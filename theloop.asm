@@ -113,85 +113,131 @@ V    V     V    V
 006a 18c0  ld   $c0,out
 006b c207  st   [$07]
 006c 00c0  ld   $c0
-006d c20a  st   [$0a]
-006e 0000  ld   $00
-006f c208  st   [$08]
-0070 c20b  st   [$0b]
-0071 1401  ld   $01,y
-0072 0901  ld   [y,$01]
-0073 8001  adda $01
-0074 ca01  st   [y,$01]
-0075 ec7a  bne  $7a
-0076 0979  ld   [y,$79]
-0077 a001  suba $01
-0078 fc7d  bra  $7d
-0079 ca79  st   [y,$79]
-007a 0200  nop
-007b 0200  nop
+006d c209  st   [$09]
+006e 0080  ld   $80
+006f c20a  st   [$0a]
+0070 0200  nop
+0071 0200  nop
+0072 0200  nop
+0073 1401  ld   $01,y
+0074 0901  ld   [y,$01]
+0075 8001  adda $01
+0076 ca01  st   [y,$01]
+0077 ec7c  bne  $7c
+0078 0979  ld   [y,$79]
+0079 a001  suba $01
+007a fc7f  bra  $7f
+007b ca79  st   [y,$79]
 007c 0200  nop
-007d 0917  ld   [y,$17]
-007e a001  suba $01
-007f ca17  st   [y,$17]
-0080 0001  ld   $01
-0081 c20f  st   [$0f]
-0082 010e  ld   [$0e]
-0083 8001  adda $01
-0084 c20e  st   [$0e]
-0085 8200  adda ac
-0086 8200  adda ac
+007d 0200  nop
+007e 0200  nop
+007f 0917  ld   [y,$17]
+0080 a001  suba $01
+0081 ca17  st   [y,$17]
+0082 0001  ld   $01
+0083 c20f  st   [$0f]
+0084 010e  ld   [$0e]
+0085 8001  adda $01
+0086 c20e  st   [$0e]
 0087 8200  adda ac
-0088 e88c  blt  $8c
-0089 0081  ld   $81
-008a fc8e  bra  $8e
-008b 0019  ld   $19
-008c c20f  st   [$0f]
-008d 0006  ld   $06
-008e 1401  ld   $01,y
-008f ca22  st   [y,$22]
-0090 8001  adda $01
-0091 ca24  st   [y,$24]
-0092 0042  ld   $42
-0093 ec93  bne  $93
-0094 a001  suba $01
-0095 002c  ld   $2c
-0096 190a  ld   [$0a],out
-0097 a001  suba $01
-0098 c208  st   [$08]
-0099 010a  ld   [$0a]
-009a 7840  xora $40,out
-009b 0009  ld   $09
-009c ec9c  bne  $9c
-009d a001  suba $01
-009e 0200  nop
-009f 0108  ld   [$08]
-00a0 190a  ld   [$0a],out
-00a1 a021  suba $21
-00a2 eca7  bne  $a7
-00a3 a002  suba $02
-00a4 00c0  ld   $c0
-00a5 fcac  bra  $ac
-00a6 c20a  st   [$0a]
-00a7 ecab  bne  $ab
-00a8 0040  ld   $40
-00a9 fcad  bra  $ad
-00aa c20a  st   [$0a]
-00ab 0200  nop
-00ac 0200  nop
-00ad 004f  ld   $4f
-00ae ecae  bne  $ae
-00af a001  suba $01
+0088 8200  adda ac
+0089 8200  adda ac
+008a e88e  blt  $8e
+008b 0081  ld   $81
+008c fc90  bra  $90
+008d 0019  ld   $19
+008e c20f  st   [$0f]
+008f 0006  ld   $06
+0090 1401  ld   $01,y
+0091 ca22  st   [y,$22]
+0092 8001  adda $01
+0093 ca24  st   [y,$24]
+0094 0040  ld   $40
+0095 ec95  bne  $95
+0096 a001  suba $01
+0097 0200  nop
+0098 002c  ld   $2c
+0099 c208  st   [$08]
+009a 1909  ld   [$09],out
+009b 0102  ld   [$02]
+009c 2003  anda $03
+009d 8001  adda $01
+009e 190a  ld   [$0a],out
+009f d602  st   [$02],y
+00a0 007f  ld   $7f
+00a1 29fe  anda [y,$fe]
+00a2 89fa  adda [y,$fa]
+00a3 cafe  st   [y,$fe]
+00a4 3080  anda $80,x
+00a5 0500  ld   [x]
+00a6 89ff  adda [y,$ff]
+00a7 89fb  adda [y,$fb]
+00a8 caff  st   [y,$ff]
+00a9 0200  nop
+00aa 0200  nop
+00ab 30fc  anda $fc,x
+00ac 1402  ld   $02,y
+00ad 0d00  ld   [y,x]
+00ae 8103  adda [$03]
+00af c203  st   [$03]
 00b0 0200  nop
-00b1 0108  ld   [$08]
-00b2 ec97  bne  $97
-00b3 190a  ld   [$0a],out
-00b4 c209  st   [$09]
-00b5 150f  ld   [$0f],y
-00b6 e0b0  jmp  y,$b0
-00b7 1880  ld   $80,out
-00b8 0000  ld   $00
-00b9 0000  ld   $00
-00ba 0000  ld   $00
-* 72 times
+00b1 0200  nop
+00b2 0200  nop
+00b3 0200  nop
+00b4 0106  ld   [$06]
+00b5 fd0b  bra  [$0b]
+00b6 1909  ld   [$09],out
+00b7 0108  ld   [$08]
+00b8 f0db  beq  $db
+00b9 a001  suba $01
+00ba c208  st   [$08]
+00bb a021  suba $21
+00bc ecc1  bne  $c1
+00bd a002  suba $02
+00be 00c0  ld   $c0
+00bf fcc6  bra  $c6
+00c0 c209  st   [$09]
+00c1 ecc5  bne  $c5
+00c2 0040  ld   $40
+00c3 fcc7  bra  $c7
+00c4 c209  st   [$09]
+00c5 0109  ld   [$09]
+00c6 0200  nop
+00c7 6040  xora $40
+00c8 c20a  st   [$0a]
+00c9 0108  ld   [$08]
+00ca 2003  anda $03
+00cb ecd6  bne  $d6
+00cc 0103  ld   [$03]
+00cd 20f0  anda $f0
+00ce 4107  ora  [$07]
+00cf c206  st   [$06]
+00d0 c003  st   $03,[$03]
+00d1 0049  ld   $49
+00d2 ecd2  bne  $d2
+00d3 a001  suba $01
+00d4 fc9b  bra  $9b
+00d5 1909  ld   [$09],out
+00d6 004b  ld   $4b
+00d7 ecd7  bne  $d7
+00d8 a001  suba $01
+00d9 ec9b  bne  $9b
+00da 1909  ld   [$09],out
+00db c209  st   [$09]
+00dc c20b  st   [$0b]
+00dd 0051  ld   $51
+00de ecde  bne  $de
+00df a001  suba $01
+00e0 0102  ld   [$02]
+00e1 2003  anda $03
+00e2 8001  adda $01
+00e3 150f  ld   [$0f],y
+00e4 e0b0  jmp  y,$b0
+00e5 1880  ld   $80,out
+00e6 0000  ld   $00
+00e7 0000  ld   $00
+00e8 0000  ld   $00
+* 26 times
 0100 00c8  ld   $c8
 0101 c20b  st   [$0b]
 0102 1401  ld   $01,y
