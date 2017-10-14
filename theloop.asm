@@ -185,7 +185,7 @@ V    V     V    V
 00b2 0200  nop
 00b3 0200  nop
 00b4 0106  ld   [$06]
-00b5 fd0b  bra  [$0b]
+00b5 0200  nop
 00b6 1909  ld   [$09],out
 00b7 0108  ld   [$08]
 00b8 f0db  beq  $db

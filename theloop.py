@@ -61,7 +61,8 @@ sample = zpByte()
 #       st [sample]
 # The difference is unhearable. This is fine when the reset/address
 # value is low and doesn't overflow with 4 channels added to it.
-# There is an alternative
+# There is an alternative, but it requires pull-down diodes on the data bus:
+#       st [sample],[sample]
 assert 4*63 + sample < 256
 # We pin this reset/address value to 3, so `sample' swings from 3 to 255
 assert sample == 3
@@ -98,17 +99,18 @@ retImage  = zpByte(2)
 ledCount  = zpByte()
 ledRomPage = zpByte()
 
-# Two bytes of startup entropy
+# Two bytes of havested entropy
+# TODO larger entropy buffer
 entropy   = zpByte(2)
-
-# All bytes above are free for temporary/scratch/stacks etc
-zpFree    = zpByte()
 
 #videoMode = zpByte()
 #time0     = zpByte() # 1/60 seconds
 #time1     = zpByte() # 1 seconds
 #time2     = zpByte() # 256 seconds (4 minutes)
 #time3     = zpByte() # 2^16 seconds (18 hours)
+
+# All bytes above, except 0x80, are free for temporary/scratch/stacks etc
+zpFree    = zpByte()
 
 #-----------------------------------------------------------------------
 #
@@ -417,7 +419,7 @@ adda(d(sample), busRAM|ea0DregAC)#20
 st(d(sample))                   #21
 wait(26-22)                     #22
 ldzp(d(xout))                   #26
-bra(d(nextVideo) | busRAM)      #27
+nop()                           #27
 ld(d(videoSync0), busRAM|regOUT)#28 End horizontal pulse
 
 # Count down the vertical blank interval until its last scan line
