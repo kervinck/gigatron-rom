@@ -139,33 +139,33 @@ def disassemble(opcode, operand):
 
   # Decode addressing and register mode (74LS138)
   if text != 'j':
-    if opcode & (7 << 2) == ea0DregAC:    ea, reg = '[%s]' % _hexString(operand), 'ac'
-    if opcode & (7 << 2) == ea0XregAC:    ea, reg = '[x]', 'ac'
-    if opcode & (7 << 2) == eaYDregAC:    ea, reg = '[y,%s]' % _hexString(operand), 'ac'
-    if opcode & (7 << 2) == eaYXregAC:    ea, reg = '[y,x]', 'ac'
-    if opcode & (7 << 2) == ea0DregX:     ea, reg = '[%s]' % _hexString(operand), 'x'
-    if opcode & (7 << 2) == ea0DregY:     ea, reg = '[%s]' % _hexString(operand), 'y'
-    if opcode & (7 << 2) == ea0DregOUT:   ea, reg = '[%s]' % _hexString(operand), 'out'
-    if opcode & (7 << 2) == eaYXregOUTIX: ea, reg = '[y,x++]', 'out'
+    if opcode & _maskMode == ea0DregAC:    ea, reg = '[%s]' % _hexString(operand), 'ac'
+    if opcode & _maskMode == ea0XregAC:    ea, reg = '[x]', 'ac'
+    if opcode & _maskMode == eaYDregAC:    ea, reg = '[y,%s]' % _hexString(operand), 'ac'
+    if opcode & _maskMode == eaYXregAC:    ea, reg = '[y,x]', 'ac'
+    if opcode & _maskMode == ea0DregX:     ea, reg = '[%s]' % _hexString(operand), 'x'
+    if opcode & _maskMode == ea0DregY:     ea, reg = '[%s]' % _hexString(operand), 'y'
+    if opcode & _maskMode == ea0DregOUT:   ea, reg = '[%s]' % _hexString(operand), 'out'
+    if opcode & _maskMode == eaYXregOUTIX: ea, reg = '[y,x++]', 'out'
   else:
     ea = '[%s]' % _hexString(operand)
 
   # Decode bus mode (74LS139)
-  if opcode & 3 == busD:   bus = _hexString(operand)
-  if opcode & 3 == busRAM: bus = '$??' if isStore else ea
-  if opcode & 3 == busAC:  bus = 'ac'
-  if opcode & 3 == busIN:  bus = 'in'
+  if opcode & _maskBus == busD:   bus = _hexString(operand)
+  if opcode & _maskBus == busRAM: bus = '$??' if isStore else ea
+  if opcode & _maskBus == busAC:  bus = 'ac'
+  if opcode & _maskBus == busIN:  bus = 'in'
 
   if text == 'j':
     # Decode jumping mode (74LS153)
-    if opcode & (7 << 2) == jL:  text = 'jmp  y,'
-    if opcode & (7 << 2) == jS:  text = 'bra  '
-    if opcode & (7 << 2) == jEQ: text = 'beq  '
-    if opcode & (7 << 2) == jNE: text = 'bne  '
-    if opcode & (7 << 2) == jGT: text = 'bgt  '
-    if opcode & (7 << 2) == jGE: text = 'bge  '
-    if opcode & (7 << 2) == jLT: text = 'blt  '
-    if opcode & (7 << 2) == jLE: text = 'ble  '
+    if opcode & _maskCc == jL:  text = 'jmp  y,'
+    if opcode & _maskCc == jS:  text = 'bra  '
+    if opcode & _maskCc == jEQ: text = 'beq  '
+    if opcode & _maskCc == jNE: text = 'bne  '
+    if opcode & _maskCc == jGT: text = 'bgt  '
+    if opcode & _maskCc == jGE: text = 'bge  '
+    if opcode & _maskCc == jLT: text = 'blt  '
+    if opcode & _maskCc == jLE: text = 'ble  '
     text += bus
   else:
     # Compose string
@@ -195,8 +195,23 @@ def _emit(ins):
   _rom1.append(operand)
   _romSize += 1
 
+  # Warning for conditional branches with a target address from RAM. The (unverified) danger is
+  # that the ALU is calculating `-A' (for the condition decoder) as L+R+1, with L=0 and R=~A. But B
+  # is also an input to R and comes from memory. The addressing mode is [D], which requires high
+  # EH and EL, and this is slower when the diodes are forward biased from the previous instruction.
+  # Therefore R might momentarily glitch while B changes value and the AND/OR layers in the 74153
+  # multiplexer resettles. Such a glitch then potentially ripples all the way through two 74283
+  # adders and the control unit's 74153. This all depends on the previous instruction's addressing
+  # mode and the values of AC and [D], which we can't know with static analysis.
+  if opcode & _maskOp == _opJ and\
+    opcode & _maskBus == busRAM and\
+    opcode & _maskCc in [ jGT, jLT, jNE, jEQ, jGE, jLE ]:
+    disassembly = disassemble(opcode, operand)
+    print '%04x %02x%02x  %s' % (_romSize, opcode, operand, disassembly)
+    print 'Warning: large propagation delay (conditional branch with RAM on bus)'
+
   # Warning for time critical instruction combination
-  if _romSize >= 2 and _rom0[_romSize-2] & _maskOp == _opJ and\
+  if _romSize >= 2 and (_rom0[_romSize-2] & _maskOp) == _opJ and\
     opcode & _maskBus == busRAM and\
     opcode & _maskMode not in [ea0DregAC, ea0DregX, ea0DregY, ea0DregOUT] and\
     opcode & _maskOp in [_opADD, _opSUB]:
