@@ -502,7 +502,7 @@ st(d(frameY))                   #35
 ld(eaYXregAC, busRAM)           #36
 adda(d(frameX), busRAM|regX)    #37
 ld(d(frameY), busRAM|regY)      #38
-ld(val(syncBits))                   #39
+ld(val(syncBits))               #39
 
 # Stream 160 pixels from memory location <Yi,Xi> onwards
 # Superimpose the sync signal bits to be robust against misprogramming
@@ -512,7 +512,8 @@ for i in range(160):
 ld(val(syncBits), regOUT)       #0 Back to black
 
 # Front porch
-ldzp(d(channel))           #1 Hop to next sound channel
+ldzp(d(channel))                #1 Hop to next sound channel
+label('soundF')
 anda(val(3))                    #2
 adda(val(1))                    #3
 ld(val(syncBits^hSync), regOUT) #4 Start horizontal pulse
@@ -576,7 +577,7 @@ ld(val(syncBits))                   #39
 # Back porch D: last of 4 repeated scanlines
 # - Calculate the next frame index
 # - Decide if this is the last line or not
-label('videoD')
+label('videoD')                 # Default video mode
 ld(d(frameX), busRAM|regX)      #29
 ldzp(d(screenY))                #30
 suba(d((120-1)*2))              #31
@@ -599,15 +600,45 @@ ld(val(syncBits))               #39
 
 # Back porch "E": after the last line
 # - Go back to program page 0 and enter vertical blank
-label('videoE')
+label('videoE') # Exit visible area
 ld(d(hi('videoLoop')),ea0DregY) #29
 jmpy(d(lo('videoLoop')))        #30
 ld(val(syncBits))               #31
+
+# Back porch "F": scanlines and fast interpreter mode
+label('videoF')                 # Fast video mode
+ldzp(d(screenY))                #29
+suba(d((120-1)*2))              #30
+bne(d(lo('notlast')))           #31
+adda(d(120*2))                  #32
+bra(d(lo('.join')))             #33
+ld(d(lo('videoE')))             #34 No more visible lines
+label('notlast')
+st(d(screenY))                  #33 More visible lines
+ld(d(lo('videoA')))             #34
+label('.join')
+st(d(nextVideo))                #35
+
+ld(d(hi('interpreter')),ea0DregY)#36
+jmpy(d(lo('interpreter')))      #37
+nop()                           #38
+
+#-----------------------------------------------------------------------
+# Interpreter
+#-----------------------------------------------------------------------
+align(0x100)
+
+label('interpreter')
+wait(199-39)                    #39 TODO: run interpreter here
+ld(d(ledRomPage), busRAM|ea0DregY)#199
+jmpy(d(lo('soundF')))           #0
+ldzp(d(channel))                #1 Hop to next sound channel
 
 #-----------------------------------------------------------------------
 # Selfie raw
 #-----------------------------------------------------------------------
 
+align(0x100)
 label('image')
 
 def palette(raw, x, y, width):
