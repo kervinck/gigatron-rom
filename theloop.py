@@ -491,6 +491,33 @@ label('vSync3')
 xora(d(hSync))                  #40 Precompute, as during the pulse there is no time
 st(d(videoSync1))               #41
 
+# Verification of protoboard.
+# Clock in the controller input and render the result
+# 6+8*9+1 = 79 instructions
+
+ld(val(127-60))
+suba(d(blankY),busRAM|regY)
+ld(val(20), regX)
+st(val(0), eaYXregOUTIX)
+st(d(zpFree),busIN)
+ld(val(1))
+label('.L0')
+st(d(zpFree+1))
+anda(d(zpFree),busRAM)
+beq(d(lo('.L1')))
+bra(d(lo('.L2')))
+ld(val(3*(R+G)))
+label('.L1')
+ld(val(1*G))
+label('.L2')
+st(eaYXregOUTIX)
+ldzp(d(zpFree+1))
+bpl(d(lo('.L0')))
+adda(busAC)
+st(val(0), eaYXregOUTIX)
+
+nesTest = 6 + 8*9 + 1
+
 # Update [xout] with the next sound sample every 4 scan lines.
 # Stay on the 'videoC equivalent' scan lines in vertical blank.
 ldzp(d(blankY))                 #42
@@ -501,12 +528,12 @@ anda(d(0xf0))                   #46
 ora(d(leds), busRAM|ea0DregAC)  #47
 st(d(xout))                     #48
 st(val(sample), ea0DregAC|busD) #49 Reset for next sample
-wait(199-50)                    #50
+wait(199-50 - nesTest)          #50 XXX Appplication cycles (scanline 1-43 with sample update)
 bra(d(lo('sound1')))            #199
 ld(d(videoSync0), busRAM|regOUT)#0 # Ends the vertical blank pulse at the right cycle
 
 label('vBlankRegular')
-wait(199-46)                    #46 XXX Application cycles (scanline 1-43)
+wait(199-46 - nesTest)          #46 XXX Application cycles (scanline 1-43 without sample update)
 bra(d(lo('sound1')))            #199
 ld(d(videoSync0), busRAM|regOUT)#0 Ends the vertical blank pulse at the right cycle
 
