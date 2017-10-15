@@ -4,7 +4,7 @@
 #  Gigatron: a single-board microcomputer from TTL
 #
 #  Core video, sound and interpreter loop for Gigatron TTL color computer
-#  - 6.25MHz clock.
+#  - 6.25MHz clock
 #  - Rendering 160x120 pixels at 6.25MHz with flexible videoline programming
 #  - Must stay above 31 kHz horizontal sync --> 200 cycles/scanline
 #  - Must stay above 59.94 Hz vertical sync --> 521 scanlines/frame
@@ -28,7 +28,8 @@ syncBits = hSync + vSync # Both pulses negative
 # The loop can therefore not be agnostic to the horizontal pulse polarity.
 assert(syncBits & hSync != 0)
 
-vFront = 10 - 4 # VGA default, adjusted to get 59.98 Hz (6.25 MHz/200/521)
+# XXX -5 to get 520 = quadruple of scan lines (for testing sound consistency)
+vFront = 10 - 5 # VGA default, adjusted to get 59.98 Hz (6.25 MHz/200/521)
 vPulse = 2
 vBack  = 33
 
@@ -79,7 +80,7 @@ bootCheck = zpByte() # Checksum
 xout      = zpByte()
 
 # Status of blinkenlights. Keep bit 4:7 clear.
-# (XXX Best make a sequencer responsible for that)
+# (Simplest is to keep the sequencer responsible for that)
 leds      = zpByte()
 
 # Visible video
@@ -96,10 +97,6 @@ videoSync1 = frameY  # Same during horizontal pulse
 # Function image return address
 retImage  = zpByte(2)
 
-# Blinking LED functionality
-ledCount   = zpByte()
-ledRomPage = zpByte()
-
 # Two bytes of havested entropy
 # XXX Consider a larger entropy buffer
 entropy    = zpByte(2)
@@ -109,6 +106,11 @@ entropy    = zpByte(2)
 #time1     = zpByte() # 1 seconds
 #time2     = zpByte() # 256 seconds (4 minutes)
 #time3     = zpByte() # 2^16 seconds (18 hours)
+
+ledTimer        = zpByte() # Number of ticks until next LED change
+ledState        = zpByte() # Current LED state
+ledTempo        = zpByte() # Next value for ledTimer after LED state change
+# Fow now the LED state machine itself is hard-coded in the program ROM
 
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 zpFree     = zpByte()
@@ -162,7 +164,7 @@ ledY=17      # Position for LED on screen
 #-----------------------------------------------------------------------
 
 # Give a first sign of life that can be checked with a voltmeter
-ld(val(0))                      # [oooo]
+ld(val(0b0000))                 # Physical: [oooo]
 ld(val(syncBits^hSync), regOUT) # Prepare XOUT update, hSync goes down, RGB to black
 ld(val(syncBits), regOUT)       # hSync goes up, updating XOUT
 
@@ -203,7 +205,7 @@ label('.countMem1')
 #suba(val(1))
 
 # Update LEDs (memory is present and counted, reset is stable)
-ld(val(1))                      # [*ooo]
+ld(val(0b0001))                 # Physical: [*ooo]
 ld(val(syncBits^hSync), regOUT)
 ld(val(syncBits), regOUT)
 
@@ -236,7 +238,7 @@ bne(d(lo('.initEnt0')))
 st(d(zpFree+1), busAC|ea0DregY)
 
 # Update LEDs (debounce)
-ld(val(1+2))                    # [**oo]
+ld(val(0b0011))                  # Physical: [**oo]
 ld(val(syncBits^hSync), regOUT)
 ld(val(syncBits), regOUT)
 
@@ -258,9 +260,9 @@ suba(val(0x5a-1))
 st(d(bootCheck))
 
 # Initialize zeroByte and oneByte
-st(val(zeroByte), ea0DregAC|busD) # [0] = 0
+st(val(zeroByte), ea0DregAC|busD)  # Physical: [0] = 0
 ld(val(1))
-st(val(oneByte), ea0DregAC|busAC) # [0x80] = 1
+st(val(oneByte), ea0DregAC|busAC)  # Physical: [0x80] = 1
 
 # Initialize scan table for default video layout
 ld(val(scanTablePage), regY)
@@ -276,6 +278,7 @@ st(eaYXregOUTIX)         # Yi  = 0x08+i
 # Init the shift2-right table for sound
 ld(val(shiftTablePage), regY)
 ld(val(0))
+st(d(channel))
 label('.loop')
 st(d(zpFree+0))
 adda(busAC)
@@ -286,6 +289,14 @@ adda(val(1))
 xora(val(0x40))
 bne(d(lo('.loop')))
 xora(val(0x40))
+
+# Init LED sequencer
+ld(val(60))
+st(d(ledTimer))
+ld(val(0))
+st(d(ledState))
+ld(val(15))
+st(d(ledTempo))
 
 # Setup a G-major chord to play
 G3, G4, B4, D5 = 824, 1648, 2064, 2464
@@ -311,7 +322,7 @@ st(d(D5 & 0x7f), eaYXregOUTIX)
 st(d(D5 >> 7), eaYXregAC)
 
 # Update LEDs (low pages are initialized)
-ld(val(1+2+4))                  # [***o]
+ld(val(0b0111))                 # Physical: [***o]
 ld(val(syncBits^hSync), regOUT)
 ld(val(syncBits), regOUT)
 
@@ -325,69 +336,104 @@ jmpy(d(lo('image')))
 label('.retImage')
 
 # Update LEDs (subroutines are working)
-ld(val(1+2+4+8))                # [****]
+ld(val(0b1111))                 # Physical: [****]
 ld(val(syncBits^hSync), regOUT)
 ld(val(syncBits), regOUT)
 st(d(leds)) # Setup for control by video loop
 
-#-----------------------------------------------------------------------
-#  Vertical blank part of video loop
-#-----------------------------------------------------------------------
-
-# Enter vertical blank
+ld(d(hi('videoLoop')), busD|ea0DregY)
+jmpy(d(lo('videoLoop')))
 ld(val(syncBits))
 
-label('videoLoop')
+#-----------------------------------------------------------------------
+#
+#  ROM page 1: Vertical blank part of video loop
+#
+#-----------------------------------------------------------------------
+align(0x100)
+label('videoLoop')              # Enter vertical blank
+
 st(d(videoSync0))               #32
 ld(val(syncBits^hSync))         #33
 st(d(videoSync1))               #34
 
-# --- Scroll demo hack app
-ld(val(scanTablePage), regY)    #35 # Left 1 pixel/frame
-ld(d(0*2+1), busRAM|eaYDregAC)  #36
-adda(val(1))                    #37
-st(d(0*2+1), busAC|eaYDregAC)   #38
+# --- Uptime clock
+
+# XXX todo...
+
+# --- LED sequencer (20 cycles)
+
+ldzp(d(ledTimer))               #35
+bne(d(lo('.leds2')))            #36
+
+ld(d(lo('.leds0')))             #37
+adda(d(ledState)|busRAM)        #38
+bra(busAC)                      #39
+bra(d(lo('.leds1')))            #40
+
+label('.leds0')
+ld(d(0x10+0b0000))              #41 Physical: [oooo]
+ld(d(0x20+0b1111))              #41 Physical: [****]
+ld(d(0x30+0b0111))              #41 Physical: [***o]
+ld(d(0x40+0b0111))              #41 Physical: [***o]
+ld(d(0x50+0b0011))              #41 Physical: [**oo]
+ld(d(0x60+0b0011))              #41 Physical: [**oo]
+ld(d(0x70+0b0001))              #41 Physical: [*ooo]
+ld(d(0x80+0b0001))              #41 Physical: [*ooo]
+ld(d(0x90+0b0000))              #41 Physical: [oooo]
+ld(d(0xa0+0b0000))              #41 Physical: [oooo]
+ld(d(0xb0+0b0001))              #41 Physical: [*ooo]
+ld(d(0xc0+0b0010))              #41 Physical: [o*oo]
+ld(d(0xd0+0b0100))              #41 Physical: [oo*o]
+ld(d(0xe0+0b1000))              #41 Physical: [ooo*]
+ld(d(0xf0+0b0100))              #41 Physical: [oo*o]
+ld(d(0xa0+0b0010))              #41 Physical: [o*oo]
+
+label('.leds1')
+st(d(leds))                     #42 Temporarily park here
+anda(val(0b11110000),regX)      #43 High 4 bits represent the next state
+ld(d(shiftTablePage),regY)      #44
+ld(busRAM|eaYXregAC)            #45
+ld(busAC,regX)                  #46
+ld(busRAM|eaYXregAC)            #47
+st(d(ledState))                 #48
+ldzp(d(leds))                   #49 Low 4 bits are the LED output
+anda(val(0b00001111))           #50
+st(d(leds))                     #51
+bra(d(lo('.leds3')))            #52
+ldzp(d(ledTempo))               #53 Setup the LED timer for the next period
+
+label('.leds2')
+wait(52-38)                     #38
+ldzp(d(ledTimer))               #52
+suba(d(1))                      #53
+
+label('.leds3')
+st(d(ledTimer))                 #54
+
+# --- Scroll demo hack app (12 cycles)
+
+ld(val(scanTablePage), regY)    #55 # Left 1 pixel/frame
+ld(d(0*2+1), busRAM|eaYDregAC)  #56
+adda(val(1))                    #57
+st(d(0*2+1), busAC|eaYDregAC)   #58
 #
-bne(d(lo('tick')))              #39 # Shift 1 pixel with every full cycle for ALU test
-ld(d(60*2+1), busRAM|eaYDregAC) #40
-suba(val(1))                    #41
-bra(d(lo('tock')))              #42
-st(d(60*2+1), busAC|eaYDregAC)  #43
+bne(d(lo('tick')))              #59 # Shift 1 pixel with every full cycle for ALU test
+ld(d(60*2+1), busRAM|eaYDregAC) #60
+suba(val(1))                    #61
+bra(d(lo('tock')))              #62
+st(d(60*2+1), busAC|eaYDregAC)  #63
 label('tick')
-nop()                           #41
-nop()                           #42
-nop()                           #43
+nop()                           #61
+nop()                           #62
+nop()                           #63
 label('tock')
 #
-ld(d(scrollerY*2+1), busRAM|eaYDregAC)#44 # Right 1 pixel/frame
-suba(val(1))                    #45
-st(d(scrollerY*2+1), busAC|eaYDregAC)#46
+ld(d(scrollerY*2+1), busRAM|eaYDregAC)#64 # Right 1 pixel/frame
+suba(val(1))                    #65
+st(d(scrollerY*2+1), busAC|eaYDregAC)#66
 
-# --- Blinking LED
-# Do this by switching 2 scanlines and controlling ROM address 15
-ld(d(hi('visiblePage')|(0<<7))) #47 Real LED off
-st(d(ledRomPage))               #48
-ldzp(d(ledCount))               #49
-adda(val(1))                    #50
-st(d(ledCount))                 #51 60/256 = 1/4 Hz
-adda(busAC)                     #52 1/2 Hz
-adda(busAC)                     #53 1 Hz
-adda(busAC)                     #54 2 Hz
-blt(d(lo('led0')))              #55
-ld(d(hi('visiblePage')|(1<<7))) #56 Real LED on
-bra(d(lo('led1')))              #57
-ld(val(screenPages+ledY))       #58 Regular image
-label('led0')
-st(d(ledRomPage))               #57
-ld(val(screenPages-2))          #58 Image with alternative scanlines
-label('led1')
-ld(d(scanTablePage),regY)       #59
-st(d((ledY+0)*2+0),busAC|eaYDregAC)#60
-adda(val(1))                    #61
-st(d((ledY+1)*2+0),busAC|eaYDregAC)#62
-# --- 
-
-wait(198-63)                    #63 # XXX Application cycles (scanline 0)
+wait(198-67)                    #67 # XXX Application cycles (scanline 0)
 
 ld(val(vFront+vPulse+vBack-2))  #198
 st(d(blankY))                   #199
@@ -410,7 +456,7 @@ adda(d(keyH), busRAM|eaYDregAC) #13
 st(d(oscH), busAC|eaYDregAC)    #14
 nop()                           #15 Was: xora [y,wavX]
 nop()                           #16 Was: adda [y,wavA]
-anda(val(0xfc),regX)            #17
+anda(val(0b11111100),regX)      #17
 ld(d(shiftTablePage), regY)     #18
 ld(busRAM|eaYXregAC)            #19
 adda(d(sample), busRAM|ea0DregAC)#20
@@ -455,15 +501,15 @@ ldzp(d(sample))                 #45
 anda(d(0xf0))                   #46
 ora(d(leds), busRAM|ea0DregAC)  #47
 st(d(xout))                     #48
-st(val(sample), ea0DregAC|busD) #49 Reset sample
+st(val(sample), ea0DregAC|busD) #49 Reset for next sample
 wait(199-50)                    #50
 bra(d(lo('sound1')))            #199
 ld(d(videoSync0), busRAM|regOUT)#0 # Ends the vertical blank pulse at the right cycle
 
 label('vBlankRegular')
-wait(199-46)                    #46 # XXX Application cycles (scanline 1-43)
+wait(199-46)                    #46 XXX Application cycles (scanline 1-43)
 bra(d(lo('sound1')))            #199
-ld(d(videoSync0), busRAM|regOUT)#0 # Ends the vertical blank pulse at the right cycle
+ld(d(videoSync0), busRAM|regOUT)#0 Ends the vertical blank pulse at the right cycle
 
 # Transfer to visible area
 label('vBlankLast')
@@ -474,13 +520,13 @@ wait(199-35)                    #35 XXX Application cycles (scanline 44)
 ldzp(d(channel))                #199 Advance to next sound channel
 anda(val(3))                    #0
 adda(val(1))                    #1
-ld(d(ledRomPage), busRAM|ea0DregY)#2
+ld(d(hi('sound2')), busD|ea0DregY)#2
 jmpy(d(lo('sound2')))           #3
 ld(val(syncBits^hSync), regOUT) #4 Start horizontal pulse
 
 #-----------------------------------------------------------------------
 #
-#  ROM page 1: visible part of video loop
+#  ROM page 2: Visible part of video loop
 #
 #-----------------------------------------------------------------------
 align(0x100)
@@ -551,7 +597,7 @@ ldzp(d(screenY))                #32
 adda(d(1), regX)                #33
 ldzp(d(frameX))                 #34
 adda(eaYXregAC, busRAM)         #35
-st(d(frameX), busAC|ea0DregX)   #36 # Undocumented opcode "store in RAM and X"!
+st(d(frameX), busAC|ea0DregX)   #36 Undocumented opcode "store in RAM and X"!
 ld(d(frameY), busRAM|regY)      #37
 bra(d(lo('pixels')))            #38
 ld(val(syncBits))               #39
@@ -559,19 +605,17 @@ ld(val(syncBits))               #39
 # Back porch C: third of 4 repeated scanlines
 # - Nothing new to do, Yi and Xi are known
 label('videoC')
-# First do something that didn't fit in the audio loop
-ldzp(d(sample))                 #29
+ldzp(d(sample))                 #29 First something that didn't fit in the audio loop
 anda(d(0xf0))                   #30
 ora(d(leds), busRAM|ea0DregAC)  #31
-st(d(xout))                     #32
-st(val(sample), ea0DregAC|busD) #33
-# Now back to video business
-ld(d(lo('videoD')))             #34
+st(d(xout))                     #32 Update [xout] with new sample (4 channels just updated)
+st(val(sample), ea0DregAC|busD) #33 Reset for next sample
+ld(d(lo('videoD')))             #34 Now back to video business
 st(d(nextVideo))                #35
 ld(d(frameX), busRAM|regX)      #36
 ld(d(frameY), busRAM|regY)      #37
 bra(d(lo('pixels')))            #38
-ld(val(syncBits))                   #39
+ld(val(syncBits))               #39
 
 # Back porch D: last of 4 repeated scanlines
 # - Calculate the next frame index
@@ -582,14 +626,12 @@ ldzp(d(screenY))                #30
 suba(d((120-1)*2))              #31
 beq(d(lo('last')))              #32
 ld(d(frameY), busRAM|regY)      #33
-
 adda(d(120*2))                  #34 # More pixel lines to go
 st(d(screenY))                  #35
 ld(d(lo('videoA')))             #36
 st(d(nextVideo))                #37
 bra(d(lo('pixels')))            #38
 ld(val(syncBits))               #39
-
 label('last')
 wait(36-34)                     #34 # No more pixel lines
 ld(d(lo('videoE')))             #36
@@ -604,7 +646,7 @@ ld(d(hi('videoLoop')),ea0DregY) #29
 jmpy(d(lo('videoLoop')))        #30
 ld(val(syncBits))               #31
 
-# Back porch "F": scanlines and fast interpreter mode
+# Back porch "F": scanlines and fast mode
 label('videoF')                 # Fast video mode
 ldzp(d(screenY))                #29
 suba(d((120-1)*2))              #30
@@ -617,19 +659,20 @@ st(d(screenY))                  #33 More visible lines
 ld(d(lo('videoA')))             #34
 label('.join')
 st(d(nextVideo))                #35
-
 ld(d(hi('interpreter')),ea0DregY)#36
 jmpy(d(lo('interpreter')))      #37
 nop()                           #38
 
 #-----------------------------------------------------------------------
-# Interpreter
+#
+#  ROM page 3: Application interpreter
+#
 #-----------------------------------------------------------------------
 align(0x100)
 
 label('interpreter')
 wait(199-39)                    #39 XXX Application cycles (every 4th of scanlines 45-524)
-ld(d(ledRomPage), busRAM|ea0DregY)#199
+ld(d(hi('soundF')), busD|ea0DregY)#199
 jmpy(d(lo('soundF')))           #0
 ldzp(d(channel))                #1 Advance to next sound channel
 

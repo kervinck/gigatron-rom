@@ -363,8 +363,6 @@ def end():
   for x, y in zip(_rom0, _rom1):
     _rom2.append(x)
     _rom2.append(y)
-  _rom2 += (65536 - len(_rom2)) * [0] # Pad to 32K
-  _rom2 += _rom2                      # And for now, duplicate the upper half
   with open(filename, 'wb') as file:
     file.write(''.join([chr(byte) for byte in _rom2]))
 
