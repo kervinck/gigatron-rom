@@ -9,7 +9,6 @@
 #  - Must stay above 31 kHz horizontal sync --> 200 cycles/scanline
 #  - Must stay above 59.94 Hz vertical sync --> 521 scanlines/frame
 #  - 4 channels sound
-#  TODO: add scanner lights
 #  TODO: add screen font
 #  TODO: add date/time clock
 #  TODO: add scanline mode ("turbo/retro")
