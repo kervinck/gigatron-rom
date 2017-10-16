@@ -223,7 +223,7 @@ V    V     V    V
 015e f094  beq  $94
 015f a001  suba $01
 0160 c208  st   [$08]
-0161 a021  suba $21
+0161 a020  suba $20
 0162 ec67  bne  $67
 0163 a002  suba $02
 0164 00c0  ld   $c0

@@ -472,7 +472,7 @@ suba(d(1))                      #31
 st(d(blankY))                   #32
 
 # Determine if we're in the vertical sync pulse
-suba(d(vBack))                  #33
+suba(d(vBack-1))                #33
 bne(d(lo('vSync0')))            #34 Tests for end of vPulse
 suba(d(vPulse))                 #35
 ld(val(syncBits))               #36 Entering vertical back porch
