@@ -434,7 +434,7 @@ st(d(scrollerY*2+1), busAC|eaYDregAC)#66
 
 wait(198-67)                    #67 # XXX Application cycles (scanline 0)
 
-ld(val(vFront+vPulse+vBack-2))  #198
+ld(val(vFront+vPulse+vBack-2))  #198 `-2' because first and last are different
 st(d(blankY))                   #199
 ld(d(videoSync0), busRAM|regOUT)#0
 
@@ -493,12 +493,19 @@ st(d(videoSync1))               #41
 
 # Verification of protoboard.
 # Clock in the controller input and render the result
-# 6+8*9+1 = 79 instructions
+# 4+6+8*9+1 = 83 instructions
 
 ld(val(127-60))
 suba(d(blankY),busRAM|regY)
 ld(val(20), regX)
+ldzp(d(blankY))
+xora(val(vBack-1-8))
+beq(d(lo('.L3')))
+bra(d(lo('.L4')))
 st(val(0), eaYXregOUTIX)
+label('.L3')
+st(val(2*R), eaYXregOUTIX)
+label('.L4')
 st(d(zpFree),busIN)
 ld(val(1))
 label('.L0')
@@ -516,7 +523,7 @@ bpl(d(lo('.L0')))
 adda(busAC)
 st(val(0), eaYXregOUTIX)
 
-nesTest = 6 + 8*9 + 1
+nesTest = 4+6 + 8*9 + 1
 
 # Update [xout] with the next sound sample every 4 scan lines.
 # Stay on the 'videoC equivalent' scan lines in vertical blank.
