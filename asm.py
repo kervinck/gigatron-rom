@@ -276,7 +276,7 @@ def zpByte(len=1):
   assert _zpSize <= 0x100
   return s
 
-def zpReset(startFrom=0)
+def zpReset(startFrom=0):
   global _zpSize
   _zpSize = startFrom
 
