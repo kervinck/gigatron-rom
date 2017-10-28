@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 #-----------------------------------------------------------------------
 #
-#  Gigatron: a single-board microcomputer from TTL
-#
 #  Core video, sound and interpreter loop for Gigatron TTL color computer
 #  - 6.25MHz clock
 #  - Rendering 160x120 pixels at 6.25MHz with flexible videoline programming
@@ -12,7 +10,6 @@
 #  TODO: add screen font
 #  TODO: add date/time clock
 #  TODO: add scanline mode ("turbo/retro")
-#  TODO: add controller input capture
 #
 #-----------------------------------------------------------------------
 
@@ -294,7 +291,7 @@ ld(val(60))
 st(d(ledTimer))
 ld(val(0))
 st(d(ledState))
-ld(val(15))
+ld(val(60/4))
 st(d(ledTempo))
 
 # Setup a G-major chord to play
@@ -371,22 +368,22 @@ bra(busAC)                      #39
 bra(d(lo('.leds1')))            #40
 
 label('.leds0')
-ld(d(0x10+0b0000))              #41 Physical: [oooo]
-ld(d(0x20+0b1111))              #41 Physical: [****]
-ld(d(0x30+0b0111))              #41 Physical: [***o]
-ld(d(0x40+0b0111))              #41 Physical: [***o]
-ld(d(0x50+0b0011))              #41 Physical: [**oo]
-ld(d(0x60+0b0011))              #41 Physical: [**oo]
-ld(d(0x70+0b0001))              #41 Physical: [*ooo]
-ld(d(0x80+0b0001))              #41 Physical: [*ooo]
-ld(d(0x90+0b0000))              #41 Physical: [oooo]
-ld(d(0xa0+0b0000))              #41 Physical: [oooo]
+ld(d(0x10+0b1111))              #41 Physical: [****]
+ld(d(0x20+0b0111))              #41 Physical: [***o]
+ld(d(0x30+0b0011))              #41 Physical: [**oo]
+ld(d(0x40+0b0001))              #41 Physical: [*ooo]
+ld(d(0x50+0b0010))              #41 Physical: [*ooo]
+ld(d(0x60+0b0100))              #41 Physical: [o*oo]
+ld(d(0x70+0b1000))              #41 Physical: [oo*o]
+ld(d(0x80+0b0100))              #41 Physical: [ooo*]
+ld(d(0x90+0b0010))              #41 Physical: [oo*o]
+ld(d(0xa0+0b0001))              #41 Physical: [o*oo]
 ld(d(0xb0+0b0001))              #41 Physical: [*ooo]
 ld(d(0xc0+0b0010))              #41 Physical: [o*oo]
 ld(d(0xd0+0b0100))              #41 Physical: [oo*o]
 ld(d(0xe0+0b1000))              #41 Physical: [ooo*]
-ld(d(0xf0+0b0100))              #41 Physical: [oo*o]
-ld(d(0xa0+0b0010))              #41 Physical: [o*oo]
+ld(d(0xf0+0b1100))              #41 Physical: [oo**]
+ld(d(0x00+0b1110))              #41 Physical: [o***]
 
 label('.leds1')
 st(d(leds))                     #42 Temporarily park here
