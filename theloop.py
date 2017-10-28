@@ -108,6 +108,15 @@ ledState        = zpByte() # Current LED state
 ledTempo        = zpByte() # Next value for ledTimer after LED state change
 # Fow now the LED state machine itself is hard-coded in the program ROM
 
+# Serial input (game controller)
+serialInput     = zpByte()
+
+# Simple ball demo
+ballX           = zpByte()
+ballDX          = zpByte()
+ballY           = zpByte()
+ballDY          = zpByte()
+
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 zpFree     = zpByte()
 
@@ -291,7 +300,7 @@ ld(val(60))
 st(d(ledTimer))
 ld(val(0))
 st(d(ledState))
-ld(val(60/4))
+ld(val(60/5))
 st(d(ledTempo))
 
 # Setup a G-major chord to play
@@ -316,6 +325,18 @@ ld(val(4), regY) # Channel 4
 ld(val(keyL), regX)
 st(d(D5 & 0x7f), eaYXregOUTIX)
 st(d(D5 >> 7), eaYXregAC)
+
+# Setup ball
+ld(val(160/2))
+st(d(ballX))
+ld(val(127))
+st(d(ballY))
+ld(val(-1))
+st(d(ballDX))
+st(d(ballDY))
+
+# Setup serial input
+st(d(serialInput))
 
 # Update LEDs (low pages are initialized)
 ld(val(0b0111))                 # Physical: [***o]
@@ -369,21 +390,21 @@ bra(d(lo('.leds1')))            #40
 
 label('.leds0')
 ld(d(0x10+0b1111))              #41 Physical: [****]
-ld(d(0x20+0b0111))              #41 Physical: [***o]
-ld(d(0x30+0b0011))              #41 Physical: [**oo]
-ld(d(0x40+0b0001))              #41 Physical: [*ooo]
-ld(d(0x50+0b0010))              #41 Physical: [*ooo]
-ld(d(0x60+0b0100))              #41 Physical: [o*oo]
-ld(d(0x70+0b1000))              #41 Physical: [oo*o]
-ld(d(0x80+0b0100))              #41 Physical: [ooo*]
-ld(d(0x90+0b0010))              #41 Physical: [oo*o]
-ld(d(0xa0+0b0001))              #41 Physical: [o*oo]
+ld(d(0x20+0b1111))              #41 Physical: [****]
+ld(d(0x30+0b0111))              #41 Physical: [***o]
+ld(d(0x40+0b0011))              #41 Physical: [**oo]
+ld(d(0x50+0b0001))              #41 Physical: [*ooo]
+ld(d(0x60+0b0010))              #41 Physical: [o*oo]
+ld(d(0x70+0b0100))              #41 Physical: [oo*o]
+ld(d(0x80+0b1000))              #41 Physical: [ooo*]
+ld(d(0x90+0b0100))              #41 Physical: [oo*o]
+ld(d(0xa0+0b0010))              #41 Physical: [o*oo]
 ld(d(0xb0+0b0001))              #41 Physical: [*ooo]
 ld(d(0xc0+0b0010))              #41 Physical: [o*oo]
 ld(d(0xd0+0b0100))              #41 Physical: [oo*o]
 ld(d(0xe0+0b1000))              #41 Physical: [ooo*]
 ld(d(0xf0+0b1100))              #41 Physical: [oo**]
-ld(d(0x00+0b1110))              #41 Physical: [o***]
+ld(d(0x10+0b1110))              #41 Physical: [o***]
 
 label('.leds1')
 st(d(leds))                     #42 Temporarily park here
@@ -413,23 +434,128 @@ ld(val(scanTablePage), regY)    #55 # Left 1 pixel/frame
 ld(d(0*2+1), busRAM|eaYDregAC)  #56
 adda(val(1))                    #57
 st(d(0*2+1), busAC|eaYDregAC)   #58
-#
-bne(d(lo('tick')))              #59 # Shift 1 pixel with every full cycle for ALU test
-ld(d(60*2+1), busRAM|eaYDregAC) #60
-suba(val(1))                    #61
-bra(d(lo('tock')))              #62
-st(d(60*2+1), busAC|eaYDregAC)  #63
-label('tick')
-nop()                           #61
-nop()                           #62
-nop()                           #63
-label('tock')
-#
+wait(64-59)                     #59
 ld(d(scrollerY*2+1), busRAM|eaYDregAC)#64 # Right 1 pixel/frame
 suba(val(1))                    #65
 st(d(scrollerY*2+1), busAC|eaYDregAC)#66
 
-wait(198-67)                    #67 # XXX Application cycles (scanline 0)
+# --- Render controller input
+ld(val(screenPages+scrollerY),regY)
+ld(val(160/2-5),regX)
+st(val(0), eaYXregOUTIX)
+ld(val(1))
+label('.M0')
+st(d(zpFree))
+anda(d(serialInput),busRAM)
+beq(d(lo('.M1')))
+bra(d(lo('.M2')))
+st(val(3*G),eaYXregOUTIX)
+label('.M1')
+st(val(1*G),eaYXregOUTIX)
+label('.M2')
+ldzp(d(zpFree))
+bpl(d(lo('.M0')))
+adda(busAC)
+st(val(0), eaYXregOUTIX)
+demoInput = 4+8*8+1
+
+# --- Bouncing ball demo (31 cycles)
+
+# Remove ball
+ld(d(ballX), busRAM|ea0DregX)   #67
+ld(d(ballY), busRAM|ea0DregY)   #68
+st(val(0), eaYXregAC)           #69
+# Test hitting vertical walls
+
+ldzp(d(ballX))
+adda(d(ballDX),busRAM)
+bpl(d(lo('.ball10')))
+bra(d(lo('.ball11')))
+ld(val(0))
+label('.ball10')
+ld(val(1))
+label('.ball11')
+st(d(zpFree),busAC)
+xWalls = 6
+
+ldzp(d(ballX))
+adda(d(ballDX),busRAM)
+suba(val(160))
+bmi(d(lo('.ball12')))
+bra(d(lo('.ball13')))
+ld(d(zpFree),busRAM)
+label('.ball12')
+ld(val(1))
+label('.ball13')
+xWalls += 6
+
+bne(lo('.ball14'))
+ld(val(0))
+# Outside the playfield
+suba(d(ballDX),busRAM)
+bra(lo('.ball15'))
+st(d(ballDX),busAC)
+# Inside the playfield
+label('.ball14')
+wait(3)
+label('.ball15')
+xWalls += 5
+
+# Probe pixel after hypothetical X move
+ldzp(d(ballX))                  #70
+adda(d(ballDX), busRAM|ea0DregX)#71
+ld(busRAM|eaYXregAC)            #72
+bne(lo('.ball0'))               #73
+ld(val(0))                      #74
+# Update X
+ldzp(d(ballX))                  #75
+adda(d(ballDX), busRAM)         #76
+bra(lo('.ball1'))               #77
+st(d(ballX),busAC|ea0DregX)     #78
+# Remove obstacle and turn around
+label('.ball0')
+st(val(0),eaYXregAC)            #75
+suba(d(ballDX),busRAM)          #76
+st(d(ballDX),busAC)             #77
+ld(d(ballX),busRAM|ea0DregX)    #78
+# Test crossing of horizontal walls
+label('.ball1')
+ldzp(d(ballY))                  #79
+adda(d(ballDY),busRAM)          #80
+anda(val(0x7f))                 #81
+suba(val(screenPages+scrollerY))#82
+bpl(lo('.ball2'))               #83
+ld(val(0))                      #84
+# Outside the playfield
+suba(d(ballDY),busRAM)          #85
+bra(lo('.ball3'))               #86
+st(d(ballDY),busAC)             #87
+# Inside the playfield
+label('.ball2')
+wait(88-85)                     #85
+# Probe pixel after hypothetical Y move
+label('.ball3')
+ldzp(d(ballY))                  #88
+adda(d(ballDY), busRAM|ea0DregY)#89
+ld(busRAM|eaYXregAC)            #90
+bne(lo('.ball4'))               #91
+ld(val(0))                      #92
+# Update Y
+ldzp(d(ballY))                  #93
+adda(d(ballDY), busRAM)         #94
+bra(lo('.ball5'))               #95
+st(d(ballY),busAC|ea0DregY)     #96
+# Remove obstacle and turn around
+label('.ball4')
+st(val(0),eaYXregAC)            #93
+suba(d(ballDY),busRAM)          #94
+st(d(ballDY))                   #95
+ld(d(ballY),busRAM|ea0DregY)    #96
+# Redraw ball
+label('.ball5')
+st(val(63), eaYXregAC)          #97
+
+wait(198-98-demoInput-xWalls)   #98 # XXX Application cycles (scanline 0)
 
 ld(val(vFront+vPulse+vBack-2))  #198 `-2' because first and last are different
 st(d(blankY))                   #199
@@ -488,39 +614,16 @@ label('vSync3')
 xora(d(hSync))                  #40 Precompute, as during the pulse there is no time
 st(d(videoSync1))               #41
 
-# Verification of protoboard.
-# Clock in the controller input and render the result
-# 4+6+8*9+1 = 83 instructions
-
-ld(val(127-60))
-suba(d(blankY),busRAM|regY)
-ld(val(20), regX)
+# Clock in the controller input
 ldzp(d(blankY))
 xora(val(vBack-1-8))
-beq(d(lo('.L3')))
-bra(d(lo('.L4')))
-st(val(0), eaYXregOUTIX)
-label('.L3')
-st(val(2*R), eaYXregOUTIX)
-label('.L4')
-st(d(zpFree),busIN)
-ld(val(1))
-label('.L0')
-st(d(zpFree+1))
-anda(d(zpFree),busRAM)
-beq(d(lo('.L1')))
-bra(d(lo('.L2')))
-ld(val(3*(R+G)))
-label('.L1')
-ld(val(1*G))
-label('.L2')
-st(eaYXregOUTIX)
-ldzp(d(zpFree+1))
-bpl(d(lo('.L0')))
-adda(busAC)
-st(val(0), eaYXregOUTIX)
-
-nesTest = 4+6 + 8*9 + 1
+bne(d(lo('.L5')))
+bra(d(lo('.L6')))
+st(d(serialInput),busIN)
+label('.L5')
+nop()
+label('.L6')
+nesTest = 5
 
 # Update [xout] with the next sound sample every 4 scan lines.
 # Stay on the 'videoC equivalent' scan lines in vertical blank.
@@ -532,6 +635,9 @@ anda(d(0xf0))                   #46
 ora(d(leds), busRAM|ea0DregAC)  #47
 st(d(xout))                     #48
 st(val(sample), ea0DregAC|busD) #49 Reset for next sample
+
+
+
 wait(199-50 - nesTest)          #50 XXX Appplication cycles (scanline 1-43 with sample update)
 bra(d(lo('sound1')))            #199
 ld(d(videoSync0), busRAM|regOUT)#0 # Ends the vertical blank pulse at the right cycle
@@ -732,28 +838,17 @@ for y in range(scrollerY):
     v = palette(raw, x, y, 256)
     st(val(v), eaYXregOUTIX)
 
-imageName = 'rrggbb-Selfie-160x120.rgb' # color raw
-f = open(imageName)
-raw = f.read()
-f.close()
-
 # Image
 for y in range(scrollerY,120):
   ld(val(0), regX)
   ld(val(screenPages+y), regY)
   for x in range(160):
-    v = palette(raw, x, y-imageUp, 160)
-    st(val(v), eaYXregOUTIX)
+    v = 0
+    xm, xd = (x-6) % 17, (x-6) // 17
+    ym, yd = (y-scrollerY-4) % 9, (y-scrollerY-4) // 9
+    if 0<=xd<9 and 0<yd<8 and xm < 12 and ym < 5:
+       v = 1 + (39*yd + 8*xd) % 63
 
-# Alternative lines ("LED ON")
-for y in range(2):
-  ld(val(0), regX)
-  ld(val(screenPages-2+y), regY)
-  for x in range(160):
-    if 23 <= x <= 25:
-       v = 3*R
-    else:
-       v = palette(raw, x, y+ledY-imageUp, 160)
     st(val(v), eaYXregOUTIX)
 
 ld(d(retImage+1), busRAM|ea0DregY)
