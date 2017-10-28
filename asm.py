@@ -270,8 +270,15 @@ def pc():
 def zpByte(len=1):
   global _zpSize
   s = _zpSize
+  if s <= 0x80 and 0x80 < s + len:
+   s = 0x81 # Better keep [0x80] reserved
   _zpSize += len
+  assert _zpSize <= 0x100
   return s
+
+def zpReset(startFrom=0)
+  global _zpSize
+  _zpSize = startFrom
 
 def end():
   errors = 0
