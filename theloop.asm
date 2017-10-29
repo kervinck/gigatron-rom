@@ -27,8 +27,8 @@ V    V     V    V
 0014 1880  ld   $80,out
 0015 18c0  ld   $c0,out
 0016 0000  ld   $00
-0017 d218  st   [$18],x
-0018 d619  st   [$19],y
+0017 d21a  st   [$1a],x
+0018 d61b  st   [$1b],y
 0019 010e  ld   [$0e]
 001a f41d  bge  $1d
 001b 8d00  adda [y,x]
@@ -39,14 +39,14 @@ V    V     V    V
 0020 810e  adda [$0e]
 0021 80c1  adda $c1
 0022 c20f  st   [$0f]
-0023 0118  ld   [$18]
+0023 011a  ld   [$1a]
 0024 8001  adda $01
 0025 ec19  bne  $19
-0026 d218  st   [$18],x
-0027 0119  ld   [$19]
+0026 d21a  st   [$1a],x
+0027 011b  ld   [$1b]
 0028 8001  adda $01
 0029 ec19  bne  $19
-002a d619  st   [$19],y
+002a d61b  st   [$1b],y
 002b 0003  ld   $03
 002c 1880  ld   $80,out
 002d 18c0  ld   $c0,out
@@ -75,10 +75,10 @@ V    V     V    V
 0044 1402  ld   $02,y
 0045 0000  ld   $00
 0046 c202  st   [$02]
-0047 c218  st   [$18]
+0047 c21a  st   [$1a]
 0048 8200  adda ac
 0049 9200  adda ac,x
-004a 0118  ld   [$18]
+004a 011a  ld   [$1a]
 004b ce00  st   [y,x]
 004c 8001  adda $01
 004d 6040  xora $40
@@ -106,262 +106,286 @@ V    V     V    V
 0063 10fa  ld   $fa,x
 0064 dc20  st   $20,[y,x++]
 0065 cc13  st   $13,[y,x]
-0066 0050  ld   $50
-0067 c214  st   [$14]
-0068 007f  ld   $7f
-0069 c216  st   [$16]
-006a 00ff  ld   $ff
-006b c215  st   [$15]
+0066 010e  ld   [$0e]
+0067 207f  anda $7f
+0068 8010  adda $10
+0069 c215  st   [$15]
+006a c219  st   [$19]
+006b 007f  ld   $7f
 006c c217  st   [$17]
-006d c213  st   [$13]
-006e 0007  ld   $07
-006f 1880  ld   $80,out
-0070 18c0  ld   $c0,out
-0071 0077  ld   $77
-0072 c20c  st   [$0c]
-0073 0000  ld   $00
-0074 c20d  st   [$0d]
-0075 1404  ld   $04,y
-0076 e000  jmp  y,$00
-0077 000f  ld   $0f
-0078 1880  ld   $80,out
-0079 18c0  ld   $c0,out
-007a c207  st   [$07]
-007b 1401  ld   $01,y
-007c e000  jmp  y,$00
-007d 00c0  ld   $c0
-007e 0000  ld   $00
-007f 0000  ld   $00
-0080 0000  ld   $00
-* 130 times
+006d 00ff  ld   $ff
+006e c216  st   [$16]
+006f c218  st   [$18]
+0070 c213  st   [$13]
+0071 c214  st   [$14]
+0072 0007  ld   $07
+0073 1880  ld   $80,out
+0074 18c0  ld   $c0,out
+0075 007b  ld   $7b
+0076 c20c  st   [$0c]
+0077 0000  ld   $00
+0078 c20d  st   [$0d]
+0079 1404  ld   $04,y
+007a e000  jmp  y,$00
+007b 000f  ld   $0f
+007c 1880  ld   $80,out
+007d 18c0  ld   $c0,out
+007e c207  st   [$07]
+007f 1401  ld   $01,y
+0080 e000  jmp  y,$00
+0081 00c0  ld   $c0
+0082 0000  ld   $00
+0083 0000  ld   $00
+0084 0000  ld   $00
+* 126 times
 0100 c209  st   [$09]
 0101 0080  ld   $80
 0102 c20a  st   [$0a]
 0103 0110  ld   [$10]
-0104 ec25  bne  $25
+0104 ec24  bne  $24
 0105 0009  ld   $09
 0106 8111  adda [$11]
 0107 fe00  bra  ac
-0108 fc19  bra  $19
+0108 fc18  bra  $18
 0109 001f  ld   $1f
-010a 002f  ld   $2f
-010b 0037  ld   $37
-010c 0043  ld   $43
-010d 0051  ld   $51
-010e 0062  ld   $62
-010f 0074  ld   $74
-0110 0088  ld   $88
-0111 0094  ld   $94
-0112 00a2  ld   $a2
-0113 00b1  ld   $b1
-0114 00c2  ld   $c2
-0115 00d4  ld   $d4
-0116 00e8  ld   $e8
-0117 00fc  ld   $fc
-0118 001e  ld   $1e
-0119 c207  st   [$07]
-011a 30f0  anda $f0,x
-011b 1402  ld   $02,y
-011c 0d00  ld   [y,x]
-011d 1200  ld   ac,x
-011e 0d00  ld   [y,x]
-011f c211  st   [$11]
-0120 0107  ld   [$07]
-0121 200f  anda $0f
-0122 c207  st   [$07]
-0123 fc2b  bra  $2b
-0124 0112  ld   [$12]
-0125 0005  ld   $05
-0126 ec26  bne  $26
-0127 a001  suba $01
-0128 0200  nop
-0129 0110  ld   [$10]
-012a a001  suba $01
-012b c210  st   [$10]
-012c 1401  ld   $01,y
-012d 0901  ld   [y,$01]
-012e 8001  adda $01
-012f ca01  st   [y,$01]
-0130 0001  ld   $01
-0131 ec31  bne  $31
-0132 a001  suba $01
-0133 0917  ld   [y,$17]
-0134 a001  suba $01
-0135 ca17  st   [y,$17]
-0136 1413  ld   $13,y
-0137 104b  ld   $4b,x
-0138 dc00  st   $00,[y,x++]
-0139 0001  ld   $01
-013a c218  st   [$18]
-013b 2113  anda [$13]
-013c f03f  beq  $3f
-013d fc40  bra  $40
-013e dc0c  st   $0c,[y,x++]
-013f dc04  st   $04,[y,x++]
-0140 0118  ld   [$18]
-0141 f43a  bge  $3a
-0142 8200  adda ac
-0143 dc00  st   $00,[y,x++]
-0144 1114  ld   [$14],x
-0145 1516  ld   [$16],y
-0146 cc00  st   $00,[y,x]
-0147 0114  ld   [$14]
-0148 8115  adda [$15]
-0149 f44c  bge  $4c
-014a fc4d  bra  $4d
-014b 0000  ld   $00
-014c 0001  ld   $01
-014d c218  st   [$18]
-014e 0114  ld   [$14]
-014f 8115  adda [$15]
-0150 a0a0  suba $a0
-0151 e854  blt  $54
-0152 fc55  bra  $55
-0153 0118  ld   [$18]
-0154 0001  ld   $01
-0155 ec5a  bne  $5a
-0156 0000  ld   $00
-0157 a115  suba [$15]
-0158 fc5d  bra  $5d
-0159 c215  st   [$15]
-015a 0200  nop
-015b 0200  nop
-015c 0200  nop
-015d 0114  ld   [$14]
-015e 9115  adda [$15],x
-015f 0d00  ld   [y,x]
-0160 ec66  bne  $66
-0161 0000  ld   $00
-0162 0114  ld   [$14]
-0163 8115  adda [$15]
-0164 fc6a  bra  $6a
-0165 d214  st   [$14],x
-0166 cc00  st   $00,[y,x]
-0167 a115  suba [$15]
-0168 c215  st   [$15]
-0169 1114  ld   [$14],x
-016a 0116  ld   [$16]
-016b 8117  adda [$17]
-016c 207f  anda $7f
-016d a013  suba $13
-016e f473  bge  $73
-016f 0000  ld   $00
-0170 a117  suba [$17]
-0171 fc76  bra  $76
-0172 c217  st   [$17]
-0173 0200  nop
-0174 0200  nop
-0175 0200  nop
-0176 0116  ld   [$16]
-0177 9517  adda [$17],y
-0178 0d00  ld   [y,x]
-0179 ec7f  bne  $7f
-017a 0000  ld   $00
-017b 0116  ld   [$16]
-017c 8117  adda [$17]
-017d fc83  bra  $83
-017e d616  st   [$16],y
-017f cc00  st   $00,[y,x]
-0180 a117  suba [$17]
-0181 c217  st   [$17]
-0182 1516  ld   [$16],y
-0183 cc3f  st   $3f,[y,x]
-0184 0005  ld   $05
-0185 ec85  bne  $85
-0186 a001  suba $01
-0187 0200  nop
-0188 0026  ld   $26
-0189 c208  st   [$08]
-018a 1909  ld   [$09],out
-018b 0102  ld   [$02]
-018c 2003  anda $03
-018d 8001  adda $01
-018e 190a  ld   [$0a],out
-018f d602  st   [$02],y
-0190 007f  ld   $7f
-0191 29fe  anda [y,$fe]
-0192 89fa  adda [y,$fa]
-0193 cafe  st   [y,$fe]
-0194 3080  anda $80,x
-0195 0500  ld   [x]
-0196 89ff  adda [y,$ff]
-0197 89fb  adda [y,$fb]
-0198 caff  st   [y,$ff]
-0199 0200  nop
-019a 0200  nop
-019b 30fc  anda $fc,x
-019c 1402  ld   $02,y
-019d 0d00  ld   [y,x]
-019e 8103  adda [$03]
-019f c203  st   [$03]
-01a0 0200  nop
-01a1 0200  nop
-01a2 0200  nop
-01a3 0200  nop
-01a4 0106  ld   [$06]
-01a5 0200  nop
-01a6 1909  ld   [$09],out
-01a7 0108  ld   [$08]
-01a8 f0d3  beq  $d3
-01a9 a001  suba $01
-01aa c208  st   [$08]
-01ab a020  suba $20
-01ac ecb1  bne  $b1
-01ad a002  suba $02
-01ae 00c0  ld   $c0
-01af fcb6  bra  $b6
-01b0 c209  st   [$09]
-01b1 ecb5  bne  $b5
-01b2 0040  ld   $40
-01b3 fcb7  bra  $b7
-01b4 c209  st   [$09]
-01b5 0109  ld   [$09]
-01b6 0200  nop
-01b7 6040  xora $40
-01b8 c20a  st   [$0a]
-01b9 0108  ld   [$08]
-01ba 6018  xora $18
-01bb ecbe  bne  $be
-01bc fcbf  bra  $bf
-01bd c313  st   in,[$13]
-01be 0200  nop
-01bf 0108  ld   [$08]
-01c0 2003  anda $03
-01c1 eccd  bne  $cd
-01c2 0103  ld   [$03]
-01c3 20f0  anda $f0
-01c4 4107  ora  [$07]
-01c5 c206  st   [$06]
-01c6 c003  st   $03,[$03]
-01c7 0046  ld   $46
-01c8 ecc8  bne  $c8
-01c9 a001  suba $01
-01ca 0200  nop
-01cb fc8b  bra  $8b
-01cc 1909  ld   [$09],out
-01cd 0048  ld   $48
-01ce ecce  bne  $ce
-01cf a001  suba $01
-01d0 0200  nop
-01d1 fc8b  bra  $8b
-01d2 1909  ld   [$09],out
-01d3 0000  ld   $00
-01d4 c209  st   [$09]
-01d5 c20b  st   [$0b]
-01d6 0050  ld   $50
-01d7 ecd7  bne  $d7
-01d8 a001  suba $01
-01d9 0200  nop
-01da 0102  ld   [$02]
-01db 2003  anda $03
-01dc 8001  adda $01
-01dd 1402  ld   $02,y
-01de e0b0  jmp  y,$b0
-01df 1880  ld   $80,out
-01e0 0000  ld   $00
-01e1 0000  ld   $00
-01e2 0000  ld   $00
-* 32 times
+010a 0027  ld   $27
+010b 0033  ld   $33
+010c 0041  ld   $41
+010d 0052  ld   $52
+010e 0064  ld   $64
+010f 0078  ld   $78
+0110 0084  ld   $84
+0111 0092  ld   $92
+0112 00a1  ld   $a1
+0113 00b2  ld   $b2
+0114 00c4  ld   $c4
+0115 00d8  ld   $d8
+0116 00ec  ld   $ec
+0117 000e  ld   $0e
+0118 c207  st   [$07]
+0119 30f0  anda $f0,x
+011a 1402  ld   $02,y
+011b 0d00  ld   [y,x]
+011c 1200  ld   ac,x
+011d 0d00  ld   [y,x]
+011e c211  st   [$11]
+011f 0107  ld   [$07]
+0120 200f  anda $0f
+0121 c207  st   [$07]
+0122 fc2a  bra  $2a
+0123 0112  ld   [$12]
+0124 0005  ld   $05
+0125 ec25  bne  $25
+0126 a001  suba $01
+0127 0200  nop
+0128 0110  ld   [$10]
+0129 a001  suba $01
+012a c210  st   [$10]
+012b 1401  ld   $01,y
+012c 0901  ld   [y,$01]
+012d 8001  adda $01
+012e ca01  st   [y,$01]
+012f 0001  ld   $01
+0130 ec30  bne  $30
+0131 a001  suba $01
+0132 0917  ld   [y,$17]
+0133 a001  suba $01
+0134 ca17  st   [y,$17]
+0135 1115  ld   [$15],x
+0136 1517  ld   [$17],y
+0137 cc00  st   $00,[y,x]
+0138 0115  ld   [$15]
+0139 8116  adda [$16]
+013a f43d  bge  $3d
+013b fc3e  bra  $3e
+013c 0000  ld   $00
+013d 0001  ld   $01
+013e c21a  st   [$1a]
+013f 0115  ld   [$15]
+0140 8116  adda [$16]
+0141 a0a0  suba $a0
+0142 e845  blt  $45
+0143 fc46  bra  $46
+0144 011a  ld   [$1a]
+0145 0001  ld   $01
+0146 ec4b  bne  $4b
+0147 0000  ld   $00
+0148 a116  suba [$16]
+0149 fc4e  bra  $4e
+014a c216  st   [$16]
+014b 0200  nop
+014c 0200  nop
+014d 0200  nop
+014e 0115  ld   [$15]
+014f 9116  adda [$16],x
+0150 0d00  ld   [y,x]
+0151 ec57  bne  $57
+0152 0000  ld   $00
+0153 0115  ld   [$15]
+0154 8116  adda [$16]
+0155 fc5b  bra  $5b
+0156 d215  st   [$15],x
+0157 cc00  st   $00,[y,x]
+0158 a116  suba [$16]
+0159 c216  st   [$16]
+015a 1115  ld   [$15],x
+015b 0117  ld   [$17]
+015c 8118  adda [$18]
+015d 207f  anda $7f
+015e a013  suba $13
+015f f464  bge  $64
+0160 0000  ld   $00
+0161 a118  suba [$18]
+0162 fc67  bra  $67
+0163 c218  st   [$18]
+0164 0200  nop
+0165 0200  nop
+0166 0200  nop
+0167 0117  ld   [$17]
+0168 9518  adda [$18],y
+0169 0d00  ld   [y,x]
+016a ec70  bne  $70
+016b 0000  ld   $00
+016c 0117  ld   [$17]
+016d 8118  adda [$18]
+016e fc74  bra  $74
+016f d617  st   [$17],y
+0170 cc00  st   $00,[y,x]
+0171 a118  suba [$18]
+0172 c218  st   [$18]
+0173 1517  ld   [$17],y
+0174 cc3f  st   $3f,[y,x]
+0175 0028  ld   $28
+0176 ec76  bne  $76
+0177 a001  suba $01
+0178 0026  ld   $26
+0179 c208  st   [$08]
+017a 1909  ld   [$09],out
+017b 0102  ld   [$02]
+017c 2003  anda $03
+017d 8001  adda $01
+017e 190a  ld   [$0a],out
+017f d602  st   [$02],y
+0180 007f  ld   $7f
+0181 29fe  anda [y,$fe]
+0182 89fa  adda [y,$fa]
+0183 cafe  st   [y,$fe]
+0184 3080  anda $80,x
+0185 0500  ld   [x]
+0186 89ff  adda [y,$ff]
+0187 89fb  adda [y,$fb]
+0188 caff  st   [y,$ff]
+0189 0200  nop
+018a 0200  nop
+018b 30fc  anda $fc,x
+018c 1402  ld   $02,y
+018d 0d00  ld   [y,x]
+018e 8103  adda [$03]
+018f c203  st   [$03]
+0190 0200  nop
+0191 0200  nop
+0192 0200  nop
+0193 0200  nop
+0194 0106  ld   [$06]
+0195 0200  nop
+0196 1909  ld   [$09],out
+0197 0108  ld   [$08]
+0198 f0c3  beq  $c3
+0199 a001  suba $01
+019a c208  st   [$08]
+019b a020  suba $20
+019c eca1  bne  $a1
+019d a002  suba $02
+019e 00c0  ld   $c0
+019f fca6  bra  $a6
+01a0 c209  st   [$09]
+01a1 eca5  bne  $a5
+01a2 0040  ld   $40
+01a3 fca7  bra  $a7
+01a4 c209  st   [$09]
+01a5 0109  ld   [$09]
+01a6 0200  nop
+01a7 6040  xora $40
+01a8 c20a  st   [$0a]
+01a9 0108  ld   [$08]
+01aa 6018  xora $18
+01ab ecae  bne  $ae
+01ac fcaf  bra  $af
+01ad c313  st   in,[$13]
+01ae 0200  nop
+01af 0108  ld   [$08]
+01b0 2003  anda $03
+01b1 ecbd  bne  $bd
+01b2 0103  ld   [$03]
+01b3 20f0  anda $f0
+01b4 4107  ora  [$07]
+01b5 c206  st   [$06]
+01b6 c003  st   $03,[$03]
+01b7 0046  ld   $46
+01b8 ecb8  bne  $b8
+01b9 a001  suba $01
+01ba 0200  nop
+01bb fc7b  bra  $7b
+01bc 1909  ld   [$09],out
+01bd 0048  ld   $48
+01be ecbe  bne  $be
+01bf a001  suba $01
+01c0 0200  nop
+01c1 fc7b  bra  $7b
+01c2 1909  ld   [$09],out
+01c3 0000  ld   $00
+01c4 c209  st   [$09]
+01c5 c20b  st   [$0b]
+01c6 0113  ld   [$13]
+01c7 f0ca  beq  $ca
+01c8 fccb  bra  $cb
+01c9 c214  st   [$14]
+01ca 0040  ld   $40
+01cb 4114  ora  [$14]
+01cc c214  st   [$14]
+01cd 2001  anda $01
+01ce ecd1  bne  $d1
+01cf fcd2  bra  $d2
+01d0 0000  ld   $00
+01d1 0001  ld   $01
+01d2 8119  adda [$19]
+01d3 c219  st   [$19]
+01d4 0114  ld   [$14]
+01d5 2002  anda $02
+01d6 ecd9  bne  $d9
+01d7 fcda  bra  $da
+01d8 0000  ld   $00
+01d9 00ff  ld   $ff
+01da 8119  adda [$19]
+01db c219  st   [$19]
+01dc 147f  ld   $7f,y
+01dd 1119  ld   [$19],x
+01de dc00  st   $00,[y,x++]
+01df 0001  ld   $01
+01e0 c21a  st   [$1a]
+01e1 2114  anda [$14]
+01e2 f0e5  beq  $e5
+01e3 fce6  bra  $e6
+01e4 dc0c  st   $0c,[y,x++]
+01e5 dc08  st   $08,[y,x++]
+01e6 011a  ld   [$1a]
+01e7 f4e0  bge  $e0
+01e8 8200  adda ac
+01e9 dc00  st   $00,[y,x++]
+01ea 0024  ld   $24
+01eb eceb  bne  $eb
+01ec a001  suba $01
+01ed 0200  nop
+01ee 0102  ld   [$02]
+01ef 2003  anda $03
+01f0 8001  adda $01
+01f1 1402  ld   $02,y
+01f2 e0b0  jmp  y,$b0
+01f3 1880  ld   $80,out
+01f4 0000  ld   $00
+01f5 0000  ld   $00
+01f6 0000  ld   $00
+* 12 times
 0200 00c8  ld   $c8
 0201 c20b  st   [$0b]
 0202 1401  ld   $01,y
@@ -3341,80 +3365,152 @@ V    V     V    V
 16a6 dc00  st   $00,[y,x++]
 16a7 dc00  st   $00,[y,x++]
 16a8 dc00  st   $00,[y,x++]
-* 160 times
+* 6 times
+16ac dc3f  st   $3f,[y,x++]
+16ad dc3f  st   $3f,[y,x++]
+16ae dc3f  st   $3f,[y,x++]
+* 12 times
+16b8 dc00  st   $00,[y,x++]
+16b9 dc00  st   $00,[y,x++]
+16ba dc00  st   $00,[y,x++]
+* 5 times
+16bd dc2f  st   $2f,[y,x++]
+16be dc2f  st   $2f,[y,x++]
+16bf dc2f  st   $2f,[y,x++]
+* 12 times
+16c9 dc00  st   $00,[y,x++]
+16ca dc00  st   $00,[y,x++]
+16cb dc00  st   $00,[y,x++]
+* 5 times
+16ce dc1f  st   $1f,[y,x++]
+16cf dc1f  st   $1f,[y,x++]
+16d0 dc1f  st   $1f,[y,x++]
+* 12 times
+16da dc00  st   $00,[y,x++]
+16db dc00  st   $00,[y,x++]
+16dc dc00  st   $00,[y,x++]
+* 5 times
+16df dc0f  st   $0f,[y,x++]
+16e0 dc0f  st   $0f,[y,x++]
+16e1 dc0f  st   $0f,[y,x++]
+* 12 times
+16eb dc00  st   $00,[y,x++]
+16ec dc00  st   $00,[y,x++]
+16ed dc00  st   $00,[y,x++]
+* 5 times
+16f0 dc0e  st   $0e,[y,x++]
+16f1 dc0e  st   $0e,[y,x++]
+16f2 dc0e  st   $0e,[y,x++]
+* 12 times
+16fc dc00  st   $00,[y,x++]
+16fd dc00  st   $00,[y,x++]
+16fe dc00  st   $00,[y,x++]
+* 5 times
+1701 dc0a  st   $0a,[y,x++]
+1702 dc0a  st   $0a,[y,x++]
+1703 dc0a  st   $0a,[y,x++]
+* 12 times
+170d dc00  st   $00,[y,x++]
+170e dc00  st   $00,[y,x++]
+170f dc00  st   $00,[y,x++]
+* 5 times
+1712 dc0b  st   $0b,[y,x++]
+1713 dc0b  st   $0b,[y,x++]
+1714 dc0b  st   $0b,[y,x++]
+* 12 times
+171e dc00  st   $00,[y,x++]
+171f dc00  st   $00,[y,x++]
+1720 dc00  st   $00,[y,x++]
+* 5 times
+1723 dc07  st   $07,[y,x++]
+1724 dc07  st   $07,[y,x++]
+1725 dc07  st   $07,[y,x++]
+* 12 times
+172f dc00  st   $00,[y,x++]
+1730 dc00  st   $00,[y,x++]
+1731 dc00  st   $00,[y,x++]
+* 5 times
+1734 dc1b  st   $1b,[y,x++]
+1735 dc1b  st   $1b,[y,x++]
+1736 dc1b  st   $1b,[y,x++]
+* 12 times
+1740 dc00  st   $00,[y,x++]
+1741 dc00  st   $00,[y,x++]
+1742 dc00  st   $00,[y,x++]
+* 6 times
 1746 1000  ld   $00,x
 1747 1420  ld   $20,y
 1748 dc00  st   $00,[y,x++]
 1749 dc00  st   $00,[y,x++]
 174a dc00  st   $00,[y,x++]
 * 6 times
-174e dc28  st   $28,[y,x++]
-174f dc28  st   $28,[y,x++]
-1750 dc28  st   $28,[y,x++]
+174e dc3f  st   $3f,[y,x++]
+174f dc3f  st   $3f,[y,x++]
+1750 dc3f  st   $3f,[y,x++]
 * 12 times
 175a dc00  st   $00,[y,x++]
 175b dc00  st   $00,[y,x++]
 175c dc00  st   $00,[y,x++]
 * 5 times
-175f dc30  st   $30,[y,x++]
-1760 dc30  st   $30,[y,x++]
-1761 dc30  st   $30,[y,x++]
+175f dc2f  st   $2f,[y,x++]
+1760 dc2f  st   $2f,[y,x++]
+1761 dc2f  st   $2f,[y,x++]
 * 12 times
 176b dc00  st   $00,[y,x++]
 176c dc00  st   $00,[y,x++]
 176d dc00  st   $00,[y,x++]
 * 5 times
-1770 dc38  st   $38,[y,x++]
-1771 dc38  st   $38,[y,x++]
-1772 dc38  st   $38,[y,x++]
+1770 dc1f  st   $1f,[y,x++]
+1771 dc1f  st   $1f,[y,x++]
+1772 dc1f  st   $1f,[y,x++]
 * 12 times
 177c dc00  st   $00,[y,x++]
 177d dc00  st   $00,[y,x++]
 177e dc00  st   $00,[y,x++]
 * 5 times
-1781 dc01  st   $01,[y,x++]
-1782 dc01  st   $01,[y,x++]
-1783 dc01  st   $01,[y,x++]
+1781 dc0f  st   $0f,[y,x++]
+1782 dc0f  st   $0f,[y,x++]
+1783 dc0f  st   $0f,[y,x++]
 * 12 times
 178d dc00  st   $00,[y,x++]
 178e dc00  st   $00,[y,x++]
 178f dc00  st   $00,[y,x++]
 * 5 times
-1792 dc09  st   $09,[y,x++]
-1793 dc09  st   $09,[y,x++]
-1794 dc09  st   $09,[y,x++]
+1792 dc0e  st   $0e,[y,x++]
+1793 dc0e  st   $0e,[y,x++]
+1794 dc0e  st   $0e,[y,x++]
 * 12 times
 179e dc00  st   $00,[y,x++]
 179f dc00  st   $00,[y,x++]
 17a0 dc00  st   $00,[y,x++]
 * 5 times
-17a3 dc11  st   $11,[y,x++]
-17a4 dc11  st   $11,[y,x++]
-17a5 dc11  st   $11,[y,x++]
+17a3 dc0a  st   $0a,[y,x++]
+17a4 dc0a  st   $0a,[y,x++]
+17a5 dc0a  st   $0a,[y,x++]
 * 12 times
 17af dc00  st   $00,[y,x++]
 17b0 dc00  st   $00,[y,x++]
 17b1 dc00  st   $00,[y,x++]
 * 5 times
-17b4 dc19  st   $19,[y,x++]
-17b5 dc19  st   $19,[y,x++]
-17b6 dc19  st   $19,[y,x++]
+17b4 dc0b  st   $0b,[y,x++]
+17b5 dc0b  st   $0b,[y,x++]
+17b6 dc0b  st   $0b,[y,x++]
 * 12 times
 17c0 dc00  st   $00,[y,x++]
 17c1 dc00  st   $00,[y,x++]
 17c2 dc00  st   $00,[y,x++]
 * 5 times
-17c5 dc21  st   $21,[y,x++]
-17c6 dc21  st   $21,[y,x++]
-17c7 dc21  st   $21,[y,x++]
+17c5 dc07  st   $07,[y,x++]
+17c6 dc07  st   $07,[y,x++]
+17c7 dc07  st   $07,[y,x++]
 * 12 times
 17d1 dc00  st   $00,[y,x++]
 17d2 dc00  st   $00,[y,x++]
 17d3 dc00  st   $00,[y,x++]
 * 5 times
-17d6 dc29  st   $29,[y,x++]
-17d7 dc29  st   $29,[y,x++]
-17d8 dc29  st   $29,[y,x++]
+17d6 dc1b  st   $1b,[y,x++]
+17d7 dc1b  st   $1b,[y,x++]
+17d8 dc1b  st   $1b,[y,x++]
 * 12 times
 17e2 dc00  st   $00,[y,x++]
 17e3 dc00  st   $00,[y,x++]
@@ -3426,73 +3522,73 @@ V    V     V    V
 17eb dc00  st   $00,[y,x++]
 17ec dc00  st   $00,[y,x++]
 * 6 times
-17f0 dc28  st   $28,[y,x++]
-17f1 dc28  st   $28,[y,x++]
-17f2 dc28  st   $28,[y,x++]
+17f0 dc3f  st   $3f,[y,x++]
+17f1 dc3f  st   $3f,[y,x++]
+17f2 dc3f  st   $3f,[y,x++]
 * 12 times
 17fc dc00  st   $00,[y,x++]
 17fd dc00  st   $00,[y,x++]
 17fe dc00  st   $00,[y,x++]
 * 5 times
-1801 dc30  st   $30,[y,x++]
-1802 dc30  st   $30,[y,x++]
-1803 dc30  st   $30,[y,x++]
+1801 dc2f  st   $2f,[y,x++]
+1802 dc2f  st   $2f,[y,x++]
+1803 dc2f  st   $2f,[y,x++]
 * 12 times
 180d dc00  st   $00,[y,x++]
 180e dc00  st   $00,[y,x++]
 180f dc00  st   $00,[y,x++]
 * 5 times
-1812 dc38  st   $38,[y,x++]
-1813 dc38  st   $38,[y,x++]
-1814 dc38  st   $38,[y,x++]
+1812 dc1f  st   $1f,[y,x++]
+1813 dc1f  st   $1f,[y,x++]
+1814 dc1f  st   $1f,[y,x++]
 * 12 times
 181e dc00  st   $00,[y,x++]
 181f dc00  st   $00,[y,x++]
 1820 dc00  st   $00,[y,x++]
 * 5 times
-1823 dc01  st   $01,[y,x++]
-1824 dc01  st   $01,[y,x++]
-1825 dc01  st   $01,[y,x++]
+1823 dc0f  st   $0f,[y,x++]
+1824 dc0f  st   $0f,[y,x++]
+1825 dc0f  st   $0f,[y,x++]
 * 12 times
 182f dc00  st   $00,[y,x++]
 1830 dc00  st   $00,[y,x++]
 1831 dc00  st   $00,[y,x++]
 * 5 times
-1834 dc09  st   $09,[y,x++]
-1835 dc09  st   $09,[y,x++]
-1836 dc09  st   $09,[y,x++]
+1834 dc0e  st   $0e,[y,x++]
+1835 dc0e  st   $0e,[y,x++]
+1836 dc0e  st   $0e,[y,x++]
 * 12 times
 1840 dc00  st   $00,[y,x++]
 1841 dc00  st   $00,[y,x++]
 1842 dc00  st   $00,[y,x++]
 * 5 times
-1845 dc11  st   $11,[y,x++]
-1846 dc11  st   $11,[y,x++]
-1847 dc11  st   $11,[y,x++]
+1845 dc0a  st   $0a,[y,x++]
+1846 dc0a  st   $0a,[y,x++]
+1847 dc0a  st   $0a,[y,x++]
 * 12 times
 1851 dc00  st   $00,[y,x++]
 1852 dc00  st   $00,[y,x++]
 1853 dc00  st   $00,[y,x++]
 * 5 times
-1856 dc19  st   $19,[y,x++]
-1857 dc19  st   $19,[y,x++]
-1858 dc19  st   $19,[y,x++]
+1856 dc0b  st   $0b,[y,x++]
+1857 dc0b  st   $0b,[y,x++]
+1858 dc0b  st   $0b,[y,x++]
 * 12 times
 1862 dc00  st   $00,[y,x++]
 1863 dc00  st   $00,[y,x++]
 1864 dc00  st   $00,[y,x++]
 * 5 times
-1867 dc21  st   $21,[y,x++]
-1868 dc21  st   $21,[y,x++]
-1869 dc21  st   $21,[y,x++]
+1867 dc07  st   $07,[y,x++]
+1868 dc07  st   $07,[y,x++]
+1869 dc07  st   $07,[y,x++]
 * 12 times
 1873 dc00  st   $00,[y,x++]
 1874 dc00  st   $00,[y,x++]
 1875 dc00  st   $00,[y,x++]
 * 5 times
-1878 dc29  st   $29,[y,x++]
-1879 dc29  st   $29,[y,x++]
-187a dc29  st   $29,[y,x++]
+1878 dc1b  st   $1b,[y,x++]
+1879 dc1b  st   $1b,[y,x++]
+187a dc1b  st   $1b,[y,x++]
 * 12 times
 1884 dc00  st   $00,[y,x++]
 1885 dc00  st   $00,[y,x++]
@@ -3504,73 +3600,73 @@ V    V     V    V
 188d dc00  st   $00,[y,x++]
 188e dc00  st   $00,[y,x++]
 * 6 times
-1892 dc28  st   $28,[y,x++]
-1893 dc28  st   $28,[y,x++]
-1894 dc28  st   $28,[y,x++]
+1892 dc3f  st   $3f,[y,x++]
+1893 dc3f  st   $3f,[y,x++]
+1894 dc3f  st   $3f,[y,x++]
 * 12 times
 189e dc00  st   $00,[y,x++]
 189f dc00  st   $00,[y,x++]
 18a0 dc00  st   $00,[y,x++]
 * 5 times
-18a3 dc30  st   $30,[y,x++]
-18a4 dc30  st   $30,[y,x++]
-18a5 dc30  st   $30,[y,x++]
+18a3 dc2f  st   $2f,[y,x++]
+18a4 dc2f  st   $2f,[y,x++]
+18a5 dc2f  st   $2f,[y,x++]
 * 12 times
 18af dc00  st   $00,[y,x++]
 18b0 dc00  st   $00,[y,x++]
 18b1 dc00  st   $00,[y,x++]
 * 5 times
-18b4 dc38  st   $38,[y,x++]
-18b5 dc38  st   $38,[y,x++]
-18b6 dc38  st   $38,[y,x++]
+18b4 dc1f  st   $1f,[y,x++]
+18b5 dc1f  st   $1f,[y,x++]
+18b6 dc1f  st   $1f,[y,x++]
 * 12 times
 18c0 dc00  st   $00,[y,x++]
 18c1 dc00  st   $00,[y,x++]
 18c2 dc00  st   $00,[y,x++]
 * 5 times
-18c5 dc01  st   $01,[y,x++]
-18c6 dc01  st   $01,[y,x++]
-18c7 dc01  st   $01,[y,x++]
+18c5 dc0f  st   $0f,[y,x++]
+18c6 dc0f  st   $0f,[y,x++]
+18c7 dc0f  st   $0f,[y,x++]
 * 12 times
 18d1 dc00  st   $00,[y,x++]
 18d2 dc00  st   $00,[y,x++]
 18d3 dc00  st   $00,[y,x++]
 * 5 times
-18d6 dc09  st   $09,[y,x++]
-18d7 dc09  st   $09,[y,x++]
-18d8 dc09  st   $09,[y,x++]
+18d6 dc0e  st   $0e,[y,x++]
+18d7 dc0e  st   $0e,[y,x++]
+18d8 dc0e  st   $0e,[y,x++]
 * 12 times
 18e2 dc00  st   $00,[y,x++]
 18e3 dc00  st   $00,[y,x++]
 18e4 dc00  st   $00,[y,x++]
 * 5 times
-18e7 dc11  st   $11,[y,x++]
-18e8 dc11  st   $11,[y,x++]
-18e9 dc11  st   $11,[y,x++]
+18e7 dc0a  st   $0a,[y,x++]
+18e8 dc0a  st   $0a,[y,x++]
+18e9 dc0a  st   $0a,[y,x++]
 * 12 times
 18f3 dc00  st   $00,[y,x++]
 18f4 dc00  st   $00,[y,x++]
 18f5 dc00  st   $00,[y,x++]
 * 5 times
-18f8 dc19  st   $19,[y,x++]
-18f9 dc19  st   $19,[y,x++]
-18fa dc19  st   $19,[y,x++]
+18f8 dc0b  st   $0b,[y,x++]
+18f9 dc0b  st   $0b,[y,x++]
+18fa dc0b  st   $0b,[y,x++]
 * 12 times
 1904 dc00  st   $00,[y,x++]
 1905 dc00  st   $00,[y,x++]
 1906 dc00  st   $00,[y,x++]
 * 5 times
-1909 dc21  st   $21,[y,x++]
-190a dc21  st   $21,[y,x++]
-190b dc21  st   $21,[y,x++]
+1909 dc07  st   $07,[y,x++]
+190a dc07  st   $07,[y,x++]
+190b dc07  st   $07,[y,x++]
 * 12 times
 1915 dc00  st   $00,[y,x++]
 1916 dc00  st   $00,[y,x++]
 1917 dc00  st   $00,[y,x++]
 * 5 times
-191a dc29  st   $29,[y,x++]
-191b dc29  st   $29,[y,x++]
-191c dc29  st   $29,[y,x++]
+191a dc1b  st   $1b,[y,x++]
+191b dc1b  st   $1b,[y,x++]
+191c dc1b  st   $1b,[y,x++]
 * 12 times
 1926 dc00  st   $00,[y,x++]
 1927 dc00  st   $00,[y,x++]
@@ -3582,73 +3678,73 @@ V    V     V    V
 192f dc00  st   $00,[y,x++]
 1930 dc00  st   $00,[y,x++]
 * 6 times
-1934 dc28  st   $28,[y,x++]
-1935 dc28  st   $28,[y,x++]
-1936 dc28  st   $28,[y,x++]
+1934 dc3f  st   $3f,[y,x++]
+1935 dc3f  st   $3f,[y,x++]
+1936 dc3f  st   $3f,[y,x++]
 * 12 times
 1940 dc00  st   $00,[y,x++]
 1941 dc00  st   $00,[y,x++]
 1942 dc00  st   $00,[y,x++]
 * 5 times
-1945 dc30  st   $30,[y,x++]
-1946 dc30  st   $30,[y,x++]
-1947 dc30  st   $30,[y,x++]
+1945 dc2f  st   $2f,[y,x++]
+1946 dc2f  st   $2f,[y,x++]
+1947 dc2f  st   $2f,[y,x++]
 * 12 times
 1951 dc00  st   $00,[y,x++]
 1952 dc00  st   $00,[y,x++]
 1953 dc00  st   $00,[y,x++]
 * 5 times
-1956 dc38  st   $38,[y,x++]
-1957 dc38  st   $38,[y,x++]
-1958 dc38  st   $38,[y,x++]
+1956 dc1f  st   $1f,[y,x++]
+1957 dc1f  st   $1f,[y,x++]
+1958 dc1f  st   $1f,[y,x++]
 * 12 times
 1962 dc00  st   $00,[y,x++]
 1963 dc00  st   $00,[y,x++]
 1964 dc00  st   $00,[y,x++]
 * 5 times
-1967 dc01  st   $01,[y,x++]
-1968 dc01  st   $01,[y,x++]
-1969 dc01  st   $01,[y,x++]
+1967 dc0f  st   $0f,[y,x++]
+1968 dc0f  st   $0f,[y,x++]
+1969 dc0f  st   $0f,[y,x++]
 * 12 times
 1973 dc00  st   $00,[y,x++]
 1974 dc00  st   $00,[y,x++]
 1975 dc00  st   $00,[y,x++]
 * 5 times
-1978 dc09  st   $09,[y,x++]
-1979 dc09  st   $09,[y,x++]
-197a dc09  st   $09,[y,x++]
+1978 dc0e  st   $0e,[y,x++]
+1979 dc0e  st   $0e,[y,x++]
+197a dc0e  st   $0e,[y,x++]
 * 12 times
 1984 dc00  st   $00,[y,x++]
 1985 dc00  st   $00,[y,x++]
 1986 dc00  st   $00,[y,x++]
 * 5 times
-1989 dc11  st   $11,[y,x++]
-198a dc11  st   $11,[y,x++]
-198b dc11  st   $11,[y,x++]
+1989 dc0a  st   $0a,[y,x++]
+198a dc0a  st   $0a,[y,x++]
+198b dc0a  st   $0a,[y,x++]
 * 12 times
 1995 dc00  st   $00,[y,x++]
 1996 dc00  st   $00,[y,x++]
 1997 dc00  st   $00,[y,x++]
 * 5 times
-199a dc19  st   $19,[y,x++]
-199b dc19  st   $19,[y,x++]
-199c dc19  st   $19,[y,x++]
+199a dc0b  st   $0b,[y,x++]
+199b dc0b  st   $0b,[y,x++]
+199c dc0b  st   $0b,[y,x++]
 * 12 times
 19a6 dc00  st   $00,[y,x++]
 19a7 dc00  st   $00,[y,x++]
 19a8 dc00  st   $00,[y,x++]
 * 5 times
-19ab dc21  st   $21,[y,x++]
-19ac dc21  st   $21,[y,x++]
-19ad dc21  st   $21,[y,x++]
+19ab dc07  st   $07,[y,x++]
+19ac dc07  st   $07,[y,x++]
+19ad dc07  st   $07,[y,x++]
 * 12 times
 19b7 dc00  st   $00,[y,x++]
 19b8 dc00  st   $00,[y,x++]
 19b9 dc00  st   $00,[y,x++]
 * 5 times
-19bc dc29  st   $29,[y,x++]
-19bd dc29  st   $29,[y,x++]
-19be dc29  st   $29,[y,x++]
+19bc dc1b  st   $1b,[y,x++]
+19bd dc1b  st   $1b,[y,x++]
+19be dc1b  st   $1b,[y,x++]
 * 12 times
 19c8 dc00  st   $00,[y,x++]
 19c9 dc00  st   $00,[y,x++]
@@ -3659,79 +3755,7 @@ V    V     V    V
 19d0 dc00  st   $00,[y,x++]
 19d1 dc00  st   $00,[y,x++]
 19d2 dc00  st   $00,[y,x++]
-* 6 times
-19d6 dc28  st   $28,[y,x++]
-19d7 dc28  st   $28,[y,x++]
-19d8 dc28  st   $28,[y,x++]
-* 12 times
-19e2 dc00  st   $00,[y,x++]
-19e3 dc00  st   $00,[y,x++]
-19e4 dc00  st   $00,[y,x++]
-* 5 times
-19e7 dc30  st   $30,[y,x++]
-19e8 dc30  st   $30,[y,x++]
-19e9 dc30  st   $30,[y,x++]
-* 12 times
-19f3 dc00  st   $00,[y,x++]
-19f4 dc00  st   $00,[y,x++]
-19f5 dc00  st   $00,[y,x++]
-* 5 times
-19f8 dc38  st   $38,[y,x++]
-19f9 dc38  st   $38,[y,x++]
-19fa dc38  st   $38,[y,x++]
-* 12 times
-1a04 dc00  st   $00,[y,x++]
-1a05 dc00  st   $00,[y,x++]
-1a06 dc00  st   $00,[y,x++]
-* 5 times
-1a09 dc01  st   $01,[y,x++]
-1a0a dc01  st   $01,[y,x++]
-1a0b dc01  st   $01,[y,x++]
-* 12 times
-1a15 dc00  st   $00,[y,x++]
-1a16 dc00  st   $00,[y,x++]
-1a17 dc00  st   $00,[y,x++]
-* 5 times
-1a1a dc09  st   $09,[y,x++]
-1a1b dc09  st   $09,[y,x++]
-1a1c dc09  st   $09,[y,x++]
-* 12 times
-1a26 dc00  st   $00,[y,x++]
-1a27 dc00  st   $00,[y,x++]
-1a28 dc00  st   $00,[y,x++]
-* 5 times
-1a2b dc11  st   $11,[y,x++]
-1a2c dc11  st   $11,[y,x++]
-1a2d dc11  st   $11,[y,x++]
-* 12 times
-1a37 dc00  st   $00,[y,x++]
-1a38 dc00  st   $00,[y,x++]
-1a39 dc00  st   $00,[y,x++]
-* 5 times
-1a3c dc19  st   $19,[y,x++]
-1a3d dc19  st   $19,[y,x++]
-1a3e dc19  st   $19,[y,x++]
-* 12 times
-1a48 dc00  st   $00,[y,x++]
-1a49 dc00  st   $00,[y,x++]
-1a4a dc00  st   $00,[y,x++]
-* 5 times
-1a4d dc21  st   $21,[y,x++]
-1a4e dc21  st   $21,[y,x++]
-1a4f dc21  st   $21,[y,x++]
-* 12 times
-1a59 dc00  st   $00,[y,x++]
-1a5a dc00  st   $00,[y,x++]
-1a5b dc00  st   $00,[y,x++]
-* 5 times
-1a5e dc29  st   $29,[y,x++]
-1a5f dc29  st   $29,[y,x++]
-1a60 dc29  st   $29,[y,x++]
-* 12 times
-1a6a dc00  st   $00,[y,x++]
-1a6b dc00  st   $00,[y,x++]
-1a6c dc00  st   $00,[y,x++]
-* 6 times
+* 160 times
 1a70 1000  ld   $00,x
 1a71 1425  ld   $25,y
 1a72 dc00  st   $00,[y,x++]
@@ -3749,86 +3773,230 @@ V    V     V    V
 1bb6 dc00  st   $00,[y,x++]
 1bb7 dc00  st   $00,[y,x++]
 1bb8 dc00  st   $00,[y,x++]
-* 160 times
+* 6 times
+1bbc dc3e  st   $3e,[y,x++]
+1bbd dc3e  st   $3e,[y,x++]
+1bbe dc3e  st   $3e,[y,x++]
+* 12 times
+1bc8 dc00  st   $00,[y,x++]
+1bc9 dc00  st   $00,[y,x++]
+1bca dc00  st   $00,[y,x++]
+* 5 times
+1bcd dc2e  st   $2e,[y,x++]
+1bce dc2e  st   $2e,[y,x++]
+1bcf dc2e  st   $2e,[y,x++]
+* 12 times
+1bd9 dc00  st   $00,[y,x++]
+1bda dc00  st   $00,[y,x++]
+1bdb dc00  st   $00,[y,x++]
+* 5 times
+1bde dc1e  st   $1e,[y,x++]
+1bdf dc1e  st   $1e,[y,x++]
+1be0 dc1e  st   $1e,[y,x++]
+* 12 times
+1bea dc00  st   $00,[y,x++]
+1beb dc00  st   $00,[y,x++]
+1bec dc00  st   $00,[y,x++]
+* 5 times
+1bef dc0d  st   $0d,[y,x++]
+1bf0 dc0d  st   $0d,[y,x++]
+1bf1 dc0d  st   $0d,[y,x++]
+* 12 times
+1bfb dc00  st   $00,[y,x++]
+1bfc dc00  st   $00,[y,x++]
+1bfd dc00  st   $00,[y,x++]
+* 5 times
+1c00 dc09  st   $09,[y,x++]
+1c01 dc09  st   $09,[y,x++]
+1c02 dc09  st   $09,[y,x++]
+* 12 times
+1c0c dc00  st   $00,[y,x++]
+1c0d dc00  st   $00,[y,x++]
+1c0e dc00  st   $00,[y,x++]
+* 5 times
+1c11 dc06  st   $06,[y,x++]
+1c12 dc06  st   $06,[y,x++]
+1c13 dc06  st   $06,[y,x++]
+* 12 times
+1c1d dc00  st   $00,[y,x++]
+1c1e dc00  st   $00,[y,x++]
+1c1f dc00  st   $00,[y,x++]
+* 5 times
+1c22 dc02  st   $02,[y,x++]
+1c23 dc02  st   $02,[y,x++]
+1c24 dc02  st   $02,[y,x++]
+* 12 times
+1c2e dc00  st   $00,[y,x++]
+1c2f dc00  st   $00,[y,x++]
+1c30 dc00  st   $00,[y,x++]
+* 5 times
+1c33 dc03  st   $03,[y,x++]
+1c34 dc03  st   $03,[y,x++]
+1c35 dc03  st   $03,[y,x++]
+* 12 times
+1c3f dc00  st   $00,[y,x++]
+1c40 dc00  st   $00,[y,x++]
+1c41 dc00  st   $00,[y,x++]
+* 5 times
+1c44 dc17  st   $17,[y,x++]
+1c45 dc17  st   $17,[y,x++]
+1c46 dc17  st   $17,[y,x++]
+* 12 times
+1c50 dc00  st   $00,[y,x++]
+1c51 dc00  st   $00,[y,x++]
+1c52 dc00  st   $00,[y,x++]
+* 6 times
 1c56 1000  ld   $00,x
 1c57 1428  ld   $28,y
 1c58 dc00  st   $00,[y,x++]
 1c59 dc00  st   $00,[y,x++]
 1c5a dc00  st   $00,[y,x++]
-* 160 times
+* 6 times
+1c5e dc3e  st   $3e,[y,x++]
+1c5f dc3e  st   $3e,[y,x++]
+1c60 dc3e  st   $3e,[y,x++]
+* 12 times
+1c6a dc00  st   $00,[y,x++]
+1c6b dc00  st   $00,[y,x++]
+1c6c dc00  st   $00,[y,x++]
+* 5 times
+1c6f dc2e  st   $2e,[y,x++]
+1c70 dc2e  st   $2e,[y,x++]
+1c71 dc2e  st   $2e,[y,x++]
+* 12 times
+1c7b dc00  st   $00,[y,x++]
+1c7c dc00  st   $00,[y,x++]
+1c7d dc00  st   $00,[y,x++]
+* 5 times
+1c80 dc1e  st   $1e,[y,x++]
+1c81 dc1e  st   $1e,[y,x++]
+1c82 dc1e  st   $1e,[y,x++]
+* 12 times
+1c8c dc00  st   $00,[y,x++]
+1c8d dc00  st   $00,[y,x++]
+1c8e dc00  st   $00,[y,x++]
+* 5 times
+1c91 dc0d  st   $0d,[y,x++]
+1c92 dc0d  st   $0d,[y,x++]
+1c93 dc0d  st   $0d,[y,x++]
+* 12 times
+1c9d dc00  st   $00,[y,x++]
+1c9e dc00  st   $00,[y,x++]
+1c9f dc00  st   $00,[y,x++]
+* 5 times
+1ca2 dc09  st   $09,[y,x++]
+1ca3 dc09  st   $09,[y,x++]
+1ca4 dc09  st   $09,[y,x++]
+* 12 times
+1cae dc00  st   $00,[y,x++]
+1caf dc00  st   $00,[y,x++]
+1cb0 dc00  st   $00,[y,x++]
+* 5 times
+1cb3 dc06  st   $06,[y,x++]
+1cb4 dc06  st   $06,[y,x++]
+1cb5 dc06  st   $06,[y,x++]
+* 12 times
+1cbf dc00  st   $00,[y,x++]
+1cc0 dc00  st   $00,[y,x++]
+1cc1 dc00  st   $00,[y,x++]
+* 5 times
+1cc4 dc02  st   $02,[y,x++]
+1cc5 dc02  st   $02,[y,x++]
+1cc6 dc02  st   $02,[y,x++]
+* 12 times
+1cd0 dc00  st   $00,[y,x++]
+1cd1 dc00  st   $00,[y,x++]
+1cd2 dc00  st   $00,[y,x++]
+* 5 times
+1cd5 dc03  st   $03,[y,x++]
+1cd6 dc03  st   $03,[y,x++]
+1cd7 dc03  st   $03,[y,x++]
+* 12 times
+1ce1 dc00  st   $00,[y,x++]
+1ce2 dc00  st   $00,[y,x++]
+1ce3 dc00  st   $00,[y,x++]
+* 5 times
+1ce6 dc17  st   $17,[y,x++]
+1ce7 dc17  st   $17,[y,x++]
+1ce8 dc17  st   $17,[y,x++]
+* 12 times
+1cf2 dc00  st   $00,[y,x++]
+1cf3 dc00  st   $00,[y,x++]
+1cf4 dc00  st   $00,[y,x++]
+* 6 times
 1cf8 1000  ld   $00,x
 1cf9 1429  ld   $29,y
 1cfa dc00  st   $00,[y,x++]
 1cfb dc00  st   $00,[y,x++]
 1cfc dc00  st   $00,[y,x++]
 * 6 times
-1d00 dc10  st   $10,[y,x++]
-1d01 dc10  st   $10,[y,x++]
-1d02 dc10  st   $10,[y,x++]
+1d00 dc3e  st   $3e,[y,x++]
+1d01 dc3e  st   $3e,[y,x++]
+1d02 dc3e  st   $3e,[y,x++]
 * 12 times
 1d0c dc00  st   $00,[y,x++]
 1d0d dc00  st   $00,[y,x++]
 1d0e dc00  st   $00,[y,x++]
 * 5 times
-1d11 dc18  st   $18,[y,x++]
-1d12 dc18  st   $18,[y,x++]
-1d13 dc18  st   $18,[y,x++]
+1d11 dc2e  st   $2e,[y,x++]
+1d12 dc2e  st   $2e,[y,x++]
+1d13 dc2e  st   $2e,[y,x++]
 * 12 times
 1d1d dc00  st   $00,[y,x++]
 1d1e dc00  st   $00,[y,x++]
 1d1f dc00  st   $00,[y,x++]
 * 5 times
-1d22 dc20  st   $20,[y,x++]
-1d23 dc20  st   $20,[y,x++]
-1d24 dc20  st   $20,[y,x++]
+1d22 dc1e  st   $1e,[y,x++]
+1d23 dc1e  st   $1e,[y,x++]
+1d24 dc1e  st   $1e,[y,x++]
 * 12 times
 1d2e dc00  st   $00,[y,x++]
 1d2f dc00  st   $00,[y,x++]
 1d30 dc00  st   $00,[y,x++]
 * 5 times
-1d33 dc28  st   $28,[y,x++]
-1d34 dc28  st   $28,[y,x++]
-1d35 dc28  st   $28,[y,x++]
+1d33 dc0d  st   $0d,[y,x++]
+1d34 dc0d  st   $0d,[y,x++]
+1d35 dc0d  st   $0d,[y,x++]
 * 12 times
 1d3f dc00  st   $00,[y,x++]
 1d40 dc00  st   $00,[y,x++]
 1d41 dc00  st   $00,[y,x++]
 * 5 times
-1d44 dc30  st   $30,[y,x++]
-1d45 dc30  st   $30,[y,x++]
-1d46 dc30  st   $30,[y,x++]
+1d44 dc09  st   $09,[y,x++]
+1d45 dc09  st   $09,[y,x++]
+1d46 dc09  st   $09,[y,x++]
 * 12 times
 1d50 dc00  st   $00,[y,x++]
 1d51 dc00  st   $00,[y,x++]
 1d52 dc00  st   $00,[y,x++]
 * 5 times
-1d55 dc38  st   $38,[y,x++]
-1d56 dc38  st   $38,[y,x++]
-1d57 dc38  st   $38,[y,x++]
+1d55 dc06  st   $06,[y,x++]
+1d56 dc06  st   $06,[y,x++]
+1d57 dc06  st   $06,[y,x++]
 * 12 times
 1d61 dc00  st   $00,[y,x++]
 1d62 dc00  st   $00,[y,x++]
 1d63 dc00  st   $00,[y,x++]
 * 5 times
-1d66 dc01  st   $01,[y,x++]
-1d67 dc01  st   $01,[y,x++]
-1d68 dc01  st   $01,[y,x++]
+1d66 dc02  st   $02,[y,x++]
+1d67 dc02  st   $02,[y,x++]
+1d68 dc02  st   $02,[y,x++]
 * 12 times
 1d72 dc00  st   $00,[y,x++]
 1d73 dc00  st   $00,[y,x++]
 1d74 dc00  st   $00,[y,x++]
 * 5 times
-1d77 dc09  st   $09,[y,x++]
-1d78 dc09  st   $09,[y,x++]
-1d79 dc09  st   $09,[y,x++]
+1d77 dc03  st   $03,[y,x++]
+1d78 dc03  st   $03,[y,x++]
+1d79 dc03  st   $03,[y,x++]
 * 12 times
 1d83 dc00  st   $00,[y,x++]
 1d84 dc00  st   $00,[y,x++]
 1d85 dc00  st   $00,[y,x++]
 * 5 times
-1d88 dc11  st   $11,[y,x++]
-1d89 dc11  st   $11,[y,x++]
-1d8a dc11  st   $11,[y,x++]
+1d88 dc17  st   $17,[y,x++]
+1d89 dc17  st   $17,[y,x++]
+1d8a dc17  st   $17,[y,x++]
 * 12 times
 1d94 dc00  st   $00,[y,x++]
 1d95 dc00  st   $00,[y,x++]
@@ -3840,73 +4008,73 @@ V    V     V    V
 1d9d dc00  st   $00,[y,x++]
 1d9e dc00  st   $00,[y,x++]
 * 6 times
-1da2 dc10  st   $10,[y,x++]
-1da3 dc10  st   $10,[y,x++]
-1da4 dc10  st   $10,[y,x++]
+1da2 dc3e  st   $3e,[y,x++]
+1da3 dc3e  st   $3e,[y,x++]
+1da4 dc3e  st   $3e,[y,x++]
 * 12 times
 1dae dc00  st   $00,[y,x++]
 1daf dc00  st   $00,[y,x++]
 1db0 dc00  st   $00,[y,x++]
 * 5 times
-1db3 dc18  st   $18,[y,x++]
-1db4 dc18  st   $18,[y,x++]
-1db5 dc18  st   $18,[y,x++]
+1db3 dc2e  st   $2e,[y,x++]
+1db4 dc2e  st   $2e,[y,x++]
+1db5 dc2e  st   $2e,[y,x++]
 * 12 times
 1dbf dc00  st   $00,[y,x++]
 1dc0 dc00  st   $00,[y,x++]
 1dc1 dc00  st   $00,[y,x++]
 * 5 times
-1dc4 dc20  st   $20,[y,x++]
-1dc5 dc20  st   $20,[y,x++]
-1dc6 dc20  st   $20,[y,x++]
+1dc4 dc1e  st   $1e,[y,x++]
+1dc5 dc1e  st   $1e,[y,x++]
+1dc6 dc1e  st   $1e,[y,x++]
 * 12 times
 1dd0 dc00  st   $00,[y,x++]
 1dd1 dc00  st   $00,[y,x++]
 1dd2 dc00  st   $00,[y,x++]
 * 5 times
-1dd5 dc28  st   $28,[y,x++]
-1dd6 dc28  st   $28,[y,x++]
-1dd7 dc28  st   $28,[y,x++]
+1dd5 dc0d  st   $0d,[y,x++]
+1dd6 dc0d  st   $0d,[y,x++]
+1dd7 dc0d  st   $0d,[y,x++]
 * 12 times
 1de1 dc00  st   $00,[y,x++]
 1de2 dc00  st   $00,[y,x++]
 1de3 dc00  st   $00,[y,x++]
 * 5 times
-1de6 dc30  st   $30,[y,x++]
-1de7 dc30  st   $30,[y,x++]
-1de8 dc30  st   $30,[y,x++]
+1de6 dc09  st   $09,[y,x++]
+1de7 dc09  st   $09,[y,x++]
+1de8 dc09  st   $09,[y,x++]
 * 12 times
 1df2 dc00  st   $00,[y,x++]
 1df3 dc00  st   $00,[y,x++]
 1df4 dc00  st   $00,[y,x++]
 * 5 times
-1df7 dc38  st   $38,[y,x++]
-1df8 dc38  st   $38,[y,x++]
-1df9 dc38  st   $38,[y,x++]
+1df7 dc06  st   $06,[y,x++]
+1df8 dc06  st   $06,[y,x++]
+1df9 dc06  st   $06,[y,x++]
 * 12 times
 1e03 dc00  st   $00,[y,x++]
 1e04 dc00  st   $00,[y,x++]
 1e05 dc00  st   $00,[y,x++]
 * 5 times
-1e08 dc01  st   $01,[y,x++]
-1e09 dc01  st   $01,[y,x++]
-1e0a dc01  st   $01,[y,x++]
+1e08 dc02  st   $02,[y,x++]
+1e09 dc02  st   $02,[y,x++]
+1e0a dc02  st   $02,[y,x++]
 * 12 times
 1e14 dc00  st   $00,[y,x++]
 1e15 dc00  st   $00,[y,x++]
 1e16 dc00  st   $00,[y,x++]
 * 5 times
-1e19 dc09  st   $09,[y,x++]
-1e1a dc09  st   $09,[y,x++]
-1e1b dc09  st   $09,[y,x++]
+1e19 dc03  st   $03,[y,x++]
+1e1a dc03  st   $03,[y,x++]
+1e1b dc03  st   $03,[y,x++]
 * 12 times
 1e25 dc00  st   $00,[y,x++]
 1e26 dc00  st   $00,[y,x++]
 1e27 dc00  st   $00,[y,x++]
 * 5 times
-1e2a dc11  st   $11,[y,x++]
-1e2b dc11  st   $11,[y,x++]
-1e2c dc11  st   $11,[y,x++]
+1e2a dc17  st   $17,[y,x++]
+1e2b dc17  st   $17,[y,x++]
+1e2c dc17  st   $17,[y,x++]
 * 12 times
 1e36 dc00  st   $00,[y,x++]
 1e37 dc00  st   $00,[y,x++]
@@ -3918,73 +4086,73 @@ V    V     V    V
 1e3f dc00  st   $00,[y,x++]
 1e40 dc00  st   $00,[y,x++]
 * 6 times
-1e44 dc10  st   $10,[y,x++]
-1e45 dc10  st   $10,[y,x++]
-1e46 dc10  st   $10,[y,x++]
+1e44 dc3e  st   $3e,[y,x++]
+1e45 dc3e  st   $3e,[y,x++]
+1e46 dc3e  st   $3e,[y,x++]
 * 12 times
 1e50 dc00  st   $00,[y,x++]
 1e51 dc00  st   $00,[y,x++]
 1e52 dc00  st   $00,[y,x++]
 * 5 times
-1e55 dc18  st   $18,[y,x++]
-1e56 dc18  st   $18,[y,x++]
-1e57 dc18  st   $18,[y,x++]
+1e55 dc2e  st   $2e,[y,x++]
+1e56 dc2e  st   $2e,[y,x++]
+1e57 dc2e  st   $2e,[y,x++]
 * 12 times
 1e61 dc00  st   $00,[y,x++]
 1e62 dc00  st   $00,[y,x++]
 1e63 dc00  st   $00,[y,x++]
 * 5 times
-1e66 dc20  st   $20,[y,x++]
-1e67 dc20  st   $20,[y,x++]
-1e68 dc20  st   $20,[y,x++]
+1e66 dc1e  st   $1e,[y,x++]
+1e67 dc1e  st   $1e,[y,x++]
+1e68 dc1e  st   $1e,[y,x++]
 * 12 times
 1e72 dc00  st   $00,[y,x++]
 1e73 dc00  st   $00,[y,x++]
 1e74 dc00  st   $00,[y,x++]
 * 5 times
-1e77 dc28  st   $28,[y,x++]
-1e78 dc28  st   $28,[y,x++]
-1e79 dc28  st   $28,[y,x++]
+1e77 dc0d  st   $0d,[y,x++]
+1e78 dc0d  st   $0d,[y,x++]
+1e79 dc0d  st   $0d,[y,x++]
 * 12 times
 1e83 dc00  st   $00,[y,x++]
 1e84 dc00  st   $00,[y,x++]
 1e85 dc00  st   $00,[y,x++]
 * 5 times
-1e88 dc30  st   $30,[y,x++]
-1e89 dc30  st   $30,[y,x++]
-1e8a dc30  st   $30,[y,x++]
+1e88 dc09  st   $09,[y,x++]
+1e89 dc09  st   $09,[y,x++]
+1e8a dc09  st   $09,[y,x++]
 * 12 times
 1e94 dc00  st   $00,[y,x++]
 1e95 dc00  st   $00,[y,x++]
 1e96 dc00  st   $00,[y,x++]
 * 5 times
-1e99 dc38  st   $38,[y,x++]
-1e9a dc38  st   $38,[y,x++]
-1e9b dc38  st   $38,[y,x++]
+1e99 dc06  st   $06,[y,x++]
+1e9a dc06  st   $06,[y,x++]
+1e9b dc06  st   $06,[y,x++]
 * 12 times
 1ea5 dc00  st   $00,[y,x++]
 1ea6 dc00  st   $00,[y,x++]
 1ea7 dc00  st   $00,[y,x++]
 * 5 times
-1eaa dc01  st   $01,[y,x++]
-1eab dc01  st   $01,[y,x++]
-1eac dc01  st   $01,[y,x++]
+1eaa dc02  st   $02,[y,x++]
+1eab dc02  st   $02,[y,x++]
+1eac dc02  st   $02,[y,x++]
 * 12 times
 1eb6 dc00  st   $00,[y,x++]
 1eb7 dc00  st   $00,[y,x++]
 1eb8 dc00  st   $00,[y,x++]
 * 5 times
-1ebb dc09  st   $09,[y,x++]
-1ebc dc09  st   $09,[y,x++]
-1ebd dc09  st   $09,[y,x++]
+1ebb dc03  st   $03,[y,x++]
+1ebc dc03  st   $03,[y,x++]
+1ebd dc03  st   $03,[y,x++]
 * 12 times
 1ec7 dc00  st   $00,[y,x++]
 1ec8 dc00  st   $00,[y,x++]
 1ec9 dc00  st   $00,[y,x++]
 * 5 times
-1ecc dc11  st   $11,[y,x++]
-1ecd dc11  st   $11,[y,x++]
-1ece dc11  st   $11,[y,x++]
+1ecc dc17  st   $17,[y,x++]
+1ecd dc17  st   $17,[y,x++]
+1ece dc17  st   $17,[y,x++]
 * 12 times
 1ed8 dc00  st   $00,[y,x++]
 1ed9 dc00  st   $00,[y,x++]
@@ -3995,157 +4163,13 @@ V    V     V    V
 1ee0 dc00  st   $00,[y,x++]
 1ee1 dc00  st   $00,[y,x++]
 1ee2 dc00  st   $00,[y,x++]
-* 6 times
-1ee6 dc10  st   $10,[y,x++]
-1ee7 dc10  st   $10,[y,x++]
-1ee8 dc10  st   $10,[y,x++]
-* 12 times
-1ef2 dc00  st   $00,[y,x++]
-1ef3 dc00  st   $00,[y,x++]
-1ef4 dc00  st   $00,[y,x++]
-* 5 times
-1ef7 dc18  st   $18,[y,x++]
-1ef8 dc18  st   $18,[y,x++]
-1ef9 dc18  st   $18,[y,x++]
-* 12 times
-1f03 dc00  st   $00,[y,x++]
-1f04 dc00  st   $00,[y,x++]
-1f05 dc00  st   $00,[y,x++]
-* 5 times
-1f08 dc20  st   $20,[y,x++]
-1f09 dc20  st   $20,[y,x++]
-1f0a dc20  st   $20,[y,x++]
-* 12 times
-1f14 dc00  st   $00,[y,x++]
-1f15 dc00  st   $00,[y,x++]
-1f16 dc00  st   $00,[y,x++]
-* 5 times
-1f19 dc28  st   $28,[y,x++]
-1f1a dc28  st   $28,[y,x++]
-1f1b dc28  st   $28,[y,x++]
-* 12 times
-1f25 dc00  st   $00,[y,x++]
-1f26 dc00  st   $00,[y,x++]
-1f27 dc00  st   $00,[y,x++]
-* 5 times
-1f2a dc30  st   $30,[y,x++]
-1f2b dc30  st   $30,[y,x++]
-1f2c dc30  st   $30,[y,x++]
-* 12 times
-1f36 dc00  st   $00,[y,x++]
-1f37 dc00  st   $00,[y,x++]
-1f38 dc00  st   $00,[y,x++]
-* 5 times
-1f3b dc38  st   $38,[y,x++]
-1f3c dc38  st   $38,[y,x++]
-1f3d dc38  st   $38,[y,x++]
-* 12 times
-1f47 dc00  st   $00,[y,x++]
-1f48 dc00  st   $00,[y,x++]
-1f49 dc00  st   $00,[y,x++]
-* 5 times
-1f4c dc01  st   $01,[y,x++]
-1f4d dc01  st   $01,[y,x++]
-1f4e dc01  st   $01,[y,x++]
-* 12 times
-1f58 dc00  st   $00,[y,x++]
-1f59 dc00  st   $00,[y,x++]
-1f5a dc00  st   $00,[y,x++]
-* 5 times
-1f5d dc09  st   $09,[y,x++]
-1f5e dc09  st   $09,[y,x++]
-1f5f dc09  st   $09,[y,x++]
-* 12 times
-1f69 dc00  st   $00,[y,x++]
-1f6a dc00  st   $00,[y,x++]
-1f6b dc00  st   $00,[y,x++]
-* 5 times
-1f6e dc11  st   $11,[y,x++]
-1f6f dc11  st   $11,[y,x++]
-1f70 dc11  st   $11,[y,x++]
-* 12 times
-1f7a dc00  st   $00,[y,x++]
-1f7b dc00  st   $00,[y,x++]
-1f7c dc00  st   $00,[y,x++]
-* 6 times
+* 160 times
 1f80 1000  ld   $00,x
 1f81 142d  ld   $2d,y
 1f82 dc00  st   $00,[y,x++]
 1f83 dc00  st   $00,[y,x++]
 1f84 dc00  st   $00,[y,x++]
-* 6 times
-1f88 dc10  st   $10,[y,x++]
-1f89 dc10  st   $10,[y,x++]
-1f8a dc10  st   $10,[y,x++]
-* 12 times
-1f94 dc00  st   $00,[y,x++]
-1f95 dc00  st   $00,[y,x++]
-1f96 dc00  st   $00,[y,x++]
-* 5 times
-1f99 dc18  st   $18,[y,x++]
-1f9a dc18  st   $18,[y,x++]
-1f9b dc18  st   $18,[y,x++]
-* 12 times
-1fa5 dc00  st   $00,[y,x++]
-1fa6 dc00  st   $00,[y,x++]
-1fa7 dc00  st   $00,[y,x++]
-* 5 times
-1faa dc20  st   $20,[y,x++]
-1fab dc20  st   $20,[y,x++]
-1fac dc20  st   $20,[y,x++]
-* 12 times
-1fb6 dc00  st   $00,[y,x++]
-1fb7 dc00  st   $00,[y,x++]
-1fb8 dc00  st   $00,[y,x++]
-* 5 times
-1fbb dc28  st   $28,[y,x++]
-1fbc dc28  st   $28,[y,x++]
-1fbd dc28  st   $28,[y,x++]
-* 12 times
-1fc7 dc00  st   $00,[y,x++]
-1fc8 dc00  st   $00,[y,x++]
-1fc9 dc00  st   $00,[y,x++]
-* 5 times
-1fcc dc30  st   $30,[y,x++]
-1fcd dc30  st   $30,[y,x++]
-1fce dc30  st   $30,[y,x++]
-* 12 times
-1fd8 dc00  st   $00,[y,x++]
-1fd9 dc00  st   $00,[y,x++]
-1fda dc00  st   $00,[y,x++]
-* 5 times
-1fdd dc38  st   $38,[y,x++]
-1fde dc38  st   $38,[y,x++]
-1fdf dc38  st   $38,[y,x++]
-* 12 times
-1fe9 dc00  st   $00,[y,x++]
-1fea dc00  st   $00,[y,x++]
-1feb dc00  st   $00,[y,x++]
-* 5 times
-1fee dc01  st   $01,[y,x++]
-1fef dc01  st   $01,[y,x++]
-1ff0 dc01  st   $01,[y,x++]
-* 12 times
-1ffa dc00  st   $00,[y,x++]
-1ffb dc00  st   $00,[y,x++]
-1ffc dc00  st   $00,[y,x++]
-* 5 times
-1fff dc09  st   $09,[y,x++]
-2000 dc09  st   $09,[y,x++]
-2001 dc09  st   $09,[y,x++]
-* 12 times
-200b dc00  st   $00,[y,x++]
-200c dc00  st   $00,[y,x++]
-200d dc00  st   $00,[y,x++]
-* 5 times
-2010 dc11  st   $11,[y,x++]
-2011 dc11  st   $11,[y,x++]
-2012 dc11  st   $11,[y,x++]
-* 12 times
-201c dc00  st   $00,[y,x++]
-201d dc00  st   $00,[y,x++]
-201e dc00  st   $00,[y,x++]
-* 6 times
+* 160 times
 2022 1000  ld   $00,x
 2023 142e  ld   $2e,y
 2024 dc00  st   $00,[y,x++]
@@ -4157,92 +4181,308 @@ V    V     V    V
 20c6 dc00  st   $00,[y,x++]
 20c7 dc00  st   $00,[y,x++]
 20c8 dc00  st   $00,[y,x++]
-* 160 times
+* 6 times
+20cc dc3d  st   $3d,[y,x++]
+20cd dc3d  st   $3d,[y,x++]
+20ce dc3d  st   $3d,[y,x++]
+* 12 times
+20d8 dc00  st   $00,[y,x++]
+20d9 dc00  st   $00,[y,x++]
+20da dc00  st   $00,[y,x++]
+* 5 times
+20dd dc2d  st   $2d,[y,x++]
+20de dc2d  st   $2d,[y,x++]
+20df dc2d  st   $2d,[y,x++]
+* 12 times
+20e9 dc00  st   $00,[y,x++]
+20ea dc00  st   $00,[y,x++]
+20eb dc00  st   $00,[y,x++]
+* 5 times
+20ee dc1d  st   $1d,[y,x++]
+20ef dc1d  st   $1d,[y,x++]
+20f0 dc1d  st   $1d,[y,x++]
+* 12 times
+20fa dc00  st   $00,[y,x++]
+20fb dc00  st   $00,[y,x++]
+20fc dc00  st   $00,[y,x++]
+* 5 times
+20ff dc0c  st   $0c,[y,x++]
+2100 dc0c  st   $0c,[y,x++]
+2101 dc0c  st   $0c,[y,x++]
+* 12 times
+210b dc00  st   $00,[y,x++]
+210c dc00  st   $00,[y,x++]
+210d dc00  st   $00,[y,x++]
+* 5 times
+2110 dc05  st   $05,[y,x++]
+2111 dc05  st   $05,[y,x++]
+2112 dc05  st   $05,[y,x++]
+* 12 times
+211c dc00  st   $00,[y,x++]
+211d dc00  st   $00,[y,x++]
+211e dc00  st   $00,[y,x++]
+* 5 times
+2121 dc01  st   $01,[y,x++]
+2122 dc01  st   $01,[y,x++]
+2123 dc01  st   $01,[y,x++]
+* 12 times
+212d dc00  st   $00,[y,x++]
+212e dc00  st   $00,[y,x++]
+212f dc00  st   $00,[y,x++]
+* 5 times
+2132 dc12  st   $12,[y,x++]
+2133 dc12  st   $12,[y,x++]
+2134 dc12  st   $12,[y,x++]
+* 12 times
+213e dc00  st   $00,[y,x++]
+213f dc00  st   $00,[y,x++]
+2140 dc00  st   $00,[y,x++]
+* 5 times
+2143 dc13  st   $13,[y,x++]
+2144 dc13  st   $13,[y,x++]
+2145 dc13  st   $13,[y,x++]
+* 12 times
+214f dc00  st   $00,[y,x++]
+2150 dc00  st   $00,[y,x++]
+2151 dc00  st   $00,[y,x++]
+* 5 times
+2154 dc23  st   $23,[y,x++]
+2155 dc23  st   $23,[y,x++]
+2156 dc23  st   $23,[y,x++]
+* 12 times
+2160 dc00  st   $00,[y,x++]
+2161 dc00  st   $00,[y,x++]
+2162 dc00  st   $00,[y,x++]
+* 6 times
 2166 1000  ld   $00,x
 2167 1430  ld   $30,y
 2168 dc00  st   $00,[y,x++]
 2169 dc00  st   $00,[y,x++]
 216a dc00  st   $00,[y,x++]
-* 160 times
+* 6 times
+216e dc3d  st   $3d,[y,x++]
+216f dc3d  st   $3d,[y,x++]
+2170 dc3d  st   $3d,[y,x++]
+* 12 times
+217a dc00  st   $00,[y,x++]
+217b dc00  st   $00,[y,x++]
+217c dc00  st   $00,[y,x++]
+* 5 times
+217f dc2d  st   $2d,[y,x++]
+2180 dc2d  st   $2d,[y,x++]
+2181 dc2d  st   $2d,[y,x++]
+* 12 times
+218b dc00  st   $00,[y,x++]
+218c dc00  st   $00,[y,x++]
+218d dc00  st   $00,[y,x++]
+* 5 times
+2190 dc1d  st   $1d,[y,x++]
+2191 dc1d  st   $1d,[y,x++]
+2192 dc1d  st   $1d,[y,x++]
+* 12 times
+219c dc00  st   $00,[y,x++]
+219d dc00  st   $00,[y,x++]
+219e dc00  st   $00,[y,x++]
+* 5 times
+21a1 dc0c  st   $0c,[y,x++]
+21a2 dc0c  st   $0c,[y,x++]
+21a3 dc0c  st   $0c,[y,x++]
+* 12 times
+21ad dc00  st   $00,[y,x++]
+21ae dc00  st   $00,[y,x++]
+21af dc00  st   $00,[y,x++]
+* 5 times
+21b2 dc05  st   $05,[y,x++]
+21b3 dc05  st   $05,[y,x++]
+21b4 dc05  st   $05,[y,x++]
+* 12 times
+21be dc00  st   $00,[y,x++]
+21bf dc00  st   $00,[y,x++]
+21c0 dc00  st   $00,[y,x++]
+* 5 times
+21c3 dc01  st   $01,[y,x++]
+21c4 dc01  st   $01,[y,x++]
+21c5 dc01  st   $01,[y,x++]
+* 12 times
+21cf dc00  st   $00,[y,x++]
+21d0 dc00  st   $00,[y,x++]
+21d1 dc00  st   $00,[y,x++]
+* 5 times
+21d4 dc12  st   $12,[y,x++]
+21d5 dc12  st   $12,[y,x++]
+21d6 dc12  st   $12,[y,x++]
+* 12 times
+21e0 dc00  st   $00,[y,x++]
+21e1 dc00  st   $00,[y,x++]
+21e2 dc00  st   $00,[y,x++]
+* 5 times
+21e5 dc13  st   $13,[y,x++]
+21e6 dc13  st   $13,[y,x++]
+21e7 dc13  st   $13,[y,x++]
+* 12 times
+21f1 dc00  st   $00,[y,x++]
+21f2 dc00  st   $00,[y,x++]
+21f3 dc00  st   $00,[y,x++]
+* 5 times
+21f6 dc23  st   $23,[y,x++]
+21f7 dc23  st   $23,[y,x++]
+21f8 dc23  st   $23,[y,x++]
+* 12 times
+2202 dc00  st   $00,[y,x++]
+2203 dc00  st   $00,[y,x++]
+2204 dc00  st   $00,[y,x++]
+* 6 times
 2208 1000  ld   $00,x
 2209 1431  ld   $31,y
 220a dc00  st   $00,[y,x++]
 220b dc00  st   $00,[y,x++]
 220c dc00  st   $00,[y,x++]
-* 160 times
+* 6 times
+2210 dc3d  st   $3d,[y,x++]
+2211 dc3d  st   $3d,[y,x++]
+2212 dc3d  st   $3d,[y,x++]
+* 12 times
+221c dc00  st   $00,[y,x++]
+221d dc00  st   $00,[y,x++]
+221e dc00  st   $00,[y,x++]
+* 5 times
+2221 dc2d  st   $2d,[y,x++]
+2222 dc2d  st   $2d,[y,x++]
+2223 dc2d  st   $2d,[y,x++]
+* 12 times
+222d dc00  st   $00,[y,x++]
+222e dc00  st   $00,[y,x++]
+222f dc00  st   $00,[y,x++]
+* 5 times
+2232 dc1d  st   $1d,[y,x++]
+2233 dc1d  st   $1d,[y,x++]
+2234 dc1d  st   $1d,[y,x++]
+* 12 times
+223e dc00  st   $00,[y,x++]
+223f dc00  st   $00,[y,x++]
+2240 dc00  st   $00,[y,x++]
+* 5 times
+2243 dc0c  st   $0c,[y,x++]
+2244 dc0c  st   $0c,[y,x++]
+2245 dc0c  st   $0c,[y,x++]
+* 12 times
+224f dc00  st   $00,[y,x++]
+2250 dc00  st   $00,[y,x++]
+2251 dc00  st   $00,[y,x++]
+* 5 times
+2254 dc05  st   $05,[y,x++]
+2255 dc05  st   $05,[y,x++]
+2256 dc05  st   $05,[y,x++]
+* 12 times
+2260 dc00  st   $00,[y,x++]
+2261 dc00  st   $00,[y,x++]
+2262 dc00  st   $00,[y,x++]
+* 5 times
+2265 dc01  st   $01,[y,x++]
+2266 dc01  st   $01,[y,x++]
+2267 dc01  st   $01,[y,x++]
+* 12 times
+2271 dc00  st   $00,[y,x++]
+2272 dc00  st   $00,[y,x++]
+2273 dc00  st   $00,[y,x++]
+* 5 times
+2276 dc12  st   $12,[y,x++]
+2277 dc12  st   $12,[y,x++]
+2278 dc12  st   $12,[y,x++]
+* 12 times
+2282 dc00  st   $00,[y,x++]
+2283 dc00  st   $00,[y,x++]
+2284 dc00  st   $00,[y,x++]
+* 5 times
+2287 dc13  st   $13,[y,x++]
+2288 dc13  st   $13,[y,x++]
+2289 dc13  st   $13,[y,x++]
+* 12 times
+2293 dc00  st   $00,[y,x++]
+2294 dc00  st   $00,[y,x++]
+2295 dc00  st   $00,[y,x++]
+* 5 times
+2298 dc23  st   $23,[y,x++]
+2299 dc23  st   $23,[y,x++]
+229a dc23  st   $23,[y,x++]
+* 12 times
+22a4 dc00  st   $00,[y,x++]
+22a5 dc00  st   $00,[y,x++]
+22a6 dc00  st   $00,[y,x++]
+* 6 times
 22aa 1000  ld   $00,x
 22ab 1432  ld   $32,y
 22ac dc00  st   $00,[y,x++]
 22ad dc00  st   $00,[y,x++]
 22ae dc00  st   $00,[y,x++]
 * 6 times
-22b2 dc37  st   $37,[y,x++]
-22b3 dc37  st   $37,[y,x++]
-22b4 dc37  st   $37,[y,x++]
+22b2 dc3d  st   $3d,[y,x++]
+22b3 dc3d  st   $3d,[y,x++]
+22b4 dc3d  st   $3d,[y,x++]
 * 12 times
 22be dc00  st   $00,[y,x++]
 22bf dc00  st   $00,[y,x++]
 22c0 dc00  st   $00,[y,x++]
 * 5 times
-22c3 dc3f  st   $3f,[y,x++]
-22c4 dc3f  st   $3f,[y,x++]
-22c5 dc3f  st   $3f,[y,x++]
+22c3 dc2d  st   $2d,[y,x++]
+22c4 dc2d  st   $2d,[y,x++]
+22c5 dc2d  st   $2d,[y,x++]
 * 12 times
 22cf dc00  st   $00,[y,x++]
 22d0 dc00  st   $00,[y,x++]
 22d1 dc00  st   $00,[y,x++]
 * 5 times
-22d4 dc08  st   $08,[y,x++]
-22d5 dc08  st   $08,[y,x++]
-22d6 dc08  st   $08,[y,x++]
+22d4 dc1d  st   $1d,[y,x++]
+22d5 dc1d  st   $1d,[y,x++]
+22d6 dc1d  st   $1d,[y,x++]
 * 12 times
 22e0 dc00  st   $00,[y,x++]
 22e1 dc00  st   $00,[y,x++]
 22e2 dc00  st   $00,[y,x++]
 * 5 times
-22e5 dc10  st   $10,[y,x++]
-22e6 dc10  st   $10,[y,x++]
-22e7 dc10  st   $10,[y,x++]
+22e5 dc0c  st   $0c,[y,x++]
+22e6 dc0c  st   $0c,[y,x++]
+22e7 dc0c  st   $0c,[y,x++]
 * 12 times
 22f1 dc00  st   $00,[y,x++]
 22f2 dc00  st   $00,[y,x++]
 22f3 dc00  st   $00,[y,x++]
 * 5 times
-22f6 dc18  st   $18,[y,x++]
-22f7 dc18  st   $18,[y,x++]
-22f8 dc18  st   $18,[y,x++]
+22f6 dc05  st   $05,[y,x++]
+22f7 dc05  st   $05,[y,x++]
+22f8 dc05  st   $05,[y,x++]
 * 12 times
 2302 dc00  st   $00,[y,x++]
 2303 dc00  st   $00,[y,x++]
 2304 dc00  st   $00,[y,x++]
 * 5 times
-2307 dc20  st   $20,[y,x++]
-2308 dc20  st   $20,[y,x++]
-2309 dc20  st   $20,[y,x++]
+2307 dc01  st   $01,[y,x++]
+2308 dc01  st   $01,[y,x++]
+2309 dc01  st   $01,[y,x++]
 * 12 times
 2313 dc00  st   $00,[y,x++]
 2314 dc00  st   $00,[y,x++]
 2315 dc00  st   $00,[y,x++]
 * 5 times
-2318 dc28  st   $28,[y,x++]
-2319 dc28  st   $28,[y,x++]
-231a dc28  st   $28,[y,x++]
+2318 dc12  st   $12,[y,x++]
+2319 dc12  st   $12,[y,x++]
+231a dc12  st   $12,[y,x++]
 * 12 times
 2324 dc00  st   $00,[y,x++]
 2325 dc00  st   $00,[y,x++]
 2326 dc00  st   $00,[y,x++]
 * 5 times
-2329 dc30  st   $30,[y,x++]
-232a dc30  st   $30,[y,x++]
-232b dc30  st   $30,[y,x++]
+2329 dc13  st   $13,[y,x++]
+232a dc13  st   $13,[y,x++]
+232b dc13  st   $13,[y,x++]
 * 12 times
 2335 dc00  st   $00,[y,x++]
 2336 dc00  st   $00,[y,x++]
 2337 dc00  st   $00,[y,x++]
 * 5 times
-233a dc38  st   $38,[y,x++]
-233b dc38  st   $38,[y,x++]
-233c dc38  st   $38,[y,x++]
+233a dc23  st   $23,[y,x++]
+233b dc23  st   $23,[y,x++]
+233c dc23  st   $23,[y,x++]
 * 12 times
 2346 dc00  st   $00,[y,x++]
 2347 dc00  st   $00,[y,x++]
@@ -4254,73 +4494,73 @@ V    V     V    V
 234f dc00  st   $00,[y,x++]
 2350 dc00  st   $00,[y,x++]
 * 6 times
-2354 dc37  st   $37,[y,x++]
-2355 dc37  st   $37,[y,x++]
-2356 dc37  st   $37,[y,x++]
+2354 dc3d  st   $3d,[y,x++]
+2355 dc3d  st   $3d,[y,x++]
+2356 dc3d  st   $3d,[y,x++]
 * 12 times
 2360 dc00  st   $00,[y,x++]
 2361 dc00  st   $00,[y,x++]
 2362 dc00  st   $00,[y,x++]
 * 5 times
-2365 dc3f  st   $3f,[y,x++]
-2366 dc3f  st   $3f,[y,x++]
-2367 dc3f  st   $3f,[y,x++]
+2365 dc2d  st   $2d,[y,x++]
+2366 dc2d  st   $2d,[y,x++]
+2367 dc2d  st   $2d,[y,x++]
 * 12 times
 2371 dc00  st   $00,[y,x++]
 2372 dc00  st   $00,[y,x++]
 2373 dc00  st   $00,[y,x++]
 * 5 times
-2376 dc08  st   $08,[y,x++]
-2377 dc08  st   $08,[y,x++]
-2378 dc08  st   $08,[y,x++]
+2376 dc1d  st   $1d,[y,x++]
+2377 dc1d  st   $1d,[y,x++]
+2378 dc1d  st   $1d,[y,x++]
 * 12 times
 2382 dc00  st   $00,[y,x++]
 2383 dc00  st   $00,[y,x++]
 2384 dc00  st   $00,[y,x++]
 * 5 times
-2387 dc10  st   $10,[y,x++]
-2388 dc10  st   $10,[y,x++]
-2389 dc10  st   $10,[y,x++]
+2387 dc0c  st   $0c,[y,x++]
+2388 dc0c  st   $0c,[y,x++]
+2389 dc0c  st   $0c,[y,x++]
 * 12 times
 2393 dc00  st   $00,[y,x++]
 2394 dc00  st   $00,[y,x++]
 2395 dc00  st   $00,[y,x++]
 * 5 times
-2398 dc18  st   $18,[y,x++]
-2399 dc18  st   $18,[y,x++]
-239a dc18  st   $18,[y,x++]
+2398 dc05  st   $05,[y,x++]
+2399 dc05  st   $05,[y,x++]
+239a dc05  st   $05,[y,x++]
 * 12 times
 23a4 dc00  st   $00,[y,x++]
 23a5 dc00  st   $00,[y,x++]
 23a6 dc00  st   $00,[y,x++]
 * 5 times
-23a9 dc20  st   $20,[y,x++]
-23aa dc20  st   $20,[y,x++]
-23ab dc20  st   $20,[y,x++]
+23a9 dc01  st   $01,[y,x++]
+23aa dc01  st   $01,[y,x++]
+23ab dc01  st   $01,[y,x++]
 * 12 times
 23b5 dc00  st   $00,[y,x++]
 23b6 dc00  st   $00,[y,x++]
 23b7 dc00  st   $00,[y,x++]
 * 5 times
-23ba dc28  st   $28,[y,x++]
-23bb dc28  st   $28,[y,x++]
-23bc dc28  st   $28,[y,x++]
+23ba dc12  st   $12,[y,x++]
+23bb dc12  st   $12,[y,x++]
+23bc dc12  st   $12,[y,x++]
 * 12 times
 23c6 dc00  st   $00,[y,x++]
 23c7 dc00  st   $00,[y,x++]
 23c8 dc00  st   $00,[y,x++]
 * 5 times
-23cb dc30  st   $30,[y,x++]
-23cc dc30  st   $30,[y,x++]
-23cd dc30  st   $30,[y,x++]
+23cb dc13  st   $13,[y,x++]
+23cc dc13  st   $13,[y,x++]
+23cd dc13  st   $13,[y,x++]
 * 12 times
 23d7 dc00  st   $00,[y,x++]
 23d8 dc00  st   $00,[y,x++]
 23d9 dc00  st   $00,[y,x++]
 * 5 times
-23dc dc38  st   $38,[y,x++]
-23dd dc38  st   $38,[y,x++]
-23de dc38  st   $38,[y,x++]
+23dc dc23  st   $23,[y,x++]
+23dd dc23  st   $23,[y,x++]
+23de dc23  st   $23,[y,x++]
 * 12 times
 23e8 dc00  st   $00,[y,x++]
 23e9 dc00  st   $00,[y,x++]
@@ -4331,332 +4571,404 @@ V    V     V    V
 23f0 dc00  st   $00,[y,x++]
 23f1 dc00  st   $00,[y,x++]
 23f2 dc00  st   $00,[y,x++]
-* 6 times
-23f6 dc37  st   $37,[y,x++]
-23f7 dc37  st   $37,[y,x++]
-23f8 dc37  st   $37,[y,x++]
-* 12 times
-2402 dc00  st   $00,[y,x++]
-2403 dc00  st   $00,[y,x++]
-2404 dc00  st   $00,[y,x++]
-* 5 times
-2407 dc3f  st   $3f,[y,x++]
-2408 dc3f  st   $3f,[y,x++]
-2409 dc3f  st   $3f,[y,x++]
-* 12 times
-2413 dc00  st   $00,[y,x++]
-2414 dc00  st   $00,[y,x++]
-2415 dc00  st   $00,[y,x++]
-* 5 times
-2418 dc08  st   $08,[y,x++]
-2419 dc08  st   $08,[y,x++]
-241a dc08  st   $08,[y,x++]
-* 12 times
-2424 dc00  st   $00,[y,x++]
-2425 dc00  st   $00,[y,x++]
-2426 dc00  st   $00,[y,x++]
-* 5 times
-2429 dc10  st   $10,[y,x++]
-242a dc10  st   $10,[y,x++]
-242b dc10  st   $10,[y,x++]
-* 12 times
-2435 dc00  st   $00,[y,x++]
-2436 dc00  st   $00,[y,x++]
-2437 dc00  st   $00,[y,x++]
-* 5 times
-243a dc18  st   $18,[y,x++]
-243b dc18  st   $18,[y,x++]
-243c dc18  st   $18,[y,x++]
-* 12 times
-2446 dc00  st   $00,[y,x++]
-2447 dc00  st   $00,[y,x++]
-2448 dc00  st   $00,[y,x++]
-* 5 times
-244b dc20  st   $20,[y,x++]
-244c dc20  st   $20,[y,x++]
-244d dc20  st   $20,[y,x++]
-* 12 times
-2457 dc00  st   $00,[y,x++]
-2458 dc00  st   $00,[y,x++]
-2459 dc00  st   $00,[y,x++]
-* 5 times
-245c dc28  st   $28,[y,x++]
-245d dc28  st   $28,[y,x++]
-245e dc28  st   $28,[y,x++]
-* 12 times
-2468 dc00  st   $00,[y,x++]
-2469 dc00  st   $00,[y,x++]
-246a dc00  st   $00,[y,x++]
-* 5 times
-246d dc30  st   $30,[y,x++]
-246e dc30  st   $30,[y,x++]
-246f dc30  st   $30,[y,x++]
-* 12 times
-2479 dc00  st   $00,[y,x++]
-247a dc00  st   $00,[y,x++]
-247b dc00  st   $00,[y,x++]
-* 5 times
-247e dc38  st   $38,[y,x++]
-247f dc38  st   $38,[y,x++]
-2480 dc38  st   $38,[y,x++]
-* 12 times
-248a dc00  st   $00,[y,x++]
-248b dc00  st   $00,[y,x++]
-248c dc00  st   $00,[y,x++]
-* 6 times
+* 160 times
 2490 1000  ld   $00,x
 2491 1435  ld   $35,y
 2492 dc00  st   $00,[y,x++]
 2493 dc00  st   $00,[y,x++]
 2494 dc00  st   $00,[y,x++]
-* 6 times
-2498 dc37  st   $37,[y,x++]
-2499 dc37  st   $37,[y,x++]
-249a dc37  st   $37,[y,x++]
-* 12 times
-24a4 dc00  st   $00,[y,x++]
-24a5 dc00  st   $00,[y,x++]
-24a6 dc00  st   $00,[y,x++]
-* 5 times
-24a9 dc3f  st   $3f,[y,x++]
-24aa dc3f  st   $3f,[y,x++]
-24ab dc3f  st   $3f,[y,x++]
-* 12 times
-24b5 dc00  st   $00,[y,x++]
-24b6 dc00  st   $00,[y,x++]
-24b7 dc00  st   $00,[y,x++]
-* 5 times
-24ba dc08  st   $08,[y,x++]
-24bb dc08  st   $08,[y,x++]
-24bc dc08  st   $08,[y,x++]
-* 12 times
-24c6 dc00  st   $00,[y,x++]
-24c7 dc00  st   $00,[y,x++]
-24c8 dc00  st   $00,[y,x++]
-* 5 times
-24cb dc10  st   $10,[y,x++]
-24cc dc10  st   $10,[y,x++]
-24cd dc10  st   $10,[y,x++]
-* 12 times
-24d7 dc00  st   $00,[y,x++]
-24d8 dc00  st   $00,[y,x++]
-24d9 dc00  st   $00,[y,x++]
-* 5 times
-24dc dc18  st   $18,[y,x++]
-24dd dc18  st   $18,[y,x++]
-24de dc18  st   $18,[y,x++]
-* 12 times
-24e8 dc00  st   $00,[y,x++]
-24e9 dc00  st   $00,[y,x++]
-24ea dc00  st   $00,[y,x++]
-* 5 times
-24ed dc20  st   $20,[y,x++]
-24ee dc20  st   $20,[y,x++]
-24ef dc20  st   $20,[y,x++]
-* 12 times
-24f9 dc00  st   $00,[y,x++]
-24fa dc00  st   $00,[y,x++]
-24fb dc00  st   $00,[y,x++]
-* 5 times
-24fe dc28  st   $28,[y,x++]
-24ff dc28  st   $28,[y,x++]
-2500 dc28  st   $28,[y,x++]
-* 12 times
-250a dc00  st   $00,[y,x++]
-250b dc00  st   $00,[y,x++]
-250c dc00  st   $00,[y,x++]
-* 5 times
-250f dc30  st   $30,[y,x++]
-2510 dc30  st   $30,[y,x++]
-2511 dc30  st   $30,[y,x++]
-* 12 times
-251b dc00  st   $00,[y,x++]
-251c dc00  st   $00,[y,x++]
-251d dc00  st   $00,[y,x++]
-* 5 times
-2520 dc38  st   $38,[y,x++]
-2521 dc38  st   $38,[y,x++]
-2522 dc38  st   $38,[y,x++]
-* 12 times
-252c dc00  st   $00,[y,x++]
-252d dc00  st   $00,[y,x++]
-252e dc00  st   $00,[y,x++]
-* 6 times
+* 160 times
 2532 1000  ld   $00,x
 2533 1436  ld   $36,y
 2534 dc00  st   $00,[y,x++]
 2535 dc00  st   $00,[y,x++]
 2536 dc00  st   $00,[y,x++]
-* 6 times
-253a dc37  st   $37,[y,x++]
-253b dc37  st   $37,[y,x++]
-253c dc37  st   $37,[y,x++]
-* 12 times
-2546 dc00  st   $00,[y,x++]
-2547 dc00  st   $00,[y,x++]
-2548 dc00  st   $00,[y,x++]
-* 5 times
-254b dc3f  st   $3f,[y,x++]
-254c dc3f  st   $3f,[y,x++]
-254d dc3f  st   $3f,[y,x++]
-* 12 times
-2557 dc00  st   $00,[y,x++]
-2558 dc00  st   $00,[y,x++]
-2559 dc00  st   $00,[y,x++]
-* 5 times
-255c dc08  st   $08,[y,x++]
-255d dc08  st   $08,[y,x++]
-255e dc08  st   $08,[y,x++]
-* 12 times
-2568 dc00  st   $00,[y,x++]
-2569 dc00  st   $00,[y,x++]
-256a dc00  st   $00,[y,x++]
-* 5 times
-256d dc10  st   $10,[y,x++]
-256e dc10  st   $10,[y,x++]
-256f dc10  st   $10,[y,x++]
-* 12 times
-2579 dc00  st   $00,[y,x++]
-257a dc00  st   $00,[y,x++]
-257b dc00  st   $00,[y,x++]
-* 5 times
-257e dc18  st   $18,[y,x++]
-257f dc18  st   $18,[y,x++]
-2580 dc18  st   $18,[y,x++]
-* 12 times
-258a dc00  st   $00,[y,x++]
-258b dc00  st   $00,[y,x++]
-258c dc00  st   $00,[y,x++]
-* 5 times
-258f dc20  st   $20,[y,x++]
-2590 dc20  st   $20,[y,x++]
-2591 dc20  st   $20,[y,x++]
-* 12 times
-259b dc00  st   $00,[y,x++]
-259c dc00  st   $00,[y,x++]
-259d dc00  st   $00,[y,x++]
-* 5 times
-25a0 dc28  st   $28,[y,x++]
-25a1 dc28  st   $28,[y,x++]
-25a2 dc28  st   $28,[y,x++]
-* 12 times
-25ac dc00  st   $00,[y,x++]
-25ad dc00  st   $00,[y,x++]
-25ae dc00  st   $00,[y,x++]
-* 5 times
-25b1 dc30  st   $30,[y,x++]
-25b2 dc30  st   $30,[y,x++]
-25b3 dc30  st   $30,[y,x++]
-* 12 times
-25bd dc00  st   $00,[y,x++]
-25be dc00  st   $00,[y,x++]
-25bf dc00  st   $00,[y,x++]
-* 5 times
-25c2 dc38  st   $38,[y,x++]
-25c3 dc38  st   $38,[y,x++]
-25c4 dc38  st   $38,[y,x++]
-* 12 times
-25ce dc00  st   $00,[y,x++]
-25cf dc00  st   $00,[y,x++]
-25d0 dc00  st   $00,[y,x++]
-* 6 times
+* 160 times
 25d4 1000  ld   $00,x
 25d5 1437  ld   $37,y
 25d6 dc00  st   $00,[y,x++]
 25d7 dc00  st   $00,[y,x++]
 25d8 dc00  st   $00,[y,x++]
-* 160 times
+* 6 times
+25dc dc3c  st   $3c,[y,x++]
+25dd dc3c  st   $3c,[y,x++]
+25de dc3c  st   $3c,[y,x++]
+* 12 times
+25e8 dc00  st   $00,[y,x++]
+25e9 dc00  st   $00,[y,x++]
+25ea dc00  st   $00,[y,x++]
+* 5 times
+25ed dc2c  st   $2c,[y,x++]
+25ee dc2c  st   $2c,[y,x++]
+25ef dc2c  st   $2c,[y,x++]
+* 12 times
+25f9 dc00  st   $00,[y,x++]
+25fa dc00  st   $00,[y,x++]
+25fb dc00  st   $00,[y,x++]
+* 5 times
+25fe dc1c  st   $1c,[y,x++]
+25ff dc1c  st   $1c,[y,x++]
+2600 dc1c  st   $1c,[y,x++]
+* 12 times
+260a dc00  st   $00,[y,x++]
+260b dc00  st   $00,[y,x++]
+260c dc00  st   $00,[y,x++]
+* 5 times
+260f dc08  st   $08,[y,x++]
+2610 dc08  st   $08,[y,x++]
+2611 dc08  st   $08,[y,x++]
+* 12 times
+261b dc00  st   $00,[y,x++]
+261c dc00  st   $00,[y,x++]
+261d dc00  st   $00,[y,x++]
+* 5 times
+2620 dc04  st   $04,[y,x++]
+2621 dc04  st   $04,[y,x++]
+2622 dc04  st   $04,[y,x++]
+* 12 times
+262c dc00  st   $00,[y,x++]
+262d dc00  st   $00,[y,x++]
+262e dc00  st   $00,[y,x++]
+* 5 times
+2631 dc11  st   $11,[y,x++]
+2632 dc11  st   $11,[y,x++]
+2633 dc11  st   $11,[y,x++]
+* 12 times
+263d dc00  st   $00,[y,x++]
+263e dc00  st   $00,[y,x++]
+263f dc00  st   $00,[y,x++]
+* 5 times
+2642 dc21  st   $21,[y,x++]
+2643 dc21  st   $21,[y,x++]
+2644 dc21  st   $21,[y,x++]
+* 12 times
+264e dc00  st   $00,[y,x++]
+264f dc00  st   $00,[y,x++]
+2650 dc00  st   $00,[y,x++]
+* 5 times
+2653 dc22  st   $22,[y,x++]
+2654 dc22  st   $22,[y,x++]
+2655 dc22  st   $22,[y,x++]
+* 12 times
+265f dc00  st   $00,[y,x++]
+2660 dc00  st   $00,[y,x++]
+2661 dc00  st   $00,[y,x++]
+* 5 times
+2664 dc33  st   $33,[y,x++]
+2665 dc33  st   $33,[y,x++]
+2666 dc33  st   $33,[y,x++]
+* 12 times
+2670 dc00  st   $00,[y,x++]
+2671 dc00  st   $00,[y,x++]
+2672 dc00  st   $00,[y,x++]
+* 6 times
 2676 1000  ld   $00,x
 2677 1438  ld   $38,y
 2678 dc00  st   $00,[y,x++]
 2679 dc00  st   $00,[y,x++]
 267a dc00  st   $00,[y,x++]
-* 160 times
+* 6 times
+267e dc3c  st   $3c,[y,x++]
+267f dc3c  st   $3c,[y,x++]
+2680 dc3c  st   $3c,[y,x++]
+* 12 times
+268a dc00  st   $00,[y,x++]
+268b dc00  st   $00,[y,x++]
+268c dc00  st   $00,[y,x++]
+* 5 times
+268f dc2c  st   $2c,[y,x++]
+2690 dc2c  st   $2c,[y,x++]
+2691 dc2c  st   $2c,[y,x++]
+* 12 times
+269b dc00  st   $00,[y,x++]
+269c dc00  st   $00,[y,x++]
+269d dc00  st   $00,[y,x++]
+* 5 times
+26a0 dc1c  st   $1c,[y,x++]
+26a1 dc1c  st   $1c,[y,x++]
+26a2 dc1c  st   $1c,[y,x++]
+* 12 times
+26ac dc00  st   $00,[y,x++]
+26ad dc00  st   $00,[y,x++]
+26ae dc00  st   $00,[y,x++]
+* 5 times
+26b1 dc08  st   $08,[y,x++]
+26b2 dc08  st   $08,[y,x++]
+26b3 dc08  st   $08,[y,x++]
+* 12 times
+26bd dc00  st   $00,[y,x++]
+26be dc00  st   $00,[y,x++]
+26bf dc00  st   $00,[y,x++]
+* 5 times
+26c2 dc04  st   $04,[y,x++]
+26c3 dc04  st   $04,[y,x++]
+26c4 dc04  st   $04,[y,x++]
+* 12 times
+26ce dc00  st   $00,[y,x++]
+26cf dc00  st   $00,[y,x++]
+26d0 dc00  st   $00,[y,x++]
+* 5 times
+26d3 dc11  st   $11,[y,x++]
+26d4 dc11  st   $11,[y,x++]
+26d5 dc11  st   $11,[y,x++]
+* 12 times
+26df dc00  st   $00,[y,x++]
+26e0 dc00  st   $00,[y,x++]
+26e1 dc00  st   $00,[y,x++]
+* 5 times
+26e4 dc21  st   $21,[y,x++]
+26e5 dc21  st   $21,[y,x++]
+26e6 dc21  st   $21,[y,x++]
+* 12 times
+26f0 dc00  st   $00,[y,x++]
+26f1 dc00  st   $00,[y,x++]
+26f2 dc00  st   $00,[y,x++]
+* 5 times
+26f5 dc22  st   $22,[y,x++]
+26f6 dc22  st   $22,[y,x++]
+26f7 dc22  st   $22,[y,x++]
+* 12 times
+2701 dc00  st   $00,[y,x++]
+2702 dc00  st   $00,[y,x++]
+2703 dc00  st   $00,[y,x++]
+* 5 times
+2706 dc33  st   $33,[y,x++]
+2707 dc33  st   $33,[y,x++]
+2708 dc33  st   $33,[y,x++]
+* 12 times
+2712 dc00  st   $00,[y,x++]
+2713 dc00  st   $00,[y,x++]
+2714 dc00  st   $00,[y,x++]
+* 6 times
 2718 1000  ld   $00,x
 2719 1439  ld   $39,y
 271a dc00  st   $00,[y,x++]
 271b dc00  st   $00,[y,x++]
 271c dc00  st   $00,[y,x++]
-* 160 times
+* 6 times
+2720 dc3c  st   $3c,[y,x++]
+2721 dc3c  st   $3c,[y,x++]
+2722 dc3c  st   $3c,[y,x++]
+* 12 times
+272c dc00  st   $00,[y,x++]
+272d dc00  st   $00,[y,x++]
+272e dc00  st   $00,[y,x++]
+* 5 times
+2731 dc2c  st   $2c,[y,x++]
+2732 dc2c  st   $2c,[y,x++]
+2733 dc2c  st   $2c,[y,x++]
+* 12 times
+273d dc00  st   $00,[y,x++]
+273e dc00  st   $00,[y,x++]
+273f dc00  st   $00,[y,x++]
+* 5 times
+2742 dc1c  st   $1c,[y,x++]
+2743 dc1c  st   $1c,[y,x++]
+2744 dc1c  st   $1c,[y,x++]
+* 12 times
+274e dc00  st   $00,[y,x++]
+274f dc00  st   $00,[y,x++]
+2750 dc00  st   $00,[y,x++]
+* 5 times
+2753 dc08  st   $08,[y,x++]
+2754 dc08  st   $08,[y,x++]
+2755 dc08  st   $08,[y,x++]
+* 12 times
+275f dc00  st   $00,[y,x++]
+2760 dc00  st   $00,[y,x++]
+2761 dc00  st   $00,[y,x++]
+* 5 times
+2764 dc04  st   $04,[y,x++]
+2765 dc04  st   $04,[y,x++]
+2766 dc04  st   $04,[y,x++]
+* 12 times
+2770 dc00  st   $00,[y,x++]
+2771 dc00  st   $00,[y,x++]
+2772 dc00  st   $00,[y,x++]
+* 5 times
+2775 dc11  st   $11,[y,x++]
+2776 dc11  st   $11,[y,x++]
+2777 dc11  st   $11,[y,x++]
+* 12 times
+2781 dc00  st   $00,[y,x++]
+2782 dc00  st   $00,[y,x++]
+2783 dc00  st   $00,[y,x++]
+* 5 times
+2786 dc21  st   $21,[y,x++]
+2787 dc21  st   $21,[y,x++]
+2788 dc21  st   $21,[y,x++]
+* 12 times
+2792 dc00  st   $00,[y,x++]
+2793 dc00  st   $00,[y,x++]
+2794 dc00  st   $00,[y,x++]
+* 5 times
+2797 dc22  st   $22,[y,x++]
+2798 dc22  st   $22,[y,x++]
+2799 dc22  st   $22,[y,x++]
+* 12 times
+27a3 dc00  st   $00,[y,x++]
+27a4 dc00  st   $00,[y,x++]
+27a5 dc00  st   $00,[y,x++]
+* 5 times
+27a8 dc33  st   $33,[y,x++]
+27a9 dc33  st   $33,[y,x++]
+27aa dc33  st   $33,[y,x++]
+* 12 times
+27b4 dc00  st   $00,[y,x++]
+27b5 dc00  st   $00,[y,x++]
+27b6 dc00  st   $00,[y,x++]
+* 6 times
 27ba 1000  ld   $00,x
 27bb 143a  ld   $3a,y
 27bc dc00  st   $00,[y,x++]
 27bd dc00  st   $00,[y,x++]
 27be dc00  st   $00,[y,x++]
-* 160 times
+* 6 times
+27c2 dc3c  st   $3c,[y,x++]
+27c3 dc3c  st   $3c,[y,x++]
+27c4 dc3c  st   $3c,[y,x++]
+* 12 times
+27ce dc00  st   $00,[y,x++]
+27cf dc00  st   $00,[y,x++]
+27d0 dc00  st   $00,[y,x++]
+* 5 times
+27d3 dc2c  st   $2c,[y,x++]
+27d4 dc2c  st   $2c,[y,x++]
+27d5 dc2c  st   $2c,[y,x++]
+* 12 times
+27df dc00  st   $00,[y,x++]
+27e0 dc00  st   $00,[y,x++]
+27e1 dc00  st   $00,[y,x++]
+* 5 times
+27e4 dc1c  st   $1c,[y,x++]
+27e5 dc1c  st   $1c,[y,x++]
+27e6 dc1c  st   $1c,[y,x++]
+* 12 times
+27f0 dc00  st   $00,[y,x++]
+27f1 dc00  st   $00,[y,x++]
+27f2 dc00  st   $00,[y,x++]
+* 5 times
+27f5 dc08  st   $08,[y,x++]
+27f6 dc08  st   $08,[y,x++]
+27f7 dc08  st   $08,[y,x++]
+* 12 times
+2801 dc00  st   $00,[y,x++]
+2802 dc00  st   $00,[y,x++]
+2803 dc00  st   $00,[y,x++]
+* 5 times
+2806 dc04  st   $04,[y,x++]
+2807 dc04  st   $04,[y,x++]
+2808 dc04  st   $04,[y,x++]
+* 12 times
+2812 dc00  st   $00,[y,x++]
+2813 dc00  st   $00,[y,x++]
+2814 dc00  st   $00,[y,x++]
+* 5 times
+2817 dc11  st   $11,[y,x++]
+2818 dc11  st   $11,[y,x++]
+2819 dc11  st   $11,[y,x++]
+* 12 times
+2823 dc00  st   $00,[y,x++]
+2824 dc00  st   $00,[y,x++]
+2825 dc00  st   $00,[y,x++]
+* 5 times
+2828 dc21  st   $21,[y,x++]
+2829 dc21  st   $21,[y,x++]
+282a dc21  st   $21,[y,x++]
+* 12 times
+2834 dc00  st   $00,[y,x++]
+2835 dc00  st   $00,[y,x++]
+2836 dc00  st   $00,[y,x++]
+* 5 times
+2839 dc22  st   $22,[y,x++]
+283a dc22  st   $22,[y,x++]
+283b dc22  st   $22,[y,x++]
+* 12 times
+2845 dc00  st   $00,[y,x++]
+2846 dc00  st   $00,[y,x++]
+2847 dc00  st   $00,[y,x++]
+* 5 times
+284a dc33  st   $33,[y,x++]
+284b dc33  st   $33,[y,x++]
+284c dc33  st   $33,[y,x++]
+* 12 times
+2856 dc00  st   $00,[y,x++]
+2857 dc00  st   $00,[y,x++]
+2858 dc00  st   $00,[y,x++]
+* 6 times
 285c 1000  ld   $00,x
 285d 143b  ld   $3b,y
 285e dc00  st   $00,[y,x++]
 285f dc00  st   $00,[y,x++]
 2860 dc00  st   $00,[y,x++]
 * 6 times
-2864 dc1f  st   $1f,[y,x++]
-2865 dc1f  st   $1f,[y,x++]
-2866 dc1f  st   $1f,[y,x++]
+2864 dc3c  st   $3c,[y,x++]
+2865 dc3c  st   $3c,[y,x++]
+2866 dc3c  st   $3c,[y,x++]
 * 12 times
 2870 dc00  st   $00,[y,x++]
 2871 dc00  st   $00,[y,x++]
 2872 dc00  st   $00,[y,x++]
 * 5 times
-2875 dc27  st   $27,[y,x++]
-2876 dc27  st   $27,[y,x++]
-2877 dc27  st   $27,[y,x++]
+2875 dc2c  st   $2c,[y,x++]
+2876 dc2c  st   $2c,[y,x++]
+2877 dc2c  st   $2c,[y,x++]
 * 12 times
 2881 dc00  st   $00,[y,x++]
 2882 dc00  st   $00,[y,x++]
 2883 dc00  st   $00,[y,x++]
 * 5 times
-2886 dc2f  st   $2f,[y,x++]
-2887 dc2f  st   $2f,[y,x++]
-2888 dc2f  st   $2f,[y,x++]
+2886 dc1c  st   $1c,[y,x++]
+2887 dc1c  st   $1c,[y,x++]
+2888 dc1c  st   $1c,[y,x++]
 * 12 times
 2892 dc00  st   $00,[y,x++]
 2893 dc00  st   $00,[y,x++]
 2894 dc00  st   $00,[y,x++]
 * 5 times
-2897 dc37  st   $37,[y,x++]
-2898 dc37  st   $37,[y,x++]
-2899 dc37  st   $37,[y,x++]
+2897 dc08  st   $08,[y,x++]
+2898 dc08  st   $08,[y,x++]
+2899 dc08  st   $08,[y,x++]
 * 12 times
 28a3 dc00  st   $00,[y,x++]
 28a4 dc00  st   $00,[y,x++]
 28a5 dc00  st   $00,[y,x++]
 * 5 times
-28a8 dc3f  st   $3f,[y,x++]
-28a9 dc3f  st   $3f,[y,x++]
-28aa dc3f  st   $3f,[y,x++]
+28a8 dc04  st   $04,[y,x++]
+28a9 dc04  st   $04,[y,x++]
+28aa dc04  st   $04,[y,x++]
 * 12 times
 28b4 dc00  st   $00,[y,x++]
 28b5 dc00  st   $00,[y,x++]
 28b6 dc00  st   $00,[y,x++]
 * 5 times
-28b9 dc08  st   $08,[y,x++]
-28ba dc08  st   $08,[y,x++]
-28bb dc08  st   $08,[y,x++]
+28b9 dc11  st   $11,[y,x++]
+28ba dc11  st   $11,[y,x++]
+28bb dc11  st   $11,[y,x++]
 * 12 times
 28c5 dc00  st   $00,[y,x++]
 28c6 dc00  st   $00,[y,x++]
 28c7 dc00  st   $00,[y,x++]
 * 5 times
-28ca dc10  st   $10,[y,x++]
-28cb dc10  st   $10,[y,x++]
-28cc dc10  st   $10,[y,x++]
+28ca dc21  st   $21,[y,x++]
+28cb dc21  st   $21,[y,x++]
+28cc dc21  st   $21,[y,x++]
 * 12 times
 28d6 dc00  st   $00,[y,x++]
 28d7 dc00  st   $00,[y,x++]
 28d8 dc00  st   $00,[y,x++]
 * 5 times
-28db dc18  st   $18,[y,x++]
-28dc dc18  st   $18,[y,x++]
-28dd dc18  st   $18,[y,x++]
+28db dc22  st   $22,[y,x++]
+28dc dc22  st   $22,[y,x++]
+28dd dc22  st   $22,[y,x++]
 * 12 times
 28e7 dc00  st   $00,[y,x++]
 28e8 dc00  st   $00,[y,x++]
 28e9 dc00  st   $00,[y,x++]
 * 5 times
-28ec dc20  st   $20,[y,x++]
-28ed dc20  st   $20,[y,x++]
-28ee dc20  st   $20,[y,x++]
+28ec dc33  st   $33,[y,x++]
+28ed dc33  st   $33,[y,x++]
+28ee dc33  st   $33,[y,x++]
 * 12 times
 28f8 dc00  st   $00,[y,x++]
 28f9 dc00  st   $00,[y,x++]
@@ -4667,308 +4979,92 @@ V    V     V    V
 2900 dc00  st   $00,[y,x++]
 2901 dc00  st   $00,[y,x++]
 2902 dc00  st   $00,[y,x++]
-* 6 times
-2906 dc1f  st   $1f,[y,x++]
-2907 dc1f  st   $1f,[y,x++]
-2908 dc1f  st   $1f,[y,x++]
-* 12 times
-2912 dc00  st   $00,[y,x++]
-2913 dc00  st   $00,[y,x++]
-2914 dc00  st   $00,[y,x++]
-* 5 times
-2917 dc27  st   $27,[y,x++]
-2918 dc27  st   $27,[y,x++]
-2919 dc27  st   $27,[y,x++]
-* 12 times
-2923 dc00  st   $00,[y,x++]
-2924 dc00  st   $00,[y,x++]
-2925 dc00  st   $00,[y,x++]
-* 5 times
-2928 dc2f  st   $2f,[y,x++]
-2929 dc2f  st   $2f,[y,x++]
-292a dc2f  st   $2f,[y,x++]
-* 12 times
-2934 dc00  st   $00,[y,x++]
-2935 dc00  st   $00,[y,x++]
-2936 dc00  st   $00,[y,x++]
-* 5 times
-2939 dc37  st   $37,[y,x++]
-293a dc37  st   $37,[y,x++]
-293b dc37  st   $37,[y,x++]
-* 12 times
-2945 dc00  st   $00,[y,x++]
-2946 dc00  st   $00,[y,x++]
-2947 dc00  st   $00,[y,x++]
-* 5 times
-294a dc3f  st   $3f,[y,x++]
-294b dc3f  st   $3f,[y,x++]
-294c dc3f  st   $3f,[y,x++]
-* 12 times
-2956 dc00  st   $00,[y,x++]
-2957 dc00  st   $00,[y,x++]
-2958 dc00  st   $00,[y,x++]
-* 5 times
-295b dc08  st   $08,[y,x++]
-295c dc08  st   $08,[y,x++]
-295d dc08  st   $08,[y,x++]
-* 12 times
-2967 dc00  st   $00,[y,x++]
-2968 dc00  st   $00,[y,x++]
-2969 dc00  st   $00,[y,x++]
-* 5 times
-296c dc10  st   $10,[y,x++]
-296d dc10  st   $10,[y,x++]
-296e dc10  st   $10,[y,x++]
-* 12 times
-2978 dc00  st   $00,[y,x++]
-2979 dc00  st   $00,[y,x++]
-297a dc00  st   $00,[y,x++]
-* 5 times
-297d dc18  st   $18,[y,x++]
-297e dc18  st   $18,[y,x++]
-297f dc18  st   $18,[y,x++]
-* 12 times
-2989 dc00  st   $00,[y,x++]
-298a dc00  st   $00,[y,x++]
-298b dc00  st   $00,[y,x++]
-* 5 times
-298e dc20  st   $20,[y,x++]
-298f dc20  st   $20,[y,x++]
-2990 dc20  st   $20,[y,x++]
-* 12 times
-299a dc00  st   $00,[y,x++]
-299b dc00  st   $00,[y,x++]
-299c dc00  st   $00,[y,x++]
-* 6 times
+* 160 times
 29a0 1000  ld   $00,x
 29a1 143d  ld   $3d,y
 29a2 dc00  st   $00,[y,x++]
 29a3 dc00  st   $00,[y,x++]
 29a4 dc00  st   $00,[y,x++]
-* 6 times
-29a8 dc1f  st   $1f,[y,x++]
-29a9 dc1f  st   $1f,[y,x++]
-29aa dc1f  st   $1f,[y,x++]
-* 12 times
-29b4 dc00  st   $00,[y,x++]
-29b5 dc00  st   $00,[y,x++]
-29b6 dc00  st   $00,[y,x++]
-* 5 times
-29b9 dc27  st   $27,[y,x++]
-29ba dc27  st   $27,[y,x++]
-29bb dc27  st   $27,[y,x++]
-* 12 times
-29c5 dc00  st   $00,[y,x++]
-29c6 dc00  st   $00,[y,x++]
-29c7 dc00  st   $00,[y,x++]
-* 5 times
-29ca dc2f  st   $2f,[y,x++]
-29cb dc2f  st   $2f,[y,x++]
-29cc dc2f  st   $2f,[y,x++]
-* 12 times
-29d6 dc00  st   $00,[y,x++]
-29d7 dc00  st   $00,[y,x++]
-29d8 dc00  st   $00,[y,x++]
-* 5 times
-29db dc37  st   $37,[y,x++]
-29dc dc37  st   $37,[y,x++]
-29dd dc37  st   $37,[y,x++]
-* 12 times
-29e7 dc00  st   $00,[y,x++]
-29e8 dc00  st   $00,[y,x++]
-29e9 dc00  st   $00,[y,x++]
-* 5 times
-29ec dc3f  st   $3f,[y,x++]
-29ed dc3f  st   $3f,[y,x++]
-29ee dc3f  st   $3f,[y,x++]
-* 12 times
-29f8 dc00  st   $00,[y,x++]
-29f9 dc00  st   $00,[y,x++]
-29fa dc00  st   $00,[y,x++]
-* 5 times
-29fd dc08  st   $08,[y,x++]
-29fe dc08  st   $08,[y,x++]
-29ff dc08  st   $08,[y,x++]
-* 12 times
-2a09 dc00  st   $00,[y,x++]
-2a0a dc00  st   $00,[y,x++]
-2a0b dc00  st   $00,[y,x++]
-* 5 times
-2a0e dc10  st   $10,[y,x++]
-2a0f dc10  st   $10,[y,x++]
-2a10 dc10  st   $10,[y,x++]
-* 12 times
-2a1a dc00  st   $00,[y,x++]
-2a1b dc00  st   $00,[y,x++]
-2a1c dc00  st   $00,[y,x++]
-* 5 times
-2a1f dc18  st   $18,[y,x++]
-2a20 dc18  st   $18,[y,x++]
-2a21 dc18  st   $18,[y,x++]
-* 12 times
-2a2b dc00  st   $00,[y,x++]
-2a2c dc00  st   $00,[y,x++]
-2a2d dc00  st   $00,[y,x++]
-* 5 times
-2a30 dc20  st   $20,[y,x++]
-2a31 dc20  st   $20,[y,x++]
-2a32 dc20  st   $20,[y,x++]
-* 12 times
-2a3c dc00  st   $00,[y,x++]
-2a3d dc00  st   $00,[y,x++]
-2a3e dc00  st   $00,[y,x++]
-* 6 times
+* 160 times
 2a42 1000  ld   $00,x
 2a43 143e  ld   $3e,y
 2a44 dc00  st   $00,[y,x++]
 2a45 dc00  st   $00,[y,x++]
 2a46 dc00  st   $00,[y,x++]
-* 6 times
-2a4a dc1f  st   $1f,[y,x++]
-2a4b dc1f  st   $1f,[y,x++]
-2a4c dc1f  st   $1f,[y,x++]
-* 12 times
-2a56 dc00  st   $00,[y,x++]
-2a57 dc00  st   $00,[y,x++]
-2a58 dc00  st   $00,[y,x++]
-* 5 times
-2a5b dc27  st   $27,[y,x++]
-2a5c dc27  st   $27,[y,x++]
-2a5d dc27  st   $27,[y,x++]
-* 12 times
-2a67 dc00  st   $00,[y,x++]
-2a68 dc00  st   $00,[y,x++]
-2a69 dc00  st   $00,[y,x++]
-* 5 times
-2a6c dc2f  st   $2f,[y,x++]
-2a6d dc2f  st   $2f,[y,x++]
-2a6e dc2f  st   $2f,[y,x++]
-* 12 times
-2a78 dc00  st   $00,[y,x++]
-2a79 dc00  st   $00,[y,x++]
-2a7a dc00  st   $00,[y,x++]
-* 5 times
-2a7d dc37  st   $37,[y,x++]
-2a7e dc37  st   $37,[y,x++]
-2a7f dc37  st   $37,[y,x++]
-* 12 times
-2a89 dc00  st   $00,[y,x++]
-2a8a dc00  st   $00,[y,x++]
-2a8b dc00  st   $00,[y,x++]
-* 5 times
-2a8e dc3f  st   $3f,[y,x++]
-2a8f dc3f  st   $3f,[y,x++]
-2a90 dc3f  st   $3f,[y,x++]
-* 12 times
-2a9a dc00  st   $00,[y,x++]
-2a9b dc00  st   $00,[y,x++]
-2a9c dc00  st   $00,[y,x++]
-* 5 times
-2a9f dc08  st   $08,[y,x++]
-2aa0 dc08  st   $08,[y,x++]
-2aa1 dc08  st   $08,[y,x++]
-* 12 times
-2aab dc00  st   $00,[y,x++]
-2aac dc00  st   $00,[y,x++]
-2aad dc00  st   $00,[y,x++]
-* 5 times
-2ab0 dc10  st   $10,[y,x++]
-2ab1 dc10  st   $10,[y,x++]
-2ab2 dc10  st   $10,[y,x++]
-* 12 times
-2abc dc00  st   $00,[y,x++]
-2abd dc00  st   $00,[y,x++]
-2abe dc00  st   $00,[y,x++]
-* 5 times
-2ac1 dc18  st   $18,[y,x++]
-2ac2 dc18  st   $18,[y,x++]
-2ac3 dc18  st   $18,[y,x++]
-* 12 times
-2acd dc00  st   $00,[y,x++]
-2ace dc00  st   $00,[y,x++]
-2acf dc00  st   $00,[y,x++]
-* 5 times
-2ad2 dc20  st   $20,[y,x++]
-2ad3 dc20  st   $20,[y,x++]
-2ad4 dc20  st   $20,[y,x++]
-* 12 times
-2ade dc00  st   $00,[y,x++]
-2adf dc00  st   $00,[y,x++]
-2ae0 dc00  st   $00,[y,x++]
-* 6 times
+* 160 times
 2ae4 1000  ld   $00,x
 2ae5 143f  ld   $3f,y
 2ae6 dc00  st   $00,[y,x++]
 2ae7 dc00  st   $00,[y,x++]
 2ae8 dc00  st   $00,[y,x++]
 * 6 times
-2aec dc1f  st   $1f,[y,x++]
-2aed dc1f  st   $1f,[y,x++]
-2aee dc1f  st   $1f,[y,x++]
+2aec dc38  st   $38,[y,x++]
+2aed dc38  st   $38,[y,x++]
+2aee dc38  st   $38,[y,x++]
 * 12 times
 2af8 dc00  st   $00,[y,x++]
 2af9 dc00  st   $00,[y,x++]
 2afa dc00  st   $00,[y,x++]
 * 5 times
-2afd dc27  st   $27,[y,x++]
-2afe dc27  st   $27,[y,x++]
-2aff dc27  st   $27,[y,x++]
+2afd dc28  st   $28,[y,x++]
+2afe dc28  st   $28,[y,x++]
+2aff dc28  st   $28,[y,x++]
 * 12 times
 2b09 dc00  st   $00,[y,x++]
 2b0a dc00  st   $00,[y,x++]
 2b0b dc00  st   $00,[y,x++]
 * 5 times
-2b0e dc2f  st   $2f,[y,x++]
-2b0f dc2f  st   $2f,[y,x++]
-2b10 dc2f  st   $2f,[y,x++]
+2b0e dc18  st   $18,[y,x++]
+2b0f dc18  st   $18,[y,x++]
+2b10 dc18  st   $18,[y,x++]
 * 12 times
 2b1a dc00  st   $00,[y,x++]
 2b1b dc00  st   $00,[y,x++]
 2b1c dc00  st   $00,[y,x++]
 * 5 times
-2b1f dc37  st   $37,[y,x++]
-2b20 dc37  st   $37,[y,x++]
-2b21 dc37  st   $37,[y,x++]
+2b1f dc14  st   $14,[y,x++]
+2b20 dc14  st   $14,[y,x++]
+2b21 dc14  st   $14,[y,x++]
 * 12 times
 2b2b dc00  st   $00,[y,x++]
 2b2c dc00  st   $00,[y,x++]
 2b2d dc00  st   $00,[y,x++]
 * 5 times
-2b30 dc3f  st   $3f,[y,x++]
-2b31 dc3f  st   $3f,[y,x++]
-2b32 dc3f  st   $3f,[y,x++]
+2b30 dc10  st   $10,[y,x++]
+2b31 dc10  st   $10,[y,x++]
+2b32 dc10  st   $10,[y,x++]
 * 12 times
 2b3c dc00  st   $00,[y,x++]
 2b3d dc00  st   $00,[y,x++]
 2b3e dc00  st   $00,[y,x++]
 * 5 times
-2b41 dc08  st   $08,[y,x++]
-2b42 dc08  st   $08,[y,x++]
-2b43 dc08  st   $08,[y,x++]
+2b41 dc20  st   $20,[y,x++]
+2b42 dc20  st   $20,[y,x++]
+2b43 dc20  st   $20,[y,x++]
 * 12 times
 2b4d dc00  st   $00,[y,x++]
 2b4e dc00  st   $00,[y,x++]
 2b4f dc00  st   $00,[y,x++]
 * 5 times
-2b52 dc10  st   $10,[y,x++]
-2b53 dc10  st   $10,[y,x++]
-2b54 dc10  st   $10,[y,x++]
+2b52 dc31  st   $31,[y,x++]
+2b53 dc31  st   $31,[y,x++]
+2b54 dc31  st   $31,[y,x++]
 * 12 times
 2b5e dc00  st   $00,[y,x++]
 2b5f dc00  st   $00,[y,x++]
 2b60 dc00  st   $00,[y,x++]
 * 5 times
-2b63 dc18  st   $18,[y,x++]
-2b64 dc18  st   $18,[y,x++]
-2b65 dc18  st   $18,[y,x++]
+2b63 dc32  st   $32,[y,x++]
+2b64 dc32  st   $32,[y,x++]
+2b65 dc32  st   $32,[y,x++]
 * 12 times
 2b6f dc00  st   $00,[y,x++]
 2b70 dc00  st   $00,[y,x++]
 2b71 dc00  st   $00,[y,x++]
 * 5 times
-2b74 dc20  st   $20,[y,x++]
-2b75 dc20  st   $20,[y,x++]
-2b76 dc20  st   $20,[y,x++]
+2b74 dc37  st   $37,[y,x++]
+2b75 dc37  st   $37,[y,x++]
+2b76 dc37  st   $37,[y,x++]
 * 12 times
 2b80 dc00  st   $00,[y,x++]
 2b81 dc00  st   $00,[y,x++]
@@ -4979,332 +5075,404 @@ V    V     V    V
 2b88 dc00  st   $00,[y,x++]
 2b89 dc00  st   $00,[y,x++]
 2b8a dc00  st   $00,[y,x++]
-* 160 times
+* 6 times
+2b8e dc38  st   $38,[y,x++]
+2b8f dc38  st   $38,[y,x++]
+2b90 dc38  st   $38,[y,x++]
+* 12 times
+2b9a dc00  st   $00,[y,x++]
+2b9b dc00  st   $00,[y,x++]
+2b9c dc00  st   $00,[y,x++]
+* 5 times
+2b9f dc28  st   $28,[y,x++]
+2ba0 dc28  st   $28,[y,x++]
+2ba1 dc28  st   $28,[y,x++]
+* 12 times
+2bab dc00  st   $00,[y,x++]
+2bac dc00  st   $00,[y,x++]
+2bad dc00  st   $00,[y,x++]
+* 5 times
+2bb0 dc18  st   $18,[y,x++]
+2bb1 dc18  st   $18,[y,x++]
+2bb2 dc18  st   $18,[y,x++]
+* 12 times
+2bbc dc00  st   $00,[y,x++]
+2bbd dc00  st   $00,[y,x++]
+2bbe dc00  st   $00,[y,x++]
+* 5 times
+2bc1 dc14  st   $14,[y,x++]
+2bc2 dc14  st   $14,[y,x++]
+2bc3 dc14  st   $14,[y,x++]
+* 12 times
+2bcd dc00  st   $00,[y,x++]
+2bce dc00  st   $00,[y,x++]
+2bcf dc00  st   $00,[y,x++]
+* 5 times
+2bd2 dc10  st   $10,[y,x++]
+2bd3 dc10  st   $10,[y,x++]
+2bd4 dc10  st   $10,[y,x++]
+* 12 times
+2bde dc00  st   $00,[y,x++]
+2bdf dc00  st   $00,[y,x++]
+2be0 dc00  st   $00,[y,x++]
+* 5 times
+2be3 dc20  st   $20,[y,x++]
+2be4 dc20  st   $20,[y,x++]
+2be5 dc20  st   $20,[y,x++]
+* 12 times
+2bef dc00  st   $00,[y,x++]
+2bf0 dc00  st   $00,[y,x++]
+2bf1 dc00  st   $00,[y,x++]
+* 5 times
+2bf4 dc31  st   $31,[y,x++]
+2bf5 dc31  st   $31,[y,x++]
+2bf6 dc31  st   $31,[y,x++]
+* 12 times
+2c00 dc00  st   $00,[y,x++]
+2c01 dc00  st   $00,[y,x++]
+2c02 dc00  st   $00,[y,x++]
+* 5 times
+2c05 dc32  st   $32,[y,x++]
+2c06 dc32  st   $32,[y,x++]
+2c07 dc32  st   $32,[y,x++]
+* 12 times
+2c11 dc00  st   $00,[y,x++]
+2c12 dc00  st   $00,[y,x++]
+2c13 dc00  st   $00,[y,x++]
+* 5 times
+2c16 dc37  st   $37,[y,x++]
+2c17 dc37  st   $37,[y,x++]
+2c18 dc37  st   $37,[y,x++]
+* 12 times
+2c22 dc00  st   $00,[y,x++]
+2c23 dc00  st   $00,[y,x++]
+2c24 dc00  st   $00,[y,x++]
+* 6 times
 2c28 1000  ld   $00,x
 2c29 1441  ld   $41,y
 2c2a dc00  st   $00,[y,x++]
 2c2b dc00  st   $00,[y,x++]
 2c2c dc00  st   $00,[y,x++]
-* 160 times
+* 6 times
+2c30 dc38  st   $38,[y,x++]
+2c31 dc38  st   $38,[y,x++]
+2c32 dc38  st   $38,[y,x++]
+* 12 times
+2c3c dc00  st   $00,[y,x++]
+2c3d dc00  st   $00,[y,x++]
+2c3e dc00  st   $00,[y,x++]
+* 5 times
+2c41 dc28  st   $28,[y,x++]
+2c42 dc28  st   $28,[y,x++]
+2c43 dc28  st   $28,[y,x++]
+* 12 times
+2c4d dc00  st   $00,[y,x++]
+2c4e dc00  st   $00,[y,x++]
+2c4f dc00  st   $00,[y,x++]
+* 5 times
+2c52 dc18  st   $18,[y,x++]
+2c53 dc18  st   $18,[y,x++]
+2c54 dc18  st   $18,[y,x++]
+* 12 times
+2c5e dc00  st   $00,[y,x++]
+2c5f dc00  st   $00,[y,x++]
+2c60 dc00  st   $00,[y,x++]
+* 5 times
+2c63 dc14  st   $14,[y,x++]
+2c64 dc14  st   $14,[y,x++]
+2c65 dc14  st   $14,[y,x++]
+* 12 times
+2c6f dc00  st   $00,[y,x++]
+2c70 dc00  st   $00,[y,x++]
+2c71 dc00  st   $00,[y,x++]
+* 5 times
+2c74 dc10  st   $10,[y,x++]
+2c75 dc10  st   $10,[y,x++]
+2c76 dc10  st   $10,[y,x++]
+* 12 times
+2c80 dc00  st   $00,[y,x++]
+2c81 dc00  st   $00,[y,x++]
+2c82 dc00  st   $00,[y,x++]
+* 5 times
+2c85 dc20  st   $20,[y,x++]
+2c86 dc20  st   $20,[y,x++]
+2c87 dc20  st   $20,[y,x++]
+* 12 times
+2c91 dc00  st   $00,[y,x++]
+2c92 dc00  st   $00,[y,x++]
+2c93 dc00  st   $00,[y,x++]
+* 5 times
+2c96 dc31  st   $31,[y,x++]
+2c97 dc31  st   $31,[y,x++]
+2c98 dc31  st   $31,[y,x++]
+* 12 times
+2ca2 dc00  st   $00,[y,x++]
+2ca3 dc00  st   $00,[y,x++]
+2ca4 dc00  st   $00,[y,x++]
+* 5 times
+2ca7 dc32  st   $32,[y,x++]
+2ca8 dc32  st   $32,[y,x++]
+2ca9 dc32  st   $32,[y,x++]
+* 12 times
+2cb3 dc00  st   $00,[y,x++]
+2cb4 dc00  st   $00,[y,x++]
+2cb5 dc00  st   $00,[y,x++]
+* 5 times
+2cb8 dc37  st   $37,[y,x++]
+2cb9 dc37  st   $37,[y,x++]
+2cba dc37  st   $37,[y,x++]
+* 12 times
+2cc4 dc00  st   $00,[y,x++]
+2cc5 dc00  st   $00,[y,x++]
+2cc6 dc00  st   $00,[y,x++]
+* 6 times
 2cca 1000  ld   $00,x
 2ccb 1442  ld   $42,y
 2ccc dc00  st   $00,[y,x++]
 2ccd dc00  st   $00,[y,x++]
 2cce dc00  st   $00,[y,x++]
-* 160 times
+* 6 times
+2cd2 dc38  st   $38,[y,x++]
+2cd3 dc38  st   $38,[y,x++]
+2cd4 dc38  st   $38,[y,x++]
+* 12 times
+2cde dc00  st   $00,[y,x++]
+2cdf dc00  st   $00,[y,x++]
+2ce0 dc00  st   $00,[y,x++]
+* 5 times
+2ce3 dc28  st   $28,[y,x++]
+2ce4 dc28  st   $28,[y,x++]
+2ce5 dc28  st   $28,[y,x++]
+* 12 times
+2cef dc00  st   $00,[y,x++]
+2cf0 dc00  st   $00,[y,x++]
+2cf1 dc00  st   $00,[y,x++]
+* 5 times
+2cf4 dc18  st   $18,[y,x++]
+2cf5 dc18  st   $18,[y,x++]
+2cf6 dc18  st   $18,[y,x++]
+* 12 times
+2d00 dc00  st   $00,[y,x++]
+2d01 dc00  st   $00,[y,x++]
+2d02 dc00  st   $00,[y,x++]
+* 5 times
+2d05 dc14  st   $14,[y,x++]
+2d06 dc14  st   $14,[y,x++]
+2d07 dc14  st   $14,[y,x++]
+* 12 times
+2d11 dc00  st   $00,[y,x++]
+2d12 dc00  st   $00,[y,x++]
+2d13 dc00  st   $00,[y,x++]
+* 5 times
+2d16 dc10  st   $10,[y,x++]
+2d17 dc10  st   $10,[y,x++]
+2d18 dc10  st   $10,[y,x++]
+* 12 times
+2d22 dc00  st   $00,[y,x++]
+2d23 dc00  st   $00,[y,x++]
+2d24 dc00  st   $00,[y,x++]
+* 5 times
+2d27 dc20  st   $20,[y,x++]
+2d28 dc20  st   $20,[y,x++]
+2d29 dc20  st   $20,[y,x++]
+* 12 times
+2d33 dc00  st   $00,[y,x++]
+2d34 dc00  st   $00,[y,x++]
+2d35 dc00  st   $00,[y,x++]
+* 5 times
+2d38 dc31  st   $31,[y,x++]
+2d39 dc31  st   $31,[y,x++]
+2d3a dc31  st   $31,[y,x++]
+* 12 times
+2d44 dc00  st   $00,[y,x++]
+2d45 dc00  st   $00,[y,x++]
+2d46 dc00  st   $00,[y,x++]
+* 5 times
+2d49 dc32  st   $32,[y,x++]
+2d4a dc32  st   $32,[y,x++]
+2d4b dc32  st   $32,[y,x++]
+* 12 times
+2d55 dc00  st   $00,[y,x++]
+2d56 dc00  st   $00,[y,x++]
+2d57 dc00  st   $00,[y,x++]
+* 5 times
+2d5a dc37  st   $37,[y,x++]
+2d5b dc37  st   $37,[y,x++]
+2d5c dc37  st   $37,[y,x++]
+* 12 times
+2d66 dc00  st   $00,[y,x++]
+2d67 dc00  st   $00,[y,x++]
+2d68 dc00  st   $00,[y,x++]
+* 6 times
 2d6c 1000  ld   $00,x
 2d6d 1443  ld   $43,y
 2d6e dc00  st   $00,[y,x++]
 2d6f dc00  st   $00,[y,x++]
 2d70 dc00  st   $00,[y,x++]
-* 160 times
+* 6 times
+2d74 dc38  st   $38,[y,x++]
+2d75 dc38  st   $38,[y,x++]
+2d76 dc38  st   $38,[y,x++]
+* 12 times
+2d80 dc00  st   $00,[y,x++]
+2d81 dc00  st   $00,[y,x++]
+2d82 dc00  st   $00,[y,x++]
+* 5 times
+2d85 dc28  st   $28,[y,x++]
+2d86 dc28  st   $28,[y,x++]
+2d87 dc28  st   $28,[y,x++]
+* 12 times
+2d91 dc00  st   $00,[y,x++]
+2d92 dc00  st   $00,[y,x++]
+2d93 dc00  st   $00,[y,x++]
+* 5 times
+2d96 dc18  st   $18,[y,x++]
+2d97 dc18  st   $18,[y,x++]
+2d98 dc18  st   $18,[y,x++]
+* 12 times
+2da2 dc00  st   $00,[y,x++]
+2da3 dc00  st   $00,[y,x++]
+2da4 dc00  st   $00,[y,x++]
+* 5 times
+2da7 dc14  st   $14,[y,x++]
+2da8 dc14  st   $14,[y,x++]
+2da9 dc14  st   $14,[y,x++]
+* 12 times
+2db3 dc00  st   $00,[y,x++]
+2db4 dc00  st   $00,[y,x++]
+2db5 dc00  st   $00,[y,x++]
+* 5 times
+2db8 dc10  st   $10,[y,x++]
+2db9 dc10  st   $10,[y,x++]
+2dba dc10  st   $10,[y,x++]
+* 12 times
+2dc4 dc00  st   $00,[y,x++]
+2dc5 dc00  st   $00,[y,x++]
+2dc6 dc00  st   $00,[y,x++]
+* 5 times
+2dc9 dc20  st   $20,[y,x++]
+2dca dc20  st   $20,[y,x++]
+2dcb dc20  st   $20,[y,x++]
+* 12 times
+2dd5 dc00  st   $00,[y,x++]
+2dd6 dc00  st   $00,[y,x++]
+2dd7 dc00  st   $00,[y,x++]
+* 5 times
+2dda dc31  st   $31,[y,x++]
+2ddb dc31  st   $31,[y,x++]
+2ddc dc31  st   $31,[y,x++]
+* 12 times
+2de6 dc00  st   $00,[y,x++]
+2de7 dc00  st   $00,[y,x++]
+2de8 dc00  st   $00,[y,x++]
+* 5 times
+2deb dc32  st   $32,[y,x++]
+2dec dc32  st   $32,[y,x++]
+2ded dc32  st   $32,[y,x++]
+* 12 times
+2df7 dc00  st   $00,[y,x++]
+2df8 dc00  st   $00,[y,x++]
+2df9 dc00  st   $00,[y,x++]
+* 5 times
+2dfc dc37  st   $37,[y,x++]
+2dfd dc37  st   $37,[y,x++]
+2dfe dc37  st   $37,[y,x++]
+* 12 times
+2e08 dc00  st   $00,[y,x++]
+2e09 dc00  st   $00,[y,x++]
+2e0a dc00  st   $00,[y,x++]
+* 6 times
 2e0e 1000  ld   $00,x
 2e0f 1444  ld   $44,y
 2e10 dc00  st   $00,[y,x++]
 2e11 dc00  st   $00,[y,x++]
 2e12 dc00  st   $00,[y,x++]
-* 6 times
-2e16 dc07  st   $07,[y,x++]
-2e17 dc07  st   $07,[y,x++]
-2e18 dc07  st   $07,[y,x++]
-* 12 times
-2e22 dc00  st   $00,[y,x++]
-2e23 dc00  st   $00,[y,x++]
-2e24 dc00  st   $00,[y,x++]
-* 5 times
-2e27 dc0f  st   $0f,[y,x++]
-2e28 dc0f  st   $0f,[y,x++]
-2e29 dc0f  st   $0f,[y,x++]
-* 12 times
-2e33 dc00  st   $00,[y,x++]
-2e34 dc00  st   $00,[y,x++]
-2e35 dc00  st   $00,[y,x++]
-* 5 times
-2e38 dc17  st   $17,[y,x++]
-2e39 dc17  st   $17,[y,x++]
-2e3a dc17  st   $17,[y,x++]
-* 12 times
-2e44 dc00  st   $00,[y,x++]
-2e45 dc00  st   $00,[y,x++]
-2e46 dc00  st   $00,[y,x++]
-* 5 times
-2e49 dc1f  st   $1f,[y,x++]
-2e4a dc1f  st   $1f,[y,x++]
-2e4b dc1f  st   $1f,[y,x++]
-* 12 times
-2e55 dc00  st   $00,[y,x++]
-2e56 dc00  st   $00,[y,x++]
-2e57 dc00  st   $00,[y,x++]
-* 5 times
-2e5a dc27  st   $27,[y,x++]
-2e5b dc27  st   $27,[y,x++]
-2e5c dc27  st   $27,[y,x++]
-* 12 times
-2e66 dc00  st   $00,[y,x++]
-2e67 dc00  st   $00,[y,x++]
-2e68 dc00  st   $00,[y,x++]
-* 5 times
-2e6b dc2f  st   $2f,[y,x++]
-2e6c dc2f  st   $2f,[y,x++]
-2e6d dc2f  st   $2f,[y,x++]
-* 12 times
-2e77 dc00  st   $00,[y,x++]
-2e78 dc00  st   $00,[y,x++]
-2e79 dc00  st   $00,[y,x++]
-* 5 times
-2e7c dc37  st   $37,[y,x++]
-2e7d dc37  st   $37,[y,x++]
-2e7e dc37  st   $37,[y,x++]
-* 12 times
-2e88 dc00  st   $00,[y,x++]
-2e89 dc00  st   $00,[y,x++]
-2e8a dc00  st   $00,[y,x++]
-* 5 times
-2e8d dc3f  st   $3f,[y,x++]
-2e8e dc3f  st   $3f,[y,x++]
-2e8f dc3f  st   $3f,[y,x++]
-* 12 times
-2e99 dc00  st   $00,[y,x++]
-2e9a dc00  st   $00,[y,x++]
-2e9b dc00  st   $00,[y,x++]
-* 5 times
-2e9e dc08  st   $08,[y,x++]
-2e9f dc08  st   $08,[y,x++]
-2ea0 dc08  st   $08,[y,x++]
-* 12 times
-2eaa dc00  st   $00,[y,x++]
-2eab dc00  st   $00,[y,x++]
-2eac dc00  st   $00,[y,x++]
-* 6 times
+* 160 times
 2eb0 1000  ld   $00,x
 2eb1 1445  ld   $45,y
 2eb2 dc00  st   $00,[y,x++]
 2eb3 dc00  st   $00,[y,x++]
 2eb4 dc00  st   $00,[y,x++]
-* 6 times
-2eb8 dc07  st   $07,[y,x++]
-2eb9 dc07  st   $07,[y,x++]
-2eba dc07  st   $07,[y,x++]
-* 12 times
-2ec4 dc00  st   $00,[y,x++]
-2ec5 dc00  st   $00,[y,x++]
-2ec6 dc00  st   $00,[y,x++]
-* 5 times
-2ec9 dc0f  st   $0f,[y,x++]
-2eca dc0f  st   $0f,[y,x++]
-2ecb dc0f  st   $0f,[y,x++]
-* 12 times
-2ed5 dc00  st   $00,[y,x++]
-2ed6 dc00  st   $00,[y,x++]
-2ed7 dc00  st   $00,[y,x++]
-* 5 times
-2eda dc17  st   $17,[y,x++]
-2edb dc17  st   $17,[y,x++]
-2edc dc17  st   $17,[y,x++]
-* 12 times
-2ee6 dc00  st   $00,[y,x++]
-2ee7 dc00  st   $00,[y,x++]
-2ee8 dc00  st   $00,[y,x++]
-* 5 times
-2eeb dc1f  st   $1f,[y,x++]
-2eec dc1f  st   $1f,[y,x++]
-2eed dc1f  st   $1f,[y,x++]
-* 12 times
-2ef7 dc00  st   $00,[y,x++]
-2ef8 dc00  st   $00,[y,x++]
-2ef9 dc00  st   $00,[y,x++]
-* 5 times
-2efc dc27  st   $27,[y,x++]
-2efd dc27  st   $27,[y,x++]
-2efe dc27  st   $27,[y,x++]
-* 12 times
-2f08 dc00  st   $00,[y,x++]
-2f09 dc00  st   $00,[y,x++]
-2f0a dc00  st   $00,[y,x++]
-* 5 times
-2f0d dc2f  st   $2f,[y,x++]
-2f0e dc2f  st   $2f,[y,x++]
-2f0f dc2f  st   $2f,[y,x++]
-* 12 times
-2f19 dc00  st   $00,[y,x++]
-2f1a dc00  st   $00,[y,x++]
-2f1b dc00  st   $00,[y,x++]
-* 5 times
-2f1e dc37  st   $37,[y,x++]
-2f1f dc37  st   $37,[y,x++]
-2f20 dc37  st   $37,[y,x++]
-* 12 times
-2f2a dc00  st   $00,[y,x++]
-2f2b dc00  st   $00,[y,x++]
-2f2c dc00  st   $00,[y,x++]
-* 5 times
-2f2f dc3f  st   $3f,[y,x++]
-2f30 dc3f  st   $3f,[y,x++]
-2f31 dc3f  st   $3f,[y,x++]
-* 12 times
-2f3b dc00  st   $00,[y,x++]
-2f3c dc00  st   $00,[y,x++]
-2f3d dc00  st   $00,[y,x++]
-* 5 times
-2f40 dc08  st   $08,[y,x++]
-2f41 dc08  st   $08,[y,x++]
-2f42 dc08  st   $08,[y,x++]
-* 12 times
-2f4c dc00  st   $00,[y,x++]
-2f4d dc00  st   $00,[y,x++]
-2f4e dc00  st   $00,[y,x++]
-* 6 times
+* 160 times
 2f52 1000  ld   $00,x
 2f53 1446  ld   $46,y
 2f54 dc00  st   $00,[y,x++]
 2f55 dc00  st   $00,[y,x++]
 2f56 dc00  st   $00,[y,x++]
-* 6 times
-2f5a dc07  st   $07,[y,x++]
-2f5b dc07  st   $07,[y,x++]
-2f5c dc07  st   $07,[y,x++]
-* 12 times
-2f66 dc00  st   $00,[y,x++]
-2f67 dc00  st   $00,[y,x++]
-2f68 dc00  st   $00,[y,x++]
-* 5 times
-2f6b dc0f  st   $0f,[y,x++]
-2f6c dc0f  st   $0f,[y,x++]
-2f6d dc0f  st   $0f,[y,x++]
-* 12 times
-2f77 dc00  st   $00,[y,x++]
-2f78 dc00  st   $00,[y,x++]
-2f79 dc00  st   $00,[y,x++]
-* 5 times
-2f7c dc17  st   $17,[y,x++]
-2f7d dc17  st   $17,[y,x++]
-2f7e dc17  st   $17,[y,x++]
-* 12 times
-2f88 dc00  st   $00,[y,x++]
-2f89 dc00  st   $00,[y,x++]
-2f8a dc00  st   $00,[y,x++]
-* 5 times
-2f8d dc1f  st   $1f,[y,x++]
-2f8e dc1f  st   $1f,[y,x++]
-2f8f dc1f  st   $1f,[y,x++]
-* 12 times
-2f99 dc00  st   $00,[y,x++]
-2f9a dc00  st   $00,[y,x++]
-2f9b dc00  st   $00,[y,x++]
-* 5 times
-2f9e dc27  st   $27,[y,x++]
-2f9f dc27  st   $27,[y,x++]
-2fa0 dc27  st   $27,[y,x++]
-* 12 times
-2faa dc00  st   $00,[y,x++]
-2fab dc00  st   $00,[y,x++]
-2fac dc00  st   $00,[y,x++]
-* 5 times
-2faf dc2f  st   $2f,[y,x++]
-2fb0 dc2f  st   $2f,[y,x++]
-2fb1 dc2f  st   $2f,[y,x++]
-* 12 times
-2fbb dc00  st   $00,[y,x++]
-2fbc dc00  st   $00,[y,x++]
-2fbd dc00  st   $00,[y,x++]
-* 5 times
-2fc0 dc37  st   $37,[y,x++]
-2fc1 dc37  st   $37,[y,x++]
-2fc2 dc37  st   $37,[y,x++]
-* 12 times
-2fcc dc00  st   $00,[y,x++]
-2fcd dc00  st   $00,[y,x++]
-2fce dc00  st   $00,[y,x++]
-* 5 times
-2fd1 dc3f  st   $3f,[y,x++]
-2fd2 dc3f  st   $3f,[y,x++]
-2fd3 dc3f  st   $3f,[y,x++]
-* 12 times
-2fdd dc00  st   $00,[y,x++]
-2fde dc00  st   $00,[y,x++]
-2fdf dc00  st   $00,[y,x++]
-* 5 times
-2fe2 dc08  st   $08,[y,x++]
-2fe3 dc08  st   $08,[y,x++]
-2fe4 dc08  st   $08,[y,x++]
-* 12 times
-2fee dc00  st   $00,[y,x++]
-2fef dc00  st   $00,[y,x++]
-2ff0 dc00  st   $00,[y,x++]
-* 6 times
+* 160 times
 2ff4 1000  ld   $00,x
 2ff5 1447  ld   $47,y
 2ff6 dc00  st   $00,[y,x++]
 2ff7 dc00  st   $00,[y,x++]
 2ff8 dc00  st   $00,[y,x++]
 * 6 times
-2ffc dc07  st   $07,[y,x++]
-2ffd dc07  st   $07,[y,x++]
-2ffe dc07  st   $07,[y,x++]
+2ffc dc15  st   $15,[y,x++]
+2ffd dc15  st   $15,[y,x++]
+2ffe dc15  st   $15,[y,x++]
 * 12 times
 3008 dc00  st   $00,[y,x++]
 3009 dc00  st   $00,[y,x++]
 300a dc00  st   $00,[y,x++]
 * 5 times
-300d dc0f  st   $0f,[y,x++]
-300e dc0f  st   $0f,[y,x++]
-300f dc0f  st   $0f,[y,x++]
+300d dc19  st   $19,[y,x++]
+300e dc19  st   $19,[y,x++]
+300f dc19  st   $19,[y,x++]
 * 12 times
 3019 dc00  st   $00,[y,x++]
 301a dc00  st   $00,[y,x++]
 301b dc00  st   $00,[y,x++]
 * 5 times
-301e dc17  st   $17,[y,x++]
-301f dc17  st   $17,[y,x++]
-3020 dc17  st   $17,[y,x++]
+301e dc29  st   $29,[y,x++]
+301f dc29  st   $29,[y,x++]
+3020 dc29  st   $29,[y,x++]
 * 12 times
 302a dc00  st   $00,[y,x++]
 302b dc00  st   $00,[y,x++]
 302c dc00  st   $00,[y,x++]
 * 5 times
-302f dc1f  st   $1f,[y,x++]
-3030 dc1f  st   $1f,[y,x++]
-3031 dc1f  st   $1f,[y,x++]
+302f dc24  st   $24,[y,x++]
+3030 dc24  st   $24,[y,x++]
+3031 dc24  st   $24,[y,x++]
 * 12 times
 303b dc00  st   $00,[y,x++]
 303c dc00  st   $00,[y,x++]
 303d dc00  st   $00,[y,x++]
 * 5 times
-3040 dc27  st   $27,[y,x++]
-3041 dc27  st   $27,[y,x++]
-3042 dc27  st   $27,[y,x++]
+3040 dc30  st   $30,[y,x++]
+3041 dc30  st   $30,[y,x++]
+3042 dc30  st   $30,[y,x++]
 * 12 times
 304c dc00  st   $00,[y,x++]
 304d dc00  st   $00,[y,x++]
 304e dc00  st   $00,[y,x++]
 * 5 times
-3051 dc2f  st   $2f,[y,x++]
-3052 dc2f  st   $2f,[y,x++]
-3053 dc2f  st   $2f,[y,x++]
+3051 dc35  st   $35,[y,x++]
+3052 dc35  st   $35,[y,x++]
+3053 dc35  st   $35,[y,x++]
 * 12 times
 305d dc00  st   $00,[y,x++]
 305e dc00  st   $00,[y,x++]
 305f dc00  st   $00,[y,x++]
 * 5 times
-3062 dc37  st   $37,[y,x++]
-3063 dc37  st   $37,[y,x++]
-3064 dc37  st   $37,[y,x++]
+3062 dc36  st   $36,[y,x++]
+3063 dc36  st   $36,[y,x++]
+3064 dc36  st   $36,[y,x++]
 * 12 times
 306e dc00  st   $00,[y,x++]
 306f dc00  st   $00,[y,x++]
 3070 dc00  st   $00,[y,x++]
 * 5 times
-3073 dc3f  st   $3f,[y,x++]
-3074 dc3f  st   $3f,[y,x++]
-3075 dc3f  st   $3f,[y,x++]
+3073 dc26  st   $26,[y,x++]
+3074 dc26  st   $26,[y,x++]
+3075 dc26  st   $26,[y,x++]
 * 12 times
 307f dc00  st   $00,[y,x++]
 3080 dc00  st   $00,[y,x++]
 3081 dc00  st   $00,[y,x++]
 * 5 times
-3084 dc08  st   $08,[y,x++]
-3085 dc08  st   $08,[y,x++]
-3086 dc08  st   $08,[y,x++]
+3084 dc27  st   $27,[y,x++]
+3085 dc27  st   $27,[y,x++]
+3086 dc27  st   $27,[y,x++]
 * 12 times
 3090 dc00  st   $00,[y,x++]
 3091 dc00  st   $00,[y,x++]
@@ -5316,73 +5484,73 @@ V    V     V    V
 3099 dc00  st   $00,[y,x++]
 309a dc00  st   $00,[y,x++]
 * 6 times
-309e dc07  st   $07,[y,x++]
-309f dc07  st   $07,[y,x++]
-30a0 dc07  st   $07,[y,x++]
+309e dc15  st   $15,[y,x++]
+309f dc15  st   $15,[y,x++]
+30a0 dc15  st   $15,[y,x++]
 * 12 times
 30aa dc00  st   $00,[y,x++]
 30ab dc00  st   $00,[y,x++]
 30ac dc00  st   $00,[y,x++]
 * 5 times
-30af dc0f  st   $0f,[y,x++]
-30b0 dc0f  st   $0f,[y,x++]
-30b1 dc0f  st   $0f,[y,x++]
+30af dc19  st   $19,[y,x++]
+30b0 dc19  st   $19,[y,x++]
+30b1 dc19  st   $19,[y,x++]
 * 12 times
 30bb dc00  st   $00,[y,x++]
 30bc dc00  st   $00,[y,x++]
 30bd dc00  st   $00,[y,x++]
 * 5 times
-30c0 dc17  st   $17,[y,x++]
-30c1 dc17  st   $17,[y,x++]
-30c2 dc17  st   $17,[y,x++]
+30c0 dc29  st   $29,[y,x++]
+30c1 dc29  st   $29,[y,x++]
+30c2 dc29  st   $29,[y,x++]
 * 12 times
 30cc dc00  st   $00,[y,x++]
 30cd dc00  st   $00,[y,x++]
 30ce dc00  st   $00,[y,x++]
 * 5 times
-30d1 dc1f  st   $1f,[y,x++]
-30d2 dc1f  st   $1f,[y,x++]
-30d3 dc1f  st   $1f,[y,x++]
+30d1 dc24  st   $24,[y,x++]
+30d2 dc24  st   $24,[y,x++]
+30d3 dc24  st   $24,[y,x++]
 * 12 times
 30dd dc00  st   $00,[y,x++]
 30de dc00  st   $00,[y,x++]
 30df dc00  st   $00,[y,x++]
 * 5 times
-30e2 dc27  st   $27,[y,x++]
-30e3 dc27  st   $27,[y,x++]
-30e4 dc27  st   $27,[y,x++]
+30e2 dc30  st   $30,[y,x++]
+30e3 dc30  st   $30,[y,x++]
+30e4 dc30  st   $30,[y,x++]
 * 12 times
 30ee dc00  st   $00,[y,x++]
 30ef dc00  st   $00,[y,x++]
 30f0 dc00  st   $00,[y,x++]
 * 5 times
-30f3 dc2f  st   $2f,[y,x++]
-30f4 dc2f  st   $2f,[y,x++]
-30f5 dc2f  st   $2f,[y,x++]
+30f3 dc35  st   $35,[y,x++]
+30f4 dc35  st   $35,[y,x++]
+30f5 dc35  st   $35,[y,x++]
 * 12 times
 30ff dc00  st   $00,[y,x++]
 3100 dc00  st   $00,[y,x++]
 3101 dc00  st   $00,[y,x++]
 * 5 times
-3104 dc37  st   $37,[y,x++]
-3105 dc37  st   $37,[y,x++]
-3106 dc37  st   $37,[y,x++]
+3104 dc36  st   $36,[y,x++]
+3105 dc36  st   $36,[y,x++]
+3106 dc36  st   $36,[y,x++]
 * 12 times
 3110 dc00  st   $00,[y,x++]
 3111 dc00  st   $00,[y,x++]
 3112 dc00  st   $00,[y,x++]
 * 5 times
-3115 dc3f  st   $3f,[y,x++]
-3116 dc3f  st   $3f,[y,x++]
-3117 dc3f  st   $3f,[y,x++]
+3115 dc26  st   $26,[y,x++]
+3116 dc26  st   $26,[y,x++]
+3117 dc26  st   $26,[y,x++]
 * 12 times
 3121 dc00  st   $00,[y,x++]
 3122 dc00  st   $00,[y,x++]
 3123 dc00  st   $00,[y,x++]
 * 5 times
-3126 dc08  st   $08,[y,x++]
-3127 dc08  st   $08,[y,x++]
-3128 dc08  st   $08,[y,x++]
+3126 dc27  st   $27,[y,x++]
+3127 dc27  st   $27,[y,x++]
+3128 dc27  st   $27,[y,x++]
 * 12 times
 3132 dc00  st   $00,[y,x++]
 3133 dc00  st   $00,[y,x++]
@@ -5393,19 +5561,235 @@ V    V     V    V
 313a dc00  st   $00,[y,x++]
 313b dc00  st   $00,[y,x++]
 313c dc00  st   $00,[y,x++]
-* 160 times
+* 6 times
+3140 dc15  st   $15,[y,x++]
+3141 dc15  st   $15,[y,x++]
+3142 dc15  st   $15,[y,x++]
+* 12 times
+314c dc00  st   $00,[y,x++]
+314d dc00  st   $00,[y,x++]
+314e dc00  st   $00,[y,x++]
+* 5 times
+3151 dc19  st   $19,[y,x++]
+3152 dc19  st   $19,[y,x++]
+3153 dc19  st   $19,[y,x++]
+* 12 times
+315d dc00  st   $00,[y,x++]
+315e dc00  st   $00,[y,x++]
+315f dc00  st   $00,[y,x++]
+* 5 times
+3162 dc29  st   $29,[y,x++]
+3163 dc29  st   $29,[y,x++]
+3164 dc29  st   $29,[y,x++]
+* 12 times
+316e dc00  st   $00,[y,x++]
+316f dc00  st   $00,[y,x++]
+3170 dc00  st   $00,[y,x++]
+* 5 times
+3173 dc24  st   $24,[y,x++]
+3174 dc24  st   $24,[y,x++]
+3175 dc24  st   $24,[y,x++]
+* 12 times
+317f dc00  st   $00,[y,x++]
+3180 dc00  st   $00,[y,x++]
+3181 dc00  st   $00,[y,x++]
+* 5 times
+3184 dc30  st   $30,[y,x++]
+3185 dc30  st   $30,[y,x++]
+3186 dc30  st   $30,[y,x++]
+* 12 times
+3190 dc00  st   $00,[y,x++]
+3191 dc00  st   $00,[y,x++]
+3192 dc00  st   $00,[y,x++]
+* 5 times
+3195 dc35  st   $35,[y,x++]
+3196 dc35  st   $35,[y,x++]
+3197 dc35  st   $35,[y,x++]
+* 12 times
+31a1 dc00  st   $00,[y,x++]
+31a2 dc00  st   $00,[y,x++]
+31a3 dc00  st   $00,[y,x++]
+* 5 times
+31a6 dc36  st   $36,[y,x++]
+31a7 dc36  st   $36,[y,x++]
+31a8 dc36  st   $36,[y,x++]
+* 12 times
+31b2 dc00  st   $00,[y,x++]
+31b3 dc00  st   $00,[y,x++]
+31b4 dc00  st   $00,[y,x++]
+* 5 times
+31b7 dc26  st   $26,[y,x++]
+31b8 dc26  st   $26,[y,x++]
+31b9 dc26  st   $26,[y,x++]
+* 12 times
+31c3 dc00  st   $00,[y,x++]
+31c4 dc00  st   $00,[y,x++]
+31c5 dc00  st   $00,[y,x++]
+* 5 times
+31c8 dc27  st   $27,[y,x++]
+31c9 dc27  st   $27,[y,x++]
+31ca dc27  st   $27,[y,x++]
+* 12 times
+31d4 dc00  st   $00,[y,x++]
+31d5 dc00  st   $00,[y,x++]
+31d6 dc00  st   $00,[y,x++]
+* 6 times
 31da 1000  ld   $00,x
 31db 144a  ld   $4a,y
 31dc dc00  st   $00,[y,x++]
 31dd dc00  st   $00,[y,x++]
 31de dc00  st   $00,[y,x++]
-* 160 times
+* 6 times
+31e2 dc15  st   $15,[y,x++]
+31e3 dc15  st   $15,[y,x++]
+31e4 dc15  st   $15,[y,x++]
+* 12 times
+31ee dc00  st   $00,[y,x++]
+31ef dc00  st   $00,[y,x++]
+31f0 dc00  st   $00,[y,x++]
+* 5 times
+31f3 dc19  st   $19,[y,x++]
+31f4 dc19  st   $19,[y,x++]
+31f5 dc19  st   $19,[y,x++]
+* 12 times
+31ff dc00  st   $00,[y,x++]
+3200 dc00  st   $00,[y,x++]
+3201 dc00  st   $00,[y,x++]
+* 5 times
+3204 dc29  st   $29,[y,x++]
+3205 dc29  st   $29,[y,x++]
+3206 dc29  st   $29,[y,x++]
+* 12 times
+3210 dc00  st   $00,[y,x++]
+3211 dc00  st   $00,[y,x++]
+3212 dc00  st   $00,[y,x++]
+* 5 times
+3215 dc24  st   $24,[y,x++]
+3216 dc24  st   $24,[y,x++]
+3217 dc24  st   $24,[y,x++]
+* 12 times
+3221 dc00  st   $00,[y,x++]
+3222 dc00  st   $00,[y,x++]
+3223 dc00  st   $00,[y,x++]
+* 5 times
+3226 dc30  st   $30,[y,x++]
+3227 dc30  st   $30,[y,x++]
+3228 dc30  st   $30,[y,x++]
+* 12 times
+3232 dc00  st   $00,[y,x++]
+3233 dc00  st   $00,[y,x++]
+3234 dc00  st   $00,[y,x++]
+* 5 times
+3237 dc35  st   $35,[y,x++]
+3238 dc35  st   $35,[y,x++]
+3239 dc35  st   $35,[y,x++]
+* 12 times
+3243 dc00  st   $00,[y,x++]
+3244 dc00  st   $00,[y,x++]
+3245 dc00  st   $00,[y,x++]
+* 5 times
+3248 dc36  st   $36,[y,x++]
+3249 dc36  st   $36,[y,x++]
+324a dc36  st   $36,[y,x++]
+* 12 times
+3254 dc00  st   $00,[y,x++]
+3255 dc00  st   $00,[y,x++]
+3256 dc00  st   $00,[y,x++]
+* 5 times
+3259 dc26  st   $26,[y,x++]
+325a dc26  st   $26,[y,x++]
+325b dc26  st   $26,[y,x++]
+* 12 times
+3265 dc00  st   $00,[y,x++]
+3266 dc00  st   $00,[y,x++]
+3267 dc00  st   $00,[y,x++]
+* 5 times
+326a dc27  st   $27,[y,x++]
+326b dc27  st   $27,[y,x++]
+326c dc27  st   $27,[y,x++]
+* 12 times
+3276 dc00  st   $00,[y,x++]
+3277 dc00  st   $00,[y,x++]
+3278 dc00  st   $00,[y,x++]
+* 6 times
 327c 1000  ld   $00,x
 327d 144b  ld   $4b,y
 327e dc00  st   $00,[y,x++]
 327f dc00  st   $00,[y,x++]
 3280 dc00  st   $00,[y,x++]
-* 160 times
+* 6 times
+3284 dc15  st   $15,[y,x++]
+3285 dc15  st   $15,[y,x++]
+3286 dc15  st   $15,[y,x++]
+* 12 times
+3290 dc00  st   $00,[y,x++]
+3291 dc00  st   $00,[y,x++]
+3292 dc00  st   $00,[y,x++]
+* 5 times
+3295 dc19  st   $19,[y,x++]
+3296 dc19  st   $19,[y,x++]
+3297 dc19  st   $19,[y,x++]
+* 12 times
+32a1 dc00  st   $00,[y,x++]
+32a2 dc00  st   $00,[y,x++]
+32a3 dc00  st   $00,[y,x++]
+* 5 times
+32a6 dc29  st   $29,[y,x++]
+32a7 dc29  st   $29,[y,x++]
+32a8 dc29  st   $29,[y,x++]
+* 12 times
+32b2 dc00  st   $00,[y,x++]
+32b3 dc00  st   $00,[y,x++]
+32b4 dc00  st   $00,[y,x++]
+* 5 times
+32b7 dc24  st   $24,[y,x++]
+32b8 dc24  st   $24,[y,x++]
+32b9 dc24  st   $24,[y,x++]
+* 12 times
+32c3 dc00  st   $00,[y,x++]
+32c4 dc00  st   $00,[y,x++]
+32c5 dc00  st   $00,[y,x++]
+* 5 times
+32c8 dc30  st   $30,[y,x++]
+32c9 dc30  st   $30,[y,x++]
+32ca dc30  st   $30,[y,x++]
+* 12 times
+32d4 dc00  st   $00,[y,x++]
+32d5 dc00  st   $00,[y,x++]
+32d6 dc00  st   $00,[y,x++]
+* 5 times
+32d9 dc35  st   $35,[y,x++]
+32da dc35  st   $35,[y,x++]
+32db dc35  st   $35,[y,x++]
+* 12 times
+32e5 dc00  st   $00,[y,x++]
+32e6 dc00  st   $00,[y,x++]
+32e7 dc00  st   $00,[y,x++]
+* 5 times
+32ea dc36  st   $36,[y,x++]
+32eb dc36  st   $36,[y,x++]
+32ec dc36  st   $36,[y,x++]
+* 12 times
+32f6 dc00  st   $00,[y,x++]
+32f7 dc00  st   $00,[y,x++]
+32f8 dc00  st   $00,[y,x++]
+* 5 times
+32fb dc26  st   $26,[y,x++]
+32fc dc26  st   $26,[y,x++]
+32fd dc26  st   $26,[y,x++]
+* 12 times
+3307 dc00  st   $00,[y,x++]
+3308 dc00  st   $00,[y,x++]
+3309 dc00  st   $00,[y,x++]
+* 5 times
+330c dc27  st   $27,[y,x++]
+330d dc27  st   $27,[y,x++]
+330e dc27  st   $27,[y,x++]
+* 12 times
+3318 dc00  st   $00,[y,x++]
+3319 dc00  st   $00,[y,x++]
+331a dc00  st   $00,[y,x++]
+* 6 times
 331e 1000  ld   $00,x
 331f 144c  ld   $4c,y
 3320 dc00  st   $00,[y,x++]
@@ -5417,230 +5801,86 @@ V    V     V    V
 33c2 dc00  st   $00,[y,x++]
 33c3 dc00  st   $00,[y,x++]
 33c4 dc00  st   $00,[y,x++]
-* 6 times
-33c8 dc2e  st   $2e,[y,x++]
-33c9 dc2e  st   $2e,[y,x++]
-33ca dc2e  st   $2e,[y,x++]
-* 12 times
-33d4 dc00  st   $00,[y,x++]
-33d5 dc00  st   $00,[y,x++]
-33d6 dc00  st   $00,[y,x++]
-* 5 times
-33d9 dc36  st   $36,[y,x++]
-33da dc36  st   $36,[y,x++]
-33db dc36  st   $36,[y,x++]
-* 12 times
-33e5 dc00  st   $00,[y,x++]
-33e6 dc00  st   $00,[y,x++]
-33e7 dc00  st   $00,[y,x++]
-* 5 times
-33ea dc3e  st   $3e,[y,x++]
-33eb dc3e  st   $3e,[y,x++]
-33ec dc3e  st   $3e,[y,x++]
-* 12 times
-33f6 dc00  st   $00,[y,x++]
-33f7 dc00  st   $00,[y,x++]
-33f8 dc00  st   $00,[y,x++]
-* 5 times
-33fb dc07  st   $07,[y,x++]
-33fc dc07  st   $07,[y,x++]
-33fd dc07  st   $07,[y,x++]
-* 12 times
-3407 dc00  st   $00,[y,x++]
-3408 dc00  st   $00,[y,x++]
-3409 dc00  st   $00,[y,x++]
-* 5 times
-340c dc0f  st   $0f,[y,x++]
-340d dc0f  st   $0f,[y,x++]
-340e dc0f  st   $0f,[y,x++]
-* 12 times
-3418 dc00  st   $00,[y,x++]
-3419 dc00  st   $00,[y,x++]
-341a dc00  st   $00,[y,x++]
-* 5 times
-341d dc17  st   $17,[y,x++]
-341e dc17  st   $17,[y,x++]
-341f dc17  st   $17,[y,x++]
-* 12 times
-3429 dc00  st   $00,[y,x++]
-342a dc00  st   $00,[y,x++]
-342b dc00  st   $00,[y,x++]
-* 5 times
-342e dc1f  st   $1f,[y,x++]
-342f dc1f  st   $1f,[y,x++]
-3430 dc1f  st   $1f,[y,x++]
-* 12 times
-343a dc00  st   $00,[y,x++]
-343b dc00  st   $00,[y,x++]
-343c dc00  st   $00,[y,x++]
-* 5 times
-343f dc27  st   $27,[y,x++]
-3440 dc27  st   $27,[y,x++]
-3441 dc27  st   $27,[y,x++]
-* 12 times
-344b dc00  st   $00,[y,x++]
-344c dc00  st   $00,[y,x++]
-344d dc00  st   $00,[y,x++]
-* 5 times
-3450 dc2f  st   $2f,[y,x++]
-3451 dc2f  st   $2f,[y,x++]
-3452 dc2f  st   $2f,[y,x++]
-* 12 times
-345c dc00  st   $00,[y,x++]
-345d dc00  st   $00,[y,x++]
-345e dc00  st   $00,[y,x++]
-* 6 times
+* 160 times
 3462 1000  ld   $00,x
 3463 144e  ld   $4e,y
 3464 dc00  st   $00,[y,x++]
 3465 dc00  st   $00,[y,x++]
 3466 dc00  st   $00,[y,x++]
-* 6 times
-346a dc2e  st   $2e,[y,x++]
-346b dc2e  st   $2e,[y,x++]
-346c dc2e  st   $2e,[y,x++]
-* 12 times
-3476 dc00  st   $00,[y,x++]
-3477 dc00  st   $00,[y,x++]
-3478 dc00  st   $00,[y,x++]
-* 5 times
-347b dc36  st   $36,[y,x++]
-347c dc36  st   $36,[y,x++]
-347d dc36  st   $36,[y,x++]
-* 12 times
-3487 dc00  st   $00,[y,x++]
-3488 dc00  st   $00,[y,x++]
-3489 dc00  st   $00,[y,x++]
-* 5 times
-348c dc3e  st   $3e,[y,x++]
-348d dc3e  st   $3e,[y,x++]
-348e dc3e  st   $3e,[y,x++]
-* 12 times
-3498 dc00  st   $00,[y,x++]
-3499 dc00  st   $00,[y,x++]
-349a dc00  st   $00,[y,x++]
-* 5 times
-349d dc07  st   $07,[y,x++]
-349e dc07  st   $07,[y,x++]
-349f dc07  st   $07,[y,x++]
-* 12 times
-34a9 dc00  st   $00,[y,x++]
-34aa dc00  st   $00,[y,x++]
-34ab dc00  st   $00,[y,x++]
-* 5 times
-34ae dc0f  st   $0f,[y,x++]
-34af dc0f  st   $0f,[y,x++]
-34b0 dc0f  st   $0f,[y,x++]
-* 12 times
-34ba dc00  st   $00,[y,x++]
-34bb dc00  st   $00,[y,x++]
-34bc dc00  st   $00,[y,x++]
-* 5 times
-34bf dc17  st   $17,[y,x++]
-34c0 dc17  st   $17,[y,x++]
-34c1 dc17  st   $17,[y,x++]
-* 12 times
-34cb dc00  st   $00,[y,x++]
-34cc dc00  st   $00,[y,x++]
-34cd dc00  st   $00,[y,x++]
-* 5 times
-34d0 dc1f  st   $1f,[y,x++]
-34d1 dc1f  st   $1f,[y,x++]
-34d2 dc1f  st   $1f,[y,x++]
-* 12 times
-34dc dc00  st   $00,[y,x++]
-34dd dc00  st   $00,[y,x++]
-34de dc00  st   $00,[y,x++]
-* 5 times
-34e1 dc27  st   $27,[y,x++]
-34e2 dc27  st   $27,[y,x++]
-34e3 dc27  st   $27,[y,x++]
-* 12 times
-34ed dc00  st   $00,[y,x++]
-34ee dc00  st   $00,[y,x++]
-34ef dc00  st   $00,[y,x++]
-* 5 times
-34f2 dc2f  st   $2f,[y,x++]
-34f3 dc2f  st   $2f,[y,x++]
-34f4 dc2f  st   $2f,[y,x++]
-* 12 times
-34fe dc00  st   $00,[y,x++]
-34ff dc00  st   $00,[y,x++]
-3500 dc00  st   $00,[y,x++]
-* 6 times
+* 160 times
 3504 1000  ld   $00,x
 3505 144f  ld   $4f,y
 3506 dc00  st   $00,[y,x++]
 3507 dc00  st   $00,[y,x++]
 3508 dc00  st   $00,[y,x++]
 * 6 times
-350c dc2e  st   $2e,[y,x++]
-350d dc2e  st   $2e,[y,x++]
-350e dc2e  st   $2e,[y,x++]
+350c dc16  st   $16,[y,x++]
+350d dc16  st   $16,[y,x++]
+350e dc16  st   $16,[y,x++]
 * 12 times
 3518 dc00  st   $00,[y,x++]
 3519 dc00  st   $00,[y,x++]
 351a dc00  st   $00,[y,x++]
 * 5 times
-351d dc36  st   $36,[y,x++]
-351e dc36  st   $36,[y,x++]
-351f dc36  st   $36,[y,x++]
+351d dc1a  st   $1a,[y,x++]
+351e dc1a  st   $1a,[y,x++]
+351f dc1a  st   $1a,[y,x++]
 * 12 times
 3529 dc00  st   $00,[y,x++]
 352a dc00  st   $00,[y,x++]
 352b dc00  st   $00,[y,x++]
 * 5 times
-352e dc3e  st   $3e,[y,x++]
-352f dc3e  st   $3e,[y,x++]
-3530 dc3e  st   $3e,[y,x++]
+352e dc2a  st   $2a,[y,x++]
+352f dc2a  st   $2a,[y,x++]
+3530 dc2a  st   $2a,[y,x++]
 * 12 times
 353a dc00  st   $00,[y,x++]
 353b dc00  st   $00,[y,x++]
 353c dc00  st   $00,[y,x++]
 * 5 times
-353f dc07  st   $07,[y,x++]
-3540 dc07  st   $07,[y,x++]
-3541 dc07  st   $07,[y,x++]
+353f dc25  st   $25,[y,x++]
+3540 dc25  st   $25,[y,x++]
+3541 dc25  st   $25,[y,x++]
 * 12 times
 354b dc00  st   $00,[y,x++]
 354c dc00  st   $00,[y,x++]
 354d dc00  st   $00,[y,x++]
 * 5 times
-3550 dc0f  st   $0f,[y,x++]
-3551 dc0f  st   $0f,[y,x++]
-3552 dc0f  st   $0f,[y,x++]
+3550 dc34  st   $34,[y,x++]
+3551 dc34  st   $34,[y,x++]
+3552 dc34  st   $34,[y,x++]
 * 12 times
 355c dc00  st   $00,[y,x++]
 355d dc00  st   $00,[y,x++]
 355e dc00  st   $00,[y,x++]
 * 5 times
-3561 dc17  st   $17,[y,x++]
-3562 dc17  st   $17,[y,x++]
-3563 dc17  st   $17,[y,x++]
+3561 dc39  st   $39,[y,x++]
+3562 dc39  st   $39,[y,x++]
+3563 dc39  st   $39,[y,x++]
 * 12 times
 356d dc00  st   $00,[y,x++]
 356e dc00  st   $00,[y,x++]
 356f dc00  st   $00,[y,x++]
 * 5 times
-3572 dc1f  st   $1f,[y,x++]
-3573 dc1f  st   $1f,[y,x++]
-3574 dc1f  st   $1f,[y,x++]
+3572 dc3a  st   $3a,[y,x++]
+3573 dc3a  st   $3a,[y,x++]
+3574 dc3a  st   $3a,[y,x++]
 * 12 times
 357e dc00  st   $00,[y,x++]
 357f dc00  st   $00,[y,x++]
 3580 dc00  st   $00,[y,x++]
 * 5 times
-3583 dc27  st   $27,[y,x++]
-3584 dc27  st   $27,[y,x++]
-3585 dc27  st   $27,[y,x++]
+3583 dc3b  st   $3b,[y,x++]
+3584 dc3b  st   $3b,[y,x++]
+3585 dc3b  st   $3b,[y,x++]
 * 12 times
 358f dc00  st   $00,[y,x++]
 3590 dc00  st   $00,[y,x++]
 3591 dc00  st   $00,[y,x++]
 * 5 times
-3594 dc2f  st   $2f,[y,x++]
-3595 dc2f  st   $2f,[y,x++]
-3596 dc2f  st   $2f,[y,x++]
+3594 dc2b  st   $2b,[y,x++]
+3595 dc2b  st   $2b,[y,x++]
+3596 dc2b  st   $2b,[y,x++]
 * 12 times
 35a0 dc00  st   $00,[y,x++]
 35a1 dc00  st   $00,[y,x++]
@@ -5652,73 +5892,73 @@ V    V     V    V
 35a9 dc00  st   $00,[y,x++]
 35aa dc00  st   $00,[y,x++]
 * 6 times
-35ae dc2e  st   $2e,[y,x++]
-35af dc2e  st   $2e,[y,x++]
-35b0 dc2e  st   $2e,[y,x++]
+35ae dc16  st   $16,[y,x++]
+35af dc16  st   $16,[y,x++]
+35b0 dc16  st   $16,[y,x++]
 * 12 times
 35ba dc00  st   $00,[y,x++]
 35bb dc00  st   $00,[y,x++]
 35bc dc00  st   $00,[y,x++]
 * 5 times
-35bf dc36  st   $36,[y,x++]
-35c0 dc36  st   $36,[y,x++]
-35c1 dc36  st   $36,[y,x++]
+35bf dc1a  st   $1a,[y,x++]
+35c0 dc1a  st   $1a,[y,x++]
+35c1 dc1a  st   $1a,[y,x++]
 * 12 times
 35cb dc00  st   $00,[y,x++]
 35cc dc00  st   $00,[y,x++]
 35cd dc00  st   $00,[y,x++]
 * 5 times
-35d0 dc3e  st   $3e,[y,x++]
-35d1 dc3e  st   $3e,[y,x++]
-35d2 dc3e  st   $3e,[y,x++]
+35d0 dc2a  st   $2a,[y,x++]
+35d1 dc2a  st   $2a,[y,x++]
+35d2 dc2a  st   $2a,[y,x++]
 * 12 times
 35dc dc00  st   $00,[y,x++]
 35dd dc00  st   $00,[y,x++]
 35de dc00  st   $00,[y,x++]
 * 5 times
-35e1 dc07  st   $07,[y,x++]
-35e2 dc07  st   $07,[y,x++]
-35e3 dc07  st   $07,[y,x++]
+35e1 dc25  st   $25,[y,x++]
+35e2 dc25  st   $25,[y,x++]
+35e3 dc25  st   $25,[y,x++]
 * 12 times
 35ed dc00  st   $00,[y,x++]
 35ee dc00  st   $00,[y,x++]
 35ef dc00  st   $00,[y,x++]
 * 5 times
-35f2 dc0f  st   $0f,[y,x++]
-35f3 dc0f  st   $0f,[y,x++]
-35f4 dc0f  st   $0f,[y,x++]
+35f2 dc34  st   $34,[y,x++]
+35f3 dc34  st   $34,[y,x++]
+35f4 dc34  st   $34,[y,x++]
 * 12 times
 35fe dc00  st   $00,[y,x++]
 35ff dc00  st   $00,[y,x++]
 3600 dc00  st   $00,[y,x++]
 * 5 times
-3603 dc17  st   $17,[y,x++]
-3604 dc17  st   $17,[y,x++]
-3605 dc17  st   $17,[y,x++]
+3603 dc39  st   $39,[y,x++]
+3604 dc39  st   $39,[y,x++]
+3605 dc39  st   $39,[y,x++]
 * 12 times
 360f dc00  st   $00,[y,x++]
 3610 dc00  st   $00,[y,x++]
 3611 dc00  st   $00,[y,x++]
 * 5 times
-3614 dc1f  st   $1f,[y,x++]
-3615 dc1f  st   $1f,[y,x++]
-3616 dc1f  st   $1f,[y,x++]
+3614 dc3a  st   $3a,[y,x++]
+3615 dc3a  st   $3a,[y,x++]
+3616 dc3a  st   $3a,[y,x++]
 * 12 times
 3620 dc00  st   $00,[y,x++]
 3621 dc00  st   $00,[y,x++]
 3622 dc00  st   $00,[y,x++]
 * 5 times
-3625 dc27  st   $27,[y,x++]
-3626 dc27  st   $27,[y,x++]
-3627 dc27  st   $27,[y,x++]
+3625 dc3b  st   $3b,[y,x++]
+3626 dc3b  st   $3b,[y,x++]
+3627 dc3b  st   $3b,[y,x++]
 * 12 times
 3631 dc00  st   $00,[y,x++]
 3632 dc00  st   $00,[y,x++]
 3633 dc00  st   $00,[y,x++]
 * 5 times
-3636 dc2f  st   $2f,[y,x++]
-3637 dc2f  st   $2f,[y,x++]
-3638 dc2f  st   $2f,[y,x++]
+3636 dc2b  st   $2b,[y,x++]
+3637 dc2b  st   $2b,[y,x++]
+3638 dc2b  st   $2b,[y,x++]
 * 12 times
 3642 dc00  st   $00,[y,x++]
 3643 dc00  st   $00,[y,x++]
@@ -5730,73 +5970,73 @@ V    V     V    V
 364b dc00  st   $00,[y,x++]
 364c dc00  st   $00,[y,x++]
 * 6 times
-3650 dc2e  st   $2e,[y,x++]
-3651 dc2e  st   $2e,[y,x++]
-3652 dc2e  st   $2e,[y,x++]
+3650 dc16  st   $16,[y,x++]
+3651 dc16  st   $16,[y,x++]
+3652 dc16  st   $16,[y,x++]
 * 12 times
 365c dc00  st   $00,[y,x++]
 365d dc00  st   $00,[y,x++]
 365e dc00  st   $00,[y,x++]
 * 5 times
-3661 dc36  st   $36,[y,x++]
-3662 dc36  st   $36,[y,x++]
-3663 dc36  st   $36,[y,x++]
+3661 dc1a  st   $1a,[y,x++]
+3662 dc1a  st   $1a,[y,x++]
+3663 dc1a  st   $1a,[y,x++]
 * 12 times
 366d dc00  st   $00,[y,x++]
 366e dc00  st   $00,[y,x++]
 366f dc00  st   $00,[y,x++]
 * 5 times
-3672 dc3e  st   $3e,[y,x++]
-3673 dc3e  st   $3e,[y,x++]
-3674 dc3e  st   $3e,[y,x++]
+3672 dc2a  st   $2a,[y,x++]
+3673 dc2a  st   $2a,[y,x++]
+3674 dc2a  st   $2a,[y,x++]
 * 12 times
 367e dc00  st   $00,[y,x++]
 367f dc00  st   $00,[y,x++]
 3680 dc00  st   $00,[y,x++]
 * 5 times
-3683 dc07  st   $07,[y,x++]
-3684 dc07  st   $07,[y,x++]
-3685 dc07  st   $07,[y,x++]
+3683 dc25  st   $25,[y,x++]
+3684 dc25  st   $25,[y,x++]
+3685 dc25  st   $25,[y,x++]
 * 12 times
 368f dc00  st   $00,[y,x++]
 3690 dc00  st   $00,[y,x++]
 3691 dc00  st   $00,[y,x++]
 * 5 times
-3694 dc0f  st   $0f,[y,x++]
-3695 dc0f  st   $0f,[y,x++]
-3696 dc0f  st   $0f,[y,x++]
+3694 dc34  st   $34,[y,x++]
+3695 dc34  st   $34,[y,x++]
+3696 dc34  st   $34,[y,x++]
 * 12 times
 36a0 dc00  st   $00,[y,x++]
 36a1 dc00  st   $00,[y,x++]
 36a2 dc00  st   $00,[y,x++]
 * 5 times
-36a5 dc17  st   $17,[y,x++]
-36a6 dc17  st   $17,[y,x++]
-36a7 dc17  st   $17,[y,x++]
+36a5 dc39  st   $39,[y,x++]
+36a6 dc39  st   $39,[y,x++]
+36a7 dc39  st   $39,[y,x++]
 * 12 times
 36b1 dc00  st   $00,[y,x++]
 36b2 dc00  st   $00,[y,x++]
 36b3 dc00  st   $00,[y,x++]
 * 5 times
-36b6 dc1f  st   $1f,[y,x++]
-36b7 dc1f  st   $1f,[y,x++]
-36b8 dc1f  st   $1f,[y,x++]
+36b6 dc3a  st   $3a,[y,x++]
+36b7 dc3a  st   $3a,[y,x++]
+36b8 dc3a  st   $3a,[y,x++]
 * 12 times
 36c2 dc00  st   $00,[y,x++]
 36c3 dc00  st   $00,[y,x++]
 36c4 dc00  st   $00,[y,x++]
 * 5 times
-36c7 dc27  st   $27,[y,x++]
-36c8 dc27  st   $27,[y,x++]
-36c9 dc27  st   $27,[y,x++]
+36c7 dc3b  st   $3b,[y,x++]
+36c8 dc3b  st   $3b,[y,x++]
+36c9 dc3b  st   $3b,[y,x++]
 * 12 times
 36d3 dc00  st   $00,[y,x++]
 36d4 dc00  st   $00,[y,x++]
 36d5 dc00  st   $00,[y,x++]
 * 5 times
-36d8 dc2f  st   $2f,[y,x++]
-36d9 dc2f  st   $2f,[y,x++]
-36da dc2f  st   $2f,[y,x++]
+36d8 dc2b  st   $2b,[y,x++]
+36d9 dc2b  st   $2b,[y,x++]
+36da dc2b  st   $2b,[y,x++]
 * 12 times
 36e4 dc00  st   $00,[y,x++]
 36e5 dc00  st   $00,[y,x++]
@@ -5807,13 +6047,157 @@ V    V     V    V
 36ec dc00  st   $00,[y,x++]
 36ed dc00  st   $00,[y,x++]
 36ee dc00  st   $00,[y,x++]
-* 160 times
+* 6 times
+36f2 dc16  st   $16,[y,x++]
+36f3 dc16  st   $16,[y,x++]
+36f4 dc16  st   $16,[y,x++]
+* 12 times
+36fe dc00  st   $00,[y,x++]
+36ff dc00  st   $00,[y,x++]
+3700 dc00  st   $00,[y,x++]
+* 5 times
+3703 dc1a  st   $1a,[y,x++]
+3704 dc1a  st   $1a,[y,x++]
+3705 dc1a  st   $1a,[y,x++]
+* 12 times
+370f dc00  st   $00,[y,x++]
+3710 dc00  st   $00,[y,x++]
+3711 dc00  st   $00,[y,x++]
+* 5 times
+3714 dc2a  st   $2a,[y,x++]
+3715 dc2a  st   $2a,[y,x++]
+3716 dc2a  st   $2a,[y,x++]
+* 12 times
+3720 dc00  st   $00,[y,x++]
+3721 dc00  st   $00,[y,x++]
+3722 dc00  st   $00,[y,x++]
+* 5 times
+3725 dc25  st   $25,[y,x++]
+3726 dc25  st   $25,[y,x++]
+3727 dc25  st   $25,[y,x++]
+* 12 times
+3731 dc00  st   $00,[y,x++]
+3732 dc00  st   $00,[y,x++]
+3733 dc00  st   $00,[y,x++]
+* 5 times
+3736 dc34  st   $34,[y,x++]
+3737 dc34  st   $34,[y,x++]
+3738 dc34  st   $34,[y,x++]
+* 12 times
+3742 dc00  st   $00,[y,x++]
+3743 dc00  st   $00,[y,x++]
+3744 dc00  st   $00,[y,x++]
+* 5 times
+3747 dc39  st   $39,[y,x++]
+3748 dc39  st   $39,[y,x++]
+3749 dc39  st   $39,[y,x++]
+* 12 times
+3753 dc00  st   $00,[y,x++]
+3754 dc00  st   $00,[y,x++]
+3755 dc00  st   $00,[y,x++]
+* 5 times
+3758 dc3a  st   $3a,[y,x++]
+3759 dc3a  st   $3a,[y,x++]
+375a dc3a  st   $3a,[y,x++]
+* 12 times
+3764 dc00  st   $00,[y,x++]
+3765 dc00  st   $00,[y,x++]
+3766 dc00  st   $00,[y,x++]
+* 5 times
+3769 dc3b  st   $3b,[y,x++]
+376a dc3b  st   $3b,[y,x++]
+376b dc3b  st   $3b,[y,x++]
+* 12 times
+3775 dc00  st   $00,[y,x++]
+3776 dc00  st   $00,[y,x++]
+3777 dc00  st   $00,[y,x++]
+* 5 times
+377a dc2b  st   $2b,[y,x++]
+377b dc2b  st   $2b,[y,x++]
+377c dc2b  st   $2b,[y,x++]
+* 12 times
+3786 dc00  st   $00,[y,x++]
+3787 dc00  st   $00,[y,x++]
+3788 dc00  st   $00,[y,x++]
+* 6 times
 378c 1000  ld   $00,x
 378d 1453  ld   $53,y
 378e dc00  st   $00,[y,x++]
 378f dc00  st   $00,[y,x++]
 3790 dc00  st   $00,[y,x++]
-* 160 times
+* 6 times
+3794 dc16  st   $16,[y,x++]
+3795 dc16  st   $16,[y,x++]
+3796 dc16  st   $16,[y,x++]
+* 12 times
+37a0 dc00  st   $00,[y,x++]
+37a1 dc00  st   $00,[y,x++]
+37a2 dc00  st   $00,[y,x++]
+* 5 times
+37a5 dc1a  st   $1a,[y,x++]
+37a6 dc1a  st   $1a,[y,x++]
+37a7 dc1a  st   $1a,[y,x++]
+* 12 times
+37b1 dc00  st   $00,[y,x++]
+37b2 dc00  st   $00,[y,x++]
+37b3 dc00  st   $00,[y,x++]
+* 5 times
+37b6 dc2a  st   $2a,[y,x++]
+37b7 dc2a  st   $2a,[y,x++]
+37b8 dc2a  st   $2a,[y,x++]
+* 12 times
+37c2 dc00  st   $00,[y,x++]
+37c3 dc00  st   $00,[y,x++]
+37c4 dc00  st   $00,[y,x++]
+* 5 times
+37c7 dc25  st   $25,[y,x++]
+37c8 dc25  st   $25,[y,x++]
+37c9 dc25  st   $25,[y,x++]
+* 12 times
+37d3 dc00  st   $00,[y,x++]
+37d4 dc00  st   $00,[y,x++]
+37d5 dc00  st   $00,[y,x++]
+* 5 times
+37d8 dc34  st   $34,[y,x++]
+37d9 dc34  st   $34,[y,x++]
+37da dc34  st   $34,[y,x++]
+* 12 times
+37e4 dc00  st   $00,[y,x++]
+37e5 dc00  st   $00,[y,x++]
+37e6 dc00  st   $00,[y,x++]
+* 5 times
+37e9 dc39  st   $39,[y,x++]
+37ea dc39  st   $39,[y,x++]
+37eb dc39  st   $39,[y,x++]
+* 12 times
+37f5 dc00  st   $00,[y,x++]
+37f6 dc00  st   $00,[y,x++]
+37f7 dc00  st   $00,[y,x++]
+* 5 times
+37fa dc3a  st   $3a,[y,x++]
+37fb dc3a  st   $3a,[y,x++]
+37fc dc3a  st   $3a,[y,x++]
+* 12 times
+3806 dc00  st   $00,[y,x++]
+3807 dc00  st   $00,[y,x++]
+3808 dc00  st   $00,[y,x++]
+* 5 times
+380b dc3b  st   $3b,[y,x++]
+380c dc3b  st   $3b,[y,x++]
+380d dc3b  st   $3b,[y,x++]
+* 12 times
+3817 dc00  st   $00,[y,x++]
+3818 dc00  st   $00,[y,x++]
+3819 dc00  st   $00,[y,x++]
+* 5 times
+381c dc2b  st   $2b,[y,x++]
+381d dc2b  st   $2b,[y,x++]
+381e dc2b  st   $2b,[y,x++]
+* 12 times
+3828 dc00  st   $00,[y,x++]
+3829 dc00  st   $00,[y,x++]
+382a dc00  st   $00,[y,x++]
+* 6 times
 382e 1000  ld   $00,x
 382f 1454  ld   $54,y
 3830 dc00  st   $00,[y,x++]
@@ -5831,391 +6215,31 @@ V    V     V    V
 3974 dc00  st   $00,[y,x++]
 3975 dc00  st   $00,[y,x++]
 3976 dc00  st   $00,[y,x++]
-* 6 times
-397a dc16  st   $16,[y,x++]
-397b dc16  st   $16,[y,x++]
-397c dc16  st   $16,[y,x++]
-* 12 times
-3986 dc00  st   $00,[y,x++]
-3987 dc00  st   $00,[y,x++]
-3988 dc00  st   $00,[y,x++]
-* 5 times
-398b dc1e  st   $1e,[y,x++]
-398c dc1e  st   $1e,[y,x++]
-398d dc1e  st   $1e,[y,x++]
-* 12 times
-3997 dc00  st   $00,[y,x++]
-3998 dc00  st   $00,[y,x++]
-3999 dc00  st   $00,[y,x++]
-* 5 times
-399c dc26  st   $26,[y,x++]
-399d dc26  st   $26,[y,x++]
-399e dc26  st   $26,[y,x++]
-* 12 times
-39a8 dc00  st   $00,[y,x++]
-39a9 dc00  st   $00,[y,x++]
-39aa dc00  st   $00,[y,x++]
-* 5 times
-39ad dc2e  st   $2e,[y,x++]
-39ae dc2e  st   $2e,[y,x++]
-39af dc2e  st   $2e,[y,x++]
-* 12 times
-39b9 dc00  st   $00,[y,x++]
-39ba dc00  st   $00,[y,x++]
-39bb dc00  st   $00,[y,x++]
-* 5 times
-39be dc36  st   $36,[y,x++]
-39bf dc36  st   $36,[y,x++]
-39c0 dc36  st   $36,[y,x++]
-* 12 times
-39ca dc00  st   $00,[y,x++]
-39cb dc00  st   $00,[y,x++]
-39cc dc00  st   $00,[y,x++]
-* 5 times
-39cf dc3e  st   $3e,[y,x++]
-39d0 dc3e  st   $3e,[y,x++]
-39d1 dc3e  st   $3e,[y,x++]
-* 12 times
-39db dc00  st   $00,[y,x++]
-39dc dc00  st   $00,[y,x++]
-39dd dc00  st   $00,[y,x++]
-* 5 times
-39e0 dc07  st   $07,[y,x++]
-39e1 dc07  st   $07,[y,x++]
-39e2 dc07  st   $07,[y,x++]
-* 12 times
-39ec dc00  st   $00,[y,x++]
-39ed dc00  st   $00,[y,x++]
-39ee dc00  st   $00,[y,x++]
-* 5 times
-39f1 dc0f  st   $0f,[y,x++]
-39f2 dc0f  st   $0f,[y,x++]
-39f3 dc0f  st   $0f,[y,x++]
-* 12 times
-39fd dc00  st   $00,[y,x++]
-39fe dc00  st   $00,[y,x++]
-39ff dc00  st   $00,[y,x++]
-* 5 times
-3a02 dc17  st   $17,[y,x++]
-3a03 dc17  st   $17,[y,x++]
-3a04 dc17  st   $17,[y,x++]
-* 12 times
-3a0e dc00  st   $00,[y,x++]
-3a0f dc00  st   $00,[y,x++]
-3a10 dc00  st   $00,[y,x++]
-* 6 times
+* 160 times
 3a14 1000  ld   $00,x
 3a15 1457  ld   $57,y
 3a16 dc00  st   $00,[y,x++]
 3a17 dc00  st   $00,[y,x++]
 3a18 dc00  st   $00,[y,x++]
-* 6 times
-3a1c dc16  st   $16,[y,x++]
-3a1d dc16  st   $16,[y,x++]
-3a1e dc16  st   $16,[y,x++]
-* 12 times
-3a28 dc00  st   $00,[y,x++]
-3a29 dc00  st   $00,[y,x++]
-3a2a dc00  st   $00,[y,x++]
-* 5 times
-3a2d dc1e  st   $1e,[y,x++]
-3a2e dc1e  st   $1e,[y,x++]
-3a2f dc1e  st   $1e,[y,x++]
-* 12 times
-3a39 dc00  st   $00,[y,x++]
-3a3a dc00  st   $00,[y,x++]
-3a3b dc00  st   $00,[y,x++]
-* 5 times
-3a3e dc26  st   $26,[y,x++]
-3a3f dc26  st   $26,[y,x++]
-3a40 dc26  st   $26,[y,x++]
-* 12 times
-3a4a dc00  st   $00,[y,x++]
-3a4b dc00  st   $00,[y,x++]
-3a4c dc00  st   $00,[y,x++]
-* 5 times
-3a4f dc2e  st   $2e,[y,x++]
-3a50 dc2e  st   $2e,[y,x++]
-3a51 dc2e  st   $2e,[y,x++]
-* 12 times
-3a5b dc00  st   $00,[y,x++]
-3a5c dc00  st   $00,[y,x++]
-3a5d dc00  st   $00,[y,x++]
-* 5 times
-3a60 dc36  st   $36,[y,x++]
-3a61 dc36  st   $36,[y,x++]
-3a62 dc36  st   $36,[y,x++]
-* 12 times
-3a6c dc00  st   $00,[y,x++]
-3a6d dc00  st   $00,[y,x++]
-3a6e dc00  st   $00,[y,x++]
-* 5 times
-3a71 dc3e  st   $3e,[y,x++]
-3a72 dc3e  st   $3e,[y,x++]
-3a73 dc3e  st   $3e,[y,x++]
-* 12 times
-3a7d dc00  st   $00,[y,x++]
-3a7e dc00  st   $00,[y,x++]
-3a7f dc00  st   $00,[y,x++]
-* 5 times
-3a82 dc07  st   $07,[y,x++]
-3a83 dc07  st   $07,[y,x++]
-3a84 dc07  st   $07,[y,x++]
-* 12 times
-3a8e dc00  st   $00,[y,x++]
-3a8f dc00  st   $00,[y,x++]
-3a90 dc00  st   $00,[y,x++]
-* 5 times
-3a93 dc0f  st   $0f,[y,x++]
-3a94 dc0f  st   $0f,[y,x++]
-3a95 dc0f  st   $0f,[y,x++]
-* 12 times
-3a9f dc00  st   $00,[y,x++]
-3aa0 dc00  st   $00,[y,x++]
-3aa1 dc00  st   $00,[y,x++]
-* 5 times
-3aa4 dc17  st   $17,[y,x++]
-3aa5 dc17  st   $17,[y,x++]
-3aa6 dc17  st   $17,[y,x++]
-* 12 times
-3ab0 dc00  st   $00,[y,x++]
-3ab1 dc00  st   $00,[y,x++]
-3ab2 dc00  st   $00,[y,x++]
-* 6 times
+* 160 times
 3ab6 1000  ld   $00,x
 3ab7 1458  ld   $58,y
 3ab8 dc00  st   $00,[y,x++]
 3ab9 dc00  st   $00,[y,x++]
 3aba dc00  st   $00,[y,x++]
-* 6 times
-3abe dc16  st   $16,[y,x++]
-3abf dc16  st   $16,[y,x++]
-3ac0 dc16  st   $16,[y,x++]
-* 12 times
-3aca dc00  st   $00,[y,x++]
-3acb dc00  st   $00,[y,x++]
-3acc dc00  st   $00,[y,x++]
-* 5 times
-3acf dc1e  st   $1e,[y,x++]
-3ad0 dc1e  st   $1e,[y,x++]
-3ad1 dc1e  st   $1e,[y,x++]
-* 12 times
-3adb dc00  st   $00,[y,x++]
-3adc dc00  st   $00,[y,x++]
-3add dc00  st   $00,[y,x++]
-* 5 times
-3ae0 dc26  st   $26,[y,x++]
-3ae1 dc26  st   $26,[y,x++]
-3ae2 dc26  st   $26,[y,x++]
-* 12 times
-3aec dc00  st   $00,[y,x++]
-3aed dc00  st   $00,[y,x++]
-3aee dc00  st   $00,[y,x++]
-* 5 times
-3af1 dc2e  st   $2e,[y,x++]
-3af2 dc2e  st   $2e,[y,x++]
-3af3 dc2e  st   $2e,[y,x++]
-* 12 times
-3afd dc00  st   $00,[y,x++]
-3afe dc00  st   $00,[y,x++]
-3aff dc00  st   $00,[y,x++]
-* 5 times
-3b02 dc36  st   $36,[y,x++]
-3b03 dc36  st   $36,[y,x++]
-3b04 dc36  st   $36,[y,x++]
-* 12 times
-3b0e dc00  st   $00,[y,x++]
-3b0f dc00  st   $00,[y,x++]
-3b10 dc00  st   $00,[y,x++]
-* 5 times
-3b13 dc3e  st   $3e,[y,x++]
-3b14 dc3e  st   $3e,[y,x++]
-3b15 dc3e  st   $3e,[y,x++]
-* 12 times
-3b1f dc00  st   $00,[y,x++]
-3b20 dc00  st   $00,[y,x++]
-3b21 dc00  st   $00,[y,x++]
-* 5 times
-3b24 dc07  st   $07,[y,x++]
-3b25 dc07  st   $07,[y,x++]
-3b26 dc07  st   $07,[y,x++]
-* 12 times
-3b30 dc00  st   $00,[y,x++]
-3b31 dc00  st   $00,[y,x++]
-3b32 dc00  st   $00,[y,x++]
-* 5 times
-3b35 dc0f  st   $0f,[y,x++]
-3b36 dc0f  st   $0f,[y,x++]
-3b37 dc0f  st   $0f,[y,x++]
-* 12 times
-3b41 dc00  st   $00,[y,x++]
-3b42 dc00  st   $00,[y,x++]
-3b43 dc00  st   $00,[y,x++]
-* 5 times
-3b46 dc17  st   $17,[y,x++]
-3b47 dc17  st   $17,[y,x++]
-3b48 dc17  st   $17,[y,x++]
-* 12 times
-3b52 dc00  st   $00,[y,x++]
-3b53 dc00  st   $00,[y,x++]
-3b54 dc00  st   $00,[y,x++]
-* 6 times
+* 160 times
 3b58 1000  ld   $00,x
 3b59 1459  ld   $59,y
 3b5a dc00  st   $00,[y,x++]
 3b5b dc00  st   $00,[y,x++]
 3b5c dc00  st   $00,[y,x++]
-* 6 times
-3b60 dc16  st   $16,[y,x++]
-3b61 dc16  st   $16,[y,x++]
-3b62 dc16  st   $16,[y,x++]
-* 12 times
-3b6c dc00  st   $00,[y,x++]
-3b6d dc00  st   $00,[y,x++]
-3b6e dc00  st   $00,[y,x++]
-* 5 times
-3b71 dc1e  st   $1e,[y,x++]
-3b72 dc1e  st   $1e,[y,x++]
-3b73 dc1e  st   $1e,[y,x++]
-* 12 times
-3b7d dc00  st   $00,[y,x++]
-3b7e dc00  st   $00,[y,x++]
-3b7f dc00  st   $00,[y,x++]
-* 5 times
-3b82 dc26  st   $26,[y,x++]
-3b83 dc26  st   $26,[y,x++]
-3b84 dc26  st   $26,[y,x++]
-* 12 times
-3b8e dc00  st   $00,[y,x++]
-3b8f dc00  st   $00,[y,x++]
-3b90 dc00  st   $00,[y,x++]
-* 5 times
-3b93 dc2e  st   $2e,[y,x++]
-3b94 dc2e  st   $2e,[y,x++]
-3b95 dc2e  st   $2e,[y,x++]
-* 12 times
-3b9f dc00  st   $00,[y,x++]
-3ba0 dc00  st   $00,[y,x++]
-3ba1 dc00  st   $00,[y,x++]
-* 5 times
-3ba4 dc36  st   $36,[y,x++]
-3ba5 dc36  st   $36,[y,x++]
-3ba6 dc36  st   $36,[y,x++]
-* 12 times
-3bb0 dc00  st   $00,[y,x++]
-3bb1 dc00  st   $00,[y,x++]
-3bb2 dc00  st   $00,[y,x++]
-* 5 times
-3bb5 dc3e  st   $3e,[y,x++]
-3bb6 dc3e  st   $3e,[y,x++]
-3bb7 dc3e  st   $3e,[y,x++]
-* 12 times
-3bc1 dc00  st   $00,[y,x++]
-3bc2 dc00  st   $00,[y,x++]
-3bc3 dc00  st   $00,[y,x++]
-* 5 times
-3bc6 dc07  st   $07,[y,x++]
-3bc7 dc07  st   $07,[y,x++]
-3bc8 dc07  st   $07,[y,x++]
-* 12 times
-3bd2 dc00  st   $00,[y,x++]
-3bd3 dc00  st   $00,[y,x++]
-3bd4 dc00  st   $00,[y,x++]
-* 5 times
-3bd7 dc0f  st   $0f,[y,x++]
-3bd8 dc0f  st   $0f,[y,x++]
-3bd9 dc0f  st   $0f,[y,x++]
-* 12 times
-3be3 dc00  st   $00,[y,x++]
-3be4 dc00  st   $00,[y,x++]
-3be5 dc00  st   $00,[y,x++]
-* 5 times
-3be8 dc17  st   $17,[y,x++]
-3be9 dc17  st   $17,[y,x++]
-3bea dc17  st   $17,[y,x++]
-* 12 times
-3bf4 dc00  st   $00,[y,x++]
-3bf5 dc00  st   $00,[y,x++]
-3bf6 dc00  st   $00,[y,x++]
-* 6 times
+* 160 times
 3bfa 1000  ld   $00,x
 3bfb 145a  ld   $5a,y
 3bfc dc00  st   $00,[y,x++]
 3bfd dc00  st   $00,[y,x++]
 3bfe dc00  st   $00,[y,x++]
-* 6 times
-3c02 dc16  st   $16,[y,x++]
-3c03 dc16  st   $16,[y,x++]
-3c04 dc16  st   $16,[y,x++]
-* 12 times
-3c0e dc00  st   $00,[y,x++]
-3c0f dc00  st   $00,[y,x++]
-3c10 dc00  st   $00,[y,x++]
-* 5 times
-3c13 dc1e  st   $1e,[y,x++]
-3c14 dc1e  st   $1e,[y,x++]
-3c15 dc1e  st   $1e,[y,x++]
-* 12 times
-3c1f dc00  st   $00,[y,x++]
-3c20 dc00  st   $00,[y,x++]
-3c21 dc00  st   $00,[y,x++]
-* 5 times
-3c24 dc26  st   $26,[y,x++]
-3c25 dc26  st   $26,[y,x++]
-3c26 dc26  st   $26,[y,x++]
-* 12 times
-3c30 dc00  st   $00,[y,x++]
-3c31 dc00  st   $00,[y,x++]
-3c32 dc00  st   $00,[y,x++]
-* 5 times
-3c35 dc2e  st   $2e,[y,x++]
-3c36 dc2e  st   $2e,[y,x++]
-3c37 dc2e  st   $2e,[y,x++]
-* 12 times
-3c41 dc00  st   $00,[y,x++]
-3c42 dc00  st   $00,[y,x++]
-3c43 dc00  st   $00,[y,x++]
-* 5 times
-3c46 dc36  st   $36,[y,x++]
-3c47 dc36  st   $36,[y,x++]
-3c48 dc36  st   $36,[y,x++]
-* 12 times
-3c52 dc00  st   $00,[y,x++]
-3c53 dc00  st   $00,[y,x++]
-3c54 dc00  st   $00,[y,x++]
-* 5 times
-3c57 dc3e  st   $3e,[y,x++]
-3c58 dc3e  st   $3e,[y,x++]
-3c59 dc3e  st   $3e,[y,x++]
-* 12 times
-3c63 dc00  st   $00,[y,x++]
-3c64 dc00  st   $00,[y,x++]
-3c65 dc00  st   $00,[y,x++]
-* 5 times
-3c68 dc07  st   $07,[y,x++]
-3c69 dc07  st   $07,[y,x++]
-3c6a dc07  st   $07,[y,x++]
-* 12 times
-3c74 dc00  st   $00,[y,x++]
-3c75 dc00  st   $00,[y,x++]
-3c76 dc00  st   $00,[y,x++]
-* 5 times
-3c79 dc0f  st   $0f,[y,x++]
-3c7a dc0f  st   $0f,[y,x++]
-3c7b dc0f  st   $0f,[y,x++]
-* 12 times
-3c85 dc00  st   $00,[y,x++]
-3c86 dc00  st   $00,[y,x++]
-3c87 dc00  st   $00,[y,x++]
-* 5 times
-3c8a dc17  st   $17,[y,x++]
-3c8b dc17  st   $17,[y,x++]
-3c8c dc17  st   $17,[y,x++]
-* 12 times
-3c96 dc00  st   $00,[y,x++]
-3c97 dc00  st   $00,[y,x++]
-3c98 dc00  st   $00,[y,x++]
-* 6 times
+* 160 times
 3c9c 1000  ld   $00,x
 3c9d 145b  ld   $5b,y
 3c9e dc00  st   $00,[y,x++]

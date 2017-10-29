@@ -29,6 +29,18 @@ vFront = 10 - 5 # VGA default, adjusted to get 59.98 Hz (6.25 MHz/200/521)
 vPulse = 2
 vBack  = 33
 
+# Game controller bits
+buttonRight     = 1
+buttonLeft      = 2
+buttonDown      = 4
+buttonUp        = 8
+buttonStart     = 16
+buttonSelect    = 32
+buttonA         = 64
+buttonB         = 128
+buttonNone      = 255
+buttonMulti     = 0
+
 #-----------------------------------------------------------------------
 #
 #  RAM page 0: variables
@@ -110,12 +122,14 @@ ledTempo        = zpByte() # Next value for ledTimer after LED state change
 
 # Serial input (game controller)
 serialInput     = zpByte()
+buttonState     = zpByte() # Filtered button state
 
 # Simple ball demo
 ballX           = zpByte()
 ballDX          = zpByte()
 ballY           = zpByte()
 ballDY          = zpByte()
+playerX         = zpByte()
 
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 zpFree     = zpByte()
@@ -327,16 +341,21 @@ st(d(D5 & 0x7f), eaYXregOUTIX)
 st(d(D5 >> 7), eaYXregAC)
 
 # Setup ball
-ld(val(160/2))
+ldzp(d(entropy+0))
+anda(val(127))
+adda(val(160/2-128/2))
 st(d(ballX))
+st(d(playerX))
 ld(val(127))
 st(d(ballY))
 ld(val(-1))
 st(d(ballDX))
 st(d(ballDY))
 
-# Setup serial input
+# Setup serial input and derived button state
+#ld(val(-1))
 st(d(serialInput))
+st(d(buttonState))
 
 # Update LEDs (low pages are initialized)
 ld(val(0b0111))                 # Physical: [***o]
@@ -390,21 +409,20 @@ bra(d(lo('.leds1')))            #40
 
 label('.leds0')
 ld(d(0x10+0b1111))              #41 Physical: [****]
-ld(d(0x20+0b1111))              #41 Physical: [****]
-ld(d(0x30+0b0111))              #41 Physical: [***o]
-ld(d(0x40+0b0011))              #41 Physical: [**oo]
-ld(d(0x50+0b0001))              #41 Physical: [*ooo]
-ld(d(0x60+0b0010))              #41 Physical: [o*oo]
-ld(d(0x70+0b0100))              #41 Physical: [oo*o]
-ld(d(0x80+0b1000))              #41 Physical: [ooo*]
-ld(d(0x90+0b0100))              #41 Physical: [oo*o]
-ld(d(0xa0+0b0010))              #41 Physical: [o*oo]
-ld(d(0xb0+0b0001))              #41 Physical: [*ooo]
-ld(d(0xc0+0b0010))              #41 Physical: [o*oo]
-ld(d(0xd0+0b0100))              #41 Physical: [oo*o]
-ld(d(0xe0+0b1000))              #41 Physical: [ooo*]
-ld(d(0xf0+0b1100))              #41 Physical: [oo**]
-ld(d(0x10+0b1110))              #41 Physical: [o***]
+ld(d(0x20+0b0111))              #41 Physical: [***o]
+ld(d(0x30+0b0011))              #41 Physical: [**oo]
+ld(d(0x40+0b0001))              #41 Physical: [*ooo]
+ld(d(0x50+0b0010))              #41 Physical: [o*oo]
+ld(d(0x60+0b0100))              #41 Physical: [oo*o]
+ld(d(0x70+0b1000))              #41 Physical: [ooo*]
+ld(d(0x80+0b0100))              #41 Physical: [oo*o]
+ld(d(0x90+0b0010))              #41 Physical: [o*oo]
+ld(d(0xa0+0b0001))              #41 Physical: [*ooo]
+ld(d(0xb0+0b0010))              #41 Physical: [o*oo]
+ld(d(0xc0+0b0100))              #41 Physical: [oo*o]
+ld(d(0xd0+0b1000))              #41 Physical: [ooo*]
+ld(d(0xe0+0b1100))              #41 Physical: [oo**]
+ld(d(0x00+0b1110))              #41 Physical: [o***]
 
 label('.leds1')
 st(d(leds))                     #42 Temporarily park here
@@ -438,26 +456,6 @@ wait(64-59)                     #59
 ld(d(scrollerY*2+1), busRAM|eaYDregAC)#64 # Right 1 pixel/frame
 suba(val(1))                    #65
 st(d(scrollerY*2+1), busAC|eaYDregAC)#66
-
-# --- Render controller input
-ld(val(screenPages+scrollerY),regY)
-ld(val(160/2-5),regX)
-st(val(0), eaYXregOUTIX)
-ld(val(1))
-label('.M0')
-st(d(zpFree))
-anda(d(serialInput),busRAM)
-beq(d(lo('.M1')))
-bra(d(lo('.M2')))
-st(val(3*G),eaYXregOUTIX)
-label('.M1')
-st(val(1*G),eaYXregOUTIX)
-label('.M2')
-ldzp(d(zpFree))
-bpl(d(lo('.M0')))
-adda(busAC)
-st(val(0), eaYXregOUTIX)
-demoInput = 4+8*8+1
 
 # --- Bouncing ball demo (31 cycles)
 
@@ -555,7 +553,7 @@ ld(d(ballY),busRAM|ea0DregY)    #96
 label('.ball5')
 st(val(63), eaYXregAC)          #97
 
-wait(198-98-demoInput-xWalls)   #98 # XXX Application cycles (scanline 0)
+wait(198-98-xWalls)             #98 # XXX Application cycles (scanline 0)
 
 ld(val(vFront+vPulse+vBack-2))  #198 `-2' because first and last are different
 st(d(blankY))                   #199
@@ -636,8 +634,6 @@ ora(d(leds), busRAM|ea0DregAC)  #47
 st(d(xout))                     #48
 st(val(sample), ea0DregAC|busD) #49 Reset for next sample
 
-
-
 wait(199-50 - nesTest)          #50 XXX Appplication cycles (scanline 1-43 with sample update)
 bra(d(lo('sound1')))            #199
 ld(d(videoSync0), busRAM|regOUT)#0 # Ends the vertical blank pulse at the right cycle
@@ -647,12 +643,68 @@ wait(199-46 - nesTest)          #46 XXX Application cycles (scanline 1-43 withou
 bra(d(lo('sound1')))            #199
 ld(d(videoSync0), busRAM|regOUT)#0 Ends the vertical blank pulse at the right cycle
 
-# Transfer to visible area
+# Last blank line before transfering to visible area
 label('vBlankLast')
 ld(val(0))                      #32
 st(d(frameX))                   #33
 st(d(nextVideo))                #34
-wait(199-35)                    #35 XXX Application cycles (scanline 44)
+
+# The serial game controller freaks out when two buttons are pressed: it just sends zeroes.
+# When we see this, preserve the old value and assume buttonA was added.
+ldzp(d(serialInput))            #35
+beq(lo('.multi0'))              #36
+bra(lo('.multi1'))              #37
+st(d(buttonState),busAC)        #38
+label('.multi0')
+ld(val(buttonA))                #38
+label('.multi1')
+ora(d(buttonState),busRAM)      #39
+st(d(buttonState),busAC)        #40
+
+# --- Respond to button state by moving the player
+# Going right
+anda(val(buttonRight))          #41
+bne(d(lo('.r0')))               #42
+bra(d(lo('.r1')))               #43
+ld(val(0))                      #44
+label('.r0')
+ld(val(+1))                     #44
+label('.r1')
+adda(d(playerX),busRAM)         #45
+st(d(playerX),busAC)            #46
+# Going left
+ldzp(d(buttonState))            #47
+anda(val(buttonLeft))           #48
+bne(d(lo('.l0')))               #49
+bra(d(lo('.l1')))               #50
+ld(val(0))                      #51
+label('.l0')
+ld(val(-1))                     #51
+label('.l1')
+adda(d(playerX),busRAM)         #52
+st(d(playerX),busAC)            #53
+
+# --- Render button state as player on bottom of screen
+ld(val(screenPages+119),regY)
+ld(d(playerX),busRAM|regX)
+st(val(0),eaYXregOUTIX)
+ld(val(1))
+label('.N0')
+st(d(zpFree))
+anda(d(buttonState),busRAM)
+beq(d(lo('.N1')))
+bra(d(lo('.N2')))
+st(val(3*G),eaYXregOUTIX)
+label('.N1')
+st(val(2*G),eaYXregOUTIX)
+label('.N2')
+ldzp(d(zpFree))
+bpl(d(lo('.N0')))
+adda(busAC)
+st(val(0),eaYXregOUTIX)
+demoInput = 4+8*8+1
+
+wait(199-54-demoInput)          #54 XXX Application cycles (scanline 44)
 ldzp(d(channel))                #199 Advance to next sound channel
 anda(val(3))                    #0
 adda(val(1))                    #1
@@ -838,6 +890,36 @@ for y in range(scrollerY):
     v = palette(raw, x, y, 256)
     st(val(v), eaYXregOUTIX)
 
+colors = [
+ 14, 15, 11,  7,  3, 19, 34, 35, 51, # +#. ##. #+. #-. #.. #.- +.+ #.+ #.#
+ 29, 13, 10,  6,  2, 18, 23, 39, 55, # -#- -#. ++. +-. +.. +.- #-- #-+ #-#
+ 41, 25,  9,  5,  1, 17, 22, 27, 43, # -++ -+- -+. --. -.. -.- +-- #+- #++
+ 45, 28, 12,  8,  4, 21, 26, 30, 31, # -#+ .#- .#. .+. .-. --- ++- +#- ##-
+ 60, 44, 24, 20, 16, 37, 42, 46, 47, # .## .#+ .+- .-- ..- --+ +++ +#+ ##+
+ 61, 56, 40, 36, 32, 33, 38, 58, 63, # -## .+# .++ .-+ ..+ -.+ +-+ ++# ###
+ 62, 57, 53, 52, 48, 49, 50, 54, 59, # +## -+# --# .-# ..# -.# +.# +-# #+#
+] # error 1.262438
+
+colors = [
+ 50, 51, 55, 59, 63, 62, 58, 54, 33, # +.# #.# #-# #+# ### +## ++# +-# -.+
+ 34, 35, 39, 43, 46, 61, 57, 53, 49, # +.+ #.+ #-+ #++ +#+ -## -+# --# -.#
+ 18, 19, 23, 42, 45, 60, 56, 52, 48, # +.- #.- #-- +++ -#+ .## .+# .-# ..#
+  2,  3, 22, 38, 41, 44, 40, 36, 32, # +.. #.. +-- +-+ -++ .#+ .++ .-+ ..+
+  6,  7, 10, 26, 25, 24, 20, 37, 16, # +-. #-. ++. ++- -+- .+- .-- --+ ..-
+ 27, 11, 15, 14, 13,  8,  4, 21, 17, # #+- #+. ##. +#. -#. .+. .-. --- -.-
+ 47, 31, 30, 29, 28, 12,  9,  5,  1, # ##+ ##- +#- -#- .#- .#. -+. --. -..
+] # error 1.228990
+
+colors = [
+ 63, 47, 31, 15, 14, 10, 11,  7, 27, # ### ##+ ##- ##. +#. ++. #+. #-. #+-
+ 62, 46, 30, 13,  9,  6,  2,  3, 23, # +## +#+ +#- -#. -+. +-. +.. #.. #--
+ 61, 45, 29, 12,  5,  1, 18, 19, 35, # -## -#+ -#- .#. --. -.. +.- #.- #.+
+ 60, 44, 28,  8,  4, 17, 33, 34, 51, # .## .#+ .#- .+. .-. -.- -.+ +.+ #.#
+ 56, 40, 24, 20, 16, 32, 49, 50, 55, # .+# .++ .+- .-- ..- ..+ -.# +.# #-#
+ 21, 25, 41, 36, 48, 53, 54, 38, 39, # --- -+- -++ .-+ ..# --# +-# +-+ #-+
+ 22, 26, 42, 37, 52, 57, 58, 59, 43, # +-- ++- +++ --+ .-# -+# ++# #+# #++
+] # error 1.303041
+
 # Image
 for y in range(scrollerY,120):
   ld(val(0), regX)
@@ -845,9 +927,9 @@ for y in range(scrollerY,120):
   for x in range(160):
     v = 0
     xm, xd = (x-6) % 17, (x-6) // 17
-    ym, yd = (y-scrollerY-4) % 9, (y-scrollerY-4) // 9
+    ym, yd = (y-scrollerY-4) % 8, (y-scrollerY-4) // 8
     if 0<=xd<9 and 0<yd<8 and xm < 12 and ym < 5:
-       v = 1 + (39*yd + 8*xd) % 63
+       v = colors[(yd-1)*9+xd]
 
     st(val(v), eaYXregOUTIX)
 
