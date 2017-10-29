@@ -182,6 +182,8 @@ ledY=17      # Position for LED on screen
 #
 #-----------------------------------------------------------------------
 
+align(0x100, 0x100)
+
 # Give a first sign of life that can be checked with a voltmeter
 ld(val(0b0000))                 # Physical: [oooo]
 ld(val(syncBits^hSync), regOUT) # Prepare XOUT update, hSync goes down, RGB to black
@@ -386,7 +388,7 @@ ld(val(syncBits))
 #  ROM page 1: Vertical blank part of video loop
 #
 #-----------------------------------------------------------------------
-align(0x100)
+align(0x100, 0x100)
 label('videoLoop')              # Enter vertical blank
 
 st(d(videoSync0))               #32
@@ -717,7 +719,7 @@ ld(val(syncBits^hSync), regOUT) #4 Start horizontal pulse
 #  ROM page 2: Visible part of video loop
 #
 #-----------------------------------------------------------------------
-align(0x100)
+align(0x100, 0x100)
 label('visiblePage')
 
 # Back porch A: first of 4 repeated scanlines
@@ -856,7 +858,7 @@ nop()                           #38
 #  ROM page 3: Application interpreter
 #
 #-----------------------------------------------------------------------
-align(0x100)
+align(0x100,0x100)
 
 label('interpreter')
 wait(199-39)                    #39 XXX Application cycles (every 4th of scanlines 45-524)

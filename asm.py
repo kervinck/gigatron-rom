@@ -5,7 +5,7 @@ from os.path import basename, splitext
 from sys import argv
 
 # Module variables because I don't feel like making a class
-_romSize, _zpSize, _symbols, _refsL, _refsH = 0, 0, {}, [], []
+_romSize, _maxRomSize, _zpSize, _symbols, _refsL, _refsH = 0, 0, 0, {}, [], []
 _rom0, _rom1 = [], []
 
 # Bus access
@@ -120,7 +120,7 @@ def label(name):
   define(name, _romSize)
 
 def define(name, value):
-  global _romSize, _symbols
+  global _symbols
   _symbols[name] = value
 
 def lo(name):
@@ -189,8 +189,13 @@ def disassemble(opcode, operand):
   return text
 
 def _emit(ins):
-  global _rom0, _rom1, _romSize
+  global _rom0, _rom1, _romSize, _maxRomSize
   opcode, operand = ins & 255, ins >> 8
+  if _romSize >= _maxRomSize:
+      disassembly = disassemble(opcode, operand)
+      print '%04x %02x%02x  %s' % (_romSize, opcode, operand, disassembly)
+      print 'Error: Program size limit exceeded'
+      _maxRomSize = 0x10000 # Extend to full address space to prevent more of the same errors
   _rom0.append(opcode)
   _rom1.append(operand)
   _romSize += 1
@@ -248,9 +253,11 @@ def ldzp (base): _emit(_opLD | busRAM | ea0DregAC | base)
 def ldzpx(base): _emit(_opLD | busRAM | ea0DregX  | base)
 def ldzpy(base): _emit(_opLD | busRAM | ea0DregY  | base)
 
-def align(n):
+def align(n, chunkSize=0x10000):
+  global _romSize, _maxRomSize
   while _romSize % n > 0:
     _emit(0)
+  _maxRomSize = min(0x10000, _romSize + chunkSize)
 
 def wait(n):
   assert n >= 0
