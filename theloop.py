@@ -402,7 +402,7 @@ st(d(videoSync1))               #34
 # --- LED sequencer (20 cycles)
 
 ldzp(d(ledTimer))               #35
-bne(d(lo('.leds2')))            #36
+bne(d(lo('.leds4')))            #36
 
 ld(d(lo('.leds0')))             #37
 adda(d(ledState)|busRAM)        #38
@@ -410,51 +410,64 @@ bra(busAC)                      #39
 bra(d(lo('.leds1')))            #40
 
 label('.leds0')
-ld(d(0x10+0b1111))              #41 Physical: [****]
-ld(d(0x20+0b0111))              #41 Physical: [***o]
-ld(d(0x30+0b0011))              #41 Physical: [**oo]
-ld(d(0x40+0b0001))              #41 Physical: [*ooo]
-ld(d(0x50+0b0010))              #41 Physical: [o*oo]
-ld(d(0x60+0b0100))              #41 Physical: [oo*o]
-ld(d(0x70+0b1000))              #41 Physical: [ooo*]
-ld(d(0x80+0b0100))              #41 Physical: [oo*o]
-ld(d(0x90+0b0010))              #41 Physical: [o*oo]
-ld(d(0xa0+0b0001))              #41 Physical: [*ooo]
-ld(d(0xb0+0b0010))              #41 Physical: [o*oo]
-ld(d(0xc0+0b0100))              #41 Physical: [oo*o]
-ld(d(0xd0+0b1000))              #41 Physical: [ooo*]
-ld(d(0xe0+0b1100))              #41 Physical: [oo**]
-ld(d(0x00+0b1110))              #41 Physical: [o***]
+ld(d(0b1111))                   #41
+ld(d(0b0111))                   #41
+ld(d(0b0011))                   #41
+ld(d(0b0001))                   #41
+ld(d(0b0010))                   #41
+ld(d(0b0100))                   #41
+ld(d(0b1000))                   #41
+ld(d(0b0100))                   #41
+ld(d(0b0010))                   #41
+ld(d(0b0001))                   #41
+ld(d(0b0011))                   #41
+ld(d(0b0111))                   #41
+ld(d(0b1111))                   #41
+ld(d(0b1110))                   #41
+ld(d(0b1100))                   #41
+ld(d(0b1000))                   #41
+ld(d(0b0100))                   #41
+ld(d(0b0010))                   #41
+ld(d(0b0001))                   #41
+ld(d(0b0010))                   #41
+ld(d(0b0100))                   #41
+ld(d(0b1000))                   #41
+ld(d(0b1100))                   #41
+ld(d(0b1110+128))               #41
 
 label('.leds1')
 st(d(leds))                     #42 Temporarily park here
-anda(val(0b11110000),regX)      #43 High 4 bits represent the next state
-ld(d(shiftTablePage),regY)      #44
-ld(busRAM|eaYXregAC)            #45
-ld(busAC,regX)                  #46
-ld(busRAM|eaYXregAC)            #47
-st(d(ledState))                 #48
-ldzp(d(leds))                   #49 Low 4 bits are the LED output
-anda(val(0b00001111))           #50
-st(d(leds))                     #51
-bra(d(lo('.leds3')))            #52
-ldzp(d(ledTempo))               #53 Setup the LED timer for the next period
 
+bmi(d(lo('.leds2')))            #43
+bra(d(lo('.leds3')))            #44
+ldzp(d(ledState))               #45
 label('.leds2')
-wait(52-38)                     #38
-ldzp(d(ledTimer))               #52
-suba(d(1))                      #53
-
+ld(val(-1))                     #45
 label('.leds3')
-st(d(ledTimer))                 #54
+adda(val(1))                    #46
+st(d(ledState))                 #47
+
+ldzp(d(leds))                   #48 Low 4 bits are the LED output
+anda(val(0b00001111))           #49
+st(d(leds))                     #50
+bra(d(lo('.leds5')))            #51
+ldzp(d(ledTempo))               #52 Setup the LED timer for the next period
+
+label('.leds4')
+wait(51-38)                     #38
+ldzp(d(ledTimer))               #51
+suba(d(1))                      #52
+
+label('.leds5')
+st(d(ledTimer))                 #53
 
 # --- Scroll demo hack app (12 cycles)
 
-ld(val(scanTablePage), regY)    #55 # Left 1 pixel/frame
-ld(d(0*2+1), busRAM|eaYDregAC)  #56
-adda(val(1))                    #57
-st(d(0*2+1), busAC|eaYDregAC)   #58
-wait(64-59)                     #59
+ld(val(scanTablePage), regY)    #54 # Left 1 pixel/frame
+ld(d(0*2+1), busRAM|eaYDregAC)  #55
+adda(val(1))                    #56
+st(d(0*2+1), busAC|eaYDregAC)   #57
+wait(64-58)                     #58
 ld(d(scrollerY*2+1), busRAM|eaYDregAC)#64 # Right 1 pixel/frame
 suba(val(1))                    #65
 st(d(scrollerY*2+1), busAC|eaYDregAC)#66
