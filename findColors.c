@@ -85,9 +85,9 @@ double trySwap2(int M[X*Y], double mError)
 // Swap 3 places
 double trySwap3(int M[X*Y], double mError)
 {
-        for (int i=0; i<63; i++)
-        for (int j=0; j<63; j++) if (j!=i)
-        for (int k=0; k<63; k++) if (k!=i && k!=j) {
+        for (int i=0; i<63-2; i++)
+        for (int j=i+1; j<63; j++)
+        for (int k=i+1; k<63; k++) if (k!=j) {
                 int N[X*Y];
 
                 memcpy(N, M, sizeof(N));
@@ -107,10 +107,10 @@ double trySwap3(int M[X*Y], double mError)
 // Swap 4 places
 double trySwap4(int M[X*Y], double mError)
 {
-        for (int i=0; i<63; i++)
-        for (int j=0; j<63; j++) if (j!=i)
-        for (int k=0; k<63; k++) if (k!=i && k!=j)
-        for (int l=0; l<63; l++) if (l!=i && l!=j && l!=k) {
+        for (int i=0; i<63-3; i++)
+        for (int j=i+1; j<63; j++)
+        for (int k=i+1; k<63; k++) if (k!=j)
+        for (int l=i+1; l<63; l++) if (l!=j && l!=k) {
                 int N[X*Y];
 
                 memcpy(N, M, sizeof(N));
@@ -130,11 +130,11 @@ double trySwap4(int M[X*Y], double mError)
 // Swap 5 places
 double trySwap5(int M[X*Y], double mError)
 {
-        for (int i=0; i<63; i++)
-        for (int j=0; j<63; j++) if (j!=i)
-        for (int k=0; k<63; k++) if (k!=i && k!=j)
-        for (int l=0; l<63; l++) if (l!=i && l!=j && l!=k)
-        for (int m=0; m<63; m++) if (m!=i && m!=j && m!=k && m!=l) {
+        for (int i=0; i<63-4; i++)
+        for (int j=i+1; j<63; j++)
+        for (int k=i+1; k<63; k++) if (k!=j)
+        for (int l=i+1; l<63; l++) if (l!=j && l!=k)
+        for (int m=i+1; m<63; m++) if (m!=j && m!=k && m!=l) {
                 int N[X*Y];
 
                 memcpy(N, M, sizeof(N));
@@ -155,12 +155,12 @@ double trySwap5(int M[X*Y], double mError)
 // Swap 6 places (this is really slow)
 double trySwap6(int M[X*Y], double mError)
 {
-        for (int i=0; i<63; i++)
-        for (int j=0; j<63; j++) if (j!=i)
-        for (int k=0; k<63; k++) if (k!=i && k!=j)
-        for (int l=0; l<63; l++) if (l!=i && l!=j && l!=k)
-        for (int m=0; m<63; m++) if (m!=i && m!=j && m!=k && m!=l)
-        for (int n=0; n<63; n++) if (n!=i && n!=j && n!=k && n!=l && n!=m) {
+        for (int i=0; i<63-5; i++)
+        for (int j=i+1; j<63; j++)
+        for (int k=i+1; k<63; k++) if (k!=j)
+        for (int l=i+1; l<63; l++) if (l!=j && l!=k)
+        for (int m=i+1; m<63; m++) if (m!=j && m!=k && m!=l)
+        for (int n=i+1; n<63; n++) if (n!=j && n!=k && n!=l && n!=m) {
                 int N[X*Y];
 
                 memcpy(N, M, sizeof(N));
