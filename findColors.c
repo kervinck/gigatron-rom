@@ -58,7 +58,6 @@ double tryShift(int M[X*Y], double mError)
                         memcpy(M, N, sizeof(N));
                         return nError;
                 }
-
         }
         return mError;
 }
@@ -179,6 +178,35 @@ double trySwap6(int M[X*Y], double mError)
         return mError;
 }
 
+// Swap 7 places (this takes forever)
+double trySwap7(int M[X*Y], double mError)
+{
+        for (int i=0; i<63-5; i++)
+        for (int j=i+1; j<63; j++)
+        for (int k=i+1; k<63; k++) if (k!=j)
+        for (int l=i+1; l<63; l++) if (l!=j && l!=k)
+        for (int m=i+1; m<63; m++) if (m!=j && m!=k && m!=l)
+        for (int n=i+1; n<63; n++) if (n!=j && n!=k && n!=l && n!=m)
+        for (int o=i+1; o<63; o++) if (o!=j && o!=k && o!=l && o!=m && o!=n) {
+                int N[X*Y];
+
+                memcpy(N, M, sizeof(N));
+                N[i] = M[j];
+                N[j] = M[k];
+                N[k] = M[l];
+                N[l] = M[m];
+                N[m] = M[n];
+                N[n] = M[o];
+                N[o] = M[i];
+                double nError = calcError(N);
+                if (nError < mError) {
+                        memcpy(M, N, sizeof(N));
+                        return nError;
+                }
+        }
+        return mError;
+}
+
 // Print in Python format
 void print(int M[X*Y], double mError)
 {
@@ -290,6 +318,11 @@ int main(void)
 
                 puts("trySwap6");
                 currentError = trySwap6(M, mError);
+                if (currentError < mError)
+                        continue;
+
+                puts("trySwap7");
+                currentError = trySwap7(M, mError);
                 if (currentError < mError)
                         continue;
 
