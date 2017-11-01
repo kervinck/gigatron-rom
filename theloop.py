@@ -482,16 +482,16 @@ ld(val(scanTablePage), regY)    #54 # Left 1 pixel/frame
 ld(d(0*2+1), busRAM|eaYDregAC)  #55
 adda(val(1))                    #56
 st(d(0*2+1), busAC|eaYDregAC)   #57
-ld(d(scrollerY*2+1), busRAM|eaYDregAC)#59 # Right 1 pixel/frame
-suba(val(1))                    #60
-st(d(scrollerY*2+1), busAC|eaYDregAC)#61
+ld(d(scrollerY*2+1), busRAM|eaYDregAC)#558 # Right 1 pixel/frame
+suba(val(1))                    #59
+st(d(scrollerY*2+1), busAC|eaYDregAC)#660
 
 # --- Bouncing ball demo (31 cycles)
 
 # Remove ball
-ld(d(ballX), busRAM|ea0DregX)   #62
-ld(d(ballY), busRAM|ea0DregY)   #63
-st(val(0), eaYXregAC)           #64
+ld(d(ballX), busRAM|ea0DregX)   #61
+ld(d(ballY), busRAM|ea0DregY)   #62
+st(val(0), eaYXregAC)           #63
 
 # Test hitting vertical walls left and right
 extra = 0
@@ -541,58 +541,58 @@ st(d(hitFlag),busD)
 extra += 7
 
 # Probe pixel after hypothetical X move
-ldzp(d(ballX))                  #65
-adda(d(ballDX), busRAM|ea0DregX)#66
-ld(busRAM|eaYXregAC)            #67
-bne(lo('.ball0'))               #68
-ld(val(0))                      #69
+ldzp(d(ballX))                  #64
+adda(d(ballDX), busRAM|ea0DregX)#65
+ld(busRAM|eaYXregAC)            #66
+bne(lo('.ball0'))               #67
+ld(val(0))                      #68
 # Update X
-ldzp(d(ballX))                  #70
-adda(d(ballDX), busRAM)         #71
-bra(lo('.ball1'))               #72
-st(d(ballX),busAC|ea0DregX)     #73
+ldzp(d(ballX))                  #69
+adda(d(ballDX), busRAM)         #70
+bra(lo('.ball1'))               #71
+st(d(ballX),busAC|ea0DregX)     #72
 # Register hit and turn around
 label('.ball0')
-st(d(hitFlag),busAC)            #70
-suba(d(ballDX),busRAM)          #71
-st(d(ballDX),busAC)             #72
-ld(d(ballX),busRAM|ea0DregX)    #73
+st(d(hitFlag),busAC)            #69
+suba(d(ballDX),busRAM)          #70
+st(d(ballDX),busAC)             #71
+ld(d(ballX),busRAM|ea0DregX)    #72
 label('.ball1')
 # Test crossing of horizontal walls
-ldzp(d(ballY))                  #74
-adda(d(ballDY),busRAM)          #75
-anda(val(0x7f))                 #76
-suba(val(screenPages+scrollerY))#77
-bpl(lo('.ball2'))               #78
-ld(val(0))                      #79
+ldzp(d(ballY))                  #73
+adda(d(ballDY),busRAM)          #74
+anda(val(0x7f))                 #75
+suba(val(screenPages+scrollerY))#76
+bpl(lo('.ball2'))               #77
+ld(val(0))                      #78
 # Outside the playfield
-suba(d(ballDY),busRAM)          #80
-bra(lo('.ball3'))               #81
-st(d(ballDY),busAC)             #82
+suba(d(ballDY),busRAM)          #79
+bra(lo('.ball3'))               #80
+st(d(ballDY),busAC)             #81
 # Inside the playfield
 label('.ball2')
-wait(83-80)                     #80
+wait(83-80)                     #79
 # Probe pixel after hypothetical Y move
 label('.ball3')
-ldzp(d(ballY))                  #83
-adda(d(ballDY), busRAM|ea0DregY)#84
-ld(busRAM|eaYXregAC)            #85
-bne(lo('.ball4'))               #86
-ld(val(0))                      #87
+ldzp(d(ballY))                  #82
+adda(d(ballDY), busRAM|ea0DregY)#83
+ld(busRAM|eaYXregAC)            #84
+bne(lo('.ball4'))               #85
+ld(val(0))                      #86
 # Update Y
-ldzp(d(ballY))                  #88
-adda(d(ballDY), busRAM)         #89
-bra(lo('.ball5'))               #90
-st(d(ballY),busAC|ea0DregY)     #91
+ldzp(d(ballY))                  #87
+adda(d(ballDY), busRAM)         #88
+bra(lo('.ball5'))               #89
+st(d(ballY),busAC|ea0DregY)     #90
 # Register hit and turn around
 label('.ball4')
-st(d(hitFlag),busAC)            #88
-suba(d(ballDY),busRAM)          #89
-st(d(ballDY))                   #90
-ld(d(ballY),busRAM|ea0DregY)    #91
+st(d(hitFlag),busAC)            #87
+suba(d(ballDY),busRAM)          #88
+st(d(ballDY))                   #89
+ld(d(ballY),busRAM|ea0DregY)    #90
 # Redraw ball
 label('.ball5')
-st(val(63), eaYXregAC)          #92
+st(val(63), eaYXregAC)          #91
 
 ldzp(d(hitFlag))
 bne(d(lo('ball6')))
@@ -620,7 +620,7 @@ adda(val(gridShiftY))
 st(d(wipeOutY))
 extra += 8
 
-wait(198-93-extra)              #93 # XXX Application cycles (scanline 0)
+wait(198-92-extra)              #92 # XXX Application cycles (scanline 0)
 
 ld(val(vFront+vPulse+vBack-2))  #198 `-2' because first and last are different
 st(d(blankY))                   #199
