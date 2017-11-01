@@ -364,9 +364,9 @@ st(d(ballY))
 ld(val(-1))
 st(d(ballDX))
 st(d(ballDY))
-ld(val(screenPages+scrollerY+gridShiftY+7))
-st(d(wipeOutX))
 ld(val(0))
+st(d(wipeOutX))
+ld(val(screenPages+scrollerY+gridShiftY+7))
 st(d(wipeOutY))
 
 # Setup serial input and derived button state
@@ -1017,8 +1017,8 @@ for y in range(scrollerY,120):
     v = 0
     xm, xd = (x-gridShiftX) % 16, (x-gridShiftX) // 16
     ym, yd = (y-gridShiftY) % 8, (y-gridShiftY) // 8
-    if 0<=xd<9 and 0<yd<8 and xm<14 and ym<6:
-       v = colors[(yd-1)*9+xd]
+    if 0<=xd<9 and 2<=yd<9 and xm<14 and ym<6:
+       v = colors[(yd-2)*9+xd]
     st(val(v), eaYXregOUTIX)
 
 ld(d(retImage+1), busRAM|ea0DregY)
