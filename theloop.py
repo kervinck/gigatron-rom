@@ -96,6 +96,7 @@ screenY   = zpByte() # Counts up from 0 to 238 in steps of 2
 frameX    = zpByte() # Starting byte within page
 frameY    = zpByte() # Page number of current pixel row (updated by videoA)
 nextVideo = zpByte()
+videoDorF = zpByte() # Scanline mode
 
 # Vertical blank, reuse some variables
 blankY     = screenY  # Counts down during vertical blank (44 to 0)
@@ -180,6 +181,9 @@ screenPages   = 0x80 - 120 # Default start of screen memory: 0x0800 to 0x7fff
 imageUp=5    # Shift of source image
 scrollerY=11 # Area for scroller
 ledY=17      # Position for LED on screen
+
+gridShiftX=9 # Bricks shift
+gridShiftY=scrollerY-4
 
 #-----------------------------------------------------------------------
 #
@@ -300,6 +304,8 @@ st(val(0), eaYXregOUTIX) # dXi = 0
 adda(val(1))
 bge(d(lo('.initVideo'))) # stops at $80
 st(eaYXregOUTIX)         # Yi  = 0x08+i
+ld(d(lo('videoF')))
+st(d(videoDorF))
 
 # Init the shift2-right table for sound
 ld(val(shiftTablePage), regY)
@@ -358,8 +364,9 @@ st(d(ballY))
 ld(val(-1))
 st(d(ballDX))
 st(d(ballDY))
-ld(val(screenPages+scrollerY))
+ld(val(screenPages+scrollerY+gridShiftY+7))
 st(d(wipeOutX))
+ld(val(0))
 st(d(wipeOutY))
 
 # Setup serial input and derived button state
@@ -594,9 +601,9 @@ ldzp(d(hitX))     # Update wipeout
 label('ball6')
 ldzp(d(wipeOutX)) # No change
 label('ball7')
-suba(val(9))
+suba(val(gridShiftX))
 anda(val(~15))
-adda(val(9))
+adda(val(gridShiftX))
 st(d(wipeOutX))
 extra += 8
 
@@ -607,9 +614,9 @@ ldzp(d(hitY))     # Update wipeout
 label('ball8')
 ldzp(d(wipeOutY)) # No change
 label('ball9')
-suba(val((scrollerY-4)%8))
+suba(val(gridShiftY))
 anda(val(~7))
-adda(val((scrollerY-4)%8))
+adda(val(gridShiftY))
 st(d(wipeOutY))
 extra += 8
 
@@ -775,14 +782,14 @@ label('.l1')
 adda(d(playerX),busRAM)         #54
 st(d(playerX),busAC)            #55
 
-# --- Render button state as pad near bottom of screen
+# --- Render current serial input as pad near bottom of screen
 ld(val(screenPages+115),regY)   #56
 ld(d(playerX),busRAM|regX)      #57
 st(val(0),eaYXregOUTIX)         #58
 ld(val(1))                      #59
 label('.N0')
 st(d(zpFree))                   #60-116
-anda(d(buttonState),busRAM)     #61-117
+anda(d(serialInput),busRAM)     #61-117
 beq(d(lo('.N1')))               #62-118
 bra(d(lo('.N2')))               #63-119
 st(val(3*G),eaYXregOUTIX)       #64-120
@@ -794,7 +801,19 @@ bpl(d(lo('.N0')))               #66-122
 adda(busAC)                     #67-123
 st(val(0),eaYXregOUTIX)         #124
 
-wait(199-125)                   #125 XXX Application cycles (scanline 44)
+# --- Switch video mode when (only) select is pressed
+ldzp(d(buttonState))            #125
+xora(val(buttonSelect))         #126
+beq(d(lo('.sel0')))             #127
+bra(d(lo('.sel1')))             #128
+ld(val(0))                      #129
+label('.sel0')
+ld(val(lo('videoD')^lo('videoF')))#129
+label('.sel1')
+xora(d(videoDorF),busRAM)       #130
+st(d(videoDorF))                #131
+
+wait(199-132)                   #132 XXX Application cycles (scanline 44)
 ldzp(d(channel))                #199 Advance to next sound channel
 anda(val(3))                    #0
 adda(val(1))                    #1
@@ -888,7 +907,7 @@ anda(d(0xf0))                   #30
 ora(d(leds), busRAM|ea0DregAC)  #31
 st(d(xout))                     #32 Update [xout] with new sample (4 channels just updated)
 st(val(sample), ea0DregAC|busD) #33 Reset for next sample
-ld(d(lo('videoF')))             #34 Now back to video business
+ldzp(d(videoDorF))              #34 Now back to video business
 st(d(nextVideo))                #35
 ld(d(frameX), busRAM|regX)      #36
 ld(d(frameY), busRAM|regY)      #37
@@ -981,14 +1000,14 @@ for y in range(scrollerY):
     st(val(v), eaYXregOUTIX)
 
 colors = [
- 63, 59, 55, 51, 35, 19, 23, 27, 31, # ### #+# #-# #.# #.+ #.- #-- #+- ##-
- 47, 43, 39, 38, 34,  3,  7, 11, 15, # ##+ #++ #-+ +-+ +.+ #.. #-. #+. ##.
- 46, 42, 26, 22, 18,  2,  6, 10, 14, # +#+ +++ ++- +-- +.- +.. +-. ++. +#.
- 29, 30, 25, 21, 17,  1,  5,  9, 13, # -#- +#- -+- --- -.- -.. --. -+. -#.
- 44, 45, 41, 37, 33, 16, 20,  4,  8, # .#+ -#+ -++ --+ -.+ ..- .-- .-. .+.
- 60, 61, 57, 53, 49, 32, 36, 24, 12, # .## -## -+# --# -.# ..+ .-+ .+- .#.
- 56, 62, 58, 54, 50, 48, 52, 40, 28, # .+# +## ++# +-# +.# ..# .-# .++ .#-
-] # error 1.211920
+ 63, 43, 38, 18,  3,  2,  1, 17, 16, # ### #++ +-+ +.- #.. +.. -.. -.- ..-
+ 59, 55, 39, 19,  7,  6,  5,  4, 20, # #+# #-# #-+ #.- #-. +-. --. .-. .--
+ 54, 51, 35, 23, 11, 10,  9,  8, 24, # +-# #.# #.+ #-- #+. ++. -+. .+. .+-
+ 50, 34, 22, 27, 15, 14, 13, 12, 25, # +.# +.+ +-- #+- ##. +#. -#. .#. -+-
+ 49, 33, 21, 26, 31, 30, 29, 28, 41, # -.# -.+ --- ++- ##- +#- -#- .#- -++
+ 32, 36, 37, 42, 47, 46, 45, 44, 40, # ..+ .-+ --+ +++ ##+ +#+ -#+ .#+ .++
+ 48, 52, 53, 57, 58, 62, 61, 60, 56, # ..# .-# --# -+# ++# +## -## .## .+#
+] # error 1.220485
 
 # Image
 for y in range(scrollerY,120):
@@ -996,11 +1015,10 @@ for y in range(scrollerY,120):
   ld(val(screenPages+y), regY)
   for x in range(160):
     v = 0
-    xm, xd = (x-9) % 16, (x-9) // 16
-    ym, yd = (y-scrollerY-4) % 8, (y-scrollerY-4) // 8
+    xm, xd = (x-gridShiftX) % 16, (x-gridShiftX) // 16
+    ym, yd = (y-gridShiftY) % 8, (y-gridShiftY) // 8
     if 0<=xd<9 and 0<yd<8 and xm<14 and ym<6:
        v = colors[(yd-1)*9+xd]
-
     st(val(v), eaYXregOUTIX)
 
 ld(d(retImage+1), busRAM|ea0DregY)
