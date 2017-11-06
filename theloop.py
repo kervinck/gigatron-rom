@@ -681,7 +681,7 @@ st(d(videoSync1))               #41
 
 # Capture the serial input
 ldzp(d(blankY))                 #42
-xora(val(vBack-1-8))            #43 Eight scanlines into the back porch
+xora(val(vBack-1-8+6))          #43 Eight scanlines into the back porch
 bne(d(lo('.ser0')))             #44
 bra(d(lo('.ser1')))             #45
 st(d(serialInput),busIN)        #46
