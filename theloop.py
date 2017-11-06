@@ -26,7 +26,7 @@ assert(syncBits & hSync != 0)
 
 # XXX -5 to get 520 = quadruple of scan lines (for testing sound consistency)
 vFront = 10 - 5 # VGA default, adjusted to get 59.98 Hz (6.25 MHz/200/521)
-vPulse = 2
+vPulse = 8
 vBack  = 33
 
 # Game controller bits
