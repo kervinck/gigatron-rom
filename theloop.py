@@ -784,7 +784,7 @@ st(d(buttonState),busAC)        #42
 # --- Respond to button state by moving the player
 # Going right
 anda(val(buttonRight))          #43
-bne(d(lo('.r0')))               #44
+beq(d(lo('.r0')))               #44
 bra(d(lo('.r1')))               #45
 ld(val(0))                      #46
 label('.r0')
@@ -795,7 +795,7 @@ st(d(playerX),busAC)            #48
 # Going left
 ldzp(d(buttonState))            #49
 anda(val(buttonLeft))           #50
-bne(d(lo('.l0')))               #51
+beq(d(lo('.l0')))               #51
 bra(d(lo('.l1')))               #52
 ld(val(0))                      #53
 label('.l0')
@@ -825,7 +825,7 @@ st(val(0),eaYXregOUTIX)         #124
 
 # --- Switch video mode when (only) select is pressed
 ldzp(d(buttonState))            #125
-xora(val(buttonSelect))         #126
+xora(val(~buttonSelect))        #126
 beq(d(lo('.sel0')))             #127
 bra(d(lo('.sel1')))             #128
 ld(val(0))                      #129
