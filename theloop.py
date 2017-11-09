@@ -26,8 +26,8 @@ assert(syncBits & hSync != 0)
 
 # XXX -5 to get 520 = quadruple of scan lines (for testing sound consistency)
 vFront = 10 - 5 # VGA default, adjusted to get 59.98 Hz (6.25 MHz/200/521)
-vPulse = 8
-vBack  = 33
+vPulse = 2+6    # 8 scanlines instead of 2 so we can feed the game controller the same signal
+vBack  = 33-6   # We borrow the 6 extra lines from the back porch
 
 # Game controller bits
 buttonRight     = 1
@@ -681,7 +681,7 @@ st(d(videoSync1))               #41
 
 # Capture the serial input
 ldzp(d(blankY))                 #42
-xora(val(vBack-1-8+6))          #43 Eight scanlines into the back porch
+xora(val(vBack-1-1))            #43 Exactly when the 74HC595 has captured all 8 controller bits
 bne(d(lo('.ser0')))             #44
 bra(d(lo('.ser1')))             #45
 st(d(serialInput),busIN)        #46

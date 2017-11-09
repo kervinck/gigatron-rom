@@ -331,9 +331,9 @@ V    V     V    V
 01b7 f0fa  beq  $fa
 01b8 a001  suba $01
 01b9 c208  st   [$08]
-01ba a020  suba $20
+01ba a01a  suba $1a
 01bb ecc0  bne  $c0
-01bc a002  suba $02
+01bc a008  suba $08
 01bd 00c0  ld   $c0
 01be fcc5  bra  $c5
 01bf c209  st   [$09]
@@ -346,7 +346,7 @@ V    V     V    V
 01c6 6040  xora $40
 01c7 c20a  st   [$0a]
 01c8 0108  ld   [$08]
-01c9 6018  xora $18
+01c9 6019  xora $19
 01ca eccd  bne  $cd
 01cb fcce  bra  $ce
 01cc c314  st   in,[$14]
