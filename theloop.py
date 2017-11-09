@@ -17,17 +17,28 @@ from asm import *
 
 # Output pin assignment for VGA
 R, G, B, hSync, vSync = 1, 4, 16, 64, 128
-syncBits = hSync + vSync # Both pulses negative
-#sync = 0             # Both pulses positive
+syncBits = hSync+vSync # Both pulses negative
 
 # When the XOUT register is in the circuit, the rising edge triggers its update.
 # The loop can therefore not be agnostic to the horizontal pulse polarity.
 assert(syncBits & hSync != 0)
 
-# XXX -5 to get 520 = quadruple of scan lines (for testing sound consistency)
-vFront = 10 - 5 # VGA default, adjusted to get 59.98 Hz (6.25 MHz/200/521)
-vPulse = 2+6    # 8 scanlines instead of 2 so we can feed the game controller the same signal
-vBack  = 33-6   # We borrow the 6 extra lines from the back porch
+# VGA defaults
+vFront = 10     # Vertical front porch
+vPulse = 2      # Vertical sync pulse
+vBack = 33      # Vertical back porch
+vgaLines = vFront + vPulse + vBack + 480
+vgaClock = 25.175e6
+
+# Adjustments for our system:
+# 1. Get refresh rate back above minimum 59.92 Hz by cutting lines from vertical front porch
+vFrontAdjust = vgaLines - int(4 * 6.25e6 / vgaClock * vgaLines)
+vFront -= vFrontAdjust
+# 2. Extend vertical sync pulse so we can feed the game controller the same signal
+vPulseExtension = max(0, 8-vPulse)
+vPulse += vPulseExtension
+# 3. Borrow these lines from the back porch so the refresh rate is unaffected
+vBack -= vPulseExtension
 
 # Game controller bits
 buttonRight     = 1
@@ -620,6 +631,17 @@ adda(val(gridShiftY))
 st(d(wipeOutY))
 extra += 8
 
+# When the total number of scanlines per frame is not an exact multiple of the (4) channels,
+# there will be an audible discontinuity if no measure is taken. This static noise can be
+# suppressed by swallowing the first `lines%4' partial samples after transitioning into
+# vertical blank. This is easiest if the modulo is 0 (do nothing) or 1 (reset sample while in
+# the first blank scanline). For the two other cases there is no solution yet: give a warning.
+soundDiscontinuity = (vFront+vPulse+vBack) % 4
+if soundDiscontinuity == 1:
+  st(val(sample), ea0DregAC|busD)
+  extra += 1
+if soundDiscontinuity > 1:
+  print "Warning: sound discontinuity not supressed"
 wait(198-92-extra)              #92 # XXX Application cycles (scanline 0)
 
 ld(val(vFront+vPulse+vBack-2))  #198 `-2' because first and last are different
