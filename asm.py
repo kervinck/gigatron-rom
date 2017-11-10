@@ -215,18 +215,6 @@ def _emit(ins):
     print '%04x %02x%02x  %s' % (_romSize, opcode, operand, disassembly)
     print 'Warning: large propagation delay (conditional branch with RAM on bus)'
 
-  # Warning for time critical instruction combination
-  if _romSize >= 2 and (_rom0[_romSize-2] & _maskOp) == _opJ and\
-    opcode & _maskBus == busRAM and\
-    opcode & _maskMode not in [ea0DregAC, ea0DregX, ea0DregY, ea0DregOUT] and\
-    opcode & _maskOp in [_opADD, _opSUB]:
-    for address in range(_romSize-2, _romSize):
-      opcode, operand = _rom0[address], _rom1[address]
-      # XXX disassembly at this point isn't correct until phase 2 has resolved all symbols
-      disassembly = disassemble(opcode, operand)
-      print '%04x %02x%02x  %s' % (_romSize, opcode, operand, disassembly)
-    print 'Warning: large propagation delay (artihmetic on RAM operand after jump and mode change)'
-
 def ld  (base, reg=regAC, flags=0): _emit(_opLD  | base | reg | flags)
 def anda(base, reg=regAC, flags=0): _emit(_opAND | base | reg | flags)
 def ora (base, reg=regAC, flags=0): _emit(_opOR  | base | reg | flags)
