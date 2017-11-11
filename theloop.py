@@ -215,6 +215,30 @@ ledY=17      # Position for LED on screen
 gridShiftX=9 # Bricks shift
 gridShiftY=scrollerY-4
 
+maxTicks = 28/2 # Duration of slowest virtual opcode (ADDW)
+vOverhead = 11 # Overhead of jumping in and out. Cycles, not ticks
+def runVcpu(n):
+  """Run interpreter for exactly n cycles"""
+  print 'runVcpu %s cycles' % n
+  assert n >= 7 + 2*maxTicks + vOverhead
+  returnPc = pc() + 7
+  ld(val(returnPc&255))         #0
+  st(d(returnTo))               #1
+  ld(val(returnPc>>8))          #2
+  st(d(returnTo+1))             #3
+  ld(val(hi('ENTER')),regY)     #4
+  n -= 7
+  n -= 2*maxTicks + vOverhead
+  assert n >= 0
+  if n % 2 == 1:
+    nop()
+    n -= 1
+  assert n % 2 == 0
+  n /= 2
+  jmpy(d(lo('ENTER')))          #5
+  print 'runVcpu %s ticks' % n
+  ld(val(n))                    #6
+
 #-----------------------------------------------------------------------
 #
 #  ROM page 0: boot and vertical blank
@@ -492,6 +516,12 @@ st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'D'
 st(val(vVarD),          eaYXregOUTIX)
 st(val(lo('POKEI')),    eaYXregOUTIX)   # POKEI 5
 st(val(5),              eaYXregOUTIX)
+
+# XXX GOTO 1
+st(val(lo('JUMP')),     eaYXregOUTIX)   # JUMP <line1>
+st(val((bStart&255)-2), eaYXregOUTIX)
+st(val(bStart>>8),      eaYXregOUTIX)
+bLine += 3
 
 line80 = bLine       # 80 IF C<0 POKE D,15
 bLine += 9
@@ -1143,9 +1173,10 @@ st(d(screenY))                  #33 More visible lines
 ld(d(lo('videoA')))             #34
 label('.join')
 st(d(nextVideo))                #35
-ld(d(hi('interpreter')),ea0DregY)#36
-jmpy(d(lo('interpreter')))      #37
-nop()                           #38
+runVcpu(199-36)                 #36 Application (every 4th of scanlines 45-524)
+ld(d(hi('soundF')), busD|ea0DregY)#199
+jmpy(d(lo('soundF')))           #0
+ldzp(d(channel))                #1 Advance to next sound channel
 
 #-----------------------------------------------------------------------
 #
@@ -1159,8 +1190,6 @@ vTicks  = zpFree                # Interpreter ticks are units of 2 clocks
 vTmp    = zpFree+1
 
 #-----------------------------------------------------------------------
-
-maxTicks = 28/2                 # Duration of slowest virtual opcode
 
 #
 # Enter the timing-aware application interpreter (aka virtual CPU)
@@ -1180,9 +1209,8 @@ maxTicks = 28/2                 # Duration of slowest virtual opcode
 #       ld ticksToUse-ticksOffset (must be >=0)
 #.cont:
 label('ENTER')
-bra(d(lo('.next2')))
-ld(d(vPC+1),busRAM|regY)
-nop()
+bra(d(lo('.next2')))            #0 Enter at '.next2' (so no startup overhead)
+ld(d(vPC+1),busRAM|regY)        #1
 
 label('next14')
 st(d(vAC))                      #14
@@ -1204,14 +1232,15 @@ ld(busRAM|eaYXregAC)            #9 Prefetch operand
 
 # Resync with caller and return
 label('RETURN')
-ld(val(syncBits+2*G),regOUT)    # Visualize the resync
-adda(val(maxTicks))             #3
-bgt(d(pc()))                    #4+i
-suba(val(1))                    #5+i
-ld(val(syncBits),regOUT)        # Visualize the resync
-ld(d(returnTo+1),busRAM|regY)   #6
-jmpy(d(returnTo+0)|busRAM)      #7
-nop()
+ld(val(syncBits+2*G),regOUT)    #3 Visualize the resync
+adda(val(maxTicks))             #4
+bgt(d(pc()))                    #5
+suba(val(1))                    #6
+ld(val(syncBits),regOUT)        #7 Visualize the resync
+ld(d(returnTo+1),busRAM|regY)   #8
+jmpy(d(returnTo+0)|busRAM)      #9
+nop()                           #10
+assert vOverhead == 11
 
 # Instruction LDI: Load immediate constant (ACL=$DD), 14 cycles
 label('LDI')
@@ -1302,8 +1331,10 @@ st(d(vPC))                      #10
 st(eaYXregOUTIX)                #11 Just to increment X
 ld(busRAM|eaYXregAC)            #12 Fetch second operand
 st(d(vPC+1))                    #13
-bra(d(lo('NEXT')))              #14
-ld(val(-16/2))                  #15
+ld(val(syncBits+2*R),regOUT)    #14 Visualize the JUMP
+ld(val(syncBits),regOUT)        #15
+bra(d(lo('NEXT')))              #16
+ld(val(-18/2))                  #17
 
 # Instruction BEQ: Branch if zero (if(ALC==0)PCL=D), 16 cycles
 label('BEQ')
@@ -1449,17 +1480,6 @@ st(eaYXregAC)                   #12
 ld(d(vPC+1),busRAM|regY)        #13
 bra(d(lo('NEXT')))              #14
 ld(val(-16/2))                  #15
-
-#-----------------------------------------------------------------------
-#       placeholder
-#-----------------------------------------------------------------------
-
-nop()
-label('interpreter')
-wait(199-39)                    #39 XXX Application cycles (every 4th of scanlines 45-524)
-ld(d(hi('soundF')), busD|ea0DregY)#199
-jmpy(d(lo('soundF')))           #0
-ldzp(d(channel))                #1 Advance to next sound channel
 
 #-----------------------------------------------------------------------
 # Selfie raw
