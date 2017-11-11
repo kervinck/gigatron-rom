@@ -115,7 +115,7 @@ videoSync0 = frameX  # Vertical sync type on current line (0xc0 or 0x40)
 videoSync1 = frameY  # Same during horizontal pulse
 
 # Function image return address
-retImage  = zpByte(2)
+returnTo   = zpByte(2)
 
 # Two bytes of havested entropy
 # XXX Consider a larger entropy buffer
@@ -148,6 +148,16 @@ hitX            = zpByte()
 hitY            = zpByte()
 hitFlag         = zpByte()
 
+# High level interpreter
+vPC     = zpByte(2)             # Interpreter program counter (points into RAM)
+vAC     = zpByte(2)             # Interpreter accumulator (16-bits)
+
+# 'BASIC' variables
+vVarA   = zpByte(2)             # BASIC variable A
+vVarB   = zpByte(2)             # BASIC variable B
+vVarC   = zpByte(2)             # BASIC variable C
+vVarD   = zpByte(2)             # BASIC variable D
+
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 zpFree     = zpByte()
 
@@ -178,6 +188,15 @@ oscH = 255
 #-----------------------------------------------------------------------
 
 shiftTablePage = 0x02
+
+#-----------------------------------------------------------------------
+#
+#  RAM page 3-7: application code 'BASIC'
+#
+#-----------------------------------------------------------------------
+
+bStart = 0x0300
+bTop   = 0x07ff
 
 #-----------------------------------------------------------------------
 #  Memory layout
@@ -392,12 +411,158 @@ ld(val(syncBits), regOUT)
 
 # Draw image (and subroutine test)
 ld(val(lo('.retImage')))
-st(d(retImage+0))
+st(d(returnTo+0))
 ld(val(hi('.retImage')))
-st(d(retImage+1))
+st(d(returnTo+1))
 ld(d(hi('image')), regY)
 jmpy(d(lo('image')))
 label('.retImage')
+
+# Load test 'BASIC' Fibonacci program into RAM
+# There is no parsing, just hand-assembled virtual CPU instructions
+#
+# 10 A=0
+# 20 B=1
+# 30 C=A+B
+# 40 A=B
+# 50 B=C
+# 60 D=17480
+# 70 POKE D,5
+# 80 IF C<0 POKE D,15
+# 90 C=C+C
+# 100 D=1+D
+# 110 IF -17496+D<>0 GOTO 70
+# 120 IF B>=0 GOTO 30
+# 130 GOTO 10
+
+bLine = bStart
+ld(val(bLine>>8), regY)
+ld(val(bLine&255),regX)
+
+line10 = bLine       # 10 A=0
+bLine += 5
+st(val(lo('LDWI')),     eaYXregOUTIX)   # LDWI 0
+st(val(0),              eaYXregOUTIX)
+st(val(0),              eaYXregOUTIX)
+st(val(lo('STW')),      eaYXregOUTIX)   # STW 'A'
+st(val(vVarA),          eaYXregOUTIX)
+
+line20 = bLine       # 20 B=1
+bLine += 5
+st(val(lo('LDWI')),     eaYXregOUTIX)   # LDWI 1
+st(val(1),              eaYXregOUTIX)
+st(val(0),              eaYXregOUTIX)
+st(val(lo('STW')),      eaYXregOUTIX)   # STW 'B'
+st(val(vVarB),          eaYXregOUTIX)
+
+line30 = bLine       # 30 C=A+B
+bLine += 6
+st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'A'
+st(val(vVarA),          eaYXregOUTIX)
+st(val(lo('ADDW')),     eaYXregOUTIX)   # ADDW 'B'
+st(val(vVarB),          eaYXregOUTIX)
+st(val(lo('STW')),      eaYXregOUTIX)   # STW 'C'
+st(val(vVarC),          eaYXregOUTIX)
+
+line40 = bLine       # 40 A=B
+bLine += 4
+st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'B'
+st(val(vVarB),          eaYXregOUTIX)
+st(val(lo('STW')),      eaYXregOUTIX)   # STW 'A'
+st(val(vVarA),          eaYXregOUTIX)
+
+line50 = bLine       # 50 B=C
+bLine += 4
+st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'C'
+st(val(vVarC),          eaYXregOUTIX)
+st(val(lo('STW')),      eaYXregOUTIX)   # STW 'B'
+st(val(vVarB),          eaYXregOUTIX)
+
+line60 = bLine       # 60 D=17480
+bLine += 5
+st(val(lo('LDWI')),     eaYXregOUTIX)   # LDWI pen
+st(val(17480&255),      eaYXregOUTIX)
+st(val(17480>>8),       eaYXregOUTIX)
+st(val(lo('STW')),      eaYXregOUTIX)   # STW 'D'
+st(val(vVarD),          eaYXregOUTIX)
+
+line70 = bLine       # 70 POKE D,5
+bLine += 4
+st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'D'
+st(val(vVarD),          eaYXregOUTIX)
+st(val(lo('POKEI')),    eaYXregOUTIX)   # POKEI 5
+st(val(5),              eaYXregOUTIX)
+
+line80 = bLine       # 80 IF C<0 POKE D,15
+bLine += 9
+st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'C'
+st(val(vVarC),          eaYXregOUTIX)
+st(val(lo('SIGNW')),    eaYXregOUTIX)   # SIGNW
+st(val(lo('BGE')),      eaYXregOUTIX)   # BGE <line90>
+st(val((bLine&255)-2),  eaYXregOUTIX)
+st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'D'
+st(val(vVarD),          eaYXregOUTIX)
+st(val(lo('POKEI')),    eaYXregOUTIX)   # POKEI 15
+st(val(15),             eaYXregOUTIX)
+
+line90 = bLine       # 90 C=C+C
+bLine += 6
+st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'C'
+st(val(vVarC),          eaYXregOUTIX)
+st(val(lo('ADDW')),     eaYXregOUTIX)   # ADDW 'C'
+st(val(vVarC),          eaYXregOUTIX)
+st(val(lo('STW')),      eaYXregOUTIX)   # STW 'C'
+st(val(vVarC),          eaYXregOUTIX)
+
+line100 = bLine      # 100 D=1+D
+bLine += 7
+st(val(lo('LDWI')),     eaYXregOUTIX)   # LDWI 1
+st(val(1),              eaYXregOUTIX)
+st(val(0),              eaYXregOUTIX)
+st(val(lo('ADDW')),     eaYXregOUTIX)   # ADDW 'D'
+st(val(vVarD),          eaYXregOUTIX)
+st(val(lo('STW')),      eaYXregOUTIX)   # STW 'D'
+st(val(vVarD),          eaYXregOUTIX)
+
+line110 = bLine      # 110 IF -17496+D<>0 GOTO 70
+bLine += 11
+st(val(lo('LDWI')),     eaYXregOUTIX)   # LDWI -17496
+st(val((-174966)&255),  eaYXregOUTIX)
+st(val((-174966)>>8),   eaYXregOUTIX)
+st(val(lo('ADDW')),     eaYXregOUTIX)   # ADDW 'D'
+st(val(vVarD),          eaYXregOUTIX)
+st(val(lo('SIGNW')),    eaYXregOUTIX)   # SIGNW
+st(val(lo('BEQ')),      eaYXregOUTIX)   # BEQ <line130>
+st(val((bLine&255)-2),  eaYXregOUTIX)
+st(val(lo('JUMP')),     eaYXregOUTIX)   # JUMP <line70>
+st(val((line70&255)-2), eaYXregOUTIX)
+st(val(line70>>8),      eaYXregOUTIX)
+
+line120 = bLine      # 120 IF B>=0 GOTO 30
+bLine += 8
+st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'B'
+st(val(vVarB),          eaYXregOUTIX)
+st(val(lo('SIGNW')),    eaYXregOUTIX)   # SIGNW
+st(val(lo('BLT')),      eaYXregOUTIX)   # BLT <line130>
+st(val((bLine&255)-2),  eaYXregOUTIX)
+st(val(lo('JUMP')),     eaYXregOUTIX)   # JUMP <line30>
+st(val((line30&255)-2), eaYXregOUTIX)
+st(val(line30>>8),      eaYXregOUTIX)
+
+line130 = bLine      # 130 GOTO 10
+bLine += 3
+st(val(lo('JUMP')),     eaYXregOUTIX)   # JUMP <line10>
+st(val((line10&255)-2), eaYXregOUTIX)
+st(val((line10)>>8),    eaYXregOUTIX)
+
+print bLine-bStart, 'BASIC bytes loaded'
+print bTop-bLine+1, 'BASIC bytes free'
+
+# Set start of user program ready to run
+ld(val((bStart&255)-2))
+st(d(vPC))
+ld(val(bStart>>8))
+st(d(vPC+1))
 
 # Update LEDs (subroutines are working)
 ld(val(0b1111))                 # Physical: [****]
@@ -988,7 +1153,308 @@ nop()                           #38
 #
 #-----------------------------------------------------------------------
 align(0x100,0x100)
+#-----------------------------------------------------------------------
 
+vTicks  = zpFree                # Interpreter ticks are units of 2 clocks
+vTmp    = zpFree+1
+
+#-----------------------------------------------------------------------
+
+maxTicks = 28/2                 # Duration of slowest virtual opcode
+
+#
+# Enter the timing-aware application interpreter (aka virtual CPU)
+#
+# This routine will execute as many as possible instructions in the
+# alotted time. When time runs out, it synchronizes such that the total
+# duration matches the caller's request. Durations are counted in `ticks',
+# which are multiples of 2 clock cycles.
+#
+# SYNOPSIS
+#       ld lo(.cont)
+#       st [returnTo]
+#       ld hi(.cont)
+#       st [returnTo+1]
+#       ld hi(ENTER),y
+#       jmp y,lo(ENTER)
+#       ld ticksToUse-ticksOffset (must be >=0)
+#.cont:
+label('ENTER')
+bra(d(lo('.next2')))
+ld(d(vPC+1),busRAM|regY)
+nop()
+
+label('next14')
+st(d(vAC))                      #14
+ld(val(-16/2))                  #15
+# Fetch next instruction and execute it, but only if there are sufficient
+# ticks left for the slowest instruction.
+label('NEXT')
+adda(d(vTicks),busRAM)          #0 Actually counting down (AC<0)
+blt(d(lo('RETURN')))            #1
+label('.next2')
+st(d(vTicks))                   #2
+ldzp(d(vPC))                    #3 Advance vPC
+adda(val(2))                    #4
+st(d(vPC),busAC|ea0DregX)       #5
+ld(busRAM|eaYXregAC)            #6 Fetch opcode (actually a branch target)
+st(eaYXregOUTIX)                #7 Just to increment X
+bra(busAC)                      #8 Execute opcode
+ld(busRAM|eaYXregAC)            #9 Prefetch operand
+
+# Resync with caller and return
+label('RETURN')
+ld(val(syncBits+2*G),regOUT)    # Visualize the resync
+adda(val(maxTicks))             #3
+bgt(d(pc()))                    #4+i
+suba(val(1))                    #5+i
+ld(val(syncBits),regOUT)        # Visualize the resync
+ld(d(returnTo+1),busRAM|regY)   #6
+jmpy(d(returnTo+0)|busRAM)      #7
+nop()
+
+# Instruction LDI: Load immediate constant (ACL=$DD), 14 cycles
+label('LDI')
+st(d(vAC))                      #10
+ld(val(-14/2))                  #11
+bra(d(lo('NEXT')))              #12
+nop()                           #13
+
+# Instruction LDWI: Load immediate constant (AC=$DDDD), 20 cycles
+label('LDWI')
+st(d(vAC))                      #10
+st(eaYXregOUTIX)                #11 Just to increment X
+ld(busRAM|eaYXregAC)            #12 Fetch second operand
+st(d(vAC+1))                    #13
+ldzp(d(vPC))                    #14 Advance vPC one more
+adda(val(1))                    #15
+st(d(vPC))                      #16
+ld(val(-20/2))                  #17
+bra(d(lo('NEXT')))              #18
+#nop()                          #(19)
+#
+# Instruction LD: Load from zero page (ACL=[D]), 16 cycles
+label('LD')
+ld(busAC,regX)                  #10 (overlap with LDWI)
+ldzp(busRAM|ea0XregAC)          #11
+bra(d(lo('next14')))            #12
+nop()                           #13
+
+# Instruction LDW: Word load from zero page (AC=[D],[D+1]), 20 cycles
+label('LDW')
+ld(busAC,regX)                  #10
+adda(val(1))                    #11
+st(d(vTmp))                     #12 Address of high byte
+ld(busRAM|ea0XregAC)            #13
+st(d(vAC))                      #14
+ld(d(vTmp),busRAM|regX)         #15
+ld(busRAM|ea0XregAC)            #16
+st(d(vAC+1))                    #17
+bra(d(lo('NEXT')))              #18
+ld(val(-20/2))                  #19
+
+# Instruction STW: Word load from zero page (AC=[D],[D+1]), 20 cycles
+label('STW')
+ld(busAC,regX)                  #10
+adda(val(1))                    #11
+st(d(vTmp))                     #12 Address of high byte
+ldzp(d(vAC))                    #13
+st(ea0XregAC)                   #14
+ld(d(vTmp),busRAM|regX)         #15
+ldzp(d(vAC+1))                  #16
+st(ea0XregAC)                   #17
+bra(d(lo('NEXT')))              #18
+ld(val(-20/2))                  #19
+
+# Instruction SIGNW: Test signedness of word (), 24 cycles
+label('SIGNW')
+ldzp(d(vPC))                    #10 Swallow operand
+suba(val(1))                    #11
+st(d(vPC))                      #12
+ldzp(d(vAC+1))                  #13 First inspect high byte ACH
+bne(d(lo('.testw3')))           #14
+bmi(d(lo('.testw4')))           #15
+st(d(vAC+1))                    #16 Clear ACH
+ldzp(d(vAC))                    #17 Additionally inspect low byte ACL
+bne(d(lo('.testw1')))           #18
+bra(d(lo('.testw2')))           #19
+label('.testw0')
+ld(val(0))                      #20 ACH==0 and ACL==0
+label('.testw1')
+ld(val(1))                      #20 ACH==0 and ACL!=0
+label('.testw2')
+st(d(vAC))                      #21
+bra(d(lo('NEXT')))              #22
+ld(val(-24/2))                  #23
+label('.testw3')
+ld(val(0))                      #16 ACH>0
+bra(d(lo('.testw0')))           #17
+st(d(vAC+1))                    #18
+label('.testw4')
+ld(val(-1))                     #17 ACH<0
+st(d(vAC+1))                    #18
+bra(d(lo('.testw1')))           #19
+nop()                           #20
+
+# Instruction JUMP
+label('JUMP')
+st(d(vPC))                      #10
+st(eaYXregOUTIX)                #11 Just to increment X
+ld(busRAM|eaYXregAC)            #12 Fetch second operand
+st(d(vPC+1))                    #13
+bra(d(lo('NEXT')))              #14
+ld(val(-16/2))                  #15
+
+# Instruction BEQ: Branch if zero (if(ALC==0)PCL=D), 16 cycles
+label('BEQ')
+ldzp(d(vAC))                    #10
+bne(d(lo('br1')))               #11
+ld(busRAM|eaYXregAC)            #12
+label('br0')
+st(d(vPC))                      #13
+bra(d(lo('NEXT')))              #14
+#ld(val(-16/2))                 #(15)
+label('br1')
+ld(val(-16/2))                  #13
+bra(d(lo('NEXT')))              #14
+#nop()                          #(15)
+#
+# Instruction ST: Store in zero page ([D]=ACL), 16 cycles
+label('ST')
+ld(busAC,regX)                  #10 (overlap with BEQ)
+ldzp(d(vAC))                    #11
+bra(d(lo('next14')))            #12
+st(d(vAC),busAC|ea0XregAC)      #13
+
+# Instruction BNE: Branch if not zero (if(ALC!=0)PCL=D), 16 cycles
+label('BNE')
+ldzp(d(vAC))                    #10
+bne(d(lo('br0')))               #11
+ld(busRAM|eaYXregAC)            #12
+ld(val(-16/2))                  #13
+bra(d(lo('NEXT')))              #14
+#nop()                          #(15)
+#
+# Instruction AND: Logical-AND with zero page (ACL&=[D]), 16 cycles
+label('AND')
+ld(busAC,regX)                  #10 (overlap with BNE)
+ldzp(d(vAC))                    #11
+bra(d(lo('next14')))            #12
+anda(busRAM,ea0XregAC)          #13
+
+# Instruction BGT: Branch if positive (if(ALC>0)PCL=D), 16 cycles
+label('BGT')
+ldzp(d(vAC))                    #10
+bgt(d(lo('br0')))               #11
+ld(busRAM|eaYXregAC)            #12
+ld(val(-16/2))                  #13
+bra(d(lo('NEXT')))              #14
+#nop()                          #(15)
+#
+# Instruction OR: Logical-OR with zero page (ACL|=[D]), 16 cycles
+label('OR')
+ld(busAC,regX)                  #10 (overlap with BGT)
+ldzp(d(vAC))                    #11
+bra(d(lo('next14')))            #12
+ora(busRAM,ea0XregAC)           #13
+
+# Instruction BLT: Branch if negative (if(ALC<0)PCL=D), 16 cycles
+label('BLT')
+ldzp(d(vAC))                    #10
+blt(d(lo('br0')))               #11
+ld(busRAM|eaYXregAC)            #12
+ld(val(-16/2))                  #13
+bra(d(lo('NEXT')))              #14
+#nop()                          #(15)
+#
+# Instruction XOR: Logical-XOR with zero page (ACL^=[D]), 16 cycles
+label('XOR')
+ld(busAC,regX)                  #10 (overlap with BLT)
+ldzp(d(vAC))                    #11
+bra(d(lo('next14')))            #12
+xora(busRAM,ea0XregAC)          #13
+
+# Instruction ADDI: Add immediate (ACL+=D), 14 cycles
+label('ADDI')
+adda(d(vAC),busRAM)             #10
+st(d(vAC))                      #11
+bra(d(lo('NEXT')))              #12
+ld(val(-14/2))                  #13
+
+# Instruction BGE: Branch if positive or zero (if(ALC>=0)PCL=D), 16 cycles
+label('BGE')
+ldzp(d(vAC))                    #10
+bge(d(lo('br0')))               #11
+ld(busRAM|eaYXregAC)            #12
+ld(val(-16/2))                  #13
+bra(d(lo('NEXT')))              #14
+#nop()                          #(15)
+#
+# Instruction ADD: Addition with zero page (ACL+=[D]), 16 cycles
+label('ADD')
+ld(busAC,regX)                  #10 (overlap with BGE)
+ldzp(d(vAC))                    #11
+bra(d(lo('next14')))            #12
+adda(busRAM,ea0XregAC)          #13
+
+# Instruction BLE: Branch if negative or zero (if(ALC<=0)PCL=D), 16 cycles
+label('BLE')
+ldzp(d(vAC))                    #10
+ble(d(lo('br0')))               #11
+ld(busRAM|eaYXregAC)            #12
+ld(val(-16/2))                  #13
+bra(d(lo('NEXT')))              #14
+#nop()                          #(15)
+#
+# Instruction SUB: Subtraction with zero page (ACL-=[D]), 16 cycles
+label('SUB')
+ld(busAC,regX)                  #10 (overlap with BLE)
+ldzp(d(vAC))                    #11
+bra(d(lo('next14')))            #12
+suba(busRAM,ea0XregAC)          #13
+
+# Instruction ADDW: Word addition with zero page (AC+=[D]+256*[D+1]), 28 cycles
+label('ADDW')
+# The non-carry paths could be 26 cycles at the expense of (much) more code.
+# But a smaller size is better so more instructions fit in this code page.
+# 28 cycles is still 4.5 usec. The 6502 equivalent takes 20 cycles or 20 usec.
+ld(busAC,regX)                  #10 Address of low byte to be added
+adda(val(1))                    #11
+st(d(vTmp))                     #12 Address of high byte to be added
+ldzp(d(vAC))                    #13
+adda(busRAM|ea0XregAC)          #14
+st(d(vAC))                      #15
+bmi(d(lo('.addw0')))            #16
+suba(busRAM|ea0XregAC)          #17 Gets back the initial value of vAC
+bra(d(lo('.addw1')))            #18
+ora(busRAM|ea0XregAC)           #19 Bit 7 is our lost carry
+label('.addw0')
+anda(busRAM|ea0XregAC)          #18 Bit 7 is our lost carry
+nop()                           #19
+label('.addw1')
+anda(val(128),regX)             #20
+ld(busRAM,ea0XregAC)            #21 Move bit 7 to bit 0
+adda(d(vAC+1))                  #22
+ld(d(vTmp),busRAM|regX)         #23
+adda(busRAM|ea0XregAC)          #24
+st(d(vAC+1))                    #25
+bra(d(lo('NEXT')))              #26
+ld(val(-28/2))                  #27
+
+# Instruction POKEI
+label('POKEI')
+ld(d(vAC),busRAM|regX)          #10
+ld(d(vAC+1),busRAM|regY)        #11
+st(eaYXregAC)                   #12
+ld(d(vPC+1),busRAM|regY)        #13
+bra(d(lo('NEXT')))              #14
+ld(val(-16/2))                  #15
+
+#-----------------------------------------------------------------------
+#       placeholder
+#-----------------------------------------------------------------------
+
+nop()
 label('interpreter')
 wait(199-39)                    #39 XXX Application cycles (every 4th of scanlines 45-524)
 ld(d(hi('soundF')), busD|ea0DregY)#199
@@ -1043,8 +1509,8 @@ for y in range(scrollerY,120):
        v = colors[(yd-2)*9+xd]
     st(val(v), eaYXregOUTIX)
 
-ld(d(retImage+1), busRAM|ea0DregY)
-jmpy(d(retImage+0)| busRAM)
+ld(d(returnTo+1), busRAM|ea0DregY)
+jmpy(d(returnTo+0)| busRAM)
 nop()
 
 #-----------------------------------------------------------------------
