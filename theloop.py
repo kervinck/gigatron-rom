@@ -1315,8 +1315,9 @@ bra(d(lo('.testw0')))           #17 testw0 is labeled 20, but from here it is 19
 st(d(vAC+1))                    #18
 label('.testw4')
 ld(val(-1))                     #17 ACH<0
-bra(d(lo('.testw1')))           #18
-st(d(vAC+1))                    #19
+st(d(vAC+1))                    #18
+bra(d(lo('.testw2')))           #19
+nop()                           #20
 
 # Instruction JUMP
 label('JUMP')
@@ -1445,10 +1446,10 @@ label('ADDW')
 ld(busAC,regX)                  #10 Address of low byte to be added
 adda(val(1))                    #11
 st(d(vTmp))                     #12 Address of high byte to be added
-ldzp(d(vAC))                    #13
+ldzp(d(vAC))                    #13 Add the low bytes
 adda(busRAM|ea0XregAC)          #14
-st(d(vAC))                      #15
-bmi(d(lo('.addw0')))            #16
+st(d(vAC))                      #15 Store low result
+bmi(d(lo('.addw0')))            #16 Now figure out if there was a carry
 suba(busRAM|ea0XregAC)          #17 Gets back the initial value of vAC
 bra(d(lo('.addw1')))            #18
 ora(busRAM|ea0XregAC)           #19 Bit 7 is our lost carry
@@ -1456,12 +1457,12 @@ label('.addw0')
 anda(busRAM|ea0XregAC)          #18 Bit 7 is our lost carry
 nop()                           #19
 label('.addw1')
-anda(val(128),regX)             #20
-ld(busRAM,ea0XregAC)            #21 Move bit 7 to bit 0
-adda(d(vAC+1),busRAM)           #22
+anda(val(0x80),regX)            #20 Move the carry to bit 0
+ld(busRAM,ea0XregAC)            #21
+adda(d(vAC+1),busRAM)           #22 Add the high bytes
 ld(d(vTmp),busRAM|regX)         #23
 adda(busRAM|ea0XregAC)          #24
-st(d(vAC+1))                    #25
+st(d(vAC+1))                    #25 Store high result
 bra(d(lo('NEXT')))              #26
 ld(val(-28/2))                  #27
 
