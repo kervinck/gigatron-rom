@@ -1226,11 +1226,11 @@ ld(busRAM|eaYXregAC)            #9 Prefetch operand
 
 # Resync with caller and return
 label('RETURN')
-ld(val(syncBits+2*G),regOUT)    #3 Visualize the resync
+ld(val(syncBits+G),regOUT)      #3 Visualize the resync (XXX remove)
 adda(val(maxTicks))             #4
 bgt(d(pc()))                    #5
 suba(val(1))                    #6
-ld(val(syncBits),regOUT)        #7 Visualize the resync
+ld(val(syncBits),regOUT)        #7 Visualize the resync (XXX remove)
 ld(d(returnTo+1),busRAM|regY)   #8
 jmpy(d(returnTo+0)|busRAM)      #9
 nop()                           #10
@@ -1325,10 +1325,8 @@ st(d(vPC))                      #10
 st(eaYXregOUTIX)                #11 Just to increment X
 ld(busRAM|eaYXregAC)            #12 Fetch second operand
 st(d(vPC+1))                    #13
-ld(val(syncBits+2*R),regOUT)    #14 Visualize the JUMP
-ld(val(syncBits),regOUT)        #15
-bra(d(lo('NEXT')))              #16
-ld(val(-18/2))                  #17
+bra(d(lo('NEXT')))              #14
+ld(val(-16/2))                  #15
 
 # Instruction BEQ: Branch if zero (if(ALC==0)PCL=D), 16 cycles
 label('BEQ')
