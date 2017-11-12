@@ -517,7 +517,22 @@ st(val(vVarD),          eaYXregOUTIX)
 st(val(lo('POKEI')),    eaYXregOUTIX)   # POKEI 5
 st(val(5),              eaYXregOUTIX)
 
-# XXX GOTO 1
+                     # XXX D=1+D
+bLine += 7
+st(val(lo('LDWI')),     eaYXregOUTIX)   # LDWI 1
+st(val(1),              eaYXregOUTIX)
+st(val(0),              eaYXregOUTIX)
+st(val(lo('ADDW')),     eaYXregOUTIX)   # ADDW 'D'
+st(val(vVarD),          eaYXregOUTIX)
+st(val(lo('STW')),      eaYXregOUTIX)   # STW 'D'
+st(val(vVarD),          eaYXregOUTIX)
+                     # XXX POKE D,10
+bLine += 4
+st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'D'
+st(val(vVarD),          eaYXregOUTIX)
+st(val(lo('POKEI')),    eaYXregOUTIX)   # POKEI 5
+st(val(10),             eaYXregOUTIX)
+                     # XXX GOTO 1
 st(val(lo('JUMP')),     eaYXregOUTIX)   # JUMP <line1>
 st(val((bStart&255)-2), eaYXregOUTIX)
 st(val(bStart>>8),      eaYXregOUTIX)
@@ -1465,7 +1480,7 @@ nop()                           #19
 label('.addw1')
 anda(val(128),regX)             #20
 ld(busRAM,ea0XregAC)            #21 Move bit 7 to bit 0
-adda(d(vAC+1))                  #22
+adda(d(vAC+1),busRAM)           #22
 ld(d(vTmp),busRAM|regX)         #23
 adda(busRAM|ea0XregAC)          #24
 st(d(vAC+1))                    #25
