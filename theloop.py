@@ -9,7 +9,6 @@
 #  - 4 channels sound
 #  TODO: add screen font
 #  TODO: add date/time clock
-#  TODO: add scanline mode ("turbo/retro")
 #
 #-----------------------------------------------------------------------
 
@@ -450,13 +449,13 @@ label('.retImage')
 # 30 C=A+B
 # 40 A=B
 # 50 B=C
+# 55 IF B>=0 GOTO 30
 # 60 D=17480
 # 70 POKE D,5
 # 80 IF C<0 POKE D,15
 # 90 C=C+C
 # 100 D=1+D
 # 110 IF -17496+D<0 GOTO 70
-# 120 IF B>=0 GOTO 30
 # 130 GOTO 10
 
 bLine = bStart
@@ -502,6 +501,17 @@ st(val(vVarC),          eaYXregOUTIX)
 st(val(lo('STW')),      eaYXregOUTIX)   # STW 'B'
 st(val(vVarB),          eaYXregOUTIX)
 
+line55 = bLine       # 55 IF B>=0 GOTO 30
+bLine += 8
+st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'B'
+st(val(vVarB),          eaYXregOUTIX)
+st(val(lo('SIGNW')),    eaYXregOUTIX)   # SIGNW
+st(val(lo('BLT')),      eaYXregOUTIX)   # BLT <next>
+st(val((bLine&255)-2),  eaYXregOUTIX)
+st(val(lo('JUMP')),     eaYXregOUTIX)   # JUMP <line30>
+st(val((line30&255)-2), eaYXregOUTIX)
+st(val(line30>>8),      eaYXregOUTIX)
+
 line60 = bLine       # 60 D=17480
 bLine += 5
 st(val(lo('LDWI')),     eaYXregOUTIX)   # LDWI pen
@@ -522,7 +532,7 @@ bLine += 9
 st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'C'
 st(val(vVarC),          eaYXregOUTIX)
 st(val(lo('SIGNW')),    eaYXregOUTIX)   # SIGNW
-st(val(lo('BGE')),      eaYXregOUTIX)   # BGE <line90>
+st(val(lo('BGE')),      eaYXregOUTIX)   # BGE <next>
 st(val((bLine&255)-2),  eaYXregOUTIX)
 st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'D'
 st(val(vVarD),          eaYXregOUTIX)
@@ -556,22 +566,11 @@ st(val((-17496)>>8),    eaYXregOUTIX)
 st(val(lo('ADDW')),     eaYXregOUTIX)   # ADDW 'D'
 st(val(vVarD),          eaYXregOUTIX)
 st(val(lo('SIGNW')),    eaYXregOUTIX)   # SIGNW
-st(val(lo('BGE')),      eaYXregOUTIX)   # BGE <line130>
+st(val(lo('BGE')),      eaYXregOUTIX)   # BGE <next>
 st(val((bLine&255)-2),  eaYXregOUTIX)
 st(val(lo('JUMP')),     eaYXregOUTIX)   # JUMP <line70>
 st(val((line70&255)-2), eaYXregOUTIX)
 st(val(line70>>8),      eaYXregOUTIX)
-
-line120 = bLine      # 120 IF B>=0 GOTO 30
-bLine += 8
-st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'B'
-st(val(vVarB),          eaYXregOUTIX)
-st(val(lo('SIGNW')),    eaYXregOUTIX)   # SIGNW
-st(val(lo('BLT')),      eaYXregOUTIX)   # BLT <line130>
-st(val((bLine&255)-2),  eaYXregOUTIX)
-st(val(lo('JUMP')),     eaYXregOUTIX)   # JUMP <line30>
-st(val((line30&255)-2), eaYXregOUTIX)
-st(val(line30>>8),      eaYXregOUTIX)
 
 line130 = bLine      # 130 GOTO 10
 bLine += 3
@@ -1193,15 +1192,8 @@ vTmp    = zpFree+1
 # duration matches the caller's request. Durations are counted in `ticks',
 # which are multiples of 2 clock cycles.
 #
-# SYNOPSIS
-#       ld lo(.cont)
-#       st [returnTo]
-#       ld hi(.cont)
-#       st [returnTo+1]
-#       ld hi(ENTER),y
-#       jmp y,lo(ENTER)
-#       ld ticksToUse-ticksOffset (must be >=0)
-#.cont:
+# Use the runVcpu() macro as entry point
+#
 label('ENTER')
 bra(d(lo('.next2')))            #0 Enter at '.next2' (so no startup overhead)
 ld(d(vPC+1),busRAM|regY)        #1
