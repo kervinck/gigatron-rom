@@ -455,7 +455,7 @@ label('.retImage')
 # 80 IF C<0 POKE D,15
 # 90 C=C+C
 # 100 D=1+D
-# 110 IF -17496+D<>0 GOTO 70
+# 110 IF -17496+D<0 GOTO 70
 # 120 IF B>=0 GOTO 30
 # 130 GOTO 10
 
@@ -517,27 +517,6 @@ st(val(vVarD),          eaYXregOUTIX)
 st(val(lo('POKEI')),    eaYXregOUTIX)   # POKEI 5
 st(val(5),              eaYXregOUTIX)
 
-                     # XXX D=1+D
-bLine += 7
-st(val(lo('LDWI')),     eaYXregOUTIX)   # LDWI 1
-st(val(1),              eaYXregOUTIX)
-st(val(0),              eaYXregOUTIX)
-st(val(lo('ADDW')),     eaYXregOUTIX)   # ADDW 'D'
-st(val(vVarD),          eaYXregOUTIX)
-st(val(lo('STW')),      eaYXregOUTIX)   # STW 'D'
-st(val(vVarD),          eaYXregOUTIX)
-                     # XXX POKE D,10
-bLine += 4
-st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'D'
-st(val(vVarD),          eaYXregOUTIX)
-st(val(lo('POKEI')),    eaYXregOUTIX)   # POKEI 5
-st(val(10),             eaYXregOUTIX)
-                     # XXX GOTO 1
-st(val(lo('JUMP')),     eaYXregOUTIX)   # JUMP <line1>
-st(val((bStart&255)-2), eaYXregOUTIX)
-st(val(bStart>>8),      eaYXregOUTIX)
-bLine += 3
-
 line80 = bLine       # 80 IF C<0 POKE D,15
 bLine += 9
 st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'C'
@@ -569,15 +548,15 @@ st(val(vVarD),          eaYXregOUTIX)
 st(val(lo('STW')),      eaYXregOUTIX)   # STW 'D'
 st(val(vVarD),          eaYXregOUTIX)
 
-line110 = bLine      # 110 IF -17496+D<>0 GOTO 70
+line110 = bLine      # 110 IF -17496+D<0 GOTO 70
 bLine += 11
 st(val(lo('LDWI')),     eaYXregOUTIX)   # LDWI -17496
-st(val((-174966)&255),  eaYXregOUTIX)
-st(val((-174966)>>8),   eaYXregOUTIX)
+st(val((-17496)&255),   eaYXregOUTIX)
+st(val((-17496)>>8),    eaYXregOUTIX)
 st(val(lo('ADDW')),     eaYXregOUTIX)   # ADDW 'D'
 st(val(vVarD),          eaYXregOUTIX)
 st(val(lo('SIGNW')),    eaYXregOUTIX)   # SIGNW
-st(val(lo('BEQ')),      eaYXregOUTIX)   # BEQ <line130>
+st(val(lo('BGE')),      eaYXregOUTIX)   # BGE <line130>
 st(val((bLine&255)-2),  eaYXregOUTIX)
 st(val(lo('JUMP')),     eaYXregOUTIX)   # JUMP <line70>
 st(val((line70&255)-2), eaYXregOUTIX)
@@ -1332,13 +1311,12 @@ bra(d(lo('NEXT')))              #22
 ld(val(-24/2))                  #23
 label('.testw3')
 ld(val(0))                      #16 ACH>0
-bra(d(lo('.testw0')))           #17
+bra(d(lo('.testw0')))           #17 testw0 is labeled 20, but from here it is 19
 st(d(vAC+1))                    #18
 label('.testw4')
 ld(val(-1))                     #17 ACH<0
-st(d(vAC+1))                    #18
-bra(d(lo('.testw1')))           #19
-nop()                           #20
+bra(d(lo('.testw1')))           #18
+st(d(vAC+1))                    #19
 
 # Instruction JUMP
 label('JUMP')
