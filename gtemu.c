@@ -12,7 +12,7 @@
 typedef unsigned short word;
 typedef unsigned char byte;
 
-const int romSize = 1<<16; // 32 Kword
+const int romSize = 1<<16; // 64 Kword
 const int ramSize = 1<<15; // 32 KByte
 
 typedef struct { // All TTL state that the CPU controls
