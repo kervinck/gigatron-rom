@@ -215,7 +215,7 @@ gridShiftX=9 # Bricks shift
 gridShiftY=scrollerY-4
 
 maxTicks = 28/2 # Duration of slowest virtual opcode (ADDW)
-vOverhead = 11 # Overhead of jumping in and out. Cycles, not ticks
+vOverhead = 9 # Overhead of jumping in and out. Cycles, not ticks
 def runVcpu(n):
   """Run interpreter for exactly n cycles"""
   print 'runVcpu %s cycles' % n
@@ -1216,15 +1216,13 @@ ld(busRAM|eaYXregAC)            #9 Prefetch operand
 
 # Resync with caller and return
 label('RETURN')
-ld(val(syncBits+G),regOUT)      #3 Visualize the resync (XXX remove)
-adda(val(maxTicks))             #4
-bgt(d(pc()))                    #5
-suba(val(1))                    #6
-ld(val(syncBits),regOUT)        #7 Visualize the resync (XXX remove)
-ld(d(returnTo+1),busRAM|regY)   #8
-jmpy(d(returnTo+0)|busRAM)      #9
-nop()                           #10
-assert vOverhead == 11
+adda(val(maxTicks))             #3
+bgt(d(pc()))                    #4
+suba(val(1))                    #5
+ld(d(returnTo+1),busRAM|regY)   #6
+jmpy(d(returnTo+0)|busRAM)      #7
+nop()                           #8
+assert vOverhead == 9
 
 # Instruction LDI: Load immediate constant (ACL=$DD), 14 cycles
 label('LDI')
