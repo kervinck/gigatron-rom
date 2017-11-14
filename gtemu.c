@@ -12,8 +12,8 @@
 typedef unsigned short word;
 typedef unsigned char byte;
 
-const int romSize = 1<<16; // 64 Kword
-const int ramSize = 1<<15; // 32 KByte
+const int romMask = 0xffff; // 64 Kword
+const int ramMask = 0x7fff; // 32 KByte
 
 typedef struct { // All TTL state that the CPU controls
   word PC;
@@ -22,13 +22,13 @@ typedef struct { // All TTL state that the CPU controls
 } CpuState;
 
 static
-CpuState cpuCycle(const CpuState S, word ROM[], byte RAM[], byte IN)
+CpuState cpuCycle(const CpuState S, byte ROM[][2], byte RAM[], byte IN)
 {
   CpuState T = S; // New state is old state unless something changes
 
   // Instruction fetch
-  T.IR = ROM[S.PC&(romSize-1)] & 0x00ff;
-  T.D  = ROM[S.PC&(romSize-1)] >> 8;
+  T.IR = ROM[S.PC&romMask][0];
+  T.D  = ROM[S.PC&romMask][1];
 
   // Control Unit
   int ins =  S.IR >> 5;      // Instruction
@@ -44,31 +44,31 @@ CpuState cpuCycle(const CpuState S, word ROM[], byte RAM[], byte IN)
   int incX = 0;
   if (!J) {
     switch (mod) {
-      #define L(p) (W?0:p) // Don't load AC and OUT during RAM write
-      case 0: to=L(&T.AC);                          break;
-      case 1: to=L(&T.AC); lo=S.X;                  break;
-      case 2: to=L(&T.AC);         hi=S.Y;          break;
-      case 3: to=L(&T.AC); lo=S.X; hi=S.Y;          break;
+      #define E(p) (W?0:p) // Disable AC and OUT loading during RAM write
+      case 0: to=E(&T.AC);                          break;
+      case 1: to=E(&T.AC); lo=S.X;                  break;
+      case 2: to=E(&T.AC);         hi=S.Y;          break;
+      case 3: to=E(&T.AC); lo=S.X; hi=S.Y;          break;
       case 4: to=  &T.X;                            break;
       case 5: to=  &T.Y;                            break;
-      case 6: to=L(&T.OUT);                         break;
-      case 7: to=L(&T.OUT); lo=S.X; hi=S.Y; incX=1; break;
+      case 6: to=E(&T.OUT);                         break;
+      case 7: to=E(&T.OUT); lo=S.X; hi=S.Y; incX=1; break;
     }
   }
-  int addr = (hi << 8) | lo;
+  word addr = (hi << 8) | lo;
 
   // Data Bus
   int B = S.undef;
   switch (bus) {
-    case 0: B=S.D;                             break;
-    case 1: if (!W) B = RAM[addr&(ramSize-1)]; break;
-    case 2: B=S.AC;                            break;
-    case 3: B=IN;                              break;
+    case 0: B=S.D;                         break;
+    case 1: if (!W) B = RAM[addr&ramMask]; break;
+    case 2: B=S.AC;                        break;
+    case 3: B=IN;                          break;
   }
 
   // Random Access Memory
   if (W)
-    RAM[addr&(ramSize-1)] = B;
+    RAM[addr&ramMask] = B;
 
   // Arithmetic and Logic Unit
   byte ALU;
@@ -111,8 +111,8 @@ static void garble(byte mem[], int len)
 
 int main(void)
 {
-  word ROM[romSize]; // 27C1024
-  byte RAM[ramSize]; // 62256
+  byte ROM[romMask+1][2]; // 27C1024
+  byte RAM[ramMask+1]; // 62256
   CpuState S;
   byte IN = 0xff; // Default due to pullup R19
 
@@ -129,7 +129,7 @@ int main(void)
     fprintf(stderr, "Error: failed to open ROM file %s\n", filename);
     exit(EXIT_FAILURE);
   }
-  fread(ROM, 1, sizeof(ROM), fp); // Assumes little-endian host system
+  fread(ROM, 1, sizeof(ROM), fp);
   if (ferror(fp)) {
     fprintf(stderr, "Error: error while reading ROM file\n");
     exit(EXIT_FAILURE);
