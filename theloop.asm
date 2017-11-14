@@ -626,12 +626,12 @@ V    V     V    V
 03f8 c208  st   [$08]
 03f9 0000  ld   $00
 03fa c20b  st   [$0b]
-03fb 0002  ld   $02
-03fc c20d  st   [$0d]
-03fd 0004  ld   $04
-03fe c20e  st   [$0e]
-03ff 1405  ld   $05,y
-0400 0200  nop
+03fb 0200  nop
+03fc 0003  ld   $03
+03fd c20d  st   [$0d]
+03fe 0004  ld   $04
+03ff c20e  st   [$0e]
+0400 1405  ld   $05,y
 0401 e000  jmp  y,$00
 0402 003a  ld   $3a
 0403 1403  ld   $03,y

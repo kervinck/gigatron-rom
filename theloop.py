@@ -219,21 +219,19 @@ vOverhead = 11 # Overhead of jumping in and out. Cycles, not ticks
 def runVcpu(n):
   """Run interpreter for exactly n cycles"""
   print 'runVcpu %s cycles' % n
-  assert n >= 7 + 2*maxTicks + vOverhead
+  if n % 2 != (7 + vOverhead) % 2:
+    nop()
+    n -= 1
+  n -= 7 + 2*maxTicks + vOverhead
+  assert n >= 0
+  assert n % 2 == 0
+  n /= 2
   returnPc = pc() + 7
   ld(val(returnPc&255))         #0
   st(d(returnTo))               #1
   ld(val(returnPc>>8))          #2
   st(d(returnTo+1))             #3
   ld(val(hi('ENTER')),regY)     #4
-  n -= 7
-  n -= 2*maxTicks + vOverhead
-  assert n >= 0
-  if n % 2 == 1:
-    nop()
-    n -= 1
-  assert n % 2 == 0
-  n /= 2
   jmpy(d(lo('ENTER')))          #5
   print 'runVcpu %s ticks' % n
   ld(val(n))                    #6
