@@ -30,7 +30,7 @@ vgaLines = vFront + vPulse + vBack + 480
 vgaClock = 25.175e6
 
 # Adjustments for our system:
-# 1. Get refresh rate back above minimum 59.92 Hz by cutting lines from vertical front porch
+# 1. Get refresh rate back above minimum 59.94 Hz by cutting lines from vertical front porch
 vFrontAdjust = vgaLines - int(4 * 6.25e6 / vgaClock * vgaLines)
 vFront -= vFrontAdjust
 # 2. Extend vertical sync pulse so we can feed the game controller the same signal
@@ -106,7 +106,7 @@ screenY   = zpByte() # Counts up from 0 to 238 in steps of 2
 frameX    = zpByte() # Starting byte within page
 frameY    = zpByte() # Page number of current pixel row (updated by videoA)
 nextVideo = zpByte()
-videoDorF = zpByte() # Scanline mode
+videoDorF = zpByte() # Scanline mode ('D' or 'F')
 
 # Vertical blank, reuse some variables
 blankY     = screenY  # Counts down during vertical blank (44 to 0)
@@ -223,8 +223,7 @@ def runVcpu(n):
     nop()
     n -= 1
   n -= 7 + 2*maxTicks + vOverhead
-  assert n >= 0
-  assert n % 2 == 0
+  assert n >= 0 and n % 2 == 0
   n /= 2
   returnPc = pc() + 7
   ld(val(returnPc&255))         #0
@@ -233,7 +232,6 @@ def runVcpu(n):
   st(d(returnTo+1))             #3
   ld(val(hi('ENTER')),regY)     #4
   jmpy(d(lo('ENTER')))          #5
-  print 'runVcpu %s ticks' % n
   ld(val(n))                    #6
 
 #-----------------------------------------------------------------------
@@ -590,6 +588,7 @@ ld(val(0b1111))                 # Physical: [****]
 ld(val(syncBits^hSync), regOUT)
 ld(val(syncBits), regOUT)
 st(d(leds)) # Setup for control by video loop
+st(d(xout))
 
 ld(d(hi('videoLoop')), busD|ea0DregY)
 jmpy(d(lo('videoLoop')))

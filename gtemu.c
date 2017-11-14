@@ -15,7 +15,7 @@ typedef unsigned char byte;
 const int romMask = 0xffff; // 64 Kword
 const int ramMask = 0x7fff; // 32 KByte
 
-typedef struct { // All TTL state that the CPU controls
+typedef struct { // TTL state that the CPU controls
   word PC;
   byte IR, D, AC, X, Y, OUT;
   byte undef;
@@ -26,7 +26,7 @@ CpuState cpuCycle(const CpuState S, byte ROM[][2], byte RAM[], byte IN)
 {
   CpuState T = S; // New state is old state unless something changes
 
-  // Instruction fetch
+  // Instruction Fetch
   T.IR = ROM[S.PC&romMask][0];
   T.D  = ROM[S.PC&romMask][1];
 
@@ -93,8 +93,8 @@ CpuState cpuCycle(const CpuState S, byte ROM[][2], byte RAM[], byte IN)
   T.PC = (S.PC + 1) & 0xffff; // Next instruction
   if (J) {
     if (mod != 0) {
-      int cond = (S.AC>>7) + 2*!ALU; // 74153
-      if (mod & (1 << cond))
+      int cond = (S.AC>>7) + 2*!ALU;
+      if (mod & (1 << cond)) // 74153
         T.PC = (S.PC & 0xff00) | B; // Branch within page
     } else
       T.PC = (S.Y << 8) | B; // Far jump
@@ -170,8 +170,8 @@ int main(void)
       T.undef = rand() & 0xff; // Change this sometimes
     }
 
-    // Advance in time
-    S=T; // The clock propagates the new state
+    // Advance time
+    S=T;
     t++;
   }
 }
