@@ -1,48 +1,31 @@
- 
-/*
- *  Gigatron simulator
- *
- *  2017-11-14 (marcelk) Initial version tested OK with ROM image
- */
-
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-typedef unsigned short word;
-typedef unsigned char byte;
-
-const int romMask = 0xffff; // 64 Kword
-const int ramMask = 0x7fff; // 32 KByte
-
 typedef struct { // TTL state that the CPU controls
-  word PC;
-  byte IR, D, AC, X, Y, OUT;
-  byte undef;
+  uint16_t PC;
+  uint8_t IR, D, AC, X, Y, OUT, undef;
 } CpuState;
 
-static
-CpuState cpuCycle(const CpuState S, byte ROM[][2], byte RAM[], byte IN)
+uint8_t ROM[1<<16][2], RAM[1<<15], IN=0xff;
+
+CpuState cpuCycle(const CpuState S)
 {
   CpuState T = S; // New state is old state unless something changes
 
-  // Instruction Fetch
-  T.IR = ROM[S.PC&romMask][0];
-  T.D  = ROM[S.PC&romMask][1];
+  T.IR = ROM[S.PC][0]; // Instruction Fetch
+  T.D  = ROM[S.PC][1];
 
-  // Control Unit
-  int ins =  S.IR >> 5;      // Instruction
+  int ins = S.IR >> 5;       // Instruction
   int mod = (S.IR >> 2) & 7; // Addressing mode (or condition)
-  int bus =  S.IR & 3;       // Bus mode
+  int bus= S.IR&3;           // Busmode
+  int W = (ins == 6);        // Write instruction?
+  int J = (ins == 7);        // Jump instruction?
 
-  // Instruction Decoder
-  int W = (ins == 6); // Write instruction
-  int J = (ins == 7); // Jump instructions
-
-  // Mode Decoder
-  byte lo = S.D, hi = 0, *to = NULL;
-  int incX = 0;
-  if (!J) {
+  uint8_t lo=S.D, hi=0, *to=NULL; // Mode Decoder
+  int incX=0;
+  if (!J)
     switch (mod) {
       #define E(p) (W?0:p) // Disable AC and OUT loading during RAM write
       case 0: to=E(&T.AC);                          break;
@@ -54,24 +37,19 @@ CpuState cpuCycle(const CpuState S, byte ROM[][2], byte RAM[], byte IN)
       case 6: to=E(&T.OUT);                         break;
       case 7: to=E(&T.OUT); lo=S.X; hi=S.Y; incX=1; break;
     }
-  }
-  word addr = (hi << 8) | lo;
+  uint16_t addr = (hi << 8) | lo;
 
-  // Data Bus
-  int B = S.undef;
+  int B = S.undef; // Data Bus
   switch (bus) {
-    case 0: B=S.D;                         break;
-    case 1: if (!W) B = RAM[addr&ramMask]; break;
-    case 2: B=S.AC;                        break;
-    case 3: B=IN;                          break;
+    case 0: B=S.D;                        break;
+    case 1: if (!W) B = RAM[addr&0x7fff]; break;
+    case 2: B=S.AC;                       break;
+    case 3: B=IN;                         break;
   }
 
-  // Random Access Memory
-  if (W)
-    RAM[addr&ramMask] = B;
+  if (W) RAM[addr&0x7fff] = B; // Random Access Memory
 
-  // Arithmetic and Logic Unit
-  byte ALU;
+  uint8_t ALU; // Arithmetic and Logic Unit
   switch (ins) {
     case 0: ALU =        B; break; // LD
     case 1: ALU = S.AC & B; break; // ANDA
@@ -83,96 +61,66 @@ CpuState cpuCycle(const CpuState S, byte ROM[][2], byte RAM[], byte IN)
     case 7: ALU = -S.AC;    break; // Bcc/JMP
   }
 
-  // Registers
-  if (to)
-    *to = ALU; // Load value
-  if (incX && to != &T.X) // 74161's precedences
-    T.X = S.X + 1; // Increment
+  if (to) *to = ALU; // Load value into register
+  if (incX) T.X = S.X + 1; // Increment X
 
-  // Condition Decoder and Program Counter
-  T.PC = (S.PC + 1) & 0xffff; // Next instruction
+  T.PC = S.PC + 1; // Next instruction
   if (J) {
-    if (mod != 0) {
-      int cond = (S.AC>>7) + 2*!ALU;
+    if (mod != 0) { // Conditional branch within page
+      int cond = (S.AC>>7) + 2*(S.AC==0);
       if (mod & (1 << cond)) // 74153
-        T.PC = (S.PC & 0xff00) | B; // Branch within page
+        T.PC = (S.PC & 0xff00) | B;
     } else
-      T.PC = (S.Y << 8) | B; // Far jump
+      T.PC = (S.Y << 8) | B; // Unconditional far jump
   }
-
   return T;
 }
 
-static void garble(byte mem[], int len)
+void garble(uint8_t mem[], int len)
 {
-  for (int i=0; i<len; i++)
-    mem[i] = rand();
+  for (int i=0; i<len; i++) mem[i] = rand();
 }
 
 int main(void)
 {
-  byte ROM[romMask+1][2]; // 27C1024
-  byte RAM[ramMask+1]; // 62256
   CpuState S;
-  byte IN = 0xff; // Default due to pullup R19
-
-  // Initialize with randomized data
-  srand(time(NULL));
+  srand(time(NULL)); // Initialize with randomized data
   garble((void*)ROM, sizeof ROM);
   garble((void*)RAM, sizeof RAM);
   garble((void*)&S, sizeof S);
 
-  // Load ROM file
-  const char *filename = "theloop.2.rom";
-  FILE *fp = fopen(filename, "rb");
+  FILE *fp = fopen("theloop.2.rom", "rb");
   if (!fp) {
-    fprintf(stderr, "Error: failed to open ROM file %s\n", filename);
+    fprintf(stderr, "Error: failed to open ROM file\n");
     exit(EXIT_FAILURE);
   }
   fread(ROM, 1, sizeof ROM, fp);
-  if (ferror(fp)) {
-    fprintf(stderr, "Error: error while reading ROM file\n");
-    exit(EXIT_FAILURE);
-  }
   fclose(fp);
 
-  int vgaX = 0, vgaY = 0;
-  long long t = -3;
+  int vgaX=0, vgaY=0;
+  for (long long t=-1; ; t++) {
+    if (t < 0) S.PC = 0; // MCP100 Power-On Reset
 
-  for (;;) {
-    if (t < 0)
-      S.PC = 0; // MCP100 Power-On Reset
+    CpuState T = cpuCycle(S); // Update CPU
 
-    // Debugging
-    //printf("PC %04x IR %02x D %02x AC %02x X %02x Y %02x OUT %02x\n", S.PC, S.IR, S.D, S.AC, S.X, S.Y, S.OUT);
-
-    // Update CPU
-    CpuState T = cpuCycle(S, ROM, RAM, IN);
-
-    // Update VGA monitor
-    int hSync = (T.OUT & 0x40) - (S.OUT & 0x40);
+    int hSync = (T.OUT & 0x40) - (S.OUT & 0x40); // "VGA monitor" (use simple stdout)
     int vSync = (T.OUT & 0x80) - (S.OUT & 0x80);
-    if (vSync < 0) // Falling vSync edge
-      vgaY = -35-1; // First visible line becomes 0, for convenience
-    if (vgaX < 200) {
+    if (vSync < 0) vgaY = -36; // Falling vSync edge
+    if (vgaX++ < 200) {
       if (hSync) putchar('|');              // Visual indicator of hSync
-      else if (vgaX == 199) putchar('>');   // Too many pixels
+      else if (vgaX == 200) putchar('>');   // Too many pixels
       else if (~S.OUT & 0x80) putchar('^'); // Visualize vBlank pulse
       else putchar(32 + (S.OUT & 63));      // Plot pixel
     }
-    vgaX++;
     if (hSync > 0) { // Rising hSync edge
       printf("%s line %d xout %02x t %0.3f\n",
-             vgaX-200 ? "~" : "", // Mark horizontal cycle errors
+             vgaX!=200 ? "~" : "", // Mark horizontal cycle errors
              vgaY, T.AC, t/6.250e+06);
       vgaX = 0;
       vgaY++;
-      T.undef = rand() & 0xff; // Change this sometimes
+      T.undef = rand() & 0xff; // Change this once in a while
     }
-
-    // Advance time
     S=T;
-    t++;
   }
+  return 0;
 }
-
