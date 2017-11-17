@@ -39,7 +39,7 @@ The programming model is primarily "accumulator oriented".
 To accommodate the lack of relative addressing and hardware stack on the host
 CPU, expression and call stacks will be (mostly) static instead of dynamic.
 vAC is the virtual accumulator
-vPC is the virtual program counter. Programs run from RAM
+vPC is the virtual program counter. Programs run from RAM.
 vAC and vPC are 16-bits and reside in the zero page.
 vPC auto-increments just its low byte, but functions can cross page boundaries.
 Program variables are 16-bit words and typically hold a number or a pointer.
@@ -47,9 +47,9 @@ Memory can be addressed as bytes or as unaligned little-endian words.
 Most instructions use 2 bytes (opcode + operand), but some have 1 and others 3.
 Opcodes are simply jump offsets into the interpeter ROM code page.
 Named global variables reside in the zero page, locals in the code page itself.
-XXX vSP: to be defined. Can use [X] or [Y,D] addressing, or both (2 stack types)
+XXX vSP: to be defined. Use [X] or [Y,D] addressing, or both (2 stack types)?
 XXX Loading and starting of programs
-XXX Simple GCL programs might be compiled by the host instead
+XXX Simple GCL programs might be compiled by the host instead of offline?
 XXX Threading and sleeping
 XXX Dynamic memory allocation
 XXX Memory-mapped I/O
@@ -57,7 +57,9 @@ XXX Memory-mapped I/O
 -----------------
 Notes on notation
 -----------------
-GCL programs are written as a long sequence of "words" without much structure enforcement by the compiler. Most words map directly to a single virtual instruction and therefore also encode an operand in them (e.g. 1+).
+GCL programs are written as a long sequence of "words" without much structure
+enforcement by the compiler. Most words map directly to a single virtual
+instruction and therefore also encode an embedded operand (e.g. 1+).
 Many words operate on both vAC and some variable or constant.
 Sequences can be grouped with () {} or [], each of which has its own meaning.
 Spaces and newlines just separate words. Use indentation for clarity.
@@ -68,9 +70,9 @@ Constants are decimal, or hexadecimal when preceded with '$'.
 Constants can be preceded by '-' or '+' (note: -$1000, not $-0000).
 Global variables names are capitalised, locals start with a lower case letter.
 In version 0 use just single letters a-z (locals) and A-Z (globals).
-'x' means a named local variable.
-'X' means a named global variable.
-('%i' means an unnamed local variable at location i in the code page.)
+'x' means a named local variable and 'X' a named global variable.
+'%i' means an unnamed local variable at location i in the code page, and
+can be used in place of a local variable name.
 
 ----------------
 Meaning of words
@@ -110,7 +112,7 @@ x: X:                   Store current vPC in variable to define a function
 X*                      Call function referenced by X
 i*                      Call local function at offset i
 i@                      Native call to ROM address in vAC (ticks in operand!)
-return                  Function return (XXX could become a macro)
+return                  Function return (XXX could become a macro?)
 x++                     Pairwise add bytes (e.g. for moving game objects)
 x--                     Pairwise subtract bytes
 x??                     Read word from memory address
