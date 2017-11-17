@@ -1,0 +1,168 @@
+-------------------------------
+Gigatron Command Language (GCL)
+-------------------------------
+GCL is an interpreted low-level language for writing simple games for
+the Gigatron TTL microcomputer, without bothering with the harsh timing
+requirements of the hardware platform.
+
+Technically, "GCL" is the source language or notation, while "vCPU" is the
+virtual CPU, or interpreter, that is executing compiled GCL instructions.
+The two are closely tied together.
+
+---------------
+Example program
+---------------
+
+{Draw the binary value of the largest 16-bit Fibonacci number on screen}
+
+:$0300 {program load address}
+[do                                     {Approximate BASIC equivalent}
+  0 a=                                  {10 A=0}
+  1 b=                                  {20 B=1}
+  [do
+    a b+ c=                             {30 C=A+B}
+    b a= c b=                           {40 A=B: B=C}
+    if>0 loop]                          {50 IF B>0 THEN 30}
+  $4448 d=                              {60 D=$4448: REM MIDDLE OF SCREEN}
+  [do
+    c [if<0 15 d! else 5 d!]            {70 IF C<0 POKE D,15 ELSE POKE D,5}
+    c c+ c=                             {80 C=C+C}
+    1 d+ d=                             {90 D=1+D}
+    -$4458 d+ if<0 loop]                {100 IF D<$4458 THEN 70}
+  loop]                                 {110 GOTO 10}
+
+-----------------
+Programming model
+-----------------
+GCL draws most of its inspiration from SWEET16 (Apple II) and FALSE (Amiga).
+The programming model is primarily "accumulator oriented".
+To accommodate the lack of relative addressing and hardware stack on the host
+CPU, expression and call stacks will be (mostly) static instead of dynamic.
+vAC is the virtual accumulator
+vPC is the virtual program counter. Programs run from RAM
+vAC and vPC are 16-bits and reside in the zero page.
+vPC auto-increments just its low byte, but functions can cross page boundaries.
+Program variables are 16-bit words and typically hold a number or a pointer.
+Memory can be addressed as bytes or as unaligned little-endian words.
+Most instructions use 2 bytes (opcode + operand), but some have 1 and others 3.
+Opcodes are simply jump offsets into the interpeter ROM code page.
+Named global variables reside in the zero page, locals in the code page itself.
+XXX vSP: to be defined. Can use [X] or [Y,D] addressing, or both (2 stack types)
+XXX Loading and starting of programs
+XXX Simple GCL programs might be compiled by the host instead
+XXX Threading and sleeping
+XXX Dynamic memory allocation
+XXX Memory-mapped I/O
+
+-----------------
+Notes on notation
+-----------------
+GCL programs are written as a long sequence of "words" without much structure enforcement by the compiler. Most words map directly to a single virtual instruction and therefore also encode an operand in them (e.g. 1+).
+Many words operate on both vAC and some variable or constant.
+Sequences can be grouped with () {} or [], each of which has its own meaning.
+Spaces and newlines just separate words. Use indentation for clarity.
+There is no need for extra spaces around the grouping characters []{}().
+'i' means an 8-bit integer constant.
+'ii' means a 16-bit integer constant.
+Constants are decimal, or hexadecimal when preceded with '$'.
+Constants can be preceded by '-' or '+' (note: -$1000, not $-0000).
+Global variables names are capitalised, locals start with a lower case letter.
+In version 0 use just single letters a-z (locals) and A-Z (globals).
+'x' means a named local variable.
+'X' means a named global variable.
+('%i' means an unnamed local variable at location i in the code page.)
+
+----------------
+Meaning of words
+----------------
+{...}                   Comments ignored by machine. Comments can be nested
+ii                      Load value into vAC, e.g. +1972, $be05
+x= X=                   Store vAC into variable
+x X                     Load vAC from variable
+x+                      Add x to vAC
+x-                      Subtract variable from vAC
+i+                      Add small constant to vAC (XXX limit 0<=i<128?)
+i-                      Subtract small constant from vAC (XXX limit 0<=i<128?)
+[...]                   Code block, used with "if", "else", "do", "loop"
+if>0                    Continue executing code if vAC > 0, otherwise jump to
+                        end of the block (or past an optional matching "else")
+                        Conditions are "=0" ">0" "<0" "<=0" ">=0" "<>0"
+else                    When encountered, skip rest of code until end of block
+do                      Mark start of loop
+loop                    Jump back to matching "do"
+i& i| i^                Logical AND, OR and XOR (note: just vAC's lower byte!)
+x& v| v^                Logical AND, OR and XOR with variable x (16-bits)
+~                       Invert all bits in vAC (XXX why no operand?)
+:ii                     Set compile address, typically at start of program
+x?                      Read byte from memory pointed by variable ("peek")
+x!                      Write vAC as byte to memory pointed by variable ("poke")
+i!                      Store vAC as byte into zero page address i
+i?                      Read zero page as unsigned byte
+
+---------------
+Not decided yet
+---------------
+0                       Clear vAC as single-byte instruction
+i                       Load a byte value in vAC and sign-extend
+_                       Negate vAC (note: underscore, not minus)
+x: X:                   Store current vPC in variable to define a function
+*                       Call function referenced by vAC
+X*                      Call function referenced by X
+i*                      Call local function at offset i
+i@                      Native call to ROM address in vAC (ticks in operand!)
+return                  Function return (XXX could become a macro)
+x++                     Pairwise add bytes (e.g. for moving game objects)
+x--                     Pairwise subtract bytes
+x??                     Read word from memory address
+x!!                     Write vAC to memory address as word
+x>> x<<                 Right shift, left shift
+: (...)                 Define macro
+(...)                   Expand macro
+                        Isolate high byte, load high byte, swap bytes, ...
+                        ROM table lookup
+                        Push, pull and index stack
+                        Inline data
+                        Characters and strings
+. , ; ' ` " # / \       Unassigned ASCII characters
+
+-------------------
+Probably not needed
+-------------------
+x_                      Load negated x in vAC (use 0 x-)
+x~                      Load inverted x to vAC (use x ~)
+ii@                     Native system call to ROM address ii (use ii @)
+* / %                   Multiplication, division, modulo (use functions)
+3.1415                  Floating point (use functions)
+ii& ii| ii^             Use variables or change expression order
+i!!                     Store vAC at zero page address i (and i+1)
+
+-------------------------------
+!!! Scratchpad below ignore !!!
+-------------------------------
+
+*
+        pushw vPC-1
+        ldw [Plot]
+
+P*
+        pushw vPC-1
+        ldw [P]
+        stw [vPC]
+        // bypass NEXT?
+
+i*
+        pushw vPC-1
+        ld i
+        st [vPCL]
+        // bypass NEXT?
+
+(def plot
+  [do
+    c [if<0 15 d! else 5 d!]
+    c c+ c=
+    1 d+ d=
+    -$4458 d+ if<0 loop]
+  (return))
+
+return:
+        pullw 
