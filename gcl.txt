@@ -68,8 +68,8 @@ There is no need for extra spaces around the grouping characters []{}().
 'ii' means a 16-bit integer constant.
 Constants are decimal, or hexadecimal when preceded with '$'.
 Constants can be preceded by '-' or '+' (note: -$1000, not $-0000).
-Global variables names are capitalised, locals start with a lower case letter.
-In version 0 use just single letters a-z (locals) and A-Z (globals).
+Global variable names are capitalized, while locals begin in lower case.
+In "version 0" use just single letters a-z (locals) and A-Z (globals).
 'x' means a named local variable and 'X' a named global variable.
 '%i' means an unnamed local variable at location i in the code page, and
 can be used in place of a local variable name.
@@ -78,7 +78,7 @@ can be used in place of a local variable name.
 Meaning of words
 ----------------
 {...}                   Comments ignored by machine. Comments can be nested
-ii                      Load value into vAC, e.g. +1972, $be05
+ii                      Load integer constant into vAC, e.g. +1972, $be05
 x= X=                   Store vAC into variable
 x X                     Load vAC from variable
 x+                      Add x to vAC
@@ -132,7 +132,7 @@ Probably not needed
 -------------------
 x_                      Load negated x in vAC (use 0 x-)
 x~                      Load inverted x to vAC (use x ~)
-ii@                     Native system call to ROM address ii (use ii @)
+ii@                     Native system call to ROM address ii (use ii i@)
 * / %                   Multiplication, division, modulo (use functions)
 3.1415                  Floating point (use functions)
 ii& ii| ii^             Use variables or change expression order
