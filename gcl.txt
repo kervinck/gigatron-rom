@@ -41,7 +41,7 @@ CPU, expression and call stacks will be (mostly) static instead of dynamic.
 vAC is the virtual accumulator
 vPC is the virtual program counter. Programs run from RAM.
 vAC and vPC are 16-bits and reside in the zero page.
-vPC auto-increments just its low byte, but functions can cross page boundaries.
+vPC auto-increments just its low byte, but function calls can go across pages.
 Program variables are 16-bit words and typically hold a number or a pointer.
 Memory can be addressed as bytes or as unaligned little-endian words.
 Most instructions use 2 bytes (opcode + operand), but some have 1 and others 3.
@@ -64,15 +64,16 @@ Many words operate on both vAC and some variable or constant.
 Sequences can be grouped with () {} or [], each of which has its own meaning.
 Spaces and newlines just separate words. Use indentation for clarity.
 There is no need for extra spaces around the grouping characters []{}().
-'i' means an 8-bit integer constant.
-'ii' means a 16-bit integer constant.
 Constants are decimal, or hexadecimal when preceded with '$'.
 Constants can be preceded by '-' or '+' (note: -$1000, not $-0000).
 Global variable names are capitalized, while locals begin in lower case.
 In "version 0" use just single letters a-z (locals) and A-Z (globals).
-'x' means a named local variable and 'X' a named global variable.
-'%i' means an unnamed local variable at location i in the code page, and
-can be used in place of a local variable name.
+The overview below uses the following conventions:
+'i' indicates an 8-bit integer constant.
+'ii' indicates a 16-bit integer constant.
+'x' indicates a named local variable and 'X' a named global variable.
+Also, everywhere where 'x' is allowed, the '%i' notation can be used to denote
+the unnamed local variable at location i in the current code page.
 
 ----------------
 Meaning of words
