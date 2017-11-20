@@ -57,7 +57,7 @@ class Compiler:
         negative = (word[ix] == '-')
         ix += 1
     if word[ix] == '$':
-      ix, jx = ix+1, ix
+      ix, jx = ix+1, ix+1
       while ix < len(word):
         o = ord(word[ix])
         if word[ix] in '0123456789': number = 16*number + o - ord('0')
@@ -65,7 +65,7 @@ class Compiler:
         elif word[ix] in 'ABCDEF': number = 16*number + o - ord('A')
         else: break
         ix += 1
-      if jx==ix: print word[ix:]; self.error('Missing hex')
+      if jx==ix: self.error('Missing hex in %s' % repr(word))
     elif word[ix].isdigit():
       while ix<len(word) and word[ix].isdigit():
         number = 10*number + ord(word[ix]) - ord('0')
