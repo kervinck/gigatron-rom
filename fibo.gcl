@@ -1,0 +1,15 @@
+{:$0300 {program load address}}
+[do                                     {Approximate BASIC equivalent}
+  0 a=                                  {10 A=0}
+  1 b=                                  {20 B=1}
+  [do
+    a b+ c=                             {30 C=A+B}
+    b a= c b=                           {40 A=B: B=C}
+    if>0 loop]                          {50 IF B>0 THEN 30}
+  $4448 d=                              {60 D=$4448: REM MIDDLE OF SCREEN}
+  [do
+    c [if<0 15 d! else 5 d!]            {70 IF C<0 POKE D,15 ELSE POKE D,5}
+    c c+ c=                             {80 C=C+C}
+    1 d+ d=                             {90 D=1+D}
+    -$4458 d+ if<0 loop]                {100 IF D<$4458 THEN 70}
+  loop]                                 {110 GOTO 10}
