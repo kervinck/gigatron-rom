@@ -13,6 +13,7 @@
 #-----------------------------------------------------------------------
 
 from asm import *
+import gcl
 
 # Output pin assignment for VGA
 R, G, B, hSync, vSync = 1, 4, 16, 64, 128
@@ -151,14 +152,10 @@ hitFlag         = zpByte()
 vPC     = zpByte(2)             # Interpreter program counter (points into RAM)
 vAC     = zpByte(2)             # Interpreter accumulator (16-bits)
 
-# 'BASIC' variables
-vVarA   = zpByte(2)             # BASIC variable A
-vVarB   = zpByte(2)             # BASIC variable B
-vVarC   = zpByte(2)             # BASIC variable C
-vVarD   = zpByte(2)             # BASIC variable D
-
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 zpFree     = zpByte()
+
+# XXX 'BASIC' variables start at 0x81
 
 #-----------------------------------------------------------------------
 #
@@ -437,143 +434,14 @@ ld(d(hi('image')), regY)
 jmpy(d(lo('image')))
 label('.retImage')
 
-# Load test 'BASIC' Fibonacci program into RAM
-# There is no parsing, just hand-assembled virtual CPU instructions
-#
-# 10 A=0
-# 20 B=1
-# 30 C=A+B
-# 40 A=B
-# 50 B=C
-# 55 IF B>=0 GOTO 30
-# 60 D=17480
-# 70 POKE D,5
-# 80 IF C<0 POKE D,15
-# 90 C=C+C
-# 100 D=1+D
-# 110 IF -17496+D<0 GOTO 70
-# 130 GOTO 10
+# Compile test 'BASIC' Fibonacci program
 
-bLine = bStart
-ld(val(bLine>>8), regY)
-ld(val(bLine&255),regX)
+program = gcl.Program(bStart)
+for line in open('fibo.gcl').readlines():
+  program.line(line)
+program.end()
 
-line10 = bLine       # 10 A=0
-bLine += 5
-st(val(lo('LDWI')),     eaYXregOUTIX)   # LDWI 0
-st(val(0),              eaYXregOUTIX)
-st(val(0),              eaYXregOUTIX)
-st(val(lo('STW')),      eaYXregOUTIX)   # STW 'A'
-st(val(vVarA),          eaYXregOUTIX)
-
-line20 = bLine       # 20 B=1
-bLine += 5
-st(val(lo('LDWI')),     eaYXregOUTIX)   # LDWI 1
-st(val(1),              eaYXregOUTIX)
-st(val(0),              eaYXregOUTIX)
-st(val(lo('STW')),      eaYXregOUTIX)   # STW 'B'
-st(val(vVarB),          eaYXregOUTIX)
-
-line30 = bLine       # 30 C=A+B
-bLine += 6
-st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'A'
-st(val(vVarA),          eaYXregOUTIX)
-st(val(lo('ADDW')),     eaYXregOUTIX)   # ADDW 'B'
-st(val(vVarB),          eaYXregOUTIX)
-st(val(lo('STW')),      eaYXregOUTIX)   # STW 'C'
-st(val(vVarC),          eaYXregOUTIX)
-
-line40 = bLine       # 40 A=B
-bLine += 4
-st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'B'
-st(val(vVarB),          eaYXregOUTIX)
-st(val(lo('STW')),      eaYXregOUTIX)   # STW 'A'
-st(val(vVarA),          eaYXregOUTIX)
-
-line50 = bLine       # 50 B=C
-bLine += 4
-st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'C'
-st(val(vVarC),          eaYXregOUTIX)
-st(val(lo('STW')),      eaYXregOUTIX)   # STW 'B'
-st(val(vVarB),          eaYXregOUTIX)
-
-line55 = bLine       # 55 IF B>=0 GOTO 30
-bLine += 8
-st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'B'
-st(val(vVarB),          eaYXregOUTIX)
-st(val(lo('SIGNW')),    eaYXregOUTIX)   # SIGNW
-st(val(lo('BLT')),      eaYXregOUTIX)   # BLT <next>
-st(val((bLine&255)-2),  eaYXregOUTIX)
-st(val(lo('JUMP')),     eaYXregOUTIX)   # JUMP <line30>
-st(val((line30&255)-2), eaYXregOUTIX)
-st(val(line30>>8),      eaYXregOUTIX)
-
-line60 = bLine       # 60 D=17480
-bLine += 5
-st(val(lo('LDWI')),     eaYXregOUTIX)   # LDWI pen
-st(val(17480&255),      eaYXregOUTIX)
-st(val(17480>>8),       eaYXregOUTIX)
-st(val(lo('STW')),      eaYXregOUTIX)   # STW 'D'
-st(val(vVarD),          eaYXregOUTIX)
-
-line70 = bLine       # 70 POKE D,5
-bLine += 4
-st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'D'
-st(val(vVarD),          eaYXregOUTIX)
-st(val(lo('POKEI')),    eaYXregOUTIX)   # POKEI 5
-st(val(5),              eaYXregOUTIX)
-
-line80 = bLine       # 80 IF C<0 POKE D,15
-bLine += 9
-st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'C'
-st(val(vVarC),          eaYXregOUTIX)
-st(val(lo('SIGNW')),    eaYXregOUTIX)   # SIGNW
-st(val(lo('BGE')),      eaYXregOUTIX)   # BGE <next>
-st(val((bLine&255)-2),  eaYXregOUTIX)
-st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'D'
-st(val(vVarD),          eaYXregOUTIX)
-st(val(lo('POKEI')),    eaYXregOUTIX)   # POKEI 15
-st(val(15),             eaYXregOUTIX)
-
-line90 = bLine       # 90 C=C+C
-bLine += 6
-st(val(lo('LDW')),      eaYXregOUTIX)   # LDW 'C'
-st(val(vVarC),          eaYXregOUTIX)
-st(val(lo('ADDW')),     eaYXregOUTIX)   # ADDW 'C'
-st(val(vVarC),          eaYXregOUTIX)
-st(val(lo('STW')),      eaYXregOUTIX)   # STW 'C'
-st(val(vVarC),          eaYXregOUTIX)
-
-line100 = bLine      # 100 D=1+D
-bLine += 7
-st(val(lo('LDWI')),     eaYXregOUTIX)   # LDWI 1
-st(val(1),              eaYXregOUTIX)
-st(val(0),              eaYXregOUTIX)
-st(val(lo('ADDW')),     eaYXregOUTIX)   # ADDW 'D'
-st(val(vVarD),          eaYXregOUTIX)
-st(val(lo('STW')),      eaYXregOUTIX)   # STW 'D'
-st(val(vVarD),          eaYXregOUTIX)
-
-line110 = bLine      # 110 IF -17496+D<0 GOTO 70
-bLine += 11
-st(val(lo('LDWI')),     eaYXregOUTIX)   # LDWI -17496
-st(val((-17496)&255),   eaYXregOUTIX)
-st(val((-17496)>>8),    eaYXregOUTIX)
-st(val(lo('ADDW')),     eaYXregOUTIX)   # ADDW 'D'
-st(val(vVarD),          eaYXregOUTIX)
-st(val(lo('SIGNW')),    eaYXregOUTIX)   # SIGNW
-st(val(lo('BGE')),      eaYXregOUTIX)   # BGE <next>
-st(val((bLine&255)-2),  eaYXregOUTIX)
-st(val(lo('JUMP')),     eaYXregOUTIX)   # JUMP <line70>
-st(val((line70&255)-2), eaYXregOUTIX)
-st(val(line70>>8),      eaYXregOUTIX)
-
-line130 = bLine      # 130 GOTO 10
-bLine += 3
-st(val(lo('JUMP')),     eaYXregOUTIX)   # JUMP <line10>
-st(val((line10&255)-2), eaYXregOUTIX)
-st(val((line10)>>8),    eaYXregOUTIX)
-
+bLine = program.vPC
 print bLine-bStart, 'BASIC bytes loaded'
 print bTop-bLine+1, 'BASIC bytes free'
 
@@ -1391,6 +1259,13 @@ st(d(vAC))                      #11
 bra(d(lo('NEXT')))              #12
 ld(val(-14/2))                  #13
 
+# Instruction BRA: Branch unconditionally (PCL=D), 14 cycles
+label('BRA')
+st(d(vPC))                      #10
+ld(val(-14/2))                  #11
+bra(d(lo('NEXT')))              #12
+nop()                           #13
+
 # Instruction BGE: Branch if positive or zero (if(ALC>=0)PCL=D), 16 cycles
 label('BGE')
 ldzp(d(vAC))                    #10
@@ -1451,7 +1326,7 @@ st(d(vAC+1))                    #25 Store high result
 bra(d(lo('NEXT')))              #26
 ld(val(-28/2))                  #27
 
-# Instruction POKEI
+# Instruction POKEI (XXX make obsolete and remove)
 label('POKEI')
 ld(d(vAC),busRAM|regX)          #10
 ld(d(vAC+1),busRAM|regY)        #11
