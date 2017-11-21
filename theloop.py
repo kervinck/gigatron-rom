@@ -1326,14 +1326,20 @@ st(d(vAC+1))                    #25 Store high result
 bra(d(lo('NEXT')))              #26
 ld(val(-28/2))                  #27
 
-# Instruction POKEI (XXX make obsolete and remove)
-label('POKEI')
-ld(d(vAC),busRAM|regX)          #10
-ld(d(vAC+1),busRAM|regY)        #11
-st(eaYXregAC)                   #12
-ld(d(vPC+1),busRAM|regY)        #13
-bra(d(lo('NEXT')))              #14
-ld(val(-16/2))                  #15
+# Instruction POKE ([[D+1],[D]] = ACL), 22 cycles
+label('POKE')
+st(d(vTmp))                     #10
+adda(val(1),regX)               #11
+ld(busRAM,ea0XregAC)            #12
+ld(busAC,regY)                  #13
+ld(d(vTmp),busRAM|regX)         #14
+ld(busRAM,ea0XregAC)            #15
+ld(busAC,regX)                  #16
+ldzp(d(vAC))                    #17
+st(eaYXregAC)                   #18
+ld(d(vPC+1),busRAM|regY)        #19
+bra(d(lo('NEXT')))              #20
+ld(val(-22/2))                  #21
 
 #-----------------------------------------------------------------------
 # Selfie raw

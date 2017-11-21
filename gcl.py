@@ -121,9 +121,9 @@ class Program:
       elif op == '+' and var:
           self.emit(lo('ADDW'))
           self.emit(self.getAddress(var))
-      elif op == '!' and con:
-          self.emit(lo('POKEI'))
-          self.emit(con)
+      elif op == '!' and var:
+          self.emit(lo('POKE'))
+          self.emit(self.getAddress(var))
       else:
         self.error('Invalid word %s' % repr(word))
 
