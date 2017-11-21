@@ -47,6 +47,7 @@ class Program:
           block = self.blocks.pop()
           if block in self.conds:
             # There was an if-statement in this block
+            # Define the label to jump here
             define('$if.%d.%d' % (block, self.conds[block]), prev(self.vPC))
             del self.conds[block]
         elif nextChar == '(': pass
@@ -102,14 +103,14 @@ class Program:
       define('$if.%d.0' % block, prev(self.vPC))
       self.conds[block] = 1
     else:
-      var, con, op = self.parseWord(word)
+      var, con, op = self.parseWord(word) # XXX Simplify this
       if op is None:
         if var:
           if var[0].isupper() and len(var) == 1:
             self.emit(lo('LDW'))
             self.emit(self.getAddress(var))
           else:
-            self.error('Locals not implemented')
+            self.error('Not implemented %s' % repr(word))
         else:
           self.emit(lo('LDWI'))
           self.emit(con&0xff)

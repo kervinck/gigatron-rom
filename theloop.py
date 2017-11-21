@@ -155,7 +155,7 @@ vAC     = zpByte(2)             # Interpreter accumulator (16-bits)
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 zpFree     = zpByte()
 
-# XXX 'BASIC' variables start at 0x81
+# XXX GCL variables start at 0x81
 
 #-----------------------------------------------------------------------
 #
@@ -187,7 +187,7 @@ shiftTablePage = 0x02
 
 #-----------------------------------------------------------------------
 #
-#  RAM page 3-7: application code 'BASIC'
+#  RAM page 3-7: application code GCL
 #
 #-----------------------------------------------------------------------
 
@@ -434,7 +434,7 @@ ld(d(hi('image')), regY)
 jmpy(d(lo('image')))
 label('.retImage')
 
-# Compile test 'BASIC' Fibonacci program
+# Compile test GCL Fibonacci program
 
 program = gcl.Program(bStart)
 for line in open('fibo.gcl').readlines():
@@ -442,8 +442,8 @@ for line in open('fibo.gcl').readlines():
 program.end()
 
 bLine = program.vPC
-print bLine-bStart, 'BASIC bytes loaded'
-print bTop-bLine+1, 'BASIC bytes free'
+print bLine-bStart, 'GCL bytes loaded'
+print bTop-bLine+1, 'GCL bytes free'
 
 # Set start of user program ready to run
 ld(val((bStart&255)-2))
