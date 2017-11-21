@@ -114,7 +114,7 @@ blankY     = screenY  # Counts down during vertical blank (44 to 0)
 videoSync0 = frameX  # Vertical sync type on current line (0xc0 or 0x40)
 videoSync1 = frameY  # Same during horizontal pulse
 
-# Function image return address
+# Generic function return address
 returnTo   = zpByte(2)
 
 # Two bytes of havested entropy
@@ -135,18 +135,6 @@ ledTempo        = zpByte() # Next value for ledTimer after LED state change
 # Serial input (game controller)
 serialInput     = zpByte()
 buttonState     = zpByte() # Filtered button state
-
-# Simple ball demo
-ballX           = zpByte()
-ballDX          = zpByte()
-ballY           = zpByte()
-ballDY          = zpByte()
-playerX         = zpByte()
-wipeOutX        = zpByte()
-wipeOutY        = zpByte()
-hitX            = zpByte()
-hitY            = zpByte()
-hitFlag         = zpByte()
 
 # High level interpreter
 vPC     = zpByte(2)             # Interpreter program counter (points into RAM)
@@ -204,13 +192,6 @@ screenPages   = 0x80 - 120 # Default start of screen memory: 0x0800 to 0x7fff
 #  Application definitions
 #-----------------------------------------------------------------------
 
-imageUp=5    # Shift of source image
-scrollerY=11 # Area for scroller
-ledY=17      # Position for LED on screen
-
-gridShiftX=9 # Bricks shift
-gridShiftY=scrollerY-4
-
 maxTicks = 28/2 # Duration of slowest virtual opcode (ADDW)
 vOverhead = 9 # Overhead of jumping in and out. Cycles, not ticks
 def runVcpu(n):
@@ -233,7 +214,7 @@ def runVcpu(n):
 
 #-----------------------------------------------------------------------
 #
-#  ROM page 0: boot and vertical blank
+#  ROM page 0: Boot
 #
 #-----------------------------------------------------------------------
 
@@ -399,22 +380,6 @@ ld(val(keyL), regX)
 st(d(D5 & 0x7f), eaYXregOUTIX)
 st(d(D5 >> 7), eaYXregAC)
 
-# Setup ball
-ldzp(d(entropy+0))
-anda(val(127))
-adda(val(160/2-128/2))
-st(d(ballX))
-st(d(playerX))
-ld(val(127))
-st(d(ballY))
-ld(val(-1))
-st(d(ballDX))
-st(d(ballDY))
-ld(val(0))
-st(d(wipeOutX))
-ld(val(screenPages+scrollerY+gridShiftY+7))
-st(d(wipeOutY))
-
 # Setup serial input and derived button state
 ld(val(-1))
 st(d(serialInput))
@@ -425,22 +390,11 @@ ld(val(0b0111))                 # Physical: [***o]
 ld(val(syncBits^hSync), regOUT)
 ld(val(syncBits), regOUT)
 
-# Draw image (and subroutine test)
-ld(val(lo('.retImage')))
-st(d(returnTo+0))
-ld(val(hi('.retImage')))
-st(d(returnTo+1))
-ld(d(hi('image')), regY)
-jmpy(d(lo('image')))
-label('.retImage')
-
 # Compile test GCL Fibonacci program
-
 program = gcl.Program(bStart)
-for line in open('fibo.gcl').readlines():
+for line in open('demo.gcl').readlines():
   program.line(line)
 program.end()
-
 bLine = program.vPC
 print bLine-bStart, 'GCL bytes loaded'
 print bTop-bLine+1, 'GCL bytes free'
@@ -540,162 +494,19 @@ suba(d(1))                      #52
 label('.leds5')
 st(d(ledTimer))                 #53
 
-# --- Scroll demo hack app (7 cycles)
-
-ld(val(scanTablePage), regY)    #54 # Left 1 pixel/frame
-ld(d(0*2+1), busRAM|eaYDregAC)  #55
-adda(val(1))                    #56
-st(d(0*2+1), busAC|eaYDregAC)   #57
-ld(d(scrollerY*2+1), busRAM|eaYDregAC)#558 # Right 1 pixel/frame
-suba(val(1))                    #59
-st(d(scrollerY*2+1), busAC|eaYDregAC)#660
-
-# --- Bouncing ball demo (31 cycles)
-
-# Remove ball
-ld(d(ballX), busRAM|ea0DregX)   #61
-ld(d(ballY), busRAM|ea0DregY)   #62
-st(val(0), eaYXregAC)           #63
-
-# Test hitting vertical walls left and right
-extra = 0
-ldzp(d(ballX))
-adda(d(ballDX),busRAM)
-bpl(d(lo('.ball10')))
-bra(d(lo('.ball11')))
-ld(val(0))
-label('.ball10')
-ld(val(1))
-label('.ball11')
-st(d(zpFree),busAC)
-extra += 6
-
-ldzp(d(ballX))
-adda(d(ballDX),busRAM)
-suba(val(160))
-bmi(d(lo('.ball12')))
-bra(d(lo('.ball13')))
-ld(d(zpFree),busRAM)
-label('.ball12')
-ld(val(1))
-label('.ball13')
-extra += 6
-
-bne(lo('.ball14'))
-ld(val(0))
-# Outside the playfield
-suba(d(ballDX),busRAM)
-bra(lo('.ball15'))
-st(d(ballDX),busAC)
-# Inside the playfield
-label('.ball14')
-wait(3) # Resync
-label('.ball15')
-extra += 5
-
-# Calc hypo X and Y
-ldzp(d(ballX))
-adda(d(ballDX), busRAM)
-st(d(hitX),busAC)
-ldzp(d(ballY))
-adda(d(ballDY), busRAM)
-st(d(hitY),busAC)
-assert(hitFlag != 0)
-st(d(hitFlag),busD)
-extra += 7
-
-# Probe pixel after hypothetical X move
-ldzp(d(ballX))                  #64
-adda(d(ballDX), busRAM|ea0DregX)#65
-ld(busRAM|eaYXregAC)            #66
-bne(lo('.ball0'))               #67
-ld(val(0))                      #68
-# Update X
-ldzp(d(ballX))                  #69
-adda(d(ballDX), busRAM)         #70
-bra(lo('.ball1'))               #71
-st(d(ballX),busAC|ea0DregX)     #72
-# Register hit and turn around
-label('.ball0')
-st(d(hitFlag),busAC)            #69
-suba(d(ballDX),busRAM)          #70
-st(d(ballDX),busAC)             #71
-ld(d(ballX),busRAM|ea0DregX)    #72
-label('.ball1')
-# Test crossing of horizontal walls
-ldzp(d(ballY))                  #73
-adda(d(ballDY),busRAM)          #74
-anda(val(0x7f))                 #75
-suba(val(screenPages+scrollerY))#76
-bpl(lo('.ball2'))               #77
-ld(val(0))                      #78
-# Outside the playfield
-suba(d(ballDY),busRAM)          #79
-bra(lo('.ball3'))               #80
-st(d(ballDY),busAC)             #81
-# Inside the playfield
-label('.ball2')
-wait(83-80)                     #79
-# Probe pixel after hypothetical Y move
-label('.ball3')
-ldzp(d(ballY))                  #82
-adda(d(ballDY), busRAM|ea0DregY)#83
-ld(busRAM|eaYXregAC)            #84
-bne(lo('.ball4'))               #85
-ld(val(0))                      #86
-# Update Y
-ldzp(d(ballY))                  #87
-adda(d(ballDY), busRAM)         #88
-bra(lo('.ball5'))               #89
-st(d(ballY),busAC|ea0DregY)     #90
-# Register hit and turn around
-label('.ball4')
-st(d(hitFlag),busAC)            #87
-suba(d(ballDY),busRAM)          #88
-st(d(ballDY))                   #89
-ld(d(ballY),busRAM|ea0DregY)    #90
-# Redraw ball
-label('.ball5')
-st(val(63), eaYXregAC)          #91
-
-ldzp(d(hitFlag))
-bne(d(lo('ball6')))
-bra(d(lo('ball7')))
-ldzp(d(hitX))     # Update wipeout
-label('ball6')
-ldzp(d(wipeOutX)) # No change
-label('ball7')
-suba(val(gridShiftX))
-anda(val(~15))
-adda(val(gridShiftX))
-st(d(wipeOutX))
-extra += 8
-
-ldzp(d(hitFlag))
-bne(d(lo('ball8')))
-bra(d(lo('ball9')))
-ldzp(d(hitY))     # Update wipeout
-label('ball8')
-ldzp(d(wipeOutY)) # No change
-label('ball9')
-suba(val(gridShiftY))
-anda(val(~7))
-adda(val(gridShiftY))
-st(d(wipeOutY))
-extra += 8
-
 # When the total number of scanlines per frame is not an exact multiple of the (4) channels,
 # there will be an audible discontinuity if no measure is taken. This static noise can be
 # suppressed by swallowing the first `lines%4' partial samples after transitioning into
 # vertical blank. This is easiest if the modulo is 0 (do nothing) or 1 (reset sample while in
 # the first blank scanline). For the two other cases there is no solution yet: give a warning.
 soundDiscontinuity = (vFront+vPulse+vBack) % 4
+extra = 0
 if soundDiscontinuity == 1:
   st(val(sample), ea0DregAC|busD)
   extra += 1
 if soundDiscontinuity > 1:
   print "Warning: sound discontinuity not supressed"
-wait(198-92-extra)              #92 # XXX Application cycles (scanline 0)
+runVcpu(198-54-extra)           #54 # XXX Application cycles (scanline 0)
 
 ld(val(vFront+vPulse+vBack-2))  #198 `-2' because first and last are different
 st(d(blankY))                   #199
@@ -775,33 +586,12 @@ ora(d(leds), busRAM|ea0DregAC)  #52
 st(d(xout))                     #53
 st(val(sample), ea0DregAC|busD) #54 Reset for next sample
 
-# Blitter function: Wipe out hit objects
-# XXX This runs more frequent than needed
-ldzp(d(wipeOutY))
-adda(val(6))
-label('.wipe')
-suba(val(1))
-ld(busAC,regY)
-ld(d(wipeOutX),busRAM|regX)
-for i in range(14):
-  st(val(0), eaYXregOUTIX)
-xora(d(wipeOutY),busRAM)
-bne(d(lo('.wipe')))
-xora(d(wipeOutY),busRAM)
-wipe = 2+6*(3+14+3)
-
-# Re-redraw the ball
-ld(d(ballX), busRAM|ea0DregX)
-ld(d(ballY), busRAM|ea0DregY)
-st(val(63), eaYXregAC)
-wipe += 3
-
-wait(199-55-wipe)               #55 XXX Appplication cycles (scanline 1-43 with sample update)
+runVcpu(199-55)                 #55 XXX Appplication cycles (scanline 1-43 with sample update)
 bra(d(lo('sound1')))            #199
 ld(d(videoSync0), busRAM|regOUT)#0 # Ends the vertical blank pulse at the right cycle
 
 label('vBlankRegular')
-wait(199-51)                    #51 XXX Application cycles (scanline 1-43 without sample update)
+runVcpu(199-51)                 #51 XXX Application cycles (scanline 1-43 without sample update)
 bra(d(lo('sound1')))            #199
 ld(d(videoSync0), busRAM|regOUT)#0 Ends the vertical blank pulse at the right cycle
 
@@ -809,86 +599,35 @@ ld(d(videoSync0), busRAM|regOUT)#0 Ends the vertical blank pulse at the right cy
 label('vBlankLast0')
 ld(val(0))                      #32
 st(d(frameX))                   #33
-ld(d(hi('vBlankLast1')), busD|ea0DregY)#34
-jmpy(d(lo('vBlankLast1')))      #35
-st(d(nextVideo))                #36
+st(d(nextVideo))                #34
 
-#-----------------------------------------------------------------------
-#
-#  ROM page 2: Last invisible line
-#
-#-----------------------------------------------------------------------
-
-align(0x100, 0x100)
 label('vBlankLast1')
 
 # The serial game controller freaks out when two buttons are pressed: it just sends zeroes.
 # When we see this, preserve the old value and assume buttonA was added.
-ldzp(d(serialInput))            #37
-beq(lo('.multi0'))              #38
-bra(lo('.multi1'))              #39
-st(d(buttonState),busAC)        #40
+ldzp(d(serialInput))            #35
+beq(lo('.multi0'))              #36
+bra(lo('.multi1'))              #37
+st(d(buttonState),busAC)        #38
 label('.multi0')
-ld(val(buttonA))                #40
+ld(val(buttonA))                #38
 label('.multi1')
-ora(d(buttonState),busRAM)      #41
-st(d(buttonState),busAC)        #42
-
-# --- Respond to button state by moving the player
-# Going right
-anda(val(buttonRight))          #43
-beq(d(lo('.r0')))               #44
-bra(d(lo('.r1')))               #45
-ld(val(0))                      #46
-label('.r0')
-ld(val(+1))                     #46
-label('.r1')
-adda(d(playerX),busRAM)         #47
-st(d(playerX),busAC)            #48
-# Going left
-ldzp(d(buttonState))            #49
-anda(val(buttonLeft))           #50
-beq(d(lo('.l0')))               #51
-bra(d(lo('.l1')))               #52
-ld(val(0))                      #53
-label('.l0')
-ld(val(-1))                     #53
-label('.l1')
-adda(d(playerX),busRAM)         #54
-st(d(playerX),busAC)            #55
-
-# --- Render current serial input as pad near bottom of screen
-ld(val(screenPages+115),regY)   #56
-ld(d(playerX),busRAM|regX)      #57
-st(val(0),eaYXregOUTIX)         #58
-ld(val(1))                      #59
-label('.N0')
-st(d(zpFree))                   #60-116
-anda(d(serialInput),busRAM)     #61-117
-beq(d(lo('.N1')))               #62-118
-bra(d(lo('.N2')))               #63-119
-st(val(3*G),eaYXregOUTIX)       #64-120
-label('.N1')
-st(val(2*G),eaYXregOUTIX)       #64-120
-label('.N2')
-ldzp(d(zpFree))                 #65-121
-bpl(d(lo('.N0')))               #66-122
-adda(busAC)                     #67-123
-st(val(0),eaYXregOUTIX)         #124
+ora(d(buttonState),busRAM)      #39
+st(d(buttonState),busAC)        #40
 
 # --- Switch video mode when (only) select is pressed
-ldzp(d(buttonState))            #125
-xora(val(~buttonSelect))        #126
-beq(d(lo('.sel0')))             #127
-bra(d(lo('.sel1')))             #128
-ld(val(0))                      #129
+ldzp(d(buttonState))            #41
+xora(val(~buttonSelect))        #42
+beq(d(lo('.sel0')))             #43
+bra(d(lo('.sel1')))             #44
+ld(val(0))                      #45
 label('.sel0')
-ld(val(lo('videoD')^lo('videoF')))#129
+ld(val(lo('videoD')^lo('videoF')))#45
 label('.sel1')
-xora(d(videoDorF),busRAM)       #130
-st(d(videoDorF))                #131
+xora(d(videoDorF),busRAM)       #46
+st(d(videoDorF))                #47
 
-wait(199-132)                   #132 XXX Application cycles (scanline 44)
+runVcpu(199-48)                 #48 XXX Application cycles (scanline 44)
 ldzp(d(channel))                #199 Advance to next sound channel
 anda(val(3))                    #0
 adda(val(1))                    #1
@@ -898,7 +637,7 @@ ld(val(syncBits^hSync), regOUT) #4 Start horizontal pulse
 
 #-----------------------------------------------------------------------
 #
-#  ROM page 3: Visible part of video loop
+#  ROM page 2: Visible part of video loop
 #
 #-----------------------------------------------------------------------
 align(0x100, 0x100)
@@ -1220,6 +959,20 @@ ldzp(d(vAC))                    #11
 bra(d(lo('next14')))            #12
 anda(busRAM,ea0XregAC)          #13
 
+# Instruction ANDI: Logical-AND with constant (ACL&=D), 14 cycles
+label('ANDI')
+anda(d(vAC),busRAM)             #10
+st(d(vAC))                      #11
+bra(d(lo('NEXT')))              #12
+ld(val(-14/2))                  #13
+
+# Instruction ORI: Logical-AND with constant (ACL|=D), 14 cycles
+label('ORI')
+ora(d(vAC),busRAM)              #10
+st(d(vAC))                      #11
+bra(d(lo('NEXT')))              #12
+ld(val(-14/2))                  #13
+
 # Instruction BGT: Branch if positive (if(ALC>0)PCL=D), 16 cycles
 label('BGT')
 ldzp(d(vAC))                    #10
@@ -1340,58 +1093,6 @@ st(eaYXregAC)                   #18
 ld(d(vPC+1),busRAM|regY)        #19
 bra(d(lo('NEXT')))              #20
 ld(val(-22/2))                  #21
-
-#-----------------------------------------------------------------------
-# Selfie raw
-#-----------------------------------------------------------------------
-
-align(0x100)
-label('image')
-
-def palette(raw, x, y, width):
-  r = ord(raw[3 * (y * width + x) + 0])
-  g = ord(raw[3 * (y * width + x) + 1])
-  b = ord(raw[3 * (y * width + x) + 2])
-  return (r/85) + 4*(g/85) + 16*(b/85)
-
-scrollerName = 'Scroller64.rgb' # Scroll text
-f = open(scrollerName)
-raw = f.read()
-f.close()
-
-# Scroller
-ld(val(0), regX)
-for y in range(scrollerY):
-  ld(val(screenPages+y), regY)
-  for x in range(256):
-    v = palette(raw, x, y, 256)
-    st(val(v), eaYXregOUTIX)
-
-colors = [
- 63, 43, 38, 18,  3,  2,  1, 17, 16, # ### #++ +-+ +.- #.. +.. -.. -.- ..-
- 59, 55, 39, 19,  7,  6,  5,  4, 20, # #+# #-# #-+ #.- #-. +-. --. .-. .--
- 54, 51, 35, 23, 11, 10,  9,  8, 24, # +-# #.# #.+ #-- #+. ++. -+. .+. .+-
- 50, 34, 22, 27, 15, 14, 13, 12, 25, # +.# +.+ +-- #+- ##. +#. -#. .#. -+-
- 49, 33, 21, 26, 31, 30, 29, 28, 41, # -.# -.+ --- ++- ##- +#- -#- .#- -++
- 32, 36, 37, 42, 47, 46, 45, 44, 40, # ..+ .-+ --+ +++ ##+ +#+ -#+ .#+ .++
- 48, 52, 53, 57, 58, 62, 61, 60, 56, # ..# .-# --# -+# ++# +## -## .## .+#
-] # error 1.220485
-
-# Image
-for y in range(scrollerY,120):
-  ld(val(0), regX)
-  ld(val(screenPages+y), regY)
-  for x in range(160):
-    v = 0
-    xm, xd = (x-gridShiftX) % 16, (x-gridShiftX) // 16
-    ym, yd = (y-gridShiftY) % 8, (y-gridShiftY) // 8
-    if 0<=xd<9 and 2<=yd<9 and xm<14 and ym<6:
-       v = colors[(yd-2)*9+xd]
-    st(val(v), eaYXregOUTIX)
-
-ld(d(returnTo+1), busRAM|ea0DregY)
-jmpy(d(returnTo+0)| busRAM)
-nop()
 
 #-----------------------------------------------------------------------
 # Finish assembly

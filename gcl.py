@@ -121,6 +121,16 @@ class Program:
       elif op == '+' and var:
           self.emit(lo('ADDW'))
           self.emit(self.getAddress(var))
+      elif op == '&' and con:
+          if con<0 or 0xff<con:
+            self.error('Out of range %s' % repr(con))
+          self.emit(lo('ANDI'))
+          self.emit(con)
+      elif op == '|' and con:
+          if con<0 or 0xff<con:
+            self.error('Out of range %s' % repr(con))
+          self.emit(lo('ORI'))
+          self.emit(con)
       elif op == '!' and var:
           self.emit(lo('POKE'))
           self.emit(self.getAddress(var))
