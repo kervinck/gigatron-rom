@@ -92,6 +92,24 @@ class Program:
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
+    elif word == 'if<0':
+      self.emit(lo('SIGNW'))
+      self.emit(lo('BGE'))
+      block = self.thisBlock()
+      self.emit(lo('$if.%d.0' % block))
+      self.conds[block] = 0
+    elif word == 'if<>0':
+      self.emit(lo('SIGNW'))
+      self.emit(lo('BEQ'))
+      block = self.thisBlock()
+      self.emit(lo('$if.%d.0' % block))
+      self.conds[block] = 0
+    elif word == 'if>=0':
+      self.emit(lo('SIGNW'))
+      self.emit(lo('BLT'))
+      block = self.thisBlock()
+      self.emit(lo('$if.%d.0' % block))
+      self.conds[block] = 0
     elif word == 'else':
       block = self.thisBlock()
       if block not in self.conds:
@@ -131,8 +149,16 @@ class Program:
             self.error('Out of range %s' % repr(con))
           self.emit(lo('ORI'))
           self.emit(con)
+      elif op == '^' and con:
+          if con<0 or 0xff<con:
+            self.error('Out of range %s' % repr(con))
+          self.emit(lo('XORI'))
+          self.emit(con)
       elif op == '!' and var:
           self.emit(lo('POKE'))
+          self.emit(self.getAddress(var))
+      elif op == '?' and var:
+          self.emit(lo('PEEK'))
           self.emit(self.getAddress(var))
       else:
         self.error('Invalid word %s' % repr(word))

@@ -1,0 +1,51 @@
+
+{ Scroller game, might become Zaxxon or Flappy Bird}
+
+$0111 S= {X shift starting from line 8}
+$0008 L= {The Loop's scanline counter}
+
+{Random}
+0 Q= R=
+
+{Last obstacle height}
+80 H=
+
+[do
+  {Get X from scanline table}
+  S? X=
+
+  {Stupid RNG}
+  R Q+ R=
+  43 Q+ Q+ Q+ Q=
+  Q 128& [if<>0 1 R+ Q+ R=]
+
+  {Random height adjustment}
+  -41 H+ [if>0 R 2& if<>0 -1 H+ H=]
+  -99 H+ [if<0 R 1& if<>0 +1 H+ H=]
+
+  {J=H<<8 XXX inefficient}
+  H J=
+  J+ J= J+ J= J+ J= J+ J= J+ J= J+ J= J+ J= J+ J=
+
+  {Top of next obstacle}
+  $a0 X+ 255& T=
+
+  {Clear vertical line}
+  $0800 T+ V=
+  [do 0 V! 
+      $100 V+ V=
+      if>0 loop]
+
+  {Draw vertical line to bottom of screen}
+  J T+ V=
+  63 V! $100 V+ V=
+  [do 42 V! 
+      $100 V+ V=
+      if>0 loop]
+
+  {Wait for vertical blank}
+  [do L? if<>0 loop]
+
+  {Scroll screen 1 pixel}
+  1 X+ S!
+loop]

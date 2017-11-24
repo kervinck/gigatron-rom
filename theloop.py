@@ -49,8 +49,6 @@ buttonStart     = 16
 buttonSelect    = 32
 buttonA         = 64
 buttonB         = 128
-buttonNone      = 255
-buttonMulti     = 0
 
 #-----------------------------------------------------------------------
 #
@@ -317,6 +315,7 @@ suba(val(0x5a-1))
 st(d(bootCheck))
 
 # Initialize zeroByte and oneByte
+# XXX Repeat this in scan line 0
 st(val(zeroByte), ea0DregAC|busD)  # Physical: [0] = 0
 ld(val(1))
 st(val(oneByte), ea0DregAC|busAC)  # Physical: [0x80] = 1
@@ -392,7 +391,7 @@ ld(val(syncBits), regOUT)
 
 # Compile test GCL Fibonacci program
 program = gcl.Program(bStart)
-for line in open('demo.gcl').readlines():
+for line in open('game.gcl').readlines():
   program.line(line)
 program.end()
 bLine = program.vPC
@@ -506,7 +505,7 @@ if soundDiscontinuity == 1:
   extra += 1
 if soundDiscontinuity > 1:
   print "Warning: sound discontinuity not supressed"
-runVcpu(198-54-extra)           #54 # XXX Application cycles (scanline 0)
+runVcpu(198-54-extra)           #54 # Application cycles (scanline 0)
 
 ld(val(vFront+vPulse+vBack-2))  #198 `-2' because first and last are different
 st(d(blankY))                   #199
@@ -586,12 +585,12 @@ ora(d(leds), busRAM|ea0DregAC)  #52
 st(d(xout))                     #53
 st(val(sample), ea0DregAC|busD) #54 Reset for next sample
 
-runVcpu(199-55)                 #55 XXX Appplication cycles (scanline 1-43 with sample update)
+runVcpu(199-55)                 #55 Appplication cycles (scanline 1-43 with sample update)
 bra(d(lo('sound1')))            #199
 ld(d(videoSync0), busRAM|regOUT)#0 # Ends the vertical blank pulse at the right cycle
 
 label('vBlankRegular')
-runVcpu(199-51)                 #51 XXX Application cycles (scanline 1-43 without sample update)
+runVcpu(199-51)                 #51 Application cycles (scanline 1-43 without sample update)
 bra(d(lo('sound1')))            #199
 ld(d(videoSync0), busRAM|regOUT)#0 Ends the vertical blank pulse at the right cycle
 
@@ -627,7 +626,7 @@ label('.sel1')
 xora(d(videoDorF),busRAM)       #46
 st(d(videoDorF))                #47
 
-runVcpu(199-48)                 #48 XXX Application cycles (scanline 44)
+runVcpu(199-48)                 #48 Application cycles (scanline 44)
 ldzp(d(channel))                #199 Advance to next sound channel
 anda(val(3))                    #0
 adda(val(1))                    #1
@@ -959,16 +958,25 @@ ldzp(d(vAC))                    #11
 bra(d(lo('next14')))            #12
 anda(busRAM,ea0XregAC)          #13
 
-# Instruction ANDI: Logical-AND with constant (ACL&=D), 14 cycles
+# Instruction ANDI: Logical-AND with constant (AC&=D), 16 cycles
 label('ANDI')
 anda(d(vAC),busRAM)             #10
+st(d(vAC))                      #11
+ld(val(0))                      #12
+st(d(vAC+1))                    #13
+bra(d(lo('NEXT')))              #14
+ld(val(-16/2))                  #15
+
+# Instruction ORI: Logical-OR with constant (AC|=D), 14 cycles
+label('ORI')
+ora(d(vAC),busRAM)              #10
 st(d(vAC))                      #11
 bra(d(lo('NEXT')))              #12
 ld(val(-14/2))                  #13
 
-# Instruction ORI: Logical-AND with constant (ACL|=D), 14 cycles
-label('ORI')
-ora(d(vAC),busRAM)              #10
+# Instruction XORI: Logical-XOR with constant (AC^=D), 14 cycles
+label('XORI')
+xora(d(vAC),busRAM)             #10
 st(d(vAC))                      #11
 bra(d(lo('NEXT')))              #12
 ld(val(-14/2))                  #13
@@ -1079,6 +1087,23 @@ st(d(vAC+1))                    #25 Store high result
 bra(d(lo('NEXT')))              #26
 ld(val(-28/2))                  #27
 
+# Instruction PEEK (AC=[[D+1],[D]]), 24 cycles
+label('PEEK')
+st(d(vTmp))                     #10
+adda(val(1),regX)               #11
+ld(busRAM,ea0XregAC)            #12
+ld(busAC,regY)                  #13
+ld(d(vTmp),busRAM|regX)         #14
+ld(busRAM,ea0XregAC)            #15
+ld(busAC,regX)                  #16
+ld(busRAM|eaYXregAC)            #17
+st(d(vAC))                      #18
+ld(val(0))                      #19
+st(d(vAC+1))                    #20
+ld(d(vPC+1),busRAM|regY)        #21
+bra(d(lo('NEXT')))              #22
+ld(val(-24/2))                  #23
+
 # Instruction POKE ([[D+1],[D]] = ACL), 22 cycles
 label('POKE')
 st(d(vTmp))                     #10
@@ -1093,6 +1118,28 @@ st(eaYXregAC)                   #18
 ld(d(vPC+1),busRAM|regY)        #19
 bra(d(lo('NEXT')))              #20
 ld(val(-22/2))                  #21
+
+#init_rng(s1,s2,s3) //Can also be used to seed the rng with more entropy during use.
+#{
+#//XOR new entropy into key state
+#a ^=s1;
+#b ^=s2;
+#c ^=s3;
+
+#x++;
+#a = (a^c^x);
+#b = (b+a);
+#c = (c+(b>>1)^a);
+#}
+
+#unsigned char randomize()
+#{
+#x++;               //x is incremented every round and is not affected by any other variable
+#a = (a^c^x);       //note the mix of addition and XOR
+#b = (b+a);         //And the use of very few instructions
+#c = (c+(b>>1)^a);  //the right shift is to ensure that high-order bits from b can affect  
+#return(c)          //low order bits of other variables
+#}
 
 #-----------------------------------------------------------------------
 # Finish assembly
