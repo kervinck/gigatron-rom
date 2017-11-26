@@ -2,49 +2,68 @@
 { Scroller game, might become Zaxxon or Flappy Bird}
 
 $0111 S= {X shift starting from line 8}
-$0008 L= {The Loop's scanline counter}
 
 {Random}
 0 Q= R=
+J=
 
 {Last obstacle height}
-80 H=
+60 H=
 
 [do
   {Get X from scanline table}
   S? X=
 
   {Stupid RNG}
-  R Q+ R=
-  43 Q+ Q+ Q+ Q=
-  Q 128& [if<>0 1 R+ Q+ R=]
+  S? R+ Q+ R=
+  Q+ [if<0 43^] Q+ Q+ Q=
+{
+  Vladimir Vassilevsky
+  seed = (seed << 7) - seed + 251;
+  return (u8)(seed + (seed>>8));
+  Q Q+ R= R+ R= R+ R= R+
+    R= R+ R= R+ R= R+ Q- R=
+  251 R+ Q=
+  162? R+ R=
+}
 
   {Random height adjustment}
-  -41 H+ [if>0 R 2& if<>0 -1 H+ H=]
-  -99 H+ [if<0 R 1& if<>0 +1 H+ H=]
+  -20 H+ [if>0 R 16& if<>0 -1 H+ H=]
+  -80 H+ [if<0 R 64& if<>0 1 H+ H=]
 
-  {J=H<<8 XXX inefficient}
-  H J=
-  J+ J= J+ J= J+ J= J+ J= J+ J= J+ J= J+ J= J+ J=
+  {J=($08+H)<<8}
+  $08 H+ 148!
 
-  {Top of next obstacle}
-  $a0 X+ 255& T=
+  {X drawing position is 1 pixel outside the visible area}
+  160 X+ 255& T=
 
   {Clear vertical line}
-  $0800 T+ V=
-  [do 0 V! 
-      $100 V+ V=
-      if>0 loop]
+  $1000 T+ V=
+  [do V! 
+    $100 V+ V=
+    if>0loop]
+
+  {Star}
+  R 63& A= $10 A+ 130! 0 129!
+  A T+ A=
+  15 A!
 
   {Draw vertical line to bottom of screen}
   J T+ V=
-  63 V! $100 V+ V=
-  [do 42 V! 
+
+  {Stress-test for SUBW}
+{
+  S V- V+ S=
+}
+
+  63 V!  {First pixel white}
+  $100 V+ V=
+  [do 175? V! 
       $100 V+ V=
-      if>0 loop]
+      if>0loop]
 
   {Wait for vertical blank}
-  [do L? if<>0 loop]
+  [do 8? if<>0loop]
 
   {Scroll screen 1 pixel}
   1 X+ S!

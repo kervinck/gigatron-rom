@@ -108,7 +108,7 @@ nextVideo = zpByte()
 videoDorF = zpByte() # Scanline mode ('D' or 'F')
 
 # Vertical blank, reuse some variables
-blankY     = screenY  # Counts down during vertical blank (44 to 0)
+blankY     = screenY # Counts down during vertical blank (44 to 0)
 videoSync0 = frameX  # Vertical sync type on current line (0xc0 or 0x40)
 videoSync1 = frameY  # Same during horizontal pulse
 
@@ -829,14 +829,16 @@ jmpy(d(returnTo+0)|busRAM)      #7
 nop()                           #8
 assert vOverhead == 9
 
-# Instruction LDI: Load immediate constant (ACL=$DD), 14 cycles
+# Instruction LDI: Load immediate constant (AC=$DD), 16 cycles
 label('LDI')
 st(d(vAC))                      #10
-ld(val(-14/2))                  #11
-bra(d(lo('NEXT')))              #12
-nop()                           #13
+ld(val(0))                      #11
+st(d(vAC+1))                    #12
+ld(val(-16/2))                  #13
+bra(d(lo('NEXT')))              #14
+nop()                           #15
 
-# Instruction LDWI: Load immediate constant (AC=$DDDD), 20 cycles
+# Instruction LDWI: Load immediate constant (AC=$DD), 20 cycles
 label('LDWI')
 st(d(vAC))                      #10
 st(eaYXregOUTIX)                #11 Just to increment X
@@ -849,16 +851,20 @@ ld(val(-20/2))                  #17
 bra(d(lo('NEXT')))              #18
 #nop()                          #(19)
 #
-# Instruction LD: Load from zero page (ACL=[D]), 16 cycles
+# Instruction LD: Load from zero page (AC=[D]), 18 cycles
 label('LD')
 ld(busAC,regX)                  #10 (overlap with LDWI)
 ldzp(busRAM|ea0XregAC)          #11
-bra(d(lo('next14')))            #12
-nop()                           #13
-
+st(d(vAC))                      #12
+ld(val(0))                      #13
+st(d(vAC+1))                    #14
+ld(val(-18/2))                  #15
+bra(d(lo('NEXT')))              #16
+#nop()                          #(17)
+#
 # Instruction LDW: Word load from zero page (AC=[D],[D+1]), 20 cycles
 label('LDW')
-ld(busAC,regX)                  #10
+ld(busAC,regX)                  #10 (overlap with LD)
 adda(val(1))                    #11
 st(d(vTmp))                     #12 Address of high byte
 ld(busRAM|ea0XregAC)            #13
@@ -882,7 +888,7 @@ st(ea0XregAC)                   #17
 bra(d(lo('NEXT')))              #18
 ld(val(-20/2))                  #19
 
-# Instruction SIGNW: Test signedness of word (), 24 cycles
+# Instruction SIGNW: Test signedness of word (0xffff,0,1), 24 cycles
 label('SIGNW')
 ldzp(d(vPC))                    #10 Swallow operand
 suba(val(1))                    #11
@@ -911,15 +917,6 @@ ld(val(-1))                     #17 ACH<0
 st(d(vAC+1))                    #18
 bra(d(lo('.testw2')))           #19
 nop()                           #20
-
-# Instruction JUMP
-label('JUMP')
-st(d(vPC))                      #10
-st(eaYXregOUTIX)                #11 Just to increment X
-ld(busRAM|eaYXregAC)            #12 Fetch second operand
-st(d(vPC+1))                    #13
-bra(d(lo('NEXT')))              #14
-ld(val(-16/2))                  #15
 
 # Instruction BEQ: Branch if zero (if(ALC==0)PCL=D), 16 cycles
 label('BEQ')
@@ -1080,9 +1077,34 @@ nop()                           #19
 label('.addw1')
 anda(val(0x80),regX)            #20 Move the carry to bit 0
 ld(busRAM,ea0XregAC)            #21
-adda(d(vAC+1),busRAM)           #22 Add the high bytes
+adda(d(vAC+1),busRAM)           #22 Add the high bytes with carry
 ld(d(vTmp),busRAM|regX)         #23
 adda(busRAM|ea0XregAC)          #24
+st(d(vAC+1))                    #25 Store high result
+bra(d(lo('NEXT')))              #26
+ld(val(-28/2))                  #27
+
+# Instruction SUBW: Word subtraction with zero page (AC-=[D]+256*[D+1]), 28 cycles
+label('SUBW')
+ld(busAC,regX)                  #10 Address of low byte to be subtracted
+adda(val(1))                    #11
+st(d(vTmp))                     #12 Address of high byte to be subtracted
+ldzp(d(vAC))                    #13 Subtract the low bytes
+suba(busRAM|ea0XregAC)          #14
+st(d(vAC))                      #15 Store low result
+bmi(d(lo('.subw0')))            #16 Now figure out if there was a carry
+adda(busRAM|ea0XregAC)          #17 Gets back the initial value of vAC
+bra(d(lo('.subw1')))            #18
+anda(busRAM|ea0XregAC)           #19 Bit 7 is our lost carry
+label('.subw0')
+ora(busRAM|ea0XregAC)          #18 Bit 7 is our lost carry
+nop()                           #19
+label('.subw1')
+anda(val(0x80),regX)            #20 Move the carry to bit 0
+ld(busRAM,ea0XregAC)            #21
+suba(d(vAC+1),busRAM)           #22 Subtract the high bytes with carry
+ld(d(vTmp),busRAM|regX)         #23
+suba(busRAM|ea0XregAC)          #24
 st(d(vAC+1))                    #25 Store high result
 bra(d(lo('NEXT')))              #26
 ld(val(-28/2))                  #27

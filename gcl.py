@@ -73,9 +73,10 @@ class Program:
     if word == 'loop':
       to = self.loops[self.thisBlock()]
       to = prev(to)
-      self.emit(lo('JUMP'))
+      if self.vPC>>8 != to>>8:
+        self.error('Loop outside page' % repr(word))
+      self.emit(lo('BRA'))
       self.emit(to&0xff)
-      self.emit(to>>8)
     elif word == 'do':
       self.loops[self.thisBlock()] = self.vPC
     elif word == 'if<0':
@@ -83,8 +84,6 @@ class Program:
       self.emit(lo('BGE'))
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
-      if block in self.conds:
-        self.error('Too many %s' % repr(word)) # XXX Think harder about this
       self.conds[block] = 0
     elif word == 'if>0':
       self.emit(lo('SIGNW'))
@@ -110,6 +109,24 @@ class Program:
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
+    elif word == 'if<>0loop':
+      self.emit(lo('SIGNW'))
+      self.emit(lo('BNE'))
+      block = self.thisBlock()
+      to = self.loops[self.thisBlock()]
+      to = prev(to)
+      self.emit(to&0xff)
+      if self.vPC>>8 != to>>8:
+        self.error('Loop outside page' % repr(word))
+    elif word == 'if>0loop':
+      self.emit(lo('SIGNW'))
+      self.emit(lo('BGT'))
+      block = self.thisBlock()
+      to = self.loops[self.thisBlock()]
+      to = prev(to)
+      self.emit(to&0xff)
+      if self.vPC>>8 != to>>8:
+        self.error('Loop outside page' % repr(word))
     elif word == 'else':
       block = self.thisBlock()
       if block not in self.conds:
@@ -130,14 +147,21 @@ class Program:
           else:
             self.error('Not implemented %s' % repr(word))
         else:
-          self.emit(lo('LDWI'))
-          self.emit(con&0xff)
-          self.emit(con>>8)
+          if 0 <= con < 256:
+            self.emit(lo('LDI'))
+            self.emit(con)
+          else:
+            self.emit(lo('LDWI'))
+            self.emit(con&0xff)
+            self.emit(con>>8)
       elif op == '=' and var:
           self.emit(lo('STW'))
           self.emit(self.getAddress(var))
       elif op == '+' and var:
           self.emit(lo('ADDW'))
+          self.emit(self.getAddress(var))
+      elif op == '-' and var:
+          self.emit(lo('SUBW'))
           self.emit(self.getAddress(var))
       elif op == '&' and con:
           if con<0 or 0xff<con:
@@ -153,6 +177,16 @@ class Program:
           if con<0 or 0xff<con:
             self.error('Out of range %s' % repr(con))
           self.emit(lo('XORI'))
+          self.emit(con)
+      elif op == '!' and con:
+          if con<0 or 0xff<con:
+            self.error('Out of range %s' % repr(con))
+          self.emit(lo('ST'))
+          self.emit(con)
+      elif op == '?' and con:
+          if con<0 or 0xff<con:
+            self.error('Out of range %s' % repr(con))
+          self.emit(lo('LD'))
           self.emit(con)
       elif op == '!' and var:
           self.emit(lo('POKE'))
