@@ -15,12 +15,15 @@ J=
   S? X=
 
   {Stupid RNG}
+
   S? R+ Q+ R=
   Q+ [if<0 43^] Q+ Q+ Q=
+
 {
-  Vladimir Vassilevsky
-  seed = (seed << 7) - seed + 251;
-  return (u8)(seed + (seed>>8));
+  {Vladimir Vassilevsky's LCG
+   seed = (seed << 7) - seed + 251; // 127*seed+251
+   return (u8)(seed + (seed>>8));
+  }
   Q Q+ R= R+ R= R+ R= R+
     R= R+ R= R+ R= R+ Q- R=
   251 R+ Q=
@@ -28,8 +31,8 @@ J=
 }
 
   {Random height adjustment}
-  -20 H+ [if>0 R 16& if<>0 -1 H+ H=]
-  -80 H+ [if<0 R 64& if<>0 1 H+ H=]
+  8   H+ [if>0 R 16& if<>0 -1 H+ H=]
+  119 H- [if>0 R 128& if<>0 1 H+ H=]
 
   {J=($08+H)<<8}
   $08 H+ 148!
@@ -44,8 +47,8 @@ J=
     if>0loop]
 
   {Star}
-  R 63& A= $10 A+ 130! 0 129!
-  A T+ A=
+  R 127& A= -119 A+ [if>0 119 A=]
+  8 A+ 130! T 129!
   15 A!
 
   {Draw vertical line to bottom of screen}
