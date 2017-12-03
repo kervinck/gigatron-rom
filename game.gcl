@@ -54,7 +54,7 @@ J=
   J T+ V=
 
   {Stress-test for SUBW}
-  {S V+ V- V- V+ S=}
+  S V+ V- V- V+ S=
 
   63 V! {First pixel white}
   $100 V+ V=

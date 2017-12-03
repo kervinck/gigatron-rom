@@ -56,11 +56,6 @@ buttonB         = 128
 #
 #-----------------------------------------------------------------------
 
-# With [0]=0 and [0x80]=1, "ld [x]" moves bit 7 to bit 0 (carry propagation)
-zeroByte = zpByte()
-assert zeroByte == 0
-oneByte = 0x80
-
 # Memory size in pages from auto-detect
 memSize = zpByte()
 
@@ -314,12 +309,6 @@ xora(val(255))
 suba(val(0x5a-1))
 st(d(bootCheck))
 
-# Initialize zeroByte and oneByte
-# XXX Repeat this in scan line 0
-st(val(zeroByte), ea0DregAC|busD)  # Physical: [0] = 0
-ld(val(1))
-st(val(oneByte), ea0DregAC|busAC)  # Physical: [0x80] = 1
-
 # Initialize scan table for default video layout
 ld(val(scanTablePage), regY)
 ld(val(0), regX)
@@ -427,71 +416,76 @@ st(d(videoSync0))               #32
 ld(val(syncBits^hSync))         #33
 st(d(videoSync1))               #34
 
+# (Re)initialize carry table for robustness
+st(d(0x00), ea0DregAC|busD)     #35
+ld(val(0x01))                   #36
+st(d(0x80), ea0DregAC|busAC)    #37
+
 # --- Uptime clock
 
-# XXX todo...
+# XXX TODO...
 
 # --- LED sequencer (20 cycles)
 
-ldzp(d(ledTimer))               #35
-bne(d(lo('.leds4')))            #36
+ldzp(d(ledTimer))               #38
+bne(d(lo('.leds4')))            #39
 
-ld(d(lo('.leds0')))             #37
-adda(d(ledState)|busRAM)        #38
-bra(busAC)                      #39
-bra(d(lo('.leds1')))            #40
+ld(d(lo('.leds0')))             #40
+adda(d(ledState)|busRAM)        #41
+bra(busAC)                      #42
+bra(d(lo('.leds1')))            #43
 
 label('.leds0')
-ld(d(0b1111))                   #41
-ld(d(0b0111))                   #41
-ld(d(0b0011))                   #41
-ld(d(0b0001))                   #41
-ld(d(0b0010))                   #41
-ld(d(0b0100))                   #41
-ld(d(0b1000))                   #41
-ld(d(0b0100))                   #41
-ld(d(0b0010))                   #41
-ld(d(0b0001))                   #41
-ld(d(0b0011))                   #41
-ld(d(0b0111))                   #41
-ld(d(0b1111))                   #41
-ld(d(0b1110))                   #41
-ld(d(0b1100))                   #41
-ld(d(0b1000))                   #41
-ld(d(0b0100))                   #41
-ld(d(0b0010))                   #41
-ld(d(0b0001))                   #41
-ld(d(0b0010))                   #41
-ld(d(0b0100))                   #41
-ld(d(0b1000))                   #41
-ld(d(0b1100))                   #41
-ld(d(0b1110+128))               #41
+ld(d(0b1111))                   #44
+ld(d(0b0111))                   #44
+ld(d(0b0011))                   #44
+ld(d(0b0001))                   #44
+ld(d(0b0010))                   #44
+ld(d(0b0100))                   #44
+ld(d(0b1000))                   #44
+ld(d(0b0100))                   #44
+ld(d(0b0010))                   #44
+ld(d(0b0001))                   #44
+ld(d(0b0011))                   #44
+ld(d(0b0111))                   #44
+ld(d(0b1111))                   #44
+ld(d(0b1110))                   #44
+ld(d(0b1100))                   #44
+ld(d(0b1000))                   #44
+ld(d(0b0100))                   #44
+ld(d(0b0010))                   #44
+ld(d(0b0001))                   #44
+ld(d(0b0010))                   #44
+ld(d(0b0100))                   #44
+ld(d(0b1000))                   #44
+ld(d(0b1100))                   #44
+ld(d(0b1110+128))               #44
 
 label('.leds1')
-st(d(leds))                     #42 Temporarily park here
+st(d(leds))                     #45 Temporarily park here
 
-bmi(d(lo('.leds2')))            #43
-bra(d(lo('.leds3')))            #44
-ldzp(d(ledState))               #45
+bmi(d(lo('.leds2')))            #46
+bra(d(lo('.leds3')))            #47
+ldzp(d(ledState))               #48
 label('.leds2')
-ld(val(-1))                     #45
+ld(val(-1))                     #48
 label('.leds3')
-adda(val(1))                    #46
-st(d(ledState))                 #47
+adda(val(1))                    #49
+st(d(ledState))                 #50
 
-ldzp(d(leds))                   #48 Low 4 bits are the LED output
-anda(val(0b00001111))           #49
-st(d(leds))                     #50
-bra(d(lo('.leds5')))            #51
-ldzp(d(ledTempo))               #52 Setup the LED timer for the next period
+ldzp(d(leds))                   #51 Low 4 bits are the LED output
+anda(val(0b00001111))           #52
+st(d(leds))                     #53
+bra(d(lo('.leds5')))            #54
+ldzp(d(ledTempo))               #55 Setup the LED timer for the next period
 
 label('.leds4')
-wait(51-38)                     #38
-ldzp(d(ledTimer))               #51
-suba(d(1))                      #52
+wait(54-41)                     #41
+ldzp(d(ledTimer))               #54
+suba(d(1))                      #55
 
 label('.leds5')
-st(d(ledTimer))                 #53
+st(d(ledTimer))                 #56
 
 # When the total number of scanlines per frame is not an exact multiple of the (4) channels,
 # there will be an audible discontinuity if no measure is taken. This static noise can be
@@ -505,7 +499,7 @@ if soundDiscontinuity == 1:
   extra += 1
 if soundDiscontinuity > 1:
   print "Warning: sound discontinuity not supressed"
-runVcpu(198-54-extra)           #54 # Application cycles (scanline 0)
+runVcpu(198-57-extra)           #57 # Application cycles (scanline 0)
 
 ld(val(vFront+vPulse+vBack-2))  #198 `-2' because first and last are different
 st(d(blankY))                   #199
@@ -788,7 +782,7 @@ vTmp    = zpFree+1
 #-----------------------------------------------------------------------
 
 #
-# Enter the timing-aware application interpreter (aka virtual CPU)
+# Enter the timing-aware application interpreter (aka virtual CPU, vCPU)
 #
 # This routine will execute as many as possible instructions in the
 # alotted time. When time runs out, it synchronizes such that the total
@@ -827,7 +821,7 @@ suba(val(1))                    #5
 ld(d(returnTo+1),busRAM|regY)   #6
 jmpy(d(returnTo+0)|busRAM)      #7
 nop()                           #8
-assert vOverhead == 9
+assert vOverhead ==              9
 
 # Instruction LDI: Load immediate constant (AC=$DD), 16 cycles
 label('LDI')
@@ -959,7 +953,7 @@ anda(busRAM,ea0XregAC)          #13
 label('ANDI')
 anda(d(vAC),busRAM)             #10
 st(d(vAC))                      #11
-ld(val(0))                      #12
+ld(val(0))                      #12 Clear high byte
 st(d(vAC+1))                    #13
 bra(d(lo('NEXT')))              #14
 ld(val(-16/2))                  #15
@@ -1075,7 +1069,7 @@ label('.addw0')
 anda(busRAM|ea0XregAC)          #18 Bit 7 is our lost carry
 nop()                           #19
 label('.addw1')
-anda(val(0x80),regX)            #20 Move the carry to bit 0
+anda(val(0x80),regX)            #20 Move the carry to bit 0 (0 or +1)
 ld(busRAM,ea0XregAC)            #21
 adda(d(vAC+1),busRAM)           #22 Add the high bytes with carry
 ld(d(vTmp),busRAM|regX)         #23
@@ -1089,23 +1083,24 @@ label('SUBW')
 ld(busAC,regX)                  #10 Address of low byte to be subtracted
 adda(val(1))                    #11
 st(d(vTmp))                     #12 Address of high byte to be subtracted
-ldzp(d(vAC))                    #13 Subtract the low bytes
-suba(busRAM|ea0XregAC)          #14
-st(d(vAC))                      #15 Store low result
-bmi(d(lo('.subw0')))            #16 Now figure out if there was a carry
-adda(busRAM|ea0XregAC)          #17 Gets back the initial value of vAC
-bra(d(lo('.subw1')))            #18
-anda(busRAM|ea0XregAC)           #19 Bit 7 is our lost carry
+ldzp(d(vAC))                    #13
+bmi(d(lo('.subw0')))            #14
+suba(busRAM|ea0XregAC)          #15
+st(d(vAC))                      #16 Store low result
+bra(d(lo('.subw1')))            #17
+ora(busRAM|ea0XregAC)           #18 Bit 7 is our lost carry
 label('.subw0')
-ora(busRAM|ea0XregAC)          #18 Bit 7 is our lost carry
-nop()                           #19
+st(d(vAC))                      #16 Store low result
+anda(busRAM|ea0XregAC)          #17 Bit 7 is our lost carry
+nop()                           #18
 label('.subw1')
-anda(val(0x80),regX)            #20 Move the carry to bit 0
-ld(busRAM,ea0XregAC)            #21
-suba(d(vAC+1),busRAM)           #22 Subtract the high bytes with carry
-ld(d(vTmp),busRAM|regX)         #23
-suba(busRAM|ea0XregAC)          #24
-st(d(vAC+1))                    #25 Store high result
+anda(val(0x80),regX)            #19 Move the carry to bit 0
+ldzp(d(vAC+1))                  #20
+suba(busRAM,ea0XregAC)          #21
+ld(d(vTmp),busRAM|regX)         #22
+suba(busRAM|ea0XregAC)          #23
+st(d(vAC+1))                    #24
+nop()                           #25
 bra(d(lo('NEXT')))              #26
 ld(val(-28/2))                  #27
 

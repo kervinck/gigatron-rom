@@ -5,7 +5,7 @@ from os.path import basename, splitext
 from sys import argv
 
 # Module variables because I don't feel like making a class
-_romSize, _maxRomSize, _zpSize, _symbols, _refsL, _refsH = 0, 0, 0, {}, [], []
+_romSize, _maxRomSize, _zpSize, _symbols, _refsL, _refsH = 0, 0, 1, {}, [], []
 _rom0, _rom1 = [], []
 
 # Bus access
@@ -266,7 +266,7 @@ def zpByte(len=1):
   global _zpSize
   s = _zpSize
   if s <= 0x80 and 0x80 < s + len:
-   s = 0x81 # Better keep [0x80] reserved
+   s = 0x81 # Keep 0x80 reserved
   _zpSize += len
   assert _zpSize <= 0x100
   return s

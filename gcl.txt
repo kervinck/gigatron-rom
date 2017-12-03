@@ -1,5 +1,5 @@
 -------------------------------
-Gigatron Command Language (GCL)
+Gigatron Control Language (GCL)
 -------------------------------
 GCL is an interpreted low-level language for writing simple games for
 the Gigatron TTL microcomputer, without bothering with the harsh timing
@@ -93,10 +93,9 @@ if>0                    Continue executing code if vAC > 0, otherwise jump to
 else                    When encountered, skip rest of code until end of block
 do                      Mark start of loop
 loop                    Jump back to matching "do"
-i& i| i^                Logical AND, OR and XOR (note: just vAC's lower byte!)
+if>0loop                Jump back to matching "do" if AC>0
+i& i| i^                Logical AND, OR and XOR with small constant
 x& v| v^                Logical AND, OR and XOR with variable x (16-bits)
-~                       Invert all bits in vAC (XXX why no operand?)
-:ii                     Set compile address, typically at start of program
 x?                      Read byte from memory pointed by variable ("peek")
 x!                      Write vAC as byte to memory pointed by variable ("poke")
 i!                      Store vAC as byte into zero page address i
@@ -107,7 +106,9 @@ Not decided yet
 ---------------
 0                       Clear vAC as single-byte instruction
 i                       Load a byte value in vAC and sign-extend
+~                       Invert all bits in vAC (XXX why no operand?)
 _                       Negate vAC (note: underscore, not minus)
+:ii                     Set compile address, typically at start of program
 x: X:                   Store current vPC in variable to define a function
 *                       Call function referenced by vAC
 X*                      Call function referenced by X
