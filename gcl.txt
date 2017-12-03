@@ -87,19 +87,21 @@ x-                      Subtract variable from vAC
 i+                      Add small constant to vAC (XXX limit 0<=i<128?)
 i-                      Subtract small constant from vAC (XXX limit 0<=i<128?)
 [...]                   Code block, used with "if", "else", "do", "loop"
-if>0                    Continue executing code if vAC > 0, otherwise jump to
+if>0                    Continue executing code if vAC>0, otherwise jump to
                         end of the block (or past an optional matching "else")
                         Conditions are "=0" ">0" "<0" "<=0" ">=0" "<>0"
 else                    When encountered, skip rest of code until end of block
 do                      Mark start of loop
 loop                    Jump back to matching "do"
-if>0loop                Jump back to matching "do" if AC>0
+if>0loop                Smaller and faster than "if>0 loop" (works with all conditions)
 i& i| i^                Logical AND, OR and XOR with small constant
-x& v| v^                Logical AND, OR and XOR with variable x (16-bits)
-x?                      Read byte from memory pointed by variable ("peek")
-x!                      Write vAC as byte to memory pointed by variable ("poke")
+x& x| x^                Logical AND, OR and XOR with variable x (16-bits)
+x? X?                   Read byte from memory pointed by variable ("peek")
+x! X!                   Write vAC as byte to memory pointed by variable ("poke")
 i!                      Store vAC as byte into zero page address i
 i?                      Read zero page as unsigned byte
+X<!                     Store vAC as byte into the low byte of variable # TODO: <X! <x!
+X>!                     Store vAC as byte into the high byte of variable # TODO: >X! >x!
 
 ---------------
 Not decided yet

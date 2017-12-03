@@ -26,7 +26,7 @@ J=
   Q Q+ R= R+ R= R+ R= R+
     R= R+ R= R+ R= R+ Q- R=
   251 R+ Q=
-  162? R+ R=
+  Q>? R+ R=
 }
 
   {Random height adjustment}
@@ -34,7 +34,7 @@ J=
   -118 H+ [if<0 R 128& if<>0 1 H+ H=]
 
   {J=($08+H)<<8}
-  $08 H+ 148!
+  $08 H+ J>!
 
   {X drawing position is 1 pixel outside the visible area}
   160 X+ 255& T=
@@ -47,8 +47,8 @@ J=
 
   {Star}
   R 127& A= -111 A+ [if>0 119 A=]
-  16 A+ 130! T 129!
-  15 A!
+  16 A+ A>! T A<!
+  15 {Yellow} A!
 
   {Draw vertical line to bottom of screen}
   J T+ V=

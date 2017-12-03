@@ -197,6 +197,12 @@ class Program:
       elif op == '!' and var:
           self.emit(lo('POKE'))
           self.emit(self.getAddress(var))
+      elif op == '<!' and var:
+          self.emit(lo('ST'))
+          self.emit(self.getAddress(var))
+      elif op == '>!' and var:
+          self.emit(lo('ST'))
+          self.emit(self.getAddress(var)+1)
       elif op == '?' and var:
           self.emit(lo('PEEK'))
           self.emit(self.getAddress(var))
