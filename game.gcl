@@ -15,7 +15,6 @@ J=
   S? X=
 
   {Stupid RNG}
-
   S? R+ Q+ R=
   Q+ [if<0 43^] Q+ Q+ Q=
 
@@ -31,7 +30,7 @@ J=
 }
 
   {Random height adjustment}
-  -8  H+ [if>0 R 16& if<>0 -1 H+ H=]
+  -8   H+ [if>0 R 16& if<>0 -1 H+ H=]
   -118 H+ [if<0 R 128& if<>0 1 H+ H=]
 
   {J=($08+H)<<8}
@@ -47,21 +46,20 @@ J=
     if>0loop]
 
   {Star}
-  R 127& A= -119 A+ [if>0 119 A=]
-  8 A+ 130! T 129!
+  R 127& A= -111 A+ [if>0 119 A=]
+  16 A+ 130! T 129!
   15 A!
 
   {Draw vertical line to bottom of screen}
   J T+ V=
 
   {Stress-test for SUBW}
-{
-  S V- V+ S=
-}
+  {S V+ V- V- V+ S=}
 
-  63 V!  {First pixel white}
+  63 V! {First pixel white}
   $100 V+ V=
-  [do 175? V! 
+  X 8& H+ C=                         {Begin of checkerboard}
+  [do [1 C+ C= 8& if=0 42 else 2] V! {Checkerboard colors}
       $100 V+ V=
       if>0loop]
 
