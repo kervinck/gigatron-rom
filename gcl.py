@@ -97,6 +97,12 @@ class Program:
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
+    elif word == 'if=0':
+      self.emit(lo('SIGNW'))
+      self.emit(lo('BNE'))
+      block = self.thisBlock()
+      self.emit(lo('$if.%d.0' % block))
+      self.conds[block] = 0
     elif word == 'if<>0':
       self.emit(lo('SIGNW'))
       self.emit(lo('BEQ'))
