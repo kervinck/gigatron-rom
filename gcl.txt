@@ -99,9 +99,9 @@ x& x| x^                Logical AND, OR and XOR with variable x (16-bits)
 x? X?                   Read byte from memory pointed by variable ("peek")
 x! X!                   Write vAC as byte to memory pointed by variable ("poke")
 i!                      Store vAC as byte into zero page address i
+X<! X>!                 Store vAC as byte into the low/high byte of variable
 i?                      Read zero page as unsigned byte
-X<!                     Store vAC as byte into the low byte of variable # TODO: <X! <x!
-X>!                     Store vAC as byte into the high byte of variable # TODO: >X! >x!
+X<? X>?                 Read low/high byte of variable
 
 ---------------
 Not decided yet

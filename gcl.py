@@ -74,7 +74,7 @@ class Program:
       to = self.loops[self.thisBlock()]
       to = prev(to)
       if self.vPC>>8 != to>>8:
-        self.error('Loop outside page' % repr(word))
+        self.error('Loop outside page')
       self.emit(lo('BRA'))
       self.emit(to&0xff)
     elif word == 'do':
@@ -123,7 +123,7 @@ class Program:
       to = prev(to)
       self.emit(to&0xff)
       if self.vPC>>8 != to>>8:
-        self.error('Loop outside page' % repr(word))
+        self.error('Loop outside page')
     elif word == 'if>0loop':
       self.emit(lo('SIGNW'))
       self.emit(lo('BGT'))
@@ -132,7 +132,7 @@ class Program:
       to = prev(to)
       self.emit(to&0xff)
       if self.vPC>>8 != to>>8:
-        self.error('Loop outside page' % repr(word))
+        self.error('Loop outside page')
     elif word == 'else':
       block = self.thisBlock()
       if block not in self.conds:
@@ -206,6 +206,12 @@ class Program:
       elif op == '?' and var:
           self.emit(lo('PEEK'))
           self.emit(self.getAddress(var))
+      elif op == '<?' and var:
+          self.emit(lo('LD'))
+          self.emit(self.getAddress(var))
+      elif op == '>?' and var:
+          self.emit(lo('LD'))
+          self.emit(self.getAddress(var)+1)
       else:
         self.error('Invalid word %s' % repr(word))
 
