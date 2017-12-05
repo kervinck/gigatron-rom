@@ -133,6 +133,15 @@ class Program:
       self.emit(to&0xff)
       if self.vPC>>8 != to>>8:
         self.error('Loop outside page')
+    elif word == 'if<0loop':
+      self.emit(lo('SIGNW'))
+      self.emit(lo('BLT'))
+      block = self.thisBlock()
+      to = self.loops[self.thisBlock()]
+      to = prev(to)
+      self.emit(to&0xff)
+      if self.vPC>>8 != to>>8:
+        self.error('Loop outside page')
     elif word == 'else':
       block = self.thisBlock()
       if block not in self.conds:
@@ -212,6 +221,9 @@ class Program:
       elif op == '>?' and var:
           self.emit(lo('LD'))
           self.emit(self.getAddress(var)+1)
+      elif op == ';' and var:
+          self.emit(lo('LOOKUP'))
+          self.emit(self.getAddress(var))
       else:
         self.error('Invalid word %s' % repr(word))
 

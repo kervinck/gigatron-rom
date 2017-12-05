@@ -1,4 +1,21 @@
 
+{ Test of built-in font }
+
+$0605 F= {Font data}
+$0800 S= {Top of screen}
+$1000 U=
+[do
+  F; A=
+  S T=
+  [do
+    A 128& [if=0 0 {Black} T! else 8 {Green} T!]
+    A A+ A=
+    $0100 T+ T=
+    U- if<0loop]
+  1 F+ F=
+  1 S+ S=
+  255& 160^ if<>0loop]
+
 { Scroller game, might become Zaxxon or Flappy Bird}
 
 $0111 S= {X shift starting from line 8}
@@ -33,9 +50,11 @@ $1800 Y= B=
   Q>? R+ R=
 }
 
+{
   {Random height adjustment}
   -60  H+ [if>0 R 16& if<>0 -1 H+ H=]
   -100 H+ [if<0 R 128& if<>0 1 H+ H=]
+}
 
   {J=($08+H)<<8}
   $08 H+ J>!
@@ -43,20 +62,18 @@ $1800 Y= B=
   {X drawing position is 1 pixel outside the visible area}
   160 X+ 255& T=
 
-  {Update ball position and velocity}
-
   {Clear vertical line}
   $1000 T+ V=
   [do V! 
     $100 V+ V=
     if>0loop]
-{
+
   {Star}
   R 127& A= -111 A+ [if>0 119 A=]
   16 A+ A>! T A<!
   15 {Yellow} A!
-}
 
+{
   {Draw vertical line to bottom of screen}
   J T+ V=
 
@@ -66,7 +83,9 @@ $1800 Y= B=
   [do [1 C+ C= 8& if=0 42 else 2] V! {Checkerboard colors}
       $100 V+ V=
       if>0loop]
+}
 
+  { Update ball position and velocity }
   Y Z+ Y=
   [if<0 0 Z- Z= Y+ Y=]
   10 Z+ Z=
@@ -84,6 +103,6 @@ $1800 Y= B=
   50 X+ B=
   Y>? B>!
   B? G=
-  48 {Blue} B!
+  63 {White} B!
 
 loop]

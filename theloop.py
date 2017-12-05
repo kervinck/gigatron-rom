@@ -14,6 +14,7 @@
 
 from asm import *
 import gcl
+import font
 
 # Output pin assignment for VGA
 R, G, B, hSync, vSync = 1, 4, 16, 64, 128
@@ -378,7 +379,8 @@ ld(val(0b0111))                 # Physical: [***o]
 ld(val(syncBits^hSync), regOUT)
 ld(val(syncBits), regOUT)
 
-# Compile test GCL Fibonacci program
+# Compile test GCL program
+# XXX load applications from ROM instead
 program = gcl.Program(bStart)
 for line in open('game.gcl').readlines():
   program.line(line)
@@ -1136,6 +1138,22 @@ ld(d(vPC+1),busRAM|regY)        #19
 bra(d(lo('NEXT')))              #20
 ld(val(-22/2))                  #21
 
+# Instruction LOOKUP, 28 cycles
+label('LOOKUP')
+st(d(vTmp))                     #10
+adda(val(1),regX)               #11
+ld(busRAM,ea0XregAC)            #12
+ld(busAC,regY)                  #13
+ld(d(vTmp),busRAM|regX)         #14
+jmpy(d(0))                      #15
+ld(busRAM,ea0XregAC)            #16
+label('.lookup0')
+st(d(vAC))                      #23
+ld(val(0))                      #24
+st(d(vAC+1))                    #25
+bra(d(lo('NEXT')))              #26
+ld(val(-28/2))                  #27
+
 #init_rng(s1,s2,s3) //Can also be used to seed the rng with more entropy during use.
 #{
 #//XOR new entropy into key state
@@ -1157,6 +1175,24 @@ ld(val(-22/2))                  #21
 #c = (c+(b>>1)^a);  //the right shift is to ensure that high-order bits from b can affect  
 #return(c)          //low order bits of other variables
 #}
+
+#-----------------------------------------------------------------------
+#
+#  ROM page 5-6: Gigatron font data
+#
+#-----------------------------------------------------------------------
+align(0x100)
+
+align(0x100, 0x100)
+bra(busAC)                    #17
+bra(val(2))                   #18
+ld(d(hi('.lookup0')),regY)    #20
+jmpy(d(lo('.lookup0')))       #21
+ld(d(vPC+1),busRAM|regY)      #22
+
+for ch in range(32, 64):
+  for byte in font.font[ch-32]:
+    ld(val(byte))
 
 #-----------------------------------------------------------------------
 # Finish assembly

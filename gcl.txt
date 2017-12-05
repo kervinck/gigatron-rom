@@ -15,7 +15,6 @@ Example program
 
 {Draw the binary value of the largest 16-bit Fibonacci number on screen}
 
-:$0300 {program load address}
 [do                                     {Approximate BASIC equivalent}
   0 a=                                  {10 A=0}
   1 b=                                  {20 B=1}
@@ -102,6 +101,7 @@ i!                      Store vAC as byte into zero page address i
 X<! X>!                 Store vAC as byte into the low/high byte of variable
 i?                      Read zero page as unsigned byte
 X<? X>?                 Read low/high byte of variable
+X;                      ROM table lookup
 
 ---------------
 Not decided yet
@@ -125,7 +125,6 @@ x>> x<<                 Right shift, left shift
 : (...)                 Define macro
 (...)                   Expand macro
                         Isolate high byte, load high byte, swap bytes, ...
-                        ROM table lookup
                         Push, pull and index stack
                         Inline data
                         Characters and strings
