@@ -9,11 +9,13 @@ class Program:
     self.blocks, self.block = [0], 1
     self.loops = {} # block -> address of last do
     self.conds = {} # block -> address of continuation
+    self.org(address)
 
-    # Configure for start address
+  def org(self, address):
+    # Configure start address for emit
     self.vPC = address
     ld(val(address&0xff),regX)
-    ld(val(address>>8), regY)
+    ld(val(address>>8),regY)
 
   def thisBlock(self):
     return self.blocks[-1]
@@ -115,6 +117,12 @@ class Program:
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
+    elif word == 'if<=0':
+      self.emit(lo('SIGNW'))
+      self.emit(lo('BGT'))
+      block = self.thisBlock()
+      self.emit(lo('$if.%d.0' % block))
+      self.conds[block] = 0
     elif word == 'if<>0loop':
       self.emit(lo('SIGNW'))
       self.emit(lo('BNE'))
@@ -169,6 +177,8 @@ class Program:
             self.emit(lo('LDWI'))
             self.emit(con&0xff)
             self.emit(con>>8)
+      elif op == ':' and con: # XXX Replace with automatic allocation
+          self.org(con)
       elif op == '=' and var:
           self.emit(lo('STW'))
           self.emit(self.getAddress(var))
@@ -224,6 +234,9 @@ class Program:
       elif op == ';' and var:
           self.emit(lo('LOOKUP'))
           self.emit(self.getAddress(var))
+      elif op == '*' and con:
+          self.emit(lo('GOTO'))
+          self.emit(con)
       else:
         self.error('Invalid word %s' % repr(word))
 
@@ -281,9 +294,9 @@ class Program:
     return (name, number, op if len(op)>0 else None)
 
   def end(self):
-     pass # XXX Check all blocks are closed
-     if len(self.conds) > 0:
-       self.error('Dangling if statements')
+    # XXX Check all blocks are closed
+    if len(self.conds) > 0:
+      self.error('Dangling if statements')
 
   def error(self, message):
     prefix = 'file %s' % repr(self.filename) if self.filename else ''

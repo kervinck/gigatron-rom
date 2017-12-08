@@ -113,7 +113,7 @@ int main(void)
       else putchar(32 + (S.OUT & 63));      // Plot pixel
     }
     if (hSync > 0) { // Rising hSync edge
-      printf("%s line %d xout %02x t %0.3f\n",
+      printf("%s line %-3d xout %02x t %0.3f\n",
              vgaX!=200 ? "~" : "", // Mark horizontal cycle errors
              vgaY, T.AC, t/6.250e+06);
       vgaX = 0;

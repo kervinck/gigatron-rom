@@ -7,7 +7,7 @@
 #  - Must stay above 31 kHz horizontal sync --> 200 cycles/scanline
 #  - Must stay above 59.94 Hz vertical sync --> 521 scanlines/frame
 #  - 4 channels sound
-#  TODO: add screen font
+#  - vCPU interpreter
 #  TODO: add date/time clock
 #
 #-----------------------------------------------------------------------
@@ -91,10 +91,7 @@ bootCheck = zpByte() # Checksum
 # accessible in this indirect manner because it isn't part of the core
 # CPU architecture.
 xout      = zpByte()
-
-# Status of blinkenlights. Keep bit 4:7 clear.
-# (Simplest is to keep the sequencer responsible for that)
-leds      = zpByte()
+xoutMask  = zpByte() # The blinkenlights and sound on/off state
 
 # Visible video
 screenY   = zpByte() # Counts up from 0 to 238 in steps of 2
@@ -121,6 +118,9 @@ entropy    = zpByte(2)
 #time2     = zpByte() # 256 seconds (4 minutes)
 #time3     = zpByte() # 2^16 seconds (18 hours)
 
+# Play sound if non-zero, count down and stop sound when zero
+soundTimer = zpByte()
+
 ledTimer        = zpByte() # Number of ticks until next LED change
 ledState        = zpByte() # Current LED state
 ledTempo        = zpByte() # Next value for ledTimer after LED state change
@@ -133,6 +133,8 @@ buttonState     = zpByte() # Filtered button state
 # High level interpreter
 vPC     = zpByte(2)             # Interpreter program counter (points into RAM)
 vAC     = zpByte(2)             # Interpreter accumulator (16-bits)
+#vSP    = zpByte(1)
+#vGlobals= zpbyte(26*2)
 
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 zpFree     = zpByte()
@@ -173,7 +175,7 @@ shiftTablePage = 0x02
 #
 #-----------------------------------------------------------------------
 
-bStart = 0x0300
+bStart = 0x0400
 bTop   = 0x07ff
 
 #-----------------------------------------------------------------------
@@ -339,11 +341,11 @@ bne(d(lo('.loop')))
 xora(val(0x40))
 
 # Init LED sequencer
-ld(val(60))
+ld(val(120))
 st(d(ledTimer))
 ld(val(0))
 st(d(ledState))
-ld(val(60/5))
+ld(val(60/6))
 st(d(ledTempo))
 
 # Setup a G-major chord to play
@@ -369,6 +371,10 @@ ld(val(keyL), regX)
 st(d(D5 & 0x7f), eaYXregOUTIX)
 st(d(D5 >> 7), eaYXregAC)
 
+# 3 seconds opening sound
+ld(val(180))
+st(d(soundTimer))
+
 # Setup serial input and derived button state
 ld(val(-1))
 st(d(serialInput))
@@ -379,27 +385,20 @@ ld(val(0b0111))                 # Physical: [***o]
 ld(val(syncBits^hSync), regOUT)
 ld(val(syncBits), regOUT)
 
-# Compile test GCL program
-# XXX load applications from ROM instead
-program = gcl.Program(bStart)
-for line in open('game.gcl').readlines():
-  program.line(line)
-program.end()
-bLine = program.vPC
-print bLine-bStart, 'GCL bytes loaded'
-print bTop-bLine+1, 'GCL bytes free'
-
-# Set start of user program ready to run
-ld(val((bStart&255)-2))
-st(d(vPC))
-ld(val(bStart>>8))
-st(d(vPC+1))
+# Setup vCPU (and subroutine test)
+ld(val(lo('.retn')))
+st(d(returnTo+0))
+ld(val(hi('.retn')))
+ld(d(hi('initVcpu')), regY)
+jmpy(d(lo('initVcpu')))
+st(d(returnTo+1))
+label('.retn')
 
 # Update LEDs (subroutines are working)
 ld(val(0b1111))                 # Physical: [****]
 ld(val(syncBits^hSync), regOUT)
 ld(val(syncBits), regOUT)
-st(d(leds)) # Setup for control by video loop
+st(d(xoutMask)) # Setup for control by video loop
 st(d(xout))
 
 ld(d(hi('videoLoop')), busD|ea0DregY)
@@ -427,68 +426,6 @@ st(d(0x80), ea0DregAC|busAC)    #37
 
 # XXX TODO...
 
-# --- LED sequencer (20 cycles)
-
-ldzp(d(ledTimer))               #38
-bne(d(lo('.leds4')))            #39
-
-ld(d(lo('.leds0')))             #40
-adda(d(ledState)|busRAM)        #41
-bra(busAC)                      #42
-bra(d(lo('.leds1')))            #43
-
-label('.leds0')
-ld(d(0b1111))                   #44
-ld(d(0b0111))                   #44
-ld(d(0b0011))                   #44
-ld(d(0b0001))                   #44
-ld(d(0b0010))                   #44
-ld(d(0b0100))                   #44
-ld(d(0b1000))                   #44
-ld(d(0b0100))                   #44
-ld(d(0b0010))                   #44
-ld(d(0b0001))                   #44
-ld(d(0b0011))                   #44
-ld(d(0b0111))                   #44
-ld(d(0b1111))                   #44
-ld(d(0b1110))                   #44
-ld(d(0b1100))                   #44
-ld(d(0b1000))                   #44
-ld(d(0b0100))                   #44
-ld(d(0b0010))                   #44
-ld(d(0b0001))                   #44
-ld(d(0b0010))                   #44
-ld(d(0b0100))                   #44
-ld(d(0b1000))                   #44
-ld(d(0b1100))                   #44
-ld(d(0b1110+128))               #44
-
-label('.leds1')
-st(d(leds))                     #45 Temporarily park here
-
-bmi(d(lo('.leds2')))            #46
-bra(d(lo('.leds3')))            #47
-ldzp(d(ledState))               #48
-label('.leds2')
-ld(val(-1))                     #48
-label('.leds3')
-adda(val(1))                    #49
-st(d(ledState))                 #50
-
-ldzp(d(leds))                   #51 Low 4 bits are the LED output
-anda(val(0b00001111))           #52
-st(d(leds))                     #53
-bra(d(lo('.leds5')))            #54
-ldzp(d(ledTempo))               #55 Setup the LED timer for the next period
-
-label('.leds4')
-wait(54-41)                     #41
-ldzp(d(ledTimer))               #54
-suba(d(1))                      #55
-
-label('.leds5')
-st(d(ledTimer))                 #56
-
 # When the total number of scanlines per frame is not an exact multiple of the (4) channels,
 # there will be an audible discontinuity if no measure is taken. This static noise can be
 # suppressed by swallowing the first `lines%4' partial samples after transitioning into
@@ -501,7 +438,96 @@ if soundDiscontinuity == 1:
   extra += 1
 if soundDiscontinuity > 1:
   print "Warning: sound discontinuity not supressed"
-runVcpu(198-57-extra)           #57 # Application cycles (scanline 0)
+
+extra+=11
+
+runVcpu(179-38-extra)           #38 # Application cycles (scanline 0)
+
+# --- LED sequencer (19 cycles)
+
+ldzp(d(ledTimer))               #179
+bne(d(lo('.leds4')))            #180
+
+ld(d(lo('.leds0')))             #181
+adda(d(ledState)|busRAM)        #182
+bra(busAC)                      #183
+bra(d(lo('.leds1')))            #184
+
+label('.leds0')
+ld(d(0b1111))                   #185
+ld(d(0b0111))                   #185
+ld(d(0b0011))                   #185
+ld(d(0b0001))                   #185
+ld(d(0b0010))                   #185
+ld(d(0b0100))                   #185
+ld(d(0b1000))                   #185
+ld(d(0b0100))                   #185
+ld(d(0b0010))                   #185
+ld(d(0b0001))                   #185
+ld(d(0b0011))                   #185
+ld(d(0b0111))                   #185
+ld(d(0b1111))                   #185
+ld(d(0b1110))                   #185
+ld(d(0b1100))                   #185
+ld(d(0b1000))                   #185
+ld(d(0b0100))                   #185
+ld(d(0b0010))                   #185
+ld(d(0b0001))                   #185
+ld(d(0b0010))                   #185
+ld(d(0b0100))                   #185
+ld(d(0b1000))                   #185
+ld(d(0b1100))                   #185
+ld(d(0b1110+128))               #185
+
+label('.leds1')
+st(d(xoutMask))                 #186 Temporarily park new state here
+
+bmi(d(lo('.leds2')))            #187
+bra(d(lo('.leds3')))            #188
+ldzp(d(ledState))               #189
+label('.leds2')
+ld(val(-1))                     #189
+label('.leds3')
+adda(val(1))                    #190
+st(d(ledState))                 #191
+
+bra(d(lo('.leds5')))            #192
+ldzp(d(ledTempo))               #193 Setup the LED timer for the next period
+
+label('.leds4')
+wait(192-182)                   #182
+ldzp(d(ledTimer))               #192
+suba(d(1))                      #193
+
+label('.leds5')
+st(d(ledTimer))                 #194
+
+ldzp(d(xoutMask))               #195 Low 4 bits are the LED output
+anda(val(0b00001111))           #196
+st(d(xoutMask))                 #197
+
+# --- Sound on/off
+
+ldzp(d(soundTimer))
+bne(d(lo('.snd0')))
+bra(d(lo('.snd1')))
+ld(val(0))
+label('.snd0')
+ld(val(0xf0))
+label('.snd1')
+ora(d(xoutMask),busRAM)
+st(d(xoutMask))
+
+# --- Sound timer count down
+
+ldzp(d(soundTimer))
+beq(d(lo('.snd2')))
+bra(d(lo('.snd3')))
+suba(val(1))
+label('.snd2')
+ld(val(0))
+label('.snd3')
+st(d(soundTimer))
 
 ld(val(vFront+vPulse+vBack-2))  #198 `-2' because first and last are different
 st(d(blankY))                   #199
@@ -576,8 +602,8 @@ ldzp(d(blankY))                 #47
 anda(d(3))                      #48
 bne(d(lo('vBlankRegular')))     #49
 ldzp(d(sample))                 #50
-anda(d(0xf0))                   #51
-ora(d(leds), busRAM|ea0DregAC)  #52
+ora(d(0x0f))                    #51
+anda(d(xoutMask),busRAM|ea0DregAC)#52
 st(d(xout))                     #53
 st(val(sample), ea0DregAC|busD) #54 Reset for next sample
 
@@ -635,7 +661,7 @@ ld(val(syncBits^hSync), regOUT) #4 Start horizontal pulse
 #  ROM page 2: Visible part of video loop
 #
 #-----------------------------------------------------------------------
-align(0x100, 0x100)
+align(0x100, 0x100+6) # XXX Small page overrun into page 3
 label('visiblePage')
 
 # Back porch A: first of 4 repeated scanlines
@@ -712,8 +738,8 @@ ld(val(syncBits))               #39
 # - Nothing new to do, Yi and Xi are known
 label('videoC')
 ldzp(d(sample))                 #29 First something that didn't fit in the audio loop
-anda(d(0xf0))                   #30
-ora(d(leds), busRAM|ea0DregAC)  #31
+ora(d(0x0f))                   #30
+anda(d(xoutMask), busRAM|ea0DregAC)  #31
 st(d(xout))                     #32 Update [xout] with new sample (4 channels just updated)
 st(val(sample), ea0DregAC|busD) #33 Reset for next sample
 ldzp(d(videoDorF))              #34 Now back to video business
@@ -778,7 +804,7 @@ ldzp(d(channel))                #1 Advance to next sound channel
 align(0x100,0x100)
 #-----------------------------------------------------------------------
 
-vTicks  = zpFree                # Interpreter ticks are units of 2 clocks
+vTicks  = zpFree                # Interpreter frames are units of 2 clocks
 vTmp    = zpFree+1
 
 #-----------------------------------------------------------------------
@@ -1154,6 +1180,15 @@ st(d(vAC+1))                    #25
 bra(d(lo('NEXT')))              #26
 ld(val(-28/2))                  #27
 
+# Instruction GOTO, (PC=256*D+254), 16 cycles
+label('GOTO')
+st(d(vPC+1))                    #10
+ld(val(0xfe))                   #11
+st(d(vPC))                      #12
+nop()                           #13
+bra(d(lo('NEXT')))              #14
+ld(val(-16/2))                  #15
+
 #init_rng(s1,s2,s3) //Can also be used to seed the rng with more entropy during use.
 #{
 #//XOR new entropy into key state
@@ -1190,9 +1225,40 @@ ld(d(hi('.lookup0')),regY)    #20
 jmpy(d(lo('.lookup0')))       #21
 ld(d(vPC+1),busRAM|regY)      #22
 
-for ch in range(32, 64):
+for ch in range(32, 64): # XXX do full font
   for byte in font.font[ch-32]:
     ld(val(byte))
+
+#-----------------------------------------------------------------------
+#
+#  ROM page 7: Bootstrap vCPU
+#
+#-----------------------------------------------------------------------
+
+align(0x100)
+
+label('initVcpu')
+
+# Compile test GCL program
+# XXX load applications from ROM instead
+program = gcl.Program(bStart)
+for line in open('game.gcl').readlines():
+  program.line(line)
+program.end()
+bLine = program.vPC
+print bLine-bStart, 'GCL bytes loaded'
+print bTop-bLine+1, 'GCL bytes free'
+
+# Set start of user program ready to run
+ld(val((bStart&255)-2))
+st(d(vPC))
+ld(val(bStart>>8))
+st(d(vPC+1))
+
+# Return
+ld(d(returnTo+1), busRAM|ea0DregY)
+jmpy(d(returnTo+0)| busRAM)
+nop()
 
 #-----------------------------------------------------------------------
 # Finish assembly

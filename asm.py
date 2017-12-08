@@ -243,9 +243,10 @@ def ldzpy(base): _emit(_opLD | busRAM | ea0DregY  | base)
 
 def align(n, chunkSize=0x10000):
   global _romSize, _maxRomSize
+  _maxRomSize = 0x10000
   while _romSize % n > 0:
     _emit(0)
-  _maxRomSize = min(0x10000, _romSize + chunkSize)
+  _maxRomSize = min(_maxRomSize, _romSize + chunkSize)
 
 def wait(n):
   assert n >= 0
