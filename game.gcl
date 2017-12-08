@@ -3,7 +3,7 @@
 $0400:
 
 {Startup delay}
-10 D= [do -1 D+ D= if<>0loop]
+20000 D= [do -1 D+ D= if<>0loop]
 
 { Test of built-in font }
 
@@ -23,7 +23,7 @@ $1000 U=
   255& 160^ if<>0loop]
 
 {Delay}
-{0 D= [do -1 D+ D= if<>0loop]}
+20000 D= [do -1 D+ D= if<>0loop]
 
 $0011 W= {Sound timer address in zero page}
 
@@ -35,8 +35,9 @@ $0111 S= {X shift starting from line 8}
 0 Q= R=
 J=
 
-{Ball acceleration D, height Y and velocity Z}
-D=
+{Ball acceleration E, height Y and velocity Z}
+E=
+G=
 Z=
 $2800 Y= B=
 
@@ -47,22 +48,19 @@ $05*
 {---------- Page 5 ----------}
 $0500:
 
-[
   {Get X from scanline table}
   S? X=
 
-  {Start gravity after a while}
-  {160^ [if<>0 10 D=]}
+  {Enable gravity after a while}
+  160^ [if=0 10 E=]
 
   {Stupid RNG}
   S? R+ Q+ R=
   Q+ [if<0 43^] Q+ Q+ Q=
 
-{
   {Random height adjustment}
   -60 H+ [if>0 R 16& if<>0 -1 H+ H=]
   -90 H+ [if<0 R 128& if<>0 1 H+ H=]
-}
 
   {J=($08+H)<<8}
   $08 H+ J>!
@@ -77,31 +75,36 @@ $0500:
     if>0loop]
 
   {Star}
+{
   R 127& A= -111 A+ [if>0 119 A=]
   16 A+ A>! T A<!
   2 {Red} A!
+}
 
   {Draw vertical line to bottom of screen}
   J T+ V=
 
   63 V! {First pixel white}
   $100 V+ V=
-  X 8& H+ C=                         {Begin of checkerboard}
-  [do {[1 C+ C= 8& if=0 42 else 32] V! {Checkerboard colors}}
-      48 V! {Blue}
+  X 8& H+ C=                          {Begin of checkerboard}
+  [do [1 C+ C= 8& if=0 42 else 32] V! {Checkerboard colors}
       $100 V+ V=
       if>0loop]
 
   {Update ball position and velocity}
-  [-3 G+ if<=0
-    Y Z+ Y= if>=0 {skip}
-  else {G<>1 or Y+Z<0}
-    0 Z- Z=
-    Y+ Y= {Reverse if hitting the bottom}
+  3 G- [if<0
+    10 Z- Z= {Reverse if hitting the bottom}
+    Y+ Y=
     12 W! {1/5th second of sound}
   ]
-  {$1400 Y- [if>0 $1400 Y=] {Clip}}
-  D Z+ Z=
+  Y Z+ Y=
+  E Z+ Z=
+  $1400 Y- [if>0 $1400 Y=] {Clip}
+
+{$06*
+{---------- Page 6 ----------}
+$0600:
+}
 
   {Wait for vertical blank}
   [do 8? if<>0loop]
@@ -112,12 +115,6 @@ $0500:
   {Clear ball}
   G B!
 
-{
-$06*
-{---------- Page 5 ----------}
-$0600:
-}
-
   {Draw the ball}
   50 X+ B=
   Y>? B>!
@@ -125,7 +122,6 @@ $0600:
   63 {White} B!
 
 $05*
-]
 
 {---------- End ----------}
 
