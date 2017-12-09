@@ -9,10 +9,15 @@ class Program:
     self.blocks, self.block = [0], 1
     self.loops = {} # block -> address of last do
     self.conds = {} # block -> address of continuation
+    self.vPC = 0
     self.org(address)
 
   def org(self, address):
     # Configure start address for emit
+    if self.vPC != address:
+      if self.vPC:
+        print '%04x' % self.vPC
+      print '%04x GCL' % address,
     self.vPC = address
     ld(val(address&0xff),regX)
     ld(val(address>>8),regY)
@@ -295,6 +300,7 @@ class Program:
 
   def end(self):
     # XXX Check all blocks are closed
+    print '%04x' % self.vPC
     if len(self.conds) > 0:
       self.error('Dangling if statements')
 

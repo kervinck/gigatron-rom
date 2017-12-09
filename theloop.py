@@ -16,6 +16,9 @@ from asm import *
 import gcl
 import font
 
+# Gigatron clock
+cpuClock = 6.250e+06
+
 # Output pin assignment for VGA
 R, G, B, hSync, vSync = 1, 4, 16, 64, 128
 syncBits = hSync+vSync # Both pulses negative
@@ -29,11 +32,11 @@ vFront = 10     # Vertical front porch
 vPulse = 2      # Vertical sync pulse
 vBack = 33      # Vertical back porch
 vgaLines = vFront + vPulse + vBack + 480
-vgaClock = 25.175e6
+vgaClock = 25.175e+06
 
 # Adjustments for our system:
 # 1. Get refresh rate back above minimum 59.94 Hz by cutting lines from vertical front porch
-vFrontAdjust = vgaLines - int(4 * 6.25e6 / vgaClock * vgaLines)
+vFrontAdjust = vgaLines - int(4 * cpuClock / vgaClock * vgaLines)
 vFront -= vFrontAdjust
 # 2. Extend vertical sync pulse so we can feed the game controller the same signal
 vPulseExtension = max(0, 8-vPulse)
@@ -105,18 +108,15 @@ blankY     = screenY # Counts down during vertical blank (44 to 0)
 videoSync0 = frameX  # Vertical sync type on current line (0xc0 or 0x40)
 videoSync1 = frameY  # Same during horizontal pulse
 
+# System clock
+frameCount = zpByte(1)
+
 # Generic function return address
 returnTo   = zpByte(2)
 
 # Two bytes of havested entropy
 # XXX Consider a larger entropy buffer
 entropy    = zpByte(2)
-
-#videoMode = zpByte()
-#time0     = zpByte() # 1/60 seconds
-#time1     = zpByte() # 1 seconds
-#time2     = zpByte() # 256 seconds (4 minutes)
-#time3     = zpByte() # 2^16 seconds (18 hours)
 
 # Play sound if non-zero, count down and stop sound when zero
 soundTimer = zpByte()
@@ -192,7 +192,7 @@ maxTicks = 28/2 # Duration of slowest virtual opcode (ADDW)
 vOverhead = 9 # Overhead of jumping in and out. Cycles, not ticks
 def runVcpu(n):
   """Run interpreter for exactly n cycles"""
-  print 'runVcpu %s cycles' % n
+  print '%04x runVcpu %s cycles' % (pc(), n)
   if n % 2 != (7 + vOverhead) % 2:
     nop()
     n -= 1
@@ -259,48 +259,48 @@ label('.countMem1')
 
 # Update LEDs (memory is present and counted, reset is stable)
 ld(val(0b0001))                 # Physical: [*ooo]
-ld(val(syncBits^hSync), regOUT)
-ld(val(syncBits), regOUT)
+ld(val(syncBits^hSync),regOUT)
+ld(val(syncBits),regOUT)
 
 # Scan the entire RAM space to collect entropy for a random number generator.
 # This loop also serves as a debouncing delay for the reset button, if present.
 # The 16-bit space is scanned, even if less RAM was detected.
 ld(val(0))
-st(d(zpFree+0), busAC|ea0DregX)
-st(d(zpFree+1), busAC|ea0DregY)
+st(d(zpFree+0),busAC|ea0DregX)
+st(d(zpFree+1),busAC|ea0DregY)
 label('.initEnt0')
 ldzp(d(entropy+0))
 bpl(d(lo('.initEnt1')))
 adda(busRAM|eaYXregAC)
-adda(val(191))
+xora(val(191))
 label('.initEnt1')
 st(d(entropy+0))
 ldzp(d(entropy+1))
 bpl(d(lo('.initEnt2')))
 adda(d(entropy+0),busRAM)
-adda(val(193))
+xora(val(193))
 label('.initEnt2')
 st(d(entropy+1))
 ldzp(d(zpFree+0))
 adda(val(1))
 bne(d(lo('.initEnt0')))
-st(d(zpFree+0), busAC|ea0DregX)
+st(d(zpFree+0),busAC|ea0DregX)
 ldzp(d(zpFree+1))
 adda(val(1))
 bne(d(lo('.initEnt0')))
-st(d(zpFree+1), busAC|ea0DregY)
+st(d(zpFree+1),busAC|ea0DregY)
 
 # Update LEDs (debounce)
 ld(val(0b0011))                  # Physical: [**oo]
-ld(val(syncBits^hSync), regOUT)
-ld(val(syncBits), regOUT)
+ld(val(syncBits^hSync),regOUT)
+ld(val(syncBits),regOUT)
 
 # Determine if this is a cold or a warm start. We do this by checking the
 # boot counter and comparing it to a simplistic checksum. The assumption
 # is that after a cold start the checksum is invalid.
 
 ldzp(d(bootCount))
-adda(d(bootCheck), busRAM)
+adda(d(bootCheck),busRAM)
 adda(d(0x5a))
 bne(d(lo('cold')))
 ld(val(0))
@@ -312,13 +312,17 @@ xora(val(255))
 suba(val(0x5a-1))
 st(d(bootCheck))
 
+# Init system timer
+ld(val(-1))
+st(d(frameCount))
+
 # Initialize scan table for default video layout
-ld(val(scanTablePage), regY)
-ld(val(0), regX)
+ld(val(scanTablePage),regY)
+ld(val(0),regX)
 ld(val(screenPages))
 st(eaYXregOUTIX)         # Yi  = 0x08+i
 label('.initVideo')
-st(val(0), eaYXregOUTIX) # dXi = 0
+st(val(0),eaYXregOUTIX)  # dXi = 0
 adda(val(1))
 bge(d(lo('.initVideo'))) # stops at $80
 st(eaYXregOUTIX)         # Yi  = 0x08+i
@@ -326,7 +330,7 @@ ld(d(lo('videoF')))
 st(d(videoDorF))
 
 # Init the shift2-right table for sound
-ld(val(shiftTablePage), regY)
+ld(val(shiftTablePage),regY)
 ld(val(0))
 st(d(channel))
 label('.loop')
@@ -351,28 +355,27 @@ st(d(ledTempo))
 # Setup a G-major chord to play
 G3, G4, B4, D5 = 824, 1648, 2064, 2464
 
-ld(val(1), regY) # Channel 1
-ld(val(keyL), regX)
-st(d(G3 & 0x7f), eaYXregOUTIX)
-st(d(G3 >> 7), eaYXregAC)
+ld(val(1),regY) # Channel 1
+ld(val(keyL),regX)
+st(d(G3 & 0x7f),eaYXregOUTIX)
+st(d(G3 >> 7),eaYXregAC)
 
-ld(val(2), regY) # Channel 2
-ld(val(keyL), regX)
-st(d(G4 & 0x7f), eaYXregOUTIX)
-st(d(G4 >> 7), eaYXregAC)
+ld(val(2),regY) # Channel 2
+ld(val(keyL),regX)
+st(d(G4&0x7f),eaYXregOUTIX)
+st(d(G4>>7),eaYXregAC)
 
-ld(val(3), regY) # Channel 3
-ld(val(keyL), regX)
-st(d(B4 & 0x7f), eaYXregOUTIX)
-st(d(B4 >> 7), eaYXregAC)
+ld(val(3),regY) # Channel 3
+ld(val(keyL),regX)
+st(d(B4&0x7f),eaYXregOUTIX)
+st(d(B4>>7),eaYXregAC)
 
-ld(val(4), regY) # Channel 4
-ld(val(keyL), regX)
-st(d(D5 & 0x7f), eaYXregOUTIX)
-st(d(D5 >> 7), eaYXregAC)
+ld(val(4),regY) # Channel 4
+ld(val(keyL),regX)
+st(d(D5&0x7f),eaYXregOUTIX)
+st(d(D5>>7),eaYXregAC)
 
-# 3 seconds opening sound
-ld(val(180))
+ld(val(0))
 st(d(soundTimer))
 
 # Setup serial input and derived button state
@@ -382,26 +385,26 @@ st(d(buttonState))
 
 # Update LEDs (low pages are initialized)
 ld(val(0b0111))                 # Physical: [***o]
-ld(val(syncBits^hSync), regOUT)
-ld(val(syncBits), regOUT)
+ld(val(syncBits^hSync),regOUT)
+ld(val(syncBits),regOUT)
 
 # Setup vCPU (and subroutine test)
 ld(val(lo('.retn')))
 st(d(returnTo+0))
 ld(val(hi('.retn')))
-ld(d(hi('initVcpu')), regY)
+ld(d(hi('initVcpu')),regY)
 jmpy(d(lo('initVcpu')))
 st(d(returnTo+1))
 label('.retn')
 
 # Update LEDs (subroutines are working)
 ld(val(0b1111))                 # Physical: [****]
-ld(val(syncBits^hSync), regOUT)
-ld(val(syncBits), regOUT)
+ld(val(syncBits^hSync),regOUT)
+ld(val(syncBits),regOUT)
 st(d(xoutMask)) # Setup for control by video loop
 st(d(xout))
 
-ld(d(hi('videoLoop')), busD|ea0DregY)
+ld(d(hi('videoLoop')),busD|ea0DregY)
 jmpy(d(lo('videoLoop')))
 ld(val(syncBits))
 
@@ -422,7 +425,11 @@ st(d(0x00), ea0DregAC|busD)     #35
 ld(val(0x01))                   #36
 st(d(0x80), ea0DregAC|busAC)    #37
 
-# --- Uptime clock
+# --- Uptime frame count
+
+ldzp(d(frameCount))             #38
+adda(val(1))                    #39
+st(d(frameCount))               #40
 
 # XXX TODO...
 
@@ -439,9 +446,9 @@ if soundDiscontinuity == 1:
 if soundDiscontinuity > 1:
   print "Warning: sound discontinuity not supressed"
 
-extra+=11
+extra+=11 # for sound on/off and sound timer hack below. XXX solve properly
 
-runVcpu(179-38-extra)           #38 # Application cycles (scanline 0)
+runVcpu(179-41-extra)           #41 # Application cycles (scanline 0)
 
 # --- LED sequencer (19 cycles)
 
@@ -551,7 +558,7 @@ st(d(oscH), busAC|eaYDregAC)    #14
 nop()                           #15 Was: xora [y,wavX]
 nop()                           #16 Was: adda [y,wavA]
 anda(val(0b11111100),regX)      #17
-ld(d(shiftTablePage), regY)     #18
+ld(d(shiftTablePage),regY)      #18
 ld(busRAM|eaYXregAC)            #19
 adda(d(sample), busRAM|ea0DregAC)#20
 st(d(sample))                   #21
@@ -710,7 +717,7 @@ st(d(oscH), busAC|eaYDregAC)    #14
 nop()                           #15 Was: xora [y,wavX]
 nop()                           #16 Was: adda [y,wavA]
 anda(val(0xfc),regX)            #17
-ld(d(shiftTablePage), regY)     #18
+ld(d(shiftTablePage),regY)      #18
 ld(busRAM|eaYXregAC)            #19
 adda(d(sample), busRAM|ea0DregAC)#20
 st(d(sample))                   #21
@@ -1107,6 +1114,7 @@ bra(d(lo('NEXT')))              #26
 ld(val(-28/2))                  #27
 
 # Instruction SUBW: Word subtraction with zero page (AC-=[D]+256*[D+1]), 28 cycles
+# All cases can be done in 26 cycles, but the code will become much larger
 label('SUBW')
 ld(busAC,regX)                  #10 Address of low byte to be subtracted
 adda(val(1))                    #11
@@ -1149,7 +1157,7 @@ ld(d(vPC+1),busRAM|regY)        #21
 bra(d(lo('NEXT')))              #22
 ld(val(-24/2))                  #23
 
-# Instruction POKE ([[D+1],[D]] = ACL), 22 cycles
+# Instruction POKE ([[D+1],[D]]=ACL), 22 cycles
 label('POKE')
 st(d(vTmp))                     #10
 adda(val(1),regX)               #11
@@ -1164,7 +1172,7 @@ ld(d(vPC+1),busRAM|regY)        #19
 bra(d(lo('NEXT')))              #20
 ld(val(-22/2))                  #21
 
-# Instruction LOOKUP, 28 cycles
+# Instruction LOOKUP, (AC=ROM[[AC]]), 28 cycles
 label('LOOKUP')
 st(d(vTmp))                     #10
 adda(val(1),regX)               #11
@@ -1182,12 +1190,12 @@ ld(val(-28/2))                  #27
 
 # Instruction GOTO, (PC=256*D+254), 16 cycles
 label('GOTO')
-st(d(vPC+1))                    #10
-ld(val(0xfe))                   #11
+st(d(vPC+1),busAC|regY)         #10
+ld(val(-2))                     #11
 st(d(vPC))                      #12
-nop()                           #13
+ld(val(-16/2))                  #13
 bra(d(lo('NEXT')))              #14
-ld(val(-16/2))                  #15
+nop()                           #15
 
 #init_rng(s1,s2,s3) //Can also be used to seed the rng with more entropy during use.
 #{
