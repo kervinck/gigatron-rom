@@ -5,7 +5,9 @@ from os.path import basename, splitext
 from sys import argv
 
 # Module variables because I don't feel like making a class
-_romSize, _maxRomSize, _zpSize, _symbols, _refsL, _refsH = 0, 0, 1, {}, [], []
+_romSize, _maxRomSize, _zpSize = 0, 0, 1
+_symbols, _refsL, _refsH = {}, [], []
+_labels = {} # Inverse of _symbols, but only when made with label(). For disassembler
 _rom0, _rom1 = [], []
 
 # Bus access
@@ -117,7 +119,11 @@ def _hexString(val):
   return '$%02x' % val
 
 def label(name):
-  define(name, _romSize)
+  address = _romSize
+  define(name, address)
+  if address not in _labels:
+    _labels[address] = [] # There can be more than one
+  _labels[_romSize].append(name)
 
 def define(name, value):
   global _symbols
@@ -133,7 +139,7 @@ def hi(name):
   _refsH.append((name, _romSize))
   return 0 # placeholder
 
-def disassemble(opcode, operand):
+def disassemble(opcode, operand, address=None):
   text = _mnemonics[opcode >> 5] # (74LS155)
   isStore = (opcode & 0xe0) == _opST
 
@@ -166,6 +172,16 @@ def disassemble(opcode, operand):
     if opcode & _maskCc == jGE: text = 'bge  '
     if opcode & _maskCc == jLT: text = 'blt  '
     if opcode & _maskCc == jLE: text = 'ble  '
+    if address is not None and opcode & _maskCc != jL and opcode & _maskBus == busD:
+      # We can calculate the destination address
+      lo, hi = address&255, address>>8
+      if lo == 255: # When branching from $xxFF, we still end up in the next page
+        hi = (hi + 1) & 255
+      destination = (hi << 8) + operand
+      if destination in _labels:
+        bus = _labels[destination][-1]
+      else:
+        bus = '$%04x' % destination
     text += bus
   else:
     # Compose string
@@ -309,36 +325,42 @@ def end():
   filename = stem + '.asm'
   print 'Creating:', filename
   with open(filename, 'w') as file:
-    file.write('address\n'
-               '|    encoding\n'
-               '|    |     instruction\n'
-               '|    |     |    operands\n'
-               '|    |     |    |\n'
-               'V    V     V    V\n')
+    file.write('              address\n'
+               '              |    encoding\n'
+               '              |    |     instruction\n'
+               '              |    |     |    operands\n'
+               '              |    |     |    |\n'
+               '              V    V     V    V\n')
     address = 0
     repeats, previous, postponed = 0, None, None
     maxRepeat = 3
-    for instruction in zip(_rom0, _rom1):
 
-      if instruction != previous:
+    for instruction in zip(_rom0, _rom1):
+      # Check if there is a label defined for this address
+      label = _labels[address][-1] + ':' if address in _labels else ''
+
+      if instruction != previous or label:
         repeats, previous = 0, instruction
         if postponed:
           file.write(postponed)
           postponed = None
+        if label:
+          for extra in _labels[address][:-1]:
+            file.write(extra+':\n') # Extra labels get their own line
       else:
         repeats += 1
 
       if repeats <= maxRepeat:
         opcode, operand = instruction
-        disassembly = disassemble(opcode, operand)
-        line = '%04x %02x%02x  %s\n' % (address, opcode, operand, disassembly)
+        disassembly = disassemble(opcode, operand, address)
+        line = '%-13s %04x %02x%02x  %s\n' % (label, address, opcode, operand, disassembly)
 
       if repeats < maxRepeat:
         file.write(line) # always write first N
       if repeats == maxRepeat:
         postponed = line # if this turns out to  be the last repeat, emit the line
       if repeats > maxRepeat: # now it makes sense to abbreviate the output
-        postponed = '* %d times\n' % (1+repeats)
+        postponed = 14*' '+'* %d times\n' % (1+repeats)
 
       address += 1
 
