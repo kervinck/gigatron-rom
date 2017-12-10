@@ -8,6 +8,7 @@ from sys import argv
 _romSize, _maxRomSize, _zpSize = 0, 0, 1
 _symbols, _refsL, _refsH = {}, [], []
 _labels = {} # Inverse of _symbols, but only when made with label(). For disassembler
+_comments = {}
 _rom0, _rom1 = [], []
 
 # Bus access
@@ -124,6 +125,15 @@ def label(name):
   if address not in _labels:
     _labels[address] = [] # There can be more than one
   _labels[_romSize].append(name)
+
+def C(line):
+  """Insert comment to print in disassembly"""
+  if line:
+    address = max(0, _romSize-1)
+    if address not in _comments:
+      _comments[address] = []
+    _comments[address].append(line)
+  return None
 
 def define(name, value):
   global _symbols
@@ -265,15 +275,18 @@ def align(n, chunkSize=0x10000):
   _maxRomSize = min(_maxRomSize, _romSize + chunkSize)
 
 def wait(n):
+  comment = 'Wait %s cycle%s' % (n, '' if n==1 else 's')
   assert n >= 0
   if n > 4:
     n -= 1
     ld(val(n/2 - 1))
+    comment = C(comment)
     bne(d(_romSize & 255))
     suba(val(1))
     n = n % 2 
   while n > 0:
     nop()
+    comment = C(comment)
     n -= 1
 
 def pc():
@@ -338,8 +351,9 @@ def end():
     for instruction in zip(_rom0, _rom1):
       # Check if there is a label defined for this address
       label = _labels[address][-1] + ':' if address in _labels else ''
+      comment = _comments[address][0] if address in _comments else ''
 
-      if instruction != previous or label:
+      if instruction != previous or label or comment:
         repeats, previous = 0, instruction
         if postponed:
           file.write(postponed)
@@ -353,10 +367,16 @@ def end():
       if repeats <= maxRepeat:
         opcode, operand = instruction
         disassembly = disassemble(opcode, operand, address)
-        line = '%-13s %04x %02x%02x  %s\n' % (label, address, opcode, operand, disassembly)
+        if comment:
+          line = '%-13s %04x %02x%02x  %-16s ;%s\n' % (label, address, opcode, operand, disassembly, comment)
+        else:
+          line = '%-13s %04x %02x%02x  %s\n' % (label, address, opcode, operand, disassembly)
 
       if repeats < maxRepeat:
         file.write(line) # always write first N
+        if comment:
+          for extra in _comments[address][1:]:
+            file.write(42*' ' + ';%s\n' % extra)
       if repeats == maxRepeat:
         postponed = line # if this turns out to  be the last repeat, emit the line
       if repeats > maxRepeat: # now it makes sense to abbreviate the output
@@ -366,7 +386,7 @@ def end():
 
     if postponed:
       file.write(postponed)
-    file.write('%04x\n' % address)
+    file.write(14*' '+'%04x\n' % address)
     assert(len(_rom0) == _romSize)
     assert(len(_rom1) == _romSize)
 

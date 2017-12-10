@@ -143,12 +143,12 @@ videoLoop:    0100 c209  st   [$09]
               0107 8001  adda $01
               0108 c20d  st   [$0d]
               0109 c003  st   $03,[$03]
-              010a 0011  ld   $11
+              010a 0011  ld   $11         ;Run vCPU for 126 cycles
               010b c20e  st   [$0e]
               010c 0001  ld   $01
               010d c20f  st   [$0f]
               010e 1404  ld   $04,y
-              010f e000  jmp  y,$00
+              010f e000  jmp  y,$00       ;ENTER
               0110 0029  ld   $29
               0111 0113  ld   [$13]
               0112 ec38  bne  .leds4
@@ -189,7 +189,7 @@ videoLoop:    0100 c209  st   [$09]
               0135 c214  st   [$14]
               0136 fc3e  bra  .leds5
               0137 0115  ld   [$15]
-.leds4:       0138 0003  ld   $03
+.leds4:       0138 0003  ld   $03         ;Wait 10 cycles
               0139 ec39  bne  $0139
               013a a001  suba $01
               013b 0200  nop
@@ -236,7 +236,7 @@ sound1:       0152 0102  ld   [$02]
               0164 0d00  ld   [y,x]
               0165 8103  adda [$03]
               0166 c203  st   [$03]
-              0167 0200  nop
+              0167 0200  nop              ;Wait 4 cycles
               0168 0200  nop
               0169 0200  nop
               016a 0200  nop
@@ -275,21 +275,21 @@ vSync3:       017e 6040  xora $40
               018b 2107  anda [$07]
               018c c206  st   [$06]
               018d c003  st   $03,[$03]
-              018e 0095  ld   $95
+              018e 0095  ld   $95         ;Run vCPU for 144 cycles
               018f c20e  st   [$0e]
               0190 0001  ld   $01
               0191 c20f  st   [$0f]
               0192 1404  ld   $04,y
-              0193 e000  jmp  y,$00
+              0193 e000  jmp  y,$00       ;ENTER
               0194 0032  ld   $32
               0195 fc52  bra  sound1
               0196 1909  ld   [$09],out
-vBlankNormal: 0197 009e  ld   $9e
+vBlankNormal: 0197 009e  ld   $9e         ;Run vCPU for 148 cycles
               0198 c20e  st   [$0e]
               0199 0001  ld   $01
               019a c20f  st   [$0f]
               019b 1404  ld   $04,y
-              019c e000  jmp  y,$00
+              019c e000  jmp  y,$00       ;ENTER
               019d 0034  ld   $34
               019e fc52  bra  sound1
               019f 1909  ld   [$09],out
@@ -311,13 +311,13 @@ vBlankLast1:  01a3 0116  ld   [$16]
 .sel0:        01af 002c  ld   $2c
 .sel1:        01b0 610c  xora [$0c]
               01b1 c20c  st   [$0c]
-              01b2 0200  nop
+              01b2 0200  nop              ;Run vCPU for 151 cycles
               01b3 00ba  ld   $ba
               01b4 c20e  st   [$0e]
               01b5 0001  ld   $01
               01b6 c20f  st   [$0f]
               01b7 1404  ld   $04,y
-              01b8 e000  jmp  y,$00
+              01b8 e000  jmp  y,$00       ;ENTER
               01b9 0035  ld   $35
               01ba 0102  ld   [$02]
               01bb 2003  anda $03
@@ -367,7 +367,7 @@ sound2:       02b0 d602  st   [$02],y
               02be 0d00  ld   [y,x]
               02bf 8103  adda [$03]
               02c0 c203  st   [$03]
-              02c1 0200  nop
+              02c1 0200  nop              ;Wait 4 cycles
               02c2 0200  nop
               02c3 0200  nop
               02c4 0200  nop
@@ -407,7 +407,7 @@ videoD:       02de 1109  ld   [$09],x
               02e6 c20b  st   [$0b]
               02e7 fc0b  bra  pixels
               02e8 00c0  ld   $c0
-last:         02e9 0200  nop
+last:         02e9 0200  nop              ;Wait 2 cycles
               02ea 0200  nop
               02eb 00ef  ld   $ef
               02ec c20b  st   [$0b]
@@ -425,13 +425,13 @@ videoF:       02f2 0108  ld   [$08]
 notlast:      02f8 c208  st   [$08]
               02f9 0000  ld   $00
 .join:        02fa c20b  st   [$0b]
-              02fb 0200  nop
+              02fb 0200  nop              ;Run vCPU for 163 cycles
               02fc 0003  ld   $03
               02fd c20e  st   [$0e]
               02fe 0003  ld   $03
               02ff c20f  st   [$0f]
               0300 1404  ld   $04,y
-              0301 e000  jmp  y,$00
+              0301 e000  jmp  y,$00       ;ENTER
               0302 003b  ld   $3b
               0303 1402  ld   $02,y
               0304 e0ad  jmp  y,$ad
@@ -1289,4 +1289,4 @@ initVcpu:     0600 1000  ld   $00,x
               07ae 150f  ld   [$0f],y
               07af e10e  jmp  y,[$0e]
               07b0 0200  nop
-07b1
+              07b1

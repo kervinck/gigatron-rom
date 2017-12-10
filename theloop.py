@@ -1,14 +1,27 @@
 #!/usr/bin/env python
 #-----------------------------------------------------------------------
 #
-#  Core video, sound and interpreter loop for Gigatron TTL color computer
+#  Core video, sound and interpreter loop for Gigatron TTL microcomputer
 #  - 6.25MHz clock
 #  - Rendering 160x120 pixels at 6.25MHz with flexible videoline programming
 #  - Must stay above 31 kHz horizontal sync --> 200 cycles/scanline
 #  - Must stay above 59.94 Hz vertical sync --> 521 scanlines/frame
 #  - 4 channels sound
 #  - vCPU interpreter
-#  TODO: add date/time clock
+#
+#  TODO:
+#  XXX: GOTO/PUSHW/PULLW for subroutines
+#  XXX: SYS for accelerated functions 
+#  XXX: ADDI/SUBI with carry
+#  XXX: Readability of asm.py instructions
+#  XXX: Multitasking (start with date/time clock in GCL)
+#  XXX: Music sequencer
+#  XXX: Simple RNG updated every 4 scanlines
+#  XXX: More waveforms
+#  XXX: Decay, using Karplus-Strong
+#  XXX: Mix controller input with entropy
+#  XXX: Loading of programs over controller port and Arduino/Trinket
+#  XXX: Better shift-table
 #
 #-----------------------------------------------------------------------
 
@@ -115,7 +128,6 @@ frameCount = zpByte(1)
 returnTo   = zpByte(2)
 
 # Two bytes of havested entropy
-# XXX Consider a larger entropy buffer
 entropy    = zpByte(2)
 
 # Play sound if non-zero, count down and stop sound when zero
@@ -192,19 +204,23 @@ vOverhead = 9 # Overhead of jumping in and out. Cycles, not ticks
 def runVcpu(n):
   """Run interpreter for exactly n cycles"""
   print '%04x runVcpu %s cycles' % (pc(), n)
+  comment = 'Run vCPU for %s cycles' % n
   if n % 2 != (7 + vOverhead) % 2:
     nop()
+    comment = C(comment)
     n -= 1
   n -= 7 + 2*maxTicks + vOverhead
   assert n >= 0 and n % 2 == 0
   n /= 2
   returnPc = pc() + 7
   ld(val(returnPc&255))         #0
+  comment = C(comment)
   st(d(returnTo))               #1
   ld(val(returnPc>>8))          #2
   st(d(returnTo+1))             #3
   ld(val(hi('ENTER')),regY)     #4
   jmpy(d(lo('ENTER')))          #5
+  C('ENTER')
   ld(val(n))                    #6
 
 #-----------------------------------------------------------------------
@@ -1231,7 +1247,7 @@ for ch in range(32, 64): # XXX do full font
 while pc()&255 < 256-5:
   nop()
 
-bra(busAC)                    #17
+bra(busAC);                   #17
 bra(val(253))                 #18
 ld(d(hi('.lookup0')),regY)    #20
 jmpy(d(lo('.lookup0')))       #21
@@ -1248,7 +1264,6 @@ align(0x100)
 label('initVcpu')
 
 # Compile test GCL program
-# XXX load applications from ROM instead
 program = gcl.Program(bStart)
 for line in open('game.gcl').readlines():
   program.line(line)
