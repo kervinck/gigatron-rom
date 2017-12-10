@@ -286,7 +286,6 @@ def wait(n):
     n = n % 2 
   while n > 0:
     nop()
-    comment = C(comment)
     n -= 1
 
 def pc():

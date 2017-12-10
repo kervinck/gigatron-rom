@@ -41,21 +41,24 @@ syncBits = hSync+vSync # Both pulses negative
 # The loop can therefore not be agnostic to the horizontal pulse polarity.
 assert(syncBits & hSync != 0)
 
-# VGA defaults
+# VGA 640x480 defaults (to be adjusted below!)
 vFront = 10     # Vertical front porch
 vPulse = 2      # Vertical sync pulse
 vBack = 33      # Vertical back porch
 vgaLines = vFront + vPulse + vBack + 480
 vgaClock = 25.175e+06
 
-# Adjustments for our system:
-# 1. Get refresh rate back above minimum 59.94 Hz by cutting lines from vertical front porch
+# Video adjustments for Gigatron
+# 1. Our clock is (slighty) slower than 1/4th VGA clock. Not all monitors will accept
+#    the decreased frame rate, so we restore the frame rate to above minimum 59.94 Hz
+#    by cutting some lines from the vertical front porch.
 vFrontAdjust = vgaLines - int(4 * cpuClock / vgaClock * vgaLines)
 vFront -= vFrontAdjust
-# 2. Extend vertical sync pulse so we can feed the game controller the same signal
+# 2. Extend vertical sync pulse so we can feed the game controller the same signal.
+#    This is needed for controllers based on the 4021 instead of 74165
 vPulseExtension = max(0, 8-vPulse)
 vPulse += vPulseExtension
-# 3. Borrow these lines from the back porch so the refresh rate is unaffected
+# 3. Borrow these lines from the back porch so the refresh rate remains unaffected
 vBack -= vPulseExtension
 
 # Game controller bits
@@ -233,12 +236,12 @@ def runVcpu(n):
 align(0x100, 0x100)
 
 # Give a first sign of life that can be checked with a voltmeter
-ld(val(0b0000))                 # Physical: [oooo]
+ld(val(0b0000));                C('LEDs |OOOO|')
 ld(val(syncBits^hSync), regOUT) # Prepare XOUT update, hSync goes down, RGB to black
 ld(val(syncBits), regOUT)       # hSync goes up, updating XOUT
 
 # Simple RAM test and size check by writing to [1<<n] and see if [0] changes.
-ld(val(1))
+ld(val(1));                     C('RAM test and count')
 label('.countMem0')
 st(d(memSize), busAC|ea0DregY)
 ld(val(255))
@@ -274,14 +277,14 @@ label('.countMem1')
 #suba(val(1))
 
 # Update LEDs (memory is present and counted, reset is stable)
-ld(val(0b0001))                 # Physical: [*ooo]
+ld(val(0b0001));                C('LEDs |*OOO|')
 ld(val(syncBits^hSync),regOUT)
 ld(val(syncBits),regOUT)
 
 # Scan the entire RAM space to collect entropy for a random number generator.
 # This loop also serves as a debouncing delay for the reset button, if present.
 # The 16-bit space is scanned, even if less RAM was detected.
-ld(val(0))
+ld(val(0));                     C('Collect entropy and debounce')
 st(d(zpFree+0),busAC|ea0DregX)
 st(d(zpFree+1),busAC|ea0DregY)
 label('.initEnt0')
@@ -307,7 +310,7 @@ bne(d(lo('.initEnt0')))
 st(d(zpFree+1),busAC|ea0DregY)
 
 # Update LEDs (debounce)
-ld(val(0b0011))                  # Physical: [**oo]
+ld(val(0b0011));                 C('LEDs |**OO|')
 ld(val(syncBits^hSync),regOUT)
 ld(val(syncBits),regOUT)
 
@@ -315,11 +318,12 @@ ld(val(syncBits),regOUT)
 # boot counter and comparing it to a simplistic checksum. The assumption
 # is that after a cold start the checksum is invalid.
 
-ldzp(d(bootCount))
+ldzp(d(bootCount));             C('Cold or warm boot?')
 adda(d(bootCheck),busRAM)
 adda(d(0x5a))
 bne(d(lo('cold')))
 ld(val(0))
+label('warm')
 ldzp(d(bootCount))              # if warm start: bootCount += 1
 adda(val(1))
 label('cold')
@@ -329,11 +333,11 @@ suba(val(0x5a-1))
 st(d(bootCheck))
 
 # Init system timer
-ld(val(-1))
+ld(val(-1));                    C('Setup system timer')
 st(d(frameCount))
 
 # Initialize scan table for default video layout
-ld(val(scanTablePage),regY)
+ld(val(scanTablePage),regY);    C('Setup video scan table')
 ld(val(0),regX)
 ld(val(screenPages))
 st(eaYXregOUTIX)         # Yi  = 0x08+i
@@ -346,7 +350,7 @@ ld(d(lo('videoF')))
 st(d(videoDorF))
 
 # Init the shift2-right table for sound
-ld(val(shiftTablePage),regY)
+ld(val(shiftTablePage),regY);   C('Setup shift2 table')
 ld(val(0))
 st(d(channel))
 label('.loop')
@@ -361,7 +365,7 @@ bne(d(lo('.loop')))
 xora(val(0x40))
 
 # Init LED sequencer
-ld(val(120))
+ld(val(120));                   C('Setup LED sequencer')
 st(d(ledTimer))
 ld(val(0))
 st(d(ledState))
@@ -371,41 +375,38 @@ st(d(ledTempo))
 # Setup a G-major chord to play
 G3, G4, B4, D5 = 824, 1648, 2064, 2464
 
-ld(val(1),regY) # Channel 1
+ld(val(1),regY);                C('Setup channel 1')
 ld(val(keyL),regX)
 st(d(G3 & 0x7f),eaYXregOUTIX)
 st(d(G3 >> 7),eaYXregAC)
 
-ld(val(2),regY) # Channel 2
+ld(val(2),regY);                C('Setup channel 2')
 ld(val(keyL),regX)
 st(d(G4&0x7f),eaYXregOUTIX)
 st(d(G4>>7),eaYXregAC)
 
-ld(val(3),regY) # Channel 3
+ld(val(3),regY);                C('Setup channel 3')
 ld(val(keyL),regX)
 st(d(B4&0x7f),eaYXregOUTIX)
 st(d(B4>>7),eaYXregAC)
 
-ld(val(4),regY) # Channel 4
+ld(val(4),regY);                C('Setup channel 4')
 ld(val(keyL),regX)
 st(d(D5&0x7f),eaYXregOUTIX)
 st(d(D5>>7),eaYXregAC)
 
-ld(val(0))
+ld(val(0));                     C('Setup sound timer')
 st(d(soundTimer))
 
-# Setup serial input and derived button state
-ld(val(-1))
+ld(val(-1));                    C('Setup serial input')
 st(d(serialInput))
 st(d(buttonState))
 
-# Update LEDs (low pages are initialized)
-ld(val(0b0111))                 # Physical: [***o]
+ld(val(0b0111));                C('LEDs |***O|')
 ld(val(syncBits^hSync),regOUT)
 ld(val(syncBits),regOUT)
 
-# Setup vCPU (and subroutine test)
-ld(val(lo('.retn')))
+ld(val(lo('.retn')));           C('Bootstrap vCPU')
 st(d(returnTo+0))
 ld(val(hi('.retn')))
 ld(d(hi('initVcpu')),regY)
@@ -413,14 +414,13 @@ jmpy(d(lo('initVcpu')))
 st(d(returnTo+1))
 label('.retn')
 
-# Update LEDs (subroutines are working)
-ld(val(0b1111))                 # Physical: [****]
+ld(val(0b1111));                C('LEDs |****|')
 ld(val(syncBits^hSync),regOUT)
 ld(val(syncBits),regOUT)
 st(d(xoutMask)) # Setup for control by video loop
 st(d(xout))
 
-ld(d(hi('videoLoop')),busD|ea0DregY)
+ld(d(hi('videoLoop')),busD|ea0DregY);C('Enter video loop')
 jmpy(d(lo('videoLoop')))
 ld(val(syncBits))
 
@@ -433,6 +433,7 @@ align(0x100, 0x100)
 label('videoLoop')              # Enter vertical blank
 
 st(d(videoSync0))               #32
+C('Start vertical blank interval')
 ld(val(syncBits^hSync))         #33
 st(d(videoSync1))               #34
 
@@ -477,30 +478,31 @@ bra(busAC)                      #183
 bra(d(lo('.leds1')))            #184
 
 label('.leds0')
-ld(d(0b1111))                   #185
-ld(d(0b0111))                   #185
-ld(d(0b0011))                   #185
-ld(d(0b0001))                   #185
-ld(d(0b0010))                   #185
-ld(d(0b0100))                   #185
-ld(d(0b1000))                   #185
-ld(d(0b0100))                   #185
-ld(d(0b0010))                   #185
-ld(d(0b0001))                   #185
-ld(d(0b0011))                   #185
-ld(d(0b0111))                   #185
-ld(d(0b1111))                   #185
-ld(d(0b1110))                   #185
-ld(d(0b1100))                   #185
-ld(d(0b1000))                   #185
-ld(d(0b0100))                   #185
-ld(d(0b0010))                   #185
-ld(d(0b0001))                   #185
-ld(d(0b0010))                   #185
-ld(d(0b0100))                   #185
-ld(d(0b1000))                   #185
-ld(d(0b1100))                   #185
+ld(d(0b1111));C('LEDs |****|')  #185
+ld(d(0b0111));C('LEDs |***O|')  #185
+ld(d(0b0011));C('LEDs |**OO|')  #185
+ld(d(0b0001));C('LEDs |*OOO|')  #185
+ld(d(0b0010));C('LEDs |O*OO|')  #185
+ld(d(0b0100));C('LEDs |OO*O|')  #185
+ld(d(0b1000));C('LEDs |OOO*|')  #185
+ld(d(0b0100));C('LEDs |OO*O|')  #185
+ld(d(0b0010));C('LEDs |O*OO|')  #185
+ld(d(0b0001));C('LEDs |*OOO|')  #185
+ld(d(0b0011));C('LEDs |**OO|')  #185
+ld(d(0b0111));C('LEDs |***O|')  #185
+ld(d(0b1111));C('LEDs |****|')  #185
+ld(d(0b1110));C('LEDs |O***|')  #185
+ld(d(0b1100));C('LEDs |OO**|')  #185
+ld(d(0b1000));C('LEDs |OOO*|')  #185
+ld(d(0b0100));C('LEDs |OO*O|')  #185
+ld(d(0b0010));C('LEDs |O*OO|')  #185
+ld(d(0b0001));C('LEDs |*OOO|')  #185
+ld(d(0b0010));C('LEDs |O*OO|')  #185
+ld(d(0b0100));C('LEDs |OO*O|')  #185
+ld(d(0b1000));C('LEDs |OOO*|')  #185
+ld(d(0b1100));C('LEDs |OO**|')  #185
 ld(d(0b1110+128))               #185
+C('LEDs |O***|')
 
 label('.leds1')
 st(d(xoutMask))                 #186 Temporarily park new state here
@@ -554,15 +556,15 @@ st(d(soundTimer))
 
 ld(val(vFront+vPulse+vBack-2))  #198 `-2' because first and last are different
 st(d(blankY))                   #199
-ld(d(videoSync0), busRAM|regOUT)#0
+ld(d(videoSync0), busRAM|regOUT);C('New scanline')#0
 
 label('sound1')
-ldzp(d(channel))                #1 Advance to next sound channel
+ldzp(d(channel));               C('Advance to next sound channel')#1
 anda(val(3))                    #2
 adda(val(1))                    #3
-ld(d(videoSync1), busRAM|regOUT)#4 Start horizontal pulse
+ld(d(videoSync1), busRAM|regOUT);C('Start horizontal pulse')#4
 st(d(channel), busAC|ea0DregY)  #5
-ld(val(0x7f))                   #6
+ld(val(0x7f))                   ;C('Update sound channel')#6
 anda(d(oscL), busRAM|eaYDregAC) #7
 adda(d(keyL), busRAM|eaYDregAC) #8
 st(d(oscL), busAC|eaYDregAC)    #9
@@ -581,7 +583,7 @@ st(d(sample))                   #21
 wait(26-22)                     #22
 ldzp(d(xout))                   #26
 nop()                           #27
-ld(d(videoSync0), busRAM|regOUT)#28 End horizontal pulse
+ld(d(videoSync0), busRAM|regOUT);C('End horizontal pulse')#28
 
 # Count down the vertical blank interval until its last scan line
 ldzp(d(blankY))                 #29
@@ -610,7 +612,7 @@ xora(d(hSync))                  #40 Precompute, as during the pulse there is no 
 st(d(videoSync1))               #41
 
 # Capture the serial input
-ldzp(d(blankY))                 #42
+ldzp(d(blankY));                C('Capture serial input')#42
 xora(val(vBack-1-1))            #43 Exactly when the 74HC595 has captured all 8 controller bits
 bne(d(lo('.ser0')))             #44
 bra(d(lo('.ser1')))             #45
@@ -625,19 +627,20 @@ ldzp(d(blankY))                 #47
 anda(d(3))                      #48
 bne(d(lo('vBlankNormal')))      #49
 ldzp(d(sample))                 #50
-ora(d(0x0f))                    #51
+label('vBlankSample')
+ora(d(0x0f));                   C('New sound sample is ready')#51
 anda(d(xoutMask),busRAM|ea0DregAC)#52
 st(d(xout))                     #53
-st(val(sample), ea0DregAC|busD) #54 Reset for next sample
+st(val(sample), ea0DregAC|busD); C('Reset for next sample')#54
 
 runVcpu(199-55)                 #55 Appplication cycles (scanline 1-43 with sample update)
 bra(d(lo('sound1')))            #199
-ld(d(videoSync0), busRAM|regOUT)#0 Ends the vertical blank pulse at the right cycle
+ld(d(videoSync0), busRAM|regOUT);C('New scanline')#0 Ends the vertical blank pulse at the right cycle
 
 label('vBlankNormal')
 runVcpu(199-51)                 #51 Application cycles (scanline 1-43 without sample update)
 bra(d(lo('sound1')))            #199
-ld(d(videoSync0), busRAM|regOUT)#0 Ends the vertical blank pulse at the right cycle
+ld(d(videoSync0), busRAM|regOUT);C('New scanline')#0 Ends the vertical blank pulse at the right cycle
 
 # Last blank line before transfering to visible area
 label('vBlankLast0')
@@ -673,7 +676,7 @@ st(d(videoDorF))                #47
 
 runVcpu(199-48)                 #48 Application cycles (scanline 44)
 ldzp(d(channel))                #199 Advance to next sound channel
-anda(val(3))                    #0
+anda(val(3));C('New scanline')  #0
 adda(val(1))                    #1
 ld(d(hi('sound2')), busD|ea0DregY)#2
 jmpy(d(lo('sound2')))           #3
@@ -709,14 +712,15 @@ ld(val(syncBits))               #39
 label('pixels')
 for i in range(160):           
   ora(eaYXregOUTIX, busRAM)     #40-199
-ld(val(syncBits), regOUT)       #0 Back to black
+  if i==0: C('Pixel burst')
+ld(val(syncBits), regOUT);C('New scanline')#0 Back to black
 
 # Front porch
-ldzp(d(channel))                #1 Advance to next sound channel
+ldzp(d(channel));C('Advance to next sound channel')#1
 label('soundF')
 anda(val(3))                    #2
 adda(val(1))                    #3
-ld(val(syncBits^hSync), regOUT) #4 Start horizontal pulse
+ld(val(syncBits^hSync), regOUT);C('Start horizontal pulse')#4
 
 # Horizontal sync
 label('sound2')
@@ -740,7 +744,7 @@ st(d(sample))                   #21
 wait(26-22)                     #22
 ldzp(d(xout))                   #26
 bra(d(nextVideo) | busRAM)      #27
-ld(val(syncBits), regOUT)       #28 End horizontal pulse
+ld(val(syncBits), regOUT);      C('End horizontal pulse')#28
 
 # Back porch B: second of 4 repeated scanlines
 # - Recompute Xi from dXi and store for retrieval in the next scanlines
@@ -760,12 +764,12 @@ ld(val(syncBits))               #39
 # Back porch C: third of 4 repeated scanlines
 # - Nothing new to do, Yi and Xi are known
 label('videoC')
-ldzp(d(sample))                 #29 First something that didn't fit in the audio loop
+ldzp(d(sample));                C('New sound sample is ready')#29 First something that didn't fit in the audio loop
 ora(d(0x0f))                    #30
 anda(d(xoutMask),busRAM|ea0DregAC)#31
 st(d(xout))                     #32 Update [xout] with new sample (4 channels just updated)
-st(val(sample),ea0DregAC|busD)  #33 Reset for next sample
-ldzp(d(videoDorF))              #34 Now back to video business
+st(val(sample),ea0DregAC|busD); C('Reset for next sample')#33 Reset for next sample
+ldzp(d(videoDorF));             C('Mode for scanline 4')#34 Now back to video business
 st(d(nextVideo))                #35
 ld(d(frameX),busRAM|regX)       #36
 ld(d(frameY),busRAM|regY)       #37
@@ -816,7 +820,7 @@ label('.join')
 st(d(nextVideo))                #35
 runVcpu(199-36)                 #36 Application (every 4th of scanlines 45-524)
 ld(d(hi('soundF')), busD|ea0DregY)#199
-jmpy(d(lo('soundF')))           #0
+jmpy(d(lo('soundF')));C('New scanline')#0
 ldzp(d(channel))                #1 Advance to next sound channel
 
 #-----------------------------------------------------------------------
@@ -841,6 +845,7 @@ vTmp    = zpFree+1
 #
 label('ENTER')
 bra(d(lo('.next2')))            #0 Enter at '.next2' (so no startup overhead)
+C('vCPU interpreter')
 ld(d(vPC+1),busRAM|regY)        #1
 
 label('next14')
@@ -849,25 +854,25 @@ ld(val(-16/2))                  #15
 # Fetch next instruction and execute it, but only if there are sufficient
 # ticks left for the slowest instruction.
 label('NEXT')
-adda(d(vTicks),busRAM)          #0 Actually counting down (AC<0)
-blt(d(lo('RETURN')))            #1
+adda(d(vTicks),busRAM);         C('Track elapsed ticks')#0 Actually counting down (AC<0)
+blt(d(lo('RETURN')));           C('Escape near time out')#1
 label('.next2')
 st(d(vTicks))                   #2
-ldzp(d(vPC))                    #3 Advance vPC
+ldzp(d(vPC));                   C('Advance vPC')#3
 adda(val(2))                    #4
 st(d(vPC),busAC|ea0DregX)       #5
-ld(busRAM|eaYXregAC)            #6 Fetch opcode (actually a branch target)
-st(eaYXregOUTIX)                #7 Just to increment X
-bra(busAC)                      #8 Execute opcode
-ld(busRAM|eaYXregAC)            #9 Prefetch operand
+ld(busRAM|eaYXregAC);           C('Fetch opcode')#6 Fetch opcode (actually a branch target)
+st(eaYXregOUTIX);               #7 Just X++
+bra(busAC);                     C('Dispatch')#8
+ld(busRAM|eaYXregAC);           C('Prefetch operand')#9
 
 # Resync with caller and return
 label('RETURN')
 adda(val(maxTicks))             #3
-bgt(d(pc()))                    #4
+bgt(d(pc()));                   C('Resync')#4
 suba(val(1))                    #5
 ld(d(returnTo+1),busRAM|regY)   #6
-jmpy(d(returnTo+0)|busRAM)      #7
+jmpy(d(returnTo+0)|busRAM);     C('Return to caller')#7
 nop()                           #8
 assert vOverhead ==              9
 
@@ -1251,7 +1256,7 @@ while pc()&255 < 256-5:
   nop()
 
 bra(busAC);                   #17
-C('Lookup trampoline for page $%02x' % (pc()>>8))
+C('Trampoline for page $%02x lookups' % (pc()>>8))
 bra(val(253))                 #18
 ld(d(hi('.lookup0')),regY)    #20
 jmpy(d(lo('.lookup0')))       #21

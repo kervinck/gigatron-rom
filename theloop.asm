@@ -4,10 +4,10 @@
               |    |     |    operands
               |    |     |    |
               V    V     V    V
-              0000 0000  ld   $00
+              0000 0000  ld   $00         ;LEDs |OOOO|
               0001 1880  ld   $80,out
               0002 18c0  ld   $c0,out
-              0003 0001  ld   $01
+              0003 0001  ld   $01         ;RAM test and count
 .countMem0:   0004 d601  st   [$01],y
               0005 00ff  ld   $ff
               0006 6900  xora [y,$00]
@@ -23,10 +23,10 @@
               0010 0101  ld   [$01]
               0011 fc04  bra  .countMem0
               0012 8200  adda ac
-.countMem1:   0013 0001  ld   $01
+.countMem1:   0013 0001  ld   $01         ;LEDs |*OOO|
               0014 1880  ld   $80,out
               0015 18c0  ld   $c0,out
-              0016 0000  ld   $00
+              0016 0000  ld   $00         ;Collect entropy and debounce
               0017 d21c  st   [$1c],x
               0018 d61d  st   [$1d],y
 .initEnt0:    0019 0110  ld   [$10]
@@ -47,23 +47,23 @@
               0028 8001  adda $01
               0029 ec19  bne  .initEnt0
               002a d61d  st   [$1d],y
-              002b 0003  ld   $03
+              002b 0003  ld   $03         ;LEDs |**OO|
               002c 1880  ld   $80,out
               002d 18c0  ld   $c0,out
-              002e 0104  ld   [$04]
+              002e 0104  ld   [$04]       ;Cold or warm boot?
               002f 8105  adda [$05]
               0030 805a  adda $5a
               0031 ec35  bne  cold
               0032 0000  ld   $00
-              0033 0104  ld   [$04]
+warm:         0033 0104  ld   [$04]
               0034 8001  adda $01
 cold:         0035 c204  st   [$04]
               0036 60ff  xora $ff
               0037 a059  suba $59
               0038 c205  st   [$05]
-              0039 00ff  ld   $ff
+              0039 00ff  ld   $ff         ;Setup system timer
               003a c20d  st   [$0d]
-              003b 1401  ld   $01,y
+              003b 1401  ld   $01,y       ;Setup video scan table
               003c 1000  ld   $00,x
               003d 0008  ld   $08
               003e de00  st   [y,x++]
@@ -73,7 +73,7 @@ cold:         0035 c204  st   [$04]
               0042 de00  st   [y,x++]
               0043 00f2  ld   $f2
               0044 c20c  st   [$0c]
-              0045 1402  ld   $02,y
+              0045 1402  ld   $02,y       ;Setup shift2 table
               0046 0000  ld   $00
               0047 c202  st   [$02]
 .loop:        0048 c21c  st   [$1c]
@@ -85,55 +85,55 @@ cold:         0035 c204  st   [$04]
               004e 6040  xora $40
               004f ec48  bne  .loop
               0050 6040  xora $40
-              0051 0078  ld   $78
+              0051 0078  ld   $78         ;Setup LED sequencer
               0052 c213  st   [$13]
               0053 0000  ld   $00
               0054 c214  st   [$14]
               0055 000a  ld   $0a
               0056 c215  st   [$15]
-              0057 1401  ld   $01,y
+              0057 1401  ld   $01,y       ;Setup channel 1
               0058 10fa  ld   $fa,x
               0059 dc38  st   $38,[y,x++]
               005a cc06  st   $06,[y,x]
-              005b 1402  ld   $02,y
+              005b 1402  ld   $02,y       ;Setup channel 2
               005c 10fa  ld   $fa,x
               005d dc70  st   $70,[y,x++]
               005e cc0c  st   $0c,[y,x]
-              005f 1403  ld   $03,y
+              005f 1403  ld   $03,y       ;Setup channel 3
               0060 10fa  ld   $fa,x
               0061 dc10  st   $10,[y,x++]
               0062 cc10  st   $10,[y,x]
-              0063 1404  ld   $04,y
+              0063 1404  ld   $04,y       ;Setup channel 4
               0064 10fa  ld   $fa,x
               0065 dc20  st   $20,[y,x++]
               0066 cc13  st   $13,[y,x]
-              0067 0000  ld   $00
+              0067 0000  ld   $00         ;Setup sound timer
               0068 c212  st   [$12]
-              0069 00ff  ld   $ff
+              0069 00ff  ld   $ff         ;Setup serial input
               006a c216  st   [$16]
               006b c217  st   [$17]
-              006c 0007  ld   $07
+              006c 0007  ld   $07         ;LEDs |***O|
               006d 1880  ld   $80,out
               006e 18c0  ld   $c0,out
-              006f 0075  ld   $75
+              006f 0075  ld   $75         ;Bootstrap vCPU
               0070 c20e  st   [$0e]
               0071 0000  ld   $00
               0072 1406  ld   $06,y
               0073 e000  jmp  y,$00
               0074 c20f  st   [$0f]
-.retn:        0075 000f  ld   $0f
+.retn:        0075 000f  ld   $0f         ;LEDs |****|
               0076 1880  ld   $80,out
               0077 18c0  ld   $c0,out
               0078 c207  st   [$07]
               0079 c206  st   [$06]
-              007a 1401  ld   $01,y
+              007a 1401  ld   $01,y       ;Enter video loop
               007b e000  jmp  y,$00
               007c 00c0  ld   $c0
               007d 0200  nop
               007e 0200  nop
               007f 0200  nop
               * 131 times
-videoLoop:    0100 c209  st   [$09]
+videoLoop:    0100 c209  st   [$09]       ;Start vertical blank interval
               0101 0080  ld   $80
               0102 c20a  st   [$0a]
               0103 c000  st   $00,[$00]
@@ -156,30 +156,30 @@ videoLoop:    0100 c209  st   [$09]
               0114 8114  adda [$14]
               0115 fe00  bra  ac
               0116 fc2f  bra  .leds1
-.leds0:       0117 000f  ld   $0f
-              0118 0007  ld   $07
-              0119 0003  ld   $03
-              011a 0001  ld   $01
-              011b 0002  ld   $02
-              011c 0004  ld   $04
-              011d 0008  ld   $08
-              011e 0004  ld   $04
-              011f 0002  ld   $02
-              0120 0001  ld   $01
-              0121 0003  ld   $03
-              0122 0007  ld   $07
-              0123 000f  ld   $0f
-              0124 000e  ld   $0e
-              0125 000c  ld   $0c
-              0126 0008  ld   $08
-              0127 0004  ld   $04
-              0128 0002  ld   $02
-              0129 0001  ld   $01
-              012a 0002  ld   $02
-              012b 0004  ld   $04
-              012c 0008  ld   $08
-              012d 000c  ld   $0c
-              012e 008e  ld   $8e
+.leds0:       0117 000f  ld   $0f         ;LEDs |****|
+              0118 0007  ld   $07         ;LEDs |***O|
+              0119 0003  ld   $03         ;LEDs |**OO|
+              011a 0001  ld   $01         ;LEDs |*OOO|
+              011b 0002  ld   $02         ;LEDs |O*OO|
+              011c 0004  ld   $04         ;LEDs |OO*O|
+              011d 0008  ld   $08         ;LEDs |OOO*|
+              011e 0004  ld   $04         ;LEDs |OO*O|
+              011f 0002  ld   $02         ;LEDs |O*OO|
+              0120 0001  ld   $01         ;LEDs |*OOO|
+              0121 0003  ld   $03         ;LEDs |**OO|
+              0122 0007  ld   $07         ;LEDs |***O|
+              0123 000f  ld   $0f         ;LEDs |****|
+              0124 000e  ld   $0e         ;LEDs |O***|
+              0125 000c  ld   $0c         ;LEDs |OO**|
+              0126 0008  ld   $08         ;LEDs |OOO*|
+              0127 0004  ld   $04         ;LEDs |OO*O|
+              0128 0002  ld   $02         ;LEDs |O*OO|
+              0129 0001  ld   $01         ;LEDs |*OOO|
+              012a 0002  ld   $02         ;LEDs |O*OO|
+              012b 0004  ld   $04         ;LEDs |OO*O|
+              012c 0008  ld   $08         ;LEDs |OOO*|
+              012d 000c  ld   $0c         ;LEDs |OO**|
+              012e 008e  ld   $8e         ;LEDs |O***|
 .leds1:       012f c207  st   [$07]
               0130 e833  blt  .leds2
               0131 fc34  bra  .leds3
@@ -214,13 +214,13 @@ videoLoop:    0100 c209  st   [$09]
 .snd3:        014e c212  st   [$12]
               014f 0027  ld   $27
               0150 c208  st   [$08]
-              0151 1909  ld   [$09],out
-sound1:       0152 0102  ld   [$02]
+              0151 1909  ld   [$09],out   ;New scanline
+sound1:       0152 0102  ld   [$02]       ;Advance to next sound channel
               0153 2003  anda $03
               0154 8001  adda $01
-              0155 190a  ld   [$0a],out
+              0155 190a  ld   [$0a],out   ;Start horizontal pulse
               0156 d602  st   [$02],y
-              0157 007f  ld   $7f
+              0157 007f  ld   $7f         ;Update sound channel
               0158 29fe  anda [y,$fe]
               0159 89fa  adda [y,$fa]
               015a cafe  st   [y,$fe]
@@ -236,13 +236,13 @@ sound1:       0152 0102  ld   [$02]
               0164 0d00  ld   [y,x]
               0165 8103  adda [$03]
               0166 c203  st   [$03]
-              0167 0200  nop              ;Wait 4 cycles
+              0167 0200  nop
               0168 0200  nop
               0169 0200  nop
               016a 0200  nop
               016b 0106  ld   [$06]
               016c 0200  nop
-              016d 1909  ld   [$09],out
+              016d 1909  ld   [$09],out   ;End horizontal pulse
               016e 0108  ld   [$08]
               016f f0a0  beq  vBlankLast0
               0170 a001  suba $01
@@ -261,7 +261,7 @@ vSync1:       017c 0109  ld   [$09]
 vSync2:       017d 0200  nop
 vSync3:       017e 6040  xora $40
               017f c20a  st   [$0a]
-              0180 0108  ld   [$08]
+              0180 0108  ld   [$08]       ;Capture serial input
               0181 6019  xora $19
               0182 ec85  bne  .ser0
               0183 fc86  bra  .ser1
@@ -271,10 +271,10 @@ vSync3:       017e 6040  xora $40
               0187 2003  anda $03
               0188 ec97  bne  vBlankNormal
               0189 0103  ld   [$03]
-              018a 400f  ora  $0f
+vBlankSample: 018a 400f  ora  $0f         ;New sound sample is ready
               018b 2107  anda [$07]
               018c c206  st   [$06]
-              018d c003  st   $03,[$03]
+              018d c003  st   $03,[$03]   ;Reset for next sample
               018e 0095  ld   $95         ;Run vCPU for 144 cycles
               018f c20e  st   [$0e]
               0190 0001  ld   $01
@@ -283,7 +283,7 @@ vSync3:       017e 6040  xora $40
               0193 e000  jmp  y,$00       ;ENTER
               0194 0032  ld   $32
               0195 fc52  bra  sound1
-              0196 1909  ld   [$09],out
+              0196 1909  ld   [$09],out   ;New scanline
 vBlankNormal: 0197 009e  ld   $9e         ;Run vCPU for 148 cycles
               0198 c20e  st   [$0e]
               0199 0001  ld   $01
@@ -292,7 +292,7 @@ vBlankNormal: 0197 009e  ld   $9e         ;Run vCPU for 148 cycles
               019c e000  jmp  y,$00       ;ENTER
               019d 0034  ld   $34
               019e fc52  bra  sound1
-              019f 1909  ld   [$09],out
+              019f 1909  ld   [$09],out   ;New scanline
 vBlankLast0:  01a0 0000  ld   $00
               01a1 c209  st   [$09]
               01a2 c20b  st   [$0b]
@@ -320,7 +320,7 @@ vBlankLast1:  01a3 0116  ld   [$16]
               01b8 e000  jmp  y,$00       ;ENTER
               01b9 0035  ld   $35
               01ba 0102  ld   [$02]
-              01bb 2003  anda $03
+              01bb 2003  anda $03         ;New scanline
               01bc 8001  adda $01
               01bd 1402  ld   $02,y
               01be e0b0  jmp  y,$b0
@@ -341,15 +341,15 @@ videoA:       0200 00c8  ld   $c8
               0208 9109  adda [$09],x
               0209 150a  ld   [$0a],y
               020a 00c0  ld   $c0
-pixels:       020b 5d00  ora  [y,x++],out
+pixels:       020b 5d00  ora  [y,x++],out ;Pixel burst
               020c 5d00  ora  [y,x++],out
               020d 5d00  ora  [y,x++],out
               * 160 times
-              02ab 18c0  ld   $c0,out
-              02ac 0102  ld   [$02]
+              02ab 18c0  ld   $c0,out     ;New scanline
+              02ac 0102  ld   [$02]       ;Advance to next sound channel
 soundF:       02ad 2003  anda $03
               02ae 8001  adda $01
-              02af 1880  ld   $80,out
+              02af 1880  ld   $80,out     ;Start horizontal pulse
 sound2:       02b0 d602  st   [$02],y
               02b1 007f  ld   $7f
               02b2 29fe  anda [y,$fe]
@@ -367,13 +367,13 @@ sound2:       02b0 d602  st   [$02],y
               02be 0d00  ld   [y,x]
               02bf 8103  adda [$03]
               02c0 c203  st   [$03]
-              02c1 0200  nop              ;Wait 4 cycles
+              02c1 0200  nop
               02c2 0200  nop
               02c3 0200  nop
               02c4 0200  nop
               02c5 0106  ld   [$06]
               02c6 fd0b  bra  [$0b]
-              02c7 18c0  ld   $c0,out
+              02c7 18c0  ld   $c0,out     ;End horizontal pulse
 videoB:       02c8 00d3  ld   $d3
               02c9 c20b  st   [$0b]
               02ca 1401  ld   $01,y
@@ -385,12 +385,12 @@ videoB:       02c8 00d3  ld   $d3
               02d0 150a  ld   [$0a],y
               02d1 fc0b  bra  pixels
               02d2 00c0  ld   $c0
-videoC:       02d3 0103  ld   [$03]
+videoC:       02d3 0103  ld   [$03]       ;New sound sample is ready
               02d4 400f  ora  $0f
               02d5 2107  anda [$07]
               02d6 c206  st   [$06]
-              02d7 c003  st   $03,[$03]
-              02d8 010c  ld   [$0c]
+              02d7 c003  st   $03,[$03]   ;Reset for next sample
+              02d8 010c  ld   [$0c]       ;Mode for scanline 4
               02d9 c20b  st   [$0b]
               02da 1109  ld   [$09],x
               02db 150a  ld   [$0a],y
@@ -407,7 +407,7 @@ videoD:       02de 1109  ld   [$09],x
               02e6 c20b  st   [$0b]
               02e7 fc0b  bra  pixels
               02e8 00c0  ld   $c0
-last:         02e9 0200  nop              ;Wait 2 cycles
+last:         02e9 0200  nop
               02ea 0200  nop
               02eb 00ef  ld   $ef
               02ec c20b  st   [$0b]
@@ -434,31 +434,31 @@ notlast:      02f8 c208  st   [$08]
               0301 e000  jmp  y,$00       ;ENTER
               0302 003b  ld   $3b
               0303 1402  ld   $02,y
-              0304 e0ad  jmp  y,$ad
+              0304 e0ad  jmp  y,$ad       ;New scanline
               0305 0102  ld   [$02]
               0306 0200  nop
               0307 0200  nop
               0308 0200  nop
               * 250 times
-ENTER:        0400 fc06  bra  .next2
+ENTER:        0400 fc06  bra  .next2      ;vCPU interpreter
               0401 1519  ld   [$19],y
 next14:       0402 c21a  st   [$1a]
               0403 00f8  ld   $f8
-NEXT:         0404 811c  adda [$1c]
-              0405 e80e  blt  RETURN
+NEXT:         0404 811c  adda [$1c]       ;Track elapsed ticks
+              0405 e80e  blt  RETURN      ;Escape near time out
 .next2:       0406 c21c  st   [$1c]
-              0407 0118  ld   [$18]
+              0407 0118  ld   [$18]       ;Advance vPC
               0408 8002  adda $02
               0409 d218  st   [$18],x
-              040a 0d00  ld   [y,x]
+              040a 0d00  ld   [y,x]       ;Fetch opcode
               040b de00  st   [y,x++]
-              040c fe00  bra  ac
-              040d 0d00  ld   [y,x]
+              040c fe00  bra  ac          ;Dispatch
+              040d 0d00  ld   [y,x]       ;Prefetch operand
 RETURN:       040e 800e  adda $0e
-              040f e40f  bgt  $040f
+              040f e40f  bgt  $040f       ;Resync
               0410 a001  suba $01
               0411 150f  ld   [$0f],y
-              0412 e10e  jmp  y,[$0e]
+              0412 e10e  jmp  y,[$0e]     ;Return to caller
               0413 0200  nop
 LDI:          0414 c21a  st   [$1a]
               0415 0000  ld   $00
@@ -851,7 +851,7 @@ font:         0500 007c  ld   $7c         ;Char ' '
               05a1 0200  nop
               05a2 0200  nop
               * 91 times
-              05fb fe00  bra  ac          ;Lookup trampoline for page $05
+              05fb fe00  bra  ac          ;Trampoline for page $05 lookups
               05fc fcfd  bra  $05fd
               05fd 1404  ld   $04,y
               05fe e0ec  jmp  y,$ec
