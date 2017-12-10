@@ -1,2 +1,0 @@
-#!/bin/sh
-minipro -p 'AT27C1024 @DIP40' -w theloop.2.rom -y -s

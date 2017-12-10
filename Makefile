@@ -10,3 +10,5 @@ test: gtemu theloop.2.rom
 theloop.2.rom: theloop.py
 	./theloop.py
 
+burn: theloop.2.rom
+	minipro -p 'AT27C1024 @DIP40' -w theloop.2.rom -y -s
