@@ -10,7 +10,7 @@ $0400:
 {Test of built-in font}
 62 P= {Pen color}
 [do
-  $0505 F= {Font data}
+  $0500 F= {Font data}
   $0800 S= {Top of screen}
   $1000 U=
   [do

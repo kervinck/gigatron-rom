@@ -18,9 +18,9 @@ class Program:
       if self.vPC:
         print '%04x' % self.vPC
       print '%04x GCL' % address,
+      ld(val(address&0xff),regX)
+      ld(val(address>>8),regY)
     self.vPC = address
-    ld(val(address&0xff),regX)
-    ld(val(address>>8),regY)
 
   def thisBlock(self):
     return self.blocks[-1]

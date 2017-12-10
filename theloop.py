@@ -134,7 +134,6 @@ buttonState     = zpByte() # Filtered button state
 vPC     = zpByte(2)             # Interpreter program counter (points into RAM)
 vAC     = zpByte(2)             # Interpreter accumulator (16-bits)
 #vSP    = zpByte(1)
-#vGlobals= zpbyte(26*2)
 
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 zpFree     = zpByte()
@@ -448,7 +447,7 @@ if soundDiscontinuity > 1:
 
 extra+=11 # for sound on/off and sound timer hack below. XXX solve properly
 
-runVcpu(179-41-extra)           #41 # Application cycles (scanline 0)
+runVcpu(179-41-extra)           #41 Application cycles (scanline 0)
 
 # --- LED sequencer (19 cycles)
 
@@ -607,7 +606,7 @@ label('.ser1')
 # Keep doing this on 'videoC equivalent' scan lines in vertical blank.
 ldzp(d(blankY))                 #47
 anda(d(3))                      #48
-bne(d(lo('vBlankRegular')))     #49
+bne(d(lo('vBlankNormal')))      #49
 ldzp(d(sample))                 #50
 ora(d(0x0f))                    #51
 anda(d(xoutMask),busRAM|ea0DregAC)#52
@@ -616,9 +615,9 @@ st(val(sample), ea0DregAC|busD) #54 Reset for next sample
 
 runVcpu(199-55)                 #55 Appplication cycles (scanline 1-43 with sample update)
 bra(d(lo('sound1')))            #199
-ld(d(videoSync0), busRAM|regOUT)#0 # Ends the vertical blank pulse at the right cycle
+ld(d(videoSync0), busRAM|regOUT)#0 Ends the vertical blank pulse at the right cycle
 
-label('vBlankRegular')
+label('vBlankNormal')
 runVcpu(199-51)                 #51 Application cycles (scanline 1-43 without sample update)
 bra(d(lo('sound1')))            #199
 ld(d(videoSync0), busRAM|regOUT)#0 Ends the vertical blank pulse at the right cycle
@@ -681,7 +680,7 @@ st(d(nextVideo))                #30
 ld(d(scanTablePage), regY)      #31
 ld(d(screenY), busRAM|regX)     #32
 ld(eaYXregAC, busRAM)           #33
-st(eaYXregOUTIX)                #34 # Just to increment X
+st(eaYXregOUTIX)                #34 Just to increment X
 st(d(frameY))                   #35
 ld(eaYXregAC, busRAM)           #36
 adda(d(frameX), busRAM|regX)    #37
@@ -745,14 +744,14 @@ ld(val(syncBits))               #39
 # - Nothing new to do, Yi and Xi are known
 label('videoC')
 ldzp(d(sample))                 #29 First something that didn't fit in the audio loop
-ora(d(0x0f))                   #30
-anda(d(xoutMask), busRAM|ea0DregAC)  #31
+ora(d(0x0f))                    #30
+anda(d(xoutMask),busRAM|ea0DregAC)#31
 st(d(xout))                     #32 Update [xout] with new sample (4 channels just updated)
-st(val(sample), ea0DregAC|busD) #33 Reset for next sample
+st(val(sample),ea0DregAC|busD)  #33 Reset for next sample
 ldzp(d(videoDorF))              #34 Now back to video business
 st(d(nextVideo))                #35
-ld(d(frameX), busRAM|regX)      #36
-ld(d(frameY), busRAM|regY)      #37
+ld(d(frameX),busRAM|regX)       #36
+ld(d(frameY),busRAM|regY)       #37
 bra(d(lo('pixels')))            #38
 ld(val(syncBits))               #39
 
@@ -765,14 +764,14 @@ ldzp(d(screenY))                #30
 suba(d((120-1)*2))              #31
 beq(d(lo('last')))              #32
 ld(d(frameY), busRAM|regY)      #33
-adda(d(120*2))                  #34 # More pixel lines to go
+adda(d(120*2))                  #34 More pixel lines to go
 st(d(screenY))                  #35
 ld(d(lo('videoA')))             #36
 st(d(nextVideo))                #37
 bra(d(lo('pixels')))            #38
 ld(val(syncBits))               #39
 label('last')
-wait(36-34)                     #34 # No more pixel lines
+wait(36-34)                     #34 No more pixel lines
 ld(d(lo('videoE')))             #36
 st(d(nextVideo))                #37
 bra(d(lo('pixels')))            #38
@@ -808,15 +807,12 @@ ldzp(d(channel))                #1 Advance to next sound channel
 #  ROM page 4: Application interpreter
 #
 #-----------------------------------------------------------------------
-align(0x100,0x100)
-#-----------------------------------------------------------------------
 
-vTicks  = zpFree                # Interpreter frames are units of 2 clocks
+align(0x100,0x100)
+
+vTicks  = zpFree                # Interpreter ticks are units of 2 clocks
 vTmp    = zpFree+1
 
-#-----------------------------------------------------------------------
-
-#
 # Enter the timing-aware application interpreter (aka virtual CPU, vCPU)
 #
 # This routine will execute as many as possible instructions in the
@@ -1179,7 +1175,7 @@ adda(val(1),regX)               #11
 ld(busRAM,ea0XregAC)            #12
 ld(busAC,regY)                  #13
 ld(d(vTmp),busRAM|regX)         #14
-jmpy(d(0))                      #15
+jmpy(d(251))                    #15
 ld(busRAM,ea0XregAC)            #16
 label('.lookup0')
 st(d(vAC))                      #23
@@ -1224,18 +1220,22 @@ nop()                           #15
 #  ROM page 5-6: Gigatron font data
 #
 #-----------------------------------------------------------------------
-align(0x100)
 
 align(0x100, 0x100)
-bra(busAC)                    #17
-bra(val(2))                   #18
-ld(d(hi('.lookup0')),regY)    #20
-jmpy(d(lo('.lookup0')))       #21
-ld(d(vPC+1),busRAM|regY)      #22
+label('font')
 
 for ch in range(32, 64): # XXX do full font
   for byte in font.font[ch-32]:
     ld(val(byte))
+
+while pc()&255 < 256-5:
+  nop()
+
+bra(busAC)                    #17
+bra(val(253))                 #18
+ld(d(hi('.lookup0')),regY)    #20
+jmpy(d(lo('.lookup0')))       #21
+ld(d(vPC+1),busRAM|regY)      #22
 
 #-----------------------------------------------------------------------
 #

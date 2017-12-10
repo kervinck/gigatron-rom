@@ -261,7 +261,7 @@ def align(n, chunkSize=0x10000):
   global _romSize, _maxRomSize
   _maxRomSize = 0x10000
   while _romSize % n > 0:
-    _emit(0)
+    nop()
   _maxRomSize = min(_maxRomSize, _romSize + chunkSize)
 
 def wait(n):
