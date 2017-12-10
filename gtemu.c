@@ -19,7 +19,7 @@ CpuState cpuCycle(const CpuState S)
 
   int ins = S.IR >> 5;       // Instruction
   int mod = (S.IR >> 2) & 7; // Addressing mode (or condition)
-  int bus= S.IR&3;           // Busmode
+  int bus = S.IR&3;          // Busmode
   int W = (ins == 6);        // Write instruction?
   int J = (ins == 7);        // Jump instruction?
 
