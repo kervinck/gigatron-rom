@@ -13,6 +13,7 @@
 #  XXX: GOTO/PUSHW/PULLW for subroutines
 #  XXX: SYS for accelerated functions 
 #  XXX: ADDI/SUBI with carry
+#  XXX: COND (and retire SIGNW)
 #  XXX: Readability of asm.py instructions
 #  XXX: Multitasking (start with date/time clock in GCL)
 #  XXX: Music sequencer
@@ -1241,13 +1242,16 @@ align(0x100, 0x100)
 label('font')
 
 for ch in range(32, 64): # XXX do full font
+  comment = 'Char %s' % repr(chr(ch))
   for byte in font.font[ch-32]:
     ld(val(byte))
+    comment = C(comment)
 
 while pc()&255 < 256-5:
   nop()
 
 bra(busAC);                   #17
+C('Lookup trampoline for page $%02x' % (pc()>>8))
 bra(val(253))                 #18
 ld(d(hi('.lookup0')),regY)    #20
 jmpy(d(lo('.lookup0')))       #21

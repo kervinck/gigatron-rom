@@ -72,6 +72,12 @@ class Program:
     st(val(byte), eaYXregOUTIX) # XXX Use ROM tables
     self.vPC += 1
 
+  def opcode(self, ins):
+    """Next opcode in RAM"""
+    st(val(lo(ins)), eaYXregOUTIX) # XXX Use ROM tables
+    C('%04x %s' % (self.vPC, ins))
+    self.vPC += 1
+
   def word(self, word):
     """Process a word and emit its code"""
     if len(word) == 0:
@@ -82,55 +88,55 @@ class Program:
       to = prev(to)
       if self.vPC>>8 != to>>8:
         self.error('Loop outside page')
-      self.emit(lo('BRA'))
-      self.emit(to&0xff)
+      self.opcode('BRA')
+      self.emit(to&255)
     elif word == 'do':
       self.loops[self.thisBlock()] = self.vPC
     elif word == 'if<0':
-      self.emit(lo('SIGNW'))
-      self.emit(lo('BGE'))
+      self.opcode('SIGNW');
+      self.opcode('BGE')
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
     elif word == 'if>0':
-      self.emit(lo('SIGNW'))
-      self.emit(lo('BLE'))
+      self.opcode('SIGNW')
+      self.opcode('BLE')
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
     elif word == 'if<0':
-      self.emit(lo('SIGNW'))
-      self.emit(lo('BGE'))
+      self.opcode('SIGNW')
+      self.opcode('BGE')
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
     elif word == 'if=0':
-      self.emit(lo('SIGNW'))
-      self.emit(lo('BNE'))
+      self.opcode('SIGNW')
+      self.opcode('BNE')
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
     elif word == 'if<>0':
-      self.emit(lo('SIGNW'))
-      self.emit(lo('BEQ'))
+      self.opcode('SIGNW')
+      self.opcode('BEQ')
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
     elif word == 'if>=0':
-      self.emit(lo('SIGNW'))
-      self.emit(lo('BLT'))
+      self.opcode('SIGNW')
+      self.opcode('BLT')
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
     elif word == 'if<=0':
-      self.emit(lo('SIGNW'))
-      self.emit(lo('BGT'))
+      self.opcode('SIGNW')
+      self.opcode('BGT')
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
     elif word == 'if<>0loop':
-      self.emit(lo('SIGNW'))
-      self.emit(lo('BNE'))
+      self.opcode('SIGNW')
+      self.opcode('BNE')
       block = self.thisBlock()
       to = self.loops[self.thisBlock()]
       to = prev(to)
@@ -138,8 +144,8 @@ class Program:
       if self.vPC>>8 != to>>8:
         self.error('Loop outside page')
     elif word == 'if>0loop':
-      self.emit(lo('SIGNW'))
-      self.emit(lo('BGT'))
+      self.opcode('SIGNW')
+      self.opcode('BGT')
       block = self.thisBlock()
       to = self.loops[self.thisBlock()]
       to = prev(to)
@@ -147,8 +153,8 @@ class Program:
       if self.vPC>>8 != to>>8:
         self.error('Loop outside page')
     elif word == 'if<0loop':
-      self.emit(lo('SIGNW'))
-      self.emit(lo('BLT'))
+      self.opcode('SIGNW')
+      self.opcode('BLT')
       block = self.thisBlock()
       to = self.loops[self.thisBlock()]
       to = prev(to)
@@ -161,7 +167,7 @@ class Program:
         self.error('Unexpected %s' % repr(word))
       if self.conds[block] > 0:
         self.error('Too many %s' % repr(word))
-      self.emit(lo('BRA'))
+      self.opcode('BRA')
       self.emit(lo('$if.%d.1' % block))
       define('$if.%d.0' % block, prev(self.vPC))
       self.conds[block] = 1
@@ -170,77 +176,77 @@ class Program:
       if op is None:
         if var:
           if var[0].isupper() and len(var) == 1:
-            self.emit(lo('LDW'))
+            self.opcode('LDW')
             self.emit(self.getAddress(var))
           else:
             self.error('Not implemented %s' % repr(word))
         else:
           if 0 <= con < 256:
-            self.emit(lo('LDI'))
+            self.opcode('LDI')
             self.emit(con)
           else:
-            self.emit(lo('LDWI'))
+            self.opcode('LDWI')
             self.emit(con&0xff)
             self.emit(con>>8)
       elif op == ':' and con: # XXX Replace with automatic allocation
           self.org(con)
       elif op == '=' and var:
-          self.emit(lo('STW'))
+          self.opcode('STW')
           self.emit(self.getAddress(var))
       elif op == '+' and var:
-          self.emit(lo('ADDW'))
+          self.opcode('ADDW')
           self.emit(self.getAddress(var))
       elif op == '-' and var:
-          self.emit(lo('SUBW'))
+          self.opcode('SUBW')
           self.emit(self.getAddress(var))
       elif op == '&' and con:
           if con<0 or 0xff<con:
             self.error('Out of range %s' % repr(con))
-          self.emit(lo('ANDI'))
+          self.opcode('ANDI')
           self.emit(con)
       elif op == '|' and con:
           if con<0 or 0xff<con:
             self.error('Out of range %s' % repr(con))
-          self.emit(lo('ORI'))
+          self.opcode('ORI')
           self.emit(con)
       elif op == '^' and con:
           if con<0 or 0xff<con:
             self.error('Out of range %s' % repr(con))
-          self.emit(lo('XORI'))
+          self.opcode('XORI')
           self.emit(con)
       elif op == '!' and con:
           if con<0 or 0xff<con:
             self.error('Out of range %s' % repr(con))
-          self.emit(lo('ST'))
+          self.opcode('ST')
           self.emit(con)
       elif op == '?' and con:
           if con<0 or 0xff<con:
             self.error('Out of range %s' % repr(con))
-          self.emit(lo('LD'))
+          self.opcode('LD')
           self.emit(con)
       elif op == '!' and var:
-          self.emit(lo('POKE'))
+          self.opcode('POKE')
           self.emit(self.getAddress(var))
       elif op == '<!' and var:
-          self.emit(lo('ST'))
+          self.opcode('ST')
           self.emit(self.getAddress(var))
       elif op == '>!' and var:
-          self.emit(lo('ST'))
+          self.opcode('ST')
           self.emit(self.getAddress(var)+1)
       elif op == '?' and var:
-          self.emit(lo('PEEK'))
+          self.opcode('PEEK')
           self.emit(self.getAddress(var))
       elif op == '<?' and var:
-          self.emit(lo('LD'))
+          self.opcode('LD')
           self.emit(self.getAddress(var))
       elif op == '>?' and var:
-          self.emit(lo('LD'))
+          self.opcode('LD')
           self.emit(self.getAddress(var)+1)
       elif op == ';' and var:
-          self.emit(lo('LOOKUP'))
+          self.opcode('LOOKUP')
           self.emit(self.getAddress(var))
       elif op == '*' and con:
-          self.emit(lo('GOTO'))
+          self.opcode('GOTO')
           self.emit(con)
       else:
         self.error('Invalid word %s' % repr(word))
