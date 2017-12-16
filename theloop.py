@@ -150,7 +150,7 @@ buttonState     = zpByte() # Filtered button state
 vPC     = zpByte(2)             # Interpreter program counter, points into RAM
 vAC     = zpByte(2)             # Interpreter accumulator, 16-bits
 vRT     = zpByte(2)             # Return address, for returning after CALL
-define('.vRT', vRT)
+define('vRT', vRT)
 
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 zpFree     = zpByte()

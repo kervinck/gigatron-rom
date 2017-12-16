@@ -173,7 +173,7 @@ class Program:
       self.conds[block] = 1
     elif word == 'return':
       self.opcode('LDW')
-      self.opcode('.vRT') # Not an opcode, but hijack what it does
+      self.opcode('vRT') # Not an opcode, but hijack what it does
       self.opcode('CALL')
     else:
       var, con, op = self.parseWord(word) # XXX Simplify this
@@ -182,6 +182,7 @@ class Program:
           if var[0].isupper() and len(var) == 1:
             self.opcode('LDW')
             self.emit(self.getAddress(var))
+            C('%04x %s' % (self.vPC, repr(var)))
           else:
             self.error('Not implemented %s' % repr(word))
         else:
@@ -197,12 +198,15 @@ class Program:
       elif op == '=' and var:
           self.opcode('STW')
           self.emit(self.getAddress(var))
+          C('%04x %s' % (self.vPC, repr(var)))
       elif op == '+' and var:
           self.opcode('ADDW')
           self.emit(self.getAddress(var))
+          C('%04x %s' % (self.vPC, repr(var)))
       elif op == '-' and var:
           self.opcode('SUBW')
           self.emit(self.getAddress(var))
+          C('%04x %s' % (self.vPC, repr(var)))
       elif op == '&' and con:
           if con<0 or 0xff<con:
             self.error('Out of range %s' % repr(con))
@@ -231,28 +235,35 @@ class Program:
       elif op == '!' and var:
           self.opcode('POKE')
           self.emit(self.getAddress(var))
+          C('%04x %s' % (self.vPC, repr(var)))
       elif op == '<!' and var:
           self.opcode('ST')
           self.emit(self.getAddress(var))
+          C('%04x <%s' % (self.vPC, repr(var)))
       elif op == '>!' and var:
           self.opcode('ST')
           self.emit(self.getAddress(var)+1)
+          C('%04x >%s' % (self.vPC, repr(var)))
       elif op == '?' and var:
           if var[0].isupper() and len(var) == 1:
             self.opcode('LDW')
             self.emit(self.getAddress(var))
+            C('%04x %s' % (self.vPC, repr(var)))
           else:
             self.error('Not implemented %s' % repr(word))
           self.opcode('PEEK')
       elif op == '<?' and var:
           self.opcode('LD')
           self.emit(self.getAddress(var))
+          C('%04x <%s' % (self.vPC, repr(var)))
       elif op == '>?' and var:
           self.opcode('LD')
           self.emit(self.getAddress(var)+1)
+          C('%04x >%s' % (self.vPC, repr(var)))
       elif op == ';' and var:
           self.opcode('LOOKUP')
           self.emit(self.getAddress(var))
+          C('%04x %s' % (self.vPC, repr(var)))
       elif op == '*' and con:
           self.opcode('LDWI')
           self.emit(con&0xff)
