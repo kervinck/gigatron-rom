@@ -22,11 +22,11 @@ Example program
     a b+ c=                             {30 C=A+B}
     b a= c b=                           {40 A=B: B=C}
     if>0 loop]                          {50 IF B>0 THEN 30}
-  $4448 d=                              {60 D=$4448: REM MIDDLE OF SCREEN}
+  $4448 d= {Middle of screen}           {60 D=$4448: REM MIDDLE OF SCREEN}
   [do
     c [if<0 15 d! else 5 d!]            {70 IF C<0 POKE D,15 ELSE POKE D,5}
     c c+ c=                             {80 C=C+C}
-    1 d+ d=                             {90 D=1+D}
+    d 1+ d=                             {90 D=D+1}
     -$4458 d+ if<0 loop]                {100 IF D<$4458 THEN 70}
   loop]                                 {110 GOTO 10}
 
@@ -112,4 +112,38 @@ push                    Push vRT onto stack
                         Use "push" on entering non-leaf subroutines
 pull                    Put top of stack in vAC
                         Use "pull call" to return from non-leaf subroutines
+
+----------------------
+vCPU instruction table
+----------------------
+
+The vCPU implements 23 instructions. Each opcode is just a byte offset
+into the interpreter page to the code that implements it. Most instructions
+take a single byte operand, but some have two and others none.
+
+Opcode Operands Description
+------ -------- -----------
+LDWI   $DDDD    Load immediate constant (AC=$DDDD)
+LDI    $DD      Load immediate constant (AC=$DD)
+LD     $DD      Load byte from zero page (AC=[D])
+ST     $DD      Store byte in zero page ([D]=AC)
+LDW    $DD      Word load from zero page (AC=[D]+256*[D+1])
+STW    $DD      Word load from zero page ([D]=AC&255,[D+1]=AC/256)
+ADDW   $DD      Word addition with zero page (AC+=[D]+256*[D+1])
+SUBW   $DD      Word subtraction with zero page (AC-=[D]+256*[D+1])
+ADDI   $DD      Add small positive constant (AC+=D)
+SUBI   $DD      Subtract small positive constant (AC+=D)
+INC    $DD      Increment zero page byte ([D]++)
+ANDI   $DD      Logical-AND with constant (AC&=D)
+ORI    $DD      Logical-OR with constant (AC|=D)
+XORI   $DD      Logical-XOR with constant (AC^=D)
+PEEK   -        Read byte from memory (AC=[AC])
+POKE   $DD      Write byte in memory ([[D+1],[D]]=AC)
+LOOKUP $DD      ROM lookup (AC=ROM[[D+1],[D]])
+COND   $CC $DD  Test AC and branch conditionally. $CC can be EQ,NE,LT,GT,LE,GE
+BRA    $DD      Branch unconditionally (PC=D+256*(PC/256))
+CALL   -        Goto address and remember where we came from (RT=PC+1, PC=AC-2)
+PUSH   -        Push value on stack ([--SP]=RT&255,[--SP]/256)
+PULL   -        Pop value from stack(AC=[SP]+256*[SP+1], SP+=2)
+SYS    $DD      Native function call for at most $DD*2 cycles
 
