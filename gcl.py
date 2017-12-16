@@ -93,50 +93,50 @@ class Program:
     elif word == 'do':
       self.loops[self.thisBlock()] = self.vPC
     elif word == 'if<0':
-      self.opcode('SIGNW');
-      self.opcode('BGE')
+      self.opcode('COND');
+      self.opcode('GE')
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
     elif word == 'if>0':
-      self.opcode('SIGNW')
-      self.opcode('BLE')
+      self.opcode('COND')
+      self.opcode('LE')
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
     elif word == 'if<0':
-      self.opcode('SIGNW')
-      self.opcode('BGE')
+      self.opcode('COND')
+      self.opcode('GE')
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
     elif word == 'if=0':
-      self.opcode('SIGNW')
-      self.opcode('BNE')
+      self.opcode('COND')
+      self.opcode('NE')
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
     elif word == 'if<>0':
-      self.opcode('SIGNW')
-      self.opcode('BEQ')
+      self.opcode('COND')
+      self.opcode('EQ')
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
     elif word == 'if>=0':
-      self.opcode('SIGNW')
-      self.opcode('BLT')
+      self.opcode('COND')
+      self.opcode('LT')
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
     elif word == 'if<=0':
-      self.opcode('SIGNW')
-      self.opcode('BGT')
+      self.opcode('COND')
+      self.opcode('GT')
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
     elif word == 'if<>0loop':
-      self.opcode('SIGNW')
-      self.opcode('BNE')
+      self.opcode('COND')
+      self.opcode('NE')
       block = self.thisBlock()
       to = self.loops[self.thisBlock()]
       to = prev(to)
@@ -144,8 +144,8 @@ class Program:
       if self.vPC>>8 != to>>8:
         self.error('Loop outside page')
     elif word == 'if>0loop':
-      self.opcode('SIGNW')
-      self.opcode('BGT')
+      self.opcode('COND')
+      self.opcode('GT')
       block = self.thisBlock()
       to = self.loops[self.thisBlock()]
       to = prev(to)
@@ -153,8 +153,8 @@ class Program:
       if self.vPC>>8 != to>>8:
         self.error('Loop outside page')
     elif word == 'if<0loop':
-      self.opcode('SIGNW')
-      self.opcode('BLT')
+      self.opcode('COND')
+      self.opcode('LT')
       block = self.thisBlock()
       to = self.loops[self.thisBlock()]
       to = prev(to)

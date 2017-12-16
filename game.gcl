@@ -70,7 +70,7 @@ $0500:
 
   {Clear vertical line}
   $1000 T+ V=
-  [do V! 
+  [do 1 V!
     $100 V+ V=
     if>0loop]
 

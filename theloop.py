@@ -13,7 +13,6 @@
 #  XXX: PUSHW/PULLW for subroutines
 #  XXX: SYS for accelerated functions 
 #  XXX: ADDI/SUBI with carry
-#  XXX: COND (and retire SIGNW)
 #  XXX: Readability of asm.py instructions
 #  XXX: Multitasking (start with date/time clock in GCL)
 #  XXX: Music sequencer
@@ -871,15 +870,6 @@ jmpy(d(returnTo+0)|busRAM);     C('Return to caller')#7
 nop()                           #8
 assert vOverhead ==              9
 
-# Instruction LDI: Load immediate constant (AC=$DD), 16 cycles
-label('LDI')
-st(d(vAC))                      #10
-ld(val(0))                      #11
-st(d(vAC+1))                    #12
-ld(val(-16/2))                  #13
-bra(d(lo('NEXT')))              #14
-nop()                           #15
-
 # Instruction LDWI: Load immediate constant (AC=$DDDD), 20 cycles
 label('LDWI')
 st(d(vAC))                      #10
@@ -916,10 +906,11 @@ ld(busRAM|ea0XregAC)            #16
 st(d(vAC+1))                    #17
 bra(d(lo('NEXT')))              #18
 ld(val(-20/2))                  #19
-
+#nop()                          #(20)
+#
 # Instruction STW: Word load from zero page (AC=[D],[D+1]), 20 cycles
 label('STW')
-ld(busAC,regX)                  #10
+ld(busAC,regX)                  #10 (overlap with LDW)
 adda(val(1))                    #11
 st(d(vTmp))                     #12 Address of high byte
 ldzp(d(vAC))                    #13
@@ -930,69 +921,93 @@ st(ea0XregAC)                   #17
 bra(d(lo('NEXT')))              #18
 ld(val(-20/2))                  #19
 
-# Instruction SIGNW: Test signedness of word (0xffff,0,1), 24 cycles
-label('SIGNW')
-ldzp(d(vPC))                    #10 Swallow operand
-suba(val(1))                    #11
-st(d(vPC))                      #12
-ldzp(d(vAC+1))                  #13 First inspect high byte ACH
-bne(d(lo('.testw3')))           #14
-bmi(d(lo('.testw4')))           #15
-st(d(vAC+1))                    #16 Clear ACH
-ldzp(d(vAC))                    #17 Additionally inspect low byte ACL
-bne(d(lo('.testw1')))           #18
-bra(d(lo('.testw2')))           #19
-label('.testw0')
-ld(val(0))                      #20 ACH==0 and ACL==0
-label('.testw1')
-ld(val(1))                      #20 ACH==0 and ACL!=0
-label('.testw2')
-st(d(vAC))                      #21
-bra(d(lo('NEXT')))              #22
-ld(val(-24/2))                  #23
-label('.testw3')
-ld(val(0))                      #16 ACH>0
-bra(d(lo('.testw0')))           #17 testw0 is labeled 20, but from here it is 19
-st(d(vAC+1))                    #18
-label('.testw4')
-ld(val(-1))                     #17 ACH<0
-st(d(vAC+1))                    #18
-bra(d(lo('.testw2')))           #19
-nop()                           #20
+# Instruction COND: Test AC sign and branch conditionally, 28 cycles
+label('COND')
+ldzp(d(vAC+1))                  #10 First inspect high byte ACH
+bne(d(lo('.cond2')))            #11
+st(d(vTmp))                     #12
+ldzp(d(vAC))                    #13 Additionally inspect low byte ACL
+beq(d(lo('.cond3')))            #14
+ld(val(1))                      #15
+st(d(vTmp))                     #16
+ld(busRAM|eaYXregAC)            #17 Operand is the conditional
+label('.cond1')
+bra(busAC)                      #18
+ldzp(d(vTmp))                   #19
+label('.cond2')
+nop()                           #13
+nop()                           #14
+nop()                           #15
+label('.cond3')
+bra(d(lo('.cond1')))            #16
+ld(busRAM|eaYXregAC)            #17 Operand is the conditional
+label('.cond4')
+ldzp(d(vPC));                   C('False condition')#22
+bra(d(lo('.cond6')))            #23
+adda(val(1))                    #24
+label('.cond5')
+st(eaYXregOUTIX);               C('True condition')#23 Just X++
+ld(busRAM|eaYXregAC)            #24
+label('.cond6')
+st(d(vPC))                      #25
+bra(d(lo('NEXT')))              #26
+ld(val(-28/2))                  #27
 
-# Instruction BEQ: Branch if zero (if(ALC==0)PCL=D), 16 cycles
-label('BEQ')
-ldzp(d(vAC))                    #10
-bne(d(lo('br1')))               #11
-ld(busRAM|eaYXregAC)            #12
-label('br0')
-st(d(vPC))                      #13
-bra(d(lo('NEXT')))              #14
-#ld(val(-16/2))                 #(15)
-label('br1')
+# Conditional EQ: Branch if zero (if(ALC==0)PCL=D)
+label('EQ')
+bne(d(lo('.cond4')))            #20
+beq(d(lo('.cond5')))            #21
+ld(busRAM|eaYXregAC)            #22
+
+# Conditional NE: Branch if not zero (if(ALC!=0)PCL=D)
+label('NE')
+beq(d(lo('.cond4')))            #20
+bne(d(lo('.cond5')))            #21
+ld(busRAM|eaYXregAC)            #22
+
+# Conditional GT: Branch if positive (if(ALC>0)PCL=D)
+label('GT')
+ble(d(lo('.cond4')))            #20
+bgt(d(lo('.cond5')))            #21
+ld(busRAM|eaYXregAC)            #22
+
+# Conditional LT: Branch if negative (if(ALC<0)PCL=D), 16 cycles
+label('LT')
+bge(d(lo('.cond4')))            #20
+blt(d(lo('.cond5')))            #21
+ld(busRAM|eaYXregAC)            #22
+
+# Conditional GE: Branch if positive or zero (if(ALC>=0)PCL=D)
+label('GE')
+blt(d(lo('.cond4')))            #20
+bge(d(lo('.cond5')))            #21
+ld(busRAM|eaYXregAC)            #22
+
+# Conditional LE: Branch if negative or zero (if(ALC<=0)PCL=D)
+label('LE')
+bgt(d(lo('.cond4')))            #20
+ble(d(lo('.cond5')))            #21
+ld(busRAM|eaYXregAC)            #22
+
+# Instruction LDI: Load immediate constant (AC=$DD), 16 cycles
+label('LDI')
+st(d(vAC))                      #10
+ld(val(0))                      #11
+st(d(vAC+1))                    #12
 ld(val(-16/2))                  #13
 bra(d(lo('NEXT')))              #14
-#nop()                          #(15)
+#nop()                           #15
 #
 # Instruction ST: Store in zero page ([D]=ACL), 16 cycles
 label('ST')
-ld(busAC,regX)                  #10 (overlap with BEQ)
+ld(busAC,regX)                  #10 (overlap with LDI)
 ldzp(d(vAC))                    #11
 bra(d(lo('next14')))            #12
 st(d(vAC),busAC|ea0XregAC)      #13
 
-# Instruction BNE: Branch if not zero (if(ALC!=0)PCL=D), 16 cycles
-label('BNE')
-ldzp(d(vAC))                    #10
-bne(d(lo('br0')))               #11
-ld(busRAM|eaYXregAC)            #12
-ld(val(-16/2))                  #13
-bra(d(lo('NEXT')))              #14
-#nop()                          #(15)
-#
 # Instruction AND: Logical-AND with zero page (ACL&=[D]), 16 cycles
 label('AND')
-ld(busAC,regX)                  #10 (overlap with BNE)
+ld(busAC,regX)                  #10
 ldzp(d(vAC))                    #11
 bra(d(lo('next14')))            #12
 anda(busRAM,ea0XregAC)          #13
@@ -1020,90 +1035,25 @@ st(d(vAC))                      #11
 bra(d(lo('NEXT')))              #12
 ld(val(-14/2))                  #13
 
-# Instruction BGT: Branch if positive (if(ALC>0)PCL=D), 16 cycles
-label('BGT')
-ldzp(d(vAC))                    #10
-bgt(d(lo('br0')))               #11
-ld(busRAM|eaYXregAC)            #12
-ld(val(-16/2))                  #13
-bra(d(lo('NEXT')))              #14
-#nop()                          #(15)
-#
 # Instruction OR: Logical-OR with zero page (ACL|=[D]), 16 cycles
 label('OR')
-ld(busAC,regX)                  #10 (overlap with BGT)
+ld(busAC,regX)                  #10
 ldzp(d(vAC))                    #11
 bra(d(lo('next14')))            #12
 ora(busRAM,ea0XregAC)           #13
-
-# Instruction BLT: Branch if negative (if(ALC<0)PCL=D), 16 cycles
-label('BLT')
-ldzp(d(vAC))                    #10
-blt(d(lo('br0')))               #11
-ld(busRAM|eaYXregAC)            #12
-ld(val(-16/2))                  #13
-bra(d(lo('NEXT')))              #14
-#nop()                          #(15)
-#
-# Instruction XOR: Logical-XOR with zero page (ACL^=[D]), 16 cycles
-label('XOR')
-ld(busAC,regX)                  #10 (overlap with BLT)
-ldzp(d(vAC))                    #11
-bra(d(lo('next14')))            #12
-xora(busRAM,ea0XregAC)          #13
 
 # Instruction BRA: Branch unconditionally (PCL=D), 14 cycles
 label('BRA')
 st(d(vPC))                      #10
 ld(val(-14/2))                  #11
 bra(d(lo('NEXT')))              #12
-nop()                           #13
-
-# Instruction BGE: Branch if positive or zero (if(ALC>=0)PCL=D), 16 cycles
-label('BGE')
-ldzp(d(vAC))                    #10
-bge(d(lo('br0')))               #11
-ld(busRAM|eaYXregAC)            #12
-ld(val(-16/2))                  #13
-bra(d(lo('NEXT')))              #14
-nop()                           #15
-
-# Instruction BLE: Branch if negative or zero (if(ALC<=0)PCL=D), 16 cycles
-label('BLE')
-ldzp(d(vAC))                    #10
-ble(d(lo('br0')))               #11
-ld(busRAM|eaYXregAC)            #12
-ld(val(-16/2))                  #13
-bra(d(lo('NEXT')))              #14
-nop()                           #15
-
-# Instruction ADDW: Word addition with zero page (AC+=[D]+256*[D+1]), 28 cycles
-label('ADDW')
-# The non-carry paths could be 26 cycles at the expense of (much) more code.
-# But a smaller size is better so more instructions fit in this code page.
-# 28 cycles is still 4.5 usec. The 6502 equivalent takes 20 cycles or 20 usec.
-ld(busAC,regX)                  #10 Address of low byte to be added
-adda(val(1))                    #11
-st(d(vTmp))                     #12 Address of high byte to be added
-ldzp(d(vAC))                    #13 Add the low bytes
-adda(busRAM|ea0XregAC)          #14
-st(d(vAC))                      #15 Store low result
-bmi(d(lo('.addw0')))            #16 Now figure out if there was a carry
-suba(busRAM|ea0XregAC)          #17 Gets back the initial value of vAC
-bra(d(lo('.addw1')))            #18
-ora(busRAM|ea0XregAC)           #19 Bit 7 is our lost carry
-label('.addw0')
-anda(busRAM|ea0XregAC)          #18 Bit 7 is our lost carry
-nop()                           #19
-label('.addw1')
-anda(val(0x80),regX)            #20 Move the carry to bit 0 (0 or +1)
-ld(busRAM,ea0XregAC)            #21
-adda(d(vAC+1),busRAM)           #22 Add the high bytes with carry
-ld(d(vTmp),busRAM|regX)         #23
-adda(busRAM|ea0XregAC)          #24
-st(d(vAC+1))                    #25 Store high result
-bra(d(lo('NEXT')))              #26
-ld(val(-28/2))                  #27
+#nop()                           #13
+# Instruction XOR: Logical-XOR with zero page (ACL^=[D]), 16 cycles
+label('XOR')
+ld(busAC,regX)                  #10 (overlap with BRA)
+ldzp(d(vAC))                    #11
+bra(d(lo('next14')))            #12
+xora(busRAM,ea0XregAC)          #13
 
 # Instruction SUBW: Word subtraction with zero page (AC-=[D]+256*[D+1]), 28 cycles
 # All cases can be done in 26 cycles, but the code will become much larger
@@ -1128,7 +1078,35 @@ suba(busRAM,ea0XregAC)          #21
 ld(d(vTmp),busRAM|regX)         #22
 suba(busRAM|ea0XregAC)          #23
 st(d(vAC+1))                    #24
-nop()                           #25
+ld(val(-28/2))                  #25
+bra(d(lo('NEXT')))              #26
+#nop()                          #25
+#
+# Instruction ADDW: Word addition with zero page (AC+=[D]+256*[D+1]), 28 cycles
+label('ADDW')
+# The non-carry paths could be 26 cycles at the expense of (much) more code.
+# But a smaller size is better so more instructions fit in this code page.
+# 28 cycles is still 4.5 usec. The 6502 equivalent takes 20 cycles or 20 usec.
+ld(busAC,regX)                  #10 (overlap with SUBW) Address of low byte to be added
+adda(val(1))                    #11
+st(d(vTmp))                     #12 Address of high byte to be added
+ldzp(d(vAC))                    #13 Add the low bytes
+adda(busRAM|ea0XregAC)          #14
+st(d(vAC))                      #15 Store low result
+bmi(d(lo('.addw0')))            #16 Now figure out if there was a carry
+suba(busRAM|ea0XregAC)          #17 Gets back the initial value of vAC
+bra(d(lo('.addw1')))            #18
+ora(busRAM|ea0XregAC)           #19 Bit 7 is our lost carry
+label('.addw0')
+anda(busRAM|ea0XregAC)          #18 Bit 7 is our lost carry
+nop()                           #19
+label('.addw1')
+anda(val(0x80),regX)            #20 Move the carry to bit 0 (0 or +1)
+ld(busRAM,ea0XregAC)            #21
+adda(d(vAC+1),busRAM)           #22 Add the high bytes with carry
+ld(d(vTmp),busRAM|regX)         #23
+adda(busRAM|ea0XregAC)          #24
+st(d(vAC+1))                    #25 Store high result
 bra(d(lo('NEXT')))              #26
 ld(val(-28/2))                  #27
 
