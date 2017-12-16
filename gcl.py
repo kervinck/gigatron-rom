@@ -243,7 +243,7 @@ class Program:
       elif op == '>!' and var:
           self.opcode('ST')
           self.emit(self.getAddress(var)+1)
-          C('%04x %s' % (prev(self.vPC, 1), repr(var)))
+          C('%04x %s+1' % (prev(self.vPC, 1), repr(var)))
       elif op == '?' and var:
           if var[0].isupper() and len(var) == 1:
             self.opcode('LDW')
@@ -259,7 +259,7 @@ class Program:
       elif op == '>?' and var:
           self.opcode('LD')
           self.emit(self.getAddress(var)+1)
-          C('%04x %s' % (prev(self.vPC, 1), repr(var)))
+          C('%04x %s+1' % (prev(self.vPC, 1), repr(var)))
       elif op == ';' and var:
           self.opcode('LOOKUP')
           self.emit(self.getAddress(var))
