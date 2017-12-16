@@ -10,7 +10,7 @@ $0400:
 {Test of built-in font}
 62 P= {Pen color}
 [do
-  $0400 F= {Font data}
+  $0500 F= {Font data}
   $0800 S= {Top of screen}
   $1000 U=
   [do
@@ -63,7 +63,7 @@ $0500:
   -90 H+ [if<0 R 128& if<>0 1 H+ H=]
 
   {J=($08+H)<<8}
-  $08 H+ J>!
+  H $08+ J>!
 
   {X drawing position is 1 pixel outside the visible area}
   160 X+ 255& T=
@@ -76,7 +76,7 @@ $0500:
 
   {Star}
   R 127& A= -111 A+ [if>0 119 A=]
-  16 A+ A>! T A<!
+  A 16+ A>! T A<!
   2 {Red} A!
 
   {Draw vertical line to bottom of screen}
@@ -85,7 +85,7 @@ $0500:
   63 V! {First pixel white}
   $100 V+ V=
   X 8& H+ C=                          {Begin of checkerboard}
-  [do [1 C+ C= 8& if=0 42 else 32] V! {Checkerboard colors}
+  [do [C 1+ C= 8& if=0 42 else 32] V! {Checkerboard colors}
       $100 V+ V=
       if>0loop]
 

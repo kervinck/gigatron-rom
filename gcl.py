@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from asm import *
+import sys
 
 class Program:
   def __init__(self, address):
@@ -203,6 +204,11 @@ class Program:
           self.opcode('ADDW')
           self.emit(self.getAddress(var))
           C('%04x %s' % (prev(self.vPC, 1), repr(var)))
+      elif op == '+' and con:
+          if con < 0 or con >= 128:
+            self.error('Out of range %s' % repr(con))
+          self.opcode('ADDI')
+          self.emit(con)
       elif op == '-' and var:
           self.opcode('SUBW')
           self.emit(self.getAddress(var))
@@ -332,9 +338,11 @@ class Program:
       self.error('Dangling if statements')
 
   def error(self, message):
-    prefix = 'file %s' % repr(self.filename) if self.filename else ''
+    prefix = '\nGCL error:'
+    prefix += (' file %s' % repr(self.filename)) if self.filename else ''
     prefix += ' line %s:' % self.lineNumber
-    raise SyntaxError(prefix + message)
+    print prefix, message
+    sys.exit()
 
 def prev(address, step=2):
   """Take vPC two bytes back, wrap around if needed to stay on page"""

@@ -10,9 +10,6 @@
 #  - vCPU interpreter
 #
 #  TODO:
-#  XXX: PUSHW/PULLW for subroutines
-#  XXX: SYS for accelerated functions 
-#  XXX: ADDI/SUBI with carry
 #  XXX: Readability of asm.py instructions
 #  XXX: Multitasking (start with date/time clock in GCL)
 #  XXX: Music sequencer
@@ -150,9 +147,10 @@ vPC     = zpByte(2)             # Interpreter program counter, points into RAM
 vAC     = zpByte(2)             # Interpreter accumulator, 16-bits
 vRT     = zpByte(2)             # Return address, for returning after CALL
 define('vRT', vRT)
+vSP     = zpByte(2)             # Stack pointer ([vSP+1] remains zero)
 
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
-zpFree     = zpByte()
+zpFree  = zpByte()
 
 # XXX GCL variables start at 0x81
 
@@ -842,14 +840,11 @@ bra(d(lo('.next2')))            #0 Enter at '.next2' (so no startup overhead)
 C('vCPU interpreter')
 ld(d(vPC+1),busRAM|regY)        #1
 
-label('next14')
-st(d(vAC))                      #14
-ld(val(-16/2))                  #15
 # Fetch next instruction and execute it, but only if there are sufficient
 # ticks left for the slowest instruction.
 label('NEXT')
 adda(d(vTicks),busRAM);         C('Track elapsed ticks')#0 Actually counting down (AC<0)
-blt(d(lo('RETURN')));           C('Escape near time out')#1
+blt(d(lo('EXIT')));             C('Escape near time out')#1
 label('.next2')
 st(d(vTicks))                   #2
 ldzp(d(vPC));                   C('Advance vPC')#3
@@ -861,7 +856,7 @@ bra(busAC);                     C('Dispatch')#8
 ld(busRAM|eaYXregAC);           C('Prefetch operand')#9
 
 # Resync with caller and return
-label('RETURN')
+label('EXIT')
 adda(val(maxTicks))             #3
 bgt(d(pc()));                   C('Resync')#4
 suba(val(1))                    #5
@@ -996,21 +991,65 @@ ld(val(0))                      #11
 st(d(vAC+1))                    #12
 ld(val(-16/2))                  #13
 bra(d(lo('NEXT')))              #14
-#nop()                           #15
+#nop()                          #(15)
 #
 # Instruction ST: Store in zero page ([D]=ACL), 16 cycles
 label('ST')
 ld(busAC,regX)                  #10 (overlap with LDI)
 ldzp(d(vAC))                    #11
-bra(d(lo('next14')))            #12
-st(d(vAC),busAC|ea0XregAC)      #13
+st(d(vAC),busAC|ea0XregAC)      #12
+ld(val(-16/2))                  #13
+bra(d(lo('NEXT')))              #14
+#nop()                          #(15)
+#
+# Instruction PULL, (AC=[SP++]), 22 cycles
+label('PULL')
+ld(d(vSP),busRAM|regX)          #10 (overlap with ST)
+ld(busRAM,ea0XregAC)            #11
+st(d(vAC))                      #12
+ldzp(d(vSP))                    #13
+adda(val(1),regX)               #14
+ld(busRAM,ea0XregAC)            #15
+st(d(vAC+1))                    #16
+ldzp(d(vSP))                    #17
+adda(val(2))                    #18
+st(d(vSP))                      #19
+label('next1')
+ldzp(d(vPC))                    #20
+suba(val(1))                    #21
+st(d(vPC))                      #22
+ld(val(-26/2))                  #23
+bra(d(lo('NEXT')))              #24
+#nop()                          #(25)
+#
+# Instruction LOOKUP, (AC=ROM[[D+1],[D]]), 28 cycles
+label('LOOKUP')
+st(d(vTmp))                     #10 (overlap with PULL)
+adda(val(1),regX)               #11
+ld(busRAM,ea0XregAC)            #12
+ld(busAC,regY)                  #13
+ld(d(vTmp),busRAM|regX)         #14
+jmpy(d(251));                   C('Trampoline offset')#15
+ld(busRAM,ea0XregAC)            #16
+label('.lookup0')
+st(d(vAC))                      #23
+ld(val(0))                      #24
+st(d(vAC+1))                    #25
+bra(d(lo('NEXT')))              #26
+ld(val(-28/2))                  #27
 
-# Instruction AND: Logical-AND with zero page (ACL&=[D]), 16 cycles
-label('AND')
-ld(busAC,regX)                  #10
-ldzp(d(vAC))                    #11
-bra(d(lo('next14')))            #12
-anda(busRAM,ea0XregAC)          #13
+# Instruction PUSH, ([--SP]=RT), 14 cycles
+label('PUSH')
+ldzp(d(vSP))                    #10
+suba(d(1),regX)                 #11
+ldzp(d(vRT+1))                  #12
+st(ea0XregAC)                   #13
+ldzp(d(vSP))                    #14
+suba(val(2))                    #15
+st(d(vSP),busAC|regX)           #16
+ldzp(d(vRT))                    #17
+bra(d(lo('next1')))             #18
+st(ea0XregAC)                   #19
 
 # Instruction ANDI: Logical-AND with constant (AC&=D), 16 cycles
 label('ANDI')
@@ -1035,30 +1074,46 @@ st(d(vAC))                      #11
 bra(d(lo('NEXT')))              #12
 ld(val(-14/2))                  #13
 
-# Instruction OR: Logical-OR with zero page (ACL|=[D]), 16 cycles
-label('OR')
-ld(busAC,regX)                  #10
-ldzp(d(vAC))                    #11
-bra(d(lo('next14')))            #12
-ora(busRAM,ea0XregAC)           #13
-
 # Instruction BRA: Branch unconditionally (PCL=D), 14 cycles
 label('BRA')
 st(d(vPC))                      #10
 ld(val(-14/2))                  #11
 bra(d(lo('NEXT')))              #12
-#nop()                           #13
-# Instruction XOR: Logical-XOR with zero page (ACL^=[D]), 16 cycles
-label('XOR')
-ld(busAC,regX)                  #10 (overlap with BRA)
-ldzp(d(vAC))                    #11
-bra(d(lo('next14')))            #12
-xora(busRAM,ea0XregAC)          #13
+#nop()                          #(13)
+#
+# Instruction POKE ([[D+1],[D]]=ACL), 22 cycles
+label('POKE')
+st(d(vTmp))                     #10 (overlap with BRA)
+adda(val(1),regX)               #11
+ld(busRAM,ea0XregAC)            #12
+ld(busAC,regY)                  #13
+ld(d(vTmp),busRAM|regX)         #14
+ld(busRAM,ea0XregAC)            #15
+ld(busAC,regX)                  #16
+ldzp(d(vAC))                    #17
+st(eaYXregAC)                   #18
+ld(d(vPC+1),busRAM|regY)        #19
+bra(d(lo('NEXT')))              #20
+ld(val(-22/2))                  #21
 
+# Instruction SYS, Native call (), <=256 cycles
+label('RETRY')
+ldzp(d(vPC));                   C('Retry until sufficient time')#13
+suba(val(2))                    #14
+st(d(vPC))                      #15
+bra(d(lo('RETURN')))            #16
+ld(val(-20/2))                  #17
+label('SYS')
+adda(d(vTicks),busRAM)          #10
+blt(d(lo('RETRY')))             #11
+ld(d(vAC+1),busRAM|regY)        #12
+jmpy(d(vAC)|busRAM)             #13
+#nop()                          #(14)
+#
 # Instruction SUBW: Word subtraction with zero page (AC-=[D]+256*[D+1]), 28 cycles
 # All cases can be done in 26 cycles, but the code will become much larger
 label('SUBW')
-ld(busAC,regX)                  #10 Address of low byte to be subtracted
+ld(busAC,regX)                  #10 (overlap with SYS) Address of low byte to be subtracted
 adda(val(1))                    #11
 st(d(vTmp))                     #12 Address of high byte to be subtracted
 ldzp(d(vAC))                    #13
@@ -1080,7 +1135,7 @@ suba(busRAM|ea0XregAC)          #23
 st(d(vAC+1))                    #24
 ld(val(-28/2))                  #25
 bra(d(lo('NEXT')))              #26
-#nop()                          #25
+#nop()                          #(27)
 #
 # Instruction ADDW: Word addition with zero page (AC+=[D]+256*[D+1]), 28 cycles
 label('ADDW')
@@ -1121,42 +1176,12 @@ ld(busRAM|eaYXregAC)            #15
 st(d(vAC))                      #16
 ld(val(0))                      #17
 st(d(vAC+1))                    #18
-ld(d(vPC+1),busRAM|regY)        #19
-bra(d(lo('NEXT')))              #20
-ld(val(-22/2))                  #21
+ld(val(-22/2))                  #19
+label('RETURN')
+bra(d(lo('NEXT')));             C('Return from SYS calls')#20
+ld(d(vPC+1),busRAM|regY)        #21
 
-# Instruction POKE ([[D+1],[D]]=ACL), 22 cycles
-label('POKE')
-st(d(vTmp))                     #10
-adda(val(1),regX)               #11
-ld(busRAM,ea0XregAC)            #12
-ld(busAC,regY)                  #13
-ld(d(vTmp),busRAM|regX)         #14
-ld(busRAM,ea0XregAC)            #15
-ld(busAC,regX)                  #16
-ldzp(d(vAC))                    #17
-st(eaYXregAC)                   #18
-ld(d(vPC+1),busRAM|regY)        #19
-bra(d(lo('NEXT')))              #20
-ld(val(-22/2))                  #21
-
-# Instruction LOOKUP, (AC=ROM[[D+1],[D]]), 28 cycles
-label('LOOKUP')
-st(d(vTmp))                     #10
-adda(val(1),regX)               #11
-ld(busRAM,ea0XregAC)            #12
-ld(busAC,regY)                  #13
-ld(d(vTmp),busRAM|regX)         #14
-jmpy(d(251));                   C('Trampoline offset')#15
-ld(busRAM,ea0XregAC)            #16
-label('.lookup0')
-st(d(vAC))                      #23
-ld(val(0))                      #24
-st(d(vAC+1))                    #25
-bra(d(lo('NEXT')))              #26
-ld(val(-28/2))                  #27
-
-# Instruction CALL, (vRT=PC+1, PC=AC-2), 22 cycles
+# Instruction CALL, (RT=PC+1, PC=AC-2), 22 cycles
 label('CALL')
 ldzp(d(vPC))                    #10
 adda(val(1));                   C('CALL has no operand, advances PC by 1')#11
@@ -1171,7 +1196,32 @@ st(d(vPC+1),busAC|regY)         #19
 bra(d(lo('NEXT')))              #20
 ld(val(-22/2))                  #21
 
-label('SYS')
+# Instruction ADDI, Add small positive constant (AC+=D), 22 cycles
+# Note: D must be <128
+label('ADDI')
+adda(d(vAC),busRAM)             #10
+st(d(vTmp))                     #11
+xora(d(vAC),busRAM)             #12
+anda(val(0x80),regX)            #13
+ld(busRAM,ea0XregAC)            #14
+adda(d(vAC+1),busRAM)           #15
+st(d(vAC+1))                    #16
+ldzp(d(vTmp))                   #17
+st(d(vAC))                      #18
+ld(val(-22/2))                  #19
+bra(d(lo('NEXT')))              #20
+#nop()                          #(21)
+#
+# Instruction INC, Increment zero page byte ([D]++), 18 cycles
+label('INC')
+ld(busAC,regX)                  #10
+ld(busRAM,ea0XregAC)            #11
+adda(val(1))                    #12
+st(ea0XregAC)                   #13
+ld(val(hi('RETURN')),regY)      #14 We have fallen off our code page
+jmpy(d(lo('RETURN')))           #15
+ld(val(-18/2))                  #16
+
 #init_rng(s1,s2,s3) //Can also be used to seed the rng with more entropy during use.
 #{
 #//XOR new entropy into key state
@@ -1196,7 +1246,7 @@ label('SYS')
 
 #-----------------------------------------------------------------------
 #
-#  ROM page 4-5: Gigatron font data
+#  ROM page 5-6: Gigatron font data
 #
 #-----------------------------------------------------------------------
 
@@ -1243,6 +1293,9 @@ ld(val((bStart&255)-2))
 st(d(vPC))
 ld(val(bStart>>8))
 st(d(vPC+1))
+ld(val(0)) # Reset vCPU stack pointer
+st(d(vSP))
+st(d(vSP+1))
 
 # Return
 ld(d(returnTo+1), busRAM|ea0DregY)
