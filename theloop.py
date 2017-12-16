@@ -1108,7 +1108,17 @@ ld(d(vPC+1),busRAM|regY)        #19
 bra(d(lo('NEXT')))              #20
 ld(val(-22/2))                  #21
 
-# Instruction SYS, Native call (), <=256 cycles
+# Instruction SYS, Native function call, <=256 cycles (<=128 ticks, in reality less)
+#
+# The 'SYS' vCPU instruction first checks the number of desired ticks given by
+# the operand. As long as there are insufficient ticks available in the current
+# time slice, the instruction will be retried. This will effectively wait for the
+# next scanline if the current slice is almost out of time. Then a jump to native
+# code is made. This code can do whatever it wants, but it must return to the
+# 'RETURN' label when done. When returning, AC must hold (the negative of) the
+# actual consumed number of whole ticks for the entire virtual instruction cycle 
+# (from NEXT to NEXT). This duration may not exceed the prior declared duration
+# in the operand.
 label('RETRY')
 ldzp(d(vPC));                   C('Retry until sufficient time')#13
 suba(val(2))                    #14
