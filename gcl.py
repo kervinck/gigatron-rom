@@ -172,6 +172,12 @@ class Program:
       self.emit(lo('$if.%d.1' % block))
       define('$if.%d.0' % block, prev(self.vPC))
       self.conds[block] = 1
+    elif word == 'push':
+      self.opcode('PUSH')
+    elif word == 'pull':
+      self.opcode('PULL')
+    elif word == 'call':
+      self.opcode('CALL')
     elif word == 'return':
       self.opcode('LDW')
       self.opcode('vRT') # Not an opcode, but hijack what it does
@@ -205,7 +211,7 @@ class Program:
           self.emit(self.getAddress(var))
           C('%04x %s' % (prev(self.vPC, 1), repr(var)))
       elif op == '+' and con:
-          if con < 0 or con >= 128:
+          if con < 0 or con >= 256:
             self.error('Out of range %s' % repr(con))
           self.opcode('ADDI')
           self.emit(con)
@@ -213,6 +219,11 @@ class Program:
           self.opcode('SUBW')
           self.emit(self.getAddress(var))
           C('%04x %s' % (prev(self.vPC, 1), repr(var)))
+      elif op == '-' and con:
+          if con < 0 or con >= 256:
+            self.error('Out of range %s' % repr(con))
+          self.opcode('SUBI')
+          self.emit(con)
       elif op == '&' and con:
           if con<0 or 0xff<con:
             self.error('Out of range %s' % repr(con))
@@ -258,6 +269,14 @@ class Program:
           else:
             self.error('Not implemented %s' % repr(word))
           self.opcode('PEEK')
+      elif op == '<++' and var:
+          self.opcode('INC')
+          self.emit(self.getAddress(var))
+          C('%04x %s' % (prev(self.vPC, 1), repr(var)))
+      elif op == '>++' and var:
+          self.opcode('INC')
+          self.emit(self.getAddress(var)+1)
+          C('%04x %s+1' % (prev(self.vPC, 1), repr(var)))
       elif op == '<?' and var:
           self.opcode('LD')
           self.emit(self.getAddress(var))
@@ -270,11 +289,6 @@ class Program:
           self.opcode('LOOKUP')
           self.emit(self.getAddress(var))
           C('%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '*' and con:
-          self.opcode('LDWI')
-          self.emit(con&0xff)
-          self.emit(con>>8)
-          self.opcode('CALL')
       else:
         self.error('Invalid word %s' % repr(word))
 

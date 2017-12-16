@@ -41,17 +41,14 @@ vAC is the virtual accumulator
 vPC is the virtual program counter. Programs run from RAM.
 vAC and vPC are 16-bits and reside in the zero page.
 vPC auto-increments just its low byte, but function calls can go across pages.
+vRT is the program counter at the most recent CALL instruction
+vSP is the stack pointer. The stack lives in the zero page top and grows down.
+
 Program variables are 16-bit words and typically hold a number or a pointer.
 Memory can be addressed as bytes or as unaligned little-endian words.
 Most instructions use 2 bytes (opcode + operand), but some have 1 and others 3.
 Opcodes are simply jump offsets into the interpeter ROM code page.
 Named global variables reside in the zero page, locals in the code page itself.
-XXX vSP: to be defined. Use [X] or [Y,D] addressing, or both (2 stack types)?
-XXX Loading and starting of programs
-XXX Simple GCL programs might be compiled by the host instead of offline?
-XXX Threading and sleeping
-XXX Dynamic memory allocation
-XXX Memory-mapped I/O
 
 -----------------
 Notes on notation
@@ -65,26 +62,39 @@ Spaces and newlines just separate words. Use indentation for clarity.
 There is no need for extra spaces around the grouping characters []{}().
 Constants are decimal, or hexadecimal when preceded with '$'.
 Constants can be preceded by '-' or '+' (note: -$1000, not $-0000).
-Global variable names are capitalized, while locals begin in lower case.
-In "version 0" use just single letters a-z (locals) and A-Z (globals).
+In "version 0" use just single letters A-Z for variable names.
 The overview below uses the following conventions:
 'i' indicates an 8-bit integer constant.
 'ii' indicates a 16-bit integer constant.
-'x' indicates a named local variable and 'X' a named global variable.
-Also, everywhere where 'x' is allowed, the '%i' notation can be used to denote
-the unnamed local variable at location i in the current code page.
+'X' indicates a named variable. Variables are global.
 
 ----------------
 Meaning of words
 ----------------
+
+Basics
+------
 {...}                   Comments ignored by machine. Comments can be nested
-ii                      Load integer constant into vAC, e.g. +1972, $be05
-x= X=                   Store vAC into variable
-x X                     Load vAC from variable
-x+                      Add x to vAC
-x-                      Subtract variable from vAC
-i+                      Add small constant to vAC (XXX limit 0<=i<128?)
-i-                      Subtract small constant from vAC (XXX limit 0<=i<128?)
+i ii                    Load integer constant into vAC, e.g. 1, +1972, $be05
+X=                      Store vAC into variable X
+X                       Load variable X into vAC
+X+ X-                   Add/subtract variable X to/from vAC
+i+ i-                   Add/subtract small constant to/from vAC (0<=i<256)
+i& i| i^                Logical AND/OR/XOR vAC with small constant (0<=i<256)
+X<! X>!                 Store vAC as byte into the low/high byte of variable
+X<? X>?                 Read low/high byte of variable
+X<++ X>++               Increment low/high byte of variable X
+
+Memory
+------
+X?                      Read unsigned byte from memory pointed by variable into vAC ("peek")
+X!                      Write vAC as byte to memory pointed by variable ("poke")
+i?                      Read zero page address i as unsigned byte into vAC
+i!                      Store vAC as byte into zero page address i
+X;                      ROM table lookup
+
+Structured programming
+----------------------
 [...]                   Code block, used with "if", "else", "do", "loop"
 if>0                    Continue executing code if vAC>0, otherwise jump to
                         end of the block (or past an optional matching "else")
@@ -93,81 +103,13 @@ else                    When encountered, skip rest of code until end of block
 do                      Mark start of loop
 loop                    Jump back to matching "do"
 if>0loop                Smaller and faster than "if>0 loop" (works with all conditions)
-i& i| i^                Logical AND, OR and XOR with small constant
-x& x| x^                Logical AND, OR and XOR with variable x (16-bits)
-x? X?                   Read byte from memory pointed by variable ("peek")
-x! X!                   Write vAC as byte to memory pointed by variable ("poke")
-i!                      Store vAC as byte into zero page address i
-X<! X>!                 Store vAC as byte into the low/high byte of variable
-i?                      Read zero page as unsigned byte
-X<? X>?                 Read low/high byte of variable
-X;                      ROM table lookup
 
----------------
-Not decided yet
----------------
-0                       Clear vAC as single-byte instruction
-i                       Load a byte value in vAC and sign-extend
-~                       Invert all bits in vAC (XXX why no operand?)
-_                       Negate vAC (note: underscore, not minus)
-:ii                     Set compile address, typically at start of program
-x: X:                   Store current vPC in variable to define a function
-*                       Call function referenced by vAC
-X*                      Call function referenced by X
-i*                      Call local function at offset i
-i@                      Native call to ROM address in vAC (ticks in operand!)
-return                  Function return (XXX could become a macro?)
-x++                     Pairwise add bytes (e.g. for moving game objects)
-x--                     Pairwise subtract bytes
-x??                     Read word from memory address
-x!!                     Write vAC to memory address as word
-x>> x<<                 Right shift, left shift
-: (...)                 Define macro
-(...)                   Expand macro
-                        Isolate high byte, load high byte, swap bytes, ...
-                        Push, pull and index stack
-                        Inline data
-                        Characters and strings
-. , ; ' ` " # / \       Unassigned ASCII characters
+Subroutines
+-----------
+call                    Jump to vAC, store vPC in vRT
+return                  Jump to vRT, for use in leaf subroutines
+push                    Push vRT onto stack
+                        Use "push" on entering non-leaf subroutines
+pull                    Put top of stack in vAC
+                        Use "pull call" to return from non-leaf subroutines
 
--------------------
-Probably not needed
--------------------
-x_                      Load negated x in vAC (use 0 x-)
-x~                      Load inverted x to vAC (use x ~)
-ii@                     Native system call to ROM address ii (use ii i@)
-* / %                   Multiplication, division, modulo (use functions)
-3.1415                  Floating point (use functions)
-ii& ii| ii^             Use variables or change expression order
-i!!                     Store vAC at zero page address i (and i+1)
-
--------------------------------
-!!! Scratchpad below ignore !!!
--------------------------------
-
-*
-        pushw vPC-1
-        ldw [Plot]
-
-P*
-        pushw vPC-1
-        ldw [P]
-        stw [vPC]
-        // bypass NEXT?
-
-i*
-        pushw vPC-1
-        ld i
-        st [vPCL]
-        // bypass NEXT?
-
-(def plot
-  [do
-    c [if<0 15 d! else 5 d!]
-    c c+ c=
-    1 d+ d=
-    -$4458 d+ if<0 loop]
-  (return))
-
-return:
-        pullw 

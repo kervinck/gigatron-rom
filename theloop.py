@@ -19,7 +19,19 @@
 #  XXX: Mix controller input with entropy
 #  XXX: Loading of programs over controller port and Arduino/Trinket
 #  XXX: Better shift-table
-#
+#  XXX: Loading and starting of programs
+#  XXX: Simple GCL programs might be compiled by the host instead of offline?
+#  XXX: Threading and sleeping
+#  XXX: Dynamic memory allocation
+#  XXX: Memory-mapped I/O
+#  XXX: Macros
+#       (def plot
+#         [do
+#           c [if<0 15 d! else 5 d!]
+#           c c+ c=
+#           1 d+ d=
+#           -$4458 d+ if<0 loop]
+#         (return))
 #-----------------------------------------------------------------------
 
 from asm import *
@@ -201,7 +213,7 @@ screenPages   = 0x80 - 120 # Default start of screen memory: 0x0800 to 0x7fff
 #  Application definitions
 #-----------------------------------------------------------------------
 
-maxTicks = 28/2 # Duration of slowest virtual opcode (ADDW)
+maxTicks = 28/2 # Duration of slowest virtual opcode
 vOverhead = 9 # Overhead of jumping in and out. Cycles, not ticks
 def runVcpu(n):
   """Run interpreter for exactly n cycles"""
@@ -1196,31 +1208,75 @@ st(d(vPC+1),busAC|regY)         #19
 bra(d(lo('NEXT')))              #20
 ld(val(-22/2))                  #21
 
-# Instruction ADDI, Add small positive constant (AC+=D), 22 cycles
-# Note: D must be <128
+# Instruction ADDI, Add small positive constant (AC+=D), 28 cycles
 label('ADDI')
-adda(d(vAC),busRAM)             #10
-st(d(vTmp))                     #11
-xora(d(vAC),busRAM)             #12
-anda(val(0x80),regX)            #13
-ld(busRAM,ea0XregAC)            #14
-adda(d(vAC+1),busRAM)           #15
-st(d(vAC+1))                    #16
-ldzp(d(vTmp))                   #17
-st(d(vAC))                      #18
-ld(val(-22/2))                  #19
-bra(d(lo('NEXT')))              #20
-#nop()                          #(21)
-#
-# Instruction INC, Increment zero page byte ([D]++), 18 cycles
+ld(val(hi('addi')),regY)        #10
+jmpy(d(lo('addi')))             #11
+st(d(vTmp))                     #12
+
+# Instruction SUBI, Subtract small positive constant (AC+=D), 28 cycles
+label('SUBI')
+ld(val(hi('subi')),regY)        #10
+jmpy(d(lo('subi')))             #11
+st(d(vTmp))                     #12
+
+# Instruction INC, Increment zero page byte ([D]++), 16 cycles
 label('INC')
 ld(busAC,regX)                  #10
 ld(busRAM,ea0XregAC)            #11
 adda(val(1))                    #12
 st(ea0XregAC)                   #13
-ld(val(hi('RETURN')),regY)      #14 We have fallen off our code page
-jmpy(d(lo('RETURN')))           #15
-ld(val(-18/2))                  #16
+bra(d(lo('NEXT')))              #14
+ld(val(-16/2))                  #15
+
+#-----------------------------------------------------------------------
+#
+#  ROM page 4: Application interpreter extension
+#
+#-----------------------------------------------------------------------
+
+align(0x100,0x100)
+
+# ADDI implementation
+label('addi')
+adda(d(vAC),busRAM)             #13
+st(d(vAC))                      #14 Store low result
+bmi(d(lo('.addi0')))            #15 Now figure out if there was a carry
+suba(d(vTmp),busRAM)            #16 Gets back the initial value of vAC
+bra(d(lo('.addi1')))            #17
+ora(d(vTmp),busRAM)             #18 Bit 7 is our lost carry
+label('.addi0')
+anda(d(vTmp),busRAM)            #17 Bit 7 is our lost carry
+nop()                           #18
+label('.addi1')
+anda(val(0x80),regX)            #19 Move the carry to bit 0 (0 or +1)
+ld(busRAM,ea0XregAC)            #20
+adda(d(vAC+1),busRAM)           #21 Add the high bytes with carry
+st(d(vAC+1))                    #22 Store high result
+ld(val(hi('RETURN')),regY)      #23
+jmpy(d(lo('RETURN')))           #24
+ld(val(-28/2))                  #25
+
+# SUBI implementation
+label('subi')
+ldzp(d(vAC))                    #13
+bmi(d(lo('.subi0')))            #14
+suba(d(vTmp),busRAM)            #15
+st(d(vAC))                      #16 Store low result
+bra(d(lo('.subi1')))            #17
+ora(d(vTmp),busRAM)             #18 Bit 7 is our lost carry
+label('.subi0')
+st(d(vAC))                      #16 Store low result
+anda(d(vTmp),busRAM)            #17 Bit 7 is our lost carry
+nop()                           #18
+label('.subi1')
+anda(val(0x80),regX)            #19 Move the carry to bit 0
+ldzp(d(vAC+1))                  #20
+suba(busRAM,ea0XregAC)          #21
+st(d(vAC+1))                    #22
+ld(val(hi('RETURN')),regY)      #23
+jmpy(d(lo('RETURN')))           #24
+ld(val(-28/2))                  #25
 
 #init_rng(s1,s2,s3) //Can also be used to seed the rng with more entropy during use.
 #{

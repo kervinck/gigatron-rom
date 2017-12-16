@@ -19,12 +19,12 @@ $0400:
     [do
       A 128& [if=0 0 {Black} T! else P {Pen color} T!]
       A A+ A=
-      $0100 T+ T=
-      U- if<0loop]
-    1 F+ F=
-    1 S+ S=
+      T>++
+      T U- if<0loop]
+    F 1+ F=
+    S 1+ S=
     255& 160^ if<>0loop]
-  P 8^ if<>0 -9 P+ P= loop]
+  P 8^ if<>0 P 9- P= loop]
 
 {Scroller game, might become Zaxxon or Flappy Bird}
 
@@ -43,7 +43,7 @@ $1800 Y= B=
 {Obstacle height}
 90 H=
 
-$0500*
+$0500 call
 {---------- Page 5 ----------}
 $0500:
 
@@ -59,23 +59,23 @@ $0500:
   Q+ [if<0 43^] Q+ Q+ Q=
 
   {Random height adjustment}
-  -60 H+ [if>0 R 16& if<>0 -1 H+ H=]
-  -90 H+ [if<0 R 128& if<>0 1 H+ H=]
+  H 88-  [if>0 R  16& if<>0 H 1- H=]
+  H 118- [if<0 R 128& if<>0 H 1+ H=]
 
   {J=($08+H)<<8}
   H $08+ J>!
 
   {X drawing position is 1 pixel outside the visible area}
-  160 X+ 255& T=
+  X 160+ 255& T=
 
   {Clear vertical line}
   $1000 T+ V=
   [do 1 V!
-    $100 V+ V=
-    if>0loop]
+    V>++
+    V if>0loop]
 
   {Star}
-  R 127& A= -111 A+ [if>0 119 A=]
+  R 127& A= A 111- [if>0 119 A=]
   A 16+ A>! T A<!
   2 {Red} A!
 
@@ -83,13 +83,13 @@ $0500:
   J T+ V=
 
   63 V! {First pixel white}
-  $100 V+ V=
+  V>++
   X 8& H+ C=                          {Begin of checkerboard}
   [do [C 1+ C= 8& if=0 42 else 32] V! {Checkerboard colors}
-      $100 V+ V=
-      if>0loop]
+      V>++
+      V if>0loop]
 
-  $0600*
+  $0600 call
 loop]
 
 {---------- Page 6 ----------}
@@ -99,27 +99,27 @@ $0600:
   [do 8? if<>0loop]
 
   {Scroll screen 1 pixel}
-  1 X+ S!
+  X 1+ S!
 
   {Clear ball}
   G B!
 
   {Update ball position and velocity}
   E Z+ Z= {Update velocity with gravity}
-  Y Z+ Y= {Update height with speed}
+  Y Z+ Y= {Update height with velocity}
 
   {Check new ball position}
-  50 X+ B=
+  X 50+ B=
   Y>? B>!
   B? G=
 
   {Reverse if we're hitting something}
-  2 G- [if<0
+  G 2- [if>0
     0 Z- Z=
     Y Z+ Y=
     10 $12! {1/6th second of sound}
 
-    50 X+ B=
+    X 50+ B=
     Y>? B>!
     B? G=
   ]
