@@ -171,6 +171,10 @@ class Program:
       self.emit(lo('$if.%d.1' % block))
       define('$if.%d.0' % block, prev(self.vPC))
       self.conds[block] = 1
+    elif word == 'return':
+      self.opcode('LDW')
+      self.opcode('.vRT') # Not an opcode, but hijack what it does
+      self.opcode('CALL')
     else:
       var, con, op = self.parseWord(word) # XXX Simplify this
       if op is None:
@@ -234,8 +238,12 @@ class Program:
           self.opcode('ST')
           self.emit(self.getAddress(var)+1)
       elif op == '?' and var:
+          if var[0].isupper() and len(var) == 1:
+            self.opcode('LDW')
+            self.emit(self.getAddress(var))
+          else:
+            self.error('Not implemented %s' % repr(word))
           self.opcode('PEEK')
-          self.emit(self.getAddress(var))
       elif op == '<?' and var:
           self.opcode('LD')
           self.emit(self.getAddress(var))
@@ -246,8 +254,10 @@ class Program:
           self.opcode('LOOKUP')
           self.emit(self.getAddress(var))
       elif op == '*' and con:
-          self.opcode('GOTO')
-          self.emit(con)
+          self.opcode('LDWI')
+          self.emit(con&0xff)
+          self.emit(con>>8)
+          self.opcode('CALL')
       else:
         self.error('Invalid word %s' % repr(word))
 

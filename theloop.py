@@ -10,7 +10,7 @@
 #  - vCPU interpreter
 #
 #  TODO:
-#  XXX: GOTO/PUSHW/PULLW for subroutines
+#  XXX: PUSHW/PULLW for subroutines
 #  XXX: SYS for accelerated functions 
 #  XXX: ADDI/SUBI with carry
 #  XXX: COND (and retire SIGNW)
@@ -147,9 +147,10 @@ serialInput     = zpByte()
 buttonState     = zpByte() # Filtered button state
 
 # High level interpreter
-vPC     = zpByte(2)             # Interpreter program counter (points into RAM)
-vAC     = zpByte(2)             # Interpreter accumulator (16-bits)
-#vSP    = zpByte(1)
+vPC     = zpByte(2)             # Interpreter program counter, points into RAM
+vAC     = zpByte(2)             # Interpreter accumulator, 16-bits
+vRT     = zpByte(2)             # Return address, for returning after CALL
+define('.vRT', vRT)
 
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 zpFree     = zpByte()
@@ -885,7 +886,7 @@ ld(val(-16/2))                  #13
 bra(d(lo('NEXT')))              #14
 nop()                           #15
 
-# Instruction LDWI: Load immediate constant (AC=$DD), 20 cycles
+# Instruction LDWI: Load immediate constant (AC=$DDDD), 20 cycles
 label('LDWI')
 st(d(vAC))                      #10
 st(eaYXregOUTIX)                #11 Just to increment X
@@ -1057,13 +1058,6 @@ ldzp(d(vAC))                    #11
 bra(d(lo('next14')))            #12
 xora(busRAM,ea0XregAC)          #13
 
-# Instruction ADDI: Add immediate (ACL+=D), 14 cycles
-label('ADDI')
-adda(d(vAC),busRAM)             #10
-st(d(vAC))                      #11
-bra(d(lo('NEXT')))              #12
-ld(val(-14/2))                  #13
-
 # Instruction BRA: Branch unconditionally (PCL=D), 14 cycles
 label('BRA')
 st(d(vPC))                      #10
@@ -1078,14 +1072,7 @@ bge(d(lo('br0')))               #11
 ld(busRAM|eaYXregAC)            #12
 ld(val(-16/2))                  #13
 bra(d(lo('NEXT')))              #14
-#nop()                          #(15)
-#
-# Instruction ADD: Addition with zero page (ACL+=[D]), 16 cycles
-label('ADD')
-ld(busAC,regX)                  #10 (overlap with BGE)
-ldzp(d(vAC))                    #11
-bra(d(lo('next14')))            #12
-adda(busRAM,ea0XregAC)          #13
+nop()                           #15
 
 # Instruction BLE: Branch if negative or zero (if(ALC<=0)PCL=D), 16 cycles
 label('BLE')
@@ -1094,14 +1081,7 @@ ble(d(lo('br0')))               #11
 ld(busRAM|eaYXregAC)            #12
 ld(val(-16/2))                  #13
 bra(d(lo('NEXT')))              #14
-#nop()                          #(15)
-#
-# Instruction SUB: Subtraction with zero page (ACL-=[D]), 16 cycles
-label('SUB')
-ld(busAC,regX)                  #10 (overlap with BLE)
-ldzp(d(vAC))                    #11
-bra(d(lo('next14')))            #12
-suba(busRAM,ea0XregAC)          #13
+nop()                           #15
 
 # Instruction ADDW: Word addition with zero page (AC+=[D]+256*[D+1]), 28 cycles
 label('ADDW')
@@ -1158,22 +1138,20 @@ nop()                           #25
 bra(d(lo('NEXT')))              #26
 ld(val(-28/2))                  #27
 
-# Instruction PEEK (AC=[[D+1],[D]]), 24 cycles
+# Instruction PEEK (AC=[AC]), 22 cycles
 label('PEEK')
-st(d(vTmp))                     #10
-adda(val(1),regX)               #11
-ld(busRAM,ea0XregAC)            #12
-ld(busAC,regY)                  #13
-ld(d(vTmp),busRAM|regX)         #14
-ld(busRAM,ea0XregAC)            #15
-ld(busAC,regX)                  #16
-ld(busRAM|eaYXregAC)            #17
-st(d(vAC))                      #18
-ld(val(0))                      #19
-st(d(vAC+1))                    #20
-ld(d(vPC+1),busRAM|regY)        #21
-bra(d(lo('NEXT')))              #22
-ld(val(-24/2))                  #23
+ldzp(d(vPC))                    #10
+suba(val(1))                    #11
+st(d(vPC))                      #12
+ld(d(vAC),busRAM|regX)          #13
+ld(d(vAC+1),busRAM|regY)        #14
+ld(busRAM|eaYXregAC)            #15
+st(d(vAC))                      #16
+ld(val(0))                      #17
+st(d(vAC+1))                    #18
+ld(d(vPC+1),busRAM|regY)        #19
+bra(d(lo('NEXT')))              #20
+ld(val(-22/2))                  #21
 
 # Instruction POKE ([[D+1],[D]]=ACL), 22 cycles
 label('POKE')
@@ -1190,14 +1168,14 @@ ld(d(vPC+1),busRAM|regY)        #19
 bra(d(lo('NEXT')))              #20
 ld(val(-22/2))                  #21
 
-# Instruction LOOKUP, (AC=ROM[[AC]]), 28 cycles
+# Instruction LOOKUP, (AC=ROM[[D+1],[D]]), 28 cycles
 label('LOOKUP')
 st(d(vTmp))                     #10
 adda(val(1),regX)               #11
 ld(busRAM,ea0XregAC)            #12
 ld(busAC,regY)                  #13
 ld(d(vTmp),busRAM|regX)         #14
-jmpy(d(251))                    #15
+jmpy(d(251));                   C('Trampoline offset')#15
 ld(busRAM,ea0XregAC)            #16
 label('.lookup0')
 st(d(vAC))                      #23
@@ -1206,15 +1184,22 @@ st(d(vAC+1))                    #25
 bra(d(lo('NEXT')))              #26
 ld(val(-28/2))                  #27
 
-# Instruction GOTO, (PC=256*D+254), 16 cycles
-label('GOTO')
-st(d(vPC+1),busAC|regY)         #10
-ld(val(-2))                     #11
-st(d(vPC))                      #12
-ld(val(-16/2))                  #13
-bra(d(lo('NEXT')))              #14
-nop()                           #15
+# Instruction CALL, (vRT=PC+1, PC=AC-2), 22 cycles
+label('CALL')
+ldzp(d(vPC))                    #10
+adda(val(1));                   C('CALL has no operand, advances PC by 1')#11
+st(d(vRT))                      #12
+ldzp(d(vAC))                    #13
+suba(val(2));                   C('vAC is actual address, NEXT adds 2')#14
+st(d(vPC))                      #15
+ldzp(d(vPC+1))                  #16
+st(d(vRT+1))                    #17
+ldzp(d(vAC+1))                  #18
+st(d(vPC+1),busAC|regY)         #19
+bra(d(lo('NEXT')))              #20
+ld(val(-22/2))                  #21
 
+label('SYS')
 #init_rng(s1,s2,s3) //Can also be used to seed the rng with more entropy during use.
 #{
 #//XOR new entropy into key state
