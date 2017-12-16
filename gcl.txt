@@ -12,7 +12,6 @@ The two are closely tied together.
 ---------------
 Example program
 ---------------
-
 {Draw the binary value of the largest 16-bit Fibonacci number on screen}
 
 [do                                     {Approximate BASIC equivalent}
@@ -33,7 +32,8 @@ Example program
 -----------------
 Programming model
 -----------------
-GCL draws most of its inspiration from SWEET16 (Apple II) and FALSE (Amiga).
+GCL draws most of its inspiration from SWEET16 (Apple II) and FALSE (Amiga),
+two rather notable mini-languages.
 The programming model is primarily "accumulator oriented".
 To accommodate the lack of relative addressing and hardware stack on the host
 CPU, expression and call stacks will be (mostly) static instead of dynamic.
@@ -54,12 +54,12 @@ Named global variables reside in the zero page, locals in the code page itself.
 Notes on notation
 -----------------
 GCL programs are written as a long sequence of "words" without much structure
-enforcement by the compiler. Most words map directly to a single virtual
+enforced by the compiler. Most words map directly to a single virtual
 instruction and therefore also encode an embedded operand (e.g. 1+).
 Many words operate on both vAC and some variable or constant.
 Sequences can be grouped with () {} or [], each of which has its own meaning.
-Spaces and newlines just separate words. Use indentation for clarity.
-There is no need for extra spaces around the grouping characters []{}().
+Spaces and newlines simply separate words. Use indentation for clarity.
+There is no need for spaces around the grouping characters []{}().
 Constants are decimal, or hexadecimal when preceded with '$'.
 Constants can be preceded by '-' or '+' (note: -$1000, not $-0000).
 In "version 0" use just single letters A-Z for variable names.
@@ -68,27 +68,27 @@ The overview below uses the following conventions:
 'ii' indicates a 16-bit integer constant.
 'X' indicates a named variable. Variables are global.
 
-----------------
-Meaning of words
-----------------
+--------------------
+Meaning of GCL words
+--------------------
 
 Basics
 ------
 {...}                   Comments ignored by machine. Comments can be nested
-i ii                    Load integer constant into vAC, e.g. 1, +1972, $be05
+i ii                    Load integer constant into vAC, e.g. 1, +1972, -$be05
 X=                      Store vAC into variable X
 X                       Load variable X into vAC
 X+ X-                   Add/subtract variable X to/from vAC
-i+ i-                   Add/subtract small constant to/from vAC (0<=i<256)
-i& i| i^                Logical AND/OR/XOR vAC with small constant (0<=i<256)
-X<! X>!                 Store vAC as byte into the low/high byte of variable
-X<? X>?                 Read low/high byte of variable
+i+ i-                   Add/subtract small constant to/from vAC
+i& i| i^                Logical AND/OR/XOR vAC with small constant
+X<! X>!                 Store vAC as byte into the low/high byte of variable X
+X<? X>?                 Read low/high byte of variable X
 X<++ X>++               Increment low/high byte of variable X
 
 Memory
 ------
-X?                      Read unsigned byte from memory pointed by variable into vAC ("peek")
-X!                      Write vAC as byte to memory pointed by variable ("poke")
+X?                      Read unsigned byte from memory pointed by X into vAC
+X!                      Write vAC as byte to memory pointed by variable
 i?                      Read zero page address i as unsigned byte into vAC
 i!                      Store vAC as byte into zero page address i
 X;                      ROM table lookup
@@ -102,7 +102,7 @@ if>0                    Continue executing code if vAC>0, otherwise jump to
 else                    When encountered, skip rest of code until end of block
 do                      Mark start of loop
 loop                    Jump back to matching "do"
-if>0loop                Smaller and faster than "if>0 loop" (works with all conditions)
+if>0loop                Optimization for "if>0 loop" (works with all conditions)
 
 Subroutines
 -----------
@@ -116,34 +116,34 @@ pull                    Put top of stack in vAC
 ----------------------
 vCPU instruction table
 ----------------------
-
-The vCPU implements 23 instructions. Each opcode is just a byte offset
-into the interpreter page to the code that implements it. Most instructions
-take a single byte operand, but some have two and others none.
+The vCPU implements 23 instructions. Each opcode is just a jump offset
+into the interpreter code page to the code that implements it. Most
+instructions take a single byte operand, but some have two and others none.
 
 Opcode Operands Description
 ------ -------- -----------
-LDWI   $DDDD    Load immediate constant (AC=$DDDD)
-LDI    $DD      Load immediate constant (AC=$DD)
-LD     $DD      Load byte from zero page (AC=[D])
-ST     $DD      Store byte in zero page ([D]=AC)
-LDW    $DD      Word load from zero page (AC=[D]+256*[D+1])
-STW    $DD      Word load from zero page ([D]=AC&255,[D+1]=AC/256)
-ADDW   $DD      Word addition with zero page (AC+=[D]+256*[D+1])
-SUBW   $DD      Word subtraction with zero page (AC-=[D]+256*[D+1])
-ADDI   $DD      Add small positive constant (AC+=D)
-SUBI   $DD      Subtract small positive constant (AC+=D)
+LDWI   $DDDD    Load immediate constant (vAC=$DDDD)
+LDI    $DD      Load immediate constant (vAC=$DD)
+LD     $DD      Load byte from zero page (vAC=[D])
+ST     $DD      Store byte in zero page ([D]=vAC)
+LDW    $DD      Word load from zero page (vAC=[D]+256*[D+1])
+STW    $DD      Word load from zero page ([D]=vAC&255,[D+1]=vAC/256)
+ADDW   $DD      Word addition with zero page (vAC+=[D]+256*[D+1])
+SUBW   $DD      Word subtraction with zero page (vAC-=[D]+256*[D+1])
+ADDI   $DD      Add small positive constant (vAC+=D)
+SUBI   $DD      Subtract small positive constant (vAC+=D)
 INC    $DD      Increment zero page byte ([D]++)
-ANDI   $DD      Logical-AND with constant (AC&=D)
-ORI    $DD      Logical-OR with constant (AC|=D)
-XORI   $DD      Logical-XOR with constant (AC^=D)
-PEEK   -        Read byte from memory (AC=[AC])
-POKE   $DD      Write byte in memory ([[D+1],[D]]=AC)
-LOOKUP $DD      ROM lookup (AC=ROM[[D+1],[D]])
-COND   $CC $DD  Test AC and branch conditionally. $CC can be EQ,NE,LT,GT,LE,GE
-BRA    $DD      Branch unconditionally (PC=D+256*(PC/256))
-CALL   -        Goto address and remember where we came from (RT=PC+1, PC=AC-2)
-PUSH   -        Push value on stack ([--SP]=RT&255,[--SP]/256)
-PULL   -        Pop value from stack(AC=[SP]+256*[SP+1], SP+=2)
-SYS    $DD      Native function call for at most $DD*2 cycles
+ANDI   $DD      Logical-AND with constant (vAC&=D)
+ORI    $DD      Logical-OR with constant (vAC|=D)
+XORI   $DD      Logical-XOR with constant (vAC^=D)
+PEEK   -        Read byte from memory (vAC=[vAC])
+POKE   $DD      Write byte in memory ([[D+1],[D]]=vAC)
+LOOKUP $DD      ROM lookup (vAC=ROM[[D+1],[D]])
+COND   $CC $DD  Test vAC and branch conditionally. $CC can be EQ,NE,LT,GT,LE,GE
+BRA    $DD      Branch unconditionally (vPC=D+256*(vPC/256))
+CALL   -        Goto address but remember vPC (vRT=vPC+1, vPC=vAC-2)
+PUSH   -        Push value on stack ([--vSP]=vRT&255,[--vSP]/256)
+PULL   -        Pop value from stack(vAC=[vSP]+256*[vSP+1], vSP+=2)
+SYS    $DD      Native function call for at most $DD ticks ($DD*2 cycles)
 
+-- End of document --

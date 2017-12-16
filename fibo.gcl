@@ -5,10 +5,10 @@
     A B+ C=                             {30 C=A+B}
     B A= C B=                           {40 A=B: B=C}
     if>0 loop]                          {50 IF B>0 THEN 30}
-  $4548 D=                              {60 D=$4448: REM MIDDLE OF SCREEN}
+  $4548 D= {Middle of screen}           {60 D=$4448: REM MIDDLE OF SCREEN}
   [do
     C [if<0 15 D! else 5 D!]            {70 IF C<0 POKE D,15 ELSE POKE D,5}
     C C+ C=                             {80 C=C+C}
-    1 D+ D=                             {90 D=1+D}
+    D 1+ D=                             {90 D=1+D}
     -$4558 D+ if<0 loop]                {100 IF D<$4458 THEN 70}
   loop]                                 {110 GOTO 10}
