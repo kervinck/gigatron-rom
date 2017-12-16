@@ -98,7 +98,7 @@ int main(void)
   fclose(fp);
 
   int vgaX=0, vgaY=0;
-  for (long long t=-1; ; t++) {
+  for (long long t=-2; ; t++) {
     if (t < 0) S.PC = 0; // MCP100 Power-On Reset
 
     CpuState T = cpuCycle(S); // Update CPU
