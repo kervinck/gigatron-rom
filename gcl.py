@@ -11,19 +11,20 @@ class Program:
     self.loops = {} # block -> address of last do
     self.conds = {} # block -> address of continuation
     self.defs  = {} # block -> address of last def
-    self.vPC = 0
+    self.vars  = {} # name -> address
+    self.vPC = None
     self.org(address)
 
   def org(self, address):
     # Configure start address for emit
-    if self.vPC != address:
-      if self.vPC:
-        print '%04x' % self.vPC
-      print '%04x GCL' % address,
-      ld(val(address&0xff),regX)
-      ld(val(address>>8),regY)
+    if self.vPC is not None:
+      print '%04x' % self.vPC
+      print '%04x vCPU code' % address,
+    ld(val(address&0xff),regX)
+    ld(val(address>>8),regY)
     self.vPC = address
-    self.bytes = 256 # Max bytes to go
+    page = address & ~255
+    self.pageEnd = page + (249 if page <= 0x400 else 256)
 
   def thisBlock(self):
     return self.blocks[-1]
@@ -70,10 +71,9 @@ class Program:
 
   def getAddress(self, var):
     if isinstance(var, str):
-      if len(var) > 1:
-        self.error('Name too long %s' % repr(var))
-      o = ord(var[0]) - ord('A')
-      return 0x81 + 2*o # XXX Proper allocation
+      if var not in self.vars:
+        self.vars[var] = zpByte(2)
+      return self.vars[var]
     else:
       if var<0 or var>255:
         self.error('Index out of range %s' % repr(var))
@@ -81,20 +81,18 @@ class Program:
 
   def emit(self, byte):
     """Next program byte in RAM"""
-    if self.bytes <= 0:
+    if self.vPC >= self.pageEnd:
         self.error('Out of code space')
     st(val(byte), eaYXregOUTIX) # XXX Use ROM tables (or yield)
-    self.vPC = step(self.vPC)
-    self.bytes -= 1
+    self.vPC += 1
 
   def opcode(self, ins):
     """Next opcode in RAM"""
-    if self.bytes <= 0:
+    if self.vPC >= self.pageEnd:
         self.error('Out of code space')
     st(val(lo(ins)),eaYXregOUTIX) # XXX Use ROM tables (or yield)
     C('%04x %s' % (self.vPC, ins))
-    self.vPC = step(self.vPC)
-    self.bytes -= 1
+    self.vPC += 1
 
   def word(self, word):
     """Process a word and emit its code"""
@@ -167,12 +165,9 @@ class Program:
       var, con, op = self.parseWord(word) # XXX Simplify this
       if op is None:
         if var:
-          if var[0].isupper() and len(var) == 1:
-            self.opcode('LDW')
-            self.emit(self.getAddress(var))
-            C('%04x %s' % (prev(self.vPC, 1), repr(var)))
-          else:
-            self.error('Not implemented %s' % repr(word))
+          self.opcode('LDW')
+          self.emit(self.getAddress(var))
+          C('%04x %s' % (prev(self.vPC, 1), repr(var)))
         else:
           if 0 <= con < 256:
             self.opcode('LDI')
@@ -252,12 +247,9 @@ class Program:
           self.emit(self.getAddress(var)+1)
           C('%04x %s+1' % (prev(self.vPC, 1), repr(var)))
       elif op == '?' and var:
-          if var[0].isupper() and len(var) == 1:
-            self.opcode('LDW')
-            self.emit(self.getAddress(var))
-            C('%04x %s' % (prev(self.vPC, 1), repr(var)))
-          else:
-            self.error('Not implemented %s' % repr(word))
+          self.opcode('LDW')
+          self.emit(self.getAddress(var))
+          C('%04x %s' % (prev(self.vPC, 1), repr(var)))
           self.opcode('PEEK')
       elif op == '<++' and var:
           self.opcode('INC')
@@ -363,6 +355,8 @@ class Program:
     print '%04x' % self.vPC
     if len(self.conds) > 0:
       self.error('Dangling if statements')
+    print '%04x globals %d' % (zpByte(0), len(self.vars))
+    print sorted(self.vars.items())
 
   def error(self, message):
     prefix = '\nGCL error:'
@@ -374,6 +368,3 @@ class Program:
 def prev(address, step=2):
   """Take vPC two bytes back, wrap around if needed to stay on page"""
   return (address & 0xff00) | ((address-step) & 0x00ff)
-
-def step(address, step=1):
-  return (address & 0xff00) | ((address+step) & 0x00ff)

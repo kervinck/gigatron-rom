@@ -11,7 +11,6 @@
 #
 #  TODO:
 #
-#  XXX: Function names
 #  XXX: Text screen
 #  XXX: ROM load / bootstrapping
 #  XXX: Image demo
@@ -33,6 +32,7 @@
 #  XXX: Threading and sleeping
 #  XXX: Sprites by scanline 4 reset method? ("videoG"=graphics)
 #  XXX: Dynamic memory allocation
+#  XXX: Scoping for variables
 #  XXX: Memory-mapped I/O
 #  XXX: Macros
 #       (def plot
@@ -170,15 +170,15 @@ vAC     = zpByte(2)             # Interpreter accumulator, 16-bits
 vRT     = zpByte(2)             # Return address, for returning after CALL
 define('vRT', vRT)
 vSP     = zpByte(2)             # Stack pointer ([vSP+1] remains zero)
+vTicks  = zpByte()              # Interpreter ticks are units of 2 clocks
+vTmp    = zpByte()
 
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
-zpFree  = zpByte()
+zpFree  = zpByte(0)
 
 # Export some zero page variables to GCL
 define('soundTimer', soundTimer)
 define('screenY', screenY)
-
-# XXX GCL variables start at 0x81
 
 #-----------------------------------------------------------------------
 #
@@ -859,9 +859,6 @@ ld(val(syncBits^hSync), regOUT) #4 Start horizontal pulse
 #-----------------------------------------------------------------------
 
 align(0x100,0x100)
-
-vTicks  = zpFree                # Interpreter ticks are units of 2 clocks
-vTmp    = zpFree+1
 
 # Enter the timing-aware application interpreter (aka virtual CPU, vCPU)
 #

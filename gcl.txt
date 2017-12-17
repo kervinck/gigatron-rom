@@ -69,11 +69,11 @@ Constants can be preceded by '-' or '+' (note: -$1000, not $-0000).
 For convenience, symbols defined by the host system can be referenced by
 prefixing a backslash, e.g. '\fontData'. This can be used anywhere where an
 integer is expected.
-In "version 0" we can only use single upper case letters A-Z for variable names.
+Variable names start with an alphanumeric character and are case sensitive.
 The overview below uses the following conventions:
 'i' indicates an 8-bit integer constant.
 'ii' indicates a 16-bit integer constant.
-'X' indicates a named variable. Variables are global.
+'X' indicates a named variable. Variables are allocated globally on the zero page.
 
 --------------------
 Meaning of GCL words

@@ -3,98 +3,89 @@
 $0400:
 
 {120 frames startup delay (with sound) to wait for VGA monitor}
-
 120 \soundTimer!
 [do \soundTimer? if<>0loop]
 
-{DrawBlock P0 P1 Color}
-{ClrScreen Color}
-{DrawChar Pen Char Color BColor}
-{DrawText S0}
-
-[def {DrawChar D}
+[def {DrawChar Char Pos}
 
   {Map ASCII code to offset in font table}
-  D 82- [if<0 50+ E= \fontL else E= \fontH] F= {Low or high page}
-  E E+ T= T+ E+ {Multiply by 5}
-  F+ F=         {Add to font page start}
-  $800 S+ U=    {Next text line, where to stop the inner drawing loop}
+  Char 82- [if<0 50+ E= \fontL else E= \fontH] F= {Low or high page}
+  E E+ T= T+ E+                                   {Multiply by 5}
+  F+ F=                                           {Add to font page start}
+  $800 Pos+ U=                                    {Next text line, where to stop the inner drawing loop}
 
-  {Print character at font position F to screen position S}
+  {Print character at font position F to screen position Pos}
   5 I= [do
     I [if<>0 F 0; F<++ else 0] A= {6 slices, 0-4 from ROM and last is 0}
-    S T=
+    Pos T=
     {Draw vertical slice}
     [do
-      A 128& [if=0 0 {Black} T! else P {Pen color} T!]
+      A 128& [if=0 0 {Black} else Color] T!
       A A+ A=
       T>++
       T U- if<0loop]
-    S<++
+    Pos<++
     I 1- I= if>=0loop]
   ret
-] O=
+] DrawChar=
 
 [def {DrawText C}
   push
   [do
-    C? D=   {Next character to be printed}
-    if<>0   {Zero terminates the string and loop}
-      C<++  {Advance text pointer}
-      {D 10^ [if=0 S<! $800 S+ S= else O call]} O call
+    Text? Char= {Next character to be printed}
+    if<>0       {Zero terminates the string and loop}
+      Text<++   {Advance text pointer}
+      Char 10^ [if=0 Pos<! $800 Pos+ Pos= else DrawChar call]
     loop]
   pop call
-] W=
+] DrawText=
 
-62 P= {Pen color}
+62 Color= {Pen color}
 [do
-  $0800 S= {Pen position at top of screen}
+  $0800 Pos= {Pen position at top of screen}
   [def {Gigatron} $47. $69. $67. $61. $74. $72. $6f. $6e.
        { TTL com} $20. $54. $54. $4c. $20. $63. $6f. $6d.
        {puter RO} $70. $75. $74. $65. $72. $20. $52. $4f.
        {M0\0}     $4d. $30. 0.
-  ] C=
-  W call
-  P 8^ if<>0 P 9- P= loop]
+  ] Text=
+  DrawText call
+  Color 8^ if<>0 Color 9- Color= loop]
 
 {Scroller game, might become Zaxxon or Flappy Bird}
 
-$0111 S= {X shift starting from line 8}
+$0111 ShiftControl= {X shift starting from line 8}
 
-{Random}
-0 Q= R=
+{Rnd0}
+0 Rnd1= Rnd0=
 J=
 
-{Ball acceleration E, height Y and velocity Z}
-E=
-Z=
-G= {Saved background}
-$1800 Y= B=
-
-{Obstacle height}
-90 H=
+{Ball acceleration BallA, height Y and velocity BallV}
+BallA= BallV= OldPixel=
 
 $0500 call
 {---------- Page 5 ----------}
 $0500:
 
+$1800 BallY= Ball=
+90 Height=
+
 [do
   {Get X from scanline table}
-  S? X=
+  ShiftControl? X=
 
   {Enable gravity after a while}
-  120^ [if=0 10 E=]
+  120^ [if=0 10 BallA=]
 
   {Stupid RNG}
-  S? R+ Q+ R=
-  Q+ [if<0 43^] Q+ Q+ Q=
+  ShiftControl? Rnd0+ Rnd1+ Rnd0=
+  Rnd1+ [if<0 43^] Rnd1+ Rnd1+ Rnd1=
 
   {Random height adjustment}
-  H 88-  [if>0 R  16& if<>0 H 1- H=]
-  H 118- [if<0 R 128& if<>0 H 1+ H=]
+  Height 88-  [if>0 Rnd0  16& if<>0 Height 1- Height=]
+  Height 118- [if<0 Rnd0 128& if<>0 Height<++]
 
   {J=($08+H)<<8}
-  H $08+ J>!
+  Height $08+ J>!
 
   {X drawing position is 1 pixel outside the visible area}
   X 160+ 255& T=
@@ -106,7 +97,7 @@ $0500:
     V if>0loop]
 
   {Star}
-  R 127& A= A 111- [if>0 119 A=]
+  Rnd0 127& A= A 111- [if>0 119 A=]
   A 16+ A>! T A<!
   2 {Red} A!
 
@@ -115,7 +106,7 @@ $0500:
 
   63 V! {First pixel white}
   V>++
-  X 8& H+ C=                          {Begin of checkerboard}
+  X 8& Height+ C=                     {Begin of checkerboard}
   [do [C 1+ C= 8& if=0 42 else 32] V! {Checkerboard colors}
       V>++
       V if>0loop]
@@ -130,33 +121,33 @@ $0600:
   [do \screenY? if<>0loop]
 
   {Scroll screen 1 pixel}
-  X 1+ S!
+  X 1+ ShiftControl!
 
   {Clear ball}
-  G B!
+  OldPixel Ball!
 
   {Update ball position and velocity}
-  E Z+ Z= {Update velocity with gravity}
-  Y Z+ Y= {Update height with velocity}
+  BallA BallV+ BallV= {Update velocity with gravity}
+  BallY BallV+ BallY= {Update height with velocity}
 
   {Check new ball position}
-  X 50+ B=
-  Y>? B>!
-  B? G=
+  X 50+ Ball=
+  BallY>? Ball>!
+  Ball? OldPixel=
 
   {Reverse if we're hitting something}
-  G 2- [if>0
-    0 Z- Z=
-    Y Z+ Y=
+  OldPixel 2- [if>0
+    0 BallV- BallV=
+    Y BallV+ Y=
     10 \soundTimer! {1/6th second of sound}
 
-    X 50+ B=
-    Y>? B>!
-    B? G=
+    X 50+ Ball=
+    BallY>? Ball>!
+    Ball? OldPixel=
   ]
 
   {Draw the ball}
-  63 {White} B!
+  63 {White} Ball!
 
   ret
 
