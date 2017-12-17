@@ -2,10 +2,6 @@
 {---------- Page 4 ----------}
 $0400:
 
-{120 frames startup delay (with sound) to wait for VGA monitor}
-120 \soundTimer!
-[do \soundTimer? if<>0loop]
-
 [def {DrawChar Char Pos}
 
   {Map ASCII code to offset in font table}
@@ -29,30 +25,64 @@ $0400:
   ret
 ] DrawChar=
 
-[def {DrawText C}
+[def {DrawText Text}
   push
   [do
     Text? Char= {Next character to be printed}
     if<>0       {Zero terminates the string and loop}
       Text<++   {Advance text pointer}
-      Char 10^ [if=0 Pos<! $800 Pos+ Pos= else DrawChar call]
+      Char 10^  [if=0 Pos<! $800 Pos+ Pos=
+                else DrawChar call]
     loop]
   pop call
 ] DrawText=
 
+[def
+  {*** Gigatron 32K ***}
+  $20. $20. $20.
+  $2a. $2a. $2a. $20. $47. $69. $67. $61.
+  $74. $72. $6f. $6e. $20. $33. $32. $4b.
+  $20. $2a. $2a. $2a. $20. $20. $20. $20. 10.
+  {TTL color computer ROM v0}
+  $54. $54. $4c. $20. $63. $6f. $6c. $6f.
+  $72. $20. $63. $6f. $6d. $70. $75. $74.
+  $65. $72. $20. $52. $4f. $4d. $20. $76.
+  $30. $20. $20. 0.
+] Welcome=
+
+$0500 call
+
+{---------- Page 5 ----------}
+$0500:
+
+[def
+  $1800 Pos=
+  [do
+    [do 0 Pos! Pos>++ Pos if>0loop]
+    $9801 Pos+ Pos=
+    255& 160^ if<>0loop]
+  ret
+] Clr=
+
+{120 frames startup delay (with sound) to wait for VGA monitor}
+180 \soundTimer!
+
+8 Color=
+$800 Pos=
+Welcome Text=
+DrawText call
+Clr call
+
+[do \soundTimer? if<>0loop]
+
 62 Color= {Pen color}
 [do
-  $0800 Pos= {Pen position at top of screen}
-  [def {Gigatron} $47. $69. $67. $61. $74. $72. $6f. $6e.
-       { TTL com} $20. $54. $54. $4c. $20. $63. $6f. $6d.
-       {puter RO} $70. $75. $74. $65. $72. $20. $52. $4f.
-       {M0\0}     $4d. $30. 0.
-  ] Text=
+  $800 Pos= {Pen position at top of screen}
+  Welcome Text=
   DrawText call
   Color 8^ if<>0 Color 9- Color= loop]
 
 {Scroller game, might become Zaxxon or Flappy Bird}
-
 $0111 ShiftControl= {X shift starting from line 8}
 
 {Rnd0}
@@ -61,10 +91,6 @@ J=
 
 {Ball acceleration BallA, height Y and velocity BallV}
 BallA= BallV= OldPixel=
-
-$0500 call
-{---------- Page 5 ----------}
-$0500:
 
 $1800 BallY= Ball=
 90 Height=
@@ -96,6 +122,12 @@ $1800 BallY= Ball=
     V>++
     V if>0loop]
 
+  $0600 call
+loop]
+
+{---------- Page 6 ----------}
+$0600:
+
   {Star}
   Rnd0 127& A= A 111- [if>0 119 A=]
   A 16+ A>! T A<!
@@ -104,6 +136,7 @@ $1800 BallY= Ball=
   {Draw vertical line to bottom of screen}
   J T+ V=
 
+
   63 V! {First pixel white}
   V>++
   X 8& Height+ C=                     {Begin of checkerboard}
@@ -111,11 +144,6 @@ $1800 BallY= Ball=
       V>++
       V if>0loop]
 
-  $0600 call
-loop]
-
-{---------- Page 6 ----------}
-$0600:
 
   {Wait for vertical blank}
   [do \screenY? if<>0loop]
@@ -138,7 +166,7 @@ $0600:
   {Reverse if we're hitting something}
   OldPixel 2- [if>0
     0 BallV- BallV=
-    Y BallV+ Y=
+    BallY BallV+ BallY=
     10 \soundTimer! {1/6th second of sound}
 
     X 50+ Ball=
