@@ -9,33 +9,40 @@ $0400:
 
 {Test of built-in font}
 62 P= {Pen color}
+
 [do
-  $0700 C= {Text} {XXX: define a ROM string and get a pointer to it}
+  [def {Gigatron} $47. $69. $67. $61. $74. $72. $6f. $6e.
+       { TTL com} $20. $54. $54. $4c. $20. $63. $6f. $6d.
+       {puter RO} $70. $75. $74. $65. $72. $20. $52. $4f.
+       {M0 \0}    $4d. $30. $20. 0.
+  ] C=
   $0500 F= {Font data}
   $0800 S= {Pen position at top of screen}
   $1000 U= {Next line (to stop the inner drawing loop)}
 
   [do
-    C; D= {D is character to be printed}
-    if<>0
+    C? D= {Next character to be printed}
+    if<>0   {Zero terminates the string and loop}
+      C<++  {Advance text pointer}
 
-    D 82- [if<0 50+ E= $0500 else E= $0600] F=
-    E E+ T= T+ E+ {Multiply by 5}
-    F+ F= {Add to font page start}
-    {Print character}
-    5 I= [do
-      I [if<>0 F; else 0] A=
-      S T=
-      {Print vertical slice}
-      [do
-        A 128& [if=0 0 {Black} T! else P {Pen color} T!]
-        A A+ A=
-        T>++
-        T U- if<0loop]
-      F 1+ F=
-      S 1+ S=
-      I 1- I= if>=0loop]
-    C<++ loop]
+      {Map ASCII code to offset in font table}
+      D 82- [if<0 50+ E= $0500 else E= $0600] F= {Low or high page}
+      E E+ T= T+ E+ {Multiply by 5}
+      F+ F=         {Add to font page start}
+
+      {Print character at font position F to screen position S}
+      5 I= [do
+        I [if<>0 F 0; F<++ else 0] A= {6 slices, 0-4 from ROM and last is 0}
+        S T=
+        {Draw vertical slice}
+        [do
+          A 128& [if=0 0 {Black} T! else P {Pen color} T!]
+          A A+ A=
+          T>++
+          T U- if<0loop]
+        S<++
+        I 1- I= if>=0loop]
+    loop]
   P 8^ if<>0 P 9- P= loop]
 
 {Scroller game, might become Zaxxon or Flappy Bird}

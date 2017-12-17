@@ -10,6 +10,7 @@ class Program:
     self.blocks, self.block = [0], 1
     self.loops = {} # block -> address of last do
     self.conds = {} # block -> address of continuation
+    self.defs  = {} # block -> address of last def
     self.vPC = 0
     self.org(address)
 
@@ -59,6 +60,9 @@ class Program:
             # XXX why not always make a label?
             define('$if.%d.%d' % (block, self.conds[block]), prev(self.vPC))
             del self.conds[block]
+          if block in self.defs:
+            define('$def.%d.%d' % (block, self.defs[block]), prev(self.vPC))
+            del self.defs[block]
         elif nextChar == '(': pass
         elif nextChar == ')': pass
     self.word(nextWord)
@@ -97,6 +101,15 @@ class Program:
         self.error('Loop outside page')
       self.opcode('BRA')
       self.emit(to&255)
+    elif word == 'def':
+      block = self.thisBlock()
+      pc = self.vPC # Just an identifier
+      self.opcode('LDWI')
+      self.emit((pc+5)&0xff)
+      self.emit((pc+5)>>8)
+      self.opcode('BRA')
+      self.defs[block] = pc
+      self.emit(lo('$def.%d.%d' % (block, pc)))
     elif word == 'do':
       self.loops[self.thisBlock()] = self.vPC
     elif word == 'if<0':
@@ -111,19 +124,12 @@ class Program:
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
-    elif word == 'if<0':
-      self.opcode('COND')
-      self.opcode('GE')
-      block = self.thisBlock()
-      self.emit(lo('$if.%d.0' % block))
-      self.conds[block] = 0
     elif word == 'if=0':
       self.opcode('COND')
       self.opcode('NE')
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
-
     elif word == 'if<>0': self._emitIf('EQ')
     elif word == 'if=0':  self._emitIf('NE')
     elif word == 'if>=0': self._emitIf('LT')
@@ -146,12 +152,9 @@ class Program:
       self.emit(lo('$if.%d.1' % block))
       define('$if.%d.0' % block, prev(self.vPC))
       self.conds[block] = 1
-    elif word == 'push':
-      self.opcode('PUSH')
-    elif word == 'pull':
-      self.opcode('PULL')
-    elif word == 'call':
-      self.opcode('CALL')
+    elif word == 'push': self.opcode('PUSH')
+    elif word == 'pop':  self.opcode('POP')
+    elif word == 'call': self.opcode('CALL')
     elif word == 'return':
       self.opcode('LDW')
       self.opcode('vRT') # Not an opcode, but hijack what it does
@@ -174,7 +177,7 @@ class Program:
             self.opcode('LDWI')
             self.emit(con&0xff)
             self.emit(con>>8)
-      elif op == ':' and con: # XXX Replace with automatic allocation
+      elif op == ':' and con is not None: # XXX Replace with automatic allocation
           self.org(con)
       elif op == '=' and var:
           self.opcode('STW')
@@ -184,7 +187,7 @@ class Program:
           self.opcode('ADDW')
           self.emit(self.getAddress(var))
           C('%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '+' and con:
+      elif op == '+' and con is not None:
           if con < 0 or con >= 256:
             self.error('Out of range %s' % repr(con))
           self.opcode('ADDI')
@@ -193,32 +196,41 @@ class Program:
           self.opcode('SUBW')
           self.emit(self.getAddress(var))
           C('%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '-' and con:
+      elif op == '-' and con is not None:
           if con < 0 or con >= 256:
             self.error('Out of range %s' % repr(con))
           self.opcode('SUBI')
           self.emit(con)
-      elif op == '&' and con:
+      elif op == '.' and con is not None:
+          if con < 0 or con >= 256:
+            self.error('Out of range %s' % repr(con))
+          self.emit(con)
+      elif op == ';' and con is not None:
+          if con < 0 or con >= 256:
+            self.error('Out of range %s' % repr(con))
+          self.opcode('LOOKUP')
+          self.emit(con)
+      elif op == '&' and con is not None:
           if con<0 or 0xff<con:
             self.error('Out of range %s' % repr(con))
           self.opcode('ANDI')
           self.emit(con)
-      elif op == '|' and con:
+      elif op == '|' and con is not None:
           if con<0 or 0xff<con:
             self.error('Out of range %s' % repr(con))
           self.opcode('ORI')
           self.emit(con)
-      elif op == '^' and con:
+      elif op == '^' and con is not None:
           if con<0 or 0xff<con:
             self.error('Out of range %s' % repr(con))
           self.opcode('XORI')
           self.emit(con)
-      elif op == '!' and con:
+      elif op == '!' and con is not None:
           if con<0 or 0xff<con:
             self.error('Out of range %s' % repr(con))
           self.opcode('ST')
           self.emit(con)
-      elif op == '?' and con:
+      elif op == '?' and con is not None:
           if con<0 or 0xff<con:
             self.error('Out of range %s' % repr(con))
           self.opcode('LD')
@@ -259,10 +271,6 @@ class Program:
           self.opcode('LD')
           self.emit(self.getAddress(var)+1)
           C('%04x %s+1' % (prev(self.vPC, 1), repr(var)))
-      elif op == ';' and var:
-          self.opcode('LOOKUP')
-          self.emit(self.getAddress(var))
-          C('%04x %s' % (prev(self.vPC, 1), repr(var)))
       else:
         self.error('Invalid word %s' % repr(word))
 

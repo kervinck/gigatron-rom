@@ -250,12 +250,12 @@ def trampoline():
   while pc()&255 < 256-5:
     nop()
 
-  bra(busAC);                   #17
+  bra(busAC);                   #13
   C('Trampoline for page $%02x00 lookups' % (pc()>>8))
-  bra(val(253))                 #18
-  ld(d(hi('.lookup0')),regY)    #20
-  jmpy(d(lo('.lookup0')))       #21
-  ld(d(vPC+1),busRAM|regY)      #22
+  bra(val(253))                 #14
+  ld(d(hi('rLookup')),regY)     #16
+  jmpy(d(lo('rLookup')))        #17
+  ld(d(vPC+1),busRAM|regY)      #18
 
 #-----------------------------------------------------------------------
 #
@@ -987,12 +987,6 @@ bne(d(lo('.cond4')))            #20
 beq(d(lo('.cond5')))            #21
 ld(busRAM|eaYXregAC)            #22
 
-# Conditional NE: Branch if not zero (if(ALC!=0)PCL=D)
-label('NE')
-beq(d(lo('.cond4')))            #20
-bne(d(lo('.cond5')))            #21
-ld(busRAM|eaYXregAC)            #22
-
 # Conditional GT: Branch if positive (if(ALC>0)PCL=D)
 label('GT')
 ble(d(lo('.cond4')))            #20
@@ -1035,8 +1029,8 @@ ld(val(-16/2))                  #13
 bra(d(lo('NEXT')))              #14
 #nop()                          #(15)
 #
-# Instruction PULL, (AC=[SP++]), 22 cycles
-label('PULL')
+# Instruction POP, (AC=[SP++]), 22 cycles
+label('POP')
 ld(d(vSP),busRAM|regX)          #10 (overlap with ST)
 ld(busRAM,ea0XregAC)            #11
 st(d(vAC))                      #12
@@ -1055,21 +1049,23 @@ ld(val(-26/2))                  #23
 bra(d(lo('NEXT')))              #24
 #nop()                          #(25)
 #
-# Instruction LOOKUP, (AC=ROM[[D+1],[D]]), 28 cycles
+# Conditional NE: Branch if not zero (if(ALC!=0)PCL=D)
+label('NE')
+beq(d(lo('.cond4')))            #20 (overlap with POP)
+bne(d(lo('.cond5')))            #21
+ld(busRAM|eaYXregAC)            #22
+
+# Instruction LOOKUP, (AC=ROM[AC+256*D]), 24 cycles
 label('LOOKUP')
-st(d(vTmp))                     #10 (overlap with PULL)
-adda(val(1),regX)               #11
-ld(busRAM,ea0XregAC)            #12
-ld(busAC,regY)                  #13
-ld(d(vTmp),busRAM|regX)         #14
-jmpy(d(251));                   C('Trampoline offset')#15
-ld(busRAM,ea0XregAC)            #16
-label('.lookup0')
-st(d(vAC))                      #23
-ld(val(0))                      #24
-st(d(vAC+1))                    #25
-bra(d(lo('NEXT')))              #26
-ld(val(-28/2))                  #27
+adda(d(vAC+1),busRAM|regY)      #10
+jmpy(d(251));                   C('Trampoline offset')#11
+ldzp(d(vAC))                    #12
+label('rLookup')
+st(d(vAC))                      #19
+ld(val(0))                      #20
+st(d(vAC+1))                    #21
+bra(d(lo('NEXT')))              #22
+ld(val(-24/2))                  #23
 
 # Instruction PUSH, ([--SP]=RT), 14 cycles
 label('PUSH')
@@ -1260,13 +1256,28 @@ st(ea0XregAC)                   #13
 bra(d(lo('NEXT')))              #14
 ld(val(-16/2))                  #15
 
+# Instruction TBD, To be defined, 18 cycles
+label('TBD')
+ld(val(hi('tbd')),regY)         #10
+jmpy(d(lo('tbd')))              #11
+st(d(vTmp))                     #12
+
+# Instruction TBD2, To be defined, 16 cycles
+label('TBD2')
+nop()                           #10
+assert(pc()&255 == 0)
+
 #-----------------------------------------------------------------------
 #
 #  ROM page 4: Application interpreter extension
 #
 #-----------------------------------------------------------------------
+align(0x100, 0x100)
 
-align(0x100,0x100)
+ld(val(hi('RETURN')),regY)      #11
+jmpy(d(lo('RETURN')))           #12
+ld(val(-16/2))                  #13
+
 
 # ADDI implementation
 label('addi')
@@ -1308,6 +1319,12 @@ st(d(vAC+1))                    #22
 ld(val(hi('RETURN')),regY)      #23
 jmpy(d(lo('RETURN')))           #24
 ld(val(-28/2))                  #25
+
+# TBD implementation
+label('tbd')
+ld(val(hi('RETURN')),regY)      #13
+jmpy(d(lo('RETURN')))           #14
+ld(val(-18/2))                  #15
 
 #init_rng(s1,s2,s3) //Can also be used to seed the rng with more entropy during use.
 #{
@@ -1360,17 +1377,8 @@ for ch in range(32+50, 128):
 trampoline()
 
 #-----------------------------------------------------------------------
-align(0x100)
-
-for c in 'Gigatron TTL computer ROM0 ':
-  ld(val(ord(c)))
-ld(val(0))
-
-trampoline()
-
-#-----------------------------------------------------------------------
 #
-#  ROM page 8: Bootstrap vCPU
+#  ROM page 7: Bootstrap vCPU
 #
 #-----------------------------------------------------------------------
 

@@ -37,32 +37,35 @@ two rather notable mini-languages.
 The programming model is primarily "accumulator oriented".
 To accommodate the lack of relative addressing and hardware stack on the host
 CPU, expression and call stacks will be (mostly) static instead of dynamic.
-vAC is the virtual accumulator
-vPC is the virtual program counter. Programs run from RAM.
-vAC and vPC are 16-bits and reside in the zero page.
-vPC auto-increments just its low byte, but function calls can go across pages.
-vRT is the program counter at the most recent CALL instruction
+
+The virtual regisers at all 16-bits and reside in the zero page.
+
+vAC is the virtual accumulator, used by instructions as operand and/or result.
+vPC is the virtual program counter. Programs run from RAM. When executing, vPC
+    auto-increments just its low byte, so it wraps around on the same RAM page.
+    (Code normally doesn't "use" this.) Function calls can go across pages.
+vRT is the stored program counter pointing to the instruction after the most
+    recent CALL instruction. This is used to return after making a subroutine
+    call. When nesting subroutines, vRT should be pushed on the stack.
 vSP is the stack pointer. The stack lives in the zero page top and grows down.
+    Although vSP is 16-bits, only the low byte is in use and the high byte is 0.
 
 Program variables are 16-bit words and typically hold a number or a pointer.
-Memory can be addressed as bytes or as unaligned little-endian words.
-Most instructions use 2 bytes (opcode + operand), but some have 1 and others 3.
-Opcodes are simply jump offsets into the interpeter ROM code page.
-Named global variables reside in the zero page, locals in the code page itself.
+Named variables reside in the zero page. Arbitrary memory can be addressed
+as bytes using 16-bit pointers.
 
 -----------------
 Notes on notation
 -----------------
 GCL programs are written as a long sequence of "words" without much structure
 enforced by the compiler. Most words map directly to a single virtual
-instruction and therefore also encode an embedded operand (e.g. 1+).
-Many words operate on both vAC and some variable or constant.
-Sequences can be grouped with () {} or [], each of which has its own meaning.
-Spaces and newlines simply separate words. Use indentation for clarity.
-There is no need for spaces around the grouping characters []{}().
+instruction and therefore also encode an embedded operand (e.g. 1+). Many words
+operate on both vAC and some variable or constant. Sequences can be grouped
+with () {} or [], each of which has its own meaning. Spaces and newlines simply separate words. Use indentation for clarity. There is no need for spaces around
+the grouping characters []{}().
 Constants are decimal, or hexadecimal when preceded with '$'.
 Constants can be preceded by '-' or '+' (note: -$1000, not $-0000).
-In "version 0" use just single letters A-Z for variable names.
+In "version 0" we can only use single upper case letters A-Z for variable names.
 The overview below uses the following conventions:
 'i' indicates an 8-bit integer constant.
 'ii' indicates a 16-bit integer constant.
@@ -91,7 +94,8 @@ X?                      Read unsigned byte from memory pointed by X into vAC
 X!                      Write vAC as byte to memory pointed by variable
 i?                      Read zero page address i as unsigned byte into vAC
 i!                      Store vAC as byte into zero page address i
-X;                      ROM table lookup
+i;                      ROM table lookup from address vAC + 256*i
+lookup                  Alias for '0;'
 
 Structured programming
 ----------------------
@@ -100,18 +104,23 @@ if>0                    Continue executing code if vAC>0, otherwise jump to
                         end of the block (or past an optional matching "else")
                         Conditions are "=0" ">0" "<0" "<=0" ">=0" "<>0"
 else                    When encountered, skip rest of code until end of block
-do                      Mark start of loop
+do                      Mark the start of a loop
 loop                    Jump back to matching "do"
 if>0loop                Optimization for "if>0 loop" (works with all conditions)
+def                     Load next vPC in vAC and jump to end of current block.
 
 Subroutines
 -----------
 call                    Jump to vAC, store vPC in vRT
-return                  Jump to vRT, for use in leaf subroutines
-push                    Push vRT onto stack
-                        Use "push" on entering non-leaf subroutines
-pull                    Put top of stack in vAC
-                        Use "pull call" to return from non-leaf subroutines
+ret                     Jump to vRT, to return from a leaf subroutine
+push                    Push vRT onto stack, for entering a non-leaf subroutine
+pop                     Remove top of stack and put value in vAC
+return                  Return from non-leaf subroutines (alias for "pull call")
+
+Data
+----
+"Text"                  Text string (XXX zero termination?)
+i.                      Raw byte-value i
 
 ----------------------
 vCPU instruction table
@@ -138,12 +147,14 @@ ORI    $DD      Logical-OR with constant (vAC|=D)
 XORI   $DD      Logical-XOR with constant (vAC^=D)
 PEEK   -        Read byte from memory (vAC=[vAC])
 POKE   $DD      Write byte in memory ([[D+1],[D]]=vAC)
-LOOKUP $DD      ROM lookup (vAC=ROM[[D+1],[D]])
-COND   $CC $DD  Test vAC and branch conditionally. $CC can be EQ,NE,LT,GT,LE,GE
+LOOKUP $DD      ROM lookup (vAC=ROM[AC+256*D])
+COND   $CC $DD  Test vAC and branch conditionally. CC can be EQ,NE,LT,GT,LE,GE
 BRA    $DD      Branch unconditionally (vPC=D+256*(vPC/256))
 CALL   -        Goto address but remember vPC (vRT=vPC+1, vPC=vAC-2)
 PUSH   -        Push value on stack ([--vSP]=vRT&255,[--vSP]/256)
 PULL   -        Pop value from stack(vAC=[vSP]+256*[vSP+1], vSP+=2)
 SYS    $DD      Native function call for at most $DD ticks ($DD*2 cycles)
+TBD1   $DD      To be defined (placeholder)
+TBD2   $DD      To be defined (placeholder) Decrement and loop?
 
 -- End of document --

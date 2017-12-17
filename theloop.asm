@@ -125,7 +125,7 @@ cold:         003c c204  st   [$04]
               0076 007c  ld   $7c         ;Bootstrap vCPU
               0077 c20e  st   [$0e]
               0078 0000  ld   $00
-              0079 1408  ld   $08,y
+              0079 1407  ld   $07,y
               007a e000  jmp  y,$00
               007b c20f  st   [$0f]
 .retn:        007c 000f  ld   $0f         ;LEDs |****|
@@ -522,217 +522,223 @@ COND:         0336 011b  ld   [$1b]
 EQ:           034d ec45  bne  .cond4
               034e f048  beq  .cond5
               034f 0d00  ld   [y,x]
-NE:           0350 f045  beq  .cond4
-              0351 ec48  bne  .cond5
+GT:           0350 f845  ble  .cond4
+              0351 e448  bgt  .cond5
               0352 0d00  ld   [y,x]
-GT:           0353 f845  ble  .cond4
-              0354 e448  bgt  .cond5
+LT:           0353 f445  bge  .cond4
+              0354 e848  blt  .cond5
               0355 0d00  ld   [y,x]
-LT:           0356 f445  bge  .cond4
-              0357 e848  blt  .cond5
+GE:           0356 e845  blt  .cond4
+              0357 f448  bge  .cond5
               0358 0d00  ld   [y,x]
-GE:           0359 e845  blt  .cond4
-              035a f448  bge  .cond5
+LE:           0359 e445  bgt  .cond4
+              035a f848  ble  .cond5
               035b 0d00  ld   [y,x]
-LE:           035c e445  bgt  .cond4
-              035d f848  ble  .cond5
-              035e 0d00  ld   [y,x]
-LDI:          035f c21a  st   [$1a]
-              0360 0000  ld   $00
-              0361 c21b  st   [$1b]
-              0362 00f8  ld   $f8
-              0363 fc02  bra  NEXT
-ST:           0364 1200  ld   ac,x
-              0365 011a  ld   [$1a]
-              0366 c61a  st   [x]
-              0367 00f8  ld   $f8
-              0368 fc02  bra  NEXT
-PULL:         0369 111e  ld   [$1e],x
-              036a 0500  ld   [x]
-              036b c21a  st   [$1a]
-              036c 011e  ld   [$1e]
-              036d 9001  adda $01,x
-              036e 0500  ld   [x]
-              036f c21b  st   [$1b]
-              0370 011e  ld   [$1e]
-              0371 8002  adda $02
-              0372 c21e  st   [$1e]
-next1:        0373 0118  ld   [$18]
-              0374 a001  suba $01
-              0375 c218  st   [$18]
-              0376 00f3  ld   $f3
-              0377 fc02  bra  NEXT
-LOOKUP:       0378 c221  st   [$21]
-              0379 9001  adda $01,x
-              037a 0500  ld   [x]
-              037b 1600  ld   ac,y
-              037c 1121  ld   [$21],x
-              037d e0fb  jmp  y,$fb       ;Trampoline offset
-              037e 0500  ld   [x]
-.lookup0:     037f c21a  st   [$1a]
-              0380 0000  ld   $00
-              0381 c21b  st   [$1b]
-              0382 fc02  bra  NEXT
-              0383 00f2  ld   $f2
-PUSH:         0384 011e  ld   [$1e]
-              0385 b001  suba $01,x
-              0386 011d  ld   [$1d]
-              0387 c600  st   [x]
-              0388 011e  ld   [$1e]
-              0389 a002  suba $02
-              038a d21e  st   [$1e],x
-              038b 011c  ld   [$1c]
-              038c fc73  bra  next1
-              038d c600  st   [x]
-ANDI:         038e 211a  anda [$1a]
-              038f c21a  st   [$1a]
-              0390 0000  ld   $00
-              0391 c21b  st   [$1b]
+LDI:          035c c21a  st   [$1a]
+              035d 0000  ld   $00
+              035e c21b  st   [$1b]
+              035f 00f8  ld   $f8
+              0360 fc02  bra  NEXT
+ST:           0361 1200  ld   ac,x
+              0362 011a  ld   [$1a]
+              0363 c61a  st   [x]
+              0364 00f8  ld   $f8
+              0365 fc02  bra  NEXT
+POP:          0366 111e  ld   [$1e],x
+              0367 0500  ld   [x]
+              0368 c21a  st   [$1a]
+              0369 011e  ld   [$1e]
+              036a 9001  adda $01,x
+              036b 0500  ld   [x]
+              036c c21b  st   [$1b]
+              036d 011e  ld   [$1e]
+              036e 8002  adda $02
+              036f c21e  st   [$1e]
+next1:        0370 0118  ld   [$18]
+              0371 a001  suba $01
+              0372 c218  st   [$18]
+              0373 00f3  ld   $f3
+              0374 fc02  bra  NEXT
+NE:           0375 f045  beq  .cond4
+              0376 ec48  bne  .cond5
+              0377 0d00  ld   [y,x]
+LOOKUP:       0378 951b  adda [$1b],y
+              0379 e0fb  jmp  y,$fb       ;Trampoline offset
+              037a 011a  ld   [$1a]
+rLookup:      037b c21a  st   [$1a]
+              037c 0000  ld   $00
+              037d c21b  st   [$1b]
+              037e fc02  bra  NEXT
+              037f 00f4  ld   $f4
+PUSH:         0380 011e  ld   [$1e]
+              0381 b001  suba $01,x
+              0382 011d  ld   [$1d]
+              0383 c600  st   [x]
+              0384 011e  ld   [$1e]
+              0385 a002  suba $02
+              0386 d21e  st   [$1e],x
+              0387 011c  ld   [$1c]
+              0388 fc70  bra  next1
+              0389 c600  st   [x]
+ANDI:         038a 211a  anda [$1a]
+              038b c21a  st   [$1a]
+              038c 0000  ld   $00
+              038d c21b  st   [$1b]
+              038e fc02  bra  NEXT
+              038f 00f8  ld   $f8
+ORI:          0390 411a  ora  [$1a]
+              0391 c21a  st   [$1a]
               0392 fc02  bra  NEXT
-              0393 00f8  ld   $f8
-ORI:          0394 411a  ora  [$1a]
+              0393 00f9  ld   $f9
+XORI:         0394 611a  xora [$1a]
               0395 c21a  st   [$1a]
               0396 fc02  bra  NEXT
               0397 00f9  ld   $f9
-XORI:         0398 611a  xora [$1a]
-              0399 c21a  st   [$1a]
+BRA:          0398 c218  st   [$18]
+              0399 00f9  ld   $f9
               039a fc02  bra  NEXT
-              039b 00f9  ld   $f9
-BRA:          039c c218  st   [$18]
-              039d 00f9  ld   $f9
-              039e fc02  bra  NEXT
-POKE:         039f c221  st   [$21]
-              03a0 9001  adda $01,x
-              03a1 0500  ld   [x]
-              03a2 1600  ld   ac,y
-              03a3 1121  ld   [$21],x
-              03a4 0500  ld   [x]
-              03a5 1200  ld   ac,x
-              03a6 011a  ld   [$1a]
-              03a7 ce00  st   [y,x]
-              03a8 1519  ld   [$19],y
-              03a9 fc02  bra  NEXT
-              03aa 00f5  ld   $f5
-retry:        03ab 0118  ld   [$18]       ;Retry until sufficient time
-              03ac a002  suba $02
-              03ad c218  st   [$18]
-              03ae fce6  bra  RETURN
-              03af 00f6  ld   $f6
-SYS:          03b0 8120  adda [$20]
-              03b1 e8ab  blt  retry
-              03b2 151b  ld   [$1b],y
-              03b3 e11a  jmp  y,[$1a]
-SUBW:         03b4 1200  ld   ac,x
-              03b5 8001  adda $01
-              03b6 c221  st   [$21]
-              03b7 011a  ld   [$1a]
-              03b8 e8bd  blt  .subw0
-              03b9 a500  suba [x]
-              03ba c21a  st   [$1a]
-              03bb fcc0  bra  .subw1
-              03bc 4500  ora  [x]
-.subw0:       03bd c21a  st   [$1a]
-              03be 2500  anda [x]
-              03bf 0200  nop
-.subw1:       03c0 3080  anda $80,x
-              03c1 011b  ld   [$1b]
-              03c2 a500  suba [x]
-              03c3 1121  ld   [$21],x
-              03c4 a500  suba [x]
-              03c5 c21b  st   [$1b]
-              03c6 00f2  ld   $f2
-              03c7 fc02  bra  NEXT
-ADDW:         03c8 1200  ld   ac,x
-              03c9 8001  adda $01
-              03ca c221  st   [$21]
-              03cb 011a  ld   [$1a]
-              03cc 8500  adda [x]
-              03cd c21a  st   [$1a]
-              03ce e8d2  blt  .addw0
-              03cf a500  suba [x]
-              03d0 fcd4  bra  .addw1
-              03d1 4500  ora  [x]
-.addw0:       03d2 2500  anda [x]
-              03d3 0200  nop
-.addw1:       03d4 3080  anda $80,x
-              03d5 0500  ld   [x]
-              03d6 811b  adda [$1b]
-              03d7 1121  ld   [$21],x
-              03d8 8500  adda [x]
-              03d9 c21b  st   [$1b]
-              03da fc02  bra  NEXT
-              03db 00f2  ld   $f2
-PEEK:         03dc 0118  ld   [$18]
-              03dd a001  suba $01
-              03de c218  st   [$18]
-              03df 111a  ld   [$1a],x
-              03e0 151b  ld   [$1b],y
-              03e1 0d00  ld   [y,x]
-              03e2 c21a  st   [$1a]
-              03e3 0000  ld   $00
-              03e4 c21b  st   [$1b]
-              03e5 00f5  ld   $f5
-RETURN:       03e6 fc02  bra  NEXT        ;Return from SYS calls
-              03e7 1519  ld   [$19],y
-CALL:         03e8 0118  ld   [$18]
-              03e9 8001  adda $01         ;CALL has no operand, advances PC by 1
-              03ea c21c  st   [$1c]
-              03eb 011a  ld   [$1a]
-              03ec a002  suba $02         ;vAC is actual address, NEXT adds 2
-              03ed c218  st   [$18]
-              03ee 0119  ld   [$19]
-              03ef c21d  st   [$1d]
-              03f0 011b  ld   [$1b]
-              03f1 d619  st   [$19],y
-              03f2 fc02  bra  NEXT
-              03f3 00f5  ld   $f5
-ADDI:         03f4 1404  ld   $04,y
-              03f5 e000  jmp  y,$00
-              03f6 c221  st   [$21]
-SUBI:         03f7 1404  ld   $04,y
-              03f8 e00f  jmp  y,$0f
-              03f9 c221  st   [$21]
-INC:          03fa 1200  ld   ac,x
-              03fb 0500  ld   [x]
-              03fc 8001  adda $01
-              03fd c600  st   [x]
-              03fe fc02  bra  NEXT
-              03ff 00f8  ld   $f8
-addi:         0400 811a  adda [$1a]
-              0401 c21a  st   [$1a]
-              0402 e806  blt  .addi0
-              0403 a121  suba [$21]
-              0404 fc08  bra  .addi1
-              0405 4121  ora  [$21]
-.addi0:       0406 2121  anda [$21]
-              0407 0200  nop
-.addi1:       0408 3080  anda $80,x
-              0409 0500  ld   [x]
-              040a 811b  adda [$1b]
-              040b c21b  st   [$1b]
-              040c 1403  ld   $03,y
-              040d e0e6  jmp  y,$e6
-              040e 00f2  ld   $f2
-subi:         040f 011a  ld   [$1a]
-              0410 e815  blt  .subi0
-              0411 a121  suba [$21]
-              0412 c21a  st   [$1a]
-              0413 fc18  bra  .subi1
-              0414 4121  ora  [$21]
-.subi0:       0415 c21a  st   [$1a]
-              0416 2121  anda [$21]
-              0417 0200  nop
-.subi1:       0418 3080  anda $80,x
-              0419 011b  ld   [$1b]
-              041a a500  suba [x]
-              041b c21b  st   [$1b]
-              041c 1403  ld   $03,y
-              041d e0e6  jmp  y,$e6
-              041e 00f2  ld   $f2
-              041f 0200  nop
-              0420 0200  nop
-              0421 0200  nop
-              * 225 times
+POKE:         039b c221  st   [$21]
+              039c 9001  adda $01,x
+              039d 0500  ld   [x]
+              039e 1600  ld   ac,y
+              039f 1121  ld   [$21],x
+              03a0 0500  ld   [x]
+              03a1 1200  ld   ac,x
+              03a2 011a  ld   [$1a]
+              03a3 ce00  st   [y,x]
+              03a4 1519  ld   [$19],y
+              03a5 fc02  bra  NEXT
+              03a6 00f5  ld   $f5
+retry:        03a7 0118  ld   [$18]       ;Retry until sufficient time
+              03a8 a002  suba $02
+              03a9 c218  st   [$18]
+              03aa fce2  bra  RETURN
+              03ab 00f6  ld   $f6
+SYS:          03ac 8120  adda [$20]
+              03ad e8a7  blt  retry
+              03ae 151b  ld   [$1b],y
+              03af e11a  jmp  y,[$1a]
+SUBW:         03b0 1200  ld   ac,x
+              03b1 8001  adda $01
+              03b2 c221  st   [$21]
+              03b3 011a  ld   [$1a]
+              03b4 e8b9  blt  .subw0
+              03b5 a500  suba [x]
+              03b6 c21a  st   [$1a]
+              03b7 fcbc  bra  .subw1
+              03b8 4500  ora  [x]
+.subw0:       03b9 c21a  st   [$1a]
+              03ba 2500  anda [x]
+              03bb 0200  nop
+.subw1:       03bc 3080  anda $80,x
+              03bd 011b  ld   [$1b]
+              03be a500  suba [x]
+              03bf 1121  ld   [$21],x
+              03c0 a500  suba [x]
+              03c1 c21b  st   [$1b]
+              03c2 00f2  ld   $f2
+              03c3 fc02  bra  NEXT
+ADDW:         03c4 1200  ld   ac,x
+              03c5 8001  adda $01
+              03c6 c221  st   [$21]
+              03c7 011a  ld   [$1a]
+              03c8 8500  adda [x]
+              03c9 c21a  st   [$1a]
+              03ca e8ce  blt  .addw0
+              03cb a500  suba [x]
+              03cc fcd0  bra  .addw1
+              03cd 4500  ora  [x]
+.addw0:       03ce 2500  anda [x]
+              03cf 0200  nop
+.addw1:       03d0 3080  anda $80,x
+              03d1 0500  ld   [x]
+              03d2 811b  adda [$1b]
+              03d3 1121  ld   [$21],x
+              03d4 8500  adda [x]
+              03d5 c21b  st   [$1b]
+              03d6 fc02  bra  NEXT
+              03d7 00f2  ld   $f2
+PEEK:         03d8 0118  ld   [$18]
+              03d9 a001  suba $01
+              03da c218  st   [$18]
+              03db 111a  ld   [$1a],x
+              03dc 151b  ld   [$1b],y
+              03dd 0d00  ld   [y,x]
+              03de c21a  st   [$1a]
+              03df 0000  ld   $00
+              03e0 c21b  st   [$1b]
+              03e1 00f5  ld   $f5
+RETURN:       03e2 fc02  bra  NEXT        ;Return from SYS calls
+              03e3 1519  ld   [$19],y
+CALL:         03e4 0118  ld   [$18]
+              03e5 8001  adda $01         ;CALL has no operand, advances PC by 1
+              03e6 c21c  st   [$1c]
+              03e7 011a  ld   [$1a]
+              03e8 a002  suba $02         ;vAC is actual address, NEXT adds 2
+              03e9 c218  st   [$18]
+              03ea 0119  ld   [$19]
+              03eb c21d  st   [$1d]
+              03ec 011b  ld   [$1b]
+              03ed d619  st   [$19],y
+              03ee fc02  bra  NEXT
+              03ef 00f5  ld   $f5
+ADDI:         03f0 1404  ld   $04,y
+              03f1 e003  jmp  y,$03
+              03f2 c221  st   [$21]
+SUBI:         03f3 1404  ld   $04,y
+              03f4 e012  jmp  y,$12
+              03f5 c221  st   [$21]
+INC:          03f6 1200  ld   ac,x
+              03f7 0500  ld   [x]
+              03f8 8001  adda $01
+              03f9 c600  st   [x]
+              03fa fc02  bra  NEXT
+              03fb 00f8  ld   $f8
+TBD:          03fc 1404  ld   $04,y
+              03fd e022  jmp  y,$22
+              03fe c221  st   [$21]
+TBD2:         03ff 0200  nop
+              0400 1403  ld   $03,y
+              0401 e0e2  jmp  y,$e2
+              0402 00f8  ld   $f8
+addi:         0403 811a  adda [$1a]
+              0404 c21a  st   [$1a]
+              0405 e809  blt  .addi0
+              0406 a121  suba [$21]
+              0407 fc0b  bra  .addi1
+              0408 4121  ora  [$21]
+.addi0:       0409 2121  anda [$21]
+              040a 0200  nop
+.addi1:       040b 3080  anda $80,x
+              040c 0500  ld   [x]
+              040d 811b  adda [$1b]
+              040e c21b  st   [$1b]
+              040f 1403  ld   $03,y
+              0410 e0e2  jmp  y,$e2
+              0411 00f2  ld   $f2
+subi:         0412 011a  ld   [$1a]
+              0413 e818  blt  .subi0
+              0414 a121  suba [$21]
+              0415 c21a  st   [$1a]
+              0416 fc1b  bra  .subi1
+              0417 4121  ora  [$21]
+.subi0:       0418 c21a  st   [$1a]
+              0419 2121  anda [$21]
+              041a 0200  nop
+.subi1:       041b 3080  anda $80,x
+              041c 011b  ld   [$1b]
+              041d a500  suba [x]
+              041e c21b  st   [$1b]
+              041f 1403  ld   $03,y
+              0420 e0e2  jmp  y,$e2
+              0421 00f2  ld   $f2
+tbd:          0422 1403  ld   $03,y
+              0423 e0e2  jmp  y,$e2
+              0424 00f7  ld   $f7
+              0425 0200  nop
+              0426 0200  nop
+              0427 0200  nop
+              * 219 times
               0500 0000  ld   $00         ;Char ' '
               0501 0000  ld   $00
               0502 0000  ld   $00
@@ -984,7 +990,7 @@ subi:         040f 011a  ld   [$1a]
               05fb fe00  bra  ac          ;Trampoline for page $0500 lookups
               05fc fcfd  bra  $05fd
               05fd 1403  ld   $03,y
-              05fe e07f  jmp  y,$7f
+              05fe e07b  jmp  y,$7b
               05ff 1519  ld   [$19],y
               0600 00fe  ld   $fe         ;Char 'R'
               0601 0090  ld   $90
@@ -1221,541 +1227,529 @@ subi:         040f 011a  ld   [$1a]
               06fb fe00  bra  ac          ;Trampoline for page $0600 lookups
               06fc fcfd  bra  $06fd
               06fd 1403  ld   $03,y
-              06fe e07f  jmp  y,$7f
+              06fe e07b  jmp  y,$7b
               06ff 1519  ld   [$19],y
-              0700 0047  ld   $47
-              0701 0069  ld   $69
-              0702 0067  ld   $67
-              0703 0061  ld   $61
-              0704 0074  ld   $74
-              0705 0072  ld   $72
-              0706 006f  ld   $6f
-              0707 006e  ld   $6e
-              0708 0020  ld   $20
-              0709 0054  ld   $54
-              070a 0054  ld   $54
-              070b 004c  ld   $4c
-              070c 0020  ld   $20
-              070d 0063  ld   $63
-              070e 006f  ld   $6f
-              070f 006d  ld   $6d
-              0710 0070  ld   $70
-              0711 0075  ld   $75
-              0712 0074  ld   $74
-              0713 0065  ld   $65
-              0714 0072  ld   $72
-              0715 0020  ld   $20
-              0716 0052  ld   $52
-              0717 004f  ld   $4f
-              0718 004d  ld   $4d
-              0719 0030  ld   $30
-              071a 0020  ld   $20
-              071b 0000  ld   $00
-              071c 0200  nop
-              071d 0200  nop
-              071e 0200  nop
-              * 223 times
-              07fb fe00  bra  ac          ;Trampoline for page $0700 lookups
-              07fc fcfd  bra  $07fd
-              07fd 1403  ld   $03,y
-              07fe e07f  jmp  y,$7f
-              07ff 1519  ld   [$19],y
-initVcpu:     0800 1000  ld   $00,x
-              0801 1404  ld   $04,y
-              0802 dc5f  st   $5f,[y,x++] ;0400 LDI
-              0803 dc78  st   $78,[y,x++]
-              0804 dc64  st   $64,[y,x++] ;0402 ST
-              0805 dc12  st   $12,[y,x++]
-              0806 dc1b  st   $1b,[y,x++] ;0404 LD
-              0807 dc12  st   $12,[y,x++]
-              0808 dc36  st   $36,[y,x++] ;0406 COND
-              0809 dc50  st   $50,[y,x++] ;0407 NE
-              080a dc02  st   $02,[y,x++]
-              080b dc5f  st   $5f,[y,x++] ;0409 LDI
-              080c dc3e  st   $3e,[y,x++]
-              080d dc2c  st   $2c,[y,x++] ;040b STW
-              080e dc9f  st   $9f,[y,x++] ;040c 'P'
-              080f dc12  st   $12,[y,x++] ;040d LDWI
-              0810 dc00  st   $00,[y,x++]
-              0811 dc07  st   $07,[y,x++]
-              0812 dc2c  st   $2c,[y,x++] ;0410 STW
-              0813 dc85  st   $85,[y,x++] ;0411 'C'
-              0814 dc12  st   $12,[y,x++] ;0412 LDWI
-              0815 dc00  st   $00,[y,x++]
-              0816 dc05  st   $05,[y,x++]
-              0817 dc2c  st   $2c,[y,x++] ;0415 STW
-              0818 dc8b  st   $8b,[y,x++] ;0416 'F'
-              0819 dc12  st   $12,[y,x++] ;0417 LDWI
-              081a dc00  st   $00,[y,x++]
-              081b dc08  st   $08,[y,x++]
-              081c dc2c  st   $2c,[y,x++] ;041a STW
-              081d dca5  st   $a5,[y,x++] ;041b 'S'
-              081e dc12  st   $12,[y,x++] ;041c LDWI
-              081f dc00  st   $00,[y,x++]
-              0820 dc10  st   $10,[y,x++]
-              0821 dc2c  st   $2c,[y,x++] ;041f STW
-              0822 dca9  st   $a9,[y,x++] ;0420 'U'
-              0823 dc78  st   $78,[y,x++] ;0421 LOOKUP
-              0824 dc85  st   $85,[y,x++] ;0422 'C'
-              0825 dc2c  st   $2c,[y,x++] ;0423 STW
-              0826 dc87  st   $87,[y,x++] ;0424 'D'
-              0827 dc36  st   $36,[y,x++] ;0425 COND
-              0828 dc4d  st   $4d,[y,x++] ;0426 EQ
-              0829 dc99  st   $99,[y,x++]
-              082a dc22  st   $22,[y,x++] ;0428 LDW
-              082b dc87  st   $87,[y,x++] ;0429 'D'
-              082c dcf7  st   $f7,[y,x++] ;042a SUBI
-              082d dc52  st   $52,[y,x++]
-              082e dc36  st   $36,[y,x++] ;042c COND
-              082f dc59  st   $59,[y,x++] ;042d GE
-              0830 dc36  st   $36,[y,x++]
-              0831 dcf4  st   $f4,[y,x++] ;042f ADDI
-              0832 dc32  st   $32,[y,x++]
-              0833 dc2c  st   $2c,[y,x++] ;0431 STW
-              0834 dc89  st   $89,[y,x++] ;0432 'E'
-              0835 dc12  st   $12,[y,x++] ;0433 LDWI
-              0836 dc00  st   $00,[y,x++]
-              0837 dc05  st   $05,[y,x++]
-              0838 dc9c  st   $9c,[y,x++] ;0436 BRA
-              0839 dc3b  st   $3b,[y,x++]
-              083a dc2c  st   $2c,[y,x++] ;0438 STW
-              083b dc89  st   $89,[y,x++] ;0439 'E'
-              083c dc12  st   $12,[y,x++] ;043a LDWI
-              083d dc00  st   $00,[y,x++]
-              083e dc06  st   $06,[y,x++]
-              083f dc2c  st   $2c,[y,x++] ;043d STW
-              0840 dc8b  st   $8b,[y,x++] ;043e 'F'
-              0841 dc22  st   $22,[y,x++] ;043f LDW
-              0842 dc89  st   $89,[y,x++] ;0440 'E'
-              0843 dcc8  st   $c8,[y,x++] ;0441 ADDW
-              0844 dc89  st   $89,[y,x++] ;0442 'E'
-              0845 dc2c  st   $2c,[y,x++] ;0443 STW
-              0846 dca7  st   $a7,[y,x++] ;0444 'T'
-              0847 dcc8  st   $c8,[y,x++] ;0445 ADDW
-              0848 dca7  st   $a7,[y,x++] ;0446 'T'
-              0849 dcc8  st   $c8,[y,x++] ;0447 ADDW
-              084a dc89  st   $89,[y,x++] ;0448 'E'
-              084b dcc8  st   $c8,[y,x++] ;0449 ADDW
-              084c dc8b  st   $8b,[y,x++] ;044a 'F'
-              084d dc2c  st   $2c,[y,x++] ;044b STW
-              084e dc8b  st   $8b,[y,x++] ;044c 'F'
-              084f dc5f  st   $5f,[y,x++] ;044d LDI
-              0850 dc05  st   $05,[y,x++]
-              0851 dc2c  st   $2c,[y,x++] ;044f STW
-              0852 dc91  st   $91,[y,x++] ;0450 'I'
-              0853 dc22  st   $22,[y,x++] ;0451 LDW
-              0854 dc91  st   $91,[y,x++] ;0452 'I'
-              0855 dc36  st   $36,[y,x++] ;0453 COND
-              0856 dc4d  st   $4d,[y,x++] ;0454 EQ
-              0857 dc58  st   $58,[y,x++]
-              0858 dc78  st   $78,[y,x++] ;0456 LOOKUP
-              0859 dc8b  st   $8b,[y,x++] ;0457 'F'
-              085a dc9c  st   $9c,[y,x++] ;0458 BRA
-              085b dc5a  st   $5a,[y,x++]
-              085c dc5f  st   $5f,[y,x++] ;045a LDI
-              085d dc00  st   $00,[y,x++]
-              085e dc2c  st   $2c,[y,x++] ;045c STW
-              085f dc81  st   $81,[y,x++] ;045d 'A'
-              0860 dc22  st   $22,[y,x++] ;045e LDW
-              0861 dca5  st   $a5,[y,x++] ;045f 'S'
-              0862 dc2c  st   $2c,[y,x++] ;0460 STW
-              0863 dca7  st   $a7,[y,x++] ;0461 'T'
-              0864 dc22  st   $22,[y,x++] ;0462 LDW
-              0865 dc81  st   $81,[y,x++] ;0463 'A'
-              0866 dc8e  st   $8e,[y,x++] ;0464 ANDI
-              0867 dc80  st   $80,[y,x++]
-              0868 dc36  st   $36,[y,x++] ;0466 COND
-              0869 dc50  st   $50,[y,x++] ;0467 NE
-              086a dc6d  st   $6d,[y,x++]
-              086b dc5f  st   $5f,[y,x++] ;0469 LDI
-              086c dc00  st   $00,[y,x++]
-              086d dc9f  st   $9f,[y,x++] ;046b POKE
-              086e dca7  st   $a7,[y,x++] ;046c 'T'
-              086f dc9c  st   $9c,[y,x++] ;046d BRA
-              0870 dc71  st   $71,[y,x++]
-              0871 dc22  st   $22,[y,x++] ;046f LDW
-              0872 dc9f  st   $9f,[y,x++] ;0470 'P'
-              0873 dc9f  st   $9f,[y,x++] ;0471 POKE
-              0874 dca7  st   $a7,[y,x++] ;0472 'T'
-              0875 dc22  st   $22,[y,x++] ;0473 LDW
-              0876 dc81  st   $81,[y,x++] ;0474 'A'
-              0877 dcc8  st   $c8,[y,x++] ;0475 ADDW
-              0878 dc81  st   $81,[y,x++] ;0476 'A'
-              0879 dc2c  st   $2c,[y,x++] ;0477 STW
-              087a dc81  st   $81,[y,x++] ;0478 'A'
-              087b dcfa  st   $fa,[y,x++] ;0479 INC
-              087c dca8  st   $a8,[y,x++] ;047a 'T'+1
-              087d dc22  st   $22,[y,x++] ;047b LDW
-              087e dca7  st   $a7,[y,x++] ;047c 'T'
-              087f dcb4  st   $b4,[y,x++] ;047d SUBW
-              0880 dca9  st   $a9,[y,x++] ;047e 'U'
-              0881 dc36  st   $36,[y,x++] ;047f COND
-              0882 dc56  st   $56,[y,x++] ;0480 LT
-              0883 dc60  st   $60,[y,x++]
-              0884 dc22  st   $22,[y,x++] ;0482 LDW
-              0885 dc8b  st   $8b,[y,x++] ;0483 'F'
-              0886 dcf4  st   $f4,[y,x++] ;0484 ADDI
-              0887 dc01  st   $01,[y,x++]
-              0888 dc2c  st   $2c,[y,x++] ;0486 STW
-              0889 dc8b  st   $8b,[y,x++] ;0487 'F'
-              088a dc22  st   $22,[y,x++] ;0488 LDW
-              088b dca5  st   $a5,[y,x++] ;0489 'S'
-              088c dcf4  st   $f4,[y,x++] ;048a ADDI
-              088d dc01  st   $01,[y,x++]
-              088e dc2c  st   $2c,[y,x++] ;048c STW
-              088f dca5  st   $a5,[y,x++] ;048d 'S'
-              0890 dc22  st   $22,[y,x++] ;048e LDW
-              0891 dc91  st   $91,[y,x++] ;048f 'I'
-              0892 dcf7  st   $f7,[y,x++] ;0490 SUBI
-              0893 dc01  st   $01,[y,x++]
-              0894 dc2c  st   $2c,[y,x++] ;0492 STW
-              0895 dc91  st   $91,[y,x++] ;0493 'I'
-              0896 dc36  st   $36,[y,x++] ;0494 COND
-              0897 dc59  st   $59,[y,x++] ;0495 GE
-              0898 dc4f  st   $4f,[y,x++]
-              0899 dcfa  st   $fa,[y,x++] ;0497 INC
-              089a dc85  st   $85,[y,x++] ;0498 'C'
-              089b dc9c  st   $9c,[y,x++] ;0499 BRA
-              089c dc1f  st   $1f,[y,x++]
-              089d dc22  st   $22,[y,x++] ;049b LDW
-              089e dc9f  st   $9f,[y,x++] ;049c 'P'
-              089f dc98  st   $98,[y,x++] ;049d XORI
-              08a0 dc08  st   $08,[y,x++]
-              08a1 dc36  st   $36,[y,x++] ;049f COND
-              08a2 dc4d  st   $4d,[y,x++] ;04a0 EQ
-              08a3 dca8  st   $a8,[y,x++]
-              08a4 dc22  st   $22,[y,x++] ;04a2 LDW
-              08a5 dc9f  st   $9f,[y,x++] ;04a3 'P'
-              08a6 dcf7  st   $f7,[y,x++] ;04a4 SUBI
-              08a7 dc09  st   $09,[y,x++]
-              08a8 dc2c  st   $2c,[y,x++] ;04a6 STW
-              08a9 dc9f  st   $9f,[y,x++] ;04a7 'P'
-              08aa dc9c  st   $9c,[y,x++] ;04a8 BRA
-              08ab dc0b  st   $0b,[y,x++]
-              08ac dc12  st   $12,[y,x++] ;04aa LDWI
-              08ad dc11  st   $11,[y,x++]
-              08ae dc01  st   $01,[y,x++]
-              08af dc2c  st   $2c,[y,x++] ;04ad STW
-              08b0 dca5  st   $a5,[y,x++] ;04ae 'S'
-              08b1 dc5f  st   $5f,[y,x++] ;04af LDI
-              08b2 dc00  st   $00,[y,x++]
-              08b3 dc2c  st   $2c,[y,x++] ;04b1 STW
-              08b4 dca1  st   $a1,[y,x++] ;04b2 'Q'
-              08b5 dc2c  st   $2c,[y,x++] ;04b3 STW
-              08b6 dca3  st   $a3,[y,x++] ;04b4 'R'
-              08b7 dc2c  st   $2c,[y,x++] ;04b5 STW
-              08b8 dc93  st   $93,[y,x++] ;04b6 'J'
-              08b9 dc2c  st   $2c,[y,x++] ;04b7 STW
-              08ba dc89  st   $89,[y,x++] ;04b8 'E'
-              08bb dc2c  st   $2c,[y,x++] ;04b9 STW
-              08bc dcb3  st   $b3,[y,x++] ;04ba 'Z'
-              08bd dc2c  st   $2c,[y,x++] ;04bb STW
-              08be dc8d  st   $8d,[y,x++] ;04bc 'G'
-              08bf dc12  st   $12,[y,x++] ;04bd LDWI
-              08c0 dc00  st   $00,[y,x++]
-              08c1 dc18  st   $18,[y,x++]
-              08c2 dc2c  st   $2c,[y,x++] ;04c0 STW
-              08c3 dcb1  st   $b1,[y,x++] ;04c1 'Y'
-              08c4 dc2c  st   $2c,[y,x++] ;04c2 STW
-              08c5 dc83  st   $83,[y,x++] ;04c3 'B'
-              08c6 dc5f  st   $5f,[y,x++] ;04c4 LDI
-              08c7 dc5a  st   $5a,[y,x++]
-              08c8 dc2c  st   $2c,[y,x++] ;04c6 STW
-              08c9 dc8f  st   $8f,[y,x++] ;04c7 'H'
-              08ca dc12  st   $12,[y,x++] ;04c8 LDWI
-              08cb dc00  st   $00,[y,x++]
-              08cc dc05  st   $05,[y,x++]
-              08cd dce8  st   $e8,[y,x++] ;04cb CALL
-              08ce 1000  ld   $00,x
-              08cf 1405  ld   $05,y
-              08d0 dc22  st   $22,[y,x++] ;0500 LDW
-              08d1 dca5  st   $a5,[y,x++] ;0501 'S'
-              08d2 dcdc  st   $dc,[y,x++] ;0502 PEEK
-              08d3 dc2c  st   $2c,[y,x++] ;0503 STW
-              08d4 dcaf  st   $af,[y,x++] ;0504 'X'
-              08d5 dc98  st   $98,[y,x++] ;0505 XORI
-              08d6 dc78  st   $78,[y,x++]
-              08d7 dc36  st   $36,[y,x++] ;0507 COND
-              08d8 dc50  st   $50,[y,x++] ;0508 NE
-              08d9 dc0c  st   $0c,[y,x++]
-              08da dc5f  st   $5f,[y,x++] ;050a LDI
-              08db dc0a  st   $0a,[y,x++]
-              08dc dc2c  st   $2c,[y,x++] ;050c STW
-              08dd dc89  st   $89,[y,x++] ;050d 'E'
-              08de dc22  st   $22,[y,x++] ;050e LDW
-              08df dca5  st   $a5,[y,x++] ;050f 'S'
-              08e0 dcdc  st   $dc,[y,x++] ;0510 PEEK
-              08e1 dcc8  st   $c8,[y,x++] ;0511 ADDW
-              08e2 dca3  st   $a3,[y,x++] ;0512 'R'
-              08e3 dcc8  st   $c8,[y,x++] ;0513 ADDW
-              08e4 dca1  st   $a1,[y,x++] ;0514 'Q'
-              08e5 dc2c  st   $2c,[y,x++] ;0515 STW
-              08e6 dca3  st   $a3,[y,x++] ;0516 'R'
-              08e7 dcc8  st   $c8,[y,x++] ;0517 ADDW
-              08e8 dca1  st   $a1,[y,x++] ;0518 'Q'
-              08e9 dc36  st   $36,[y,x++] ;0519 COND
-              08ea dc59  st   $59,[y,x++] ;051a GE
-              08eb dc1c  st   $1c,[y,x++]
-              08ec dc98  st   $98,[y,x++] ;051c XORI
-              08ed dc2b  st   $2b,[y,x++]
-              08ee dcc8  st   $c8,[y,x++] ;051e ADDW
-              08ef dca1  st   $a1,[y,x++] ;051f 'Q'
-              08f0 dcc8  st   $c8,[y,x++] ;0520 ADDW
-              08f1 dca1  st   $a1,[y,x++] ;0521 'Q'
-              08f2 dc2c  st   $2c,[y,x++] ;0522 STW
-              08f3 dca1  st   $a1,[y,x++] ;0523 'Q'
-              08f4 dc22  st   $22,[y,x++] ;0524 LDW
-              08f5 dc8f  st   $8f,[y,x++] ;0525 'H'
-              08f6 dcf7  st   $f7,[y,x++] ;0526 SUBI
-              08f7 dc58  st   $58,[y,x++]
-              08f8 dc36  st   $36,[y,x++] ;0528 COND
-              08f9 dc5c  st   $5c,[y,x++] ;0529 LE
-              08fa dc36  st   $36,[y,x++]
-              08fb dc22  st   $22,[y,x++] ;052b LDW
-              08fc dca3  st   $a3,[y,x++] ;052c 'R'
-              08fd dc8e  st   $8e,[y,x++] ;052d ANDI
-              08fe dc10  st   $10,[y,x++]
-              08ff dc36  st   $36,[y,x++] ;052f COND
-              0900 dc4d  st   $4d,[y,x++] ;0530 EQ
-              0901 dc36  st   $36,[y,x++]
-              0902 dc22  st   $22,[y,x++] ;0532 LDW
-              0903 dc8f  st   $8f,[y,x++] ;0533 'H'
-              0904 dcf7  st   $f7,[y,x++] ;0534 SUBI
-              0905 dc01  st   $01,[y,x++]
-              0906 dc2c  st   $2c,[y,x++] ;0536 STW
-              0907 dc8f  st   $8f,[y,x++] ;0537 'H'
-              0908 dc22  st   $22,[y,x++] ;0538 LDW
-              0909 dc8f  st   $8f,[y,x++] ;0539 'H'
-              090a dcf7  st   $f7,[y,x++] ;053a SUBI
-              090b dc76  st   $76,[y,x++]
-              090c dc36  st   $36,[y,x++] ;053c COND
-              090d dc59  st   $59,[y,x++] ;053d GE
-              090e dc4a  st   $4a,[y,x++]
-              090f dc22  st   $22,[y,x++] ;053f LDW
-              0910 dca3  st   $a3,[y,x++] ;0540 'R'
-              0911 dc8e  st   $8e,[y,x++] ;0541 ANDI
-              0912 dc80  st   $80,[y,x++]
-              0913 dc36  st   $36,[y,x++] ;0543 COND
-              0914 dc4d  st   $4d,[y,x++] ;0544 EQ
-              0915 dc4a  st   $4a,[y,x++]
-              0916 dc22  st   $22,[y,x++] ;0546 LDW
-              0917 dc8f  st   $8f,[y,x++] ;0547 'H'
-              0918 dcf4  st   $f4,[y,x++] ;0548 ADDI
-              0919 dc01  st   $01,[y,x++]
-              091a dc2c  st   $2c,[y,x++] ;054a STW
-              091b dc8f  st   $8f,[y,x++] ;054b 'H'
-              091c dc22  st   $22,[y,x++] ;054c LDW
-              091d dc8f  st   $8f,[y,x++] ;054d 'H'
-              091e dcf4  st   $f4,[y,x++] ;054e ADDI
-              091f dc08  st   $08,[y,x++]
-              0920 dc64  st   $64,[y,x++] ;0550 ST
-              0921 dc94  st   $94,[y,x++] ;0551 'J'+1
-              0922 dc22  st   $22,[y,x++] ;0552 LDW
-              0923 dcaf  st   $af,[y,x++] ;0553 'X'
-              0924 dcf4  st   $f4,[y,x++] ;0554 ADDI
-              0925 dca0  st   $a0,[y,x++]
-              0926 dc8e  st   $8e,[y,x++] ;0556 ANDI
-              0927 dcff  st   $ff,[y,x++]
-              0928 dc2c  st   $2c,[y,x++] ;0558 STW
-              0929 dca7  st   $a7,[y,x++] ;0559 'T'
-              092a dc12  st   $12,[y,x++] ;055a LDWI
-              092b dc00  st   $00,[y,x++]
-              092c dc10  st   $10,[y,x++]
-              092d dcc8  st   $c8,[y,x++] ;055d ADDW
-              092e dca7  st   $a7,[y,x++] ;055e 'T'
-              092f dc2c  st   $2c,[y,x++] ;055f STW
-              0930 dcab  st   $ab,[y,x++] ;0560 'V'
-              0931 dc5f  st   $5f,[y,x++] ;0561 LDI
-              0932 dc01  st   $01,[y,x++]
-              0933 dc9f  st   $9f,[y,x++] ;0563 POKE
-              0934 dcab  st   $ab,[y,x++] ;0564 'V'
-              0935 dcfa  st   $fa,[y,x++] ;0565 INC
-              0936 dcac  st   $ac,[y,x++] ;0566 'V'+1
-              0937 dc22  st   $22,[y,x++] ;0567 LDW
-              0938 dcab  st   $ab,[y,x++] ;0568 'V'
-              0939 dc36  st   $36,[y,x++] ;0569 COND
-              093a dc53  st   $53,[y,x++] ;056a GT
-              093b dc5f  st   $5f,[y,x++]
-              093c dc22  st   $22,[y,x++] ;056c LDW
-              093d dca3  st   $a3,[y,x++] ;056d 'R'
-              093e dc8e  st   $8e,[y,x++] ;056e ANDI
-              093f dc7f  st   $7f,[y,x++]
-              0940 dc2c  st   $2c,[y,x++] ;0570 STW
-              0941 dc81  st   $81,[y,x++] ;0571 'A'
-              0942 dc22  st   $22,[y,x++] ;0572 LDW
-              0943 dc81  st   $81,[y,x++] ;0573 'A'
-              0944 dcf7  st   $f7,[y,x++] ;0574 SUBI
-              0945 dc6f  st   $6f,[y,x++]
-              0946 dc36  st   $36,[y,x++] ;0576 COND
-              0947 dc5c  st   $5c,[y,x++] ;0577 LE
-              0948 dc7b  st   $7b,[y,x++]
-              0949 dc5f  st   $5f,[y,x++] ;0579 LDI
-              094a dc77  st   $77,[y,x++]
-              094b dc2c  st   $2c,[y,x++] ;057b STW
-              094c dc81  st   $81,[y,x++] ;057c 'A'
-              094d dc22  st   $22,[y,x++] ;057d LDW
-              094e dc81  st   $81,[y,x++] ;057e 'A'
-              094f dcf4  st   $f4,[y,x++] ;057f ADDI
-              0950 dc10  st   $10,[y,x++]
-              0951 dc64  st   $64,[y,x++] ;0581 ST
-              0952 dc82  st   $82,[y,x++] ;0582 'A'+1
-              0953 dc22  st   $22,[y,x++] ;0583 LDW
-              0954 dca7  st   $a7,[y,x++] ;0584 'T'
-              0955 dc64  st   $64,[y,x++] ;0585 ST
-              0956 dc81  st   $81,[y,x++] ;0586 'A'
-              0957 dc5f  st   $5f,[y,x++] ;0587 LDI
-              0958 dc02  st   $02,[y,x++]
-              0959 dc9f  st   $9f,[y,x++] ;0589 POKE
-              095a dc81  st   $81,[y,x++] ;058a 'A'
-              095b dc22  st   $22,[y,x++] ;058b LDW
-              095c dc93  st   $93,[y,x++] ;058c 'J'
-              095d dcc8  st   $c8,[y,x++] ;058d ADDW
-              095e dca7  st   $a7,[y,x++] ;058e 'T'
-              095f dc2c  st   $2c,[y,x++] ;058f STW
-              0960 dcab  st   $ab,[y,x++] ;0590 'V'
-              0961 dc5f  st   $5f,[y,x++] ;0591 LDI
-              0962 dc3f  st   $3f,[y,x++]
-              0963 dc9f  st   $9f,[y,x++] ;0593 POKE
-              0964 dcab  st   $ab,[y,x++] ;0594 'V'
-              0965 dcfa  st   $fa,[y,x++] ;0595 INC
-              0966 dcac  st   $ac,[y,x++] ;0596 'V'+1
-              0967 dc22  st   $22,[y,x++] ;0597 LDW
-              0968 dcaf  st   $af,[y,x++] ;0598 'X'
-              0969 dc8e  st   $8e,[y,x++] ;0599 ANDI
-              096a dc08  st   $08,[y,x++]
-              096b dcc8  st   $c8,[y,x++] ;059b ADDW
-              096c dc8f  st   $8f,[y,x++] ;059c 'H'
-              096d dc2c  st   $2c,[y,x++] ;059d STW
-              096e dc85  st   $85,[y,x++] ;059e 'C'
-              096f dc22  st   $22,[y,x++] ;059f LDW
-              0970 dc85  st   $85,[y,x++] ;05a0 'C'
-              0971 dcf4  st   $f4,[y,x++] ;05a1 ADDI
-              0972 dc01  st   $01,[y,x++]
-              0973 dc2c  st   $2c,[y,x++] ;05a3 STW
-              0974 dc85  st   $85,[y,x++] ;05a4 'C'
-              0975 dc8e  st   $8e,[y,x++] ;05a5 ANDI
-              0976 dc08  st   $08,[y,x++]
-              0977 dc36  st   $36,[y,x++] ;05a7 COND
-              0978 dc50  st   $50,[y,x++] ;05a8 NE
-              0979 dcac  st   $ac,[y,x++]
-              097a dc5f  st   $5f,[y,x++] ;05aa LDI
-              097b dc2a  st   $2a,[y,x++]
-              097c dc9c  st   $9c,[y,x++] ;05ac BRA
-              097d dcae  st   $ae,[y,x++]
-              097e dc5f  st   $5f,[y,x++] ;05ae LDI
-              097f dc20  st   $20,[y,x++]
-              0980 dc9f  st   $9f,[y,x++] ;05b0 POKE
-              0981 dcab  st   $ab,[y,x++] ;05b1 'V'
-              0982 dcfa  st   $fa,[y,x++] ;05b2 INC
-              0983 dcac  st   $ac,[y,x++] ;05b3 'V'+1
-              0984 dc22  st   $22,[y,x++] ;05b4 LDW
-              0985 dcab  st   $ab,[y,x++] ;05b5 'V'
-              0986 dc36  st   $36,[y,x++] ;05b6 COND
-              0987 dc53  st   $53,[y,x++] ;05b7 GT
-              0988 dc9d  st   $9d,[y,x++]
-              0989 dc12  st   $12,[y,x++] ;05b9 LDWI
-              098a dc00  st   $00,[y,x++]
-              098b dc06  st   $06,[y,x++]
-              098c dce8  st   $e8,[y,x++] ;05bc CALL
-              098d dc9c  st   $9c,[y,x++] ;05bd BRA
-              098e dcfe  st   $fe,[y,x++]
-              098f 1000  ld   $00,x
-              0990 1406  ld   $06,y
-              0991 dc1b  st   $1b,[y,x++] ;0600 LD
-              0992 dc08  st   $08,[y,x++]
-              0993 dc36  st   $36,[y,x++] ;0602 COND
-              0994 dc50  st   $50,[y,x++] ;0603 NE
-              0995 dcfe  st   $fe,[y,x++]
-              0996 dc22  st   $22,[y,x++] ;0605 LDW
-              0997 dcaf  st   $af,[y,x++] ;0606 'X'
-              0998 dcf4  st   $f4,[y,x++] ;0607 ADDI
-              0999 dc01  st   $01,[y,x++]
-              099a dc9f  st   $9f,[y,x++] ;0609 POKE
-              099b dca5  st   $a5,[y,x++] ;060a 'S'
-              099c dc22  st   $22,[y,x++] ;060b LDW
-              099d dc8d  st   $8d,[y,x++] ;060c 'G'
-              099e dc9f  st   $9f,[y,x++] ;060d POKE
-              099f dc83  st   $83,[y,x++] ;060e 'B'
-              09a0 dc22  st   $22,[y,x++] ;060f LDW
-              09a1 dc89  st   $89,[y,x++] ;0610 'E'
-              09a2 dcc8  st   $c8,[y,x++] ;0611 ADDW
-              09a3 dcb3  st   $b3,[y,x++] ;0612 'Z'
-              09a4 dc2c  st   $2c,[y,x++] ;0613 STW
-              09a5 dcb3  st   $b3,[y,x++] ;0614 'Z'
-              09a6 dc22  st   $22,[y,x++] ;0615 LDW
-              09a7 dcb1  st   $b1,[y,x++] ;0616 'Y'
-              09a8 dcc8  st   $c8,[y,x++] ;0617 ADDW
-              09a9 dcb3  st   $b3,[y,x++] ;0618 'Z'
-              09aa dc2c  st   $2c,[y,x++] ;0619 STW
-              09ab dcb1  st   $b1,[y,x++] ;061a 'Y'
-              09ac dc22  st   $22,[y,x++] ;061b LDW
-              09ad dcaf  st   $af,[y,x++] ;061c 'X'
-              09ae dcf4  st   $f4,[y,x++] ;061d ADDI
-              09af dc32  st   $32,[y,x++]
-              09b0 dc2c  st   $2c,[y,x++] ;061f STW
-              09b1 dc83  st   $83,[y,x++] ;0620 'B'
-              09b2 dc1b  st   $1b,[y,x++] ;0621 LD
-              09b3 dcb2  st   $b2,[y,x++] ;0622 'Y'+1
-              09b4 dc64  st   $64,[y,x++] ;0623 ST
-              09b5 dc84  st   $84,[y,x++] ;0624 'B'+1
-              09b6 dc22  st   $22,[y,x++] ;0625 LDW
-              09b7 dc83  st   $83,[y,x++] ;0626 'B'
-              09b8 dcdc  st   $dc,[y,x++] ;0627 PEEK
-              09b9 dc2c  st   $2c,[y,x++] ;0628 STW
-              09ba dc8d  st   $8d,[y,x++] ;0629 'G'
-              09bb dc22  st   $22,[y,x++] ;062a LDW
-              09bc dc8d  st   $8d,[y,x++] ;062b 'G'
-              09bd dcf7  st   $f7,[y,x++] ;062c SUBI
-              09be dc02  st   $02,[y,x++]
-              09bf dc36  st   $36,[y,x++] ;062e COND
-              09c0 dc5c  st   $5c,[y,x++] ;062f LE
-              09c1 dc4e  st   $4e,[y,x++]
-              09c2 dc5f  st   $5f,[y,x++] ;0631 LDI
-              09c3 dc00  st   $00,[y,x++]
-              09c4 dcb4  st   $b4,[y,x++] ;0633 SUBW
-              09c5 dcb3  st   $b3,[y,x++] ;0634 'Z'
-              09c6 dc2c  st   $2c,[y,x++] ;0635 STW
-              09c7 dcb3  st   $b3,[y,x++] ;0636 'Z'
-              09c8 dc22  st   $22,[y,x++] ;0637 LDW
-              09c9 dcb1  st   $b1,[y,x++] ;0638 'Y'
-              09ca dcc8  st   $c8,[y,x++] ;0639 ADDW
-              09cb dcb3  st   $b3,[y,x++] ;063a 'Z'
-              09cc dc2c  st   $2c,[y,x++] ;063b STW
-              09cd dcb1  st   $b1,[y,x++] ;063c 'Y'
-              09ce dc5f  st   $5f,[y,x++] ;063d LDI
-              09cf dc0a  st   $0a,[y,x++]
-              09d0 dc64  st   $64,[y,x++] ;063f ST
-              09d1 dc12  st   $12,[y,x++]
-              09d2 dc22  st   $22,[y,x++] ;0641 LDW
-              09d3 dcaf  st   $af,[y,x++] ;0642 'X'
-              09d4 dcf4  st   $f4,[y,x++] ;0643 ADDI
-              09d5 dc32  st   $32,[y,x++]
-              09d6 dc2c  st   $2c,[y,x++] ;0645 STW
-              09d7 dc83  st   $83,[y,x++] ;0646 'B'
-              09d8 dc1b  st   $1b,[y,x++] ;0647 LD
-              09d9 dcb2  st   $b2,[y,x++] ;0648 'Y'+1
-              09da dc64  st   $64,[y,x++] ;0649 ST
-              09db dc84  st   $84,[y,x++] ;064a 'B'+1
-              09dc dc22  st   $22,[y,x++] ;064b LDW
-              09dd dc83  st   $83,[y,x++] ;064c 'B'
-              09de dcdc  st   $dc,[y,x++] ;064d PEEK
-              09df dc2c  st   $2c,[y,x++] ;064e STW
-              09e0 dc8d  st   $8d,[y,x++] ;064f 'G'
-              09e1 dc5f  st   $5f,[y,x++] ;0650 LDI
-              09e2 dc3f  st   $3f,[y,x++]
-              09e3 dc9f  st   $9f,[y,x++] ;0652 POKE
-              09e4 dc83  st   $83,[y,x++] ;0653 'B'
-              09e5 dc22  st   $22,[y,x++] ;0654 LDW
-              09e6 dc1c  st   $1c,[y,x++] ;0655 vRT
-              09e7 dce8  st   $e8,[y,x++] ;0656 CALL
-              09e8 00fe  ld   $fe
-              09e9 c218  st   [$18]
-              09ea 0004  ld   $04
-              09eb c219  st   [$19]
-              09ec 0000  ld   $00
-              09ed c21e  st   [$1e]
-              09ee c21f  st   [$1f]
-              09ef 150f  ld   [$0f],y
-              09f0 e10e  jmp  y,[$0e]
-              09f1 0200  nop
-              09f2
+initVcpu:     0700 1000  ld   $00,x
+              0701 1404  ld   $04,y
+              0702 dc5c  st   $5c,[y,x++] ;0400 LDI
+              0703 dc78  st   $78,[y,x++]
+              0704 dc61  st   $61,[y,x++] ;0402 ST
+              0705 dc12  st   $12,[y,x++]
+              0706 dc1b  st   $1b,[y,x++] ;0404 LD
+              0707 dc12  st   $12,[y,x++]
+              0708 dc36  st   $36,[y,x++] ;0406 COND
+              0709 dc75  st   $75,[y,x++] ;0407 NE
+              070a dc02  st   $02,[y,x++]
+              070b dc5c  st   $5c,[y,x++] ;0409 LDI
+              070c dc3e  st   $3e,[y,x++]
+              070d dc2c  st   $2c,[y,x++] ;040b STW
+              070e dc9f  st   $9f,[y,x++] ;040c 'P'
+              070f dc12  st   $12,[y,x++] ;040d LDWI
+              0710 dc12  st   $12,[y,x++]
+              0711 dc04  st   $04,[y,x++]
+              0712 dc98  st   $98,[y,x++] ;0410 BRA
+              0713 dc2c  st   $2c,[y,x++]
+              0714 dc47  st   $47,[y,x++]
+              0715 dc69  st   $69,[y,x++]
+              0716 dc67  st   $67,[y,x++]
+              0717 dc61  st   $61,[y,x++]
+              0718 dc74  st   $74,[y,x++]
+              0719 dc72  st   $72,[y,x++]
+              071a dc6f  st   $6f,[y,x++]
+              071b dc6e  st   $6e,[y,x++]
+              071c dc20  st   $20,[y,x++]
+              071d dc54  st   $54,[y,x++]
+              071e dc54  st   $54,[y,x++]
+              071f dc4c  st   $4c,[y,x++]
+              0720 dc20  st   $20,[y,x++]
+              0721 dc63  st   $63,[y,x++]
+              0722 dc6f  st   $6f,[y,x++]
+              0723 dc6d  st   $6d,[y,x++]
+              0724 dc70  st   $70,[y,x++]
+              0725 dc75  st   $75,[y,x++]
+              0726 dc74  st   $74,[y,x++]
+              0727 dc65  st   $65,[y,x++]
+              0728 dc72  st   $72,[y,x++]
+              0729 dc20  st   $20,[y,x++]
+              072a dc52  st   $52,[y,x++]
+              072b dc4f  st   $4f,[y,x++]
+              072c dc4d  st   $4d,[y,x++]
+              072d dc30  st   $30,[y,x++]
+              072e dc20  st   $20,[y,x++]
+              072f dc00  st   $00,[y,x++]
+              0730 dc2c  st   $2c,[y,x++] ;042e STW
+              0731 dc85  st   $85,[y,x++] ;042f 'C'
+              0732 dc12  st   $12,[y,x++] ;0430 LDWI
+              0733 dc00  st   $00,[y,x++]
+              0734 dc05  st   $05,[y,x++]
+              0735 dc2c  st   $2c,[y,x++] ;0433 STW
+              0736 dc8b  st   $8b,[y,x++] ;0434 'F'
+              0737 dc12  st   $12,[y,x++] ;0435 LDWI
+              0738 dc00  st   $00,[y,x++]
+              0739 dc08  st   $08,[y,x++]
+              073a dc2c  st   $2c,[y,x++] ;0438 STW
+              073b dca5  st   $a5,[y,x++] ;0439 'S'
+              073c dc12  st   $12,[y,x++] ;043a LDWI
+              073d dc00  st   $00,[y,x++]
+              073e dc10  st   $10,[y,x++]
+              073f dc2c  st   $2c,[y,x++] ;043d STW
+              0740 dca9  st   $a9,[y,x++] ;043e 'U'
+              0741 dc22  st   $22,[y,x++] ;043f LDW
+              0742 dc85  st   $85,[y,x++] ;0440 'C'
+              0743 dcd8  st   $d8,[y,x++] ;0441 PEEK
+              0744 dc2c  st   $2c,[y,x++] ;0442 STW
+              0745 dc87  st   $87,[y,x++] ;0443 'D'
+              0746 dc36  st   $36,[y,x++] ;0444 COND
+              0747 dc4d  st   $4d,[y,x++] ;0445 EQ
+              0748 dcb2  st   $b2,[y,x++]
+              0749 dcf6  st   $f6,[y,x++] ;0447 INC
+              074a dc85  st   $85,[y,x++] ;0448 'C'
+              074b dc22  st   $22,[y,x++] ;0449 LDW
+              074c dc87  st   $87,[y,x++] ;044a 'D'
+              074d dcf3  st   $f3,[y,x++] ;044b SUBI
+              074e dc52  st   $52,[y,x++]
+              074f dc36  st   $36,[y,x++] ;044d COND
+              0750 dc56  st   $56,[y,x++] ;044e GE
+              0751 dc57  st   $57,[y,x++]
+              0752 dcf0  st   $f0,[y,x++] ;0450 ADDI
+              0753 dc32  st   $32,[y,x++]
+              0754 dc2c  st   $2c,[y,x++] ;0452 STW
+              0755 dc89  st   $89,[y,x++] ;0453 'E'
+              0756 dc12  st   $12,[y,x++] ;0454 LDWI
+              0757 dc00  st   $00,[y,x++]
+              0758 dc05  st   $05,[y,x++]
+              0759 dc98  st   $98,[y,x++] ;0457 BRA
+              075a dc5c  st   $5c,[y,x++]
+              075b dc2c  st   $2c,[y,x++] ;0459 STW
+              075c dc89  st   $89,[y,x++] ;045a 'E'
+              075d dc12  st   $12,[y,x++] ;045b LDWI
+              075e dc00  st   $00,[y,x++]
+              075f dc06  st   $06,[y,x++]
+              0760 dc2c  st   $2c,[y,x++] ;045e STW
+              0761 dc8b  st   $8b,[y,x++] ;045f 'F'
+              0762 dc22  st   $22,[y,x++] ;0460 LDW
+              0763 dc89  st   $89,[y,x++] ;0461 'E'
+              0764 dcc4  st   $c4,[y,x++] ;0462 ADDW
+              0765 dc89  st   $89,[y,x++] ;0463 'E'
+              0766 dc2c  st   $2c,[y,x++] ;0464 STW
+              0767 dca7  st   $a7,[y,x++] ;0465 'T'
+              0768 dcc4  st   $c4,[y,x++] ;0466 ADDW
+              0769 dca7  st   $a7,[y,x++] ;0467 'T'
+              076a dcc4  st   $c4,[y,x++] ;0468 ADDW
+              076b dc89  st   $89,[y,x++] ;0469 'E'
+              076c dcc4  st   $c4,[y,x++] ;046a ADDW
+              076d dc8b  st   $8b,[y,x++] ;046b 'F'
+              076e dc2c  st   $2c,[y,x++] ;046c STW
+              076f dc8b  st   $8b,[y,x++] ;046d 'F'
+              0770 dc5c  st   $5c,[y,x++] ;046e LDI
+              0771 dc05  st   $05,[y,x++]
+              0772 dc2c  st   $2c,[y,x++] ;0470 STW
+              0773 dc91  st   $91,[y,x++] ;0471 'I'
+              0774 dc22  st   $22,[y,x++] ;0472 LDW
+              0775 dc91  st   $91,[y,x++] ;0473 'I'
+              0776 dc36  st   $36,[y,x++] ;0474 COND
+              0777 dc4d  st   $4d,[y,x++] ;0475 EQ
+              0778 dc7d  st   $7d,[y,x++]
+              0779 dc22  st   $22,[y,x++] ;0477 LDW
+              077a dc8b  st   $8b,[y,x++] ;0478 'F'
+              077b dc78  st   $78,[y,x++] ;0479 LOOKUP
+              077c dc00  st   $00,[y,x++]
+              077d dcf6  st   $f6,[y,x++] ;047b INC
+              077e dc8b  st   $8b,[y,x++] ;047c 'F'
+              077f dc98  st   $98,[y,x++] ;047d BRA
+              0780 dc7f  st   $7f,[y,x++]
+              0781 dc5c  st   $5c,[y,x++] ;047f LDI
+              0782 dc00  st   $00,[y,x++]
+              0783 dc2c  st   $2c,[y,x++] ;0481 STW
+              0784 dc81  st   $81,[y,x++] ;0482 'A'
+              0785 dc22  st   $22,[y,x++] ;0483 LDW
+              0786 dca5  st   $a5,[y,x++] ;0484 'S'
+              0787 dc2c  st   $2c,[y,x++] ;0485 STW
+              0788 dca7  st   $a7,[y,x++] ;0486 'T'
+              0789 dc22  st   $22,[y,x++] ;0487 LDW
+              078a dc81  st   $81,[y,x++] ;0488 'A'
+              078b dc8a  st   $8a,[y,x++] ;0489 ANDI
+              078c dc80  st   $80,[y,x++]
+              078d dc36  st   $36,[y,x++] ;048b COND
+              078e dc75  st   $75,[y,x++] ;048c NE
+              078f dc92  st   $92,[y,x++]
+              0790 dc5c  st   $5c,[y,x++] ;048e LDI
+              0791 dc00  st   $00,[y,x++]
+              0792 dc9b  st   $9b,[y,x++] ;0490 POKE
+              0793 dca7  st   $a7,[y,x++] ;0491 'T'
+              0794 dc98  st   $98,[y,x++] ;0492 BRA
+              0795 dc96  st   $96,[y,x++]
+              0796 dc22  st   $22,[y,x++] ;0494 LDW
+              0797 dc9f  st   $9f,[y,x++] ;0495 'P'
+              0798 dc9b  st   $9b,[y,x++] ;0496 POKE
+              0799 dca7  st   $a7,[y,x++] ;0497 'T'
+              079a dc22  st   $22,[y,x++] ;0498 LDW
+              079b dc81  st   $81,[y,x++] ;0499 'A'
+              079c dcc4  st   $c4,[y,x++] ;049a ADDW
+              079d dc81  st   $81,[y,x++] ;049b 'A'
+              079e dc2c  st   $2c,[y,x++] ;049c STW
+              079f dc81  st   $81,[y,x++] ;049d 'A'
+              07a0 dcf6  st   $f6,[y,x++] ;049e INC
+              07a1 dca8  st   $a8,[y,x++] ;049f 'T'+1
+              07a2 dc22  st   $22,[y,x++] ;04a0 LDW
+              07a3 dca7  st   $a7,[y,x++] ;04a1 'T'
+              07a4 dcb0  st   $b0,[y,x++] ;04a2 SUBW
+              07a5 dca9  st   $a9,[y,x++] ;04a3 'U'
+              07a6 dc36  st   $36,[y,x++] ;04a4 COND
+              07a7 dc53  st   $53,[y,x++] ;04a5 LT
+              07a8 dc85  st   $85,[y,x++]
+              07a9 dcf6  st   $f6,[y,x++] ;04a7 INC
+              07aa dca5  st   $a5,[y,x++] ;04a8 'S'
+              07ab dc22  st   $22,[y,x++] ;04a9 LDW
+              07ac dc91  st   $91,[y,x++] ;04aa 'I'
+              07ad dcf3  st   $f3,[y,x++] ;04ab SUBI
+              07ae dc01  st   $01,[y,x++]
+              07af dc2c  st   $2c,[y,x++] ;04ad STW
+              07b0 dc91  st   $91,[y,x++] ;04ae 'I'
+              07b1 dc36  st   $36,[y,x++] ;04af COND
+              07b2 dc56  st   $56,[y,x++] ;04b0 GE
+              07b3 dc70  st   $70,[y,x++]
+              07b4 dc98  st   $98,[y,x++] ;04b2 BRA
+              07b5 dc3d  st   $3d,[y,x++]
+              07b6 dc22  st   $22,[y,x++] ;04b4 LDW
+              07b7 dc9f  st   $9f,[y,x++] ;04b5 'P'
+              07b8 dc94  st   $94,[y,x++] ;04b6 XORI
+              07b9 dc08  st   $08,[y,x++]
+              07ba dc36  st   $36,[y,x++] ;04b8 COND
+              07bb dc4d  st   $4d,[y,x++] ;04b9 EQ
+              07bc dcc1  st   $c1,[y,x++]
+              07bd dc22  st   $22,[y,x++] ;04bb LDW
+              07be dc9f  st   $9f,[y,x++] ;04bc 'P'
+              07bf dcf3  st   $f3,[y,x++] ;04bd SUBI
+              07c0 dc09  st   $09,[y,x++]
+              07c1 dc2c  st   $2c,[y,x++] ;04bf STW
+              07c2 dc9f  st   $9f,[y,x++] ;04c0 'P'
+              07c3 dc98  st   $98,[y,x++] ;04c1 BRA
+              07c4 dc0b  st   $0b,[y,x++]
+              07c5 dc12  st   $12,[y,x++] ;04c3 LDWI
+              07c6 dc11  st   $11,[y,x++]
+              07c7 dc01  st   $01,[y,x++]
+              07c8 dc2c  st   $2c,[y,x++] ;04c6 STW
+              07c9 dca5  st   $a5,[y,x++] ;04c7 'S'
+              07ca dc5c  st   $5c,[y,x++] ;04c8 LDI
+              07cb dc00  st   $00,[y,x++]
+              07cc dc2c  st   $2c,[y,x++] ;04ca STW
+              07cd dca1  st   $a1,[y,x++] ;04cb 'Q'
+              07ce dc2c  st   $2c,[y,x++] ;04cc STW
+              07cf dca3  st   $a3,[y,x++] ;04cd 'R'
+              07d0 dc2c  st   $2c,[y,x++] ;04ce STW
+              07d1 dc93  st   $93,[y,x++] ;04cf 'J'
+              07d2 dc2c  st   $2c,[y,x++] ;04d0 STW
+              07d3 dc89  st   $89,[y,x++] ;04d1 'E'
+              07d4 dc2c  st   $2c,[y,x++] ;04d2 STW
+              07d5 dcb3  st   $b3,[y,x++] ;04d3 'Z'
+              07d6 dc2c  st   $2c,[y,x++] ;04d4 STW
+              07d7 dc8d  st   $8d,[y,x++] ;04d5 'G'
+              07d8 dc12  st   $12,[y,x++] ;04d6 LDWI
+              07d9 dc00  st   $00,[y,x++]
+              07da dc18  st   $18,[y,x++]
+              07db dc2c  st   $2c,[y,x++] ;04d9 STW
+              07dc dcb1  st   $b1,[y,x++] ;04da 'Y'
+              07dd dc2c  st   $2c,[y,x++] ;04db STW
+              07de dc83  st   $83,[y,x++] ;04dc 'B'
+              07df dc5c  st   $5c,[y,x++] ;04dd LDI
+              07e0 dc5a  st   $5a,[y,x++]
+              07e1 dc2c  st   $2c,[y,x++] ;04df STW
+              07e2 dc8f  st   $8f,[y,x++] ;04e0 'H'
+              07e3 dc12  st   $12,[y,x++] ;04e1 LDWI
+              07e4 dc00  st   $00,[y,x++]
+              07e5 dc05  st   $05,[y,x++]
+              07e6 dce4  st   $e4,[y,x++] ;04e4 CALL
+              07e7 1000  ld   $00,x
+              07e8 1405  ld   $05,y
+              07e9 dc22  st   $22,[y,x++] ;0500 LDW
+              07ea dca5  st   $a5,[y,x++] ;0501 'S'
+              07eb dcd8  st   $d8,[y,x++] ;0502 PEEK
+              07ec dc2c  st   $2c,[y,x++] ;0503 STW
+              07ed dcaf  st   $af,[y,x++] ;0504 'X'
+              07ee dc94  st   $94,[y,x++] ;0505 XORI
+              07ef dc78  st   $78,[y,x++]
+              07f0 dc36  st   $36,[y,x++] ;0507 COND
+              07f1 dc75  st   $75,[y,x++] ;0508 NE
+              07f2 dc0c  st   $0c,[y,x++]
+              07f3 dc5c  st   $5c,[y,x++] ;050a LDI
+              07f4 dc0a  st   $0a,[y,x++]
+              07f5 dc2c  st   $2c,[y,x++] ;050c STW
+              07f6 dc89  st   $89,[y,x++] ;050d 'E'
+              07f7 dc22  st   $22,[y,x++] ;050e LDW
+              07f8 dca5  st   $a5,[y,x++] ;050f 'S'
+              07f9 dcd8  st   $d8,[y,x++] ;0510 PEEK
+              07fa dcc4  st   $c4,[y,x++] ;0511 ADDW
+              07fb dca3  st   $a3,[y,x++] ;0512 'R'
+              07fc dcc4  st   $c4,[y,x++] ;0513 ADDW
+              07fd dca1  st   $a1,[y,x++] ;0514 'Q'
+              07fe dc2c  st   $2c,[y,x++] ;0515 STW
+              07ff dca3  st   $a3,[y,x++] ;0516 'R'
+              0800 dcc4  st   $c4,[y,x++] ;0517 ADDW
+              0801 dca1  st   $a1,[y,x++] ;0518 'Q'
+              0802 dc36  st   $36,[y,x++] ;0519 COND
+              0803 dc56  st   $56,[y,x++] ;051a GE
+              0804 dc1c  st   $1c,[y,x++]
+              0805 dc94  st   $94,[y,x++] ;051c XORI
+              0806 dc2b  st   $2b,[y,x++]
+              0807 dcc4  st   $c4,[y,x++] ;051e ADDW
+              0808 dca1  st   $a1,[y,x++] ;051f 'Q'
+              0809 dcc4  st   $c4,[y,x++] ;0520 ADDW
+              080a dca1  st   $a1,[y,x++] ;0521 'Q'
+              080b dc2c  st   $2c,[y,x++] ;0522 STW
+              080c dca1  st   $a1,[y,x++] ;0523 'Q'
+              080d dc22  st   $22,[y,x++] ;0524 LDW
+              080e dc8f  st   $8f,[y,x++] ;0525 'H'
+              080f dcf3  st   $f3,[y,x++] ;0526 SUBI
+              0810 dc58  st   $58,[y,x++]
+              0811 dc36  st   $36,[y,x++] ;0528 COND
+              0812 dc59  st   $59,[y,x++] ;0529 LE
+              0813 dc36  st   $36,[y,x++]
+              0814 dc22  st   $22,[y,x++] ;052b LDW
+              0815 dca3  st   $a3,[y,x++] ;052c 'R'
+              0816 dc8a  st   $8a,[y,x++] ;052d ANDI
+              0817 dc10  st   $10,[y,x++]
+              0818 dc36  st   $36,[y,x++] ;052f COND
+              0819 dc4d  st   $4d,[y,x++] ;0530 EQ
+              081a dc36  st   $36,[y,x++]
+              081b dc22  st   $22,[y,x++] ;0532 LDW
+              081c dc8f  st   $8f,[y,x++] ;0533 'H'
+              081d dcf3  st   $f3,[y,x++] ;0534 SUBI
+              081e dc01  st   $01,[y,x++]
+              081f dc2c  st   $2c,[y,x++] ;0536 STW
+              0820 dc8f  st   $8f,[y,x++] ;0537 'H'
+              0821 dc22  st   $22,[y,x++] ;0538 LDW
+              0822 dc8f  st   $8f,[y,x++] ;0539 'H'
+              0823 dcf3  st   $f3,[y,x++] ;053a SUBI
+              0824 dc76  st   $76,[y,x++]
+              0825 dc36  st   $36,[y,x++] ;053c COND
+              0826 dc56  st   $56,[y,x++] ;053d GE
+              0827 dc4a  st   $4a,[y,x++]
+              0828 dc22  st   $22,[y,x++] ;053f LDW
+              0829 dca3  st   $a3,[y,x++] ;0540 'R'
+              082a dc8a  st   $8a,[y,x++] ;0541 ANDI
+              082b dc80  st   $80,[y,x++]
+              082c dc36  st   $36,[y,x++] ;0543 COND
+              082d dc4d  st   $4d,[y,x++] ;0544 EQ
+              082e dc4a  st   $4a,[y,x++]
+              082f dc22  st   $22,[y,x++] ;0546 LDW
+              0830 dc8f  st   $8f,[y,x++] ;0547 'H'
+              0831 dcf0  st   $f0,[y,x++] ;0548 ADDI
+              0832 dc01  st   $01,[y,x++]
+              0833 dc2c  st   $2c,[y,x++] ;054a STW
+              0834 dc8f  st   $8f,[y,x++] ;054b 'H'
+              0835 dc22  st   $22,[y,x++] ;054c LDW
+              0836 dc8f  st   $8f,[y,x++] ;054d 'H'
+              0837 dcf0  st   $f0,[y,x++] ;054e ADDI
+              0838 dc08  st   $08,[y,x++]
+              0839 dc61  st   $61,[y,x++] ;0550 ST
+              083a dc94  st   $94,[y,x++] ;0551 'J'+1
+              083b dc22  st   $22,[y,x++] ;0552 LDW
+              083c dcaf  st   $af,[y,x++] ;0553 'X'
+              083d dcf0  st   $f0,[y,x++] ;0554 ADDI
+              083e dca0  st   $a0,[y,x++]
+              083f dc8a  st   $8a,[y,x++] ;0556 ANDI
+              0840 dcff  st   $ff,[y,x++]
+              0841 dc2c  st   $2c,[y,x++] ;0558 STW
+              0842 dca7  st   $a7,[y,x++] ;0559 'T'
+              0843 dc12  st   $12,[y,x++] ;055a LDWI
+              0844 dc00  st   $00,[y,x++]
+              0845 dc10  st   $10,[y,x++]
+              0846 dcc4  st   $c4,[y,x++] ;055d ADDW
+              0847 dca7  st   $a7,[y,x++] ;055e 'T'
+              0848 dc2c  st   $2c,[y,x++] ;055f STW
+              0849 dcab  st   $ab,[y,x++] ;0560 'V'
+              084a dc5c  st   $5c,[y,x++] ;0561 LDI
+              084b dc01  st   $01,[y,x++]
+              084c dc9b  st   $9b,[y,x++] ;0563 POKE
+              084d dcab  st   $ab,[y,x++] ;0564 'V'
+              084e dcf6  st   $f6,[y,x++] ;0565 INC
+              084f dcac  st   $ac,[y,x++] ;0566 'V'+1
+              0850 dc22  st   $22,[y,x++] ;0567 LDW
+              0851 dcab  st   $ab,[y,x++] ;0568 'V'
+              0852 dc36  st   $36,[y,x++] ;0569 COND
+              0853 dc50  st   $50,[y,x++] ;056a GT
+              0854 dc5f  st   $5f,[y,x++]
+              0855 dc22  st   $22,[y,x++] ;056c LDW
+              0856 dca3  st   $a3,[y,x++] ;056d 'R'
+              0857 dc8a  st   $8a,[y,x++] ;056e ANDI
+              0858 dc7f  st   $7f,[y,x++]
+              0859 dc2c  st   $2c,[y,x++] ;0570 STW
+              085a dc81  st   $81,[y,x++] ;0571 'A'
+              085b dc22  st   $22,[y,x++] ;0572 LDW
+              085c dc81  st   $81,[y,x++] ;0573 'A'
+              085d dcf3  st   $f3,[y,x++] ;0574 SUBI
+              085e dc6f  st   $6f,[y,x++]
+              085f dc36  st   $36,[y,x++] ;0576 COND
+              0860 dc59  st   $59,[y,x++] ;0577 LE
+              0861 dc7b  st   $7b,[y,x++]
+              0862 dc5c  st   $5c,[y,x++] ;0579 LDI
+              0863 dc77  st   $77,[y,x++]
+              0864 dc2c  st   $2c,[y,x++] ;057b STW
+              0865 dc81  st   $81,[y,x++] ;057c 'A'
+              0866 dc22  st   $22,[y,x++] ;057d LDW
+              0867 dc81  st   $81,[y,x++] ;057e 'A'
+              0868 dcf0  st   $f0,[y,x++] ;057f ADDI
+              0869 dc10  st   $10,[y,x++]
+              086a dc61  st   $61,[y,x++] ;0581 ST
+              086b dc82  st   $82,[y,x++] ;0582 'A'+1
+              086c dc22  st   $22,[y,x++] ;0583 LDW
+              086d dca7  st   $a7,[y,x++] ;0584 'T'
+              086e dc61  st   $61,[y,x++] ;0585 ST
+              086f dc81  st   $81,[y,x++] ;0586 'A'
+              0870 dc5c  st   $5c,[y,x++] ;0587 LDI
+              0871 dc02  st   $02,[y,x++]
+              0872 dc9b  st   $9b,[y,x++] ;0589 POKE
+              0873 dc81  st   $81,[y,x++] ;058a 'A'
+              0874 dc22  st   $22,[y,x++] ;058b LDW
+              0875 dc93  st   $93,[y,x++] ;058c 'J'
+              0876 dcc4  st   $c4,[y,x++] ;058d ADDW
+              0877 dca7  st   $a7,[y,x++] ;058e 'T'
+              0878 dc2c  st   $2c,[y,x++] ;058f STW
+              0879 dcab  st   $ab,[y,x++] ;0590 'V'
+              087a dc5c  st   $5c,[y,x++] ;0591 LDI
+              087b dc3f  st   $3f,[y,x++]
+              087c dc9b  st   $9b,[y,x++] ;0593 POKE
+              087d dcab  st   $ab,[y,x++] ;0594 'V'
+              087e dcf6  st   $f6,[y,x++] ;0595 INC
+              087f dcac  st   $ac,[y,x++] ;0596 'V'+1
+              0880 dc22  st   $22,[y,x++] ;0597 LDW
+              0881 dcaf  st   $af,[y,x++] ;0598 'X'
+              0882 dc8a  st   $8a,[y,x++] ;0599 ANDI
+              0883 dc08  st   $08,[y,x++]
+              0884 dcc4  st   $c4,[y,x++] ;059b ADDW
+              0885 dc8f  st   $8f,[y,x++] ;059c 'H'
+              0886 dc2c  st   $2c,[y,x++] ;059d STW
+              0887 dc85  st   $85,[y,x++] ;059e 'C'
+              0888 dc22  st   $22,[y,x++] ;059f LDW
+              0889 dc85  st   $85,[y,x++] ;05a0 'C'
+              088a dcf0  st   $f0,[y,x++] ;05a1 ADDI
+              088b dc01  st   $01,[y,x++]
+              088c dc2c  st   $2c,[y,x++] ;05a3 STW
+              088d dc85  st   $85,[y,x++] ;05a4 'C'
+              088e dc8a  st   $8a,[y,x++] ;05a5 ANDI
+              088f dc08  st   $08,[y,x++]
+              0890 dc36  st   $36,[y,x++] ;05a7 COND
+              0891 dc75  st   $75,[y,x++] ;05a8 NE
+              0892 dcac  st   $ac,[y,x++]
+              0893 dc5c  st   $5c,[y,x++] ;05aa LDI
+              0894 dc2a  st   $2a,[y,x++]
+              0895 dc98  st   $98,[y,x++] ;05ac BRA
+              0896 dcae  st   $ae,[y,x++]
+              0897 dc5c  st   $5c,[y,x++] ;05ae LDI
+              0898 dc20  st   $20,[y,x++]
+              0899 dc9b  st   $9b,[y,x++] ;05b0 POKE
+              089a dcab  st   $ab,[y,x++] ;05b1 'V'
+              089b dcf6  st   $f6,[y,x++] ;05b2 INC
+              089c dcac  st   $ac,[y,x++] ;05b3 'V'+1
+              089d dc22  st   $22,[y,x++] ;05b4 LDW
+              089e dcab  st   $ab,[y,x++] ;05b5 'V'
+              089f dc36  st   $36,[y,x++] ;05b6 COND
+              08a0 dc50  st   $50,[y,x++] ;05b7 GT
+              08a1 dc9d  st   $9d,[y,x++]
+              08a2 dc12  st   $12,[y,x++] ;05b9 LDWI
+              08a3 dc00  st   $00,[y,x++]
+              08a4 dc06  st   $06,[y,x++]
+              08a5 dce4  st   $e4,[y,x++] ;05bc CALL
+              08a6 dc98  st   $98,[y,x++] ;05bd BRA
+              08a7 dcfe  st   $fe,[y,x++]
+              08a8 1000  ld   $00,x
+              08a9 1406  ld   $06,y
+              08aa dc1b  st   $1b,[y,x++] ;0600 LD
+              08ab dc08  st   $08,[y,x++]
+              08ac dc36  st   $36,[y,x++] ;0602 COND
+              08ad dc75  st   $75,[y,x++] ;0603 NE
+              08ae dcfe  st   $fe,[y,x++]
+              08af dc22  st   $22,[y,x++] ;0605 LDW
+              08b0 dcaf  st   $af,[y,x++] ;0606 'X'
+              08b1 dcf0  st   $f0,[y,x++] ;0607 ADDI
+              08b2 dc01  st   $01,[y,x++]
+              08b3 dc9b  st   $9b,[y,x++] ;0609 POKE
+              08b4 dca5  st   $a5,[y,x++] ;060a 'S'
+              08b5 dc22  st   $22,[y,x++] ;060b LDW
+              08b6 dc8d  st   $8d,[y,x++] ;060c 'G'
+              08b7 dc9b  st   $9b,[y,x++] ;060d POKE
+              08b8 dc83  st   $83,[y,x++] ;060e 'B'
+              08b9 dc22  st   $22,[y,x++] ;060f LDW
+              08ba dc89  st   $89,[y,x++] ;0610 'E'
+              08bb dcc4  st   $c4,[y,x++] ;0611 ADDW
+              08bc dcb3  st   $b3,[y,x++] ;0612 'Z'
+              08bd dc2c  st   $2c,[y,x++] ;0613 STW
+              08be dcb3  st   $b3,[y,x++] ;0614 'Z'
+              08bf dc22  st   $22,[y,x++] ;0615 LDW
+              08c0 dcb1  st   $b1,[y,x++] ;0616 'Y'
+              08c1 dcc4  st   $c4,[y,x++] ;0617 ADDW
+              08c2 dcb3  st   $b3,[y,x++] ;0618 'Z'
+              08c3 dc2c  st   $2c,[y,x++] ;0619 STW
+              08c4 dcb1  st   $b1,[y,x++] ;061a 'Y'
+              08c5 dc22  st   $22,[y,x++] ;061b LDW
+              08c6 dcaf  st   $af,[y,x++] ;061c 'X'
+              08c7 dcf0  st   $f0,[y,x++] ;061d ADDI
+              08c8 dc32  st   $32,[y,x++]
+              08c9 dc2c  st   $2c,[y,x++] ;061f STW
+              08ca dc83  st   $83,[y,x++] ;0620 'B'
+              08cb dc1b  st   $1b,[y,x++] ;0621 LD
+              08cc dcb2  st   $b2,[y,x++] ;0622 'Y'+1
+              08cd dc61  st   $61,[y,x++] ;0623 ST
+              08ce dc84  st   $84,[y,x++] ;0624 'B'+1
+              08cf dc22  st   $22,[y,x++] ;0625 LDW
+              08d0 dc83  st   $83,[y,x++] ;0626 'B'
+              08d1 dcd8  st   $d8,[y,x++] ;0627 PEEK
+              08d2 dc2c  st   $2c,[y,x++] ;0628 STW
+              08d3 dc8d  st   $8d,[y,x++] ;0629 'G'
+              08d4 dc22  st   $22,[y,x++] ;062a LDW
+              08d5 dc8d  st   $8d,[y,x++] ;062b 'G'
+              08d6 dcf3  st   $f3,[y,x++] ;062c SUBI
+              08d7 dc02  st   $02,[y,x++]
+              08d8 dc36  st   $36,[y,x++] ;062e COND
+              08d9 dc59  st   $59,[y,x++] ;062f LE
+              08da dc4e  st   $4e,[y,x++]
+              08db dc5c  st   $5c,[y,x++] ;0631 LDI
+              08dc dc00  st   $00,[y,x++]
+              08dd dcb0  st   $b0,[y,x++] ;0633 SUBW
+              08de dcb3  st   $b3,[y,x++] ;0634 'Z'
+              08df dc2c  st   $2c,[y,x++] ;0635 STW
+              08e0 dcb3  st   $b3,[y,x++] ;0636 'Z'
+              08e1 dc22  st   $22,[y,x++] ;0637 LDW
+              08e2 dcb1  st   $b1,[y,x++] ;0638 'Y'
+              08e3 dcc4  st   $c4,[y,x++] ;0639 ADDW
+              08e4 dcb3  st   $b3,[y,x++] ;063a 'Z'
+              08e5 dc2c  st   $2c,[y,x++] ;063b STW
+              08e6 dcb1  st   $b1,[y,x++] ;063c 'Y'
+              08e7 dc5c  st   $5c,[y,x++] ;063d LDI
+              08e8 dc0a  st   $0a,[y,x++]
+              08e9 dc61  st   $61,[y,x++] ;063f ST
+              08ea dc12  st   $12,[y,x++]
+              08eb dc22  st   $22,[y,x++] ;0641 LDW
+              08ec dcaf  st   $af,[y,x++] ;0642 'X'
+              08ed dcf0  st   $f0,[y,x++] ;0643 ADDI
+              08ee dc32  st   $32,[y,x++]
+              08ef dc2c  st   $2c,[y,x++] ;0645 STW
+              08f0 dc83  st   $83,[y,x++] ;0646 'B'
+              08f1 dc1b  st   $1b,[y,x++] ;0647 LD
+              08f2 dcb2  st   $b2,[y,x++] ;0648 'Y'+1
+              08f3 dc61  st   $61,[y,x++] ;0649 ST
+              08f4 dc84  st   $84,[y,x++] ;064a 'B'+1
+              08f5 dc22  st   $22,[y,x++] ;064b LDW
+              08f6 dc83  st   $83,[y,x++] ;064c 'B'
+              08f7 dcd8  st   $d8,[y,x++] ;064d PEEK
+              08f8 dc2c  st   $2c,[y,x++] ;064e STW
+              08f9 dc8d  st   $8d,[y,x++] ;064f 'G'
+              08fa dc5c  st   $5c,[y,x++] ;0650 LDI
+              08fb dc3f  st   $3f,[y,x++]
+              08fc dc9b  st   $9b,[y,x++] ;0652 POKE
+              08fd dc83  st   $83,[y,x++] ;0653 'B'
+              08fe dc22  st   $22,[y,x++] ;0654 LDW
+              08ff dc1c  st   $1c,[y,x++] ;0655 vRT
+              0900 dce4  st   $e4,[y,x++] ;0656 CALL
+              0901 00fe  ld   $fe
+              0902 c218  st   [$18]
+              0903 0004  ld   $04
+              0904 c219  st   [$19]
+              0905 0000  ld   $00
+              0906 c21e  st   [$1e]
+              0907 c21f  st   [$1f]
+              0908 150f  ld   [$0f],y
+              0909 e10e  jmp  y,[$0e]
+              090a 0200  nop
+              090b
