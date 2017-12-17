@@ -10,20 +10,32 @@ $0400:
 {Test of built-in font}
 62 P= {Pen color}
 [do
+  $0700 C= {Text} {XXX: define a ROM string and get a pointer to it}
   $0500 F= {Font data}
-  $0800 S= {Top of screen}
-  $1000 U=
+  $0800 S= {Pen position at top of screen}
+  $1000 U= {Next line (to stop the inner drawing loop)}
+
   [do
-    F; A=
-    S T=
-    [do
-      A 128& [if=0 0 {Black} T! else P {Pen color} T!]
-      A A+ A=
-      T>++
-      T U- if<0loop]
-    F 1+ F=
-    S 1+ S=
-    255& 160^ if<>0loop]
+    C; D= {D is character to be printed}
+    if<>0
+
+    D 82- [if<0 50+ E= $0500 else E= $0600] F=
+    E E+ T= T+ E+ {Multiply by 5}
+    F+ F= {Add to font page start}
+    {Print character}
+    5 I= [do
+      I [if<>0 F; else 0] A=
+      S T=
+      {Print vertical slice}
+      [do
+        A 128& [if=0 0 {Black} T! else P {Pen color} T!]
+        A A+ A=
+        T>++
+        T U- if<0loop]
+      F 1+ F=
+      S 1+ S=
+      I 1- I= if>=0loop]
+    C<++ loop]
   P 8^ if<>0 P 9- P= loop]
 
 {Scroller game, might become Zaxxon or Flappy Bird}

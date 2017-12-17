@@ -56,6 +56,7 @@ class Program:
           if block in self.conds:
             # There was an if-statement in this block
             # Define the label to jump here
+            # XXX why not always make a label?
             define('$if.%d.%d' % (block, self.conds[block]), prev(self.vPC))
             del self.conds[block]
         elif nextChar == '(': pass
@@ -63,10 +64,15 @@ class Program:
     self.word(nextWord)
 
   def getAddress(self, var):
-    if len(var) > 1:
-      self.error('Name too long %s' % repr(var))
-    o = ord(var[0]) - ord('A')
-    return 0x81 + 2*o # XXX Proper allocation
+    if isinstance(var, str):
+      if len(var) > 1:
+        self.error('Name too long %s' % repr(var))
+      o = ord(var[0]) - ord('A')
+      return 0x81 + 2*o # XXX Proper allocation
+    else:
+      if var<0 or var>255:
+        self.error('Index out of range %s' % repr(var))
+      return var
 
   def emit(self, byte):
     """Next program byte in RAM"""
@@ -94,7 +100,7 @@ class Program:
     elif word == 'do':
       self.loops[self.thisBlock()] = self.vPC
     elif word == 'if<0':
-      self.opcode('COND');
+      self.opcode('COND')
       self.opcode('GE')
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
@@ -117,51 +123,19 @@ class Program:
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
-    elif word == 'if<>0':
-      self.opcode('COND')
-      self.opcode('EQ')
-      block = self.thisBlock()
-      self.emit(lo('$if.%d.0' % block))
-      self.conds[block] = 0
-    elif word == 'if>=0':
-      self.opcode('COND')
-      self.opcode('LT')
-      block = self.thisBlock()
-      self.emit(lo('$if.%d.0' % block))
-      self.conds[block] = 0
-    elif word == 'if<=0':
-      self.opcode('COND')
-      self.opcode('GT')
-      block = self.thisBlock()
-      self.emit(lo('$if.%d.0' % block))
-      self.conds[block] = 0
-    elif word == 'if<>0loop':
-      self.opcode('COND')
-      self.opcode('NE')
-      block = self.thisBlock()
-      to = self.loops[self.thisBlock()]
-      to = prev(to)
-      self.emit(to&0xff)
-      if self.vPC>>8 != to>>8:
-        self.error('Loop outside page')
-    elif word == 'if>0loop':
-      self.opcode('COND')
-      self.opcode('GT')
-      block = self.thisBlock()
-      to = self.loops[self.thisBlock()]
-      to = prev(to)
-      self.emit(to&0xff)
-      if self.vPC>>8 != to>>8:
-        self.error('Loop outside page')
-    elif word == 'if<0loop':
-      self.opcode('COND')
-      self.opcode('LT')
-      block = self.thisBlock()
-      to = self.loops[self.thisBlock()]
-      to = prev(to)
-      self.emit(to&0xff)
-      if self.vPC>>8 != to>>8:
-        self.error('Loop outside page')
+
+    elif word == 'if<>0': self._emitIf('EQ')
+    elif word == 'if=0':  self._emitIf('NE')
+    elif word == 'if>=0': self._emitIf('LT')
+    elif word == 'if<=0': self._emitIf('GT')
+    elif word == 'if>0':  self._emitIf('LE')
+    elif word == 'if<0':  self._emitIf('GE')
+    elif word == 'if<>0loop': self._emitIfLoop('NE')
+    elif word == 'if=0loop':  self._emitIfLoop('EQ')
+    elif word == 'if>0loop':  self._emitIfLoop('GT')
+    elif word == 'if<0loop':  self._emitIfLoop('LT')
+    elif word == 'if>=0loop': self._emitIfLoop('GE')
+    elif word == 'if<=0loop': self._emitIfLoop('LE')
     elif word == 'else':
       block = self.thisBlock()
       if block not in self.conds:
@@ -291,6 +265,23 @@ class Program:
           C('%04x %s' % (prev(self.vPC, 1), repr(var)))
       else:
         self.error('Invalid word %s' % repr(word))
+
+  def _emitIf(self, cond):
+      self.opcode('COND')
+      self.opcode(cond)
+      block = self.thisBlock()
+      self.emit(lo('$if.%d.0' % block))
+      self.conds[block] = 0
+
+  def _emitIfLoop(self, cond):
+      self.opcode('COND')
+      self.opcode(cond)
+      block = self.thisBlock()
+      to = self.loops[self.thisBlock()]
+      to = prev(to)
+      self.emit(to&0xff)
+      if self.vPC>>8 != to>>8:
+        self.error('Loop outside page')
 
   def parseWord(self, word):
     """Break word into pieces"""

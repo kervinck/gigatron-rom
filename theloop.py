@@ -7,21 +7,31 @@
 #  - Must stay above 31 kHz horizontal sync --> 200 cycles/scanline
 #  - Must stay above 59.94 Hz vertical sync --> 521 scanlines/frame
 #  - 4 channels sound
-#  - vCPU interpreter
+#  - 16-bits vCPU interpreter
 #
 #  TODO:
+#
+#  XXX: Function names
+#  XXX: Text screen
+#  XXX: ROM load / bootstrapping
+#  XXX: Image demo
+#  XXX: Logo drawing
+#  XXX: Input handling update
+#  XXX: Serial loading
 #  XXX: Readability of asm.py instructions
 #  XXX: Multitasking (start with date/time clock in GCL)
 #  XXX: Music sequencer
 #  XXX: Simple RNG updated every 4 scanlines
 #  XXX: More waveforms
 #  XXX: Decay, using Karplus-Strong
+#  XXX: Prefix notation for high/low byte >X++ instead of X>++
 #  XXX: Mix controller input with entropy
 #  XXX: Loading of programs over controller port and Arduino/Trinket
 #  XXX: Better shift-table
 #  XXX: Loading and starting of programs
 #  XXX: Simple GCL programs might be compiled by the host instead of offline?
 #  XXX: Threading and sleeping
+#  XXX: Sprites by scanline 4 reset method? ("videoG"=graphics)
 #  XXX: Dynamic memory allocation
 #  XXX: Memory-mapped I/O
 #  XXX: Macros
@@ -29,7 +39,7 @@
 #         [do
 #           c [if<0 15 d! else 5 d!]
 #           c c+ c=
-#           1 d+ d=
+#           d 1+ d=
 #           -$4458 d+ if<0 loop]
 #         (return))
 #-----------------------------------------------------------------------
@@ -235,6 +245,17 @@ def runVcpu(n):
   ld(val(hi('ENTER')),regY)     #4
   jmpy(d(lo('ENTER')))          #5
   ld(val(n))                    #6
+
+def trampoline():
+  while pc()&255 < 256-5:
+    nop()
+
+  bra(busAC);                   #17
+  C('Trampoline for page $%02x00 lookups' % (pc()>>8))
+  bra(val(253))                 #18
+  ld(d(hi('.lookup0')),regY)    #20
+  jmpy(d(lo('.lookup0')))       #21
+  ld(d(vPC+1),busRAM|regY)      #22
 
 #-----------------------------------------------------------------------
 #
@@ -1119,7 +1140,7 @@ ld(val(-22/2))                  #21
 # actual consumed number of whole ticks for the entire virtual instruction cycle 
 # (from NEXT to NEXT). This duration may not exceed the prior declared duration
 # in the operand.
-label('RETRY')
+label('retry')
 ldzp(d(vPC));                   C('Retry until sufficient time')#13
 suba(val(2))                    #14
 st(d(vPC))                      #15
@@ -1127,7 +1148,7 @@ bra(d(lo('RETURN')))            #16
 ld(val(-20/2))                  #17
 label('SYS')
 adda(d(vTicks),busRAM)          #10
-blt(d(lo('RETRY')))             #11
+blt(d(lo('retry')))             #11
 ld(d(vAC+1),busRAM|regY)        #12
 jmpy(d(vAC)|busRAM)             #13
 #nop()                          #(14)
@@ -1317,32 +1338,43 @@ ld(val(-28/2))                  #25
 #-----------------------------------------------------------------------
 
 align(0x100, 0x100)
-label('font')
 
-for ch in range(32, 64): # XXX do full font
+for ch in range(32, 32+50):
   comment = 'Char %s' % repr(chr(ch))
   for byte in font.font[ch-32]:
     ld(val(byte))
     comment = C(comment)
 
-while pc()&255 < 256-5:
-  nop()
+trampoline()
 
-bra(busAC);                   #17
-C('Trampoline for page $%02x lookups' % (pc()>>8))
-bra(val(253))                 #18
-ld(d(hi('.lookup0')),regY)    #20
-jmpy(d(lo('.lookup0')))       #21
-ld(d(vPC+1),busRAM|regY)      #22
+#-----------------------------------------------------------------------
+
+align(0x100, 0x100)
+
+for ch in range(32+50, 128):
+  comment = 'Char %s' % repr(chr(ch))
+  for byte in font.font[ch-32]:
+    ld(val(byte))
+    comment = C(comment)
+
+trampoline()
+
+#-----------------------------------------------------------------------
+align(0x100)
+
+for c in 'Gigatron TTL computer ROM0 ':
+  ld(val(ord(c)))
+ld(val(0))
+
+trampoline()
 
 #-----------------------------------------------------------------------
 #
-#  ROM page 7: Bootstrap vCPU
+#  ROM page 8: Bootstrap vCPU
 #
 #-----------------------------------------------------------------------
 
 align(0x100)
-
 label('initVcpu')
 
 # Compile test GCL program
