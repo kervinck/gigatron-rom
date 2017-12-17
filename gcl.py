@@ -158,9 +158,6 @@ class Program:
     elif word == 'call': self.opcode('CALL')
     elif word == 'ret':
       self.opcode('RET')
-    elif word == 'return':
-      self.opcode('POP')
-      self.opcode('CALL')
     else:
       var, con, op = self.parseWord(word) # XXX Simplify this
       if op is None:

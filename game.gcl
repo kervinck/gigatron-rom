@@ -1,6 +1,6 @@
 
-{---------- Page 4 ----------}
-$0400:
+{---------- Page 3 ----------}
+$0300:
 
 [def {DrawChar Char Pos}
 
@@ -50,10 +50,10 @@ $0400:
   $30. $20. $20. 0.
 ] Welcome=
 
-$0500 call
+$0400 call
 
-{---------- Page 5 ----------}
-$0500:
+{---------- Page 4 ----------}
+$0400:
 
 [def
   $1800 Pos=
@@ -122,11 +122,11 @@ $1800 BallY= Ball=
     V>++
     V if>0loop]
 
-  $0600 call
+  $0500 call
 loop]
 
-{---------- Page 6 ----------}
-$0600:
+{---------- Page 5 ----------}
+$0500:
 
   {Star}
   Rnd0 127& A= A 111- [if>0 119 A=]
@@ -136,14 +136,12 @@ $0600:
   {Draw vertical line to bottom of screen}
   J T+ V=
 
-
   63 V! {First pixel white}
   V>++
   X 8& Height+ C=                     {Begin of checkerboard}
   [do [C 1+ C= 8& if=0 42 else 32] V! {Checkerboard colors}
       V>++
       V if>0loop]
-
 
   {Wait for vertical blank}
   [do \screenY? if<>0loop]

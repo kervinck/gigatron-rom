@@ -116,15 +116,15 @@ def                     Load next vPC in vAC and jump to end of current block.
 Subroutines
 -----------
 call                    Jump to vAC, store old vPC in vRT
-ret                     Jump to vRT, to return from a leaf subroutine
+ret                     Jump to vRT, to return from a leaf subroutine. Non-leaf
+                        subroutines should use "pop call" as return sequence
 push                    Push vRT onto stack, for entering a non-leaf subroutine
 pop                     Remove top of stack and put value in vAC
-return                  Return from non-leaf subroutines (alias for "pop call")
 
 Data
 ----
 i.                      Raw byte-value i
-"Text"                  Text string
+"Text"                  Text string XXX Not implementd
 
 ----------------------
 vCPU instruction table
