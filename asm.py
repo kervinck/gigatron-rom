@@ -139,6 +139,9 @@ def define(name, value):
   global _symbols
   _symbols[name] = value
 
+def symbol(name):
+  return _symbols[name] if name in _symbols else None
+
 def lo(name):
   global _refsL
   _refsL.append((name, _romSize))

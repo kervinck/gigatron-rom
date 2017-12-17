@@ -174,6 +174,10 @@ vSP     = zpByte(2)             # Stack pointer ([vSP+1] remains zero)
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 zpFree  = zpByte()
 
+# Export some zero page variables to GCL
+define('soundTimer', soundTimer)
+define('screenY', screenY)
+
 # XXX GCL variables start at 0x81
 
 #-----------------------------------------------------------------------
@@ -1368,6 +1372,7 @@ nop()                           #23
 
 align(0x100, 0x100)
 
+label('fontL')
 for ch in range(32, 32+50):
   comment = 'Char %s' % repr(chr(ch))
   for byte in font.font[ch-32]:
@@ -1380,6 +1385,7 @@ trampoline()
 
 align(0x100, 0x100)
 
+label('fontH')
 for ch in range(32+50, 128):
   comment = 'Char %s' % repr(chr(ch))
   for byte in font.font[ch-32]:

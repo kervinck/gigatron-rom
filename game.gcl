@@ -4,45 +4,57 @@ $0400:
 
 {120 frames startup delay (with sound) to wait for VGA monitor}
 
-120 $12! {soundTimer}
-[do $12? if<>0loop]
+120 \soundTimer!
+[do \soundTimer? if<>0loop]
 
-{Test of built-in font}
+{DrawBlock P0 P1 Color}
+{ClrScreen Color}
+{DrawChar Pen Char Color BColor}
+{DrawText S0}
+
+[def {DrawChar D}
+
+  {Map ASCII code to offset in font table}
+  D 82- [if<0 50+ E= \fontL else E= \fontH] F= {Low or high page}
+  E E+ T= T+ E+ {Multiply by 5}
+  F+ F=         {Add to font page start}
+  $800 S+ U=    {Next text line, where to stop the inner drawing loop}
+
+  {Print character at font position F to screen position S}
+  5 I= [do
+    I [if<>0 F 0; F<++ else 0] A= {6 slices, 0-4 from ROM and last is 0}
+    S T=
+    {Draw vertical slice}
+    [do
+      A 128& [if=0 0 {Black} T! else P {Pen color} T!]
+      A A+ A=
+      T>++
+      T U- if<0loop]
+    S<++
+    I 1- I= if>=0loop]
+  ret
+] O=
+
+[def {DrawText C}
+  push
+  [do
+    C? D=   {Next character to be printed}
+    if<>0   {Zero terminates the string and loop}
+      C<++  {Advance text pointer}
+      {D 10^ [if=0 S<! $800 S+ S= else O call]} O call
+    loop]
+  pop call
+] W=
+
 62 P= {Pen color}
-
 [do
+  $0800 S= {Pen position at top of screen}
   [def {Gigatron} $47. $69. $67. $61. $74. $72. $6f. $6e.
        { TTL com} $20. $54. $54. $4c. $20. $63. $6f. $6d.
        {puter RO} $70. $75. $74. $65. $72. $20. $52. $4f.
-       {M0 \0}    $4d. $30. $20. 0.
+       {M0\0}     $4d. $30. 0.
   ] C=
-  $0500 F= {Font data}
-  $0800 S= {Pen position at top of screen}
-  $1000 U= {Next line (where to stop the inner drawing loop)}
-
-  [do
-    C? D= {Next character to be printed}
-    if<>0   {Zero terminates the string and loop}
-      C<++  {Advance text pointer}
-
-      {Map ASCII code to offset in font table}
-      D 82- [if<0 50+ E= $0500 else E= $0600] F= {Low or high page}
-      E E+ T= T+ E+ {Multiply by 5}
-      F+ F=         {Add to font page start}
-
-      {Print character at font position F to screen position S}
-      5 I= [do
-        I [if<>0 F 0; F<++ else 0] A= {6 slices, 0-4 from ROM and last is 0}
-        S T=
-        {Draw vertical slice}
-        [do
-          A 128& [if=0 0 {Black} T! else P {Pen color} T!]
-          A A+ A=
-          T>++
-          T U- if<0loop]
-        S<++
-        I 1- I= if>=0loop]
-    loop]
+  W call
   P 8^ if<>0 P 9- P= loop]
 
 {Scroller game, might become Zaxxon or Flappy Bird}
@@ -115,7 +127,7 @@ loop]
 $0600:
 
   {Wait for vertical blank}
-  [do 8? if<>0loop]
+  [do \screenY? if<>0loop]
 
   {Scroll screen 1 pixel}
   X 1+ S!
@@ -136,7 +148,7 @@ $0600:
   G 2- [if>0
     0 Z- Z=
     Y Z+ Y=
-    10 $12! {1/6th second of sound}
+    10 \soundTimer! {1/6th second of sound}
 
     X 50+ B=
     Y>? B>!

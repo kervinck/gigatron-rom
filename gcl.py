@@ -329,6 +329,15 @@ class Program:
       while word[ix].isdigit():
         number = 10*number + ord(word[ix]) - ord('0')
         ix += 1
+    elif word[ix] == '\\':
+        sym = ''
+        ix += 1
+        while word[ix].isalnum():
+          sym += word[ix]
+          ix += 1
+        number = symbol(sym)
+        if number is None:
+          self.error('Undefined symbol %s' % repr(sym))
     else:
       # Named variable?
       number = None
@@ -339,6 +348,7 @@ class Program:
         while word[ix].isalnum():
           name += word[ix]
           ix += 1
+
         name = name if len(name)>0 else None
 
     if number is not None:
