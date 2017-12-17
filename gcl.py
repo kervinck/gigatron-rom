@@ -23,6 +23,7 @@ class Program:
       ld(val(address&0xff),regX)
       ld(val(address>>8),regY)
     self.vPC = address
+    self.bytes = 256 # Max bytes to go
 
   def thisBlock(self):
     return self.blocks[-1]
@@ -61,7 +62,7 @@ class Program:
             define('$if.%d.%d' % (block, self.conds[block]), prev(self.vPC))
             del self.conds[block]
           if block in self.defs:
-            define('$def.%d.%d' % (block, self.defs[block]), prev(self.vPC))
+            define('$def.%d' % self.defs[block], prev(self.vPC))
             del self.defs[block]
         elif nextChar == '(': pass
         elif nextChar == ')': pass
@@ -80,14 +81,20 @@ class Program:
 
   def emit(self, byte):
     """Next program byte in RAM"""
-    st(val(byte), eaYXregOUTIX) # XXX Use ROM tables
-    self.vPC += 1
+    if self.bytes <= 0:
+        self.error('Out of code space')
+    st(val(byte), eaYXregOUTIX) # XXX Use ROM tables (or yield)
+    self.vPC = step(self.vPC)
+    self.bytes -= 1
 
   def opcode(self, ins):
     """Next opcode in RAM"""
-    st(val(lo(ins)), eaYXregOUTIX) # XXX Use ROM tables
+    if self.bytes <= 0:
+        self.error('Out of code space')
+    st(val(lo(ins)),eaYXregOUTIX) # XXX Use ROM tables (or yield)
     C('%04x %s' % (self.vPC, ins))
-    self.vPC += 1
+    self.vPC = step(self.vPC)
+    self.bytes -= 1
 
   def word(self, word):
     """Process a word and emit its code"""
@@ -102,14 +109,10 @@ class Program:
       self.opcode('BRA')
       self.emit(to&255)
     elif word == 'def':
-      block = self.thisBlock()
       pc = self.vPC # Just an identifier
-      self.opcode('LDWI')
-      self.emit((pc+5)&0xff)
-      self.emit((pc+5)>>8)
-      self.opcode('BRA')
-      self.defs[block] = pc
-      self.emit(lo('$def.%d.%d' % (block, pc)))
+      self.opcode('DEF')
+      self.defs[self.thisBlock()] = pc
+      self.emit(lo('$def.%d' % pc))
     elif word == 'do':
       self.loops[self.thisBlock()] = self.vPC
     elif word == 'if<0':
@@ -155,9 +158,10 @@ class Program:
     elif word == 'push': self.opcode('PUSH')
     elif word == 'pop':  self.opcode('POP')
     elif word == 'call': self.opcode('CALL')
+    elif word == 'ret':
+      self.opcode('RET')
     elif word == 'return':
-      self.opcode('LDW')
-      self.opcode('vRT') # Not an opcode, but hijack what it does
+      self.opcode('POP')
       self.opcode('CALL')
     else:
       var, con, op = self.parseWord(word) # XXX Simplify this
@@ -361,3 +365,5 @@ def prev(address, step=2):
   """Take vPC two bytes back, wrap around if needed to stay on page"""
   return (address & 0xff00) | ((address-step) & 0x00ff)
 
+def step(address, step=1):
+  return (address & 0xff00) | ((address+step) & 0x00ff)

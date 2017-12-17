@@ -1132,7 +1132,7 @@ ld(val(-22/2))                  #21
 # time slice, the instruction will be retried. This will effectively wait for the
 # next scanline if the current slice is almost out of time. Then a jump to native
 # code is made. This code can do whatever it wants, but it must return to the
-# 'RETURN' label when done. When returning, AC must hold (the negative of) the
+# 'REENTER' label when done. When returning, AC must hold (the negative of) the
 # actual consumed number of whole ticks for the entire virtual instruction cycle 
 # (from NEXT to NEXT). This duration may not exceed the prior declared duration
 # in the operand.
@@ -1140,7 +1140,7 @@ label('retry')
 ldzp(d(vPC));                   C('Retry until sufficient time')#13
 suba(val(2))                    #14
 st(d(vPC))                      #15
-bra(d(lo('RETURN')))            #16
+bra(d(lo('REENTER')))           #16
 ld(val(-20/2))                  #17
 label('SYS')
 adda(d(vTicks),busRAM)          #10
@@ -1216,7 +1216,7 @@ st(d(vAC))                      #16
 ld(val(0))                      #17
 st(d(vAC+1))                    #18
 ld(val(-22/2))                  #19
-label('RETURN')
+label('REENTER')
 bra(d(lo('NEXT')));             C('Return from SYS calls')#20
 ld(d(vPC+1),busRAM|regY)        #21
 
@@ -1256,15 +1256,15 @@ st(ea0XregAC)                   #13
 bra(d(lo('NEXT')))              #14
 ld(val(-16/2))                  #15
 
-# Instruction TBD, To be defined, 18 cycles
-label('TBD')
-ld(val(hi('tbd')),regY)         #10
-jmpy(d(lo('tbd')))              #11
+# Instruction DEF, Define data or code (AC,PCL=PC+2,D), 18 cycles
+label('DEF')
+ld(val(hi('def')),regY)         #10
+jmpy(d(lo('def')))              #11
 st(d(vTmp))                     #12
 
-# Instruction TBD2, To be defined, 16 cycles
-label('TBD2')
-nop()                           #10
+# Instruction RET, To be defined, 16 cycles
+label('RET')
+ldzp(d(vRT))                    #10
 assert(pc()&255 == 0)
 
 #-----------------------------------------------------------------------
@@ -1274,10 +1274,14 @@ assert(pc()&255 == 0)
 #-----------------------------------------------------------------------
 align(0x100, 0x100)
 
-ld(val(hi('RETURN')),regY)      #11
-jmpy(d(lo('RETURN')))           #12
-ld(val(-16/2))                  #13
-
+# (Continue RET)
+suba(val(2))                    #11
+st(d(vPC))                      #12
+ldzp(d(vRT+1))                  #13
+st(d(vPC+1))                    #14
+ld(val(hi('REENTER')),regY)     #15
+jmpy(d(lo('REENTER')))          #17
+ld(val(-20/2))                  #18
 
 # ADDI implementation
 label('addi')
@@ -1295,8 +1299,8 @@ anda(val(0x80),regX)            #19 Move the carry to bit 0 (0 or +1)
 ld(busRAM,ea0XregAC)            #20
 adda(d(vAC+1),busRAM)           #21 Add the high bytes with carry
 st(d(vAC+1))                    #22 Store high result
-ld(val(hi('RETURN')),regY)      #23
-jmpy(d(lo('RETURN')))           #24
+ld(val(hi('REENTER')),regY)     #23
+jmpy(d(lo('REENTER')))          #24
 ld(val(-28/2))                  #25
 
 # SUBI implementation
@@ -1316,15 +1320,23 @@ anda(val(0x80),regX)            #19 Move the carry to bit 0
 ldzp(d(vAC+1))                  #20
 suba(busRAM,ea0XregAC)          #21
 st(d(vAC+1))                    #22
-ld(val(hi('RETURN')),regY)      #23
-jmpy(d(lo('RETURN')))           #24
+ld(val(hi('REENTER')),regY)     #23
+jmpy(d(lo('REENTER')))          #24
 ld(val(-28/2))                  #25
 
-# TBD implementation
-label('tbd')
-ld(val(hi('RETURN')),regY)      #13
-jmpy(d(lo('RETURN')))           #14
-ld(val(-18/2))                  #15
+# DEF implementation
+label('def')
+ldzp(d(vPC))                    #13
+adda(val(2))                    #14
+st(d(vAC))                      #15
+ldzp(d(vPC+1))                  #16
+st(d(vAC+1))                    #17
+ldzp(d(vTmp))                   #18
+st(d(vPC))                      #19
+ld(val(hi('REENTER')),regY)     #20
+ld(val(-26/2))                  #21
+jmpy(d(lo('REENTER')))          #22
+nop()                           #23
 
 #init_rng(s1,s2,s3) //Can also be used to seed the rng with more entropy during use.
 #{

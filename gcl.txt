@@ -111,11 +111,11 @@ def                     Load next vPC in vAC and jump to end of current block.
 
 Subroutines
 -----------
-call                    Jump to vAC, store vPC in vRT
+call                    Jump to vAC, store old vPC in vRT
 ret                     Jump to vRT, to return from a leaf subroutine
 push                    Push vRT onto stack, for entering a non-leaf subroutine
 pop                     Remove top of stack and put value in vAC
-return                  Return from non-leaf subroutines (alias for "pull call")
+return                  Return from non-leaf subroutines (alias for "pop call")
 
 Data
 ----
@@ -125,8 +125,8 @@ i.                      Raw byte-value i
 ----------------------
 vCPU instruction table
 ----------------------
-The vCPU implements 23 instructions. Each opcode is just a jump offset
-into the interpreter code page to the code that implements it. Most
+The vCPU interpreter has 25 core instructions. Each opcode is just a jump offset
+into the interpreter code page to the code that implements its behavior. Most
 instructions take a single byte operand, but some have two and others none.
 
 Opcode Operands Description
@@ -136,7 +136,7 @@ LDI    $DD      Load immediate constant (vAC=$DD)
 LD     $DD      Load byte from zero page (vAC=[D])
 ST     $DD      Store byte in zero page ([D]=vAC)
 LDW    $DD      Word load from zero page (vAC=[D]+256*[D+1])
-STW    $DD      Word load from zero page ([D]=vAC&255,[D+1]=vAC/256)
+STW    $DD      Word load from zero page ([D]=vAC&255,[D+1]=vAC>>8)
 ADDW   $DD      Word addition with zero page (vAC+=[D]+256*[D+1])
 SUBW   $DD      Word subtraction with zero page (vAC-=[D]+256*[D+1])
 ADDI   $DD      Add small positive constant (vAC+=D)
@@ -149,12 +149,12 @@ PEEK   -        Read byte from memory (vAC=[vAC])
 POKE   $DD      Write byte in memory ([[D+1],[D]]=vAC)
 LOOKUP $DD      ROM lookup (vAC=ROM[AC+256*D])
 COND   $CC $DD  Test vAC and branch conditionally. CC can be EQ,NE,LT,GT,LE,GE
-BRA    $DD      Branch unconditionally (vPC=D+256*(vPC/256))
-CALL   -        Goto address but remember vPC (vRT=vPC+1, vPC=vAC-2)
-PUSH   -        Push value on stack ([--vSP]=vRT&255,[--vSP]/256)
+BRA    $DD      Branch unconditionally (vPC=D+256*(vPC>>8))
+CALL   -        Goto address but remember vPC (vRT,vPC=vPC+1,vAC-2)
+RET   $DD       Leaf return (vPC=vRT-2)
+PUSH   -        Push value on stack ([--vSP]=vRT&255,[--vSP]>>8)
 PULL   -        Pop value from stack(vAC=[vSP]+256*[vSP+1], vSP+=2)
 SYS    $DD      Native function call for at most $DD ticks ($DD*2 cycles)
-TBD1   $DD      To be defined (placeholder)
-TBD2   $DD      To be defined (placeholder) Decrement and loop?
+DEF    $DD      Define data or code (vAC,vPC=vPC+2,D+256*(vPC>>8))
 
 -- End of document --
