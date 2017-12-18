@@ -54,7 +54,9 @@ $0400:
 [def { Clear(Pos) }
   Pos p=
   [do
-    [do 0 p! p>++ p if>0loop]
+    [do {0 p!}
+        p \arg0= \SYS_38_VCLEAR8 38@ {Clears 8 pixels vertically}
+        $800 p+ p= if>0loop]
     $9801 p+ p=
     255& 160^ if<>0loop]
   ret
@@ -147,8 +149,8 @@ $0500:
 
 {Setup}
 
-{120 frames startup delay (with sound) to wait for VGA monitor}
-180 \soundTimer!
+{120 frames startup delay (with sound) to wait for VGA monitor = 2.0}
+120 \soundTimer!
 
 8 {Green2} Color=
 $800 Pos=

@@ -11,8 +11,8 @@
 #
 #  TODO:
 #
-#  XXX: Test SYS with ClearScreen acceleration
 #  XXX: DecOut routine
+#  XXX: Some form of local variables?
 #  XXX: ROM load / bootstrapping
 #  XXX: Image demo
 #  XXX: Logo drawing
@@ -174,6 +174,8 @@ vSP     = zpByte(2)             # Stack pointer ([vSP+1] remains zero)
 vTicks  = zpByte()              # Interpreter ticks are units of 2 clocks
 vTmp    = zpByte()
 
+args    = zpByte(2)             # Space to pass arguments to SYS calls
+
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 zpFree  = zpByte(0)
 
@@ -181,6 +183,8 @@ zpFree  = zpByte(0)
 define('soundTimer', soundTimer)
 define('screenY',    screenY)
 define('frameCount', frameCount)
+define('args',       args)
+define('arg0',       args+0)
 
 #-----------------------------------------------------------------------
 #
@@ -230,17 +234,33 @@ screenPages   = 0x80 - 120 # Default start of screen memory: 0x0800 to 0x7fff
 #-----------------------------------------------------------------------
 
 maxTicks = 28/2 # Duration of slowest virtual opcode
-vOverhead = 9 # Overhead of jumping in and out. Cycles, not ticks
-def runVcpu(n):
+define('$maxTicks', maxTicks)
+
+vOverheadInt = 9 # Overhead of jumping in and out. Cycles, not ticks
+vOverheadExt = 7
+
+maxSYS = -999 # Largest time slice for 'SYS
+minSYS = +999 # Smallest time slice for 'SYS'
+
+def runVcpu(n, ref=None):
   """Run interpreter for exactly n cycles"""
   print '%04x runVcpu %s cycles' % (pc(), n)
   comment = 'Run vCPU for %s cycles' % n
-  if n % 2 != (7 + vOverhead) % 2:
+  if ref:
+    comment += ' (%s)' % ref
+  if n % 2 != (vOverheadExt + vOverheadInt) % 2:
     nop()
     comment = C(comment)
     n -= 1
-  n -= 7 + 2*maxTicks + vOverhead
+  n -= vOverheadExt + vOverheadInt + 2*maxTicks
   assert n >= 0 and n % 2 == 0
+
+  global maxSYS, minSYS
+  maxSYS = max(maxSYS, n + 2*maxTicks)
+  minSYS = min(minSYS, n + 2*maxTicks)
+  define('$maxSYS', maxSYS)
+  define('$minSYS', minSYS)
+
   n /= 2
   returnPc = pc() + 7
   ld(val(returnPc&255))         #0
@@ -594,7 +614,7 @@ st(d(screenY))                  #33 More visible lines
 ld(d(lo('videoA')))             #34
 label('.join')
 st(d(nextVideo))                #35
-runVcpu(199-36)                 #36 Application (every 4th of scanlines 45-524)
+runVcpu(199-36, 'line41-521 typeF')#36 Application (every 4th of scanlines 41-521)
 ld(d(hi('soundF')), busD|ea0DregY)#199 XXX This is on the current page
 jmpy(d(lo('soundF')));          C('<New scanline start>')#0
 ldzp(d(channel))                #1 Advance to next sound channel
@@ -634,9 +654,9 @@ if soundDiscontinuity == 1:
 if soundDiscontinuity > 1:
   print "Warning: sound discontinuity not supressed"
 
-extra+=11 # for sound on/off and sound timer hack below. XXX solve properly
+extra+=11 # For sound on/off and sound timer hack below. XXX solve properly
 
-runVcpu(179-41-extra)           #41 Application cycles (scanline 0)
+runVcpu(179-41-extra, 'line0')  #41 Application cycles (scanline 0)
 
 # --- LED sequencer (19 cycles)
 
@@ -804,12 +824,12 @@ anda(d(xoutMask),busRAM|ea0DregAC)#52
 st(d(xout))                     #53
 st(val(sample), ea0DregAC|busD); C('Reset for next sample')#54
 
-runVcpu(199-55)                 #55 Appplication cycles (scanline 1-43 with sample update)
+runVcpu(199-55, 'line1-39 typeC')#55 Appplication cycles (scanline 1-43 with sample update)
 bra(d(lo('sound1')))            #199
 ld(d(videoSync0), busRAM|regOUT);C('<New scanline start>')#0 Ends the vertical blank pulse at the right cycle
 
 label('vBlankNormal')
-runVcpu(199-51)                 #51 Application cycles (scanline 1-43 without sample update)
+runVcpu(199-51, 'line1-39 typeABD')#51 Application cycles (scanline 1-43 without sample update)
 bra(d(lo('sound1')))            #199
 ld(d(videoSync0), busRAM|regOUT);C('<New scanline start>')#0 Ends the vertical blank pulse at the right cycle
 
@@ -845,7 +865,7 @@ label('.sel1')
 xora(d(videoDorF),busRAM)       #46
 st(d(videoDorF))                #47
 
-runVcpu(199-48)                 #48 Application cycles (scanline 44)
+runVcpu(199-48, 'line40')       #48 Application cycles (scanline 40)
 ldzp(d(channel))                #199 Advance to next sound channel
 anda(val(3));                   C('<New scanline start>')#0
 adda(val(1))                    #1
@@ -899,7 +919,7 @@ suba(val(1))                    #5
 ld(d(returnTo+1),busRAM|regY)   #6
 jmpy(d(returnTo+0)|busRAM);     C('Return to caller')#7
 nop()                           #8
-assert vOverhead ==              9
+assert vOverheadInt ==          9
 
 # Instruction LDWI: Load immediate constant (AC=$DDDD), 20 cycles
 label('LDWI')
@@ -1138,7 +1158,10 @@ ld(val(-22/2))                  #21
 # 'REENTER' label when done. When returning, AC must hold (the negative of) the
 # actual consumed number of whole ticks for the entire virtual instruction cycle 
 # (from NEXT to NEXT). This duration may not exceed the prior declared duration
-# in the operand.
+# in the operand + 28 (or maxTicks). The operand specifies the (negative) of the
+# maximum number of EXTRA ticks that the native call will need. The GCL compiler
+# automatically makes this calculation from gross number of cycles to excess
+# number of ticks.
 label('retry')
 ldzp(d(vPC));                   C('Retry until sufficient time')#13
 suba(val(2))                    #14
@@ -1341,6 +1364,30 @@ ld(val(-26/2))                  #21
 jmpy(d(lo('REENTER')))          #22
 nop()                           #23
 
+#-----------------------------------------------------------------------
+#
+#  vCPU extension functions (for acceleration and compaction) follow below.
+#
+#  The naming convention is: SYS_<N>_<ALLCAPS>
+#
+#  With <N> the maximum number of cycles the function will run
+#  (counted from NEXT to NEXT). This is the same number that must
+#  be passed to the 'SYS' vCPU instruction as operand, and it will
+#  appear in the GCL code upon use.
+#
+#-----------------------------------------------------------------------
+
+# Extension SYS_38_VCLEAR8: Zero a vertical slice of 8 bytes(pixels)
+label('SYS_38_VCLEAR8')
+ld(d(args+0),busRAM|regX)       #15
+ldzp(d(args+1))                 #16
+for i in range(8):
+  adda(val(i),regY)             #17+2i
+  st(d(0),eaYXregAC)            #18+2i
+ld(val(hi('REENTER')),regY)     #33
+jmpy(d(lo('REENTER')))          #34
+ld(val(-38/2))                  #35
+
 #init_rng(s1,s2,s3) //Can also be used to seed the rng with more entropy during use.
 #{
 #//XOR new entropy into key state
@@ -1425,9 +1472,17 @@ ld(val((bStart&255)-2))
 st(d(vPC))
 ld(val(bStart>>8))
 st(d(vPC+1))
-ld(val(0)) # Reset vCPU stack pointer
+
+# Reset vCPU stack pointer
+ld(val(0))
 st(d(vSP))
 st(d(vSP+1))
+
+# Preload with next page, for easy setup within GCL
+#ld(val(0))
+st(d(vRT))
+ld(val(bStart>>8)+1)
+st(d(vRT+1))
 
 # Return
 ld(d(returnTo+1), busRAM|ea0DregY)

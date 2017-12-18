@@ -86,6 +86,8 @@ class Program:
     """Next program byte in RAM"""
     if self.vPC >= self.segEnd:
         self.error('Out of code space')
+    if byte < 0 or byte >= 256:
+        self.error('Value out of range %d (must be 0..255)' % byte)
     st(val(byte), eaYXregOUTIX) # XXX Use ROM tables (or yield)
     self.vPC += 1
 
@@ -182,6 +184,9 @@ class Program:
           self.opcode('STW')
           self.emit(self.getAddress(var))
           C('%04x %s' % (prev(self.vPC, 1), repr(var)))
+      elif op == '=' and con:
+          self.opcode('STW')
+          self.emit(con)
       elif op == '+' and var:
           self.opcode('ADDW')
           self.emit(self.getAddress(var))
@@ -267,6 +272,17 @@ class Program:
           self.opcode('LD')
           self.emit(self.getAddress(var)+1)
           C('%04x %s+1' % (prev(self.vPC, 1), repr(var)))
+      elif op == '@' and con:
+          if con&1:
+            self.error('Invalid value %s (must be even)' % repr(con))
+          minSYS, maxSYS = symbol('$minSYS'), symbol('$maxSYS')
+          if con > maxSYS:
+            self.warning('Large cycle count %s > %s (will never run)' % (repr(con), repr(maxSYS)))
+          elif con > minSYS:
+            self.warning('Large cycle count %s > %s (will not always run)' % (repr(con), repr(minSYS)))
+          self.opcode('SYS')
+          extraTicks = con/2 - symbol('$maxTicks')
+          self.emit(256 - extraTicks if extraTicks > 0 else 0)
       else:
         self.error('Invalid word %s' % repr(word))
 
@@ -324,7 +340,7 @@ class Program:
     elif word[ix] == '\\':
         sym = ''
         ix += 1
-        while word[ix].isalnum():
+        while word[ix].isalnum() or word[ix] == '_':
           sym += word[ix]
           ix += 1
         number = symbol(sym)
@@ -337,7 +353,7 @@ class Program:
          ix = 0 # Reset
       else:
         name = ''
-        while word[ix].isalnum():
+        while word[ix].isalnum() or word[ix] == '_':
           name += word[ix]
           ix += 1
 
@@ -357,6 +373,12 @@ class Program:
       self.error('Dangling if statements')
     print '%04x Variables %d' % (zpByte(0), len(self.vars))
     print 'Symbols: ' + ' '.join(sorted(self.vars.keys()))
+
+  def warning(self, message):
+    prefix = 'GCL warning:'
+    prefix += (' file %s' % repr(self.filename)) if self.filename else ''
+    prefix += ' line %s:' % self.lineNumber
+    print prefix, message
 
   def error(self, message):
     prefix = 'GCL error:'
