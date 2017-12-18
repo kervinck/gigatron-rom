@@ -147,9 +147,9 @@ $0500:
   RunPart1 call
 ] RunPart2=
 
-[def {DrawJupiter}
-  \jupiter0 p=   {Addres in ROM for image data}
-  Pos       q=   {Pos points in video memory}
+[def {DrawImage}
+  Image p=   {Addres in ROM for image data}
+  Pos   q=   {Pos points in video memory}
   [do
     {Draw slice}
     [do
@@ -162,13 +162,18 @@ $0500:
     $8801 q+ q=
     255& 160^ if<>0loop]
   ret
-] DrawJupiter=
+] DrawImage=
+
+\vRT>++ ret {during setup: hop to next page}
+{---------- RAM page 6 ----------}
+$0600:
 
 {--- Setup ---}
 
 {Draw image}
+\entropy? 128& [if=0 \jupiter0 else \parrot0] Image=
 $800 Pos=
-DrawJupiter call
+DrawImage call
 
 {Opening sound for 2 seconds}
 120 \soundTimer!

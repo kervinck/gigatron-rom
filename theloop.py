@@ -180,6 +180,7 @@ args    = zpByte(2)             # Space to pass arguments to SYS calls
 zpFree  = zpByte(0)
 
 # Export some zero page variables to GCL
+define('entropy',    entropy)
 define('soundTimer', soundTimer)
 define('screenY',    screenY)
 define('frameCount', frameCount)
@@ -1450,28 +1451,26 @@ for ch in range(32+50, 128):
 trampoline()
 
 #-----------------------------------------------------------------------
-#  ROM page XX: Jupiter image
+#  ROM page XX: Images
 #-----------------------------------------------------------------------
 
-f = open('Jupiter-160x120.rgb')
-rgbBytes = f.read()
-f.close()
+def importImage(rgbName, width, height, ref):
+  f = open(rgbName)
+  raw = f.read()
+  f.close()
+  for y in range(height):
+    align(0x100, 0x100)
+    label('%s%d' % (ref, y))
+    for x in range(width):
+      R = ord(raw[3 * (y * width + x) + 0])+43
+      G = ord(raw[3 * (y * width + x) + 1])+43
+      B = ord(raw[3 * (y * width + x) + 2])+43
+      byte = (R/85) + 4*(G/85) + 16*(B/85)
+      ld(val(byte))
+    trampoline()
 
-width, height = 160, 120
-
-def toPalette(raw, x, y):
-  R = ord(raw[3 * (y * width + x) + 0])
-  G = ord(raw[3 * (y * width + x) + 1])
-  B = ord(raw[3 * (y * width + x) + 2])
-  return (R/85) + 4*(G/85) + 16*(B/85)
-
-for y in range(120):
-  align(0x100, 0x100)
-  label('jupiter%d' % y)
-  for x in range(width):
-    byte = toPalette(rgbBytes, x, y)
-    ld(val(byte))
-  trampoline()
+importImage('Jupiter-160x120.rgb', 160, 120, 'jupiter')
+importImage('Parrot-160x120.rgb',  160, 120, 'parrot')
 
 #-----------------------------------------------------------------------
 #
@@ -1512,7 +1511,6 @@ st(d(vRT+1))
 ld(d(returnTo+1), busRAM|ea0DregY)
 jmpy(d(returnTo+0)| busRAM)
 nop()
-
 
 #-----------------------------------------------------------------------
 # Finish assembly
