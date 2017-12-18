@@ -1,0 +1,186 @@
+
+{---------- RAM page 3 ----------}
+$0300:
+
+[def { DrawChar(Char,Pos,Color) }
+  {Map ASCII code to offset in font table}
+
+  Char 82- [if<0 50+ i= \font32up            {Select low or high page}
+            else i=     \font82up] fontData=
+  i i+ tmp= tmp+ i+    {Multiply by 5 and add to page}
+  fontData+ fontData=  {Add to page address to reach bitmap data for Char}
+  $800 Pos+ U=         {Next text line, where to stop the inner drawing loop}
+
+  {Draw 6 vertical slices: 5 using font data, the last with all-zeros}
+  5 i= [do
+    [if<>0 fontData 0; fontData<++ else 0] bits=
+    Pos p=
+    {Draw vertical slice}
+    [do
+      bits 128& [if=0 0 {Black} else Color] p!
+      bits bits+ bits=
+      p>++
+      p U- if<0loop]
+    Pos<++
+    i 1- i= if>=0loop]
+  ret
+] DrawChar=
+
+[def { DrawText(Text,Pos) }
+  push
+  [do
+    Text? Char= {Next character to be printed}
+    if<>0       {Zero termination}
+      Text<++   {Advance text pointer}
+      Char 10^ [if=0 Pos<! $800 Pos+ Pos=
+                else DrawChar call]
+      loop]
+  pop call
+] DrawText=
+
+[def
+  {   *** Gigatron 32K ***    }
+  $20. $20. $20. $2a. $2a. $2a. $20. $47. $69. $67. $61. $74. $72. $6f. $6e.
+  $20. $33. $32. $4b. $20. $2a. $2a. $2a. $20. $20. $20. $20. 10.
+  {TTL color computer ROM v0  }
+  $54. $54. $4c. $20. $63. $6f. $6c. $6f. $72. $20. $63. $6f. $6d. $70. $75.
+  $74. $65. $72. $20. $52. $4f. $4d. $20. $76. $30. $20. $20. 10. 0.
+] Welcome=
+
+$0400 call
+{---------- RAM page 4 ----------}
+$0400:
+
+[def { Clear(Pos) }
+  Pos p=
+  [do
+    [do 0 p! p>++ p if>0loop]
+    $9801 p+ p=
+    255& 160^ if<>0loop]
+  ret
+] Clear=
+
+[def {RunPart1}
+  {Get X from scanline table}
+  ShiftControl? X=
+
+  {Enable gravity after a while}
+  120^ [if=0 10 BallA=]
+
+  {Stupid RNG}
+  \frameCount? Rnd0+ Rnd1+ Rnd0=
+  Rnd1+ [if<0 43^] Rnd1+ Rnd1+ Rnd1=
+
+  {Random height adjustment}
+  Height 88-  [if>0 Rnd0  16& if<>0 Height 1- Height=]
+  Height 118- [if<0 Rnd0 128& if<>0 Height<++]
+
+  {J=($08+H)<<8}
+  Height $08+ J>!
+
+  {X drawing position is 1 pixel outside the visible area}
+  X 160+ 255& p=
+
+  {Clear vertical line}
+  $1000 p+ V=
+  [do 1 V!
+    V>++
+    V if>0loop]
+
+  {Star}
+  Rnd0 127& A= A 111- [if>0 119 A=]
+  A 16+ A>! p A<!
+  2 {Red} A!
+
+  {Draw vertical line to bottom of screen}
+  J p+ V=
+
+  63 V! {First pixel white}
+  V>++
+  X 8& Height+ C=                     {Begin of checkerboard}
+  [do [C 1+ C= 8& if=0 42 else 32] V! {Checkerboard colors}
+      V>++
+      V if>0loop]
+
+  {Wait for vertical blank}
+  [do \screenY? if<>0loop]
+
+  {Scroll screen 1 pixel}
+  X 1+ ShiftControl!
+
+  RunPart2 call
+] RunPart1=
+
+$0500 call
+{---------- RAM page 5 ----------}
+$0500:
+
+[def {RunPart2}
+  {Clear ball}
+  OldPixel Ball!
+
+  {Update ball position and velocity}
+  BallA BallV+ BallV= {Update velocity with gravity}
+  BallY BallV+ BallY= {Update height with velocity}
+
+  {Check new ball position}
+  X 50+ Ball=
+  BallY>? Ball>!
+  Ball? OldPixel=
+
+  {Reverse if we're hitting something}
+  OldPixel 2- [if>0
+    0 BallV- BallV=
+    BallY BallV+ BallY=
+    10 \soundTimer! {1/6th second of sound}
+
+    X 50+ Ball=
+    BallY>? Ball>!
+    Ball? OldPixel=
+  ]
+
+  {Draw the ball}
+  63 {White} Ball!
+
+  RunPart1 call
+] RunPart2=
+
+{Setup}
+
+{120 frames startup delay (with sound) to wait for VGA monitor}
+180 \soundTimer!
+
+8 {Green2} Color=
+$800 Pos=
+Welcome Text=
+DrawText call
+Clear call
+
+[do \soundTimer? if<>0loop]
+
+62 Color= {Pen color}
+[do
+  $800 Pos= {Pen position at top of screen}
+  Welcome Text=
+  DrawText call
+  Color 8^ if<>0 Color 9- Color= loop]
+
+{Scroller game, might become Zaxxon or Flappy Bird}
+$0111 ShiftControl= {X shift starting from line 8}
+
+{Rnd0}
+
+0 Rnd1= Rnd0=
+J=
+
+{Ball acceleration BallA, height Y and velocity BallV}
+BallA= BallV= OldPixel=
+
+$1800 BallY= Ball=
+90 Height=
+
+{Run}
+RunPart1 call
+
+{---------- End ----------}
+

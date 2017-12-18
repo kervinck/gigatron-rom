@@ -11,7 +11,8 @@
 #
 #  TODO:
 #
-#  XXX: Text screen
+#  XXX: Test SYS with ClearScreen acceleration
+#  XXX: DecOut routine
 #  XXX: ROM load / bootstrapping
 #  XXX: Image demo
 #  XXX: Logo drawing
@@ -178,7 +179,8 @@ zpFree  = zpByte(0)
 
 # Export some zero page variables to GCL
 define('soundTimer', soundTimer)
-define('screenY', screenY)
+define('screenY',    screenY)
+define('frameCount', frameCount)
 
 #-----------------------------------------------------------------------
 #
@@ -1361,6 +1363,15 @@ nop()                           #23
 #return(c)          //low order bits of other variables
 #}
 
+#  {Vladimir Vassilevsky's LCG
+#   seed = (seed << 7) - seed + 251; // 127*seed+251
+#   return (u8)(seed + (seed>>8));
+#  }
+#  Q Q+ R= R+ R= R+ R= R+
+#    R= R+ R= R+ R= R+ Q- R=
+#  251 R+ Q=
+#  Q>? R+ R=
+
 #-----------------------------------------------------------------------
 #
 #  ROM page 5-6: Gigatron font data
@@ -1369,7 +1380,7 @@ nop()                           #23
 
 align(0x100, 0x100)
 
-label('fontL')
+label('font32up')
 for ch in range(32, 32+50):
   comment = 'Char %s' % repr(chr(ch))
   for byte in font.font[ch-32]:
@@ -1382,7 +1393,7 @@ trampoline()
 
 align(0x100, 0x100)
 
-label('fontH')
+label('font82up')
 for ch in range(32+50, 128):
   comment = 'Char %s' % repr(chr(ch))
   for byte in font.font[ch-32]:
@@ -1402,7 +1413,7 @@ label('initVcpu')
 
 # Compile test GCL program
 program = gcl.Program(bStart)
-for line in open('game.gcl').readlines():
+for line in open('main.gcl').readlines():
   program.line(line)
 program.end()
 bLine = program.vPC

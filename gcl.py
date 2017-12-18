@@ -15,16 +15,19 @@ class Program:
     self.vPC = None
     self.org(address)
 
+  def segInfo(self):
+    print '%04x vCPU used %d unused %d' % (self.segStart, self.vPC - self.segStart, self.segEnd - self.vPC)
+
   def org(self, address):
     # Configure start address for emit
-    if self.vPC is not None:
-      print '%04x' % self.vPC
-      print '%04x vCPU code' % address,
+    if self.vPC is not None and self.segStart < self.vPC:
+      self.segInfo()
     ld(val(address&0xff),regX)
     ld(val(address>>8),regY)
-    self.vPC = address
+    self.segStart = address
     page = address & ~255
-    self.pageEnd = page + (249 if page <= 0x400 else 256)
+    self.segEnd = page + (249 if page <= 0x400 else 256)
+    self.vPC = self.segStart
 
   def thisBlock(self):
     return self.blocks[-1]
@@ -81,14 +84,14 @@ class Program:
 
   def emit(self, byte):
     """Next program byte in RAM"""
-    if self.vPC >= self.pageEnd:
+    if self.vPC >= self.segEnd:
         self.error('Out of code space')
     st(val(byte), eaYXregOUTIX) # XXX Use ROM tables (or yield)
     self.vPC += 1
 
   def opcode(self, ins):
     """Next opcode in RAM"""
-    if self.vPC >= self.pageEnd:
+    if self.vPC >= self.segEnd:
         self.error('Out of code space')
     st(val(lo(ins)),eaYXregOUTIX) # XXX Use ROM tables (or yield)
     C('%04x %s' % (self.vPC, ins))
@@ -348,15 +351,15 @@ class Program:
     return (name, number, op if len(op)>0 else None)
 
   def end(self):
+    self.segInfo()
     # XXX Check all blocks are closed
-    print '%04x' % self.vPC
     if len(self.conds) > 0:
       self.error('Dangling if statements')
-    print '%04x globals %d' % (zpByte(0), len(self.vars))
-    print sorted(self.vars.items())
+    print '%04x Variables %d' % (zpByte(0), len(self.vars))
+    print 'Symbols: ' + ' '.join(sorted(self.vars.keys()))
 
   def error(self, message):
-    prefix = '\nGCL error:'
+    prefix = 'GCL error:'
     prefix += (' file %s' % repr(self.filename)) if self.filename else ''
     prefix += ' line %s:' % self.lineNumber
     print prefix, message
