@@ -47,7 +47,7 @@ $0300:
   $74. $65. $72. $20. $52. $4f. $4d. $20. $76. $30. $20. $20. 10. 0.
 ] Welcome=
 
-$0400 call
+ret {during setup: hop to next page}
 {---------- RAM page 4 ----------}
 $0400:
 
@@ -113,7 +113,7 @@ $0400:
   RunPart2 call
 ] RunPart1=
 
-$0500 call
+\vRT>++ ret {during setup: hop to next page}
 {---------- RAM page 5 ----------}
 $0500:
 
@@ -170,8 +170,7 @@ Clear call
 {Scroller game, might become Zaxxon or Flappy Bird}
 $0111 ShiftControl= {X shift starting from line 8}
 
-{Rnd0}
-
+{Random}
 0 Rnd1= Rnd0=
 J=
 

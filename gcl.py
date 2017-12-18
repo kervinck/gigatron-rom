@@ -22,8 +22,9 @@ class Program:
     # Configure start address for emit
     if self.vPC is not None and self.segStart < self.vPC:
       self.segInfo()
-    ld(val(address&0xff),regX)
-    ld(val(address>>8),regY)
+    if address != self.vPC or self.segStart < self.vPC:
+      ld(val(address&0xff),regX)
+      ld(val(address>>8),regY)
     self.segStart = address
     page = address & ~255
     self.segEnd = page + (249 if page <= 0x400 else 256)
@@ -260,10 +261,16 @@ class Program:
           self.opcode('INC')
           self.emit(self.getAddress(var))
           C('%04x %s' % (prev(self.vPC, 1), repr(var)))
+      elif op == '<++' and con:
+          self.opcode('INC')
+          self.emit(con)
       elif op == '>++' and var:
           self.opcode('INC')
           self.emit(self.getAddress(var)+1)
           C('%04x %s+1' % (prev(self.vPC, 1), repr(var)))
+      elif op == '>++' and con:
+          self.opcode('INC')
+          self.emit(con+1)
       elif op == '<?' and var:
           self.opcode('LD')
           self.emit(self.getAddress(var))

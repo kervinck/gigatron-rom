@@ -1478,10 +1478,10 @@ ld(val(0))
 st(d(vSP))
 st(d(vSP+1))
 
-# Preload with next page, for easy setup within GCL
+# Preload vRT with address of next page, for easier setup section in GCL
 #ld(val(0))
 st(d(vRT))
-ld(val(bStart>>8)+1)
+ld(val((bStart>>8)+1))
 st(d(vRT+1))
 
 # Return
