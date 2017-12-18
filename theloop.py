@@ -11,31 +11,31 @@
 #
 #  TODO:
 #
-#  XXX: DecOut routine
-#  XXX: Some form of local variables?
-#  XXX: ROM load / bootstrapping
-#  XXX: Image demo
+#  XXX: Image packed in memory
+#  XXX: Serial read from ROM tables, ignoring page boundraries
+#  XXX: ROM load of code / bootstrapping
 #  XXX: Logo drawing
 #  XXX: Input handling update
-#  XXX: Serial loading
-#  XXX: Readability of asm.py instructions
-#  XXX: Multitasking (start with date/time clock in GCL)
-#  XXX: Music sequencer
-#  XXX: Simple RNG updated every 4 scanlines
 #  XXX: More waveforms
+#  XXX: DecOut routine
+#  XXX: Key/pitch table
+#  XXX: Music sequencer
+#  XXX: Serial loading of programs with Arduino/Trinket
+#  XXX: Multitasking (start with date/time clock in GCL)
+#  XXX: Simple RNG updated every 4 scanlines
 #  XXX: Decay, using Karplus-Strong
-#  XXX: Prefix notation for high/low byte >X++ instead of X>++
 #  XXX: Mix controller input with entropy
-#  XXX: Loading of programs over controller port and Arduino/Trinket
-#  XXX: Better shift-table
 #  XXX: Loading and starting of programs
-#  XXX: Simple GCL programs might be compiled by the host instead of offline?
+#  XXX: Better shift-table (use ROM?)
+#  XXX: Better notation for 'call'.
+#  XXX: Prefix notation for high/low byte >X++ instead of X>++
+#  XXX: Readability of asm.py instructions
 #  XXX: Threading and sleeping
 #  XXX: Sprites by scanline 4 reset method? ("videoG"=graphics)
+#  XXX: Simple GCL programs might be compiled by the host instead of offline?
 #  XXX: Dynamic memory allocation
-#  XXX: Scoping for variables
-#  XXX: Memory-mapped I/O
-#  XXX: Macros
+#  XXX: Scoping for variables or some form of local variables?
+#  XXX: Macros {name:....}
 #       (def plot
 #         [do
 #           c [if<0 15 d! else 5 d!]
@@ -1450,8 +1450,32 @@ for ch in range(32+50, 128):
 trampoline()
 
 #-----------------------------------------------------------------------
+#  ROM page XX: Jupiter image
+#-----------------------------------------------------------------------
+
+f = open('Jupiter-160x120.rgb')
+rgbBytes = f.read()
+f.close()
+
+width, height = 160, 120
+
+def toPalette(raw, x, y):
+  R = ord(raw[3 * (y * width + x) + 0])
+  G = ord(raw[3 * (y * width + x) + 1])
+  B = ord(raw[3 * (y * width + x) + 2])
+  return (R/85) + 4*(G/85) + 16*(B/85)
+
+for y in range(120):
+  align(0x100, 0x100)
+  label('jupiter%d' % y)
+  for x in range(width):
+    byte = toPalette(rgbBytes, x, y)
+    ld(val(byte))
+  trampoline()
+
+#-----------------------------------------------------------------------
 #
-#  ROM page 7: Bootstrap vCPU
+#  ROM page XX: Bootstrap vCPU
 #
 #-----------------------------------------------------------------------
 
@@ -1488,6 +1512,7 @@ st(d(vRT+1))
 ld(d(returnTo+1), busRAM|ea0DregY)
 jmpy(d(returnTo+0)| busRAM)
 nop()
+
 
 #-----------------------------------------------------------------------
 # Finish assembly

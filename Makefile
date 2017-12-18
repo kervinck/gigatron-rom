@@ -1,6 +1,6 @@
 CFLAGS:=-std=c11 -O3 -Wall
 
-theloop.2.rom: *.py *.gcl
+theloop.2.rom: *.py *.gcl *.rgb
 	./theloop.py
 
 run: gtemu theloop.2.rom
@@ -12,3 +12,7 @@ test: gtemu theloop.2.rom
 
 burn: theloop.2.rom
 	minipro -p 'AT27C1024 @DIP40' -w theloop.2.rom -y -s
+
+%.rgb: %.png
+	# Uses ImageMagick
+	convert "$<" "$@"

@@ -147,19 +147,42 @@ $0500:
   RunPart1 call
 ] RunPart2=
 
-{Setup}
+[def {DrawJupiter}
+  \jupiter0 p=   {Addres in ROM for image data}
+  Pos       q=   {Pos points in video memory}
+  [do
+    {Draw slice}
+    [do
+      p 0; q!
+      $0100 p+ p=
+      $0100 q+ q=
+      if>0loop]
+    {Advance to next slice}
+    $8801 p+ p=
+    $8801 q+ q=
+    255& 160^ if<>0loop]
+  ret
+] DrawJupiter=
 
-{120 frames startup delay (with sound) to wait for VGA monitor = 2.0}
+{--- Setup ---}
+
+{Draw image}
+$800 Pos=
+DrawJupiter call
+
+{Opening sound for 2 seconds}
 120 \soundTimer!
 
+{Display welcome tekst}
 8 {Green2} Color=
 $800 Pos=
 Welcome Text=
 DrawText call
-Clear call
 
+{Wait for sound to stop}
 [do \soundTimer? if<>0loop]
 
+{Flash welcome text in several colors}
 62 Color= {Pen color}
 [do
   $800 Pos= {Pen position at top of screen}
@@ -167,7 +190,13 @@ Clear call
   DrawText call
   Color 8^ if<>0 Color 9- Color= loop]
 
-{Scroller game, might become Zaxxon or Flappy Bird}
+{Wait 2.5 seconds}
+\frameCount? 150+ 255& tmp=
+[do \frameCount? tmp- if<>0loop]
+
+{Clear image}
+Clear call
+
 $0111 ShiftControl= {X shift starting from line 8}
 
 {Random}
@@ -180,7 +209,8 @@ BallA= BallV= OldPixel=
 $1800 BallY= Ball=
 90 Height=
 
-{Run}
+{--- Run ---}
+
 RunPart1 call
 
 {---------- End ----------}
