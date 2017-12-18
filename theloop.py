@@ -163,7 +163,7 @@ vPC     = zpByte(2)             # Interpreter program counter, points into RAM
 vAC     = zpByte(2)             # Interpreter accumulator, 16-bits
 vRT     = zpByte(2)             # Return address, for returning after CALL
 define('vRT', vRT)
-vSP     = zpByte(2)             # Stack pointer ([vSP+1] remains zero)
+vSP     = zpByte(1)             # Stack pointer
 vTicks  = zpByte()              # Interpreter ticks are units of 2 clocks
 vTmp    = zpByte()
 
@@ -1492,7 +1492,6 @@ st(d(vPC+1))
 # Reset vCPU stack pointer
 ld(val(0))
 st(d(vSP))
-st(d(vSP+1))
 
 # Preload vRT with address of next page, for easier setup section in GCL
 #ld(val(0))
