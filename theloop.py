@@ -11,38 +11,31 @@
 #
 #  TODO:
 #
+#  XXX: Simple RNG updated every 4 scanlines
 #  XXX: Image packed in memory
 #  XXX: Serial read from ROM tables, ignoring page boundraries
 #  XXX: ROM load of code / bootstrapping
-#  XXX: Logo drawing
 #  XXX: Input handling update
-#  XXX: More waveforms
+#  XXX: Main menu
+#  XXX: Logo drawing
 #  XXX: DecOut routine
 #  XXX: Key/pitch table
 #  XXX: Music sequencer
+#  XXX: More waveforms
 #  XXX: Serial loading of programs with Arduino/Trinket
-#  XXX: Multitasking (start with date/time clock in GCL)
-#  XXX: Simple RNG updated every 4 scanlines
-#  XXX: Decay, using Karplus-Strong
-#  XXX: Mix controller input with entropy
+#  XXX: Multitasking/threading/sleeping (start with date/time clock in GCL)
 #  XXX: Loading and starting of programs
 #  XXX: Better shift-table (use ROM?)
-#  XXX: Better notation for 'call'.
+#  XXX: Better notation for 'call'. () or []
 #  XXX: Prefix notation for high/low byte >X++ instead of X>++
 #  XXX: Readability of asm.py instructions
-#  XXX: Threading and sleeping
 #  XXX: Sprites by scanline 4 reset method? ("videoG"=graphics)
+#  XXX: Decay, using Karplus-Strong
+#  XXX: Mix controller input with entropy
+#  XXX: Scoping for variables or some form of local variables?
 #  XXX: Simple GCL programs might be compiled by the host instead of offline?
 #  XXX: Dynamic memory allocation
-#  XXX: Scoping for variables or some form of local variables?
-#  XXX: Macros {name:....}
-#       (def plot
-#         [do
-#           c [if<0 15 d! else 5 d!]
-#           c c+ c=
-#           d 1+ d=
-#           -$4458 d+ if<0 loop]
-#         (return))
+#  XXX: Macros
 #-----------------------------------------------------------------------
 
 from asm import *
