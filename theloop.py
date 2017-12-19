@@ -93,6 +93,10 @@ buttonSelect    = 32
 buttonA         = 64
 buttonB         = 128
 
+# Compile option: True restricts the calling of interpreter to calls from
+# page 2, for 2 cycles less interpreter ENTER/EXIT overhead
+fastRunVcpu = True
+
 #-----------------------------------------------------------------------
 #
 #  RAM page 0: variables
@@ -152,6 +156,9 @@ frameCount = zpByte(1)
 
 # Generic function return address
 returnTo   = zpByte(2)
+
+# Return from EEPROM lookups
+lookupReturn = zpByte(2)
 
 # Two bytes of havested entropy
 entropy    = zpByte(2)
@@ -241,7 +248,7 @@ maxTicks = 28/2 # Duration of slowest virtual opcode
 define('$maxTicks', maxTicks)
 
 vOverheadInt = 9 # Overhead of jumping in and out. Cycles, not ticks
-vOverheadExt = 7
+vOverheadExt = 5 if fastRunVcpu else 7
 
 maxSYS = -999 # Largest time slice for 'SYS
 minSYS = +999 # Smallest time slice for 'SYS'
@@ -257,21 +264,28 @@ def runVcpu(n, ref=None):
     comment = C(comment)
     n -= 1
   n -= vOverheadExt + vOverheadInt + 2*maxTicks
+
   assert n >= 0 and n % 2 == 0
 
   global maxSYS, minSYS
   maxSYS = max(maxSYS, n + 2*maxTicks)
   minSYS = min(minSYS, n + 2*maxTicks)
+  # Tell GCL compiler this range, so it can check SYS call operands
   define('$maxSYS', maxSYS)
   define('$minSYS', minSYS)
 
   n /= 2
-  returnPc = pc() + 7
+  returnPc = pc() + (5 if fastRunVcpu else 7)
   ld(val(returnPc&255))         #0
   comment = C(comment)
   st(d(returnTo))               #1
-  ld(val(returnPc>>8))          #2
-  st(d(returnTo+1))             #3
+  if fastRunVcpu:
+    # In this mode [returnTo+1] will not be used
+    assert returnPc>>8 == 2
+  else:
+    # Allow interpreter to be called from anywhere
+    ld(val(returnPc>>8))        #2
+    st(d(returnTo+1))           #3
   ld(val(hi('ENTER')),regY)     #4
   jmpy(d(lo('ENTER')))          #5
   ld(val(n))                    #6
@@ -934,7 +948,10 @@ label('EXIT')
 adda(val(maxTicks))             #3
 bgt(d(pc()));                   C('Resync')#4
 suba(val(1))                    #5
-ld(d(returnTo+1),busRAM|regY)   #6
+if fastRunVcpu:
+  ld(val(2),regY)               #6
+else:
+  ld(d(returnTo+1),busRAM|regY) #6
 jmpy(d(returnTo+0)|busRAM);     C('Return to caller')#7
 nop()                           #8
 assert vOverheadInt ==          9
@@ -1497,6 +1514,9 @@ importImage('Images/Parrot-160x120.rgb',  160, 120, 'parrot')
 
 align(0x100)
 label('initVcpu')
+
+# For info
+print 'SYS warning %s error %s' % (repr(minSYS), repr(maxSYS))
 
 # Compile test GCL program
 program = gcl.Program(bStart)
