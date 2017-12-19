@@ -11,14 +11,37 @@
 #
 #  TODO:
 #
-#  XXX: Simple RNG updated every 4 scanlines
 #  XXX: Image packed in memory
+#         8x8 pixel block in 48 bytes. Maybe 2 bytes overhead: 50
+#         5 pixel blocks in one page
+#         3 pages encode 1 column of 15 blocks
+#         3*20 = 60 pages to encode an image: 15 kB. Good for Parrot, Jupiter, Baboon
+#         SYS Routine to unpack 6 bytes would be nice
+#  XXX: Simple RNG updated every 4 scanlines (videoD only?)
+#        SYS Routine for mixing would be nice
+#         ld in
+#         adda [frameCount]
+#         xora R0
+#         bmi .rnd0
+#         bra .rnd1
+#         adda R0
+# .rnd0   suba R0
+# .rnd1   st R0
+#         xora [frameCount]
+#         bmi .rnd2
+#         bra .rnd3
+#         adda R1
+# .rnd2   suba R1
+# .rnd3   st R1
+# Retrieve:
+#         ld R0
+#         xora R1
 #  XXX: Serial read from ROM tables, ignoring page boundraries
 #  XXX: ROM load of code / bootstrapping
 #  XXX: Input handling update
 #  XXX: Main menu
 #  XXX: Logo drawing
-#  XXX: DecOut routine
+#  XXX: DrawDecimal routine
 #  XXX: Key/pitch table
 #  XXX: Music sequencer
 #  XXX: More waveforms
@@ -1462,8 +1485,8 @@ def importImage(rgbName, width, height, ref):
       ld(val(byte))
     trampoline()
 
-importImage('Jupiter-160x120.rgb', 160, 120, 'jupiter')
-importImage('Parrot-160x120.rgb',  160, 120, 'parrot')
+importImage('Images/Jupiter-160x120.rgb', 160, 120, 'jupiter')
+importImage('Images/Parrot-160x120.rgb',  160, 120, 'parrot')
 
 #-----------------------------------------------------------------------
 #

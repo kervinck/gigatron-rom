@@ -1,15 +1,23 @@
 
-{---------- RAM page 3 ----------}
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       GCL applications                                                |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+{-----------------------------------------------------------------------+
+|       RAM page 3                                                      |
++-----------------------------------------------------------------------}
 $0300:
 
 [def { DrawChar(Char,Pos,Color) }
-  {Map ASCII code to offset in font table}
 
+  {Map ASCII code to offset in font table}
   Char 82- [if<0 50+ i= \font32up            {Select low or high page}
             else i=     \font82up] fontData=
-  i i+ tmp= tmp+ i+    {Multiply by 5 and add to page}
+  i i+ tmp= tmp+ i+    {Multiply by 5}
   fontData+ fontData=  {Add to page address to reach bitmap data for Char}
-  $800 Pos+ U=         {Next text line, where to stop the inner drawing loop}
+  $800 Pos+ q=         {Where to stop the inner drawing loop}
 
   {Draw 6 vertical slices: 5 using font data, the last with all-zeros}
   5 i= [do
@@ -20,7 +28,7 @@ $0300:
       bits 128& [if=0 0 {Black} else Color] p!
       bits bits+ bits=
       p>++
-      p U- if<0loop]
+      p q- if<0loop]
     Pos<++
     i 1- i= if>=0loop]
   ret
@@ -48,7 +56,9 @@ $0300:
 ] Welcome=
 
 ret {during setup: hop to next page}
-{---------- RAM page 4 ----------}
+{-----------------------------------------------------------------------+
+|       RAM page 4                                        }\vRT>++ ret{ |
++-----------------------------------------------------------------------}
 $0400:
 
 [def { Clear(Pos) }
@@ -114,7 +124,9 @@ $0400:
 ] RunPart1=
 
 \vRT>++ ret {during setup: hop to next page}
-{---------- RAM page 5 ----------}
+{-----------------------------------------------------------------------+
+|       RAM page 5                                        }\vRT>++ ret{ |
++-----------------------------------------------------------------------}
 $0500:
 
 [def {RunPart2}
@@ -164,8 +176,9 @@ $0500:
   ret
 ] DrawImage=
 
-\vRT>++ ret {during setup: hop to next page}
-{---------- RAM page 6 ----------}
+{-----------------------------------------------------------------------+
+|       RAM page 6                                        }\vRT>++ ret{ |
++-----------------------------------------------------------------------}
 $0600:
 
 {--- Setup ---}
@@ -218,5 +231,7 @@ $1800 BallY= Ball=
 
 RunPart1 call
 
-{---------- End ----------}
+{-----------------------------------------------------------------------+
+|       End                                                             |
++-----------------------------------------------------------------------}
 
