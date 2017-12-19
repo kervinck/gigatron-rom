@@ -34,26 +34,26 @@
               001b 1880  ld   $80,out
               001c 18c0  ld   $c0,out
               001d 0000  ld   $00         ;Collect entropy from RAM
-              001e d223  st   [$23],x
-              001f d624  st   [$24],y
-.initEnt0:    0020 0110  ld   [$10]
+              001e d225  st   [$25],x
+              001f d626  st   [$26],y
+.initEnt0:    0020 0112  ld   [$12]
               0021 f424  bge  .initEnt1
               0022 8d00  adda [y,x]
               0023 60bf  xora $bf
-.initEnt1:    0024 c210  st   [$10]
-              0025 0111  ld   [$11]
+.initEnt1:    0024 c212  st   [$12]
+              0025 0113  ld   [$13]
               0026 f429  bge  .initEnt2
-              0027 8110  adda [$10]
+              0027 8112  adda [$12]
               0028 60c1  xora $c1
-.initEnt2:    0029 c211  st   [$11]
-              002a 0123  ld   [$23]
+.initEnt2:    0029 c213  st   [$13]
+              002a 0125  ld   [$25]
               002b 8001  adda $01
               002c ec20  bne  .initEnt0
-              002d d223  st   [$23],x
-              002e 0124  ld   [$24]
+              002d d225  st   [$25],x
+              002e 0126  ld   [$26]
               002f 8001  adda $01
               0030 ec20  bne  .initEnt0
-              0031 d624  st   [$24],y
+              0031 d626  st   [$26],y
               0032 0003  ld   $03         ;LEDs |**OO|
               0033 1880  ld   $80,out
               0034 18c0  ld   $c0,out
@@ -83,21 +83,21 @@ cold:         003c c204  st   [$04]
               004c 1402  ld   $02,y       ;Setup shift2 table
               004d 0000  ld   $00
               004e c202  st   [$02]
-.loop:        004f c223  st   [$23]
+.loop:        004f c225  st   [$25]
               0050 8200  adda ac
               0051 9200  adda ac,x
-              0052 0123  ld   [$23]
+              0052 0125  ld   [$25]
               0053 ce00  st   [y,x]
               0054 8001  adda $01
               0055 6040  xora $40
               0056 ec4f  bne  .loop
               0057 6040  xora $40
               0058 0078  ld   $78         ;Setup LED sequencer
-              0059 c213  st   [$13]
+              0059 c215  st   [$15]
               005a 0000  ld   $00
-              005b c214  st   [$14]
+              005b c216  st   [$16]
               005c 000a  ld   $0a
-              005d c215  st   [$15]
+              005d c217  st   [$17]
               005e 1401  ld   $01,y       ;Setup channel 1
               005f 10fa  ld   $fa,x
               0060 dc38  st   $38,[y,x++]
@@ -115,10 +115,10 @@ cold:         003c c204  st   [$04]
               006c dc20  st   $20,[y,x++]
               006d cc13  st   $13,[y,x]
               006e 0000  ld   $00         ;Setup sound timer
-              006f c212  st   [$12]
+              006f c214  st   [$14]
               0070 00ff  ld   $ff         ;Setup serial input
-              0071 c216  st   [$16]
-              0072 c217  st   [$17]
+              0071 c218  st   [$18]
+              0072 c219  st   [$19]
               0073 0007  ld   $07         ;LEDs |***O|
               0074 1880  ld   $80,out
               0075 18c0  ld   $c0,out
@@ -134,7 +134,7 @@ cold:         003c c204  st   [$04]
               007f c207  st   [$07]
               0080 c206  st   [$06]
               0081 1402  ld   $02,y       ;Enter video loop
-              0082 e006  jmp  y,$06
+              0082 e004  jmp  y,$04
               0083 00c0  ld   $c0
               0084 0200  nop
               0085 0200  nop
@@ -224,7 +224,7 @@ last:         01e9 0200  nop
               01ed fc0b  bra  pixels
               01ee 00c0  ld   $c0
 videoE:       01ef 1402  ld   $02,y
-              01f0 e006  jmp  y,$06
+              01f0 e004  jmp  y,$04
               01f1 00c0  ld   $c0
 videoF:       01f2 0108  ld   [$08]
               01f3 a0ee  suba $ee
@@ -236,231 +236,221 @@ notlast:      01f8 c208  st   [$08]
               01f9 0000  ld   $00
 .join:        01fa c20b  st   [$0b]
               01fb 0200  nop              ;Run vCPU for 163 cycles (line41-521 typeF)
-              01fc 0003  ld   $03
+              01fc 0001  ld   $01
               01fd c20e  st   [$0e]
-              01fe 0002  ld   $02
-              01ff c20f  st   [$0f]
-              0200 1403  ld   $03,y
-              0201 e000  jmp  y,$00
-              0202 003b  ld   $3b
-              0203 1401  ld   $01,y
-              0204 e0ad  jmp  y,$ad       ;<New scanline start>
-              0205 0102  ld   [$02]
-vBlank:       0206 c209  st   [$09]       ;Start vertical blank interval
-              0207 0080  ld   $80
-              0208 c20a  st   [$0a]
-              0209 c000  st   $00,[$00]
-              020a 0001  ld   $01
-              020b c280  st   [$80]
-              020c 010d  ld   [$0d]
-              020d 8001  adda $01
-              020e c20d  st   [$0d]
-              020f 8111  adda [$11]
-              0210 6116  xora [$16]
-              0211 8110  adda [$10]
-              0212 d210  st   [$10],x
-              0213 e816  blt  .rnd0
-              0214 fc17  bra  .rnd1
-              0215 6111  xora [$11]
-.rnd0:        0216 8111  adda [$11]
-.rnd1:        0217 a500  suba [x]
-              0218 c211  st   [$11]
-              0219 c003  st   $03,[$03]
-              021a 0200  nop              ;Run vCPU for 117 cycles (line0)
-              021b 0022  ld   $22
-              021c c20e  st   [$0e]
-              021d 0002  ld   $02
-              021e c20f  st   [$0f]
-              021f 1403  ld   $03,y
-              0220 e000  jmp  y,$00
-              0221 0024  ld   $24
-              0222 0113  ld   [$13]
-              0223 ec49  bne  .leds4
-              0224 0028  ld   $28
-              0225 8114  adda [$14]
-              0226 fe00  bra  ac
-              0227 fc40  bra  .leds1
-.leds0:       0228 000f  ld   $0f         ;LEDs |****|
-              0229 0007  ld   $07         ;LEDs |***O|
-              022a 0003  ld   $03         ;LEDs |**OO|
-              022b 0001  ld   $01         ;LEDs |*OOO|
+              01fe 1403  ld   $03,y
+              01ff e000  jmp  y,$00
+              0200 003c  ld   $3c
+              0201 1401  ld   $01,y
+              0202 e0ad  jmp  y,$ad       ;<New scanline start>
+              0203 0102  ld   [$02]
+vBlank:       0204 c209  st   [$09]       ;Start vertical blank interval
+              0205 0080  ld   $80
+              0206 c20a  st   [$0a]
+              0207 c000  st   $00,[$00]
+              0208 0001  ld   $01
+              0209 c280  st   [$80]
+              020a 010d  ld   [$0d]
+              020b 8001  adda $01
+              020c c20d  st   [$0d]
+              020d 8113  adda [$13]
+              020e 6118  xora [$18]
+              020f 8112  adda [$12]
+              0210 d212  st   [$12],x
+              0211 e814  blt  .rnd0
+              0212 fc15  bra  .rnd1
+              0213 6053  xora $53
+.rnd0:        0214 606c  xora $6c
+.rnd1:        0215 8500  adda [x]
+              0216 6113  xora [$13]
+              0217 c213  st   [$13]
+              0218 c003  st   $03,[$03]
+              0219 001e  ld   $1e         ;Run vCPU for 116 cycles (line0)
+              021a c20e  st   [$0e]
+              021b 1403  ld   $03,y
+              021c e000  jmp  y,$00
+              021d 0025  ld   $25
+              021e 0115  ld   [$15]
+              021f ec45  bne  .leds4
+              0220 0024  ld   $24
+              0221 8116  adda [$16]
+              0222 fe00  bra  ac
+              0223 fc3c  bra  .leds1
+.leds0:       0224 000f  ld   $0f         ;LEDs |****|
+              0225 0007  ld   $07         ;LEDs |***O|
+              0226 0003  ld   $03         ;LEDs |**OO|
+              0227 0001  ld   $01         ;LEDs |*OOO|
+              0228 0002  ld   $02         ;LEDs |O*OO|
+              0229 0004  ld   $04         ;LEDs |OO*O|
+              022a 0008  ld   $08         ;LEDs |OOO*|
+              022b 0004  ld   $04         ;LEDs |OO*O|
               022c 0002  ld   $02         ;LEDs |O*OO|
-              022d 0004  ld   $04         ;LEDs |OO*O|
-              022e 0008  ld   $08         ;LEDs |OOO*|
-              022f 0004  ld   $04         ;LEDs |OO*O|
-              0230 0002  ld   $02         ;LEDs |O*OO|
-              0231 0001  ld   $01         ;LEDs |*OOO|
-              0232 0003  ld   $03         ;LEDs |**OO|
-              0233 0007  ld   $07         ;LEDs |***O|
-              0234 000f  ld   $0f         ;LEDs |****|
-              0235 000e  ld   $0e         ;LEDs |O***|
-              0236 000c  ld   $0c         ;LEDs |OO**|
-              0237 0008  ld   $08         ;LEDs |OOO*|
+              022d 0001  ld   $01         ;LEDs |*OOO|
+              022e 0003  ld   $03         ;LEDs |**OO|
+              022f 0007  ld   $07         ;LEDs |***O|
+              0230 000f  ld   $0f         ;LEDs |****|
+              0231 000e  ld   $0e         ;LEDs |O***|
+              0232 000c  ld   $0c         ;LEDs |OO**|
+              0233 0008  ld   $08         ;LEDs |OOO*|
+              0234 0004  ld   $04         ;LEDs |OO*O|
+              0235 0002  ld   $02         ;LEDs |O*OO|
+              0236 0001  ld   $01         ;LEDs |*OOO|
+              0237 0002  ld   $02         ;LEDs |O*OO|
               0238 0004  ld   $04         ;LEDs |OO*O|
-              0239 0002  ld   $02         ;LEDs |O*OO|
-              023a 0001  ld   $01         ;LEDs |*OOO|
-              023b 0002  ld   $02         ;LEDs |O*OO|
-              023c 0004  ld   $04         ;LEDs |OO*O|
-              023d 0008  ld   $08         ;LEDs |OOO*|
-              023e 000c  ld   $0c         ;LEDs |OO**|
-              023f 008e  ld   $8e         ;LEDs |O***|
-.leds1:       0240 c207  st   [$07]
-              0241 e844  blt  .leds2
-              0242 fc45  bra  .leds3
-              0243 0114  ld   [$14]
-.leds2:       0244 00ff  ld   $ff
-.leds3:       0245 8001  adda $01
-              0246 c214  st   [$14]
-              0247 fc4f  bra  .leds5
-              0248 0115  ld   [$15]
-.leds4:       0249 0003  ld   $03         ;Wait 10 cycles
-              024a ec4a  bne  $024a
-              024b a001  suba $01
-              024c 0200  nop
-              024d 0113  ld   [$13]
-              024e a001  suba $01
-.leds5:       024f c213  st   [$13]
-              0250 0107  ld   [$07]
-              0251 200f  anda $0f
-              0252 c207  st   [$07]
-              0253 0112  ld   [$12]
-              0254 ec57  bne  .snd0
-              0255 fc58  bra  .snd1
-              0256 0000  ld   $00
-.snd0:        0257 00f0  ld   $f0
-.snd1:        0258 4107  ora  [$07]
-              0259 c207  st   [$07]
-              025a 0112  ld   [$12]
-              025b f05e  beq  .snd2
-              025c fc5f  bra  .snd3
-              025d a001  suba $01
-.snd2:        025e 0000  ld   $00
-.snd3:        025f c212  st   [$12]
-              0260 0027  ld   $27
-              0261 c208  st   [$08]
-              0262 1909  ld   [$09],out   ;<New scanline start>
-sound1:       0263 0102  ld   [$02]       ;Advance to next sound channel
-              0264 2003  anda $03
-              0265 8001  adda $01
-              0266 190a  ld   [$0a],out   ;Start horizontal pulse
-              0267 d602  st   [$02],y
-              0268 007f  ld   $7f         ;Update sound channel
-              0269 29fe  anda [y,$fe]
-              026a 89fa  adda [y,$fa]
-              026b cafe  st   [y,$fe]
-              026c 3080  anda $80,x
-              026d 0500  ld   [x]
-              026e 89ff  adda [y,$ff]
-              026f 89fb  adda [y,$fb]
-              0270 caff  st   [y,$ff]
-              0271 0200  nop
-              0272 0200  nop
-              0273 30fc  anda $fc,x
-              0274 1402  ld   $02,y
-              0275 0d00  ld   [y,x]
-              0276 8103  adda [$03]
-              0277 c203  st   [$03]
-              0278 0200  nop
+              0239 0008  ld   $08         ;LEDs |OOO*|
+              023a 000c  ld   $0c         ;LEDs |OO**|
+              023b 008e  ld   $8e         ;LEDs |O***|
+.leds1:       023c c207  st   [$07]
+              023d e840  blt  .leds2
+              023e fc41  bra  .leds3
+              023f 0116  ld   [$16]
+.leds2:       0240 00ff  ld   $ff
+.leds3:       0241 8001  adda $01
+              0242 c216  st   [$16]
+              0243 fc4b  bra  .leds5
+              0244 0117  ld   [$17]
+.leds4:       0245 0003  ld   $03         ;Wait 10 cycles
+              0246 ec46  bne  $0246
+              0247 a001  suba $01
+              0248 0200  nop
+              0249 0115  ld   [$15]
+              024a a001  suba $01
+.leds5:       024b c215  st   [$15]
+              024c 0107  ld   [$07]
+              024d 200f  anda $0f
+              024e c207  st   [$07]
+              024f 0114  ld   [$14]
+              0250 ec53  bne  .snd0
+              0251 fc54  bra  .snd1
+              0252 0000  ld   $00
+.snd0:        0253 00f0  ld   $f0
+.snd1:        0254 4107  ora  [$07]
+              0255 c207  st   [$07]
+              0256 0114  ld   [$14]
+              0257 f05a  beq  .snd2
+              0258 fc5b  bra  .snd3
+              0259 a001  suba $01
+.snd2:        025a 0000  ld   $00
+.snd3:        025b c214  st   [$14]
+              025c 0027  ld   $27
+              025d c208  st   [$08]
+              025e 1909  ld   [$09],out   ;<New scanline start>
+sound1:       025f 0102  ld   [$02]       ;Advance to next sound channel
+              0260 2003  anda $03
+              0261 8001  adda $01
+              0262 190a  ld   [$0a],out   ;Start horizontal pulse
+              0263 d602  st   [$02],y
+              0264 007f  ld   $7f         ;Update sound channel
+              0265 29fe  anda [y,$fe]
+              0266 89fa  adda [y,$fa]
+              0267 cafe  st   [y,$fe]
+              0268 3080  anda $80,x
+              0269 0500  ld   [x]
+              026a 89ff  adda [y,$ff]
+              026b 89fb  adda [y,$fb]
+              026c caff  st   [y,$ff]
+              026d 0200  nop
+              026e 0200  nop
+              026f 30fc  anda $fc,x
+              0270 1402  ld   $02,y
+              0271 0d00  ld   [y,x]
+              0272 8103  adda [$03]
+              0273 c203  st   [$03]
+              0274 0200  nop
+              0275 0200  nop
+              0276 0200  nop
+              0277 0200  nop
+              0278 0106  ld   [$06]
               0279 0200  nop
-              027a 0200  nop
-              027b 0200  nop
-              027c 0106  ld   [$06]
-              027d 0200  nop
-              027e 1909  ld   [$09],out   ;End horizontal pulse
-              027f 0108  ld   [$08]
-              0280 f0b1  beq  vBlankLast0
-              0281 a001  suba $01
-              0282 c208  st   [$08]
-              0283 a01a  suba $1a
-              0284 ec89  bne  vSync0
-              0285 a008  suba $08
-              0286 00c0  ld   $c0
-              0287 fc8e  bra  vSync2
+              027a 1909  ld   [$09],out   ;End horizontal pulse
+              027b 0108  ld   [$08]
+              027c f0a9  beq  vBlankLast0
+              027d a001  suba $01
+              027e c208  st   [$08]
+              027f a01a  suba $1a
+              0280 ec85  bne  vSync0
+              0281 a008  suba $08
+              0282 00c0  ld   $c0
+              0283 fc8a  bra  vSync2
+              0284 c209  st   [$09]
+vSync0:       0285 ec89  bne  vSync1
+              0286 0040  ld   $40
+              0287 fc8b  bra  vSync3
               0288 c209  st   [$09]
-vSync0:       0289 ec8d  bne  vSync1
-              028a 0040  ld   $40
-              028b fc8f  bra  vSync3
-              028c c209  st   [$09]
-vSync1:       028d 0109  ld   [$09]
-vSync2:       028e 0200  nop
-vSync3:       028f 6040  xora $40
-              0290 c20a  st   [$0a]
-              0291 0108  ld   [$08]       ;Capture serial input
-              0292 6019  xora $19
-              0293 ec96  bne  .ser0
-              0294 fc97  bra  .ser1
-              0295 c316  st   in,[$16]
-.ser0:        0296 0200  nop
-.ser1:        0297 0108  ld   [$08]
-              0298 2003  anda $03
-              0299 eca8  bne  vBlankNormal
-              029a 0103  ld   [$03]
-vBlankSample: 029b 400f  ora  $0f         ;New sound sample is ready
-              029c 2107  anda [$07]
-              029d c206  st   [$06]
-              029e c003  st   $03,[$03]   ;Reset for next sample
-              029f 00a6  ld   $a6         ;Run vCPU for 144 cycles (line1-39 typeC)
-              02a0 c20e  st   [$0e]
-              02a1 0002  ld   $02
-              02a2 c20f  st   [$0f]
-              02a3 1403  ld   $03,y
-              02a4 e000  jmp  y,$00
-              02a5 0032  ld   $32
-              02a6 fc63  bra  sound1
-              02a7 1909  ld   [$09],out   ;<New scanline start>
-vBlankNormal: 02a8 00af  ld   $af         ;Run vCPU for 148 cycles (line1-39 typeABD)
-              02a9 c20e  st   [$0e]
-              02aa 0002  ld   $02
-              02ab c20f  st   [$0f]
-              02ac 1403  ld   $03,y
-              02ad e000  jmp  y,$00
-              02ae 0034  ld   $34
-              02af fc63  bra  sound1
-              02b0 1909  ld   [$09],out   ;<New scanline start>
-vBlankLast0:  02b1 0000  ld   $00
-              02b2 c209  st   [$09]
-              02b3 c20b  st   [$0b]
-vBlankLast1:  02b4 0116  ld   [$16]
-              02b5 f0b8  beq  .multi0
-              02b6 fcb9  bra  .multi1
-              02b7 c217  st   [$17]
-.multi0:      02b8 0040  ld   $40
-.multi1:      02b9 4117  ora  [$17]
-              02ba c217  st   [$17]
-              02bb 0117  ld   [$17]
-              02bc 60df  xora $df
-              02bd f0c0  beq  .sel0
-              02be fcc1  bra  .sel1
-              02bf 0000  ld   $00
-.sel0:        02c0 002c  ld   $2c
-.sel1:        02c1 610c  xora [$0c]
-              02c2 c20c  st   [$0c]
-              02c3 0200  nop              ;Run vCPU for 151 cycles (line40)
-              02c4 00cb  ld   $cb
-              02c5 c20e  st   [$0e]
-              02c6 0002  ld   $02
-              02c7 c20f  st   [$0f]
-              02c8 1403  ld   $03,y
-              02c9 e000  jmp  y,$00
-              02ca 0035  ld   $35
-              02cb 0102  ld   [$02]
-              02cc 2003  anda $03         ;<New scanline start>
-              02cd 8001  adda $01
-              02ce 1401  ld   $01,y
-              02cf e0b0  jmp  y,$b0
-              02d0 1880  ld   $80,out
-              02d1 0200  nop
-              02d2 0200  nop
-              02d3 0200  nop
-              * 47 times
+vSync1:       0289 0109  ld   [$09]
+vSync2:       028a 0200  nop
+vSync3:       028b 6040  xora $40
+              028c c20a  st   [$0a]
+              028d 0108  ld   [$08]       ;Capture serial input
+              028e 6019  xora $19
+              028f ec92  bne  .ser0
+              0290 fc93  bra  .ser1
+              0291 c318  st   in,[$18]
+.ser0:        0292 0200  nop
+.ser1:        0293 0108  ld   [$08]
+              0294 2003  anda $03
+              0295 eca2  bne  vBlankNormal
+              0296 0103  ld   [$03]
+vBlankSample: 0297 400f  ora  $0f         ;New sound sample is ready
+              0298 2107  anda [$07]
+              0299 c206  st   [$06]
+              029a c003  st   $03,[$03]   ;Reset for next sample
+              029b 00a0  ld   $a0         ;Run vCPU for 144 cycles (line1-39 typeC)
+              029c c20e  st   [$0e]
+              029d 1403  ld   $03,y
+              029e e000  jmp  y,$00
+              029f 0033  ld   $33
+              02a0 fc5f  bra  sound1
+              02a1 1909  ld   [$09],out   ;<New scanline start>
+vBlankNormal: 02a2 00a7  ld   $a7         ;Run vCPU for 148 cycles (line1-39 typeABD)
+              02a3 c20e  st   [$0e]
+              02a4 1403  ld   $03,y
+              02a5 e000  jmp  y,$00
+              02a6 0035  ld   $35
+              02a7 fc5f  bra  sound1
+              02a8 1909  ld   [$09],out   ;<New scanline start>
+vBlankLast0:  02a9 0000  ld   $00
+              02aa c209  st   [$09]
+              02ab c20b  st   [$0b]
+vBlankLast1:  02ac 0118  ld   [$18]
+              02ad f0b0  beq  .multi0
+              02ae fcb1  bra  .multi1
+              02af c219  st   [$19]
+.multi0:      02b0 0040  ld   $40
+.multi1:      02b1 4119  ora  [$19]
+              02b2 c219  st   [$19]
+              02b3 0119  ld   [$19]
+              02b4 60df  xora $df
+              02b5 f0b8  beq  .sel0
+              02b6 fcb9  bra  .sel1
+              02b7 0000  ld   $00
+.sel0:        02b8 002c  ld   $2c
+.sel1:        02b9 610c  xora [$0c]
+              02ba c20c  st   [$0c]
+              02bb 0200  nop              ;Run vCPU for 151 cycles (line40)
+              02bc 00c1  ld   $c1
+              02bd c20e  st   [$0e]
+              02be 1403  ld   $03,y
+              02bf e000  jmp  y,$00
+              02c0 0036  ld   $36
+              02c1 0102  ld   [$02]
+              02c2 2003  anda $03         ;<New scanline start>
+              02c3 8001  adda $01
+              02c4 1401  ld   $01,y
+              02c5 e0b0  jmp  y,$b0
+              02c6 1880  ld   $80,out
+              02c7 0200  nop
+              02c8 0200  nop
+              02c9 0200  nop
+              * 57 times
 ENTER:        0300 fc04  bra  .next2      ;vCPU interpreter
-              0301 1519  ld   [$19],y
-NEXT:         0302 811f  adda [$1f]       ;Track elapsed ticks
+              0301 151b  ld   [$1b],y
+NEXT:         0302 8121  adda [$21]       ;Track elapsed ticks
               0303 e80c  blt  EXIT        ;Escape near time out
-.next2:       0304 c21f  st   [$1f]
-              0305 0118  ld   [$18]       ;Advance vPC
+.next2:       0304 c221  st   [$21]
+              0305 011a  ld   [$1a]       ;Advance vPC
               0306 8002  adda $02
-              0307 d218  st   [$18],x
+              0307 d21a  st   [$1a],x
               0308 0d00  ld   [y,x]       ;Fetch opcode
               0309 de00  st   [y,x++]
               030a fe00  bra  ac          ;Dispatch
@@ -468,66 +458,66 @@ NEXT:         0302 811f  adda [$1f]       ;Track elapsed ticks
 EXIT:         030c 800e  adda $0e
               030d e40d  bgt  $030d       ;Resync
               030e a001  suba $01
-              030f 150f  ld   [$0f],y
+              030f 1402  ld   $02,y
               0310 e10e  jmp  y,[$0e]     ;Return to caller
               0311 0200  nop
-LDWI:         0312 c21a  st   [$1a]
+LDWI:         0312 c21c  st   [$1c]
               0313 de00  st   [y,x++]
               0314 0d00  ld   [y,x]
-              0315 c21b  st   [$1b]
-              0316 0118  ld   [$18]
+              0315 c21d  st   [$1d]
+              0316 011a  ld   [$1a]
               0317 8001  adda $01
-              0318 c218  st   [$18]
+              0318 c21a  st   [$1a]
               0319 00f6  ld   $f6
               031a fc02  bra  NEXT
 LD:           031b 1200  ld   ac,x
               031c 0500  ld   [x]
-              031d c21a  st   [$1a]
+              031d c21c  st   [$1c]
               031e 0000  ld   $00
-              031f c21b  st   [$1b]
+              031f c21d  st   [$1d]
               0320 00f7  ld   $f7
               0321 fc02  bra  NEXT
 LDW:          0322 1200  ld   ac,x
               0323 8001  adda $01
-              0324 c220  st   [$20]
+              0324 c222  st   [$22]
               0325 0500  ld   [x]
-              0326 c21a  st   [$1a]
-              0327 1120  ld   [$20],x
+              0326 c21c  st   [$1c]
+              0327 1122  ld   [$22],x
               0328 0500  ld   [x]
-              0329 c21b  st   [$1b]
+              0329 c21d  st   [$1d]
               032a fc02  bra  NEXT
               032b 00f6  ld   $f6
 STW:          032c 1200  ld   ac,x
               032d 8001  adda $01
-              032e c220  st   [$20]
-              032f 011a  ld   [$1a]
+              032e c222  st   [$22]
+              032f 011c  ld   [$1c]
               0330 c600  st   [x]
-              0331 1120  ld   [$20],x
-              0332 011b  ld   [$1b]
+              0331 1122  ld   [$22],x
+              0332 011d  ld   [$1d]
               0333 c600  st   [x]
               0334 fc02  bra  NEXT
               0335 00f6  ld   $f6
-COND:         0336 011b  ld   [$1b]
+COND:         0336 011d  ld   [$1d]
               0337 ec40  bne  .cond2
-              0338 c220  st   [$20]
-              0339 011a  ld   [$1a]
+              0338 c222  st   [$22]
+              0339 011c  ld   [$1c]
               033a f043  beq  .cond3
               033b 0001  ld   $01
-              033c c220  st   [$20]
+              033c c222  st   [$22]
               033d 0d00  ld   [y,x]
 .cond1:       033e fe00  bra  ac
-              033f 0120  ld   [$20]
+              033f 0122  ld   [$22]
 .cond2:       0340 0200  nop
               0341 0200  nop
               0342 0200  nop
 .cond3:       0343 fc3e  bra  .cond1
               0344 0d00  ld   [y,x]
-.cond4:       0345 0118  ld   [$18]       ;False condition
+.cond4:       0345 011a  ld   [$1a]       ;False condition
               0346 fc4a  bra  .cond6
               0347 8001  adda $01
 .cond5:       0348 de00  st   [y,x++]     ;True condition
               0349 0d00  ld   [y,x]
-.cond6:       034a c218  st   [$18]
+.cond6:       034a c21a  st   [$1a]
               034b fc02  bra  NEXT
               034c 00f2  ld   $f2
 EQ:           034d ec45  bne  .cond4
@@ -545,116 +535,116 @@ GE:           0356 e845  blt  .cond4
 LE:           0359 e445  bgt  .cond4
               035a f848  ble  .cond5
               035b 0d00  ld   [y,x]
-LDI:          035c c21a  st   [$1a]
+LDI:          035c c21c  st   [$1c]
               035d 0000  ld   $00
-              035e c21b  st   [$1b]
+              035e c21d  st   [$1d]
               035f 00f8  ld   $f8
               0360 fc02  bra  NEXT
 ST:           0361 1200  ld   ac,x
-              0362 011a  ld   [$1a]
-              0363 c61a  st   [x]
+              0362 011c  ld   [$1c]
+              0363 c61c  st   [x]
               0364 00f8  ld   $f8
               0365 fc02  bra  NEXT
-POP:          0366 111e  ld   [$1e],x
+POP:          0366 1120  ld   [$20],x
               0367 0500  ld   [x]
-              0368 c21a  st   [$1a]
-              0369 011e  ld   [$1e]
+              0368 c21c  st   [$1c]
+              0369 0120  ld   [$20]
               036a 9001  adda $01,x
               036b 0500  ld   [x]
-              036c c21b  st   [$1b]
-              036d 011e  ld   [$1e]
+              036c c21d  st   [$1d]
+              036d 0120  ld   [$20]
               036e 8002  adda $02
-              036f c21e  st   [$1e]
-next1:        0370 0118  ld   [$18]
+              036f c220  st   [$20]
+next1:        0370 011a  ld   [$1a]
               0371 a001  suba $01
-              0372 c218  st   [$18]
+              0372 c21a  st   [$1a]
               0373 00f3  ld   $f3
               0374 fc02  bra  NEXT
 NE:           0375 f045  beq  .cond4
               0376 ec48  bne  .cond5
               0377 0d00  ld   [y,x]
-LOOKUP:       0378 951b  adda [$1b],y
+LOOKUP:       0378 951d  adda [$1d],y
               0379 e0fb  jmp  y,$fb       ;Trampoline offset
-              037a 011a  ld   [$1a]
-rLookup:      037b c21a  st   [$1a]
+              037a 011c  ld   [$1c]
+rLookup:      037b c21c  st   [$1c]
               037c 0000  ld   $00
-              037d c21b  st   [$1b]
+              037d c21d  st   [$1d]
               037e fc02  bra  NEXT
               037f 00f4  ld   $f4
-PUSH:         0380 011e  ld   [$1e]
+PUSH:         0380 0120  ld   [$20]
               0381 b001  suba $01,x
-              0382 011d  ld   [$1d]
+              0382 011f  ld   [$1f]
               0383 c600  st   [x]
-              0384 011e  ld   [$1e]
+              0384 0120  ld   [$20]
               0385 a002  suba $02
-              0386 d21e  st   [$1e],x
-              0387 011c  ld   [$1c]
+              0386 d220  st   [$20],x
+              0387 011e  ld   [$1e]
               0388 fc70  bra  next1
               0389 c600  st   [x]
-ANDI:         038a 211a  anda [$1a]
-              038b c21a  st   [$1a]
+ANDI:         038a 211c  anda [$1c]
+              038b c21c  st   [$1c]
               038c 0000  ld   $00
-              038d c21b  st   [$1b]
+              038d c21d  st   [$1d]
               038e fc02  bra  NEXT
               038f 00f8  ld   $f8
-ORI:          0390 411a  ora  [$1a]
-              0391 c21a  st   [$1a]
+ORI:          0390 411c  ora  [$1c]
+              0391 c21c  st   [$1c]
               0392 fc02  bra  NEXT
               0393 00f9  ld   $f9
-XORI:         0394 611a  xora [$1a]
-              0395 c21a  st   [$1a]
+XORI:         0394 611c  xora [$1c]
+              0395 c21c  st   [$1c]
               0396 fc02  bra  NEXT
               0397 00f9  ld   $f9
-BRA:          0398 c218  st   [$18]
+BRA:          0398 c21a  st   [$1a]
               0399 00f9  ld   $f9
               039a fc02  bra  NEXT
-POKE:         039b c220  st   [$20]
+POKE:         039b c222  st   [$22]
               039c 9001  adda $01,x
               039d 0500  ld   [x]
               039e 1600  ld   ac,y
-              039f 1120  ld   [$20],x
+              039f 1122  ld   [$22],x
               03a0 0500  ld   [x]
               03a1 1200  ld   ac,x
-              03a2 011a  ld   [$1a]
+              03a2 011c  ld   [$1c]
               03a3 ce00  st   [y,x]
-              03a4 1519  ld   [$19],y
+              03a4 151b  ld   [$1b],y
               03a5 fc02  bra  NEXT
               03a6 00f5  ld   $f5
-retry:        03a7 0118  ld   [$18]       ;Retry until sufficient time
+retry:        03a7 011a  ld   [$1a]       ;Retry until sufficient time
               03a8 a002  suba $02
-              03a9 c218  st   [$18]
+              03a9 c21a  st   [$1a]
               03aa fce2  bra  REENTER
               03ab 00f6  ld   $f6
-SYS:          03ac 811f  adda [$1f]
+SYS:          03ac 8121  adda [$21]
               03ad e8a7  blt  retry
-              03ae 151b  ld   [$1b],y
-              03af e11a  jmp  y,[$1a]
+              03ae 151d  ld   [$1d],y
+              03af e11c  jmp  y,[$1c]
 SUBW:         03b0 1200  ld   ac,x
               03b1 8001  adda $01
-              03b2 c220  st   [$20]
-              03b3 011a  ld   [$1a]
+              03b2 c222  st   [$22]
+              03b3 011c  ld   [$1c]
               03b4 e8b9  blt  .subw0
               03b5 a500  suba [x]
-              03b6 c21a  st   [$1a]
+              03b6 c21c  st   [$1c]
               03b7 fcbc  bra  .subw1
               03b8 4500  ora  [x]
-.subw0:       03b9 c21a  st   [$1a]
+.subw0:       03b9 c21c  st   [$1c]
               03ba 2500  anda [x]
               03bb 0200  nop
 .subw1:       03bc 3080  anda $80,x
-              03bd 011b  ld   [$1b]
+              03bd 011d  ld   [$1d]
               03be a500  suba [x]
-              03bf 1120  ld   [$20],x
+              03bf 1122  ld   [$22],x
               03c0 a500  suba [x]
-              03c1 c21b  st   [$1b]
+              03c1 c21d  st   [$1d]
               03c2 00f2  ld   $f2
               03c3 fc02  bra  NEXT
 ADDW:         03c4 1200  ld   ac,x
               03c5 8001  adda $01
-              03c6 c220  st   [$20]
-              03c7 011a  ld   [$1a]
+              03c6 c222  st   [$22]
+              03c7 011c  ld   [$1c]
               03c8 8500  adda [x]
-              03c9 c21a  st   [$1a]
+              03c9 c21c  st   [$1c]
               03ca e8ce  blt  .addw0
               03cb a500  suba [x]
               03cc fcd0  bra  .addw1
@@ -663,42 +653,42 @@ ADDW:         03c4 1200  ld   ac,x
               03cf 0200  nop
 .addw1:       03d0 3080  anda $80,x
               03d1 0500  ld   [x]
-              03d2 811b  adda [$1b]
-              03d3 1120  ld   [$20],x
+              03d2 811d  adda [$1d]
+              03d3 1122  ld   [$22],x
               03d4 8500  adda [x]
-              03d5 c21b  st   [$1b]
+              03d5 c21d  st   [$1d]
               03d6 fc02  bra  NEXT
               03d7 00f2  ld   $f2
-PEEK:         03d8 0118  ld   [$18]
+PEEK:         03d8 011a  ld   [$1a]
               03d9 a001  suba $01
-              03da c218  st   [$18]
-              03db 111a  ld   [$1a],x
-              03dc 151b  ld   [$1b],y
+              03da c21a  st   [$1a]
+              03db 111c  ld   [$1c],x
+              03dc 151d  ld   [$1d],y
               03dd 0d00  ld   [y,x]
-              03de c21a  st   [$1a]
+              03de c21c  st   [$1c]
               03df 0000  ld   $00
-              03e0 c21b  st   [$1b]
+              03e0 c21d  st   [$1d]
               03e1 00f5  ld   $f5
 REENTER:      03e2 fc02  bra  NEXT        ;Return from SYS calls
-              03e3 1519  ld   [$19],y
-CALL:         03e4 0118  ld   [$18]
+              03e3 151b  ld   [$1b],y
+CALL:         03e4 011a  ld   [$1a]
               03e5 8001  adda $01         ;CALL has no operand, advances PC by 1
-              03e6 c21c  st   [$1c]
-              03e7 011a  ld   [$1a]
+              03e6 c21e  st   [$1e]
+              03e7 011c  ld   [$1c]
               03e8 a002  suba $02         ;vAC is actual address, NEXT adds 2
-              03e9 c218  st   [$18]
-              03ea 0119  ld   [$19]
-              03eb c21d  st   [$1d]
-              03ec 011b  ld   [$1b]
-              03ed d619  st   [$19],y
+              03e9 c21a  st   [$1a]
+              03ea 011b  ld   [$1b]
+              03eb c21f  st   [$1f]
+              03ec 011d  ld   [$1d]
+              03ed d61b  st   [$1b],y
               03ee fc02  bra  NEXT
               03ef 00f5  ld   $f5
 ADDI:         03f0 1404  ld   $04,y
               03f1 e007  jmp  y,$07
-              03f2 c220  st   [$20]
+              03f2 c222  st   [$22]
 SUBI:         03f3 1404  ld   $04,y
               03f4 e016  jmp  y,$16
-              03f5 c220  st   [$20]
+              03f5 c222  st   [$22]
 INC:          03f6 1200  ld   ac,x
               03f7 0500  ld   [x]
               03f8 8001  adda $01
@@ -707,59 +697,59 @@ INC:          03f6 1200  ld   ac,x
               03fb 00f8  ld   $f8
 DEF:          03fc 1404  ld   $04,y
               03fd e026  jmp  y,$26
-              03fe c220  st   [$20]
-RET:          03ff 011c  ld   [$1c]
+              03fe c222  st   [$22]
+RET:          03ff 011e  ld   [$1e]
               0400 a002  suba $02
-              0401 c218  st   [$18]
-              0402 011d  ld   [$1d]
-              0403 c219  st   [$19]
+              0401 c21a  st   [$1a]
+              0402 011f  ld   [$1f]
+              0403 c21b  st   [$1b]
               0404 1403  ld   $03,y
               0405 e0e2  jmp  y,$e2
               0406 00f6  ld   $f6
-addi:         0407 811a  adda [$1a]
-              0408 c21a  st   [$1a]
+addi:         0407 811c  adda [$1c]
+              0408 c21c  st   [$1c]
               0409 e80d  blt  .addi0
-              040a a120  suba [$20]
+              040a a122  suba [$22]
               040b fc0f  bra  .addi1
-              040c 4120  ora  [$20]
-.addi0:       040d 2120  anda [$20]
+              040c 4122  ora  [$22]
+.addi0:       040d 2122  anda [$22]
               040e 0200  nop
 .addi1:       040f 3080  anda $80,x
               0410 0500  ld   [x]
-              0411 811b  adda [$1b]
-              0412 c21b  st   [$1b]
+              0411 811d  adda [$1d]
+              0412 c21d  st   [$1d]
               0413 1403  ld   $03,y
               0414 e0e2  jmp  y,$e2
               0415 00f2  ld   $f2
-subi:         0416 011a  ld   [$1a]
+subi:         0416 011c  ld   [$1c]
               0417 e81c  blt  .subi0
-              0418 a120  suba [$20]
-              0419 c21a  st   [$1a]
+              0418 a122  suba [$22]
+              0419 c21c  st   [$1c]
               041a fc1f  bra  .subi1
-              041b 4120  ora  [$20]
-.subi0:       041c c21a  st   [$1a]
-              041d 2120  anda [$20]
+              041b 4122  ora  [$22]
+.subi0:       041c c21c  st   [$1c]
+              041d 2122  anda [$22]
               041e 0200  nop
 .subi1:       041f 3080  anda $80,x
-              0420 011b  ld   [$1b]
+              0420 011d  ld   [$1d]
               0421 a500  suba [x]
-              0422 c21b  st   [$1b]
+              0422 c21d  st   [$1d]
               0423 1403  ld   $03,y
               0424 e0e2  jmp  y,$e2
               0425 00f2  ld   $f2
-def:          0426 0118  ld   [$18]
+def:          0426 011a  ld   [$1a]
               0427 8002  adda $02
-              0428 c21a  st   [$1a]
-              0429 0119  ld   [$19]
-              042a c21b  st   [$1b]
-              042b 0120  ld   [$20]
-              042c c218  st   [$18]
+              0428 c21c  st   [$1c]
+              0429 011b  ld   [$1b]
+              042a c21d  st   [$1d]
+              042b 0122  ld   [$22]
+              042c c21a  st   [$1a]
               042d 1403  ld   $03,y
               042e 00f3  ld   $f3
               042f e0e2  jmp  y,$e2
               0430 0200  nop
-SYS_38_VCLEAR8: 0431 1121  ld   [$21],x
-              0432 0122  ld   [$22]
+SYS_38_VCLEAR8: 0431 1123  ld   [$23],x
+              0432 0124  ld   [$24]
               0433 9400  adda $00,y
               0434 cc00  st   $00,[y,x]
               0435 9401  adda $01,y
@@ -1035,7 +1025,7 @@ font32up:     0500 0000  ld   $00         ;Char ' '
               05fc fcfd  bra  $05fd
               05fd 1403  ld   $03,y
               05fe e07b  jmp  y,$7b
-              05ff 1519  ld   [$19],y
+              05ff 151b  ld   [$1b],y
 font82up:     0600 00fe  ld   $fe         ;Char 'R'
               0601 0090  ld   $90
               0602 0098  ld   $98
@@ -1272,7 +1262,7 @@ font82up:     0600 00fe  ld   $fe         ;Char 'R'
               06fc fcfd  bra  $06fd
               06fd 1403  ld   $03,y
               06fe e07b  jmp  y,$7b
-              06ff 1519  ld   [$19],y
+              06ff 151b  ld   [$1b],y
 jupiter0:     0700 0000  ld   $00
               0701 0000  ld   $00
               0702 0000  ld   $00
@@ -1285,7 +1275,7 @@ jupiter0:     0700 0000  ld   $00
               07fc fcfd  bra  $07fd
               07fd 1403  ld   $03,y
               07fe e07b  jmp  y,$7b
-              07ff 1519  ld   [$19],y
+              07ff 151b  ld   [$1b],y
 jupiter1:     0800 0000  ld   $00
               0801 0000  ld   $00
               0802 0000  ld   $00
@@ -1298,7 +1288,7 @@ jupiter1:     0800 0000  ld   $00
               08fc fcfd  bra  $08fd
               08fd 1403  ld   $03,y
               08fe e07b  jmp  y,$7b
-              08ff 1519  ld   [$19],y
+              08ff 151b  ld   [$1b],y
 jupiter2:     0900 0000  ld   $00
               0901 0000  ld   $00
               0902 0000  ld   $00
@@ -1311,7 +1301,7 @@ jupiter2:     0900 0000  ld   $00
               09fc fcfd  bra  $09fd
               09fd 1403  ld   $03,y
               09fe e07b  jmp  y,$7b
-              09ff 1519  ld   [$19],y
+              09ff 151b  ld   [$1b],y
 jupiter3:     0a00 0000  ld   $00
               0a01 0000  ld   $00
               0a02 0000  ld   $00
@@ -1342,7 +1332,7 @@ jupiter3:     0a00 0000  ld   $00
               0afc fcfd  bra  $0afd
               0afd 1403  ld   $03,y
               0afe e07b  jmp  y,$7b
-              0aff 1519  ld   [$19],y
+              0aff 151b  ld   [$1b],y
 jupiter4:     0b00 0000  ld   $00
               0b01 0000  ld   $00
               0b02 0000  ld   $00
@@ -1381,7 +1371,7 @@ jupiter4:     0b00 0000  ld   $00
               0bfc fcfd  bra  $0bfd
               0bfd 1403  ld   $03,y
               0bfe e07b  jmp  y,$7b
-              0bff 1519  ld   [$19],y
+              0bff 151b  ld   [$1b],y
 jupiter5:     0c00 0000  ld   $00
               0c01 0000  ld   $00
               0c02 0000  ld   $00
@@ -1434,7 +1424,7 @@ jupiter5:     0c00 0000  ld   $00
               0cfc fcfd  bra  $0cfd
               0cfd 1403  ld   $03,y
               0cfe e07b  jmp  y,$7b
-              0cff 1519  ld   [$19],y
+              0cff 151b  ld   [$1b],y
 jupiter6:     0d00 0000  ld   $00
               0d01 0000  ld   $00
               0d02 0000  ld   $00
@@ -1495,7 +1485,7 @@ jupiter6:     0d00 0000  ld   $00
               0dfc fcfd  bra  $0dfd
               0dfd 1403  ld   $03,y
               0dfe e07b  jmp  y,$7b
-              0dff 1519  ld   [$19],y
+              0dff 151b  ld   [$1b],y
 jupiter7:     0e00 0000  ld   $00
               0e01 0000  ld   $00
               0e02 0000  ld   $00
@@ -1561,7 +1551,7 @@ jupiter7:     0e00 0000  ld   $00
               0efc fcfd  bra  $0efd
               0efd 1403  ld   $03,y
               0efe e07b  jmp  y,$7b
-              0eff 1519  ld   [$19],y
+              0eff 151b  ld   [$1b],y
 jupiter8:     0f00 0000  ld   $00
               0f01 0000  ld   $00
               0f02 0000  ld   $00
@@ -1630,7 +1620,7 @@ jupiter8:     0f00 0000  ld   $00
               0ffc fcfd  bra  $0ffd
               0ffd 1403  ld   $03,y
               0ffe e07b  jmp  y,$7b
-              0fff 1519  ld   [$19],y
+              0fff 151b  ld   [$1b],y
 jupiter9:     1000 0000  ld   $00
               1001 0000  ld   $00
               1002 0000  ld   $00
@@ -1705,7 +1695,7 @@ jupiter9:     1000 0000  ld   $00
               10fc fcfd  bra  $10fd
               10fd 1403  ld   $03,y
               10fe e07b  jmp  y,$7b
-              10ff 1519  ld   [$19],y
+              10ff 151b  ld   [$1b],y
 jupiter10:    1100 0000  ld   $00
               1101 0000  ld   $00
               1102 0000  ld   $00
@@ -1784,7 +1774,7 @@ jupiter10:    1100 0000  ld   $00
               11fc fcfd  bra  $11fd
               11fd 1403  ld   $03,y
               11fe e07b  jmp  y,$7b
-              11ff 1519  ld   [$19],y
+              11ff 151b  ld   [$1b],y
 jupiter11:    1200 0000  ld   $00
               1201 0000  ld   $00
               1202 0000  ld   $00
@@ -1866,7 +1856,7 @@ jupiter11:    1200 0000  ld   $00
               12fc fcfd  bra  $12fd
               12fd 1403  ld   $03,y
               12fe e07b  jmp  y,$7b
-              12ff 1519  ld   [$19],y
+              12ff 151b  ld   [$1b],y
 jupiter12:    1300 0000  ld   $00
               1301 0000  ld   $00
               1302 0000  ld   $00
@@ -1951,7 +1941,7 @@ jupiter12:    1300 0000  ld   $00
               13fc fcfd  bra  $13fd
               13fd 1403  ld   $03,y
               13fe e07b  jmp  y,$7b
-              13ff 1519  ld   [$19],y
+              13ff 151b  ld   [$1b],y
 jupiter13:    1400 0000  ld   $00
               1401 0000  ld   $00
               1402 0000  ld   $00
@@ -2041,7 +2031,7 @@ jupiter13:    1400 0000  ld   $00
               14fc fcfd  bra  $14fd
               14fd 1403  ld   $03,y
               14fe e07b  jmp  y,$7b
-              14ff 1519  ld   [$19],y
+              14ff 151b  ld   [$1b],y
 jupiter14:    1500 0000  ld   $00
               1501 0000  ld   $00
               1502 0000  ld   $00
@@ -2133,7 +2123,7 @@ jupiter14:    1500 0000  ld   $00
               15fc fcfd  bra  $15fd
               15fd 1403  ld   $03,y
               15fe e07b  jmp  y,$7b
-              15ff 1519  ld   [$19],y
+              15ff 151b  ld   [$1b],y
 jupiter15:    1600 0000  ld   $00
               1601 0000  ld   $00
               1602 0000  ld   $00
@@ -2228,7 +2218,7 @@ jupiter15:    1600 0000  ld   $00
               16fc fcfd  bra  $16fd
               16fd 1403  ld   $03,y
               16fe e07b  jmp  y,$7b
-              16ff 1519  ld   [$19],y
+              16ff 151b  ld   [$1b],y
 jupiter16:    1700 0000  ld   $00
               1701 0000  ld   $00
               1702 0000  ld   $00
@@ -2326,7 +2316,7 @@ jupiter16:    1700 0000  ld   $00
               17fc fcfd  bra  $17fd
               17fd 1403  ld   $03,y
               17fe e07b  jmp  y,$7b
-              17ff 1519  ld   [$19],y
+              17ff 151b  ld   [$1b],y
 jupiter17:    1800 0000  ld   $00
               1801 0000  ld   $00
               1802 0000  ld   $00
@@ -2425,7 +2415,7 @@ jupiter17:    1800 0000  ld   $00
               18fc fcfd  bra  $18fd
               18fd 1403  ld   $03,y
               18fe e07b  jmp  y,$7b
-              18ff 1519  ld   [$19],y
+              18ff 151b  ld   [$1b],y
 jupiter18:    1900 0000  ld   $00
               1901 0000  ld   $00
               1902 0000  ld   $00
@@ -2526,7 +2516,7 @@ jupiter18:    1900 0000  ld   $00
               19fc fcfd  bra  $19fd
               19fd 1403  ld   $03,y
               19fe e07b  jmp  y,$7b
-              19ff 1519  ld   [$19],y
+              19ff 151b  ld   [$1b],y
 jupiter19:    1a00 0000  ld   $00
               1a01 0000  ld   $00
               1a02 0000  ld   $00
@@ -2630,7 +2620,7 @@ jupiter19:    1a00 0000  ld   $00
               1afc fcfd  bra  $1afd
               1afd 1403  ld   $03,y
               1afe e07b  jmp  y,$7b
-              1aff 1519  ld   [$19],y
+              1aff 151b  ld   [$1b],y
 jupiter20:    1b00 0000  ld   $00
               1b01 0000  ld   $00
               1b02 0000  ld   $00
@@ -2736,7 +2726,7 @@ jupiter20:    1b00 0000  ld   $00
               1bfc fcfd  bra  $1bfd
               1bfd 1403  ld   $03,y
               1bfe e07b  jmp  y,$7b
-              1bff 1519  ld   [$19],y
+              1bff 151b  ld   [$1b],y
 jupiter21:    1c00 0000  ld   $00
               1c01 0000  ld   $00
               1c02 0000  ld   $00
@@ -2843,7 +2833,7 @@ jupiter21:    1c00 0000  ld   $00
               1cfc fcfd  bra  $1cfd
               1cfd 1403  ld   $03,y
               1cfe e07b  jmp  y,$7b
-              1cff 1519  ld   [$19],y
+              1cff 151b  ld   [$1b],y
 jupiter22:    1d00 0000  ld   $00
               1d01 0000  ld   $00
               1d02 0000  ld   $00
@@ -2952,7 +2942,7 @@ jupiter22:    1d00 0000  ld   $00
               1dfc fcfd  bra  $1dfd
               1dfd 1403  ld   $03,y
               1dfe e07b  jmp  y,$7b
-              1dff 1519  ld   [$19],y
+              1dff 151b  ld   [$1b],y
 jupiter23:    1e00 0000  ld   $00
               1e01 0000  ld   $00
               1e02 0000  ld   $00
@@ -3063,7 +3053,7 @@ jupiter23:    1e00 0000  ld   $00
               1efc fcfd  bra  $1efd
               1efd 1403  ld   $03,y
               1efe e07b  jmp  y,$7b
-              1eff 1519  ld   [$19],y
+              1eff 151b  ld   [$1b],y
 jupiter24:    1f00 0000  ld   $00
               1f01 0000  ld   $00
               1f02 0000  ld   $00
@@ -3176,7 +3166,7 @@ jupiter24:    1f00 0000  ld   $00
               1ffc fcfd  bra  $1ffd
               1ffd 1403  ld   $03,y
               1ffe e07b  jmp  y,$7b
-              1fff 1519  ld   [$19],y
+              1fff 151b  ld   [$1b],y
 jupiter25:    2000 0000  ld   $00
               2001 0000  ld   $00
               2002 0000  ld   $00
@@ -3292,7 +3282,7 @@ jupiter25:    2000 0000  ld   $00
               20fc fcfd  bra  $20fd
               20fd 1403  ld   $03,y
               20fe e07b  jmp  y,$7b
-              20ff 1519  ld   [$19],y
+              20ff 151b  ld   [$1b],y
 jupiter26:    2100 0000  ld   $00
               2101 0000  ld   $00
               2102 0000  ld   $00
@@ -3408,7 +3398,7 @@ jupiter26:    2100 0000  ld   $00
               21fc fcfd  bra  $21fd
               21fd 1403  ld   $03,y
               21fe e07b  jmp  y,$7b
-              21ff 1519  ld   [$19],y
+              21ff 151b  ld   [$1b],y
 jupiter27:    2200 0000  ld   $00
               2201 0000  ld   $00
               2202 0000  ld   $00
@@ -3526,7 +3516,7 @@ jupiter27:    2200 0000  ld   $00
               22fc fcfd  bra  $22fd
               22fd 1403  ld   $03,y
               22fe e07b  jmp  y,$7b
-              22ff 1519  ld   [$19],y
+              22ff 151b  ld   [$1b],y
 jupiter28:    2300 0000  ld   $00
               2301 0000  ld   $00
               2302 0000  ld   $00
@@ -3645,7 +3635,7 @@ jupiter28:    2300 0000  ld   $00
               23fc fcfd  bra  $23fd
               23fd 1403  ld   $03,y
               23fe e07b  jmp  y,$7b
-              23ff 1519  ld   [$19],y
+              23ff 151b  ld   [$1b],y
 jupiter29:    2400 0000  ld   $00
               2401 0000  ld   $00
               2402 0000  ld   $00
@@ -3767,7 +3757,7 @@ jupiter29:    2400 0000  ld   $00
               24fc fcfd  bra  $24fd
               24fd 1403  ld   $03,y
               24fe e07b  jmp  y,$7b
-              24ff 1519  ld   [$19],y
+              24ff 151b  ld   [$1b],y
 jupiter30:    2500 0000  ld   $00
               2501 0000  ld   $00
               2502 0000  ld   $00
@@ -3887,7 +3877,7 @@ jupiter30:    2500 0000  ld   $00
               25fc fcfd  bra  $25fd
               25fd 1403  ld   $03,y
               25fe e07b  jmp  y,$7b
-              25ff 1519  ld   [$19],y
+              25ff 151b  ld   [$1b],y
 jupiter31:    2600 0000  ld   $00
               2601 0000  ld   $00
               2602 0000  ld   $00
@@ -4011,7 +4001,7 @@ jupiter31:    2600 0000  ld   $00
               26fc fcfd  bra  $26fd
               26fd 1403  ld   $03,y
               26fe e07b  jmp  y,$7b
-              26ff 1519  ld   [$19],y
+              26ff 151b  ld   [$1b],y
 jupiter32:    2700 0000  ld   $00
               2701 0000  ld   $00
               2702 0000  ld   $00
@@ -4135,7 +4125,7 @@ jupiter32:    2700 0000  ld   $00
               27fc fcfd  bra  $27fd
               27fd 1403  ld   $03,y
               27fe e07b  jmp  y,$7b
-              27ff 1519  ld   [$19],y
+              27ff 151b  ld   [$1b],y
 jupiter33:    2800 0000  ld   $00
               2801 0000  ld   $00
               2802 0000  ld   $00
@@ -4261,7 +4251,7 @@ jupiter33:    2800 0000  ld   $00
               28fc fcfd  bra  $28fd
               28fd 1403  ld   $03,y
               28fe e07b  jmp  y,$7b
-              28ff 1519  ld   [$19],y
+              28ff 151b  ld   [$1b],y
 jupiter34:    2900 0000  ld   $00
               2901 0000  ld   $00
               2902 0000  ld   $00
@@ -4389,7 +4379,7 @@ jupiter34:    2900 0000  ld   $00
               29fc fcfd  bra  $29fd
               29fd 1403  ld   $03,y
               29fe e07b  jmp  y,$7b
-              29ff 1519  ld   [$19],y
+              29ff 151b  ld   [$1b],y
 jupiter35:    2a00 0000  ld   $00
               2a01 0000  ld   $00
               2a02 0000  ld   $00
@@ -4517,7 +4507,7 @@ jupiter35:    2a00 0000  ld   $00
               2afc fcfd  bra  $2afd
               2afd 1403  ld   $03,y
               2afe e07b  jmp  y,$7b
-              2aff 1519  ld   [$19],y
+              2aff 151b  ld   [$1b],y
 jupiter36:    2b00 0000  ld   $00
               2b01 0000  ld   $00
               2b02 0000  ld   $00
@@ -4646,7 +4636,7 @@ jupiter36:    2b00 0000  ld   $00
               2bfc fcfd  bra  $2bfd
               2bfd 1403  ld   $03,y
               2bfe e07b  jmp  y,$7b
-              2bff 1519  ld   [$19],y
+              2bff 151b  ld   [$1b],y
 jupiter37:    2c00 0000  ld   $00
               2c01 0000  ld   $00
               2c02 0000  ld   $00
@@ -4776,7 +4766,7 @@ jupiter37:    2c00 0000  ld   $00
               2cfc fcfd  bra  $2cfd
               2cfd 1403  ld   $03,y
               2cfe e07b  jmp  y,$7b
-              2cff 1519  ld   [$19],y
+              2cff 151b  ld   [$1b],y
 jupiter38:    2d00 0000  ld   $00
               2d01 0000  ld   $00
               2d02 0000  ld   $00
@@ -4907,7 +4897,7 @@ jupiter38:    2d00 0000  ld   $00
               2dfc fcfd  bra  $2dfd
               2dfd 1403  ld   $03,y
               2dfe e07b  jmp  y,$7b
-              2dff 1519  ld   [$19],y
+              2dff 151b  ld   [$1b],y
 jupiter39:    2e00 0000  ld   $00
               2e01 0000  ld   $00
               2e02 0000  ld   $00
@@ -5037,7 +5027,7 @@ jupiter39:    2e00 0000  ld   $00
               2efc fcfd  bra  $2efd
               2efd 1403  ld   $03,y
               2efe e07b  jmp  y,$7b
-              2eff 1519  ld   [$19],y
+              2eff 151b  ld   [$1b],y
 jupiter40:    2f00 0000  ld   $00
               2f01 0000  ld   $00
               2f02 0000  ld   $00
@@ -5169,7 +5159,7 @@ jupiter40:    2f00 0000  ld   $00
               2ffc fcfd  bra  $2ffd
               2ffd 1403  ld   $03,y
               2ffe e07b  jmp  y,$7b
-              2fff 1519  ld   [$19],y
+              2fff 151b  ld   [$1b],y
 jupiter41:    3000 0000  ld   $00
               3001 0000  ld   $00
               3002 0000  ld   $00
@@ -5303,7 +5293,7 @@ jupiter41:    3000 0000  ld   $00
               30fc fcfd  bra  $30fd
               30fd 1403  ld   $03,y
               30fe e07b  jmp  y,$7b
-              30ff 1519  ld   [$19],y
+              30ff 151b  ld   [$1b],y
 jupiter42:    3100 0000  ld   $00
               3101 0000  ld   $00
               3102 0000  ld   $00
@@ -5437,7 +5427,7 @@ jupiter42:    3100 0000  ld   $00
               31fc fcfd  bra  $31fd
               31fd 1403  ld   $03,y
               31fe e07b  jmp  y,$7b
-              31ff 1519  ld   [$19],y
+              31ff 151b  ld   [$1b],y
 jupiter43:    3200 0000  ld   $00
               3201 0000  ld   $00
               3202 0000  ld   $00
@@ -5572,7 +5562,7 @@ jupiter43:    3200 0000  ld   $00
               32fc fcfd  bra  $32fd
               32fd 1403  ld   $03,y
               32fe e07b  jmp  y,$7b
-              32ff 1519  ld   [$19],y
+              32ff 151b  ld   [$1b],y
 jupiter44:    3300 0000  ld   $00
               3301 0000  ld   $00
               3302 0000  ld   $00
@@ -5707,7 +5697,7 @@ jupiter44:    3300 0000  ld   $00
               33fc fcfd  bra  $33fd
               33fd 1403  ld   $03,y
               33fe e07b  jmp  y,$7b
-              33ff 1519  ld   [$19],y
+              33ff 151b  ld   [$1b],y
 jupiter45:    3400 0000  ld   $00
               3401 0000  ld   $00
               3402 0000  ld   $00
@@ -5843,7 +5833,7 @@ jupiter45:    3400 0000  ld   $00
               34fc fcfd  bra  $34fd
               34fd 1403  ld   $03,y
               34fe e07b  jmp  y,$7b
-              34ff 1519  ld   [$19],y
+              34ff 151b  ld   [$1b],y
 jupiter46:    3500 0000  ld   $00
               3501 0000  ld   $00
               3502 0000  ld   $00
@@ -5979,7 +5969,7 @@ jupiter46:    3500 0000  ld   $00
               35fc fcfd  bra  $35fd
               35fd 1403  ld   $03,y
               35fe e07b  jmp  y,$7b
-              35ff 1519  ld   [$19],y
+              35ff 151b  ld   [$1b],y
 jupiter47:    3600 0000  ld   $00
               3601 0000  ld   $00
               3602 0000  ld   $00
@@ -6116,7 +6106,7 @@ jupiter47:    3600 0000  ld   $00
               36fc fcfd  bra  $36fd
               36fd 1403  ld   $03,y
               36fe e07b  jmp  y,$7b
-              36ff 1519  ld   [$19],y
+              36ff 151b  ld   [$1b],y
 jupiter48:    3700 0000  ld   $00
               3701 0000  ld   $00
               3702 0000  ld   $00
@@ -6248,7 +6238,7 @@ jupiter48:    3700 0000  ld   $00
               37fc fcfd  bra  $37fd
               37fd 1403  ld   $03,y
               37fe e07b  jmp  y,$7b
-              37ff 1519  ld   [$19],y
+              37ff 151b  ld   [$1b],y
 jupiter49:    3800 0000  ld   $00
               3801 0000  ld   $00
               3802 0000  ld   $00
@@ -6385,7 +6375,7 @@ jupiter49:    3800 0000  ld   $00
               38fc fcfd  bra  $38fd
               38fd 1403  ld   $03,y
               38fe e07b  jmp  y,$7b
-              38ff 1519  ld   [$19],y
+              38ff 151b  ld   [$1b],y
 jupiter50:    3900 0000  ld   $00
               3901 0000  ld   $00
               3902 0000  ld   $00
@@ -6522,7 +6512,7 @@ jupiter50:    3900 0000  ld   $00
               39fc fcfd  bra  $39fd
               39fd 1403  ld   $03,y
               39fe e07b  jmp  y,$7b
-              39ff 1519  ld   [$19],y
+              39ff 151b  ld   [$1b],y
 jupiter51:    3a00 0000  ld   $00
               3a01 0000  ld   $00
               3a02 0000  ld   $00
@@ -6659,7 +6649,7 @@ jupiter51:    3a00 0000  ld   $00
               3afc fcfd  bra  $3afd
               3afd 1403  ld   $03,y
               3afe e07b  jmp  y,$7b
-              3aff 1519  ld   [$19],y
+              3aff 151b  ld   [$1b],y
 jupiter52:    3b00 0000  ld   $00
               3b01 0000  ld   $00
               3b02 0000  ld   $00
@@ -6789,7 +6779,7 @@ jupiter52:    3b00 0000  ld   $00
               3bfc fcfd  bra  $3bfd
               3bfd 1403  ld   $03,y
               3bfe e07b  jmp  y,$7b
-              3bff 1519  ld   [$19],y
+              3bff 151b  ld   [$1b],y
 jupiter53:    3c00 0000  ld   $00
               3c01 0000  ld   $00
               3c02 0000  ld   $00
@@ -6911,7 +6901,7 @@ jupiter53:    3c00 0000  ld   $00
               3cfc fcfd  bra  $3cfd
               3cfd 1403  ld   $03,y
               3cfe e07b  jmp  y,$7b
-              3cff 1519  ld   [$19],y
+              3cff 151b  ld   [$1b],y
 jupiter54:    3d00 0000  ld   $00
               3d01 0000  ld   $00
               3d02 0000  ld   $00
@@ -7047,7 +7037,7 @@ jupiter54:    3d00 0000  ld   $00
               3dfc fcfd  bra  $3dfd
               3dfd 1403  ld   $03,y
               3dfe e07b  jmp  y,$7b
-              3dff 1519  ld   [$19],y
+              3dff 151b  ld   [$1b],y
 jupiter55:    3e00 0000  ld   $00
               3e01 0000  ld   $00
               3e02 0000  ld   $00
@@ -7187,7 +7177,7 @@ jupiter55:    3e00 0000  ld   $00
               3efc fcfd  bra  $3efd
               3efd 1403  ld   $03,y
               3efe e07b  jmp  y,$7b
-              3eff 1519  ld   [$19],y
+              3eff 151b  ld   [$1b],y
 jupiter56:    3f00 0000  ld   $00
               3f01 0000  ld   $00
               3f02 0000  ld   $00
@@ -7326,7 +7316,7 @@ jupiter56:    3f00 0000  ld   $00
               3ffc fcfd  bra  $3ffd
               3ffd 1403  ld   $03,y
               3ffe e07b  jmp  y,$7b
-              3fff 1519  ld   [$19],y
+              3fff 151b  ld   [$1b],y
 jupiter57:    4000 0000  ld   $00
               4001 0000  ld   $00
               4002 0000  ld   $00
@@ -7465,7 +7455,7 @@ jupiter57:    4000 0000  ld   $00
               40fc fcfd  bra  $40fd
               40fd 1403  ld   $03,y
               40fe e07b  jmp  y,$7b
-              40ff 1519  ld   [$19],y
+              40ff 151b  ld   [$1b],y
 jupiter58:    4100 0000  ld   $00
               4101 0000  ld   $00
               4102 0000  ld   $00
@@ -7605,7 +7595,7 @@ jupiter58:    4100 0000  ld   $00
               41fc fcfd  bra  $41fd
               41fd 1403  ld   $03,y
               41fe e07b  jmp  y,$7b
-              41ff 1519  ld   [$19],y
+              41ff 151b  ld   [$1b],y
 jupiter59:    4200 0000  ld   $00
               4201 0000  ld   $00
               4202 0000  ld   $00
@@ -7744,7 +7734,7 @@ jupiter59:    4200 0000  ld   $00
               42fc fcfd  bra  $42fd
               42fd 1403  ld   $03,y
               42fe e07b  jmp  y,$7b
-              42ff 1519  ld   [$19],y
+              42ff 151b  ld   [$1b],y
 jupiter60:    4300 0000  ld   $00
               4301 0000  ld   $00
               4302 0000  ld   $00
@@ -7871,7 +7861,7 @@ jupiter60:    4300 0000  ld   $00
               43fc fcfd  bra  $43fd
               43fd 1403  ld   $03,y
               43fe e07b  jmp  y,$7b
-              43ff 1519  ld   [$19],y
+              43ff 151b  ld   [$1b],y
 jupiter61:    4400 0000  ld   $00
               4401 0000  ld   $00
               4402 0000  ld   $00
@@ -8001,7 +7991,7 @@ jupiter61:    4400 0000  ld   $00
               44fc fcfd  bra  $44fd
               44fd 1403  ld   $03,y
               44fe e07b  jmp  y,$7b
-              44ff 1519  ld   [$19],y
+              44ff 151b  ld   [$1b],y
 jupiter62:    4500 0000  ld   $00
               4501 0000  ld   $00
               4502 0000  ld   $00
@@ -8140,7 +8130,7 @@ jupiter62:    4500 0000  ld   $00
               45fc fcfd  bra  $45fd
               45fd 1403  ld   $03,y
               45fe e07b  jmp  y,$7b
-              45ff 1519  ld   [$19],y
+              45ff 151b  ld   [$1b],y
 jupiter63:    4600 0000  ld   $00
               4601 0000  ld   $00
               4602 0000  ld   $00
@@ -8280,7 +8270,7 @@ jupiter63:    4600 0000  ld   $00
               46fc fcfd  bra  $46fd
               46fd 1403  ld   $03,y
               46fe e07b  jmp  y,$7b
-              46ff 1519  ld   [$19],y
+              46ff 151b  ld   [$1b],y
 jupiter64:    4700 0000  ld   $00
               4701 0000  ld   $00
               4702 0000  ld   $00
@@ -8420,7 +8410,7 @@ jupiter64:    4700 0000  ld   $00
               47fc fcfd  bra  $47fd
               47fd 1403  ld   $03,y
               47fe e07b  jmp  y,$7b
-              47ff 1519  ld   [$19],y
+              47ff 151b  ld   [$1b],y
 jupiter65:    4800 0000  ld   $00
               4801 0000  ld   $00
               4802 0000  ld   $00
@@ -8560,7 +8550,7 @@ jupiter65:    4800 0000  ld   $00
               48fc fcfd  bra  $48fd
               48fd 1403  ld   $03,y
               48fe e07b  jmp  y,$7b
-              48ff 1519  ld   [$19],y
+              48ff 151b  ld   [$1b],y
 jupiter66:    4900 0000  ld   $00
               4901 0000  ld   $00
               4902 0000  ld   $00
@@ -8699,7 +8689,7 @@ jupiter66:    4900 0000  ld   $00
               49fc fcfd  bra  $49fd
               49fd 1403  ld   $03,y
               49fe e07b  jmp  y,$7b
-              49ff 1519  ld   [$19],y
+              49ff 151b  ld   [$1b],y
 jupiter67:    4a00 0000  ld   $00
               4a01 0000  ld   $00
               4a02 0000  ld   $00
@@ -8837,7 +8827,7 @@ jupiter67:    4a00 0000  ld   $00
               4afc fcfd  bra  $4afd
               4afd 1403  ld   $03,y
               4afe e07b  jmp  y,$7b
-              4aff 1519  ld   [$19],y
+              4aff 151b  ld   [$1b],y
 jupiter68:    4b00 0000  ld   $00
               4b01 0000  ld   $00
               4b02 0000  ld   $00
@@ -8971,7 +8961,7 @@ jupiter68:    4b00 0000  ld   $00
               4bfc fcfd  bra  $4bfd
               4bfd 1403  ld   $03,y
               4bfe e07b  jmp  y,$7b
-              4bff 1519  ld   [$19],y
+              4bff 151b  ld   [$1b],y
 jupiter69:    4c00 0000  ld   $00
               4c01 0000  ld   $00
               4c02 0000  ld   $00
@@ -9104,7 +9094,7 @@ jupiter69:    4c00 0000  ld   $00
               4cfc fcfd  bra  $4cfd
               4cfd 1403  ld   $03,y
               4cfe e07b  jmp  y,$7b
-              4cff 1519  ld   [$19],y
+              4cff 151b  ld   [$1b],y
 jupiter70:    4d00 0000  ld   $00
               4d01 0000  ld   $00
               4d02 0000  ld   $00
@@ -9229,7 +9219,7 @@ jupiter70:    4d00 0000  ld   $00
               4dfc fcfd  bra  $4dfd
               4dfd 1403  ld   $03,y
               4dfe e07b  jmp  y,$7b
-              4dff 1519  ld   [$19],y
+              4dff 151b  ld   [$1b],y
 jupiter71:    4e00 0000  ld   $00
               4e01 0000  ld   $00
               4e02 0000  ld   $00
@@ -9365,7 +9355,7 @@ jupiter71:    4e00 0000  ld   $00
               4efc fcfd  bra  $4efd
               4efd 1403  ld   $03,y
               4efe e07b  jmp  y,$7b
-              4eff 1519  ld   [$19],y
+              4eff 151b  ld   [$1b],y
 jupiter72:    4f00 0000  ld   $00
               4f01 0000  ld   $00
               4f02 0000  ld   $00
@@ -9494,7 +9484,7 @@ jupiter72:    4f00 0000  ld   $00
               4ffc fcfd  bra  $4ffd
               4ffd 1403  ld   $03,y
               4ffe e07b  jmp  y,$7b
-              4fff 1519  ld   [$19],y
+              4fff 151b  ld   [$1b],y
 jupiter73:    5000 0000  ld   $00
               5001 0000  ld   $00
               5002 0000  ld   $00
@@ -9613,7 +9603,7 @@ jupiter73:    5000 0000  ld   $00
               50fc fcfd  bra  $50fd
               50fd 1403  ld   $03,y
               50fe e07b  jmp  y,$7b
-              50ff 1519  ld   [$19],y
+              50ff 151b  ld   [$1b],y
 jupiter74:    5100 0000  ld   $00
               5101 0000  ld   $00
               5102 0000  ld   $00
@@ -9744,7 +9734,7 @@ jupiter74:    5100 0000  ld   $00
               51fc fcfd  bra  $51fd
               51fd 1403  ld   $03,y
               51fe e07b  jmp  y,$7b
-              51ff 1519  ld   [$19],y
+              51ff 151b  ld   [$1b],y
 jupiter75:    5200 0000  ld   $00
               5201 0000  ld   $00
               5202 0000  ld   $00
@@ -9878,7 +9868,7 @@ jupiter75:    5200 0000  ld   $00
               52fc fcfd  bra  $52fd
               52fd 1403  ld   $03,y
               52fe e07b  jmp  y,$7b
-              52ff 1519  ld   [$19],y
+              52ff 151b  ld   [$1b],y
 jupiter76:    5300 0000  ld   $00
               5301 0000  ld   $00
               5302 0000  ld   $00
@@ -10011,7 +10001,7 @@ jupiter76:    5300 0000  ld   $00
               53fc fcfd  bra  $53fd
               53fd 1403  ld   $03,y
               53fe e07b  jmp  y,$7b
-              53ff 1519  ld   [$19],y
+              53ff 151b  ld   [$1b],y
 jupiter77:    5400 0000  ld   $00
               5401 0000  ld   $00
               5402 0000  ld   $00
@@ -10143,7 +10133,7 @@ jupiter77:    5400 0000  ld   $00
               54fc fcfd  bra  $54fd
               54fd 1403  ld   $03,y
               54fe e07b  jmp  y,$7b
-              54ff 1519  ld   [$19],y
+              54ff 151b  ld   [$1b],y
 jupiter78:    5500 0000  ld   $00
               5501 0000  ld   $00
               5502 0000  ld   $00
@@ -10274,7 +10264,7 @@ jupiter78:    5500 0000  ld   $00
               55fc fcfd  bra  $55fd
               55fd 1403  ld   $03,y
               55fe e07b  jmp  y,$7b
-              55ff 1519  ld   [$19],y
+              55ff 151b  ld   [$1b],y
 jupiter79:    5600 0000  ld   $00
               5601 0000  ld   $00
               5602 0000  ld   $00
@@ -10399,7 +10389,7 @@ jupiter79:    5600 0000  ld   $00
               56fc fcfd  bra  $56fd
               56fd 1403  ld   $03,y
               56fe e07b  jmp  y,$7b
-              56ff 1519  ld   [$19],y
+              56ff 151b  ld   [$1b],y
 jupiter80:    5700 0000  ld   $00
               5701 0000  ld   $00
               5702 0000  ld   $00
@@ -10529,7 +10519,7 @@ jupiter80:    5700 0000  ld   $00
               57fc fcfd  bra  $57fd
               57fd 1403  ld   $03,y
               57fe e07b  jmp  y,$7b
-              57ff 1519  ld   [$19],y
+              57ff 151b  ld   [$1b],y
 jupiter81:    5800 0000  ld   $00
               5801 0000  ld   $00
               5802 0000  ld   $00
@@ -10654,7 +10644,7 @@ jupiter81:    5800 0000  ld   $00
               58fc fcfd  bra  $58fd
               58fd 1403  ld   $03,y
               58fe e07b  jmp  y,$7b
-              58ff 1519  ld   [$19],y
+              58ff 151b  ld   [$1b],y
 jupiter82:    5900 0000  ld   $00
               5901 0000  ld   $00
               5902 0000  ld   $00
@@ -10768,7 +10758,7 @@ jupiter82:    5900 0000  ld   $00
               59fc fcfd  bra  $59fd
               59fd 1403  ld   $03,y
               59fe e07b  jmp  y,$7b
-              59ff 1519  ld   [$19],y
+              59ff 151b  ld   [$1b],y
 jupiter83:    5a00 0000  ld   $00
               5a01 0000  ld   $00
               5a02 0000  ld   $00
@@ -10897,7 +10887,7 @@ jupiter83:    5a00 0000  ld   $00
               5afc fcfd  bra  $5afd
               5afd 1403  ld   $03,y
               5afe e07b  jmp  y,$7b
-              5aff 1519  ld   [$19],y
+              5aff 151b  ld   [$1b],y
 jupiter84:    5b00 0000  ld   $00
               5b01 0000  ld   $00
               5b02 0000  ld   $00
@@ -11025,7 +11015,7 @@ jupiter84:    5b00 0000  ld   $00
               5bfc fcfd  bra  $5bfd
               5bfd 1403  ld   $03,y
               5bfe e07b  jmp  y,$7b
-              5bff 1519  ld   [$19],y
+              5bff 151b  ld   [$1b],y
 jupiter85:    5c00 0000  ld   $00
               5c01 0000  ld   $00
               5c02 0000  ld   $00
@@ -11151,7 +11141,7 @@ jupiter85:    5c00 0000  ld   $00
               5cfc fcfd  bra  $5cfd
               5cfd 1403  ld   $03,y
               5cfe e07b  jmp  y,$7b
-              5cff 1519  ld   [$19],y
+              5cff 151b  ld   [$1b],y
 jupiter86:    5d00 0000  ld   $00
               5d01 0000  ld   $00
               5d02 0000  ld   $00
@@ -11275,7 +11265,7 @@ jupiter86:    5d00 0000  ld   $00
               5dfc fcfd  bra  $5dfd
               5dfd 1403  ld   $03,y
               5dfe e07b  jmp  y,$7b
-              5dff 1519  ld   [$19],y
+              5dff 151b  ld   [$1b],y
 jupiter87:    5e00 0000  ld   $00
               5e01 0000  ld   $00
               5e02 0000  ld   $00
@@ -11399,7 +11389,7 @@ jupiter87:    5e00 0000  ld   $00
               5efc fcfd  bra  $5efd
               5efd 1403  ld   $03,y
               5efe e07b  jmp  y,$7b
-              5eff 1519  ld   [$19],y
+              5eff 151b  ld   [$1b],y
 jupiter88:    5f00 0000  ld   $00
               5f01 0000  ld   $00
               5f02 0000  ld   $00
@@ -11523,7 +11513,7 @@ jupiter88:    5f00 0000  ld   $00
               5ffc fcfd  bra  $5ffd
               5ffd 1403  ld   $03,y
               5ffe e07b  jmp  y,$7b
-              5fff 1519  ld   [$19],y
+              5fff 151b  ld   [$1b],y
 jupiter89:    6000 0000  ld   $00
               6001 0000  ld   $00
               6002 0000  ld   $00
@@ -11645,7 +11635,7 @@ jupiter89:    6000 0000  ld   $00
               60fc fcfd  bra  $60fd
               60fd 1403  ld   $03,y
               60fe e07b  jmp  y,$7b
-              60ff 1519  ld   [$19],y
+              60ff 151b  ld   [$1b],y
 jupiter90:    6100 0000  ld   $00
               6101 0000  ld   $00
               6102 0000  ld   $00
@@ -11764,7 +11754,7 @@ jupiter90:    6100 0000  ld   $00
               61fc fcfd  bra  $61fd
               61fd 1403  ld   $03,y
               61fe e07b  jmp  y,$7b
-              61ff 1519  ld   [$19],y
+              61ff 151b  ld   [$1b],y
 jupiter91:    6200 0000  ld   $00
               6201 0000  ld   $00
               6202 0000  ld   $00
@@ -11884,7 +11874,7 @@ jupiter91:    6200 0000  ld   $00
               62fc fcfd  bra  $62fd
               62fd 1403  ld   $03,y
               62fe e07b  jmp  y,$7b
-              62ff 1519  ld   [$19],y
+              62ff 151b  ld   [$1b],y
 jupiter92:    6300 0000  ld   $00
               6301 0000  ld   $00
               6302 0000  ld   $00
@@ -12001,7 +11991,7 @@ jupiter92:    6300 0000  ld   $00
               63fc fcfd  bra  $63fd
               63fd 1403  ld   $03,y
               63fe e07b  jmp  y,$7b
-              63ff 1519  ld   [$19],y
+              63ff 151b  ld   [$1b],y
 jupiter93:    6400 0000  ld   $00
               6401 0000  ld   $00
               6402 0000  ld   $00
@@ -12117,7 +12107,7 @@ jupiter93:    6400 0000  ld   $00
               64fc fcfd  bra  $64fd
               64fd 1403  ld   $03,y
               64fe e07b  jmp  y,$7b
-              64ff 1519  ld   [$19],y
+              64ff 151b  ld   [$1b],y
 jupiter94:    6500 0000  ld   $00
               6501 0000  ld   $00
               6502 0000  ld   $00
@@ -12231,7 +12221,7 @@ jupiter94:    6500 0000  ld   $00
               65fc fcfd  bra  $65fd
               65fd 1403  ld   $03,y
               65fe e07b  jmp  y,$7b
-              65ff 1519  ld   [$19],y
+              65ff 151b  ld   [$1b],y
 jupiter95:    6600 0000  ld   $00
               6601 0000  ld   $00
               6602 0000  ld   $00
@@ -12344,7 +12334,7 @@ jupiter95:    6600 0000  ld   $00
               66fc fcfd  bra  $66fd
               66fd 1403  ld   $03,y
               66fe e07b  jmp  y,$7b
-              66ff 1519  ld   [$19],y
+              66ff 151b  ld   [$1b],y
 jupiter96:    6700 0000  ld   $00
               6701 0000  ld   $00
               6702 0000  ld   $00
@@ -12455,7 +12445,7 @@ jupiter96:    6700 0000  ld   $00
               67fc fcfd  bra  $67fd
               67fd 1403  ld   $03,y
               67fe e07b  jmp  y,$7b
-              67ff 1519  ld   [$19],y
+              67ff 151b  ld   [$1b],y
 jupiter97:    6800 0000  ld   $00
               6801 0000  ld   $00
               6802 0000  ld   $00
@@ -12565,7 +12555,7 @@ jupiter97:    6800 0000  ld   $00
               68fc fcfd  bra  $68fd
               68fd 1403  ld   $03,y
               68fe e07b  jmp  y,$7b
-              68ff 1519  ld   [$19],y
+              68ff 151b  ld   [$1b],y
 jupiter98:    6900 0000  ld   $00
               6901 0000  ld   $00
               6902 0000  ld   $00
@@ -12673,7 +12663,7 @@ jupiter98:    6900 0000  ld   $00
               69fc fcfd  bra  $69fd
               69fd 1403  ld   $03,y
               69fe e07b  jmp  y,$7b
-              69ff 1519  ld   [$19],y
+              69ff 151b  ld   [$1b],y
 jupiter99:    6a00 0000  ld   $00
               6a01 0000  ld   $00
               6a02 0000  ld   $00
@@ -12779,7 +12769,7 @@ jupiter99:    6a00 0000  ld   $00
               6afc fcfd  bra  $6afd
               6afd 1403  ld   $03,y
               6afe e07b  jmp  y,$7b
-              6aff 1519  ld   [$19],y
+              6aff 151b  ld   [$1b],y
 jupiter100:   6b00 0000  ld   $00
               6b01 0000  ld   $00
               6b02 0000  ld   $00
@@ -12883,7 +12873,7 @@ jupiter100:   6b00 0000  ld   $00
               6bfc fcfd  bra  $6bfd
               6bfd 1403  ld   $03,y
               6bfe e07b  jmp  y,$7b
-              6bff 1519  ld   [$19],y
+              6bff 151b  ld   [$1b],y
 jupiter101:   6c00 0000  ld   $00
               6c01 0000  ld   $00
               6c02 0000  ld   $00
@@ -12983,7 +12973,7 @@ jupiter101:   6c00 0000  ld   $00
               6cfc fcfd  bra  $6cfd
               6cfd 1403  ld   $03,y
               6cfe e07b  jmp  y,$7b
-              6cff 1519  ld   [$19],y
+              6cff 151b  ld   [$1b],y
 jupiter102:   6d00 0000  ld   $00
               6d01 0000  ld   $00
               6d02 0000  ld   $00
@@ -13082,7 +13072,7 @@ jupiter102:   6d00 0000  ld   $00
               6dfc fcfd  bra  $6dfd
               6dfd 1403  ld   $03,y
               6dfe e07b  jmp  y,$7b
-              6dff 1519  ld   [$19],y
+              6dff 151b  ld   [$1b],y
 jupiter103:   6e00 0000  ld   $00
               6e01 0000  ld   $00
               6e02 0000  ld   $00
@@ -13178,7 +13168,7 @@ jupiter103:   6e00 0000  ld   $00
               6efc fcfd  bra  $6efd
               6efd 1403  ld   $03,y
               6efe e07b  jmp  y,$7b
-              6eff 1519  ld   [$19],y
+              6eff 151b  ld   [$1b],y
 jupiter104:   6f00 0000  ld   $00
               6f01 0000  ld   $00
               6f02 0000  ld   $00
@@ -13273,7 +13263,7 @@ jupiter104:   6f00 0000  ld   $00
               6ffc fcfd  bra  $6ffd
               6ffd 1403  ld   $03,y
               6ffe e07b  jmp  y,$7b
-              6fff 1519  ld   [$19],y
+              6fff 151b  ld   [$1b],y
 jupiter105:   7000 0000  ld   $00
               7001 0000  ld   $00
               7002 0000  ld   $00
@@ -13365,7 +13355,7 @@ jupiter105:   7000 0000  ld   $00
               70fc fcfd  bra  $70fd
               70fd 1403  ld   $03,y
               70fe e07b  jmp  y,$7b
-              70ff 1519  ld   [$19],y
+              70ff 151b  ld   [$1b],y
 jupiter106:   7100 0000  ld   $00
               7101 0000  ld   $00
               7102 0000  ld   $00
@@ -13453,7 +13443,7 @@ jupiter106:   7100 0000  ld   $00
               71fc fcfd  bra  $71fd
               71fd 1403  ld   $03,y
               71fe e07b  jmp  y,$7b
-              71ff 1519  ld   [$19],y
+              71ff 151b  ld   [$1b],y
 jupiter107:   7200 0000  ld   $00
               7201 0000  ld   $00
               7202 0000  ld   $00
@@ -13539,7 +13529,7 @@ jupiter107:   7200 0000  ld   $00
               72fc fcfd  bra  $72fd
               72fd 1403  ld   $03,y
               72fe e07b  jmp  y,$7b
-              72ff 1519  ld   [$19],y
+              72ff 151b  ld   [$1b],y
 jupiter108:   7300 0000  ld   $00
               7301 0000  ld   $00
               7302 0000  ld   $00
@@ -13622,7 +13612,7 @@ jupiter108:   7300 0000  ld   $00
               73fc fcfd  bra  $73fd
               73fd 1403  ld   $03,y
               73fe e07b  jmp  y,$7b
-              73ff 1519  ld   [$19],y
+              73ff 151b  ld   [$1b],y
 jupiter109:   7400 0000  ld   $00
               7401 0000  ld   $00
               7402 0000  ld   $00
@@ -13700,7 +13690,7 @@ jupiter109:   7400 0000  ld   $00
               74fc fcfd  bra  $74fd
               74fd 1403  ld   $03,y
               74fe e07b  jmp  y,$7b
-              74ff 1519  ld   [$19],y
+              74ff 151b  ld   [$1b],y
 jupiter110:   7500 0000  ld   $00
               7501 0000  ld   $00
               7502 0000  ld   $00
@@ -13773,7 +13763,7 @@ jupiter110:   7500 0000  ld   $00
               75fc fcfd  bra  $75fd
               75fd 1403  ld   $03,y
               75fe e07b  jmp  y,$7b
-              75ff 1519  ld   [$19],y
+              75ff 151b  ld   [$1b],y
 jupiter111:   7600 0000  ld   $00
               7601 0000  ld   $00
               7602 0000  ld   $00
@@ -13844,7 +13834,7 @@ jupiter111:   7600 0000  ld   $00
               76fc fcfd  bra  $76fd
               76fd 1403  ld   $03,y
               76fe e07b  jmp  y,$7b
-              76ff 1519  ld   [$19],y
+              76ff 151b  ld   [$1b],y
 jupiter112:   7700 0000  ld   $00
               7701 0000  ld   $00
               7702 0000  ld   $00
@@ -13909,7 +13899,7 @@ jupiter112:   7700 0000  ld   $00
               77fc fcfd  bra  $77fd
               77fd 1403  ld   $03,y
               77fe e07b  jmp  y,$7b
-              77ff 1519  ld   [$19],y
+              77ff 151b  ld   [$1b],y
 jupiter113:   7800 0000  ld   $00
               7801 0000  ld   $00
               7802 0000  ld   $00
@@ -13968,7 +13958,7 @@ jupiter113:   7800 0000  ld   $00
               78fc fcfd  bra  $78fd
               78fd 1403  ld   $03,y
               78fe e07b  jmp  y,$7b
-              78ff 1519  ld   [$19],y
+              78ff 151b  ld   [$1b],y
 jupiter114:   7900 0000  ld   $00
               7901 0000  ld   $00
               7902 0000  ld   $00
@@ -14021,7 +14011,7 @@ jupiter114:   7900 0000  ld   $00
               79fc fcfd  bra  $79fd
               79fd 1403  ld   $03,y
               79fe e07b  jmp  y,$7b
-              79ff 1519  ld   [$19],y
+              79ff 151b  ld   [$1b],y
 jupiter115:   7a00 0000  ld   $00
               7a01 0000  ld   $00
               7a02 0000  ld   $00
@@ -14067,7 +14057,7 @@ jupiter115:   7a00 0000  ld   $00
               7afc fcfd  bra  $7afd
               7afd 1403  ld   $03,y
               7afe e07b  jmp  y,$7b
-              7aff 1519  ld   [$19],y
+              7aff 151b  ld   [$1b],y
 jupiter116:   7b00 0000  ld   $00
               7b01 0000  ld   $00
               7b02 0000  ld   $00
@@ -14099,7 +14089,7 @@ jupiter116:   7b00 0000  ld   $00
               7bfc fcfd  bra  $7bfd
               7bfd 1403  ld   $03,y
               7bfe e07b  jmp  y,$7b
-              7bff 1519  ld   [$19],y
+              7bff 151b  ld   [$1b],y
 jupiter117:   7c00 0000  ld   $00
               7c01 0000  ld   $00
               7c02 0000  ld   $00
@@ -14117,7 +14107,7 @@ jupiter117:   7c00 0000  ld   $00
               7cfc fcfd  bra  $7cfd
               7cfd 1403  ld   $03,y
               7cfe e07b  jmp  y,$7b
-              7cff 1519  ld   [$19],y
+              7cff 151b  ld   [$1b],y
 jupiter118:   7d00 0000  ld   $00
               7d01 0000  ld   $00
               7d02 0000  ld   $00
@@ -14130,7 +14120,7 @@ jupiter118:   7d00 0000  ld   $00
               7dfc fcfd  bra  $7dfd
               7dfd 1403  ld   $03,y
               7dfe e07b  jmp  y,$7b
-              7dff 1519  ld   [$19],y
+              7dff 151b  ld   [$1b],y
 jupiter119:   7e00 0000  ld   $00
               7e01 0000  ld   $00
               7e02 0000  ld   $00
@@ -14143,7 +14133,7 @@ jupiter119:   7e00 0000  ld   $00
               7efc fcfd  bra  $7efd
               7efd 1403  ld   $03,y
               7efe e07b  jmp  y,$7b
-              7eff 1519  ld   [$19],y
+              7eff 151b  ld   [$1b],y
 parrot0:      7f00 0000  ld   $00
               7f01 0000  ld   $00
               7f02 0000  ld   $00
@@ -14240,7 +14230,7 @@ parrot0:      7f00 0000  ld   $00
               7ffc fcfd  bra  $7ffd
               7ffd 1403  ld   $03,y
               7ffe e07b  jmp  y,$7b
-              7fff 1519  ld   [$19],y
+              7fff 151b  ld   [$1b],y
 parrot1:      8000 0000  ld   $00
               8001 0000  ld   $00
               8002 0000  ld   $00
@@ -14365,7 +14355,7 @@ parrot1:      8000 0000  ld   $00
               80fc fcfd  bra  $80fd
               80fd 1403  ld   $03,y
               80fe e07b  jmp  y,$7b
-              80ff 1519  ld   [$19],y
+              80ff 151b  ld   [$1b],y
 parrot2:      8100 0000  ld   $00
               8101 0000  ld   $00
               8102 0000  ld   $00
@@ -14493,7 +14483,7 @@ parrot2:      8100 0000  ld   $00
               81fc fcfd  bra  $81fd
               81fd 1403  ld   $03,y
               81fe e07b  jmp  y,$7b
-              81ff 1519  ld   [$19],y
+              81ff 151b  ld   [$1b],y
 parrot3:      8200 0000  ld   $00
               8201 0000  ld   $00
               8202 0000  ld   $00
@@ -14619,7 +14609,7 @@ parrot3:      8200 0000  ld   $00
               82fc fcfd  bra  $82fd
               82fd 1403  ld   $03,y
               82fe e07b  jmp  y,$7b
-              82ff 1519  ld   [$19],y
+              82ff 151b  ld   [$1b],y
 parrot4:      8300 0000  ld   $00
               8301 0000  ld   $00
               8302 0000  ld   $00
@@ -14741,7 +14731,7 @@ parrot4:      8300 0000  ld   $00
               83fc fcfd  bra  $83fd
               83fd 1403  ld   $03,y
               83fe e07b  jmp  y,$7b
-              83ff 1519  ld   [$19],y
+              83ff 151b  ld   [$1b],y
 parrot5:      8400 0000  ld   $00
               8401 0000  ld   $00
               8402 0000  ld   $00
@@ -14895,7 +14885,7 @@ parrot5:      8400 0000  ld   $00
               84fc fcfd  bra  $84fd
               84fd 1403  ld   $03,y
               84fe e07b  jmp  y,$7b
-              84ff 1519  ld   [$19],y
+              84ff 151b  ld   [$1b],y
 parrot6:      8500 0000  ld   $00
               8501 0000  ld   $00
               8502 0000  ld   $00
@@ -15035,7 +15025,7 @@ parrot6:      8500 0000  ld   $00
               85fc fcfd  bra  $85fd
               85fd 1403  ld   $03,y
               85fe e07b  jmp  y,$7b
-              85ff 1519  ld   [$19],y
+              85ff 151b  ld   [$1b],y
 parrot7:      8600 0000  ld   $00
               8601 0000  ld   $00
               8602 0010  ld   $10
@@ -15189,7 +15179,7 @@ parrot7:      8600 0000  ld   $00
               86fc fcfd  bra  $86fd
               86fd 1403  ld   $03,y
               86fe e07b  jmp  y,$7b
-              86ff 1519  ld   [$19],y
+              86ff 151b  ld   [$1b],y
 parrot8:      8700 0000  ld   $00
               8701 0000  ld   $00
               8702 0000  ld   $00
@@ -15327,7 +15317,7 @@ parrot8:      8700 0000  ld   $00
               87fc fcfd  bra  $87fd
               87fd 1403  ld   $03,y
               87fe e07b  jmp  y,$7b
-              87ff 1519  ld   [$19],y
+              87ff 151b  ld   [$1b],y
 parrot9:      8800 0000  ld   $00
               8801 0000  ld   $00
               8802 0000  ld   $00
@@ -15469,7 +15459,7 @@ parrot9:      8800 0000  ld   $00
               88fc fcfd  bra  $88fd
               88fd 1403  ld   $03,y
               88fe e07b  jmp  y,$7b
-              88ff 1519  ld   [$19],y
+              88ff 151b  ld   [$1b],y
 parrot10:     8900 0000  ld   $00
               8901 0000  ld   $00
               8902 0000  ld   $00
@@ -15600,7 +15590,7 @@ parrot10:     8900 0000  ld   $00
               89fc fcfd  bra  $89fd
               89fd 1403  ld   $03,y
               89fe e07b  jmp  y,$7b
-              89ff 1519  ld   [$19],y
+              89ff 151b  ld   [$1b],y
 parrot11:     8a00 0000  ld   $00
               8a01 0000  ld   $00
               8a02 0000  ld   $00
@@ -15740,7 +15730,7 @@ parrot11:     8a00 0000  ld   $00
               8afc fcfd  bra  $8afd
               8afd 1403  ld   $03,y
               8afe e07b  jmp  y,$7b
-              8aff 1519  ld   [$19],y
+              8aff 151b  ld   [$1b],y
 parrot12:     8b00 0000  ld   $00
               8b01 0000  ld   $00
               8b02 0000  ld   $00
@@ -15887,7 +15877,7 @@ parrot12:     8b00 0000  ld   $00
               8bfc fcfd  bra  $8bfd
               8bfd 1403  ld   $03,y
               8bfe e07b  jmp  y,$7b
-              8bff 1519  ld   [$19],y
+              8bff 151b  ld   [$1b],y
 parrot13:     8c00 0000  ld   $00
               8c01 0000  ld   $00
               8c02 0000  ld   $00
@@ -16028,7 +16018,7 @@ parrot13:     8c00 0000  ld   $00
               8cfc fcfd  bra  $8cfd
               8cfd 1403  ld   $03,y
               8cfe e07b  jmp  y,$7b
-              8cff 1519  ld   [$19],y
+              8cff 151b  ld   [$1b],y
 parrot14:     8d00 0000  ld   $00
               8d01 0005  ld   $05
               8d02 0000  ld   $00
@@ -16172,7 +16162,7 @@ parrot14:     8d00 0000  ld   $00
               8dfc fcfd  bra  $8dfd
               8dfd 1403  ld   $03,y
               8dfe e07b  jmp  y,$7b
-              8dff 1519  ld   [$19],y
+              8dff 151b  ld   [$1b],y
 parrot15:     8e00 0000  ld   $00
               8e01 0000  ld   $00
               8e02 0010  ld   $10
@@ -16319,7 +16309,7 @@ parrot15:     8e00 0000  ld   $00
               8efc fcfd  bra  $8efd
               8efd 1403  ld   $03,y
               8efe e07b  jmp  y,$7b
-              8eff 1519  ld   [$19],y
+              8eff 151b  ld   [$1b],y
 parrot16:     8f00 002a  ld   $2a
               8f01 0016  ld   $16
               8f02 0015  ld   $15
@@ -16456,7 +16446,7 @@ parrot16:     8f00 002a  ld   $2a
               8ffc fcfd  bra  $8ffd
               8ffd 1403  ld   $03,y
               8ffe e07b  jmp  y,$7b
-              8fff 1519  ld   [$19],y
+              8fff 151b  ld   [$1b],y
 parrot17:     9000 003e  ld   $3e
               9001 0015  ld   $15
               9002 0015  ld   $15
@@ -16604,7 +16594,7 @@ parrot17:     9000 003e  ld   $3e
               90fc fcfd  bra  $90fd
               90fd 1403  ld   $03,y
               90fe e07b  jmp  y,$7b
-              90ff 1519  ld   [$19],y
+              90ff 151b  ld   [$1b],y
 parrot18:     9100 0001  ld   $01
               9101 0000  ld   $00
               9102 0000  ld   $00
@@ -16752,7 +16742,7 @@ parrot18:     9100 0001  ld   $01
               91fc fcfd  bra  $91fd
               91fd 1403  ld   $03,y
               91fe e07b  jmp  y,$7b
-              91ff 1519  ld   [$19],y
+              91ff 151b  ld   [$1b],y
 parrot19:     9200 0000  ld   $00
               9201 0000  ld   $00
               9202 0000  ld   $00
@@ -16905,7 +16895,7 @@ parrot19:     9200 0000  ld   $00
               92fc fcfd  bra  $92fd
               92fd 1403  ld   $03,y
               92fe e07b  jmp  y,$7b
-              92ff 1519  ld   [$19],y
+              92ff 151b  ld   [$1b],y
 parrot20:     9300 0000  ld   $00
               9301 0000  ld   $00
               9302 0000  ld   $00
@@ -17048,7 +17038,7 @@ parrot20:     9300 0000  ld   $00
               93fc fcfd  bra  $93fd
               93fd 1403  ld   $03,y
               93fe e07b  jmp  y,$7b
-              93ff 1519  ld   [$19],y
+              93ff 151b  ld   [$1b],y
 parrot21:     9400 0000  ld   $00
               9401 0000  ld   $00
               9402 0000  ld   $00
@@ -17213,7 +17203,7 @@ parrot21:     9400 0000  ld   $00
               94fc fcfd  bra  $94fd
               94fd 1403  ld   $03,y
               94fe e07b  jmp  y,$7b
-              94ff 1519  ld   [$19],y
+              94ff 151b  ld   [$1b],y
 parrot22:     9500 0000  ld   $00
               9501 0000  ld   $00
               9502 0000  ld   $00
@@ -17362,7 +17352,7 @@ parrot22:     9500 0000  ld   $00
               95fc fcfd  bra  $95fd
               95fd 1403  ld   $03,y
               95fe e07b  jmp  y,$7b
-              95ff 1519  ld   [$19],y
+              95ff 151b  ld   [$1b],y
 parrot23:     9600 0000  ld   $00
               9601 0000  ld   $00
               9602 0010  ld   $10
@@ -17522,7 +17512,7 @@ parrot23:     9600 0000  ld   $00
               96fc fcfd  bra  $96fd
               96fd 1403  ld   $03,y
               96fe e07b  jmp  y,$7b
-              96ff 1519  ld   [$19],y
+              96ff 151b  ld   [$1b],y
 parrot24:     9700 0000  ld   $00
               9701 0000  ld   $00
               9702 0000  ld   $00
@@ -17684,7 +17674,7 @@ parrot24:     9700 0000  ld   $00
               97fc fcfd  bra  $97fd
               97fd 1403  ld   $03,y
               97fe e07b  jmp  y,$7b
-              97ff 1519  ld   [$19],y
+              97ff 151b  ld   [$1b],y
 parrot25:     9800 0000  ld   $00
               9801 0000  ld   $00
               9802 0000  ld   $00
@@ -17844,7 +17834,7 @@ parrot25:     9800 0000  ld   $00
               98fc fcfd  bra  $98fd
               98fd 1403  ld   $03,y
               98fe e07b  jmp  y,$7b
-              98ff 1519  ld   [$19],y
+              98ff 151b  ld   [$1b],y
 parrot26:     9900 0000  ld   $00
               9901 0000  ld   $00
               9902 0004  ld   $04
@@ -18009,7 +17999,7 @@ parrot26:     9900 0000  ld   $00
               99fc fcfd  bra  $99fd
               99fd 1403  ld   $03,y
               99fe e07b  jmp  y,$7b
-              99ff 1519  ld   [$19],y
+              99ff 151b  ld   [$1b],y
 parrot27:     9a00 0000  ld   $00
               9a01 0000  ld   $00
               9a02 0000  ld   $00
@@ -18167,7 +18157,7 @@ parrot27:     9a00 0000  ld   $00
               9afc fcfd  bra  $9afd
               9afd 1403  ld   $03,y
               9afe e07b  jmp  y,$7b
-              9aff 1519  ld   [$19],y
+              9aff 151b  ld   [$1b],y
 parrot28:     9b00 0000  ld   $00
               9b01 0000  ld   $00
               9b02 0000  ld   $00
@@ -18314,7 +18304,7 @@ parrot28:     9b00 0000  ld   $00
               9bfc fcfd  bra  $9bfd
               9bfd 1403  ld   $03,y
               9bfe e07b  jmp  y,$7b
-              9bff 1519  ld   [$19],y
+              9bff 151b  ld   [$1b],y
 parrot29:     9c00 0000  ld   $00
               9c01 0000  ld   $00
               9c02 0000  ld   $00
@@ -18451,7 +18441,7 @@ parrot29:     9c00 0000  ld   $00
               9cfc fcfd  bra  $9cfd
               9cfd 1403  ld   $03,y
               9cfe e07b  jmp  y,$7b
-              9cff 1519  ld   [$19],y
+              9cff 151b  ld   [$1b],y
 parrot30:     9d00 0000  ld   $00
               9d01 0000  ld   $00
               9d02 0000  ld   $00
@@ -18594,7 +18584,7 @@ parrot30:     9d00 0000  ld   $00
               9dfc fcfd  bra  $9dfd
               9dfd 1403  ld   $03,y
               9dfe e07b  jmp  y,$7b
-              9dff 1519  ld   [$19],y
+              9dff 151b  ld   [$1b],y
 parrot31:     9e00 0000  ld   $00
               9e01 0000  ld   $00
               9e02 0000  ld   $00
@@ -18737,7 +18727,7 @@ parrot31:     9e00 0000  ld   $00
               9efc fcfd  bra  $9efd
               9efd 1403  ld   $03,y
               9efe e07b  jmp  y,$7b
-              9eff 1519  ld   [$19],y
+              9eff 151b  ld   [$1b],y
 parrot32:     9f00 0000  ld   $00
               9f01 0000  ld   $00
               9f02 0000  ld   $00
@@ -18883,7 +18873,7 @@ parrot32:     9f00 0000  ld   $00
               9ffc fcfd  bra  $9ffd
               9ffd 1403  ld   $03,y
               9ffe e07b  jmp  y,$7b
-              9fff 1519  ld   [$19],y
+              9fff 151b  ld   [$1b],y
 parrot33:     a000 0000  ld   $00
               a001 0000  ld   $00
               a002 0000  ld   $00
@@ -19032,7 +19022,7 @@ parrot33:     a000 0000  ld   $00
               a0fc fcfd  bra  $a0fd
               a0fd 1403  ld   $03,y
               a0fe e07b  jmp  y,$7b
-              a0ff 1519  ld   [$19],y
+              a0ff 151b  ld   [$1b],y
 parrot34:     a100 0000  ld   $00
               a101 0000  ld   $00
               a102 0000  ld   $00
@@ -19183,7 +19173,7 @@ parrot34:     a100 0000  ld   $00
               a1fc fcfd  bra  $a1fd
               a1fd 1403  ld   $03,y
               a1fe e07b  jmp  y,$7b
-              a1ff 1519  ld   [$19],y
+              a1ff 151b  ld   [$1b],y
 parrot35:     a200 0000  ld   $00
               a201 0005  ld   $05
               a202 0000  ld   $00
@@ -19341,7 +19331,7 @@ parrot35:     a200 0000  ld   $00
               a2fc fcfd  bra  $a2fd
               a2fd 1403  ld   $03,y
               a2fe e07b  jmp  y,$7b
-              a2ff 1519  ld   [$19],y
+              a2ff 151b  ld   [$1b],y
 parrot36:     a300 0000  ld   $00
               a301 0010  ld   $10
               a302 0000  ld   $00
@@ -19502,7 +19492,7 @@ parrot36:     a300 0000  ld   $00
               a3fc fcfd  bra  $a3fd
               a3fd 1403  ld   $03,y
               a3fe e07b  jmp  y,$7b
-              a3ff 1519  ld   [$19],y
+              a3ff 151b  ld   [$1b],y
 parrot37:     a400 0005  ld   $05
               a401 0004  ld   $04
               a402 0015  ld   $15
@@ -19664,7 +19654,7 @@ parrot37:     a400 0005  ld   $05
               a4fc fcfd  bra  $a4fd
               a4fd 1403  ld   $03,y
               a4fe e07b  jmp  y,$7b
-              a4ff 1519  ld   [$19],y
+              a4ff 151b  ld   [$1b],y
 parrot38:     a500 002a  ld   $2a
               a501 002a  ld   $2a
               a502 002e  ld   $2e
@@ -19828,7 +19818,7 @@ parrot38:     a500 002a  ld   $2a
               a5fc fcfd  bra  $a5fd
               a5fd 1403  ld   $03,y
               a5fe e07b  jmp  y,$7b
-              a5ff 1519  ld   [$19],y
+              a5ff 151b  ld   [$1b],y
 parrot39:     a600 002e  ld   $2e
               a601 002e  ld   $2e
               a602 002a  ld   $2a
@@ -19993,7 +19983,7 @@ parrot39:     a600 002e  ld   $2e
               a6fc fcfd  bra  $a6fd
               a6fd 1403  ld   $03,y
               a6fe e07b  jmp  y,$7b
-              a6ff 1519  ld   [$19],y
+              a6ff 151b  ld   [$1b],y
 parrot40:     a700 0019  ld   $19
               a701 0009  ld   $09
               a702 0019  ld   $19
@@ -20158,7 +20148,7 @@ parrot40:     a700 0019  ld   $19
               a7fc fcfd  bra  $a7fd
               a7fd 1403  ld   $03,y
               a7fe e07b  jmp  y,$7b
-              a7ff 1519  ld   [$19],y
+              a7ff 151b  ld   [$1b],y
 parrot41:     a800 0009  ld   $09
               a801 0009  ld   $09
               a802 000a  ld   $0a
@@ -20321,7 +20311,7 @@ parrot41:     a800 0009  ld   $09
               a8fc fcfd  bra  $a8fd
               a8fd 1403  ld   $03,y
               a8fe e07b  jmp  y,$7b
-              a8ff 1519  ld   [$19],y
+              a8ff 151b  ld   [$1b],y
 parrot42:     a900 0009  ld   $09
               a901 0009  ld   $09
               a902 0009  ld   $09
@@ -20477,7 +20467,7 @@ parrot42:     a900 0009  ld   $09
               a9fc fcfd  bra  $a9fd
               a9fd 1403  ld   $03,y
               a9fe e07b  jmp  y,$7b
-              a9ff 1519  ld   [$19],y
+              a9ff 151b  ld   [$1b],y
 parrot43:     aa00 001a  ld   $1a
               aa01 0019  ld   $19
               aa02 001a  ld   $1a
@@ -20640,7 +20630,7 @@ parrot43:     aa00 001a  ld   $1a
               aafc fcfd  bra  $aafd
               aafd 1403  ld   $03,y
               aafe e07b  jmp  y,$7b
-              aaff 1519  ld   [$19],y
+              aaff 151b  ld   [$1b],y
 parrot44:     ab00 0005  ld   $05
               ab01 0015  ld   $15
               ab02 0005  ld   $05
@@ -20807,7 +20797,7 @@ parrot44:     ab00 0005  ld   $05
               abfc fcfd  bra  $abfd
               abfd 1403  ld   $03,y
               abfe e07b  jmp  y,$7b
-              abff 1519  ld   [$19],y
+              abff 151b  ld   [$1b],y
 parrot45:     ac00 0000  ld   $00
               ac01 0000  ld   $00
               ac02 0000  ld   $00
@@ -20974,7 +20964,7 @@ parrot45:     ac00 0000  ld   $00
               acfc fcfd  bra  $acfd
               acfd 1403  ld   $03,y
               acfe e07b  jmp  y,$7b
-              acff 1519  ld   [$19],y
+              acff 151b  ld   [$1b],y
 parrot46:     ad00 0015  ld   $15
               ad01 0019  ld   $19
               ad02 001a  ld   $1a
@@ -21143,7 +21133,7 @@ parrot46:     ad00 0015  ld   $15
               adfc fcfd  bra  $adfd
               adfd 1403  ld   $03,y
               adfe e07b  jmp  y,$7b
-              adff 1519  ld   [$19],y
+              adff 151b  ld   [$1b],y
 parrot47:     ae00 001a  ld   $1a
               ae01 002a  ld   $2a
               ae02 0029  ld   $29
@@ -21309,7 +21299,7 @@ parrot47:     ae00 001a  ld   $1a
               aefc fcfd  bra  $aefd
               aefd 1403  ld   $03,y
               aefe e07b  jmp  y,$7b
-              aeff 1519  ld   [$19],y
+              aeff 151b  ld   [$1b],y
 parrot48:     af00 0009  ld   $09
               af01 0009  ld   $09
               af02 0009  ld   $09
@@ -21476,7 +21466,7 @@ parrot48:     af00 0009  ld   $09
               affc fcfd  bra  $affd
               affd 1403  ld   $03,y
               affe e07b  jmp  y,$7b
-              afff 1519  ld   [$19],y
+              afff 151b  ld   [$1b],y
 parrot49:     b000 0009  ld   $09
               b001 0015  ld   $15
               b002 0009  ld   $09
@@ -21643,7 +21633,7 @@ parrot49:     b000 0009  ld   $09
               b0fc fcfd  bra  $b0fd
               b0fd 1403  ld   $03,y
               b0fe e07b  jmp  y,$7b
-              b0ff 1519  ld   [$19],y
+              b0ff 151b  ld   [$1b],y
 parrot50:     b100 0019  ld   $19
               b101 002a  ld   $2a
               b102 0019  ld   $19
@@ -21811,7 +21801,7 @@ parrot50:     b100 0019  ld   $19
               b1fc fcfd  bra  $b1fd
               b1fd 1403  ld   $03,y
               b1fe e07b  jmp  y,$7b
-              b1ff 1519  ld   [$19],y
+              b1ff 151b  ld   [$1b],y
 parrot51:     b200 001a  ld   $1a
               b201 002e  ld   $2e
               b202 002a  ld   $2a
@@ -21979,7 +21969,7 @@ parrot51:     b200 001a  ld   $1a
               b2fc fcfd  bra  $b2fd
               b2fd 1403  ld   $03,y
               b2fe e07b  jmp  y,$7b
-              b2ff 1519  ld   [$19],y
+              b2ff 151b  ld   [$1b],y
 parrot52:     b300 0004  ld   $04
               b301 0005  ld   $05
               b302 0019  ld   $19
@@ -22147,7 +22137,7 @@ parrot52:     b300 0004  ld   $04
               b3fc fcfd  bra  $b3fd
               b3fd 1403  ld   $03,y
               b3fe e07b  jmp  y,$7b
-              b3ff 1519  ld   [$19],y
+              b3ff 151b  ld   [$1b],y
 parrot53:     b400 0019  ld   $19
               b401 0019  ld   $19
               b402 002a  ld   $2a
@@ -22314,7 +22304,7 @@ parrot53:     b400 0019  ld   $19
               b4fc fcfd  bra  $b4fd
               b4fd 1403  ld   $03,y
               b4fe e07b  jmp  y,$7b
-              b4ff 1519  ld   [$19],y
+              b4ff 151b  ld   [$1b],y
 parrot54:     b500 0019  ld   $19
               b501 001a  ld   $1a
               b502 0019  ld   $19
@@ -22481,7 +22471,7 @@ parrot54:     b500 0019  ld   $19
               b5fc fcfd  bra  $b5fd
               b5fd 1403  ld   $03,y
               b5fe e07b  jmp  y,$7b
-              b5ff 1519  ld   [$19],y
+              b5ff 151b  ld   [$1b],y
 parrot55:     b600 0009  ld   $09
               b601 0009  ld   $09
               b602 0009  ld   $09
@@ -22647,7 +22637,7 @@ parrot55:     b600 0009  ld   $09
               b6fc fcfd  bra  $b6fd
               b6fd 1403  ld   $03,y
               b6fe e07b  jmp  y,$7b
-              b6ff 1519  ld   [$19],y
+              b6ff 151b  ld   [$1b],y
 parrot56:     b700 0009  ld   $09
               b701 0019  ld   $19
               b702 0005  ld   $05
@@ -22814,7 +22804,7 @@ parrot56:     b700 0009  ld   $09
               b7fc fcfd  bra  $b7fd
               b7fd 1403  ld   $03,y
               b7fe e07b  jmp  y,$7b
-              b7ff 1519  ld   [$19],y
+              b7ff 151b  ld   [$1b],y
 parrot57:     b800 0005  ld   $05
               b801 0005  ld   $05
               b802 0009  ld   $09
@@ -22981,7 +22971,7 @@ parrot57:     b800 0005  ld   $05
               b8fc fcfd  bra  $b8fd
               b8fd 1403  ld   $03,y
               b8fe e07b  jmp  y,$7b
-              b8ff 1519  ld   [$19],y
+              b8ff 151b  ld   [$1b],y
 parrot58:     b900 0000  ld   $00
               b901 0000  ld   $00
               b902 0000  ld   $00
@@ -23149,7 +23139,7 @@ parrot58:     b900 0000  ld   $00
               b9fc fcfd  bra  $b9fd
               b9fd 1403  ld   $03,y
               b9fe e07b  jmp  y,$7b
-              b9ff 1519  ld   [$19],y
+              b9ff 151b  ld   [$1b],y
 parrot59:     ba00 0019  ld   $19
               ba01 0019  ld   $19
               ba02 0005  ld   $05
@@ -23318,7 +23308,7 @@ parrot59:     ba00 0019  ld   $19
               bafc fcfd  bra  $bafd
               bafd 1403  ld   $03,y
               bafe e07b  jmp  y,$7b
-              baff 1519  ld   [$19],y
+              baff 151b  ld   [$1b],y
 parrot60:     bb00 0009  ld   $09
               bb01 0009  ld   $09
               bb02 0019  ld   $19
@@ -23485,7 +23475,7 @@ parrot60:     bb00 0009  ld   $09
               bbfc fcfd  bra  $bbfd
               bbfd 1403  ld   $03,y
               bbfe e07b  jmp  y,$7b
-              bbff 1519  ld   [$19],y
+              bbff 151b  ld   [$1b],y
 parrot61:     bc00 000a  ld   $0a
               bc01 0019  ld   $19
               bc02 000a  ld   $0a
@@ -23653,7 +23643,7 @@ parrot61:     bc00 000a  ld   $0a
               bcfc fcfd  bra  $bcfd
               bcfd 1403  ld   $03,y
               bcfe e07b  jmp  y,$7b
-              bcff 1519  ld   [$19],y
+              bcff 151b  ld   [$1b],y
 parrot62:     bd00 0019  ld   $19
               bd01 000a  ld   $0a
               bd02 0009  ld   $09
@@ -23820,7 +23810,7 @@ parrot62:     bd00 0019  ld   $19
               bdfc fcfd  bra  $bdfd
               bdfd 1403  ld   $03,y
               bdfe e07b  jmp  y,$7b
-              bdff 1519  ld   [$19],y
+              bdff 151b  ld   [$1b],y
 parrot63:     be00 0009  ld   $09
               be01 0015  ld   $15
               be02 0004  ld   $04
@@ -23989,7 +23979,7 @@ parrot63:     be00 0009  ld   $09
               befc fcfd  bra  $befd
               befd 1403  ld   $03,y
               befe e07b  jmp  y,$7b
-              beff 1519  ld   [$19],y
+              beff 151b  ld   [$1b],y
 parrot64:     bf00 0005  ld   $05
               bf01 0000  ld   $00
               bf02 0000  ld   $00
@@ -24154,7 +24144,7 @@ parrot64:     bf00 0005  ld   $05
               bffc fcfd  bra  $bffd
               bffd 1403  ld   $03,y
               bffe e07b  jmp  y,$7b
-              bfff 1519  ld   [$19],y
+              bfff 151b  ld   [$1b],y
 parrot65:     c000 0004  ld   $04
               c001 0000  ld   $00
               c002 0000  ld   $00
@@ -24319,7 +24309,7 @@ parrot65:     c000 0004  ld   $04
               c0fc fcfd  bra  $c0fd
               c0fd 1403  ld   $03,y
               c0fe e07b  jmp  y,$7b
-              c0ff 1519  ld   [$19],y
+              c0ff 151b  ld   [$1b],y
 parrot66:     c100 0005  ld   $05
               c101 0005  ld   $05
               c102 0004  ld   $04
@@ -24480,7 +24470,7 @@ parrot66:     c100 0005  ld   $05
               c1fc fcfd  bra  $c1fd
               c1fd 1403  ld   $03,y
               c1fe e07b  jmp  y,$7b
-              c1ff 1519  ld   [$19],y
+              c1ff 151b  ld   [$1b],y
 parrot67:     c200 0005  ld   $05
               c201 0009  ld   $09
               c202 001a  ld   $1a
@@ -24645,7 +24635,7 @@ parrot67:     c200 0005  ld   $05
               c2fc fcfd  bra  $c2fd
               c2fd 1403  ld   $03,y
               c2fe e07b  jmp  y,$7b
-              c2ff 1519  ld   [$19],y
+              c2ff 151b  ld   [$1b],y
 parrot68:     c300 0009  ld   $09
               c301 0015  ld   $15
               c302 001a  ld   $1a
@@ -24811,7 +24801,7 @@ parrot68:     c300 0009  ld   $09
               c3fc fcfd  bra  $c3fd
               c3fd 1403  ld   $03,y
               c3fe e07b  jmp  y,$7b
-              c3ff 1519  ld   [$19],y
+              c3ff 151b  ld   [$1b],y
 parrot69:     c400 0009  ld   $09
               c401 000a  ld   $0a
               c402 0019  ld   $19
@@ -24980,7 +24970,7 @@ parrot69:     c400 0009  ld   $09
               c4fc fcfd  bra  $c4fd
               c4fd 1403  ld   $03,y
               c4fe e07b  jmp  y,$7b
-              c4ff 1519  ld   [$19],y
+              c4ff 151b  ld   [$1b],y
 parrot70:     c500 0015  ld   $15
               c501 001a  ld   $1a
               c502 002a  ld   $2a
@@ -25149,7 +25139,7 @@ parrot70:     c500 0015  ld   $15
               c5fc fcfd  bra  $c5fd
               c5fd 1403  ld   $03,y
               c5fe e07b  jmp  y,$7b
-              c5ff 1519  ld   [$19],y
+              c5ff 151b  ld   [$1b],y
 parrot71:     c600 001a  ld   $1a
               c601 002a  ld   $2a
               c602 002a  ld   $2a
@@ -25313,7 +25303,7 @@ parrot71:     c600 001a  ld   $1a
               c6fc fcfd  bra  $c6fd
               c6fd 1403  ld   $03,y
               c6fe e07b  jmp  y,$7b
-              c6ff 1519  ld   [$19],y
+              c6ff 151b  ld   [$1b],y
 parrot72:     c700 0015  ld   $15
               c701 0015  ld   $15
               c702 002a  ld   $2a
@@ -25481,7 +25471,7 @@ parrot72:     c700 0015  ld   $15
               c7fc fcfd  bra  $c7fd
               c7fd 1403  ld   $03,y
               c7fe e07b  jmp  y,$7b
-              c7ff 1519  ld   [$19],y
+              c7ff 151b  ld   [$1b],y
 parrot73:     c800 0005  ld   $05
               c801 0015  ld   $15
               c802 0019  ld   $19
@@ -25650,7 +25640,7 @@ parrot73:     c800 0005  ld   $05
               c8fc fcfd  bra  $c8fd
               c8fd 1403  ld   $03,y
               c8fe e07b  jmp  y,$7b
-              c8ff 1519  ld   [$19],y
+              c8ff 151b  ld   [$1b],y
 parrot74:     c900 0005  ld   $05
               c901 0005  ld   $05
               c902 0005  ld   $05
@@ -25817,7 +25807,7 @@ parrot74:     c900 0005  ld   $05
               c9fc fcfd  bra  $c9fd
               c9fd 1403  ld   $03,y
               c9fe e07b  jmp  y,$7b
-              c9ff 1519  ld   [$19],y
+              c9ff 151b  ld   [$1b],y
 parrot75:     ca00 0004  ld   $04
               ca01 0005  ld   $05
               ca02 0004  ld   $04
@@ -25984,7 +25974,7 @@ parrot75:     ca00 0004  ld   $04
               cafc fcfd  bra  $cafd
               cafd 1403  ld   $03,y
               cafe e07b  jmp  y,$7b
-              caff 1519  ld   [$19],y
+              caff 151b  ld   [$1b],y
 parrot76:     cb00 0019  ld   $19
               cb01 0009  ld   $09
               cb02 0005  ld   $05
@@ -26153,7 +26143,7 @@ parrot76:     cb00 0019  ld   $19
               cbfc fcfd  bra  $cbfd
               cbfd 1403  ld   $03,y
               cbfe e07b  jmp  y,$7b
-              cbff 1519  ld   [$19],y
+              cbff 151b  ld   [$1b],y
 parrot77:     cc00 0009  ld   $09
               cc01 000a  ld   $0a
               cc02 0009  ld   $09
@@ -26322,7 +26312,7 @@ parrot77:     cc00 0009  ld   $09
               ccfc fcfd  bra  $ccfd
               ccfd 1403  ld   $03,y
               ccfe e07b  jmp  y,$7b
-              ccff 1519  ld   [$19],y
+              ccff 151b  ld   [$1b],y
 parrot78:     cd00 0005  ld   $05
               cd01 0009  ld   $09
               cd02 001a  ld   $1a
@@ -26489,7 +26479,7 @@ parrot78:     cd00 0005  ld   $05
               cdfc fcfd  bra  $cdfd
               cdfd 1403  ld   $03,y
               cdfe e07b  jmp  y,$7b
-              cdff 1519  ld   [$19],y
+              cdff 151b  ld   [$1b],y
 parrot79:     ce00 0000  ld   $00
               ce01 0005  ld   $05
               ce02 001a  ld   $1a
@@ -26656,7 +26646,7 @@ parrot79:     ce00 0000  ld   $00
               cefc fcfd  bra  $cefd
               cefd 1403  ld   $03,y
               cefe e07b  jmp  y,$7b
-              ceff 1519  ld   [$19],y
+              ceff 151b  ld   [$1b],y
 parrot80:     cf00 0019  ld   $19
               cf01 001a  ld   $1a
               cf02 0005  ld   $05
@@ -26821,7 +26811,7 @@ parrot80:     cf00 0019  ld   $19
               cffc fcfd  bra  $cffd
               cffd 1403  ld   $03,y
               cffe e07b  jmp  y,$7b
-              cfff 1519  ld   [$19],y
+              cfff 151b  ld   [$1b],y
 parrot81:     d000 001a  ld   $1a
               d001 0005  ld   $05
               d002 0019  ld   $19
@@ -26987,7 +26977,7 @@ parrot81:     d000 001a  ld   $1a
               d0fc fcfd  bra  $d0fd
               d0fd 1403  ld   $03,y
               d0fe e07b  jmp  y,$7b
-              d0ff 1519  ld   [$19],y
+              d0ff 151b  ld   [$1b],y
 parrot82:     d100 0005  ld   $05
               d101 0005  ld   $05
               d102 0009  ld   $09
@@ -27153,7 +27143,7 @@ parrot82:     d100 0005  ld   $05
               d1fc fcfd  bra  $d1fd
               d1fd 1403  ld   $03,y
               d1fe e07b  jmp  y,$7b
-              d1ff 1519  ld   [$19],y
+              d1ff 151b  ld   [$1b],y
 parrot83:     d200 0009  ld   $09
               d201 0019  ld   $19
               d202 0009  ld   $09
@@ -27316,7 +27306,7 @@ parrot83:     d200 0009  ld   $09
               d2fc fcfd  bra  $d2fd
               d2fd 1403  ld   $03,y
               d2fe e07b  jmp  y,$7b
-              d2ff 1519  ld   [$19],y
+              d2ff 151b  ld   [$1b],y
 parrot84:     d300 0005  ld   $05
               d301 0005  ld   $05
               d302 0005  ld   $05
@@ -27480,7 +27470,7 @@ parrot84:     d300 0005  ld   $05
               d3fc fcfd  bra  $d3fd
               d3fd 1403  ld   $03,y
               d3fe e07b  jmp  y,$7b
-              d3ff 1519  ld   [$19],y
+              d3ff 151b  ld   [$1b],y
 parrot85:     d400 0000  ld   $00
               d401 0004  ld   $04
               d402 0000  ld   $00
@@ -27637,7 +27627,7 @@ parrot85:     d400 0000  ld   $00
               d4fc fcfd  bra  $d4fd
               d4fd 1403  ld   $03,y
               d4fe e07b  jmp  y,$7b
-              d4ff 1519  ld   [$19],y
+              d4ff 151b  ld   [$1b],y
 parrot86:     d500 0005  ld   $05
               d501 0015  ld   $15
               d502 0016  ld   $16
@@ -27801,7 +27791,7 @@ parrot86:     d500 0005  ld   $05
               d5fc fcfd  bra  $d5fd
               d5fd 1403  ld   $03,y
               d5fe e07b  jmp  y,$7b
-              d5ff 1519  ld   [$19],y
+              d5ff 151b  ld   [$1b],y
 parrot87:     d600 001a  ld   $1a
               d601 001a  ld   $1a
               d602 001a  ld   $1a
@@ -27968,7 +27958,7 @@ parrot87:     d600 001a  ld   $1a
               d6fc fcfd  bra  $d6fd
               d6fd 1403  ld   $03,y
               d6fe e07b  jmp  y,$7b
-              d6ff 1519  ld   [$19],y
+              d6ff 151b  ld   [$1b],y
 parrot88:     d700 0005  ld   $05
               d701 0004  ld   $04
               d702 0005  ld   $05
@@ -28131,7 +28121,7 @@ parrot88:     d700 0005  ld   $05
               d7fc fcfd  bra  $d7fd
               d7fd 1403  ld   $03,y
               d7fe e07b  jmp  y,$7b
-              d7ff 1519  ld   [$19],y
+              d7ff 151b  ld   [$1b],y
 parrot89:     d800 0009  ld   $09
               d801 0005  ld   $05
               d802 0005  ld   $05
@@ -28298,7 +28288,7 @@ parrot89:     d800 0009  ld   $09
               d8fc fcfd  bra  $d8fd
               d8fd 1403  ld   $03,y
               d8fe e07b  jmp  y,$7b
-              d8ff 1519  ld   [$19],y
+              d8ff 151b  ld   [$1b],y
 parrot90:     d900 000a  ld   $0a
               d901 0019  ld   $19
               d902 0009  ld   $09
@@ -28467,7 +28457,7 @@ parrot90:     d900 000a  ld   $0a
               d9fc fcfd  bra  $d9fd
               d9fd 1403  ld   $03,y
               d9fe e07b  jmp  y,$7b
-              d9ff 1519  ld   [$19],y
+              d9ff 151b  ld   [$1b],y
 parrot91:     da00 001e  ld   $1e
               da01 000a  ld   $0a
               da02 001a  ld   $1a
@@ -28634,7 +28624,7 @@ parrot91:     da00 001e  ld   $1e
               dafc fcfd  bra  $dafd
               dafd 1403  ld   $03,y
               dafe e07b  jmp  y,$7b
-              daff 1519  ld   [$19],y
+              daff 151b  ld   [$1b],y
 parrot92:     db00 000a  ld   $0a
               db01 001e  ld   $1e
               db02 000a  ld   $0a
@@ -28802,7 +28792,7 @@ parrot92:     db00 000a  ld   $0a
               dbfc fcfd  bra  $dbfd
               dbfd 1403  ld   $03,y
               dbfe e07b  jmp  y,$7b
-              dbff 1519  ld   [$19],y
+              dbff 151b  ld   [$1b],y
 parrot93:     dc00 000a  ld   $0a
               dc01 001a  ld   $1a
               dc02 001e  ld   $1e
@@ -28971,7 +28961,7 @@ parrot93:     dc00 000a  ld   $0a
               dcfc fcfd  bra  $dcfd
               dcfd 1403  ld   $03,y
               dcfe e07b  jmp  y,$7b
-              dcff 1519  ld   [$19],y
+              dcff 151b  ld   [$1b],y
 parrot94:     dd00 0005  ld   $05
               dd01 0009  ld   $09
               dd02 001a  ld   $1a
@@ -29140,7 +29130,7 @@ parrot94:     dd00 0005  ld   $05
               ddfc fcfd  bra  $ddfd
               ddfd 1403  ld   $03,y
               ddfe e07b  jmp  y,$7b
-              ddff 1519  ld   [$19],y
+              ddff 151b  ld   [$1b],y
 parrot95:     de00 0010  ld   $10
               de01 0004  ld   $04
               de02 0000  ld   $00
@@ -29300,7 +29290,7 @@ parrot95:     de00 0010  ld   $10
               defc fcfd  bra  $defd
               defd 1403  ld   $03,y
               defe e07b  jmp  y,$7b
-              deff 1519  ld   [$19],y
+              deff 151b  ld   [$1b],y
 parrot96:     df00 0005  ld   $05
               df01 0000  ld   $00
               df02 0005  ld   $05
@@ -29459,7 +29449,7 @@ parrot96:     df00 0005  ld   $05
               dffc fcfd  bra  $dffd
               dffd 1403  ld   $03,y
               dffe e07b  jmp  y,$7b
-              dfff 1519  ld   [$19],y
+              dfff 151b  ld   [$1b],y
 parrot97:     e000 0004  ld   $04
               e001 0005  ld   $05
               e002 0004  ld   $04
@@ -29624,7 +29614,7 @@ parrot97:     e000 0004  ld   $04
               e0fc fcfd  bra  $e0fd
               e0fd 1403  ld   $03,y
               e0fe e07b  jmp  y,$7b
-              e0ff 1519  ld   [$19],y
+              e0ff 151b  ld   [$1b],y
 parrot98:     e100 0004  ld   $04
               e101 0005  ld   $05
               e102 0004  ld   $04
@@ -29787,7 +29777,7 @@ parrot98:     e100 0004  ld   $04
               e1fc fcfd  bra  $e1fd
               e1fd 1403  ld   $03,y
               e1fe e07b  jmp  y,$7b
-              e1ff 1519  ld   [$19],y
+              e1ff 151b  ld   [$1b],y
 parrot99:     e200 0014  ld   $14
               e201 0005  ld   $05
               e202 0015  ld   $15
@@ -29945,7 +29935,7 @@ parrot99:     e200 0014  ld   $14
               e2fc fcfd  bra  $e2fd
               e2fd 1403  ld   $03,y
               e2fe e07b  jmp  y,$7b
-              e2ff 1519  ld   [$19],y
+              e2ff 151b  ld   [$1b],y
 parrot100:    e300 0015  ld   $15
               e301 0019  ld   $19
               e302 0015  ld   $15
@@ -30100,7 +30090,7 @@ parrot100:    e300 0015  ld   $15
               e3fc fcfd  bra  $e3fd
               e3fd 1403  ld   $03,y
               e3fe e07b  jmp  y,$7b
-              e3ff 1519  ld   [$19],y
+              e3ff 151b  ld   [$1b],y
 parrot101:    e400 0005  ld   $05
               e401 0019  ld   $19
               e402 0015  ld   $15
@@ -30246,7 +30236,7 @@ parrot101:    e400 0005  ld   $05
               e4fc fcfd  bra  $e4fd
               e4fd 1403  ld   $03,y
               e4fe e07b  jmp  y,$7b
-              e4ff 1519  ld   [$19],y
+              e4ff 151b  ld   [$1b],y
 parrot102:    e500 0000  ld   $00
               e501 0005  ld   $05
               e502 0005  ld   $05
@@ -30402,7 +30392,7 @@ parrot102:    e500 0000  ld   $00
               e5fc fcfd  bra  $e5fd
               e5fd 1403  ld   $03,y
               e5fe e07b  jmp  y,$7b
-              e5ff 1519  ld   [$19],y
+              e5ff 151b  ld   [$1b],y
 parrot103:    e600 0000  ld   $00
               e601 0000  ld   $00
               e602 0005  ld   $05
@@ -30554,7 +30544,7 @@ parrot103:    e600 0000  ld   $00
               e6fc fcfd  bra  $e6fd
               e6fd 1403  ld   $03,y
               e6fe e07b  jmp  y,$7b
-              e6ff 1519  ld   [$19],y
+              e6ff 151b  ld   [$1b],y
 parrot104:    e700 0014  ld   $14
               e701 0004  ld   $04
               e702 0004  ld   $04
@@ -30703,7 +30693,7 @@ parrot104:    e700 0014  ld   $14
               e7fc fcfd  bra  $e7fd
               e7fd 1403  ld   $03,y
               e7fe e07b  jmp  y,$7b
-              e7ff 1519  ld   [$19],y
+              e7ff 151b  ld   [$1b],y
 parrot105:    e800 002a  ld   $2a
               e801 0015  ld   $15
               e802 0005  ld   $05
@@ -30860,7 +30850,7 @@ parrot105:    e800 002a  ld   $2a
               e8fc fcfd  bra  $e8fd
               e8fd 1403  ld   $03,y
               e8fe e07b  jmp  y,$7b
-              e8ff 1519  ld   [$19],y
+              e8ff 151b  ld   [$1b],y
 parrot106:    e900 002a  ld   $2a
               e901 002a  ld   $2a
               e902 0004  ld   $04
@@ -31018,7 +31008,7 @@ parrot106:    e900 002a  ld   $2a
               e9fc fcfd  bra  $e9fd
               e9fd 1403  ld   $03,y
               e9fe e07b  jmp  y,$7b
-              e9ff 1519  ld   [$19],y
+              e9ff 151b  ld   [$1b],y
 parrot107:    ea00 0015  ld   $15
               ea01 0004  ld   $04
               ea02 0005  ld   $05
@@ -31171,7 +31161,7 @@ parrot107:    ea00 0015  ld   $15
               eafc fcfd  bra  $eafd
               eafd 1403  ld   $03,y
               eafe e07b  jmp  y,$7b
-              eaff 1519  ld   [$19],y
+              eaff 151b  ld   [$1b],y
 parrot108:    eb00 0000  ld   $00
               eb01 0000  ld   $00
               eb02 0010  ld   $10
@@ -31318,7 +31308,7 @@ parrot108:    eb00 0000  ld   $00
               ebfc fcfd  bra  $ebfd
               ebfd 1403  ld   $03,y
               ebfe e07b  jmp  y,$7b
-              ebff 1519  ld   [$19],y
+              ebff 151b  ld   [$1b],y
 parrot109:    ec00 0004  ld   $04
               ec01 0015  ld   $15
               ec02 002a  ld   $2a
@@ -31462,7 +31452,7 @@ parrot109:    ec00 0004  ld   $04
               ecfc fcfd  bra  $ecfd
               ecfd 1403  ld   $03,y
               ecfe e07b  jmp  y,$7b
-              ecff 1519  ld   [$19],y
+              ecff 151b  ld   [$1b],y
 parrot110:    ed00 002a  ld   $2a
               ed01 003e  ld   $3e
               ed02 003e  ld   $3e
@@ -31615,7 +31605,7 @@ parrot110:    ed00 002a  ld   $2a
               edfc fcfd  bra  $edfd
               edfd 1403  ld   $03,y
               edfe e07b  jmp  y,$7b
-              edff 1519  ld   [$19],y
+              edff 151b  ld   [$1b],y
 parrot111:    ee00 003e  ld   $3e
               ee01 003a  ld   $3a
               ee02 003a  ld   $3a
@@ -31769,7 +31759,7 @@ parrot111:    ee00 003e  ld   $3e
               eefc fcfd  bra  $eefd
               eefd 1403  ld   $03,y
               eefe e07b  jmp  y,$7b
-              eeff 1519  ld   [$19],y
+              eeff 151b  ld   [$1b],y
 parrot112:    ef00 002a  ld   $2a
               ef01 003e  ld   $3e
               ef02 003e  ld   $3e
@@ -31929,7 +31919,7 @@ parrot112:    ef00 002a  ld   $2a
               effc fcfd  bra  $effd
               effd 1403  ld   $03,y
               effe e07b  jmp  y,$7b
-              efff 1519  ld   [$19],y
+              efff 151b  ld   [$1b],y
 parrot113:    f000 003a  ld   $3a
               f001 003f  ld   $3f
               f002 002e  ld   $2e
@@ -32091,7 +32081,7 @@ parrot113:    f000 003a  ld   $3a
               f0fc fcfd  bra  $f0fd
               f0fd 1403  ld   $03,y
               f0fe e07b  jmp  y,$7b
-              f0ff 1519  ld   [$19],y
+              f0ff 151b  ld   [$1b],y
 parrot114:    f100 003f  ld   $3f
               f101 002a  ld   $2a
               f102 0029  ld   $29
@@ -32241,7 +32231,7 @@ parrot114:    f100 003f  ld   $3f
               f1fc fcfd  bra  $f1fd
               f1fd 1403  ld   $03,y
               f1fe e07b  jmp  y,$7b
-              f1ff 1519  ld   [$19],y
+              f1ff 151b  ld   [$1b],y
 parrot115:    f200 0029  ld   $29
               f201 002a  ld   $2a
               f202 0029  ld   $29
@@ -32399,7 +32389,7 @@ parrot115:    f200 0029  ld   $29
               f2fc fcfd  bra  $f2fd
               f2fd 1403  ld   $03,y
               f2fe e07b  jmp  y,$7b
-              f2ff 1519  ld   [$19],y
+              f2ff 151b  ld   [$1b],y
 parrot116:    f300 002a  ld   $2a
               f301 0025  ld   $25
               f302 0019  ld   $19
@@ -32557,7 +32547,7 @@ parrot116:    f300 002a  ld   $2a
               f3fc fcfd  bra  $f3fd
               f3fd 1403  ld   $03,y
               f3fe e07b  jmp  y,$7b
-              f3ff 1519  ld   [$19],y
+              f3ff 151b  ld   [$1b],y
 parrot117:    f400 0025  ld   $25
               f401 0019  ld   $19
               f402 002a  ld   $2a
@@ -32715,7 +32705,7 @@ parrot117:    f400 0025  ld   $25
               f4fc fcfd  bra  $f4fd
               f4fd 1403  ld   $03,y
               f4fe e07b  jmp  y,$7b
-              f4ff 1519  ld   [$19],y
+              f4ff 151b  ld   [$1b],y
 parrot118:    f500 0029  ld   $29
               f501 0026  ld   $26
               f502 0029  ld   $29
@@ -32873,7 +32863,7 @@ parrot118:    f500 0029  ld   $29
               f5fc fcfd  bra  $f5fd
               f5fd 1403  ld   $03,y
               f5fe e07b  jmp  y,$7b
-              f5ff 1519  ld   [$19],y
+              f5ff 151b  ld   [$1b],y
 parrot119:    f600 0025  ld   $25
               f601 0019  ld   $19
               f602 002a  ld   $2a
@@ -33030,13 +33020,13 @@ parrot119:    f600 0025  ld   $25
               f6fc fcfd  bra  $f6fd
               f6fd 1403  ld   $03,y
               f6fe e07b  jmp  y,$7b
-              f6ff 1519  ld   [$19],y
+              f6ff 151b  ld   [$1b],y
 initVcpu:     f700 1000  ld   $00,x
               f701 1403  ld   $03,y
               f702 dcfc  st   $fc,[y,x++] ;0300 DEF
               f703 dc6d  st   $6d,[y,x++]
               f704 dc22  st   $22,[y,x++] ;0302 LDW
-              f705 dc23  st   $23,[y,x++] ;0303 'Char'
+              f705 dc25  st   $25,[y,x++] ;0303 'Char'
               f706 dcf3  st   $f3,[y,x++] ;0304 SUBI
               f707 dc52  st   $52,[y,x++]
               f708 dc36  st   $36,[y,x++] ;0306 COND
@@ -33045,65 +33035,65 @@ initVcpu:     f700 1000  ld   $00,x
               f70b dcf0  st   $f0,[y,x++] ;0309 ADDI
               f70c dc32  st   $32,[y,x++]
               f70d dc2c  st   $2c,[y,x++] ;030b STW
-              f70e dc25  st   $25,[y,x++] ;030c 'i'
+              f70e dc27  st   $27,[y,x++] ;030c 'i'
               f70f dc12  st   $12,[y,x++] ;030d LDWI
               f710 dc00  st   $00,[y,x++]
               f711 dc05  st   $05,[y,x++]
               f712 dc98  st   $98,[y,x++] ;0310 BRA
               f713 dc15  st   $15,[y,x++]
               f714 dc2c  st   $2c,[y,x++] ;0312 STW
-              f715 dc25  st   $25,[y,x++] ;0313 'i'
+              f715 dc27  st   $27,[y,x++] ;0313 'i'
               f716 dc12  st   $12,[y,x++] ;0314 LDWI
               f717 dc00  st   $00,[y,x++]
               f718 dc06  st   $06,[y,x++]
               f719 dc2c  st   $2c,[y,x++] ;0317 STW
-              f71a dc27  st   $27,[y,x++] ;0318 'fontData'
+              f71a dc29  st   $29,[y,x++] ;0318 'fontData'
               f71b dc22  st   $22,[y,x++] ;0319 LDW
-              f71c dc25  st   $25,[y,x++] ;031a 'i'
+              f71c dc27  st   $27,[y,x++] ;031a 'i'
               f71d dcc4  st   $c4,[y,x++] ;031b ADDW
-              f71e dc25  st   $25,[y,x++] ;031c 'i'
+              f71e dc27  st   $27,[y,x++] ;031c 'i'
               f71f dc2c  st   $2c,[y,x++] ;031d STW
-              f720 dc29  st   $29,[y,x++] ;031e 'tmp'
+              f720 dc2b  st   $2b,[y,x++] ;031e 'tmp'
               f721 dcc4  st   $c4,[y,x++] ;031f ADDW
-              f722 dc29  st   $29,[y,x++] ;0320 'tmp'
+              f722 dc2b  st   $2b,[y,x++] ;0320 'tmp'
               f723 dcc4  st   $c4,[y,x++] ;0321 ADDW
-              f724 dc25  st   $25,[y,x++] ;0322 'i'
+              f724 dc27  st   $27,[y,x++] ;0322 'i'
               f725 dcc4  st   $c4,[y,x++] ;0323 ADDW
-              f726 dc27  st   $27,[y,x++] ;0324 'fontData'
+              f726 dc29  st   $29,[y,x++] ;0324 'fontData'
               f727 dc2c  st   $2c,[y,x++] ;0325 STW
-              f728 dc27  st   $27,[y,x++] ;0326 'fontData'
+              f728 dc29  st   $29,[y,x++] ;0326 'fontData'
               f729 dc12  st   $12,[y,x++] ;0327 LDWI
               f72a dc00  st   $00,[y,x++]
               f72b dc08  st   $08,[y,x++]
               f72c dcc4  st   $c4,[y,x++] ;032a ADDW
-              f72d dc2b  st   $2b,[y,x++] ;032b 'Pos'
+              f72d dc2d  st   $2d,[y,x++] ;032b 'Pos'
               f72e dc2c  st   $2c,[y,x++] ;032c STW
-              f72f dc2d  st   $2d,[y,x++] ;032d 'q'
+              f72f dc2f  st   $2f,[y,x++] ;032d 'q'
               f730 dc5c  st   $5c,[y,x++] ;032e LDI
               f731 dc05  st   $05,[y,x++]
               f732 dc2c  st   $2c,[y,x++] ;0330 STW
-              f733 dc25  st   $25,[y,x++] ;0331 'i'
+              f733 dc27  st   $27,[y,x++] ;0331 'i'
               f734 dc36  st   $36,[y,x++] ;0332 COND
               f735 dc4d  st   $4d,[y,x++] ;0333 EQ
               f736 dc3b  st   $3b,[y,x++]
               f737 dc22  st   $22,[y,x++] ;0335 LDW
-              f738 dc27  st   $27,[y,x++] ;0336 'fontData'
+              f738 dc29  st   $29,[y,x++] ;0336 'fontData'
               f739 dc78  st   $78,[y,x++] ;0337 LOOKUP
               f73a dc00  st   $00,[y,x++]
               f73b dcf6  st   $f6,[y,x++] ;0339 INC
-              f73c dc27  st   $27,[y,x++] ;033a 'fontData'
+              f73c dc29  st   $29,[y,x++] ;033a 'fontData'
               f73d dc98  st   $98,[y,x++] ;033b BRA
               f73e dc3d  st   $3d,[y,x++]
               f73f dc5c  st   $5c,[y,x++] ;033d LDI
               f740 dc00  st   $00,[y,x++]
               f741 dc2c  st   $2c,[y,x++] ;033f STW
-              f742 dc2f  st   $2f,[y,x++] ;0340 'bits'
+              f742 dc31  st   $31,[y,x++] ;0340 'bits'
               f743 dc22  st   $22,[y,x++] ;0341 LDW
-              f744 dc2b  st   $2b,[y,x++] ;0342 'Pos'
+              f744 dc2d  st   $2d,[y,x++] ;0342 'Pos'
               f745 dc2c  st   $2c,[y,x++] ;0343 STW
-              f746 dc31  st   $31,[y,x++] ;0344 'p'
+              f746 dc33  st   $33,[y,x++] ;0344 'p'
               f747 dc22  st   $22,[y,x++] ;0345 LDW
-              f748 dc2f  st   $2f,[y,x++] ;0346 'bits'
+              f748 dc31  st   $31,[y,x++] ;0346 'bits'
               f749 dc8a  st   $8a,[y,x++] ;0347 ANDI
               f74a dc80  st   $80,[y,x++]
               f74b dc36  st   $36,[y,x++] ;0349 COND
@@ -33114,78 +33104,78 @@ initVcpu:     f700 1000  ld   $00,x
               f750 dc98  st   $98,[y,x++] ;034e BRA
               f751 dc50  st   $50,[y,x++]
               f752 dc22  st   $22,[y,x++] ;0350 LDW
-              f753 dc33  st   $33,[y,x++] ;0351 'Color'
+              f753 dc35  st   $35,[y,x++] ;0351 'Color'
               f754 dc9b  st   $9b,[y,x++] ;0352 POKE
-              f755 dc31  st   $31,[y,x++] ;0353 'p'
+              f755 dc33  st   $33,[y,x++] ;0353 'p'
               f756 dc22  st   $22,[y,x++] ;0354 LDW
-              f757 dc2f  st   $2f,[y,x++] ;0355 'bits'
+              f757 dc31  st   $31,[y,x++] ;0355 'bits'
               f758 dcc4  st   $c4,[y,x++] ;0356 ADDW
-              f759 dc2f  st   $2f,[y,x++] ;0357 'bits'
+              f759 dc31  st   $31,[y,x++] ;0357 'bits'
               f75a dc2c  st   $2c,[y,x++] ;0358 STW
-              f75b dc2f  st   $2f,[y,x++] ;0359 'bits'
+              f75b dc31  st   $31,[y,x++] ;0359 'bits'
               f75c dcf6  st   $f6,[y,x++] ;035a INC
-              f75d dc32  st   $32,[y,x++] ;035b 'p'+1
+              f75d dc34  st   $34,[y,x++] ;035b 'p'+1
               f75e dc22  st   $22,[y,x++] ;035c LDW
-              f75f dc31  st   $31,[y,x++] ;035d 'p'
+              f75f dc33  st   $33,[y,x++] ;035d 'p'
               f760 dcb0  st   $b0,[y,x++] ;035e SUBW
-              f761 dc2d  st   $2d,[y,x++] ;035f 'q'
+              f761 dc2f  st   $2f,[y,x++] ;035f 'q'
               f762 dc36  st   $36,[y,x++] ;0360 COND
               f763 dc53  st   $53,[y,x++] ;0361 LT
               f764 dc43  st   $43,[y,x++]
               f765 dcf6  st   $f6,[y,x++] ;0363 INC
-              f766 dc2b  st   $2b,[y,x++] ;0364 'Pos'
+              f766 dc2d  st   $2d,[y,x++] ;0364 'Pos'
               f767 dc22  st   $22,[y,x++] ;0365 LDW
-              f768 dc25  st   $25,[y,x++] ;0366 'i'
+              f768 dc27  st   $27,[y,x++] ;0366 'i'
               f769 dcf3  st   $f3,[y,x++] ;0367 SUBI
               f76a dc01  st   $01,[y,x++]
               f76b dc2c  st   $2c,[y,x++] ;0369 STW
-              f76c dc25  st   $25,[y,x++] ;036a 'i'
+              f76c dc27  st   $27,[y,x++] ;036a 'i'
               f76d dc36  st   $36,[y,x++] ;036b COND
               f76e dc56  st   $56,[y,x++] ;036c GE
               f76f dc30  st   $30,[y,x++]
               f770 dcff  st   $ff,[y,x++] ;036e RET
               f771 dc2c  st   $2c,[y,x++] ;036f STW
-              f772 dc35  st   $35,[y,x++] ;0370 'DrawChar'
+              f772 dc37  st   $37,[y,x++] ;0370 'DrawChar'
               f773 dcfc  st   $fc,[y,x++] ;0371 DEF
               f774 dc95  st   $95,[y,x++]
               f775 dc80  st   $80,[y,x++] ;0373 PUSH
               f776 dc22  st   $22,[y,x++] ;0374 LDW
-              f777 dc37  st   $37,[y,x++] ;0375 'Text'
+              f777 dc39  st   $39,[y,x++] ;0375 'Text'
               f778 dcd8  st   $d8,[y,x++] ;0376 PEEK
               f779 dc2c  st   $2c,[y,x++] ;0377 STW
-              f77a dc23  st   $23,[y,x++] ;0378 'Char'
+              f77a dc25  st   $25,[y,x++] ;0378 'Char'
               f77b dc36  st   $36,[y,x++] ;0379 COND
               f77c dc4d  st   $4d,[y,x++] ;037a EQ
               f77d dc93  st   $93,[y,x++]
               f77e dcf6  st   $f6,[y,x++] ;037c INC
-              f77f dc37  st   $37,[y,x++] ;037d 'Text'
+              f77f dc39  st   $39,[y,x++] ;037d 'Text'
               f780 dc22  st   $22,[y,x++] ;037e LDW
-              f781 dc23  st   $23,[y,x++] ;037f 'Char'
+              f781 dc25  st   $25,[y,x++] ;037f 'Char'
               f782 dc94  st   $94,[y,x++] ;0380 XORI
               f783 dc0a  st   $0a,[y,x++]
               f784 dc36  st   $36,[y,x++] ;0382 COND
               f785 dc75  st   $75,[y,x++] ;0383 NE
               f786 dc8e  st   $8e,[y,x++]
               f787 dc61  st   $61,[y,x++] ;0385 ST
-              f788 dc2b  st   $2b,[y,x++] ;0386 'Pos'
+              f788 dc2d  st   $2d,[y,x++] ;0386 'Pos'
               f789 dc12  st   $12,[y,x++] ;0387 LDWI
               f78a dc00  st   $00,[y,x++]
               f78b dc08  st   $08,[y,x++]
               f78c dcc4  st   $c4,[y,x++] ;038a ADDW
-              f78d dc2b  st   $2b,[y,x++] ;038b 'Pos'
+              f78d dc2d  st   $2d,[y,x++] ;038b 'Pos'
               f78e dc2c  st   $2c,[y,x++] ;038c STW
-              f78f dc2b  st   $2b,[y,x++] ;038d 'Pos'
+              f78f dc2d  st   $2d,[y,x++] ;038d 'Pos'
               f790 dc98  st   $98,[y,x++] ;038e BRA
               f791 dc91  st   $91,[y,x++]
               f792 dc22  st   $22,[y,x++] ;0390 LDW
-              f793 dc35  st   $35,[y,x++] ;0391 'DrawChar'
+              f793 dc37  st   $37,[y,x++] ;0391 'DrawChar'
               f794 dce4  st   $e4,[y,x++] ;0392 CALL
               f795 dc98  st   $98,[y,x++] ;0393 BRA
               f796 dc72  st   $72,[y,x++]
               f797 dc66  st   $66,[y,x++] ;0395 POP
               f798 dce4  st   $e4,[y,x++] ;0396 CALL
               f799 dc2c  st   $2c,[y,x++] ;0397 STW
-              f79a dc39  st   $39,[y,x++] ;0398 'DrawText'
+              f79a dc3b  st   $3b,[y,x++] ;0398 'DrawText'
               f79b dcfc  st   $fc,[y,x++] ;0399 DEF
               f79c dcd2  st   $d2,[y,x++]
               f79d dc20  st   $20,[y,x++]
@@ -33246,23 +33236,23 @@ initVcpu:     f700 1000  ld   $00,x
               f7d4 dc0a  st   $0a,[y,x++]
               f7d5 dc00  st   $00,[y,x++]
               f7d6 dc2c  st   $2c,[y,x++] ;03d4 STW
-              f7d7 dc3b  st   $3b,[y,x++] ;03d5 'Welcome'
+              f7d7 dc3d  st   $3d,[y,x++] ;03d5 'Welcome'
               f7d8 dcff  st   $ff,[y,x++] ;03d6 RET
               f7d9 dcf6  st   $f6,[y,x++] ;03d7 INC
-              f7da dc1d  st   $1d,[y,x++]
+              f7da dc1f  st   $1f,[y,x++]
               f7db dcff  st   $ff,[y,x++] ;03d9 RET
               f7dc 1000  ld   $00,x
               f7dd 1404  ld   $04,y
               f7de dcfc  st   $fc,[y,x++] ;0400 DEF
               f7df dc26  st   $26,[y,x++]
               f7e0 dc22  st   $22,[y,x++] ;0402 LDW
-              f7e1 dc2b  st   $2b,[y,x++] ;0403 'Pos'
+              f7e1 dc2d  st   $2d,[y,x++] ;0403 'Pos'
               f7e2 dc2c  st   $2c,[y,x++] ;0404 STW
-              f7e3 dc31  st   $31,[y,x++] ;0405 'p'
+              f7e3 dc33  st   $33,[y,x++] ;0405 'p'
               f7e4 dc22  st   $22,[y,x++] ;0406 LDW
-              f7e5 dc31  st   $31,[y,x++] ;0407 'p'
+              f7e5 dc33  st   $33,[y,x++] ;0407 'p'
               f7e6 dc2c  st   $2c,[y,x++] ;0408 STW
-              f7e7 dc21  st   $21,[y,x++]
+              f7e7 dc23  st   $23,[y,x++]
               f7e8 dc12  st   $12,[y,x++] ;040a LDWI
               f7e9 dc31  st   $31,[y,x++]
               f7ea dc04  st   $04,[y,x++]
@@ -33272,9 +33262,9 @@ initVcpu:     f700 1000  ld   $00,x
               f7ee dc00  st   $00,[y,x++]
               f7ef dc08  st   $08,[y,x++]
               f7f0 dcc4  st   $c4,[y,x++] ;0412 ADDW
-              f7f1 dc31  st   $31,[y,x++] ;0413 'p'
+              f7f1 dc33  st   $33,[y,x++] ;0413 'p'
               f7f2 dc2c  st   $2c,[y,x++] ;0414 STW
-              f7f3 dc31  st   $31,[y,x++] ;0415 'p'
+              f7f3 dc33  st   $33,[y,x++] ;0415 'p'
               f7f4 dc36  st   $36,[y,x++] ;0416 COND
               f7f5 dc50  st   $50,[y,x++] ;0417 GT
               f7f6 dc04  st   $04,[y,x++]
@@ -33282,9 +33272,9 @@ initVcpu:     f700 1000  ld   $00,x
               f7f8 dc01  st   $01,[y,x++]
               f7f9 dc98  st   $98,[y,x++]
               f7fa dcc4  st   $c4,[y,x++] ;041c ADDW
-              f7fb dc31  st   $31,[y,x++] ;041d 'p'
+              f7fb dc33  st   $33,[y,x++] ;041d 'p'
               f7fc dc2c  st   $2c,[y,x++] ;041e STW
-              f7fd dc31  st   $31,[y,x++] ;041f 'p'
+              f7fd dc33  st   $33,[y,x++] ;041f 'p'
               f7fe dc8a  st   $8a,[y,x++] ;0420 ANDI
               f7ff dcff  st   $ff,[y,x++]
               f800 dc94  st   $94,[y,x++] ;0422 XORI
@@ -33294,14 +33284,14 @@ initVcpu:     f700 1000  ld   $00,x
               f804 dc04  st   $04,[y,x++]
               f805 dcff  st   $ff,[y,x++] ;0427 RET
               f806 dc2c  st   $2c,[y,x++] ;0428 STW
-              f807 dc3d  st   $3d,[y,x++] ;0429 'Clear'
+              f807 dc3f  st   $3f,[y,x++] ;0429 'Clear'
               f808 dcfc  st   $fc,[y,x++] ;042a DEF
               f809 dcd7  st   $d7,[y,x++]
               f80a dc22  st   $22,[y,x++] ;042c LDW
-              f80b dc3f  st   $3f,[y,x++] ;042d 'ShiftControl'
+              f80b dc41  st   $41,[y,x++] ;042d 'ShiftControl'
               f80c dcd8  st   $d8,[y,x++] ;042e PEEK
               f80d dc2c  st   $2c,[y,x++] ;042f STW
-              f80e dc41  st   $41,[y,x++] ;0430 'X'
+              f80e dc43  st   $43,[y,x++] ;0430 'X'
               f80f dc94  st   $94,[y,x++] ;0431 XORI
               f810 dc78  st   $78,[y,x++]
               f811 dc36  st   $36,[y,x++] ;0433 COND
@@ -33310,83 +33300,83 @@ initVcpu:     f700 1000  ld   $00,x
               f814 dc5c  st   $5c,[y,x++] ;0436 LDI
               f815 dc0a  st   $0a,[y,x++]
               f816 dc2c  st   $2c,[y,x++] ;0438 STW
-              f817 dc43  st   $43,[y,x++] ;0439 'BallA'
+              f817 dc45  st   $45,[y,x++] ;0439 'BallA'
               f818 dc22  st   $22,[y,x++] ;043a LDW
-              f819 dc45  st   $45,[y,x++] ;043b 'Height'
+              f819 dc47  st   $47,[y,x++] ;043b 'Height'
               f81a dcf3  st   $f3,[y,x++] ;043c SUBI
               f81b dc58  st   $58,[y,x++]
               f81c dc36  st   $36,[y,x++] ;043e COND
               f81d dc59  st   $59,[y,x++] ;043f LE
               f81e dc4c  st   $4c,[y,x++]
               f81f dc1b  st   $1b,[y,x++] ;0441 LD
-              f820 dc10  st   $10,[y,x++]
+              f820 dc12  st   $12,[y,x++]
               f821 dc8a  st   $8a,[y,x++] ;0443 ANDI
               f822 dc10  st   $10,[y,x++]
               f823 dc36  st   $36,[y,x++] ;0445 COND
               f824 dc4d  st   $4d,[y,x++] ;0446 EQ
               f825 dc4c  st   $4c,[y,x++]
               f826 dc22  st   $22,[y,x++] ;0448 LDW
-              f827 dc45  st   $45,[y,x++] ;0449 'Height'
+              f827 dc47  st   $47,[y,x++] ;0449 'Height'
               f828 dcf3  st   $f3,[y,x++] ;044a SUBI
               f829 dc01  st   $01,[y,x++]
               f82a dc2c  st   $2c,[y,x++] ;044c STW
-              f82b dc45  st   $45,[y,x++] ;044d 'Height'
+              f82b dc47  st   $47,[y,x++] ;044d 'Height'
               f82c dc22  st   $22,[y,x++] ;044e LDW
-              f82d dc45  st   $45,[y,x++] ;044f 'Height'
+              f82d dc47  st   $47,[y,x++] ;044f 'Height'
               f82e dcf3  st   $f3,[y,x++] ;0450 SUBI
               f82f dc76  st   $76,[y,x++]
               f830 dc36  st   $36,[y,x++] ;0452 COND
               f831 dc56  st   $56,[y,x++] ;0453 GE
               f832 dc5c  st   $5c,[y,x++]
               f833 dc1b  st   $1b,[y,x++] ;0455 LD
-              f834 dc10  st   $10,[y,x++]
+              f834 dc12  st   $12,[y,x++]
               f835 dc8a  st   $8a,[y,x++] ;0457 ANDI
               f836 dc80  st   $80,[y,x++]
               f837 dc36  st   $36,[y,x++] ;0459 COND
               f838 dc4d  st   $4d,[y,x++] ;045a EQ
               f839 dc5c  st   $5c,[y,x++]
               f83a dcf6  st   $f6,[y,x++] ;045c INC
-              f83b dc45  st   $45,[y,x++] ;045d 'Height'
+              f83b dc47  st   $47,[y,x++] ;045d 'Height'
               f83c dc22  st   $22,[y,x++] ;045e LDW
-              f83d dc45  st   $45,[y,x++] ;045f 'Height'
+              f83d dc47  st   $47,[y,x++] ;045f 'Height'
               f83e dcf0  st   $f0,[y,x++] ;0460 ADDI
               f83f dc08  st   $08,[y,x++]
               f840 dc61  st   $61,[y,x++] ;0462 ST
-              f841 dc48  st   $48,[y,x++] ;0463 'J'+1
+              f841 dc4a  st   $4a,[y,x++] ;0463 'J'+1
               f842 dc22  st   $22,[y,x++] ;0464 LDW
-              f843 dc41  st   $41,[y,x++] ;0465 'X'
+              f843 dc43  st   $43,[y,x++] ;0465 'X'
               f844 dcf0  st   $f0,[y,x++] ;0466 ADDI
               f845 dca0  st   $a0,[y,x++]
               f846 dc8a  st   $8a,[y,x++] ;0468 ANDI
               f847 dcff  st   $ff,[y,x++]
               f848 dc2c  st   $2c,[y,x++] ;046a STW
-              f849 dc31  st   $31,[y,x++] ;046b 'p'
+              f849 dc33  st   $33,[y,x++] ;046b 'p'
               f84a dc12  st   $12,[y,x++] ;046c LDWI
               f84b dc00  st   $00,[y,x++]
               f84c dc10  st   $10,[y,x++]
               f84d dcc4  st   $c4,[y,x++] ;046f ADDW
-              f84e dc31  st   $31,[y,x++] ;0470 'p'
+              f84e dc33  st   $33,[y,x++] ;0470 'p'
               f84f dc2c  st   $2c,[y,x++] ;0471 STW
-              f850 dc49  st   $49,[y,x++] ;0472 'V'
+              f850 dc4b  st   $4b,[y,x++] ;0472 'V'
               f851 dc5c  st   $5c,[y,x++] ;0473 LDI
               f852 dc01  st   $01,[y,x++]
               f853 dc9b  st   $9b,[y,x++] ;0475 POKE
-              f854 dc49  st   $49,[y,x++] ;0476 'V'
+              f854 dc4b  st   $4b,[y,x++] ;0476 'V'
               f855 dcf6  st   $f6,[y,x++] ;0477 INC
-              f856 dc4a  st   $4a,[y,x++] ;0478 'V'+1
+              f856 dc4c  st   $4c,[y,x++] ;0478 'V'+1
               f857 dc22  st   $22,[y,x++] ;0479 LDW
-              f858 dc49  st   $49,[y,x++] ;047a 'V'
+              f858 dc4b  st   $4b,[y,x++] ;047a 'V'
               f859 dc36  st   $36,[y,x++] ;047b COND
               f85a dc50  st   $50,[y,x++] ;047c GT
               f85b dc71  st   $71,[y,x++]
               f85c dc1b  st   $1b,[y,x++] ;047e LD
-              f85d dc10  st   $10,[y,x++]
+              f85d dc12  st   $12,[y,x++]
               f85e dc8a  st   $8a,[y,x++] ;0480 ANDI
               f85f dc7f  st   $7f,[y,x++]
               f860 dc2c  st   $2c,[y,x++] ;0482 STW
-              f861 dc4b  st   $4b,[y,x++] ;0483 'A'
+              f861 dc4d  st   $4d,[y,x++] ;0483 'A'
               f862 dc22  st   $22,[y,x++] ;0484 LDW
-              f863 dc4b  st   $4b,[y,x++] ;0485 'A'
+              f863 dc4d  st   $4d,[y,x++] ;0485 'A'
               f864 dcf3  st   $f3,[y,x++] ;0486 SUBI
               f865 dc6f  st   $6f,[y,x++]
               f866 dc36  st   $36,[y,x++] ;0488 COND
@@ -33395,47 +33385,47 @@ initVcpu:     f700 1000  ld   $00,x
               f869 dc5c  st   $5c,[y,x++] ;048b LDI
               f86a dc77  st   $77,[y,x++]
               f86b dc2c  st   $2c,[y,x++] ;048d STW
-              f86c dc4b  st   $4b,[y,x++] ;048e 'A'
+              f86c dc4d  st   $4d,[y,x++] ;048e 'A'
               f86d dc22  st   $22,[y,x++] ;048f LDW
-              f86e dc4b  st   $4b,[y,x++] ;0490 'A'
+              f86e dc4d  st   $4d,[y,x++] ;0490 'A'
               f86f dcf0  st   $f0,[y,x++] ;0491 ADDI
               f870 dc10  st   $10,[y,x++]
               f871 dc61  st   $61,[y,x++] ;0493 ST
-              f872 dc4c  st   $4c,[y,x++] ;0494 'A'+1
+              f872 dc4e  st   $4e,[y,x++] ;0494 'A'+1
               f873 dc22  st   $22,[y,x++] ;0495 LDW
-              f874 dc31  st   $31,[y,x++] ;0496 'p'
+              f874 dc33  st   $33,[y,x++] ;0496 'p'
               f875 dc61  st   $61,[y,x++] ;0497 ST
-              f876 dc4b  st   $4b,[y,x++] ;0498 'A'
+              f876 dc4d  st   $4d,[y,x++] ;0498 'A'
               f877 dc5c  st   $5c,[y,x++] ;0499 LDI
               f878 dc02  st   $02,[y,x++]
               f879 dc9b  st   $9b,[y,x++] ;049b POKE
-              f87a dc4b  st   $4b,[y,x++] ;049c 'A'
+              f87a dc4d  st   $4d,[y,x++] ;049c 'A'
               f87b dc22  st   $22,[y,x++] ;049d LDW
-              f87c dc47  st   $47,[y,x++] ;049e 'J'
+              f87c dc49  st   $49,[y,x++] ;049e 'J'
               f87d dcc4  st   $c4,[y,x++] ;049f ADDW
-              f87e dc31  st   $31,[y,x++] ;04a0 'p'
+              f87e dc33  st   $33,[y,x++] ;04a0 'p'
               f87f dc2c  st   $2c,[y,x++] ;04a1 STW
-              f880 dc49  st   $49,[y,x++] ;04a2 'V'
+              f880 dc4b  st   $4b,[y,x++] ;04a2 'V'
               f881 dc5c  st   $5c,[y,x++] ;04a3 LDI
               f882 dc3f  st   $3f,[y,x++]
               f883 dc9b  st   $9b,[y,x++] ;04a5 POKE
-              f884 dc49  st   $49,[y,x++] ;04a6 'V'
+              f884 dc4b  st   $4b,[y,x++] ;04a6 'V'
               f885 dcf6  st   $f6,[y,x++] ;04a7 INC
-              f886 dc4a  st   $4a,[y,x++] ;04a8 'V'+1
+              f886 dc4c  st   $4c,[y,x++] ;04a8 'V'+1
               f887 dc22  st   $22,[y,x++] ;04a9 LDW
-              f888 dc41  st   $41,[y,x++] ;04aa 'X'
+              f888 dc43  st   $43,[y,x++] ;04aa 'X'
               f889 dc8a  st   $8a,[y,x++] ;04ab ANDI
               f88a dc08  st   $08,[y,x++]
               f88b dcc4  st   $c4,[y,x++] ;04ad ADDW
-              f88c dc45  st   $45,[y,x++] ;04ae 'Height'
+              f88c dc47  st   $47,[y,x++] ;04ae 'Height'
               f88d dc2c  st   $2c,[y,x++] ;04af STW
-              f88e dc4d  st   $4d,[y,x++] ;04b0 'C'
+              f88e dc4f  st   $4f,[y,x++] ;04b0 'C'
               f88f dc22  st   $22,[y,x++] ;04b1 LDW
-              f890 dc4d  st   $4d,[y,x++] ;04b2 'C'
+              f890 dc4f  st   $4f,[y,x++] ;04b2 'C'
               f891 dcf0  st   $f0,[y,x++] ;04b3 ADDI
               f892 dc01  st   $01,[y,x++]
               f893 dc2c  st   $2c,[y,x++] ;04b5 STW
-              f894 dc4d  st   $4d,[y,x++] ;04b6 'C'
+              f894 dc4f  st   $4f,[y,x++] ;04b6 'C'
               f895 dc8a  st   $8a,[y,x++] ;04b7 ANDI
               f896 dc08  st   $08,[y,x++]
               f897 dc36  st   $36,[y,x++] ;04b9 COND
@@ -33448,11 +33438,11 @@ initVcpu:     f700 1000  ld   $00,x
               f89e dc5c  st   $5c,[y,x++] ;04c0 LDI
               f89f dc20  st   $20,[y,x++]
               f8a0 dc9b  st   $9b,[y,x++] ;04c2 POKE
-              f8a1 dc49  st   $49,[y,x++] ;04c3 'V'
+              f8a1 dc4b  st   $4b,[y,x++] ;04c3 'V'
               f8a2 dcf6  st   $f6,[y,x++] ;04c4 INC
-              f8a3 dc4a  st   $4a,[y,x++] ;04c5 'V'+1
+              f8a3 dc4c  st   $4c,[y,x++] ;04c5 'V'+1
               f8a4 dc22  st   $22,[y,x++] ;04c6 LDW
-              f8a5 dc49  st   $49,[y,x++] ;04c7 'V'
+              f8a5 dc4b  st   $4b,[y,x++] ;04c7 'V'
               f8a6 dc36  st   $36,[y,x++] ;04c8 COND
               f8a7 dc50  st   $50,[y,x++] ;04c9 GT
               f8a8 dcaf  st   $af,[y,x++]
@@ -33462,59 +33452,59 @@ initVcpu:     f700 1000  ld   $00,x
               f8ac dc75  st   $75,[y,x++] ;04ce NE
               f8ad dcc9  st   $c9,[y,x++]
               f8ae dc22  st   $22,[y,x++] ;04d0 LDW
-              f8af dc41  st   $41,[y,x++] ;04d1 'X'
+              f8af dc43  st   $43,[y,x++] ;04d1 'X'
               f8b0 dcf0  st   $f0,[y,x++] ;04d2 ADDI
               f8b1 dc01  st   $01,[y,x++]
               f8b2 dc9b  st   $9b,[y,x++] ;04d4 POKE
-              f8b3 dc3f  st   $3f,[y,x++] ;04d5 'ShiftControl'
+              f8b3 dc41  st   $41,[y,x++] ;04d5 'ShiftControl'
               f8b4 dc22  st   $22,[y,x++] ;04d6 LDW
-              f8b5 dc4f  st   $4f,[y,x++] ;04d7 'RunPart2'
+              f8b5 dc51  st   $51,[y,x++] ;04d7 'RunPart2'
               f8b6 dce4  st   $e4,[y,x++] ;04d8 CALL
               f8b7 dc2c  st   $2c,[y,x++] ;04d9 STW
-              f8b8 dc51  st   $51,[y,x++] ;04da 'RunPart1'
+              f8b8 dc53  st   $53,[y,x++] ;04da 'RunPart1'
               f8b9 dcf6  st   $f6,[y,x++] ;04db INC
-              f8ba dc1d  st   $1d,[y,x++]
+              f8ba dc1f  st   $1f,[y,x++]
               f8bb dcff  st   $ff,[y,x++] ;04dd RET
               f8bc dcf6  st   $f6,[y,x++] ;04de INC
-              f8bd dc1d  st   $1d,[y,x++]
+              f8bd dc1f  st   $1f,[y,x++]
               f8be dcff  st   $ff,[y,x++] ;04e0 RET
               f8bf 1000  ld   $00,x
               f8c0 1405  ld   $05,y
               f8c1 dcfc  st   $fc,[y,x++] ;0500 DEF
               f8c2 dc4c  st   $4c,[y,x++]
               f8c3 dc22  st   $22,[y,x++] ;0502 LDW
-              f8c4 dc53  st   $53,[y,x++] ;0503 'OldPixel'
+              f8c4 dc55  st   $55,[y,x++] ;0503 'OldPixel'
               f8c5 dc9b  st   $9b,[y,x++] ;0504 POKE
-              f8c6 dc55  st   $55,[y,x++] ;0505 'Ball'
+              f8c6 dc57  st   $57,[y,x++] ;0505 'Ball'
               f8c7 dc22  st   $22,[y,x++] ;0506 LDW
-              f8c8 dc43  st   $43,[y,x++] ;0507 'BallA'
+              f8c8 dc45  st   $45,[y,x++] ;0507 'BallA'
               f8c9 dcc4  st   $c4,[y,x++] ;0508 ADDW
-              f8ca dc57  st   $57,[y,x++] ;0509 'BallV'
+              f8ca dc59  st   $59,[y,x++] ;0509 'BallV'
               f8cb dc2c  st   $2c,[y,x++] ;050a STW
-              f8cc dc57  st   $57,[y,x++] ;050b 'BallV'
+              f8cc dc59  st   $59,[y,x++] ;050b 'BallV'
               f8cd dc22  st   $22,[y,x++] ;050c LDW
-              f8ce dc59  st   $59,[y,x++] ;050d 'BallY'
+              f8ce dc5b  st   $5b,[y,x++] ;050d 'BallY'
               f8cf dcc4  st   $c4,[y,x++] ;050e ADDW
-              f8d0 dc57  st   $57,[y,x++] ;050f 'BallV'
+              f8d0 dc59  st   $59,[y,x++] ;050f 'BallV'
               f8d1 dc2c  st   $2c,[y,x++] ;0510 STW
-              f8d2 dc59  st   $59,[y,x++] ;0511 'BallY'
+              f8d2 dc5b  st   $5b,[y,x++] ;0511 'BallY'
               f8d3 dc22  st   $22,[y,x++] ;0512 LDW
-              f8d4 dc41  st   $41,[y,x++] ;0513 'X'
+              f8d4 dc43  st   $43,[y,x++] ;0513 'X'
               f8d5 dcf0  st   $f0,[y,x++] ;0514 ADDI
               f8d6 dc32  st   $32,[y,x++]
               f8d7 dc2c  st   $2c,[y,x++] ;0516 STW
-              f8d8 dc55  st   $55,[y,x++] ;0517 'Ball'
+              f8d8 dc57  st   $57,[y,x++] ;0517 'Ball'
               f8d9 dc1b  st   $1b,[y,x++] ;0518 LD
-              f8da dc5a  st   $5a,[y,x++] ;0519 'BallY'+1
+              f8da dc5c  st   $5c,[y,x++] ;0519 'BallY'+1
               f8db dc61  st   $61,[y,x++] ;051a ST
-              f8dc dc56  st   $56,[y,x++] ;051b 'Ball'+1
+              f8dc dc58  st   $58,[y,x++] ;051b 'Ball'+1
               f8dd dc22  st   $22,[y,x++] ;051c LDW
-              f8de dc55  st   $55,[y,x++] ;051d 'Ball'
+              f8de dc57  st   $57,[y,x++] ;051d 'Ball'
               f8df dcd8  st   $d8,[y,x++] ;051e PEEK
               f8e0 dc2c  st   $2c,[y,x++] ;051f STW
-              f8e1 dc53  st   $53,[y,x++] ;0520 'OldPixel'
+              f8e1 dc55  st   $55,[y,x++] ;0520 'OldPixel'
               f8e2 dc22  st   $22,[y,x++] ;0521 LDW
-              f8e3 dc53  st   $53,[y,x++] ;0522 'OldPixel'
+              f8e3 dc55  st   $55,[y,x++] ;0522 'OldPixel'
               f8e4 dcf3  st   $f3,[y,x++] ;0523 SUBI
               f8e5 dc02  st   $02,[y,x++]
               f8e6 dc36  st   $36,[y,x++] ;0525 COND
@@ -33523,73 +33513,73 @@ initVcpu:     f700 1000  ld   $00,x
               f8e9 dc5c  st   $5c,[y,x++] ;0528 LDI
               f8ea dc00  st   $00,[y,x++]
               f8eb dcb0  st   $b0,[y,x++] ;052a SUBW
-              f8ec dc57  st   $57,[y,x++] ;052b 'BallV'
+              f8ec dc59  st   $59,[y,x++] ;052b 'BallV'
               f8ed dc2c  st   $2c,[y,x++] ;052c STW
-              f8ee dc57  st   $57,[y,x++] ;052d 'BallV'
+              f8ee dc59  st   $59,[y,x++] ;052d 'BallV'
               f8ef dc22  st   $22,[y,x++] ;052e LDW
-              f8f0 dc59  st   $59,[y,x++] ;052f 'BallY'
+              f8f0 dc5b  st   $5b,[y,x++] ;052f 'BallY'
               f8f1 dcc4  st   $c4,[y,x++] ;0530 ADDW
-              f8f2 dc57  st   $57,[y,x++] ;0531 'BallV'
+              f8f2 dc59  st   $59,[y,x++] ;0531 'BallV'
               f8f3 dc2c  st   $2c,[y,x++] ;0532 STW
-              f8f4 dc59  st   $59,[y,x++] ;0533 'BallY'
+              f8f4 dc5b  st   $5b,[y,x++] ;0533 'BallY'
               f8f5 dc5c  st   $5c,[y,x++] ;0534 LDI
               f8f6 dc0a  st   $0a,[y,x++]
               f8f7 dc61  st   $61,[y,x++] ;0536 ST
-              f8f8 dc12  st   $12,[y,x++]
+              f8f8 dc14  st   $14,[y,x++]
               f8f9 dc22  st   $22,[y,x++] ;0538 LDW
-              f8fa dc41  st   $41,[y,x++] ;0539 'X'
+              f8fa dc43  st   $43,[y,x++] ;0539 'X'
               f8fb dcf0  st   $f0,[y,x++] ;053a ADDI
               f8fc dc32  st   $32,[y,x++]
               f8fd dc2c  st   $2c,[y,x++] ;053c STW
-              f8fe dc55  st   $55,[y,x++] ;053d 'Ball'
+              f8fe dc57  st   $57,[y,x++] ;053d 'Ball'
               f8ff dc1b  st   $1b,[y,x++] ;053e LD
-              f900 dc5a  st   $5a,[y,x++] ;053f 'BallY'+1
+              f900 dc5c  st   $5c,[y,x++] ;053f 'BallY'+1
               f901 dc61  st   $61,[y,x++] ;0540 ST
-              f902 dc56  st   $56,[y,x++] ;0541 'Ball'+1
+              f902 dc58  st   $58,[y,x++] ;0541 'Ball'+1
               f903 dc22  st   $22,[y,x++] ;0542 LDW
-              f904 dc55  st   $55,[y,x++] ;0543 'Ball'
+              f904 dc57  st   $57,[y,x++] ;0543 'Ball'
               f905 dcd8  st   $d8,[y,x++] ;0544 PEEK
               f906 dc2c  st   $2c,[y,x++] ;0545 STW
-              f907 dc53  st   $53,[y,x++] ;0546 'OldPixel'
+              f907 dc55  st   $55,[y,x++] ;0546 'OldPixel'
               f908 dc5c  st   $5c,[y,x++] ;0547 LDI
               f909 dc3f  st   $3f,[y,x++]
               f90a dc9b  st   $9b,[y,x++] ;0549 POKE
-              f90b dc55  st   $55,[y,x++] ;054a 'Ball'
+              f90b dc57  st   $57,[y,x++] ;054a 'Ball'
               f90c dc22  st   $22,[y,x++] ;054b LDW
-              f90d dc51  st   $51,[y,x++] ;054c 'RunPart1'
+              f90d dc53  st   $53,[y,x++] ;054c 'RunPart1'
               f90e dce4  st   $e4,[y,x++] ;054d CALL
               f90f dc2c  st   $2c,[y,x++] ;054e STW
-              f910 dc4f  st   $4f,[y,x++] ;054f 'RunPart2'
+              f910 dc51  st   $51,[y,x++] ;054f 'RunPart2'
               f911 dcfc  st   $fc,[y,x++] ;0550 DEF
               f912 dc85  st   $85,[y,x++]
               f913 dc22  st   $22,[y,x++] ;0552 LDW
-              f914 dc5b  st   $5b,[y,x++] ;0553 'Image'
+              f914 dc5d  st   $5d,[y,x++] ;0553 'Image'
               f915 dc2c  st   $2c,[y,x++] ;0554 STW
-              f916 dc31  st   $31,[y,x++] ;0555 'p'
+              f916 dc33  st   $33,[y,x++] ;0555 'p'
               f917 dc22  st   $22,[y,x++] ;0556 LDW
-              f918 dc2b  st   $2b,[y,x++] ;0557 'Pos'
+              f918 dc2d  st   $2d,[y,x++] ;0557 'Pos'
               f919 dc2c  st   $2c,[y,x++] ;0558 STW
-              f91a dc2d  st   $2d,[y,x++] ;0559 'q'
+              f91a dc2f  st   $2f,[y,x++] ;0559 'q'
               f91b dc22  st   $22,[y,x++] ;055a LDW
-              f91c dc31  st   $31,[y,x++] ;055b 'p'
+              f91c dc33  st   $33,[y,x++] ;055b 'p'
               f91d dc78  st   $78,[y,x++] ;055c LOOKUP
               f91e dc00  st   $00,[y,x++]
               f91f dc9b  st   $9b,[y,x++] ;055e POKE
-              f920 dc2d  st   $2d,[y,x++] ;055f 'q'
+              f920 dc2f  st   $2f,[y,x++] ;055f 'q'
               f921 dc12  st   $12,[y,x++] ;0560 LDWI
               f922 dc00  st   $00,[y,x++]
               f923 dc01  st   $01,[y,x++]
               f924 dcc4  st   $c4,[y,x++] ;0563 ADDW
-              f925 dc31  st   $31,[y,x++] ;0564 'p'
+              f925 dc33  st   $33,[y,x++] ;0564 'p'
               f926 dc2c  st   $2c,[y,x++] ;0565 STW
-              f927 dc31  st   $31,[y,x++] ;0566 'p'
+              f927 dc33  st   $33,[y,x++] ;0566 'p'
               f928 dc12  st   $12,[y,x++] ;0567 LDWI
               f929 dc00  st   $00,[y,x++]
               f92a dc01  st   $01,[y,x++]
               f92b dcc4  st   $c4,[y,x++] ;056a ADDW
-              f92c dc2d  st   $2d,[y,x++] ;056b 'q'
+              f92c dc2f  st   $2f,[y,x++] ;056b 'q'
               f92d dc2c  st   $2c,[y,x++] ;056c STW
-              f92e dc2d  st   $2d,[y,x++] ;056d 'q'
+              f92e dc2f  st   $2f,[y,x++] ;056d 'q'
               f92f dc36  st   $36,[y,x++] ;056e COND
               f930 dc50  st   $50,[y,x++] ;056f GT
               f931 dc58  st   $58,[y,x++]
@@ -33597,16 +33587,16 @@ initVcpu:     f700 1000  ld   $00,x
               f933 dc01  st   $01,[y,x++]
               f934 dc88  st   $88,[y,x++]
               f935 dcc4  st   $c4,[y,x++] ;0574 ADDW
-              f936 dc31  st   $31,[y,x++] ;0575 'p'
+              f936 dc33  st   $33,[y,x++] ;0575 'p'
               f937 dc2c  st   $2c,[y,x++] ;0576 STW
-              f938 dc31  st   $31,[y,x++] ;0577 'p'
+              f938 dc33  st   $33,[y,x++] ;0577 'p'
               f939 dc12  st   $12,[y,x++] ;0578 LDWI
               f93a dc01  st   $01,[y,x++]
               f93b dc88  st   $88,[y,x++]
               f93c dcc4  st   $c4,[y,x++] ;057b ADDW
-              f93d dc2d  st   $2d,[y,x++] ;057c 'q'
+              f93d dc2f  st   $2f,[y,x++] ;057c 'q'
               f93e dc2c  st   $2c,[y,x++] ;057d STW
-              f93f dc2d  st   $2d,[y,x++] ;057e 'q'
+              f93f dc2f  st   $2f,[y,x++] ;057e 'q'
               f940 dc8a  st   $8a,[y,x++] ;057f ANDI
               f941 dcff  st   $ff,[y,x++]
               f942 dc94  st   $94,[y,x++] ;0581 XORI
@@ -33616,14 +33606,14 @@ initVcpu:     f700 1000  ld   $00,x
               f946 dc58  st   $58,[y,x++]
               f947 dcff  st   $ff,[y,x++] ;0586 RET
               f948 dc2c  st   $2c,[y,x++] ;0587 STW
-              f949 dc5d  st   $5d,[y,x++] ;0588 'DrawImage'
+              f949 dc5f  st   $5f,[y,x++] ;0588 'DrawImage'
               f94a dcf6  st   $f6,[y,x++] ;0589 INC
-              f94b dc1d  st   $1d,[y,x++]
+              f94b dc1f  st   $1f,[y,x++]
               f94c dcff  st   $ff,[y,x++] ;058b RET
               f94d 1000  ld   $00,x
               f94e 1406  ld   $06,y
               f94f dc1b  st   $1b,[y,x++] ;0600 LD
-              f950 dc10  st   $10,[y,x++]
+              f950 dc12  st   $12,[y,x++]
               f951 dc8a  st   $8a,[y,x++] ;0602 ANDI
               f952 dc80  st   $80,[y,x++]
               f953 dc36  st   $36,[y,x++] ;0604 COND
@@ -33638,69 +33628,69 @@ initVcpu:     f700 1000  ld   $00,x
               f95c dc00  st   $00,[y,x++]
               f95d dc7f  st   $7f,[y,x++]
               f95e dc2c  st   $2c,[y,x++] ;060f STW
-              f95f dc5b  st   $5b,[y,x++] ;0610 'Image'
+              f95f dc5d  st   $5d,[y,x++] ;0610 'Image'
               f960 dc12  st   $12,[y,x++] ;0611 LDWI
               f961 dc00  st   $00,[y,x++]
               f962 dc08  st   $08,[y,x++]
               f963 dc2c  st   $2c,[y,x++] ;0614 STW
-              f964 dc2b  st   $2b,[y,x++] ;0615 'Pos'
+              f964 dc2d  st   $2d,[y,x++] ;0615 'Pos'
               f965 dc22  st   $22,[y,x++] ;0616 LDW
-              f966 dc5d  st   $5d,[y,x++] ;0617 'DrawImage'
+              f966 dc5f  st   $5f,[y,x++] ;0617 'DrawImage'
               f967 dce4  st   $e4,[y,x++] ;0618 CALL
               f968 dc5c  st   $5c,[y,x++] ;0619 LDI
               f969 dc78  st   $78,[y,x++]
               f96a dc61  st   $61,[y,x++] ;061b ST
-              f96b dc12  st   $12,[y,x++]
+              f96b dc14  st   $14,[y,x++]
               f96c dc5c  st   $5c,[y,x++] ;061d LDI
               f96d dc08  st   $08,[y,x++]
               f96e dc2c  st   $2c,[y,x++] ;061f STW
-              f96f dc33  st   $33,[y,x++] ;0620 'Color'
+              f96f dc35  st   $35,[y,x++] ;0620 'Color'
               f970 dc12  st   $12,[y,x++] ;0621 LDWI
               f971 dc00  st   $00,[y,x++]
               f972 dc08  st   $08,[y,x++]
               f973 dc2c  st   $2c,[y,x++] ;0624 STW
-              f974 dc2b  st   $2b,[y,x++] ;0625 'Pos'
+              f974 dc2d  st   $2d,[y,x++] ;0625 'Pos'
               f975 dc22  st   $22,[y,x++] ;0626 LDW
-              f976 dc3b  st   $3b,[y,x++] ;0627 'Welcome'
+              f976 dc3d  st   $3d,[y,x++] ;0627 'Welcome'
               f977 dc2c  st   $2c,[y,x++] ;0628 STW
-              f978 dc37  st   $37,[y,x++] ;0629 'Text'
+              f978 dc39  st   $39,[y,x++] ;0629 'Text'
               f979 dc22  st   $22,[y,x++] ;062a LDW
-              f97a dc39  st   $39,[y,x++] ;062b 'DrawText'
+              f97a dc3b  st   $3b,[y,x++] ;062b 'DrawText'
               f97b dce4  st   $e4,[y,x++] ;062c CALL
               f97c dc1b  st   $1b,[y,x++] ;062d LD
-              f97d dc12  st   $12,[y,x++]
+              f97d dc14  st   $14,[y,x++]
               f97e dc36  st   $36,[y,x++] ;062f COND
               f97f dc75  st   $75,[y,x++] ;0630 NE
               f980 dc2b  st   $2b,[y,x++]
               f981 dc5c  st   $5c,[y,x++] ;0632 LDI
               f982 dc3e  st   $3e,[y,x++]
               f983 dc2c  st   $2c,[y,x++] ;0634 STW
-              f984 dc33  st   $33,[y,x++] ;0635 'Color'
+              f984 dc35  st   $35,[y,x++] ;0635 'Color'
               f985 dc12  st   $12,[y,x++] ;0636 LDWI
               f986 dc00  st   $00,[y,x++]
               f987 dc08  st   $08,[y,x++]
               f988 dc2c  st   $2c,[y,x++] ;0639 STW
-              f989 dc2b  st   $2b,[y,x++] ;063a 'Pos'
+              f989 dc2d  st   $2d,[y,x++] ;063a 'Pos'
               f98a dc22  st   $22,[y,x++] ;063b LDW
-              f98b dc3b  st   $3b,[y,x++] ;063c 'Welcome'
+              f98b dc3d  st   $3d,[y,x++] ;063c 'Welcome'
               f98c dc2c  st   $2c,[y,x++] ;063d STW
-              f98d dc37  st   $37,[y,x++] ;063e 'Text'
+              f98d dc39  st   $39,[y,x++] ;063e 'Text'
               f98e dc22  st   $22,[y,x++] ;063f LDW
-              f98f dc39  st   $39,[y,x++] ;0640 'DrawText'
+              f98f dc3b  st   $3b,[y,x++] ;0640 'DrawText'
               f990 dce4  st   $e4,[y,x++] ;0641 CALL
               f991 dc22  st   $22,[y,x++] ;0642 LDW
-              f992 dc33  st   $33,[y,x++] ;0643 'Color'
+              f992 dc35  st   $35,[y,x++] ;0643 'Color'
               f993 dc94  st   $94,[y,x++] ;0644 XORI
               f994 dc08  st   $08,[y,x++]
               f995 dc36  st   $36,[y,x++] ;0646 COND
               f996 dc4d  st   $4d,[y,x++] ;0647 EQ
               f997 dc4f  st   $4f,[y,x++]
               f998 dc22  st   $22,[y,x++] ;0649 LDW
-              f999 dc33  st   $33,[y,x++] ;064a 'Color'
+              f999 dc35  st   $35,[y,x++] ;064a 'Color'
               f99a dcf3  st   $f3,[y,x++] ;064b SUBI
               f99b dc09  st   $09,[y,x++]
               f99c dc2c  st   $2c,[y,x++] ;064d STW
-              f99d dc33  st   $33,[y,x++] ;064e 'Color'
+              f99d dc35  st   $35,[y,x++] ;064e 'Color'
               f99e dc98  st   $98,[y,x++] ;064f BRA
               f99f dc34  st   $34,[y,x++]
               f9a0 dc1b  st   $1b,[y,x++] ;0651 LD
@@ -33710,55 +33700,55 @@ initVcpu:     f700 1000  ld   $00,x
               f9a4 dc8a  st   $8a,[y,x++] ;0655 ANDI
               f9a5 dcff  st   $ff,[y,x++]
               f9a6 dc2c  st   $2c,[y,x++] ;0657 STW
-              f9a7 dc29  st   $29,[y,x++] ;0658 'tmp'
+              f9a7 dc2b  st   $2b,[y,x++] ;0658 'tmp'
               f9a8 dc1b  st   $1b,[y,x++] ;0659 LD
               f9a9 dc0d  st   $0d,[y,x++]
               f9aa dcb0  st   $b0,[y,x++] ;065b SUBW
-              f9ab dc29  st   $29,[y,x++] ;065c 'tmp'
+              f9ab dc2b  st   $2b,[y,x++] ;065c 'tmp'
               f9ac dc36  st   $36,[y,x++] ;065d COND
               f9ad dc75  st   $75,[y,x++] ;065e NE
               f9ae dc57  st   $57,[y,x++]
               f9af dc22  st   $22,[y,x++] ;0660 LDW
-              f9b0 dc3d  st   $3d,[y,x++] ;0661 'Clear'
+              f9b0 dc3f  st   $3f,[y,x++] ;0661 'Clear'
               f9b1 dce4  st   $e4,[y,x++] ;0662 CALL
               f9b2 dc12  st   $12,[y,x++] ;0663 LDWI
               f9b3 dc11  st   $11,[y,x++]
               f9b4 dc01  st   $01,[y,x++]
               f9b5 dc2c  st   $2c,[y,x++] ;0666 STW
-              f9b6 dc3f  st   $3f,[y,x++] ;0667 'ShiftControl'
+              f9b6 dc41  st   $41,[y,x++] ;0667 'ShiftControl'
               f9b7 dc5c  st   $5c,[y,x++] ;0668 LDI
               f9b8 dc00  st   $00,[y,x++]
               f9b9 dc2c  st   $2c,[y,x++] ;066a STW
-              f9ba dc47  st   $47,[y,x++] ;066b 'J'
+              f9ba dc49  st   $49,[y,x++] ;066b 'J'
               f9bb dc2c  st   $2c,[y,x++] ;066c STW
-              f9bc dc43  st   $43,[y,x++] ;066d 'BallA'
+              f9bc dc45  st   $45,[y,x++] ;066d 'BallA'
               f9bd dc2c  st   $2c,[y,x++] ;066e STW
-              f9be dc57  st   $57,[y,x++] ;066f 'BallV'
+              f9be dc59  st   $59,[y,x++] ;066f 'BallV'
               f9bf dc2c  st   $2c,[y,x++] ;0670 STW
-              f9c0 dc53  st   $53,[y,x++] ;0671 'OldPixel'
+              f9c0 dc55  st   $55,[y,x++] ;0671 'OldPixel'
               f9c1 dc12  st   $12,[y,x++] ;0672 LDWI
               f9c2 dc00  st   $00,[y,x++]
               f9c3 dc18  st   $18,[y,x++]
               f9c4 dc2c  st   $2c,[y,x++] ;0675 STW
-              f9c5 dc59  st   $59,[y,x++] ;0676 'BallY'
+              f9c5 dc5b  st   $5b,[y,x++] ;0676 'BallY'
               f9c6 dc2c  st   $2c,[y,x++] ;0677 STW
-              f9c7 dc55  st   $55,[y,x++] ;0678 'Ball'
+              f9c7 dc57  st   $57,[y,x++] ;0678 'Ball'
               f9c8 dc5c  st   $5c,[y,x++] ;0679 LDI
               f9c9 dc5a  st   $5a,[y,x++]
               f9ca dc2c  st   $2c,[y,x++] ;067b STW
-              f9cb dc45  st   $45,[y,x++] ;067c 'Height'
+              f9cb dc47  st   $47,[y,x++] ;067c 'Height'
               f9cc dc22  st   $22,[y,x++] ;067d LDW
-              f9cd dc51  st   $51,[y,x++] ;067e 'RunPart1'
+              f9cd dc53  st   $53,[y,x++] ;067e 'RunPart1'
               f9ce dce4  st   $e4,[y,x++] ;067f CALL
               f9cf 00fe  ld   $fe
-              f9d0 c218  st   [$18]
+              f9d0 c21a  st   [$1a]
               f9d1 0003  ld   $03
-              f9d2 c219  st   [$19]
+              f9d2 c21b  st   [$1b]
               f9d3 0000  ld   $00
-              f9d4 c21e  st   [$1e]
-              f9d5 c21c  st   [$1c]
+              f9d4 c220  st   [$20]
+              f9d5 c21e  st   [$1e]
               f9d6 0004  ld   $04
-              f9d7 c21d  st   [$1d]
+              f9d7 c21f  st   [$1f]
               f9d8 150f  ld   [$0f],y
               f9d9 e10e  jmp  y,[$0e]
               f9da 0200  nop

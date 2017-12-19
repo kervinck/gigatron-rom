@@ -19,11 +19,6 @@
 #         3*20 = 60 pages to encode an image: 15 kB. Good for Parrot, Jupiter, Baboon
 #         SYS Routine to unpack 6 bytes would be nice
 #  XXX: Image packed in memory
-#  XXX: Simple RNG updated every 4 scanlines (videoD only?)
-#        SYS Routine for mixing would be nice
-# Retrieve:
-#         ld   [entropy+0]
-#         xora [entropy+1]
 #  XXX: Serial read from ROM tables, ignoring page boundraries
 #  XXX: ROM load of code / bootstrapping
 #  XXX: Main menu
@@ -657,19 +652,20 @@ ldzp(d(frameCount))             #38
 adda(val(1))                    #39
 st(d(frameCount))               #40
 
-# --- Mix entropy (9 cycles)
+# --- Mix entropy (10 cycles)
 adda(d(entropy+1),busRAM)       #41
 xora(d(serialInput),busRAM)     #42 Mix in serial input
 adda(d(entropy+0),busRAM)       #43
 st(d(entropy+0),busAC|regX)     #44
 bmi(d(lo('.rnd0')))             #45
 bra(d(lo('.rnd1')))             #46
-xora(d(entropy+1),busRAM)       #47
+xora(val(64+16+2+1))            #47
 label('.rnd0')
-adda(d(entropy+1),busRAM)       #47
+xora(val(64+32+8+4))            #47
 label('.rnd1')
-suba(busRAM|ea0XregAC)          #48
-st(d(entropy+1))                #49
+adda(busRAM|ea0XregAC)          #48
+xora(d(entropy+1),busRAM)       #49
+st(d(entropy+1))                #50
 
 # XXX TODO...
 
@@ -688,7 +684,7 @@ if soundDiscontinuity > 1:
 
 extra+=11 # For sound on/off and sound timer hack below. XXX solve properly
 
-runVcpu(179-50-extra, 'line0')  #50 Application cycles (scanline 0)
+runVcpu(179-51-extra, 'line0')  #51 Application cycles (scanline 0)
 
 # --- LED sequencer (19 cycles)
 
