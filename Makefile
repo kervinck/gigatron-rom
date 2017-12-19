@@ -1,6 +1,6 @@
 CFLAGS:=-std=c11 -O3 -Wall
 
-theloop.2.rom: *.py *.gcl *.rgb
+theloop.2.rom: *.py *.gcl Images/*.rgb
 	./theloop.py
 
 run: gtemu theloop.2.rom
