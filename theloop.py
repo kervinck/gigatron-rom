@@ -11,34 +11,21 @@
 #
 #  TODO:
 #
-#  XXX: Image packed in memory
+#  XXX: Input handling update
+#  XXX: Rising planet
 #         8x8 pixel block in 48 bytes. Maybe 2 bytes overhead: 50
 #         5 pixel blocks in one page
 #         3 pages encode 1 column of 15 blocks
 #         3*20 = 60 pages to encode an image: 15 kB. Good for Parrot, Jupiter, Baboon
 #         SYS Routine to unpack 6 bytes would be nice
+#  XXX: Image packed in memory
 #  XXX: Simple RNG updated every 4 scanlines (videoD only?)
 #        SYS Routine for mixing would be nice
-#         ld in
-#         adda [frameCount]
-#         xora R0
-#         bmi .rnd0
-#         bra .rnd1
-#         adda R0
-# .rnd0   suba R0
-# .rnd1   st R0
-#         xora [frameCount]
-#         bmi .rnd2
-#         bra .rnd3
-#         adda R1
-# .rnd2   suba R1
-# .rnd3   st R1
 # Retrieve:
-#         ld R0
-#         xora R1
+#         ld   [entropy+0]
+#         xora [entropy+1]
 #  XXX: Serial read from ROM tables, ignoring page boundraries
 #  XXX: ROM load of code / bootstrapping
-#  XXX: Input handling update
 #  XXX: Main menu
 #  XXX: Logo drawing
 #  XXX: DrawDecimal routine
@@ -261,7 +248,7 @@ minSYS = +999 # Smallest time slice for 'SYS'
 
 def runVcpu(n, ref=None):
   """Run interpreter for exactly n cycles"""
-  print '%04x runVcpu %s cycles' % (pc(), n)
+  print '%04x runVcpu %s cycles (%s)' % (pc(), n, ref)
   comment = 'Run vCPU for %s cycles' % n
   if ref:
     comment += ' (%s)' % ref
@@ -656,6 +643,20 @@ ldzp(d(frameCount))             #38
 adda(val(1))                    #39
 st(d(frameCount))               #40
 
+# --- Mix entropy (9 cycles)
+adda(d(entropy+1),busRAM)       #41
+xora(d(serialInput),busRAM)     #42 Mix in serial input
+adda(d(entropy+0),busRAM)       #43
+st(d(entropy+0),busAC|regX)     #44
+bmi(d(lo('.rnd0')))             #45
+bra(d(lo('.rnd1')))             #46
+xora(d(entropy+1),busRAM)       #47
+label('.rnd0')
+adda(d(entropy+1),busRAM)       #47
+label('.rnd1')
+suba(busRAM|ea0XregAC)          #48
+st(d(entropy+1))                #49
+
 # XXX TODO...
 
 # When the total number of scanlines per frame is not an exact multiple of the (4) channels,
@@ -673,7 +674,7 @@ if soundDiscontinuity > 1:
 
 extra+=11 # For sound on/off and sound timer hack below. XXX solve properly
 
-runVcpu(179-41-extra, 'line0')  #41 Application cycles (scanline 0)
+runVcpu(179-50-extra, 'line0')  #50 Application cycles (scanline 0)
 
 # --- LED sequencer (19 cycles)
 

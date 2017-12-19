@@ -5,6 +5,28 @@
 |                                                                       |
 +-----------------------------------------------------------------------}
 
+{
+Gigatron RAM map
+----------------
+             +------------------------------------+---------------------+
+page 0       | System and program variables       |   vCPU stack at top |
+             +------------------------------------+--+------------------+
+page 1       | Video frame indirection table         | Channel 1 at top |
+             +---------------------------------------+------------------+
+page 2       | Shift table for sound                 | Channel 2 at top |
+             +---------------------------------------+------------------+
+page 3       | vCPU code                             | Channel 3 at top |
+             |                                       +------------------+
+page 4       |                                       | Channel 4 at top |
+             |                                       +------------------+
+page 5-7     |                                                          |
+             +---------------------------+------------------------------+
+page 8-127   | 120x160 pixels video      | Extra video/code/data at top |
+             +---------------------------+------------------------------+
+page 128-255 | Not used in the 32K system: mirror of page 0-127         |
+             +----------------------------------------------------------+
+}
+
 {-----------------------------------------------------------------------+
 |       RAM page 3                                                      |
 +-----------------------------------------------------------------------}
@@ -57,7 +79,7 @@ $0300:
 
 ret {during setup: hop to next page}
 {-----------------------------------------------------------------------+
-|       RAM page 4                                        }\vRT>++ ret{ |
+|}\vRT>++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
 $0400:
 
@@ -79,13 +101,9 @@ $0400:
   {Enable gravity after a while}
   120^ [if=0 10 BallA=]
 
-  {Stupid RNG}
-  \frameCount? Rnd0+ Rnd1+ Rnd0=
-  Rnd1+ [if<0 43^] Rnd1+ Rnd1+ Rnd1=
-
   {Random height adjustment}
-  Height 88-  [if>0 Rnd0  16& if<>0 Height 1- Height=]
-  Height 118- [if<0 Rnd0 128& if<>0 Height<++]
+  Height 88-  [if>0 \entropy?  16& if<>0 Height 1- Height=]
+  Height 118- [if<0 \entropy? 128& if<>0 Height<++]
 
   {J=($08+H)<<8}
   Height $08+ J>!
@@ -100,7 +118,7 @@ $0400:
     V if>0loop]
 
   {Star}
-  Rnd0 127& A= A 111- [if>0 119 A=]
+  \entropy? 127& A= A 111- [if>0 119 A=]
   A 16+ A>! p A<!
   2 {Red} A!
 
@@ -124,8 +142,9 @@ $0400:
 ] RunPart1=
 
 \vRT>++ ret {during setup: hop to next page}
+
 {-----------------------------------------------------------------------+
-|       RAM page 5                                        }\vRT>++ ret{ |
+|}\vRT>++ ret{          RAM page 5                                      |
 +-----------------------------------------------------------------------}
 $0500:
 
@@ -177,7 +196,7 @@ $0500:
 ] DrawImage=
 
 {-----------------------------------------------------------------------+
-|       RAM page 6                                        }\vRT>++ ret{ |
+|}\vRT>++ ret{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
 $0600:
 
@@ -217,15 +236,14 @@ Clear call
 
 $0111 ShiftControl= {X shift starting from line 8}
 
-{Random}
-0 Rnd1= Rnd0=
-J=
 
 {Ball acceleration BallA, height Y and velocity BallV}
+0 J=
 BallA= BallV= OldPixel=
 
 $1800 BallY= Ball=
 90 Height=
+
 
 {--- Run ---}
 
