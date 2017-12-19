@@ -5,12 +5,13 @@ Files
 =====
 ```
 theloop.py                      Video/audio/io/interpreter loops
-                                Built-in vCPU applications
-                                Execute to update ROM files
+                                Built-in vCPU applications and data
+                                Execute theloop.py to build ROM files
 gcl.txt                         Gigatron Control Language explanation
 gtemu.c                         Emulator / executable instruction set definition
 LICENSE                         2-Clause BSD License
 Makefile                        Marcel's Makefile
+README.md                       This file...
 ```
 
 Files processed by theloop.py
