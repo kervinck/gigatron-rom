@@ -36,7 +36,6 @@
 #  XXX: Readability of asm.py instructions
 #  XXX: Sprites by scanline 4 reset method? ("videoG"=graphics)
 #  XXX: Decay, using Karplus-Strong
-#  XXX: Mix controller input with entropy
 #  XXX: Scoping for variables or some form of local variables?
 #  XXX: Simple GCL programs might be compiled by the host instead of offline?
 #  XXX: Dynamic memory allocation
@@ -156,7 +155,7 @@ returnTo   = zpByte(2)
 lookupReturn = zpByte(2)
 
 # Two bytes of havested entropy
-entropy    = zpByte(2)
+entropy    = zpByte(3)
 
 # Play sound if non-zero, count down and stop sound when zero
 soundTimer = zpByte()
@@ -368,6 +367,8 @@ adda(d(entropy+0),busRAM)
 xora(val(193))
 label('.initEnt2')
 st(d(entropy+1))
+adda(d(entropy+2),busRAM)
+st(d(entropy+2))
 ldzp(d(zpFree+0))
 adda(val(1))
 bne(d(lo('.initEnt0')))
@@ -652,19 +653,21 @@ ldzp(d(frameCount))             #38
 adda(val(1))                    #39
 st(d(frameCount))               #40
 
-# --- Mix entropy (9 cycles)
+# --- Mix entropy (11 cycles)
 xora(d(entropy+1),busRAM)       #41
 xora(d(serialInput),busRAM)     #42 Mix in serial input
 adda(d(entropy+0),busRAM)       #43
 st(d(entropy+0))                #44
-bmi(d(lo('.rnd0')))             #45
-bra(d(lo('.rnd1')))             #46
-xora(val(64+16+2+1))            #47
+adda(d(entropy+2),busRAM)       #45 Some hidden state
+st(d(entropy+2))                #46
+bmi(d(lo('.rnd0')))             #47
+bra(d(lo('.rnd1')))             #48
+xora(val(64+16+2+1))            #49
 label('.rnd0')
-xora(val(64+32+8+4))            #47
+xora(val(64+32+8+4))            #49
 label('.rnd1')
-adda(d(entropy+1),busRAM)       #48
-st(d(entropy+1))                #49
+adda(d(entropy+1),busRAM)       #50
+st(d(entropy+1))                #51
 
 # XXX TODO...
 
@@ -683,7 +686,7 @@ if soundDiscontinuity > 1:
 
 extra+=11 # For sound on/off and sound timer hack below. XXX solve properly
 
-runVcpu(179-50-extra, 'line0')  #50 Application cycles (scanline 0)
+runVcpu(179-52-extra, 'line0')  #52 Application cycles (scanline 0)
 
 # --- LED sequencer (19 cycles)
 
@@ -1422,30 +1425,32 @@ jmpy(d(lo('REENTER')))          #34
 ld(val(-38/2))                  #35
 
 #-----------------------------------------------------------------------
-# Extension SYS_32_RANDOM: Update entropy and copy to vAC
+# Extension SYS_34_RANDOM: Update entropy and copy to vAC
 #-----------------------------------------------------------------------
 
 # This same algorithm runs automatically once per vertical blank.
 # Use this function to get numbers at a higher rate.
-label('SYS_32_RANDOM')
+label('SYS_34_RANDOM')
 ldzp(d(frameCount))             #15
 xora(d(entropy+1),busRAM)       #16
 xora(d(serialInput),busRAM)     #17
 adda(d(entropy+0),busRAM)       #18
 st(d(entropy+0))                #19
 st(d(vAC+0))                    #20
-bmi(d(lo('.sys_rnd0')))         #21
-bra(d(lo('.sys_rnd1')))         #22
-xora(val(64+16+2+1))            #23
+adda(d(entropy+2),busRAM)       #21
+st(d(entropy+2))                #22
+bmi(d(lo('.sys_rnd0')))         #23
+bra(d(lo('.sys_rnd1')))         #24
+xora(val(64+16+2+1))            #25
 label('.sys_rnd0')
-xora(val(64+32+8+4))            #23
+xora(val(64+32+8+4))            #25
 label('.sys_rnd1')
-adda(d(entropy+1),busRAM)       #24
-st(d(entropy+1))                #25
-st(d(vAC+1))                    #26
-ld(val(hi('REENTER')),regY)     #27
-jmpy(d(lo('REENTER')))          #28
-ld(val(-32/2))                  #29
+adda(d(entropy+1),busRAM)       #26
+st(d(entropy+1))                #27
+st(d(vAC+1))                    #28
+ld(val(hi('REENTER')),regY)     #29
+jmpy(d(lo('REENTER')))          #30
+ld(val(-34/2))                  #31
 
 #-----------------------------------------------------------------------
 #

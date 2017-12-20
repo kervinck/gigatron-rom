@@ -89,7 +89,7 @@ $0400:
         p \arg0= \SYS_38_VCLEAR8 38@ {Clears 8 pixels vertically}
         $800 p+ p= if>0loop]
     $8001 Pos+ p+ p=
-    255& {160^} if<>0loop]
+    255& 160^ if<>0loop]
   ret
 ] Clear=
 
@@ -195,7 +195,7 @@ $0500:
 [def {RandomTest -- Entropy tester}
   $0121 ShiftControl=
   [do
-    \SYS_32_RANDOM 32@ p=
+    \SYS_34_RANDOM 34@ p=
     [if<0 $8000 p+ p=]
 
     {If on-screen, increase pixel color}
