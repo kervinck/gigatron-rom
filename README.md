@@ -33,3 +33,25 @@ theloop.0.rom                   ROM file for 28C256 #0 (breadboard)
 theloop.1.rom                   ROM file for 28C256 #1 (breadboard)
 theloop.2.rom                   ROM file for 27C1024 (PCB versions)
 ```
+
+Memory map (RAM)
+================
+```
+             +------------------------------------+---------------------+
+page 0       | System and program variables     <-|-> vCPU stack at top |
+             +------------------------------------+--+------------------+
+page 1       | Video frame indirection table         | Channel 1 at top |
+             +---------------------------------------+------------------+
+page 2       | Shift table for sound                 | Channel 2 at top |
+             +---------------------------------------+------------------+
+page 3       | vCPU code                          248| Channel 3 at top |
+             |                                       +------------------+
+page 4       |                                       | Channel 4 at top |
+             |                                       +------------------+
+page 5-7     |0                       159 160                        255|
+             +---------------------------+------------------------------+
+page 8-127   | 120 lines of 160 pixels   | Extra video/code/data at top |
+             +---------------------------+------------------------------+
+page 128-255 | Not used in the 32K system: mirror of page 0-127         |
+             +----------------------------------------------------------+
+```
