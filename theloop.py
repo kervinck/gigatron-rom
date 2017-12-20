@@ -4,7 +4,7 @@
 #  Core video, sound and interpreter loop for Gigatron TTL microcomputer
 #  - 6.25MHz clock
 #  - Rendering 160x120 pixels at 6.25MHz with flexible videoline programming
-#  - Must stay above 31 kHz horizontal sync --> 200 cycles/scanline
+#  - Must stay above 31 kHz horizontal sync --> 200 cycles/scanine
 #  - Must stay above 59.94 Hz vertical sync --> 521 scanlines/frame
 #  - 4 channels sound
 #  - 16-bits vCPU interpreter
@@ -30,11 +30,11 @@
 #  XXX: Serial loading of programs with Arduino/Trinket
 #  XXX: Multitasking/threading/sleeping (start with date/time clock in GCL)
 #  XXX: Loading and starting of programs
+#  XXX: Pacman ghosts. Sprites by scan line 4 reset method? ("videoG"=graphics)
 #  XXX: Better shift-table (use ROM?)
 #  XXX: Better notation for 'call'. () or []
 #  XXX: Prefix notation for high/low byte >X++ instead of X>++
 #  XXX: Readability of asm.py instructions
-#  XXX: Sprites by scanline 4 reset method? ("videoG"=graphics)
 #  XXX: Decay, using Karplus-Strong
 #  XXX: Scoping for variables or some form of local variables?
 #  XXX: Simple GCL programs might be compiled by the host instead of offline?
@@ -100,7 +100,7 @@ fastRunVcpu = True
 # Memory size in pages from auto-detect
 memSize = zpByte()
 
-# The current channel number for sound generation. Advanced every scanline
+# The current channel number for sound generation. Advanced every scan line
 # and independent of the vertical refresh to maintain constant oscillation.
 channel = zpByte()
 
@@ -137,10 +137,11 @@ xoutMask  = zpByte() # The blinkenlights and sound on/off state
 screenY   = zpByte() # Counts up from 0 to 238 in steps of 2
 frameX    = zpByte() # Starting byte within page
 frameY    = zpByte() # Page number of current pixel row (updated by videoA)
-nextVideo = zpByte()
-videoDorF = zpByte() # Scanline mode ('D' or 'F')
+nextVideo = zpByte() # Jump offset to scan line handler (videoA, videoB, ...)
+videoDorF = zpByte() # Handler for every 4th line (videoD or videoF)
 
-# Vertical blank, reuse some variables
+# Vertical blank (reuse some variables used in the visible part)
+vBlank    = zpByte() # 1=first scanline, start of vblank interval, 0=other line
 blankY     = screenY # Counts down during vertical blank (44 to 0)
 videoSync0 = frameX  # Vertical sync type on current line (0xc0 or 0x40)
 videoSync1 = frameY  # Same during horizontal pulse
@@ -154,7 +155,7 @@ returnTo   = zpByte(2)
 # Return from EEPROM lookups
 lookupReturn = zpByte(2)
 
-# Two bytes of havested entropy
+# Entropy harvested from SRAM startup and controller input
 entropy    = zpByte(3)
 
 # Play sound if non-zero, count down and stop sound when zero
@@ -186,7 +187,7 @@ zpFree  = zpByte(0)
 # Export some zero page variables to GCL
 define('entropy',    entropy)
 define('soundTimer', soundTimer)
-define('screenY',    screenY)
+define('vBlank',     vBlank)
 define('frameCount', frameCount)
 define('args',       args)
 define('arg0',       args+0)
@@ -489,8 +490,8 @@ ld(val(syncBits),regOUT)
 st(d(xoutMask)) # Setup for control by video loop
 st(d(xout))
 
-ld(d(hi('vBlank')),busD|ea0DregY);C('Enter video loop')
-jmpy(d(lo('vBlank')))
+ld(d(hi('vBlankStart')),busD|ea0DregY);C('Enter video loop')
+jmpy(d(lo('vBlankStart')))
 ld(val(syncBits))
 
 #-----------------------------------------------------------------------
@@ -500,8 +501,8 @@ ld(val(syncBits))
 #-----------------------------------------------------------------------
 align(0x100, 0x200)
 
-# Back porch A: first of 4 repeated scanlines
-# - Fetch next Yi and store it for retrieval in the next scanlines
+# Back porch A: first of 4 repeated scan lines
+# - Fetch next Yi and store it for retrieval in the next scan lines
 # - Calculate Xi from dXi, but there is no cycle time left to store it as well
 label('videoA')
 assert(lo('videoA') == 0)       # videoA starts at the page boundary
@@ -523,7 +524,7 @@ label('pixels')
 for i in range(160):
   ora(eaYXregOUTIX, busRAM)     #40-199
   if i==0: C('Pixel burst')
-ld(val(syncBits), regOUT);      C('<New scanline start>')#0 Back to black
+ld(val(syncBits), regOUT);      C('<New scan line start>')#0 Back to black
 
 # Front porch
 ldzp(d(channel));C('Advance to next sound channel')#1
@@ -556,8 +557,8 @@ ldzp(d(xout))                   #26
 bra(d(nextVideo) | busRAM)      #27
 ld(val(syncBits), regOUT);      C('End horizontal pulse')#28
 
-# Back porch B: second of 4 repeated scanlines
-# - Recompute Xi from dXi and store for retrieval in the next scanlines
+# Back porch B: second of 4 repeated scan lines
+# - Recompute Xi from dXi and store for retrieval in the next scan lines
 label('videoB')
 ld(d(lo('videoC')))             #29
 st(d(nextVideo))                #30
@@ -571,7 +572,7 @@ ld(d(frameY), busRAM|regY)      #37
 bra(d(lo('pixels')))            #38
 ld(val(syncBits))               #39
 
-# Back porch C: third of 4 repeated scanlines
+# Back porch C: third of 4 repeated scan lines
 # - Nothing new to do, Yi and Xi are known
 label('videoC')
 ldzp(d(sample));                C('New sound sample is ready')#29 First something that didn't fit in the audio loop
@@ -579,14 +580,14 @@ ora(d(0x0f))                    #30
 anda(d(xoutMask),busRAM|ea0DregAC)#31
 st(d(xout))                     #32 Update [xout] with new sample (4 channels just updated)
 st(val(sample),ea0DregAC|busD); C('Reset for next sample')#33 Reset for next sample
-ldzp(d(videoDorF));             C('Mode for scanline 4')#34 Now back to video business
+ldzp(d(videoDorF));             C('Mode for scan line 4')#34 Now back to video business
 st(d(nextVideo))                #35
 ld(d(frameX),busRAM|regX)       #36
 ld(d(frameY),busRAM|regY)       #37
 bra(d(lo('pixels')))            #38
 ld(val(syncBits))               #39
 
-# Back porch D: last of 4 repeated scanlines
+# Back porch D: last of 4 repeated scan lines
 # - Calculate the next frame index
 # - Decide if this is the last line or not
 label('videoD')                 # Default video mode
@@ -611,11 +612,11 @@ ld(val(syncBits))               #39
 # Back porch "E": after the last line
 # - Go back to program page 0 and enter vertical blank
 label('videoE') # Exit visible area
-ld(d(hi('vBlank')),ea0DregY)    #29
-jmpy(d(lo('vBlank'))   )        #30
+ld(d(hi('vBlankStart')),ea0DregY)#29
+jmpy(d(lo('vBlankStart'))   )   #30
 ld(val(syncBits))               #31
 
-# Back porch "F": scanlines and fast mode
+# Back porch "F": scan lines and fast mode
 label('videoF')                 # Fast video mode
 ldzp(d(screenY))                #29
 suba(d((120-1)*2))              #30
@@ -628,13 +629,13 @@ st(d(screenY))                  #33 More visible lines
 ld(d(lo('videoA')))             #34
 label('.join')
 st(d(nextVideo))                #35
-runVcpu(199-36, 'line41-521 typeF')#36 Application (every 4th of scanlines 41-521)
+runVcpu(199-36, 'line41-521 typeF')#36 Application (every 4th of scan lines 41-521)
 ld(d(hi('soundF')), busD|ea0DregY)#199 XXX This is on the current page
-jmpy(d(lo('soundF')));          C('<New scanline start>')#0
+jmpy(d(lo('soundF')));          C('<New scan line start>')#0
 ldzp(d(channel))                #1 Advance to next sound channel
 
 # Vertical blank part of video loop
-label('vBlank')                 # Start of vertical blank interval
+label('vBlankStart')            # Start of vertical blank interval
 assert(pc()&255<16)             # Assure that we are in the beginning of the next page
 
 st(d(videoSync0))               #32
@@ -645,37 +646,37 @@ st(d(videoSync1))               #34
 # (Re)initialize carry table for robustness
 st(d(0x00), ea0DregAC|busD)     #35
 ld(val(0x01))                   #36
-st(d(0x80), ea0DregAC|busAC)    #37
+st(d(0x80))                     #37
+
+# Signal beginning of vertical blank to GCL
+st(d(vBlank))                   #38
 
 # --- Uptime frame count
-
-ldzp(d(frameCount))             #38
-adda(val(1))                    #39
-st(d(frameCount))               #40
+ldzp(d(frameCount))             #39
+adda(val(1))                    #40
+st(d(frameCount))               #41
 
 # --- Mix entropy (11 cycles)
-xora(d(entropy+1),busRAM)       #41
-xora(d(serialInput),busRAM)     #42 Mix in serial input
-adda(d(entropy+0),busRAM)       #43
-st(d(entropy+0))                #44
-adda(d(entropy+2),busRAM)       #45 Some hidden state
-st(d(entropy+2))                #46
-bmi(d(lo('.rnd0')))             #47
-bra(d(lo('.rnd1')))             #48
-xora(val(64+16+2+1))            #49
+xora(d(entropy+1),busRAM)       #42
+xora(d(serialInput),busRAM)     #43 Mix in serial input
+adda(d(entropy+0),busRAM)       #44
+st(d(entropy+0))                #45
+adda(d(entropy+2),busRAM)       #46 Some hidden state
+st(d(entropy+2))                #47
+bmi(d(lo('.rnd0')))             #48
+bra(d(lo('.rnd1')))             #49
+xora(val(64+16+2+1))            #50
 label('.rnd0')
-xora(val(64+32+8+4))            #49
+xora(val(64+32+8+4))            #50
 label('.rnd1')
-adda(d(entropy+1),busRAM)       #50
-st(d(entropy+1))                #51
+adda(d(entropy+1),busRAM)       #51
+st(d(entropy+1))                #52
 
-# XXX TODO...
-
-# When the total number of scanlines per frame is not an exact multiple of the (4) channels,
+# When the total number of scan lines per frame is not an exact multiple of the (4) channels,
 # there will be an audible discontinuity if no measure is taken. This static noise can be
-# suppressed by swallowing the first `lines%4' partial samples after transitioning into
+# suppressed by swallowing the first `lines mod 4' partial samples after transitioning into
 # vertical blank. This is easiest if the modulo is 0 (do nothing) or 1 (reset sample while in
-# the first blank scanline). For the two other cases there is no solution yet: give a warning.
+# the first blank scan line). For the two other cases there is no solution yet: give a warning.
 soundDiscontinuity = (vFront+vPulse+vBack) % 4
 extra = 0
 if soundDiscontinuity == 1:
@@ -686,7 +687,8 @@ if soundDiscontinuity > 1:
 
 extra+=11 # For sound on/off and sound timer hack below. XXX solve properly
 
-runVcpu(179-52-extra, 'line0')  #52 Application cycles (scanline 0)
+runVcpu(178-53-extra, 'line0')  #53 Application cycles (scan line 0)
+st(d(vBlank))                   #178 Keep at 0 for remainder of frame
 
 # --- LED sequencer (19 cycles)
 
@@ -752,7 +754,7 @@ ldzp(d(xoutMask))               #195 Low 4 bits are the LED output
 anda(val(0b00001111))           #196
 st(d(xoutMask))                 #197
 
-# --- Sound on/off
+# --- Sound on/off (XXX Hack)
 
 ldzp(d(soundTimer))
 bne(d(lo('.snd0')))
@@ -764,7 +766,7 @@ label('.snd1')
 ora(d(xoutMask),busRAM)
 st(d(xoutMask))
 
-# --- Sound timer count down
+# --- Sound timer count down (XXX Replace by sequencer)
 
 ldzp(d(soundTimer))
 beq(d(lo('.snd2')))
@@ -777,7 +779,7 @@ st(d(soundTimer))
 
 ld(val(vFront+vPulse+vBack-2))  #198 `-2' because first and last are different
 st(d(blankY))                   #199
-ld(d(videoSync0), busRAM|regOUT);C('<New scanline start>')#0
+ld(d(videoSync0), busRAM|regOUT);C('<New scan line start>')#0
 
 label('sound1')
 ldzp(d(channel));               C('Advance to next sound channel')#1
@@ -854,14 +856,14 @@ anda(d(xoutMask),busRAM|ea0DregAC)#52
 st(d(xout))                     #53
 st(val(sample), ea0DregAC|busD); C('Reset for next sample')#54
 
-runVcpu(199-55, 'line1-39 typeC')#55 Appplication cycles (scanline 1-43 with sample update)
+runVcpu(199-55, 'line1-39 typeC')#55 Appplication cycles (scan line 1-43 with sample update)
 bra(d(lo('sound1')))            #199
-ld(d(videoSync0), busRAM|regOUT);C('<New scanline start>')#0 Ends the vertical blank pulse at the right cycle
+ld(d(videoSync0), busRAM|regOUT);C('<New scan line start>')#0 Ends the vertical blank pulse at the right cycle
 
 label('vBlankNormal')
-runVcpu(199-51, 'line1-39 typeABD')#51 Application cycles (scanline 1-43 without sample update)
+runVcpu(199-51, 'line1-39 typeABD')#51 Application cycles (scan line 1-43 without sample update)
 bra(d(lo('sound1')))            #199
-ld(d(videoSync0), busRAM|regOUT);C('<New scanline start>')#0 Ends the vertical blank pulse at the right cycle
+ld(d(videoSync0), busRAM|regOUT);C('<New scan line start>')#0 Ends the vertical blank pulse at the right cycle
 
 # Last blank line before transfering to visible area
 label('vBlankLast0')
@@ -895,9 +897,9 @@ label('.sel1')
 xora(d(videoDorF),busRAM)       #46
 st(d(videoDorF))                #47
 
-runVcpu(199-48, 'line40')       #48 Application cycles (scanline 40)
+runVcpu(199-48, 'line40')       #48 Application cycles (scan line 40)
 ldzp(d(channel))                #199 Advance to next sound channel
-anda(val(3));                   C('<New scanline start>')#0
+anda(val(3));                   C('<New scan line start>')#0
 adda(val(1))                    #1
 ld(d(hi('sound2')), busD|ea0DregY)#2
 jmpy(d(lo('sound2')))           #3
@@ -951,7 +953,7 @@ if fastRunVcpu:
 else:
   ld(d(returnTo+1),busRAM|regY) #6
 jmpy(d(returnTo+0)|busRAM);     C('Return to caller')#7
-nop()                           #8
+ld(val(0))                      #8 AC should be 0 already. Still..
 assert vOverheadInt ==          9
 
 # Instruction LDWI: Load immediate constant (AC=$DDDD), 20 cycles
@@ -1186,7 +1188,7 @@ ld(val(-22/2))                  #21
 # The 'SYS' vCPU instruction first checks the number of desired ticks given by
 # the operand. As long as there are insufficient ticks available in the current
 # time slice, the instruction will be retried. This will effectively wait for the
-# next scanline if the current slice is almost out of time. Then a jump to native
+# next scan line if the current slice is almost out of time. Then a jump to native
 # code is made. This code can do whatever it wants, but it must return to the
 # 'REENTER' label when done. When returning, AC must hold (the negative of) the
 # actual consumed number of whole ticks for the entire virtual instruction cycle 

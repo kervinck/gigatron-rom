@@ -131,8 +131,8 @@ $0400:
       V>++
       V if>0loop]
 
-  {Wait for vertical blank XXX provide a scanline=0 signal for this}
-  [do \screenY? if<>0loop]
+  {Wait for vertical blank to start}
+  [do \vBlank? if=0loop]
 
   {Scroll screen 1 pixel}
   X 1+ ShiftControl!
