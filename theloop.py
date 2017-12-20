@@ -652,20 +652,19 @@ ldzp(d(frameCount))             #38
 adda(val(1))                    #39
 st(d(frameCount))               #40
 
-# --- Mix entropy (10 cycles)
-adda(d(entropy+1),busRAM)       #41
+# --- Mix entropy (9 cycles)
+xora(d(entropy+1),busRAM)       #41
 xora(d(serialInput),busRAM)     #42 Mix in serial input
 adda(d(entropy+0),busRAM)       #43
-st(d(entropy+0),busAC|regX)     #44
+st(d(entropy+0))                #44
 bmi(d(lo('.rnd0')))             #45
 bra(d(lo('.rnd1')))             #46
 xora(val(64+16+2+1))            #47
 label('.rnd0')
 xora(val(64+32+8+4))            #47
 label('.rnd1')
-adda(busRAM|ea0XregAC)          #48
-xora(d(entropy+1),busRAM)       #49
-st(d(entropy+1))                #50
+adda(d(entropy+1),busRAM)       #48
+st(d(entropy+1))                #49
 
 # XXX TODO...
 
@@ -684,7 +683,7 @@ if soundDiscontinuity > 1:
 
 extra+=11 # For sound on/off and sound timer hack below. XXX solve properly
 
-runVcpu(179-51-extra, 'line0')  #51 Application cycles (scanline 0)
+runVcpu(179-50-extra, 'line0')  #50 Application cycles (scanline 0)
 
 # --- LED sequencer (19 cycles)
 
@@ -1408,7 +1407,10 @@ nop()                           #23
 #
 #-----------------------------------------------------------------------
 
+#-----------------------------------------------------------------------
 # Extension SYS_38_VCLEAR8: Zero a vertical slice of 8 bytes(pixels)
+#-----------------------------------------------------------------------
+
 label('SYS_38_VCLEAR8')
 ld(d(args+0),busRAM|regX)       #15
 ldzp(d(args+1))                 #16
@@ -1419,36 +1421,31 @@ ld(val(hi('REENTER')),regY)     #33
 jmpy(d(lo('REENTER')))          #34
 ld(val(-38/2))                  #35
 
-#init_rng(s1,s2,s3) //Can also be used to seed the rng with more entropy during use.
-#{
-#//XOR new entropy into key state
-#a ^=s1;
-#b ^=s2;
-#c ^=s3;
+#-----------------------------------------------------------------------
+# Extension SYS_32_RANDOM: Update entropy and copy to vAC
+#-----------------------------------------------------------------------
 
-#x++;
-#a = (a^c^x);
-#b = (b+a);
-#c = (c+(b>>1)^a);
-#}
-
-#unsigned char randomize()
-#{
-#x++;               //x is incremented every round and is not affected by any other variable
-#a = (a^c^x);       //note the mix of addition and XOR
-#b = (b+a);         //And the use of very few instructions
-#c = (c+(b>>1)^a);  //the right shift is to ensure that high-order bits from b can affect  
-#return(c)          //low order bits of other variables
-#}
-
-#  {Vladimir Vassilevsky's LCG
-#   seed = (seed << 7) - seed + 251; // 127*seed+251
-#   return (u8)(seed + (seed>>8));
-#  }
-#  Q Q+ R= R+ R= R+ R= R+
-#    R= R+ R= R+ R= R+ Q- R=
-#  251 R+ Q=
-#  Q>? R+ R=
+# This same algorithm runs automatically once per vertical blank.
+# Use this function to get numbers at a higher rate.
+label('SYS_32_RANDOM')
+ldzp(d(frameCount))             #15
+xora(d(entropy+1),busRAM)       #16
+xora(d(serialInput),busRAM)     #17
+adda(d(entropy+0),busRAM)       #18
+st(d(entropy+0))                #19
+st(d(vAC+0))                    #20
+bmi(d(lo('.sys_rnd0')))         #21
+bra(d(lo('.sys_rnd1')))         #22
+xora(val(64+16+2+1))            #23
+label('.sys_rnd0')
+xora(val(64+32+8+4))            #23
+label('.sys_rnd1')
+adda(d(entropy+1),busRAM)       #24
+st(d(entropy+1))                #25
+st(d(vAC+1))                    #26
+ld(val(hi('REENTER')),regY)     #27
+jmpy(d(lo('REENTER')))          #28
+ld(val(-32/2))                  #29
 
 #-----------------------------------------------------------------------
 #

@@ -9,26 +9,26 @@
 Gigatron RAM map
 ----------------
              +------------------------------------+---------------------+
-page 0       | System and program variables       |   vCPU stack at top |
+page 0       | System and program variables     <-|-> vCPU stack at top |
              +------------------------------------+--+------------------+
 page 1       | Video frame indirection table         | Channel 1 at top |
              +---------------------------------------+------------------+
 page 2       | Shift table for sound                 | Channel 2 at top |
              +---------------------------------------+------------------+
-page 3       | vCPU code                             | Channel 3 at top |
+page 3       | vCPU code                          248| Channel 3 at top |
              |                                       +------------------+
 page 4       |                                       | Channel 4 at top |
              |                                       +------------------+
-page 5-7     |                                                          |
+page 5-7     |0                       159 160                        255|
              +---------------------------+------------------------------+
-page 8-127   | 120x160 pixels video      | Extra video/code/data at top |
+page 8-127   | 120 lines of 160 pixels   | Extra video/code/data at top |
              +---------------------------+------------------------------+
 page 128-255 | Not used in the 32K system: mirror of page 0-127         |
              +----------------------------------------------------------+
 }
 
 {-----------------------------------------------------------------------+
-|       RAM page 3                                                      |
+|                       RAM page 3                                      |
 +-----------------------------------------------------------------------}
 $0300:
 
@@ -77,9 +77,8 @@ $0300:
   $74. $65. $72. $20. $52. $4f. $4d. $20. $76. $30. $20. $20. 10. 0.
 ] Welcome=
 
-ret {during setup: hop to next page}
 {-----------------------------------------------------------------------+
-|}\vRT>++ ret{          RAM page 4                                      |
+|}ret{                  RAM page 4                                      |
 +-----------------------------------------------------------------------}
 $0400:
 
@@ -89,8 +88,8 @@ $0400:
     [do {0 p!}
         p \arg0= \SYS_38_VCLEAR8 38@ {Clears 8 pixels vertically}
         $800 p+ p= if>0loop]
-    $9801 p+ p=
-    255& 160^ if<>0loop]
+    $8001 Pos+ p+ p=
+    255& {160^} if<>0loop]
   ret
 ] Clear=
 
@@ -132,7 +131,7 @@ $0400:
       V>++
       V if>0loop]
 
-  {Wait for vertical blank}
+  {Wait for vertical blank XXX provide a scanline=0 signal for this}
   [do \screenY? if<>0loop]
 
   {Scroll screen 1 pixel}
@@ -140,8 +139,6 @@ $0400:
 
   RunPart2 call
 ] RunPart1=
-
-\vRT>++ ret {during setup: hop to next page}
 
 {-----------------------------------------------------------------------+
 |}\vRT>++ ret{          RAM page 5                                      |
@@ -195,6 +192,21 @@ $0500:
   ret
 ] DrawImage=
 
+[def {RandomTest -- Entropy tester}
+  $0121 ShiftControl=
+  [do
+    \SYS_32_RANDOM 32@ p=
+    [if<0 $8000 p+ p=]
+
+    {If on-screen, increase pixel color}
+    $800 p+ p= [if>0 p? 1+ p!]
+
+    {Scrolling}
+    \frameCount? ShiftControl!
+
+    loop]
+] RandomTest=
+
 {-----------------------------------------------------------------------+
 |}\vRT>++ ret{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
@@ -234,8 +246,11 @@ DrawText call
 {Clear image}
 Clear call
 
-$0111 ShiftControl= {X shift starting from line 8}
+{Wait 2.5 seconds}
+\frameCount? 150+ 255& tmp=
+[do \frameCount? tmp- if<>0loop]
 
+$0111 ShiftControl= {X shift starting from line 8}
 
 {Ball acceleration BallA, height Y and velocity BallV}
 0 J=
