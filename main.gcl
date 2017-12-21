@@ -34,12 +34,14 @@ $0300:
 
 {-
   First setup all subroutine definitions and variables, without making
-  calls. This way allows use of vRT to hop from page to page during setup
+  calls. This way allows use of vRT to hop from page to page during setup,
   with minimal overhead. At the end, run the main loop.
 -}
 
-[def { DrawChar(Char,Pos,Color) }
+[def
 {-
+  DrawChar(Char)
+
   Draw a 5x8 character on screen with the built-in font.
   `Char' must be in the 32-127 range (this is not checked)
 -}
@@ -65,8 +67,10 @@ $0300:
   ret
 ] DrawChar=
 
-[def { DrawText(Text,Pos) }
+[def
 {-
+  DrawText(Text,Pos) }
+
   Draw a zero-terminated text string to the screen.
   Character 10 acts as newline.
   There is no check for running off screen.
@@ -103,8 +107,9 @@ $0300:
 +-----------------------------------------------------------------------}
 $0400:
 
-[def { ClearScreen(Pos) }
+[def
 {-
+  ClearScreen(Pos)
   Clear screen from current position to bottom right
 -}
   Pos p=
@@ -119,7 +124,10 @@ $0400:
   ret
 ] ClearScreen=
 
-[def {RunPart1}
+[def
+{-
+  RunPart1
+-}
   {Get X from scanline table}
   ShiftControl? X=
 
@@ -171,7 +179,50 @@ $0400:
 +-----------------------------------------------------------------------}
 $0500:
 
-[def {RunPart2}
+[def
+{-
+  DrawImage -- Draw full-screen image on screen (~1.5 seconds)
+-}
+  Image p=   {Addres in ROM for image data}
+  $0800 q=   {Pos points in video memory}
+  [do
+    {Draw slice}
+    [do
+      p \sysData= \SYS_40_READ3  40@ {Read 3 bytes from ROM}
+                  \SYS_56_UNPACK 56@ {Unpack to 4 bytes}
+      q \sysPos=  \SYS_30_DRAW4  30@ {Write 4 bytes to screen}
+      $80 p+ p=
+      q>++ q
+      if>0loop]
+    {Advance to next slice}
+    $c403 p+ p=
+    $8804 q+ q=
+    255& 160^ if<>0loop]
+  ret
+] DrawImage=
+
+[def
+{-
+  RandomTest -- Entropy tester
+-}
+  $0121 ShiftControl=
+  [do
+    \SYS_34_RANDOM 34@ p=
+    [if<0 $8000 p+ p=]
+
+    {If on-screen, increase pixel color}
+    $800 p+ p= [if>0 p? 1+ p!]
+
+    {Scrolling}
+    \frameCount? ShiftControl!
+
+    loop]
+] RandomTest=
+
+[def
+{-
+  RunPart2
+-}
   {Clear ball}
   OldPixel Ball!
 
@@ -201,41 +252,6 @@ $0500:
   RunPart1 call
 ] RunPart2=
 
-[def {DrawImage}
-  Image p=   {Addres in ROM for image data}
-  Pos   q=   {Pos points in video memory}
-  [do
-    {Draw slice}
-    [do
-      p \sysData= \SYS_40_READ3  40@ {Read 3 bytes from ROM}
-                  \SYS_56_UNPACK 56@ {Unpack to 4 bytes}
-      q \sysPos=  \SYS_30_DRAW4  30@ {Write 4 bytes to screen}
-      $80 p+ p=
-      q>++ q
-      if>0loop]
-
-    {Advance to next slice}
-    $c403 p+ p=
-    $8804 q+ q=
-    255& 160^ if<>0loop]
-  ret
-] DrawImage=
-
-[def {RandomTest -- Entropy tester}
-  $0121 ShiftControl=
-  [do
-    \SYS_34_RANDOM 34@ p=
-    [if<0 $8000 p+ p=]
-
-    {If on-screen, increase pixel color}
-    $800 p+ p= [if>0 p? 1+ p!]
-
-    {Scrolling}
-    \frameCount? ShiftControl!
-
-    loop]
-] RandomTest=
-
 {-----------------------------------------------------------------------+
 |}\vRT>++ ret{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
@@ -245,30 +261,31 @@ $0600:
 
 [def
 {-
-  Wait1 -- Wait 1.0 seconds
+  Wait -- Wait Delay number of frames (range 1..255)
 -}
-  \frameCount? 60+ 255& tmp=
+  \frameCount? Delay+ 255& tmp=
   [do \frameCount? tmp- if<>0loop]
   ret
-] Wait1=
+] Wait=
+
+{Opening sound for 2 seconds}
+120 \soundTimer!
 
 {Draw images}
 $800 Pos=
 \packedBaboon  Image= DrawImage call
-Wait1 call
+60 Delay= Wait call
 \packedParrot  Image= DrawImage call
-Wait1 call
+Wait call
 \packedJupiter Image= DrawImage call
-
-{Opening sound for 2 seconds}
-120 \soundTimer!
-Wait1 call
+Wait call
 
 {Display welcome tekst}
 8 {Green2} Color=
 $800 Pos=
 Welcome Text=
 DrawText call
+Wait call
 
 {Wait for sound to stop}
 [do \soundTimer? if<>0loop]
@@ -282,17 +299,13 @@ DrawText call
   Color 8^ if<>0 Color 9- Color= loop]
 
 {Wait 2.5 seconds}
-\frameCount? 150+ 255& tmp=
-[do \frameCount? tmp- if<>0loop]
+150 Delay= Wait call
 
-{ClearScreen image}
+{ClearScreen}
 ClearScreen call
 
-{Wait 2.5 seconds}
-\frameCount? 150+ 255& tmp=
-[do \frameCount? tmp- if<>0loop]
-
-$0111 ShiftControl= {X shift starting from line 8}
+{X shift starting from line 8}
+$0111 ShiftControl=
 
 {Ball acceleration BallA, height Y and velocity BallV}
 0 J=
@@ -303,6 +316,7 @@ $1800 BallY= Ball=
 
 {--- Run ---}
 
+RandomTest call
 RunPart1 call
 
 {-----------------------------------------------------------------------+

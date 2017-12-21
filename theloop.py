@@ -41,6 +41,8 @@
 #  XXX Iets met scroller. Flappy Bird?
 #  XXX Iets met doolhof. Berzerk/Robotron? Pac Mac?
 #  XXX Primes, Fibonacci, Queens
+#  XXX Entropy
+#  XXX Dice
 #  XXX Game of Life (edit <-> stop <-> slow <-> fast)
 #  XXX Game #5 Iets met schieten. Space Invaders, Demon Attack, Galaga style
 #  XXX Game #6 Iets met racen.
