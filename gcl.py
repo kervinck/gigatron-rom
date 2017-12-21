@@ -177,8 +177,8 @@ class Program:
             self.emit(con)
           else:
             self.opcode('LDWI')
-            self.emit(con&0xff)
-            self.emit(con>>8)
+            self.emit( con    &0xff)
+            self.emit((con>>8)&0xff)
       elif op == ':' and con is not None: # XXX Replace with automatic allocation
           self.org(con)
       elif op == '=' and var:
