@@ -69,7 +69,7 @@ $0300:
 
 [def
 {-
-  DrawText(Text,Pos) }
+  DrawText(Text,Pos)
 
   Draw a zero-terminated text string to the screen.
   Character 10 acts as newline.
