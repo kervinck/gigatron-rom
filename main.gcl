@@ -32,11 +32,20 @@ page 128-255 | Not used in the 32K system: mirror of page 0-127         |
 +-----------------------------------------------------------------------}
 $0300:
 
-[def { DrawChar(Char,Pos,Color) }
+{-
+  First setup all subroutine definitions and variables, without making
+  calls. This way allows use of vRT to hop from page to page during setup
+  with minimal overhead. At the end, run the main loop.
+-}
 
+[def { DrawChar(Char,Pos,Color) }
+{-
+  Draw a 5x8 character on screen with the built-in font.
+  `Char' must be in the 32-127 range (this is not checked)
+-}
   {Map ASCII code to offset in font table}
-  Char 82- [if<0 50+ i= \font32up            {Select low or high page}
-            else i=     \font82up] fontData=
+  Char 82- [if<0 50+ i= \font32up
+            else     i= \font82up] fontData= {Select low or high page}
   i i+ tmp= tmp+ i+    {Multiply by 5}
   fontData+ fontData=  {Add to page address to reach bitmap data for Char}
   $800 Pos+ q=         {Where to stop the inner drawing loop}
@@ -57,6 +66,11 @@ $0300:
 ] DrawChar=
 
 [def { DrawText(Text,Pos) }
+{-
+  Draw a zero-terminated text string to the screen.
+  Character 10 acts as newline.
+  There is no check for running off screen.
+-}
   push
   [do
     Text? Char= {Next character to be printed}
@@ -69,6 +83,13 @@ $0300:
 ] DrawText=
 
 [def
+{-
+  Startup message
+-}
+  {XXX move this to a ROM table}
+  {XXX display the counted memory}
+  {XXX Make ROM version readable by applications}
+  {XXX display number of free bytes}
   {   *** Gigatron 32K ***    }
   $20. $20. $20. $2a. $2a. $2a. $20. $47. $69. $67. $61. $74. $72. $6f. $6e.
   $20. $33. $32. $4b. $20. $2a. $2a. $2a. $20. $20. $20. $20. 10.
@@ -82,16 +103,21 @@ $0300:
 +-----------------------------------------------------------------------}
 $0400:
 
-[def { Clear(Pos) }
+[def { ClearScreen(Pos) }
+{-
+  Clear screen from current position to bottom right
+-}
   Pos p=
+  Pos 255| 255- {XXX Is there a better way to clear the low byte?}
+  i= $8001 i+ i=
   [do
-    [do {0 p!}
-        p \arg0= \SYS_38_VCLEAR8 38@ {Clears 8 pixels vertically}
-        $800 p+ p= if>0loop]
-    $8001 Pos+ p+ p=
+    p [do
+      \sysArgs= \SYS_38_VCLEAR8 38@ {Clears 8 pixels vertically}
+      $800 p+ p= if>0loop]
+    i+ p=
     255& 160^ if<>0loop]
   ret
-] Clear=
+] ClearScreen=
 
 [def {RunPart1}
   {Get X from scanline table}
@@ -181,13 +207,16 @@ $0500:
   [do
     {Draw slice}
     [do
-      p 0; q!
-      $0100 p+ p=
-      $0100 q+ q=
+      p \sysData= \SYS_40_READ3  40@ {Read 3 bytes from ROM}
+                  \SYS_56_UNPACK 56@ {Unpack to 4 bytes}
+      q \sysPos=  \SYS_30_DRAW4  30@ {Write 4 bytes to screen}
+      $80 p+ p=
+      q>++ q
       if>0loop]
+
     {Advance to next slice}
-    $8801 p+ p=
-    $8801 q+ q=
+    $c403 p+ p=
+    $8804 q+ q=
     255& 160^ if<>0loop]
   ret
 ] DrawImage=
@@ -214,13 +243,26 @@ $0600:
 
 {--- Setup ---}
 
-{Draw image}
-\entropy? 128& [if=0 \jupiter0 else \parrot0] Image=
+[def
+{-
+  Wait1 -- Wait 1.0 seconds
+-}
+  \frameCount? 60+ 255& tmp=
+  [do \frameCount? tmp- if<>0loop]
+  ret
+] Wait1=
+
+{Draw images}
 $800 Pos=
-DrawImage call
+\packedBaboon  Image= DrawImage call
+Wait1 call
+\packedParrot  Image= DrawImage call
+Wait1 call
+\packedJupiter Image= DrawImage call
 
 {Opening sound for 2 seconds}
 120 \soundTimer!
+Wait1 call
 
 {Display welcome tekst}
 8 {Green2} Color=
@@ -243,8 +285,8 @@ DrawText call
 \frameCount? 150+ 255& tmp=
 [do \frameCount? tmp- if<>0loop]
 
-{Clear image}
-Clear call
+{ClearScreen image}
+ClearScreen call
 
 {Wait 2.5 seconds}
 \frameCount? 150+ 255& tmp=
@@ -258,7 +300,6 @@ BallA= BallV= OldPixel=
 
 $1800 BallY= Ball=
 90 Height=
-
 
 {--- Run ---}
 

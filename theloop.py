@@ -4,42 +4,47 @@
 #  Core video, sound and interpreter loop for Gigatron TTL microcomputer
 #  - 6.25MHz clock
 #  - Rendering 160x120 pixels at 6.25MHz with flexible videoline programming
-#  - Must stay above 31 kHz horizontal sync --> 200 cycles/scanine
+#  - Must stay above 31 kHz horizontal sync --> 200 cycles/scanline
 #  - Must stay above 59.94 Hz vertical sync --> 521 scanlines/frame
 #  - 4 channels sound
 #  - 16-bits vCPU interpreter
+#  - Builtin vCPU programs
 #
-#  TODO:
+#  XXX Input handling update
+#  XXX Serial read from ROM tables, hiding page boundraries
+#  XXX Main menu / Loading and starting of programs
+#  XXX ROM load of vCPU code / bootstrapping
+#  XXX Logo drawing
+#  XXX DrawDecimal routine
+#  XXX Key/pitch table
+#  XXX Music sequencer
+#  XXX More waveforms
+#  XXX Serial loading of programs with Arduino/Trinket
+#  XXX Pacman ghosts. Sprites by scan line 4 reset method? ("videoG"=graphics)
+#  XXX Intro: Rising planet?
+#  XXX Multitasking/threading/sleeping (start with date/time clock in GCL)
+#  XXX Better shift-table (use ROM?)
+#  XXX Better notation for 'call': () or []
+#  XXX Prefix notation for high/low byte >X++ instead of X>++
+#  XXX Readability of asm.py instructions
+#  XXX Decay, using Karplus-Strong
+#  XXX Scoping for variables or some form of local variables?
+#  XXX Simple GCL programs might be compiled by the host instead of offline?
+#  XXX Dynamic memory allocation
+#  XXX Macros
 #
-#  XXX: Input handling update
-#  XXX: Rising planet
-#         8x8 pixel block in 48 bytes. Maybe 2 bytes overhead: 50
-#         5 pixel blocks in one page
-#         3 pages encode 1 column of 15 blocks
-#         3*20 = 60 pages to encode an image: 15 kB. Good for Parrot, Jupiter, Baboon
-#         SYS Routine to unpack 6 bytes would be nice
-#  XXX: Image packed in memory
-#  XXX: Serial read from ROM tables, ignoring page boundraries
-#  XXX: ROM load of code / bootstrapping
-#  XXX: Main menu
-#  XXX: Logo drawing
-#  XXX: DrawDecimal routine
-#  XXX: Key/pitch table
-#  XXX: Music sequencer
-#  XXX: More waveforms
-#  XXX: Serial loading of programs with Arduino/Trinket
-#  XXX: Multitasking/threading/sleeping (start with date/time clock in GCL)
-#  XXX: Loading and starting of programs
-#  XXX: Pacman ghosts. Sprites by scan line 4 reset method? ("videoG"=graphics)
-#  XXX: Better shift-table (use ROM?)
-#  XXX: Better notation for 'call'. () or []
-#  XXX: Prefix notation for high/low byte >X++ instead of X>++
-#  XXX: Readability of asm.py instructions
-#  XXX: Decay, using Karplus-Strong
-#  XXX: Scoping for variables or some form of local variables?
-#  XXX: Simple GCL programs might be compiled by the host instead of offline?
-#  XXX: Dynamic memory allocation
-#  XXX: Macros
+#  Possible applications
+#  XXX Picture Frame
+#  XXX Snakes
+#  XXX Iets heel simpels. Snakes? Plane and tank battle?
+#  XXX Nog iets simpels. Gigatron layout balls/bricks game
+#  XXX Iets met scroller. Flappy Bird?
+#  XXX Iets met doolhof. Berzerk/Robotron? Pac Mac?
+#  XXX Primes, Fibonacci, Queens
+#  XXX Game of Life (edit <-> stop <-> slow <-> fast)
+#  XXX Game #5 Iets met schieten. Space Invaders, Demon Attack, Galaga style
+#  XXX Game #6 Iets met racen.
+#
 #-----------------------------------------------------------------------
 
 from asm import *
@@ -65,16 +70,17 @@ vgaLines = vFront + vPulse + vBack + 480
 vgaClock = 25.175e+06
 
 # Video adjustments for Gigatron
-# 1. Our clock is (slighty) slower than 1/4th VGA clock. Not all monitors will accept
-#    the decreased frame rate, so we restore the frame rate to above minimum 59.94 Hz
-#    by cutting some lines from the vertical front porch.
+# 1. Our clock is (slighty) slower than 1/4th VGA clock. Not all monitors will
+#    accept the decreased frame rate, so we restore the frame rate to above
+#    minimum 59.94 Hz by cutting some lines from the vertical front porch.
 vFrontAdjust = vgaLines - int(4 * cpuClock / vgaClock * vgaLines)
 vFront -= vFrontAdjust
-# 2. Extend vertical sync pulse so we can feed the game controller the same signal.
-#    This is needed for controllers based on the 4021 instead of 74165
+# 2. Extend vertical sync pulse so we can feed the game controller the same
+#    signal. This is needed for controllers based on the 4021 instead of 74165
 vPulseExtension = max(0, 8-vPulse)
 vPulse += vPulseExtension
-# 3. Borrow these lines from the back porch so the refresh rate remains unaffected
+# 3. Borrow these lines from the back porch so the refresh rate remains
+#    unaffected
 vBack -= vPulseExtension
 
 # Game controller bits
@@ -149,11 +155,7 @@ videoSync1 = frameY  # Same during horizontal pulse
 # System clock
 frameCount = zpByte(1)
 
-# Generic function return address
-returnTo   = zpByte(2)
-
-# Return from EEPROM lookups
-lookupReturn = zpByte(2)
+returnTo   = zpByte(2) # Generic function return address
 
 # Entropy harvested from SRAM startup and controller input
 entropy    = zpByte(3)
@@ -171,26 +173,34 @@ serialInput     = zpByte()
 buttonState     = zpByte() # Filtered button state
 
 # vCPU interpreter
-vPC     = zpByte(2)             # Interpreter program counter, points into RAM
-vAC     = zpByte(2)             # Interpreter accumulator, 16-bits
-vRT     = zpByte(2)             # Return address, for returning after CALL
+vPC             = zpByte(2) # Interpreter program counter, points into RAM
+vAC             = zpByte(2) # Interpreter accumulator, 16-bits
+vRT             = zpByte(2) # Return address, for returning after CALL
 define('vRT', vRT)
-vSP     = zpByte(1)             # Stack pointer
-vTicks  = zpByte()              # Interpreter ticks are units of 2 clocks
-vTmp    = zpByte()
+vSP             = zpByte(1) # Stack pointer
+vTicks          = zpByte() # Interpreter ticks are units of 2 clocks
+vTmp            = zpByte()
 
-args    = zpByte(2)             # Space to pass arguments to SYS calls
+# Registers for SYS functions
+sysPos          = zpByte(2)
+sysData         = zpByte(2)
 
+# SYS arguments and results
+sysArgs         = zpByte(8)
+
+# ROM reader
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
-zpFree  = zpByte(0)
+zpFree          = zpByte(0)
 
 # Export some zero page variables to GCL
+# XXX Solve in another way (not through symbol table!)
 define('entropy',    entropy)
 define('soundTimer', soundTimer)
 define('vBlank',     vBlank)
 define('frameCount', frameCount)
-define('args',       args)
-define('arg0',       args+0)
+define('sysArgs',    sysArgs)
+define('sysData',    sysData)
+define('sysPos',     sysPos)
 
 #-----------------------------------------------------------------------
 #
@@ -284,17 +294,6 @@ def runVcpu(n, ref=None):
   ld(val(hi('ENTER')),regY)     #4
   jmpy(d(lo('ENTER')))          #5
   ld(val(n))                    #6
-
-def trampoline():
-  while pc()&255 < 256-5:
-    nop()
-
-  bra(busAC);                   #13
-  C('Trampoline for page $%02x00 lookups' % (pc()>>8))
-  bra(val(253))                 #14
-  ld(d(hi('rLookup')),regY)     #16
-  jmpy(d(lo('rLookup')))        #17
-  ld(d(vPC+1),busRAM|regY)      #18
 
 #-----------------------------------------------------------------------
 #
@@ -1115,15 +1114,26 @@ ld(busRAM|eaYXregAC)            #22
 
 # Instruction LOOKUP, (AC=ROM[AC+256*D]), 24 cycles
 label('LOOKUP')
-adda(d(vAC+1),busRAM|regY)      #10
+ld(d(vAC+1),busRAM|regY)        #10
 jmpy(d(251));                   C('Trampoline offset')#11
-ldzp(d(vAC))                    #12
-label('rLookup')
+adda(d(vAC),busRAM)             #12
+label('luReturn')
 st(d(vAC))                      #19
 ld(val(0))                      #20
 st(d(vAC+1))                    #21
 bra(d(lo('NEXT')))              #22
 ld(val(-24/2))                  #23
+
+def trampoline():
+  """Read 1 byte from ROM page"""
+  while pc()&255 < 256-5:
+    nop()
+  bra(busAC);                   #13
+  C('Trampoline for page $%02x00 lookups' % (pc()>>8))
+  bra(val(253))                 #14
+  ld(d(hi('luReturn')),regY)    #16
+  jmpy(d(lo('luReturn')))       #17
+  ld(d(vPC+1),busRAM|regY)      #18 Restore
 
 # Instruction PUSH, ([--SP]=RT), 14 cycles
 label('PUSH')
@@ -1194,9 +1204,11 @@ ld(val(-22/2))                  #21
 # actual consumed number of whole ticks for the entire virtual instruction cycle 
 # (from NEXT to NEXT). This duration may not exceed the prior declared duration
 # in the operand + 28 (or maxTicks). The operand specifies the (negative) of the
-# maximum number of EXTRA ticks that the native call will need. The GCL compiler
+# maximum number of *extra* ticks that the native call will need. The GCL compiler
 # automatically makes this calculation from gross number of cycles to excess
 # number of ticks.
+# SYS functions can modify vPC to implement repetition. For example to split
+# up work into multiple chucks.
 label('retry')
 ldzp(d(vPC));                   C('Retry until sufficient time')#13
 suba(val(2))                    #14
@@ -1417,8 +1429,8 @@ nop()                           #23
 #-----------------------------------------------------------------------
 
 label('SYS_38_VCLEAR8')
-ld(d(args+0),busRAM|regX)       #15
-ldzp(d(args+1))                 #16
+ld(d(sysArgs+0),busRAM|regX)    #15
+ldzp(d(sysArgs+1))              #16
 for i in range(8):
   adda(val(i),regY)             #17+2i
   st(d(0),eaYXregAC)            #18+2i
@@ -1441,18 +1453,127 @@ st(d(entropy+0))                #19
 st(d(vAC+0))                    #20
 adda(d(entropy+2),busRAM)       #21
 st(d(entropy+2))                #22
-bmi(d(lo('.sys_rnd0')))         #23
-bra(d(lo('.sys_rnd1')))         #24
+bmi(d(lo('.sysRnd0')))          #23
+bra(d(lo('.sysRnd1')))          #24
 xora(val(64+16+2+1))            #25
-label('.sys_rnd0')
+label('.sysRnd0')
 xora(val(64+32+8+4))            #25
-label('.sys_rnd1')
+label('.sysRnd1')
 adda(d(entropy+1),busRAM)       #26
 st(d(entropy+1))                #27
 st(d(vAC+1))                    #28
 ld(val(hi('REENTER')),regY)     #29
 jmpy(d(lo('REENTER')))          #30
 ld(val(-34/2))                  #31
+
+#-----------------------------------------------------------------------
+# Extension SYS_40_READ3: Read 3 consecutive bytes from ROM
+#-----------------------------------------------------------------------
+
+label('SYS_40_READ3')
+ld(d(sysData+1),busRAM|regY)    #15
+jmpy(d(128-7))                  #16 trampoline3a
+ldzp(d(sysData+0))              #17
+label('txReturn')
+st(d(sysArgs+2))                #34
+ld(val(hi('REENTER')),regY)     #35
+jmpy(d(lo('REENTER')))          #36
+ld(val(-40/2))                  #37
+
+def trampoline3a():
+  """Read 3 bytes from ROM page"""
+  while pc()&255 < 128-7:
+    nop()
+  bra(busAC)                    #18
+  C('Trampoline for page $%02x00 reading (entry)' % (pc()>>8))
+  bra(d(123))                   #19
+  st(d(sysArgs+0))              #21
+  ldzp(d(sysData+0))            #22
+  adda(val(1))                  #23
+  bra(busAC)                    #24
+  bra(d(250))                   #25 trampoline3b
+
+def trampoline3b():
+  """Read 3 bytes from ROM page (continue)"""
+  while pc()&255 < 256-6:
+    nop()
+  st(d(sysArgs+1))              #27
+  C('Trampoline for page $%02x00 reading (continue)' % (pc()>>8))
+  ldzp(d(sysData+0))            #28
+  adda(val(2))                  #29
+  ld(d(hi('txReturn')),regY)    #30
+  bra(busAC)                    #31
+  jmpy(d(lo('txReturn')))       #32
+
+#-----------------------------------------------------------------------
+# Extension SYS_58_UNPACK: Unpack 3 bytes into 4 pixels
+#-----------------------------------------------------------------------
+
+label('SYS_56_UNPACK')
+ld(val(shiftTablePage),regY)    #15
+ldzp(d(sysArgs+2))              #16 a[2]>>2
+anda(val(0xfc),regX)            #17
+ld(eaYXregAC|busRAM)            #18
+st(d(sysArgs+3));               C('-> Pixel 3')#19
+
+ldzp(d(sysArgs+2))              #20 (a[2]&3)<<4
+anda(val(0x03),regX)            #21
+adda(busAC)                     #22
+adda(busAC)                     #23
+adda(busAC)                     #24
+adda(busAC)                     #25
+st(d(sysArgs+2));               #26
+
+ldzp(d(sysArgs+1))              #27 | a[1]>>4
+anda(val(0xfc),regX)            #28
+ld(eaYXregAC|busRAM)            #29
+anda(val(0xfc),regX)            #30
+ld(eaYXregAC|busRAM)            #31
+ora(d(sysArgs+2),busRAM)        #32
+st(d(sysArgs+2));               C('-> Pixel 2')#33
+
+ldzp(d(sysArgs+1))              #34 (a[1]&15)<<2
+anda(val(0x0f))                 #35
+adda(busAC)                     #36
+adda(busAC)                     #37
+st(d(sysArgs+1))                #38
+
+ldzp(d(sysArgs+0))              #39 | a[0]>>6
+anda(val(0xfc),regX)            #40
+ld(eaYXregAC|busRAM)            #41
+anda(val(0xfc),regX)            #42
+ld(eaYXregAC|busRAM)            #43
+anda(val(0xfc),regX)            #44
+ld(eaYXregAC|busRAM)            #45
+ora(d(sysArgs+1),busRAM)        #46
+st(d(sysArgs+1));               C('-> Pixel 1')#47
+
+ldzp(d(sysArgs+0))              #48 a[1]&63
+anda(val(0x3f))                 #49
+st(d(sysArgs+0));               C('-> Pixel 0')#50
+
+ld(val(hi('REENTER')),regY)     #51
+jmpy(d(lo('REENTER')))          #52
+ld(val(-56/2))                  #53
+
+#-----------------------------------------------------------------------
+# Extension SYS_30_DRAW4:
+#-----------------------------------------------------------------------
+
+label('SYS_30_DRAW4')
+ld(d(sysPos+0),busRAM|regX)     #15
+ld(d(sysPos+1),busRAM|regY)     #16
+ldzp(d(sysArgs+0))              #17
+st(eaYXregOUTIX)                #18
+ldzp(d(sysArgs+1))              #19
+st(eaYXregOUTIX)                #20
+ldzp(d(sysArgs+2))              #21
+st(eaYXregOUTIX)                #22
+ldzp(d(sysArgs+3))              #23
+st(eaYXregOUTIX)                #24
+ld(val(hi('REENTER')),regY)     #25
+jmpy(d(lo('REENTER')))          #26
+ld(val(-30/2))                  #27
 
 #-----------------------------------------------------------------------
 #
@@ -1485,26 +1606,39 @@ for ch in range(32+50, 128):
 trampoline()
 
 #-----------------------------------------------------------------------
-#  ROM page XX: Images
+#  ROM page 76-: Built-in full resolution images
 #-----------------------------------------------------------------------
 
 def importImage(rgbName, width, height, ref):
   f = open(rgbName)
   raw = f.read()
   f.close()
-  for y in range(height):
-    align(0x100, 0x100)
-    label('%s%d' % (ref, y))
-    for x in range(width):
-      R = ord(raw[3 * (y * width + x) + 0])+43
-      G = ord(raw[3 * (y * width + x) + 1])+43
-      B = ord(raw[3 * (y * width + x) + 2])+43
-      byte = (R/85) + 4*(G/85) + 16*(B/85)
-      ld(val(byte))
-    trampoline()
+  align(0x100)
+  label(ref)
+  for y in range(0, height, 2):
+    for j in range(2):
+      align(0x80)
+      comment = 'Pixels for %s line %s' % (ref, y+j)
+      for x in range(0, width, 4):
+        bytes = []
+        for i in range(4):
+          R = ord(raw[3 * ((y + j) * width + x + i) + 0])
+          G = ord(raw[3 * ((y + j) * width + x + i) + 1])
+          B = ord(raw[3 * ((y + j) * width + x + i) + 2])
+          bytes.append( (R/85) + 4*(G/85) + 16*(B/85) )
 
-importImage('Images/Jupiter-160x120.rgb', 160, 120, 'jupiter')
-importImage('Images/Parrot-160x120.rgb',  160, 120, 'parrot')
+        # Pack 4 pixels in 3 bytes
+        ld(val( ((bytes[0]&0b111111)>>0) + ((bytes[1]&0b000011)<<6) )); comment = C(comment)
+        ld(val( ((bytes[1]&0b111100)>>2) + ((bytes[2]&0b001111)<<4) ))
+        ld(val( ((bytes[2]&0b110000)>>4) + ((bytes[3]&0b111111)<<2) ))
+      if j==0:
+        trampoline3a()
+      else:
+        trampoline3b()
+
+importImage('Images/Jupiter-160x120.rgb', 160, 120, 'packedJupiter')
+importImage('Images/Parrot-160x120.rgb',  160, 120, 'packedParrot')
+importImage('Images/Baboon-160x120.rgb',  160, 120, 'packedBaboon')
 
 #-----------------------------------------------------------------------
 #
