@@ -159,11 +159,12 @@ class Program:
       self.emit(lo('$if.%d.1' % block))
       define('$if.%d.0' % block, prev(self.vPC))
       self.conds[block] = 1
+
     elif word == 'push': self.opcode('PUSH')
     elif word == 'pop':  self.opcode('POP')
     elif word == 'call': self.opcode('CALL')
-    elif word == 'ret':
-      self.opcode('RET')
+    elif word == 'ret':  self.opcode('RET')
+    elif word == 'peek': self.opcode('PEEK')
     else:
       var, con, op = self.parseWord(word) # XXX Simplify this
       if op is None:

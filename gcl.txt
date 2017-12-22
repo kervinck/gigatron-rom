@@ -94,6 +94,7 @@ X<++ X>++               Increment low/high byte of variable X
 Memory
 ------
 X?                      Read unsigned byte from memory pointed by X into vAC
+peek                    Read byte from memory pointed by vAC
 X!                      Write vAC as byte to memory pointed by variable
 i?                      Read zero page address i as unsigned byte into vAC
 i!                      Store vAC as byte into zero page address i
