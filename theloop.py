@@ -1668,7 +1668,7 @@ print 'SYS warning %s error %s' % (repr(minSYS), repr(maxSYS))
 
 # Compile test GCL program
 program = gcl.Program(bStart)
-for line in open('screen.gcl').readlines():
+for line in open('snake.gcl').readlines():
   program.line(line)
 program.end()
 bLine = program.vPC
