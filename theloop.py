@@ -35,8 +35,6 @@
 #
 #  Possible applications
 #  XXX Picture Frame
-#  XXX Snakes
-#  XXX Iets heel simpels. Snakes? Plane and tank battle?
 #  XXX Nog iets simpels. Gigatron layout balls/bricks game
 #  XXX Iets met scroller. Flappy Bird?
 #  XXX Iets met doolhof. Berzerk/Robotron? Pac Mac?
@@ -46,7 +44,7 @@
 #  XXX Game of Life (edit <-> stop <-> slow <-> fast)
 #  XXX Game #5 Iets met schieten. Space Invaders, Demon Attack, Galaga style
 #  XXX Game #6 Iets met racen.
-#
+#  XXX Demo mode: flip between applications in auto-play mode
 #-----------------------------------------------------------------------
 
 from asm import *
@@ -178,7 +176,6 @@ buttonState     = zpByte() # Filtered button state
 vPC             = zpByte(2) # Interpreter program counter, points into RAM
 vAC             = zpByte(2) # Interpreter accumulator, 16-bits
 vRT             = zpByte(2) # Return address, for returning after CALL
-define('vRT', vRT)
 vSP             = zpByte(1) # Stack pointer
 vTicks          = zpByte() # Interpreter ticks are units of 2 clocks
 vTmp            = zpByte()
@@ -196,11 +193,15 @@ zpFree          = zpByte(0)
 
 # Export some zero page variables to GCL
 # XXX Solve in another way (not through symbol table!)
+define('vRT',        vRT)
 define('entropy',    entropy)
 define('soundTimer', soundTimer)
 define('vBlank',     vBlank)
 define('frameCount', frameCount)
 define('sysArgs',    sysArgs)
+define('sysArgs1',   sysArgs+1)
+define('sysArgs2',   sysArgs+2)
+define('sysArgs3',   sysArgs+3)
 define('sysData',    sysData)
 define('sysPos',     sysPos)
 
@@ -1519,7 +1520,7 @@ ld(eaYXregAC|busRAM)            #18
 st(d(sysArgs+3));               C('-> Pixel 3')#19
 
 ldzp(d(sysArgs+2))              #20 (a[2]&3)<<4
-anda(val(0x03),regX)            #21
+anda(val(0x03))                 #21
 adda(busAC)                     #22
 adda(busAC)                     #23
 adda(busAC)                     #24
@@ -1642,6 +1643,17 @@ importImage('Images/Jupiter-160x120.rgb', 160, 120, 'packedJupiter')
 importImage('Images/Parrot-160x120.rgb',  160, 120, 'packedParrot')
 importImage('Images/Baboon-160x120.rgb',  160, 120, 'packedBaboon')
 
+f = open('Images/gigatron.rgb', 'rb')
+raw = f.read()
+f.close()
+align(0x100)
+label('gigatronRaw')
+for i in xrange(len(raw)):
+  if i&255 < 251:
+    ld(val(ord(raw[i])))
+  elif i&255 == 251:
+    trampoline()
+
 #-----------------------------------------------------------------------
 #
 #  ROM page XX: Bootstrap vCPU
@@ -1656,7 +1668,7 @@ print 'SYS warning %s error %s' % (repr(minSYS), repr(maxSYS))
 
 # Compile test GCL program
 program = gcl.Program(bStart)
-for line in open('main.gcl').readlines():
+for line in open('screen.gcl').readlines():
   program.line(line)
 program.end()
 bLine = program.vPC

@@ -127,7 +127,7 @@ cold:         003e c204  st   [$04]
               0078 007e  ld   $7e         ;Bootstrap vCPU
               0079 c20f  st   [$0f]
               007a 0000  ld   $00
-              007b 14bb  ld   $bb,y
+              007b 14d3  ld   $d3,y
               007c e000  jmp  y,$00
               007d c210  st   [$10]
 .retn:        007e 000f  ld   $0f         ;LEDs |****|
@@ -806,7 +806,7 @@ SYS_56_UNPACK: 045f 1402  ld   $02,y
               0462 0d00  ld   [y,x]
               0463 c22a  st   [$2a]       ;-> Pixel 3
               0464 0129  ld   [$29]
-              0465 3003  anda $03,x
+              0465 2003  anda $03
               0466 8200  adda ac
               0467 8200  adda ac
               0468 8200  adda ac
@@ -41524,839 +41524,6327 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               bafd 1404  ld   $04,y
               bafe fe00  bra  ac
               baff e05b  jmp  y,$5b
-initVcpu:     bb00 1000  ld   $00,x
-              bb01 1403  ld   $03,y
-              bb02 dcfc  st   $fc,[y,x++] ;0300 DEF
-              bb03 dc6d  st   $6d,[y,x++]
-              bb04 dc22  st   $22,[y,x++] ;0302 LDW
-              bb05 dc2f  st   $2f,[y,x++] ;0303 'Char'
-              bb06 dcf3  st   $f3,[y,x++] ;0304 SUBI
-              bb07 dc52  st   $52,[y,x++]
-              bb08 dc36  st   $36,[y,x++] ;0306 COND
-              bb09 dc56  st   $56,[y,x++] ;0307 GE
-              bb0a dc10  st   $10,[y,x++]
-              bb0b dcf0  st   $f0,[y,x++] ;0309 ADDI
-              bb0c dc32  st   $32,[y,x++]
-              bb0d dc2c  st   $2c,[y,x++] ;030b STW
-              bb0e dc31  st   $31,[y,x++] ;030c 'i'
-              bb0f dc12  st   $12,[y,x++] ;030d LDWI
-              bb10 dc00  st   $00,[y,x++]
-              bb11 dc05  st   $05,[y,x++]
-              bb12 dc98  st   $98,[y,x++] ;0310 BRA
-              bb13 dc15  st   $15,[y,x++]
-              bb14 dc2c  st   $2c,[y,x++] ;0312 STW
-              bb15 dc31  st   $31,[y,x++] ;0313 'i'
-              bb16 dc12  st   $12,[y,x++] ;0314 LDWI
-              bb17 dc00  st   $00,[y,x++]
-              bb18 dc06  st   $06,[y,x++]
-              bb19 dc2c  st   $2c,[y,x++] ;0317 STW
-              bb1a dc33  st   $33,[y,x++] ;0318 'fontData'
-              bb1b dc22  st   $22,[y,x++] ;0319 LDW
-              bb1c dc31  st   $31,[y,x++] ;031a 'i'
-              bb1d dcc4  st   $c4,[y,x++] ;031b ADDW
-              bb1e dc31  st   $31,[y,x++] ;031c 'i'
-              bb1f dc2c  st   $2c,[y,x++] ;031d STW
-              bb20 dc35  st   $35,[y,x++] ;031e 'tmp'
-              bb21 dcc4  st   $c4,[y,x++] ;031f ADDW
-              bb22 dc35  st   $35,[y,x++] ;0320 'tmp'
-              bb23 dcc4  st   $c4,[y,x++] ;0321 ADDW
-              bb24 dc31  st   $31,[y,x++] ;0322 'i'
-              bb25 dcc4  st   $c4,[y,x++] ;0323 ADDW
-              bb26 dc33  st   $33,[y,x++] ;0324 'fontData'
-              bb27 dc2c  st   $2c,[y,x++] ;0325 STW
-              bb28 dc33  st   $33,[y,x++] ;0326 'fontData'
-              bb29 dc12  st   $12,[y,x++] ;0327 LDWI
-              bb2a dc00  st   $00,[y,x++]
-              bb2b dc08  st   $08,[y,x++]
-              bb2c dcc4  st   $c4,[y,x++] ;032a ADDW
-              bb2d dc37  st   $37,[y,x++] ;032b 'Pos'
-              bb2e dc2c  st   $2c,[y,x++] ;032c STW
-              bb2f dc39  st   $39,[y,x++] ;032d 'q'
-              bb30 dc5c  st   $5c,[y,x++] ;032e LDI
-              bb31 dc05  st   $05,[y,x++]
-              bb32 dc2c  st   $2c,[y,x++] ;0330 STW
-              bb33 dc31  st   $31,[y,x++] ;0331 'i'
-              bb34 dc36  st   $36,[y,x++] ;0332 COND
-              bb35 dc4d  st   $4d,[y,x++] ;0333 EQ
-              bb36 dc3b  st   $3b,[y,x++]
-              bb37 dc22  st   $22,[y,x++] ;0335 LDW
-              bb38 dc33  st   $33,[y,x++] ;0336 'fontData'
-              bb39 dc78  st   $78,[y,x++] ;0337 LOOKUP
-              bb3a dc00  st   $00,[y,x++]
-              bb3b dcf6  st   $f6,[y,x++] ;0339 INC
-              bb3c dc33  st   $33,[y,x++] ;033a 'fontData'
-              bb3d dc98  st   $98,[y,x++] ;033b BRA
-              bb3e dc3d  st   $3d,[y,x++]
-              bb3f dc5c  st   $5c,[y,x++] ;033d LDI
-              bb40 dc00  st   $00,[y,x++]
-              bb41 dc2c  st   $2c,[y,x++] ;033f STW
-              bb42 dc3b  st   $3b,[y,x++] ;0340 'bits'
-              bb43 dc22  st   $22,[y,x++] ;0341 LDW
-              bb44 dc37  st   $37,[y,x++] ;0342 'Pos'
-              bb45 dc2c  st   $2c,[y,x++] ;0343 STW
-              bb46 dc3d  st   $3d,[y,x++] ;0344 'p'
-              bb47 dc22  st   $22,[y,x++] ;0345 LDW
-              bb48 dc3b  st   $3b,[y,x++] ;0346 'bits'
-              bb49 dc8a  st   $8a,[y,x++] ;0347 ANDI
-              bb4a dc80  st   $80,[y,x++]
-              bb4b dc36  st   $36,[y,x++] ;0349 COND
-              bb4c dc75  st   $75,[y,x++] ;034a NE
-              bb4d dc4e  st   $4e,[y,x++]
-              bb4e dc5c  st   $5c,[y,x++] ;034c LDI
-              bb4f dc00  st   $00,[y,x++]
-              bb50 dc98  st   $98,[y,x++] ;034e BRA
-              bb51 dc50  st   $50,[y,x++]
-              bb52 dc22  st   $22,[y,x++] ;0350 LDW
-              bb53 dc3f  st   $3f,[y,x++] ;0351 'Color'
-              bb54 dc9b  st   $9b,[y,x++] ;0352 POKE
-              bb55 dc3d  st   $3d,[y,x++] ;0353 'p'
-              bb56 dc22  st   $22,[y,x++] ;0354 LDW
-              bb57 dc3b  st   $3b,[y,x++] ;0355 'bits'
-              bb58 dcc4  st   $c4,[y,x++] ;0356 ADDW
-              bb59 dc3b  st   $3b,[y,x++] ;0357 'bits'
-              bb5a dc2c  st   $2c,[y,x++] ;0358 STW
-              bb5b dc3b  st   $3b,[y,x++] ;0359 'bits'
-              bb5c dcf6  st   $f6,[y,x++] ;035a INC
-              bb5d dc3e  st   $3e,[y,x++] ;035b 'p'+1
-              bb5e dc22  st   $22,[y,x++] ;035c LDW
-              bb5f dc3d  st   $3d,[y,x++] ;035d 'p'
-              bb60 dcb0  st   $b0,[y,x++] ;035e SUBW
-              bb61 dc39  st   $39,[y,x++] ;035f 'q'
-              bb62 dc36  st   $36,[y,x++] ;0360 COND
-              bb63 dc53  st   $53,[y,x++] ;0361 LT
-              bb64 dc43  st   $43,[y,x++]
-              bb65 dcf6  st   $f6,[y,x++] ;0363 INC
-              bb66 dc37  st   $37,[y,x++] ;0364 'Pos'
-              bb67 dc22  st   $22,[y,x++] ;0365 LDW
-              bb68 dc31  st   $31,[y,x++] ;0366 'i'
-              bb69 dcf3  st   $f3,[y,x++] ;0367 SUBI
-              bb6a dc01  st   $01,[y,x++]
-              bb6b dc2c  st   $2c,[y,x++] ;0369 STW
-              bb6c dc31  st   $31,[y,x++] ;036a 'i'
-              bb6d dc36  st   $36,[y,x++] ;036b COND
-              bb6e dc56  st   $56,[y,x++] ;036c GE
-              bb6f dc30  st   $30,[y,x++]
-              bb70 dcff  st   $ff,[y,x++] ;036e RET
-              bb71 dc2c  st   $2c,[y,x++] ;036f STW
-              bb72 dc41  st   $41,[y,x++] ;0370 'DrawChar'
-              bb73 dcfc  st   $fc,[y,x++] ;0371 DEF
-              bb74 dc95  st   $95,[y,x++]
-              bb75 dc80  st   $80,[y,x++] ;0373 PUSH
-              bb76 dc22  st   $22,[y,x++] ;0374 LDW
-              bb77 dc43  st   $43,[y,x++] ;0375 'Text'
-              bb78 dcd8  st   $d8,[y,x++] ;0376 PEEK
-              bb79 dc2c  st   $2c,[y,x++] ;0377 STW
-              bb7a dc2f  st   $2f,[y,x++] ;0378 'Char'
-              bb7b dc36  st   $36,[y,x++] ;0379 COND
-              bb7c dc4d  st   $4d,[y,x++] ;037a EQ
-              bb7d dc93  st   $93,[y,x++]
-              bb7e dcf6  st   $f6,[y,x++] ;037c INC
-              bb7f dc43  st   $43,[y,x++] ;037d 'Text'
-              bb80 dc22  st   $22,[y,x++] ;037e LDW
-              bb81 dc2f  st   $2f,[y,x++] ;037f 'Char'
-              bb82 dc94  st   $94,[y,x++] ;0380 XORI
-              bb83 dc0a  st   $0a,[y,x++]
-              bb84 dc36  st   $36,[y,x++] ;0382 COND
-              bb85 dc75  st   $75,[y,x++] ;0383 NE
-              bb86 dc8e  st   $8e,[y,x++]
-              bb87 dc61  st   $61,[y,x++] ;0385 ST
-              bb88 dc37  st   $37,[y,x++] ;0386 'Pos'
-              bb89 dc12  st   $12,[y,x++] ;0387 LDWI
-              bb8a dc00  st   $00,[y,x++]
-              bb8b dc08  st   $08,[y,x++]
-              bb8c dcc4  st   $c4,[y,x++] ;038a ADDW
-              bb8d dc37  st   $37,[y,x++] ;038b 'Pos'
-              bb8e dc2c  st   $2c,[y,x++] ;038c STW
-              bb8f dc37  st   $37,[y,x++] ;038d 'Pos'
-              bb90 dc98  st   $98,[y,x++] ;038e BRA
-              bb91 dc91  st   $91,[y,x++]
-              bb92 dc22  st   $22,[y,x++] ;0390 LDW
-              bb93 dc41  st   $41,[y,x++] ;0391 'DrawChar'
-              bb94 dce4  st   $e4,[y,x++] ;0392 CALL
-              bb95 dc98  st   $98,[y,x++] ;0393 BRA
-              bb96 dc72  st   $72,[y,x++]
-              bb97 dc66  st   $66,[y,x++] ;0395 POP
-              bb98 dce4  st   $e4,[y,x++] ;0396 CALL
-              bb99 dc2c  st   $2c,[y,x++] ;0397 STW
-              bb9a dc45  st   $45,[y,x++] ;0398 'DrawText'
-              bb9b dcfc  st   $fc,[y,x++] ;0399 DEF
-              bb9c dcd2  st   $d2,[y,x++]
-              bb9d dc20  st   $20,[y,x++]
-              bb9e dc20  st   $20,[y,x++]
-              bb9f dc20  st   $20,[y,x++]
-              bba0 dc2a  st   $2a,[y,x++]
-              bba1 dc2a  st   $2a,[y,x++]
-              bba2 dc2a  st   $2a,[y,x++]
-              bba3 dc20  st   $20,[y,x++]
-              bba4 dc47  st   $47,[y,x++]
-              bba5 dc69  st   $69,[y,x++]
-              bba6 dc67  st   $67,[y,x++]
-              bba7 dc61  st   $61,[y,x++]
-              bba8 dc74  st   $74,[y,x++]
-              bba9 dc72  st   $72,[y,x++]
-              bbaa dc6f  st   $6f,[y,x++]
-              bbab dc6e  st   $6e,[y,x++]
-              bbac dc20  st   $20,[y,x++]
-              bbad dc33  st   $33,[y,x++]
-              bbae dc32  st   $32,[y,x++]
-              bbaf dc4b  st   $4b,[y,x++]
-              bbb0 dc20  st   $20,[y,x++]
-              bbb1 dc2a  st   $2a,[y,x++]
-              bbb2 dc2a  st   $2a,[y,x++]
-              bbb3 dc2a  st   $2a,[y,x++]
-              bbb4 dc20  st   $20,[y,x++]
-              bbb5 dc20  st   $20,[y,x++]
-              bbb6 dc20  st   $20,[y,x++]
-              bbb7 dc20  st   $20,[y,x++]
-              bbb8 dc0a  st   $0a,[y,x++]
-              bbb9 dc54  st   $54,[y,x++]
-              bbba dc54  st   $54,[y,x++]
-              bbbb dc4c  st   $4c,[y,x++]
-              bbbc dc20  st   $20,[y,x++]
-              bbbd dc63  st   $63,[y,x++]
-              bbbe dc6f  st   $6f,[y,x++]
-              bbbf dc6c  st   $6c,[y,x++]
-              bbc0 dc6f  st   $6f,[y,x++]
-              bbc1 dc72  st   $72,[y,x++]
-              bbc2 dc20  st   $20,[y,x++]
-              bbc3 dc63  st   $63,[y,x++]
-              bbc4 dc6f  st   $6f,[y,x++]
-              bbc5 dc6d  st   $6d,[y,x++]
-              bbc6 dc70  st   $70,[y,x++]
-              bbc7 dc75  st   $75,[y,x++]
-              bbc8 dc74  st   $74,[y,x++]
-              bbc9 dc65  st   $65,[y,x++]
-              bbca dc72  st   $72,[y,x++]
-              bbcb dc20  st   $20,[y,x++]
-              bbcc dc52  st   $52,[y,x++]
-              bbcd dc4f  st   $4f,[y,x++]
-              bbce dc4d  st   $4d,[y,x++]
-              bbcf dc20  st   $20,[y,x++]
-              bbd0 dc76  st   $76,[y,x++]
-              bbd1 dc30  st   $30,[y,x++]
-              bbd2 dc20  st   $20,[y,x++]
-              bbd3 dc20  st   $20,[y,x++]
-              bbd4 dc0a  st   $0a,[y,x++]
-              bbd5 dc00  st   $00,[y,x++]
-              bbd6 dc2c  st   $2c,[y,x++] ;03d4 STW
-              bbd7 dc47  st   $47,[y,x++] ;03d5 'Welcome'
-              bbd8 dcff  st   $ff,[y,x++] ;03d6 RET
-              bbd9 1000  ld   $00,x
-              bbda 1404  ld   $04,y
-              bbdb dcfc  st   $fc,[y,x++] ;0400 DEF
-              bbdc dc32  st   $32,[y,x++]
-              bbdd dc22  st   $22,[y,x++] ;0402 LDW
-              bbde dc37  st   $37,[y,x++] ;0403 'Pos'
-              bbdf dc2c  st   $2c,[y,x++] ;0404 STW
-              bbe0 dc3d  st   $3d,[y,x++] ;0405 'p'
-              bbe1 dc22  st   $22,[y,x++] ;0406 LDW
-              bbe2 dc37  st   $37,[y,x++] ;0407 'Pos'
-              bbe3 dc90  st   $90,[y,x++] ;0408 ORI
-              bbe4 dcff  st   $ff,[y,x++]
-              bbe5 dcf3  st   $f3,[y,x++] ;040a SUBI
-              bbe6 dcff  st   $ff,[y,x++]
-              bbe7 dc2c  st   $2c,[y,x++] ;040c STW
-              bbe8 dc31  st   $31,[y,x++] ;040d 'i'
-              bbe9 dc12  st   $12,[y,x++] ;040e LDWI
-              bbea dc01  st   $01,[y,x++]
-              bbeb dc80  st   $80,[y,x++]
-              bbec dcc4  st   $c4,[y,x++] ;0411 ADDW
-              bbed dc31  st   $31,[y,x++] ;0412 'i'
-              bbee dc2c  st   $2c,[y,x++] ;0413 STW
-              bbef dc31  st   $31,[y,x++] ;0414 'i'
-              bbf0 dc22  st   $22,[y,x++] ;0415 LDW
-              bbf1 dc3d  st   $3d,[y,x++] ;0416 'p'
-              bbf2 dc2c  st   $2c,[y,x++] ;0417 STW
-              bbf3 dc27  st   $27,[y,x++]
-              bbf4 dc12  st   $12,[y,x++] ;0419 LDWI
-              bbf5 dc31  st   $31,[y,x++]
-              bbf6 dc04  st   $04,[y,x++]
-              bbf7 dcac  st   $ac,[y,x++] ;041c SYS
-              bbf8 dcfb  st   $fb,[y,x++]
-              bbf9 dc12  st   $12,[y,x++] ;041e LDWI
-              bbfa dc00  st   $00,[y,x++]
-              bbfb dc08  st   $08,[y,x++]
-              bbfc dcc4  st   $c4,[y,x++] ;0421 ADDW
-              bbfd dc3d  st   $3d,[y,x++] ;0422 'p'
-              bbfe dc2c  st   $2c,[y,x++] ;0423 STW
-              bbff dc3d  st   $3d,[y,x++] ;0424 'p'
-              bc00 dc36  st   $36,[y,x++] ;0425 COND
-              bc01 dc50  st   $50,[y,x++] ;0426 GT
-              bc02 dc15  st   $15,[y,x++]
-              bc03 dcc4  st   $c4,[y,x++] ;0428 ADDW
-              bc04 dc31  st   $31,[y,x++] ;0429 'i'
-              bc05 dc2c  st   $2c,[y,x++] ;042a STW
-              bc06 dc3d  st   $3d,[y,x++] ;042b 'p'
-              bc07 dc8a  st   $8a,[y,x++] ;042c ANDI
-              bc08 dcff  st   $ff,[y,x++]
-              bc09 dc94  st   $94,[y,x++] ;042e XORI
-              bc0a dca0  st   $a0,[y,x++]
-              bc0b dc36  st   $36,[y,x++] ;0430 COND
-              bc0c dc75  st   $75,[y,x++] ;0431 NE
-              bc0d dc13  st   $13,[y,x++]
-              bc0e dcff  st   $ff,[y,x++] ;0433 RET
-              bc0f dc2c  st   $2c,[y,x++] ;0434 STW
-              bc10 dc49  st   $49,[y,x++] ;0435 'ClearScreen'
-              bc11 dcfc  st   $fc,[y,x++] ;0436 DEF
-              bc12 dce3  st   $e3,[y,x++]
-              bc13 dc22  st   $22,[y,x++] ;0438 LDW
-              bc14 dc4b  st   $4b,[y,x++] ;0439 'ShiftControl'
-              bc15 dcd8  st   $d8,[y,x++] ;043a PEEK
-              bc16 dc2c  st   $2c,[y,x++] ;043b STW
-              bc17 dc4d  st   $4d,[y,x++] ;043c 'X'
-              bc18 dc94  st   $94,[y,x++] ;043d XORI
-              bc19 dc78  st   $78,[y,x++]
-              bc1a dc36  st   $36,[y,x++] ;043f COND
-              bc1b dc75  st   $75,[y,x++] ;0440 NE
-              bc1c dc44  st   $44,[y,x++]
-              bc1d dc5c  st   $5c,[y,x++] ;0442 LDI
-              bc1e dc0a  st   $0a,[y,x++]
-              bc1f dc2c  st   $2c,[y,x++] ;0444 STW
-              bc20 dc4f  st   $4f,[y,x++] ;0445 'BallA'
-              bc21 dc22  st   $22,[y,x++] ;0446 LDW
-              bc22 dc51  st   $51,[y,x++] ;0447 'Height'
-              bc23 dcf3  st   $f3,[y,x++] ;0448 SUBI
-              bc24 dc58  st   $58,[y,x++]
-              bc25 dc36  st   $36,[y,x++] ;044a COND
-              bc26 dc59  st   $59,[y,x++] ;044b LE
-              bc27 dc58  st   $58,[y,x++]
-              bc28 dc1b  st   $1b,[y,x++] ;044d LD
-              bc29 dc11  st   $11,[y,x++]
-              bc2a dc8a  st   $8a,[y,x++] ;044f ANDI
-              bc2b dc10  st   $10,[y,x++]
-              bc2c dc36  st   $36,[y,x++] ;0451 COND
-              bc2d dc4d  st   $4d,[y,x++] ;0452 EQ
-              bc2e dc58  st   $58,[y,x++]
-              bc2f dc22  st   $22,[y,x++] ;0454 LDW
-              bc30 dc51  st   $51,[y,x++] ;0455 'Height'
-              bc31 dcf3  st   $f3,[y,x++] ;0456 SUBI
-              bc32 dc01  st   $01,[y,x++]
-              bc33 dc2c  st   $2c,[y,x++] ;0458 STW
-              bc34 dc51  st   $51,[y,x++] ;0459 'Height'
-              bc35 dc22  st   $22,[y,x++] ;045a LDW
-              bc36 dc51  st   $51,[y,x++] ;045b 'Height'
-              bc37 dcf3  st   $f3,[y,x++] ;045c SUBI
-              bc38 dc76  st   $76,[y,x++]
-              bc39 dc36  st   $36,[y,x++] ;045e COND
-              bc3a dc56  st   $56,[y,x++] ;045f GE
-              bc3b dc68  st   $68,[y,x++]
-              bc3c dc1b  st   $1b,[y,x++] ;0461 LD
-              bc3d dc11  st   $11,[y,x++]
-              bc3e dc8a  st   $8a,[y,x++] ;0463 ANDI
-              bc3f dc80  st   $80,[y,x++]
-              bc40 dc36  st   $36,[y,x++] ;0465 COND
-              bc41 dc4d  st   $4d,[y,x++] ;0466 EQ
-              bc42 dc68  st   $68,[y,x++]
-              bc43 dcf6  st   $f6,[y,x++] ;0468 INC
-              bc44 dc51  st   $51,[y,x++] ;0469 'Height'
-              bc45 dc22  st   $22,[y,x++] ;046a LDW
-              bc46 dc51  st   $51,[y,x++] ;046b 'Height'
-              bc47 dcf0  st   $f0,[y,x++] ;046c ADDI
-              bc48 dc08  st   $08,[y,x++]
-              bc49 dc61  st   $61,[y,x++] ;046e ST
-              bc4a dc54  st   $54,[y,x++] ;046f 'J'+1
-              bc4b dc22  st   $22,[y,x++] ;0470 LDW
-              bc4c dc4d  st   $4d,[y,x++] ;0471 'X'
-              bc4d dcf0  st   $f0,[y,x++] ;0472 ADDI
-              bc4e dca0  st   $a0,[y,x++]
-              bc4f dc8a  st   $8a,[y,x++] ;0474 ANDI
-              bc50 dcff  st   $ff,[y,x++]
-              bc51 dc2c  st   $2c,[y,x++] ;0476 STW
-              bc52 dc3d  st   $3d,[y,x++] ;0477 'p'
-              bc53 dc12  st   $12,[y,x++] ;0478 LDWI
-              bc54 dc00  st   $00,[y,x++]
-              bc55 dc10  st   $10,[y,x++]
-              bc56 dcc4  st   $c4,[y,x++] ;047b ADDW
-              bc57 dc3d  st   $3d,[y,x++] ;047c 'p'
-              bc58 dc2c  st   $2c,[y,x++] ;047d STW
-              bc59 dc55  st   $55,[y,x++] ;047e 'V'
-              bc5a dc5c  st   $5c,[y,x++] ;047f LDI
-              bc5b dc01  st   $01,[y,x++]
-              bc5c dc9b  st   $9b,[y,x++] ;0481 POKE
-              bc5d dc55  st   $55,[y,x++] ;0482 'V'
-              bc5e dcf6  st   $f6,[y,x++] ;0483 INC
-              bc5f dc56  st   $56,[y,x++] ;0484 'V'+1
-              bc60 dc22  st   $22,[y,x++] ;0485 LDW
-              bc61 dc55  st   $55,[y,x++] ;0486 'V'
-              bc62 dc36  st   $36,[y,x++] ;0487 COND
-              bc63 dc50  st   $50,[y,x++] ;0488 GT
-              bc64 dc7d  st   $7d,[y,x++]
-              bc65 dc1b  st   $1b,[y,x++] ;048a LD
-              bc66 dc11  st   $11,[y,x++]
-              bc67 dc8a  st   $8a,[y,x++] ;048c ANDI
-              bc68 dc7f  st   $7f,[y,x++]
-              bc69 dc2c  st   $2c,[y,x++] ;048e STW
-              bc6a dc57  st   $57,[y,x++] ;048f 'A'
-              bc6b dc22  st   $22,[y,x++] ;0490 LDW
-              bc6c dc57  st   $57,[y,x++] ;0491 'A'
-              bc6d dcf3  st   $f3,[y,x++] ;0492 SUBI
-              bc6e dc6f  st   $6f,[y,x++]
-              bc6f dc36  st   $36,[y,x++] ;0494 COND
-              bc70 dc59  st   $59,[y,x++] ;0495 LE
-              bc71 dc99  st   $99,[y,x++]
-              bc72 dc5c  st   $5c,[y,x++] ;0497 LDI
-              bc73 dc77  st   $77,[y,x++]
-              bc74 dc2c  st   $2c,[y,x++] ;0499 STW
-              bc75 dc57  st   $57,[y,x++] ;049a 'A'
-              bc76 dc22  st   $22,[y,x++] ;049b LDW
-              bc77 dc57  st   $57,[y,x++] ;049c 'A'
-              bc78 dcf0  st   $f0,[y,x++] ;049d ADDI
-              bc79 dc10  st   $10,[y,x++]
-              bc7a dc61  st   $61,[y,x++] ;049f ST
-              bc7b dc58  st   $58,[y,x++] ;04a0 'A'+1
-              bc7c dc22  st   $22,[y,x++] ;04a1 LDW
-              bc7d dc3d  st   $3d,[y,x++] ;04a2 'p'
-              bc7e dc61  st   $61,[y,x++] ;04a3 ST
-              bc7f dc57  st   $57,[y,x++] ;04a4 'A'
-              bc80 dc5c  st   $5c,[y,x++] ;04a5 LDI
-              bc81 dc02  st   $02,[y,x++]
-              bc82 dc9b  st   $9b,[y,x++] ;04a7 POKE
-              bc83 dc57  st   $57,[y,x++] ;04a8 'A'
-              bc84 dc22  st   $22,[y,x++] ;04a9 LDW
-              bc85 dc53  st   $53,[y,x++] ;04aa 'J'
-              bc86 dcc4  st   $c4,[y,x++] ;04ab ADDW
-              bc87 dc3d  st   $3d,[y,x++] ;04ac 'p'
-              bc88 dc2c  st   $2c,[y,x++] ;04ad STW
-              bc89 dc55  st   $55,[y,x++] ;04ae 'V'
-              bc8a dc5c  st   $5c,[y,x++] ;04af LDI
-              bc8b dc3f  st   $3f,[y,x++]
-              bc8c dc9b  st   $9b,[y,x++] ;04b1 POKE
-              bc8d dc55  st   $55,[y,x++] ;04b2 'V'
-              bc8e dcf6  st   $f6,[y,x++] ;04b3 INC
-              bc8f dc56  st   $56,[y,x++] ;04b4 'V'+1
-              bc90 dc22  st   $22,[y,x++] ;04b5 LDW
-              bc91 dc4d  st   $4d,[y,x++] ;04b6 'X'
-              bc92 dc8a  st   $8a,[y,x++] ;04b7 ANDI
-              bc93 dc08  st   $08,[y,x++]
-              bc94 dcc4  st   $c4,[y,x++] ;04b9 ADDW
-              bc95 dc51  st   $51,[y,x++] ;04ba 'Height'
-              bc96 dc2c  st   $2c,[y,x++] ;04bb STW
-              bc97 dc59  st   $59,[y,x++] ;04bc 'C'
-              bc98 dc22  st   $22,[y,x++] ;04bd LDW
-              bc99 dc59  st   $59,[y,x++] ;04be 'C'
-              bc9a dcf0  st   $f0,[y,x++] ;04bf ADDI
-              bc9b dc01  st   $01,[y,x++]
-              bc9c dc2c  st   $2c,[y,x++] ;04c1 STW
-              bc9d dc59  st   $59,[y,x++] ;04c2 'C'
-              bc9e dc8a  st   $8a,[y,x++] ;04c3 ANDI
-              bc9f dc08  st   $08,[y,x++]
-              bca0 dc36  st   $36,[y,x++] ;04c5 COND
-              bca1 dc75  st   $75,[y,x++] ;04c6 NE
-              bca2 dcca  st   $ca,[y,x++]
-              bca3 dc5c  st   $5c,[y,x++] ;04c8 LDI
-              bca4 dc2a  st   $2a,[y,x++]
-              bca5 dc98  st   $98,[y,x++] ;04ca BRA
-              bca6 dccc  st   $cc,[y,x++]
-              bca7 dc5c  st   $5c,[y,x++] ;04cc LDI
-              bca8 dc20  st   $20,[y,x++]
-              bca9 dc9b  st   $9b,[y,x++] ;04ce POKE
-              bcaa dc55  st   $55,[y,x++] ;04cf 'V'
-              bcab dcf6  st   $f6,[y,x++] ;04d0 INC
-              bcac dc56  st   $56,[y,x++] ;04d1 'V'+1
-              bcad dc22  st   $22,[y,x++] ;04d2 LDW
-              bcae dc55  st   $55,[y,x++] ;04d3 'V'
-              bcaf dc36  st   $36,[y,x++] ;04d4 COND
-              bcb0 dc50  st   $50,[y,x++] ;04d5 GT
-              bcb1 dcbb  st   $bb,[y,x++]
-              bcb2 dc1b  st   $1b,[y,x++] ;04d7 LD
-              bcb3 dc0d  st   $0d,[y,x++]
-              bcb4 dc36  st   $36,[y,x++] ;04d9 COND
-              bcb5 dc4d  st   $4d,[y,x++] ;04da EQ
-              bcb6 dcd5  st   $d5,[y,x++]
-              bcb7 dc22  st   $22,[y,x++] ;04dc LDW
-              bcb8 dc4d  st   $4d,[y,x++] ;04dd 'X'
-              bcb9 dcf0  st   $f0,[y,x++] ;04de ADDI
-              bcba dc01  st   $01,[y,x++]
-              bcbb dc9b  st   $9b,[y,x++] ;04e0 POKE
-              bcbc dc4b  st   $4b,[y,x++] ;04e1 'ShiftControl'
-              bcbd dc22  st   $22,[y,x++] ;04e2 LDW
-              bcbe dc5b  st   $5b,[y,x++] ;04e3 'RunPart2'
-              bcbf dce4  st   $e4,[y,x++] ;04e4 CALL
-              bcc0 dc2c  st   $2c,[y,x++] ;04e5 STW
-              bcc1 dc5d  st   $5d,[y,x++] ;04e6 'RunPart1'
-              bcc2 dcf6  st   $f6,[y,x++] ;04e7 INC
-              bcc3 dc1f  st   $1f,[y,x++]
-              bcc4 dcff  st   $ff,[y,x++] ;04e9 RET
-              bcc5 1000  ld   $00,x
-              bcc6 1405  ld   $05,y
-              bcc7 dcfc  st   $fc,[y,x++] ;0500 DEF
-              bcc8 dc43  st   $43,[y,x++]
-              bcc9 dc22  st   $22,[y,x++] ;0502 LDW
-              bcca dc5f  st   $5f,[y,x++] ;0503 'Image'
-              bccb dc2c  st   $2c,[y,x++] ;0504 STW
-              bccc dc3d  st   $3d,[y,x++] ;0505 'p'
-              bccd dc12  st   $12,[y,x++] ;0506 LDWI
-              bcce dc00  st   $00,[y,x++]
-              bccf dc08  st   $08,[y,x++]
-              bcd0 dc2c  st   $2c,[y,x++] ;0509 STW
-              bcd1 dc39  st   $39,[y,x++] ;050a 'q'
-              bcd2 dc22  st   $22,[y,x++] ;050b LDW
-              bcd3 dc3d  st   $3d,[y,x++] ;050c 'p'
-              bcd4 dc2c  st   $2c,[y,x++] ;050d STW
-              bcd5 dc25  st   $25,[y,x++]
-              bcd6 dc12  st   $12,[y,x++] ;050f LDWI
-              bcd7 dc58  st   $58,[y,x++]
-              bcd8 dc04  st   $04,[y,x++]
-              bcd9 dcac  st   $ac,[y,x++] ;0512 SYS
-              bcda dcfa  st   $fa,[y,x++]
-              bcdb dc12  st   $12,[y,x++] ;0514 LDWI
-              bcdc dc5f  st   $5f,[y,x++]
-              bcdd dc04  st   $04,[y,x++]
-              bcde dcac  st   $ac,[y,x++] ;0517 SYS
-              bcdf dcf2  st   $f2,[y,x++]
-              bce0 dc22  st   $22,[y,x++] ;0519 LDW
-              bce1 dc39  st   $39,[y,x++] ;051a 'q'
-              bce2 dc2c  st   $2c,[y,x++] ;051b STW
-              bce3 dc23  st   $23,[y,x++]
-              bce4 dc12  st   $12,[y,x++] ;051d LDWI
-              bce5 dc86  st   $86,[y,x++]
-              bce6 dc04  st   $04,[y,x++]
-              bce7 dcac  st   $ac,[y,x++] ;0520 SYS
-              bce8 dcff  st   $ff,[y,x++]
-              bce9 dc5c  st   $5c,[y,x++] ;0522 LDI
-              bcea dc80  st   $80,[y,x++]
-              bceb dcc4  st   $c4,[y,x++] ;0524 ADDW
-              bcec dc3d  st   $3d,[y,x++] ;0525 'p'
-              bced dc2c  st   $2c,[y,x++] ;0526 STW
-              bcee dc3d  st   $3d,[y,x++] ;0527 'p'
-              bcef dcf6  st   $f6,[y,x++] ;0528 INC
-              bcf0 dc3a  st   $3a,[y,x++] ;0529 'q'+1
-              bcf1 dc22  st   $22,[y,x++] ;052a LDW
-              bcf2 dc39  st   $39,[y,x++] ;052b 'q'
-              bcf3 dc36  st   $36,[y,x++] ;052c COND
-              bcf4 dc50  st   $50,[y,x++] ;052d GT
-              bcf5 dc09  st   $09,[y,x++]
-              bcf6 dc12  st   $12,[y,x++] ;052f LDWI
-              bcf7 dc03  st   $03,[y,x++]
-              bcf8 dcc4  st   $c4,[y,x++]
-              bcf9 dcc4  st   $c4,[y,x++] ;0532 ADDW
-              bcfa dc3d  st   $3d,[y,x++] ;0533 'p'
-              bcfb dc2c  st   $2c,[y,x++] ;0534 STW
-              bcfc dc3d  st   $3d,[y,x++] ;0535 'p'
-              bcfd dc12  st   $12,[y,x++] ;0536 LDWI
-              bcfe dc04  st   $04,[y,x++]
-              bcff dc88  st   $88,[y,x++]
-              bd00 dcc4  st   $c4,[y,x++] ;0539 ADDW
-              bd01 dc39  st   $39,[y,x++] ;053a 'q'
-              bd02 dc2c  st   $2c,[y,x++] ;053b STW
-              bd03 dc39  st   $39,[y,x++] ;053c 'q'
-              bd04 dc8a  st   $8a,[y,x++] ;053d ANDI
-              bd05 dcff  st   $ff,[y,x++]
-              bd06 dc94  st   $94,[y,x++] ;053f XORI
-              bd07 dca0  st   $a0,[y,x++]
-              bd08 dc36  st   $36,[y,x++] ;0541 COND
-              bd09 dc75  st   $75,[y,x++] ;0542 NE
-              bd0a dc09  st   $09,[y,x++]
-              bd0b dcff  st   $ff,[y,x++] ;0544 RET
-              bd0c dc2c  st   $2c,[y,x++] ;0545 STW
-              bd0d dc61  st   $61,[y,x++] ;0546 'DrawImage'
-              bd0e dcfc  st   $fc,[y,x++] ;0547 DEF
-              bd0f dc74  st   $74,[y,x++]
-              bd10 dc12  st   $12,[y,x++] ;0549 LDWI
-              bd11 dc21  st   $21,[y,x++]
-              bd12 dc01  st   $01,[y,x++]
-              bd13 dc2c  st   $2c,[y,x++] ;054c STW
-              bd14 dc4b  st   $4b,[y,x++] ;054d 'ShiftControl'
-              bd15 dc12  st   $12,[y,x++] ;054e LDWI
-              bd16 dc46  st   $46,[y,x++]
-              bd17 dc04  st   $04,[y,x++]
-              bd18 dcac  st   $ac,[y,x++] ;0551 SYS
-              bd19 dcfd  st   $fd,[y,x++]
-              bd1a dc2c  st   $2c,[y,x++] ;0553 STW
-              bd1b dc3d  st   $3d,[y,x++] ;0554 'p'
-              bd1c dc36  st   $36,[y,x++] ;0555 COND
-              bd1d dc56  st   $56,[y,x++] ;0556 GE
-              bd1e dc5d  st   $5d,[y,x++]
-              bd1f dc12  st   $12,[y,x++] ;0558 LDWI
-              bd20 dc00  st   $00,[y,x++]
-              bd21 dc80  st   $80,[y,x++]
-              bd22 dcc4  st   $c4,[y,x++] ;055b ADDW
-              bd23 dc3d  st   $3d,[y,x++] ;055c 'p'
-              bd24 dc2c  st   $2c,[y,x++] ;055d STW
-              bd25 dc3d  st   $3d,[y,x++] ;055e 'p'
-              bd26 dc12  st   $12,[y,x++] ;055f LDWI
-              bd27 dc00  st   $00,[y,x++]
-              bd28 dc08  st   $08,[y,x++]
-              bd29 dcc4  st   $c4,[y,x++] ;0562 ADDW
-              bd2a dc3d  st   $3d,[y,x++] ;0563 'p'
-              bd2b dc2c  st   $2c,[y,x++] ;0564 STW
-              bd2c dc3d  st   $3d,[y,x++] ;0565 'p'
-              bd2d dc36  st   $36,[y,x++] ;0566 COND
-              bd2e dc59  st   $59,[y,x++] ;0567 LE
-              bd2f dc6e  st   $6e,[y,x++]
-              bd30 dc22  st   $22,[y,x++] ;0569 LDW
-              bd31 dc3d  st   $3d,[y,x++] ;056a 'p'
-              bd32 dcd8  st   $d8,[y,x++] ;056b PEEK
-              bd33 dcf0  st   $f0,[y,x++] ;056c ADDI
-              bd34 dc01  st   $01,[y,x++]
-              bd35 dc9b  st   $9b,[y,x++] ;056e POKE
-              bd36 dc3d  st   $3d,[y,x++] ;056f 'p'
-              bd37 dc1b  st   $1b,[y,x++] ;0570 LD
-              bd38 dc0e  st   $0e,[y,x++]
-              bd39 dc9b  st   $9b,[y,x++] ;0572 POKE
-              bd3a dc4b  st   $4b,[y,x++] ;0573 'ShiftControl'
-              bd3b dc98  st   $98,[y,x++] ;0574 BRA
-              bd3c dc4c  st   $4c,[y,x++]
-              bd3d dc2c  st   $2c,[y,x++] ;0576 STW
-              bd3e dc63  st   $63,[y,x++] ;0577 'RandomTest'
-              bd3f dcfc  st   $fc,[y,x++] ;0578 DEF
-              bd40 dcc4  st   $c4,[y,x++]
-              bd41 dc22  st   $22,[y,x++] ;057a LDW
-              bd42 dc65  st   $65,[y,x++] ;057b 'OldPixel'
-              bd43 dc9b  st   $9b,[y,x++] ;057c POKE
-              bd44 dc67  st   $67,[y,x++] ;057d 'Ball'
-              bd45 dc22  st   $22,[y,x++] ;057e LDW
-              bd46 dc4f  st   $4f,[y,x++] ;057f 'BallA'
-              bd47 dcc4  st   $c4,[y,x++] ;0580 ADDW
-              bd48 dc69  st   $69,[y,x++] ;0581 'BallV'
-              bd49 dc2c  st   $2c,[y,x++] ;0582 STW
-              bd4a dc69  st   $69,[y,x++] ;0583 'BallV'
-              bd4b dc22  st   $22,[y,x++] ;0584 LDW
-              bd4c dc6b  st   $6b,[y,x++] ;0585 'BallY'
-              bd4d dcc4  st   $c4,[y,x++] ;0586 ADDW
-              bd4e dc69  st   $69,[y,x++] ;0587 'BallV'
-              bd4f dc2c  st   $2c,[y,x++] ;0588 STW
-              bd50 dc6b  st   $6b,[y,x++] ;0589 'BallY'
-              bd51 dc22  st   $22,[y,x++] ;058a LDW
-              bd52 dc4d  st   $4d,[y,x++] ;058b 'X'
-              bd53 dcf0  st   $f0,[y,x++] ;058c ADDI
-              bd54 dc32  st   $32,[y,x++]
-              bd55 dc2c  st   $2c,[y,x++] ;058e STW
-              bd56 dc67  st   $67,[y,x++] ;058f 'Ball'
-              bd57 dc1b  st   $1b,[y,x++] ;0590 LD
-              bd58 dc6c  st   $6c,[y,x++] ;0591 'BallY'+1
-              bd59 dc61  st   $61,[y,x++] ;0592 ST
-              bd5a dc68  st   $68,[y,x++] ;0593 'Ball'+1
-              bd5b dc22  st   $22,[y,x++] ;0594 LDW
-              bd5c dc67  st   $67,[y,x++] ;0595 'Ball'
-              bd5d dcd8  st   $d8,[y,x++] ;0596 PEEK
-              bd5e dc2c  st   $2c,[y,x++] ;0597 STW
-              bd5f dc65  st   $65,[y,x++] ;0598 'OldPixel'
-              bd60 dc22  st   $22,[y,x++] ;0599 LDW
-              bd61 dc65  st   $65,[y,x++] ;059a 'OldPixel'
-              bd62 dcf3  st   $f3,[y,x++] ;059b SUBI
-              bd63 dc02  st   $02,[y,x++]
-              bd64 dc36  st   $36,[y,x++] ;059d COND
-              bd65 dc59  st   $59,[y,x++] ;059e LE
-              bd66 dcbd  st   $bd,[y,x++]
-              bd67 dc5c  st   $5c,[y,x++] ;05a0 LDI
-              bd68 dc00  st   $00,[y,x++]
-              bd69 dcb0  st   $b0,[y,x++] ;05a2 SUBW
-              bd6a dc69  st   $69,[y,x++] ;05a3 'BallV'
-              bd6b dc2c  st   $2c,[y,x++] ;05a4 STW
-              bd6c dc69  st   $69,[y,x++] ;05a5 'BallV'
-              bd6d dc22  st   $22,[y,x++] ;05a6 LDW
-              bd6e dc6b  st   $6b,[y,x++] ;05a7 'BallY'
-              bd6f dcc4  st   $c4,[y,x++] ;05a8 ADDW
-              bd70 dc69  st   $69,[y,x++] ;05a9 'BallV'
-              bd71 dc2c  st   $2c,[y,x++] ;05aa STW
-              bd72 dc6b  st   $6b,[y,x++] ;05ab 'BallY'
-              bd73 dc5c  st   $5c,[y,x++] ;05ac LDI
-              bd74 dc0a  st   $0a,[y,x++]
-              bd75 dc61  st   $61,[y,x++] ;05ae ST
-              bd76 dc14  st   $14,[y,x++]
-              bd77 dc22  st   $22,[y,x++] ;05b0 LDW
-              bd78 dc4d  st   $4d,[y,x++] ;05b1 'X'
-              bd79 dcf0  st   $f0,[y,x++] ;05b2 ADDI
-              bd7a dc32  st   $32,[y,x++]
-              bd7b dc2c  st   $2c,[y,x++] ;05b4 STW
-              bd7c dc67  st   $67,[y,x++] ;05b5 'Ball'
-              bd7d dc1b  st   $1b,[y,x++] ;05b6 LD
-              bd7e dc6c  st   $6c,[y,x++] ;05b7 'BallY'+1
-              bd7f dc61  st   $61,[y,x++] ;05b8 ST
-              bd80 dc68  st   $68,[y,x++] ;05b9 'Ball'+1
-              bd81 dc22  st   $22,[y,x++] ;05ba LDW
-              bd82 dc67  st   $67,[y,x++] ;05bb 'Ball'
-              bd83 dcd8  st   $d8,[y,x++] ;05bc PEEK
-              bd84 dc2c  st   $2c,[y,x++] ;05bd STW
-              bd85 dc65  st   $65,[y,x++] ;05be 'OldPixel'
-              bd86 dc5c  st   $5c,[y,x++] ;05bf LDI
-              bd87 dc3f  st   $3f,[y,x++]
-              bd88 dc9b  st   $9b,[y,x++] ;05c1 POKE
-              bd89 dc67  st   $67,[y,x++] ;05c2 'Ball'
-              bd8a dc22  st   $22,[y,x++] ;05c3 LDW
-              bd8b dc5d  st   $5d,[y,x++] ;05c4 'RunPart1'
-              bd8c dce4  st   $e4,[y,x++] ;05c5 CALL
-              bd8d dc2c  st   $2c,[y,x++] ;05c6 STW
-              bd8e dc5b  st   $5b,[y,x++] ;05c7 'RunPart2'
-              bd8f dcf6  st   $f6,[y,x++] ;05c8 INC
-              bd90 dc1f  st   $1f,[y,x++]
-              bd91 dcff  st   $ff,[y,x++] ;05ca RET
-              bd92 1000  ld   $00,x
-              bd93 1406  ld   $06,y
-              bd94 dcfc  st   $fc,[y,x++] ;0600 DEF
-              bd95 dc10  st   $10,[y,x++]
-              bd96 dc1b  st   $1b,[y,x++] ;0602 LD
-              bd97 dc0e  st   $0e,[y,x++]
-              bd98 dcc4  st   $c4,[y,x++] ;0604 ADDW
-              bd99 dc6d  st   $6d,[y,x++] ;0605 'Delay'
-              bd9a dc8a  st   $8a,[y,x++] ;0606 ANDI
-              bd9b dcff  st   $ff,[y,x++]
-              bd9c dc2c  st   $2c,[y,x++] ;0608 STW
-              bd9d dc35  st   $35,[y,x++] ;0609 'tmp'
-              bd9e dc1b  st   $1b,[y,x++] ;060a LD
-              bd9f dc0e  st   $0e,[y,x++]
-              bda0 dcb0  st   $b0,[y,x++] ;060c SUBW
-              bda1 dc35  st   $35,[y,x++] ;060d 'tmp'
-              bda2 dc36  st   $36,[y,x++] ;060e COND
-              bda3 dc75  st   $75,[y,x++] ;060f NE
-              bda4 dc08  st   $08,[y,x++]
-              bda5 dcff  st   $ff,[y,x++] ;0611 RET
-              bda6 dc2c  st   $2c,[y,x++] ;0612 STW
-              bda7 dc6f  st   $6f,[y,x++] ;0613 'Wait'
-              bda8 dc5c  st   $5c,[y,x++] ;0614 LDI
-              bda9 dc78  st   $78,[y,x++]
-              bdaa dc61  st   $61,[y,x++] ;0616 ST
-              bdab dc14  st   $14,[y,x++]
-              bdac dc12  st   $12,[y,x++] ;0618 LDWI
-              bdad dc00  st   $00,[y,x++]
-              bdae dc08  st   $08,[y,x++]
-              bdaf dc2c  st   $2c,[y,x++] ;061b STW
-              bdb0 dc37  st   $37,[y,x++] ;061c 'Pos'
-              bdb1 dc12  st   $12,[y,x++] ;061d LDWI
-              bdb2 dc00  st   $00,[y,x++]
-              bdb3 dc7f  st   $7f,[y,x++]
-              bdb4 dc2c  st   $2c,[y,x++] ;0620 STW
-              bdb5 dc5f  st   $5f,[y,x++] ;0621 'Image'
-              bdb6 dc22  st   $22,[y,x++] ;0622 LDW
-              bdb7 dc61  st   $61,[y,x++] ;0623 'DrawImage'
-              bdb8 dce4  st   $e4,[y,x++] ;0624 CALL
-              bdb9 dc5c  st   $5c,[y,x++] ;0625 LDI
-              bdba dc3c  st   $3c,[y,x++]
-              bdbb dc2c  st   $2c,[y,x++] ;0627 STW
-              bdbc dc6d  st   $6d,[y,x++] ;0628 'Delay'
-              bdbd dc22  st   $22,[y,x++] ;0629 LDW
-              bdbe dc6f  st   $6f,[y,x++] ;062a 'Wait'
-              bdbf dce4  st   $e4,[y,x++] ;062b CALL
-              bdc0 dc12  st   $12,[y,x++] ;062c LDWI
-              bdc1 dc00  st   $00,[y,x++]
-              bdc2 dc43  st   $43,[y,x++]
-              bdc3 dc2c  st   $2c,[y,x++] ;062f STW
-              bdc4 dc5f  st   $5f,[y,x++] ;0630 'Image'
-              bdc5 dc22  st   $22,[y,x++] ;0631 LDW
-              bdc6 dc61  st   $61,[y,x++] ;0632 'DrawImage'
-              bdc7 dce4  st   $e4,[y,x++] ;0633 CALL
-              bdc8 dc22  st   $22,[y,x++] ;0634 LDW
-              bdc9 dc6f  st   $6f,[y,x++] ;0635 'Wait'
-              bdca dce4  st   $e4,[y,x++] ;0636 CALL
-              bdcb dc12  st   $12,[y,x++] ;0637 LDWI
-              bdcc dc00  st   $00,[y,x++]
-              bdcd dc07  st   $07,[y,x++]
-              bdce dc2c  st   $2c,[y,x++] ;063a STW
-              bdcf dc5f  st   $5f,[y,x++] ;063b 'Image'
-              bdd0 dc22  st   $22,[y,x++] ;063c LDW
-              bdd1 dc61  st   $61,[y,x++] ;063d 'DrawImage'
-              bdd2 dce4  st   $e4,[y,x++] ;063e CALL
-              bdd3 dc22  st   $22,[y,x++] ;063f LDW
-              bdd4 dc6f  st   $6f,[y,x++] ;0640 'Wait'
-              bdd5 dce4  st   $e4,[y,x++] ;0641 CALL
-              bdd6 dc5c  st   $5c,[y,x++] ;0642 LDI
-              bdd7 dc08  st   $08,[y,x++]
-              bdd8 dc2c  st   $2c,[y,x++] ;0644 STW
-              bdd9 dc3f  st   $3f,[y,x++] ;0645 'Color'
-              bdda dc12  st   $12,[y,x++] ;0646 LDWI
-              bddb dc00  st   $00,[y,x++]
-              bddc dc08  st   $08,[y,x++]
-              bddd dc2c  st   $2c,[y,x++] ;0649 STW
-              bdde dc37  st   $37,[y,x++] ;064a 'Pos'
-              bddf dc22  st   $22,[y,x++] ;064b LDW
-              bde0 dc47  st   $47,[y,x++] ;064c 'Welcome'
-              bde1 dc2c  st   $2c,[y,x++] ;064d STW
-              bde2 dc43  st   $43,[y,x++] ;064e 'Text'
-              bde3 dc22  st   $22,[y,x++] ;064f LDW
-              bde4 dc45  st   $45,[y,x++] ;0650 'DrawText'
-              bde5 dce4  st   $e4,[y,x++] ;0651 CALL
-              bde6 dc22  st   $22,[y,x++] ;0652 LDW
-              bde7 dc6f  st   $6f,[y,x++] ;0653 'Wait'
-              bde8 dce4  st   $e4,[y,x++] ;0654 CALL
-              bde9 dc1b  st   $1b,[y,x++] ;0655 LD
-              bdea dc14  st   $14,[y,x++]
-              bdeb dc36  st   $36,[y,x++] ;0657 COND
-              bdec dc75  st   $75,[y,x++] ;0658 NE
-              bded dc53  st   $53,[y,x++]
-              bdee dc5c  st   $5c,[y,x++] ;065a LDI
-              bdef dc3e  st   $3e,[y,x++]
-              bdf0 dc2c  st   $2c,[y,x++] ;065c STW
-              bdf1 dc3f  st   $3f,[y,x++] ;065d 'Color'
-              bdf2 dc12  st   $12,[y,x++] ;065e LDWI
-              bdf3 dc00  st   $00,[y,x++]
-              bdf4 dc08  st   $08,[y,x++]
-              bdf5 dc2c  st   $2c,[y,x++] ;0661 STW
-              bdf6 dc37  st   $37,[y,x++] ;0662 'Pos'
-              bdf7 dc22  st   $22,[y,x++] ;0663 LDW
-              bdf8 dc47  st   $47,[y,x++] ;0664 'Welcome'
-              bdf9 dc2c  st   $2c,[y,x++] ;0665 STW
-              bdfa dc43  st   $43,[y,x++] ;0666 'Text'
-              bdfb dc22  st   $22,[y,x++] ;0667 LDW
-              bdfc dc45  st   $45,[y,x++] ;0668 'DrawText'
-              bdfd dce4  st   $e4,[y,x++] ;0669 CALL
-              bdfe dc22  st   $22,[y,x++] ;066a LDW
-              bdff dc3f  st   $3f,[y,x++] ;066b 'Color'
-              be00 dc94  st   $94,[y,x++] ;066c XORI
-              be01 dc08  st   $08,[y,x++]
-              be02 dc36  st   $36,[y,x++] ;066e COND
-              be03 dc4d  st   $4d,[y,x++] ;066f EQ
-              be04 dc77  st   $77,[y,x++]
-              be05 dc22  st   $22,[y,x++] ;0671 LDW
-              be06 dc3f  st   $3f,[y,x++] ;0672 'Color'
-              be07 dcf3  st   $f3,[y,x++] ;0673 SUBI
-              be08 dc09  st   $09,[y,x++]
-              be09 dc2c  st   $2c,[y,x++] ;0675 STW
-              be0a dc3f  st   $3f,[y,x++] ;0676 'Color'
-              be0b dc98  st   $98,[y,x++] ;0677 BRA
-              be0c dc5c  st   $5c,[y,x++]
-              be0d dc5c  st   $5c,[y,x++] ;0679 LDI
-              be0e dc96  st   $96,[y,x++]
-              be0f dc2c  st   $2c,[y,x++] ;067b STW
-              be10 dc6d  st   $6d,[y,x++] ;067c 'Delay'
-              be11 dc22  st   $22,[y,x++] ;067d LDW
-              be12 dc6f  st   $6f,[y,x++] ;067e 'Wait'
-              be13 dce4  st   $e4,[y,x++] ;067f CALL
-              be14 dc22  st   $22,[y,x++] ;0680 LDW
-              be15 dc49  st   $49,[y,x++] ;0681 'ClearScreen'
-              be16 dce4  st   $e4,[y,x++] ;0682 CALL
-              be17 dc12  st   $12,[y,x++] ;0683 LDWI
-              be18 dc11  st   $11,[y,x++]
-              be19 dc01  st   $01,[y,x++]
-              be1a dc2c  st   $2c,[y,x++] ;0686 STW
-              be1b dc4b  st   $4b,[y,x++] ;0687 'ShiftControl'
-              be1c dc5c  st   $5c,[y,x++] ;0688 LDI
-              be1d dc00  st   $00,[y,x++]
-              be1e dc2c  st   $2c,[y,x++] ;068a STW
-              be1f dc53  st   $53,[y,x++] ;068b 'J'
-              be20 dc2c  st   $2c,[y,x++] ;068c STW
-              be21 dc4f  st   $4f,[y,x++] ;068d 'BallA'
-              be22 dc2c  st   $2c,[y,x++] ;068e STW
-              be23 dc69  st   $69,[y,x++] ;068f 'BallV'
-              be24 dc2c  st   $2c,[y,x++] ;0690 STW
-              be25 dc65  st   $65,[y,x++] ;0691 'OldPixel'
-              be26 dc12  st   $12,[y,x++] ;0692 LDWI
-              be27 dc00  st   $00,[y,x++]
-              be28 dc18  st   $18,[y,x++]
-              be29 dc2c  st   $2c,[y,x++] ;0695 STW
-              be2a dc6b  st   $6b,[y,x++] ;0696 'BallY'
-              be2b dc2c  st   $2c,[y,x++] ;0697 STW
-              be2c dc67  st   $67,[y,x++] ;0698 'Ball'
-              be2d dc5c  st   $5c,[y,x++] ;0699 LDI
-              be2e dc5a  st   $5a,[y,x++]
-              be2f dc2c  st   $2c,[y,x++] ;069b STW
-              be30 dc51  st   $51,[y,x++] ;069c 'Height'
-              be31 dc22  st   $22,[y,x++] ;069d LDW
-              be32 dc63  st   $63,[y,x++] ;069e 'RandomTest'
-              be33 dce4  st   $e4,[y,x++] ;069f CALL
-              be34 dc22  st   $22,[y,x++] ;06a0 LDW
-              be35 dc5d  st   $5d,[y,x++] ;06a1 'RunPart1'
-              be36 dce4  st   $e4,[y,x++] ;06a2 CALL
-              be37 00fe  ld   $fe
-              be38 c21a  st   [$1a]
-              be39 0003  ld   $03
-              be3a c21b  st   [$1b]
-              be3b 0000  ld   $00
-              be3c c220  st   [$20]
-              be3d c21e  st   [$1e]
-              be3e 0004  ld   $04
-              be3f c21f  st   [$1f]
-              be40 1510  ld   [$10],y
-              be41 e10f  jmp  y,[$0f]
-              be42 0200  nop
-              be43
+gigatronRaw:  bb00 00aa  ld   $aa
+              bb01 00aa  ld   $aa
+              bb02 00aa  ld   $aa
+              bb03 006a  ld   $6a
+              bb04 006a  ld   $6a
+              bb05 0056  ld   $56
+              bb06 0055  ld   $55
+              bb07 0055  ld   $55
+              bb08 00aa  ld   $aa
+              bb09 00fe  ld   $fe
+              bb0a 00aa  ld   $aa
+              bb0b 00aa  ld   $aa
+              bb0c 00aa  ld   $aa
+              * 8 times
+              bb12 00ea  ld   $ea
+              bb13 00ef  ld   $ef
+              bb14 00ef  ld   $ef
+              bb15 00aa  ld   $aa
+              bb16 00aa  ld   $aa
+              bb17 00a6  ld   $a6
+              bb18 0066  ld   $66
+              bb19 0066  ld   $66
+              bb1a 00a6  ld   $a6
+              bb1b 0095  ld   $95
+              bb1c 0099  ld   $99
+              bb1d 009a  ld   $9a
+              bb1e 00aa  ld   $aa
+              bb1f 009a  ld   $9a
+              bb20 0096  ld   $96
+              bb21 0095  ld   $95
+              bb22 005a  ld   $5a
+              bb23 0066  ld   $66
+              bb24 0065  ld   $65
+              bb25 0095  ld   $95
+              bb26 009a  ld   $9a
+              bb27 00a9  ld   $a9
+              bb28 00a9  ld   $a9
+              bb29 00a6  ld   $a6
+              bb2a 00ea  ld   $ea
+              bb2b 00ff  ld   $ff
+              bb2c 00fb  ld   $fb
+              bb2d 006a  ld   $6a
+              bb2e 0059  ld   $59
+              bb2f 0095  ld   $95
+              bb30 0055  ld   $55
+              bb31 0099  ld   $99
+              bb32 0099  ld   $99
+              bb33 00aa  ld   $aa
+              bb34 00aa  ld   $aa
+              bb35 00a6  ld   $a6
+              bb36 006a  ld   $6a
+              bb37 00aa  ld   $aa
+              bb38 0096  ld   $96
+              bb39 00aa  ld   $aa
+              bb3a 0099  ld   $99
+              bb3b 0001  ld   $01
+              bb3c 0043  ld   $43
+              bb3d 00a5  ld   $a5
+              bb3e 00aa  ld   $aa
+              bb3f 00aa  ld   $aa
+              bb40 00af  ld   $af
+              bb41 00ab  ld   $ab
+              bb42 00aa  ld   $aa
+              bb43 006a  ld   $6a
+              bb44 00a6  ld   $a6
+              bb45 00aa  ld   $aa
+              bb46 00aa  ld   $aa
+              bb47 00aa  ld   $aa
+              bb48 00ff  ld   $ff
+              bb49 00ee  ld   $ee
+              bb4a 00aa  ld   $aa
+              bb4b 006a  ld   $6a
+              bb4c 00a9  ld   $a9
+              bb4d 00aa  ld   $aa
+              bb4e 006a  ld   $6a
+              bb4f 00aa  ld   $aa
+              bb50 0095  ld   $95
+              bb51 00a9  ld   $a9
+              bb52 0095  ld   $95
+              bb53 00aa  ld   $aa
+              bb54 00a9  ld   $a9
+              bb55 0059  ld   $59
+              bb56 0095  ld   $95
+              bb57 00aa  ld   $aa
+              bb58 00aa  ld   $aa
+              bb59 009a  ld   $9a
+              bb5a 00a9  ld   $a9
+              bb5b 0099  ld   $99
+              bb5c 0099  ld   $99
+              bb5d 0099  ld   $99
+              bb5e 00aa  ld   $aa
+              bb5f 00fa  ld   $fa
+              bb60 00bb  ld   $bb
+              bb61 00bf  ld   $bf
+              bb62 00ab  ld   $ab
+              bb63 005a  ld   $5a
+              bb64 0059  ld   $59
+              bb65 00a5  ld   $a5
+              bb66 0095  ld   $95
+              bb67 0099  ld   $99
+              bb68 00a6  ld   $a6
+              bb69 0066  ld   $66
+              bb6a 00aa  ld   $aa
+              bb6b 00aa  ld   $aa
+              bb6c 00aa  ld   $aa
+              * 5 times
+              bb6f 006a  ld   $6a
+              bb70 0005  ld   $05
+              bb71 000c  ld   $0c
+              bb72 0055  ld   $55
+              bb73 00a9  ld   $a9
+              bb74 00aa  ld   $aa
+              bb75 00aa  ld   $aa
+              bb76 00aa  ld   $aa
+              bb77 00fb  ld   $fb
+              bb78 00aa  ld   $aa
+              bb79 00bf  ld   $bf
+              bb7a 00ea  ld   $ea
+              bb7b 00aa  ld   $aa
+              bb7c 00fe  ld   $fe
+              bb7d 00ff  ld   $ff
+              bb7e 00aa  ld   $aa
+              bb7f 005a  ld   $5a
+              bb80 0066  ld   $66
+              bb81 0066  ld   $66
+              bb82 0055  ld   $55
+              bb83 00aa  ld   $aa
+              bb84 00aa  ld   $aa
+              bb85 00a9  ld   $a9
+              bb86 00a6  ld   $a6
+              bb87 00aa  ld   $aa
+              bb88 006a  ld   $6a
+              bb89 00a6  ld   $a6
+              bb8a 0055  ld   $55
+              bb8b 0095  ld   $95
+              bb8c 0056  ld   $56
+              bb8d 00a5  ld   $a5
+              bb8e 00aa  ld   $aa
+              bb8f 00aa  ld   $aa
+              bb90 006a  ld   $6a
+              bb91 00aa  ld   $aa
+              bb92 009a  ld   $9a
+              bb93 00e9  ld   $e9
+              bb94 00fa  ld   $fa
+              bb95 00bb  ld   $bb
+              bb96 007b  ld   $7b
+              bb97 005a  ld   $5a
+              bb98 00a5  ld   $a5
+              bb99 006a  ld   $6a
+              bb9a 0059  ld   $59
+              bb9b 00a5  ld   $a5
+              bb9c 006a  ld   $6a
+              bb9d 006a  ld   $6a
+              bb9e 00a6  ld   $a6
+              bb9f 0066  ld   $66
+              bba0 00aa  ld   $aa
+              bba1 00aa  ld   $aa
+              bba2 00aa  ld   $aa
+              * 5 times
+              bba5 0069  ld   $69
+              bba6 0005  ld   $05
+              bba7 0004  ld   $04
+              bba8 0050  ld   $50
+              bba9 0055  ld   $55
+              bbaa 0055  ld   $55
+              bbab 0055  ld   $55
+              bbac 00a9  ld   $a9
+              bbad 00a9  ld   $a9
+              bbae 00ea  ld   $ea
+              bbaf 00ee  ld   $ee
+              bbb0 00ee  ld   $ee
+              bbb1 00fe  ld   $fe
+              bbb2 00fb  ld   $fb
+              bbb3 00fb  ld   $fb
+              bbb4 00bb  ld   $bb
+              bbb5 005b  ld   $5b
+              bbb6 006a  ld   $6a
+              bbb7 0065  ld   $65
+              bbb8 00a9  ld   $a9
+              bbb9 0066  ld   $66
+              bbba 00a5  ld   $a5
+              bbbb 0099  ld   $99
+              bbbc 00aa  ld   $aa
+              bbbd 00aa  ld   $aa
+              bbbe 009a  ld   $9a
+              bbbf 00aa  ld   $aa
+              bbc0 0055  ld   $55
+              bbc1 00a5  ld   $a5
+              bbc2 0056  ld   $56
+              bbc3 0065  ld   $65
+              bbc4 0055  ld   $55
+              bbc5 0065  ld   $65
+              bbc6 00a5  ld   $a5
+              bbc7 00aa  ld   $aa
+              bbc8 00aa  ld   $aa
+              bbc9 00aa  ld   $aa
+              bbca 00fa  ld   $fa
+              bbcb 00eb  ld   $eb
+              bbcc 00bf  ld   $bf
+              bbcd 005a  ld   $5a
+              bbce 0056  ld   $56
+              bbcf 0065  ld   $65
+              bbd0 00a5  ld   $a5
+              bbd1 00aa  ld   $aa
+              bbd2 00aa  ld   $aa
+              bbd3 00a9  ld   $a9
+              bbd4 0096  ld   $96
+              bbd5 006a  ld   $6a
+              bbd6 005a  ld   $5a
+              bbd7 00a9  ld   $a9
+              bbd8 00aa  ld   $aa
+              bbd9 00aa  ld   $aa
+              bbda 00ea  ld   $ea
+              bbdb 00aa  ld   $aa
+              bbdc 0059  ld   $59
+              bbdd 0055  ld   $55
+              bbde 0055  ld   $55
+              bbdf 0055  ld   $55
+              bbe0 0056  ld   $56
+              bbe1 0040  ld   $40
+              bbe2 0050  ld   $50
+              bbe3 00a9  ld   $a9
+              bbe4 00aa  ld   $aa
+              bbe5 00aa  ld   $aa
+              bbe6 00aa  ld   $aa
+              bbe7 00ea  ld   $ea
+              bbe8 00bf  ld   $bf
+              bbe9 00ff  ld   $ff
+              bbea 00bf  ld   $bf
+              bbeb 00ab  ld   $ab
+              bbec 00aa  ld   $aa
+              bbed 00a5  ld   $a5
+              bbee 009a  ld   $9a
+              bbef 0095  ld   $95
+              bbf0 0066  ld   $66
+              bbf1 0056  ld   $56
+              bbf2 00aa  ld   $aa
+              bbf3 00a6  ld   $a6
+              bbf4 00aa  ld   $aa
+              bbf5 00ab  ld   $ab
+              bbf6 0065  ld   $65
+              bbf7 0095  ld   $95
+              bbf8 0056  ld   $56
+              bbf9 0000  ld   $00
+              bbfa 0000  ld   $00
+              bbfb fe00  bra  ac          ;Trampoline for page $bb00 lookups
+              bbfc fcfd  bra  $bbfd
+              bbfd 1403  ld   $03,y
+              bbfe e07b  jmp  y,$7b
+              bbff 151b  ld   [$1b],y
+              bc00 00a5  ld   $a5
+              bc01 0056  ld   $56
+              bc02 00a6  ld   $a6
+              bc03 0066  ld   $66
+              bc04 006a  ld   $6a
+              bc05 00aa  ld   $aa
+              bc06 00aa  ld   $aa
+              bc07 00fe  ld   $fe
+              bc08 00fb  ld   $fb
+              bc09 00af  ld   $af
+              bc0a 005a  ld   $5a
+              bc0b 0056  ld   $56
+              bc0c 0055  ld   $55
+              bc0d 0055  ld   $55
+              bc0e 00a6  ld   $a6
+              bc0f 00a6  ld   $a6
+              bc10 009a  ld   $9a
+              bc11 00aa  ld   $aa
+              bc12 00a9  ld   $a9
+              bc13 0059  ld   $59
+              bc14 0095  ld   $95
+              bc15 00aa  ld   $aa
+              bc16 00aa  ld   $aa
+              bc17 00aa  ld   $aa
+              bc18 00aa  ld   $aa
+              bc19 009a  ld   $9a
+              bc1a 0056  ld   $56
+              bc1b 006a  ld   $6a
+              bc1c 00aa  ld   $aa
+              bc1d 00aa  ld   $aa
+              bc1e 0015  ld   $15
+              bc1f 0020  ld   $20
+              bc20 0094  ld   $94
+              bc21 00aa  ld   $aa
+              bc22 00aa  ld   $aa
+              bc23 00ea  ld   $ea
+              bc24 00aa  ld   $aa
+              bc25 00ea  ld   $ea
+              bc26 00ff  ld   $ff
+              bc27 00fe  ld   $fe
+              bc28 00ae  ld   $ae
+              bc29 00ab  ld   $ab
+              bc2a 00aa  ld   $aa
+              bc2b 00a9  ld   $a9
+              bc2c 0096  ld   $96
+              bc2d 005a  ld   $5a
+              bc2e 00a9  ld   $a9
+              bc2f 0056  ld   $56
+              bc30 00a9  ld   $a9
+              bc31 00aa  ld   $aa
+              bc32 00a6  ld   $a6
+              bc33 0095  ld   $95
+              bc34 0059  ld   $59
+              bc35 0055  ld   $55
+              bc36 0005  ld   $05
+              bc37 0054  ld   $54
+              bc38 0054  ld   $54
+              bc39 0055  ld   $55
+              bc3a 00a5  ld   $a5
+              bc3b 00a5  ld   $a5
+              bc3c 00ea  ld   $ea
+              bc3d 00bb  ld   $bb
+              bc3e 00bb  ld   $bb
+              bc3f 007b  ld   $7b
+              bc40 005a  ld   $5a
+              bc41 0055  ld   $55
+              bc42 0065  ld   $65
+              bc43 0095  ld   $95
+              bc44 0056  ld   $56
+              bc45 006a  ld   $6a
+              bc46 00aa  ld   $aa
+              bc47 00aa  ld   $aa
+              bc48 0065  ld   $65
+              bc49 0056  ld   $56
+              bc4a 0056  ld   $56
+              bc4b 00aa  ld   $aa
+              bc4c 00aa  ld   $aa
+              bc4d 00ab  ld   $ab
+              bc4e 00aa  ld   $aa
+              bc4f 006a  ld   $6a
+              bc50 00aa  ld   $aa
+              bc51 00a9  ld   $a9
+              bc52 0095  ld   $95
+              bc53 005a  ld   $5a
+              bc54 0069  ld   $69
+              bc55 0065  ld   $65
+              bc56 00a9  ld   $a9
+              bc57 00aa  ld   $aa
+              bc58 00aa  ld   $aa
+              bc59 00aa  ld   $aa
+              bc5a 00ea  ld   $ea
+              bc5b 00ff  ld   $ff
+              bc5c 00af  ld   $af
+              bc5d 00aa  ld   $aa
+              bc5e 00aa  ld   $aa
+              bc5f 00aa  ld   $aa
+              bc60 00aa  ld   $aa
+              bc61 00ab  ld   $ab
+              bc62 00aa  ld   $aa
+              bc63 006a  ld   $6a
+              bc64 00a9  ld   $a9
+              bc65 00aa  ld   $aa
+              bc66 00aa  ld   $aa
+              bc67 0059  ld   $59
+              bc68 0055  ld   $55
+              bc69 0055  ld   $55
+              bc6a 0045  ld   $45
+              bc6b 0044  ld   $44
+              bc6c 0040  ld   $40
+              bc6d 0001  ld   $01
+              bc6e 0045  ld   $45
+              bc6f 0055  ld   $55
+              bc70 00aa  ld   $aa
+              bc71 00fa  ld   $fa
+              bc72 006b  ld   $6b
+              bc73 006a  ld   $6a
+              bc74 00a6  ld   $a6
+              bc75 006a  ld   $6a
+              bc76 0095  ld   $95
+              bc77 009a  ld   $9a
+              bc78 006a  ld   $6a
+              bc79 006a  ld   $6a
+              bc7a 00a6  ld   $a6
+              bc7b 0065  ld   $65
+              bc7c 00a5  ld   $a5
+              bc7d 00a6  ld   $a6
+              bc7e 00a6  ld   $a6
+              bc7f 00aa  ld   $aa
+              bc80 00ab  ld   $ab
+              bc81 00ba  ld   $ba
+              bc82 006a  ld   $6a
+              bc83 0066  ld   $66
+              bc84 00aa  ld   $aa
+              bc85 006a  ld   $6a
+              bc86 00aa  ld   $aa
+              bc87 00a9  ld   $a9
+              bc88 00a9  ld   $a9
+              bc89 00a6  ld   $a6
+              bc8a 00aa  ld   $aa
+              bc8b 00aa  ld   $aa
+              bc8c 00ab  ld   $ab
+              bc8d 00aa  ld   $aa
+              bc8e 00aa  ld   $aa
+              bc8f 00ea  ld   $ea
+              bc90 00bf  ld   $bf
+              bc91 005a  ld   $5a
+              bc92 0066  ld   $66
+              bc93 00a5  ld   $a5
+              bc94 00aa  ld   $aa
+              bc95 00aa  ld   $aa
+              bc96 00ba  ld   $ba
+              bc97 00aa  ld   $aa
+              bc98 00aa  ld   $aa
+              bc99 00aa  ld   $aa
+              bc9a 005a  ld   $5a
+              bc9b 00a9  ld   $a9
+              bc9c 006a  ld   $6a
+              bc9d 0055  ld   $55
+              bc9e 0095  ld   $95
+              bc9f 006a  ld   $6a
+              bca0 005a  ld   $5a
+              bca1 0055  ld   $55
+              bca2 0055  ld   $55
+              bca3 0055  ld   $55
+              bca4 0011  ld   $11
+              bca5 00c0  ld   $c0
+              bca6 0050  ld   $50
+              bca7 0055  ld   $55
+              bca8 0055  ld   $55
+              bca9 0055  ld   $55
+              bcaa 0095  ld   $95
+              bcab 00aa  ld   $aa
+              bcac 009a  ld   $9a
+              bcad 009a  ld   $9a
+              bcae 0069  ld   $69
+              bcaf 00a9  ld   $a9
+              bcb0 0095  ld   $95
+              bcb1 0055  ld   $55
+              bcb2 0055  ld   $55
+              bcb3 00aa  ld   $aa
+              bcb4 00aa  ld   $aa
+              bcb5 00ff  ld   $ff
+              bcb6 00ea  ld   $ea
+              bcb7 006a  ld   $6a
+              bcb8 00aa  ld   $aa
+              bcb9 00aa  ld   $aa
+              bcba 00a9  ld   $a9
+              bcbb 00aa  ld   $aa
+              bcbc 009a  ld   $9a
+              bcbd 0099  ld   $99
+              bcbe 006a  ld   $6a
+              bcbf 00aa  ld   $aa
+              bcc0 00aa  ld   $aa
+              bcc1 00fa  ld   $fa
+              bcc2 00eb  ld   $eb
+              bcc3 00bf  ld   $bf
+              bcc4 00aa  ld   $aa
+              bcc5 00aa  ld   $aa
+              bcc6 006a  ld   $6a
+              bcc7 0066  ld   $66
+              bcc8 0066  ld   $66
+              bcc9 0065  ld   $65
+              bcca 00a9  ld   $a9
+              bccb 00aa  ld   $aa
+              bccc 00aa  ld   $aa
+              bccd 00aa  ld   $aa
+              bcce 00ab  ld   $ab
+              bccf 0055  ld   $55
+              bcd0 0059  ld   $59
+              bcd1 0055  ld   $55
+              bcd2 0055  ld   $55
+              bcd3 0055  ld   $55
+              * 5 times
+              bcd6 0005  ld   $05
+              bcd7 0055  ld   $55
+              bcd8 006a  ld   $6a
+              bcd9 0055  ld   $55
+              bcda 0055  ld   $55
+              bcdb 0080  ld   $80
+              bcdc 0051  ld   $51
+              bcdd 0055  ld   $55
+              bcde 0095  ld   $95
+              bcdf 00aa  ld   $aa
+              bce0 00aa  ld   $aa
+              bce1 00a5  ld   $a5
+              bce2 0056  ld   $56
+              bce3 0056  ld   $56
+              bce4 0065  ld   $65
+              bce5 0055  ld   $55
+              bce6 0066  ld   $66
+              bce7 00ea  ld   $ea
+              bce8 00aa  ld   $aa
+              bce9 00ab  ld   $ab
+              bcea 00aa  ld   $aa
+              bceb 00aa  ld   $aa
+              bcec 00aa  ld   $aa
+              bced 006a  ld   $6a
+              bcee 006a  ld   $6a
+              bcef 00a6  ld   $a6
+              bcf0 00aa  ld   $aa
+              bcf1 009a  ld   $9a
+              bcf2 00aa  ld   $aa
+              bcf3 00aa  ld   $aa
+              bcf4 00aa  ld   $aa
+              bcf5 00aa  ld   $aa
+              bcf6 00ff  ld   $ff
+              bcf7 00af  ld   $af
+              bcf8 00aa  ld   $aa
+              bcf9 0000  ld   $00
+              bcfa 0000  ld   $00
+              bcfb fe00  bra  ac          ;Trampoline for page $bc00 lookups
+              bcfc fcfd  bra  $bcfd
+              bcfd 1403  ld   $03,y
+              bcfe e07b  jmp  y,$7b
+              bcff 151b  ld   [$1b],y
+              bd00 00aa  ld   $aa
+              bd01 005a  ld   $5a
+              bd02 00aa  ld   $aa
+              bd03 0095  ld   $95
+              bd04 005a  ld   $5a
+              bd05 0055  ld   $55
+              bd06 00a9  ld   $a9
+              bd07 009a  ld   $9a
+              bd08 0056  ld   $56
+              bd09 0055  ld   $55
+              bd0a 0045  ld   $45
+              bd0b 0000  ld   $00
+              bd0c 0041  ld   $41
+              bd0d 0055  ld   $55
+              bd0e 0055  ld   $55
+              bd0f 0055  ld   $55
+              bd10 0055  ld   $55
+              bd11 0041  ld   $41
+              bd12 0045  ld   $45
+              bd13 0055  ld   $55
+              bd14 0056  ld   $56
+              bd15 0055  ld   $55
+              bd16 0005  ld   $05
+              bd17 001c  ld   $1c
+              bd18 0050  ld   $50
+              bd19 0055  ld   $55
+              bd1a 006a  ld   $6a
+              bd1b 0069  ld   $69
+              bd1c 0059  ld   $59
+              bd1d 0095  ld   $95
+              bd1e 0055  ld   $55
+              bd1f 0099  ld   $99
+              bd20 0095  ld   $95
+              bd21 00ba  ld   $ba
+              bd22 00bb  ld   $bb
+              bd23 00ab  ld   $ab
+              bd24 00a9  ld   $a9
+              bd25 00a9  ld   $a9
+              bd26 00aa  ld   $aa
+              bd27 00aa  ld   $aa
+              bd28 00aa  ld   $aa
+              * 5 times
+              bd2b 00a9  ld   $a9
+              bd2c 00aa  ld   $aa
+              bd2d 00aa  ld   $aa
+              bd2e 00ee  ld   $ee
+              bd2f 00fe  ld   $fe
+              bd30 00ee  ld   $ee
+              bd31 00ae  ld   $ae
+              bd32 00a6  ld   $a6
+              bd33 0095  ld   $95
+              bd34 00aa  ld   $aa
+              bd35 00aa  ld   $aa
+              bd36 0095  ld   $95
+              bd37 005a  ld   $5a
+              bd38 00a9  ld   $a9
+              bd39 0055  ld   $55
+              bd3a 0015  ld   $15
+              bd3b 0054  ld   $54
+              bd3c 00c0  ld   $c0
+              bd3d 0051  ld   $51
+              bd3e 0015  ld   $15
+              bd3f 0011  ld   $11
+              bd40 0020  ld   $20
+              bd41 0054  ld   $54
+              bd42 0045  ld   $45
+              bd43 0044  ld   $44
+              bd44 0040  ld   $40
+              bd45 00c0  ld   $c0
+              bd46 0052  ld   $52
+              bd47 0055  ld   $55
+              bd48 00a9  ld   $a9
+              bd49 009a  ld   $9a
+              bd4a 005a  ld   $5a
+              bd4b 00a9  ld   $a9
+              bd4c 00ba  ld   $ba
+              bd4d 00fa  ld   $fa
+              bd4e 00aa  ld   $aa
+              bd4f 00aa  ld   $aa
+              bd50 00aa  ld   $aa
+              bd51 006a  ld   $6a
+              bd52 006a  ld   $6a
+              bd53 00aa  ld   $aa
+              bd54 00aa  ld   $aa
+              bd55 00aa  ld   $aa
+              * 7 times
+              bd5a 00ab  ld   $ab
+              bd5b 00ae  ld   $ae
+              bd5c 00aa  ld   $aa
+              bd5d 006a  ld   $6a
+              bd5e 0055  ld   $55
+              bd5f 0055  ld   $55
+              bd60 0044  ld   $44
+              bd61 0054  ld   $54
+              bd62 0001  ld   $01
+              bd63 0066  ld   $66
+              bd64 0055  ld   $55
+              bd65 00aa  ld   $aa
+              bd66 00aa  ld   $aa
+              bd67 00fa  ld   $fa
+              bd68 00ab  ld   $ab
+              bd69 00aa  ld   $aa
+              bd6a 00aa  ld   $aa
+              bd6b 00aa  ld   $aa
+              * 5 times
+              bd6e 00a6  ld   $a6
+              bd6f 00aa  ld   $aa
+              bd70 0099  ld   $99
+              bd71 00aa  ld   $aa
+              bd72 00a9  ld   $a9
+              bd73 005a  ld   $5a
+              bd74 0055  ld   $55
+              bd75 0015  ld   $15
+              bd76 0011  ld   $11
+              bd77 0001  ld   $01
+              bd78 0070  ld   $70
+              bd79 0055  ld   $55
+              bd7a 0095  ld   $95
+              bd7b 00ae  ld   $ae
+              bd7c 00ae  ld   $ae
+              bd7d 00aa  ld   $aa
+              bd7e 00aa  ld   $aa
+              bd7f 005a  ld   $5a
+              bd80 00aa  ld   $aa
+              bd81 0055  ld   $55
+              bd82 0055  ld   $55
+              bd83 0051  ld   $51
+              bd84 0001  ld   $01
+              bd85 00b0  ld   $b0
+              bd86 0014  ld   $14
+              bd87 0010  ld   $10
+              bd88 00b0  ld   $b0
+              bd89 0040  ld   $40
+              bd8a 0080  ld   $80
+              bd8b 0053  ld   $53
+              bd8c 0000  ld   $00
+              bd8d 0093  ld   $93
+              bd8e 00aa  ld   $aa
+              bd8f 0056  ld   $56
+              bd90 0065  ld   $65
+              bd91 0055  ld   $55
+              bd92 0051  ld   $51
+              bd93 0040  ld   $40
+              bd94 0010  ld   $10
+              bd95 0011  ld   $11
+              bd96 0011  ld   $11
+              bd97 00d0  ld   $d0
+              bd98 0040  ld   $40
+              bd99 0005  ld   $05
+              bd9a 0004  ld   $04
+              bd9b 0008  ld   $08
+              bd9c 0010  ld   $10
+              bd9d 0015  ld   $15
+              bd9e 0051  ld   $51
+              bd9f 0050  ld   $50
+              bda0 0005  ld   $05
+              bda1 0004  ld   $04
+              bda2 0010  ld   $10
+              bda3 00f0  ld   $f0
+              bda4 0040  ld   $40
+              bda5 0040  ld   $40
+              bda6 0050  ld   $50
+              bda7 0040  ld   $40
+              bda8 0040  ld   $40
+              bda9 0050  ld   $50
+              bdaa 0001  ld   $01
+              bdab 004e  ld   $4e
+              bdac 0055  ld   $55
+              bdad 0041  ld   $41
+              bdae 0005  ld   $05
+              bdaf 0055  ld   $55
+              bdb0 0055  ld   $55
+              bdb1 0055  ld   $55
+              * 5 times
+              bdb4 0015  ld   $15
+              bdb5 00b0  ld   $b0
+              bdb6 0054  ld   $54
+              bdb7 0054  ld   $54
+              bdb8 0045  ld   $45
+              bdb9 0055  ld   $55
+              bdba 0065  ld   $65
+              bdbb 0056  ld   $56
+              bdbc 0096  ld   $96
+              bdbd 0069  ld   $69
+              bdbe 0099  ld   $99
+              bdbf 0096  ld   $96
+              bdc0 0015  ld   $15
+              bdc1 0055  ld   $55
+              bdc2 0001  ld   $01
+              bdc3 0054  ld   $54
+              bdc4 0001  ld   $01
+              bdc5 0015  ld   $15
+              bdc6 0050  ld   $50
+              bdc7 0001  ld   $01
+              bdc8 0020  ld   $20
+              bdc9 0055  ld   $55
+              bdca 0055  ld   $55
+              bdcb 0095  ld   $95
+              bdcc 0055  ld   $55
+              bdcd 0055  ld   $55
+              bdce 0055  ld   $55
+              * 5 times
+              bdd1 0051  ld   $51
+              bdd2 0001  ld   $01
+              bdd3 0055  ld   $55
+              bdd4 0055  ld   $55
+              bdd5 0040  ld   $40
+              bdd6 0050  ld   $50
+              bdd7 0001  ld   $01
+              bdd8 0001  ld   $01
+              bdd9 0005  ld   $05
+              bdda 0008  ld   $08
+              bddb 0054  ld   $54
+              bddc 0044  ld   $44
+              bddd 0095  ld   $95
+              bdde 0065  ld   $65
+              bddf 009a  ld   $9a
+              bde0 00ea  ld   $ea
+              bde1 00a9  ld   $a9
+              bde2 00aa  ld   $aa
+              bde3 00a7  ld   $a7
+              bde4 007a  ld   $7a
+              bde5 00aa  ld   $aa
+              bde6 00a7  ld   $a7
+              bde7 0065  ld   $65
+              bde8 0005  ld   $05
+              bde9 0001  ld   $01
+              bdea 0017  ld   $17
+              bdeb 0054  ld   $54
+              bdec 0000  ld   $00
+              bded 0046  ld   $46
+              bdee 0056  ld   $56
+              bdef 00aa  ld   $aa
+              bdf0 0095  ld   $95
+              bdf1 005a  ld   $5a
+              bdf2 0095  ld   $95
+              bdf3 0055  ld   $55
+              bdf4 0055  ld   $55
+              bdf5 0041  ld   $41
+              bdf6 0015  ld   $15
+              bdf7 0055  ld   $55
+              bdf8 0055  ld   $55
+              bdf9 0000  ld   $00
+              bdfa 0000  ld   $00
+              bdfb fe00  bra  ac          ;Trampoline for page $bd00 lookups
+              bdfc fcfd  bra  $bdfd
+              bdfd 1403  ld   $03,y
+              bdfe e07b  jmp  y,$7b
+              bdff 151b  ld   [$1b],y
+              be00 0054  ld   $54
+              be01 0055  ld   $55
+              be02 0055  ld   $55
+              be03 0055  ld   $55
+              be04 0005  ld   $05
+              be05 0055  ld   $55
+              be06 0055  ld   $55
+              be07 0059  ld   $59
+              be08 00e6  ld   $e6
+              be09 006a  ld   $6a
+              be0a 00ae  ld   $ae
+              be0b 00e6  ld   $e6
+              be0c 006a  ld   $6a
+              be0d 00ae  ld   $ae
+              be0e 00e6  ld   $e6
+              be0f 006a  ld   $6a
+              be10 00ae  ld   $ae
+              be11 00e6  ld   $e6
+              be12 0069  ld   $69
+              be13 0059  ld   $59
+              be14 0041  ld   $41
+              be15 0040  ld   $40
+              be16 0057  ld   $57
+              be17 005a  ld   $5a
+              be18 0055  ld   $55
+              be19 0055  ld   $55
+              be1a 0055  ld   $55
+              be1b 0015  ld   $15
+              be1c 0005  ld   $05
+              be1d 0001  ld   $01
+              be1e 0042  ld   $42
+              be1f 0040  ld   $40
+              be20 0055  ld   $55
+              be21 0050  ld   $50
+              be22 0055  ld   $55
+              be23 0051  ld   $51
+              be24 0051  ld   $51
+              be25 0055  ld   $55
+              be26 0055  ld   $55
+              be27 0065  ld   $65
+              be28 009a  ld   $9a
+              be29 00ab  ld   $ab
+              be2a 006a  ld   $6a
+              be2b 00ae  ld   $ae
+              be2c 00e6  ld   $e6
+              be2d 006a  ld   $6a
+              be2e 00ae  ld   $ae
+              be2f 00e6  ld   $e6
+              be30 006a  ld   $6a
+              be31 00ae  ld   $ae
+              be32 00e6  ld   $e6
+              be33 00aa  ld   $aa
+              be34 009e  ld   $9e
+              be35 00a6  ld   $a6
+              be36 0015  ld   $15
+              be37 0004  ld   $04
+              be38 006c  ld   $6c
+              be39 0055  ld   $55
+              be3a 0099  ld   $99
+              be3b 0055  ld   $55
+              be3c 0055  ld   $55
+              be3d 0045  ld   $45
+              be3e 0055  ld   $55
+              be3f 0040  ld   $40
+              be40 0050  ld   $50
+              be41 0001  ld   $01
+              be42 0002  ld   $02
+              be43 0055  ld   $55
+              be44 0055  ld   $55
+              be45 0056  ld   $56
+              be46 0055  ld   $55
+              be47 0055  ld   $55
+              be48 0054  ld   $54
+              be49 0055  ld   $55
+              be4a 0096  ld   $96
+              be4b 00b9  ld   $b9
+              be4c 009a  ld   $9a
+              be4d 00ab  ld   $ab
+              be4e 0079  ld   $79
+              be4f 00aa  ld   $aa
+              be50 00a7  ld   $a7
+              be51 007a  ld   $7a
+              be52 009a  ld   $9a
+              be53 00ab  ld   $ab
+              be54 00b9  ld   $b9
+              be55 009a  ld   $9a
+              be56 00ab  ld   $ab
+              be57 00b9  ld   $b9
+              be58 009a  ld   $9a
+              be59 00eb  ld   $eb
+              be5a 0069  ld   $69
+              be5b 0059  ld   $59
+              be5c 00a5  ld   $a5
+              be5d 0066  ld   $66
+              be5e 0056  ld   $56
+              be5f 0055  ld   $55
+              be60 0055  ld   $55
+              be61 0015  ld   $15
+              be62 0055  ld   $55
+              be63 0080  ld   $80
+              be64 0050  ld   $50
+              be65 0055  ld   $55
+              be66 0014  ld   $14
+              be67 00c0  ld   $c0
+              be68 0054  ld   $54
+              be69 005a  ld   $5a
+              be6a 0059  ld   $59
+              be6b 0095  ld   $95
+              be6c 0055  ld   $55
+              be6d 0005  ld   $05
+              be6e 0055  ld   $55
+              be6f 0050  ld   $50
+              be70 0045  ld   $45
+              be71 0055  ld   $55
+              be72 0055  ld   $55
+              be73 00e5  ld   $e5
+              be74 00ff  ld   $ff
+              be75 006a  ld   $6a
+              be76 00a5  ld   $a5
+              be77 00a6  ld   $a6
+              be78 0069  ld   $69
+              be79 009a  ld   $9a
+              be7a 00e6  ld   $e6
+              be7b 006a  ld   $6a
+              be7c 00ae  ld   $ae
+              be7d 00e6  ld   $e6
+              be7e 006a  ld   $6a
+              be7f 009e  ld   $9e
+              be80 00aa  ld   $aa
+              be81 00b9  ld   $b9
+              be82 009a  ld   $9a
+              be83 00e6  ld   $e6
+              be84 006a  ld   $6a
+              be85 009e  ld   $9e
+              be86 00ea  ld   $ea
+              be87 00a9  ld   $a9
+              be88 009a  ld   $9a
+              be89 00a7  ld   $a7
+              be8a 0065  ld   $65
+              be8b 00aa  ld   $aa
+              be8c 00ee  ld   $ee
+              be8d 00ae  ld   $ae
+              be8e 00ae  ld   $ae
+              be8f 00ba  ld   $ba
+              be90 00aa  ld   $aa
+              be91 009a  ld   $9a
+              be92 0099  ld   $99
+              be93 00aa  ld   $aa
+              be94 00aa  ld   $aa
+              be95 0046  ld   $46
+              be96 0000  ld   $00
+              be97 0053  ld   $53
+              be98 006a  ld   $6a
+              be99 0065  ld   $65
+              be9a 0056  ld   $56
+              be9b 0055  ld   $55
+              be9c 0055  ld   $55
+              be9d 0055  ld   $55
+              * 5 times
+              bea0 0059  ld   $59
+              bea1 0095  ld   $95
+              bea2 00bf  ld   $bf
+              bea3 00aa  ld   $aa
+              bea4 0056  ld   $56
+              bea5 0065  ld   $65
+              bea6 006a  ld   $6a
+              bea7 00a7  ld   $a7
+              bea8 0076  ld   $76
+              bea9 00aa  ld   $aa
+              beaa 0097  ld   $97
+              beab 00b9  ld   $b9
+              beac 009a  ld   $9a
+              bead 00ea  ld   $ea
+              beae 00a9  ld   $a9
+              beaf 009e  ld   $9e
+              beb0 00ea  ld   $ea
+              beb1 00a9  ld   $a9
+              beb2 009e  ld   $9e
+              beb3 00ea  ld   $ea
+              beb4 00a9  ld   $a9
+              beb5 009e  ld   $9e
+              beb6 00ea  ld   $ea
+              beb7 00a9  ld   $a9
+              beb8 00ae  ld   $ae
+              beb9 0096  ld   $96
+              beba 00a9  ld   $a9
+              bebb 00fe  ld   $fe
+              bebc 00aa  ld   $aa
+              bebd 00bf  ld   $bf
+              bebe 00fa  ld   $fa
+              bebf 00ab  ld   $ab
+              bec0 00ba  ld   $ba
+              bec1 00aa  ld   $aa
+              bec2 005a  ld   $5a
+              bec3 00a9  ld   $a9
+              bec4 005a  ld   $5a
+              bec5 0051  ld   $51
+              bec6 0080  ld   $80
+              bec7 00a2  ld   $a2
+              bec8 0056  ld   $56
+              bec9 00aa  ld   $aa
+              beca 0099  ld   $99
+              becb 00aa  ld   $aa
+              becc 0095  ld   $95
+              becd 005a  ld   $5a
+              bece 0065  ld   $65
+              becf 0096  ld   $96
+              bed0 00aa  ld   $aa
+              bed1 0056  ld   $56
+              bed2 0015  ld   $15
+              bed3 0055  ld   $55
+              bed4 0055  ld   $55
+              bed5 0069  ld   $69
+              bed6 0099  ld   $99
+              bed7 00ea  ld   $ea
+              bed8 00a9  ld   $a9
+              bed9 009e  ld   $9e
+              beda 00aa  ld   $aa
+              bedb 0079  ld   $79
+              bedc 00aa  ld   $aa
+              bedd 00a7  ld   $a7
+              bede 007a  ld   $7a
+              bedf 009a  ld   $9a
+              bee0 00a7  ld   $a7
+              bee1 007a  ld   $7a
+              bee2 00aa  ld   $aa
+              bee3 00e6  ld   $e6
+              bee4 006a  ld   $6a
+              bee5 00ae  ld   $ae
+              bee6 00e6  ld   $e6
+              bee7 006a  ld   $6a
+              bee8 009e  ld   $9e
+              bee9 00ea  ld   $ea
+              beea 0095  ld   $95
+              beeb 00aa  ld   $aa
+              beec 00ab  ld   $ab
+              beed 00ee  ld   $ee
+              beee 00ee  ld   $ee
+              beef 00ea  ld   $ea
+              bef0 006e  ld   $6e
+              bef1 0049  ld   $49
+              bef2 0041  ld   $41
+              bef3 0040  ld   $40
+              bef4 0050  ld   $50
+              bef5 00a9  ld   $a9
+              bef6 002a  ld   $2a
+              bef7 00a0  ld   $a0
+              bef8 00a8  ld   $a8
+              bef9 0000  ld   $00
+              befa 0000  ld   $00
+              befb fe00  bra  ac          ;Trampoline for page $be00 lookups
+              befc fcfd  bra  $befd
+              befd 1403  ld   $03,y
+              befe e07b  jmp  y,$7b
+              beff 151b  ld   [$1b],y
+              bf00 006a  ld   $6a
+              bf01 00aa  ld   $aa
+              bf02 006a  ld   $6a
+              bf03 00a9  ld   $a9
+              bf04 00aa  ld   $aa
+              bf05 00aa  ld   $aa
+              bf06 00aa  ld   $aa
+              bf07 005a  ld   $5a
+              bf08 00a9  ld   $a9
+              bf09 0069  ld   $69
+              bf0a 0005  ld   $05
+              bf0b 0004  ld   $04
+              bf0c 0055  ld   $55
+              bf0d 00a9  ld   $a9
+              bf0e 00e6  ld   $e6
+              bf0f 006a  ld   $6a
+              bf10 00ae  ld   $ae
+              bf11 00a6  ld   $a6
+              bf12 00b9  ld   $b9
+              bf13 009a  ld   $9a
+              bf14 00ab  ld   $ab
+              bf15 0079  ld   $79
+              bf16 00aa  ld   $aa
+              bf17 00a7  ld   $a7
+              bf18 00ba  ld   $ba
+              bf19 009a  ld   $9a
+              bf1a 00ab  ld   $ab
+              bf1b 00b9  ld   $b9
+              bf1c 009e  ld   $9e
+              bf1d 00ea  ld   $ea
+              bf1e 00a9  ld   $a9
+              bf1f 009e  ld   $9e
+              bf20 00ea  ld   $ea
+              bf21 006a  ld   $6a
+              bf22 009e  ld   $9e
+              bf23 0096  ld   $96
+              bf24 00aa  ld   $aa
+              bf25 00fa  ld   $fa
+              bf26 00ab  ld   $ab
+              bf27 00fe  ld   $fe
+              bf28 00aa  ld   $aa
+              bf29 0002  ld   $02
+              bf2a 0041  ld   $41
+              bf2b 0044  ld   $44
+              bf2c 0055  ld   $55
+              bf2d 0040  ld   $40
+              bf2e 0050  ld   $50
+              bf2f 00a9  ld   $a9
+              bf30 0015  ld   $15
+              bf31 0090  ld   $90
+              bf32 00a8  ld   $a8
+              bf33 0095  ld   $95
+              bf34 00aa  ld   $aa
+              bf35 009a  ld   $9a
+              bf36 00aa  ld   $aa
+              bf37 005a  ld   $5a
+              bf38 00aa  ld   $aa
+              bf39 00a5  ld   $a5
+              bf3a 009a  ld   $9a
+              bf3b 005a  ld   $5a
+              bf3c 006a  ld   $6a
+              bf3d 0055  ld   $55
+              bf3e 0095  ld   $95
+              bf3f 0069  ld   $69
+              bf40 006e  ld   $6e
+              bf41 00a6  ld   $a6
+              bf42 00b9  ld   $b9
+              bf43 009a  ld   $9a
+              bf44 00ab  ld   $ab
+              bf45 00b9  ld   $b9
+              bf46 009a  ld   $9a
+              bf47 00ab  ld   $ab
+              bf48 00b9  ld   $b9
+              bf49 00da  ld   $da
+              bf4a 00ab  ld   $ab
+              bf4b 00bd  ld   $bd
+              bf4c 00da  ld   $da
+              bf4d 00bb  ld   $bb
+              bf4e 00b9  ld   $b9
+              bf4f 009f  ld   $9f
+              bf50 00fa  ld   $fa
+              bf51 00b9  ld   $b9
+              bf52 009a  ld   $9a
+              bf53 00a7  ld   $a7
+              bf54 007a  ld   $7a
+              bf55 009a  ld   $9a
+              bf56 00a6  ld   $a6
+              bf57 00bb  ld   $bb
+              bf58 00bb  ld   $bb
+              bf59 00ab  ld   $ab
+              bf5a 00be  ld   $be
+              bf5b 0045  ld   $45
+              bf5c 0051  ld   $51
+              bf5d 0065  ld   $65
+              bf5e 0005  ld   $05
+              bf5f 0008  ld   $08
+              bf60 0095  ld   $95
+              bf61 000a  ld   $0a
+              bf62 0024  ld   $24
+              bf63 00aa  ld   $aa
+              bf64 00aa  ld   $aa
+              bf65 00aa  ld   $aa
+              bf66 006a  ld   $6a
+              bf67 00aa  ld   $aa
+              bf68 0099  ld   $99
+              bf69 0099  ld   $99
+              bf6a 00aa  ld   $aa
+              bf6b 00a9  ld   $a9
+              bf6c 006a  ld   $6a
+              bf6d 00aa  ld   $aa
+              bf6e 0096  ld   $96
+              bf6f 006a  ld   $6a
+              bf70 00a9  ld   $a9
+              bf71 00e6  ld   $e6
+              bf72 00a9  ld   $a9
+              bf73 009e  ld   $9e
+              bf74 00ea  ld   $ea
+              bf75 00a9  ld   $a9
+              bf76 009e  ld   $9e
+              bf77 00e6  ld   $e6
+              bf78 006a  ld   $6a
+              bf79 009e  ld   $9e
+              bf7a 00a6  ld   $a6
+              bf7b 0079  ld   $79
+              bf7c 009a  ld   $9a
+              bf7d 00a7  ld   $a7
+              bf7e 00b9  ld   $b9
+              bf7f 009a  ld   $9a
+              bf80 00fa  ld   $fa
+              bf81 00b9  ld   $b9
+              bf82 00ab  ld   $ab
+              bf83 00fb  ld   $fb
+              bf84 006a  ld   $6a
+              bf85 00ae  ld   $ae
+              bf86 00ea  ld   $ea
+              bf87 00a5  ld   $a5
+              bf88 00ea  ld   $ea
+              bf89 00af  ld   $af
+              bf8a 00fe  ld   $fe
+              bf8b 009a  ld   $9a
+              bf8c 0042  ld   $42
+              bf8d 00d5  ld   $d5
+              bf8e 00fa  ld   $fa
+              bf8f 0097  ld   $97
+              bf90 0040  ld   $40
+              bf91 0050  ld   $50
+              bf92 00a9  ld   $a9
+              bf93 0014  ld   $14
+              bf94 0080  ld   $80
+              bf95 00a8  ld   $a8
+              bf96 00aa  ld   $aa
+              bf97 00aa  ld   $aa
+              bf98 00aa  ld   $aa
+              * 11 times
+              bfa1 00a6  ld   $a6
+              bfa2 006a  ld   $6a
+              bfa3 005e  ld   $5e
+              bfa4 00aa  ld   $aa
+              bfa5 00b9  ld   $b9
+              bfa6 009a  ld   $9a
+              bfa7 00ab  ld   $ab
+              bfa8 00b9  ld   $b9
+              bfa9 009a  ld   $9a
+              bfaa 00e6  ld   $e6
+              bfab 00a9  ld   $a9
+              bfac 009a  ld   $9a
+              bfad 00a7  ld   $a7
+              bfae 006e  ld   $6e
+              bfaf 00aa  ld   $aa
+              bfb0 00b7  ld   $b7
+              bfb1 00b9  ld   $b9
+              bfb2 009f  ld   $9f
+              bfb3 00ea  ld   $ea
+              bfb4 00bd  ld   $bd
+              bfb5 00de  ld   $de
+              bfb6 00ea  ld   $ea
+              bfb7 007a  ld   $7a
+              bfb8 009a  ld   $9a
+              bfb9 00a7  ld   $a7
+              bfba 00a5  ld   $a5
+              bfbb 00fa  ld   $fa
+              bfbc 00ab  ld   $ab
+              bfbd 007a  ld   $7a
+              bfbe 0055  ld   $55
+              bfbf 0041  ld   $41
+              bfc0 00ea  ld   $ea
+              bfc1 00af  ld   $af
+              bfc2 0001  ld   $01
+              bfc3 0082  ld   $82
+              bfc4 001a  ld   $1a
+              bfc5 0000  ld   $00
+              bfc6 0088  ld   $88
+              bfc7 00ea  ld   $ea
+              bfc8 00ee  ld   $ee
+              bfc9 00aa  ld   $aa
+              bfca 00bf  ld   $bf
+              bfcb 00ea  ld   $ea
+              bfcc 00ae  ld   $ae
+              bfcd 00ae  ld   $ae
+              bfce 00ea  ld   $ea
+              bfcf 00aa  ld   $aa
+              bfd0 00aa  ld   $aa
+              bfd1 00aa  ld   $aa
+              bfd2 00aa  ld   $aa
+              bfd3 005e  ld   $5e
+              bfd4 00a6  ld   $a6
+              bfd5 007a  ld   $7a
+              bfd6 00aa  ld   $aa
+              bfd7 00ab  ld   $ab
+              bfd8 00b9  ld   $b9
+              bfd9 009a  ld   $9a
+              bfda 00a7  ld   $a7
+              bfdb 0079  ld   $79
+              bfdc 009a  ld   $9a
+              bfdd 00a6  ld   $a6
+              bfde 0069  ld   $69
+              bfdf 009a  ld   $9a
+              bfe0 00a7  ld   $a7
+              bfe1 0069  ld   $69
+              bfe2 009a  ld   $9a
+              bfe3 00a6  ld   $a6
+              bfe4 00a9  ld   $a9
+              bfe5 009b  ld   $9b
+              bfe6 00bb  ld   $bb
+              bfe7 00ba  ld   $ba
+              bfe8 00ef  ld   $ef
+              bfe9 00a7  ld   $a7
+              bfea 00ba  ld   $ba
+              bfeb 009a  ld   $9a
+              bfec 00aa  ld   $aa
+              bfed 00aa  ld   $aa
+              bfee 006b  ld   $6b
+              bfef 00a6  ld   $a6
+              bff0 0080  ld   $80
+              bff1 0050  ld   $50
+              bff2 00a9  ld   $a9
+              bff3 0025  ld   $25
+              bff4 0020  ld   $20
+              bff5 00a8  ld   $a8
+              bff6 0015  ld   $15
+              bff7 0080  ld   $80
+              bff8 00a8  ld   $a8
+              bff9 0000  ld   $00
+              bffa 0000  ld   $00
+              bffb fe00  bra  ac          ;Trampoline for page $bf00 lookups
+              bffc fcfd  bra  $bffd
+              bffd 1403  ld   $03,y
+              bffe e07b  jmp  y,$7b
+              bfff 151b  ld   [$1b],y
+              c000 00aa  ld   $aa
+              c001 00aa  ld   $aa
+              c002 00aa  ld   $aa
+              c003 00be  ld   $be
+              c004 00ba  ld   $ba
+              c005 00fa  ld   $fa
+              c006 00ab  ld   $ab
+              c007 00ea  ld   $ea
+              c008 00ea  ld   $ea
+              c009 00aa  ld   $aa
+              c00a 00ab  ld   $ab
+              c00b 00aa  ld   $aa
+              c00c 007a  ld   $7a
+              c00d 00aa  ld   $aa
+              c00e 00e6  ld   $e6
+              c00f 006a  ld   $6a
+              c010 00ee  ld   $ee
+              c011 00a7  ld   $a7
+              c012 007a  ld   $7a
+              c013 009b  ld   $9b
+              c014 00a6  ld   $a6
+              c015 0079  ld   $79
+              c016 009a  ld   $9a
+              c017 00a6  ld   $a6
+              c018 0065  ld   $65
+              c019 009a  ld   $9a
+              c01a 00a6  ld   $a6
+              c01b 0079  ld   $79
+              c01c 009a  ld   $9a
+              c01d 00a7  ld   $a7
+              c01e 007a  ld   $7a
+              c01f 00ab  ld   $ab
+              c020 00fb  ld   $fb
+              c021 00ba  ld   $ba
+              c022 009f  ld   $9f
+              c023 00e6  ld   $e6
+              c024 006a  ld   $6a
+              c025 00a9  ld   $a9
+              c026 00ea  ld   $ea
+              c027 00aa  ld   $aa
+              c028 005a  ld   $5a
+              c029 0001  ld   $01
+              c02a 0005  ld   $05
+              c02b 00a5  ld   $a5
+              c02c 0056  ld   $56
+              c02d 0000  ld   $00
+              c02e 00a2  ld   $a2
+              c02f 00ab  ld   $ab
+              c030 00ea  ld   $ea
+              c031 00ab  ld   $ab
+              c032 00af  ld   $af
+              c033 00be  ld   $be
+              c034 00ba  ld   $ba
+              c035 00fa  ld   $fa
+              c036 00bf  ld   $bf
+              c037 00fe  ld   $fe
+              c038 00ee  ld   $ee
+              c039 00ea  ld   $ea
+              c03a 00af  ld   $af
+              c03b 00a7  ld   $a7
+              c03c 007a  ld   $7a
+              c03d 00ae  ld   $ae
+              c03e 00ea  ld   $ea
+              c03f 007e  ld   $7e
+              c040 00aa  ld   $aa
+              c041 00a7  ld   $a7
+              c042 0069  ld   $69
+              c043 009e  ld   $9e
+              c044 00a6  ld   $a6
+              c045 0064  ld   $64
+              c046 004a  ld   $4a
+              c047 00a6  ld   $a6
+              c048 0068  ld   $68
+              c049 0089  ld   $89
+              c04a 0096  ld   $96
+              c04b 0069  ld   $69
+              c04c 009a  ld   $9a
+              c04d 00e6  ld   $e6
+              c04e 006a  ld   $6a
+              c04f 00af  ld   $af
+              c050 00fa  ld   $fa
+              c051 00ba  ld   $ba
+              c052 00af  ld   $af
+              c053 00e6  ld   $e6
+              c054 00a9  ld   $a9
+              c055 00fa  ld   $fa
+              c056 00bb  ld   $bb
+              c057 006a  ld   $6a
+              c058 0009  ld   $09
+              c059 0014  ld   $14
+              c05a 0095  ld   $95
+              c05b 004a  ld   $4a
+              c05c 0001  ld   $01
+              c05d 0088  ld   $88
+              c05e 00fa  ld   $fa
+              c05f 00ab  ld   $ab
+              c060 00fa  ld   $fa
+              c061 00ab  ld   $ab
+              c062 00ab  ld   $ab
+              c063 00aa  ld   $aa
+              c064 00bf  ld   $bf
+              c065 00ea  ld   $ea
+              c066 00af  ld   $af
+              c067 00ee  ld   $ee
+              c068 00fe  ld   $fe
+              c069 00ea  ld   $ea
+              c06a 00af  ld   $af
+              c06b 00ea  ld   $ea
+              c06c 00aa  ld   $aa
+              c06d 00af  ld   $af
+              c06e 00a7  ld   $a7
+              c06f 007a  ld   $7a
+              c070 009a  ld   $9a
+              c071 00e6  ld   $e6
+              c072 0069  ld   $69
+              c073 0099  ld   $99
+              c074 00a6  ld   $a6
+              c075 0025  ld   $25
+              c076 005a  ld   $5a
+              c077 00a6  ld   $a6
+              c078 0065  ld   $65
+              c079 008a  ld   $8a
+              c07a 0096  ld   $96
+              c07b 0069  ld   $69
+              c07c 009a  ld   $9a
+              c07d 00a6  ld   $a6
+              c07e 00b9  ld   $b9
+              c07f 00ea  ld   $ea
+              c080 00fb  ld   $fb
+              c081 00ba  ld   $ba
+              c082 00ae  ld   $ae
+              c083 00a6  ld   $a6
+              c084 00ea  ld   $ea
+              c085 00ae  ld   $ae
+              c086 00fa  ld   $fa
+              c087 00ab  ld   $ab
+              c088 009a  ld   $9a
+              c089 0055  ld   $55
+              c08a 0015  ld   $15
+              c08b 0010  ld   $10
+              c08c 00a8  ld   $a8
+              c08d 002a  ld   $2a
+              c08e 0090  ld   $90
+              c08f 00fc  ld   $fc
+              c090 00ea  ld   $ea
+              c091 00ff  ld   $ff
+              c092 00eb  ld   $eb
+              c093 00ef  ld   $ef
+              c094 00af  ld   $af
+              c095 00bf  ld   $bf
+              c096 00ba  ld   $ba
+              c097 00bb  ld   $bb
+              c098 00fa  ld   $fa
+              c099 00ab  ld   $ab
+              c09a 00bf  ld   $bf
+              c09b 00fa  ld   $fa
+              c09c 00ba  ld   $ba
+              c09d 00ab  ld   $ab
+              c09e 00fb  ld   $fb
+              c09f 007a  ld   $7a
+              c0a0 00ab  ld   $ab
+              c0a1 00a7  ld   $a7
+              c0a2 0069  ld   $69
+              c0a3 005a  ld   $5a
+              c0a4 00a6  ld   $a6
+              c0a5 0068  ld   $68
+              c0a6 0089  ld   $89
+              c0a7 0096  ld   $96
+              c0a8 0029  ld   $29
+              c0a9 0099  ld   $99
+              c0aa 0092  ld   $92
+              c0ab 0069  ld   $69
+              c0ac 0089  ld   $89
+              c0ad 0096  ld   $96
+              c0ae 0069  ld   $69
+              c0af 009a  ld   $9a
+              c0b0 00e6  ld   $e6
+              c0b1 00a9  ld   $a9
+              c0b2 00ee  ld   $ee
+              c0b3 00fa  ld   $fa
+              c0b4 007a  ld   $7a
+              c0b5 00ae  ld   $ae
+              c0b6 00fe  ld   $fe
+              c0b7 00ee  ld   $ee
+              c0b8 00af  ld   $af
+              c0b9 00ba  ld   $ba
+              c0ba 00ba  ld   $ba
+              c0bb 00aa  ld   $aa
+              c0bc 00aa  ld   $aa
+              c0bd 00aa  ld   $aa
+              c0be 0006  ld   $06
+              c0bf 0001  ld   $01
+              c0c0 00c8  ld   $c8
+              c0c1 00ff  ld   $ff
+              c0c2 00ff  ld   $ff
+              c0c3 00ef  ld   $ef
+              c0c4 00bf  ld   $bf
+              c0c5 00bb  ld   $bb
+              c0c6 00ff  ld   $ff
+              c0c7 00fe  ld   $fe
+              c0c8 00bb  ld   $bb
+              c0c9 00bb  ld   $bb
+              c0ca 00bb  ld   $bb
+              c0cb 00fb  ld   $fb
+              c0cc 00ab  ld   $ab
+              c0cd 00bf  ld   $bf
+              c0ce 00fa  ld   $fa
+              c0cf 00be  ld   $be
+              c0d0 00ae  ld   $ae
+              c0d1 00ea  ld   $ea
+              c0d2 0069  ld   $69
+              c0d3 009a  ld   $9a
+              c0d4 00a6  ld   $a6
+              c0d5 0069  ld   $69
+              c0d6 0059  ld   $59
+              c0d7 00a2  ld   $a2
+              c0d8 0025  ld   $25
+              c0d9 005a  ld   $5a
+              c0da 00a2  ld   $a2
+              c0db 0025  ld   $25
+              c0dc 005a  ld   $5a
+              c0dd 00a2  ld   $a2
+              c0de 0065  ld   $65
+              c0df 004a  ld   $4a
+              c0e0 00a6  ld   $a6
+              c0e1 0069  ld   $69
+              c0e2 00aa  ld   $aa
+              c0e3 00f6  ld   $f6
+              c0e4 00ba  ld   $ba
+              c0e5 00af  ld   $af
+              c0e6 00a6  ld   $a6
+              c0e7 00aa  ld   $aa
+              c0e8 00be  ld   $be
+              c0e9 00bf  ld   $bf
+              c0ea 00fa  ld   $fa
+              c0eb 00bf  ld   $bf
+              c0ec 00fa  ld   $fa
+              c0ed 00aa  ld   $aa
+              c0ee 00ae  ld   $ae
+              c0ef 0096  ld   $96
+              c0f0 0004  ld   $04
+              c0f1 0080  ld   $80
+              c0f2 00fc  ld   $fc
+              c0f3 00ff  ld   $ff
+              c0f4 00ef  ld   $ef
+              c0f5 00ff  ld   $ff
+              c0f6 00ff  ld   $ff
+              c0f7 00fe  ld   $fe
+              c0f8 00fb  ld   $fb
+              c0f9 0000  ld   $00
+              c0fa 0000  ld   $00
+              c0fb fe00  bra  ac          ;Trampoline for page $c000 lookups
+              c0fc fcfd  bra  $c0fd
+              c0fd 1403  ld   $03,y
+              c0fe e07b  jmp  y,$7b
+              c0ff 151b  ld   [$1b],y
+              c100 00ff  ld   $ff
+              c101 00ff  ld   $ff
+              c102 00ef  ld   $ef
+              c103 00ef  ld   $ef
+              c104 00af  ld   $af
+              c105 00bf  ld   $bf
+              c106 00fa  ld   $fa
+              c107 00af  ld   $af
+              c108 00bb  ld   $bb
+              c109 007a  ld   $7a
+              c10a 009a  ld   $9a
+              c10b 00e6  ld   $e6
+              c10c 0065  ld   $65
+              c10d 005a  ld   $5a
+              c10e 00a6  ld   $a6
+              c10f 0029  ld   $29
+              c110 005a  ld   $5a
+              c111 0066  ld   $66
+              c112 0064  ld   $64
+              c113 004a  ld   $4a
+              c114 00a5  ld   $a5
+              c115 0065  ld   $65
+              c116 005a  ld   $5a
+              c117 00a6  ld   $a6
+              c118 0069  ld   $69
+              c119 005a  ld   $5a
+              c11a 00a6  ld   $a6
+              c11b 0069  ld   $69
+              c11c 00aa  ld   $aa
+              c11d 00fa  ld   $fa
+              c11e 007e  ld   $7e
+              c11f 00aa  ld   $aa
+              c120 00fa  ld   $fa
+              c121 00af  ld   $af
+              c122 00fe  ld   $fe
+              c123 00a6  ld   $a6
+              c124 0055  ld   $55
+              c125 0055  ld   $55
+              c126 0065  ld   $65
+              c127 0026  ld   $26
+              c128 0011  ld   $11
+              c129 0001  ld   $01
+              c12a 00c8  ld   $c8
+              c12b 00ff  ld   $ff
+              c12c 00ef  ld   $ef
+              c12d 00ff  ld   $ff
+              c12e 00ff  ld   $ff
+              c12f 00ff  ld   $ff
+              * 7 times
+              c134 00ef  ld   $ef
+              c135 00ff  ld   $ff
+              c136 00ff  ld   $ff
+              c137 00ef  ld   $ef
+              c138 00bb  ld   $bb
+              c139 00ba  ld   $ba
+              c13a 009a  ld   $9a
+              c13b 00a6  ld   $a6
+              c13c 00b9  ld   $b9
+              c13d 009a  ld   $9a
+              c13e 00e6  ld   $e6
+              c13f 0069  ld   $69
+              c140 009a  ld   $9a
+              c141 0096  ld   $96
+              c142 0069  ld   $69
+              c143 005a  ld   $5a
+              c144 00a2  ld   $a2
+              c145 0065  ld   $65
+              c146 009a  ld   $9a
+              c147 00a6  ld   $a6
+              c148 00a9  ld   $a9
+              c149 009e  ld   $9e
+              c14a 00ea  ld   $ea
+              c14b 00a9  ld   $a9
+              c14c 009e  ld   $9e
+              c14d 00a6  ld   $a6
+              c14e 00aa  ld   $aa
+              c14f 00ae  ld   $ae
+              c150 00ea  ld   $ea
+              c151 00aa  ld   $aa
+              c152 00aa  ld   $aa
+              c153 00ff  ld   $ff
+              c154 00ba  ld   $ba
+              c155 0005  ld   $05
+              c156 0001  ld   $01
+              c157 0001  ld   $01
+              c158 0004  ld   $04
+              c159 0004  ld   $04
+              c15a 0010  ld   $10
+              c15b 0010  ld   $10
+              c15c 0040  ld   $40
+              c15d 0040  ld   $40
+              c15e 0000  ld   $00
+              c15f 0001  ld   $01
+              c160 00c6  ld   $c6
+              c161 00ff  ld   $ff
+              c162 00ff  ld   $ff
+              c163 00ff  ld   $ff
+              c164 00ff  ld   $ff
+              c165 00bf  ld   $bf
+              c166 00ff  ld   $ff
+              c167 00ff  ld   $ff
+              c168 00ee  ld   $ee
+              c169 00ff  ld   $ff
+              c16a 00ff  ld   $ff
+              c16b 00ff  ld   $ff
+              * 5 times
+              c16e 00eb  ld   $eb
+              c16f 006a  ld   $6a
+              c170 00ae  ld   $ae
+              c171 00e6  ld   $e6
+              c172 006a  ld   $6a
+              c173 009a  ld   $9a
+              c174 00ab  ld   $ab
+              c175 00b9  ld   $b9
+              c176 00aa  ld   $aa
+              c177 00a7  ld   $a7
+              c178 0069  ld   $69
+              c179 009a  ld   $9a
+              c17a 00a6  ld   $a6
+              c17b 0064  ld   $64
+              c17c 005a  ld   $5a
+              c17d 00a6  ld   $a6
+              c17e 00a9  ld   $a9
+              c17f 009e  ld   $9e
+              c180 00ea  ld   $ea
+              c181 0069  ld   $69
+              c182 009a  ld   $9a
+              c183 0097  ld   $97
+              c184 0069  ld   $69
+              c185 0099  ld   $99
+              c186 00a6  ld   $a6
+              c187 00aa  ld   $aa
+              c188 00af  ld   $af
+              c189 00ba  ld   $ba
+              c18a 00bf  ld   $bf
+              c18b 004a  ld   $4a
+              c18c 0050  ld   $50
+              c18d 0001  ld   $01
+              c18e 0055  ld   $55
+              c18f 0040  ld   $40
+              c190 0044  ld   $44
+              c191 0005  ld   $05
+              c192 001c  ld   $1c
+              c193 00bf  ld   $bf
+              c194 00fb  ld   $fb
+              c195 00ff  ld   $ff
+              c196 00fe  ld   $fe
+              c197 00fe  ld   $fe
+              c198 00fb  ld   $fb
+              c199 00fb  ld   $fb
+              c19a 00ff  ld   $ff
+              c19b 00ff  ld   $ff
+              c19c 00ff  ld   $ff
+              c19d 00fe  ld   $fe
+              c19e 00bf  ld   $bf
+              c19f 00fe  ld   $fe
+              c1a0 00ee  ld   $ee
+              c1a1 00ab  ld   $ab
+              c1a2 00a9  ld   $a9
+              c1a3 009e  ld   $9e
+              c1a4 009a  ld   $9a
+              c1a5 0069  ld   $69
+              c1a6 00aa  ld   $aa
+              c1a7 00a6  ld   $a6
+              c1a8 0079  ld   $79
+              c1a9 005a  ld   $5a
+              c1aa 00a6  ld   $a6
+              c1ab 0079  ld   $79
+              c1ac 009a  ld   $9a
+              c1ad 00a6  ld   $a6
+              c1ae 0069  ld   $69
+              c1af 005a  ld   $5a
+              c1b0 00a6  ld   $a6
+              c1b1 0069  ld   $69
+              c1b2 005a  ld   $5a
+              c1b3 00a6  ld   $a6
+              c1b4 00a5  ld   $a5
+              c1b5 009a  ld   $9a
+              c1b6 0096  ld   $96
+              c1b7 0069  ld   $69
+              c1b8 0059  ld   $59
+              c1b9 00a5  ld   $a5
+              c1ba 00ea  ld   $ea
+              c1bb 00aa  ld   $aa
+              c1bc 00ab  ld   $ab
+              c1bd 006a  ld   $6a
+              c1be 0055  ld   $55
+              c1bf 0051  ld   $51
+              c1c0 0011  ld   $11
+              c1c1 0055  ld   $55
+              c1c2 0045  ld   $45
+              c1c3 0004  ld   $04
+              c1c4 0004  ld   $04
+              c1c5 0018  ld   $18
+              c1c6 00ff  ld   $ff
+              c1c7 00bf  ld   $bf
+              c1c8 00ff  ld   $ff
+              c1c9 00ef  ld   $ef
+              c1ca 00ff  ld   $ff
+              c1cb 00ff  ld   $ff
+              c1cc 00ff  ld   $ff
+              c1cd 00ff  ld   $ff
+              c1ce 00bb  ld   $bb
+              c1cf 00ff  ld   $ff
+              c1d0 00ff  ld   $ff
+              c1d1 00ff  ld   $ff
+              c1d2 00ff  ld   $ff
+              c1d3 00af  ld   $af
+              c1d4 00ea  ld   $ea
+              c1d5 006a  ld   $6a
+              c1d6 00aa  ld   $aa
+              c1d7 00a7  ld   $a7
+              c1d8 0079  ld   $79
+              c1d9 0099  ld   $99
+              c1da 0096  ld   $96
+              c1db 0069  ld   $69
+              c1dc 0099  ld   $99
+              c1dd 00a6  ld   $a6
+              c1de 00ba  ld   $ba
+              c1df 005a  ld   $5a
+              c1e0 00a6  ld   $a6
+              c1e1 007a  ld   $7a
+              c1e2 009a  ld   $9a
+              c1e3 00a7  ld   $a7
+              c1e4 0079  ld   $79
+              c1e5 0099  ld   $99
+              c1e6 0096  ld   $96
+              c1e7 0069  ld   $69
+              c1e8 0099  ld   $99
+              c1e9 0096  ld   $96
+              c1ea 0095  ld   $95
+              c1eb 009a  ld   $9a
+              c1ec 00aa  ld   $aa
+              c1ed 00fa  ld   $fa
+              c1ee 00eb  ld   $eb
+              c1ef 00bf  ld   $bf
+              c1f0 00ba  ld   $ba
+              c1f1 00aa  ld   $aa
+              c1f2 009a  ld   $9a
+              c1f3 0059  ld   $59
+              c1f4 0059  ld   $59
+              c1f5 0055  ld   $55
+              c1f6 0055  ld   $55
+              c1f7 0040  ld   $40
+              c1f8 0001  ld   $01
+              c1f9 0000  ld   $00
+              c1fa 0000  ld   $00
+              c1fb fe00  bra  ac          ;Trampoline for page $c100 lookups
+              c1fc fcfd  bra  $c1fd
+              c1fd 1403  ld   $03,y
+              c1fe e07b  jmp  y,$7b
+              c1ff 151b  ld   [$1b],y
+              c200 00c5  ld   $c5
+              c201 00ff  ld   $ff
+              c202 00ff  ld   $ff
+              c203 00ff  ld   $ff
+              c204 00ff  ld   $ff
+              c205 00af  ld   $af
+              c206 00fe  ld   $fe
+              c207 00ff  ld   $ff
+              c208 00fe  ld   $fe
+              c209 00fb  ld   $fb
+              c20a 00ef  ld   $ef
+              c20b 00fe  ld   $fe
+              c20c 00bf  ld   $bf
+              c20d 00ee  ld   $ee
+              c20e 00fe  ld   $fe
+              c20f 007a  ld   $7a
+              c210 00aa  ld   $aa
+              c211 00ab  ld   $ab
+              c212 00a9  ld   $a9
+              c213 009a  ld   $9a
+              c214 00e6  ld   $e6
+              c215 00a9  ld   $a9
+              c216 009a  ld   $9a
+              c217 00aa  ld   $aa
+              c218 00a9  ld   $a9
+              c219 009e  ld   $9e
+              c21a 00a6  ld   $a6
+              c21b 00a9  ld   $a9
+              c21c 009e  ld   $9e
+              c21d 00aa  ld   $aa
+              c21e 00aa  ld   $aa
+              c21f 009e  ld   $9e
+              c220 00a6  ld   $a6
+              c221 0069  ld   $69
+              c222 0099  ld   $99
+              c223 00aa  ld   $aa
+              c224 0025  ld   $25
+              c225 0055  ld   $55
+              c226 00a5  ld   $a5
+              c227 00a9  ld   $a9
+              c228 00fa  ld   $fa
+              c229 00ab  ld   $ab
+              c22a 00ff  ld   $ff
+              c22b 00ee  ld   $ee
+              c22c 00ee  ld   $ee
+              c22d 00ee  ld   $ee
+              c22e 00ae  ld   $ae
+              c22f 00aa  ld   $aa
+              c230 006a  ld   $6a
+              c231 00aa  ld   $aa
+              c232 0056  ld   $56
+              c233 0055  ld   $55
+              c234 0004  ld   $04
+              c235 0008  ld   $08
+              c236 00d0  ld   $d0
+              c237 00bb  ld   $bb
+              c238 00fb  ld   $fb
+              c239 00ff  ld   $ff
+              c23a 00ff  ld   $ff
+              c23b 00ff  ld   $ff
+              c23c 00ff  ld   $ff
+              c23d 00bf  ld   $bf
+              c23e 00fb  ld   $fb
+              c23f 00ff  ld   $ff
+              c240 00bf  ld   $bf
+              c241 00ff  ld   $ff
+              c242 00ff  ld   $ff
+              c243 00af  ld   $af
+              c244 00fb  ld   $fb
+              c245 00aa  ld   $aa
+              c246 009e  ld   $9e
+              c247 00ea  ld   $ea
+              c248 006a  ld   $6a
+              c249 00ae  ld   $ae
+              c24a 00ab  ld   $ab
+              c24b 00ba  ld   $ba
+              c24c 009e  ld   $9e
+              c24d 00ea  ld   $ea
+              c24e 00ba  ld   $ba
+              c24f 009e  ld   $9e
+              c250 00e6  ld   $e6
+              c251 00a9  ld   $a9
+              c252 009a  ld   $9a
+              c253 00ea  ld   $ea
+              c254 00b9  ld   $b9
+              c255 00aa  ld   $aa
+              c256 00ab  ld   $ab
+              c257 007a  ld   $7a
+              c258 00aa  ld   $aa
+              c259 00a6  ld   $a6
+              c25a 0069  ld   $69
+              c25b 0059  ld   $59
+              c25c 0055  ld   $55
+              c25d 00aa  ld   $aa
+              c25e 00ae  ld   $ae
+              c25f 00fe  ld   $fe
+              c260 00aa  ld   $aa
+              c261 00bf  ld   $bf
+              c262 00fa  ld   $fa
+              c263 00bb  ld   $bb
+              c264 00fb  ld   $fb
+              c265 00bb  ld   $bb
+              c266 00ba  ld   $ba
+              c267 00bb  ld   $bb
+              c268 00fb  ld   $fb
+              c269 00aa  ld   $aa
+              c26a 009a  ld   $9a
+              c26b 006a  ld   $6a
+              c26c 0095  ld   $95
+              c26d 00ff  ld   $ff
+              c26e 00bf  ld   $bf
+              c26f 00fb  ld   $fb
+              c270 00ef  ld   $ef
+              c271 00ff  ld   $ff
+              c272 00ff  ld   $ff
+              c273 00fb  ld   $fb
+              c274 00ff  ld   $ff
+              c275 00ff  ld   $ff
+              c276 00eb  ld   $eb
+              c277 00ff  ld   $ff
+              c278 00af  ld   $af
+              c279 00fe  ld   $fe
+              c27a 00ea  ld   $ea
+              c27b 006a  ld   $6a
+              c27c 00aa  ld   $aa
+              c27d 00a7  ld   $a7
+              c27e 00ba  ld   $ba
+              c27f 00ab  ld   $ab
+              c280 00ea  ld   $ea
+              c281 00ae  ld   $ae
+              c282 009a  ld   $9a
+              c283 00ab  ld   $ab
+              c284 006a  ld   $6a
+              c285 009f  ld   $9f
+              c286 00a6  ld   $a6
+              c287 0065  ld   $65
+              c288 00aa  ld   $aa
+              c289 00a7  ld   $a7
+              c28a 00aa  ld   $aa
+              c28b 00ee  ld   $ee
+              c28c 00ea  ld   $ea
+              c28d 00a9  ld   $a9
+              c28e 005a  ld   $5a
+              c28f 00a7  ld   $a7
+              c290 0065  ld   $65
+              c291 0045  ld   $45
+              c292 00a6  ld   $a6
+              c293 00aa  ld   $aa
+              c294 00fa  ld   $fa
+              c295 00ff  ld   $ff
+              c296 00ea  ld   $ea
+              c297 00ff  ld   $ff
+              c298 00ab  ld   $ab
+              c299 00bf  ld   $bf
+              c29a 00be  ld   $be
+              c29b 00fe  ld   $fe
+              c29c 00ab  ld   $ab
+              c29d 00bf  ld   $bf
+              c29e 00fe  ld   $fe
+              c29f 00ee  ld   $ee
+              c2a0 00ee  ld   $ee
+              c2a1 00ee  ld   $ee
+              c2a2 00aa  ld   $aa
+              c2a3 00ba  ld   $ba
+              c2a4 00fa  ld   $fa
+              c2a5 00bf  ld   $bf
+              c2a6 00fa  ld   $fa
+              c2a7 00bf  ld   $bf
+              c2a8 00fb  ld   $fb
+              c2a9 00ef  ld   $ef
+              c2aa 00ff  ld   $ff
+              c2ab 00ff  ld   $ff
+              c2ac 00ff  ld   $ff
+              c2ad 00ef  ld   $ef
+              c2ae 00bf  ld   $bf
+              c2af 00bf  ld   $bf
+              c2b0 00fb  ld   $fb
+              c2b1 00a9  ld   $a9
+              c2b2 009e  ld   $9e
+              c2b3 00aa  ld   $aa
+              c2b4 00a9  ld   $a9
+              c2b5 00ae  ld   $ae
+              c2b6 00a7  ld   $a7
+              c2b7 007a  ld   $7a
+              c2b8 00aa  ld   $aa
+              c2b9 00e6  ld   $e6
+              c2ba 006a  ld   $6a
+              c2bb 00ae  ld   $ae
+              c2bc 00a6  ld   $a6
+              c2bd 0079  ld   $79
+              c2be 009a  ld   $9a
+              c2bf 00a6  ld   $a6
+              c2c0 0069  ld   $69
+              c2c1 009a  ld   $9a
+              c2c2 0096  ld   $96
+              c2c3 0069  ld   $69
+              c2c4 0099  ld   $99
+              c2c5 00a6  ld   $a6
+              c2c6 0065  ld   $65
+              c2c7 005a  ld   $5a
+              c2c8 00a6  ld   $a6
+              c2c9 00aa  ld   $aa
+              c2ca 00ba  ld   $ba
+              c2cb 00bb  ld   $bb
+              c2cc 00bb  ld   $bb
+              c2cd 00bb  ld   $bb
+              c2ce 00fb  ld   $fb
+              c2cf 00eb  ld   $eb
+              c2d0 00ef  ld   $ef
+              c2d1 00bf  ld   $bf
+              c2d2 00fa  ld   $fa
+              c2d3 00ff  ld   $ff
+              c2d4 00eb  ld   $eb
+              c2d5 00ff  ld   $ff
+              c2d6 00bb  ld   $bb
+              c2d7 00fb  ld   $fb
+              c2d8 00bf  ld   $bf
+              c2d9 00aa  ld   $aa
+              c2da 00aa  ld   $aa
+              c2db 00ea  ld   $ea
+              c2dc 00af  ld   $af
+              c2dd 00ff  ld   $ff
+              c2de 00fe  ld   $fe
+              c2df 00fe  ld   $fe
+              c2e0 00af  ld   $af
+              c2e1 00bf  ld   $bf
+              c2e2 00ff  ld   $ff
+              c2e3 00bf  ld   $bf
+              c2e4 00ff  ld   $ff
+              c2e5 00ea  ld   $ea
+              c2e6 00bb  ld   $bb
+              c2e7 007a  ld   $7a
+              c2e8 009a  ld   $9a
+              c2e9 00ea  ld   $ea
+              c2ea 0069  ld   $69
+              c2eb 009a  ld   $9a
+              c2ec 00a6  ld   $a6
+              c2ed 0069  ld   $69
+              c2ee 009e  ld   $9e
+              c2ef 00aa  ld   $aa
+              c2f0 0079  ld   $79
+              c2f1 009a  ld   $9a
+              c2f2 00a6  ld   $a6
+              c2f3 0069  ld   $69
+              c2f4 009a  ld   $9a
+              c2f5 00a7  ld   $a7
+              c2f6 0069  ld   $69
+              c2f7 009e  ld   $9e
+              c2f8 00a6  ld   $a6
+              c2f9 0000  ld   $00
+              c2fa 0000  ld   $00
+              c2fb fe00  bra  ac          ;Trampoline for page $c200 lookups
+              c2fc fcfd  bra  $c2fd
+              c2fd 1403  ld   $03,y
+              c2fe e07b  jmp  y,$7b
+              c2ff 151b  ld   [$1b],y
+              c300 0069  ld   $69
+              c301 0099  ld   $99
+              c302 0056  ld   $56
+              c303 0065  ld   $65
+              c304 0045  ld   $45
+              c305 0056  ld   $56
+              c306 00a9  ld   $a9
+              c307 00aa  ld   $aa
+              c308 00ea  ld   $ea
+              c309 00ee  ld   $ee
+              c30a 00ee  ld   $ee
+              c30b 00ee  ld   $ee
+              c30c 00ae  ld   $ae
+              c30d 00fe  ld   $fe
+              c30e 00ea  ld   $ea
+              c30f 00af  ld   $af
+              c310 00fe  ld   $fe
+              c311 00ff  ld   $ff
+              c312 00bf  ld   $bf
+              c313 00fe  ld   $fe
+              c314 00bf  ld   $bf
+              c315 007a  ld   $7a
+              c316 005a  ld   $5a
+              c317 00aa  ld   $aa
+              c318 00a5  ld   $a5
+              c319 00aa  ld   $aa
+              c31a 00aa  ld   $aa
+              c31b 00ab  ld   $ab
+              c31c 00fb  ld   $fb
+              c31d 00fb  ld   $fb
+              c31e 00ff  ld   $ff
+              c31f 00bb  ld   $bb
+              c320 00ff  ld   $ff
+              c321 00bf  ld   $bf
+              c322 00ff  ld   $ff
+              c323 00eb  ld   $eb
+              c324 006a  ld   $6a
+              c325 00aa  ld   $aa
+              c326 00a7  ld   $a7
+              c327 006a  ld   $6a
+              c328 009e  ld   $9e
+              c329 00da  ld   $da
+              c32a 0069  ld   $69
+              c32b 00aa  ld   $aa
+              c32c 00a7  ld   $a7
+              c32d 007a  ld   $7a
+              c32e 009a  ld   $9a
+              c32f 0096  ld   $96
+              c330 0069  ld   $69
+              c331 0099  ld   $99
+              c332 00a6  ld   $a6
+              c333 0065  ld   $65
+              c334 005a  ld   $5a
+              c335 00a6  ld   $a6
+              c336 0065  ld   $65
+              c337 005a  ld   $5a
+              c338 0092  ld   $92
+              c339 0025  ld   $25
+              c33a 0045  ld   $45
+              c33b 0055  ld   $55
+              c33c 0065  ld   $65
+              c33d 0095  ld   $95
+              c33e 00aa  ld   $aa
+              c33f 00aa  ld   $aa
+              c340 00aa  ld   $aa
+              c341 00aa  ld   $aa
+              c342 00fa  ld   $fa
+              c343 00aa  ld   $aa
+              c344 00ea  ld   $ea
+              c345 00ea  ld   $ea
+              c346 00fe  ld   $fe
+              c347 00ea  ld   $ea
+              c348 00ef  ld   $ef
+              c349 00ef  ld   $ef
+              c34a 00ef  ld   $ef
+              c34b 007f  ld   $7f
+              c34c 00a5  ld   $a5
+              c34d 0056  ld   $56
+              c34e 0065  ld   $65
+              c34f 0066  ld   $66
+              c350 00aa  ld   $aa
+              c351 00aa  ld   $aa
+              c352 00fe  ld   $fe
+              c353 00ee  ld   $ee
+              c354 00ee  ld   $ee
+              c355 00ee  ld   $ee
+              c356 00bf  ld   $bf
+              c357 00fa  ld   $fa
+              c358 00ab  ld   $ab
+              c359 00eb  ld   $eb
+              c35a 006a  ld   $6a
+              c35b 009e  ld   $9e
+              c35c 00a6  ld   $a6
+              c35d 0079  ld   $79
+              c35e 009a  ld   $9a
+              c35f 00a6  ld   $a6
+              c360 00b9  ld   $b9
+              c361 009a  ld   $9a
+              c362 00ea  ld   $ea
+              c363 0069  ld   $69
+              c364 009e  ld   $9e
+              c365 0096  ld   $96
+              c366 0068  ld   $68
+              c367 009a  ld   $9a
+              c368 0096  ld   $96
+              c369 0069  ld   $69
+              c36a 0099  ld   $99
+              c36b 0096  ld   $96
+              c36c 0064  ld   $64
+              c36d 0089  ld   $89
+              c36e 0095  ld   $95
+              c36f 0014  ld   $14
+              c370 0005  ld   $05
+              c371 0051  ld   $51
+              c372 0055  ld   $55
+              c373 005a  ld   $5a
+              c374 009a  ld   $9a
+              c375 00a9  ld   $a9
+              c376 00a9  ld   $a9
+              c377 00aa  ld   $aa
+              c378 00aa  ld   $aa
+              c379 00aa  ld   $aa
+              * 5 times
+              c37c 00ea  ld   $ea
+              c37d 00ef  ld   $ef
+              c37e 00fe  ld   $fe
+              c37f 00aa  ld   $aa
+              c380 00bb  ld   $bb
+              c381 00bb  ld   $bb
+              c382 0059  ld   $59
+              c383 0066  ld   $66
+              c384 00a5  ld   $a5
+              c385 0095  ld   $95
+              c386 00a6  ld   $a6
+              c387 00aa  ld   $aa
+              c388 00fa  ld   $fa
+              c389 00eb  ld   $eb
+              c38a 00aa  ld   $aa
+              c38b 00aa  ld   $aa
+              c38c 00ea  ld   $ea
+              c38d 006a  ld   $6a
+              c38e 00ae  ld   $ae
+              c38f 00ea  ld   $ea
+              c390 00a9  ld   $a9
+              c391 009a  ld   $9a
+              c392 00ab  ld   $ab
+              c393 0065  ld   $65
+              c394 00aa  ld   $aa
+              c395 00a7  ld   $a7
+              c396 0069  ld   $69
+              c397 009e  ld   $9e
+              c398 00f6  ld   $f6
+              c399 006a  ld   $6a
+              c39a 009a  ld   $9a
+              c39b 00a6  ld   $a6
+              c39c 0069  ld   $69
+              c39d 0099  ld   $99
+              c39e 00a7  ld   $a7
+              c39f 0029  ld   $29
+              c3a0 0099  ld   $99
+              c3a1 00a6  ld   $a6
+              c3a2 0058  ld   $58
+              c3a3 0059  ld   $59
+              c3a4 0012  ld   $12
+              c3a5 0050  ld   $50
+              c3a6 0045  ld   $45
+              c3a7 0055  ld   $55
+              c3a8 0064  ld   $64
+              c3a9 005a  ld   $5a
+              c3aa 00a6  ld   $a6
+              c3ab 0066  ld   $66
+              c3ac 0059  ld   $59
+              c3ad 0096  ld   $96
+              c3ae 0069  ld   $69
+              c3af 0059  ld   $59
+              c3b0 0096  ld   $96
+              c3b1 00aa  ld   $aa
+              c3b2 00aa  ld   $aa
+              c3b3 00aa  ld   $aa
+              c3b4 00aa  ld   $aa
+              c3b5 00ae  ld   $ae
+              c3b6 00aa  ld   $aa
+              c3b7 006a  ld   $6a
+              c3b8 006a  ld   $6a
+              c3b9 00a9  ld   $a9
+              c3ba 00a5  ld   $a5
+              c3bb 005a  ld   $5a
+              c3bc 00a9  ld   $a9
+              c3bd 00aa  ld   $aa
+              c3be 00fa  ld   $fa
+              c3bf 00ab  ld   $ab
+              c3c0 0069  ld   $69
+              c3c1 0055  ld   $55
+              c3c2 00a5  ld   $a5
+              c3c3 006a  ld   $6a
+              c3c4 00aa  ld   $aa
+              c3c5 00a7  ld   $a7
+              c3c6 007a  ld   $7a
+              c3c7 009a  ld   $9a
+              c3c8 00a6  ld   $a6
+              c3c9 0079  ld   $79
+              c3ca 005a  ld   $5a
+              c3cb 00a6  ld   $a6
+              c3cc 0069  ld   $69
+              c3cd 00aa  ld   $aa
+              c3ce 00e6  ld   $e6
+              c3cf 00aa  ld   $aa
+              c3d0 009f  ld   $9f
+              c3d1 00a6  ld   $a6
+              c3d2 00a9  ld   $a9
+              c3d3 00ae  ld   $ae
+              c3d4 00a6  ld   $a6
+              c3d5 0079  ld   $79
+              c3d6 005a  ld   $5a
+              c3d7 00a2  ld   $a2
+              c3d8 0065  ld   $65
+              c3d9 004a  ld   $4a
+              c3da 0001  ld   $01
+              c3db 0002  ld   $02
+              c3dc 0055  ld   $55
+              c3dd 0051  ld   $51
+              c3de 0055  ld   $55
+              c3df 0059  ld   $59
+              c3e0 0095  ld   $95
+              c3e1 0055  ld   $55
+              c3e2 0055  ld   $55
+              c3e3 0056  ld   $56
+              c3e4 0066  ld   $66
+              c3e5 00a9  ld   $a9
+              c3e6 00aa  ld   $aa
+              c3e7 00a9  ld   $a9
+              c3e8 00aa  ld   $aa
+              c3e9 00ab  ld   $ab
+              c3ea 00aa  ld   $aa
+              c3eb 00aa  ld   $aa
+              c3ec 00aa  ld   $aa
+              c3ed 006a  ld   $6a
+              c3ee 00a9  ld   $a9
+              c3ef 00a6  ld   $a6
+              c3f0 005a  ld   $5a
+              c3f1 00aa  ld   $aa
+              c3f2 00aa  ld   $aa
+              c3f3 00ba  ld   $ba
+              c3f4 00fa  ld   $fa
+              c3f5 00ef  ld   $ef
+              c3f6 0099  ld   $99
+              c3f7 0059  ld   $59
+              c3f8 0056  ld   $56
+              c3f9 0000  ld   $00
+              c3fa 0000  ld   $00
+              c3fb fe00  bra  ac          ;Trampoline for page $c300 lookups
+              c3fc fcfd  bra  $c3fd
+              c3fd 1403  ld   $03,y
+              c3fe e07b  jmp  y,$7b
+              c3ff 151b  ld   [$1b],y
+              c400 0069  ld   $69
+              c401 00ae  ld   $ae
+              c402 00a6  ld   $a6
+              c403 006a  ld   $6a
+              c404 00ae  ld   $ae
+              c405 00e6  ld   $e6
+              c406 0069  ld   $69
+              c407 009a  ld   $9a
+              c408 0096  ld   $96
+              c409 0079  ld   $79
+              c40a 00aa  ld   $aa
+              c40b 00a7  ld   $a7
+              c40c 00be  ld   $be
+              c40d 00af  ld   $af
+              c40e 00e7  ld   $e7
+              c40f 00aa  ld   $aa
+              c410 00ef  ld   $ef
+              c411 00a7  ld   $a7
+              c412 0065  ld   $65
+              c413 009a  ld   $9a
+              c414 0096  ld   $96
+              c415 0029  ld   $29
+              c416 005a  ld   $5a
+              c417 0092  ld   $92
+              c418 0015  ld   $15
+              c419 0045  ld   $45
+              c41a 0095  ld   $95
+              c41b 0014  ld   $14
+              c41c 009a  ld   $9a
+              c41d 0056  ld   $56
+              c41e 0065  ld   $65
+              c41f 0059  ld   $59
+              c420 00a9  ld   $a9
+              c421 0055  ld   $55
+              c422 005a  ld   $5a
+              c423 0099  ld   $99
+              c424 00a5  ld   $a5
+              c425 0059  ld   $59
+              c426 0096  ld   $96
+              c427 0066  ld   $66
+              c428 005a  ld   $5a
+              c429 00aa  ld   $aa
+              c42a 00a5  ld   $a5
+              c42b 005a  ld   $5a
+              c42c 00aa  ld   $aa
+              c42d 00a5  ld   $a5
+              c42e 00a9  ld   $a9
+              c42f 00aa  ld   $aa
+              c430 00ea  ld   $ea
+              c431 00ef  ld   $ef
+              c432 00ab  ld   $ab
+              c433 00aa  ld   $aa
+              c434 009a  ld   $9a
+              c435 0099  ld   $99
+              c436 00a9  ld   $a9
+              c437 009a  ld   $9a
+              c438 00ea  ld   $ea
+              c439 00a9  ld   $a9
+              c43a 009a  ld   $9a
+              c43b 00a6  ld   $a6
+              c43c 0065  ld   $65
+              c43d 009a  ld   $9a
+              c43e 00a6  ld   $a6
+              c43f 0069  ld   $69
+              c440 009a  ld   $9a
+              c441 00ab  ld   $ab
+              c442 00ba  ld   $ba
+              c443 009a  ld   $9a
+              c444 00ea  ld   $ea
+              c445 0069  ld   $69
+              c446 009a  ld   $9a
+              c447 00e6  ld   $e6
+              c448 0069  ld   $69
+              c449 008a  ld   $8a
+              c44a 00a6  ld   $a6
+              c44b 0064  ld   $64
+              c44c 005a  ld   $5a
+              c44d 00a6  ld   $a6
+              c44e 0054  ld   $54
+              c44f 0049  ld   $49
+              c450 0051  ld   $51
+              c451 0055  ld   $55
+              c452 0059  ld   $59
+              c453 00a6  ld   $a6
+              c454 0066  ld   $66
+              c455 005a  ld   $5a
+              c456 009a  ld   $9a
+              c457 006a  ld   $6a
+              c458 00a9  ld   $a9
+              c459 00a6  ld   $a6
+              c45a 0066  ld   $66
+              c45b 0056  ld   $56
+              c45c 00aa  ld   $aa
+              c45d 0065  ld   $65
+              c45e 00a9  ld   $a9
+              c45f 0096  ld   $96
+              c460 006a  ld   $6a
+              c461 00a9  ld   $a9
+              c462 0095  ld   $95
+              c463 0055  ld   $55
+              c464 0056  ld   $56
+              c465 00aa  ld   $aa
+              c466 00aa  ld   $aa
+              c467 00fa  ld   $fa
+              c468 00eb  ld   $eb
+              c469 0056  ld   $56
+              c46a 0099  ld   $99
+              c46b 009a  ld   $9a
+              c46c 0069  ld   $69
+              c46d 00aa  ld   $aa
+              c46e 00a7  ld   $a7
+              c46f 007a  ld   $7a
+              c470 009a  ld   $9a
+              c471 00a7  ld   $a7
+              c472 0079  ld   $79
+              c473 004a  ld   $4a
+              c474 00a6  ld   $a6
+              c475 0065  ld   $65
+              c476 009a  ld   $9a
+              c477 00a6  ld   $a6
+              c478 006d  ld   $6d
+              c479 009e  ld   $9e
+              c47a 00a6  ld   $a6
+              c47b 0069  ld   $69
+              c47c 009a  ld   $9a
+              c47d 00a7  ld   $a7
+              c47e 0069  ld   $69
+              c47f 0099  ld   $99
+              c480 0096  ld   $96
+              c481 0069  ld   $69
+              c482 0089  ld   $89
+              c483 0096  ld   $96
+              c484 0068  ld   $68
+              c485 0049  ld   $49
+              c486 0095  ld   $95
+              c487 0054  ld   $54
+              c488 0095  ld   $95
+              c489 0096  ld   $96
+              c48a 006a  ld   $6a
+              c48b 00a9  ld   $a9
+              c48c 00a6  ld   $a6
+              c48d 0066  ld   $66
+              c48e 006a  ld   $6a
+              c48f 00a6  ld   $a6
+              c490 00a5  ld   $a5
+              c491 0099  ld   $99
+              c492 0096  ld   $96
+              c493 005a  ld   $5a
+              c494 0069  ld   $69
+              c495 00a5  ld   $a5
+              c496 0065  ld   $65
+              c497 00a5  ld   $a5
+              c498 0056  ld   $56
+              c499 006a  ld   $6a
+              c49a 00a9  ld   $a9
+              c49b 0095  ld   $95
+              c49c 00aa  ld   $aa
+              c49d 00fa  ld   $fa
+              c49e 00ab  ld   $ab
+              c49f 0059  ld   $59
+              c4a0 0059  ld   $59
+              c4a1 0055  ld   $55
+              c4a2 00a9  ld   $a9
+              c4a3 009e  ld   $9e
+              c4a4 00aa  ld   $aa
+              c4a5 0079  ld   $79
+              c4a6 009a  ld   $9a
+              c4a7 00a6  ld   $a6
+              c4a8 0065  ld   $65
+              c4a9 004a  ld   $4a
+              c4aa 00a6  ld   $a6
+              c4ab 0065  ld   $65
+              c4ac 009e  ld   $9e
+              c4ad 00ea  ld   $ea
+              c4ae 00b9  ld   $b9
+              c4af 009a  ld   $9a
+              c4b0 00a7  ld   $a7
+              c4b1 00b9  ld   $b9
+              c4b2 009a  ld   $9a
+              c4b3 00a6  ld   $a6
+              c4b4 0079  ld   $79
+              c4b5 004a  ld   $4a
+              c4b6 00a6  ld   $a6
+              c4b7 0029  ld   $29
+              c4b8 005a  ld   $5a
+              c4b9 00a6  ld   $a6
+              c4ba 0025  ld   $25
+              c4bb 005a  ld   $5a
+              c4bc 0052  ld   $52
+              c4bd 0054  ld   $54
+              c4be 0059  ld   $59
+              c4bf 00aa  ld   $aa
+              c4c0 00aa  ld   $aa
+              c4c1 006a  ld   $6a
+              c4c2 00a6  ld   $a6
+              c4c3 00aa  ld   $aa
+              c4c4 005a  ld   $5a
+              c4c5 00aa  ld   $aa
+              c4c6 00a5  ld   $a5
+              c4c7 005a  ld   $5a
+              c4c8 00a9  ld   $a9
+              c4c9 0065  ld   $65
+              c4ca 005a  ld   $5a
+              c4cb 009a  ld   $9a
+              c4cc 0069  ld   $69
+              c4cd 006a  ld   $6a
+              c4ce 00a6  ld   $a6
+              c4cf 0095  ld   $95
+              c4d0 0099  ld   $99
+              c4d1 00aa  ld   $aa
+              c4d2 00aa  ld   $aa
+              c4d3 00fe  ld   $fe
+              c4d4 00ab  ld   $ab
+              c4d5 0055  ld   $55
+              c4d6 0069  ld   $69
+              c4d7 00a5  ld   $a5
+              c4d8 0065  ld   $65
+              c4d9 009a  ld   $9a
+              c4da 00ea  ld   $ea
+              c4db 00a9  ld   $a9
+              c4dc 009a  ld   $9a
+              c4dd 00a7  ld   $a7
+              c4de 0068  ld   $68
+              c4df 005a  ld   $5a
+              c4e0 00a2  ld   $a2
+              c4e1 0069  ld   $69
+              c4e2 009a  ld   $9a
+              c4e3 00a7  ld   $a7
+              c4e4 006a  ld   $6a
+              c4e5 00ae  ld   $ae
+              c4e6 00a6  ld   $a6
+              c4e7 006a  ld   $6a
+              c4e8 00ae  ld   $ae
+              c4e9 00ab  ld   $ab
+              c4ea 0079  ld   $79
+              c4eb 009a  ld   $9a
+              c4ec 00e6  ld   $e6
+              c4ed 0069  ld   $69
+              c4ee 008a  ld   $8a
+              c4ef 00a6  ld   $a6
+              c4f0 0068  ld   $68
+              c4f1 0099  ld   $99
+              c4f2 0056  ld   $56
+              c4f3 0064  ld   $64
+              c4f4 0095  ld   $95
+              c4f5 0099  ld   $99
+              c4f6 00a9  ld   $a9
+              c4f7 0099  ld   $99
+              c4f8 00aa  ld   $aa
+              c4f9 0000  ld   $00
+              c4fa 0000  ld   $00
+              c4fb fe00  bra  ac          ;Trampoline for page $c400 lookups
+              c4fc fcfd  bra  $c4fd
+              c4fd 1403  ld   $03,y
+              c4fe e07b  jmp  y,$7b
+              c4ff 151b  ld   [$1b],y
+              c500 00a5  ld   $a5
+              c501 00aa  ld   $aa
+              c502 00aa  ld   $aa
+              c503 00aa  ld   $aa
+              * 9 times
+              c50a 0099  ld   $99
+              c50b 0099  ld   $99
+              c50c 00a9  ld   $a9
+              c50d 005a  ld   $5a
+              c50e 00aa  ld   $aa
+              c50f 00ea  ld   $ea
+              c510 00eb  ld   $eb
+              c511 00ab  ld   $ab
+              c512 00a5  ld   $a5
+              c513 0096  ld   $96
+              c514 00aa  ld   $aa
+              c515 00aa  ld   $aa
+              c516 00ae  ld   $ae
+              c517 00e6  ld   $e6
+              c518 006a  ld   $6a
+              c519 009e  ld   $9e
+              c51a 00a6  ld   $a6
+              c51b 0065  ld   $65
+              c51c 009a  ld   $9a
+              c51d 00e6  ld   $e6
+              c51e 0069  ld   $69
+              c51f 00ae  ld   $ae
+              c520 00ea  ld   $ea
+              c521 00bd  ld   $bd
+              c522 009a  ld   $9a
+              c523 00a7  ld   $a7
+              c524 0069  ld   $69
+              c525 00aa  ld   $aa
+              c526 00e6  ld   $e6
+              c527 00aa  ld   $aa
+              c528 009e  ld   $9e
+              c529 00ea  ld   $ea
+              c52a 00a9  ld   $a9
+              c52b 009e  ld   $9e
+              c52c 0096  ld   $96
+              c52d 0069  ld   $69
+              c52e 004a  ld   $4a
+              c52f 0096  ld   $96
+              c530 0015  ld   $15
+              c531 0065  ld   $65
+              c532 00a6  ld   $a6
+              c533 0066  ld   $66
+              c534 006a  ld   $6a
+              c535 00a6  ld   $a6
+              c536 00a6  ld   $a6
+              c537 009a  ld   $9a
+              c538 00ea  ld   $ea
+              c539 00aa  ld   $aa
+              c53a 00ae  ld   $ae
+              c53b 00eb  ld   $eb
+              c53c 00ba  ld   $ba
+              c53d 00aa  ld   $aa
+              c53e 00ab  ld   $ab
+              c53f 00ba  ld   $ba
+              c540 009a  ld   $9a
+              c541 00aa  ld   $aa
+              c542 0095  ld   $95
+              c543 00aa  ld   $aa
+              c544 00aa  ld   $aa
+              c545 00aa  ld   $aa
+              c546 00bf  ld   $bf
+              c547 00ab  ld   $ab
+              c548 006a  ld   $6a
+              c549 00a9  ld   $a9
+              c54a 00ea  ld   $ea
+              c54b 00bf  ld   $bf
+              c54c 00af  ld   $af
+              c54d 00aa  ld   $aa
+              c54e 0079  ld   $79
+              c54f 009a  ld   $9a
+              c550 0096  ld   $96
+              c551 0079  ld   $79
+              c552 009a  ld   $9a
+              c553 00a7  ld   $a7
+              c554 00ba  ld   $ba
+              c555 009a  ld   $9a
+              c556 00ab  ld   $ab
+              c557 0079  ld   $79
+              c558 009a  ld   $9a
+              c559 00a6  ld   $a6
+              c55a 0069  ld   $69
+              c55b 009a  ld   $9a
+              c55c 00ab  ld   $ab
+              c55d 0069  ld   $69
+              c55e 00ae  ld   $ae
+              c55f 00e6  ld   $e6
+              c560 006a  ld   $6a
+              c561 009e  ld   $9e
+              c562 00a6  ld   $a6
+              c563 0064  ld   $64
+              c564 005a  ld   $5a
+              c565 0066  ld   $66
+              c566 0064  ld   $64
+              c567 0099  ld   $99
+              c568 00aa  ld   $aa
+              c569 00a9  ld   $a9
+              c56a 00aa  ld   $aa
+              c56b 0096  ld   $96
+              c56c 006a  ld   $6a
+              c56d 006a  ld   $6a
+              c56e 00aa  ld   $aa
+              c56f 00aa  ld   $aa
+              c570 00ea  ld   $ea
+              c571 00ea  ld   $ea
+              c572 00af  ld   $af
+              c573 00ee  ld   $ee
+              c574 00ee  ld   $ee
+              c575 006e  ld   $6e
+              c576 0069  ld   $69
+              c577 0095  ld   $95
+              c578 00a9  ld   $a9
+              c579 00a9  ld   $a9
+              c57a 00aa  ld   $aa
+              c57b 00bb  ld   $bb
+              c57c 00ff  ld   $ff
+              c57d 00aa  ld   $aa
+              c57e 006a  ld   $6a
+              c57f 005a  ld   $5a
+              c580 00aa  ld   $aa
+              c581 00be  ld   $be
+              c582 00ae  ld   $ae
+              c583 00e6  ld   $e6
+              c584 0069  ld   $69
+              c585 009e  ld   $9e
+              c586 00a6  ld   $a6
+              c587 0069  ld   $69
+              c588 00aa  ld   $aa
+              c589 00eb  ld   $eb
+              c58a 00a9  ld   $a9
+              c58b 00de  ld   $de
+              c58c 00aa  ld   $aa
+              c58d 0079  ld   $79
+              c58e 009a  ld   $9a
+              c58f 00a7  ld   $a7
+              c590 0079  ld   $79
+              c591 009a  ld   $9a
+              c592 00e6  ld   $e6
+              c593 00ad  ld   $ad
+              c594 00ae  ld   $ae
+              c595 00e6  ld   $e6
+              c596 00aa  ld   $aa
+              c597 009e  ld   $9e
+              c598 00a6  ld   $a6
+              c599 0069  ld   $69
+              c59a 0089  ld   $89
+              c59b 0096  ld   $96
+              c59c 0055  ld   $55
+              c59d 0095  ld   $95
+              c59e 009a  ld   $9a
+              c59f 00a9  ld   $a9
+              c5a0 0099  ld   $99
+              c5a1 0095  ld   $95
+              c5a2 0095  ld   $95
+              c5a3 009a  ld   $9a
+              c5a4 00aa  ld   $aa
+              c5a5 00aa  ld   $aa
+              c5a6 00aa  ld   $aa
+              c5a7 00aa  ld   $aa
+              c5a8 00bf  ld   $bf
+              c5a9 00aa  ld   $aa
+              c5aa 00a6  ld   $a6
+              c5ab 006a  ld   $6a
+              c5ac 0095  ld   $95
+              c5ad 0096  ld   $96
+              c5ae 005a  ld   $5a
+              c5af 0095  ld   $95
+              c5b0 00aa  ld   $aa
+              c5b1 00ea  ld   $ea
+              c5b2 00ab  ld   $ab
+              c5b3 0097  ld   $97
+              c5b4 0065  ld   $65
+              c5b5 00a9  ld   $a9
+              c5b6 00ea  ld   $ea
+              c5b7 00bb  ld   $bb
+              c5b8 00ef  ld   $ef
+              c5b9 00ab  ld   $ab
+              c5ba 007a  ld   $7a
+              c5bb 009a  ld   $9a
+              c5bc 0096  ld   $96
+              c5bd 00a8  ld   $a8
+              c5be 009a  ld   $9a
+              c5bf 00bb  ld   $bb
+              c5c0 00ba  ld   $ba
+              c5c1 009b  ld   $9b
+              c5c2 00eb  ld   $eb
+              c5c3 0069  ld   $69
+              c5c4 009a  ld   $9a
+              c5c5 00a6  ld   $a6
+              c5c6 0069  ld   $69
+              c5c7 009a  ld   $9a
+              c5c8 00a6  ld   $a6
+              c5c9 0069  ld   $69
+              c5ca 009a  ld   $9a
+              c5cb 00a7  ld   $a7
+              c5cc 00a9  ld   $a9
+              c5cd 009f  ld   $9f
+              c5ce 00a7  ld   $a7
+              c5cf 0068  ld   $68
+              c5d0 0099  ld   $99
+              c5d1 0091  ld   $91
+              c5d2 0069  ld   $69
+              c5d3 0099  ld   $99
+              c5d4 00ea  ld   $ea
+              c5d5 00aa  ld   $aa
+              c5d6 00aa  ld   $aa
+              c5d7 00aa  ld   $aa
+              c5d8 00aa  ld   $aa
+              c5d9 0099  ld   $99
+              c5da 009a  ld   $9a
+              c5db 0069  ld   $69
+              c5dc 0059  ld   $59
+              c5dd 00aa  ld   $aa
+              c5de 00bf  ld   $bf
+              c5df 00ae  ld   $ae
+              c5e0 009a  ld   $9a
+              c5e1 00aa  ld   $aa
+              c5e2 005a  ld   $5a
+              c5e3 006a  ld   $6a
+              c5e4 00a5  ld   $a5
+              c5e5 006a  ld   $6a
+              c5e6 00aa  ld   $aa
+              c5e7 00aa  ld   $aa
+              c5e8 00bf  ld   $bf
+              c5e9 0066  ld   $66
+              c5ea 00aa  ld   $aa
+              c5eb 00aa  ld   $aa
+              c5ec 00bb  ld   $bb
+              c5ed 00be  ld   $be
+              c5ee 00ae  ld   $ae
+              c5ef 00e6  ld   $e6
+              c5f0 0069  ld   $69
+              c5f1 009a  ld   $9a
+              c5f2 00a7  ld   $a7
+              c5f3 0065  ld   $65
+              c5f4 00ee  ld   $ee
+              c5f5 00e6  ld   $e6
+              c5f6 0069  ld   $69
+              c5f7 00ae  ld   $ae
+              c5f8 00a6  ld   $a6
+              c5f9 0000  ld   $00
+              c5fa 0000  ld   $00
+              c5fb fe00  bra  ac          ;Trampoline for page $c500 lookups
+              c5fc fcfd  bra  $c5fd
+              c5fd 1403  ld   $03,y
+              c5fe e07b  jmp  y,$7b
+              c5ff 151b  ld   [$1b],y
+              c600 0069  ld   $69
+              c601 009a  ld   $9a
+              c602 0096  ld   $96
+              c603 0069  ld   $69
+              c604 0099  ld   $99
+              c605 00a6  ld   $a6
+              c606 0069  ld   $69
+              c607 009a  ld   $9a
+              c608 00a6  ld   $a6
+              c609 00b9  ld   $b9
+              c60a 009a  ld   $9a
+              c60b 00a7  ld   $a7
+              c60c 0065  ld   $65
+              c60d 005a  ld   $5a
+              c60e 00a6  ld   $a6
+              c60f 0015  ld   $15
+              c610 00a9  ld   $a9
+              c611 00ea  ld   $ea
+              c612 00ba  ld   $ba
+              c613 00ae  ld   $ae
+              c614 00eb  ld   $eb
+              c615 00ba  ld   $ba
+              c616 00ae  ld   $ae
+              c617 00eb  ld   $eb
+              c618 00ba  ld   $ba
+              c619 00aa  ld   $aa
+              c61a 00fb  ld   $fb
+              c61b 00ba  ld   $ba
+              c61c 00af  ld   $af
+              c61d 00fb  ld   $fb
+              c61e 006a  ld   $6a
+              c61f 006a  ld   $6a
+              c620 00a5  ld   $a5
+              c621 0066  ld   $66
+              c622 009a  ld   $9a
+              c623 00aa  ld   $aa
+              c624 00ea  ld   $ea
+              c625 00af  ld   $af
+              c626 00aa  ld   $aa
+              c627 0065  ld   $65
+              c628 00aa  ld   $aa
+              c629 00aa  ld   $aa
+              c62a 00bb  ld   $bb
+              c62b 00ef  ld   $ef
+              c62c 00ab  ld   $ab
+              c62d 006a  ld   $6a
+              c62e 009e  ld   $9e
+              c62f 00a2  ld   $a2
+              c630 0069  ld   $69
+              c631 00aa  ld   $aa
+              c632 00e7  ld   $e7
+              c633 006a  ld   $6a
+              c634 009e  ld   $9e
+              c635 00e6  ld   $e6
+              c636 0069  ld   $69
+              c637 009e  ld   $9e
+              c638 00ab  ld   $ab
+              c639 0079  ld   $79
+              c63a 009e  ld   $9e
+              c63b 00e6  ld   $e6
+              c63c 0065  ld   $65
+              c63d 009a  ld   $9a
+              c63e 00a6  ld   $a6
+              c63f 0069  ld   $69
+              c640 009e  ld   $9e
+              c641 00a6  ld   $a6
+              c642 0065  ld   $65
+              c643 009a  ld   $9a
+              c644 0096  ld   $96
+              c645 0069  ld   $69
+              c646 0059  ld   $59
+              c647 00a6  ld   $a6
+              c648 0079  ld   $79
+              c649 009a  ld   $9a
+              c64a 00e7  ld   $e7
+              c64b 0069  ld   $69
+              c64c 009e  ld   $9e
+              c64d 00ea  ld   $ea
+              c64e 00a9  ld   $a9
+              c64f 00ae  ld   $ae
+              c650 00ab  ld   $ab
+              c651 00ba  ld   $ba
+              c652 00aa  ld   $aa
+              c653 00eb  ld   $eb
+              c654 00ba  ld   $ba
+              c655 009a  ld   $9a
+              c656 009a  ld   $9a
+              c657 009a  ld   $9a
+              c658 006a  ld   $6a
+              c659 00aa  ld   $aa
+              c65a 00fa  ld   $fa
+              c65b 00af  ld   $af
+              c65c 00aa  ld   $aa
+              c65d 00a5  ld   $a5
+              c65e 00aa  ld   $aa
+              c65f 00eb  ld   $eb
+              c660 00ae  ld   $ae
+              c661 00ae  ld   $ae
+              c662 00ea  ld   $ea
+              c663 0069  ld   $69
+              c664 009a  ld   $9a
+              c665 0097  ld   $97
+              c666 0069  ld   $69
+              c667 009a  ld   $9a
+              c668 00ab  ld   $ab
+              c669 0069  ld   $69
+              c66a 00ae  ld   $ae
+              c66b 00e6  ld   $e6
+              c66c 006a  ld   $6a
+              c66d 00ae  ld   $ae
+              c66e 00f6  ld   $f6
+              c66f 006a  ld   $6a
+              c670 009a  ld   $9a
+              c671 00a7  ld   $a7
+              c672 0069  ld   $69
+              c673 0099  ld   $99
+              c674 0097  ld   $97
+              c675 0069  ld   $69
+              c676 005a  ld   $5a
+              c677 00a6  ld   $a6
+              c678 0069  ld   $69
+              c679 0099  ld   $99
+              c67a 00a6  ld   $a6
+              c67b 0065  ld   $65
+              c67c 0045  ld   $45
+              c67d 00d6  ld   $d6
+              c67e 0065  ld   $65
+              c67f 005d  ld   $5d
+              c680 00d6  ld   $d6
+              c681 0065  ld   $65
+              c682 005d  ld   $5d
+              c683 00d6  ld   $d6
+              c684 0069  ld   $69
+              c685 009d  ld   $9d
+              c686 00e6  ld   $e6
+              c687 00b9  ld   $b9
+              c688 009e  ld   $9e
+              c689 00ea  ld   $ea
+              c68a 0069  ld   $69
+              c68b 006a  ld   $6a
+              c68c 00aa  ld   $aa
+              c68d 00a5  ld   $a5
+              c68e 009a  ld   $9a
+              c68f 00aa  ld   $aa
+              c690 00aa  ld   $aa
+              c691 00af  ld   $af
+              c692 00aa  ld   $aa
+              c693 00a9  ld   $a9
+              c694 009a  ld   $9a
+              c695 00ea  ld   $ea
+              c696 00aa  ld   $aa
+              c697 00af  ld   $af
+              c698 00fb  ld   $fb
+              c699 006a  ld   $6a
+              c69a 009e  ld   $9e
+              c69b 00a6  ld   $a6
+              c69c 0065  ld   $65
+              c69d 009a  ld   $9a
+              c69e 00a6  ld   $a6
+              c69f 0079  ld   $79
+              c6a0 009a  ld   $9a
+              c6a1 00a7  ld   $a7
+              c6a2 0069  ld   $69
+              c6a3 00aa  ld   $aa
+              c6a4 00a7  ld   $a7
+              c6a5 007a  ld   $7a
+              c6a6 009e  ld   $9e
+              c6a7 00a6  ld   $a6
+              c6a8 0065  ld   $65
+              c6a9 009a  ld   $9a
+              c6aa 00a6  ld   $a6
+              c6ab 0069  ld   $69
+              c6ac 0089  ld   $89
+              c6ad 0096  ld   $96
+              c6ae 0069  ld   $69
+              c6af 009a  ld   $9a
+              c6b0 00a6  ld   $a6
+              c6b1 0069  ld   $69
+              c6b2 0059  ld   $59
+              c6b3 0096  ld   $96
+              c6b4 0034  ld   $34
+              c6b5 0049  ld   $49
+              c6b6 0097  ld   $97
+              c6b7 0074  ld   $74
+              c6b8 0049  ld   $49
+              c6b9 0093  ld   $93
+              c6ba 0034  ld   $34
+              c6bb 0049  ld   $49
+              c6bc 0097  ld   $97
+              c6bd 0064  ld   $64
+              c6be 005d  ld   $5d
+              c6bf 00e6  ld   $e6
+              c6c0 00b9  ld   $b9
+              c6c1 00aa  ld   $aa
+              c6c2 00a6  ld   $a6
+              c6c3 005a  ld   $5a
+              c6c4 00a9  ld   $a9
+              c6c5 00aa  ld   $aa
+              c6c6 00ea  ld   $ea
+              c6c7 00bf  ld   $bf
+              c6c8 00aa  ld   $aa
+              c6c9 00ba  ld   $ba
+              c6ca 00fe  ld   $fe
+              c6cb 00eb  ld   $eb
+              c6cc 00bf  ld   $bf
+              c6cd 00af  ld   $af
+              c6ce 00fa  ld   $fa
+              c6cf 00a9  ld   $a9
+              c6d0 009e  ld   $9e
+              c6d1 00e6  ld   $e6
+              c6d2 0069  ld   $69
+              c6d3 0099  ld   $99
+              c6d4 00a7  ld   $a7
+              c6d5 00a9  ld   $a9
+              c6d6 009e  ld   $9e
+              c6d7 00e6  ld   $e6
+              c6d8 0069  ld   $69
+              c6d9 009e  ld   $9e
+              c6da 00fa  ld   $fa
+              c6db 0069  ld   $69
+              c6dc 009a  ld   $9a
+              c6dd 00a6  ld   $a6
+              c6de 0069  ld   $69
+              c6df 0089  ld   $89
+              c6e0 0096  ld   $96
+              c6e1 0065  ld   $65
+              c6e2 009e  ld   $9e
+              c6e3 00e6  ld   $e6
+              c6e4 0065  ld   $65
+              c6e5 009e  ld   $9e
+              c6e6 0096  ld   $96
+              c6e7 0069  ld   $69
+              c6e8 005a  ld   $5a
+              c6e9 0042  ld   $42
+              c6ea 0010  ld   $10
+              c6eb 0054  ld   $54
+              c6ec 0096  ld   $96
+              c6ed 0069  ld   $69
+              c6ee 0099  ld   $99
+              c6ef 0096  ld   $96
+              c6f0 0065  ld   $65
+              c6f1 0059  ld   $59
+              c6f2 0097  ld   $97
+              c6f3 0075  ld   $75
+              c6f4 005a  ld   $5a
+              c6f5 00d6  ld   $d6
+              c6f6 00a5  ld   $a5
+              c6f7 006a  ld   $6a
+              c6f8 00aa  ld   $aa
+              c6f9 0000  ld   $00
+              c6fa 0000  ld   $00
+              c6fb fe00  bra  ac          ;Trampoline for page $c600 lookups
+              c6fc fcfd  bra  $c6fd
+              c6fd 1403  ld   $03,y
+              c6fe e07b  jmp  y,$7b
+              c6ff 151b  ld   [$1b],y
+              c700 00aa  ld   $aa
+              c701 00ba  ld   $ba
+              c702 00aa  ld   $aa
+              c703 00bb  ld   $bb
+              c704 00fb  ld   $fb
+              c705 00ff  ld   $ff
+              c706 00ff  ld   $ff
+              c707 00fb  ld   $fb
+              c708 00bb  ld   $bb
+              c709 00ef  ld   $ef
+              c70a 00ee  ld   $ee
+              c70b 00eb  ld   $eb
+              c70c 006a  ld   $6a
+              c70d 009e  ld   $9e
+              c70e 00a6  ld   $a6
+              c70f 0065  ld   $65
+              c710 009a  ld   $9a
+              c711 00a6  ld   $a6
+              c712 0079  ld   $79
+              c713 009a  ld   $9a
+              c714 00aa  ld   $aa
+              c715 00b9  ld   $b9
+              c716 009a  ld   $9a
+              c717 00ea  ld   $ea
+              c718 00a9  ld   $a9
+              c719 009a  ld   $9a
+              c71a 00a7  ld   $a7
+              c71b 0079  ld   $79
+              c71c 005a  ld   $5a
+              c71d 00e6  ld   $e6
+              c71e 0068  ld   $68
+              c71f 005a  ld   $5a
+              c720 00a6  ld   $a6
+              c721 0069  ld   $69
+              c722 00aa  ld   $aa
+              c723 00a6  ld   $a6
+              c724 00a5  ld   $a5
+              c725 005a  ld   $5a
+              c726 0001  ld   $01
+              c727 0006  ld   $06
+              c728 0054  ld   $54
+              c729 0045  ld   $45
+              c72a 0050  ld   $50
+              c72b 0055  ld   $55
+              c72c 0055  ld   $55
+              c72d 007a  ld   $7a
+              c72e 0005  ld   $05
+              c72f 0055  ld   $55
+              c730 0094  ld   $94
+              c731 009a  ld   $9a
+              c732 00aa  ld   $aa
+              c733 00bf  ld   $bf
+              c734 00ef  ld   $ef
+              c735 00ff  ld   $ff
+              c736 00ff  ld   $ff
+              c737 00fa  ld   $fa
+              c738 00ff  ld   $ff
+              c739 00ff  ld   $ff
+              c73a 00bf  ld   $bf
+              c73b 00ff  ld   $ff
+              c73c 00ff  ld   $ff
+              c73d 00af  ld   $af
+              c73e 00fa  ld   $fa
+              c73f 00ba  ld   $ba
+              c740 009a  ld   $9a
+              c741 00a7  ld   $a7
+              c742 0079  ld   $79
+              c743 0099  ld   $99
+              c744 00e6  ld   $e6
+              c745 0069  ld   $69
+              c746 009a  ld   $9a
+              c747 00a7  ld   $a7
+              c748 007a  ld   $7a
+              c749 00ab  ld   $ab
+              c74a 00fb  ld   $fb
+              c74b 00a9  ld   $a9
+              c74c 009e  ld   $9e
+              c74d 00ea  ld   $ea
+              c74e 0069  ld   $69
+              c74f 009a  ld   $9a
+              c750 0096  ld   $96
+              c751 0069  ld   $69
+              c752 0099  ld   $99
+              c753 00a7  ld   $a7
+              c754 0075  ld   $75
+              c755 009a  ld   $9a
+              c756 00ab  ld   $ab
+              c757 00a9  ld   $a9
+              c758 005a  ld   $5a
+              c759 0001  ld   $01
+              c75a 004c  ld   $4c
+              c75b 00a5  ld   $a5
+              c75c 0056  ld   $56
+              c75d 00c0  ld   $c0
+              c75e 00a0  ld   $a0
+              c75f 00aa  ld   $aa
+              c760 00fa  ld   $fa
+              c761 00af  ld   $af
+              c762 00aa  ld   $aa
+              c763 00ab  ld   $ab
+              c764 00ff  ld   $ff
+              c765 00fb  ld   $fb
+              c766 00ff  ld   $ff
+              c767 00fb  ld   $fb
+              c768 00ff  ld   $ff
+              c769 00ff  ld   $ff
+              c76a 00ff  ld   $ff
+              c76b 00eb  ld   $eb
+              c76c 00ae  ld   $ae
+              c76d 00ae  ld   $ae
+              c76e 00e6  ld   $e6
+              c76f 0069  ld   $69
+              c770 009a  ld   $9a
+              c771 0096  ld   $96
+              c772 00a9  ld   $a9
+              c773 009a  ld   $9a
+              c774 00ab  ld   $ab
+              c775 00a9  ld   $a9
+              c776 00af  ld   $af
+              c777 00a7  ld   $a7
+              c778 00ba  ld   $ba
+              c779 00ea  ld   $ea
+              c77a 00eb  ld   $eb
+              c77b 00ae  ld   $ae
+              c77c 00ae  ld   $ae
+              c77d 00e6  ld   $e6
+              c77e 0069  ld   $69
+              c77f 009a  ld   $9a
+              c780 00a6  ld   $a6
+              c781 00a9  ld   $a9
+              c782 009a  ld   $9a
+              c783 00aa  ld   $aa
+              c784 0065  ld   $65
+              c785 00aa  ld   $aa
+              c786 0066  ld   $66
+              c787 0050  ld   $50
+              c788 0001  ld   $01
+              c789 0001  ld   $01
+              c78a 0009  ld   $09
+              c78b 0094  ld   $94
+              c78c 0056  ld   $56
+              c78d 00c0  ld   $c0
+              c78e 00a0  ld   $a0
+              c78f 00aa  ld   $aa
+              c790 00ee  ld   $ee
+              c791 00ee  ld   $ee
+              c792 00ab  ld   $ab
+              c793 00ea  ld   $ea
+              c794 00ff  ld   $ff
+              c795 00ff  ld   $ff
+              c796 00ff  ld   $ff
+              c797 00fe  ld   $fe
+              c798 00ff  ld   $ff
+              c799 00ff  ld   $ff
+              c79a 00ff  ld   $ff
+              c79b 00fb  ld   $fb
+              c79c 00ba  ld   $ba
+              c79d 00ab  ld   $ab
+              c79e 00a7  ld   $a7
+              c79f 0079  ld   $79
+              c7a0 009a  ld   $9a
+              c7a1 00e7  ld   $e7
+              c7a2 007a  ld   $7a
+              c7a3 00aa  ld   $aa
+              c7a4 00eb  ld   $eb
+              c7a5 00ba  ld   $ba
+              c7a6 00da  ld   $da
+              c7a7 00eb  ld   $eb
+              c7a8 006e  ld   $6e
+              c7a9 00ae  ld   $ae
+              c7aa 00fa  ld   $fa
+              c7ab 00ba  ld   $ba
+              c7ac 009e  ld   $9e
+              c7ad 00a6  ld   $a6
+              c7ae 007a  ld   $7a
+              c7af 00aa  ld   $aa
+              c7b0 0097  ld   $97
+              c7b1 0079  ld   $79
+              c7b2 005a  ld   $5a
+              c7b3 00a6  ld   $a6
+              c7b4 00aa  ld   $aa
+              c7b5 00aa  ld   $aa
+              c7b6 00ab  ld   $ab
+              c7b7 0055  ld   $55
+              c7b8 00a5  ld   $a5
+              c7b9 0056  ld   $56
+              c7ba 0050  ld   $50
+              c7bb 0041  ld   $41
+              c7bc 0055  ld   $55
+              c7bd 0055  ld   $55
+              c7be 0056  ld   $56
+              c7bf 0051  ld   $51
+              c7c0 0095  ld   $95
+              c7c1 005a  ld   $5a
+              c7c2 0001  ld   $01
+              c7c3 0083  ld   $83
+              c7c4 00be  ld   $be
+              c7c5 00ff  ld   $ff
+              c7c6 00ff  ld   $ff
+              c7c7 00ff  ld   $ff
+              c7c8 00ea  ld   $ea
+              c7c9 00eb  ld   $eb
+              c7ca 00ff  ld   $ff
+              c7cb 00ff  ld   $ff
+              c7cc 00ff  ld   $ff
+              c7cd 00ff  ld   $ff
+              c7ce 00fe  ld   $fe
+              c7cf 00fe  ld   $fe
+              c7d0 00ff  ld   $ff
+              c7d1 00ea  ld   $ea
+              c7d2 00be  ld   $be
+              c7d3 00aa  ld   $aa
+              c7d4 00a7  ld   $a7
+              c7d5 00a5  ld   $a5
+              c7d6 009a  ld   $9a
+              c7d7 00aa  ld   $aa
+              c7d8 00be  ld   $be
+              c7d9 00de  ld   $de
+              c7da 00ea  ld   $ea
+              c7db 00ad  ld   $ad
+              c7dc 00ae  ld   $ae
+              c7dd 00e6  ld   $e6
+              c7de 00aa  ld   $aa
+              c7df 009f  ld   $9f
+              c7e0 00ab  ld   $ab
+              c7e1 00be  ld   $be
+              c7e2 00aa  ld   $aa
+              c7e3 00a7  ld   $a7
+              c7e4 00ba  ld   $ba
+              c7e5 009a  ld   $9a
+              c7e6 00ab  ld   $ab
+              c7e7 00a9  ld   $a9
+              c7e8 009a  ld   $9a
+              c7e9 00aa  ld   $aa
+              c7ea 00be  ld   $be
+              c7eb 00aa  ld   $aa
+              c7ec 00a6  ld   $a6
+              c7ed 00aa  ld   $aa
+              c7ee 00af  ld   $af
+              c7ef 0056  ld   $56
+              c7f0 0065  ld   $65
+              c7f1 00a5  ld   $a5
+              c7f2 00aa  ld   $aa
+              c7f3 00ba  ld   $ba
+              c7f4 005a  ld   $5a
+              c7f5 0095  ld   $95
+              c7f6 006a  ld   $6a
+              c7f7 009a  ld   $9a
+              c7f8 0056  ld   $56
+              c7f9 0000  ld   $00
+              c7fa 0000  ld   $00
+              c7fb fe00  bra  ac          ;Trampoline for page $c700 lookups
+              c7fc fcfd  bra  $c7fd
+              c7fd 1403  ld   $03,y
+              c7fe e07b  jmp  y,$7b
+              c7ff 151b  ld   [$1b],y
+              c800 0095  ld   $95
+              c801 00fa  ld   $fa
+              c802 00ff  ld   $ff
+              c803 00fe  ld   $fe
+              c804 00fe  ld   $fe
+              c805 00ab  ld   $ab
+              c806 00ff  ld   $ff
+              c807 00ff  ld   $ff
+              c808 00ff  ld   $ff
+              * 6 times
+              c80c 00fb  ld   $fb
+              c80d 00ff  ld   $ff
+              c80e 00ff  ld   $ff
+              c80f 00ba  ld   $ba
+              c810 009f  ld   $9f
+              c811 00ea  ld   $ea
+              c812 00b9  ld   $b9
+              c813 00aa  ld   $aa
+              c814 00fb  ld   $fb
+              c815 00ba  ld   $ba
+              c816 00aa  ld   $aa
+              c817 00a7  ld   $a7
+              c818 00ba  ld   $ba
+              c819 00da  ld   $da
+              c81a 00eb  ld   $eb
+              c81b 006a  ld   $6a
+              c81c 00ae  ld   $ae
+              c81d 00fa  ld   $fa
+              c81e 00ba  ld   $ba
+              c81f 009a  ld   $9a
+              c820 00ab  ld   $ab
+              c821 00be  ld   $be
+              c822 00ae  ld   $ae
+              c823 00e6  ld   $e6
+              c824 006a  ld   $6a
+              c825 009d  ld   $9d
+              c826 00aa  ld   $aa
+              c827 00bb  ld   $bb
+              c828 00ab  ld   $ab
+              c829 00aa  ld   $aa
+              c82a 00ea  ld   $ea
+              c82b 00af  ld   $af
+              c82c 00aa  ld   $aa
+              c82d 00aa  ld   $aa
+              c82e 00ea  ld   $ea
+              c82f 00af  ld   $af
+              c830 00bf  ld   $bf
+              c831 00ae  ld   $ae
+              c832 00aa  ld   $aa
+              c833 00aa  ld   $aa
+              c834 0059  ld   $59
+              c835 0095  ld   $95
+              c836 00d5  ld   $d5
+              c837 00ea  ld   $ea
+              c838 00ff  ld   $ff
+              c839 00ff  ld   $ff
+              c83a 00ff  ld   $ff
+              * 7 times
+              c83f 00ea  ld   $ea
+              c840 00ff  ld   $ff
+              c841 00fb  ld   $fb
+              c842 00ff  ld   $ff
+              c843 00ff  ld   $ff
+              c844 00ff  ld   $ff
+              c845 00be  ld   $be
+              c846 00ab  ld   $ab
+              c847 00ab  ld   $ab
+              c848 006a  ld   $6a
+              c849 00ae  ld   $ae
+              c84a 00fa  ld   $fa
+              c84b 00aa  ld   $aa
+              c84c 00af  ld   $af
+              c84d 00fa  ld   $fa
+              c84e 006a  ld   $6a
+              c84f 00ae  ld   $ae
+              c850 00e6  ld   $e6
+              c851 006a  ld   $6a
+              c852 00ae  ld   $ae
+              c853 00fa  ld   $fa
+              c854 00aa  ld   $aa
+              c855 00af  ld   $af
+              c856 00fa  ld   $fa
+              c857 00ba  ld   $ba
+              c858 00af  ld   $af
+              c859 00ea  ld   $ea
+              c85a 006a  ld   $6a
+              c85b 00aa  ld   $aa
+              c85c 00fa  ld   $fa
+              c85d 00fe  ld   $fe
+              c85e 00ae  ld   $ae
+              c85f 00aa  ld   $aa
+              c860 00ea  ld   $ea
+              c861 00af  ld   $af
+              c862 00aa  ld   $aa
+              c863 00a9  ld   $a9
+              c864 00ba  ld   $ba
+              c865 00bb  ld   $bb
+              c866 00ff  ld   $ff
+              c867 00af  ld   $af
+              c868 00aa  ld   $aa
+              c869 007b  ld   $7b
+              c86a 000a  ld   $0a
+              c86b 0011  ld   $11
+              c86c 0090  ld   $90
+              c86d 00bf  ld   $bf
+              c86e 00ff  ld   $ff
+              c86f 00af  ld   $af
+              c870 00ff  ld   $ff
+              c871 00bb  ld   $bb
+              c872 00bb  ld   $bb
+              c873 00bf  ld   $bf
+              c874 006a  ld   $6a
+              c875 00da  ld   $da
+              c876 00fa  ld   $fa
+              c877 00ff  ld   $ff
+              c878 00ef  ld   $ef
+              c879 00ef  ld   $ef
+              c87a 00ff  ld   $ff
+              c87b 00bb  ld   $bb
+              c87c 00af  ld   $af
+              c87d 00bb  ld   $bb
+              c87e 00ba  ld   $ba
+              c87f 00af  ld   $af
+              c880 00fb  ld   $fb
+              c881 00ba  ld   $ba
+              c882 00ae  ld   $ae
+              c883 00e6  ld   $e6
+              c884 00aa  ld   $aa
+              c885 00ee  ld   $ee
+              c886 00ea  ld   $ea
+              c887 00a9  ld   $a9
+              c888 00ea  ld   $ea
+              c889 00a7  ld   $a7
+              c88a 00ba  ld   $ba
+              c88b 00ee  ld   $ee
+              c88c 00ea  ld   $ea
+              c88d 00bf  ld   $bf
+              c88e 00ee  ld   $ee
+              c88f 00ab  ld   $ab
+              c890 00b9  ld   $b9
+              c891 005a  ld   $5a
+              c892 00be  ld   $be
+              c893 00bf  ld   $bf
+              c894 00ea  ld   $ea
+              c895 009b  ld   $9b
+              c896 00aa  ld   $aa
+              c897 00ae  ld   $ae
+              c898 0096  ld   $96
+              c899 00aa  ld   $aa
+              c89a 00e9  ld   $e9
+              c89b 00ea  ld   $ea
+              c89c 00bf  ld   $bf
+              c89d 00ab  ld   $ab
+              c89e 00ab  ld   $ab
+              c89f 00ae  ld   $ae
+              c8a0 0059  ld   $59
+              c8a1 0055  ld   $55
+              c8a2 0095  ld   $95
+              c8a3 00ef  ld   $ef
+              c8a4 00fa  ld   $fa
+              c8a5 00fb  ld   $fb
+              c8a6 00af  ld   $af
+              c8a7 00ff  ld   $ff
+              c8a8 00ab  ld   $ab
+              c8a9 00a6  ld   $a6
+              c8aa 00a9  ld   $a9
+              c8ab 00aa  ld   $aa
+              c8ac 00ff  ld   $ff
+              c8ad 00fb  ld   $fb
+              c8ae 00ff  ld   $ff
+              c8af 00fe  ld   $fe
+              c8b0 00ff  ld   $ff
+              c8b1 00bf  ld   $bf
+              c8b2 00ab  ld   $ab
+              c8b3 00ab  ld   $ab
+              c8b4 00ba  ld   $ba
+              c8b5 00ab  ld   $ab
+              c8b6 00bb  ld   $bb
+              c8b7 00ba  ld   $ba
+              c8b8 00eb  ld   $eb
+              c8b9 00eb  ld   $eb
+              c8ba 00ae  ld   $ae
+              c8bb 009e  ld   $9e
+              c8bc 00ea  ld   $ea
+              c8bd 00a9  ld   $a9
+              c8be 00ae  ld   $ae
+              c8bf 00fa  ld   $fa
+              c8c0 00ba  ld   $ba
+              c8c1 00ab  ld   $ab
+              c8c2 00fb  ld   $fb
+              c8c3 00ae  ld   $ae
+              c8c4 00af  ld   $af
+              c8c5 00a7  ld   $a7
+              c8c6 006a  ld   $6a
+              c8c7 005a  ld   $5a
+              c8c8 00ed  ld   $ed
+              c8c9 00fe  ld   $fe
+              c8ca 00af  ld   $af
+              c8cb 00aa  ld   $aa
+              c8cc 00ea  ld   $ea
+              c8cd 00ef  ld   $ef
+              c8ce 00fe  ld   $fe
+              c8cf 00af  ld   $af
+              c8d0 00ff  ld   $ff
+              c8d1 00ab  ld   $ab
+              c8d2 00fb  ld   $fb
+              c8d3 00af  ld   $af
+              c8d4 00ea  ld   $ea
+              c8d5 00aa  ld   $aa
+              c8d6 009a  ld   $9a
+              c8d7 00aa  ld   $aa
+              c8d8 00a5  ld   $a5
+              c8d9 00ef  ld   $ef
+              c8da 00ff  ld   $ff
+              c8db 00ff  ld   $ff
+              c8dc 00ff  ld   $ff
+              c8dd 00bf  ld   $bf
+              c8de 0055  ld   $55
+              c8df 0060  ld   $60
+              c8e0 0015  ld   $15
+              c8e1 00da  ld   $da
+              c8e2 00fe  ld   $fe
+              c8e3 00ff  ld   $ff
+              c8e4 00ff  ld   $ff
+              c8e5 00ff  ld   $ff
+              c8e6 00ff  ld   $ff
+              c8e7 00bb  ld   $bb
+              c8e8 00ab  ld   $ab
+              c8e9 00fb  ld   $fb
+              c8ea 00aa  ld   $aa
+              c8eb 00af  ld   $af
+              c8ec 00ff  ld   $ff
+              c8ed 00ba  ld   $ba
+              c8ee 00af  ld   $af
+              c8ef 00fa  ld   $fa
+              c8f0 00ba  ld   $ba
+              c8f1 00ab  ld   $ab
+              c8f2 00bb  ld   $bb
+              c8f3 00ba  ld   $ba
+              c8f4 00af  ld   $af
+              c8f5 00bb  ld   $bb
+              c8f6 00fa  ld   $fa
+              c8f7 00af  ld   $af
+              c8f8 00ff  ld   $ff
+              c8f9 0000  ld   $00
+              c8fa 0000  ld   $00
+              c8fb fe00  bra  ac          ;Trampoline for page $c800 lookups
+              c8fc fcfd  bra  $c8fd
+              c8fd 1403  ld   $03,y
+              c8fe e07b  jmp  y,$7b
+              c8ff 151b  ld   [$1b],y
+              c900 00fa  ld   $fa
+              c901 00ae  ld   $ae
+              c902 00a6  ld   $a6
+              c903 006a  ld   $6a
+              c904 0055  ld   $55
+              c905 00fd  ld   $fd
+              c906 00af  ld   $af
+              c907 00fe  ld   $fe
+              c908 00ea  ld   $ea
+              c909 00ee  ld   $ee
+              c90a 00ae  ld   $ae
+              c90b 00bf  ld   $bf
+              c90c 00fa  ld   $fa
+              c90d 00bf  ld   $bf
+              c90e 00bb  ld   $bb
+              c90f 00bf  ld   $bf
+              c910 00ae  ld   $ae
+              c911 00aa  ld   $aa
+              c912 00be  ld   $be
+              c913 005a  ld   $5a
+              c914 00aa  ld   $aa
+              c915 00bf  ld   $bf
+              c916 00ea  ld   $ea
+              c917 00ab  ld   $ab
+              c918 00fe  ld   $fe
+              c919 00fa  ld   $fa
+              c91a 00ab  ld   $ab
+              c91b 0056  ld   $56
+              c91c 0010  ld   $10
+              c91d 0058  ld   $58
+              c91e 00ea  ld   $ea
+              c91f 00ff  ld   $ff
+              c920 00ea  ld   $ea
+              c921 00af  ld   $af
+              c922 00fe  ld   $fe
+              c923 00ea  ld   $ea
+              c924 00ae  ld   $ae
+              c925 00ae  ld   $ae
+              c926 00aa  ld   $aa
+              c927 00ba  ld   $ba
+              c928 00ee  ld   $ee
+              c929 00ea  ld   $ea
+              c92a 00ae  ld   $ae
+              c92b 00ea  ld   $ea
+              c92c 00ab  ld   $ab
+              c92d 00ba  ld   $ba
+              c92e 00aa  ld   $aa
+              c92f 00a7  ld   $a7
+              c930 00aa  ld   $aa
+              c931 00ee  ld   $ee
+              c932 00ea  ld   $ea
+              c933 00aa  ld   $aa
+              c934 00af  ld   $af
+              c935 00fa  ld   $fa
+              c936 00aa  ld   $aa
+              c937 009a  ld   $9a
+              c938 00a6  ld   $a6
+              c939 0065  ld   $65
+              c93a 0051  ld   $51
+              c93b 00ba  ld   $ba
+              c93c 00bb  ld   $bb
+              c93d 00ab  ld   $ab
+              c93e 00ab  ld   $ab
+              c93f 00ea  ld   $ea
+              c940 00ee  ld   $ee
+              c941 00aa  ld   $aa
+              c942 00aa  ld   $aa
+              c943 00aa  ld   $aa
+              c944 00ea  ld   $ea
+              c945 00ab  ld   $ab
+              c946 00ff  ld   $ff
+              c947 00ea  ld   $ea
+              c948 00aa  ld   $aa
+              c949 006a  ld   $6a
+              c94a 00aa  ld   $aa
+              c94b 002e  ld   $2e
+              c94c 0000  ld   $00
+              c94d 0000  ld   $00
+              c94e 0040  ld   $40
+              c94f 0059  ld   $59
+              c950 00a9  ld   $a9
+              c951 0055  ld   $55
+              c952 0055  ld   $55
+              c953 0001  ld   $01
+              c954 003f  ld   $3f
+              c955 0010  ld   $10
+              c956 0050  ld   $50
+              c957 00a6  ld   $a6
+              c958 00bb  ld   $bb
+              c959 00fb  ld   $fb
+              c95a 00bf  ld   $bf
+              c95b 00af  ld   $af
+              c95c 006a  ld   $6a
+              c95d 0010  ld   $10
+              c95e 00d0  ld   $d0
+              c95f 0057  ld   $57
+              c960 00ff  ld   $ff
+              c961 00ef  ld   $ef
+              c962 00af  ld   $af
+              c963 00be  ld   $be
+              c964 00aa  ld   $aa
+              c965 00a6  ld   $a6
+              c966 00aa  ld   $aa
+              c967 000a  ld   $0a
+              c968 0001  ld   $01
+              c969 007b  ld   $7b
+              c96a 00f9  ld   $f9
+              c96b 00bb  ld   $bb
+              c96c 00ba  ld   $ba
+              c96d 00ea  ld   $ea
+              c96e 00ab  ld   $ab
+              c96f 006a  ld   $6a
+              c970 0059  ld   $59
+              c971 00a6  ld   $a6
+              c972 00aa  ld   $aa
+              c973 000a  ld   $0a
+              c974 00e8  ld   $e8
+              c975 0095  ld   $95
+              c976 00aa  ld   $aa
+              c977 00aa  ld   $aa
+              c978 00a9  ld   $a9
+              c979 009a  ld   $9a
+              c97a 00a6  ld   $a6
+              c97b 0055  ld   $55
+              c97c 0095  ld   $95
+              c97d 0056  ld   $56
+              c97e 00a9  ld   $a9
+              c97f 005a  ld   $5a
+              c980 0001  ld   $01
+              c981 0079  ld   $79
+              c982 00a6  ld   $a6
+              c983 00ab  ld   $ab
+              c984 0069  ld   $69
+              c985 0059  ld   $59
+              c986 0055  ld   $55
+              c987 0015  ld   $15
+              c988 0059  ld   $59
+              c989 0091  ld   $91
+              c98a 0055  ld   $55
+              c98b 0099  ld   $99
+              c98c 00aa  ld   $aa
+              c98d 0015  ld   $15
+              c98e 0080  ld   $80
+              c98f 00ab  ld   $ab
+              c990 006a  ld   $6a
+              c991 005a  ld   $5a
+              c992 0091  ld   $91
+              c993 0015  ld   $15
+              c994 0049  ld   $49
+              c995 0055  ld   $55
+              c996 0058  ld   $58
+              c997 0099  ld   $99
+              c998 0095  ld   $95
+              c999 0099  ld   $99
+              c99a 005a  ld   $5a
+              c99b 0001  ld   $01
+              c99c 00b8  ld   $b8
+              c99d 00aa  ld   $aa
+              c99e 0096  ld   $96
+              c99f 0059  ld   $59
+              c9a0 0089  ld   $89
+              c9a1 0055  ld   $55
+              c9a2 0054  ld   $54
+              c9a3 0045  ld   $45
+              c9a4 0055  ld   $55
+              c9a5 0054  ld   $54
+              c9a6 005a  ld   $5a
+              c9a7 00a6  ld   $a6
+              c9a8 002a  ld   $2a
+              c9a9 0080  ld   $80
+              c9aa 00ab  ld   $ab
+              c9ab 006a  ld   $6a
+              c9ac 005a  ld   $5a
+              c9ad 0052  ld   $52
+              c9ae 0015  ld   $15
+              c9af 0045  ld   $45
+              c9b0 0051  ld   $51
+              c9b1 0015  ld   $15
+              c9b2 0059  ld   $59
+              c9b3 0055  ld   $55
+              c9b4 00a9  ld   $a9
+              c9b5 00aa  ld   $aa
+              c9b6 00a6  ld   $a6
+              c9b7 0015  ld   $15
+              c9b8 0050  ld   $50
+              c9b9 0043  ld   $43
+              c9ba 00aa  ld   $aa
+              c9bb 005a  ld   $5a
+              c9bc 0066  ld   $66
+              c9bd 0065  ld   $65
+              c9be 0045  ld   $45
+              c9bf 0045  ld   $45
+              c9c0 0014  ld   $14
+              c9c1 0045  ld   $45
+              c9c2 0055  ld   $55
+              c9c3 0064  ld   $64
+              c9c4 0095  ld   $95
+              c9c5 00ea  ld   $ea
+              c9c6 006a  ld   $6a
+              c9c7 0005  ld   $05
+              c9c8 00d8  ld   $d8
+              c9c9 00a9  ld   $a9
+              c9ca 009a  ld   $9a
+              c9cb 0052  ld   $52
+              c9cc 0015  ld   $15
+              c9cd 0045  ld   $45
+              c9ce 0051  ld   $51
+              c9cf 0050  ld   $50
+              c9d0 0045  ld   $45
+              c9d1 0051  ld   $51
+              c9d2 0055  ld   $55
+              c9d3 0099  ld   $99
+              c9d4 00a9  ld   $a9
+              c9d5 006a  ld   $6a
+              c9d6 000a  ld   $0a
+              c9d7 00d8  ld   $d8
+              c9d8 00aa  ld   $aa
+              c9d9 009a  ld   $9a
+              c9da 0056  ld   $56
+              c9db 0025  ld   $25
+              c9dc 0055  ld   $55
+              c9dd 0041  ld   $41
+              c9de 0015  ld   $15
+              c9df 0045  ld   $45
+              c9e0 0055  ld   $55
+              c9e1 0055  ld   $55
+              c9e2 0056  ld   $56
+              c9e3 00a6  ld   $a6
+              c9e4 0069  ld   $69
+              c9e5 0055  ld   $55
+              c9e6 0001  ld   $01
+              c9e7 0075  ld   $75
+              c9e8 00a5  ld   $a5
+              c9e9 00a6  ld   $a6
+              c9ea 0015  ld   $15
+              c9eb 0055  ld   $55
+              c9ec 0051  ld   $51
+              c9ed 0014  ld   $14
+              c9ee 0054  ld   $54
+              c9ef 0055  ld   $55
+              c9f0 0065  ld   $65
+              c9f1 005a  ld   $5a
+              c9f2 00a6  ld   $a6
+              c9f3 00a5  ld   $a5
+              c9f4 005a  ld   $5a
+              c9f5 0012  ld   $12
+              c9f6 0040  ld   $40
+              c9f7 005d  ld   $5d
+              c9f8 00a9  ld   $a9
+              c9f9 0000  ld   $00
+              c9fa 0000  ld   $00
+              c9fb fe00  bra  ac          ;Trampoline for page $c900 lookups
+              c9fc fcfd  bra  $c9fd
+              c9fd 1403  ld   $03,y
+              c9fe e07b  jmp  y,$7b
+              c9ff 151b  ld   [$1b],y
+              ca00 0069  ld   $69
+              ca01 0099  ld   $99
+              ca02 0096  ld   $96
+              ca03 0055  ld   $55
+              ca04 0045  ld   $45
+              ca05 0055  ld   $55
+              ca06 0059  ld   $59
+              ca07 0099  ld   $99
+              ca08 0095  ld   $95
+              ca09 0055  ld   $55
+              ca0a 0095  ld   $95
+              ca0b 0066  ld   $66
+              ca0c 0010  ld   $10
+              ca0d 0060  ld   $60
+              ca0e 00a7  ld   $a7
+              ca0f 006a  ld   $6a
+              ca10 005a  ld   $5a
+              ca11 00a5  ld   $a5
+              ca12 0055  ld   $55
+              ca13 005a  ld   $5a
+              ca14 0091  ld   $91
+              ca15 0055  ld   $55
+              ca16 0055  ld   $55
+              ca17 0055  ld   $55
+              ca18 0069  ld   $69
+              ca19 00a9  ld   $a9
+              ca1a 0056  ld   $56
+              ca1b 00c0  ld   $c0
+              ca1c 005d  ld   $5d
+              ca1d 0099  ld   $99
+              ca1e 0069  ld   $69
+              ca1f 0095  ld   $95
+              ca20 0056  ld   $56
+              ca21 0015  ld   $15
+              ca22 0055  ld   $55
+              ca23 0095  ld   $95
+              ca24 0014  ld   $14
+              ca25 0045  ld   $45
+              ca26 0051  ld   $51
+              ca27 0095  ld   $95
+              ca28 009a  ld   $9a
+              ca29 0041  ld   $41
+              ca2a 0080  ld   $80
+              ca2b 005d  ld   $5d
+              ca2c 0065  ld   $65
+              ca2d 0065  ld   $65
+              ca2e 0055  ld   $55
+              ca2f 0051  ld   $51
+              ca30 0065  ld   $65
+              ca31 0085  ld   $85
+              ca32 0056  ld   $56
+              ca33 0054  ld   $54
+              ca34 0045  ld   $45
+              ca35 0095  ld   $95
+              ca36 0069  ld   $69
+              ca37 00aa  ld   $aa
+              ca38 00aa  ld   $aa
+              ca39 0059  ld   $59
+              ca3a 0055  ld   $55
+              ca3b 0001  ld   $01
+              ca3c 0033  ld   $33
+              ca3d 0054  ld   $54
+              ca3e 00a5  ld   $a5
+              ca3f 0054  ld   $54
+              ca40 0049  ld   $49
+              ca41 0065  ld   $65
+              ca42 0065  ld   $65
+              ca43 0055  ld   $55
+              ca44 0066  ld   $66
+              ca45 0025  ld   $25
+              ca46 0055  ld   $55
+              ca47 0055  ld   $55
+              ca48 00a9  ld   $a9
+              ca49 00aa  ld   $aa
+              ca4a 00bb  ld   $bb
+              ca4b 00ba  ld   $ba
+              ca4c 00ab  ld   $ab
+              ca4d 00aa  ld   $aa
+              ca4e 0055  ld   $55
+              ca4f 0005  ld   $05
+              ca50 00c0  ld   $c0
+              ca51 0099  ld   $99
+              ca52 0099  ld   $99
+              ca53 0051  ld   $51
+              ca54 0065  ld   $65
+              ca55 004a  ld   $4a
+              ca56 0055  ld   $55
+              ca57 0069  ld   $69
+              ca58 0045  ld   $45
+              ca59 0066  ld   $66
+              ca5a 0065  ld   $65
+              ca5b 005a  ld   $5a
+              ca5c 00a9  ld   $a9
+              ca5d 00be  ld   $be
+              ca5e 00ea  ld   $ea
+              ca5f 00a7  ld   $a7
+              ca60 00be  ld   $be
+              ca61 00ab  ld   $ab
+              ca62 00a7  ld   $a7
+              ca63 002a  ld   $2a
+              ca64 0005  ld   $05
+              ca65 00b0  ld   $b0
+              ca66 0045  ld   $45
+              ca67 00a9  ld   $a9
+              ca68 00a6  ld   $a6
+              ca69 0055  ld   $55
+              ca6a 0059  ld   $59
+              ca6b 0095  ld   $95
+              ca6c 0059  ld   $59
+              ca6d 0099  ld   $99
+              ca6e 0095  ld   $95
+              ca6f 0059  ld   $59
+              ca70 0059  ld   $59
+              ca71 0095  ld   $95
+              ca72 00a9  ld   $a9
+              ca73 00ea  ld   $ea
+              ca74 00f6  ld   $f6
+              ca75 00aa  ld   $aa
+              ca76 009b  ld   $9b
+              ca77 00bb  ld   $bb
+              ca78 00ba  ld   $ba
+              ca79 00eb  ld   $eb
+              ca7a 00aa  ld   $aa
+              ca7b 001a  ld   $1a
+              ca7c 0004  ld   $04
+              ca7d 00a0  ld   $a0
+              ca7e 0054  ld   $54
+              ca7f 00a5  ld   $a5
+              ca80 00fa  ld   $fa
+              ca81 00ae  ld   $ae
+              ca82 009e  ld   $9e
+              ca83 0066  ld   $66
+              ca84 0069  ld   $69
+              ca85 0095  ld   $95
+              ca86 0056  ld   $56
+              ca87 0065  ld   $65
+              ca88 0056  ld   $56
+              ca89 0056  ld   $56
+              ca8a 0059  ld   $59
+              ca8b 0099  ld   $99
+              ca8c 00aa  ld   $aa
+              ca8d 00be  ld   $be
+              ca8e 00ea  ld   $ea
+              ca8f 00ab  ld   $ab
+              ca90 00ae  ld   $ae
+              ca91 00de  ld   $de
+              ca92 00ea  ld   $ea
+              ca93 00ae  ld   $ae
+              ca94 00ee  ld   $ee
+              ca95 00aa  ld   $aa
+              ca96 0014  ld   $14
+              ca97 0060  ld   $60
+              ca98 0056  ld   $56
+              ca99 00aa  ld   $aa
+              ca9a 00ab  ld   $ab
+              ca9b 00bb  ld   $bb
+              ca9c 00ba  ld   $ba
+              ca9d 00ab  ld   $ab
+              ca9e 0096  ld   $96
+              ca9f 0055  ld   $55
+              caa0 009a  ld   $9a
+              caa1 0056  ld   $56
+              caa2 0069  ld   $69
+              caa3 0095  ld   $95
+              caa4 0056  ld   $56
+              caa5 0065  ld   $65
+              caa6 0096  ld   $96
+              caa7 00aa  ld   $aa
+              caa8 006e  ld   $6e
+              caa9 00ee  ld   $ee
+              caaa 00a6  ld   $a6
+              caab 007e  ld   $7e
+              caac 00ea  ld   $ea
+              caad 00aa  ld   $aa
+              caae 007e  ld   $7e
+              caaf 00ea  ld   $ea
+              cab0 00ab  ld   $ab
+              cab1 006a  ld   $6a
+              cab2 0005  ld   $05
+              cab3 0090  ld   $90
+              cab4 0055  ld   $55
+              cab5 00ea  ld   $ea
+              cab6 00ab  ld   $ab
+              cab7 00be  ld   $be
+              cab8 00ea  ld   $ea
+              cab9 00ab  ld   $ab
+              caba 007e  ld   $7e
+              cabb 0099  ld   $99
+              cabc 0095  ld   $95
+              cabd 0055  ld   $55
+              cabe 005a  ld   $5a
+              cabf 0095  ld   $95
+              cac0 0054  ld   $54
+              cac1 0099  ld   $99
+              cac2 0095  ld   $95
+              cac3 00aa  ld   $aa
+              cac4 009f  ld   $9f
+              cac5 00fa  ld   $fa
+              cac6 00aa  ld   $aa
+              cac7 00af  ld   $af
+              cac8 00ba  ld   $ba
+              cac9 00b9  ld   $b9
+              caca 009b  ld   $9b
+              cacb 00ba  ld   $ba
+              cacc 00ba  ld   $ba
+              cacd 00ab  ld   $ab
+              cace 0067  ld   $67
+              cacf 00c0  ld   $c0
+              cad0 0008  ld   $08
+              cad1 0065  ld   $65
+              cad2 00be  ld   $be
+              cad3 00ea  ld   $ea
+              cad4 00ea  ld   $ea
+              cad5 00ad  ld   $ad
+              cad6 00af  ld   $af
+              cad7 00fa  ld   $fa
+              cad8 00aa  ld   $aa
+              cad9 005a  ld   $5a
+              cada 00a6  ld   $a6
+              cadb 0055  ld   $55
+              cadc 005a  ld   $5a
+              cadd 0065  ld   $65
+              cade 00a5  ld   $a5
+              cadf 009a  ld   $9a
+              cae0 00a6  ld   $a6
+              cae1 00ba  ld   $ba
+              cae2 00ab  ld   $ab
+              cae3 00f6  ld   $f6
+              cae4 006a  ld   $6a
+              cae5 00ab  ld   $ab
+              cae6 00bb  ld   $bb
+              cae7 00a9  ld   $a9
+              cae8 00ee  ld   $ee
+              cae9 00a6  ld   $a6
+              caea 00be  ld   $be
+              caeb 00eb  ld   $eb
+              caec 0057  ld   $57
+              caed 0080  ld   $80
+              caee 0058  ld   $58
+              caef 00f9  ld   $f9
+              caf0 00aa  ld   $aa
+              caf1 00ef  ld   $ef
+              caf2 00e6  ld   $e6
+              caf3 00ae  ld   $ae
+              caf4 00ea  ld   $ea
+              caf5 00ab  ld   $ab
+              caf6 00be  ld   $be
+              caf7 00ab  ld   $ab
+              caf8 0096  ld   $96
+              caf9 0000  ld   $00
+              cafa 0000  ld   $00
+              cafb fe00  bra  ac          ;Trampoline for page $ca00 lookups
+              cafc fcfd  bra  $cafd
+              cafd 1403  ld   $03,y
+              cafe e07b  jmp  y,$7b
+              caff 151b  ld   [$1b],y
+              cb00 0055  ld   $55
+              cb01 0055  ld   $55
+              cb02 0095  ld   $95
+              cb03 0069  ld   $69
+              cb04 0056  ld   $56
+              cb05 00ba  ld   $ba
+              cb06 00ae  ld   $ae
+              cb07 00de  ld   $de
+              cb08 00aa  ld   $aa
+              cb09 007e  ld   $7e
+              cb0a 00ea  ld   $ea
+              cb0b 00a6  ld   $a6
+              cb0c 00be  ld   $be
+              cb0d 00da  ld   $da
+              cb0e 00ea  ld   $ea
+              cb0f 00aa  ld   $aa
+              cb10 00ea  ld   $ea
+              cb11 00ab  ld   $ab
+              cb12 0015  ld   $15
+              cb13 0000  ld   $00
+              cb14 0056  ld   $56
+              cb15 00ae  ld   $ae
+              cb16 00ea  ld   $ea
+              cb17 00ab  ld   $ab
+              cb18 00ae  ld   $ae
+              cb19 00ee  ld   $ee
+              cb1a 00ea  ld   $ea
+              cb1b 00ad  ld   $ad
+              cb1c 00ab  ld   $ab
+              cb1d 00ab  ld   $ab
+              cb1e 00a9  ld   $a9
+              cb1f 00aa  ld   $aa
+              cb20 00a6  ld   $a6
+              cb21 00a9  ld   $a9
+              cb22 005a  ld   $5a
+              cb23 00a6  ld   $a6
+              cb24 00aa  ld   $aa
+              cb25 009e  ld   $9e
+              cb26 00bb  ld   $bb
+              cb27 006a  ld   $6a
+              cb28 00af  ld   $af
+              cb29 00ea  ld   $ea
+              cb2a 00ae  ld   $ae
+              cb2b 00ae  ld   $ae
+              cb2c 00b6  ld   $b6
+              cb2d 00aa  ld   $aa
+              cb2e 00ea  ld   $ea
+              cb2f 00b7  ld   $b7
+              cb30 00aa  ld   $aa
+              cb31 005f  ld   $5f
+              cb32 0001  ld   $01
+              cb33 0060  ld   $60
+              cb34 00aa  ld   $aa
+              cb35 00fa  ld   $fa
+              cb36 006a  ld   $6a
+              cb37 00af  ld   $af
+              cb38 00fa  ld   $fa
+              cb39 00aa  ld   $aa
+              cb3a 00af  ld   $af
+              cb3b 00fa  ld   $fa
+              cb3c 00a9  ld   $a9
+              cb3d 005b  ld   $5b
+              cb3e 00a6  ld   $a6
+              cb3f 00aa  ld   $aa
+              cb40 009a  ld   $9a
+              cb41 0066  ld   $66
+              cb42 00a5  ld   $a5
+              cb43 00ea  ld   $ea
+              cb44 00ba  ld   $ba
+              cb45 00aa  ld   $aa
+              cb46 009f  ld   $9f
+              cb47 00ba  ld   $ba
+              cb48 006a  ld   $6a
+              cb49 00ab  ld   $ab
+              cb4a 00b7  ld   $b7
+              cb4b 00aa  ld   $aa
+              cb4c 009f  ld   $9f
+              cb4d 00ba  ld   $ba
+              cb4e 00a9  ld   $a9
+              cb4f 00ee  ld   $ee
+              cb50 00aa  ld   $aa
+              cb51 0029  ld   $29
+              cb52 00f0  ld   $f0
+              cb53 0055  ld   $55
+              cb54 00aa  ld   $aa
+              cb55 009b  ld   $9b
+              cb56 00bb  ld   $bb
+              cb57 00be  ld   $be
+              cb58 00ea  ld   $ea
+              cb59 00e6  ld   $e6
+              cb5a 006e  ld   $6e
+              cb5b 00af  ld   $af
+              cb5c 00fa  ld   $fa
+              cb5d 006a  ld   $6a
+              cb5e 005a  ld   $5a
+              cb5f 0095  ld   $95
+              cb60 00a9  ld   $a9
+              cb61 005a  ld   $5a
+              cb62 00a6  ld   $a6
+              cb63 00ae  ld   $ae
+              cb64 00ee  ld   $ee
+              cb65 00e6  ld   $e6
+              cb66 00ae  ld   $ae
+              cb67 00ee  ld   $ee
+              cb68 00e6  ld   $e6
+              cb69 00be  ld   $be
+              cb6a 00ea  ld   $ea
+              cb6b 00ea  ld   $ea
+              cb6c 00ad  ld   $ad
+              cb6d 00ea  ld   $ea
+              cb6e 00ab  ld   $ab
+              cb6f 006e  ld   $6e
+              cb70 00ea  ld   $ea
+              cb71 00ab  ld   $ab
+              cb72 0010  ld   $10
+              cb73 00e0  ld   $e0
+              cb74 00a5  ld   $a5
+              cb75 00be  ld   $be
+              cb76 00ee  ld   $ee
+              cb77 00ea  ld   $ea
+              cb78 006e  ld   $6e
+              cb79 00ee  ld   $ee
+              cb7a 00ba  ld   $ba
+              cb7b 00ba  ld   $ba
+              cb7c 00ab  ld   $ab
+              cb7d 00bb  ld   $bb
+              cb7e 00be  ld   $be
+              cb7f 009a  ld   $9a
+              cb80 0066  ld   $66
+              cb81 006a  ld   $6a
+              cb82 00aa  ld   $aa
+              cb83 00ba  ld   $ba
+              cb84 00ba  ld   $ba
+              cb85 009b  ld   $9b
+              cb86 00bb  ld   $bb
+              cb87 006a  ld   $6a
+              cb88 00af  ld   $af
+              cb89 00ba  ld   $ba
+              cb8a 006a  ld   $6a
+              cb8b 00af  ld   $af
+              cb8c 00b6  ld   $b6
+              cb8d 00ba  ld   $ba
+              cb8e 009b  ld   $9b
+              cb8f 00fa  ld   $fa
+              cb90 00a9  ld   $a9
+              cb91 00ab  ld   $ab
+              cb92 00a6  ld   $a6
+              cb93 0005  ld   $05
+              cb94 00d0  ld   $d0
+              cb95 0055  ld   $55
+              cb96 00aa  ld   $aa
+              cb97 00eb  ld   $eb
+              cb98 00ea  ld   $ea
+              cb99 00ae  ld   $ae
+              cb9a 00af  ld   $af
+              cb9b 00fa  ld   $fa
+              cb9c 00aa  ld   $aa
+              cb9d 00af  ld   $af
+              cb9e 00b6  ld   $b6
+              cb9f 00ba  ld   $ba
+              cba0 00ab  ld   $ab
+              cba1 00bb  ld   $bb
+              cba2 00ba  ld   $ba
+              cba3 00aa  ld   $aa
+              cba4 00fa  ld   $fa
+              cba5 00aa  ld   $aa
+              cba6 00af  ld   $af
+              cba7 00ba  ld   $ba
+              cba8 00ba  ld   $ba
+              cba9 00ab  ld   $ab
+              cbaa 00fa  ld   $fa
+              cbab 00a9  ld   $a9
+              cbac 00af  ld   $af
+              cbad 00ba  ld   $ba
+              cbae 00ba  ld   $ba
+              cbaf 009b  ld   $9b
+              cbb0 00bb  ld   $bb
+              cbb1 00aa  ld   $aa
+              cbb2 009f  ld   $9f
+              cbb3 00fa  ld   $fa
+              cbb4 002a  ld   $2a
+              cbb5 00e0  ld   $e0
+              cbb6 0055  ld   $55
+              cbb7 00be  ld   $be
+              cbb8 00ee  ld   $ee
+              cbb9 00ea  ld   $ea
+              cbba 00ae  ld   $ae
+              cbbb 00ee  ld   $ee
+              cbbc 00e6  ld   $e6
+              cbbd 00ae  ld   $ae
+              cbbe 00ee  ld   $ee
+              cbbf 00fa  ld   $fa
+              cbc0 006a  ld   $6a
+              cbc1 00ef  ld   $ef
+              cbc2 00ea  ld   $ea
+              cbc3 00ae  ld   $ae
+              cbc4 00ef  ld   $ef
+              cbc5 00ea  ld   $ea
+              cbc6 00be  ld   $be
+              cbc7 009b  ld   $9b
+              cbc8 00bb  ld   $bb
+              cbc9 00b9  ld   $b9
+              cbca 009b  ld   $9b
+              cbcb 00bb  ld   $bb
+              cbcc 00ba  ld   $ba
+              cbcd 009b  ld   $9b
+              cbce 00bb  ld   $bb
+              cbcf 00a9  ld   $a9
+              cbd0 00ab  ld   $ab
+              cbd1 00ab  ld   $ab
+              cbd2 00ad  ld   $ad
+              cbd3 00ee  ld   $ee
+              cbd4 00aa  ld   $aa
+              cbd5 002d  ld   $2d
+              cbd6 0004  ld   $04
+              cbd7 0074  ld   $74
+              cbd8 00aa  ld   $aa
+              cbd9 00ab  ld   $ab
+              cbda 00bb  ld   $bb
+              cbdb 007e  ld   $7e
+              cbdc 00ea  ld   $ea
+              cbdd 00bb  ld   $bb
+              cbde 00ba  ld   $ba
+              cbdf 00eb  ld   $eb
+              cbe0 00a7  ld   $a7
+              cbe1 00be  ld   $be
+              cbe2 00ea  ld   $ea
+              cbe3 00ab  ld   $ab
+              cbe4 007e  ld   $7e
+              cbe5 00ea  ld   $ea
+              cbe6 00ab  ld   $ab
+              cbe7 00be  ld   $be
+              cbe8 00ab  ld   $ab
+              cbe9 00bb  ld   $bb
+              cbea 00ba  ld   $ba
+              cbeb 00ab  ld   $ab
+              cbec 00ba  ld   $ba
+              cbed 007a  ld   $7a
+              cbee 00ab  ld   $ab
+              cbef 00ba  ld   $ba
+              cbf0 00ba  ld   $ba
+              cbf1 00ab  ld   $ab
+              cbf2 00bb  ld   $bb
+              cbf3 00ad  ld   $ad
+              cbf4 00ee  ld   $ee
+              cbf5 00a6  ld   $a6
+              cbf6 00be  ld   $be
+              cbf7 005a  ld   $5a
+              cbf8 0001  ld   $01
+              cbf9 0000  ld   $00
+              cbfa 0000  ld   $00
+              cbfb fe00  bra  ac          ;Trampoline for page $cb00 lookups
+              cbfc fcfd  bra  $cbfd
+              cbfd 1403  ld   $03,y
+              cbfe e07b  jmp  y,$7b
+              cbff 151b  ld   [$1b],y
+              cc00 005c  ld   $5c
+              cc01 00a5  ld   $a5
+              cc02 00fa  ld   $fa
+              cc03 00ae  ld   $ae
+              cc04 00ee  ld   $ee
+              cc05 00fa  ld   $fa
+              cc06 00aa  ld   $aa
+              cc07 00ef  ld   $ef
+              cc08 00e6  ld   $e6
+              cc09 00ae  ld   $ae
+              cc0a 00ee  ld   $ee
+              cc0b 00f6  ld   $f6
+              cc0c 00aa  ld   $aa
+              cc0d 00af  ld   $af
+              cc0e 00fa  ld   $fa
+              cc0f 00ae  ld   $ae
+              cc10 00ee  ld   $ee
+              cc11 00e6  ld   $e6
+              cc12 00ae  ld   $ae
+              cc13 00de  ld   $de
+              cc14 00ea  ld   $ea
+              cc15 00ad  ld   $ad
+              cc16 00de  ld   $de
+              cc17 00ea  ld   $ea
+              cc18 00be  ld   $be
+              cc19 009b  ld   $9b
+              cc1a 00bb  ld   $bb
+              cc1b 007a  ld   $7a
+              cc1c 00ea  ld   $ea
+              cc1d 00ab  ld   $ab
+              cc1e 00ae  ld   $ae
+              cc1f 00de  ld   $de
+              cc20 00aa  ld   $aa
+              cc21 0029  ld   $29
+              cc22 00c0  ld   $c0
+              cc23 0055  ld   $55
+              cc24 00be  ld   $be
+              cc25 00ab  ld   $ab
+              cc26 00bb  ld   $bb
+              cc27 00be  ld   $be
+              cc28 00ea  ld   $ea
+              cc29 00eb  ld   $eb
+              cc2a 00ae  ld   $ae
+              cc2b 00ee  ld   $ee
+              cc2c 00aa  ld   $aa
+              cc2d 00be  ld   $be
+              cc2e 00ea  ld   $ea
+              cc2f 00ea  ld   $ea
+              cc30 00ae  ld   $ae
+              cc31 00af  ld   $af
+              cc32 00bb  ld   $bb
+              cc33 00ba  ld   $ba
+              cc34 00db  ld   $db
+              cc35 00ab  ld   $ab
+              cc36 00ae  ld   $ae
+              cc37 00ea  ld   $ea
+              cc38 00ab  ld   $ab
+              cc39 00ae  ld   $ae
+              cc3a 00ea  ld   $ea
+              cc3b 00ea  ld   $ea
+              cc3c 00ae  ld   $ae
+              cc3d 00ee  ld   $ee
+              cc3e 00ba  ld   $ba
+              cc3f 00aa  ld   $aa
+              cc40 009f  ld   $9f
+              cc41 00ba  ld   $ba
+              cc42 00ba  ld   $ba
+              cc43 00ab  ld   $ab
+              cc44 0002  ld   $02
+              cc45 005c  ld   $5c
+              cc46 00aa  ld   $aa
+              cc47 00fa  ld   $fa
+              cc48 00aa  ld   $aa
+              cc49 00af  ld   $af
+              cc4a 00fa  ld   $fa
+              cc4b 00ae  ld   $ae
+              cc4c 00af  ld   $af
+              cc4d 00fa  ld   $fa
+              cc4e 006e  ld   $6e
+              cc4f 00ee  ld   $ee
+              cc50 00fa  ld   $fa
+              cc51 00a9  ld   $a9
+              cc52 00ab  ld   $ab
+              cc53 00bb  ld   $bb
+              cc54 007e  ld   $7e
+              cc55 00ea  ld   $ea
+              cc56 00ab  ld   $ab
+              cc57 006e  ld   $6e
+              cc58 009a  ld   $9a
+              cc59 00a6  ld   $a6
+              cc5a 00a9  ld   $a9
+              cc5b 00ea  ld   $ea
+              cc5c 00e7  ld   $e7
+              cc5d 00ae  ld   $ae
+              cc5e 00da  ld   $da
+              cc5f 00ab  ld   $ab
+              cc60 00ad  ld   $ad
+              cc61 009e  ld   $9e
+              cc62 00ba  ld   $ba
+              cc63 00ba  ld   $ba
+              cc64 009b  ld   $9b
+              cc65 00ba  ld   $ba
+              cc66 0069  ld   $69
+              cc67 0005  ld   $05
+              cc68 0068  ld   $68
+              cc69 0095  ld   $95
+              cc6a 00ee  ld   $ee
+              cc6b 00fa  ld   $fa
+              cc6c 00b9  ld   $b9
+              cc6d 00eb  ld   $eb
+              cc6e 00ab  ld   $ab
+              cc6f 00be  ld   $be
+              cc70 00ee  ld   $ee
+              cc71 00fa  ld   $fa
+              cc72 00ba  ld   $ba
+              cc73 00eb  ld   $eb
+              cc74 00ab  ld   $ab
+              cc75 00be  ld   $be
+              cc76 00ee  ld   $ee
+              cc77 00fa  ld   $fa
+              cc78 00aa  ld   $aa
+              cc79 00af  ld   $af
+              cc7a 00fa  ld   $fa
+              cc7b 006a  ld   $6a
+              cc7c 0055  ld   $55
+              cc7d 0055  ld   $55
+              cc7e 0059  ld   $59
+              cc7f 00aa  ld   $aa
+              cc80 00ba  ld   $ba
+              cc81 00ba  ld   $ba
+              cc82 00eb  ld   $eb
+              cc83 00ab  ld   $ab
+              cc84 00be  ld   $be
+              cc85 00ea  ld   $ea
+              cc86 00ea  ld   $ea
+              cc87 006e  ld   $6e
+              cc88 00ea  ld   $ea
+              cc89 00ab  ld   $ab
+              cc8a 007e  ld   $7e
+              cc8b 0005  ld   $05
+              cc8c 0068  ld   $68
+              cc8d 00a9  ld   $a9
+              cc8e 00ab  ld   $ab
+              cc8f 00bb  ld   $bb
+              cc90 00be  ld   $be
+              cc91 00ea  ld   $ea
+              cc92 00ab  ld   $ab
+              cc93 00be  ld   $be
+              cc94 00eb  ld   $eb
+              cc95 00eb  ld   $eb
+              cc96 00ae  ld   $ae
+              cc97 00ee  ld   $ee
+              cc98 00ea  ld   $ea
+              cc99 00ae  ld   $ae
+              cc9a 00ef  ld   $ef
+              cc9b 00ab  ld   $ab
+              cc9c 00bd  ld   $bd
+              cc9d 00ea  ld   $ea
+              cc9e 00ab  ld   $ab
+              cc9f 0055  ld   $55
+              cca0 0055  ld   $55
+              cca1 0055  ld   $55
+              cca2 0055  ld   $55
+              cca3 00e9  ld   $e9
+              cca4 00ea  ld   $ea
+              cca5 00ae  ld   $ae
+              cca6 009f  ld   $9f
+              cca7 00ba  ld   $ba
+              cca8 00b9  ld   $b9
+              cca9 009b  ld   $9b
+              ccaa 00bb  ld   $bb
+              ccab 00aa  ld   $aa
+              ccac 009f  ld   $9f
+              ccad 00ba  ld   $ba
+              ccae 007a  ld   $7a
+              ccaf 0006  ld   $06
+              ccb0 0064  ld   $64
+              ccb1 0095  ld   $95
+              ccb2 00ab  ld   $ab
+              ccb3 00bb  ld   $bb
+              ccb4 00be  ld   $be
+              ccb5 00ea  ld   $ea
+              ccb6 00ab  ld   $ab
+              ccb7 00be  ld   $be
+              ccb8 00ab  ld   $ab
+              ccb9 00fb  ld   $fb
+              ccba 00ae  ld   $ae
+              ccbb 00af  ld   $af
+              ccbc 00bb  ld   $bb
+              ccbd 00be  ld   $be
+              ccbe 00af  ld   $af
+              ccbf 00fa  ld   $fa
+              ccc0 00aa  ld   $aa
+              ccc1 00ef  ld   $ef
+              ccc2 00ea  ld   $ea
+              ccc3 006e  ld   $6e
+              ccc4 005a  ld   $5a
+              ccc5 0055  ld   $55
+              ccc6 0015  ld   $15
+              ccc7 0055  ld   $55
+              ccc8 00a5  ld   $a5
+              ccc9 00ba  ld   $ba
+              ccca 00ab  ld   $ab
+              cccb 00bb  ld   $bb
+              cccc 00ba  ld   $ba
+              cccd 00ab  ld   $ab
+              ccce 00ba  ld   $ba
+              cccf 006a  ld   $6a
+              ccd0 00af  ld   $af
+              ccd1 00ba  ld   $ba
+              ccd2 00b9  ld   $b9
+              ccd3 00ab  ld   $ab
+              ccd4 0002  ld   $02
+              ccd5 0059  ld   $59
+              ccd6 00aa  ld   $aa
+              ccd7 00fa  ld   $fa
+              ccd8 00aa  ld   $aa
+              ccd9 00ef  ld   $ef
+              ccda 00ea  ld   $ea
+              ccdb 00ae  ld   $ae
+              ccdc 00af  ld   $af
+              ccdd 00bb  ld   $bb
+              ccde 00ba  ld   $ba
+              ccdf 00eb  ld   $eb
+              cce0 00bb  ld   $bb
+              cce1 00ba  ld   $ba
+              cce2 00ef  ld   $ef
+              cce3 00ea  ld   $ea
+              cce4 00ae  ld   $ae
+              cce5 00ee  ld   $ee
+              cce6 00fa  ld   $fa
+              cce7 00ae  ld   $ae
+              cce8 00ae  ld   $ae
+              cce9 00a6  ld   $a6
+              ccea 006a  ld   $6a
+              cceb 00aa  ld   $aa
+              ccec 00a5  ld   $a5
+              cced 00ae  ld   $ae
+              ccee 00ef  ld   $ef
+              ccef 00ea  ld   $ea
+              ccf0 00ad  ld   $ad
+              ccf1 00ee  ld   $ee
+              ccf2 00e6  ld   $e6
+              ccf3 00ae  ld   $ae
+              ccf4 00ae  ld   $ae
+              ccf5 00ba  ld   $ba
+              ccf6 00ba  ld   $ba
+              ccf7 00ea  ld   $ea
+              ccf8 00e6  ld   $e6
+              ccf9 0000  ld   $00
+              ccfa 0000  ld   $00
+              ccfb fe00  bra  ac          ;Trampoline for page $cc00 lookups
+              ccfc fcfd  bra  $ccfd
+              ccfd 1403  ld   $03,y
+              ccfe e07b  jmp  y,$7b
+              ccff 151b  ld   [$1b],y
+              cd00 0015  ld   $15
+              cd01 0070  ld   $70
+              cd02 0055  ld   $55
+              cd03 00aa  ld   $aa
+              cd04 00af  ld   $af
+              cd05 00fa  ld   $fa
+              cd06 00aa  ld   $aa
+              cd07 00ef  ld   $ef
+              cd08 00ea  ld   $ea
+              cd09 00ae  ld   $ae
+              cd0a 00ee  ld   $ee
+              cd0b 0056  ld   $56
+              cd0c 00ea  ld   $ea
+              cd0d 00af  ld   $af
+              cd0e 00fb  ld   $fb
+              cd0f 00ae  ld   $ae
+              cd10 00ee  ld   $ee
+              cd11 00e6  ld   $e6
+              cd12 00ae  ld   $ae
+              cd13 00af  ld   $af
+              cd14 00fa  ld   $fa
+              cd15 00ae  ld   $ae
+              cd16 00ef  ld   $ef
+              cd17 00ab  ld   $ab
+              cd18 00be  ld   $be
+              cd19 00ea  ld   $ea
+              cd1a 00ab  ld   $ab
+              cd1b 00be  ld   $be
+              cd1c 00ea  ld   $ea
+              cd1d 00ab  ld   $ab
+              cd1e 00ae  ld   $ae
+              cd1f 00ee  ld   $ee
+              cd20 00ea  ld   $ea
+              cd21 00ad  ld   $ad
+              cd22 009b  ld   $9b
+              cd23 00bb  ld   $bb
+              cd24 00b9  ld   $b9
+              cd25 00ab  ld   $ab
+              cd26 0056  ld   $56
+              cd27 00c0  ld   $c0
+              cd28 0095  ld   $95
+              cd29 00aa  ld   $aa
+              cd2a 00be  ld   $be
+              cd2b 00ab  ld   $ab
+              cd2c 00bb  ld   $bb
+              cd2d 00ba  ld   $ba
+              cd2e 00ef  ld   $ef
+              cd2f 00fa  ld   $fa
+              cd30 006a  ld   $6a
+              cd31 0005  ld   $05
+              cd32 0004  ld   $04
+              cd33 00a5  ld   $a5
+              cd34 00eb  ld   $eb
+              cd35 00bb  ld   $bb
+              cd36 00ba  ld   $ba
+              cd37 00eb  ld   $eb
+              cd38 00ab  ld   $ab
+              cd39 00be  ld   $be
+              cd3a 00ee  ld   $ee
+              cd3b 00ab  ld   $ab
+              cd3c 00be  ld   $be
+              cd3d 00ea  ld   $ea
+              cd3e 00fa  ld   $fa
+              cd3f 00aa  ld   $aa
+              cd40 00ef  ld   $ef
+              cd41 00ea  ld   $ea
+              cd42 00ae  ld   $ae
+              cd43 00af  ld   $af
+              cd44 00f6  ld   $f6
+              cd45 006a  ld   $6a
+              cd46 00ab  ld   $ab
+              cd47 00bb  ld   $bb
+              cd48 00ba  ld   $ba
+              cd49 00ea  ld   $ea
+              cd4a 00b6  ld   $b6
+              cd4b 00aa  ld   $aa
+              cd4c 009f  ld   $9f
+              cd4d 0066  ld   $66
+              cd4e 0080  ld   $80
+              cd4f 0055  ld   $55
+              cd50 0095  ld   $95
+              cd51 00a9  ld   $a9
+              cd52 00aa  ld   $aa
+              cd53 00fb  ld   $fb
+              cd54 00ae  ld   $ae
+              cd55 00ef  ld   $ef
+              cd56 00ea  ld   $ea
+              cd57 0015  ld   $15
+              cd58 0040  ld   $40
+              cd59 00a8  ld   $a8
+              cd5a 00bb  ld   $bb
+              cd5b 00eb  ld   $eb
+              cd5c 00ab  ld   $ab
+              cd5d 00be  ld   $be
+              cd5e 00af  ld   $af
+              cd5f 00fa  ld   $fa
+              cd60 00ae  ld   $ae
+              cd61 00af  ld   $af
+              cd62 00fa  ld   $fa
+              cd63 00be  ld   $be
+              cd64 00da  ld   $da
+              cd65 00bb  ld   $bb
+              cd66 00ba  ld   $ba
+              cd67 00eb  ld   $eb
+              cd68 00eb  ld   $eb
+              cd69 00be  ld   $be
+              cd6a 00ab  ld   $ab
+              cd6b 00bb  ld   $bb
+              cd6c 006a  ld   $6a
+              cd6d 00af  ld   $af
+              cd6e 00b6  ld   $b6
+              cd6f 00ba  ld   $ba
+              cd70 009b  ld   $9b
+              cd71 00bb  ld   $bb
+              cd72 00aa  ld   $aa
+              cd73 000a  ld   $0a
+              cd74 0054  ld   $54
+              cd75 0055  ld   $55
+              cd76 009a  ld   $9a
+              cd77 0055  ld   $55
+              cd78 0055  ld   $55
+              cd79 00aa  ld   $aa
+              cd7a 00aa  ld   $aa
+              cd7b 006a  ld   $6a
+              cd7c 001a  ld   $1a
+              cd7d 0000  ld   $00
+              cd7e 0045  ld   $45
+              cd7f 00e5  ld   $e5
+              cd80 00fa  ld   $fa
+              cd81 00ba  ld   $ba
+              cd82 00ef  ld   $ef
+              cd83 00fa  ld   $fa
+              cd84 00be  ld   $be
+              cd85 00ea  ld   $ea
+              cd86 00eb  ld   $eb
+              cd87 00be  ld   $be
+              cd88 00ab  ld   $ab
+              cd89 00fb  ld   $fb
+              cd8a 00ae  ld   $ae
+              cd8b 00ee  ld   $ee
+              cd8c 00bb  ld   $bb
+              cd8d 00ba  ld   $ba
+              cd8e 00eb  ld   $eb
+              cd8f 00ab  ld   $ab
+              cd90 00bd  ld   $bd
+              cd91 00ea  ld   $ea
+              cd92 00ab  ld   $ab
+              cd93 00be  ld   $be
+              cd94 00ea  ld   $ea
+              cd95 00ab  ld   $ab
+              cd96 006a  ld   $6a
+              cd97 005a  ld   $5a
+              cd98 0051  ld   $51
+              cd99 0000  ld   $00
+              cd9a 0055  ld   $55
+              cd9b 00a5  ld   $a5
+              cd9c 0069  ld   $69
+              cd9d 0055  ld   $55
+              cd9e 0096  ld   $96
+              cd9f 0069  ld   $69
+              cda0 009a  ld   $9a
+              cda1 0056  ld   $56
+              cda2 0000  ld   $00
+              cda3 0052  ld   $52
+              cda4 00f9  ld   $f9
+              cda5 00af  ld   $af
+              cda6 00bf  ld   $bf
+              cda7 00bb  ld   $bb
+              cda8 00ba  ld   $ba
+              cda9 00ef  ld   $ef
+              cdaa 00fa  ld   $fa
+              cdab 00ae  ld   $ae
+              cdac 00ee  ld   $ee
+              cdad 00fa  ld   $fa
+              cdae 00aa  ld   $aa
+              cdaf 00af  ld   $af
+              cdb0 00fa  ld   $fa
+              cdb1 00aa  ld   $aa
+              cdb2 00ef  ld   $ef
+              cdb3 00ea  ld   $ea
+              cdb4 00ae  ld   $ae
+              cdb5 00ee  ld   $ee
+              cdb6 00a6  ld   $a6
+              cdb7 006e  ld   $6e
+              cdb8 00aa  ld   $aa
+              cdb9 0066  ld   $66
+              cdba 0014  ld   $14
+              cdbb 0060  ld   $60
+              cdbc 0055  ld   $55
+              cdbd 0069  ld   $69
+              cdbe 0059  ld   $59
+              cdbf 0095  ld   $95
+              cdc0 00ea  ld   $ea
+              cdc1 00fb  ld   $fb
+              cdc2 00ef  ld   $ef
+              cdc3 00aa  ld   $aa
+              cdc4 009a  ld   $9a
+              cdc5 0056  ld   $56
+              cdc6 0015  ld   $15
+              cdc7 0010  ld   $10
+              cdc8 0050  ld   $50
+              cdc9 00c0  ld   $c0
+              cdca 0050  ld   $50
+              cdcb 00a9  ld   $a9
+              cdcc 00be  ld   $be
+              cdcd 00ef  ld   $ef
+              cdce 00fb  ld   $fb
+              cdcf 00af  ld   $af
+              cdd0 00af  ld   $af
+              cdd1 00bb  ld   $bb
+              cdd2 00ba  ld   $ba
+              cdd3 00ef  ld   $ef
+              cdd4 00ea  ld   $ea
+              cdd5 00be  ld   $be
+              cdd6 00eb  ld   $eb
+              cdd7 00eb  ld   $eb
+              cdd8 00be  ld   $be
+              cdd9 00ab  ld   $ab
+              cdda 00bb  ld   $bb
+              cddb 0069  ld   $69
+              cddc 009a  ld   $9a
+              cddd 00a6  ld   $a6
+              cdde 0065  ld   $65
+              cddf 005a  ld   $5a
+              cde0 0056  ld   $56
+              cde1 0080  ld   $80
+              cde2 0055  ld   $55
+              cde3 00a9  ld   $a9
+              cde4 006a  ld   $6a
+              cde5 0099  ld   $99
+              cde6 00aa  ld   $aa
+              cde7 00fe  ld   $fe
+              cde8 00ef  ld   $ef
+              cde9 00ff  ld   $ff
+              cdea 00ff  ld   $ff
+              cdeb 00ff  ld   $ff
+              cdec 00ff  ld   $ff
+              cded 00fe  ld   $fe
+              cdee 00aa  ld   $aa
+              cdef 00aa  ld   $aa
+              cdf0 0055  ld   $55
+              cdf1 0005  ld   $05
+              cdf2 0004  ld   $04
+              cdf3 00e5  ld   $e5
+              cdf4 00ab  ld   $ab
+              cdf5 00ab  ld   $ab
+              cdf6 00aa  ld   $aa
+              cdf7 00fe  ld   $fe
+              cdf8 00eb  ld   $eb
+              cdf9 0000  ld   $00
+              cdfa 0000  ld   $00
+              cdfb fe00  bra  ac          ;Trampoline for page $cd00 lookups
+              cdfc fcfd  bra  $cdfd
+              cdfd 1403  ld   $03,y
+              cdfe e07b  jmp  y,$7b
+              cdff 151b  ld   [$1b],y
+              ce00 00be  ld   $be
+              ce01 00af  ld   $af
+              ce02 00fa  ld   $fa
+              ce03 00ba  ld   $ba
+              ce04 00eb  ld   $eb
+              ce05 00ab  ld   $ab
+              ce06 00be  ld   $be
+              ce07 00eb  ld   $eb
+              ce08 00eb  ld   $eb
+              ce09 0069  ld   $69
+              ce0a 005a  ld   $5a
+              ce0b 0056  ld   $56
+              ce0c 0055  ld   $55
+              ce0d 0055  ld   $55
+              ce0e 0055  ld   $55
+              ce0f 0014  ld   $14
+              ce10 0050  ld   $50
+              ce11 0055  ld   $55
+              ce12 0069  ld   $69
+              ce13 005a  ld   $5a
+              ce14 006a  ld   $6a
+              ce15 00ea  ld   $ea
+              ce16 00ff  ld   $ff
+              ce17 00ab  ld   $ab
+              ce18 00ff  ld   $ff
+              ce19 00ee  ld   $ee
+              ce1a 00ee  ld   $ee
+              ce1b 00fe  ld   $fe
+              ce1c 00fa  ld   $fa
+              ce1d 00ff  ld   $ff
+              ce1e 00ff  ld   $ff
+              ce1f 00ff  ld   $ff
+              ce20 00ab  ld   $ab
+              ce21 00aa  ld   $aa
+              ce22 00aa  ld   $aa
+              ce23 00aa  ld   $aa
+              ce24 00aa  ld   $aa
+              ce25 00ef  ld   $ef
+              ce26 00aa  ld   $aa
+              ce27 00aa  ld   $aa
+              ce28 00aa  ld   $aa
+              ce29 00fa  ld   $fa
+              ce2a 00ae  ld   $ae
+              ce2b 00ee  ld   $ee
+              ce2c 00eb  ld   $eb
+              ce2d 00be  ld   $be
+              ce2e 00ee  ld   $ee
+              ce2f 00ab  ld   $ab
+              ce30 00be  ld   $be
+              ce31 005a  ld   $5a
+              ce32 0055  ld   $55
+              ce33 0064  ld   $64
+              ce34 0095  ld   $95
+              ce35 0096  ld   $96
+              ce36 0069  ld   $69
+              ce37 0000  ld   $00
+              ce38 0050  ld   $50
+              ce39 0094  ld   $94
+              ce3a 00aa  ld   $aa
+              ce3b 00a6  ld   $a6
+              ce3c 00aa  ld   $aa
+              ce3d 00fe  ld   $fe
+              ce3e 00ff  ld   $ff
+              ce3f 00ba  ld   $ba
+              ce40 00aa  ld   $aa
+              ce41 00aa  ld   $aa
+              ce42 00aa  ld   $aa
+              ce43 00aa  ld   $aa
+              ce44 00ee  ld   $ee
+              ce45 00ee  ld   $ee
+              ce46 00ee  ld   $ee
+              ce47 00ff  ld   $ff
+              ce48 00ba  ld   $ba
+              ce49 00aa  ld   $aa
+              ce4a 00aa  ld   $aa
+              ce4b 00aa  ld   $aa
+              ce4c 00ff  ld   $ff
+              ce4d 00ff  ld   $ff
+              ce4e 00ba  ld   $ba
+              ce4f 009a  ld   $9a
+              ce50 00a6  ld   $a6
+              ce51 0069  ld   $69
+              ce52 009a  ld   $9a
+              ce53 00aa  ld   $aa
+              ce54 00a9  ld   $a9
+              ce55 00aa  ld   $aa
+              ce56 00aa  ld   $aa
+              ce57 00aa  ld   $aa
+              ce58 00af  ld   $af
+              ce59 00a6  ld   $a6
+              ce5a 0069  ld   $69
+              ce5b 0099  ld   $99
+              ce5c 0091  ld   $91
+              ce5d 0055  ld   $55
+              ce5e 005a  ld   $5a
+              ce5f 0001  ld   $01
+              ce60 0095  ld   $95
+              ce61 0099  ld   $99
+              ce62 0096  ld   $96
+              ce63 00aa  ld   $aa
+              ce64 00fa  ld   $fa
+              ce65 00fb  ld   $fb
+              ce66 00ab  ld   $ab
+              ce67 00bb  ld   $bb
+              ce68 00aa  ld   $aa
+              ce69 00aa  ld   $aa
+              ce6a 00aa  ld   $aa
+              * 5 times
+              ce6d 00fa  ld   $fa
+              ce6e 00ff  ld   $ff
+              ce6f 00bb  ld   $bb
+              ce70 00ab  ld   $ab
+              ce71 00aa  ld   $aa
+              ce72 00fa  ld   $fa
+              ce73 00ff  ld   $ff
+              ce74 00ff  ld   $ff
+              ce75 00fe  ld   $fe
+              ce76 00af  ld   $af
+              ce77 00a6  ld   $a6
+              ce78 0066  ld   $66
+              ce79 006a  ld   $6a
+              ce7a 00a6  ld   $a6
+              ce7b 0065  ld   $65
+              ce7c 009a  ld   $9a
+              ce7d 00a6  ld   $a6
+              ce7e 0069  ld   $69
+              ce7f 009a  ld   $9a
+              ce80 00aa  ld   $aa
+              ce81 0065  ld   $65
+              ce82 0056  ld   $56
+              ce83 0056  ld   $56
+              ce84 0059  ld   $59
+              ce85 0099  ld   $99
+              ce86 0055  ld   $55
+              ce87 0010  ld   $10
+              ce88 0030  ld   $30
+              ce89 0055  ld   $55
+              ce8a 006a  ld   $6a
+              ce8b 00aa  ld   $aa
+              ce8c 00ee  ld   $ee
+              ce8d 00fe  ld   $fe
+              ce8e 00ff  ld   $ff
+              ce8f 00ff  ld   $ff
+              ce90 00ff  ld   $ff
+              ce91 00ef  ld   $ef
+              ce92 00ff  ld   $ff
+              ce93 00aa  ld   $aa
+              ce94 00ae  ld   $ae
+              ce95 00aa  ld   $aa
+              ce96 00ab  ld   $ab
+              ce97 00af  ld   $af
+              ce98 00fe  ld   $fe
+              ce99 00bf  ld   $bf
+              ce9a 00fe  ld   $fe
+              ce9b 00ff  ld   $ff
+              ce9c 00bf  ld   $bf
+              ce9d 00bf  ld   $bf
+              ce9e 00ff  ld   $ff
+              ce9f 00bf  ld   $bf
+              cea0 00ae  ld   $ae
+              cea1 00a6  ld   $a6
+              cea2 0065  ld   $65
+              cea3 0095  ld   $95
+              cea4 0056  ld   $56
+              cea5 0069  ld   $69
+              cea6 0095  ld   $95
+              cea7 0096  ld   $96
+              cea8 0055  ld   $55
+              cea9 0059  ld   $59
+              ceaa 00a5  ld   $a5
+              ceab 0065  ld   $65
+              ceac 0056  ld   $56
+              cead 0096  ld   $96
+              ceae 0059  ld   $59
+              ceaf 0059  ld   $59
+              ceb0 0001  ld   $01
+              ceb1 0013  ld   $13
+              ceb2 0094  ld   $94
+              ceb3 00aa  ld   $aa
+              ceb4 00aa  ld   $aa
+              ceb5 00ff  ld   $ff
+              ceb6 00ff  ld   $ff
+              ceb7 00ea  ld   $ea
+              ceb8 00af  ld   $af
+              ceb9 00ff  ld   $ff
+              ceba 00fa  ld   $fa
+              cebb 00ff  ld   $ff
+              cebc 00ff  ld   $ff
+              cebd 00ff  ld   $ff
+              cebe 00ef  ld   $ef
+              cebf 00ff  ld   $ff
+              cec0 00bf  ld   $bf
+              cec1 00fa  ld   $fa
+              cec2 00fb  ld   $fb
+              cec3 00ff  ld   $ff
+              cec4 00ab  ld   $ab
+              cec5 00ff  ld   $ff
+              cec6 00bf  ld   $bf
+              cec7 00fb  ld   $fb
+              cec8 00eb  ld   $eb
+              cec9 00ae  ld   $ae
+              ceca 009e  ld   $9e
+              cecb 00a6  ld   $a6
+              cecc 0065  ld   $65
+              cecd 0095  ld   $95
+              cece 0056  ld   $56
+              cecf 0065  ld   $65
+              ced0 0095  ld   $95
+              ced1 0056  ld   $56
+              ced2 0069  ld   $69
+              ced3 0055  ld   $55
+              ced4 0056  ld   $56
+              ced5 0065  ld   $65
+              ced6 0056  ld   $56
+              ced7 0095  ld   $95
+              ced8 0069  ld   $69
+              ced9 0005  ld   $05
+              ceda 004c  ld   $4c
+              cedb 0095  ld   $95
+              cedc 00aa  ld   $aa
+              cedd 00ff  ld   $ff
+              cede 00fb  ld   $fb
+              cedf 00eb  ld   $eb
+              cee0 00ff  ld   $ff
+              cee1 00fb  ld   $fb
+              cee2 00eb  ld   $eb
+              cee3 00bf  ld   $bf
+              cee4 00bb  ld   $bb
+              cee5 00bb  ld   $bb
+              cee6 00fb  ld   $fb
+              cee7 00ef  ld   $ef
+              cee8 00fe  ld   $fe
+              cee9 00fb  ld   $fb
+              ceea 00ff  ld   $ff
+              ceeb 00ff  ld   $ff
+              ceec 00ef  ld   $ef
+              ceed 00ff  ld   $ff
+              ceee 00ef  ld   $ef
+              ceef 00ef  ld   $ef
+              cef0 00bf  ld   $bf
+              cef1 00af  ld   $af
+              cef2 00e6  ld   $e6
+              cef3 00ba  ld   $ba
+              cef4 00aa  ld   $aa
+              cef5 00a6  ld   $a6
+              cef6 006a  ld   $6a
+              cef7 0055  ld   $55
+              cef8 0056  ld   $56
+              cef9 0000  ld   $00
+              cefa 0000  ld   $00
+              cefb fe00  bra  ac          ;Trampoline for page $ce00 lookups
+              cefc fcfd  bra  $cefd
+              cefd 1403  ld   $03,y
+              cefe e07b  jmp  y,$7b
+              ceff 151b  ld   [$1b],y
+              cf00 0069  ld   $69
+              cf01 0055  ld   $55
+              cf02 0056  ld   $56
+              cf03 0069  ld   $69
+              cf04 0095  ld   $95
+              cf05 0056  ld   $56
+              cf06 0064  ld   $64
+              cf07 0056  ld   $56
+              cf08 0066  ld   $66
+              cf09 0000  ld   $00
+              cf0a 0095  ld   $95
+              cf0b 00aa  ld   $aa
+              cf0c 00fe  ld   $fe
+              cf0d 00eb  ld   $eb
+              cf0e 00ef  ld   $ef
+              cf0f 00bf  ld   $bf
+              cf10 00fb  ld   $fb
+              cf11 00fb  ld   $fb
+              cf12 00fb  ld   $fb
+              cf13 00ef  ld   $ef
+              cf14 00ff  ld   $ff
+              cf15 00ef  ld   $ef
+              cf16 00af  ld   $af
+              cf17 00ff  ld   $ff
+              cf18 00ee  ld   $ee
+              cf19 00fe  ld   $fe
+              cf1a 00bb  ld   $bb
+              cf1b 00bf  ld   $bf
+              cf1c 00ff  ld   $ff
+              cf1d 00bb  ld   $bb
+              cf1e 00ff  ld   $ff
+              cf1f 00ef  ld   $ef
+              cf20 00eb  ld   $eb
+              cf21 00aa  ld   $aa
+              cf22 00af  ld   $af
+              cf23 00eb  ld   $eb
+              cf24 00be  ld   $be
+              cf25 00aa  ld   $aa
+              cf26 00ab  ld   $ab
+              cf27 0069  ld   $69
+              cf28 005a  ld   $5a
+              cf29 00a5  ld   $a5
+              cf2a 0055  ld   $55
+              cf2b 005a  ld   $5a
+              cf2c 0095  ld   $95
+              cf2d 0059  ld   $59
+              cf2e 0059  ld   $59
+              cf2f 0095  ld   $95
+              cf30 0059  ld   $59
+              cf31 0019  ld   $19
+              cf32 0000  ld   $00
+              cf33 0052  ld   $52
+              cf34 00a5  ld   $a5
+              cf35 00ba  ld   $ba
+              cf36 00bb  ld   $bb
+              cf37 00bf  ld   $bf
+              cf38 00bf  ld   $bf
+              cf39 00fe  ld   $fe
+              cf3a 00fe  ld   $fe
+              cf3b 00af  ld   $af
+              cf3c 00fe  ld   $fe
+              cf3d 00ff  ld   $ff
+              cf3e 00ee  ld   $ee
+              cf3f 00fe  ld   $fe
+              cf40 00ee  ld   $ee
+              cf41 00fe  ld   $fe
+              cf42 00fb  ld   $fb
+              cf43 00ef  ld   $ef
+              cf44 00ef  ld   $ef
+              cf45 00bf  ld   $bf
+              cf46 00fa  ld   $fa
+              cf47 00ff  ld   $ff
+              cf48 00aa  ld   $aa
+              cf49 00aa  ld   $aa
+              cf4a 00ab  ld   $ab
+              cf4b 00be  ld   $be
+              cf4c 00ae  ld   $ae
+              cf4d 00fa  ld   $fa
+              cf4e 00ba  ld   $ba
+              cf4f 00af  ld   $af
+              cf50 00ea  ld   $ea
+              cf51 00aa  ld   $aa
+              cf52 00aa  ld   $aa
+              cf53 00aa  ld   $aa
+              cf54 0069  ld   $69
+              cf55 0099  ld   $99
+              cf56 00a6  ld   $a6
+              cf57 0065  ld   $65
+              cf58 0056  ld   $56
+              cf59 0066  ld   $66
+              cf5a 0069  ld   $69
+              cf5b 0005  ld   $05
+              cf5c 0048  ld   $48
+              cf5d 0090  ld   $90
+              cf5e 00aa  ld   $aa
+              cf5f 00fe  ld   $fe
+              cf60 00bb  ld   $bb
+              cf61 00bb  ld   $bb
+              cf62 00fb  ld   $fb
+              cf63 00bb  ld   $bb
+              cf64 00fb  ld   $fb
+              cf65 00eb  ld   $eb
+              cf66 00ff  ld   $ff
+              cf67 00ee  ld   $ee
+              cf68 00ff  ld   $ff
+              cf69 00eb  ld   $eb
+              cf6a 00ef  ld   $ef
+              cf6b 00ff  ld   $ff
+              cf6c 00ea  ld   $ea
+              cf6d 00bf  ld   $bf
+              cf6e 00fe  ld   $fe
+              cf6f 00fe  ld   $fe
+              cf70 00fe  ld   $fe
+              cf71 00ab  ld   $ab
+              cf72 00ba  ld   $ba
+              cf73 00aa  ld   $aa
+              cf74 00ea  ld   $ea
+              cf75 00ba  ld   $ba
+              cf76 00af  ld   $af
+              cf77 00fb  ld   $fb
+              cf78 00aa  ld   $aa
+              cf79 009a  ld   $9a
+              cf7a 00e6  ld   $e6
+              cf7b 006a  ld   $6a
+              cf7c 009e  ld   $9e
+              cf7d 00aa  ld   $aa
+              cf7e 00a9  ld   $a9
+              cf7f 009a  ld   $9a
+              cf80 009a  ld   $9a
+              cf81 0069  ld   $69
+              cf82 009a  ld   $9a
+              cf83 009a  ld   $9a
+              cf84 0069  ld   $69
+              cf85 0004  ld   $04
+              cf86 0048  ld   $48
+              cf87 0095  ld   $95
+              cf88 00ea  ld   $ea
+              cf89 00ef  ld   $ef
+              cf8a 00fe  ld   $fe
+              cf8b 00ef  ld   $ef
+              cf8c 00ee  ld   $ee
+              cf8d 00ee  ld   $ee
+              cf8e 00af  ld   $af
+              cf8f 00ff  ld   $ff
+              cf90 00af  ld   $af
+              cf91 00bf  ld   $bf
+              cf92 00fa  ld   $fa
+              cf93 00bf  ld   $bf
+              cf94 00fe  ld   $fe
+              cf95 00af  ld   $af
+              cf96 00ff  ld   $ff
+              cf97 00ef  ld   $ef
+              cf98 00fb  ld   $fb
+              cf99 00bb  ld   $bb
+              cf9a 00bb  ld   $bb
+              cf9b 00ab  ld   $ab
+              cf9c 00be  ld   $be
+              cf9d 009a  ld   $9a
+              cf9e 00fa  ld   $fa
+              cf9f 00be  ld   $be
+              cfa0 00ee  ld   $ee
+              cfa1 00e7  ld   $e7
+              cfa2 006a  ld   $6a
+              cfa3 00ae  ld   $ae
+              cfa4 00a6  ld   $a6
+              cfa5 006a  ld   $6a
+              cfa6 00aa  ld   $aa
+              cfa7 00a7  ld   $a7
+              cfa8 007a  ld   $7a
+              cfa9 00aa  ld   $aa
+              cfaa 00a6  ld   $a6
+              cfab 00aa  ld   $aa
+              cfac 00aa  ld   $aa
+              cfad 00a6  ld   $a6
+              cfae 0015  ld   $15
+              cfaf 0044  ld   $44
+              cfb0 0000  ld   $00
+              cfb1 0050  ld   $50
+              cfb2 00a5  ld   $a5
+              cfb3 00fb  ld   $fb
+              cfb4 00ff  ld   $ff
+              cfb5 00ee  ld   $ee
+              cfb6 00ee  ld   $ee
+              cfb7 00fe  ld   $fe
+              cfb8 00bf  ld   $bf
+              cfb9 00bb  ld   $bb
+              cfba 00bf  ld   $bf
+              cfbb 00fa  ld   $fa
+              cfbc 00eb  ld   $eb
+              cfbd 00ff  ld   $ff
+              cfbe 00ea  ld   $ea
+              cfbf 00bf  ld   $bf
+              cfc0 00bf  ld   $bf
+              cfc1 00bf  ld   $bf
+              cfc2 00bb  ld   $bb
+              cfc3 00fb  ld   $fb
+              cfc4 00eb  ld   $eb
+              cfc5 00ff  ld   $ff
+              cfc6 00aa  ld   $aa
+              cfc7 00af  ld   $af
+              cfc8 00ab  ld   $ab
+              cfc9 00ba  ld   $ba
+              cfca 00ae  ld   $ae
+              cfcb 00fb  ld   $fb
+              cfcc 00aa  ld   $aa
+              cfcd 009a  ld   $9a
+              cfce 0056  ld   $56
+              cfcf 00a5  ld   $a5
+              cfd0 005a  ld   $5a
+              cfd1 00aa  ld   $aa
+              cfd2 006a  ld   $6a
+              cfd3 00aa  ld   $aa
+              cfd4 0096  ld   $96
+              cfd5 006a  ld   $6a
+              cfd6 009a  ld   $9a
+              cfd7 00aa  ld   $aa
+              cfd8 00a9  ld   $a9
+              cfd9 009a  ld   $9a
+              cfda 00aa  ld   $aa
+              cfdb 0065  ld   $65
+              cfdc 005a  ld   $5a
+              cfdd 0056  ld   $56
+              cfde 0015  ld   $15
+              cfdf 0004  ld   $04
+              cfe0 0020  ld   $20
+              cfe1 0050  ld   $50
+              cfe2 0055  ld   $55
+              cfe3 00a9  ld   $a9
+              cfe4 00fe  ld   $fe
+              cfe5 00af  ld   $af
+              cfe6 00fe  ld   $fe
+              cfe7 00fa  ld   $fa
+              cfe8 00ff  ld   $ff
+              cfe9 00ee  ld   $ee
+              cfea 00ee  ld   $ee
+              cfeb 00ee  ld   $ee
+              cfec 00ef  ld   $ef
+              cfed 00fe  ld   $fe
+              cfee 00ea  ld   $ea
+              cfef 00ff  ld   $ff
+              cff0 00fe  ld   $fe
+              cff1 00ee  ld   $ee
+              cff2 00af  ld   $af
+              cff3 00fe  ld   $fe
+              cff4 00ee  ld   $ee
+              cff5 00ee  ld   $ee
+              cff6 00ea  ld   $ea
+              cff7 00af  ld   $af
+              cff8 00aa  ld   $aa
+              cff9 0000  ld   $00
+              cffa 0000  ld   $00
+              cffb fe00  bra  ac          ;Trampoline for page $cf00 lookups
+              cffc fcfd  bra  $cffd
+              cffd 1403  ld   $03,y
+              cffe e07b  jmp  y,$7b
+              cfff 151b  ld   [$1b],y
+              d000 00aa  ld   $aa
+              d001 00ee  ld   $ee
+              d002 00eb  ld   $eb
+              d003 00be  ld   $be
+              d004 00aa  ld   $aa
+              d005 00a7  ld   $a7
+              d006 006a  ld   $6a
+              d007 0059  ld   $59
+              d008 0055  ld   $55
+              d009 006a  ld   $6a
+              d00a 0055  ld   $55
+              d00b 009a  ld   $9a
+              d00c 00a5  ld   $a5
+              d00d 005a  ld   $5a
+              d00e 00aa  ld   $aa
+              d00f 00a5  ld   $a5
+              d010 005a  ld   $5a
+              d011 00ea  ld   $ea
+              d012 00a9  ld   $a9
+              d013 009a  ld   $9a
+              d014 00aa  ld   $aa
+              d015 00a9  ld   $a9
+              d016 009a  ld   $9a
+              d017 00aa  ld   $aa
+              d018 0069  ld   $69
+              d019 0059  ld   $59
+              d01a 0001  ld   $01
+              d01b 0044  ld   $44
+              d01c 0055  ld   $55
+              d01d 00a9  ld   $a9
+              d01e 00ba  ld   $ba
+              d01f 00bf  ld   $bf
+              d020 00ff  ld   $ff
+              d021 00fe  ld   $fe
+              d022 00fb  ld   $fb
+              d023 00eb  ld   $eb
+              d024 00fe  ld   $fe
+              d025 00af  ld   $af
+              d026 00ff  ld   $ff
+              d027 00ee  ld   $ee
+              d028 00ee  ld   $ee
+              d029 00fe  ld   $fe
+              d02a 00fa  ld   $fa
+              d02b 00ab  ld   $ab
+              d02c 00bf  ld   $bf
+              d02d 00fe  ld   $fe
+              d02e 00ee  ld   $ee
+              d02f 00ee  ld   $ee
+              d030 00fe  ld   $fe
+              d031 00ef  ld   $ef
+              d032 00ff  ld   $ff
+              d033 007a  ld   $7a
+              d034 00aa  ld   $aa
+              d035 00fb  ld   $fb
+              d036 00ba  ld   $ba
+              d037 00af  ld   $af
+              d038 00e6  ld   $e6
+              d039 00ba  ld   $ba
+              d03a 009a  ld   $9a
+              d03b 005a  ld   $5a
+              d03c 00a9  ld   $a9
+              d03d 0099  ld   $99
+              d03e 0099  ld   $99
+              d03f 0059  ld   $59
+              d040 00a5  ld   $a5
+              d041 0056  ld   $56
+              d042 00a5  ld   $a5
+              d043 0056  ld   $56
+              d044 0096  ld   $96
+              d045 006a  ld   $6a
+              d046 0065  ld   $65
+              d047 00a6  ld   $a6
+              d048 006a  ld   $6a
+              d049 00a9  ld   $a9
+              d04a 00a6  ld   $a6
+              d04b 0065  ld   $65
+              d04c 00aa  ld   $aa
+              d04d 00aa  ld   $aa
+              d04e 0014  ld   $14
+              d04f 0030  ld   $30
+              d050 0054  ld   $54
+              d051 00a9  ld   $a9
+              d052 009a  ld   $9a
+              d053 00ea  ld   $ea
+              d054 00ea  ld   $ea
+              d055 00ef  ld   $ef
+              d056 00fe  ld   $fe
+              d057 00bb  ld   $bb
+              d058 00ff  ld   $ff
+              d059 00bf  ld   $bf
+              d05a 00bb  ld   $bb
+              d05b 00bb  ld   $bb
+              d05c 00bb  ld   $bb
+              d05d 00bb  ld   $bb
+              d05e 00bf  ld   $bf
+              d05f 00fb  ld   $fb
+              d060 00bf  ld   $bf
+              d061 00fa  ld   $fa
+              d062 00eb  ld   $eb
+              d063 00bf  ld   $bf
+              d064 00bf  ld   $bf
+              d065 00fa  ld   $fa
+              d066 00ea  ld   $ea
+              d067 00af  ld   $af
+              d068 00a7  ld   $a7
+              d069 00ba  ld   $ba
+              d06a 00ea  ld   $ea
+              d06b 00eb  ld   $eb
+              d06c 00be  ld   $be
+              d06d 00ae  ld   $ae
+              d06e 00b7  ld   $b7
+              d06f 00ba  ld   $ba
+              d070 00ae  ld   $ae
+              d071 00a6  ld   $a6
+              d072 00aa  ld   $aa
+              d073 009a  ld   $9a
+              d074 00aa  ld   $aa
+              d075 006a  ld   $6a
+              d076 0056  ld   $56
+              d077 006a  ld   $6a
+              d078 0065  ld   $65
+              d079 0055  ld   $55
+              d07a 0055  ld   $55
+              d07b 0069  ld   $69
+              d07c 0055  ld   $55
+              d07d 0056  ld   $56
+              d07e 0069  ld   $69
+              d07f 0059  ld   $59
+              d080 00aa  ld   $aa
+              d081 00a5  ld   $a5
+              d082 009e  ld   $9e
+              d083 0002  ld   $02
+              d084 0043  ld   $43
+              d085 00a5  ld   $a5
+              d086 00a6  ld   $a6
+              d087 00ba  ld   $ba
+              d088 00af  ld   $af
+              d089 00fa  ld   $fa
+              d08a 00bf  ld   $bf
+              d08b 00fe  ld   $fe
+              d08c 00fb  ld   $fb
+              d08d 00af  ld   $af
+              d08e 00fe  ld   $fe
+              d08f 00fb  ld   $fb
+              d090 00bb  ld   $bb
+              d091 00ab  ld   $ab
+              d092 00ab  ld   $ab
+              d093 00af  ld   $af
+              d094 00bf  ld   $bf
+              d095 00fa  ld   $fa
+              d096 00bb  ld   $bb
+              d097 00fb  ld   $fb
+              d098 00ab  ld   $ab
+              d099 00ff  ld   $ff
+              d09a 00ef  ld   $ef
+              d09b 00ef  ld   $ef
+              d09c 00ae  ld   $ae
+              d09d 00aa  ld   $aa
+              d09e 00fb  ld   $fb
+              d09f 00b9  ld   $b9
+              d0a0 00af  ld   $af
+              d0a1 00e6  ld   $e6
+              d0a2 00ae  ld   $ae
+              d0a3 00ae  ld   $ae
+              d0a4 00ab  ld   $ab
+              d0a5 00b9  ld   $b9
+              d0a6 00aa  ld   $aa
+              d0a7 00eb  ld   $eb
+              d0a8 00a9  ld   $a9
+              d0a9 009a  ld   $9a
+              d0aa 00aa  ld   $aa
+              d0ab 0066  ld   $66
+              d0ac 00aa  ld   $aa
+              d0ad 00a6  ld   $a6
+              d0ae 0056  ld   $56
+              d0af 006a  ld   $6a
+              d0b0 0055  ld   $55
+              d0b1 0055  ld   $55
+              d0b2 0065  ld   $65
+              d0b3 0055  ld   $55
+              d0b4 0055  ld   $55
+              d0b5 0055  ld   $55
+              d0b6 0055  ld   $55
+              d0b7 006a  ld   $6a
+              d0b8 0005  ld   $05
+              d0b9 000c  ld   $0c
+              d0ba 00a9  ld   $a9
+              d0bb 009a  ld   $9a
+              d0bc 00aa  ld   $aa
+              d0bd 00ba  ld   $ba
+              d0be 00ae  ld   $ae
+              d0bf 00ab  ld   $ab
+              d0c0 00be  ld   $be
+              d0c1 00aa  ld   $aa
+              d0c2 00ff  ld   $ff
+              d0c3 00bb  ld   $bb
+              d0c4 00bf  ld   $bf
+              d0c5 00fa  ld   $fa
+              d0c6 00ff  ld   $ff
+              d0c7 00fe  ld   $fe
+              d0c8 00fb  ld   $fb
+              d0c9 00bb  ld   $bb
+              d0ca 00bf  ld   $bf
+              d0cb 00bb  ld   $bb
+              d0cc 00bf  ld   $bf
+              d0cd 00fe  ld   $fe
+              d0ce 00eb  ld   $eb
+              d0cf 00ea  ld   $ea
+              d0d0 00af  ld   $af
+              d0d1 00e6  ld   $e6
+              d0d2 007a  ld   $7a
+              d0d3 00ee  ld   $ee
+              d0d4 00ab  ld   $ab
+              d0d5 00ba  ld   $ba
+              d0d6 00af  ld   $af
+              d0d7 00ea  ld   $ea
+              d0d8 00be  ld   $be
+              d0d9 00ea  ld   $ea
+              d0da 00ab  ld   $ab
+              d0db 00fe  ld   $fe
+              d0dc 00ef  ld   $ef
+              d0dd 00ff  ld   $ff
+              d0de 00ba  ld   $ba
+              d0df 009e  ld   $9e
+              d0e0 00eb  ld   $eb
+              d0e1 006a  ld   $6a
+              d0e2 00aa  ld   $aa
+              d0e3 00aa  ld   $aa
+              d0e4 00a9  ld   $a9
+              d0e5 009a  ld   $9a
+              d0e6 009a  ld   $9a
+              d0e7 0069  ld   $69
+              d0e8 0055  ld   $55
+              d0e9 0055  ld   $55
+              d0ea 0055  ld   $55
+              d0eb 0055  ld   $55
+              d0ec 00aa  ld   $aa
+              d0ed 0014  ld   $14
+              d0ee 0020  ld   $20
+              d0ef 0054  ld   $54
+              d0f0 0069  ld   $69
+              d0f1 00a9  ld   $a9
+              d0f2 00fa  ld   $fa
+              d0f3 00aa  ld   $aa
+              d0f4 00af  ld   $af
+              d0f5 00ea  ld   $ea
+              d0f6 00be  ld   $be
+              d0f7 00ea  ld   $ea
+              d0f8 00ab  ld   $ab
+              d0f9 0000  ld   $00
+              d0fa 0000  ld   $00
+              d0fb fe00  bra  ac          ;Trampoline for page $d000 lookups
+              d0fc fcfd  bra  $d0fd
+              d0fd 1403  ld   $03,y
+              d0fe e07b  jmp  y,$7b
+              d0ff 151b  ld   [$1b],y
+              d100 00fe  ld   $fe
+              d101 00ea  ld   $ea
+              d102 00ff  ld   $ff
+              d103 00ea  ld   $ea
+              d104 00ef  ld   $ef
+              d105 00ee  ld   $ee
+              d106 00ef  ld   $ef
+              d107 00ff  ld   $ff
+              d108 00ef  ld   $ef
+              d109 00bf  ld   $bf
+              d10a 00bb  ld   $bb
+              d10b 00bf  ld   $bf
+              d10c 00bf  ld   $bf
+              d10d 00ae  ld   $ae
+              d10e 00ea  ld   $ea
+              d10f 00aa  ld   $aa
+              d110 00af  ld   $af
+              d111 00fa  ld   $fa
+              d112 00ba  ld   $ba
+              d113 009f  ld   $9f
+              d114 00ea  ld   $ea
+              d115 007a  ld   $7a
+              d116 00aa  ld   $aa
+              d117 00fb  ld   $fb
+              d118 00ff  ld   $ff
+              d119 00ff  ld   $ff
+              d11a 00ff  ld   $ff
+              * 5 times
+              d11d 00fb  ld   $fb
+              d11e 00ba  ld   $ba
+              d11f 00af  ld   $af
+              d120 00ab  ld   $ab
+              d121 007a  ld   $7a
+              d122 00aa  ld   $aa
+              d123 00aa  ld   $aa
+              d124 00aa  ld   $aa
+              d125 009a  ld   $9a
+              d126 00aa  ld   $aa
+              d127 0065  ld   $65
+              d128 00a6  ld   $a6
+              d129 0096  ld   $96
+              d12a 0000  ld   $00
+              d12b 00a1  ld   $a1
+              d12c 00a5  ld   $a5
+              d12d 0065  ld   $65
+              d12e 00aa  ld   $aa
+              d12f 00a7  ld   $a7
+              d130 00ba  ld   $ba
+              d131 00af  ld   $af
+              d132 00ea  ld   $ea
+              d133 00aa  ld   $aa
+              d134 00ae  ld   $ae
+              d135 00ab  ld   $ab
+              d136 00aa  ld   $aa
+              d137 00aa  ld   $aa
+              d138 00fb  ld   $fb
+              d139 00bb  ld   $bb
+              d13a 00ff  ld   $ff
+              d13b 00eb  ld   $eb
+              d13c 00bf  ld   $bf
+              d13d 00bb  ld   $bb
+              d13e 00ff  ld   $ff
+              d13f 00bf  ld   $bf
+              d140 00ef  ld   $ef
+              d141 00e6  ld   $e6
+              d142 006a  ld   $6a
+              d143 00ee  ld   $ee
+              d144 00eb  ld   $eb
+              d145 00ba  ld   $ba
+              d146 00af  ld   $af
+              d147 00eb  ld   $eb
+              d148 006a  ld   $6a
+              d149 00ee  ld   $ee
+              d14a 00ea  ld   $ea
+              d14b 00ea  ld   $ea
+              d14c 00ff  ld   $ff
+              d14d 00ff  ld   $ff
+              d14e 00bf  ld   $bf
+              d14f 00ff  ld   $ff
+              d150 00ff  ld   $ff
+              d151 00ff  ld   $ff
+              * 5 times
+              d154 00bf  ld   $bf
+              d155 00af  ld   $af
+              d156 00fb  ld   $fb
+              d157 00ba  ld   $ba
+              d158 009f  ld   $9f
+              d159 00eb  ld   $eb
+              d15a 00ba  ld   $ba
+              d15b 00aa  ld   $aa
+              d15c 00ea  ld   $ea
+              d15d 006a  ld   $6a
+              d15e 0005  ld   $05
+              d15f 0010  ld   $10
+              d160 00a5  ld   $a5
+              d161 009a  ld   $9a
+              d162 0095  ld   $95
+              d163 00a9  ld   $a9
+              d164 00aa  ld   $aa
+              d165 00ab  ld   $ab
+              d166 00ba  ld   $ba
+              d167 00af  ld   $af
+              d168 00bb  ld   $bb
+              d169 00ba  ld   $ba
+              d16a 009a  ld   $9a
+              d16b 00ab  ld   $ab
+              d16c 00aa  ld   $aa
+              d16d 00aa  ld   $aa
+              d16e 00ea  ld   $ea
+              d16f 00ee  ld   $ee
+              d170 00ee  ld   $ee
+              d171 00eb  ld   $eb
+              d172 00bf  ld   $bf
+              d173 00fa  ld   $fa
+              d174 00eb  ld   $eb
+              d175 00aa  ld   $aa
+              d176 00ae  ld   $ae
+              d177 00bb  ld   $bb
+              d178 00ba  ld   $ba
+              d179 00da  ld   $da
+              d17a 00eb  ld   $eb
+              d17b 00ae  ld   $ae
+              d17c 009e  ld   $9e
+              d17d 00ab  ld   $ab
+              d17e 00b9  ld   $b9
+              d17f 009a  ld   $9a
+              d180 00ab  ld   $ab
+              d181 00ba  ld   $ba
+              d182 00ab  ld   $ab
+              d183 00bf  ld   $bf
+              d184 00ff  ld   $ff
+              d185 00ff  ld   $ff
+              d186 00ff  ld   $ff
+              d187 00ef  ld   $ef
+              d188 00ff  ld   $ff
+              d189 00ff  ld   $ff
+              d18a 00eb  ld   $eb
+              d18b 00af  ld   $af
+              d18c 00fe  ld   $fe
+              d18d 00fe  ld   $fe
+              d18e 00ab  ld   $ab
+              d18f 00fb  ld   $fb
+              d190 006a  ld   $6a
+              d191 009e  ld   $9e
+              d192 0002  ld   $02
+              d193 0045  ld   $45
+              d194 0095  ld   $95
+              d195 0095  ld   $95
+              d196 0059  ld   $59
+              d197 009a  ld   $9a
+              d198 00a6  ld   $a6
+              d199 00b9  ld   $b9
+              d19a 009f  ld   $9f
+              d19b 00ea  ld   $ea
+              d19c 006a  ld   $6a
+              d19d 00af  ld   $af
+              d19e 00ab  ld   $ab
+              d19f 00be  ld   $be
+              d1a0 00ee  ld   $ee
+              d1a1 00eb  ld   $eb
+              d1a2 00aa  ld   $aa
+              d1a3 00ae  ld   $ae
+              d1a4 00ba  ld   $ba
+              d1a5 00ba  ld   $ba
+              d1a6 00ab  ld   $ab
+              d1a7 00fb  ld   $fb
+              d1a8 006a  ld   $6a
+              d1a9 00ae  ld   $ae
+              d1aa 00e6  ld   $e6
+              d1ab 00be  ld   $be
+              d1ac 00ee  ld   $ee
+              d1ad 00eb  ld   $eb
+              d1ae 006a  ld   $6a
+              d1af 00ee  ld   $ee
+              d1b0 00ea  ld   $ea
+              d1b1 00aa  ld   $aa
+              d1b2 009f  ld   $9f
+              d1b3 00ea  ld   $ea
+              d1b4 00b9  ld   $b9
+              d1b5 00aa  ld   $aa
+              d1b6 00ab  ld   $ab
+              d1b7 00b9  ld   $b9
+              d1b8 00aa  ld   $aa
+              d1b9 00bb  ld   $bb
+              d1ba 00ba  ld   $ba
+              d1bb 00bf  ld   $bf
+              d1bc 00ff  ld   $ff
+              d1bd 00ff  ld   $ff
+              d1be 00ef  ld   $ef
+              d1bf 00ff  ld   $ff
+              d1c0 00ee  ld   $ee
+              d1c1 00fe  ld   $fe
+              d1c2 00ff  ld   $ff
+              d1c3 00bf  ld   $bf
+              d1c4 00ab  ld   $ab
+              d1c5 0057  ld   $57
+              d1c6 0080  ld   $80
+              d1c7 0051  ld   $51
+              d1c8 00a5  ld   $a5
+              d1c9 0065  ld   $65
+              d1ca 005a  ld   $5a
+              d1cb 00aa  ld   $aa
+              d1cc 00ba  ld   $ba
+              d1cd 00aa  ld   $aa
+              d1ce 00ab  ld   $ab
+              d1cf 00ba  ld   $ba
+              d1d0 00aa  ld   $aa
+              d1d1 00e7  ld   $e7
+              d1d2 006a  ld   $6a
+              d1d3 00ae  ld   $ae
+              d1d4 00e6  ld   $e6
+              d1d5 006e  ld   $6e
+              d1d6 00ae  ld   $ae
+              d1d7 00ab  ld   $ab
+              d1d8 00aa  ld   $aa
+              d1d9 00ae  ld   $ae
+              d1da 00aa  ld   $aa
+              d1db 00b9  ld   $b9
+              d1dc 00ea  ld   $ea
+              d1dd 00eb  ld   $eb
+              d1de 00ba  ld   $ba
+              d1df 00af  ld   $af
+              d1e0 00ab  ld   $ab
+              d1e1 00b9  ld   $b9
+              d1e2 00ae  ld   $ae
+              d1e3 00a7  ld   $a7
+              d1e4 007a  ld   $7a
+              d1e5 00ae  ld   $ae
+              d1e6 00a7  ld   $a7
+              d1e7 007e  ld   $7e
+              d1e8 00aa  ld   $aa
+              d1e9 00a7  ld   $a7
+              d1ea 006a  ld   $6a
+              d1eb 00ae  ld   $ae
+              d1ec 00ea  ld   $ea
+              d1ed 00aa  ld   $aa
+              d1ee 00aa  ld   $aa
+              d1ef 00bb  ld   $bb
+              d1f0 00fa  ld   $fa
+              d1f1 00bf  ld   $bf
+              d1f2 00ff  ld   $ff
+              d1f3 00ff  ld   $ff
+              d1f4 00ff  ld   $ff
+              d1f5 00fb  ld   $fb
+              d1f6 00ba  ld   $ba
+              d1f7 009a  ld   $9a
+              d1f8 0056  ld   $56
+              d1f9 0000  ld   $00
+              d1fa 0000  ld   $00
+              d1fb fe00  bra  ac          ;Trampoline for page $d100 lookups
+              d1fc fcfd  bra  $d1fd
+              d1fd 1403  ld   $03,y
+              d1fe e07b  jmp  y,$7b
+              d1ff 151b  ld   [$1b],y
+              d200 00c0  ld   $c0
+              d201 0061  ld   $61
+              d202 0066  ld   $66
+              d203 006a  ld   $6a
+              d204 00aa  ld   $aa
+              d205 00a6  ld   $a6
+              d206 00be  ld   $be
+              d207 00de  ld   $de
+              d208 00ea  ld   $ea
+              d209 00b9  ld   $b9
+              d20a 00ea  ld   $ea
+              d20b 00ab  ld   $ab
+              d20c 00ba  ld   $ba
+              d20d 00ab  ld   $ab
+              d20e 00eb  ld   $eb
+              d20f 00aa  ld   $aa
+              d210 00ae  ld   $ae
+              d211 00a7  ld   $a7
+              d212 00ba  ld   $ba
+              d213 009e  ld   $9e
+              d214 00ea  ld   $ea
+              d215 00ba  ld   $ba
+              d216 00ee  ld   $ee
+              d217 00eb  ld   $eb
+              d218 006e  ld   $6e
+              d219 00ae  ld   $ae
+              d21a 00bb  ld   $bb
+              d21b 00ba  ld   $ba
+              d21c 009b  ld   $9b
+              d21d 00ab  ld   $ab
+              d21e 00a9  ld   $a9
+              d21f 00ae  ld   $ae
+              d220 00ea  ld   $ea
+              d221 00a9  ld   $a9
+              d222 00aa  ld   $aa
+              d223 00ab  ld   $ab
+              d224 007a  ld   $7a
+              d225 00aa  ld   $aa
+              d226 00a7  ld   $a7
+              d227 00b9  ld   $b9
+              d228 009a  ld   $9a
+              d229 00ab  ld   $ab
+              d22a 00a9  ld   $a9
+              d22b 00ab  ld   $ab
+              d22c 00ab  ld   $ab
+              d22d 00fa  ld   $fa
+              d22e 00ff  ld   $ff
+              d22f 00bb  ld   $bb
+              d230 007a  ld   $7a
+              d231 0009  ld   $09
+              d232 0020  ld   $20
+              d233 0054  ld   $54
+              d234 0055  ld   $55
+              d235 0066  ld   $66
+              d236 00aa  ld   $aa
+              d237 00ae  ld   $ae
+              d238 00ea  ld   $ea
+              d239 00ba  ld   $ba
+              d23a 00ee  ld   $ee
+              d23b 00e6  ld   $e6
+              d23c 006a  ld   $6a
+              d23d 00ae  ld   $ae
+              d23e 00e6  ld   $e6
+              d23f 006a  ld   $6a
+              d240 00ae  ld   $ae
+              d241 00f6  ld   $f6
+              d242 00aa  ld   $aa
+              d243 00ae  ld   $ae
+              d244 00b6  ld   $b6
+              d245 00ba  ld   $ba
+              d246 00de  ld   $de
+              d247 00ea  ld   $ea
+              d248 00ba  ld   $ba
+              d249 00ae  ld   $ae
+              d24a 00ab  ld   $ab
+              d24b 00be  ld   $be
+              d24c 00ae  ld   $ae
+              d24d 00ab  ld   $ab
+              d24e 007e  ld   $7e
+              d24f 00ee  ld   $ee
+              d250 00ea  ld   $ea
+              d251 00aa  ld   $aa
+              d252 00aa  ld   $aa
+              d253 00e6  ld   $e6
+              d254 006a  ld   $6a
+              d255 00ae  ld   $ae
+              d256 00ea  ld   $ea
+              d257 00aa  ld   $aa
+              d258 00ae  ld   $ae
+              d259 00e6  ld   $e6
+              d25a 006a  ld   $6a
+              d25b 00ae  ld   $ae
+              d25c 00a7  ld   $a7
+              d25d 00ba  ld   $ba
+              d25e 00ea  ld   $ea
+              d25f 00ab  ld   $ab
+              d260 00ba  ld   $ba
+              d261 00ae  ld   $ae
+              d262 0056  ld   $56
+              d263 0080  ld   $80
+              d264 0052  ld   $52
+              d265 0001  ld   $01
+              d266 0041  ld   $41
+              d267 0055  ld   $55
+              d268 00a5  ld   $a5
+              d269 00a9  ld   $a9
+              d26a 009a  ld   $9a
+              d26b 00ab  ld   $ab
+              d26c 007a  ld   $7a
+              d26d 00aa  ld   $aa
+              d26e 00eb  ld   $eb
+              d26f 006a  ld   $6a
+              d270 00ae  ld   $ae
+              d271 00ea  ld   $ea
+              d272 00aa  ld   $aa
+              d273 00de  ld   $de
+              d274 00ea  ld   $ea
+              d275 00ba  ld   $ba
+              d276 00aa  ld   $aa
+              d277 00eb  ld   $eb
+              d278 00be  ld   $be
+              d279 00de  ld   $de
+              d27a 00ab  ld   $ab
+              d27b 00bd  ld   $bd
+              d27c 00ae  ld   $ae
+              d27d 00fa  ld   $fa
+              d27e 00be  ld   $be
+              d27f 00aa  ld   $aa
+              d280 00eb  ld   $eb
+              d281 00ae  ld   $ae
+              d282 009e  ld   $9e
+              d283 00a6  ld   $a6
+              d284 007a  ld   $7a
+              d285 00aa  ld   $aa
+              d286 00e6  ld   $e6
+              d287 006a  ld   $6a
+              d288 009e  ld   $9e
+              d289 00ea  ld   $ea
+              d28a 00ae  ld   $ae
+              d28b 00ae  ld   $ae
+              d28c 00ea  ld   $ea
+              d28d 00a9  ld   $a9
+              d28e 009a  ld   $9a
+              d28f 00a7  ld   $a7
+              d290 007a  ld   $7a
+              d291 00ae  ld   $ae
+              d292 00a6  ld   $a6
+              d293 0000  ld   $00
+              d294 0054  ld   $54
+              d295 0055  ld   $55
+              d296 00a9  ld   $a9
+              d297 009a  ld   $9a
+              d298 00ea  ld   $ea
+              d299 006a  ld   $6a
+              d29a 00aa  ld   $aa
+              d29b 00ab  ld   $ab
+              d29c 00b9  ld   $b9
+              d29d 009a  ld   $9a
+              d29e 00ab  ld   $ab
+              d29f 00b9  ld   $b9
+              d2a0 009a  ld   $9a
+              d2a1 00ea  ld   $ea
+              d2a2 00ae  ld   $ae
+              d2a3 00ae  ld   $ae
+              d2a4 00bb  ld   $bb
+              d2a5 00ba  ld   $ba
+              d2a6 00ae  ld   $ae
+              d2a7 00fa  ld   $fa
+              d2a8 00ff  ld   $ff
+              d2a9 00ff  ld   $ff
+              d2aa 00ff  ld   $ff
+              d2ab 00be  ld   $be
+              d2ac 00aa  ld   $aa
+              d2ad 00a7  ld   $a7
+              d2ae 00aa  ld   $aa
+              d2af 00ae  ld   $ae
+              d2b0 00ea  ld   $ea
+              d2b1 00be  ld   $be
+              d2b2 00aa  ld   $aa
+              d2b3 00ab  ld   $ab
+              d2b4 007a  ld   $7a
+              d2b5 00aa  ld   $aa
+              d2b6 00a7  ld   $a7
+              d2b7 00ba  ld   $ba
+              d2b8 00aa  ld   $aa
+              d2b9 00fa  ld   $fa
+              d2ba 00ba  ld   $ba
+              d2bb 00af  ld   $af
+              d2bc 00ea  ld   $ea
+              d2bd 002a  ld   $2a
+              d2be 0005  ld   $05
+              d2bf 004c  ld   $4c
+              d2c0 0050  ld   $50
+              d2c1 0095  ld   $95
+              d2c2 00a6  ld   $a6
+              d2c3 00aa  ld   $aa
+              d2c4 009f  ld   $9f
+              d2c5 00ea  ld   $ea
+              d2c6 00a9  ld   $a9
+              d2c7 009e  ld   $9e
+              d2c8 00ea  ld   $ea
+              d2c9 006a  ld   $6a
+              d2ca 00ae  ld   $ae
+              d2cb 00e6  ld   $e6
+              d2cc 006e  ld   $6e
+              d2cd 00ae  ld   $ae
+              d2ce 00a7  ld   $a7
+              d2cf 00ba  ld   $ba
+              d2d0 00bb  ld   $bb
+              d2d1 00fb  ld   $fb
+              d2d2 00bf  ld   $bf
+              d2d3 00fa  ld   $fa
+              d2d4 00eb  ld   $eb
+              d2d5 00aa  ld   $aa
+              d2d6 009a  ld   $9a
+              d2d7 00ab  ld   $ab
+              d2d8 0069  ld   $69
+              d2d9 009a  ld   $9a
+              d2da 00ea  ld   $ea
+              d2db 00a9  ld   $a9
+              d2dc 00de  ld   $de
+              d2dd 00aa  ld   $aa
+              d2de 007a  ld   $7a
+              d2df 00aa  ld   $aa
+              d2e0 00ab  ld   $ab
+              d2e1 0069  ld   $69
+              d2e2 00ae  ld   $ae
+              d2e3 00fe  ld   $fe
+              d2e4 00bf  ld   $bf
+              d2e5 00ef  ld   $ef
+              d2e6 00a7  ld   $a7
+              d2e7 0010  ld   $10
+              d2e8 0060  ld   $60
+              d2e9 0000  ld   $00
+              d2ea 0000  ld   $00
+              d2eb 0000  ld   $00
+              * 18 times
+              d2fb fe00  bra  ac          ;Trampoline for page $d200 lookups
+              d2fc fcfd  bra  $d2fd
+              d2fd 1403  ld   $03,y
+              d2fe e07b  jmp  y,$7b
+              d2ff 151b  ld   [$1b],y
+initVcpu:     d300 1000  ld   $00,x
+              d301 1403  ld   $03,y
+              d302 dc12  st   $12,[y,x++] ;0300 LDWI
+              d303 dc01  st   $01,[y,x++]
+              d304 dc01  st   $01,[y,x++]
+              d305 dc2c  st   $2c,[y,x++] ;0303 STW
+              d306 dc2f  st   $2f,[y,x++] ;0304 'ShiftControl'
+              d307 dcfc  st   $fc,[y,x++] ;0305 DEF
+              d308 dcca  st   $ca,[y,x++]
+              d309 dc12  st   $12,[y,x++] ;0307 LDWI
+              d30a dc46  st   $46,[y,x++]
+              d30b dc04  st   $04,[y,x++]
+              d30c dcac  st   $ac,[y,x++] ;030a SYS
+              d30d dcfd  st   $fd,[y,x++]
+              d30e dc2c  st   $2c,[y,x++] ;030c STW
+              d30f dc31  st   $31,[y,x++] ;030d 'q'
+              d310 dc1b  st   $1b,[y,x++] ;030e LD
+              d311 dc32  st   $32,[y,x++] ;030f 'q'+1
+              d312 dcf3  st   $f3,[y,x++] ;0310 SUBI
+              d313 dc78  st   $78,[y,x++]
+              d314 dc36  st   $36,[y,x++] ;0312 COND
+              d315 dc56  st   $56,[y,x++] ;0313 GE
+              d316 dc05  st   $05,[y,x++]
+              d317 dcf0  st   $f0,[y,x++] ;0315 ADDI
+              d318 dc80  st   $80,[y,x++]
+              d319 dc61  st   $61,[y,x++] ;0317 ST
+              d31a dc32  st   $32,[y,x++] ;0318 'q'+1
+              d31b dc22  st   $22,[y,x++] ;0319 LDW
+              d31c dc31  st   $31,[y,x++] ;031a 'q'
+              d31d dc2c  st   $2c,[y,x++] ;031b STW
+              d31e dc33  st   $33,[y,x++] ;031c 'r'
+              d31f dcf0  st   $f0,[y,x++] ;031d ADDI
+              d320 dc48  st   $48,[y,x++]
+              d321 dc61  st   $61,[y,x++] ;031f ST
+              d322 dc33  st   $33,[y,x++] ;0320 'r'
+              d323 dc5c  st   $5c,[y,x++] ;0321 LDI
+              d324 dc00  st   $00,[y,x++]
+              d325 dc2c  st   $2c,[y,x++] ;0323 STW
+              d326 dc35  st   $35,[y,x++] ;0324 'i'
+              d327 dc2c  st   $2c,[y,x++] ;0325 STW
+              d328 dc37  st   $37,[y,x++] ;0326 'n'
+              d329 dc22  st   $22,[y,x++] ;0327 LDW
+              d32a dc37  st   $37,[y,x++] ;0328 'n'
+              d32b dc36  st   $36,[y,x++] ;0329 COND
+              d32c dc50  st   $50,[y,x++] ;032a GT
+              d32d dc5b  st   $5b,[y,x++]
+              d32e dc22  st   $22,[y,x++] ;032c LDW
+              d32f dc35  st   $35,[y,x++] ;032d 'i'
+              d330 dc36  st   $36,[y,x++] ;032e COND
+              d331 dc75  st   $75,[y,x++] ;032f NE
+              d332 dc59  st   $59,[y,x++]
+              d333 dc22  st   $22,[y,x++] ;0331 LDW
+              d334 dc39  st   $39,[y,x++] ;0332 'p'
+              d335 dc78  st   $78,[y,x++] ;0333 LOOKUP
+              d336 dc00  st   $00,[y,x++]
+              d337 dc61  st   $61,[y,x++] ;0335 ST
+              d338 dc27  st   $27,[y,x++]
+              d339 dc22  st   $22,[y,x++] ;0337 LDW
+              d33a dc39  st   $39,[y,x++] ;0338 'p'
+              d33b dc78  st   $78,[y,x++] ;0339 LOOKUP
+              d33c dc01  st   $01,[y,x++]
+              d33d dc61  st   $61,[y,x++] ;033b ST
+              d33e dc28  st   $28,[y,x++]
+              d33f dc22  st   $22,[y,x++] ;033d LDW
+              d340 dc39  st   $39,[y,x++] ;033e 'p'
+              d341 dc78  st   $78,[y,x++] ;033f LOOKUP
+              d342 dc02  st   $02,[y,x++]
+              d343 dc61  st   $61,[y,x++] ;0341 ST
+              d344 dc29  st   $29,[y,x++]
+              d345 dc22  st   $22,[y,x++] ;0343 LDW
+              d346 dc39  st   $39,[y,x++] ;0344 'p'
+              d347 dcf0  st   $f0,[y,x++] ;0345 ADDI
+              d348 dc03  st   $03,[y,x++]
+              d349 dc2c  st   $2c,[y,x++] ;0347 STW
+              d34a dc39  st   $39,[y,x++] ;0348 'p'
+              d34b dc8a  st   $8a,[y,x++] ;0349 ANDI
+              d34c dcff  st   $ff,[y,x++]
+              d34d dc94  st   $94,[y,x++] ;034b XORI
+              d34e dcf9  st   $f9,[y,x++]
+              d34f dc36  st   $36,[y,x++] ;034d COND
+              d350 dc75  st   $75,[y,x++] ;034e NE
+              d351 dc54  st   $54,[y,x++]
+              d352 dc22  st   $22,[y,x++] ;0350 LDW
+              d353 dc39  st   $39,[y,x++] ;0351 'p'
+              d354 dcf0  st   $f0,[y,x++] ;0352 ADDI
+              d355 dc07  st   $07,[y,x++]
+              d356 dc2c  st   $2c,[y,x++] ;0354 STW
+              d357 dc39  st   $39,[y,x++] ;0355 'p'
+              d358 dc12  st   $12,[y,x++] ;0356 LDWI
+              d359 dc5f  st   $5f,[y,x++]
+              d35a dc04  st   $04,[y,x++]
+              d35b dcac  st   $ac,[y,x++] ;0359 SYS
+              d35c dcf2  st   $f2,[y,x++]
+              d35d dc22  st   $22,[y,x++] ;035b LDW
+              d35e dc37  st   $37,[y,x++] ;035c 'n'
+              d35f dc36  st   $36,[y,x++] ;035d COND
+              d360 dc56  st   $56,[y,x++] ;035e GE
+              d361 dc73  st   $73,[y,x++]
+              d362 dc5c  st   $5c,[y,x++] ;0360 LDI
+              d363 dc27  st   $27,[y,x++]
+              d364 dcc4  st   $c4,[y,x++] ;0362 ADDW
+              d365 dc35  st   $35,[y,x++] ;0363 'i'
+              d366 dcd8  st   $d8,[y,x++] ;0364 PEEK
+              d367 dc2c  st   $2c,[y,x++] ;0365 STW
+              d368 dc37  st   $37,[y,x++] ;0366 'n'
+              d369 dc36  st   $36,[y,x++] ;0367 COND
+              d36a dc75  st   $75,[y,x++] ;0368 NE
+              d36b dc69  st   $69,[y,x++]
+              d36c dcff  st   $ff,[y,x++] ;036a RET
+              d36d dc22  st   $22,[y,x++] ;036b LDW
+              d36e dc35  st   $35,[y,x++] ;036c 'i'
+              d36f dcf0  st   $f0,[y,x++] ;036d ADDI
+              d370 dc01  st   $01,[y,x++]
+              d371 dc8a  st   $8a,[y,x++] ;036f ANDI
+              d372 dc03  st   $03,[y,x++]
+              d373 dc2c  st   $2c,[y,x++] ;0371 STW
+              d374 dc35  st   $35,[y,x++] ;0372 'i'
+              d375 dc98  st   $98,[y,x++] ;0373 BRA
+              d376 dca1  st   $a1,[y,x++]
+              d377 dc36  st   $36,[y,x++] ;0375 COND
+              d378 dc59  st   $59,[y,x++] ;0376 LE
+              d379 dc84  st   $84,[y,x++]
+              d37a dc5c  st   $5c,[y,x++] ;0378 LDI
+              d37b dc3f  st   $3f,[y,x++]
+              d37c dc9b  st   $9b,[y,x++] ;037a POKE
+              d37d dc31  st   $31,[y,x++] ;037b 'q'
+              d37e dc22  st   $22,[y,x++] ;037c LDW
+              d37f dc37  st   $37,[y,x++] ;037d 'n'
+              d380 dcf3  st   $f3,[y,x++] ;037e SUBI
+              d381 dc01  st   $01,[y,x++]
+              d382 dc2c  st   $2c,[y,x++] ;0380 STW
+              d383 dc37  st   $37,[y,x++] ;0381 'n'
+              d384 dcf6  st   $f6,[y,x++] ;0382 INC
+              d385 dc31  st   $31,[y,x++] ;0383 'q'
+              d386 dc98  st   $98,[y,x++] ;0384 BRA
+              d387 dca1  st   $a1,[y,x++]
+              d388 dc5c  st   $5c,[y,x++] ;0386 LDI
+              d389 dc27  st   $27,[y,x++]
+              d38a dcc4  st   $c4,[y,x++] ;0388 ADDW
+              d38b dc35  st   $35,[y,x++] ;0389 'i'
+              d38c dcd8  st   $d8,[y,x++] ;038a PEEK
+              d38d dc36  st   $36,[y,x++] ;038b COND
+              d38e dc4d  st   $4d,[y,x++] ;038c EQ
+              d38f dc94  st   $94,[y,x++]
+              d390 dc94  st   $94,[y,x++] ;038e XORI
+              d391 dc3f  st   $3f,[y,x++]
+              d392 dc9b  st   $9b,[y,x++] ;0390 POKE
+              d393 dc31  st   $31,[y,x++] ;0391 'q'
+              d394 dcf6  st   $f6,[y,x++] ;0392 INC
+              d395 dc31  st   $31,[y,x++] ;0393 'q'
+              d396 dc98  st   $98,[y,x++] ;0394 BRA
+              d397 dc99  st   $99,[y,x++]
+              d398 dc12  st   $12,[y,x++] ;0396 LDWI
+              d399 dcff  st   $ff,[y,x++]
+              d39a dcff  st   $ff,[y,x++]
+              d39b dc2c  st   $2c,[y,x++] ;0399 STW
+              d39c dc37  st   $37,[y,x++] ;039a 'n'
+              d39d dc22  st   $22,[y,x++] ;039b LDW
+              d39e dc35  st   $35,[y,x++] ;039c 'i'
+              d39f dcf0  st   $f0,[y,x++] ;039d ADDI
+              d3a0 dc01  st   $01,[y,x++]
+              d3a1 dc8a  st   $8a,[y,x++] ;039f ANDI
+              d3a2 dc03  st   $03,[y,x++]
+              d3a3 dc2c  st   $2c,[y,x++] ;03a1 STW
+              d3a4 dc35  st   $35,[y,x++] ;03a2 'i'
+              d3a5 dc22  st   $22,[y,x++] ;03a3 LDW
+              d3a6 dc31  st   $31,[y,x++] ;03a4 'q'
+              d3a7 dcb0  st   $b0,[y,x++] ;03a5 SUBW
+              d3a8 dc33  st   $33,[y,x++] ;03a6 'r'
+              d3a9 dc36  st   $36,[y,x++] ;03a7 COND
+              d3aa dc75  st   $75,[y,x++] ;03a8 NE
+              d3ab dcc4  st   $c4,[y,x++]
+              d3ac dc5c  st   $5c,[y,x++] ;03aa LDI
+              d3ad dc00  st   $00,[y,x++]
+              d3ae dc9b  st   $9b,[y,x++] ;03ac POKE
+              d3af dc31  st   $31,[y,x++] ;03ad 'q'
+              d3b0 dc22  st   $22,[y,x++] ;03ae LDW
+              d3b1 dc31  st   $31,[y,x++] ;03af 'q'
+              d3b2 dcf3  st   $f3,[y,x++] ;03b0 SUBI
+              d3b3 dc48  st   $48,[y,x++]
+              d3b4 dc61  st   $61,[y,x++] ;03b2 ST
+              d3b5 dc31  st   $31,[y,x++] ;03b3 'q'
+              d3b6 dcf6  st   $f6,[y,x++] ;03b4 INC
+              d3b7 dc32  st   $32,[y,x++] ;03b5 'q'+1
+              d3b8 dc22  st   $22,[y,x++] ;03b6 LDW
+              d3b9 dc31  st   $31,[y,x++] ;03b7 'q'
+              d3ba dc36  st   $36,[y,x++] ;03b8 COND
+              d3bb dc56  st   $56,[y,x++] ;03b9 GE
+              d3bc dcc0  st   $c0,[y,x++]
+              d3bd dc12  st   $12,[y,x++] ;03bb LDWI
+              d3be dc00  st   $00,[y,x++]
+              d3bf dc88  st   $88,[y,x++]
+              d3c0 dcc4  st   $c4,[y,x++] ;03be ADDW
+              d3c1 dc31  st   $31,[y,x++] ;03bf 'q'
+              d3c2 dc2c  st   $2c,[y,x++] ;03c0 STW
+              d3c3 dc31  st   $31,[y,x++] ;03c1 'q'
+              d3c4 dc1b  st   $1b,[y,x++] ;03c2 LD
+              d3c5 dc32  st   $32,[y,x++] ;03c3 'q'+1
+              d3c6 dc61  st   $61,[y,x++] ;03c4 ST
+              d3c7 dc34  st   $34,[y,x++] ;03c5 'r'+1
+              d3c8 dc1b  st   $1b,[y,x++] ;03c6 LD
+              d3c9 dc0e  st   $0e,[y,x++]
+              d3ca dc9b  st   $9b,[y,x++] ;03c8 POKE
+              d3cb dc2f  st   $2f,[y,x++] ;03c9 'ShiftControl'
+              d3cc dc98  st   $98,[y,x++] ;03ca BRA
+              d3cd dc25  st   $25,[y,x++]
+              d3ce dc2c  st   $2c,[y,x++] ;03cc STW
+              d3cf dc3b  st   $3b,[y,x++] ;03cd 'Transfer'
+              d3d0 dc12  st   $12,[y,x++] ;03ce LDWI
+              d3d1 dc00  st   $00,[y,x++]
+              d3d2 dcbb  st   $bb,[y,x++]
+              d3d3 dc2c  st   $2c,[y,x++] ;03d1 STW
+              d3d4 dc39  st   $39,[y,x++] ;03d2 'p'
+              d3d5 dc22  st   $22,[y,x++] ;03d3 LDW
+              d3d6 dc3b  st   $3b,[y,x++] ;03d4 'Transfer'
+              d3d7 dce4  st   $e4,[y,x++] ;03d5 CALL
+              d3d8 dc22  st   $22,[y,x++] ;03d6 LDW
+              d3d9 dc3b  st   $3b,[y,x++] ;03d7 'Transfer'
+              d3da dce4  st   $e4,[y,x++] ;03d8 CALL
+              d3db dc98  st   $98,[y,x++] ;03d9 BRA
+              d3dc dccc  st   $cc,[y,x++]
+              d3dd 00fe  ld   $fe
+              d3de c21a  st   [$1a]
+              d3df 0003  ld   $03
+              d3e0 c21b  st   [$1b]
+              d3e1 0000  ld   $00
+              d3e2 c220  st   [$20]
+              d3e3 c21e  st   [$1e]
+              d3e4 0004  ld   $04
+              d3e5 c21f  st   [$1f]
+              d3e6 1510  ld   [$10],y
+              d3e7 e10f  jmp  y,[$0f]
+              d3e8 0200  nop
+              d3e9
