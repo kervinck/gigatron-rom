@@ -138,14 +138,9 @@ $0400:
   {Display welcome tekst}
   8 {Green} Color=
   $800 Pos=
+  ClearScreen call
   Welcome Text=
   DrawText call
-
-  ClearScreen call
-
-  {Wait for sound to stop}
-  [do \soundTimer? if<>0loop]
-
   60 Delay= Wait call
 
   pop call
@@ -179,12 +174,21 @@ $0400:
   $1000 Pos= ClearScreen call
 
   {Draw bounding box}
-  8 {Green} Color=
+  4 {Dark Green} Color=
   $1000 Pos=
      +1 Step= 159 Count= DrawLine call
    $100 Step= 111 Count= DrawLine call
      -1 Step= 159 Count= DrawLine call
   -$100 Step= 111 Count= DrawLine call
+
+  {Place snake}
+  $4450 Head= Tail=
+  0 Grow=
+  3 {Yellow} Color=
+  $0001 stepU=
+  $0100 stepV=
+  1 Delay= {Game speed}
+
   pop call
 ] SetupGame=
 
@@ -193,7 +197,7 @@ $0400:
   Game over
 -}
   push
-  $4034 Pos=
+  $4434 Pos=
   [def
     $47. $41. $4d. $45. $20. $4f. $56. $45. $52. 0. {GAME OVER}
   ] Text=
@@ -205,6 +209,71 @@ $0400:
 |}\vRT>++ ret{          RAM page 5                                      |
 +-----------------------------------------------------------------------}
 $0500:
+
+[def
+{-
+  RunGame --
+-}
+  push
+
+  [do
+    {Auto snake control}
+
+    TurnL p=
+    TurnR q=
+    {Look left}  Head stepV- peek [if<>0 32- if<>0 0 p=]
+    {Look right} Head stepV+ peek [if<>0 32- if<>0 0 q=]
+    {Look ahead} Head stepU+ peek [if=0 \entropy? $7f& 3- [if<0 1 else 0]]
+    [if<>0 32- if<>0
+      {Wall or random direction change: must go left or right.
+       Pick randomly, without bias, but don't crash into a wall when not needed}
+      p [if=0 q else
+        q [if=0 p else
+         \entropy? 1& [if=0 p else q]
+        ]
+      ]
+      [if<>0 call]
+    ]
+
+    {Leave a trace behind in the pixels two high bits}
+    {Bit 15 and bit 0 of stepU identify the direction}
+    stepU>? 128& tmp=
+    stepU     1& [if<>0 64] tmp+
+    10+ {Yellow} Head!
+
+    {Make step}
+    Head stepU+ Head=
+    Head? [if<>0
+      32- [if<>0 pop call] {Hit something}
+      {Eat food}
+      Grow 1+ Grow=
+      2 \soundTimer!
+    ]
+    15 {Bright Yellow} Head!
+
+    {Update tail}
+    Grow [if>0
+      1- Grow= {Do nothing while growing}
+    else
+      Tail? tmp=
+      0 {Black} Tail!
+
+      [def $0100 $0001 $ff00 $ffff]
+      tmp 64& [if=0 $0100 else $0001] x=
+      tmp 128& [if=0 x else 0 x-] Tail+ Tail=
+    ]
+
+    AddFood call
+
+    Wait call
+    loop]
+
+] RunGame=
+
+{-----------------------------------------------------------------------+
+|}\vRT>++ ret{          RAM page 6                                      |
++-----------------------------------------------------------------------}
+$0600:
 
 [def
   0 stepV- tmp=
@@ -220,54 +289,18 @@ $0500:
   ret
 ] TurnR=
 
-
 [def
-{-
-  RunGame --
--}
-  push
-
-  {Place snake}
-  $3050 Head=
-  10 {Yellow} Color=
-     1 stepU=
-  $100 stepV=
-  3 Delay= {Speed}
-
   [do
-    {Auto snake control}
+    \SYS_34_RANDOM 34@ Pos=
 
-    10 {Yellow} Head!
+    Pos<?      128- [if<0 158+] 1+   {1..158}   Pos<!
+    Pos>? 127& 64-  [if<0 110+] $11+ {$11..$fe} Pos>!
 
-    {Look left}  Head stepV- peek [if=0 TurnL else 0] p=
-    {Look right} Head stepV+ peek [if=0 TurnR else 0] q=
-    {Look ahead} Head stepU+ peek [if=0 \entropy? $7f& 3- [if<0 1 else 0]]
-    [if<>0
-      {Wall or random direction change: must go left or right.
-       Pick randomly, without bias, but don't crash into a wall when not needed}
-      p [if=0 q else
-        q [if=0 p else
-         \entropy? 1& [if=0 p else q]
-        ]
-      ]
-      [if<>0 call]
-    ]
+    Pos? if<>0loop]
 
-    Head stepU+ Head=
-    Head? if=0
-      15 {Bright Yellow} Head!
-      Wait call
-      loop]
-
-  3 {Bright Red} Color= Head!
-
-  pop call
-] RunGame=
-
-{-----------------------------------------------------------------------+
-|}\vRT>++ ret{          RAM page 6                                      |
-+-----------------------------------------------------------------------}
-$0600:
+  32 {Blue} Pos!
+  ret
+] AddFood=
 
 {--- Run ---}
 
@@ -278,7 +311,9 @@ Intro call
 
   RunGame call
 
+  3 {Bright Red} Color= Head!
   GameOver call
+  120 \soundTimer!
 
   240 Delay= Wait call
 
