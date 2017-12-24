@@ -47,7 +47,8 @@ vPC  is the virtual program counter. Programs run from RAM. When executing, vPC
 vRET is the stored program counter pointing to the instruction after the most
      recent CALL instruction. This is used to return after making a subroutine
      call. When nesting subroutines, vRET should be pushed on the stack.
-vSP  is a 1 byte stack pointer. The stack lives in the zero page top and grows down.
+vSP  is a 1 byte stack pointer. The stack lives in the zero page top and grows
+     down.
 
 Program variables are 16-bit words and typically hold a number or a pointer.
 Named variables reside in the zero page. Arbitrary memory can be addressed

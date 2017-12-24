@@ -6,7 +6,6 @@
 +-----------------------------------------------------------------------}
 
 {
-XXX Controller play
 XXX 2x2 cell size
 XXX Increasing speed and rising tones
 XXX Less food
@@ -124,10 +123,8 @@ $0400:
 
   {Display welcome tekst}
   8 {Green} Color=
-  $800 Pos=
-  ClearScreen call
-  Welcome Text=
-  DrawText call
+  $800 Pos= ClearScreen call
+  Welcome Text= DrawText call
   60 Delay= Wait call
 
   pop call
@@ -204,23 +201,9 @@ $0500:
   push
 
   [do
-    {Auto snake control}
 
-    TurnL p=
-    TurnR q=
-    {Look left}  Head stepV- peek [if<>0 32- if<>0 0 p=]
-    {Look right} Head stepV+ peek [if<>0 32- if<>0 0 q=]
-    {Look ahead} Head stepU+ peek [if=0 \entropy? $7f& 3- [if<0 1 else 0]]
-    [if<>0 32- if<>0
-      {Wall or random direction change: must go left or right.
-       Pick randomly, without bias, but don't crash into a wall when not needed}
-      p [if=0 q else
-        q [if=0 p else
-         \entropy? 1& [if=0 p else q]
-        ]
-      ]
-      [if<>0 call]
-    ]
+    {AutoControl call}
+    PlayerControl call
 
     {Leave a trace behind in the pixels two high bits}
     {Bit 15 and bit 0 of stepU identify the direction}
@@ -275,6 +258,47 @@ $0600:
   tmp   stepV=
   ret
 ] TurnR=
+
+[def
+  {Auto snake control}
+  push
+  TurnL p=
+  TurnR q=
+  {Look left}  Head stepV- peek [if<>0 32- if<>0 0 p=]
+  {Look right} Head stepV+ peek [if<>0 32- if<>0 0 q=]
+  {Look ahead} Head stepU+ peek [if=0 \entropy? $7f& 3- [if<0 1 else 0]]
+  [if<>0 32- if<>0
+    {Wall or random direction change: must go left or right.
+     Pick randomly, without bias, but don't crash into a wall when not needed}
+    p [if=0 q else
+      q [if=0 p else
+       \entropy? 1& [if=0 p else q]
+      ]
+    ]
+    [if<>0 call]
+  ]
+  pop call
+] AutoControl=
+
+{
+buttonRight     = 1
+buttonLeft      = 2
+buttonDown      = 4
+buttonUp        = 8
+}
+
+[def
+  \serialRaw? $fe^ {~buttonRight} [if=0 $0001 stepU= $0100 stepV=]
+  \serialRaw? $fd^ {~buttonLeft}  [if=0 $ffff stepU= $ff00 stepV=]
+  \serialRaw? $fb^ {~buttonDown}  [if=0 $0100 stepU= $ffff stepV=]
+  \serialRaw? $f7^ {~buttonUpp}   [if=0 $ff00 stepU= $0001 stepV=]
+  ret
+] PlayerControl=
+
+{-----------------------------------------------------------------------+
+|}\vRET>++ ret{         RAM page 7                                      |
++-----------------------------------------------------------------------}
+$0700:
 
 [def
   [do

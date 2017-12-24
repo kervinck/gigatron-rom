@@ -23,8 +23,9 @@
 #  XXX Serial loading of programs with Arduino/Trinket
 #  XXX Double-check initialisation of all variables
 #
-#  Optional
+#  Maybe
 #  XXX More waveforms
+#  XXX Scroll out the top line of text
 #  XXX Pacman ghosts. Sprites by scan line 4 reset method? ("videoG"=graphics)
 #  XXX Intro: Rising planet?
 #  XXX Multitasking/threading/sleeping (start with date/time clock in GCL)
@@ -163,7 +164,7 @@ frameCount      = zpByte(1)
 serialRaw       = zpByte() # New raw serial read
 serialLast      = zpByte() # Previous serial read
 buttonState     = zpByte() # Clearable button state
-softResetTimer  = zpByte() # After 2 seconds of pressing 'Start', do a soft reset
+softResetTimer  = zpByte() # After 2 seconds of holding 'Start', do a soft reset
 
 # Extended output (blinkenlights in bit 0:3 and audio in but 4:7). This
 # value must be present in AC during a rising hSync edge. It then gets
@@ -202,15 +203,16 @@ zpFree          = zpByte(0)
 
 # Export some zero page variables to GCL
 # XXX Solve in another way (not through symbol table!)
-define('vRET',       vRET)
 define('entropy',    entropy)
-define('soundTimer', soundTimer)
-define('vBlank',     vBlank)
 define('frameCount', frameCount)
+define('serialRaw',  serialRaw)
 for i in range(8):
   define('sysArgs%d' % i, sysArgs+i)
+define('soundTimer', soundTimer)
 define('sysData',    sysData)
 define('sysPos',     sysPos)
+define('vBlank',     vBlank)
+define('vRET',       vRET)
 
 #-----------------------------------------------------------------------
 #
