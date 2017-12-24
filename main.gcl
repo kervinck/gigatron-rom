@@ -316,8 +316,8 @@ $1800 BallY= Ball=
 
 {--- Run ---}
 
-RandomTest call
 RunPart1 call
+RandomTest call
 
 {-----------------------------------------------------------------------+
 |       End                                                             |
