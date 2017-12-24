@@ -184,7 +184,7 @@ $0400:
   Game over
 -}
   push
-  $4434 Pos=
+  $4435 Pos=
   [def
     $47. $41. $4d. $45. $20. $4f. $56. $45. $52. 0. {GAME OVER}
   ] Text=
