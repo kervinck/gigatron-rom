@@ -1,30 +1,17 @@
 
 {-----------------------------------------------------------------------+
 |                                                                       |
-|       GCL applications                                                |
+|       Snake game                                                      |
 |                                                                       |
 +-----------------------------------------------------------------------}
 
 {
-Gigatron RAM map
-----------------
-             +------------------------------------+---------------------+
-page 0       | System and program variables     <-|-> vCPU stack at top |
-             +------------------------------------+--+------------------+
-page 1       | Video frame indirection table         | Channel 1 at top |
-             +---------------------------------------+------------------+
-page 2       | Shift table for sound                 | Channel 2 at top |
-             +---------------------------------------+------------------+
-page 3       | vCPU code                          248| Channel 3 at top |
-             |                                       +------------------+
-page 4       |                                       | Channel 4 at top |
-             |                                       +------------------+
-page 5-7     |0                       159 160                        255|
-             +---------------------------+------------------------------+
-page 8-127   | 120 lines of 160 pixels   | Extra video/code/data at top |
-             +---------------------------+------------------------------+
-page 128-255 | Not used in the 32K system: mirror of page 0-127         |
-             +----------------------------------------------------------+
+XXX Controller play
+XXX 2x2 cell size
+XXX Increasing speed and rising tones
+XXX Less food
+XXX Score and high score
+XXX More points for getting to food faster
 }
 
 {-----------------------------------------------------------------------+
@@ -34,7 +21,7 @@ $0300:
 
 {-
   First setup all subroutine definitions and variables, without making
-  calls. This way allows use of vRT to hop from page to page during setup,
+  calls. This way allows use of vRET to hop from page to page during setup,
   with minimal overhead. At the end, run the main loop.
 -}
 
@@ -156,7 +143,7 @@ $0400:
   [do
     {Clear one stripe}
     p [do
-      {p} \sysArgs= \SYS_38_VCLEAR8 38@ {Clears 8 pixels vertically}
+      {p} \sysArgs0= \SYS_38_VCLEAR8 38@ {Clears 8 pixels vertically}
       $800 p+ p= if>0loop]
     {Next stripe}
     i+ p=
@@ -206,7 +193,7 @@ $0400:
 ] GameOver=
 
 {-----------------------------------------------------------------------+
-|}\vRT>++ ret{          RAM page 5                                      |
+|}\vRET>++ ret{         RAM page 5                                      |
 +-----------------------------------------------------------------------}
 $0500:
 
@@ -271,7 +258,7 @@ $0500:
 ] RunGame=
 
 {-----------------------------------------------------------------------+
-|}\vRT>++ ret{          RAM page 6                                      |
+|}\vRET>++ ret{         RAM page 6                                      |
 +-----------------------------------------------------------------------}
 $0600:
 

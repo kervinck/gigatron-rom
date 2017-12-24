@@ -19,7 +19,7 @@ $0101 ShiftControl=
     {Fill buffer with next group of 4 bytes when needed}
     n [if<=0
       i [if=0
-        p 0; \sysArgs!
+        p 0; \sysArgs0!
         p 1; \sysArgs1!
         p 2; \sysArgs2!
         p 3+ p= 255& 249^ [if=0 p 7+ p=] {Advance read pointer}
@@ -29,7 +29,7 @@ $0101 ShiftControl=
     ]
 
     [if<0
-      \sysArgs i+ peek n= [if=0 ret {No more data}]
+      \sysArgs0 i+ peek n= [if=0 ret {No more data}]
       i 1+ 3& i=
     else
       [if>0
@@ -38,7 +38,7 @@ $0101 ShiftControl=
         q<++
       else
         {Consume next byte}
-        \sysArgs i+ peek [if<>0
+        \sysArgs0 i+ peek [if<>0
           63^ q! {New pixel}
           q<++
         else

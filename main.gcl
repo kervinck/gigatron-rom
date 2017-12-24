@@ -34,7 +34,7 @@ $0300:
 
 {-
   First setup all subroutine definitions and variables, without making
-  calls. This way allows use of vRT to hop from page to page during setup,
+  calls. This way allows use of vRET to hop from page to page during setup,
   with minimal overhead. At the end, run the main loop.
 -}
 
@@ -117,7 +117,7 @@ $0400:
   i= $8001 i+ i=
   [do
     p [do
-      \sysArgs= \SYS_38_VCLEAR8 38@ {Clears 8 pixels vertically}
+      \sysArgs0= \SYS_38_VCLEAR8 38@ {Clears 8 pixels vertically}
       $800 p+ p= if>0loop]
     i+ p=
     255& 160^ if<>0loop]
@@ -175,7 +175,7 @@ $0400:
 ] RunPart1=
 
 {-----------------------------------------------------------------------+
-|}\vRT>++ ret{          RAM page 5                                      |
+|}\vRET>++ ret{         RAM page 5                                      |
 +-----------------------------------------------------------------------}
 $0500:
 
@@ -253,7 +253,7 @@ $0500:
 ] RunPart2=
 
 {-----------------------------------------------------------------------+
-|}\vRT>++ ret{          RAM page 6                                      |
+|}\vRET>++ ret{         RAM page 6                                      |
 +-----------------------------------------------------------------------}
 $0600:
 

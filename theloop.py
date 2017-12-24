@@ -9,17 +9,22 @@
 #  - 4 channels sound
 #  - 16-bits vCPU interpreter
 #  - Builtin vCPU programs
+#  - Serial input handler
+#  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
-#  XXX Input handling update
+#  To do
+#  XXX DrawDecimal routine
 #  XXX Serial read from ROM tables, hiding page boundraries
 #  XXX Main menu / Loading and starting of programs
 #  XXX ROM load of vCPU code / bootstrapping
 #  XXX Logo drawing
-#  XXX DrawDecimal routine
 #  XXX Key/pitch table
 #  XXX Music sequencer
-#  XXX More waveforms
 #  XXX Serial loading of programs with Arduino/Trinket
+#  XXX Double-check initialisation of all variables
+#
+#  Optional
+#  XXX More waveforms
 #  XXX Pacman ghosts. Sprites by scan line 4 reset method? ("videoG"=graphics)
 #  XXX Intro: Rising planet?
 #  XXX Multitasking/threading/sleeping (start with date/time clock in GCL)
@@ -35,11 +40,12 @@
 #
 #  Possible applications
 #  XXX Picture Frame
+#  XXX Info screen (zero page)
 #  XXX Nog iets simpels. Gigatron layout balls/bricks game
 #  XXX Iets met scroller. Flappy Bird?
 #  XXX Iets met doolhof. Berzerk/Robotron? Pac Mac?
 #  XXX Primes, Fibonacci, Queens
-#  XXX Entropy
+#  XXX Random dots screen
 #  XXX Dice
 #  XXX Game of Life (edit <-> stop <-> slow <-> fast)
 #  XXX Game #5 Iets met schieten. Space Invaders, Demon Attack, Galaga style
@@ -83,7 +89,7 @@ vPulse += vPulseExtension
 #    unaffected
 vBack -= vPulseExtension
 
-# Game controller bits
+# Game controller bits (actual controllers in kit have negative output)
 buttonRight     = 1
 buttonLeft      = 2
 buttonDown      = 4
@@ -104,14 +110,14 @@ fastRunVcpu = True
 #-----------------------------------------------------------------------
 
 # Memory size in pages from auto-detect
-memSize = zpByte()
+memSize         = zpByte()
 
 # The current channel number for sound generation. Advanced every scan line
 # and independent of the vertical refresh to maintain constant oscillation.
-channel = zpByte()
+channel         = zpByte()
 
 # Next sound sample being synthesized
-sample = zpByte()
+sample          = zpByte()
 # To save one instruction in the critical inner loop, `sample' is always
 # reset with its own address instead of, for example, the value 0. Compare:
 # 1 instruction reset
@@ -128,54 +134,49 @@ assert 4*63 + sample < 256
 assert sample == 3
 
 # Booting
-bootCount = zpByte() # 0 for cold boot
-bootCheck = zpByte() # Checksum
+bootCount       = zpByte() # 0 for cold boot
+bootCheck       = zpByte() # Checksum
+
+# Entropy harvested from SRAM startup and controller input
+entropy         = zpByte(3)
+
+# Generic function return address
+returnTo        = zpByte(2)
+
+# Visible video
+screenY         = zpByte() # Counts up from 0 to 238 in steps of 2
+frameX          = zpByte() # Starting byte within page
+frameY          = zpByte() # Page number of current pixel row (updated by videoA)
+nextVideo       = zpByte() # Jump offset to scan line handler (videoA, videoB, ...)
+videoDorF       = zpByte() # Handler for every 4th line (videoD or videoF)
+
+# Vertical blank (reuse some variables used in the visible part)
+vBlank          = zpByte() # 1=first scanline, start of vblank interval, 0=other line
+blankY          = screenY # Counts down during vertical blank (44 to 0)
+videoSync0      = frameX  # Vertical sync type on current line (0xc0 or 0x40)
+videoSync1      = frameY  # Same during horizontal pulse
+
+# Frame counter is good enough as system clock
+frameCount      = zpByte(1)
+
+# Serial input (game controller)
+serialRaw       = zpByte() # New raw serial read
+serialLast      = zpByte() # Previous serial read
+buttonState     = zpByte() # Clearable button state
+softResetTimer  = zpByte() # After 2 seconds of pressing 'Start', do a soft reset
 
 # Extended output (blinkenlights in bit 0:3 and audio in but 4:7). This
 # value must be present in AC during a rising hSync edge. It then gets
 # copied to the XOUT register by the hardware. The XOUT register is only
 # accessible in this indirect manner because it isn't part of the core
 # CPU architecture.
-xout      = zpByte()
-xoutMask  = zpByte() # The blinkenlights and sound on/off state
-
-# Visible video
-screenY   = zpByte() # Counts up from 0 to 238 in steps of 2
-frameX    = zpByte() # Starting byte within page
-frameY    = zpByte() # Page number of current pixel row (updated by videoA)
-nextVideo = zpByte() # Jump offset to scan line handler (videoA, videoB, ...)
-videoDorF = zpByte() # Handler for every 4th line (videoD or videoF)
-
-# Vertical blank (reuse some variables used in the visible part)
-vBlank    = zpByte() # 1=first scanline, start of vblank interval, 0=other line
-blankY     = screenY # Counts down during vertical blank (44 to 0)
-videoSync0 = frameX  # Vertical sync type on current line (0xc0 or 0x40)
-videoSync1 = frameY  # Same during horizontal pulse
-
-# System clock
-frameCount = zpByte(1)
-
-returnTo   = zpByte(2) # Generic function return address
-
-# Entropy harvested from SRAM startup and controller input
-entropy    = zpByte(3)
-
-# Play sound if non-zero, count down and stop sound when zero
-soundTimer = zpByte()
-
-ledTimer        = zpByte() # Number of ticks until next LED change
-ledState        = zpByte() # Current LED state
-ledTempo        = zpByte() # Next value for ledTimer after LED state change
-# Fow now the LED state machine itself is hard-coded in the program ROM
-
-# Serial input (game controller)
-serialInput     = zpByte()
-buttonState     = zpByte() # Filtered button state
+xout            = zpByte()
+xoutMask        = zpByte() # The blinkenlights and sound on/off state
 
 # vCPU interpreter
 vPC             = zpByte(2) # Interpreter program counter, points into RAM
 vAC             = zpByte(2) # Interpreter accumulator, 16-bits
-vRT             = zpByte(2) # Return address, for returning after CALL
+vRET            = zpByte(2) # Return address, for returning after CALL
 vSP             = zpByte(1) # Stack pointer
 vTicks          = zpByte() # Interpreter ticks are units of 2 clocks
 vTmp            = zpByte()
@@ -187,21 +188,27 @@ sysData         = zpByte(2)
 # SYS arguments and results
 sysArgs         = zpByte(8)
 
+# Play sound if non-zero, count down and stop sound when zero
+soundTimer      = zpByte()
+
+# Fow now the LED state machine itself is hard-coded in the program ROM
+ledTimer        = zpByte() # Number of ticks until next LED change
+ledState        = zpByte() # Current LED state
+ledTempo        = zpByte() # Next value for ledTimer after LED state change
+
 # ROM reader
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 zpFree          = zpByte(0)
 
 # Export some zero page variables to GCL
 # XXX Solve in another way (not through symbol table!)
-define('vRT',        vRT)
+define('vRET',       vRET)
 define('entropy',    entropy)
 define('soundTimer', soundTimer)
 define('vBlank',     vBlank)
 define('frameCount', frameCount)
-define('sysArgs',    sysArgs)
-define('sysArgs1',   sysArgs+1)
-define('sysArgs2',   sysArgs+2)
-define('sysArgs3',   sysArgs+3)
+for i in range(8):
+  define('sysArgs%d' % i, sysArgs+i)
 define('sysData',    sysData)
 define('sysPos',     sysPos)
 
@@ -239,8 +246,8 @@ shiftTablePage = 0x02
 #
 #-----------------------------------------------------------------------
 
-bStart = 0x0300
-bTop   = 0x07ff
+vCpuStart = 0x0300
+vCpuTop   = 0x07ff
 
 #-----------------------------------------------------------------------
 #  Memory layout
@@ -421,6 +428,18 @@ st(eaYXregOUTIX)         # Yi  = 0x08+i
 ld(d(lo('videoF')))
 st(d(videoDorF))
 
+# vCPU reset handler (we have 9 unused bytes behind the video table)
+vCpuReset = 0x0100 + 240
+st(d(lo('LDWI')),        eaYXregOUTIX); C('Setup vCPU reset handler')
+st(d(lo('SYS_30_RESET')),eaYXregOUTIX)
+st(d(hi('SYS_30_RESET')),eaYXregOUTIX)
+st(d(lo('SYS')),         eaYXregOUTIX)
+st(d(30),                eaYXregOUTIX)
+# XXX Should also reset the video table
+
+st(d(lo('BRA')),eaYXregOUTIX); C('Setup vCPU reset handler')
+st(d(240-2)    ,eaYXregOUTIX)
+
 # Init the shift2-right table for sound
 ld(val(shiftTablePage),regY);   C('Setup shift2 table')
 ld(val(0))
@@ -470,9 +489,10 @@ st(d(D5>>7),eaYXregAC)
 ld(val(0));                     C('Setup sound timer')
 st(d(soundTimer))
 
-ld(val(-1));                    C('Setup serial input')
-st(d(serialInput))
-st(d(buttonState))
+st(d(softResetTimer));          C('Setup serial input')
+st(d(serialRaw),busIN)
+st(d(serialLast),busIN)
+st(d(buttonState),busIN)
 
 ld(val(0b0111));                C('LEDs |***O|')
 ld(val(syncBits^hSync),regOUT)
@@ -489,8 +509,8 @@ label('.retn')
 ld(val(0b1111));                C('LEDs |****|')
 ld(val(syncBits^hSync),regOUT)
 ld(val(syncBits),regOUT)
-st(d(xoutMask)) # Setup for control by video loop
-st(d(xout))
+st(d(xout)) # Setup for control by video loop
+st(d(xoutMask))
 
 ld(d(hi('vBlankStart')),busD|ea0DregY);C('Enter video loop')
 jmpy(d(lo('vBlankStart')))
@@ -596,7 +616,7 @@ label('videoD')                 # Default video mode
 ld(d(frameX), busRAM|regX)      #29
 ldzp(d(screenY))                #30
 suba(d((120-1)*2))              #31
-beq(d(lo('last')))              #32
+beq(d(lo('.last')))             #32
 ld(d(frameY), busRAM|regY)      #33
 adda(d(120*2))                  #34 More pixel lines to go
 st(d(screenY))                  #35
@@ -604,7 +624,7 @@ ld(d(lo('videoA')))             #36
 st(d(nextVideo))                #37
 bra(d(lo('pixels')))            #38
 ld(val(syncBits))               #39
-label('last')
+label('.last')
 wait(36-34)                     #34 No more pixel lines
 ld(d(lo('videoE')))             #36
 st(d(nextVideo))                #37
@@ -622,11 +642,11 @@ ld(val(syncBits))               #31
 label('videoF')                 # Fast video mode
 ldzp(d(screenY))                #29
 suba(d((120-1)*2))              #30
-bne(d(lo('notlast')))           #31
+bne(d(lo('.notlast')))          #31
 adda(d(120*2))                  #32
 bra(d(lo('.join')))             #33
 ld(d(lo('videoE')))             #34 No more visible lines
-label('notlast')
+label('.notlast')
 st(d(screenY))                  #33 More visible lines
 ld(d(lo('videoA')))             #34
 label('.join')
@@ -640,39 +660,73 @@ ldzp(d(channel))                #1 Advance to next sound channel
 label('vBlankStart')            # Start of vertical blank interval
 assert(pc()&255<16)             # Assure that we are in the beginning of the next page
 
-st(d(videoSync0))               #32
-C('Start vertical blank interval')
+st(d(videoSync0));              C('Start of vertical blank interval')#32
 ld(val(syncBits^hSync))         #33
 st(d(videoSync1))               #34
 
 # (Re)initialize carry table for robustness
-st(d(0x00), ea0DregAC|busD)     #35
+st(d(0x00), ea0DregAC|busD);    C('Carry table')#35
 ld(val(0x01))                   #36
 st(d(0x80))                     #37
 
 # Signal beginning of vertical blank to GCL
-st(d(vBlank))                   #38
+st(d(vBlank));                  C('Vertical blank signal for GCL')#38
 
-# --- Uptime frame count
-ldzp(d(frameCount))             #39
-adda(val(1))                    #40
-st(d(frameCount))               #41
+# pChange = pNew & ~pOld
+# nChange = nNew | ~nOld {DeMorgan}
 
-# --- Mix entropy (11 cycles)
-xora(d(entropy+1),busRAM)       #42
-xora(d(serialInput),busRAM)     #43 Mix in serial input
-adda(d(entropy+0),busRAM)       #44
-st(d(entropy+0))                #45
-adda(d(entropy+2),busRAM)       #46 Some hidden state
-st(d(entropy+2))                #47
-bmi(d(lo('.rnd0')))             #48
-bra(d(lo('.rnd1')))             #49
-xora(val(64+16+2+1))            #50
+# Filter raw serial input captured in last vblank (7 cycles)
+ld(val(255));                   C('Filter controller input')#39
+xora(d(serialLast),busRAM)      #40
+ora(d(serialRaw),busRAM)        #41 Catch button-press events
+anda(d(buttonState),busRAM)     #42 Keep active button presses
+ora(d(serialRaw),busRAM)        #43 Auto-reset already-released buttons
+st(d(buttonState))              #44
+ldzp(d(serialRaw))              #45
+st(d(serialLast))               #46
+
+# Respond to reset button (13 cycles)
+xora(val(~buttonStart));        C('Check for soft reset')#47
+beq(d(lo('.restart0')))         #48
+bra(d(lo('.restart1')))         #49
+ld(val(120))                    #50 2 seconds
+label('.restart0')
+ldzp(d(softResetTimer))         #50
+label('.restart1')
+suba(val(1))                    #51
+bne(d(lo('.restart2')))         #52
+st(d(softResetTimer))           #53
+ld(val((vCpuReset&255)-2))         #54 Force reset
+st(d(vPC))                      #55
+ld(val(vCpuReset>>8))              #56
+bra(d(lo('.restart3')))         #57
+st(d(vPC+1))                    #58
+label('.restart2')
+wait(59-54)                     #54
+label('.restart3')
+
+# TODO: move Select logic in here
+
+# Uptime frame count (3 cycles)
+ldzp(d(frameCount));            C('Frame counter')#59
+adda(val(1))                    #60
+st(d(frameCount))               #61
+
+# Mix entropy (11 cycles)
+xora(d(entropy+1),busRAM);      C('Mix entropy')#62
+xora(d(serialRaw),busRAM)       #63 Mix in serial input
+adda(d(entropy+0),busRAM)       #64
+st(d(entropy+0))                #65
+adda(d(entropy+2),busRAM)       #66 Some hidden state
+st(d(entropy+2))                #67
+bmi(d(lo('.rnd0')))             #68
+bra(d(lo('.rnd1')))             #69
+xora(val(64+16+2+1))            #70
 label('.rnd0')
-xora(val(64+32+8+4))            #50
+xora(val(64+32+8+4))            #70
 label('.rnd1')
-adda(d(entropy+1),busRAM)       #51
-st(d(entropy+1))                #52
+adda(d(entropy+1),busRAM)       #71
+st(d(entropy+1))                #72
 
 # When the total number of scan lines per frame is not an exact multiple of the (4) channels,
 # there will be an audible discontinuity if no measure is taken. This static noise can be
@@ -683,18 +737,19 @@ soundDiscontinuity = (vFront+vPulse+vBack) % 4
 extra = 0
 if soundDiscontinuity == 1:
   st(val(sample), ea0DregAC|busD)
+  C('Sound continuity')
   extra += 1
 if soundDiscontinuity > 1:
   print "Warning: sound discontinuity not supressed"
 
 extra+=11 # For sound on/off and sound timer hack below. XXX solve properly
 
-runVcpu(178-53-extra, 'line0')  #53 Application cycles (scan line 0)
+runVcpu(178-73-extra, 'line0')  #73 Application cycles (scan line 0)
 st(d(vBlank))                   #178 Keep at 0 for remainder of frame
 
 # --- LED sequencer (19 cycles)
 
-ldzp(d(ledTimer))               #179
+ldzp(d(ledTimer));              C('Blinkenlight sequencer')#179
 bne(d(lo('.leds4')))            #180
 
 ld(d(lo('.leds0')))             #181
@@ -753,24 +808,24 @@ label('.leds5')
 st(d(ledTimer))                 #194
 
 ldzp(d(xoutMask))               #195 Low 4 bits are the LED output
-anda(val(0b00001111))           #196
+anda(val(0b00001111))           #196 High bits will be restored below
 st(d(xoutMask))                 #197
 
-# --- Sound on/off (XXX Hack)
+# --- Sound on/off (XXX Hack, must come after LED)
 
-ldzp(d(soundTimer))
+ldzp(d(soundTimer));            C('Sound on/off')
 bne(d(lo('.snd0')))
 bra(d(lo('.snd1')))
-ld(val(0))
+ld(val(0))   # Sound off
 label('.snd0')
-ld(val(0xf0))
+ld(val(0xf0))# Sound on
 label('.snd1')
 ora(d(xoutMask),busRAM)
 st(d(xoutMask))
 
 # --- Sound timer count down (XXX Replace by sequencer)
 
-ldzp(d(soundTimer))
+ldzp(d(soundTimer));            C('Sound timer')
 beq(d(lo('.snd2')))
 bra(d(lo('.snd3')))
 suba(val(1))
@@ -836,12 +891,13 @@ label('vSync3')
 xora(d(hSync))                  #40 Precompute, as during the pulse there is no time
 st(d(videoSync1))               #41
 
-# Capture the serial input
+# Capture the serial input before the '595 shifts it out
+# Note: postpone post-processing until back at scan line 0
 ldzp(d(blankY));                C('Capture serial input')#42
 xora(val(vBack-1-1))            #43 Exactly when the 74HC595 has captured all 8 controller bits
 bne(d(lo('.ser0')))             #44
 bra(d(lo('.ser1')))             #45
-st(d(serialInput),busIN)        #46
+st(d(serialRaw),busIN)          #46
 label('.ser0')
 nop()                           #46
 label('.ser1')
@@ -875,31 +931,24 @@ st(d(nextVideo))                #34
 
 label('vBlankLast1')
 
-# The serial game controller freaks out when two buttons are pressed: it just sends zeroes.
-# When we see this, preserve the old value and assume buttonA was added.
-ldzp(d(serialInput))            #35
-beq(lo('.multi0'))              #36
-bra(lo('.multi1'))              #37
-st(d(buttonState),busAC)        #38
-label('.multi0')
-ld(val(buttonA))                #38
-label('.multi1')
-ora(d(buttonState),busRAM)      #39
-st(d(buttonState),busAC)        #40
-
 # --- Switch video mode when (only) select is pressed
-ldzp(d(buttonState))            #41
-xora(val(~buttonSelect))        #42
-beq(d(lo('.sel0')))             #43
-bra(d(lo('.sel1')))             #44
-ld(val(0))                      #45
-label('.sel0')
-ld(val(lo('videoD')^lo('videoF')))#45
-label('.sel1')
-xora(d(videoDorF),busRAM)       #46
-st(d(videoDorF))                #47
+ldzp(d(buttonState))            #35
+xora(val(~buttonSelect))        #36
+beq(d(lo('.select0')))          #37
+bra(d(lo('.select1')))          #38
+ld(val(0))                      #39
+label('.select0')
+ld(val(lo('videoD')^lo('videoF')))#39
+label('.select1')
+xora(d(videoDorF),busRAM)       #40
+st(d(videoDorF))                #41
 
-runVcpu(199-48, 'line40')       #48 Application cycles (scan line 40)
+# XXX move to line 0
+ldzp(d(buttonState))
+ora(val(buttonSelect))
+st(d(buttonState))
+
+runVcpu(199-42-3, 'line40')       #42 Application cycles (scan line 40)
 ldzp(d(channel))                #199 Advance to next sound channel
 anda(val(3));                   C('<New scan line start>')#0
 adda(val(1))                    #1
@@ -1142,12 +1191,12 @@ def trampoline():
 label('PUSH')
 ldzp(d(vSP))                    #10
 suba(d(1),regX)                 #11
-ldzp(d(vRT+1))                  #12
+ldzp(d(vRET+1))                 #12
 st(ea0XregAC)                   #13
 ldzp(d(vSP))                    #14
 suba(val(2))                    #15
 st(d(vSP),busAC|regX)           #16
-ldzp(d(vRT))                    #17
+ldzp(d(vRET))                   #17
 bra(d(lo('next1')))             #18
 st(ea0XregAC)                   #19
 
@@ -1300,12 +1349,12 @@ ld(d(vPC+1),busRAM|regY)        #21
 label('CALL')
 ldzp(d(vPC))                    #10
 adda(val(1));                   C('CALL has no operand, advances PC by 1')#11
-st(d(vRT))                      #12
+st(d(vRET))                     #12
 ldzp(d(vAC))                    #13
 suba(val(2));                   C('vAC is actual address, NEXT adds 2')#14
 st(d(vPC))                      #15
 ldzp(d(vPC+1))                  #16
-st(d(vRT+1))                    #17
+st(d(vRET+1))                   #17
 ldzp(d(vAC+1))                  #18
 st(d(vPC+1),busAC|regY)         #19
 bra(d(lo('NEXT')))              #20
@@ -1340,7 +1389,7 @@ st(d(vTmp))                     #12
 
 # Instruction RET, To be defined, 16 cycles
 label('RET')
-ldzp(d(vRT))                    #10
+ldzp(d(vRET))                   #10
 assert(pc()&255 == 0)
 
 #-----------------------------------------------------------------------
@@ -1353,7 +1402,7 @@ align(0x100, 0x100)
 # (Continue RET)
 suba(val(2))                    #11
 st(d(vPC))                      #12
-ldzp(d(vRT+1))                  #13
+ldzp(d(vRET+1))                 #13
 st(d(vPC+1))                    #14
 ld(val(hi('REENTER')),regY)     #15
 jmpy(d(lo('REENTER')))          #17
@@ -1428,6 +1477,26 @@ nop()                           #23
 #-----------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
+# Extension SYS_30_RESET: Soft reset
+#-----------------------------------------------------------------------
+
+label('SYS_30_RESET')
+# XXX What if software is loading?
+ld(val((vCpuStart&255)-2))      #15 vPC
+st(d(vPC))                      #16
+ld(val(vCpuStart>>8))           #17
+st(d(vPC+1))                    #18
+ld(val(0))                      #19 vRET
+st(d(vRET))                     #20
+ld(val((vCpuStart>>8)+1))       #21
+st(d(vRET+1))                   #22
+ld(val(0))                      #23 Sound (and LEDs) off
+st(d(xoutMask))                 #24
+ld(val(hi('REENTER')),regY)     #25
+jmpy(d(lo('REENTER')))          #26
+ld(val(-30/2))                  #27
+
+#-----------------------------------------------------------------------
 # Extension SYS_38_VCLEAR8: Zero a vertical slice of 8 bytes(pixels)
 #-----------------------------------------------------------------------
 
@@ -1450,7 +1519,7 @@ ld(val(-38/2))                  #35
 label('SYS_34_RANDOM')
 ldzp(d(frameCount))             #15
 xora(d(entropy+1),busRAM)       #16
-xora(d(serialInput),busRAM)     #17
+xora(d(serialRaw),busRAM)       #17
 adda(d(entropy+0),busRAM)       #18
 st(d(entropy+0))                #19
 st(d(vAC+0))                    #20
@@ -1667,29 +1736,29 @@ label('initVcpu')
 print 'SYS warning %s error %s' % (repr(minSYS), repr(maxSYS))
 
 # Compile test GCL program
-program = gcl.Program(bStart)
+program = gcl.Program(vCpuStart)
 for line in open('snake.gcl').readlines():
   program.line(line)
 program.end()
 bLine = program.vPC
-print bLine-bStart, 'GCL bytes loaded'
-print bTop-bLine+1, 'GCL bytes free'
+print bLine-vCpuStart, 'GCL bytes loaded'
+print vCpuTop-bLine+1, 'GCL bytes free'
 
 # Set start of user program ready to run
-ld(val((bStart&255)-2))
+ld(val((vCpuStart&255)-2))
 st(d(vPC))
-ld(val(bStart>>8))
+ld(val(vCpuStart>>8))
 st(d(vPC+1))
 
 # Reset vCPU stack pointer
 ld(val(0))
 st(d(vSP))
 
-# Preload vRT with address of next page, for easier setup section in GCL
+# Preload vRET with address of next page, for easier setup section in GCL
 #ld(val(0))
-st(d(vRT))
-ld(val((bStart>>8)+1))
-st(d(vRT+1))
+st(d(vRET))
+ld(val((vCpuStart>>8)+1))
+st(d(vRET+1))
 
 # Return
 ld(d(returnTo+1), busRAM|ea0DregY)
