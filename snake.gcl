@@ -6,12 +6,14 @@
 +-----------------------------------------------------------------------}
 
 {
+XXX Non-black playfield
+XXX Smarter border drawing
+XXX Leave poison at tail, to prevent killing player (brown?)
 XXX Increasing speed and rising tones
 XXX Score and high score
+XXX Better title bar
+XXX Accelerated text drawing
 XXX More points for getting to food faster
-XXX Add poison when timer runs out
-XXX Opponent snake?
-XXX Poison food
 }
 
 {-----------------------------------------------------------------------+
@@ -108,15 +110,6 @@ $0300:
 $0400:
 
 [def
-  push
-  11 {Orange} Color=
-  $0800 Pos=
-  [def $41. $55. $54. $4f. 0.{AUTO}] Text= DrawText call
-  AutoControl Control=
-  pop call
-] EnableAutoPlay=
-
-[def
 {-
   Game over
 -}
@@ -206,7 +199,7 @@ $0500:
   push
 
   [do
-    Head TakeOver- [if=0 TakeOver= EnableAutoPlay call]
+    {Control is one of LaunchControl, PlayerControl or AutoControl}
     Control call
 
     {Leave a trace behind in the pixels two high bits}
@@ -265,7 +258,7 @@ $0600:
 [def
   push
   {If a key is pressed, start restart the game}
-  \serialRaw? 255^ [if<>0 SetupGame call pop call]
+  \serialRaw? $3f& $3f^ [if<>0 SetupGame call pop call]
 
   {Auto snake control}
   TurnL p=
@@ -288,10 +281,11 @@ $0600:
 ] AutoControl=
 
 [def
-  \serialRaw? $fe^ {~buttonRight} [if=0 $0001 stepU= $0100 stepV=]
-  \serialRaw? $fd^ {~buttonLeft}  [if=0 $ffff stepU= $ff00 stepV=]
-  \serialRaw? $fb^ {~buttonDown}  [if=0 $0100 stepU= $ffff stepV=]
-  \serialRaw? $f7^ {~buttonUpp}   [if=0 $ff00 stepU= $0001 stepV=]
+  \serialRaw? $fe^ {~buttonRight} [if=0 $0001 stepU=]
+  \serialRaw? $fd^ {~buttonLeft}  [if=0 $ffff stepU=]
+  \serialRaw? $fb^ {~buttonDown}  [if=0 $0100 stepU=]
+  \serialRaw? $f7^ {~buttonUpp}   [if=0 $ff00 stepU=]
+  {Note: `stepV' is not used once under player control}
   ret
 ] PlayerControl=
 
@@ -325,7 +319,6 @@ $0700:
      -1 Step= 157 Count= DrawLine call
   -$100 Step= 109 Count= DrawLine call
 
-
   {Get ready message}
   $4432 Pos= 3 {Red} Color=
   [def
@@ -342,8 +335,7 @@ $0700:
   0 Grow=
   $0001 stepU= $0100 stepV= {Start right}
 
-  PlayerControl Control=
-  $449c TakeOver= {Switch to autopilot when reaching this}
+  LaunchControl Control=
 
   8 {Green} Color=
   25 i=
@@ -361,6 +353,24 @@ $0700:
 |}$08a0 call{           RAM page 8                                      |
 +-----------------------------------------------------------------------}
 $08a0:
+
+[def
+{-
+  After game started, 
+-}
+  push
+  $449c Head- [if=0
+    {Switch to autopilot when reaching this position}
+    11 {Orange} Color=
+    $0800 Pos=
+    [def $41. $55. $54. $4f. 0.{AUTO}] Text= DrawText call
+    AutoControl Control= call
+  else
+    {Disable launch control once a button is pressed}
+    \serialRaw? 255^ [if<>0 PlayerControl Control= call]
+  ]
+  pop call
+] LaunchControl=
 
 {--- Run ---}
 
