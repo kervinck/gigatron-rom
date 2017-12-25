@@ -29,6 +29,7 @@
 #  XXX Pacman ghosts. Sprites by scan line 4 reset method? ("videoG"=graphics)
 #  XXX Intro: Rising planet?
 #  XXX Multitasking/threading/sleeping (start with date/time clock in GCL)
+#  XXX Should soft reset also reset videoDorF and frame counter?
 #  XXX Better shift-table (use ROM?)
 #  XXX Better notation for 'call': () or []
 #  XXX Prefix notation for high/low byte >X++ instead of X>++
@@ -413,10 +414,6 @@ xora(val(255))
 suba(val(0x5a-1))
 st(d(bootCheck))
 
-# Initial video mode
-ld(d(lo('videoF')));            C('Setup video mode')
-st(d(videoDorF))
-
 # vCPU reset handler
 vCpuReset = scanTable + 240 # we have 9 unused bytes behind the video table
 ld(val((vCpuReset&255)-2));     C('Setup vCPU reset handler')
@@ -425,10 +422,10 @@ adda(val(2),regX)
 ld(val(vCpuReset>>8))
 st(d(vPC+1),busAC|regY)
 st(d(lo('LDWI')),        eaYXregOUTIX)
-st(d(lo('SYS_52_RESET')),eaYXregOUTIX)
-st(d(hi('SYS_52_RESET')),eaYXregOUTIX)
+st(d(lo('SYS_54_RESET')),eaYXregOUTIX)
+st(d(hi('SYS_54_RESET')),eaYXregOUTIX)
 st(d(lo('SYS')),         eaYXregOUTIX)
-st(d(52),                eaYXregOUTIX)
+st(d(54),                eaYXregOUTIX)
 
 # XXX Everything below should at one point migrate to reset.gcl
 
@@ -1469,7 +1466,7 @@ nop()                           #23
 #-----------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
-# Extension SYS_52_RESET: Soft reset
+# Extension SYS_54_RESET: Soft reset
 #-----------------------------------------------------------------------
 
 # SYS_XX_RESET initiates an immediate Gigatron reset from within the vCPU.
@@ -1485,7 +1482,7 @@ nop()                           #23
 
 vCpuBoot = 0xea
 
-label('SYS_52_RESET')
+label('SYS_54_RESET')
 ld(val(vCpuBoot-2))             #15 vPC
 st(d(vPC))                      #16
 ld(val(vCpuBoot),regX)          #17 vPC
@@ -1496,6 +1493,9 @@ st(d(vSP))                      #21 Reset stack pointer
 st(d(vRET))                     #22 vRET
 ld(val(vCpuStart>>8))           #23
 st(d(vRET+1))                   #24
+ld(d(lo('videoF')))             #25
+st(d(videoDorF))                #26
+
 # Poke a boot sector into high zero page for the bootstrap
 # part that needs more than fits in a single SYS extension
 # - Clearing video table (to be removed)
@@ -1527,9 +1527,9 @@ st(d(lo('RET')    ),eaYXregOUTIX) #00fd Jumps to $0300
 st(d(scanTable&255),eaYXregOUTIX) #00fe Video table pointer
 st(d(scanTable>>8 ),eaYXregOUTIX) #00ff
 
-ld(val(hi('REENTER')),regY)     #47
-jmpy(d(lo('REENTER')))          #48
-ld(val(-52/2))                  #49
+ld(val(hi('REENTER')),regY)     #49
+jmpy(d(lo('REENTER')))          #50
+ld(val(-54/2))                  #51
 
 #-----------------------------------------------------------------------
 # Extension SYS_38_VCLEAR8: Zero a vertical slice of 8 bytes(pixels)

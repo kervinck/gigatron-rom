@@ -70,79 +70,77 @@ cold:         003e c204  st   [$04]
               003f 60ff  xora $ff
               0040 a059  suba $59
               0041 c205  st   [$05]
-              0042 00f2  ld   $f2         ;Setup video mode
-              0043 c20f  st   [$0f]
-              0044 00ee  ld   $ee         ;Setup vCPU reset handler
-              0045 c218  st   [$18]
-              0046 9002  adda $02,x
-              0047 0001  ld   $01
-              0048 d619  st   [$19],y
-              0049 dc12  st   $12,[y,x++]
-              004a dc31  st   $31,[y,x++]
-              004b dc04  st   $04,[y,x++]
-              004c dcac  st   $ac,[y,x++]
-              004d dc34  st   $34,[y,x++]
-              004e 1402  ld   $02,y       ;Setup shift2 table
-              004f 0000  ld   $00
-              0050 c202  st   [$02]
-.loop:        0051 c231  st   [$31]
-              0052 8200  adda ac
-              0053 9200  adda ac,x
-              0054 0131  ld   [$31]
-              0055 ce00  st   [y,x]
-              0056 8001  adda $01
+              0042 00ee  ld   $ee         ;Setup vCPU reset handler
+              0043 c218  st   [$18]
+              0044 9002  adda $02,x
+              0045 0001  ld   $01
+              0046 d619  st   [$19],y
+              0047 dc12  st   $12,[y,x++]
+              0048 dc31  st   $31,[y,x++]
+              0049 dc04  st   $04,[y,x++]
+              004a dcac  st   $ac,[y,x++]
+              004b dc36  st   $36,[y,x++]
+              004c 1402  ld   $02,y       ;Setup shift2 table
+              004d 0000  ld   $00
+              004e c202  st   [$02]
+.loop:        004f c231  st   [$31]
+              0050 8200  adda ac
+              0051 9200  adda ac,x
+              0052 0131  ld   [$31]
+              0053 ce00  st   [y,x]
+              0054 8001  adda $01
+              0055 6040  xora $40
+              0056 ec4f  bne  .loop
               0057 6040  xora $40
-              0058 ec51  bne  .loop
-              0059 6040  xora $40
-              005a 0078  ld   $78         ;Setup LED sequencer
-              005b c22e  st   [$2e]
-              005c 0000  ld   $00
-              005d c22f  st   [$2f]
-              005e 000a  ld   $0a
-              005f c230  st   [$30]
-              0060 1401  ld   $01,y       ;Setup channel 1
-              0061 10fa  ld   $fa,x
-              0062 dc38  st   $38,[y,x++]
-              0063 cc06  st   $06,[y,x]
-              0064 1402  ld   $02,y       ;Setup channel 2
-              0065 10fa  ld   $fa,x
-              0066 dc70  st   $70,[y,x++]
-              0067 cc0c  st   $0c,[y,x]
-              0068 1403  ld   $03,y       ;Setup channel 3
-              0069 10fa  ld   $fa,x
-              006a dc10  st   $10,[y,x++]
-              006b cc10  st   $10,[y,x]
-              006c 1404  ld   $04,y       ;Setup channel 4
-              006d 10fa  ld   $fa,x
-              006e dc20  st   $20,[y,x++]
-              006f cc13  st   $13,[y,x]
-              0070 0000  ld   $00         ;Setup sound timer
-              0071 c22d  st   [$2d]
-              0072 c215  st   [$15]       ;Setup serial input
-              0073 c312  st   in,[$12]
-              0074 c313  st   in,[$13]
-              0075 c314  st   in,[$14]
-              0076 0007  ld   $07         ;LEDs |***O|
-              0077 1880  ld   $80,out
-              0078 18c0  ld   $c0,out
-              0079 007f  ld   $7f         ;Load application
-              007a c209  st   [$09]
-              007b 0000  ld   $00
-              007c 14d3  ld   $d3,y
-              007d e000  jmp  y,$00
-              007e c20a  st   [$0a]
-.retn:        007f 000f  ld   $0f         ;LEDs |****|
-              0080 1880  ld   $80,out
-              0081 18c0  ld   $c0,out
-              0082 c216  st   [$16]
-              0083 c217  st   [$17]
-              0084 1402  ld   $02,y       ;Enter video loop
-              0085 e004  jmp  y,$04
-              0086 00c0  ld   $c0
+              0058 0078  ld   $78         ;Setup LED sequencer
+              0059 c22e  st   [$2e]
+              005a 0000  ld   $00
+              005b c22f  st   [$2f]
+              005c 000a  ld   $0a
+              005d c230  st   [$30]
+              005e 1401  ld   $01,y       ;Setup channel 1
+              005f 10fa  ld   $fa,x
+              0060 dc38  st   $38,[y,x++]
+              0061 cc06  st   $06,[y,x]
+              0062 1402  ld   $02,y       ;Setup channel 2
+              0063 10fa  ld   $fa,x
+              0064 dc70  st   $70,[y,x++]
+              0065 cc0c  st   $0c,[y,x]
+              0066 1403  ld   $03,y       ;Setup channel 3
+              0067 10fa  ld   $fa,x
+              0068 dc10  st   $10,[y,x++]
+              0069 cc10  st   $10,[y,x]
+              006a 1404  ld   $04,y       ;Setup channel 4
+              006b 10fa  ld   $fa,x
+              006c dc20  st   $20,[y,x++]
+              006d cc13  st   $13,[y,x]
+              006e 0000  ld   $00         ;Setup sound timer
+              006f c22d  st   [$2d]
+              0070 c215  st   [$15]       ;Setup serial input
+              0071 c312  st   in,[$12]
+              0072 c313  st   in,[$13]
+              0073 c314  st   in,[$14]
+              0074 0007  ld   $07         ;LEDs |***O|
+              0075 1880  ld   $80,out
+              0076 18c0  ld   $c0,out
+              0077 007d  ld   $7d         ;Load application
+              0078 c209  st   [$09]
+              0079 0000  ld   $00
+              007a 14d3  ld   $d3,y
+              007b e000  jmp  y,$00
+              007c c20a  st   [$0a]
+.retn:        007d 000f  ld   $0f         ;LEDs |****|
+              007e 1880  ld   $80,out
+              007f 18c0  ld   $c0,out
+              0080 c216  st   [$16]
+              0081 c217  st   [$17]
+              0082 1402  ld   $02,y       ;Enter video loop
+              0083 e004  jmp  y,$04
+              0084 00c0  ld   $c0
+              0085 0200  nop
+              0086 0200  nop
               0087 0200  nop
-              0088 0200  nop
-              0089 0200  nop
-              * 121 times
+              * 123 times
 videoA:       0100 00c8  ld   $c8
               0101 c20e  st   [$0e]
               0102 1401  ld   $01,y
@@ -774,7 +772,7 @@ def:          0426 0118  ld   [$18]
               042e 00f3  ld   $f3
               042f e0e2  jmp  y,$e2
               0430 0200  nop
-SYS_52_RESET: 0431 00e8  ld   $e8
+SYS_54_RESET: 0431 00e8  ld   $e8
               0432 c218  st   [$18]
               0433 10ea  ld   $ea,x
               0434 0000  ld   $00
@@ -784,133 +782,135 @@ SYS_52_RESET: 0431 00e8  ld   $e8
               0438 c21c  st   [$1c]
               0439 0003  ld   $03
               043a c21d  st   [$1d]
-              043b dc5c  st   $5c,[y,x++]
-              043c dc08  st   $08,[y,x++]
-              043d dc9b  st   $9b,[y,x++]
-              043e dcfe  st   $fe,[y,x++]
-              043f dcf6  st   $f6,[y,x++]
-              0440 dceb  st   $eb,[y,x++]
+              043b 00f2  ld   $f2
+              043c c20f  st   [$0f]
+              043d dc5c  st   $5c,[y,x++]
+              043e dc08  st   $08,[y,x++]
+              043f dc9b  st   $9b,[y,x++]
+              0440 dcfe  st   $fe,[y,x++]
               0441 dcf6  st   $f6,[y,x++]
-              0442 dcfe  st   $fe,[y,x++]
-              0443 dc5c  st   $5c,[y,x++]
-              0444 dc00  st   $00,[y,x++]
-              0445 dc9b  st   $9b,[y,x++]
-              0446 dcfe  st   $fe,[y,x++]
-              0447 dcf6  st   $f6,[y,x++]
+              0442 dceb  st   $eb,[y,x++]
+              0443 dcf6  st   $f6,[y,x++]
+              0444 dcfe  st   $fe,[y,x++]
+              0445 dc5c  st   $5c,[y,x++]
+              0446 dc00  st   $00,[y,x++]
+              0447 dc9b  st   $9b,[y,x++]
               0448 dcfe  st   $fe,[y,x++]
-              0449 dc22  st   $22,[y,x++]
-              044a dcea  st   $ea,[y,x++]
-              044b dc36  st   $36,[y,x++]
-              044c dc56  st   $56,[y,x++]
-              044d dce8  st   $e8,[y,x++]
-              044e dcff  st   $ff,[y,x++]
-              044f dc00  st   $00,[y,x++]
-              0450 dc01  st   $01,[y,x++]
-              0451 1403  ld   $03,y
-              0452 e0e2  jmp  y,$e2
-              0453 00e6  ld   $e6
-SYS_38_VCLEAR8: 0454 1125  ld   [$25],x
-              0455 0126  ld   [$26]
-              0456 9400  adda $00,y
-              0457 cc00  st   $00,[y,x]
-              0458 9401  adda $01,y
+              0449 dcf6  st   $f6,[y,x++]
+              044a dcfe  st   $fe,[y,x++]
+              044b dc22  st   $22,[y,x++]
+              044c dcea  st   $ea,[y,x++]
+              044d dc36  st   $36,[y,x++]
+              044e dc56  st   $56,[y,x++]
+              044f dce8  st   $e8,[y,x++]
+              0450 dcff  st   $ff,[y,x++]
+              0451 dc00  st   $00,[y,x++]
+              0452 dc01  st   $01,[y,x++]
+              0453 1403  ld   $03,y
+              0454 e0e2  jmp  y,$e2
+              0455 00e5  ld   $e5
+SYS_38_VCLEAR8: 0456 1125  ld   [$25],x
+              0457 0126  ld   [$26]
+              0458 9400  adda $00,y
               0459 cc00  st   $00,[y,x]
-              045a 9402  adda $02,y
+              045a 9401  adda $01,y
               045b cc00  st   $00,[y,x]
-              045c 9403  adda $03,y
+              045c 9402  adda $02,y
               045d cc00  st   $00,[y,x]
-              045e 9404  adda $04,y
+              045e 9403  adda $03,y
               045f cc00  st   $00,[y,x]
-              0460 9405  adda $05,y
+              0460 9404  adda $04,y
               0461 cc00  st   $00,[y,x]
-              0462 9406  adda $06,y
+              0462 9405  adda $05,y
               0463 cc00  st   $00,[y,x]
-              0464 9407  adda $07,y
+              0464 9406  adda $06,y
               0465 cc00  st   $00,[y,x]
-              0466 1403  ld   $03,y
-              0467 e0e2  jmp  y,$e2
-              0468 00ed  ld   $ed
-SYS_34_RANDOM: 0469 0111  ld   [$11]
-              046a 6107  xora [$07]
-              046b 6112  xora [$12]
-              046c 8106  adda [$06]
-              046d c206  st   [$06]
-              046e c21a  st   [$1a]
-              046f 8108  adda [$08]
-              0470 c208  st   [$08]
-              0471 e874  blt  .sysRnd0
-              0472 fc75  bra  .sysRnd1
-              0473 6053  xora $53
-.sysRnd0:     0474 606c  xora $6c
-.sysRnd1:     0475 8107  adda [$07]
-              0476 c207  st   [$07]
-              0477 c21b  st   [$1b]
-              0478 1403  ld   $03,y
-              0479 e0e2  jmp  y,$e2
-              047a 00ef  ld   $ef
-SYS_40_READ3: 047b 1524  ld   [$24],y
-              047c e079  jmp  y,$79
-              047d 0123  ld   [$23]
-txReturn:     047e c227  st   [$27]
-              047f 1403  ld   $03,y
-              0480 e0e2  jmp  y,$e2
-              0481 00ec  ld   $ec
-SYS_56_UNPACK: 0482 1402  ld   $02,y
-              0483 0127  ld   [$27]
-              0484 30fc  anda $fc,x
-              0485 0d00  ld   [y,x]
-              0486 c228  st   [$28]       ;-> Pixel 3
-              0487 0127  ld   [$27]
-              0488 2003  anda $03
-              0489 8200  adda ac
-              048a 8200  adda ac
+              0466 9407  adda $07,y
+              0467 cc00  st   $00,[y,x]
+              0468 1403  ld   $03,y
+              0469 e0e2  jmp  y,$e2
+              046a 00ed  ld   $ed
+SYS_34_RANDOM: 046b 0111  ld   [$11]
+              046c 6107  xora [$07]
+              046d 6112  xora [$12]
+              046e 8106  adda [$06]
+              046f c206  st   [$06]
+              0470 c21a  st   [$1a]
+              0471 8108  adda [$08]
+              0472 c208  st   [$08]
+              0473 e876  blt  .sysRnd0
+              0474 fc77  bra  .sysRnd1
+              0475 6053  xora $53
+.sysRnd0:     0476 606c  xora $6c
+.sysRnd1:     0477 8107  adda [$07]
+              0478 c207  st   [$07]
+              0479 c21b  st   [$1b]
+              047a 1403  ld   $03,y
+              047b e0e2  jmp  y,$e2
+              047c 00ef  ld   $ef
+SYS_40_READ3: 047d 1524  ld   [$24],y
+              047e e079  jmp  y,$79
+              047f 0123  ld   [$23]
+txReturn:     0480 c227  st   [$27]
+              0481 1403  ld   $03,y
+              0482 e0e2  jmp  y,$e2
+              0483 00ec  ld   $ec
+SYS_56_UNPACK: 0484 1402  ld   $02,y
+              0485 0127  ld   [$27]
+              0486 30fc  anda $fc,x
+              0487 0d00  ld   [y,x]
+              0488 c228  st   [$28]       ;-> Pixel 3
+              0489 0127  ld   [$27]
+              048a 2003  anda $03
               048b 8200  adda ac
               048c 8200  adda ac
-              048d c227  st   [$27]
-              048e 0126  ld   [$26]
-              048f 30fc  anda $fc,x
-              0490 0d00  ld   [y,x]
+              048d 8200  adda ac
+              048e 8200  adda ac
+              048f c227  st   [$27]
+              0490 0126  ld   [$26]
               0491 30fc  anda $fc,x
               0492 0d00  ld   [y,x]
-              0493 4127  ora  [$27]
-              0494 c227  st   [$27]       ;-> Pixel 2
-              0495 0126  ld   [$26]
-              0496 200f  anda $0f
-              0497 8200  adda ac
-              0498 8200  adda ac
-              0499 c226  st   [$26]
-              049a 0125  ld   [$25]
-              049b 30fc  anda $fc,x
-              049c 0d00  ld   [y,x]
+              0493 30fc  anda $fc,x
+              0494 0d00  ld   [y,x]
+              0495 4127  ora  [$27]
+              0496 c227  st   [$27]       ;-> Pixel 2
+              0497 0126  ld   [$26]
+              0498 200f  anda $0f
+              0499 8200  adda ac
+              049a 8200  adda ac
+              049b c226  st   [$26]
+              049c 0125  ld   [$25]
               049d 30fc  anda $fc,x
               049e 0d00  ld   [y,x]
               049f 30fc  anda $fc,x
               04a0 0d00  ld   [y,x]
-              04a1 4126  ora  [$26]
-              04a2 c226  st   [$26]       ;-> Pixel 1
-              04a3 0125  ld   [$25]
-              04a4 203f  anda $3f
-              04a5 c225  st   [$25]       ;-> Pixel 0
-              04a6 1403  ld   $03,y
-              04a7 e0e2  jmp  y,$e2
-              04a8 00e4  ld   $e4
-SYS_30_DRAW4: 04a9 1121  ld   [$21],x
-              04aa 1522  ld   [$22],y
-              04ab 0125  ld   [$25]
-              04ac de00  st   [y,x++]
-              04ad 0126  ld   [$26]
+              04a1 30fc  anda $fc,x
+              04a2 0d00  ld   [y,x]
+              04a3 4126  ora  [$26]
+              04a4 c226  st   [$26]       ;-> Pixel 1
+              04a5 0125  ld   [$25]
+              04a6 203f  anda $3f
+              04a7 c225  st   [$25]       ;-> Pixel 0
+              04a8 1403  ld   $03,y
+              04a9 e0e2  jmp  y,$e2
+              04aa 00e4  ld   $e4
+SYS_30_DRAW4: 04ab 1121  ld   [$21],x
+              04ac 1522  ld   [$22],y
+              04ad 0125  ld   [$25]
               04ae de00  st   [y,x++]
-              04af 0127  ld   [$27]
+              04af 0126  ld   [$26]
               04b0 de00  st   [y,x++]
-              04b1 0128  ld   [$28]
+              04b1 0127  ld   [$27]
               04b2 de00  st   [y,x++]
-              04b3 1403  ld   $03,y
-              04b4 e0e2  jmp  y,$e2
-              04b5 00f1  ld   $f1
-              04b6 0200  nop
-              04b7 0200  nop
+              04b3 0128  ld   [$28]
+              04b4 de00  st   [y,x++]
+              04b5 1403  ld   $03,y
+              04b6 e0e2  jmp  y,$e2
+              04b7 00f1  ld   $f1
               04b8 0200  nop
-              * 74 times
+              04b9 0200  nop
+              04ba 0200  nop
+              * 72 times
 font32up:     0500 0000  ld   $00         ;Char ' '
               0501 0000  ld   $00
               0502 0000  ld   $00
@@ -1424,7 +1424,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               07fc 8002  adda $02
               07fd 1404  ld   $04,y
               07fe fe00  bra  ac
-              07ff e07e  jmp  y,$7e
+              07ff e080  jmp  y,$80
               0800 0000  ld   $00         ;Pixels for packedJupiter line 2
               0801 0000  ld   $00
               0802 0000  ld   $00
@@ -1465,7 +1465,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               08fc 8002  adda $02
               08fd 1404  ld   $04,y
               08fe fe00  bra  ac
-              08ff e07e  jmp  y,$7e
+              08ff e080  jmp  y,$80
               0900 0000  ld   $00         ;Pixels for packedJupiter line 4
               0901 0000  ld   $00
               0902 0000  ld   $00
@@ -1547,7 +1547,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               09fc 8002  adda $02
               09fd 1404  ld   $04,y
               09fe fe00  bra  ac
-              09ff e07e  jmp  y,$7e
+              09ff e080  jmp  y,$80
               0a00 0000  ld   $00         ;Pixels for packedJupiter line 6
               0a01 0000  ld   $00
               0a02 0000  ld   $00
@@ -1650,7 +1650,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               0afc 8002  adda $02
               0afd 1404  ld   $04,y
               0afe fe00  bra  ac
-              0aff e07e  jmp  y,$7e
+              0aff e080  jmp  y,$80
               0b00 0000  ld   $00         ;Pixels for packedJupiter line 8
               0b01 0000  ld   $00
               0b02 0000  ld   $00
@@ -1766,7 +1766,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               0bfc 8002  adda $02
               0bfd 1404  ld   $04,y
               0bfe fe00  bra  ac
-              0bff e07e  jmp  y,$7e
+              0bff e080  jmp  y,$80
               0c00 0000  ld   $00         ;Pixels for packedJupiter line 10
               0c01 0000  ld   $00
               0c02 0000  ld   $00
@@ -1893,7 +1893,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               0cfc 8002  adda $02
               0cfd 1404  ld   $04,y
               0cfe fe00  bra  ac
-              0cff e07e  jmp  y,$7e
+              0cff e080  jmp  y,$80
               0d00 0000  ld   $00         ;Pixels for packedJupiter line 12
               0d01 0000  ld   $00
               0d02 0000  ld   $00
@@ -2032,7 +2032,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               0dfc 8002  adda $02
               0dfd 1404  ld   $04,y
               0dfe fe00  bra  ac
-              0dff e07e  jmp  y,$7e
+              0dff e080  jmp  y,$80
               0e00 0000  ld   $00         ;Pixels for packedJupiter line 14
               0e01 0000  ld   $00
               0e02 0000  ld   $00
@@ -2180,7 +2180,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               0efc 8002  adda $02
               0efd 1404  ld   $04,y
               0efe fe00  bra  ac
-              0eff e07e  jmp  y,$7e
+              0eff e080  jmp  y,$80
               0f00 0000  ld   $00         ;Pixels for packedJupiter line 16
               0f01 0000  ld   $00
               0f02 0000  ld   $00
@@ -2335,7 +2335,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               0ffc 8002  adda $02
               0ffd 1404  ld   $04,y
               0ffe fe00  bra  ac
-              0fff e07e  jmp  y,$7e
+              0fff e080  jmp  y,$80
               1000 0000  ld   $00         ;Pixels for packedJupiter line 18
               1001 0000  ld   $00
               1002 0000  ld   $00
@@ -2497,7 +2497,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               10fc 8002  adda $02
               10fd 1404  ld   $04,y
               10fe fe00  bra  ac
-              10ff e07e  jmp  y,$7e
+              10ff e080  jmp  y,$80
               1100 0000  ld   $00         ;Pixels for packedJupiter line 20
               1101 0000  ld   $00
               1102 0000  ld   $00
@@ -2665,7 +2665,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               11fc 8002  adda $02
               11fd 1404  ld   $04,y
               11fe fe00  bra  ac
-              11ff e07e  jmp  y,$7e
+              11ff e080  jmp  y,$80
               1200 0000  ld   $00         ;Pixels for packedJupiter line 22
               1201 0000  ld   $00
               1202 0000  ld   $00
@@ -2839,7 +2839,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               12fc 8002  adda $02
               12fd 1404  ld   $04,y
               12fe fe00  bra  ac
-              12ff e07e  jmp  y,$7e
+              12ff e080  jmp  y,$80
               1300 0000  ld   $00         ;Pixels for packedJupiter line 24
               1301 0000  ld   $00
               1302 0000  ld   $00
@@ -3019,7 +3019,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               13fc 8002  adda $02
               13fd 1404  ld   $04,y
               13fe fe00  bra  ac
-              13ff e07e  jmp  y,$7e
+              13ff e080  jmp  y,$80
               1400 0000  ld   $00         ;Pixels for packedJupiter line 26
               1401 0000  ld   $00
               1402 0000  ld   $00
@@ -3203,7 +3203,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               14fc 8002  adda $02
               14fd 1404  ld   $04,y
               14fe fe00  bra  ac
-              14ff e07e  jmp  y,$7e
+              14ff e080  jmp  y,$80
               1500 0000  ld   $00         ;Pixels for packedJupiter line 28
               1501 0000  ld   $00
               1502 0000  ld   $00
@@ -3391,7 +3391,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               15fc 8002  adda $02
               15fd 1404  ld   $04,y
               15fe fe00  bra  ac
-              15ff e07e  jmp  y,$7e
+              15ff e080  jmp  y,$80
               1600 0000  ld   $00         ;Pixels for packedJupiter line 30
               1601 0000  ld   $00
               1602 0000  ld   $00
@@ -3583,7 +3583,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               16fc 8002  adda $02
               16fd 1404  ld   $04,y
               16fe fe00  bra  ac
-              16ff e07e  jmp  y,$7e
+              16ff e080  jmp  y,$80
               1700 0000  ld   $00         ;Pixels for packedJupiter line 32
               1701 0000  ld   $00
               1702 0000  ld   $00
@@ -3779,7 +3779,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               17fc 8002  adda $02
               17fd 1404  ld   $04,y
               17fe fe00  bra  ac
-              17ff e07e  jmp  y,$7e
+              17ff e080  jmp  y,$80
               1800 0000  ld   $00         ;Pixels for packedJupiter line 34
               1801 0000  ld   $00
               1802 0000  ld   $00
@@ -3978,7 +3978,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               18fc 8002  adda $02
               18fd 1404  ld   $04,y
               18fe fe00  bra  ac
-              18ff e07e  jmp  y,$7e
+              18ff e080  jmp  y,$80
               1900 0000  ld   $00         ;Pixels for packedJupiter line 36
               1901 0000  ld   $00
               1902 0000  ld   $00
@@ -4180,7 +4180,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               19fc 8002  adda $02
               19fd 1404  ld   $04,y
               19fe fe00  bra  ac
-              19ff e07e  jmp  y,$7e
+              19ff e080  jmp  y,$80
               1a00 0000  ld   $00         ;Pixels for packedJupiter line 38
               1a01 0000  ld   $00
               1a02 0000  ld   $00
@@ -4385,7 +4385,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               1afc 8002  adda $02
               1afd 1404  ld   $04,y
               1afe fe00  bra  ac
-              1aff e07e  jmp  y,$7e
+              1aff e080  jmp  y,$80
               1b00 0000  ld   $00         ;Pixels for packedJupiter line 40
               1b01 0000  ld   $00
               1b02 0000  ld   $00
@@ -4593,7 +4593,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               1bfc 8002  adda $02
               1bfd 1404  ld   $04,y
               1bfe fe00  bra  ac
-              1bff e07e  jmp  y,$7e
+              1bff e080  jmp  y,$80
               1c00 0000  ld   $00         ;Pixels for packedJupiter line 42
               1c01 0000  ld   $00
               1c02 0000  ld   $00
@@ -4802,7 +4802,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               1cfc 8002  adda $02
               1cfd 1404  ld   $04,y
               1cfe fe00  bra  ac
-              1cff e07e  jmp  y,$7e
+              1cff e080  jmp  y,$80
               1d00 0000  ld   $00         ;Pixels for packedJupiter line 44
               1d01 0000  ld   $00
               1d02 0000  ld   $00
@@ -5011,7 +5011,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               1dfc 8002  adda $02
               1dfd 1404  ld   $04,y
               1dfe fe00  bra  ac
-              1dff e07e  jmp  y,$7e
+              1dff e080  jmp  y,$80
               1e00 0000  ld   $00         ;Pixels for packedJupiter line 46
               1e01 0000  ld   $00
               1e02 0000  ld   $00
@@ -5222,7 +5222,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               1efc 8002  adda $02
               1efd 1404  ld   $04,y
               1efe fe00  bra  ac
-              1eff e07e  jmp  y,$7e
+              1eff e080  jmp  y,$80
               1f00 0000  ld   $00         ;Pixels for packedJupiter line 48
               1f01 0000  ld   $00
               1f02 0000  ld   $00
@@ -5436,7 +5436,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               1ffc 8002  adda $02
               1ffd 1404  ld   $04,y
               1ffe fe00  bra  ac
-              1fff e07e  jmp  y,$7e
+              1fff e080  jmp  y,$80
               2000 0000  ld   $00         ;Pixels for packedJupiter line 50
               2001 0000  ld   $00
               2002 0000  ld   $00
@@ -5651,7 +5651,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               20fc 8002  adda $02
               20fd 1404  ld   $04,y
               20fe fe00  bra  ac
-              20ff e07e  jmp  y,$7e
+              20ff e080  jmp  y,$80
               2100 0000  ld   $00         ;Pixels for packedJupiter line 52
               2101 0000  ld   $00
               2102 0000  ld   $00
@@ -5868,7 +5868,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               21fc 8002  adda $02
               21fd 1404  ld   $04,y
               21fe fe00  bra  ac
-              21ff e07e  jmp  y,$7e
+              21ff e080  jmp  y,$80
               2200 0000  ld   $00         ;Pixels for packedJupiter line 54
               2201 0000  ld   $00
               2202 0000  ld   $00
@@ -6085,7 +6085,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               22fc 8002  adda $02
               22fd 1404  ld   $04,y
               22fe fe00  bra  ac
-              22ff e07e  jmp  y,$7e
+              22ff e080  jmp  y,$80
               2300 0000  ld   $00         ;Pixels for packedJupiter line 56
               2301 0000  ld   $00
               2302 0000  ld   $00
@@ -6303,7 +6303,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               23fc 8002  adda $02
               23fd 1404  ld   $04,y
               23fe fe00  bra  ac
-              23ff e07e  jmp  y,$7e
+              23ff e080  jmp  y,$80
               2400 0000  ld   $00         ;Pixels for packedJupiter line 58
               2401 0000  ld   $00
               2402 0000  ld   $00
@@ -6521,7 +6521,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               24fc 8002  adda $02
               24fd 1404  ld   $04,y
               24fe fe00  bra  ac
-              24ff e07e  jmp  y,$7e
+              24ff e080  jmp  y,$80
               2500 0000  ld   $00         ;Pixels for packedJupiter line 60
               2501 0000  ld   $00
               2502 0000  ld   $00
@@ -6738,7 +6738,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               25fc 8002  adda $02
               25fd 1404  ld   $04,y
               25fe fe00  bra  ac
-              25ff e07e  jmp  y,$7e
+              25ff e080  jmp  y,$80
               2600 0000  ld   $00         ;Pixels for packedJupiter line 62
               2601 0000  ld   $00
               2602 0000  ld   $00
@@ -6955,7 +6955,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               26fc 8002  adda $02
               26fd 1404  ld   $04,y
               26fe fe00  bra  ac
-              26ff e07e  jmp  y,$7e
+              26ff e080  jmp  y,$80
               2700 0000  ld   $00         ;Pixels for packedJupiter line 64
               2701 0000  ld   $00
               2702 0000  ld   $00
@@ -7173,7 +7173,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               27fc 8002  adda $02
               27fd 1404  ld   $04,y
               27fe fe00  bra  ac
-              27ff e07e  jmp  y,$7e
+              27ff e080  jmp  y,$80
               2800 0000  ld   $00         ;Pixels for packedJupiter line 66
               2801 0000  ld   $00
               2802 0000  ld   $00
@@ -7390,7 +7390,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               28fc 8002  adda $02
               28fd 1404  ld   $04,y
               28fe fe00  bra  ac
-              28ff e07e  jmp  y,$7e
+              28ff e080  jmp  y,$80
               2900 0000  ld   $00         ;Pixels for packedJupiter line 68
               2901 0000  ld   $00
               2902 0000  ld   $00
@@ -7605,7 +7605,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               29fc 8002  adda $02
               29fd 1404  ld   $04,y
               29fe fe00  bra  ac
-              29ff e07e  jmp  y,$7e
+              29ff e080  jmp  y,$80
               2a00 0000  ld   $00         ;Pixels for packedJupiter line 70
               2a01 0000  ld   $00
               2a02 0000  ld   $00
@@ -7816,7 +7816,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               2afc 8002  adda $02
               2afd 1404  ld   $04,y
               2afe fe00  bra  ac
-              2aff e07e  jmp  y,$7e
+              2aff e080  jmp  y,$80
               2b00 0000  ld   $00         ;Pixels for packedJupiter line 72
               2b01 0000  ld   $00
               2b02 0000  ld   $00
@@ -8027,7 +8027,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               2bfc 8002  adda $02
               2bfd 1404  ld   $04,y
               2bfe fe00  bra  ac
-              2bff e07e  jmp  y,$7e
+              2bff e080  jmp  y,$80
               2c00 0000  ld   $00         ;Pixels for packedJupiter line 74
               2c01 0000  ld   $00
               2c02 0000  ld   $00
@@ -8237,7 +8237,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               2cfc 8002  adda $02
               2cfd 1404  ld   $04,y
               2cfe fe00  bra  ac
-              2cff e07e  jmp  y,$7e
+              2cff e080  jmp  y,$80
               2d00 0000  ld   $00         ;Pixels for packedJupiter line 76
               2d01 0000  ld   $00
               2d02 0000  ld   $00
@@ -8445,7 +8445,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               2dfc 8002  adda $02
               2dfd 1404  ld   $04,y
               2dfe fe00  bra  ac
-              2dff e07e  jmp  y,$7e
+              2dff e080  jmp  y,$80
               2e00 0000  ld   $00         ;Pixels for packedJupiter line 78
               2e01 0000  ld   $00
               2e02 0000  ld   $00
@@ -8652,7 +8652,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               2efc 8002  adda $02
               2efd 1404  ld   $04,y
               2efe fe00  bra  ac
-              2eff e07e  jmp  y,$7e
+              2eff e080  jmp  y,$80
               2f00 0000  ld   $00         ;Pixels for packedJupiter line 80
               2f01 0000  ld   $00
               2f02 0000  ld   $00
@@ -8856,7 +8856,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               2ffc 8002  adda $02
               2ffd 1404  ld   $04,y
               2ffe fe00  bra  ac
-              2fff e07e  jmp  y,$7e
+              2fff e080  jmp  y,$80
               3000 0000  ld   $00         ;Pixels for packedJupiter line 82
               3001 0000  ld   $00
               3002 0000  ld   $00
@@ -9056,7 +9056,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               30fc 8002  adda $02
               30fd 1404  ld   $04,y
               30fe fe00  bra  ac
-              30ff e07e  jmp  y,$7e
+              30ff e080  jmp  y,$80
               3100 0000  ld   $00         ;Pixels for packedJupiter line 84
               3101 0000  ld   $00
               3102 0000  ld   $00
@@ -9255,7 +9255,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               31fc 8002  adda $02
               31fd 1404  ld   $04,y
               31fe fe00  bra  ac
-              31ff e07e  jmp  y,$7e
+              31ff e080  jmp  y,$80
               3200 0000  ld   $00         ;Pixels for packedJupiter line 86
               3201 0000  ld   $00
               3202 0000  ld   $00
@@ -9451,7 +9451,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               32fc 8002  adda $02
               32fd 1404  ld   $04,y
               32fe fe00  bra  ac
-              32ff e07e  jmp  y,$7e
+              32ff e080  jmp  y,$80
               3300 0000  ld   $00         ;Pixels for packedJupiter line 88
               3301 0000  ld   $00
               3302 0000  ld   $00
@@ -9644,7 +9644,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               33fc 8002  adda $02
               33fd 1404  ld   $04,y
               33fe fe00  bra  ac
-              33ff e07e  jmp  y,$7e
+              33ff e080  jmp  y,$80
               3400 0000  ld   $00         ;Pixels for packedJupiter line 90
               3401 0000  ld   $00
               3402 0000  ld   $00
@@ -9832,7 +9832,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               34fc 8002  adda $02
               34fd 1404  ld   $04,y
               34fe fe00  bra  ac
-              34ff e07e  jmp  y,$7e
+              34ff e080  jmp  y,$80
               3500 0000  ld   $00         ;Pixels for packedJupiter line 92
               3501 0000  ld   $00
               3502 0000  ld   $00
@@ -10015,7 +10015,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               35fc 8002  adda $02
               35fd 1404  ld   $04,y
               35fe fe00  bra  ac
-              35ff e07e  jmp  y,$7e
+              35ff e080  jmp  y,$80
               3600 0000  ld   $00         ;Pixels for packedJupiter line 94
               3601 0000  ld   $00
               3602 0000  ld   $00
@@ -10193,7 +10193,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               36fc 8002  adda $02
               36fd 1404  ld   $04,y
               36fe fe00  bra  ac
-              36ff e07e  jmp  y,$7e
+              36ff e080  jmp  y,$80
               3700 0000  ld   $00         ;Pixels for packedJupiter line 96
               3701 0000  ld   $00
               3702 0000  ld   $00
@@ -10367,7 +10367,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               37fc 8002  adda $02
               37fd 1404  ld   $04,y
               37fe fe00  bra  ac
-              37ff e07e  jmp  y,$7e
+              37ff e080  jmp  y,$80
               3800 0000  ld   $00         ;Pixels for packedJupiter line 98
               3801 0000  ld   $00
               3802 0000  ld   $00
@@ -10535,7 +10535,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               38fc 8002  adda $02
               38fd 1404  ld   $04,y
               38fe fe00  bra  ac
-              38ff e07e  jmp  y,$7e
+              38ff e080  jmp  y,$80
               3900 0000  ld   $00         ;Pixels for packedJupiter line 100
               3901 0000  ld   $00
               3902 0000  ld   $00
@@ -10695,7 +10695,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               39fc 8002  adda $02
               39fd 1404  ld   $04,y
               39fe fe00  bra  ac
-              39ff e07e  jmp  y,$7e
+              39ff e080  jmp  y,$80
               3a00 0000  ld   $00         ;Pixels for packedJupiter line 102
               3a01 0000  ld   $00
               3a02 0000  ld   $00
@@ -10848,7 +10848,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               3afc 8002  adda $02
               3afd 1404  ld   $04,y
               3afe fe00  bra  ac
-              3aff e07e  jmp  y,$7e
+              3aff e080  jmp  y,$80
               3b00 0000  ld   $00         ;Pixels for packedJupiter line 104
               3b01 0000  ld   $00
               3b02 0000  ld   $00
@@ -10996,7 +10996,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               3bfc 8002  adda $02
               3bfd 1404  ld   $04,y
               3bfe fe00  bra  ac
-              3bff e07e  jmp  y,$7e
+              3bff e080  jmp  y,$80
               3c00 0000  ld   $00         ;Pixels for packedJupiter line 106
               3c01 0000  ld   $00
               3c02 0000  ld   $00
@@ -11135,7 +11135,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               3cfc 8002  adda $02
               3cfd 1404  ld   $04,y
               3cfe fe00  bra  ac
-              3cff e07e  jmp  y,$7e
+              3cff e080  jmp  y,$80
               3d00 0000  ld   $00         ;Pixels for packedJupiter line 108
               3d01 0000  ld   $00
               3d02 0000  ld   $00
@@ -11264,7 +11264,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               3dfc 8002  adda $02
               3dfd 1404  ld   $04,y
               3dfe fe00  bra  ac
-              3dff e07e  jmp  y,$7e
+              3dff e080  jmp  y,$80
               3e00 0000  ld   $00         ;Pixels for packedJupiter line 110
               3e01 0000  ld   $00
               3e02 0000  ld   $00
@@ -11380,7 +11380,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               3efc 8002  adda $02
               3efd 1404  ld   $04,y
               3efe fe00  bra  ac
-              3eff e07e  jmp  y,$7e
+              3eff e080  jmp  y,$80
               3f00 0000  ld   $00         ;Pixels for packedJupiter line 112
               3f01 0000  ld   $00
               3f02 0000  ld   $00
@@ -11481,7 +11481,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               3ffc 8002  adda $02
               3ffd 1404  ld   $04,y
               3ffe fe00  bra  ac
-              3fff e07e  jmp  y,$7e
+              3fff e080  jmp  y,$80
               4000 0000  ld   $00         ;Pixels for packedJupiter line 114
               4001 0000  ld   $00
               4002 0000  ld   $00
@@ -11562,7 +11562,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               40fc 8002  adda $02
               40fd 1404  ld   $04,y
               40fe fe00  bra  ac
-              40ff e07e  jmp  y,$7e
+              40ff e080  jmp  y,$80
               4100 0000  ld   $00         ;Pixels for packedJupiter line 116
               4101 0000  ld   $00
               4102 0000  ld   $00
@@ -11606,7 +11606,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               41fc 8002  adda $02
               41fd 1404  ld   $04,y
               41fe fe00  bra  ac
-              41ff e07e  jmp  y,$7e
+              41ff e080  jmp  y,$80
               4200 0000  ld   $00         ;Pixels for packedJupiter line 118
               4201 0000  ld   $00
               4202 0000  ld   $00
@@ -11630,7 +11630,7 @@ packedJupiter: 0700 0000  ld   $00         ;Pixels for packedJupiter line 0
               42fc 8002  adda $02
               42fd 1404  ld   $04,y
               42fe fe00  bra  ac
-              42ff e07e  jmp  y,$7e
+              42ff e080  jmp  y,$80
 packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               4301 0000  ld   $00
               4302 0000  ld   $00
@@ -11814,7 +11814,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               43fc 8002  adda $02
               43fd 1404  ld   $04,y
               43fe fe00  bra  ac
-              43ff e07e  jmp  y,$7e
+              43ff e080  jmp  y,$80
               4400 0000  ld   $00         ;Pixels for packedParrot line 2
               4401 0000  ld   $00
               4402 0000  ld   $00
@@ -12018,7 +12018,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               44fc 8002  adda $02
               44fd 1404  ld   $04,y
               44fe fe00  bra  ac
-              44ff e07e  jmp  y,$7e
+              44ff e080  jmp  y,$80
               4500 0000  ld   $00         ;Pixels for packedParrot line 4
               4501 0000  ld   $00
               4502 0000  ld   $00
@@ -12243,7 +12243,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               45fc 8002  adda $02
               45fd 1404  ld   $04,y
               45fe fe00  bra  ac
-              45ff e07e  jmp  y,$7e
+              45ff e080  jmp  y,$80
               4600 0000  ld   $00         ;Pixels for packedParrot line 6
               4601 0000  ld   $00
               4602 0000  ld   $00
@@ -12479,7 +12479,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               46fc 8002  adda $02
               46fd 1404  ld   $04,y
               46fe fe00  bra  ac
-              46ff e07e  jmp  y,$7e
+              46ff e080  jmp  y,$80
               4700 0000  ld   $00         ;Pixels for packedParrot line 8
               4701 0000  ld   $00
               4702 0000  ld   $00
@@ -12713,7 +12713,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               47fc 8002  adda $02
               47fd 1404  ld   $04,y
               47fe fe00  bra  ac
-              47ff e07e  jmp  y,$7e
+              47ff e080  jmp  y,$80
               4800 0000  ld   $00         ;Pixels for packedParrot line 10
               4801 0000  ld   $00
               4802 0000  ld   $00
@@ -12946,7 +12946,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               48fc 8002  adda $02
               48fd 1404  ld   $04,y
               48fe fe00  bra  ac
-              48ff e07e  jmp  y,$7e
+              48ff e080  jmp  y,$80
               4900 0000  ld   $00         ;Pixels for packedParrot line 12
               4901 0000  ld   $00
               4902 0000  ld   $00
@@ -13184,7 +13184,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               49fc 8002  adda $02
               49fd 1404  ld   $04,y
               49fe fe00  bra  ac
-              49ff e07e  jmp  y,$7e
+              49ff e080  jmp  y,$80
               4a00 0040  ld   $40         ;Pixels for packedParrot line 14
               4a01 0001  ld   $01
               4a02 0000  ld   $00
@@ -13418,7 +13418,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               4afc 8002  adda $02
               4afd 1404  ld   $04,y
               4afe fe00  bra  ac
-              4aff e07e  jmp  y,$7e
+              4aff e080  jmp  y,$80
               4b00 00aa  ld   $aa         ;Pixels for packedParrot line 16
               4b01 0055  ld   $55
               4b02 0001  ld   $01
@@ -13658,7 +13658,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               4bfc 8002  adda $02
               4bfd 1404  ld   $04,y
               4bfe fe00  bra  ac
-              4bff e07e  jmp  y,$7e
+              4bff e080  jmp  y,$80
               4c00 0001  ld   $01         ;Pixels for packedParrot line 18
               4c01 0000  ld   $00
               4c02 0000  ld   $00
@@ -13893,7 +13893,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               4cfc 8002  adda $02
               4cfd 1404  ld   $04,y
               4cfe fe00  bra  ac
-              4cff e07e  jmp  y,$7e
+              4cff e080  jmp  y,$80
               4d00 0000  ld   $00         ;Pixels for packedParrot line 20
               4d01 0000  ld   $00
               4d02 0000  ld   $00
@@ -14148,7 +14148,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               4dfc 8002  adda $02
               4dfd 1404  ld   $04,y
               4dfe fe00  bra  ac
-              4dff e07e  jmp  y,$7e
+              4dff e080  jmp  y,$80
               4e00 0000  ld   $00         ;Pixels for packedParrot line 22
               4e01 0000  ld   $00
               4e02 0000  ld   $00
@@ -14404,7 +14404,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               4efc 8002  adda $02
               4efd 1404  ld   $04,y
               4efe fe00  bra  ac
-              4eff e07e  jmp  y,$7e
+              4eff e080  jmp  y,$80
               4f00 0000  ld   $00         ;Pixels for packedParrot line 24
               4f01 0000  ld   $00
               4f02 0000  ld   $00
@@ -14656,7 +14656,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               4ffc 8002  adda $02
               4ffd 1404  ld   $04,y
               4ffe fe00  bra  ac
-              4fff e07e  jmp  y,$7e
+              4fff e080  jmp  y,$80
               5000 0000  ld   $00         ;Pixels for packedParrot line 26
               5001 0040  ld   $40
               5002 0000  ld   $00
@@ -14908,7 +14908,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               50fc 8002  adda $02
               50fd 1404  ld   $04,y
               50fe fe00  bra  ac
-              50ff e07e  jmp  y,$7e
+              50ff e080  jmp  y,$80
               5100 0000  ld   $00         ;Pixels for packedParrot line 28
               5101 0000  ld   $00
               5102 0000  ld   $00
@@ -15142,7 +15142,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               51fc 8002  adda $02
               51fd 1404  ld   $04,y
               51fe fe00  bra  ac
-              51ff e07e  jmp  y,$7e
+              51ff e080  jmp  y,$80
               5200 0000  ld   $00         ;Pixels for packedParrot line 30
               5201 0000  ld   $00
               5202 0000  ld   $00
@@ -15371,7 +15371,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               52fc 8002  adda $02
               52fd 1404  ld   $04,y
               52fe fe00  bra  ac
-              52ff e07e  jmp  y,$7e
+              52ff e080  jmp  y,$80
               5300 0000  ld   $00         ;Pixels for packedParrot line 32
               5301 0000  ld   $00
               5302 0000  ld   $00
@@ -15604,7 +15604,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               53fc 8002  adda $02
               53fd 1404  ld   $04,y
               53fe fe00  bra  ac
-              53ff e07e  jmp  y,$7e
+              53ff e080  jmp  y,$80
               5400 0000  ld   $00         ;Pixels for packedParrot line 34
               5401 0000  ld   $00
               5402 0000  ld   $00
@@ -15845,7 +15845,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               54fc 8002  adda $02
               54fd 1404  ld   $04,y
               54fe fe00  bra  ac
-              54ff e07e  jmp  y,$7e
+              54ff e080  jmp  y,$80
               5500 0000  ld   $00         ;Pixels for packedParrot line 36
               5501 0004  ld   $04
               5502 0000  ld   $00
@@ -16099,7 +16099,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               55fc 8002  adda $02
               55fd 1404  ld   $04,y
               55fe fe00  bra  ac
-              55ff e07e  jmp  y,$7e
+              55ff e080  jmp  y,$80
               5600 00aa  ld   $aa         ;Pixels for packedParrot line 38
               5601 00ea  ld   $ea
               5602 00aa  ld   $aa
@@ -16354,7 +16354,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               56fc 8002  adda $02
               56fd 1404  ld   $04,y
               56fe fe00  bra  ac
-              56ff e07e  jmp  y,$7e
+              56ff e080  jmp  y,$80
               5700 0059  ld   $59         ;Pixels for packedParrot line 40
               5701 0092  ld   $92
               5702 0065  ld   $65
@@ -16607,7 +16607,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               57fc 8002  adda $02
               57fd 1404  ld   $04,y
               57fe fe00  bra  ac
-              57ff e07e  jmp  y,$7e
+              57ff e080  jmp  y,$80
               5800 0049  ld   $49         ;Pixels for packedParrot line 42
               5801 0092  ld   $92
               5802 0024  ld   $24
@@ -16858,7 +16858,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               58fc 8002  adda $02
               58fd 1404  ld   $04,y
               58fe fe00  bra  ac
-              58ff e07e  jmp  y,$7e
+              58ff e080  jmp  y,$80
               5900 0045  ld   $45         ;Pixels for packedParrot line 44
               5901 0055  ld   $55
               5902 0050  ld   $50
@@ -17114,7 +17114,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               59fc 8002  adda $02
               59fd 1404  ld   $04,y
               59fe fe00  bra  ac
-              59ff e07e  jmp  y,$7e
+              59ff e080  jmp  y,$80
               5a00 0055  ld   $55         ;Pixels for packedParrot line 46
               5a01 00a6  ld   $a6
               5a02 00a9  ld   $a9
@@ -17370,7 +17370,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               5afc 8002  adda $02
               5afd 1404  ld   $04,y
               5afe fe00  bra  ac
-              5aff e07e  jmp  y,$7e
+              5aff e080  jmp  y,$80
               5b00 0049  ld   $49         ;Pixels for packedParrot line 48
               5b01 0092  ld   $92
               5b02 0024  ld   $24
@@ -17626,7 +17626,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               5bfc 8002  adda $02
               5bfd 1404  ld   $04,y
               5bfe fe00  bra  ac
-              5bff e07e  jmp  y,$7e
+              5bff e080  jmp  y,$80
               5c00 0099  ld   $99         ;Pixels for packedParrot line 50
               5c01 009a  ld   $9a
               5c02 0055  ld   $55
@@ -17882,7 +17882,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               5cfc 8002  adda $02
               5cfd 1404  ld   $04,y
               5cfe fe00  bra  ac
-              5cff e07e  jmp  y,$7e
+              5cff e080  jmp  y,$80
               5d00 0044  ld   $44         ;Pixels for packedParrot line 52
               5d01 0091  ld   $91
               5d02 0069  ld   $69
@@ -18138,7 +18138,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               5dfc 8002  adda $02
               5dfd 1404  ld   $04,y
               5dfe fe00  bra  ac
-              5dff e07e  jmp  y,$7e
+              5dff e080  jmp  y,$80
               5e00 0099  ld   $99         ;Pixels for packedParrot line 54
               5e01 0096  ld   $96
               5e02 0079  ld   $79
@@ -18394,7 +18394,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               5efc 8002  adda $02
               5efd 1404  ld   $04,y
               5efe fe00  bra  ac
-              5eff e07e  jmp  y,$7e
+              5eff e080  jmp  y,$80
               5f00 0049  ld   $49         ;Pixels for packedParrot line 56
               5f01 0056  ld   $56
               5f02 0024  ld   $24
@@ -18650,7 +18650,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               5ffc 8002  adda $02
               5ffd 1404  ld   $04,y
               5ffe fe00  bra  ac
-              5fff e07e  jmp  y,$7e
+              5fff e080  jmp  y,$80
               6000 0000  ld   $00         ;Pixels for packedParrot line 58
               6001 0000  ld   $00
               6002 0010  ld   $10
@@ -18906,7 +18906,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               60fc 8002  adda $02
               60fd 1404  ld   $04,y
               60fe fe00  bra  ac
-              60ff e07e  jmp  y,$7e
+              60ff e080  jmp  y,$80
               6100 0049  ld   $49         ;Pixels for packedParrot line 60
               6101 0092  ld   $92
               6102 0025  ld   $25
@@ -19162,7 +19162,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               61fc 8002  adda $02
               61fd 1404  ld   $04,y
               61fe fe00  bra  ac
-              61ff e07e  jmp  y,$7e
+              61ff e080  jmp  y,$80
               6200 0099  ld   $99         ;Pixels for packedParrot line 62
               6201 0092  ld   $92
               6202 0064  ld   $64
@@ -19418,7 +19418,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               62fc 8002  adda $02
               62fd 1404  ld   $04,y
               62fe fe00  bra  ac
-              62ff e07e  jmp  y,$7e
+              62ff e080  jmp  y,$80
               6300 0005  ld   $05         ;Pixels for packedParrot line 64
               6301 0000  ld   $00
               6302 0000  ld   $00
@@ -19671,7 +19671,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               63fc 8002  adda $02
               63fd 1404  ld   $04,y
               63fe fe00  bra  ac
-              63ff e07e  jmp  y,$7e
+              63ff e080  jmp  y,$80
               6400 0045  ld   $45         ;Pixels for packedParrot line 66
               6401 0041  ld   $41
               6402 0054  ld   $54
@@ -19924,7 +19924,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               64fc 8002  adda $02
               64fd 1404  ld   $04,y
               64fe fe00  bra  ac
-              64ff e07e  jmp  y,$7e
+              64ff e080  jmp  y,$80
               6500 0049  ld   $49         ;Pixels for packedParrot line 68
               6501 00a5  ld   $a5
               6502 0055  ld   $55
@@ -20179,7 +20179,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               65fc 8002  adda $02
               65fd 1404  ld   $04,y
               65fe fe00  bra  ac
-              65ff e07e  jmp  y,$7e
+              65ff e080  jmp  y,$80
               6600 0095  ld   $95         ;Pixels for packedParrot line 70
               6601 00a6  ld   $a6
               6602 006a  ld   $6a
@@ -20435,7 +20435,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               66fc 8002  adda $02
               66fd 1404  ld   $04,y
               66fe fe00  bra  ac
-              66ff e07e  jmp  y,$7e
+              66ff e080  jmp  y,$80
               6700 0055  ld   $55         ;Pixels for packedParrot line 72
               6701 00a5  ld   $a5
               6702 0056  ld   $56
@@ -20691,7 +20691,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               67fc 8002  adda $02
               67fd 1404  ld   $04,y
               67fe fe00  bra  ac
-              67ff e07e  jmp  y,$7e
+              67ff e080  jmp  y,$80
               6800 0045  ld   $45         ;Pixels for packedParrot line 74
               6801 0051  ld   $51
               6802 0014  ld   $14
@@ -20947,7 +20947,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               68fc 8002  adda $02
               68fd 1404  ld   $04,y
               68fe fe00  bra  ac
-              68ff e07e  jmp  y,$7e
+              68ff e080  jmp  y,$80
               6900 0059  ld   $59         ;Pixels for packedParrot line 76
               6901 0052  ld   $52
               6902 0010  ld   $10
@@ -21203,7 +21203,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               69fc 8002  adda $02
               69fd 1404  ld   $04,y
               69fe fe00  bra  ac
-              69ff e07e  jmp  y,$7e
+              69ff e080  jmp  y,$80
               6a00 0045  ld   $45         ;Pixels for packedParrot line 78
               6a01 00a2  ld   $a2
               6a02 0069  ld   $69
@@ -21459,7 +21459,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               6afc 8002  adda $02
               6afd 1404  ld   $04,y
               6afe fe00  bra  ac
-              6aff e07e  jmp  y,$7e
+              6aff e080  jmp  y,$80
               6b00 0099  ld   $99         ;Pixels for packedParrot line 80
               6b01 0056  ld   $56
               6b02 0024  ld   $24
@@ -21715,7 +21715,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               6bfc 8002  adda $02
               6bfd 1404  ld   $04,y
               6bfe fe00  bra  ac
-              6bff e07e  jmp  y,$7e
+              6bff e080  jmp  y,$80
               6c00 0045  ld   $45         ;Pixels for packedParrot line 82
               6c01 0091  ld   $91
               6c02 0068  ld   $68
@@ -21969,7 +21969,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               6cfc 8002  adda $02
               6cfd 1404  ld   $04,y
               6cfe fe00  bra  ac
-              6cff e07e  jmp  y,$7e
+              6cff e080  jmp  y,$80
               6d00 0045  ld   $45         ;Pixels for packedParrot line 84
               6d01 0051  ld   $51
               6d02 0064  ld   $64
@@ -22219,7 +22219,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               6dfc 8002  adda $02
               6dfd 1404  ld   $04,y
               6dfe fe00  bra  ac
-              6dff e07e  jmp  y,$7e
+              6dff e080  jmp  y,$80
               6e00 0045  ld   $45         ;Pixels for packedParrot line 86
               6e01 0065  ld   $65
               6e02 0055  ld   $55
@@ -22474,7 +22474,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               6efc 8002  adda $02
               6efd 1404  ld   $04,y
               6efe fe00  bra  ac
-              6eff e07e  jmp  y,$7e
+              6eff e080  jmp  y,$80
               6f00 0005  ld   $05         ;Pixels for packedParrot line 88
               6f01 0051  ld   $51
               6f02 0014  ld   $14
@@ -22730,7 +22730,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               6ffc 8002  adda $02
               6ffd 1404  ld   $04,y
               6ffe fe00  bra  ac
-              6fff e07e  jmp  y,$7e
+              6fff e080  jmp  y,$80
               7000 004a  ld   $4a         ;Pixels for packedParrot line 90
               7001 0096  ld   $96
               7002 0010  ld   $10
@@ -22986,7 +22986,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               70fc 8002  adda $02
               70fd 1404  ld   $04,y
               70fe fe00  bra  ac
-              70ff e07e  jmp  y,$7e
+              70ff e080  jmp  y,$80
               7100 008a  ld   $8a         ;Pixels for packedParrot line 92
               7101 00a7  ld   $a7
               7102 0068  ld   $68
@@ -23242,7 +23242,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               71fc 8002  adda $02
               71fd 1404  ld   $04,y
               71fe fe00  bra  ac
-              71ff e07e  jmp  y,$7e
+              71ff e080  jmp  y,$80
               7200 0045  ld   $45         ;Pixels for packedParrot line 94
               7201 00a2  ld   $a2
               7202 0069  ld   $69
@@ -23493,7 +23493,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               72fc 8002  adda $02
               72fd 1404  ld   $04,y
               72fe fe00  bra  ac
-              72ff e07e  jmp  y,$7e
+              72ff e080  jmp  y,$80
               7300 0005  ld   $05         ;Pixels for packedParrot line 96
               7301 0050  ld   $50
               7302 0000  ld   $00
@@ -23744,7 +23744,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               73fc 8002  adda $02
               73fd 1404  ld   $04,y
               73fe fe00  bra  ac
-              73ff e07e  jmp  y,$7e
+              73ff e080  jmp  y,$80
               7400 0044  ld   $44         ;Pixels for packedParrot line 98
               7401 0041  ld   $41
               7402 0014  ld   $14
@@ -23993,7 +23993,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               74fc 8002  adda $02
               74fd 1404  ld   $04,y
               74fe fe00  bra  ac
-              74ff e07e  jmp  y,$7e
+              74ff e080  jmp  y,$80
               7500 0055  ld   $55         ;Pixels for packedParrot line 100
               7501 0056  ld   $56
               7502 0055  ld   $55
@@ -24229,7 +24229,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               75fc 8002  adda $02
               75fd 1404  ld   $04,y
               75fe fe00  bra  ac
-              75ff e07e  jmp  y,$7e
+              75ff e080  jmp  y,$80
               7600 0040  ld   $40         ;Pixels for packedParrot line 102
               7601 0051  ld   $51
               7602 00a4  ld   $a4
@@ -24470,7 +24470,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               76fc 8002  adda $02
               76fd 1404  ld   $04,y
               76fe fe00  bra  ac
-              76ff e07e  jmp  y,$7e
+              76ff e080  jmp  y,$80
               7700 0014  ld   $14         ;Pixels for packedParrot line 104
               7701 0041  ld   $41
               7702 0014  ld   $14
@@ -24713,7 +24713,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               77fc 8002  adda $02
               77fd 1404  ld   $04,y
               77fe fe00  bra  ac
-              77ff e07e  jmp  y,$7e
+              77ff e080  jmp  y,$80
               7800 00aa  ld   $aa         ;Pixels for packedParrot line 106
               7801 004a  ld   $4a
               7802 0014  ld   $14
@@ -24954,7 +24954,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               78fc 8002  adda $02
               78fd 1404  ld   $04,y
               78fe fe00  bra  ac
-              78ff e07e  jmp  y,$7e
+              78ff e080  jmp  y,$80
               7900 0000  ld   $00         ;Pixels for packedParrot line 108
               7901 0000  ld   $00
               7902 00a5  ld   $a5
@@ -25180,7 +25180,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               79fc 8002  adda $02
               79fd 1404  ld   $04,y
               79fe fe00  bra  ac
-              79ff e07e  jmp  y,$7e
+              79ff e080  jmp  y,$80
               7a00 00aa  ld   $aa         ;Pixels for packedParrot line 110
               7a01 00ef  ld   $ef
               7a02 00eb  ld   $eb
@@ -25425,7 +25425,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               7afc 8002  adda $02
               7afd 1404  ld   $04,y
               7afe fe00  bra  ac
-              7aff e07e  jmp  y,$7e
+              7aff e080  jmp  y,$80
               7b00 00aa  ld   $aa         ;Pixels for packedParrot line 112
               7b01 00ef  ld   $ef
               7b02 00ef  ld   $ef
@@ -25674,7 +25674,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               7bfc 8002  adda $02
               7bfd 1404  ld   $04,y
               7bfe fe00  bra  ac
-              7bff e07e  jmp  y,$7e
+              7bff e080  jmp  y,$80
               7c00 00bf  ld   $bf         ;Pixels for packedParrot line 114
               7c01 009a  ld   $9a
               7c02 00a6  ld   $a6
@@ -25915,7 +25915,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               7cfc 8002  adda $02
               7cfd 1404  ld   $04,y
               7cfe fe00  bra  ac
-              7cff e07e  jmp  y,$7e
+              7cff e080  jmp  y,$80
               7d00 006a  ld   $6a         ;Pixels for packedParrot line 116
               7d01 0099  ld   $99
               7d02 00a5  ld   $a5
@@ -26162,7 +26162,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               7dfc 8002  adda $02
               7dfd 1404  ld   $04,y
               7dfe fe00  bra  ac
-              7dff e07e  jmp  y,$7e
+              7dff e080  jmp  y,$80
               7e00 00a9  ld   $a9         ;Pixels for packedParrot line 118
               7e01 0099  ld   $99
               7e02 0066  ld   $66
@@ -26412,7 +26412,7 @@ packedParrot: 4300 0000  ld   $00         ;Pixels for packedParrot line 0
               7efc 8002  adda $02
               7efd 1404  ld   $04,y
               7efe fe00  bra  ac
-              7eff e07e  jmp  y,$7e
+              7eff e080  jmp  y,$80
 packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7f01 0055  ld   $55
               7f02 0054  ld   $54
@@ -26668,7 +26668,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7ffc 8002  adda $02
               7ffd 1404  ld   $04,y
               7ffe fe00  bra  ac
-              7fff e07e  jmp  y,$7e
+              7fff e080  jmp  y,$80
               8000 0045  ld   $45         ;Pixels for packedBaboon line 2
               8001 0065  ld   $65
               8002 0068  ld   $68
@@ -26915,7 +26915,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               80fc 8002  adda $02
               80fd 1404  ld   $04,y
               80fe fe00  bra  ac
-              80ff e07e  jmp  y,$7e
+              80ff e080  jmp  y,$80
               8100 0055  ld   $55         ;Pixels for packedBaboon line 4
               8101 0051  ld   $51
               8102 0054  ld   $54
@@ -27166,7 +27166,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               81fc 8002  adda $02
               81fd 1404  ld   $04,y
               81fe fe00  bra  ac
-              81ff e07e  jmp  y,$7e
+              81ff e080  jmp  y,$80
               8200 0045  ld   $45         ;Pixels for packedBaboon line 6
               8201 0055  ld   $55
               8202 0068  ld   $68
@@ -27396,7 +27396,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               82fc 8002  adda $02
               82fd 1404  ld   $04,y
               82fe fe00  bra  ac
-              82ff e07e  jmp  y,$7e
+              82ff e080  jmp  y,$80
               8300 0045  ld   $45         ;Pixels for packedBaboon line 8
               8301 0055  ld   $55
               8302 0054  ld   $54
@@ -27650,7 +27650,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               83fc 8002  adda $02
               83fd 1404  ld   $04,y
               83fe fe00  bra  ac
-              83ff e07e  jmp  y,$7e
+              83ff e080  jmp  y,$80
               8400 0095  ld   $95         ;Pixels for packedBaboon line 10
               8401 0062  ld   $62
               8402 0025  ld   $25
@@ -27902,7 +27902,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               84fc 8002  adda $02
               84fd 1404  ld   $04,y
               84fe fe00  bra  ac
-              84ff e07e  jmp  y,$7e
+              84ff e080  jmp  y,$80
               8500 0055  ld   $55         ;Pixels for packedBaboon line 12
               8501 0066  ld   $66
               8502 0065  ld   $65
@@ -28157,7 +28157,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               85fc 8002  adda $02
               85fd 1404  ld   $04,y
               85fe fe00  bra  ac
-              85ff e07e  jmp  y,$7e
+              85ff e080  jmp  y,$80
               8600 0095  ld   $95         ;Pixels for packedBaboon line 14
               8601 0095  ld   $95
               8602 0069  ld   $69
@@ -28413,7 +28413,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               86fc 8002  adda $02
               86fd 1404  ld   $04,y
               86fe fe00  bra  ac
-              86ff e07e  jmp  y,$7e
+              86ff e080  jmp  y,$80
               8700 009a  ld   $9a         ;Pixels for packedBaboon line 16
               8701 0055  ld   $55
               8702 0054  ld   $54
@@ -28668,7 +28668,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               87fc 8002  adda $02
               87fd 1404  ld   $04,y
               87fe fe00  bra  ac
-              87ff e07e  jmp  y,$7e
+              87ff e080  jmp  y,$80
               8800 005a  ld   $5a         ;Pixels for packedBaboon line 18
               8801 0061  ld   $61
               8802 0025  ld   $25
@@ -28924,7 +28924,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               88fc 8002  adda $02
               88fd 1404  ld   $04,y
               88fe fe00  bra  ac
-              88ff e07e  jmp  y,$7e
+              88ff e080  jmp  y,$80
               8900 0045  ld   $45         ;Pixels for packedBaboon line 20
               8901 0051  ld   $51
               8902 0055  ld   $55
@@ -29179,7 +29179,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               89fc 8002  adda $02
               89fd 1404  ld   $04,y
               89fe fe00  bra  ac
-              89ff e07e  jmp  y,$7e
+              89ff e080  jmp  y,$80
               8a00 0085  ld   $85         ;Pixels for packedBaboon line 22
               8a01 00a6  ld   $a6
               8a02 0015  ld   $15
@@ -29435,7 +29435,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8afc 8002  adda $02
               8afd 1404  ld   $04,y
               8afe fe00  bra  ac
-              8aff e07e  jmp  y,$7e
+              8aff e080  jmp  y,$80
               8b00 0045  ld   $45         ;Pixels for packedBaboon line 24
               8b01 0051  ld   $51
               8b02 0029  ld   $29
@@ -29690,7 +29690,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8bfc 8002  adda $02
               8bfd 1404  ld   $04,y
               8bfe fe00  bra  ac
-              8bff e07e  jmp  y,$7e
+              8bff e080  jmp  y,$80
               8c00 0085  ld   $85         ;Pixels for packedBaboon line 26
               8c01 0096  ld   $96
               8c02 0015  ld   $15
@@ -29946,7 +29946,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8cfc 8002  adda $02
               8cfd 1404  ld   $04,y
               8cfe fe00  bra  ac
-              8cff e07e  jmp  y,$7e
+              8cff e080  jmp  y,$80
               8d00 0096  ld   $96         ;Pixels for packedBaboon line 28
               8d01 0056  ld   $56
               8d02 0054  ld   $54
@@ -30199,7 +30199,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8dfc 8002  adda $02
               8dfd 1404  ld   $04,y
               8dfe fe00  bra  ac
-              8dff e07e  jmp  y,$7e
+              8dff e080  jmp  y,$80
               8e00 0055  ld   $55         ;Pixels for packedBaboon line 30
               8e01 00a5  ld   $a5
               8e02 0015  ld   $15
@@ -30455,7 +30455,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8efc 8002  adda $02
               8efd 1404  ld   $04,y
               8efe fe00  bra  ac
-              8eff e07e  jmp  y,$7e
+              8eff e080  jmp  y,$80
               8f00 0045  ld   $45         ;Pixels for packedBaboon line 32
               8f01 0065  ld   $65
               8f02 0054  ld   $54
@@ -30711,7 +30711,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8ffc 8002  adda $02
               8ffd 1404  ld   $04,y
               8ffe fe00  bra  ac
-              8fff e07e  jmp  y,$7e
+              8fff e080  jmp  y,$80
               9000 0095  ld   $95         ;Pixels for packedBaboon line 34
               9001 0056  ld   $56
               9002 0055  ld   $55
@@ -30967,7 +30967,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               90fc 8002  adda $02
               90fd 1404  ld   $04,y
               90fe fe00  bra  ac
-              90ff e07e  jmp  y,$7e
+              90ff e080  jmp  y,$80
               9100 0095  ld   $95         ;Pixels for packedBaboon line 36
               9101 0056  ld   $56
               9102 0069  ld   $69
@@ -31223,7 +31223,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               91fc 8002  adda $02
               91fd 1404  ld   $04,y
               91fe fe00  bra  ac
-              91ff e07e  jmp  y,$7e
+              91ff e080  jmp  y,$80
               9200 0055  ld   $55         ;Pixels for packedBaboon line 38
               9201 0055  ld   $55
               9202 0054  ld   $54
@@ -31479,7 +31479,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               92fc 8002  adda $02
               92fd 1404  ld   $04,y
               92fe fe00  bra  ac
-              92ff e07e  jmp  y,$7e
+              92ff e080  jmp  y,$80
               9300 0055  ld   $55         ;Pixels for packedBaboon line 40
               9301 0055  ld   $55
               9302 0055  ld   $55
@@ -31735,7 +31735,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               93fc 8002  adda $02
               93fd 1404  ld   $04,y
               93fe fe00  bra  ac
-              93ff e07e  jmp  y,$7e
+              93ff e080  jmp  y,$80
               9400 0095  ld   $95         ;Pixels for packedBaboon line 42
               9401 0051  ld   $51
               9402 0055  ld   $55
@@ -31988,7 +31988,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               94fc 8002  adda $02
               94fd 1404  ld   $04,y
               94fe fe00  bra  ac
-              94ff e07e  jmp  y,$7e
+              94ff e080  jmp  y,$80
               9500 0055  ld   $55         ;Pixels for packedBaboon line 44
               9501 0061  ld   $61
               9502 0055  ld   $55
@@ -32244,7 +32244,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               95fc 8002  adda $02
               95fd 1404  ld   $04,y
               95fe fe00  bra  ac
-              95ff e07e  jmp  y,$7e
+              95ff e080  jmp  y,$80
               9600 0055  ld   $55         ;Pixels for packedBaboon line 46
               9601 00a6  ld   $a6
               9602 0055  ld   $55
@@ -32500,7 +32500,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               96fc 8002  adda $02
               96fd 1404  ld   $04,y
               96fe fe00  bra  ac
-              96ff e07e  jmp  y,$7e
+              96ff e080  jmp  y,$80
               9700 0045  ld   $45         ;Pixels for packedBaboon line 48
               9701 0055  ld   $55
               9702 0014  ld   $14
@@ -32756,7 +32756,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               97fc 8002  adda $02
               97fd 1404  ld   $04,y
               97fe fe00  bra  ac
-              97ff e07e  jmp  y,$7e
+              97ff e080  jmp  y,$80
               9800 005a  ld   $5a         ;Pixels for packedBaboon line 50
               9801 00a5  ld   $a5
               9802 0059  ld   $59
@@ -33012,7 +33012,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               98fc 8002  adda $02
               98fd 1404  ld   $04,y
               98fe fe00  bra  ac
-              98ff e07e  jmp  y,$7e
+              98ff e080  jmp  y,$80
               9900 005a  ld   $5a         ;Pixels for packedBaboon line 52
               9901 0055  ld   $55
               9902 0069  ld   $69
@@ -33267,7 +33267,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               99fc 8002  adda $02
               99fd 1404  ld   $04,y
               99fe fe00  bra  ac
-              99ff e07e  jmp  y,$7e
+              99ff e080  jmp  y,$80
               9a00 0095  ld   $95         ;Pixels for packedBaboon line 54
               9a01 0056  ld   $56
               9a02 0055  ld   $55
@@ -33522,7 +33522,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9afc 8002  adda $02
               9afd 1404  ld   $04,y
               9afe fe00  bra  ac
-              9aff e07e  jmp  y,$7e
+              9aff e080  jmp  y,$80
               9b00 0056  ld   $56         ;Pixels for packedBaboon line 56
               9b01 00a5  ld   $a5
               9b02 0055  ld   $55
@@ -33776,7 +33776,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9bfc 8002  adda $02
               9bfd 1404  ld   $04,y
               9bfe fe00  bra  ac
-              9bff e07e  jmp  y,$7e
+              9bff e080  jmp  y,$80
               9c00 0096  ld   $96         ;Pixels for packedBaboon line 58
               9c01 00a5  ld   $a5
               9c02 0055  ld   $55
@@ -34030,7 +34030,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9cfc 8002  adda $02
               9cfd 1404  ld   $04,y
               9cfe fe00  bra  ac
-              9cff e07e  jmp  y,$7e
+              9cff e080  jmp  y,$80
               9d00 009a  ld   $9a         ;Pixels for packedBaboon line 60
               9d01 00a5  ld   $a5
               9d02 0059  ld   $59
@@ -34285,7 +34285,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9dfc 8002  adda $02
               9dfd 1404  ld   $04,y
               9dfe fe00  bra  ac
-              9dff e07e  jmp  y,$7e
+              9dff e080  jmp  y,$80
               9e00 009a  ld   $9a         ;Pixels for packedBaboon line 62
               9e01 00a6  ld   $a6
               9e02 0069  ld   $69
@@ -34536,7 +34536,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9efc 8002  adda $02
               9efd 1404  ld   $04,y
               9efe fe00  bra  ac
-              9eff e07e  jmp  y,$7e
+              9eff e080  jmp  y,$80
               9f00 009a  ld   $9a         ;Pixels for packedBaboon line 64
               9f01 0066  ld   $66
               9f02 0069  ld   $69
@@ -34789,7 +34789,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9ffc 8002  adda $02
               9ffd 1404  ld   $04,y
               9ffe fe00  bra  ac
-              9fff e07e  jmp  y,$7e
+              9fff e080  jmp  y,$80
               a000 009a  ld   $9a         ;Pixels for packedBaboon line 66
               a001 00a6  ld   $a6
               a002 006d  ld   $6d
@@ -35043,7 +35043,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               a0fc 8002  adda $02
               a0fd 1404  ld   $04,y
               a0fe fe00  bra  ac
-              a0ff e07e  jmp  y,$7e
+              a0ff e080  jmp  y,$80
               a100 00da  ld   $da         ;Pixels for packedBaboon line 68
               a101 00a6  ld   $a6
               a102 0069  ld   $69
@@ -35292,7 +35292,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               a1fc 8002  adda $02
               a1fd 1404  ld   $04,y
               a1fe fe00  bra  ac
-              a1ff e07e  jmp  y,$7e
+              a1ff e080  jmp  y,$80
               a200 009a  ld   $9a         ;Pixels for packedBaboon line 70
               a201 00b6  ld   $b6
               a202 0069  ld   $69
@@ -35544,7 +35544,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               a2fc 8002  adda $02
               a2fd 1404  ld   $04,y
               a2fe fe00  bra  ac
-              a2ff e07e  jmp  y,$7e
+              a2ff e080  jmp  y,$80
               a300 009a  ld   $9a         ;Pixels for packedBaboon line 72
               a301 00b6  ld   $b6
               a302 0069  ld   $69
@@ -35791,7 +35791,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               a3fc 8002  adda $02
               a3fd 1404  ld   $04,y
               a3fe fe00  bra  ac
-              a3ff e07e  jmp  y,$7e
+              a3ff e080  jmp  y,$80
               a400 00da  ld   $da         ;Pixels for packedBaboon line 74
               a401 00a6  ld   $a6
               a402 0069  ld   $69
@@ -36038,7 +36038,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               a4fc 8002  adda $02
               a4fd 1404  ld   $04,y
               a4fe fe00  bra  ac
-              a4ff e07e  jmp  y,$7e
+              a4ff e080  jmp  y,$80
               a500 00da  ld   $da         ;Pixels for packedBaboon line 76
               a501 00b6  ld   $b6
               a502 0069  ld   $69
@@ -36287,7 +36287,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               a5fc 8002  adda $02
               a5fd 1404  ld   $04,y
               a5fe fe00  bra  ac
-              a5ff e07e  jmp  y,$7e
+              a5ff e080  jmp  y,$80
               a600 00da  ld   $da         ;Pixels for packedBaboon line 78
               a601 00a6  ld   $a6
               a602 006d  ld   $6d
@@ -36536,7 +36536,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               a6fc 8002  adda $02
               a6fd 1404  ld   $04,y
               a6fe fe00  bra  ac
-              a6ff e07e  jmp  y,$7e
+              a6ff e080  jmp  y,$80
               a700 00da  ld   $da         ;Pixels for packedBaboon line 80
               a701 00e6  ld   $e6
               a702 006d  ld   $6d
@@ -36781,7 +36781,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               a7fc 8002  adda $02
               a7fd 1404  ld   $04,y
               a7fe fe00  bra  ac
-              a7ff e07e  jmp  y,$7e
+              a7ff e080  jmp  y,$80
               a800 00da  ld   $da         ;Pixels for packedBaboon line 82
               a801 00a6  ld   $a6
               a802 007c  ld   $7c
@@ -37037,7 +37037,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               a8fc 8002  adda $02
               a8fd 1404  ld   $04,y
               a8fe fe00  bra  ac
-              a8ff e07e  jmp  y,$7e
+              a8ff e080  jmp  y,$80
               a900 00db  ld   $db         ;Pixels for packedBaboon line 84
               a901 00b7  ld   $b7
               a902 0069  ld   $69
@@ -37293,7 +37293,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               a9fc 8002  adda $02
               a9fd 1404  ld   $04,y
               a9fe fe00  bra  ac
-              a9ff e07e  jmp  y,$7e
+              a9ff e080  jmp  y,$80
               aa00 009b  ld   $9b         ;Pixels for packedBaboon line 86
               aa01 00b6  ld   $b6
               aa02 0069  ld   $69
@@ -37547,7 +37547,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               aafc 8002  adda $02
               aafd 1404  ld   $04,y
               aafe fe00  bra  ac
-              aaff e07e  jmp  y,$7e
+              aaff e080  jmp  y,$80
               ab00 009b  ld   $9b         ;Pixels for packedBaboon line 88
               ab01 00b6  ld   $b6
               ab02 0069  ld   $69
@@ -37803,7 +37803,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               abfc 8002  adda $02
               abfd 1404  ld   $04,y
               abfe fe00  bra  ac
-              abff e07e  jmp  y,$7e
+              abff e080  jmp  y,$80
               ac00 009b  ld   $9b         ;Pixels for packedBaboon line 90
               ac01 00b6  ld   $b6
               ac02 0069  ld   $69
@@ -38059,7 +38059,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               acfc 8002  adda $02
               acfd 1404  ld   $04,y
               acfe fe00  bra  ac
-              acff e07e  jmp  y,$7e
+              acff e080  jmp  y,$80
               ad00 00da  ld   $da         ;Pixels for packedBaboon line 92
               ad01 00e6  ld   $e6
               ad02 006e  ld   $6e
@@ -38315,7 +38315,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               adfc 8002  adda $02
               adfd 1404  ld   $04,y
               adfe fe00  bra  ac
-              adff e07e  jmp  y,$7e
+              adff e080  jmp  y,$80
               ae00 00ea  ld   $ea         ;Pixels for packedBaboon line 94
               ae01 00e6  ld   $e6
               ae02 006d  ld   $6d
@@ -38571,7 +38571,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               aefc 8002  adda $02
               aefd 1404  ld   $04,y
               aefe fe00  bra  ac
-              aeff e07e  jmp  y,$7e
+              aeff e080  jmp  y,$80
               af00 009a  ld   $9a         ;Pixels for packedBaboon line 96
               af01 00b6  ld   $b6
               af02 0069  ld   $69
@@ -38827,7 +38827,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               affc 8002  adda $02
               affd 1404  ld   $04,y
               affe fe00  bra  ac
-              afff e07e  jmp  y,$7e
+              afff e080  jmp  y,$80
               b000 009a  ld   $9a         ;Pixels for packedBaboon line 98
               b001 00a6  ld   $a6
               b002 0079  ld   $79
@@ -39083,7 +39083,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               b0fc 8002  adda $02
               b0fd 1404  ld   $04,y
               b0fe fe00  bra  ac
-              b0ff e07e  jmp  y,$7e
+              b0ff e080  jmp  y,$80
               b100 009a  ld   $9a         ;Pixels for packedBaboon line 100
               b101 00a6  ld   $a6
               b102 006a  ld   $6a
@@ -39338,7 +39338,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               b1fc 8002  adda $02
               b1fd 1404  ld   $04,y
               b1fe fe00  bra  ac
-              b1ff e07e  jmp  y,$7e
+              b1ff e080  jmp  y,$80
               b200 00aa  ld   $aa         ;Pixels for packedBaboon line 102
               b201 00e6  ld   $e6
               b202 006a  ld   $6a
@@ -39584,7 +39584,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               b2fc 8002  adda $02
               b2fd 1404  ld   $04,y
               b2fe fe00  bra  ac
-              b2ff e07e  jmp  y,$7e
+              b2ff e080  jmp  y,$80
               b300 009a  ld   $9a         ;Pixels for packedBaboon line 104
               b301 00aa  ld   $aa
               b302 00aa  ld   $aa
@@ -39835,7 +39835,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               b3fc 8002  adda $02
               b3fd 1404  ld   $04,y
               b3fe fe00  bra  ac
-              b3ff e07e  jmp  y,$7e
+              b3ff e080  jmp  y,$80
               b400 00aa  ld   $aa         ;Pixels for packedBaboon line 106
               b401 00a6  ld   $a6
               b402 00aa  ld   $aa
@@ -40071,7 +40071,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               b4fc 8002  adda $02
               b4fd 1404  ld   $04,y
               b4fe fe00  bra  ac
-              b4ff e07e  jmp  y,$7e
+              b4ff e080  jmp  y,$80
               b500 00aa  ld   $aa         ;Pixels for packedBaboon line 108
               b501 009a  ld   $9a
               b502 00a9  ld   $a9
@@ -40322,7 +40322,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               b5fc 8002  adda $02
               b5fd 1404  ld   $04,y
               b5fe fe00  bra  ac
-              b5ff e07e  jmp  y,$7e
+              b5ff e080  jmp  y,$80
               b600 00aa  ld   $aa         ;Pixels for packedBaboon line 110
               b601 00aa  ld   $aa
               b602 0095  ld   $95
@@ -40576,7 +40576,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               b6fc 8002  adda $02
               b6fd 1404  ld   $04,y
               b6fe fe00  bra  ac
-              b6ff e07e  jmp  y,$7e
+              b6ff e080  jmp  y,$80
               b700 006a  ld   $6a         ;Pixels for packedBaboon line 112
               b701 00aa  ld   $aa
               b702 00a9  ld   $a9
@@ -40832,7 +40832,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               b7fc 8002  adda $02
               b7fd 1404  ld   $04,y
               b7fe fe00  bra  ac
-              b7ff e07e  jmp  y,$7e
+              b7ff e080  jmp  y,$80
               b800 006a  ld   $6a         ;Pixels for packedBaboon line 114
               b801 00aa  ld   $aa
               b802 0066  ld   $66
@@ -41084,7 +41084,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               b8fc 8002  adda $02
               b8fd 1404  ld   $04,y
               b8fe fe00  bra  ac
-              b8ff e07e  jmp  y,$7e
+              b8ff e080  jmp  y,$80
               b900 00a9  ld   $a9         ;Pixels for packedBaboon line 116
               b901 0096  ld   $96
               b902 00aa  ld   $aa
@@ -41328,7 +41328,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               b9fc 8002  adda $02
               b9fd 1404  ld   $04,y
               b9fe fe00  bra  ac
-              b9ff e07e  jmp  y,$7e
+              b9ff e080  jmp  y,$80
               ba00 0099  ld   $99         ;Pixels for packedBaboon line 118
               ba01 009a  ld   $9a
               ba02 0056  ld   $56
@@ -41578,7 +41578,7 @@ packedBaboon: 7f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               bafc 8002  adda $02
               bafd 1404  ld   $04,y
               bafe fe00  bra  ac
-              baff e07e  jmp  y,$7e
+              baff e080  jmp  y,$80
 gigatronRaw:  bb00 00aa  ld   $aa
               bb01 00aa  ld   $aa
               bb02 00aa  ld   $aa
@@ -48282,7 +48282,7 @@ loadApp:      d300 1000  ld   $00,x
               d562 dc2c  st   $2c,[y,x++] ;05af STW
               d563 dc43  st   $43,[y,x++] ;05b0 'Color'
               d564 dc12  st   $12,[y,x++] ;05b1 LDWI
-              d565 dc69  st   $69,[y,x++]
+              d565 dc6b  st   $6b,[y,x++]
               d566 dc04  st   $04,[y,x++]
               d567 dcac  st   $ac,[y,x++] ;05b4 SYS
               d568 dcfd  st   $fd,[y,x++]
