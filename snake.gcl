@@ -8,7 +8,7 @@
 {
 XXX Non-black playfield
 XXX Smarter border drawing
-XXX Leave poison at tail, to prevent killing player (brown?)
+XXX Leave poison at tail, to prevent accidentally killing player (brown?)
 XXX Increasing speed and rising tones
 XXX Score and high score
 XXX Better title bar
@@ -19,7 +19,6 @@ XXX More points for getting to food faster
 {-----------------------------------------------------------------------+
 |                       RAM page 3                                      |
 +-----------------------------------------------------------------------}
-$0300:
 
 {-
   First setup all subroutine definitions and variables, without making
@@ -85,7 +84,7 @@ $0300:
   {XXX display number of free bytes}
   {   *** Gigatron 32K ***    }
   $20. $20. $20. $2a. $2a. $2a. $20. $47. $69. $67. $61. $74. $72. $6f. $6e.
-  $20. $33. $32. $4b. $20. $2a. $2a. $2a. $20. $20. $20. $20. 10.
+  $20. $33. $32. $4b. $20. $2a. $2a. $2a. 10.
   {TTL color computer ROM v0  }
   $54. $54. $4c. $20. $63. $6f. $6c. $6f. $72. $20. $63. $6f. $6d. $70. $75.
   $74. $65. $72. $20. $52. $4f. $4d. $20. $76. $30. $20. $20. 10. 0.
@@ -105,7 +104,7 @@ $0300:
 ] DrawLine=
 
 {-----------------------------------------------------------------------+
-|}ret{                  RAM page 4                                      |
+|}\vRET>++ ret{         RAM page 4                                      |
 +-----------------------------------------------------------------------}
 $0400:
 

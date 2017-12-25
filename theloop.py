@@ -24,7 +24,7 @@
 #  XXX Double-check initialisation of all variables
 #
 #  Maybe
-#  XXX More waveforms
+#  XXX More waveforms (eg. with offset in shift2 table)
 #  XXX Scroll out the top line of text
 #  XXX Pacman ghosts. Sprites by scan line 4 reset method? ("videoG"=graphics)
 #  XXX Intro: Rising planet?
@@ -45,9 +45,8 @@
 #  XXX Nog iets simpels. Gigatron layout balls/bricks game
 #  XXX Iets met scroller. Flappy Bird?
 #  XXX Iets met doolhof. Berzerk/Robotron? Pac Mac?
-#  XXX Primes, Fibonacci, Queens
+#  XXX Primes, Fibonacci (bignum), Queens
 #  XXX Random dots screen
-#  XXX Dice
 #  XXX Game of Life (edit <-> stop <-> slow <-> fast)
 #  XXX Game #5 Iets met schieten. Space Invaders, Demon Attack, Galaga style
 #  XXX Game #6 Iets met racen.
@@ -221,7 +220,8 @@ define('vRET',       vRET)
 #-----------------------------------------------------------------------
 
 # Byte 0-239 define the video lines
-scanTablePage = 0x01       # Indirection table: Y[0] dX[0]  ..., Y[119] dX[119]
+scanTable = 0x0100
+scanTablePage = scanTable>>8 # Indirection table: Y[0] dX[0]  ..., Y[119] dX[119]
 
 # Highest bytes are for channel 1 variables
 
@@ -433,11 +433,21 @@ st(d(videoDorF))
 # vCPU reset handler (we have 9 unused bytes behind the video table)
 vCpuReset = 0x0100 + 240
 st(d(lo('LDWI')),        eaYXregOUTIX); C('Setup vCPU reset handler')
-st(d(lo('SYS_32_RESET')),eaYXregOUTIX)
-st(d(hi('SYS_32_RESET')),eaYXregOUTIX)
+st(d(lo('SYS_52_RESET')),eaYXregOUTIX)
+st(d(hi('SYS_52_RESET')),eaYXregOUTIX)
 st(d(lo('SYS')),         eaYXregOUTIX)
-st(d(32),                eaYXregOUTIX)
+st(d(52),                eaYXregOUTIX)
 # XXX Should also reset the video table
+#     But this takes >240 cycles
+#     How about 240x the restart trick?
+#     Better to the reset in dedicated gcl code
+#     (not easier, because that also needs loading))
+#     BUT: we can store bootstrap code at $0081, and jump there!
+
+
+
+
+
 
 st(d(lo('BRA')),eaYXregOUTIX); C('Setup vCPU reset handler')
 st(d(240-2)    ,eaYXregOUTIX)
@@ -698,9 +708,9 @@ label('.restart1')
 suba(val(1))                    #51
 bne(d(lo('.restart2')))         #52
 st(d(softResetTimer))           #53
-ld(val((vCpuReset&255)-2))         #54 Force reset
+ld(val((vCpuReset&255)-2))      #54 Force reset
 st(d(vPC))                      #55
-ld(val(vCpuReset>>8))              #56
+ld(val(vCpuReset>>8))           #56
 bra(d(lo('.restart3')))         #57
 st(d(vPC+1))                    #58
 label('.restart2')
@@ -1479,26 +1489,69 @@ nop()                           #23
 #-----------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
-# Extension SYS_32_RESET: Soft reset
+# Extension SYS_52_RESET: Soft reset
 #-----------------------------------------------------------------------
 
-label('SYS_32_RESET')
-# XXX What if software is loading?
-ld(val((vCpuStart&255)-2))      #15 vPC
+# SYS_XX_RESET initiates an immediate Gigatron reset from within the vCPU.
+# The reset sequence itself is mostly implemented in GCL: reset.gcl.
+# This must first be loaded into RAM, but that takes more than 1 scanline.
+# Therefore this vCPU bootstrapping code gets written, by this SYS extension,
+# into the high part of the zero page where normally the stack lives. For
+# compactness this code is self-modifying and will run once after written.
+# Yes: this is all completely crazy but it works out nicely: the Gigatron
+# can reset itself while maintaining the video and audio signals and without
+# missing a beat... The idea is that this mechanism can be used to switch
+# between different applications stored in ROM.
+
+vCpuBoot = 0xea
+
+label('SYS_52_RESET')
+ld(val(vCpuBoot-2))             #15 vPC
 st(d(vPC))                      #16
-ld(val(vCpuStart>>8))           #17
-st(d(vPC+1))                    #18
-ld(val(0))                      #19 vRET
-st(d(vRET))                     #20
-ld(val((vCpuStart>>8)+1))       #21
-st(d(vRET+1))                   #22
-ld(val(0))                      #23 Sound (and LEDs) off
-st(d(xoutMask))                 #24
-st(d(vSP))                      #25 Reset stack pointer
-nop()                           #26
-ld(val(hi('REENTER')),regY)     #27
-jmpy(d(lo('REENTER')))          #28
-ld(val(-32/2))                  #29
+ld(val(vCpuBoot),regX)          #17 vPC
+ld(val(0))                      #18
+st(d(vPC+1),busAC|regY)         #19 Boot on zero page
+st(d(xoutMask))                 #20 Sound (and LEDs) off
+st(d(vSP))                      #21 Reset stack pointer
+st(d(vRET))                     #22 vRET
+ld(val(vCpuStart>>8))           #23
+st(d(vRET+1))                   #24
+
+# Poke a boot sector into high zero page for the bootstrap
+# part that needs more than fits in a single SYS extension
+# - Clearing video table (to be removed)
+# This code is self modifying and will need to run just once
+# XXX load reset.gcl from ROM
+# - XXX Clearing video table
+# - XXX Clearing screen, printing system message
+# - XXX Clearing sound properly
+# - XXX Loading program from ROM
+st(d(lo('LDI')    ),eaYXregOUTIX) #00ea
+st(d(   0x08      ),eaYXregOUTIX) #00eb RAM page for video line i
+st(d(lo('POKE')   ),eaYXregOUTIX) #00ec "Y[i] = $080+i"
+st(d(   0xfe      ),eaYXregOUTIX) #00ed
+st(d(lo('INC')    ),eaYXregOUTIX) #00ee Self-modification
+st(d(   0xeb      ),eaYXregOUTIX) #00ef
+st(d(lo('INC')    ),eaYXregOUTIX) #00f0
+st(d(   0xfe      ),eaYXregOUTIX) #00f1
+st(d(lo('LDI')    ),eaYXregOUTIX) #00f2
+st(d(    0        ),eaYXregOUTIX) #00f3
+st(d(lo('POKE')   ),eaYXregOUTIX) #00f4 "dX[i] = 0"
+st(d(   0xfe      ),eaYXregOUTIX) #00f5
+st(d(lo('INC')    ),eaYXregOUTIX) #00f6
+st(d(   0xfe      ),eaYXregOUTIX) #00f7
+st(d(lo('LDW')    ),eaYXregOUTIX) #00f8 "for i in range(120)"
+st(d(   0xea      ),eaYXregOUTIX) #00f9 Pulls [$eb] into vAC+1 ...
+st(d(lo('COND')   ),eaYXregOUTIX) #00fa ...so we can test bit7
+st(d(lo('GE')     ),eaYXregOUTIX) #00fb
+st(d(   0xea-2    ),eaYXregOUTIX) #00fc
+st(d(lo('RET')    ),eaYXregOUTIX) #00fd Jumps to $0300
+st(d(scanTable&255),eaYXregOUTIX) #00fe Video table pointer
+st(d(scanTable>>8 ),eaYXregOUTIX) #00ff
+
+ld(val(hi('REENTER')),regY)     #47
+jmpy(d(lo('REENTER')))          #48
+ld(val(-52/2))                  #49
 
 #-----------------------------------------------------------------------
 # Extension SYS_38_VCLEAR8: Zero a vertical slice of 8 bytes(pixels)
@@ -1761,7 +1814,8 @@ st(d(vSP))
 # Preload vRET with address of next page, for easier setup section in GCL
 #ld(val(0))
 st(d(vRET))
-ld(val((vCpuStart>>8)+1))
+#ld(val((vCpuStart>>8)+1))
+ld(val(vCpuStart>>8))
 st(d(vRET+1))
 
 # Return
