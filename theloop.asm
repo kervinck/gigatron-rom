@@ -70,86 +70,79 @@ cold:         003e c204  st   [$04]
               003f 60ff  xora $ff
               0040 a059  suba $59
               0041 c205  st   [$05]
-              0042 00ff  ld   $ff         ;Setup system timer
-              0043 c211  st   [$11]
-              0044 1401  ld   $01,y       ;Setup video scan table
-              0045 1000  ld   $00,x
-              0046 0008  ld   $08
-              0047 de00  st   [y,x++]
-.initVideo:   0048 dc00  st   $00,[y,x++]
-              0049 8001  adda $01
-              004a f448  bge  .initVideo
-              004b de00  st   [y,x++]
-              004c 00f2  ld   $f2
-              004d c20f  st   [$0f]
-              004e dc12  st   $12,[y,x++] ;Setup vCPU reset handler
-              004f dc31  st   $31,[y,x++]
-              0050 dc04  st   $04,[y,x++]
-              0051 dcac  st   $ac,[y,x++]
-              0052 dc34  st   $34,[y,x++]
-              0053 dc98  st   $98,[y,x++] ;Setup vCPU reset handler
-              0054 dcee  st   $ee,[y,x++]
-              0055 1402  ld   $02,y       ;Setup shift2 table
-              0056 0000  ld   $00
-              0057 c202  st   [$02]
-.loop:        0058 c231  st   [$31]
-              0059 8200  adda ac
-              005a 9200  adda ac,x
-              005b 0131  ld   [$31]
-              005c ce00  st   [y,x]
-              005d 8001  adda $01
-              005e 6040  xora $40
-              005f ec58  bne  .loop
-              0060 6040  xora $40
-              0061 0078  ld   $78         ;Setup LED sequencer
-              0062 c22e  st   [$2e]
-              0063 0000  ld   $00
-              0064 c22f  st   [$2f]
-              0065 000a  ld   $0a
-              0066 c230  st   [$30]
-              0067 1401  ld   $01,y       ;Setup channel 1
-              0068 10fa  ld   $fa,x
-              0069 dc38  st   $38,[y,x++]
-              006a cc06  st   $06,[y,x]
-              006b 1402  ld   $02,y       ;Setup channel 2
-              006c 10fa  ld   $fa,x
-              006d dc70  st   $70,[y,x++]
-              006e cc0c  st   $0c,[y,x]
-              006f 1403  ld   $03,y       ;Setup channel 3
-              0070 10fa  ld   $fa,x
-              0071 dc10  st   $10,[y,x++]
-              0072 cc10  st   $10,[y,x]
-              0073 1404  ld   $04,y       ;Setup channel 4
-              0074 10fa  ld   $fa,x
-              0075 dc20  st   $20,[y,x++]
-              0076 cc13  st   $13,[y,x]
-              0077 0000  ld   $00         ;Setup sound timer
-              0078 c22d  st   [$2d]
-              0079 c215  st   [$15]       ;Setup serial input
-              007a c312  st   in,[$12]
-              007b c313  st   in,[$13]
-              007c c314  st   in,[$14]
-              007d 0007  ld   $07         ;LEDs |***O|
-              007e 1880  ld   $80,out
-              007f 18c0  ld   $c0,out
-              0080 0086  ld   $86         ;Bootstrap vCPU
-              0081 c209  st   [$09]
-              0082 0000  ld   $00
-              0083 14d3  ld   $d3,y
-              0084 e000  jmp  y,$00
-              0085 c20a  st   [$0a]
-.retn:        0086 000f  ld   $0f         ;LEDs |****|
-              0087 1880  ld   $80,out
-              0088 18c0  ld   $c0,out
-              0089 c216  st   [$16]
-              008a c217  st   [$17]
-              008b 1402  ld   $02,y       ;Enter video loop
-              008c e004  jmp  y,$04
-              008d 00c0  ld   $c0
-              008e 0200  nop
-              008f 0200  nop
-              0090 0200  nop
-              * 114 times
+              0042 00f2  ld   $f2         ;Setup video mode
+              0043 c20f  st   [$0f]
+              0044 00ee  ld   $ee         ;Setup vCPU reset handler
+              0045 c218  st   [$18]
+              0046 9002  adda $02,x
+              0047 0001  ld   $01
+              0048 d619  st   [$19],y
+              0049 dc12  st   $12,[y,x++]
+              004a dc31  st   $31,[y,x++]
+              004b dc04  st   $04,[y,x++]
+              004c dcac  st   $ac,[y,x++]
+              004d dc34  st   $34,[y,x++]
+              004e 1402  ld   $02,y       ;Setup shift2 table
+              004f 0000  ld   $00
+              0050 c202  st   [$02]
+.loop:        0051 c231  st   [$31]
+              0052 8200  adda ac
+              0053 9200  adda ac,x
+              0054 0131  ld   [$31]
+              0055 ce00  st   [y,x]
+              0056 8001  adda $01
+              0057 6040  xora $40
+              0058 ec51  bne  .loop
+              0059 6040  xora $40
+              005a 0078  ld   $78         ;Setup LED sequencer
+              005b c22e  st   [$2e]
+              005c 0000  ld   $00
+              005d c22f  st   [$2f]
+              005e 000a  ld   $0a
+              005f c230  st   [$30]
+              0060 1401  ld   $01,y       ;Setup channel 1
+              0061 10fa  ld   $fa,x
+              0062 dc38  st   $38,[y,x++]
+              0063 cc06  st   $06,[y,x]
+              0064 1402  ld   $02,y       ;Setup channel 2
+              0065 10fa  ld   $fa,x
+              0066 dc70  st   $70,[y,x++]
+              0067 cc0c  st   $0c,[y,x]
+              0068 1403  ld   $03,y       ;Setup channel 3
+              0069 10fa  ld   $fa,x
+              006a dc10  st   $10,[y,x++]
+              006b cc10  st   $10,[y,x]
+              006c 1404  ld   $04,y       ;Setup channel 4
+              006d 10fa  ld   $fa,x
+              006e dc20  st   $20,[y,x++]
+              006f cc13  st   $13,[y,x]
+              0070 0000  ld   $00         ;Setup sound timer
+              0071 c22d  st   [$2d]
+              0072 c215  st   [$15]       ;Setup serial input
+              0073 c312  st   in,[$12]
+              0074 c313  st   in,[$13]
+              0075 c314  st   in,[$14]
+              0076 0007  ld   $07         ;LEDs |***O|
+              0077 1880  ld   $80,out
+              0078 18c0  ld   $c0,out
+              0079 007f  ld   $7f         ;Load application
+              007a c209  st   [$09]
+              007b 0000  ld   $00
+              007c 14d3  ld   $d3,y
+              007d e000  jmp  y,$00
+              007e c20a  st   [$0a]
+.retn:        007f 000f  ld   $0f         ;LEDs |****|
+              0080 1880  ld   $80,out
+              0081 18c0  ld   $c0,out
+              0082 c216  st   [$16]
+              0083 c217  st   [$17]
+              0084 1402  ld   $02,y       ;Enter video loop
+              0085 e004  jmp  y,$04
+              0086 00c0  ld   $c0
+              0087 0200  nop
+              0088 0200  nop
+              0089 0200  nop
+              * 121 times
 videoA:       0100 00c8  ld   $c8
               0101 c20e  st   [$0e]
               0102 1401  ld   $01,y
@@ -47676,7 +47669,7 @@ gigatronRaw:  bb00 00aa  ld   $aa
               d2fd 1403  ld   $03,y
               d2fe e07b  jmp  y,$7b
               d2ff 1519  ld   [$19],y
-initVcpu:     d300 1000  ld   $00,x
+loadApp:      d300 1000  ld   $00,x
               d301 1403  ld   $03,y
               d302 dcfc  st   $fc,[y,x++] ;0300 DEF
               d303 dc6d  st   $6d,[y,x++]
@@ -48901,16 +48894,7 @@ initVcpu:     d300 1000  ld   $00,x
               d7cc dce4  st   $e4,[y,x++] ;08fa CALL
               d7cd dc98  st   $98,[y,x++] ;08fb BRA
               d7ce dcda  st   $da,[y,x++]
-              d7cf 00fe  ld   $fe
-              d7d0 c218  st   [$18]
-              d7d1 0003  ld   $03
-              d7d2 c219  st   [$19]
-              d7d3 0000  ld   $00
-              d7d4 c21e  st   [$1e]
-              d7d5 c21c  st   [$1c]
-              d7d6 0003  ld   $03
-              d7d7 c21d  st   [$1d]
-              d7d8 150a  ld   [$0a],y
-              d7d9 e109  jmp  y,[$09]
-              d7da 0200  nop
-              d7db
+              d7cf 150a  ld   [$0a],y
+              d7d0 e109  jmp  y,[$09]
+              d7d1 0200  nop
+              d7d2

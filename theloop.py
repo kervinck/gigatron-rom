@@ -413,44 +413,24 @@ xora(val(255))
 suba(val(0x5a-1))
 st(d(bootCheck))
 
-# Init system timer
-ld(val(-1));                    C('Setup system timer')
-st(d(frameCount))
-
-# Initialize scan table for default video layout
-ld(val(scanTablePage),regY);    C('Setup video scan table')
-ld(val(0),regX)
-ld(val(screenPages))
-st(eaYXregOUTIX)         # Yi  = 0x08+i
-label('.initVideo')
-st(val(0),eaYXregOUTIX)  # dXi = 0
-adda(val(1))
-bge(d(lo('.initVideo'))) # stops at $80
-st(eaYXregOUTIX)         # Yi  = 0x08+i
-ld(d(lo('videoF')))
+# Initial video mode
+ld(d(lo('videoF')));            C('Setup video mode')
 st(d(videoDorF))
 
-# vCPU reset handler (we have 9 unused bytes behind the video table)
-vCpuReset = 0x0100 + 240
-st(d(lo('LDWI')),        eaYXregOUTIX); C('Setup vCPU reset handler')
+# vCPU reset handler
+vCpuReset = scanTable + 240 # we have 9 unused bytes behind the video table
+ld(val((vCpuReset&255)-2));     C('Setup vCPU reset handler')
+st(d(vPC))
+adda(val(2),regX)
+ld(val(vCpuReset>>8))
+st(d(vPC+1),busAC|regY)
+st(d(lo('LDWI')),        eaYXregOUTIX)
 st(d(lo('SYS_52_RESET')),eaYXregOUTIX)
 st(d(hi('SYS_52_RESET')),eaYXregOUTIX)
 st(d(lo('SYS')),         eaYXregOUTIX)
 st(d(52),                eaYXregOUTIX)
-# XXX Should also reset the video table
-#     But this takes >240 cycles
-#     How about 240x the restart trick?
-#     Better to the reset in dedicated gcl code
-#     (not easier, because that also needs loading))
-#     BUT: we can store bootstrap code at $0081, and jump there!
 
-
-
-
-
-
-st(d(lo('BRA')),eaYXregOUTIX); C('Setup vCPU reset handler')
-st(d(240-2)    ,eaYXregOUTIX)
+# XXX Everything below should at one point migrate to reset.gcl
 
 # Init the shift2-right table for sound
 ld(val(shiftTablePage),regY);   C('Setup shift2 table')
@@ -510,11 +490,11 @@ ld(val(0b0111));                C('LEDs |***O|')
 ld(val(syncBits^hSync),regOUT)
 ld(val(syncBits),regOUT)
 
-ld(val(lo('.retn')));           C('Bootstrap vCPU')
+ld(val(lo('.retn')));           C('Load application')
 st(d(returnTo+0))
 ld(val(hi('.retn')))
-ld(d(hi('initVcpu')),regY)
-jmpy(d(lo('initVcpu')))
+ld(d(hi('loadApp')),regY)
+jmpy(d(lo('loadApp')))
 st(d(returnTo+1))
 label('.retn')
 
@@ -1516,11 +1496,9 @@ st(d(vSP))                      #21 Reset stack pointer
 st(d(vRET))                     #22 vRET
 ld(val(vCpuStart>>8))           #23
 st(d(vRET+1))                   #24
-
 # Poke a boot sector into high zero page for the bootstrap
 # part that needs more than fits in a single SYS extension
 # - Clearing video table (to be removed)
-# This code is self modifying and will need to run just once
 # XXX load reset.gcl from ROM
 # - XXX Clearing video table
 # - XXX Clearing screen, printing system message
@@ -1787,7 +1765,7 @@ for i in xrange(len(raw)):
 #-----------------------------------------------------------------------
 
 align(0x100)
-label('initVcpu')
+label('loadApp')
 
 # For info
 print 'SYS warning %s error %s' % (repr(minSYS), repr(maxSYS))
@@ -1800,23 +1778,6 @@ program.end()
 bLine = program.vPC
 print bLine-vCpuStart, 'GCL bytes loaded'
 print vCpuTop-bLine+1, 'GCL bytes free'
-
-# Set start of user program ready to run
-ld(val((vCpuStart&255)-2))
-st(d(vPC))
-ld(val(vCpuStart>>8))
-st(d(vPC+1))
-
-# Reset vCPU stack pointer
-ld(val(0))
-st(d(vSP))
-
-# Preload vRET with address of next page, for easier setup section in GCL
-#ld(val(0))
-st(d(vRET))
-#ld(val((vCpuStart>>8)+1))
-ld(val(vCpuStart>>8))
-st(d(vRET+1))
 
 # Return
 ld(d(returnTo+1), busRAM|ea0DregY)
