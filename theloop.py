@@ -433,8 +433,8 @@ st(d(videoDorF))
 # vCPU reset handler (we have 9 unused bytes behind the video table)
 vCpuReset = 0x0100 + 240
 st(d(lo('LDWI')),        eaYXregOUTIX); C('Setup vCPU reset handler')
-st(d(lo('SYS_30_RESET')),eaYXregOUTIX)
-st(d(hi('SYS_30_RESET')),eaYXregOUTIX)
+st(d(lo('SYS_32_RESET')),eaYXregOUTIX)
+st(d(hi('SYS_32_RESET')),eaYXregOUTIX)
 st(d(lo('SYS')),         eaYXregOUTIX)
 st(d(30),                eaYXregOUTIX)
 # XXX Should also reset the video table
@@ -1479,10 +1479,10 @@ nop()                           #23
 #-----------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
-# Extension SYS_30_RESET: Soft reset
+# Extension SYS_32_RESET: Soft reset
 #-----------------------------------------------------------------------
 
-label('SYS_30_RESET')
+label('SYS_32_RESET')
 # XXX What if software is loading?
 ld(val((vCpuStart&255)-2))      #15 vPC
 st(d(vPC))                      #16
@@ -1494,9 +1494,11 @@ ld(val((vCpuStart>>8)+1))       #21
 st(d(vRET+1))                   #22
 ld(val(0))                      #23 Sound (and LEDs) off
 st(d(xoutMask))                 #24
-ld(val(hi('REENTER')),regY)     #25
-jmpy(d(lo('REENTER')))          #26
-ld(val(-30/2))                  #27
+st(d(vSP))                      #25 Reset stack pointer
+nop()                           #26
+ld(val(hi('REENTER')),regY)     #27
+jmpy(d(lo('REENTER')))          #28
+ld(val(-32/2))                  #29
 
 #-----------------------------------------------------------------------
 # Extension SYS_38_VCLEAR8: Zero a vertical slice of 8 bytes(pixels)
