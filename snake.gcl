@@ -145,7 +145,7 @@ $0400:
   push
 
   {Display welcome tekst}
-  8 {Green} Color=
+  12 {Bright Green} Color=
   $800 Pos= ClearScreen call
   Welcome Text= DrawText call
   60 Delay= Wait call
@@ -230,7 +230,7 @@ $0500:
     {Update tail}
     Grow [if>0
       1- Grow= {Do nothing while growing}
-      8 {Bright Blue} Color= AddFood call {Food}
+      8 {Green} Color= AddFood call {Food}
       60 {Bright Cyan} Color= AddFood call {Poison}
     else
       Tail? tmp=
@@ -307,7 +307,7 @@ $0700:
   push
 
   {Remove any 'AUTO' text}
-  8 {Green} Color= $0800 Pos=
+  12 {Green} Color= $0800 Pos=
   [def $20. $20. $20. $2a. 10. 0.] Text= DrawText call
 
   {ClearScreen}

@@ -47990,7 +47990,7 @@ initVcpu:     d300 1000  ld   $00,x
               d44b dc6e  st   $6e,[y,x++]
               d44c dc80  st   $80,[y,x++] ;0453 PUSH
               d44d dc5c  st   $5c,[y,x++] ;0454 LDI
-              d44e dc08  st   $08,[y,x++]
+              d44e dc0c  st   $0c,[y,x++]
               d44f dc2c  st   $2c,[y,x++] ;0456 STW
               d450 dc41  st   $41,[y,x++] ;0457 'Color'
               d451 dc12  st   $12,[y,x++] ;0458 LDWI
@@ -48615,7 +48615,7 @@ initVcpu:     d300 1000  ld   $00,x
               d6bc dcf1  st   $f1,[y,x++]
               d6bd dc80  st   $80,[y,x++] ;0702 PUSH
               d6be dc5c  st   $5c,[y,x++] ;0703 LDI
-              d6bf dc08  st   $08,[y,x++]
+              d6bf dc0c  st   $0c,[y,x++]
               d6c0 dc2c  st   $2c,[y,x++] ;0705 STW
               d6c1 dc41  st   $41,[y,x++] ;0706 'Color'
               d6c2 dc12  st   $12,[y,x++] ;0707 LDWI
