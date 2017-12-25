@@ -258,7 +258,7 @@ $0600:
 [def
   push
   {If a key is pressed, start restart the game}
-  \serialRaw? $3f& $3f^ [if<>0 SetupGame call pop call]
+  \serialRaw? $cf& {~buttonStart&~buttonSelect} $cf^ [if<>0 SetupGame call pop call]
 
   {Auto snake control}
   TurnL p=
@@ -367,7 +367,7 @@ $08a0:
     AutoControl Control= call
   else
     {Disable launch control once a button is pressed}
-    \serialRaw? 255^ [if<>0 PlayerControl Control= call]
+    \serialRaw? $cf& {~buttonStart|~buttonSelect} $cf^ [if<>0 PlayerControl Control= call]
   ]
   pop call
 ] LaunchControl=
