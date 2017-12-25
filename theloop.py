@@ -436,7 +436,7 @@ st(d(lo('LDWI')),        eaYXregOUTIX); C('Setup vCPU reset handler')
 st(d(lo('SYS_32_RESET')),eaYXregOUTIX)
 st(d(hi('SYS_32_RESET')),eaYXregOUTIX)
 st(d(lo('SYS')),         eaYXregOUTIX)
-st(d(30),                eaYXregOUTIX)
+st(d(32),                eaYXregOUTIX)
 # XXX Should also reset the video table
 
 st(d(lo('BRA')),eaYXregOUTIX); C('Setup vCPU reset handler')
