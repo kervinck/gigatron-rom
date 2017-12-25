@@ -6,12 +6,9 @@
 +-----------------------------------------------------------------------}
 
 {
-XXX Non-black playfield
 XXX Smarter border drawing
-XXX Leave poison at tail, to prevent accidentally killing player (brown?)
 XXX Increasing speed and rising tones
 XXX Score and high score
-XXX Better title bar
 XXX Accelerated text drawing
 XXX More points for getting to food faster
 }
@@ -46,7 +43,7 @@ XXX More points for getting to food faster
     Pos p=
     {Draw vertical slice}
     [do
-      bits 128& [if=0 0 {Black} else Color] p!
+      bits 128& [if=0 BgColor else Color] p!
       bits bits+ bits=
       p>++
       p q- if<0loop]
@@ -75,20 +72,10 @@ XXX More points for getting to food faster
 ] DrawText=
 
 [def
-{-
-  Startup message
--}
-  {XXX move this to a ROM table}
-  {XXX display the counted memory}
-  {XXX Make ROM version readable by applications}
-  {XXX display number of free bytes}
-  {   *** Gigatron 32K ***    }
-  $20. $20. $20. $2a. $2a. $2a. $20. $47. $69. $67. $61. $74. $72. $6f. $6e.
-  $20. $33. $32. $4b. $20. $2a. $2a. $2a. 10.
-  {TTL color computer ROM v0  }
-  $54. $54. $4c. $20. $63. $6f. $6c. $6f. $72. $20. $63. $6f. $6d. $70. $75.
-  $74. $65. $72. $20. $52. $4f. $4d. $20. $76. $30. $20. $20. 10. 0.
-] Welcome=
+  {0000 00  Gigatron  HI 0000}
+   $30. $30. $30. $30. $20. $31. $30. $20. $20. $47. $69. $67. $61. $74. $72. $6f.
+   $6e. $20. $20. $48. $49. $20. $31. $30. $30. $30. 0.
+] Title=
 
 [def
 {-
@@ -137,10 +124,12 @@ $0400:
   push
 
   {Display welcome tekst}
-  12 {Bright Green} Color=
+  8 {Green} Color=
+  0 BgColor=
   $800 Pos= ClearScreen call
-  Welcome Text= DrawText call
-  60 Delay= Wait call
+  $802 Pos= Title Text= DrawText call
+  4 BgColor=
+  63 Delay= Wait call
 
   pop call
 ] Intro=
@@ -154,9 +143,7 @@ $0400:
   i= $8001 i+ i=        {Offset to move to next stripe}
   [do
     {Clear one stripe}
-    p [do
-      {p} \sysArgs0= \SYS_38_VCLEAR8 38@ {Clears 8 pixels vertically}
-      $800 p+ p= if>0loop]
+    p [do BgColor p!  $100 p+ p= if>0loop]
     {Next stripe}
     i+ p=
     255& 160^ if<>0loop]
@@ -206,15 +193,16 @@ $0500:
     stepU>? 128& tmp=
     stepU     1& [if<>0 64] tmp+
 
-    11+ {Orange} Color= Head Pos= DrawBlock call {Tail color and trace}
+    30+ {Cyan} Color= Head Pos= DrawBlock call {Tail color and trace}
 
     {Make step}
     Head stepU+ stepU+ Head=
 
-    Head? [if<>0
-      8^ [if<>0 {Hit wall or poison} pop call]
+    Head? $33& [if<>0 {Hit wall or poison} pop call]
+    Head? 8^ [if=0
       {Eat food}
-      Grow 1+ Grow= {XXX More at higher difficulty level}
+      Grow<++
+      Drops<++
       2 \soundTimer!
     ]
     63 {White} Color= Head Pos= DrawBlock call
@@ -222,11 +210,11 @@ $0500:
     {Update tail}
     Grow [if>0
       1- Grow= {Do nothing while growing}
-      8 {Green} Color= AddFood call {Food}
-      60 {Bright Cyan} Color= AddFood call {Poison}
+      AddFood call
     else
       Tail? tmp=
-      0 {Black} Color= Tail Pos= DrawBlock call
+      Drops [if>0 1- Drops= 11 {Orange} else BgColor] Color=
+      Tail Pos= DrawBlock call
 
       tmp 64&  [if=0 $0100 else $0001] x=
       tmp 128& [if=0 x else 0 x-]
@@ -240,11 +228,12 @@ $0500:
 
 [def
   push
+  8 {Gree} Color=
   [do
     \SYS_34_RANDOM 34@ Pos=
     Pos<?      128- [if<0 157+] 1+   {1..157}   $fe& Pos<!
     Pos>? 127& 64-  [if<0 109+] $11+ {$11..$fd} $fe& Pos>!
-    Pos? if<>0loop]
+    Pos? BgColor- if<>0loop]
   DrawBlock call
   pop call
 ] AddFood=
@@ -262,11 +251,11 @@ $0600:
   {Auto snake control}
   TurnL p=
   TurnR q=
-  {Look ahead} Head stepU+ stepU+ peek tmp=
-  {Look left}  Head stepV- stepV- peek [if<>0 8^ [if<>0 0 p= else 0 q= 1 tmp=]]
-  {Look right} Head stepV+ stepV+ peek [if<>0 8^ [if<>0 0 q= else 0 p= 1 tmp=]]
+  {Look ahead} Head stepU+ stepU+ peek 4^ tmp=
+  {Look left}  Head stepV- stepV- peek 4^ [if<>0 {8^4}12^ [if<>0 0 p= else 0 q= 1 tmp=]]
+  {Look right} Head stepV+ stepV+ peek 4^ [if<>0 {8^4}12^ [if<>0 0 q= else 0 p= 1 tmp=]]
                                   tmp  [if=0 \entropy? $7f& 6- [if<0 1 else 0]]
-  [if<>0 8^ if<>0
+  [if<>0 {8^4}12^ if<>0
     {Wall or random direction change: must go left or right.
      Pick randomly, without bias, but don't crash into a wall when not needed}
     p [if=0 q else
@@ -300,14 +289,16 @@ $0700:
   push
 
   {Remove any 'AUTO' text}
-  12 {Green} Color= $0800 Pos=
-  [def $20. $20. $20. $2a. 10. 0.] Text= DrawText call
+  0 BgColor=
+  8 {Green} Color= $802 Pos=
+  [def $30. $30. $30. $30. 10. 0.] Text= DrawText call
 
   {ClearScreen}
+  4 BgColor=
   ClearScreen call
 
   {Draw bounding box}
-  32 {Blue} Color=
+  26 {30} {42} {Dark Grey} Color=
   $1000 Pos=
      +1 Step= 159 Count= DrawLine call
    $100 Step= 111 Count= DrawLine call
@@ -331,12 +322,11 @@ $0700:
 
   {Place snake}
   $4430 Head= Tail=
-  0 Grow=
+  0 Grow= Drops=
   $0001 stepU= $0100 stepV= {Start right}
 
   LaunchControl Control=
 
-  8 {Green} Color=
   25 i=
   [do
     AddFood call
@@ -355,13 +345,14 @@ $08a0:
 
 [def
 {-
-  After game started, 
+  XXX better strategy: run both PlayerControl and AutoControl.
+  The first one to take control will takes over the game...
 -}
   push
   $449c Head- [if=0
     {Switch to autopilot when reaching this position}
-    11 {Orange} Color=
-    $0800 Pos=
+    30 {XXX} Color=
+    $0802 Pos=
     [def $41. $55. $54. $4f. 0.{AUTO}] Text= DrawText call
     AutoControl Control= call
   else
@@ -377,11 +368,12 @@ Intro call
 
 [do
   SetupGame call
+
   RunGame call
 
   3 {Bright Red} Color= Head Pos= DrawBlock call
-  GameOver call
   120 \soundTimer!
+  GameOver call
 
   240 Delay= Wait call
 
