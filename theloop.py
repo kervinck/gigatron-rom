@@ -41,13 +41,13 @@
 #  XXX Macros
 #
 #  Possible applications
-#  XXX Picture Frame
-#  XXX Info screen (zero page)
 #  XXX Nog iets simpels. Gigatron layout balls/bricks game
 #  XXX Iets met scroller. Flappy Bird?
+#  XXX Picture Frame
+#  XXX Random dots screen
+#  XXX Info screen (zero page)
 #  XXX Iets met doolhof. Berzerk/Robotron? Pac Mac?
 #  XXX Primes, Fibonacci (bignum), Queens
-#  XXX Random dots screen
 #  XXX Game of Life (edit <-> stop <-> slow <-> fast)
 #  XXX Game #5 Iets met schieten. Space Invaders, Demon Attack, Galaga style
 #  XXX Game #6 Iets met racen.
@@ -1494,7 +1494,7 @@ st(d(vRET))                     #22 vRET
 ld(val(vCpuStart>>8))           #23
 st(d(vRET+1))                   #24
 ld(d(lo('videoF')))             #25
-st(d(videoDorF))                #26
+st(d(videoDorF))                #26 This executes before the visible part
 
 # Poke a boot sector into high zero page for the bootstrap
 # part that needs more than fits in a single SYS extension
