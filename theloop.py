@@ -41,11 +41,11 @@
 #  XXX Macros
 #
 #  Possible applications
-#  XXX Nog iets simpels. Gigatron layout balls/bricks game
-#  XXX Iets met scroller. Flappy Bird?
+#  XXX Gigatron layout balls/bricks game
 #  XXX Picture Frame
+#  XXX Iets met scroller. Flappy Bird?
 #  XXX Random dots screen
-#  XXX Info screen (zero page)
+#  XXX Info screen (zero page?)
 #  XXX Iets met doolhof. Berzerk/Robotron? Pac Mac?
 #  XXX Primes, Fibonacci (bignum), Queens
 #  XXX Game of Life (edit <-> stop <-> slow <-> fast)
