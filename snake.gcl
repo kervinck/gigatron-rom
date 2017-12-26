@@ -6,10 +6,9 @@
 +-----------------------------------------------------------------------}
 
 {
+XXX Accelerated text drawing
 XXX Smarter border drawing
 XXX Increasing speed and rising tones
-XXX Score and high score
-XXX Accelerated text drawing
 XXX More points for getting to food faster
 }
 
@@ -23,9 +22,11 @@ XXX More points for getting to food faster
   with minimal overhead. At the end, run the main loop.
 -}
 
+0 HighScore=
+
 [def
 {-
-  DrawChar(Char)
+  DrawChar -- Pos Color Char
 
   Draw a 5x8 character on screen with the built-in font.
   `Char' must be in the 32-127 range (this is not checked)
@@ -72,9 +73,9 @@ XXX More points for getting to food faster
 ] DrawText=
 
 [def
-  {0000 00  Gigatron  HI 0000}
-   $30. $30. $30. $30. $20. $31. $30. $20. $20. $47. $69. $67. $61. $74. $72. $6f.
-   $6e. $20. $20. $48. $49. $20. $31. $30. $30. $30. 0.
+  {10  Gigatron  HI}
+   $31. $30. $20. $20. $47. $69. $67. $61. $74. $72. $6f.
+   $6e. $20. $20. $48. $49. 0.
 ] Title=
 
 [def
@@ -105,6 +106,10 @@ $0400:
     $47. $41. $4d. $45. $20. $4f. $56. $45. $52. 0. {GAME OVER}
   ] Text=
   DrawText call
+  Score HighScore- [if>0
+    Score HighScore=
+    63 Color= DrawHighScore call
+  ]
   pop call
 ] GameOver=
 
@@ -127,7 +132,7 @@ $0400:
   8 {Green} Color=
   0 BgColor=
   $800 Pos= ClearScreen call
-  $802 Pos= Title Text= DrawText call
+  $820 Pos= Title Text= DrawText call
   4 BgColor=
   63 Delay= Wait call
 
@@ -143,7 +148,7 @@ $0400:
   i= $8001 i+ i=        {Offset to move to next stripe}
   [do
     {Clear one stripe}
-    p [do BgColor p!  $100 p+ p= if>0loop]
+    p [do BgColor p! $100 p+ p= if>=0loop]
     {Next stripe}
     i+ p=
     255& 160^ if<>0loop]
@@ -201,6 +206,8 @@ $0500:
     Head? $33& [if<>0 {Hit wall or poison} pop call]
     Head? 8^ [if=0
       {Eat food}
+      Score 10+ Score=
+      DrawScore call
       Grow<++
       Drops<++
       2 \soundTimer!
@@ -228,7 +235,7 @@ $0500:
 
 [def
   push
-  8 {Gree} Color=
+  8 {Green} Color=
   [do
     \SYS_34_RANDOM 34@ Pos=
     Pos<?      128- [if<0 157+] 1+   {1..157}   $fe& Pos<!
@@ -288,17 +295,17 @@ $0700:
 -}
   push
 
-  {Remove any 'AUTO' text}
-  0 BgColor=
-  8 {Green} Color= $802 Pos=
-  [def $30. $30. $30. $30. 10. 0.] Text= DrawText call
+  {Reset score}
+  0 Score= DrawScore call
+  DrawHighScore call
 
   {ClearScreen}
+  $1000 Pos=
   4 BgColor=
   ClearScreen call
 
   {Draw bounding box}
-  26 {30} {42} {Dark Grey} Color=
+  26 Color=
   $1000 Pos=
      +1 Step= 159 Count= DrawLine call
    $100 Step= 111 Count= DrawLine call
@@ -362,22 +369,77 @@ $08a0:
   pop call
 ] LaunchControl=
 
+{-----------------------------------------------------------------------+
+|}$09a0 call{           RAM page 9                                      |
++-----------------------------------------------------------------------}
+$09a0:
+
+[def { DrawNextDigit -- Value Radix }
+  push
+  $30 Char=
+  Value [do
+    Radix-
+    if>=0
+      Value=
+      Char<++
+      loop
+  ]
+  DrawChar call
+  pop call
+] DrawNextDigit=
+
+{-----------------------------------------------------------------------+
+|}$0aa0 call{           RAM page 10                                     |
++-----------------------------------------------------------------------}
+$0aa0:
+
+[def { DrawNumber4 - Value Radix }
+  push
+  1000 Radix= DrawNextDigit call
+   100 Radix= DrawNextDigit call
+    10 Radix= DrawNextDigit call
+     1 Radix= DrawNextDigit call
+  pop call
+] DrawNumber4=
+
+[def
+  push
+  $802 Pos= 8 Color=
+  BgColor XXX= 0 BgColor=
+  Score Value= DrawNumber4 call
+  XXX BgColor=
+  pop call
+] DrawScore=
+
+{-----------------------------------------------------------------------+
+|}$0ba0 call{           RAM page 11                                     |
++-----------------------------------------------------------------------}
+$0ba0:
+
+[def
+  push
+  $886 Pos=
+  BgColor XXX= 0 BgColor=
+  HighScore Value= DrawNumber4 call
+  XXX BgColor=
+  pop call
+] DrawHighScore=
+
 {--- Run ---}
 
 Intro call
 
 [do
   SetupGame call
-
   RunGame call
 
-  3 {Bright Red} Color= Head Pos= DrawBlock call
   120 \soundTimer!
+  3 {Bright Red} Color= Head Pos= DrawBlock call
   GameOver call
-
   240 Delay= Wait call
 
-  loop]
+  loop
+]
 
 {-----------------------------------------------------------------------+
 |       End                                                             |
