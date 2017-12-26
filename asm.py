@@ -299,7 +299,7 @@ def zpByte(len=1):
   s = _zpSize
   if s <= 0x80 and 0x80 < s + len:
    s = 0x81 # Keep 0x80 reserved
-  _zpSize += len
+  _zpSize = s+len
   assert _zpSize <= 0x100
   return s
 
