@@ -48624,12 +48624,12 @@ loadApp:      d300 1000  ld   $00,x
               d6b8 dc2c  st   $2c,[y,x++] ;06e0 STW
               d6b9 dc57  st   $57,[y,x++] ;06e1 'Timer'
               d6ba dcf3  st   $f3,[y,x++] ;06e2 SUBI
-              d6bb dc14  st   $14,[y,x++]
+              d6bb dc0f  st   $0f,[y,x++]
               d6bc dc36  st   $36,[y,x++] ;06e4 COND
               d6bd dc59  st   $59,[y,x++] ;06e5 LE
               d6be dce9  st   $e9,[y,x++]
               d6bf dc5c  st   $5c,[y,x++] ;06e7 LDI
-              d6c0 dc14  st   $14,[y,x++]
+              d6c0 dc0f  st   $0f,[y,x++]
               d6c1 dc2c  st   $2c,[y,x++] ;06e9 STW
               d6c2 dc57  st   $57,[y,x++] ;06ea 'Timer'
               d6c3 dc1b  st   $1b,[y,x++] ;06eb LD
@@ -49148,7 +49148,7 @@ loadApp:      d300 1000  ld   $00,x
               d8ca dc22  st   $22,[y,x++] ;0add LDW
               d8cb dc55  st   $55,[y,x++] ;0ade 'TimeOut'
               d8cc dcf0  st   $f0,[y,x++] ;0adf ADDI
-              d8cd dc1e  st   $1e,[y,x++]
+              d8cd dc3c  st   $3c,[y,x++]
               d8ce dc8a  st   $8a,[y,x++] ;0ae1 ANDI
               d8cf dcff  st   $ff,[y,x++]
               d8d0 dc2c  st   $2c,[y,x++] ;0ae3 STW

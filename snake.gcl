@@ -304,7 +304,7 @@ $0600:
 [def
   push
   Timer 10+ Timer=
-  20- [if>0 20 Timer=]
+  15- [if>0 15 Timer=]
   \frameCount? TimeOut=
   DrawTimer call
   pop call
@@ -465,7 +465,7 @@ $0aa0:
   8 Color=
   0 BgColor=
   Timer Value= DrawNumber2 call
-  TimeOut 30+ 255& TimeOut=
+  TimeOut 60+ 255& TimeOut=
   pop call
 ] DrawTimer=
 
