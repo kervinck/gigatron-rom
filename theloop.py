@@ -13,7 +13,6 @@
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #  To do
-#  XXX DrawDecimal routine
 #  XXX Serial read from ROM tables, hiding page boundraries
 #  XXX Main menu / Loading and starting of programs
 #  XXX ROM load of vCPU code / bootstrapping
@@ -44,6 +43,8 @@
 #  XXX Gigatron layout balls/bricks game
 #  XXX Picture Frame
 #  XXX Iets met scroller. Flappy Bird?
+#  XXX About Gigatron
+#  XXX 5 sec test screen
 #  XXX Random dots screen
 #  XXX Info screen (zero page?)
 #  XXX Iets met doolhof. Berzerk/Robotron? Pac Mac?
