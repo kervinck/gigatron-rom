@@ -7,9 +7,10 @@
 
 {
 XXX Accelerated text drawing
-XXX Smarter border drawing
+XXX Smarter border drawing (spiral draw)
+XXX Use same drawing techique for clearing playfield
 XXX Increasing speed and rising tones
-XXX More points for getting to food faster
+XXX Increase speed when pressing button
 }
 
 {-----------------------------------------------------------------------+
@@ -98,6 +99,12 @@ XXX More points for getting to food faster
   pop call
 ] UpdateTimer=
 
+[def
+  push
+  Head Pos= 63 {White} Color= DrawBlock call
+  pop call
+] DrawHead=
+
 {-----------------------------------------------------------------------+
 |}\vRET>++ ret{         RAM page 4                                      |
 +-----------------------------------------------------------------------}
@@ -141,7 +148,7 @@ $0400:
   0 BgColor=
   $800 Pos= ClearScreen call
   $838 Pos= Title Text= DrawText call
-  63 Delay= Wait call
+  60 Delay= Wait call
 
   pop call
 ] Intro=
@@ -185,14 +192,6 @@ $0400:
   ret
 ] DrawBlock=
 
-[def
-  push
-  10 Timer=
-  \frameCount? TimeOut=
-  DrawTimer call
-  pop call
-] ResetTimer=
-
 {-----------------------------------------------------------------------+
 |}\vRET>++ ret{         RAM page 5                                      |
 +-----------------------------------------------------------------------}
@@ -224,10 +223,10 @@ $0500:
       2 \soundTimer!
       Score Timer+ Score=
       DrawScore call
-      ResetTimer call
+      AddTimer call
       Grow<++ Drops<++
     ]
-    63 {White} Color= Head Pos= DrawBlock call
+    DrawHead call
 
     {Update tail}
     Grow [if>0
@@ -302,6 +301,15 @@ $0600:
   ret
 ] PlayerControl=
 
+[def
+  push
+  Timer 10+ Timer=
+  20- [if>0 20 Timer=]
+  \frameCount? TimeOut=
+  DrawTimer call
+  pop call
+] AddTimer=
+
 {-----------------------------------------------------------------------+
 |}\vRET>++ ret{         RAM page 7                                      |
 +-----------------------------------------------------------------------}
@@ -314,7 +322,8 @@ $0700:
   push
 
   {Reset score}
-  0 Score= DrawScore call
+  0 Score= Timer= DrawScore call
+  10 Timer= DrawTimer call
   DrawHighScore call
 
   {ClearScreen}
@@ -324,7 +333,6 @@ $0700:
 
   {Draw bounding box}
   26 Color=
-  $1000 Pos=
      +1 Step= 159 Count= DrawLine call
    $100 Step= 111 Count= DrawLine call
      -1 Step= 159 Count= DrawLine call
@@ -347,7 +355,8 @@ $0700:
 
   {Place snake}
   $4430 Head= Tail=
-  Pos= DrawBlock call {XXX Prevents putting food on current head}
+  DrawHead call
+
   0 Grow= Drops=
   $0001 stepU= $0100 stepV= {Start right}
 
@@ -359,7 +368,8 @@ $0700:
 
   2 Delay= {Game speed}
 
-  ResetTimer call
+  0 Timer=
+  AddTimer call
 
   LaunchControl Control=
 
@@ -390,6 +400,15 @@ $08a0:
   pop call
 ] LaunchControl=
 
+[def { DrawNumber2 - Value Radix }
+  push
+  $20 Char=
+    10 Radix= DrawNextDigit call
+  $30 Char=
+     1 Radix= DrawNextDigit call
+  pop call
+] DrawNumber2=
+
 {-----------------------------------------------------------------------+
 |}$09a0 call{           RAM page 9                                      |
 +-----------------------------------------------------------------------}
@@ -397,33 +416,34 @@ $09a0:
 
 [def { DrawNextDigit -- Value Radix }
   push
-  $30 Char=
-  Value [do
-    Radix-
-    if>=0
-      Value=
-      Char<++
-      loop
+  Value Radix- [if>=0
+    Value=
+    $31 Char=
+    Value [do
+      Radix-
+      if>=0
+        Value=
+        Char<++
+        loop
+    ]
+    DrawChar call
+    $30 Char=
+  else
+    DrawChar call
   ]
-  DrawChar call
   pop call
 ] DrawNextDigit=
 
 [def { DrawNumber4 - Value Radix }
   push
+  $20 Char=
   1000 Radix= DrawNextDigit call
    100 Radix= DrawNextDigit call
     10 Radix= DrawNextDigit call
+  $30 Char=
      1 Radix= DrawNextDigit call
   pop call
 ] DrawNumber4=
-
-[def { DrawNumber2 - Value Radix }
-  push
-    10 Radix= DrawNextDigit call
-     1 Radix= DrawNextDigit call
-  pop call
-] DrawNumber2=
 
 {-----------------------------------------------------------------------+
 |}$0aa0 call{           RAM page 10                                     |
@@ -445,7 +465,7 @@ $0aa0:
   8 Color=
   0 BgColor=
   Timer Value= DrawNumber2 call
-  TimeOut 60+ 255& TimeOut=
+  TimeOut 30+ 255& TimeOut=
   pop call
 ] DrawTimer=
 
