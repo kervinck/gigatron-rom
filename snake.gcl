@@ -73,9 +73,7 @@ XXX More points for getting to food faster
 ] DrawText=
 
 [def
-  {10  Gigatron  HI}
-   $31. $30. $20. $20. $47. $69. $67. $61. $74. $72. $6f.
-   $6e. $20. $20. $48. $49. 0.
+   $47. $69. $67. $61. $74. $72. $6f. $6e. 0. {Gigatron}
 ] Title=
 
 [def
@@ -91,6 +89,15 @@ XXX More points for getting to food faster
   ret
 ] DrawLine=
 
+[def
+  push
+  \frameCount? TimeOut- 128& [if=0
+    Timer [if>0 1- Timer=]
+    DrawTimer call
+  ]
+  pop call
+] UpdateTimer=
+
 {-----------------------------------------------------------------------+
 |}\vRET>++ ret{         RAM page 4                                      |
 +-----------------------------------------------------------------------}
@@ -105,10 +112,11 @@ $0400:
   [def
     $47. $41. $4d. $45. $20. $4f. $56. $45. $52. 0. {GAME OVER}
   ] Text=
+  4 BgColor=
   DrawText call
   Score HighScore- [if>0
     Score HighScore=
-    63 Color= DrawHighScore call
+    30 Color= DrawHighScore call
   ]
   pop call
 ] GameOver=
@@ -132,8 +140,7 @@ $0400:
   8 {Green} Color=
   0 BgColor=
   $800 Pos= ClearScreen call
-  $820 Pos= Title Text= DrawText call
-  4 BgColor=
+  $838 Pos= Title Text= DrawText call
   63 Delay= Wait call
 
   pop call
@@ -178,6 +185,14 @@ $0400:
   ret
 ] DrawBlock=
 
+[def
+  push
+  10 Timer=
+  \frameCount? TimeOut=
+  DrawTimer call
+  pop call
+] ResetTimer=
+
 {-----------------------------------------------------------------------+
 |}\vRET>++ ret{         RAM page 5                                      |
 +-----------------------------------------------------------------------}
@@ -204,13 +219,13 @@ $0500:
     Head stepU+ stepU+ Head=
 
     Head? $33& [if<>0 {Hit wall or poison} pop call]
-    Head? 8^ [if=0
+    Head? 8^ {Food?} [if=0
       {Eat food}
-      Score 10+ Score=
-      DrawScore call
-      Grow<++
-      Drops<++
       2 \soundTimer!
+      Score Timer+ Score=
+      DrawScore call
+      ResetTimer call
+      Grow<++ Drops<++
     ]
     63 {White} Color= Head Pos= DrawBlock call
 
@@ -219,8 +234,9 @@ $0500:
       1- Grow= {Do nothing while growing}
       AddFood call
     else
+      {Tail is following the head}
       Tail? tmp=
-      Drops [if>0 1- Drops= 11 {Orange} else BgColor] Color=
+      Drops [if>0 1- Drops= 11 {Orange} else 4] Color=
       Tail Pos= DrawBlock call
 
       tmp 64&  [if=0 $0100 else $0001] x=
@@ -228,6 +244,8 @@ $0500:
       {XXX Tail+ Tail=}
       tmp= Tail tmp+ tmp+ Tail=
     ]
+
+    UpdateTimer call
 
     Wait call
     loop]
@@ -240,7 +258,7 @@ $0500:
     \SYS_34_RANDOM 34@ Pos=
     Pos<?      128- [if<0 157+] 1+   {1..157}   $fe& Pos<!
     Pos>? 127& 64-  [if<0 109+] $11+ {$11..$fd} $fe& Pos>!
-    Pos? BgColor- if<>0loop]
+    Pos? 4^ if<>0loop]
   DrawBlock call
   pop call
 ] AddFood=
@@ -329,10 +347,9 @@ $0700:
 
   {Place snake}
   $4430 Head= Tail=
+  Pos= DrawBlock call {XXX Prevents putting food on current head}
   0 Grow= Drops=
   $0001 stepU= $0100 stepV= {Start right}
-
-  LaunchControl Control=
 
   25 i=
   [do
@@ -341,6 +358,10 @@ $0700:
   if>0loop]
 
   2 Delay= {Game speed}
+
+  ResetTimer call
+
+  LaunchControl Control=
 
   pop call
 ] SetupGame=
@@ -353,7 +374,7 @@ $08a0:
 [def
 {-
   XXX better strategy: run both PlayerControl and AutoControl.
-  The first one to take control will takes over the game...
+  The first one to take control will take over the game...
 -}
   push
   $449c Head- [if=0
@@ -388,11 +409,6 @@ $09a0:
   pop call
 ] DrawNextDigit=
 
-{-----------------------------------------------------------------------+
-|}$0aa0 call{           RAM page 10                                     |
-+-----------------------------------------------------------------------}
-$0aa0:
-
 [def { DrawNumber4 - Value Radix }
   push
   1000 Radix= DrawNextDigit call
@@ -402,14 +418,36 @@ $0aa0:
   pop call
 ] DrawNumber4=
 
+[def { DrawNumber2 - Value Radix }
+  push
+    10 Radix= DrawNextDigit call
+     1 Radix= DrawNextDigit call
+  pop call
+] DrawNumber2=
+
+{-----------------------------------------------------------------------+
+|}$0aa0 call{           RAM page 10                                     |
++-----------------------------------------------------------------------}
+$0aa0:
+
 [def
   push
-  $802 Pos= 8 Color=
-  BgColor XXX= 0 BgColor=
+  $802 Pos=
+  Score HighScore- [if>0 30 else 8] Color=
+  0 BgColor=
   Score Value= DrawNumber4 call
-  XXX BgColor=
   pop call
 ] DrawScore=
+
+[def
+  push
+  $820 Pos=
+  8 Color=
+  0 BgColor=
+  Timer Value= DrawNumber2 call
+  TimeOut 60+ 255& TimeOut=
+  pop call
+] DrawTimer=
 
 {-----------------------------------------------------------------------+
 |}$0ba0 call{           RAM page 11                                     |
@@ -418,10 +456,9 @@ $0ba0:
 
 [def
   push
-  $886 Pos=
-  BgColor XXX= 0 BgColor=
+  $874 Pos= 0 BgColor=
+  [def $48. $49. $20. 0. {HI }] Text= DrawText call
   HighScore Value= DrawNumber4 call
-  XXX BgColor=
   pop call
 ] DrawHighScore=
 

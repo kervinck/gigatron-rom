@@ -3,6 +3,9 @@
 from asm import *
 import sys
 
+# XXX Give warning when 'call' and 'ret' are used in the same block
+# XXX Give warning when block contains code but no 'ret' or 'push/pop/call'
+
 class Program:
   def __init__(self, address):
     self.comment = 0
