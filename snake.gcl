@@ -323,7 +323,7 @@ $0700:
 
   {Reset score}
   0 Score= Timer= DrawScore call
-  10 Timer= DrawTimer call
+  15 Timer= DrawTimer call
   DrawHighScore call
 
   {ClearScreen}
