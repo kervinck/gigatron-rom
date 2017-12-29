@@ -48378,152 +48378,184 @@ loadApp:      d400 1000  ld   $00,x
               d609 1000  ld   $00,x
               d60a 1406  ld   $06,y
               d60b dcfc  st   $fc,[y,x++] ;0600 DEF
-              d60c dc6d  st   $6d,[y,x++]
-              d60d dc5c  st   $5c,[y,x++] ;0602 LDI
+              d60c dc7c  st   $7c,[y,x++]
+              d60d dc12  st   $12,[y,x++] ;0602 LDWI
               d60e dc00  st   $00,[y,x++]
-              d60f dc2c  st   $2c,[y,x++] ;0604 STW
-              d610 dc6b  st   $6b,[y,x++] ;0605 'Y'
-              d611 dc5c  st   $5c,[y,x++] ;0606 LDI
-              d612 dcb1  st   $b1,[y,x++]
-              d613 dc2c  st   $2c,[y,x++] ;0608 STW
-              d614 dc6d  st   $6d,[y,x++] ;0609 'DX'
-              d615 dc12  st   $12,[y,x++] ;060a LDWI
-              d616 dc30  st   $30,[y,x++]
-              d617 dc01  st   $01,[y,x++]
-              d618 dc2c  st   $2c,[y,x++] ;060d STW
-              d619 dc3f  st   $3f,[y,x++] ;060e 'p'
-              d61a dc12  st   $12,[y,x++] ;060f LDWI
-              d61b dc00  st   $00,[y,x++]
-              d61c dcd3  st   $d3,[y,x++]
-              d61d dcc4  st   $c4,[y,x++] ;0612 ADDW
-              d61e dc6b  st   $6b,[y,x++] ;0613 'Y'
-              d61f dcc4  st   $c4,[y,x++] ;0614 ADDW
-              d620 dc6b  st   $6b,[y,x++] ;0615 'Y'
-              d621 dc78  st   $78,[y,x++] ;0616 LOOKUP
-              d622 dc0c  st   $0c,[y,x++]
+              d60f dcf0  st   $f0,[y,x++]
+              d610 dc2c  st   $2c,[y,x++] ;0605 STW
+              d611 dc6b  st   $6b,[y,x++] ;0606 'X'
+              d612 dc5c  st   $5c,[y,x++] ;0607 LDI
+              d613 dc5f  st   $5f,[y,x++]
+              d614 dc2c  st   $2c,[y,x++] ;0609 STW
+              d615 dc6d  st   $6d,[y,x++] ;060a 'Y'
+              d616 dc12  st   $12,[y,x++] ;060b LDWI
+              d617 dca0  st   $a0,[y,x++]
+              d618 dc08  st   $08,[y,x++]
+              d619 dcc4  st   $c4,[y,x++] ;060e ADDW
+              d61a dc6d  st   $6d,[y,x++] ;060f 'Y'
+              d61b dc2c  st   $2c,[y,x++] ;0610 STW
+              d61c dc3f  st   $3f,[y,x++] ;0611 'p'
+              d61d dc1b  st   $1b,[y,x++] ;0612 LD
+              d61e dc6c  st   $6c,[y,x++] ;0613 'X'+1
+              d61f dc9b  st   $9b,[y,x++] ;0614 POKE
+              d620 dc3f  st   $3f,[y,x++] ;0615 'p'
+              d621 dc22  st   $22,[y,x++] ;0616 LDW
+              d622 dc6b  st   $6b,[y,x++] ;0617 'X'
               d623 dcc4  st   $c4,[y,x++] ;0618 ADDW
-              d624 dc6f  st   $6f,[y,x++] ;0619 'phase'
-              d625 dc8a  st   $8a,[y,x++] ;061a ANDI
-              d626 dc08  st   $08,[y,x++]
-              d627 dc36  st   $36,[y,x++] ;061c COND
-              d628 dc75  st   $75,[y,x++] ;061d NE
-              d629 dc21  st   $21,[y,x++]
-              d62a dc5c  st   $5c,[y,x++] ;061f LDI
-              d62b dc20  st   $20,[y,x++]
-              d62c dc98  st   $98,[y,x++] ;0621 BRA
-              d62d dc23  st   $23,[y,x++]
-              d62e dc5c  st   $5c,[y,x++] ;0623 LDI
-              d62f dc50  st   $50,[y,x++]
-              d630 dc2c  st   $2c,[y,x++] ;0625 STW
-              d631 dc71  st   $71,[y,x++] ;0626 'Hue'
-              d632 dc22  st   $22,[y,x++] ;0627 LDW
-              d633 dc71  st   $71,[y,x++] ;0628 'Hue'
-              d634 dcc4  st   $c4,[y,x++] ;0629 ADDW
-              d635 dc6b  st   $6b,[y,x++] ;062a 'Y'
-              d636 dc9b  st   $9b,[y,x++] ;062b POKE
-              d637 dc3f  st   $3f,[y,x++] ;062c 'p'
-              d638 dcf6  st   $f6,[y,x++] ;062d INC
-              d639 dc3f  st   $3f,[y,x++] ;062e 'p'
-              d63a dc22  st   $22,[y,x++] ;062f LDW
-              d63b dc6d  st   $6d,[y,x++] ;0630 'DX'
-              d63c dc9b  st   $9b,[y,x++] ;0631 POKE
-              d63d dc3f  st   $3f,[y,x++] ;0632 'p'
-              d63e dcf6  st   $f6,[y,x++] ;0633 INC
-              d63f dc3f  st   $3f,[y,x++] ;0634 'p'
-              d640 dc5c  st   $5c,[y,x++] ;0635 LDI
-              d641 dc80  st   $80,[y,x++]
+              d624 dc6f  st   $6f,[y,x++] ;0619 'DX'
+              d625 dc2c  st   $2c,[y,x++] ;061a STW
+              d626 dc6b  st   $6b,[y,x++] ;061b 'X'
+              d627 dc22  st   $22,[y,x++] ;061c LDW
+              d628 dc6d  st   $6d,[y,x++] ;061d 'Y'
+              d629 dcf3  st   $f3,[y,x++] ;061e SUBI
+              d62a dc01  st   $01,[y,x++]
+              d62b dc36  st   $36,[y,x++] ;0620 COND
+              d62c dc56  st   $56,[y,x++] ;0621 GE
+              d62d dc07  st   $07,[y,x++]
+              d62e dc12  st   $12,[y,x++] ;0623 LDWI
+              d62f dcff  st   $ff,[y,x++]
+              d630 dc08  st   $08,[y,x++]
+              d631 dcd8  st   $d8,[y,x++] ;0626 PEEK
+              d632 dc2c  st   $2c,[y,x++] ;0627 STW
+              d633 dc71  st   $71,[y,x++] ;0628 'LastX'
+              d634 dc5c  st   $5c,[y,x++] ;0629 LDI
+              d635 dc00  st   $00,[y,x++]
+              d636 dcb0  st   $b0,[y,x++] ;062b SUBW
+              d637 dc71  st   $71,[y,x++] ;062c 'LastX'
+              d638 dc2c  st   $2c,[y,x++] ;062d STW
+              d639 dc71  st   $71,[y,x++] ;062e 'LastX'
+              d63a dc12  st   $12,[y,x++] ;062f LDWI
+              d63b dc00  st   $00,[y,x++]
+              d63c dc20  st   $20,[y,x++]
+              d63d dc2c  st   $2c,[y,x++] ;0632 STW
+              d63e dc73  st   $73,[y,x++] ;0633 'SegmentY'
+              d63f dc12  st   $12,[y,x++] ;0634 LDWI
+              d640 dc30  st   $30,[y,x++]
+              d641 dc01  st   $01,[y,x++]
               d642 dc2c  st   $2c,[y,x++] ;0637 STW
-              d643 dc6d  st   $6d,[y,x++] ;0638 'DX'
-              d644 dc12  st   $12,[y,x++] ;0639 LDWI
+              d643 dc3f  st   $3f,[y,x++] ;0638 'p'
+              d644 dc5c  st   $5c,[y,x++] ;0639 LDI
               d645 dc00  st   $00,[y,x++]
-              d646 dcd3  st   $d3,[y,x++]
-              d647 dcc4  st   $c4,[y,x++] ;063c ADDW
-              d648 dc6b  st   $6b,[y,x++] ;063d 'Y'
-              d649 dcc4  st   $c4,[y,x++] ;063e ADDW
-              d64a dc6b  st   $6b,[y,x++] ;063f 'Y'
-              d64b dc78  st   $78,[y,x++] ;0640 LOOKUP
-              d64c dc0d  st   $0d,[y,x++]
-              d64d dcc4  st   $c4,[y,x++] ;0642 ADDW
-              d64e dc6f  st   $6f,[y,x++] ;0643 'phase'
-              d64f dc8a  st   $8a,[y,x++] ;0644 ANDI
-              d650 dc08  st   $08,[y,x++]
-              d651 dc36  st   $36,[y,x++] ;0646 COND
-              d652 dc75  st   $75,[y,x++] ;0647 NE
-              d653 dc4b  st   $4b,[y,x++]
-              d654 dc5c  st   $5c,[y,x++] ;0649 LDI
-              d655 dc20  st   $20,[y,x++]
-              d656 dc98  st   $98,[y,x++] ;064b BRA
-              d657 dc4d  st   $4d,[y,x++]
-              d658 dc5c  st   $5c,[y,x++] ;064d LDI
-              d659 dc50  st   $50,[y,x++]
-              d65a dc2c  st   $2c,[y,x++] ;064f STW
-              d65b dc71  st   $71,[y,x++] ;0650 'Hue'
-              d65c dc22  st   $22,[y,x++] ;0651 LDW
-              d65d dc71  st   $71,[y,x++] ;0652 'Hue'
-              d65e dcc4  st   $c4,[y,x++] ;0653 ADDW
-              d65f dc6b  st   $6b,[y,x++] ;0654 'Y'
-              d660 dc9b  st   $9b,[y,x++] ;0655 POKE
+              d646 dc2c  st   $2c,[y,x++] ;063b STW
+              d647 dc6d  st   $6d,[y,x++] ;063c 'Y'
+              d648 dc12  st   $12,[y,x++] ;063d LDWI
+              d649 dc00  st   $00,[y,x++]
+              d64a dcd3  st   $d3,[y,x++]
+              d64b dcc4  st   $c4,[y,x++] ;0640 ADDW
+              d64c dc6d  st   $6d,[y,x++] ;0641 'Y'
+              d64d dc78  st   $78,[y,x++] ;0642 LOOKUP
+              d64e dc0c  st   $0c,[y,x++]
+              d64f dcc4  st   $c4,[y,x++] ;0644 ADDW
+              d650 dc75  st   $75,[y,x++] ;0645 'phase'
+              d651 dc8a  st   $8a,[y,x++] ;0646 ANDI
+              d652 dc08  st   $08,[y,x++]
+              d653 dc36  st   $36,[y,x++] ;0648 COND
+              d654 dc4d  st   $4d,[y,x++] ;0649 EQ
+              d655 dc4b  st   $4b,[y,x++]
+              d656 dc5c  st   $5c,[y,x++] ;064b LDI
+              d657 dc30  st   $30,[y,x++]
+              d658 dc2c  st   $2c,[y,x++] ;064d STW
+              d659 dc77  st   $77,[y,x++] ;064e 'Hue'
+              d65a dc1b  st   $1b,[y,x++] ;064f LD
+              d65b dc74  st   $74,[y,x++] ;0650 'SegmentY'+1
+              d65c dcc4  st   $c4,[y,x++] ;0651 ADDW
+              d65d dc77  st   $77,[y,x++] ;0652 'Hue'
+              d65e dc9b  st   $9b,[y,x++] ;0653 POKE
+              d65f dc3f  st   $3f,[y,x++] ;0654 'p'
+              d660 dcf6  st   $f6,[y,x++] ;0655 INC
               d661 dc3f  st   $3f,[y,x++] ;0656 'p'
-              d662 dcf6  st   $f6,[y,x++] ;0657 INC
-              d663 dc3f  st   $3f,[y,x++] ;0658 'p'
-              d664 dc22  st   $22,[y,x++] ;0659 LDW
-              d665 dc6d  st   $6d,[y,x++] ;065a 'DX'
-              d666 dc9b  st   $9b,[y,x++] ;065b POKE
-              d667 dc3f  st   $3f,[y,x++] ;065c 'p'
-              d668 dcf6  st   $f6,[y,x++] ;065d INC
-              d669 dc3f  st   $3f,[y,x++] ;065e 'p'
-              d66a dc5c  st   $5c,[y,x++] ;065f LDI
-              d66b dc81  st   $81,[y,x++]
-              d66c dc2c  st   $2c,[y,x++] ;0661 STW
-              d66d dc6d  st   $6d,[y,x++] ;0662 'DX'
-              d66e dc22  st   $22,[y,x++] ;0663 LDW
-              d66f dc6b  st   $6b,[y,x++] ;0664 'Y'
-              d670 dcf0  st   $f0,[y,x++] ;0665 ADDI
-              d671 dc01  st   $01,[y,x++]
-              d672 dc2c  st   $2c,[y,x++] ;0667 STW
-              d673 dc6b  st   $6b,[y,x++] ;0668 'Y'
-              d674 dc94  st   $94,[y,x++] ;0669 XORI
-              d675 dc30  st   $30,[y,x++]
-              d676 dc36  st   $36,[y,x++] ;066b COND
-              d677 dc75  st   $75,[y,x++] ;066c NE
-              d678 dc0d  st   $0d,[y,x++]
-              d679 dcff  st   $ff,[y,x++] ;066e RET
-              d67a dc2c  st   $2c,[y,x++] ;066f STW
-              d67b dc73  st   $73,[y,x++] ;0670 'DrawRoad'
-              d67c dc22  st   $22,[y,x++] ;0671 LDW
-              d67d dc59  st   $59,[y,x++] ;0672 'Intro'
-              d67e dce4  st   $e4,[y,x++] ;0673 CALL
-              d67f dc22  st   $22,[y,x++] ;0674 LDW
-              d680 dc69  st   $69,[y,x++] ;0675 'SetupRoad'
-              d681 dce4  st   $e4,[y,x++] ;0676 CALL
-              d682 dc5c  st   $5c,[y,x++] ;0677 LDI
-              d683 dc01  st   $01,[y,x++]
-              d684 dc2c  st   $2c,[y,x++] ;0679 STW
-              d685 dc53  st   $53,[y,x++] ;067a 'Delay'
-              d686 dc5c  st   $5c,[y,x++] ;067b LDI
-              d687 dc00  st   $00,[y,x++]
-              d688 dc2c  st   $2c,[y,x++] ;067d STW
-              d689 dc6f  st   $6f,[y,x++] ;067e 'phase'
-              d68a dc22  st   $22,[y,x++] ;067f LDW
-              d68b dc6f  st   $6f,[y,x++] ;0680 'phase'
-              d68c dcf0  st   $f0,[y,x++] ;0681 ADDI
-              d68d dc01  st   $01,[y,x++]
-              d68e dc2c  st   $2c,[y,x++] ;0683 STW
-              d68f dc6f  st   $6f,[y,x++] ;0684 'phase'
-              d690 dc22  st   $22,[y,x++] ;0685 LDW
-              d691 dc73  st   $73,[y,x++] ;0686 'DrawRoad'
-              d692 dce4  st   $e4,[y,x++] ;0687 CALL
-              d693 dc22  st   $22,[y,x++] ;0688 LDW
-              d694 dc55  st   $55,[y,x++] ;0689 'Wait'
-              d695 dce4  st   $e4,[y,x++] ;068a CALL
-              d696 dc98  st   $98,[y,x++] ;068b BRA
-              d697 dc7d  st   $7d,[y,x++]
-              d698 dcf6  st   $f6,[y,x++] ;068d INC
-              d699 dc1d  st   $1d,[y,x++]
-              d69a dcff  st   $ff,[y,x++] ;068f RET
-              d69b 1000  ld   $00,x
-              d69c 1407  ld   $07,y
-              d69d 150a  ld   [$0a],y
-              d69e e109  jmp  y,[$09]
-              d69f 0200  nop
-              d6a0
+              d662 dc12  st   $12,[y,x++] ;0657 LDWI
+              d663 dca0  st   $a0,[y,x++]
+              d664 dc08  st   $08,[y,x++]
+              d665 dcc4  st   $c4,[y,x++] ;065a ADDW
+              d666 dc6d  st   $6d,[y,x++] ;065b 'Y'
+              d667 dc2c  st   $2c,[y,x++] ;065c STW
+              d668 dc3b  st   $3b,[y,x++] ;065d 'q'
+              d669 dcd8  st   $d8,[y,x++] ;065e PEEK
+              d66a dcc4  st   $c4,[y,x++] ;065f ADDW
+              d66b dc73  st   $73,[y,x++] ;0660 'SegmentY'
+              d66c dcb0  st   $b0,[y,x++] ;0661 SUBW
+              d66d dc71  st   $71,[y,x++] ;0662 'LastX'
+              d66e dc9b  st   $9b,[y,x++] ;0663 POKE
+              d66f dc3f  st   $3f,[y,x++] ;0664 'p'
+              d670 dcf6  st   $f6,[y,x++] ;0665 INC
+              d671 dc3f  st   $3f,[y,x++] ;0666 'p'
+              d672 dc22  st   $22,[y,x++] ;0667 LDW
+              d673 dc3b  st   $3b,[y,x++] ;0668 'q'
+              d674 dcd8  st   $d8,[y,x++] ;0669 PEEK
+              d675 dc2c  st   $2c,[y,x++] ;066a STW
+              d676 dc71  st   $71,[y,x++] ;066b 'LastX'
+              d677 dc22  st   $22,[y,x++] ;066c LDW
+              d678 dc73  st   $73,[y,x++] ;066d 'SegmentY'
+              d679 dcf0  st   $f0,[y,x++] ;066e ADDI
+              d67a dc80  st   $80,[y,x++]
+              d67b dc2c  st   $2c,[y,x++] ;0670 STW
+              d67c dc73  st   $73,[y,x++] ;0671 'SegmentY'
+              d67d dc22  st   $22,[y,x++] ;0672 LDW
+              d67e dc6d  st   $6d,[y,x++] ;0673 'Y'
+              d67f dcf0  st   $f0,[y,x++] ;0674 ADDI
+              d680 dc01  st   $01,[y,x++]
+              d681 dc2c  st   $2c,[y,x++] ;0676 STW
+              d682 dc6d  st   $6d,[y,x++] ;0677 'Y'
+              d683 dc94  st   $94,[y,x++] ;0678 XORI
+              d684 dc60  st   $60,[y,x++]
+              d685 dc36  st   $36,[y,x++] ;067a COND
+              d686 dc75  st   $75,[y,x++] ;067b NE
+              d687 dc3b  st   $3b,[y,x++]
+              d688 dcff  st   $ff,[y,x++] ;067d RET
+              d689 dc2c  st   $2c,[y,x++] ;067e STW
+              d68a dc79  st   $79,[y,x++] ;067f 'DrawRoad'
+              d68b dc22  st   $22,[y,x++] ;0680 LDW
+              d68c dc59  st   $59,[y,x++] ;0681 'Intro'
+              d68d dce4  st   $e4,[y,x++] ;0682 CALL
+              d68e dc22  st   $22,[y,x++] ;0683 LDW
+              d68f dc69  st   $69,[y,x++] ;0684 'SetupRoad'
+              d690 dce4  st   $e4,[y,x++] ;0685 CALL
+              d691 dc5c  st   $5c,[y,x++] ;0686 LDI
+              d692 dc02  st   $02,[y,x++]
+              d693 dc2c  st   $2c,[y,x++] ;0688 STW
+              d694 dc53  st   $53,[y,x++] ;0689 'Delay'
+              d695 dc5c  st   $5c,[y,x++] ;068a LDI
+              d696 dc00  st   $00,[y,x++]
+              d697 dc2c  st   $2c,[y,x++] ;068c STW
+              d698 dc75  st   $75,[y,x++] ;068d 'phase'
+              d699 dc22  st   $22,[y,x++] ;068e LDW
+              d69a dc75  st   $75,[y,x++] ;068f 'phase'
+              d69b dc8a  st   $8a,[y,x++] ;0690 ANDI
+              d69c dc80  st   $80,[y,x++]
+              d69d dc36  st   $36,[y,x++] ;0692 COND
+              d69e dc75  st   $75,[y,x++] ;0693 NE
+              d69f dc97  st   $97,[y,x++]
+              d6a0 dc22  st   $22,[y,x++] ;0695 LDW
+              d6a1 dc75  st   $75,[y,x++] ;0696 'phase'
+              d6a2 dc98  st   $98,[y,x++] ;0697 BRA
+              d6a3 dc9b  st   $9b,[y,x++]
+              d6a4 dc22  st   $22,[y,x++] ;0699 LDW
+              d6a5 dc75  st   $75,[y,x++] ;069a 'phase'
+              d6a6 dc94  st   $94,[y,x++] ;069b XORI
+              d6a7 dcff  st   $ff,[y,x++]
+              d6a8 dcf3  st   $f3,[y,x++] ;069d SUBI
+              d6a9 dc40  st   $40,[y,x++]
+              d6aa dcf3  st   $f3,[y,x++] ;069f SUBI
+              d6ab dc60  st   $60,[y,x++]
+              d6ac dc2c  st   $2c,[y,x++] ;06a1 STW
+              d6ad dc6f  st   $6f,[y,x++] ;06a2 'DX'
+              d6ae dc22  st   $22,[y,x++] ;06a3 LDW
+              d6af dc79  st   $79,[y,x++] ;06a4 'DrawRoad'
+              d6b0 dce4  st   $e4,[y,x++] ;06a5 CALL
+              d6b1 dcf6  st   $f6,[y,x++] ;06a6 INC
+              d6b2 dc75  st   $75,[y,x++] ;06a7 'phase'
+              d6b3 dc22  st   $22,[y,x++] ;06a8 LDW
+              d6b4 dc55  st   $55,[y,x++] ;06a9 'Wait'
+              d6b5 dce4  st   $e4,[y,x++] ;06aa CALL
+              d6b6 dc98  st   $98,[y,x++] ;06ab BRA
+              d6b7 dc8c  st   $8c,[y,x++]
+              d6b8 dcf6  st   $f6,[y,x++] ;06ad INC
+              d6b9 dc1d  st   $1d,[y,x++]
+              d6ba dcff  st   $ff,[y,x++] ;06af RET
+              d6bb 1000  ld   $00,x
+              d6bc 1407  ld   $07,y
+              d6bd 150a  ld   [$0a],y
+              d6be e109  jmp  y,[$09]
+              d6bf 0200  nop
+              d6c0

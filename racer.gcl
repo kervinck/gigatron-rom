@@ -9,6 +9,7 @@
 XXX Reduce road size from 96 lines to 80 (width 17-96)
 XXX Aliasing at horizon
 XXX Left-right curbstone artifact
+XXX Flash skyscraper light
 }
 
 {-----------------------------------------------------------------------+
@@ -197,18 +198,35 @@ $0500:
 $0600:
 
 [def
-  0 Y= $b1 DX=
-  $0130 {Road control}  p=
+  {Step 1: Calculate road curvature from bottom line up}
+
+  $f000 X= {X position * 256}
+  95 [do Y=
+    $08a0 Y+ p=
+    X>? p!         { *($8a0+Y) = X>>8 }
+    X DX+ X=
+    Y 1- if>=0loop]
+
+  {Step 2: Update video table from top line down}
+
+  $08ff peek LastX= 0 LastX- LastX= {Keeps bottom line at fixed position}
+  $2000 SegmentY= {Start with smallest segment}
+  $0130 p=        {Video table start of road}
+  0 Y=
   [do
-    \invTable Y+ Y+ 12; phase+ 8& [if=0 $20 else $50] Hue=
-    Hue Y+ p! p<++ DX p! p<++
-    $80 DX=
+    {High address}
+    \invTable Y+ 12; phase+ 8& [if<>0 $30] Hue= {for $2000 or $5000}
+    SegmentY>? Hue+ p! p<++
 
-    \invTable Y+ Y+ 13; phase+ 8& [if=0 $20 else $50] Hue=
-    Hue Y+ p! p<++ DX p! p<++
-    $81 DX=
+    {Low address}
+    $08a0 Y+ q=         {*q is the desired absolute X offset}
+    peek SegmentY+ LastX- p! p<++
 
-    Y 1+ Y= 48^ if<>0loop]
+    q? LastX=
+
+    SegmentY $80+ SegmentY= {Next segment}
+    Y 1+ Y= 96^ if<>0loop]
+
   ret
 ] DrawRoad=
 
@@ -217,14 +235,13 @@ $0600:
 Intro call
 SetupRoad call
 
-1 Delay=
+2 Delay=
 0 phase=
 [do
-  phase 1+ phase=
+  phase 128& [if=0 phase else phase 255^] 64- 96- DX=
   DrawRoad call
-
+  phase<++
   Wait call
-  {[do \vBlank? if=0loop]}
   loop]
 
 {-----------------------------------------------------------------------+
