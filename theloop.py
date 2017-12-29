@@ -1761,6 +1761,20 @@ for i in xrange(len(raw)):
 
 #-----------------------------------------------------------------------
 #
+#  ROM page XX: Inversion table
+#
+#-----------------------------------------------------------------------
+
+align(0x100, 0x100)
+label('invTable')
+
+for i in range(251):
+  ld(val(8*255/(i+8)))
+
+trampoline()
+
+#-----------------------------------------------------------------------
+#
 #  ROM page XX: Bootstrap vCPU
 #
 #-----------------------------------------------------------------------
@@ -1773,7 +1787,7 @@ print 'SYS warning %s error %s' % (repr(minSYS), repr(maxSYS))
 
 # Compile test GCL program
 program = gcl.Program(vCpuStart)
-for line in open('snake.gcl').readlines():
+for line in open('racer.gcl').readlines():
   program.line(line)
 program.end()
 bLine = program.vPC

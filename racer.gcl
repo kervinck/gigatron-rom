@@ -1,0 +1,236 @@
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Racer game                                                      |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+{
+XXX Reduce road size from 96 lines to 80 (width 17-96)
+XXX Aliasing at horizon
+XXX Left-right curbstone artifact
+XXX Spurious pixel on bottom line
+}
+
+{-----------------------------------------------------------------------+
+|                       RAM page 3                                      |
++-----------------------------------------------------------------------}
+
+[def
+{-
+  DrawChar -- Pos Color Char
+
+  Draw a 5x8 character on screen with the built-in font.
+  `Char' must be in the 32-127 range (this is not checked)
+-}
+  {Map ASCII code to offset in font table}
+  Char 82- [if<0 50+ i= \font32up
+            else     i= \font82up] fontData= {Select low or high page}
+  i i+ tmp= tmp+ i+    {Multiply by 5}
+  fontData+ fontData=  {Add to page address to reach bitmap data for Char}
+  $800 Pos+ q=         {Where to stop the inner drawing loop}
+
+  {Draw 6 vertical slices: 5 using font data, the last with all-zeros}
+  5 i= [do
+    [if<>0 fontData 0; fontData<++ else 0] bits=
+    Pos p=
+    {Draw vertical slice}
+    [do
+      bits 128& [if=0 BgColor else Color] p!
+      bits bits+ bits=
+      p>++
+      p q- if<0loop]
+    Pos<++
+    i 1- i= if>=0loop]
+  ret
+] DrawChar=
+
+[def
+{-
+  DrawText(Text,Pos)
+
+  Draw a zero-terminated text string to the screen.
+  Character 10 acts as newline.
+  There is no check for running off screen.
+-}
+  push
+  [do
+    Text? Char= {Next character to be printed}
+    if<>0       {Zero termination}
+      Text<++   {Advance text pointer}
+      Char 10^ [if=0 Pos<! $800 Pos+ Pos=
+                else DrawChar call]
+      loop]
+  pop call
+] DrawText=
+
+[def
+   $47. $69. $67. $61. $74. $72. $6f. $6e. 0. {Gigatron}
+] Title=
+
+[def
+{-
+  DrawLine -- Draw line
+-}
+  Count i=
+  [do if>0
+    Color Pos!
+    Pos Step+ Pos=
+    i 1- i=
+    loop]
+  ret
+] DrawLine=
+
+[def
+{-
+  Wait -- Wait Delay number of frames (range 1..255)
+-}
+  \frameCount? Delay+ 255& tmp=
+  [do \frameCount? tmp- if<>0loop]
+  ret
+] Wait=
+
+{-----------------------------------------------------------------------+
+|}\vRET>++ ret{         RAM page 4                                      |
++-----------------------------------------------------------------------}
+$0400:
+
+[def
+{-
+  Intro
+-}
+  push
+
+  {Display welcome tekst}
+  8 {Green} Color=
+  48 BgColor=
+  $800 Pos= ClearScreen call
+  63 Color=
+  $838 Pos= Title Text= DrawText call
+  60 Delay= Wait call
+
+  pop call
+] Intro=
+
+[def
+{-
+  ClearScreen -- Clear screen from current position to bottom right
+-}
+  Pos p=
+  Pos 255| 255-         {XXX Is there a better way to clear the low byte?}
+  i= $8001 i+ i=        {Offset to move to next stripe}
+  [do
+    {Clear one stripe}
+    p [do BgColor p! $100 p+ p= if>=0loop]
+    {Next stripe}
+    i+ p=
+    255& {Entire width} if<>0loop]
+  ret
+] ClearScreen=
+
+{-----------------------------------------------------------------------+
+|}\vRET>++ ret{         RAM page 5                                      |
++-----------------------------------------------------------------------}
+$0500:
+
+[def
+  {Calculate CurbLeft}
+  Width Width+ tmp= {x2}
+          tmp+ tmp= {x4}
+          tmp+ tmp= {x8}
+          tmp+ tmp= {x16}
+  tmp>? CurbLeft=   {CurbLeft = Width/16}
+  Width CurbLeft- CurbRight=
+
+  0 W=
+
+  {Draw road segment}
+  Width i= [do
+    21{Dark Grey} Color=
+    W CurbLeft-  [if<0  CurbColor Color=]
+    W CurbRight- [if>=0 CurbColor Color=]
+    Color p!
+    W<++
+    p<++
+    i 1- i= if>0loop]
+
+  {Draw grass}
+  [do
+    GrassColor p!
+    p<++
+    p<? 127& if<>0loop]
+
+  ret
+] SetupSegment=
+
+[def
+  push
+
+  $2000 Pos=
+  3 {Bright Red} CurbColor=
+  8 {Green} GrassColor=
+
+  1 Width=
+  [do
+    Pos p=
+    SetupSegment call Width 1+ Width=
+    SetupSegment call Width 1+ Width=
+    Pos>++
+    Width 97^ if<>0loop]
+
+  63 {White} CurbColor=
+  12 {Bright Green} GrassColor=
+
+  1 Width=
+  [do
+    Pos p=
+    SetupSegment call Width 1+ Width=
+    SetupSegment call Width 1+ Width=
+    Pos>++
+    Width 97^ if<>0loop]
+
+  pop call
+] SetupRoad=
+
+{-----------------------------------------------------------------------+
+|}\vRET>++ ret{         RAM page 6                                      |
++-----------------------------------------------------------------------}
+$0600:
+
+[def
+  0 Y= $b1 DX=
+  $0130 {Road control}  p=
+  [do
+    \invTable Y+ Y+ 12; phase+ 4& [if=0 $20 else $50] Hue=
+    Hue Y+ p! p<++ DX p! p<++
+    $81 DX=
+    Hue Y+ p! p<++ DX p! p<++
+    $80 DX=
+    Y 1+ Y= 48- if<>0loop]
+  ret
+] DrawRoad=
+
+{--- Run ---}
+
+Intro call
+SetupRoad call
+
+2 Delay=
+0 phase=
+[do
+  phase 1+ phase=
+  DrawRoad call
+
+  Wait call
+  {[do \vBlank? if=0loop]}
+  loop]
+
+{-----------------------------------------------------------------------+
+|}\vRET>++ ret{         RAM page 7                                      |
++-----------------------------------------------------------------------}
+$0700:
+
+{-----------------------------------------------------------------------+
+|       End                                                             |
++-----------------------------------------------------------------------}
+
