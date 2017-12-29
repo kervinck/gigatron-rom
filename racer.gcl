@@ -9,7 +9,6 @@
 XXX Reduce road size from 96 lines to 80 (width 17-96)
 XXX Aliasing at horizon
 XXX Left-right curbstone artifact
-XXX Spurious pixel on bottom line
 }
 
 {-----------------------------------------------------------------------+
@@ -201,11 +200,11 @@ $0600:
   0 Y= $b1 DX=
   $0130 {Road control}  p=
   [do
-    \invTable Y+ Y+ 12; phase+ 4& [if=0 $20 else $50] Hue=
-    Hue Y+ p! p<++ DX p! p<++
-    $81 DX=
+    \invTable Y+ Y+ 20; phase+ 4& [if=0 $20 else $50] Hue=
     Hue Y+ p! p<++ DX p! p<++
     $80 DX=
+    Hue Y+ p! p<++ DX p! p<++
+    $81 DX=
     Y 1+ Y= 48- if<>0loop]
   ret
 ] DrawRoad=
@@ -215,7 +214,7 @@ $0600:
 Intro call
 SetupRoad call
 
-2 Delay=
+1 Delay=
 0 phase=
 [do
   phase 1+ phase=
