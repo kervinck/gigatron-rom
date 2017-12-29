@@ -1768,8 +1768,9 @@ for i in xrange(len(raw)):
 align(0x100, 0x100)
 label('invTable')
 
+# Unit 64, offset 0.25
 for i in range(251):
-  ld(val(8*255/(i+8)))
+  ld(val(4095/(i+16)))
 
 trampoline()
 

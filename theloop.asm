@@ -47670,149 +47670,185 @@ gigatronRaw:  bb00 00aa  ld   $aa
               d2fe e07b  jmp  y,$7b
               d2ff 1519  ld   [$19],y
 invTable:     d300 00ff  ld   $ff
-              d301 00e2  ld   $e2
-              d302 00cc  ld   $cc
-              d303 00b9  ld   $b9
-              d304 00aa  ld   $aa
-              d305 009c  ld   $9c
-              d306 0091  ld   $91
-              d307 0088  ld   $88
-              d308 007f  ld   $7f
-              d309 0078  ld   $78
-              d30a 0071  ld   $71
-              d30b 006b  ld   $6b
-              d30c 0066  ld   $66
-              d30d 0061  ld   $61
-              d30e 005c  ld   $5c
-              d30f 0058  ld   $58
-              d310 0055  ld   $55
-              d311 0051  ld   $51
-              d312 004e  ld   $4e
-              d313 004b  ld   $4b
-              d314 0048  ld   $48
-              d315 0046  ld   $46
-              d316 0044  ld   $44
-              d317 0041  ld   $41
-              d318 003f  ld   $3f
-              d319 003d  ld   $3d
-              d31a 003c  ld   $3c
-              d31b 003a  ld   $3a
-              d31c 0038  ld   $38
-              d31d 0037  ld   $37
-              d31e 0035  ld   $35
-              d31f 0034  ld   $34
-              d320 0033  ld   $33
-              d321 0031  ld   $31
-              d322 0030  ld   $30
-              d323 002f  ld   $2f
-              d324 002e  ld   $2e
-              d325 002d  ld   $2d
-              d326 002c  ld   $2c
-              d327 002b  ld   $2b
-              d328 002a  ld   $2a
-              d329 0029  ld   $29
-              d32a 0028  ld   $28
-              d32b 0028  ld   $28
-              d32c 0027  ld   $27
-              d32d 0026  ld   $26
-              d32e 0025  ld   $25
-              d32f 0025  ld   $25
-              d330 0024  ld   $24
-              d331 0023  ld   $23
-              d332 0023  ld   $23
-              d333 0022  ld   $22
-              d334 0022  ld   $22
-              d335 0021  ld   $21
-              d336 0020  ld   $20
-              d337 0020  ld   $20
-              d338 001f  ld   $1f
-              d339 001f  ld   $1f
-              d33a 001e  ld   $1e
-              d33b 001e  ld   $1e
-              d33c 001e  ld   $1e
-              d33d 001d  ld   $1d
-              d33e 001d  ld   $1d
-              d33f 001c  ld   $1c
-              d340 001c  ld   $1c
-              d341 001b  ld   $1b
-              d342 001b  ld   $1b
-              d343 001b  ld   $1b
-              d344 001a  ld   $1a
-              d345 001a  ld   $1a
-              d346 001a  ld   $1a
-              d347 0019  ld   $19
-              d348 0019  ld   $19
-              d349 0019  ld   $19
-              d34a 0018  ld   $18
-              d34b 0018  ld   $18
-              d34c 0018  ld   $18
-              d34d 0018  ld   $18
-              d34e 0017  ld   $17
-              d34f 0017  ld   $17
-              d350 0017  ld   $17
-              d351 0016  ld   $16
-              d352 0016  ld   $16
-              d353 0016  ld   $16
-              d354 0016  ld   $16
-              d355 0015  ld   $15
-              d356 0015  ld   $15
-              d357 0015  ld   $15
+              d301 00f0  ld   $f0
+              d302 00e3  ld   $e3
+              d303 00d7  ld   $d7
+              d304 00cc  ld   $cc
+              d305 00c3  ld   $c3
+              d306 00ba  ld   $ba
+              d307 00b2  ld   $b2
+              d308 00aa  ld   $aa
+              d309 00a3  ld   $a3
+              d30a 009d  ld   $9d
+              d30b 0097  ld   $97
+              d30c 0092  ld   $92
+              d30d 008d  ld   $8d
+              d30e 0088  ld   $88
+              d30f 0084  ld   $84
+              d310 007f  ld   $7f
+              d311 007c  ld   $7c
+              d312 0078  ld   $78
+              d313 0075  ld   $75
+              d314 0071  ld   $71
+              d315 006e  ld   $6e
+              d316 006b  ld   $6b
+              d317 0069  ld   $69
+              d318 0066  ld   $66
+              d319 0063  ld   $63
+              d31a 0061  ld   $61
+              d31b 005f  ld   $5f
+              d31c 005d  ld   $5d
+              d31d 005b  ld   $5b
+              d31e 0059  ld   $59
+              d31f 0057  ld   $57
+              d320 0055  ld   $55
+              d321 0053  ld   $53
+              d322 0051  ld   $51
+              d323 0050  ld   $50
+              d324 004e  ld   $4e
+              d325 004d  ld   $4d
+              d326 004b  ld   $4b
+              d327 004a  ld   $4a
+              d328 0049  ld   $49
+              d329 0047  ld   $47
+              d32a 0046  ld   $46
+              d32b 0045  ld   $45
+              d32c 0044  ld   $44
+              d32d 0043  ld   $43
+              d32e 0042  ld   $42
+              d32f 0041  ld   $41
+              d330 003f  ld   $3f
+              d331 003f  ld   $3f
+              d332 003e  ld   $3e
+              d333 003d  ld   $3d
+              d334 003c  ld   $3c
+              d335 003b  ld   $3b
+              d336 003a  ld   $3a
+              d337 0039  ld   $39
+              d338 0038  ld   $38
+              d339 0038  ld   $38
+              d33a 0037  ld   $37
+              d33b 0036  ld   $36
+              d33c 0035  ld   $35
+              d33d 0035  ld   $35
+              d33e 0034  ld   $34
+              d33f 0033  ld   $33
+              d340 0033  ld   $33
+              d341 0032  ld   $32
+              d342 0031  ld   $31
+              d343 0031  ld   $31
+              d344 0030  ld   $30
+              d345 0030  ld   $30
+              d346 002f  ld   $2f
+              d347 002f  ld   $2f
+              d348 002e  ld   $2e
+              d349 002e  ld   $2e
+              d34a 002d  ld   $2d
+              d34b 002d  ld   $2d
+              d34c 002c  ld   $2c
+              d34d 002c  ld   $2c
+              d34e 002b  ld   $2b
+              d34f 002b  ld   $2b
+              d350 002a  ld   $2a
+              d351 002a  ld   $2a
+              d352 0029  ld   $29
+              d353 0029  ld   $29
+              d354 0028  ld   $28
+              d355 0028  ld   $28
+              d356 0028  ld   $28
+              d357 0027  ld   $27
+              d358 0027  ld   $27
+              d359 0027  ld   $27
+              d35a 0026  ld   $26
+              d35b 0026  ld   $26
+              d35c 0025  ld   $25
+              d35d 0025  ld   $25
+              d35e 0025  ld   $25
+              d35f 0024  ld   $24
+              d360 0024  ld   $24
+              d361 0024  ld   $24
+              d362 0023  ld   $23
+              d363 0023  ld   $23
+              d364 0023  ld   $23
+              d365 0023  ld   $23
+              d366 0022  ld   $22
+              d367 0022  ld   $22
+              d368 0022  ld   $22
+              d369 0021  ld   $21
+              d36a 0021  ld   $21
+              d36b 0021  ld   $21
+              d36c 0021  ld   $21
+              d36d 0020  ld   $20
+              d36e 0020  ld   $20
+              d36f 0020  ld   $20
+              d370 001f  ld   $1f
+              d371 001f  ld   $1f
+              d372 001f  ld   $1f
               * 5 times
-              d35a 0014  ld   $14
-              d35b 0014  ld   $14
-              d35c 0014  ld   $14
+              d375 001e  ld   $1e
+              d376 001e  ld   $1e
+              d377 001e  ld   $1e
+              d378 001e  ld   $1e
+              d379 001d  ld   $1d
+              d37a 001d  ld   $1d
+              d37b 001d  ld   $1d
               * 5 times
-              d35f 0013  ld   $13
-              d360 0013  ld   $13
-              d361 0013  ld   $13
+              d37e 001c  ld   $1c
+              d37f 001c  ld   $1c
+              d380 001c  ld   $1c
               * 5 times
-              d364 0012  ld   $12
-              d365 0012  ld   $12
-              d366 0012  ld   $12
+              d383 001b  ld   $1b
+              d384 001b  ld   $1b
+              d385 001b  ld   $1b
+              * 5 times
+              d388 001a  ld   $1a
+              d389 001a  ld   $1a
+              d38a 001a  ld   $1a
               * 6 times
-              d36a 0011  ld   $11
-              d36b 0011  ld   $11
-              d36c 0011  ld   $11
+              d38e 0019  ld   $19
+              d38f 0019  ld   $19
+              d390 0019  ld   $19
+              * 6 times
+              d394 0018  ld   $18
+              d395 0018  ld   $18
+              d396 0018  ld   $18
               * 7 times
-              d371 0010  ld   $10
-              d372 0010  ld   $10
-              d373 0010  ld   $10
-              * 7 times
-              d378 000f  ld   $0f
-              d379 000f  ld   $0f
-              d37a 000f  ld   $0f
+              d39b 0017  ld   $17
+              d39c 0017  ld   $17
+              d39d 0017  ld   $17
+              * 8 times
+              d3a3 0016  ld   $16
+              d3a4 0016  ld   $16
+              d3a5 0016  ld   $16
+              * 8 times
+              d3ab 0015  ld   $15
+              d3ac 0015  ld   $15
+              d3ad 0015  ld   $15
               * 9 times
-              d381 000e  ld   $0e
-              d382 000e  ld   $0e
-              d383 000e  ld   $0e
+              d3b4 0014  ld   $14
+              d3b5 0014  ld   $14
+              d3b6 0014  ld   $14
               * 9 times
-              d38a 000d  ld   $0d
-              d38b 000d  ld   $0d
-              d38c 000d  ld   $0d
+              d3bd 0013  ld   $13
+              d3be 0013  ld   $13
+              d3bf 0013  ld   $13
               * 11 times
-              d395 000c  ld   $0c
-              d396 000c  ld   $0c
-              d397 000c  ld   $0c
-              * 14 times
-              d3a3 000b  ld   $0b
-              d3a4 000b  ld   $0b
-              d3a5 000b  ld   $0b
+              d3c8 0012  ld   $12
+              d3c9 0012  ld   $12
+              d3ca 0012  ld   $12
+              * 12 times
+              d3d4 0011  ld   $11
+              d3d5 0011  ld   $11
+              d3d6 0011  ld   $11
+              * 13 times
+              d3e1 0010  ld   $10
+              d3e2 0010  ld   $10
+              d3e3 0010  ld   $10
               * 15 times
-              d3b2 000a  ld   $0a
-              d3b3 000a  ld   $0a
-              d3b4 000a  ld   $0a
-              * 19 times
-              d3c5 0009  ld   $09
-              d3c6 0009  ld   $09
-              d3c7 0009  ld   $09
-              * 22 times
-              d3db 0008  ld   $08
-              d3dc 0008  ld   $08
-              d3dd 0008  ld   $08
-              * 29 times
-              d3f8 0007  ld   $07
-              d3f9 0007  ld   $07
-              d3fa 0007  ld   $07
+              d3f0 000f  ld   $0f
+              d3f1 000f  ld   $0f
+              d3f2 000f  ld   $0f
+              * 11 times
               d3fb fe00  bra  ac          ;Trampoline for page $d300 lookups
               d3fc fcfd  bra  $d3fd
               d3fd 1403  ld   $03,y
@@ -48342,7 +48378,7 @@ loadApp:      d400 1000  ld   $00,x
               d609 1000  ld   $00,x
               d60a 1406  ld   $06,y
               d60b dcfc  st   $fc,[y,x++] ;0600 DEF
-              d60c dc55  st   $55,[y,x++]
+              d60c dc6d  st   $6d,[y,x++]
               d60d dc5c  st   $5c,[y,x++] ;0602 LDI
               d60e dc00  st   $00,[y,x++]
               d60f dc2c  st   $2c,[y,x++] ;0604 STW
@@ -48368,7 +48404,7 @@ loadApp:      d400 1000  ld   $00,x
               d623 dcc4  st   $c4,[y,x++] ;0618 ADDW
               d624 dc6f  st   $6f,[y,x++] ;0619 'phase'
               d625 dc8a  st   $8a,[y,x++] ;061a ANDI
-              d626 dc04  st   $04,[y,x++]
+              d626 dc08  st   $08,[y,x++]
               d627 dc36  st   $36,[y,x++] ;061c COND
               d628 dc75  st   $75,[y,x++] ;061d NE
               d629 dc21  st   $21,[y,x++]
@@ -48395,75 +48431,99 @@ loadApp:      d400 1000  ld   $00,x
               d63e dcf6  st   $f6,[y,x++] ;0633 INC
               d63f dc3f  st   $3f,[y,x++] ;0634 'p'
               d640 dc5c  st   $5c,[y,x++] ;0635 LDI
-              d641 dc81  st   $81,[y,x++]
+              d641 dc80  st   $80,[y,x++]
               d642 dc2c  st   $2c,[y,x++] ;0637 STW
               d643 dc6d  st   $6d,[y,x++] ;0638 'DX'
-              d644 dc22  st   $22,[y,x++] ;0639 LDW
-              d645 dc71  st   $71,[y,x++] ;063a 'Hue'
-              d646 dcc4  st   $c4,[y,x++] ;063b ADDW
-              d647 dc6b  st   $6b,[y,x++] ;063c 'Y'
-              d648 dc9b  st   $9b,[y,x++] ;063d POKE
-              d649 dc3f  st   $3f,[y,x++] ;063e 'p'
-              d64a dcf6  st   $f6,[y,x++] ;063f INC
-              d64b dc3f  st   $3f,[y,x++] ;0640 'p'
-              d64c dc22  st   $22,[y,x++] ;0641 LDW
-              d64d dc6d  st   $6d,[y,x++] ;0642 'DX'
-              d64e dc9b  st   $9b,[y,x++] ;0643 POKE
-              d64f dc3f  st   $3f,[y,x++] ;0644 'p'
-              d650 dcf6  st   $f6,[y,x++] ;0645 INC
-              d651 dc3f  st   $3f,[y,x++] ;0646 'p'
-              d652 dc5c  st   $5c,[y,x++] ;0647 LDI
-              d653 dc80  st   $80,[y,x++]
-              d654 dc2c  st   $2c,[y,x++] ;0649 STW
-              d655 dc6d  st   $6d,[y,x++] ;064a 'DX'
-              d656 dc22  st   $22,[y,x++] ;064b LDW
-              d657 dc6b  st   $6b,[y,x++] ;064c 'Y'
-              d658 dcf0  st   $f0,[y,x++] ;064d ADDI
-              d659 dc01  st   $01,[y,x++]
+              d644 dc12  st   $12,[y,x++] ;0639 LDWI
+              d645 dc00  st   $00,[y,x++]
+              d646 dcd3  st   $d3,[y,x++]
+              d647 dcc4  st   $c4,[y,x++] ;063c ADDW
+              d648 dc6b  st   $6b,[y,x++] ;063d 'Y'
+              d649 dcc4  st   $c4,[y,x++] ;063e ADDW
+              d64a dc6b  st   $6b,[y,x++] ;063f 'Y'
+              d64b dc78  st   $78,[y,x++] ;0640 LOOKUP
+              d64c dc0d  st   $0d,[y,x++]
+              d64d dcc4  st   $c4,[y,x++] ;0642 ADDW
+              d64e dc6f  st   $6f,[y,x++] ;0643 'phase'
+              d64f dc8a  st   $8a,[y,x++] ;0644 ANDI
+              d650 dc08  st   $08,[y,x++]
+              d651 dc36  st   $36,[y,x++] ;0646 COND
+              d652 dc75  st   $75,[y,x++] ;0647 NE
+              d653 dc4b  st   $4b,[y,x++]
+              d654 dc5c  st   $5c,[y,x++] ;0649 LDI
+              d655 dc20  st   $20,[y,x++]
+              d656 dc98  st   $98,[y,x++] ;064b BRA
+              d657 dc4d  st   $4d,[y,x++]
+              d658 dc5c  st   $5c,[y,x++] ;064d LDI
+              d659 dc50  st   $50,[y,x++]
               d65a dc2c  st   $2c,[y,x++] ;064f STW
-              d65b dc6b  st   $6b,[y,x++] ;0650 'Y'
-              d65c dcf3  st   $f3,[y,x++] ;0651 SUBI
-              d65d dc30  st   $30,[y,x++]
-              d65e dc36  st   $36,[y,x++] ;0653 COND
-              d65f dc75  st   $75,[y,x++] ;0654 NE
-              d660 dc0d  st   $0d,[y,x++]
-              d661 dcff  st   $ff,[y,x++] ;0656 RET
-              d662 dc2c  st   $2c,[y,x++] ;0657 STW
-              d663 dc73  st   $73,[y,x++] ;0658 'DrawRoad'
+              d65b dc71  st   $71,[y,x++] ;0650 'Hue'
+              d65c dc22  st   $22,[y,x++] ;0651 LDW
+              d65d dc71  st   $71,[y,x++] ;0652 'Hue'
+              d65e dcc4  st   $c4,[y,x++] ;0653 ADDW
+              d65f dc6b  st   $6b,[y,x++] ;0654 'Y'
+              d660 dc9b  st   $9b,[y,x++] ;0655 POKE
+              d661 dc3f  st   $3f,[y,x++] ;0656 'p'
+              d662 dcf6  st   $f6,[y,x++] ;0657 INC
+              d663 dc3f  st   $3f,[y,x++] ;0658 'p'
               d664 dc22  st   $22,[y,x++] ;0659 LDW
-              d665 dc59  st   $59,[y,x++] ;065a 'Intro'
-              d666 dce4  st   $e4,[y,x++] ;065b CALL
-              d667 dc22  st   $22,[y,x++] ;065c LDW
-              d668 dc69  st   $69,[y,x++] ;065d 'SetupRoad'
-              d669 dce4  st   $e4,[y,x++] ;065e CALL
+              d665 dc6d  st   $6d,[y,x++] ;065a 'DX'
+              d666 dc9b  st   $9b,[y,x++] ;065b POKE
+              d667 dc3f  st   $3f,[y,x++] ;065c 'p'
+              d668 dcf6  st   $f6,[y,x++] ;065d INC
+              d669 dc3f  st   $3f,[y,x++] ;065e 'p'
               d66a dc5c  st   $5c,[y,x++] ;065f LDI
-              d66b dc02  st   $02,[y,x++]
+              d66b dc81  st   $81,[y,x++]
               d66c dc2c  st   $2c,[y,x++] ;0661 STW
-              d66d dc53  st   $53,[y,x++] ;0662 'Delay'
-              d66e dc5c  st   $5c,[y,x++] ;0663 LDI
-              d66f dc00  st   $00,[y,x++]
-              d670 dc2c  st   $2c,[y,x++] ;0665 STW
-              d671 dc6f  st   $6f,[y,x++] ;0666 'phase'
-              d672 dc22  st   $22,[y,x++] ;0667 LDW
-              d673 dc6f  st   $6f,[y,x++] ;0668 'phase'
-              d674 dcf0  st   $f0,[y,x++] ;0669 ADDI
-              d675 dc01  st   $01,[y,x++]
-              d676 dc2c  st   $2c,[y,x++] ;066b STW
-              d677 dc6f  st   $6f,[y,x++] ;066c 'phase'
-              d678 dc22  st   $22,[y,x++] ;066d LDW
-              d679 dc73  st   $73,[y,x++] ;066e 'DrawRoad'
-              d67a dce4  st   $e4,[y,x++] ;066f CALL
-              d67b dc22  st   $22,[y,x++] ;0670 LDW
-              d67c dc55  st   $55,[y,x++] ;0671 'Wait'
-              d67d dce4  st   $e4,[y,x++] ;0672 CALL
-              d67e dc98  st   $98,[y,x++] ;0673 BRA
-              d67f dc65  st   $65,[y,x++]
-              d680 dcf6  st   $f6,[y,x++] ;0675 INC
-              d681 dc1d  st   $1d,[y,x++]
-              d682 dcff  st   $ff,[y,x++] ;0677 RET
-              d683 1000  ld   $00,x
-              d684 1407  ld   $07,y
-              d685 150a  ld   [$0a],y
-              d686 e109  jmp  y,[$09]
-              d687 0200  nop
-              d688
+              d66d dc6d  st   $6d,[y,x++] ;0662 'DX'
+              d66e dc22  st   $22,[y,x++] ;0663 LDW
+              d66f dc6b  st   $6b,[y,x++] ;0664 'Y'
+              d670 dcf0  st   $f0,[y,x++] ;0665 ADDI
+              d671 dc01  st   $01,[y,x++]
+              d672 dc2c  st   $2c,[y,x++] ;0667 STW
+              d673 dc6b  st   $6b,[y,x++] ;0668 'Y'
+              d674 dc94  st   $94,[y,x++] ;0669 XORI
+              d675 dc30  st   $30,[y,x++]
+              d676 dc36  st   $36,[y,x++] ;066b COND
+              d677 dc75  st   $75,[y,x++] ;066c NE
+              d678 dc0d  st   $0d,[y,x++]
+              d679 dcff  st   $ff,[y,x++] ;066e RET
+              d67a dc2c  st   $2c,[y,x++] ;066f STW
+              d67b dc73  st   $73,[y,x++] ;0670 'DrawRoad'
+              d67c dc22  st   $22,[y,x++] ;0671 LDW
+              d67d dc59  st   $59,[y,x++] ;0672 'Intro'
+              d67e dce4  st   $e4,[y,x++] ;0673 CALL
+              d67f dc22  st   $22,[y,x++] ;0674 LDW
+              d680 dc69  st   $69,[y,x++] ;0675 'SetupRoad'
+              d681 dce4  st   $e4,[y,x++] ;0676 CALL
+              d682 dc5c  st   $5c,[y,x++] ;0677 LDI
+              d683 dc01  st   $01,[y,x++]
+              d684 dc2c  st   $2c,[y,x++] ;0679 STW
+              d685 dc53  st   $53,[y,x++] ;067a 'Delay'
+              d686 dc5c  st   $5c,[y,x++] ;067b LDI
+              d687 dc00  st   $00,[y,x++]
+              d688 dc2c  st   $2c,[y,x++] ;067d STW
+              d689 dc6f  st   $6f,[y,x++] ;067e 'phase'
+              d68a dc22  st   $22,[y,x++] ;067f LDW
+              d68b dc6f  st   $6f,[y,x++] ;0680 'phase'
+              d68c dcf0  st   $f0,[y,x++] ;0681 ADDI
+              d68d dc01  st   $01,[y,x++]
+              d68e dc2c  st   $2c,[y,x++] ;0683 STW
+              d68f dc6f  st   $6f,[y,x++] ;0684 'phase'
+              d690 dc22  st   $22,[y,x++] ;0685 LDW
+              d691 dc73  st   $73,[y,x++] ;0686 'DrawRoad'
+              d692 dce4  st   $e4,[y,x++] ;0687 CALL
+              d693 dc22  st   $22,[y,x++] ;0688 LDW
+              d694 dc55  st   $55,[y,x++] ;0689 'Wait'
+              d695 dce4  st   $e4,[y,x++] ;068a CALL
+              d696 dc98  st   $98,[y,x++] ;068b BRA
+              d697 dc7d  st   $7d,[y,x++]
+              d698 dcf6  st   $f6,[y,x++] ;068d INC
+              d699 dc1d  st   $1d,[y,x++]
+              d69a dcff  st   $ff,[y,x++] ;068f RET
+              d69b 1000  ld   $00,x
+              d69c 1407  ld   $07,y
+              d69d 150a  ld   [$0a],y
+              d69e e109  jmp  y,[$09]
+              d69f 0200  nop
+              d6a0
