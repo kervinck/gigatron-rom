@@ -17,6 +17,7 @@ class Program:
     self.vars  = {} # name -> address
     self.vPC = None
     self.org(address)
+    self.version = None # Must be first word 'gcl<N>'
 
   def segInfo(self):
     print '%04x vCPU used %d unused %d' % (self.segStart, self.vPC - self.segStart, self.segEnd - self.vPC)
@@ -108,7 +109,12 @@ class Program:
     if len(word) == 0:
       return
 
-    if word == 'loop':
+    if self.version is None:
+      if word in ['gcl0x']:
+        self.version = word
+      else:
+        self.error('Invalid GCL version %s' % repr(word))
+    elif word == 'loop':
       to = self.loops[self.thisBlock()]
       to = prev(to)
       if self.vPC>>8 != to>>8:

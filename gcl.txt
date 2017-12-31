@@ -12,6 +12,9 @@ The two are closely tied together.
 ---------------
 Example program
 ---------------
+
+gcl1 {GCL version}
+
 {Draw the binary value of the largest 16-bit Fibonacci number on screen}
 
 [do                                     {Approximate BASIC equivalent}
@@ -127,6 +130,10 @@ Data
 ----
 i.                      Raw byte-value i
 "Text"                  Text string XXX Not implementd
+
+Versioning
+----------
+gcl0x gcl1              GCL version. Suffix x denotes experimental/extended versions
 
 ----------------------
 vCPU instruction table
