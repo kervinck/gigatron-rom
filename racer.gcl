@@ -20,7 +20,7 @@ XXX Flash skyscraper light
 
 [def
 {-
-  DrawChar -- Pos Color Char
+  /rawChar -- Pos Color Char
 
   Draw a 5x8 character on screen with the built-in font.
   `Char' must be in the 32-127 range (this is not checked)
@@ -200,12 +200,27 @@ $0600:
 [def
   {Step 1: Calculate road curvature from bottom line up}
 
+  {
+    ------##==##------
+    ------##==##------
+    -----##====##-----
+    -----##====##-----
+    ----##======##----
+    ----##======##----
+  }
+
+
   $f000 X= {X position * 256}
   95 [do Y=
     $08a0 Y+ p=
-    X>? p!         { *($8a0+Y) = X>>8 }
+    X>? p! { *($8a0+Y) = X>>8 }
+    Y 1-
+    Y=
+    $08a0 Y+ p=
+    X>? p! { *($8a0+Y) = X>>8 }
     X DX+ X=
-    Y 1- if>=0loop]
+    Y 1-
+  if>=0loop]
 
   {Step 2: Update video table from top line down}
 
@@ -215,7 +230,9 @@ $0600:
   0 Y=
   [do
     {High address}
-    \invTable Y+ 12; phase+ 8& [if<>0 $30] Hue= {for $2000 or $5000}
+    \invTable Y+ 12; {Z mapping}
+    phase+ 8& {Vertical scrolling phase}
+    [if<>0 $30] Hue= {for $2000 or $5000}
     SegmentY>? Hue+ p! p<++
 
     {Low address}
@@ -236,10 +253,10 @@ $0600:
 Intro call
 SetupRoad call
 
-2 Delay=
+1 Delay=
 0 phase=
 [do
-  phase 128& [if=0 phase else phase 255^] 64- 96- DX=
+  phase 128& [if=0 phase else phase 255^] 64- 32- DX= DX+ Dx= DX+ DX= DX+ DX= DX+ DX=
   DrawRoad call
   phase<++
   Wait call
