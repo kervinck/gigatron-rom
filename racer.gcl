@@ -160,7 +160,7 @@ $0500:
   [do
     GrassColor p!
     p<++
-    p<? 127& if<>0loop]
+    p<? if<>0loop]
 
   ret
 ] SetupSegment=
@@ -172,24 +172,22 @@ $0500:
   3 {Bright Red} CurbColor=
   8 {Green} GrassColor=
 
-  1 Width=
+  2 Width=
   [do
     Pos p=
-    SetupSegment call Width 1+ Width=
-    SetupSegment call Width 1+ Width=
+    SetupSegment call Width 2+ Width=
     Pos>++
-    Width 97^ if<>0loop]
+    Width 98^ if<>0loop]
 
   63 {White} CurbColor=
   12 {Bright Green} GrassColor=
 
-  1 Width=
+  2 Width=
   [do
     Pos p=
-    SetupSegment call Width 1+ Width=
-    SetupSegment call Width 1+ Width=
+    SetupSegment call Width 2+ Width=
     Pos>++
-    Width 97^ if<>0loop]
+    Width 98^ if<>0loop]
 
   pop call
 ] SetupRoad=
@@ -222,20 +220,16 @@ $0600:
 
     {Low address}
     $08a0 Y+ q=         {*q is the desired absolute X offset}
-    peek SegmentY+ LastX- p! p<++
+    peek LastX- p! p<++
 
     q? LastX=
 
-    SegmentY $80+ SegmentY= {Next segment}
+    SegmentY $80+ SegmentY=
+
     Y 1+ Y= 96^ if<>0loop]
 
   ret
 ] DrawRoad=
-
-{-----------------------------------------------------------------------+
-|}\vRET>++ ret{         RAM page 7                                      |
-+-----------------------------------------------------------------------}
-$0700:
 
 {--- Run ---}
 
@@ -250,6 +244,11 @@ SetupRoad call
   phase<++
   Wait call
   loop]
+
+{-----------------------------------------------------------------------+
+|}\vRET>++ ret{         RAM page 7                                      |
++-----------------------------------------------------------------------}
+$0700:
 
 {-----------------------------------------------------------------------+
 |       End                                                             |
