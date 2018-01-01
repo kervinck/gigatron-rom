@@ -6,6 +6,8 @@
 +-----------------------------------------------------------------------}
 
 {
+XXX Don't allow autoplayer to obtain a hi score
+XXX More colors, less green
 XXX Accelerated text drawing
 XXX Smarter border drawing (spiral draw)
 XXX Use same drawing techique for clearing playfield
