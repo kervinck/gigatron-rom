@@ -161,7 +161,7 @@ XORI   $DD      Logical-XOR with constant (vAC^=D)
 PEEK   -        Read byte from memory (vAC=[vAC])
 POKE   $DD      Write byte in memory ([[D+1],[D]]=vAC)
 LOOKUP $DD      ROM lookup (vAC=ROM[AC+256*D])
-COND   $CC $DD  Test vAC and branch conditionally. CC can be EQ,NE,LT,GT,LE,GE
+BCC    $CC $DD  Test vAC and branch conditionally. CC can be EQ,NE,LT,GT,LE,GE
 BRA    $DD      Branch unconditionally (vPC=D+256*(vPC>>8))
 CALL   -        Goto address but remember vPC (vRET,vPC=vPC+1,vAC-2)
 RET    -        Leaf return (vPC=vRET-2)

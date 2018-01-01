@@ -3,8 +3,10 @@
 from asm import *
 import sys
 
-# XXX Give warning when 'call' and 'ret' are used in the same block
-# XXX Give warning when block contains code but no 'ret' or 'push/pop/call'
+# XXX Give warning when 'call' and 'ret' are used in the same def-block
+# XXX Give warning when def-block contains 'call' put no 'push'
+# XXX Give warning when def-block contains code but no 'ret' or '(pop) call'
+# XXX Primitive or macro to clear just lower byte of vAC
 
 class Program:
   def __init__(self, address):
@@ -129,19 +131,19 @@ class Program:
     elif word == 'do':
       self.loops[self.thisBlock()] = self.vPC
     elif word == 'if<0':
-      self.opcode('COND')
+      self.opcode('BCC')
       self.opcode('GE')
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
     elif word == 'if>0':
-      self.opcode('COND')
+      self.opcode('BCC')
       self.opcode('LE')
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
     elif word == 'if=0':
-      self.opcode('COND')
+      self.opcode('BCC')
       self.opcode('NE')
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
@@ -304,14 +306,14 @@ class Program:
         self.error('Invalid word %s' % repr(word))
 
   def _emitIf(self, cond):
-      self.opcode('COND')
+      self.opcode('BCC')
       self.opcode(cond)
       block = self.thisBlock()
       self.emit(lo('$if.%d.0' % block))
       self.conds[block] = 0
 
   def _emitIfLoop(self, cond):
-      self.opcode('COND')
+      self.opcode('BCC')
       self.opcode(cond)
       block = self.thisBlock()
       to = self.loops[self.thisBlock()]

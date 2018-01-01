@@ -1048,8 +1048,8 @@ st(ea0XregAC)                   #17
 bra(d(lo('NEXT')))              #18
 ld(val(-20/2))                  #19
 
-# Instruction COND: Test AC sign and branch conditionally, 28 cycles
-label('COND')
+# Instruction BCC: Test AC sign and branch conditionally, 28 cycles
+label('BCC')
 ldzp(d(vAC+1))                  #10 First inspect high byte ACH
 bne(d(lo('.cond2')))            #11
 st(d(vTmp))                     #12
@@ -1521,7 +1521,7 @@ st(d(lo('INC')    ),eaYXregOUTIX) #00f6
 st(d(   0xfe      ),eaYXregOUTIX) #00f7
 st(d(lo('LDW')    ),eaYXregOUTIX) #00f8 "for i in range(120)"
 st(d(   0xea      ),eaYXregOUTIX) #00f9 Pulls [$eb] into vAC+1 ...
-st(d(lo('COND')   ),eaYXregOUTIX) #00fa ...so we can test bit7
+st(d(lo('BCC')    ),eaYXregOUTIX) #00fa ...so we can test bit7
 st(d(lo('GE')     ),eaYXregOUTIX) #00fb
 st(d(   0xea-2    ),eaYXregOUTIX) #00fc
 st(d(lo('RET')    ),eaYXregOUTIX) #00fd Jumps to $0300
@@ -1773,6 +1773,14 @@ for i in range(251):
   ld(val(4095/(i+16)))
 
 trampoline()
+
+#-----------------------------------------------------------------------
+#
+#  ROM page XX: Skyline
+#
+#-----------------------------------------------------------------------
+
+#importImage('Images/sky1-16x16.rgb', 16, 16, 'packedSkyLine')
 
 #-----------------------------------------------------------------------
 #
