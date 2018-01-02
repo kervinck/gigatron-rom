@@ -14,6 +14,7 @@ XXX Scoring system
 XXX Draw skyline
 XXX Scroll skyline
 XXX Bending road
+XXX Checkerboard grass
 }
 
 {-----------------------------------------------------------------------+
@@ -148,18 +149,16 @@ $0500:
           tmp+ tmp= {x4}
           tmp+ tmp= {x8}
           tmp+ tmp= {x16}
+          tmp+ tmp= {x32}
   tmp>? CurbLeft=   {CurbLeft = Width/16}
   Width CurbLeft- CurbRight=
 
-  0 W=
+  Pos p=
 
+  0 CurbRight- W=
   {Draw road segment}
   Width i= [do
-    21{Dark Grey} Color=
-    W CurbLeft-  [if<0  CurbColor Color=]
-    W CurbRight- [if>=0 CurbColor Color=]
-    Color p!
-    W<++
+    W 1+ W= [if<=0 21 {Dark Grey} else CurbColor] p!
     p<++
     i 1- i= if>0loop]
 
@@ -169,30 +168,34 @@ $0500:
     p<++
     p<? if<>0loop]
 
+  {Draw mirror image}
+  [do
+    p 255^ peek p!
+    p<++
+    p<? 128^ if<>0loop]
+
   ret
 ] SetupSegment=
 
 [def
   push
 
-  $2000 Pos=
+  $2080 Pos=
 
-  2 Width=
+  1 Width=
   [do
-    Pos p=
     3 {Bright Red} CurbColor=
     8 {Green} GrassColor=
     SetupSegment call
     Pos>++
 
-    Pos p=
     63 {White} CurbColor=
     12 {Bright Green} GrassColor=
     SetupSegment call
     Pos>++
 
-    Width 2+ Width=
-    Width 98^ if<>0loop]
+    Width 1+ Width=
+    Width 49^ if<>0loop]
 
   pop call
 ] SetupRoad=
@@ -218,7 +221,7 @@ $0600:
   {Step 2: Update video table low bytes for road}
   {This step is most timing-sensitive wrt. the video loop}
 
-  $0ffa peek 42+ LastX= {Pivot 12px from bottom where road width is 84}
+  $0ffa peek 48- LastX= {Pivot 12px from bottom / front of car}
   $0131 p=              {Video table start of road}
 
   $0fd0 q=
@@ -287,7 +290,7 @@ $0700:
 Intro call
 SetupRoad call
 
-$2300 CarX=
+$7900 CarX=
 1 Delay=
 63 phase=
 
@@ -295,14 +298,14 @@ $2300 CarX=
   Wait call
 
   phase<++
-  phase 128& [if=0 phase else phase 255^] 48- DX=
+  phase 128& [if=0 phase else phase 255^] 64- DX=
   DX+ DX= DriftX= DX+ DX= DX+ DX= DX+ DX= {Shift 4}
 
   CalcCurvature call
 
   DrawCurvature call
 
-  32 DriftX- CarX+ CarX=
+  CarX DriftX- CarX=
   0 Steer=
   \serialRaw? $fe^ {~buttonRight} [if=0  $200 CarX+ CarX= +1 Steer=]
   \serialRaw? $fd^ {~buttonLeft}  [if=0 -$200 CarX+ CarX= -1 Steer=]
