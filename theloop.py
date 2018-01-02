@@ -148,8 +148,8 @@ returnTo        = zpByte(2)
 # Visible video
 screenY         = zpByte() # Counts up from 0 to 238 in steps of 2
 frameX          = zpByte() # Starting byte within page
-frameY          = zpByte() # Page number of current pixel row (updated by videoA)
-nextVideo       = zpByte() # Jump offset to scan line handler (videoA, videoB, ...)
+frameY          = zpByte() # Page of current pixel row (updated by videoA)
+nextVideo       = zpByte() # Jump offset to scan line handler (videoA, B, C...)
 videoDorF       = zpByte() # Handler for every 4th line (videoD or videoF)
 
 # Vertical blank (reuse some variables used in the visible part)
@@ -222,8 +222,7 @@ define('vLR',        vLR)
 #-----------------------------------------------------------------------
 
 # Byte 0-239 define the video lines
-scanTable = 0x0100
-scanTablePage = scanTable>>8 # Indirection table: Y[0] dX[0]  ..., Y[119] dX[119]
+videoTable = 0x0100 # Indirection table: Y[0] dX[0]  ..., Y[119] dX[119]
 
 # Highest bytes are for channel 1 variables
 
@@ -416,7 +415,7 @@ suba(val(0x5a-1))
 st(d(bootCheck))
 
 # vCPU reset handler
-vCpuReset = scanTable + 240 # we have 9 unused bytes behind the video table
+vCpuReset = videoTable + 240 # we have 9 unused bytes behind the video table
 ld(val((vCpuReset&255)-2));     C('Setup vCPU reset handler')
 st(d(vPC))
 adda(val(2),regX)
@@ -520,7 +519,7 @@ label('videoA')
 assert(lo('videoA') == 0)       # videoA starts at the page boundary
 ld(d(lo('videoB')))             #29
 st(d(nextVideo))                #30
-ld(d(scanTablePage), regY)      #31
+ld(d(videoTable>>8), regY)      #31
 ld(d(screenY), busRAM|regX)     #32
 ld(eaYXregAC, busRAM)           #33
 st(eaYXregOUTIX)                #34 Just to increment X
@@ -574,7 +573,7 @@ ld(val(syncBits), regOUT);      C('End horizontal pulse')#28
 label('videoB')
 ld(d(lo('videoC')))             #29
 st(d(nextVideo))                #30
-ld(d(scanTablePage), regY)      #31
+ld(d(videoTable>>8), regY)      #31
 ldzp(d(screenY))                #32
 adda(d(1), regX)                #33
 ldzp(d(frameX))                 #34
@@ -1505,28 +1504,28 @@ st(d(videoDorF))                #26 This executes before the visible part
 # - XXX Clearing screen, printing system message
 # - XXX Clearing sound properly
 # - XXX Loading program from ROM
-st(d(lo('LDI')    ),eaYXregOUTIX) #00ea
-st(d(   0x08      ),eaYXregOUTIX) #00eb RAM page for video line i
-st(d(lo('POKE')   ),eaYXregOUTIX) #00ec "Y[i] = $080+i"
-st(d(   0xfe      ),eaYXregOUTIX) #00ed
-st(d(lo('INC')    ),eaYXregOUTIX) #00ee Self-modification
-st(d(   0xeb      ),eaYXregOUTIX) #00ef
-st(d(lo('INC')    ),eaYXregOUTIX) #00f0
-st(d(   0xfe      ),eaYXregOUTIX) #00f1
-st(d(lo('LDI')    ),eaYXregOUTIX) #00f2
-st(d(    0        ),eaYXregOUTIX) #00f3
-st(d(lo('POKE')   ),eaYXregOUTIX) #00f4 "dX[i] = 0"
-st(d(   0xfe      ),eaYXregOUTIX) #00f5
-st(d(lo('INC')    ),eaYXregOUTIX) #00f6
-st(d(   0xfe      ),eaYXregOUTIX) #00f7
-st(d(lo('LDW')    ),eaYXregOUTIX) #00f8 "for i in range(120)"
-st(d(   0xea      ),eaYXregOUTIX) #00f9 Pulls [$eb] into vAC+1 ...
-st(d(lo('BCC')    ),eaYXregOUTIX) #00fa ...so we can test bit7
-st(d(lo('GE')     ),eaYXregOUTIX) #00fb
-st(d(   0xea-2    ),eaYXregOUTIX) #00fc
-st(d(lo('RET')    ),eaYXregOUTIX) #00fd Jumps to $0300
-st(d(scanTable&255),eaYXregOUTIX) #00fe Video table pointer
-st(d(scanTable>>8 ),eaYXregOUTIX) #00ff
+st(d(lo('LDI')     ),eaYXregOUTIX) #00ea
+st(d(   0x08       ),eaYXregOUTIX) #00eb RAM page for video line i
+st(d(lo('POKE')    ),eaYXregOUTIX) #00ec "Y[i] = $080+i"
+st(d(   0xfe       ),eaYXregOUTIX) #00ed
+st(d(lo('INC')     ),eaYXregOUTIX) #00ee Self-modification
+st(d(   0xeb       ),eaYXregOUTIX) #00ef
+st(d(lo('INC')     ),eaYXregOUTIX) #00f0
+st(d(   0xfe       ),eaYXregOUTIX) #00f1
+st(d(lo('LDI')     ),eaYXregOUTIX) #00f2
+st(d(    0         ),eaYXregOUTIX) #00f3
+st(d(lo('POKE')    ),eaYXregOUTIX) #00f4 "dX[i] = 0"
+st(d(   0xfe       ),eaYXregOUTIX) #00f5
+st(d(lo('INC')     ),eaYXregOUTIX) #00f6
+st(d(   0xfe       ),eaYXregOUTIX) #00f7
+st(d(lo('LDW')     ),eaYXregOUTIX) #00f8 "for i in range(120)"
+st(d(   0xea       ),eaYXregOUTIX) #00f9 Pulls [$eb] into vAC+1 ...
+st(d(lo('BCC')     ),eaYXregOUTIX) #00fa ...so we can test bit7
+st(d(lo('GE')      ),eaYXregOUTIX) #00fb
+st(d(   0xea-2     ),eaYXregOUTIX) #00fc
+st(d(lo('RET')     ),eaYXregOUTIX) #00fd Jumps to $0300
+st(d(videoTable&255),eaYXregOUTIX) #00fe Video table pointer
+st(d(videoTable>>8 ),eaYXregOUTIX) #00ff
 
 ld(val(hi('REENTER')),regY)     #49
 jmpy(d(lo('REENTER')))          #50
@@ -1682,6 +1681,15 @@ st(eaYXregOUTIX)                #24
 ld(val(hi('REENTER')),regY)     #25
 jmpy(d(lo('REENTER')))          #26
 ld(val(-30/2))                  #27
+
+#-----------------------------------------------------------------------
+# Extension SYS_SET_X:
+#-----------------------------------------------------------------------
+
+ld(d(sysArgs+0),busRAM|regX)    #15
+ld(d(sysArgs+1),busRAM|regY)    #16
+st(eaYXregOUTIX)                #18
+
 
 #-----------------------------------------------------------------------
 #

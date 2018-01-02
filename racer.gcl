@@ -200,63 +200,74 @@ $0500:
 $0600:
 
 [def
-  {Step 1: Calculate road curvature from bottom line up}
+  {Step 1: Calculate road curvature}
 
-  $80 X=
-  $08ff p=
+  0 X=
+  $0fa0 p=
   [do
-    X>? p!
-    p 1- p=
-    X>? p!
+    X>? p! p<++ p! p<++
     X DX+ X=
-    p 1- p=
-    255& $9f^
+    p<?
   if<>0loop]
 
-  {Step 2: Update video table from top line down}
+  {Step 2: Update video table low bytes for road}
+  {This step is most timing-sensitive wrt. the video loop}
 
-  $08ff peek LastX= 0 LastX- LastX= {Keeps bottom line at fixed position}
-  $2000 SegmentY= {Start with smallest segment}
-  $0130 p=        {Video table start of road}
-  0 Y=
+  $0ff0 peek 40+ LastX= {Pivot 16px above bottom of screen / road width 80}
+  $0131 p=          {Video table start of road}
+
+  $0fa0 q= 
+  [do
+    {Low address}
+    q? LastX- p!  p<++ p<++
+
+    p<++ p<++
+
+    q? LastX=
+    q<++ q<++
+    q<? if<>0loop]
+
+  {Step 3: Update video table high bytes for road width and color scheme}
+  {Do this part last because timing doesn't really cause visible problems}
+
+  $2000 SegmentY=   {Start with smallest segment}
+  $0130 p=          {Video table start of road}
+
+  \invTable z=
   [do
     {High address}
-    \invTable Y+ 12; {Z mapping}
+    z 12; {Z mapping}
     phase+ 8& {Vertical scrolling phase}
     [if<>0 $30] Hue= {for $2000 or $5000}
     SegmentY>? Hue+ p! p<++
-
-    {Low address}
-    $08a0 Y+ q=         {*q is the desired absolute X offset}
-    peek LastX- p! p<++
-
-    q? LastX=
-
+    p<++
     SegmentY $80+ SegmentY=
+    z<++
 
-    Y 1+ Y= 96^ if<>0loop]
+    p<? 240^ if<>0loop]
 
   ret
 ] DrawRoad=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 7                                      |
++-----------------------------------------------------------------------}
+$0700:
 
 {--- Run ---}
 
 Intro call
 SetupRoad call
 
-5 Delay=
+1 Delay=
 0 phase=
 [do
-  phase 128& [if=0 phase else phase 255^] 64- 32- DX= DX+ Dx= DX+ DX= DX+ DX= DX+ DX=
+  phase 128& [if=0 phase else phase 255^] 48- DX=
+  DX+ DX= DX+ DX= DX+ DX= DX+ DX= {Shift 4}
+  Wait call
   DrawRoad call
   phase<++
-  Wait call
   loop]
-
-{-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 7                                      |
-+-----------------------------------------------------------------------}
-$0700:
 
 {-----------------------------------------------------------------------+
 |       End                                                             |
