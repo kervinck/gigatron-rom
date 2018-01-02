@@ -205,8 +205,6 @@ class Program:
           self.emit(self.getAddress(var))
           C('%04x %s' % (prev(self.vPC, 1), repr(var)))
       elif op == '+' and con is not None:
-          if con < 0 or con >= 256:
-            self.error('Out of range %s' % repr(con))
           self.opcode('ADDI')
           self.emit(con)
       elif op == '-' and var:
@@ -214,42 +212,29 @@ class Program:
           self.emit(self.getAddress(var))
           C('%04x %s' % (prev(self.vPC, 1), repr(var)))
       elif op == '-' and con is not None:
-          if con < 0 or con >= 256:
-            self.error('Out of range %s' % repr(con))
           self.opcode('SUBI')
           self.emit(con)
       elif op == '.' and con is not None:
-          if con < 0 or con >= 256:
-            self.error('Out of range %s' % repr(con))
-          self.emit(con)
+          if -255 <= con < 0:
+            self.emit(con & 255)
+          else:
+            self.emit(con)
       elif op == ';' and con is not None:
-          if con < 0 or con >= 256:
-            self.error('Out of range %s' % repr(con))
           self.opcode('LOOKUP')
           self.emit(con)
       elif op == '&' and con is not None:
-          if con<0 or 0xff<con:
-            self.error('Out of range %s' % repr(con))
           self.opcode('ANDI')
           self.emit(con)
       elif op == '|' and con is not None:
-          if con<0 or 0xff<con:
-            self.error('Out of range %s' % repr(con))
           self.opcode('ORI')
           self.emit(con)
       elif op == '^' and con is not None:
-          if con<0 or 0xff<con:
-            self.error('Out of range %s' % repr(con))
           self.opcode('XORI')
           self.emit(con)
       elif op == '!' and con is not None:
-          if con<0 or 0xff<con:
-            self.error('Out of range %s' % repr(con))
           self.opcode('ST')
           self.emit(con)
       elif op == '?' and con is not None:
-          if con<0 or 0xff<con:
-            self.error('Out of range %s' % repr(con))
           self.opcode('LD')
           self.emit(con)
       elif op == '!' and var:
