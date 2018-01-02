@@ -15,9 +15,6 @@ XXX Scoring system
 XXX Draw skyline
 XXX Scroll skyline
 XXX Bending road
-XXX Curb size, also at horizon
-XXX Flash skyscraper light?
-XXX Hills?
 }
 
 {-----------------------------------------------------------------------+
@@ -131,13 +128,13 @@ $0400:
 ] ClearScreen=
 
 [def
-  {Even lines}
+  {--- Even lines ---}
   Video?       p>! Video<++
   Video? X+ X= p<! Video<++
   Sprite q=
   q? [do q<++ p! p<++ q? if<>0loop]
 
-  {Odd lines}
+  {--- Odd lines ---}
   Video?       p>! Video<++
          X     p<! Video<++
   Sprite q=
@@ -231,7 +228,7 @@ $0600:
   {Step 2: Update video table low bytes for road}
   {This step is most timing-sensitive wrt. the video loop}
 
-  $0ff8 peek 40+ LastX= {Pivot 16px from bottom where road width is 80}
+  $0ffa peek 42+ LastX= {Pivot 12px from bottom where road width is 84}
   $0131 p=              {Video table start of road}
 
   $0fd0 q=
