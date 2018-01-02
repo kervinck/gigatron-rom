@@ -8,8 +8,7 @@
 gcl0x
 
 {
-XXX Steering
-XXX Collision detection
+XXX Collision detection & better sprite clearing
 XXX Engine sound
 XXX Scoring system
 XXX Draw skyline
@@ -128,22 +127,15 @@ $0400:
 ] ClearScreen=
 
 [def
-  {--- Even lines ---}
-  Video?       p>! Video<++
-  Video? X+ X= p<! Video<++
-  Sprite q=
-  q? [do q<++ p! p<++ q? if<>0loop]
+  Sprite s=
+  Video? 254&  p>! 1| q>! Video<++
+  Video? X+ X= s? X+               {First byte is extra offset}
+               p<!    q<!
+  21 [do p! p<++ q! q<++ s<++ s? if<>0loop] 21 p! q!
 
-  {--- Odd lines ---}
-  Video?       p>! Video<++
-         X     p<! Video<++
-  Sprite q=
-  q? [do q<++ p! p<++ q? if<>0loop]
-
+  Video 3+ Video=
   ret
 ] DrawPixels=
-
-[def 21. 21. 21. 21. 21. 21. 21. 21. 21. 21. 21. 21. 21. 21. 0.] Road=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 5                                      |
@@ -263,11 +255,11 @@ $0600:
   ret
 ] DrawPerspective=
 
-[def 21. 21. 64. 64. 64. 40. 60. 60. 40. 64. 64. 64. 21. 21. 0.] Car0=
-[def 21. 21. 21. 40. 20. 20. 63. 63. 20. 20. 40. 21. 21. 21. 0.] Car1=
-[def 21. 21. 40. 20. 20. 20. 40. 40. 20. 20. 20. 40. 21. 21. 0.] Car2=
-[def 64. 64. 64. 64. 40. 20. 20. 20. 20. 40. 64. 64. 64. 64. 0.] Car3=
-[def 64. 64. 64. 64. 21. 21. 21. 21. 21. 21. 64. 64. 64. 64. 0.] Car4=
+[def  0.         21. 21. 64. 64. 64. 40. 60. 60. 40. 64. 64. 64. 21. 21.         0.] Car0=
+[def  0.         21. 21. 21. 40. 20. 20. 63. 63. 20. 20. 40. 21. 21. 21.         0.] Car1=
+[def -1.     21. 21. 21. 40. 20. 20. 20. 40. 40. 20. 20. 20. 40. 21. 21. 21.     0.] Car2=
+[def -2. 21. 21. 64. 64. 64. 64. 40. 20. 20. 20. 20. 40. 64. 64. 64. 64. 21. 21. 0.] Car3=
+[def -2. 21. 21. 64. 64. 64. 64. 21. 21. 21. 21. 21. 21. 64. 64. 64. 64. 21. 21. 0.] Car4=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 7                                      |
@@ -290,23 +282,6 @@ $0700:
   pop call
 ] DrawCar=
 
-[def
-  push
-
-  $01d9 peek 255^ X=
-  CarX>? X+ X=
-  $01d8 Video=
-
-  Road Sprite=
-  DrawPixels call
-  DrawPixels call X Steer- X=
-  DrawPixels call
-  DrawPixels call
-  DrawPixels call
-
-  pop call
-] RemoveCar=
-
 {--- Run ---}
 
 Intro call
@@ -325,11 +300,7 @@ $2300 CarX=
 
   CalcCurvature call
 
-  RemoveCar call {XXX Don't remove car before drawing one...}
-
   DrawCurvature call
-
-  DrawPerspective call
 
   32 DriftX- CarX+ CarX=
   0 Steer=
@@ -337,6 +308,9 @@ $2300 CarX=
   \serialRaw? $fd^ {~buttonLeft}  [if=0 -$200 CarX+ CarX= -1 Steer=]
 
   DrawCar call
+
+  DrawPerspective call
+
 
   loop]
 
