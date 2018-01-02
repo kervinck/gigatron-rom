@@ -10,12 +10,12 @@ gcl0x
 {
 XXX Steering
 XXX Collision detection
-XXX Bending road
-XXX Curb size, also at horizon
 XXX Engine sound
 XXX Scoring system
 XXX Draw skyline
 XXX Scroll skyline
+XXX Bending road
+XXX Curb size, also at horizon
 XXX Flash skyscraper light?
 XXX Hills?
 }
@@ -130,6 +130,24 @@ $0400:
   ret
 ] ClearScreen=
 
+[def
+  {Even lines}
+  Video?       p>! Video<++
+  Video? X+ X= p<! Video<++
+  Sprite q=
+  q? [do q<++ p! p<++ q? if<>0loop]
+
+  {Odd lines}
+  Video?       p>! Video<++
+         X     p<! Video<++
+  Sprite q=
+  q? [do q<++ p! p<++ q? if<>0loop]
+
+  ret
+] DrawPixels=
+
+[def 21. 21. 21. 21. 21. 21. 21. 21. 21. 21. 21. 21. 21. 21. 0.] Road=
+
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 5                                      |
 +-----------------------------------------------------------------------}
@@ -206,11 +224,14 @@ $0600:
     X>? p! p<++
     X DX+ X=
     p<? if<>0loop]
+  ret
+] CalcCurvature=
 
+[def
   {Step 2: Update video table low bytes for road}
   {This step is most timing-sensitive wrt. the video loop}
 
-  $0ff8 peek 40+ LastX= {Pivot 16px above bottom of screen / road width 80}
+  $0ff8 peek 40+ LastX= {Pivot 16px from bottom where road width is 80}
   $0131 p=              {Video table start of road}
 
   $0fd0 q=
@@ -222,7 +243,10 @@ $0600:
     q? LastX=
     q<++
     q<? if<>0loop]
+  ret
+] DrawCurvature=
 
+[def
   {Step 3: Update video table high bytes for road width and color scheme}
   {Do this part last because timing doesn't really cause visible problems}
 
@@ -231,8 +255,8 @@ $0600:
 
   \invTable z=
   [do
-    z 12;            {Y to Z depth mapping for perspective}
-    phase+ 8&        {Vertical scrolling phase}
+    z 20;            {Y to Z depth mapping for perspective}
+    phase+ 4&        {Vertical scrolling phase}
     [if<>0 $30] Hue= {To get $2000 or $5000}
     SegmentY>? Hue+ p! p<++
     p<++
@@ -242,13 +266,13 @@ $0600:
     p<? 240^ if<>0loop]
 
   ret
-] DrawRoad=
+] DrawPerspective=
 
-[def 21. 21. 21. 64. 64. 64. 40. 60. 60. 40. 64. 64. 64. 21. 21. 21. 0.] Car0=
-[def 21. 21. 21. 21. 40. 20. 20. 63. 63. 20. 20. 40. 21. 21. 21. 21. 0.] Car1=
-[def 21. 21. 21. 40. 20. 20. 20. 40. 40. 20. 20. 20. 40. 21. 21. 21. 0.] Car2=
-[def 21. 64. 64. 64. 64. 40. 20. 20. 20. 20. 40. 64. 64. 64. 64. 21. 0.] Car3=
-[def 21. 64. 64. 64. 64. 21. 21. 21. 21. 21. 21. 64. 64. 64. 64. 21. 0.] Car4=
+[def 21. 21. 64. 64. 64. 40. 60. 60. 40. 64. 64. 64. 21. 21. 0.] Car0=
+[def 21. 21. 21. 40. 20. 20. 63. 63. 20. 20. 40. 21. 21. 21. 0.] Car1=
+[def 21. 21. 40. 20. 20. 20. 40. 40. 20. 20. 20. 40. 21. 21. 0.] Car2=
+[def 64. 64. 64. 64. 40. 20. 20. 20. 20. 40. 64. 64. 64. 64. 0.] Car3=
+[def 64. 64. 64. 64. 21. 21. 21. 21. 21. 21. 64. 64. 64. 64. 0.] Car4=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 7                                      |
@@ -256,26 +280,14 @@ $0600:
 $0700:
 
 [def
-  v?       p>! v<++
-  v? X+ X= p<! v<++
-  Sprite q= 21 [do p! p<++ q? q<++ if<>0loop] 21 p!
-
-  v?       p>! v<++
-     X     p<! v<++
-  Sprite q= 21 [do p! p<++ q? q<++ if<>0loop] 21 p!
-
-  ret
-] DrawPixels=
-
-[def
   push
 
-  $01d9 peek 255^ CarX+ X=
-
-  $01d8 v=
+  $01d9 peek 255^ X=
+  CarX>? X+ X=
+  $01d8 Video=
 
   Car0 Sprite= DrawPixels call
-  Car1 Sprite= DrawPixels call
+  Car1 Sprite= DrawPixels call X Steer- X=
   Car2 Sprite= DrawPixels call
   Car3 Sprite= DrawPixels call
   Car4 Sprite= DrawPixels call
@@ -283,21 +295,54 @@ $0700:
   pop call
 ] DrawCar=
 
+[def
+  push
+
+  $01d9 peek 255^ X=
+  CarX>? X+ X=
+  $01d8 Video=
+
+  Road Sprite=
+  DrawPixels call
+  DrawPixels call X Steer- X=
+  DrawPixels call
+  DrawPixels call
+  DrawPixels call
+
+  pop call
+] RemoveCar=
+
 {--- Run ---}
 
 Intro call
 SetupRoad call
 
-20 CarX=
+$3800 CarX=
 1 Delay=
-0 phase=
+63 phase=
+
 [do
-  phase 128& [if=0 phase else phase 255^] 48- DX=
-  DX+ DX= DX+ DX= DX+ DX= DX+ DX= {Shift 4}
   Wait call
-  DrawRoad call
-  DrawCar call
+
   phase<++
+  phase 128& [if=0 phase else phase 255^] 48- DX=
+  DX+ DX= DX+ DX= DriftX= DX+ DX= DX+ DX= {Shift 4}
+
+  CalcCurvature call
+
+  RemoveCar call {XXX Don't remove car before drawing one...}
+
+  DrawCurvature call
+
+  DrawPerspective call
+
+  $40 DriftX- CarX+ CarX=
+  0 Steer=
+  \serialRaw? $fe^ {~buttonRight} [if=0  $200 CarX+ CarX= +1 Steer=]
+  \serialRaw? $fd^ {~buttonLeft}  [if=0 -$200 CarX+ CarX= -1 Steer=]
+
+  DrawCar call
+
   loop]
 
 {-----------------------------------------------------------------------+
