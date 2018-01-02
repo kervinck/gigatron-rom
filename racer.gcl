@@ -184,24 +184,22 @@ $0500:
   push
 
   $2000 Pos=
-  3 {Bright Red} CurbColor=
-  8 {Green} GrassColor=
 
   2 Width=
   [do
     Pos p=
-    SetupSegment call Width 2+ Width=
+    3 {Bright Red} CurbColor=
+    8 {Green} GrassColor=
+    SetupSegment call
     Pos>++
-    Width 98^ if<>0loop]
 
-  63 {White} CurbColor=
-  12 {Bright Green} GrassColor=
-
-  2 Width=
-  [do
     Pos p=
-    SetupSegment call Width 2+ Width=
+    63 {White} CurbColor=
+    12 {Bright Green} GrassColor=
+    SetupSegment call
     Pos>++
+
+    Width 2+ Width=
     Width 98^ if<>0loop]
 
   pop call
@@ -247,17 +245,17 @@ $0600:
   {Step 3: Update video table high bytes for road width and color scheme}
   {Do this part last because timing doesn't really cause visible problems}
 
-  $2000 SegmentY=   {Start with smallest segment}
+  $20 SegmentY=   {Start with smallest segment}
   $0130 p=          {Video table start of road}
 
   \invTable z=
   [do
     z 20;            {Y to Z depth mapping for perspective}
     phase+ 4&        {Vertical scrolling phase}
-    [if<>0 $30] Hue= {To get $2000 or $5000}
-    SegmentY>? Hue+ p! p<++
-    p<++
-    SegmentY $80+ SegmentY=
+    [if<>0 $01] Hue=
+    SegmentY 254& Hue+ p!
+    p<++ p<++
+    SegmentY<++
     z<++
 
     p<? 240^ if<>0loop]
@@ -314,7 +312,7 @@ $0700:
 Intro call
 SetupRoad call
 
-$3800 CarX=
+$2300 CarX=
 1 Delay=
 63 phase=
 
@@ -323,7 +321,7 @@ $3800 CarX=
 
   phase<++
   phase 128& [if=0 phase else phase 255^] 48- DX=
-  DX+ DX= DX+ DX= DriftX= DX+ DX= DX+ DX= {Shift 4}
+  DX+ DX= DriftX= DX+ DX= DX+ DX= DX+ DX= {Shift 4}
 
   CalcCurvature call
 
@@ -333,7 +331,7 @@ $3800 CarX=
 
   DrawPerspective call
 
-  $40 DriftX- CarX+ CarX=
+  32 DriftX- CarX+ CarX=
   0 Steer=
   \serialRaw? $fe^ {~buttonRight} [if=0  $200 CarX+ CarX= +1 Steer=]
   \serialRaw? $fd^ {~buttonLeft}  [if=0 -$200 CarX+ CarX= -1 Steer=]
