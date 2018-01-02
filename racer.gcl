@@ -8,23 +8,30 @@
 gcl0x
 
 {
-XXX Reduce road size from 96 lines to 80 (width 17-96)
-XXX Aliasing at horizon
-XXX Left-right curbstone artifact
-XXX Flash skyscraper light
+XXX Remove flickering
+XXX Draw car
+XXX Steering
+XXX Collision detection
+XXX Bending road
+XXX Curb size, also at horizon
+XXX Engine sound
+XXX Scoring system
+XXX Draw skyline
+XXX Scroll skyline
+XXX Flash skyscraper light?
+XXX Hills?
 }
 
 {-----------------------------------------------------------------------+
 |                       RAM page 3                                      |
 +-----------------------------------------------------------------------}
 
-[def
-{-
-  /rawChar -- Pos Color Char
+[def {
+  DrawChar -- Pos Color Char
 
   Draw a 5x8 character on screen with the built-in font.
   `Char' must be in the 32-127 range (this is not checked)
--}
+}
   {Map ASCII code to offset in font table}
   Char 82- [if<0 50+ i= \font32up
             else     i= \font82up] fontData= {Select low or high page}
@@ -47,14 +54,13 @@ XXX Flash skyscraper light
   ret
 ] DrawChar=
 
-[def
-{-
+[def {
   DrawText(Text,Pos)
 
   Draw a zero-terminated text string to the screen.
   Character 10 acts as newline.
   There is no check for running off screen.
--}
+}
   push
   [do
     Text? Char= {Next character to be printed}
@@ -70,10 +76,9 @@ XXX Flash skyscraper light
    $47. $69. $67. $61. $74. $72. $6f. $6e. 0. {Gigatron}
 ] Title=
 
-[def
-{-
+[def {
   DrawLine -- Draw line
--}
+}
   Count i=
   [do if>0
     Color Pos!
@@ -83,24 +88,22 @@ XXX Flash skyscraper light
   ret
 ] DrawLine=
 
-[def
-{-
+[def {
   Wait -- Wait Delay number of frames (range 1..255)
--}
+}
   \frameCount? Delay+ 255& tmp=
   [do \frameCount? tmp- if<>0loop]
   ret
 ] Wait=
 
 {-----------------------------------------------------------------------+
-|}\vRET>++ ret{         RAM page 4                                      |
+|}\vLR>++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
 $0400:
 
-[def
-{-
+[def {
   Intro
--}
+}
   push
 
   {Display welcome tekst}
@@ -114,10 +117,9 @@ $0400:
   pop call
 ] Intro=
 
-[def
-{-
+[def {
   ClearScreen -- Clear screen from current position to bottom right
--}
+}
   Pos p=
   Pos 255| 255-         {XXX Is there a better way to clear the low byte?}
   i= $8001 i+ i=        {Offset to move to next stripe}
@@ -131,7 +133,7 @@ $0400:
 ] ClearScreen=
 
 {-----------------------------------------------------------------------+
-|}\vRET>++ ret{         RAM page 5                                      |
+|}\vLR>++ ret{          RAM page 5                                      |
 +-----------------------------------------------------------------------}
 $0500:
 
@@ -193,34 +195,23 @@ $0500:
 ] SetupRoad=
 
 {-----------------------------------------------------------------------+
-|}\vRET>++ ret{         RAM page 6                                      |
+|}\vLR>++ ret{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
 $0600:
 
 [def
   {Step 1: Calculate road curvature from bottom line up}
 
-  {
-    ------##==##------
-    ------##==##------
-    -----##====##-----
-    -----##====##-----
-    ----##======##----
-    ----##======##----
-  }
-
-
-  $f000 X= {X position * 256}
-  95 [do Y=
-    $08a0 Y+ p=
-    X>? p! { *($8a0+Y) = X>>8 }
-    Y 1-
-    Y=
-    $08a0 Y+ p=
-    X>? p! { *($8a0+Y) = X>>8 }
+  $80 X=
+  $08ff p=
+  [do
+    X>? p!
+    p 1- p=
+    X>? p!
     X DX+ X=
-    Y 1-
-  if>=0loop]
+    p 1- p=
+    255& $9f^
+  if<>0loop]
 
   {Step 2: Update video table from top line down}
 
@@ -253,7 +244,7 @@ $0600:
 Intro call
 SetupRoad call
 
-1 Delay=
+5 Delay=
 0 phase=
 [do
   phase 128& [if=0 phase else phase 255^] 64- 32- DX= DX+ Dx= DX+ DX= DX+ DX= DX+ DX=
@@ -263,7 +254,7 @@ SetupRoad call
   loop]
 
 {-----------------------------------------------------------------------+
-|}\vRET>++ ret{         RAM page 7                                      |
+|}\vLR>++ ret{          RAM page 7                                      |
 +-----------------------------------------------------------------------}
 $0700:
 

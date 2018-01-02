@@ -21,7 +21,7 @@ XXX Increase speed when pressing button
 
 {-
   First setup all subroutine definitions and variables, without making
-  calls. This way allows use of vRET to hop from page to page during setup,
+  calls. This way allows use of vLR to hop from page to page during setup,
   with minimal overhead. At the end, run the main loop.
 -}
 
@@ -108,7 +108,7 @@ XXX Increase speed when pressing button
 ] DrawHead=
 
 {-----------------------------------------------------------------------+
-|}\vRET>++ ret{         RAM page 4                                      |
+|}\vLR>++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
 $0400:
 
@@ -195,7 +195,7 @@ $0400:
 ] DrawBlock=
 
 {-----------------------------------------------------------------------+
-|}\vRET>++ ret{         RAM page 5                                      |
+|}\vLR>++ ret{          RAM page 5                                      |
 +-----------------------------------------------------------------------}
 $0500:
 
@@ -265,7 +265,7 @@ $0500:
 ] AddFood=
 
 {-----------------------------------------------------------------------+
-|}\vRET>++ ret{         RAM page 6                                      |
+|}\vLR>++ ret{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
 $0600:
 
@@ -313,7 +313,7 @@ $0600:
 ] AddTimer=
 
 {-----------------------------------------------------------------------+
-|}\vRET>++ ret{         RAM page 7                                      |
+|}\vLR>++ ret{          RAM page 7                                      |
 +-----------------------------------------------------------------------}
 $0700:
 

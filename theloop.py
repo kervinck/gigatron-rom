@@ -43,7 +43,7 @@
 #  XXX Gigatron layout balls/bricks game
 #  XXX Picture Frame
 #  XXX Iets met scroller. Flappy Bird?
-#  XXX About Gigatron
+#  XXX About Gigatron & credits
 #  XXX 5 sec test screen
 #  XXX Random dots screen
 #  XXX Info screen (zero page?)
@@ -178,7 +178,7 @@ xoutMask        = zpByte() # The blinkenlights and sound on/off state
 # vCPU interpreter
 vPC             = zpByte(2) # Interpreter program counter, points into RAM
 vAC             = zpByte(2) # Interpreter accumulator, 16-bits
-vRET            = zpByte(2) # Return address, for returning after CALL
+vLR             = zpByte(2) # Return address, for returning after CALL
 vSP             = zpByte(1) # Stack pointer
 vTicks          = zpByte() # Interpreter ticks are units of 2 clocks
 vTmp            = zpByte()
@@ -213,7 +213,7 @@ define('soundTimer', soundTimer)
 define('sysData',    sysData)
 define('sysPos',     sysPos)
 define('vBlank',     vBlank)
-define('vRET',       vRET)
+define('vLR',        vLR)
 
 #-----------------------------------------------------------------------
 #
@@ -1181,12 +1181,12 @@ def trampoline():
 label('PUSH')
 ldzp(d(vSP))                    #10
 suba(d(1),regX)                 #11
-ldzp(d(vRET+1))                 #12
+ldzp(d(vLR+1))                  #12
 st(ea0XregAC)                   #13
 ldzp(d(vSP))                    #14
 suba(val(2))                    #15
 st(d(vSP),busAC|regX)           #16
-ldzp(d(vRET))                   #17
+ldzp(d(vLR))                    #17
 bra(d(lo('next1')))             #18
 st(ea0XregAC)                   #19
 
@@ -1339,12 +1339,12 @@ ld(d(vPC+1),busRAM|regY)        #21
 label('CALL')
 ldzp(d(vPC))                    #10
 adda(val(1));                   C('CALL has no operand, advances PC by 1')#11
-st(d(vRET))                     #12
+st(d(vLR))                      #12
 ldzp(d(vAC))                    #13
 suba(val(2));                   C('vAC is actual address, NEXT adds 2')#14
 st(d(vPC))                      #15
 ldzp(d(vPC+1))                  #16
-st(d(vRET+1))                   #17
+st(d(vLR+1))                    #17
 ldzp(d(vAC+1))                  #18
 st(d(vPC+1),busAC|regY)         #19
 bra(d(lo('NEXT')))              #20
@@ -1379,7 +1379,7 @@ st(d(vTmp))                     #12
 
 # Instruction RET, To be defined, 16 cycles
 label('RET')
-ldzp(d(vRET))                   #10
+ldzp(d(vLR))                    #10
 assert(pc()&255 == 0)
 
 #-----------------------------------------------------------------------
@@ -1392,7 +1392,7 @@ align(0x100, 0x100)
 # (Continue RET)
 suba(val(2))                    #11
 st(d(vPC))                      #12
-ldzp(d(vRET+1))                 #13
+ldzp(d(vLR+1))                  #13
 st(d(vPC+1))                    #14
 ld(val(hi('REENTER')),regY)     #15
 jmpy(d(lo('REENTER')))          #17
@@ -1491,9 +1491,9 @@ ld(val(0))                      #18
 st(d(vPC+1),busAC|regY)         #19 Boot on zero page
 st(d(xoutMask))                 #20 Sound (and LEDs) off
 st(d(vSP))                      #21 Reset stack pointer
-st(d(vRET))                     #22 vRET
+st(d(vLR))                      #22 Link register
 ld(val(vCpuStart>>8))           #23
-st(d(vRET+1))                   #24
+st(d(vLR+1))                    #24
 ld(d(lo('videoF')))             #25
 st(d(videoDorF))                #26 This executes before the visible part
 

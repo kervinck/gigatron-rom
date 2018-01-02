@@ -34,7 +34,7 @@ $0300:
 
 {-
   First setup all subroutine definitions and variables, without making
-  calls. This way allows use of vRET to hop from page to page during setup,
+  calls. This way allows use of vLR to hop from page to page during setup,
   with minimal overhead. At the end, run the main loop.
 -}
 
@@ -103,7 +103,7 @@ $0300:
 ] Welcome=
 
 {-----------------------------------------------------------------------+
-|}\vRET>++ ret{         RAM page 4                                      |
+|}\vLR>++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
 $0400:
 
@@ -175,7 +175,7 @@ $0400:
 ] RunPart1=
 
 {-----------------------------------------------------------------------+
-|}\vRET>++ ret{         RAM page 5                                      |
+|}\vLR>++ ret{          RAM page 5                                      |
 +-----------------------------------------------------------------------}
 $0500:
 
@@ -253,7 +253,7 @@ $0500:
 ] RunPart2=
 
 {-----------------------------------------------------------------------+
-|}\vRET>++ ret{         RAM page 6                                      |
+|}\vLR>++ ret{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
 $0600:
 
