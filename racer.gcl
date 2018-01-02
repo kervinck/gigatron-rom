@@ -8,8 +8,6 @@
 gcl0x
 
 {
-XXX Remove flickering
-XXX Draw car
 XXX Steering
 XXX Collision detection
 XXX Bending road
@@ -203,28 +201,26 @@ $0600:
   {Step 1: Calculate road curvature}
 
   0 X=
-  $0fa0 p=
+  $0fd0 p= {array of 48 bytes: $0fd0-$0fff}
   [do
-    X>? p! p<++ p! p<++
+    X>? p! p<++
     X DX+ X=
-    p<?
-  if<>0loop]
+    p<? if<>0loop]
 
   {Step 2: Update video table low bytes for road}
   {This step is most timing-sensitive wrt. the video loop}
 
-  $0ff0 peek 40+ LastX= {Pivot 16px above bottom of screen / road width 80}
-  $0131 p=          {Video table start of road}
+  $0ff8 peek 40+ LastX= {Pivot 16px above bottom of screen / road width 80}
+  $0131 p=              {Video table start of road}
 
-  $0fa0 q= 
+  $0fd0 q=
   [do
-    {Low address}
-    q? LastX- p!  p<++ p<++
-
-    p<++ p<++
+    q? LastX- p!
+    p<++ p<++ p<++ p<++
+    {p 4+ p=}
 
     q? LastX=
-    q<++ q<++
+    q<++
     q<? if<>0loop]
 
   {Step 3: Update video table high bytes for road width and color scheme}
@@ -235,10 +231,9 @@ $0600:
 
   \invTable z=
   [do
-    {High address}
-    z 12; {Z mapping}
-    phase+ 8& {Vertical scrolling phase}
-    [if<>0 $30] Hue= {for $2000 or $5000}
+    z 12;            {Y to Z depth mapping for perspective}
+    phase+ 8&        {Vertical scrolling phase}
+    [if<>0 $30] Hue= {To get $2000 or $5000}
     SegmentY>? Hue+ p! p<++
     p<++
     SegmentY $80+ SegmentY=
@@ -249,16 +244,51 @@ $0600:
   ret
 ] DrawRoad=
 
+[def 21. 21. 21. 64. 64. 64. 40. 60. 60. 40. 64. 64. 64. 21. 21. 21. 0.] Car0=
+[def 21. 21. 21. 21. 40. 20. 20. 63. 63. 20. 20. 40. 21. 21. 21. 21. 0.] Car1=
+[def 21. 21. 21. 40. 20. 20. 20. 40. 40. 20. 20. 20. 40. 21. 21. 21. 0.] Car2=
+[def 21. 64. 64. 64. 64. 40. 20. 20. 20. 20. 40. 64. 64. 64. 64. 21. 0.] Car3=
+[def 21. 64. 64. 64. 64. 21. 21. 21. 21. 21. 21. 64. 64. 64. 64. 21. 0.] Car4=
+
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 7                                      |
 +-----------------------------------------------------------------------}
 $0700:
+
+[def
+  v?       p>! v<++
+  v? X+ X= p<! v<++
+  Sprite q= 21 [do p! p<++ q? q<++ if<>0loop] 21 p!
+
+  v?       p>! v<++
+     X     p<! v<++
+  Sprite q= 21 [do p! p<++ q? q<++ if<>0loop] 21 p!
+
+  ret
+] DrawPixels=
+
+[def
+  push
+
+  $01d9 peek 255^ CarX+ X=
+
+  $01d8 v=
+
+  Car0 Sprite= DrawPixels call
+  Car1 Sprite= DrawPixels call
+  Car2 Sprite= DrawPixels call
+  Car3 Sprite= DrawPixels call
+  Car4 Sprite= DrawPixels call
+
+  pop call
+] DrawCar=
 
 {--- Run ---}
 
 Intro call
 SetupRoad call
 
+20 CarX=
 1 Delay=
 0 phase=
 [do
@@ -266,6 +296,7 @@ SetupRoad call
   DX+ DX= DX+ DX= DX+ DX= DX+ DX= {Shift 4}
   Wait call
   DrawRoad call
+  DrawCar call
   phase<++
   loop]
 
