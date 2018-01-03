@@ -23,6 +23,7 @@
 #  XXX Double-check initialisation of all variables
 #
 #  Maybe
+#  XXX CALL needs vAC and that is annoying. Can we have CALL $XX?
 #  XXX More waveforms (eg. with offset in shift2 table)
 #  XXX Scroll out the top line of text
 #  XXX Pacman ghosts. Sprites by scan line 4 reset method? ("videoG"=graphics)
@@ -213,6 +214,7 @@ define('soundTimer', soundTimer)
 define('sysData',    sysData)
 define('sysPos',     sysPos)
 define('vBlank',     vBlank)
+define('vAC',        vAC)
 define('vLR',        vLR)
 
 #-----------------------------------------------------------------------

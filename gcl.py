@@ -215,10 +215,7 @@ class Program:
           self.opcode('SUBI')
           self.emit(con)
       elif op == '.' and con is not None:
-          if -255 <= con < 0:
-            self.emit(con & 255)
-          else:
-            self.emit(con)
+          self.emit(con & 255)
       elif op == ';' and con is not None:
           self.opcode('LOOKUP')
           self.emit(con)
