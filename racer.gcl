@@ -278,7 +278,6 @@ $0600:
     128& [if=0 Distance else Distance 255^] 255& 64- DX=
     DX DX+ DX= DriftX= DX+ DX= DX+ DX= DX+ DX= {Shift 4}
 
-    HorizonX DX+ HorizonX=
 
     DrawCurvature call
 
@@ -286,6 +285,7 @@ $0600:
     Speed [do
       tmp=
       CarX DriftX- CarX= {Drift is proportional to speed}
+      HorizonX DX+ HorizonX= {Same with horizon}
       tmp 1- if>0loop]
     0 Steer=
     \serialRaw? $01& {~buttonRight} [if=0  $200 CarX+ CarX= +1 Steer=]

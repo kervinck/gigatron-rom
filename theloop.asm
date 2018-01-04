@@ -48646,31 +48646,31 @@ loadApp:      d400 1000  ld   $00,x
               d717 dc2c  st   $2c,[y,x++] ;0666 STW
               d718 dc97  st   $97,[y,x++] ;0667 'DX'
               d719 dc22  st   $22,[y,x++] ;0668 LDW
-              d71a dc9b  st   $9b,[y,x++] ;0669 'HorizonX'
-              d71b dcc4  st   $c4,[y,x++] ;066a ADDW
-              d71c dc97  st   $97,[y,x++] ;066b 'DX'
-              d71d dc2c  st   $2c,[y,x++] ;066c STW
-              d71e dc9b  st   $9b,[y,x++] ;066d 'HorizonX'
-              d71f dc22  st   $22,[y,x++] ;066e LDW
-              d720 dc9d  st   $9d,[y,x++] ;066f 'DrawCurvature'
-              d721 dce4  st   $e4,[y,x++] ;0670 CALL
-              d722 dc22  st   $22,[y,x++] ;0671 LDW
-              d723 dc9f  st   $9f,[y,x++] ;0672 'Speed'
+              d71a dc9b  st   $9b,[y,x++] ;0669 'DrawCurvature'
+              d71b dce4  st   $e4,[y,x++] ;066a CALL
+              d71c dc22  st   $22,[y,x++] ;066b LDW
+              d71d dc9d  st   $9d,[y,x++] ;066c 'Speed'
+              d71e dc2c  st   $2c,[y,x++] ;066d STW
+              d71f dc37  st   $37,[y,x++] ;066e 'tmp'
+              d720 dc22  st   $22,[y,x++] ;066f LDW
+              d721 dc9f  st   $9f,[y,x++] ;0670 'CarX'
+              d722 dcb0  st   $b0,[y,x++] ;0671 SUBW
+              d723 dc99  st   $99,[y,x++] ;0672 'DriftX'
               d724 dc2c  st   $2c,[y,x++] ;0673 STW
-              d725 dc37  st   $37,[y,x++] ;0674 'tmp'
+              d725 dc9f  st   $9f,[y,x++] ;0674 'CarX'
               d726 dc22  st   $22,[y,x++] ;0675 LDW
-              d727 dca1  st   $a1,[y,x++] ;0676 'CarX'
-              d728 dcb0  st   $b0,[y,x++] ;0677 SUBW
-              d729 dc99  st   $99,[y,x++] ;0678 'DriftX'
+              d727 dca1  st   $a1,[y,x++] ;0676 'HorizonX'
+              d728 dcc4  st   $c4,[y,x++] ;0677 ADDW
+              d729 dc97  st   $97,[y,x++] ;0678 'DX'
               d72a dc2c  st   $2c,[y,x++] ;0679 STW
-              d72b dca1  st   $a1,[y,x++] ;067a 'CarX'
+              d72b dca1  st   $a1,[y,x++] ;067a 'HorizonX'
               d72c dc22  st   $22,[y,x++] ;067b LDW
               d72d dc37  st   $37,[y,x++] ;067c 'tmp'
               d72e dcf3  st   $f3,[y,x++] ;067d SUBI
               d72f dc01  st   $01,[y,x++]
               d730 dc36  st   $36,[y,x++] ;067f BCC
               d731 dc50  st   $50,[y,x++] ;0680 GT
-              d732 dc71  st   $71,[y,x++]
+              d732 dc6b  st   $6b,[y,x++]
               d733 dc5c  st   $5c,[y,x++] ;0682 LDI
               d734 dc00  st   $00,[y,x++]
               d735 dc2c  st   $2c,[y,x++] ;0684 STW
@@ -48686,9 +48686,9 @@ loadApp:      d400 1000  ld   $00,x
               d73f dc00  st   $00,[y,x++]
               d740 dc02  st   $02,[y,x++]
               d741 dcc4  st   $c4,[y,x++] ;0690 ADDW
-              d742 dca1  st   $a1,[y,x++] ;0691 'CarX'
+              d742 dc9f  st   $9f,[y,x++] ;0691 'CarX'
               d743 dc2c  st   $2c,[y,x++] ;0692 STW
-              d744 dca1  st   $a1,[y,x++] ;0693 'CarX'
+              d744 dc9f  st   $9f,[y,x++] ;0693 'CarX'
               d745 dc5c  st   $5c,[y,x++] ;0694 LDI
               d746 dc01  st   $01,[y,x++]
               d747 dc2c  st   $2c,[y,x++] ;0696 STW
@@ -48704,9 +48704,9 @@ loadApp:      d400 1000  ld   $00,x
               d751 dc00  st   $00,[y,x++]
               d752 dcfe  st   $fe,[y,x++]
               d753 dcc4  st   $c4,[y,x++] ;06a2 ADDW
-              d754 dca1  st   $a1,[y,x++] ;06a3 'CarX'
+              d754 dc9f  st   $9f,[y,x++] ;06a3 'CarX'
               d755 dc2c  st   $2c,[y,x++] ;06a4 STW
-              d756 dca1  st   $a1,[y,x++] ;06a5 'CarX'
+              d756 dc9f  st   $9f,[y,x++] ;06a5 'CarX'
               d757 dc12  st   $12,[y,x++] ;06a6 LDWI
               d758 dcff  st   $ff,[y,x++]
               d759 dcff  st   $ff,[y,x++]
@@ -48720,14 +48720,14 @@ loadApp:      d400 1000  ld   $00,x
               d761 dc75  st   $75,[y,x++] ;06b0 NE
               d762 dcb9  st   $b9,[y,x++]
               d763 dc22  st   $22,[y,x++] ;06b2 LDW
-              d764 dc9f  st   $9f,[y,x++] ;06b3 'Speed'
+              d764 dc9d  st   $9d,[y,x++] ;06b3 'Speed'
               d765 dcf3  st   $f3,[y,x++] ;06b4 SUBI
               d766 dc04  st   $04,[y,x++]
               d767 dc36  st   $36,[y,x++] ;06b6 BCC
               d768 dc56  st   $56,[y,x++] ;06b7 GE
               d769 dcb9  st   $b9,[y,x++]
               d76a dcf6  st   $f6,[y,x++] ;06b9 INC
-              d76b dc9f  st   $9f,[y,x++] ;06ba 'Speed'
+              d76b dc9d  st   $9d,[y,x++] ;06ba 'Speed'
               d76c dc1b  st   $1b,[y,x++] ;06bb LD
               d76d dc12  st   $12,[y,x++]
               d76e dc8a  st   $8a,[y,x++] ;06bd ANDI
@@ -48736,14 +48736,14 @@ loadApp:      d400 1000  ld   $00,x
               d771 dc75  st   $75,[y,x++] ;06c0 NE
               d772 dcc9  st   $c9,[y,x++]
               d773 dc22  st   $22,[y,x++] ;06c2 LDW
-              d774 dc9f  st   $9f,[y,x++] ;06c3 'Speed'
+              d774 dc9d  st   $9d,[y,x++] ;06c3 'Speed'
               d775 dcf3  st   $f3,[y,x++] ;06c4 SUBI
               d776 dc01  st   $01,[y,x++]
               d777 dc36  st   $36,[y,x++] ;06c6 BCC
               d778 dc59  st   $59,[y,x++] ;06c7 LE
               d779 dcc9  st   $c9,[y,x++]
               d77a dc2c  st   $2c,[y,x++] ;06c9 STW
-              d77b dc9f  st   $9f,[y,x++] ;06ca 'Speed'
+              d77b dc9d  st   $9d,[y,x++] ;06ca 'Speed'
               d77c dc5c  st   $5c,[y,x++] ;06cb LDI
               d77d dc00  st   $00,[y,x++]
               d77e dc2c  st   $2c,[y,x++] ;06cd STW
@@ -48935,7 +48935,7 @@ loadApp:      d400 1000  ld   $00,x
               d838 dc2c  st   $2c,[y,x++] ;0794 STW
               d839 dc3f  st   $3f,[y,x++] ;0795 'p'
               d83a dc1b  st   $1b,[y,x++] ;0796 LD
-              d83b dc9c  st   $9c,[y,x++] ;0797 'HorizonX'+1
+              d83b dca2  st   $a2,[y,x++] ;0797 'HorizonX'+1
               d83c dc9b  st   $9b,[y,x++] ;0798 POKE
               d83d dc3f  st   $3f,[y,x++] ;0799 'p'
               d83e dc2c  st   $2c,[y,x++] ;079a STW
@@ -48989,7 +48989,7 @@ loadApp:      d400 1000  ld   $00,x
               d86e dcae  st   $ae,[y,x++]
               d86f dcff  st   $ff,[y,x++] ;07cb RET
               d870 dc2c  st   $2c,[y,x++] ;07cc STW
-              d871 dc9d  st   $9d,[y,x++] ;07cd 'DrawCurvature'
+              d871 dc9b  st   $9b,[y,x++] ;07cd 'DrawCurvature'
               d872 dc12  st   $12,[y,x++] ;07ce LDWI
               d873 dca0  st   $a0,[y,x++]
               d874 dc08  st   $08,[y,x++]
@@ -49084,7 +49084,7 @@ loadApp:      d400 1000  ld   $00,x
               d8cd dc2c  st   $2c,[y,x++] ;09b6 STW
               d8ce dcb1  st   $b1,[y,x++] ;09b7 'LastFrame'
               d8cf dc22  st   $22,[y,x++] ;09b8 LDW
-              d8d0 dc9f  st   $9f,[y,x++] ;09b9 'Speed'
+              d8d0 dc9d  st   $9d,[y,x++] ;09b9 'Speed'
               d8d1 dcc4  st   $c4,[y,x++] ;09ba ADDW
               d8d2 dc87  st   $87,[y,x++] ;09bb 'Distance'
               d8d3 dc2c  st   $2c,[y,x++] ;09bc STW
@@ -49131,7 +49131,7 @@ loadApp:      d400 1000  ld   $00,x
               d8fc dc2c  st   $2c,[y,x++] ;0aa9 STW
               d8fd dc63  st   $63,[y,x++] ;0aaa 'X'
               d8fe dc1b  st   $1b,[y,x++] ;0aab LD
-              d8ff dca2  st   $a2,[y,x++] ;0aac 'CarX'+1
+              d8ff dca0  st   $a0,[y,x++] ;0aac 'CarX'+1
               d900 dcc4  st   $c4,[y,x++] ;0aad ADDW
               d901 dc63  st   $63,[y,x++] ;0aae 'X'
               d902 dc2c  st   $2c,[y,x++] ;0aaf STW
@@ -49315,7 +49315,7 @@ loadApp:      d400 1000  ld   $00,x
               d9b4 dc2c  st   $2c,[y,x++] ;0fa5 STW
               d9b5 dc97  st   $97,[y,x++] ;0fa6 'DX'
               d9b6 dc22  st   $22,[y,x++] ;0fa7 LDW
-              d9b7 dc9d  st   $9d,[y,x++] ;0fa8 'DrawCurvature'
+              d9b7 dc9b  st   $9b,[y,x++] ;0fa8 'DrawCurvature'
               d9b8 dce4  st   $e4,[y,x++] ;0fa9 CALL
               d9b9 dc22  st   $22,[y,x++] ;0faa LDW
               d9ba dca7  st   $a7,[y,x++] ;0fab 'DrawPerspective'
@@ -49340,7 +49340,7 @@ loadApp:      d400 1000  ld   $00,x
               d9cd dc2c  st   $2c,[y,x++] ;0fbe STW
               d9ce dc55  st   $55,[y,x++] ;0fbf 'Value'
               d9cf dc2c  st   $2c,[y,x++] ;0fc0 STW
-              d9d0 dc9b  st   $9b,[y,x++] ;0fc1 'HorizonX'
+              d9d0 dca1  st   $a1,[y,x++] ;0fc1 'HorizonX'
               d9d1 dc1b  st   $1b,[y,x++] ;0fc2 LD
               d9d2 dc11  st   $11,[y,x++]
               d9d3 dc2c  st   $2c,[y,x++] ;0fc4 STW
@@ -49349,11 +49349,11 @@ loadApp:      d400 1000  ld   $00,x
               d9d6 dc00  st   $00,[y,x++]
               d9d7 dc79  st   $79,[y,x++]
               d9d8 dc2c  st   $2c,[y,x++] ;0fc9 STW
-              d9d9 dca1  st   $a1,[y,x++] ;0fca 'CarX'
+              d9d9 dc9f  st   $9f,[y,x++] ;0fca 'CarX'
               d9da dc5c  st   $5c,[y,x++] ;0fcb LDI
               d9db dc01  st   $01,[y,x++]
               d9dc dc2c  st   $2c,[y,x++] ;0fcd STW
-              d9dd dc9f  st   $9f,[y,x++] ;0fce 'Speed'
+              d9dd dc9d  st   $9d,[y,x++] ;0fce 'Speed'
               d9de dc22  st   $22,[y,x++] ;0fcf LDW
               d9df dca9  st   $a9,[y,x++] ;0fd0 'PlayGame'
               d9e0 dce4  st   $e4,[y,x++] ;0fd1 CALL
