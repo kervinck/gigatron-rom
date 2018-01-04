@@ -13,15 +13,20 @@ XXX Bending road
 XXX Engine sound
 XXX Slower acceleration
 XXX Breaking and automatic slow-down to cruising speed
+XXX Improve progress indicator
+XXX Add simple speedometer
 
 XXX Draw skyline
 XXX Scroll skyline
 
-XXX Checkerboard grass?
+XXX Smoother update of subsecond timer? (Needs native acceleration)
+XXX Checkerboard grass? (Simple)
 XXX Obstacles?
 XXX Finish line?
 XXX Crash sound effect?
 XXX Sprite acceleration?
+XXX Car crash sequence when hitting curb?
+XXX Background music score?
 }
 
 {-----------------------------------------------------------------------+
@@ -291,7 +296,6 @@ $0600:
     DrawPerspective call
 
     {Draw current time}
-    {XXX Do this incrementally}
     Time Value=
     $800 Pos=
     63 Color=
