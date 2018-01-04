@@ -13,6 +13,7 @@ XXX Bending road
 XXX Engine sound
 XXX Slower acceleration
 XXX Breaking and automatic slow-down to cruising speed
+XXX Move car forward when going faster
 XXX Improve progress indicator
 XXX Add simple speedometer
 XXX Freeze time display for the first 2 seconds after completing a lap
@@ -80,9 +81,9 @@ XXX Background music score?
   pop call
 ] DrawText=
 
-[def
-   $47. $69. $67. $61. $74. $72. $6f. $6e. 0. {Gigatron}
-] Title=
+[def $47. $69. $67. $61. $74. $72. $6f. $6e. 0. ]      GigatronText=
+[def $44. $65. $6e. $20. $48. $61. $61. $67. 0. ]      Horizon1Text=
+[def $45. $69. $6e. $64. $68. $6f. $76. $65. $6e. 0. ] Horizon2Text=
 
 [def {
   Wait -- Wait Delay number of frames (range 1..255)
@@ -275,7 +276,9 @@ $0600:
       $7400 Distance=
     ]
     128& [if=0 Distance else Distance 255^] 255& 64- DX=
-    DX+ DX= DriftX= DX+ DX= DX+ DX= DX+ DX= {Shift 4}
+    DX DX+ DX= DriftX= DX+ DX= DX+ DX= DX+ DX= {Shift 4}
+
+    HorizonX DX+ HorizonX=
 
     DrawCurvature call
 
@@ -311,9 +314,12 @@ $0600:
 +-----------------------------------------------------------------------}
 $0700:
 
+[def $2d. $3a. $2d. $2d. $2e. $2d. 0.] EmptyTimeText=
+
 [def {
   DrawTime -- Render elapsed time (in frams) as M:SS.s -- Value Radix
               Draw no more than 1 digit at a time
+              XXX Yes, this is hideous and needs to be rewritten
 }
   push
 
@@ -328,7 +334,6 @@ $0700:
 
 [def
   {Step 1: Calculate road curvature}
-
   0 X=
   $74d0 p= {array[48] on $74d0-$74ff, in display memory but out of view}
   [do
@@ -336,11 +341,14 @@ $0700:
     X DX+ X=
     p<? if<>0loop]
 
+  $0111 p= HorizonX>? p!        {Video table: start of sky}
+  tmp=
+
   {Step 2: Update video table low bytes for road}
   {This step is most timing-sensitive wrt. the video loop}
 
-  $74fa peek 48- LastX= {Pivot 12px from bottom / front of car}
-  $0131 p=              {Video table start of road}
+  $74fa peek 48- tmp+ LastX=    {Pivot 12px from bottom / front of car}
+  $0131 p=                      {Video table: horizon / start of road}
 
   $74d0 q=
   [do
@@ -351,6 +359,7 @@ $0700:
     q? LastX=
     q<++
     q<? if<>0loop]
+
   ret
 ] DrawCurvature=
 
@@ -397,7 +406,8 @@ $09a0:
   Speed Distance+ Distance=
 
   {Update progress indicator}
-  $0ff4 p= Distance>? p+ p= 21 p! p<++ 60 p!
+  $0ef4 p= Distance>? p+ p= 21 p! p<++ 60 p!
+
   ret
 ] AdvanceCar=
 
@@ -434,14 +444,17 @@ $0ba0:
   48 BgColor=
   $800 Pos= ClearScreen call
   63 Color=
-  Pos<++    EmptyTime Text= DrawText call
-  $87c Pos= EmptyTime Text= DrawText call
-  $838 Pos= Title Text= DrawText call
+  Pos<++    EmptyTimeText Text= DrawText call
+  $87c Pos= EmptyTimeText Text= DrawText call
+  $838 Pos= GigatronText  Text= DrawText call
+  21 Color=
+  $18a8 Pos= Horizon1Text Text= DrawText call
+  $1825 Pos= Horizon2Text Text= DrawText call
+
   60 Delay= Wait call
 
   pop call
 ] Intro=
-  [def $2d. $3a. $2d. $2d. $2e. $2d. 0.] EmptyTime=
 
 {-----------------------------------------------------------------------+
 |}$0ca0 call{           RAM page 12                                     |
@@ -474,7 +487,7 @@ Intro call
   SetupRoad call
   $7400 Distance=
   $7fff BestTime=
-  0 Time= Value=
+  0 Time= Value= HorizonX=
   \frameCount? LastFrame=
   $7900 CarX=
   1 Speed=
