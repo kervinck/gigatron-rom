@@ -7,6 +7,7 @@ import sys
 # XXX Give warning when def-block contains 'call' put no 'push'
 # XXX Give warning when def-block contains code but no 'ret' or '(pop) call'
 # XXX Primitive or macro to clear just lower byte of vAC
+# XXX Give warning when not all comments are closed
 
 class Program:
   def __init__(self, address):
