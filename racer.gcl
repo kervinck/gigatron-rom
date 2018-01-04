@@ -15,6 +15,7 @@ XXX Slower acceleration
 XXX Breaking and automatic slow-down to cruising speed
 XXX Improve progress indicator
 XXX Add simple speedometer
+XXX Freeze time display for the first 2 seconds after completing a lap
 
 XXX Draw skyline
 XXX Scroll skyline
@@ -297,7 +298,7 @@ $0600:
 
     {Draw current time}
     Time Value=
-    $800 Pos=
+    $801 Pos=
     63 Color=
     DrawTime call
 
@@ -396,7 +397,7 @@ $09a0:
   Speed Distance+ Distance=
 
   {Update progress indicator}
-  $0f1f p= Distance>? p+ p= 21 p! p<++ 60 p!
+  $0ff4 p= Distance>? p+ p= 21 p! p<++ 60 p!
   ret
 ] AdvanceCar=
 
@@ -433,7 +434,7 @@ $0ba0:
   48 BgColor=
   $800 Pos= ClearScreen call
   63 Color=
-            EmptyTime Text= DrawText call
+  Pos<++    EmptyTime Text= DrawText call
   $87c Pos= EmptyTime Text= DrawText call
   $838 Pos= Title Text= DrawText call
   60 Delay= Wait call
