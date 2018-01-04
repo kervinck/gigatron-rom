@@ -260,9 +260,9 @@ $0600:
       Time BestTime- [if<0 Time BestTime=]
 
       4 Dig0= Dig1= Dig2=
-      [do tmp=
-        BestTime Value= $87c Pos= DrawTime
-        tmp 1- if>0loop]
+      [do j=
+        BestTime Value= $87c Pos= DrawTime call
+        j 1- if>0loop]
 
       {New lap}
       0 Time=
