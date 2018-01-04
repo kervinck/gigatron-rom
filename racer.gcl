@@ -10,11 +10,13 @@ gcl0x
 {
 XXX Engine sound
 XXX Scoring system
+XXX Bending road
+XXX Randomized road
 XXX Draw skyline
 XXX Scroll skyline
-XXX Bending road
 XXX Sprite acceleration
 XXX Checkerboard grass
+XXX Obstacles?
 }
 
 {-----------------------------------------------------------------------+
@@ -237,6 +239,20 @@ $0500:
   ret
 ] SetupSegment=
 
+[def
+  push
+  $01d9 peek 255^ X=
+  CarX>? X+ X=
+  $01d8 Video=
+  Car0 Sprite= DrawPixels call
+  Car1 Sprite= DrawPixels call
+  X Steer- X=
+  Car2 Sprite= DrawPixels call
+  Car3 Sprite= DrawPixels call
+  Car4 Sprite= DrawPixels call
+  pop call
+] DrawCar=
+
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
@@ -297,68 +313,54 @@ $0600:
   Car sprite. Black is 0 but also the teminator, therfore use 64 for black.
   XXX Reduce footprint by bringing all lines under one 'def'
 }
-
 [def 2.         64. 64. 64. 40. 60. 60. 40. 64. 64. 64.         0.] Car0=
 [def 3.             40. 20. 20. 63. 63. 20. 20. 40.             0.] Car1=
 [def 2.         40. 20. 20. 20. 40. 40. 20. 20. 20. 40.         0.] Car2=
 [def 0. 64. 64. 64. 64. 40. 20. 20. 20. 20. 40. 64. 64. 64. 64. 0.] Car3=
 [def 0. 64. 64. 64. 64. 21. 21. 21. 21. 21. 21. 64. 64. 64. 64. 0.] Car4=
 
+
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 7                                      |
 +-----------------------------------------------------------------------}
 $0700:
 
- PlayGame=
-
 {--- Run ---}
-
 Intro call
 
-[def
-  push
-
-  $01d9 peek 255^ X=
-  CarX>? X+ X=
-  $01d8 Video=
-
-  Car0 Sprite= DrawPixels call
-  Car1 Sprite= DrawPixels call X Steer- X=
-  Car2 Sprite= DrawPixels call
-  Car3 Sprite= DrawPixels call
-  Car4 Sprite= DrawPixels call
-
-  pop call
-] DrawCar=
-
-[do {
-  Main loop
-}
-
+{--- Main loop ---}
+[do
   {Setup game}
-  $1000 Pos= ClearScreen call
   0 DX= DrawCurvature call
   63 phase=
   DrawPerspective call
   SetupRoad call
   $7900 CarX=
   1 Delay=
+  1 Speed=
 
   {Run game loop}
   [do
     Wait call
 
-    phase<++
-    phase 128& [if=0 phase else phase 255^] 64- DX=
+    Speed phase+ phase=
+    128& [if=0 phase else phase 255^] 255& 64- DX=
     DX+ DX= DriftX= DX+ DX= DX+ DX= DX+ DX= {Shift 4}
 
     DrawCurvature call
 
-    CarX DriftX- CarX=
+    {Control car}
+    Speed [do
+      tmp=
+      CarX DriftX- CarX= {Drift is proportional to speed}
+      tmp 1- if>0loop]
     0 Steer=
     \serialRaw? $fe^ {~buttonRight} [if=0  $200 CarX+ CarX= +1 Steer=]
     \serialRaw? $fd^ {~buttonLeft}  [if=0 -$200 CarX+ CarX= -1 Steer=]
+    \serialRaw? $bf^ {~buttonA}     [if=0 Speed 4- [if<0 Speed<++]]
+    \serialRaw? $7f^ {~buttonB}     [if=0 Speed 1- [if>0 Speed=]]
 
+    {Draw car}
     0 Collision=
     DrawCar call
 
@@ -366,7 +368,7 @@ Intro call
 
     Collision if=0loop]
 
-  {Game Over text}
+  {Game Over message}
   $1435 Pos=
   [def
     $47. $41. $4d. $45. $20. $4f. $56. $45. $52. 0. {GAME OVER}
@@ -376,6 +378,7 @@ Intro call
 
   240 Delay= Wait call
 
+  $1000 Pos= ClearScreen call
   loop]
 
 {-----------------------------------------------------------------------+
