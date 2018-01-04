@@ -8,7 +8,6 @@
 gcl0x
 
 {
-XXX Collision detection
 XXX Engine sound
 XXX Scoring system
 XXX Draw skyline
@@ -128,33 +127,45 @@ $0400:
   ret
 ] ClearScreen=
 
-[def
-  {Setup page reference for write pointers}
+[def {
+  DrawPixels -- Write a single line of pixels on two correspinding
+                road scanlines (light and dark). Remove previous
+                pixels, if any.
+                XXX This is probably better done as a SYS call
+}
+  { Setup page reference for write pointers }
   Video? 254&  p>! 1| q>! Video<++
 
-  {Clear p and q from position p[0] to position q[0]}
+  {Find segment to clear from position p[0] to position q[0]}
   0 p<! q<!
   p? i= q? i- i=        {i = q[0] - p[0]}
   p? p<! q<!            {p,q = p+p[0], q+p[0]}
 
   {Clear previous object}
+  {XXX Only clear pixels outside new area?}
   [do
     21 p! q!            {Clear pixel on both lines}
     p<++ q<++
     i 1- i=
     if>0loop]
 
-  {Record new p[0]}
-  0 p<!
+  {Set low bytes of p and q, to turn them into pixel write pointers}
+  Sprite s=             {Pixel read pointer}
+  0 p<!                 {First let p point to start of page}
+  Video? X+ X= s? X+    {First byte in pixel data is offset}
+  p!                    {Remember starting point}
+  p<! q<!               {Set low bytes}
 
-  {Prepare low bytes of write pointers}
-  Sprite s=
-  Video? X+ X= s? X+    {First byte is extra offset}
-  p!
-  p<!    q<!
+  {Draw actual pixels}
+  s<++
+  [do
+     p? 21^ Collision+ Collision=
+     s?
+     p! p<++
+     q! q<++
+     s<++ s? if<>0loop]
 
-  s<++ s? [do p! p<++ q! q<++ s<++ s? if<>0loop]
-
+  {Remember end point for later removal}
   0 q<! p<? q!
 
   Video 3+ Video=
@@ -167,7 +178,33 @@ $0400:
 $0500:
 
 [def
+  push
+  $2080 Pos=
+
+  1 Width=
+  [do
+    3 {Bright Red} CurbColor=
+    8 {Green} GrassColor=
+    SetupSegment call
+    Pos>++
+
+    63 {White} CurbColor=
+    12 {Bright Green} GrassColor=
+    SetupSegment call
+    Pos>++
+
+    Width 1+ Width=
+    Pos if>=0loop]
+
+  {Setup undo infomation for last lines (for car sprite)}
+  $7400 [do \POKE. \vAC. \vAC>++ if>0loop]
+
+  pop call
+] SetupRoad=
+
+[def
   {Calculate CurbLeft}
+  {XXX Simplify}
   Width Width+ tmp= {x2}
           tmp+ tmp= {x4}
           tmp+ tmp= {x8}
@@ -200,32 +237,6 @@ $0500:
   ret
 ] SetupSegment=
 
-[def
-  push
-
-  $2080 Pos=
-
-  1 Width=
-  [do
-    3 {Bright Red} CurbColor=
-    8 {Green} GrassColor=
-    SetupSegment call
-    Pos>++
-
-    63 {White} CurbColor=
-    12 {Bright Green} GrassColor=
-    SetupSegment call
-    Pos>++
-
-    Width 1+ Width=
-    Pos if>=0loop]
-
-  {Setup undo infomation for last lines (for car sprite)}
-  $7400 [do \POKE. \vAC. \vAC>++ if>0loop]
-
-  pop call
-] SetupRoad=
-
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
@@ -240,10 +251,7 @@ $0600:
     X>? p! p<++
     X DX+ X=
     p<? if<>0loop]
-  ret
-] CalcCurvature=
 
-[def
   {Step 2: Update video table low bytes for road}
   {This step is most timing-sensitive wrt. the video loop}
 
@@ -266,14 +274,15 @@ $0600:
   {Step 3: Update video table high bytes for road width and color scheme}
   {Do this part last because timing doesn't really cause visible problems}
 
-  $20 SegmentY=   {Start with smallest segment}
-  $0130 p=          {Video table start of road}
+  $20 SegmentY=      {Start with smallest segment}
+  $0130 p=           {Video table top of road, at horizon}
 
   \invTable z=
   [do
-    z 20;            {Y to Z depth mapping for perspective}
+    z 20;            {Y to Z depth mapping for perspective.
+                      Offset of 20 reduces aliasing near horizon}
     phase+ 4&        {Vertical scrolling phase}
-    [if<>0 $01] Hue=
+    [if<>0 1] Hue=
     SegmentY 254& Hue+ p!
     p<++ p<++
     SegmentY<++
@@ -283,6 +292,11 @@ $0600:
 
   ret
 ] DrawPerspective=
+
+{
+  Car sprite. Black is 0 but also the teminator, therfore use 64 for black.
+  XXX Reduce footprint by bringing all lines under one 'def'
+}
 
 [def 2.         64. 64. 64. 40. 60. 60. 40. 64. 64. 64.         0.] Car0=
 [def 3.             40. 20. 20. 63. 63. 20. 20. 40.             0.] Car1=
@@ -294,6 +308,12 @@ $0600:
 |}\vLR>++ ret{          RAM page 7                                      |
 +-----------------------------------------------------------------------}
 $0700:
+
+ PlayGame=
+
+{--- Run ---}
+
+Intro call
 
 [def
   push
@@ -311,34 +331,50 @@ $0700:
   pop call
 ] DrawCar=
 
-{--- Run ---}
+[do {
+  Main loop
+}
 
-Intro call
-SetupRoad call
-
-$7900 CarX=
-1 Delay=
-63 phase=
-
-[do
-  Wait call
-
-  phase<++
-  phase 128& [if=0 phase else phase 255^] 64- DX=
-  DX+ DX= DriftX= DX+ DX= DX+ DX= DX+ DX= {Shift 4}
-
-  CalcCurvature call
-
-  DrawCurvature call
-
-  CarX DriftX- CarX=
-  0 Steer=
-  \serialRaw? $fe^ {~buttonRight} [if=0  $200 CarX+ CarX= +1 Steer=]
-  \serialRaw? $fd^ {~buttonLeft}  [if=0 -$200 CarX+ CarX= -1 Steer=]
-
-  DrawCar call
-
+  {Setup game}
+  $1000 Pos= ClearScreen call
+  0 DX= DrawCurvature call
+  63 phase=
   DrawPerspective call
+  SetupRoad call
+  $7900 CarX=
+  1 Delay=
+
+  {Run game loop}
+  [do
+    Wait call
+
+    phase<++
+    phase 128& [if=0 phase else phase 255^] 64- DX=
+    DX+ DX= DriftX= DX+ DX= DX+ DX= DX+ DX= {Shift 4}
+
+    DrawCurvature call
+
+    CarX DriftX- CarX=
+    0 Steer=
+    \serialRaw? $fe^ {~buttonRight} [if=0  $200 CarX+ CarX= +1 Steer=]
+    \serialRaw? $fd^ {~buttonLeft}  [if=0 -$200 CarX+ CarX= -1 Steer=]
+
+    0 Collision=
+    DrawCar call
+
+    DrawPerspective call
+
+    Collision if=0loop]
+
+  {Game Over text}
+  $1435 Pos=
+  [def
+    $47. $41. $4d. $45. $20. $4f. $56. $45. $52. 0. {GAME OVER}
+  ] Text=
+  15 Color=
+  DrawText call
+
+  240 Delay= Wait call
 
   loop]
 
