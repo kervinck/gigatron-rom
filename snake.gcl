@@ -298,7 +298,7 @@ $0600:
   \serialRaw? $fe^ {~buttonRight} [if=0 $0001 stepU=]
   \serialRaw? $fd^ {~buttonLeft}  [if=0 $ffff stepU=]
   \serialRaw? $fb^ {~buttonDown}  [if=0 $0100 stepU=]
-  \serialRaw? $f7^ {~buttonUpp}   [if=0 $ff00 stepU=]
+  \serialRaw? $f7^ {~buttonUp}    [if=0 $ff00 stepU=]
   {Note: `stepV' is not used once under player control}
   ret
 ] PlayerControl=
