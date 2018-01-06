@@ -256,7 +256,7 @@ $0500:
   push
   8 {Green} Color=
   [do
-    \SYS_34_RANDOM 34@ Pos=
+    \SYS_34_Random 34@ Pos=
     Pos<?      128- [if<0 157+] 1+   {1..157}   $fe& Pos<!
     Pos>? 127& 64-  [if<0 109+] $11+ {$11..$fd} $fe& Pos>!
     Pos? 4^ if<>0loop]

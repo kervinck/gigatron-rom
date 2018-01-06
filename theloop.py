@@ -424,8 +424,8 @@ adda(val(2),regX)
 ld(val(vCpuReset>>8))
 st(d(vPC+1),busAC|regY)
 st(d(lo('LDWI')),        eaYXregOUTIX)
-st(d(lo('SYS_54_RESET')),eaYXregOUTIX)
-st(d(hi('SYS_54_RESET')),eaYXregOUTIX)
+st(d(lo('SYS_54_Reset')),eaYXregOUTIX)
+st(d(hi('SYS_54_Reset')),eaYXregOUTIX)
 st(d(lo('SYS')),         eaYXregOUTIX)
 st(d(54),                eaYXregOUTIX)
 
@@ -1458,7 +1458,7 @@ nop()                           #23
 #
 #  vCPU extension functions (for acceleration and compaction) follow below.
 #
-#  The naming convention is: SYS_<N>_<ALLCAPS>
+#  The naming convention is: SYS_<N>_<CamelCase>
 #
 #  With <N> the maximum number of cycles the function will run
 #  (counted from NEXT to NEXT). This is the same number that must
@@ -1468,10 +1468,10 @@ nop()                           #23
 #-----------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
-# Extension SYS_54_RESET: Soft reset
+# Extension SYS_54_Reset: Soft reset
 #-----------------------------------------------------------------------
 
-# SYS_XX_RESET initiates an immediate Gigatron reset from within the vCPU.
+# SYS_54_Reset initiates an immediate Gigatron reset from within the vCPU.
 # The reset sequence itself is mostly implemented in GCL: reset.gcl.
 # This must first be loaded into RAM, but that takes more than 1 scanline.
 # Therefore this vCPU bootstrapping code gets written, by this SYS extension,
@@ -1484,7 +1484,7 @@ nop()                           #23
 
 vCpuBoot = 0xea
 
-label('SYS_54_RESET')
+label('SYS_54_Reset')
 ld(val(vCpuBoot-2))             #15 vPC
 st(d(vPC))                      #16
 ld(val(vCpuBoot),regX)          #17 vPC
@@ -1534,10 +1534,10 @@ jmpy(d(lo('REENTER')))          #50
 ld(val(-54/2))                  #51
 
 #-----------------------------------------------------------------------
-# Extension SYS_38_VCLEAR8: Zero a vertical slice of 8 bytes(pixels)
+# Extension SYS_38_VClear8: Zero a vertical slice of 8 bytes(pixels)
 #-----------------------------------------------------------------------
 
-label('SYS_38_VCLEAR8')
+label('SYS_38_VClear8')
 ld(d(sysArgs+0),busRAM|regX)    #15
 ldzp(d(sysArgs+1))              #16
 for i in range(8):
@@ -1548,12 +1548,12 @@ jmpy(d(lo('REENTER')))          #34
 ld(val(-38/2))                  #35
 
 #-----------------------------------------------------------------------
-# Extension SYS_34_RANDOM: Update entropy and copy to vAC
+# Extension SYS_34_Random: Update entropy and copy to vAC
 #-----------------------------------------------------------------------
 
 # This same algorithm runs automatically once per vertical blank.
 # Use this function to get numbers at a higher rate.
-label('SYS_34_RANDOM')
+label('SYS_34_Random')
 ldzp(d(frameCount))             #15
 xora(d(entropy+1),busRAM)       #16
 xora(d(serialRaw),busRAM)       #17
@@ -1576,10 +1576,10 @@ jmpy(d(lo('REENTER')))          #30
 ld(val(-34/2))                  #31
 
 #-----------------------------------------------------------------------
-# Extension SYS_40_READ3: Read 3 consecutive bytes from ROM
+# Extension SYS_40_Read3: Read 3 consecutive bytes from ROM
 #-----------------------------------------------------------------------
 
-label('SYS_40_READ3')
+label('SYS_40_Read3')
 ld(d(sysData+1),busRAM|regY)    #15
 jmpy(d(128-7))                  #16 trampoline3a
 ldzp(d(sysData+0))              #17
@@ -1615,10 +1615,10 @@ def trampoline3b():
   jmpy(d(lo('txReturn')))       #32
 
 #-----------------------------------------------------------------------
-# Extension SYS_58_UNPACK: Unpack 3 bytes into 4 pixels
+# Extension SYS_58_Unpack: Unpack 3 bytes into 4 pixels
 #-----------------------------------------------------------------------
 
-label('SYS_56_UNPACK')
+label('SYS_56_Unpack')
 ld(val(shiftTablePage),regY)    #15
 ldzp(d(sysArgs+2))              #16 a[2]>>2
 anda(val(0xfc),regX)            #17
@@ -1666,10 +1666,10 @@ jmpy(d(lo('REENTER')))          #52
 ld(val(-56/2))                  #53
 
 #-----------------------------------------------------------------------
-# Extension SYS_30_DRAW4:
+# Extension SYS_30_Draw4:
 #-----------------------------------------------------------------------
 
-label('SYS_30_DRAW4')
+label('SYS_30_Draw4')
 ld(d(sysPos+0),busRAM|regX)     #15
 ld(d(sysPos+1),busRAM|regY)     #16
 ldzp(d(sysArgs+0))              #17
@@ -1683,6 +1683,41 @@ st(eaYXregOUTIX)                #24
 ld(val(hi('REENTER')),regY)     #25
 jmpy(d(lo('REENTER')))          #26
 ld(val(-30/2))                  #27
+
+#-----------------------------------------------------------------------
+# Extension SYS_134_VDrawBits:
+#-----------------------------------------------------------------------
+
+# Draw slice of a character
+# sysPos        Position on screen
+# sysArgs+0     Color 0 (background)
+# sysArgs+1     Color 1 (pen)
+# sysArgs+2     8 bits, highest bit first (destructive)
+
+label('SYS_134_VDrawBits')
+ld(d(sysPos+0),busRAM|regX)     #15
+ld(val(0))                      #16
+label('.vdb0')
+st(d(vTmp))                     #17+i*14
+adda(d(sysPos+1),busRAM|regY)   #18+i*14 Y=[sysPos+1]+vTmp
+ldzp(d(sysArgs+2))              #19+i*14 Select color
+bmi(d(lo('.vdb1')))             #20+i*14
+bra(d(lo('.vdb2')))             #21+i*14
+ldzp(d(sysArgs+0))              #22+i*14
+label('.vdb1')
+ldzp(d(sysArgs+1))              #22+i*14
+label('.vdb2')
+st(eaYXregAC)                   #23+i*14 Draw pixel
+ldzp(d(sysArgs+2))              #24+i*14 Shift byte left
+adda(busAC)                     #25+i*14
+st(d(sysArgs+2))                #26+i*14
+ldzp(d(vTmp))                   #27+i*14 Loop counter
+suba(val(7))                    #28+i*14
+bne(d(lo('.vdb0')))             #29+i*14
+adda(val(8))                    #30+i*14
+ld(val(hi('REENTER')),regY)     #129
+jmpy(d(lo('REENTER')))          #130
+ld(val(-134/2))                 #131
 
 #-----------------------------------------------------------------------
 #

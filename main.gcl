@@ -117,7 +117,7 @@ $0400:
   i= $8001 i+ i=
   [do
     p [do
-      \sysArgs0= \SYS_38_VCLEAR8 38@ {Clears 8 pixels vertically}
+      \sysArgs0= \SYS_38_VClear8 38@ {Clears 8 pixels vertically}
       $800 p+ p= if>0loop]
     i+ p=
     255& 160^ if<>0loop]
@@ -188,9 +188,9 @@ $0500:
   [do
     {Draw slice}
     [do
-      p \sysData= \SYS_40_READ3  40@ {Read 3 bytes from ROM}
-                  \SYS_56_UNPACK 56@ {Unpack to 4 bytes}
-      q \sysPos=  \SYS_30_DRAW4  30@ {Write 4 bytes to screen}
+      p \sysData= \SYS_40_Read3  40@ {Read 3 bytes from ROM}
+                  \SYS_56_Unpack 56@ {Unpack to 4 bytes}
+      q \sysPos=  \SYS_30_Draw4  30@ {Write 4 bytes to screen}
       $80 p+ p=
       q>++ q
       if>0loop]
@@ -207,7 +207,7 @@ $0500:
 -}
   $0121 ShiftControl=
   [do
-    \SYS_34_RANDOM 34@ p=
+    \SYS_34_Random 34@ p=
     [if<0 $8000 p+ p=]
 
     {If on-screen, increase pixel color}
