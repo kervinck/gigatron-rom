@@ -49,10 +49,10 @@ XXX Background music score?
   BgColor \sysArgs0!
   Color   \sysArgs1!
   Pos     \sysPos=
-  4 i= [do
+  $fb i= [do
     fontData 0; fontData<++ \sysArgs2! \SYS_134_VDrawBits 134@
     \sysPos<++
-    i 1- i= if>=0loop]
+    i<++ i if<>0loop]
   0 \sysArgs2! \SYS_134_VDrawBits 134@
   Pos 6+ Pos=
   ret
