@@ -258,7 +258,6 @@ $0600:
     128& [if=0 Distance else Distance 255^] 255& 64- DX=
     DX DX+ DX= DriftX= DX+ DX= DX+ DX= DX+ DX= {Shift 4}
 
-
     DrawCurvature call
 
     {Control car}
@@ -311,11 +310,13 @@ $0700:
 
 [def
   {Step 1: Calculate road curvature}
-  0 X=
-  $74d0 p= {array[48] on $74d0-$74ff, in display memory but out of view}
+  Distance 63& 2+ tmp= \invTable q=
+  $74d0 p=                      {array[48], in display memory but out of view}
+  {0 X=}                        {No need to initialize X because only deltas matter}
+  X>? p! p<++
   [do
+    q 2+ q= 18; tmp+ 32& [if<>0 X DX+ X=]
     X>? p! p<++
-    X DX+ X=
     p<? if<>0loop]
 
   $0111 p= HorizonX>? p!        {Video table: start of sky}
@@ -326,12 +327,10 @@ $0700:
 
   $74fa peek 48- tmp+ LastX=    {Pivot 12px from bottom / front of car}
   $0131 p=                      {Video table: horizon / start of road}
-
   $74d0 q=
   [do
     q? LastX- p!
     p<++ p<++ p<++ p<++
-    {p 4+ p=}
 
     q? LastX=
     q<++
