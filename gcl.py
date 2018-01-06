@@ -23,7 +23,11 @@ class Program:
     self.version = None # Must be first word 'gcl<N>'
 
   def segInfo(self):
-    print '%04x vCPU used %d unused %d' % (self.segStart, self.vPC - self.segStart, self.segEnd - self.vPC)
+    print '%04x vCPU avail %3d used %3d unused %3d' % (
+      self.segStart,
+      self.segEnd - self.segStart,
+      self.vPC - self.segStart,
+      self.segEnd - self.vPC)
 
   def org(self, address):
     # Configure start address for emit
