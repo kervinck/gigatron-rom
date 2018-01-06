@@ -8,8 +8,8 @@
 gcl0x
 
 {
-XXX Randomized trajectory
 XXX Bending road
+XXX Randomized trajectory
 XXX Engine sound
 XXX Slower acceleration
 XXX Breaking and automatic slow-down to cruising speed
@@ -18,10 +18,8 @@ XXX Improve progress indicator
 XXX Add simple speedometer
 XXX Freeze time display for the first 2 seconds after completing a lap
 
-XXX Draw skyline
-XXX Scroll skyline
+XXX Draw skyline graphics
 
-XXX Smoother update of subsecond timer? (Needs native acceleration)
 XXX Checkerboard grass? (Simple)
 XXX Obstacles?
 XXX Finish line?
@@ -46,20 +44,17 @@ XXX Background music score?
             else     i= \font82up] fontData= {Select low or high page}
   i i+ tmp= tmp+ i+    {Multiply by 5}
   fontData+ fontData=  {Add to page address to reach bitmap data for Char}
-  $800 Pos+ q=         {Where to stop the inner drawing loop}
 
   {Draw 6 vertical slices: 5 using font data, the last with all-zeros}
-  5 i= [do
-    [if<>0 fontData 0; fontData<++ else 0] bits=
-    Pos p=
-    {Draw vertical slice}
-    [do
-      bits 128& [if=0 BgColor else Color] p!
-      bits bits+ bits=
-      p>++
-      p q- if<0loop]
-    Pos<++
+  BgColor \sysArgs0!
+  Color   \sysArgs1!
+  Pos     \sysPos=
+  4 i= [do
+    fontData 0; fontData<++ \sysArgs2! \SYS_134_VDrawBits 134@
+    \sysPos<++
     i 1- i= if>=0loop]
+  0 \sysArgs2! \SYS_134_VDrawBits 134@
+  Pos 6+ Pos=
   ret
 ] DrawChar=
 
@@ -266,7 +261,8 @@ $0600:
     [if<0
       Time BestTime- [if<0 Time BestTime=]
 
-      4 Dig0= Dig1= Dig2=
+      {XXX Too complex. Just don't use DrawTime here}
+      4 Prev1= Prev2= Prev3=
       [do j=
         BestTime Value= $87c Pos= DrawTime call
         j 1- if>0loop]
@@ -318,17 +314,15 @@ $0700:
 
 [def {
   DrawTime -- Render elapsed time (in frams) as M:SS.s -- Value Radix
-              Draw no more than 1 digit at a time
-              XXX Yes, this is hideous and needs to be rewritten
+              Skip unchanged digits
 }
   push
 
   3600 Radix= ExtractDigit call {\sysArgs7? $30+ Char= {Show frame speed for debugging}}
-                                Dig2 Char- [if<>0 Char Dig2= DrawChar call else Pos 12+ Pos=
-   600 Radix= ExtractDigit call Dig1 Char- [if<>0 Char Dig1= DrawChar call else Pos  6+ Pos=
-    60 Radix= ExtractDigit call Dig0 Char- [if<>0 Char Dig0= DrawChar call else Pos 12+ Pos=
-     6 Radix= ExtractDigit call DrawChar call
-  ]]]
+                                Prev3 Char- [if<>0 Char Prev3= DrawChar call Pos 6+ else Pos 12+] Pos=
+   600 Radix= ExtractDigit call Prev2 Char- [if<>0 Char Prev2= DrawChar call        else Pos  6+  Pos=]
+    60 Radix= ExtractDigit call Prev1 Char- [if<>0 Char Prev1= DrawChar call Pos 6+ else Pos 12+] Pos=
+     6 Radix= ExtractDigit call                                DrawChar call
   pop call
 ] DrawTime=
 
