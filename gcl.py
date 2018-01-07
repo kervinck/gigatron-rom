@@ -122,7 +122,8 @@ class Program:
       else:
         self.error('Invalid GCL version %s' % repr(word))
     elif word == 'loop':
-      to = self.loops[self.thisBlock()]
+      to = [block for block in self.blocks if block in self.loops]
+      to = self.loops[to[-1]]
       to = prev(to)
       if self.vPC>>8 != to>>8:
         self.error('Loop outside page')
@@ -303,7 +304,8 @@ class Program:
       self.opcode('BCC')
       self.opcode(cond)
       block = self.thisBlock()
-      to = self.loops[self.thisBlock()]
+      to = [block for block in self.blocks if block in self.loops]
+      to = self.loops[to[-1]]
       to = prev(to)
       self.emit(to&0xff)
       if self.vPC>>8 != to>>8:
