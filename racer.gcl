@@ -17,8 +17,9 @@ XXX Move car forward when going faster
 XXX Improve progress indicator
 XXX Add simple speedometer
 XXX Freeze time display for the first 2 seconds after completing a lap
-
+XXX Increase minimum speed when completing a lap
 XXX Draw skyline graphics
+XXX Higher frame rate
 
 XXX Obstacles?
 XXX Finish line?
@@ -85,7 +86,7 @@ XXX Background music score?
   ret
 ] Wait=
 
-[def { ExtractDigit -- Value Radix }
+[def {ExtractDigit -- Value Radix}
   $30 Char=
   Value Radix- [if>=0
     [do
@@ -108,7 +109,7 @@ $0400:
                 pixels, if any.
                 XXX This is probably better done as a SYS call
 }
-  { Setup page reference for write pointers }
+  {Setup page reference for write pointers}
   Video? 254&  p>! 1| q>! Video<++
 
   {Find segment to clear from position p[0] to position q[0]}
@@ -249,8 +250,12 @@ $0600:
       0 Time=
       $7400 Distance=
     ]
-    128& [if=0 Distance else Distance 255^] 255& 64- DX=
-    DX DX+ DX= DriftX= DX+ DX= DX+ DX= DX+ DX= {Shift 4}
+
+    {Map distance to road curvature}
+
+    64& [if=0 Distance else Distance 255^] 63& 32- DDX= {-64 ... +63}
+    DDX+ DX= DX+ DX= DX+ DX=
+    DX+ DriftX=
 
     DrawCurvature call
 
@@ -258,7 +263,9 @@ $0600:
     Speed [do
       tmp=
       CarX DriftX- CarX= {Drift is proportional to speed}
+{
       HorizonX DX+ HorizonX= {Same with horizon}
+}
       tmp 1- if>0loop]
     0 Steer=
     \serialRaw? $01& {~buttonRight} [if=0  $200 CarX+ CarX= +1 Steer=]
@@ -281,19 +288,18 @@ $0600:
     pop call
 ] PlayGame=
 
+[def $2d. $3a. $2d. $2d. $2e. $2d. 0.] EmptyTimeText=
+
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 7                                      |
 +-----------------------------------------------------------------------}
 $0700:
-
-[def $2d. $3a. $2d. $2d. $2e. $2d. 0.] EmptyTimeText=
 
 [def {
   DrawTime -- Render elapsed time (in frams) as M:SS.s -- Value Radix
               Skip unchanged digits
 }
   push
-
   3600 Radix= ExtractDigit call \sysArgs7? $30+ Char= {Show frame speed for debugging}
                                 Prev3 Char- [if<>0 Char Prev3= QDrawChar call else Pos] 12+ Pos=
    600 Radix= ExtractDigit call Prev2 Char- [if<>0 Char Prev2= QDrawChar call else Pos]  6+ Pos=
@@ -309,26 +315,28 @@ $0700:
   {0 X=}                        {No need to initialize X because only deltas matter}
   X>? p! p<++
   [do
-    q 2+ q= 18; tmp+ 32& [if<>0 X DX+ X=]
+    DX DDX+ DX=
+    X DX+ X=
     X>? p! p<++
     p<? if<>0loop]
 
   $0111 p= HorizonX>? p!        {Video table: start of sky}
-  tmp=
 
   {Step 2: Update video table low bytes for road}
+
   {This step is most timing-sensitive wrt. the video loop}
 
-  $74fa peek 48- tmp+ LastX=    {Pivot 12px from bottom / front of car}
-  $0131 p=                      {Video table: horizon / start of road}
+  $01ed p=                      {Video table: bottom of road}
   $74d0 q=
+  q? X= q<++
   [do
-    q? LastX- p!
-    p<++ p<++ p<++ p<++
-
-    q? LastX=
-    q<++
+    {\SYS_XXX_Racer_UpdateVideoX XXX@}
+    q? X- p! p 4- p=
+    q? X= q<++
     q<? if<>0loop]
+
+  {XXX Pivot 12px from bottom / front of car}
+  $74d5 peek 48+ X- p!
 
   ret
 ] DrawCurvature=
