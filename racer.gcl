@@ -20,7 +20,6 @@ XXX Freeze time display for the first 2 seconds after completing a lap
 
 XXX Draw skyline graphics
 
-XXX Checkerboard grass? (Simple)
 XXX Obstacles?
 XXX Finish line?
 XXX Crash sound effect?
@@ -168,19 +167,22 @@ $0500:
   push
   $2080 Pos=
 
-  1 Width=
+  0 Width= {(Half) road width}
   [do
-    3 {Bright Red} CurbColor=
-    8 {Green} GrassColor=
+    Width 1+ Width=
+
+    {Even lines are bright}
+    3 {Bright Red}    CurbColor=
+    8 {Green}         GrassColor=
     SetupSegment call
     Pos>++
 
-    63 {White} CurbColor=
+    {Odd lines are dark}
+    63 {White}        CurbColor=
     12 {Bright Green} GrassColor=
     SetupSegment call
     Pos>++
 
-    Width<++
     Pos if>=0loop]
 
   {Setup undo infomation for last lines (for car sprite)}
@@ -190,35 +192,27 @@ $0500:
 ] SetupRoad=
 
 [def
-  {Calculate CurbLeft}
-  {XXX Simplify}
-  Width Width+ tmp= {x2}
-          tmp+ tmp= {x4}
-          tmp+ tmp= {x8}
-          tmp+ tmp= {x16}
-          tmp+ tmp= {x32}
-  tmp>? CurbLeft=   {CurbLeft = Width/16}
-  Width CurbLeft- CurbRight=
-
-  Pos p=
-
-  0 CurbRight- W=
   {Draw road segment}
-  Width i= [do
-    W 1+ W= [if<=0 21 {Dark Grey} else CurbColor] p!
-    p<++
-    i 1- i= if>0loop]
+  Pos p=
+  Width [do tmp=
+    21 p! p<++
+    tmp 1- if>0loop]
+
+  {Draw curb}
+  p q=
+  Width [do 8- [if>0 tmp=
+      q 1- q=
+      CurbColor q!
+      tmp loop]]
 
   {Draw grass}
   [do
-    GrassColor p!
-    p<++
+    GrassColor p! p<++
     p<? if<>0loop]
 
   {Draw mirror image}
   [do
-    p 255^ peek p!
-    p<++
+    p 255^ peek p! p<++
     p<? 128^ if<>0loop]
 
   ret
