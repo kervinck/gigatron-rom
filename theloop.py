@@ -1797,6 +1797,36 @@ for i in xrange(len(raw)):
 
 #-----------------------------------------------------------------------
 #
+#  ROM page XX: Skyline for Racer
+#
+#-----------------------------------------------------------------------
+
+f = open('Images/RacerHorizon-256x16.rgb', 'rb')
+raw = f.read()
+f.close()
+
+packed, quartet = [], []
+for i in xrange(0, len(raw), 3):
+  R, G, B = ord(raw[i+0]), ord(raw[i+1]), ord(raw[i+2])
+  quartet.append((R/85) + 4*(G/85) + 16*(B/85))
+  if len(quartet) == 4:
+    # Pack 4 pixels in 3 bytes
+    packed.append( ((quartet[0]&0b111111)>>0) + ((quartet[1]&0b000011)<<6) )
+    packed.append( ((quartet[1]&0b111100)>>2) + ((quartet[2]&0b001111)<<4) )
+    packed.append( ((quartet[2]&0b110000)>>4) + ((quartet[3]&0b111111)<<2) )
+    quartet = []
+
+align(0x100)
+label('zippedRacerHorizon')
+for i in xrange(len(packed)):
+  ld(val(packed[i]))
+  if i%251 == 250:
+    trampoline()
+while pc()&255 != 0:
+  trampoline()
+
+#-----------------------------------------------------------------------
+#
 #  ROM page XX: Inversion table
 #
 #-----------------------------------------------------------------------
@@ -1809,14 +1839,6 @@ for i in range(251):
   ld(val(4095/(i+16)))
 
 trampoline()
-
-#-----------------------------------------------------------------------
-#
-#  ROM page XX: Skyline
-#
-#-----------------------------------------------------------------------
-
-#importImage('Images/sky1-16x16.rgb', 16, 16, 'packedSkyLine')
 
 #-----------------------------------------------------------------------
 #

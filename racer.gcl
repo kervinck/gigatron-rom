@@ -18,9 +18,9 @@ XXX Improve progress indicator
 XXX Add simple speedometer
 XXX Freeze time display for the first 2 seconds after completing a lap
 XXX Increase minimum speed when completing a lap
-XXX Draw skyline graphics
 XXX Higher frame rate
 
+XXX Image compression?
 XXX Obstacles?
 XXX Finish line?
 XXX Crash sound effect?
@@ -33,8 +33,7 @@ XXX Background music score?
 |                       RAM page 3                                      |
 +-----------------------------------------------------------------------}
 
-[def {
-  QDrawChar -- Pos Color Char
+[def {QDrawChar -- Pos Color Char
 
   Draw a 5x8 character on screen with the built-in font.
   `Char' must be in the 32-127 range (this is not checked)
@@ -75,8 +74,6 @@ XXX Background music score?
 ] DrawText=
 
 [def $47. $69. $67. $61. $74. $72. $6f. $6e. 0. ]      GigatronText=
-[def $44. $65. $6e. $20. $48. $61. $61. $67. 0. ]      Horizon1Text=
-[def $45. $69. $6e. $64. $68. $6f. $76. $65. $6e. 0. ] Horizon2Text=
 
 [def {
   Wait -- Wait Delay number of frames (range 1..255)
@@ -263,9 +260,9 @@ $0600:
     Speed [do
       tmp=
       CarX DriftX- CarX= {Drift is proportional to speed}
-{
+
       HorizonX DX+ HorizonX= {Same with horizon}
-}
+
       tmp 1- if>0loop]
     0 Steer=
     \serialRaw? $01& {~buttonRight} [if=0  $200 CarX+ CarX= +1 Steer=]
@@ -300,7 +297,7 @@ $0700:
               Skip unchanged digits
 }
   push
-  3600 Radix= ExtractDigit call \sysArgs7? $30+ Char= {Show frame speed for debugging}
+  3600 Radix= ExtractDigit call {\sysArgs7? $30+ Char= {Show frame speed for debugging}}
                                 Prev3 Char- [if<>0 Char Prev3= QDrawChar call else Pos] 12+ Pos=
    600 Radix= ExtractDigit call Prev2 Char- [if<>0 Char Prev2= QDrawChar call else Pos]  6+ Pos=
     60 Radix= ExtractDigit call Prev1 Char- [if<>0 Char Prev1= QDrawChar call else Pos] 12+ Pos=
@@ -315,19 +312,17 @@ $0700:
   {0 X=}                        {No need to initialize X because only deltas matter}
   X>? p! p<++
   [do
-    DX DDX+ DX=
-    X DX+ X=
-    X>? p! p<++
+    DX  DDX+ DX=
+    X   DX+  X=
+    X>? p!   p<++
     p<? if<>0loop]
 
-  $0111 p= HorizonX>? p!        {Video table: start of sky}
+  $0111 p= HorizonX>? tmp= p!        {Video table: start of sky}
 
   {Step 2: Update video table low bytes for road}
-
   {This step is most timing-sensitive wrt. the video loop}
 
-  $01ed p=                      {Video table: bottom of road}
-  $74d0 q=
+  $01ed p= $74d0 q=             {Video table: bottom of road}
   q? X= q<++
   [do
     {\SYS_XXX_Racer_UpdateVideoX XXX@}
@@ -336,7 +331,7 @@ $0700:
     q<? if<>0loop]
 
   {XXX Pivot 12px from bottom / front of car}
-  $74d5 peek 48+ X- p!
+  $74d5 peek 48+ tmp- X- p!
 
   ret
 ] DrawCurvature=
@@ -419,15 +414,19 @@ $0ba0:
   push
 
   {Display welcome tekst}
-  48 BgColor=
+  32 BgColor=
+
+  BgColor \sysArgs0! \sysArgs1!
+  $800    \sysPos=
+  [do
+    \SYS_134_VDrawBits 134@
+    \sysPos<++
+    \sysPos? 160^ if<>0loop]
+
   63 Color=
   $801 Pos= EmptyTimeText Text= DrawText call
   $87c Pos= EmptyTimeText Text= DrawText call
   $838 Pos= GigatronText  Text= DrawText call
-  21 Color=
-  $18a8 Pos= Horizon1Text Text= DrawText call
-  $1825 Pos= Horizon2Text Text= DrawText call
-
   60 Delay= Wait call
 
   pop call
@@ -448,6 +447,22 @@ $0da0:
 +-----------------------------------------------------------------------}
 $0ea0:
 
+[def {SetupHorizon}
+  push
+
+  \zippedRacerHorizon p= $1000 q=
+  [def p<? 250^ [if<>0 1 else 6] p+ p= ret] tmp= {"next p"}
+  [do
+    p 0; \sysArgs0! tmp call
+      0; \sysArgs1! tmp call
+      0; \sysArgs2! tmp call
+                     \SYS_56_Unpack 56@
+    q \sysPos= 4+ q= \SYS_30_Draw4  30@
+    q>? $20^ if<>0loop]
+
+  pop call
+] SetupHorizon=
+
 {-----------------------------------------------------------------------+
 |}$0fa0 call{           RAM page 15                                     |
 +-----------------------------------------------------------------------}
@@ -460,8 +475,9 @@ Intro call
 [do
   {Setup new game}
   0 DX= DrawCurvature call
-  DrawPerspective call
-  SetupRoad call
+  DrawPerspective     call
+  SetupHorizon        call
+  SetupRoad           call
   $7400 Distance=
   $7fff BestTime=
   0 Time= Value= HorizonX=
