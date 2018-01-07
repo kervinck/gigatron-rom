@@ -21,6 +21,12 @@
 #  XXX Music sequencer
 #  XXX Serial loading of programs with Arduino/Trinket
 #  XXX Double-check initialisation of all variables
+#  XXX Show counted memory at startup
+#  XXX ROM padding
+#  XXX GCL: 'page' macro
+#  XXX asm: make d() implicit in first argument of instructions
+#  XXX Key table
+#  XXX Sequencer
 #
 #  Maybe
 #  XXX CALL needs vAC and that is annoying. Can we have CALL $XX?
@@ -29,7 +35,6 @@
 #  XXX Pacman ghosts. Sprites by scan line 4 reset method? ("videoG"=graphics)
 #  XXX Intro: Rising planet?
 #  XXX Multitasking/threading/sleeping (start with date/time clock in GCL)
-#  XXX Should soft reset also reset videoDorF and frame counter?
 #  XXX Better shift-table (use ROM?)
 #  XXX Better notation for 'call': () or []
 #  XXX Prefix notation for high/low byte >X++ instead of X>++
@@ -48,6 +53,7 @@
 #  XXX 5 sec test screen
 #  XXX Random dots screen
 #  XXX Info screen (zero page?)
+#  XXX Font screen 16x8 chars
 #  XXX Iets met doolhof. Berzerk/Robotron? Pac Mac?
 #  XXX Primes, Fibonacci (bignum), Queens
 #  XXX Game of Life (edit <-> stop <-> slow <-> fast)
@@ -454,7 +460,7 @@ st(d(ledState))
 ld(val(60/6))
 st(d(ledTempo))
 
-# Setup a G-major chord to play
+# Setup a G-major chord to play XXX Move to GCL
 G3, G4, B4, D5 = 824, 1648, 2064, 2464
 
 ld(val(1),regY);                C('Setup channel 1')
@@ -1750,6 +1756,29 @@ for ch in range(32+50, 128):
 trampoline()
 
 #-----------------------------------------------------------------------
+#
+#  ROM page XX: Key table for music
+#
+#-----------------------------------------------------------------------
+
+align(0x100, 0x100)
+notes = 'CCDDEFFGGAAB'
+sampleRate = cpuClock / 200.0 / 4
+for i in range(0, 250, 2):
+  j = i/2-1
+  freq = 440.0*2.0**((j-57)/12.0)
+  if j>=0 and freq <= sampleRate/2.0:
+    key = int(round(32768 * freq / sampleRate))
+    octave, note = j/12, notes[j%12]
+    sharp = '-' if notes[j%12-1] != note else '#'
+    comment = '%s%s%s (%0.1f Hz)' % (note, sharp, octave, freq)
+  else:
+    key, comment = 0, None
+  ld(val(key&127)); C(comment)
+  ld(val(key>>7))
+trampoline()
+
+#-----------------------------------------------------------------------
 #  ROM page 76-: Built-in full resolution images
 #-----------------------------------------------------------------------
 
@@ -1850,7 +1879,7 @@ align(0x100)
 label('loadApp')
 
 # For info
-print 'SYS warning %s error %s' % (repr(minSYS), repr(maxSYS))
+print 'info SYS length warning %s error %s' % (repr(minSYS), repr(maxSYS))
 
 # Compile test GCL program
 program = gcl.Program(vCpuStart)
