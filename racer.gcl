@@ -171,15 +171,15 @@ $0500:
   [do
     Width 1+ Width=
 
-    {Even lines are bright}
-    3 {Bright Red}    CurbColor=
-    8 {Green}         GrassColor=
+    {Even lines are dark}
+    63 {White}        CurbColor=
+    12 {Bright Green} GrassColor=
     SetupSegment call
     Pos>++
 
-    {Odd lines are dark}
-    63 {White}        CurbColor=
-    12 {Bright Green} GrassColor=
+    {Odd lines are bright}
+    3 {Bright Red}    CurbColor=
+    8 {Green}         GrassColor=
     SetupSegment call
     Pos>++
 
@@ -304,7 +304,7 @@ $0700:
 
 [def
   {Step 1: Calculate road curvature}
-  Distance 63& 2+ tmp= \invTable q=
+  Distance 63& 1+ tmp= \invTable q=
   $74d0 p=                      {array[48], in display memory but out of view}
   {0 X=}                        {No need to initialize X because only deltas matter}
   X>? p! p<++
