@@ -16,3 +16,6 @@ burn: theloop.2.rom
 %.rgb: %.png
 	# Uses ImageMagick
 	convert "$<" "$@"
+
+todo:
+	@git ls-files | sed 's/ /\\ /g' | xargs grep -I -i -E '(todo|xxx)'
