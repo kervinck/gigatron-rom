@@ -1147,15 +1147,15 @@ ld(val(-16/2))                  #13
 bra(d(lo('NEXT')))              #14
 #nop()                          #(15)
 #
-# Instruction POP, (AC=[SP++]), 22 cycles
+# Instruction POP, (LR=[SP++]), 22 cycles
 label('POP')
 ld(d(vSP),busRAM|regX)          #10 (overlap with ST)
 ld(busRAM,ea0XregAC)            #11
-st(d(vAC))                      #12
+st(d(vLR))                      #12
 ldzp(d(vSP))                    #13
 adda(val(1),regX)               #14
 ld(busRAM,ea0XregAC)            #15
-st(d(vAC+1))                    #16
+st(d(vLR+1))                    #16
 ldzp(d(vSP))                    #17
 adda(val(2))                    #18
 st(d(vSP))                      #19

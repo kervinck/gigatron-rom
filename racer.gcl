@@ -70,7 +70,7 @@ XXX Background music score?
       Char 10^ [if=0 Pos<! $800 Pos+ Pos=
                 else QDrawChar!! 6+ Pos=]
       loop]
-  pop \vAC!!
+  pop ret
 ] DrawText=
 
 [def $47. $69. $67. $61. $74. $72. $6f. $6e. 0. ]      GigatronText=
@@ -186,7 +186,7 @@ $0500:
   {Setup undo infomation for last lines (for car sprite)}
   $7400 [do \POKE. \vAC. \vAC>++ if>0loop]
 
-  pop \vAC!!
+  pop ret
 ] SetupRoad=
 
 [def
@@ -282,7 +282,7 @@ $0600:
     DrawTime!!
 
     Collision if=0loop]
-    pop \vAC!!
+  pop ret
 ] PlayGame=
 
 [def $2d. $3a. $2d. $2d. $2e. $2d. 0.] EmptyTimeText=
@@ -306,7 +306,7 @@ $0700:
    600 Radix= ExtractDigit!! Prev2 Char- [if<>0 Char Prev2= QDrawChar!! else Pos]  6+ Pos=
     60 Radix= ExtractDigit!! Prev1 Char- [if<>0 Char Prev1= QDrawChar!! else Pos] 12+ Pos=
      6 Radix= ExtractDigit!!                                QDrawChar!!
-  pop \vAC!!
+  pop ret
 ] DrawTime=
 
 [def
@@ -404,7 +404,7 @@ $0aa0:
   Car2 Sprite= DrawPixels!!
   Car3 Sprite= DrawPixels!!
   Car4 Sprite= DrawPixels!!
-  pop \vAC!!
+  pop ret
 ] DrawRaceCar=
 
 {-----------------------------------------------------------------------+
@@ -433,7 +433,7 @@ $0ba0:
   $838 Pos= GigatronText  Text= DrawText!!
   60 Delay= Wait!!
 
-  pop \vAC!!
+  pop ret
 ] Intro=
 
 {-----------------------------------------------------------------------+
@@ -464,7 +464,7 @@ $0ea0:
     q \sysPos= 4+ q= \SYS_30_Draw4  30@
     q>? $20^ if<>0loop]
 
-  pop \vAC!!
+  pop ret
 ] SetupHorizon=
 
 {-----------------------------------------------------------------------+

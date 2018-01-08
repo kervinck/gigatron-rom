@@ -120,9 +120,9 @@ Subroutines
 -----------
 X!!                     Jump to function pointed by X, store old vPC in vLR
 ret                     Jump to vLR, to return from a leaf subroutine. Non-leaf
-                        subroutines should use "pop \vAC!!" as return sequence
+                        subroutines should use "pop ret" as return sequence
 push                    Push vLR onto stack, for entering a non-leaf subroutine
-pop                     Remove top of stack and put value in vAC XXX should become vLR
+pop                     Remove top of stack and put value in vLR
 i@                      Call native code pointed by vAC, needing at most i cycles
 
 Data
