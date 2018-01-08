@@ -14,12 +14,13 @@
 #
 #  To do
 #  XXX Serial read from ROM tables, hiding page boundraries
+#      Protocol: [<addrH> <addrL> <n-1> n*<byte>]+ 0
 #  XXX Main menu / Loading and starting of programs
 #  XXX ROM load of vCPU code / bootstrapping
 #  XXX Logo drawing
-#  XXX Key/pitch table
 #  XXX Music sequencer
 #  XXX Serial loading of programs with Arduino/Trinket
+#      Protocol: 0x21('!') <addrH> <addrL> <n-1> n*<byte> <sum> (n=1-32)
 #  XXX Double-check initialisation of all variables
 #  XXX Show counted memory at startup
 #  XXX ROM padding
