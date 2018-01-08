@@ -30,7 +30,6 @@
 #  XXX Sequencer
 #
 #  Maybe
-#  XXX CALL needs vAC and that is annoying. Can we have CALL $XX?
 #  XXX More waveforms (eg. with offset in shift2 table)
 #  XXX Scroll out the top line of text
 #  XXX Pacman ghosts. Sprites by scan line 4 reset method? ("videoG"=graphics)
@@ -961,8 +960,6 @@ ld(val(syncBits^hSync), regOUT) #4 Start horizontal pulse
 #
 #-----------------------------------------------------------------------
 
-align(0x100,0x100)
-
 # Enter the timing-aware application interpreter (aka virtual CPU, vCPU)
 #
 # This routine will execute as many as possible instructions in the
@@ -970,11 +967,22 @@ align(0x100,0x100)
 # duration matches the caller's request. Durations are counted in `ticks',
 # which are multiples of 2 clock cycles.
 #
-# Use the runVcpu() macro as entry point
-#
+# Synopsis: Use the runVcpu() macro as entry point
+
+# We let 'ENTER' begin one word before the page boundary, for a bit extra
+# precious space in the packed interpreter code page. Although ENTER's
+# first instruction is bra() which normally doesn't cross page boundaries,
+# in this case it will still jump into the right space, because branches
+# from $xxFF land in the next page anyway.
+while pc()&255 < 255:
+  nop()
 label('ENTER')
 bra(d(lo('.next2')))            #0 Enter at '.next2' (so no startup overhead)
 C('vCPU interpreter')
+
+# --- Page boundary ---
+
+align(0x100,0x100)
 ld(d(vPC+1),busRAM|regY)        #1
 
 # Fetch next instruction and execute it, but only if there are sufficient
@@ -1069,9 +1077,18 @@ ld(busRAM|eaYXregAC)            #17 Operand is the conditional
 label('.cond1')
 bra(busAC)                      #18
 ldzp(d(vTmp))                   #19
+
+# Conditional EQ: Branch if zero (if(ALC==0)PCL=D)
+label('EQ')
+bne(d(lo('.cond4')))            #20
 label('.cond2')
-nop()                           #13
-nop()                           #14
+beq(d(lo('.cond5')));           C('AC=0 in EQ, AC!=0 from BCC...')#21 (overlap with BCC)
+ld(busRAM|eaYXregAC)            #22 (overlap with BCC)
+
+# (continue BCC)
+#label('.cond2')
+#nop()                          #13
+#nop()                          #14
 nop()                           #15
 label('.cond3')
 bra(d(lo('.cond1')))            #16
@@ -1087,12 +1104,6 @@ label('.cond6')
 st(d(vPC))                      #25
 bra(d(lo('NEXT')))              #26
 ld(val(-28/2))                  #27
-
-# Conditional EQ: Branch if zero (if(ALC==0)PCL=D)
-label('EQ')
-bne(d(lo('.cond4')))            #20
-beq(d(lo('.cond5')))            #21
-ld(busRAM|eaYXregAC)            #22
 
 # Conditional GT: Branch if positive (if(ALC>0)PCL=D)
 label('GT')
@@ -1185,7 +1196,7 @@ def trampoline():
   jmpy(d(lo('luReturn')))       #17
   ld(d(vPC+1),busRAM|regY)      #18 Restore
 
-# Instruction PUSH, ([--SP]=RT), 14 cycles
+# Instruction PUSH, ([--SP]=LR), 14 cycles
 label('PUSH')
 ldzp(d(vSP))                    #10
 suba(d(1),regX)                 #11
@@ -1343,20 +1354,30 @@ label('REENTER')
 bra(d(lo('NEXT')));             C('Return from SYS calls')#20
 ld(d(vPC+1),busRAM|regY)        #21
 
-# Instruction CALL, (RT=PC+1, PC=AC-2), 22 cycles
+# Instruction DEF, Define data or code (AC,PCL=PC+2,D), 18 cycles
+label('DEF')
+ld(val(hi('def')),regY)         #10
+jmpy(d(lo('def')))              #11
+#st(d(vTmp))                    #12
+#
+# Instruction CALL, (LR=PC+2,PC=[D]-2), 26 cycles
 label('CALL')
-ldzp(d(vPC))                    #10
-adda(val(1));                   C('CALL has no operand, advances PC by 1')#11
-st(d(vLR))                      #12
-ldzp(d(vAC))                    #13
-suba(val(2));                   C('vAC is actual address, NEXT adds 2')#14
-st(d(vPC))                      #15
-ldzp(d(vPC+1))                  #16
-st(d(vLR+1))                    #17
-ldzp(d(vAC+1))                  #18
-st(d(vPC+1),busAC|regY)         #19
-bra(d(lo('NEXT')))              #20
-ld(val(-22/2))                  #21
+st(d(vTmp))                     #10 (overlap with DEF)
+ldzp(d(vPC))                    #11
+adda(val(2));                   C('Point to instruction after CALL')#12
+st(d(vLR))                      #13
+ldzp(d(vPC+1))                  #14
+st(d(vLR+1))                    #15
+ld(d(vTmp),busRAM|regX)         #16
+ld(busRAM|ea0XregAC)            #17
+suba(val(2));                   C('Because NEXT will add 2')#18
+st(d(vPC))                      #19
+ldzp(d(vTmp))                   #20
+adda(val(1),regX)               #21
+ld(busRAM|ea0XregAC)            #22
+st(d(vPC+1),busAC|regY)         #23
+bra(d(lo('NEXT')))              #24
+ld(val(-26/2))                  #25
 
 # Instruction ADDI, Add small positive constant (AC+=D), 28 cycles
 label('ADDI')
@@ -1378,12 +1399,6 @@ adda(val(1))                    #12
 st(ea0XregAC)                   #13
 bra(d(lo('NEXT')))              #14
 ld(val(-16/2))                  #15
-
-# Instruction DEF, Define data or code (AC,PCL=PC+2,D), 18 cycles
-label('DEF')
-ld(val(hi('def')),regY)         #10
-jmpy(d(lo('def')))              #11
-st(d(vTmp))                     #12
 
 # Instruction RET, To be defined, 16 cycles
 label('RET')

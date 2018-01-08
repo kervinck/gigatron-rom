@@ -25,7 +25,7 @@ XXX Obstacles?
 XXX Finish line?
 XXX Crash sound effect?
 XXX Sprite acceleration?
-XXX Car crash sequence when hitting curb?
+XXX Car crash sequence when hitting curb? Easy to make it scatter...
 XXX Background music score?
 }
 
@@ -68,9 +68,9 @@ XXX Background music score?
     if<>0       {Zero termination}
       Text<++   {Advance text pointer}
       Char 10^ [if=0 Pos<! $800 Pos+ Pos=
-                else QDrawChar call 6+ Pos=]
+                else QDrawChar!! 6+ Pos=]
       loop]
-  pop call
+  pop \vAC!!
 ] DrawText=
 
 [def $47. $69. $67. $61. $74. $72. $6f. $6e. 0. ]      GigatronText=
@@ -172,13 +172,13 @@ $0500:
     {Even lines are dark}
     63 {White}        CurbColor=
     12 {Bright Green} GrassColor=
-    SetupSegment call
+    SetupSegment!!
     Pos>++
 
     {Odd lines are bright}
     3 {Bright Red}    CurbColor=
     8 {Green}         GrassColor=
-    SetupSegment call
+    SetupSegment!!
     Pos>++
 
     Pos if>=0loop]
@@ -186,7 +186,7 @@ $0500:
   {Setup undo infomation for last lines (for car sprite)}
   $7400 [do \POKE. \vAC. \vAC>++ if>0loop]
 
-  pop call
+  pop \vAC!!
 ] SetupRoad=
 
 [def
@@ -230,7 +230,7 @@ $0600:
   0 Collision=
   [do
     [do \vBlank? if=0loop]
-    AdvanceCar call
+    AdvanceCar!!
 
     {See if we have reached the finish}
     Distance
@@ -240,7 +240,7 @@ $0600:
       {XXX Too complex. Just don't use DrawTime here}
       4 Prev1= Prev2= Prev3=
       [do j=
-        BestTime Value= $87c Pos= DrawTime call
+        BestTime Value= $87c Pos= DrawTime!!
         j 1- if>0loop]
 
       {New lap}
@@ -254,7 +254,7 @@ $0600:
     DDX+ DX= DX+ DX= DX+ DX=
     DX+ DriftX=
 
-    DrawCurvature call
+    DrawCurvature!!
 
     {Control car}
     Speed [do
@@ -271,18 +271,18 @@ $0600:
     \serialRaw? $80& {~buttonB}     [if=0 Speed 1- [if>0 Speed=]]
 
     {Draw car}
-    DrawRaceCar call
+    DrawRaceCar!!
 
-    DrawPerspective call
+    DrawPerspective!!
 
     {Draw current time}
     Time Value=
     $801 Pos=
     63 Color=
-    DrawTime call
+    DrawTime!!
 
     Collision if=0loop]
-    pop call
+    pop \vAC!!
 ] PlayGame=
 
 [def $2d. $3a. $2d. $2d. $2e. $2d. 0.] EmptyTimeText=
@@ -297,12 +297,16 @@ $0700:
               Skip unchanged digits
 }
   push
-  3600 Radix= ExtractDigit call {\sysArgs7? $30+ Char= {Show frame speed for debugging}}
-                                Prev3 Char- [if<>0 Char Prev3= QDrawChar call else Pos] 12+ Pos=
-   600 Radix= ExtractDigit call Prev2 Char- [if<>0 Char Prev2= QDrawChar call else Pos]  6+ Pos=
-    60 Radix= ExtractDigit call Prev1 Char- [if<>0 Char Prev1= QDrawChar call else Pos] 12+ Pos=
-     6 Radix= ExtractDigit call                                QDrawChar call
-  pop call
+  {Note we have 3599 instead of 3600. Assuming a 6.25MHz clock, 200 cycles per
+   scanline and 521 scanlines per frame, the Gigatron runs at 59.98 frames per
+   second and that is ~3599 frames per minute. With this single correction the
+   overall timekeeping error is within the tolerances of the crystal itself.}
+  3599 Radix= ExtractDigit!! \sysArgs7? $30+ Char= {Show frame speed for debugging}
+                             Prev3 Char- [if<>0 Char Prev3= QDrawChar!! else Pos] 12+ Pos=
+   600 Radix= ExtractDigit!! Prev2 Char- [if<>0 Char Prev2= QDrawChar!! else Pos]  6+ Pos=
+    60 Radix= ExtractDigit!! Prev1 Char- [if<>0 Char Prev1= QDrawChar!! else Pos] 12+ Pos=
+     6 Radix= ExtractDigit!!                                QDrawChar!!
+  pop \vAC!!
 ] DrawTime=
 
 [def
@@ -337,7 +341,7 @@ $0700:
 ] DrawCurvature=
 
 {-----------------------------------------------------------------------+
-|}$08a0 call{           RAM page 8                                      |
+|}$08a0 \vAC!!{         RAM page 8                                      |
 +-----------------------------------------------------------------------}
 $08a0:
 
@@ -366,7 +370,7 @@ $08a0:
 ] DrawPerspective=
 
 {-----------------------------------------------------------------------+
-|}$09a0 call{           RAM page 9                                      |
+|}$09a0 \vAC!!{         RAM page 9                                      |
 +-----------------------------------------------------------------------}
 $09a0:
 
@@ -385,7 +389,7 @@ $09a0:
 ] AdvanceCar=
 
 {-----------------------------------------------------------------------+
-|}$0aa0 call{           RAM page 10                                     |
+|}$0aa0 \vAC!!{         RAM page 10                                     |
 +-----------------------------------------------------------------------}
 $0aa0:
 
@@ -394,17 +398,17 @@ $0aa0:
   $01d9 peek 255^ X=
   CarX>? X+ X=
   $01d8 Video=
-  Car0 Sprite= DrawPixels call
-  Car1 Sprite= DrawPixels call
+  Car0 Sprite= DrawPixels!!
+  Car1 Sprite= DrawPixels!!
   X Steer- X=
-  Car2 Sprite= DrawPixels call
-  Car3 Sprite= DrawPixels call
-  Car4 Sprite= DrawPixels call
-  pop call
+  Car2 Sprite= DrawPixels!!
+  Car3 Sprite= DrawPixels!!
+  Car4 Sprite= DrawPixels!!
+  pop \vAC!!
 ] DrawRaceCar=
 
 {-----------------------------------------------------------------------+
-|}$0ba0 call{           RAM page 11                                     |
+|}$0ba0 \vAC!!{         RAM page 11                                     |
 +-----------------------------------------------------------------------}
 $0ba0:
 
@@ -424,26 +428,26 @@ $0ba0:
     \sysPos? 160^ if<>0loop]
 
   63 Color=
-  $801 Pos= EmptyTimeText Text= DrawText call
-  $87c Pos= EmptyTimeText Text= DrawText call
-  $838 Pos= GigatronText  Text= DrawText call
-  60 Delay= Wait call
+  $801 Pos= EmptyTimeText Text= DrawText!!
+  $87c Pos= EmptyTimeText Text= DrawText!!
+  $838 Pos= GigatronText  Text= DrawText!!
+  60 Delay= Wait!!
 
-  pop call
+  pop \vAC!!
 ] Intro=
 
 {-----------------------------------------------------------------------+
-|}$0ca0 call{           RAM page 12                                     |
+|}$0ca0 \vAC!!{         RAM page 12                                     |
 +-----------------------------------------------------------------------}
 $0ca0:
 
 {-----------------------------------------------------------------------+
-|}$0da0 call{           RAM page 13                                     |
+|}$0da0 \vAC!!{         RAM page 13                                     |
 +-----------------------------------------------------------------------}
 $0da0:
 
 {-----------------------------------------------------------------------+
-|}$0ea0 call{           RAM page 14                                     |
+|}$0ea0 \vAC!!{         RAM page 14                                     |
 +-----------------------------------------------------------------------}
 $0ea0:
 
@@ -453,31 +457,31 @@ $0ea0:
   \zippedRacerHorizon p= $1000 q=
   [def p<? 250^ [if<>0 1 else 6] p+ p= ret] tmp= {"next p"}
   [do
-    p 0; \sysArgs0! tmp call
-      0; \sysArgs1! tmp call
-      0; \sysArgs2! tmp call
+    p 0; \sysArgs0! tmp!!
+      0; \sysArgs1! tmp!!
+      0; \sysArgs2! tmp!!
                      \SYS_56_Unpack 56@
     q \sysPos= 4+ q= \SYS_30_Draw4  30@
     q>? $20^ if<>0loop]
 
-  pop call
+  pop \vAC!!
 ] SetupHorizon=
 
 {-----------------------------------------------------------------------+
-|}$0fa0 call{           RAM page 15                                     |
+|}$0fa0 \vAC!!{         RAM page 15                                     |
 +-----------------------------------------------------------------------}
 $0fa0:
 
 {--- Run ---}
-Intro call
+Intro!!
 
 {--- Main loop ---}
 [do
   {Setup new game}
-  0 DX= DrawCurvature call
-  DrawPerspective     call
-  SetupHorizon        call
-  SetupRoad           call
+  0 DX= DrawCurvature!!
+  DrawPerspective!!
+  SetupHorizon!!
+  SetupRoad!!
   $7400 Distance=
   $7fff BestTime=
   0 Time= Value= HorizonX=
@@ -488,7 +492,7 @@ Intro call
   {XXX "Get ready" message}
 
   {Play game until finished}
-  PlayGame call
+  PlayGame!!
 
   {"Game over" message}
   $1435 Pos=
@@ -496,9 +500,9 @@ Intro call
     $47. $41. $4d. $45. $20. $4f. $56. $45. $52. 0. {GAME OVER}
   ] Text=
   15 Color=
-  DrawText call
+  DrawText!!
 
-  240 Delay= Wait call
+  240 Delay= Wait!!
 
  loop]
 

@@ -179,7 +179,6 @@ class Program:
 
     elif word == 'push': self.opcode('PUSH')
     elif word == 'pop':  self.opcode('POP')
-    elif word == 'call': self.opcode('CALL')
     elif word == 'ret':  self.opcode('RET')
     elif word == 'peek': self.opcode('PEEK')
     else:
@@ -199,6 +198,13 @@ class Program:
             self.emit((con>>8)&0xff)
       elif op == ':' and con is not None: # XXX Replace with automatic allocation
           self.org(con)
+      elif op == '!!' and var: # XXX Need a proper notation for calls. '!!' is yuck
+          self.opcode('CALL')
+          self.emit(self.getAddress(var))
+          C('%04x %s' % (prev(self.vPC, 1), repr(var)))
+      elif op == '!!' and con:
+          self.opcode('CALL')
+          self.emit(con)
       elif op == '=' and var:
           self.opcode('STW')
           self.emit(self.getAddress(var))
