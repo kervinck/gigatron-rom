@@ -180,6 +180,10 @@ class Program:
     elif word == 'push': self.opcode('PUSH')
     elif word == 'pop':  self.opcode('POP')
     elif word == 'ret':  self.opcode('RET')
+    elif word == 'call':
+          self.opcode('CALL')
+          self.emit(symbol('vAC'))
+          C('%04x vAC' % prev(self.vPC, 1))
     elif word == 'peek': self.opcode('PEEK')
     else:
       var, con, op = self.parseWord(word) # XXX Simplify this
@@ -196,15 +200,11 @@ class Program:
             self.opcode('LDWI')
             self.emit( con    &0xff)
             self.emit((con>>8)&0xff)
-      elif op == ':' and con is not None: # XXX Replace with automatic allocation
-          self.org(con)
-      elif op == '!!' and var: # XXX Need a proper notation for calls. '!!' is yuck
-          self.opcode('CALL')
-          self.emit(self.getAddress(var))
-          C('%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '!!' and con:
-          self.opcode('CALL')
+      elif op == ';' and con:
+          self.opcode('LDW')
           self.emit(con)
+      elif op == ':' and con is not None: # XXX Replace with automatic allocation ('page')
+          self.org(con)
       elif op == '=' and var:
           self.opcode('STW')
           self.emit(self.getAddress(var))
@@ -226,9 +226,9 @@ class Program:
       elif op == '-' and con is not None:
           self.opcode('SUBI')
           self.emit(con)
-      elif op == '.' and con is not None:
+      elif op == '#' and con is not None:
           self.emit(con & 255)
-      elif op == ';' and con is not None:
+      elif op == '?' and con is not None:
           self.opcode('LOOKUP')
           self.emit(con)
       elif op == '&' and con is not None:
@@ -240,25 +240,25 @@ class Program:
       elif op == '^' and con is not None:
           self.opcode('XORI')
           self.emit(con)
-      elif op == '!' and con is not None:
+      elif op == '.' and con is not None:
           self.opcode('ST')
           self.emit(con)
-      elif op == '?' and con is not None:
+      elif op == ',' and con is not None:
           self.opcode('LD')
           self.emit(con)
-      elif op == '!' and var:
+      elif op == '.' and var:
           self.opcode('POKE')
           self.emit(self.getAddress(var))
           C('%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '<!' and var:
+      elif op == '<.' and var:
           self.opcode('ST')
           self.emit(self.getAddress(var))
           C('%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '>!' and var:
+      elif op == '>.' and var:
           self.opcode('ST')
           self.emit(self.getAddress(var)+1)
           C('%04x %s+1' % (prev(self.vPC, 1), repr(var)))
-      elif op == '?' and var:
+      elif op == ',' and var:
           self.opcode('LDW')
           self.emit(self.getAddress(var))
           C('%04x %s' % (prev(self.vPC, 1), repr(var)))
@@ -277,14 +277,18 @@ class Program:
       elif op == '>++' and con:
           self.opcode('INC')
           self.emit(con+1)
-      elif op == '<?' and var:
+      elif op == '<,' and var:
           self.opcode('LD')
           self.emit(self.getAddress(var))
           C('%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '>?' and var:
+      elif op == '>,' and var:
           self.opcode('LD')
           self.emit(self.getAddress(var)+1)
           C('%04x %s+1' % (prev(self.vPC, 1), repr(var)))
+      elif op == '!' and var:
+          self.opcode('CALL')
+          self.emit(self.getAddress(var))
+          C('%04x %s' % (prev(self.vPC, 1), repr(var)))
       elif op == '@' and con:
           if con&1:
             self.error('Invalid value %s (must be even)' % repr(con))

@@ -26,11 +26,12 @@ gcl1 {GCL version}
     if>0 loop]                          {50 IF B>0 THEN 30}
   $4448 d= {Middle of screen}           {60 D=$4448: REM MIDDLE OF SCREEN}
   [do
-    c [if<0 15 d! else 5 d!]            {70 IF C<0 POKE D,15 ELSE POKE D,5}
+    c [if<0 15 d. else 5 d.]            {70 IF C<0 POKE D,15 ELSE POKE D,5}
     c c+ c=                             {80 C=C+C}
     d 1+ d=                             {90 D=D+1}
     -$4458 d+ if<0 loop]                {100 IF D<$4458 THEN 70}
   loop]                                 {110 GOTO 10}
+
 
 -----------------
 Programming model
@@ -90,19 +91,19 @@ X                       Load variable X into vAC
 X+ X-                   Add/subtract variable X to/from vAC
 i+ i-                   Add/subtract small constant to/from vAC
 i& i| i^                Logical AND/OR/XOR vAC with small constant
-X<! X>!                 Store vAC as byte into the low/high byte of variable X
-X<? X>?                 Read low/high byte of variable X
+X<. X>.                 Store vAC as byte into the low/high byte of variable X
+X<, X>,                 Read low/high byte of variable X
 X<++ X>++               Increment low/high byte of variable X
 
 Memory
 ------
-X?                      Read unsigned byte from memory pointed by X into vAC
+X,                      Read unsigned byte from memory pointed by X into vAC
 peek                    Read byte from memory pointed by vAC
-X!                      Write vAC as byte to memory pointed by variable
-i?                      Read zero page address i as unsigned byte into vAC
-i!                      Store vAC as byte into zero page address i
-i;                      ROM table lookup from address vAC+i
-lookup                  Alias for '0;'
+X.                      Write vAC as byte to memory pointed by variable
+i,                      Read zero page address i as unsigned byte into vAC
+i;                      Read variable at zero page address into vAC
+i.                      Store vAC as byte into zero page address i
+i?                      ROM table lookup from address vAC+i
 
 Structured programming
 ----------------------
@@ -118,16 +119,17 @@ def                     Load next vPC in vAC and jump to end of current block.
 
 Subroutines
 -----------
-X!!                     Jump to function pointed by X, store old vPC in vLR
+X!                      Jump to function pointed by X, store old vPC in vLR
+call                    Jump to function pointed by vAC, store old vPC in vLR
 ret                     Jump to vLR, to return from a leaf subroutine. Non-leaf
                         subroutines should use "pop ret" as return sequence
 push                    Push vLR onto stack, for entering a non-leaf subroutine
 pop                     Remove top of stack and put value in vLR
-i@                      Call native code pointed by vAC, needing at most i cycles
+i!                      Call native code pointed by vAC, needing at most i cycles
 
 Data
 ----
-i.                      Raw byte-value i
+i#                      Raw byte-value i
 "Text"                  Text string XXX Not implementd
 
 Versioning

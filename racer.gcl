@@ -45,11 +45,11 @@ XXX Background music score?
   fontData+ fontData=  {Add to page address to reach bitmap data for Char}
 
   {Draw 6 vertical slices: 5 using font data, the last with all-zeros}
-  BgColor \sysArgs0!
-  Color   \sysArgs1!
+  BgColor \sysArgs0.
+  Color   \sysArgs1.
   Pos     \sysPos=
   $fb i= [do
-    fontData 0; fontData<++ \sysArgs2! \SYS_134_VDrawBits 134@
+    fontData 0? fontData<++ \sysArgs2. \SYS_134_VDrawBits 134@
     \sysPos<++
     i<++ i if<>0loop]
   Pos ret
@@ -64,22 +64,22 @@ XXX Background music score?
 }
   push
   [do
-    Text? Char= {Next character to be printed}
+    Text, Char= {Next character to be printed}
     if<>0       {Zero termination}
       Text<++   {Advance text pointer}
-      Char 10^ [if=0 Pos<! $800 Pos+ Pos=
-                else QDrawChar!! 6+ Pos=]
+      Char 10^ [if=0 Pos<. $800 Pos+ Pos=
+                else QDrawChar! 6+ Pos=]
       loop]
   pop ret
 ] DrawText=
 
-[def $47. $69. $67. $61. $74. $72. $6f. $6e. 0. ]      GigatronText=
+[def $47# $69# $67# $61# $74# $72# $6f# $6e# 0# ] GigatronText=
 
 [def {
   Wait -- Wait Delay number of frames (range 1..255)
 }
-  \frameCount? Delay+ 255& tmp=
-  [do \frameCount? tmp- if<>0loop]
+  \frameCount, Delay+ 255& tmp=
+  [do \frameCount, tmp- if<>0loop]
   ret
 ] Wait=
 
@@ -107,39 +107,39 @@ $0400:
                 XXX This is probably better done as a SYS call
 }
   {Setup page reference for write pointers}
-  Video? 254&  p>! 1| q>! Video<++
+  Video, 254&  p>. 1| q>. Video<++
 
   {Find segment to clear from position p[0] to position q[0]}
-  0 p<! q<!
-  p? i= q? i- i=        {i = q[0] - p[0]}
-  p? p<! q<!            {p,q = p+p[0], q+p[0]}
+  0 p<. q<.
+  p, i= q, i- i=        {i = q[0] - p[0]}
+  p, p<. q<.            {p,q = p+p[0], q+p[0]}
 
   {Clear previous object}
   {XXX Only clear pixels outside new area?}
   [do
-    21 p! q!            {Clear pixel on both lines}
+    21 p. q.            {Clear pixel on both lines}
     p<++ q<++
     i 1- i=
     if>0loop]
 
   {Set low bytes of p and q, to turn them into pixel write pointers}
   Sprite s=             {Pixel read pointer}
-  0 p<!                 {First let p point to start of page}
-  Video? X+ X= s? X+    {First byte in pixel data is offset}
-  p!                    {Remember starting point}
-  p<! q<!               {Set low bytes}
+  0 p<.                 {First let p point to start of page}
+  Video, X+ X= s, X+    {First byte in pixel data is offset}
+  p.                    {Remember starting point}
+  p<. q<.               {Set low bytes}
 
   {Draw actual pixels}
   s<++
   [do
-     p? 21^ Collision+ Collision=
-     s?
-     p! p<++
-     q! q<++
-     s<++ s? if<>0loop]
+     p, 21^ Collision+ Collision=
+     s,
+     p. p<++
+     q. q<++
+     s<++ s, if<>0loop]
 
   {Remember end point for later removal}
-  0 q<! p<? q!
+  0 q<. p<, q.
 
   Video 3+ Video=
   ret
@@ -149,17 +149,17 @@ $0400:
   Car sprite. Black is 0 but also the teminator, therfore use 64 for black.
   XXX Reduce footprint by bringing all lines under one 'def'
 }
-[def 2.         64. 64. 64. 40. 60. 60. 40. 64. 64. 64.         0.] Car0=
-[def 3.             40. 20. 20. 63. 63. 20. 20. 40.             0.] Car1=
-[def 2.         40. 20. 20. 20. 40. 40. 20. 20. 20. 40.         0.] Car2=
+[def 2#         64# 64# 64# 40# 60# 60# 40# 64# 64# 64#         0#] Car0=
+[def 3#             40# 20# 20# 63# 63# 20# 20# 40#             0#] Car1=
+[def 2#         40# 20# 20# 20# 40# 40# 20# 20# 20# 40#         0#] Car2=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 5                                      |
 +-----------------------------------------------------------------------}
 $0500:
 
-[def 0. 64. 64. 64. 64. 40. 20. 20. 20. 20. 40. 64. 64. 64. 64. 0.] Car3=
-[def 0. 64. 64. 64. 64. 21. 21. 21. 21. 21. 21. 64. 64. 64. 64. 0.] Car4=
+[def 0# 64# 64# 64# 64# 40# 20# 20# 20# 20# 40# 64# 64# 64# 64# 0#] Car3=
+[def 0# 64# 64# 64# 64# 21# 21# 21# 21# 21# 21# 64# 64# 64# 64# 0#] Car4=
 
 [def
   push
@@ -172,19 +172,19 @@ $0500:
     {Even lines are dark}
     63 {White}        CurbColor=
     12 {Bright Green} GrassColor=
-    SetupSegment!!
+    SetupSegment!
     Pos>++
 
     {Odd lines are bright}
     3 {Bright Red}    CurbColor=
     8 {Green}         GrassColor=
-    SetupSegment!!
+    SetupSegment!
     Pos>++
 
     Pos if>=0loop]
 
   {Setup undo infomation for last lines (for car sprite)}
-  $7400 [do \POKE. \vAC. \vAC>++ if>0loop]
+  $7400 [do \POKE# \vAC# \vAC>++ if>0loop]
 
   pop ret
 ] SetupRoad=
@@ -193,25 +193,25 @@ $0500:
   {Draw road segment}
   Pos p=
   Width [do tmp=
-    21 p! p<++
+    21 p. p<++
     tmp 1- if>0loop]
 
   {Draw curb}
   p q=
   Width [do 8- [if>0 tmp=
       q 1- q=
-      CurbColor q!
+      CurbColor q.
       tmp loop]]
 
   {Draw grass}
   [do
-    GrassColor p! p<++
-    p<? if<>0loop]
+    GrassColor p. p<++
+    p<, if<>0loop]
 
   {Draw mirror image}
   [do
-    p 255^ peek p! p<++
-    p<? 128^ if<>0loop]
+    p 255^ peek p. p<++
+    p<, 128^ if<>0loop]
 
   ret
 ] SetupSegment=
@@ -229,8 +229,8 @@ $0600:
   {Run game loop}
   0 Collision=
   [do
-    [do \vBlank? if=0loop]
-    AdvanceCar!!
+    [do \vBlank, if=0loop]
+    AdvanceCar!
 
     {See if we have reached the finish}
     Distance
@@ -240,7 +240,7 @@ $0600:
       {XXX Too complex. Just don't use DrawTime here}
       4 Prev1= Prev2= Prev3=
       [do j=
-        BestTime Value= $87c Pos= DrawTime!!
+        BestTime Value= $87c Pos= DrawTime!
         j 1- if>0loop]
 
       {New lap}
@@ -254,7 +254,7 @@ $0600:
     DDX+ DX= DX+ DX= DX+ DX=
     DX+ DriftX=
 
-    DrawCurvature!!
+    DrawCurvature!
 
     {Control car}
     Speed [do
@@ -265,27 +265,27 @@ $0600:
 
       tmp 1- if>0loop]
     0 Steer=
-    \serialRaw? $01& {~buttonRight} [if=0  $200 CarX+ CarX= +1 Steer=]
-    \serialRaw? $02& {~buttonLeft}  [if=0 -$200 CarX+ CarX= -1 Steer=]
-    \serialRaw? $40& {~buttonA}     [if=0 Speed 4- [if<0 Speed<++]]
-    \serialRaw? $80& {~buttonB}     [if=0 Speed 1- [if>0 Speed=]]
+    \serialRaw, $01& {~buttonRight} [if=0  $200 CarX+ CarX= +1 Steer=]
+    \serialRaw, $02& {~buttonLeft}  [if=0 -$200 CarX+ CarX= -1 Steer=]
+    \serialRaw, $40& {~buttonA}     [if=0 Speed 4- [if<0 Speed<++]]
+    \serialRaw, $80& {~buttonB}     [if=0 Speed 1- [if>0 Speed=]]
 
     {Draw car}
-    DrawRaceCar!!
+    DrawRaceCar!
 
-    DrawPerspective!!
+    DrawPerspective!
 
     {Draw current time}
     Time Value=
     $801 Pos=
     63 Color=
-    DrawTime!!
+    DrawTime!
 
     Collision if=0loop]
   pop ret
 ] PlayGame=
 
-[def $2d. $3a. $2d. $2d. $2e. $2d. 0.] EmptyTimeText=
+[def $2d# $3a# $2d# $2d# $2e# $2d# 0#] EmptyTimeText=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 7                                      |
@@ -301,11 +301,11 @@ $0700:
    scanline and 521 scanlines per frame, the Gigatron runs at 59.98 frames per
    second and that is ~3599 frames per minute. With this single correction the
    overall timekeeping error is within the tolerances of the crystal itself.}
-  3599 Radix= ExtractDigit!! \sysArgs7? $30+ Char= {Show frame speed for debugging}
-                             Prev3 Char- [if<>0 Char Prev3= QDrawChar!! else Pos] 12+ Pos=
-   600 Radix= ExtractDigit!! Prev2 Char- [if<>0 Char Prev2= QDrawChar!! else Pos]  6+ Pos=
-    60 Radix= ExtractDigit!! Prev1 Char- [if<>0 Char Prev1= QDrawChar!! else Pos] 12+ Pos=
-     6 Radix= ExtractDigit!!                                QDrawChar!!
+  3599 Radix= ExtractDigit! \sysArgs7, $30+ Char= {Show frame speed for debugging}
+                            Prev3 Char- [if<>0 Char Prev3= QDrawChar! else Pos] 12+ Pos=
+   600 Radix= ExtractDigit! Prev2 Char- [if<>0 Char Prev2= QDrawChar! else Pos]  6+ Pos=
+    60 Radix= ExtractDigit! Prev1 Char- [if<>0 Char Prev1= QDrawChar! else Pos] 12+ Pos=
+     6 Radix= ExtractDigit!                                QDrawChar!
   pop ret
 ] DrawTime=
 
@@ -314,34 +314,34 @@ $0700:
   Distance 63& 1+ tmp= \invTable q=
   $74d0 p=                      {array[48], in display memory but out of view}
   {0 X=}                        {No need to initialize X because only deltas matter}
-  X>? p! p<++
+  X>, p. p<++
   [do
     DX  DDX+ DX=
     X   DX+  X=
-    X>? p!   p<++
-    p<? if<>0loop]
+    X>, p.   p<++
+    p<, if<>0loop]
 
-  $0111 p= HorizonX>? tmp= p!        {Video table: start of sky}
+  $0111 p= HorizonX>, tmp= p.        {Video table: start of sky}
 
   {Step 2: Update video table low bytes for road}
   {This step is most timing-sensitive wrt. the video loop}
 
   $01ed p= $74d0 q=             {Video table: bottom of road}
-  q? X= q<++
+  q, X= q<++
   [do
     {\SYS_XXX_Racer_UpdateVideoX XXX@}
-    q? X- p! p 4- p=
-    q? X= q<++
-    q<? if<>0loop]
+    q, X- p. p 4- p=
+    q, X= q<++
+    q<, if<>0loop]
 
   {XXX Pivot 12px from bottom / front of car}
-  $74d5 peek 48+ tmp- X- p!
+  $74d5 peek 48+ tmp- X- p.
 
   ret
 ] DrawCurvature=
 
 {-----------------------------------------------------------------------+
-|}$08a0 \vAC!!{         RAM page 8                                      |
+|}$08a0 call{           RAM page 8                                      |
 +-----------------------------------------------------------------------}
 $08a0:
 
@@ -355,60 +355,60 @@ $08a0:
 
   \invTable q=
   [do
-    q 20;               {Y to Z depth mapping for perspective. The offset
+    q 20?               {Y to Z depth mapping for perspective. The offset
                          of 20 just reduces the aliasing near horizon.}
     Distance+ 4&        {Vertical scrolling Distance}
     [if<>0 1] tmp=
-    SegmentY 254& tmp+ p!
+    SegmentY 254& tmp+ p.
     p<++ p<++
     SegmentY<++
     q<++
 
-    p<? 240^ if<>0loop]
+    p<, 240^ if<>0loop]
 
   ret
 ] DrawPerspective=
 
 {-----------------------------------------------------------------------+
-|}$09a0 \vAC!!{         RAM page 9                                      |
+|}$09a0 call{           RAM page 9                                      |
 +-----------------------------------------------------------------------}
 $09a0:
 
 [def
   {Update time with actual elapsed frames}
-  \frameCount? LastFrame- 255& \sysArgs7! Time+ [if<0 $7fff] Time=
-  \frameCount? LastFrame=
+  \frameCount, LastFrame- 255& \sysArgs7. Time+ [if<0 $7fff] Time=
+  \frameCount, LastFrame=
 
   {Advance car along track}
   Speed Distance+ Distance=
 
   {Update progress indicator}
-  $0ef4 p= Distance>? p+ p= 21 p! p<++ 60 p!
+  $0ef4 p= Distance>, p+ p= 21 p. p<++ 60 p.
 
   ret
 ] AdvanceCar=
 
 {-----------------------------------------------------------------------+
-|}$0aa0 \vAC!!{         RAM page 10                                     |
+|}$0aa0 call{           RAM page 10                                     |
 +-----------------------------------------------------------------------}
 $0aa0:
 
 [def
   push
   $01d9 peek 255^ X=
-  CarX>? X+ X=
+  CarX>, X+ X=
   $01d8 Video=
-  Car0 Sprite= DrawPixels!!
-  Car1 Sprite= DrawPixels!!
+  Car0 Sprite= DrawPixels!
+  Car1 Sprite= DrawPixels!
   X Steer- X=
-  Car2 Sprite= DrawPixels!!
-  Car3 Sprite= DrawPixels!!
-  Car4 Sprite= DrawPixels!!
+  Car2 Sprite= DrawPixels!
+  Car3 Sprite= DrawPixels!
+  Car4 Sprite= DrawPixels!
   pop ret
 ] DrawRaceCar=
 
 {-----------------------------------------------------------------------+
-|}$0ba0 \vAC!!{         RAM page 11                                     |
+|}$0ba0 call{           RAM page 11                                     |
 +-----------------------------------------------------------------------}
 $0ba0:
 
@@ -420,34 +420,34 @@ $0ba0:
   {Display welcome tekst}
   32 BgColor=
 
-  BgColor \sysArgs0! \sysArgs1!
+  BgColor \sysArgs0. \sysArgs1.
   $800    \sysPos=
   [do
     \SYS_134_VDrawBits 134@
     \sysPos<++
-    \sysPos? 160^ if<>0loop]
+    \sysPos, 160^ if<>0loop]
 
   63 Color=
-  $801 Pos= EmptyTimeText Text= DrawText!!
-  $87c Pos= EmptyTimeText Text= DrawText!!
-  $838 Pos= GigatronText  Text= DrawText!!
-  60 Delay= Wait!!
+  $801 Pos= EmptyTimeText Text= DrawText!
+  $87c Pos= EmptyTimeText Text= DrawText!
+  $838 Pos= GigatronText  Text= DrawText!
+  60 Delay= Wait!
 
   pop ret
 ] Intro=
 
 {-----------------------------------------------------------------------+
-|}$0ca0 \vAC!!{         RAM page 12                                     |
+|}$0ca0 call{           RAM page 12                                     |
 +-----------------------------------------------------------------------}
 $0ca0:
 
 {-----------------------------------------------------------------------+
-|}$0da0 \vAC!!{         RAM page 13                                     |
+|}$0da0 call{           RAM page 13                                     |
 +-----------------------------------------------------------------------}
 $0da0:
 
 {-----------------------------------------------------------------------+
-|}$0ea0 \vAC!!{         RAM page 14                                     |
+|}$0ea0 call{           RAM page 14                                     |
 +-----------------------------------------------------------------------}
 $0ea0:
 
@@ -455,54 +455,54 @@ $0ea0:
   push
 
   \zippedRacerHorizon p= $1000 q=
-  [def p<? 250^ [if<>0 1 else 6] p+ p= ret] tmp= {"next p"}
+  [def p<, 250^ [if<>0 1 else 6] p+ p= ret] tmp= {"next p"}
   [do
-    p 0; \sysArgs0! tmp!!
-      0; \sysArgs1! tmp!!
-      0; \sysArgs2! tmp!!
+    p 0? \sysArgs0. tmp!
+      0? \sysArgs1. tmp!
+      0? \sysArgs2. tmp!
                      \SYS_56_Unpack 56@
     q \sysPos= 4+ q= \SYS_30_Draw4  30@
-    q>? $20^ if<>0loop]
+    q>, $20^ if<>0loop]
 
   pop ret
 ] SetupHorizon=
 
 {-----------------------------------------------------------------------+
-|}$0fa0 \vAC!!{         RAM page 15                                     |
+|}$0fa0 call{           RAM page 15                                     |
 +-----------------------------------------------------------------------}
 $0fa0:
 
 {--- Run ---}
-Intro!!
+Intro!
 
 {--- Main loop ---}
 [do
   {Setup new game}
-  0 DX= DrawCurvature!!
-  DrawPerspective!!
-  SetupHorizon!!
-  SetupRoad!!
+  0 DX= DrawCurvature!
+  DrawPerspective!
+  SetupHorizon!
+  SetupRoad!
   $7400 Distance=
   $7fff BestTime=
   0 Time= Value= HorizonX=
-  \frameCount? LastFrame=
+  \frameCount, LastFrame=
   $7900 CarX=
   1 Speed=
 
   {XXX "Get ready" message}
 
   {Play game until finished}
-  PlayGame!!
+  PlayGame!
 
   {"Game over" message}
   $1435 Pos=
   [def
-    $47. $41. $4d. $45. $20. $4f. $56. $45. $52. 0. {GAME OVER}
+    $47# $41# $4d# $45# $20# $4f# $56# $45# $52# 0# {GAME OVER}
   ] Text=
   15 Color=
-  DrawText!!
+  DrawText!
 
-  240 Delay= Wait!!
+  240 Delay= Wait!
 
  loop]
 
