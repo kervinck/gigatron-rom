@@ -132,7 +132,7 @@ i.                      Raw byte-value i
 
 Versioning
 ----------
-gcl0x gcl1              GCL version. Suffix x denotes experimental/extended versions
+gcl0x gcl1              GCL version. Suffix 'x' denotes experimental/extended versions
 
 ----------------------
 vCPU instruction table
@@ -160,12 +160,12 @@ XORI   $DD      Logical-XOR with constant (vAC^=D)
 PEEK   -        Read byte from memory (vAC=[vAC])
 POKE   $DD      Write byte in memory ([[D+1],[D]]=vAC&255)
 LOOKUP $DD      ROM lookup (vAC=ROM[AC+256*D])
+BRA    $DD      Branch unconditionally (vPC=(vPC&0xff00)+D)
 BCC    $CC $DD  Test vAC and branch conditionally. CC can be EQ,NE,LT,GT,LE,GE
-BRA    $DD      Branch unconditionally (vPC=D+256*(vPC>>8))
 CALL   -        Goto address but remember vPC (vLR,vPC=vPC+1,vAC-2)
 RET    -        Leaf return (vPC=vLR-2)
-PUSH   -        Push value on stack ([--vSP]=vLR&255,[--vSP]>>8)
-PULL   -        Pop value from stack(vAC=[vSP]+256*[vSP+1], vSP+=2)
+PUSH   -        Push vLR on stack ([--vSP]=vLR&255,[--vSP]=vLR>>8)
+PULL   -        Pop value from stack (vAC=[vSP]+256*[vSP+1],vSP+=2)
 SYS    $DD      Native function call for at most $DD ticks ($DD*2 cycles)
 DEF    $DD      Define data or code (vAC,vPC=vPC+2,D+256*(vPC>>8))
 
