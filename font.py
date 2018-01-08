@@ -4,7 +4,7 @@
 
 def _char(*args):
   """Convert character from easy-readable strings data into ROM bytes"""
-  X Y = len(args[0]), len(args)
+  X, Y = len(args[0]), len(args)
   bytes = []
   for x in range(X):
     byte = 0
