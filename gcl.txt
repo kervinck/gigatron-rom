@@ -14,24 +14,30 @@ Example program
 ---------------
 
 gcl1 {GCL version}
+                                        {Approximate BASIC equivalent}
+{Function to draw binary value as pixels}
 
-{Draw the binary value of the largest 16-bit Fibonacci number on screen}
-
-[do                                     {Approximate BASIC equivalent}
-  0 a=                                  {10 A=0}
-  1 b=                                  {20 B=1}
+[def                                    {10 GOTO 80}
+  $4448 D= {Middle of screen}           {20 D=$4448: REM MIDDLE OF SCREEN}
   [do
-    a b+ c=                             {30 C=A+B}
-    b a= c b=                           {40 A=B: B=C}
-    if>0 loop]                          {50 IF B>0 THEN 30}
-  $4448 d= {Middle of screen}           {60 D=$4448: REM MIDDLE OF SCREEN}
-  [do
-    c [if<0 15 d. else 5 d.]            {70 IF C<0 POKE D,15 ELSE POKE D,5}
-    c c+ c=                             {80 C=C+C}
-    d 1+ d=                             {90 D=D+1}
-    -$4458 d+ if<0 loop]                {100 IF D<$4458 THEN 70}
-  loop]                                 {110 GOTO 10}
+    C [if<0 15 else 5] D.               {30 IF C<0 POKE D,15 ELSE POKE D,5}
+    C C+ C=                             {40 C=C+C}
+    D 1+ D=                             {50 D=D+1}
+    -$4458 D+ if<0 loop]                {60 IF D<$4458 THEN 30}
+  ret                                   {70 RETURN}
+] Plot=
 
+{Compute largest 16-bit Fibonacci number and plot it on screen}
+
+[do
+  0 A=                                  {80 A=0}
+  1 B=                                  {90 B=1}
+  [do
+    A B+ C=                             {100 C=A+B}
+    B A= C B=                           {110 A=B: B=C}
+    if>0 loop]                          {120 IF B>0 THEN 100}
+  Plot!                                 {130 GOSUB 20}
+  loop]                                 {140 GOTO 80}
 
 -----------------
 Programming model
@@ -48,7 +54,7 @@ vAC  is the virtual accumulator, used by instructions as operand and/or result
 vPC  is the virtual program counter. Programs run from RAM. When executing, vPC
      auto-increments just its low byte, so it wraps around on the same RAM page.
      (Code normally doesn't "use" this.) Function calls can go across pages.
-vLR  is the link register. It points to the instruction following the most recent
+vLR  is the link register. It points to the instruction after the most recent
      CALL instruction. This is used to return after making a subroutine
      call. When nesting subroutines, vLR should be pushed on the stack.
 vSP  is the stack pointer. The stack lives in the zero page top and grows down.
@@ -76,7 +82,7 @@ Variable names start with an alphanumeric character and are case sensitive.
 The overview below uses the following conventions:
 'i' indicates an 8-bit integer constant.
 'ii' indicates a 16-bit integer constant.
-'X' indicates a named variable. Variables are allocated globally on the zero page.
+'X' indicates a named variable, allocated globally on the zero page.
 
 --------------------
 Meaning of GCL words
@@ -98,12 +104,12 @@ X<++ X>++               Increment low/high byte of variable X
 Memory
 ------
 X,                      Read unsigned byte from memory pointed by X into vAC
-peek                    Read byte from memory pointed by vAC
-X.                      Write vAC as byte to memory pointed by variable
-i,                      Read zero page address i as unsigned byte into vAC
-i;                      Read variable at zero page address into vAC
+X.                      Write vAC as byte to memory pointed by variable X
+i,                      Read unsigned byte at zero page address i into vAC
 i.                      Store vAC as byte into zero page address i
-i?                      ROM table lookup from address vAC+i
+i;                      Read word at zero page address i into vAC
+i?                      Table lookup from ROM address vAC+i
+peek                    Read byte from memory pointed by vAC (Same as "\vAC,")
 
 Structured programming
 ----------------------
@@ -113,19 +119,19 @@ if>0                    Continue executing code if vAC>0, otherwise jump to
                         Conditions are "=0" ">0" "<0" "<=0" ">=0" "<>0"
 else                    When encountered, skip rest of code until end of block
 do                      Mark the start of a loop
-loop                    Jump back to matching "do" (may be in an enclosing block)
+loop                    Jump back to matching "do" (May be in an outer block)
 if>0loop                Optimization for "if>0 loop" (works with all conditions)
-def                     Load next vPC in vAC and jump to end of current block.
+def                     Load next vPC in vAC and jump to end of current block
 
 Subroutines
 -----------
 X!                      Jump to function pointed by X, store old vPC in vLR
-call                    Jump to function pointed by vAC, store old vPC in vLR
 ret                     Jump to vLR, to return from a leaf subroutine. Non-leaf
                         subroutines should use "pop ret" as return sequence
 push                    Push vLR onto stack, for entering a non-leaf subroutine
 pop                     Remove top of stack and put value in vLR
-i!                      Call native code pointed by vAC, needing at most i cycles
+i!                      Call native code pointed by vAC, not exceeding i cycles
+call                    Jump to function pointed by vAC (Same as "\vAC!")
 
 Data
 ----
@@ -133,7 +139,7 @@ i#                      Raw byte-value i
 
 Versioning
 ----------
-gcl0x gcl1              GCL version. Suffix 'x' denotes experimental/extended versions
+gcl0x gcl1              GCL version. "x" denotes experimental/extended versions
 
 Future extensions
 -----------------
@@ -141,6 +147,8 @@ Future extensions
 'A                      Character code?
 "Text"                  Text string?
 ()                      Macros?
+$X                      For localized variables
+=12                     For raw byte values (better readable than 12#)
 
 ----------------------
 vCPU instruction table
@@ -173,7 +181,7 @@ BCC    $CC $DD  Test vAC and branch conditionally. CC can be EQ,NE,LT,GT,LE,GE
 CALL   $DD      Goto address but remember vPC (vLR,vPC=vPC+2,[D]+256*[D+1]-2)
 RET    -        Leaf return (vPC=vLR-2)
 PUSH   -        Push vLR on stack ([--vSP]=vLR&255,[--vSP]=vLR>>8)
-POP    -        Pop value from stack (vAC=[vSP]+256*[vSP+1],vSP+=2) XXX should restore to vLR
+POP    -        Pop value from stack (vAC=[vSP]+256*[vSP+1],vSP+=2)
 SYS    $DD      Native function call for at most $DD ticks ($DD*2 cycles)
 DEF    $DD      Define data or code (vAC,vPC=vPC+2,D+256*(vPC>>8))
 
