@@ -418,7 +418,7 @@ $0ba0:
   push
 
   {Display welcome tekst}
-  32 BgColor=
+  48 BgColor=
 
   BgColor \sysArgs0. \sysArgs1.
   $800    \sysPos=
