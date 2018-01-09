@@ -113,7 +113,7 @@ if>0                    Continue executing code if vAC>0, otherwise jump to
                         Conditions are "=0" ">0" "<0" "<=0" ">=0" "<>0"
 else                    When encountered, skip rest of code until end of block
 do                      Mark the start of a loop
-loop                    Jump back to matching "do"
+loop                    Jump back to matching "do" (may be in an enclosing block)
 if>0loop                Optimization for "if>0 loop" (works with all conditions)
 def                     Load next vPC in vAC and jump to end of current block.
 
@@ -130,11 +130,17 @@ i!                      Call native code pointed by vAC, needing at most i cycle
 Data
 ----
 i#                      Raw byte-value i
-"Text"                  Text string XXX Not implementd
 
 Versioning
 ----------
 gcl0x gcl1              GCL version. Suffix 'x' denotes experimental/extended versions
+
+Future extensions
+-----------------
+<p++ >p++               Notation for p<++ p>++
+'A                      Character code?
+"Text"                  Text string?
+()                      Macros?
 
 ----------------------
 vCPU instruction table
