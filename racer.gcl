@@ -8,25 +8,27 @@
 gcl0x
 
 {
+Todo:
 XXX Bending road
 XXX Randomized trajectory
 XXX Engine sound
 XXX Slower acceleration
 XXX Breaking and automatic slow-down to cruising speed
-XXX Improve progress indicator
-XXX Add simple speedometer
+XXX Improve track indicator
+
+Maybe:
 XXX Freeze time display for the first 2 seconds after completing a lap
 XXX Increase minimum speed when completing a lap
-XXX Higher frame rate
-
 XXX Obstacles? Other cars / bicycles?
+XXX Car crash sequence when hitting curb? Easy to make it scatter...
+XXX Add breaking sound
+XXX Add tire screech sound
 XXX Move car forward when going faster
-XXX Image compression?
 XXX Finish line?
+XXX Background music score?
 XXX Crash sound effect?
 XXX Sprite acceleration?
-XXX Car crash sequence when hitting curb? Easy to make it scatter...
-XXX Background music score?
+XXX Image compression?
 
  Many ideas here come from Lou's Pseudo 3d page at
  http://www.extentofthejam.com/pseudo/
