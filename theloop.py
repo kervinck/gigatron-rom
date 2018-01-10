@@ -1879,9 +1879,9 @@ while pc()&255 != 0:
 align(0x100, 0x100)
 label('invTable')
 
-# Unit 64, offset 0.25
+# Unit 64, table offset 16 (=1/4), value offset 1: (x+16)*(y+1) == 64*64 - e
 for i in range(251):
-  ld(val(4095/(i+16)))
+  ld(val(4096/(i+16)-1))
 
 trampoline()
 
