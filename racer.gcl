@@ -19,7 +19,7 @@ XXX Freeze time display for the first 2 seconds after completing a lap
 XXX Increase minimum speed when completing a lap
 XXX Higher frame rate
 
-XXX Obstacles?
+XXX Obstacles? Other cars / bicycles?
 XXX Move car forward when going faster
 XXX Image compression?
 XXX Finish line?
@@ -62,7 +62,6 @@ XXX Background music score?
   DrawText(Text,Pos)
 
   Draw a zero-terminated text string to the screen.
-  Character 10 acts as newline.
   There is no check for running off screen.
 }
   push
@@ -260,7 +259,7 @@ $0600:
   pop ret
 ] DrawTime=
 
-[def {DrawCurvature}
+[def {DrawRoad}
   $74d0 p=                      {array[48], in display memory but out of view}
   {0 X=}                        {No need to initialize X because only deltas matter}
   X>, p. p<++
@@ -312,7 +311,7 @@ $0600:
   tmp X- s.
 
   ret
-] DrawCurvature=
+] DrawRoad=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 7                                      |
@@ -351,7 +350,7 @@ $0700:
 
     {Draw bending of the road}
     $e8 Divider= {Divider XXX Calculate based on distance and map}
-    DrawCurvature!
+    DrawRoad!
 
     {Car "physics" and driver input}
     ControlCar!
@@ -360,7 +359,7 @@ $0700:
     DrawRaceCar!
 
     {Update the perspective illusion}
-    DrawPerspective!
+    DrawGrass!
 
     {Draw current time}
     Time Value= $801 Pos= 63 Color= DrawTime!
@@ -409,7 +408,7 @@ $08a0:
     if<>0loop]
 
   ret
-] DrawPerspective=
+] DrawGrass=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 9                                      |
@@ -517,8 +516,8 @@ Intro!
 [do
   {Setup new game}
   $e8 Divider=
-  0 DDX= DDX2= DX= DrawCurvature!
-  DrawPerspective!
+  0 DDX= DDX2= DX= DrawRoad!
+  DrawGrass!
   SetupHorizon!
   SetupRoad!
 
