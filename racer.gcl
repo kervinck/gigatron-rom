@@ -13,20 +13,23 @@ XXX Randomized trajectory
 XXX Engine sound
 XXX Slower acceleration
 XXX Breaking and automatic slow-down to cruising speed
-XXX Move car forward when going faster
 XXX Improve progress indicator
 XXX Add simple speedometer
 XXX Freeze time display for the first 2 seconds after completing a lap
 XXX Increase minimum speed when completing a lap
 XXX Higher frame rate
 
-XXX Image compression?
 XXX Obstacles?
+XXX Move car forward when going faster
+XXX Image compression?
 XXX Finish line?
 XXX Crash sound effect?
 XXX Sprite acceleration?
 XXX Car crash sequence when hitting curb? Easy to make it scatter...
 XXX Background music score?
+
+ Many ideas here come from Lou's Pseudo 3d page at
+ http://www.extentofthejam.com/pseudo/
 }
 
 {-----------------------------------------------------------------------+
@@ -222,77 +225,6 @@ $0500:
 $0600:
 
 [def {
-  Play a single game until the end
-}
-  push
-
-  {Run game loop}
-  0 Collision=
-  [do
-    [do \vBlank, if=0loop]
-    AdvanceCar!
-
-    {See if we have reached the finish}
-    Distance
-    [if<0
-      Time BestTime- [if<0 Time BestTime=]
-
-      {XXX Too complex. Just don't use DrawTime here}
-      4 Prev1= Prev2= Prev3=
-      [do j=
-        BestTime Value= $87c Pos= DrawTime!
-        j 1- if>0loop]
-
-      {New lap}
-      0 Time=
-      $7400 Distance=
-    ]
-
-    {Map distance to road curvature}
-
-    64& [if=0 Distance else Distance 255^] 63& 32- DDX= {-64 ... +63}
-    DDX+ DX= DX+ DX= DX+ DX=
-    DX+ DriftX=
-
-    DrawCurvature!
-
-    {Control car}
-    Speed [do
-      tmp=
-      CarX DriftX- CarX= {Drift is proportional to speed}
-
-      HorizonX DX+ HorizonX= {Same with horizon}
-
-      tmp 1- if>0loop]
-    0 Steer=
-    \serialRaw, $01& {~buttonRight} [if=0  $200 CarX+ CarX= +1 Steer=]
-    \serialRaw, $02& {~buttonLeft}  [if=0 -$200 CarX+ CarX= -1 Steer=]
-    \serialRaw, $40& {~buttonA}     [if=0 Speed 4- [if<0 Speed<++]]
-    \serialRaw, $80& {~buttonB}     [if=0 Speed 1- [if>0 Speed=]]
-
-    {Draw car}
-    DrawRaceCar!
-
-    DrawPerspective!
-
-    {Draw current time}
-    Time Value=
-    $801 Pos=
-    63 Color=
-    DrawTime!
-
-    Collision if=0loop]
-  pop ret
-] PlayGame=
-
-[def $2d# $3a# $2d# $2d# $2e# $2d# 0#] EmptyTimeText=
-
-{-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 7                                      |
-+-----------------------------------------------------------------------}
-$0700:
-
-[def {
   DrawTime -- Render elapsed time (in frams) as M:SS.s -- Value Radix
               Skip unchanged digits
 }
@@ -309,16 +241,23 @@ $0700:
   pop ret
 ] DrawTime=
 
-[def
-  {Step 1: Calculate road curvature}
-  Distance 63& 1+ tmp= \invTable q=
+[def {DrawCurvature}
   $74d0 p=                      {array[48], in display memory but out of view}
   {0 X=}                        {No need to initialize X because only deltas matter}
   X>, p. p<++
+
+  {Road curvature for bottom segment}
   [do
-    DX  DDX+ DX=
-    X   DX+  X=
-    X>, p.   p<++
+    DX DDX+ DX=
+    X+ X=
+    X>, p. p<++
+    Divider<++ Divider if<>0loop]
+
+  {Road curvature for top segment}
+  [do
+    DX DDX2+ DX=
+    X+ X=
+    X>, p. p<++
     p<, if<>0loop]
 
   $0111 p= HorizonX>, tmp= p.        {Video table: start of sky}
@@ -339,6 +278,75 @@ $0700:
 
   ret
 ] DrawCurvature=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 7                                      |
++-----------------------------------------------------------------------}
+$0700:
+
+[def {
+  Play a single game until the end
+}
+  push
+
+  {Run game loop}
+  0 Collision=
+  [do
+    AdvanceCar!
+
+    {See if we have reached the finish}
+    Distance
+    [if<0
+      Time BestTime- [if<0 Time BestTime=]
+
+      {XXX Too complex. Just don't use DrawTime here}
+      4 Prev1= Prev2= Prev3=
+      [do j=
+        BestTime Value= $87c Pos= DrawTime!
+        j 1- if>0loop]
+
+      {New lap}
+      0 Time= $7400 Distance=
+    ]
+
+    {Map distance to road curvature}
+    64& [if=0 Distance else Distance 255^] 63& 32- DDX= {-64 ... +63}
+    DDX+ DX= DX+ DX= DX+ DriftX=
+    0 DDX- DDX2=
+
+    {Sync}
+    [do \vBlank, if=0loop]
+
+    {Draw bending of the road}
+    $e8 Divider= {Divider}
+    DrawCurvature!
+
+    {Control race car}
+    Speed [do
+      tmp=
+      CarX DriftX- CarX= {Drift is proportional to speed}
+      HorizonX DX+ HorizonX= {Same with horizon}
+      tmp 1- if>0loop]
+    0 Steer=
+    \serialRaw, $01& {~buttonRight} [if=0  $200 CarX+ CarX= +1 Steer=]
+    \serialRaw, $02& {~buttonLeft}  [if=0 -$200 CarX+ CarX= -1 Steer=]
+    \serialRaw, $40& {~buttonA}     [if=0 Speed 4- [if<0 Speed<++]]
+    \serialRaw, $80& {~buttonB}     [if=0 Speed 1- [if>0 Speed=]]
+
+    {Draw race car}
+    DrawRaceCar!
+
+    {Update the perspective illusion}
+    DrawPerspective!
+
+    {Draw current time}
+    Time Value= $801 Pos= 63 Color= DrawTime!
+
+    Collision if=0loop]
+  pop ret
+] PlayGame=
+
+[def $2d# $3a# $2d# $2d# $2e# $2d# 0#] EmptyTimeText=
 
 {-----------------------------------------------------------------------+
 |}$08a0 \vLR= ret{      RAM page 8                                      |
@@ -478,24 +486,26 @@ Intro!
 {--- Main loop ---}
 [do
   {Setup new game}
-  0 DX= DrawCurvature!
+  $e8 Divider=
+  0 DDX= DDX2= DX= DrawCurvature!
   DrawPerspective!
   SetupHorizon!
   SetupRoad!
+
   $7400 Distance=
   $7fff BestTime=
   0 Time= Value= HorizonX=
-  \frameCount, LastFrame=
   $7900 CarX=
   1 Speed=
 
   {XXX "Get ready" message}
 
   {Play game until finished}
+  \frameCount, LastFrame=
   PlayGame!
 
   {"Game over" message}
-  $1435 Pos=
+  $1435 Pos= {XXX Adjust for horizon position}
   [def
     $47# $41# $4d# $45# $20# $4f# $56# $45# $52# 0# {GAME OVER}
   ] Text=
