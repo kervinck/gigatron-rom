@@ -1770,7 +1770,7 @@ trampoline()
 
 #-----------------------------------------------------------------------
 #
-#  ROM page XX: Key table for music
+#  ROM page 7: Key table for music
 #
 #-----------------------------------------------------------------------
 
@@ -1792,8 +1792,34 @@ for i in range(0, 250, 2):
 trampoline()
 
 #-----------------------------------------------------------------------
+#
+#  ROM page 8: Inversion table
+#
+#-----------------------------------------------------------------------
+
+align(0x100, 0x100)
+label('invTable')
+
+# Unit 64, table offset 16 (=1/4), value offset 1: (x+16)*(y+1) == 64*64 - e
+for i in range(251):
+  ld(val(4096/(i+16)-1))
+
+trampoline()
+
+#-----------------------------------------------------------------------
 #  ROM page 76-: Built-in full resolution images
 #-----------------------------------------------------------------------
+
+f = open('Images/gigatron.rgb', 'rb')
+raw = f.read()
+f.close()
+align(0x100)
+label('gigatronRaw')
+for i in xrange(len(raw)):
+  if i&255 < 251:
+    ld(val(ord(raw[i])))
+  elif i&255 == 251:
+    trampoline()
 
 def importImage(rgbName, width, height, ref):
   f = open(rgbName)
@@ -1822,20 +1848,9 @@ def importImage(rgbName, width, height, ref):
       else:
         trampoline3b()
 
-importImage('Images/Jupiter-160x120.rgb', 160, 120, 'packedJupiter')
 importImage('Images/Parrot-160x120.rgb',  160, 120, 'packedParrot')
 importImage('Images/Baboon-160x120.rgb',  160, 120, 'packedBaboon')
-
-f = open('Images/gigatron.rgb', 'rb')
-raw = f.read()
-f.close()
-align(0x100)
-label('gigatronRaw')
-for i in xrange(len(raw)):
-  if i&255 < 251:
-    ld(val(ord(raw[i])))
-  elif i&255 == 251:
-    trampoline()
+importImage('Images/Jupiter-160x120.rgb', 160, 120, 'packedJupiter')
 
 #-----------------------------------------------------------------------
 #
@@ -1866,21 +1881,6 @@ for i in xrange(len(packed)):
     trampoline()
 while pc()&255 != 0:
   trampoline()
-
-#-----------------------------------------------------------------------
-#
-#  ROM page XX: Inversion table
-#
-#-----------------------------------------------------------------------
-
-align(0x100, 0x100)
-label('invTable')
-
-# Unit 64, table offset 16 (=1/4), value offset 1: (x+16)*(y+1) == 64*64 - e
-for i in range(251):
-  ld(val(4096/(i+16)-1))
-
-trampoline()
 
 #-----------------------------------------------------------------------
 #
