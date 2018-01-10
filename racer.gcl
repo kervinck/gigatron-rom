@@ -251,11 +251,9 @@ $0600:
    scanline and 521 scanlines per frame, the Gigatron runs at 59.98 frames per
    second and that is ~3599 frames per minute. With this single correction the
    overall timekeeping error is within the tolerances of the crystal itself.}
-  3599 Radix= ExtractDigit! \sysArgs7, $30+ Char= {Show frame speed for debugging}
+
+  3599 Radix= ExtractDigit! {\sysArgs7, $30+ Char= {Show frame speed for debugging}}
                             Prev3 Char- [if<>0 Char Prev3= QDrawChar! else Pos] 12+ Pos=
-{
-  3599 Radix= ExtractDigit! Prev3 Char- [if<>0 Char Prev3= QDrawChar! else Pos] 12+ Pos=
-}
    600 Radix= ExtractDigit! Prev2 Char- [if<>0 Char Prev2= QDrawChar! else Pos]  6+ Pos=
     60 Radix= ExtractDigit! Prev1 Char- [if<>0 Char Prev1= QDrawChar! else Pos] 12+ Pos=
      6 Radix= ExtractDigit!                                QDrawChar!
