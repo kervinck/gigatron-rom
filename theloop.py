@@ -30,6 +30,7 @@
 #  Maybe
 #  XXX Music sequencer (combined with LED sequencer)
 #  XXX Logo drawing
+#  XXX Readability of asm.py instructions
 #  XXX asm: make d() implicit in first argument of instructions
 #  XXX GCL: 'page' macro
 #  XXX More waveforms (eg. with offset in shift2 table)
@@ -38,13 +39,10 @@
 #  XXX Intro: Rising planet?
 #  XXX Multitasking/threading/sleeping (start with date/time clock in GCL)
 #  XXX Better shift-table (use ROM?)
-#  XXX Better notation for 'call': () or []
 #  XXX Prefix notation for high/low byte >X++ instead of X>++
-#  XXX Readability of asm.py instructions
 #  XXX Decay, using Karplus-Strong
-#  XXX Scoping for variables or some form of local variables?
+#  XXX Scoping for variables or some form of local variables? $i ("localized")
 #  XXX Simple GCL programs might be compiled by the host instead of offline?
-#  XXX Dynamic memory allocation
 #  XXX Macros
 #
 #  Future applications
