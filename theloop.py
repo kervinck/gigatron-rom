@@ -255,7 +255,6 @@ shiftTablePage = 0x02
 #-----------------------------------------------------------------------
 
 vCpuStart = 0x0300
-vCpuTop   = 0x07ff
 
 #-----------------------------------------------------------------------
 #  Memory layout
@@ -1899,9 +1898,6 @@ program = gcl.Program(vCpuStart)
 for line in open('racer.gcl').readlines():
   program.line(line)
 program.end()
-bLine = program.vPC
-print bLine-vCpuStart, 'GCL bytes loaded'
-print vCpuTop-bLine+1, 'GCL bytes free'
 
 # Return
 ld(d(returnTo+1), busRAM|ea0DregY)
