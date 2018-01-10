@@ -363,6 +363,8 @@ def end():
         if label:
           for extra in _labels[address][:-1]:
             file.write(extra+':\n') # Extra labels get their own line
+          if len(label) > 13:
+            label += '\n' + (13 * ' ')
       else:
         repeats += 1
 
