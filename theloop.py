@@ -13,23 +13,25 @@
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #  To do
-#  XXX Serial read from ROM tables, hiding page boundraries
+#  XXX Racer game
+#  XXX Serial application load from ROM tables, hiding page boundraries
 #      Protocol: [<addrH> <addrL> <n-1> n*<byte>]+ 0
 #  XXX Main menu / Loading and starting of programs
-#  XXX ROM load of vCPU code / bootstrapping
-#  XXX Logo drawing
-#  XXX Music sequencer
 #  XXX Serial loading of programs with Arduino/Trinket
 #      Protocol: 0x21('!') <addrH> <addrL> <n-1> n*<byte> <sum> (n=1-32)
 #  XXX Double-check initialisation of all variables
 #  XXX Show counted memory at startup
 #  XXX ROM padding
-#  XXX GCL: 'page' macro
-#  XXX asm: make d() implicit in first argument of instructions
-#  XXX Key table
-#  XXX Sequencer
+#  XXX Snake game
+#  XXX Picture Frame
+#  XXX Test screen
+#  XXX About Gigatron, credits & thanks
 #
 #  Maybe
+#  XXX Music sequencer (combined with LED sequencer)
+#  XXX Logo drawing
+#  XXX asm: make d() implicit in first argument of instructions
+#  XXX GCL: 'page' macro
 #  XXX More waveforms (eg. with offset in shift2 table)
 #  XXX Scroll out the top line of text
 #  XXX Pacman ghosts. Sprites by scan line 4 reset method? ("videoG"=graphics)
@@ -45,21 +47,18 @@
 #  XXX Dynamic memory allocation
 #  XXX Macros
 #
-#  Possible applications
+#  Future applications
 #  XXX Gigatron layout balls/bricks game
-#  XXX Picture Frame
-#  XXX Iets met scroller. Flappy Bird?
-#  XXX About Gigatron & credits
-#  XXX 5 sec test screen
+#  XXX Horizontal scroller. Flappy Bird
 #  XXX Random dots screen
-#  XXX Info screen (zero page?)
+#  XXX Info screen (zero page)
 #  XXX Font screen 16x8 chars
-#  XXX Iets met doolhof. Berzerk/Robotron? Pac Mac?
+#  XXX Maze game. Berzerk/Robotron? Pac Mac
 #  XXX Primes, Fibonacci (bignum), Queens
+#  XXX Mandelbrot fractal
 #  XXX Game of Life (edit <-> stop <-> slow <-> fast)
-#  XXX Game #5 Iets met schieten. Space Invaders, Demon Attack, Galaga style
-#  XXX Game #6 Iets met racen.
-#  XXX Demo mode: flip between applications in auto-play mode
+#  XXX Game #5 Shooter. Space Invaders, Demon Attack, Galaga style
+#  XXX Exhibition mode: flip between applications in auto-play mode
 #-----------------------------------------------------------------------
 
 from asm import *
