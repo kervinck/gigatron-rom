@@ -1881,6 +1881,35 @@ for i in xrange(len(packed)):
 while pc()&255 != 0:
   trampoline()
 
+label('SYS_40_Racer_UpdateVideoX')
+ld(d(sysArgs+2),busRAM|regX)    #15 q,
+ld(d(sysArgs+3),busRAM|regY)    #16
+ld(eaYXregAC,busRAM)            #17
+st(d(vTmp))                     #18
+suba(d(sysArgs+4),busRAM)       #19 X-
+ld(d(sysArgs+0),busRAM|regX)    #20 p.
+ld(d(sysArgs+1),busRAM|regY)    #21
+st(eaYXregAC,busAC)             #22
+ld(d(sysArgs+0),busRAM)         #23 p 4- p=
+suba(d(4))                      #24
+st(d(sysArgs+0))                #25
+ldzp(d(vTmp))                   #26 q,
+st(d(sysArgs+4))                #27 X=
+ld(d(sysArgs+2),busRAM)         #28 q<++
+adda(d(1))                      #29
+st(d(sysArgs+2))                #30
+bne(d(lo('.sysRacer0')))        #31 Self-repeat by adjusting vPC
+ldzp(d(vPC))                    #32
+bra(d(lo('.sysRacer1')))        #33
+nop()                           #34
+label('.sysRacer0')
+suba(d(2))                      #33
+st(d(vPC))                      #34
+label('.sysRacer1')
+ld(val(hi('REENTER')),regY)     #35
+jmpy(d(lo('REENTER')))          #36
+ld(val(-40/2))                  #37
+
 #-----------------------------------------------------------------------
 #
 #  ROM page XX: Bootstrap vCPU

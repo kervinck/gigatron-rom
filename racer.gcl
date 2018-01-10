@@ -260,21 +260,37 @@ $0600:
     X>, p. p<++
     p<, if<>0loop]
 
-  $0111 p= HorizonX>, tmp= p.        {Video table: start of sky}
+  {Update video table low bytes for road}
 
-  {Step 2: Update video table low bytes for road}
-  {This step is most timing-sensitive wrt. the video loop}
+  {Prepare SYS call}
+  $01ed      \sysArgs0= {"p"}
+  $74d1      \sysArgs2= {"q"}
+  $74d0 peek \sysArgs4= {"X"}
 
-  $01ed p= $74d0 q=             {Video table: bottom of road}
-  q, X= q<++
-  [do
-    {\SYS_XXX_Racer_UpdateVideoX XXX@}
-    q, X- p. p 4- p=
-    q, X= q<++
-    q<, if<>0loop]
+  HorizonX>, tmp=                    {Pivot 12px from bottom (front of car)}
+  $74d5 peek 48+ tmp- tmp=
 
-  {XXX Pivot 12px from bottom / front of car}
-  $74d5 peek 48+ tmp- X- p.
+  $0111 s=                           {Video table: start of sky}
+
+  {Sync with video loop}
+  [do \vBlank, if=0loop]
+
+  {Set top of horizon}
+  HorizonX>, s.
+
+  {Copy to video table. This is most timing-critical for a smooth road update}
+  \SYS_40_Racer_UpdateVideoX 40@
+  {This SYS call self-repeats for a total of 47 times and is equivalent to:
+    [do
+      q, X- p. p 4- p=
+      q, X= q<++
+      q<, if<>0loop]
+  }
+  \sysArgs0; s= {$0131 bottom of sky (horizon)}
+  \sysArgs4; X=
+
+  {Set bottom of sky}
+  tmp X- s.
 
   ret
 ] DrawCurvature=
@@ -314,18 +330,15 @@ $0700:
     DDX+ DX= DX+ DX= DX+ DriftX=
     0 DDX- DDX2=
 
-    {Sync}
-    [do \vBlank, if=0loop]
-
     {Draw bending of the road}
-    $e8 Divider= {Divider}
+    $e8 Divider= {Divider XXX Calculate based on distance and map}
     DrawCurvature!
 
     {Control race car}
     Speed [do
       tmp=
       CarX DriftX- CarX= {Drift is proportional to speed}
-      HorizonX DX+ HorizonX= {Same with horizon}
+      HorizonX DriftX+ DriftX+ HorizonX= {Same with horizon}
       tmp 1- if>0loop]
     0 Steer=
     \serialRaw, $01& {~buttonRight} [if=0  $200 CarX+ CarX= +1 Steer=]
