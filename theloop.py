@@ -1910,6 +1910,34 @@ ld(val(hi('REENTER')),regY)     #35
 jmpy(d(lo('REENTER')))          #36
 ld(val(-40/2))                  #37
 
+label('SYS_40_Racer_UpdateVideoY')
+ldzp(d(sysArgs+3))              #15 4&
+anda(d(4))                      #16
+bne(d(lo('.sysRacer2')))        #17 [if<>0 1]
+bra(d(lo('.sysRacer3')))        #18
+ld(d(0))                        #19
+label('.sysRacer2')
+ld(d(1))                        #19
+label('.sysRacer3')
+st(d(vTmp))                     #20 tmp=
+ld(d(sysArgs+1),busRAM|regY)    #21
+ld(d(sysArgs+0),busRAM)         #22 p<++ p<++
+adda(d(2))                      #23
+st(d(sysArgs+0),busAC|regX)     #24
+xora(d(238))                    #25 238^
+st(d(vAC))                      #26
+st(d(vAC+1))                    #27
+ldzp(d(sysArgs+2))              #28 SegmentY
+anda(d(254))                    #29 254&
+adda(d(vTmp),busRAM)            #30 tmp+
+st(eaYXregAC,busAC)             #31
+ldzp(d(sysArgs+2))              #32 SegmentY<++
+adda(d(1))                      #33
+st(d(sysArgs+2))                #34
+ld(val(hi('REENTER')),regY)     #35
+jmpy(d(lo('REENTER')))          #36
+ld(val(-40/2))                  #37
+
 #-----------------------------------------------------------------------
 #
 #  ROM page XX: Bootstrap vCPU

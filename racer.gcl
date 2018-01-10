@@ -70,11 +70,34 @@ XXX Background music score?
     Text, Char= {Next character to be printed}
     if<>0       {Zero termination}
       Text<++   {Advance text pointer}
-      Char 10^ [if=0 Pos<. $800 Pos+ Pos=
-                else QDrawChar! 6+ Pos=]
+      QDrawChar! 6+ Pos=
       loop]
   pop ret
 ] DrawText=
+
+[def {ControlCar}
+  {Update time with actual elapsed frames}
+  \frameCount, LastFrame- 255& \sysArgs7. Time+ [if<0 $7fff] Time=
+  \frameCount, LastFrame=
+
+  {Control race car}
+  Speed [do
+    tmp=
+    CarX DriftX- CarX= {Drift is proportional to speed}
+    HorizonX DriftX+ DriftX+ HorizonX= {Same with horizon}
+    tmp 1- if>0loop]
+  0 Steer=
+  \serialRaw, $01& {~buttonRight} [if=0  $200 CarX+ CarX= +1 Steer=]
+  \serialRaw, $02& {~buttonLeft}  [if=0 -$200 CarX+ CarX= -1 Steer=]
+  \serialRaw, $40& {~buttonA}     [if=0 Speed 4- [if<0 Speed<++]]
+  \serialRaw, $80& {~buttonB}     [if=0 Speed 1- [if>0 Speed=]]
+  ret
+] ControlCar=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+$0400:
 
 [def $47# $69# $67# $61# $74# $72# $6f# $6e# 0# ] GigatronText=
 
@@ -97,11 +120,6 @@ XXX Background music score?
   ]
   ret
 ] ExtractDigit=
-
-{-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 4                                      |
-+-----------------------------------------------------------------------}
-$0400:
 
 [def {
   DrawPixels -- Write a single line of pixels on two correspinding
@@ -235,6 +253,9 @@ $0600:
    overall timekeeping error is within the tolerances of the crystal itself.}
   3599 Radix= ExtractDigit! \sysArgs7, $30+ Char= {Show frame speed for debugging}
                             Prev3 Char- [if<>0 Char Prev3= QDrawChar! else Pos] 12+ Pos=
+{
+  3599 Radix= ExtractDigit! Prev3 Char- [if<>0 Char Prev3= QDrawChar! else Pos] 12+ Pos=
+}
    600 Radix= ExtractDigit! Prev2 Char- [if<>0 Char Prev2= QDrawChar! else Pos]  6+ Pos=
     60 Radix= ExtractDigit! Prev1 Char- [if<>0 Char Prev1= QDrawChar! else Pos] 12+ Pos=
      6 Radix= ExtractDigit!                                QDrawChar!
@@ -334,17 +355,8 @@ $0700:
     $e8 Divider= {Divider XXX Calculate based on distance and map}
     DrawCurvature!
 
-    {Control race car}
-    Speed [do
-      tmp=
-      CarX DriftX- CarX= {Drift is proportional to speed}
-      HorizonX DriftX+ DriftX+ HorizonX= {Same with horizon}
-      tmp 1- if>0loop]
-    0 Steer=
-    \serialRaw, $01& {~buttonRight} [if=0  $200 CarX+ CarX= +1 Steer=]
-    \serialRaw, $02& {~buttonLeft}  [if=0 -$200 CarX+ CarX= -1 Steer=]
-    \serialRaw, $40& {~buttonA}     [if=0 Speed 4- [if<0 Speed<++]]
-    \serialRaw, $80& {~buttonB}     [if=0 Speed 1- [if>0 Speed=]]
+    {Car "physics" and driver input}
+    ControlCar!
 
     {Draw race car}
     DrawRaceCar!
@@ -370,9 +382,9 @@ $08a0:
   {Update video table high bytes for road width and color scheme}
   {We do this part last because any timing delays here don't really
    cause visible problems.}
-
-  $20 SegmentY=         {Start with smallest segment}
+{
   $0130 p=              {Video table top of road, at horizon}
+  $20 SegmentY=         {Start with smallest segment}
 
   \invTable q=
   [do
@@ -386,6 +398,17 @@ $08a0:
     q<++
 
     p<, 240^ if<>0loop]
+}
+  $012e \sysArgs0= {"p"}
+  $20   \sysArgs2. {"SegmentY"}
+
+  \invTable q=
+  [do
+    q 20?
+    Distance+ \sysArgs3.
+    \SYS_40_Racer_UpdateVideoY 40@
+    q<++
+    if<>0loop]
 
   ret
 ] DrawPerspective=
@@ -396,10 +419,6 @@ $08a0:
 $09a0:
 
 [def
-  {Update time with actual elapsed frames}
-  \frameCount, LastFrame- 255& \sysArgs7. Time+ [if<0 $7fff] Time=
-  \frameCount, LastFrame=
-
   {Advance car along track}
   Speed Distance+ Distance=
 
