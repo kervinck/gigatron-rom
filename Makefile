@@ -1,5 +1,5 @@
-CFLAGS:=-std=c11 -Ofast -Wall
-LDFLAGS=-lSDL2
+CFLAGS:=-std=c11 -Ofast -Wall -ggdb3
+LDFLAGS=-lSDL2 -ggdb3
 
 theloop.2.rom: *.py *.gcl Images/*.rgb
 	./theloop.py

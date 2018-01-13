@@ -133,12 +133,13 @@ int main(void)
 		  }
 	  }
 	  if (hSync > 0) { // Rising hSync edge
+		  SDL_Event event;
+		  SDL_Rect dstrect;
 		  SDL_Rect srcrect;
 		  srcrect.x = 0;
 		  srcrect.w = 640;
 		  srcrect.y = vgaY;
 		  srcrect.h = 1;
-		  SDL_Rect dstrect;
 		  dstrect.x = 0;
 		  dstrect.w = 640;
 		  dstrect.y = vgaY;
@@ -150,6 +151,11 @@ int main(void)
 		  vgaX = 0;
 		  vgaY++;
 		  T.undef = rand() & 0xff; // Change this once in a while
+
+		  if (SDL_PollEvent(&event)) {
+			  if (event.type == SDL_QUIT)
+				  break;
+		  }
 	  }
 	  S=T;
   }
