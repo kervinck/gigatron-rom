@@ -87,6 +87,9 @@ int main(void)
   CpuState S;
   SDL_Window *window;
   SDL_Renderer *renderer;
+  SDL_Texture *texture;
+  Uint32 pixels[640 * 4];
+  Uint32 colors[64];
   srand(time(NULL)); // Initialize with randomized data
   garble((uint8_t*)ROM, sizeof ROM);
   garble(RAM, sizeof RAM);
@@ -100,10 +103,14 @@ int main(void)
   fread(ROM, 1, sizeof ROM, fp);
   fclose(fp);
 
+  for(int i=0; i<64; i++)
+	  colors[i] = rand() | 0xff000000;
+
   SDL_Init(SDL_INIT_VIDEO);
 
   window = SDL_CreateWindow( "Gigatron", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, 0);
   SDL_CreateWindowAndRenderer(640, 480, 0, &window, &renderer);
+  texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, 640, 480);
 
   int vgaX=0, vgaY=0;
   for (long long t=-2; ; t++) {
@@ -119,13 +126,26 @@ int main(void)
 		  else if (vgaX == 200) { }   // Too many pixels
 		  else if (~S.OUT & 0x80) { } // Visualize vBlank pulse
 		  else { // Plot pixel
-			 SDL_SetRenderDrawColor(renderer, (S.OUT & 63) * 4, (S.OUT & 63) * 5, (S.OUT & 63) * 13, 255);
-		         SDL_RenderDrawPoint(renderer, vgaX * 3 + 0, vgaY);
-		         SDL_RenderDrawPoint(renderer, vgaX * 3 + 1, vgaY);
-		         SDL_RenderDrawPoint(renderer, vgaX * 3 + 2, vgaY);
+			 Uint32 v = colors[S.OUT & 63];
+			 pixels[vgaX * 3 + 0] = v;
+			 pixels[vgaX * 3 + 1] = v;
+			 pixels[vgaX * 3 + 2] = v;
 		  }
 	  }
 	  if (hSync > 0) { // Rising hSync edge
+		  SDL_Rect srcrect;
+		  srcrect.x = 0;
+		  srcrect.w = 640;
+		  srcrect.y = vgaY;
+		  srcrect.h = 1;
+		  SDL_Rect dstrect;
+		  dstrect.x = 0;
+		  dstrect.w = 640;
+		  dstrect.y = vgaY;
+		  dstrect.h = 1;
+	  	  SDL_UpdateTexture(texture, &dstrect, pixels, 640 * sizeof(Uint32));
+		  //SDL_RenderClear(renderer);
+		  SDL_RenderCopy(renderer, texture, &srcrect, &dstrect);
 		  SDL_RenderPresent(renderer);
 		  vgaX = 0;
 		  vgaY++;
