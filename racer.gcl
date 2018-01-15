@@ -9,8 +9,8 @@ gcl0x
 
 {
 Todo:
-XXX Bending road
-XXX Randomized trajectory
+XXX Randomized trajectory and fix horizon movement
+XXX Remove curve debugging (or change it into an obstacle)
 XXX Engine sound
 XXX Slower acceleration
 XXX Breaking and automatic slow-down to cruising speed
@@ -167,21 +167,10 @@ $0400:
   ret
 ] DrawPixels=
 
-{
-  Car sprite. Black is 0 but also the teminator, therfore use 64 for black.
-  XXX Reduce footprint by bringing all lines under one 'def'
-}
-[def 2#         64# 64# 64# 40# 60# 60# 40# 64# 64# 64#         0#] Car0=
-[def 3#             40# 20# 20# 63# 63# 20# 20# 40#             0#] Car1=
-[def 2#         40# 20# 20# 20# 40# 40# 20# 20# 20# 40#         0#] Car2=
-
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 5                                      |
 +-----------------------------------------------------------------------}
 $0500:
-
-[def 0# 64# 64# 64# 64# 40# 20# 20# 20# 20# 40# 64# 64# 64# 64# 0#] Car3=
-[def 0# 64# 64# 64# 64# 21# 21# 21# 21# 21# 21# 64# 64# 64# 64# 0#] Car4=
 
 [def
   push
@@ -238,11 +227,6 @@ $0500:
   ret
 ] SetupSegment=
 
-{-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 6                                      |
-+-----------------------------------------------------------------------}
-$0600:
-
 [def {
   DrawTime -- Render elapsed time (in frams) as M:SS.s -- Value Radix
               Skip unchanged digits
@@ -261,23 +245,45 @@ $0600:
   pop ret
 ] DrawTime=
 
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 6                                      |
++-----------------------------------------------------------------------}
+$0600:
+
 [def {DrawRoad}
   $74d0 p=                      {array[48], in display memory but out of view}
-  {0 X=}                        {No need to initialize X because only deltas matter}
-  X>, p. p<++
+  {0 X=}                        {No need to initialize X as only deltas matter}
+  0 DX=
+
+Distance  63| NextDivider=      { XXX Just for testing}
+Distance- tmp=                  { [0..127] }
+tmp+      tmp=                  { [0..255] To get 1/(2x), or 1/2 * 1/x }
+                                { Clip at bottom of screen [48+0]   [$30]->$3f }
+tmp 163- [if>0 163 tmp=]        { Clip at top of screen    [48+163] [$d3]->$11 }
+\invTable tmp+ 48? tmp=         { $11 .. $3f }
+
+tmp+ 2- z>. 80 z<. Distance<, 64& [if<>0 63] z.
+        z>++                                 z.
+{
+272 tmp- Divider=
+}
+192 tmp+ Divider=               { -47 .. -1 }
+
+Distance  64& [if<>0 {Swap}   DDX i= DDX2 DDX= i DDX2= ]
+Distance 128& [if<>0 {Negate} 0 DDX- DDX= 0 DDX2- DDX2= ]
 
   {Road curvature for bottom segment}
   [do
+    X>, p. p<++
     DX DDX+ DX=
     X+ X=
-    X>, p. p<++
     Divider<++ Divider if<>0loop]
 
   {Road curvature for top segment}
   [do
+    X>, p. p<++
     DX DDX2+ DX=
     X+ X=
-    X>, p. p<++
     p<, if<>0loop]
 
   {Update video table low bytes for road}
@@ -346,12 +352,13 @@ $0700:
     ]
 
     {Map distance to road curvature}
-    64& [if=0 Distance else Distance 255^] 63& 32- DDX= {-64 ... +63}
+    64& [if=0 Distance else Distance 255^] 63& 32- DDX= {-32 ... +31}
     DDX+ DX= DX+ DX= DX+ DriftX=
     0 DDX- DDX2=
+ 0 DDX=
+15 DDX2=
 
     {Draw bending of the road}
-    $e8 Divider= {Divider XXX Calculate based on distance and map}
     DrawRoad!
 
     {Car "physics" and driver input}
@@ -371,6 +378,16 @@ $0700:
 ] PlayGame=
 
 [def $2d# $3a# $2d# $2d# $2e# $2d# 0#] EmptyTimeText=
+
+{
+  Car sprite. Black is 0 but also the teminator, therfore use 64 for black.
+  XXX Reduce footprint by bringing all lines under one 'def'
+}
+[def 2#         64# 64# 64# 40# 60# 60# 40# 64# 64# 64#         0#] Car0=
+[def 3#             40# 20# 20# 63# 63# 20# 20# 40#             0#] Car1=
+[def 2#         40# 20# 20# 20# 40# 40# 20# 20# 20# 40#         0#] Car2=
+[def 0# 64# 64# 64# 64# 40# 20# 20# 20# 20# 40# 64# 64# 64# 64# 0#] Car3=
+[def 0# 64# 64# 64# 64# 21# 21# 21# 21# 21# 21# 64# 64# 64# 64# 0#] Car4=
 
 {-----------------------------------------------------------------------+
 |}$08a0 \vLR= ret{      RAM page 8                                      |
@@ -517,7 +534,6 @@ Intro!
 {--- Main loop ---}
 [do
   {Setup new game}
-  $e8 Divider=
   0 DDX= DDX2= DX= DrawRoad!
   DrawGrass!
   SetupHorizon!
