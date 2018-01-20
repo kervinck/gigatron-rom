@@ -1911,8 +1911,8 @@ jmpy(d(lo('REENTER')))          #36
 ld(val(-40/2))                  #37
 
 label('SYS_40_Racer_UpdateVideoY')
-ldzp(d(sysArgs+3))              #15 4&
-anda(d(4))                      #16
+ldzp(d(sysArgs+3))              #15 8&
+anda(d(8))                      #16
 bne(d(lo('.sysRacer2')))        #17 [if<>0 1]
 bra(d(lo('.sysRacer3')))        #18
 ld(d(0))                        #19
