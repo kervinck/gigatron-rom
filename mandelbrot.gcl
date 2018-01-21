@@ -16,6 +16,10 @@ gcl0x
   - Implement multiplication in interpreter
   - Implement shift-right in interpreter as well
   - A bit slow
+
+  XXX At the end change all to grey tones and redo
+  XXX Redo at different sections
+  XXX Tone for every pixel value
 }
 
 {-----------------------------------------------------------------------+
@@ -66,11 +70,21 @@ $0300:
 [def
   push
 
+{
+      // q*(q + x - 1/4) < 1/4*y^2, where q = (x - 1/4)^2 + y^2
+      int Q = mulShift(X0-ONE/4, X0-ONE/4) + mulShift(Y0, Y0);
+      if (mulShift(Q, Q + X0 - ONE/4)*4 < mulShift(Y0, Y0))
+        putchar('~');
+        continue;
+}
+
+
+
   0 X= XX= Y= YY= i=
   [do
     i 1+ i= 64^ if<>0           {Break after 64 iterations}
 
-                                {Mandelbrot function: p' := p^2 + c}
+                                {Mandelbrot function: z' := z^2 + c}
     X A= Y Y+ B= MulShift7! Y0+ Y= {Y = 2*X*Y + Y0}
     XX YY- X0+                  X= {X = X^2 - Y^2 + X0}
 
@@ -112,8 +126,25 @@ $0400:
       DY [if<0 -$100 p+ p=]
       DY [if>0  $100 p+ p=]
 
-      {Calculate color and plot}
-      63 p. CalcPixel! p.
+      63 p. {White while busy here}
+
+      {First check if we are inside one of the main bulbs for
+       a quick bailout (Wikipedia)
+       (x+1)^ + y^2 < 1/16}
+      Y0 A= B= MulShift7! YY=
+      X0 128+ A= B= MulShift7! YY+ 8- [if<0 0
+      else
+
+      {q*(q + x - 1/4) < 1/4*y^2, where q = (x - 1/4)^2 + y^2}
+      X0 32- A= B= MulShift7! YY+ {q}
+      A= X0+ 32- B= MulShift7! tmp=
+      tmp+ tmp= tmp+ tmp= {*4} YY- [if<0 0
+      else
+
+      {Otherwise run the escape algorithm}
+      CalcPixel!
+      ]]
+      p. {Plot pixel}
       len 1- if>0loop]
 
     DY tmp= DX DY= 0 tmp- DX= {Turn right}
@@ -154,7 +185,10 @@ $0500:
 $0600:
 
 { Main }
-[do CalcSet! loop]
+[do
+  CalcSet!
+  60 \soundTimer. {For debugging}
+  loop]
 
 {-----------------------------------------------------------------------+
 |       End                                                             |

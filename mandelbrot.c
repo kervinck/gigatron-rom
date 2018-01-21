@@ -10,10 +10,11 @@
 #include <stdlib.h>
 
 #define BITS 7
+#define ONE (1<<BITS)
 
 // Calculate (A*B) >> BITS
 static
-short mulShift(short A, short B, short shift)
+short mulShift(short A, short B)
 {
   // Extract sign and absolute values
   int sign = 0;
@@ -22,20 +23,19 @@ short mulShift(short A, short B, short shift)
     sign = 1;
   }
   assert(A >= 0);
-  assert(A < (6<<BITS));
-
+  assert(A < 0x800);
   if (B < 0) {
     B = -B;
     sign ^= 1;
   }
   assert(B >= 0);
-  assert(B < (6<<BITS));
 
   short REF = (A * B) >> BITS;
 
   // Multiply
+  short shift = BITS;
   int C = 0;
-  for (short bit=0x200; bit; bit>>=1) {
+  for (short bit=0x400; bit; bit>>=1) {
     assert(C < 0xc000);
     if (C < 0x4000)
       C += C;
@@ -68,22 +68,37 @@ int main(void)
 {
   for (short Y0=-180; Y0<180; Y0+=3) {
     for (short X0=-320; X0<160; X0+=3) {
+      // First check if we are inside one of the main bulbs for
+      // a quick bailout (Wikipedia)
+      // (x+1)^ + y^2 < 1/16
+      if (mulShift(X0+ONE, X0+ONE) + mulShift(Y0, Y0) < ONE/16) {
+        putchar('~');
+        continue;
+      }
+      // q*(q + x - 1/4) < 1/4*y^2, where q = (x - 1/4)^2 + y^2
+      int Q = mulShift(X0-ONE/4, X0-ONE/4) + mulShift(Y0, Y0);
+      if (mulShift(Q, Q + X0 - ONE/4)*4 < mulShift(Y0, Y0)) {
+        putchar('~');
+        continue;
+      }
+
+      // Otherwise run the escape algorithm
       int X=0, XX=0, Y=0, YY=0;
       int i;
       for (i=1; i<64; i++) {
         assert(abs(X) < (2<<BITS));
         assert(abs(Y) < (2<<BITS));
 
-        // Mandelbrot function: p' := p^2 + c
-        Y = mulShift(X, 2*Y, BITS) + Y0;
+        // Mandelbrot function: z' := z^2 + c
+        Y = mulShift(X, 2*Y) + Y0;
         X = XX - YY + X0;
 
         assert(abs(XX) < (4<<BITS));
         assert(abs(YY) < (4<<BITS));
 
         // Calculate squares
-        XX = mulShift(X, X, BITS);
-        YY = mulShift(Y, Y, BITS);
+        XX = mulShift(X, X);
+        YY = mulShift(Y, Y);
 
         if (XX + YY >= 4<<BITS)
           break;
