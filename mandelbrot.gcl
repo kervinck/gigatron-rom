@@ -1,0 +1,141 @@
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Mandelbrot fractal                                              |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+gcl0x
+
+{
+  Plot the Mandelbrot set
+  Use 16-bit vCPU math as 7-bit fixed point arithmetic (1.00 -> 128)
+  Implement multiplication in interpreter
+  Implement shift-right in interpreter as well
+  Very slow!
+}
+
+{-----------------------------------------------------------------------+
+|                       RAM page 3                                      |
++-----------------------------------------------------------------------}
+$0300:
+
+{ Pretty accurate multiply-shift, can be off by one }
+[def
+  push
+
+  {Extract sign and absolute values}
+  0 sign= C=
+ {0}A- [if>0 A= 1 sign=]
+  0 B- [if>0 B= sign 1^ sign=]
+
+  {Multiply}
+  7 shift= {Pending shift}
+  $200
+  [do
+    bit=
+
+    C [if>=0
+      C+ C=
+    else
+      {Shift prematurely in an attempt to avoid overflow}
+      B ShiftRight! B=
+      shift 1- shift=]
+
+    {Add partial product}
+    A bit- [if>=0
+      A=
+      C B+ C=]
+
+    bit ShiftRight! if<>0loop]
+
+  {Shift}
+  [do
+    C ShiftRight! C=
+    shift 1- shift= if>0loop]
+
+  {Apply sign to return value}
+  sign [if<>0 0 C- else C]
+
+  pop ret
+] MulShift7=
+
+{ Calculate color for (X0,Y0) }
+[def
+  push
+
+  0 X= XX= Y= YY= i=
+  [do
+    i 1+ i= 64^ if<>0           {Break after 64 iterations}
+
+                                {Mandelbrot function: p' := p^2 + c}
+    X A= Y Y+ B= MulShift7! Y0+ Y= {Y = 2*X*Y + Y0}
+    XX YY- X0+                  X= {X = X^2 - Y^2 + X0}
+
+                                {Calculate squares}
+   {X}A= B= MulShift7!          XX=
+    Y A= B= MulShift7!          YY=
+
+    -$200 XX+ YY+ if<0loop]     {Also break when X^2 + Y^2 >= 4}
+  i
+  pop ret
+] CalcPixel=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+$0400:
+
+[def
+  push
+  $800 p= {Top of video screen}
+  -180 Y0=
+  [do
+    -320 X0=
+    [do
+      63 p. {White pixel so we can see where we are}
+      CalcPixel! p.
+      X0 3+ X0= 160- if<0loop]
+    p 96+ p=
+    Y0 3+ Y0= 180- if<0loop]
+  pop ret
+] CalcSet=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 5                                      |
++-----------------------------------------------------------------------}
+$0500:
+
+{ Stupid shift-right function }
+{ XXX Better make a SYS extension for this }
+[def
+  a= 0 b=
+  $8000 a+ [if>=0 a= $4000 b+ b=]
+  $c000 a+ [if>=0 a= $2000 b+ b=]
+  $e000 a+ [if>=0 a= $1000 b+ b=]
+  $f000 a+ [if>=0 a= $0800 b+ b=]
+  $f800 a+ [if>=0 a= $0400 b+ b=]
+  $fc00 a+ [if>=0 a= $0200 b+ b=]
+  $fe00 a+ [if>=0 a= $0100 b+ b=]
+  $ff00 a+ [if>=0 a= $0080 b+ b=]
+  $ff80 a+ [if>=0 a= $0040 b+ b=]
+  $ffc0 a+ [if>=0 a= $0020 b+ b=]
+  $ffe0 a+ [if>=0 a= $0010 b+ b=]
+  $fff0 a+ [if>=0 a= $0008 b+ b=]
+  $fff8 a+ [if>=0 a= $0004 b+ b=]
+  $fffc a+ [if>=0 a= $0002 b+ b=]
+      a 2& [if<>0          b<++ ]
+  b ret
+] ShiftRight=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 6                                      |
++-----------------------------------------------------------------------}
+$0600:
+
+[do CalcSet! loop]
+
+{-----------------------------------------------------------------------+
+|       End                                                             |
++-----------------------------------------------------------------------}
+

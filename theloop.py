@@ -1952,7 +1952,7 @@ print 'info SYS length warning %s error %s' % (repr(minSYS), repr(maxSYS))
 
 # Compile test GCL program
 program = gcl.Program(vCpuStart)
-for line in open('racer.gcl').readlines():
+for line in open('mandelbrot.gcl').readlines():
   program.line(line)
 program.end()
 
