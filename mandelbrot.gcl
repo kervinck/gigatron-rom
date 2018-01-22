@@ -69,17 +69,6 @@ $0300:
 { Calculate color for (X0,Y0) }
 [def
   push
-
-{
-      // q*(q + x - 1/4) < 1/4*y^2, where q = (x - 1/4)^2 + y^2
-      int Q = mulShift(X0-ONE/4, X0-ONE/4) + mulShift(Y0, Y0);
-      if (mulShift(Q, Q + X0 - ONE/4)*4 < mulShift(Y0, Y0))
-        putchar('~');
-        continue;
-}
-
-
-
   0 X= XX= Y= YY= i=
   [do
     i 1+ i= 64^ if<>0           {Break after 64 iterations}
