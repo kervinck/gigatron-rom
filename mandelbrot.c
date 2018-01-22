@@ -86,21 +86,21 @@ int main(void)
       int X=0, XX=0, Y=0, YY=0;
       int i;
       for (i=1; i<64; i++) {
-        assert(abs(X) < (2<<BITS));
-        assert(abs(Y) < (2<<BITS));
+        assert(abs(X) <= (2<<BITS));
+        assert(abs(Y) <= (2<<BITS));
 
         // Mandelbrot function: z' := z^2 + c
         Y = mulShift(X, 2*Y) + Y0;
         X = XX - YY + X0;
 
-        assert(abs(XX) < (4<<BITS));
-        assert(abs(YY) < (4<<BITS));
+        assert(abs(XX) <= (4<<BITS));
+        assert(abs(YY) <= (4<<BITS));
 
         // Calculate squares
         XX = mulShift(X, X);
         YY = mulShift(Y, Y);
 
-        if (XX + YY >= 4<<BITS)
+        if (XX + YY > 4<<BITS)
           break;
       }
       putchar(' '+ (i&63));

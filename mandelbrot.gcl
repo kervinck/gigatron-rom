@@ -20,6 +20,8 @@ gcl0x
   XXX At the end change all to grey tones and redo
   XXX Redo at different sections
   XXX Tone for every pixel value
+  XXX Convert into a clock application
+  XXX Double vertical resolution by exploiting vertical symmetry
 }
 
 {-----------------------------------------------------------------------+
@@ -81,7 +83,7 @@ $0300:
    {X}A= B= MulShift7!          XX=
     Y A= B= MulShift7!          YY=
 
-    -$200 XX+ YY+ if<0loop]     {Also break when X^2 + Y^2 >= 4}
+    -$200 XX+ YY+ if<=0loop]    {Also break when X^2 + Y^2 > 4}
   i
   pop ret
 ] CalcPixel=
@@ -115,7 +117,8 @@ $0400:
       DY [if<0 -$100 p+ p=]
       DY [if>0  $100 p+ p=]
 
-      63 p. {White while busy here}
+      {Draw white pixel while busy here}
+      63 p.
 
       {First check if we are inside one of the main bulbs for
        a quick bailout (Wikipedia)
@@ -130,7 +133,7 @@ $0400:
       tmp+ tmp= tmp+ tmp= {*4} YY- [if<0 0
       else
 
-      {Otherwise run the escape algorithm}
+      {Otherwise run the escape time algorithm}
       CalcPixel!
       ]]
       p. {Plot pixel}
