@@ -73,7 +73,7 @@ $0300:
   push
   0 X= XX= Y= YY= i=
   [do
-    i 1+ i= 64^ if<>0           {Break after 64 iterations}
+    i 1+ i= 64^ if<>0           {Break after completing 63 iterations}
 
                                 {Mandelbrot function: z' := z^2 + c}
     X A= Y Y+ B= MulShift7! Y0+ Y= {Y = 2*X*Y + Y0}
