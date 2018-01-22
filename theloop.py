@@ -1144,6 +1144,7 @@ bra(d(lo('NEXT')))              #14
 #nop()                          #(15)
 #
 # Instruction POP, (LR=[SP++]), 22 cycles
+# XXX Candidate for moving to next page
 label('POP')
 ld(d(vSP),busRAM|regX)          #10 (overlap with ST)
 ld(busRAM,ea0XregAC)            #11
@@ -1236,6 +1237,7 @@ bra(d(lo('NEXT')))              #12
 #nop()                          #(13)
 #
 # Instruction POKE ([[D+1],[D]]=ACL), 22 cycles
+# XXX Candidate for moving to next page
 label('POKE')
 st(d(vTmp))                     #10 (overlap with BRA)
 adda(val(1),regX)               #11
@@ -1335,6 +1337,7 @@ bra(d(lo('NEXT')))              #26
 ld(val(-28/2))                  #27
 
 # Instruction PEEK (AC=[AC]), 22 cycles
+# XXX Candidate for moving to next page
 label('PEEK')
 ldzp(d(vPC))                    #10
 suba(val(1))                    #11
@@ -1414,8 +1417,8 @@ st(d(vPC))                      #12
 ldzp(d(vLR+1))                  #13
 st(d(vPC+1))                    #14
 ld(val(hi('REENTER')),regY)     #15
-jmpy(d(lo('REENTER')))          #17
-ld(val(-20/2))                  #18
+jmpy(d(lo('REENTER')))          #16
+ld(val(-20/2))                  #17
 
 # ADDI implementation
 label('addi')
