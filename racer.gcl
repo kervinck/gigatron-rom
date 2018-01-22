@@ -9,7 +9,9 @@ gcl0x
 
 {
 Todo:
-XXX Randomized trajectory and fix horizon movement
+XXX Randomized trajectory
+XXX Add more interesting camera behavior (DX0)
+XXX Fix horizon movement
 XXX Remove curve debugging (or change it into an obstacle)
 XXX Engine sound
 XXX Slower acceleration
@@ -85,7 +87,7 @@ XXX Image compression?
   Speed [do
     tmp=
     CarX DriftX- CarX= {Drift is proportional to speed}
-    HorizonX DriftX+ DriftX+ HorizonX= {Same with horizon}
+    {HorizonX DriftX+ DriftX+ HorizonX= {Same with horizon}}
     tmp 1- if>0loop]
 
   0 Steer=
@@ -349,15 +351,20 @@ $0700:
     [if>0
       NextDDX DDX=                                      {Shift to next segment}
       \entropy, 31& 68+ NextTurn+ NextTurn=             {NextTurn += [68...99]}
-      \entropy, 32& [if<>0 15] NextDDX=                 {Turn right}
-      \entropy, 64& [if<>0 15] NextDDX- NextDDX=        {... and/or left}
+      \entropy, 32& [if<>0 24] NextDDX=                 {Turn right}
+      \entropy, 64& [if<>0 24] NextDDX- NextDDX=        {... and/or left}
     ]
-
-    {XXX DriftX and Horizon}
-    0 DriftX=
 
     {Draw bending of the road}
     DrawRoad!
+
+    {DriftX}
+    DDX     DriftX=
+    DriftX+ DriftX=
+    DriftX+ DriftX=
+    DriftX+ DriftX=
+
+    {Horizon}
 
     {Car "physics" and driver input}
     ControlRaceCar!
@@ -384,13 +391,14 @@ $0700:
 [def 2#         64# 64# 64# 40# 60# 60# 40# 64# 64# 64#         0#] Car0=
 [def 3#             40# 20# 20# 63# 63# 20# 20# 40#             0#] Car1=
 [def 2#         40# 20# 20# 20# 40# 40# 20# 20# 20# 40#         0#] Car2=
-[def 0# 64# 64# 64# 64# 40# 20# 20# 20# 20# 40# 64# 64# 64# 64# 0#] Car3=
-[def 0# 64# 64# 64# 64# 21# 21# 21# 21# 21# 21# 64# 64# 64# 64# 0#] Car4=
 
 {-----------------------------------------------------------------------+
 |}$08a0 \vLR= ret{      RAM page 8                                      |
 +-----------------------------------------------------------------------}
 $08a0:
+
+[def 0# 64# 64# 64# 64# 40# 20# 20# 20# 20# 40# 64# 64# 64# 64# 0#] Car3=
+[def 0# 64# 64# 64# 64# 21# 21# 21# 21# 21# 21# 64# 64# 64# 64# 0#] Car4=
 
 [def
   {Update video table high bytes for road width and color scheme}
@@ -541,7 +549,7 @@ Intro!
   SetupRoad!
 
   $7fff BestTime=
-  0 Time= Value= HorizonX=
+  0 Time= Value= HorizonX= DriftX=
   $7900 CarX=
   1 Speed=
 
