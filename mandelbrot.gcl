@@ -17,9 +17,10 @@ gcl0x
   - Implement shift-right in interpreter as well
   - A bit slow (8242.655 seconds)
 
+  XXX Change traversal logic: 1. draw 2. turn 3. step
   XXX At the end change all to grey tones and redo
   XXX Redo at different sections
-  XXX Tone for every pixel value
+  XXX Sound for every pixel value
   XXX Convert into a clock application
   XXX Double vertical resolution by exploiting vertical symmetry
 }

@@ -7,6 +7,7 @@
 
 {
 XXX Don't allow autoplayer to obtain a hi score
+XXX Don't allow reversing for playability
 XXX More colors, less green
 XXX Accelerated text drawing
 XXX Smarter border drawing (spiral draw)
