@@ -59,6 +59,8 @@
 #  XXX Exhibition mode: flip between applications in auto-play mode
 #-----------------------------------------------------------------------
 
+import sys
+
 from asm import *
 import gcl
 import font
@@ -1955,7 +1957,7 @@ print 'info SYS length warning %s error %s' % (repr(minSYS), repr(maxSYS))
 
 # Compile test GCL program
 program = gcl.Program(vCpuStart)
-for line in open('mandelbrot.gcl').readlines():
+for line in open(sys.argv[1]).readlines():
   program.line(line)
 program.end()
 
