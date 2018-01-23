@@ -10,17 +10,15 @@ gcl0x
 {
 Todo:
 XXX Engine sound
-XXX Slower acceleration
-XXX Breaking and automatic slow-down to cruising speed
 XXX Improve track indicator
 XXX Add more interesting camera behavior (DX0)
 XXX Positioning of "GAME OVER" message
-XXX Setup artefacts before and after game
+XXX Obstacles? Other cars / bicycles?
+XXX Drawing artefacts before and after game. "GET READY" message?
 
 Maybe:
 XXX Freeze time display for the first 2 seconds after completing a lap
 XXX Increase minimum speed when completing a lap
-XXX Obstacles? Other cars / bicycles?
 XXX Car crash sequence when hitting curb? Easy to make it scatter...
 XXX Add breaking sound
 XXX Add tire screech sound
@@ -61,39 +59,30 @@ XXX Image compression?
   Pos ret
 ] QDrawChar=
 
-[def {
-  DrawText(Text,Pos)
-
-  Draw a zero-terminated text string to the screen.
-  There is no check for running off screen.
-}
-  push
-  [do
-    Text, Char= {Next character to be printed}
-    if<>0       {Zero termination}
-      Text<++   {Advance text pointer}
-      QDrawChar! 6+ Pos=
-      loop]
-  pop ret
-] DrawText=
-
 [def {ControlRaceCar}
   {Update time with actual elapsed frames}
   \frameCount, LastFrame- 255& \sysArgs7. Time+ [if<0 $7fff] Time=
   \frameCount, LastFrame=
 
   {Car drift and horizon shift are proportional to speed}
-  Speed [do i=
+  Speed>, [do if>0 i=
     CarX DriftX- CarX=
     HorizonX HorizonDX+ HorizonX=
-    i 1- if>0loop]
+    i 1- loop]
 
   {Steering}
   0 Steer=
   \serialRaw, $01& {~buttonRight} [if=0  $200 CarX+ CarX= +1 Steer=]
   \serialRaw, $02& {~buttonLeft}  [if=0 -$200 CarX+ CarX= -1 Steer=]
-  \serialRaw, $40& {~buttonA}     [if=0 Speed 5- [if<0 Speed<++]]
-  \serialRaw, $80& {~buttonB}     [if=0 Speed 1- [if>0 Speed=]]
+
+  {Speed control}
+  \serialRaw, $40& {~buttonA} [if=0 {Accelerating}
+    Speed $10+ Speed= {At 15 fps $10 means ~1s to reach the next speed level}
+    $5ff Speed- [if<0 $5ff Speed=]
+   else
+    -$108 Speed+ [if>=0 Speed 8- Speed=] {Slowly drop to very low speed}
+  ]
+  \serialRaw, $80& {~buttonB} [if=0 Speed $40- [if<0 0] Speed=] {Braking}
   ret
 ] ControlRaceCar=
 
@@ -254,6 +243,22 @@ $0500:
 +-----------------------------------------------------------------------}
 $0600:
 
+[def {
+  DrawText(Text,Pos)
+
+  Draw a zero-terminated text string to the screen.
+  There is no check for running off screen.
+}
+  push
+  [do
+    Text, Char= {Next character to be printed}
+    if<>0       {Zero termination}
+      Text<++   {Advance text pointer}
+      QDrawChar! 6+ Pos=
+      loop]
+  pop ret
+] DrawText=
+
 [def {DrawRoad}
   $74d0 p=                      {array[48], in display memory but out of view}
   0 X= DX=
@@ -328,7 +333,6 @@ $0700:
   {Run game loop}
   0 Collision=
   [do
-
     AdvanceCar!
 
     {See if we have reached the finish}
@@ -350,12 +354,11 @@ $0700:
     {See if we have reached the next turn}
     {Distance} NextTurn-
     [if>0
-      Random NextTurn+ 109^ Random=     {Circuit formuala}
-      31& 40+ NextTurn+ NextTurn=       {40..71 units until nextt}
-      Random>, 3& 1+ i= i+ i+ i= i+ i=  {Magnitude 6,12,18,24}
+      Random NextTurn+ 109^ Random=     {Circuit formula}
+      31& 40+ NextTurn+ NextTurn=       {40..71 units until next turn}
+      Random>, 3& 1+ i= i+ i+ i= i+ i=  {Bending magnitude 6,12,18,24}
       NextDDX DDX=                      {Shift to next segment}
-
-     {DDX} [if<0  i+
+     {DDX} [if<0  i+                    {Adjust bending of road}
       else [if>0  i-
       else {if=0} Random [if>=0 i else 0 i-]
       ]]
@@ -448,7 +451,7 @@ $09a0:
 
 [def
   {Advance car along track}
-  Speed Distance+ Distance=
+  Speed>, Distance+ Distance=
 
   {Update progress indicator}
   $0ef4 p= Distance>, p+ p= 21 p. p<++ 60 p.
@@ -554,9 +557,8 @@ Intro!
   SetupRoad!
 
   $7fff BestTime=
-  0 Time= Value= HorizonX= DriftX=
+  0 Time= Value= HorizonX= DriftX= Speed=
   $7900 CarX=
-  1 Speed=
 
   {XXX "Get ready" message}
 
