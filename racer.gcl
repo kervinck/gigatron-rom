@@ -83,13 +83,13 @@ XXX Image compression?
   \frameCount, LastFrame- 255& \sysArgs7. Time+ [if<0 $7fff] Time=
   \frameCount, LastFrame=
 
-  {Control race car}
-  Speed [do
-    tmp=
-    CarX DriftX- CarX= {Drift is proportional to speed}
-    {HorizonX DriftX+ DriftX+ HorizonX= {Same with horizon}}
-    tmp 1- if>0loop]
+  {Car drift and horizon shift are proportional to speed}
+  Speed [do i=
+    CarX DriftX- CarX=
+    HorizonX HorizonDX+ HorizonX=
+    i 1- if>0loop]
 
+  {Steering}
   0 Steer=
   \serialRaw, $01& {~buttonRight} [if=0  $200 CarX+ CarX= +1 Steer=]
   \serialRaw, $02& {~buttonLeft}  [if=0 -$200 CarX+ CarX= -1 Steer=]
@@ -239,12 +239,14 @@ $0500:
    scanline and 521 scanlines per frame, the Gigatron runs at 59.98 frames per
    second and that is ~3599 frames per minute. With this single correction the
    overall timekeeping error is within the tolerances of the crystal itself.}
-
-  3599 Radix= ExtractDigit! {\sysArgs7, $30+ Char= {Show frame speed for debugging}}
-                            Prev3 Char- [if<>0 Char Prev3= QDrawChar! else Pos] 12+ Pos=
-   600 Radix= ExtractDigit! Prev2 Char- [if<>0 Char Prev2= QDrawChar! else Pos]  6+ Pos=
-    60 Radix= ExtractDigit! Prev1 Char- [if<>0 Char Prev1= QDrawChar! else Pos] 12+ Pos=
-     6 Radix= ExtractDigit!                                QDrawChar!
+  3599 Radix= ExtractDigit!
+       {\sysArgs7, $30+ Char= {Show frame speed for debugging}}
+       Prev3 Char- [if<>0 Char Prev3= QDrawChar! else Pos] 12+ Pos=
+   600 Radix= ExtractDigit!
+       Prev2 Char- [if<>0 Char Prev2= QDrawChar! else Pos]  6+ Pos=
+    60 Radix= ExtractDigit!
+       Prev1 Char- [if<>0 Char Prev1= QDrawChar! else Pos] 12+ Pos=
+     6 Radix= ExtractDigit! QDrawChar!
   pop ret
 ] DrawTime=
 
@@ -262,7 +264,7 @@ $0600:
   \invTable tmp+ 53? tmp=       {59 .. 11}
 
   {Debug marker}
-  tmp+ 10+ z>. 80 z<. NextDDX z. z>++ z.
+  tmp+ 10+ z>. 192 z<. NextDDX z. z>++ z.
 
   {Road curvature for bottom segment}
   197 tmp+ i=                   {(byte)-47 .. (byte)-1}
@@ -350,7 +352,7 @@ $0700:
     {Distance} NextTurn-
     [if>0
       NextDDX DDX=                                      {Shift to next segment}
-      \entropy, 31& 68+ NextTurn+ NextTurn=             {NextTurn += [68...99]}
+      \entropy, 31& 40+ NextTurn+ NextTurn=             {NextTurn < 100}
       \entropy, 32& [if<>0 24] NextDDX=                 {Turn right}
       \entropy, 64& [if<>0 24] NextDDX- NextDDX=        {... and/or left}
     ]
@@ -358,13 +360,11 @@ $0700:
     {Draw bending of the road}
     DrawRoad!
 
-    {DriftX}
+    {Drift and horizon movement}
     DDX     DriftX=
     DriftX+ DriftX=
     DriftX+ DriftX=
-    DriftX+ DriftX=
-
-    {Horizon}
+    DriftX+ DriftX= HorizonDX=
 
     {Car "physics" and driver input}
     ControlRaceCar!
