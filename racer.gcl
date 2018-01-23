@@ -9,16 +9,13 @@ gcl0x
 
 {
 Todo:
-XXX Randomized trajectory
-   - more variation in corner radii
-   - revert to straight or opposite direction after corner
-   - fixed pseudo-random sequence
-XXX Add more interesting camera behavior (DX0)
-XXX Remove curve debugging (or change it into an obstacle)
 XXX Engine sound
 XXX Slower acceleration
 XXX Breaking and automatic slow-down to cruising speed
 XXX Improve track indicator
+XXX Add more interesting camera behavior (DX0)
+XXX Positioning of "GAME OVER" message
+XXX Setup artefacts before and after game
 
 Maybe:
 XXX Freeze time display for the first 2 seconds after completing a lap
@@ -266,7 +263,7 @@ $0600:
   \invTable tmp+ 53? tmp=       {59 .. 11}
 
   {Debug marker}
-  tmp+ 10+ z>. 192 z<. NextDDX z. z>++ z.
+  {tmp+ 10+ z>. 192 z<. NextDDX z. z>++ z.}
 
   {Road curvature for bottom segment}
   197 tmp+ i=                   {(byte)-47 .. (byte)-1}
@@ -331,6 +328,7 @@ $0700:
   {Run game loop}
   0 Collision=
   [do
+
     AdvanceCar!
 
     {See if we have reached the finish}
@@ -345,18 +343,23 @@ $0700:
         j 1- if>0loop]
 
       {New lap}
-      0 Time=
-      $fc00 NextTurn+ NextTurn=
-      $fc00 Distance+ Distance=
+      0 Time= Random=
+      $7400 Distance= NextTurn=
     ]
 
     {See if we have reached the next turn}
     {Distance} NextTurn-
     [if>0
-      NextDDX DDX=                                      {Shift to next segment}
-      \entropy, 31& 40+ NextTurn+ NextTurn=             {NextTurn < 100}
-      \entropy, 32& [if<>0 24] NextDDX=                 {Turn right}
-      \entropy, 64& [if<>0 24] NextDDX- NextDDX=        {... and/or left}
+      Random NextTurn+ 109^ Random=     {Circuit formuala}
+      31& 40+ NextTurn+ NextTurn=       {40..71 units until nextt}
+      Random>, 3& 1+ i= i+ i+ i= i+ i=  {Magnitude 6,12,18,24}
+      NextDDX DDX=                      {Shift to next segment}
+
+     {DDX} [if<0  i+
+      else [if>0  i-
+      else {if=0} Random [if>=0 i else 0 i-]
+      ]]
+      NextDDX=
     ]
 
     {Draw bending of the road}
@@ -545,7 +548,7 @@ Intro!
   {Setup new game}
   $7400 Distance= NextTurn=
 
-  0 DDX= NextDDX= DrawRoad!
+  0 Random= DDX= NextDDX= DrawRoad!
   DrawGrass!
   SetupHorizon!
   SetupRoad!
