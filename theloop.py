@@ -226,6 +226,7 @@ define('sysData',    sysData)
 define('sysPos',     sysPos)
 define('vBlank',     vBlank)
 define('vAC',        vAC)
+define('vACH',       vAC+1)
 define('vLR',        vLR)
 
 #-----------------------------------------------------------------------

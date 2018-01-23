@@ -9,7 +9,6 @@ gcl0x
 
 {
 Todo:
-XXX Engine sound
 XXX Improve track indicator
 XXX Add more interesting camera behavior (DX0)
 XXX Positioning of "GAME OVER" message
@@ -320,6 +319,21 @@ $0600:
   ret
 ] DrawRoad=
 
+[def {PlayEngineSound}
+
+  {High key is Speed[7:14]}
+  $01fb {keyH} p= Speed Speed+ \vACH,
+  p. p>++ p. p>++ p. p>++ p. {Sound channel 1-4}
+
+  {Low key is Speed[0:6]}
+  $01fa {keyL} p= Speed 127&
+  p. p>++ p. p>++ p. p>++ p. {Sound channel 1-4}
+
+  60 \soundTimer= {Keep sound for another second}
+
+  ret
+] PlayEngineSound=
+
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 7                                      |
 +-----------------------------------------------------------------------}
@@ -376,6 +390,9 @@ $0700:
 
     {Car "physics" and driver input}
     ControlRaceCar!
+
+    {Update pitch of engine sound}
+    PlayEngineSound!
 
     {Draw race car}
     DrawRaceCar!
