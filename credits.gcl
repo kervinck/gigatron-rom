@@ -1,0 +1,158 @@
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Credits screen                                                  |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+gcl0x
+
+{-----------------------------------------------------------------------+
+|                       RAM page 3                                      |
++-----------------------------------------------------------------------}
+$0300:
+
+{
+  First setup all subroutine definitions and variables, without making
+  calls. This way allows use of vLR to hop from page to page during setup,
+  with minimal overhead. At the end, run the main loop.
+}
+
+[def
+{-
+  DrawText(Text,Pos)
+
+  Draw a zero-terminated text string to the screen.
+  Character 10 acts as newline.
+  There is no check for running off screen.
+-}
+  push
+  [do
+    Text, Char= {Next character to be printed}
+    if<>0       {Zero termination}
+      Text<++   {Advance text pointer}
+      Char 10^ [if=0 Pos<. $800 Pos+ Pos=
+                else DrawChar!]
+      loop]
+  pop ret
+] DrawText=
+
+[def {Message}
+ $54# $68# $69# $73# $20# $47# $69# $67# $61# $74# $72# $6f# $6e#
+ $20# $54# $54# $4c# $20# $63# $6f# $6d# $70# $75# $74# $65# $72#
+ $0a# $6b# $69# $74# $20# $77# $61# $73# $20# $63# $6f# $6e# $63#
+ $65# $69# $76# $65# $64# $2c# $0a# $64# $65# $73# $69# $67# $6e#
+ $65# $64# $20# $61# $6e# $64# $20# $62# $72# $6f# $75# $67# $68#
+ $74# $20# $74# $6f# $0a# $79# $6f# $75# $20# $62# $79# $20# $4d#
+ $61# $72# $63# $65# $6c# $20# $76# $61# $6e# $20# $4b# $65# $72#
+ $76# $69# $6e# $63# $6b# $0a# $61# $6e# $64# $20# $57# $61# $6c#
+ $74# $65# $72# $20# $42# $65# $6c# $67# $65# $72# $73# $2c# $20#
+ $62# $61# $73# $65# $64# $0a# $6f# $6e# $20# $61# $6e# $20# $6f#
+ $72# $69# $67# $69# $6e# $61# $6c# $20# $64# $65# $73# $69# $67#
+ $6e# $20# $62# $79# $0a# $4d# $61# $72# $63# $65# $6c# $20# $76#
+ $61# $6e# $20# $4b# $65# $72# $76# $69# $6e# $63# $6b# $2e# $0a#
+ $0a# $53# $70# $65# $63# $69# $61# $6c# $20# $74# $68# $61# $6e#
+ $6b# $73# $20# $6d# $75# $73# $74# $20# $67# $6f# $20# $74# $6f#
+ 0#
+] Part1=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+$0400:
+
+[def
+ $0a# $4d# $61# $72# $63# $2c# $20# $50# $61# $75# $6c# $2c# $20#
+ $49# $76# $61# $6e# $61# $2c# $20# $4f# $73# $63# $61# $72# $2c#
+ $0a# $4d# $61# $72# $74# $69# $6a# $6e# $2c# $20# $45# $72# $69#
+ $6b# $2c# $20# $42# $65# $6c# $6c# $61# $2c# $20# $48# $47# $2c#
+ $0a# $41# $6e# $74# $6f# $6f# $6e# $2c# $20# $44# $69# $65# $74#
+ $65# $72# $2c# $20# $42# $65# $6e# $2c# $20# $42# $72# $61# $64#
+ $2c# $0a# $53# $76# $65# $6e# $2c# $20# $42# $72# $69# $61# $6e#
+ $2c# $20# $4c# $6f# $75# $20# $61# $6e# $64# $20# $61# $6c# $6c#
+ $0a# $47# $69# $67# $61# $74# $72# $6f# $6e# $20# $75# $73# $65#
+ $72# $73# $21# $0a# $20# $20# $20# $20# $20# $20# $20# $20# $20#
+ $20# $20# $4d# $61# $72# $63# $65# $6c# $20# $26# $20# $57# $61#
+ $6c# $74# $65# $72# 0#
+] Part2=
+
+[def
+{-
+  ClearScreen(Pos)
+  Clear screen from current position to bottom right
+-}
+  Pos p=
+  Pos 255| 255- {XXX Is there a better way to clear the low byte?}
+  i= $8001 i+ i=
+  [do
+    p [do
+      \sysArgs0= \SYS_38_VClear8 38@ {Clears 8 pixels vertically}
+      $800 p+ p= if>0loop]
+    i+ p=
+    255& 160^ if<>0loop]
+  ret
+] ClearScreen=
+
+[def
+{-
+  Wait -- Wait Delay number of frames (range 1..255)
+-}
+  \frameCount, Delay+ 255& tmp=
+  [do \frameCount, tmp- if<>0loop]
+  ret
+] Wait=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 5                                      |
++-----------------------------------------------------------------------}
+$0500:
+
+[def
+{-
+  DrawChar(Char)
+
+  Draw a 5x8 character on screen with the built-in font.
+  `Char' must be in the 32-127 range (this is not checked)
+-}
+  {Map ASCII code to offset in font table}
+  Char 82- [if<0 50+ i= \font32up
+            else     i= \font82up] fontData= {Select low or high page}
+  i i+ tmp= tmp+ i+    {Multiply by 5}
+  fontData+ fontData=  {Add to page address to reach bitmap data for Char}
+  $800 Pos+ q=         {Where to stop the inner drawing loop}
+
+  {Draw 6 vertical slices: 5 using font data, the last with all-zeros}
+  5 i= [do
+    [if<>0 fontData 0? fontData<++ else 0] bits=
+    Pos p=
+    {Draw vertical slice}
+    [do
+      bits 128& [if=0 0 {Black} else Color] p.
+      bits bits+ bits=
+      p>++
+      p q- if<0loop]
+    Pos<++
+    i 1- i= if>=0loop]
+  ret
+] DrawChar=
+
+{--- Setup ---}
+
+$800 Pos= ClearScreen!
+
+[do
+ {Redraw text in several colors}
+ 62 Color= {Pen color}
+ [do
+   $800 Pos= {Pen position at top of screen}
+   Part1 Text= DrawText!
+   Part2 Text= DrawText!
+   240 Delay= Wait!
+   Color 8^ if<>0 Color 9- Color= loop]
+
+loop]
+
+{-----------------------------------------------------------------------+
+|       End                                                             |
++-----------------------------------------------------------------------}
+
