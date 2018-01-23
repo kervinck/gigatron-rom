@@ -10,8 +10,10 @@ gcl0x
 {
 Todo:
 XXX Randomized trajectory
+   - more variation in corner radii
+   - revert to straight or opposite direction after corner
+   - fixed pseudo-random sequence
 XXX Add more interesting camera behavior (DX0)
-XXX Fix horizon movement
 XXX Remove curve debugging (or change it into an obstacle)
 XXX Engine sound
 XXX Slower acceleration
