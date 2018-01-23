@@ -28,6 +28,12 @@
 #  XXX About Gigatron, credits & thanks
 #
 #  Maybe
+#  XXX vCPU: Interrupts / Task switching (e.g for clock, LED sequencer)
+#  XXX vCPU: Right shift (Left shift)
+#  XXX vCPU: ANDW, ORW, XORW
+#  XXX vCPU: Clear just vAC[0:7]
+#  XXX vCPU: PUSHA, POPA
+#  XXX vCPU: Multiplication (mulShift8?)
 #  XXX Music sequencer (combined with LED sequencer)
 #  XXX Logo drawing
 #  XXX Readability of asm.py instructions
