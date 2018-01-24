@@ -17,7 +17,6 @@ gcl0x
   - Implement shift-right in interpreter as well
   - A bit slow (8242.655 seconds)
 
-  XXX Change traversal logic: 1. draw 2. turn 3. step
   XXX At the end change all to grey tones and redo
   XXX Redo at different sections
   XXX Sound for every pixel value
@@ -70,7 +69,7 @@ $0300:
 ] MulShift7=
 
 { Calculate color for (X0,Y0) }
-[def
+[def {CalcPixel}
   push
   0 X= XX= Y= YY= i=
   [do
@@ -84,8 +83,10 @@ $0300:
    {X}A= B= MulShift7!          XX=
     Y A= B= MulShift7!          YY=
 
-    -$200 XX+ YY+ if<=0loop]    {Also break when X^2 + Y^2 > 4}
-  i
+    -$200 XX+ YY+
+    [if>0 i else loop]          {Also break when X^2 + Y^2 > 4}
+   {[if<=0loop else i]          XXX more efficient if the compiler supports this}
+  ]
   pop ret
 ] CalcPixel=
 
@@ -97,51 +98,63 @@ $0400:
 [def
   push
 
-  $7ff p= {Start of video (minus 1 to compensate for 1st step)}
+  $800 p= {Start of video}
 
-  -323 X0= 3 DX= 161 Width=  {Horizontal parameters}
   -180 Y0= 0 DY= 120 Height= {Vertical parameters}
+  -320 X0= 3 DX= 160 Width=  {Horizontal parameters}
+  len= LastPixel=
 
   [do
-    {Length of next segment, either horizontal or vertical}
-    DX [if<>0 Width 1- Width= else Height 1- Height=] if>0
-    [do
-      len=
+    {Draw white pixel while busy here}
+    63 p.
 
-      {Step in the fractal plane}
-      X0 DX+ X0=
-      Y0 DY+ Y0=
-
-      {Matching step in video frame}
-      DX [if<0 p 1-     p=]
-      DX [if>0 p 1+     p=]
-      DY [if<0 -$100 p+ p=]
-      DY [if>0  $100 p+ p=]
-
-      {Draw white pixel while busy here}
-      63 p.
-
-      {First check if we are inside one of the main bulbs for
+    LastPixel 0 [if=0
+      {Check if we are inside one of the main bulbs for
        a quick bailout (Wikipedia)
        (x+1)^ + y^2 < 1/16}
       Y0 A= B= MulShift7! YY=
       X0 128+ A= B= MulShift7! YY+ 8- [if<0 0
       else
 
-      {q*(q + x - 1/4) < 1/4*y^2, where q = (x - 1/4)^2 + y^2}
-      X0 32- A= B= MulShift7! YY+ {q}
-      A= X0+ 32- B= MulShift7! tmp=
-      tmp+ tmp= tmp+ tmp= {*4} YY- [if<0 0
-      else
+        {q*(q + x - 1/4) < 1/4*y^2, where q = (x - 1/4)^2 + y^2}
+        X0 32- A= B= MulShift7! YY+ {q}
+        A= X0+ 32- B= MulShift7! tmp=
+        tmp+ tmp= tmp+ tmp= {*4} YY- [if<0 0
+        else
 
-      {Otherwise run the escape time algorithm}
+          {Otherwise run the escape time algorithm}
+          CalcPixel!
+        ]
+      ]
+    else
+      {No shortcut}
       CalcPixel!
-      ]]
-      p. {Plot pixel}
-      len 1- if>0loop]
+    ]
 
-    DY tmp= DX DY= 0 tmp- DX= {Turn right}
-    loop]
+    LastPixel= p. {Plot pixel}
+
+    len 1- [if<=0
+      {Turn right}
+      DY tmp= DX DY= 0 tmp- DX=
+
+      {Length of next segment, either horizontal or vertical}
+      DX [if<>0 Width 1- Width= else Height 1- Height=]
+    ]
+
+    {Break when reaching a zero-length segment}
+    len= if>0
+
+    {Step in the fractal plane}
+    X0 DX+ X0=
+    Y0 DY+ Y0=
+
+    {Matching step in video frame}
+    DX [if<0 p 1-     p=]
+    DX [if>0 p 1+     p=]
+    DY [if<0 -$100 p+ p=]
+    DY [if>0  $100 p+ p=]
+
+  loop]
   pop ret
 ] CalcSet=
 

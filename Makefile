@@ -1,7 +1,7 @@
 CFLAGS:=-std=c11 -O3 -Wall
 
 theloop.2.rom: *.py *.gcl Images/*.rgb Makefile
-	./theloop.py racer.gcl
+	./theloop.py mandelbrot.gcl
 
 run: gtemu theloop.2.rom
 	./gtemu
