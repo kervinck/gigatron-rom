@@ -15,7 +15,7 @@ gcl0x
   - Use 16-bit vCPU math as 7-bit fixed point arithmetic (1.00 -> 128)
   - Implement multiplication in interpreter
   - Implement shift-right in interpreter as well
-  - A bit slow (8242.655 seconds)
+  - A bit slow (6833.438 seconds)
 
   XXX At the end change all to grey tones and redo
   XXX Redo at different sections
@@ -95,20 +95,18 @@ $0300:
 +-----------------------------------------------------------------------}
 $0400:
 
-[def
+[def {CalcSet}
   push
 
   $800 p= {Start of video}
-
-  -180 Y0= 0 DY= 120 Height= {Vertical parameters}
-  -320 X0= 3 DX= 160 Width=  {Horizontal parameters}
-  len= LastPixel=
+  LastPixel= {Anything well-defined}
+  Width len=
 
   [do
     {Draw white pixel while busy here}
     63 p.
 
-    LastPixel 0 [if=0
+    LastPixel [if=0
       {Check if we are inside one of the main bulbs for
        a quick bailout (Wikipedia)
        (x+1)^ + y^2 < 1/16}
@@ -192,8 +190,18 @@ $0600:
 
 { Main }
 [do
+  {Zoom1 12959.981 seconds}
+  -148 Y0= 0 DY= 120 Height= {Vertical parameters}
+   -98 X0= 1 DX= 160 Width=  {Horizontal parameters}
   CalcSet!
   60 \soundTimer. {For debugging}
+
+  {Global 6833.438 seconds}
+  -180 Y0= 0 DY= 120 Height= {Vertical parameters}
+  -320 X0= 3 DX= 160 Width=  {Horizontal parameters}
+  CalcSet!
+  60 \soundTimer. {For debugging}
+
   loop]
 
 {-----------------------------------------------------------------------+
