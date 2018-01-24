@@ -17,8 +17,6 @@ gcl0x
   - Implement shift-right in interpreter as well
   - A bit slow (6833.438 seconds)
 
-  XXX At the end change all to grey tones and redo
-  XXX Redo at different sections
   XXX Sound for every pixel value
   XXX Convert into a clock application
   XXX Double vertical resolution by exploiting vertical symmetry
@@ -84,8 +82,7 @@ $0300:
     Y A= B= MulShift7!          YY=
 
     -$200 XX+ YY+
-    [if>0 i else loop]          {Also break when X^2 + Y^2 > 4}
-   {[if<=0loop else i]          XXX more efficient if the compiler supports this}
+    if<=0loop {else} i          {Also break when X^2 + Y^2 > 4}
   ]
   pop ret
 ] CalcPixel=
@@ -99,8 +96,10 @@ $0400:
   push
 
   $800 p= {Start of video}
+  120 Height= 160 Width= len=
   LastPixel= {Anything well-defined}
-  Width len=
+  0 DY=
+  Step DX=
 
   [do
     {Draw white pixel while busy here}
@@ -153,6 +152,11 @@ $0400:
     DY [if>0  $100 p+ p=]
 
   loop]
+
+  60 \soundTimer. {For debugging}
+
+  GreyOut!
+
   pop ret
 ] CalcSet=
 
@@ -160,6 +164,65 @@ $0400:
 |}\vLR>++ ret{          RAM page 5                                      |
 +-----------------------------------------------------------------------}
 $0500:
+
+[def {GreyOut}
+  push
+
+  $800 p=
+  120 Height= 160 Width= len=
+  1 DX= 0 DY=
+
+  [do
+    0 Level=
+    32 [do
+      i=
+      p, 63& i- [if>=0 p. i 21& [if<>0 1 else 2] Level+ Level=]
+      i ShiftRight!
+      if>0loop]
+    {Level in 0..9}
+    p. {Paint it black}
+
+    Level [if<>0
+      {Level in 1..9}
+
+      {Ordered dithering}
+      p>, 1& i= i+ i= {2 * bit 0 of y}
+      p   1&    i+ i= {+   bit 0 of x}
+      [def 0# 2# {Bayer matrix (Wikipedia)}
+           3# 1#]
+      i+ peek Level+ 1- Level=
+      {Level in 0..11}
+     
+      {Map intensity level to actual grey color (multiple of 1+4+16)}
+      [do Level 3- if>=0 Level= p, 21+ p. loop]
+    ]
+
+    {Advance to next pixel}
+    len 1- [if<=0
+      {Turn right}
+      DY tmp= DX DY= 0 tmp- DX=
+
+      {Length of next segment, either horizontal or vertical}
+      DX [if<>0 Width 1- Width= else Height 1- Height=]
+    ]
+
+    {Break when reaching a zero-length segment}
+    len= if>0
+
+    {Matching step in video frame}
+    DX [if<0 p 1-     p=]
+    DX [if>0 p 1+     p=]
+    DY [if<0 -$100 p+ p=]
+    DY [if>0  $100 p+ p=]
+
+  loop]
+  pop ret
+] GreyOut=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 6                                      |
++-----------------------------------------------------------------------}
+$0600:
 
 { Stupid shift-right function }
 { XXX Better make a SYS extension for this }
@@ -184,24 +247,18 @@ $0500:
 ] ShiftRight=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 6                                      |
+|}\vLR>++ ret{          RAM page 7                                      |
 +-----------------------------------------------------------------------}
-$0600:
+$0700:
 
 { Main }
 [do
-  {Zoom1 12959.981 seconds}
-  -148 Y0= 0 DY= 120 Height= {Vertical parameters}
-   -98 X0= 1 DX= 160 Width=  {Horizontal parameters}
-  CalcSet!
-  60 \soundTimer. {For debugging}
-
-  {Global 6833.438 seconds}
-  -180 Y0= 0 DY= 120 Height= {Vertical parameters}
-  -320 X0= 3 DX= 160 Width=  {Horizontal parameters}
-  CalcSet!
-  60 \soundTimer. {For debugging}
-
+  -180 Y0= -320 X0= 3 Step= CalcSet!  {Global 6833.438 seconds}
+  -148 Y0=  -98 X0= 1 Step= CalcSet!  {Zoom1 12959.981 seconds}
+   -60 Y0= -260 X0= 1 Step= CalcSet!  {Zoom2}
+  -320 Y0= -360 X0= 9 Step= CalcSet!  {Wide}
+     0 Y0= -100 X0= 1 Step= CalcSet!  {Zoom3}
+   -60 Y0=    0 X0= 1 Step= CalcSet!  {Zoom4}
   loop]
 
 {-----------------------------------------------------------------------+

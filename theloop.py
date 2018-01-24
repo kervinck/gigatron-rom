@@ -59,7 +59,6 @@
 #  XXX Font screen 16x8 chars
 #  XXX Maze game. Berzerk/Robotron? Pac Mac
 #  XXX Primes, Fibonacci (bignum), Queens
-#  XXX Mandelbrot fractal
 #  XXX Game of Life (edit <-> stop <-> slow <-> fast)
 #  XXX Game #5 Shooter. Space Invaders, Demon Attack, Galaga style
 #  XXX Exhibition mode: flip between applications in auto-play mode
