@@ -13,21 +13,18 @@
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #  To do
-#  XXX Racer game
 #  XXX Serial application load from ROM tables, hiding page boundraries
 #      Protocol: [<addrH> <addrL> <n-1> n*<byte>]+ 0
 #  XXX Main menu / Loading and starting of programs
 #  XXX Serial loading of programs with Arduino/Trinket
 #      Protocol: 0x21('!') <addrH> <addrL> <n-1> n*<byte> <sum> (n=1-32)
+#      Align bytes with visible scanlines
 #  XXX Double-check initialisation of all variables
 #  XXX Show counted memory at startup
 #  XXX ROM padding
-#  XXX Snake game
-#  XXX Picture Frame
-#  XXX Test screen
-#  XXX About Gigatron, credits & thanks
 #
 #  Maybe
+#  XXX Audio: Move shift table to page 7, then add waveform synthesis
 #  XXX vCPU: Interrupts / Task switching (e.g for clock, LED sequencer)
 #  XXX vCPU: Right shift (Left shift)
 #  XXX vCPU: ANDW, ORW, XORW
@@ -36,28 +33,23 @@
 #  XXX vCPU: Multiplication (mulShift8?)
 #  XXX Music sequencer (combined with LED sequencer)
 #  XXX Logo drawing
-#  XXX Readability of asm.py instructions
-#  XXX asm: make d() implicit in first argument of instructions
-#  XXX GCL: 'page' macro
-#  XXX More waveforms (eg. with offset in shift2 table)
-#  XXX Scroll out the top line of text
-#  XXX Pacman ghosts. Sprites by scan line 4 reset method? ("videoG"=graphics)
+#  XXX Readability of asm.py instructions, esp. make d() implicit
+#  XXX Scroll out the top line of text, or generic vertical scroll SYS call
 #  XXX Intro: Rising planet?
+#  XXX Pacman ghosts. Sprites by scan line 4 reset method? ("videoG"=graphics)
 #  XXX Multitasking/threading/sleeping (start with date/time clock in GCL)
-#  XXX Better shift-table (use ROM?)
 #  XXX Prefix notation for high/low byte >X++ instead of X>++
-#  XXX Decay, using Karplus-Strong
+#  XXX Audio: Decay, using Karplus-Strong
 #  XXX Scoping for variables or some form of local variables? $i ("localized")
 #  XXX Simple GCL programs might be compiled by the host instead of offline?
-#  XXX Macros
 #
 #  Future applications
-#  XXX Gigatron layout balls/bricks game
-#  XXX Horizontal scroller. Flappy Bird
 #  XXX Random dots screen
-#  XXX Info screen (zero page)
 #  XXX Font screen 16x8 chars
+#  XXX Info screen (zero page)
+#  XXX Gigatron layout balls/bricks game
 #  XXX Maze game. Berzerk/Robotron? Pac Mac
+#  XXX Horizontal scroller. Flappy Bird
 #  XXX Primes, Fibonacci (bignum), Queens
 #  XXX Game of Life (edit <-> stop <-> slow <-> fast)
 #  XXX Game #5 Shooter. Space Invaders, Demon Attack, Galaga style
