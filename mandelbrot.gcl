@@ -15,11 +15,13 @@ gcl0x
   - Use 16-bit vCPU math as 7-bit fixed point arithmetic (1.00 -> 128)
   - Implement multiplication in interpreter
   - Implement shift-right in interpreter as well
-  - A bit slow (6833.438 seconds)
+  - A bit slow (6832.904 seconds)
 
   XXX Sound for every pixel value
   XXX Convert into a clock application
   XXX Double vertical resolution by exploiting vertical symmetry
+  XXX Lookup table for intensity mapping
+  XXX Refactor pixel order from what to do with it
 }
 
 {-----------------------------------------------------------------------+
@@ -253,12 +255,12 @@ $0700:
 
 { Main }
 [do
-  -180 Y0= -320 X0= 3 Step= CalcSet!  {Global 6833.438 seconds}
-  -148 Y0=  -98 X0= 1 Step= CalcSet!  {Zoom1 12959.981 seconds}
-   -60 Y0= -260 X0= 1 Step= CalcSet!  {Zoom2}
-  -320 Y0= -360 X0= 9 Step= CalcSet!  {Wide}
-     0 Y0= -100 X0= 1 Step= CalcSet!  {Zoom3}
-   -60 Y0=    0 X0= 1 Step= CalcSet!  {Zoom4}
+  -180 Y0= -320 X0= 3 Step= CalcSet!    {Global 6832.904 seconds}
+  -148 Y0=  -98 X0= 1 Step= CalcSet!    {Zoom1 12959.981 seconds}
+   -60 Y0= -256 X0= 1 Step= CalcSet!    {Zoom2 12461.071 seconds}
+  -320 Y0= -360 X0= 9 Step= CalcSet!    {Wide   2048.707 seconds}
+     0 Y0= -100 X0= 1 Step= CalcSet!    {Zoom3 14346.791 seconds}
+   -60 Y0=    0 X0= 1 Step= CalcSet!    {Zoom4  8584.882 seconds}
   loop]
 
 {-----------------------------------------------------------------------+
