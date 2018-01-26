@@ -307,6 +307,17 @@ def zpReset(startFrom=0):
   global _zpSize
   _zpSize = startFrom
 
+def trampoline():
+  """Read 1 byte from ROM page"""
+  while pc()&255 < 256-5:
+    nop()
+  bra(busAC);                   #13
+  C('Trampoline for page $%04x lookups' % (pc()&~255))
+  bra(val(253))                 #14
+  ld(d(hi('luReturn')),regY)    #16
+  jmpy(d(lo('luReturn')))       #17
+  ld(d(lo('vPC+1')),busRAM|regY)#18 Restore
+
 def end():
   errors = 0
 

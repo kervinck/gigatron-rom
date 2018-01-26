@@ -13,9 +13,7 @@
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #  To do
-#  XXX Serial application load from ROM tables, hiding page boundraries
-#      Protocol: [<addrH> <addrL> <n-1> n*<byte>]+ 0
-#  XXX Main menu / Loading and starting of programs
+#  XXX Main menu
 #  XXX Serial loading of programs with Arduino/Trinket
 #      Protocol: 0x21('!') <addrH> <addrL> <n-1> n*<byte> <sum> (n=1-32)
 #      Align bytes with visible scanlines
@@ -186,7 +184,7 @@ vSP             = zpByte(1) # Stack pointer
 vTicks          = zpByte() # Interpreter ticks are units of 2 clocks
 vTmp            = zpByte()
 
-# Registers for SYS functions
+# Registers for SYS functions XXX Remove, use sysArgs[] instead
 sysPos          = zpByte(2)
 sysData         = zpByte(2)
 
@@ -201,12 +199,12 @@ ledTimer        = zpByte() # Number of ticks until next LED change
 ledState        = zpByte() # Current LED state
 ledTempo        = zpByte() # Next value for ledTimer after LED state change
 
-# ROM reader
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 zpFree          = zpByte(0)
 
 # Export some zero page variables to GCL
 # XXX Solve in another way (not through symbol table!)
+define('memSize',    memSize)
 define('entropy',    entropy)
 define('frameCount', frameCount)
 define('serialRaw',  serialRaw)
@@ -219,6 +217,8 @@ define('vBlank',     vBlank)
 define('vAC',        vAC)
 define('vACH',       vAC+1)
 define('vLR',        vLR)
+define('screenY',    screenY)
+define('vPC+1',      vPC+1) # XXX trampoline() is probably in the wrong module
 
 #-----------------------------------------------------------------------
 #
@@ -426,12 +426,12 @@ adda(val(2),regX)
 ld(val(vCpuReset>>8))
 st(d(vPC+1),busAC|regY)
 st(d(lo('LDWI')),        eaYXregOUTIX)
-st(d(lo('SYS_54_Reset')),eaYXregOUTIX)
-st(d(hi('SYS_54_Reset')),eaYXregOUTIX)
+st(d(lo('SYS_42_Reset')),eaYXregOUTIX)
+st(d(hi('SYS_42_Reset')),eaYXregOUTIX)
 st(d(lo('SYS')),         eaYXregOUTIX)
-st(d(54),                eaYXregOUTIX)
+st(d(256-42/2+maxTicks), eaYXregOUTIX)
 
-# XXX Everything below should at one point migrate to reset.gcl
+# XXX Everything below should at one point migrate to Reset.gcl
 
 # Init the shift2-right table for sound
 ld(val(shiftTablePage),regY);   C('Setup shift2 table')
@@ -491,14 +491,6 @@ ld(val(0b0111));                C('LEDs |***O|')
 ld(val(syncBits^hSync),regOUT)
 ld(val(syncBits),regOUT)
 
-ld(val(lo('.retn')));           C('Load application')
-st(d(returnTo+0))
-ld(val(hi('.retn')))
-ld(d(hi('loadApp')),regY)
-jmpy(d(lo('loadApp')))
-st(d(returnTo+1))
-label('.retn')
-
 ld(val(0b1111));                C('LEDs |****|')
 ld(val(syncBits^hSync),regOUT)
 ld(val(syncBits),regOUT)
@@ -508,6 +500,139 @@ st(d(xoutMask))
 ld(d(hi('vBlankStart')),busD|ea0DregY);C('Enter video loop')
 jmpy(d(lo('vBlankStart')))
 ld(val(syncBits))
+
+#-----------------------------------------------------------------------
+# Extension SYS_42_Reset: Soft reset
+#-----------------------------------------------------------------------
+
+# SYS_42_Reset initiates an immediate Gigatron reset from within the vCPU.
+# The reset sequence itself is mostly implemented in GCL by Reset.gcl.
+# This must first be loaded into RAM. But as that takes more than 1 scanline,
+# some vCPU bootstrapping code gets loaded into the high part of the zero page,
+# and then the vCPU is redircted to execute that.
+
+vCpuBoot = 0x00f6
+
+label('SYS_42_Reset')
+ld(val(vCpuBoot-2))                     #15 vPC
+st(d(vPC))                              #16
+ld(val(vCpuBoot),regX)                  #17 vPC
+ld(val(0))                              #18
+st(d(vPC+1),busAC|regY)                 #19 Boot on zero page
+st(d(vSP))                              #20 Reset stack pointer
+assert(vCpuStart&255==0)
+st(d(vLR))                              #21
+ld(val(vCpuStart>>8))                   #22
+st(d(vLR+1))                            #23
+ld(d(lo('videoF')))                     #24 Do this before first visible pixels
+st(d(videoDorF))                        #25
+nop()                                   #26
+# Start of manually compiled vCPU section
+st(d(lo('LDWI')    ),eaYXregOUTIX)      #27 00f6 Where to read from ROM
+st(d(lo('Reset.gcl')),eaYXregOUTIX)     #28 00f7
+st(d(hi('Reset.gcl')),eaYXregOUTIX)     #29 00f8
+st(d(lo('STW')     ),eaYXregOUTIX)      #30 00f9
+st(d(sysArgs       ),eaYXregOUTIX)      #31 00fa
+st(d(lo('LDWI')    ),eaYXregOUTIX)      #32 00fb Call SYS_88_LoadRom
+st(d(lo('SYS_88_LoadRom')),eaYXregOUTIX)#33 00fc
+st(d(hi('SYS_88_LoadRom')),eaYXregOUTIX)#34 00fd
+st(d(lo('SYS')     ),eaYXregOUTIX)      #35 00fe
+st(d(256-88/2+maxTicks),eaYXregOUTIX)   #36 00ff
+# Return to interpreter
+ld(val(hi('REENTER')),regY)     #37
+jmpy(d(lo('REENTER')))          #38
+ld(val(-42/2))                  #39
+
+#-----------------------------------------------------------------------
+# Extension SYS_88_LoadRom: Load code from ROM into memory
+#-----------------------------------------------------------------------
+#
+# This loads the vCPU code with consideration of the current vSP
+# Used during reset, but also for switching between applications
+# or for loading data from ROM during an application.
+#
+# Variables:
+#       sysArgs[0:1]    ROM pointer (input set by caller)
+#       sysArgs[2:3]    RAM pointer (variable)
+#       sysArgs[4]      State counter (variable)
+#       vLR             vCPU continues here (input set by caller)
+
+label('SYS_88_LoadRom')
+ld(val(0))                              #15 Address of loader on zero page
+st(d(vPC+1),busAC|regY)                 #16
+ldzp(d(vSP))                            #17 Below the current stack pointer
+suba(d(53+2))                           #18 (AC -> *+0)
+st(d(vTmp),busAC|regX)                  #19
+adda(val(-2))                           #20 (AC -> *-2)
+st(d(vPC))                              #21
+# Start of manually compiled vCPU section
+st(d(lo('PUSH')    ),eaYXregOUTIX)      #22 *+0
+st(d(lo('BRA')     ),eaYXregOUTIX)      #23 *+1
+adda(val(26))                           #24 (AC -> *+24)
+st(                  eaYXregOUTIX)      #25 *+2
+st(d(lo('ST')      ),eaYXregOUTIX)      #26 *+3 Chunk copy loop
+st(d(sysArgs+3     ),eaYXregOUTIX)      #27 *+4 High-address came first
+st(d(lo('CALL')    ),eaYXregOUTIX)      #28 *+5
+adda(val(33-24))                        #29 (AC -> *+33)
+st(                  eaYXregOUTIX)      #30 *+6
+st(d(lo('ST')      ),eaYXregOUTIX)      #31 *+7
+st(d(sysArgs+2     ),eaYXregOUTIX)      #32 *+8 Then the low address
+st(d(lo('CALL')    ),eaYXregOUTIX)      #33 *+9
+st(                  eaYXregOUTIX)      #34 *+10
+st(d(lo('ST')      ),eaYXregOUTIX)      #35 *+11 Byte copy loop
+st(d(sysArgs+4     ),eaYXregOUTIX)      #36 *+12 Byte count (0 means 256)
+st(d(lo('CALL')    ),eaYXregOUTIX)      #37 *+13
+st(                  eaYXregOUTIX)      #38 *+14
+st(d(lo('POKE')    ),eaYXregOUTIX)      #39 *+15
+st(d(sysArgs+2     ),eaYXregOUTIX)      #40 *+16
+st(d(lo('INC')     ),eaYXregOUTIX)      #41 *+17
+st(d(sysArgs+2     ),eaYXregOUTIX)      #42 *+18
+st(d(lo('LD')      ),eaYXregOUTIX)      #43 *+19
+st(d(sysArgs+4     ),eaYXregOUTIX)      #44 *+20
+st(d(lo('SUBI')    ),eaYXregOUTIX)      #45 *+21
+st(d(1             ),eaYXregOUTIX)      #46 *+22
+st(d(lo('BCC')     ),eaYXregOUTIX)      #47 *+23
+st(d(lo('NE')      ),eaYXregOUTIX)      #48 *+24
+adda(val(11-2-33))                      #49 (AC -> *+9)
+st(                  eaYXregOUTIX)      #50 *+25
+st(d(lo('CALL')    ),eaYXregOUTIX)      #51 *+26 Go to next block
+adda(val(33-9))                         #52 (AC -> *+33)
+st(                  eaYXregOUTIX)      #53 *+27
+st(d(lo('BCC')     ),eaYXregOUTIX)      #54 *+28
+st(d(lo('NE')      ),eaYXregOUTIX)      #55 *+29
+adda(val(3-2-33))                       #56 (AC -> *+1)
+st(                  eaYXregOUTIX)      #57 *+30
+st(d(lo('POP')     ),eaYXregOUTIX)      #58 *+31 End
+st(d(lo('RET')     ),eaYXregOUTIX)      #59 *+32
+# Pointer constant pointing to the routine below (for use by CALL)
+adda(val(35-1))                         #60 (AC -> *+35)
+st(                  eaYXregOUTIX)      #61 *+33
+st(d(0             ),eaYXregOUTIX)      #62 *+34
+# Routine to read next byte from ROM and advance read pointer
+st(d(lo('LD')      ),eaYXregOUTIX)      #63 *+35 Test for end of ROM table
+st(d(sysArgs+0     ),eaYXregOUTIX)      #64 *+36
+st(d(lo('XORI')    ),eaYXregOUTIX)      #65 *+37
+st(d(251           ),eaYXregOUTIX)      #66 *+38
+st(d(lo('BCC')     ),eaYXregOUTIX)      #67 *+39
+st(d(lo('NE')      ),eaYXregOUTIX)      #68 *+40
+adda(val(46-2-35))                      #69 (AC -> *+44)
+st(                  eaYXregOUTIX)      #70 *+41
+st(d(lo('ST')      ),eaYXregOUTIX)      #71 *+42 Wrap to next ROM page
+st(d(sysArgs+0     ),eaYXregOUTIX)      #72 *+43
+st(d(lo('INC')     ),eaYXregOUTIX)      #73 *+44
+st(d(sysArgs+1     ),eaYXregOUTIX)      #74 *+45
+st(d(lo('LDW')     ),eaYXregOUTIX)      #75 *+46 Read next byte from ROM table
+st(d(sysArgs+0     ),eaYXregOUTIX)      #76 *+47
+st(d(lo('LOOKUP')  ),eaYXregOUTIX)      #77 *+48
+st(d(0             ),eaYXregOUTIX)      #78 *+49
+st(d(lo('INC')     ),eaYXregOUTIX)      #79 *+50 Increment read pointer
+st(d(sysArgs+0     ),eaYXregOUTIX)      #80 *+51
+st(d(lo('RET')     ),eaYXregOUTIX)      #81 *+52 Return
+# Return to interpreter
+nop()                                   #82
+ld(val(hi('REENTER')),regY)             #83
+jmpy(d(lo('REENTER')))                  #84
+ld(val(-88/2))                          #85
 
 #-----------------------------------------------------------------------
 #
@@ -1182,17 +1307,6 @@ st(d(vAC+1))                    #21
 bra(d(lo('NEXT')))              #22
 ld(val(-24/2))                  #23
 
-def trampoline():
-  """Read 1 byte from ROM page"""
-  while pc()&255 < 256-5:
-    nop()
-  bra(busAC);                   #13
-  C('Trampoline for page $%02x00 lookups' % (pc()>>8))
-  bra(val(253))                 #14
-  ld(d(hi('luReturn')),regY)    #16
-  jmpy(d(lo('luReturn')))       #17
-  ld(d(vPC+1),busRAM|regY)      #18 Restore
-
 # Instruction PUSH, ([--SP]=LR), 14 cycles
 label('PUSH')
 ldzp(d(vSP))                    #10
@@ -1489,70 +1603,27 @@ nop()                           #23
 #-----------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
-# Extension SYS_54_Reset: Soft reset
+# Extension SYS_22_Out: Send byte to output port
 #-----------------------------------------------------------------------
 
-# SYS_54_Reset initiates an immediate Gigatron reset from within the vCPU.
-# The reset sequence itself is mostly implemented in GCL: reset.gcl.
-# This must first be loaded into RAM, but that takes more than 1 scanline.
-# Therefore this vCPU bootstrapping code gets written, by this SYS extension,
-# into the high part of the zero page where normally the stack lives. For
-# compactness this code is self-modifying and will run once after written.
-# Yes: this is all completely crazy but it works out nicely: the Gigatron
-# can reset itself while maintaining the video and audio signals and without
-# missing a beat... The idea is that this mechanism can be used to switch
-# between different applications stored in ROM.
+label('SYS_22_Out')
+ld(d(sysArgs+0),busRAM|regOUT)  #15
+nop()                           #16
+ld(val(hi('REENTER')),regY)     #17
+jmpy(d(lo('REENTER')))          #18
+ld(val(-22/2))                  #19
 
-vCpuBoot = 0xea
+#-----------------------------------------------------------------------
+# Extension SYS_XX_LoadSerial:
+#-----------------------------------------------------------------------
 
-label('SYS_54_Reset')
-ld(val(vCpuBoot-2))             #15 vPC
-st(d(vPC))                      #16
-ld(val(vCpuBoot),regX)          #17 vPC
-ld(val(0))                      #18
-st(d(vPC+1),busAC|regY)         #19 Boot on zero page
-st(d(xoutMask))                 #20 Sound (and LEDs) off
-st(d(vSP))                      #21 Reset stack pointer
-st(d(vLR))                      #22 Link register
-ld(val(vCpuStart>>8))           #23
-st(d(vLR+1))                    #24
-ld(d(lo('videoF')))             #25
-st(d(videoDorF))                #26 This executes before the visible part
+# Wait for vertical blank
+#
+# sysArgs[0:1] Current address
+# sysArgs[2]   Count remaining
+# sysArgs[3]   Checksum
 
-# Poke a boot sector into high zero page for the bootstrap
-# part that needs more than fits in a single SYS extension
-# - Clearing video table (to be removed)
-# XXX load reset.gcl from ROM
-# - XXX Clearing video table
-# - XXX Clearing screen, printing system message
-# - XXX Clearing sound properly
-# - XXX Loading program from ROM
-st(d(lo('LDI')     ),eaYXregOUTIX) #00ea
-st(d(   0x08       ),eaYXregOUTIX) #00eb RAM page for video line i
-st(d(lo('POKE')    ),eaYXregOUTIX) #00ec "Y[i] = $080+i"
-st(d(   0xfe       ),eaYXregOUTIX) #00ed
-st(d(lo('INC')     ),eaYXregOUTIX) #00ee Self-modification
-st(d(   0xeb       ),eaYXregOUTIX) #00ef
-st(d(lo('INC')     ),eaYXregOUTIX) #00f0
-st(d(   0xfe       ),eaYXregOUTIX) #00f1
-st(d(lo('LDI')     ),eaYXregOUTIX) #00f2
-st(d(    0         ),eaYXregOUTIX) #00f3
-st(d(lo('POKE')    ),eaYXregOUTIX) #00f4 "dX[i] = 0"
-st(d(   0xfe       ),eaYXregOUTIX) #00f5
-st(d(lo('INC')     ),eaYXregOUTIX) #00f6
-st(d(   0xfe       ),eaYXregOUTIX) #00f7
-st(d(lo('LDW')     ),eaYXregOUTIX) #00f8 "for i in range(120)"
-st(d(   0xea       ),eaYXregOUTIX) #00f9 Pulls [$eb] into vAC+1 ...
-st(d(lo('BCC')     ),eaYXregOUTIX) #00fa ...so we can test bit7
-st(d(lo('GE')      ),eaYXregOUTIX) #00fb
-st(d(   0xea-2     ),eaYXregOUTIX) #00fc
-st(d(lo('RET')     ),eaYXregOUTIX) #00fd Jumps to $0300
-st(d(videoTable&255),eaYXregOUTIX) #00fe Video table pointer
-st(d(videoTable>>8 ),eaYXregOUTIX) #00ff
-
-ld(val(hi('REENTER')),regY)     #49
-jmpy(d(lo('REENTER')))          #50
-ld(val(-54/2))                  #51
+label('SYS_XX_LoadSerial')
 
 #-----------------------------------------------------------------------
 # Extension SYS_38_VClear8: Zero a vertical slice of 8 bytes(pixels)
@@ -1947,22 +2018,18 @@ ld(val(-40/2))                  #37
 #
 #-----------------------------------------------------------------------
 
-align(0x100)
-label('loadApp')
-
 # For info
 print 'info SYS length warning %s error %s' % (repr(minSYS), repr(maxSYS))
 
 # Compile test GCL program
+label(sys.argv[1])
 program = gcl.Program(vCpuStart)
 for line in open(sys.argv[1]).readlines():
   program.line(line)
 program.end()
 
-# Return
-ld(d(returnTo+1), busRAM|ea0DregY)
-jmpy(d(returnTo+0)| busRAM)
-nop()
+if pc()&255:
+  trampoline()
 
 #-----------------------------------------------------------------------
 # Finish assembly

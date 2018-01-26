@@ -3,9 +3,8 @@
 from asm import *
 import sys
 
-# XXX Give warning when 'call' and 'ret' are used in the same def-block
 # XXX Give warning when def-block contains 'call' put no 'push'
-# XXX Give warning when def-block contains code but no 'ret' or '(pop) call'
+# XXX Give warning when def-block contains code but no 'ret'
 # XXX Primitive or macro to clear just lower byte of vAC
 # XXX Give warning when not all comments are closed
 # XXX Macros
@@ -21,23 +20,29 @@ class Program:
     self.defs  = {} # block -> address of last def
     self.vars  = {} # name -> address
     self.vPC = None
+    self.chunkId = 0 # This should not be reset for a new program
     self.org(address)
     self.version = None # Must be first word 'gcl<N>'
 
   def segInfo(self):
-    print '%04x vCPU avail %3d used %3d unused %3d' % (
+    print '%3d: %04x vCPU avail %3d used %3d unused %3d' % (
+      self.chunkId,
       self.segStart,
       self.segEnd - self.segStart,
       self.vPC - self.segStart,
       self.segEnd - self.vPC)
+    define('$chunk.%d' % self.chunkId, self.vPC - self.segStart)
+    self.chunkId += 1
 
   def org(self, address):
     # Configure start address for emit
     if self.vPC is not None and self.segStart < self.vPC:
       self.segInfo()
     if address != self.vPC or self.segStart < self.vPC:
-      ld(val(address&0xff),regX)
-      ld(val(address>>8),regY)
+      assert(address>>8) # Because a zero would mark the end of stream
+      ld(val(address>>8));   C('RAM loading address (high byte first)')
+      ld(val(address&0xff))
+      ld(val(lo('$chunk.%d' % self.chunkId))); C('Chunk length (1..256)')
     self.segStart = address
     page = address & ~255
     self.segEnd = page + (249 if page <= 0x400 else 256)
@@ -102,14 +107,14 @@ class Program:
         self.error('Out of code space')
     if byte < 0 or byte >= 256:
         self.error('Value out of range %d (must be 0..255)' % byte)
-    st(val(byte), eaYXregOUTIX) # XXX Use ROM tables (or yield)
+    putInRomTable(byte)
     self.vPC += 1
 
   def opcode(self, ins):
     """Next opcode in RAM"""
     if self.vPC >= self.segEnd:
         self.error('Out of code space')
-    st(val(lo(ins)),eaYXregOUTIX) # XXX Use ROM tables (or yield)
+    putInRomTable(lo(ins))
     C('%04x %s' % (self.vPC, ins))
     self.vPC += 1
 
@@ -393,6 +398,7 @@ class Program:
       self.error('Dangling if statements')
     print '%04x Variables %d' % (zpByte(0), len(self.vars))
     print 'Symbols: ' + ' '.join(sorted(self.vars.keys()))
+    putInRomTable(0) # Zero marks the end of stream
 
   def warning(self, message):
     prefix = 'GCL warning:'
@@ -406,6 +412,11 @@ class Program:
     prefix += ' line %s:' % self.lineNumber
     print prefix, message
     sys.exit()
+
+def putInRomTable(byte):
+  ld(val(byte))
+  if pc()&255 == 251:
+    trampoline()
 
 def prev(address, step=2):
   """Take vPC two bytes back, wrap around if needed to stay on page"""
