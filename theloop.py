@@ -18,7 +18,6 @@
 #      Protocol: 0x21('!') <addrH> <addrL> <n-1> n*<byte> <sum> (n=1-32)
 #      Align bytes with visible scanlines
 #  XXX Double-check initialisation of all variables
-#  XXX Show counted memory at startup
 #  XXX ROM padding
 #
 #  Maybe
@@ -456,29 +455,6 @@ st(d(ledState))
 ld(val(60/6))
 st(d(ledTempo))
 
-# Setup a G-major chord to play XXX Move to GCL
-G3, G4, B4, D5 = 824, 1648, 2064, 2464
-
-ld(val(1),regY);                C('Setup channel 1')
-ld(val(keyL),regX)
-st(d(G3 & 0x7f),eaYXregOUTIX)
-st(d(G3 >> 7),eaYXregAC)
-
-ld(val(2),regY);                C('Setup channel 2')
-ld(val(keyL),regX)
-st(d(G4&0x7f),eaYXregOUTIX)
-st(d(G4>>7),eaYXregAC)
-
-ld(val(3),regY);                C('Setup channel 3')
-ld(val(keyL),regX)
-st(d(B4&0x7f),eaYXregOUTIX)
-st(d(B4>>7),eaYXregAC)
-
-ld(val(4),regY);                C('Setup channel 4')
-ld(val(keyL),regX)
-st(d(D5&0x7f),eaYXregOUTIX)
-st(d(D5>>7),eaYXregAC)
-
 ld(val(0));                     C('Setup sound timer')
 st(d(soundTimer))
 
@@ -550,6 +526,9 @@ ld(val(-42/2))                  #39
 # This loads the vCPU code with consideration of the current vSP
 # Used during reset, but also for switching between applications
 # or for loading data from ROM during an application.
+#
+# ROM stream format is [<addrH> <addrL> <n&255> n*<byte> ]* 0
+# on top of lookup tables.
 #
 # Variables:
 #       sysArgs[0:1]    ROM pointer (input set by caller)
@@ -1850,6 +1829,7 @@ trampoline()
 align(0x100, 0x100)
 notes = 'CCDDEFFGGAAB'
 sampleRate = cpuClock / 200.0 / 4
+label('notesTable')
 for i in range(0, 250, 2):
   j = i/2-1
   freq = 440.0*2.0**((j-57)/12.0)
