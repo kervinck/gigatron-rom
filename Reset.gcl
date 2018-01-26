@@ -7,9 +7,6 @@
 
 gcl0x
 
-{ Stop any sound }
-0 \soundTimer.
-
 { Setup video indirection table }
 [def
   $100 p= {videoTable}

@@ -455,10 +455,8 @@ st(d(ledState))
 ld(val(60/6))
 st(d(ledTempo))
 
-ld(val(0));                     C('Setup sound timer')
-st(d(soundTimer))
-
-st(d(softResetTimer));          C('Setup serial input')
+ld(val(0));                     C('Setup serial input')
+st(d(softResetTimer))
 st(d(serialRaw),busIN)
 st(d(serialLast),busIN)
 st(d(buttonState),busIN)
@@ -498,11 +496,11 @@ st(d(vPC+1),busAC|regY)                 #19 Boot on zero page
 st(d(vSP))                              #20 Reset stack pointer
 assert(vCpuStart&255==0)
 st(d(vLR))                              #21
-ld(val(vCpuStart>>8))                   #22
-st(d(vLR+1))                            #23
-ld(d(lo('videoF')))                     #24 Do this before first visible pixels
-st(d(videoDorF))                        #25
-nop()                                   #26
+st(d(soundTimer))                       #22
+ld(val(vCpuStart>>8))                   #23
+st(d(vLR+1))                            #24
+ld(d(lo('videoF')))                     #25 Do this before first visible pixels
+st(d(videoDorF))                        #26
 # Start of manually compiled vCPU section
 st(d(lo('LDWI')    ),eaYXregOUTIX)      #27 00f6 Where to read from ROM
 st(d(lo('Reset.gcl')),eaYXregOUTIX)     #28 00f7
@@ -527,7 +525,7 @@ ld(val(-42/2))                  #39
 # Used during reset, but also for switching between applications
 # or for loading data from ROM during an application.
 #
-# ROM stream format is [<addrH> <addrL> <n&255> n*<byte> ]* 0
+# ROM stream format is [<addrH> <addrL> <n&255> n*<byte>]* 0
 # on top of lookup tables.
 #
 # Variables:
