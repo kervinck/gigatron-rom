@@ -74,7 +74,7 @@ $0400:
   {Draw 5 vertical slices}
   5 [do
     i=
-    fontData 0? fontData<++ bits=
+    fontData 0? bits= fontData<++
     Pos p=
     {Draw vertical slice}
     [do
@@ -83,7 +83,8 @@ $0400:
       p>++
       p q- if<0loop]
     Pos<++
-    i 1- if>=0loop]
+    i 1- if>0loop]
+  Pos<++ {Skip one empty line}
   ret
 ] DrawChar=
 
@@ -91,7 +92,7 @@ $0400:
   High byte is channel, low byte is note (shoud be even)
   Reset the oscillators and channel variables }
 [def {SetupChannel}
-  i= 255| 255^ $fa| p=          {Pointer to channel struct}
+  i= 255| 255^ $f9| p=          {Pointer to channel struct}
   i<, i=                        {Extract note}
   0 p. p<++                     {.wavX}
   \notesTable i+ 0? p. p<++     {.keyL}
@@ -110,7 +111,7 @@ $0400:
   $270 {2: G-4} SetupChannel!
   $378 {3: B-4} SetupChannel!
   $47e {4: D-5} SetupChannel!
-  60 \soundTimer.
+  120 \soundTimer.
   pop ret
 ] PlayChord=
 
