@@ -11,7 +11,8 @@ import sys
 # XXX 'page' macro
 
 class Program:
-  def __init__(self, address):
+  def __init__(self, address, name):
+    self.name = name
     self.comment = 0
     self.lineNumber, self.filename = 0, None
     self.blocks, self.block = [0], 1
@@ -20,19 +21,19 @@ class Program:
     self.defs  = {} # block -> address of last def
     self.vars  = {} # name -> address
     self.vPC = None
-    self.chunkId = 0 # This should not be reset for a new program
+    self.segId = 0
     self.org(address)
     self.version = None # Must be first word 'gcl<N>'
 
   def segInfo(self):
     print '%3d: %04x vCPU avail %3d used %3d unused %3d' % (
-      self.chunkId,
+      self.segId,
       self.segStart,
       self.segEnd - self.segStart,
       self.vPC - self.segStart,
       self.segEnd - self.vPC)
-    define('$chunk.%d' % self.chunkId, self.vPC - self.segStart)
-    self.chunkId += 1
+    define('$%s.seg.%d' % (self.name, self.segId), self.vPC - self.segStart)
+    self.segId += 1
 
   def org(self, address):
     # Configure start address for emit
@@ -42,7 +43,7 @@ class Program:
       assert(address>>8) # Because a zero would mark the end of stream
       ld(val(address>>8));   C('RAM loading address (high byte first)')
       ld(val(address&0xff))
-      ld(val(lo('$chunk.%d' % self.chunkId))); C('Chunk length (1..256)')
+      ld(val(lo('$%s.seg.%d' % (self.name, self.segId)))); C('Segment length (1..256)')
     self.segStart = address
     page = address & ~255
     self.segEnd = page + (249 if page <= 0x400 else 256)
@@ -82,10 +83,10 @@ class Program:
             # There was an if-statement in this block
             # Define the label to jump here
             # XXX why not always make a label?
-            define('$if.%d.%d' % (block, self.conds[block]), prev(self.vPC))
+            define('$%s.if.%d.%d' % (self.name, block, self.conds[block]), prev(self.vPC))
             del self.conds[block]
           if block in self.defs:
-            define('$def.%d' % self.defs[block], prev(self.vPC))
+            define('$%s.def.%d' % (self.name, self.defs[block]), prev(self.vPC))
             del self.defs[block]
         elif nextChar == '(': pass
         elif nextChar == ')': pass
@@ -101,21 +102,20 @@ class Program:
         self.error('Index out of range %s' % repr(var))
       return var
 
-  def emit(self, byte):
+  def emit(self, byte, comment=None):
     """Next program byte in RAM"""
     if self.vPC >= self.segEnd:
         self.error('Out of code space')
     if byte < 0 or byte >= 256:
         self.error('Value out of range %d (must be 0..255)' % byte)
-    putInRomTable(byte)
+    putInRomTable(byte, comment)
     self.vPC += 1
 
   def opcode(self, ins):
     """Next opcode in RAM"""
     if self.vPC >= self.segEnd:
         self.error('Out of code space')
-    putInRomTable(lo(ins))
-    C('%04x %s' % (self.vPC, ins))
+    putInRomTable(lo(ins), '%04x %s' % (self.vPC, ins))
     self.vPC += 1
 
   def word(self, word):
@@ -140,26 +140,26 @@ class Program:
       pc = self.vPC # Just an identifier
       self.opcode('DEF')
       self.defs[self.thisBlock()] = pc
-      self.emit(lo('$def.%d' % pc))
+      self.emit(lo('$%s.def.%d' % (self.name, pc)))
     elif word == 'do':
       self.loops[self.thisBlock()] = self.vPC
     elif word == 'if<0':
       self.opcode('BCC')
       self.opcode('GE')
       block = self.thisBlock()
-      self.emit(lo('$if.%d.0' % block))
+      self.emit(lo('$%s.if.%d.0' % (self.name, block)))
       self.conds[block] = 0
     elif word == 'if>0':
       self.opcode('BCC')
       self.opcode('LE')
       block = self.thisBlock()
-      self.emit(lo('$if.%d.0' % block))
+      self.emit(lo('$%s.if.%d.0' % (self.name, block)))
       self.conds[block] = 0
     elif word == 'if=0':
       self.opcode('BCC')
       self.opcode('NE')
       block = self.thisBlock()
-      self.emit(lo('$if.%d.0' % block))
+      self.emit(lo('$%s.if.%d.0' % (self.name, block)))
       self.conds[block] = 0
     elif word == 'if<>0': self._emitIf('EQ')
     elif word == 'if=0':  self._emitIf('NE')
@@ -180,8 +180,8 @@ class Program:
       if self.conds[block] > 0:
         self.error('Too many %s' % repr(word))
       self.opcode('BRA')
-      self.emit(lo('$if.%d.1' % block))
-      define('$if.%d.0' % block, prev(self.vPC))
+      self.emit(lo('$%s.if.%d.1' % (self.name, block)))
+      define('$%s.if.%d.0' % (self.name, block), prev(self.vPC))
       self.conds[block] = 1
 
     elif word == 'push': self.opcode('PUSH')
@@ -189,16 +189,14 @@ class Program:
     elif word == 'ret':  self.opcode('RET')
     elif word == 'call':
           self.opcode('CALL')
-          self.emit(symbol('vAC'))
-          C('%04x vAC' % prev(self.vPC, 1))
+          self.emit(symbol('vAC'), '%04x vAC' % prev(self.vPC, 1))
     elif word == 'peek': self.opcode('PEEK')
     else:
       var, con, op = self.parseWord(word) # XXX Simplify this
       if op is None:
         if var:
           self.opcode('LDW')
-          self.emit(self.getAddress(var))
-          C('%04x %s' % (prev(self.vPC, 1), repr(var)))
+          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
         else:
           if 0 <= con < 256:
             self.opcode('LDI')
@@ -214,22 +212,19 @@ class Program:
           self.org(con)
       elif op == '=' and var:
           self.opcode('STW')
-          self.emit(self.getAddress(var))
-          C('%04x %s' % (prev(self.vPC, 1), repr(var)))
+          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
       elif op == '=' and con:
           self.opcode('STW')
           self.emit(con)
       elif op == '+' and var:
           self.opcode('ADDW')
-          self.emit(self.getAddress(var))
-          C('%04x %s' % (prev(self.vPC, 1), repr(var)))
+          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
       elif op == '+' and con is not None:
           self.opcode('ADDI')
           self.emit(con)
       elif op == '-' and var:
           self.opcode('SUBW')
-          self.emit(self.getAddress(var))
-          C('%04x %s' % (prev(self.vPC, 1), repr(var)))
+          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
       elif op == '-' and con is not None:
           self.opcode('SUBI')
           self.emit(con)
@@ -255,47 +250,38 @@ class Program:
           self.emit(con)
       elif op == '.' and var:
           self.opcode('POKE')
-          self.emit(self.getAddress(var))
-          C('%04x %s' % (prev(self.vPC, 1), repr(var)))
+          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
       elif op == '<.' and var:
           self.opcode('ST')
-          self.emit(self.getAddress(var))
-          C('%04x %s' % (prev(self.vPC, 1), repr(var)))
+          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
       elif op == '>.' and var:
           self.opcode('ST')
-          self.emit(self.getAddress(var)+1)
-          C('%04x %s+1' % (prev(self.vPC, 1), repr(var)))
+          self.emit(self.getAddress(var)+1, '%04x %s+1' % (prev(self.vPC, 1), repr(var)))
       elif op == ',' and var:
           self.opcode('LDW')
-          self.emit(self.getAddress(var))
-          C('%04x %s' % (prev(self.vPC, 1), repr(var)))
+          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
           self.opcode('PEEK')
       elif op == '<++' and var:
           self.opcode('INC')
-          self.emit(self.getAddress(var))
-          C('%04x %s' % (prev(self.vPC, 1), repr(var)))
+          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
       elif op == '<++' and con:
           self.opcode('INC')
           self.emit(con)
       elif op == '>++' and var:
           self.opcode('INC')
-          self.emit(self.getAddress(var)+1)
-          C('%04x %s+1' % (prev(self.vPC, 1), repr(var)))
+          self.emit(self.getAddress(var)+1, '%04x %s+1' % (prev(self.vPC, 1), repr(var)))
       elif op == '>++' and con:
           self.opcode('INC')
           self.emit(con+1)
       elif op == '<,' and var:
           self.opcode('LD')
-          self.emit(self.getAddress(var))
-          C('%04x %s' % (prev(self.vPC, 1), repr(var)))
+          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
       elif op == '>,' and var:
           self.opcode('LD')
-          self.emit(self.getAddress(var)+1)
-          C('%04x %s+1' % (prev(self.vPC, 1), repr(var)))
+          self.emit(self.getAddress(var)+1, '%04x %s+1' % (prev(self.vPC, 1), repr(var)))
       elif op == '!' and var:
           self.opcode('CALL')
-          self.emit(self.getAddress(var))
-          C('%04x %s' % (prev(self.vPC, 1), repr(var)))
+          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
       elif op == '@' and con:
           if con&1:
             self.error('Invalid value %s (must be even)' % repr(con))
@@ -314,7 +300,7 @@ class Program:
       self.opcode('BCC')
       self.opcode(cond)
       block = self.thisBlock()
-      self.emit(lo('$if.%d.0' % block))
+      self.emit(lo('$%s.if.%d.0' % (self.name, block)))
       self.conds[block] = 0
 
   def _emitIfLoop(self, cond):
@@ -413,8 +399,10 @@ class Program:
     print prefix, message
     sys.exit()
 
-def putInRomTable(byte):
+def putInRomTable(byte, comment=None):
   ld(val(byte))
+  if comment:
+    C(comment)
   if pc()&255 == 251:
     trampoline()
 

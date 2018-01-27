@@ -187,6 +187,7 @@ def disassemble(opcode, operand, address=None):
     if opcode & _maskCc == jLE: text = 'ble  '
     if address is not None and opcode & _maskCc != jL and opcode & _maskBus == busD:
       # We can calculate the destination address
+      # XXX Except when the previous instruction is a far jump (jmp y,...)
       lo, hi = address&255, address>>8
       if lo == 255: # When branching from $xxFF, we still end up in the next page
         hi = (hi + 1) & 255
@@ -303,7 +304,7 @@ def zpByte(len=1):
   assert _zpSize <= 0x100
   return s
 
-def zpReset(startFrom=0):
+def zpReset(startFrom=1):
   global _zpSize
   _zpSize = startFrom
 
@@ -423,8 +424,12 @@ def end():
   for x, y in zip(_rom0, _rom1):
     _rom2.append(x)
     _rom2.append(y)
+  # Padding
+  while len(_rom2) < 2*_maxRomSize:
+    _rom2.append(ord('Gigatron!'[ (len(_rom2)-2*_maxRomSize) % 9 ]))
+  # Write ROM file
   with open(filename, 'wb') as file:
     file.write(''.join([chr(byte) for byte in _rom2]))
 
-  print 'OK: %d words' % _romSize
+  print 'OK: %d words used, %d words free (total %d bytes padded)' % (_romSize, _maxRomSize-_romSize, len(_rom2))
 

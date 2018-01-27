@@ -18,7 +18,6 @@
 #      Protocol: 0x21('!') <addrH> <addrL> <n-1> n*<byte> <sum> (n=1-32)
 #      Align bytes with visible scanlines
 #  XXX Double-check initialisation of all variables
-#  XXX ROM padding
 #
 #  Maybe
 #  XXX Audio: Move shift table to page 7, then add waveform synthesis
@@ -480,7 +479,7 @@ ld(val(syncBits))
 #-----------------------------------------------------------------------
 
 # SYS_42_Reset initiates an immediate Gigatron reset from within the vCPU.
-# The reset sequence itself is mostly implemented in GCL by Reset.gcl.
+# The reset sequence itself is mostly implemented in GCL by Reset.gcl .
 # This must first be loaded into RAM. But as that takes more than 1 scanline,
 # some vCPU bootstrapping code gets loaded into the high part of the zero page,
 # and then the vCPU is redircted to execute that.
@@ -503,13 +502,13 @@ ld(d(lo('videoF')))                     #25 Do this before first visible pixels
 st(d(videoDorF))                        #26
 # Start of manually compiled vCPU section
 st(d(lo('LDWI')    ),eaYXregOUTIX)      #27 00f6 Where to read from ROM
-st(d(lo('Reset.gcl')),eaYXregOUTIX)     #28 00f7
-st(d(hi('Reset.gcl')),eaYXregOUTIX)     #29 00f8
+st(d(lo('Reset')),eaYXregOUTIX)         #28 00f7
+st(d(hi('Reset')),eaYXregOUTIX)         #29 00f8
 st(d(lo('STW')     ),eaYXregOUTIX)      #30 00f9
 st(d(sysArgs       ),eaYXregOUTIX)      #31 00fa
 st(d(lo('LDWI')    ),eaYXregOUTIX)      #32 00fb Call SYS_88_LoadRom
 st(d(lo('SYS_88_LoadRom')),eaYXregOUTIX)#33 00fc
-st(d(hi('SYS_88_LoadRom')),eaYXregOUTIX)#34 00fd
+st(d(hi('SYS_88_LoadRom')),eaYXregOUTIX)#34 00fd (is 0...)
 st(d(lo('SYS')     ),eaYXregOUTIX)      #35 00fe
 st(d(256-88/2+maxTicks),eaYXregOUTIX)   #36 00ff
 # Return to interpreter
@@ -2000,11 +1999,16 @@ ld(val(-40/2))                  #37
 print 'info SYS length warning %s error %s' % (repr(minSYS), repr(maxSYS))
 
 # Compile test GCL program
-label(sys.argv[1])
-program = gcl.Program(vCpuStart)
-for line in open(sys.argv[1]).readlines():
-  program.line(line)
-program.end()
+
+for gclSource in sys.argv[1:]:
+  name = gclSource.rsplit('.', 1)[0]
+  print '*** Loading: %s (%s)' % (repr(gclSource), name)
+  label(name)
+  program = gcl.Program(vCpuStart, name)
+  zpReset(zpFree)
+  for line in open(gclSource).readlines():
+    program.line(line)
+  program.end()
 
 if pc()&255:
   trampoline()

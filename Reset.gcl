@@ -8,44 +8,26 @@
 gcl0x
 
 { Setup video indirection table }
-[def
-  $100 p= {videoTable}
-  $800 q= {frame}
-  [do
-    q>,  p. p<++          { Y[i] = 8..127}
-    0    p. p<++          {dX[i] = 0}
-    q>++ q  if>0loop]
-  ret
-] SetupVideo=
+$100 p= {videoTable}
+$800 q= {frame}
+[do
+  q>,  p. p<++          { Y[i] = 8..127}
+  0    p. p<++          {dX[i] = 0}
+  q>++ q  if>0loop]
 
-[def
- i=
- Channel $fa| p= 1| q=
- \notesTable i+ 0? p.
- \notesTable i+ 1? q.
- Channel>++
- ret
-] PlayNote=
+{ Clear screen }
+$800 p= $8801 i=
+[do
+  p [do
+    \sysArgs0= \SYS_38_VClear8 38@ {Clears 8 pixels vertically}
+    $800 p+ p= if>0loop]
+  i+ p=
+  255& 160^ if<>0loop]
 
-{
-  Play a G-major chord with 4 channels
-}
-[def
-  push
-  $100 Channel=
-   88 {G-3} PlayNote!
-  112 {G-4} PlayNote!
-  120 {B-4} PlayNote!
-  126 {D-5} PlayNote!
-  120 \soundTimer.
-  pop ret
-] PlayChord=
-
-{
+{ Startup message:
   +--------------------------+
   |   *** Gigatron ??K ***   |
-  |TTL microcomputer ROM v0x |
-}
+  |TTL microcomputer ROM v0x | }
 [def
   {Line 1}
   $2a# $2a# $2a# $20# $47# $69# $67# $61#
@@ -66,49 +48,6 @@ $2f2f Char=                     {Two ASCII counters, both starting at '0'-1}
 [do Char<++  4- if>=0loop]      {Count number of 1K chunks}
 Char>, p. p<++ Char p.          {Put decimals into StartupMessage}
 
-{-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 4                                      |
-+-----------------------------------------------------------------------}
-$0400:
-
-[def {DrawChar}
-{
-  Draw a 5x8 character on screen with the built-in font.
-  `Char' must be in the 32-127 range (this is not checked)
-}
-  {Map ASCII code to offset in font table}
-  Char 82- [if<0 50+ i= \font32up
-            else     i= \font82up] fontData= {Select low or high page}
-  i i+ tmp= tmp+ i+    {Multiply by 5}
-  fontData+ fontData=  {Add to page address to reach bitmap data for Char}
-  $800 Pos+ q=         {Where to stop the inner drawing loop}
-
-  {Draw 6 vertical slices: 5 using font data, the last with all-zeros}
-  5 i= [do
-    [if<>0 fontData 0? fontData<++ else 0] bits=
-    Pos p=
-    {Draw vertical slice}
-    [do
-      bits 128& [if=0 0 {Black} else 8 {Green}] p.
-      bits bits+ bits= {Shift left}
-      p>++
-      p q- if<0loop]
-    Pos<++
-    i 1- i= if>=0loop]
-  ret
-] DrawChar=
-
-[def {ClearScreen}
-  $800 p= $8801 i=
-  [do
-    p [do
-      \sysArgs0= \SYS_38_VClear8 38@ {Clears 8 pixels vertically}
-      $800 p+ p= if>0loop]
-    i+ p=
-    255& 160^ if<>0loop]
-  ret
-] ClearScreen=
-
 [def {DrawText}
   push
   [do
@@ -118,12 +57,69 @@ $0400:
   pop ret
 ] DrawText=
 
-SetupVideo!
-ClearScreen!
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+$0400:
+
+{ Draw a 5x8 character on screen with the built-in font
+  Char must be in the 32-127 range (this is not checked) }
+[def {DrawChar}
+  {Map ASCII code to offset in font table}
+  Char 82- [if<0 50+ i= \font32up
+            else     i= \font82up] fontData= {Select low or high page}
+  i i+ tmp= tmp+ i+    {Multiply by 5}
+  fontData+ fontData=  {Add to page address to reach bitmap data for Char}
+  $800 Pos+ q=         {Where to stop the inner drawing loop}
+  {Draw 5 vertical slices}
+  5 [do
+    i=
+    fontData 0? fontData<++ bits=
+    Pos p=
+    {Draw vertical slice}
+    [do
+      bits 128& [if=0 0 {Black} else 8 {Green}] p.
+      bits bits+ bits= {Shift left}
+      p>++
+      p q- if<0loop]
+    Pos<++
+    i 1- if>=0loop]
+  ret
+] DrawChar=
+
+{ Play a note on one channel
+  High byte is channel, low byte is note (shoud be even)
+  Reset the oscillators and channel variables }
+[def {SetupChannel}
+  i= 255| 255^ $fa| p=          {Pointer to channel struct}
+  i<, i=                        {Extract note}
+  0 p. p<++                     {.wavX}
+  \notesTable i+ 0? p. p<++     {.keyL}
+  \notesTable i+ 1? p. p<++     {.keyH}
+  p<++                          {reserved for use by shift table}
+  0 p. p<++                     {.wavA}
+  p. p<++                       {.oscL}
+  p.                            {.oscH}
+  ret
+] SetupChannel=
+
+{ Play a G-major chord with 4 channels }
+[def {PlayChord}
+  push
+  $158 {1: G-3} SetupChannel!
+  $270 {2: G-4} SetupChannel!
+  $378 {3: B-4} SetupChannel!
+  $47e {4: D-5} SetupChannel!
+  60 \soundTimer.
+  pop ret
+] PlayChord=
+
+{ Call functions }
 $812 Pos= StartupMessage Text= DrawText!
 PlayChord!
 
-[do loop]
+{ Load and start main program }
+\Main \sysArgs0= $300 \vLR= \SYS_88_LoadRom 88@
 
 {-----------------------------------------------------------------------+
 |                                                                       |

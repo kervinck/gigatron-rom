@@ -1,7 +1,7 @@
 CFLAGS:=-std=c11 -O3 -Wall
 
 theloop.2.rom: *.py *.gcl Images/*.rgb Makefile
-	./theloop.py Reset.gcl
+	./theloop.py Mandelbrot.gcl Racer.gcl Main.gcl Reset.gcl
 
 run: gtemu theloop.2.rom
 	./gtemu
