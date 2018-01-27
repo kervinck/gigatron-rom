@@ -275,7 +275,7 @@ minSYS = +999 # Smallest time slice for 'SYS'
 
 def runVcpu(n, ref=None):
   """Run interpreter for exactly n cycles"""
-  print '%04x runVcpu %s cycles (%s)' % (pc(), n, ref)
+  print 'runVcpu at %04x cycles %3s info %s' % (pc(), n, ref)
   comment = 'Run vCPU for %s cycles' % n
   if ref:
     comment += ' (%s)' % ref
@@ -1996,19 +1996,21 @@ ld(val(-40/2))                  #37
 #-----------------------------------------------------------------------
 
 # For info
-print 'info SYS length warning %s error %s' % (repr(minSYS), repr(maxSYS))
+print 'SYS limits low %s high %s' % (repr(minSYS), repr(maxSYS))
 
 # Compile test GCL program
 
 for gclSource in sys.argv[1:]:
   name = gclSource.rsplit('.', 1)[0]
-  print '*** Loading: %s (%s)' % (repr(gclSource), name)
+  print
+  print 'Compile file %s label %s' % (gclSource, name)
   label(name)
   program = gcl.Program(vCpuStart, name)
   zpReset(zpFree)
   for line in open(gclSource).readlines():
     program.line(line)
   program.end()
+print
 
 if pc()&255:
   trampoline()

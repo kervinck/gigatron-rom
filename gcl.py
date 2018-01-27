@@ -26,8 +26,7 @@ class Program:
     self.version = None # Must be first word 'gcl<N>'
 
   def segInfo(self):
-    print '%3d: %04x vCPU avail %3d used %3d unused %3d' % (
-      self.segId,
+    print ' Segment at %04x size %3d used %3d unused %3d' % (
       self.segStart,
       self.segEnd - self.segStart,
       self.vPC - self.segStart,
@@ -288,8 +287,6 @@ class Program:
           minSYS, maxSYS = symbol('$minSYS'), symbol('$maxSYS')
           if con > maxSYS:
             self.warning('Large cycle count %s > %s (will never run)' % (repr(con), repr(maxSYS)))
-          elif con > minSYS:
-            self.warning('Large cycle count %s > %s (will not always run)' % (repr(con), repr(minSYS)))
           self.opcode('SYS')
           extraTicks = con/2 - symbol('$maxTicks')
           self.emit(256 - extraTicks if extraTicks > 0 else 0)
@@ -382,9 +379,12 @@ class Program:
     # XXX Check all blocks are closed
     if len(self.conds) > 0:
       self.error('Dangling if statements')
-    print '%04x Variables %d' % (zpByte(0), len(self.vars))
-    print 'Symbols: ' + ' '.join(sorted(self.vars.keys()))
+    print ' Variables count %d bytes %d end %04x' % (len(self.vars), 2*len(self.vars), zpByte(0))
+    symbols, n = sorted(self.vars.keys()), 8
+    for i in range(0, len(symbols), n):
+      print ' Symbols ' + ' '.join(symbols[i:i+n])
     putInRomTable(0) # Zero marks the end of stream
+    C('End of file')
 
   def warning(self, message):
     prefix = 'GCL warning:'

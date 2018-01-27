@@ -313,11 +313,15 @@ def trampoline():
   while pc()&255 < 256-5:
     nop()
   bra(busAC);                   #13
-  C('Trampoline for page $%04x lookups' % (pc()&~255))
+  C('+-----------------------------------+')
   bra(val(253))                 #14
+  C('|                                   |')
   ld(d(hi('luReturn')),regY)    #16
+  C('| Trampoline for page $%04x lookups |' % (pc()&~255))
   jmpy(d(lo('luReturn')))       #17
+  C('|                                   |')
   ld(d(lo('vPC+1')),busRAM|regY)#18 Restore
+  C('+-----------------------------------+')
 
 def end():
   errors = 0
@@ -350,7 +354,7 @@ def end():
 
   # Disassemble for readability
   filename = stem + '.asm'
-  print 'Creating:', filename
+  print 'Create file', filename
   with open(filename, 'w') as file:
     file.write('              address\n'
                '              |    encoding\n'
@@ -408,18 +412,18 @@ def end():
 
   # Write ROM files
   filename = stem + '.0.rom'
-  print 'Creating:', filename
+  print 'Create file', filename
   with open(filename, 'wb') as file:
     file.write(''.join([chr(byte) for byte in _rom0]))
 
   filename = stem + '.1.rom'
-  print 'Creating:', filename
+  print 'Create file', filename
   with open(filename, 'wb') as file:
     file.write(''.join([chr(byte) for byte in _rom1]))
 
   # 16-bit version for 27C1024, little endian
   filename = stem + '.2.rom'
-  print 'Creating:', filename
+  print 'Create file', filename
   _rom2 = []
   for x, y in zip(_rom0, _rom1):
     _rom2.append(x)
@@ -431,5 +435,5 @@ def end():
   with open(filename, 'wb') as file:
     file.write(''.join([chr(byte) for byte in _rom2]))
 
-  print 'OK: %d words used, %d words free (total %d bytes padded)' % (_romSize, _maxRomSize-_romSize, len(_rom2))
+  print 'OK usedWords %d freeWords %d totalBytes %d' % (_romSize, _maxRomSize-_romSize, len(_rom2))
 
