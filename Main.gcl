@@ -1,5 +1,5 @@
 
 gcl0x
 
-\Racer \sysArgs0= $300 \vLR= \SYS_88_LoadRom 88@
+\Snake \sysArgs0= $300 \vLR= \SYS_88_LoadRom 88@
 

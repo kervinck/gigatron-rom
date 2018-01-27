@@ -5,6 +5,8 @@
 |                                                                       |
 +-----------------------------------------------------------------------}
 
+gcl0x
+
 {
 XXX Don't allow autoplayer to obtain a hi score
 XXX Don't allow reversing for playability
@@ -44,11 +46,11 @@ XXX Increase speed when pressing button
 
   {Draw 6 vertical slices: 5 using font data, the last with all-zeros}
   5 i= [do
-    [if<>0 fontData 0; fontData<++ else 0] bits=
+    [if<>0 fontData 0? fontData<++ else 0] bits=
     Pos p=
     {Draw vertical slice}
     [do
-      bits 128& [if=0 BgColor else Color] p!
+      bits 128& [if=0 BgColor else Color] p.
       bits bits+ bits=
       p>++
       p q- if<0loop]
@@ -67,17 +69,17 @@ XXX Increase speed when pressing button
 -}
   push
   [do
-    Text? Char= {Next character to be printed}
+    Text, Char= {Next character to be printed}
     if<>0       {Zero termination}
       Text<++   {Advance text pointer}
-      Char 10^ [if=0 Pos<! $800 Pos+ Pos=
-                else DrawChar call]
+      Char 10^ [if=0 Pos<. $800 Pos+ Pos=
+                else DrawChar!]
       loop]
-  pop call
+  pop ret
 ] DrawText=
 
 [def
-   $47. $69. $67. $61. $74. $72. $6f. $6e. 0. {Gigatron}
+   $47# $69# $67# $61# $74# $72# $6f# $6e# 0# {Gigatron}
 ] Title=
 
 [def
@@ -86,7 +88,7 @@ XXX Increase speed when pressing button
 -}
   Count i=
   [do if>0
-    Color Pos!
+    Color Pos.
     Pos Step+ Pos=
     i 1- i=
     loop]
@@ -95,17 +97,17 @@ XXX Increase speed when pressing button
 
 [def
   push
-  \frameCount? TimeOut- 128& [if=0
+  \frameCount, TimeOut- 128& [if=0
     Timer [if>0 1- Timer=]
-    DrawTimer call
+    DrawTimer!
   ]
-  pop call
+  pop ret
 ] UpdateTimer=
 
 [def
   push
-  Head Pos= 63 {White} Color= DrawBlock call
-  pop call
+  Head Pos= 63 {White} Color= DrawBlock!
+  pop ret
 ] DrawHead=
 
 {-----------------------------------------------------------------------+
@@ -120,23 +122,23 @@ $0400:
   push
   $4435 Pos=
   [def
-    $47. $41. $4d. $45. $20. $4f. $56. $45. $52. 0. {GAME OVER}
+    $47# $41# $4d# $45# $20# $4f# $56# $45# $52# 0# {GAME OVER}
   ] Text=
   4 BgColor=
-  DrawText call
+  DrawText!
   Score HighScore- [if>0
     Score HighScore=
-    30 Color= DrawHighScore call
+    30 Color= DrawHighScore!
   ]
-  pop call
+  pop ret
 ] GameOver=
 
 [def
 {-
   Wait -- Wait Delay number of frames (range 1..255)
 -}
-  \frameCount? Delay+ 255& tmp=
-  [do \frameCount? tmp- if<>0loop]
+  \frameCount, Delay+ 255& tmp=
+  [do \frameCount, tmp- if<>0loop]
   ret
 ] Wait=
 
@@ -149,11 +151,11 @@ $0400:
   {Display welcome tekst}
   8 {Green} Color=
   0 BgColor=
-  $800 Pos= ClearScreen call
-  $838 Pos= Title Text= DrawText call
-  60 Delay= Wait call
+  $800 Pos= ClearScreen!
+  $838 Pos= Title Text= DrawText!
+  60 Delay= Wait!
 
-  pop call
+  pop ret
 ] Intro=
 
 [def
@@ -161,11 +163,11 @@ $0400:
   ClearScreen -- Clear screen from current position to bottom right
 -}
   Pos p=
-  Pos 255| 255-         {XXX Is there a better way to clear the low byte?}
+  Pos 255| 255^         {Clear low byte}
   i= $8001 i+ i=        {Offset to move to next stripe}
   [do
     {Clear one stripe}
-    p [do BgColor p! $100 p+ p= if>=0loop]
+    p [do BgColor p. $100 p+ p= if>=0loop]
     {Next stripe}
     i+ p=
     255& 160^ if<>0loop]
@@ -188,10 +190,10 @@ $0400:
 
 [def
   Pos    p=
-  Color  Pos!
-  Pos<++ Pos!
-  Pos>++ Pos!
-  p>++ p!
+  Color  Pos.
+  Pos<++ Pos.
+  Pos>++ Pos.
+  p>++ p.
   ret
 ] DrawBlock=
 
@@ -208,38 +210,38 @@ $0500:
 
   [do
     {Control is one of LaunchControl, PlayerControl or AutoControl}
-    Control call
+    Control!
 
     {Leave a trace behind in the pixels two high bits}
     {Bit 15 and bit 0 of stepU identify the direction}
-    stepU>? 128& tmp=
+    stepU>, 128& tmp=
     stepU     1& [if<>0 64] tmp+
 
-    30+ {Cyan} Color= Head Pos= DrawBlock call {Tail color and trace}
+    30+ {Cyan} Color= Head Pos= DrawBlock! {Tail color and trace}
 
     {Make step}
     Head stepU+ stepU+ Head=
 
-    Head? $33& [if<>0 {Hit wall or poison} pop call]
-    Head? 8^ {Food?} [if=0
+    Head, $33& [if<>0 {Hit wall or poison} pop ret]
+    Head, 8^ {Food?} [if=0
       {Eat food}
-      2 \soundTimer!
+      2 \soundTimer.
       Score Timer+ Score=
-      DrawScore call
-      AddTimer call
+      DrawScore!
+      AddTimer!
       Grow<++ Drops<++
     ]
-    DrawHead call
+    DrawHead!
 
     {Update tail}
     Grow [if>0
       1- Grow= {Do nothing while growing}
-      AddFood call
+      AddFood!
     else
       {Tail is following the head}
-      Tail? tmp=
+      Tail, tmp=
       Drops [if>0 1- Drops= 11 {Orange} else 4] Color=
-      Tail Pos= DrawBlock call
+      Tail Pos= DrawBlock!
 
       tmp 64&  [if=0 $0100 else $0001] x=
       tmp 128& [if=0 x else 0 x-]
@@ -247,9 +249,9 @@ $0500:
       tmp= Tail tmp+ tmp+ Tail=
     ]
 
-    UpdateTimer call
+    UpdateTimer!
 
-    Wait call
+    Wait!
     loop]
 ] RunGame=
 
@@ -258,11 +260,11 @@ $0500:
   8 {Green} Color=
   [do
     \SYS_34_Random 34@ Pos=
-    Pos<?      128- [if<0 157+] 1+   {1..157}   $fe& Pos<!
-    Pos>? 127& 64-  [if<0 109+] $11+ {$11..$fd} $fe& Pos>!
-    Pos? 4^ if<>0loop]
-  DrawBlock call
-  pop call
+    Pos<,      128- [if<0 157+] 1+   {1..157}   $fe& Pos<.
+    Pos>, 127& 64-  [if<0 109+] $11+ {$11..$fd} $fe& Pos>.
+    Pos, 4^ if<>0loop]
+  DrawBlock!
+  pop ret
 ] AddFood=
 
 {-----------------------------------------------------------------------+
@@ -273,7 +275,7 @@ $0600:
 [def
   push
   {If a key is pressed, start restart the game}
-  \serialRaw? $cf& {~buttonStart&~buttonSelect} $cf^ [if<>0 SetupGame call pop call]
+  \serialRaw, $cf& {~buttonStart&~buttonSelect} $cf^ [if<>0 SetupGame! pop ret]
 
   {Auto snake control}
   TurnL p=
@@ -281,25 +283,25 @@ $0600:
   {Look ahead} Head stepU+ stepU+ peek 4^ tmp=
   {Look left}  Head stepV- stepV- peek 4^ [if<>0 {8^4}12^ [if<>0 0 p= else 0 q= 1 tmp=]]
   {Look right} Head stepV+ stepV+ peek 4^ [if<>0 {8^4}12^ [if<>0 0 q= else 0 p= 1 tmp=]]
-                                  tmp  [if=0 \entropy? $7f& 6- [if<0 1 else 0]]
+                                  tmp  [if=0 \entropy, $7f& 6- [if<0 1 else 0]]
   [if<>0 {8^4}12^ if<>0
     {Wall or random direction change: must go left or right.
      Pick randomly, without bias, but don't crash into a wall when not needed}
     p [if=0 q else
       q [if=0 p else
-       \entropy? 1& [if=0 p else q]
+       \entropy, 1& [if=0 p else q]
       ]
     ]
     [if<>0 call {TurnL or TurnR}]
   ]
-  pop call
+  pop ret
 ] AutoControl=
 
 [def
-  \serialRaw? $fe^ {~buttonRight} [if=0 $0001 stepU=]
-  \serialRaw? $fd^ {~buttonLeft}  [if=0 $ffff stepU=]
-  \serialRaw? $fb^ {~buttonDown}  [if=0 $0100 stepU=]
-  \serialRaw? $f7^ {~buttonUp}    [if=0 $ff00 stepU=]
+  \serialRaw, $fe^ {~buttonRight} [if=0 $0001 stepU=]
+  \serialRaw, $fd^ {~buttonLeft}  [if=0 $ffff stepU=]
+  \serialRaw, $fb^ {~buttonDown}  [if=0 $0100 stepU=]
+  \serialRaw, $f7^ {~buttonUp}    [if=0 $ff00 stepU=]
   {Note: `stepV' is not used once under player control}
   ret
 ] PlayerControl=
@@ -308,9 +310,9 @@ $0600:
   push
   Timer 10+ Timer=
   15- [if>0 15 Timer=]
-  \frameCount? TimeOut=
-  DrawTimer call
-  pop call
+  \frameCount, TimeOut=
+  DrawTimer!
+  pop ret
 ] AddTimer=
 
 {-----------------------------------------------------------------------+
@@ -325,62 +327,62 @@ $0700:
   push
 
   {Reset score}
-  0 Score= Timer= DrawScore call
-  15 Timer= DrawTimer call
-  DrawHighScore call
+  0 Score= Timer= DrawScore!
+  15 Timer= DrawTimer!
+  DrawHighScore!
 
   {ClearScreen}
   $1000 Pos=
   4 BgColor=
-  ClearScreen call
+  ClearScreen!
 
   {Draw bounding box}
   26 Color=
-     +1 Step= 159 Count= DrawLine call
-   $100 Step= 111 Count= DrawLine call
-     -1 Step= 159 Count= DrawLine call
-  -$100 Step= 110 Count= DrawLine call
-     +1 Step= 158 Count= DrawLine call
-   $100 Step= 109 Count= DrawLine call
-     -1 Step= 157 Count= DrawLine call
-  -$100 Step= 109 Count= DrawLine call
+     +1 Step= 159 Count= DrawLine!
+   $100 Step= 111 Count= DrawLine!
+     -1 Step= 159 Count= DrawLine!
+  -$100 Step= 110 Count= DrawLine!
+     +1 Step= 158 Count= DrawLine!
+   $100 Step= 109 Count= DrawLine!
+     -1 Step= 157 Count= DrawLine!
+  -$100 Step= 109 Count= DrawLine!
 
   {Get ready message}
   $4432 Pos= 3 {Red} Color=
   [def
-    $47. $45. $54. $20. $52. $45. $41. $44. $59. $21. 0. {GET READY!}
-  ] Text= DrawText call
-  60 Delay= Wait call
+    $47# $45# $54# $20# $52# $45# $41# $44# $59# $21# 0# {GET READY!}
+  ] Text= DrawText!
+  60 Delay= Wait!
   $4432 Pos=
   [def
-    $20. $20. $20. $20. $20. $20. $20. $20. $20. $20. 0.
-  ] Text= DrawText call
+    $20# $20# $20# $20# $20# $20# $20# $20# $20# $20# 0#
+  ] Text= DrawText!
 
   {Place snake}
   $4430 Head= Tail=
-  DrawHead call
+  DrawHead!
 
   0 Grow= Drops=
   $0001 stepU= $0100 stepV= {Start right}
 
   25 i=
   [do
-    AddFood call
+    AddFood!
     i 1- i=
   if>0loop]
 
   2 Delay= {Game speed}
 
   0 Timer=
-  AddTimer call
+  AddTimer!
 
   LaunchControl Control=
 
-  pop call
+  pop ret
 ] SetupGame=
 
 {-----------------------------------------------------------------------+
-|}$08a0 call{           RAM page 8                                      |
+|}$08a0 \vLR= ret{      RAM page 8                                      |
 +-----------------------------------------------------------------------}
 $08a0:
 
@@ -394,26 +396,26 @@ $08a0:
     {Switch to autopilot when reaching this position}
     30 {XXX} Color=
     $0802 Pos=
-    [def $41. $55. $54. $4f. 0.{AUTO}] Text= DrawText call
+    [def $41# $55# $54# $4f# 0#{AUTO}] Text= DrawText!
     AutoControl Control= call
   else
     {Disable launch control once a button is pressed}
-    \serialRaw? $cf& {~buttonStart|~buttonSelect} $cf^ [if<>0 PlayerControl Control= call]
+    \serialRaw, $cf& {~buttonStart|~buttonSelect} $cf^ [if<>0 PlayerControl Control= call]
   ]
-  pop call
+  pop ret
 ] LaunchControl=
 
 [def { DrawNumber2 - Value Radix }
   push
   $20 Char=
-    10 Radix= DrawNextDigit call
+    10 Radix= DrawNextDigit!
   $30 Char=
-     1 Radix= DrawNextDigit call
-  pop call
+     1 Radix= DrawNextDigit!
+  pop ret
 ] DrawNumber2=
 
 {-----------------------------------------------------------------------+
-|}$09a0 call{           RAM page 9                                      |
+|}\vLR>++ ret{          RAM page 9                                      |
 +-----------------------------------------------------------------------}
 $09a0:
 
@@ -429,27 +431,27 @@ $09a0:
         Char<++
         loop
     ]
-    DrawChar call
+    DrawChar!
     $30 Char=
   else
-    DrawChar call
+    DrawChar!
   ]
-  pop call
+  pop ret
 ] DrawNextDigit=
 
 [def { DrawNumber4 - Value Radix }
   push
   $20 Char=
-  1000 Radix= DrawNextDigit call
-   100 Radix= DrawNextDigit call
-    10 Radix= DrawNextDigit call
+  1000 Radix= DrawNextDigit!
+   100 Radix= DrawNextDigit!
+    10 Radix= DrawNextDigit!
   $30 Char=
-     1 Radix= DrawNextDigit call
-  pop call
+     1 Radix= DrawNextDigit!
+  pop ret
 ] DrawNumber4=
 
 {-----------------------------------------------------------------------+
-|}$0aa0 call{           RAM page 10                                     |
+|}\vLR>++ ret{          RAM page 10                                     |
 +-----------------------------------------------------------------------}
 $0aa0:
 
@@ -458,8 +460,8 @@ $0aa0:
   $802 Pos=
   Score HighScore- [if>0 30 else 8] Color=
   0 BgColor=
-  Score Value= DrawNumber4 call
-  pop call
+  Score Value= DrawNumber4!
+  pop ret
 ] DrawScore=
 
 [def
@@ -467,36 +469,36 @@ $0aa0:
   $820 Pos=
   8 Color=
   0 BgColor=
-  Timer Value= DrawNumber2 call
+  Timer Value= DrawNumber2!
   TimeOut 60+ 255& TimeOut=
-  pop call
+  pop ret
 ] DrawTimer=
 
 {-----------------------------------------------------------------------+
-|}$0ba0 call{           RAM page 11                                     |
+|}\vLR>++ ret{          RAM page 11                                     |
 +-----------------------------------------------------------------------}
 $0ba0:
 
 [def
   push
   $874 Pos= 0 BgColor=
-  [def $48. $49. $20. 0. {HI }] Text= DrawText call
-  HighScore Value= DrawNumber4 call
-  pop call
+  [def $48# $49# $20# 0# {HI }] Text= DrawText!
+  HighScore Value= DrawNumber4!
+  pop ret
 ] DrawHighScore=
 
 {--- Run ---}
 
-Intro call
+Intro!
 
 [do
-  SetupGame call
-  RunGame call
+  SetupGame!
+  RunGame!
 
-  120 \soundTimer!
-  3 {Bright Red} Color= Head Pos= DrawBlock call
-  GameOver call
-  240 Delay= Wait call
+  120 \soundTimer.
+  3 {Bright Red} Color= Head Pos= DrawBlock!
+  GameOver!
+  240 Delay= Wait!
 
   loop
 ]
