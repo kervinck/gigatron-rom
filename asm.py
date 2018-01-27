@@ -313,6 +313,12 @@ def trampoline():
   while pc()&255 < 256-5:
     nop()
   bra(busAC);                   #13
+  """
+     It is possible to make this section 2 bytes shorter
+     and 1 cycle faster by entering directly wih "jmp y,ac"
+     instead of "jmp y,251". However, this will cost two
+     words at LOOKUP in vCPU and space is expensive there.
+  """
   C('+-----------------------------------+')
   bra(val(253))                 #14
   C('|                                   |')
