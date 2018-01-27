@@ -13,7 +13,6 @@
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #  To do
-#  XXX Main menu
 #  XXX Serial loading of programs with Arduino/Trinket
 #      Protocol: 0x21('!') <addrH> <addrL> <n-1> n*<byte> <sum> (n=1-32)
 #      Align bytes with visible scanlines
@@ -206,6 +205,7 @@ define('memSize',    memSize)
 define('entropy',    entropy)
 define('frameCount', frameCount)
 define('serialRaw',  serialRaw)
+define('buttonState', buttonState)
 for i in range(8):
   define('sysArgs%d' % i, sysArgs+i)
 define('soundTimer', soundTimer)
@@ -456,9 +456,10 @@ st(d(ledTempo))
 
 ld(val(0));                     C('Setup serial input')
 st(d(softResetTimer))
-st(d(serialRaw),busIN)
-st(d(serialLast),busIN)
-st(d(buttonState),busIN)
+ld(val(255))
+st(d(serialRaw))
+st(d(serialLast))
+st(d(buttonState))
 
 ld(val(0b0111));                C('LEDs |***O|')
 ld(val(syncBits^hSync),regOUT)
