@@ -1227,11 +1227,11 @@ font32up:     0500 0000  ld   $00         ;Char ' '
               05f8 0084  ld   $84
               05f9 007a  ld   $7a
               05fa 0200  nop
-              05fb fe00  bra  ac          ;Trampoline for page $0500 lookups
-              05fc fcfd  bra  $05fd
-              05fd 1403  ld   $03,y
-              05fe e078  jmp  y,$78
-              05ff 1519  ld   [$19],y
+              05fb fe00  bra  ac          ;+-----------------------------------+
+              05fc fcfd  bra  $05fd       ;|                                   |
+              05fd 1403  ld   $03,y       ;| Trampoline for page $0500 lookups |
+              05fe e078  jmp  y,$78       ;|                                   |
+              05ff 1519  ld   [$19],y     ;+-----------------------------------+
 font82up:     0600 00fe  ld   $fe         ;Char 'R'
               0601 0090  ld   $90
               0602 0098  ld   $98
@@ -1464,11 +1464,11 @@ font82up:     0600 00fe  ld   $fe         ;Char 'R'
               06e7 0200  nop
               06e8 0200  nop
               * 21 times
-              06fb fe00  bra  ac          ;Trampoline for page $0600 lookups
-              06fc fcfd  bra  $06fd
-              06fd 1403  ld   $03,y
-              06fe e078  jmp  y,$78
-              06ff 1519  ld   [$19],y
+              06fb fe00  bra  ac          ;+-----------------------------------+
+              06fc fcfd  bra  $06fd       ;|                                   |
+              06fd 1403  ld   $03,y       ;| Trampoline for page $0600 lookups |
+              06fe e078  jmp  y,$78       ;|                                   |
+              06ff 1519  ld   [$19],y     ;+-----------------------------------+
 notesTable:   0700 0000  ld   $00
               0701 0000  ld   $00
               0702 0045  ld   $45         ;C-0 (16.4 Hz)
@@ -1666,11 +1666,11 @@ notesTable:   0700 0000  ld   $00
               07c2 0000  ld   $00
               * 58 times
               07fa 0200  nop
-              07fb fe00  bra  ac          ;Trampoline for page $0700 lookups
-              07fc fcfd  bra  $07fd
-              07fd 1403  ld   $03,y
-              07fe e078  jmp  y,$78
-              07ff 1519  ld   [$19],y
+              07fb fe00  bra  ac          ;+-----------------------------------+
+              07fc fcfd  bra  $07fd       ;|                                   |
+              07fd 1403  ld   $03,y       ;| Trampoline for page $0700 lookups |
+              07fe e078  jmp  y,$78       ;|                                   |
+              07ff 1519  ld   [$19],y     ;+-----------------------------------+
 invTable:     0800 00ff  ld   $ff
               0801 00ef  ld   $ef
               0802 00e2  ld   $e2
@@ -1852,11 +1852,11 @@ invTable:     0800 00ff  ld   $ff
               08f2 000e  ld   $0e
               08f3 000e  ld   $0e
               * 10 times
-              08fb fe00  bra  ac          ;Trampoline for page $0800 lookups
-              08fc fcfd  bra  $08fd
-              08fd 1403  ld   $03,y
-              08fe e078  jmp  y,$78
-              08ff 1519  ld   [$19],y
+              08fb fe00  bra  ac          ;+-----------------------------------+
+              08fc fcfd  bra  $08fd       ;|                                   |
+              08fd 1403  ld   $03,y       ;| Trampoline for page $0800 lookups |
+              08fe e078  jmp  y,$78       ;|                                   |
+              08ff 1519  ld   [$19],y     ;+-----------------------------------+
 gigatronRaw:  0900 00aa  ld   $aa
               0901 00aa  ld   $aa
               0902 00aa  ld   $aa
@@ -2102,11 +2102,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               09f8 0056  ld   $56
               09f9 0000  ld   $00
               09fa 0000  ld   $00
-              09fb fe00  bra  ac          ;Trampoline for page $0900 lookups
-              09fc fcfd  bra  $09fd
-              09fd 1403  ld   $03,y
-              09fe e078  jmp  y,$78
-              09ff 1519  ld   [$19],y
+              09fb fe00  bra  ac          ;+-----------------------------------+
+              09fc fcfd  bra  $09fd       ;|                                   |
+              09fd 1403  ld   $03,y       ;| Trampoline for page $0900 lookups |
+              09fe e078  jmp  y,$78       ;|                                   |
+              09ff 1519  ld   [$19],y     ;+-----------------------------------+
               0a00 00a5  ld   $a5
               0a01 0056  ld   $56
               0a02 00a6  ld   $a6
@@ -2357,11 +2357,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               0af8 00aa  ld   $aa
               0af9 0000  ld   $00
               0afa 0000  ld   $00
-              0afb fe00  bra  ac          ;Trampoline for page $0a00 lookups
-              0afc fcfd  bra  $0afd
-              0afd 1403  ld   $03,y
-              0afe e078  jmp  y,$78
-              0aff 1519  ld   [$19],y
+              0afb fe00  bra  ac          ;+-----------------------------------+
+              0afc fcfd  bra  $0afd       ;|                                   |
+              0afd 1403  ld   $03,y       ;| Trampoline for page $0a00 lookups |
+              0afe e078  jmp  y,$78       ;|                                   |
+              0aff 1519  ld   [$19],y     ;+-----------------------------------+
               0b00 00aa  ld   $aa
               0b01 005a  ld   $5a
               0b02 00aa  ld   $aa
@@ -2606,11 +2606,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               0bf8 0055  ld   $55
               0bf9 0000  ld   $00
               0bfa 0000  ld   $00
-              0bfb fe00  bra  ac          ;Trampoline for page $0b00 lookups
-              0bfc fcfd  bra  $0bfd
-              0bfd 1403  ld   $03,y
-              0bfe e078  jmp  y,$78
-              0bff 1519  ld   [$19],y
+              0bfb fe00  bra  ac          ;+-----------------------------------+
+              0bfc fcfd  bra  $0bfd       ;|                                   |
+              0bfd 1403  ld   $03,y       ;| Trampoline for page $0b00 lookups |
+              0bfe e078  jmp  y,$78       ;|                                   |
+              0bff 1519  ld   [$19],y     ;+-----------------------------------+
               0c00 0054  ld   $54
               0c01 0055  ld   $55
               0c02 0055  ld   $55
@@ -2861,11 +2861,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               0cf8 00a8  ld   $a8
               0cf9 0000  ld   $00
               0cfa 0000  ld   $00
-              0cfb fe00  bra  ac          ;Trampoline for page $0c00 lookups
-              0cfc fcfd  bra  $0cfd
-              0cfd 1403  ld   $03,y
-              0cfe e078  jmp  y,$78
-              0cff 1519  ld   [$19],y
+              0cfb fe00  bra  ac          ;+-----------------------------------+
+              0cfc fcfd  bra  $0cfd       ;|                                   |
+              0cfd 1403  ld   $03,y       ;| Trampoline for page $0c00 lookups |
+              0cfe e078  jmp  y,$78       ;|                                   |
+              0cff 1519  ld   [$19],y     ;+-----------------------------------+
               0d00 006a  ld   $6a
               0d01 00aa  ld   $aa
               0d02 006a  ld   $6a
@@ -3110,11 +3110,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               0df8 00a8  ld   $a8
               0df9 0000  ld   $00
               0dfa 0000  ld   $00
-              0dfb fe00  bra  ac          ;Trampoline for page $0d00 lookups
-              0dfc fcfd  bra  $0dfd
-              0dfd 1403  ld   $03,y
-              0dfe e078  jmp  y,$78
-              0dff 1519  ld   [$19],y
+              0dfb fe00  bra  ac          ;+-----------------------------------+
+              0dfc fcfd  bra  $0dfd       ;|                                   |
+              0dfd 1403  ld   $03,y       ;| Trampoline for page $0d00 lookups |
+              0dfe e078  jmp  y,$78       ;|                                   |
+              0dff 1519  ld   [$19],y     ;+-----------------------------------+
               0e00 00aa  ld   $aa
               0e01 00aa  ld   $aa
               0e02 00aa  ld   $aa
@@ -3366,11 +3366,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               0ef8 00fb  ld   $fb
               0ef9 0000  ld   $00
               0efa 0000  ld   $00
-              0efb fe00  bra  ac          ;Trampoline for page $0e00 lookups
-              0efc fcfd  bra  $0efd
-              0efd 1403  ld   $03,y
-              0efe e078  jmp  y,$78
-              0eff 1519  ld   [$19],y
+              0efb fe00  bra  ac          ;+-----------------------------------+
+              0efc fcfd  bra  $0efd       ;|                                   |
+              0efd 1403  ld   $03,y       ;| Trampoline for page $0e00 lookups |
+              0efe e078  jmp  y,$78       ;|                                   |
+              0eff 1519  ld   [$19],y     ;+-----------------------------------+
               0f00 00ff  ld   $ff
               0f01 00ff  ld   $ff
               0f02 00ef  ld   $ef
@@ -3618,11 +3618,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               0ff8 0001  ld   $01
               0ff9 0000  ld   $00
               0ffa 0000  ld   $00
-              0ffb fe00  bra  ac          ;Trampoline for page $0f00 lookups
-              0ffc fcfd  bra  $0ffd
-              0ffd 1403  ld   $03,y
-              0ffe e078  jmp  y,$78
-              0fff 1519  ld   [$19],y
+              0ffb fe00  bra  ac          ;+-----------------------------------+
+              0ffc fcfd  bra  $0ffd       ;|                                   |
+              0ffd 1403  ld   $03,y       ;| Trampoline for page $0f00 lookups |
+              0ffe e078  jmp  y,$78       ;|                                   |
+              0fff 1519  ld   [$19],y     ;+-----------------------------------+
               1000 00c5  ld   $c5
               1001 00ff  ld   $ff
               1002 00ff  ld   $ff
@@ -3874,11 +3874,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               10f8 00a6  ld   $a6
               10f9 0000  ld   $00
               10fa 0000  ld   $00
-              10fb fe00  bra  ac          ;Trampoline for page $1000 lookups
-              10fc fcfd  bra  $10fd
-              10fd 1403  ld   $03,y
-              10fe e078  jmp  y,$78
-              10ff 1519  ld   [$19],y
+              10fb fe00  bra  ac          ;+-----------------------------------+
+              10fc fcfd  bra  $10fd       ;|                                   |
+              10fd 1403  ld   $03,y       ;| Trampoline for page $1000 lookups |
+              10fe e078  jmp  y,$78       ;|                                   |
+              10ff 1519  ld   [$19],y     ;+-----------------------------------+
               1100 0069  ld   $69
               1101 0099  ld   $99
               1102 0056  ld   $56
@@ -4129,11 +4129,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               11f8 0056  ld   $56
               11f9 0000  ld   $00
               11fa 0000  ld   $00
-              11fb fe00  bra  ac          ;Trampoline for page $1100 lookups
-              11fc fcfd  bra  $11fd
-              11fd 1403  ld   $03,y
-              11fe e078  jmp  y,$78
-              11ff 1519  ld   [$19],y
+              11fb fe00  bra  ac          ;+-----------------------------------+
+              11fc fcfd  bra  $11fd       ;|                                   |
+              11fd 1403  ld   $03,y       ;| Trampoline for page $1100 lookups |
+              11fe e078  jmp  y,$78       ;|                                   |
+              11ff 1519  ld   [$19],y     ;+-----------------------------------+
               1200 0069  ld   $69
               1201 00ae  ld   $ae
               1202 00a6  ld   $a6
@@ -4385,11 +4385,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               12f8 00aa  ld   $aa
               12f9 0000  ld   $00
               12fa 0000  ld   $00
-              12fb fe00  bra  ac          ;Trampoline for page $1200 lookups
-              12fc fcfd  bra  $12fd
-              12fd 1403  ld   $03,y
-              12fe e078  jmp  y,$78
-              12ff 1519  ld   [$19],y
+              12fb fe00  bra  ac          ;+-----------------------------------+
+              12fc fcfd  bra  $12fd       ;|                                   |
+              12fd 1403  ld   $03,y       ;| Trampoline for page $1200 lookups |
+              12fe e078  jmp  y,$78       ;|                                   |
+              12ff 1519  ld   [$19],y     ;+-----------------------------------+
               1300 00a5  ld   $a5
               1301 00aa  ld   $aa
               1302 00aa  ld   $aa
@@ -4636,11 +4636,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               13f8 00a6  ld   $a6
               13f9 0000  ld   $00
               13fa 0000  ld   $00
-              13fb fe00  bra  ac          ;Trampoline for page $1300 lookups
-              13fc fcfd  bra  $13fd
-              13fd 1403  ld   $03,y
-              13fe e078  jmp  y,$78
-              13ff 1519  ld   [$19],y
+              13fb fe00  bra  ac          ;+-----------------------------------+
+              13fc fcfd  bra  $13fd       ;|                                   |
+              13fd 1403  ld   $03,y       ;| Trampoline for page $1300 lookups |
+              13fe e078  jmp  y,$78       ;|                                   |
+              13ff 1519  ld   [$19],y     ;+-----------------------------------+
               1400 0069  ld   $69
               1401 009a  ld   $9a
               1402 0096  ld   $96
@@ -4892,11 +4892,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               14f8 00aa  ld   $aa
               14f9 0000  ld   $00
               14fa 0000  ld   $00
-              14fb fe00  bra  ac          ;Trampoline for page $1400 lookups
-              14fc fcfd  bra  $14fd
-              14fd 1403  ld   $03,y
-              14fe e078  jmp  y,$78
-              14ff 1519  ld   [$19],y
+              14fb fe00  bra  ac          ;+-----------------------------------+
+              14fc fcfd  bra  $14fd       ;|                                   |
+              14fd 1403  ld   $03,y       ;| Trampoline for page $1400 lookups |
+              14fe e078  jmp  y,$78       ;|                                   |
+              14ff 1519  ld   [$19],y     ;+-----------------------------------+
               1500 00aa  ld   $aa
               1501 00ba  ld   $ba
               1502 00aa  ld   $aa
@@ -5148,11 +5148,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               15f8 0056  ld   $56
               15f9 0000  ld   $00
               15fa 0000  ld   $00
-              15fb fe00  bra  ac          ;Trampoline for page $1500 lookups
-              15fc fcfd  bra  $15fd
-              15fd 1403  ld   $03,y
-              15fe e078  jmp  y,$78
-              15ff 1519  ld   [$19],y
+              15fb fe00  bra  ac          ;+-----------------------------------+
+              15fc fcfd  bra  $15fd       ;|                                   |
+              15fd 1403  ld   $03,y       ;| Trampoline for page $1500 lookups |
+              15fe e078  jmp  y,$78       ;|                                   |
+              15ff 1519  ld   [$19],y     ;+-----------------------------------+
               1600 0095  ld   $95
               1601 00fa  ld   $fa
               1602 00ff  ld   $ff
@@ -5399,11 +5399,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               16f8 00ff  ld   $ff
               16f9 0000  ld   $00
               16fa 0000  ld   $00
-              16fb fe00  bra  ac          ;Trampoline for page $1600 lookups
-              16fc fcfd  bra  $16fd
-              16fd 1403  ld   $03,y
-              16fe e078  jmp  y,$78
-              16ff 1519  ld   [$19],y
+              16fb fe00  bra  ac          ;+-----------------------------------+
+              16fc fcfd  bra  $16fd       ;|                                   |
+              16fd 1403  ld   $03,y       ;| Trampoline for page $1600 lookups |
+              16fe e078  jmp  y,$78       ;|                                   |
+              16ff 1519  ld   [$19],y     ;+-----------------------------------+
               1700 00fa  ld   $fa
               1701 00ae  ld   $ae
               1702 00a6  ld   $a6
@@ -5655,11 +5655,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               17f8 00a9  ld   $a9
               17f9 0000  ld   $00
               17fa 0000  ld   $00
-              17fb fe00  bra  ac          ;Trampoline for page $1700 lookups
-              17fc fcfd  bra  $17fd
-              17fd 1403  ld   $03,y
-              17fe e078  jmp  y,$78
-              17ff 1519  ld   [$19],y
+              17fb fe00  bra  ac          ;+-----------------------------------+
+              17fc fcfd  bra  $17fd       ;|                                   |
+              17fd 1403  ld   $03,y       ;| Trampoline for page $1700 lookups |
+              17fe e078  jmp  y,$78       ;|                                   |
+              17ff 1519  ld   [$19],y     ;+-----------------------------------+
               1800 0069  ld   $69
               1801 0099  ld   $99
               1802 0096  ld   $96
@@ -5911,11 +5911,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               18f8 0096  ld   $96
               18f9 0000  ld   $00
               18fa 0000  ld   $00
-              18fb fe00  bra  ac          ;Trampoline for page $1800 lookups
-              18fc fcfd  bra  $18fd
-              18fd 1403  ld   $03,y
-              18fe e078  jmp  y,$78
-              18ff 1519  ld   [$19],y
+              18fb fe00  bra  ac          ;+-----------------------------------+
+              18fc fcfd  bra  $18fd       ;|                                   |
+              18fd 1403  ld   $03,y       ;| Trampoline for page $1800 lookups |
+              18fe e078  jmp  y,$78       ;|                                   |
+              18ff 1519  ld   [$19],y     ;+-----------------------------------+
               1900 0055  ld   $55
               1901 0055  ld   $55
               1902 0095  ld   $95
@@ -6167,11 +6167,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               19f8 0001  ld   $01
               19f9 0000  ld   $00
               19fa 0000  ld   $00
-              19fb fe00  bra  ac          ;Trampoline for page $1900 lookups
-              19fc fcfd  bra  $19fd
-              19fd 1403  ld   $03,y
-              19fe e078  jmp  y,$78
-              19ff 1519  ld   [$19],y
+              19fb fe00  bra  ac          ;+-----------------------------------+
+              19fc fcfd  bra  $19fd       ;|                                   |
+              19fd 1403  ld   $03,y       ;| Trampoline for page $1900 lookups |
+              19fe e078  jmp  y,$78       ;|                                   |
+              19ff 1519  ld   [$19],y     ;+-----------------------------------+
               1a00 005c  ld   $5c
               1a01 00a5  ld   $a5
               1a02 00fa  ld   $fa
@@ -6423,11 +6423,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               1af8 00e6  ld   $e6
               1af9 0000  ld   $00
               1afa 0000  ld   $00
-              1afb fe00  bra  ac          ;Trampoline for page $1a00 lookups
-              1afc fcfd  bra  $1afd
-              1afd 1403  ld   $03,y
-              1afe e078  jmp  y,$78
-              1aff 1519  ld   [$19],y
+              1afb fe00  bra  ac          ;+-----------------------------------+
+              1afc fcfd  bra  $1afd       ;|                                   |
+              1afd 1403  ld   $03,y       ;| Trampoline for page $1a00 lookups |
+              1afe e078  jmp  y,$78       ;|                                   |
+              1aff 1519  ld   [$19],y     ;+-----------------------------------+
               1b00 0015  ld   $15
               1b01 0070  ld   $70
               1b02 0055  ld   $55
@@ -6679,11 +6679,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               1bf8 00eb  ld   $eb
               1bf9 0000  ld   $00
               1bfa 0000  ld   $00
-              1bfb fe00  bra  ac          ;Trampoline for page $1b00 lookups
-              1bfc fcfd  bra  $1bfd
-              1bfd 1403  ld   $03,y
-              1bfe e078  jmp  y,$78
-              1bff 1519  ld   [$19],y
+              1bfb fe00  bra  ac          ;+-----------------------------------+
+              1bfc fcfd  bra  $1bfd       ;|                                   |
+              1bfd 1403  ld   $03,y       ;| Trampoline for page $1b00 lookups |
+              1bfe e078  jmp  y,$78       ;|                                   |
+              1bff 1519  ld   [$19],y     ;+-----------------------------------+
               1c00 00be  ld   $be
               1c01 00af  ld   $af
               1c02 00fa  ld   $fa
@@ -6934,11 +6934,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               1cf8 0056  ld   $56
               1cf9 0000  ld   $00
               1cfa 0000  ld   $00
-              1cfb fe00  bra  ac          ;Trampoline for page $1c00 lookups
-              1cfc fcfd  bra  $1cfd
-              1cfd 1403  ld   $03,y
-              1cfe e078  jmp  y,$78
-              1cff 1519  ld   [$19],y
+              1cfb fe00  bra  ac          ;+-----------------------------------+
+              1cfc fcfd  bra  $1cfd       ;|                                   |
+              1cfd 1403  ld   $03,y       ;| Trampoline for page $1c00 lookups |
+              1cfe e078  jmp  y,$78       ;|                                   |
+              1cff 1519  ld   [$19],y     ;+-----------------------------------+
               1d00 0069  ld   $69
               1d01 0055  ld   $55
               1d02 0056  ld   $56
@@ -7190,11 +7190,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               1df8 00aa  ld   $aa
               1df9 0000  ld   $00
               1dfa 0000  ld   $00
-              1dfb fe00  bra  ac          ;Trampoline for page $1d00 lookups
-              1dfc fcfd  bra  $1dfd
-              1dfd 1403  ld   $03,y
-              1dfe e078  jmp  y,$78
-              1dff 1519  ld   [$19],y
+              1dfb fe00  bra  ac          ;+-----------------------------------+
+              1dfc fcfd  bra  $1dfd       ;|                                   |
+              1dfd 1403  ld   $03,y       ;| Trampoline for page $1d00 lookups |
+              1dfe e078  jmp  y,$78       ;|                                   |
+              1dff 1519  ld   [$19],y     ;+-----------------------------------+
               1e00 00aa  ld   $aa
               1e01 00ee  ld   $ee
               1e02 00eb  ld   $eb
@@ -7446,11 +7446,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               1ef8 00ab  ld   $ab
               1ef9 0000  ld   $00
               1efa 0000  ld   $00
-              1efb fe00  bra  ac          ;Trampoline for page $1e00 lookups
-              1efc fcfd  bra  $1efd
-              1efd 1403  ld   $03,y
-              1efe e078  jmp  y,$78
-              1eff 1519  ld   [$19],y
+              1efb fe00  bra  ac          ;+-----------------------------------+
+              1efc fcfd  bra  $1efd       ;|                                   |
+              1efd 1403  ld   $03,y       ;| Trampoline for page $1e00 lookups |
+              1efe e078  jmp  y,$78       ;|                                   |
+              1eff 1519  ld   [$19],y     ;+-----------------------------------+
               1f00 00fe  ld   $fe
               1f01 00ea  ld   $ea
               1f02 00ff  ld   $ff
@@ -7700,11 +7700,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               1ff8 0056  ld   $56
               1ff9 0000  ld   $00
               1ffa 0000  ld   $00
-              1ffb fe00  bra  ac          ;Trampoline for page $1f00 lookups
-              1ffc fcfd  bra  $1ffd
-              1ffd 1403  ld   $03,y
-              1ffe e078  jmp  y,$78
-              1fff 1519  ld   [$19],y
+              1ffb fe00  bra  ac          ;+-----------------------------------+
+              1ffc fcfd  bra  $1ffd       ;|                                   |
+              1ffd 1403  ld   $03,y       ;| Trampoline for page $1f00 lookups |
+              1ffe e078  jmp  y,$78       ;|                                   |
+              1fff 1519  ld   [$19],y     ;+-----------------------------------+
               2000 00c0  ld   $c0
               2001 0061  ld   $61
               2002 0066  ld   $66
@@ -7942,11 +7942,11 @@ gigatronRaw:  0900 00aa  ld   $aa
               20ea 0000  ld   $00
               20eb 0000  ld   $00
               * 18 times
-              20fb fe00  bra  ac          ;Trampoline for page $2000 lookups
-              20fc fcfd  bra  $20fd
-              20fd 1403  ld   $03,y
-              20fe e078  jmp  y,$78
-              20ff 1519  ld   [$19],y
+              20fb fe00  bra  ac          ;+-----------------------------------+
+              20fc fcfd  bra  $20fd       ;|                                   |
+              20fd 1403  ld   $03,y       ;| Trampoline for page $2000 lookups |
+              20fe e078  jmp  y,$78       ;|                                   |
+              20ff 1519  ld   [$19],y     ;+-----------------------------------+
 packedParrot: 2100 0000  ld   $00         ;Pixels for packedParrot line 0
               2101 0000  ld   $00
               2102 0000  ld   $00
@@ -48378,11 +48378,11 @@ zippedRacerHorizon:
               d5f8 00c3  ld   $c3
               d5f9 0030  ld   $30
               d5fa 000c  ld   $0c
-              d5fb fe00  bra  ac          ;Trampoline for page $d500 lookups
-              d5fc fcfd  bra  $d5fd
-              d5fd 1403  ld   $03,y
-              d5fe e078  jmp  y,$78
-              d5ff 1519  ld   [$19],y
+              d5fb fe00  bra  ac          ;+-----------------------------------+
+              d5fc fcfd  bra  $d5fd       ;|                                   |
+              d5fd 1403  ld   $03,y       ;| Trampoline for page $d500 lookups |
+              d5fe e078  jmp  y,$78       ;|                                   |
+              d5ff 1519  ld   [$19],y     ;+-----------------------------------+
               d600 00c3  ld   $c3
               d601 00f0  ld   $f0
               d602 000f  ld   $0f
@@ -48634,11 +48634,11 @@ zippedRacerHorizon:
               d6f8 000c  ld   $0c
               d6f9 00c3  ld   $c3
               d6fa 00b0  ld   $b0
-              d6fb fe00  bra  ac          ;Trampoline for page $d600 lookups
-              d6fc fcfd  bra  $d6fd
-              d6fd 1403  ld   $03,y
-              d6fe e078  jmp  y,$78
-              d6ff 1519  ld   [$19],y
+              d6fb fe00  bra  ac          ;+-----------------------------------+
+              d6fc fcfd  bra  $d6fd       ;|                                   |
+              d6fd 1403  ld   $03,y       ;| Trampoline for page $d600 lookups |
+              d6fe e078  jmp  y,$78       ;|                                   |
+              d6ff 1519  ld   [$19],y     ;+-----------------------------------+
               d700 00aa  ld   $aa
               d701 00aa  ld   $aa
               d702 002a  ld   $2a
@@ -48880,11 +48880,11 @@ zippedRacerHorizon:
               d7f8 00f0  ld   $f0
               d7f9 00ff  ld   $ff
               d7fa 00ff  ld   $ff
-              d7fb fe00  bra  ac          ;Trampoline for page $d700 lookups
-              d7fc fcfd  bra  $d7fd
-              d7fd 1403  ld   $03,y
-              d7fe e078  jmp  y,$78
-              d7ff 1519  ld   [$19],y
+              d7fb fe00  bra  ac          ;+-----------------------------------+
+              d7fc fcfd  bra  $d7fd       ;|                                   |
+              d7fd 1403  ld   $03,y       ;| Trampoline for page $d700 lookups |
+              d7fe e078  jmp  y,$78       ;|                                   |
+              d7ff 1519  ld   [$19],y     ;+-----------------------------------+
               d800 0030  ld   $30
               d801 000c  ld   $0c
               d802 00c3  ld   $c3
@@ -49136,11 +49136,11 @@ zippedRacerHorizon:
               d8f8 00ab  ld   $ab
               d8f9 00ea  ld   $ea
               d8fa 00af  ld   $af
-              d8fb fe00  bra  ac          ;Trampoline for page $d800 lookups
-              d8fc fcfd  bra  $d8fd
-              d8fd 1403  ld   $03,y
-              d8fe e078  jmp  y,$78
-              d8ff 1519  ld   [$19],y
+              d8fb fe00  bra  ac          ;+-----------------------------------+
+              d8fc fcfd  bra  $d8fd       ;|                                   |
+              d8fd 1403  ld   $03,y       ;| Trampoline for page $d800 lookups |
+              d8fe e078  jmp  y,$78       ;|                                   |
+              d8ff 1519  ld   [$19],y     ;+-----------------------------------+
               d900 00ab  ld   $ab
               d901 00bf  ld   $bf
               d902 00aa  ld   $aa
@@ -49392,11 +49392,11 @@ zippedRacerHorizon:
               d9f8 000c  ld   $0c
               d9f9 00c3  ld   $c3
               d9fa 0030  ld   $30
-              d9fb fe00  bra  ac          ;Trampoline for page $d900 lookups
-              d9fc fcfd  bra  $d9fd
-              d9fd 1403  ld   $03,y
-              d9fe e078  jmp  y,$78
-              d9ff 1519  ld   [$19],y
+              d9fb fe00  bra  ac          ;+-----------------------------------+
+              d9fc fcfd  bra  $d9fd       ;|                                   |
+              d9fd 1403  ld   $03,y       ;| Trampoline for page $d900 lookups |
+              d9fe e078  jmp  y,$78       ;|                                   |
+              d9ff 1519  ld   [$19],y     ;+-----------------------------------+
               da00 000c  ld   $0c
               da01 00c3  ld   $c3
               da02 0030  ld   $30
@@ -49644,11 +49644,11 @@ zippedRacerHorizon:
               daf8 0096  ld   $96
               daf9 0065  ld   $65
               dafa 0059  ld   $59
-              dafb fe00  bra  ac          ;Trampoline for page $da00 lookups
-              dafc fcfd  bra  $dafd
-              dafd 1403  ld   $03,y
-              dafe e078  jmp  y,$78
-              daff 1519  ld   [$19],y
+              dafb fe00  bra  ac          ;+-----------------------------------+
+              dafc fcfd  bra  $dafd       ;|                                   |
+              dafd 1403  ld   $03,y       ;| Trampoline for page $da00 lookups |
+              dafe e078  jmp  y,$78       ;|                                   |
+              daff 1519  ld   [$19],y     ;+-----------------------------------+
               db00 0086  ld   $86
               db01 00aa  ld   $aa
               db02 005a  ld   $5a
@@ -49896,11 +49896,11 @@ zippedRacerHorizon:
               dbf8 00c3  ld   $c3
               dbf9 00eb  ld   $eb
               dbfa 001a  ld   $1a
-              dbfb fe00  bra  ac          ;Trampoline for page $db00 lookups
-              dbfc fcfd  bra  $dbfd
-              dbfd 1403  ld   $03,y
-              dbfe e078  jmp  y,$78
-              dbff 1519  ld   [$19],y
+              dbfb fe00  bra  ac          ;+-----------------------------------+
+              dbfc fcfd  bra  $dbfd       ;|                                   |
+              dbfd 1403  ld   $03,y       ;| Trampoline for page $db00 lookups |
+              dbfe e078  jmp  y,$78       ;|                                   |
+              dbff 1519  ld   [$19],y     ;+-----------------------------------+
               dc00 0004  ld   $04
               dc01 0041  ld   $41
               dc02 00b0  ld   $b0
@@ -50149,11 +50149,11 @@ zippedRacerHorizon:
               dcf8 000c  ld   $0c
               dcf9 00c3  ld   $c3
               dcfa 0030  ld   $30
-              dcfb fe00  bra  ac          ;Trampoline for page $dc00 lookups
-              dcfc fcfd  bra  $dcfd
-              dcfd 1403  ld   $03,y
-              dcfe e078  jmp  y,$78
-              dcff 1519  ld   [$19],y
+              dcfb fe00  bra  ac          ;+-----------------------------------+
+              dcfc fcfd  bra  $dcfd       ;|                                   |
+              dcfd 1403  ld   $03,y       ;| Trampoline for page $dc00 lookups |
+              dcfe e078  jmp  y,$78       ;|                                   |
+              dcff 1519  ld   [$19],y     ;+-----------------------------------+
               dd00 000c  ld   $0c
               dd01 00c3  ld   $c3
               dd02 0030  ld   $30
@@ -50404,11 +50404,11 @@ zippedRacerHorizon:
               ddf8 0030  ld   $30
               ddf9 000c  ld   $0c
               ddfa 00c3  ld   $c3
-              ddfb fe00  bra  ac          ;Trampoline for page $dd00 lookups
-              ddfc fcfd  bra  $ddfd
-              ddfd 1403  ld   $03,y
-              ddfe e078  jmp  y,$78
-              ddff 1519  ld   [$19],y
+              ddfb fe00  bra  ac          ;+-----------------------------------+
+              ddfc fcfd  bra  $ddfd       ;|                                   |
+              ddfd 1403  ld   $03,y       ;| Trampoline for page $dd00 lookups |
+              ddfe e078  jmp  y,$78       ;|                                   |
+              ddff 1519  ld   [$19],y     ;+-----------------------------------+
               de00 0030  ld   $30
               de01 00ac  ld   $ac
               de02 0069  ld   $69
@@ -50654,11 +50654,11 @@ zippedRacerHorizon:
               def7 0000  ld   $00
               def8 0000  ld   $00
               * 5 times
-              defb fe00  bra  ac          ;Trampoline for page $de00 lookups
-              defc fcfd  bra  $defd
-              defd 1403  ld   $03,y
-              defe e078  jmp  y,$78
-              deff 1519  ld   [$19],y
+              defb fe00  bra  ac          ;+-----------------------------------+
+              defc fcfd  bra  $defd       ;|                                   |
+              defd 1403  ld   $03,y       ;| Trampoline for page $de00 lookups |
+              defe e078  jmp  y,$78       ;|                                   |
+              deff 1519  ld   [$19],y     ;+-----------------------------------+
               df00 0000  ld   $00
               df01 0000  ld   $00
               df02 0000  ld   $00
@@ -50902,11 +50902,11 @@ zippedRacerHorizon:
               dff8 00ff  ld   $ff
               dff9 00fe  ld   $fe
               dffa 00ef  ld   $ef
-              dffb fe00  bra  ac          ;Trampoline for page $df00 lookups
-              dffc fcfd  bra  $dffd
-              dffd 1403  ld   $03,y
-              dffe e078  jmp  y,$78
-              dfff 1519  ld   [$19],y
+              dffb fe00  bra  ac          ;+-----------------------------------+
+              dffc fcfd  bra  $dffd       ;|                                   |
+              dffd 1403  ld   $03,y       ;| Trampoline for page $df00 lookups |
+              dffe e078  jmp  y,$78       ;|                                   |
+              dfff 1519  ld   [$19],y     ;+-----------------------------------+
               e000 00ff  ld   $ff
               e001 00fe  ld   $fe
               e002 00ef  ld   $ef
@@ -51147,11 +51147,11 @@ zippedRacerHorizon:
               e0f8 0030  ld   $30
               e0f9 000c  ld   $0c
               e0fa 00ff  ld   $ff
-              e0fb fe00  bra  ac          ;Trampoline for page $e000 lookups
-              e0fc fcfd  bra  $e0fd
-              e0fd 1403  ld   $03,y
-              e0fe e078  jmp  y,$78
-              e0ff 1519  ld   [$19],y
+              e0fb fe00  bra  ac          ;+-----------------------------------+
+              e0fc fcfd  bra  $e0fd       ;|                                   |
+              e0fd 1403  ld   $03,y       ;| Trampoline for page $e000 lookups |
+              e0fe e078  jmp  y,$78       ;|                                   |
+              e0ff 1519  ld   [$19],y     ;+-----------------------------------+
               e100 00ff  ld   $ff
               e101 00ff  ld   $ff
               e102 00ff  ld   $ff
@@ -51210,11 +51210,11 @@ zippedRacerHorizon:
               e13d 0200  nop
               e13e 0200  nop
               * 191 times
-              e1fb fe00  bra  ac          ;Trampoline for page $e100 lookups
-              e1fc fcfd  bra  $e1fd
-              e1fd 1403  ld   $03,y
-              e1fe e078  jmp  y,$78
-              e1ff 1519  ld   [$19],y
+              e1fb fe00  bra  ac          ;+-----------------------------------+
+              e1fc fcfd  bra  $e1fd       ;|                                   |
+              e1fd 1403  ld   $03,y       ;| Trampoline for page $e100 lookups |
+              e1fe e078  jmp  y,$78       ;|                                   |
+              e1ff 1519  ld   [$19],y     ;+-----------------------------------+
 SYS_40_Racer_UpdateVideoX:
               e200 1127  ld   [$27],x
               e201 1528  ld   [$28],y
@@ -51468,11 +51468,11 @@ Mandelbrot:   e231 0003  ld   $03         ;RAM loading address (high byte first)
               e2f8 00fe  ld   $fe
               e2f9 00c1  ld   $c1         ;03c5 ADDW
               e2fa 0043  ld   $43         ;03c5 'XX'
-              e2fb fe00  bra  ac          ;Trampoline for page $e200 lookups
-              e2fc fcfd  bra  $e2fd
-              e2fd 1403  ld   $03,y
-              e2fe e078  jmp  y,$78
-              e2ff 1519  ld   [$19],y
+              e2fb fe00  bra  ac          ;+-----------------------------------+
+              e2fc fcfd  bra  $e2fd       ;|                                   |
+              e2fd 1403  ld   $03,y       ;| Trampoline for page $e200 lookups |
+              e2fe e078  jmp  y,$78       ;|                                   |
+              e2ff 1519  ld   [$19],y     ;+-----------------------------------+
               e300 00c1  ld   $c1         ;03c7 ADDW
               e301 0047  ld   $47         ;03c7 'YY'
               e302 0035  ld   $35         ;03c9 BCC
@@ -51724,11 +51724,11 @@ Mandelbrot:   e231 0003  ld   $03         ;RAM loading address (high byte first)
               e3f8 00ff  ld   $ff         ;04e7 RET
               e3f9 002b  ld   $2b         ;04e8 STW
               e3fa 0065  ld   $65         ;04e8 'CalcSet'
-              e3fb fe00  bra  ac          ;Trampoline for page $e300 lookups
-              e3fc fcfd  bra  $e3fd
-              e3fd 1403  ld   $03,y
-              e3fe e078  jmp  y,$78
-              e3ff 1519  ld   [$19],y
+              e3fb fe00  bra  ac          ;+-----------------------------------+
+              e3fc fcfd  bra  $e3fd       ;|                                   |
+              e3fd 1403  ld   $03,y       ;| Trampoline for page $e300 lookups |
+              e3fe e078  jmp  y,$78       ;|                                   |
+              e3ff 1519  ld   [$19],y     ;+-----------------------------------+
               e400 00f9  ld   $f9         ;04ea INC
               e401 001d  ld   $1d
               e402 00ff  ld   $ff         ;04ec RET
@@ -51980,11 +51980,11 @@ Mandelbrot:   e231 0003  ld   $03         ;RAM loading address (high byte first)
               e4f8 00c1  ld   $c1         ;060b ADDW
               e4f9 0069  ld   $69         ;060b 'a'
               e4fa 0035  ld   $35         ;060d BCC
-              e4fb fe00  bra  ac          ;Trampoline for page $e400 lookups
-              e4fc fcfd  bra  $e4fd
-              e4fd 1403  ld   $03,y
-              e4fe e078  jmp  y,$78
-              e4ff 1519  ld   [$19],y
+              e4fb fe00  bra  ac          ;+-----------------------------------+
+              e4fc fcfd  bra  $e4fd       ;|                                   |
+              e4fd 1403  ld   $03,y       ;| Trampoline for page $e400 lookups |
+              e4fe e078  jmp  y,$78       ;|                                   |
+              e4ff 1519  ld   [$19],y     ;+-----------------------------------+
               e500 0050  ld   $50         ;060e LT
               e501 0017  ld   $17
               e502 002b  ld   $2b         ;0610 STW
@@ -52236,11 +52236,11 @@ Mandelbrot:   e231 0003  ld   $03         ;RAM loading address (high byte first)
               e5f8 002b  ld   $2b         ;0703 STW
               e5f9 004b  ld   $4b         ;0703 'Y0'
               e5fa 0011  ld   $11         ;0705 LDWI
-              e5fb fe00  bra  ac          ;Trampoline for page $e500 lookups
-              e5fc fcfd  bra  $e5fd
-              e5fd 1403  ld   $03,y
-              e5fe e078  jmp  y,$78
-              e5ff 1519  ld   [$19],y
+              e5fb fe00  bra  ac          ;+-----------------------------------+
+              e5fc fcfd  bra  $e5fd       ;|                                   |
+              e5fd 1403  ld   $03,y       ;| Trampoline for page $e500 lookups |
+              e5fe e078  jmp  y,$78       ;|                                   |
+              e5ff 1519  ld   [$19],y     ;+-----------------------------------+
               e600 00c0  ld   $c0
               e601 00fe  ld   $fe
               e602 002b  ld   $2b         ;0708 STW
@@ -52331,7 +52331,7 @@ Mandelbrot:   e231 0003  ld   $03         ;RAM loading address (high byte first)
               e657 0065  ld   $65         ;075c 'CalcSet'
               e658 0095  ld   $95         ;075e BRA
               e659 00fe  ld   $fe
-              e65a 0000  ld   $00
+              e65a 0000  ld   $00         ;End of file
 Racer:        e65b 0003  ld   $03         ;RAM loading address (high byte first)
               e65c 0000  ld   $00
               e65d 00ee  ld   $ee         ;Segment length (1..256)
@@ -52492,11 +52492,11 @@ Racer:        e65b 0003  ld   $03         ;RAM loading address (high byte first)
               e6f8 0012  ld   $12
               e6f9 0087  ld   $87         ;039b ANDI
               e6fa 0002  ld   $02
-              e6fb fe00  bra  ac          ;Trampoline for page $e600 lookups
-              e6fc fcfd  bra  $e6fd
-              e6fd 1403  ld   $03,y
-              e6fe e078  jmp  y,$78
-              e6ff 1519  ld   [$19],y
+              e6fb fe00  bra  ac          ;+-----------------------------------+
+              e6fc fcfd  bra  $e6fd       ;|                                   |
+              e6fd 1403  ld   $03,y       ;| Trampoline for page $e600 lookups |
+              e6fe e078  jmp  y,$78       ;|                                   |
+              e6ff 1519  ld   [$19],y     ;+-----------------------------------+
               e700 0035  ld   $35         ;039d BCC
               e701 0072  ld   $72         ;039e NE
               e702 00aa  ld   $aa
@@ -52748,11 +52748,11 @@ Racer:        e65b 0003  ld   $03         ;RAM loading address (high byte first)
               e7f8 0063  ld   $63         ;04a3 'q'
               e7f9 00f9  ld   $f9         ;04a5 INC
               e7fa 0067  ld   $67         ;04a5 's'
-              e7fb fe00  bra  ac          ;Trampoline for page $e700 lookups
-              e7fc fcfd  bra  $e7fd
-              e7fd 1403  ld   $03,y
-              e7fe e078  jmp  y,$78
-              e7ff 1519  ld   [$19],y
+              e7fb fe00  bra  ac          ;+-----------------------------------+
+              e7fc fcfd  bra  $e7fd       ;|                                   |
+              e7fd 1403  ld   $03,y       ;| Trampoline for page $e700 lookups |
+              e7fe e078  jmp  y,$78       ;|                                   |
+              e7ff 1519  ld   [$19],y     ;+-----------------------------------+
               e800 0021  ld   $21         ;04a7 LDW
               e801 0067  ld   $67         ;04a7 's'
               e802 00d5  ld   $d5         ;04a9 PEEK
@@ -53004,11 +53004,11 @@ Racer:        e65b 0003  ld   $03         ;RAM loading address (high byte first)
               e8f8 0095  ld   $95         ;05db BRA
               e8f9 00dd  ld   $dd
               e8fa 0021  ld   $21         ;05dd LDW
-              e8fb fe00  bra  ac          ;Trampoline for page $e800 lookups
-              e8fc fcfd  bra  $e8fd
-              e8fd 1403  ld   $03,y
-              e8fe e078  jmp  y,$78
-              e8ff 1519  ld   [$19],y
+              e8fb fe00  bra  ac          ;+-----------------------------------+
+              e8fc fcfd  bra  $e8fd       ;|                                   |
+              e8fd 1403  ld   $03,y       ;| Trampoline for page $e800 lookups |
+              e8fe e078  jmp  y,$78       ;|                                   |
+              e8ff 1519  ld   [$19],y     ;+-----------------------------------+
               e900 003d  ld   $3d         ;05dd 'Pos'
               e901 00f3  ld   $f3         ;05df ADDI
               e902 000c  ld   $0c
@@ -53260,11 +53260,11 @@ Racer:        e65b 0003  ld   $03         ;RAM loading address (high byte first)
               e9f8 002b  ld   $2b         ;06e1 STW
               e9f9 002d  ld   $2d
               e9fa 00ff  ld   $ff         ;06e3 RET
-              e9fb fe00  bra  ac          ;Trampoline for page $e900 lookups
-              e9fc fcfd  bra  $e9fd
-              e9fd 1403  ld   $03,y
-              e9fe e078  jmp  y,$78
-              e9ff 1519  ld   [$19],y
+              e9fb fe00  bra  ac          ;+-----------------------------------+
+              e9fc fcfd  bra  $e9fd       ;|                                   |
+              e9fd 1403  ld   $03,y       ;| Trampoline for page $e900 lookups |
+              e9fe e078  jmp  y,$78       ;|                                   |
+              e9ff 1519  ld   [$19],y     ;+-----------------------------------+
               ea00 002b  ld   $2b         ;06e4 STW
               ea01 0093  ld   $93         ;06e4 'PlayEngineSound'
               ea02 00f9  ld   $f9         ;06e6 INC
@@ -53272,7 +53272,7 @@ Racer:        e65b 0003  ld   $03         ;RAM loading address (high byte first)
               ea04 00ff  ld   $ff         ;06e8 RET
               ea05 0007  ld   $07         ;RAM loading address (high byte first)
               ea06 0000  ld   $00
-              ea07 00fd  ld   $fd         ;Segment length (1..256)
+              ea07 00ed  ld   $ed         ;Segment length (1..256)
               ea08 00e1  ld   $e1         ;0700 DEF
               ea09 00ba  ld   $ba
               ea0a 007d  ld   $7d         ;0702 PUSH
@@ -53504,38 +53504,38 @@ Racer:        e65b 0003  ld   $03         ;RAM loading address (high byte first)
               eaec 0000  ld   $00
               eaed 002b  ld   $2b         ;07e5 STW
               eaee 00a7  ld   $a7         ;07e5 'Car1'
-              eaef 00e1  ld   $e1         ;07e7 DEF
-              eaf0 00f3  ld   $f3
-              eaf1 0002  ld   $02
-              eaf2 0028  ld   $28
-              eaf3 0014  ld   $14
-              eaf4 0014  ld   $14
-              eaf5 0014  ld   $14
-              eaf6 0028  ld   $28
-              eaf7 0028  ld   $28
-              eaf8 0014  ld   $14
-              eaf9 0014  ld   $14
-              eafa 0014  ld   $14
-              eafb fe00  bra  ac          ;Trampoline for page $ea00 lookups
-              eafc fcfd  bra  $eafd
-              eafd 1403  ld   $03,y
-              eafe e078  jmp  y,$78
-              eaff 1519  ld   [$19],y
+              eaef 0011  ld   $11         ;07e7 LDWI
+              eaf0 00a0  ld   $a0
+              eaf1 0008  ld   $08
+              eaf2 002b  ld   $2b         ;07ea STW
+              eaf3 001c  ld   $1c
+              eaf4 00ff  ld   $ff         ;07ec RET
+              eaf5 0008  ld   $08         ;RAM loading address (high byte first)
+              eaf6 00a0  ld   $a0
+              eaf7 0060  ld   $60         ;Segment length (1..256)
+              eaf8 00e1  ld   $e1         ;08a0 DEF
+              eaf9 00ac  ld   $ac
+              eafa 0002  ld   $02
+              eafb fe00  bra  ac          ;+-----------------------------------+
+              eafc fcfd  bra  $eafd       ;|                                   |
+              eafd 1403  ld   $03,y       ;| Trampoline for page $ea00 lookups |
+              eafe e078  jmp  y,$78       ;|                                   |
+              eaff 1519  ld   [$19],y     ;+-----------------------------------+
               eb00 0028  ld   $28
-              eb01 0000  ld   $00
-              eb02 002b  ld   $2b         ;07f5 STW
-              eb03 00a9  ld   $a9         ;07f5 'Car2'
-              eb04 0011  ld   $11         ;07f7 LDWI
-              eb05 00a0  ld   $a0
-              eb06 0008  ld   $08
-              eb07 002b  ld   $2b         ;07fa STW
-              eb08 001c  ld   $1c
-              eb09 00ff  ld   $ff         ;07fc RET
-              eb0a 0008  ld   $08         ;RAM loading address (high byte first)
-              eb0b 00a0  ld   $a0
-              eb0c 0050  ld   $50         ;Segment length (1..256)
-              eb0d 00e1  ld   $e1         ;08a0 DEF
-              eb0e 00b0  ld   $b0
+              eb01 0014  ld   $14
+              eb02 0014  ld   $14
+              eb03 0014  ld   $14
+              eb04 0028  ld   $28
+              eb05 0028  ld   $28
+              eb06 0014  ld   $14
+              eb07 0014  ld   $14
+              eb08 0014  ld   $14
+              eb09 0028  ld   $28
+              eb0a 0000  ld   $00
+              eb0b 002b  ld   $2b         ;08ae STW
+              eb0c 00a9  ld   $a9         ;08ae 'Car2'
+              eb0d 00e1  ld   $e1         ;08b0 DEF
+              eb0e 00c0  ld   $c0
               eb0f 0000  ld   $00
               eb10 0040  ld   $40
               eb11 0040  ld   $40
@@ -53552,10 +53552,10 @@ Racer:        e65b 0003  ld   $03         ;RAM loading address (high byte first)
               eb1c 0040  ld   $40
               eb1d 0040  ld   $40
               eb1e 0000  ld   $00
-              eb1f 002b  ld   $2b         ;08b2 STW
-              eb20 00ab  ld   $ab         ;08b2 'Car3'
-              eb21 00e1  ld   $e1         ;08b4 DEF
-              eb22 00c4  ld   $c4
+              eb1f 002b  ld   $2b         ;08c2 STW
+              eb20 00ab  ld   $ab         ;08c2 'Car3'
+              eb21 00e1  ld   $e1         ;08c4 DEF
+              eb22 00d4  ld   $d4
               eb23 0000  ld   $00
               eb24 0040  ld   $40
               eb25 0040  ld   $40
@@ -53570,48 +53570,48 @@ Racer:        e65b 0003  ld   $03         ;RAM loading address (high byte first)
               eb30 0040  ld   $40
               eb31 0040  ld   $40
               eb32 0000  ld   $00
-              eb33 002b  ld   $2b         ;08c6 STW
-              eb34 00ad  ld   $ad         ;08c6 'Car4'
-              eb35 00e1  ld   $e1         ;08c8 DEF
-              eb36 00e9  ld   $e9
-              eb37 0011  ld   $11         ;08ca LDWI
+              eb33 002b  ld   $2b         ;08d6 STW
+              eb34 00ad  ld   $ad         ;08d6 'Car4'
+              eb35 00e1  ld   $e1         ;08d8 DEF
+              eb36 00f9  ld   $f9
+              eb37 0011  ld   $11         ;08da LDWI
               eb38 002e  ld   $2e
               eb39 0001  ld   $01
-              eb3a 002b  ld   $2b         ;08cd STW
+              eb3a 002b  ld   $2b         ;08dd STW
               eb3b 0025  ld   $25
-              eb3c 0059  ld   $59         ;08cf LDI
+              eb3c 0059  ld   $59         ;08df LDI
               eb3d 0020  ld   $20
-              eb3e 005e  ld   $5e         ;08d1 ST
+              eb3e 005e  ld   $5e         ;08e1 ST
               eb3f 0027  ld   $27
-              eb40 0011  ld   $11         ;08d3 LDWI
+              eb40 0011  ld   $11         ;08e3 LDWI
               eb41 0000  ld   $00
               eb42 0008  ld   $08
-              eb43 002b  ld   $2b         ;08d6 STW
-              eb44 0063  ld   $63         ;08d6 'q'
-              eb45 0021  ld   $21         ;08d8 LDW
-              eb46 0063  ld   $63         ;08d8 'q'
-              eb47 0075  ld   $75         ;08da LOOKUP
+              eb43 002b  ld   $2b         ;08e6 STW
+              eb44 0063  ld   $63         ;08e6 'q'
+              eb45 0021  ld   $21         ;08e8 LDW
+              eb46 0063  ld   $63         ;08e8 'q'
+              eb47 0075  ld   $75         ;08ea LOOKUP
               eb48 0008  ld   $08
-              eb49 00c1  ld   $c1         ;08dc ADDW
-              eb4a 008b  ld   $8b         ;08dc 'Distance'
-              eb4b 005e  ld   $5e         ;08de ST
+              eb49 00c1  ld   $c1         ;08ec ADDW
+              eb4a 008b  ld   $8b         ;08ec 'Distance'
+              eb4b 005e  ld   $5e         ;08ee ST
               eb4c 0028  ld   $28
-              eb4d 0011  ld   $11         ;08e0 LDWI
+              eb4d 0011  ld   $11         ;08f0 LDWI
               eb4e 0019  ld   $19
               eb4f 00e2  ld   $e2
-              eb50 00a9  ld   $a9         ;08e3 SYS
+              eb50 00a9  ld   $a9         ;08f3 SYS
               eb51 00fa  ld   $fa
-              eb52 00f9  ld   $f9         ;08e5 INC
-              eb53 0063  ld   $63         ;08e5 'q'
-              eb54 0035  ld   $35         ;08e7 BCC
-              eb55 0072  ld   $72         ;08e8 NE
-              eb56 00d6  ld   $d6
-              eb57 00ff  ld   $ff         ;08ea RET
-              eb58 002b  ld   $2b         ;08eb STW
-              eb59 009f  ld   $9f         ;08eb 'DrawGrass'
-              eb5a 00f9  ld   $f9         ;08ed INC
+              eb52 00f9  ld   $f9         ;08f5 INC
+              eb53 0063  ld   $63         ;08f5 'q'
+              eb54 0035  ld   $35         ;08f7 BCC
+              eb55 0072  ld   $72         ;08f8 NE
+              eb56 00e6  ld   $e6
+              eb57 00ff  ld   $ff         ;08fa RET
+              eb58 002b  ld   $2b         ;08fb STW
+              eb59 009f  ld   $9f         ;08fb 'DrawGrass'
+              eb5a 00f9  ld   $f9         ;08fd INC
               eb5b 001d  ld   $1d
-              eb5c 00ff  ld   $ff         ;08ef RET
+              eb5c 00ff  ld   $ff         ;08ff RET
               eb5d 0009  ld   $09         ;RAM loading address (high byte first)
               eb5e 00a0  ld   $a0
               eb5f 0023  ld   $23         ;Segment length (1..256)
@@ -53770,11 +53770,11 @@ Racer:        e65b 0003  ld   $03         ;RAM loading address (high byte first)
               ebf8 0085  ld   $85         ;0bcd 'DrawText'
               ebf9 0011  ld   $11         ;0bcf LDWI
               ebfa 007c  ld   $7c
-              ebfb fe00  bra  ac          ;Trampoline for page $eb00 lookups
-              ebfc fcfd  bra  $ebfd
-              ebfd 1403  ld   $03,y
-              ebfe e078  jmp  y,$78
-              ebff 1519  ld   [$19],y
+              ebfb fe00  bra  ac          ;+-----------------------------------+
+              ebfc fcfd  bra  $ebfd       ;|                                   |
+              ebfd 1403  ld   $03,y       ;| Trampoline for page $eb00 lookups |
+              ebfe e078  jmp  y,$78       ;|                                   |
+              ebff 1519  ld   [$19],y     ;+-----------------------------------+
               ec00 0008  ld   $08
               ec01 002b  ld   $2b         ;0bd2 STW
               ec02 003d  ld   $3d         ;0bd2 'Pos'
@@ -53999,7 +53999,7 @@ Racer:        e65b 0003  ld   $03         ;RAM loading address (high byte first)
               ecdd 0057  ld   $57         ;0ff2 'Wait'
               ecde 0095  ld   $95         ;0ff4 BRA
               ecdf 00a0  ld   $a0
-              ece0 0000  ld   $00
+              ece0 0000  ld   $00         ;End of file
 Main:         ece1 0003  ld   $03         ;RAM loading address (high byte first)
               ece2 0000  ld   $00
               ece3 000e  ld   $0e         ;Segment length (1..256)
@@ -54017,7 +54017,7 @@ Main:         ece1 0003  ld   $03         ;RAM loading address (high byte first)
               ecef 0087  ld   $87
               ecf0 00a9  ld   $a9         ;030c SYS
               ecf1 00e2  ld   $e2
-              ecf2 0000  ld   $00
+              ecf2 0000  ld   $00         ;End of file
 Reset:        ecf3 0003  ld   $03         ;RAM loading address (high byte first)
               ecf4 0000  ld   $00
               ecf5 00ca  ld   $ca         ;Segment length (1..256)
@@ -54026,11 +54026,11 @@ Reset:        ecf3 0003  ld   $03         ;RAM loading address (high byte first)
               ecf8 0001  ld   $01
               ecf9 002b  ld   $2b         ;0303 STW
               ecfa 0031  ld   $31         ;0303 'p'
-              ecfb fe00  bra  ac          ;Trampoline for page $ec00 lookups
-              ecfc fcfd  bra  $ecfd
-              ecfd 1403  ld   $03,y
-              ecfe e078  jmp  y,$78
-              ecff 1519  ld   [$19],y
+              ecfb fe00  bra  ac          ;+-----------------------------------+
+              ecfc fcfd  bra  $ecfd       ;|                                   |
+              ecfd 1403  ld   $03,y       ;| Trampoline for page $ec00 lookups |
+              ecfe e078  jmp  y,$78       ;|                                   |
+              ecff 1519  ld   [$19],y     ;+-----------------------------------+
               ed00 0011  ld   $11         ;0305 LDWI
               ed01 0000  ld   $00
               ed02 0008  ld   $08
@@ -54282,11 +54282,11 @@ Reset:        ecf3 0003  ld   $03         ;RAM loading address (high byte first)
               edf8 002b  ld   $2b         ;0430 STW
               edf9 0035  ld   $35         ;0430 'i'
               edfa 0021  ld   $21         ;0432 LDW
-              edfb fe00  bra  ac          ;Trampoline for page $ed00 lookups
-              edfc fcfd  bra  $edfd
-              edfd 1403  ld   $03,y
-              edfe e078  jmp  y,$78
-              edff 1519  ld   [$19],y
+              edfb fe00  bra  ac          ;+-----------------------------------+
+              edfc fcfd  bra  $edfd       ;|                                   |
+              edfd 1403  ld   $03,y       ;| Trampoline for page $ed00 lookups |
+              edfe e078  jmp  y,$78       ;|                                   |
+              edff 1519  ld   [$19],y     ;+-----------------------------------+
               ee00 0043  ld   $43         ;0432 'fontData'
               ee01 0075  ld   $75         ;0434 LOOKUP
               ee02 0000  ld   $00
@@ -54461,14 +54461,14 @@ Reset:        ecf3 0003  ld   $03         ;RAM loading address (high byte first)
               eeab 0087  ld   $87
               eeac 00a9  ld   $a9         ;04df SYS
               eead 00e2  ld   $e2
-              eeae 0000  ld   $00
+              eeae 0000  ld   $00         ;End of file
               eeaf 0200  nop
               eeb0 0200  nop
               eeb1 0200  nop
               * 76 times
-              eefb fe00  bra  ac          ;Trampoline for page $ee00 lookups
-              eefc fcfd  bra  $eefd
-              eefd 1403  ld   $03,y
-              eefe e078  jmp  y,$78
-              eeff 1519  ld   [$19],y
+              eefb fe00  bra  ac          ;+-----------------------------------+
+              eefc fcfd  bra  $eefd       ;|                                   |
+              eefd 1403  ld   $03,y       ;| Trampoline for page $ee00 lookups |
+              eefe e078  jmp  y,$78       ;|                                   |
+              eeff 1519  ld   [$19],y     ;+-----------------------------------+
               ef00
