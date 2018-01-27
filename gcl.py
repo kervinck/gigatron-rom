@@ -40,9 +40,9 @@ class Program:
       self.segInfo()
     if address != self.vPC or self.segStart < self.vPC:
       assert(address>>8) # Because a zero would mark the end of stream
-      ld(val(address>>8));   C('RAM loading address (high byte first)')
-      ld(val(address&0xff))
-      ld(val(lo('$%s.seg.%d' % (self.name, self.segId)))); C('Segment length (1..256)')
+      putInRomTable(address>>8, '| RAM segment address (high byte first)')
+      putInRomTable(address&0xff, '|')
+      putInRomTable(lo('$%s.seg.%d' % (self.name, self.segId)), '| Length (1..256)')
     self.segStart = address
     page = address & ~255
     self.segEnd = page + (249 if page <= 0x400 else 256)

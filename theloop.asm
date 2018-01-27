@@ -127,7 +127,7 @@ SYS_42_Reset: 006e 00f4  ld   $f4
               0078 00f2  ld   $f2
               0079 c20f  st   [$0f]
               007a dc11  st   $11,[y,x++]
-              007b dcf3  st   $f3,[y,x++]
+              007b dcf9  st   $f9,[y,x++]
               007c dcec  st   $ec,[y,x++]
               007d dc2b  st   $2b,[y,x++]
               007e dc25  st   $25,[y,x++]
@@ -51266,9 +51266,9 @@ SYS_40_Racer_UpdateVideoY:
               e22e 1403  ld   $03,y
               e22f e0df  jmp  y,$df
               e230 00ec  ld   $ec
-Mandelbrot:   e231 0003  ld   $03         ;RAM loading address (high byte first)
-              e232 0000  ld   $00
-              e233 00d5  ld   $d5         ;Segment length (1..256)
+Mandelbrot:   e231 0003  ld   $03         ;| RAM segment address (high byte first)
+              e232 0000  ld   $00         ;|
+              e233 00d5  ld   $d5         ;| Length (1..256)
               e234 00e1  ld   $e1         ;0300 DEF
               e235 007a  ld   $7a
               e236 007d  ld   $7d         ;0302 PUSH
@@ -51487,9 +51487,9 @@ Mandelbrot:   e231 0003  ld   $03         ;RAM loading address (high byte first)
               e30b 00f9  ld   $f9         ;03d2 INC
               e30c 001d  ld   $1d
               e30d 00ff  ld   $ff         ;03d4 RET
-              e30e 0004  ld   $04         ;RAM loading address (high byte first)
-              e30f 0000  ld   $00
-              e310 00ed  ld   $ed         ;Segment length (1..256)
+              e30e 0004  ld   $04         ;| RAM segment address (high byte first)
+              e30f 0000  ld   $00         ;|
+              e310 00ed  ld   $ed         ;| Length (1..256)
               e311 00e1  ld   $e1         ;0400 DEF
               e312 00e6  ld   $e6
               e313 007d  ld   $7d         ;0402 PUSH
@@ -51732,9 +51732,9 @@ Mandelbrot:   e231 0003  ld   $03         ;RAM loading address (high byte first)
               e400 00f9  ld   $f9         ;04ea INC
               e401 001d  ld   $1d
               e402 00ff  ld   $ff         ;04ec RET
-              e403 0005  ld   $05         ;RAM loading address (high byte first)
-              e404 0000  ld   $00
-              e405 00e4  ld   $e4         ;Segment length (1..256)
+              e403 0005  ld   $05         ;| RAM segment address (high byte first)
+              e404 0000  ld   $00         ;|
+              e405 00e4  ld   $e4         ;| Length (1..256)
               e406 00e1  ld   $e1         ;0500 DEF
               e407 00dd  ld   $dd
               e408 007d  ld   $7d         ;0502 PUSH
@@ -51963,9 +51963,9 @@ Mandelbrot:   e231 0003  ld   $03         ;RAM loading address (high byte first)
               e4e7 00f9  ld   $f9         ;05e1 INC
               e4e8 001d  ld   $1d
               e4e9 00ff  ld   $ff         ;05e3 RET
-              e4ea 0006  ld   $06         ;RAM loading address (high byte first)
-              e4eb 0000  ld   $00
-              e4ec 0000  ld   $00         ;Segment length (1..256)
+              e4ea 0006  ld   $06         ;| RAM segment address (high byte first)
+              e4eb 0000  ld   $00         ;|
+              e4ec 0000  ld   $00         ;| Length (1..256)
               e4ed 00e1  ld   $e1         ;0600 DEF
               e4ee 00f9  ld   $f9
               e4ef 002b  ld   $2b         ;0602 STW
@@ -52227,9 +52227,9 @@ Mandelbrot:   e231 0003  ld   $03         ;RAM loading address (high byte first)
               e5ef 00f9  ld   $f9         ;06fd INC
               e5f0 001d  ld   $1d
               e5f1 00ff  ld   $ff         ;06ff RET
-              e5f2 0007  ld   $07         ;RAM loading address (high byte first)
-              e5f3 0000  ld   $00
-              e5f4 0060  ld   $60         ;Segment length (1..256)
+              e5f2 0007  ld   $07         ;| RAM segment address (high byte first)
+              e5f3 0000  ld   $00         ;|
+              e5f4 0060  ld   $60         ;| Length (1..256)
               e5f5 0011  ld   $11         ;0700 LDWI
               e5f6 004c  ld   $4c
               e5f7 00ff  ld   $ff
@@ -52332,9 +52332,9 @@ Mandelbrot:   e231 0003  ld   $03         ;RAM loading address (high byte first)
               e658 0095  ld   $95         ;075e BRA
               e659 00fe  ld   $fe
               e65a 0000  ld   $00         ;End of file
-Racer:        e65b 0003  ld   $03         ;RAM loading address (high byte first)
-              e65c 0000  ld   $00
-              e65d 00ee  ld   $ee         ;Segment length (1..256)
+Racer:        e65b 0003  ld   $03         ;| RAM segment address (high byte first)
+              e65c 0000  ld   $00         ;|
+              e65d 00ee  ld   $ee         ;| Length (1..256)
               e65e 00e1  ld   $e1         ;0300 DEF
               e65f 004e  ld   $4e
               e660 0021  ld   $21         ;0302 LDW
@@ -52578,9 +52578,9 @@ Racer:        e65b 0003  ld   $03         ;RAM loading address (high byte first)
               e74e 00f9  ld   $f9         ;03eb INC
               e74f 001d  ld   $1d
               e750 00ff  ld   $ff         ;03ed RET
-              e751 0004  ld   $04         ;RAM loading address (high byte first)
-              e752 0000  ld   $00
-              e753 00c1  ld   $c1         ;Segment length (1..256)
+              e751 0004  ld   $04         ;| RAM segment address (high byte first)
+              e752 0000  ld   $00         ;|
+              e753 00c1  ld   $c1         ;| Length (1..256)
               e754 00e1  ld   $e1         ;0400 DEF
               e755 0009  ld   $09
               e756 0047  ld   $47
@@ -52779,9 +52779,9 @@ Racer:        e65b 0003  ld   $03         ;RAM loading address (high byte first)
               e817 00f9  ld   $f9         ;04be INC
               e818 001d  ld   $1d
               e819 00ff  ld   $ff         ;04c0 RET
-              e81a 0005  ld   $05         ;RAM loading address (high byte first)
-              e81b 0000  ld   $00
-              e81c 00f2  ld   $f2         ;Segment length (1..256)
+              e81a 0005  ld   $05         ;| RAM segment address (high byte first)
+              e81b 0000  ld   $00         ;|
+              e81c 00f2  ld   $f2         ;| Length (1..256)
               e81d 00e1  ld   $e1         ;0500 DEF
               e81e 0039  ld   $39
               e81f 007d  ld   $7d         ;0502 PUSH
@@ -53029,9 +53029,9 @@ Racer:        e65b 0003  ld   $03         ;RAM loading address (high byte first)
               e911 00f9  ld   $f9         ;05ef INC
               e912 001d  ld   $1d
               e913 00ff  ld   $ff         ;05f1 RET
-              e914 0006  ld   $06         ;RAM loading address (high byte first)
-              e915 0000  ld   $00
-              e916 00e9  ld   $e9         ;Segment length (1..256)
+              e914 0006  ld   $06         ;| RAM segment address (high byte first)
+              e915 0000  ld   $00         ;|
+              e916 00e9  ld   $e9         ;| Length (1..256)
               e917 00e1  ld   $e1         ;0600 DEF
               e918 0015  ld   $15
               e919 007d  ld   $7d         ;0602 PUSH
@@ -53270,1202 +53270,1208 @@ Racer:        e65b 0003  ld   $03         ;RAM loading address (high byte first)
               ea02 00f9  ld   $f9         ;06e6 INC
               ea03 001d  ld   $1d
               ea04 00ff  ld   $ff         ;06e8 RET
-              ea05 0007  ld   $07         ;RAM loading address (high byte first)
-              ea06 0000  ld   $00
-              ea07 00ed  ld   $ed         ;Segment length (1..256)
+              ea05 0007  ld   $07         ;| RAM segment address (high byte first)
+              ea06 0000  ld   $00         ;|
+              ea07 00f3  ld   $f3         ;| Length (1..256)
               ea08 00e1  ld   $e1         ;0700 DEF
-              ea09 00ba  ld   $ba
+              ea09 00c0  ld   $c0
               ea0a 007d  ld   $7d         ;0702 PUSH
               ea0b 0059  ld   $59         ;0703 LDI
               ea0c 0000  ld   $00
               ea0d 002b  ld   $2b         ;0705 STW
               ea0e 006b  ld   $6b         ;0705 'Collision'
-              ea0f 00e3  ld   $e3         ;0707 CALL
-              ea10 0095  ld   $95         ;0707 'AdvanceCar'
-              ea11 0021  ld   $21         ;0709 LDW
-              ea12 008b  ld   $8b         ;0709 'Distance'
-              ea13 0035  ld   $35         ;070b BCC
-              ea14 0053  ld   $53         ;070c GE
-              ea15 0040  ld   $40
-              ea16 0021  ld   $21         ;070e LDW
-              ea17 0043  ld   $43         ;070e 'Time'
-              ea18 00ad  ld   $ad         ;0710 SUBW
-              ea19 0097  ld   $97         ;0710 'BestTime'
-              ea1a 0035  ld   $35         ;0712 BCC
-              ea1b 0053  ld   $53         ;0713 GE
-              ea1c 0017  ld   $17
-              ea1d 0021  ld   $21         ;0715 LDW
-              ea1e 0043  ld   $43         ;0715 'Time'
-              ea1f 002b  ld   $2b         ;0717 STW
-              ea20 0097  ld   $97         ;0717 'BestTime'
-              ea21 0059  ld   $59         ;0719 LDI
-              ea22 0004  ld   $04
-              ea23 002b  ld   $2b         ;071b STW
-              ea24 007d  ld   $7d         ;071b 'Prev1'
+              ea0f 002b  ld   $2b         ;0707 STW
+              ea10 0079  ld   $79         ;0707 'Prev3'
+              ea11 002b  ld   $2b         ;0709 STW
+              ea12 007b  ld   $7b         ;0709 'Prev2'
+              ea13 002b  ld   $2b         ;070b STW
+              ea14 007d  ld   $7d         ;070b 'Prev1'
+              ea15 00e3  ld   $e3         ;070d CALL
+              ea16 0095  ld   $95         ;070d 'AdvanceCar'
+              ea17 0021  ld   $21         ;070f LDW
+              ea18 008b  ld   $8b         ;070f 'Distance'
+              ea19 0035  ld   $35         ;0711 BCC
+              ea1a 0053  ld   $53         ;0712 GE
+              ea1b 0046  ld   $46
+              ea1c 0021  ld   $21         ;0714 LDW
+              ea1d 0043  ld   $43         ;0714 'Time'
+              ea1e 00ad  ld   $ad         ;0716 SUBW
+              ea1f 0097  ld   $97         ;0716 'BestTime'
+              ea20 0035  ld   $35         ;0718 BCC
+              ea21 0053  ld   $53         ;0719 GE
+              ea22 001d  ld   $1d
+              ea23 0021  ld   $21         ;071b LDW
+              ea24 0043  ld   $43         ;071b 'Time'
               ea25 002b  ld   $2b         ;071d STW
-              ea26 007b  ld   $7b         ;071d 'Prev2'
-              ea27 002b  ld   $2b         ;071f STW
-              ea28 0079  ld   $79         ;071f 'Prev3'
+              ea26 0097  ld   $97         ;071d 'BestTime'
+              ea27 0059  ld   $59         ;071f LDI
+              ea28 0004  ld   $04
               ea29 002b  ld   $2b         ;0721 STW
-              ea2a 0099  ld   $99         ;0721 'j'
-              ea2b 0021  ld   $21         ;0723 LDW
-              ea2c 0097  ld   $97         ;0723 'BestTime'
+              ea2a 007d  ld   $7d         ;0721 'Prev1'
+              ea2b 002b  ld   $2b         ;0723 STW
+              ea2c 007b  ld   $7b         ;0723 'Prev2'
               ea2d 002b  ld   $2b         ;0725 STW
-              ea2e 0059  ld   $59         ;0725 'Value'
-              ea2f 0011  ld   $11         ;0727 LDWI
-              ea30 007c  ld   $7c
-              ea31 0008  ld   $08
-              ea32 002b  ld   $2b         ;072a STW
-              ea33 003d  ld   $3d         ;072a 'Pos'
-              ea34 00e3  ld   $e3         ;072c CALL
-              ea35 0081  ld   $81         ;072c 'DrawTime'
-              ea36 0021  ld   $21         ;072e LDW
-              ea37 0099  ld   $99         ;072e 'j'
-              ea38 00f6  ld   $f6         ;0730 SUBI
-              ea39 0001  ld   $01
-              ea3a 0035  ld   $35         ;0732 BCC
-              ea3b 004d  ld   $4d         ;0733 GT
-              ea3c 001f  ld   $1f
-              ea3d 0059  ld   $59         ;0735 LDI
-              ea3e 0000  ld   $00
-              ea3f 002b  ld   $2b         ;0737 STW
-              ea40 0043  ld   $43         ;0737 'Time'
-              ea41 002b  ld   $2b         ;0739 STW
-              ea42 009b  ld   $9b         ;0739 'Random'
-              ea43 0011  ld   $11         ;073b LDWI
+              ea2e 0079  ld   $79         ;0725 'Prev3'
+              ea2f 002b  ld   $2b         ;0727 STW
+              ea30 0099  ld   $99         ;0727 'j'
+              ea31 0021  ld   $21         ;0729 LDW
+              ea32 0097  ld   $97         ;0729 'BestTime'
+              ea33 002b  ld   $2b         ;072b STW
+              ea34 0059  ld   $59         ;072b 'Value'
+              ea35 0011  ld   $11         ;072d LDWI
+              ea36 007c  ld   $7c
+              ea37 0008  ld   $08
+              ea38 002b  ld   $2b         ;0730 STW
+              ea39 003d  ld   $3d         ;0730 'Pos'
+              ea3a 00e3  ld   $e3         ;0732 CALL
+              ea3b 0081  ld   $81         ;0732 'DrawTime'
+              ea3c 0021  ld   $21         ;0734 LDW
+              ea3d 0099  ld   $99         ;0734 'j'
+              ea3e 00f6  ld   $f6         ;0736 SUBI
+              ea3f 0001  ld   $01
+              ea40 0035  ld   $35         ;0738 BCC
+              ea41 004d  ld   $4d         ;0739 GT
+              ea42 0025  ld   $25
+              ea43 0059  ld   $59         ;073b LDI
               ea44 0000  ld   $00
-              ea45 0074  ld   $74
-              ea46 002b  ld   $2b         ;073e STW
-              ea47 008b  ld   $8b         ;073e 'Distance'
-              ea48 002b  ld   $2b         ;0740 STW
-              ea49 0089  ld   $89         ;0740 'NextTurn'
-              ea4a 00ad  ld   $ad         ;0742 SUBW
-              ea4b 0089  ld   $89         ;0742 'NextTurn'
-              ea4c 0035  ld   $35         ;0744 BCC
-              ea4d 0056  ld   $56         ;0745 LE
-              ea4e 0088  ld   $88
-              ea4f 0021  ld   $21         ;0747 LDW
-              ea50 009b  ld   $9b         ;0747 'Random'
-              ea51 00c1  ld   $c1         ;0749 ADDW
-              ea52 0089  ld   $89         ;0749 'NextTurn'
-              ea53 0091  ld   $91         ;074b XORI
-              ea54 006d  ld   $6d
-              ea55 002b  ld   $2b         ;074d STW
+              ea45 002b  ld   $2b         ;073d STW
+              ea46 0043  ld   $43         ;073d 'Time'
+              ea47 002b  ld   $2b         ;073f STW
+              ea48 009b  ld   $9b         ;073f 'Random'
+              ea49 0011  ld   $11         ;0741 LDWI
+              ea4a 0000  ld   $00
+              ea4b 0074  ld   $74
+              ea4c 002b  ld   $2b         ;0744 STW
+              ea4d 008b  ld   $8b         ;0744 'Distance'
+              ea4e 002b  ld   $2b         ;0746 STW
+              ea4f 0089  ld   $89         ;0746 'NextTurn'
+              ea50 00ad  ld   $ad         ;0748 SUBW
+              ea51 0089  ld   $89         ;0748 'NextTurn'
+              ea52 0035  ld   $35         ;074a BCC
+              ea53 0056  ld   $56         ;074b LE
+              ea54 008e  ld   $8e
+              ea55 0021  ld   $21         ;074d LDW
               ea56 009b  ld   $9b         ;074d 'Random'
-              ea57 0087  ld   $87         ;074f ANDI
-              ea58 001f  ld   $1f
-              ea59 00f3  ld   $f3         ;0751 ADDI
-              ea5a 0028  ld   $28
-              ea5b 00c1  ld   $c1         ;0753 ADDW
-              ea5c 0089  ld   $89         ;0753 'NextTurn'
-              ea5d 002b  ld   $2b         ;0755 STW
-              ea5e 0089  ld   $89         ;0755 'NextTurn'
-              ea5f 001a  ld   $1a         ;0757 LD
-              ea60 009c  ld   $9c         ;0757 'Random'+1
-              ea61 0087  ld   $87         ;0759 ANDI
-              ea62 0003  ld   $03
-              ea63 00f3  ld   $f3         ;075b ADDI
-              ea64 0001  ld   $01
-              ea65 002b  ld   $2b         ;075d STW
-              ea66 0033  ld   $33         ;075d 'i'
-              ea67 00c1  ld   $c1         ;075f ADDW
-              ea68 0033  ld   $33         ;075f 'i'
-              ea69 00c1  ld   $c1         ;0761 ADDW
-              ea6a 0033  ld   $33         ;0761 'i'
+              ea57 00c1  ld   $c1         ;074f ADDW
+              ea58 0089  ld   $89         ;074f 'NextTurn'
+              ea59 0091  ld   $91         ;0751 XORI
+              ea5a 006d  ld   $6d
+              ea5b 002b  ld   $2b         ;0753 STW
+              ea5c 009b  ld   $9b         ;0753 'Random'
+              ea5d 0087  ld   $87         ;0755 ANDI
+              ea5e 001f  ld   $1f
+              ea5f 00f3  ld   $f3         ;0757 ADDI
+              ea60 0028  ld   $28
+              ea61 00c1  ld   $c1         ;0759 ADDW
+              ea62 0089  ld   $89         ;0759 'NextTurn'
+              ea63 002b  ld   $2b         ;075b STW
+              ea64 0089  ld   $89         ;075b 'NextTurn'
+              ea65 001a  ld   $1a         ;075d LD
+              ea66 009c  ld   $9c         ;075d 'Random'+1
+              ea67 0087  ld   $87         ;075f ANDI
+              ea68 0003  ld   $03
+              ea69 00f3  ld   $f3         ;0761 ADDI
+              ea6a 0001  ld   $01
               ea6b 002b  ld   $2b         ;0763 STW
               ea6c 0033  ld   $33         ;0763 'i'
               ea6d 00c1  ld   $c1         ;0765 ADDW
               ea6e 0033  ld   $33         ;0765 'i'
-              ea6f 002b  ld   $2b         ;0767 STW
+              ea6f 00c1  ld   $c1         ;0767 ADDW
               ea70 0033  ld   $33         ;0767 'i'
-              ea71 0021  ld   $21         ;0769 LDW
-              ea72 008f  ld   $8f         ;0769 'NextDDX'
-              ea73 002b  ld   $2b         ;076b STW
-              ea74 008d  ld   $8d         ;076b 'DDX'
-              ea75 0035  ld   $35         ;076d BCC
-              ea76 0053  ld   $53         ;076e GE
-              ea77 0072  ld   $72
-              ea78 00c1  ld   $c1         ;0770 ADDW
-              ea79 0033  ld   $33         ;0770 'i'
-              ea7a 0095  ld   $95         ;0772 BRA
-              ea7b 0086  ld   $86
-              ea7c 0035  ld   $35         ;0774 BCC
-              ea7d 0056  ld   $56         ;0775 LE
-              ea7e 0079  ld   $79
-              ea7f 00ad  ld   $ad         ;0777 SUBW
-              ea80 0033  ld   $33         ;0777 'i'
-              ea81 0095  ld   $95         ;0779 BRA
-              ea82 0086  ld   $86
-              ea83 0021  ld   $21         ;077b LDW
-              ea84 009b  ld   $9b         ;077b 'Random'
-              ea85 0035  ld   $35         ;077d BCC
-              ea86 0050  ld   $50         ;077e LT
-              ea87 0082  ld   $82
-              ea88 0021  ld   $21         ;0780 LDW
-              ea89 0033  ld   $33         ;0780 'i'
-              ea8a 0095  ld   $95         ;0782 BRA
-              ea8b 0086  ld   $86
-              ea8c 0059  ld   $59         ;0784 LDI
-              ea8d 0000  ld   $00
-              ea8e 00ad  ld   $ad         ;0786 SUBW
+              ea71 002b  ld   $2b         ;0769 STW
+              ea72 0033  ld   $33         ;0769 'i'
+              ea73 00c1  ld   $c1         ;076b ADDW
+              ea74 0033  ld   $33         ;076b 'i'
+              ea75 002b  ld   $2b         ;076d STW
+              ea76 0033  ld   $33         ;076d 'i'
+              ea77 0021  ld   $21         ;076f LDW
+              ea78 008f  ld   $8f         ;076f 'NextDDX'
+              ea79 002b  ld   $2b         ;0771 STW
+              ea7a 008d  ld   $8d         ;0771 'DDX'
+              ea7b 0035  ld   $35         ;0773 BCC
+              ea7c 0053  ld   $53         ;0774 GE
+              ea7d 0078  ld   $78
+              ea7e 00c1  ld   $c1         ;0776 ADDW
+              ea7f 0033  ld   $33         ;0776 'i'
+              ea80 0095  ld   $95         ;0778 BRA
+              ea81 008c  ld   $8c
+              ea82 0035  ld   $35         ;077a BCC
+              ea83 0056  ld   $56         ;077b LE
+              ea84 007f  ld   $7f
+              ea85 00ad  ld   $ad         ;077d SUBW
+              ea86 0033  ld   $33         ;077d 'i'
+              ea87 0095  ld   $95         ;077f BRA
+              ea88 008c  ld   $8c
+              ea89 0021  ld   $21         ;0781 LDW
+              ea8a 009b  ld   $9b         ;0781 'Random'
+              ea8b 0035  ld   $35         ;0783 BCC
+              ea8c 0050  ld   $50         ;0784 LT
+              ea8d 0088  ld   $88
+              ea8e 0021  ld   $21         ;0786 LDW
               ea8f 0033  ld   $33         ;0786 'i'
-              ea90 002b  ld   $2b         ;0788 STW
-              ea91 008f  ld   $8f         ;0788 'NextDDX'
-              ea92 00e3  ld   $e3         ;078a CALL
-              ea93 0091  ld   $91         ;078a 'DrawRoad'
-              ea94 0021  ld   $21         ;078c LDW
-              ea95 008d  ld   $8d         ;078c 'DDX'
+              ea90 0095  ld   $95         ;0788 BRA
+              ea91 008c  ld   $8c
+              ea92 0059  ld   $59         ;078a LDI
+              ea93 0000  ld   $00
+              ea94 00ad  ld   $ad         ;078c SUBW
+              ea95 0033  ld   $33         ;078c 'i'
               ea96 002b  ld   $2b         ;078e STW
-              ea97 0049  ld   $49         ;078e 'DriftX'
-              ea98 00c1  ld   $c1         ;0790 ADDW
-              ea99 0049  ld   $49         ;0790 'DriftX'
-              ea9a 002b  ld   $2b         ;0792 STW
-              ea9b 0049  ld   $49         ;0792 'DriftX'
-              ea9c 00c1  ld   $c1         ;0794 ADDW
+              ea97 008f  ld   $8f         ;078e 'NextDDX'
+              ea98 00e3  ld   $e3         ;0790 CALL
+              ea99 0091  ld   $91         ;0790 'DrawRoad'
+              ea9a 0021  ld   $21         ;0792 LDW
+              ea9b 008d  ld   $8d         ;0792 'DDX'
+              ea9c 002b  ld   $2b         ;0794 STW
               ea9d 0049  ld   $49         ;0794 'DriftX'
-              ea9e 002b  ld   $2b         ;0796 STW
+              ea9e 00c1  ld   $c1         ;0796 ADDW
               ea9f 0049  ld   $49         ;0796 'DriftX'
-              eaa0 00c1  ld   $c1         ;0798 ADDW
+              eaa0 002b  ld   $2b         ;0798 STW
               eaa1 0049  ld   $49         ;0798 'DriftX'
-              eaa2 002b  ld   $2b         ;079a STW
+              eaa2 00c1  ld   $c1         ;079a ADDW
               eaa3 0049  ld   $49         ;079a 'DriftX'
               eaa4 002b  ld   $2b         ;079c STW
-              eaa5 004d  ld   $4d         ;079c 'HorizonDX'
-              eaa6 00e3  ld   $e3         ;079e CALL
-              eaa7 0051  ld   $51         ;079e 'ControlRaceCar'
-              eaa8 00e3  ld   $e3         ;07a0 CALL
-              eaa9 0093  ld   $93         ;07a0 'PlayEngineSound'
-              eaaa 00e3  ld   $e3         ;07a2 CALL
-              eaab 009d  ld   $9d         ;07a2 'DrawRaceCar'
+              eaa5 0049  ld   $49         ;079c 'DriftX'
+              eaa6 00c1  ld   $c1         ;079e ADDW
+              eaa7 0049  ld   $49         ;079e 'DriftX'
+              eaa8 002b  ld   $2b         ;07a0 STW
+              eaa9 0049  ld   $49         ;07a0 'DriftX'
+              eaaa 002b  ld   $2b         ;07a2 STW
+              eaab 004d  ld   $4d         ;07a2 'HorizonDX'
               eaac 00e3  ld   $e3         ;07a4 CALL
-              eaad 009f  ld   $9f         ;07a4 'DrawGrass'
-              eaae 0021  ld   $21         ;07a6 LDW
-              eaaf 0043  ld   $43         ;07a6 'Time'
-              eab0 002b  ld   $2b         ;07a8 STW
-              eab1 0059  ld   $59         ;07a8 'Value'
-              eab2 0011  ld   $11         ;07aa LDWI
-              eab3 0001  ld   $01
-              eab4 0008  ld   $08
-              eab5 002b  ld   $2b         ;07ad STW
-              eab6 003d  ld   $3d         ;07ad 'Pos'
-              eab7 0059  ld   $59         ;07af LDI
-              eab8 003f  ld   $3f
-              eab9 002b  ld   $2b         ;07b1 STW
-              eaba 003b  ld   $3b         ;07b1 'Color'
-              eabb 00e3  ld   $e3         ;07b3 CALL
-              eabc 0081  ld   $81         ;07b3 'DrawTime'
-              eabd 0021  ld   $21         ;07b5 LDW
-              eabe 006b  ld   $6b         ;07b5 'Collision'
-              eabf 0035  ld   $35         ;07b7 BCC
-              eac0 003f  ld   $3f         ;07b8 EQ
-              eac1 0005  ld   $05
-              eac2 0063  ld   $63         ;07ba POP
-              eac3 00ff  ld   $ff         ;07bb RET
-              eac4 002b  ld   $2b         ;07bc STW
-              eac5 00a1  ld   $a1         ;07bc 'PlayGame'
-              eac6 00e1  ld   $e1         ;07be DEF
-              eac7 00c5  ld   $c5
-              eac8 002d  ld   $2d
-              eac9 003a  ld   $3a
-              eaca 002d  ld   $2d
-              eacb 002d  ld   $2d
-              eacc 002e  ld   $2e
-              eacd 002d  ld   $2d
-              eace 0000  ld   $00
-              eacf 002b  ld   $2b         ;07c7 STW
-              ead0 00a3  ld   $a3         ;07c7 'EmptyTimeText'
-              ead1 00e1  ld   $e1         ;07c9 DEF
-              ead2 00d5  ld   $d5
-              ead3 0002  ld   $02
-              ead4 0040  ld   $40
-              ead5 0040  ld   $40
-              ead6 0040  ld   $40
-              ead7 0028  ld   $28
-              ead8 003c  ld   $3c
-              ead9 003c  ld   $3c
-              eada 0028  ld   $28
+              eaad 0051  ld   $51         ;07a4 'ControlRaceCar'
+              eaae 00e3  ld   $e3         ;07a6 CALL
+              eaaf 0093  ld   $93         ;07a6 'PlayEngineSound'
+              eab0 00e3  ld   $e3         ;07a8 CALL
+              eab1 009d  ld   $9d         ;07a8 'DrawRaceCar'
+              eab2 00e3  ld   $e3         ;07aa CALL
+              eab3 009f  ld   $9f         ;07aa 'DrawGrass'
+              eab4 0021  ld   $21         ;07ac LDW
+              eab5 0043  ld   $43         ;07ac 'Time'
+              eab6 002b  ld   $2b         ;07ae STW
+              eab7 0059  ld   $59         ;07ae 'Value'
+              eab8 0011  ld   $11         ;07b0 LDWI
+              eab9 0001  ld   $01
+              eaba 0008  ld   $08
+              eabb 002b  ld   $2b         ;07b3 STW
+              eabc 003d  ld   $3d         ;07b3 'Pos'
+              eabd 0059  ld   $59         ;07b5 LDI
+              eabe 003f  ld   $3f
+              eabf 002b  ld   $2b         ;07b7 STW
+              eac0 003b  ld   $3b         ;07b7 'Color'
+              eac1 00e3  ld   $e3         ;07b9 CALL
+              eac2 0081  ld   $81         ;07b9 'DrawTime'
+              eac3 0021  ld   $21         ;07bb LDW
+              eac4 006b  ld   $6b         ;07bb 'Collision'
+              eac5 0035  ld   $35         ;07bd BCC
+              eac6 003f  ld   $3f         ;07be EQ
+              eac7 000b  ld   $0b
+              eac8 0063  ld   $63         ;07c0 POP
+              eac9 00ff  ld   $ff         ;07c1 RET
+              eaca 002b  ld   $2b         ;07c2 STW
+              eacb 00a1  ld   $a1         ;07c2 'PlayGame'
+              eacc 00e1  ld   $e1         ;07c4 DEF
+              eacd 00cb  ld   $cb
+              eace 002d  ld   $2d
+              eacf 003a  ld   $3a
+              ead0 002d  ld   $2d
+              ead1 002d  ld   $2d
+              ead2 002e  ld   $2e
+              ead3 002d  ld   $2d
+              ead4 0000  ld   $00
+              ead5 002b  ld   $2b         ;07cd STW
+              ead6 00a3  ld   $a3         ;07cd 'EmptyTimeText'
+              ead7 00e1  ld   $e1         ;07cf DEF
+              ead8 00db  ld   $db
+              ead9 0002  ld   $02
+              eada 0040  ld   $40
               eadb 0040  ld   $40
               eadc 0040  ld   $40
-              eadd 0040  ld   $40
-              eade 0000  ld   $00
-              eadf 002b  ld   $2b         ;07d7 STW
-              eae0 00a5  ld   $a5         ;07d7 'Car0'
-              eae1 00e1  ld   $e1         ;07d9 DEF
-              eae2 00e3  ld   $e3
-              eae3 0003  ld   $03
-              eae4 0028  ld   $28
-              eae5 0014  ld   $14
-              eae6 0014  ld   $14
-              eae7 003f  ld   $3f
-              eae8 003f  ld   $3f
-              eae9 0014  ld   $14
-              eaea 0014  ld   $14
-              eaeb 0028  ld   $28
-              eaec 0000  ld   $00
-              eaed 002b  ld   $2b         ;07e5 STW
-              eaee 00a7  ld   $a7         ;07e5 'Car1'
-              eaef 0011  ld   $11         ;07e7 LDWI
-              eaf0 00a0  ld   $a0
-              eaf1 0008  ld   $08
-              eaf2 002b  ld   $2b         ;07ea STW
-              eaf3 001c  ld   $1c
-              eaf4 00ff  ld   $ff         ;07ec RET
-              eaf5 0008  ld   $08         ;RAM loading address (high byte first)
+              eadd 0028  ld   $28
+              eade 003c  ld   $3c
+              eadf 003c  ld   $3c
+              eae0 0028  ld   $28
+              eae1 0040  ld   $40
+              eae2 0040  ld   $40
+              eae3 0040  ld   $40
+              eae4 0000  ld   $00
+              eae5 002b  ld   $2b         ;07dd STW
+              eae6 00a5  ld   $a5         ;07dd 'Car0'
+              eae7 00e1  ld   $e1         ;07df DEF
+              eae8 00e9  ld   $e9
+              eae9 0003  ld   $03
+              eaea 0028  ld   $28
+              eaeb 0014  ld   $14
+              eaec 0014  ld   $14
+              eaed 003f  ld   $3f
+              eaee 003f  ld   $3f
+              eaef 0014  ld   $14
+              eaf0 0014  ld   $14
+              eaf1 0028  ld   $28
+              eaf2 0000  ld   $00
+              eaf3 002b  ld   $2b         ;07eb STW
+              eaf4 00a7  ld   $a7         ;07eb 'Car1'
+              eaf5 0011  ld   $11         ;07ed LDWI
               eaf6 00a0  ld   $a0
-              eaf7 0060  ld   $60         ;Segment length (1..256)
-              eaf8 00e1  ld   $e1         ;08a0 DEF
-              eaf9 00ac  ld   $ac
-              eafa 0002  ld   $02
+              eaf7 0008  ld   $08
+              eaf8 002b  ld   $2b         ;07f0 STW
+              eaf9 001c  ld   $1c
+              eafa 00ff  ld   $ff         ;07f2 RET
               eafb fe00  bra  ac          ;+-----------------------------------+
               eafc fcfd  bra  $eafd       ;|                                   |
               eafd 1403  ld   $03,y       ;| Trampoline for page $ea00 lookups |
               eafe e078  jmp  y,$78       ;|                                   |
               eaff 1519  ld   [$19],y     ;+-----------------------------------+
-              eb00 0028  ld   $28
-              eb01 0014  ld   $14
-              eb02 0014  ld   $14
-              eb03 0014  ld   $14
-              eb04 0028  ld   $28
-              eb05 0028  ld   $28
-              eb06 0014  ld   $14
+              eb00 0008  ld   $08         ;| RAM segment address (high byte first)
+              eb01 00a0  ld   $a0         ;|
+              eb02 0060  ld   $60         ;| Length (1..256)
+              eb03 00e1  ld   $e1         ;08a0 DEF
+              eb04 00ac  ld   $ac
+              eb05 0002  ld   $02
+              eb06 0028  ld   $28
               eb07 0014  ld   $14
               eb08 0014  ld   $14
-              eb09 0028  ld   $28
-              eb0a 0000  ld   $00
-              eb0b 002b  ld   $2b         ;08ae STW
-              eb0c 00a9  ld   $a9         ;08ae 'Car2'
-              eb0d 00e1  ld   $e1         ;08b0 DEF
-              eb0e 00c0  ld   $c0
-              eb0f 0000  ld   $00
-              eb10 0040  ld   $40
-              eb11 0040  ld   $40
-              eb12 0040  ld   $40
-              eb13 0040  ld   $40
-              eb14 0028  ld   $28
-              eb15 0014  ld   $14
-              eb16 0014  ld   $14
-              eb17 0014  ld   $14
-              eb18 0014  ld   $14
-              eb19 0028  ld   $28
-              eb1a 0040  ld   $40
-              eb1b 0040  ld   $40
-              eb1c 0040  ld   $40
-              eb1d 0040  ld   $40
-              eb1e 0000  ld   $00
-              eb1f 002b  ld   $2b         ;08c2 STW
-              eb20 00ab  ld   $ab         ;08c2 'Car3'
-              eb21 00e1  ld   $e1         ;08c4 DEF
-              eb22 00d4  ld   $d4
-              eb23 0000  ld   $00
-              eb24 0040  ld   $40
-              eb25 0040  ld   $40
-              eb26 0040  ld   $40
-              eb27 0040  ld   $40
-              eb28 0015  ld   $15
-              eb29 0015  ld   $15
-              eb2a 0015  ld   $15
+              eb09 0014  ld   $14
+              eb0a 0028  ld   $28
+              eb0b 0028  ld   $28
+              eb0c 0014  ld   $14
+              eb0d 0014  ld   $14
+              eb0e 0014  ld   $14
+              eb0f 0028  ld   $28
+              eb10 0000  ld   $00
+              eb11 002b  ld   $2b         ;08ae STW
+              eb12 00a9  ld   $a9         ;08ae 'Car2'
+              eb13 00e1  ld   $e1         ;08b0 DEF
+              eb14 00c0  ld   $c0
+              eb15 0000  ld   $00
+              eb16 0040  ld   $40
+              eb17 0040  ld   $40
+              eb18 0040  ld   $40
+              eb19 0040  ld   $40
+              eb1a 0028  ld   $28
+              eb1b 0014  ld   $14
+              eb1c 0014  ld   $14
+              eb1d 0014  ld   $14
+              eb1e 0014  ld   $14
+              eb1f 0028  ld   $28
+              eb20 0040  ld   $40
+              eb21 0040  ld   $40
+              eb22 0040  ld   $40
+              eb23 0040  ld   $40
+              eb24 0000  ld   $00
+              eb25 002b  ld   $2b         ;08c2 STW
+              eb26 00ab  ld   $ab         ;08c2 'Car3'
+              eb27 00e1  ld   $e1         ;08c4 DEF
+              eb28 00d4  ld   $d4
+              eb29 0000  ld   $00
+              eb2a 0040  ld   $40
+              eb2b 0040  ld   $40
+              eb2c 0040  ld   $40
+              eb2d 0040  ld   $40
+              eb2e 0015  ld   $15
+              eb2f 0015  ld   $15
+              eb30 0015  ld   $15
               * 6 times
-              eb2e 0040  ld   $40
-              eb2f 0040  ld   $40
-              eb30 0040  ld   $40
-              eb31 0040  ld   $40
-              eb32 0000  ld   $00
-              eb33 002b  ld   $2b         ;08d6 STW
-              eb34 00ad  ld   $ad         ;08d6 'Car4'
-              eb35 00e1  ld   $e1         ;08d8 DEF
-              eb36 00f9  ld   $f9
-              eb37 0011  ld   $11         ;08da LDWI
-              eb38 002e  ld   $2e
-              eb39 0001  ld   $01
-              eb3a 002b  ld   $2b         ;08dd STW
-              eb3b 0025  ld   $25
-              eb3c 0059  ld   $59         ;08df LDI
-              eb3d 0020  ld   $20
-              eb3e 005e  ld   $5e         ;08e1 ST
-              eb3f 0027  ld   $27
-              eb40 0011  ld   $11         ;08e3 LDWI
-              eb41 0000  ld   $00
-              eb42 0008  ld   $08
-              eb43 002b  ld   $2b         ;08e6 STW
-              eb44 0063  ld   $63         ;08e6 'q'
-              eb45 0021  ld   $21         ;08e8 LDW
-              eb46 0063  ld   $63         ;08e8 'q'
-              eb47 0075  ld   $75         ;08ea LOOKUP
+              eb34 0040  ld   $40
+              eb35 0040  ld   $40
+              eb36 0040  ld   $40
+              eb37 0040  ld   $40
+              eb38 0000  ld   $00
+              eb39 002b  ld   $2b         ;08d6 STW
+              eb3a 00ad  ld   $ad         ;08d6 'Car4'
+              eb3b 00e1  ld   $e1         ;08d8 DEF
+              eb3c 00f9  ld   $f9
+              eb3d 0011  ld   $11         ;08da LDWI
+              eb3e 002e  ld   $2e
+              eb3f 0001  ld   $01
+              eb40 002b  ld   $2b         ;08dd STW
+              eb41 0025  ld   $25
+              eb42 0059  ld   $59         ;08df LDI
+              eb43 0020  ld   $20
+              eb44 005e  ld   $5e         ;08e1 ST
+              eb45 0027  ld   $27
+              eb46 0011  ld   $11         ;08e3 LDWI
+              eb47 0000  ld   $00
               eb48 0008  ld   $08
-              eb49 00c1  ld   $c1         ;08ec ADDW
-              eb4a 008b  ld   $8b         ;08ec 'Distance'
-              eb4b 005e  ld   $5e         ;08ee ST
-              eb4c 0028  ld   $28
-              eb4d 0011  ld   $11         ;08f0 LDWI
-              eb4e 0019  ld   $19
-              eb4f 00e2  ld   $e2
-              eb50 00a9  ld   $a9         ;08f3 SYS
-              eb51 00fa  ld   $fa
-              eb52 00f9  ld   $f9         ;08f5 INC
-              eb53 0063  ld   $63         ;08f5 'q'
-              eb54 0035  ld   $35         ;08f7 BCC
-              eb55 0072  ld   $72         ;08f8 NE
-              eb56 00e6  ld   $e6
-              eb57 00ff  ld   $ff         ;08fa RET
-              eb58 002b  ld   $2b         ;08fb STW
-              eb59 009f  ld   $9f         ;08fb 'DrawGrass'
-              eb5a 00f9  ld   $f9         ;08fd INC
-              eb5b 001d  ld   $1d
-              eb5c 00ff  ld   $ff         ;08ff RET
-              eb5d 0009  ld   $09         ;RAM loading address (high byte first)
-              eb5e 00a0  ld   $a0
-              eb5f 0023  ld   $23         ;Segment length (1..256)
-              eb60 00e1  ld   $e1         ;09a0 DEF
-              eb61 00bc  ld   $bc
-              eb62 001a  ld   $1a         ;09a2 LD
-              eb63 0046  ld   $46         ;09a2 'Speed'+1
-              eb64 00c1  ld   $c1         ;09a4 ADDW
-              eb65 008b  ld   $8b         ;09a4 'Distance'
-              eb66 002b  ld   $2b         ;09a6 STW
-              eb67 008b  ld   $8b         ;09a6 'Distance'
-              eb68 0011  ld   $11         ;09a8 LDWI
-              eb69 00f4  ld   $f4
-              eb6a 000e  ld   $0e
-              eb6b 002b  ld   $2b         ;09ab STW
-              eb6c 0061  ld   $61         ;09ab 'p'
-              eb6d 001a  ld   $1a         ;09ad LD
-              eb6e 008c  ld   $8c         ;09ad 'Distance'+1
-              eb6f 00c1  ld   $c1         ;09af ADDW
-              eb70 0061  ld   $61         ;09af 'p'
-              eb71 002b  ld   $2b         ;09b1 STW
-              eb72 0061  ld   $61         ;09b1 'p'
-              eb73 0059  ld   $59         ;09b3 LDI
-              eb74 0015  ld   $15
-              eb75 0098  ld   $98         ;09b5 POKE
-              eb76 0061  ld   $61         ;09b5 'p'
-              eb77 00f9  ld   $f9         ;09b7 INC
-              eb78 0061  ld   $61         ;09b7 'p'
-              eb79 0059  ld   $59         ;09b9 LDI
-              eb7a 003c  ld   $3c
-              eb7b 0098  ld   $98         ;09bb POKE
-              eb7c 0061  ld   $61         ;09bb 'p'
-              eb7d 00ff  ld   $ff         ;09bd RET
-              eb7e 002b  ld   $2b         ;09be STW
-              eb7f 0095  ld   $95         ;09be 'AdvanceCar'
-              eb80 00f9  ld   $f9         ;09c0 INC
-              eb81 001d  ld   $1d
-              eb82 00ff  ld   $ff         ;09c2 RET
-              eb83 000a  ld   $0a         ;RAM loading address (high byte first)
-              eb84 00a0  ld   $a0
-              eb85 0041  ld   $41         ;Segment length (1..256)
-              eb86 00e1  ld   $e1         ;0aa0 DEF
-              eb87 00da  ld   $da
-              eb88 007d  ld   $7d         ;0aa2 PUSH
-              eb89 0011  ld   $11         ;0aa3 LDWI
-              eb8a 00d9  ld   $d9
-              eb8b 0001  ld   $01
-              eb8c 00d5  ld   $d5         ;0aa6 PEEK
-              eb8d 0091  ld   $91         ;0aa7 XORI
-              eb8e 00ff  ld   $ff
-              eb8f 002b  ld   $2b         ;0aa9 STW
-              eb90 0069  ld   $69         ;0aa9 'X'
-              eb91 001a  ld   $1a         ;0aab LD
-              eb92 0048  ld   $48         ;0aab 'CarX'+1
-              eb93 00c1  ld   $c1         ;0aad ADDW
-              eb94 0069  ld   $69         ;0aad 'X'
-              eb95 002b  ld   $2b         ;0aaf STW
-              eb96 0069  ld   $69         ;0aaf 'X'
-              eb97 0011  ld   $11         ;0ab1 LDWI
-              eb98 00d8  ld   $d8
-              eb99 0001  ld   $01
-              eb9a 002b  ld   $2b         ;0ab4 STW
-              eb9b 005f  ld   $5f         ;0ab4 'Video'
-              eb9c 0021  ld   $21         ;0ab6 LDW
-              eb9d 00a5  ld   $a5         ;0ab6 'Car0'
-              eb9e 002b  ld   $2b         ;0ab8 STW
-              eb9f 0065  ld   $65         ;0ab8 'Sprite'
-              eba0 00e3  ld   $e3         ;0aba CALL
-              eba1 006d  ld   $6d         ;0aba 'DrawPixels'
-              eba2 0021  ld   $21         ;0abc LDW
-              eba3 00a7  ld   $a7         ;0abc 'Car1'
-              eba4 002b  ld   $2b         ;0abe STW
-              eba5 0065  ld   $65         ;0abe 'Sprite'
-              eba6 00e3  ld   $e3         ;0ac0 CALL
-              eba7 006d  ld   $6d         ;0ac0 'DrawPixels'
-              eba8 0021  ld   $21         ;0ac2 LDW
-              eba9 0069  ld   $69         ;0ac2 'X'
-              ebaa 00ad  ld   $ad         ;0ac4 SUBW
-              ebab 004f  ld   $4f         ;0ac4 'Steer'
-              ebac 002b  ld   $2b         ;0ac6 STW
-              ebad 0069  ld   $69         ;0ac6 'X'
-              ebae 0021  ld   $21         ;0ac8 LDW
-              ebaf 00a9  ld   $a9         ;0ac8 'Car2'
-              ebb0 002b  ld   $2b         ;0aca STW
-              ebb1 0065  ld   $65         ;0aca 'Sprite'
-              ebb2 00e3  ld   $e3         ;0acc CALL
-              ebb3 006d  ld   $6d         ;0acc 'DrawPixels'
-              ebb4 0021  ld   $21         ;0ace LDW
-              ebb5 00ab  ld   $ab         ;0ace 'Car3'
-              ebb6 002b  ld   $2b         ;0ad0 STW
-              ebb7 0065  ld   $65         ;0ad0 'Sprite'
-              ebb8 00e3  ld   $e3         ;0ad2 CALL
-              ebb9 006d  ld   $6d         ;0ad2 'DrawPixels'
-              ebba 0021  ld   $21         ;0ad4 LDW
-              ebbb 00ad  ld   $ad         ;0ad4 'Car4'
-              ebbc 002b  ld   $2b         ;0ad6 STW
-              ebbd 0065  ld   $65         ;0ad6 'Sprite'
-              ebbe 00e3  ld   $e3         ;0ad8 CALL
-              ebbf 006d  ld   $6d         ;0ad8 'DrawPixels'
-              ebc0 0063  ld   $63         ;0ada POP
-              ebc1 00ff  ld   $ff         ;0adb RET
-              ebc2 002b  ld   $2b         ;0adc STW
-              ebc3 009d  ld   $9d         ;0adc 'DrawRaceCar'
-              ebc4 00f9  ld   $f9         ;0ade INC
-              ebc5 001d  ld   $1d
-              ebc6 00ff  ld   $ff         ;0ae0 RET
-              ebc7 000b  ld   $0b         ;RAM loading address (high byte first)
-              ebc8 00a0  ld   $a0
-              ebc9 0052  ld   $52         ;Segment length (1..256)
-              ebca 00e1  ld   $e1         ;0ba0 DEF
-              ebcb 00eb  ld   $eb
-              ebcc 007d  ld   $7d         ;0ba2 PUSH
-              ebcd 0059  ld   $59         ;0ba3 LDI
-              ebce 0030  ld   $30
-              ebcf 002b  ld   $2b         ;0ba5 STW
-              ebd0 0039  ld   $39         ;0ba5 'BgColor'
-              ebd1 0021  ld   $21         ;0ba7 LDW
-              ebd2 0039  ld   $39         ;0ba7 'BgColor'
-              ebd3 005e  ld   $5e         ;0ba9 ST
-              ebd4 0025  ld   $25
-              ebd5 005e  ld   $5e         ;0bab ST
-              ebd6 0026  ld   $26
-              ebd7 0011  ld   $11         ;0bad LDWI
-              ebd8 0000  ld   $00
-              ebd9 0008  ld   $08
-              ebda 002b  ld   $2b         ;0bb0 STW
-              ebdb 0021  ld   $21
-              ebdc 0011  ld   $11         ;0bb2 LDWI
-              ebdd 0098  ld   $98
-              ebde 0004  ld   $04
-              ebdf 00a9  ld   $a9         ;0bb5 SYS
-              ebe0 00cb  ld   $cb
-              ebe1 00f9  ld   $f9         ;0bb7 INC
-              ebe2 0021  ld   $21
-              ebe3 001a  ld   $1a         ;0bb9 LD
-              ebe4 0021  ld   $21
-              ebe5 0091  ld   $91         ;0bbb XORI
-              ebe6 00a0  ld   $a0
-              ebe7 0035  ld   $35         ;0bbd BCC
-              ebe8 0072  ld   $72         ;0bbe NE
-              ebe9 00b0  ld   $b0
-              ebea 0059  ld   $59         ;0bc0 LDI
-              ebeb 003f  ld   $3f
-              ebec 002b  ld   $2b         ;0bc2 STW
-              ebed 003b  ld   $3b         ;0bc2 'Color'
-              ebee 0011  ld   $11         ;0bc4 LDWI
-              ebef 0001  ld   $01
-              ebf0 0008  ld   $08
-              ebf1 002b  ld   $2b         ;0bc7 STW
-              ebf2 003d  ld   $3d         ;0bc7 'Pos'
-              ebf3 0021  ld   $21         ;0bc9 LDW
-              ebf4 00a3  ld   $a3         ;0bc9 'EmptyTimeText'
-              ebf5 002b  ld   $2b         ;0bcb STW
-              ebf6 0083  ld   $83         ;0bcb 'Text'
-              ebf7 00e3  ld   $e3         ;0bcd CALL
-              ebf8 0085  ld   $85         ;0bcd 'DrawText'
-              ebf9 0011  ld   $11         ;0bcf LDWI
-              ebfa 007c  ld   $7c
+              eb49 002b  ld   $2b         ;08e6 STW
+              eb4a 0063  ld   $63         ;08e6 'q'
+              eb4b 0021  ld   $21         ;08e8 LDW
+              eb4c 0063  ld   $63         ;08e8 'q'
+              eb4d 0075  ld   $75         ;08ea LOOKUP
+              eb4e 0008  ld   $08
+              eb4f 00c1  ld   $c1         ;08ec ADDW
+              eb50 008b  ld   $8b         ;08ec 'Distance'
+              eb51 005e  ld   $5e         ;08ee ST
+              eb52 0028  ld   $28
+              eb53 0011  ld   $11         ;08f0 LDWI
+              eb54 0019  ld   $19
+              eb55 00e2  ld   $e2
+              eb56 00a9  ld   $a9         ;08f3 SYS
+              eb57 00fa  ld   $fa
+              eb58 00f9  ld   $f9         ;08f5 INC
+              eb59 0063  ld   $63         ;08f5 'q'
+              eb5a 0035  ld   $35         ;08f7 BCC
+              eb5b 0072  ld   $72         ;08f8 NE
+              eb5c 00e6  ld   $e6
+              eb5d 00ff  ld   $ff         ;08fa RET
+              eb5e 002b  ld   $2b         ;08fb STW
+              eb5f 009f  ld   $9f         ;08fb 'DrawGrass'
+              eb60 00f9  ld   $f9         ;08fd INC
+              eb61 001d  ld   $1d
+              eb62 00ff  ld   $ff         ;08ff RET
+              eb63 0009  ld   $09         ;| RAM segment address (high byte first)
+              eb64 00a0  ld   $a0         ;|
+              eb65 0023  ld   $23         ;| Length (1..256)
+              eb66 00e1  ld   $e1         ;09a0 DEF
+              eb67 00bc  ld   $bc
+              eb68 001a  ld   $1a         ;09a2 LD
+              eb69 0046  ld   $46         ;09a2 'Speed'+1
+              eb6a 00c1  ld   $c1         ;09a4 ADDW
+              eb6b 008b  ld   $8b         ;09a4 'Distance'
+              eb6c 002b  ld   $2b         ;09a6 STW
+              eb6d 008b  ld   $8b         ;09a6 'Distance'
+              eb6e 0011  ld   $11         ;09a8 LDWI
+              eb6f 00f4  ld   $f4
+              eb70 000e  ld   $0e
+              eb71 002b  ld   $2b         ;09ab STW
+              eb72 0061  ld   $61         ;09ab 'p'
+              eb73 001a  ld   $1a         ;09ad LD
+              eb74 008c  ld   $8c         ;09ad 'Distance'+1
+              eb75 00c1  ld   $c1         ;09af ADDW
+              eb76 0061  ld   $61         ;09af 'p'
+              eb77 002b  ld   $2b         ;09b1 STW
+              eb78 0061  ld   $61         ;09b1 'p'
+              eb79 0059  ld   $59         ;09b3 LDI
+              eb7a 0015  ld   $15
+              eb7b 0098  ld   $98         ;09b5 POKE
+              eb7c 0061  ld   $61         ;09b5 'p'
+              eb7d 00f9  ld   $f9         ;09b7 INC
+              eb7e 0061  ld   $61         ;09b7 'p'
+              eb7f 0059  ld   $59         ;09b9 LDI
+              eb80 003c  ld   $3c
+              eb81 0098  ld   $98         ;09bb POKE
+              eb82 0061  ld   $61         ;09bb 'p'
+              eb83 00ff  ld   $ff         ;09bd RET
+              eb84 002b  ld   $2b         ;09be STW
+              eb85 0095  ld   $95         ;09be 'AdvanceCar'
+              eb86 00f9  ld   $f9         ;09c0 INC
+              eb87 001d  ld   $1d
+              eb88 00ff  ld   $ff         ;09c2 RET
+              eb89 000a  ld   $0a         ;| RAM segment address (high byte first)
+              eb8a 00a0  ld   $a0         ;|
+              eb8b 0041  ld   $41         ;| Length (1..256)
+              eb8c 00e1  ld   $e1         ;0aa0 DEF
+              eb8d 00da  ld   $da
+              eb8e 007d  ld   $7d         ;0aa2 PUSH
+              eb8f 0011  ld   $11         ;0aa3 LDWI
+              eb90 00d9  ld   $d9
+              eb91 0001  ld   $01
+              eb92 00d5  ld   $d5         ;0aa6 PEEK
+              eb93 0091  ld   $91         ;0aa7 XORI
+              eb94 00ff  ld   $ff
+              eb95 002b  ld   $2b         ;0aa9 STW
+              eb96 0069  ld   $69         ;0aa9 'X'
+              eb97 001a  ld   $1a         ;0aab LD
+              eb98 0048  ld   $48         ;0aab 'CarX'+1
+              eb99 00c1  ld   $c1         ;0aad ADDW
+              eb9a 0069  ld   $69         ;0aad 'X'
+              eb9b 002b  ld   $2b         ;0aaf STW
+              eb9c 0069  ld   $69         ;0aaf 'X'
+              eb9d 0011  ld   $11         ;0ab1 LDWI
+              eb9e 00d8  ld   $d8
+              eb9f 0001  ld   $01
+              eba0 002b  ld   $2b         ;0ab4 STW
+              eba1 005f  ld   $5f         ;0ab4 'Video'
+              eba2 0021  ld   $21         ;0ab6 LDW
+              eba3 00a5  ld   $a5         ;0ab6 'Car0'
+              eba4 002b  ld   $2b         ;0ab8 STW
+              eba5 0065  ld   $65         ;0ab8 'Sprite'
+              eba6 00e3  ld   $e3         ;0aba CALL
+              eba7 006d  ld   $6d         ;0aba 'DrawPixels'
+              eba8 0021  ld   $21         ;0abc LDW
+              eba9 00a7  ld   $a7         ;0abc 'Car1'
+              ebaa 002b  ld   $2b         ;0abe STW
+              ebab 0065  ld   $65         ;0abe 'Sprite'
+              ebac 00e3  ld   $e3         ;0ac0 CALL
+              ebad 006d  ld   $6d         ;0ac0 'DrawPixels'
+              ebae 0021  ld   $21         ;0ac2 LDW
+              ebaf 0069  ld   $69         ;0ac2 'X'
+              ebb0 00ad  ld   $ad         ;0ac4 SUBW
+              ebb1 004f  ld   $4f         ;0ac4 'Steer'
+              ebb2 002b  ld   $2b         ;0ac6 STW
+              ebb3 0069  ld   $69         ;0ac6 'X'
+              ebb4 0021  ld   $21         ;0ac8 LDW
+              ebb5 00a9  ld   $a9         ;0ac8 'Car2'
+              ebb6 002b  ld   $2b         ;0aca STW
+              ebb7 0065  ld   $65         ;0aca 'Sprite'
+              ebb8 00e3  ld   $e3         ;0acc CALL
+              ebb9 006d  ld   $6d         ;0acc 'DrawPixels'
+              ebba 0021  ld   $21         ;0ace LDW
+              ebbb 00ab  ld   $ab         ;0ace 'Car3'
+              ebbc 002b  ld   $2b         ;0ad0 STW
+              ebbd 0065  ld   $65         ;0ad0 'Sprite'
+              ebbe 00e3  ld   $e3         ;0ad2 CALL
+              ebbf 006d  ld   $6d         ;0ad2 'DrawPixels'
+              ebc0 0021  ld   $21         ;0ad4 LDW
+              ebc1 00ad  ld   $ad         ;0ad4 'Car4'
+              ebc2 002b  ld   $2b         ;0ad6 STW
+              ebc3 0065  ld   $65         ;0ad6 'Sprite'
+              ebc4 00e3  ld   $e3         ;0ad8 CALL
+              ebc5 006d  ld   $6d         ;0ad8 'DrawPixels'
+              ebc6 0063  ld   $63         ;0ada POP
+              ebc7 00ff  ld   $ff         ;0adb RET
+              ebc8 002b  ld   $2b         ;0adc STW
+              ebc9 009d  ld   $9d         ;0adc 'DrawRaceCar'
+              ebca 00f9  ld   $f9         ;0ade INC
+              ebcb 001d  ld   $1d
+              ebcc 00ff  ld   $ff         ;0ae0 RET
+              ebcd 000b  ld   $0b         ;| RAM segment address (high byte first)
+              ebce 00a0  ld   $a0         ;|
+              ebcf 0052  ld   $52         ;| Length (1..256)
+              ebd0 00e1  ld   $e1         ;0ba0 DEF
+              ebd1 00eb  ld   $eb
+              ebd2 007d  ld   $7d         ;0ba2 PUSH
+              ebd3 0059  ld   $59         ;0ba3 LDI
+              ebd4 0030  ld   $30
+              ebd5 002b  ld   $2b         ;0ba5 STW
+              ebd6 0039  ld   $39         ;0ba5 'BgColor'
+              ebd7 0021  ld   $21         ;0ba7 LDW
+              ebd8 0039  ld   $39         ;0ba7 'BgColor'
+              ebd9 005e  ld   $5e         ;0ba9 ST
+              ebda 0025  ld   $25
+              ebdb 005e  ld   $5e         ;0bab ST
+              ebdc 0026  ld   $26
+              ebdd 0011  ld   $11         ;0bad LDWI
+              ebde 0000  ld   $00
+              ebdf 0008  ld   $08
+              ebe0 002b  ld   $2b         ;0bb0 STW
+              ebe1 0021  ld   $21
+              ebe2 0011  ld   $11         ;0bb2 LDWI
+              ebe3 0098  ld   $98
+              ebe4 0004  ld   $04
+              ebe5 00a9  ld   $a9         ;0bb5 SYS
+              ebe6 00cb  ld   $cb
+              ebe7 00f9  ld   $f9         ;0bb7 INC
+              ebe8 0021  ld   $21
+              ebe9 001a  ld   $1a         ;0bb9 LD
+              ebea 0021  ld   $21
+              ebeb 0091  ld   $91         ;0bbb XORI
+              ebec 00a0  ld   $a0
+              ebed 0035  ld   $35         ;0bbd BCC
+              ebee 0072  ld   $72         ;0bbe NE
+              ebef 00b0  ld   $b0
+              ebf0 0059  ld   $59         ;0bc0 LDI
+              ebf1 003f  ld   $3f
+              ebf2 002b  ld   $2b         ;0bc2 STW
+              ebf3 003b  ld   $3b         ;0bc2 'Color'
+              ebf4 0011  ld   $11         ;0bc4 LDWI
+              ebf5 0001  ld   $01
+              ebf6 0008  ld   $08
+              ebf7 002b  ld   $2b         ;0bc7 STW
+              ebf8 003d  ld   $3d         ;0bc7 'Pos'
+              ebf9 0021  ld   $21         ;0bc9 LDW
+              ebfa 00a3  ld   $a3         ;0bc9 'EmptyTimeText'
               ebfb fe00  bra  ac          ;+-----------------------------------+
               ebfc fcfd  bra  $ebfd       ;|                                   |
               ebfd 1403  ld   $03,y       ;| Trampoline for page $eb00 lookups |
               ebfe e078  jmp  y,$78       ;|                                   |
               ebff 1519  ld   [$19],y     ;+-----------------------------------+
-              ec00 0008  ld   $08
-              ec01 002b  ld   $2b         ;0bd2 STW
-              ec02 003d  ld   $3d         ;0bd2 'Pos'
-              ec03 0021  ld   $21         ;0bd4 LDW
-              ec04 00a3  ld   $a3         ;0bd4 'EmptyTimeText'
-              ec05 002b  ld   $2b         ;0bd6 STW
-              ec06 0083  ld   $83         ;0bd6 'Text'
-              ec07 00e3  ld   $e3         ;0bd8 CALL
-              ec08 0085  ld   $85         ;0bd8 'DrawText'
-              ec09 0011  ld   $11         ;0bda LDWI
-              ec0a 0038  ld   $38
-              ec0b 0008  ld   $08
-              ec0c 002b  ld   $2b         ;0bdd STW
-              ec0d 003d  ld   $3d         ;0bdd 'Pos'
-              ec0e 0021  ld   $21         ;0bdf LDW
-              ec0f 0053  ld   $53         ;0bdf 'GigatronText'
-              ec10 002b  ld   $2b         ;0be1 STW
-              ec11 0083  ld   $83         ;0be1 'Text'
-              ec12 00e3  ld   $e3         ;0be3 CALL
-              ec13 0085  ld   $85         ;0be3 'DrawText'
-              ec14 0059  ld   $59         ;0be5 LDI
-              ec15 003c  ld   $3c
-              ec16 002b  ld   $2b         ;0be7 STW
-              ec17 0055  ld   $55         ;0be7 'Delay'
-              ec18 00e3  ld   $e3         ;0be9 CALL
-              ec19 0057  ld   $57         ;0be9 'Wait'
-              ec1a 0063  ld   $63         ;0beb POP
-              ec1b 00ff  ld   $ff         ;0bec RET
-              ec1c 002b  ld   $2b         ;0bed STW
-              ec1d 00af  ld   $af         ;0bed 'Intro'
-              ec1e 00f9  ld   $f9         ;0bef INC
-              ec1f 001d  ld   $1d
-              ec20 00ff  ld   $ff         ;0bf1 RET
-              ec21 000c  ld   $0c         ;RAM loading address (high byte first)
-              ec22 00a0  ld   $a0
-              ec23 0003  ld   $03         ;Segment length (1..256)
-              ec24 00f9  ld   $f9         ;0ca0 INC
+              ec00 002b  ld   $2b         ;0bcb STW
+              ec01 0083  ld   $83         ;0bcb 'Text'
+              ec02 00e3  ld   $e3         ;0bcd CALL
+              ec03 0085  ld   $85         ;0bcd 'DrawText'
+              ec04 0011  ld   $11         ;0bcf LDWI
+              ec05 007c  ld   $7c
+              ec06 0008  ld   $08
+              ec07 002b  ld   $2b         ;0bd2 STW
+              ec08 003d  ld   $3d         ;0bd2 'Pos'
+              ec09 0021  ld   $21         ;0bd4 LDW
+              ec0a 00a3  ld   $a3         ;0bd4 'EmptyTimeText'
+              ec0b 002b  ld   $2b         ;0bd6 STW
+              ec0c 0083  ld   $83         ;0bd6 'Text'
+              ec0d 00e3  ld   $e3         ;0bd8 CALL
+              ec0e 0085  ld   $85         ;0bd8 'DrawText'
+              ec0f 0011  ld   $11         ;0bda LDWI
+              ec10 0038  ld   $38
+              ec11 0008  ld   $08
+              ec12 002b  ld   $2b         ;0bdd STW
+              ec13 003d  ld   $3d         ;0bdd 'Pos'
+              ec14 0021  ld   $21         ;0bdf LDW
+              ec15 0053  ld   $53         ;0bdf 'GigatronText'
+              ec16 002b  ld   $2b         ;0be1 STW
+              ec17 0083  ld   $83         ;0be1 'Text'
+              ec18 00e3  ld   $e3         ;0be3 CALL
+              ec19 0085  ld   $85         ;0be3 'DrawText'
+              ec1a 0059  ld   $59         ;0be5 LDI
+              ec1b 003c  ld   $3c
+              ec1c 002b  ld   $2b         ;0be7 STW
+              ec1d 0055  ld   $55         ;0be7 'Delay'
+              ec1e 00e3  ld   $e3         ;0be9 CALL
+              ec1f 0057  ld   $57         ;0be9 'Wait'
+              ec20 0063  ld   $63         ;0beb POP
+              ec21 00ff  ld   $ff         ;0bec RET
+              ec22 002b  ld   $2b         ;0bed STW
+              ec23 00af  ld   $af         ;0bed 'Intro'
+              ec24 00f9  ld   $f9         ;0bef INC
               ec25 001d  ld   $1d
-              ec26 00ff  ld   $ff         ;0ca2 RET
-              ec27 000d  ld   $0d         ;RAM loading address (high byte first)
-              ec28 00a0  ld   $a0
-              ec29 0003  ld   $03         ;Segment length (1..256)
-              ec2a 00f9  ld   $f9         ;0da0 INC
+              ec26 00ff  ld   $ff         ;0bf1 RET
+              ec27 000c  ld   $0c         ;| RAM segment address (high byte first)
+              ec28 00a0  ld   $a0         ;|
+              ec29 0003  ld   $03         ;| Length (1..256)
+              ec2a 00f9  ld   $f9         ;0ca0 INC
               ec2b 001d  ld   $1d
-              ec2c 00ff  ld   $ff         ;0da2 RET
-              ec2d 000e  ld   $0e         ;RAM loading address (high byte first)
-              ec2e 00a0  ld   $a0
-              ec2f 0057  ld   $57         ;Segment length (1..256)
-              ec30 00e1  ld   $e1         ;0ea0 DEF
-              ec31 00f0  ld   $f0
-              ec32 007d  ld   $7d         ;0ea2 PUSH
-              ec33 0011  ld   $11         ;0ea3 LDWI
-              ec34 0000  ld   $00
-              ec35 00d5  ld   $d5
-              ec36 002b  ld   $2b         ;0ea6 STW
-              ec37 0061  ld   $61         ;0ea6 'p'
-              ec38 0011  ld   $11         ;0ea8 LDWI
-              ec39 0000  ld   $00
-              ec3a 0010  ld   $10
-              ec3b 002b  ld   $2b         ;0eab STW
-              ec3c 0063  ld   $63         ;0eab 'q'
-              ec3d 00e1  ld   $e1         ;0ead DEF
-              ec3e 00bf  ld   $bf
-              ec3f 001a  ld   $1a         ;0eaf LD
-              ec40 0061  ld   $61         ;0eaf 'p'
-              ec41 0091  ld   $91         ;0eb1 XORI
-              ec42 00fa  ld   $fa
-              ec43 0035  ld   $35         ;0eb3 BCC
-              ec44 003f  ld   $3f         ;0eb4 EQ
-              ec45 00b8  ld   $b8
-              ec46 0059  ld   $59         ;0eb6 LDI
-              ec47 0001  ld   $01
-              ec48 0095  ld   $95         ;0eb8 BRA
-              ec49 00ba  ld   $ba
-              ec4a 0059  ld   $59         ;0eba LDI
-              ec4b 0006  ld   $06
-              ec4c 00c1  ld   $c1         ;0ebc ADDW
-              ec4d 0061  ld   $61         ;0ebc 'p'
-              ec4e 002b  ld   $2b         ;0ebe STW
-              ec4f 0061  ld   $61         ;0ebe 'p'
-              ec50 00ff  ld   $ff         ;0ec0 RET
-              ec51 002b  ld   $2b         ;0ec1 STW
-              ec52 0037  ld   $37         ;0ec1 'tmp'
-              ec53 0021  ld   $21         ;0ec3 LDW
-              ec54 0061  ld   $61         ;0ec3 'p'
-              ec55 0075  ld   $75         ;0ec5 LOOKUP
-              ec56 0000  ld   $00
-              ec57 005e  ld   $5e         ;0ec7 ST
-              ec58 0025  ld   $25
-              ec59 00e3  ld   $e3         ;0ec9 CALL
-              ec5a 0037  ld   $37         ;0ec9 'tmp'
-              ec5b 0075  ld   $75         ;0ecb LOOKUP
+              ec2c 00ff  ld   $ff         ;0ca2 RET
+              ec2d 000d  ld   $0d         ;| RAM segment address (high byte first)
+              ec2e 00a0  ld   $a0         ;|
+              ec2f 0003  ld   $03         ;| Length (1..256)
+              ec30 00f9  ld   $f9         ;0da0 INC
+              ec31 001d  ld   $1d
+              ec32 00ff  ld   $ff         ;0da2 RET
+              ec33 000e  ld   $0e         ;| RAM segment address (high byte first)
+              ec34 00a0  ld   $a0         ;|
+              ec35 0057  ld   $57         ;| Length (1..256)
+              ec36 00e1  ld   $e1         ;0ea0 DEF
+              ec37 00f0  ld   $f0
+              ec38 007d  ld   $7d         ;0ea2 PUSH
+              ec39 0011  ld   $11         ;0ea3 LDWI
+              ec3a 0000  ld   $00
+              ec3b 00d5  ld   $d5
+              ec3c 002b  ld   $2b         ;0ea6 STW
+              ec3d 0061  ld   $61         ;0ea6 'p'
+              ec3e 0011  ld   $11         ;0ea8 LDWI
+              ec3f 0000  ld   $00
+              ec40 0010  ld   $10
+              ec41 002b  ld   $2b         ;0eab STW
+              ec42 0063  ld   $63         ;0eab 'q'
+              ec43 00e1  ld   $e1         ;0ead DEF
+              ec44 00bf  ld   $bf
+              ec45 001a  ld   $1a         ;0eaf LD
+              ec46 0061  ld   $61         ;0eaf 'p'
+              ec47 0091  ld   $91         ;0eb1 XORI
+              ec48 00fa  ld   $fa
+              ec49 0035  ld   $35         ;0eb3 BCC
+              ec4a 003f  ld   $3f         ;0eb4 EQ
+              ec4b 00b8  ld   $b8
+              ec4c 0059  ld   $59         ;0eb6 LDI
+              ec4d 0001  ld   $01
+              ec4e 0095  ld   $95         ;0eb8 BRA
+              ec4f 00ba  ld   $ba
+              ec50 0059  ld   $59         ;0eba LDI
+              ec51 0006  ld   $06
+              ec52 00c1  ld   $c1         ;0ebc ADDW
+              ec53 0061  ld   $61         ;0ebc 'p'
+              ec54 002b  ld   $2b         ;0ebe STW
+              ec55 0061  ld   $61         ;0ebe 'p'
+              ec56 00ff  ld   $ff         ;0ec0 RET
+              ec57 002b  ld   $2b         ;0ec1 STW
+              ec58 0037  ld   $37         ;0ec1 'tmp'
+              ec59 0021  ld   $21         ;0ec3 LDW
+              ec5a 0061  ld   $61         ;0ec3 'p'
+              ec5b 0075  ld   $75         ;0ec5 LOOKUP
               ec5c 0000  ld   $00
-              ec5d 005e  ld   $5e         ;0ecd ST
-              ec5e 0026  ld   $26
-              ec5f 00e3  ld   $e3         ;0ecf CALL
-              ec60 0037  ld   $37         ;0ecf 'tmp'
-              ec61 0075  ld   $75         ;0ed1 LOOKUP
+              ec5d 005e  ld   $5e         ;0ec7 ST
+              ec5e 0025  ld   $25
+              ec5f 00e3  ld   $e3         ;0ec9 CALL
+              ec60 0037  ld   $37         ;0ec9 'tmp'
+              ec61 0075  ld   $75         ;0ecb LOOKUP
               ec62 0000  ld   $00
-              ec63 005e  ld   $5e         ;0ed3 ST
-              ec64 0027  ld   $27
-              ec65 00e3  ld   $e3         ;0ed5 CALL
-              ec66 0037  ld   $37         ;0ed5 'tmp'
-              ec67 0011  ld   $11         ;0ed7 LDWI
-              ec68 0064  ld   $64
-              ec69 0004  ld   $04
-              ec6a 00a9  ld   $a9         ;0eda SYS
-              ec6b 00f2  ld   $f2
-              ec6c 0021  ld   $21         ;0edc LDW
-              ec6d 0063  ld   $63         ;0edc 'q'
-              ec6e 002b  ld   $2b         ;0ede STW
-              ec6f 0021  ld   $21
-              ec70 00f3  ld   $f3         ;0ee0 ADDI
-              ec71 0004  ld   $04
-              ec72 002b  ld   $2b         ;0ee2 STW
-              ec73 0063  ld   $63         ;0ee2 'q'
-              ec74 0011  ld   $11         ;0ee4 LDWI
-              ec75 008b  ld   $8b
-              ec76 0004  ld   $04
-              ec77 00a9  ld   $a9         ;0ee7 SYS
-              ec78 00ff  ld   $ff
-              ec79 001a  ld   $1a         ;0ee9 LD
-              ec7a 0064  ld   $64         ;0ee9 'q'+1
-              ec7b 0091  ld   $91         ;0eeb XORI
-              ec7c 0020  ld   $20
-              ec7d 0035  ld   $35         ;0eed BCC
-              ec7e 0072  ld   $72         ;0eee NE
-              ec7f 00c1  ld   $c1
-              ec80 0063  ld   $63         ;0ef0 POP
-              ec81 00ff  ld   $ff         ;0ef1 RET
-              ec82 002b  ld   $2b         ;0ef2 STW
-              ec83 00b1  ld   $b1         ;0ef2 'SetupHorizon'
-              ec84 00f9  ld   $f9         ;0ef4 INC
-              ec85 001d  ld   $1d
-              ec86 00ff  ld   $ff         ;0ef6 RET
-              ec87 000f  ld   $0f         ;RAM loading address (high byte first)
-              ec88 00a0  ld   $a0
-              ec89 0056  ld   $56         ;Segment length (1..256)
-              ec8a 00e3  ld   $e3         ;0fa0 CALL
-              ec8b 00af  ld   $af         ;0fa0 'Intro'
-              ec8c 0011  ld   $11         ;0fa2 LDWI
-              ec8d 0000  ld   $00
-              ec8e 0074  ld   $74
-              ec8f 002b  ld   $2b         ;0fa5 STW
-              ec90 008b  ld   $8b         ;0fa5 'Distance'
-              ec91 002b  ld   $2b         ;0fa7 STW
-              ec92 0089  ld   $89         ;0fa7 'NextTurn'
-              ec93 0059  ld   $59         ;0fa9 LDI
-              ec94 0000  ld   $00
-              ec95 002b  ld   $2b         ;0fab STW
-              ec96 009b  ld   $9b         ;0fab 'Random'
-              ec97 002b  ld   $2b         ;0fad STW
-              ec98 008d  ld   $8d         ;0fad 'DDX'
-              ec99 002b  ld   $2b         ;0faf STW
-              ec9a 008f  ld   $8f         ;0faf 'NextDDX'
-              ec9b 00e3  ld   $e3         ;0fb1 CALL
-              ec9c 0091  ld   $91         ;0fb1 'DrawRoad'
-              ec9d 00e3  ld   $e3         ;0fb3 CALL
-              ec9e 009f  ld   $9f         ;0fb3 'DrawGrass'
-              ec9f 00e3  ld   $e3         ;0fb5 CALL
-              eca0 00b1  ld   $b1         ;0fb5 'SetupHorizon'
-              eca1 00e3  ld   $e3         ;0fb7 CALL
-              eca2 0077  ld   $77         ;0fb7 'SetupRoad'
-              eca3 0011  ld   $11         ;0fb9 LDWI
-              eca4 00ff  ld   $ff
-              eca5 007f  ld   $7f
-              eca6 002b  ld   $2b         ;0fbc STW
-              eca7 0097  ld   $97         ;0fbc 'BestTime'
-              eca8 0059  ld   $59         ;0fbe LDI
-              eca9 0000  ld   $00
-              ecaa 002b  ld   $2b         ;0fc0 STW
-              ecab 0043  ld   $43         ;0fc0 'Time'
-              ecac 002b  ld   $2b         ;0fc2 STW
-              ecad 0059  ld   $59         ;0fc2 'Value'
-              ecae 002b  ld   $2b         ;0fc4 STW
-              ecaf 004b  ld   $4b         ;0fc4 'HorizonX'
-              ecb0 002b  ld   $2b         ;0fc6 STW
-              ecb1 0049  ld   $49         ;0fc6 'DriftX'
-              ecb2 002b  ld   $2b         ;0fc8 STW
-              ecb3 0045  ld   $45         ;0fc8 'Speed'
-              ecb4 0011  ld   $11         ;0fca LDWI
-              ecb5 0000  ld   $00
-              ecb6 0079  ld   $79
-              ecb7 002b  ld   $2b         ;0fcd STW
-              ecb8 0047  ld   $47         ;0fcd 'CarX'
-              ecb9 001a  ld   $1a         ;0fcf LD
-              ecba 0011  ld   $11
-              ecbb 002b  ld   $2b         ;0fd1 STW
-              ecbc 0041  ld   $41         ;0fd1 'LastFrame'
-              ecbd 00e3  ld   $e3         ;0fd3 CALL
-              ecbe 00a1  ld   $a1         ;0fd3 'PlayGame'
-              ecbf 0011  ld   $11         ;0fd5 LDWI
-              ecc0 0035  ld   $35
-              ecc1 0014  ld   $14
-              ecc2 002b  ld   $2b         ;0fd8 STW
-              ecc3 003d  ld   $3d         ;0fd8 'Pos'
-              ecc4 00e1  ld   $e1         ;0fda DEF
-              ecc5 00e4  ld   $e4
-              ecc6 0047  ld   $47
-              ecc7 0041  ld   $41
-              ecc8 004d  ld   $4d
-              ecc9 0045  ld   $45
-              ecca 0020  ld   $20
-              eccb 004f  ld   $4f
-              eccc 0056  ld   $56
-              eccd 0045  ld   $45
-              ecce 0052  ld   $52
-              eccf 0000  ld   $00
-              ecd0 002b  ld   $2b         ;0fe6 STW
-              ecd1 0083  ld   $83         ;0fe6 'Text'
-              ecd2 0059  ld   $59         ;0fe8 LDI
-              ecd3 000f  ld   $0f
-              ecd4 002b  ld   $2b         ;0fea STW
-              ecd5 003b  ld   $3b         ;0fea 'Color'
-              ecd6 00e3  ld   $e3         ;0fec CALL
-              ecd7 0085  ld   $85         ;0fec 'DrawText'
-              ecd8 0059  ld   $59         ;0fee LDI
-              ecd9 00f0  ld   $f0
-              ecda 002b  ld   $2b         ;0ff0 STW
-              ecdb 0055  ld   $55         ;0ff0 'Delay'
-              ecdc 00e3  ld   $e3         ;0ff2 CALL
-              ecdd 0057  ld   $57         ;0ff2 'Wait'
-              ecde 0095  ld   $95         ;0ff4 BRA
-              ecdf 00a0  ld   $a0
-              ece0 0000  ld   $00         ;End of file
-Main:         ece1 0003  ld   $03         ;RAM loading address (high byte first)
-              ece2 0000  ld   $00
-              ece3 000e  ld   $0e         ;Segment length (1..256)
-              ece4 0011  ld   $11         ;0300 LDWI
-              ece5 005b  ld   $5b
-              ece6 00e6  ld   $e6
-              ece7 002b  ld   $2b         ;0303 STW
-              ece8 0025  ld   $25
-              ece9 0011  ld   $11         ;0305 LDWI
-              ecea 0000  ld   $00
-              eceb 0003  ld   $03
-              ecec 002b  ld   $2b         ;0308 STW
-              eced 001c  ld   $1c
-              ecee 0059  ld   $59         ;030a LDI
-              ecef 0087  ld   $87
-              ecf0 00a9  ld   $a9         ;030c SYS
-              ecf1 00e2  ld   $e2
-              ecf2 0000  ld   $00         ;End of file
-Reset:        ecf3 0003  ld   $03         ;RAM loading address (high byte first)
-              ecf4 0000  ld   $00
-              ecf5 00ca  ld   $ca         ;Segment length (1..256)
-              ecf6 0011  ld   $11         ;0300 LDWI
-              ecf7 0000  ld   $00
-              ecf8 0001  ld   $01
-              ecf9 002b  ld   $2b         ;0303 STW
-              ecfa 0031  ld   $31         ;0303 'p'
+              ec63 005e  ld   $5e         ;0ecd ST
+              ec64 0026  ld   $26
+              ec65 00e3  ld   $e3         ;0ecf CALL
+              ec66 0037  ld   $37         ;0ecf 'tmp'
+              ec67 0075  ld   $75         ;0ed1 LOOKUP
+              ec68 0000  ld   $00
+              ec69 005e  ld   $5e         ;0ed3 ST
+              ec6a 0027  ld   $27
+              ec6b 00e3  ld   $e3         ;0ed5 CALL
+              ec6c 0037  ld   $37         ;0ed5 'tmp'
+              ec6d 0011  ld   $11         ;0ed7 LDWI
+              ec6e 0064  ld   $64
+              ec6f 0004  ld   $04
+              ec70 00a9  ld   $a9         ;0eda SYS
+              ec71 00f2  ld   $f2
+              ec72 0021  ld   $21         ;0edc LDW
+              ec73 0063  ld   $63         ;0edc 'q'
+              ec74 002b  ld   $2b         ;0ede STW
+              ec75 0021  ld   $21
+              ec76 00f3  ld   $f3         ;0ee0 ADDI
+              ec77 0004  ld   $04
+              ec78 002b  ld   $2b         ;0ee2 STW
+              ec79 0063  ld   $63         ;0ee2 'q'
+              ec7a 0011  ld   $11         ;0ee4 LDWI
+              ec7b 008b  ld   $8b
+              ec7c 0004  ld   $04
+              ec7d 00a9  ld   $a9         ;0ee7 SYS
+              ec7e 00ff  ld   $ff
+              ec7f 001a  ld   $1a         ;0ee9 LD
+              ec80 0064  ld   $64         ;0ee9 'q'+1
+              ec81 0091  ld   $91         ;0eeb XORI
+              ec82 0020  ld   $20
+              ec83 0035  ld   $35         ;0eed BCC
+              ec84 0072  ld   $72         ;0eee NE
+              ec85 00c1  ld   $c1
+              ec86 0063  ld   $63         ;0ef0 POP
+              ec87 00ff  ld   $ff         ;0ef1 RET
+              ec88 002b  ld   $2b         ;0ef2 STW
+              ec89 00b1  ld   $b1         ;0ef2 'SetupHorizon'
+              ec8a 00f9  ld   $f9         ;0ef4 INC
+              ec8b 001d  ld   $1d
+              ec8c 00ff  ld   $ff         ;0ef6 RET
+              ec8d 000f  ld   $0f         ;| RAM segment address (high byte first)
+              ec8e 00a0  ld   $a0         ;|
+              ec8f 0056  ld   $56         ;| Length (1..256)
+              ec90 00e3  ld   $e3         ;0fa0 CALL
+              ec91 00af  ld   $af         ;0fa0 'Intro'
+              ec92 0011  ld   $11         ;0fa2 LDWI
+              ec93 0000  ld   $00
+              ec94 0074  ld   $74
+              ec95 002b  ld   $2b         ;0fa5 STW
+              ec96 008b  ld   $8b         ;0fa5 'Distance'
+              ec97 002b  ld   $2b         ;0fa7 STW
+              ec98 0089  ld   $89         ;0fa7 'NextTurn'
+              ec99 0059  ld   $59         ;0fa9 LDI
+              ec9a 0000  ld   $00
+              ec9b 002b  ld   $2b         ;0fab STW
+              ec9c 009b  ld   $9b         ;0fab 'Random'
+              ec9d 002b  ld   $2b         ;0fad STW
+              ec9e 008d  ld   $8d         ;0fad 'DDX'
+              ec9f 002b  ld   $2b         ;0faf STW
+              eca0 008f  ld   $8f         ;0faf 'NextDDX'
+              eca1 00e3  ld   $e3         ;0fb1 CALL
+              eca2 0091  ld   $91         ;0fb1 'DrawRoad'
+              eca3 00e3  ld   $e3         ;0fb3 CALL
+              eca4 009f  ld   $9f         ;0fb3 'DrawGrass'
+              eca5 00e3  ld   $e3         ;0fb5 CALL
+              eca6 00b1  ld   $b1         ;0fb5 'SetupHorizon'
+              eca7 00e3  ld   $e3         ;0fb7 CALL
+              eca8 0077  ld   $77         ;0fb7 'SetupRoad'
+              eca9 0011  ld   $11         ;0fb9 LDWI
+              ecaa 00ff  ld   $ff
+              ecab 007f  ld   $7f
+              ecac 002b  ld   $2b         ;0fbc STW
+              ecad 0097  ld   $97         ;0fbc 'BestTime'
+              ecae 0059  ld   $59         ;0fbe LDI
+              ecaf 0000  ld   $00
+              ecb0 002b  ld   $2b         ;0fc0 STW
+              ecb1 0043  ld   $43         ;0fc0 'Time'
+              ecb2 002b  ld   $2b         ;0fc2 STW
+              ecb3 0059  ld   $59         ;0fc2 'Value'
+              ecb4 002b  ld   $2b         ;0fc4 STW
+              ecb5 004b  ld   $4b         ;0fc4 'HorizonX'
+              ecb6 002b  ld   $2b         ;0fc6 STW
+              ecb7 0049  ld   $49         ;0fc6 'DriftX'
+              ecb8 002b  ld   $2b         ;0fc8 STW
+              ecb9 0045  ld   $45         ;0fc8 'Speed'
+              ecba 0011  ld   $11         ;0fca LDWI
+              ecbb 0000  ld   $00
+              ecbc 0079  ld   $79
+              ecbd 002b  ld   $2b         ;0fcd STW
+              ecbe 0047  ld   $47         ;0fcd 'CarX'
+              ecbf 001a  ld   $1a         ;0fcf LD
+              ecc0 0011  ld   $11
+              ecc1 002b  ld   $2b         ;0fd1 STW
+              ecc2 0041  ld   $41         ;0fd1 'LastFrame'
+              ecc3 00e3  ld   $e3         ;0fd3 CALL
+              ecc4 00a1  ld   $a1         ;0fd3 'PlayGame'
+              ecc5 0011  ld   $11         ;0fd5 LDWI
+              ecc6 0035  ld   $35
+              ecc7 0014  ld   $14
+              ecc8 002b  ld   $2b         ;0fd8 STW
+              ecc9 003d  ld   $3d         ;0fd8 'Pos'
+              ecca 00e1  ld   $e1         ;0fda DEF
+              eccb 00e4  ld   $e4
+              eccc 0047  ld   $47
+              eccd 0041  ld   $41
+              ecce 004d  ld   $4d
+              eccf 0045  ld   $45
+              ecd0 0020  ld   $20
+              ecd1 004f  ld   $4f
+              ecd2 0056  ld   $56
+              ecd3 0045  ld   $45
+              ecd4 0052  ld   $52
+              ecd5 0000  ld   $00
+              ecd6 002b  ld   $2b         ;0fe6 STW
+              ecd7 0083  ld   $83         ;0fe6 'Text'
+              ecd8 0059  ld   $59         ;0fe8 LDI
+              ecd9 000f  ld   $0f
+              ecda 002b  ld   $2b         ;0fea STW
+              ecdb 003b  ld   $3b         ;0fea 'Color'
+              ecdc 00e3  ld   $e3         ;0fec CALL
+              ecdd 0085  ld   $85         ;0fec 'DrawText'
+              ecde 0059  ld   $59         ;0fee LDI
+              ecdf 00f0  ld   $f0
+              ece0 002b  ld   $2b         ;0ff0 STW
+              ece1 0055  ld   $55         ;0ff0 'Delay'
+              ece2 00e3  ld   $e3         ;0ff2 CALL
+              ece3 0057  ld   $57         ;0ff2 'Wait'
+              ece4 0095  ld   $95         ;0ff4 BRA
+              ece5 00a0  ld   $a0
+              ece6 0000  ld   $00         ;End of file
+Main:         ece7 0003  ld   $03         ;| RAM segment address (high byte first)
+              ece8 0000  ld   $00         ;|
+              ece9 000e  ld   $0e         ;| Length (1..256)
+              ecea 0011  ld   $11         ;0300 LDWI
+              eceb 005b  ld   $5b
+              ecec 00e6  ld   $e6
+              eced 002b  ld   $2b         ;0303 STW
+              ecee 0025  ld   $25
+              ecef 0011  ld   $11         ;0305 LDWI
+              ecf0 0000  ld   $00
+              ecf1 0003  ld   $03
+              ecf2 002b  ld   $2b         ;0308 STW
+              ecf3 001c  ld   $1c
+              ecf4 0059  ld   $59         ;030a LDI
+              ecf5 0087  ld   $87
+              ecf6 00a9  ld   $a9         ;030c SYS
+              ecf7 00e2  ld   $e2
+              ecf8 0000  ld   $00         ;End of file
+Reset:        ecf9 0003  ld   $03         ;| RAM segment address (high byte first)
+              ecfa 0000  ld   $00         ;|
               ecfb fe00  bra  ac          ;+-----------------------------------+
               ecfc fcfd  bra  $ecfd       ;|                                   |
               ecfd 1403  ld   $03,y       ;| Trampoline for page $ec00 lookups |
               ecfe e078  jmp  y,$78       ;|                                   |
               ecff 1519  ld   [$19],y     ;+-----------------------------------+
-              ed00 0011  ld   $11         ;0305 LDWI
-              ed01 0000  ld   $00
-              ed02 0008  ld   $08
-              ed03 002b  ld   $2b         ;0308 STW
-              ed04 0033  ld   $33         ;0308 'q'
-              ed05 001a  ld   $1a         ;030a LD
-              ed06 0034  ld   $34         ;030a 'q'+1
-              ed07 0098  ld   $98         ;030c POKE
-              ed08 0031  ld   $31         ;030c 'p'
-              ed09 00f9  ld   $f9         ;030e INC
-              ed0a 0031  ld   $31         ;030e 'p'
-              ed0b 0059  ld   $59         ;0310 LDI
-              ed0c 0000  ld   $00
-              ed0d 0098  ld   $98         ;0312 POKE
-              ed0e 0031  ld   $31         ;0312 'p'
-              ed0f 00f9  ld   $f9         ;0314 INC
-              ed10 0031  ld   $31         ;0314 'p'
-              ed11 00f9  ld   $f9         ;0316 INC
-              ed12 0034  ld   $34         ;0316 'q'+1
-              ed13 0021  ld   $21         ;0318 LDW
-              ed14 0033  ld   $33         ;0318 'q'
-              ed15 0035  ld   $35         ;031a BCC
-              ed16 004d  ld   $4d         ;031b GT
-              ed17 0008  ld   $08
-              ed18 0011  ld   $11         ;031d LDWI
-              ed19 0000  ld   $00
-              ed1a 0008  ld   $08
-              ed1b 002b  ld   $2b         ;0320 STW
-              ed1c 0031  ld   $31         ;0320 'p'
-              ed1d 0011  ld   $11         ;0322 LDWI
-              ed1e 0001  ld   $01
-              ed1f 0088  ld   $88
-              ed20 002b  ld   $2b         ;0325 STW
-              ed21 0035  ld   $35         ;0325 'i'
-              ed22 0021  ld   $21         ;0327 LDW
-              ed23 0031  ld   $31         ;0327 'p'
-              ed24 002b  ld   $2b         ;0329 STW
-              ed25 0025  ld   $25
-              ed26 0011  ld   $11         ;032b LDWI
-              ed27 0036  ld   $36
-              ed28 0004  ld   $04
-              ed29 00a9  ld   $a9         ;032e SYS
-              ed2a 00fb  ld   $fb
-              ed2b 0011  ld   $11         ;0330 LDWI
-              ed2c 0000  ld   $00
-              ed2d 0008  ld   $08
-              ed2e 00c1  ld   $c1         ;0333 ADDW
-              ed2f 0031  ld   $31         ;0333 'p'
-              ed30 002b  ld   $2b         ;0335 STW
-              ed31 0031  ld   $31         ;0335 'p'
-              ed32 0035  ld   $35         ;0337 BCC
-              ed33 004d  ld   $4d         ;0338 GT
-              ed34 0027  ld   $27
-              ed35 00c1  ld   $c1         ;033a ADDW
-              ed36 0035  ld   $35         ;033a 'i'
-              ed37 002b  ld   $2b         ;033c STW
-              ed38 0031  ld   $31         ;033c 'p'
-              ed39 0087  ld   $87         ;033e ANDI
-              ed3a 00ff  ld   $ff
-              ed3b 0091  ld   $91         ;0340 XORI
-              ed3c 00a0  ld   $a0
-              ed3d 0035  ld   $35         ;0342 BCC
-              ed3e 0072  ld   $72         ;0343 NE
-              ed3f 0025  ld   $25
-              ed40 00e1  ld   $e1         ;0345 DEF
-              ed41 0074  ld   $74
-              ed42 002a  ld   $2a
-              ed43 002a  ld   $2a
-              ed44 002a  ld   $2a
-              ed45 0020  ld   $20
-              ed46 0047  ld   $47
-              ed47 0069  ld   $69
-              ed48 0067  ld   $67
-              ed49 0061  ld   $61
-              ed4a 0074  ld   $74
-              ed4b 0072  ld   $72
-              ed4c 006f  ld   $6f
-              ed4d 006e  ld   $6e
-              ed4e 0020  ld   $20
-              ed4f 003f  ld   $3f
-              ed50 003f  ld   $3f
-              ed51 004b  ld   $4b
-              ed52 0020  ld   $20
-              ed53 002a  ld   $2a
-              ed54 002a  ld   $2a
-              ed55 002a  ld   $2a
-              ed56 000a  ld   $0a
-              ed57 0054  ld   $54
-              ed58 0054  ld   $54
-              ed59 004c  ld   $4c
-              ed5a 0020  ld   $20
-              ed5b 006d  ld   $6d
-              ed5c 0069  ld   $69
-              ed5d 0063  ld   $63
-              ed5e 0072  ld   $72
-              ed5f 006f  ld   $6f
-              ed60 0063  ld   $63
-              ed61 006f  ld   $6f
-              ed62 006d  ld   $6d
-              ed63 0070  ld   $70
-              ed64 0075  ld   $75
-              ed65 0074  ld   $74
-              ed66 0065  ld   $65
-              ed67 0072  ld   $72
-              ed68 0020  ld   $20
-              ed69 0052  ld   $52
-              ed6a 004f  ld   $4f
-              ed6b 004d  ld   $4d
-              ed6c 0020  ld   $20
-              ed6d 0076  ld   $76
-              ed6e 0030  ld   $30
-              ed6f 0078  ld   $78
-              ed70 0000  ld   $00
-              ed71 002b  ld   $2b         ;0376 STW
-              ed72 0037  ld   $37         ;0376 'StartupMessage'
-              ed73 00f3  ld   $f3         ;0378 ADDI
-              ed74 000d  ld   $0d
-              ed75 002b  ld   $2b         ;037a STW
-              ed76 0031  ld   $31         ;037a 'p'
-              ed77 0011  ld   $11         ;037c LDWI
-              ed78 002f  ld   $2f
-              ed79 002f  ld   $2f
-              ed7a 002b  ld   $2b         ;037f STW
-              ed7b 0039  ld   $39         ;037f 'Char'
-              ed7c 001a  ld   $1a         ;0381 LD
-              ed7d 0001  ld   $01
-              ed7e 00f6  ld   $f6         ;0383 SUBI
-              ed7f 0001  ld   $01
-              ed80 0087  ld   $87         ;0385 ANDI
-              ed81 00ff  ld   $ff
-              ed82 00f3  ld   $f3         ;0387 ADDI
+              ed00 00ca  ld   $ca         ;| Length (1..256)
+              ed01 0011  ld   $11         ;0300 LDWI
+              ed02 0000  ld   $00
+              ed03 0001  ld   $01
+              ed04 002b  ld   $2b         ;0303 STW
+              ed05 0031  ld   $31         ;0303 'p'
+              ed06 0011  ld   $11         ;0305 LDWI
+              ed07 0000  ld   $00
+              ed08 0008  ld   $08
+              ed09 002b  ld   $2b         ;0308 STW
+              ed0a 0033  ld   $33         ;0308 'q'
+              ed0b 001a  ld   $1a         ;030a LD
+              ed0c 0034  ld   $34         ;030a 'q'+1
+              ed0d 0098  ld   $98         ;030c POKE
+              ed0e 0031  ld   $31         ;030c 'p'
+              ed0f 00f9  ld   $f9         ;030e INC
+              ed10 0031  ld   $31         ;030e 'p'
+              ed11 0059  ld   $59         ;0310 LDI
+              ed12 0000  ld   $00
+              ed13 0098  ld   $98         ;0312 POKE
+              ed14 0031  ld   $31         ;0312 'p'
+              ed15 00f9  ld   $f9         ;0314 INC
+              ed16 0031  ld   $31         ;0314 'p'
+              ed17 00f9  ld   $f9         ;0316 INC
+              ed18 0034  ld   $34         ;0316 'q'+1
+              ed19 0021  ld   $21         ;0318 LDW
+              ed1a 0033  ld   $33         ;0318 'q'
+              ed1b 0035  ld   $35         ;031a BCC
+              ed1c 004d  ld   $4d         ;031b GT
+              ed1d 0008  ld   $08
+              ed1e 0011  ld   $11         ;031d LDWI
+              ed1f 0000  ld   $00
+              ed20 0008  ld   $08
+              ed21 002b  ld   $2b         ;0320 STW
+              ed22 0031  ld   $31         ;0320 'p'
+              ed23 0011  ld   $11         ;0322 LDWI
+              ed24 0001  ld   $01
+              ed25 0088  ld   $88
+              ed26 002b  ld   $2b         ;0325 STW
+              ed27 0035  ld   $35         ;0325 'i'
+              ed28 0021  ld   $21         ;0327 LDW
+              ed29 0031  ld   $31         ;0327 'p'
+              ed2a 002b  ld   $2b         ;0329 STW
+              ed2b 0025  ld   $25
+              ed2c 0011  ld   $11         ;032b LDWI
+              ed2d 0036  ld   $36
+              ed2e 0004  ld   $04
+              ed2f 00a9  ld   $a9         ;032e SYS
+              ed30 00fb  ld   $fb
+              ed31 0011  ld   $11         ;0330 LDWI
+              ed32 0000  ld   $00
+              ed33 0008  ld   $08
+              ed34 00c1  ld   $c1         ;0333 ADDW
+              ed35 0031  ld   $31         ;0333 'p'
+              ed36 002b  ld   $2b         ;0335 STW
+              ed37 0031  ld   $31         ;0335 'p'
+              ed38 0035  ld   $35         ;0337 BCC
+              ed39 004d  ld   $4d         ;0338 GT
+              ed3a 0027  ld   $27
+              ed3b 00c1  ld   $c1         ;033a ADDW
+              ed3c 0035  ld   $35         ;033a 'i'
+              ed3d 002b  ld   $2b         ;033c STW
+              ed3e 0031  ld   $31         ;033c 'p'
+              ed3f 0087  ld   $87         ;033e ANDI
+              ed40 00ff  ld   $ff
+              ed41 0091  ld   $91         ;0340 XORI
+              ed42 00a0  ld   $a0
+              ed43 0035  ld   $35         ;0342 BCC
+              ed44 0072  ld   $72         ;0343 NE
+              ed45 0025  ld   $25
+              ed46 00e1  ld   $e1         ;0345 DEF
+              ed47 0074  ld   $74
+              ed48 002a  ld   $2a
+              ed49 002a  ld   $2a
+              ed4a 002a  ld   $2a
+              ed4b 0020  ld   $20
+              ed4c 0047  ld   $47
+              ed4d 0069  ld   $69
+              ed4e 0067  ld   $67
+              ed4f 0061  ld   $61
+              ed50 0074  ld   $74
+              ed51 0072  ld   $72
+              ed52 006f  ld   $6f
+              ed53 006e  ld   $6e
+              ed54 0020  ld   $20
+              ed55 003f  ld   $3f
+              ed56 003f  ld   $3f
+              ed57 004b  ld   $4b
+              ed58 0020  ld   $20
+              ed59 002a  ld   $2a
+              ed5a 002a  ld   $2a
+              ed5b 002a  ld   $2a
+              ed5c 000a  ld   $0a
+              ed5d 0054  ld   $54
+              ed5e 0054  ld   $54
+              ed5f 004c  ld   $4c
+              ed60 0020  ld   $20
+              ed61 006d  ld   $6d
+              ed62 0069  ld   $69
+              ed63 0063  ld   $63
+              ed64 0072  ld   $72
+              ed65 006f  ld   $6f
+              ed66 0063  ld   $63
+              ed67 006f  ld   $6f
+              ed68 006d  ld   $6d
+              ed69 0070  ld   $70
+              ed6a 0075  ld   $75
+              ed6b 0074  ld   $74
+              ed6c 0065  ld   $65
+              ed6d 0072  ld   $72
+              ed6e 0020  ld   $20
+              ed6f 0052  ld   $52
+              ed70 004f  ld   $4f
+              ed71 004d  ld   $4d
+              ed72 0020  ld   $20
+              ed73 0076  ld   $76
+              ed74 0030  ld   $30
+              ed75 0078  ld   $78
+              ed76 0000  ld   $00
+              ed77 002b  ld   $2b         ;0376 STW
+              ed78 0037  ld   $37         ;0376 'StartupMessage'
+              ed79 00f3  ld   $f3         ;0378 ADDI
+              ed7a 000d  ld   $0d
+              ed7b 002b  ld   $2b         ;037a STW
+              ed7c 0031  ld   $31         ;037a 'p'
+              ed7d 0011  ld   $11         ;037c LDWI
+              ed7e 002f  ld   $2f
+              ed7f 002f  ld   $2f
+              ed80 002b  ld   $2b         ;037f STW
+              ed81 0039  ld   $39         ;037f 'Char'
+              ed82 001a  ld   $1a         ;0381 LD
               ed83 0001  ld   $01
-              ed84 00f9  ld   $f9         ;0389 INC
-              ed85 003a  ld   $3a         ;0389 'Char'+1
-              ed86 00f6  ld   $f6         ;038b SUBI
-              ed87 0028  ld   $28
-              ed88 0035  ld   $35         ;038d BCC
-              ed89 0053  ld   $53         ;038e GE
-              ed8a 0087  ld   $87
-              ed8b 00f3  ld   $f3         ;0390 ADDI
-              ed8c 0028  ld   $28
-              ed8d 00f9  ld   $f9         ;0392 INC
-              ed8e 0039  ld   $39         ;0392 'Char'
-              ed8f 00f6  ld   $f6         ;0394 SUBI
-              ed90 0004  ld   $04
-              ed91 0035  ld   $35         ;0396 BCC
-              ed92 0053  ld   $53         ;0397 GE
-              ed93 0090  ld   $90
-              ed94 001a  ld   $1a         ;0399 LD
-              ed95 003a  ld   $3a         ;0399 'Char'+1
-              ed96 0098  ld   $98         ;039b POKE
-              ed97 0031  ld   $31         ;039b 'p'
-              ed98 00f9  ld   $f9         ;039d INC
-              ed99 0031  ld   $31         ;039d 'p'
-              ed9a 0021  ld   $21         ;039f LDW
-              ed9b 0039  ld   $39         ;039f 'Char'
-              ed9c 0098  ld   $98         ;03a1 POKE
-              ed9d 0031  ld   $31         ;03a1 'p'
-              ed9e 00e1  ld   $e1         ;03a3 DEF
-              ed9f 00c3  ld   $c3
-              eda0 007d  ld   $7d         ;03a5 PUSH
-              eda1 0021  ld   $21         ;03a6 LDW
-              eda2 003b  ld   $3b         ;03a6 'Text'
-              eda3 00d5  ld   $d5         ;03a8 PEEK
-              eda4 0035  ld   $35         ;03a9 BCC
-              eda5 003f  ld   $3f         ;03aa EQ
-              eda6 00c1  ld   $c1
-              eda7 002b  ld   $2b         ;03ac STW
-              eda8 0039  ld   $39         ;03ac 'Char'
-              eda9 00f9  ld   $f9         ;03ae INC
-              edaa 003b  ld   $3b         ;03ae 'Text'
-              edab 0091  ld   $91         ;03b0 XORI
-              edac 000a  ld   $0a
-              edad 0035  ld   $35         ;03b2 BCC
-              edae 0072  ld   $72         ;03b3 NE
-              edaf 00bd  ld   $bd
-              edb0 005e  ld   $5e         ;03b5 ST
-              edb1 003d  ld   $3d         ;03b5 'Pos'
-              edb2 001a  ld   $1a         ;03b7 LD
-              edb3 003e  ld   $3e         ;03b7 'Pos'+1
-              edb4 00f3  ld   $f3         ;03b9 ADDI
-              edb5 0008  ld   $08
-              edb6 005e  ld   $5e         ;03bb ST
-              edb7 003e  ld   $3e         ;03bb 'Pos'+1
-              edb8 0095  ld   $95         ;03bd BRA
-              edb9 00bf  ld   $bf
-              edba 00e3  ld   $e3         ;03bf CALL
-              edbb 003f  ld   $3f         ;03bf 'DrawChar'
-              edbc 0095  ld   $95         ;03c1 BRA
-              edbd 00a4  ld   $a4
-              edbe 0063  ld   $63         ;03c3 POP
-              edbf 00ff  ld   $ff         ;03c4 RET
-              edc0 002b  ld   $2b         ;03c5 STW
-              edc1 0041  ld   $41         ;03c5 'DrawText'
-              edc2 00f9  ld   $f9         ;03c7 INC
-              edc3 001d  ld   $1d
-              edc4 00ff  ld   $ff         ;03c9 RET
-              edc5 0004  ld   $04         ;RAM loading address (high byte first)
-              edc6 0000  ld   $00
-              edc7 00e1  ld   $e1         ;Segment length (1..256)
-              edc8 00e1  ld   $e1         ;0400 DEF
-              edc9 0066  ld   $66
-              edca 0021  ld   $21         ;0402 LDW
-              edcb 0039  ld   $39         ;0402 'Char'
-              edcc 00f6  ld   $f6         ;0404 SUBI
-              edcd 0052  ld   $52
-              edce 0035  ld   $35         ;0406 BCC
-              edcf 0053  ld   $53         ;0407 GE
-              edd0 0010  ld   $10
-              edd1 00f3  ld   $f3         ;0409 ADDI
-              edd2 0032  ld   $32
-              edd3 002b  ld   $2b         ;040b STW
-              edd4 0035  ld   $35         ;040b 'i'
-              edd5 0011  ld   $11         ;040d LDWI
-              edd6 0000  ld   $00
-              edd7 0005  ld   $05
-              edd8 0095  ld   $95         ;0410 BRA
-              edd9 0015  ld   $15
-              edda 002b  ld   $2b         ;0412 STW
-              eddb 0035  ld   $35         ;0412 'i'
-              eddc 0011  ld   $11         ;0414 LDWI
-              eddd 0000  ld   $00
-              edde 0006  ld   $06
-              eddf 002b  ld   $2b         ;0417 STW
-              ede0 0043  ld   $43         ;0417 'fontData'
-              ede1 0021  ld   $21         ;0419 LDW
-              ede2 0035  ld   $35         ;0419 'i'
-              ede3 00c1  ld   $c1         ;041b ADDW
-              ede4 0035  ld   $35         ;041b 'i'
-              ede5 002b  ld   $2b         ;041d STW
-              ede6 0045  ld   $45         ;041d 'tmp'
-              ede7 00c1  ld   $c1         ;041f ADDW
-              ede8 0045  ld   $45         ;041f 'tmp'
-              ede9 00c1  ld   $c1         ;0421 ADDW
-              edea 0035  ld   $35         ;0421 'i'
-              edeb 00c1  ld   $c1         ;0423 ADDW
-              edec 0043  ld   $43         ;0423 'fontData'
-              eded 002b  ld   $2b         ;0425 STW
-              edee 0043  ld   $43         ;0425 'fontData'
-              edef 0011  ld   $11         ;0427 LDWI
-              edf0 0000  ld   $00
-              edf1 0008  ld   $08
-              edf2 00c1  ld   $c1         ;042a ADDW
-              edf3 003d  ld   $3d         ;042a 'Pos'
-              edf4 002b  ld   $2b         ;042c STW
-              edf5 0033  ld   $33         ;042c 'q'
-              edf6 0059  ld   $59         ;042e LDI
-              edf7 0005  ld   $05
-              edf8 002b  ld   $2b         ;0430 STW
-              edf9 0035  ld   $35         ;0430 'i'
-              edfa 0021  ld   $21         ;0432 LDW
+              ed84 00f6  ld   $f6         ;0383 SUBI
+              ed85 0001  ld   $01
+              ed86 0087  ld   $87         ;0385 ANDI
+              ed87 00ff  ld   $ff
+              ed88 00f3  ld   $f3         ;0387 ADDI
+              ed89 0001  ld   $01
+              ed8a 00f9  ld   $f9         ;0389 INC
+              ed8b 003a  ld   $3a         ;0389 'Char'+1
+              ed8c 00f6  ld   $f6         ;038b SUBI
+              ed8d 0028  ld   $28
+              ed8e 0035  ld   $35         ;038d BCC
+              ed8f 0053  ld   $53         ;038e GE
+              ed90 0087  ld   $87
+              ed91 00f3  ld   $f3         ;0390 ADDI
+              ed92 0028  ld   $28
+              ed93 00f9  ld   $f9         ;0392 INC
+              ed94 0039  ld   $39         ;0392 'Char'
+              ed95 00f6  ld   $f6         ;0394 SUBI
+              ed96 0004  ld   $04
+              ed97 0035  ld   $35         ;0396 BCC
+              ed98 0053  ld   $53         ;0397 GE
+              ed99 0090  ld   $90
+              ed9a 001a  ld   $1a         ;0399 LD
+              ed9b 003a  ld   $3a         ;0399 'Char'+1
+              ed9c 0098  ld   $98         ;039b POKE
+              ed9d 0031  ld   $31         ;039b 'p'
+              ed9e 00f9  ld   $f9         ;039d INC
+              ed9f 0031  ld   $31         ;039d 'p'
+              eda0 0021  ld   $21         ;039f LDW
+              eda1 0039  ld   $39         ;039f 'Char'
+              eda2 0098  ld   $98         ;03a1 POKE
+              eda3 0031  ld   $31         ;03a1 'p'
+              eda4 00e1  ld   $e1         ;03a3 DEF
+              eda5 00c3  ld   $c3
+              eda6 007d  ld   $7d         ;03a5 PUSH
+              eda7 0021  ld   $21         ;03a6 LDW
+              eda8 003b  ld   $3b         ;03a6 'Text'
+              eda9 00d5  ld   $d5         ;03a8 PEEK
+              edaa 0035  ld   $35         ;03a9 BCC
+              edab 003f  ld   $3f         ;03aa EQ
+              edac 00c1  ld   $c1
+              edad 002b  ld   $2b         ;03ac STW
+              edae 0039  ld   $39         ;03ac 'Char'
+              edaf 00f9  ld   $f9         ;03ae INC
+              edb0 003b  ld   $3b         ;03ae 'Text'
+              edb1 0091  ld   $91         ;03b0 XORI
+              edb2 000a  ld   $0a
+              edb3 0035  ld   $35         ;03b2 BCC
+              edb4 0072  ld   $72         ;03b3 NE
+              edb5 00bd  ld   $bd
+              edb6 005e  ld   $5e         ;03b5 ST
+              edb7 003d  ld   $3d         ;03b5 'Pos'
+              edb8 001a  ld   $1a         ;03b7 LD
+              edb9 003e  ld   $3e         ;03b7 'Pos'+1
+              edba 00f3  ld   $f3         ;03b9 ADDI
+              edbb 0008  ld   $08
+              edbc 005e  ld   $5e         ;03bb ST
+              edbd 003e  ld   $3e         ;03bb 'Pos'+1
+              edbe 0095  ld   $95         ;03bd BRA
+              edbf 00bf  ld   $bf
+              edc0 00e3  ld   $e3         ;03bf CALL
+              edc1 003f  ld   $3f         ;03bf 'DrawChar'
+              edc2 0095  ld   $95         ;03c1 BRA
+              edc3 00a4  ld   $a4
+              edc4 0063  ld   $63         ;03c3 POP
+              edc5 00ff  ld   $ff         ;03c4 RET
+              edc6 002b  ld   $2b         ;03c5 STW
+              edc7 0041  ld   $41         ;03c5 'DrawText'
+              edc8 00f9  ld   $f9         ;03c7 INC
+              edc9 001d  ld   $1d
+              edca 00ff  ld   $ff         ;03c9 RET
+              edcb 0004  ld   $04         ;| RAM segment address (high byte first)
+              edcc 0000  ld   $00         ;|
+              edcd 00e1  ld   $e1         ;| Length (1..256)
+              edce 00e1  ld   $e1         ;0400 DEF
+              edcf 0066  ld   $66
+              edd0 0021  ld   $21         ;0402 LDW
+              edd1 0039  ld   $39         ;0402 'Char'
+              edd2 00f6  ld   $f6         ;0404 SUBI
+              edd3 0052  ld   $52
+              edd4 0035  ld   $35         ;0406 BCC
+              edd5 0053  ld   $53         ;0407 GE
+              edd6 0010  ld   $10
+              edd7 00f3  ld   $f3         ;0409 ADDI
+              edd8 0032  ld   $32
+              edd9 002b  ld   $2b         ;040b STW
+              edda 0035  ld   $35         ;040b 'i'
+              eddb 0011  ld   $11         ;040d LDWI
+              eddc 0000  ld   $00
+              eddd 0005  ld   $05
+              edde 0095  ld   $95         ;0410 BRA
+              eddf 0015  ld   $15
+              ede0 002b  ld   $2b         ;0412 STW
+              ede1 0035  ld   $35         ;0412 'i'
+              ede2 0011  ld   $11         ;0414 LDWI
+              ede3 0000  ld   $00
+              ede4 0006  ld   $06
+              ede5 002b  ld   $2b         ;0417 STW
+              ede6 0043  ld   $43         ;0417 'fontData'
+              ede7 0021  ld   $21         ;0419 LDW
+              ede8 0035  ld   $35         ;0419 'i'
+              ede9 00c1  ld   $c1         ;041b ADDW
+              edea 0035  ld   $35         ;041b 'i'
+              edeb 002b  ld   $2b         ;041d STW
+              edec 0045  ld   $45         ;041d 'tmp'
+              eded 00c1  ld   $c1         ;041f ADDW
+              edee 0045  ld   $45         ;041f 'tmp'
+              edef 00c1  ld   $c1         ;0421 ADDW
+              edf0 0035  ld   $35         ;0421 'i'
+              edf1 00c1  ld   $c1         ;0423 ADDW
+              edf2 0043  ld   $43         ;0423 'fontData'
+              edf3 002b  ld   $2b         ;0425 STW
+              edf4 0043  ld   $43         ;0425 'fontData'
+              edf5 0011  ld   $11         ;0427 LDWI
+              edf6 0000  ld   $00
+              edf7 0008  ld   $08
+              edf8 00c1  ld   $c1         ;042a ADDW
+              edf9 003d  ld   $3d         ;042a 'Pos'
+              edfa 002b  ld   $2b         ;042c STW
               edfb fe00  bra  ac          ;+-----------------------------------+
               edfc fcfd  bra  $edfd       ;|                                   |
               edfd 1403  ld   $03,y       ;| Trampoline for page $ed00 lookups |
               edfe e078  jmp  y,$78       ;|                                   |
               edff 1519  ld   [$19],y     ;+-----------------------------------+
-              ee00 0043  ld   $43         ;0432 'fontData'
-              ee01 0075  ld   $75         ;0434 LOOKUP
-              ee02 0000  ld   $00
-              ee03 002b  ld   $2b         ;0436 STW
-              ee04 0047  ld   $47         ;0436 'bits'
-              ee05 00f9  ld   $f9         ;0438 INC
-              ee06 0043  ld   $43         ;0438 'fontData'
-              ee07 0021  ld   $21         ;043a LDW
-              ee08 003d  ld   $3d         ;043a 'Pos'
-              ee09 002b  ld   $2b         ;043c STW
-              ee0a 0031  ld   $31         ;043c 'p'
-              ee0b 0021  ld   $21         ;043e LDW
-              ee0c 0047  ld   $47         ;043e 'bits'
-              ee0d 0087  ld   $87         ;0440 ANDI
-              ee0e 0080  ld   $80
-              ee0f 0035  ld   $35         ;0442 BCC
-              ee10 0072  ld   $72         ;0443 NE
-              ee11 0047  ld   $47
-              ee12 0059  ld   $59         ;0445 LDI
-              ee13 0000  ld   $00
-              ee14 0095  ld   $95         ;0447 BRA
-              ee15 0049  ld   $49
-              ee16 0059  ld   $59         ;0449 LDI
-              ee17 0008  ld   $08
-              ee18 0098  ld   $98         ;044b POKE
-              ee19 0031  ld   $31         ;044b 'p'
-              ee1a 0021  ld   $21         ;044d LDW
-              ee1b 0047  ld   $47         ;044d 'bits'
-              ee1c 00c1  ld   $c1         ;044f ADDW
-              ee1d 0047  ld   $47         ;044f 'bits'
-              ee1e 002b  ld   $2b         ;0451 STW
-              ee1f 0047  ld   $47         ;0451 'bits'
-              ee20 00f9  ld   $f9         ;0453 INC
-              ee21 0032  ld   $32         ;0453 'p'+1
-              ee22 0021  ld   $21         ;0455 LDW
-              ee23 0031  ld   $31         ;0455 'p'
-              ee24 00ad  ld   $ad         ;0457 SUBW
-              ee25 0033  ld   $33         ;0457 'q'
-              ee26 0035  ld   $35         ;0459 BCC
-              ee27 0050  ld   $50         ;045a LT
-              ee28 003c  ld   $3c
-              ee29 00f9  ld   $f9         ;045c INC
-              ee2a 003d  ld   $3d         ;045c 'Pos'
-              ee2b 0021  ld   $21         ;045e LDW
-              ee2c 0035  ld   $35         ;045e 'i'
-              ee2d 00f6  ld   $f6         ;0460 SUBI
-              ee2e 0001  ld   $01
-              ee2f 0035  ld   $35         ;0462 BCC
-              ee30 004d  ld   $4d         ;0463 GT
-              ee31 002e  ld   $2e
-              ee32 00f9  ld   $f9         ;0465 INC
-              ee33 003d  ld   $3d         ;0465 'Pos'
-              ee34 00ff  ld   $ff         ;0467 RET
-              ee35 002b  ld   $2b         ;0468 STW
-              ee36 003f  ld   $3f         ;0468 'DrawChar'
-              ee37 00e1  ld   $e1         ;046a DEF
-              ee38 00a3  ld   $a3
-              ee39 002b  ld   $2b         ;046c STW
-              ee3a 0035  ld   $35         ;046c 'i'
-              ee3b 008d  ld   $8d         ;046e ORI
-              ee3c 00ff  ld   $ff
-              ee3d 0091  ld   $91         ;0470 XORI
-              ee3e 00ff  ld   $ff
-              ee3f 008d  ld   $8d         ;0472 ORI
-              ee40 00f9  ld   $f9
-              ee41 002b  ld   $2b         ;0474 STW
-              ee42 0031  ld   $31         ;0474 'p'
-              ee43 001a  ld   $1a         ;0476 LD
-              ee44 0035  ld   $35         ;0476 'i'
-              ee45 002b  ld   $2b         ;0478 STW
-              ee46 0035  ld   $35         ;0478 'i'
-              ee47 0059  ld   $59         ;047a LDI
-              ee48 0000  ld   $00
-              ee49 0098  ld   $98         ;047c POKE
-              ee4a 0031  ld   $31         ;047c 'p'
-              ee4b 00f9  ld   $f9         ;047e INC
-              ee4c 0031  ld   $31         ;047e 'p'
-              ee4d 0011  ld   $11         ;0480 LDWI
+              ee00 0033  ld   $33         ;042c 'q'
+              ee01 0059  ld   $59         ;042e LDI
+              ee02 0005  ld   $05
+              ee03 002b  ld   $2b         ;0430 STW
+              ee04 0035  ld   $35         ;0430 'i'
+              ee05 0021  ld   $21         ;0432 LDW
+              ee06 0043  ld   $43         ;0432 'fontData'
+              ee07 0075  ld   $75         ;0434 LOOKUP
+              ee08 0000  ld   $00
+              ee09 002b  ld   $2b         ;0436 STW
+              ee0a 0047  ld   $47         ;0436 'bits'
+              ee0b 00f9  ld   $f9         ;0438 INC
+              ee0c 0043  ld   $43         ;0438 'fontData'
+              ee0d 0021  ld   $21         ;043a LDW
+              ee0e 003d  ld   $3d         ;043a 'Pos'
+              ee0f 002b  ld   $2b         ;043c STW
+              ee10 0031  ld   $31         ;043c 'p'
+              ee11 0021  ld   $21         ;043e LDW
+              ee12 0047  ld   $47         ;043e 'bits'
+              ee13 0087  ld   $87         ;0440 ANDI
+              ee14 0080  ld   $80
+              ee15 0035  ld   $35         ;0442 BCC
+              ee16 0072  ld   $72         ;0443 NE
+              ee17 0047  ld   $47
+              ee18 0059  ld   $59         ;0445 LDI
+              ee19 0000  ld   $00
+              ee1a 0095  ld   $95         ;0447 BRA
+              ee1b 0049  ld   $49
+              ee1c 0059  ld   $59         ;0449 LDI
+              ee1d 0008  ld   $08
+              ee1e 0098  ld   $98         ;044b POKE
+              ee1f 0031  ld   $31         ;044b 'p'
+              ee20 0021  ld   $21         ;044d LDW
+              ee21 0047  ld   $47         ;044d 'bits'
+              ee22 00c1  ld   $c1         ;044f ADDW
+              ee23 0047  ld   $47         ;044f 'bits'
+              ee24 002b  ld   $2b         ;0451 STW
+              ee25 0047  ld   $47         ;0451 'bits'
+              ee26 00f9  ld   $f9         ;0453 INC
+              ee27 0032  ld   $32         ;0453 'p'+1
+              ee28 0021  ld   $21         ;0455 LDW
+              ee29 0031  ld   $31         ;0455 'p'
+              ee2a 00ad  ld   $ad         ;0457 SUBW
+              ee2b 0033  ld   $33         ;0457 'q'
+              ee2c 0035  ld   $35         ;0459 BCC
+              ee2d 0050  ld   $50         ;045a LT
+              ee2e 003c  ld   $3c
+              ee2f 00f9  ld   $f9         ;045c INC
+              ee30 003d  ld   $3d         ;045c 'Pos'
+              ee31 0021  ld   $21         ;045e LDW
+              ee32 0035  ld   $35         ;045e 'i'
+              ee33 00f6  ld   $f6         ;0460 SUBI
+              ee34 0001  ld   $01
+              ee35 0035  ld   $35         ;0462 BCC
+              ee36 004d  ld   $4d         ;0463 GT
+              ee37 002e  ld   $2e
+              ee38 00f9  ld   $f9         ;0465 INC
+              ee39 003d  ld   $3d         ;0465 'Pos'
+              ee3a 00ff  ld   $ff         ;0467 RET
+              ee3b 002b  ld   $2b         ;0468 STW
+              ee3c 003f  ld   $3f         ;0468 'DrawChar'
+              ee3d 00e1  ld   $e1         ;046a DEF
+              ee3e 00a3  ld   $a3
+              ee3f 002b  ld   $2b         ;046c STW
+              ee40 0035  ld   $35         ;046c 'i'
+              ee41 008d  ld   $8d         ;046e ORI
+              ee42 00ff  ld   $ff
+              ee43 0091  ld   $91         ;0470 XORI
+              ee44 00ff  ld   $ff
+              ee45 008d  ld   $8d         ;0472 ORI
+              ee46 00f9  ld   $f9
+              ee47 002b  ld   $2b         ;0474 STW
+              ee48 0031  ld   $31         ;0474 'p'
+              ee49 001a  ld   $1a         ;0476 LD
+              ee4a 0035  ld   $35         ;0476 'i'
+              ee4b 002b  ld   $2b         ;0478 STW
+              ee4c 0035  ld   $35         ;0478 'i'
+              ee4d 0059  ld   $59         ;047a LDI
               ee4e 0000  ld   $00
-              ee4f 0007  ld   $07
-              ee50 00c1  ld   $c1         ;0483 ADDW
-              ee51 0035  ld   $35         ;0483 'i'
-              ee52 0075  ld   $75         ;0485 LOOKUP
-              ee53 0000  ld   $00
-              ee54 0098  ld   $98         ;0487 POKE
-              ee55 0031  ld   $31         ;0487 'p'
-              ee56 00f9  ld   $f9         ;0489 INC
-              ee57 0031  ld   $31         ;0489 'p'
-              ee58 0011  ld   $11         ;048b LDWI
+              ee4f 0098  ld   $98         ;047c POKE
+              ee50 0031  ld   $31         ;047c 'p'
+              ee51 00f9  ld   $f9         ;047e INC
+              ee52 0031  ld   $31         ;047e 'p'
+              ee53 0011  ld   $11         ;0480 LDWI
+              ee54 0000  ld   $00
+              ee55 0007  ld   $07
+              ee56 00c1  ld   $c1         ;0483 ADDW
+              ee57 0035  ld   $35         ;0483 'i'
+              ee58 0075  ld   $75         ;0485 LOOKUP
               ee59 0000  ld   $00
-              ee5a 0007  ld   $07
-              ee5b 00c1  ld   $c1         ;048e ADDW
-              ee5c 0035  ld   $35         ;048e 'i'
-              ee5d 0075  ld   $75         ;0490 LOOKUP
-              ee5e 0001  ld   $01
-              ee5f 0098  ld   $98         ;0492 POKE
-              ee60 0031  ld   $31         ;0492 'p'
-              ee61 00f9  ld   $f9         ;0494 INC
-              ee62 0031  ld   $31         ;0494 'p'
-              ee63 00f9  ld   $f9         ;0496 INC
-              ee64 0031  ld   $31         ;0496 'p'
-              ee65 0059  ld   $59         ;0498 LDI
-              ee66 0000  ld   $00
-              ee67 0098  ld   $98         ;049a POKE
-              ee68 0031  ld   $31         ;049a 'p'
-              ee69 00f9  ld   $f9         ;049c INC
-              ee6a 0031  ld   $31         ;049c 'p'
-              ee6b 0098  ld   $98         ;049e POKE
-              ee6c 0031  ld   $31         ;049e 'p'
-              ee6d 00f9  ld   $f9         ;04a0 INC
-              ee6e 0031  ld   $31         ;04a0 'p'
-              ee6f 0098  ld   $98         ;04a2 POKE
-              ee70 0031  ld   $31         ;04a2 'p'
-              ee71 00ff  ld   $ff         ;04a4 RET
-              ee72 002b  ld   $2b         ;04a5 STW
-              ee73 0049  ld   $49         ;04a5 'SetupChannel'
-              ee74 00e1  ld   $e1         ;04a7 DEF
-              ee75 00c2  ld   $c2
-              ee76 007d  ld   $7d         ;04a9 PUSH
-              ee77 0011  ld   $11         ;04aa LDWI
-              ee78 0058  ld   $58
-              ee79 0001  ld   $01
-              ee7a 00e3  ld   $e3         ;04ad CALL
-              ee7b 0049  ld   $49         ;04ad 'SetupChannel'
-              ee7c 0011  ld   $11         ;04af LDWI
-              ee7d 0070  ld   $70
-              ee7e 0002  ld   $02
-              ee7f 00e3  ld   $e3         ;04b2 CALL
-              ee80 0049  ld   $49         ;04b2 'SetupChannel'
-              ee81 0011  ld   $11         ;04b4 LDWI
-              ee82 0078  ld   $78
-              ee83 0003  ld   $03
-              ee84 00e3  ld   $e3         ;04b7 CALL
-              ee85 0049  ld   $49         ;04b7 'SetupChannel'
-              ee86 0011  ld   $11         ;04b9 LDWI
-              ee87 007e  ld   $7e
-              ee88 0004  ld   $04
-              ee89 00e3  ld   $e3         ;04bc CALL
-              ee8a 0049  ld   $49         ;04bc 'SetupChannel'
-              ee8b 0059  ld   $59         ;04be LDI
-              ee8c 0078  ld   $78
-              ee8d 005e  ld   $5e         ;04c0 ST
-              ee8e 002d  ld   $2d
-              ee8f 0063  ld   $63         ;04c2 POP
-              ee90 00ff  ld   $ff         ;04c3 RET
-              ee91 002b  ld   $2b         ;04c4 STW
-              ee92 004b  ld   $4b         ;04c4 'PlayChord'
-              ee93 0011  ld   $11         ;04c6 LDWI
-              ee94 0012  ld   $12
-              ee95 0008  ld   $08
-              ee96 002b  ld   $2b         ;04c9 STW
-              ee97 003d  ld   $3d         ;04c9 'Pos'
-              ee98 0021  ld   $21         ;04cb LDW
-              ee99 0037  ld   $37         ;04cb 'StartupMessage'
-              ee9a 002b  ld   $2b         ;04cd STW
-              ee9b 003b  ld   $3b         ;04cd 'Text'
-              ee9c 00e3  ld   $e3         ;04cf CALL
-              ee9d 0041  ld   $41         ;04cf 'DrawText'
-              ee9e 00e3  ld   $e3         ;04d1 CALL
-              ee9f 004b  ld   $4b         ;04d1 'PlayChord'
-              eea0 0011  ld   $11         ;04d3 LDWI
-              eea1 00e1  ld   $e1
-              eea2 00ec  ld   $ec
-              eea3 002b  ld   $2b         ;04d6 STW
-              eea4 0025  ld   $25
-              eea5 0011  ld   $11         ;04d8 LDWI
-              eea6 0000  ld   $00
-              eea7 0003  ld   $03
-              eea8 002b  ld   $2b         ;04db STW
-              eea9 001c  ld   $1c
-              eeaa 0059  ld   $59         ;04dd LDI
-              eeab 0087  ld   $87
-              eeac 00a9  ld   $a9         ;04df SYS
-              eead 00e2  ld   $e2
-              eeae 0000  ld   $00         ;End of file
-              eeaf 0200  nop
-              eeb0 0200  nop
-              eeb1 0200  nop
-              * 76 times
+              ee5a 0098  ld   $98         ;0487 POKE
+              ee5b 0031  ld   $31         ;0487 'p'
+              ee5c 00f9  ld   $f9         ;0489 INC
+              ee5d 0031  ld   $31         ;0489 'p'
+              ee5e 0011  ld   $11         ;048b LDWI
+              ee5f 0000  ld   $00
+              ee60 0007  ld   $07
+              ee61 00c1  ld   $c1         ;048e ADDW
+              ee62 0035  ld   $35         ;048e 'i'
+              ee63 0075  ld   $75         ;0490 LOOKUP
+              ee64 0001  ld   $01
+              ee65 0098  ld   $98         ;0492 POKE
+              ee66 0031  ld   $31         ;0492 'p'
+              ee67 00f9  ld   $f9         ;0494 INC
+              ee68 0031  ld   $31         ;0494 'p'
+              ee69 00f9  ld   $f9         ;0496 INC
+              ee6a 0031  ld   $31         ;0496 'p'
+              ee6b 0059  ld   $59         ;0498 LDI
+              ee6c 0000  ld   $00
+              ee6d 0098  ld   $98         ;049a POKE
+              ee6e 0031  ld   $31         ;049a 'p'
+              ee6f 00f9  ld   $f9         ;049c INC
+              ee70 0031  ld   $31         ;049c 'p'
+              ee71 0098  ld   $98         ;049e POKE
+              ee72 0031  ld   $31         ;049e 'p'
+              ee73 00f9  ld   $f9         ;04a0 INC
+              ee74 0031  ld   $31         ;04a0 'p'
+              ee75 0098  ld   $98         ;04a2 POKE
+              ee76 0031  ld   $31         ;04a2 'p'
+              ee77 00ff  ld   $ff         ;04a4 RET
+              ee78 002b  ld   $2b         ;04a5 STW
+              ee79 0049  ld   $49         ;04a5 'SetupChannel'
+              ee7a 00e1  ld   $e1         ;04a7 DEF
+              ee7b 00c2  ld   $c2
+              ee7c 007d  ld   $7d         ;04a9 PUSH
+              ee7d 0011  ld   $11         ;04aa LDWI
+              ee7e 0058  ld   $58
+              ee7f 0001  ld   $01
+              ee80 00e3  ld   $e3         ;04ad CALL
+              ee81 0049  ld   $49         ;04ad 'SetupChannel'
+              ee82 0011  ld   $11         ;04af LDWI
+              ee83 0070  ld   $70
+              ee84 0002  ld   $02
+              ee85 00e3  ld   $e3         ;04b2 CALL
+              ee86 0049  ld   $49         ;04b2 'SetupChannel'
+              ee87 0011  ld   $11         ;04b4 LDWI
+              ee88 0078  ld   $78
+              ee89 0003  ld   $03
+              ee8a 00e3  ld   $e3         ;04b7 CALL
+              ee8b 0049  ld   $49         ;04b7 'SetupChannel'
+              ee8c 0011  ld   $11         ;04b9 LDWI
+              ee8d 007e  ld   $7e
+              ee8e 0004  ld   $04
+              ee8f 00e3  ld   $e3         ;04bc CALL
+              ee90 0049  ld   $49         ;04bc 'SetupChannel'
+              ee91 0059  ld   $59         ;04be LDI
+              ee92 0078  ld   $78
+              ee93 005e  ld   $5e         ;04c0 ST
+              ee94 002d  ld   $2d
+              ee95 0063  ld   $63         ;04c2 POP
+              ee96 00ff  ld   $ff         ;04c3 RET
+              ee97 002b  ld   $2b         ;04c4 STW
+              ee98 004b  ld   $4b         ;04c4 'PlayChord'
+              ee99 0011  ld   $11         ;04c6 LDWI
+              ee9a 0012  ld   $12
+              ee9b 0008  ld   $08
+              ee9c 002b  ld   $2b         ;04c9 STW
+              ee9d 003d  ld   $3d         ;04c9 'Pos'
+              ee9e 0021  ld   $21         ;04cb LDW
+              ee9f 0037  ld   $37         ;04cb 'StartupMessage'
+              eea0 002b  ld   $2b         ;04cd STW
+              eea1 003b  ld   $3b         ;04cd 'Text'
+              eea2 00e3  ld   $e3         ;04cf CALL
+              eea3 0041  ld   $41         ;04cf 'DrawText'
+              eea4 00e3  ld   $e3         ;04d1 CALL
+              eea5 004b  ld   $4b         ;04d1 'PlayChord'
+              eea6 0011  ld   $11         ;04d3 LDWI
+              eea7 00e7  ld   $e7
+              eea8 00ec  ld   $ec
+              eea9 002b  ld   $2b         ;04d6 STW
+              eeaa 0025  ld   $25
+              eeab 0011  ld   $11         ;04d8 LDWI
+              eeac 0000  ld   $00
+              eead 0003  ld   $03
+              eeae 002b  ld   $2b         ;04db STW
+              eeaf 001c  ld   $1c
+              eeb0 0059  ld   $59         ;04dd LDI
+              eeb1 0087  ld   $87
+              eeb2 00a9  ld   $a9         ;04df SYS
+              eeb3 00e2  ld   $e2
+              eeb4 0000  ld   $00         ;End of file
+              eeb5 0200  nop
+              eeb6 0200  nop
+              eeb7 0200  nop
+              * 70 times
               eefb fe00  bra  ac          ;+-----------------------------------+
               eefc fcfd  bra  $eefd       ;|                                   |
               eefd 1403  ld   $03,y       ;| Trampoline for page $ee00 lookups |

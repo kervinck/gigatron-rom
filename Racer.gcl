@@ -348,7 +348,7 @@ $0700:
 
   {Run game loop}
   0 Collision=
-  {Prev3= Prev2= Prev1=}
+  Prev3= Prev2= Prev1=
   [do
     AdvanceCar!
 

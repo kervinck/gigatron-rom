@@ -2003,7 +2003,7 @@ print 'SYS limits low %s high %s' % (repr(minSYS), repr(maxSYS))
 for gclSource in sys.argv[1:]:
   name = gclSource.rsplit('.', 1)[0]
   print
-  print 'Compile file %s label %s' % (gclSource, name)
+  print 'Compile file %s label %s ROM %04x' % (gclSource, name, pc())
   label(name)
   program = gcl.Program(vCpuStart, name)
   zpReset(zpFree)
