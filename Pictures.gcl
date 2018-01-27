@@ -1,0 +1,83 @@
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       GCL applications                                                |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+gcl0x
+
+{-----------------------------------------------------------------------+
+|                       RAM page 3                                      |
++-----------------------------------------------------------------------}
+
+{
+  Draw full-screen image on screen (~1.5 seconds)
+}
+[def {DrawImage}
+  {vAC} p=                      {Addres in ROM for image data}
+  $0101 v=                      {Video table entry to control X}
+  $0800 q=                      {Points in video memory}
+  2 FrameRate=                  {Target frame rate (frames/pixel)}
+  [do \vBlank, if=0loop]        {Synchronize with video loop}
+  \frameCount, t=
+  160 [do i=
+
+    {Draw slice one pixel outside view}
+    v, 160+ 255& q<.
+    [do
+      p \sysData= \SYS_40_Read3  40@ {Read 3 bytes from ROM}
+                  \SYS_56_Unpack 56@ {Unpack to 4 bytes}
+      q \sysPos=  \SYS_30_Draw4  30@ {Write 4 bytes to screen}
+      $80 p+ p=
+      q>++ q
+      if>0loop]
+
+    {Shift in 4 controlled steps}
+    [do
+      t FrameRate+ 255& t=
+      [do \frameCount, t- if<>0loop]
+
+      {Scroll 4 pixels left}
+      v, 1+ v.
+      3& if<>0loop]
+
+    {Advance to next slice}
+    $c403 p+ p=
+    $8800 q+ q=
+
+    i 4- if>0loop]
+  ret
+] DrawImage=
+
+{
+  Wait number of seconds
+}
+[def {Wait}
+  [do
+    Delay=
+    \frameCount, 60+ 255& tmp=
+    [do \frameCount, tmp- if<>0loop]
+    Delay 1- if>0loop]
+  ret
+] WaitSeconds=
+
+{
+  Wait until all buttons are released
+}
+[def
+  [do \serialRaw, 255^ if<>0loop]
+  ret
+] WaitController=
+
+{Draw images in a continuous loop}
+[do
+  \packedBaboon  DrawImage! 15 WaitSeconds! WaitController!
+  \packedParrot  DrawImage! 15 WaitSeconds! WaitController!
+  \packedJupiter DrawImage! 15 WaitSeconds! WaitController!
+loop]
+
+{-----------------------------------------------------------------------+
+|       End                                                             |
++-----------------------------------------------------------------------}
+
