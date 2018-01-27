@@ -12,34 +12,42 @@
 #  - Serial input handler
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
-#  To do
+#  To do for ROM v1
 #  XXX Serial loading of programs with Arduino/Trinket
-#      Protocol: 0x21('!') <addrH> <addrL> <n-1> n*<byte> <sum> (n=1-32)
-#      Align bytes with visible scanlines
+#      Protocol: 0x21('!') <addrH> <addrL> <n> n*<byte> <sum> (n=1-32)
+#      Align bytes exactly with visible scanlines
 #  XXX Double-check initialisation of all variables
 #
-#  Maybe
+#  Hopefully in ROM v1
+#  XXX Logo drawing
+#  XXX Music sequencer (combined with LED sequencer)
 #  XXX Audio: Move shift table to page 7, then add waveform synthesis
-#  XXX vCPU: Interrupts / Task switching (e.g for clock, LED sequencer)
+#  XXX Adjustable return address for LOOKUP trampolines
 #  XXX vCPU: Right shift (Left shift)
+#  XXX Retire sysPos and sysData (use sysArgs instead)
 #  XXX vCPU: ANDW, ORW, XORW
-#  XXX vCPU: Clear just vAC[0:7]
+#  XXX vCPU: N-shift table (8 bits)
+#  XXX Prefix notation for high/low byte >X++ instead of X>++
+#  XXX Readability of asm.py instructions, esp. make d() implicit
+#  XXX Pictures: speed up scrolling by splitting work over frames
+#
+#  Probably not in ROM v1
+#  XXX vCPU: Interrupts / Task switching (e.g for clock, LED sequencer)
 #  XXX vCPU: PUSHA, POPA
 #  XXX vCPU: Multiplication (mulShift8?)
-#  XXX Music sequencer (combined with LED sequencer)
-#  XXX Logo drawing
-#  XXX Readability of asm.py instructions, esp. make d() implicit
 #  XXX Scroll out the top line of text, or generic vertical scroll SYS call
 #  XXX Intro: Rising planet?
 #  XXX Pacman ghosts. Sprites by scan line 4 reset method? ("videoG"=graphics)
 #  XXX Multitasking/threading/sleeping (start with date/time clock in GCL)
-#  XXX Prefix notation for high/low byte >X++ instead of X>++
 #  XXX Audio: Decay, using Karplus-Strong
 #  XXX Scoping for variables or some form of local variables? $i ("localized")
 #  XXX Simple GCL programs might be compiled by the host instead of offline?
+#  XXX vCPU: Clear just vAC[0:7] (Workaround is not bad: |255 ^255)
+#  XXX Random dots screensaver
+#  XXX Star field
 #
-#  Future applications
-#  XXX Random dots screen
+#  Future applications after ROM v1
+#  XXX ROM data compression (starting with Jupiter and Racer image)
 #  XXX Font screen 16x8 chars
 #  XXX Info screen (zero page)
 #  XXX Gigatron layout balls/bricks game
@@ -429,6 +437,12 @@ st(d(hi('SYS_42_Reset')),eaYXregOUTIX)
 st(d(lo('SYS')),         eaYXregOUTIX)
 st(d(256-42/2+maxTicks), eaYXregOUTIX)
 
+ld(val(255));                   C('Setup serial input')
+st(d(serialRaw))
+st(d(serialLast))
+st(d(buttonState))
+st(d(softResetTimer))
+
 # XXX Everything below should at one point migrate to Reset.gcl
 
 # Init the shift2-right table for sound
@@ -453,13 +467,6 @@ ld(val(0))
 st(d(ledState))
 ld(val(60/6))
 st(d(ledTempo))
-
-ld(val(0));                     C('Setup serial input')
-st(d(softResetTimer))
-ld(val(255))
-st(d(serialRaw))
-st(d(serialLast))
-st(d(buttonState))
 
 ld(val(0b0111));                C('LEDs |***O|')
 ld(val(syncBits^hSync),regOUT)
@@ -503,8 +510,8 @@ ld(d(lo('videoF')))                     #25 Do this before first visible pixels
 st(d(videoDorF))                        #26
 # Start of manually compiled vCPU section
 st(d(lo('LDWI')    ),eaYXregOUTIX)      #27 00f6 Where to read from ROM
-st(d(lo('Reset')),eaYXregOUTIX)         #28 00f7
-st(d(hi('Reset')),eaYXregOUTIX)         #29 00f8
+st(d(lo('Reset')   ),eaYXregOUTIX)      #28 00f7
+st(d(hi('Reset')   ),eaYXregOUTIX)      #29 00f8
 st(d(lo('STW')     ),eaYXregOUTIX)      #30 00f9
 st(d(sysArgs       ),eaYXregOUTIX)      #31 00fa
 st(d(lo('LDWI')    ),eaYXregOUTIX)      #32 00fb Call SYS_88_LoadRom
@@ -513,9 +520,9 @@ st(d(hi('SYS_88_LoadRom')),eaYXregOUTIX)#34 00fd (is 0...)
 st(d(lo('SYS')     ),eaYXregOUTIX)      #35 00fe
 st(d(256-88/2+maxTicks),eaYXregOUTIX)   #36 00ff
 # Return to interpreter
-ld(val(hi('REENTER')),regY)     #37
-jmpy(d(lo('REENTER')))          #38
-ld(val(-42/2))                  #39
+ld(val(hi('REENTER')),regY)             #37
+jmpy(d(lo('REENTER')))                  #38
+ld(val(-42/2))                          #39
 
 #-----------------------------------------------------------------------
 # Extension SYS_88_LoadRom: Load code from ROM into memory
@@ -780,48 +787,52 @@ st(d(buttonState))              #44
 ldzp(d(serialRaw))              #45
 st(d(serialLast))               #46
 
-# Respond to reset button (13 cycles)
+# Respond to reset button (12 cycles)
 xora(val(~buttonStart));        C('Check for soft reset')#47
-beq(d(lo('.restart0')))         #48
-bra(d(lo('.restart1')))         #49
-ld(val(120))                    #50 2 seconds
+bne(d(lo('.restart0')))         #48
+ldzp(d(softResetTimer))         #49 As long as button pressed
+suba(val(1))                    #50 ... count down the timer
+st(d(softResetTimer))           #51
+anda(d(127))                    #52
+beq(d(lo('.restart2')))         #53
+ld(val((vCpuReset&255)-2))      #54 Start force reset when hitting 0
+bra(d(lo('.restart1')))         #55 ... otherwise do nothing yet
+bra(d(lo('.restart3')))         #56
 label('.restart0')
-ldzp(d(softResetTimer))         #50
+ld(val(127))                    #50 Restore to ~2 seconds when not pressed
+st(d(softResetTimer))           #51
+wait(56-52)                     #52
+bra(d(lo('.restart3')))         #56
 label('.restart1')
-suba(val(1))                    #51
-bne(d(lo('.restart2')))         #52
-st(d(softResetTimer))           #53
-ld(val((vCpuReset&255)-2))      #54 Force reset
-st(d(vPC))                      #55
-ld(val(vCpuReset>>8))           #56
-bra(d(lo('.restart3')))         #57
-st(d(vPC+1))                    #58
+nop()                           #57
 label('.restart2')
-wait(59-54)                     #54
+st(d(vPC))                      #55 Continue force reset
+ld(val(vCpuReset>>8))           #56
+st(d(vPC+1))                    #57
 label('.restart3')
 
 # TODO: move Select logic in here
 
 # Uptime frame count (3 cycles)
-ldzp(d(frameCount));            C('Frame counter')#59
-adda(val(1))                    #60
-st(d(frameCount))               #61
+ldzp(d(frameCount));            C('Frame counter')#58
+adda(val(1))                    #59
+st(d(frameCount))               #60
 
 # Mix entropy (11 cycles)
-xora(d(entropy+1),busRAM);      C('Mix entropy')#62
-xora(d(serialRaw),busRAM)       #63 Mix in serial input
-adda(d(entropy+0),busRAM)       #64
-st(d(entropy+0))                #65
-adda(d(entropy+2),busRAM)       #66 Some hidden state
-st(d(entropy+2))                #67
-bmi(d(lo('.rnd0')))             #68
-bra(d(lo('.rnd1')))             #69
-xora(val(64+16+2+1))            #70
+xora(d(entropy+1),busRAM);      C('Mix entropy')#61
+xora(d(serialRaw),busRAM)       #62 Mix in serial input
+adda(d(entropy+0),busRAM)       #63
+st(d(entropy+0))                #64
+adda(d(entropy+2),busRAM)       #65 Some hidden state
+st(d(entropy+2))                #66
+bmi(d(lo('.rnd0')))             #67
+bra(d(lo('.rnd1')))             #68
+xora(val(64+16+2+1))            #69
 label('.rnd0')
-xora(val(64+32+8+4))            #70
+xora(val(64+32+8+4))            #69
 label('.rnd1')
-adda(d(entropy+1),busRAM)       #71
-st(d(entropy+1))                #72
+adda(d(entropy+1),busRAM)       #70
+st(d(entropy+1))                #71
 
 # When the total number of scan lines per frame is not an exact multiple of the (4) channels,
 # there will be an audible discontinuity if no measure is taken. This static noise can be
@@ -839,7 +850,7 @@ if soundDiscontinuity > 1:
 
 extra+=11 # For sound on/off and sound timer hack below. XXX solve properly
 
-runVcpu(178-73-extra, 'line0')  #73 Application cycles (scan line 0)
+runVcpu(178-72-extra, 'line0')  #72 Application cycles (scan line 0)
 st(d(vBlank))                   #178 Keep at 0 for remainder of frame
 
 # --- LED sequencer (19 cycles)

@@ -7,22 +7,29 @@
 
 gcl0x
 
-{ Setup video indirection table }
-$100 p= {videoTable}
-$800 q= {frame}
-[do
-  q>,  p. p<++          { Y[i] = 8..127}
-  0    p. p<++          {dX[i] = 0}
-  q>++ q  if>0loop]
+\Main Main=
 
-{ Clear screen }
-$800 p= $8801 i=
-[do
-  p [do
-    \sysArgs0= \SYS_38_VClear8 38@ {Clears 8 pixels vertically}
-    $800 p+ p= if>0loop]
-  i+ p=
-  255& 160^ if<>0loop]
+{ Setup video }
+\Screen \sysArgs0=
+[def
+  { Setup video indirection table }
+  $100 p= {videoTable}
+  $800 q= {frame}
+  [do
+    q>,  p. p<++          { Y[i] = 8..127}
+    0    p. p<++          {dX[i] = 0}
+    q>++ q  if>0loop]
+
+  { Clear screen }
+  $800 p= $8801 i=
+  [do
+    p [do
+      \sysArgs0= \SYS_38_VClear8 38@ {Clears 8 pixels vertically}
+      $800 p+ p= if>0loop]
+    i+ p=
+    255& 160^ if<>0loop]
+  ret
+] SetupVideo=
 
 { Startup message:
   +--------------------------+
@@ -61,6 +68,9 @@ Char>, p. p<++ Char p.          {Put decimals into StartupMessage}
 |}\vLR>++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
 $0400:
+
+{ Filter reset button while still in reset sequence }
+\buttonState; [if>=0 16& if=0 \sysArgs0; Main=]
 
 { Draw a 5x8 character on screen with the built-in font
   Char must be in the 32-127 range (this is not checked) }
@@ -115,12 +125,13 @@ $0400:
   pop ret
 ] PlayChord=
 
-{ Call functions }
+{ Now it is safe to call functions }
+PlayChord! {Audio before video}
+SetupVideo!
 $812 Pos= StartupMessage Text= DrawText!
-PlayChord!
 
 { Load and start main program }
-\Main \sysArgs0= $300 \vLR= \SYS_88_LoadRom 88@
+Main \sysArgs0= $300 \vLR= \SYS_88_LoadRom 88@
 
 {-----------------------------------------------------------------------+
 |                                                                       |

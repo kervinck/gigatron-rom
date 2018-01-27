@@ -1,7 +1,15 @@
 CFLAGS:=-std=c11 -O3 -Wall
 
 theloop.2.rom: *.py *.gcl Images/*.rgb Makefile
-	./theloop.py Snake.gcl Racer.gcl Mandelbrot.gcl Pictures.gcl Credits.gcl Main.gcl Reset.gcl
+	./theloop.py\
+		Snake.gcl\
+		Racer.gcl\
+		Mandelbrot.gcl\
+		Pictures.gcl\
+		Credits.gcl\
+		Screen.gcl\
+		Main.gcl\
+		Reset.gcl
 
 run: gtemu theloop.2.rom
 	./gtemu
@@ -23,3 +31,5 @@ burn: theloop.2.rom
 
 todo:
 	@git ls-files | sed 's/ /\\ /g' | xargs grep -I -i -E '(todo|xxx)'
+
+# vi: noexpandtab

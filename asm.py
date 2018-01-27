@@ -441,5 +441,5 @@ def end():
   with open(filename, 'wb') as file:
     file.write(''.join([chr(byte) for byte in _rom2]))
 
-  print 'OK usedWords %d freeWords %d totalBytes %d' % (_romSize, _maxRomSize-_romSize, len(_rom2))
+  print 'OK used %d free %d size %d' % (_romSize, _maxRomSize-_romSize, len(_rom2))
 
