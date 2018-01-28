@@ -16,7 +16,6 @@
 #  XXX Serial loading of programs with Arduino/Trinket
 #      Protocol: 0x21('!') <addrH> <addrL> <n> n*<byte> <sum> (n=1-32)
 #      Align bytes exactly with visible scanlines
-#  XXX Double-check initialisation of all variables
 #
 #  Hopefully in ROM v1
 #  XXX Logo drawing
@@ -171,7 +170,7 @@ frameCount      = zpByte(1)
 serialRaw       = zpByte() # New raw serial read
 serialLast      = zpByte() # Previous serial read
 buttonState     = zpByte() # Clearable button state
-softResetTimer  = zpByte() # After 2 seconds of holding 'Start', do a soft reset
+resetTimer      = zpByte() # After 2 seconds of holding 'Start', do a soft reset
 
 # Extended output (blinkenlights in bit 0:3 and audio in but 4:7). This
 # value must be present in AC during a rising hSync edge. It then gets
@@ -206,6 +205,7 @@ ledTempo        = zpByte() # Next value for ledTimer after LED state change
 
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 zpFree          = zpByte(0)
+print 'zpFree %04x' % zpFree
 
 #-----------------------------------------------------------------------
 #
@@ -419,10 +419,11 @@ st(d(lo('SYS')),         eaYXregOUTIX)
 st(d(256-42/2+maxTicks), eaYXregOUTIX)
 
 ld(val(255));                   C('Setup serial input')
+st(d(frameCount))
 st(d(serialRaw))
 st(d(serialLast))
 st(d(buttonState))
-st(d(softResetTimer))
+st(d(resetTimer))
 
 # XXX Everything below should at one point migrate to Reset.gcl
 
@@ -771,9 +772,9 @@ st(d(serialLast))               #46
 # Respond to reset button (12 cycles)
 xora(val(~buttonStart));        C('Check for soft reset')#47
 bne(d(lo('.restart0')))         #48
-ldzp(d(softResetTimer))         #49 As long as button pressed
+ldzp(d(resetTimer))             #49 As long as button pressed
 suba(val(1))                    #50 ... count down the timer
-st(d(softResetTimer))           #51
+st(d(resetTimer))               #51
 anda(d(127))                    #52
 beq(d(lo('.restart2')))         #53
 ld(val((vCpuReset&255)-2))      #54 Start force reset when hitting 0
@@ -781,7 +782,7 @@ bra(d(lo('.restart1')))         #55 ... otherwise do nothing yet
 bra(d(lo('.restart3')))         #56
 label('.restart0')
 ld(val(127))                    #50 Restore to ~2 seconds when not pressed
-st(d(softResetTimer))           #51
+st(d(resetTimer))               #51
 wait(56-52)                     #52
 bra(d(lo('.restart3')))         #56
 label('.restart1')
