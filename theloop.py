@@ -97,14 +97,19 @@ vPulse += vPulseExtension
 vBack -= vPulseExtension
 
 # Game controller bits (actual controllers in kit have negative output)
+# +-------------------------------------+
+# |       Up                      B*    |
+# |  Left + Right              B     A* |
+# |      Down     Select Start    A     |
+# +-------------------------------------+ *=Auto fire
 buttonRight     = 1
 buttonLeft      = 2
 buttonDown      = 4
 buttonUp        = 8
 buttonStart     = 16
 buttonSelect    = 32
-buttonA         = 64  # XXX swap, this is B
-buttonB         = 128 # XXX swap, this is A
+buttonB         = 64
+buttonA         = 128
 
 # Compile option: True restricts the calling of interpreter to calls from
 # page 2, for 2 cycles less interpreter ENTER/EXIT overhead

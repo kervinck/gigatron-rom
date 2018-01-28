@@ -76,145 +76,146 @@ cold:         003e c204  st   [$04]
               0045 0001  ld   $01
               0046 d619  st   [$19],y
               0047 dc11  st   $11,[y,x++]
-              0048 dc6e  st   $6e,[y,x++]
+              0048 dc6f  st   $6f,[y,x++]
               0049 dc00  st   $00,[y,x++]
               004a dca9  st   $a9,[y,x++]
               004b dcf9  st   $f9,[y,x++]
               004c 00ff  ld   $ff         ;Setup serial input
-              004d c212  st   [$12]
-              004e c213  st   [$13]
-              004f c214  st   [$14]
-              0050 c215  st   [$15]
-              0051 1402  ld   $02,y       ;Setup shift2 table
-              0052 0000  ld   $00
-              0053 c202  st   [$02]
-.loop:        0054 c231  st   [$31]
-              0055 8200  adda ac
-              0056 9200  adda ac,x
-              0057 0131  ld   [$31]
-              0058 ce00  st   [y,x]
-              0059 8001  adda $01
-              005a 6040  xora $40
-              005b ec54  bne  .loop
-              005c 6040  xora $40
-              005d 0078  ld   $78         ;Setup LED sequencer
-              005e c22e  st   [$2e]
-              005f 0000  ld   $00
-              0060 c22f  st   [$2f]
-              0061 000a  ld   $0a
-              0062 c230  st   [$30]
-              0063 0007  ld   $07         ;LEDs |***O|
-              0064 1880  ld   $80,out
-              0065 18c0  ld   $c0,out
-              0066 000f  ld   $0f         ;LEDs |****|
-              0067 1880  ld   $80,out
-              0068 18c0  ld   $c0,out
-              0069 c216  st   [$16]
-              006a c217  st   [$17]
-              006b 1402  ld   $02,y       ;Enter video loop
-              006c e004  jmp  y,$04
-              006d 00c0  ld   $c0
-SYS_42_Reset: 006e 00f4  ld   $f4
-              006f c218  st   [$18]
-              0070 10f6  ld   $f6,x
-              0071 0000  ld   $00
-              0072 d619  st   [$19],y
-              0073 c21e  st   [$1e]
-              0074 c21c  st   [$1c]
-              0075 c22d  st   [$2d]
-              0076 0003  ld   $03
-              0077 c21d  st   [$1d]
-              0078 00f2  ld   $f2
-              0079 c20f  st   [$0f]
-              007a dc11  st   $11,[y,x++]
-              007b dcad  st   $ad,[y,x++]
-              007c dcfa  st   $fa,[y,x++]
-              007d dc2b  st   $2b,[y,x++]
-              007e dc25  st   $25,[y,x++]
-              007f dc11  st   $11,[y,x++]
-              0080 dc87  st   $87,[y,x++]
-              0081 dc00  st   $00,[y,x++]
-              0082 dca9  st   $a9,[y,x++]
-              0083 dce2  st   $e2,[y,x++]
-              0084 1403  ld   $03,y
-              0085 e0df  jmp  y,$df
-              0086 00eb  ld   $eb
+              004d c211  st   [$11]
+              004e c212  st   [$12]
+              004f c213  st   [$13]
+              0050 c214  st   [$14]
+              0051 c215  st   [$15]
+              0052 1402  ld   $02,y       ;Setup shift2 table
+              0053 0000  ld   $00
+              0054 c202  st   [$02]
+.loop:        0055 c231  st   [$31]
+              0056 8200  adda ac
+              0057 9200  adda ac,x
+              0058 0131  ld   [$31]
+              0059 ce00  st   [y,x]
+              005a 8001  adda $01
+              005b 6040  xora $40
+              005c ec55  bne  .loop
+              005d 6040  xora $40
+              005e 0078  ld   $78         ;Setup LED sequencer
+              005f c22e  st   [$2e]
+              0060 0000  ld   $00
+              0061 c22f  st   [$2f]
+              0062 000a  ld   $0a
+              0063 c230  st   [$30]
+              0064 0007  ld   $07         ;LEDs |***O|
+              0065 1880  ld   $80,out
+              0066 18c0  ld   $c0,out
+              0067 000f  ld   $0f         ;LEDs |****|
+              0068 1880  ld   $80,out
+              0069 18c0  ld   $c0,out
+              006a c216  st   [$16]
+              006b c217  st   [$17]
+              006c 1402  ld   $02,y       ;Enter video loop
+              006d e004  jmp  y,$04
+              006e 00c0  ld   $c0
+SYS_42_Reset: 006f 00f4  ld   $f4
+              0070 c218  st   [$18]
+              0071 10f6  ld   $f6,x
+              0072 0000  ld   $00
+              0073 d619  st   [$19],y
+              0074 c21e  st   [$1e]
+              0075 c21c  st   [$1c]
+              0076 c22d  st   [$2d]
+              0077 0003  ld   $03
+              0078 c21d  st   [$1d]
+              0079 00f2  ld   $f2
+              007a c20f  st   [$0f]
+              007b dc11  st   $11,[y,x++]
+              007c dcad  st   $ad,[y,x++]
+              007d dcfa  st   $fa,[y,x++]
+              007e dc2b  st   $2b,[y,x++]
+              007f dc25  st   $25,[y,x++]
+              0080 dc11  st   $11,[y,x++]
+              0081 dc88  st   $88,[y,x++]
+              0082 dc00  st   $00,[y,x++]
+              0083 dca9  st   $a9,[y,x++]
+              0084 dce2  st   $e2,[y,x++]
+              0085 1403  ld   $03,y
+              0086 e0df  jmp  y,$df
+              0087 00eb  ld   $eb
 SYS_88_LoadRom:
-              0087 0000  ld   $00
-              0088 d619  st   [$19],y
-              0089 011e  ld   [$1e]
-              008a a037  suba $37
-              008b d220  st   [$20],x
-              008c 80fe  adda $fe
-              008d c218  st   [$18]
-              008e dc7d  st   $7d,[y,x++]
-              008f dc95  st   $95,[y,x++]
-              0090 801a  adda $1a
-              0091 de00  st   [y,x++]
-              0092 dc5e  st   $5e,[y,x++]
-              0093 dc28  st   $28,[y,x++]
-              0094 dce3  st   $e3,[y,x++]
-              0095 8009  adda $09
-              0096 de00  st   [y,x++]
-              0097 dc5e  st   $5e,[y,x++]
-              0098 dc27  st   $27,[y,x++]
-              0099 dce3  st   $e3,[y,x++]
-              009a de00  st   [y,x++]
-              009b dc5e  st   $5e,[y,x++]
-              009c dc29  st   $29,[y,x++]
-              009d dce3  st   $e3,[y,x++]
-              009e de00  st   [y,x++]
-              009f dc98  st   $98,[y,x++]
-              00a0 dc27  st   $27,[y,x++]
-              00a1 dcf9  st   $f9,[y,x++]
-              00a2 dc27  st   $27,[y,x++]
-              00a3 dc1a  st   $1a,[y,x++]
-              00a4 dc29  st   $29,[y,x++]
-              00a5 dcf6  st   $f6,[y,x++]
-              00a6 dc01  st   $01,[y,x++]
-              00a7 dc35  st   $35,[y,x++]
-              00a8 dc72  st   $72,[y,x++]
-              00a9 80e8  adda $e8
-              00aa de00  st   [y,x++]
-              00ab dce3  st   $e3,[y,x++]
-              00ac 8018  adda $18
-              00ad de00  st   [y,x++]
-              00ae dc35  st   $35,[y,x++]
-              00af dc72  st   $72,[y,x++]
-              00b0 80e0  adda $e0
-              00b1 de00  st   [y,x++]
-              00b2 dc63  st   $63,[y,x++]
-              00b3 dcff  st   $ff,[y,x++]
-              00b4 8022  adda $22
-              00b5 de00  st   [y,x++]
-              00b6 dc00  st   $00,[y,x++]
-              00b7 dc1a  st   $1a,[y,x++]
-              00b8 dc25  st   $25,[y,x++]
-              00b9 dc91  st   $91,[y,x++]
-              00ba dcfb  st   $fb,[y,x++]
-              00bb dc35  st   $35,[y,x++]
-              00bc dc72  st   $72,[y,x++]
-              00bd 8009  adda $09
-              00be de00  st   [y,x++]
-              00bf dc5e  st   $5e,[y,x++]
-              00c0 dc25  st   $25,[y,x++]
-              00c1 dcf9  st   $f9,[y,x++]
-              00c2 dc26  st   $26,[y,x++]
-              00c3 dc21  st   $21,[y,x++]
-              00c4 dc25  st   $25,[y,x++]
-              00c5 dc75  st   $75,[y,x++]
-              00c6 dc00  st   $00,[y,x++]
-              00c7 dcf9  st   $f9,[y,x++]
-              00c8 dc25  st   $25,[y,x++]
-              00c9 dcff  st   $ff,[y,x++]
-              00ca 0200  nop
-              00cb 1403  ld   $03,y
-              00cc e0df  jmp  y,$df
-              00cd 00d4  ld   $d4
-              00ce 0200  nop
+              0088 0000  ld   $00
+              0089 d619  st   [$19],y
+              008a 011e  ld   [$1e]
+              008b a037  suba $37
+              008c d220  st   [$20],x
+              008d 80fe  adda $fe
+              008e c218  st   [$18]
+              008f dc7d  st   $7d,[y,x++]
+              0090 dc95  st   $95,[y,x++]
+              0091 801a  adda $1a
+              0092 de00  st   [y,x++]
+              0093 dc5e  st   $5e,[y,x++]
+              0094 dc28  st   $28,[y,x++]
+              0095 dce3  st   $e3,[y,x++]
+              0096 8009  adda $09
+              0097 de00  st   [y,x++]
+              0098 dc5e  st   $5e,[y,x++]
+              0099 dc27  st   $27,[y,x++]
+              009a dce3  st   $e3,[y,x++]
+              009b de00  st   [y,x++]
+              009c dc5e  st   $5e,[y,x++]
+              009d dc29  st   $29,[y,x++]
+              009e dce3  st   $e3,[y,x++]
+              009f de00  st   [y,x++]
+              00a0 dc98  st   $98,[y,x++]
+              00a1 dc27  st   $27,[y,x++]
+              00a2 dcf9  st   $f9,[y,x++]
+              00a3 dc27  st   $27,[y,x++]
+              00a4 dc1a  st   $1a,[y,x++]
+              00a5 dc29  st   $29,[y,x++]
+              00a6 dcf6  st   $f6,[y,x++]
+              00a7 dc01  st   $01,[y,x++]
+              00a8 dc35  st   $35,[y,x++]
+              00a9 dc72  st   $72,[y,x++]
+              00aa 80e8  adda $e8
+              00ab de00  st   [y,x++]
+              00ac dce3  st   $e3,[y,x++]
+              00ad 8018  adda $18
+              00ae de00  st   [y,x++]
+              00af dc35  st   $35,[y,x++]
+              00b0 dc72  st   $72,[y,x++]
+              00b1 80e0  adda $e0
+              00b2 de00  st   [y,x++]
+              00b3 dc63  st   $63,[y,x++]
+              00b4 dcff  st   $ff,[y,x++]
+              00b5 8022  adda $22
+              00b6 de00  st   [y,x++]
+              00b7 dc00  st   $00,[y,x++]
+              00b8 dc1a  st   $1a,[y,x++]
+              00b9 dc25  st   $25,[y,x++]
+              00ba dc91  st   $91,[y,x++]
+              00bb dcfb  st   $fb,[y,x++]
+              00bc dc35  st   $35,[y,x++]
+              00bd dc72  st   $72,[y,x++]
+              00be 8009  adda $09
+              00bf de00  st   [y,x++]
+              00c0 dc5e  st   $5e,[y,x++]
+              00c1 dc25  st   $25,[y,x++]
+              00c2 dcf9  st   $f9,[y,x++]
+              00c3 dc26  st   $26,[y,x++]
+              00c4 dc21  st   $21,[y,x++]
+              00c5 dc25  st   $25,[y,x++]
+              00c6 dc75  st   $75,[y,x++]
+              00c7 dc00  st   $00,[y,x++]
+              00c8 dcf9  st   $f9,[y,x++]
+              00c9 dc25  st   $25,[y,x++]
+              00ca dcff  st   $ff,[y,x++]
+              00cb 0200  nop
+              00cc 1403  ld   $03,y
+              00cd e0df  jmp  y,$df
+              00ce 00d4  ld   $d4
               00cf 0200  nop
               00d0 0200  nop
-              * 50 times
+              00d1 0200  nop
+              * 49 times
 videoA:       0100 00c8  ld   $c8
               0101 c20e  st   [$0e]
               0102 1401  ld   $01,y
@@ -53004,7 +53005,7 @@ Racer:        e844 0003  ld   $03         ;| RAM segment address (high byte firs
               e8f3 001a  ld   $1a         ;03ac LD
               e8f4 0012  ld   $12
               e8f5 0087  ld   $87         ;03ae ANDI
-              e8f6 0040  ld   $40
+              e8f6 0080  ld   $80
               e8f7 0035  ld   $35         ;03b0 BCC
               e8f8 0072  ld   $72         ;03b1 NE
               e8f9 00c6  ld   $c6
@@ -53051,7 +53052,7 @@ Racer:        e844 0003  ld   $03         ;| RAM segment address (high byte firs
               e922 001a  ld   $1a         ;03d6 LD
               e923 0012  ld   $12
               e924 0087  ld   $87         ;03d8 ANDI
-              e925 0080  ld   $80
+              e925 0040  ld   $40
               e926 0035  ld   $35         ;03da BCC
               e927 0072  ld   $72         ;03db NE
               e928 00e6  ld   $e6
@@ -57391,7 +57392,7 @@ Main:         f817 0003  ld   $03         ;| RAM segment address (high byte firs
               fa1f 001a  ld   $1a         ;0565 LD
               fa20 0014  ld   $14
               fa21 0087  ld   $87         ;0567 ANDI
-              fa22 0040  ld   $40
+              fa22 0080  ld   $80
               fa23 0035  ld   $35         ;0569 BCC
               fa24 0072  ld   $72         ;056a NE
               fa25 0023  ld   $23
@@ -57526,7 +57527,7 @@ Main:         f817 0003  ld   $03         ;| RAM segment address (high byte firs
               faa6 002b  ld   $2b         ;05ec STW
               faa7 001c  ld   $1c
               faa8 0059  ld   $59         ;05ee LDI
-              faa9 0087  ld   $87
+              faa9 0088  ld   $88
               faaa 00a9  ld   $a9         ;05f0 SYS
               faab 00e2  ld   $e2
               faac 0000  ld   $00         ;End of file
@@ -58000,7 +58001,7 @@ Reset:        faad 0003  ld   $03         ;| RAM segment address (high byte firs
               fc80 002b  ld   $2b         ;04ea STW
               fc81 001c  ld   $1c
               fc82 0059  ld   $59         ;04ec LDI
-              fc83 0087  ld   $87
+              fc83 0088  ld   $88
               fc84 00a9  ld   $a9         ;04ee SYS
               fc85 00e2  ld   $e2
               fc86 0000  ld   $00         ;End of file

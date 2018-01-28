@@ -129,7 +129,7 @@ $2000 Pos=
   { Handle each stroke of Up/Down and A controller buttons }
   \buttonState,  8& {buttonUp}   [if=0 WipeOutArrow! Item    [if>0 1- else 0] Item= \buttonState, 8| \buttonState.]
   \buttonState,  4& {buttonDown} [if=0 WipeOutArrow! Item 5- [if<0 6+ else 5] Item= \buttonState, 4| \buttonState.]
-  \buttonState, 64& {buttonA}    if<>0loop
+  \buttonState, 128&{buttonA}    if<>0loop
 
   42 {Grey} Color= PrintArrow!
 
