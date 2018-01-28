@@ -7,6 +7,7 @@ theloop.2.rom: *.py *.gcl Images/*.rgb Makefile
 		Mandelbrot.gcl\
 		Pictures.gcl\
 		Credits.gcl\
+		Loader.gcl\
 		Screen.gcl\
 		Main.gcl\
 		Reset.gcl

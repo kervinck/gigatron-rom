@@ -207,25 +207,6 @@ ledTempo        = zpByte() # Next value for ledTimer after LED state change
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 zpFree          = zpByte(0)
 
-# Export some zero page variables to GCL
-# XXX Solve in another way (not through symbol table!)
-define('memSize',    memSize)
-define('entropy',    entropy)
-define('frameCount', frameCount)
-define('serialRaw',  serialRaw)
-define('buttonState', buttonState)
-for i in range(8):
-  define('sysArgs%d' % i, sysArgs+i)
-define('soundTimer', soundTimer)
-define('sysData',    sysData)
-define('sysPos',     sysPos)
-define('vBlank',     vBlank)
-define('vAC',        vAC)
-define('vACH',       vAC+1)
-define('vLR',        vLR)
-define('screenY',    screenY)
-define('vPC+1',      vPC+1) # XXX trampoline() is probably in the wrong module
-
 #-----------------------------------------------------------------------
 #
 #  RAM page 1: video line table
@@ -842,7 +823,7 @@ st(d(entropy+1))                #71
 soundDiscontinuity = (vFront+vPulse+vBack) % 4
 extra = 0
 if soundDiscontinuity == 1:
-  st(val(sample), ea0DregAC|busD)
+  st(val(sample), ea0DregAC|busD) # XXX Problem: We're clearing 2 samples here?
   C('Sound continuity')
   extra += 1
 if soundDiscontinuity > 1:
@@ -1031,37 +1012,32 @@ ld(d(videoSync0), busRAM|regOUT);C('<New scan line start>')#0 Ends the vertical 
 
 # Last blank line before transfering to visible area
 label('vBlankLast0')
-ld(val(0))                      #32
-st(d(frameX))                   #33
-st(d(nextVideo))                #34
-
-label('vBlankLast1')
 
 # --- Switch video mode when (only) select is pressed
-ldzp(d(buttonState))            #35
-xora(val(~buttonSelect))        #36
-beq(d(lo('.select0')))          #37
-bra(d(lo('.select1')))          #38
-ld(val(0))                      #39
+ldzp(d(buttonState))            #32
+xora(val(~buttonSelect))        #33
+beq(d(lo('.select0')))          #34
+bra(d(lo('.select1')))          #35
+ld(val(0))                      #36
 label('.select0')
-ld(val(lo('videoD')^lo('videoF')))#39
+ld(val(lo('videoD')^lo('videoF')))#36
 label('.select1')
-xora(d(videoDorF),busRAM)       #40
-st(d(videoDorF))                #41
+xora(d(videoDorF),busRAM)       #37
+st(d(videoDorF))                #38
+ldzp(d(buttonState))            #39 XXX move to line 0
+ora(val(buttonSelect))          #40
+st(d(buttonState))              #41
 
-# XXX move to line 0
-ldzp(d(buttonState))
-ora(val(buttonSelect))
-st(d(buttonState))
-
-runVcpu(199-42-3, 'line40')       #42 Application cycles (scan line 40)
+runVcpu(197-42, 'line40')       #42 Application cycles (scan line 40)
+# vAC==0 now
+st(d(frameX))                   #197 
+st(d(nextVideo))                #198
 ldzp(d(channel))                #199 Advance to next sound channel
 anda(val(3));                   C('<New scan line start>')#0
 adda(val(1))                    #1
 ld(d(hi('sound2')), busD|ea0DregY)#2
 jmpy(d(lo('sound2')))           #3
 ld(val(syncBits^hSync), regOUT) #4 Start horizontal pulse
-
 
 #-----------------------------------------------------------------------
 #
@@ -1602,6 +1578,19 @@ jmpy(d(lo('REENTER')))          #18
 ld(val(-22/2))                  #19
 
 #-----------------------------------------------------------------------
+# Extension SYS_24_In: Read a byte from the input port
+#-----------------------------------------------------------------------
+
+label('SYS_24_In')
+st(d(vAC),busIN)                #15
+ld(val(0))                      #16
+st(d(vAC+1))                    #17
+nop()                           #18
+ld(val(hi('REENTER')),regY)     #19
+jmpy(d(lo('REENTER')))          #20
+ld(val(-24/2))                  #21
+
+#-----------------------------------------------------------------------
 # Extension SYS_XX_LoadSerial:
 #-----------------------------------------------------------------------
 
@@ -2009,6 +1998,27 @@ ld(val(-40/2))                  #37
 
 # For info
 print 'SYS limits low %s high %s' % (repr(minSYS), repr(maxSYS))
+
+# Export some zero page variables to GCL
+# XXX Solve in another way (not through symbol table!)
+define('memSize',    memSize)
+define('entropy',    entropy)
+define('frameCount', frameCount)
+define('serialRaw',  serialRaw)
+define('buttonState', buttonState)
+for i in range(8):
+  define('sysArgs%d' % i, sysArgs+i)
+define('soundTimer', soundTimer)
+define('sysData',    sysData)
+define('sysPos',     sysPos)
+define('vBlank',     vBlank)
+define('vAC',        vAC)
+define('vACH',       vAC+1)
+define('vLR',        vLR)
+# All these are hacks:
+define('screenY',    screenY)
+define('nextVideo',  nextVideo)
+define('vPC+1',      vPC+1) # XXX trampoline() is probably in the wrong module
 
 # Compile test GCL program
 

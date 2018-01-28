@@ -1,0 +1,35 @@
+
+gcl0x
+
+{
+  Serial loading of programs with Arduino/Trinket over the serial port
+  Still a study to see if we can get the transmission right
+}
+
+\SYS_24_In SYS_24_In= {Put in variable to save some code space}
+
+$800 B= {Dynamic read buffer}
+     A= {Active line indicator}
+[do
+  {Process the next transmission frame}
+  0 S= {Checksum}
+  [do \screenY, 25^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Protocol byte}
+  [do \screenY, 19^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Length, just 6 bits}
+  [do \screenY, 11^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Low address}
+  [do \screenY,  3^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {High address}
+  [do \nextVideo,   if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Payload 0}
+  {256-59=} 197 i=
+  [do \screenY, 2&  if<>0loop  SYS_24_In 24@ B. B<++ S+ S= {Payload 1-59}
+  i<++ i if<>0loop]
+  [do \screenY, 36^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Checksum byte}
+
+  {Judge the checksum}
+  255& [if=0 12 {Light green} else 3 {Light red}] B. B<++
+
+  {Indicator (value is the serial input as seen by theloop)}
+  A, 255^ A. B A= \serialRaw, A.
+
+  {Advance to next line in screen memory}
+  $100 B+ [if<0 $800 else 255| 255^] B=
+loop]
+

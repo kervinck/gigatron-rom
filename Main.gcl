@@ -78,7 +78,7 @@ $0400:
   9# $4d# $61# $6e# $64# $65# $6c# $62# $72# $6f# $74# 10# {Mandelbrot}
   9# $50# $69# $63# $74# $75# $72# $65# $73# 10#           {Pictures}
   9# $43# $72# $65# $64# $69# $74# $73# 10#                {Credits}
-  9# $2a# $4c# $6f# $61# $64# $65# $72# 10#                {*Loader}
+  9# $4c# $6f# $61# $64# $65# $72# 10#                     {Loader}
   0#
 ] MainMenu=
 
@@ -138,7 +138,8 @@ $2000 Pos=
   1-   [if=0 \Racer      else
   1-   [if=0 \Mandelbrot else
   1-   [if=0 \Pictures   else
-  1-   [if=0 \Credits    else loop]]]]
+  1-   [if=0 \Credits    else
+  1-   [if=0 \Loader     else loop]]]]]
 ] Program=
 
 { Wipe out everything but the selected line }
