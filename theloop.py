@@ -104,8 +104,8 @@ buttonDown      = 4
 buttonUp        = 8
 buttonStart     = 16
 buttonSelect    = 32
-buttonA         = 64
-buttonB         = 128
+buttonA         = 64  # XXX swap, this is B
+buttonB         = 128 # XXX swap, this is A
 
 # Compile option: True restricts the calling of interpreter to calls from
 # page 2, for 2 cycles less interpreter ENTER/EXIT overhead

@@ -9,6 +9,7 @@ gcl0x
 
 {
 Todo:
+XXX Blinkenlights unintentionally speed up
 XXX Improve track indicator
 XXX Add more interesting camera behavior (DX0)
 XXX Positioning of "GAME OVER" message
