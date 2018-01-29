@@ -440,7 +440,7 @@ vBlankStart:  0204 c20c  st   [$0c]       ;Start of vertical blank interval
               0279 a001  suba $01
 .snd2:        027a 0000  ld   $00
 .snd3:        027b c22d  st   [$2d]
-              027c 0027  ld   $27
+              027c 00b3  ld   $b3
               027d c20b  st   [$0b]
               027e 190c  ld   [$0c],out   ;<New scan line start>
 sound1:       027f 0102  ld   [$02]       ;Advance to next sound channel
@@ -472,12 +472,12 @@ sound1:       027f 0102  ld   [$02]       ;Advance to next sound channel
               0299 0200  nop
               029a 190c  ld   [$0c],out   ;End horizontal pulse
               029b 010b  ld   [$0b]
-              029c f0c9  beq  vBlankLast0
-              029d a001  suba $01
+              029c f4c9  bge  vBlankLast
+              029d 8002  adda $02
               029e c20b  st   [$0b]
-              029f a01a  suba $1a
+              029f 8035  adda $35
               02a0 eca5  bne  vSync0
-              02a1 a008  suba $08
+              02a1 8010  adda $10
               02a2 00c0  ld   $c0
               02a3 fcaa  bra  vSync2
               02a4 c20c  st   [$0c]
@@ -490,13 +490,13 @@ vSync2:       02aa 0200  nop
 vSync3:       02ab 6040  xora $40
               02ac c20d  st   [$0d]
               02ad 010b  ld   [$0b]       ;Capture serial input
-              02ae 6019  xora $19
+              02ae 60cf  xora $cf
               02af ecb2  bne  .ser0
               02b0 fcb3  bra  .ser1
               02b1 c312  st   in,[$12]
 .ser0:        02b2 0200  nop
 .ser1:        02b3 010b  ld   [$0b]
-              02b4 2003  anda $03
+              02b4 2006  anda $06
               02b5 ecc2  bne  vBlankNormal
               02b6 0103  ld   [$03]
 vBlankSample: 02b7 400f  ora  $0f         ;New sound sample is ready
@@ -517,7 +517,7 @@ vBlankNormal: 02c2 00c7  ld   $c7         ;Run vCPU for 148 cycles (line1-39 typ
               02c6 0035  ld   $35
               02c7 fc7f  bra  sound1
               02c8 190c  ld   [$0c],out   ;<New scan line start>
-vBlankLast0:  02c9 0114  ld   [$14]
+vBlankLast:   02c9 0114  ld   [$14]
               02ca 60df  xora $df
               02cb f0ce  beq  .select0
               02cc fccf  bra  .select1
@@ -528,12 +528,12 @@ vBlankLast0:  02c9 0114  ld   [$14]
               02d1 0114  ld   [$14]
               02d2 4020  ora  $20
               02d3 c214  st   [$14]
-              02d4 0200  nop              ;Run vCPU for 155 cycles (line40)
-              02d5 00da  ld   $da
-              02d6 c209  st   [$09]
-              02d7 1402  ld   $02,y
-              02d8 e0ff  jmp  y,$ff
-              02d9 0038  ld   $38
+              02d4 00d9  ld   $d9         ;Run vCPU for 154 cycles (line40)
+              02d5 c209  st   [$09]
+              02d6 1402  ld   $02,y
+              02d7 e0ff  jmp  y,$ff
+              02d8 0038  ld   $38
+              02d9 c20b  st   [$0b]
               02da c20c  st   [$0c]
               02db c20e  st   [$0e]
               02dc 0102  ld   [$02]
@@ -56447,7 +56447,7 @@ Loader:       f65b 0003  ld   $03         ;| RAM segment address (high byte firs
               f66e 001a  ld   $1a         ;0310 LD
               f66f 000b  ld   $0b
               f670 0091  ld   $91         ;0312 XORI
-              f671 0019  ld   $19
+              f671 00cd  ld   $cd
               f672 0035  ld   $35         ;0314 BCC
               f673 0072  ld   $72         ;0315 NE
               f674 000e  ld   $0e
@@ -56466,7 +56466,7 @@ Loader:       f65b 0003  ld   $03         ;| RAM segment address (high byte firs
               f681 001a  ld   $1a         ;0323 LD
               f682 000b  ld   $0b
               f683 0091  ld   $91         ;0325 XORI
-              f684 0013  ld   $13
+              f684 00db  ld   $db
               f685 0035  ld   $35         ;0327 BCC
               f686 0072  ld   $72         ;0328 NE
               f687 0021  ld   $21
@@ -56485,7 +56485,7 @@ Loader:       f65b 0003  ld   $03         ;| RAM segment address (high byte firs
               f694 001a  ld   $1a         ;0336 LD
               f695 000b  ld   $0b
               f696 0091  ld   $91         ;0338 XORI
-              f697 000b  ld   $0b
+              f697 00eb  ld   $eb
               f698 0035  ld   $35         ;033a BCC
               f699 0072  ld   $72         ;033b NE
               f69a 0034  ld   $34
@@ -56504,7 +56504,7 @@ Loader:       f65b 0003  ld   $03         ;| RAM segment address (high byte firs
               f6a7 001a  ld   $1a         ;0349 LD
               f6a8 000b  ld   $0b
               f6a9 0091  ld   $91         ;034b XORI
-              f6aa 0003  ld   $03
+              f6aa 00fb  ld   $fb
               f6ab 0035  ld   $35         ;034d BCC
               f6ac 0072  ld   $72         ;034e NE
               f6ad 0047  ld   $47
@@ -56570,7 +56570,7 @@ Loader:       f65b 0003  ld   $03         ;| RAM segment address (high byte firs
               f6e9 001a  ld   $1a         ;038b LD
               f6ea 000b  ld   $0b
               f6eb 0091  ld   $91         ;038d XORI
-              f6ec 0024  ld   $24
+              f6ec 00b9  ld   $b9
               f6ed 0035  ld   $35         ;038f BCC
               f6ee 0072  ld   $72         ;0390 NE
               f6ef 0089  ld   $89

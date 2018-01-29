@@ -13,8 +13,8 @@ $800 B= {Dynamic read buffer}
 [do
   {Process the next transmission frame}
   0 S= {Checksum}
-  [do \videoY, 207^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Protocol byte}
-  [do \videoY, 219^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Length, just 6 bits}
+  [do \videoY, 205^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Protocol byte}
+  [do \videoY, 219^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Length, 7 new bits}
   [do \videoY, 235^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Low address}
   [do \videoY, 251^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {High address}
   [do \nextVideo,   if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Payload 0}
