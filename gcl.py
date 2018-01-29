@@ -3,6 +3,7 @@
 from asm import *
 import sys
 
+# XXX Give a warning when starting new block after calls were made
 # XXX Give warning when def-block contains 'call' put no 'push'
 # XXX Give warning when def-block contains code but no 'ret'
 # XXX Primitive or macro to clear just lower byte of vAC

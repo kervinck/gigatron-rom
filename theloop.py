@@ -16,8 +16,10 @@
 #  XXX Serial loading of programs with Arduino/Trinket
 #      Protocol: 0x21('!') <addrH> <addrL> <n> n*<byte> <sum> (n=1-32)
 #      Align bytes exactly with visible scanlines
+#  XXX Colors in reset screen (no black background, for video alignment)
 #
 #  Hopefully in ROM v1
+#  XXX Move opening tone from Reset.gcl to Main.gcl
 #  XXX Logo drawing
 #  XXX Music sequencer (combined with LED sequencer)
 #  XXX Audio: Move shift table to page 7, then add waveform synthesis
