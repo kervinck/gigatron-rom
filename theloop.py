@@ -78,7 +78,7 @@ assert(syncBits & hSync != 0)
 # VGA 640x480 defaults (to be adjusted below!)
 vFront = 10     # Vertical front porch
 vPulse = 2      # Vertical sync pulse
-vBack = 33      # Vertical back porch
+vBack  = 33     # Vertical back porch
 vgaLines = vFront + vPulse + vBack + 480
 vgaClock = 25.175e+06
 
@@ -156,7 +156,8 @@ entropy         = zpByte(3)
 returnTo        = zpByte(2)
 
 # Visible video
-screenY         = zpByte() # Counts up from 0 to 238 in steps of 2
+videoY          = zpByte() # Counts up from 0 to 238 in steps of 2
+                           # Counts up during vertical blank (-44/-40 to 0)
 frameX          = zpByte() # Starting byte within page
 frameY          = zpByte() # Page of current pixel row (updated by videoA)
 nextVideo       = zpByte() # Jump offset to scan line handler (videoA, B, C...)
@@ -164,9 +165,8 @@ videoDorF       = zpByte() # Handler for every 4th line (videoD or videoF)
 
 # Vertical blank (reuse some variables used in the visible part)
 vBlank          = zpByte() # 1=first scanline, start of vblank interval, 0=other line
-blankY          = screenY # Counts down during vertical blank (44 to 0)
-videoSync0      = frameX  # Vertical sync type on current line (0xc0 or 0x40)
-videoSync1      = frameY  # Same during horizontal pulse
+videoSync0      = frameX   # Vertical sync type on current line (0xc0 or 0x40)
+videoSync1      = frameY   # Same during horizontal pulse
 
 # Frame counter is good enough as system clock
 frameCount      = zpByte(1)
@@ -620,7 +620,7 @@ assert(lo('videoA') == 0)       # videoA starts at the page boundary
 ld(d(lo('videoB')))             #29
 st(d(nextVideo))                #30
 ld(d(videoTable>>8), regY)      #31
-ld(d(screenY), busRAM|regX)     #32
+ld(d(videoY), busRAM|regX)      #32
 ld(eaYXregAC, busRAM)           #33
 st(eaYXregOUTIX)                #34 Just to increment X
 st(d(frameY))                   #35
@@ -674,7 +674,7 @@ label('videoB')
 ld(d(lo('videoC')))             #29
 st(d(nextVideo))                #30
 ld(d(videoTable>>8), regY)      #31
-ldzp(d(screenY))                #32
+ldzp(d(videoY))                 #32
 adda(d(1), regX)                #33
 ldzp(d(frameX))                 #34
 adda(eaYXregAC, busRAM)         #35
@@ -703,12 +703,12 @@ ld(val(syncBits))               #39
 # - Decide if this is the last line or not
 label('videoD')                 # Default video mode
 ld(d(frameX), busRAM|regX)      #29
-ldzp(d(screenY))                #30
+ldzp(d(videoY))                 #30
 suba(d((120-1)*2))              #31
 beq(d(lo('.last')))             #32
 ld(d(frameY), busRAM|regY)      #33
 adda(d(120*2))                  #34 More pixel lines to go
-st(d(screenY))                  #35
+st(d(videoY))                   #35
 ld(d(lo('videoA')))             #36
 st(d(nextVideo))                #37
 bra(d(lo('pixels')))            #38
@@ -729,14 +729,14 @@ ld(val(syncBits))               #31
 
 # Back porch "F": scan lines and fast mode
 label('videoF')                 # Fast video mode
-ldzp(d(screenY))                #29
+ldzp(d(videoY))                 #29
 suba(d((120-1)*2))              #30
 bne(d(lo('.notlast')))          #31
 adda(d(120*2))                  #32
 bra(d(lo('.join')))             #33
 ld(d(lo('videoE')))             #34 No more visible lines
 label('.notlast')
-st(d(screenY))                  #33 More visible lines
+st(d(videoY))                   #33 More visible lines
 ld(d(lo('videoA')))             #34
 label('.join')
 st(d(nextVideo))                #35
@@ -927,8 +927,8 @@ ld(val(0))
 label('.snd3')
 st(d(soundTimer))
 
-ld(val(vFront+vPulse+vBack-2))  #198 `-2' because first and last are different
-st(d(blankY))                   #199
+ld(val(2*(-vFront-vPulse-vBack+2)+1))#198 +2 because first and last are different
+st(d(videoY))                   #199
 ld(d(videoSync0), busRAM|regOUT);C('<New scan line start>')#0
 
 label('sound1')
@@ -958,16 +958,16 @@ ldzp(d(xout))                   #26
 nop()                           #27
 ld(d(videoSync0), busRAM|regOUT);C('End horizontal pulse')#28
 
-# Count down the vertical blank interval until its last scan line
-ldzp(d(blankY))                 #29
-beq(d(lo('vBlankLast0')))       #30
-suba(d(1))                      #31
-st(d(blankY))                   #32
+# Count through the vertical blank interval until its last scan line
+ldzp(d(videoY))                 #29
+bpl(d(lo('vBlankLast')))        #30
+adda(d(2))                      #31
+st(d(videoY))                   #32
 
 # Determine if we're in the vertical sync pulse
-suba(d(vBack-1))                #33
+adda(d(2*(vBack-1)+1))          #33
 bne(d(lo('vSync0')))            #34 Tests for end of vPulse
-suba(d(vPulse))                 #35
+adda(d(2*vPulse))               #35
 ld(val(syncBits))               #36 Entering vertical back porch
 bra(d(lo('vSync2')))            #37
 st(d(videoSync0))               #38
@@ -986,8 +986,8 @@ st(d(videoSync1))               #41
 
 # Capture the serial input before the '595 shifts it out
 # Note: postpone post-processing until back at scan line 0
-ldzp(d(blankY));                C('Capture serial input')#42
-xora(val(vBack-1-1))            #43 Exactly when the 74HC595 has captured all 8 controller bits
+ldzp(d(videoY));                C('Capture serial input')#42
+xora(val(2*(-vBack+1+1)+1))     #43 Exactly when the 74HC595 has captured all 8 controller bits
 bne(d(lo('.ser0')))             #44
 bra(d(lo('.ser1')))             #45
 st(d(serialRaw),busIN)          #46
@@ -997,8 +997,8 @@ label('.ser1')
 
 # Update [xout] with the next sound sample every 4 scan lines.
 # Keep doing this on 'videoC equivalent' scan lines in vertical blank.
-ldzp(d(blankY))                 #47
-anda(d(3))                      #48
+ldzp(d(videoY))                 #47
+anda(d(6))                      #48
 bne(d(lo('vBlankNormal')))      #49
 ldzp(d(sample))                 #50
 label('vBlankSample')
@@ -1017,7 +1017,7 @@ bra(d(lo('sound1')))            #199
 ld(d(videoSync0), busRAM|regOUT);C('<New scan line start>')#0 Ends the vertical blank pulse at the right cycle
 
 # Last blank line before transfering to visible area
-label('vBlankLast0')
+label('vBlankLast')
 
 # --- Switch video mode when (only) select is pressed
 ldzp(d(buttonState))            #32
@@ -1034,8 +1034,9 @@ ldzp(d(buttonState))            #39 XXX move to line 0
 ora(val(buttonSelect))          #40
 st(d(buttonState))              #41
 
-runVcpu(197-42, 'line40')       #42 Application cycles (scan line 40)
+runVcpu(196-42, 'line40')       #42 Application cycles (scan line 40)
 # vAC==0 now
+st(d(videoY))                   #196
 st(d(frameX))                   #197 
 st(d(nextVideo))                #198
 ldzp(d(channel))                #199 Advance to next sound channel
@@ -2022,7 +2023,7 @@ define('vAC',        vAC)
 define('vACH',       vAC+1)
 define('vLR',        vLR)
 # All these are hacks:
-define('screenY',    screenY)
+define('videoY',     videoY)
 define('nextVideo',  nextVideo)
 define('vPC+1',      vPC+1) # XXX trampoline() is probably in the wrong module
 

@@ -13,15 +13,15 @@ $800 B= {Dynamic read buffer}
 [do
   {Process the next transmission frame}
   0 S= {Checksum}
-  [do \screenY, 25^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Protocol byte}
-  [do \screenY, 19^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Length, just 6 bits}
-  [do \screenY, 11^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Low address}
-  [do \screenY,  3^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {High address}
+  [do \videoY, 207^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Protocol byte}
+  [do \videoY, 219^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Length, just 6 bits}
+  [do \videoY, 235^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Low address}
+  [do \videoY, 251^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {High address}
   [do \nextVideo,   if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Payload 0}
   {256-59=} 197 i=
-  [do \screenY, 2&  if<>0loop  SYS_24_In 24@ B. B<++ S+ S= {Payload 1-59}
+  [do \videoY,   2& if<>0loop  SYS_24_In 24@ B. B<++ S+ S= {Payload 1-59}
   i<++ i if<>0loop]
-  [do \screenY, 36^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Checksum byte}
+  [do \videoY, 185^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Checksum byte}
 
   {Judge the checksum}
   255& [if=0 12 {Light green} else 3 {Light red}] B. B<++

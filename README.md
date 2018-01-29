@@ -73,7 +73,7 @@ Address   Name          Description
 0005      bootCheck     Checksum
 0006      entropy
 0009      returnTo
-000b      screenY       Counts up from 0 to 238 in steps of 2
+000b      videoY        Counts up from 0 to 238 in steps of 2 (odd in vBlank)
 000c      frameX        Starting byte within page
 000d      frameY        Page of current pixel row (updated by videoA)
 000e      nextVideo     Jump offset to scan line handler (videoA, B, C...)
