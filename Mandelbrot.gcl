@@ -221,46 +221,25 @@ $0500:
   pop ret
 ] GreyOut=
 
+{ Shift-right function (wrapper for SYS extension) }
+[def
+  \sysArgs0= \SYS_48_LSRW 48@
+  ret
+] ShiftRight=
+
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
 $0600:
 
-{ Stupid shift-right function }
-{ XXX Better make a SYS extension for this }
-[def
-  a= 0 b=
-  $8000 a+ [if>=0 a= $4000 b+ b=]
-  $c000 a+ [if>=0 a= $2000 b+ b=]
-  $e000 a+ [if>=0 a= $1000 b+ b=]
-  $f000 a+ [if>=0 a= $0800 b+ b=]
-  $f800 a+ [if>=0 a= $0400 b+ b=]
-  $fc00 a+ [if>=0 a= $0200 b+ b=]
-  $fe00 a+ [if>=0 a= $0100 b+ b=]
-  $ff00 a+ [if>=0 a= $0080 b+ b=]
-  $ff80 a+ [if>=0 a= $0040 b+ b=]
-  $ffc0 a+ [if>=0 a= $0020 b+ b=]
-  $ffe0 a+ [if>=0 a= $0010 b+ b=]
-  $fff0 a+ [if>=0 a= $0008 b+ b=]
-  $fff8 a+ [if>=0 a= $0004 b+ b=]
-  $fffc a+ [if>=0 a= $0002 b+ b=]
-      a 2& [if<>0          b<++ ]
-  b ret
-] ShiftRight=
-
-{-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 7                                      |
-+-----------------------------------------------------------------------}
-$0700:
-
 { Main }
 [do
-  -180 Y0= -320 X0= 3 Step= CalcSet!    {Global 6832.904 seconds}
-  -148 Y0=  -98 X0= 1 Step= CalcSet!    {Zoom1 12959.981 seconds}
-   -60 Y0= -256 X0= 1 Step= CalcSet!    {Zoom2 12461.071 seconds}
-  -320 Y0= -360 X0= 9 Step= CalcSet!    {Wide   2048.707 seconds}
-     0 Y0= -100 X0= 1 Step= CalcSet!    {Zoom3 14346.791 seconds}
-   -60 Y0=    0 X0= 1 Step= CalcSet!    {Zoom4  8584.882 seconds}
+  -180 Y0= -320 X0= 3 Step= CalcSet!    {Global 1702.513 seconds}
+  -148 Y0=  -98 X0= 1 Step= CalcSet!    {Zoom1  3227.751 seconds}
+   -60 Y0= -256 X0= 1 Step= CalcSet!    {Zoom2  3108.196 seconds}
+  -320 Y0= -360 X0= 9 Step= CalcSet!    {Wide    513.833 seconds}
+     0 Y0= -100 X0= 1 Step= CalcSet!    {Zoom3  3571.411 seconds}
+   -60 Y0=    0 X0= 1 Step= CalcSet!    {Zoom4  2147.072 seconds}
   loop]
 
 {-----------------------------------------------------------------------+

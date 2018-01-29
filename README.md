@@ -112,11 +112,11 @@ Address   Name          Description
 01fd      wavA[1]
 01fe      oscL[1]
 01ff      oscL[1]
-0200-02f8 shiftTable
+0200-02f8 audioTable
 02f9      wavX[2]       Sound channel 2
 02fa      keyL[2]
 02fb      keyH[2]
-02fc      shiftTable
+02fc      audioTable
 02fd      wavA[2]
 02fe      oscL[2]
 02ff      oscL[2]

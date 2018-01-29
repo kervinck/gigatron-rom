@@ -240,7 +240,7 @@ oscH = 255
 #
 #-----------------------------------------------------------------------
 
-shiftTablePage = 0x02
+audioTable = 0x0200
 
 #-----------------------------------------------------------------------
 #
@@ -435,7 +435,7 @@ st(d(resetTimer))
 # XXX Everything below should at one point migrate to Reset.gcl
 
 # Init the shift2-right table for sound
-ld(val(shiftTablePage),regY);   C('Setup shift2 table')
+ld(val(audioTable>>8),regY);    C('Setup shift2 table')
 ld(val(0))
 st(d(channel))
 label('.loop')
@@ -661,7 +661,7 @@ st(d(oscH), busAC|eaYDregAC)    #14
 nop()                           #15 Was: xora [y,wavX]
 nop()                           #16 Was: adda [y,wavA]
 anda(val(0xfc),regX)            #17
-ld(d(shiftTablePage),regY)      #18
+ld(d(audioTable>>8),regY)       #18
 ld(busRAM|eaYXregAC)            #19
 adda(d(sample), busRAM|ea0DregAC)#20
 st(d(sample))                   #21
@@ -951,7 +951,7 @@ st(d(oscH), busAC|eaYDregAC)    #14
 nop()                           #15 Was: xora [y,wavX]
 nop()                           #16 Was: adda [y,wavA]
 anda(val(0b11111100),regX)      #17
-ld(d(shiftTablePage),regY)      #18
+ld(d(audioTable>>8),regY)       #18
 ld(busRAM|eaYXregAC)            #19
 adda(d(sample), busRAM|ea0DregAC)#20
 st(d(sample))                   #21
@@ -1364,7 +1364,7 @@ ld(val(-20/2))                  #17
 label('SYS')
 adda(d(vTicks),busRAM)          #10
 blt(d(lo('retry')))             #11
-ld(d(vAC+1),busRAM|regY)        #12
+ld(d(vAC+1),busRAM|regY)        #12 XXX Consider using another location (sysArgs0 is more natural)
 jmpy(d(vAC)|busRAM)             #13
 #nop()                          #(14)
 #
@@ -1697,7 +1697,7 @@ def trampoline3b():
 #-----------------------------------------------------------------------
 
 label('SYS_56_Unpack')
-ld(val(shiftTablePage),regY)    #15
+ld(val(audioTable>>8),regY)     #15
 ldzp(d(sysArgs+2))              #16 a[2]>>2
 anda(val(0xfc),regX)            #17
 ld(eaYXregAC|busRAM)            #18
@@ -1798,6 +1798,72 @@ jmpy(d(lo('REENTER')))          #130
 ld(val(-134/2))                 #131
 
 #-----------------------------------------------------------------------
+#  ROM page 5-6: Shift table
+#-----------------------------------------------------------------------
+
+# Lookup table for i>>n, with n in 1..6
+# Indexing ix = i & ~b | (b-1), where b = 1<<(n-1)
+#       ...
+#       lda  <.ret
+#       st   [vTmp]
+#       ld   >shiftTable,y
+#       <calculate ix>
+#       jmp  y,ac
+#       bra  $ff
+# .ret: ...
+#
+# i >> 7 can be always be done with RAM: [i&128]
+#       ...
+#       anda $80,x
+#       ld   [x]
+#       ...
+
+align(0x100, 0x200)
+
+label('shiftTable')
+shiftTable = pc()
+for ix in range(255):
+  for n in range(1,7): # Find first zero
+    if ~ix & (1 << (n-1)):
+      break
+  pattern = ['x' if i<n else '1' if ix&(1<<i) else '0' for i in range(8)]
+  ld(val(ix>>n)); C('0b%s >> %d' % (''.join(reversed(pattern)), n))
+
+assert(pc()&255 == 255)
+bra(d(vTmp)|busRAM); C('Jumps back into next page')
+
+# 16-bits logical shift right
+label('SYS_48_LSRW')
+assert(pc()&255 == 0)#First instruction on this page must be a nop
+nop()                           #15
+ld(d(hi('shiftTable')),regY)    #16
+ld(d(lo('.sysLsrw0')));         C('Shift low byte')#17
+st(d(vTmp))                     #18
+ldzp(d(sysArgs+0))              #19
+anda(d(254))                    #20
+jmpy(busAC)                     #21
+bra(d(255));                    C('Actually $%04x' % (shiftTable+255))#22
+label('.sysLsrw0')
+st(d(vAC))                      #26
+ld(d(lo('.sysLsrw1')));         C('Shift high byte')#27
+st(d(vTmp))                     #28
+ldzp(d(sysArgs+1))              #29
+anda(d(254))                    #30
+jmpy(busAC)                     #31
+bra(d(255));                    C('Actually $%04x' % (shiftTable+255))#32
+label('.sysLsrw1')
+st(d(vAC+1))                    #36
+ldzp(d(sysArgs+1));             C('Transfer bit 8')#37
+anda(d(1))                      #38
+adda(d(127))                    #39
+anda(d(128))                    #40
+ora(d(vAC)|busRAM)              #41
+st(d(vAC))                      #42
+ld(d(hi('REENTER')),regY)       #43
+jmpy(d(lo('REENTER')))          #44
+ld(d(-48/2))                    #45
+
+#-----------------------------------------------------------------------
 #
 #  ROM page 5-6: Gigatron font data
 #
@@ -1829,7 +1895,7 @@ trampoline()
 
 #-----------------------------------------------------------------------
 #
-#  ROM page 7: Key table for music
+#  ROM page 9: Key table for music
 #
 #-----------------------------------------------------------------------
 
@@ -1853,7 +1919,7 @@ trampoline()
 
 #-----------------------------------------------------------------------
 #
-#  ROM page 8: Inversion table
+#  ROM page 10: Inversion table
 #
 #-----------------------------------------------------------------------
 
@@ -1867,7 +1933,7 @@ for i in range(251):
 trampoline()
 
 #-----------------------------------------------------------------------
-#  ROM page 76-: Built-in full resolution images
+#  ROM page 11: Built-in full resolution images
 #-----------------------------------------------------------------------
 
 f = open('Images/gigatron.rgb', 'rb')
