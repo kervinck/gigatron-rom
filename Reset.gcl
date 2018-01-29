@@ -121,7 +121,6 @@ $0400:
   $270 {2: G-4} SetupChannel!
   $378 {3: B-4} SetupChannel!
   $47e {4: D-5} SetupChannel!
-  120 \soundTimer.
   pop ret
 ] PlayChord=
 

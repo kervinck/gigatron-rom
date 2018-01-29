@@ -14,20 +14,18 @@
 #
 #  To do for ROM v1
 #  XXX Serial loading of programs with Arduino/Trinket
-#      Protocol: 0x21('!') <addrH> <addrL> <n> n*<byte> <sum> (n=1-32)
+#      Protocol: 0x21('!') <n[0:6]> <addrL> <addrH> 60*<byte> <checksum>
 #      Align bytes exactly with visible scanlines
 #  XXX Colors in reset screen (no black background, for video alignment)
 #
 #  Hopefully in ROM v1
-#  XXX Move opening tone from Reset.gcl to Main.gcl
 #  XXX Logo drawing
 #  XXX Music sequencer (combined with LED sequencer)
 #  XXX Audio: Move shift table to page 7, then add waveform synthesis
 #  XXX Adjustable return address for LOOKUP trampolines
-#  XXX vCPU: Right shift (Left shift)
 #  XXX Retire sysPos and sysData (use sysArgs instead)
 #  XXX vCPU: ANDW, ORW, XORW
-#  XXX vCPU: N-shift table (8 bits)
+#  XXX vCPU: Rethink clobbering of vAC by SYS
 #  XXX Prefix notation for high/low byte >X++ instead of X>++
 #  XXX Readability of asm.py instructions, esp. make d() implicit
 #  XXX Pictures: speed up scrolling by splitting work over frames
