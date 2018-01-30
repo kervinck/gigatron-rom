@@ -13,6 +13,7 @@
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #  To do for ROM v1
+#  XXX Move SYS_Racer
 #  XXX Serial loading of programs with Arduino/Trinket
 #      Protocol: 0x21('!') <n[0:6]> <addrL> <addrH> 60*<byte> <checksum>
 #      Align bytes exactly with visible scanlines
@@ -1862,6 +1863,67 @@ jmpy(d(lo('REENTER')))          #44
 ld(d(-48/2))                    #45
 
 #-----------------------------------------------------------------------
+#  Application specific SYS extensions
+#-----------------------------------------------------------------------
+
+label('SYS_40_Racer_UpdateVideoX')
+ld(d(sysArgs+2),busRAM|regX)    #15 q,
+ld(d(sysArgs+3),busRAM|regY)    #16
+ld(eaYXregAC,busRAM)            #17
+st(d(vTmp))                     #18
+suba(d(sysArgs+4),busRAM)       #19 X-
+ld(d(sysArgs+0),busRAM|regX)    #20 p.
+ld(d(sysArgs+1),busRAM|regY)    #21
+st(eaYXregAC,busAC)             #22
+ld(d(sysArgs+0),busRAM)         #23 p 4- p=
+suba(d(4))                      #24
+st(d(sysArgs+0))                #25
+ldzp(d(vTmp))                   #26 q,
+st(d(sysArgs+4))                #27 X=
+ld(d(sysArgs+2),busRAM)         #28 q<++
+adda(d(1))                      #29
+st(d(sysArgs+2))                #30
+bne(d(lo('.sysRacer0')))        #31 Self-repeat by adjusting vPC
+ldzp(d(vPC))                    #32
+bra(d(lo('.sysRacer1')))        #33
+nop()                           #34
+label('.sysRacer0')
+suba(d(2))                      #33
+st(d(vPC))                      #34
+label('.sysRacer1')
+ld(val(hi('REENTER')),regY)     #35
+jmpy(d(lo('REENTER')))          #36
+ld(val(-40/2))                  #37
+
+label('SYS_40_Racer_UpdateVideoY')
+ldzp(d(sysArgs+3))              #15 8&
+anda(d(8))                      #16
+bne(d(lo('.sysRacer2')))        #17 [if<>0 1]
+bra(d(lo('.sysRacer3')))        #18
+ld(d(0))                        #19
+label('.sysRacer2')
+ld(d(1))                        #19
+label('.sysRacer3')
+st(d(vTmp))                     #20 tmp=
+ld(d(sysArgs+1),busRAM|regY)    #21
+ld(d(sysArgs+0),busRAM)         #22 p<++ p<++
+adda(d(2))                      #23
+st(d(sysArgs+0),busAC|regX)     #24
+xora(d(238))                    #25 238^
+st(d(vAC))                      #26
+st(d(vAC+1))                    #27
+ldzp(d(sysArgs+2))              #28 SegmentY
+anda(d(254))                    #29 254&
+adda(d(vTmp),busRAM)            #30 tmp+
+st(eaYXregAC,busAC)             #31
+ldzp(d(sysArgs+2))              #32 SegmentY<++
+adda(d(1))                      #33
+st(d(sysArgs+2))                #34
+ld(val(hi('REENTER')),regY)     #35
+jmpy(d(lo('REENTER')))          #36
+ld(val(-40/2))                  #37
+
+#-----------------------------------------------------------------------
 #
 #  ROM page 5-6: Gigatron font data
 #
@@ -1997,71 +2059,11 @@ for i in xrange(0, len(raw), 3):
     packed.append( ((quartet[2]&0b110000)>>4) + ((quartet[3]&0b111111)<<2) )
     quartet = []
 
-align(0x100)
 label('zippedRacerHorizon')
 for i in xrange(len(packed)):
   ld(val(packed[i]))
   if i%251 == 250:
     trampoline()
-while pc()&255 != 0:
-  trampoline()
-
-label('SYS_40_Racer_UpdateVideoX')
-ld(d(sysArgs+2),busRAM|regX)    #15 q,
-ld(d(sysArgs+3),busRAM|regY)    #16
-ld(eaYXregAC,busRAM)            #17
-st(d(vTmp))                     #18
-suba(d(sysArgs+4),busRAM)       #19 X-
-ld(d(sysArgs+0),busRAM|regX)    #20 p.
-ld(d(sysArgs+1),busRAM|regY)    #21
-st(eaYXregAC,busAC)             #22
-ld(d(sysArgs+0),busRAM)         #23 p 4- p=
-suba(d(4))                      #24
-st(d(sysArgs+0))                #25
-ldzp(d(vTmp))                   #26 q,
-st(d(sysArgs+4))                #27 X=
-ld(d(sysArgs+2),busRAM)         #28 q<++
-adda(d(1))                      #29
-st(d(sysArgs+2))                #30
-bne(d(lo('.sysRacer0')))        #31 Self-repeat by adjusting vPC
-ldzp(d(vPC))                    #32
-bra(d(lo('.sysRacer1')))        #33
-nop()                           #34
-label('.sysRacer0')
-suba(d(2))                      #33
-st(d(vPC))                      #34
-label('.sysRacer1')
-ld(val(hi('REENTER')),regY)     #35
-jmpy(d(lo('REENTER')))          #36
-ld(val(-40/2))                  #37
-
-label('SYS_40_Racer_UpdateVideoY')
-ldzp(d(sysArgs+3))              #15 8&
-anda(d(8))                      #16
-bne(d(lo('.sysRacer2')))        #17 [if<>0 1]
-bra(d(lo('.sysRacer3')))        #18
-ld(d(0))                        #19
-label('.sysRacer2')
-ld(d(1))                        #19
-label('.sysRacer3')
-st(d(vTmp))                     #20 tmp=
-ld(d(sysArgs+1),busRAM|regY)    #21
-ld(d(sysArgs+0),busRAM)         #22 p<++ p<++
-adda(d(2))                      #23
-st(d(sysArgs+0),busAC|regX)     #24
-xora(d(238))                    #25 238^
-st(d(vAC))                      #26
-st(d(vAC+1))                    #27
-ldzp(d(sysArgs+2))              #28 SegmentY
-anda(d(254))                    #29 254&
-adda(d(vTmp),busRAM)            #30 tmp+
-st(eaYXregAC,busAC)             #31
-ldzp(d(sysArgs+2))              #32 SegmentY<++
-adda(d(1))                      #33
-st(d(sysArgs+2))                #34
-ld(val(hi('REENTER')),regY)     #35
-jmpy(d(lo('REENTER')))          #36
-ld(val(-40/2))                  #37
 
 #-----------------------------------------------------------------------
 #
