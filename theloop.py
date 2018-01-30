@@ -13,7 +13,6 @@
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #  To do for ROM v1
-#  XXX Move SYS_Racer
 #  XXX Serial loading of programs with Arduino/Trinket
 #      Protocol: 0x21('!') <n[0:6]> <addrL> <addrH> 60*<byte> <checksum>
 #      Align bytes exactly with visible scanlines
