@@ -927,7 +927,7 @@ ld(val(0))
 label('.snd3')
 st(d(soundTimer))
 
-ld(val(2*(-vFront-vPulse-vBack+2)+1))#198 +2 because first and last are different
+ld(val(1-2*(vFront+vPulse+vBack-2)))#198 -2 because first and last are different
 st(d(videoY))                   #199
 ld(d(videoSync0), busRAM|regOUT);C('<New scan line start>')#0
 
@@ -965,7 +965,7 @@ adda(d(2))                      #31
 st(d(videoY))                   #32
 
 # Determine if we're in the vertical sync pulse
-adda(d(2*(vBack-1)+1))          #33
+suba(d(1-2*(vBack-1)))          #33
 bne(d(lo('vSync0')))            #34 Tests for end of vPulse
 adda(d(2*vPulse))               #35
 ld(val(syncBits))               #36 Entering vertical back porch
@@ -987,7 +987,7 @@ st(d(videoSync1))               #41
 # Capture the serial input before the '595 shifts it out
 # Note: postpone post-processing until back at scan line 0
 ldzp(d(videoY));                C('Capture serial input')#42
-xora(val(2*(-vBack+1+1)+1))     #43 Exactly when the 74HC595 has captured all 8 controller bits
+xora(val(1-2*(vBack-1-1)))      #43 Exactly when the 74HC595 has captured all 8 controller bits
 bne(d(lo('.ser0')))             #44
 bra(d(lo('.ser1')))             #45
 st(d(serialRaw),busIN)          #46
