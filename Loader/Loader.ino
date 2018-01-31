@@ -30,7 +30,7 @@ void setup() {
   sendController(~buttonStart, 128+32);
 
   // Wait for main menu to be ready
-  delay(3500);
+  delay(3000);
 
   // Navigate menu. 'Loader' is at the bottom
   for (int i=0; i<10; i++) {
@@ -51,11 +51,8 @@ void loop() {
   static int len = strlen(hello);
 
   noInterrupts();
-  for (;;) {
-    //hello[57] = 215;
-    //hello[58] = 256-hello[57];
-    sendFrame(hello, len+sprintf(hello+len, "%u", i++));
-  }
+  for (;;)
+    sendFrame('W', len+sprintf(hello+len, "%u", i++), 0x300, hello);
 }
 
 // Pretend to be a game controller
@@ -74,7 +71,7 @@ void sendController(byte value, int n)
   interrupts(); // So delay() can work again
 }
 
-void sendFrame(byte message[60], byte len)
+void sendFrame(byte firstByte, byte len, unsigned address, byte message[60])
 {
   // Send one frame of data
   //
@@ -90,15 +87,14 @@ void sendFrame(byte message[60], byte len)
   // such alignment at visible scanline 3, 11, 19, ... etc.
 
   checksum = 'g';              // Setup checksum but don't start with 0
-  byte firstByte = 'W';        // Protocol byte 'W' (Write)
   sendFirst(firstByte, 8);     // Protocol byte
   checksum += firstByte << 6;  // Keep Loader.gcl dumb
   sendBits(len, 6);            // Length 1..60
-  sendBits(0x00, 8);           // Low address bits
-  sendBits(0x03, 8);           // High address bits
+  sendBits(address&255, 8);    // Low address bits
+  sendBits(address>>8, 8);     // High address bits
   for (byte i=0; i<60; i++)    // Payload bytes
     sendBits(message[i], 8);
-  sendBits(256-checksum, 8);   // Checksum
+  sendBits(-checksum, 8);      // Checksum must come out as 0
   PORTB |= 1<<PORTB5;          // Send 1 when idle
 }
 
