@@ -9,12 +9,12 @@ gcl0x
 \SYS_24_In SYS_24_In= {Put in variable to save some code space}
 
 $800 B= {Dynamic read buffer}
-     A= {Active line indicator}
+66+  A= {Active line indicator}
 [do
   {Process the next transmission frame}
-  0 S= {Checksum}
-  [do \videoY, 205^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Protocol byte}
-  [do \videoY, 219^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Length, 7 new bits}
+  103 {'g'} S=                                             {Checksum}
+  [do \videoY, 207^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Protocol byte}
+  [do \videoY, 219^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Length, 6 new bits}
   [do \videoY, 235^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Low address}
   [do \videoY, 251^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {High address}
   [do \nextVideo,   if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Payload 0}
@@ -26,8 +26,8 @@ $800 B= {Dynamic read buffer}
   {Judge the checksum}
   255& [if=0 12 {Light green} else 3 {Light red}] B. B<++
 
-  {Indicator (value is the serial input as seen by theloop)}
-  A, 255^ A. B A= \serialRaw, A.
+  {White moving indicator}
+  A, 0 A. B A= 63 A.
 
   {Advance to next line in screen memory}
   $100 B+ [if<0 $800 else 255| 255^] B=
