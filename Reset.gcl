@@ -7,10 +7,7 @@
 
 gcl0x
 
-\Main Main=
-
 { Setup video }
-\Screen \sysArgs0=
 [def
   { Setup video indirection table }
   $100 p= {videoTable}
@@ -22,12 +19,14 @@ gcl0x
 
   { Clear screen }
   $800 p= $8801 i=
+  32 \sysArgs0. \sysArgs1. {Blue}
   [do
     p [do
-      \sysArgs0= \SYS_38_VClear8 38@ {Clears 8 pixels vertically}
+      \sysPos= \SYS_134_VDrawBits 134@ {Clears 8 pixels vertically}
       $800 p+ p= if>0loop]
     i+ p=
     255& 160^ if<>0loop]
+
   ret
 ] SetupVideo=
 
@@ -69,9 +68,6 @@ Char>, p. p<++ Char p.          {Put decimals into StartupMessage}
 +-----------------------------------------------------------------------}
 $0400:
 
-{ Filter reset button while still in reset sequence }
-\buttonState; [if>=0 16& if=0 \sysArgs0; Main=]
-
 { Draw a 5x8 character on screen with the built-in font
   Char must be in the 32-127 range (this is not checked) }
 [def {DrawChar}
@@ -88,7 +84,7 @@ $0400:
     Pos p=
     {Draw vertical slice}
     [do
-      bits 128& [if=0 0 {Black} else 8 {Green}] p.
+      bits 128& [if<>0 63 {White} p.]
       bits bits+ bits= {Shift left}
       p>++
       p q- if<0loop]
@@ -99,7 +95,7 @@ $0400:
 ] DrawChar=
 
 { Play a note on one channel
-  High byte is channel, low byte is note (shoud be even)
+  High byte is channel, low byte is note (should be even)
   Reset the oscillators and channel variables }
 [def {SetupChannel}
   i= 255| 255^ $f9| p=          {Pointer to channel struct}
@@ -107,14 +103,14 @@ $0400:
   0 p. p<++                     {.wavX}
   \notesTable i+ 0? p. p<++     {.keyL}
   \notesTable i+ 1? p. p<++     {.keyH}
-  p<++                          {reserved for use by shift table}
+  p<++                          {Reserved for use by shift table}
   0 p. p<++                     {.wavA}
   p. p<++                       {.oscL}
   p.                            {.oscH}
   ret
 ] SetupChannel=
 
-{ Play a G-major chord with 4 channels }
+{ Setup a G-major chord with 4 channels but don't play it yet }
 [def {PlayChord}
   push
   $158 {1: G-3} SetupChannel!
@@ -122,15 +118,15 @@ $0400:
   $378 {3: B-4} SetupChannel!
   $47e {4: D-5} SetupChannel!
   pop ret
-] PlayChord=
+] SetupAudio=
 
 { Now it is safe to call functions }
-PlayChord! {Audio before video}
+SetupAudio!
 SetupVideo!
 $812 Pos= StartupMessage Text= DrawText!
 
 { Load and start main program }
-Main \sysArgs0= $300 \vLR= \SYS_88_LoadRom 88@
+\Main \sysArgs0= $300 \vLR= \SYS_88_LoadRom 88@
 
 {-----------------------------------------------------------------------+
 |                                                                       |

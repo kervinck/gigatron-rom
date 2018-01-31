@@ -16,7 +16,6 @@
 #  XXX Serial loading of programs with Arduino/Trinket
 #      Protocol: 0x21('!') <n[0:6]> <addrL> <addrH> 60*<byte> <checksum>
 #      Align bytes exactly with visible scanlines
-#  XXX Colors in reset screen (no black background, for video alignment)
 #
 #  Hopefully in ROM v1
 #  XXX Logo drawing

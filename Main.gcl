@@ -23,7 +23,7 @@ gcl0x
     Pos p=
     {Draw vertical slice}
     [do
-      bits 128& [if=0 0 {Black} else Color] p.
+      bits 128& [if=0 32 {Blue} else Color] p.
       bits bits+ bits= {Shift left}
       p>++
       p q- if<0loop]
@@ -119,9 +119,9 @@ $0500:
 { Print menu }
 $2000 Pos=
 42 {Grey}   Color= PrintDivider!
-10 {Yellow} Color= MainMenu PrintText!
+15 {Yellow} Color= MainMenu PrintText!
 42 {Grey}   Color= PrintDivider!
- 8 {Green}  Color= HelpText PrintText!
+                   HelpText PrintText!
 
 { Operate menu }
 0 Item=
@@ -147,9 +147,10 @@ $2000 Pos=
 { Wipe out everything but the selected line }
 $800 p= $8801 i=
 Pos>, q= {Y position of current cursor}
+32 \sysArgs0. \sysArgs1.
 [do
   p>, q- [if<>0
-    p \sysArgs0= \SYS_38_VClear8 38@ {Clears 8 pixels vertically}
+    p \sysPos= \SYS_134_VDrawBits 134@ {Clears 8 pixels vertically}
   ]
   $800 p+ p= if>0loop
   i+ p=
