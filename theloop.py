@@ -1597,16 +1597,26 @@ jmpy(d(lo('REENTER')))          #20
 ld(val(-24/2))                  #21
 
 #-----------------------------------------------------------------------
-# Extension SYS_XX_LoadSerial:
+# Extension SYS_30_LoadSerial:
 #-----------------------------------------------------------------------
 
-# Wait for vertical blank
-#
 # sysArgs[0:1] Current address
-# sysArgs[2]   Count remaining
-# sysArgs[3]   Checksum
+# sysArgs[2]   Checksum
 
-label('SYS_XX_LoadSerial')
+label('SYS_30_LoadSerial')
+ld(d(sysArgs+0),busRAM|regX)    #15
+ld(d(sysArgs+1),busRAM|regY)    #16
+ld(busIN)                       #17
+st(eaYXregAC)                   #18
+adda(d(sysArgs+2),busRAM)       #19
+st(d(sysArgs+2))                #20
+ldzp(d(sysArgs+0))              #21
+adda(d(1))                      #22
+st(d(sysArgs+0))                #23
+ld(val(-30/2))                  #24
+ld(val(hi('REENTER')),regY)     #25
+jmpy(d(lo('REENTER')))          #26
+nop()                           #27
 
 #-----------------------------------------------------------------------
 # Extension SYS_38_VClear8: Zero a vertical slice of 8 bytes(pixels)

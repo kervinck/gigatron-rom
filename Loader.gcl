@@ -6,30 +6,34 @@ gcl0x
   Still a study to see if we can get the transmission right
 }
 
-\SYS_24_In SYS_24_In= {Put in variable to save some code space}
+{
+  'W' Write N bytes into memory
+  'G' Go address
+}
 
-$800 B= {Dynamic read buffer}
-66+  A= {Active line indicator}
+\SYS_30_LoadSerial L= {Put in variable to save some code space}
+
+{-----------------------------------------------------------------------+
+|}$7f00 \vLR= ret{      RAM page 8                                      |
++-----------------------------------------------------------------------}
+$7f00:
+
 [do
   {Process the next transmission frame}
-  103 {'g'} S=                                             {Checksum}
-  [do \videoY, 207^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Protocol byte}
-  [do \videoY, 219^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Length, 6 new bits}
-  [do \videoY, 235^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Low address}
-  [do \videoY, 251^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {High address}
-  [do \nextVideo,   if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Payload 0}
+  $7e00 \sysArgs0=                                         {Input buffer}
+  103 {'g'} \sysArgs2.                                     {Checksum}
+  [do \videoY, 207^ if<>0loop] L 30@                       {Command byte}
+  [do \videoY, 219^ if<>0loop] L 30@                       {Length, 6 new bits}
+  [do \videoY, 235^ if<>0loop] L 30@                       {Low address}
+  [do \videoY, 251^ if<>0loop] L 30@                       {High address}
+  [do \nextVideo,   if<>0loop] L 30@                       {Payload 0}
   {256-59=} 197 i=
-  [do \videoY,   2& if<>0loop  SYS_24_In 24@ B. B<++ S+ S= {Payload 1-59}
+  [do \videoY,   2& if<>0loop  L 30@                       {Payload 1-59}
   i<++ i if<>0loop]
-  [do \videoY, 185^ if<>0loop] SYS_24_In 24@ B. B<++ S+ S= {Checksum byte}
+  [do \videoY, 185^ if<>0loop] L 30@                       {Checksum byte}
 
   {Judge the checksum}
-  255& [if=0 12 {Light green} else 3 {Light red}] B. B<++
-
-  {White moving indicator}
-  A, 0 A. B A= 63 A.
-
-  {Advance to next line in screen memory}
-  $100 B+ [if<0 $800 else 255| 255^] B=
+  \sysArgs0; i=
+  \sysArgs2, [if=0 12 {Light green} else 3 {Light red}] i.
 loop]
 
