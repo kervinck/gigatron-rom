@@ -221,7 +221,7 @@ $0500:
 
 { Shift-right function (wrapper for SYS extension) }
 [def
-  \sysArgs0= \SYS_48_LSRW 48@
+  \sysArgs0= \SYS_LSRW_48 48@
   ret
 ] ShiftRight=
 

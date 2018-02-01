@@ -14,8 +14,10 @@
 #
 #  To do for ROM v1
 #  XXX Serial loading of programs with Arduino/Trinket
-#      Protocol: 0x21('!') <n[0:6]> <addrL> <addrH> 60*<byte> <checksum>
-#      Align bytes exactly with visible scanlines
+#      - Copy into memory
+#      - Fit in zero page
+#      - Interactive vs program load (conflicting requirement for vLR/RET)
+#      - Load/verify/exec
 #
 #  Hopefully in ROM v1
 #  XXX Logo drawing
@@ -30,14 +32,12 @@
 #  XXX Pictures: speed up scrolling by splitting work over frames
 #
 #  Probably not in ROM v1
-#  XXX vCPU: Interrupts / Task switching (e.g for clock, LED sequencer)
-#  XXX vCPU: PUSHA, POPA
 #  XXX vCPU: Multiplication (mulShift8?)
+#  XXX vCPU: PUSHA, POPA
+#  XXX vCPU: Interrupts / Task switching (e.g for clock, LED sequencer)
 #  XXX Scroll out the top line of text, or generic vertical scroll SYS call
 #  XXX Intro: Rising planet?
-#  XXX Pacman ghosts. Sprites by scan line 4 reset method? ("videoG"=graphics)
 #  XXX Multitasking/threading/sleeping (start with date/time clock in GCL)
-#  XXX Audio: Decay, using Karplus-Strong
 #  XXX Scoping for variables or some form of local variables? $i ("localized")
 #  XXX Simple GCL programs might be compiled by the host instead of offline?
 #  XXX vCPU: Clear just vAC[0:7] (Workaround is not bad: |255 ^255)
@@ -45,6 +45,8 @@
 #  XXX Star field
 #
 #  Future applications after ROM v1
+#  XXX Pacman ghosts. Sprites by scan line 4 reset method? ("videoG"=graphics)
+#  XXX Audio: Decay, using Karplus-Strong
 #  XXX ROM data compression (starting with Jupiter and Racer image)
 #  XXX Font screen 16x8 chars
 #  XXX Info screen (zero page)
@@ -417,8 +419,8 @@ adda(val(2),regX)
 ld(val(vCpuReset>>8))
 st(d(vPC+1),busAC|regY)
 st(d(lo('LDWI')),        eaYXregOUTIX)
-st(d(lo('SYS_42_Reset')),eaYXregOUTIX)
-st(d(hi('SYS_42_Reset')),eaYXregOUTIX)
+st(d(lo('SYS_Reset_42')),eaYXregOUTIX)
+st(d(hi('SYS_Reset_42')),eaYXregOUTIX)
 st(d(lo('SYS')),         eaYXregOUTIX)
 st(d(256-42/2+maxTicks), eaYXregOUTIX)
 
@@ -469,10 +471,10 @@ jmpy(d(lo('vBlankStart')))
 ld(val(syncBits))
 
 #-----------------------------------------------------------------------
-# Extension SYS_42_Reset: Soft reset
+# Extension SYS_Reset_42: Soft reset
 #-----------------------------------------------------------------------
 
-# SYS_42_Reset initiates an immediate Gigatron reset from within the vCPU.
+# SYS_Reset_42 initiates an immediate Gigatron reset from within the vCPU.
 # The reset sequence itself is mostly implemented in GCL by Reset.gcl .
 # This must first be loaded into RAM. But as that takes more than 1 scanline,
 # some vCPU bootstrapping code gets loaded into the high part of the zero page,
@@ -480,7 +482,7 @@ ld(val(syncBits))
 
 vCpuBoot = 0x00f6
 
-label('SYS_42_Reset')
+label('SYS_Reset_42')
 ld(val(vCpuBoot-2))                     #15 vPC
 st(d(vPC))                              #16
 ld(val(vCpuBoot),regX)                  #17 vPC
@@ -500,9 +502,9 @@ st(d(lo('Reset')   ),eaYXregOUTIX)      #28 00f7
 st(d(hi('Reset')   ),eaYXregOUTIX)      #29 00f8
 st(d(lo('STW')     ),eaYXregOUTIX)      #30 00f9
 st(d(sysArgs       ),eaYXregOUTIX)      #31 00fa
-st(d(lo('LDWI')    ),eaYXregOUTIX)      #32 00fb Call SYS_88_LoadRom
-st(d(lo('SYS_88_LoadRom')),eaYXregOUTIX)#33 00fc
-st(d(hi('SYS_88_LoadRom')),eaYXregOUTIX)#34 00fd (is 0...)
+st(d(lo('LDWI')    ),eaYXregOUTIX)      #32 00fb Call SYS_Exec_88
+st(d(lo('SYS_Exec_88')),eaYXregOUTIX)   #33 00fc
+st(d(hi('SYS_Exec_88')),eaYXregOUTIX)   #34 00fd (is 0...)
 st(d(lo('SYS')     ),eaYXregOUTIX)      #35 00fe
 st(d(256-88/2+maxTicks),eaYXregOUTIX)   #36 00ff
 # Return to interpreter
@@ -511,7 +513,7 @@ jmpy(d(lo('REENTER')))                  #38
 ld(val(-42/2))                          #39
 
 #-----------------------------------------------------------------------
-# Extension SYS_88_LoadRom: Load code from ROM into memory
+# Extension SYS_Exec_88: Load code from ROM into memory and execute it
 #-----------------------------------------------------------------------
 #
 # This loads the vCPU code with consideration of the current vSP
@@ -527,7 +529,7 @@ ld(val(-42/2))                          #39
 #       sysArgs[4]      State counter (variable)
 #       vLR             vCPU continues here (input set by caller)
 
-label('SYS_88_LoadRom')
+label('SYS_Exec_88')
 ld(val(0))                              #15 Address of loader on zero page
 st(d(vPC+1),busAC|regY)                 #16
 ldzp(d(vSP))                            #17 Below the current stack pointer
@@ -1563,7 +1565,7 @@ nop()                           #23
 #
 #  vCPU extension functions (for acceleration and compaction) follow below.
 #
-#  The naming convention is: SYS_<N>_<CamelCase>
+#  The naming convention is: SYS_<CamelCase>_<N>
 #
 #  With <N> the maximum number of cycles the function will run
 #  (counted from NEXT to NEXT). This is the same number that must
@@ -1573,10 +1575,10 @@ nop()                           #23
 #-----------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
-# Extension SYS_22_Out: Send byte to output port
+# Extension SYS_Out_22: Send byte to output port
 #-----------------------------------------------------------------------
 
-label('SYS_22_Out')
+label('SYS_Out_22')
 ld(d(sysArgs+0),busRAM|regOUT)  #15
 nop()                           #16
 ld(val(hi('REENTER')),regY)     #17
@@ -1584,10 +1586,10 @@ jmpy(d(lo('REENTER')))          #18
 ld(val(-22/2))                  #19
 
 #-----------------------------------------------------------------------
-# Extension SYS_24_In: Read a byte from the input port
+# Extension SYS_In_24: Read a byte from the input port
 #-----------------------------------------------------------------------
 
-label('SYS_24_In')
+label('SYS_In_24')
 st(d(vAC),busIN)                #15
 ld(val(0))                      #16
 st(d(vAC+1))                    #17
@@ -1597,13 +1599,13 @@ jmpy(d(lo('REENTER')))          #20
 ld(val(-24/2))                  #21
 
 #-----------------------------------------------------------------------
-# Extension SYS_30_LoadSerial:
+# Extension SYS_NextByteIn_30
 #-----------------------------------------------------------------------
 
 # sysArgs[0:1] Current address
 # sysArgs[2]   Checksum
 
-label('SYS_30_LoadSerial')
+label('SYS_NextByteIn_30')
 ld(d(sysArgs+0),busRAM|regX)    #15
 ld(d(sysArgs+1),busRAM|regY)    #16
 ld(busIN)                       #17
@@ -1618,27 +1620,90 @@ ld(val(hi('REENTER')),regY)     #25
 jmpy(d(lo('REENTER')))          #26
 nop()                           #27
 
+# XXX Clocked byte in
+# Wait for raster to reach videoY
+
 #-----------------------------------------------------------------------
-# Extension SYS_38_VClear8: Zero a vertical slice of 8 bytes(pixels)
+# Extension SYS_ConditionalCopy_34
 #-----------------------------------------------------------------------
 
-label('SYS_38_VClear8')
+# sysArgs[0:1] Source address
+# sysArgs[3]   Copy count
+# sysArgs[4:5] Destination address
+
+label('SYS_ConditionalCopy_34')
+ldzp(d(sysArgs+3))              #15 Copy count
+beq(d(lo('.sysCc')))            #16
+suba(d(1))                      #17
+st(d(sysArgs+3))                #18
+ld(d(sysArgs+0),busRAM|regX)    #19 Current pointer
+ld(d(sysArgs+1),busRAM|regY)    #20
+ld(eaYXregAC,busRAM)            #21
+ld(d(sysArgs+4),busRAM|regX)    #22 Target pointer
+ld(d(sysArgs+5),busRAM|regY)    #23
+st(eaYXregAC)                   #24
+ldzp(d(sysArgs+4))              #25 Increment target
+adda(d(1))                      #26
+st(d(sysArgs+4))                #27
+ld(d(-34/2))                    #28
+ld(val(hi('REENTER')),regY)     #29
+jmpy(d(lo('REENTER')))          #30
+label('.sysCc')
+nop()                           #18
+ld(val(hi('REENTER')),regY)     #19
+jmpy(d(lo('REENTER')))          #20
+ld(d(-24/2))                    #21
+
+#-----------------------------------------------------------------------
+# Extension SYS_ProcessInput_46
+#-----------------------------------------------------------------------
+
+label('SYS_ProcessInput_46')
 ld(d(sysArgs+0),busRAM|regX)    #15
-ldzp(d(sysArgs+1))              #16
-for i in range(8):
-  adda(val(i),regY)             #17+2i
-  st(d(0),eaYXregAC)            #18+2i
-ld(val(hi('REENTER')),regY)     #33
-jmpy(d(lo('REENTER')))          #34
-ld(val(-38/2))                  #35
+ld(d(sysArgs+1),busRAM|regY)    #16
+ld(eaYXregAC,busRAM)            #17 Last checksum
+bne(d(lo('.sysPi0')))           #18
+ld(d(sysArgs+0),busRAM)         #19
+suba(d(64),regX)                #20
+ld(eaYXregAC,busRAM)            #21 Length byte
+st(eaYXregOUTIX)                #22 X++
+anda(d(63))                     #23 Bit 6:7 are garbage
+st(d(sysArgs+3))                #24 Copy count
+ld(eaYXregAC,busRAM)            #25 Low copy address
+st(eaYXregOUTIX)                #26 X++
+st(d(sysArgs+4))                #27
+ld(eaYXregAC,busRAM)            #28 High copy address
+st(eaYXregOUTIX)                #29 X++
+st(d(sysArgs+5))                #30
+ldzp(d(sysArgs+3))              #31
+bne(d(lo('.sysPi1')))           #32
+ld(eaYXregAC,busRAM)            #33 Low run address
+st(eaYXregOUTIX)                #34 X++
+suba(d(2))                      #35
+st(d(vPC))                      #36
+st(d(vLR))                      #37
+ld(eaYXregAC,busRAM)            #38 High run address
+st(d(vPC+1))                    #39
+st(d(vLR+1))                    #40
+ld(val(hi('REENTER')),regY)     #41
+jmpy(d(lo('REENTER')))          #42
+label('.sysPi0')
+ld(d(-46/2))                    #20,43
+ld(val(hi('REENTER')),regY)     #21
+jmpy(d(lo('REENTER')))          #22
+label('.sysPi1')
+ld(d(-26/2))                    #23,34
+ld(val(hi('REENTER')),regY)     #35
+jmpy(d(lo('REENTER')))          #36
+ld(d(-40/2))                    #37
 
 #-----------------------------------------------------------------------
-# Extension SYS_34_Random: Update entropy and copy to vAC
+# Extension SYS_Random_34: Update entropy and copy to vAC
 #-----------------------------------------------------------------------
 
 # This same algorithm runs automatically once per vertical blank.
 # Use this function to get numbers at a higher rate.
-label('SYS_34_Random')
+label('SYS_Random_34')
 ldzp(d(frameCount))             #15
 xora(d(entropy+1),busRAM)       #16
 xora(d(serialRaw),busRAM)       #17
@@ -1661,10 +1726,10 @@ jmpy(d(lo('REENTER')))          #30
 ld(val(-34/2))                  #31
 
 #-----------------------------------------------------------------------
-# Extension SYS_40_Read3: Read 3 consecutive bytes from ROM
+# Extension SYS_Read3_40: Read 3 consecutive bytes from ROM
 #-----------------------------------------------------------------------
 
-label('SYS_40_Read3')
+label('SYS_Read3_40')
 ld(d(sysData+1),busRAM|regY)    #15
 jmpy(d(128-7))                  #16 trampoline3a
 ldzp(d(sysData+0))              #17
@@ -1700,10 +1765,10 @@ def trampoline3b():
   jmpy(d(lo('txReturn')))       #32
 
 #-----------------------------------------------------------------------
-# Extension SYS_58_Unpack: Unpack 3 bytes into 4 pixels
+# Extension SYS_Unpack_56: Unpack 3 bytes into 4 pixels
 #-----------------------------------------------------------------------
 
-label('SYS_56_Unpack')
+label('SYS_Unpack_56')
 ld(val(audioTable>>8),regY)     #15
 ldzp(d(sysArgs+2))              #16 a[2]>>2
 anda(val(0xfc),regX)            #17
@@ -1751,10 +1816,10 @@ jmpy(d(lo('REENTER')))          #52
 ld(val(-56/2))                  #53
 
 #-----------------------------------------------------------------------
-# Extension SYS_30_Draw4:
+# Extension SYS_Draw4_30:
 #-----------------------------------------------------------------------
 
-label('SYS_30_Draw4')
+label('SYS_Draw4_30')
 ld(d(sysPos+0),busRAM|regX)     #15
 ld(d(sysPos+1),busRAM|regY)     #16
 ldzp(d(sysArgs+0))              #17
@@ -1770,7 +1835,7 @@ jmpy(d(lo('REENTER')))          #26
 ld(val(-30/2))                  #27
 
 #-----------------------------------------------------------------------
-# Extension SYS_134_VDrawBits:
+# Extension SYS_VDrawBits_134:
 #-----------------------------------------------------------------------
 
 # Draw slice of a character
@@ -1779,7 +1844,7 @@ ld(val(-30/2))                  #27
 # sysArgs+1     Color 1 (pen)
 # sysArgs+2     8 bits, highest bit first (destructive)
 
-label('SYS_134_VDrawBits')
+label('SYS_VDrawBits_134')
 ld(d(sysPos+0),busRAM|regX)     #15
 ld(val(0))                      #16
 label('.vdb0')
@@ -1840,7 +1905,7 @@ assert(pc()&255 == 255)
 bra(d(vTmp)|busRAM); C('Jumps back into next page')
 
 # 16-bits logical shift right
-label('SYS_48_LSRW')
+label('SYS_LSRW_48')
 assert(pc()&255 == 0)#First instruction on this page must be a nop
 nop()                           #15
 ld(d(hi('shiftTable')),regY)    #16
@@ -1874,7 +1939,7 @@ ld(d(-48/2))                    #45
 #  Application specific SYS extensions
 #-----------------------------------------------------------------------
 
-label('SYS_40_Racer_UpdateVideoX')
+label('SYS_RacerUpdateVideoX_40')
 ld(d(sysArgs+2),busRAM|regX)    #15 q,
 ld(d(sysArgs+3),busRAM|regY)    #16
 ld(eaYXregAC,busRAM)            #17
@@ -1903,7 +1968,7 @@ ld(val(hi('REENTER')),regY)     #35
 jmpy(d(lo('REENTER')))          #36
 ld(val(-40/2))                  #37
 
-label('SYS_40_Racer_UpdateVideoY')
+label('SYS_RacerUpdateVideoY_40')
 ldzp(d(sysArgs+3))              #15 8&
 anda(d(8))                      #16
 bne(d(lo('.sysRacer2')))        #17 [if<>0 1]

@@ -26,9 +26,9 @@ gcl0x
     {Draw slice one pixel outside view}
     v, 160+ 255& q<.
     [do
-      p \sysData= \SYS_40_Read3  40@ {Read 3 bytes from ROM}
-                  \SYS_56_Unpack 56@ {Unpack to 4 bytes}
-      q \sysPos=  \SYS_30_Draw4  30@ {Write 4 bytes to screen}
+      p \sysData= \SYS_Read3_40  40@ {Read 3 bytes from ROM}
+                  \SYS_Unpack_56 56@ {Unpack to 4 bytes}
+      q \sysPos=  \SYS_Draw4_30  30@ {Write 4 bytes to screen}
       $80 p+ p=
       q>++ q
       if>0loop]

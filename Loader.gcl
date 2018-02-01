@@ -3,37 +3,48 @@ gcl0x
 
 {
   Serial loading of programs with Arduino/Trinket over the serial port
-  Still a study to see if we can get the transmission right
+
+  XXX Clear screen
+  XXX Add explanation on screen
 }
 
-{
-  'W' Write N bytes into memory
-  'G' Go address
-}
+{Put in variable to save some code space}
+\SYS_NextByteIn_30      NextByteIn_30=
+\SYS_ConditionalCopy_34 ConditionalCopy_34=
 
-\SYS_30_LoadSerial L= {Put in variable to save some code space}
+0 \sysArgs3. {Clears the copy counter}
+$4304 A=     {Activity indicator}
 
 {-----------------------------------------------------------------------+
-|}$7f00 \vLR= ret{      RAM page 8                                      |
+|}$0800 \vLR= ret{      RAM page 8 (visible area)                       |
 +-----------------------------------------------------------------------}
-$7f00:
+$0800:
 
 [do
+  63 A. {White indicator}
+
   {Process the next transmission frame}
-  $7e00 \sysArgs0=                                         {Input buffer}
-  103 {'g'} \sysArgs2.                                     {Checksum}
-  [do \videoY, 207^ if<>0loop] L 30@                       {Command byte}
-  [do \videoY, 219^ if<>0loop] L 30@                       {Length, 6 new bits}
-  [do \videoY, 235^ if<>0loop] L 30@                       {Low address}
-  [do \videoY, 251^ if<>0loop] L 30@                       {High address}
-  [do \nextVideo,   if<>0loop] L 30@                       {Payload 0}
+  $4400 \sysArgs0=                                    {Input buffer}
+  103 {'g'} \sysArgs2.                                {Reset checksum}
+  [do \videoY, 207^ if<>0loop] NextByteIn_30      30@ {Protocol byte}
+  [do \videoY, 219^ if<>0loop] NextByteIn_30      30@ {Length, 6 new bits}
+  [do \videoY, 235^ if<>0loop] NextByteIn_30      30@ {Low address}
+  [do \videoY, 251^ if<>0loop] NextByteIn_30      30@ {High address}
+                               ConditionalCopy_34 34@ {Copy previous bytes}
   {256-59=} 197 i=
-  [do \videoY,   2& if<>0loop  L 30@                       {Payload 1-59}
-  i<++ i if<>0loop]
-  [do \videoY, 185^ if<>0loop] L 30@                       {Checksum byte}
+  [do \nextVideo,   if<>0loop] NextByteIn_30      30@ {Payload 0}
+  [do                          ConditionalCopy_34 34@ {Copy previous bytes}
+    [do \videoY, 2& if<>0loop] NextByteIn_30      30@ {Payload 1-59}
+    i<++ i if<>0loop]
+  [do \videoY, 185^ if<>0loop] NextByteIn_30      30@ {Checksum byte}
 
   {Judge the checksum}
-  \sysArgs0; i=
-  \sysArgs2, [if=0 12 {Light green} else 3 {Light red}] i.
-loop]
+  \SYS_ProcessInput_46 46@
 
+  {Red or green}
+  \sysArgs2, {Checksum} [if=0 12 {Light green OK} else 3 {Light red NOK}] A.
+
+  {Advance indicator}
+  A<, 63- [if<0 64+ else 4] A<.
+
+loop]

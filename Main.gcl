@@ -150,14 +150,14 @@ Pos>, q= {Y position of current cursor}
 32 \sysArgs0. \sysArgs1.
 [do
   p>, q- [if<>0
-    p \sysPos= \SYS_134_VDrawBits 134@ {Clears 8 pixels vertically}
+    p \sysPos= \SYS_VDrawBits_134 134@ {Clears 8 pixels vertically}
   ]
   $800 p+ p= if>0loop
   i+ p=
   255& 160^ if<>0loop]
 
 { Load and start the selected program }
-Program \sysArgs0= $300 \vLR= \SYS_88_LoadRom 88@
+Program \sysArgs0= $300 \vLR= \SYS_Exec_88 88@
 
 {-----------------------------------------------------------------------+
 |                                                                       |

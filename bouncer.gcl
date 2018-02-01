@@ -117,9 +117,10 @@ $0400:
   Pos p=
   Pos 255| 255- {XXX Is there a better way to clear the low byte?}
   i= $8001 i+ i=
+  0 \sysArgs0. \sysArgs1. {Black}
   [do
     p [do
-      \sysArgs0= \SYS_38_VClear8 38@ {Clears 8 pixels vertically}
+      \sysPos= \SYS_VDrawBits_134 134@ {Clears 8 pixels vertically}
       $800 p+ p= if>0loop]
     i+ p=
     255& 160^ if<>0loop]

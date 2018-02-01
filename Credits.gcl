@@ -75,17 +75,12 @@ $0400:
  $20# $26# $20# $57# $61# $6c# $74# $65# $72# $0a# 0#
 ] Part2=
 
-[def
-{-
-  ClearScreen(Pos)
-  Clear screen from current position to bottom right
--}
-  Pos p=
-  Pos 255| 255- {XXX Is there a better way to clear the low byte?}
-  i= $8001 i+ i=
+[def { Clear screen }
+  $800 p= $8801 i=
+  0 \sysArgs0. \sysArgs1. {Black}
   [do
     p [do
-      \sysArgs0= \SYS_38_VClear8 38@ {Clears 8 pixels vertically}
+      \sysPos= \SYS_VDrawBits_134 134@ {Clears 8 pixels vertically}
       $800 p+ p= if>0loop]
     i+ p=
     255& 160^ if<>0loop]
