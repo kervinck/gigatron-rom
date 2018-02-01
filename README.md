@@ -17,7 +17,8 @@ README.md                       This file...
 Files processed by theloop.py
 =============================
 ```
-main.gcl                        Application code
+Reset.gcl                       System reset code
+Main.gcl *.gcl                  Application code
 gcl.py                          Module: GCL to vCPU compiler
 asm.py                          Module: Assembler functions
 font.py                         Module: Gigatron font definition

@@ -14,7 +14,7 @@
 #
 #  To do for ROM v1
 #  XXX Serial loading of programs with Arduino/Trinket
-#      - Copy into memory
+#      - Copy into memory (implemented but not tested)
 #      - Fit in zero page
 #      - Interactive vs program load (conflicting requirement for vLR/RET)
 #      - Load/verify/exec
@@ -412,11 +412,11 @@ suba(val(0x5a-1))
 st(d(bootCheck))
 
 # vCPU reset handler
-vCpuReset = videoTable + 240 # we have 9 unused bytes behind the video table
-ld(val((vCpuReset&255)-2));     C('Setup vCPU reset handler')
+vReset = videoTable + 240 # we have 9 unused bytes behind the video table
+ld(val((vReset&255)-2));     C('Setup vCPU reset handler')
 st(d(vPC))
 adda(val(2),regX)
-ld(val(vCpuReset>>8))
+ld(val(vReset>>8))
 st(d(vPC+1),busAC|regY)
 st(d(lo('LDWI')),        eaYXregOUTIX)
 st(d(lo('SYS_Reset_42')),eaYXregOUTIX)
@@ -783,7 +783,7 @@ suba(val(1))                    #50 ... count down the timer
 st(d(resetTimer))               #51
 anda(d(127))                    #52
 beq(d(lo('.restart2')))         #53
-ld(val((vCpuReset&255)-2))      #54 Start force reset when hitting 0
+ld(val((vReset&255)-2))         #54 Start force reset when hitting 0
 bra(d(lo('.restart1')))         #55 ... otherwise do nothing yet
 bra(d(lo('.restart3')))         #56
 label('.restart0')
@@ -795,7 +795,7 @@ label('.restart1')
 nop()                           #57
 label('.restart2')
 st(d(vPC))                      #55 Continue force reset
-ld(val(vCpuReset>>8))           #56
+ld(val(vReset>>8))              #56
 st(d(vPC+1))                    #57
 label('.restart3')
 
