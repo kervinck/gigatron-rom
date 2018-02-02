@@ -45,14 +45,27 @@ void setup() {
   }
 }
 
-void loop() {
-  static byte hello[60] = "Hello there ";
-  static unsigned i = 0;
-  static int len = strlen(hello);
+byte blinky[] = {
+  0x11, 0x50, 0x44, // 0300 LDWI $4450
+  0x2b, 0x31,       // 0303 STW  'p'
+  0x98, 0x31,       // 0305 POKE 'p'
+  0xf3, 0x01,       // 0307 ADDI 1
+  0x95, 0x03        // 0309 BRA  $0305
+                    // 030b
+};
 
+void loop() {
+  static byte message[60];
   noInterrupts();
-  for (;;)
-    sendFrame('W', len+sprintf(hello+len, "%u", i++), 0x300, hello);
+  for (;;) {
+    // Frame 1: load
+    memcpy(message, blinky, sizeof blinky);
+    sendFrame('W', sizeof blinky, 0x7f00, message);
+
+    // Frame 2: exec
+    memset(message, 0, sizeof blinky);
+    sendFrame('W', 0, 0x7f00, message);
+  }
 }
 
 // Pretend to be a game controller
@@ -76,15 +89,15 @@ void sendFrame(byte firstByte, byte len, unsigned address, byte message[60])
   // Send one frame of data
   //
   // A frame has 65*8-2=518 bits, including protocol byte and checksum.
-  // The reasons for -2 (-1 and -1) are:
-  // -1: from start at vertical pulse, there are 35 scanlines remaining
+  // The reasons for the two "missing" bits are:
+  // 1. From start of vertical pulse, there are 35 scanlines remaining
   // in vertical blank. But we also need the payload bytes to align
   // with scanlines where the interpreter runs, so the Gigatron doesn't
   // have to shift everything it receives by 1 bit.
-  // -1: there is a 1 bit latency inside the 74HCT595 for the data bit,
-  // but obviously not for the sync signals.
-  // All together, we drop 2 bits from the 2nd byte in frame to achieve
-  // such alignment at visible scanline 3, 11, 19, ... etc.
+  // 2. There is a 1 bit latency inside the 74HCT595 for the data bit,
+  // but (obviously) not for the sync signals.
+  // All together, we drop 2 bits from the 2nd byte in a frame to achieve
+  // byte alignment for the Gigatron at visible scanline 3, 11, 19, ... etc.
 
   checksum = 'g';              // Setup checksum but don't start with 0
   sendFirst(firstByte, 8);     // Protocol byte
@@ -100,7 +113,7 @@ void sendFrame(byte firstByte, byte len, unsigned address, byte message[60])
 
 void sendFirst(byte value, byte n)
 {
-  // Wait for start of vertical blank pulse to sync with loader
+  // Wait vertical sync NEGATIVE edge to sync with loader
   while (~PINB & (1<<PORTB4)) // Ensure vSync is HIGH first
     ;
   while (PINB & (1<<PORTB4)) // Then wait for vSync to drop
@@ -118,9 +131,9 @@ inline void sendBits(byte value, byte n)
     else
       PORTB &= ~(1<<PORTB5);
 
-    // Wait for horizontal pulse UP for the bit transfer
-    // This is timing critical for the first bit of the first byte
-    // and the reason that interrupts must be disabled.
+    // Wait for bit transfer at horizontal sync POSITIVE edge.
+    // This timing is tight for the first bit of the first byte and
+    // the reason that interrupts must be disabled on the Arduino.
     while (PINB & (1<<PORTB3))  // Ensure hSync is LOW first
       ;
     while (~PINB & (1<<PORTB3)) // Then wait for hSync to rise

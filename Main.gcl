@@ -129,9 +129,21 @@ $2000 Pos=
   \frameCount, Color= PrintArrow!
 
   { Handle each stroke of Up/Down and A controller buttons }
-  \buttonState,  8& {buttonUp}   [if=0 WipeOutArrow! Item    [if>0 1- else 0] Item= \buttonState, 8| \buttonState.]
-  \buttonState,  4& {buttonDown} [if=0 WipeOutArrow! Item 5- [if<0 6+ else 5] Item= \buttonState, 4| \buttonState.]
-  \buttonState, 128&{buttonA}    if<>0loop
+
+  {buttonUp}
+  \buttonState, 247^ [if=0
+     WipeOutArrow!
+     Item    [if>0 1- else 0] Item=
+     \buttonState, 8| \buttonState.]
+
+  {buttonDown}
+  \buttonState, 251^ [if=0
+     WipeOutArrow!
+     Item 5- [if<0 6+ else 5] Item=
+     \buttonState, 4| \buttonState.]
+
+  {buttonA}
+  \buttonState, 127^ if<>0loop
 
   42 {Grey} Color= PrintArrow!
 
@@ -141,8 +153,9 @@ $2000 Pos=
   1-   [if=0 \Mandelbrot else
   1-   [if=0 \Pictures   else
   1-   [if=0 \Credits    else
-  1-   [if=0 \Loader     else loop]]]]]
-] Program=
+  1-   [if=0 \Loader     else loop]]]]]]
+  Program=
+]
 
 { Wipe out everything but the selected line }
 $800 p= $8801 i=

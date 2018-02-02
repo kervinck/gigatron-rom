@@ -12,14 +12,11 @@
 #  - Serial input handler
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
-#  To do for ROM v1
-#  XXX Serial loading of programs with Arduino/Trinket
-#      - Copy into memory (implemented but not tested)
-#      - Fit in zero page
-#      - Interactive vs program load (conflicting requirement for vLR/RET)
-#      - Load/verify/exec
-#
 #  Hopefully in ROM v1
+#  XXX Serial loading of programs with Arduino/Trinket
+#      - Fit in zero page
+#      - Load/verify/exec
+#      - Interactive vs program load (conflicting requirement for vLR/RET)
 #  XXX Logo drawing
 #  XXX Music sequencer (combined with LED sequencer)
 #  XXX Audio: Move shift table to page 7, then add waveform synthesis
@@ -822,11 +819,12 @@ label('.rnd1')
 adda(d(entropy+1),busRAM)       #70
 st(d(entropy+1))                #71
 
-# When the total number of scan lines per frame is not an exact multiple of the (4) channels,
-# there will be an audible discontinuity if no measure is taken. This static noise can be
-# suppressed by swallowing the first `lines mod 4' partial samples after transitioning into
-# vertical blank. This is easiest if the modulo is 0 (do nothing) or 1 (reset sample while in
-# the first blank scan line). For the two other cases there is no solution yet: give a warning.
+# When the total number of scan lines per frame is not an exact multiple of the
+# (4) channels, there will be an audible discontinuity if no measure is taken.
+# This static noise can be suppressed by swallowing the first `lines mod 4'
+# partial samples after transitioning into vertical blank. This is easiest if
+# the modulo is 0 (do nothing) or 1 (reset sample while in the first blank scan
+# line). For the two other cases there is no solution yet: give a warning.
 soundDiscontinuity = (vFront+vPulse+vBack) % 4
 extra = 0
 if soundDiscontinuity == 1:
@@ -1039,7 +1037,7 @@ runVcpu(196-42, 'line40')       #42 Application cycles (scan line 40)
 # vAC==0 now
 st(d(videoY))                   #196
 st(d(frameX))                   #197 
-st(d(nextVideo))                #198
+st(d(nextVideo))                #198 videoA=0
 ldzp(d(channel))                #199 Advance to next sound channel
 anda(val(3));                   C('<New scan line start>')#0
 adda(val(1))                    #1
@@ -1655,47 +1653,71 @@ jmpy(d(lo('REENTER')))          #20
 ld(d(-24/2))                    #21
 
 #-----------------------------------------------------------------------
-# Extension SYS_ProcessInput_46
+# Extension SYS_ProcessInput_44
 #-----------------------------------------------------------------------
 
-label('SYS_ProcessInput_46')
-ld(d(sysArgs+0),busRAM|regX)    #15
-ld(d(sysArgs+1),busRAM|regY)    #16
-ld(eaYXregAC,busRAM)            #17 Last checksum
-bne(d(lo('.sysPi0')))           #18
-ld(d(sysArgs+0),busRAM)         #19
-suba(d(64),regX)                #20
-ld(eaYXregAC,busRAM)            #21 Length byte
-st(eaYXregOUTIX)                #22 X++
-anda(d(63))                     #23 Bit 6:7 are garbage
-st(d(sysArgs+3))                #24 Copy count
-ld(eaYXregAC,busRAM)            #25 Low copy address
-st(eaYXregOUTIX)                #26 X++
-st(d(sysArgs+4))                #27
-ld(eaYXregAC,busRAM)            #28 High copy address
-st(eaYXregOUTIX)                #29 X++
-st(d(sysArgs+5))                #30
-ldzp(d(sysArgs+3))              #31
-bne(d(lo('.sysPi1')))           #32
-ld(eaYXregAC,busRAM)            #33 Low run address
-st(eaYXregOUTIX)                #34 X++
-suba(d(2))                      #35
-st(d(vPC))                      #36
-st(d(vLR))                      #37
-ld(eaYXregAC,busRAM)            #38 High run address
-st(d(vPC+1))                    #39
-st(d(vLR+1))                    #40
-ld(val(hi('REENTER')),regY)     #41
-jmpy(d(lo('REENTER')))          #42
+# Check for command and checksum
+# Dispatch the corresponding follow-up action
+# Command Checksum Action
+# -1      Any      Ignore
+# 'W'     OK       Copy, increment good block counter
+# 'W'     NOK      Clear good block counter
+# else    NOK      Clear good block counter
+#
+# 0 'W'
+# 1 len
+# 2 addrL
+# 3 addrH
+# 4-63 data
+# 64 checksum
+# 65
+#
+# XXX Bad checksum:
+# XXX 'W' for write
+#   Copy bytes
+#   Increment good block counter
+# XXX 'G' for conditional go
+#   Count number consecutive good frames
+#   Address -> Target address
+#
+# Good block counter should be displayed on screen
+
+label('SYS_ProcessInput_44')
+ld(d(sysArgs+1),busRAM|regY)    #15
+ldzp(d(sysArgs+2))              #16 Last checksum
+bne(d(lo('.sysPi0')))           #17
+ld(d(sysArgs+0),busRAM)         #18
+suba(d(64),regX)                #19
+ld(eaYXregAC,busRAM)            #20 Length byte
+st(eaYXregOUTIX)                #21 X++
+anda(d(63))                     #22 Bit 6:7 are garbage
+st(d(sysArgs+3))                #23 Copy count
+ld(eaYXregAC,busRAM)            #24 Low copy address
+st(eaYXregOUTIX)                #25 X++
+st(d(sysArgs+4))                #26
+ld(eaYXregAC,busRAM)            #27 High copy address
+st(eaYXregOUTIX)                #28 X++
+st(d(sysArgs+5))                #29
+ldzp(d(sysArgs+3))              #30
+bne(d(lo('.sysPi1')))           #31
+ldzp(d(sysArgs+4))              #32 Low run address
+suba(d(2))                      #33
+st(d(vPC))                      #34
+st(d(vLR))                      #35
+ldzp(d(sysArgs+5))              #36 High run address
+st(d(vPC+1))                    #37
+st(d(vLR+1))                    #38
+ld(val(hi('REENTER')),regY)     #39
+jmpy(d(lo('REENTER')))          #40
+ld(d(-44/2))                    #41
 label('.sysPi0')
-ld(d(-46/2))                    #20,43
-ld(val(hi('REENTER')),regY)     #21
-jmpy(d(lo('REENTER')))          #22
+ld(val(hi('REENTER')),regY)     #19
+jmpy(d(lo('REENTER')))          #20
+ld(d(-24/2))                    #21
 label('.sysPi1')
-ld(d(-26/2))                    #23,34
-ld(val(hi('REENTER')),regY)     #35
-jmpy(d(lo('REENTER')))          #36
-ld(d(-40/2))                    #37
+ld(val(hi('REENTER')),regY)     #33
+jmpy(d(lo('REENTER')))          #34
+ld(d(-38/2))                    #35
 
 #-----------------------------------------------------------------------
 # Extension SYS_Random_34: Update entropy and copy to vAC
