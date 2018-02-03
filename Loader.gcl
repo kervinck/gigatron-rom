@@ -73,6 +73,7 @@ vgaY nextVideo videoY vCPU Comment
   [do \videoY, 249^ if<>0loop] NextByteIn_30      30@ {High address}
                                ConditionalCopy_34 34@ {Copy previous bytes}
   [do \nextVideo,   if<>0loop] NextByteIn_30      30@ {Payload 0}
+  0 {Delay to force next scanline: "[18 28] 20 30; 18; [20 24" = 158 > 148}
   [do                          ConditionalCopy_34 34@ {Copy previous bytes}
     [do \videoY, 2&  if=0loop] NextByteIn_30      30@ {Payload 1-59}
       \videoY, 238^ if<>0loop]
