@@ -43,9 +43,10 @@ $500c Pos=
 \SYS_NextByteIn_30      NextByteIn_30=
 \SYS_ConditionalCopy_34 ConditionalCopy_34=
 
-0 \sysArgs3. {Clears the copy counter}
-$5a0c A=     {Activity indicator}
-$5b0c B=     {Buffer}
+0 \sysArgs3.            {Clears the copy counter}
+$5a0c A=                {Activity indicator}
+$5b0c B=                {Buffer}
+103 {'g'} \sysArgs2.    {Reset checksum}
 
 {-----------------------------------------------------------------------+
 |}$590c \vLR= ret{      Inside screen area                              |
@@ -60,7 +61,6 @@ $590c:
 
   {Receive the next transmission frame}
   B         \sysArgs0=                                {Input buffer}
-  103 {'g'} \sysArgs2.                                {Reset checksum}
   [do \videoY, 205^ if<>0loop] NextByteIn_30      30@ {Protocol byte}
   [do \videoY, 217^ if<>0loop] NextByteIn_30      30@ {Length, 6 new bits}
   [do \videoY, 233^ if<>0loop] NextByteIn_30      30@ {Low address}
@@ -73,12 +73,11 @@ $590c:
       \videoY, 238^ if<>0loop]
   [do \videoY, 183^ if<>0loop] NextByteIn_30      30@ {Checksum byte}
 
-  \sysArgs2,                 {Checksum OK?}
-  [if=0
-    \SYS_ProcessInput_46 46@ {Check command and execute it}
-    12                       {Light green OK}
-  else 3                     {Light red NOK}
-  ] A.                       {Plot red or green indicator}
+  {Plot red or green indicator}
+  \sysArgs2, [if=0 12 else 3] A.
+
+  {Check checksum and command, and execute if OK. Also reset checksum.}
+  \SYS_ProcessInput_48 48@
 
   {Advance indicator}
   A<, 11- 127& 12+ A<.

@@ -1656,7 +1656,7 @@ jmpy(d(lo('REENTER')))          #20
 ld(d(-24/2))                    #21
 
 #-----------------------------------------------------------------------
-# Extension SYS_ProcessInput_46
+# Extension SYS_ProcessInput_48
 #-----------------------------------------------------------------------
 
 # sysArgs[0:1] Source address
@@ -1664,53 +1664,62 @@ ld(d(-24/2))                    #21
 # sysArgs[3]   Copy count
 # sysArgs[4:5] Destination address
 
-label('SYS_ProcessInput_46')
+label('SYS_ProcessInput_48')
 ld(d(sysArgs+1),busRAM|regY)    #15
-ld(d(sysArgs+0),busRAM)         #16
-suba(d(65),regX)                #17 Point at first byte of buffer
-ld(eaYXregAC,busRAM)            #18 Command byte
-st(eaYXregOUTIX)                #19 X++
-xora(d(ord('L')))               #20 This loader lumps everything under 'L'
-bne(d(lo('.sysPi1')))           #21
-ld(eaYXregAC,busRAM);           C('Valid command')#22 Length byte
-st(eaYXregOUTIX)                #23 X++
-anda(d(63))                     #24 Bit 6:7 are garbage
-st(d(sysArgs+3))                #25 Copy count
-ld(eaYXregAC,busRAM)            #26 Low copy address
-st(eaYXregOUTIX)                #27 X++
-st(d(sysArgs+4))                #28
-ld(eaYXregAC,busRAM)            #29 High copy address
-st(eaYXregOUTIX)                #30 X++
-st(d(sysArgs+5))                #31
-ldzp(d(sysArgs+3))              #32
-bne(d(lo('.sysPi2')))           #33
-# Execute code
-ldzp(d(sysArgs+4));             C('Execute')#34 Low run address
-suba(d(2))                      #35
-st(d(vPC))                      #36
-st(d(vLR))                      #37
-ldzp(d(sysArgs+5))              #38 High run address
-st(d(vPC+1))                    #39
-st(d(vLR+1))                    #40
+ldzp(d(sysArgs+2))              #16
+bne(d(lo('.sysPi0')))           #17
+ld(d(sysArgs+0),busRAM)         #18
+suba(d(65),regX)                #19 Point at first byte of buffer
+ld(eaYXregAC,busRAM)            #20 Command byte
+st(eaYXregOUTIX)                #21 X++
+xora(d(ord('L')))               #22 This loader lumps everything under 'L'
+bne(d(lo('.sysPi1')))           #23
+ld(eaYXregAC,busRAM);           C('Valid command')#24 Length byte
+st(eaYXregOUTIX)                #25 X++
+anda(d(63))                     #26 Bit 6:7 are garbage
+st(d(sysArgs+3))                #27 Copy count
+ld(eaYXregAC,busRAM)            #28 Low copy address
+st(eaYXregOUTIX)                #29 X++
+st(d(sysArgs+4))                #30
+ld(eaYXregAC,busRAM)            #31 High copy address
+st(eaYXregOUTIX)                #32 X++
+st(d(sysArgs+5))                #33
+ldzp(d(sysArgs+3))              #34
+bne(d(lo('.sysPi2')))           #35
+# Execute code (don't care about checksum anymore)
+ldzp(d(sysArgs+4));             C('Execute')#36 Low run address
+suba(d(2))                      #37
+st(d(vPC))                      #38
+st(d(vLR))                      #39
+ldzp(d(sysArgs+5))              #40 High run address
+st(d(vPC+1))                    #41
+st(d(vLR+1))                    #42
+ld(val(hi('REENTER')),regY)     #43
+jmpy(d(lo('REENTER')))          #44
+ld(d(-48/2))                    #45
+# Invalid checksum
+label('.sysPi0')
+ld(d(ord('g')));                C('Invalid checksum')#21 Reset checksum
+st(d(sysArgs+2))                #22
+ld(val(hi('REENTER')),regY)     #23
+jmpy(d(lo('REENTER')))          #24
+ld(d(-26/2))                    #25
+# Unknown command
+label('.sysPi1')
+ld(d(ord('g')));                C('Unknown command')#25 Reset checksum
+st(d(sysArgs+2))                #26
+ld(val(hi('REENTER')),regY)     #27
+jmpy(d(lo('REENTER')))          #28
+ld(d(-32/2))                    #29
+# Loading data
+label('.sysPi2')
+ld(d(sysArgs+0),busRAM);        C('Loading data')#37 Continue checksum
+suba(d(1),regX)                 #38 Point at last byte
+ld(eaYXregAC,busRAM)            #39
+st(d(sysArgs+2))                #40
 ld(val(hi('REENTER')),regY)     #41
 jmpy(d(lo('REENTER')))          #42
 ld(d(-46/2))                    #43
-# Unknown command
-label('.sysPi1')
-ld(d(ord('g')));                C('Unknown command')#23 Reset checksum
-st(d(sysArgs+2))                #24
-ld(val(hi('REENTER')),regY)     #25
-jmpy(d(lo('REENTER')))          #26
-ld(d(-30/2))                    #27
-# Loading data
-label('.sysPi2')
-ld(d(sysArgs+0),busRAM);        C('Loading data')#35 Continue checksum
-suba(d(1),regX)                 #36 Point at last byte
-ld(eaYXregAC,busRAM)            #36
-st(d(sysArgs+2))                #38
-ld(val(hi('REENTER')),regY)     #39
-jmpy(d(lo('REENTER')))          #40
-ld(d(-44/2))                    #41
 
 #-----------------------------------------------------------------------
 # Extension SYS_Random_34: Update entropy and copy to vAC
