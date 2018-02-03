@@ -58,13 +58,16 @@ void loop() {
   static byte message[60];
   noInterrupts();
   for (;;) {
+    // Setup checksum but don't start with 0
+    checksum = 'g';
+
     // Frame 1: load
     memcpy(message, blinky, sizeof blinky);
-    sendFrame('W', sizeof blinky, 0x7f00, message);
+    sendFrame('L', sizeof blinky, 0x7f00, message);
 
     // Frame 2: exec
     memset(message, 0, sizeof blinky);
-    sendFrame('W', 0, 0x7f00, message);
+    sendFrame('L', 0, 0x7f00, message);
   }
 }
 
@@ -99,7 +102,6 @@ void sendFrame(byte firstByte, byte len, unsigned address, byte message[60])
   // All together, we drop 2 bits from the 2nd byte in a frame to achieve
   // byte alignment for the Gigatron at visible scanline 3, 11, 19, ... etc.
 
-  checksum = 'g';              // Setup checksum but don't start with 0
   sendFirst(firstByte, 8);     // Protocol byte
   checksum += firstByte << 6;  // Keep Loader.gcl dumb
   sendBits(len, 6);            // Length 1..60
@@ -107,7 +109,9 @@ void sendFrame(byte firstByte, byte len, unsigned address, byte message[60])
   sendBits(address>>8, 8);     // High address bits
   for (byte i=0; i<60; i++)    // Payload bytes
     sendBits(message[i], 8);
+  byte nextChecksum = -checksum;
   sendBits(-checksum, 8);      // Checksum must come out as 0
+  checksum = nextChecksum;     // Concatenate checksums
   PORTB |= 1<<PORTB5;          // Send 1 when idle
 }
 
@@ -122,7 +126,7 @@ void sendFirst(byte value, byte n)
 }
 
 // Send n bits, highest first
-inline void sendBits(byte value, byte n)
+void sendBits(byte value, byte n)
 {
   for (byte bit=1<<(n-1); bit; bit>>=1) {
     // Send next bit

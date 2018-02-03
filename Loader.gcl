@@ -1,26 +1,92 @@
 gcl0x
-{
-  Serial loading of programs with Arduino/Trinket over the serial port
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Loading of programs over the serial port (with Arduino)         |
+|                                                                       |
++-----------------------------------------------------------------------}
 
-  XXX Clear screen
-  XXX Add explanation on screen
-}
+{ Setup }
 
-{Put in variable to save some code space}
+[def {PrintChar}
+  Char=
+  {Map ASCII code to offset in font table}
+  82- [if<0 50+ i= \font32up
+       else     i= \font82up] fontData= {Select low or high page}
+  i i+ tmp= tmp+ i+    {Multiply by 5}
+  fontData+ fontData=  {Add to page address to reach bitmap data for Char}
+  $800 Pos+ q=           {Where to stop the inner drawing loop}
+  {Draw 5 vertical slices}
+  5 [do
+    i=
+    fontData 0? bits= fontData<++
+    Pos p=
+    {Draw vertical slice}
+    [do
+      bits 128& [if=0 32 {Blue} else 15] p.
+      bits bits+ bits= {Shift left}
+      p>++
+      p q- if<0loop]
+    Pos<++
+    i 1- if>0loop]
+  Pos<++ {Skip one slice for spacing}
+  ret
+] PrintChar=
+
+{ Display ready to load text }
+$500c Pos=
+[def {Ready to load}
+  $52# $65# $61# $64# $79# $20# $74# $6f#
+  $20# $6c# $6f# $61# $64# 0# ] Text=
+[do Text, if<>0 Text<++ PrintChar! loop]
+
+{ Put these in variable to save some code space below }
 \SYS_NextByteIn_30      NextByteIn_30=
 \SYS_ConditionalCopy_34 ConditionalCopy_34=
 
 0 \sysArgs3. {Clears the copy counter}
-$4304 A=     {Activity indicator}
+$5a0c A=     {Activity indicator}
+$5b0c B=     {Buffer}
 
 {-----------------------------------------------------------------------+
-|}$0800 \vLR= ret{      RAM page 8 (visible area)                       |
+|}$590c \vLR= ret{      Inside screen area                              |
 +-----------------------------------------------------------------------}
-$0800:
+$590c:
+
+{ Loop }
+
+[do
+  {White indicator}
+  63 A.
+
+  {Receive the next transmission frame}
+  B         \sysArgs0=                                {Input buffer}
+  103 {'g'} \sysArgs2.                                {Reset checksum}
+  [do \videoY, 205^ if<>0loop] NextByteIn_30      30@ {Protocol byte}
+  [do \videoY, 217^ if<>0loop] NextByteIn_30      30@ {Length, 6 new bits}
+  [do \videoY, 233^ if<>0loop] NextByteIn_30      30@ {Low address}
+  [do \videoY, 249^ if<>0loop] NextByteIn_30      30@ {High address}
+                               ConditionalCopy_34 34@ {Copy previous bytes}
+  [do \nextVideo,   if<>0loop] NextByteIn_30      30@ {Payload 0}
+  0 {Delay to force next scanline: "[18 28] 20 30; 18; [20 24" = 158 > 148}
+  [do                          ConditionalCopy_34 34@ {Copy previous bytes}
+    [do \videoY, 2&  if=0loop] NextByteIn_30      30@ {Payload 1-59}
+      \videoY, 238^ if<>0loop]
+  [do \videoY, 183^ if<>0loop] NextByteIn_30      30@ {Checksum byte}
+
+  \sysArgs2,                 {Checksum OK?}
+  [if=0
+    \SYS_ProcessInput_46 46@ {Check command and execute it}
+    12                       {Light green OK}
+  else 3                     {Light red NOK}
+  ] A.                       {Plot red or green indicator}
+
+  {Advance indicator}
+  A<, 11- 127& 12+ A<.
+loop]
 
 {
 vgaY nextVideo videoY vCPU Comment
----- --------- ------ ---- ----------------------
+---- --------- ------ ---- -------
    0  videoE      238  Yes First vBlank
    1  videoE      179  Yes
    2  videoE      181  Yes
@@ -60,31 +126,7 @@ vgaY nextVideo videoY vCPU Comment
  520  videoF->E   238  Yes
 }
 
-[do
-  {White indicator}
-  63 A.
+{-----------------------------------------------------------------------+
+|                                                                       |
++-----------------------------------------------------------------------}
 
-  {Receive the next transmission frame}
-  $4400     \sysArgs0=                                {Input buffer}
-  103 {'g'} \sysArgs2.                                {Reset checksum}
-  [do \videoY, 205^ if<>0loop] NextByteIn_30      30@ {Protocol byte}
-  [do \videoY, 217^ if<>0loop] NextByteIn_30      30@ {Length, 6 new bits}
-  [do \videoY, 233^ if<>0loop] NextByteIn_30      30@ {Low address}
-  [do \videoY, 249^ if<>0loop] NextByteIn_30      30@ {High address}
-                               ConditionalCopy_34 34@ {Copy previous bytes}
-  [do \nextVideo,   if<>0loop] NextByteIn_30      30@ {Payload 0}
-  0 {Delay to force next scanline: "[18 28] 20 30; 18; [20 24" = 158 > 148}
-  [do                          ConditionalCopy_34 34@ {Copy previous bytes}
-    [do \videoY, 2&  if=0loop] NextByteIn_30      30@ {Payload 1-59}
-      \videoY, 238^ if<>0loop]
-  [do \videoY, 183^ if<>0loop] NextByteIn_30      30@ {Checksum byte}
-
-  {Red or green}
-  \sysArgs2, {Checksum} [if=0 12 {Light green OK} else 3 {Light red NOK}] A.
-
-  {Judge the checksum}
-  \SYS_ProcessInput_44 44@
-
-  {Advance indicator}
-  A<, 63- [if<0 64+ else 4] A<.
-loop]
