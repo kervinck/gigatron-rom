@@ -13,20 +13,25 @@
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #  Hopefully in ROM v1
-#  XXX Serial loading of programs with Arduino/Trinket
-#      - Fit in zero page
-#      - Load/verify/exec
-#      - Interactive vs program load (conflicting requirement for vLR/RET)
-#  XXX Logo drawing
+#  XXX Loader: No crash when holding autofire
+#  XXX Loader: Fit in zero page
+#  XXX Loader: Interactive vs load (conflicting requirement for vLR/RET)
 #  XXX Music sequencer (combined with LED sequencer)
-#  XXX Audio: Move shift table to page 7, then add waveform synthesis
 #  XXX Adjustable return address for LOOKUP trampolines
+#  XXX Zero-page: Still need returnTo?
 #  XXX Retire sysPos and sysData (use sysArgs instead)
-#  XXX vCPU: ANDW, ORW, XORW
 #  XXX vCPU: Rethink clobbering of vAC by SYS
-#  XXX Prefix notation for high/low byte >X++ instead of X>++
-#  XXX Readability of asm.py instructions, esp. make d() implicit
+#  XXX vCPU: ANDW, ORW, XORW
+#  XXX vCPU: NEGW, ABSW, MAXW, MINW
+#  XXX vCPU: Word pointers (p; p: PEEKW POKEW)
+#  XXX Audio: Move shift table to page 7, then add waveform synthesis
+#  XXX Logo drawing
+#  XXX GCL: Prefix notation for high/low byte >X++ instead of X>++
 #  XXX Pictures: speed up scrolling by splitting work over frames
+#  XXX Readability of asm.py instructions, esp. make d() implicit
+#  XXX GCL: Rethink i, i. i; i= x, x. x= x: consistency
+#  XXX GCL: Stabalize zero page allocation
+#  XXX How it works memo: brief description of every software function
 #
 #  Probably not in ROM v1
 #  XXX vCPU: Multiplication (mulShift8?)

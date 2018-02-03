@@ -15,11 +15,14 @@ gcl0x
   - Use 16-bit vCPU math as 7-bit fixed point arithmetic (1.00 -> 128)
   - Implement multiplication in interpreter
 
+  ROM v1:
   XXX Sound for every pixel value
   XXX Convert into a clock application
-  XXX Double vertical resolution by exploiting vertical symmetry
+
+  Later:
   XXX Lookup table for intensity mapping
   XXX Refactor pixel order from what to do with it
+  XXX Double vertical resolution by exploiting vertical symmetry
 }
 
 {-----------------------------------------------------------------------+

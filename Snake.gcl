@@ -8,13 +8,18 @@
 gcl0x
 
 {
+ROM v1:
+XXX Start timer at 15
 XXX Don't allow autoplayer to obtain a hi score
 XXX Don't allow reversing for playability
+XXX Rising tones
+
+Maybe:
 XXX More colors, less green
 XXX Accelerated text drawing
 XXX Smarter border drawing (spiral draw)
 XXX Use same drawing techique for clearing playfield
-XXX Increasing speed and rising tones
+XXX Increasing speed
 XXX Increase speed when pressing button
 }
 

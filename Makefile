@@ -31,6 +31,6 @@ burn: theloop.2.rom
 	convert "$<" "$@"
 
 todo:
-	@git ls-files | sed 's/ /\\ /g' | xargs grep -I -i -E '(todo|xxx)'
+	@git ls-files | sed 's/ /\\ /g' | xargs grep -I -E '(TODO|XXX)'
 
 # vi: noexpandtab
