@@ -300,7 +300,7 @@ $0600:
   $0111 s=                           {Video table: start of sky}
 
   {Sync with video loop}
-  [do \vBlank, if=0loop]
+  [do \videoY, 1& if=0loop]
 
   {Set top of horizon}
   HorizonX>, s.

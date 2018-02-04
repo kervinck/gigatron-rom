@@ -19,7 +19,7 @@ gcl0x
   $0101 v=                      {Video table entry to control X}
   $0800 q=                      {Points in video memory}
   2 FrameRate=                  {Target frame rate (frames/pixel)}
-  [do \vBlank, if=0loop]        {Synchronize with video loop}
+  [do \videoY, 1& if=0loop]     {Synchronize with video loop}
   \frameCount, t=
   160 [do i=
 

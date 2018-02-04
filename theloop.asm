@@ -34,8 +34,8 @@
               001b 1880  ld   $80,out
               001c 18c0  ld   $c0,out
               001d 0000  ld   $00         ;Collect entropy from RAM
-              001e d231  st   [$31],x
-              001f d632  st   [$32],y
+              001e d230  st   [$30],x
+              001f d631  st   [$31],y
 .initEnt0:    0020 0106  ld   [$06]
               0021 f424  bge  .initEnt1
               0022 8d00  adda [y,x]
@@ -48,14 +48,14 @@
 .initEnt2:    0029 c207  st   [$07]
               002a 8108  adda [$08]
               002b c208  st   [$08]
-              002c 0131  ld   [$31]
+              002c 0130  ld   [$30]
               002d 8001  adda $01
               002e ec20  bne  .initEnt0
-              002f d231  st   [$31],x
-              0030 0132  ld   [$32]
+              002f d230  st   [$30],x
+              0030 0131  ld   [$31]
               0031 8001  adda $01
               0032 ec20  bne  .initEnt0
-              0033 d632  st   [$32],y
+              0033 d631  st   [$31],y
               0034 0003  ld   $03         ;LEDs |**OO|
               0035 1880  ld   $80,out
               0036 18c0  ld   $c0,out
@@ -71,150 +71,151 @@ cold:         003e c204  st   [$04]
               0040 a059  suba $59
               0041 c205  st   [$05]
               0042 00ee  ld   $ee         ;Setup vCPU reset handler
-              0043 c218  st   [$18]
+              0043 c217  st   [$17]
               0044 9002  adda $02,x
               0045 0001  ld   $01
-              0046 d619  st   [$19],y
+              0046 d618  st   [$18],y
               0047 dc11  st   $11,[y,x++]
-              0048 dc6f  st   $6f,[y,x++]
+              0048 dc70  st   $70,[y,x++]
               0049 dc00  st   $00,[y,x++]
               004a dca9  st   $a9,[y,x++]
               004b dcf9  st   $f9,[y,x++]
               004c 00ff  ld   $ff         ;Setup serial input
-              004d c211  st   [$11]
-              004e c212  st   [$12]
-              004f c213  st   [$13]
-              0050 c214  st   [$14]
-              0051 c215  st   [$15]
+              004d c210  st   [$10]
+              004e c211  st   [$11]
+              004f c212  st   [$12]
+              0050 c213  st   [$13]
+              0051 c214  st   [$14]
               0052 1402  ld   $02,y       ;Setup shift2 table
               0053 0000  ld   $00
               0054 c202  st   [$02]
-.loop:        0055 c231  st   [$31]
+.loop:        0055 c230  st   [$30]
               0056 8200  adda ac
               0057 9200  adda ac,x
-              0058 0131  ld   [$31]
+              0058 0130  ld   [$30]
               0059 ce00  st   [y,x]
               005a 8001  adda $01
               005b 6040  xora $40
               005c ec55  bne  .loop
               005d 6040  xora $40
               005e 0078  ld   $78         ;Setup LED sequencer
-              005f c22e  st   [$2e]
-              0060 0000  ld   $00
+              005f c22d  st   [$2d]
+              0060 000a  ld   $0a
               0061 c22f  st   [$2f]
-              0062 000a  ld   $0a
-              0063 c230  st   [$30]
-              0064 0007  ld   $07         ;LEDs |***O|
-              0065 1880  ld   $80,out
-              0066 18c0  ld   $c0,out
-              0067 000f  ld   $0f         ;LEDs |****|
-              0068 1880  ld   $80,out
-              0069 18c0  ld   $c0,out
-              006a c216  st   [$16]
-              006b c217  st   [$17]
-              006c 1402  ld   $02,y       ;Enter video loop
-              006d e004  jmp  y,$04
-              006e 00c0  ld   $c0
-SYS_Reset_42: 006f 00f4  ld   $f4
-              0070 c218  st   [$18]
-              0071 10f6  ld   $f6,x
-              0072 0000  ld   $00
-              0073 d619  st   [$19],y
-              0074 c21e  st   [$1e]
-              0075 c21c  st   [$1c]
-              0076 c22d  st   [$2d]
-              0077 0003  ld   $03
-              0078 c21d  st   [$1d]
-              0079 00f2  ld   $f2
-              007a c20f  st   [$0f]
-              007b dc11  st   $11,[y,x++]
-              007c dc2e  st   $2e,[y,x++]
-              007d dcfb  st   $fb,[y,x++]
-              007e dc2b  st   $2b,[y,x++]
-              007f dc25  st   $25,[y,x++]
-              0080 dc11  st   $11,[y,x++]
-              0081 dc88  st   $88,[y,x++]
-              0082 dc00  st   $00,[y,x++]
-              0083 dca9  st   $a9,[y,x++]
-              0084 dce2  st   $e2,[y,x++]
-              0085 1403  ld   $03,y
-              0086 e0df  jmp  y,$df
-              0087 00eb  ld   $eb
-SYS_Exec_88:  0088 0000  ld   $00
-              0089 d619  st   [$19],y
-              008a 011e  ld   [$1e]
-              008b a037  suba $37
-              008c d220  st   [$20],x
-              008d 80fe  adda $fe
-              008e c218  st   [$18]
-              008f dc7d  st   $7d,[y,x++]
-              0090 dc95  st   $95,[y,x++]
-              0091 801a  adda $1a
-              0092 de00  st   [y,x++]
-              0093 dc5e  st   $5e,[y,x++]
-              0094 dc28  st   $28,[y,x++]
-              0095 dce3  st   $e3,[y,x++]
-              0096 8009  adda $09
-              0097 de00  st   [y,x++]
-              0098 dc5e  st   $5e,[y,x++]
-              0099 dc27  st   $27,[y,x++]
-              009a dce3  st   $e3,[y,x++]
-              009b de00  st   [y,x++]
-              009c dc5e  st   $5e,[y,x++]
-              009d dc29  st   $29,[y,x++]
-              009e dce3  st   $e3,[y,x++]
-              009f de00  st   [y,x++]
-              00a0 dc98  st   $98,[y,x++]
-              00a1 dc27  st   $27,[y,x++]
-              00a2 dcf9  st   $f9,[y,x++]
-              00a3 dc27  st   $27,[y,x++]
-              00a4 dc1a  st   $1a,[y,x++]
-              00a5 dc29  st   $29,[y,x++]
-              00a6 dcf6  st   $f6,[y,x++]
-              00a7 dc01  st   $01,[y,x++]
-              00a8 dc35  st   $35,[y,x++]
-              00a9 dc72  st   $72,[y,x++]
-              00aa 80e8  adda $e8
-              00ab de00  st   [y,x++]
-              00ac dce3  st   $e3,[y,x++]
-              00ad 8018  adda $18
-              00ae de00  st   [y,x++]
-              00af dc35  st   $35,[y,x++]
-              00b0 dc72  st   $72,[y,x++]
-              00b1 80e0  adda $e0
-              00b2 de00  st   [y,x++]
-              00b3 dc63  st   $63,[y,x++]
-              00b4 dcff  st   $ff,[y,x++]
-              00b5 8022  adda $22
-              00b6 de00  st   [y,x++]
-              00b7 dc00  st   $00,[y,x++]
-              00b8 dc1a  st   $1a,[y,x++]
-              00b9 dc25  st   $25,[y,x++]
-              00ba dc91  st   $91,[y,x++]
-              00bb dcfb  st   $fb,[y,x++]
-              00bc dc35  st   $35,[y,x++]
-              00bd dc72  st   $72,[y,x++]
-              00be 8009  adda $09
-              00bf de00  st   [y,x++]
-              00c0 dc5e  st   $5e,[y,x++]
-              00c1 dc25  st   $25,[y,x++]
-              00c2 dcf9  st   $f9,[y,x++]
-              00c3 dc26  st   $26,[y,x++]
-              00c4 dc21  st   $21,[y,x++]
-              00c5 dc25  st   $25,[y,x++]
-              00c6 dc75  st   $75,[y,x++]
-              00c7 dc00  st   $00,[y,x++]
-              00c8 dcf9  st   $f9,[y,x++]
-              00c9 dc25  st   $25,[y,x++]
-              00ca dcff  st   $ff,[y,x++]
-              00cb 0200  nop
-              00cc 1403  ld   $03,y
-              00cd e0df  jmp  y,$df
-              00ce 00d4  ld   $d4
-              00cf 0200  nop
+              0062 0000  ld   $00
+              0063 c22e  st   [$2e]
+              0064 c22c  st   [$2c]
+              0065 0007  ld   $07         ;LEDs |***O|
+              0066 1880  ld   $80,out
+              0067 18c0  ld   $c0,out
+              0068 000f  ld   $0f         ;LEDs |****|
+              0069 1880  ld   $80,out
+              006a 18c0  ld   $c0,out
+              006b c215  st   [$15]
+              006c c216  st   [$16]
+              006d 1402  ld   $02,y       ;Enter video loop
+              006e e004  jmp  y,$04
+              006f 00c0  ld   $c0
+SYS_Reset_42: 0070 00f4  ld   $f4
+              0071 c217  st   [$17]
+              0072 10f6  ld   $f6,x
+              0073 0000  ld   $00
+              0074 d618  st   [$18],y
+              0075 c21d  st   [$1d]
+              0076 c21b  st   [$1b]
+              0077 c22c  st   [$2c]
+              0078 0003  ld   $03
+              0079 c21c  st   [$1c]
+              007a 00f2  ld   $f2
+              007b c20f  st   [$0f]
+              007c dc11  st   $11,[y,x++]
+              007d dc21  st   $21,[y,x++]
+              007e dcfb  st   $fb,[y,x++]
+              007f dc2b  st   $2b,[y,x++]
+              0080 dc24  st   $24,[y,x++]
+              0081 dc11  st   $11,[y,x++]
+              0082 dc89  st   $89,[y,x++]
+              0083 dc00  st   $00,[y,x++]
+              0084 dca9  st   $a9,[y,x++]
+              0085 dce2  st   $e2,[y,x++]
+              0086 1403  ld   $03,y
+              0087 e0df  jmp  y,$df
+              0088 00eb  ld   $eb
+SYS_Exec_88:  0089 0000  ld   $00
+              008a d618  st   [$18],y
+              008b 011d  ld   [$1d]
+              008c a037  suba $37
+              008d d21f  st   [$1f],x
+              008e 80fe  adda $fe
+              008f c217  st   [$17]
+              0090 dc7d  st   $7d,[y,x++]
+              0091 dc95  st   $95,[y,x++]
+              0092 801a  adda $1a
+              0093 de00  st   [y,x++]
+              0094 dc5e  st   $5e,[y,x++]
+              0095 dc27  st   $27,[y,x++]
+              0096 dce3  st   $e3,[y,x++]
+              0097 8009  adda $09
+              0098 de00  st   [y,x++]
+              0099 dc5e  st   $5e,[y,x++]
+              009a dc26  st   $26,[y,x++]
+              009b dce3  st   $e3,[y,x++]
+              009c de00  st   [y,x++]
+              009d dc5e  st   $5e,[y,x++]
+              009e dc28  st   $28,[y,x++]
+              009f dce3  st   $e3,[y,x++]
+              00a0 de00  st   [y,x++]
+              00a1 dc98  st   $98,[y,x++]
+              00a2 dc26  st   $26,[y,x++]
+              00a3 dcf9  st   $f9,[y,x++]
+              00a4 dc26  st   $26,[y,x++]
+              00a5 dc1a  st   $1a,[y,x++]
+              00a6 dc28  st   $28,[y,x++]
+              00a7 dcf6  st   $f6,[y,x++]
+              00a8 dc01  st   $01,[y,x++]
+              00a9 dc35  st   $35,[y,x++]
+              00aa dc72  st   $72,[y,x++]
+              00ab 80e8  adda $e8
+              00ac de00  st   [y,x++]
+              00ad dce3  st   $e3,[y,x++]
+              00ae 8018  adda $18
+              00af de00  st   [y,x++]
+              00b0 dc35  st   $35,[y,x++]
+              00b1 dc72  st   $72,[y,x++]
+              00b2 80e0  adda $e0
+              00b3 de00  st   [y,x++]
+              00b4 dc63  st   $63,[y,x++]
+              00b5 dcff  st   $ff,[y,x++]
+              00b6 8022  adda $22
+              00b7 de00  st   [y,x++]
+              00b8 dc00  st   $00,[y,x++]
+              00b9 dc1a  st   $1a,[y,x++]
+              00ba dc24  st   $24,[y,x++]
+              00bb dc91  st   $91,[y,x++]
+              00bc dcfb  st   $fb,[y,x++]
+              00bd dc35  st   $35,[y,x++]
+              00be dc72  st   $72,[y,x++]
+              00bf 8009  adda $09
+              00c0 de00  st   [y,x++]
+              00c1 dc5e  st   $5e,[y,x++]
+              00c2 dc24  st   $24,[y,x++]
+              00c3 dcf9  st   $f9,[y,x++]
+              00c4 dc25  st   $25,[y,x++]
+              00c5 dc21  st   $21,[y,x++]
+              00c6 dc24  st   $24,[y,x++]
+              00c7 dc75  st   $75,[y,x++]
+              00c8 dc00  st   $00,[y,x++]
+              00c9 dcf9  st   $f9,[y,x++]
+              00ca dc24  st   $24,[y,x++]
+              00cb dcff  st   $ff,[y,x++]
+              00cc 0200  nop
+              00cd 1403  ld   $03,y
+              00ce e0df  jmp  y,$df
+              00cf 00d4  ld   $d4
               00d0 0200  nop
               00d1 0200  nop
-              * 49 times
+              00d2 0200  nop
+              * 48 times
 videoA:       0100 00c8  ld   $c8
               0101 c20e  st   [$0e]
               0102 1401  ld   $01,y
@@ -256,7 +257,7 @@ sound2:       01b0 d602  st   [$02],y
               01c2 0200  nop
               01c3 0200  nop
               01c4 0200  nop
-              01c5 0116  ld   [$16]
+              01c5 0115  ld   [$15]
               01c6 fd0e  bra  [$0e]
               01c7 18c0  ld   $c0,out     ;End horizontal pulse
 videoB:       01c8 00d3  ld   $d3
@@ -272,8 +273,8 @@ videoB:       01c8 00d3  ld   $d3
               01d2 00c0  ld   $c0
 videoC:       01d3 0103  ld   [$03]       ;New sound sample is ready
               01d4 400f  ora  $0f
-              01d5 2117  anda [$17]
-              01d6 c216  st   [$16]
+              01d5 2116  anda [$16]
+              01d6 c215  st   [$15]
               01d7 c003  st   $03,[$03]   ;Reset for next sample
               01d8 010f  ld   [$0f]       ;Mode for scan line 4
               01d9 c20e  st   [$0e]
@@ -325,234 +326,232 @@ vBlankStart:  0204 c20c  st   [$0c]       ;Start of vertical blank interval
               0207 c000  st   $00,[$00]   ;Carry table
               0208 0001  ld   $01
               0209 c280  st   [$80]
-              020a c210  st   [$10]       ;Vertical blank signal for GCL
-              020b 00ff  ld   $ff         ;Filter controller input
-              020c 6113  xora [$13]
-              020d 4112  ora  [$12]
-              020e 2114  anda [$14]
-              020f 4112  ora  [$12]
-              0210 c214  st   [$14]
-              0211 0112  ld   [$12]
-              0212 c213  st   [$13]
-              0213 60ef  xora $ef         ;Check for soft reset
-              0214 ec1d  bne  .restart0
-              0215 0115  ld   [$15]
-              0216 a001  suba $01
-              0217 c215  st   [$15]
-              0218 207f  anda $7f
-              0219 f025  beq  .restart2
-              021a 00ee  ld   $ee
-              021b fc24  bra  .restart1
-              021c fc28  bra  .restart3
-.restart0:    021d 007f  ld   $7f
-              021e c215  st   [$15]
-              021f 0200  nop
+              020a 00b3  ld   $b3
+              020b c20b  st   [$0b]
+              020c 00ff  ld   $ff         ;Filter controller input
+              020d 6112  xora [$12]
+              020e 4111  ora  [$11]
+              020f 2113  anda [$13]
+              0210 4111  ora  [$11]
+              0211 c213  st   [$13]
+              0212 0111  ld   [$11]
+              0213 c212  st   [$12]
+              0214 60ef  xora $ef         ;Check for soft reset
+              0215 ec1e  bne  .restart0
+              0216 0114  ld   [$14]
+              0217 a001  suba $01
+              0218 c214  st   [$14]
+              0219 207f  anda $7f
+              021a f026  beq  .restart2
+              021b 00ee  ld   $ee
+              021c fc25  bra  .restart1
+              021d fc29  bra  .restart3
+.restart0:    021e 007f  ld   $7f
+              021f c214  st   [$14]
               0220 0200  nop
               0221 0200  nop
               0222 0200  nop
-              0223 fc28  bra  .restart3
-.restart1:    0224 0200  nop
-.restart2:    0225 c218  st   [$18]
-              0226 0001  ld   $01
-              0227 c219  st   [$19]
-.restart3:    0228 0111  ld   [$11]       ;Frame counter
-              0229 8001  adda $01
-              022a c211  st   [$11]
-              022b 6107  xora [$07]       ;Mix entropy
-              022c 6112  xora [$12]
-              022d 8106  adda [$06]
-              022e c206  st   [$06]
-              022f 8108  adda [$08]
-              0230 c208  st   [$08]
-              0231 e834  blt  .rnd0
-              0232 fc35  bra  .rnd1
-              0233 6053  xora $53
-.rnd0:        0234 606c  xora $6c
-.rnd1:        0235 8107  adda [$07]
-              0236 c207  st   [$07]
-              0237 c003  st   $03,[$03]   ;Sound continuity
-              0238 003d  ld   $3d         ;Run vCPU for 94 cycles (line0)
-              0239 c209  st   [$09]
-              023a 1402  ld   $02,y
-              023b e0ff  jmp  y,$ff
-              023c 001a  ld   $1a
-              023d c210  st   [$10]
-              023e 012e  ld   [$2e]       ;Blinkenlight sequencer
-              023f ec65  bne  .leds4
-              0240 0044  ld   $44
-              0241 812f  adda [$2f]
-              0242 fe00  bra  ac
-              0243 fc5c  bra  .leds1
-.leds0:       0244 000f  ld   $0f         ;LEDs |****|
-              0245 0007  ld   $07         ;LEDs |***O|
-              0246 0003  ld   $03         ;LEDs |**OO|
+              0223 0200  nop
+              0224 fc29  bra  .restart3
+.restart1:    0225 0200  nop
+.restart2:    0226 c217  st   [$17]
+              0227 0001  ld   $01
+              0228 c218  st   [$18]
+.restart3:    0229 0110  ld   [$10]       ;Frame counter
+              022a 8001  adda $01
+              022b c210  st   [$10]
+              022c 6107  xora [$07]       ;Mix entropy
+              022d 6111  xora [$11]
+              022e 8106  adda [$06]
+              022f c206  st   [$06]
+              0230 8108  adda [$08]
+              0231 c208  st   [$08]
+              0232 e835  blt  .rnd0
+              0233 fc36  bra  .rnd1
+              0234 6053  xora $53
+.rnd0:        0235 606c  xora $6c
+.rnd1:        0236 8107  adda [$07]
+              0237 c207  st   [$07]
+              0238 012d  ld   [$2d]       ;Blinkenlight sequencer
+              0239 ec5f  bne  .leds4
+              023a 003e  ld   $3e
+              023b 812e  adda [$2e]
+              023c fe00  bra  ac
+              023d fc56  bra  .leds1
+.leds0:       023e 000f  ld   $0f         ;LEDs |****|
+              023f 0007  ld   $07         ;LEDs |***O|
+              0240 0003  ld   $03         ;LEDs |**OO|
+              0241 0001  ld   $01         ;LEDs |*OOO|
+              0242 0002  ld   $02         ;LEDs |O*OO|
+              0243 0004  ld   $04         ;LEDs |OO*O|
+              0244 0008  ld   $08         ;LEDs |OOO*|
+              0245 0004  ld   $04         ;LEDs |OO*O|
+              0246 0002  ld   $02         ;LEDs |O*OO|
               0247 0001  ld   $01         ;LEDs |*OOO|
-              0248 0002  ld   $02         ;LEDs |O*OO|
-              0249 0004  ld   $04         ;LEDs |OO*O|
-              024a 0008  ld   $08         ;LEDs |OOO*|
-              024b 0004  ld   $04         ;LEDs |OO*O|
-              024c 0002  ld   $02         ;LEDs |O*OO|
-              024d 0001  ld   $01         ;LEDs |*OOO|
-              024e 0003  ld   $03         ;LEDs |**OO|
-              024f 0007  ld   $07         ;LEDs |***O|
-              0250 000f  ld   $0f         ;LEDs |****|
-              0251 000e  ld   $0e         ;LEDs |O***|
-              0252 000c  ld   $0c         ;LEDs |OO**|
+              0248 0003  ld   $03         ;LEDs |**OO|
+              0249 0007  ld   $07         ;LEDs |***O|
+              024a 000f  ld   $0f         ;LEDs |****|
+              024b 000e  ld   $0e         ;LEDs |O***|
+              024c 000c  ld   $0c         ;LEDs |OO**|
+              024d 0008  ld   $08         ;LEDs |OOO*|
+              024e 0004  ld   $04         ;LEDs |OO*O|
+              024f 0002  ld   $02         ;LEDs |O*OO|
+              0250 0001  ld   $01         ;LEDs |*OOO|
+              0251 0002  ld   $02         ;LEDs |O*OO|
+              0252 0004  ld   $04         ;LEDs |OO*O|
               0253 0008  ld   $08         ;LEDs |OOO*|
-              0254 0004  ld   $04         ;LEDs |OO*O|
-              0255 0002  ld   $02         ;LEDs |O*OO|
-              0256 0001  ld   $01         ;LEDs |*OOO|
-              0257 0002  ld   $02         ;LEDs |O*OO|
-              0258 0004  ld   $04         ;LEDs |OO*O|
-              0259 0008  ld   $08         ;LEDs |OOO*|
-              025a 000c  ld   $0c         ;LEDs |OO**|
-              025b 008e  ld   $8e         ;LEDs |O***|
-.leds1:       025c c217  st   [$17]
-              025d e860  blt  .leds2
-              025e fc61  bra  .leds3
-              025f 012f  ld   [$2f]
-.leds2:       0260 00ff  ld   $ff
-.leds3:       0261 8001  adda $01
-              0262 c22f  st   [$2f]
-              0263 fc6b  bra  .leds5
-              0264 0130  ld   [$30]
-.leds4:       0265 0003  ld   $03         ;Wait 10 cycles
-              0266 ec66  bne  $0266
-              0267 a001  suba $01
-              0268 0200  nop
-              0269 012e  ld   [$2e]
-              026a a001  suba $01
-.leds5:       026b c22e  st   [$2e]
-              026c 0117  ld   [$17]
-              026d 200f  anda $0f
-              026e c217  st   [$17]
-              026f 012d  ld   [$2d]       ;Sound on/off
-              0270 ec73  bne  .snd0
-              0271 fc74  bra  .snd1
-              0272 0000  ld   $00
-.snd0:        0273 00f0  ld   $f0
-.snd1:        0274 4117  ora  [$17]
-              0275 c217  st   [$17]
-              0276 012d  ld   [$2d]       ;Sound timer
-              0277 f07a  beq  .snd2
-              0278 fc7b  bra  .snd3
-              0279 a001  suba $01
-.snd2:        027a 0000  ld   $00
-.snd3:        027b c22d  st   [$2d]
-              027c 00b3  ld   $b3
-              027d c20b  st   [$0b]
-              027e 190c  ld   [$0c],out   ;<New scan line start>
-sound1:       027f 0102  ld   [$02]       ;Advance to next sound channel
-              0280 2003  anda $03
-              0281 8001  adda $01
-              0282 190d  ld   [$0d],out   ;Start horizontal pulse
-              0283 d602  st   [$02],y
-              0284 007f  ld   $7f         ;Update sound channel
-              0285 29fe  anda [y,$fe]
-              0286 89fa  adda [y,$fa]
-              0287 cafe  st   [y,$fe]
-              0288 3080  anda $80,x
-              0289 0500  ld   [x]
-              028a 89ff  adda [y,$ff]
-              028b 89fb  adda [y,$fb]
-              028c caff  st   [y,$ff]
-              028d 0200  nop
-              028e 0200  nop
-              028f 30fc  anda $fc,x
-              0290 1402  ld   $02,y
-              0291 0d00  ld   [y,x]
-              0292 8103  adda [$03]
-              0293 c203  st   [$03]
+              0254 000c  ld   $0c         ;LEDs |OO**|
+              0255 008e  ld   $8e         ;LEDs |O***|
+.leds1:       0256 c216  st   [$16]
+              0257 e85a  blt  .leds2
+              0258 fc5b  bra  .leds3
+              0259 012e  ld   [$2e]
+.leds2:       025a 00ff  ld   $ff
+.leds3:       025b 8001  adda $01
+              025c c22e  st   [$2e]
+              025d fc65  bra  .leds5
+              025e 012f  ld   [$2f]
+.leds4:       025f 0003  ld   $03         ;Wait 10 cycles
+              0260 ec60  bne  $0260
+              0261 a001  suba $01
+              0262 0200  nop
+              0263 012d  ld   [$2d]
+              0264 a001  suba $01
+.leds5:       0265 c22d  st   [$2d]
+              0266 0116  ld   [$16]
+              0267 200f  anda $0f
+              0268 c216  st   [$16]
+              0269 012c  ld   [$2c]       ;Sound on/off
+              026a ec6d  bne  .snd0
+              026b fc6e  bra  .snd1
+              026c 0000  ld   $00
+.snd0:        026d 00f0  ld   $f0
+.snd1:        026e 4116  ora  [$16]
+              026f c216  st   [$16]
+              0270 012c  ld   [$2c]       ;Sound timer
+              0271 f074  beq  .snd2
+              0272 fc75  bra  .snd3
+              0273 a001  suba $01
+.snd2:        0274 0000  ld   $00
+.snd3:        0275 c22c  st   [$2c]
+              0276 c003  st   $03,[$03]   ;Sound continuity
+              0277 007c  ld   $7c         ;Run vCPU for 96 cycles (line0)
+              0278 c209  st   [$09]
+              0279 1402  ld   $02,y
+              027a e0ff  jmp  y,$ff
+              027b 001b  ld   $1b
+              027c 190c  ld   [$0c],out   ;<New scan line start>
+sound1:       027d 0102  ld   [$02]       ;Advance to next sound channel
+              027e 2003  anda $03
+              027f 8001  adda $01
+              0280 190d  ld   [$0d],out   ;Start horizontal pulse
+              0281 d602  st   [$02],y
+              0282 007f  ld   $7f         ;Update sound channel
+              0283 29fe  anda [y,$fe]
+              0284 89fa  adda [y,$fa]
+              0285 cafe  st   [y,$fe]
+              0286 3080  anda $80,x
+              0287 0500  ld   [x]
+              0288 89ff  adda [y,$ff]
+              0289 89fb  adda [y,$fb]
+              028a caff  st   [y,$ff]
+              028b 0200  nop
+              028c 0200  nop
+              028d 30fc  anda $fc,x
+              028e 1402  ld   $02,y
+              028f 0d00  ld   [y,x]
+              0290 8103  adda [$03]
+              0291 c203  st   [$03]
+              0292 0200  nop
+              0293 0200  nop
               0294 0200  nop
               0295 0200  nop
-              0296 0200  nop
+              0296 0115  ld   [$15]
               0297 0200  nop
-              0298 0116  ld   [$16]
-              0299 0200  nop
-              029a 190c  ld   [$0c],out   ;End horizontal pulse
-              029b 010b  ld   [$0b]
-              029c f4c9  bge  vBlankLast
-              029d 8002  adda $02
-              029e c20b  st   [$0b]
-              029f a0cd  suba $cd
-              02a0 eca5  bne  vSync0
-              02a1 8010  adda $10
-              02a2 00c0  ld   $c0
-              02a3 fcaa  bra  vSync2
-              02a4 c20c  st   [$0c]
-vSync0:       02a5 eca9  bne  vSync1
-              02a6 0040  ld   $40
-              02a7 fcab  bra  vSync3
-              02a8 c20c  st   [$0c]
-vSync1:       02a9 010c  ld   [$0c]
-vSync2:       02aa 0200  nop
-vSync3:       02ab 6040  xora $40
-              02ac c20d  st   [$0d]
-              02ad 010b  ld   [$0b]       ;Capture serial input
-              02ae 60cf  xora $cf
-              02af ecb2  bne  .ser0
-              02b0 fcb3  bra  .ser1
-              02b1 c312  st   in,[$12]
-.ser0:        02b2 0200  nop
-.ser1:        02b3 010b  ld   [$0b]
-              02b4 2006  anda $06
-              02b5 ecc2  bne  vBlankNormal
-              02b6 0103  ld   [$03]
-vBlankSample: 02b7 400f  ora  $0f         ;New sound sample is ready
-              02b8 2117  anda [$17]
-              02b9 c216  st   [$16]
-              02ba c003  st   $03,[$03]   ;Reset for next sample
-              02bb 00c0  ld   $c0         ;Run vCPU for 144 cycles (line1-39 typeC)
-              02bc c209  st   [$09]
-              02bd 1402  ld   $02,y
-              02be e0ff  jmp  y,$ff
-              02bf 0033  ld   $33
-              02c0 fc7f  bra  sound1
-              02c1 190c  ld   [$0c],out   ;<New scan line start>
-vBlankNormal: 02c2 00c7  ld   $c7         ;Run vCPU for 148 cycles (line1-39 typeABD)
-              02c3 c209  st   [$09]
-              02c4 1402  ld   $02,y
-              02c5 e0ff  jmp  y,$ff
-              02c6 0035  ld   $35
-              02c7 fc7f  bra  sound1
-              02c8 190c  ld   [$0c],out   ;<New scan line start>
-vBlankLast:   02c9 0114  ld   [$14]
-              02ca 60df  xora $df
-              02cb f0ce  beq  .select0
-              02cc fccf  bra  .select1
-              02cd 0000  ld   $00
-.select0:     02ce 002c  ld   $2c
-.select1:     02cf 610f  xora [$0f]
-              02d0 c20f  st   [$0f]
-              02d1 0114  ld   [$14]
-              02d2 4020  ora  $20
-              02d3 c214  st   [$14]
-              02d4 00d9  ld   $d9         ;Run vCPU for 154 cycles (line40)
-              02d5 c209  st   [$09]
-              02d6 1402  ld   $02,y
-              02d7 e0ff  jmp  y,$ff
-              02d8 0038  ld   $38
-              02d9 c20b  st   [$0b]
-              02da c20c  st   [$0c]
-              02db c20e  st   [$0e]
-              02dc 0102  ld   [$02]
-              02dd 2003  anda $03         ;<New scan line start>
-              02de 8001  adda $01
-              02df 1401  ld   $01,y
-              02e0 e0b0  jmp  y,$b0
-              02e1 1880  ld   $80,out
+              0298 190c  ld   [$0c],out   ;End horizontal pulse
+              0299 010b  ld   [$0b]
+              029a f4c7  bge  vBlankLast
+              029b 8002  adda $02
+              029c c20b  st   [$0b]
+              029d a0cd  suba $cd
+              029e eca3  bne  vSync0
+              029f 8010  adda $10
+              02a0 00c0  ld   $c0
+              02a1 fca8  bra  vSync2
+              02a2 c20c  st   [$0c]
+vSync0:       02a3 eca7  bne  vSync1
+              02a4 0040  ld   $40
+              02a5 fca9  bra  vSync3
+              02a6 c20c  st   [$0c]
+vSync1:       02a7 010c  ld   [$0c]
+vSync2:       02a8 0200  nop
+vSync3:       02a9 6040  xora $40
+              02aa c20d  st   [$0d]
+              02ab 010b  ld   [$0b]       ;Capture serial input
+              02ac 60cf  xora $cf
+              02ad ecb0  bne  .ser0
+              02ae fcb1  bra  .ser1
+              02af c311  st   in,[$11]
+.ser0:        02b0 0200  nop
+.ser1:        02b1 010b  ld   [$0b]
+              02b2 2006  anda $06
+              02b3 ecc0  bne  vBlankNormal
+              02b4 0103  ld   [$03]
+vBlankSample: 02b5 400f  ora  $0f         ;New sound sample is ready
+              02b6 2116  anda [$16]
+              02b7 c215  st   [$15]
+              02b8 c003  st   $03,[$03]   ;Reset for next sample
+              02b9 00be  ld   $be         ;Run vCPU for 144 cycles (line1-39 typeC)
+              02ba c209  st   [$09]
+              02bb 1402  ld   $02,y
+              02bc e0ff  jmp  y,$ff
+              02bd 0033  ld   $33
+              02be fc7d  bra  sound1
+              02bf 190c  ld   [$0c],out   ;<New scan line start>
+vBlankNormal: 02c0 00c5  ld   $c5         ;Run vCPU for 148 cycles (line1-39 typeABD)
+              02c1 c209  st   [$09]
+              02c2 1402  ld   $02,y
+              02c3 e0ff  jmp  y,$ff
+              02c4 0035  ld   $35
+              02c5 fc7d  bra  sound1
+              02c6 190c  ld   [$0c],out   ;<New scan line start>
+vBlankLast:   02c7 0113  ld   [$13]
+              02c8 60df  xora $df
+              02c9 f0cc  beq  .select0
+              02ca fccd  bra  .select1
+              02cb 0000  ld   $00
+.select0:     02cc 002c  ld   $2c
+.select1:     02cd 610f  xora [$0f]
+              02ce c20f  st   [$0f]
+              02cf 0113  ld   [$13]
+              02d0 4020  ora  $20
+              02d1 c213  st   [$13]
+              02d2 00d7  ld   $d7         ;Run vCPU for 154 cycles (line40)
+              02d3 c209  st   [$09]
+              02d4 1402  ld   $02,y
+              02d5 e0ff  jmp  y,$ff
+              02d6 0038  ld   $38
+              02d7 c20b  st   [$0b]
+              02d8 c20c  st   [$0c]
+              02d9 c20e  st   [$0e]
+              02da 0102  ld   [$02]
+              02db 2003  anda $03         ;<New scan line start>
+              02dc 8001  adda $01
+              02dd 1401  ld   $01,y
+              02de e0b0  jmp  y,$b0
+              02df 1880  ld   $80,out
+              02e0 0200  nop
+              02e1 0200  nop
               02e2 0200  nop
-              02e3 0200  nop
-              02e4 0200  nop
-              * 29 times
+              * 31 times
 ENTER:        02ff fc03  bra  .next2      ;vCPU interpreter
-              0300 1519  ld   [$19],y
-NEXT:         0301 811f  adda [$1f]       ;Track elapsed ticks
+              0300 1518  ld   [$18],y
+NEXT:         0301 811e  adda [$1e]       ;Track elapsed ticks
               0302 e80b  blt  EXIT        ;Escape near time out
-.next2:       0303 c21f  st   [$1f]
-              0304 0118  ld   [$18]       ;Advance vPC
+.next2:       0303 c21e  st   [$1e]
+              0304 0117  ld   [$17]       ;Advance vPC
               0305 8002  adda $02
-              0306 d218  st   [$18],x
+              0306 d217  st   [$17],x
               0307 0d00  ld   [y,x]       ;Fetch opcode
               0308 de00  st   [y,x++]
               0309 fe00  bra  ac          ;Dispatch
@@ -563,64 +562,64 @@ EXIT:         030b 800e  adda $0e
               030e 1402  ld   $02,y
               030f e109  jmp  y,[$09]     ;Return to caller
               0310 0000  ld   $00
-LDWI:         0311 c21a  st   [$1a]
+LDWI:         0311 c219  st   [$19]
               0312 de00  st   [y,x++]
               0313 0d00  ld   [y,x]
-              0314 c21b  st   [$1b]
-              0315 0118  ld   [$18]
+              0314 c21a  st   [$1a]
+              0315 0117  ld   [$17]
               0316 8001  adda $01
-              0317 c218  st   [$18]
+              0317 c217  st   [$17]
               0318 00f6  ld   $f6
               0319 fc01  bra  NEXT
 LD:           031a 1200  ld   ac,x
               031b 0500  ld   [x]
-              031c c21a  st   [$1a]
+              031c c219  st   [$19]
               031d 0000  ld   $00
-              031e c21b  st   [$1b]
+              031e c21a  st   [$1a]
               031f 00f7  ld   $f7
               0320 fc01  bra  NEXT
 LDW:          0321 1200  ld   ac,x
               0322 8001  adda $01
-              0323 c220  st   [$20]
+              0323 c21f  st   [$1f]
               0324 0500  ld   [x]
-              0325 c21a  st   [$1a]
-              0326 1120  ld   [$20],x
+              0325 c219  st   [$19]
+              0326 111f  ld   [$1f],x
               0327 0500  ld   [x]
-              0328 c21b  st   [$1b]
+              0328 c21a  st   [$1a]
               0329 fc01  bra  NEXT
               032a 00f6  ld   $f6
 STW:          032b 1200  ld   ac,x
               032c 8001  adda $01
-              032d c220  st   [$20]
-              032e 011a  ld   [$1a]
+              032d c21f  st   [$1f]
+              032e 0119  ld   [$19]
               032f c600  st   [x]
-              0330 1120  ld   [$20],x
-              0331 011b  ld   [$1b]
+              0330 111f  ld   [$1f],x
+              0331 011a  ld   [$1a]
               0332 c600  st   [x]
               0333 fc01  bra  NEXT
               0334 00f6  ld   $f6
-BCC:          0335 011b  ld   [$1b]
+BCC:          0335 011a  ld   [$1a]
               0336 ec40  bne  .cond2
-              0337 c220  st   [$20]
-              0338 011a  ld   [$1a]
+              0337 c21f  st   [$1f]
+              0338 0119  ld   [$19]
               0339 f043  beq  .cond3
               033a 0001  ld   $01
-              033b c220  st   [$20]
+              033b c21f  st   [$1f]
               033c 0d00  ld   [y,x]
 .cond1:       033d fe00  bra  ac
-              033e 0120  ld   [$20]
+              033e 011f  ld   [$1f]
 EQ:           033f ec45  bne  .cond4
 .cond2:       0340 f048  beq  .cond5      ;AC=0 in EQ, AC!=0 from BCC...
               0341 0d00  ld   [y,x]
               0342 0200  nop
 .cond3:       0343 fc3d  bra  .cond1
               0344 0d00  ld   [y,x]
-.cond4:       0345 0118  ld   [$18]       ;False condition
+.cond4:       0345 0117  ld   [$17]       ;False condition
               0346 fc4a  bra  .cond6
               0347 8001  adda $01
 .cond5:       0348 de00  st   [y,x++]     ;True condition
               0349 0d00  ld   [y,x]
-.cond6:       034a c218  st   [$18]
+.cond6:       034a c217  st   [$17]
               034b fc01  bra  NEXT
               034c 00f2  ld   $f2
 GT:           034d f845  ble  .cond4
@@ -635,116 +634,116 @@ GE:           0353 e845  blt  .cond4
 LE:           0356 e445  bgt  .cond4
               0357 f848  ble  .cond5
               0358 0d00  ld   [y,x]
-LDI:          0359 c21a  st   [$1a]
+LDI:          0359 c219  st   [$19]
               035a 0000  ld   $00
-              035b c21b  st   [$1b]
+              035b c21a  st   [$1a]
               035c 00f8  ld   $f8
               035d fc01  bra  NEXT
 ST:           035e 1200  ld   ac,x
-              035f 011a  ld   [$1a]
-              0360 c61a  st   [x]
+              035f 0119  ld   [$19]
+              0360 c619  st   [x]
               0361 00f8  ld   $f8
               0362 fc01  bra  NEXT
-POP:          0363 111e  ld   [$1e],x
+POP:          0363 111d  ld   [$1d],x
               0364 0500  ld   [x]
-              0365 c21c  st   [$1c]
-              0366 011e  ld   [$1e]
+              0365 c21b  st   [$1b]
+              0366 011d  ld   [$1d]
               0367 9001  adda $01,x
               0368 0500  ld   [x]
-              0369 c21d  st   [$1d]
-              036a 011e  ld   [$1e]
+              0369 c21c  st   [$1c]
+              036a 011d  ld   [$1d]
               036b 8002  adda $02
-              036c c21e  st   [$1e]
-next1:        036d 0118  ld   [$18]
+              036c c21d  st   [$1d]
+next1:        036d 0117  ld   [$17]
               036e a001  suba $01
-              036f c218  st   [$18]
+              036f c217  st   [$17]
               0370 00f3  ld   $f3
               0371 fc01  bra  NEXT
 NE:           0372 f045  beq  .cond4
               0373 ec48  bne  .cond5
               0374 0d00  ld   [y,x]
-LOOKUP:       0375 151b  ld   [$1b],y
+LOOKUP:       0375 151a  ld   [$1a],y
               0376 e0fb  jmp  y,$fb       ;Trampoline offset
-              0377 811a  adda [$1a]
-luReturn:     0378 c21a  st   [$1a]
+              0377 8119  adda [$19]
+luReturn:     0378 c219  st   [$19]
               0379 0000  ld   $00
-              037a c21b  st   [$1b]
+              037a c21a  st   [$1a]
               037b fc01  bra  NEXT
               037c 00f4  ld   $f4
-PUSH:         037d 011e  ld   [$1e]
+PUSH:         037d 011d  ld   [$1d]
               037e b001  suba $01,x
-              037f 011d  ld   [$1d]
+              037f 011c  ld   [$1c]
               0380 c600  st   [x]
-              0381 011e  ld   [$1e]
+              0381 011d  ld   [$1d]
               0382 a002  suba $02
-              0383 d21e  st   [$1e],x
-              0384 011c  ld   [$1c]
+              0383 d21d  st   [$1d],x
+              0384 011b  ld   [$1b]
               0385 fc6d  bra  next1
               0386 c600  st   [x]
-ANDI:         0387 211a  anda [$1a]
-              0388 c21a  st   [$1a]
+ANDI:         0387 2119  anda [$19]
+              0388 c219  st   [$19]
               0389 0000  ld   $00
-              038a c21b  st   [$1b]
+              038a c21a  st   [$1a]
               038b fc01  bra  NEXT
               038c 00f8  ld   $f8
-ORI:          038d 411a  ora  [$1a]
-              038e c21a  st   [$1a]
+ORI:          038d 4119  ora  [$19]
+              038e c219  st   [$19]
               038f fc01  bra  NEXT
               0390 00f9  ld   $f9
-XORI:         0391 611a  xora [$1a]
-              0392 c21a  st   [$1a]
+XORI:         0391 6119  xora [$19]
+              0392 c219  st   [$19]
               0393 fc01  bra  NEXT
               0394 00f9  ld   $f9
-BRA:          0395 c218  st   [$18]
+BRA:          0395 c217  st   [$17]
               0396 00f9  ld   $f9
               0397 fc01  bra  NEXT
-POKE:         0398 c220  st   [$20]
+POKE:         0398 c21f  st   [$1f]
               0399 9001  adda $01,x
               039a 0500  ld   [x]
               039b 1600  ld   ac,y
-              039c 1120  ld   [$20],x
+              039c 111f  ld   [$1f],x
               039d 0500  ld   [x]
               039e 1200  ld   ac,x
-              039f 011a  ld   [$1a]
+              039f 0119  ld   [$19]
               03a0 ce00  st   [y,x]
-              03a1 1519  ld   [$19],y
+              03a1 1518  ld   [$18],y
               03a2 fc01  bra  NEXT
               03a3 00f5  ld   $f5
-retry:        03a4 0118  ld   [$18]       ;Retry until sufficient time
+retry:        03a4 0117  ld   [$17]       ;Retry until sufficient time
               03a5 a002  suba $02
-              03a6 c218  st   [$18]
+              03a6 c217  st   [$17]
               03a7 fcdf  bra  REENTER
               03a8 00f6  ld   $f6
-SYS:          03a9 811f  adda [$1f]
+SYS:          03a9 811e  adda [$1e]
               03aa e8a4  blt  retry
-              03ab 151b  ld   [$1b],y
-              03ac e11a  jmp  y,[$1a]
+              03ab 151a  ld   [$1a],y
+              03ac e119  jmp  y,[$19]
 SUBW:         03ad 1200  ld   ac,x
               03ae 8001  adda $01
-              03af c220  st   [$20]
-              03b0 011a  ld   [$1a]
+              03af c21f  st   [$1f]
+              03b0 0119  ld   [$19]
               03b1 e8b6  blt  .subw0
               03b2 a500  suba [x]
-              03b3 c21a  st   [$1a]
+              03b3 c219  st   [$19]
               03b4 fcb9  bra  .subw1
               03b5 4500  ora  [x]
-.subw0:       03b6 c21a  st   [$1a]
+.subw0:       03b6 c219  st   [$19]
               03b7 2500  anda [x]
               03b8 0200  nop
 .subw1:       03b9 3080  anda $80,x
-              03ba 011b  ld   [$1b]
+              03ba 011a  ld   [$1a]
               03bb a500  suba [x]
-              03bc 1120  ld   [$20],x
+              03bc 111f  ld   [$1f],x
               03bd a500  suba [x]
-              03be c21b  st   [$1b]
+              03be c21a  st   [$1a]
               03bf 00f2  ld   $f2
               03c0 fc01  bra  NEXT
 ADDW:         03c1 1200  ld   ac,x
               03c2 8001  adda $01
-              03c3 c220  st   [$20]
-              03c4 011a  ld   [$1a]
+              03c3 c21f  st   [$1f]
+              03c4 0119  ld   [$19]
               03c5 8500  adda [x]
-              03c6 c21a  st   [$1a]
+              03c6 c219  st   [$19]
               03c7 e8cb  blt  .addw0
               03c8 a500  suba [x]
               03c9 fccd  bra  .addw1
@@ -753,304 +752,313 @@ ADDW:         03c1 1200  ld   ac,x
               03cc 0200  nop
 .addw1:       03cd 3080  anda $80,x
               03ce 0500  ld   [x]
-              03cf 811b  adda [$1b]
-              03d0 1120  ld   [$20],x
+              03cf 811a  adda [$1a]
+              03d0 111f  ld   [$1f],x
               03d1 8500  adda [x]
-              03d2 c21b  st   [$1b]
+              03d2 c21a  st   [$1a]
               03d3 fc01  bra  NEXT
               03d4 00f2  ld   $f2
-PEEK:         03d5 0118  ld   [$18]
+PEEK:         03d5 0117  ld   [$17]
               03d6 a001  suba $01
-              03d7 c218  st   [$18]
-              03d8 111a  ld   [$1a],x
-              03d9 151b  ld   [$1b],y
+              03d7 c217  st   [$17]
+              03d8 1119  ld   [$19],x
+              03d9 151a  ld   [$1a],y
               03da 0d00  ld   [y,x]
-              03db c21a  st   [$1a]
+              03db c219  st   [$19]
               03dc 0000  ld   $00
-              03dd c21b  st   [$1b]
+              03dd c21a  st   [$1a]
               03de 00f5  ld   $f5
 REENTER:      03df fc01  bra  NEXT        ;Return from SYS calls
-              03e0 1519  ld   [$19],y
+              03e0 1518  ld   [$18],y
 DEF:          03e1 1404  ld   $04,y
               03e2 e026  jmp  y,$26
-CALL:         03e3 c220  st   [$20]
-              03e4 0118  ld   [$18]
+CALL:         03e3 c21f  st   [$1f]
+              03e4 0117  ld   [$17]
               03e5 8002  adda $02         ;Point to instruction after CALL
-              03e6 c21c  st   [$1c]
-              03e7 0119  ld   [$19]
-              03e8 c21d  st   [$1d]
-              03e9 1120  ld   [$20],x
+              03e6 c21b  st   [$1b]
+              03e7 0118  ld   [$18]
+              03e8 c21c  st   [$1c]
+              03e9 111f  ld   [$1f],x
               03ea 0500  ld   [x]
               03eb a002  suba $02         ;Because NEXT will add 2
-              03ec c218  st   [$18]
-              03ed 0120  ld   [$20]
+              03ec c217  st   [$17]
+              03ed 011f  ld   [$1f]
               03ee 9001  adda $01,x
               03ef 0500  ld   [x]
-              03f0 d619  st   [$19],y
+              03f0 d618  st   [$18],y
               03f1 fc01  bra  NEXT
               03f2 00f3  ld   $f3
 ADDI:         03f3 1404  ld   $04,y
               03f4 e007  jmp  y,$07
-              03f5 c220  st   [$20]
+              03f5 c21f  st   [$1f]
 SUBI:         03f6 1404  ld   $04,y
               03f7 e016  jmp  y,$16
-              03f8 c220  st   [$20]
+              03f8 c21f  st   [$1f]
 INC:          03f9 1200  ld   ac,x
               03fa 0500  ld   [x]
               03fb 8001  adda $01
               03fc c600  st   [x]
               03fd fc01  bra  NEXT
               03fe 00f8  ld   $f8
-RET:          03ff 011c  ld   [$1c]
+RET:          03ff 011b  ld   [$1b]
               0400 a002  suba $02
-              0401 c218  st   [$18]
-              0402 011d  ld   [$1d]
-              0403 c219  st   [$19]
+              0401 c217  st   [$17]
+              0402 011c  ld   [$1c]
+              0403 c218  st   [$18]
               0404 1403  ld   $03,y
               0405 e0df  jmp  y,$df
               0406 00f6  ld   $f6
-addi:         0407 811a  adda [$1a]
-              0408 c21a  st   [$1a]
+addi:         0407 8119  adda [$19]
+              0408 c219  st   [$19]
               0409 e80d  blt  .addi0
-              040a a120  suba [$20]
+              040a a11f  suba [$1f]
               040b fc0f  bra  .addi1
-              040c 4120  ora  [$20]
-.addi0:       040d 2120  anda [$20]
+              040c 411f  ora  [$1f]
+.addi0:       040d 211f  anda [$1f]
               040e 0200  nop
 .addi1:       040f 3080  anda $80,x
               0410 0500  ld   [x]
-              0411 811b  adda [$1b]
-              0412 c21b  st   [$1b]
+              0411 811a  adda [$1a]
+              0412 c21a  st   [$1a]
               0413 1403  ld   $03,y
               0414 e0df  jmp  y,$df
               0415 00f2  ld   $f2
-subi:         0416 011a  ld   [$1a]
+subi:         0416 0119  ld   [$19]
               0417 e81c  blt  .subi0
-              0418 a120  suba [$20]
-              0419 c21a  st   [$1a]
+              0418 a11f  suba [$1f]
+              0419 c219  st   [$19]
               041a fc1f  bra  .subi1
-              041b 4120  ora  [$20]
-.subi0:       041c c21a  st   [$1a]
-              041d 2120  anda [$20]
+              041b 411f  ora  [$1f]
+.subi0:       041c c219  st   [$19]
+              041d 211f  anda [$1f]
               041e 0200  nop
 .subi1:       041f 3080  anda $80,x
-              0420 011b  ld   [$1b]
+              0420 011a  ld   [$1a]
               0421 a500  suba [x]
-              0422 c21b  st   [$1b]
+              0422 c21a  st   [$1a]
               0423 1403  ld   $03,y
               0424 e0df  jmp  y,$df
               0425 00f2  ld   $f2
-def:          0426 0118  ld   [$18]
+def:          0426 0117  ld   [$17]
               0427 8002  adda $02
-              0428 c21a  st   [$1a]
-              0429 0119  ld   [$19]
-              042a c21b  st   [$1b]
-              042b 0120  ld   [$20]
-              042c c218  st   [$18]
+              0428 c219  st   [$19]
+              0429 0118  ld   [$18]
+              042a c21a  st   [$1a]
+              042b 011f  ld   [$1f]
+              042c c217  st   [$17]
               042d 1403  ld   $03,y
               042e 00f3  ld   $f3
               042f e0df  jmp  y,$df
               0430 0200  nop
-SYS_Out_22:   0431 1925  ld   [$25],out
+SYS_Out_22:   0431 1924  ld   [$24],out
               0432 0200  nop
               0433 1403  ld   $03,y
               0434 e0df  jmp  y,$df
               0435 00f5  ld   $f5
-SYS_In_24:    0436 c31a  st   in,[$1a]
+SYS_In_24:    0436 c319  st   in,[$19]
               0437 0000  ld   $00
-              0438 c21b  st   [$1b]
+              0438 c21a  st   [$1a]
               0439 0200  nop
               043a 1403  ld   $03,y
               043b e0df  jmp  y,$df
               043c 00f4  ld   $f4
-SYS_NextByteIn_30:
-              043d 1125  ld   [$25],x
-              043e 1526  ld   [$26],y
-              043f 0300  ld   in
-              0440 ce00  st   [y,x]
-              0441 8127  adda [$27]
-              0442 c227  st   [$27]
-              0443 0125  ld   [$25]
-              0444 8001  adda $01
-              0445 c225  st   [$25]
-              0446 00f1  ld   $f1
-              0447 1403  ld   $03,y
-              0448 e0df  jmp  y,$df
-              0449 0200  nop
-SYS_ConditionalCopy_34:
-              044a 0128  ld   [$28]
-              044b f05a  beq  .sysCc
-              044c a001  suba $01
-              044d c228  st   [$28]
-              044e 1125  ld   [$25],x
-              044f 1526  ld   [$26],y
-              0450 0d00  ld   [y,x]
-              0451 1129  ld   [$29],x
-              0452 152a  ld   [$2a],y
-              0453 ce00  st   [y,x]
-              0454 0129  ld   [$29]
-              0455 8001  adda $01
-              0456 c229  st   [$29]
-              0457 00ef  ld   $ef
-              0458 1403  ld   $03,y
-              0459 e0df  jmp  y,$df
-.sysCc:       045a 0200  nop
-              045b 1403  ld   $03,y
-              045c e0df  jmp  y,$df
-              045d 00f4  ld   $f4
+SYS_NextByteIn_32:
+              043d 010b  ld   [$0b]
+              043e 612a  xora [$2a]
+              043f ec4c  bne  .sysNbi
+              0440 1124  ld   [$24],x
+              0441 1525  ld   [$25],y
+              0442 0300  ld   in
+              0443 ce00  st   [y,x]
+              0444 8126  adda [$26]
+              0445 c226  st   [$26]
+              0446 0124  ld   [$24]
+              0447 8001  adda $01
+              0448 c224  st   [$24]
+              0449 1403  ld   $03,y
+              044a e0df  jmp  y,$df
+              044b 00f0  ld   $f0
+.sysNbi:      044c 0117  ld   [$17]
+              044d a002  suba $02
+              044e c217  st   [$17]
+              044f 00f2  ld   $f2
+              0450 1403  ld   $03,y
+              0451 e0df  jmp  y,$df
+              0452 0200  nop
+SYS_PayloadCopy_34:
+              0453 0127  ld   [$27]
+              0454 f061  beq  .sysCc0
+              0455 a001  suba $01
+              0456 c227  st   [$27]
+              0457 1124  ld   [$24],x
+              0458 1525  ld   [$25],y
+              0459 0d00  ld   [y,x]
+              045a 1128  ld   [$28],x
+              045b 1529  ld   [$29],y
+              045c ce00  st   [y,x]
+              045d 0128  ld   [$28]
+              045e 8001  adda $01
+              045f c228  st   [$28]
+              0460 fc65  bra  .sysCc1
+.sysCc0:      0461 1403  ld   $03,y
+              0462 0004  ld   $04         ;Wait 11 cycles
+              0463 ec63  bne  $0463
+              0464 a001  suba $01
+.sysCc1:      0465 e0df  jmp  y,$df
+              0466 00ef  ld   $ef
 SYS_ProcessInput_48:
-              045e 1526  ld   [$26],y
-              045f 0127  ld   [$27]
-              0460 ec7d  bne  .sysPi0
-              0461 0125  ld   [$25]
-              0462 b041  suba $41,x
-              0463 0d00  ld   [y,x]
-              0464 de00  st   [y,x++]
-              0465 604c  xora $4c
-              0466 ec82  bne  .sysPi1
-              0467 0d00  ld   [y,x]       ;Valid command
-              0468 de00  st   [y,x++]
-              0469 203f  anda $3f
-              046a c228  st   [$28]
-              046b 0d00  ld   [y,x]
-              046c de00  st   [y,x++]
-              046d c229  st   [$29]
-              046e 0d00  ld   [y,x]
-              046f de00  st   [y,x++]
-              0470 c22a  st   [$2a]
-              0471 0128  ld   [$28]
-              0472 ec87  bne  .sysPi2
-              0473 0129  ld   [$29]       ;Execute
-              0474 a002  suba $02
-              0475 c218  st   [$18]
-              0476 c21c  st   [$1c]
-              0477 012a  ld   [$2a]
-              0478 c219  st   [$19]
-              0479 c21d  st   [$1d]
-              047a 1403  ld   $03,y
-              047b e0df  jmp  y,$df
-              047c 00e8  ld   $e8
-.sysPi0:      047d 0067  ld   $67         ;Invalid checksum
-              047e c227  st   [$27]
-              047f 1403  ld   $03,y
-              0480 e0df  jmp  y,$df
-              0481 00f3  ld   $f3
-.sysPi1:      0482 0067  ld   $67         ;Unknown command
-              0483 c227  st   [$27]
-              0484 1403  ld   $03,y
-              0485 e0df  jmp  y,$df
-              0486 00f0  ld   $f0
-.sysPi2:      0487 0125  ld   [$25]       ;Loading data
-              0488 b001  suba $01,x
-              0489 0d00  ld   [y,x]
-              048a c227  st   [$27]
-              048b 1403  ld   $03,y
-              048c e0df  jmp  y,$df
-              048d 00e9  ld   $e9
+              0467 1525  ld   [$25],y
+              0468 0126  ld   [$26]
+              0469 ec86  bne  .sysPi0
+              046a 0124  ld   [$24]
+              046b b041  suba $41,x
+              046c 0d00  ld   [y,x]
+              046d de00  st   [y,x++]
+              046e 604c  xora $4c
+              046f ec8b  bne  .sysPi1
+              0470 0d00  ld   [y,x]       ;Valid command
+              0471 de00  st   [y,x++]
+              0472 203f  anda $3f
+              0473 c227  st   [$27]
+              0474 0d00  ld   [y,x]
+              0475 de00  st   [y,x++]
+              0476 c228  st   [$28]
+              0477 0d00  ld   [y,x]
+              0478 de00  st   [y,x++]
+              0479 c229  st   [$29]
+              047a 0127  ld   [$27]
+              047b ec90  bne  .sysPi2
+              047c 0128  ld   [$28]       ;Execute
+              047d a002  suba $02
+              047e c217  st   [$17]
+              047f c21b  st   [$1b]
+              0480 0129  ld   [$29]
+              0481 c218  st   [$18]
+              0482 c21c  st   [$1c]
+              0483 1403  ld   $03,y
+              0484 e0df  jmp  y,$df
+              0485 00e8  ld   $e8
+.sysPi0:      0486 0067  ld   $67         ;Invalid checksum
+              0487 c226  st   [$26]
+              0488 1403  ld   $03,y
+              0489 e0df  jmp  y,$df
+              048a 00f3  ld   $f3
+.sysPi1:      048b 0067  ld   $67         ;Unknown command
+              048c c226  st   [$26]
+              048d 1403  ld   $03,y
+              048e e0df  jmp  y,$df
+              048f 00f0  ld   $f0
+.sysPi2:      0490 0124  ld   [$24]       ;Loading data
+              0491 b001  suba $01,x
+              0492 0d00  ld   [y,x]
+              0493 c226  st   [$26]
+              0494 1403  ld   $03,y
+              0495 e0df  jmp  y,$df
+              0496 00e9  ld   $e9
 SYS_Random_34:
-              048e 0111  ld   [$11]
-              048f 6107  xora [$07]
-              0490 6112  xora [$12]
-              0491 8106  adda [$06]
-              0492 c206  st   [$06]
-              0493 c21a  st   [$1a]
-              0494 8108  adda [$08]
-              0495 c208  st   [$08]
-              0496 e899  blt  .sysRnd0
-              0497 fc9a  bra  .sysRnd1
-              0498 6053  xora $53
-.sysRnd0:     0499 606c  xora $6c
-.sysRnd1:     049a 8107  adda [$07]
-              049b c207  st   [$07]
-              049c c21b  st   [$1b]
-              049d 1403  ld   $03,y
-              049e e0df  jmp  y,$df
-              049f 00ef  ld   $ef
-SYS_Read3_40: 04a0 1524  ld   [$24],y
-              04a1 e079  jmp  y,$79
-              04a2 0123  ld   [$23]
-txReturn:     04a3 c227  st   [$27]
-              04a4 1403  ld   $03,y
-              04a5 e0df  jmp  y,$df
-              04a6 00ec  ld   $ec
+              0497 0110  ld   [$10]
+              0498 6107  xora [$07]
+              0499 6111  xora [$11]
+              049a 8106  adda [$06]
+              049b c206  st   [$06]
+              049c c219  st   [$19]
+              049d 8108  adda [$08]
+              049e c208  st   [$08]
+              049f e8a2  blt  .sysRnd0
+              04a0 fca3  bra  .sysRnd1
+              04a1 6053  xora $53
+.sysRnd0:     04a2 606c  xora $6c
+.sysRnd1:     04a3 8107  adda [$07]
+              04a4 c207  st   [$07]
+              04a5 c21a  st   [$1a]
+              04a6 1403  ld   $03,y
+              04a7 e0df  jmp  y,$df
+              04a8 00ef  ld   $ef
+SYS_Read3_40: 04a9 1523  ld   [$23],y
+              04aa e079  jmp  y,$79
+              04ab 0122  ld   [$22]
+txReturn:     04ac c226  st   [$26]
+              04ad 1403  ld   $03,y
+              04ae e0df  jmp  y,$df
+              04af 00ec  ld   $ec
 SYS_Unpack_56:
-              04a7 1402  ld   $02,y
-              04a8 0127  ld   [$27]
-              04a9 30fc  anda $fc,x
-              04aa 0d00  ld   [y,x]
-              04ab c228  st   [$28]       ;-> Pixel 3
-              04ac 0127  ld   [$27]
-              04ad 2003  anda $03
-              04ae 8200  adda ac
-              04af 8200  adda ac
-              04b0 8200  adda ac
-              04b1 8200  adda ac
-              04b2 c227  st   [$27]
-              04b3 0126  ld   [$26]
-              04b4 30fc  anda $fc,x
-              04b5 0d00  ld   [y,x]
-              04b6 30fc  anda $fc,x
-              04b7 0d00  ld   [y,x]
-              04b8 4127  ora  [$27]
-              04b9 c227  st   [$27]       ;-> Pixel 2
-              04ba 0126  ld   [$26]
-              04bb 200f  anda $0f
-              04bc 8200  adda ac
-              04bd 8200  adda ac
-              04be c226  st   [$26]
-              04bf 0125  ld   [$25]
-              04c0 30fc  anda $fc,x
-              04c1 0d00  ld   [y,x]
-              04c2 30fc  anda $fc,x
-              04c3 0d00  ld   [y,x]
-              04c4 30fc  anda $fc,x
-              04c5 0d00  ld   [y,x]
-              04c6 4126  ora  [$26]
-              04c7 c226  st   [$26]       ;-> Pixel 1
-              04c8 0125  ld   [$25]
-              04c9 203f  anda $3f
-              04ca c225  st   [$25]       ;-> Pixel 0
-              04cb 1403  ld   $03,y
-              04cc e0df  jmp  y,$df
-              04cd 00e4  ld   $e4
-SYS_Draw4_30: 04ce 1121  ld   [$21],x
-              04cf 1522  ld   [$22],y
-              04d0 0125  ld   [$25]
-              04d1 de00  st   [y,x++]
-              04d2 0126  ld   [$26]
-              04d3 de00  st   [y,x++]
-              04d4 0127  ld   [$27]
-              04d5 de00  st   [y,x++]
-              04d6 0128  ld   [$28]
-              04d7 de00  st   [y,x++]
-              04d8 1403  ld   $03,y
-              04d9 e0df  jmp  y,$df
-              04da 00f1  ld   $f1
-SYS_VDrawBits_134:
-              04db 1121  ld   [$21],x
-              04dc 0000  ld   $00
-.vdb0:        04dd c220  st   [$20]
-              04de 9522  adda [$22],y
+              04b0 1402  ld   $02,y
+              04b1 0126  ld   [$26]
+              04b2 30fc  anda $fc,x
+              04b3 0d00  ld   [y,x]
+              04b4 c227  st   [$27]       ;-> Pixel 3
+              04b5 0126  ld   [$26]
+              04b6 2003  anda $03
+              04b7 8200  adda ac
+              04b8 8200  adda ac
+              04b9 8200  adda ac
+              04ba 8200  adda ac
+              04bb c226  st   [$26]
+              04bc 0125  ld   [$25]
+              04bd 30fc  anda $fc,x
+              04be 0d00  ld   [y,x]
+              04bf 30fc  anda $fc,x
+              04c0 0d00  ld   [y,x]
+              04c1 4126  ora  [$26]
+              04c2 c226  st   [$26]       ;-> Pixel 2
+              04c3 0125  ld   [$25]
+              04c4 200f  anda $0f
+              04c5 8200  adda ac
+              04c6 8200  adda ac
+              04c7 c225  st   [$25]
+              04c8 0124  ld   [$24]
+              04c9 30fc  anda $fc,x
+              04ca 0d00  ld   [y,x]
+              04cb 30fc  anda $fc,x
+              04cc 0d00  ld   [y,x]
+              04cd 30fc  anda $fc,x
+              04ce 0d00  ld   [y,x]
+              04cf 4125  ora  [$25]
+              04d0 c225  st   [$25]       ;-> Pixel 1
+              04d1 0124  ld   [$24]
+              04d2 203f  anda $3f
+              04d3 c224  st   [$24]       ;-> Pixel 0
+              04d4 1403  ld   $03,y
+              04d5 e0df  jmp  y,$df
+              04d6 00e4  ld   $e4
+SYS_Draw4_30: 04d7 1120  ld   [$20],x
+              04d8 1521  ld   [$21],y
+              04d9 0124  ld   [$24]
+              04da de00  st   [y,x++]
+              04db 0125  ld   [$25]
+              04dc de00  st   [y,x++]
+              04dd 0126  ld   [$26]
+              04de de00  st   [y,x++]
               04df 0127  ld   [$27]
-              04e0 e8e3  blt  .vdb1
-              04e1 fce4  bra  .vdb2
-              04e2 0125  ld   [$25]
-.vdb1:        04e3 0126  ld   [$26]
-.vdb2:        04e4 ce00  st   [y,x]
-              04e5 0127  ld   [$27]
-              04e6 8200  adda ac
-              04e7 c227  st   [$27]
-              04e8 0120  ld   [$20]
-              04e9 a007  suba $07
-              04ea ecdd  bne  .vdb0
-              04eb 8008  adda $08
-              04ec 1403  ld   $03,y
-              04ed e0df  jmp  y,$df
-              04ee 00bd  ld   $bd
-              04ef 0200  nop
-              04f0 0200  nop
-              04f1 0200  nop
-              * 17 times
+              04e0 de00  st   [y,x++]
+              04e1 1403  ld   $03,y
+              04e2 e0df  jmp  y,$df
+              04e3 00f1  ld   $f1
+SYS_VDrawBits_134:
+              04e4 1120  ld   [$20],x
+              04e5 0000  ld   $00
+.vdb0:        04e6 c21f  st   [$1f]
+              04e7 9521  adda [$21],y
+              04e8 0126  ld   [$26]
+              04e9 e8ec  blt  .vdb1
+              04ea fced  bra  .vdb2
+              04eb 0124  ld   [$24]
+.vdb1:        04ec 0125  ld   [$25]
+.vdb2:        04ed ce00  st   [y,x]
+              04ee 0126  ld   [$26]
+              04ef 8200  adda ac
+              04f0 c226  st   [$26]
+              04f1 011f  ld   [$1f]
+              04f2 a007  suba $07
+              04f3 ece6  bne  .vdb0
+              04f4 8008  adda $08
+              04f5 1403  ld   $03,y
+              04f6 e0df  jmp  y,$df
+              04f7 00bd  ld   $bd
+              04f8 0200  nop
+              04f9 0200  nop
+              04fa 0200  nop
+              * 8 times
 shiftTable:   0500 0000  ld   $00         ;0b0000000x >> 1
               0501 0000  ld   $00         ;0b000000xx >> 2
               0502 0001  ld   $01         ;0b0000001x >> 1
@@ -1306,80 +1314,80 @@ shiftTable:   0500 0000  ld   $00         ;0b0000000x >> 1
               05fc 007e  ld   $7e         ;0b1111110x >> 1
               05fd 003f  ld   $3f         ;0b111111xx >> 2
               05fe 007f  ld   $7f         ;0b1111111x >> 1
-              05ff fd20  bra  [$20]       ;Jumps back into next page
+              05ff fd1f  bra  [$1f]       ;Jumps back into next page
 SYS_LSRW_48:  0600 0200  nop
               0601 1405  ld   $05,y
               0602 0008  ld   $08         ;Shift low byte
-              0603 c220  st   [$20]
-              0604 0125  ld   [$25]
+              0603 c21f  st   [$1f]
+              0604 0124  ld   [$24]
               0605 20fe  anda $fe
               0606 e200  jmp  y,ac
               0607 fcff  bra  $06ff       ;Actually $05ff
-.sysLsrw0:    0608 c21a  st   [$1a]
+.sysLsrw0:    0608 c219  st   [$19]
               0609 000f  ld   $0f         ;Shift high byte
-              060a c220  st   [$20]
-              060b 0126  ld   [$26]
+              060a c21f  st   [$1f]
+              060b 0125  ld   [$25]
               060c 20fe  anda $fe
               060d e200  jmp  y,ac
               060e fcff  bra  $06ff       ;Actually $05ff
-.sysLsrw1:    060f c21b  st   [$1b]
-              0610 0126  ld   [$26]       ;Transfer bit 8
+.sysLsrw1:    060f c21a  st   [$1a]
+              0610 0125  ld   [$25]       ;Transfer bit 8
               0611 2001  anda $01
               0612 807f  adda $7f
               0613 2080  anda $80
-              0614 411a  ora  [$1a]
-              0615 c21a  st   [$1a]
+              0614 4119  ora  [$19]
+              0615 c219  st   [$19]
               0616 1403  ld   $03,y
               0617 e0df  jmp  y,$df
               0618 00e8  ld   $e8
 SYS_RacerUpdateVideoX_40:
-              0619 1127  ld   [$27],x
-              061a 1528  ld   [$28],y
+              0619 1126  ld   [$26],x
+              061a 1527  ld   [$27],y
               061b 0d00  ld   [y,x]
-              061c c220  st   [$20]
-              061d a129  suba [$29]
-              061e 1125  ld   [$25],x
-              061f 1526  ld   [$26],y
+              061c c21f  st   [$1f]
+              061d a128  suba [$28]
+              061e 1124  ld   [$24],x
+              061f 1525  ld   [$25],y
               0620 ce00  st   [y,x]
-              0621 0125  ld   [$25]
+              0621 0124  ld   [$24]
               0622 a004  suba $04
-              0623 c225  st   [$25]
-              0624 0120  ld   [$20]
-              0625 c229  st   [$29]
-              0626 0127  ld   [$27]
+              0623 c224  st   [$24]
+              0624 011f  ld   [$1f]
+              0625 c228  st   [$28]
+              0626 0126  ld   [$26]
               0627 8001  adda $01
-              0628 c227  st   [$27]
+              0628 c226  st   [$26]
               0629 ec2d  bne  .sysRacer0
-              062a 0118  ld   [$18]
+              062a 0117  ld   [$17]
               062b fc2f  bra  .sysRacer1
               062c 0200  nop
 .sysRacer0:   062d a002  suba $02
-              062e c218  st   [$18]
+              062e c217  st   [$17]
 .sysRacer1:   062f 1403  ld   $03,y
               0630 e0df  jmp  y,$df
               0631 00ec  ld   $ec
 SYS_RacerUpdateVideoY_40:
-              0632 0128  ld   [$28]
+              0632 0127  ld   [$27]
               0633 2008  anda $08
               0634 ec37  bne  .sysRacer2
               0635 fc38  bra  .sysRacer3
               0636 0000  ld   $00
 .sysRacer2:   0637 0001  ld   $01
-.sysRacer3:   0638 c220  st   [$20]
-              0639 1526  ld   [$26],y
-              063a 0125  ld   [$25]
+.sysRacer3:   0638 c21f  st   [$1f]
+              0639 1525  ld   [$25],y
+              063a 0124  ld   [$24]
               063b 8002  adda $02
-              063c d225  st   [$25],x
+              063c d224  st   [$24],x
               063d 60ee  xora $ee
-              063e c21a  st   [$1a]
-              063f c21b  st   [$1b]
-              0640 0127  ld   [$27]
+              063e c219  st   [$19]
+              063f c21a  st   [$1a]
+              0640 0126  ld   [$26]
               0641 20fe  anda $fe
-              0642 8120  adda [$20]
+              0642 811f  adda [$1f]
               0643 ce00  st   [y,x]
-              0644 0127  ld   [$27]
+              0644 0126  ld   [$26]
               0645 8001  adda $01
-              0646 c227  st   [$27]
+              0646 c226  st   [$26]
               0647 1403  ld   $03,y
               0648 e0df  jmp  y,$df
               0649 00ec  ld   $ec
@@ -1639,7 +1647,7 @@ font32up:     0700 0000  ld   $00         ;Char ' '
               07fc fcfd  bra  $07fd       ;|                                   |
               07fd 1403  ld   $03,y       ;| Trampoline for page $0700 lookups |
               07fe e078  jmp  y,$78       ;|                                   |
-              07ff 1519  ld   [$19],y     ;+-----------------------------------+
+              07ff 1518  ld   [$18],y     ;+-----------------------------------+
 font82up:     0800 00fe  ld   $fe         ;Char 'R'
               0801 0090  ld   $90
               0802 0098  ld   $98
@@ -1876,7 +1884,7 @@ font82up:     0800 00fe  ld   $fe         ;Char 'R'
               08fc fcfd  bra  $08fd       ;|                                   |
               08fd 1403  ld   $03,y       ;| Trampoline for page $0800 lookups |
               08fe e078  jmp  y,$78       ;|                                   |
-              08ff 1519  ld   [$19],y     ;+-----------------------------------+
+              08ff 1518  ld   [$18],y     ;+-----------------------------------+
 notesTable:   0900 0000  ld   $00
               0901 0000  ld   $00
               0902 0045  ld   $45         ;C-0 (16.4 Hz)
@@ -2078,7 +2086,7 @@ notesTable:   0900 0000  ld   $00
               09fc fcfd  bra  $09fd       ;|                                   |
               09fd 1403  ld   $03,y       ;| Trampoline for page $0900 lookups |
               09fe e078  jmp  y,$78       ;|                                   |
-              09ff 1519  ld   [$19],y     ;+-----------------------------------+
+              09ff 1518  ld   [$18],y     ;+-----------------------------------+
 invTable:     0a00 00ff  ld   $ff
               0a01 00ef  ld   $ef
               0a02 00e2  ld   $e2
@@ -2264,7 +2272,7 @@ invTable:     0a00 00ff  ld   $ff
               0afc fcfd  bra  $0afd       ;|                                   |
               0afd 1403  ld   $03,y       ;| Trampoline for page $0a00 lookups |
               0afe e078  jmp  y,$78       ;|                                   |
-              0aff 1519  ld   [$19],y     ;+-----------------------------------+
+              0aff 1518  ld   [$18],y     ;+-----------------------------------+
 gigatronRaw:  0b00 00aa  ld   $aa
               0b01 00aa  ld   $aa
               0b02 00aa  ld   $aa
@@ -2514,7 +2522,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               0bfc fcfd  bra  $0bfd       ;|                                   |
               0bfd 1403  ld   $03,y       ;| Trampoline for page $0b00 lookups |
               0bfe e078  jmp  y,$78       ;|                                   |
-              0bff 1519  ld   [$19],y     ;+-----------------------------------+
+              0bff 1518  ld   [$18],y     ;+-----------------------------------+
               0c00 00a5  ld   $a5
               0c01 0056  ld   $56
               0c02 00a6  ld   $a6
@@ -2769,7 +2777,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               0cfc fcfd  bra  $0cfd       ;|                                   |
               0cfd 1403  ld   $03,y       ;| Trampoline for page $0c00 lookups |
               0cfe e078  jmp  y,$78       ;|                                   |
-              0cff 1519  ld   [$19],y     ;+-----------------------------------+
+              0cff 1518  ld   [$18],y     ;+-----------------------------------+
               0d00 00aa  ld   $aa
               0d01 005a  ld   $5a
               0d02 00aa  ld   $aa
@@ -3018,7 +3026,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               0dfc fcfd  bra  $0dfd       ;|                                   |
               0dfd 1403  ld   $03,y       ;| Trampoline for page $0d00 lookups |
               0dfe e078  jmp  y,$78       ;|                                   |
-              0dff 1519  ld   [$19],y     ;+-----------------------------------+
+              0dff 1518  ld   [$18],y     ;+-----------------------------------+
               0e00 0054  ld   $54
               0e01 0055  ld   $55
               0e02 0055  ld   $55
@@ -3273,7 +3281,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               0efc fcfd  bra  $0efd       ;|                                   |
               0efd 1403  ld   $03,y       ;| Trampoline for page $0e00 lookups |
               0efe e078  jmp  y,$78       ;|                                   |
-              0eff 1519  ld   [$19],y     ;+-----------------------------------+
+              0eff 1518  ld   [$18],y     ;+-----------------------------------+
               0f00 006a  ld   $6a
               0f01 00aa  ld   $aa
               0f02 006a  ld   $6a
@@ -3522,7 +3530,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               0ffc fcfd  bra  $0ffd       ;|                                   |
               0ffd 1403  ld   $03,y       ;| Trampoline for page $0f00 lookups |
               0ffe e078  jmp  y,$78       ;|                                   |
-              0fff 1519  ld   [$19],y     ;+-----------------------------------+
+              0fff 1518  ld   [$18],y     ;+-----------------------------------+
               1000 00aa  ld   $aa
               1001 00aa  ld   $aa
               1002 00aa  ld   $aa
@@ -3778,7 +3786,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               10fc fcfd  bra  $10fd       ;|                                   |
               10fd 1403  ld   $03,y       ;| Trampoline for page $1000 lookups |
               10fe e078  jmp  y,$78       ;|                                   |
-              10ff 1519  ld   [$19],y     ;+-----------------------------------+
+              10ff 1518  ld   [$18],y     ;+-----------------------------------+
               1100 00ff  ld   $ff
               1101 00ff  ld   $ff
               1102 00ef  ld   $ef
@@ -4030,7 +4038,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               11fc fcfd  bra  $11fd       ;|                                   |
               11fd 1403  ld   $03,y       ;| Trampoline for page $1100 lookups |
               11fe e078  jmp  y,$78       ;|                                   |
-              11ff 1519  ld   [$19],y     ;+-----------------------------------+
+              11ff 1518  ld   [$18],y     ;+-----------------------------------+
               1200 00c5  ld   $c5
               1201 00ff  ld   $ff
               1202 00ff  ld   $ff
@@ -4286,7 +4294,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               12fc fcfd  bra  $12fd       ;|                                   |
               12fd 1403  ld   $03,y       ;| Trampoline for page $1200 lookups |
               12fe e078  jmp  y,$78       ;|                                   |
-              12ff 1519  ld   [$19],y     ;+-----------------------------------+
+              12ff 1518  ld   [$18],y     ;+-----------------------------------+
               1300 0069  ld   $69
               1301 0099  ld   $99
               1302 0056  ld   $56
@@ -4541,7 +4549,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               13fc fcfd  bra  $13fd       ;|                                   |
               13fd 1403  ld   $03,y       ;| Trampoline for page $1300 lookups |
               13fe e078  jmp  y,$78       ;|                                   |
-              13ff 1519  ld   [$19],y     ;+-----------------------------------+
+              13ff 1518  ld   [$18],y     ;+-----------------------------------+
               1400 0069  ld   $69
               1401 00ae  ld   $ae
               1402 00a6  ld   $a6
@@ -4797,7 +4805,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               14fc fcfd  bra  $14fd       ;|                                   |
               14fd 1403  ld   $03,y       ;| Trampoline for page $1400 lookups |
               14fe e078  jmp  y,$78       ;|                                   |
-              14ff 1519  ld   [$19],y     ;+-----------------------------------+
+              14ff 1518  ld   [$18],y     ;+-----------------------------------+
               1500 00a5  ld   $a5
               1501 00aa  ld   $aa
               1502 00aa  ld   $aa
@@ -5048,7 +5056,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               15fc fcfd  bra  $15fd       ;|                                   |
               15fd 1403  ld   $03,y       ;| Trampoline for page $1500 lookups |
               15fe e078  jmp  y,$78       ;|                                   |
-              15ff 1519  ld   [$19],y     ;+-----------------------------------+
+              15ff 1518  ld   [$18],y     ;+-----------------------------------+
               1600 0069  ld   $69
               1601 009a  ld   $9a
               1602 0096  ld   $96
@@ -5304,7 +5312,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               16fc fcfd  bra  $16fd       ;|                                   |
               16fd 1403  ld   $03,y       ;| Trampoline for page $1600 lookups |
               16fe e078  jmp  y,$78       ;|                                   |
-              16ff 1519  ld   [$19],y     ;+-----------------------------------+
+              16ff 1518  ld   [$18],y     ;+-----------------------------------+
               1700 00aa  ld   $aa
               1701 00ba  ld   $ba
               1702 00aa  ld   $aa
@@ -5560,7 +5568,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               17fc fcfd  bra  $17fd       ;|                                   |
               17fd 1403  ld   $03,y       ;| Trampoline for page $1700 lookups |
               17fe e078  jmp  y,$78       ;|                                   |
-              17ff 1519  ld   [$19],y     ;+-----------------------------------+
+              17ff 1518  ld   [$18],y     ;+-----------------------------------+
               1800 0095  ld   $95
               1801 00fa  ld   $fa
               1802 00ff  ld   $ff
@@ -5811,7 +5819,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               18fc fcfd  bra  $18fd       ;|                                   |
               18fd 1403  ld   $03,y       ;| Trampoline for page $1800 lookups |
               18fe e078  jmp  y,$78       ;|                                   |
-              18ff 1519  ld   [$19],y     ;+-----------------------------------+
+              18ff 1518  ld   [$18],y     ;+-----------------------------------+
               1900 00fa  ld   $fa
               1901 00ae  ld   $ae
               1902 00a6  ld   $a6
@@ -6067,7 +6075,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               19fc fcfd  bra  $19fd       ;|                                   |
               19fd 1403  ld   $03,y       ;| Trampoline for page $1900 lookups |
               19fe e078  jmp  y,$78       ;|                                   |
-              19ff 1519  ld   [$19],y     ;+-----------------------------------+
+              19ff 1518  ld   [$18],y     ;+-----------------------------------+
               1a00 0069  ld   $69
               1a01 0099  ld   $99
               1a02 0096  ld   $96
@@ -6323,7 +6331,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               1afc fcfd  bra  $1afd       ;|                                   |
               1afd 1403  ld   $03,y       ;| Trampoline for page $1a00 lookups |
               1afe e078  jmp  y,$78       ;|                                   |
-              1aff 1519  ld   [$19],y     ;+-----------------------------------+
+              1aff 1518  ld   [$18],y     ;+-----------------------------------+
               1b00 0055  ld   $55
               1b01 0055  ld   $55
               1b02 0095  ld   $95
@@ -6579,7 +6587,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               1bfc fcfd  bra  $1bfd       ;|                                   |
               1bfd 1403  ld   $03,y       ;| Trampoline for page $1b00 lookups |
               1bfe e078  jmp  y,$78       ;|                                   |
-              1bff 1519  ld   [$19],y     ;+-----------------------------------+
+              1bff 1518  ld   [$18],y     ;+-----------------------------------+
               1c00 005c  ld   $5c
               1c01 00a5  ld   $a5
               1c02 00fa  ld   $fa
@@ -6835,7 +6843,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               1cfc fcfd  bra  $1cfd       ;|                                   |
               1cfd 1403  ld   $03,y       ;| Trampoline for page $1c00 lookups |
               1cfe e078  jmp  y,$78       ;|                                   |
-              1cff 1519  ld   [$19],y     ;+-----------------------------------+
+              1cff 1518  ld   [$18],y     ;+-----------------------------------+
               1d00 0015  ld   $15
               1d01 0070  ld   $70
               1d02 0055  ld   $55
@@ -7091,7 +7099,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               1dfc fcfd  bra  $1dfd       ;|                                   |
               1dfd 1403  ld   $03,y       ;| Trampoline for page $1d00 lookups |
               1dfe e078  jmp  y,$78       ;|                                   |
-              1dff 1519  ld   [$19],y     ;+-----------------------------------+
+              1dff 1518  ld   [$18],y     ;+-----------------------------------+
               1e00 00be  ld   $be
               1e01 00af  ld   $af
               1e02 00fa  ld   $fa
@@ -7346,7 +7354,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               1efc fcfd  bra  $1efd       ;|                                   |
               1efd 1403  ld   $03,y       ;| Trampoline for page $1e00 lookups |
               1efe e078  jmp  y,$78       ;|                                   |
-              1eff 1519  ld   [$19],y     ;+-----------------------------------+
+              1eff 1518  ld   [$18],y     ;+-----------------------------------+
               1f00 0069  ld   $69
               1f01 0055  ld   $55
               1f02 0056  ld   $56
@@ -7602,7 +7610,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               1ffc fcfd  bra  $1ffd       ;|                                   |
               1ffd 1403  ld   $03,y       ;| Trampoline for page $1f00 lookups |
               1ffe e078  jmp  y,$78       ;|                                   |
-              1fff 1519  ld   [$19],y     ;+-----------------------------------+
+              1fff 1518  ld   [$18],y     ;+-----------------------------------+
               2000 00aa  ld   $aa
               2001 00ee  ld   $ee
               2002 00eb  ld   $eb
@@ -7858,7 +7866,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               20fc fcfd  bra  $20fd       ;|                                   |
               20fd 1403  ld   $03,y       ;| Trampoline for page $2000 lookups |
               20fe e078  jmp  y,$78       ;|                                   |
-              20ff 1519  ld   [$19],y     ;+-----------------------------------+
+              20ff 1518  ld   [$18],y     ;+-----------------------------------+
               2100 00fe  ld   $fe
               2101 00ea  ld   $ea
               2102 00ff  ld   $ff
@@ -8112,7 +8120,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               21fc fcfd  bra  $21fd       ;|                                   |
               21fd 1403  ld   $03,y       ;| Trampoline for page $2100 lookups |
               21fe e078  jmp  y,$78       ;|                                   |
-              21ff 1519  ld   [$19],y     ;+-----------------------------------+
+              21ff 1518  ld   [$18],y     ;+-----------------------------------+
               2200 00c0  ld   $c0
               2201 0061  ld   $61
               2202 0066  ld   $66
@@ -8354,7 +8362,7 @@ gigatronRaw:  0b00 00aa  ld   $aa
               22fc fcfd  bra  $22fd       ;|                                   |
               22fd 1403  ld   $03,y       ;| Trampoline for page $2200 lookups |
               22fe e078  jmp  y,$78       ;|                                   |
-              22ff 1519  ld   [$19],y     ;+-----------------------------------+
+              22ff 1518  ld   [$18],y     ;+-----------------------------------+
 packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2301 0000  ld   $00
               2302 0000  ld   $00
@@ -8433,8 +8441,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2378 0200  nop
               2379 fe00  bra  ac          ;Trampoline for page $2300 reading (entry)
               237a fc7b  bra  $237b
-              237b c225  st   [$25]
-              237c 0123  ld   [$23]
+              237b c224  st   [$24]
+              237c 0122  ld   [$22]
               237d 8001  adda $01
               237e fe00  bra  ac
               237f fcfa  bra  $23fa
@@ -8533,12 +8541,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               23f7 0000  ld   $00
               23f8 0200  nop
               23f9 0200  nop
-              23fa c226  st   [$26]       ;Trampoline for page $2300 reading (continue)
-              23fb 0123  ld   [$23]
+              23fa c225  st   [$25]       ;Trampoline for page $2300 reading (continue)
+              23fb 0122  ld   [$22]
               23fc 8002  adda $02
               23fd 1404  ld   $04,y
               23fe fe00  bra  ac
-              23ff e0a3  jmp  y,$a3
+              23ff e0ac  jmp  y,$ac
               2400 0000  ld   $00         ;Pixels for packedParrot line 2
               2401 0000  ld   $00
               2402 0000  ld   $00
@@ -8637,8 +8645,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2478 0200  nop
               2479 fe00  bra  ac          ;Trampoline for page $2400 reading (entry)
               247a fc7b  bra  $247b
-              247b c225  st   [$25]
-              247c 0123  ld   [$23]
+              247b c224  st   [$24]
+              247c 0122  ld   [$22]
               247d 8001  adda $01
               247e fe00  bra  ac
               247f fcfa  bra  $24fa
@@ -8737,12 +8745,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               24f7 0056  ld   $56
               24f8 0200  nop
               24f9 0200  nop
-              24fa c226  st   [$26]       ;Trampoline for page $2400 reading (continue)
-              24fb 0123  ld   [$23]
+              24fa c225  st   [$25]       ;Trampoline for page $2400 reading (continue)
+              24fb 0122  ld   [$22]
               24fc 8002  adda $02
               24fd 1404  ld   $04,y
               24fe fe00  bra  ac
-              24ff e0a3  jmp  y,$a3
+              24ff e0ac  jmp  y,$ac
               2500 0000  ld   $00         ;Pixels for packedParrot line 4
               2501 0000  ld   $00
               2502 0000  ld   $00
@@ -8840,8 +8848,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2578 0200  nop
               2579 fe00  bra  ac          ;Trampoline for page $2500 reading (entry)
               257a fc7b  bra  $257b
-              257b c225  st   [$25]
-              257c 0123  ld   [$23]
+              257b c224  st   [$24]
+              257c 0122  ld   [$22]
               257d 8001  adda $01
               257e fe00  bra  ac
               257f fcfa  bra  $25fa
@@ -8962,12 +8970,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               25f7 0011  ld   $11
               25f8 0200  nop
               25f9 0200  nop
-              25fa c226  st   [$26]       ;Trampoline for page $2500 reading (continue)
-              25fb 0123  ld   [$23]
+              25fa c225  st   [$25]       ;Trampoline for page $2500 reading (continue)
+              25fb 0122  ld   [$22]
               25fc 8002  adda $02
               25fd 1404  ld   $04,y
               25fe fe00  bra  ac
-              25ff e0a3  jmp  y,$a3
+              25ff e0ac  jmp  y,$ac
               2600 0000  ld   $00         ;Pixels for packedParrot line 6
               2601 0000  ld   $00
               2602 0000  ld   $00
@@ -9078,8 +9086,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2678 0200  nop
               2679 fe00  bra  ac          ;Trampoline for page $2600 reading (entry)
               267a fc7b  bra  $267b
-              267b c225  st   [$25]
-              267c 0123  ld   [$23]
+              267b c224  st   [$24]
+              267c 0122  ld   [$22]
               267d 8001  adda $01
               267e fe00  bra  ac
               267f fcfa  bra  $26fa
@@ -9198,12 +9206,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               26f7 0000  ld   $00
               26f8 0200  nop
               26f9 0200  nop
-              26fa c226  st   [$26]       ;Trampoline for page $2600 reading (continue)
-              26fb 0123  ld   [$23]
+              26fa c225  st   [$25]       ;Trampoline for page $2600 reading (continue)
+              26fb 0122  ld   [$22]
               26fc 8002  adda $02
               26fd 1404  ld   $04,y
               26fe fe00  bra  ac
-              26ff e0a3  jmp  y,$a3
+              26ff e0ac  jmp  y,$ac
               2700 0000  ld   $00         ;Pixels for packedParrot line 8
               2701 0000  ld   $00
               2702 0000  ld   $00
@@ -9316,8 +9324,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2778 0200  nop
               2779 fe00  bra  ac          ;Trampoline for page $2700 reading (entry)
               277a fc7b  bra  $277b
-              277b c225  st   [$25]
-              277c 0123  ld   [$23]
+              277b c224  st   [$24]
+              277c 0122  ld   [$22]
               277d 8001  adda $01
               277e fe00  bra  ac
               277f fcfa  bra  $27fa
@@ -9432,12 +9440,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               27f7 0000  ld   $00
               27f8 0200  nop
               27f9 0200  nop
-              27fa c226  st   [$26]       ;Trampoline for page $2700 reading (continue)
-              27fb 0123  ld   [$23]
+              27fa c225  st   [$25]       ;Trampoline for page $2700 reading (continue)
+              27fb 0122  ld   [$22]
               27fc 8002  adda $02
               27fd 1404  ld   $04,y
               27fe fe00  bra  ac
-              27ff e0a3  jmp  y,$a3
+              27ff e0ac  jmp  y,$ac
               2800 0000  ld   $00         ;Pixels for packedParrot line 10
               2801 0000  ld   $00
               2802 0000  ld   $00
@@ -9548,8 +9556,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2878 0200  nop
               2879 fe00  bra  ac          ;Trampoline for page $2800 reading (entry)
               287a fc7b  bra  $287b
-              287b c225  st   [$25]
-              287c 0123  ld   [$23]
+              287b c224  st   [$24]
+              287c 0122  ld   [$22]
               287d 8001  adda $01
               287e fe00  bra  ac
               287f fcfa  bra  $28fa
@@ -9665,12 +9673,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               28f7 0000  ld   $00
               28f8 0200  nop
               28f9 0200  nop
-              28fa c226  st   [$26]       ;Trampoline for page $2800 reading (continue)
-              28fb 0123  ld   [$23]
+              28fa c225  st   [$25]       ;Trampoline for page $2800 reading (continue)
+              28fb 0122  ld   [$22]
               28fc 8002  adda $02
               28fd 1404  ld   $04,y
               28fe fe00  bra  ac
-              28ff e0a3  jmp  y,$a3
+              28ff e0ac  jmp  y,$ac
               2900 0000  ld   $00         ;Pixels for packedParrot line 12
               2901 0000  ld   $00
               2902 0000  ld   $00
@@ -9791,8 +9799,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2978 0200  nop
               2979 fe00  bra  ac          ;Trampoline for page $2900 reading (entry)
               297a fc7b  bra  $297b
-              297b c225  st   [$25]
-              297c 0123  ld   [$23]
+              297b c224  st   [$24]
+              297c 0122  ld   [$22]
               297d 8001  adda $01
               297e fe00  bra  ac
               297f fcfa  bra  $29fa
@@ -9903,12 +9911,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               29f7 0010  ld   $10
               29f8 0200  nop
               29f9 0200  nop
-              29fa c226  st   [$26]       ;Trampoline for page $2900 reading (continue)
-              29fb 0123  ld   [$23]
+              29fa c225  st   [$25]       ;Trampoline for page $2900 reading (continue)
+              29fb 0122  ld   [$22]
               29fc 8002  adda $02
               29fd 1404  ld   $04,y
               29fe fe00  bra  ac
-              29ff e0a3  jmp  y,$a3
+              29ff e0ac  jmp  y,$ac
               2a00 0040  ld   $40         ;Pixels for packedParrot line 14
               2a01 0001  ld   $01
               2a02 0000  ld   $00
@@ -10020,8 +10028,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2a78 0200  nop
               2a79 fe00  bra  ac          ;Trampoline for page $2a00 reading (entry)
               2a7a fc7b  bra  $2a7b
-              2a7b c225  st   [$25]
-              2a7c 0123  ld   [$23]
+              2a7b c224  st   [$24]
+              2a7c 0122  ld   [$22]
               2a7d 8001  adda $01
               2a7e fe00  bra  ac
               2a7f fcfa  bra  $2afa
@@ -10137,12 +10145,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2af7 0010  ld   $10
               2af8 0200  nop
               2af9 0200  nop
-              2afa c226  st   [$26]       ;Trampoline for page $2a00 reading (continue)
-              2afb 0123  ld   [$23]
+              2afa c225  st   [$25]       ;Trampoline for page $2a00 reading (continue)
+              2afb 0122  ld   [$22]
               2afc 8002  adda $02
               2afd 1404  ld   $04,y
               2afe fe00  bra  ac
-              2aff e0a3  jmp  y,$a3
+              2aff e0ac  jmp  y,$ac
               2b00 00aa  ld   $aa         ;Pixels for packedParrot line 16
               2b01 0055  ld   $55
               2b02 0001  ld   $01
@@ -10257,8 +10265,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2b78 0200  nop
               2b79 fe00  bra  ac          ;Trampoline for page $2b00 reading (entry)
               2b7a fc7b  bra  $2b7b
-              2b7b c225  st   [$25]
-              2b7c 0123  ld   [$23]
+              2b7b c224  st   [$24]
+              2b7c 0122  ld   [$22]
               2b7d 8001  adda $01
               2b7e fe00  bra  ac
               2b7f fcfa  bra  $2bfa
@@ -10377,12 +10385,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2bf7 0010  ld   $10
               2bf8 0200  nop
               2bf9 0200  nop
-              2bfa c226  st   [$26]       ;Trampoline for page $2b00 reading (continue)
-              2bfb 0123  ld   [$23]
+              2bfa c225  st   [$25]       ;Trampoline for page $2b00 reading (continue)
+              2bfb 0122  ld   [$22]
               2bfc 8002  adda $02
               2bfd 1404  ld   $04,y
               2bfe fe00  bra  ac
-              2bff e0a3  jmp  y,$a3
+              2bff e0ac  jmp  y,$ac
               2c00 0001  ld   $01         ;Pixels for packedParrot line 18
               2c01 0000  ld   $00
               2c02 0000  ld   $00
@@ -10495,8 +10503,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2c78 0200  nop
               2c79 fe00  bra  ac          ;Trampoline for page $2c00 reading (entry)
               2c7a fc7b  bra  $2c7b
-              2c7b c225  st   [$25]
-              2c7c 0123  ld   [$23]
+              2c7b c224  st   [$24]
+              2c7c 0122  ld   [$22]
               2c7d 8001  adda $01
               2c7e fe00  bra  ac
               2c7f fcfa  bra  $2cfa
@@ -10612,12 +10620,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2cf7 0011  ld   $11
               2cf8 0200  nop
               2cf9 0200  nop
-              2cfa c226  st   [$26]       ;Trampoline for page $2c00 reading (continue)
-              2cfb 0123  ld   [$23]
+              2cfa c225  st   [$25]       ;Trampoline for page $2c00 reading (continue)
+              2cfb 0122  ld   [$22]
               2cfc 8002  adda $02
               2cfd 1404  ld   $04,y
               2cfe fe00  bra  ac
-              2cff e0a3  jmp  y,$a3
+              2cff e0ac  jmp  y,$ac
               2d00 0000  ld   $00         ;Pixels for packedParrot line 20
               2d01 0000  ld   $00
               2d02 0000  ld   $00
@@ -10740,8 +10748,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2d78 0200  nop
               2d79 fe00  bra  ac          ;Trampoline for page $2d00 reading (entry)
               2d7a fc7b  bra  $2d7b
-              2d7b c225  st   [$25]
-              2d7c 0123  ld   [$23]
+              2d7b c224  st   [$24]
+              2d7c 0122  ld   [$22]
               2d7d 8001  adda $01
               2d7e fe00  bra  ac
               2d7f fcfa  bra  $2dfa
@@ -10867,12 +10875,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2df7 0000  ld   $00
               2df8 0200  nop
               2df9 0200  nop
-              2dfa c226  st   [$26]       ;Trampoline for page $2d00 reading (continue)
-              2dfb 0123  ld   [$23]
+              2dfa c225  st   [$25]       ;Trampoline for page $2d00 reading (continue)
+              2dfb 0122  ld   [$22]
               2dfc 8002  adda $02
               2dfd 1404  ld   $04,y
               2dfe fe00  bra  ac
-              2dff e0a3  jmp  y,$a3
+              2dff e0ac  jmp  y,$ac
               2e00 0000  ld   $00         ;Pixels for packedParrot line 22
               2e01 0000  ld   $00
               2e02 0000  ld   $00
@@ -10996,8 +11004,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2e78 0200  nop
               2e79 fe00  bra  ac          ;Trampoline for page $2e00 reading (entry)
               2e7a fc7b  bra  $2e7b
-              2e7b c225  st   [$25]
-              2e7c 0123  ld   [$23]
+              2e7b c224  st   [$24]
+              2e7c 0122  ld   [$22]
               2e7d 8001  adda $01
               2e7e fe00  bra  ac
               2e7f fcfa  bra  $2efa
@@ -11123,12 +11131,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2ef7 0025  ld   $25
               2ef8 0200  nop
               2ef9 0200  nop
-              2efa c226  st   [$26]       ;Trampoline for page $2e00 reading (continue)
-              2efb 0123  ld   [$23]
+              2efa c225  st   [$25]       ;Trampoline for page $2e00 reading (continue)
+              2efb 0122  ld   [$22]
               2efc 8002  adda $02
               2efd 1404  ld   $04,y
               2efe fe00  bra  ac
-              2eff e0a3  jmp  y,$a3
+              2eff e0ac  jmp  y,$ac
               2f00 0000  ld   $00         ;Pixels for packedParrot line 24
               2f01 0000  ld   $00
               2f02 0000  ld   $00
@@ -11250,8 +11258,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2f78 0200  nop
               2f79 fe00  bra  ac          ;Trampoline for page $2f00 reading (entry)
               2f7a fc7b  bra  $2f7b
-              2f7b c225  st   [$25]
-              2f7c 0123  ld   [$23]
+              2f7b c224  st   [$24]
+              2f7c 0122  ld   [$22]
               2f7d 8001  adda $01
               2f7e fe00  bra  ac
               2f7f fcfa  bra  $2ffa
@@ -11375,12 +11383,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2ff7 00aa  ld   $aa
               2ff8 0200  nop
               2ff9 0200  nop
-              2ffa c226  st   [$26]       ;Trampoline for page $2f00 reading (continue)
-              2ffb 0123  ld   [$23]
+              2ffa c225  st   [$25]       ;Trampoline for page $2f00 reading (continue)
+              2ffb 0122  ld   [$22]
               2ffc 8002  adda $02
               2ffd 1404  ld   $04,y
               2ffe fe00  bra  ac
-              2fff e0a3  jmp  y,$a3
+              2fff e0ac  jmp  y,$ac
               3000 0000  ld   $00         ;Pixels for packedParrot line 26
               3001 0040  ld   $40
               3002 0000  ld   $00
@@ -11504,8 +11512,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3078 0200  nop
               3079 fe00  bra  ac          ;Trampoline for page $3000 reading (entry)
               307a fc7b  bra  $307b
-              307b c225  st   [$25]
-              307c 0123  ld   [$23]
+              307b c224  st   [$24]
+              307c 0122  ld   [$22]
               307d 8001  adda $01
               307e fe00  bra  ac
               307f fcfa  bra  $30fa
@@ -11627,12 +11635,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               30f7 0014  ld   $14
               30f8 0200  nop
               30f9 0200  nop
-              30fa c226  st   [$26]       ;Trampoline for page $3000 reading (continue)
-              30fb 0123  ld   [$23]
+              30fa c225  st   [$25]       ;Trampoline for page $3000 reading (continue)
+              30fb 0122  ld   [$22]
               30fc 8002  adda $02
               30fd 1404  ld   $04,y
               30fe fe00  bra  ac
-              30ff e0a3  jmp  y,$a3
+              30ff e0ac  jmp  y,$ac
               3100 0000  ld   $00         ;Pixels for packedParrot line 28
               3101 0000  ld   $00
               3102 0000  ld   $00
@@ -11747,8 +11755,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3178 0200  nop
               3179 fe00  bra  ac          ;Trampoline for page $3100 reading (entry)
               317a fc7b  bra  $317b
-              317b c225  st   [$25]
-              317c 0123  ld   [$23]
+              317b c224  st   [$24]
+              317c 0122  ld   [$22]
               317d 8001  adda $01
               317e fe00  bra  ac
               317f fcfa  bra  $31fa
@@ -11861,12 +11869,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               31f7 0024  ld   $24
               31f8 0200  nop
               31f9 0200  nop
-              31fa c226  st   [$26]       ;Trampoline for page $3100 reading (continue)
-              31fb 0123  ld   [$23]
+              31fa c225  st   [$25]       ;Trampoline for page $3100 reading (continue)
+              31fb 0122  ld   [$22]
               31fc 8002  adda $02
               31fd 1404  ld   $04,y
               31fe fe00  bra  ac
-              31ff e0a3  jmp  y,$a3
+              31ff e0ac  jmp  y,$ac
               3200 0000  ld   $00         ;Pixels for packedParrot line 30
               3201 0000  ld   $00
               3202 0000  ld   $00
@@ -11979,8 +11987,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3278 0200  nop
               3279 fe00  bra  ac          ;Trampoline for page $3200 reading (entry)
               327a fc7b  bra  $327b
-              327b c225  st   [$25]
-              327c 0123  ld   [$23]
+              327b c224  st   [$24]
+              327c 0122  ld   [$22]
               327d 8001  adda $01
               327e fe00  bra  ac
               327f fcfa  bra  $32fa
@@ -12090,12 +12098,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               32f7 0025  ld   $25
               32f8 0200  nop
               32f9 0200  nop
-              32fa c226  st   [$26]       ;Trampoline for page $3200 reading (continue)
-              32fb 0123  ld   [$23]
+              32fa c225  st   [$25]       ;Trampoline for page $3200 reading (continue)
+              32fb 0122  ld   [$22]
               32fc 8002  adda $02
               32fd 1404  ld   $04,y
               32fe fe00  bra  ac
-              32ff e0a3  jmp  y,$a3
+              32ff e0ac  jmp  y,$ac
               3300 0000  ld   $00         ;Pixels for packedParrot line 32
               3301 0000  ld   $00
               3302 0000  ld   $00
@@ -12206,8 +12214,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3378 0200  nop
               3379 fe00  bra  ac          ;Trampoline for page $3300 reading (entry)
               337a fc7b  bra  $337b
-              337b c225  st   [$25]
-              337c 0123  ld   [$23]
+              337b c224  st   [$24]
+              337c 0122  ld   [$22]
               337d 8001  adda $01
               337e fe00  bra  ac
               337f fcfa  bra  $33fa
@@ -12323,12 +12331,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               33f7 0014  ld   $14
               33f8 0200  nop
               33f9 0200  nop
-              33fa c226  st   [$26]       ;Trampoline for page $3300 reading (continue)
-              33fb 0123  ld   [$23]
+              33fa c225  st   [$25]       ;Trampoline for page $3300 reading (continue)
+              33fb 0122  ld   [$22]
               33fc 8002  adda $02
               33fd 1404  ld   $04,y
               33fe fe00  bra  ac
-              33ff e0a3  jmp  y,$a3
+              33ff e0ac  jmp  y,$ac
               3400 0000  ld   $00         ;Pixels for packedParrot line 34
               3401 0000  ld   $00
               3402 0000  ld   $00
@@ -12442,8 +12450,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3478 0200  nop
               3479 fe00  bra  ac          ;Trampoline for page $3400 reading (entry)
               347a fc7b  bra  $347b
-              347b c225  st   [$25]
-              347c 0123  ld   [$23]
+              347b c224  st   [$24]
+              347c 0122  ld   [$22]
               347d 8001  adda $01
               347e fe00  bra  ac
               347f fcfa  bra  $34fa
@@ -12564,12 +12572,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               34f7 0010  ld   $10
               34f8 0200  nop
               34f9 0200  nop
-              34fa c226  st   [$26]       ;Trampoline for page $3400 reading (continue)
-              34fb 0123  ld   [$23]
+              34fa c225  st   [$25]       ;Trampoline for page $3400 reading (continue)
+              34fb 0122  ld   [$22]
               34fc 8002  adda $02
               34fd 1404  ld   $04,y
               34fe fe00  bra  ac
-              34ff e0a3  jmp  y,$a3
+              34ff e0ac  jmp  y,$ac
               3500 0000  ld   $00         ;Pixels for packedParrot line 36
               3501 0004  ld   $04
               3502 0000  ld   $00
@@ -12691,8 +12699,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3578 0200  nop
               3579 fe00  bra  ac          ;Trampoline for page $3500 reading (entry)
               357a fc7b  bra  $357b
-              357b c225  st   [$25]
-              357c 0123  ld   [$23]
+              357b c224  st   [$24]
+              357c 0122  ld   [$22]
               357d 8001  adda $01
               357e fe00  bra  ac
               357f fcfa  bra  $35fa
@@ -12818,12 +12826,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               35f7 0005  ld   $05
               35f8 0200  nop
               35f9 0200  nop
-              35fa c226  st   [$26]       ;Trampoline for page $3500 reading (continue)
-              35fb 0123  ld   [$23]
+              35fa c225  st   [$25]       ;Trampoline for page $3500 reading (continue)
+              35fb 0122  ld   [$22]
               35fc 8002  adda $02
               35fd 1404  ld   $04,y
               35fe fe00  bra  ac
-              35ff e0a3  jmp  y,$a3
+              35ff e0ac  jmp  y,$ac
               3600 00aa  ld   $aa         ;Pixels for packedParrot line 38
               3601 00ea  ld   $ea
               3602 00aa  ld   $aa
@@ -12946,8 +12954,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3678 0200  nop
               3679 fe00  bra  ac          ;Trampoline for page $3600 reading (entry)
               367a fc7b  bra  $367b
-              367b c225  st   [$25]
-              367c 0123  ld   [$23]
+              367b c224  st   [$24]
+              367c 0122  ld   [$22]
               367d 8001  adda $01
               367e fe00  bra  ac
               367f fcfa  bra  $36fa
@@ -13073,12 +13081,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               36f7 006d  ld   $6d
               36f8 0200  nop
               36f9 0200  nop
-              36fa c226  st   [$26]       ;Trampoline for page $3600 reading (continue)
-              36fb 0123  ld   [$23]
+              36fa c225  st   [$25]       ;Trampoline for page $3600 reading (continue)
+              36fb 0122  ld   [$22]
               36fc 8002  adda $02
               36fd 1404  ld   $04,y
               36fe fe00  bra  ac
-              36ff e0a3  jmp  y,$a3
+              36ff e0ac  jmp  y,$ac
               3700 0059  ld   $59         ;Pixels for packedParrot line 40
               3701 0092  ld   $92
               3702 0065  ld   $65
@@ -13201,8 +13209,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3778 0200  nop
               3779 fe00  bra  ac          ;Trampoline for page $3700 reading (entry)
               377a fc7b  bra  $377b
-              377b c225  st   [$25]
-              377c 0123  ld   [$23]
+              377b c224  st   [$24]
+              377c 0122  ld   [$22]
               377d 8001  adda $01
               377e fe00  bra  ac
               377f fcfa  bra  $37fa
@@ -13326,12 +13334,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               37f7 007d  ld   $7d
               37f8 0200  nop
               37f9 0200  nop
-              37fa c226  st   [$26]       ;Trampoline for page $3700 reading (continue)
-              37fb 0123  ld   [$23]
+              37fa c225  st   [$25]       ;Trampoline for page $3700 reading (continue)
+              37fb 0122  ld   [$22]
               37fc 8002  adda $02
               37fd 1404  ld   $04,y
               37fe fe00  bra  ac
-              37ff e0a3  jmp  y,$a3
+              37ff e0ac  jmp  y,$ac
               3800 0049  ld   $49         ;Pixels for packedParrot line 42
               3801 0092  ld   $92
               3802 0024  ld   $24
@@ -13451,8 +13459,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3878 0200  nop
               3879 fe00  bra  ac          ;Trampoline for page $3800 reading (entry)
               387a fc7b  bra  $387b
-              387b c225  st   [$25]
-              387c 0123  ld   [$23]
+              387b c224  st   [$24]
+              387c 0122  ld   [$22]
               387d 8001  adda $01
               387e fe00  bra  ac
               387f fcfa  bra  $38fa
@@ -13577,12 +13585,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               38f7 0010  ld   $10
               38f8 0200  nop
               38f9 0200  nop
-              38fa c226  st   [$26]       ;Trampoline for page $3800 reading (continue)
-              38fb 0123  ld   [$23]
+              38fa c225  st   [$25]       ;Trampoline for page $3800 reading (continue)
+              38fb 0122  ld   [$22]
               38fc 8002  adda $02
               38fd 1404  ld   $04,y
               38fe fe00  bra  ac
-              38ff e0a3  jmp  y,$a3
+              38ff e0ac  jmp  y,$ac
               3900 0045  ld   $45         ;Pixels for packedParrot line 44
               3901 0055  ld   $55
               3902 0050  ld   $50
@@ -13706,8 +13714,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3978 0200  nop
               3979 fe00  bra  ac          ;Trampoline for page $3900 reading (entry)
               397a fc7b  bra  $397b
-              397b c225  st   [$25]
-              397c 0123  ld   [$23]
+              397b c224  st   [$24]
+              397c 0122  ld   [$22]
               397d 8001  adda $01
               397e fe00  bra  ac
               397f fcfa  bra  $39fa
@@ -13833,12 +13841,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               39f7 0001  ld   $01
               39f8 0200  nop
               39f9 0200  nop
-              39fa c226  st   [$26]       ;Trampoline for page $3900 reading (continue)
-              39fb 0123  ld   [$23]
+              39fa c225  st   [$25]       ;Trampoline for page $3900 reading (continue)
+              39fb 0122  ld   [$22]
               39fc 8002  adda $02
               39fd 1404  ld   $04,y
               39fe fe00  bra  ac
-              39ff e0a3  jmp  y,$a3
+              39ff e0ac  jmp  y,$ac
               3a00 0055  ld   $55         ;Pixels for packedParrot line 46
               3a01 00a6  ld   $a6
               3a02 00a9  ld   $a9
@@ -13962,8 +13970,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3a78 0200  nop
               3a79 fe00  bra  ac          ;Trampoline for page $3a00 reading (entry)
               3a7a fc7b  bra  $3a7b
-              3a7b c225  st   [$25]
-              3a7c 0123  ld   [$23]
+              3a7b c224  st   [$24]
+              3a7c 0122  ld   [$22]
               3a7d 8001  adda $01
               3a7e fe00  bra  ac
               3a7f fcfa  bra  $3afa
@@ -14089,12 +14097,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3af7 0002  ld   $02
               3af8 0200  nop
               3af9 0200  nop
-              3afa c226  st   [$26]       ;Trampoline for page $3a00 reading (continue)
-              3afb 0123  ld   [$23]
+              3afa c225  st   [$25]       ;Trampoline for page $3a00 reading (continue)
+              3afb 0122  ld   [$22]
               3afc 8002  adda $02
               3afd 1404  ld   $04,y
               3afe fe00  bra  ac
-              3aff e0a3  jmp  y,$a3
+              3aff e0ac  jmp  y,$ac
               3b00 0049  ld   $49         ;Pixels for packedParrot line 48
               3b01 0092  ld   $92
               3b02 0024  ld   $24
@@ -14218,8 +14226,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3b78 0200  nop
               3b79 fe00  bra  ac          ;Trampoline for page $3b00 reading (entry)
               3b7a fc7b  bra  $3b7b
-              3b7b c225  st   [$25]
-              3b7c 0123  ld   [$23]
+              3b7b c224  st   [$24]
+              3b7c 0122  ld   [$22]
               3b7d 8001  adda $01
               3b7e fe00  bra  ac
               3b7f fcfa  bra  $3bfa
@@ -14345,12 +14353,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3bf7 0001  ld   $01
               3bf8 0200  nop
               3bf9 0200  nop
-              3bfa c226  st   [$26]       ;Trampoline for page $3b00 reading (continue)
-              3bfb 0123  ld   [$23]
+              3bfa c225  st   [$25]       ;Trampoline for page $3b00 reading (continue)
+              3bfb 0122  ld   [$22]
               3bfc 8002  adda $02
               3bfd 1404  ld   $04,y
               3bfe fe00  bra  ac
-              3bff e0a3  jmp  y,$a3
+              3bff e0ac  jmp  y,$ac
               3c00 0099  ld   $99         ;Pixels for packedParrot line 50
               3c01 009a  ld   $9a
               3c02 0055  ld   $55
@@ -14474,8 +14482,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3c78 0200  nop
               3c79 fe00  bra  ac          ;Trampoline for page $3c00 reading (entry)
               3c7a fc7b  bra  $3c7b
-              3c7b c225  st   [$25]
-              3c7c 0123  ld   [$23]
+              3c7b c224  st   [$24]
+              3c7c 0122  ld   [$22]
               3c7d 8001  adda $01
               3c7e fe00  bra  ac
               3c7f fcfa  bra  $3cfa
@@ -14601,12 +14609,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3cf7 0002  ld   $02
               3cf8 0200  nop
               3cf9 0200  nop
-              3cfa c226  st   [$26]       ;Trampoline for page $3c00 reading (continue)
-              3cfb 0123  ld   [$23]
+              3cfa c225  st   [$25]       ;Trampoline for page $3c00 reading (continue)
+              3cfb 0122  ld   [$22]
               3cfc 8002  adda $02
               3cfd 1404  ld   $04,y
               3cfe fe00  bra  ac
-              3cff e0a3  jmp  y,$a3
+              3cff e0ac  jmp  y,$ac
               3d00 0044  ld   $44         ;Pixels for packedParrot line 52
               3d01 0091  ld   $91
               3d02 0069  ld   $69
@@ -14730,8 +14738,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3d78 0200  nop
               3d79 fe00  bra  ac          ;Trampoline for page $3d00 reading (entry)
               3d7a fc7b  bra  $3d7b
-              3d7b c225  st   [$25]
-              3d7c 0123  ld   [$23]
+              3d7b c224  st   [$24]
+              3d7c 0122  ld   [$22]
               3d7d 8001  adda $01
               3d7e fe00  bra  ac
               3d7f fcfa  bra  $3dfa
@@ -14857,12 +14865,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3df7 0002  ld   $02
               3df8 0200  nop
               3df9 0200  nop
-              3dfa c226  st   [$26]       ;Trampoline for page $3d00 reading (continue)
-              3dfb 0123  ld   [$23]
+              3dfa c225  st   [$25]       ;Trampoline for page $3d00 reading (continue)
+              3dfb 0122  ld   [$22]
               3dfc 8002  adda $02
               3dfd 1404  ld   $04,y
               3dfe fe00  bra  ac
-              3dff e0a3  jmp  y,$a3
+              3dff e0ac  jmp  y,$ac
               3e00 0099  ld   $99         ;Pixels for packedParrot line 54
               3e01 0096  ld   $96
               3e02 0079  ld   $79
@@ -14986,8 +14994,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3e78 0200  nop
               3e79 fe00  bra  ac          ;Trampoline for page $3e00 reading (entry)
               3e7a fc7b  bra  $3e7b
-              3e7b c225  st   [$25]
-              3e7c 0123  ld   [$23]
+              3e7b c224  st   [$24]
+              3e7c 0122  ld   [$22]
               3e7d 8001  adda $01
               3e7e fe00  bra  ac
               3e7f fcfa  bra  $3efa
@@ -15113,12 +15121,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3ef7 0002  ld   $02
               3ef8 0200  nop
               3ef9 0200  nop
-              3efa c226  st   [$26]       ;Trampoline for page $3e00 reading (continue)
-              3efb 0123  ld   [$23]
+              3efa c225  st   [$25]       ;Trampoline for page $3e00 reading (continue)
+              3efb 0122  ld   [$22]
               3efc 8002  adda $02
               3efd 1404  ld   $04,y
               3efe fe00  bra  ac
-              3eff e0a3  jmp  y,$a3
+              3eff e0ac  jmp  y,$ac
               3f00 0049  ld   $49         ;Pixels for packedParrot line 56
               3f01 0056  ld   $56
               3f02 0024  ld   $24
@@ -15242,8 +15250,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3f78 0200  nop
               3f79 fe00  bra  ac          ;Trampoline for page $3f00 reading (entry)
               3f7a fc7b  bra  $3f7b
-              3f7b c225  st   [$25]
-              3f7c 0123  ld   [$23]
+              3f7b c224  st   [$24]
+              3f7c 0122  ld   [$22]
               3f7d 8001  adda $01
               3f7e fe00  bra  ac
               3f7f fcfa  bra  $3ffa
@@ -15369,12 +15377,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               3ff7 0016  ld   $16
               3ff8 0200  nop
               3ff9 0200  nop
-              3ffa c226  st   [$26]       ;Trampoline for page $3f00 reading (continue)
-              3ffb 0123  ld   [$23]
+              3ffa c225  st   [$25]       ;Trampoline for page $3f00 reading (continue)
+              3ffb 0122  ld   [$22]
               3ffc 8002  adda $02
               3ffd 1404  ld   $04,y
               3ffe fe00  bra  ac
-              3fff e0a3  jmp  y,$a3
+              3fff e0ac  jmp  y,$ac
               4000 0000  ld   $00         ;Pixels for packedParrot line 58
               4001 0000  ld   $00
               4002 0010  ld   $10
@@ -15498,8 +15506,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4078 0200  nop
               4079 fe00  bra  ac          ;Trampoline for page $4000 reading (entry)
               407a fc7b  bra  $407b
-              407b c225  st   [$25]
-              407c 0123  ld   [$23]
+              407b c224  st   [$24]
+              407c 0122  ld   [$22]
               407d 8001  adda $01
               407e fe00  bra  ac
               407f fcfa  bra  $40fa
@@ -15625,12 +15633,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               40f7 0001  ld   $01
               40f8 0200  nop
               40f9 0200  nop
-              40fa c226  st   [$26]       ;Trampoline for page $4000 reading (continue)
-              40fb 0123  ld   [$23]
+              40fa c225  st   [$25]       ;Trampoline for page $4000 reading (continue)
+              40fb 0122  ld   [$22]
               40fc 8002  adda $02
               40fd 1404  ld   $04,y
               40fe fe00  bra  ac
-              40ff e0a3  jmp  y,$a3
+              40ff e0ac  jmp  y,$ac
               4100 0049  ld   $49         ;Pixels for packedParrot line 60
               4101 0092  ld   $92
               4102 0025  ld   $25
@@ -15754,8 +15762,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4178 0200  nop
               4179 fe00  bra  ac          ;Trampoline for page $4100 reading (entry)
               417a fc7b  bra  $417b
-              417b c225  st   [$25]
-              417c 0123  ld   [$23]
+              417b c224  st   [$24]
+              417c 0122  ld   [$22]
               417d 8001  adda $01
               417e fe00  bra  ac
               417f fcfa  bra  $41fa
@@ -15881,12 +15889,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               41f7 0010  ld   $10
               41f8 0200  nop
               41f9 0200  nop
-              41fa c226  st   [$26]       ;Trampoline for page $4100 reading (continue)
-              41fb 0123  ld   [$23]
+              41fa c225  st   [$25]       ;Trampoline for page $4100 reading (continue)
+              41fb 0122  ld   [$22]
               41fc 8002  adda $02
               41fd 1404  ld   $04,y
               41fe fe00  bra  ac
-              41ff e0a3  jmp  y,$a3
+              41ff e0ac  jmp  y,$ac
               4200 0099  ld   $99         ;Pixels for packedParrot line 62
               4201 0092  ld   $92
               4202 0064  ld   $64
@@ -16010,8 +16018,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4278 0200  nop
               4279 fe00  bra  ac          ;Trampoline for page $4200 reading (entry)
               427a fc7b  bra  $427b
-              427b c225  st   [$25]
-              427c 0123  ld   [$23]
+              427b c224  st   [$24]
+              427c 0122  ld   [$22]
               427d 8001  adda $01
               427e fe00  bra  ac
               427f fcfa  bra  $42fa
@@ -16137,12 +16145,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               42f7 0054  ld   $54
               42f8 0200  nop
               42f9 0200  nop
-              42fa c226  st   [$26]       ;Trampoline for page $4200 reading (continue)
-              42fb 0123  ld   [$23]
+              42fa c225  st   [$25]       ;Trampoline for page $4200 reading (continue)
+              42fb 0122  ld   [$22]
               42fc 8002  adda $02
               42fd 1404  ld   $04,y
               42fe fe00  bra  ac
-              42ff e0a3  jmp  y,$a3
+              42ff e0ac  jmp  y,$ac
               4300 0005  ld   $05         ;Pixels for packedParrot line 64
               4301 0000  ld   $00
               4302 0000  ld   $00
@@ -16265,8 +16273,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4378 0200  nop
               4379 fe00  bra  ac          ;Trampoline for page $4300 reading (entry)
               437a fc7b  bra  $437b
-              437b c225  st   [$25]
-              437c 0123  ld   [$23]
+              437b c224  st   [$24]
+              437c 0122  ld   [$22]
               437d 8001  adda $01
               437e fe00  bra  ac
               437f fcfa  bra  $43fa
@@ -16390,12 +16398,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               43f7 0014  ld   $14
               43f8 0200  nop
               43f9 0200  nop
-              43fa c226  st   [$26]       ;Trampoline for page $4300 reading (continue)
-              43fb 0123  ld   [$23]
+              43fa c225  st   [$25]       ;Trampoline for page $4300 reading (continue)
+              43fb 0122  ld   [$22]
               43fc 8002  adda $02
               43fd 1404  ld   $04,y
               43fe fe00  bra  ac
-              43ff e0a3  jmp  y,$a3
+              43ff e0ac  jmp  y,$ac
               4400 0045  ld   $45         ;Pixels for packedParrot line 66
               4401 0041  ld   $41
               4402 0054  ld   $54
@@ -16516,8 +16524,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4478 0200  nop
               4479 fe00  bra  ac          ;Trampoline for page $4400 reading (entry)
               447a fc7b  bra  $447b
-              447b c225  st   [$25]
-              447c 0123  ld   [$23]
+              447b c224  st   [$24]
+              447c 0122  ld   [$22]
               447d 8001  adda $01
               447e fe00  bra  ac
               447f fcfa  bra  $44fa
@@ -16643,12 +16651,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               44f7 0069  ld   $69
               44f8 0200  nop
               44f9 0200  nop
-              44fa c226  st   [$26]       ;Trampoline for page $4400 reading (continue)
-              44fb 0123  ld   [$23]
+              44fa c225  st   [$25]       ;Trampoline for page $4400 reading (continue)
+              44fb 0122  ld   [$22]
               44fc 8002  adda $02
               44fd 1404  ld   $04,y
               44fe fe00  bra  ac
-              44ff e0a3  jmp  y,$a3
+              44ff e0ac  jmp  y,$ac
               4500 0049  ld   $49         ;Pixels for packedParrot line 68
               4501 00a5  ld   $a5
               4502 0055  ld   $55
@@ -16771,8 +16779,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4578 0200  nop
               4579 fe00  bra  ac          ;Trampoline for page $4500 reading (entry)
               457a fc7b  bra  $457b
-              457b c225  st   [$25]
-              457c 0123  ld   [$23]
+              457b c224  st   [$24]
+              457c 0122  ld   [$22]
               457d 8001  adda $01
               457e fe00  bra  ac
               457f fcfa  bra  $45fa
@@ -16898,12 +16906,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               45f7 0064  ld   $64
               45f8 0200  nop
               45f9 0200  nop
-              45fa c226  st   [$26]       ;Trampoline for page $4500 reading (continue)
-              45fb 0123  ld   [$23]
+              45fa c225  st   [$25]       ;Trampoline for page $4500 reading (continue)
+              45fb 0122  ld   [$22]
               45fc 8002  adda $02
               45fd 1404  ld   $04,y
               45fe fe00  bra  ac
-              45ff e0a3  jmp  y,$a3
+              45ff e0ac  jmp  y,$ac
               4600 0095  ld   $95         ;Pixels for packedParrot line 70
               4601 00a6  ld   $a6
               4602 006a  ld   $6a
@@ -17027,8 +17035,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4678 0200  nop
               4679 fe00  bra  ac          ;Trampoline for page $4600 reading (entry)
               467a fc7b  bra  $467b
-              467b c225  st   [$25]
-              467c 0123  ld   [$23]
+              467b c224  st   [$24]
+              467c 0122  ld   [$22]
               467d 8001  adda $01
               467e fe00  bra  ac
               467f fcfa  bra  $46fa
@@ -17154,12 +17162,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               46f7 0014  ld   $14
               46f8 0200  nop
               46f9 0200  nop
-              46fa c226  st   [$26]       ;Trampoline for page $4600 reading (continue)
-              46fb 0123  ld   [$23]
+              46fa c225  st   [$25]       ;Trampoline for page $4600 reading (continue)
+              46fb 0122  ld   [$22]
               46fc 8002  adda $02
               46fd 1404  ld   $04,y
               46fe fe00  bra  ac
-              46ff e0a3  jmp  y,$a3
+              46ff e0ac  jmp  y,$ac
               4700 0055  ld   $55         ;Pixels for packedParrot line 72
               4701 00a5  ld   $a5
               4702 0056  ld   $56
@@ -17283,8 +17291,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4778 0200  nop
               4779 fe00  bra  ac          ;Trampoline for page $4700 reading (entry)
               477a fc7b  bra  $477b
-              477b c225  st   [$25]
-              477c 0123  ld   [$23]
+              477b c224  st   [$24]
+              477c 0122  ld   [$22]
               477d 8001  adda $01
               477e fe00  bra  ac
               477f fcfa  bra  $47fa
@@ -17410,12 +17418,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               47f7 0055  ld   $55
               47f8 0200  nop
               47f9 0200  nop
-              47fa c226  st   [$26]       ;Trampoline for page $4700 reading (continue)
-              47fb 0123  ld   [$23]
+              47fa c225  st   [$25]       ;Trampoline for page $4700 reading (continue)
+              47fb 0122  ld   [$22]
               47fc 8002  adda $02
               47fd 1404  ld   $04,y
               47fe fe00  bra  ac
-              47ff e0a3  jmp  y,$a3
+              47ff e0ac  jmp  y,$ac
               4800 0045  ld   $45         ;Pixels for packedParrot line 74
               4801 0051  ld   $51
               4802 0014  ld   $14
@@ -17539,8 +17547,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4878 0200  nop
               4879 fe00  bra  ac          ;Trampoline for page $4800 reading (entry)
               487a fc7b  bra  $487b
-              487b c225  st   [$25]
-              487c 0123  ld   [$23]
+              487b c224  st   [$24]
+              487c 0122  ld   [$22]
               487d 8001  adda $01
               487e fe00  bra  ac
               487f fcfa  bra  $48fa
@@ -17666,12 +17674,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               48f7 0000  ld   $00
               48f8 0200  nop
               48f9 0200  nop
-              48fa c226  st   [$26]       ;Trampoline for page $4800 reading (continue)
-              48fb 0123  ld   [$23]
+              48fa c225  st   [$25]       ;Trampoline for page $4800 reading (continue)
+              48fb 0122  ld   [$22]
               48fc 8002  adda $02
               48fd 1404  ld   $04,y
               48fe fe00  bra  ac
-              48ff e0a3  jmp  y,$a3
+              48ff e0ac  jmp  y,$ac
               4900 0059  ld   $59         ;Pixels for packedParrot line 76
               4901 0052  ld   $52
               4902 0010  ld   $10
@@ -17795,8 +17803,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4978 0200  nop
               4979 fe00  bra  ac          ;Trampoline for page $4900 reading (entry)
               497a fc7b  bra  $497b
-              497b c225  st   [$25]
-              497c 0123  ld   [$23]
+              497b c224  st   [$24]
+              497c 0122  ld   [$22]
               497d 8001  adda $01
               497e fe00  bra  ac
               497f fcfa  bra  $49fa
@@ -17922,12 +17930,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               49f7 0010  ld   $10
               49f8 0200  nop
               49f9 0200  nop
-              49fa c226  st   [$26]       ;Trampoline for page $4900 reading (continue)
-              49fb 0123  ld   [$23]
+              49fa c225  st   [$25]       ;Trampoline for page $4900 reading (continue)
+              49fb 0122  ld   [$22]
               49fc 8002  adda $02
               49fd 1404  ld   $04,y
               49fe fe00  bra  ac
-              49ff e0a3  jmp  y,$a3
+              49ff e0ac  jmp  y,$ac
               4a00 0045  ld   $45         ;Pixels for packedParrot line 78
               4a01 00a2  ld   $a2
               4a02 0069  ld   $69
@@ -18051,8 +18059,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4a78 0200  nop
               4a79 fe00  bra  ac          ;Trampoline for page $4a00 reading (entry)
               4a7a fc7b  bra  $4a7b
-              4a7b c225  st   [$25]
-              4a7c 0123  ld   [$23]
+              4a7b c224  st   [$24]
+              4a7c 0122  ld   [$22]
               4a7d 8001  adda $01
               4a7e fe00  bra  ac
               4a7f fcfa  bra  $4afa
@@ -18178,12 +18186,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4af7 0000  ld   $00
               4af8 0200  nop
               4af9 0200  nop
-              4afa c226  st   [$26]       ;Trampoline for page $4a00 reading (continue)
-              4afb 0123  ld   [$23]
+              4afa c225  st   [$25]       ;Trampoline for page $4a00 reading (continue)
+              4afb 0122  ld   [$22]
               4afc 8002  adda $02
               4afd 1404  ld   $04,y
               4afe fe00  bra  ac
-              4aff e0a3  jmp  y,$a3
+              4aff e0ac  jmp  y,$ac
               4b00 0099  ld   $99         ;Pixels for packedParrot line 80
               4b01 0056  ld   $56
               4b02 0024  ld   $24
@@ -18307,8 +18315,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4b78 0200  nop
               4b79 fe00  bra  ac          ;Trampoline for page $4b00 reading (entry)
               4b7a fc7b  bra  $4b7b
-              4b7b c225  st   [$25]
-              4b7c 0123  ld   [$23]
+              4b7b c224  st   [$24]
+              4b7c 0122  ld   [$22]
               4b7d 8001  adda $01
               4b7e fe00  bra  ac
               4b7f fcfa  bra  $4bfa
@@ -18434,12 +18442,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4bf7 0010  ld   $10
               4bf8 0200  nop
               4bf9 0200  nop
-              4bfa c226  st   [$26]       ;Trampoline for page $4b00 reading (continue)
-              4bfb 0123  ld   [$23]
+              4bfa c225  st   [$25]       ;Trampoline for page $4b00 reading (continue)
+              4bfb 0122  ld   [$22]
               4bfc 8002  adda $02
               4bfd 1404  ld   $04,y
               4bfe fe00  bra  ac
-              4bff e0a3  jmp  y,$a3
+              4bff e0ac  jmp  y,$ac
               4c00 0045  ld   $45         ;Pixels for packedParrot line 82
               4c01 0091  ld   $91
               4c02 0068  ld   $68
@@ -18563,8 +18571,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4c78 0200  nop
               4c79 fe00  bra  ac          ;Trampoline for page $4c00 reading (entry)
               4c7a fc7b  bra  $4c7b
-              4c7b c225  st   [$25]
-              4c7c 0123  ld   [$23]
+              4c7b c224  st   [$24]
+              4c7c 0122  ld   [$22]
               4c7d 8001  adda $01
               4c7e fe00  bra  ac
               4c7f fcfa  bra  $4cfa
@@ -18688,12 +18696,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               * 6 times
               4cf8 0200  nop
               4cf9 0200  nop
-              4cfa c226  st   [$26]       ;Trampoline for page $4c00 reading (continue)
-              4cfb 0123  ld   [$23]
+              4cfa c225  st   [$25]       ;Trampoline for page $4c00 reading (continue)
+              4cfb 0122  ld   [$22]
               4cfc 8002  adda $02
               4cfd 1404  ld   $04,y
               4cfe fe00  bra  ac
-              4cff e0a3  jmp  y,$a3
+              4cff e0ac  jmp  y,$ac
               4d00 0045  ld   $45         ;Pixels for packedParrot line 84
               4d01 0051  ld   $51
               4d02 0064  ld   $64
@@ -18817,8 +18825,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4d78 0200  nop
               4d79 fe00  bra  ac          ;Trampoline for page $4d00 reading (entry)
               4d7a fc7b  bra  $4d7b
-              4d7b c225  st   [$25]
-              4d7c 0123  ld   [$23]
+              4d7b c224  st   [$24]
+              4d7c 0122  ld   [$22]
               4d7d 8001  adda $01
               4d7e fe00  bra  ac
               4d7f fcfa  bra  $4dfa
@@ -18938,12 +18946,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               * 8 times
               4df8 0200  nop
               4df9 0200  nop
-              4dfa c226  st   [$26]       ;Trampoline for page $4d00 reading (continue)
-              4dfb 0123  ld   [$23]
+              4dfa c225  st   [$25]       ;Trampoline for page $4d00 reading (continue)
+              4dfb 0122  ld   [$22]
               4dfc 8002  adda $02
               4dfd 1404  ld   $04,y
               4dfe fe00  bra  ac
-              4dff e0a3  jmp  y,$a3
+              4dff e0ac  jmp  y,$ac
               4e00 0045  ld   $45         ;Pixels for packedParrot line 86
               4e01 0065  ld   $65
               4e02 0055  ld   $55
@@ -19066,8 +19074,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4e78 0200  nop
               4e79 fe00  bra  ac          ;Trampoline for page $4e00 reading (entry)
               4e7a fc7b  bra  $4e7b
-              4e7b c225  st   [$25]
-              4e7c 0123  ld   [$23]
+              4e7b c224  st   [$24]
+              4e7c 0122  ld   [$22]
               4e7d 8001  adda $01
               4e7e fe00  bra  ac
               4e7f fcfa  bra  $4efa
@@ -19193,12 +19201,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4ef7 0000  ld   $00
               4ef8 0200  nop
               4ef9 0200  nop
-              4efa c226  st   [$26]       ;Trampoline for page $4e00 reading (continue)
-              4efb 0123  ld   [$23]
+              4efa c225  st   [$25]       ;Trampoline for page $4e00 reading (continue)
+              4efb 0122  ld   [$22]
               4efc 8002  adda $02
               4efd 1404  ld   $04,y
               4efe fe00  bra  ac
-              4eff e0a3  jmp  y,$a3
+              4eff e0ac  jmp  y,$ac
               4f00 0005  ld   $05         ;Pixels for packedParrot line 88
               4f01 0051  ld   $51
               4f02 0014  ld   $14
@@ -19322,8 +19330,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4f78 0200  nop
               4f79 fe00  bra  ac          ;Trampoline for page $4f00 reading (entry)
               4f7a fc7b  bra  $4f7b
-              4f7b c225  st   [$25]
-              4f7c 0123  ld   [$23]
+              4f7b c224  st   [$24]
+              4f7c 0122  ld   [$22]
               4f7d 8001  adda $01
               4f7e fe00  bra  ac
               4f7f fcfa  bra  $4ffa
@@ -19449,12 +19457,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               4ff7 0000  ld   $00
               4ff8 0200  nop
               4ff9 0200  nop
-              4ffa c226  st   [$26]       ;Trampoline for page $4f00 reading (continue)
-              4ffb 0123  ld   [$23]
+              4ffa c225  st   [$25]       ;Trampoline for page $4f00 reading (continue)
+              4ffb 0122  ld   [$22]
               4ffc 8002  adda $02
               4ffd 1404  ld   $04,y
               4ffe fe00  bra  ac
-              4fff e0a3  jmp  y,$a3
+              4fff e0ac  jmp  y,$ac
               5000 004a  ld   $4a         ;Pixels for packedParrot line 90
               5001 0096  ld   $96
               5002 0010  ld   $10
@@ -19578,8 +19586,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5078 0200  nop
               5079 fe00  bra  ac          ;Trampoline for page $5000 reading (entry)
               507a fc7b  bra  $507b
-              507b c225  st   [$25]
-              507c 0123  ld   [$23]
+              507b c224  st   [$24]
+              507c 0122  ld   [$22]
               507d 8001  adda $01
               507e fe00  bra  ac
               507f fcfa  bra  $50fa
@@ -19705,12 +19713,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               50f7 00aa  ld   $aa
               50f8 0200  nop
               50f9 0200  nop
-              50fa c226  st   [$26]       ;Trampoline for page $5000 reading (continue)
-              50fb 0123  ld   [$23]
+              50fa c225  st   [$25]       ;Trampoline for page $5000 reading (continue)
+              50fb 0122  ld   [$22]
               50fc 8002  adda $02
               50fd 1404  ld   $04,y
               50fe fe00  bra  ac
-              50ff e0a3  jmp  y,$a3
+              50ff e0ac  jmp  y,$ac
               5100 008a  ld   $8a         ;Pixels for packedParrot line 92
               5101 00a7  ld   $a7
               5102 0068  ld   $68
@@ -19834,8 +19842,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5178 0200  nop
               5179 fe00  bra  ac          ;Trampoline for page $5100 reading (entry)
               517a fc7b  bra  $517b
-              517b c225  st   [$25]
-              517c 0123  ld   [$23]
+              517b c224  st   [$24]
+              517c 0122  ld   [$22]
               517d 8001  adda $01
               517e fe00  bra  ac
               517f fcfa  bra  $51fa
@@ -19961,12 +19969,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               51f7 00a5  ld   $a5
               51f8 0200  nop
               51f9 0200  nop
-              51fa c226  st   [$26]       ;Trampoline for page $5100 reading (continue)
-              51fb 0123  ld   [$23]
+              51fa c225  st   [$25]       ;Trampoline for page $5100 reading (continue)
+              51fb 0122  ld   [$22]
               51fc 8002  adda $02
               51fd 1404  ld   $04,y
               51fe fe00  bra  ac
-              51ff e0a3  jmp  y,$a3
+              51ff e0ac  jmp  y,$ac
               5200 0045  ld   $45         ;Pixels for packedParrot line 94
               5201 00a2  ld   $a2
               5202 0069  ld   $69
@@ -20090,8 +20098,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5278 0200  nop
               5279 fe00  bra  ac          ;Trampoline for page $5200 reading (entry)
               527a fc7b  bra  $527b
-              527b c225  st   [$25]
-              527c 0123  ld   [$23]
+              527b c224  st   [$24]
+              527c 0122  ld   [$22]
               527d 8001  adda $01
               527e fe00  bra  ac
               527f fcfa  bra  $52fa
@@ -20212,12 +20220,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               52f7 0095  ld   $95
               52f8 0200  nop
               52f9 0200  nop
-              52fa c226  st   [$26]       ;Trampoline for page $5200 reading (continue)
-              52fb 0123  ld   [$23]
+              52fa c225  st   [$25]       ;Trampoline for page $5200 reading (continue)
+              52fb 0122  ld   [$22]
               52fc 8002  adda $02
               52fd 1404  ld   $04,y
               52fe fe00  bra  ac
-              52ff e0a3  jmp  y,$a3
+              52ff e0ac  jmp  y,$ac
               5300 0005  ld   $05         ;Pixels for packedParrot line 96
               5301 0050  ld   $50
               5302 0000  ld   $00
@@ -20338,8 +20346,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5378 0200  nop
               5379 fe00  bra  ac          ;Trampoline for page $5300 reading (entry)
               537a fc7b  bra  $537b
-              537b c225  st   [$25]
-              537c 0123  ld   [$23]
+              537b c224  st   [$24]
+              537c 0122  ld   [$22]
               537d 8001  adda $01
               537e fe00  bra  ac
               537f fcfa  bra  $53fa
@@ -20463,12 +20471,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               53f7 0010  ld   $10
               53f8 0200  nop
               53f9 0200  nop
-              53fa c226  st   [$26]       ;Trampoline for page $5300 reading (continue)
-              53fb 0123  ld   [$23]
+              53fa c225  st   [$25]       ;Trampoline for page $5300 reading (continue)
+              53fb 0122  ld   [$22]
               53fc 8002  adda $02
               53fd 1404  ld   $04,y
               53fe fe00  bra  ac
-              53ff e0a3  jmp  y,$a3
+              53ff e0ac  jmp  y,$ac
               5400 0044  ld   $44         ;Pixels for packedParrot line 98
               5401 0041  ld   $41
               5402 0014  ld   $14
@@ -20589,8 +20597,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5478 0200  nop
               5479 fe00  bra  ac          ;Trampoline for page $5400 reading (entry)
               547a fc7b  bra  $547b
-              547b c225  st   [$25]
-              547c 0123  ld   [$23]
+              547b c224  st   [$24]
+              547c 0122  ld   [$22]
               547d 8001  adda $01
               547e fe00  bra  ac
               547f fcfa  bra  $54fa
@@ -20712,12 +20720,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               54f7 0000  ld   $00
               54f8 0200  nop
               54f9 0200  nop
-              54fa c226  st   [$26]       ;Trampoline for page $5400 reading (continue)
-              54fb 0123  ld   [$23]
+              54fa c225  st   [$25]       ;Trampoline for page $5400 reading (continue)
+              54fb 0122  ld   [$22]
               54fc 8002  adda $02
               54fd 1404  ld   $04,y
               54fe fe00  bra  ac
-              54ff e0a3  jmp  y,$a3
+              54ff e0ac  jmp  y,$ac
               5500 0055  ld   $55         ;Pixels for packedParrot line 100
               5501 0056  ld   $56
               5502 0055  ld   $55
@@ -20835,8 +20843,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5578 0200  nop
               5579 fe00  bra  ac          ;Trampoline for page $5500 reading (entry)
               557a fc7b  bra  $557b
-              557b c225  st   [$25]
-              557c 0123  ld   [$23]
+              557b c224  st   [$24]
+              557c 0122  ld   [$22]
               557d 8001  adda $01
               557e fe00  bra  ac
               557f fcfa  bra  $55fa
@@ -20948,12 +20956,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               55f7 0000  ld   $00
               55f8 0200  nop
               55f9 0200  nop
-              55fa c226  st   [$26]       ;Trampoline for page $5500 reading (continue)
-              55fb 0123  ld   [$23]
+              55fa c225  st   [$25]       ;Trampoline for page $5500 reading (continue)
+              55fb 0122  ld   [$22]
               55fc 8002  adda $02
               55fd 1404  ld   $04,y
               55fe fe00  bra  ac
-              55ff e0a3  jmp  y,$a3
+              55ff e0ac  jmp  y,$ac
               5600 0040  ld   $40         ;Pixels for packedParrot line 102
               5601 0051  ld   $51
               5602 00a4  ld   $a4
@@ -21070,8 +21078,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5678 0200  nop
               5679 fe00  bra  ac          ;Trampoline for page $5600 reading (entry)
               567a fc7b  bra  $567b
-              567b c225  st   [$25]
-              567c 0123  ld   [$23]
+              567b c224  st   [$24]
+              567c 0122  ld   [$22]
               567d 8001  adda $01
               567e fe00  bra  ac
               567f fcfa  bra  $56fa
@@ -21189,12 +21197,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               56f7 0010  ld   $10
               56f8 0200  nop
               56f9 0200  nop
-              56fa c226  st   [$26]       ;Trampoline for page $5600 reading (continue)
-              56fb 0123  ld   [$23]
+              56fa c225  st   [$25]       ;Trampoline for page $5600 reading (continue)
+              56fb 0122  ld   [$22]
               56fc 8002  adda $02
               56fd 1404  ld   $04,y
               56fe fe00  bra  ac
-              56ff e0a3  jmp  y,$a3
+              56ff e0ac  jmp  y,$ac
               5700 0014  ld   $14         ;Pixels for packedParrot line 104
               5701 0041  ld   $41
               5702 0014  ld   $14
@@ -21310,8 +21318,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5778 0200  nop
               5779 fe00  bra  ac          ;Trampoline for page $5700 reading (entry)
               577a fc7b  bra  $577b
-              577b c225  st   [$25]
-              577c 0123  ld   [$23]
+              577b c224  st   [$24]
+              577c 0122  ld   [$22]
               577d 8001  adda $01
               577e fe00  bra  ac
               577f fcfa  bra  $57fa
@@ -21432,12 +21440,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               57f7 0000  ld   $00
               57f8 0200  nop
               57f9 0200  nop
-              57fa c226  st   [$26]       ;Trampoline for page $5700 reading (continue)
-              57fb 0123  ld   [$23]
+              57fa c225  st   [$25]       ;Trampoline for page $5700 reading (continue)
+              57fb 0122  ld   [$22]
               57fc 8002  adda $02
               57fd 1404  ld   $04,y
               57fe fe00  bra  ac
-              57ff e0a3  jmp  y,$a3
+              57ff e0ac  jmp  y,$ac
               5800 00aa  ld   $aa         ;Pixels for packedParrot line 106
               5801 004a  ld   $4a
               5802 0014  ld   $14
@@ -21555,8 +21563,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5878 0200  nop
               5879 fe00  bra  ac          ;Trampoline for page $5800 reading (entry)
               587a fc7b  bra  $587b
-              587b c225  st   [$25]
-              587c 0123  ld   [$23]
+              587b c224  st   [$24]
+              587c 0122  ld   [$22]
               587d 8001  adda $01
               587e fe00  bra  ac
               587f fcfa  bra  $58fa
@@ -21673,12 +21681,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               * 9 times
               58f8 0200  nop
               58f9 0200  nop
-              58fa c226  st   [$26]       ;Trampoline for page $5800 reading (continue)
-              58fb 0123  ld   [$23]
+              58fa c225  st   [$25]       ;Trampoline for page $5800 reading (continue)
+              58fb 0122  ld   [$22]
               58fc 8002  adda $02
               58fd 1404  ld   $04,y
               58fe fe00  bra  ac
-              58ff e0a3  jmp  y,$a3
+              58ff e0ac  jmp  y,$ac
               5900 0000  ld   $00         ;Pixels for packedParrot line 108
               5901 0000  ld   $00
               5902 00a5  ld   $a5
@@ -21789,8 +21797,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5978 0200  nop
               5979 fe00  bra  ac          ;Trampoline for page $5900 reading (entry)
               597a fc7b  bra  $597b
-              597b c225  st   [$25]
-              597c 0123  ld   [$23]
+              597b c224  st   [$24]
+              597c 0122  ld   [$22]
               597d 8001  adda $01
               597e fe00  bra  ac
               597f fcfa  bra  $59fa
@@ -21899,12 +21907,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               * 6 times
               59f8 0200  nop
               59f9 0200  nop
-              59fa c226  st   [$26]       ;Trampoline for page $5900 reading (continue)
-              59fb 0123  ld   [$23]
+              59fa c225  st   [$25]       ;Trampoline for page $5900 reading (continue)
+              59fb 0122  ld   [$22]
               59fc 8002  adda $02
               59fd 1404  ld   $04,y
               59fe fe00  bra  ac
-              59ff e0a3  jmp  y,$a3
+              59ff e0ac  jmp  y,$ac
               5a00 00aa  ld   $aa         ;Pixels for packedParrot line 110
               5a01 00ef  ld   $ef
               5a02 00eb  ld   $eb
@@ -22022,8 +22030,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5a78 0200  nop
               5a79 fe00  bra  ac          ;Trampoline for page $5a00 reading (entry)
               5a7a fc7b  bra  $5a7b
-              5a7b c225  st   [$25]
-              5a7c 0123  ld   [$23]
+              5a7b c224  st   [$24]
+              5a7c 0122  ld   [$22]
               5a7d 8001  adda $01
               5a7e fe00  bra  ac
               5a7f fcfa  bra  $5afa
@@ -22144,12 +22152,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5af7 0000  ld   $00
               5af8 0200  nop
               5af9 0200  nop
-              5afa c226  st   [$26]       ;Trampoline for page $5a00 reading (continue)
-              5afb 0123  ld   [$23]
+              5afa c225  st   [$25]       ;Trampoline for page $5a00 reading (continue)
+              5afb 0122  ld   [$22]
               5afc 8002  adda $02
               5afd 1404  ld   $04,y
               5afe fe00  bra  ac
-              5aff e0a3  jmp  y,$a3
+              5aff e0ac  jmp  y,$ac
               5b00 00aa  ld   $aa         ;Pixels for packedParrot line 112
               5b01 00ef  ld   $ef
               5b02 00ef  ld   $ef
@@ -22270,8 +22278,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5b78 0200  nop
               5b79 fe00  bra  ac          ;Trampoline for page $5b00 reading (entry)
               5b7a fc7b  bra  $5b7b
-              5b7b c225  st   [$25]
-              5b7c 0123  ld   [$23]
+              5b7b c224  st   [$24]
+              5b7c 0122  ld   [$22]
               5b7d 8001  adda $01
               5b7e fe00  bra  ac
               5b7f fcfa  bra  $5bfa
@@ -22393,12 +22401,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               * 8 times
               5bf8 0200  nop
               5bf9 0200  nop
-              5bfa c226  st   [$26]       ;Trampoline for page $5b00 reading (continue)
-              5bfb 0123  ld   [$23]
+              5bfa c225  st   [$25]       ;Trampoline for page $5b00 reading (continue)
+              5bfb 0122  ld   [$22]
               5bfc 8002  adda $02
               5bfd 1404  ld   $04,y
               5bfe fe00  bra  ac
-              5bff e0a3  jmp  y,$a3
+              5bff e0ac  jmp  y,$ac
               5c00 00bf  ld   $bf         ;Pixels for packedParrot line 114
               5c01 009a  ld   $9a
               5c02 00a6  ld   $a6
@@ -22512,8 +22520,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5c78 0200  nop
               5c79 fe00  bra  ac          ;Trampoline for page $5c00 reading (entry)
               5c7a fc7b  bra  $5c7b
-              5c7b c225  st   [$25]
-              5c7c 0123  ld   [$23]
+              5c7b c224  st   [$24]
+              5c7c 0122  ld   [$22]
               5c7d 8001  adda $01
               5c7e fe00  bra  ac
               5c7f fcfa  bra  $5cfa
@@ -22634,12 +22642,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               * 8 times
               5cf8 0200  nop
               5cf9 0200  nop
-              5cfa c226  st   [$26]       ;Trampoline for page $5c00 reading (continue)
-              5cfb 0123  ld   [$23]
+              5cfa c225  st   [$25]       ;Trampoline for page $5c00 reading (continue)
+              5cfb 0122  ld   [$22]
               5cfc 8002  adda $02
               5cfd 1404  ld   $04,y
               5cfe fe00  bra  ac
-              5cff e0a3  jmp  y,$a3
+              5cff e0ac  jmp  y,$ac
               5d00 006a  ld   $6a         ;Pixels for packedParrot line 116
               5d01 0099  ld   $99
               5d02 00a5  ld   $a5
@@ -22756,8 +22764,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5d78 0200  nop
               5d79 fe00  bra  ac          ;Trampoline for page $5d00 reading (entry)
               5d7a fc7b  bra  $5d7b
-              5d7b c225  st   [$25]
-              5d7c 0123  ld   [$23]
+              5d7b c224  st   [$24]
+              5d7c 0122  ld   [$22]
               5d7d 8001  adda $01
               5d7e fe00  bra  ac
               5d7f fcfa  bra  $5dfa
@@ -22881,12 +22889,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5df7 0000  ld   $00
               5df8 0200  nop
               5df9 0200  nop
-              5dfa c226  st   [$26]       ;Trampoline for page $5d00 reading (continue)
-              5dfb 0123  ld   [$23]
+              5dfa c225  st   [$25]       ;Trampoline for page $5d00 reading (continue)
+              5dfb 0122  ld   [$22]
               5dfc 8002  adda $02
               5dfd 1404  ld   $04,y
               5dfe fe00  bra  ac
-              5dff e0a3  jmp  y,$a3
+              5dff e0ac  jmp  y,$ac
               5e00 00a9  ld   $a9         ;Pixels for packedParrot line 118
               5e01 0099  ld   $99
               5e02 0066  ld   $66
@@ -23007,8 +23015,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5e78 0200  nop
               5e79 fe00  bra  ac          ;Trampoline for page $5e00 reading (entry)
               5e7a fc7b  bra  $5e7b
-              5e7b c225  st   [$25]
-              5e7c 0123  ld   [$23]
+              5e7b c224  st   [$24]
+              5e7c 0122  ld   [$22]
               5e7d 8001  adda $01
               5e7e fe00  bra  ac
               5e7f fcfa  bra  $5efa
@@ -23131,12 +23139,12 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5ef7 0010  ld   $10
               5ef8 0200  nop
               5ef9 0200  nop
-              5efa c226  st   [$26]       ;Trampoline for page $5e00 reading (continue)
-              5efb 0123  ld   [$23]
+              5efa c225  st   [$25]       ;Trampoline for page $5e00 reading (continue)
+              5efb 0122  ld   [$22]
               5efc 8002  adda $02
               5efd 1404  ld   $04,y
               5efe fe00  bra  ac
-              5eff e0a3  jmp  y,$a3
+              5eff e0ac  jmp  y,$ac
 packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               5f01 0055  ld   $55
               5f02 0054  ld   $54
@@ -23260,8 +23268,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               5f78 0200  nop
               5f79 fe00  bra  ac          ;Trampoline for page $5f00 reading (entry)
               5f7a fc7b  bra  $5f7b
-              5f7b c225  st   [$25]
-              5f7c 0123  ld   [$23]
+              5f7b c224  st   [$24]
+              5f7c 0122  ld   [$22]
               5f7d 8001  adda $01
               5f7e fe00  bra  ac
               5f7f fcfa  bra  $5ffa
@@ -23387,12 +23395,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               5ff7 0058  ld   $58
               5ff8 0200  nop
               5ff9 0200  nop
-              5ffa c226  st   [$26]       ;Trampoline for page $5f00 reading (continue)
-              5ffb 0123  ld   [$23]
+              5ffa c225  st   [$25]       ;Trampoline for page $5f00 reading (continue)
+              5ffb 0122  ld   [$22]
               5ffc 8002  adda $02
               5ffd 1404  ld   $04,y
               5ffe fe00  bra  ac
-              5fff e0a3  jmp  y,$a3
+              5fff e0ac  jmp  y,$ac
               6000 0045  ld   $45         ;Pixels for packedBaboon line 2
               6001 0065  ld   $65
               6002 0068  ld   $68
@@ -23507,8 +23515,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6078 0200  nop
               6079 fe00  bra  ac          ;Trampoline for page $6000 reading (entry)
               607a fc7b  bra  $607b
-              607b c225  st   [$25]
-              607c 0123  ld   [$23]
+              607b c224  st   [$24]
+              607c 0122  ld   [$22]
               607d 8001  adda $01
               607e fe00  bra  ac
               607f fcfa  bra  $60fa
@@ -23634,12 +23642,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               60f7 0055  ld   $55
               60f8 0200  nop
               60f9 0200  nop
-              60fa c226  st   [$26]       ;Trampoline for page $6000 reading (continue)
-              60fb 0123  ld   [$23]
+              60fa c225  st   [$25]       ;Trampoline for page $6000 reading (continue)
+              60fb 0122  ld   [$22]
               60fc 8002  adda $02
               60fd 1404  ld   $04,y
               60fe fe00  bra  ac
-              60ff e0a3  jmp  y,$a3
+              60ff e0ac  jmp  y,$ac
               6100 0055  ld   $55         ;Pixels for packedBaboon line 4
               6101 0051  ld   $51
               6102 0054  ld   $54
@@ -23758,8 +23766,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6178 0200  nop
               6179 fe00  bra  ac          ;Trampoline for page $6100 reading (entry)
               617a fc7b  bra  $617b
-              617b c225  st   [$25]
-              617c 0123  ld   [$23]
+              617b c224  st   [$24]
+              617c 0122  ld   [$22]
               617d 8001  adda $01
               617e fe00  bra  ac
               617f fcfa  bra  $61fa
@@ -23885,12 +23893,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               61f7 0055  ld   $55
               61f8 0200  nop
               61f9 0200  nop
-              61fa c226  st   [$26]       ;Trampoline for page $6100 reading (continue)
-              61fb 0123  ld   [$23]
+              61fa c225  st   [$25]       ;Trampoline for page $6100 reading (continue)
+              61fb 0122  ld   [$22]
               61fc 8002  adda $02
               61fd 1404  ld   $04,y
               61fe fe00  bra  ac
-              61ff e0a3  jmp  y,$a3
+              61ff e0ac  jmp  y,$ac
               6200 0045  ld   $45         ;Pixels for packedBaboon line 6
               6201 0055  ld   $55
               6202 0068  ld   $68
@@ -24000,8 +24008,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6278 0200  nop
               6279 fe00  bra  ac          ;Trampoline for page $6200 reading (entry)
               627a fc7b  bra  $627b
-              627b c225  st   [$25]
-              627c 0123  ld   [$23]
+              627b c224  st   [$24]
+              627c 0122  ld   [$22]
               627d 8001  adda $01
               627e fe00  bra  ac
               627f fcfa  bra  $62fa
@@ -24115,12 +24123,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               62f7 0069  ld   $69
               62f8 0200  nop
               62f9 0200  nop
-              62fa c226  st   [$26]       ;Trampoline for page $6200 reading (continue)
-              62fb 0123  ld   [$23]
+              62fa c225  st   [$25]       ;Trampoline for page $6200 reading (continue)
+              62fb 0122  ld   [$22]
               62fc 8002  adda $02
               62fd 1404  ld   $04,y
               62fe fe00  bra  ac
-              62ff e0a3  jmp  y,$a3
+              62ff e0ac  jmp  y,$ac
               6300 0045  ld   $45         ;Pixels for packedBaboon line 8
               6301 0055  ld   $55
               6302 0054  ld   $54
@@ -24243,8 +24251,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6378 0200  nop
               6379 fe00  bra  ac          ;Trampoline for page $6300 reading (entry)
               637a fc7b  bra  $637b
-              637b c225  st   [$25]
-              637c 0123  ld   [$23]
+              637b c224  st   [$24]
+              637c 0122  ld   [$22]
               637d 8001  adda $01
               637e fe00  bra  ac
               637f fcfa  bra  $63fa
@@ -24369,12 +24377,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               63f7 0055  ld   $55
               63f8 0200  nop
               63f9 0200  nop
-              63fa c226  st   [$26]       ;Trampoline for page $6300 reading (continue)
-              63fb 0123  ld   [$23]
+              63fa c225  st   [$25]       ;Trampoline for page $6300 reading (continue)
+              63fb 0122  ld   [$22]
               63fc 8002  adda $02
               63fd 1404  ld   $04,y
               63fe fe00  bra  ac
-              63ff e0a3  jmp  y,$a3
+              63ff e0ac  jmp  y,$ac
               6400 0095  ld   $95         ;Pixels for packedBaboon line 10
               6401 0062  ld   $62
               6402 0025  ld   $25
@@ -24498,8 +24506,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6478 0200  nop
               6479 fe00  bra  ac          ;Trampoline for page $6400 reading (entry)
               647a fc7b  bra  $647b
-              647b c225  st   [$25]
-              647c 0123  ld   [$23]
+              647b c224  st   [$24]
+              647c 0122  ld   [$22]
               647d 8001  adda $01
               647e fe00  bra  ac
               647f fcfa  bra  $64fa
@@ -24621,12 +24629,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               64f7 0055  ld   $55
               64f8 0200  nop
               64f9 0200  nop
-              64fa c226  st   [$26]       ;Trampoline for page $6400 reading (continue)
-              64fb 0123  ld   [$23]
+              64fa c225  st   [$25]       ;Trampoline for page $6400 reading (continue)
+              64fb 0122  ld   [$22]
               64fc 8002  adda $02
               64fd 1404  ld   $04,y
               64fe fe00  bra  ac
-              64ff e0a3  jmp  y,$a3
+              64ff e0ac  jmp  y,$ac
               6500 0055  ld   $55         ;Pixels for packedBaboon line 12
               6501 0066  ld   $66
               6502 0065  ld   $65
@@ -24749,8 +24757,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6578 0200  nop
               6579 fe00  bra  ac          ;Trampoline for page $6500 reading (entry)
               657a fc7b  bra  $657b
-              657b c225  st   [$25]
-              657c 0123  ld   [$23]
+              657b c224  st   [$24]
+              657c 0122  ld   [$22]
               657d 8001  adda $01
               657e fe00  bra  ac
               657f fcfa  bra  $65fa
@@ -24876,12 +24884,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               65f7 0055  ld   $55
               65f8 0200  nop
               65f9 0200  nop
-              65fa c226  st   [$26]       ;Trampoline for page $6500 reading (continue)
-              65fb 0123  ld   [$23]
+              65fa c225  st   [$25]       ;Trampoline for page $6500 reading (continue)
+              65fb 0122  ld   [$22]
               65fc 8002  adda $02
               65fd 1404  ld   $04,y
               65fe fe00  bra  ac
-              65ff e0a3  jmp  y,$a3
+              65ff e0ac  jmp  y,$ac
               6600 0095  ld   $95         ;Pixels for packedBaboon line 14
               6601 0095  ld   $95
               6602 0069  ld   $69
@@ -25005,8 +25013,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6678 0200  nop
               6679 fe00  bra  ac          ;Trampoline for page $6600 reading (entry)
               667a fc7b  bra  $667b
-              667b c225  st   [$25]
-              667c 0123  ld   [$23]
+              667b c224  st   [$24]
+              667c 0122  ld   [$22]
               667d 8001  adda $01
               667e fe00  bra  ac
               667f fcfa  bra  $66fa
@@ -25132,12 +25140,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               66f7 0069  ld   $69
               66f8 0200  nop
               66f9 0200  nop
-              66fa c226  st   [$26]       ;Trampoline for page $6600 reading (continue)
-              66fb 0123  ld   [$23]
+              66fa c225  st   [$25]       ;Trampoline for page $6600 reading (continue)
+              66fb 0122  ld   [$22]
               66fc 8002  adda $02
               66fd 1404  ld   $04,y
               66fe fe00  bra  ac
-              66ff e0a3  jmp  y,$a3
+              66ff e0ac  jmp  y,$ac
               6700 009a  ld   $9a         ;Pixels for packedBaboon line 16
               6701 0055  ld   $55
               6702 0054  ld   $54
@@ -25260,8 +25268,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6778 0200  nop
               6779 fe00  bra  ac          ;Trampoline for page $6700 reading (entry)
               677a fc7b  bra  $677b
-              677b c225  st   [$25]
-              677c 0123  ld   [$23]
+              677b c224  st   [$24]
+              677c 0122  ld   [$22]
               677d 8001  adda $01
               677e fe00  bra  ac
               677f fcfa  bra  $67fa
@@ -25387,12 +25395,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               67f7 0054  ld   $54
               67f8 0200  nop
               67f9 0200  nop
-              67fa c226  st   [$26]       ;Trampoline for page $6700 reading (continue)
-              67fb 0123  ld   [$23]
+              67fa c225  st   [$25]       ;Trampoline for page $6700 reading (continue)
+              67fb 0122  ld   [$22]
               67fc 8002  adda $02
               67fd 1404  ld   $04,y
               67fe fe00  bra  ac
-              67ff e0a3  jmp  y,$a3
+              67ff e0ac  jmp  y,$ac
               6800 005a  ld   $5a         ;Pixels for packedBaboon line 18
               6801 0061  ld   $61
               6802 0025  ld   $25
@@ -25516,8 +25524,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6878 0200  nop
               6879 fe00  bra  ac          ;Trampoline for page $6800 reading (entry)
               687a fc7b  bra  $687b
-              687b c225  st   [$25]
-              687c 0123  ld   [$23]
+              687b c224  st   [$24]
+              687c 0122  ld   [$22]
               687d 8001  adda $01
               687e fe00  bra  ac
               687f fcfa  bra  $68fa
@@ -25643,12 +25651,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               68f7 0065  ld   $65
               68f8 0200  nop
               68f9 0200  nop
-              68fa c226  st   [$26]       ;Trampoline for page $6800 reading (continue)
-              68fb 0123  ld   [$23]
+              68fa c225  st   [$25]       ;Trampoline for page $6800 reading (continue)
+              68fb 0122  ld   [$22]
               68fc 8002  adda $02
               68fd 1404  ld   $04,y
               68fe fe00  bra  ac
-              68ff e0a3  jmp  y,$a3
+              68ff e0ac  jmp  y,$ac
               6900 0045  ld   $45         ;Pixels for packedBaboon line 20
               6901 0051  ld   $51
               6902 0055  ld   $55
@@ -25771,8 +25779,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6978 0200  nop
               6979 fe00  bra  ac          ;Trampoline for page $6900 reading (entry)
               697a fc7b  bra  $697b
-              697b c225  st   [$25]
-              697c 0123  ld   [$23]
+              697b c224  st   [$24]
+              697c 0122  ld   [$22]
               697d 8001  adda $01
               697e fe00  bra  ac
               697f fcfa  bra  $69fa
@@ -25898,12 +25906,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               69f7 0054  ld   $54
               69f8 0200  nop
               69f9 0200  nop
-              69fa c226  st   [$26]       ;Trampoline for page $6900 reading (continue)
-              69fb 0123  ld   [$23]
+              69fa c225  st   [$25]       ;Trampoline for page $6900 reading (continue)
+              69fb 0122  ld   [$22]
               69fc 8002  adda $02
               69fd 1404  ld   $04,y
               69fe fe00  bra  ac
-              69ff e0a3  jmp  y,$a3
+              69ff e0ac  jmp  y,$ac
               6a00 0085  ld   $85         ;Pixels for packedBaboon line 22
               6a01 00a6  ld   $a6
               6a02 0015  ld   $15
@@ -26027,8 +26035,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6a78 0200  nop
               6a79 fe00  bra  ac          ;Trampoline for page $6a00 reading (entry)
               6a7a fc7b  bra  $6a7b
-              6a7b c225  st   [$25]
-              6a7c 0123  ld   [$23]
+              6a7b c224  st   [$24]
+              6a7c 0122  ld   [$22]
               6a7d 8001  adda $01
               6a7e fe00  bra  ac
               6a7f fcfa  bra  $6afa
@@ -26154,12 +26162,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6af7 0055  ld   $55
               6af8 0200  nop
               6af9 0200  nop
-              6afa c226  st   [$26]       ;Trampoline for page $6a00 reading (continue)
-              6afb 0123  ld   [$23]
+              6afa c225  st   [$25]       ;Trampoline for page $6a00 reading (continue)
+              6afb 0122  ld   [$22]
               6afc 8002  adda $02
               6afd 1404  ld   $04,y
               6afe fe00  bra  ac
-              6aff e0a3  jmp  y,$a3
+              6aff e0ac  jmp  y,$ac
               6b00 0045  ld   $45         ;Pixels for packedBaboon line 24
               6b01 0051  ld   $51
               6b02 0029  ld   $29
@@ -26282,8 +26290,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6b78 0200  nop
               6b79 fe00  bra  ac          ;Trampoline for page $6b00 reading (entry)
               6b7a fc7b  bra  $6b7b
-              6b7b c225  st   [$25]
-              6b7c 0123  ld   [$23]
+              6b7b c224  st   [$24]
+              6b7c 0122  ld   [$22]
               6b7d 8001  adda $01
               6b7e fe00  bra  ac
               6b7f fcfa  bra  $6bfa
@@ -26409,12 +26417,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6bf7 0055  ld   $55
               6bf8 0200  nop
               6bf9 0200  nop
-              6bfa c226  st   [$26]       ;Trampoline for page $6b00 reading (continue)
-              6bfb 0123  ld   [$23]
+              6bfa c225  st   [$25]       ;Trampoline for page $6b00 reading (continue)
+              6bfb 0122  ld   [$22]
               6bfc 8002  adda $02
               6bfd 1404  ld   $04,y
               6bfe fe00  bra  ac
-              6bff e0a3  jmp  y,$a3
+              6bff e0ac  jmp  y,$ac
               6c00 0085  ld   $85         ;Pixels for packedBaboon line 26
               6c01 0096  ld   $96
               6c02 0015  ld   $15
@@ -26538,8 +26546,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6c78 0200  nop
               6c79 fe00  bra  ac          ;Trampoline for page $6c00 reading (entry)
               6c7a fc7b  bra  $6c7b
-              6c7b c225  st   [$25]
-              6c7c 0123  ld   [$23]
+              6c7b c224  st   [$24]
+              6c7c 0122  ld   [$22]
               6c7d 8001  adda $01
               6c7e fe00  bra  ac
               6c7f fcfa  bra  $6cfa
@@ -26665,12 +26673,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6cf7 0065  ld   $65
               6cf8 0200  nop
               6cf9 0200  nop
-              6cfa c226  st   [$26]       ;Trampoline for page $6c00 reading (continue)
-              6cfb 0123  ld   [$23]
+              6cfa c225  st   [$25]       ;Trampoline for page $6c00 reading (continue)
+              6cfb 0122  ld   [$22]
               6cfc 8002  adda $02
               6cfd 1404  ld   $04,y
               6cfe fe00  bra  ac
-              6cff e0a3  jmp  y,$a3
+              6cff e0ac  jmp  y,$ac
               6d00 0096  ld   $96         ;Pixels for packedBaboon line 28
               6d01 0056  ld   $56
               6d02 0054  ld   $54
@@ -26791,8 +26799,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6d78 0200  nop
               6d79 fe00  bra  ac          ;Trampoline for page $6d00 reading (entry)
               6d7a fc7b  bra  $6d7b
-              6d7b c225  st   [$25]
-              6d7c 0123  ld   [$23]
+              6d7b c224  st   [$24]
+              6d7c 0122  ld   [$22]
               6d7d 8001  adda $01
               6d7e fe00  bra  ac
               6d7f fcfa  bra  $6dfa
@@ -26918,12 +26926,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6df7 0065  ld   $65
               6df8 0200  nop
               6df9 0200  nop
-              6dfa c226  st   [$26]       ;Trampoline for page $6d00 reading (continue)
-              6dfb 0123  ld   [$23]
+              6dfa c225  st   [$25]       ;Trampoline for page $6d00 reading (continue)
+              6dfb 0122  ld   [$22]
               6dfc 8002  adda $02
               6dfd 1404  ld   $04,y
               6dfe fe00  bra  ac
-              6dff e0a3  jmp  y,$a3
+              6dff e0ac  jmp  y,$ac
               6e00 0055  ld   $55         ;Pixels for packedBaboon line 30
               6e01 00a5  ld   $a5
               6e02 0015  ld   $15
@@ -27047,8 +27055,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6e78 0200  nop
               6e79 fe00  bra  ac          ;Trampoline for page $6e00 reading (entry)
               6e7a fc7b  bra  $6e7b
-              6e7b c225  st   [$25]
-              6e7c 0123  ld   [$23]
+              6e7b c224  st   [$24]
+              6e7c 0122  ld   [$22]
               6e7d 8001  adda $01
               6e7e fe00  bra  ac
               6e7f fcfa  bra  $6efa
@@ -27174,12 +27182,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6ef7 0055  ld   $55
               6ef8 0200  nop
               6ef9 0200  nop
-              6efa c226  st   [$26]       ;Trampoline for page $6e00 reading (continue)
-              6efb 0123  ld   [$23]
+              6efa c225  st   [$25]       ;Trampoline for page $6e00 reading (continue)
+              6efb 0122  ld   [$22]
               6efc 8002  adda $02
               6efd 1404  ld   $04,y
               6efe fe00  bra  ac
-              6eff e0a3  jmp  y,$a3
+              6eff e0ac  jmp  y,$ac
               6f00 0045  ld   $45         ;Pixels for packedBaboon line 32
               6f01 0065  ld   $65
               6f02 0054  ld   $54
@@ -27303,8 +27311,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6f78 0200  nop
               6f79 fe00  bra  ac          ;Trampoline for page $6f00 reading (entry)
               6f7a fc7b  bra  $6f7b
-              6f7b c225  st   [$25]
-              6f7c 0123  ld   [$23]
+              6f7b c224  st   [$24]
+              6f7c 0122  ld   [$22]
               6f7d 8001  adda $01
               6f7e fe00  bra  ac
               6f7f fcfa  bra  $6ffa
@@ -27430,12 +27438,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               6ff7 0055  ld   $55
               6ff8 0200  nop
               6ff9 0200  nop
-              6ffa c226  st   [$26]       ;Trampoline for page $6f00 reading (continue)
-              6ffb 0123  ld   [$23]
+              6ffa c225  st   [$25]       ;Trampoline for page $6f00 reading (continue)
+              6ffb 0122  ld   [$22]
               6ffc 8002  adda $02
               6ffd 1404  ld   $04,y
               6ffe fe00  bra  ac
-              6fff e0a3  jmp  y,$a3
+              6fff e0ac  jmp  y,$ac
               7000 0095  ld   $95         ;Pixels for packedBaboon line 34
               7001 0056  ld   $56
               7002 0055  ld   $55
@@ -27559,8 +27567,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7078 0200  nop
               7079 fe00  bra  ac          ;Trampoline for page $7000 reading (entry)
               707a fc7b  bra  $707b
-              707b c225  st   [$25]
-              707c 0123  ld   [$23]
+              707b c224  st   [$24]
+              707c 0122  ld   [$22]
               707d 8001  adda $01
               707e fe00  bra  ac
               707f fcfa  bra  $70fa
@@ -27686,12 +27694,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               70f7 0015  ld   $15
               70f8 0200  nop
               70f9 0200  nop
-              70fa c226  st   [$26]       ;Trampoline for page $7000 reading (continue)
-              70fb 0123  ld   [$23]
+              70fa c225  st   [$25]       ;Trampoline for page $7000 reading (continue)
+              70fb 0122  ld   [$22]
               70fc 8002  adda $02
               70fd 1404  ld   $04,y
               70fe fe00  bra  ac
-              70ff e0a3  jmp  y,$a3
+              70ff e0ac  jmp  y,$ac
               7100 0095  ld   $95         ;Pixels for packedBaboon line 36
               7101 0056  ld   $56
               7102 0069  ld   $69
@@ -27815,8 +27823,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7178 0200  nop
               7179 fe00  bra  ac          ;Trampoline for page $7100 reading (entry)
               717a fc7b  bra  $717b
-              717b c225  st   [$25]
-              717c 0123  ld   [$23]
+              717b c224  st   [$24]
+              717c 0122  ld   [$22]
               717d 8001  adda $01
               717e fe00  bra  ac
               717f fcfa  bra  $71fa
@@ -27942,12 +27950,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               71f7 0065  ld   $65
               71f8 0200  nop
               71f9 0200  nop
-              71fa c226  st   [$26]       ;Trampoline for page $7100 reading (continue)
-              71fb 0123  ld   [$23]
+              71fa c225  st   [$25]       ;Trampoline for page $7100 reading (continue)
+              71fb 0122  ld   [$22]
               71fc 8002  adda $02
               71fd 1404  ld   $04,y
               71fe fe00  bra  ac
-              71ff e0a3  jmp  y,$a3
+              71ff e0ac  jmp  y,$ac
               7200 0055  ld   $55         ;Pixels for packedBaboon line 38
               7201 0055  ld   $55
               7202 0054  ld   $54
@@ -28071,8 +28079,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7278 0200  nop
               7279 fe00  bra  ac          ;Trampoline for page $7200 reading (entry)
               727a fc7b  bra  $727b
-              727b c225  st   [$25]
-              727c 0123  ld   [$23]
+              727b c224  st   [$24]
+              727c 0122  ld   [$22]
               727d 8001  adda $01
               727e fe00  bra  ac
               727f fcfa  bra  $72fa
@@ -28198,12 +28206,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               72f7 0065  ld   $65
               72f8 0200  nop
               72f9 0200  nop
-              72fa c226  st   [$26]       ;Trampoline for page $7200 reading (continue)
-              72fb 0123  ld   [$23]
+              72fa c225  st   [$25]       ;Trampoline for page $7200 reading (continue)
+              72fb 0122  ld   [$22]
               72fc 8002  adda $02
               72fd 1404  ld   $04,y
               72fe fe00  bra  ac
-              72ff e0a3  jmp  y,$a3
+              72ff e0ac  jmp  y,$ac
               7300 0055  ld   $55         ;Pixels for packedBaboon line 40
               7301 0055  ld   $55
               7302 0055  ld   $55
@@ -28327,8 +28335,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7378 0200  nop
               7379 fe00  bra  ac          ;Trampoline for page $7300 reading (entry)
               737a fc7b  bra  $737b
-              737b c225  st   [$25]
-              737c 0123  ld   [$23]
+              737b c224  st   [$24]
+              737c 0122  ld   [$22]
               737d 8001  adda $01
               737e fe00  bra  ac
               737f fcfa  bra  $73fa
@@ -28454,12 +28462,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               73f7 0055  ld   $55
               73f8 0200  nop
               73f9 0200  nop
-              73fa c226  st   [$26]       ;Trampoline for page $7300 reading (continue)
-              73fb 0123  ld   [$23]
+              73fa c225  st   [$25]       ;Trampoline for page $7300 reading (continue)
+              73fb 0122  ld   [$22]
               73fc 8002  adda $02
               73fd 1404  ld   $04,y
               73fe fe00  bra  ac
-              73ff e0a3  jmp  y,$a3
+              73ff e0ac  jmp  y,$ac
               7400 0095  ld   $95         ;Pixels for packedBaboon line 42
               7401 0051  ld   $51
               7402 0055  ld   $55
@@ -28580,8 +28588,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7478 0200  nop
               7479 fe00  bra  ac          ;Trampoline for page $7400 reading (entry)
               747a fc7b  bra  $747b
-              747b c225  st   [$25]
-              747c 0123  ld   [$23]
+              747b c224  st   [$24]
+              747c 0122  ld   [$22]
               747d 8001  adda $01
               747e fe00  bra  ac
               747f fcfa  bra  $74fa
@@ -28707,12 +28715,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               74f7 0055  ld   $55
               74f8 0200  nop
               74f9 0200  nop
-              74fa c226  st   [$26]       ;Trampoline for page $7400 reading (continue)
-              74fb 0123  ld   [$23]
+              74fa c225  st   [$25]       ;Trampoline for page $7400 reading (continue)
+              74fb 0122  ld   [$22]
               74fc 8002  adda $02
               74fd 1404  ld   $04,y
               74fe fe00  bra  ac
-              74ff e0a3  jmp  y,$a3
+              74ff e0ac  jmp  y,$ac
               7500 0055  ld   $55         ;Pixels for packedBaboon line 44
               7501 0061  ld   $61
               7502 0055  ld   $55
@@ -28836,8 +28844,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7578 0200  nop
               7579 fe00  bra  ac          ;Trampoline for page $7500 reading (entry)
               757a fc7b  bra  $757b
-              757b c225  st   [$25]
-              757c 0123  ld   [$23]
+              757b c224  st   [$24]
+              757c 0122  ld   [$22]
               757d 8001  adda $01
               757e fe00  bra  ac
               757f fcfa  bra  $75fa
@@ -28963,12 +28971,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               75f7 0055  ld   $55
               75f8 0200  nop
               75f9 0200  nop
-              75fa c226  st   [$26]       ;Trampoline for page $7500 reading (continue)
-              75fb 0123  ld   [$23]
+              75fa c225  st   [$25]       ;Trampoline for page $7500 reading (continue)
+              75fb 0122  ld   [$22]
               75fc 8002  adda $02
               75fd 1404  ld   $04,y
               75fe fe00  bra  ac
-              75ff e0a3  jmp  y,$a3
+              75ff e0ac  jmp  y,$ac
               7600 0055  ld   $55         ;Pixels for packedBaboon line 46
               7601 00a6  ld   $a6
               7602 0055  ld   $55
@@ -29092,8 +29100,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7678 0200  nop
               7679 fe00  bra  ac          ;Trampoline for page $7600 reading (entry)
               767a fc7b  bra  $767b
-              767b c225  st   [$25]
-              767c 0123  ld   [$23]
+              767b c224  st   [$24]
+              767c 0122  ld   [$22]
               767d 8001  adda $01
               767e fe00  bra  ac
               767f fcfa  bra  $76fa
@@ -29219,12 +29227,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               76f7 0055  ld   $55
               76f8 0200  nop
               76f9 0200  nop
-              76fa c226  st   [$26]       ;Trampoline for page $7600 reading (continue)
-              76fb 0123  ld   [$23]
+              76fa c225  st   [$25]       ;Trampoline for page $7600 reading (continue)
+              76fb 0122  ld   [$22]
               76fc 8002  adda $02
               76fd 1404  ld   $04,y
               76fe fe00  bra  ac
-              76ff e0a3  jmp  y,$a3
+              76ff e0ac  jmp  y,$ac
               7700 0045  ld   $45         ;Pixels for packedBaboon line 48
               7701 0055  ld   $55
               7702 0014  ld   $14
@@ -29348,8 +29356,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7778 0200  nop
               7779 fe00  bra  ac          ;Trampoline for page $7700 reading (entry)
               777a fc7b  bra  $777b
-              777b c225  st   [$25]
-              777c 0123  ld   [$23]
+              777b c224  st   [$24]
+              777c 0122  ld   [$22]
               777d 8001  adda $01
               777e fe00  bra  ac
               777f fcfa  bra  $77fa
@@ -29475,12 +29483,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               77f7 0055  ld   $55
               77f8 0200  nop
               77f9 0200  nop
-              77fa c226  st   [$26]       ;Trampoline for page $7700 reading (continue)
-              77fb 0123  ld   [$23]
+              77fa c225  st   [$25]       ;Trampoline for page $7700 reading (continue)
+              77fb 0122  ld   [$22]
               77fc 8002  adda $02
               77fd 1404  ld   $04,y
               77fe fe00  bra  ac
-              77ff e0a3  jmp  y,$a3
+              77ff e0ac  jmp  y,$ac
               7800 005a  ld   $5a         ;Pixels for packedBaboon line 50
               7801 00a5  ld   $a5
               7802 0059  ld   $59
@@ -29604,8 +29612,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7878 0200  nop
               7879 fe00  bra  ac          ;Trampoline for page $7800 reading (entry)
               787a fc7b  bra  $787b
-              787b c225  st   [$25]
-              787c 0123  ld   [$23]
+              787b c224  st   [$24]
+              787c 0122  ld   [$22]
               787d 8001  adda $01
               787e fe00  bra  ac
               787f fcfa  bra  $78fa
@@ -29731,12 +29739,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               78f7 0065  ld   $65
               78f8 0200  nop
               78f9 0200  nop
-              78fa c226  st   [$26]       ;Trampoline for page $7800 reading (continue)
-              78fb 0123  ld   [$23]
+              78fa c225  st   [$25]       ;Trampoline for page $7800 reading (continue)
+              78fb 0122  ld   [$22]
               78fc 8002  adda $02
               78fd 1404  ld   $04,y
               78fe fe00  bra  ac
-              78ff e0a3  jmp  y,$a3
+              78ff e0ac  jmp  y,$ac
               7900 005a  ld   $5a         ;Pixels for packedBaboon line 52
               7901 0055  ld   $55
               7902 0069  ld   $69
@@ -29860,8 +29868,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7978 0200  nop
               7979 fe00  bra  ac          ;Trampoline for page $7900 reading (entry)
               797a fc7b  bra  $797b
-              797b c225  st   [$25]
-              797c 0123  ld   [$23]
+              797b c224  st   [$24]
+              797c 0122  ld   [$22]
               797d 8001  adda $01
               797e fe00  bra  ac
               797f fcfa  bra  $79fa
@@ -29986,12 +29994,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               79f7 0055  ld   $55
               79f8 0200  nop
               79f9 0200  nop
-              79fa c226  st   [$26]       ;Trampoline for page $7900 reading (continue)
-              79fb 0123  ld   [$23]
+              79fa c225  st   [$25]       ;Trampoline for page $7900 reading (continue)
+              79fb 0122  ld   [$22]
               79fc 8002  adda $02
               79fd 1404  ld   $04,y
               79fe fe00  bra  ac
-              79ff e0a3  jmp  y,$a3
+              79ff e0ac  jmp  y,$ac
               7a00 0095  ld   $95         ;Pixels for packedBaboon line 54
               7a01 0056  ld   $56
               7a02 0055  ld   $55
@@ -30114,8 +30122,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7a78 0200  nop
               7a79 fe00  bra  ac          ;Trampoline for page $7a00 reading (entry)
               7a7a fc7b  bra  $7a7b
-              7a7b c225  st   [$25]
-              7a7c 0123  ld   [$23]
+              7a7b c224  st   [$24]
+              7a7c 0122  ld   [$22]
               7a7d 8001  adda $01
               7a7e fe00  bra  ac
               7a7f fcfa  bra  $7afa
@@ -30241,12 +30249,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7af7 0055  ld   $55
               7af8 0200  nop
               7af9 0200  nop
-              7afa c226  st   [$26]       ;Trampoline for page $7a00 reading (continue)
-              7afb 0123  ld   [$23]
+              7afa c225  st   [$25]       ;Trampoline for page $7a00 reading (continue)
+              7afb 0122  ld   [$22]
               7afc 8002  adda $02
               7afd 1404  ld   $04,y
               7afe fe00  bra  ac
-              7aff e0a3  jmp  y,$a3
+              7aff e0ac  jmp  y,$ac
               7b00 0056  ld   $56         ;Pixels for packedBaboon line 56
               7b01 00a5  ld   $a5
               7b02 0055  ld   $55
@@ -30368,8 +30376,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7b78 0200  nop
               7b79 fe00  bra  ac          ;Trampoline for page $7b00 reading (entry)
               7b7a fc7b  bra  $7b7b
-              7b7b c225  st   [$25]
-              7b7c 0123  ld   [$23]
+              7b7b c224  st   [$24]
+              7b7c 0122  ld   [$22]
               7b7d 8001  adda $01
               7b7e fe00  bra  ac
               7b7f fcfa  bra  $7bfa
@@ -30495,12 +30503,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7bf7 0055  ld   $55
               7bf8 0200  nop
               7bf9 0200  nop
-              7bfa c226  st   [$26]       ;Trampoline for page $7b00 reading (continue)
-              7bfb 0123  ld   [$23]
+              7bfa c225  st   [$25]       ;Trampoline for page $7b00 reading (continue)
+              7bfb 0122  ld   [$22]
               7bfc 8002  adda $02
               7bfd 1404  ld   $04,y
               7bfe fe00  bra  ac
-              7bff e0a3  jmp  y,$a3
+              7bff e0ac  jmp  y,$ac
               7c00 0096  ld   $96         ;Pixels for packedBaboon line 58
               7c01 00a5  ld   $a5
               7c02 0055  ld   $55
@@ -30622,8 +30630,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7c78 0200  nop
               7c79 fe00  bra  ac          ;Trampoline for page $7c00 reading (entry)
               7c7a fc7b  bra  $7c7b
-              7c7b c225  st   [$25]
-              7c7c 0123  ld   [$23]
+              7c7b c224  st   [$24]
+              7c7c 0122  ld   [$22]
               7c7d 8001  adda $01
               7c7e fe00  bra  ac
               7c7f fcfa  bra  $7cfa
@@ -30749,12 +30757,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7cf7 0055  ld   $55
               7cf8 0200  nop
               7cf9 0200  nop
-              7cfa c226  st   [$26]       ;Trampoline for page $7c00 reading (continue)
-              7cfb 0123  ld   [$23]
+              7cfa c225  st   [$25]       ;Trampoline for page $7c00 reading (continue)
+              7cfb 0122  ld   [$22]
               7cfc 8002  adda $02
               7cfd 1404  ld   $04,y
               7cfe fe00  bra  ac
-              7cff e0a3  jmp  y,$a3
+              7cff e0ac  jmp  y,$ac
               7d00 009a  ld   $9a         ;Pixels for packedBaboon line 60
               7d01 00a5  ld   $a5
               7d02 0059  ld   $59
@@ -30878,8 +30886,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7d78 0200  nop
               7d79 fe00  bra  ac          ;Trampoline for page $7d00 reading (entry)
               7d7a fc7b  bra  $7d7b
-              7d7b c225  st   [$25]
-              7d7c 0123  ld   [$23]
+              7d7b c224  st   [$24]
+              7d7c 0122  ld   [$22]
               7d7d 8001  adda $01
               7d7e fe00  bra  ac
               7d7f fcfa  bra  $7dfa
@@ -31004,12 +31012,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7df7 0054  ld   $54
               7df8 0200  nop
               7df9 0200  nop
-              7dfa c226  st   [$26]       ;Trampoline for page $7d00 reading (continue)
-              7dfb 0123  ld   [$23]
+              7dfa c225  st   [$25]       ;Trampoline for page $7d00 reading (continue)
+              7dfb 0122  ld   [$22]
               7dfc 8002  adda $02
               7dfd 1404  ld   $04,y
               7dfe fe00  bra  ac
-              7dff e0a3  jmp  y,$a3
+              7dff e0ac  jmp  y,$ac
               7e00 009a  ld   $9a         ;Pixels for packedBaboon line 62
               7e01 00a6  ld   $a6
               7e02 0069  ld   $69
@@ -31131,8 +31139,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7e78 0200  nop
               7e79 fe00  bra  ac          ;Trampoline for page $7e00 reading (entry)
               7e7a fc7b  bra  $7e7b
-              7e7b c225  st   [$25]
-              7e7c 0123  ld   [$23]
+              7e7b c224  st   [$24]
+              7e7c 0122  ld   [$22]
               7e7d 8001  adda $01
               7e7e fe00  bra  ac
               7e7f fcfa  bra  $7efa
@@ -31255,12 +31263,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7ef7 0055  ld   $55
               7ef8 0200  nop
               7ef9 0200  nop
-              7efa c226  st   [$26]       ;Trampoline for page $7e00 reading (continue)
-              7efb 0123  ld   [$23]
+              7efa c225  st   [$25]       ;Trampoline for page $7e00 reading (continue)
+              7efb 0122  ld   [$22]
               7efc 8002  adda $02
               7efd 1404  ld   $04,y
               7efe fe00  bra  ac
-              7eff e0a3  jmp  y,$a3
+              7eff e0ac  jmp  y,$ac
               7f00 009a  ld   $9a         ;Pixels for packedBaboon line 64
               7f01 0066  ld   $66
               7f02 0069  ld   $69
@@ -31381,8 +31389,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7f78 0200  nop
               7f79 fe00  bra  ac          ;Trampoline for page $7f00 reading (entry)
               7f7a fc7b  bra  $7f7b
-              7f7b c225  st   [$25]
-              7f7c 0123  ld   [$23]
+              7f7b c224  st   [$24]
+              7f7c 0122  ld   [$22]
               7f7d 8001  adda $01
               7f7e fe00  bra  ac
               7f7f fcfa  bra  $7ffa
@@ -31508,12 +31516,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               7ff7 0055  ld   $55
               7ff8 0200  nop
               7ff9 0200  nop
-              7ffa c226  st   [$26]       ;Trampoline for page $7f00 reading (continue)
-              7ffb 0123  ld   [$23]
+              7ffa c225  st   [$25]       ;Trampoline for page $7f00 reading (continue)
+              7ffb 0122  ld   [$22]
               7ffc 8002  adda $02
               7ffd 1404  ld   $04,y
               7ffe fe00  bra  ac
-              7fff e0a3  jmp  y,$a3
+              7fff e0ac  jmp  y,$ac
               8000 009a  ld   $9a         ;Pixels for packedBaboon line 66
               8001 00a6  ld   $a6
               8002 006d  ld   $6d
@@ -31635,8 +31643,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8078 0200  nop
               8079 fe00  bra  ac          ;Trampoline for page $8000 reading (entry)
               807a fc7b  bra  $807b
-              807b c225  st   [$25]
-              807c 0123  ld   [$23]
+              807b c224  st   [$24]
+              807c 0122  ld   [$22]
               807d 8001  adda $01
               807e fe00  bra  ac
               807f fcfa  bra  $80fa
@@ -31762,12 +31770,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               80f7 0055  ld   $55
               80f8 0200  nop
               80f9 0200  nop
-              80fa c226  st   [$26]       ;Trampoline for page $8000 reading (continue)
-              80fb 0123  ld   [$23]
+              80fa c225  st   [$25]       ;Trampoline for page $8000 reading (continue)
+              80fb 0122  ld   [$22]
               80fc 8002  adda $02
               80fd 1404  ld   $04,y
               80fe fe00  bra  ac
-              80ff e0a3  jmp  y,$a3
+              80ff e0ac  jmp  y,$ac
               8100 00da  ld   $da         ;Pixels for packedBaboon line 68
               8101 00a6  ld   $a6
               8102 0069  ld   $69
@@ -31889,8 +31897,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8178 0200  nop
               8179 fe00  bra  ac          ;Trampoline for page $8100 reading (entry)
               817a fc7b  bra  $817b
-              817b c225  st   [$25]
-              817c 0123  ld   [$23]
+              817b c224  st   [$24]
+              817c 0122  ld   [$22]
               817d 8001  adda $01
               817e fe00  bra  ac
               817f fcfa  bra  $81fa
@@ -32011,12 +32019,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               81f7 0054  ld   $54
               81f8 0200  nop
               81f9 0200  nop
-              81fa c226  st   [$26]       ;Trampoline for page $8100 reading (continue)
-              81fb 0123  ld   [$23]
+              81fa c225  st   [$25]       ;Trampoline for page $8100 reading (continue)
+              81fb 0122  ld   [$22]
               81fc 8002  adda $02
               81fd 1404  ld   $04,y
               81fe fe00  bra  ac
-              81ff e0a3  jmp  y,$a3
+              81ff e0ac  jmp  y,$ac
               8200 009a  ld   $9a         ;Pixels for packedBaboon line 70
               8201 00b6  ld   $b6
               8202 0069  ld   $69
@@ -32138,8 +32146,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8278 0200  nop
               8279 fe00  bra  ac          ;Trampoline for page $8200 reading (entry)
               827a fc7b  bra  $827b
-              827b c225  st   [$25]
-              827c 0123  ld   [$23]
+              827b c224  st   [$24]
+              827c 0122  ld   [$22]
               827d 8001  adda $01
               827e fe00  bra  ac
               827f fcfa  bra  $82fa
@@ -32263,12 +32271,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               82f7 0055  ld   $55
               82f8 0200  nop
               82f9 0200  nop
-              82fa c226  st   [$26]       ;Trampoline for page $8200 reading (continue)
-              82fb 0123  ld   [$23]
+              82fa c225  st   [$25]       ;Trampoline for page $8200 reading (continue)
+              82fb 0122  ld   [$22]
               82fc 8002  adda $02
               82fd 1404  ld   $04,y
               82fe fe00  bra  ac
-              82ff e0a3  jmp  y,$a3
+              82ff e0ac  jmp  y,$ac
               8300 009a  ld   $9a         ;Pixels for packedBaboon line 72
               8301 00b6  ld   $b6
               8302 0069  ld   $69
@@ -32386,8 +32394,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8378 0200  nop
               8379 fe00  bra  ac          ;Trampoline for page $8300 reading (entry)
               837a fc7b  bra  $837b
-              837b c225  st   [$25]
-              837c 0123  ld   [$23]
+              837b c224  st   [$24]
+              837c 0122  ld   [$22]
               837d 8001  adda $01
               837e fe00  bra  ac
               837f fcfa  bra  $83fa
@@ -32510,12 +32518,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               83f7 0054  ld   $54
               83f8 0200  nop
               83f9 0200  nop
-              83fa c226  st   [$26]       ;Trampoline for page $8300 reading (continue)
-              83fb 0123  ld   [$23]
+              83fa c225  st   [$25]       ;Trampoline for page $8300 reading (continue)
+              83fb 0122  ld   [$22]
               83fc 8002  adda $02
               83fd 1404  ld   $04,y
               83fe fe00  bra  ac
-              83ff e0a3  jmp  y,$a3
+              83ff e0ac  jmp  y,$ac
               8400 00da  ld   $da         ;Pixels for packedBaboon line 74
               8401 00a6  ld   $a6
               8402 0069  ld   $69
@@ -32634,8 +32642,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8478 0200  nop
               8479 fe00  bra  ac          ;Trampoline for page $8400 reading (entry)
               847a fc7b  bra  $847b
-              847b c225  st   [$25]
-              847c 0123  ld   [$23]
+              847b c224  st   [$24]
+              847c 0122  ld   [$22]
               847d 8001  adda $01
               847e fe00  bra  ac
               847f fcfa  bra  $84fa
@@ -32757,12 +32765,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               84f7 0054  ld   $54
               84f8 0200  nop
               84f9 0200  nop
-              84fa c226  st   [$26]       ;Trampoline for page $8400 reading (continue)
-              84fb 0123  ld   [$23]
+              84fa c225  st   [$25]       ;Trampoline for page $8400 reading (continue)
+              84fb 0122  ld   [$22]
               84fc 8002  adda $02
               84fd 1404  ld   $04,y
               84fe fe00  bra  ac
-              84ff e0a3  jmp  y,$a3
+              84ff e0ac  jmp  y,$ac
               8500 00da  ld   $da         ;Pixels for packedBaboon line 76
               8501 00b6  ld   $b6
               8502 0069  ld   $69
@@ -32886,8 +32894,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8578 0200  nop
               8579 fe00  bra  ac          ;Trampoline for page $8500 reading (entry)
               857a fc7b  bra  $857b
-              857b c225  st   [$25]
-              857c 0123  ld   [$23]
+              857b c224  st   [$24]
+              857c 0122  ld   [$22]
               857d 8001  adda $01
               857e fe00  bra  ac
               857f fcfa  bra  $85fa
@@ -33006,12 +33014,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               85f7 0055  ld   $55
               85f8 0200  nop
               85f9 0200  nop
-              85fa c226  st   [$26]       ;Trampoline for page $8500 reading (continue)
-              85fb 0123  ld   [$23]
+              85fa c225  st   [$25]       ;Trampoline for page $8500 reading (continue)
+              85fb 0122  ld   [$22]
               85fc 8002  adda $02
               85fd 1404  ld   $04,y
               85fe fe00  bra  ac
-              85ff e0a3  jmp  y,$a3
+              85ff e0ac  jmp  y,$ac
               8600 00da  ld   $da         ;Pixels for packedBaboon line 78
               8601 00a6  ld   $a6
               8602 006d  ld   $6d
@@ -33133,8 +33141,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8678 0200  nop
               8679 fe00  bra  ac          ;Trampoline for page $8600 reading (entry)
               867a fc7b  bra  $867b
-              867b c225  st   [$25]
-              867c 0123  ld   [$23]
+              867b c224  st   [$24]
+              867c 0122  ld   [$22]
               867d 8001  adda $01
               867e fe00  bra  ac
               867f fcfa  bra  $86fa
@@ -33255,12 +33263,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               86f7 0059  ld   $59
               86f8 0200  nop
               86f9 0200  nop
-              86fa c226  st   [$26]       ;Trampoline for page $8600 reading (continue)
-              86fb 0123  ld   [$23]
+              86fa c225  st   [$25]       ;Trampoline for page $8600 reading (continue)
+              86fb 0122  ld   [$22]
               86fc 8002  adda $02
               86fd 1404  ld   $04,y
               86fe fe00  bra  ac
-              86ff e0a3  jmp  y,$a3
+              86ff e0ac  jmp  y,$ac
               8700 00da  ld   $da         ;Pixels for packedBaboon line 80
               8701 00e6  ld   $e6
               8702 006d  ld   $6d
@@ -33378,8 +33386,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8778 0200  nop
               8779 fe00  bra  ac          ;Trampoline for page $8700 reading (entry)
               877a fc7b  bra  $877b
-              877b c225  st   [$25]
-              877c 0123  ld   [$23]
+              877b c224  st   [$24]
+              877c 0122  ld   [$22]
               877d 8001  adda $01
               877e fe00  bra  ac
               877f fcfa  bra  $87fa
@@ -33500,12 +33508,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               87f7 0055  ld   $55
               87f8 0200  nop
               87f9 0200  nop
-              87fa c226  st   [$26]       ;Trampoline for page $8700 reading (continue)
-              87fb 0123  ld   [$23]
+              87fa c225  st   [$25]       ;Trampoline for page $8700 reading (continue)
+              87fb 0122  ld   [$22]
               87fc 8002  adda $02
               87fd 1404  ld   $04,y
               87fe fe00  bra  ac
-              87ff e0a3  jmp  y,$a3
+              87ff e0ac  jmp  y,$ac
               8800 00da  ld   $da         ;Pixels for packedBaboon line 82
               8801 00a6  ld   $a6
               8802 007c  ld   $7c
@@ -33629,8 +33637,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8878 0200  nop
               8879 fe00  bra  ac          ;Trampoline for page $8800 reading (entry)
               887a fc7b  bra  $887b
-              887b c225  st   [$25]
-              887c 0123  ld   [$23]
+              887b c224  st   [$24]
+              887c 0122  ld   [$22]
               887d 8001  adda $01
               887e fe00  bra  ac
               887f fcfa  bra  $88fa
@@ -33756,12 +33764,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               88f7 0055  ld   $55
               88f8 0200  nop
               88f9 0200  nop
-              88fa c226  st   [$26]       ;Trampoline for page $8800 reading (continue)
-              88fb 0123  ld   [$23]
+              88fa c225  st   [$25]       ;Trampoline for page $8800 reading (continue)
+              88fb 0122  ld   [$22]
               88fc 8002  adda $02
               88fd 1404  ld   $04,y
               88fe fe00  bra  ac
-              88ff e0a3  jmp  y,$a3
+              88ff e0ac  jmp  y,$ac
               8900 00db  ld   $db         ;Pixels for packedBaboon line 84
               8901 00b7  ld   $b7
               8902 0069  ld   $69
@@ -33885,8 +33893,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8978 0200  nop
               8979 fe00  bra  ac          ;Trampoline for page $8900 reading (entry)
               897a fc7b  bra  $897b
-              897b c225  st   [$25]
-              897c 0123  ld   [$23]
+              897b c224  st   [$24]
+              897c 0122  ld   [$22]
               897d 8001  adda $01
               897e fe00  bra  ac
               897f fcfa  bra  $89fa
@@ -34012,12 +34020,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               89f7 0065  ld   $65
               89f8 0200  nop
               89f9 0200  nop
-              89fa c226  st   [$26]       ;Trampoline for page $8900 reading (continue)
-              89fb 0123  ld   [$23]
+              89fa c225  st   [$25]       ;Trampoline for page $8900 reading (continue)
+              89fb 0122  ld   [$22]
               89fc 8002  adda $02
               89fd 1404  ld   $04,y
               89fe fe00  bra  ac
-              89ff e0a3  jmp  y,$a3
+              89ff e0ac  jmp  y,$ac
               8a00 009b  ld   $9b         ;Pixels for packedBaboon line 86
               8a01 00b6  ld   $b6
               8a02 0069  ld   $69
@@ -34140,8 +34148,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8a78 0200  nop
               8a79 fe00  bra  ac          ;Trampoline for page $8a00 reading (entry)
               8a7a fc7b  bra  $8a7b
-              8a7b c225  st   [$25]
-              8a7c 0123  ld   [$23]
+              8a7b c224  st   [$24]
+              8a7c 0122  ld   [$22]
               8a7d 8001  adda $01
               8a7e fe00  bra  ac
               8a7f fcfa  bra  $8afa
@@ -34266,12 +34274,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8af7 005a  ld   $5a
               8af8 0200  nop
               8af9 0200  nop
-              8afa c226  st   [$26]       ;Trampoline for page $8a00 reading (continue)
-              8afb 0123  ld   [$23]
+              8afa c225  st   [$25]       ;Trampoline for page $8a00 reading (continue)
+              8afb 0122  ld   [$22]
               8afc 8002  adda $02
               8afd 1404  ld   $04,y
               8afe fe00  bra  ac
-              8aff e0a3  jmp  y,$a3
+              8aff e0ac  jmp  y,$ac
               8b00 009b  ld   $9b         ;Pixels for packedBaboon line 88
               8b01 00b6  ld   $b6
               8b02 0069  ld   $69
@@ -34395,8 +34403,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8b78 0200  nop
               8b79 fe00  bra  ac          ;Trampoline for page $8b00 reading (entry)
               8b7a fc7b  bra  $8b7b
-              8b7b c225  st   [$25]
-              8b7c 0123  ld   [$23]
+              8b7b c224  st   [$24]
+              8b7c 0122  ld   [$22]
               8b7d 8001  adda $01
               8b7e fe00  bra  ac
               8b7f fcfa  bra  $8bfa
@@ -34522,12 +34530,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8bf7 0065  ld   $65
               8bf8 0200  nop
               8bf9 0200  nop
-              8bfa c226  st   [$26]       ;Trampoline for page $8b00 reading (continue)
-              8bfb 0123  ld   [$23]
+              8bfa c225  st   [$25]       ;Trampoline for page $8b00 reading (continue)
+              8bfb 0122  ld   [$22]
               8bfc 8002  adda $02
               8bfd 1404  ld   $04,y
               8bfe fe00  bra  ac
-              8bff e0a3  jmp  y,$a3
+              8bff e0ac  jmp  y,$ac
               8c00 009b  ld   $9b         ;Pixels for packedBaboon line 90
               8c01 00b6  ld   $b6
               8c02 0069  ld   $69
@@ -34651,8 +34659,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8c78 0200  nop
               8c79 fe00  bra  ac          ;Trampoline for page $8c00 reading (entry)
               8c7a fc7b  bra  $8c7b
-              8c7b c225  st   [$25]
-              8c7c 0123  ld   [$23]
+              8c7b c224  st   [$24]
+              8c7c 0122  ld   [$22]
               8c7d 8001  adda $01
               8c7e fe00  bra  ac
               8c7f fcfa  bra  $8cfa
@@ -34778,12 +34786,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8cf7 0065  ld   $65
               8cf8 0200  nop
               8cf9 0200  nop
-              8cfa c226  st   [$26]       ;Trampoline for page $8c00 reading (continue)
-              8cfb 0123  ld   [$23]
+              8cfa c225  st   [$25]       ;Trampoline for page $8c00 reading (continue)
+              8cfb 0122  ld   [$22]
               8cfc 8002  adda $02
               8cfd 1404  ld   $04,y
               8cfe fe00  bra  ac
-              8cff e0a3  jmp  y,$a3
+              8cff e0ac  jmp  y,$ac
               8d00 00da  ld   $da         ;Pixels for packedBaboon line 92
               8d01 00e6  ld   $e6
               8d02 006e  ld   $6e
@@ -34907,8 +34915,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8d78 0200  nop
               8d79 fe00  bra  ac          ;Trampoline for page $8d00 reading (entry)
               8d7a fc7b  bra  $8d7b
-              8d7b c225  st   [$25]
-              8d7c 0123  ld   [$23]
+              8d7b c224  st   [$24]
+              8d7c 0122  ld   [$22]
               8d7d 8001  adda $01
               8d7e fe00  bra  ac
               8d7f fcfa  bra  $8dfa
@@ -35034,12 +35042,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8df7 006a  ld   $6a
               8df8 0200  nop
               8df9 0200  nop
-              8dfa c226  st   [$26]       ;Trampoline for page $8d00 reading (continue)
-              8dfb 0123  ld   [$23]
+              8dfa c225  st   [$25]       ;Trampoline for page $8d00 reading (continue)
+              8dfb 0122  ld   [$22]
               8dfc 8002  adda $02
               8dfd 1404  ld   $04,y
               8dfe fe00  bra  ac
-              8dff e0a3  jmp  y,$a3
+              8dff e0ac  jmp  y,$ac
               8e00 00ea  ld   $ea         ;Pixels for packedBaboon line 94
               8e01 00e6  ld   $e6
               8e02 006d  ld   $6d
@@ -35163,8 +35171,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8e78 0200  nop
               8e79 fe00  bra  ac          ;Trampoline for page $8e00 reading (entry)
               8e7a fc7b  bra  $8e7b
-              8e7b c225  st   [$25]
-              8e7c 0123  ld   [$23]
+              8e7b c224  st   [$24]
+              8e7c 0122  ld   [$22]
               8e7d 8001  adda $01
               8e7e fe00  bra  ac
               8e7f fcfa  bra  $8efa
@@ -35290,12 +35298,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8ef7 006a  ld   $6a
               8ef8 0200  nop
               8ef9 0200  nop
-              8efa c226  st   [$26]       ;Trampoline for page $8e00 reading (continue)
-              8efb 0123  ld   [$23]
+              8efa c225  st   [$25]       ;Trampoline for page $8e00 reading (continue)
+              8efb 0122  ld   [$22]
               8efc 8002  adda $02
               8efd 1404  ld   $04,y
               8efe fe00  bra  ac
-              8eff e0a3  jmp  y,$a3
+              8eff e0ac  jmp  y,$ac
               8f00 009a  ld   $9a         ;Pixels for packedBaboon line 96
               8f01 00b6  ld   $b6
               8f02 0069  ld   $69
@@ -35419,8 +35427,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8f78 0200  nop
               8f79 fe00  bra  ac          ;Trampoline for page $8f00 reading (entry)
               8f7a fc7b  bra  $8f7b
-              8f7b c225  st   [$25]
-              8f7c 0123  ld   [$23]
+              8f7b c224  st   [$24]
+              8f7c 0122  ld   [$22]
               8f7d 8001  adda $01
               8f7e fe00  bra  ac
               8f7f fcfa  bra  $8ffa
@@ -35546,12 +35554,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               8ff7 0066  ld   $66
               8ff8 0200  nop
               8ff9 0200  nop
-              8ffa c226  st   [$26]       ;Trampoline for page $8f00 reading (continue)
-              8ffb 0123  ld   [$23]
+              8ffa c225  st   [$25]       ;Trampoline for page $8f00 reading (continue)
+              8ffb 0122  ld   [$22]
               8ffc 8002  adda $02
               8ffd 1404  ld   $04,y
               8ffe fe00  bra  ac
-              8fff e0a3  jmp  y,$a3
+              8fff e0ac  jmp  y,$ac
               9000 009a  ld   $9a         ;Pixels for packedBaboon line 98
               9001 00a6  ld   $a6
               9002 0079  ld   $79
@@ -35675,8 +35683,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9078 0200  nop
               9079 fe00  bra  ac          ;Trampoline for page $9000 reading (entry)
               907a fc7b  bra  $907b
-              907b c225  st   [$25]
-              907c 0123  ld   [$23]
+              907b c224  st   [$24]
+              907c 0122  ld   [$22]
               907d 8001  adda $01
               907e fe00  bra  ac
               907f fcfa  bra  $90fa
@@ -35802,12 +35810,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               90f7 0066  ld   $66
               90f8 0200  nop
               90f9 0200  nop
-              90fa c226  st   [$26]       ;Trampoline for page $9000 reading (continue)
-              90fb 0123  ld   [$23]
+              90fa c225  st   [$25]       ;Trampoline for page $9000 reading (continue)
+              90fb 0122  ld   [$22]
               90fc 8002  adda $02
               90fd 1404  ld   $04,y
               90fe fe00  bra  ac
-              90ff e0a3  jmp  y,$a3
+              90ff e0ac  jmp  y,$ac
               9100 009a  ld   $9a         ;Pixels for packedBaboon line 100
               9101 00a6  ld   $a6
               9102 006a  ld   $6a
@@ -35930,8 +35938,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9178 0200  nop
               9179 fe00  bra  ac          ;Trampoline for page $9100 reading (entry)
               917a fc7b  bra  $917b
-              917b c225  st   [$25]
-              917c 0123  ld   [$23]
+              917b c224  st   [$24]
+              917c 0122  ld   [$22]
               917d 8001  adda $01
               917e fe00  bra  ac
               917f fcfa  bra  $91fa
@@ -36057,12 +36065,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               91f7 0066  ld   $66
               91f8 0200  nop
               91f9 0200  nop
-              91fa c226  st   [$26]       ;Trampoline for page $9100 reading (continue)
-              91fb 0123  ld   [$23]
+              91fa c225  st   [$25]       ;Trampoline for page $9100 reading (continue)
+              91fb 0122  ld   [$22]
               91fc 8002  adda $02
               91fd 1404  ld   $04,y
               91fe fe00  bra  ac
-              91ff e0a3  jmp  y,$a3
+              91ff e0ac  jmp  y,$ac
               9200 00aa  ld   $aa         ;Pixels for packedBaboon line 102
               9201 00e6  ld   $e6
               9202 006a  ld   $6a
@@ -36183,8 +36191,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9278 0200  nop
               9279 fe00  bra  ac          ;Trampoline for page $9200 reading (entry)
               927a fc7b  bra  $927b
-              927b c225  st   [$25]
-              927c 0123  ld   [$23]
+              927b c224  st   [$24]
+              927c 0122  ld   [$22]
               927d 8001  adda $01
               927e fe00  bra  ac
               927f fcfa  bra  $92fa
@@ -36303,12 +36311,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               92f7 00a5  ld   $a5
               92f8 0200  nop
               92f9 0200  nop
-              92fa c226  st   [$26]       ;Trampoline for page $9200 reading (continue)
-              92fb 0123  ld   [$23]
+              92fa c225  st   [$25]       ;Trampoline for page $9200 reading (continue)
+              92fb 0122  ld   [$22]
               92fc 8002  adda $02
               92fd 1404  ld   $04,y
               92fe fe00  bra  ac
-              92ff e0a3  jmp  y,$a3
+              92ff e0ac  jmp  y,$ac
               9300 009a  ld   $9a         ;Pixels for packedBaboon line 104
               9301 00aa  ld   $aa
               9302 00aa  ld   $aa
@@ -36430,8 +36438,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9378 0200  nop
               9379 fe00  bra  ac          ;Trampoline for page $9300 reading (entry)
               937a fc7b  bra  $937b
-              937b c225  st   [$25]
-              937c 0123  ld   [$23]
+              937b c224  st   [$24]
+              937c 0122  ld   [$22]
               937d 8001  adda $01
               937e fe00  bra  ac
               937f fcfa  bra  $93fa
@@ -36554,12 +36562,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               93f7 00a5  ld   $a5
               93f8 0200  nop
               93f9 0200  nop
-              93fa c226  st   [$26]       ;Trampoline for page $9300 reading (continue)
-              93fb 0123  ld   [$23]
+              93fa c225  st   [$25]       ;Trampoline for page $9300 reading (continue)
+              93fb 0122  ld   [$22]
               93fc 8002  adda $02
               93fd 1404  ld   $04,y
               93fe fe00  bra  ac
-              93ff e0a3  jmp  y,$a3
+              93ff e0ac  jmp  y,$ac
               9400 00aa  ld   $aa         ;Pixels for packedBaboon line 106
               9401 00a6  ld   $a6
               9402 00aa  ld   $aa
@@ -36667,8 +36675,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9478 0200  nop
               9479 fe00  bra  ac          ;Trampoline for page $9400 reading (entry)
               947a fc7b  bra  $947b
-              947b c225  st   [$25]
-              947c 0123  ld   [$23]
+              947b c224  st   [$24]
+              947c 0122  ld   [$22]
               947d 8001  adda $01
               947e fe00  bra  ac
               947f fcfa  bra  $94fa
@@ -36790,12 +36798,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               94f7 00a5  ld   $a5
               94f8 0200  nop
               94f9 0200  nop
-              94fa c226  st   [$26]       ;Trampoline for page $9400 reading (continue)
-              94fb 0123  ld   [$23]
+              94fa c225  st   [$25]       ;Trampoline for page $9400 reading (continue)
+              94fb 0122  ld   [$22]
               94fc 8002  adda $02
               94fd 1404  ld   $04,y
               94fe fe00  bra  ac
-              94ff e0a3  jmp  y,$a3
+              94ff e0ac  jmp  y,$ac
               9500 00aa  ld   $aa         ;Pixels for packedBaboon line 108
               9501 009a  ld   $9a
               9502 00a9  ld   $a9
@@ -36919,8 +36927,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9578 0200  nop
               9579 fe00  bra  ac          ;Trampoline for page $9500 reading (entry)
               957a fc7b  bra  $957b
-              957b c225  st   [$25]
-              957c 0123  ld   [$23]
+              957b c224  st   [$24]
+              957c 0122  ld   [$22]
               957d 8001  adda $01
               957e fe00  bra  ac
               957f fcfa  bra  $95fa
@@ -37041,12 +37049,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               95f7 0096  ld   $96
               95f8 0200  nop
               95f9 0200  nop
-              95fa c226  st   [$26]       ;Trampoline for page $9500 reading (continue)
-              95fb 0123  ld   [$23]
+              95fa c225  st   [$25]       ;Trampoline for page $9500 reading (continue)
+              95fb 0122  ld   [$22]
               95fc 8002  adda $02
               95fd 1404  ld   $04,y
               95fe fe00  bra  ac
-              95ff e0a3  jmp  y,$a3
+              95ff e0ac  jmp  y,$ac
               9600 00aa  ld   $aa         ;Pixels for packedBaboon line 110
               9601 00aa  ld   $aa
               9602 0095  ld   $95
@@ -37170,8 +37178,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9678 0200  nop
               9679 fe00  bra  ac          ;Trampoline for page $9600 reading (entry)
               967a fc7b  bra  $967b
-              967b c225  st   [$25]
-              967c 0123  ld   [$23]
+              967b c224  st   [$24]
+              967c 0122  ld   [$22]
               967d 8001  adda $01
               967e fe00  bra  ac
               967f fcfa  bra  $96fa
@@ -37295,12 +37303,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               96f7 0095  ld   $95
               96f8 0200  nop
               96f9 0200  nop
-              96fa c226  st   [$26]       ;Trampoline for page $9600 reading (continue)
-              96fb 0123  ld   [$23]
+              96fa c225  st   [$25]       ;Trampoline for page $9600 reading (continue)
+              96fb 0122  ld   [$22]
               96fc 8002  adda $02
               96fd 1404  ld   $04,y
               96fe fe00  bra  ac
-              96ff e0a3  jmp  y,$a3
+              96ff e0ac  jmp  y,$ac
               9700 006a  ld   $6a         ;Pixels for packedBaboon line 112
               9701 00aa  ld   $aa
               9702 00a9  ld   $a9
@@ -37424,8 +37432,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9778 0200  nop
               9779 fe00  bra  ac          ;Trampoline for page $9700 reading (entry)
               977a fc7b  bra  $977b
-              977b c225  st   [$25]
-              977c 0123  ld   [$23]
+              977b c224  st   [$24]
+              977c 0122  ld   [$22]
               977d 8001  adda $01
               977e fe00  bra  ac
               977f fcfa  bra  $97fa
@@ -37551,12 +37559,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               97f7 0056  ld   $56
               97f8 0200  nop
               97f9 0200  nop
-              97fa c226  st   [$26]       ;Trampoline for page $9700 reading (continue)
-              97fb 0123  ld   [$23]
+              97fa c225  st   [$25]       ;Trampoline for page $9700 reading (continue)
+              97fb 0122  ld   [$22]
               97fc 8002  adda $02
               97fd 1404  ld   $04,y
               97fe fe00  bra  ac
-              97ff e0a3  jmp  y,$a3
+              97ff e0ac  jmp  y,$ac
               9800 006a  ld   $6a         ;Pixels for packedBaboon line 114
               9801 00aa  ld   $aa
               9802 0066  ld   $66
@@ -37680,8 +37688,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9878 0200  nop
               9879 fe00  bra  ac          ;Trampoline for page $9800 reading (entry)
               987a fc7b  bra  $987b
-              987b c225  st   [$25]
-              987c 0123  ld   [$23]
+              987b c224  st   [$24]
+              987c 0122  ld   [$22]
               987d 8001  adda $01
               987e fe00  bra  ac
               987f fcfa  bra  $98fa
@@ -37803,12 +37811,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               98f7 0055  ld   $55
               98f8 0200  nop
               98f9 0200  nop
-              98fa c226  st   [$26]       ;Trampoline for page $9800 reading (continue)
-              98fb 0123  ld   [$23]
+              98fa c225  st   [$25]       ;Trampoline for page $9800 reading (continue)
+              98fb 0122  ld   [$22]
               98fc 8002  adda $02
               98fd 1404  ld   $04,y
               98fe fe00  bra  ac
-              98ff e0a3  jmp  y,$a3
+              98ff e0ac  jmp  y,$ac
               9900 00a9  ld   $a9         ;Pixels for packedBaboon line 116
               9901 0096  ld   $96
               9902 00aa  ld   $aa
@@ -37921,8 +37929,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9978 0200  nop
               9979 fe00  bra  ac          ;Trampoline for page $9900 reading (entry)
               997a fc7b  bra  $997b
-              997b c225  st   [$25]
-              997c 0123  ld   [$23]
+              997b c224  st   [$24]
+              997c 0122  ld   [$22]
               997d 8001  adda $01
               997e fe00  bra  ac
               997f fcfa  bra  $99fa
@@ -38047,12 +38055,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               99f7 0055  ld   $55
               99f8 0200  nop
               99f9 0200  nop
-              99fa c226  st   [$26]       ;Trampoline for page $9900 reading (continue)
-              99fb 0123  ld   [$23]
+              99fa c225  st   [$25]       ;Trampoline for page $9900 reading (continue)
+              99fb 0122  ld   [$22]
               99fc 8002  adda $02
               99fd 1404  ld   $04,y
               99fe fe00  bra  ac
-              99ff e0a3  jmp  y,$a3
+              99ff e0ac  jmp  y,$ac
               9a00 0099  ld   $99         ;Pixels for packedBaboon line 118
               9a01 009a  ld   $9a
               9a02 0056  ld   $56
@@ -38172,8 +38180,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9a78 0200  nop
               9a79 fe00  bra  ac          ;Trampoline for page $9a00 reading (entry)
               9a7a fc7b  bra  $9a7b
-              9a7b c225  st   [$25]
-              9a7c 0123  ld   [$23]
+              9a7b c224  st   [$24]
+              9a7c 0122  ld   [$22]
               9a7d 8001  adda $01
               9a7e fe00  bra  ac
               9a7f fcfa  bra  $9afa
@@ -38297,12 +38305,12 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9af7 0055  ld   $55
               9af8 0200  nop
               9af9 0200  nop
-              9afa c226  st   [$26]       ;Trampoline for page $9a00 reading (continue)
-              9afb 0123  ld   [$23]
+              9afa c225  st   [$25]       ;Trampoline for page $9a00 reading (continue)
+              9afb 0122  ld   [$22]
               9afc 8002  adda $02
               9afd 1404  ld   $04,y
               9afe fe00  bra  ac
-              9aff e0a3  jmp  y,$a3
+              9aff e0ac  jmp  y,$ac
 packedJupiter:
               9b00 0000  ld   $00         ;Pixels for packedJupiter line 0
               9b01 0000  ld   $00
@@ -38311,8 +38319,8 @@ packedJupiter:
               9b78 0200  nop
               9b79 fe00  bra  ac          ;Trampoline for page $9b00 reading (entry)
               9b7a fc7b  bra  $9b7b
-              9b7b c225  st   [$25]
-              9b7c 0123  ld   [$23]
+              9b7b c224  st   [$24]
+              9b7c 0122  ld   [$22]
               9b7d 8001  adda $01
               9b7e fe00  bra  ac
               9b7f fcfa  bra  $9bfa
@@ -38322,12 +38330,12 @@ packedJupiter:
               * 120 times
               9bf8 0200  nop
               9bf9 0200  nop
-              9bfa c226  st   [$26]       ;Trampoline for page $9b00 reading (continue)
-              9bfb 0123  ld   [$23]
+              9bfa c225  st   [$25]       ;Trampoline for page $9b00 reading (continue)
+              9bfb 0122  ld   [$22]
               9bfc 8002  adda $02
               9bfd 1404  ld   $04,y
               9bfe fe00  bra  ac
-              9bff e0a3  jmp  y,$a3
+              9bff e0ac  jmp  y,$ac
               9c00 0000  ld   $00         ;Pixels for packedJupiter line 2
               9c01 0000  ld   $00
               9c02 0000  ld   $00
@@ -38335,8 +38343,8 @@ packedJupiter:
               9c78 0200  nop
               9c79 fe00  bra  ac          ;Trampoline for page $9c00 reading (entry)
               9c7a fc7b  bra  $9c7b
-              9c7b c225  st   [$25]
-              9c7c 0123  ld   [$23]
+              9c7b c224  st   [$24]
+              9c7c 0122  ld   [$22]
               9c7d 8001  adda $01
               9c7e fe00  bra  ac
               9c7f fcfa  bra  $9cfa
@@ -38363,12 +38371,12 @@ packedJupiter:
               * 53 times
               9cf8 0200  nop
               9cf9 0200  nop
-              9cfa c226  st   [$26]       ;Trampoline for page $9c00 reading (continue)
-              9cfb 0123  ld   [$23]
+              9cfa c225  st   [$25]       ;Trampoline for page $9c00 reading (continue)
+              9cfb 0122  ld   [$22]
               9cfc 8002  adda $02
               9cfd 1404  ld   $04,y
               9cfe fe00  bra  ac
-              9cff e0a3  jmp  y,$a3
+              9cff e0ac  jmp  y,$ac
               9d00 0000  ld   $00         ;Pixels for packedJupiter line 4
               9d01 0000  ld   $00
               9d02 0000  ld   $00
@@ -38401,8 +38409,8 @@ packedJupiter:
               9d78 0200  nop
               9d79 fe00  bra  ac          ;Trampoline for page $9d00 reading (entry)
               9d7a fc7b  bra  $9d7b
-              9d7b c225  st   [$25]
-              9d7c 0123  ld   [$23]
+              9d7b c224  st   [$24]
+              9d7c 0122  ld   [$22]
               9d7d 8001  adda $01
               9d7e fe00  bra  ac
               9d7f fcfa  bra  $9dfa
@@ -38445,12 +38453,12 @@ packedJupiter:
               * 46 times
               9df8 0200  nop
               9df9 0200  nop
-              9dfa c226  st   [$26]       ;Trampoline for page $9d00 reading (continue)
-              9dfb 0123  ld   [$23]
+              9dfa c225  st   [$25]       ;Trampoline for page $9d00 reading (continue)
+              9dfb 0122  ld   [$22]
               9dfc 8002  adda $02
               9dfd 1404  ld   $04,y
               9dfe fe00  bra  ac
-              9dff e0a3  jmp  y,$a3
+              9dff e0ac  jmp  y,$ac
               9e00 0000  ld   $00         ;Pixels for packedJupiter line 6
               9e01 0000  ld   $00
               9e02 0000  ld   $00
@@ -38496,8 +38504,8 @@ packedJupiter:
               9e78 0200  nop
               9e79 fe00  bra  ac          ;Trampoline for page $9e00 reading (entry)
               9e7a fc7b  bra  $9e7b
-              9e7b c225  st   [$25]
-              9e7c 0123  ld   [$23]
+              9e7b c224  st   [$24]
+              9e7c 0122  ld   [$22]
               9e7d 8001  adda $01
               9e7e fe00  bra  ac
               9e7f fcfa  bra  $9efa
@@ -38548,12 +38556,12 @@ packedJupiter:
               * 42 times
               9ef8 0200  nop
               9ef9 0200  nop
-              9efa c226  st   [$26]       ;Trampoline for page $9e00 reading (continue)
-              9efb 0123  ld   [$23]
+              9efa c225  st   [$25]       ;Trampoline for page $9e00 reading (continue)
+              9efb 0122  ld   [$22]
               9efc 8002  adda $02
               9efd 1404  ld   $04,y
               9efe fe00  bra  ac
-              9eff e0a3  jmp  y,$a3
+              9eff e0ac  jmp  y,$ac
               9f00 0000  ld   $00         ;Pixels for packedJupiter line 8
               9f01 0000  ld   $00
               9f02 0000  ld   $00
@@ -38605,8 +38613,8 @@ packedJupiter:
               9f78 0200  nop
               9f79 fe00  bra  ac          ;Trampoline for page $9f00 reading (entry)
               9f7a fc7b  bra  $9f7b
-              9f7b c225  st   [$25]
-              9f7c 0123  ld   [$23]
+              9f7b c224  st   [$24]
+              9f7c 0122  ld   [$22]
               9f7d 8001  adda $01
               9f7e fe00  bra  ac
               9f7f fcfa  bra  $9ffa
@@ -38664,12 +38672,12 @@ packedJupiter:
               * 39 times
               9ff8 0200  nop
               9ff9 0200  nop
-              9ffa c226  st   [$26]       ;Trampoline for page $9f00 reading (continue)
-              9ffb 0123  ld   [$23]
+              9ffa c225  st   [$25]       ;Trampoline for page $9f00 reading (continue)
+              9ffb 0122  ld   [$22]
               9ffc 8002  adda $02
               9ffd 1404  ld   $04,y
               9ffe fe00  bra  ac
-              9fff e0a3  jmp  y,$a3
+              9fff e0ac  jmp  y,$ac
               a000 0000  ld   $00         ;Pixels for packedJupiter line 10
               a001 0000  ld   $00
               a002 0000  ld   $00
@@ -38727,8 +38735,8 @@ packedJupiter:
               a078 0200  nop
               a079 fe00  bra  ac          ;Trampoline for page $a000 reading (entry)
               a07a fc7b  bra  $a07b
-              a07b c225  st   [$25]
-              a07c 0123  ld   [$23]
+              a07b c224  st   [$24]
+              a07c 0122  ld   [$22]
               a07d 8001  adda $01
               a07e fe00  bra  ac
               a07f fcfa  bra  $a0fa
@@ -38791,12 +38799,12 @@ packedJupiter:
               * 36 times
               a0f8 0200  nop
               a0f9 0200  nop
-              a0fa c226  st   [$26]       ;Trampoline for page $a000 reading (continue)
-              a0fb 0123  ld   [$23]
+              a0fa c225  st   [$25]       ;Trampoline for page $a000 reading (continue)
+              a0fb 0122  ld   [$22]
               a0fc 8002  adda $02
               a0fd 1404  ld   $04,y
               a0fe fe00  bra  ac
-              a0ff e0a3  jmp  y,$a3
+              a0ff e0ac  jmp  y,$ac
               a100 0000  ld   $00         ;Pixels for packedJupiter line 12
               a101 0000  ld   $00
               a102 0000  ld   $00
@@ -38860,8 +38868,8 @@ packedJupiter:
               a178 0200  nop
               a179 fe00  bra  ac          ;Trampoline for page $a100 reading (entry)
               a17a fc7b  bra  $a17b
-              a17b c225  st   [$25]
-              a17c 0123  ld   [$23]
+              a17b c224  st   [$24]
+              a17c 0122  ld   [$22]
               a17d 8001  adda $01
               a17e fe00  bra  ac
               a17f fcfa  bra  $a1fa
@@ -38930,12 +38938,12 @@ packedJupiter:
               * 33 times
               a1f8 0200  nop
               a1f9 0200  nop
-              a1fa c226  st   [$26]       ;Trampoline for page $a100 reading (continue)
-              a1fb 0123  ld   [$23]
+              a1fa c225  st   [$25]       ;Trampoline for page $a100 reading (continue)
+              a1fb 0122  ld   [$22]
               a1fc 8002  adda $02
               a1fd 1404  ld   $04,y
               a1fe fe00  bra  ac
-              a1ff e0a3  jmp  y,$a3
+              a1ff e0ac  jmp  y,$ac
               a200 0000  ld   $00         ;Pixels for packedJupiter line 14
               a201 0000  ld   $00
               a202 0000  ld   $00
@@ -39004,8 +39012,8 @@ packedJupiter:
               a278 0200  nop
               a279 fe00  bra  ac          ;Trampoline for page $a200 reading (entry)
               a27a fc7b  bra  $a27b
-              a27b c225  st   [$25]
-              a27c 0123  ld   [$23]
+              a27b c224  st   [$24]
+              a27c 0122  ld   [$22]
               a27d 8001  adda $01
               a27e fe00  bra  ac
               a27f fcfa  bra  $a2fa
@@ -39078,12 +39086,12 @@ packedJupiter:
               * 31 times
               a2f8 0200  nop
               a2f9 0200  nop
-              a2fa c226  st   [$26]       ;Trampoline for page $a200 reading (continue)
-              a2fb 0123  ld   [$23]
+              a2fa c225  st   [$25]       ;Trampoline for page $a200 reading (continue)
+              a2fb 0122  ld   [$22]
               a2fc 8002  adda $02
               a2fd 1404  ld   $04,y
               a2fe fe00  bra  ac
-              a2ff e0a3  jmp  y,$a3
+              a2ff e0ac  jmp  y,$ac
               a300 0000  ld   $00         ;Pixels for packedJupiter line 16
               a301 0000  ld   $00
               a302 0000  ld   $00
@@ -39156,8 +39164,8 @@ packedJupiter:
               a378 0200  nop
               a379 fe00  bra  ac          ;Trampoline for page $a300 reading (entry)
               a37a fc7b  bra  $a37b
-              a37b c225  st   [$25]
-              a37c 0123  ld   [$23]
+              a37b c224  st   [$24]
+              a37c 0122  ld   [$22]
               a37d 8001  adda $01
               a37e fe00  bra  ac
               a37f fcfa  bra  $a3fa
@@ -39233,12 +39241,12 @@ packedJupiter:
               * 29 times
               a3f8 0200  nop
               a3f9 0200  nop
-              a3fa c226  st   [$26]       ;Trampoline for page $a300 reading (continue)
-              a3fb 0123  ld   [$23]
+              a3fa c225  st   [$25]       ;Trampoline for page $a300 reading (continue)
+              a3fb 0122  ld   [$22]
               a3fc 8002  adda $02
               a3fd 1404  ld   $04,y
               a3fe fe00  bra  ac
-              a3ff e0a3  jmp  y,$a3
+              a3ff e0ac  jmp  y,$ac
               a400 0000  ld   $00         ;Pixels for packedJupiter line 18
               a401 0000  ld   $00
               a402 0000  ld   $00
@@ -39314,8 +39322,8 @@ packedJupiter:
               a478 0200  nop
               a479 fe00  bra  ac          ;Trampoline for page $a400 reading (entry)
               a47a fc7b  bra  $a47b
-              a47b c225  st   [$25]
-              a47c 0123  ld   [$23]
+              a47b c224  st   [$24]
+              a47c 0122  ld   [$22]
               a47d 8001  adda $01
               a47e fe00  bra  ac
               a47f fcfa  bra  $a4fa
@@ -39395,12 +39403,12 @@ packedJupiter:
               * 27 times
               a4f8 0200  nop
               a4f9 0200  nop
-              a4fa c226  st   [$26]       ;Trampoline for page $a400 reading (continue)
-              a4fb 0123  ld   [$23]
+              a4fa c225  st   [$25]       ;Trampoline for page $a400 reading (continue)
+              a4fb 0122  ld   [$22]
               a4fc 8002  adda $02
               a4fd 1404  ld   $04,y
               a4fe fe00  bra  ac
-              a4ff e0a3  jmp  y,$a3
+              a4ff e0ac  jmp  y,$ac
               a500 0000  ld   $00         ;Pixels for packedJupiter line 20
               a501 0000  ld   $00
               a502 0000  ld   $00
@@ -39479,8 +39487,8 @@ packedJupiter:
               a578 0200  nop
               a579 fe00  bra  ac          ;Trampoline for page $a500 reading (entry)
               a57a fc7b  bra  $a57b
-              a57b c225  st   [$25]
-              a57c 0123  ld   [$23]
+              a57b c224  st   [$24]
+              a57c 0122  ld   [$22]
               a57d 8001  adda $01
               a57e fe00  bra  ac
               a57f fcfa  bra  $a5fa
@@ -39563,12 +39571,12 @@ packedJupiter:
               * 26 times
               a5f8 0200  nop
               a5f9 0200  nop
-              a5fa c226  st   [$26]       ;Trampoline for page $a500 reading (continue)
-              a5fb 0123  ld   [$23]
+              a5fa c225  st   [$25]       ;Trampoline for page $a500 reading (continue)
+              a5fb 0122  ld   [$22]
               a5fc 8002  adda $02
               a5fd 1404  ld   $04,y
               a5fe fe00  bra  ac
-              a5ff e0a3  jmp  y,$a3
+              a5ff e0ac  jmp  y,$ac
               a600 0000  ld   $00         ;Pixels for packedJupiter line 22
               a601 0000  ld   $00
               a602 0000  ld   $00
@@ -39650,8 +39658,8 @@ packedJupiter:
               a678 0200  nop
               a679 fe00  bra  ac          ;Trampoline for page $a600 reading (entry)
               a67a fc7b  bra  $a67b
-              a67b c225  st   [$25]
-              a67c 0123  ld   [$23]
+              a67b c224  st   [$24]
+              a67c 0122  ld   [$22]
               a67d 8001  adda $01
               a67e fe00  bra  ac
               a67f fcfa  bra  $a6fa
@@ -39737,12 +39745,12 @@ packedJupiter:
               * 24 times
               a6f8 0200  nop
               a6f9 0200  nop
-              a6fa c226  st   [$26]       ;Trampoline for page $a600 reading (continue)
-              a6fb 0123  ld   [$23]
+              a6fa c225  st   [$25]       ;Trampoline for page $a600 reading (continue)
+              a6fb 0122  ld   [$22]
               a6fc 8002  adda $02
               a6fd 1404  ld   $04,y
               a6fe fe00  bra  ac
-              a6ff e0a3  jmp  y,$a3
+              a6ff e0ac  jmp  y,$ac
               a700 0000  ld   $00         ;Pixels for packedJupiter line 24
               a701 0000  ld   $00
               a702 0000  ld   $00
@@ -39827,8 +39835,8 @@ packedJupiter:
               a778 0200  nop
               a779 fe00  bra  ac          ;Trampoline for page $a700 reading (entry)
               a77a fc7b  bra  $a77b
-              a77b c225  st   [$25]
-              a77c 0123  ld   [$23]
+              a77b c224  st   [$24]
+              a77c 0122  ld   [$22]
               a77d 8001  adda $01
               a77e fe00  bra  ac
               a77f fcfa  bra  $a7fa
@@ -39917,12 +39925,12 @@ packedJupiter:
               * 23 times
               a7f8 0200  nop
               a7f9 0200  nop
-              a7fa c226  st   [$26]       ;Trampoline for page $a700 reading (continue)
-              a7fb 0123  ld   [$23]
+              a7fa c225  st   [$25]       ;Trampoline for page $a700 reading (continue)
+              a7fb 0122  ld   [$22]
               a7fc 8002  adda $02
               a7fd 1404  ld   $04,y
               a7fe fe00  bra  ac
-              a7ff e0a3  jmp  y,$a3
+              a7ff e0ac  jmp  y,$ac
               a800 0000  ld   $00         ;Pixels for packedJupiter line 26
               a801 0000  ld   $00
               a802 0000  ld   $00
@@ -40009,8 +40017,8 @@ packedJupiter:
               a878 0200  nop
               a879 fe00  bra  ac          ;Trampoline for page $a800 reading (entry)
               a87a fc7b  bra  $a87b
-              a87b c225  st   [$25]
-              a87c 0123  ld   [$23]
+              a87b c224  st   [$24]
+              a87c 0122  ld   [$22]
               a87d 8001  adda $01
               a87e fe00  bra  ac
               a87f fcfa  bra  $a8fa
@@ -40101,12 +40109,12 @@ packedJupiter:
               * 22 times
               a8f8 0200  nop
               a8f9 0200  nop
-              a8fa c226  st   [$26]       ;Trampoline for page $a800 reading (continue)
-              a8fb 0123  ld   [$23]
+              a8fa c225  st   [$25]       ;Trampoline for page $a800 reading (continue)
+              a8fb 0122  ld   [$22]
               a8fc 8002  adda $02
               a8fd 1404  ld   $04,y
               a8fe fe00  bra  ac
-              a8ff e0a3  jmp  y,$a3
+              a8ff e0ac  jmp  y,$ac
               a900 0000  ld   $00         ;Pixels for packedJupiter line 28
               a901 0000  ld   $00
               a902 0000  ld   $00
@@ -40195,8 +40203,8 @@ packedJupiter:
               a978 0200  nop
               a979 fe00  bra  ac          ;Trampoline for page $a900 reading (entry)
               a97a fc7b  bra  $a97b
-              a97b c225  st   [$25]
-              a97c 0123  ld   [$23]
+              a97b c224  st   [$24]
+              a97c 0122  ld   [$22]
               a97d 8001  adda $01
               a97e fe00  bra  ac
               a97f fcfa  bra  $a9fa
@@ -40289,12 +40297,12 @@ packedJupiter:
               * 21 times
               a9f8 0200  nop
               a9f9 0200  nop
-              a9fa c226  st   [$26]       ;Trampoline for page $a900 reading (continue)
-              a9fb 0123  ld   [$23]
+              a9fa c225  st   [$25]       ;Trampoline for page $a900 reading (continue)
+              a9fb 0122  ld   [$22]
               a9fc 8002  adda $02
               a9fd 1404  ld   $04,y
               a9fe fe00  bra  ac
-              a9ff e0a3  jmp  y,$a3
+              a9ff e0ac  jmp  y,$ac
               aa00 0000  ld   $00         ;Pixels for packedJupiter line 30
               aa01 0000  ld   $00
               aa02 0000  ld   $00
@@ -40385,8 +40393,8 @@ packedJupiter:
               aa78 0200  nop
               aa79 fe00  bra  ac          ;Trampoline for page $aa00 reading (entry)
               aa7a fc7b  bra  $aa7b
-              aa7b c225  st   [$25]
-              aa7c 0123  ld   [$23]
+              aa7b c224  st   [$24]
+              aa7c 0122  ld   [$22]
               aa7d 8001  adda $01
               aa7e fe00  bra  ac
               aa7f fcfa  bra  $aafa
@@ -40481,12 +40489,12 @@ packedJupiter:
               * 20 times
               aaf8 0200  nop
               aaf9 0200  nop
-              aafa c226  st   [$26]       ;Trampoline for page $aa00 reading (continue)
-              aafb 0123  ld   [$23]
+              aafa c225  st   [$25]       ;Trampoline for page $aa00 reading (continue)
+              aafb 0122  ld   [$22]
               aafc 8002  adda $02
               aafd 1404  ld   $04,y
               aafe fe00  bra  ac
-              aaff e0a3  jmp  y,$a3
+              aaff e0ac  jmp  y,$ac
               ab00 0000  ld   $00         ;Pixels for packedJupiter line 32
               ab01 0000  ld   $00
               ab02 0000  ld   $00
@@ -40579,8 +40587,8 @@ packedJupiter:
               ab78 0200  nop
               ab79 fe00  bra  ac          ;Trampoline for page $ab00 reading (entry)
               ab7a fc7b  bra  $ab7b
-              ab7b c225  st   [$25]
-              ab7c 0123  ld   [$23]
+              ab7b c224  st   [$24]
+              ab7c 0122  ld   [$22]
               ab7d 8001  adda $01
               ab7e fe00  bra  ac
               ab7f fcfa  bra  $abfa
@@ -40677,12 +40685,12 @@ packedJupiter:
               * 19 times
               abf8 0200  nop
               abf9 0200  nop
-              abfa c226  st   [$26]       ;Trampoline for page $ab00 reading (continue)
-              abfb 0123  ld   [$23]
+              abfa c225  st   [$25]       ;Trampoline for page $ab00 reading (continue)
+              abfb 0122  ld   [$22]
               abfc 8002  adda $02
               abfd 1404  ld   $04,y
               abfe fe00  bra  ac
-              abff e0a3  jmp  y,$a3
+              abff e0ac  jmp  y,$ac
               ac00 0000  ld   $00         ;Pixels for packedJupiter line 34
               ac01 0000  ld   $00
               ac02 0000  ld   $00
@@ -40777,8 +40785,8 @@ packedJupiter:
               ac78 0200  nop
               ac79 fe00  bra  ac          ;Trampoline for page $ac00 reading (entry)
               ac7a fc7b  bra  $ac7b
-              ac7b c225  st   [$25]
-              ac7c 0123  ld   [$23]
+              ac7b c224  st   [$24]
+              ac7c 0122  ld   [$22]
               ac7d 8001  adda $01
               ac7e fe00  bra  ac
               ac7f fcfa  bra  $acfa
@@ -40876,12 +40884,12 @@ packedJupiter:
               * 18 times
               acf8 0200  nop
               acf9 0200  nop
-              acfa c226  st   [$26]       ;Trampoline for page $ac00 reading (continue)
-              acfb 0123  ld   [$23]
+              acfa c225  st   [$25]       ;Trampoline for page $ac00 reading (continue)
+              acfb 0122  ld   [$22]
               acfc 8002  adda $02
               acfd 1404  ld   $04,y
               acfe fe00  bra  ac
-              acff e0a3  jmp  y,$a3
+              acff e0ac  jmp  y,$ac
               ad00 0000  ld   $00         ;Pixels for packedJupiter line 36
               ad01 0000  ld   $00
               ad02 0000  ld   $00
@@ -40978,8 +40986,8 @@ packedJupiter:
               ad78 0200  nop
               ad79 fe00  bra  ac          ;Trampoline for page $ad00 reading (entry)
               ad7a fc7b  bra  $ad7b
-              ad7b c225  st   [$25]
-              ad7c 0123  ld   [$23]
+              ad7b c224  st   [$24]
+              ad7c 0122  ld   [$22]
               ad7d 8001  adda $01
               ad7e fe00  bra  ac
               ad7f fcfa  bra  $adfa
@@ -41078,12 +41086,12 @@ packedJupiter:
               * 18 times
               adf8 0200  nop
               adf9 0200  nop
-              adfa c226  st   [$26]       ;Trampoline for page $ad00 reading (continue)
-              adfb 0123  ld   [$23]
+              adfa c225  st   [$25]       ;Trampoline for page $ad00 reading (continue)
+              adfb 0122  ld   [$22]
               adfc 8002  adda $02
               adfd 1404  ld   $04,y
               adfe fe00  bra  ac
-              adff e0a3  jmp  y,$a3
+              adff e0ac  jmp  y,$ac
               ae00 0000  ld   $00         ;Pixels for packedJupiter line 38
               ae01 0000  ld   $00
               ae02 0000  ld   $00
@@ -41181,8 +41189,8 @@ packedJupiter:
               ae78 0200  nop
               ae79 fe00  bra  ac          ;Trampoline for page $ae00 reading (entry)
               ae7a fc7b  bra  $ae7b
-              ae7b c225  st   [$25]
-              ae7c 0123  ld   [$23]
+              ae7b c224  st   [$24]
+              ae7c 0122  ld   [$22]
               ae7d 8001  adda $01
               ae7e fe00  bra  ac
               ae7f fcfa  bra  $aefa
@@ -41283,12 +41291,12 @@ packedJupiter:
               * 17 times
               aef8 0200  nop
               aef9 0200  nop
-              aefa c226  st   [$26]       ;Trampoline for page $ae00 reading (continue)
-              aefb 0123  ld   [$23]
+              aefa c225  st   [$25]       ;Trampoline for page $ae00 reading (continue)
+              aefb 0122  ld   [$22]
               aefc 8002  adda $02
               aefd 1404  ld   $04,y
               aefe fe00  bra  ac
-              aeff e0a3  jmp  y,$a3
+              aeff e0ac  jmp  y,$ac
               af00 0000  ld   $00         ;Pixels for packedJupiter line 40
               af01 0000  ld   $00
               af02 0000  ld   $00
@@ -41387,8 +41395,8 @@ packedJupiter:
               af78 0200  nop
               af79 fe00  bra  ac          ;Trampoline for page $af00 reading (entry)
               af7a fc7b  bra  $af7b
-              af7b c225  st   [$25]
-              af7c 0123  ld   [$23]
+              af7b c224  st   [$24]
+              af7c 0122  ld   [$22]
               af7d 8001  adda $01
               af7e fe00  bra  ac
               af7f fcfa  bra  $affa
@@ -41491,12 +41499,12 @@ packedJupiter:
               * 16 times
               aff8 0200  nop
               aff9 0200  nop
-              affa c226  st   [$26]       ;Trampoline for page $af00 reading (continue)
-              affb 0123  ld   [$23]
+              affa c225  st   [$25]       ;Trampoline for page $af00 reading (continue)
+              affb 0122  ld   [$22]
               affc 8002  adda $02
               affd 1404  ld   $04,y
               affe fe00  bra  ac
-              afff e0a3  jmp  y,$a3
+              afff e0ac  jmp  y,$ac
               b000 0000  ld   $00         ;Pixels for packedJupiter line 42
               b001 0000  ld   $00
               b002 0000  ld   $00
@@ -41596,8 +41604,8 @@ packedJupiter:
               b078 0200  nop
               b079 fe00  bra  ac          ;Trampoline for page $b000 reading (entry)
               b07a fc7b  bra  $b07b
-              b07b c225  st   [$25]
-              b07c 0123  ld   [$23]
+              b07b c224  st   [$24]
+              b07c 0122  ld   [$22]
               b07d 8001  adda $01
               b07e fe00  bra  ac
               b07f fcfa  bra  $b0fa
@@ -41700,12 +41708,12 @@ packedJupiter:
               * 16 times
               b0f8 0200  nop
               b0f9 0200  nop
-              b0fa c226  st   [$26]       ;Trampoline for page $b000 reading (continue)
-              b0fb 0123  ld   [$23]
+              b0fa c225  st   [$25]       ;Trampoline for page $b000 reading (continue)
+              b0fb 0122  ld   [$22]
               b0fc 8002  adda $02
               b0fd 1404  ld   $04,y
               b0fe fe00  bra  ac
-              b0ff e0a3  jmp  y,$a3
+              b0ff e0ac  jmp  y,$ac
               b100 0000  ld   $00         ;Pixels for packedJupiter line 44
               b101 0000  ld   $00
               b102 0000  ld   $00
@@ -41805,8 +41813,8 @@ packedJupiter:
               b178 0200  nop
               b179 fe00  bra  ac          ;Trampoline for page $b100 reading (entry)
               b17a fc7b  bra  $b17b
-              b17b c225  st   [$25]
-              b17c 0123  ld   [$23]
+              b17b c224  st   [$24]
+              b17c 0122  ld   [$22]
               b17d 8001  adda $01
               b17e fe00  bra  ac
               b17f fcfa  bra  $b1fa
@@ -41909,12 +41917,12 @@ packedJupiter:
               * 16 times
               b1f8 0200  nop
               b1f9 0200  nop
-              b1fa c226  st   [$26]       ;Trampoline for page $b100 reading (continue)
-              b1fb 0123  ld   [$23]
+              b1fa c225  st   [$25]       ;Trampoline for page $b100 reading (continue)
+              b1fb 0122  ld   [$22]
               b1fc 8002  adda $02
               b1fd 1404  ld   $04,y
               b1fe fe00  bra  ac
-              b1ff e0a3  jmp  y,$a3
+              b1ff e0ac  jmp  y,$ac
               b200 0000  ld   $00         ;Pixels for packedJupiter line 46
               b201 0000  ld   $00
               b202 0000  ld   $00
@@ -42015,8 +42023,8 @@ packedJupiter:
               b278 0200  nop
               b279 fe00  bra  ac          ;Trampoline for page $b200 reading (entry)
               b27a fc7b  bra  $b27b
-              b27b c225  st   [$25]
-              b27c 0123  ld   [$23]
+              b27b c224  st   [$24]
+              b27c 0122  ld   [$22]
               b27d 8001  adda $01
               b27e fe00  bra  ac
               b27f fcfa  bra  $b2fa
@@ -42120,12 +42128,12 @@ packedJupiter:
               * 16 times
               b2f8 0200  nop
               b2f9 0200  nop
-              b2fa c226  st   [$26]       ;Trampoline for page $b200 reading (continue)
-              b2fb 0123  ld   [$23]
+              b2fa c225  st   [$25]       ;Trampoline for page $b200 reading (continue)
+              b2fb 0122  ld   [$22]
               b2fc 8002  adda $02
               b2fd 1404  ld   $04,y
               b2fe fe00  bra  ac
-              b2ff e0a3  jmp  y,$a3
+              b2ff e0ac  jmp  y,$ac
               b300 0000  ld   $00         ;Pixels for packedJupiter line 48
               b301 0000  ld   $00
               b302 0000  ld   $00
@@ -42227,8 +42235,8 @@ packedJupiter:
               b378 0200  nop
               b379 fe00  bra  ac          ;Trampoline for page $b300 reading (entry)
               b37a fc7b  bra  $b37b
-              b37b c225  st   [$25]
-              b37c 0123  ld   [$23]
+              b37b c224  st   [$24]
+              b37c 0122  ld   [$22]
               b37d 8001  adda $01
               b37e fe00  bra  ac
               b37f fcfa  bra  $b3fa
@@ -42334,12 +42342,12 @@ packedJupiter:
               * 14 times
               b3f8 0200  nop
               b3f9 0200  nop
-              b3fa c226  st   [$26]       ;Trampoline for page $b300 reading (continue)
-              b3fb 0123  ld   [$23]
+              b3fa c225  st   [$25]       ;Trampoline for page $b300 reading (continue)
+              b3fb 0122  ld   [$22]
               b3fc 8002  adda $02
               b3fd 1404  ld   $04,y
               b3fe fe00  bra  ac
-              b3ff e0a3  jmp  y,$a3
+              b3ff e0ac  jmp  y,$ac
               b400 0000  ld   $00         ;Pixels for packedJupiter line 50
               b401 0000  ld   $00
               b402 0000  ld   $00
@@ -42442,8 +42450,8 @@ packedJupiter:
               b478 0200  nop
               b479 fe00  bra  ac          ;Trampoline for page $b400 reading (entry)
               b47a fc7b  bra  $b47b
-              b47b c225  st   [$25]
-              b47c 0123  ld   [$23]
+              b47b c224  st   [$24]
+              b47c 0122  ld   [$22]
               b47d 8001  adda $01
               b47e fe00  bra  ac
               b47f fcfa  bra  $b4fa
@@ -42549,12 +42557,12 @@ packedJupiter:
               * 14 times
               b4f8 0200  nop
               b4f9 0200  nop
-              b4fa c226  st   [$26]       ;Trampoline for page $b400 reading (continue)
-              b4fb 0123  ld   [$23]
+              b4fa c225  st   [$25]       ;Trampoline for page $b400 reading (continue)
+              b4fb 0122  ld   [$22]
               b4fc 8002  adda $02
               b4fd 1404  ld   $04,y
               b4fe fe00  bra  ac
-              b4ff e0a3  jmp  y,$a3
+              b4ff e0ac  jmp  y,$ac
               b500 0000  ld   $00         ;Pixels for packedJupiter line 52
               b501 0000  ld   $00
               b502 0000  ld   $00
@@ -42658,8 +42666,8 @@ packedJupiter:
               b578 0200  nop
               b579 fe00  bra  ac          ;Trampoline for page $b500 reading (entry)
               b57a fc7b  bra  $b57b
-              b57b c225  st   [$25]
-              b57c 0123  ld   [$23]
+              b57b c224  st   [$24]
+              b57c 0122  ld   [$22]
               b57d 8001  adda $01
               b57e fe00  bra  ac
               b57f fcfa  bra  $b5fa
@@ -42766,12 +42774,12 @@ packedJupiter:
               * 14 times
               b5f8 0200  nop
               b5f9 0200  nop
-              b5fa c226  st   [$26]       ;Trampoline for page $b500 reading (continue)
-              b5fb 0123  ld   [$23]
+              b5fa c225  st   [$25]       ;Trampoline for page $b500 reading (continue)
+              b5fb 0122  ld   [$22]
               b5fc 8002  adda $02
               b5fd 1404  ld   $04,y
               b5fe fe00  bra  ac
-              b5ff e0a3  jmp  y,$a3
+              b5ff e0ac  jmp  y,$ac
               b600 0000  ld   $00         ;Pixels for packedJupiter line 54
               b601 0000  ld   $00
               b602 0000  ld   $00
@@ -42875,8 +42883,8 @@ packedJupiter:
               b678 0200  nop
               b679 fe00  bra  ac          ;Trampoline for page $b600 reading (entry)
               b67a fc7b  bra  $b67b
-              b67b c225  st   [$25]
-              b67c 0123  ld   [$23]
+              b67b c224  st   [$24]
+              b67c 0122  ld   [$22]
               b67d 8001  adda $01
               b67e fe00  bra  ac
               b67f fcfa  bra  $b6fa
@@ -42983,12 +42991,12 @@ packedJupiter:
               * 14 times
               b6f8 0200  nop
               b6f9 0200  nop
-              b6fa c226  st   [$26]       ;Trampoline for page $b600 reading (continue)
-              b6fb 0123  ld   [$23]
+              b6fa c225  st   [$25]       ;Trampoline for page $b600 reading (continue)
+              b6fb 0122  ld   [$22]
               b6fc 8002  adda $02
               b6fd 1404  ld   $04,y
               b6fe fe00  bra  ac
-              b6ff e0a3  jmp  y,$a3
+              b6ff e0ac  jmp  y,$ac
               b700 0000  ld   $00         ;Pixels for packedJupiter line 56
               b701 0000  ld   $00
               b702 0000  ld   $00
@@ -43093,8 +43101,8 @@ packedJupiter:
               b778 0200  nop
               b779 fe00  bra  ac          ;Trampoline for page $b700 reading (entry)
               b77a fc7b  bra  $b77b
-              b77b c225  st   [$25]
-              b77c 0123  ld   [$23]
+              b77b c224  st   [$24]
+              b77c 0122  ld   [$22]
               b77d 8001  adda $01
               b77e fe00  bra  ac
               b77f fcfa  bra  $b7fa
@@ -43201,12 +43209,12 @@ packedJupiter:
               * 14 times
               b7f8 0200  nop
               b7f9 0200  nop
-              b7fa c226  st   [$26]       ;Trampoline for page $b700 reading (continue)
-              b7fb 0123  ld   [$23]
+              b7fa c225  st   [$25]       ;Trampoline for page $b700 reading (continue)
+              b7fb 0122  ld   [$22]
               b7fc 8002  adda $02
               b7fd 1404  ld   $04,y
               b7fe fe00  bra  ac
-              b7ff e0a3  jmp  y,$a3
+              b7ff e0ac  jmp  y,$ac
               b800 0000  ld   $00         ;Pixels for packedJupiter line 58
               b801 0000  ld   $00
               b802 0000  ld   $00
@@ -43311,8 +43319,8 @@ packedJupiter:
               b878 0200  nop
               b879 fe00  bra  ac          ;Trampoline for page $b800 reading (entry)
               b87a fc7b  bra  $b87b
-              b87b c225  st   [$25]
-              b87c 0123  ld   [$23]
+              b87b c224  st   [$24]
+              b87c 0122  ld   [$22]
               b87d 8001  adda $01
               b87e fe00  bra  ac
               b87f fcfa  bra  $b8fa
@@ -43419,12 +43427,12 @@ packedJupiter:
               * 14 times
               b8f8 0200  nop
               b8f9 0200  nop
-              b8fa c226  st   [$26]       ;Trampoline for page $b800 reading (continue)
-              b8fb 0123  ld   [$23]
+              b8fa c225  st   [$25]       ;Trampoline for page $b800 reading (continue)
+              b8fb 0122  ld   [$22]
               b8fc 8002  adda $02
               b8fd 1404  ld   $04,y
               b8fe fe00  bra  ac
-              b8ff e0a3  jmp  y,$a3
+              b8ff e0ac  jmp  y,$ac
               b900 0000  ld   $00         ;Pixels for packedJupiter line 60
               b901 0000  ld   $00
               b902 0000  ld   $00
@@ -43528,8 +43536,8 @@ packedJupiter:
               b978 0200  nop
               b979 fe00  bra  ac          ;Trampoline for page $b900 reading (entry)
               b97a fc7b  bra  $b97b
-              b97b c225  st   [$25]
-              b97c 0123  ld   [$23]
+              b97b c224  st   [$24]
+              b97c 0122  ld   [$22]
               b97d 8001  adda $01
               b97e fe00  bra  ac
               b97f fcfa  bra  $b9fa
@@ -43636,12 +43644,12 @@ packedJupiter:
               * 14 times
               b9f8 0200  nop
               b9f9 0200  nop
-              b9fa c226  st   [$26]       ;Trampoline for page $b900 reading (continue)
-              b9fb 0123  ld   [$23]
+              b9fa c225  st   [$25]       ;Trampoline for page $b900 reading (continue)
+              b9fb 0122  ld   [$22]
               b9fc 8002  adda $02
               b9fd 1404  ld   $04,y
               b9fe fe00  bra  ac
-              b9ff e0a3  jmp  y,$a3
+              b9ff e0ac  jmp  y,$ac
               ba00 0000  ld   $00         ;Pixels for packedJupiter line 62
               ba01 0000  ld   $00
               ba02 0000  ld   $00
@@ -43745,8 +43753,8 @@ packedJupiter:
               ba78 0200  nop
               ba79 fe00  bra  ac          ;Trampoline for page $ba00 reading (entry)
               ba7a fc7b  bra  $ba7b
-              ba7b c225  st   [$25]
-              ba7c 0123  ld   [$23]
+              ba7b c224  st   [$24]
+              ba7c 0122  ld   [$22]
               ba7d 8001  adda $01
               ba7e fe00  bra  ac
               ba7f fcfa  bra  $bafa
@@ -43853,12 +43861,12 @@ packedJupiter:
               * 14 times
               baf8 0200  nop
               baf9 0200  nop
-              bafa c226  st   [$26]       ;Trampoline for page $ba00 reading (continue)
-              bafb 0123  ld   [$23]
+              bafa c225  st   [$25]       ;Trampoline for page $ba00 reading (continue)
+              bafb 0122  ld   [$22]
               bafc 8002  adda $02
               bafd 1404  ld   $04,y
               bafe fe00  bra  ac
-              baff e0a3  jmp  y,$a3
+              baff e0ac  jmp  y,$ac
               bb00 0000  ld   $00         ;Pixels for packedJupiter line 64
               bb01 0000  ld   $00
               bb02 0000  ld   $00
@@ -43963,8 +43971,8 @@ packedJupiter:
               bb78 0200  nop
               bb79 fe00  bra  ac          ;Trampoline for page $bb00 reading (entry)
               bb7a fc7b  bra  $bb7b
-              bb7b c225  st   [$25]
-              bb7c 0123  ld   [$23]
+              bb7b c224  st   [$24]
+              bb7c 0122  ld   [$22]
               bb7d 8001  adda $01
               bb7e fe00  bra  ac
               bb7f fcfa  bra  $bbfa
@@ -44071,12 +44079,12 @@ packedJupiter:
               * 14 times
               bbf8 0200  nop
               bbf9 0200  nop
-              bbfa c226  st   [$26]       ;Trampoline for page $bb00 reading (continue)
-              bbfb 0123  ld   [$23]
+              bbfa c225  st   [$25]       ;Trampoline for page $bb00 reading (continue)
+              bbfb 0122  ld   [$22]
               bbfc 8002  adda $02
               bbfd 1404  ld   $04,y
               bbfe fe00  bra  ac
-              bbff e0a3  jmp  y,$a3
+              bbff e0ac  jmp  y,$ac
               bc00 0000  ld   $00         ;Pixels for packedJupiter line 66
               bc01 0000  ld   $00
               bc02 0000  ld   $00
@@ -44180,8 +44188,8 @@ packedJupiter:
               bc78 0200  nop
               bc79 fe00  bra  ac          ;Trampoline for page $bc00 reading (entry)
               bc7a fc7b  bra  $bc7b
-              bc7b c225  st   [$25]
-              bc7c 0123  ld   [$23]
+              bc7b c224  st   [$24]
+              bc7c 0122  ld   [$22]
               bc7d 8001  adda $01
               bc7e fe00  bra  ac
               bc7f fcfa  bra  $bcfa
@@ -44288,12 +44296,12 @@ packedJupiter:
               * 13 times
               bcf8 0200  nop
               bcf9 0200  nop
-              bcfa c226  st   [$26]       ;Trampoline for page $bc00 reading (continue)
-              bcfb 0123  ld   [$23]
+              bcfa c225  st   [$25]       ;Trampoline for page $bc00 reading (continue)
+              bcfb 0122  ld   [$22]
               bcfc 8002  adda $02
               bcfd 1404  ld   $04,y
               bcfe fe00  bra  ac
-              bcff e0a3  jmp  y,$a3
+              bcff e0ac  jmp  y,$ac
               bd00 0000  ld   $00         ;Pixels for packedJupiter line 68
               bd01 0000  ld   $00
               bd02 0000  ld   $00
@@ -44396,8 +44404,8 @@ packedJupiter:
               bd78 0200  nop
               bd79 fe00  bra  ac          ;Trampoline for page $bd00 reading (entry)
               bd7a fc7b  bra  $bd7b
-              bd7b c225  st   [$25]
-              bd7c 0123  ld   [$23]
+              bd7b c224  st   [$24]
+              bd7c 0122  ld   [$22]
               bd7d 8001  adda $01
               bd7e fe00  bra  ac
               bd7f fcfa  bra  $bdfa
@@ -44503,12 +44511,12 @@ packedJupiter:
               * 14 times
               bdf8 0200  nop
               bdf9 0200  nop
-              bdfa c226  st   [$26]       ;Trampoline for page $bd00 reading (continue)
-              bdfb 0123  ld   [$23]
+              bdfa c225  st   [$25]       ;Trampoline for page $bd00 reading (continue)
+              bdfb 0122  ld   [$22]
               bdfc 8002  adda $02
               bdfd 1404  ld   $04,y
               bdfe fe00  bra  ac
-              bdff e0a3  jmp  y,$a3
+              bdff e0ac  jmp  y,$ac
               be00 0000  ld   $00         ;Pixels for packedJupiter line 70
               be01 0000  ld   $00
               be02 0000  ld   $00
@@ -44610,8 +44618,8 @@ packedJupiter:
               be78 0200  nop
               be79 fe00  bra  ac          ;Trampoline for page $be00 reading (entry)
               be7a fc7b  bra  $be7b
-              be7b c225  st   [$25]
-              be7c 0123  ld   [$23]
+              be7b c224  st   [$24]
+              be7c 0122  ld   [$22]
               be7d 8001  adda $01
               be7e fe00  bra  ac
               be7f fcfa  bra  $befa
@@ -44714,12 +44722,12 @@ packedJupiter:
               * 16 times
               bef8 0200  nop
               bef9 0200  nop
-              befa c226  st   [$26]       ;Trampoline for page $be00 reading (continue)
-              befb 0123  ld   [$23]
+              befa c225  st   [$25]       ;Trampoline for page $be00 reading (continue)
+              befb 0122  ld   [$22]
               befc 8002  adda $02
               befd 1404  ld   $04,y
               befe fe00  bra  ac
-              beff e0a3  jmp  y,$a3
+              beff e0ac  jmp  y,$ac
               bf00 0000  ld   $00         ;Pixels for packedJupiter line 72
               bf01 0000  ld   $00
               bf02 0000  ld   $00
@@ -44820,8 +44828,8 @@ packedJupiter:
               bf78 0200  nop
               bf79 fe00  bra  ac          ;Trampoline for page $bf00 reading (entry)
               bf7a fc7b  bra  $bf7b
-              bf7b c225  st   [$25]
-              bf7c 0123  ld   [$23]
+              bf7b c224  st   [$24]
+              bf7c 0122  ld   [$22]
               bf7d 8001  adda $01
               bf7e fe00  bra  ac
               bf7f fcfa  bra  $bffa
@@ -44925,12 +44933,12 @@ packedJupiter:
               * 15 times
               bff8 0200  nop
               bff9 0200  nop
-              bffa c226  st   [$26]       ;Trampoline for page $bf00 reading (continue)
-              bffb 0123  ld   [$23]
+              bffa c225  st   [$25]       ;Trampoline for page $bf00 reading (continue)
+              bffb 0122  ld   [$22]
               bffc 8002  adda $02
               bffd 1404  ld   $04,y
               bffe fe00  bra  ac
-              bfff e0a3  jmp  y,$a3
+              bfff e0ac  jmp  y,$ac
               c000 0000  ld   $00         ;Pixels for packedJupiter line 74
               c001 0000  ld   $00
               c002 0000  ld   $00
@@ -45031,8 +45039,8 @@ packedJupiter:
               c078 0200  nop
               c079 fe00  bra  ac          ;Trampoline for page $c000 reading (entry)
               c07a fc7b  bra  $c07b
-              c07b c225  st   [$25]
-              c07c 0123  ld   [$23]
+              c07b c224  st   [$24]
+              c07c 0122  ld   [$22]
               c07d 8001  adda $01
               c07e fe00  bra  ac
               c07f fcfa  bra  $c0fa
@@ -45135,12 +45143,12 @@ packedJupiter:
               * 16 times
               c0f8 0200  nop
               c0f9 0200  nop
-              c0fa c226  st   [$26]       ;Trampoline for page $c000 reading (continue)
-              c0fb 0123  ld   [$23]
+              c0fa c225  st   [$25]       ;Trampoline for page $c000 reading (continue)
+              c0fb 0122  ld   [$22]
               c0fc 8002  adda $02
               c0fd 1404  ld   $04,y
               c0fe fe00  bra  ac
-              c0ff e0a3  jmp  y,$a3
+              c0ff e0ac  jmp  y,$ac
               c100 0000  ld   $00         ;Pixels for packedJupiter line 76
               c101 0000  ld   $00
               c102 0000  ld   $00
@@ -45240,8 +45248,8 @@ packedJupiter:
               c178 0200  nop
               c179 fe00  bra  ac          ;Trampoline for page $c100 reading (entry)
               c17a fc7b  bra  $c17b
-              c17b c225  st   [$25]
-              c17c 0123  ld   [$23]
+              c17b c224  st   [$24]
+              c17c 0122  ld   [$22]
               c17d 8001  adda $01
               c17e fe00  bra  ac
               c17f fcfa  bra  $c1fa
@@ -45343,12 +45351,12 @@ packedJupiter:
               * 17 times
               c1f8 0200  nop
               c1f9 0200  nop
-              c1fa c226  st   [$26]       ;Trampoline for page $c100 reading (continue)
-              c1fb 0123  ld   [$23]
+              c1fa c225  st   [$25]       ;Trampoline for page $c100 reading (continue)
+              c1fb 0122  ld   [$22]
               c1fc 8002  adda $02
               c1fd 1404  ld   $04,y
               c1fe fe00  bra  ac
-              c1ff e0a3  jmp  y,$a3
+              c1ff e0ac  jmp  y,$ac
               c200 0000  ld   $00         ;Pixels for packedJupiter line 78
               c201 0000  ld   $00
               c202 0000  ld   $00
@@ -45448,8 +45456,8 @@ packedJupiter:
               c278 0200  nop
               c279 fe00  bra  ac          ;Trampoline for page $c200 reading (entry)
               c27a fc7b  bra  $c27b
-              c27b c225  st   [$25]
-              c27c 0123  ld   [$23]
+              c27b c224  st   [$24]
+              c27c 0122  ld   [$22]
               c27d 8001  adda $01
               c27e fe00  bra  ac
               c27f fcfa  bra  $c2fa
@@ -45550,12 +45558,12 @@ packedJupiter:
               * 17 times
               c2f8 0200  nop
               c2f9 0200  nop
-              c2fa c226  st   [$26]       ;Trampoline for page $c200 reading (continue)
-              c2fb 0123  ld   [$23]
+              c2fa c225  st   [$25]       ;Trampoline for page $c200 reading (continue)
+              c2fb 0122  ld   [$22]
               c2fc 8002  adda $02
               c2fd 1404  ld   $04,y
               c2fe fe00  bra  ac
-              c2ff e0a3  jmp  y,$a3
+              c2ff e0ac  jmp  y,$ac
               c300 0000  ld   $00         ;Pixels for packedJupiter line 80
               c301 0000  ld   $00
               c302 0000  ld   $00
@@ -45653,8 +45661,8 @@ packedJupiter:
               c378 0200  nop
               c379 fe00  bra  ac          ;Trampoline for page $c300 reading (entry)
               c37a fc7b  bra  $c37b
-              c37b c225  st   [$25]
-              c37c 0123  ld   [$23]
+              c37b c224  st   [$24]
+              c37c 0122  ld   [$22]
               c37d 8001  adda $01
               c37e fe00  bra  ac
               c37f fcfa  bra  $c3fa
@@ -45754,12 +45762,12 @@ packedJupiter:
               * 17 times
               c3f8 0200  nop
               c3f9 0200  nop
-              c3fa c226  st   [$26]       ;Trampoline for page $c300 reading (continue)
-              c3fb 0123  ld   [$23]
+              c3fa c225  st   [$25]       ;Trampoline for page $c300 reading (continue)
+              c3fb 0122  ld   [$22]
               c3fc 8002  adda $02
               c3fd 1404  ld   $04,y
               c3fe fe00  bra  ac
-              c3ff e0a3  jmp  y,$a3
+              c3ff e0ac  jmp  y,$ac
               c400 0000  ld   $00         ;Pixels for packedJupiter line 82
               c401 0000  ld   $00
               c402 0000  ld   $00
@@ -45854,8 +45862,8 @@ packedJupiter:
               c478 0200  nop
               c479 fe00  bra  ac          ;Trampoline for page $c400 reading (entry)
               c47a fc7b  bra  $c47b
-              c47b c225  st   [$25]
-              c47c 0123  ld   [$23]
+              c47b c224  st   [$24]
+              c47c 0122  ld   [$22]
               c47d 8001  adda $01
               c47e fe00  bra  ac
               c47f fcfa  bra  $c4fa
@@ -45954,12 +45962,12 @@ packedJupiter:
               * 18 times
               c4f8 0200  nop
               c4f9 0200  nop
-              c4fa c226  st   [$26]       ;Trampoline for page $c400 reading (continue)
-              c4fb 0123  ld   [$23]
+              c4fa c225  st   [$25]       ;Trampoline for page $c400 reading (continue)
+              c4fb 0122  ld   [$22]
               c4fc 8002  adda $02
               c4fd 1404  ld   $04,y
               c4fe fe00  bra  ac
-              c4ff e0a3  jmp  y,$a3
+              c4ff e0ac  jmp  y,$ac
               c500 0000  ld   $00         ;Pixels for packedJupiter line 84
               c501 0000  ld   $00
               c502 0000  ld   $00
@@ -46055,8 +46063,8 @@ packedJupiter:
               c578 0200  nop
               c579 fe00  bra  ac          ;Trampoline for page $c500 reading (entry)
               c57a fc7b  bra  $c57b
-              c57b c225  st   [$25]
-              c57c 0123  ld   [$23]
+              c57b c224  st   [$24]
+              c57c 0122  ld   [$22]
               c57d 8001  adda $01
               c57e fe00  bra  ac
               c57f fcfa  bra  $c5fa
@@ -46153,12 +46161,12 @@ packedJupiter:
               * 19 times
               c5f8 0200  nop
               c5f9 0200  nop
-              c5fa c226  st   [$26]       ;Trampoline for page $c500 reading (continue)
-              c5fb 0123  ld   [$23]
+              c5fa c225  st   [$25]       ;Trampoline for page $c500 reading (continue)
+              c5fb 0122  ld   [$22]
               c5fc 8002  adda $02
               c5fd 1404  ld   $04,y
               c5fe fe00  bra  ac
-              c5ff e0a3  jmp  y,$a3
+              c5ff e0ac  jmp  y,$ac
               c600 0000  ld   $00         ;Pixels for packedJupiter line 86
               c601 0000  ld   $00
               c602 0000  ld   $00
@@ -46253,8 +46261,8 @@ packedJupiter:
               c678 0200  nop
               c679 fe00  bra  ac          ;Trampoline for page $c600 reading (entry)
               c67a fc7b  bra  $c67b
-              c67b c225  st   [$25]
-              c67c 0123  ld   [$23]
+              c67b c224  st   [$24]
+              c67c 0122  ld   [$22]
               c67d 8001  adda $01
               c67e fe00  bra  ac
               c67f fcfa  bra  $c6fa
@@ -46349,12 +46357,12 @@ packedJupiter:
               * 20 times
               c6f8 0200  nop
               c6f9 0200  nop
-              c6fa c226  st   [$26]       ;Trampoline for page $c600 reading (continue)
-              c6fb 0123  ld   [$23]
+              c6fa c225  st   [$25]       ;Trampoline for page $c600 reading (continue)
+              c6fb 0122  ld   [$22]
               c6fc 8002  adda $02
               c6fd 1404  ld   $04,y
               c6fe fe00  bra  ac
-              c6ff e0a3  jmp  y,$a3
+              c6ff e0ac  jmp  y,$ac
               c700 0000  ld   $00         ;Pixels for packedJupiter line 88
               c701 0000  ld   $00
               c702 0000  ld   $00
@@ -46447,8 +46455,8 @@ packedJupiter:
               c778 0200  nop
               c779 fe00  bra  ac          ;Trampoline for page $c700 reading (entry)
               c77a fc7b  bra  $c77b
-              c77b c225  st   [$25]
-              c77c 0123  ld   [$23]
+              c77b c224  st   [$24]
+              c77c 0122  ld   [$22]
               c77d 8001  adda $01
               c77e fe00  bra  ac
               c77f fcfa  bra  $c7fa
@@ -46542,12 +46550,12 @@ packedJupiter:
               * 21 times
               c7f8 0200  nop
               c7f9 0200  nop
-              c7fa c226  st   [$26]       ;Trampoline for page $c700 reading (continue)
-              c7fb 0123  ld   [$23]
+              c7fa c225  st   [$25]       ;Trampoline for page $c700 reading (continue)
+              c7fb 0122  ld   [$22]
               c7fc 8002  adda $02
               c7fd 1404  ld   $04,y
               c7fe fe00  bra  ac
-              c7ff e0a3  jmp  y,$a3
+              c7ff e0ac  jmp  y,$ac
               c800 0000  ld   $00         ;Pixels for packedJupiter line 90
               c801 0000  ld   $00
               c802 0000  ld   $00
@@ -46637,8 +46645,8 @@ packedJupiter:
               c878 0200  nop
               c879 fe00  bra  ac          ;Trampoline for page $c800 reading (entry)
               c87a fc7b  bra  $c87b
-              c87b c225  st   [$25]
-              c87c 0123  ld   [$23]
+              c87b c224  st   [$24]
+              c87c 0122  ld   [$22]
               c87d 8001  adda $01
               c87e fe00  bra  ac
               c87f fcfa  bra  $c8fa
@@ -46730,12 +46738,12 @@ packedJupiter:
               * 21 times
               c8f8 0200  nop
               c8f9 0200  nop
-              c8fa c226  st   [$26]       ;Trampoline for page $c800 reading (continue)
-              c8fb 0123  ld   [$23]
+              c8fa c225  st   [$25]       ;Trampoline for page $c800 reading (continue)
+              c8fb 0122  ld   [$22]
               c8fc 8002  adda $02
               c8fd 1404  ld   $04,y
               c8fe fe00  bra  ac
-              c8ff e0a3  jmp  y,$a3
+              c8ff e0ac  jmp  y,$ac
               c900 0000  ld   $00         ;Pixels for packedJupiter line 92
               c901 0000  ld   $00
               c902 0000  ld   $00
@@ -46823,8 +46831,8 @@ packedJupiter:
               c978 0200  nop
               c979 fe00  bra  ac          ;Trampoline for page $c900 reading (entry)
               c97a fc7b  bra  $c97b
-              c97b c225  st   [$25]
-              c97c 0123  ld   [$23]
+              c97b c224  st   [$24]
+              c97c 0122  ld   [$22]
               c97d 8001  adda $01
               c97e fe00  bra  ac
               c97f fcfa  bra  $c9fa
@@ -46913,12 +46921,12 @@ packedJupiter:
               * 23 times
               c9f8 0200  nop
               c9f9 0200  nop
-              c9fa c226  st   [$26]       ;Trampoline for page $c900 reading (continue)
-              c9fb 0123  ld   [$23]
+              c9fa c225  st   [$25]       ;Trampoline for page $c900 reading (continue)
+              c9fb 0122  ld   [$22]
               c9fc 8002  adda $02
               c9fd 1404  ld   $04,y
               c9fe fe00  bra  ac
-              c9ff e0a3  jmp  y,$a3
+              c9ff e0ac  jmp  y,$ac
               ca00 0000  ld   $00         ;Pixels for packedJupiter line 94
               ca01 0000  ld   $00
               ca02 0000  ld   $00
@@ -47004,8 +47012,8 @@ packedJupiter:
               ca78 0200  nop
               ca79 fe00  bra  ac          ;Trampoline for page $ca00 reading (entry)
               ca7a fc7b  bra  $ca7b
-              ca7b c225  st   [$25]
-              ca7c 0123  ld   [$23]
+              ca7b c224  st   [$24]
+              ca7c 0122  ld   [$22]
               ca7d 8001  adda $01
               ca7e fe00  bra  ac
               ca7f fcfa  bra  $cafa
@@ -47091,12 +47099,12 @@ packedJupiter:
               * 24 times
               caf8 0200  nop
               caf9 0200  nop
-              cafa c226  st   [$26]       ;Trampoline for page $ca00 reading (continue)
-              cafb 0123  ld   [$23]
+              cafa c225  st   [$25]       ;Trampoline for page $ca00 reading (continue)
+              cafb 0122  ld   [$22]
               cafc 8002  adda $02
               cafd 1404  ld   $04,y
               cafe fe00  bra  ac
-              caff e0a3  jmp  y,$a3
+              caff e0ac  jmp  y,$ac
               cb00 0000  ld   $00         ;Pixels for packedJupiter line 96
               cb01 0000  ld   $00
               cb02 0000  ld   $00
@@ -47179,8 +47187,8 @@ packedJupiter:
               cb78 0200  nop
               cb79 fe00  bra  ac          ;Trampoline for page $cb00 reading (entry)
               cb7a fc7b  bra  $cb7b
-              cb7b c225  st   [$25]
-              cb7c 0123  ld   [$23]
+              cb7b c224  st   [$24]
+              cb7c 0122  ld   [$22]
               cb7d 8001  adda $01
               cb7e fe00  bra  ac
               cb7f fcfa  bra  $cbfa
@@ -47265,12 +47273,12 @@ packedJupiter:
               * 25 times
               cbf8 0200  nop
               cbf9 0200  nop
-              cbfa c226  st   [$26]       ;Trampoline for page $cb00 reading (continue)
-              cbfb 0123  ld   [$23]
+              cbfa c225  st   [$25]       ;Trampoline for page $cb00 reading (continue)
+              cbfb 0122  ld   [$22]
               cbfc 8002  adda $02
               cbfd 1404  ld   $04,y
               cbfe fe00  bra  ac
-              cbff e0a3  jmp  y,$a3
+              cbff e0ac  jmp  y,$ac
               cc00 0000  ld   $00         ;Pixels for packedJupiter line 98
               cc01 0000  ld   $00
               cc02 0000  ld   $00
@@ -47351,8 +47359,8 @@ packedJupiter:
               cc78 0200  nop
               cc79 fe00  bra  ac          ;Trampoline for page $cc00 reading (entry)
               cc7a fc7b  bra  $cc7b
-              cc7b c225  st   [$25]
-              cc7c 0123  ld   [$23]
+              cc7b c224  st   [$24]
+              cc7c 0122  ld   [$22]
               cc7d 8001  adda $01
               cc7e fe00  bra  ac
               cc7f fcfa  bra  $ccfa
@@ -47433,12 +47441,12 @@ packedJupiter:
               * 27 times
               ccf8 0200  nop
               ccf9 0200  nop
-              ccfa c226  st   [$26]       ;Trampoline for page $cc00 reading (continue)
-              ccfb 0123  ld   [$23]
+              ccfa c225  st   [$25]       ;Trampoline for page $cc00 reading (continue)
+              ccfb 0122  ld   [$22]
               ccfc 8002  adda $02
               ccfd 1404  ld   $04,y
               ccfe fe00  bra  ac
-              ccff e0a3  jmp  y,$a3
+              ccff e0ac  jmp  y,$ac
               cd00 0000  ld   $00         ;Pixels for packedJupiter line 100
               cd01 0000  ld   $00
               cd02 0000  ld   $00
@@ -47515,8 +47523,8 @@ packedJupiter:
               cd78 0200  nop
               cd79 fe00  bra  ac          ;Trampoline for page $cd00 reading (entry)
               cd7a fc7b  bra  $cd7b
-              cd7b c225  st   [$25]
-              cd7c 0123  ld   [$23]
+              cd7b c224  st   [$24]
+              cd7c 0122  ld   [$22]
               cd7d 8001  adda $01
               cd7e fe00  bra  ac
               cd7f fcfa  bra  $cdfa
@@ -47593,12 +47601,12 @@ packedJupiter:
               * 29 times
               cdf8 0200  nop
               cdf9 0200  nop
-              cdfa c226  st   [$26]       ;Trampoline for page $cd00 reading (continue)
-              cdfb 0123  ld   [$23]
+              cdfa c225  st   [$25]       ;Trampoline for page $cd00 reading (continue)
+              cdfb 0122  ld   [$22]
               cdfc 8002  adda $02
               cdfd 1404  ld   $04,y
               cdfe fe00  bra  ac
-              cdff e0a3  jmp  y,$a3
+              cdff e0ac  jmp  y,$ac
               ce00 0000  ld   $00         ;Pixels for packedJupiter line 102
               ce01 0000  ld   $00
               ce02 0000  ld   $00
@@ -47672,8 +47680,8 @@ packedJupiter:
               ce78 0200  nop
               ce79 fe00  bra  ac          ;Trampoline for page $ce00 reading (entry)
               ce7a fc7b  bra  $ce7b
-              ce7b c225  st   [$25]
-              ce7c 0123  ld   [$23]
+              ce7b c224  st   [$24]
+              ce7c 0122  ld   [$22]
               ce7d 8001  adda $01
               ce7e fe00  bra  ac
               ce7f fcfa  bra  $cefa
@@ -47746,12 +47754,12 @@ packedJupiter:
               * 31 times
               cef8 0200  nop
               cef9 0200  nop
-              cefa c226  st   [$26]       ;Trampoline for page $ce00 reading (continue)
-              cefb 0123  ld   [$23]
+              cefa c225  st   [$25]       ;Trampoline for page $ce00 reading (continue)
+              cefb 0122  ld   [$22]
               cefc 8002  adda $02
               cefd 1404  ld   $04,y
               cefe fe00  bra  ac
-              ceff e0a3  jmp  y,$a3
+              ceff e0ac  jmp  y,$ac
               cf00 0000  ld   $00         ;Pixels for packedJupiter line 104
               cf01 0000  ld   $00
               cf02 0000  ld   $00
@@ -47822,8 +47830,8 @@ packedJupiter:
               cf78 0200  nop
               cf79 fe00  bra  ac          ;Trampoline for page $cf00 reading (entry)
               cf7a fc7b  bra  $cf7b
-              cf7b c225  st   [$25]
-              cf7c 0123  ld   [$23]
+              cf7b c224  st   [$24]
+              cf7c 0122  ld   [$22]
               cf7d 8001  adda $01
               cf7e fe00  bra  ac
               cf7f fcfa  bra  $cffa
@@ -47894,12 +47902,12 @@ packedJupiter:
               * 32 times
               cff8 0200  nop
               cff9 0200  nop
-              cffa c226  st   [$26]       ;Trampoline for page $cf00 reading (continue)
-              cffb 0123  ld   [$23]
+              cffa c225  st   [$25]       ;Trampoline for page $cf00 reading (continue)
+              cffb 0122  ld   [$22]
               cffc 8002  adda $02
               cffd 1404  ld   $04,y
               cffe fe00  bra  ac
-              cfff e0a3  jmp  y,$a3
+              cfff e0ac  jmp  y,$ac
               d000 0000  ld   $00         ;Pixels for packedJupiter line 106
               d001 0000  ld   $00
               d002 0000  ld   $00
@@ -47965,8 +47973,8 @@ packedJupiter:
               d078 0200  nop
               d079 fe00  bra  ac          ;Trampoline for page $d000 reading (entry)
               d07a fc7b  bra  $d07b
-              d07b c225  st   [$25]
-              d07c 0123  ld   [$23]
+              d07b c224  st   [$24]
+              d07c 0122  ld   [$22]
               d07d 8001  adda $01
               d07e fe00  bra  ac
               d07f fcfa  bra  $d0fa
@@ -48033,12 +48041,12 @@ packedJupiter:
               * 34 times
               d0f8 0200  nop
               d0f9 0200  nop
-              d0fa c226  st   [$26]       ;Trampoline for page $d000 reading (continue)
-              d0fb 0123  ld   [$23]
+              d0fa c225  st   [$25]       ;Trampoline for page $d000 reading (continue)
+              d0fb 0122  ld   [$22]
               d0fc 8002  adda $02
               d0fd 1404  ld   $04,y
               d0fe fe00  bra  ac
-              d0ff e0a3  jmp  y,$a3
+              d0ff e0ac  jmp  y,$ac
               d100 0000  ld   $00         ;Pixels for packedJupiter line 108
               d101 0000  ld   $00
               d102 0000  ld   $00
@@ -48100,8 +48108,8 @@ packedJupiter:
               d178 0200  nop
               d179 fe00  bra  ac          ;Trampoline for page $d100 reading (entry)
               d17a fc7b  bra  $d17b
-              d17b c225  st   [$25]
-              d17c 0123  ld   [$23]
+              d17b c224  st   [$24]
+              d17c 0122  ld   [$22]
               d17d 8001  adda $01
               d17e fe00  bra  ac
               d17f fcfa  bra  $d1fa
@@ -48162,12 +48170,12 @@ packedJupiter:
               * 37 times
               d1f8 0200  nop
               d1f9 0200  nop
-              d1fa c226  st   [$26]       ;Trampoline for page $d100 reading (continue)
-              d1fb 0123  ld   [$23]
+              d1fa c225  st   [$25]       ;Trampoline for page $d100 reading (continue)
+              d1fb 0122  ld   [$22]
               d1fc 8002  adda $02
               d1fd 1404  ld   $04,y
               d1fe fe00  bra  ac
-              d1ff e0a3  jmp  y,$a3
+              d1ff e0ac  jmp  y,$ac
               d200 0000  ld   $00         ;Pixels for packedJupiter line 110
               d201 0000  ld   $00
               d202 0000  ld   $00
@@ -48221,8 +48229,8 @@ packedJupiter:
               d278 0200  nop
               d279 fe00  bra  ac          ;Trampoline for page $d200 reading (entry)
               d27a fc7b  bra  $d27b
-              d27b c225  st   [$25]
-              d27c 0123  ld   [$23]
+              d27b c224  st   [$24]
+              d27c 0122  ld   [$22]
               d27d 8001  adda $01
               d27e fe00  bra  ac
               d27f fcfa  bra  $d2fa
@@ -48278,12 +48286,12 @@ packedJupiter:
               * 39 times
               d2f8 0200  nop
               d2f9 0200  nop
-              d2fa c226  st   [$26]       ;Trampoline for page $d200 reading (continue)
-              d2fb 0123  ld   [$23]
+              d2fa c225  st   [$25]       ;Trampoline for page $d200 reading (continue)
+              d2fb 0122  ld   [$22]
               d2fc 8002  adda $02
               d2fd 1404  ld   $04,y
               d2fe fe00  bra  ac
-              d2ff e0a3  jmp  y,$a3
+              d2ff e0ac  jmp  y,$ac
               d300 0000  ld   $00         ;Pixels for packedJupiter line 112
               d301 0000  ld   $00
               d302 0000  ld   $00
@@ -48332,8 +48340,8 @@ packedJupiter:
               d378 0200  nop
               d379 fe00  bra  ac          ;Trampoline for page $d300 reading (entry)
               d37a fc7b  bra  $d37b
-              d37b c225  st   [$25]
-              d37c 0123  ld   [$23]
+              d37b c224  st   [$24]
+              d37c 0122  ld   [$22]
               d37d 8001  adda $01
               d37e fe00  bra  ac
               d37f fcfa  bra  $d3fa
@@ -48379,12 +48387,12 @@ packedJupiter:
               * 45 times
               d3f8 0200  nop
               d3f9 0200  nop
-              d3fa c226  st   [$26]       ;Trampoline for page $d300 reading (continue)
-              d3fb 0123  ld   [$23]
+              d3fa c225  st   [$25]       ;Trampoline for page $d300 reading (continue)
+              d3fb 0122  ld   [$22]
               d3fc 8002  adda $02
               d3fd 1404  ld   $04,y
               d3fe fe00  bra  ac
-              d3ff e0a3  jmp  y,$a3
+              d3ff e0ac  jmp  y,$ac
               d400 0000  ld   $00         ;Pixels for packedJupiter line 114
               d401 0000  ld   $00
               d402 0000  ld   $00
@@ -48424,8 +48432,8 @@ packedJupiter:
               d478 0200  nop
               d479 fe00  bra  ac          ;Trampoline for page $d400 reading (entry)
               d47a fc7b  bra  $d47b
-              d47b c225  st   [$25]
-              d47c 0123  ld   [$23]
+              d47b c224  st   [$24]
+              d47c 0122  ld   [$22]
               d47d 8001  adda $01
               d47e fe00  bra  ac
               d47f fcfa  bra  $d4fa
@@ -48460,12 +48468,12 @@ packedJupiter:
               * 49 times
               d4f8 0200  nop
               d4f9 0200  nop
-              d4fa c226  st   [$26]       ;Trampoline for page $d400 reading (continue)
-              d4fb 0123  ld   [$23]
+              d4fa c225  st   [$25]       ;Trampoline for page $d400 reading (continue)
+              d4fb 0122  ld   [$22]
               d4fc 8002  adda $02
               d4fd 1404  ld   $04,y
               d4fe fe00  bra  ac
-              d4ff e0a3  jmp  y,$a3
+              d4ff e0ac  jmp  y,$ac
               d500 0000  ld   $00         ;Pixels for packedJupiter line 116
               d501 0000  ld   $00
               d502 0000  ld   $00
@@ -48488,8 +48496,8 @@ packedJupiter:
               d578 0200  nop
               d579 fe00  bra  ac          ;Trampoline for page $d500 reading (entry)
               d57a fc7b  bra  $d57b
-              d57b c225  st   [$25]
-              d57c 0123  ld   [$23]
+              d57b c224  st   [$24]
+              d57c 0122  ld   [$22]
               d57d 8001  adda $01
               d57e fe00  bra  ac
               d57f fcfa  bra  $d5fa
@@ -48504,12 +48512,12 @@ packedJupiter:
               * 57 times
               d5f8 0200  nop
               d5f9 0200  nop
-              d5fa c226  st   [$26]       ;Trampoline for page $d500 reading (continue)
-              d5fb 0123  ld   [$23]
+              d5fa c225  st   [$25]       ;Trampoline for page $d500 reading (continue)
+              d5fb 0122  ld   [$22]
               d5fc 8002  adda $02
               d5fd 1404  ld   $04,y
               d5fe fe00  bra  ac
-              d5ff e0a3  jmp  y,$a3
+              d5ff e0ac  jmp  y,$ac
               d600 0000  ld   $00         ;Pixels for packedJupiter line 118
               d601 0000  ld   $00
               d602 0000  ld   $00
@@ -48517,8 +48525,8 @@ packedJupiter:
               d678 0200  nop
               d679 fe00  bra  ac          ;Trampoline for page $d600 reading (entry)
               d67a fc7b  bra  $d67b
-              d67b c225  st   [$25]
-              d67c 0123  ld   [$23]
+              d67b c224  st   [$24]
+              d67c 0122  ld   [$22]
               d67d 8001  adda $01
               d67e fe00  bra  ac
               d67f fcfa  bra  $d6fa
@@ -48528,12 +48536,12 @@ packedJupiter:
               * 120 times
               d6f8 0200  nop
               d6f9 0200  nop
-              d6fa c226  st   [$26]       ;Trampoline for page $d600 reading (continue)
-              d6fb 0123  ld   [$23]
+              d6fa c225  st   [$25]       ;Trampoline for page $d600 reading (continue)
+              d6fb 0122  ld   [$22]
               d6fc 8002  adda $02
               d6fd 1404  ld   $04,y
               d6fe fe00  bra  ac
-              d6ff e0a3  jmp  y,$a3
+              d6ff e0ac  jmp  y,$ac
 zippedRacerHorizon:
               d700 0030  ld   $30
               d701 000c  ld   $0c
@@ -48790,7 +48798,7 @@ zippedRacerHorizon:
               d7fc fcfd  bra  $d7fd       ;|                                   |
               d7fd 1403  ld   $03,y       ;| Trampoline for page $d700 lookups |
               d7fe e078  jmp  y,$78       ;|                                   |
-              d7ff 1519  ld   [$19],y     ;+-----------------------------------+
+              d7ff 1518  ld   [$18],y     ;+-----------------------------------+
               d800 00c3  ld   $c3
               d801 00f0  ld   $f0
               d802 000f  ld   $0f
@@ -49046,7 +49054,7 @@ zippedRacerHorizon:
               d8fc fcfd  bra  $d8fd       ;|                                   |
               d8fd 1403  ld   $03,y       ;| Trampoline for page $d800 lookups |
               d8fe e078  jmp  y,$78       ;|                                   |
-              d8ff 1519  ld   [$19],y     ;+-----------------------------------+
+              d8ff 1518  ld   [$18],y     ;+-----------------------------------+
               d900 00aa  ld   $aa
               d901 00aa  ld   $aa
               d902 002a  ld   $2a
@@ -49292,7 +49300,7 @@ zippedRacerHorizon:
               d9fc fcfd  bra  $d9fd       ;|                                   |
               d9fd 1403  ld   $03,y       ;| Trampoline for page $d900 lookups |
               d9fe e078  jmp  y,$78       ;|                                   |
-              d9ff 1519  ld   [$19],y     ;+-----------------------------------+
+              d9ff 1518  ld   [$18],y     ;+-----------------------------------+
               da00 0030  ld   $30
               da01 000c  ld   $0c
               da02 00c3  ld   $c3
@@ -49548,7 +49556,7 @@ zippedRacerHorizon:
               dafc fcfd  bra  $dafd       ;|                                   |
               dafd 1403  ld   $03,y       ;| Trampoline for page $da00 lookups |
               dafe e078  jmp  y,$78       ;|                                   |
-              daff 1519  ld   [$19],y     ;+-----------------------------------+
+              daff 1518  ld   [$18],y     ;+-----------------------------------+
               db00 00ab  ld   $ab
               db01 00bf  ld   $bf
               db02 00aa  ld   $aa
@@ -49804,7 +49812,7 @@ zippedRacerHorizon:
               dbfc fcfd  bra  $dbfd       ;|                                   |
               dbfd 1403  ld   $03,y       ;| Trampoline for page $db00 lookups |
               dbfe e078  jmp  y,$78       ;|                                   |
-              dbff 1519  ld   [$19],y     ;+-----------------------------------+
+              dbff 1518  ld   [$18],y     ;+-----------------------------------+
               dc00 000c  ld   $0c
               dc01 00c3  ld   $c3
               dc02 0030  ld   $30
@@ -50056,7 +50064,7 @@ zippedRacerHorizon:
               dcfc fcfd  bra  $dcfd       ;|                                   |
               dcfd 1403  ld   $03,y       ;| Trampoline for page $dc00 lookups |
               dcfe e078  jmp  y,$78       ;|                                   |
-              dcff 1519  ld   [$19],y     ;+-----------------------------------+
+              dcff 1518  ld   [$18],y     ;+-----------------------------------+
               dd00 0086  ld   $86
               dd01 00aa  ld   $aa
               dd02 005a  ld   $5a
@@ -50308,7 +50316,7 @@ zippedRacerHorizon:
               ddfc fcfd  bra  $ddfd       ;|                                   |
               ddfd 1403  ld   $03,y       ;| Trampoline for page $dd00 lookups |
               ddfe e078  jmp  y,$78       ;|                                   |
-              ddff 1519  ld   [$19],y     ;+-----------------------------------+
+              ddff 1518  ld   [$18],y     ;+-----------------------------------+
               de00 0004  ld   $04
               de01 0041  ld   $41
               de02 00b0  ld   $b0
@@ -50561,7 +50569,7 @@ zippedRacerHorizon:
               defc fcfd  bra  $defd       ;|                                   |
               defd 1403  ld   $03,y       ;| Trampoline for page $de00 lookups |
               defe e078  jmp  y,$78       ;|                                   |
-              deff 1519  ld   [$19],y     ;+-----------------------------------+
+              deff 1518  ld   [$18],y     ;+-----------------------------------+
               df00 000c  ld   $0c
               df01 00c3  ld   $c3
               df02 0030  ld   $30
@@ -50816,7 +50824,7 @@ zippedRacerHorizon:
               dffc fcfd  bra  $dffd       ;|                                   |
               dffd 1403  ld   $03,y       ;| Trampoline for page $df00 lookups |
               dffe e078  jmp  y,$78       ;|                                   |
-              dfff 1519  ld   [$19],y     ;+-----------------------------------+
+              dfff 1518  ld   [$18],y     ;+-----------------------------------+
               e000 0030  ld   $30
               e001 00ac  ld   $ac
               e002 0069  ld   $69
@@ -51066,7 +51074,7 @@ zippedRacerHorizon:
               e0fc fcfd  bra  $e0fd       ;|                                   |
               e0fd 1403  ld   $03,y       ;| Trampoline for page $e000 lookups |
               e0fe e078  jmp  y,$78       ;|                                   |
-              e0ff 1519  ld   [$19],y     ;+-----------------------------------+
+              e0ff 1518  ld   [$18],y     ;+-----------------------------------+
               e100 0000  ld   $00
               e101 0000  ld   $00
               e102 0000  ld   $00
@@ -51314,7 +51322,7 @@ zippedRacerHorizon:
               e1fc fcfd  bra  $e1fd       ;|                                   |
               e1fd 1403  ld   $03,y       ;| Trampoline for page $e100 lookups |
               e1fe e078  jmp  y,$78       ;|                                   |
-              e1ff 1519  ld   [$19],y     ;+-----------------------------------+
+              e1ff 1518  ld   [$18],y     ;+-----------------------------------+
               e200 00ff  ld   $ff
               e201 00fe  ld   $fe
               e202 00ef  ld   $ef
@@ -51559,7 +51567,7 @@ zippedRacerHorizon:
               e2fc fcfd  bra  $e2fd       ;|                                   |
               e2fd 1403  ld   $03,y       ;| Trampoline for page $e200 lookups |
               e2fe e078  jmp  y,$78       ;|                                   |
-              e2ff 1519  ld   [$19],y     ;+-----------------------------------+
+              e2ff 1518  ld   [$18],y     ;+-----------------------------------+
               e300 00ff  ld   $ff
               e301 00ff  ld   $ff
               e302 00ff  ld   $ff
@@ -51620,11 +51628,11 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e33f 0059  ld   $59         ;0300 LDI
               e340 0000  ld   $00
               e341 002b  ld   $2b         ;0302 STW
-              e342 0031  ld   $31         ;0302 'HighScore'
+              e342 0030  ld   $30         ;0302 'HighScore'
               e343 00e1  ld   $e1         ;0304 DEF
               e344 0071  ld   $71
               e345 0021  ld   $21         ;0306 LDW
-              e346 0033  ld   $33         ;0306 'Char'
+              e346 0032  ld   $32         ;0306 'Char'
               e347 00f6  ld   $f6         ;0308 SUBI
               e348 0052  ld   $52
               e349 0035  ld   $35         ;030a BCC
@@ -51633,146 +51641,146 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e34c 00f3  ld   $f3         ;030d ADDI
               e34d 0032  ld   $32
               e34e 002b  ld   $2b         ;030f STW
-              e34f 0035  ld   $35         ;030f 'i'
+              e34f 0034  ld   $34         ;030f 'i'
               e350 0011  ld   $11         ;0311 LDWI
               e351 0000  ld   $00
               e352 0007  ld   $07
               e353 0095  ld   $95         ;0314 BRA
               e354 0019  ld   $19
               e355 002b  ld   $2b         ;0316 STW
-              e356 0035  ld   $35         ;0316 'i'
+              e356 0034  ld   $34         ;0316 'i'
               e357 0011  ld   $11         ;0318 LDWI
               e358 0000  ld   $00
               e359 0008  ld   $08
               e35a 002b  ld   $2b         ;031b STW
-              e35b 0037  ld   $37         ;031b 'fontData'
+              e35b 0036  ld   $36         ;031b 'fontData'
               e35c 0021  ld   $21         ;031d LDW
-              e35d 0035  ld   $35         ;031d 'i'
+              e35d 0034  ld   $34         ;031d 'i'
               e35e 00c1  ld   $c1         ;031f ADDW
-              e35f 0035  ld   $35         ;031f 'i'
+              e35f 0034  ld   $34         ;031f 'i'
               e360 002b  ld   $2b         ;0321 STW
-              e361 0039  ld   $39         ;0321 'tmp'
+              e361 0038  ld   $38         ;0321 'tmp'
               e362 00c1  ld   $c1         ;0323 ADDW
-              e363 0039  ld   $39         ;0323 'tmp'
+              e363 0038  ld   $38         ;0323 'tmp'
               e364 00c1  ld   $c1         ;0325 ADDW
-              e365 0035  ld   $35         ;0325 'i'
+              e365 0034  ld   $34         ;0325 'i'
               e366 00c1  ld   $c1         ;0327 ADDW
-              e367 0037  ld   $37         ;0327 'fontData'
+              e367 0036  ld   $36         ;0327 'fontData'
               e368 002b  ld   $2b         ;0329 STW
-              e369 0037  ld   $37         ;0329 'fontData'
+              e369 0036  ld   $36         ;0329 'fontData'
               e36a 0011  ld   $11         ;032b LDWI
               e36b 0000  ld   $00
               e36c 0008  ld   $08
               e36d 00c1  ld   $c1         ;032e ADDW
-              e36e 003b  ld   $3b         ;032e 'Pos'
+              e36e 003a  ld   $3a         ;032e 'Pos'
               e36f 002b  ld   $2b         ;0330 STW
-              e370 003d  ld   $3d         ;0330 'q'
+              e370 003c  ld   $3c         ;0330 'q'
               e371 0059  ld   $59         ;0332 LDI
               e372 0005  ld   $05
               e373 002b  ld   $2b         ;0334 STW
-              e374 0035  ld   $35         ;0334 'i'
+              e374 0034  ld   $34         ;0334 'i'
               e375 0035  ld   $35         ;0336 BCC
               e376 003f  ld   $3f         ;0337 EQ
               e377 003f  ld   $3f
               e378 0021  ld   $21         ;0339 LDW
-              e379 0037  ld   $37         ;0339 'fontData'
+              e379 0036  ld   $36         ;0339 'fontData'
               e37a 0075  ld   $75         ;033b LOOKUP
               e37b 0000  ld   $00
               e37c 00f9  ld   $f9         ;033d INC
-              e37d 0037  ld   $37         ;033d 'fontData'
+              e37d 0036  ld   $36         ;033d 'fontData'
               e37e 0095  ld   $95         ;033f BRA
               e37f 0041  ld   $41
               e380 0059  ld   $59         ;0341 LDI
               e381 0000  ld   $00
               e382 002b  ld   $2b         ;0343 STW
-              e383 003f  ld   $3f         ;0343 'bits'
+              e383 003e  ld   $3e         ;0343 'bits'
               e384 0021  ld   $21         ;0345 LDW
-              e385 003b  ld   $3b         ;0345 'Pos'
+              e385 003a  ld   $3a         ;0345 'Pos'
               e386 002b  ld   $2b         ;0347 STW
-              e387 0041  ld   $41         ;0347 'p'
+              e387 0040  ld   $40         ;0347 'p'
               e388 0021  ld   $21         ;0349 LDW
-              e389 003f  ld   $3f         ;0349 'bits'
+              e389 003e  ld   $3e         ;0349 'bits'
               e38a 0087  ld   $87         ;034b ANDI
               e38b 0080  ld   $80
               e38c 0035  ld   $35         ;034d BCC
               e38d 0072  ld   $72         ;034e NE
               e38e 0052  ld   $52
               e38f 0021  ld   $21         ;0350 LDW
-              e390 0043  ld   $43         ;0350 'BgColor'
+              e390 0042  ld   $42         ;0350 'BgColor'
               e391 0095  ld   $95         ;0352 BRA
               e392 0054  ld   $54
               e393 0021  ld   $21         ;0354 LDW
-              e394 0045  ld   $45         ;0354 'Color'
+              e394 0044  ld   $44         ;0354 'Color'
               e395 0098  ld   $98         ;0356 POKE
-              e396 0041  ld   $41         ;0356 'p'
+              e396 0040  ld   $40         ;0356 'p'
               e397 0021  ld   $21         ;0358 LDW
-              e398 003f  ld   $3f         ;0358 'bits'
+              e398 003e  ld   $3e         ;0358 'bits'
               e399 00c1  ld   $c1         ;035a ADDW
-              e39a 003f  ld   $3f         ;035a 'bits'
+              e39a 003e  ld   $3e         ;035a 'bits'
               e39b 002b  ld   $2b         ;035c STW
-              e39c 003f  ld   $3f         ;035c 'bits'
+              e39c 003e  ld   $3e         ;035c 'bits'
               e39d 00f9  ld   $f9         ;035e INC
-              e39e 0042  ld   $42         ;035e 'p'+1
+              e39e 0041  ld   $41         ;035e 'p'+1
               e39f 0021  ld   $21         ;0360 LDW
-              e3a0 0041  ld   $41         ;0360 'p'
+              e3a0 0040  ld   $40         ;0360 'p'
               e3a1 00ad  ld   $ad         ;0362 SUBW
-              e3a2 003d  ld   $3d         ;0362 'q'
+              e3a2 003c  ld   $3c         ;0362 'q'
               e3a3 0035  ld   $35         ;0364 BCC
               e3a4 0050  ld   $50         ;0365 LT
               e3a5 0047  ld   $47
               e3a6 00f9  ld   $f9         ;0367 INC
-              e3a7 003b  ld   $3b         ;0367 'Pos'
+              e3a7 003a  ld   $3a         ;0367 'Pos'
               e3a8 0021  ld   $21         ;0369 LDW
-              e3a9 0035  ld   $35         ;0369 'i'
+              e3a9 0034  ld   $34         ;0369 'i'
               e3aa 00f6  ld   $f6         ;036b SUBI
               e3ab 0001  ld   $01
               e3ac 002b  ld   $2b         ;036d STW
-              e3ad 0035  ld   $35         ;036d 'i'
+              e3ad 0034  ld   $34         ;036d 'i'
               e3ae 0035  ld   $35         ;036f BCC
               e3af 0053  ld   $53         ;0370 GE
               e3b0 0034  ld   $34
               e3b1 00ff  ld   $ff         ;0372 RET
               e3b2 002b  ld   $2b         ;0373 STW
-              e3b3 0047  ld   $47         ;0373 'DrawChar'
+              e3b3 0046  ld   $46         ;0373 'DrawChar'
               e3b4 00e1  ld   $e1         ;0375 DEF
               e3b5 0098  ld   $98
               e3b6 007d  ld   $7d         ;0377 PUSH
               e3b7 0021  ld   $21         ;0378 LDW
-              e3b8 0049  ld   $49         ;0378 'Text'
+              e3b8 0048  ld   $48         ;0378 'Text'
               e3b9 00d5  ld   $d5         ;037a PEEK
               e3ba 002b  ld   $2b         ;037b STW
-              e3bb 0033  ld   $33         ;037b 'Char'
+              e3bb 0032  ld   $32         ;037b 'Char'
               e3bc 0035  ld   $35         ;037d BCC
               e3bd 003f  ld   $3f         ;037e EQ
               e3be 0096  ld   $96
               e3bf 00f9  ld   $f9         ;0380 INC
-              e3c0 0049  ld   $49         ;0380 'Text'
+              e3c0 0048  ld   $48         ;0380 'Text'
               e3c1 0021  ld   $21         ;0382 LDW
-              e3c2 0033  ld   $33         ;0382 'Char'
+              e3c2 0032  ld   $32         ;0382 'Char'
               e3c3 0091  ld   $91         ;0384 XORI
               e3c4 000a  ld   $0a
               e3c5 0035  ld   $35         ;0386 BCC
               e3c6 0072  ld   $72         ;0387 NE
               e3c7 0092  ld   $92
               e3c8 005e  ld   $5e         ;0389 ST
-              e3c9 003b  ld   $3b         ;0389 'Pos'
+              e3c9 003a  ld   $3a         ;0389 'Pos'
               e3ca 0011  ld   $11         ;038b LDWI
               e3cb 0000  ld   $00
               e3cc 0008  ld   $08
               e3cd 00c1  ld   $c1         ;038e ADDW
-              e3ce 003b  ld   $3b         ;038e 'Pos'
+              e3ce 003a  ld   $3a         ;038e 'Pos'
               e3cf 002b  ld   $2b         ;0390 STW
-              e3d0 003b  ld   $3b         ;0390 'Pos'
+              e3d0 003a  ld   $3a         ;0390 'Pos'
               e3d1 0095  ld   $95         ;0392 BRA
               e3d2 0094  ld   $94
               e3d3 00e3  ld   $e3         ;0394 CALL
-              e3d4 0047  ld   $47         ;0394 'DrawChar'
+              e3d4 0046  ld   $46         ;0394 'DrawChar'
               e3d5 0095  ld   $95         ;0396 BRA
               e3d6 0076  ld   $76
               e3d7 0063  ld   $63         ;0398 POP
               e3d8 00ff  ld   $ff         ;0399 RET
               e3d9 002b  ld   $2b         ;039a STW
-              e3da 004b  ld   $4b         ;039a 'DrawText'
+              e3da 004a  ld   $4a         ;039a 'DrawText'
               e3db 00e1  ld   $e1         ;039c DEF
               e3dc 00a5  ld   $a5
               e3dd 0047  ld   $47
@@ -51785,88 +51793,88 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e3e4 006e  ld   $6e
               e3e5 0000  ld   $00
               e3e6 002b  ld   $2b         ;03a7 STW
-              e3e7 004d  ld   $4d         ;03a7 'Title'
+              e3e7 004c  ld   $4c         ;03a7 'Title'
               e3e8 00e1  ld   $e1         ;03a9 DEF
               e3e9 00c3  ld   $c3
               e3ea 0021  ld   $21         ;03ab LDW
-              e3eb 004f  ld   $4f         ;03ab 'Count'
+              e3eb 004e  ld   $4e         ;03ab 'Count'
               e3ec 002b  ld   $2b         ;03ad STW
-              e3ed 0035  ld   $35         ;03ad 'i'
+              e3ed 0034  ld   $34         ;03ad 'i'
               e3ee 0035  ld   $35         ;03af BCC
               e3ef 0056  ld   $56         ;03b0 LE
               e3f0 00c2  ld   $c2
               e3f1 0021  ld   $21         ;03b2 LDW
-              e3f2 0045  ld   $45         ;03b2 'Color'
+              e3f2 0044  ld   $44         ;03b2 'Color'
               e3f3 0098  ld   $98         ;03b4 POKE
-              e3f4 003b  ld   $3b         ;03b4 'Pos'
+              e3f4 003a  ld   $3a         ;03b4 'Pos'
               e3f5 0021  ld   $21         ;03b6 LDW
-              e3f6 003b  ld   $3b         ;03b6 'Pos'
+              e3f6 003a  ld   $3a         ;03b6 'Pos'
               e3f7 00c1  ld   $c1         ;03b8 ADDW
-              e3f8 0051  ld   $51         ;03b8 'Step'
+              e3f8 0050  ld   $50         ;03b8 'Step'
               e3f9 002b  ld   $2b         ;03ba STW
-              e3fa 003b  ld   $3b         ;03ba 'Pos'
+              e3fa 003a  ld   $3a         ;03ba 'Pos'
               e3fb fe00  bra  ac          ;+-----------------------------------+
               e3fc fcfd  bra  $e3fd       ;|                                   |
               e3fd 1403  ld   $03,y       ;| Trampoline for page $e300 lookups |
               e3fe e078  jmp  y,$78       ;|                                   |
-              e3ff 1519  ld   [$19],y     ;+-----------------------------------+
+              e3ff 1518  ld   [$18],y     ;+-----------------------------------+
               e400 0021  ld   $21         ;03bc LDW
-              e401 0035  ld   $35         ;03bc 'i'
+              e401 0034  ld   $34         ;03bc 'i'
               e402 00f6  ld   $f6         ;03be SUBI
               e403 0001  ld   $01
               e404 002b  ld   $2b         ;03c0 STW
-              e405 0035  ld   $35         ;03c0 'i'
+              e405 0034  ld   $34         ;03c0 'i'
               e406 0095  ld   $95         ;03c2 BRA
               e407 00ad  ld   $ad
               e408 00ff  ld   $ff         ;03c4 RET
               e409 002b  ld   $2b         ;03c5 STW
-              e40a 0053  ld   $53         ;03c5 'DrawLine'
+              e40a 0052  ld   $52         ;03c5 'DrawLine'
               e40b 00e1  ld   $e1         ;03c7 DEF
               e40c 00de  ld   $de
               e40d 007d  ld   $7d         ;03c9 PUSH
               e40e 001a  ld   $1a         ;03ca LD
-              e40f 0011  ld   $11
+              e40f 0010  ld   $10
               e410 00ad  ld   $ad         ;03cc SUBW
-              e411 0055  ld   $55         ;03cc 'TimeOut'
+              e411 0054  ld   $54         ;03cc 'TimeOut'
               e412 0087  ld   $87         ;03ce ANDI
               e413 0080  ld   $80
               e414 0035  ld   $35         ;03d0 BCC
               e415 0072  ld   $72         ;03d1 NE
               e416 00dc  ld   $dc
               e417 0021  ld   $21         ;03d3 LDW
-              e418 0057  ld   $57         ;03d3 'Timer'
+              e418 0056  ld   $56         ;03d3 'Timer'
               e419 0035  ld   $35         ;03d5 BCC
               e41a 0056  ld   $56         ;03d6 LE
               e41b 00da  ld   $da
               e41c 00f6  ld   $f6         ;03d8 SUBI
               e41d 0001  ld   $01
               e41e 002b  ld   $2b         ;03da STW
-              e41f 0057  ld   $57         ;03da 'Timer'
+              e41f 0056  ld   $56         ;03da 'Timer'
               e420 00e3  ld   $e3         ;03dc CALL
-              e421 0059  ld   $59         ;03dc 'DrawTimer'
+              e421 0058  ld   $58         ;03dc 'DrawTimer'
               e422 0063  ld   $63         ;03de POP
               e423 00ff  ld   $ff         ;03df RET
               e424 002b  ld   $2b         ;03e0 STW
-              e425 005b  ld   $5b         ;03e0 'UpdateTimer'
+              e425 005a  ld   $5a         ;03e0 'UpdateTimer'
               e426 00e1  ld   $e1         ;03e2 DEF
               e427 00ef  ld   $ef
               e428 007d  ld   $7d         ;03e4 PUSH
               e429 0021  ld   $21         ;03e5 LDW
-              e42a 005d  ld   $5d         ;03e5 'Head'
+              e42a 005c  ld   $5c         ;03e5 'Head'
               e42b 002b  ld   $2b         ;03e7 STW
-              e42c 003b  ld   $3b         ;03e7 'Pos'
+              e42c 003a  ld   $3a         ;03e7 'Pos'
               e42d 0059  ld   $59         ;03e9 LDI
               e42e 003f  ld   $3f
               e42f 002b  ld   $2b         ;03eb STW
-              e430 0045  ld   $45         ;03eb 'Color'
+              e430 0044  ld   $44         ;03eb 'Color'
               e431 00e3  ld   $e3         ;03ed CALL
-              e432 005f  ld   $5f         ;03ed 'DrawBlock'
+              e432 005e  ld   $5e         ;03ed 'DrawBlock'
               e433 0063  ld   $63         ;03ef POP
               e434 00ff  ld   $ff         ;03f0 RET
               e435 002b  ld   $2b         ;03f1 STW
-              e436 0061  ld   $61         ;03f1 'DrawHead'
+              e436 0060  ld   $60         ;03f1 'DrawHead'
               e437 00f9  ld   $f9         ;03f3 INC
-              e438 001d  ld   $1d
+              e438 001c  ld   $1c
               e439 00ff  ld   $ff         ;03f5 RET
               e43a 0004  ld   $04         ;| RAM segment address (high byte first)
               e43b 0000  ld   $00         ;|
@@ -51878,7 +51886,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e441 0035  ld   $35
               e442 0044  ld   $44
               e443 002b  ld   $2b         ;0406 STW
-              e444 003b  ld   $3b         ;0406 'Pos'
+              e444 003a  ld   $3a         ;0406 'Pos'
               e445 00e1  ld   $e1         ;0408 DEF
               e446 0012  ld   $12
               e447 0047  ld   $47
@@ -51892,134 +51900,134 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e44f 0052  ld   $52
               e450 0000  ld   $00
               e451 002b  ld   $2b         ;0414 STW
-              e452 0049  ld   $49         ;0414 'Text'
+              e452 0048  ld   $48         ;0414 'Text'
               e453 0059  ld   $59         ;0416 LDI
               e454 0004  ld   $04
               e455 002b  ld   $2b         ;0418 STW
-              e456 0043  ld   $43         ;0418 'BgColor'
+              e456 0042  ld   $42         ;0418 'BgColor'
               e457 00e3  ld   $e3         ;041a CALL
-              e458 004b  ld   $4b         ;041a 'DrawText'
+              e458 004a  ld   $4a         ;041a 'DrawText'
               e459 0021  ld   $21         ;041c LDW
-              e45a 0063  ld   $63         ;041c 'Score'
+              e45a 0062  ld   $62         ;041c 'Score'
               e45b 00ad  ld   $ad         ;041e SUBW
-              e45c 0031  ld   $31         ;041e 'HighScore'
+              e45c 0030  ld   $30         ;041e 'HighScore'
               e45d 0035  ld   $35         ;0420 BCC
               e45e 0056  ld   $56         ;0421 LE
               e45f 002b  ld   $2b
               e460 0021  ld   $21         ;0423 LDW
-              e461 0063  ld   $63         ;0423 'Score'
+              e461 0062  ld   $62         ;0423 'Score'
               e462 002b  ld   $2b         ;0425 STW
-              e463 0031  ld   $31         ;0425 'HighScore'
+              e463 0030  ld   $30         ;0425 'HighScore'
               e464 0059  ld   $59         ;0427 LDI
               e465 001e  ld   $1e
               e466 002b  ld   $2b         ;0429 STW
-              e467 0045  ld   $45         ;0429 'Color'
+              e467 0044  ld   $44         ;0429 'Color'
               e468 00e3  ld   $e3         ;042b CALL
-              e469 0065  ld   $65         ;042b 'DrawHighScore'
+              e469 0064  ld   $64         ;042b 'DrawHighScore'
               e46a 0063  ld   $63         ;042d POP
               e46b 00ff  ld   $ff         ;042e RET
               e46c 002b  ld   $2b         ;042f STW
-              e46d 0067  ld   $67         ;042f 'GameOver'
+              e46d 0066  ld   $66         ;042f 'GameOver'
               e46e 00e1  ld   $e1         ;0431 DEF
               e46f 0041  ld   $41
               e470 001a  ld   $1a         ;0433 LD
-              e471 0011  ld   $11
+              e471 0010  ld   $10
               e472 00c1  ld   $c1         ;0435 ADDW
-              e473 0069  ld   $69         ;0435 'Delay'
+              e473 0068  ld   $68         ;0435 'Delay'
               e474 0087  ld   $87         ;0437 ANDI
               e475 00ff  ld   $ff
               e476 002b  ld   $2b         ;0439 STW
-              e477 0039  ld   $39         ;0439 'tmp'
+              e477 0038  ld   $38         ;0439 'tmp'
               e478 001a  ld   $1a         ;043b LD
-              e479 0011  ld   $11
+              e479 0010  ld   $10
               e47a 00ad  ld   $ad         ;043d SUBW
-              e47b 0039  ld   $39         ;043d 'tmp'
+              e47b 0038  ld   $38         ;043d 'tmp'
               e47c 0035  ld   $35         ;043f BCC
               e47d 0072  ld   $72         ;0440 NE
               e47e 0039  ld   $39
               e47f 00ff  ld   $ff         ;0442 RET
               e480 002b  ld   $2b         ;0443 STW
-              e481 006b  ld   $6b         ;0443 'Wait'
+              e481 006a  ld   $6a         ;0443 'Wait'
               e482 00e1  ld   $e1         ;0445 DEF
               e483 0068  ld   $68
               e484 007d  ld   $7d         ;0447 PUSH
               e485 0059  ld   $59         ;0448 LDI
               e486 0008  ld   $08
               e487 002b  ld   $2b         ;044a STW
-              e488 0045  ld   $45         ;044a 'Color'
+              e488 0044  ld   $44         ;044a 'Color'
               e489 0059  ld   $59         ;044c LDI
               e48a 0000  ld   $00
               e48b 002b  ld   $2b         ;044e STW
-              e48c 0043  ld   $43         ;044e 'BgColor'
+              e48c 0042  ld   $42         ;044e 'BgColor'
               e48d 0011  ld   $11         ;0450 LDWI
               e48e 0000  ld   $00
               e48f 0008  ld   $08
               e490 002b  ld   $2b         ;0453 STW
-              e491 003b  ld   $3b         ;0453 'Pos'
+              e491 003a  ld   $3a         ;0453 'Pos'
               e492 00e3  ld   $e3         ;0455 CALL
-              e493 006d  ld   $6d         ;0455 'ClearScreen'
+              e493 006c  ld   $6c         ;0455 'ClearScreen'
               e494 0011  ld   $11         ;0457 LDWI
               e495 0038  ld   $38
               e496 0008  ld   $08
               e497 002b  ld   $2b         ;045a STW
-              e498 003b  ld   $3b         ;045a 'Pos'
+              e498 003a  ld   $3a         ;045a 'Pos'
               e499 0021  ld   $21         ;045c LDW
-              e49a 004d  ld   $4d         ;045c 'Title'
+              e49a 004c  ld   $4c         ;045c 'Title'
               e49b 002b  ld   $2b         ;045e STW
-              e49c 0049  ld   $49         ;045e 'Text'
+              e49c 0048  ld   $48         ;045e 'Text'
               e49d 00e3  ld   $e3         ;0460 CALL
-              e49e 004b  ld   $4b         ;0460 'DrawText'
+              e49e 004a  ld   $4a         ;0460 'DrawText'
               e49f 0059  ld   $59         ;0462 LDI
               e4a0 003c  ld   $3c
               e4a1 002b  ld   $2b         ;0464 STW
-              e4a2 0069  ld   $69         ;0464 'Delay'
+              e4a2 0068  ld   $68         ;0464 'Delay'
               e4a3 00e3  ld   $e3         ;0466 CALL
-              e4a4 006b  ld   $6b         ;0466 'Wait'
+              e4a4 006a  ld   $6a         ;0466 'Wait'
               e4a5 0063  ld   $63         ;0468 POP
               e4a6 00ff  ld   $ff         ;0469 RET
               e4a7 002b  ld   $2b         ;046a STW
-              e4a8 006f  ld   $6f         ;046a 'Intro'
+              e4a8 006e  ld   $6e         ;046a 'Intro'
               e4a9 00e1  ld   $e1         ;046c DEF
               e4aa 009b  ld   $9b
               e4ab 0021  ld   $21         ;046e LDW
-              e4ac 003b  ld   $3b         ;046e 'Pos'
+              e4ac 003a  ld   $3a         ;046e 'Pos'
               e4ad 002b  ld   $2b         ;0470 STW
-              e4ae 0041  ld   $41         ;0470 'p'
+              e4ae 0040  ld   $40         ;0470 'p'
               e4af 0021  ld   $21         ;0472 LDW
-              e4b0 003b  ld   $3b         ;0472 'Pos'
+              e4b0 003a  ld   $3a         ;0472 'Pos'
               e4b1 008d  ld   $8d         ;0474 ORI
               e4b2 00ff  ld   $ff
               e4b3 0091  ld   $91         ;0476 XORI
               e4b4 00ff  ld   $ff
               e4b5 002b  ld   $2b         ;0478 STW
-              e4b6 0035  ld   $35         ;0478 'i'
+              e4b6 0034  ld   $34         ;0478 'i'
               e4b7 0011  ld   $11         ;047a LDWI
               e4b8 0001  ld   $01
               e4b9 0080  ld   $80
               e4ba 00c1  ld   $c1         ;047d ADDW
-              e4bb 0035  ld   $35         ;047d 'i'
+              e4bb 0034  ld   $34         ;047d 'i'
               e4bc 002b  ld   $2b         ;047f STW
-              e4bd 0035  ld   $35         ;047f 'i'
+              e4bd 0034  ld   $34         ;047f 'i'
               e4be 0021  ld   $21         ;0481 LDW
-              e4bf 0041  ld   $41         ;0481 'p'
+              e4bf 0040  ld   $40         ;0481 'p'
               e4c0 0021  ld   $21         ;0483 LDW
-              e4c1 0043  ld   $43         ;0483 'BgColor'
+              e4c1 0042  ld   $42         ;0483 'BgColor'
               e4c2 0098  ld   $98         ;0485 POKE
-              e4c3 0041  ld   $41         ;0485 'p'
+              e4c3 0040  ld   $40         ;0485 'p'
               e4c4 0011  ld   $11         ;0487 LDWI
               e4c5 0000  ld   $00
               e4c6 0001  ld   $01
               e4c7 00c1  ld   $c1         ;048a ADDW
-              e4c8 0041  ld   $41         ;048a 'p'
+              e4c8 0040  ld   $40         ;048a 'p'
               e4c9 002b  ld   $2b         ;048c STW
-              e4ca 0041  ld   $41         ;048c 'p'
+              e4ca 0040  ld   $40         ;048c 'p'
               e4cb 0035  ld   $35         ;048e BCC
               e4cc 0053  ld   $53         ;048f GE
               e4cd 0081  ld   $81
               e4ce 00c1  ld   $c1         ;0491 ADDW
-              e4cf 0035  ld   $35         ;0491 'i'
+              e4cf 0034  ld   $34         ;0491 'i'
               e4d0 002b  ld   $2b         ;0493 STW
-              e4d1 0041  ld   $41         ;0493 'p'
+              e4d1 0040  ld   $40         ;0493 'p'
               e4d2 0087  ld   $87         ;0495 ANDI
               e4d3 00ff  ld   $ff
               e4d4 0091  ld   $91         ;0497 XORI
@@ -52029,77 +52037,77 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e4d8 007f  ld   $7f
               e4d9 00ff  ld   $ff         ;049c RET
               e4da 002b  ld   $2b         ;049d STW
-              e4db 006d  ld   $6d         ;049d 'ClearScreen'
+              e4db 006c  ld   $6c         ;049d 'ClearScreen'
               e4dc 00e1  ld   $e1         ;049f DEF
               e4dd 00ae  ld   $ae
               e4de 0059  ld   $59         ;04a1 LDI
               e4df 0000  ld   $00
               e4e0 00ad  ld   $ad         ;04a3 SUBW
-              e4e1 0071  ld   $71         ;04a3 'stepV'
+              e4e1 0070  ld   $70         ;04a3 'stepV'
               e4e2 002b  ld   $2b         ;04a5 STW
-              e4e3 0039  ld   $39         ;04a5 'tmp'
+              e4e3 0038  ld   $38         ;04a5 'tmp'
               e4e4 0021  ld   $21         ;04a7 LDW
-              e4e5 0073  ld   $73         ;04a7 'stepU'
+              e4e5 0072  ld   $72         ;04a7 'stepU'
               e4e6 002b  ld   $2b         ;04a9 STW
-              e4e7 0071  ld   $71         ;04a9 'stepV'
+              e4e7 0070  ld   $70         ;04a9 'stepV'
               e4e8 0021  ld   $21         ;04ab LDW
-              e4e9 0039  ld   $39         ;04ab 'tmp'
+              e4e9 0038  ld   $38         ;04ab 'tmp'
               e4ea 002b  ld   $2b         ;04ad STW
-              e4eb 0073  ld   $73         ;04ad 'stepU'
+              e4eb 0072  ld   $72         ;04ad 'stepU'
               e4ec 00ff  ld   $ff         ;04af RET
               e4ed 002b  ld   $2b         ;04b0 STW
-              e4ee 0075  ld   $75         ;04b0 'TurnL'
+              e4ee 0074  ld   $74         ;04b0 'TurnL'
               e4ef 00e1  ld   $e1         ;04b2 DEF
               e4f0 00c1  ld   $c1
               e4f1 0059  ld   $59         ;04b4 LDI
               e4f2 0000  ld   $00
               e4f3 00ad  ld   $ad         ;04b6 SUBW
-              e4f4 0073  ld   $73         ;04b6 'stepU'
+              e4f4 0072  ld   $72         ;04b6 'stepU'
               e4f5 002b  ld   $2b         ;04b8 STW
-              e4f6 0039  ld   $39         ;04b8 'tmp'
+              e4f6 0038  ld   $38         ;04b8 'tmp'
               e4f7 0021  ld   $21         ;04ba LDW
-              e4f8 0071  ld   $71         ;04ba 'stepV'
+              e4f8 0070  ld   $70         ;04ba 'stepV'
               e4f9 002b  ld   $2b         ;04bc STW
-              e4fa 0073  ld   $73         ;04bc 'stepU'
+              e4fa 0072  ld   $72         ;04bc 'stepU'
               e4fb fe00  bra  ac          ;+-----------------------------------+
               e4fc fcfd  bra  $e4fd       ;|                                   |
               e4fd 1403  ld   $03,y       ;| Trampoline for page $e400 lookups |
               e4fe e078  jmp  y,$78       ;|                                   |
-              e4ff 1519  ld   [$19],y     ;+-----------------------------------+
+              e4ff 1518  ld   [$18],y     ;+-----------------------------------+
               e500 0021  ld   $21         ;04be LDW
-              e501 0039  ld   $39         ;04be 'tmp'
+              e501 0038  ld   $38         ;04be 'tmp'
               e502 002b  ld   $2b         ;04c0 STW
-              e503 0071  ld   $71         ;04c0 'stepV'
+              e503 0070  ld   $70         ;04c0 'stepV'
               e504 00ff  ld   $ff         ;04c2 RET
               e505 002b  ld   $2b         ;04c3 STW
-              e506 0077  ld   $77         ;04c3 'TurnR'
+              e506 0076  ld   $76         ;04c3 'TurnR'
               e507 00e1  ld   $e1         ;04c5 DEF
               e508 00da  ld   $da
               e509 0021  ld   $21         ;04c7 LDW
-              e50a 003b  ld   $3b         ;04c7 'Pos'
+              e50a 003a  ld   $3a         ;04c7 'Pos'
               e50b 002b  ld   $2b         ;04c9 STW
-              e50c 0041  ld   $41         ;04c9 'p'
+              e50c 0040  ld   $40         ;04c9 'p'
               e50d 0021  ld   $21         ;04cb LDW
-              e50e 0045  ld   $45         ;04cb 'Color'
+              e50e 0044  ld   $44         ;04cb 'Color'
               e50f 0098  ld   $98         ;04cd POKE
-              e510 003b  ld   $3b         ;04cd 'Pos'
+              e510 003a  ld   $3a         ;04cd 'Pos'
               e511 00f9  ld   $f9         ;04cf INC
-              e512 003b  ld   $3b         ;04cf 'Pos'
+              e512 003a  ld   $3a         ;04cf 'Pos'
               e513 0098  ld   $98         ;04d1 POKE
-              e514 003b  ld   $3b         ;04d1 'Pos'
+              e514 003a  ld   $3a         ;04d1 'Pos'
               e515 00f9  ld   $f9         ;04d3 INC
-              e516 003c  ld   $3c         ;04d3 'Pos'+1
+              e516 003b  ld   $3b         ;04d3 'Pos'+1
               e517 0098  ld   $98         ;04d5 POKE
-              e518 003b  ld   $3b         ;04d5 'Pos'
+              e518 003a  ld   $3a         ;04d5 'Pos'
               e519 00f9  ld   $f9         ;04d7 INC
-              e51a 0042  ld   $42         ;04d7 'p'+1
+              e51a 0041  ld   $41         ;04d7 'p'+1
               e51b 0098  ld   $98         ;04d9 POKE
-              e51c 0041  ld   $41         ;04d9 'p'
+              e51c 0040  ld   $40         ;04d9 'p'
               e51d 00ff  ld   $ff         ;04db RET
               e51e 002b  ld   $2b         ;04dc STW
-              e51f 005f  ld   $5f         ;04dc 'DrawBlock'
+              e51f 005e  ld   $5e         ;04dc 'DrawBlock'
               e520 00f9  ld   $f9         ;04de INC
-              e521 001d  ld   $1d
+              e521 001c  ld   $1c
               e522 00ff  ld   $ff         ;04e0 RET
               e523 0005  ld   $05         ;| RAM segment address (high byte first)
               e524 0000  ld   $00         ;|
@@ -52108,15 +52116,15 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e527 00a4  ld   $a4
               e528 007d  ld   $7d         ;0502 PUSH
               e529 00e3  ld   $e3         ;0503 CALL
-              e52a 0079  ld   $79         ;0503 'Control'
+              e52a 0078  ld   $78         ;0503 'Control'
               e52b 001a  ld   $1a         ;0505 LD
-              e52c 0074  ld   $74         ;0505 'stepU'+1
+              e52c 0073  ld   $73         ;0505 'stepU'+1
               e52d 0087  ld   $87         ;0507 ANDI
               e52e 0080  ld   $80
               e52f 002b  ld   $2b         ;0509 STW
-              e530 0039  ld   $39         ;0509 'tmp'
+              e530 0038  ld   $38         ;0509 'tmp'
               e531 0021  ld   $21         ;050b LDW
-              e532 0073  ld   $73         ;050b 'stepU'
+              e532 0072  ld   $72         ;050b 'stepU'
               e533 0087  ld   $87         ;050d ANDI
               e534 0001  ld   $01
               e535 0035  ld   $35         ;050f BCC
@@ -52125,27 +52133,27 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e538 0059  ld   $59         ;0512 LDI
               e539 0040  ld   $40
               e53a 00c1  ld   $c1         ;0514 ADDW
-              e53b 0039  ld   $39         ;0514 'tmp'
+              e53b 0038  ld   $38         ;0514 'tmp'
               e53c 00f3  ld   $f3         ;0516 ADDI
               e53d 001e  ld   $1e
               e53e 002b  ld   $2b         ;0518 STW
-              e53f 0045  ld   $45         ;0518 'Color'
+              e53f 0044  ld   $44         ;0518 'Color'
               e540 0021  ld   $21         ;051a LDW
-              e541 005d  ld   $5d         ;051a 'Head'
+              e541 005c  ld   $5c         ;051a 'Head'
               e542 002b  ld   $2b         ;051c STW
-              e543 003b  ld   $3b         ;051c 'Pos'
+              e543 003a  ld   $3a         ;051c 'Pos'
               e544 00e3  ld   $e3         ;051e CALL
-              e545 005f  ld   $5f         ;051e 'DrawBlock'
+              e545 005e  ld   $5e         ;051e 'DrawBlock'
               e546 0021  ld   $21         ;0520 LDW
-              e547 005d  ld   $5d         ;0520 'Head'
+              e547 005c  ld   $5c         ;0520 'Head'
               e548 00c1  ld   $c1         ;0522 ADDW
-              e549 0073  ld   $73         ;0522 'stepU'
+              e549 0072  ld   $72         ;0522 'stepU'
               e54a 00c1  ld   $c1         ;0524 ADDW
-              e54b 0073  ld   $73         ;0524 'stepU'
+              e54b 0072  ld   $72         ;0524 'stepU'
               e54c 002b  ld   $2b         ;0526 STW
-              e54d 005d  ld   $5d         ;0526 'Head'
+              e54d 005c  ld   $5c         ;0526 'Head'
               e54e 0021  ld   $21         ;0528 LDW
-              e54f 005d  ld   $5d         ;0528 'Head'
+              e54f 005c  ld   $5c         ;0528 'Head'
               e550 00d5  ld   $d5         ;052a PEEK
               e551 0087  ld   $87         ;052b ANDI
               e552 0033  ld   $33
@@ -52155,7 +52163,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e556 0063  ld   $63         ;0530 POP
               e557 00ff  ld   $ff         ;0531 RET
               e558 0021  ld   $21         ;0532 LDW
-              e559 005d  ld   $5d         ;0532 'Head'
+              e559 005c  ld   $5c         ;0532 'Head'
               e55a 00d5  ld   $d5         ;0534 PEEK
               e55b 0091  ld   $91         ;0535 XORI
               e55c 0008  ld   $08
@@ -52165,50 +52173,50 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e560 0059  ld   $59         ;053a LDI
               e561 0002  ld   $02
               e562 005e  ld   $5e         ;053c ST
-              e563 002d  ld   $2d
+              e563 002c  ld   $2c
               e564 0021  ld   $21         ;053e LDW
-              e565 0063  ld   $63         ;053e 'Score'
+              e565 0062  ld   $62         ;053e 'Score'
               e566 00c1  ld   $c1         ;0540 ADDW
-              e567 0057  ld   $57         ;0540 'Timer'
+              e567 0056  ld   $56         ;0540 'Timer'
               e568 002b  ld   $2b         ;0542 STW
-              e569 0063  ld   $63         ;0542 'Score'
+              e569 0062  ld   $62         ;0542 'Score'
               e56a 00e3  ld   $e3         ;0544 CALL
-              e56b 007b  ld   $7b         ;0544 'DrawScore'
+              e56b 007a  ld   $7a         ;0544 'DrawScore'
               e56c 00e3  ld   $e3         ;0546 CALL
-              e56d 007d  ld   $7d         ;0546 'AddTimer'
+              e56d 007c  ld   $7c         ;0546 'AddTimer'
               e56e 00f9  ld   $f9         ;0548 INC
-              e56f 0081  ld   $81         ;0548 'Grow'
+              e56f 007e  ld   $7e         ;0548 'Grow'
               e570 00f9  ld   $f9         ;054a INC
-              e571 0083  ld   $83         ;054a 'Drops'
+              e571 0081  ld   $81         ;054a 'Drops'
               e572 00e3  ld   $e3         ;054c CALL
-              e573 0061  ld   $61         ;054c 'DrawHead'
+              e573 0060  ld   $60         ;054c 'DrawHead'
               e574 0021  ld   $21         ;054e LDW
-              e575 0081  ld   $81         ;054e 'Grow'
+              e575 007e  ld   $7e         ;054e 'Grow'
               e576 0035  ld   $35         ;0550 BCC
               e577 0056  ld   $56         ;0551 LE
               e578 0059  ld   $59
               e579 00f6  ld   $f6         ;0553 SUBI
               e57a 0001  ld   $01
               e57b 002b  ld   $2b         ;0555 STW
-              e57c 0081  ld   $81         ;0555 'Grow'
+              e57c 007e  ld   $7e         ;0555 'Grow'
               e57d 00e3  ld   $e3         ;0557 CALL
-              e57e 0085  ld   $85         ;0557 'AddFood'
+              e57e 0083  ld   $83         ;0557 'AddFood'
               e57f 0095  ld   $95         ;0559 BRA
               e580 009e  ld   $9e
               e581 0021  ld   $21         ;055b LDW
-              e582 0087  ld   $87         ;055b 'Tail'
+              e582 0085  ld   $85         ;055b 'Tail'
               e583 00d5  ld   $d5         ;055d PEEK
               e584 002b  ld   $2b         ;055e STW
-              e585 0039  ld   $39         ;055e 'tmp'
+              e585 0038  ld   $38         ;055e 'tmp'
               e586 0021  ld   $21         ;0560 LDW
-              e587 0083  ld   $83         ;0560 'Drops'
+              e587 0081  ld   $81         ;0560 'Drops'
               e588 0035  ld   $35         ;0562 BCC
               e589 0056  ld   $56         ;0563 LE
               e58a 006b  ld   $6b
               e58b 00f6  ld   $f6         ;0565 SUBI
               e58c 0001  ld   $01
               e58d 002b  ld   $2b         ;0567 STW
-              e58e 0083  ld   $83         ;0567 'Drops'
+              e58e 0081  ld   $81         ;0567 'Drops'
               e58f 0059  ld   $59         ;0569 LDI
               e590 000b  ld   $0b
               e591 0095  ld   $95         ;056b BRA
@@ -52216,15 +52224,15 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e593 0059  ld   $59         ;056d LDI
               e594 0004  ld   $04
               e595 002b  ld   $2b         ;056f STW
-              e596 0045  ld   $45         ;056f 'Color'
+              e596 0044  ld   $44         ;056f 'Color'
               e597 0021  ld   $21         ;0571 LDW
-              e598 0087  ld   $87         ;0571 'Tail'
+              e598 0085  ld   $85         ;0571 'Tail'
               e599 002b  ld   $2b         ;0573 STW
-              e59a 003b  ld   $3b         ;0573 'Pos'
+              e59a 003a  ld   $3a         ;0573 'Pos'
               e59b 00e3  ld   $e3         ;0575 CALL
-              e59c 005f  ld   $5f         ;0575 'DrawBlock'
+              e59c 005e  ld   $5e         ;0575 'DrawBlock'
               e59d 0021  ld   $21         ;0577 LDW
-              e59e 0039  ld   $39         ;0577 'tmp'
+              e59e 0038  ld   $38         ;0577 'tmp'
               e59f 0087  ld   $87         ;0579 ANDI
               e5a0 0040  ld   $40
               e5a1 0035  ld   $35         ;057b BCC
@@ -52238,56 +52246,56 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e5a9 0059  ld   $59         ;0583 LDI
               e5aa 0001  ld   $01
               e5ab 002b  ld   $2b         ;0585 STW
-              e5ac 0089  ld   $89         ;0585 'x'
+              e5ac 0087  ld   $87         ;0585 'x'
               e5ad 0021  ld   $21         ;0587 LDW
-              e5ae 0039  ld   $39         ;0587 'tmp'
+              e5ae 0038  ld   $38         ;0587 'tmp'
               e5af 0087  ld   $87         ;0589 ANDI
               e5b0 0080  ld   $80
               e5b1 0035  ld   $35         ;058b BCC
               e5b2 0072  ld   $72         ;058c NE
               e5b3 0090  ld   $90
               e5b4 0021  ld   $21         ;058e LDW
-              e5b5 0089  ld   $89         ;058e 'x'
+              e5b5 0087  ld   $87         ;058e 'x'
               e5b6 0095  ld   $95         ;0590 BRA
               e5b7 0094  ld   $94
               e5b8 0059  ld   $59         ;0592 LDI
               e5b9 0000  ld   $00
               e5ba 00ad  ld   $ad         ;0594 SUBW
-              e5bb 0089  ld   $89         ;0594 'x'
+              e5bb 0087  ld   $87         ;0594 'x'
               e5bc 002b  ld   $2b         ;0596 STW
-              e5bd 0039  ld   $39         ;0596 'tmp'
+              e5bd 0038  ld   $38         ;0596 'tmp'
               e5be 0021  ld   $21         ;0598 LDW
-              e5bf 0087  ld   $87         ;0598 'Tail'
+              e5bf 0085  ld   $85         ;0598 'Tail'
               e5c0 00c1  ld   $c1         ;059a ADDW
-              e5c1 0039  ld   $39         ;059a 'tmp'
+              e5c1 0038  ld   $38         ;059a 'tmp'
               e5c2 00c1  ld   $c1         ;059c ADDW
-              e5c3 0039  ld   $39         ;059c 'tmp'
+              e5c3 0038  ld   $38         ;059c 'tmp'
               e5c4 002b  ld   $2b         ;059e STW
-              e5c5 0087  ld   $87         ;059e 'Tail'
+              e5c5 0085  ld   $85         ;059e 'Tail'
               e5c6 00e3  ld   $e3         ;05a0 CALL
-              e5c7 005b  ld   $5b         ;05a0 'UpdateTimer'
+              e5c7 005a  ld   $5a         ;05a0 'UpdateTimer'
               e5c8 00e3  ld   $e3         ;05a2 CALL
-              e5c9 006b  ld   $6b         ;05a2 'Wait'
+              e5c9 006a  ld   $6a         ;05a2 'Wait'
               e5ca 0095  ld   $95         ;05a4 BRA
               e5cb 0001  ld   $01
               e5cc 002b  ld   $2b         ;05a6 STW
-              e5cd 008b  ld   $8b         ;05a6 'RunGame'
+              e5cd 0089  ld   $89         ;05a6 'RunGame'
               e5ce 00e1  ld   $e1         ;05a8 DEF
               e5cf 00e0  ld   $e0
               e5d0 007d  ld   $7d         ;05aa PUSH
               e5d1 0059  ld   $59         ;05ab LDI
               e5d2 0008  ld   $08
               e5d3 002b  ld   $2b         ;05ad STW
-              e5d4 0045  ld   $45         ;05ad 'Color'
+              e5d4 0044  ld   $44         ;05ad 'Color'
               e5d5 0011  ld   $11         ;05af LDWI
-              e5d6 008e  ld   $8e
+              e5d6 0097  ld   $97
               e5d7 0004  ld   $04
               e5d8 00a9  ld   $a9         ;05b2 SYS
               e5d9 00fd  ld   $fd
               e5da 002b  ld   $2b         ;05b4 STW
-              e5db 003b  ld   $3b         ;05b4 'Pos'
+              e5db 003a  ld   $3a         ;05b4 'Pos'
               e5dc 001a  ld   $1a         ;05b6 LD
-              e5dd 003b  ld   $3b         ;05b6 'Pos'
+              e5dd 003a  ld   $3a         ;05b6 'Pos'
               e5de 00f6  ld   $f6         ;05b8 SUBI
               e5df 0080  ld   $80
               e5e0 0035  ld   $35         ;05ba BCC
@@ -52300,9 +52308,9 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e5e7 0087  ld   $87         ;05c1 ANDI
               e5e8 00fe  ld   $fe
               e5e9 005e  ld   $5e         ;05c3 ST
-              e5ea 003b  ld   $3b         ;05c3 'Pos'
+              e5ea 003a  ld   $3a         ;05c3 'Pos'
               e5eb 001a  ld   $1a         ;05c5 LD
-              e5ec 003c  ld   $3c         ;05c5 'Pos'+1
+              e5ec 003b  ld   $3b         ;05c5 'Pos'+1
               e5ed 0087  ld   $87         ;05c7 ANDI
               e5ee 007f  ld   $7f
               e5ef 00f6  ld   $f6         ;05c9 SUBI
@@ -52321,10 +52329,10 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e5fc fcfd  bra  $e5fd       ;|                                   |
               e5fd 1403  ld   $03,y       ;| Trampoline for page $e500 lookups |
               e5fe e078  jmp  y,$78       ;|                                   |
-              e5ff 1519  ld   [$19],y     ;+-----------------------------------+
-              e600 003c  ld   $3c         ;05d4 'Pos'+1
+              e5ff 1518  ld   [$18],y     ;+-----------------------------------+
+              e600 003b  ld   $3b         ;05d4 'Pos'+1
               e601 0021  ld   $21         ;05d6 LDW
-              e602 003b  ld   $3b         ;05d6 'Pos'
+              e602 003a  ld   $3a         ;05d6 'Pos'
               e603 00d5  ld   $d5         ;05d8 PEEK
               e604 0091  ld   $91         ;05d9 XORI
               e605 0004  ld   $04
@@ -52332,13 +52340,13 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e607 0072  ld   $72         ;05dc NE
               e608 00ad  ld   $ad
               e609 00e3  ld   $e3         ;05de CALL
-              e60a 005f  ld   $5f         ;05de 'DrawBlock'
+              e60a 005e  ld   $5e         ;05de 'DrawBlock'
               e60b 0063  ld   $63         ;05e0 POP
               e60c 00ff  ld   $ff         ;05e1 RET
               e60d 002b  ld   $2b         ;05e2 STW
-              e60e 0085  ld   $85         ;05e2 'AddFood'
+              e60e 0083  ld   $83         ;05e2 'AddFood'
               e60f 00f9  ld   $f9         ;05e4 INC
-              e610 001d  ld   $1d
+              e610 001c  ld   $1c
               e611 00ff  ld   $ff         ;05e6 RET
               e612 0006  ld   $06         ;| RAM segment address (high byte first)
               e613 0000  ld   $00         ;|
@@ -52347,7 +52355,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e616 00a1  ld   $a1
               e617 007d  ld   $7d         ;0602 PUSH
               e618 001a  ld   $1a         ;0603 LD
-              e619 0012  ld   $12
+              e619 0011  ld   $11
               e61a 0087  ld   $87         ;0605 ANDI
               e61b 00cf  ld   $cf
               e61c 0091  ld   $91         ;0607 XORI
@@ -52356,34 +52364,34 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e61f 003f  ld   $3f         ;060a EQ
               e620 000e  ld   $0e
               e621 00e3  ld   $e3         ;060c CALL
-              e622 008d  ld   $8d         ;060c 'SetupGame'
+              e622 008b  ld   $8b         ;060c 'SetupGame'
               e623 0063  ld   $63         ;060e POP
               e624 00ff  ld   $ff         ;060f RET
               e625 0021  ld   $21         ;0610 LDW
-              e626 0075  ld   $75         ;0610 'TurnL'
+              e626 0074  ld   $74         ;0610 'TurnL'
               e627 002b  ld   $2b         ;0612 STW
-              e628 0041  ld   $41         ;0612 'p'
+              e628 0040  ld   $40         ;0612 'p'
               e629 0021  ld   $21         ;0614 LDW
-              e62a 0077  ld   $77         ;0614 'TurnR'
+              e62a 0076  ld   $76         ;0614 'TurnR'
               e62b 002b  ld   $2b         ;0616 STW
-              e62c 003d  ld   $3d         ;0616 'q'
+              e62c 003c  ld   $3c         ;0616 'q'
               e62d 0021  ld   $21         ;0618 LDW
-              e62e 005d  ld   $5d         ;0618 'Head'
+              e62e 005c  ld   $5c         ;0618 'Head'
               e62f 00c1  ld   $c1         ;061a ADDW
-              e630 0073  ld   $73         ;061a 'stepU'
+              e630 0072  ld   $72         ;061a 'stepU'
               e631 00c1  ld   $c1         ;061c ADDW
-              e632 0073  ld   $73         ;061c 'stepU'
+              e632 0072  ld   $72         ;061c 'stepU'
               e633 00d5  ld   $d5         ;061e PEEK
               e634 0091  ld   $91         ;061f XORI
               e635 0004  ld   $04
               e636 002b  ld   $2b         ;0621 STW
-              e637 0039  ld   $39         ;0621 'tmp'
+              e637 0038  ld   $38         ;0621 'tmp'
               e638 0021  ld   $21         ;0623 LDW
-              e639 005d  ld   $5d         ;0623 'Head'
+              e639 005c  ld   $5c         ;0623 'Head'
               e63a 00ad  ld   $ad         ;0625 SUBW
-              e63b 0071  ld   $71         ;0625 'stepV'
+              e63b 0070  ld   $70         ;0625 'stepV'
               e63c 00ad  ld   $ad         ;0627 SUBW
-              e63d 0071  ld   $71         ;0627 'stepV'
+              e63d 0070  ld   $70         ;0627 'stepV'
               e63e 00d5  ld   $d5         ;0629 PEEK
               e63f 0091  ld   $91         ;062a XORI
               e640 0004  ld   $04
@@ -52398,23 +52406,23 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e649 0059  ld   $59         ;0634 LDI
               e64a 0000  ld   $00
               e64b 002b  ld   $2b         ;0636 STW
-              e64c 0041  ld   $41         ;0636 'p'
+              e64c 0040  ld   $40         ;0636 'p'
               e64d 0095  ld   $95         ;0638 BRA
               e64e 0040  ld   $40
               e64f 0059  ld   $59         ;063a LDI
               e650 0000  ld   $00
               e651 002b  ld   $2b         ;063c STW
-              e652 003d  ld   $3d         ;063c 'q'
+              e652 003c  ld   $3c         ;063c 'q'
               e653 0059  ld   $59         ;063e LDI
               e654 0001  ld   $01
               e655 002b  ld   $2b         ;0640 STW
-              e656 0039  ld   $39         ;0640 'tmp'
+              e656 0038  ld   $38         ;0640 'tmp'
               e657 0021  ld   $21         ;0642 LDW
-              e658 005d  ld   $5d         ;0642 'Head'
+              e658 005c  ld   $5c         ;0642 'Head'
               e659 00c1  ld   $c1         ;0644 ADDW
-              e65a 0071  ld   $71         ;0644 'stepV'
+              e65a 0070  ld   $70         ;0644 'stepV'
               e65b 00c1  ld   $c1         ;0646 ADDW
-              e65c 0071  ld   $71         ;0646 'stepV'
+              e65c 0070  ld   $70         ;0646 'stepV'
               e65d 00d5  ld   $d5         ;0648 PEEK
               e65e 0091  ld   $91         ;0649 XORI
               e65f 0004  ld   $04
@@ -52429,19 +52437,19 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e668 0059  ld   $59         ;0653 LDI
               e669 0000  ld   $00
               e66a 002b  ld   $2b         ;0655 STW
-              e66b 003d  ld   $3d         ;0655 'q'
+              e66b 003c  ld   $3c         ;0655 'q'
               e66c 0095  ld   $95         ;0657 BRA
               e66d 005f  ld   $5f
               e66e 0059  ld   $59         ;0659 LDI
               e66f 0000  ld   $00
               e670 002b  ld   $2b         ;065b STW
-              e671 0041  ld   $41         ;065b 'p'
+              e671 0040  ld   $40         ;065b 'p'
               e672 0059  ld   $59         ;065d LDI
               e673 0001  ld   $01
               e674 002b  ld   $2b         ;065f STW
-              e675 0039  ld   $39         ;065f 'tmp'
+              e675 0038  ld   $38         ;065f 'tmp'
               e676 0021  ld   $21         ;0661 LDW
-              e677 0039  ld   $39         ;0661 'tmp'
+              e677 0038  ld   $38         ;0661 'tmp'
               e678 0035  ld   $35         ;0663 BCC
               e679 0072  ld   $72         ;0664 NE
               e67a 0073  ld   $73
@@ -52469,21 +52477,21 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e690 003f  ld   $3f         ;067b EQ
               e691 009f  ld   $9f
               e692 0021  ld   $21         ;067d LDW
-              e693 0041  ld   $41         ;067d 'p'
+              e693 0040  ld   $40         ;067d 'p'
               e694 0035  ld   $35         ;067f BCC
               e695 0072  ld   $72         ;0680 NE
               e696 0084  ld   $84
               e697 0021  ld   $21         ;0682 LDW
-              e698 003d  ld   $3d         ;0682 'q'
+              e698 003c  ld   $3c         ;0682 'q'
               e699 0095  ld   $95         ;0684 BRA
               e69a 009a  ld   $9a
               e69b 0021  ld   $21         ;0686 LDW
-              e69c 003d  ld   $3d         ;0686 'q'
+              e69c 003c  ld   $3c         ;0686 'q'
               e69d 0035  ld   $35         ;0688 BCC
               e69e 0072  ld   $72         ;0689 NE
               e69f 008d  ld   $8d
               e6a0 0021  ld   $21         ;068b LDW
-              e6a1 0041  ld   $41         ;068b 'p'
+              e6a1 0040  ld   $40         ;068b 'p'
               e6a2 0095  ld   $95         ;068d BRA
               e6a3 009a  ld   $9a
               e6a4 001a  ld   $1a         ;068f LD
@@ -52494,24 +52502,24 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e6a9 0072  ld   $72         ;0694 NE
               e6aa 0098  ld   $98
               e6ab 0021  ld   $21         ;0696 LDW
-              e6ac 0041  ld   $41         ;0696 'p'
+              e6ac 0040  ld   $40         ;0696 'p'
               e6ad 0095  ld   $95         ;0698 BRA
               e6ae 009a  ld   $9a
               e6af 0021  ld   $21         ;069a LDW
-              e6b0 003d  ld   $3d         ;069a 'q'
+              e6b0 003c  ld   $3c         ;069a 'q'
               e6b1 0035  ld   $35         ;069c BCC
               e6b2 003f  ld   $3f         ;069d EQ
               e6b3 009f  ld   $9f
               e6b4 00e3  ld   $e3         ;069f CALL
-              e6b5 001a  ld   $1a         ;069f vAC
+              e6b5 0019  ld   $19         ;069f vAC
               e6b6 0063  ld   $63         ;06a1 POP
               e6b7 00ff  ld   $ff         ;06a2 RET
               e6b8 002b  ld   $2b         ;06a3 STW
-              e6b9 008f  ld   $8f         ;06a3 'AutoControl'
+              e6b9 008d  ld   $8d         ;06a3 'AutoControl'
               e6ba 00e1  ld   $e1         ;06a5 DEF
               e6bb 00d5  ld   $d5
               e6bc 001a  ld   $1a         ;06a7 LD
-              e6bd 0012  ld   $12
+              e6bd 0011  ld   $11
               e6be 0091  ld   $91         ;06a9 XORI
               e6bf 00fe  ld   $fe
               e6c0 0035  ld   $35         ;06ab BCC
@@ -52520,9 +52528,9 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e6c3 0059  ld   $59         ;06ae LDI
               e6c4 0001  ld   $01
               e6c5 002b  ld   $2b         ;06b0 STW
-              e6c6 0073  ld   $73         ;06b0 'stepU'
+              e6c6 0072  ld   $72         ;06b0 'stepU'
               e6c7 001a  ld   $1a         ;06b2 LD
-              e6c8 0012  ld   $12
+              e6c8 0011  ld   $11
               e6c9 0091  ld   $91         ;06b4 XORI
               e6ca 00fd  ld   $fd
               e6cb 0035  ld   $35         ;06b6 BCC
@@ -52532,9 +52540,9 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e6cf 00ff  ld   $ff
               e6d0 00ff  ld   $ff
               e6d1 002b  ld   $2b         ;06bc STW
-              e6d2 0073  ld   $73         ;06bc 'stepU'
+              e6d2 0072  ld   $72         ;06bc 'stepU'
               e6d3 001a  ld   $1a         ;06be LD
-              e6d4 0012  ld   $12
+              e6d4 0011  ld   $11
               e6d5 0091  ld   $91         ;06c0 XORI
               e6d6 00fb  ld   $fb
               e6d7 0035  ld   $35         ;06c2 BCC
@@ -52544,9 +52552,9 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e6db 0000  ld   $00
               e6dc 0001  ld   $01
               e6dd 002b  ld   $2b         ;06c8 STW
-              e6de 0073  ld   $73         ;06c8 'stepU'
+              e6de 0072  ld   $72         ;06c8 'stepU'
               e6df 001a  ld   $1a         ;06ca LD
-              e6e0 0012  ld   $12
+              e6e0 0011  ld   $11
               e6e1 0091  ld   $91         ;06cc XORI
               e6e2 00f7  ld   $f7
               e6e3 0035  ld   $35         ;06ce BCC
@@ -52556,19 +52564,19 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e6e7 0000  ld   $00
               e6e8 00ff  ld   $ff
               e6e9 002b  ld   $2b         ;06d4 STW
-              e6ea 0073  ld   $73         ;06d4 'stepU'
+              e6ea 0072  ld   $72         ;06d4 'stepU'
               e6eb 00ff  ld   $ff         ;06d6 RET
               e6ec 002b  ld   $2b         ;06d7 STW
-              e6ed 0091  ld   $91         ;06d7 'PlayerControl'
+              e6ed 008f  ld   $8f         ;06d7 'PlayerControl'
               e6ee 00e1  ld   $e1         ;06d9 DEF
               e6ef 00f1  ld   $f1
               e6f0 007d  ld   $7d         ;06db PUSH
               e6f1 0021  ld   $21         ;06dc LDW
-              e6f2 0057  ld   $57         ;06dc 'Timer'
+              e6f2 0056  ld   $56         ;06dc 'Timer'
               e6f3 00f3  ld   $f3         ;06de ADDI
               e6f4 000a  ld   $0a
               e6f5 002b  ld   $2b         ;06e0 STW
-              e6f6 0057  ld   $57         ;06e0 'Timer'
+              e6f6 0056  ld   $56         ;06e0 'Timer'
               e6f7 00f6  ld   $f6         ;06e2 SUBI
               e6f8 000f  ld   $0f
               e6f9 0035  ld   $35         ;06e4 BCC
@@ -52577,24 +52585,24 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e6fc fcfd  bra  $e6fd       ;|                                   |
               e6fd 1403  ld   $03,y       ;| Trampoline for page $e600 lookups |
               e6fe e078  jmp  y,$78       ;|                                   |
-              e6ff 1519  ld   [$19],y     ;+-----------------------------------+
+              e6ff 1518  ld   [$18],y     ;+-----------------------------------+
               e700 00e9  ld   $e9
               e701 0059  ld   $59         ;06e7 LDI
               e702 000f  ld   $0f
               e703 002b  ld   $2b         ;06e9 STW
-              e704 0057  ld   $57         ;06e9 'Timer'
+              e704 0056  ld   $56         ;06e9 'Timer'
               e705 001a  ld   $1a         ;06eb LD
-              e706 0011  ld   $11
+              e706 0010  ld   $10
               e707 002b  ld   $2b         ;06ed STW
-              e708 0055  ld   $55         ;06ed 'TimeOut'
+              e708 0054  ld   $54         ;06ed 'TimeOut'
               e709 00e3  ld   $e3         ;06ef CALL
-              e70a 0059  ld   $59         ;06ef 'DrawTimer'
+              e70a 0058  ld   $58         ;06ef 'DrawTimer'
               e70b 0063  ld   $63         ;06f1 POP
               e70c 00ff  ld   $ff         ;06f2 RET
               e70d 002b  ld   $2b         ;06f3 STW
-              e70e 007d  ld   $7d         ;06f3 'AddTimer'
+              e70e 007c  ld   $7c         ;06f3 'AddTimer'
               e70f 00f9  ld   $f9         ;06f5 INC
-              e710 001d  ld   $1d
+              e710 001c  ld   $1c
               e711 00ff  ld   $ff         ;06f7 RET
               e712 0007  ld   $07         ;| RAM segment address (high byte first)
               e713 0000  ld   $00         ;|
@@ -52605,129 +52613,129 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e718 0059  ld   $59         ;0703 LDI
               e719 0000  ld   $00
               e71a 002b  ld   $2b         ;0705 STW
-              e71b 0063  ld   $63         ;0705 'Score'
+              e71b 0062  ld   $62         ;0705 'Score'
               e71c 002b  ld   $2b         ;0707 STW
-              e71d 0057  ld   $57         ;0707 'Timer'
+              e71d 0056  ld   $56         ;0707 'Timer'
               e71e 00e3  ld   $e3         ;0709 CALL
-              e71f 007b  ld   $7b         ;0709 'DrawScore'
+              e71f 007a  ld   $7a         ;0709 'DrawScore'
               e720 0059  ld   $59         ;070b LDI
               e721 000f  ld   $0f
               e722 002b  ld   $2b         ;070d STW
-              e723 0057  ld   $57         ;070d 'Timer'
+              e723 0056  ld   $56         ;070d 'Timer'
               e724 00e3  ld   $e3         ;070f CALL
-              e725 0059  ld   $59         ;070f 'DrawTimer'
+              e725 0058  ld   $58         ;070f 'DrawTimer'
               e726 00e3  ld   $e3         ;0711 CALL
-              e727 0065  ld   $65         ;0711 'DrawHighScore'
+              e727 0064  ld   $64         ;0711 'DrawHighScore'
               e728 0011  ld   $11         ;0713 LDWI
               e729 0000  ld   $00
               e72a 0010  ld   $10
               e72b 002b  ld   $2b         ;0716 STW
-              e72c 003b  ld   $3b         ;0716 'Pos'
+              e72c 003a  ld   $3a         ;0716 'Pos'
               e72d 0059  ld   $59         ;0718 LDI
               e72e 0004  ld   $04
               e72f 002b  ld   $2b         ;071a STW
-              e730 0043  ld   $43         ;071a 'BgColor'
+              e730 0042  ld   $42         ;071a 'BgColor'
               e731 00e3  ld   $e3         ;071c CALL
-              e732 006d  ld   $6d         ;071c 'ClearScreen'
+              e732 006c  ld   $6c         ;071c 'ClearScreen'
               e733 0059  ld   $59         ;071e LDI
               e734 001a  ld   $1a
               e735 002b  ld   $2b         ;0720 STW
-              e736 0045  ld   $45         ;0720 'Color'
+              e736 0044  ld   $44         ;0720 'Color'
               e737 0059  ld   $59         ;0722 LDI
               e738 0001  ld   $01
               e739 002b  ld   $2b         ;0724 STW
-              e73a 0051  ld   $51         ;0724 'Step'
+              e73a 0050  ld   $50         ;0724 'Step'
               e73b 0059  ld   $59         ;0726 LDI
               e73c 009f  ld   $9f
               e73d 002b  ld   $2b         ;0728 STW
-              e73e 004f  ld   $4f         ;0728 'Count'
+              e73e 004e  ld   $4e         ;0728 'Count'
               e73f 00e3  ld   $e3         ;072a CALL
-              e740 0053  ld   $53         ;072a 'DrawLine'
+              e740 0052  ld   $52         ;072a 'DrawLine'
               e741 0011  ld   $11         ;072c LDWI
               e742 0000  ld   $00
               e743 0001  ld   $01
               e744 002b  ld   $2b         ;072f STW
-              e745 0051  ld   $51         ;072f 'Step'
+              e745 0050  ld   $50         ;072f 'Step'
               e746 0059  ld   $59         ;0731 LDI
               e747 006f  ld   $6f
               e748 002b  ld   $2b         ;0733 STW
-              e749 004f  ld   $4f         ;0733 'Count'
+              e749 004e  ld   $4e         ;0733 'Count'
               e74a 00e3  ld   $e3         ;0735 CALL
-              e74b 0053  ld   $53         ;0735 'DrawLine'
+              e74b 0052  ld   $52         ;0735 'DrawLine'
               e74c 0011  ld   $11         ;0737 LDWI
               e74d 00ff  ld   $ff
               e74e 00ff  ld   $ff
               e74f 002b  ld   $2b         ;073a STW
-              e750 0051  ld   $51         ;073a 'Step'
+              e750 0050  ld   $50         ;073a 'Step'
               e751 0059  ld   $59         ;073c LDI
               e752 009f  ld   $9f
               e753 002b  ld   $2b         ;073e STW
-              e754 004f  ld   $4f         ;073e 'Count'
+              e754 004e  ld   $4e         ;073e 'Count'
               e755 00e3  ld   $e3         ;0740 CALL
-              e756 0053  ld   $53         ;0740 'DrawLine'
+              e756 0052  ld   $52         ;0740 'DrawLine'
               e757 0011  ld   $11         ;0742 LDWI
               e758 0000  ld   $00
               e759 00ff  ld   $ff
               e75a 002b  ld   $2b         ;0745 STW
-              e75b 0051  ld   $51         ;0745 'Step'
+              e75b 0050  ld   $50         ;0745 'Step'
               e75c 0059  ld   $59         ;0747 LDI
               e75d 006e  ld   $6e
               e75e 002b  ld   $2b         ;0749 STW
-              e75f 004f  ld   $4f         ;0749 'Count'
+              e75f 004e  ld   $4e         ;0749 'Count'
               e760 00e3  ld   $e3         ;074b CALL
-              e761 0053  ld   $53         ;074b 'DrawLine'
+              e761 0052  ld   $52         ;074b 'DrawLine'
               e762 0059  ld   $59         ;074d LDI
               e763 0001  ld   $01
               e764 002b  ld   $2b         ;074f STW
-              e765 0051  ld   $51         ;074f 'Step'
+              e765 0050  ld   $50         ;074f 'Step'
               e766 0059  ld   $59         ;0751 LDI
               e767 009e  ld   $9e
               e768 002b  ld   $2b         ;0753 STW
-              e769 004f  ld   $4f         ;0753 'Count'
+              e769 004e  ld   $4e         ;0753 'Count'
               e76a 00e3  ld   $e3         ;0755 CALL
-              e76b 0053  ld   $53         ;0755 'DrawLine'
+              e76b 0052  ld   $52         ;0755 'DrawLine'
               e76c 0011  ld   $11         ;0757 LDWI
               e76d 0000  ld   $00
               e76e 0001  ld   $01
               e76f 002b  ld   $2b         ;075a STW
-              e770 0051  ld   $51         ;075a 'Step'
+              e770 0050  ld   $50         ;075a 'Step'
               e771 0059  ld   $59         ;075c LDI
               e772 006d  ld   $6d
               e773 002b  ld   $2b         ;075e STW
-              e774 004f  ld   $4f         ;075e 'Count'
+              e774 004e  ld   $4e         ;075e 'Count'
               e775 00e3  ld   $e3         ;0760 CALL
-              e776 0053  ld   $53         ;0760 'DrawLine'
+              e776 0052  ld   $52         ;0760 'DrawLine'
               e777 0011  ld   $11         ;0762 LDWI
               e778 00ff  ld   $ff
               e779 00ff  ld   $ff
               e77a 002b  ld   $2b         ;0765 STW
-              e77b 0051  ld   $51         ;0765 'Step'
+              e77b 0050  ld   $50         ;0765 'Step'
               e77c 0059  ld   $59         ;0767 LDI
               e77d 009d  ld   $9d
               e77e 002b  ld   $2b         ;0769 STW
-              e77f 004f  ld   $4f         ;0769 'Count'
+              e77f 004e  ld   $4e         ;0769 'Count'
               e780 00e3  ld   $e3         ;076b CALL
-              e781 0053  ld   $53         ;076b 'DrawLine'
+              e781 0052  ld   $52         ;076b 'DrawLine'
               e782 0011  ld   $11         ;076d LDWI
               e783 0000  ld   $00
               e784 00ff  ld   $ff
               e785 002b  ld   $2b         ;0770 STW
-              e786 0051  ld   $51         ;0770 'Step'
+              e786 0050  ld   $50         ;0770 'Step'
               e787 0059  ld   $59         ;0772 LDI
               e788 006d  ld   $6d
               e789 002b  ld   $2b         ;0774 STW
-              e78a 004f  ld   $4f         ;0774 'Count'
+              e78a 004e  ld   $4e         ;0774 'Count'
               e78b 00e3  ld   $e3         ;0776 CALL
-              e78c 0053  ld   $53         ;0776 'DrawLine'
+              e78c 0052  ld   $52         ;0776 'DrawLine'
               e78d 0011  ld   $11         ;0778 LDWI
               e78e 0032  ld   $32
               e78f 0044  ld   $44
               e790 002b  ld   $2b         ;077b STW
-              e791 003b  ld   $3b         ;077b 'Pos'
+              e791 003a  ld   $3a         ;077b 'Pos'
               e792 0059  ld   $59         ;077d LDI
               e793 0003  ld   $03
               e794 002b  ld   $2b         ;077f STW
-              e795 0045  ld   $45         ;077f 'Color'
+              e795 0044  ld   $44         ;077f 'Color'
               e796 00e1  ld   $e1         ;0781 DEF
               e797 008c  ld   $8c
               e798 0047  ld   $47
@@ -52742,20 +52750,20 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e7a1 0021  ld   $21
               e7a2 0000  ld   $00
               e7a3 002b  ld   $2b         ;078e STW
-              e7a4 0049  ld   $49         ;078e 'Text'
+              e7a4 0048  ld   $48         ;078e 'Text'
               e7a5 00e3  ld   $e3         ;0790 CALL
-              e7a6 004b  ld   $4b         ;0790 'DrawText'
+              e7a6 004a  ld   $4a         ;0790 'DrawText'
               e7a7 0059  ld   $59         ;0792 LDI
               e7a8 003c  ld   $3c
               e7a9 002b  ld   $2b         ;0794 STW
-              e7aa 0069  ld   $69         ;0794 'Delay'
+              e7aa 0068  ld   $68         ;0794 'Delay'
               e7ab 00e3  ld   $e3         ;0796 CALL
-              e7ac 006b  ld   $6b         ;0796 'Wait'
+              e7ac 006a  ld   $6a         ;0796 'Wait'
               e7ad 0011  ld   $11         ;0798 LDWI
               e7ae 0032  ld   $32
               e7af 0044  ld   $44
               e7b0 002b  ld   $2b         ;079b STW
-              e7b1 003b  ld   $3b         ;079b 'Pos'
+              e7b1 003a  ld   $3a         ;079b 'Pos'
               e7b2 00e1  ld   $e1         ;079d DEF
               e7b3 00a8  ld   $a8
               e7b4 0020  ld   $20
@@ -52764,62 +52772,62 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               * 10 times
               e7be 0000  ld   $00
               e7bf 002b  ld   $2b         ;07aa STW
-              e7c0 0049  ld   $49         ;07aa 'Text'
+              e7c0 0048  ld   $48         ;07aa 'Text'
               e7c1 00e3  ld   $e3         ;07ac CALL
-              e7c2 004b  ld   $4b         ;07ac 'DrawText'
+              e7c2 004a  ld   $4a         ;07ac 'DrawText'
               e7c3 0011  ld   $11         ;07ae LDWI
               e7c4 0030  ld   $30
               e7c5 0044  ld   $44
               e7c6 002b  ld   $2b         ;07b1 STW
-              e7c7 005d  ld   $5d         ;07b1 'Head'
+              e7c7 005c  ld   $5c         ;07b1 'Head'
               e7c8 002b  ld   $2b         ;07b3 STW
-              e7c9 0087  ld   $87         ;07b3 'Tail'
+              e7c9 0085  ld   $85         ;07b3 'Tail'
               e7ca 00e3  ld   $e3         ;07b5 CALL
-              e7cb 0061  ld   $61         ;07b5 'DrawHead'
+              e7cb 0060  ld   $60         ;07b5 'DrawHead'
               e7cc 0059  ld   $59         ;07b7 LDI
               e7cd 0000  ld   $00
               e7ce 002b  ld   $2b         ;07b9 STW
-              e7cf 0081  ld   $81         ;07b9 'Grow'
+              e7cf 007e  ld   $7e         ;07b9 'Grow'
               e7d0 002b  ld   $2b         ;07bb STW
-              e7d1 0083  ld   $83         ;07bb 'Drops'
+              e7d1 0081  ld   $81         ;07bb 'Drops'
               e7d2 0059  ld   $59         ;07bd LDI
               e7d3 0001  ld   $01
               e7d4 002b  ld   $2b         ;07bf STW
-              e7d5 0073  ld   $73         ;07bf 'stepU'
+              e7d5 0072  ld   $72         ;07bf 'stepU'
               e7d6 0011  ld   $11         ;07c1 LDWI
               e7d7 0000  ld   $00
               e7d8 0001  ld   $01
               e7d9 002b  ld   $2b         ;07c4 STW
-              e7da 0071  ld   $71         ;07c4 'stepV'
+              e7da 0070  ld   $70         ;07c4 'stepV'
               e7db 0059  ld   $59         ;07c6 LDI
               e7dc 0019  ld   $19
               e7dd 002b  ld   $2b         ;07c8 STW
-              e7de 0035  ld   $35         ;07c8 'i'
+              e7de 0034  ld   $34         ;07c8 'i'
               e7df 00e3  ld   $e3         ;07ca CALL
-              e7e0 0085  ld   $85         ;07ca 'AddFood'
+              e7e0 0083  ld   $83         ;07ca 'AddFood'
               e7e1 0021  ld   $21         ;07cc LDW
-              e7e2 0035  ld   $35         ;07cc 'i'
+              e7e2 0034  ld   $34         ;07cc 'i'
               e7e3 00f6  ld   $f6         ;07ce SUBI
               e7e4 0001  ld   $01
               e7e5 002b  ld   $2b         ;07d0 STW
-              e7e6 0035  ld   $35         ;07d0 'i'
+              e7e6 0034  ld   $34         ;07d0 'i'
               e7e7 0035  ld   $35         ;07d2 BCC
               e7e8 004d  ld   $4d         ;07d3 GT
               e7e9 00c8  ld   $c8
               e7ea 0059  ld   $59         ;07d5 LDI
               e7eb 0002  ld   $02
               e7ec 002b  ld   $2b         ;07d7 STW
-              e7ed 0069  ld   $69         ;07d7 'Delay'
+              e7ed 0068  ld   $68         ;07d7 'Delay'
               e7ee 0059  ld   $59         ;07d9 LDI
               e7ef 0000  ld   $00
               e7f0 002b  ld   $2b         ;07db STW
-              e7f1 0057  ld   $57         ;07db 'Timer'
+              e7f1 0056  ld   $56         ;07db 'Timer'
               e7f2 00e3  ld   $e3         ;07dd CALL
-              e7f3 007d  ld   $7d         ;07dd 'AddTimer'
+              e7f3 007c  ld   $7c         ;07dd 'AddTimer'
               e7f4 0021  ld   $21         ;07df LDW
-              e7f5 0093  ld   $93         ;07df 'LaunchControl'
+              e7f5 0091  ld   $91         ;07df 'LaunchControl'
               e7f6 002b  ld   $2b         ;07e1 STW
-              e7f7 0079  ld   $79         ;07e1 'Control'
+              e7f7 0078  ld   $78         ;07e1 'Control'
               e7f8 0063  ld   $63         ;07e3 POP
               e7f9 00ff  ld   $ff         ;07e4 RET
               e7fa 002b  ld   $2b         ;07e5 STW
@@ -52827,13 +52835,13 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e7fc fcfd  bra  $e7fd       ;|                                   |
               e7fd 1403  ld   $03,y       ;| Trampoline for page $e700 lookups |
               e7fe e078  jmp  y,$78       ;|                                   |
-              e7ff 1519  ld   [$19],y     ;+-----------------------------------+
-              e800 008d  ld   $8d         ;07e5 'SetupGame'
+              e7ff 1518  ld   [$18],y     ;+-----------------------------------+
+              e800 008b  ld   $8b         ;07e5 'SetupGame'
               e801 0011  ld   $11         ;07e7 LDWI
               e802 00a0  ld   $a0
               e803 0008  ld   $08
               e804 002b  ld   $2b         ;07ea STW
-              e805 001c  ld   $1c
+              e805 001b  ld   $1b
               e806 00ff  ld   $ff         ;07ec RET
               e807 0008  ld   $08         ;| RAM segment address (high byte first)
               e808 00a0  ld   $a0         ;|
@@ -52845,19 +52853,19 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e80e 009c  ld   $9c
               e80f 0044  ld   $44
               e810 00ad  ld   $ad         ;08a6 SUBW
-              e811 005d  ld   $5d         ;08a6 'Head'
+              e811 005c  ld   $5c         ;08a6 'Head'
               e812 0035  ld   $35         ;08a8 BCC
               e813 0072  ld   $72         ;08a9 NE
               e814 00c5  ld   $c5
               e815 0059  ld   $59         ;08ab LDI
               e816 001e  ld   $1e
               e817 002b  ld   $2b         ;08ad STW
-              e818 0045  ld   $45         ;08ad 'Color'
+              e818 0044  ld   $44         ;08ad 'Color'
               e819 0011  ld   $11         ;08af LDWI
               e81a 0002  ld   $02
               e81b 0008  ld   $08
               e81c 002b  ld   $2b         ;08b2 STW
-              e81d 003b  ld   $3b         ;08b2 'Pos'
+              e81d 003a  ld   $3a         ;08b2 'Pos'
               e81e 00e1  ld   $e1         ;08b4 DEF
               e81f 00b9  ld   $b9
               e820 0041  ld   $41
@@ -52866,19 +52874,19 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e823 004f  ld   $4f
               e824 0000  ld   $00
               e825 002b  ld   $2b         ;08bb STW
-              e826 0049  ld   $49         ;08bb 'Text'
+              e826 0048  ld   $48         ;08bb 'Text'
               e827 00e3  ld   $e3         ;08bd CALL
-              e828 004b  ld   $4b         ;08bd 'DrawText'
+              e828 004a  ld   $4a         ;08bd 'DrawText'
               e829 0021  ld   $21         ;08bf LDW
-              e82a 008f  ld   $8f         ;08bf 'AutoControl'
+              e82a 008d  ld   $8d         ;08bf 'AutoControl'
               e82b 002b  ld   $2b         ;08c1 STW
-              e82c 0079  ld   $79         ;08c1 'Control'
+              e82c 0078  ld   $78         ;08c1 'Control'
               e82d 00e3  ld   $e3         ;08c3 CALL
-              e82e 001a  ld   $1a         ;08c3 vAC
+              e82e 0019  ld   $19         ;08c3 vAC
               e82f 0095  ld   $95         ;08c5 BRA
               e830 00d4  ld   $d4
               e831 001a  ld   $1a         ;08c7 LD
-              e832 0012  ld   $12
+              e832 0011  ld   $11
               e833 0087  ld   $87         ;08c9 ANDI
               e834 00cf  ld   $cf
               e835 0091  ld   $91         ;08cb XORI
@@ -52887,44 +52895,44 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e838 003f  ld   $3f         ;08ce EQ
               e839 00d4  ld   $d4
               e83a 0021  ld   $21         ;08d0 LDW
-              e83b 0091  ld   $91         ;08d0 'PlayerControl'
+              e83b 008f  ld   $8f         ;08d0 'PlayerControl'
               e83c 002b  ld   $2b         ;08d2 STW
-              e83d 0079  ld   $79         ;08d2 'Control'
+              e83d 0078  ld   $78         ;08d2 'Control'
               e83e 00e3  ld   $e3         ;08d4 CALL
-              e83f 001a  ld   $1a         ;08d4 vAC
+              e83f 0019  ld   $19         ;08d4 vAC
               e840 0063  ld   $63         ;08d6 POP
               e841 00ff  ld   $ff         ;08d7 RET
               e842 002b  ld   $2b         ;08d8 STW
-              e843 0093  ld   $93         ;08d8 'LaunchControl'
+              e843 0091  ld   $91         ;08d8 'LaunchControl'
               e844 00e1  ld   $e1         ;08da DEF
               e845 00f1  ld   $f1
               e846 007d  ld   $7d         ;08dc PUSH
               e847 0059  ld   $59         ;08dd LDI
               e848 0020  ld   $20
               e849 002b  ld   $2b         ;08df STW
-              e84a 0033  ld   $33         ;08df 'Char'
+              e84a 0032  ld   $32         ;08df 'Char'
               e84b 0059  ld   $59         ;08e1 LDI
               e84c 000a  ld   $0a
               e84d 002b  ld   $2b         ;08e3 STW
-              e84e 0095  ld   $95         ;08e3 'Radix'
+              e84e 0093  ld   $93         ;08e3 'Radix'
               e84f 00e3  ld   $e3         ;08e5 CALL
-              e850 0097  ld   $97         ;08e5 'DrawNextDigit'
+              e850 0095  ld   $95         ;08e5 'DrawNextDigit'
               e851 0059  ld   $59         ;08e7 LDI
               e852 0030  ld   $30
               e853 002b  ld   $2b         ;08e9 STW
-              e854 0033  ld   $33         ;08e9 'Char'
+              e854 0032  ld   $32         ;08e9 'Char'
               e855 0059  ld   $59         ;08eb LDI
               e856 0001  ld   $01
               e857 002b  ld   $2b         ;08ed STW
-              e858 0095  ld   $95         ;08ed 'Radix'
+              e858 0093  ld   $93         ;08ed 'Radix'
               e859 00e3  ld   $e3         ;08ef CALL
-              e85a 0097  ld   $97         ;08ef 'DrawNextDigit'
+              e85a 0095  ld   $95         ;08ef 'DrawNextDigit'
               e85b 0063  ld   $63         ;08f1 POP
               e85c 00ff  ld   $ff         ;08f2 RET
               e85d 002b  ld   $2b         ;08f3 STW
-              e85e 0099  ld   $99         ;08f3 'DrawNumber2'
+              e85e 0097  ld   $97         ;08f3 'DrawNumber2'
               e85f 00f9  ld   $f9         ;08f5 INC
-              e860 001d  ld   $1d
+              e860 001c  ld   $1c
               e861 00ff  ld   $ff         ;08f7 RET
               e862 0009  ld   $09         ;| RAM segment address (high byte first)
               e863 00a0  ld   $a0         ;|
@@ -52933,87 +52941,87 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e866 00c7  ld   $c7
               e867 007d  ld   $7d         ;09a2 PUSH
               e868 0021  ld   $21         ;09a3 LDW
-              e869 009b  ld   $9b         ;09a3 'Value'
+              e869 0099  ld   $99         ;09a3 'Value'
               e86a 00ad  ld   $ad         ;09a5 SUBW
-              e86b 0095  ld   $95         ;09a5 'Radix'
+              e86b 0093  ld   $93         ;09a5 'Radix'
               e86c 0035  ld   $35         ;09a7 BCC
               e86d 0050  ld   $50         ;09a8 LT
               e86e 00c3  ld   $c3
               e86f 002b  ld   $2b         ;09aa STW
-              e870 009b  ld   $9b         ;09aa 'Value'
+              e870 0099  ld   $99         ;09aa 'Value'
               e871 0059  ld   $59         ;09ac LDI
               e872 0031  ld   $31
               e873 002b  ld   $2b         ;09ae STW
-              e874 0033  ld   $33         ;09ae 'Char'
+              e874 0032  ld   $32         ;09ae 'Char'
               e875 0021  ld   $21         ;09b0 LDW
-              e876 009b  ld   $9b         ;09b0 'Value'
+              e876 0099  ld   $99         ;09b0 'Value'
               e877 00ad  ld   $ad         ;09b2 SUBW
-              e878 0095  ld   $95         ;09b2 'Radix'
+              e878 0093  ld   $93         ;09b2 'Radix'
               e879 0035  ld   $35         ;09b4 BCC
               e87a 0050  ld   $50         ;09b5 LT
               e87b 00bb  ld   $bb
               e87c 002b  ld   $2b         ;09b7 STW
-              e87d 009b  ld   $9b         ;09b7 'Value'
+              e87d 0099  ld   $99         ;09b7 'Value'
               e87e 00f9  ld   $f9         ;09b9 INC
-              e87f 0033  ld   $33         ;09b9 'Char'
+              e87f 0032  ld   $32         ;09b9 'Char'
               e880 0095  ld   $95         ;09bb BRA
               e881 00b0  ld   $b0
               e882 00e3  ld   $e3         ;09bd CALL
-              e883 0047  ld   $47         ;09bd 'DrawChar'
+              e883 0046  ld   $46         ;09bd 'DrawChar'
               e884 0059  ld   $59         ;09bf LDI
               e885 0030  ld   $30
               e886 002b  ld   $2b         ;09c1 STW
-              e887 0033  ld   $33         ;09c1 'Char'
+              e887 0032  ld   $32         ;09c1 'Char'
               e888 0095  ld   $95         ;09c3 BRA
               e889 00c5  ld   $c5
               e88a 00e3  ld   $e3         ;09c5 CALL
-              e88b 0047  ld   $47         ;09c5 'DrawChar'
+              e88b 0046  ld   $46         ;09c5 'DrawChar'
               e88c 0063  ld   $63         ;09c7 POP
               e88d 00ff  ld   $ff         ;09c8 RET
               e88e 002b  ld   $2b         ;09c9 STW
-              e88f 0097  ld   $97         ;09c9 'DrawNextDigit'
+              e88f 0095  ld   $95         ;09c9 'DrawNextDigit'
               e890 00e1  ld   $e1         ;09cb DEF
               e891 00ef  ld   $ef
               e892 007d  ld   $7d         ;09cd PUSH
               e893 0059  ld   $59         ;09ce LDI
               e894 0020  ld   $20
               e895 002b  ld   $2b         ;09d0 STW
-              e896 0033  ld   $33         ;09d0 'Char'
+              e896 0032  ld   $32         ;09d0 'Char'
               e897 0011  ld   $11         ;09d2 LDWI
               e898 00e8  ld   $e8
               e899 0003  ld   $03
               e89a 002b  ld   $2b         ;09d5 STW
-              e89b 0095  ld   $95         ;09d5 'Radix'
+              e89b 0093  ld   $93         ;09d5 'Radix'
               e89c 00e3  ld   $e3         ;09d7 CALL
-              e89d 0097  ld   $97         ;09d7 'DrawNextDigit'
+              e89d 0095  ld   $95         ;09d7 'DrawNextDigit'
               e89e 0059  ld   $59         ;09d9 LDI
               e89f 0064  ld   $64
               e8a0 002b  ld   $2b         ;09db STW
-              e8a1 0095  ld   $95         ;09db 'Radix'
+              e8a1 0093  ld   $93         ;09db 'Radix'
               e8a2 00e3  ld   $e3         ;09dd CALL
-              e8a3 0097  ld   $97         ;09dd 'DrawNextDigit'
+              e8a3 0095  ld   $95         ;09dd 'DrawNextDigit'
               e8a4 0059  ld   $59         ;09df LDI
               e8a5 000a  ld   $0a
               e8a6 002b  ld   $2b         ;09e1 STW
-              e8a7 0095  ld   $95         ;09e1 'Radix'
+              e8a7 0093  ld   $93         ;09e1 'Radix'
               e8a8 00e3  ld   $e3         ;09e3 CALL
-              e8a9 0097  ld   $97         ;09e3 'DrawNextDigit'
+              e8a9 0095  ld   $95         ;09e3 'DrawNextDigit'
               e8aa 0059  ld   $59         ;09e5 LDI
               e8ab 0030  ld   $30
               e8ac 002b  ld   $2b         ;09e7 STW
-              e8ad 0033  ld   $33         ;09e7 'Char'
+              e8ad 0032  ld   $32         ;09e7 'Char'
               e8ae 0059  ld   $59         ;09e9 LDI
               e8af 0001  ld   $01
               e8b0 002b  ld   $2b         ;09eb STW
-              e8b1 0095  ld   $95         ;09eb 'Radix'
+              e8b1 0093  ld   $93         ;09eb 'Radix'
               e8b2 00e3  ld   $e3         ;09ed CALL
-              e8b3 0097  ld   $97         ;09ed 'DrawNextDigit'
+              e8b3 0095  ld   $95         ;09ed 'DrawNextDigit'
               e8b4 0063  ld   $63         ;09ef POP
               e8b5 00ff  ld   $ff         ;09f0 RET
               e8b6 002b  ld   $2b         ;09f1 STW
-              e8b7 009d  ld   $9d         ;09f1 'DrawNumber4'
+              e8b7 009b  ld   $9b         ;09f1 'DrawNumber4'
               e8b8 00f9  ld   $f9         ;09f3 INC
-              e8b9 001d  ld   $1d
+              e8b9 001c  ld   $1c
               e8ba 00ff  ld   $ff         ;09f5 RET
               e8bb 000a  ld   $0a         ;| RAM segment address (high byte first)
               e8bc 00a0  ld   $a0         ;|
@@ -53025,11 +53033,11 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e8c2 0002  ld   $02
               e8c3 0008  ld   $08
               e8c4 002b  ld   $2b         ;0aa6 STW
-              e8c5 003b  ld   $3b         ;0aa6 'Pos'
+              e8c5 003a  ld   $3a         ;0aa6 'Pos'
               e8c6 0021  ld   $21         ;0aa8 LDW
-              e8c7 0063  ld   $63         ;0aa8 'Score'
+              e8c7 0062  ld   $62         ;0aa8 'Score'
               e8c8 00ad  ld   $ad         ;0aaa SUBW
-              e8c9 0031  ld   $31         ;0aaa 'HighScore'
+              e8c9 0030  ld   $30         ;0aaa 'HighScore'
               e8ca 0035  ld   $35         ;0aac BCC
               e8cb 0056  ld   $56         ;0aad LE
               e8cc 00b1  ld   $b1
@@ -53040,21 +53048,21 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e8d1 0059  ld   $59         ;0ab3 LDI
               e8d2 0008  ld   $08
               e8d3 002b  ld   $2b         ;0ab5 STW
-              e8d4 0045  ld   $45         ;0ab5 'Color'
+              e8d4 0044  ld   $44         ;0ab5 'Color'
               e8d5 0059  ld   $59         ;0ab7 LDI
               e8d6 0000  ld   $00
               e8d7 002b  ld   $2b         ;0ab9 STW
-              e8d8 0043  ld   $43         ;0ab9 'BgColor'
+              e8d8 0042  ld   $42         ;0ab9 'BgColor'
               e8d9 0021  ld   $21         ;0abb LDW
-              e8da 0063  ld   $63         ;0abb 'Score'
+              e8da 0062  ld   $62         ;0abb 'Score'
               e8db 002b  ld   $2b         ;0abd STW
-              e8dc 009b  ld   $9b         ;0abd 'Value'
+              e8dc 0099  ld   $99         ;0abd 'Value'
               e8dd 00e3  ld   $e3         ;0abf CALL
-              e8de 009d  ld   $9d         ;0abf 'DrawNumber4'
+              e8de 009b  ld   $9b         ;0abf 'DrawNumber4'
               e8df 0063  ld   $63         ;0ac1 POP
               e8e0 00ff  ld   $ff         ;0ac2 RET
               e8e1 002b  ld   $2b         ;0ac3 STW
-              e8e2 007b  ld   $7b         ;0ac3 'DrawScore'
+              e8e2 007a  ld   $7a         ;0ac3 'DrawScore'
               e8e3 00e1  ld   $e1         ;0ac5 DEF
               e8e4 00e3  ld   $e3
               e8e5 007d  ld   $7d         ;0ac7 PUSH
@@ -53062,40 +53070,40 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e8e7 0020  ld   $20
               e8e8 0008  ld   $08
               e8e9 002b  ld   $2b         ;0acb STW
-              e8ea 003b  ld   $3b         ;0acb 'Pos'
+              e8ea 003a  ld   $3a         ;0acb 'Pos'
               e8eb 0059  ld   $59         ;0acd LDI
               e8ec 0008  ld   $08
               e8ed 002b  ld   $2b         ;0acf STW
-              e8ee 0045  ld   $45         ;0acf 'Color'
+              e8ee 0044  ld   $44         ;0acf 'Color'
               e8ef 0059  ld   $59         ;0ad1 LDI
               e8f0 0000  ld   $00
               e8f1 002b  ld   $2b         ;0ad3 STW
-              e8f2 0043  ld   $43         ;0ad3 'BgColor'
+              e8f2 0042  ld   $42         ;0ad3 'BgColor'
               e8f3 0021  ld   $21         ;0ad5 LDW
-              e8f4 0057  ld   $57         ;0ad5 'Timer'
+              e8f4 0056  ld   $56         ;0ad5 'Timer'
               e8f5 002b  ld   $2b         ;0ad7 STW
-              e8f6 009b  ld   $9b         ;0ad7 'Value'
+              e8f6 0099  ld   $99         ;0ad7 'Value'
               e8f7 00e3  ld   $e3         ;0ad9 CALL
-              e8f8 0099  ld   $99         ;0ad9 'DrawNumber2'
+              e8f8 0097  ld   $97         ;0ad9 'DrawNumber2'
               e8f9 0021  ld   $21         ;0adb LDW
-              e8fa 0055  ld   $55         ;0adb 'TimeOut'
+              e8fa 0054  ld   $54         ;0adb 'TimeOut'
               e8fb fe00  bra  ac          ;+-----------------------------------+
               e8fc fcfd  bra  $e8fd       ;|                                   |
               e8fd 1403  ld   $03,y       ;| Trampoline for page $e800 lookups |
               e8fe e078  jmp  y,$78       ;|                                   |
-              e8ff 1519  ld   [$19],y     ;+-----------------------------------+
+              e8ff 1518  ld   [$18],y     ;+-----------------------------------+
               e900 00f3  ld   $f3         ;0add ADDI
               e901 003c  ld   $3c
               e902 0087  ld   $87         ;0adf ANDI
               e903 00ff  ld   $ff
               e904 002b  ld   $2b         ;0ae1 STW
-              e905 0055  ld   $55         ;0ae1 'TimeOut'
+              e905 0054  ld   $54         ;0ae1 'TimeOut'
               e906 0063  ld   $63         ;0ae3 POP
               e907 00ff  ld   $ff         ;0ae4 RET
               e908 002b  ld   $2b         ;0ae5 STW
-              e909 0059  ld   $59         ;0ae5 'DrawTimer'
+              e909 0058  ld   $58         ;0ae5 'DrawTimer'
               e90a 00f9  ld   $f9         ;0ae7 INC
-              e90b 001d  ld   $1d
+              e90b 001c  ld   $1c
               e90c 00ff  ld   $ff         ;0ae9 RET
               e90d 000b  ld   $0b         ;| RAM segment address (high byte first)
               e90e 00a0  ld   $a0         ;|
@@ -53107,11 +53115,11 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e914 0074  ld   $74
               e915 0008  ld   $08
               e916 002b  ld   $2b         ;0ba6 STW
-              e917 003b  ld   $3b         ;0ba6 'Pos'
+              e917 003a  ld   $3a         ;0ba6 'Pos'
               e918 0059  ld   $59         ;0ba8 LDI
               e919 0000  ld   $00
               e91a 002b  ld   $2b         ;0baa STW
-              e91b 0043  ld   $43         ;0baa 'BgColor'
+              e91b 0042  ld   $42         ;0baa 'BgColor'
               e91c 00e1  ld   $e1         ;0bac DEF
               e91d 00b0  ld   $b0
               e91e 0048  ld   $48
@@ -53119,47 +53127,47 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e920 0020  ld   $20
               e921 0000  ld   $00
               e922 002b  ld   $2b         ;0bb2 STW
-              e923 0049  ld   $49         ;0bb2 'Text'
+              e923 0048  ld   $48         ;0bb2 'Text'
               e924 00e3  ld   $e3         ;0bb4 CALL
-              e925 004b  ld   $4b         ;0bb4 'DrawText'
+              e925 004a  ld   $4a         ;0bb4 'DrawText'
               e926 0021  ld   $21         ;0bb6 LDW
-              e927 0031  ld   $31         ;0bb6 'HighScore'
+              e927 0030  ld   $30         ;0bb6 'HighScore'
               e928 002b  ld   $2b         ;0bb8 STW
-              e929 009b  ld   $9b         ;0bb8 'Value'
+              e929 0099  ld   $99         ;0bb8 'Value'
               e92a 00e3  ld   $e3         ;0bba CALL
-              e92b 009d  ld   $9d         ;0bba 'DrawNumber4'
+              e92b 009b  ld   $9b         ;0bba 'DrawNumber4'
               e92c 0063  ld   $63         ;0bbc POP
               e92d 00ff  ld   $ff         ;0bbd RET
               e92e 002b  ld   $2b         ;0bbe STW
-              e92f 0065  ld   $65         ;0bbe 'DrawHighScore'
+              e92f 0064  ld   $64         ;0bbe 'DrawHighScore'
               e930 00e3  ld   $e3         ;0bc0 CALL
-              e931 006f  ld   $6f         ;0bc0 'Intro'
+              e931 006e  ld   $6e         ;0bc0 'Intro'
               e932 00e3  ld   $e3         ;0bc2 CALL
-              e933 008d  ld   $8d         ;0bc2 'SetupGame'
+              e933 008b  ld   $8b         ;0bc2 'SetupGame'
               e934 00e3  ld   $e3         ;0bc4 CALL
-              e935 008b  ld   $8b         ;0bc4 'RunGame'
+              e935 0089  ld   $89         ;0bc4 'RunGame'
               e936 0059  ld   $59         ;0bc6 LDI
               e937 0078  ld   $78
               e938 005e  ld   $5e         ;0bc8 ST
-              e939 002d  ld   $2d
+              e939 002c  ld   $2c
               e93a 0059  ld   $59         ;0bca LDI
               e93b 0003  ld   $03
               e93c 002b  ld   $2b         ;0bcc STW
-              e93d 0045  ld   $45         ;0bcc 'Color'
+              e93d 0044  ld   $44         ;0bcc 'Color'
               e93e 0021  ld   $21         ;0bce LDW
-              e93f 005d  ld   $5d         ;0bce 'Head'
+              e93f 005c  ld   $5c         ;0bce 'Head'
               e940 002b  ld   $2b         ;0bd0 STW
-              e941 003b  ld   $3b         ;0bd0 'Pos'
+              e941 003a  ld   $3a         ;0bd0 'Pos'
               e942 00e3  ld   $e3         ;0bd2 CALL
-              e943 005f  ld   $5f         ;0bd2 'DrawBlock'
+              e943 005e  ld   $5e         ;0bd2 'DrawBlock'
               e944 00e3  ld   $e3         ;0bd4 CALL
-              e945 0067  ld   $67         ;0bd4 'GameOver'
+              e945 0066  ld   $66         ;0bd4 'GameOver'
               e946 0059  ld   $59         ;0bd6 LDI
               e947 00f0  ld   $f0
               e948 002b  ld   $2b         ;0bd8 STW
-              e949 0069  ld   $69         ;0bd8 'Delay'
+              e949 0068  ld   $68         ;0bd8 'Delay'
               e94a 00e3  ld   $e3         ;0bda CALL
-              e94b 006b  ld   $6b         ;0bda 'Wait'
+              e94b 006a  ld   $6a         ;0bda 'Wait'
               e94c 0095  ld   $95         ;0bdc BRA
               e94d 00c0  ld   $c0
               e94e 0000  ld   $00         ;End of file
@@ -53169,7 +53177,7 @@ Racer:        e94f 0003  ld   $03         ;| RAM segment address (high byte firs
               e952 00e1  ld   $e1         ;0300 DEF
               e953 004e  ld   $4e
               e954 0021  ld   $21         ;0302 LDW
-              e955 0031  ld   $31         ;0302 'Char'
+              e955 0030  ld   $30         ;0302 'Char'
               e956 00f6  ld   $f6         ;0304 SUBI
               e957 0052  ld   $52
               e958 0035  ld   $35         ;0306 BCC
@@ -53178,88 +53186,88 @@ Racer:        e94f 0003  ld   $03         ;| RAM segment address (high byte firs
               e95b 00f3  ld   $f3         ;0309 ADDI
               e95c 0032  ld   $32
               e95d 002b  ld   $2b         ;030b STW
-              e95e 0033  ld   $33         ;030b 'i'
+              e95e 0032  ld   $32         ;030b 'i'
               e95f 0011  ld   $11         ;030d LDWI
               e960 0000  ld   $00
               e961 0007  ld   $07
               e962 0095  ld   $95         ;0310 BRA
               e963 0015  ld   $15
               e964 002b  ld   $2b         ;0312 STW
-              e965 0033  ld   $33         ;0312 'i'
+              e965 0032  ld   $32         ;0312 'i'
               e966 0011  ld   $11         ;0314 LDWI
               e967 0000  ld   $00
               e968 0008  ld   $08
               e969 002b  ld   $2b         ;0317 STW
-              e96a 0035  ld   $35         ;0317 'fontData'
+              e96a 0034  ld   $34         ;0317 'fontData'
               e96b 0021  ld   $21         ;0319 LDW
-              e96c 0033  ld   $33         ;0319 'i'
+              e96c 0032  ld   $32         ;0319 'i'
               e96d 00c1  ld   $c1         ;031b ADDW
-              e96e 0033  ld   $33         ;031b 'i'
+              e96e 0032  ld   $32         ;031b 'i'
               e96f 002b  ld   $2b         ;031d STW
-              e970 0037  ld   $37         ;031d 'tmp'
+              e970 0036  ld   $36         ;031d 'tmp'
               e971 00c1  ld   $c1         ;031f ADDW
-              e972 0037  ld   $37         ;031f 'tmp'
+              e972 0036  ld   $36         ;031f 'tmp'
               e973 00c1  ld   $c1         ;0321 ADDW
-              e974 0033  ld   $33         ;0321 'i'
+              e974 0032  ld   $32         ;0321 'i'
               e975 00c1  ld   $c1         ;0323 ADDW
-              e976 0035  ld   $35         ;0323 'fontData'
+              e976 0034  ld   $34         ;0323 'fontData'
               e977 002b  ld   $2b         ;0325 STW
-              e978 0035  ld   $35         ;0325 'fontData'
+              e978 0034  ld   $34         ;0325 'fontData'
               e979 0021  ld   $21         ;0327 LDW
-              e97a 0039  ld   $39         ;0327 'BgColor'
+              e97a 0038  ld   $38         ;0327 'BgColor'
               e97b 005e  ld   $5e         ;0329 ST
-              e97c 0025  ld   $25
+              e97c 0024  ld   $24
               e97d 0021  ld   $21         ;032b LDW
-              e97e 003b  ld   $3b         ;032b 'Color'
+              e97e 003a  ld   $3a         ;032b 'Color'
               e97f 005e  ld   $5e         ;032d ST
-              e980 0026  ld   $26
+              e980 0025  ld   $25
               e981 0021  ld   $21         ;032f LDW
-              e982 003d  ld   $3d         ;032f 'Pos'
+              e982 003c  ld   $3c         ;032f 'Pos'
               e983 002b  ld   $2b         ;0331 STW
-              e984 0021  ld   $21
+              e984 0020  ld   $20
               e985 0059  ld   $59         ;0333 LDI
               e986 00fb  ld   $fb
               e987 002b  ld   $2b         ;0335 STW
-              e988 0033  ld   $33         ;0335 'i'
+              e988 0032  ld   $32         ;0335 'i'
               e989 0021  ld   $21         ;0337 LDW
-              e98a 0035  ld   $35         ;0337 'fontData'
+              e98a 0034  ld   $34         ;0337 'fontData'
               e98b 0075  ld   $75         ;0339 LOOKUP
               e98c 0000  ld   $00
               e98d 00f9  ld   $f9         ;033b INC
-              e98e 0035  ld   $35         ;033b 'fontData'
+              e98e 0034  ld   $34         ;033b 'fontData'
               e98f 005e  ld   $5e         ;033d ST
-              e990 0027  ld   $27
+              e990 0026  ld   $26
               e991 0011  ld   $11         ;033f LDWI
-              e992 00db  ld   $db
+              e992 00e4  ld   $e4
               e993 0004  ld   $04
               e994 00a9  ld   $a9         ;0342 SYS
               e995 00cb  ld   $cb
               e996 00f9  ld   $f9         ;0344 INC
-              e997 0021  ld   $21
+              e997 0020  ld   $20
               e998 00f9  ld   $f9         ;0346 INC
-              e999 0033  ld   $33         ;0346 'i'
+              e999 0032  ld   $32         ;0346 'i'
               e99a 0021  ld   $21         ;0348 LDW
-              e99b 0033  ld   $33         ;0348 'i'
+              e99b 0032  ld   $32         ;0348 'i'
               e99c 0035  ld   $35         ;034a BCC
               e99d 0072  ld   $72         ;034b NE
               e99e 0035  ld   $35
               e99f 0021  ld   $21         ;034d LDW
-              e9a0 003d  ld   $3d         ;034d 'Pos'
+              e9a0 003c  ld   $3c         ;034d 'Pos'
               e9a1 00ff  ld   $ff         ;034f RET
               e9a2 002b  ld   $2b         ;0350 STW
-              e9a3 003f  ld   $3f         ;0350 'QDrawChar'
+              e9a3 003e  ld   $3e         ;0350 'QDrawChar'
               e9a4 00e1  ld   $e1         ;0352 DEF
               e9a5 00e7  ld   $e7
               e9a6 001a  ld   $1a         ;0354 LD
-              e9a7 0011  ld   $11
+              e9a7 0010  ld   $10
               e9a8 00ad  ld   $ad         ;0356 SUBW
-              e9a9 0041  ld   $41         ;0356 'LastFrame'
+              e9a9 0040  ld   $40         ;0356 'LastFrame'
               e9aa 0087  ld   $87         ;0358 ANDI
               e9ab 00ff  ld   $ff
               e9ac 005e  ld   $5e         ;035a ST
-              e9ad 002c  ld   $2c
+              e9ad 002b  ld   $2b
               e9ae 00c1  ld   $c1         ;035c ADDW
-              e9af 0043  ld   $43         ;035c 'Time'
+              e9af 0042  ld   $42         ;035c 'Time'
               e9b0 0035  ld   $35         ;035e BCC
               e9b1 0053  ld   $53         ;035f GE
               e9b2 0062  ld   $62
@@ -53267,32 +53275,32 @@ Racer:        e94f 0003  ld   $03         ;| RAM segment address (high byte firs
               e9b4 00ff  ld   $ff
               e9b5 007f  ld   $7f
               e9b6 002b  ld   $2b         ;0364 STW
-              e9b7 0043  ld   $43         ;0364 'Time'
+              e9b7 0042  ld   $42         ;0364 'Time'
               e9b8 001a  ld   $1a         ;0366 LD
-              e9b9 0011  ld   $11
+              e9b9 0010  ld   $10
               e9ba 002b  ld   $2b         ;0368 STW
-              e9bb 0041  ld   $41         ;0368 'LastFrame'
+              e9bb 0040  ld   $40         ;0368 'LastFrame'
               e9bc 001a  ld   $1a         ;036a LD
-              e9bd 0046  ld   $46         ;036a 'Speed'+1
+              e9bd 0045  ld   $45         ;036a 'Speed'+1
               e9be 0035  ld   $35         ;036c BCC
               e9bf 0056  ld   $56         ;036d LE
               e9c0 0081  ld   $81
               e9c1 002b  ld   $2b         ;036f STW
-              e9c2 0033  ld   $33         ;036f 'i'
+              e9c2 0032  ld   $32         ;036f 'i'
               e9c3 0021  ld   $21         ;0371 LDW
-              e9c4 0047  ld   $47         ;0371 'CarX'
+              e9c4 0046  ld   $46         ;0371 'CarX'
               e9c5 00ad  ld   $ad         ;0373 SUBW
-              e9c6 0049  ld   $49         ;0373 'DriftX'
+              e9c6 0048  ld   $48         ;0373 'DriftX'
               e9c7 002b  ld   $2b         ;0375 STW
-              e9c8 0047  ld   $47         ;0375 'CarX'
+              e9c8 0046  ld   $46         ;0375 'CarX'
               e9c9 0021  ld   $21         ;0377 LDW
-              e9ca 004b  ld   $4b         ;0377 'HorizonX'
+              e9ca 004a  ld   $4a         ;0377 'HorizonX'
               e9cb 00c1  ld   $c1         ;0379 ADDW
-              e9cc 004d  ld   $4d         ;0379 'HorizonDX'
+              e9cc 004c  ld   $4c         ;0379 'HorizonDX'
               e9cd 002b  ld   $2b         ;037b STW
-              e9ce 004b  ld   $4b         ;037b 'HorizonX'
+              e9ce 004a  ld   $4a         ;037b 'HorizonX'
               e9cf 0021  ld   $21         ;037d LDW
-              e9d0 0033  ld   $33         ;037d 'i'
+              e9d0 0032  ld   $32         ;037d 'i'
               e9d1 00f6  ld   $f6         ;037f SUBI
               e9d2 0001  ld   $01
               e9d3 0095  ld   $95         ;0381 BRA
@@ -53300,9 +53308,9 @@ Racer:        e94f 0003  ld   $03         ;| RAM segment address (high byte firs
               e9d5 0059  ld   $59         ;0383 LDI
               e9d6 0000  ld   $00
               e9d7 002b  ld   $2b         ;0385 STW
-              e9d8 004f  ld   $4f         ;0385 'Steer'
+              e9d8 004e  ld   $4e         ;0385 'Steer'
               e9d9 001a  ld   $1a         ;0387 LD
-              e9da 0012  ld   $12
+              e9da 0011  ld   $11
               e9db 0087  ld   $87         ;0389 ANDI
               e9dc 0001  ld   $01
               e9dd 0035  ld   $35         ;038b BCC
@@ -53312,15 +53320,15 @@ Racer:        e94f 0003  ld   $03         ;| RAM segment address (high byte firs
               e9e1 0000  ld   $00
               e9e2 0002  ld   $02
               e9e3 00c1  ld   $c1         ;0391 ADDW
-              e9e4 0047  ld   $47         ;0391 'CarX'
+              e9e4 0046  ld   $46         ;0391 'CarX'
               e9e5 002b  ld   $2b         ;0393 STW
-              e9e6 0047  ld   $47         ;0393 'CarX'
+              e9e6 0046  ld   $46         ;0393 'CarX'
               e9e7 0059  ld   $59         ;0395 LDI
               e9e8 0001  ld   $01
               e9e9 002b  ld   $2b         ;0397 STW
-              e9ea 004f  ld   $4f         ;0397 'Steer'
+              e9ea 004e  ld   $4e         ;0397 'Steer'
               e9eb 001a  ld   $1a         ;0399 LD
-              e9ec 0012  ld   $12
+              e9ec 0011  ld   $11
               e9ed 0087  ld   $87         ;039b ANDI
               e9ee 0002  ld   $02
               e9ef 0035  ld   $35         ;039d BCC
@@ -53330,37 +53338,37 @@ Racer:        e94f 0003  ld   $03         ;| RAM segment address (high byte firs
               e9f3 0000  ld   $00
               e9f4 00fe  ld   $fe
               e9f5 00c1  ld   $c1         ;03a3 ADDW
-              e9f6 0047  ld   $47         ;03a3 'CarX'
+              e9f6 0046  ld   $46         ;03a3 'CarX'
               e9f7 002b  ld   $2b         ;03a5 STW
-              e9f8 0047  ld   $47         ;03a5 'CarX'
+              e9f8 0046  ld   $46         ;03a5 'CarX'
               e9f9 0011  ld   $11         ;03a7 LDWI
               e9fa 00ff  ld   $ff
               e9fb fe00  bra  ac          ;+-----------------------------------+
               e9fc fcfd  bra  $e9fd       ;|                                   |
               e9fd 1403  ld   $03,y       ;| Trampoline for page $e900 lookups |
               e9fe e078  jmp  y,$78       ;|                                   |
-              e9ff 1519  ld   [$19],y     ;+-----------------------------------+
+              e9ff 1518  ld   [$18],y     ;+-----------------------------------+
               ea00 00ff  ld   $ff
               ea01 002b  ld   $2b         ;03aa STW
-              ea02 004f  ld   $4f         ;03aa 'Steer'
+              ea02 004e  ld   $4e         ;03aa 'Steer'
               ea03 001a  ld   $1a         ;03ac LD
-              ea04 0012  ld   $12
+              ea04 0011  ld   $11
               ea05 0087  ld   $87         ;03ae ANDI
               ea06 0080  ld   $80
               ea07 0035  ld   $35         ;03b0 BCC
               ea08 0072  ld   $72         ;03b1 NE
               ea09 00c6  ld   $c6
               ea0a 0021  ld   $21         ;03b3 LDW
-              ea0b 0045  ld   $45         ;03b3 'Speed'
+              ea0b 0044  ld   $44         ;03b3 'Speed'
               ea0c 00f3  ld   $f3         ;03b5 ADDI
               ea0d 0010  ld   $10
               ea0e 002b  ld   $2b         ;03b7 STW
-              ea0f 0045  ld   $45         ;03b7 'Speed'
+              ea0f 0044  ld   $44         ;03b7 'Speed'
               ea10 0011  ld   $11         ;03b9 LDWI
               ea11 00ff  ld   $ff
               ea12 0005  ld   $05
               ea13 00ad  ld   $ad         ;03bc SUBW
-              ea14 0045  ld   $45         ;03bc 'Speed'
+              ea14 0044  ld   $44         ;03bc 'Speed'
               ea15 0035  ld   $35         ;03be BCC
               ea16 0053  ld   $53         ;03bf GE
               ea17 00c4  ld   $c4
@@ -53368,32 +53376,32 @@ Racer:        e94f 0003  ld   $03         ;| RAM segment address (high byte firs
               ea19 00ff  ld   $ff
               ea1a 0005  ld   $05
               ea1b 002b  ld   $2b         ;03c4 STW
-              ea1c 0045  ld   $45         ;03c4 'Speed'
+              ea1c 0044  ld   $44         ;03c4 'Speed'
               ea1d 0095  ld   $95         ;03c6 BRA
               ea1e 00d4  ld   $d4
               ea1f 0011  ld   $11         ;03c8 LDWI
               ea20 00f8  ld   $f8
               ea21 00fe  ld   $fe
               ea22 00c1  ld   $c1         ;03cb ADDW
-              ea23 0045  ld   $45         ;03cb 'Speed'
+              ea23 0044  ld   $44         ;03cb 'Speed'
               ea24 0035  ld   $35         ;03cd BCC
               ea25 0050  ld   $50         ;03ce LT
               ea26 00d4  ld   $d4
               ea27 0021  ld   $21         ;03d0 LDW
-              ea28 0045  ld   $45         ;03d0 'Speed'
+              ea28 0044  ld   $44         ;03d0 'Speed'
               ea29 00f6  ld   $f6         ;03d2 SUBI
               ea2a 0008  ld   $08
               ea2b 002b  ld   $2b         ;03d4 STW
-              ea2c 0045  ld   $45         ;03d4 'Speed'
+              ea2c 0044  ld   $44         ;03d4 'Speed'
               ea2d 001a  ld   $1a         ;03d6 LD
-              ea2e 0012  ld   $12
+              ea2e 0011  ld   $11
               ea2f 0087  ld   $87         ;03d8 ANDI
               ea30 0040  ld   $40
               ea31 0035  ld   $35         ;03da BCC
               ea32 0072  ld   $72         ;03db NE
               ea33 00e6  ld   $e6
               ea34 0021  ld   $21         ;03dd LDW
-              ea35 0045  ld   $45         ;03dd 'Speed'
+              ea35 0044  ld   $44         ;03dd 'Speed'
               ea36 00f6  ld   $f6         ;03df SUBI
               ea37 0040  ld   $40
               ea38 0035  ld   $35         ;03e1 BCC
@@ -53402,12 +53410,12 @@ Racer:        e94f 0003  ld   $03         ;| RAM segment address (high byte firs
               ea3b 0059  ld   $59         ;03e4 LDI
               ea3c 0000  ld   $00
               ea3d 002b  ld   $2b         ;03e6 STW
-              ea3e 0045  ld   $45         ;03e6 'Speed'
+              ea3e 0044  ld   $44         ;03e6 'Speed'
               ea3f 00ff  ld   $ff         ;03e8 RET
               ea40 002b  ld   $2b         ;03e9 STW
-              ea41 0051  ld   $51         ;03e9 'ControlRaceCar'
+              ea41 0050  ld   $50         ;03e9 'ControlRaceCar'
               ea42 00f9  ld   $f9         ;03eb INC
-              ea43 001d  ld   $1d
+              ea43 001c  ld   $1c
               ea44 00ff  ld   $ff         ;03ed RET
               ea45 0004  ld   $04         ;| RAM segment address (high byte first)
               ea46 0000  ld   $00         ;|
@@ -53424,163 +53432,163 @@ Racer:        e94f 0003  ld   $03         ;| RAM segment address (high byte firs
               ea51 006e  ld   $6e
               ea52 0000  ld   $00
               ea53 002b  ld   $2b         ;040b STW
-              ea54 0053  ld   $53         ;040b 'GigatronText'
+              ea54 0052  ld   $52         ;040b 'GigatronText'
               ea55 00e1  ld   $e1         ;040d DEF
               ea56 001d  ld   $1d
               ea57 001a  ld   $1a         ;040f LD
-              ea58 0011  ld   $11
+              ea58 0010  ld   $10
               ea59 00c1  ld   $c1         ;0411 ADDW
-              ea5a 0055  ld   $55         ;0411 'Delay'
+              ea5a 0054  ld   $54         ;0411 'Delay'
               ea5b 0087  ld   $87         ;0413 ANDI
               ea5c 00ff  ld   $ff
               ea5d 002b  ld   $2b         ;0415 STW
-              ea5e 0037  ld   $37         ;0415 'tmp'
+              ea5e 0036  ld   $36         ;0415 'tmp'
               ea5f 001a  ld   $1a         ;0417 LD
-              ea60 0011  ld   $11
+              ea60 0010  ld   $10
               ea61 00ad  ld   $ad         ;0419 SUBW
-              ea62 0037  ld   $37         ;0419 'tmp'
+              ea62 0036  ld   $36         ;0419 'tmp'
               ea63 0035  ld   $35         ;041b BCC
               ea64 0072  ld   $72         ;041c NE
               ea65 0015  ld   $15
               ea66 00ff  ld   $ff         ;041e RET
               ea67 002b  ld   $2b         ;041f STW
-              ea68 0057  ld   $57         ;041f 'Wait'
+              ea68 0056  ld   $56         ;041f 'Wait'
               ea69 00e1  ld   $e1         ;0421 DEF
               ea6a 0036  ld   $36
               ea6b 0059  ld   $59         ;0423 LDI
               ea6c 0030  ld   $30
               ea6d 002b  ld   $2b         ;0425 STW
-              ea6e 0031  ld   $31         ;0425 'Char'
+              ea6e 0030  ld   $30         ;0425 'Char'
               ea6f 0021  ld   $21         ;0427 LDW
-              ea70 0059  ld   $59         ;0427 'Value'
+              ea70 0058  ld   $58         ;0427 'Value'
               ea71 00ad  ld   $ad         ;0429 SUBW
-              ea72 005b  ld   $5b         ;0429 'Radix'
+              ea72 005a  ld   $5a         ;0429 'Radix'
               ea73 0035  ld   $35         ;042b BCC
               ea74 0050  ld   $50         ;042c LT
               ea75 0035  ld   $35
               ea76 002b  ld   $2b         ;042e STW
-              ea77 0059  ld   $59         ;042e 'Value'
+              ea77 0058  ld   $58         ;042e 'Value'
               ea78 00f9  ld   $f9         ;0430 INC
-              ea79 0031  ld   $31         ;0430 'Char'
+              ea79 0030  ld   $30         ;0430 'Char'
               ea7a 00ad  ld   $ad         ;0432 SUBW
-              ea7b 005b  ld   $5b         ;0432 'Radix'
+              ea7b 005a  ld   $5a         ;0432 'Radix'
               ea7c 0035  ld   $35         ;0434 BCC
               ea7d 0053  ld   $53         ;0435 GE
               ea7e 002c  ld   $2c
               ea7f 00ff  ld   $ff         ;0437 RET
               ea80 002b  ld   $2b         ;0438 STW
-              ea81 005d  ld   $5d         ;0438 'ExtractDigit'
+              ea81 005c  ld   $5c         ;0438 'ExtractDigit'
               ea82 00e1  ld   $e1         ;043a DEF
               ea83 00ba  ld   $ba
               ea84 0021  ld   $21         ;043c LDW
-              ea85 005f  ld   $5f         ;043c 'Video'
+              ea85 005e  ld   $5e         ;043c 'Video'
               ea86 00d5  ld   $d5         ;043e PEEK
               ea87 0087  ld   $87         ;043f ANDI
               ea88 00fe  ld   $fe
               ea89 005e  ld   $5e         ;0441 ST
-              ea8a 0062  ld   $62         ;0441 'p'+1
+              ea8a 0061  ld   $61         ;0441 'p'+1
               ea8b 008d  ld   $8d         ;0443 ORI
               ea8c 0001  ld   $01
               ea8d 005e  ld   $5e         ;0445 ST
-              ea8e 0064  ld   $64         ;0445 'q'+1
+              ea8e 0063  ld   $63         ;0445 'q'+1
               ea8f 00f9  ld   $f9         ;0447 INC
-              ea90 005f  ld   $5f         ;0447 'Video'
+              ea90 005e  ld   $5e         ;0447 'Video'
               ea91 0059  ld   $59         ;0449 LDI
               ea92 0000  ld   $00
               ea93 005e  ld   $5e         ;044b ST
-              ea94 0061  ld   $61         ;044b 'p'
+              ea94 0060  ld   $60         ;044b 'p'
               ea95 005e  ld   $5e         ;044d ST
-              ea96 0063  ld   $63         ;044d 'q'
+              ea96 0062  ld   $62         ;044d 'q'
               ea97 0021  ld   $21         ;044f LDW
-              ea98 0061  ld   $61         ;044f 'p'
+              ea98 0060  ld   $60         ;044f 'p'
               ea99 00d5  ld   $d5         ;0451 PEEK
               ea9a 002b  ld   $2b         ;0452 STW
-              ea9b 0033  ld   $33         ;0452 'i'
+              ea9b 0032  ld   $32         ;0452 'i'
               ea9c 0021  ld   $21         ;0454 LDW
-              ea9d 0063  ld   $63         ;0454 'q'
+              ea9d 0062  ld   $62         ;0454 'q'
               ea9e 00d5  ld   $d5         ;0456 PEEK
               ea9f 00ad  ld   $ad         ;0457 SUBW
-              eaa0 0033  ld   $33         ;0457 'i'
+              eaa0 0032  ld   $32         ;0457 'i'
               eaa1 002b  ld   $2b         ;0459 STW
-              eaa2 0033  ld   $33         ;0459 'i'
+              eaa2 0032  ld   $32         ;0459 'i'
               eaa3 0021  ld   $21         ;045b LDW
-              eaa4 0061  ld   $61         ;045b 'p'
+              eaa4 0060  ld   $60         ;045b 'p'
               eaa5 00d5  ld   $d5         ;045d PEEK
               eaa6 005e  ld   $5e         ;045e ST
-              eaa7 0061  ld   $61         ;045e 'p'
+              eaa7 0060  ld   $60         ;045e 'p'
               eaa8 005e  ld   $5e         ;0460 ST
-              eaa9 0063  ld   $63         ;0460 'q'
+              eaa9 0062  ld   $62         ;0460 'q'
               eaaa 0059  ld   $59         ;0462 LDI
               eaab 0015  ld   $15
               eaac 0098  ld   $98         ;0464 POKE
-              eaad 0061  ld   $61         ;0464 'p'
+              eaad 0060  ld   $60         ;0464 'p'
               eaae 0098  ld   $98         ;0466 POKE
-              eaaf 0063  ld   $63         ;0466 'q'
+              eaaf 0062  ld   $62         ;0466 'q'
               eab0 00f9  ld   $f9         ;0468 INC
-              eab1 0061  ld   $61         ;0468 'p'
+              eab1 0060  ld   $60         ;0468 'p'
               eab2 00f9  ld   $f9         ;046a INC
-              eab3 0063  ld   $63         ;046a 'q'
+              eab3 0062  ld   $62         ;046a 'q'
               eab4 0021  ld   $21         ;046c LDW
-              eab5 0033  ld   $33         ;046c 'i'
+              eab5 0032  ld   $32         ;046c 'i'
               eab6 00f6  ld   $f6         ;046e SUBI
               eab7 0001  ld   $01
               eab8 002b  ld   $2b         ;0470 STW
-              eab9 0033  ld   $33         ;0470 'i'
+              eab9 0032  ld   $32         ;0470 'i'
               eaba 0035  ld   $35         ;0472 BCC
               eabb 004d  ld   $4d         ;0473 GT
               eabc 0060  ld   $60
               eabd 0021  ld   $21         ;0475 LDW
-              eabe 0065  ld   $65         ;0475 'Sprite'
+              eabe 0064  ld   $64         ;0475 'Sprite'
               eabf 002b  ld   $2b         ;0477 STW
-              eac0 0067  ld   $67         ;0477 's'
+              eac0 0066  ld   $66         ;0477 's'
               eac1 0059  ld   $59         ;0479 LDI
               eac2 0000  ld   $00
               eac3 005e  ld   $5e         ;047b ST
-              eac4 0061  ld   $61         ;047b 'p'
+              eac4 0060  ld   $60         ;047b 'p'
               eac5 0021  ld   $21         ;047d LDW
-              eac6 005f  ld   $5f         ;047d 'Video'
+              eac6 005e  ld   $5e         ;047d 'Video'
               eac7 00d5  ld   $d5         ;047f PEEK
               eac8 00c1  ld   $c1         ;0480 ADDW
-              eac9 0069  ld   $69         ;0480 'X'
+              eac9 0068  ld   $68         ;0480 'X'
               eaca 002b  ld   $2b         ;0482 STW
-              eacb 0069  ld   $69         ;0482 'X'
+              eacb 0068  ld   $68         ;0482 'X'
               eacc 0021  ld   $21         ;0484 LDW
-              eacd 0067  ld   $67         ;0484 's'
+              eacd 0066  ld   $66         ;0484 's'
               eace 00d5  ld   $d5         ;0486 PEEK
               eacf 00c1  ld   $c1         ;0487 ADDW
-              ead0 0069  ld   $69         ;0487 'X'
+              ead0 0068  ld   $68         ;0487 'X'
               ead1 0098  ld   $98         ;0489 POKE
-              ead2 0061  ld   $61         ;0489 'p'
+              ead2 0060  ld   $60         ;0489 'p'
               ead3 005e  ld   $5e         ;048b ST
-              ead4 0061  ld   $61         ;048b 'p'
+              ead4 0060  ld   $60         ;048b 'p'
               ead5 005e  ld   $5e         ;048d ST
-              ead6 0063  ld   $63         ;048d 'q'
+              ead6 0062  ld   $62         ;048d 'q'
               ead7 00f9  ld   $f9         ;048f INC
-              ead8 0067  ld   $67         ;048f 's'
+              ead8 0066  ld   $66         ;048f 's'
               ead9 0021  ld   $21         ;0491 LDW
-              eada 0061  ld   $61         ;0491 'p'
+              eada 0060  ld   $60         ;0491 'p'
               eadb 00d5  ld   $d5         ;0493 PEEK
               eadc 0091  ld   $91         ;0494 XORI
               eadd 0015  ld   $15
               eade 00c1  ld   $c1         ;0496 ADDW
-              eadf 006b  ld   $6b         ;0496 'Collision'
+              eadf 006a  ld   $6a         ;0496 'Collision'
               eae0 002b  ld   $2b         ;0498 STW
-              eae1 006b  ld   $6b         ;0498 'Collision'
+              eae1 006a  ld   $6a         ;0498 'Collision'
               eae2 0021  ld   $21         ;049a LDW
-              eae3 0067  ld   $67         ;049a 's'
+              eae3 0066  ld   $66         ;049a 's'
               eae4 00d5  ld   $d5         ;049c PEEK
               eae5 0098  ld   $98         ;049d POKE
-              eae6 0061  ld   $61         ;049d 'p'
+              eae6 0060  ld   $60         ;049d 'p'
               eae7 00f9  ld   $f9         ;049f INC
-              eae8 0061  ld   $61         ;049f 'p'
+              eae8 0060  ld   $60         ;049f 'p'
               eae9 0098  ld   $98         ;04a1 POKE
-              eaea 0063  ld   $63         ;04a1 'q'
+              eaea 0062  ld   $62         ;04a1 'q'
               eaeb 00f9  ld   $f9         ;04a3 INC
-              eaec 0063  ld   $63         ;04a3 'q'
+              eaec 0062  ld   $62         ;04a3 'q'
               eaed 00f9  ld   $f9         ;04a5 INC
-              eaee 0067  ld   $67         ;04a5 's'
+              eaee 0066  ld   $66         ;04a5 's'
               eaef 0021  ld   $21         ;04a7 LDW
-              eaf0 0067  ld   $67         ;04a7 's'
+              eaf0 0066  ld   $66         ;04a7 's'
               eaf1 00d5  ld   $d5         ;04a9 PEEK
               eaf2 0035  ld   $35         ;04aa BCC
               eaf3 0072  ld   $72         ;04ab NE
@@ -53588,27 +53596,27 @@ Racer:        e94f 0003  ld   $03         ;| RAM segment address (high byte firs
               eaf5 0059  ld   $59         ;04ad LDI
               eaf6 0000  ld   $00
               eaf7 005e  ld   $5e         ;04af ST
-              eaf8 0063  ld   $63         ;04af 'q'
+              eaf8 0062  ld   $62         ;04af 'q'
               eaf9 001a  ld   $1a         ;04b1 LD
-              eafa 0061  ld   $61         ;04b1 'p'
+              eafa 0060  ld   $60         ;04b1 'p'
               eafb fe00  bra  ac          ;+-----------------------------------+
               eafc fcfd  bra  $eafd       ;|                                   |
               eafd 1403  ld   $03,y       ;| Trampoline for page $ea00 lookups |
               eafe e078  jmp  y,$78       ;|                                   |
-              eaff 1519  ld   [$19],y     ;+-----------------------------------+
+              eaff 1518  ld   [$18],y     ;+-----------------------------------+
               eb00 0098  ld   $98         ;04b3 POKE
-              eb01 0063  ld   $63         ;04b3 'q'
+              eb01 0062  ld   $62         ;04b3 'q'
               eb02 0021  ld   $21         ;04b5 LDW
-              eb03 005f  ld   $5f         ;04b5 'Video'
+              eb03 005e  ld   $5e         ;04b5 'Video'
               eb04 00f3  ld   $f3         ;04b7 ADDI
               eb05 0003  ld   $03
               eb06 002b  ld   $2b         ;04b9 STW
-              eb07 005f  ld   $5f         ;04b9 'Video'
+              eb07 005e  ld   $5e         ;04b9 'Video'
               eb08 00ff  ld   $ff         ;04bb RET
               eb09 002b  ld   $2b         ;04bc STW
-              eb0a 006d  ld   $6d         ;04bc 'DrawPixels'
+              eb0a 006c  ld   $6c         ;04bc 'DrawPixels'
               eb0b 00f9  ld   $f9         ;04be INC
-              eb0c 001d  ld   $1d
+              eb0c 001c  ld   $1c
               eb0d 00ff  ld   $ff         ;04c0 RET
               eb0e 0005  ld   $05         ;| RAM segment address (high byte first)
               eb0f 0000  ld   $00         ;|
@@ -53620,43 +53628,43 @@ Racer:        e94f 0003  ld   $03         ;| RAM segment address (high byte firs
               eb15 0080  ld   $80
               eb16 0020  ld   $20
               eb17 002b  ld   $2b         ;0506 STW
-              eb18 003d  ld   $3d         ;0506 'Pos'
+              eb18 003c  ld   $3c         ;0506 'Pos'
               eb19 0059  ld   $59         ;0508 LDI
               eb1a 0000  ld   $00
               eb1b 002b  ld   $2b         ;050a STW
-              eb1c 006f  ld   $6f         ;050a 'Width'
+              eb1c 006e  ld   $6e         ;050a 'Width'
               eb1d 0021  ld   $21         ;050c LDW
-              eb1e 006f  ld   $6f         ;050c 'Width'
+              eb1e 006e  ld   $6e         ;050c 'Width'
               eb1f 00f3  ld   $f3         ;050e ADDI
               eb20 0001  ld   $01
               eb21 002b  ld   $2b         ;0510 STW
-              eb22 006f  ld   $6f         ;0510 'Width'
+              eb22 006e  ld   $6e         ;0510 'Width'
               eb23 0059  ld   $59         ;0512 LDI
               eb24 003f  ld   $3f
               eb25 002b  ld   $2b         ;0514 STW
-              eb26 0071  ld   $71         ;0514 'CurbColor'
+              eb26 0070  ld   $70         ;0514 'CurbColor'
               eb27 0059  ld   $59         ;0516 LDI
               eb28 000c  ld   $0c
               eb29 002b  ld   $2b         ;0518 STW
-              eb2a 0073  ld   $73         ;0518 'GrassColor'
+              eb2a 0072  ld   $72         ;0518 'GrassColor'
               eb2b 00e3  ld   $e3         ;051a CALL
-              eb2c 0075  ld   $75         ;051a 'SetupSegment'
+              eb2c 0074  ld   $74         ;051a 'SetupSegment'
               eb2d 00f9  ld   $f9         ;051c INC
-              eb2e 003e  ld   $3e         ;051c 'Pos'+1
+              eb2e 003d  ld   $3d         ;051c 'Pos'+1
               eb2f 0059  ld   $59         ;051e LDI
               eb30 0003  ld   $03
               eb31 002b  ld   $2b         ;0520 STW
-              eb32 0071  ld   $71         ;0520 'CurbColor'
+              eb32 0070  ld   $70         ;0520 'CurbColor'
               eb33 0059  ld   $59         ;0522 LDI
               eb34 0008  ld   $08
               eb35 002b  ld   $2b         ;0524 STW
-              eb36 0073  ld   $73         ;0524 'GrassColor'
+              eb36 0072  ld   $72         ;0524 'GrassColor'
               eb37 00e3  ld   $e3         ;0526 CALL
-              eb38 0075  ld   $75         ;0526 'SetupSegment'
+              eb38 0074  ld   $74         ;0526 'SetupSegment'
               eb39 00f9  ld   $f9         ;0528 INC
-              eb3a 003e  ld   $3e         ;0528 'Pos'+1
+              eb3a 003d  ld   $3d         ;0528 'Pos'+1
               eb3b 0021  ld   $21         ;052a LDW
-              eb3c 003d  ld   $3d         ;052a 'Pos'
+              eb3c 003c  ld   $3c         ;052a 'Pos'
               eb3d 0035  ld   $35         ;052c BCC
               eb3e 0053  ld   $53         ;052d GE
               eb3f 000a  ld   $0a
@@ -53664,88 +53672,88 @@ Racer:        e94f 0003  ld   $03         ;| RAM segment address (high byte firs
               eb41 0000  ld   $00
               eb42 0074  ld   $74
               eb43 0098  ld   $98
-              eb44 001a  ld   $1a
+              eb44 0019  ld   $19
               eb45 00f9  ld   $f9         ;0534 INC
-              eb46 001b  ld   $1b
+              eb46 001a  ld   $1a
               eb47 0035  ld   $35         ;0536 BCC
               eb48 004d  ld   $4d         ;0537 GT
               eb49 0030  ld   $30
               eb4a 0063  ld   $63         ;0539 POP
               eb4b 00ff  ld   $ff         ;053a RET
               eb4c 002b  ld   $2b         ;053b STW
-              eb4d 0077  ld   $77         ;053b 'SetupRoad'
+              eb4d 0076  ld   $76         ;053b 'SetupRoad'
               eb4e 00e1  ld   $e1         ;053d DEF
               eb4f 0089  ld   $89
               eb50 0021  ld   $21         ;053f LDW
-              eb51 003d  ld   $3d         ;053f 'Pos'
+              eb51 003c  ld   $3c         ;053f 'Pos'
               eb52 002b  ld   $2b         ;0541 STW
-              eb53 0061  ld   $61         ;0541 'p'
+              eb53 0060  ld   $60         ;0541 'p'
               eb54 0021  ld   $21         ;0543 LDW
-              eb55 006f  ld   $6f         ;0543 'Width'
+              eb55 006e  ld   $6e         ;0543 'Width'
               eb56 002b  ld   $2b         ;0545 STW
-              eb57 0037  ld   $37         ;0545 'tmp'
+              eb57 0036  ld   $36         ;0545 'tmp'
               eb58 0059  ld   $59         ;0547 LDI
               eb59 0015  ld   $15
               eb5a 0098  ld   $98         ;0549 POKE
-              eb5b 0061  ld   $61         ;0549 'p'
+              eb5b 0060  ld   $60         ;0549 'p'
               eb5c 00f9  ld   $f9         ;054b INC
-              eb5d 0061  ld   $61         ;054b 'p'
+              eb5d 0060  ld   $60         ;054b 'p'
               eb5e 0021  ld   $21         ;054d LDW
-              eb5f 0037  ld   $37         ;054d 'tmp'
+              eb5f 0036  ld   $36         ;054d 'tmp'
               eb60 00f6  ld   $f6         ;054f SUBI
               eb61 0001  ld   $01
               eb62 0035  ld   $35         ;0551 BCC
               eb63 004d  ld   $4d         ;0552 GT
               eb64 0043  ld   $43
               eb65 0021  ld   $21         ;0554 LDW
-              eb66 0061  ld   $61         ;0554 'p'
+              eb66 0060  ld   $60         ;0554 'p'
               eb67 002b  ld   $2b         ;0556 STW
-              eb68 0063  ld   $63         ;0556 'q'
+              eb68 0062  ld   $62         ;0556 'q'
               eb69 0021  ld   $21         ;0558 LDW
-              eb6a 006f  ld   $6f         ;0558 'Width'
+              eb6a 006e  ld   $6e         ;0558 'Width'
               eb6b 00f6  ld   $f6         ;055a SUBI
               eb6c 0008  ld   $08
               eb6d 0035  ld   $35         ;055c BCC
               eb6e 0056  ld   $56         ;055d LE
               eb6f 006d  ld   $6d
               eb70 002b  ld   $2b         ;055f STW
-              eb71 0037  ld   $37         ;055f 'tmp'
+              eb71 0036  ld   $36         ;055f 'tmp'
               eb72 0021  ld   $21         ;0561 LDW
-              eb73 0063  ld   $63         ;0561 'q'
+              eb73 0062  ld   $62         ;0561 'q'
               eb74 00f6  ld   $f6         ;0563 SUBI
               eb75 0001  ld   $01
               eb76 002b  ld   $2b         ;0565 STW
-              eb77 0063  ld   $63         ;0565 'q'
+              eb77 0062  ld   $62         ;0565 'q'
               eb78 0021  ld   $21         ;0567 LDW
-              eb79 0071  ld   $71         ;0567 'CurbColor'
+              eb79 0070  ld   $70         ;0567 'CurbColor'
               eb7a 0098  ld   $98         ;0569 POKE
-              eb7b 0063  ld   $63         ;0569 'q'
+              eb7b 0062  ld   $62         ;0569 'q'
               eb7c 0021  ld   $21         ;056b LDW
-              eb7d 0037  ld   $37         ;056b 'tmp'
+              eb7d 0036  ld   $36         ;056b 'tmp'
               eb7e 0095  ld   $95         ;056d BRA
               eb7f 0058  ld   $58
               eb80 0021  ld   $21         ;056f LDW
-              eb81 0073  ld   $73         ;056f 'GrassColor'
+              eb81 0072  ld   $72         ;056f 'GrassColor'
               eb82 0098  ld   $98         ;0571 POKE
-              eb83 0061  ld   $61         ;0571 'p'
+              eb83 0060  ld   $60         ;0571 'p'
               eb84 00f9  ld   $f9         ;0573 INC
-              eb85 0061  ld   $61         ;0573 'p'
+              eb85 0060  ld   $60         ;0573 'p'
               eb86 001a  ld   $1a         ;0575 LD
-              eb87 0061  ld   $61         ;0575 'p'
+              eb87 0060  ld   $60         ;0575 'p'
               eb88 0035  ld   $35         ;0577 BCC
               eb89 0072  ld   $72         ;0578 NE
               eb8a 006d  ld   $6d
               eb8b 0021  ld   $21         ;057a LDW
-              eb8c 0061  ld   $61         ;057a 'p'
+              eb8c 0060  ld   $60         ;057a 'p'
               eb8d 0091  ld   $91         ;057c XORI
               eb8e 00ff  ld   $ff
               eb8f 00d5  ld   $d5         ;057e PEEK
               eb90 0098  ld   $98         ;057f POKE
-              eb91 0061  ld   $61         ;057f 'p'
+              eb91 0060  ld   $60         ;057f 'p'
               eb92 00f9  ld   $f9         ;0581 INC
-              eb93 0061  ld   $61         ;0581 'p'
+              eb93 0060  ld   $60         ;0581 'p'
               eb94 001a  ld   $1a         ;0583 LD
-              eb95 0061  ld   $61         ;0583 'p'
+              eb95 0060  ld   $60         ;0583 'p'
               eb96 0091  ld   $91         ;0585 XORI
               eb97 0080  ld   $80
               eb98 0035  ld   $35         ;0587 BCC
@@ -53753,7 +53761,7 @@ Racer:        e94f 0003  ld   $03         ;| RAM segment address (high byte firs
               eb9a 0078  ld   $78
               eb9b 00ff  ld   $ff         ;058a RET
               eb9c 002b  ld   $2b         ;058b STW
-              eb9d 0075  ld   $75         ;058b 'SetupSegment'
+              eb9d 0074  ld   $74         ;058b 'SetupSegment'
               eb9e 00e1  ld   $e1         ;058d DEF
               eb9f 00eb  ld   $eb
               eba0 007d  ld   $7d         ;058f PUSH
@@ -53761,212 +53769,212 @@ Racer:        e94f 0003  ld   $03         ;| RAM segment address (high byte firs
               eba2 000f  ld   $0f
               eba3 000e  ld   $0e
               eba4 002b  ld   $2b         ;0593 STW
-              eba5 005b  ld   $5b         ;0593 'Radix'
+              eba5 005a  ld   $5a         ;0593 'Radix'
               eba6 00e3  ld   $e3         ;0595 CALL
-              eba7 005d  ld   $5d         ;0595 'ExtractDigit'
+              eba7 005c  ld   $5c         ;0595 'ExtractDigit'
               eba8 0021  ld   $21         ;0597 LDW
-              eba9 0079  ld   $79         ;0597 'Prev3'
+              eba9 0078  ld   $78         ;0597 'Prev3'
               ebaa 00ad  ld   $ad         ;0599 SUBW
-              ebab 0031  ld   $31         ;0599 'Char'
+              ebab 0030  ld   $30         ;0599 'Char'
               ebac 0035  ld   $35         ;059b BCC
               ebad 003f  ld   $3f         ;059c EQ
               ebae 00a4  ld   $a4
               ebaf 0021  ld   $21         ;059e LDW
-              ebb0 0031  ld   $31         ;059e 'Char'
+              ebb0 0030  ld   $30         ;059e 'Char'
               ebb1 002b  ld   $2b         ;05a0 STW
-              ebb2 0079  ld   $79         ;05a0 'Prev3'
+              ebb2 0078  ld   $78         ;05a0 'Prev3'
               ebb3 00e3  ld   $e3         ;05a2 CALL
-              ebb4 003f  ld   $3f         ;05a2 'QDrawChar'
+              ebb4 003e  ld   $3e         ;05a2 'QDrawChar'
               ebb5 0095  ld   $95         ;05a4 BRA
               ebb6 00a6  ld   $a6
               ebb7 0021  ld   $21         ;05a6 LDW
-              ebb8 003d  ld   $3d         ;05a6 'Pos'
+              ebb8 003c  ld   $3c         ;05a6 'Pos'
               ebb9 00f3  ld   $f3         ;05a8 ADDI
               ebba 000c  ld   $0c
               ebbb 002b  ld   $2b         ;05aa STW
-              ebbc 003d  ld   $3d         ;05aa 'Pos'
+              ebbc 003c  ld   $3c         ;05aa 'Pos'
               ebbd 0011  ld   $11         ;05ac LDWI
               ebbe 0058  ld   $58
               ebbf 0002  ld   $02
               ebc0 002b  ld   $2b         ;05af STW
-              ebc1 005b  ld   $5b         ;05af 'Radix'
+              ebc1 005a  ld   $5a         ;05af 'Radix'
               ebc2 00e3  ld   $e3         ;05b1 CALL
-              ebc3 005d  ld   $5d         ;05b1 'ExtractDigit'
+              ebc3 005c  ld   $5c         ;05b1 'ExtractDigit'
               ebc4 0021  ld   $21         ;05b3 LDW
-              ebc5 007b  ld   $7b         ;05b3 'Prev2'
+              ebc5 007a  ld   $7a         ;05b3 'Prev2'
               ebc6 00ad  ld   $ad         ;05b5 SUBW
-              ebc7 0031  ld   $31         ;05b5 'Char'
+              ebc7 0030  ld   $30         ;05b5 'Char'
               ebc8 0035  ld   $35         ;05b7 BCC
               ebc9 003f  ld   $3f         ;05b8 EQ
               ebca 00c0  ld   $c0
               ebcb 0021  ld   $21         ;05ba LDW
-              ebcc 0031  ld   $31         ;05ba 'Char'
+              ebcc 0030  ld   $30         ;05ba 'Char'
               ebcd 002b  ld   $2b         ;05bc STW
-              ebce 007b  ld   $7b         ;05bc 'Prev2'
+              ebce 007a  ld   $7a         ;05bc 'Prev2'
               ebcf 00e3  ld   $e3         ;05be CALL
-              ebd0 003f  ld   $3f         ;05be 'QDrawChar'
+              ebd0 003e  ld   $3e         ;05be 'QDrawChar'
               ebd1 0095  ld   $95         ;05c0 BRA
               ebd2 00c2  ld   $c2
               ebd3 0021  ld   $21         ;05c2 LDW
-              ebd4 003d  ld   $3d         ;05c2 'Pos'
+              ebd4 003c  ld   $3c         ;05c2 'Pos'
               ebd5 00f3  ld   $f3         ;05c4 ADDI
               ebd6 0006  ld   $06
               ebd7 002b  ld   $2b         ;05c6 STW
-              ebd8 003d  ld   $3d         ;05c6 'Pos'
+              ebd8 003c  ld   $3c         ;05c6 'Pos'
               ebd9 0059  ld   $59         ;05c8 LDI
               ebda 003c  ld   $3c
               ebdb 002b  ld   $2b         ;05ca STW
-              ebdc 005b  ld   $5b         ;05ca 'Radix'
+              ebdc 005a  ld   $5a         ;05ca 'Radix'
               ebdd 00e3  ld   $e3         ;05cc CALL
-              ebde 005d  ld   $5d         ;05cc 'ExtractDigit'
+              ebde 005c  ld   $5c         ;05cc 'ExtractDigit'
               ebdf 0021  ld   $21         ;05ce LDW
-              ebe0 007d  ld   $7d         ;05ce 'Prev1'
+              ebe0 007c  ld   $7c         ;05ce 'Prev1'
               ebe1 00ad  ld   $ad         ;05d0 SUBW
-              ebe2 0031  ld   $31         ;05d0 'Char'
+              ebe2 0030  ld   $30         ;05d0 'Char'
               ebe3 0035  ld   $35         ;05d2 BCC
               ebe4 003f  ld   $3f         ;05d3 EQ
               ebe5 00db  ld   $db
               ebe6 0021  ld   $21         ;05d5 LDW
-              ebe7 0031  ld   $31         ;05d5 'Char'
+              ebe7 0030  ld   $30         ;05d5 'Char'
               ebe8 002b  ld   $2b         ;05d7 STW
-              ebe9 007d  ld   $7d         ;05d7 'Prev1'
+              ebe9 007c  ld   $7c         ;05d7 'Prev1'
               ebea 00e3  ld   $e3         ;05d9 CALL
-              ebeb 003f  ld   $3f         ;05d9 'QDrawChar'
+              ebeb 003e  ld   $3e         ;05d9 'QDrawChar'
               ebec 0095  ld   $95         ;05db BRA
               ebed 00dd  ld   $dd
               ebee 0021  ld   $21         ;05dd LDW
-              ebef 003d  ld   $3d         ;05dd 'Pos'
+              ebef 003c  ld   $3c         ;05dd 'Pos'
               ebf0 00f3  ld   $f3         ;05df ADDI
               ebf1 000c  ld   $0c
               ebf2 002b  ld   $2b         ;05e1 STW
-              ebf3 003d  ld   $3d         ;05e1 'Pos'
+              ebf3 003c  ld   $3c         ;05e1 'Pos'
               ebf4 0059  ld   $59         ;05e3 LDI
               ebf5 0006  ld   $06
               ebf6 002b  ld   $2b         ;05e5 STW
-              ebf7 005b  ld   $5b         ;05e5 'Radix'
+              ebf7 005a  ld   $5a         ;05e5 'Radix'
               ebf8 00e3  ld   $e3         ;05e7 CALL
-              ebf9 005d  ld   $5d         ;05e7 'ExtractDigit'
+              ebf9 005c  ld   $5c         ;05e7 'ExtractDigit'
               ebfa 00e3  ld   $e3         ;05e9 CALL
               ebfb fe00  bra  ac          ;+-----------------------------------+
               ebfc fcfd  bra  $ebfd       ;|                                   |
               ebfd 1403  ld   $03,y       ;| Trampoline for page $eb00 lookups |
               ebfe e078  jmp  y,$78       ;|                                   |
-              ebff 1519  ld   [$19],y     ;+-----------------------------------+
-              ec00 003f  ld   $3f         ;05e9 'QDrawChar'
+              ebff 1518  ld   [$18],y     ;+-----------------------------------+
+              ec00 003e  ld   $3e         ;05e9 'QDrawChar'
               ec01 0063  ld   $63         ;05eb POP
               ec02 00ff  ld   $ff         ;05ec RET
               ec03 002b  ld   $2b         ;05ed STW
-              ec04 0081  ld   $81         ;05ed 'DrawTime'
+              ec04 007e  ld   $7e         ;05ed 'DrawTime'
               ec05 00f9  ld   $f9         ;05ef INC
-              ec06 001d  ld   $1d
+              ec06 001c  ld   $1c
               ec07 00ff  ld   $ff         ;05f1 RET
               ec08 0006  ld   $06         ;| RAM segment address (high byte first)
               ec09 0000  ld   $00         ;|
-              ec0a 00e9  ld   $e9         ;| Length (1..256)
+              ec0a 00eb  ld   $eb         ;| Length (1..256)
               ec0b 00e1  ld   $e1         ;0600 DEF
               ec0c 0015  ld   $15
               ec0d 007d  ld   $7d         ;0602 PUSH
               ec0e 0021  ld   $21         ;0603 LDW
-              ec0f 0083  ld   $83         ;0603 'Text'
+              ec0f 0081  ld   $81         ;0603 'Text'
               ec10 00d5  ld   $d5         ;0605 PEEK
               ec11 002b  ld   $2b         ;0606 STW
-              ec12 0031  ld   $31         ;0606 'Char'
+              ec12 0030  ld   $30         ;0606 'Char'
               ec13 0035  ld   $35         ;0608 BCC
               ec14 003f  ld   $3f         ;0609 EQ
               ec15 0013  ld   $13
               ec16 00f9  ld   $f9         ;060b INC
-              ec17 0083  ld   $83         ;060b 'Text'
+              ec17 0081  ld   $81         ;060b 'Text'
               ec18 00e3  ld   $e3         ;060d CALL
-              ec19 003f  ld   $3f         ;060d 'QDrawChar'
+              ec19 003e  ld   $3e         ;060d 'QDrawChar'
               ec1a 00f3  ld   $f3         ;060f ADDI
               ec1b 0006  ld   $06
               ec1c 002b  ld   $2b         ;0611 STW
-              ec1d 003d  ld   $3d         ;0611 'Pos'
+              ec1d 003c  ld   $3c         ;0611 'Pos'
               ec1e 0095  ld   $95         ;0613 BRA
               ec1f 0001  ld   $01
               ec20 0063  ld   $63         ;0615 POP
               ec21 00ff  ld   $ff         ;0616 RET
               ec22 002b  ld   $2b         ;0617 STW
-              ec23 0085  ld   $85         ;0617 'DrawText'
+              ec23 0083  ld   $83         ;0617 'DrawText'
               ec24 00e1  ld   $e1         ;0619 DEF
-              ec25 00a9  ld   $a9
+              ec25 00ab  ld   $ab
               ec26 0011  ld   $11         ;061b LDWI
               ec27 00d0  ld   $d0
               ec28 0074  ld   $74
               ec29 002b  ld   $2b         ;061e STW
-              ec2a 0061  ld   $61         ;061e 'p'
+              ec2a 0060  ld   $60         ;061e 'p'
               ec2b 0059  ld   $59         ;0620 LDI
               ec2c 0000  ld   $00
               ec2d 002b  ld   $2b         ;0622 STW
-              ec2e 0069  ld   $69         ;0622 'X'
+              ec2e 0068  ld   $68         ;0622 'X'
               ec2f 002b  ld   $2b         ;0624 STW
-              ec30 0087  ld   $87         ;0624 'DX'
+              ec30 0085  ld   $85         ;0624 'DX'
               ec31 0021  ld   $21         ;0626 LDW
-              ec32 0089  ld   $89         ;0626 'NextTurn'
+              ec32 0087  ld   $87         ;0626 'NextTurn'
               ec33 00ad  ld   $ad         ;0628 SUBW
-              ec34 008b  ld   $8b         ;0628 'Distance'
+              ec34 0089  ld   $89         ;0628 'Distance'
               ec35 002b  ld   $2b         ;062a STW
-              ec36 0037  ld   $37         ;062a 'tmp'
+              ec36 0036  ld   $36         ;062a 'tmp'
               ec37 00c1  ld   $c1         ;062c ADDW
-              ec38 0037  ld   $37         ;062c 'tmp'
+              ec38 0036  ld   $36         ;062c 'tmp'
               ec39 002b  ld   $2b         ;062e STW
-              ec3a 0037  ld   $37         ;062e 'tmp'
+              ec3a 0036  ld   $36         ;062e 'tmp'
               ec3b 0011  ld   $11         ;0630 LDWI
               ec3c 0000  ld   $00
               ec3d 000a  ld   $0a
               ec3e 00c1  ld   $c1         ;0633 ADDW
-              ec3f 0037  ld   $37         ;0633 'tmp'
+              ec3f 0036  ld   $36         ;0633 'tmp'
               ec40 0075  ld   $75         ;0635 LOOKUP
               ec41 0035  ld   $35
               ec42 002b  ld   $2b         ;0637 STW
-              ec43 0037  ld   $37         ;0637 'tmp'
+              ec43 0036  ld   $36         ;0637 'tmp'
               ec44 0059  ld   $59         ;0639 LDI
               ec45 00c5  ld   $c5
               ec46 00c1  ld   $c1         ;063b ADDW
-              ec47 0037  ld   $37         ;063b 'tmp'
+              ec47 0036  ld   $36         ;063b 'tmp'
               ec48 002b  ld   $2b         ;063d STW
-              ec49 0033  ld   $33         ;063d 'i'
+              ec49 0032  ld   $32         ;063d 'i'
               ec4a 001a  ld   $1a         ;063f LD
-              ec4b 006a  ld   $6a         ;063f 'X'+1
+              ec4b 0069  ld   $69         ;063f 'X'+1
               ec4c 0098  ld   $98         ;0641 POKE
-              ec4d 0061  ld   $61         ;0641 'p'
+              ec4d 0060  ld   $60         ;0641 'p'
               ec4e 00f9  ld   $f9         ;0643 INC
-              ec4f 0061  ld   $61         ;0643 'p'
+              ec4f 0060  ld   $60         ;0643 'p'
               ec50 0021  ld   $21         ;0645 LDW
-              ec51 0087  ld   $87         ;0645 'DX'
+              ec51 0085  ld   $85         ;0645 'DX'
               ec52 00c1  ld   $c1         ;0647 ADDW
-              ec53 008d  ld   $8d         ;0647 'DDX'
+              ec53 008b  ld   $8b         ;0647 'DDX'
               ec54 002b  ld   $2b         ;0649 STW
-              ec55 0087  ld   $87         ;0649 'DX'
+              ec55 0085  ld   $85         ;0649 'DX'
               ec56 00c1  ld   $c1         ;064b ADDW
-              ec57 0069  ld   $69         ;064b 'X'
+              ec57 0068  ld   $68         ;064b 'X'
               ec58 002b  ld   $2b         ;064d STW
-              ec59 0069  ld   $69         ;064d 'X'
+              ec59 0068  ld   $68         ;064d 'X'
               ec5a 00f9  ld   $f9         ;064f INC
-              ec5b 0033  ld   $33         ;064f 'i'
+              ec5b 0032  ld   $32         ;064f 'i'
               ec5c 0021  ld   $21         ;0651 LDW
-              ec5d 0033  ld   $33         ;0651 'i'
+              ec5d 0032  ld   $32         ;0651 'i'
               ec5e 0035  ld   $35         ;0653 BCC
               ec5f 0072  ld   $72         ;0654 NE
               ec60 003d  ld   $3d
               ec61 001a  ld   $1a         ;0656 LD
-              ec62 006a  ld   $6a         ;0656 'X'+1
+              ec62 0069  ld   $69         ;0656 'X'+1
               ec63 0098  ld   $98         ;0658 POKE
-              ec64 0061  ld   $61         ;0658 'p'
+              ec64 0060  ld   $60         ;0658 'p'
               ec65 00f9  ld   $f9         ;065a INC
-              ec66 0061  ld   $61         ;065a 'p'
+              ec66 0060  ld   $60         ;065a 'p'
               ec67 0021  ld   $21         ;065c LDW
-              ec68 0087  ld   $87         ;065c 'DX'
+              ec68 0085  ld   $85         ;065c 'DX'
               ec69 00c1  ld   $c1         ;065e ADDW
-              ec6a 008f  ld   $8f         ;065e 'NextDDX'
+              ec6a 008d  ld   $8d         ;065e 'NextDDX'
               ec6b 002b  ld   $2b         ;0660 STW
-              ec6c 0087  ld   $87         ;0660 'DX'
+              ec6c 0085  ld   $85         ;0660 'DX'
               ec6d 00c1  ld   $c1         ;0662 ADDW
-              ec6e 0069  ld   $69         ;0662 'X'
+              ec6e 0068  ld   $68         ;0662 'X'
               ec6f 002b  ld   $2b         ;0664 STW
-              ec70 0069  ld   $69         ;0664 'X'
+              ec70 0068  ld   $68         ;0664 'X'
               ec71 001a  ld   $1a         ;0666 LD
-              ec72 0061  ld   $61         ;0666 'p'
+              ec72 0060  ld   $60         ;0666 'p'
               ec73 0035  ld   $35         ;0668 BCC
               ec74 0072  ld   $72         ;0669 NE
               ec75 0054  ld   $54
@@ -53974,22 +53982,22 @@ Racer:        e94f 0003  ld   $03         ;| RAM segment address (high byte firs
               ec77 00ed  ld   $ed
               ec78 0001  ld   $01
               ec79 002b  ld   $2b         ;066e STW
-              ec7a 0025  ld   $25
+              ec7a 0024  ld   $24
               ec7b 0011  ld   $11         ;0670 LDWI
               ec7c 00d1  ld   $d1
               ec7d 0074  ld   $74
               ec7e 002b  ld   $2b         ;0673 STW
-              ec7f 0027  ld   $27
+              ec7f 0026  ld   $26
               ec80 0011  ld   $11         ;0675 LDWI
               ec81 00d0  ld   $d0
               ec82 0074  ld   $74
               ec83 00d5  ld   $d5         ;0678 PEEK
               ec84 002b  ld   $2b         ;0679 STW
-              ec85 0029  ld   $29
+              ec85 0028  ld   $28
               ec86 001a  ld   $1a         ;067b LD
-              ec87 004c  ld   $4c         ;067b 'HorizonX'+1
+              ec87 004b  ld   $4b         ;067b 'HorizonX'+1
               ec88 002b  ld   $2b         ;067d STW
-              ec89 0037  ld   $37         ;067d 'tmp'
+              ec89 0036  ld   $36         ;067d 'tmp'
               ec8a 0011  ld   $11         ;067f LDWI
               ec8b 00d5  ld   $d5
               ec8c 0074  ld   $74
@@ -53997,4189 +54005,4176 @@ Racer:        e94f 0003  ld   $03         ;| RAM segment address (high byte firs
               ec8e 00f3  ld   $f3         ;0683 ADDI
               ec8f 0030  ld   $30
               ec90 00ad  ld   $ad         ;0685 SUBW
-              ec91 0037  ld   $37         ;0685 'tmp'
+              ec91 0036  ld   $36         ;0685 'tmp'
               ec92 002b  ld   $2b         ;0687 STW
-              ec93 0037  ld   $37         ;0687 'tmp'
+              ec93 0036  ld   $36         ;0687 'tmp'
               ec94 0011  ld   $11         ;0689 LDWI
               ec95 0011  ld   $11
               ec96 0001  ld   $01
               ec97 002b  ld   $2b         ;068c STW
-              ec98 0067  ld   $67         ;068c 's'
+              ec98 0066  ld   $66         ;068c 's'
               ec99 001a  ld   $1a         ;068e LD
-              ec9a 0010  ld   $10
-              ec9b 0035  ld   $35         ;0690 BCC
-              ec9c 003f  ld   $3f         ;0691 EQ
-              ec9d 008c  ld   $8c
-              ec9e 001a  ld   $1a         ;0693 LD
-              ec9f 004c  ld   $4c         ;0693 'HorizonX'+1
-              eca0 0098  ld   $98         ;0695 POKE
-              eca1 0067  ld   $67         ;0695 's'
-              eca2 0011  ld   $11         ;0697 LDWI
-              eca3 0019  ld   $19
-              eca4 0006  ld   $06
-              eca5 00a9  ld   $a9         ;069a SYS
-              eca6 00fa  ld   $fa
-              eca7 0021  ld   $21         ;069c LDW
-              eca8 0025  ld   $25
-              eca9 002b  ld   $2b         ;069e STW
-              ecaa 0067  ld   $67         ;069e 's'
-              ecab 0021  ld   $21         ;06a0 LDW
-              ecac 0029  ld   $29
-              ecad 002b  ld   $2b         ;06a2 STW
-              ecae 0069  ld   $69         ;06a2 'X'
-              ecaf 0021  ld   $21         ;06a4 LDW
-              ecb0 0037  ld   $37         ;06a4 'tmp'
-              ecb1 00ad  ld   $ad         ;06a6 SUBW
-              ecb2 0069  ld   $69         ;06a6 'X'
-              ecb3 0098  ld   $98         ;06a8 POKE
-              ecb4 0067  ld   $67         ;06a8 's'
-              ecb5 00ff  ld   $ff         ;06aa RET
-              ecb6 002b  ld   $2b         ;06ab STW
-              ecb7 0091  ld   $91         ;06ab 'DrawRoad'
-              ecb8 00e1  ld   $e1         ;06ad DEF
-              ecb9 00e2  ld   $e2
-              ecba 0011  ld   $11         ;06af LDWI
-              ecbb 00fb  ld   $fb
-              ecbc 0001  ld   $01
-              ecbd 002b  ld   $2b         ;06b2 STW
-              ecbe 0061  ld   $61         ;06b2 'p'
-              ecbf 0021  ld   $21         ;06b4 LDW
-              ecc0 0045  ld   $45         ;06b4 'Speed'
-              ecc1 00c1  ld   $c1         ;06b6 ADDW
-              ecc2 0045  ld   $45         ;06b6 'Speed'
-              ecc3 001a  ld   $1a         ;06b8 LD
-              ecc4 001b  ld   $1b
-              ecc5 0098  ld   $98         ;06ba POKE
-              ecc6 0061  ld   $61         ;06ba 'p'
-              ecc7 00f9  ld   $f9         ;06bc INC
-              ecc8 0062  ld   $62         ;06bc 'p'+1
-              ecc9 0098  ld   $98         ;06be POKE
-              ecca 0061  ld   $61         ;06be 'p'
-              eccb 00f9  ld   $f9         ;06c0 INC
-              eccc 0062  ld   $62         ;06c0 'p'+1
-              eccd 0098  ld   $98         ;06c2 POKE
-              ecce 0061  ld   $61         ;06c2 'p'
-              eccf 00f9  ld   $f9         ;06c4 INC
-              ecd0 0062  ld   $62         ;06c4 'p'+1
-              ecd1 0098  ld   $98         ;06c6 POKE
-              ecd2 0061  ld   $61         ;06c6 'p'
-              ecd3 0011  ld   $11         ;06c8 LDWI
-              ecd4 00fa  ld   $fa
-              ecd5 0001  ld   $01
-              ecd6 002b  ld   $2b         ;06cb STW
-              ecd7 0061  ld   $61         ;06cb 'p'
-              ecd8 0021  ld   $21         ;06cd LDW
-              ecd9 0045  ld   $45         ;06cd 'Speed'
-              ecda 0087  ld   $87         ;06cf ANDI
-              ecdb 007f  ld   $7f
-              ecdc 0098  ld   $98         ;06d1 POKE
-              ecdd 0061  ld   $61         ;06d1 'p'
-              ecde 00f9  ld   $f9         ;06d3 INC
-              ecdf 0062  ld   $62         ;06d3 'p'+1
-              ece0 0098  ld   $98         ;06d5 POKE
-              ece1 0061  ld   $61         ;06d5 'p'
-              ece2 00f9  ld   $f9         ;06d7 INC
-              ece3 0062  ld   $62         ;06d7 'p'+1
-              ece4 0098  ld   $98         ;06d9 POKE
-              ece5 0061  ld   $61         ;06d9 'p'
-              ece6 00f9  ld   $f9         ;06db INC
-              ece7 0062  ld   $62         ;06db 'p'+1
-              ece8 0098  ld   $98         ;06dd POKE
-              ece9 0061  ld   $61         ;06dd 'p'
-              ecea 0059  ld   $59         ;06df LDI
-              eceb 003c  ld   $3c
-              ecec 002b  ld   $2b         ;06e1 STW
-              eced 002d  ld   $2d
-              ecee 00ff  ld   $ff         ;06e3 RET
-              ecef 002b  ld   $2b         ;06e4 STW
-              ecf0 0093  ld   $93         ;06e4 'PlayEngineSound'
-              ecf1 00f9  ld   $f9         ;06e6 INC
-              ecf2 001d  ld   $1d
-              ecf3 00ff  ld   $ff         ;06e8 RET
-              ecf4 0007  ld   $07         ;| RAM segment address (high byte first)
-              ecf5 0000  ld   $00         ;|
-              ecf6 00f3  ld   $f3         ;| Length (1..256)
-              ecf7 00e1  ld   $e1         ;0700 DEF
-              ecf8 00c0  ld   $c0
-              ecf9 007d  ld   $7d         ;0702 PUSH
-              ecfa 0059  ld   $59         ;0703 LDI
+              ec9a 000b  ld   $0b
+              ec9b 0087  ld   $87         ;0690 ANDI
+              ec9c 0001  ld   $01
+              ec9d 0035  ld   $35         ;0692 BCC
+              ec9e 003f  ld   $3f         ;0693 EQ
+              ec9f 008c  ld   $8c
+              eca0 001a  ld   $1a         ;0695 LD
+              eca1 004b  ld   $4b         ;0695 'HorizonX'+1
+              eca2 0098  ld   $98         ;0697 POKE
+              eca3 0066  ld   $66         ;0697 's'
+              eca4 0011  ld   $11         ;0699 LDWI
+              eca5 0019  ld   $19
+              eca6 0006  ld   $06
+              eca7 00a9  ld   $a9         ;069c SYS
+              eca8 00fa  ld   $fa
+              eca9 0021  ld   $21         ;069e LDW
+              ecaa 0024  ld   $24
+              ecab 002b  ld   $2b         ;06a0 STW
+              ecac 0066  ld   $66         ;06a0 's'
+              ecad 0021  ld   $21         ;06a2 LDW
+              ecae 0028  ld   $28
+              ecaf 002b  ld   $2b         ;06a4 STW
+              ecb0 0068  ld   $68         ;06a4 'X'
+              ecb1 0021  ld   $21         ;06a6 LDW
+              ecb2 0036  ld   $36         ;06a6 'tmp'
+              ecb3 00ad  ld   $ad         ;06a8 SUBW
+              ecb4 0068  ld   $68         ;06a8 'X'
+              ecb5 0098  ld   $98         ;06aa POKE
+              ecb6 0066  ld   $66         ;06aa 's'
+              ecb7 00ff  ld   $ff         ;06ac RET
+              ecb8 002b  ld   $2b         ;06ad STW
+              ecb9 008f  ld   $8f         ;06ad 'DrawRoad'
+              ecba 00e1  ld   $e1         ;06af DEF
+              ecbb 00e4  ld   $e4
+              ecbc 0011  ld   $11         ;06b1 LDWI
+              ecbd 00fb  ld   $fb
+              ecbe 0001  ld   $01
+              ecbf 002b  ld   $2b         ;06b4 STW
+              ecc0 0060  ld   $60         ;06b4 'p'
+              ecc1 0021  ld   $21         ;06b6 LDW
+              ecc2 0044  ld   $44         ;06b6 'Speed'
+              ecc3 00c1  ld   $c1         ;06b8 ADDW
+              ecc4 0044  ld   $44         ;06b8 'Speed'
+              ecc5 001a  ld   $1a         ;06ba LD
+              ecc6 001a  ld   $1a
+              ecc7 0098  ld   $98         ;06bc POKE
+              ecc8 0060  ld   $60         ;06bc 'p'
+              ecc9 00f9  ld   $f9         ;06be INC
+              ecca 0061  ld   $61         ;06be 'p'+1
+              eccb 0098  ld   $98         ;06c0 POKE
+              eccc 0060  ld   $60         ;06c0 'p'
+              eccd 00f9  ld   $f9         ;06c2 INC
+              ecce 0061  ld   $61         ;06c2 'p'+1
+              eccf 0098  ld   $98         ;06c4 POKE
+              ecd0 0060  ld   $60         ;06c4 'p'
+              ecd1 00f9  ld   $f9         ;06c6 INC
+              ecd2 0061  ld   $61         ;06c6 'p'+1
+              ecd3 0098  ld   $98         ;06c8 POKE
+              ecd4 0060  ld   $60         ;06c8 'p'
+              ecd5 0011  ld   $11         ;06ca LDWI
+              ecd6 00fa  ld   $fa
+              ecd7 0001  ld   $01
+              ecd8 002b  ld   $2b         ;06cd STW
+              ecd9 0060  ld   $60         ;06cd 'p'
+              ecda 0021  ld   $21         ;06cf LDW
+              ecdb 0044  ld   $44         ;06cf 'Speed'
+              ecdc 0087  ld   $87         ;06d1 ANDI
+              ecdd 007f  ld   $7f
+              ecde 0098  ld   $98         ;06d3 POKE
+              ecdf 0060  ld   $60         ;06d3 'p'
+              ece0 00f9  ld   $f9         ;06d5 INC
+              ece1 0061  ld   $61         ;06d5 'p'+1
+              ece2 0098  ld   $98         ;06d7 POKE
+              ece3 0060  ld   $60         ;06d7 'p'
+              ece4 00f9  ld   $f9         ;06d9 INC
+              ece5 0061  ld   $61         ;06d9 'p'+1
+              ece6 0098  ld   $98         ;06db POKE
+              ece7 0060  ld   $60         ;06db 'p'
+              ece8 00f9  ld   $f9         ;06dd INC
+              ece9 0061  ld   $61         ;06dd 'p'+1
+              ecea 0098  ld   $98         ;06df POKE
+              eceb 0060  ld   $60         ;06df 'p'
+              ecec 0059  ld   $59         ;06e1 LDI
+              eced 003c  ld   $3c
+              ecee 002b  ld   $2b         ;06e3 STW
+              ecef 002c  ld   $2c
+              ecf0 00ff  ld   $ff         ;06e5 RET
+              ecf1 002b  ld   $2b         ;06e6 STW
+              ecf2 0091  ld   $91         ;06e6 'PlayEngineSound'
+              ecf3 00f9  ld   $f9         ;06e8 INC
+              ecf4 001c  ld   $1c
+              ecf5 00ff  ld   $ff         ;06ea RET
+              ecf6 0007  ld   $07         ;| RAM segment address (high byte first)
+              ecf7 0000  ld   $00         ;|
+              ecf8 00f3  ld   $f3         ;| Length (1..256)
+              ecf9 00e1  ld   $e1         ;0700 DEF
+              ecfa 00c0  ld   $c0
               ecfb fe00  bra  ac          ;+-----------------------------------+
               ecfc fcfd  bra  $ecfd       ;|                                   |
               ecfd 1403  ld   $03,y       ;| Trampoline for page $ec00 lookups |
               ecfe e078  jmp  y,$78       ;|                                   |
-              ecff 1519  ld   [$19],y     ;+-----------------------------------+
-              ed00 0000  ld   $00
-              ed01 002b  ld   $2b         ;0705 STW
-              ed02 006b  ld   $6b         ;0705 'Collision'
-              ed03 002b  ld   $2b         ;0707 STW
-              ed04 0079  ld   $79         ;0707 'Prev3'
-              ed05 002b  ld   $2b         ;0709 STW
-              ed06 007b  ld   $7b         ;0709 'Prev2'
-              ed07 002b  ld   $2b         ;070b STW
-              ed08 007d  ld   $7d         ;070b 'Prev1'
-              ed09 00e3  ld   $e3         ;070d CALL
-              ed0a 0095  ld   $95         ;070d 'AdvanceCar'
-              ed0b 0021  ld   $21         ;070f LDW
-              ed0c 008b  ld   $8b         ;070f 'Distance'
-              ed0d 0035  ld   $35         ;0711 BCC
-              ed0e 0053  ld   $53         ;0712 GE
-              ed0f 0046  ld   $46
-              ed10 0021  ld   $21         ;0714 LDW
-              ed11 0043  ld   $43         ;0714 'Time'
-              ed12 00ad  ld   $ad         ;0716 SUBW
-              ed13 0097  ld   $97         ;0716 'BestTime'
-              ed14 0035  ld   $35         ;0718 BCC
-              ed15 0053  ld   $53         ;0719 GE
-              ed16 001d  ld   $1d
-              ed17 0021  ld   $21         ;071b LDW
-              ed18 0043  ld   $43         ;071b 'Time'
-              ed19 002b  ld   $2b         ;071d STW
-              ed1a 0097  ld   $97         ;071d 'BestTime'
-              ed1b 0059  ld   $59         ;071f LDI
-              ed1c 0004  ld   $04
-              ed1d 002b  ld   $2b         ;0721 STW
-              ed1e 007d  ld   $7d         ;0721 'Prev1'
-              ed1f 002b  ld   $2b         ;0723 STW
-              ed20 007b  ld   $7b         ;0723 'Prev2'
-              ed21 002b  ld   $2b         ;0725 STW
-              ed22 0079  ld   $79         ;0725 'Prev3'
-              ed23 002b  ld   $2b         ;0727 STW
-              ed24 0099  ld   $99         ;0727 'j'
-              ed25 0021  ld   $21         ;0729 LDW
-              ed26 0097  ld   $97         ;0729 'BestTime'
-              ed27 002b  ld   $2b         ;072b STW
-              ed28 0059  ld   $59         ;072b 'Value'
-              ed29 0011  ld   $11         ;072d LDWI
-              ed2a 007c  ld   $7c
-              ed2b 0008  ld   $08
-              ed2c 002b  ld   $2b         ;0730 STW
-              ed2d 003d  ld   $3d         ;0730 'Pos'
-              ed2e 00e3  ld   $e3         ;0732 CALL
-              ed2f 0081  ld   $81         ;0732 'DrawTime'
-              ed30 0021  ld   $21         ;0734 LDW
-              ed31 0099  ld   $99         ;0734 'j'
-              ed32 00f6  ld   $f6         ;0736 SUBI
-              ed33 0001  ld   $01
-              ed34 0035  ld   $35         ;0738 BCC
-              ed35 004d  ld   $4d         ;0739 GT
-              ed36 0025  ld   $25
-              ed37 0059  ld   $59         ;073b LDI
-              ed38 0000  ld   $00
-              ed39 002b  ld   $2b         ;073d STW
-              ed3a 0043  ld   $43         ;073d 'Time'
-              ed3b 002b  ld   $2b         ;073f STW
-              ed3c 009b  ld   $9b         ;073f 'Random'
-              ed3d 0011  ld   $11         ;0741 LDWI
-              ed3e 0000  ld   $00
-              ed3f 0074  ld   $74
-              ed40 002b  ld   $2b         ;0744 STW
-              ed41 008b  ld   $8b         ;0744 'Distance'
-              ed42 002b  ld   $2b         ;0746 STW
-              ed43 0089  ld   $89         ;0746 'NextTurn'
-              ed44 00ad  ld   $ad         ;0748 SUBW
-              ed45 0089  ld   $89         ;0748 'NextTurn'
-              ed46 0035  ld   $35         ;074a BCC
-              ed47 0056  ld   $56         ;074b LE
-              ed48 008e  ld   $8e
-              ed49 0021  ld   $21         ;074d LDW
-              ed4a 009b  ld   $9b         ;074d 'Random'
-              ed4b 00c1  ld   $c1         ;074f ADDW
-              ed4c 0089  ld   $89         ;074f 'NextTurn'
-              ed4d 0091  ld   $91         ;0751 XORI
-              ed4e 006d  ld   $6d
-              ed4f 002b  ld   $2b         ;0753 STW
-              ed50 009b  ld   $9b         ;0753 'Random'
-              ed51 0087  ld   $87         ;0755 ANDI
-              ed52 001f  ld   $1f
-              ed53 00f3  ld   $f3         ;0757 ADDI
-              ed54 0028  ld   $28
-              ed55 00c1  ld   $c1         ;0759 ADDW
-              ed56 0089  ld   $89         ;0759 'NextTurn'
-              ed57 002b  ld   $2b         ;075b STW
-              ed58 0089  ld   $89         ;075b 'NextTurn'
-              ed59 001a  ld   $1a         ;075d LD
-              ed5a 009c  ld   $9c         ;075d 'Random'+1
-              ed5b 0087  ld   $87         ;075f ANDI
-              ed5c 0003  ld   $03
-              ed5d 00f3  ld   $f3         ;0761 ADDI
-              ed5e 0001  ld   $01
-              ed5f 002b  ld   $2b         ;0763 STW
-              ed60 0033  ld   $33         ;0763 'i'
-              ed61 00c1  ld   $c1         ;0765 ADDW
-              ed62 0033  ld   $33         ;0765 'i'
-              ed63 00c1  ld   $c1         ;0767 ADDW
-              ed64 0033  ld   $33         ;0767 'i'
-              ed65 002b  ld   $2b         ;0769 STW
-              ed66 0033  ld   $33         ;0769 'i'
-              ed67 00c1  ld   $c1         ;076b ADDW
-              ed68 0033  ld   $33         ;076b 'i'
-              ed69 002b  ld   $2b         ;076d STW
-              ed6a 0033  ld   $33         ;076d 'i'
-              ed6b 0021  ld   $21         ;076f LDW
-              ed6c 008f  ld   $8f         ;076f 'NextDDX'
-              ed6d 002b  ld   $2b         ;0771 STW
-              ed6e 008d  ld   $8d         ;0771 'DDX'
-              ed6f 0035  ld   $35         ;0773 BCC
-              ed70 0053  ld   $53         ;0774 GE
-              ed71 0078  ld   $78
-              ed72 00c1  ld   $c1         ;0776 ADDW
-              ed73 0033  ld   $33         ;0776 'i'
-              ed74 0095  ld   $95         ;0778 BRA
-              ed75 008c  ld   $8c
-              ed76 0035  ld   $35         ;077a BCC
-              ed77 0056  ld   $56         ;077b LE
-              ed78 007f  ld   $7f
-              ed79 00ad  ld   $ad         ;077d SUBW
-              ed7a 0033  ld   $33         ;077d 'i'
-              ed7b 0095  ld   $95         ;077f BRA
-              ed7c 008c  ld   $8c
-              ed7d 0021  ld   $21         ;0781 LDW
-              ed7e 009b  ld   $9b         ;0781 'Random'
-              ed7f 0035  ld   $35         ;0783 BCC
-              ed80 0050  ld   $50         ;0784 LT
-              ed81 0088  ld   $88
-              ed82 0021  ld   $21         ;0786 LDW
-              ed83 0033  ld   $33         ;0786 'i'
-              ed84 0095  ld   $95         ;0788 BRA
-              ed85 008c  ld   $8c
-              ed86 0059  ld   $59         ;078a LDI
-              ed87 0000  ld   $00
-              ed88 00ad  ld   $ad         ;078c SUBW
-              ed89 0033  ld   $33         ;078c 'i'
-              ed8a 002b  ld   $2b         ;078e STW
-              ed8b 008f  ld   $8f         ;078e 'NextDDX'
-              ed8c 00e3  ld   $e3         ;0790 CALL
-              ed8d 0091  ld   $91         ;0790 'DrawRoad'
-              ed8e 0021  ld   $21         ;0792 LDW
-              ed8f 008d  ld   $8d         ;0792 'DDX'
-              ed90 002b  ld   $2b         ;0794 STW
-              ed91 0049  ld   $49         ;0794 'DriftX'
-              ed92 00c1  ld   $c1         ;0796 ADDW
-              ed93 0049  ld   $49         ;0796 'DriftX'
-              ed94 002b  ld   $2b         ;0798 STW
-              ed95 0049  ld   $49         ;0798 'DriftX'
-              ed96 00c1  ld   $c1         ;079a ADDW
-              ed97 0049  ld   $49         ;079a 'DriftX'
-              ed98 002b  ld   $2b         ;079c STW
-              ed99 0049  ld   $49         ;079c 'DriftX'
-              ed9a 00c1  ld   $c1         ;079e ADDW
-              ed9b 0049  ld   $49         ;079e 'DriftX'
-              ed9c 002b  ld   $2b         ;07a0 STW
-              ed9d 0049  ld   $49         ;07a0 'DriftX'
-              ed9e 002b  ld   $2b         ;07a2 STW
-              ed9f 004d  ld   $4d         ;07a2 'HorizonDX'
-              eda0 00e3  ld   $e3         ;07a4 CALL
-              eda1 0051  ld   $51         ;07a4 'ControlRaceCar'
-              eda2 00e3  ld   $e3         ;07a6 CALL
-              eda3 0093  ld   $93         ;07a6 'PlayEngineSound'
-              eda4 00e3  ld   $e3         ;07a8 CALL
-              eda5 009d  ld   $9d         ;07a8 'DrawRaceCar'
-              eda6 00e3  ld   $e3         ;07aa CALL
-              eda7 009f  ld   $9f         ;07aa 'DrawGrass'
-              eda8 0021  ld   $21         ;07ac LDW
-              eda9 0043  ld   $43         ;07ac 'Time'
-              edaa 002b  ld   $2b         ;07ae STW
-              edab 0059  ld   $59         ;07ae 'Value'
-              edac 0011  ld   $11         ;07b0 LDWI
-              edad 0001  ld   $01
-              edae 0008  ld   $08
-              edaf 002b  ld   $2b         ;07b3 STW
-              edb0 003d  ld   $3d         ;07b3 'Pos'
-              edb1 0059  ld   $59         ;07b5 LDI
-              edb2 003f  ld   $3f
-              edb3 002b  ld   $2b         ;07b7 STW
-              edb4 003b  ld   $3b         ;07b7 'Color'
-              edb5 00e3  ld   $e3         ;07b9 CALL
-              edb6 0081  ld   $81         ;07b9 'DrawTime'
-              edb7 0021  ld   $21         ;07bb LDW
-              edb8 006b  ld   $6b         ;07bb 'Collision'
-              edb9 0035  ld   $35         ;07bd BCC
-              edba 003f  ld   $3f         ;07be EQ
-              edbb 000b  ld   $0b
-              edbc 0063  ld   $63         ;07c0 POP
-              edbd 00ff  ld   $ff         ;07c1 RET
-              edbe 002b  ld   $2b         ;07c2 STW
-              edbf 00a1  ld   $a1         ;07c2 'PlayGame'
-              edc0 00e1  ld   $e1         ;07c4 DEF
-              edc1 00cb  ld   $cb
-              edc2 002d  ld   $2d
-              edc3 003a  ld   $3a
+              ecff 1518  ld   [$18],y     ;+-----------------------------------+
+              ed00 007d  ld   $7d         ;0702 PUSH
+              ed01 0059  ld   $59         ;0703 LDI
+              ed02 0000  ld   $00
+              ed03 002b  ld   $2b         ;0705 STW
+              ed04 006a  ld   $6a         ;0705 'Collision'
+              ed05 002b  ld   $2b         ;0707 STW
+              ed06 0078  ld   $78         ;0707 'Prev3'
+              ed07 002b  ld   $2b         ;0709 STW
+              ed08 007a  ld   $7a         ;0709 'Prev2'
+              ed09 002b  ld   $2b         ;070b STW
+              ed0a 007c  ld   $7c         ;070b 'Prev1'
+              ed0b 00e3  ld   $e3         ;070d CALL
+              ed0c 0093  ld   $93         ;070d 'AdvanceCar'
+              ed0d 0021  ld   $21         ;070f LDW
+              ed0e 0089  ld   $89         ;070f 'Distance'
+              ed0f 0035  ld   $35         ;0711 BCC
+              ed10 0053  ld   $53         ;0712 GE
+              ed11 0046  ld   $46
+              ed12 0021  ld   $21         ;0714 LDW
+              ed13 0042  ld   $42         ;0714 'Time'
+              ed14 00ad  ld   $ad         ;0716 SUBW
+              ed15 0095  ld   $95         ;0716 'BestTime'
+              ed16 0035  ld   $35         ;0718 BCC
+              ed17 0053  ld   $53         ;0719 GE
+              ed18 001d  ld   $1d
+              ed19 0021  ld   $21         ;071b LDW
+              ed1a 0042  ld   $42         ;071b 'Time'
+              ed1b 002b  ld   $2b         ;071d STW
+              ed1c 0095  ld   $95         ;071d 'BestTime'
+              ed1d 0059  ld   $59         ;071f LDI
+              ed1e 0004  ld   $04
+              ed1f 002b  ld   $2b         ;0721 STW
+              ed20 007c  ld   $7c         ;0721 'Prev1'
+              ed21 002b  ld   $2b         ;0723 STW
+              ed22 007a  ld   $7a         ;0723 'Prev2'
+              ed23 002b  ld   $2b         ;0725 STW
+              ed24 0078  ld   $78         ;0725 'Prev3'
+              ed25 002b  ld   $2b         ;0727 STW
+              ed26 0097  ld   $97         ;0727 'j'
+              ed27 0021  ld   $21         ;0729 LDW
+              ed28 0095  ld   $95         ;0729 'BestTime'
+              ed29 002b  ld   $2b         ;072b STW
+              ed2a 0058  ld   $58         ;072b 'Value'
+              ed2b 0011  ld   $11         ;072d LDWI
+              ed2c 007c  ld   $7c
+              ed2d 0008  ld   $08
+              ed2e 002b  ld   $2b         ;0730 STW
+              ed2f 003c  ld   $3c         ;0730 'Pos'
+              ed30 00e3  ld   $e3         ;0732 CALL
+              ed31 007e  ld   $7e         ;0732 'DrawTime'
+              ed32 0021  ld   $21         ;0734 LDW
+              ed33 0097  ld   $97         ;0734 'j'
+              ed34 00f6  ld   $f6         ;0736 SUBI
+              ed35 0001  ld   $01
+              ed36 0035  ld   $35         ;0738 BCC
+              ed37 004d  ld   $4d         ;0739 GT
+              ed38 0025  ld   $25
+              ed39 0059  ld   $59         ;073b LDI
+              ed3a 0000  ld   $00
+              ed3b 002b  ld   $2b         ;073d STW
+              ed3c 0042  ld   $42         ;073d 'Time'
+              ed3d 002b  ld   $2b         ;073f STW
+              ed3e 0099  ld   $99         ;073f 'Random'
+              ed3f 0011  ld   $11         ;0741 LDWI
+              ed40 0000  ld   $00
+              ed41 0074  ld   $74
+              ed42 002b  ld   $2b         ;0744 STW
+              ed43 0089  ld   $89         ;0744 'Distance'
+              ed44 002b  ld   $2b         ;0746 STW
+              ed45 0087  ld   $87         ;0746 'NextTurn'
+              ed46 00ad  ld   $ad         ;0748 SUBW
+              ed47 0087  ld   $87         ;0748 'NextTurn'
+              ed48 0035  ld   $35         ;074a BCC
+              ed49 0056  ld   $56         ;074b LE
+              ed4a 008e  ld   $8e
+              ed4b 0021  ld   $21         ;074d LDW
+              ed4c 0099  ld   $99         ;074d 'Random'
+              ed4d 00c1  ld   $c1         ;074f ADDW
+              ed4e 0087  ld   $87         ;074f 'NextTurn'
+              ed4f 0091  ld   $91         ;0751 XORI
+              ed50 006d  ld   $6d
+              ed51 002b  ld   $2b         ;0753 STW
+              ed52 0099  ld   $99         ;0753 'Random'
+              ed53 0087  ld   $87         ;0755 ANDI
+              ed54 001f  ld   $1f
+              ed55 00f3  ld   $f3         ;0757 ADDI
+              ed56 0028  ld   $28
+              ed57 00c1  ld   $c1         ;0759 ADDW
+              ed58 0087  ld   $87         ;0759 'NextTurn'
+              ed59 002b  ld   $2b         ;075b STW
+              ed5a 0087  ld   $87         ;075b 'NextTurn'
+              ed5b 001a  ld   $1a         ;075d LD
+              ed5c 009a  ld   $9a         ;075d 'Random'+1
+              ed5d 0087  ld   $87         ;075f ANDI
+              ed5e 0003  ld   $03
+              ed5f 00f3  ld   $f3         ;0761 ADDI
+              ed60 0001  ld   $01
+              ed61 002b  ld   $2b         ;0763 STW
+              ed62 0032  ld   $32         ;0763 'i'
+              ed63 00c1  ld   $c1         ;0765 ADDW
+              ed64 0032  ld   $32         ;0765 'i'
+              ed65 00c1  ld   $c1         ;0767 ADDW
+              ed66 0032  ld   $32         ;0767 'i'
+              ed67 002b  ld   $2b         ;0769 STW
+              ed68 0032  ld   $32         ;0769 'i'
+              ed69 00c1  ld   $c1         ;076b ADDW
+              ed6a 0032  ld   $32         ;076b 'i'
+              ed6b 002b  ld   $2b         ;076d STW
+              ed6c 0032  ld   $32         ;076d 'i'
+              ed6d 0021  ld   $21         ;076f LDW
+              ed6e 008d  ld   $8d         ;076f 'NextDDX'
+              ed6f 002b  ld   $2b         ;0771 STW
+              ed70 008b  ld   $8b         ;0771 'DDX'
+              ed71 0035  ld   $35         ;0773 BCC
+              ed72 0053  ld   $53         ;0774 GE
+              ed73 0078  ld   $78
+              ed74 00c1  ld   $c1         ;0776 ADDW
+              ed75 0032  ld   $32         ;0776 'i'
+              ed76 0095  ld   $95         ;0778 BRA
+              ed77 008c  ld   $8c
+              ed78 0035  ld   $35         ;077a BCC
+              ed79 0056  ld   $56         ;077b LE
+              ed7a 007f  ld   $7f
+              ed7b 00ad  ld   $ad         ;077d SUBW
+              ed7c 0032  ld   $32         ;077d 'i'
+              ed7d 0095  ld   $95         ;077f BRA
+              ed7e 008c  ld   $8c
+              ed7f 0021  ld   $21         ;0781 LDW
+              ed80 0099  ld   $99         ;0781 'Random'
+              ed81 0035  ld   $35         ;0783 BCC
+              ed82 0050  ld   $50         ;0784 LT
+              ed83 0088  ld   $88
+              ed84 0021  ld   $21         ;0786 LDW
+              ed85 0032  ld   $32         ;0786 'i'
+              ed86 0095  ld   $95         ;0788 BRA
+              ed87 008c  ld   $8c
+              ed88 0059  ld   $59         ;078a LDI
+              ed89 0000  ld   $00
+              ed8a 00ad  ld   $ad         ;078c SUBW
+              ed8b 0032  ld   $32         ;078c 'i'
+              ed8c 002b  ld   $2b         ;078e STW
+              ed8d 008d  ld   $8d         ;078e 'NextDDX'
+              ed8e 00e3  ld   $e3         ;0790 CALL
+              ed8f 008f  ld   $8f         ;0790 'DrawRoad'
+              ed90 0021  ld   $21         ;0792 LDW
+              ed91 008b  ld   $8b         ;0792 'DDX'
+              ed92 002b  ld   $2b         ;0794 STW
+              ed93 0048  ld   $48         ;0794 'DriftX'
+              ed94 00c1  ld   $c1         ;0796 ADDW
+              ed95 0048  ld   $48         ;0796 'DriftX'
+              ed96 002b  ld   $2b         ;0798 STW
+              ed97 0048  ld   $48         ;0798 'DriftX'
+              ed98 00c1  ld   $c1         ;079a ADDW
+              ed99 0048  ld   $48         ;079a 'DriftX'
+              ed9a 002b  ld   $2b         ;079c STW
+              ed9b 0048  ld   $48         ;079c 'DriftX'
+              ed9c 00c1  ld   $c1         ;079e ADDW
+              ed9d 0048  ld   $48         ;079e 'DriftX'
+              ed9e 002b  ld   $2b         ;07a0 STW
+              ed9f 0048  ld   $48         ;07a0 'DriftX'
+              eda0 002b  ld   $2b         ;07a2 STW
+              eda1 004c  ld   $4c         ;07a2 'HorizonDX'
+              eda2 00e3  ld   $e3         ;07a4 CALL
+              eda3 0050  ld   $50         ;07a4 'ControlRaceCar'
+              eda4 00e3  ld   $e3         ;07a6 CALL
+              eda5 0091  ld   $91         ;07a6 'PlayEngineSound'
+              eda6 00e3  ld   $e3         ;07a8 CALL
+              eda7 009b  ld   $9b         ;07a8 'DrawRaceCar'
+              eda8 00e3  ld   $e3         ;07aa CALL
+              eda9 009d  ld   $9d         ;07aa 'DrawGrass'
+              edaa 0021  ld   $21         ;07ac LDW
+              edab 0042  ld   $42         ;07ac 'Time'
+              edac 002b  ld   $2b         ;07ae STW
+              edad 0058  ld   $58         ;07ae 'Value'
+              edae 0011  ld   $11         ;07b0 LDWI
+              edaf 0001  ld   $01
+              edb0 0008  ld   $08
+              edb1 002b  ld   $2b         ;07b3 STW
+              edb2 003c  ld   $3c         ;07b3 'Pos'
+              edb3 0059  ld   $59         ;07b5 LDI
+              edb4 003f  ld   $3f
+              edb5 002b  ld   $2b         ;07b7 STW
+              edb6 003a  ld   $3a         ;07b7 'Color'
+              edb7 00e3  ld   $e3         ;07b9 CALL
+              edb8 007e  ld   $7e         ;07b9 'DrawTime'
+              edb9 0021  ld   $21         ;07bb LDW
+              edba 006a  ld   $6a         ;07bb 'Collision'
+              edbb 0035  ld   $35         ;07bd BCC
+              edbc 003f  ld   $3f         ;07be EQ
+              edbd 000b  ld   $0b
+              edbe 0063  ld   $63         ;07c0 POP
+              edbf 00ff  ld   $ff         ;07c1 RET
+              edc0 002b  ld   $2b         ;07c2 STW
+              edc1 009f  ld   $9f         ;07c2 'PlayGame'
+              edc2 00e1  ld   $e1         ;07c4 DEF
+              edc3 00cb  ld   $cb
               edc4 002d  ld   $2d
-              edc5 002d  ld   $2d
-              edc6 002e  ld   $2e
+              edc5 003a  ld   $3a
+              edc6 002d  ld   $2d
               edc7 002d  ld   $2d
-              edc8 0000  ld   $00
-              edc9 002b  ld   $2b         ;07cd STW
-              edca 00a3  ld   $a3         ;07cd 'EmptyTimeText'
-              edcb 00e1  ld   $e1         ;07cf DEF
-              edcc 00db  ld   $db
-              edcd 0002  ld   $02
-              edce 0040  ld   $40
-              edcf 0040  ld   $40
+              edc8 002e  ld   $2e
+              edc9 002d  ld   $2d
+              edca 0000  ld   $00
+              edcb 002b  ld   $2b         ;07cd STW
+              edcc 00a1  ld   $a1         ;07cd 'EmptyTimeText'
+              edcd 00e1  ld   $e1         ;07cf DEF
+              edce 00db  ld   $db
+              edcf 0002  ld   $02
               edd0 0040  ld   $40
-              edd1 0028  ld   $28
-              edd2 003c  ld   $3c
-              edd3 003c  ld   $3c
-              edd4 0028  ld   $28
-              edd5 0040  ld   $40
-              edd6 0040  ld   $40
+              edd1 0040  ld   $40
+              edd2 0040  ld   $40
+              edd3 0028  ld   $28
+              edd4 003c  ld   $3c
+              edd5 003c  ld   $3c
+              edd6 0028  ld   $28
               edd7 0040  ld   $40
-              edd8 0000  ld   $00
-              edd9 002b  ld   $2b         ;07dd STW
-              edda 00a5  ld   $a5         ;07dd 'Car0'
-              eddb 00e1  ld   $e1         ;07df DEF
-              eddc 00e9  ld   $e9
-              eddd 0003  ld   $03
-              edde 0028  ld   $28
-              eddf 0014  ld   $14
-              ede0 0014  ld   $14
-              ede1 003f  ld   $3f
-              ede2 003f  ld   $3f
-              ede3 0014  ld   $14
-              ede4 0014  ld   $14
-              ede5 0028  ld   $28
-              ede6 0000  ld   $00
-              ede7 002b  ld   $2b         ;07eb STW
-              ede8 00a7  ld   $a7         ;07eb 'Car1'
-              ede9 0011  ld   $11         ;07ed LDWI
-              edea 00a0  ld   $a0
-              edeb 0008  ld   $08
-              edec 002b  ld   $2b         ;07f0 STW
-              eded 001c  ld   $1c
-              edee 00ff  ld   $ff         ;07f2 RET
-              edef 0008  ld   $08         ;| RAM segment address (high byte first)
-              edf0 00a0  ld   $a0         ;|
-              edf1 0060  ld   $60         ;| Length (1..256)
-              edf2 00e1  ld   $e1         ;08a0 DEF
-              edf3 00ac  ld   $ac
-              edf4 0002  ld   $02
-              edf5 0028  ld   $28
-              edf6 0014  ld   $14
-              edf7 0014  ld   $14
+              edd8 0040  ld   $40
+              edd9 0040  ld   $40
+              edda 0000  ld   $00
+              eddb 002b  ld   $2b         ;07dd STW
+              eddc 00a3  ld   $a3         ;07dd 'Car0'
+              eddd 00e1  ld   $e1         ;07df DEF
+              edde 00e9  ld   $e9
+              eddf 0003  ld   $03
+              ede0 0028  ld   $28
+              ede1 0014  ld   $14
+              ede2 0014  ld   $14
+              ede3 003f  ld   $3f
+              ede4 003f  ld   $3f
+              ede5 0014  ld   $14
+              ede6 0014  ld   $14
+              ede7 0028  ld   $28
+              ede8 0000  ld   $00
+              ede9 002b  ld   $2b         ;07eb STW
+              edea 00a5  ld   $a5         ;07eb 'Car1'
+              edeb 0011  ld   $11         ;07ed LDWI
+              edec 00a0  ld   $a0
+              eded 0008  ld   $08
+              edee 002b  ld   $2b         ;07f0 STW
+              edef 001b  ld   $1b
+              edf0 00ff  ld   $ff         ;07f2 RET
+              edf1 0008  ld   $08         ;| RAM segment address (high byte first)
+              edf2 00a0  ld   $a0         ;|
+              edf3 0060  ld   $60         ;| Length (1..256)
+              edf4 00e1  ld   $e1         ;08a0 DEF
+              edf5 00ac  ld   $ac
+              edf6 0002  ld   $02
+              edf7 0028  ld   $28
               edf8 0014  ld   $14
-              edf9 0028  ld   $28
-              edfa 0028  ld   $28
+              edf9 0014  ld   $14
+              edfa 0014  ld   $14
               edfb fe00  bra  ac          ;+-----------------------------------+
               edfc fcfd  bra  $edfd       ;|                                   |
               edfd 1403  ld   $03,y       ;| Trampoline for page $ed00 lookups |
               edfe e078  jmp  y,$78       ;|                                   |
-              edff 1519  ld   [$19],y     ;+-----------------------------------+
-              ee00 0014  ld   $14
-              ee01 0014  ld   $14
+              edff 1518  ld   [$18],y     ;+-----------------------------------+
+              ee00 0028  ld   $28
+              ee01 0028  ld   $28
               ee02 0014  ld   $14
-              ee03 0028  ld   $28
-              ee04 0000  ld   $00
-              ee05 002b  ld   $2b         ;08ae STW
-              ee06 00a9  ld   $a9         ;08ae 'Car2'
-              ee07 00e1  ld   $e1         ;08b0 DEF
-              ee08 00c0  ld   $c0
-              ee09 0000  ld   $00
-              ee0a 0040  ld   $40
-              ee0b 0040  ld   $40
+              ee03 0014  ld   $14
+              ee04 0014  ld   $14
+              ee05 0028  ld   $28
+              ee06 0000  ld   $00
+              ee07 002b  ld   $2b         ;08ae STW
+              ee08 00a7  ld   $a7         ;08ae 'Car2'
+              ee09 00e1  ld   $e1         ;08b0 DEF
+              ee0a 00c0  ld   $c0
+              ee0b 0000  ld   $00
               ee0c 0040  ld   $40
               ee0d 0040  ld   $40
-              ee0e 0028  ld   $28
-              ee0f 0014  ld   $14
-              ee10 0014  ld   $14
+              ee0e 0040  ld   $40
+              ee0f 0040  ld   $40
+              ee10 0028  ld   $28
               ee11 0014  ld   $14
               ee12 0014  ld   $14
-              ee13 0028  ld   $28
-              ee14 0040  ld   $40
-              ee15 0040  ld   $40
+              ee13 0014  ld   $14
+              ee14 0014  ld   $14
+              ee15 0028  ld   $28
               ee16 0040  ld   $40
               ee17 0040  ld   $40
-              ee18 0000  ld   $00
-              ee19 002b  ld   $2b         ;08c2 STW
-              ee1a 00ab  ld   $ab         ;08c2 'Car3'
-              ee1b 00e1  ld   $e1         ;08c4 DEF
-              ee1c 00d4  ld   $d4
-              ee1d 0000  ld   $00
-              ee1e 0040  ld   $40
-              ee1f 0040  ld   $40
+              ee18 0040  ld   $40
+              ee19 0040  ld   $40
+              ee1a 0000  ld   $00
+              ee1b 002b  ld   $2b         ;08c2 STW
+              ee1c 00a9  ld   $a9         ;08c2 'Car3'
+              ee1d 00e1  ld   $e1         ;08c4 DEF
+              ee1e 00d4  ld   $d4
+              ee1f 0000  ld   $00
               ee20 0040  ld   $40
               ee21 0040  ld   $40
-              ee22 0015  ld   $15
-              ee23 0015  ld   $15
+              ee22 0040  ld   $40
+              ee23 0040  ld   $40
               ee24 0015  ld   $15
+              ee25 0015  ld   $15
+              ee26 0015  ld   $15
               * 6 times
-              ee28 0040  ld   $40
-              ee29 0040  ld   $40
               ee2a 0040  ld   $40
               ee2b 0040  ld   $40
-              ee2c 0000  ld   $00
-              ee2d 002b  ld   $2b         ;08d6 STW
-              ee2e 00ad  ld   $ad         ;08d6 'Car4'
-              ee2f 00e1  ld   $e1         ;08d8 DEF
-              ee30 00f9  ld   $f9
-              ee31 0011  ld   $11         ;08da LDWI
-              ee32 002e  ld   $2e
-              ee33 0001  ld   $01
-              ee34 002b  ld   $2b         ;08dd STW
-              ee35 0025  ld   $25
-              ee36 0059  ld   $59         ;08df LDI
-              ee37 0020  ld   $20
-              ee38 005e  ld   $5e         ;08e1 ST
-              ee39 0027  ld   $27
-              ee3a 0011  ld   $11         ;08e3 LDWI
-              ee3b 0000  ld   $00
-              ee3c 000a  ld   $0a
-              ee3d 002b  ld   $2b         ;08e6 STW
-              ee3e 0063  ld   $63         ;08e6 'q'
-              ee3f 0021  ld   $21         ;08e8 LDW
-              ee40 0063  ld   $63         ;08e8 'q'
-              ee41 0075  ld   $75         ;08ea LOOKUP
-              ee42 0008  ld   $08
-              ee43 00c1  ld   $c1         ;08ec ADDW
-              ee44 008b  ld   $8b         ;08ec 'Distance'
-              ee45 005e  ld   $5e         ;08ee ST
-              ee46 0028  ld   $28
-              ee47 0011  ld   $11         ;08f0 LDWI
-              ee48 0032  ld   $32
-              ee49 0006  ld   $06
-              ee4a 00a9  ld   $a9         ;08f3 SYS
-              ee4b 00fa  ld   $fa
-              ee4c 00f9  ld   $f9         ;08f5 INC
-              ee4d 0063  ld   $63         ;08f5 'q'
-              ee4e 0035  ld   $35         ;08f7 BCC
-              ee4f 0072  ld   $72         ;08f8 NE
-              ee50 00e6  ld   $e6
-              ee51 00ff  ld   $ff         ;08fa RET
-              ee52 002b  ld   $2b         ;08fb STW
-              ee53 009f  ld   $9f         ;08fb 'DrawGrass'
-              ee54 00f9  ld   $f9         ;08fd INC
-              ee55 001d  ld   $1d
-              ee56 00ff  ld   $ff         ;08ff RET
-              ee57 0009  ld   $09         ;| RAM segment address (high byte first)
-              ee58 00a0  ld   $a0         ;|
-              ee59 0023  ld   $23         ;| Length (1..256)
-              ee5a 00e1  ld   $e1         ;09a0 DEF
-              ee5b 00bc  ld   $bc
-              ee5c 001a  ld   $1a         ;09a2 LD
-              ee5d 0046  ld   $46         ;09a2 'Speed'+1
-              ee5e 00c1  ld   $c1         ;09a4 ADDW
-              ee5f 008b  ld   $8b         ;09a4 'Distance'
-              ee60 002b  ld   $2b         ;09a6 STW
-              ee61 008b  ld   $8b         ;09a6 'Distance'
-              ee62 0011  ld   $11         ;09a8 LDWI
-              ee63 00f4  ld   $f4
-              ee64 000e  ld   $0e
-              ee65 002b  ld   $2b         ;09ab STW
-              ee66 0061  ld   $61         ;09ab 'p'
-              ee67 001a  ld   $1a         ;09ad LD
-              ee68 008c  ld   $8c         ;09ad 'Distance'+1
-              ee69 00c1  ld   $c1         ;09af ADDW
-              ee6a 0061  ld   $61         ;09af 'p'
-              ee6b 002b  ld   $2b         ;09b1 STW
-              ee6c 0061  ld   $61         ;09b1 'p'
-              ee6d 0059  ld   $59         ;09b3 LDI
-              ee6e 0015  ld   $15
-              ee6f 0098  ld   $98         ;09b5 POKE
-              ee70 0061  ld   $61         ;09b5 'p'
-              ee71 00f9  ld   $f9         ;09b7 INC
-              ee72 0061  ld   $61         ;09b7 'p'
-              ee73 0059  ld   $59         ;09b9 LDI
-              ee74 003c  ld   $3c
-              ee75 0098  ld   $98         ;09bb POKE
-              ee76 0061  ld   $61         ;09bb 'p'
-              ee77 00ff  ld   $ff         ;09bd RET
-              ee78 002b  ld   $2b         ;09be STW
-              ee79 0095  ld   $95         ;09be 'AdvanceCar'
-              ee7a 00f9  ld   $f9         ;09c0 INC
-              ee7b 001d  ld   $1d
-              ee7c 00ff  ld   $ff         ;09c2 RET
-              ee7d 000a  ld   $0a         ;| RAM segment address (high byte first)
-              ee7e 00a0  ld   $a0         ;|
-              ee7f 0041  ld   $41         ;| Length (1..256)
-              ee80 00e1  ld   $e1         ;0aa0 DEF
-              ee81 00da  ld   $da
-              ee82 007d  ld   $7d         ;0aa2 PUSH
-              ee83 0011  ld   $11         ;0aa3 LDWI
-              ee84 00d9  ld   $d9
-              ee85 0001  ld   $01
-              ee86 00d5  ld   $d5         ;0aa6 PEEK
-              ee87 0091  ld   $91         ;0aa7 XORI
-              ee88 00ff  ld   $ff
-              ee89 002b  ld   $2b         ;0aa9 STW
-              ee8a 0069  ld   $69         ;0aa9 'X'
-              ee8b 001a  ld   $1a         ;0aab LD
-              ee8c 0048  ld   $48         ;0aab 'CarX'+1
-              ee8d 00c1  ld   $c1         ;0aad ADDW
-              ee8e 0069  ld   $69         ;0aad 'X'
-              ee8f 002b  ld   $2b         ;0aaf STW
-              ee90 0069  ld   $69         ;0aaf 'X'
-              ee91 0011  ld   $11         ;0ab1 LDWI
-              ee92 00d8  ld   $d8
-              ee93 0001  ld   $01
-              ee94 002b  ld   $2b         ;0ab4 STW
-              ee95 005f  ld   $5f         ;0ab4 'Video'
-              ee96 0021  ld   $21         ;0ab6 LDW
-              ee97 00a5  ld   $a5         ;0ab6 'Car0'
-              ee98 002b  ld   $2b         ;0ab8 STW
-              ee99 0065  ld   $65         ;0ab8 'Sprite'
-              ee9a 00e3  ld   $e3         ;0aba CALL
-              ee9b 006d  ld   $6d         ;0aba 'DrawPixels'
-              ee9c 0021  ld   $21         ;0abc LDW
-              ee9d 00a7  ld   $a7         ;0abc 'Car1'
-              ee9e 002b  ld   $2b         ;0abe STW
-              ee9f 0065  ld   $65         ;0abe 'Sprite'
-              eea0 00e3  ld   $e3         ;0ac0 CALL
-              eea1 006d  ld   $6d         ;0ac0 'DrawPixels'
-              eea2 0021  ld   $21         ;0ac2 LDW
-              eea3 0069  ld   $69         ;0ac2 'X'
-              eea4 00ad  ld   $ad         ;0ac4 SUBW
-              eea5 004f  ld   $4f         ;0ac4 'Steer'
-              eea6 002b  ld   $2b         ;0ac6 STW
-              eea7 0069  ld   $69         ;0ac6 'X'
-              eea8 0021  ld   $21         ;0ac8 LDW
-              eea9 00a9  ld   $a9         ;0ac8 'Car2'
-              eeaa 002b  ld   $2b         ;0aca STW
-              eeab 0065  ld   $65         ;0aca 'Sprite'
-              eeac 00e3  ld   $e3         ;0acc CALL
-              eead 006d  ld   $6d         ;0acc 'DrawPixels'
-              eeae 0021  ld   $21         ;0ace LDW
-              eeaf 00ab  ld   $ab         ;0ace 'Car3'
-              eeb0 002b  ld   $2b         ;0ad0 STW
-              eeb1 0065  ld   $65         ;0ad0 'Sprite'
-              eeb2 00e3  ld   $e3         ;0ad2 CALL
-              eeb3 006d  ld   $6d         ;0ad2 'DrawPixels'
-              eeb4 0021  ld   $21         ;0ad4 LDW
-              eeb5 00ad  ld   $ad         ;0ad4 'Car4'
-              eeb6 002b  ld   $2b         ;0ad6 STW
-              eeb7 0065  ld   $65         ;0ad6 'Sprite'
-              eeb8 00e3  ld   $e3         ;0ad8 CALL
-              eeb9 006d  ld   $6d         ;0ad8 'DrawPixels'
-              eeba 0063  ld   $63         ;0ada POP
-              eebb 00ff  ld   $ff         ;0adb RET
-              eebc 002b  ld   $2b         ;0adc STW
-              eebd 009d  ld   $9d         ;0adc 'DrawRaceCar'
-              eebe 00f9  ld   $f9         ;0ade INC
-              eebf 001d  ld   $1d
-              eec0 00ff  ld   $ff         ;0ae0 RET
-              eec1 000b  ld   $0b         ;| RAM segment address (high byte first)
-              eec2 00a0  ld   $a0         ;|
-              eec3 0052  ld   $52         ;| Length (1..256)
-              eec4 00e1  ld   $e1         ;0ba0 DEF
-              eec5 00eb  ld   $eb
-              eec6 007d  ld   $7d         ;0ba2 PUSH
-              eec7 0059  ld   $59         ;0ba3 LDI
-              eec8 0030  ld   $30
-              eec9 002b  ld   $2b         ;0ba5 STW
-              eeca 0039  ld   $39         ;0ba5 'BgColor'
-              eecb 0021  ld   $21         ;0ba7 LDW
-              eecc 0039  ld   $39         ;0ba7 'BgColor'
-              eecd 005e  ld   $5e         ;0ba9 ST
-              eece 0025  ld   $25
-              eecf 005e  ld   $5e         ;0bab ST
-              eed0 0026  ld   $26
-              eed1 0011  ld   $11         ;0bad LDWI
-              eed2 0000  ld   $00
-              eed3 0008  ld   $08
-              eed4 002b  ld   $2b         ;0bb0 STW
-              eed5 0021  ld   $21
-              eed6 0011  ld   $11         ;0bb2 LDWI
-              eed7 00db  ld   $db
-              eed8 0004  ld   $04
-              eed9 00a9  ld   $a9         ;0bb5 SYS
-              eeda 00cb  ld   $cb
-              eedb 00f9  ld   $f9         ;0bb7 INC
-              eedc 0021  ld   $21
-              eedd 001a  ld   $1a         ;0bb9 LD
-              eede 0021  ld   $21
-              eedf 0091  ld   $91         ;0bbb XORI
-              eee0 00a0  ld   $a0
-              eee1 0035  ld   $35         ;0bbd BCC
-              eee2 0072  ld   $72         ;0bbe NE
-              eee3 00b0  ld   $b0
-              eee4 0059  ld   $59         ;0bc0 LDI
-              eee5 003f  ld   $3f
-              eee6 002b  ld   $2b         ;0bc2 STW
-              eee7 003b  ld   $3b         ;0bc2 'Color'
-              eee8 0011  ld   $11         ;0bc4 LDWI
-              eee9 0001  ld   $01
-              eeea 0008  ld   $08
-              eeeb 002b  ld   $2b         ;0bc7 STW
-              eeec 003d  ld   $3d         ;0bc7 'Pos'
-              eeed 0021  ld   $21         ;0bc9 LDW
-              eeee 00a3  ld   $a3         ;0bc9 'EmptyTimeText'
-              eeef 002b  ld   $2b         ;0bcb STW
-              eef0 0083  ld   $83         ;0bcb 'Text'
-              eef1 00e3  ld   $e3         ;0bcd CALL
-              eef2 0085  ld   $85         ;0bcd 'DrawText'
-              eef3 0011  ld   $11         ;0bcf LDWI
-              eef4 007c  ld   $7c
-              eef5 0008  ld   $08
-              eef6 002b  ld   $2b         ;0bd2 STW
-              eef7 003d  ld   $3d         ;0bd2 'Pos'
-              eef8 0021  ld   $21         ;0bd4 LDW
-              eef9 00a3  ld   $a3         ;0bd4 'EmptyTimeText'
-              eefa 002b  ld   $2b         ;0bd6 STW
+              ee2c 0040  ld   $40
+              ee2d 0040  ld   $40
+              ee2e 0000  ld   $00
+              ee2f 002b  ld   $2b         ;08d6 STW
+              ee30 00ab  ld   $ab         ;08d6 'Car4'
+              ee31 00e1  ld   $e1         ;08d8 DEF
+              ee32 00f9  ld   $f9
+              ee33 0011  ld   $11         ;08da LDWI
+              ee34 002e  ld   $2e
+              ee35 0001  ld   $01
+              ee36 002b  ld   $2b         ;08dd STW
+              ee37 0024  ld   $24
+              ee38 0059  ld   $59         ;08df LDI
+              ee39 0020  ld   $20
+              ee3a 005e  ld   $5e         ;08e1 ST
+              ee3b 0026  ld   $26
+              ee3c 0011  ld   $11         ;08e3 LDWI
+              ee3d 0000  ld   $00
+              ee3e 000a  ld   $0a
+              ee3f 002b  ld   $2b         ;08e6 STW
+              ee40 0062  ld   $62         ;08e6 'q'
+              ee41 0021  ld   $21         ;08e8 LDW
+              ee42 0062  ld   $62         ;08e8 'q'
+              ee43 0075  ld   $75         ;08ea LOOKUP
+              ee44 0008  ld   $08
+              ee45 00c1  ld   $c1         ;08ec ADDW
+              ee46 0089  ld   $89         ;08ec 'Distance'
+              ee47 005e  ld   $5e         ;08ee ST
+              ee48 0027  ld   $27
+              ee49 0011  ld   $11         ;08f0 LDWI
+              ee4a 0032  ld   $32
+              ee4b 0006  ld   $06
+              ee4c 00a9  ld   $a9         ;08f3 SYS
+              ee4d 00fa  ld   $fa
+              ee4e 00f9  ld   $f9         ;08f5 INC
+              ee4f 0062  ld   $62         ;08f5 'q'
+              ee50 0035  ld   $35         ;08f7 BCC
+              ee51 0072  ld   $72         ;08f8 NE
+              ee52 00e6  ld   $e6
+              ee53 00ff  ld   $ff         ;08fa RET
+              ee54 002b  ld   $2b         ;08fb STW
+              ee55 009d  ld   $9d         ;08fb 'DrawGrass'
+              ee56 00f9  ld   $f9         ;08fd INC
+              ee57 001c  ld   $1c
+              ee58 00ff  ld   $ff         ;08ff RET
+              ee59 0009  ld   $09         ;| RAM segment address (high byte first)
+              ee5a 00a0  ld   $a0         ;|
+              ee5b 0023  ld   $23         ;| Length (1..256)
+              ee5c 00e1  ld   $e1         ;09a0 DEF
+              ee5d 00bc  ld   $bc
+              ee5e 001a  ld   $1a         ;09a2 LD
+              ee5f 0045  ld   $45         ;09a2 'Speed'+1
+              ee60 00c1  ld   $c1         ;09a4 ADDW
+              ee61 0089  ld   $89         ;09a4 'Distance'
+              ee62 002b  ld   $2b         ;09a6 STW
+              ee63 0089  ld   $89         ;09a6 'Distance'
+              ee64 0011  ld   $11         ;09a8 LDWI
+              ee65 00f4  ld   $f4
+              ee66 000e  ld   $0e
+              ee67 002b  ld   $2b         ;09ab STW
+              ee68 0060  ld   $60         ;09ab 'p'
+              ee69 001a  ld   $1a         ;09ad LD
+              ee6a 008a  ld   $8a         ;09ad 'Distance'+1
+              ee6b 00c1  ld   $c1         ;09af ADDW
+              ee6c 0060  ld   $60         ;09af 'p'
+              ee6d 002b  ld   $2b         ;09b1 STW
+              ee6e 0060  ld   $60         ;09b1 'p'
+              ee6f 0059  ld   $59         ;09b3 LDI
+              ee70 0015  ld   $15
+              ee71 0098  ld   $98         ;09b5 POKE
+              ee72 0060  ld   $60         ;09b5 'p'
+              ee73 00f9  ld   $f9         ;09b7 INC
+              ee74 0060  ld   $60         ;09b7 'p'
+              ee75 0059  ld   $59         ;09b9 LDI
+              ee76 003c  ld   $3c
+              ee77 0098  ld   $98         ;09bb POKE
+              ee78 0060  ld   $60         ;09bb 'p'
+              ee79 00ff  ld   $ff         ;09bd RET
+              ee7a 002b  ld   $2b         ;09be STW
+              ee7b 0093  ld   $93         ;09be 'AdvanceCar'
+              ee7c 00f9  ld   $f9         ;09c0 INC
+              ee7d 001c  ld   $1c
+              ee7e 00ff  ld   $ff         ;09c2 RET
+              ee7f 000a  ld   $0a         ;| RAM segment address (high byte first)
+              ee80 00a0  ld   $a0         ;|
+              ee81 0041  ld   $41         ;| Length (1..256)
+              ee82 00e1  ld   $e1         ;0aa0 DEF
+              ee83 00da  ld   $da
+              ee84 007d  ld   $7d         ;0aa2 PUSH
+              ee85 0011  ld   $11         ;0aa3 LDWI
+              ee86 00d9  ld   $d9
+              ee87 0001  ld   $01
+              ee88 00d5  ld   $d5         ;0aa6 PEEK
+              ee89 0091  ld   $91         ;0aa7 XORI
+              ee8a 00ff  ld   $ff
+              ee8b 002b  ld   $2b         ;0aa9 STW
+              ee8c 0068  ld   $68         ;0aa9 'X'
+              ee8d 001a  ld   $1a         ;0aab LD
+              ee8e 0047  ld   $47         ;0aab 'CarX'+1
+              ee8f 00c1  ld   $c1         ;0aad ADDW
+              ee90 0068  ld   $68         ;0aad 'X'
+              ee91 002b  ld   $2b         ;0aaf STW
+              ee92 0068  ld   $68         ;0aaf 'X'
+              ee93 0011  ld   $11         ;0ab1 LDWI
+              ee94 00d8  ld   $d8
+              ee95 0001  ld   $01
+              ee96 002b  ld   $2b         ;0ab4 STW
+              ee97 005e  ld   $5e         ;0ab4 'Video'
+              ee98 0021  ld   $21         ;0ab6 LDW
+              ee99 00a3  ld   $a3         ;0ab6 'Car0'
+              ee9a 002b  ld   $2b         ;0ab8 STW
+              ee9b 0064  ld   $64         ;0ab8 'Sprite'
+              ee9c 00e3  ld   $e3         ;0aba CALL
+              ee9d 006c  ld   $6c         ;0aba 'DrawPixels'
+              ee9e 0021  ld   $21         ;0abc LDW
+              ee9f 00a5  ld   $a5         ;0abc 'Car1'
+              eea0 002b  ld   $2b         ;0abe STW
+              eea1 0064  ld   $64         ;0abe 'Sprite'
+              eea2 00e3  ld   $e3         ;0ac0 CALL
+              eea3 006c  ld   $6c         ;0ac0 'DrawPixels'
+              eea4 0021  ld   $21         ;0ac2 LDW
+              eea5 0068  ld   $68         ;0ac2 'X'
+              eea6 00ad  ld   $ad         ;0ac4 SUBW
+              eea7 004e  ld   $4e         ;0ac4 'Steer'
+              eea8 002b  ld   $2b         ;0ac6 STW
+              eea9 0068  ld   $68         ;0ac6 'X'
+              eeaa 0021  ld   $21         ;0ac8 LDW
+              eeab 00a7  ld   $a7         ;0ac8 'Car2'
+              eeac 002b  ld   $2b         ;0aca STW
+              eead 0064  ld   $64         ;0aca 'Sprite'
+              eeae 00e3  ld   $e3         ;0acc CALL
+              eeaf 006c  ld   $6c         ;0acc 'DrawPixels'
+              eeb0 0021  ld   $21         ;0ace LDW
+              eeb1 00a9  ld   $a9         ;0ace 'Car3'
+              eeb2 002b  ld   $2b         ;0ad0 STW
+              eeb3 0064  ld   $64         ;0ad0 'Sprite'
+              eeb4 00e3  ld   $e3         ;0ad2 CALL
+              eeb5 006c  ld   $6c         ;0ad2 'DrawPixels'
+              eeb6 0021  ld   $21         ;0ad4 LDW
+              eeb7 00ab  ld   $ab         ;0ad4 'Car4'
+              eeb8 002b  ld   $2b         ;0ad6 STW
+              eeb9 0064  ld   $64         ;0ad6 'Sprite'
+              eeba 00e3  ld   $e3         ;0ad8 CALL
+              eebb 006c  ld   $6c         ;0ad8 'DrawPixels'
+              eebc 0063  ld   $63         ;0ada POP
+              eebd 00ff  ld   $ff         ;0adb RET
+              eebe 002b  ld   $2b         ;0adc STW
+              eebf 009b  ld   $9b         ;0adc 'DrawRaceCar'
+              eec0 00f9  ld   $f9         ;0ade INC
+              eec1 001c  ld   $1c
+              eec2 00ff  ld   $ff         ;0ae0 RET
+              eec3 000b  ld   $0b         ;| RAM segment address (high byte first)
+              eec4 00a0  ld   $a0         ;|
+              eec5 0052  ld   $52         ;| Length (1..256)
+              eec6 00e1  ld   $e1         ;0ba0 DEF
+              eec7 00eb  ld   $eb
+              eec8 007d  ld   $7d         ;0ba2 PUSH
+              eec9 0059  ld   $59         ;0ba3 LDI
+              eeca 0030  ld   $30
+              eecb 002b  ld   $2b         ;0ba5 STW
+              eecc 0038  ld   $38         ;0ba5 'BgColor'
+              eecd 0021  ld   $21         ;0ba7 LDW
+              eece 0038  ld   $38         ;0ba7 'BgColor'
+              eecf 005e  ld   $5e         ;0ba9 ST
+              eed0 0024  ld   $24
+              eed1 005e  ld   $5e         ;0bab ST
+              eed2 0025  ld   $25
+              eed3 0011  ld   $11         ;0bad LDWI
+              eed4 0000  ld   $00
+              eed5 0008  ld   $08
+              eed6 002b  ld   $2b         ;0bb0 STW
+              eed7 0020  ld   $20
+              eed8 0011  ld   $11         ;0bb2 LDWI
+              eed9 00e4  ld   $e4
+              eeda 0004  ld   $04
+              eedb 00a9  ld   $a9         ;0bb5 SYS
+              eedc 00cb  ld   $cb
+              eedd 00f9  ld   $f9         ;0bb7 INC
+              eede 0020  ld   $20
+              eedf 001a  ld   $1a         ;0bb9 LD
+              eee0 0020  ld   $20
+              eee1 0091  ld   $91         ;0bbb XORI
+              eee2 00a0  ld   $a0
+              eee3 0035  ld   $35         ;0bbd BCC
+              eee4 0072  ld   $72         ;0bbe NE
+              eee5 00b0  ld   $b0
+              eee6 0059  ld   $59         ;0bc0 LDI
+              eee7 003f  ld   $3f
+              eee8 002b  ld   $2b         ;0bc2 STW
+              eee9 003a  ld   $3a         ;0bc2 'Color'
+              eeea 0011  ld   $11         ;0bc4 LDWI
+              eeeb 0001  ld   $01
+              eeec 0008  ld   $08
+              eeed 002b  ld   $2b         ;0bc7 STW
+              eeee 003c  ld   $3c         ;0bc7 'Pos'
+              eeef 0021  ld   $21         ;0bc9 LDW
+              eef0 00a1  ld   $a1         ;0bc9 'EmptyTimeText'
+              eef1 002b  ld   $2b         ;0bcb STW
+              eef2 0081  ld   $81         ;0bcb 'Text'
+              eef3 00e3  ld   $e3         ;0bcd CALL
+              eef4 0083  ld   $83         ;0bcd 'DrawText'
+              eef5 0011  ld   $11         ;0bcf LDWI
+              eef6 007c  ld   $7c
+              eef7 0008  ld   $08
+              eef8 002b  ld   $2b         ;0bd2 STW
+              eef9 003c  ld   $3c         ;0bd2 'Pos'
+              eefa 0021  ld   $21         ;0bd4 LDW
               eefb fe00  bra  ac          ;+-----------------------------------+
               eefc fcfd  bra  $eefd       ;|                                   |
               eefd 1403  ld   $03,y       ;| Trampoline for page $ee00 lookups |
               eefe e078  jmp  y,$78       ;|                                   |
-              eeff 1519  ld   [$19],y     ;+-----------------------------------+
-              ef00 0083  ld   $83         ;0bd6 'Text'
-              ef01 00e3  ld   $e3         ;0bd8 CALL
-              ef02 0085  ld   $85         ;0bd8 'DrawText'
-              ef03 0011  ld   $11         ;0bda LDWI
-              ef04 0038  ld   $38
-              ef05 0008  ld   $08
-              ef06 002b  ld   $2b         ;0bdd STW
-              ef07 003d  ld   $3d         ;0bdd 'Pos'
-              ef08 0021  ld   $21         ;0bdf LDW
-              ef09 0053  ld   $53         ;0bdf 'GigatronText'
-              ef0a 002b  ld   $2b         ;0be1 STW
-              ef0b 0083  ld   $83         ;0be1 'Text'
-              ef0c 00e3  ld   $e3         ;0be3 CALL
-              ef0d 0085  ld   $85         ;0be3 'DrawText'
-              ef0e 0059  ld   $59         ;0be5 LDI
-              ef0f 003c  ld   $3c
-              ef10 002b  ld   $2b         ;0be7 STW
-              ef11 0055  ld   $55         ;0be7 'Delay'
-              ef12 00e3  ld   $e3         ;0be9 CALL
-              ef13 0057  ld   $57         ;0be9 'Wait'
-              ef14 0063  ld   $63         ;0beb POP
-              ef15 00ff  ld   $ff         ;0bec RET
-              ef16 002b  ld   $2b         ;0bed STW
-              ef17 00af  ld   $af         ;0bed 'Intro'
-              ef18 00f9  ld   $f9         ;0bef INC
-              ef19 001d  ld   $1d
-              ef1a 00ff  ld   $ff         ;0bf1 RET
-              ef1b 000c  ld   $0c         ;| RAM segment address (high byte first)
-              ef1c 00a0  ld   $a0         ;|
-              ef1d 0003  ld   $03         ;| Length (1..256)
-              ef1e 00f9  ld   $f9         ;0ca0 INC
-              ef1f 001d  ld   $1d
-              ef20 00ff  ld   $ff         ;0ca2 RET
-              ef21 000d  ld   $0d         ;| RAM segment address (high byte first)
-              ef22 00a0  ld   $a0         ;|
-              ef23 0003  ld   $03         ;| Length (1..256)
-              ef24 00f9  ld   $f9         ;0da0 INC
-              ef25 001d  ld   $1d
-              ef26 00ff  ld   $ff         ;0da2 RET
-              ef27 000e  ld   $0e         ;| RAM segment address (high byte first)
-              ef28 00a0  ld   $a0         ;|
-              ef29 0057  ld   $57         ;| Length (1..256)
-              ef2a 00e1  ld   $e1         ;0ea0 DEF
-              ef2b 00f0  ld   $f0
-              ef2c 007d  ld   $7d         ;0ea2 PUSH
-              ef2d 0011  ld   $11         ;0ea3 LDWI
-              ef2e 0000  ld   $00
-              ef2f 00d7  ld   $d7
-              ef30 002b  ld   $2b         ;0ea6 STW
-              ef31 0061  ld   $61         ;0ea6 'p'
-              ef32 0011  ld   $11         ;0ea8 LDWI
-              ef33 0000  ld   $00
-              ef34 0010  ld   $10
-              ef35 002b  ld   $2b         ;0eab STW
-              ef36 0063  ld   $63         ;0eab 'q'
-              ef37 00e1  ld   $e1         ;0ead DEF
-              ef38 00bf  ld   $bf
-              ef39 001a  ld   $1a         ;0eaf LD
-              ef3a 0061  ld   $61         ;0eaf 'p'
-              ef3b 0091  ld   $91         ;0eb1 XORI
-              ef3c 00fa  ld   $fa
-              ef3d 0035  ld   $35         ;0eb3 BCC
-              ef3e 003f  ld   $3f         ;0eb4 EQ
-              ef3f 00b8  ld   $b8
-              ef40 0059  ld   $59         ;0eb6 LDI
-              ef41 0001  ld   $01
-              ef42 0095  ld   $95         ;0eb8 BRA
-              ef43 00ba  ld   $ba
-              ef44 0059  ld   $59         ;0eba LDI
-              ef45 0006  ld   $06
-              ef46 00c1  ld   $c1         ;0ebc ADDW
-              ef47 0061  ld   $61         ;0ebc 'p'
-              ef48 002b  ld   $2b         ;0ebe STW
-              ef49 0061  ld   $61         ;0ebe 'p'
-              ef4a 00ff  ld   $ff         ;0ec0 RET
-              ef4b 002b  ld   $2b         ;0ec1 STW
-              ef4c 0037  ld   $37         ;0ec1 'tmp'
-              ef4d 0021  ld   $21         ;0ec3 LDW
-              ef4e 0061  ld   $61         ;0ec3 'p'
-              ef4f 0075  ld   $75         ;0ec5 LOOKUP
-              ef50 0000  ld   $00
-              ef51 005e  ld   $5e         ;0ec7 ST
-              ef52 0025  ld   $25
-              ef53 00e3  ld   $e3         ;0ec9 CALL
-              ef54 0037  ld   $37         ;0ec9 'tmp'
-              ef55 0075  ld   $75         ;0ecb LOOKUP
-              ef56 0000  ld   $00
-              ef57 005e  ld   $5e         ;0ecd ST
-              ef58 0026  ld   $26
-              ef59 00e3  ld   $e3         ;0ecf CALL
-              ef5a 0037  ld   $37         ;0ecf 'tmp'
-              ef5b 0075  ld   $75         ;0ed1 LOOKUP
-              ef5c 0000  ld   $00
-              ef5d 005e  ld   $5e         ;0ed3 ST
-              ef5e 0027  ld   $27
-              ef5f 00e3  ld   $e3         ;0ed5 CALL
-              ef60 0037  ld   $37         ;0ed5 'tmp'
-              ef61 0011  ld   $11         ;0ed7 LDWI
-              ef62 00a7  ld   $a7
-              ef63 0004  ld   $04
-              ef64 00a9  ld   $a9         ;0eda SYS
-              ef65 00f2  ld   $f2
-              ef66 0021  ld   $21         ;0edc LDW
-              ef67 0063  ld   $63         ;0edc 'q'
-              ef68 002b  ld   $2b         ;0ede STW
-              ef69 0021  ld   $21
-              ef6a 00f3  ld   $f3         ;0ee0 ADDI
-              ef6b 0004  ld   $04
-              ef6c 002b  ld   $2b         ;0ee2 STW
-              ef6d 0063  ld   $63         ;0ee2 'q'
-              ef6e 0011  ld   $11         ;0ee4 LDWI
-              ef6f 00ce  ld   $ce
-              ef70 0004  ld   $04
-              ef71 00a9  ld   $a9         ;0ee7 SYS
-              ef72 00ff  ld   $ff
-              ef73 001a  ld   $1a         ;0ee9 LD
-              ef74 0064  ld   $64         ;0ee9 'q'+1
-              ef75 0091  ld   $91         ;0eeb XORI
-              ef76 0020  ld   $20
-              ef77 0035  ld   $35         ;0eed BCC
-              ef78 0072  ld   $72         ;0eee NE
-              ef79 00c1  ld   $c1
-              ef7a 0063  ld   $63         ;0ef0 POP
-              ef7b 00ff  ld   $ff         ;0ef1 RET
-              ef7c 002b  ld   $2b         ;0ef2 STW
-              ef7d 00b1  ld   $b1         ;0ef2 'SetupHorizon'
-              ef7e 00f9  ld   $f9         ;0ef4 INC
-              ef7f 001d  ld   $1d
-              ef80 00ff  ld   $ff         ;0ef6 RET
-              ef81 000f  ld   $0f         ;| RAM segment address (high byte first)
-              ef82 00a0  ld   $a0         ;|
-              ef83 0056  ld   $56         ;| Length (1..256)
-              ef84 00e3  ld   $e3         ;0fa0 CALL
-              ef85 00af  ld   $af         ;0fa0 'Intro'
-              ef86 0011  ld   $11         ;0fa2 LDWI
-              ef87 0000  ld   $00
-              ef88 0074  ld   $74
-              ef89 002b  ld   $2b         ;0fa5 STW
-              ef8a 008b  ld   $8b         ;0fa5 'Distance'
-              ef8b 002b  ld   $2b         ;0fa7 STW
-              ef8c 0089  ld   $89         ;0fa7 'NextTurn'
-              ef8d 0059  ld   $59         ;0fa9 LDI
-              ef8e 0000  ld   $00
-              ef8f 002b  ld   $2b         ;0fab STW
-              ef90 009b  ld   $9b         ;0fab 'Random'
-              ef91 002b  ld   $2b         ;0fad STW
-              ef92 008d  ld   $8d         ;0fad 'DDX'
-              ef93 002b  ld   $2b         ;0faf STW
-              ef94 008f  ld   $8f         ;0faf 'NextDDX'
-              ef95 00e3  ld   $e3         ;0fb1 CALL
-              ef96 0091  ld   $91         ;0fb1 'DrawRoad'
-              ef97 00e3  ld   $e3         ;0fb3 CALL
-              ef98 009f  ld   $9f         ;0fb3 'DrawGrass'
-              ef99 00e3  ld   $e3         ;0fb5 CALL
-              ef9a 00b1  ld   $b1         ;0fb5 'SetupHorizon'
-              ef9b 00e3  ld   $e3         ;0fb7 CALL
-              ef9c 0077  ld   $77         ;0fb7 'SetupRoad'
-              ef9d 0011  ld   $11         ;0fb9 LDWI
-              ef9e 00ff  ld   $ff
-              ef9f 007f  ld   $7f
-              efa0 002b  ld   $2b         ;0fbc STW
-              efa1 0097  ld   $97         ;0fbc 'BestTime'
-              efa2 0059  ld   $59         ;0fbe LDI
-              efa3 0000  ld   $00
-              efa4 002b  ld   $2b         ;0fc0 STW
-              efa5 0043  ld   $43         ;0fc0 'Time'
-              efa6 002b  ld   $2b         ;0fc2 STW
-              efa7 0059  ld   $59         ;0fc2 'Value'
-              efa8 002b  ld   $2b         ;0fc4 STW
-              efa9 004b  ld   $4b         ;0fc4 'HorizonX'
-              efaa 002b  ld   $2b         ;0fc6 STW
-              efab 0049  ld   $49         ;0fc6 'DriftX'
-              efac 002b  ld   $2b         ;0fc8 STW
-              efad 0045  ld   $45         ;0fc8 'Speed'
-              efae 0011  ld   $11         ;0fca LDWI
-              efaf 0000  ld   $00
-              efb0 0079  ld   $79
-              efb1 002b  ld   $2b         ;0fcd STW
-              efb2 0047  ld   $47         ;0fcd 'CarX'
-              efb3 001a  ld   $1a         ;0fcf LD
-              efb4 0011  ld   $11
-              efb5 002b  ld   $2b         ;0fd1 STW
-              efb6 0041  ld   $41         ;0fd1 'LastFrame'
-              efb7 00e3  ld   $e3         ;0fd3 CALL
-              efb8 00a1  ld   $a1         ;0fd3 'PlayGame'
-              efb9 0011  ld   $11         ;0fd5 LDWI
-              efba 0035  ld   $35
-              efbb 0014  ld   $14
-              efbc 002b  ld   $2b         ;0fd8 STW
-              efbd 003d  ld   $3d         ;0fd8 'Pos'
-              efbe 00e1  ld   $e1         ;0fda DEF
-              efbf 00e4  ld   $e4
-              efc0 0047  ld   $47
-              efc1 0041  ld   $41
-              efc2 004d  ld   $4d
-              efc3 0045  ld   $45
-              efc4 0020  ld   $20
-              efc5 004f  ld   $4f
-              efc6 0056  ld   $56
-              efc7 0045  ld   $45
-              efc8 0052  ld   $52
-              efc9 0000  ld   $00
-              efca 002b  ld   $2b         ;0fe6 STW
-              efcb 0083  ld   $83         ;0fe6 'Text'
-              efcc 0059  ld   $59         ;0fe8 LDI
-              efcd 000f  ld   $0f
-              efce 002b  ld   $2b         ;0fea STW
-              efcf 003b  ld   $3b         ;0fea 'Color'
-              efd0 00e3  ld   $e3         ;0fec CALL
-              efd1 0085  ld   $85         ;0fec 'DrawText'
-              efd2 0059  ld   $59         ;0fee LDI
-              efd3 00f0  ld   $f0
-              efd4 002b  ld   $2b         ;0ff0 STW
-              efd5 0055  ld   $55         ;0ff0 'Delay'
-              efd6 00e3  ld   $e3         ;0ff2 CALL
-              efd7 0057  ld   $57         ;0ff2 'Wait'
-              efd8 0095  ld   $95         ;0ff4 BRA
-              efd9 00a0  ld   $a0
-              efda 0000  ld   $00         ;End of file
-Mandelbrot:   efdb 0003  ld   $03         ;| RAM segment address (high byte first)
-              efdc 0000  ld   $00         ;|
-              efdd 00d5  ld   $d5         ;| Length (1..256)
-              efde 00e1  ld   $e1         ;0300 DEF
-              efdf 007a  ld   $7a
-              efe0 007d  ld   $7d         ;0302 PUSH
-              efe1 0059  ld   $59         ;0303 LDI
-              efe2 0000  ld   $00
-              efe3 002b  ld   $2b         ;0305 STW
-              efe4 0031  ld   $31         ;0305 'sign'
-              efe5 002b  ld   $2b         ;0307 STW
-              efe6 0033  ld   $33         ;0307 'C'
-              efe7 00ad  ld   $ad         ;0309 SUBW
-              efe8 0035  ld   $35         ;0309 'A'
-              efe9 0035  ld   $35         ;030b BCC
-              efea 0056  ld   $56         ;030c LE
-              efeb 0012  ld   $12
-              efec 002b  ld   $2b         ;030e STW
-              efed 0035  ld   $35         ;030e 'A'
-              efee 0059  ld   $59         ;0310 LDI
-              efef 0001  ld   $01
-              eff0 002b  ld   $2b         ;0312 STW
-              eff1 0031  ld   $31         ;0312 'sign'
-              eff2 0059  ld   $59         ;0314 LDI
-              eff3 0000  ld   $00
-              eff4 00ad  ld   $ad         ;0316 SUBW
-              eff5 0037  ld   $37         ;0316 'B'
-              eff6 0035  ld   $35         ;0318 BCC
-              eff7 0056  ld   $56         ;0319 LE
-              eff8 0021  ld   $21
-              eff9 002b  ld   $2b         ;031b STW
-              effa 0037  ld   $37         ;031b 'B'
+              eeff 1518  ld   [$18],y     ;+-----------------------------------+
+              ef00 00a1  ld   $a1         ;0bd4 'EmptyTimeText'
+              ef01 002b  ld   $2b         ;0bd6 STW
+              ef02 0081  ld   $81         ;0bd6 'Text'
+              ef03 00e3  ld   $e3         ;0bd8 CALL
+              ef04 0083  ld   $83         ;0bd8 'DrawText'
+              ef05 0011  ld   $11         ;0bda LDWI
+              ef06 0038  ld   $38
+              ef07 0008  ld   $08
+              ef08 002b  ld   $2b         ;0bdd STW
+              ef09 003c  ld   $3c         ;0bdd 'Pos'
+              ef0a 0021  ld   $21         ;0bdf LDW
+              ef0b 0052  ld   $52         ;0bdf 'GigatronText'
+              ef0c 002b  ld   $2b         ;0be1 STW
+              ef0d 0081  ld   $81         ;0be1 'Text'
+              ef0e 00e3  ld   $e3         ;0be3 CALL
+              ef0f 0083  ld   $83         ;0be3 'DrawText'
+              ef10 0059  ld   $59         ;0be5 LDI
+              ef11 003c  ld   $3c
+              ef12 002b  ld   $2b         ;0be7 STW
+              ef13 0054  ld   $54         ;0be7 'Delay'
+              ef14 00e3  ld   $e3         ;0be9 CALL
+              ef15 0056  ld   $56         ;0be9 'Wait'
+              ef16 0063  ld   $63         ;0beb POP
+              ef17 00ff  ld   $ff         ;0bec RET
+              ef18 002b  ld   $2b         ;0bed STW
+              ef19 00ad  ld   $ad         ;0bed 'Intro'
+              ef1a 00f9  ld   $f9         ;0bef INC
+              ef1b 001c  ld   $1c
+              ef1c 00ff  ld   $ff         ;0bf1 RET
+              ef1d 000c  ld   $0c         ;| RAM segment address (high byte first)
+              ef1e 00a0  ld   $a0         ;|
+              ef1f 0003  ld   $03         ;| Length (1..256)
+              ef20 00f9  ld   $f9         ;0ca0 INC
+              ef21 001c  ld   $1c
+              ef22 00ff  ld   $ff         ;0ca2 RET
+              ef23 000d  ld   $0d         ;| RAM segment address (high byte first)
+              ef24 00a0  ld   $a0         ;|
+              ef25 0003  ld   $03         ;| Length (1..256)
+              ef26 00f9  ld   $f9         ;0da0 INC
+              ef27 001c  ld   $1c
+              ef28 00ff  ld   $ff         ;0da2 RET
+              ef29 000e  ld   $0e         ;| RAM segment address (high byte first)
+              ef2a 00a0  ld   $a0         ;|
+              ef2b 0057  ld   $57         ;| Length (1..256)
+              ef2c 00e1  ld   $e1         ;0ea0 DEF
+              ef2d 00f0  ld   $f0
+              ef2e 007d  ld   $7d         ;0ea2 PUSH
+              ef2f 0011  ld   $11         ;0ea3 LDWI
+              ef30 0000  ld   $00
+              ef31 00d7  ld   $d7
+              ef32 002b  ld   $2b         ;0ea6 STW
+              ef33 0060  ld   $60         ;0ea6 'p'
+              ef34 0011  ld   $11         ;0ea8 LDWI
+              ef35 0000  ld   $00
+              ef36 0010  ld   $10
+              ef37 002b  ld   $2b         ;0eab STW
+              ef38 0062  ld   $62         ;0eab 'q'
+              ef39 00e1  ld   $e1         ;0ead DEF
+              ef3a 00bf  ld   $bf
+              ef3b 001a  ld   $1a         ;0eaf LD
+              ef3c 0060  ld   $60         ;0eaf 'p'
+              ef3d 0091  ld   $91         ;0eb1 XORI
+              ef3e 00fa  ld   $fa
+              ef3f 0035  ld   $35         ;0eb3 BCC
+              ef40 003f  ld   $3f         ;0eb4 EQ
+              ef41 00b8  ld   $b8
+              ef42 0059  ld   $59         ;0eb6 LDI
+              ef43 0001  ld   $01
+              ef44 0095  ld   $95         ;0eb8 BRA
+              ef45 00ba  ld   $ba
+              ef46 0059  ld   $59         ;0eba LDI
+              ef47 0006  ld   $06
+              ef48 00c1  ld   $c1         ;0ebc ADDW
+              ef49 0060  ld   $60         ;0ebc 'p'
+              ef4a 002b  ld   $2b         ;0ebe STW
+              ef4b 0060  ld   $60         ;0ebe 'p'
+              ef4c 00ff  ld   $ff         ;0ec0 RET
+              ef4d 002b  ld   $2b         ;0ec1 STW
+              ef4e 0036  ld   $36         ;0ec1 'tmp'
+              ef4f 0021  ld   $21         ;0ec3 LDW
+              ef50 0060  ld   $60         ;0ec3 'p'
+              ef51 0075  ld   $75         ;0ec5 LOOKUP
+              ef52 0000  ld   $00
+              ef53 005e  ld   $5e         ;0ec7 ST
+              ef54 0024  ld   $24
+              ef55 00e3  ld   $e3         ;0ec9 CALL
+              ef56 0036  ld   $36         ;0ec9 'tmp'
+              ef57 0075  ld   $75         ;0ecb LOOKUP
+              ef58 0000  ld   $00
+              ef59 005e  ld   $5e         ;0ecd ST
+              ef5a 0025  ld   $25
+              ef5b 00e3  ld   $e3         ;0ecf CALL
+              ef5c 0036  ld   $36         ;0ecf 'tmp'
+              ef5d 0075  ld   $75         ;0ed1 LOOKUP
+              ef5e 0000  ld   $00
+              ef5f 005e  ld   $5e         ;0ed3 ST
+              ef60 0026  ld   $26
+              ef61 00e3  ld   $e3         ;0ed5 CALL
+              ef62 0036  ld   $36         ;0ed5 'tmp'
+              ef63 0011  ld   $11         ;0ed7 LDWI
+              ef64 00b0  ld   $b0
+              ef65 0004  ld   $04
+              ef66 00a9  ld   $a9         ;0eda SYS
+              ef67 00f2  ld   $f2
+              ef68 0021  ld   $21         ;0edc LDW
+              ef69 0062  ld   $62         ;0edc 'q'
+              ef6a 002b  ld   $2b         ;0ede STW
+              ef6b 0020  ld   $20
+              ef6c 00f3  ld   $f3         ;0ee0 ADDI
+              ef6d 0004  ld   $04
+              ef6e 002b  ld   $2b         ;0ee2 STW
+              ef6f 0062  ld   $62         ;0ee2 'q'
+              ef70 0011  ld   $11         ;0ee4 LDWI
+              ef71 00d7  ld   $d7
+              ef72 0004  ld   $04
+              ef73 00a9  ld   $a9         ;0ee7 SYS
+              ef74 00ff  ld   $ff
+              ef75 001a  ld   $1a         ;0ee9 LD
+              ef76 0063  ld   $63         ;0ee9 'q'+1
+              ef77 0091  ld   $91         ;0eeb XORI
+              ef78 0020  ld   $20
+              ef79 0035  ld   $35         ;0eed BCC
+              ef7a 0072  ld   $72         ;0eee NE
+              ef7b 00c1  ld   $c1
+              ef7c 0063  ld   $63         ;0ef0 POP
+              ef7d 00ff  ld   $ff         ;0ef1 RET
+              ef7e 002b  ld   $2b         ;0ef2 STW
+              ef7f 00af  ld   $af         ;0ef2 'SetupHorizon'
+              ef80 00f9  ld   $f9         ;0ef4 INC
+              ef81 001c  ld   $1c
+              ef82 00ff  ld   $ff         ;0ef6 RET
+              ef83 000f  ld   $0f         ;| RAM segment address (high byte first)
+              ef84 00a0  ld   $a0         ;|
+              ef85 0056  ld   $56         ;| Length (1..256)
+              ef86 00e3  ld   $e3         ;0fa0 CALL
+              ef87 00ad  ld   $ad         ;0fa0 'Intro'
+              ef88 0011  ld   $11         ;0fa2 LDWI
+              ef89 0000  ld   $00
+              ef8a 0074  ld   $74
+              ef8b 002b  ld   $2b         ;0fa5 STW
+              ef8c 0089  ld   $89         ;0fa5 'Distance'
+              ef8d 002b  ld   $2b         ;0fa7 STW
+              ef8e 0087  ld   $87         ;0fa7 'NextTurn'
+              ef8f 0059  ld   $59         ;0fa9 LDI
+              ef90 0000  ld   $00
+              ef91 002b  ld   $2b         ;0fab STW
+              ef92 0099  ld   $99         ;0fab 'Random'
+              ef93 002b  ld   $2b         ;0fad STW
+              ef94 008b  ld   $8b         ;0fad 'DDX'
+              ef95 002b  ld   $2b         ;0faf STW
+              ef96 008d  ld   $8d         ;0faf 'NextDDX'
+              ef97 00e3  ld   $e3         ;0fb1 CALL
+              ef98 008f  ld   $8f         ;0fb1 'DrawRoad'
+              ef99 00e3  ld   $e3         ;0fb3 CALL
+              ef9a 009d  ld   $9d         ;0fb3 'DrawGrass'
+              ef9b 00e3  ld   $e3         ;0fb5 CALL
+              ef9c 00af  ld   $af         ;0fb5 'SetupHorizon'
+              ef9d 00e3  ld   $e3         ;0fb7 CALL
+              ef9e 0076  ld   $76         ;0fb7 'SetupRoad'
+              ef9f 0011  ld   $11         ;0fb9 LDWI
+              efa0 00ff  ld   $ff
+              efa1 007f  ld   $7f
+              efa2 002b  ld   $2b         ;0fbc STW
+              efa3 0095  ld   $95         ;0fbc 'BestTime'
+              efa4 0059  ld   $59         ;0fbe LDI
+              efa5 0000  ld   $00
+              efa6 002b  ld   $2b         ;0fc0 STW
+              efa7 0042  ld   $42         ;0fc0 'Time'
+              efa8 002b  ld   $2b         ;0fc2 STW
+              efa9 0058  ld   $58         ;0fc2 'Value'
+              efaa 002b  ld   $2b         ;0fc4 STW
+              efab 004a  ld   $4a         ;0fc4 'HorizonX'
+              efac 002b  ld   $2b         ;0fc6 STW
+              efad 0048  ld   $48         ;0fc6 'DriftX'
+              efae 002b  ld   $2b         ;0fc8 STW
+              efaf 0044  ld   $44         ;0fc8 'Speed'
+              efb0 0011  ld   $11         ;0fca LDWI
+              efb1 0000  ld   $00
+              efb2 0079  ld   $79
+              efb3 002b  ld   $2b         ;0fcd STW
+              efb4 0046  ld   $46         ;0fcd 'CarX'
+              efb5 001a  ld   $1a         ;0fcf LD
+              efb6 0010  ld   $10
+              efb7 002b  ld   $2b         ;0fd1 STW
+              efb8 0040  ld   $40         ;0fd1 'LastFrame'
+              efb9 00e3  ld   $e3         ;0fd3 CALL
+              efba 009f  ld   $9f         ;0fd3 'PlayGame'
+              efbb 0011  ld   $11         ;0fd5 LDWI
+              efbc 0035  ld   $35
+              efbd 0014  ld   $14
+              efbe 002b  ld   $2b         ;0fd8 STW
+              efbf 003c  ld   $3c         ;0fd8 'Pos'
+              efc0 00e1  ld   $e1         ;0fda DEF
+              efc1 00e4  ld   $e4
+              efc2 0047  ld   $47
+              efc3 0041  ld   $41
+              efc4 004d  ld   $4d
+              efc5 0045  ld   $45
+              efc6 0020  ld   $20
+              efc7 004f  ld   $4f
+              efc8 0056  ld   $56
+              efc9 0045  ld   $45
+              efca 0052  ld   $52
+              efcb 0000  ld   $00
+              efcc 002b  ld   $2b         ;0fe6 STW
+              efcd 0081  ld   $81         ;0fe6 'Text'
+              efce 0059  ld   $59         ;0fe8 LDI
+              efcf 000f  ld   $0f
+              efd0 002b  ld   $2b         ;0fea STW
+              efd1 003a  ld   $3a         ;0fea 'Color'
+              efd2 00e3  ld   $e3         ;0fec CALL
+              efd3 0083  ld   $83         ;0fec 'DrawText'
+              efd4 0059  ld   $59         ;0fee LDI
+              efd5 00f0  ld   $f0
+              efd6 002b  ld   $2b         ;0ff0 STW
+              efd7 0054  ld   $54         ;0ff0 'Delay'
+              efd8 00e3  ld   $e3         ;0ff2 CALL
+              efd9 0056  ld   $56         ;0ff2 'Wait'
+              efda 0095  ld   $95         ;0ff4 BRA
+              efdb 00a0  ld   $a0
+              efdc 0000  ld   $00         ;End of file
+Mandelbrot:   efdd 0003  ld   $03         ;| RAM segment address (high byte first)
+              efde 0000  ld   $00         ;|
+              efdf 00d5  ld   $d5         ;| Length (1..256)
+              efe0 00e1  ld   $e1         ;0300 DEF
+              efe1 007a  ld   $7a
+              efe2 007d  ld   $7d         ;0302 PUSH
+              efe3 0059  ld   $59         ;0303 LDI
+              efe4 0000  ld   $00
+              efe5 002b  ld   $2b         ;0305 STW
+              efe6 0030  ld   $30         ;0305 'sign'
+              efe7 002b  ld   $2b         ;0307 STW
+              efe8 0032  ld   $32         ;0307 'C'
+              efe9 00ad  ld   $ad         ;0309 SUBW
+              efea 0034  ld   $34         ;0309 'A'
+              efeb 0035  ld   $35         ;030b BCC
+              efec 0056  ld   $56         ;030c LE
+              efed 0012  ld   $12
+              efee 002b  ld   $2b         ;030e STW
+              efef 0034  ld   $34         ;030e 'A'
+              eff0 0059  ld   $59         ;0310 LDI
+              eff1 0001  ld   $01
+              eff2 002b  ld   $2b         ;0312 STW
+              eff3 0030  ld   $30         ;0312 'sign'
+              eff4 0059  ld   $59         ;0314 LDI
+              eff5 0000  ld   $00
+              eff6 00ad  ld   $ad         ;0316 SUBW
+              eff7 0036  ld   $36         ;0316 'B'
+              eff8 0035  ld   $35         ;0318 BCC
+              eff9 0056  ld   $56         ;0319 LE
+              effa 0021  ld   $21
               effb fe00  bra  ac          ;+-----------------------------------+
               effc fcfd  bra  $effd       ;|                                   |
               effd 1403  ld   $03,y       ;| Trampoline for page $ef00 lookups |
               effe e078  jmp  y,$78       ;|                                   |
-              efff 1519  ld   [$19],y     ;+-----------------------------------+
-              f000 0021  ld   $21         ;031d LDW
-              f001 0031  ld   $31         ;031d 'sign'
-              f002 0091  ld   $91         ;031f XORI
-              f003 0001  ld   $01
-              f004 002b  ld   $2b         ;0321 STW
-              f005 0031  ld   $31         ;0321 'sign'
-              f006 0059  ld   $59         ;0323 LDI
-              f007 0007  ld   $07
-              f008 002b  ld   $2b         ;0325 STW
-              f009 0039  ld   $39         ;0325 'shift'
-              f00a 0011  ld   $11         ;0327 LDWI
-              f00b 0000  ld   $00
-              f00c 0002  ld   $02
-              f00d 002b  ld   $2b         ;032a STW
-              f00e 003b  ld   $3b         ;032a 'bit'
-              f00f 0011  ld   $11         ;032c LDWI
-              f010 0000  ld   $00
-              f011 00c0  ld   $c0
-              f012 00c1  ld   $c1         ;032f ADDW
-              f013 0033  ld   $33         ;032f 'C'
-              f014 0035  ld   $35         ;0331 BCC
-              f015 0053  ld   $53         ;0332 GE
-              f016 003a  ld   $3a
-              f017 0021  ld   $21         ;0334 LDW
-              f018 0033  ld   $33         ;0334 'C'
-              f019 00c1  ld   $c1         ;0336 ADDW
-              f01a 0033  ld   $33         ;0336 'C'
-              f01b 002b  ld   $2b         ;0338 STW
-              f01c 0033  ld   $33         ;0338 'C'
-              f01d 0095  ld   $95         ;033a BRA
-              f01e 0046  ld   $46
-              f01f 0021  ld   $21         ;033c LDW
-              f020 0037  ld   $37         ;033c 'B'
-              f021 00e3  ld   $e3         ;033e CALL
-              f022 003d  ld   $3d         ;033e 'ShiftRight'
-              f023 002b  ld   $2b         ;0340 STW
-              f024 0037  ld   $37         ;0340 'B'
-              f025 0021  ld   $21         ;0342 LDW
-              f026 0039  ld   $39         ;0342 'shift'
-              f027 00f6  ld   $f6         ;0344 SUBI
-              f028 0001  ld   $01
-              f029 002b  ld   $2b         ;0346 STW
-              f02a 0039  ld   $39         ;0346 'shift'
-              f02b 0021  ld   $21         ;0348 LDW
-              f02c 0035  ld   $35         ;0348 'A'
-              f02d 00ad  ld   $ad         ;034a SUBW
-              f02e 003b  ld   $3b         ;034a 'bit'
-              f02f 0035  ld   $35         ;034c BCC
-              f030 0050  ld   $50         ;034d LT
-              f031 0055  ld   $55
-              f032 002b  ld   $2b         ;034f STW
-              f033 0035  ld   $35         ;034f 'A'
-              f034 0021  ld   $21         ;0351 LDW
-              f035 0033  ld   $33         ;0351 'C'
-              f036 00c1  ld   $c1         ;0353 ADDW
-              f037 0037  ld   $37         ;0353 'B'
-              f038 002b  ld   $2b         ;0355 STW
-              f039 0033  ld   $33         ;0355 'C'
-              f03a 0021  ld   $21         ;0357 LDW
-              f03b 003b  ld   $3b         ;0357 'bit'
-              f03c 00e3  ld   $e3         ;0359 CALL
-              f03d 003d  ld   $3d         ;0359 'ShiftRight'
-              f03e 0035  ld   $35         ;035b BCC
-              f03f 0072  ld   $72         ;035c NE
-              f040 0028  ld   $28
-              f041 0021  ld   $21         ;035e LDW
-              f042 0033  ld   $33         ;035e 'C'
-              f043 00e3  ld   $e3         ;0360 CALL
-              f044 003d  ld   $3d         ;0360 'ShiftRight'
-              f045 002b  ld   $2b         ;0362 STW
-              f046 0033  ld   $33         ;0362 'C'
-              f047 0021  ld   $21         ;0364 LDW
-              f048 0039  ld   $39         ;0364 'shift'
-              f049 00f6  ld   $f6         ;0366 SUBI
-              f04a 0001  ld   $01
-              f04b 002b  ld   $2b         ;0368 STW
-              f04c 0039  ld   $39         ;0368 'shift'
-              f04d 0035  ld   $35         ;036a BCC
-              f04e 004d  ld   $4d         ;036b GT
-              f04f 005c  ld   $5c
-              f050 0021  ld   $21         ;036d LDW
-              f051 0031  ld   $31         ;036d 'sign'
-              f052 0035  ld   $35         ;036f BCC
-              f053 003f  ld   $3f         ;0370 EQ
-              f054 0076  ld   $76
-              f055 0059  ld   $59         ;0372 LDI
-              f056 0000  ld   $00
-              f057 00ad  ld   $ad         ;0374 SUBW
-              f058 0033  ld   $33         ;0374 'C'
-              f059 0095  ld   $95         ;0376 BRA
-              f05a 0078  ld   $78
-              f05b 0021  ld   $21         ;0378 LDW
-              f05c 0033  ld   $33         ;0378 'C'
-              f05d 0063  ld   $63         ;037a POP
-              f05e 00ff  ld   $ff         ;037b RET
-              f05f 002b  ld   $2b         ;037c STW
-              f060 003f  ld   $3f         ;037c 'MulShift7'
-              f061 00e1  ld   $e1         ;037e DEF
-              f062 00ce  ld   $ce
-              f063 007d  ld   $7d         ;0380 PUSH
-              f064 0059  ld   $59         ;0381 LDI
-              f065 0000  ld   $00
-              f066 002b  ld   $2b         ;0383 STW
-              f067 0041  ld   $41         ;0383 'X'
-              f068 002b  ld   $2b         ;0385 STW
-              f069 0043  ld   $43         ;0385 'XX'
-              f06a 002b  ld   $2b         ;0387 STW
-              f06b 0045  ld   $45         ;0387 'Y'
-              f06c 002b  ld   $2b         ;0389 STW
-              f06d 0047  ld   $47         ;0389 'YY'
-              f06e 002b  ld   $2b         ;038b STW
-              f06f 0049  ld   $49         ;038b 'i'
-              f070 0021  ld   $21         ;038d LDW
-              f071 0049  ld   $49         ;038d 'i'
-              f072 00f3  ld   $f3         ;038f ADDI
-              f073 0001  ld   $01
-              f074 002b  ld   $2b         ;0391 STW
-              f075 0049  ld   $49         ;0391 'i'
-              f076 0091  ld   $91         ;0393 XORI
-              f077 0040  ld   $40
-              f078 0035  ld   $35         ;0395 BCC
-              f079 003f  ld   $3f         ;0396 EQ
-              f07a 00cc  ld   $cc
-              f07b 0021  ld   $21         ;0398 LDW
-              f07c 0041  ld   $41         ;0398 'X'
-              f07d 002b  ld   $2b         ;039a STW
-              f07e 0035  ld   $35         ;039a 'A'
-              f07f 0021  ld   $21         ;039c LDW
-              f080 0045  ld   $45         ;039c 'Y'
-              f081 00c1  ld   $c1         ;039e ADDW
-              f082 0045  ld   $45         ;039e 'Y'
-              f083 002b  ld   $2b         ;03a0 STW
-              f084 0037  ld   $37         ;03a0 'B'
-              f085 00e3  ld   $e3         ;03a2 CALL
-              f086 003f  ld   $3f         ;03a2 'MulShift7'
-              f087 00c1  ld   $c1         ;03a4 ADDW
-              f088 004b  ld   $4b         ;03a4 'Y0'
-              f089 002b  ld   $2b         ;03a6 STW
-              f08a 0045  ld   $45         ;03a6 'Y'
-              f08b 0021  ld   $21         ;03a8 LDW
-              f08c 0043  ld   $43         ;03a8 'XX'
-              f08d 00ad  ld   $ad         ;03aa SUBW
-              f08e 0047  ld   $47         ;03aa 'YY'
-              f08f 00c1  ld   $c1         ;03ac ADDW
-              f090 004d  ld   $4d         ;03ac 'X0'
-              f091 002b  ld   $2b         ;03ae STW
-              f092 0041  ld   $41         ;03ae 'X'
-              f093 002b  ld   $2b         ;03b0 STW
-              f094 0035  ld   $35         ;03b0 'A'
-              f095 002b  ld   $2b         ;03b2 STW
-              f096 0037  ld   $37         ;03b2 'B'
-              f097 00e3  ld   $e3         ;03b4 CALL
-              f098 003f  ld   $3f         ;03b4 'MulShift7'
-              f099 002b  ld   $2b         ;03b6 STW
-              f09a 0043  ld   $43         ;03b6 'XX'
-              f09b 0021  ld   $21         ;03b8 LDW
-              f09c 0045  ld   $45         ;03b8 'Y'
-              f09d 002b  ld   $2b         ;03ba STW
-              f09e 0035  ld   $35         ;03ba 'A'
-              f09f 002b  ld   $2b         ;03bc STW
-              f0a0 0037  ld   $37         ;03bc 'B'
-              f0a1 00e3  ld   $e3         ;03be CALL
-              f0a2 003f  ld   $3f         ;03be 'MulShift7'
-              f0a3 002b  ld   $2b         ;03c0 STW
-              f0a4 0047  ld   $47         ;03c0 'YY'
-              f0a5 0011  ld   $11         ;03c2 LDWI
-              f0a6 0000  ld   $00
-              f0a7 00fe  ld   $fe
-              f0a8 00c1  ld   $c1         ;03c5 ADDW
-              f0a9 0043  ld   $43         ;03c5 'XX'
-              f0aa 00c1  ld   $c1         ;03c7 ADDW
-              f0ab 0047  ld   $47         ;03c7 'YY'
-              f0ac 0035  ld   $35         ;03c9 BCC
-              f0ad 0056  ld   $56         ;03ca LE
-              f0ae 008b  ld   $8b
-              f0af 0021  ld   $21         ;03cc LDW
-              f0b0 0049  ld   $49         ;03cc 'i'
-              f0b1 0063  ld   $63         ;03ce POP
-              f0b2 00ff  ld   $ff         ;03cf RET
-              f0b3 002b  ld   $2b         ;03d0 STW
-              f0b4 004f  ld   $4f         ;03d0 'CalcPixel'
-              f0b5 00f9  ld   $f9         ;03d2 INC
-              f0b6 001d  ld   $1d
-              f0b7 00ff  ld   $ff         ;03d4 RET
-              f0b8 0004  ld   $04         ;| RAM segment address (high byte first)
-              f0b9 0000  ld   $00         ;|
-              f0ba 00ed  ld   $ed         ;| Length (1..256)
-              f0bb 00e1  ld   $e1         ;0400 DEF
-              f0bc 00e6  ld   $e6
-              f0bd 007d  ld   $7d         ;0402 PUSH
-              f0be 0011  ld   $11         ;0403 LDWI
-              f0bf 0000  ld   $00
-              f0c0 0008  ld   $08
-              f0c1 002b  ld   $2b         ;0406 STW
-              f0c2 0051  ld   $51         ;0406 'p'
-              f0c3 0059  ld   $59         ;0408 LDI
-              f0c4 0078  ld   $78
-              f0c5 002b  ld   $2b         ;040a STW
-              f0c6 0053  ld   $53         ;040a 'Height'
-              f0c7 0059  ld   $59         ;040c LDI
-              f0c8 00a0  ld   $a0
-              f0c9 002b  ld   $2b         ;040e STW
-              f0ca 0055  ld   $55         ;040e 'Width'
-              f0cb 002b  ld   $2b         ;0410 STW
-              f0cc 0057  ld   $57         ;0410 'len'
-              f0cd 002b  ld   $2b         ;0412 STW
-              f0ce 0059  ld   $59         ;0412 'LastPixel'
-              f0cf 0059  ld   $59         ;0414 LDI
-              f0d0 0000  ld   $00
-              f0d1 002b  ld   $2b         ;0416 STW
-              f0d2 005b  ld   $5b         ;0416 'DY'
-              f0d3 0021  ld   $21         ;0418 LDW
-              f0d4 005d  ld   $5d         ;0418 'Step'
-              f0d5 002b  ld   $2b         ;041a STW
-              f0d6 005f  ld   $5f         ;041a 'DX'
-              f0d7 0059  ld   $59         ;041c LDI
-              f0d8 003f  ld   $3f
-              f0d9 0098  ld   $98         ;041e POKE
-              f0da 0051  ld   $51         ;041e 'p'
-              f0db 0021  ld   $21         ;0420 LDW
-              f0dc 0059  ld   $59         ;0420 'LastPixel'
-              f0dd 0035  ld   $35         ;0422 BCC
-              f0de 0072  ld   $72         ;0423 NE
-              f0df 006f  ld   $6f
-              f0e0 0021  ld   $21         ;0425 LDW
-              f0e1 004b  ld   $4b         ;0425 'Y0'
-              f0e2 002b  ld   $2b         ;0427 STW
-              f0e3 0035  ld   $35         ;0427 'A'
-              f0e4 002b  ld   $2b         ;0429 STW
-              f0e5 0037  ld   $37         ;0429 'B'
-              f0e6 00e3  ld   $e3         ;042b CALL
-              f0e7 003f  ld   $3f         ;042b 'MulShift7'
-              f0e8 002b  ld   $2b         ;042d STW
-              f0e9 0047  ld   $47         ;042d 'YY'
-              f0ea 0021  ld   $21         ;042f LDW
-              f0eb 004d  ld   $4d         ;042f 'X0'
-              f0ec 00f3  ld   $f3         ;0431 ADDI
-              f0ed 0080  ld   $80
-              f0ee 002b  ld   $2b         ;0433 STW
-              f0ef 0035  ld   $35         ;0433 'A'
-              f0f0 002b  ld   $2b         ;0435 STW
-              f0f1 0037  ld   $37         ;0435 'B'
-              f0f2 00e3  ld   $e3         ;0437 CALL
-              f0f3 003f  ld   $3f         ;0437 'MulShift7'
-              f0f4 00c1  ld   $c1         ;0439 ADDW
-              f0f5 0047  ld   $47         ;0439 'YY'
-              f0f6 00f6  ld   $f6         ;043b SUBI
-              f0f7 0008  ld   $08
-              f0f8 0035  ld   $35         ;043d BCC
-              f0f9 0053  ld   $53         ;043e GE
-              f0fa 0042  ld   $42
+              efff 1518  ld   [$18],y     ;+-----------------------------------+
+              f000 002b  ld   $2b         ;031b STW
+              f001 0036  ld   $36         ;031b 'B'
+              f002 0021  ld   $21         ;031d LDW
+              f003 0030  ld   $30         ;031d 'sign'
+              f004 0091  ld   $91         ;031f XORI
+              f005 0001  ld   $01
+              f006 002b  ld   $2b         ;0321 STW
+              f007 0030  ld   $30         ;0321 'sign'
+              f008 0059  ld   $59         ;0323 LDI
+              f009 0007  ld   $07
+              f00a 002b  ld   $2b         ;0325 STW
+              f00b 0038  ld   $38         ;0325 'shift'
+              f00c 0011  ld   $11         ;0327 LDWI
+              f00d 0000  ld   $00
+              f00e 0002  ld   $02
+              f00f 002b  ld   $2b         ;032a STW
+              f010 003a  ld   $3a         ;032a 'bit'
+              f011 0011  ld   $11         ;032c LDWI
+              f012 0000  ld   $00
+              f013 00c0  ld   $c0
+              f014 00c1  ld   $c1         ;032f ADDW
+              f015 0032  ld   $32         ;032f 'C'
+              f016 0035  ld   $35         ;0331 BCC
+              f017 0053  ld   $53         ;0332 GE
+              f018 003a  ld   $3a
+              f019 0021  ld   $21         ;0334 LDW
+              f01a 0032  ld   $32         ;0334 'C'
+              f01b 00c1  ld   $c1         ;0336 ADDW
+              f01c 0032  ld   $32         ;0336 'C'
+              f01d 002b  ld   $2b         ;0338 STW
+              f01e 0032  ld   $32         ;0338 'C'
+              f01f 0095  ld   $95         ;033a BRA
+              f020 0046  ld   $46
+              f021 0021  ld   $21         ;033c LDW
+              f022 0036  ld   $36         ;033c 'B'
+              f023 00e3  ld   $e3         ;033e CALL
+              f024 003c  ld   $3c         ;033e 'ShiftRight'
+              f025 002b  ld   $2b         ;0340 STW
+              f026 0036  ld   $36         ;0340 'B'
+              f027 0021  ld   $21         ;0342 LDW
+              f028 0038  ld   $38         ;0342 'shift'
+              f029 00f6  ld   $f6         ;0344 SUBI
+              f02a 0001  ld   $01
+              f02b 002b  ld   $2b         ;0346 STW
+              f02c 0038  ld   $38         ;0346 'shift'
+              f02d 0021  ld   $21         ;0348 LDW
+              f02e 0034  ld   $34         ;0348 'A'
+              f02f 00ad  ld   $ad         ;034a SUBW
+              f030 003a  ld   $3a         ;034a 'bit'
+              f031 0035  ld   $35         ;034c BCC
+              f032 0050  ld   $50         ;034d LT
+              f033 0055  ld   $55
+              f034 002b  ld   $2b         ;034f STW
+              f035 0034  ld   $34         ;034f 'A'
+              f036 0021  ld   $21         ;0351 LDW
+              f037 0032  ld   $32         ;0351 'C'
+              f038 00c1  ld   $c1         ;0353 ADDW
+              f039 0036  ld   $36         ;0353 'B'
+              f03a 002b  ld   $2b         ;0355 STW
+              f03b 0032  ld   $32         ;0355 'C'
+              f03c 0021  ld   $21         ;0357 LDW
+              f03d 003a  ld   $3a         ;0357 'bit'
+              f03e 00e3  ld   $e3         ;0359 CALL
+              f03f 003c  ld   $3c         ;0359 'ShiftRight'
+              f040 0035  ld   $35         ;035b BCC
+              f041 0072  ld   $72         ;035c NE
+              f042 0028  ld   $28
+              f043 0021  ld   $21         ;035e LDW
+              f044 0032  ld   $32         ;035e 'C'
+              f045 00e3  ld   $e3         ;0360 CALL
+              f046 003c  ld   $3c         ;0360 'ShiftRight'
+              f047 002b  ld   $2b         ;0362 STW
+              f048 0032  ld   $32         ;0362 'C'
+              f049 0021  ld   $21         ;0364 LDW
+              f04a 0038  ld   $38         ;0364 'shift'
+              f04b 00f6  ld   $f6         ;0366 SUBI
+              f04c 0001  ld   $01
+              f04d 002b  ld   $2b         ;0368 STW
+              f04e 0038  ld   $38         ;0368 'shift'
+              f04f 0035  ld   $35         ;036a BCC
+              f050 004d  ld   $4d         ;036b GT
+              f051 005c  ld   $5c
+              f052 0021  ld   $21         ;036d LDW
+              f053 0030  ld   $30         ;036d 'sign'
+              f054 0035  ld   $35         ;036f BCC
+              f055 003f  ld   $3f         ;0370 EQ
+              f056 0076  ld   $76
+              f057 0059  ld   $59         ;0372 LDI
+              f058 0000  ld   $00
+              f059 00ad  ld   $ad         ;0374 SUBW
+              f05a 0032  ld   $32         ;0374 'C'
+              f05b 0095  ld   $95         ;0376 BRA
+              f05c 0078  ld   $78
+              f05d 0021  ld   $21         ;0378 LDW
+              f05e 0032  ld   $32         ;0378 'C'
+              f05f 0063  ld   $63         ;037a POP
+              f060 00ff  ld   $ff         ;037b RET
+              f061 002b  ld   $2b         ;037c STW
+              f062 003e  ld   $3e         ;037c 'MulShift7'
+              f063 00e1  ld   $e1         ;037e DEF
+              f064 00ce  ld   $ce
+              f065 007d  ld   $7d         ;0380 PUSH
+              f066 0059  ld   $59         ;0381 LDI
+              f067 0000  ld   $00
+              f068 002b  ld   $2b         ;0383 STW
+              f069 0040  ld   $40         ;0383 'X'
+              f06a 002b  ld   $2b         ;0385 STW
+              f06b 0042  ld   $42         ;0385 'XX'
+              f06c 002b  ld   $2b         ;0387 STW
+              f06d 0044  ld   $44         ;0387 'Y'
+              f06e 002b  ld   $2b         ;0389 STW
+              f06f 0046  ld   $46         ;0389 'YY'
+              f070 002b  ld   $2b         ;038b STW
+              f071 0048  ld   $48         ;038b 'i'
+              f072 0021  ld   $21         ;038d LDW
+              f073 0048  ld   $48         ;038d 'i'
+              f074 00f3  ld   $f3         ;038f ADDI
+              f075 0001  ld   $01
+              f076 002b  ld   $2b         ;0391 STW
+              f077 0048  ld   $48         ;0391 'i'
+              f078 0091  ld   $91         ;0393 XORI
+              f079 0040  ld   $40
+              f07a 0035  ld   $35         ;0395 BCC
+              f07b 003f  ld   $3f         ;0396 EQ
+              f07c 00cc  ld   $cc
+              f07d 0021  ld   $21         ;0398 LDW
+              f07e 0040  ld   $40         ;0398 'X'
+              f07f 002b  ld   $2b         ;039a STW
+              f080 0034  ld   $34         ;039a 'A'
+              f081 0021  ld   $21         ;039c LDW
+              f082 0044  ld   $44         ;039c 'Y'
+              f083 00c1  ld   $c1         ;039e ADDW
+              f084 0044  ld   $44         ;039e 'Y'
+              f085 002b  ld   $2b         ;03a0 STW
+              f086 0036  ld   $36         ;03a0 'B'
+              f087 00e3  ld   $e3         ;03a2 CALL
+              f088 003e  ld   $3e         ;03a2 'MulShift7'
+              f089 00c1  ld   $c1         ;03a4 ADDW
+              f08a 004a  ld   $4a         ;03a4 'Y0'
+              f08b 002b  ld   $2b         ;03a6 STW
+              f08c 0044  ld   $44         ;03a6 'Y'
+              f08d 0021  ld   $21         ;03a8 LDW
+              f08e 0042  ld   $42         ;03a8 'XX'
+              f08f 00ad  ld   $ad         ;03aa SUBW
+              f090 0046  ld   $46         ;03aa 'YY'
+              f091 00c1  ld   $c1         ;03ac ADDW
+              f092 004c  ld   $4c         ;03ac 'X0'
+              f093 002b  ld   $2b         ;03ae STW
+              f094 0040  ld   $40         ;03ae 'X'
+              f095 002b  ld   $2b         ;03b0 STW
+              f096 0034  ld   $34         ;03b0 'A'
+              f097 002b  ld   $2b         ;03b2 STW
+              f098 0036  ld   $36         ;03b2 'B'
+              f099 00e3  ld   $e3         ;03b4 CALL
+              f09a 003e  ld   $3e         ;03b4 'MulShift7'
+              f09b 002b  ld   $2b         ;03b6 STW
+              f09c 0042  ld   $42         ;03b6 'XX'
+              f09d 0021  ld   $21         ;03b8 LDW
+              f09e 0044  ld   $44         ;03b8 'Y'
+              f09f 002b  ld   $2b         ;03ba STW
+              f0a0 0034  ld   $34         ;03ba 'A'
+              f0a1 002b  ld   $2b         ;03bc STW
+              f0a2 0036  ld   $36         ;03bc 'B'
+              f0a3 00e3  ld   $e3         ;03be CALL
+              f0a4 003e  ld   $3e         ;03be 'MulShift7'
+              f0a5 002b  ld   $2b         ;03c0 STW
+              f0a6 0046  ld   $46         ;03c0 'YY'
+              f0a7 0011  ld   $11         ;03c2 LDWI
+              f0a8 0000  ld   $00
+              f0a9 00fe  ld   $fe
+              f0aa 00c1  ld   $c1         ;03c5 ADDW
+              f0ab 0042  ld   $42         ;03c5 'XX'
+              f0ac 00c1  ld   $c1         ;03c7 ADDW
+              f0ad 0046  ld   $46         ;03c7 'YY'
+              f0ae 0035  ld   $35         ;03c9 BCC
+              f0af 0056  ld   $56         ;03ca LE
+              f0b0 008b  ld   $8b
+              f0b1 0021  ld   $21         ;03cc LDW
+              f0b2 0048  ld   $48         ;03cc 'i'
+              f0b3 0063  ld   $63         ;03ce POP
+              f0b4 00ff  ld   $ff         ;03cf RET
+              f0b5 002b  ld   $2b         ;03d0 STW
+              f0b6 004e  ld   $4e         ;03d0 'CalcPixel'
+              f0b7 00f9  ld   $f9         ;03d2 INC
+              f0b8 001c  ld   $1c
+              f0b9 00ff  ld   $ff         ;03d4 RET
+              f0ba 0004  ld   $04         ;| RAM segment address (high byte first)
+              f0bb 0000  ld   $00         ;|
+              f0bc 00ed  ld   $ed         ;| Length (1..256)
+              f0bd 00e1  ld   $e1         ;0400 DEF
+              f0be 00e6  ld   $e6
+              f0bf 007d  ld   $7d         ;0402 PUSH
+              f0c0 0011  ld   $11         ;0403 LDWI
+              f0c1 0000  ld   $00
+              f0c2 0008  ld   $08
+              f0c3 002b  ld   $2b         ;0406 STW
+              f0c4 0050  ld   $50         ;0406 'p'
+              f0c5 0059  ld   $59         ;0408 LDI
+              f0c6 0078  ld   $78
+              f0c7 002b  ld   $2b         ;040a STW
+              f0c8 0052  ld   $52         ;040a 'Height'
+              f0c9 0059  ld   $59         ;040c LDI
+              f0ca 00a0  ld   $a0
+              f0cb 002b  ld   $2b         ;040e STW
+              f0cc 0054  ld   $54         ;040e 'Width'
+              f0cd 002b  ld   $2b         ;0410 STW
+              f0ce 0056  ld   $56         ;0410 'len'
+              f0cf 002b  ld   $2b         ;0412 STW
+              f0d0 0058  ld   $58         ;0412 'LastPixel'
+              f0d1 0059  ld   $59         ;0414 LDI
+              f0d2 0000  ld   $00
+              f0d3 002b  ld   $2b         ;0416 STW
+              f0d4 005a  ld   $5a         ;0416 'DY'
+              f0d5 0021  ld   $21         ;0418 LDW
+              f0d6 005c  ld   $5c         ;0418 'Step'
+              f0d7 002b  ld   $2b         ;041a STW
+              f0d8 005e  ld   $5e         ;041a 'DX'
+              f0d9 0059  ld   $59         ;041c LDI
+              f0da 003f  ld   $3f
+              f0db 0098  ld   $98         ;041e POKE
+              f0dc 0050  ld   $50         ;041e 'p'
+              f0dd 0021  ld   $21         ;0420 LDW
+              f0de 0058  ld   $58         ;0420 'LastPixel'
+              f0df 0035  ld   $35         ;0422 BCC
+              f0e0 0072  ld   $72         ;0423 NE
+              f0e1 006f  ld   $6f
+              f0e2 0021  ld   $21         ;0425 LDW
+              f0e3 004a  ld   $4a         ;0425 'Y0'
+              f0e4 002b  ld   $2b         ;0427 STW
+              f0e5 0034  ld   $34         ;0427 'A'
+              f0e6 002b  ld   $2b         ;0429 STW
+              f0e7 0036  ld   $36         ;0429 'B'
+              f0e8 00e3  ld   $e3         ;042b CALL
+              f0e9 003e  ld   $3e         ;042b 'MulShift7'
+              f0ea 002b  ld   $2b         ;042d STW
+              f0eb 0046  ld   $46         ;042d 'YY'
+              f0ec 0021  ld   $21         ;042f LDW
+              f0ed 004c  ld   $4c         ;042f 'X0'
+              f0ee 00f3  ld   $f3         ;0431 ADDI
+              f0ef 0080  ld   $80
+              f0f0 002b  ld   $2b         ;0433 STW
+              f0f1 0034  ld   $34         ;0433 'A'
+              f0f2 002b  ld   $2b         ;0435 STW
+              f0f3 0036  ld   $36         ;0435 'B'
+              f0f4 00e3  ld   $e3         ;0437 CALL
+              f0f5 003e  ld   $3e         ;0437 'MulShift7'
+              f0f6 00c1  ld   $c1         ;0439 ADDW
+              f0f7 0046  ld   $46         ;0439 'YY'
+              f0f8 00f6  ld   $f6         ;043b SUBI
+              f0f9 0008  ld   $08
+              f0fa 0035  ld   $35         ;043d BCC
               f0fb fe00  bra  ac          ;+-----------------------------------+
               f0fc fcfd  bra  $f0fd       ;|                                   |
               f0fd 1403  ld   $03,y       ;| Trampoline for page $f000 lookups |
               f0fe e078  jmp  y,$78       ;|                                   |
-              f0ff 1519  ld   [$19],y     ;+-----------------------------------+
-              f100 0059  ld   $59         ;0440 LDI
-              f101 0000  ld   $00
-              f102 0095  ld   $95         ;0442 BRA
-              f103 006d  ld   $6d
-              f104 0021  ld   $21         ;0444 LDW
-              f105 004d  ld   $4d         ;0444 'X0'
-              f106 00f6  ld   $f6         ;0446 SUBI
-              f107 0020  ld   $20
-              f108 002b  ld   $2b         ;0448 STW
-              f109 0035  ld   $35         ;0448 'A'
-              f10a 002b  ld   $2b         ;044a STW
-              f10b 0037  ld   $37         ;044a 'B'
-              f10c 00e3  ld   $e3         ;044c CALL
-              f10d 003f  ld   $3f         ;044c 'MulShift7'
-              f10e 00c1  ld   $c1         ;044e ADDW
-              f10f 0047  ld   $47         ;044e 'YY'
-              f110 002b  ld   $2b         ;0450 STW
-              f111 0035  ld   $35         ;0450 'A'
-              f112 00c1  ld   $c1         ;0452 ADDW
-              f113 004d  ld   $4d         ;0452 'X0'
-              f114 00f6  ld   $f6         ;0454 SUBI
-              f115 0020  ld   $20
-              f116 002b  ld   $2b         ;0456 STW
-              f117 0037  ld   $37         ;0456 'B'
-              f118 00e3  ld   $e3         ;0458 CALL
-              f119 003f  ld   $3f         ;0458 'MulShift7'
-              f11a 002b  ld   $2b         ;045a STW
-              f11b 0061  ld   $61         ;045a 'tmp'
-              f11c 00c1  ld   $c1         ;045c ADDW
-              f11d 0061  ld   $61         ;045c 'tmp'
-              f11e 002b  ld   $2b         ;045e STW
-              f11f 0061  ld   $61         ;045e 'tmp'
-              f120 00c1  ld   $c1         ;0460 ADDW
-              f121 0061  ld   $61         ;0460 'tmp'
-              f122 002b  ld   $2b         ;0462 STW
-              f123 0061  ld   $61         ;0462 'tmp'
-              f124 00ad  ld   $ad         ;0464 SUBW
-              f125 0047  ld   $47         ;0464 'YY'
-              f126 0035  ld   $35         ;0466 BCC
-              f127 0053  ld   $53         ;0467 GE
-              f128 006b  ld   $6b
-              f129 0059  ld   $59         ;0469 LDI
-              f12a 0000  ld   $00
-              f12b 0095  ld   $95         ;046b BRA
-              f12c 006d  ld   $6d
-              f12d 00e3  ld   $e3         ;046d CALL
-              f12e 004f  ld   $4f         ;046d 'CalcPixel'
-              f12f 0095  ld   $95         ;046f BRA
-              f130 0071  ld   $71
-              f131 00e3  ld   $e3         ;0471 CALL
-              f132 004f  ld   $4f         ;0471 'CalcPixel'
-              f133 002b  ld   $2b         ;0473 STW
-              f134 0059  ld   $59         ;0473 'LastPixel'
-              f135 0098  ld   $98         ;0475 POKE
-              f136 0051  ld   $51         ;0475 'p'
-              f137 0021  ld   $21         ;0477 LDW
-              f138 0057  ld   $57         ;0477 'len'
-              f139 00f6  ld   $f6         ;0479 SUBI
-              f13a 0001  ld   $01
-              f13b 0035  ld   $35         ;047b BCC
-              f13c 004d  ld   $4d         ;047c GT
-              f13d 009d  ld   $9d
-              f13e 0021  ld   $21         ;047e LDW
-              f13f 005b  ld   $5b         ;047e 'DY'
-              f140 002b  ld   $2b         ;0480 STW
-              f141 0061  ld   $61         ;0480 'tmp'
-              f142 0021  ld   $21         ;0482 LDW
-              f143 005f  ld   $5f         ;0482 'DX'
-              f144 002b  ld   $2b         ;0484 STW
-              f145 005b  ld   $5b         ;0484 'DY'
-              f146 0059  ld   $59         ;0486 LDI
-              f147 0000  ld   $00
-              f148 00ad  ld   $ad         ;0488 SUBW
-              f149 0061  ld   $61         ;0488 'tmp'
-              f14a 002b  ld   $2b         ;048a STW
-              f14b 005f  ld   $5f         ;048a 'DX'
-              f14c 0021  ld   $21         ;048c LDW
-              f14d 005f  ld   $5f         ;048c 'DX'
-              f14e 0035  ld   $35         ;048e BCC
-              f14f 003f  ld   $3f         ;048f EQ
-              f150 0097  ld   $97
-              f151 0021  ld   $21         ;0491 LDW
-              f152 0055  ld   $55         ;0491 'Width'
-              f153 00f6  ld   $f6         ;0493 SUBI
-              f154 0001  ld   $01
-              f155 002b  ld   $2b         ;0495 STW
-              f156 0055  ld   $55         ;0495 'Width'
-              f157 0095  ld   $95         ;0497 BRA
-              f158 009d  ld   $9d
-              f159 0021  ld   $21         ;0499 LDW
-              f15a 0053  ld   $53         ;0499 'Height'
-              f15b 00f6  ld   $f6         ;049b SUBI
-              f15c 0001  ld   $01
-              f15d 002b  ld   $2b         ;049d STW
-              f15e 0053  ld   $53         ;049d 'Height'
-              f15f 002b  ld   $2b         ;049f STW
-              f160 0057  ld   $57         ;049f 'len'
-              f161 0035  ld   $35         ;04a1 BCC
-              f162 0056  ld   $56         ;04a2 LE
-              f163 00de  ld   $de
-              f164 0021  ld   $21         ;04a4 LDW
-              f165 004d  ld   $4d         ;04a4 'X0'
-              f166 00c1  ld   $c1         ;04a6 ADDW
-              f167 005f  ld   $5f         ;04a6 'DX'
-              f168 002b  ld   $2b         ;04a8 STW
-              f169 004d  ld   $4d         ;04a8 'X0'
-              f16a 0021  ld   $21         ;04aa LDW
-              f16b 004b  ld   $4b         ;04aa 'Y0'
-              f16c 00c1  ld   $c1         ;04ac ADDW
-              f16d 005b  ld   $5b         ;04ac 'DY'
-              f16e 002b  ld   $2b         ;04ae STW
-              f16f 004b  ld   $4b         ;04ae 'Y0'
-              f170 0021  ld   $21         ;04b0 LDW
-              f171 005f  ld   $5f         ;04b0 'DX'
-              f172 0035  ld   $35         ;04b2 BCC
-              f173 0053  ld   $53         ;04b3 GE
-              f174 00b9  ld   $b9
-              f175 0021  ld   $21         ;04b5 LDW
-              f176 0051  ld   $51         ;04b5 'p'
-              f177 00f6  ld   $f6         ;04b7 SUBI
-              f178 0001  ld   $01
-              f179 002b  ld   $2b         ;04b9 STW
-              f17a 0051  ld   $51         ;04b9 'p'
-              f17b 0021  ld   $21         ;04bb LDW
-              f17c 005f  ld   $5f         ;04bb 'DX'
-              f17d 0035  ld   $35         ;04bd BCC
-              f17e 0056  ld   $56         ;04be LE
-              f17f 00c4  ld   $c4
-              f180 0021  ld   $21         ;04c0 LDW
-              f181 0051  ld   $51         ;04c0 'p'
-              f182 00f3  ld   $f3         ;04c2 ADDI
-              f183 0001  ld   $01
-              f184 002b  ld   $2b         ;04c4 STW
-              f185 0051  ld   $51         ;04c4 'p'
-              f186 0021  ld   $21         ;04c6 LDW
-              f187 005b  ld   $5b         ;04c6 'DY'
-              f188 0035  ld   $35         ;04c8 BCC
-              f189 0053  ld   $53         ;04c9 GE
-              f18a 00d0  ld   $d0
-              f18b 0011  ld   $11         ;04cb LDWI
-              f18c 0000  ld   $00
-              f18d 00ff  ld   $ff
-              f18e 00c1  ld   $c1         ;04ce ADDW
-              f18f 0051  ld   $51         ;04ce 'p'
-              f190 002b  ld   $2b         ;04d0 STW
-              f191 0051  ld   $51         ;04d0 'p'
-              f192 0021  ld   $21         ;04d2 LDW
-              f193 005b  ld   $5b         ;04d2 'DY'
-              f194 0035  ld   $35         ;04d4 BCC
-              f195 0056  ld   $56         ;04d5 LE
-              f196 00dc  ld   $dc
-              f197 0011  ld   $11         ;04d7 LDWI
-              f198 0000  ld   $00
-              f199 0001  ld   $01
-              f19a 00c1  ld   $c1         ;04da ADDW
-              f19b 0051  ld   $51         ;04da 'p'
-              f19c 002b  ld   $2b         ;04dc STW
-              f19d 0051  ld   $51         ;04dc 'p'
-              f19e 0095  ld   $95         ;04de BRA
-              f19f 001a  ld   $1a
-              f1a0 0059  ld   $59         ;04e0 LDI
-              f1a1 003c  ld   $3c
-              f1a2 005e  ld   $5e         ;04e2 ST
-              f1a3 002d  ld   $2d
-              f1a4 00e3  ld   $e3         ;04e4 CALL
-              f1a5 0063  ld   $63         ;04e4 'GreyOut'
-              f1a6 0063  ld   $63         ;04e6 POP
-              f1a7 00ff  ld   $ff         ;04e7 RET
-              f1a8 002b  ld   $2b         ;04e8 STW
-              f1a9 0065  ld   $65         ;04e8 'CalcSet'
-              f1aa 00f9  ld   $f9         ;04ea INC
-              f1ab 001d  ld   $1d
-              f1ac 00ff  ld   $ff         ;04ec RET
-              f1ad 0005  ld   $05         ;| RAM segment address (high byte first)
-              f1ae 0000  ld   $00         ;|
-              f1af 00f0  ld   $f0         ;| Length (1..256)
-              f1b0 00e1  ld   $e1         ;0500 DEF
-              f1b1 00dd  ld   $dd
-              f1b2 007d  ld   $7d         ;0502 PUSH
-              f1b3 0011  ld   $11         ;0503 LDWI
-              f1b4 0000  ld   $00
-              f1b5 0008  ld   $08
-              f1b6 002b  ld   $2b         ;0506 STW
-              f1b7 0051  ld   $51         ;0506 'p'
-              f1b8 0059  ld   $59         ;0508 LDI
-              f1b9 0078  ld   $78
-              f1ba 002b  ld   $2b         ;050a STW
-              f1bb 0053  ld   $53         ;050a 'Height'
-              f1bc 0059  ld   $59         ;050c LDI
-              f1bd 00a0  ld   $a0
-              f1be 002b  ld   $2b         ;050e STW
-              f1bf 0055  ld   $55         ;050e 'Width'
-              f1c0 002b  ld   $2b         ;0510 STW
-              f1c1 0057  ld   $57         ;0510 'len'
-              f1c2 0059  ld   $59         ;0512 LDI
-              f1c3 0001  ld   $01
-              f1c4 002b  ld   $2b         ;0514 STW
-              f1c5 005f  ld   $5f         ;0514 'DX'
-              f1c6 0059  ld   $59         ;0516 LDI
-              f1c7 0000  ld   $00
-              f1c8 002b  ld   $2b         ;0518 STW
-              f1c9 005b  ld   $5b         ;0518 'DY'
-              f1ca 0059  ld   $59         ;051a LDI
-              f1cb 0000  ld   $00
-              f1cc 002b  ld   $2b         ;051c STW
-              f1cd 0067  ld   $67         ;051c 'Level'
-              f1ce 0059  ld   $59         ;051e LDI
-              f1cf 0020  ld   $20
-              f1d0 002b  ld   $2b         ;0520 STW
-              f1d1 0049  ld   $49         ;0520 'i'
-              f1d2 0021  ld   $21         ;0522 LDW
-              f1d3 0051  ld   $51         ;0522 'p'
-              f1d4 00d5  ld   $d5         ;0524 PEEK
-              f1d5 0087  ld   $87         ;0525 ANDI
-              f1d6 003f  ld   $3f
-              f1d7 00ad  ld   $ad         ;0527 SUBW
-              f1d8 0049  ld   $49         ;0527 'i'
-              f1d9 0035  ld   $35         ;0529 BCC
-              f1da 0050  ld   $50         ;052a LT
-              f1db 003d  ld   $3d
-              f1dc 0098  ld   $98         ;052c POKE
-              f1dd 0051  ld   $51         ;052c 'p'
-              f1de 0021  ld   $21         ;052e LDW
-              f1df 0049  ld   $49         ;052e 'i'
-              f1e0 0087  ld   $87         ;0530 ANDI
-              f1e1 0015  ld   $15
-              f1e2 0035  ld   $35         ;0532 BCC
-              f1e3 003f  ld   $3f         ;0533 EQ
-              f1e4 0037  ld   $37
-              f1e5 0059  ld   $59         ;0535 LDI
-              f1e6 0001  ld   $01
-              f1e7 0095  ld   $95         ;0537 BRA
-              f1e8 0039  ld   $39
-              f1e9 0059  ld   $59         ;0539 LDI
-              f1ea 0002  ld   $02
-              f1eb 00c1  ld   $c1         ;053b ADDW
-              f1ec 0067  ld   $67         ;053b 'Level'
-              f1ed 002b  ld   $2b         ;053d STW
-              f1ee 0067  ld   $67         ;053d 'Level'
-              f1ef 0021  ld   $21         ;053f LDW
-              f1f0 0049  ld   $49         ;053f 'i'
-              f1f1 00e3  ld   $e3         ;0541 CALL
-              f1f2 003d  ld   $3d         ;0541 'ShiftRight'
-              f1f3 0035  ld   $35         ;0543 BCC
-              f1f4 004d  ld   $4d         ;0544 GT
-              f1f5 001e  ld   $1e
-              f1f6 0098  ld   $98         ;0546 POKE
-              f1f7 0051  ld   $51         ;0546 'p'
-              f1f8 0021  ld   $21         ;0548 LDW
-              f1f9 0067  ld   $67         ;0548 'Level'
-              f1fa 0035  ld   $35         ;054a BCC
+              f0ff 1518  ld   [$18],y     ;+-----------------------------------+
+              f100 0053  ld   $53         ;043e GE
+              f101 0042  ld   $42
+              f102 0059  ld   $59         ;0440 LDI
+              f103 0000  ld   $00
+              f104 0095  ld   $95         ;0442 BRA
+              f105 006d  ld   $6d
+              f106 0021  ld   $21         ;0444 LDW
+              f107 004c  ld   $4c         ;0444 'X0'
+              f108 00f6  ld   $f6         ;0446 SUBI
+              f109 0020  ld   $20
+              f10a 002b  ld   $2b         ;0448 STW
+              f10b 0034  ld   $34         ;0448 'A'
+              f10c 002b  ld   $2b         ;044a STW
+              f10d 0036  ld   $36         ;044a 'B'
+              f10e 00e3  ld   $e3         ;044c CALL
+              f10f 003e  ld   $3e         ;044c 'MulShift7'
+              f110 00c1  ld   $c1         ;044e ADDW
+              f111 0046  ld   $46         ;044e 'YY'
+              f112 002b  ld   $2b         ;0450 STW
+              f113 0034  ld   $34         ;0450 'A'
+              f114 00c1  ld   $c1         ;0452 ADDW
+              f115 004c  ld   $4c         ;0452 'X0'
+              f116 00f6  ld   $f6         ;0454 SUBI
+              f117 0020  ld   $20
+              f118 002b  ld   $2b         ;0456 STW
+              f119 0036  ld   $36         ;0456 'B'
+              f11a 00e3  ld   $e3         ;0458 CALL
+              f11b 003e  ld   $3e         ;0458 'MulShift7'
+              f11c 002b  ld   $2b         ;045a STW
+              f11d 0060  ld   $60         ;045a 'tmp'
+              f11e 00c1  ld   $c1         ;045c ADDW
+              f11f 0060  ld   $60         ;045c 'tmp'
+              f120 002b  ld   $2b         ;045e STW
+              f121 0060  ld   $60         ;045e 'tmp'
+              f122 00c1  ld   $c1         ;0460 ADDW
+              f123 0060  ld   $60         ;0460 'tmp'
+              f124 002b  ld   $2b         ;0462 STW
+              f125 0060  ld   $60         ;0462 'tmp'
+              f126 00ad  ld   $ad         ;0464 SUBW
+              f127 0046  ld   $46         ;0464 'YY'
+              f128 0035  ld   $35         ;0466 BCC
+              f129 0053  ld   $53         ;0467 GE
+              f12a 006b  ld   $6b
+              f12b 0059  ld   $59         ;0469 LDI
+              f12c 0000  ld   $00
+              f12d 0095  ld   $95         ;046b BRA
+              f12e 006d  ld   $6d
+              f12f 00e3  ld   $e3         ;046d CALL
+              f130 004e  ld   $4e         ;046d 'CalcPixel'
+              f131 0095  ld   $95         ;046f BRA
+              f132 0071  ld   $71
+              f133 00e3  ld   $e3         ;0471 CALL
+              f134 004e  ld   $4e         ;0471 'CalcPixel'
+              f135 002b  ld   $2b         ;0473 STW
+              f136 0058  ld   $58         ;0473 'LastPixel'
+              f137 0098  ld   $98         ;0475 POKE
+              f138 0050  ld   $50         ;0475 'p'
+              f139 0021  ld   $21         ;0477 LDW
+              f13a 0056  ld   $56         ;0477 'len'
+              f13b 00f6  ld   $f6         ;0479 SUBI
+              f13c 0001  ld   $01
+              f13d 0035  ld   $35         ;047b BCC
+              f13e 004d  ld   $4d         ;047c GT
+              f13f 009d  ld   $9d
+              f140 0021  ld   $21         ;047e LDW
+              f141 005a  ld   $5a         ;047e 'DY'
+              f142 002b  ld   $2b         ;0480 STW
+              f143 0060  ld   $60         ;0480 'tmp'
+              f144 0021  ld   $21         ;0482 LDW
+              f145 005e  ld   $5e         ;0482 'DX'
+              f146 002b  ld   $2b         ;0484 STW
+              f147 005a  ld   $5a         ;0484 'DY'
+              f148 0059  ld   $59         ;0486 LDI
+              f149 0000  ld   $00
+              f14a 00ad  ld   $ad         ;0488 SUBW
+              f14b 0060  ld   $60         ;0488 'tmp'
+              f14c 002b  ld   $2b         ;048a STW
+              f14d 005e  ld   $5e         ;048a 'DX'
+              f14e 0021  ld   $21         ;048c LDW
+              f14f 005e  ld   $5e         ;048c 'DX'
+              f150 0035  ld   $35         ;048e BCC
+              f151 003f  ld   $3f         ;048f EQ
+              f152 0097  ld   $97
+              f153 0021  ld   $21         ;0491 LDW
+              f154 0054  ld   $54         ;0491 'Width'
+              f155 00f6  ld   $f6         ;0493 SUBI
+              f156 0001  ld   $01
+              f157 002b  ld   $2b         ;0495 STW
+              f158 0054  ld   $54         ;0495 'Width'
+              f159 0095  ld   $95         ;0497 BRA
+              f15a 009d  ld   $9d
+              f15b 0021  ld   $21         ;0499 LDW
+              f15c 0052  ld   $52         ;0499 'Height'
+              f15d 00f6  ld   $f6         ;049b SUBI
+              f15e 0001  ld   $01
+              f15f 002b  ld   $2b         ;049d STW
+              f160 0052  ld   $52         ;049d 'Height'
+              f161 002b  ld   $2b         ;049f STW
+              f162 0056  ld   $56         ;049f 'len'
+              f163 0035  ld   $35         ;04a1 BCC
+              f164 0056  ld   $56         ;04a2 LE
+              f165 00de  ld   $de
+              f166 0021  ld   $21         ;04a4 LDW
+              f167 004c  ld   $4c         ;04a4 'X0'
+              f168 00c1  ld   $c1         ;04a6 ADDW
+              f169 005e  ld   $5e         ;04a6 'DX'
+              f16a 002b  ld   $2b         ;04a8 STW
+              f16b 004c  ld   $4c         ;04a8 'X0'
+              f16c 0021  ld   $21         ;04aa LDW
+              f16d 004a  ld   $4a         ;04aa 'Y0'
+              f16e 00c1  ld   $c1         ;04ac ADDW
+              f16f 005a  ld   $5a         ;04ac 'DY'
+              f170 002b  ld   $2b         ;04ae STW
+              f171 004a  ld   $4a         ;04ae 'Y0'
+              f172 0021  ld   $21         ;04b0 LDW
+              f173 005e  ld   $5e         ;04b0 'DX'
+              f174 0035  ld   $35         ;04b2 BCC
+              f175 0053  ld   $53         ;04b3 GE
+              f176 00b9  ld   $b9
+              f177 0021  ld   $21         ;04b5 LDW
+              f178 0050  ld   $50         ;04b5 'p'
+              f179 00f6  ld   $f6         ;04b7 SUBI
+              f17a 0001  ld   $01
+              f17b 002b  ld   $2b         ;04b9 STW
+              f17c 0050  ld   $50         ;04b9 'p'
+              f17d 0021  ld   $21         ;04bb LDW
+              f17e 005e  ld   $5e         ;04bb 'DX'
+              f17f 0035  ld   $35         ;04bd BCC
+              f180 0056  ld   $56         ;04be LE
+              f181 00c4  ld   $c4
+              f182 0021  ld   $21         ;04c0 LDW
+              f183 0050  ld   $50         ;04c0 'p'
+              f184 00f3  ld   $f3         ;04c2 ADDI
+              f185 0001  ld   $01
+              f186 002b  ld   $2b         ;04c4 STW
+              f187 0050  ld   $50         ;04c4 'p'
+              f188 0021  ld   $21         ;04c6 LDW
+              f189 005a  ld   $5a         ;04c6 'DY'
+              f18a 0035  ld   $35         ;04c8 BCC
+              f18b 0053  ld   $53         ;04c9 GE
+              f18c 00d0  ld   $d0
+              f18d 0011  ld   $11         ;04cb LDWI
+              f18e 0000  ld   $00
+              f18f 00ff  ld   $ff
+              f190 00c1  ld   $c1         ;04ce ADDW
+              f191 0050  ld   $50         ;04ce 'p'
+              f192 002b  ld   $2b         ;04d0 STW
+              f193 0050  ld   $50         ;04d0 'p'
+              f194 0021  ld   $21         ;04d2 LDW
+              f195 005a  ld   $5a         ;04d2 'DY'
+              f196 0035  ld   $35         ;04d4 BCC
+              f197 0056  ld   $56         ;04d5 LE
+              f198 00dc  ld   $dc
+              f199 0011  ld   $11         ;04d7 LDWI
+              f19a 0000  ld   $00
+              f19b 0001  ld   $01
+              f19c 00c1  ld   $c1         ;04da ADDW
+              f19d 0050  ld   $50         ;04da 'p'
+              f19e 002b  ld   $2b         ;04dc STW
+              f19f 0050  ld   $50         ;04dc 'p'
+              f1a0 0095  ld   $95         ;04de BRA
+              f1a1 001a  ld   $1a
+              f1a2 0059  ld   $59         ;04e0 LDI
+              f1a3 003c  ld   $3c
+              f1a4 005e  ld   $5e         ;04e2 ST
+              f1a5 002c  ld   $2c
+              f1a6 00e3  ld   $e3         ;04e4 CALL
+              f1a7 0062  ld   $62         ;04e4 'GreyOut'
+              f1a8 0063  ld   $63         ;04e6 POP
+              f1a9 00ff  ld   $ff         ;04e7 RET
+              f1aa 002b  ld   $2b         ;04e8 STW
+              f1ab 0064  ld   $64         ;04e8 'CalcSet'
+              f1ac 00f9  ld   $f9         ;04ea INC
+              f1ad 001c  ld   $1c
+              f1ae 00ff  ld   $ff         ;04ec RET
+              f1af 0005  ld   $05         ;| RAM segment address (high byte first)
+              f1b0 0000  ld   $00         ;|
+              f1b1 00f0  ld   $f0         ;| Length (1..256)
+              f1b2 00e1  ld   $e1         ;0500 DEF
+              f1b3 00dd  ld   $dd
+              f1b4 007d  ld   $7d         ;0502 PUSH
+              f1b5 0011  ld   $11         ;0503 LDWI
+              f1b6 0000  ld   $00
+              f1b7 0008  ld   $08
+              f1b8 002b  ld   $2b         ;0506 STW
+              f1b9 0050  ld   $50         ;0506 'p'
+              f1ba 0059  ld   $59         ;0508 LDI
+              f1bb 0078  ld   $78
+              f1bc 002b  ld   $2b         ;050a STW
+              f1bd 0052  ld   $52         ;050a 'Height'
+              f1be 0059  ld   $59         ;050c LDI
+              f1bf 00a0  ld   $a0
+              f1c0 002b  ld   $2b         ;050e STW
+              f1c1 0054  ld   $54         ;050e 'Width'
+              f1c2 002b  ld   $2b         ;0510 STW
+              f1c3 0056  ld   $56         ;0510 'len'
+              f1c4 0059  ld   $59         ;0512 LDI
+              f1c5 0001  ld   $01
+              f1c6 002b  ld   $2b         ;0514 STW
+              f1c7 005e  ld   $5e         ;0514 'DX'
+              f1c8 0059  ld   $59         ;0516 LDI
+              f1c9 0000  ld   $00
+              f1ca 002b  ld   $2b         ;0518 STW
+              f1cb 005a  ld   $5a         ;0518 'DY'
+              f1cc 0059  ld   $59         ;051a LDI
+              f1cd 0000  ld   $00
+              f1ce 002b  ld   $2b         ;051c STW
+              f1cf 0066  ld   $66         ;051c 'Level'
+              f1d0 0059  ld   $59         ;051e LDI
+              f1d1 0020  ld   $20
+              f1d2 002b  ld   $2b         ;0520 STW
+              f1d3 0048  ld   $48         ;0520 'i'
+              f1d4 0021  ld   $21         ;0522 LDW
+              f1d5 0050  ld   $50         ;0522 'p'
+              f1d6 00d5  ld   $d5         ;0524 PEEK
+              f1d7 0087  ld   $87         ;0525 ANDI
+              f1d8 003f  ld   $3f
+              f1d9 00ad  ld   $ad         ;0527 SUBW
+              f1da 0048  ld   $48         ;0527 'i'
+              f1db 0035  ld   $35         ;0529 BCC
+              f1dc 0050  ld   $50         ;052a LT
+              f1dd 003d  ld   $3d
+              f1de 0098  ld   $98         ;052c POKE
+              f1df 0050  ld   $50         ;052c 'p'
+              f1e0 0021  ld   $21         ;052e LDW
+              f1e1 0048  ld   $48         ;052e 'i'
+              f1e2 0087  ld   $87         ;0530 ANDI
+              f1e3 0015  ld   $15
+              f1e4 0035  ld   $35         ;0532 BCC
+              f1e5 003f  ld   $3f         ;0533 EQ
+              f1e6 0037  ld   $37
+              f1e7 0059  ld   $59         ;0535 LDI
+              f1e8 0001  ld   $01
+              f1e9 0095  ld   $95         ;0537 BRA
+              f1ea 0039  ld   $39
+              f1eb 0059  ld   $59         ;0539 LDI
+              f1ec 0002  ld   $02
+              f1ed 00c1  ld   $c1         ;053b ADDW
+              f1ee 0066  ld   $66         ;053b 'Level'
+              f1ef 002b  ld   $2b         ;053d STW
+              f1f0 0066  ld   $66         ;053d 'Level'
+              f1f1 0021  ld   $21         ;053f LDW
+              f1f2 0048  ld   $48         ;053f 'i'
+              f1f3 00e3  ld   $e3         ;0541 CALL
+              f1f4 003c  ld   $3c         ;0541 'ShiftRight'
+              f1f5 0035  ld   $35         ;0543 BCC
+              f1f6 004d  ld   $4d         ;0544 GT
+              f1f7 001e  ld   $1e
+              f1f8 0098  ld   $98         ;0546 POKE
+              f1f9 0050  ld   $50         ;0546 'p'
+              f1fa 0021  ld   $21         ;0548 LDW
               f1fb fe00  bra  ac          ;+-----------------------------------+
               f1fc fcfd  bra  $f1fd       ;|                                   |
               f1fd 1403  ld   $03,y       ;| Trampoline for page $f100 lookups |
               f1fe e078  jmp  y,$78       ;|                                   |
-              f1ff 1519  ld   [$19],y     ;+-----------------------------------+
-              f200 003f  ld   $3f         ;054b EQ
-              f201 007e  ld   $7e
-              f202 001a  ld   $1a         ;054d LD
-              f203 0052  ld   $52         ;054d 'p'+1
-              f204 0087  ld   $87         ;054f ANDI
-              f205 0001  ld   $01
-              f206 002b  ld   $2b         ;0551 STW
-              f207 0049  ld   $49         ;0551 'i'
-              f208 00c1  ld   $c1         ;0553 ADDW
-              f209 0049  ld   $49         ;0553 'i'
-              f20a 002b  ld   $2b         ;0555 STW
-              f20b 0049  ld   $49         ;0555 'i'
-              f20c 0021  ld   $21         ;0557 LDW
-              f20d 0051  ld   $51         ;0557 'p'
-              f20e 0087  ld   $87         ;0559 ANDI
-              f20f 0001  ld   $01
-              f210 00c1  ld   $c1         ;055b ADDW
-              f211 0049  ld   $49         ;055b 'i'
-              f212 002b  ld   $2b         ;055d STW
-              f213 0049  ld   $49         ;055d 'i'
-              f214 00e1  ld   $e1         ;055f DEF
-              f215 0063  ld   $63
-              f216 0000  ld   $00
-              f217 0002  ld   $02
-              f218 0003  ld   $03
-              f219 0001  ld   $01
-              f21a 00c1  ld   $c1         ;0565 ADDW
-              f21b 0049  ld   $49         ;0565 'i'
-              f21c 00d5  ld   $d5         ;0567 PEEK
-              f21d 00c1  ld   $c1         ;0568 ADDW
-              f21e 0067  ld   $67         ;0568 'Level'
-              f21f 00f6  ld   $f6         ;056a SUBI
-              f220 0001  ld   $01
-              f221 002b  ld   $2b         ;056c STW
-              f222 0067  ld   $67         ;056c 'Level'
-              f223 0021  ld   $21         ;056e LDW
-              f224 0067  ld   $67         ;056e 'Level'
-              f225 00f6  ld   $f6         ;0570 SUBI
-              f226 0003  ld   $03
-              f227 0035  ld   $35         ;0572 BCC
-              f228 0050  ld   $50         ;0573 LT
-              f229 007e  ld   $7e
-              f22a 002b  ld   $2b         ;0575 STW
-              f22b 0067  ld   $67         ;0575 'Level'
-              f22c 0021  ld   $21         ;0577 LDW
-              f22d 0051  ld   $51         ;0577 'p'
-              f22e 00d5  ld   $d5         ;0579 PEEK
-              f22f 00f3  ld   $f3         ;057a ADDI
-              f230 0015  ld   $15
-              f231 0098  ld   $98         ;057c POKE
-              f232 0051  ld   $51         ;057c 'p'
-              f233 0095  ld   $95         ;057e BRA
-              f234 006c  ld   $6c
-              f235 0021  ld   $21         ;0580 LDW
-              f236 0057  ld   $57         ;0580 'len'
-              f237 00f6  ld   $f6         ;0582 SUBI
-              f238 0001  ld   $01
-              f239 0035  ld   $35         ;0584 BCC
-              f23a 004d  ld   $4d         ;0585 GT
-              f23b 00a6  ld   $a6
-              f23c 0021  ld   $21         ;0587 LDW
-              f23d 005b  ld   $5b         ;0587 'DY'
-              f23e 002b  ld   $2b         ;0589 STW
-              f23f 0061  ld   $61         ;0589 'tmp'
-              f240 0021  ld   $21         ;058b LDW
-              f241 005f  ld   $5f         ;058b 'DX'
-              f242 002b  ld   $2b         ;058d STW
-              f243 005b  ld   $5b         ;058d 'DY'
-              f244 0059  ld   $59         ;058f LDI
-              f245 0000  ld   $00
-              f246 00ad  ld   $ad         ;0591 SUBW
-              f247 0061  ld   $61         ;0591 'tmp'
-              f248 002b  ld   $2b         ;0593 STW
-              f249 005f  ld   $5f         ;0593 'DX'
-              f24a 0021  ld   $21         ;0595 LDW
-              f24b 005f  ld   $5f         ;0595 'DX'
-              f24c 0035  ld   $35         ;0597 BCC
-              f24d 003f  ld   $3f         ;0598 EQ
-              f24e 00a0  ld   $a0
-              f24f 0021  ld   $21         ;059a LDW
-              f250 0055  ld   $55         ;059a 'Width'
-              f251 00f6  ld   $f6         ;059c SUBI
-              f252 0001  ld   $01
-              f253 002b  ld   $2b         ;059e STW
-              f254 0055  ld   $55         ;059e 'Width'
-              f255 0095  ld   $95         ;05a0 BRA
-              f256 00a6  ld   $a6
-              f257 0021  ld   $21         ;05a2 LDW
-              f258 0053  ld   $53         ;05a2 'Height'
-              f259 00f6  ld   $f6         ;05a4 SUBI
-              f25a 0001  ld   $01
-              f25b 002b  ld   $2b         ;05a6 STW
-              f25c 0053  ld   $53         ;05a6 'Height'
-              f25d 002b  ld   $2b         ;05a8 STW
-              f25e 0057  ld   $57         ;05a8 'len'
-              f25f 0035  ld   $35         ;05aa BCC
-              f260 0056  ld   $56         ;05ab LE
-              f261 00db  ld   $db
-              f262 0021  ld   $21         ;05ad LDW
-              f263 005f  ld   $5f         ;05ad 'DX'
-              f264 0035  ld   $35         ;05af BCC
-              f265 0053  ld   $53         ;05b0 GE
-              f266 00b6  ld   $b6
-              f267 0021  ld   $21         ;05b2 LDW
-              f268 0051  ld   $51         ;05b2 'p'
-              f269 00f6  ld   $f6         ;05b4 SUBI
-              f26a 0001  ld   $01
-              f26b 002b  ld   $2b         ;05b6 STW
-              f26c 0051  ld   $51         ;05b6 'p'
-              f26d 0021  ld   $21         ;05b8 LDW
-              f26e 005f  ld   $5f         ;05b8 'DX'
-              f26f 0035  ld   $35         ;05ba BCC
-              f270 0056  ld   $56         ;05bb LE
-              f271 00c1  ld   $c1
-              f272 0021  ld   $21         ;05bd LDW
-              f273 0051  ld   $51         ;05bd 'p'
-              f274 00f3  ld   $f3         ;05bf ADDI
-              f275 0001  ld   $01
-              f276 002b  ld   $2b         ;05c1 STW
-              f277 0051  ld   $51         ;05c1 'p'
-              f278 0021  ld   $21         ;05c3 LDW
-              f279 005b  ld   $5b         ;05c3 'DY'
-              f27a 0035  ld   $35         ;05c5 BCC
-              f27b 0053  ld   $53         ;05c6 GE
-              f27c 00cd  ld   $cd
-              f27d 0011  ld   $11         ;05c8 LDWI
-              f27e 0000  ld   $00
-              f27f 00ff  ld   $ff
-              f280 00c1  ld   $c1         ;05cb ADDW
-              f281 0051  ld   $51         ;05cb 'p'
-              f282 002b  ld   $2b         ;05cd STW
-              f283 0051  ld   $51         ;05cd 'p'
-              f284 0021  ld   $21         ;05cf LDW
-              f285 005b  ld   $5b         ;05cf 'DY'
-              f286 0035  ld   $35         ;05d1 BCC
-              f287 0056  ld   $56         ;05d2 LE
-              f288 00d9  ld   $d9
-              f289 0011  ld   $11         ;05d4 LDWI
-              f28a 0000  ld   $00
-              f28b 0001  ld   $01
-              f28c 00c1  ld   $c1         ;05d7 ADDW
-              f28d 0051  ld   $51         ;05d7 'p'
-              f28e 002b  ld   $2b         ;05d9 STW
-              f28f 0051  ld   $51         ;05d9 'p'
-              f290 0095  ld   $95         ;05db BRA
-              f291 0018  ld   $18
-              f292 0063  ld   $63         ;05dd POP
-              f293 00ff  ld   $ff         ;05de RET
-              f294 002b  ld   $2b         ;05df STW
-              f295 0063  ld   $63         ;05df 'GreyOut'
-              f296 00e1  ld   $e1         ;05e1 DEF
-              f297 00e9  ld   $e9
-              f298 002b  ld   $2b         ;05e3 STW
-              f299 0025  ld   $25
-              f29a 0011  ld   $11         ;05e5 LDWI
-              f29b 0000  ld   $00
-              f29c 0006  ld   $06
-              f29d 00a9  ld   $a9         ;05e8 SYS
-              f29e 00f6  ld   $f6
-              f29f 00ff  ld   $ff         ;05ea RET
-              f2a0 002b  ld   $2b         ;05eb STW
-              f2a1 003d  ld   $3d         ;05eb 'ShiftRight'
-              f2a2 00f9  ld   $f9         ;05ed INC
-              f2a3 001d  ld   $1d
-              f2a4 00ff  ld   $ff         ;05ef RET
-              f2a5 0006  ld   $06         ;| RAM segment address (high byte first)
-              f2a6 0000  ld   $00         ;|
-              f2a7 0060  ld   $60         ;| Length (1..256)
-              f2a8 0011  ld   $11         ;0600 LDWI
-              f2a9 004c  ld   $4c
-              f2aa 00ff  ld   $ff
-              f2ab 002b  ld   $2b         ;0603 STW
-              f2ac 004b  ld   $4b         ;0603 'Y0'
-              f2ad 0011  ld   $11         ;0605 LDWI
-              f2ae 00c0  ld   $c0
-              f2af 00fe  ld   $fe
-              f2b0 002b  ld   $2b         ;0608 STW
-              f2b1 004d  ld   $4d         ;0608 'X0'
-              f2b2 0059  ld   $59         ;060a LDI
-              f2b3 0003  ld   $03
-              f2b4 002b  ld   $2b         ;060c STW
-              f2b5 005d  ld   $5d         ;060c 'Step'
-              f2b6 00e3  ld   $e3         ;060e CALL
-              f2b7 0065  ld   $65         ;060e 'CalcSet'
-              f2b8 0011  ld   $11         ;0610 LDWI
-              f2b9 006c  ld   $6c
-              f2ba 00ff  ld   $ff
-              f2bb 002b  ld   $2b         ;0613 STW
-              f2bc 004b  ld   $4b         ;0613 'Y0'
-              f2bd 0011  ld   $11         ;0615 LDWI
-              f2be 009e  ld   $9e
-              f2bf 00ff  ld   $ff
-              f2c0 002b  ld   $2b         ;0618 STW
-              f2c1 004d  ld   $4d         ;0618 'X0'
-              f2c2 0059  ld   $59         ;061a LDI
-              f2c3 0001  ld   $01
-              f2c4 002b  ld   $2b         ;061c STW
-              f2c5 005d  ld   $5d         ;061c 'Step'
-              f2c6 00e3  ld   $e3         ;061e CALL
-              f2c7 0065  ld   $65         ;061e 'CalcSet'
-              f2c8 0011  ld   $11         ;0620 LDWI
-              f2c9 00c4  ld   $c4
-              f2ca 00ff  ld   $ff
-              f2cb 002b  ld   $2b         ;0623 STW
-              f2cc 004b  ld   $4b         ;0623 'Y0'
-              f2cd 0011  ld   $11         ;0625 LDWI
-              f2ce 0000  ld   $00
-              f2cf 00ff  ld   $ff
-              f2d0 002b  ld   $2b         ;0628 STW
-              f2d1 004d  ld   $4d         ;0628 'X0'
-              f2d2 0059  ld   $59         ;062a LDI
-              f2d3 0001  ld   $01
-              f2d4 002b  ld   $2b         ;062c STW
-              f2d5 005d  ld   $5d         ;062c 'Step'
-              f2d6 00e3  ld   $e3         ;062e CALL
-              f2d7 0065  ld   $65         ;062e 'CalcSet'
-              f2d8 0011  ld   $11         ;0630 LDWI
-              f2d9 00c0  ld   $c0
-              f2da 00fe  ld   $fe
-              f2db 002b  ld   $2b         ;0633 STW
-              f2dc 004b  ld   $4b         ;0633 'Y0'
-              f2dd 0011  ld   $11         ;0635 LDWI
-              f2de 0098  ld   $98
-              f2df 00fe  ld   $fe
-              f2e0 002b  ld   $2b         ;0638 STW
-              f2e1 004d  ld   $4d         ;0638 'X0'
-              f2e2 0059  ld   $59         ;063a LDI
-              f2e3 0009  ld   $09
-              f2e4 002b  ld   $2b         ;063c STW
-              f2e5 005d  ld   $5d         ;063c 'Step'
-              f2e6 00e3  ld   $e3         ;063e CALL
-              f2e7 0065  ld   $65         ;063e 'CalcSet'
-              f2e8 0059  ld   $59         ;0640 LDI
-              f2e9 0000  ld   $00
-              f2ea 002b  ld   $2b         ;0642 STW
-              f2eb 004b  ld   $4b         ;0642 'Y0'
-              f2ec 0011  ld   $11         ;0644 LDWI
-              f2ed 009c  ld   $9c
-              f2ee 00ff  ld   $ff
-              f2ef 002b  ld   $2b         ;0647 STW
-              f2f0 004d  ld   $4d         ;0647 'X0'
-              f2f1 0059  ld   $59         ;0649 LDI
-              f2f2 0001  ld   $01
-              f2f3 002b  ld   $2b         ;064b STW
-              f2f4 005d  ld   $5d         ;064b 'Step'
-              f2f5 00e3  ld   $e3         ;064d CALL
-              f2f6 0065  ld   $65         ;064d 'CalcSet'
-              f2f7 0011  ld   $11         ;064f LDWI
-              f2f8 00c4  ld   $c4
-              f2f9 00ff  ld   $ff
-              f2fa 002b  ld   $2b         ;0652 STW
+              f1ff 1518  ld   [$18],y     ;+-----------------------------------+
+              f200 0066  ld   $66         ;0548 'Level'
+              f201 0035  ld   $35         ;054a BCC
+              f202 003f  ld   $3f         ;054b EQ
+              f203 007e  ld   $7e
+              f204 001a  ld   $1a         ;054d LD
+              f205 0051  ld   $51         ;054d 'p'+1
+              f206 0087  ld   $87         ;054f ANDI
+              f207 0001  ld   $01
+              f208 002b  ld   $2b         ;0551 STW
+              f209 0048  ld   $48         ;0551 'i'
+              f20a 00c1  ld   $c1         ;0553 ADDW
+              f20b 0048  ld   $48         ;0553 'i'
+              f20c 002b  ld   $2b         ;0555 STW
+              f20d 0048  ld   $48         ;0555 'i'
+              f20e 0021  ld   $21         ;0557 LDW
+              f20f 0050  ld   $50         ;0557 'p'
+              f210 0087  ld   $87         ;0559 ANDI
+              f211 0001  ld   $01
+              f212 00c1  ld   $c1         ;055b ADDW
+              f213 0048  ld   $48         ;055b 'i'
+              f214 002b  ld   $2b         ;055d STW
+              f215 0048  ld   $48         ;055d 'i'
+              f216 00e1  ld   $e1         ;055f DEF
+              f217 0063  ld   $63
+              f218 0000  ld   $00
+              f219 0002  ld   $02
+              f21a 0003  ld   $03
+              f21b 0001  ld   $01
+              f21c 00c1  ld   $c1         ;0565 ADDW
+              f21d 0048  ld   $48         ;0565 'i'
+              f21e 00d5  ld   $d5         ;0567 PEEK
+              f21f 00c1  ld   $c1         ;0568 ADDW
+              f220 0066  ld   $66         ;0568 'Level'
+              f221 00f6  ld   $f6         ;056a SUBI
+              f222 0001  ld   $01
+              f223 002b  ld   $2b         ;056c STW
+              f224 0066  ld   $66         ;056c 'Level'
+              f225 0021  ld   $21         ;056e LDW
+              f226 0066  ld   $66         ;056e 'Level'
+              f227 00f6  ld   $f6         ;0570 SUBI
+              f228 0003  ld   $03
+              f229 0035  ld   $35         ;0572 BCC
+              f22a 0050  ld   $50         ;0573 LT
+              f22b 007e  ld   $7e
+              f22c 002b  ld   $2b         ;0575 STW
+              f22d 0066  ld   $66         ;0575 'Level'
+              f22e 0021  ld   $21         ;0577 LDW
+              f22f 0050  ld   $50         ;0577 'p'
+              f230 00d5  ld   $d5         ;0579 PEEK
+              f231 00f3  ld   $f3         ;057a ADDI
+              f232 0015  ld   $15
+              f233 0098  ld   $98         ;057c POKE
+              f234 0050  ld   $50         ;057c 'p'
+              f235 0095  ld   $95         ;057e BRA
+              f236 006c  ld   $6c
+              f237 0021  ld   $21         ;0580 LDW
+              f238 0056  ld   $56         ;0580 'len'
+              f239 00f6  ld   $f6         ;0582 SUBI
+              f23a 0001  ld   $01
+              f23b 0035  ld   $35         ;0584 BCC
+              f23c 004d  ld   $4d         ;0585 GT
+              f23d 00a6  ld   $a6
+              f23e 0021  ld   $21         ;0587 LDW
+              f23f 005a  ld   $5a         ;0587 'DY'
+              f240 002b  ld   $2b         ;0589 STW
+              f241 0060  ld   $60         ;0589 'tmp'
+              f242 0021  ld   $21         ;058b LDW
+              f243 005e  ld   $5e         ;058b 'DX'
+              f244 002b  ld   $2b         ;058d STW
+              f245 005a  ld   $5a         ;058d 'DY'
+              f246 0059  ld   $59         ;058f LDI
+              f247 0000  ld   $00
+              f248 00ad  ld   $ad         ;0591 SUBW
+              f249 0060  ld   $60         ;0591 'tmp'
+              f24a 002b  ld   $2b         ;0593 STW
+              f24b 005e  ld   $5e         ;0593 'DX'
+              f24c 0021  ld   $21         ;0595 LDW
+              f24d 005e  ld   $5e         ;0595 'DX'
+              f24e 0035  ld   $35         ;0597 BCC
+              f24f 003f  ld   $3f         ;0598 EQ
+              f250 00a0  ld   $a0
+              f251 0021  ld   $21         ;059a LDW
+              f252 0054  ld   $54         ;059a 'Width'
+              f253 00f6  ld   $f6         ;059c SUBI
+              f254 0001  ld   $01
+              f255 002b  ld   $2b         ;059e STW
+              f256 0054  ld   $54         ;059e 'Width'
+              f257 0095  ld   $95         ;05a0 BRA
+              f258 00a6  ld   $a6
+              f259 0021  ld   $21         ;05a2 LDW
+              f25a 0052  ld   $52         ;05a2 'Height'
+              f25b 00f6  ld   $f6         ;05a4 SUBI
+              f25c 0001  ld   $01
+              f25d 002b  ld   $2b         ;05a6 STW
+              f25e 0052  ld   $52         ;05a6 'Height'
+              f25f 002b  ld   $2b         ;05a8 STW
+              f260 0056  ld   $56         ;05a8 'len'
+              f261 0035  ld   $35         ;05aa BCC
+              f262 0056  ld   $56         ;05ab LE
+              f263 00db  ld   $db
+              f264 0021  ld   $21         ;05ad LDW
+              f265 005e  ld   $5e         ;05ad 'DX'
+              f266 0035  ld   $35         ;05af BCC
+              f267 0053  ld   $53         ;05b0 GE
+              f268 00b6  ld   $b6
+              f269 0021  ld   $21         ;05b2 LDW
+              f26a 0050  ld   $50         ;05b2 'p'
+              f26b 00f6  ld   $f6         ;05b4 SUBI
+              f26c 0001  ld   $01
+              f26d 002b  ld   $2b         ;05b6 STW
+              f26e 0050  ld   $50         ;05b6 'p'
+              f26f 0021  ld   $21         ;05b8 LDW
+              f270 005e  ld   $5e         ;05b8 'DX'
+              f271 0035  ld   $35         ;05ba BCC
+              f272 0056  ld   $56         ;05bb LE
+              f273 00c1  ld   $c1
+              f274 0021  ld   $21         ;05bd LDW
+              f275 0050  ld   $50         ;05bd 'p'
+              f276 00f3  ld   $f3         ;05bf ADDI
+              f277 0001  ld   $01
+              f278 002b  ld   $2b         ;05c1 STW
+              f279 0050  ld   $50         ;05c1 'p'
+              f27a 0021  ld   $21         ;05c3 LDW
+              f27b 005a  ld   $5a         ;05c3 'DY'
+              f27c 0035  ld   $35         ;05c5 BCC
+              f27d 0053  ld   $53         ;05c6 GE
+              f27e 00cd  ld   $cd
+              f27f 0011  ld   $11         ;05c8 LDWI
+              f280 0000  ld   $00
+              f281 00ff  ld   $ff
+              f282 00c1  ld   $c1         ;05cb ADDW
+              f283 0050  ld   $50         ;05cb 'p'
+              f284 002b  ld   $2b         ;05cd STW
+              f285 0050  ld   $50         ;05cd 'p'
+              f286 0021  ld   $21         ;05cf LDW
+              f287 005a  ld   $5a         ;05cf 'DY'
+              f288 0035  ld   $35         ;05d1 BCC
+              f289 0056  ld   $56         ;05d2 LE
+              f28a 00d9  ld   $d9
+              f28b 0011  ld   $11         ;05d4 LDWI
+              f28c 0000  ld   $00
+              f28d 0001  ld   $01
+              f28e 00c1  ld   $c1         ;05d7 ADDW
+              f28f 0050  ld   $50         ;05d7 'p'
+              f290 002b  ld   $2b         ;05d9 STW
+              f291 0050  ld   $50         ;05d9 'p'
+              f292 0095  ld   $95         ;05db BRA
+              f293 0018  ld   $18
+              f294 0063  ld   $63         ;05dd POP
+              f295 00ff  ld   $ff         ;05de RET
+              f296 002b  ld   $2b         ;05df STW
+              f297 0062  ld   $62         ;05df 'GreyOut'
+              f298 00e1  ld   $e1         ;05e1 DEF
+              f299 00e9  ld   $e9
+              f29a 002b  ld   $2b         ;05e3 STW
+              f29b 0024  ld   $24
+              f29c 0011  ld   $11         ;05e5 LDWI
+              f29d 0000  ld   $00
+              f29e 0006  ld   $06
+              f29f 00a9  ld   $a9         ;05e8 SYS
+              f2a0 00f6  ld   $f6
+              f2a1 00ff  ld   $ff         ;05ea RET
+              f2a2 002b  ld   $2b         ;05eb STW
+              f2a3 003c  ld   $3c         ;05eb 'ShiftRight'
+              f2a4 00f9  ld   $f9         ;05ed INC
+              f2a5 001c  ld   $1c
+              f2a6 00ff  ld   $ff         ;05ef RET
+              f2a7 0006  ld   $06         ;| RAM segment address (high byte first)
+              f2a8 0000  ld   $00         ;|
+              f2a9 0060  ld   $60         ;| Length (1..256)
+              f2aa 0011  ld   $11         ;0600 LDWI
+              f2ab 004c  ld   $4c
+              f2ac 00ff  ld   $ff
+              f2ad 002b  ld   $2b         ;0603 STW
+              f2ae 004a  ld   $4a         ;0603 'Y0'
+              f2af 0011  ld   $11         ;0605 LDWI
+              f2b0 00c0  ld   $c0
+              f2b1 00fe  ld   $fe
+              f2b2 002b  ld   $2b         ;0608 STW
+              f2b3 004c  ld   $4c         ;0608 'X0'
+              f2b4 0059  ld   $59         ;060a LDI
+              f2b5 0003  ld   $03
+              f2b6 002b  ld   $2b         ;060c STW
+              f2b7 005c  ld   $5c         ;060c 'Step'
+              f2b8 00e3  ld   $e3         ;060e CALL
+              f2b9 0064  ld   $64         ;060e 'CalcSet'
+              f2ba 0011  ld   $11         ;0610 LDWI
+              f2bb 006c  ld   $6c
+              f2bc 00ff  ld   $ff
+              f2bd 002b  ld   $2b         ;0613 STW
+              f2be 004a  ld   $4a         ;0613 'Y0'
+              f2bf 0011  ld   $11         ;0615 LDWI
+              f2c0 009e  ld   $9e
+              f2c1 00ff  ld   $ff
+              f2c2 002b  ld   $2b         ;0618 STW
+              f2c3 004c  ld   $4c         ;0618 'X0'
+              f2c4 0059  ld   $59         ;061a LDI
+              f2c5 0001  ld   $01
+              f2c6 002b  ld   $2b         ;061c STW
+              f2c7 005c  ld   $5c         ;061c 'Step'
+              f2c8 00e3  ld   $e3         ;061e CALL
+              f2c9 0064  ld   $64         ;061e 'CalcSet'
+              f2ca 0011  ld   $11         ;0620 LDWI
+              f2cb 00c4  ld   $c4
+              f2cc 00ff  ld   $ff
+              f2cd 002b  ld   $2b         ;0623 STW
+              f2ce 004a  ld   $4a         ;0623 'Y0'
+              f2cf 0011  ld   $11         ;0625 LDWI
+              f2d0 0000  ld   $00
+              f2d1 00ff  ld   $ff
+              f2d2 002b  ld   $2b         ;0628 STW
+              f2d3 004c  ld   $4c         ;0628 'X0'
+              f2d4 0059  ld   $59         ;062a LDI
+              f2d5 0001  ld   $01
+              f2d6 002b  ld   $2b         ;062c STW
+              f2d7 005c  ld   $5c         ;062c 'Step'
+              f2d8 00e3  ld   $e3         ;062e CALL
+              f2d9 0064  ld   $64         ;062e 'CalcSet'
+              f2da 0011  ld   $11         ;0630 LDWI
+              f2db 00c0  ld   $c0
+              f2dc 00fe  ld   $fe
+              f2dd 002b  ld   $2b         ;0633 STW
+              f2de 004a  ld   $4a         ;0633 'Y0'
+              f2df 0011  ld   $11         ;0635 LDWI
+              f2e0 0098  ld   $98
+              f2e1 00fe  ld   $fe
+              f2e2 002b  ld   $2b         ;0638 STW
+              f2e3 004c  ld   $4c         ;0638 'X0'
+              f2e4 0059  ld   $59         ;063a LDI
+              f2e5 0009  ld   $09
+              f2e6 002b  ld   $2b         ;063c STW
+              f2e7 005c  ld   $5c         ;063c 'Step'
+              f2e8 00e3  ld   $e3         ;063e CALL
+              f2e9 0064  ld   $64         ;063e 'CalcSet'
+              f2ea 0059  ld   $59         ;0640 LDI
+              f2eb 0000  ld   $00
+              f2ec 002b  ld   $2b         ;0642 STW
+              f2ed 004a  ld   $4a         ;0642 'Y0'
+              f2ee 0011  ld   $11         ;0644 LDWI
+              f2ef 009c  ld   $9c
+              f2f0 00ff  ld   $ff
+              f2f1 002b  ld   $2b         ;0647 STW
+              f2f2 004c  ld   $4c         ;0647 'X0'
+              f2f3 0059  ld   $59         ;0649 LDI
+              f2f4 0001  ld   $01
+              f2f5 002b  ld   $2b         ;064b STW
+              f2f6 005c  ld   $5c         ;064b 'Step'
+              f2f7 00e3  ld   $e3         ;064d CALL
+              f2f8 0064  ld   $64         ;064d 'CalcSet'
+              f2f9 0011  ld   $11         ;064f LDWI
+              f2fa 00c4  ld   $c4
               f2fb fe00  bra  ac          ;+-----------------------------------+
               f2fc fcfd  bra  $f2fd       ;|                                   |
               f2fd 1403  ld   $03,y       ;| Trampoline for page $f200 lookups |
               f2fe e078  jmp  y,$78       ;|                                   |
-              f2ff 1519  ld   [$19],y     ;+-----------------------------------+
-              f300 004b  ld   $4b         ;0652 'Y0'
-              f301 0059  ld   $59         ;0654 LDI
-              f302 0000  ld   $00
-              f303 002b  ld   $2b         ;0656 STW
-              f304 004d  ld   $4d         ;0656 'X0'
-              f305 0059  ld   $59         ;0658 LDI
-              f306 0001  ld   $01
-              f307 002b  ld   $2b         ;065a STW
-              f308 005d  ld   $5d         ;065a 'Step'
-              f309 00e3  ld   $e3         ;065c CALL
-              f30a 0065  ld   $65         ;065c 'CalcSet'
-              f30b 0095  ld   $95         ;065e BRA
-              f30c 00fe  ld   $fe
-              f30d 0000  ld   $00         ;End of file
-Pictures:     f30e 0003  ld   $03         ;| RAM segment address (high byte first)
-              f30f 0000  ld   $00         ;|
-              f310 00cb  ld   $cb         ;| Length (1..256)
-              f311 00e1  ld   $e1         ;0300 DEF
-              f312 007b  ld   $7b
-              f313 002b  ld   $2b         ;0302 STW
-              f314 0031  ld   $31         ;0302 'p'
-              f315 0011  ld   $11         ;0304 LDWI
-              f316 0001  ld   $01
-              f317 0001  ld   $01
-              f318 002b  ld   $2b         ;0307 STW
-              f319 0033  ld   $33         ;0307 'v'
-              f31a 0011  ld   $11         ;0309 LDWI
-              f31b 0000  ld   $00
-              f31c 0008  ld   $08
-              f31d 002b  ld   $2b         ;030c STW
-              f31e 0035  ld   $35         ;030c 'q'
-              f31f 0059  ld   $59         ;030e LDI
-              f320 0002  ld   $02
-              f321 002b  ld   $2b         ;0310 STW
-              f322 0037  ld   $37         ;0310 'FrameRate'
-              f323 001a  ld   $1a         ;0312 LD
-              f324 0010  ld   $10
-              f325 0035  ld   $35         ;0314 BCC
-              f326 003f  ld   $3f         ;0315 EQ
-              f327 0010  ld   $10
-              f328 001a  ld   $1a         ;0317 LD
-              f329 0011  ld   $11
-              f32a 002b  ld   $2b         ;0319 STW
-              f32b 0039  ld   $39         ;0319 't'
-              f32c 0059  ld   $59         ;031b LDI
-              f32d 00a0  ld   $a0
-              f32e 002b  ld   $2b         ;031d STW
-              f32f 003b  ld   $3b         ;031d 'i'
-              f330 0021  ld   $21         ;031f LDW
-              f331 0033  ld   $33         ;031f 'v'
-              f332 00d5  ld   $d5         ;0321 PEEK
-              f333 00f3  ld   $f3         ;0322 ADDI
-              f334 00a0  ld   $a0
-              f335 0087  ld   $87         ;0324 ANDI
-              f336 00ff  ld   $ff
-              f337 005e  ld   $5e         ;0326 ST
-              f338 0035  ld   $35         ;0326 'q'
-              f339 0021  ld   $21         ;0328 LDW
-              f33a 0031  ld   $31         ;0328 'p'
-              f33b 002b  ld   $2b         ;032a STW
-              f33c 0023  ld   $23
-              f33d 0011  ld   $11         ;032c LDWI
-              f33e 00a0  ld   $a0
-              f33f 0004  ld   $04
-              f340 00a9  ld   $a9         ;032f SYS
-              f341 00fa  ld   $fa
-              f342 0011  ld   $11         ;0331 LDWI
-              f343 00a7  ld   $a7
-              f344 0004  ld   $04
-              f345 00a9  ld   $a9         ;0334 SYS
-              f346 00f2  ld   $f2
-              f347 0021  ld   $21         ;0336 LDW
-              f348 0035  ld   $35         ;0336 'q'
-              f349 002b  ld   $2b         ;0338 STW
-              f34a 0021  ld   $21
-              f34b 0011  ld   $11         ;033a LDWI
-              f34c 00ce  ld   $ce
-              f34d 0004  ld   $04
-              f34e 00a9  ld   $a9         ;033d SYS
-              f34f 00ff  ld   $ff
-              f350 0059  ld   $59         ;033f LDI
-              f351 0080  ld   $80
-              f352 00c1  ld   $c1         ;0341 ADDW
-              f353 0031  ld   $31         ;0341 'p'
-              f354 002b  ld   $2b         ;0343 STW
-              f355 0031  ld   $31         ;0343 'p'
-              f356 00f9  ld   $f9         ;0345 INC
-              f357 0036  ld   $36         ;0345 'q'+1
-              f358 0021  ld   $21         ;0347 LDW
-              f359 0035  ld   $35         ;0347 'q'
-              f35a 0035  ld   $35         ;0349 BCC
-              f35b 004d  ld   $4d         ;034a GT
-              f35c 0026  ld   $26
-              f35d 0021  ld   $21         ;034c LDW
-              f35e 0039  ld   $39         ;034c 't'
-              f35f 00c1  ld   $c1         ;034e ADDW
-              f360 0037  ld   $37         ;034e 'FrameRate'
-              f361 0087  ld   $87         ;0350 ANDI
-              f362 00ff  ld   $ff
-              f363 002b  ld   $2b         ;0352 STW
-              f364 0039  ld   $39         ;0352 't'
-              f365 001a  ld   $1a         ;0354 LD
-              f366 0011  ld   $11
-              f367 00ad  ld   $ad         ;0356 SUBW
-              f368 0039  ld   $39         ;0356 't'
-              f369 0035  ld   $35         ;0358 BCC
-              f36a 0072  ld   $72         ;0359 NE
-              f36b 0052  ld   $52
-              f36c 0021  ld   $21         ;035b LDW
-              f36d 0033  ld   $33         ;035b 'v'
-              f36e 00d5  ld   $d5         ;035d PEEK
-              f36f 00f3  ld   $f3         ;035e ADDI
-              f370 0001  ld   $01
-              f371 0098  ld   $98         ;0360 POKE
-              f372 0033  ld   $33         ;0360 'v'
-              f373 0087  ld   $87         ;0362 ANDI
-              f374 0003  ld   $03
-              f375 0035  ld   $35         ;0364 BCC
-              f376 0072  ld   $72         ;0365 NE
-              f377 004a  ld   $4a
-              f378 0011  ld   $11         ;0367 LDWI
-              f379 0003  ld   $03
-              f37a 00c4  ld   $c4
-              f37b 00c1  ld   $c1         ;036a ADDW
-              f37c 0031  ld   $31         ;036a 'p'
-              f37d 002b  ld   $2b         ;036c STW
-              f37e 0031  ld   $31         ;036c 'p'
-              f37f 0011  ld   $11         ;036e LDWI
-              f380 0000  ld   $00
-              f381 0088  ld   $88
-              f382 00c1  ld   $c1         ;0371 ADDW
-              f383 0035  ld   $35         ;0371 'q'
-              f384 002b  ld   $2b         ;0373 STW
-              f385 0035  ld   $35         ;0373 'q'
-              f386 0021  ld   $21         ;0375 LDW
-              f387 003b  ld   $3b         ;0375 'i'
-              f388 00f6  ld   $f6         ;0377 SUBI
-              f389 0004  ld   $04
-              f38a 0035  ld   $35         ;0379 BCC
-              f38b 004d  ld   $4d         ;037a GT
-              f38c 001b  ld   $1b
-              f38d 00ff  ld   $ff         ;037c RET
-              f38e 002b  ld   $2b         ;037d STW
-              f38f 003d  ld   $3d         ;037d 'DrawImage'
-              f390 00e1  ld   $e1         ;037f DEF
-              f391 0098  ld   $98
-              f392 002b  ld   $2b         ;0381 STW
-              f393 003f  ld   $3f         ;0381 'Delay'
-              f394 001a  ld   $1a         ;0383 LD
-              f395 0011  ld   $11
-              f396 00f3  ld   $f3         ;0385 ADDI
-              f397 003c  ld   $3c
-              f398 0087  ld   $87         ;0387 ANDI
-              f399 00ff  ld   $ff
-              f39a 002b  ld   $2b         ;0389 STW
-              f39b 0041  ld   $41         ;0389 'tmp'
-              f39c 001a  ld   $1a         ;038b LD
-              f39d 0011  ld   $11
-              f39e 00ad  ld   $ad         ;038d SUBW
-              f39f 0041  ld   $41         ;038d 'tmp'
-              f3a0 0035  ld   $35         ;038f BCC
-              f3a1 0072  ld   $72         ;0390 NE
-              f3a2 0089  ld   $89
-              f3a3 0021  ld   $21         ;0392 LDW
-              f3a4 003f  ld   $3f         ;0392 'Delay'
-              f3a5 00f6  ld   $f6         ;0394 SUBI
-              f3a6 0001  ld   $01
-              f3a7 0035  ld   $35         ;0396 BCC
-              f3a8 004d  ld   $4d         ;0397 GT
-              f3a9 007f  ld   $7f
-              f3aa 00ff  ld   $ff         ;0399 RET
-              f3ab 002b  ld   $2b         ;039a STW
-              f3ac 0043  ld   $43         ;039a 'WaitSeconds'
-              f3ad 00e1  ld   $e1         ;039c DEF
-              f3ae 00a4  ld   $a4
-              f3af 001a  ld   $1a         ;039e LD
-              f3b0 0012  ld   $12
-              f3b1 0091  ld   $91         ;03a0 XORI
-              f3b2 00ff  ld   $ff
-              f3b3 0035  ld   $35         ;03a2 BCC
-              f3b4 0072  ld   $72         ;03a3 NE
-              f3b5 009c  ld   $9c
-              f3b6 00ff  ld   $ff         ;03a5 RET
-              f3b7 002b  ld   $2b         ;03a6 STW
-              f3b8 0045  ld   $45         ;03a6 'WaitController'
-              f3b9 0011  ld   $11         ;03a8 LDWI
-              f3ba 0000  ld   $00
-              f3bb 005f  ld   $5f
-              f3bc 00e3  ld   $e3         ;03ab CALL
-              f3bd 003d  ld   $3d         ;03ab 'DrawImage'
-              f3be 0059  ld   $59         ;03ad LDI
-              f3bf 000f  ld   $0f
-              f3c0 00e3  ld   $e3         ;03af CALL
-              f3c1 0043  ld   $43         ;03af 'WaitSeconds'
-              f3c2 00e3  ld   $e3         ;03b1 CALL
-              f3c3 0045  ld   $45         ;03b1 'WaitController'
-              f3c4 0011  ld   $11         ;03b3 LDWI
-              f3c5 0000  ld   $00
-              f3c6 0023  ld   $23
-              f3c7 00e3  ld   $e3         ;03b6 CALL
-              f3c8 003d  ld   $3d         ;03b6 'DrawImage'
-              f3c9 0059  ld   $59         ;03b8 LDI
-              f3ca 000f  ld   $0f
-              f3cb 00e3  ld   $e3         ;03ba CALL
-              f3cc 0043  ld   $43         ;03ba 'WaitSeconds'
-              f3cd 00e3  ld   $e3         ;03bc CALL
-              f3ce 0045  ld   $45         ;03bc 'WaitController'
-              f3cf 0011  ld   $11         ;03be LDWI
-              f3d0 0000  ld   $00
-              f3d1 009b  ld   $9b
-              f3d2 00e3  ld   $e3         ;03c1 CALL
-              f3d3 003d  ld   $3d         ;03c1 'DrawImage'
-              f3d4 0059  ld   $59         ;03c3 LDI
-              f3d5 000f  ld   $0f
-              f3d6 00e3  ld   $e3         ;03c5 CALL
-              f3d7 0043  ld   $43         ;03c5 'WaitSeconds'
-              f3d8 00e3  ld   $e3         ;03c7 CALL
-              f3d9 0045  ld   $45         ;03c7 'WaitController'
-              f3da 0095  ld   $95         ;03c9 BRA
-              f3db 00a6  ld   $a6
-              f3dc 0000  ld   $00         ;End of file
-Credits:      f3dd 0003  ld   $03         ;| RAM segment address (high byte first)
-              f3de 0000  ld   $00         ;|
-              f3df 00f2  ld   $f2         ;| Length (1..256)
-              f3e0 00e1  ld   $e1         ;0300 DEF
-              f3e1 0023  ld   $23
-              f3e2 007d  ld   $7d         ;0302 PUSH
-              f3e3 0021  ld   $21         ;0303 LDW
-              f3e4 0031  ld   $31         ;0303 'Text'
-              f3e5 00d5  ld   $d5         ;0305 PEEK
-              f3e6 002b  ld   $2b         ;0306 STW
-              f3e7 0033  ld   $33         ;0306 'Char'
-              f3e8 0035  ld   $35         ;0308 BCC
-              f3e9 003f  ld   $3f         ;0309 EQ
-              f3ea 0021  ld   $21
-              f3eb 00f9  ld   $f9         ;030b INC
-              f3ec 0031  ld   $31         ;030b 'Text'
-              f3ed 0021  ld   $21         ;030d LDW
-              f3ee 0033  ld   $33         ;030d 'Char'
-              f3ef 0091  ld   $91         ;030f XORI
-              f3f0 000a  ld   $0a
-              f3f1 0035  ld   $35         ;0311 BCC
-              f3f2 0072  ld   $72         ;0312 NE
-              f3f3 001d  ld   $1d
-              f3f4 005e  ld   $5e         ;0314 ST
-              f3f5 0035  ld   $35         ;0314 'Pos'
-              f3f6 0011  ld   $11         ;0316 LDWI
-              f3f7 0000  ld   $00
-              f3f8 0008  ld   $08
-              f3f9 00c1  ld   $c1         ;0319 ADDW
-              f3fa 0035  ld   $35         ;0319 'Pos'
+              f2ff 1518  ld   [$18],y     ;+-----------------------------------+
+              f300 00ff  ld   $ff
+              f301 002b  ld   $2b         ;0652 STW
+              f302 004a  ld   $4a         ;0652 'Y0'
+              f303 0059  ld   $59         ;0654 LDI
+              f304 0000  ld   $00
+              f305 002b  ld   $2b         ;0656 STW
+              f306 004c  ld   $4c         ;0656 'X0'
+              f307 0059  ld   $59         ;0658 LDI
+              f308 0001  ld   $01
+              f309 002b  ld   $2b         ;065a STW
+              f30a 005c  ld   $5c         ;065a 'Step'
+              f30b 00e3  ld   $e3         ;065c CALL
+              f30c 0064  ld   $64         ;065c 'CalcSet'
+              f30d 0095  ld   $95         ;065e BRA
+              f30e 00fe  ld   $fe
+              f30f 0000  ld   $00         ;End of file
+Pictures:     f310 0003  ld   $03         ;| RAM segment address (high byte first)
+              f311 0000  ld   $00         ;|
+              f312 00cd  ld   $cd         ;| Length (1..256)
+              f313 00e1  ld   $e1         ;0300 DEF
+              f314 007d  ld   $7d
+              f315 002b  ld   $2b         ;0302 STW
+              f316 0030  ld   $30         ;0302 'p'
+              f317 0011  ld   $11         ;0304 LDWI
+              f318 0001  ld   $01
+              f319 0001  ld   $01
+              f31a 002b  ld   $2b         ;0307 STW
+              f31b 0032  ld   $32         ;0307 'v'
+              f31c 0011  ld   $11         ;0309 LDWI
+              f31d 0000  ld   $00
+              f31e 0008  ld   $08
+              f31f 002b  ld   $2b         ;030c STW
+              f320 0034  ld   $34         ;030c 'q'
+              f321 0059  ld   $59         ;030e LDI
+              f322 0002  ld   $02
+              f323 002b  ld   $2b         ;0310 STW
+              f324 0036  ld   $36         ;0310 'FrameRate'
+              f325 001a  ld   $1a         ;0312 LD
+              f326 000b  ld   $0b
+              f327 0087  ld   $87         ;0314 ANDI
+              f328 0001  ld   $01
+              f329 0035  ld   $35         ;0316 BCC
+              f32a 003f  ld   $3f         ;0317 EQ
+              f32b 0010  ld   $10
+              f32c 001a  ld   $1a         ;0319 LD
+              f32d 0010  ld   $10
+              f32e 002b  ld   $2b         ;031b STW
+              f32f 0038  ld   $38         ;031b 't'
+              f330 0059  ld   $59         ;031d LDI
+              f331 00a0  ld   $a0
+              f332 002b  ld   $2b         ;031f STW
+              f333 003a  ld   $3a         ;031f 'i'
+              f334 0021  ld   $21         ;0321 LDW
+              f335 0032  ld   $32         ;0321 'v'
+              f336 00d5  ld   $d5         ;0323 PEEK
+              f337 00f3  ld   $f3         ;0324 ADDI
+              f338 00a0  ld   $a0
+              f339 0087  ld   $87         ;0326 ANDI
+              f33a 00ff  ld   $ff
+              f33b 005e  ld   $5e         ;0328 ST
+              f33c 0034  ld   $34         ;0328 'q'
+              f33d 0021  ld   $21         ;032a LDW
+              f33e 0030  ld   $30         ;032a 'p'
+              f33f 002b  ld   $2b         ;032c STW
+              f340 0022  ld   $22
+              f341 0011  ld   $11         ;032e LDWI
+              f342 00a9  ld   $a9
+              f343 0004  ld   $04
+              f344 00a9  ld   $a9         ;0331 SYS
+              f345 00fa  ld   $fa
+              f346 0011  ld   $11         ;0333 LDWI
+              f347 00b0  ld   $b0
+              f348 0004  ld   $04
+              f349 00a9  ld   $a9         ;0336 SYS
+              f34a 00f2  ld   $f2
+              f34b 0021  ld   $21         ;0338 LDW
+              f34c 0034  ld   $34         ;0338 'q'
+              f34d 002b  ld   $2b         ;033a STW
+              f34e 0020  ld   $20
+              f34f 0011  ld   $11         ;033c LDWI
+              f350 00d7  ld   $d7
+              f351 0004  ld   $04
+              f352 00a9  ld   $a9         ;033f SYS
+              f353 00ff  ld   $ff
+              f354 0059  ld   $59         ;0341 LDI
+              f355 0080  ld   $80
+              f356 00c1  ld   $c1         ;0343 ADDW
+              f357 0030  ld   $30         ;0343 'p'
+              f358 002b  ld   $2b         ;0345 STW
+              f359 0030  ld   $30         ;0345 'p'
+              f35a 00f9  ld   $f9         ;0347 INC
+              f35b 0035  ld   $35         ;0347 'q'+1
+              f35c 0021  ld   $21         ;0349 LDW
+              f35d 0034  ld   $34         ;0349 'q'
+              f35e 0035  ld   $35         ;034b BCC
+              f35f 004d  ld   $4d         ;034c GT
+              f360 0028  ld   $28
+              f361 0021  ld   $21         ;034e LDW
+              f362 0038  ld   $38         ;034e 't'
+              f363 00c1  ld   $c1         ;0350 ADDW
+              f364 0036  ld   $36         ;0350 'FrameRate'
+              f365 0087  ld   $87         ;0352 ANDI
+              f366 00ff  ld   $ff
+              f367 002b  ld   $2b         ;0354 STW
+              f368 0038  ld   $38         ;0354 't'
+              f369 001a  ld   $1a         ;0356 LD
+              f36a 0010  ld   $10
+              f36b 00ad  ld   $ad         ;0358 SUBW
+              f36c 0038  ld   $38         ;0358 't'
+              f36d 0035  ld   $35         ;035a BCC
+              f36e 0072  ld   $72         ;035b NE
+              f36f 0054  ld   $54
+              f370 0021  ld   $21         ;035d LDW
+              f371 0032  ld   $32         ;035d 'v'
+              f372 00d5  ld   $d5         ;035f PEEK
+              f373 00f3  ld   $f3         ;0360 ADDI
+              f374 0001  ld   $01
+              f375 0098  ld   $98         ;0362 POKE
+              f376 0032  ld   $32         ;0362 'v'
+              f377 0087  ld   $87         ;0364 ANDI
+              f378 0003  ld   $03
+              f379 0035  ld   $35         ;0366 BCC
+              f37a 0072  ld   $72         ;0367 NE
+              f37b 004c  ld   $4c
+              f37c 0011  ld   $11         ;0369 LDWI
+              f37d 0003  ld   $03
+              f37e 00c4  ld   $c4
+              f37f 00c1  ld   $c1         ;036c ADDW
+              f380 0030  ld   $30         ;036c 'p'
+              f381 002b  ld   $2b         ;036e STW
+              f382 0030  ld   $30         ;036e 'p'
+              f383 0011  ld   $11         ;0370 LDWI
+              f384 0000  ld   $00
+              f385 0088  ld   $88
+              f386 00c1  ld   $c1         ;0373 ADDW
+              f387 0034  ld   $34         ;0373 'q'
+              f388 002b  ld   $2b         ;0375 STW
+              f389 0034  ld   $34         ;0375 'q'
+              f38a 0021  ld   $21         ;0377 LDW
+              f38b 003a  ld   $3a         ;0377 'i'
+              f38c 00f6  ld   $f6         ;0379 SUBI
+              f38d 0004  ld   $04
+              f38e 0035  ld   $35         ;037b BCC
+              f38f 004d  ld   $4d         ;037c GT
+              f390 001d  ld   $1d
+              f391 00ff  ld   $ff         ;037e RET
+              f392 002b  ld   $2b         ;037f STW
+              f393 003c  ld   $3c         ;037f 'DrawImage'
+              f394 00e1  ld   $e1         ;0381 DEF
+              f395 009a  ld   $9a
+              f396 002b  ld   $2b         ;0383 STW
+              f397 003e  ld   $3e         ;0383 'Delay'
+              f398 001a  ld   $1a         ;0385 LD
+              f399 0010  ld   $10
+              f39a 00f3  ld   $f3         ;0387 ADDI
+              f39b 003c  ld   $3c
+              f39c 0087  ld   $87         ;0389 ANDI
+              f39d 00ff  ld   $ff
+              f39e 002b  ld   $2b         ;038b STW
+              f39f 0040  ld   $40         ;038b 'tmp'
+              f3a0 001a  ld   $1a         ;038d LD
+              f3a1 0010  ld   $10
+              f3a2 00ad  ld   $ad         ;038f SUBW
+              f3a3 0040  ld   $40         ;038f 'tmp'
+              f3a4 0035  ld   $35         ;0391 BCC
+              f3a5 0072  ld   $72         ;0392 NE
+              f3a6 008b  ld   $8b
+              f3a7 0021  ld   $21         ;0394 LDW
+              f3a8 003e  ld   $3e         ;0394 'Delay'
+              f3a9 00f6  ld   $f6         ;0396 SUBI
+              f3aa 0001  ld   $01
+              f3ab 0035  ld   $35         ;0398 BCC
+              f3ac 004d  ld   $4d         ;0399 GT
+              f3ad 0081  ld   $81
+              f3ae 00ff  ld   $ff         ;039b RET
+              f3af 002b  ld   $2b         ;039c STW
+              f3b0 0042  ld   $42         ;039c 'WaitSeconds'
+              f3b1 00e1  ld   $e1         ;039e DEF
+              f3b2 00a6  ld   $a6
+              f3b3 001a  ld   $1a         ;03a0 LD
+              f3b4 0011  ld   $11
+              f3b5 0091  ld   $91         ;03a2 XORI
+              f3b6 00ff  ld   $ff
+              f3b7 0035  ld   $35         ;03a4 BCC
+              f3b8 0072  ld   $72         ;03a5 NE
+              f3b9 009e  ld   $9e
+              f3ba 00ff  ld   $ff         ;03a7 RET
+              f3bb 002b  ld   $2b         ;03a8 STW
+              f3bc 0044  ld   $44         ;03a8 'WaitController'
+              f3bd 0011  ld   $11         ;03aa LDWI
+              f3be 0000  ld   $00
+              f3bf 005f  ld   $5f
+              f3c0 00e3  ld   $e3         ;03ad CALL
+              f3c1 003c  ld   $3c         ;03ad 'DrawImage'
+              f3c2 0059  ld   $59         ;03af LDI
+              f3c3 000f  ld   $0f
+              f3c4 00e3  ld   $e3         ;03b1 CALL
+              f3c5 0042  ld   $42         ;03b1 'WaitSeconds'
+              f3c6 00e3  ld   $e3         ;03b3 CALL
+              f3c7 0044  ld   $44         ;03b3 'WaitController'
+              f3c8 0011  ld   $11         ;03b5 LDWI
+              f3c9 0000  ld   $00
+              f3ca 0023  ld   $23
+              f3cb 00e3  ld   $e3         ;03b8 CALL
+              f3cc 003c  ld   $3c         ;03b8 'DrawImage'
+              f3cd 0059  ld   $59         ;03ba LDI
+              f3ce 000f  ld   $0f
+              f3cf 00e3  ld   $e3         ;03bc CALL
+              f3d0 0042  ld   $42         ;03bc 'WaitSeconds'
+              f3d1 00e3  ld   $e3         ;03be CALL
+              f3d2 0044  ld   $44         ;03be 'WaitController'
+              f3d3 0011  ld   $11         ;03c0 LDWI
+              f3d4 0000  ld   $00
+              f3d5 009b  ld   $9b
+              f3d6 00e3  ld   $e3         ;03c3 CALL
+              f3d7 003c  ld   $3c         ;03c3 'DrawImage'
+              f3d8 0059  ld   $59         ;03c5 LDI
+              f3d9 000f  ld   $0f
+              f3da 00e3  ld   $e3         ;03c7 CALL
+              f3db 0042  ld   $42         ;03c7 'WaitSeconds'
+              f3dc 00e3  ld   $e3         ;03c9 CALL
+              f3dd 0044  ld   $44         ;03c9 'WaitController'
+              f3de 0095  ld   $95         ;03cb BRA
+              f3df 00a8  ld   $a8
+              f3e0 0000  ld   $00         ;End of file
+Credits:      f3e1 0003  ld   $03         ;| RAM segment address (high byte first)
+              f3e2 0000  ld   $00         ;|
+              f3e3 00f2  ld   $f2         ;| Length (1..256)
+              f3e4 00e1  ld   $e1         ;0300 DEF
+              f3e5 0023  ld   $23
+              f3e6 007d  ld   $7d         ;0302 PUSH
+              f3e7 0021  ld   $21         ;0303 LDW
+              f3e8 0030  ld   $30         ;0303 'Text'
+              f3e9 00d5  ld   $d5         ;0305 PEEK
+              f3ea 002b  ld   $2b         ;0306 STW
+              f3eb 0032  ld   $32         ;0306 'Char'
+              f3ec 0035  ld   $35         ;0308 BCC
+              f3ed 003f  ld   $3f         ;0309 EQ
+              f3ee 0021  ld   $21
+              f3ef 00f9  ld   $f9         ;030b INC
+              f3f0 0030  ld   $30         ;030b 'Text'
+              f3f1 0021  ld   $21         ;030d LDW
+              f3f2 0032  ld   $32         ;030d 'Char'
+              f3f3 0091  ld   $91         ;030f XORI
+              f3f4 000a  ld   $0a
+              f3f5 0035  ld   $35         ;0311 BCC
+              f3f6 0072  ld   $72         ;0312 NE
+              f3f7 001d  ld   $1d
+              f3f8 005e  ld   $5e         ;0314 ST
+              f3f9 0034  ld   $34         ;0314 'Pos'
+              f3fa 0011  ld   $11         ;0316 LDWI
               f3fb fe00  bra  ac          ;+-----------------------------------+
               f3fc fcfd  bra  $f3fd       ;|                                   |
               f3fd 1403  ld   $03,y       ;| Trampoline for page $f300 lookups |
               f3fe e078  jmp  y,$78       ;|                                   |
-              f3ff 1519  ld   [$19],y     ;+-----------------------------------+
-              f400 002b  ld   $2b         ;031b STW
-              f401 0035  ld   $35         ;031b 'Pos'
-              f402 0095  ld   $95         ;031d BRA
-              f403 001f  ld   $1f
-              f404 00e3  ld   $e3         ;031f CALL
-              f405 0037  ld   $37         ;031f 'DrawChar'
-              f406 0095  ld   $95         ;0321 BRA
-              f407 0001  ld   $01
-              f408 0063  ld   $63         ;0323 POP
-              f409 00ff  ld   $ff         ;0324 RET
-              f40a 002b  ld   $2b         ;0325 STW
-              f40b 0039  ld   $39         ;0325 'DrawText'
-              f40c 00e1  ld   $e1         ;0327 DEF
-              f40d 00eb  ld   $eb
-              f40e 0054  ld   $54
-              f40f 0068  ld   $68
-              f410 0069  ld   $69
-              f411 0073  ld   $73
-              f412 0020  ld   $20
-              f413 0047  ld   $47
+              f3ff 1518  ld   [$18],y     ;+-----------------------------------+
+              f400 0000  ld   $00
+              f401 0008  ld   $08
+              f402 00c1  ld   $c1         ;0319 ADDW
+              f403 0034  ld   $34         ;0319 'Pos'
+              f404 002b  ld   $2b         ;031b STW
+              f405 0034  ld   $34         ;031b 'Pos'
+              f406 0095  ld   $95         ;031d BRA
+              f407 001f  ld   $1f
+              f408 00e3  ld   $e3         ;031f CALL
+              f409 0036  ld   $36         ;031f 'DrawChar'
+              f40a 0095  ld   $95         ;0321 BRA
+              f40b 0001  ld   $01
+              f40c 0063  ld   $63         ;0323 POP
+              f40d 00ff  ld   $ff         ;0324 RET
+              f40e 002b  ld   $2b         ;0325 STW
+              f40f 0038  ld   $38         ;0325 'DrawText'
+              f410 00e1  ld   $e1         ;0327 DEF
+              f411 00eb  ld   $eb
+              f412 0054  ld   $54
+              f413 0068  ld   $68
               f414 0069  ld   $69
-              f415 0067  ld   $67
-              f416 0061  ld   $61
-              f417 0074  ld   $74
-              f418 0072  ld   $72
-              f419 006f  ld   $6f
-              f41a 006e  ld   $6e
-              f41b 0020  ld   $20
-              f41c 0054  ld   $54
-              f41d 0054  ld   $54
-              f41e 004c  ld   $4c
+              f415 0073  ld   $73
+              f416 0020  ld   $20
+              f417 0047  ld   $47
+              f418 0069  ld   $69
+              f419 0067  ld   $67
+              f41a 0061  ld   $61
+              f41b 0074  ld   $74
+              f41c 0072  ld   $72
+              f41d 006f  ld   $6f
+              f41e 006e  ld   $6e
               f41f 0020  ld   $20
-              f420 0063  ld   $63
-              f421 006f  ld   $6f
-              f422 006d  ld   $6d
-              f423 0070  ld   $70
-              f424 0075  ld   $75
-              f425 0074  ld   $74
-              f426 0065  ld   $65
-              f427 0072  ld   $72
-              f428 000a  ld   $0a
-              f429 006b  ld   $6b
-              f42a 0069  ld   $69
-              f42b 0074  ld   $74
-              f42c 0020  ld   $20
-              f42d 0077  ld   $77
-              f42e 0061  ld   $61
-              f42f 0073  ld   $73
+              f420 0054  ld   $54
+              f421 0054  ld   $54
+              f422 004c  ld   $4c
+              f423 0020  ld   $20
+              f424 0063  ld   $63
+              f425 006f  ld   $6f
+              f426 006d  ld   $6d
+              f427 0070  ld   $70
+              f428 0075  ld   $75
+              f429 0074  ld   $74
+              f42a 0065  ld   $65
+              f42b 0072  ld   $72
+              f42c 000a  ld   $0a
+              f42d 006b  ld   $6b
+              f42e 0069  ld   $69
+              f42f 0074  ld   $74
               f430 0020  ld   $20
-              f431 0063  ld   $63
-              f432 006f  ld   $6f
-              f433 006e  ld   $6e
-              f434 0063  ld   $63
-              f435 0065  ld   $65
-              f436 0069  ld   $69
-              f437 0076  ld   $76
-              f438 0065  ld   $65
-              f439 0064  ld   $64
-              f43a 002c  ld   $2c
-              f43b 000a  ld   $0a
-              f43c 0064  ld   $64
-              f43d 0065  ld   $65
-              f43e 0073  ld   $73
-              f43f 0069  ld   $69
-              f440 0067  ld   $67
-              f441 006e  ld   $6e
-              f442 0065  ld   $65
-              f443 0064  ld   $64
-              f444 0020  ld   $20
-              f445 0061  ld   $61
-              f446 006e  ld   $6e
+              f431 0077  ld   $77
+              f432 0061  ld   $61
+              f433 0073  ld   $73
+              f434 0020  ld   $20
+              f435 0063  ld   $63
+              f436 006f  ld   $6f
+              f437 006e  ld   $6e
+              f438 0063  ld   $63
+              f439 0065  ld   $65
+              f43a 0069  ld   $69
+              f43b 0076  ld   $76
+              f43c 0065  ld   $65
+              f43d 0064  ld   $64
+              f43e 002c  ld   $2c
+              f43f 000a  ld   $0a
+              f440 0064  ld   $64
+              f441 0065  ld   $65
+              f442 0073  ld   $73
+              f443 0069  ld   $69
+              f444 0067  ld   $67
+              f445 006e  ld   $6e
+              f446 0065  ld   $65
               f447 0064  ld   $64
               f448 0020  ld   $20
-              f449 0062  ld   $62
-              f44a 0072  ld   $72
-              f44b 006f  ld   $6f
-              f44c 0075  ld   $75
-              f44d 0067  ld   $67
-              f44e 0068  ld   $68
-              f44f 0074  ld   $74
-              f450 0020  ld   $20
-              f451 0074  ld   $74
-              f452 006f  ld   $6f
-              f453 000a  ld   $0a
-              f454 0079  ld   $79
-              f455 006f  ld   $6f
-              f456 0075  ld   $75
-              f457 0020  ld   $20
-              f458 0062  ld   $62
-              f459 0079  ld   $79
-              f45a 0020  ld   $20
-              f45b 004d  ld   $4d
-              f45c 0061  ld   $61
-              f45d 0072  ld   $72
-              f45e 0063  ld   $63
-              f45f 0065  ld   $65
-              f460 006c  ld   $6c
-              f461 0020  ld   $20
-              f462 0076  ld   $76
-              f463 0061  ld   $61
-              f464 006e  ld   $6e
+              f449 0061  ld   $61
+              f44a 006e  ld   $6e
+              f44b 0064  ld   $64
+              f44c 0020  ld   $20
+              f44d 0062  ld   $62
+              f44e 0072  ld   $72
+              f44f 006f  ld   $6f
+              f450 0075  ld   $75
+              f451 0067  ld   $67
+              f452 0068  ld   $68
+              f453 0074  ld   $74
+              f454 0020  ld   $20
+              f455 0074  ld   $74
+              f456 006f  ld   $6f
+              f457 000a  ld   $0a
+              f458 0079  ld   $79
+              f459 006f  ld   $6f
+              f45a 0075  ld   $75
+              f45b 0020  ld   $20
+              f45c 0062  ld   $62
+              f45d 0079  ld   $79
+              f45e 0020  ld   $20
+              f45f 004d  ld   $4d
+              f460 0061  ld   $61
+              f461 0072  ld   $72
+              f462 0063  ld   $63
+              f463 0065  ld   $65
+              f464 006c  ld   $6c
               f465 0020  ld   $20
-              f466 004b  ld   $4b
-              f467 0065  ld   $65
-              f468 0072  ld   $72
-              f469 0076  ld   $76
-              f46a 0069  ld   $69
-              f46b 006e  ld   $6e
-              f46c 0063  ld   $63
-              f46d 006b  ld   $6b
-              f46e 000a  ld   $0a
-              f46f 0061  ld   $61
-              f470 006e  ld   $6e
-              f471 0064  ld   $64
-              f472 0020  ld   $20
-              f473 0057  ld   $57
-              f474 0061  ld   $61
-              f475 006c  ld   $6c
-              f476 0074  ld   $74
-              f477 0065  ld   $65
-              f478 0072  ld   $72
-              f479 0020  ld   $20
-              f47a 0042  ld   $42
+              f466 0076  ld   $76
+              f467 0061  ld   $61
+              f468 006e  ld   $6e
+              f469 0020  ld   $20
+              f46a 004b  ld   $4b
+              f46b 0065  ld   $65
+              f46c 0072  ld   $72
+              f46d 0076  ld   $76
+              f46e 0069  ld   $69
+              f46f 006e  ld   $6e
+              f470 0063  ld   $63
+              f471 006b  ld   $6b
+              f472 000a  ld   $0a
+              f473 0061  ld   $61
+              f474 006e  ld   $6e
+              f475 0064  ld   $64
+              f476 0020  ld   $20
+              f477 0057  ld   $57
+              f478 0061  ld   $61
+              f479 006c  ld   $6c
+              f47a 0074  ld   $74
               f47b 0065  ld   $65
-              f47c 006c  ld   $6c
-              f47d 0067  ld   $67
-              f47e 0065  ld   $65
-              f47f 0072  ld   $72
-              f480 0073  ld   $73
-              f481 002c  ld   $2c
-              f482 0020  ld   $20
-              f483 0062  ld   $62
-              f484 0061  ld   $61
-              f485 0073  ld   $73
-              f486 0065  ld   $65
-              f487 0064  ld   $64
-              f488 000a  ld   $0a
-              f489 006f  ld   $6f
-              f48a 006e  ld   $6e
-              f48b 0020  ld   $20
-              f48c 0061  ld   $61
-              f48d 006e  ld   $6e
-              f48e 0020  ld   $20
-              f48f 006f  ld   $6f
-              f490 0072  ld   $72
-              f491 0069  ld   $69
-              f492 0067  ld   $67
-              f493 0069  ld   $69
-              f494 006e  ld   $6e
-              f495 0061  ld   $61
-              f496 006c  ld   $6c
-              f497 0020  ld   $20
-              f498 0064  ld   $64
-              f499 0065  ld   $65
-              f49a 0073  ld   $73
-              f49b 0069  ld   $69
-              f49c 0067  ld   $67
-              f49d 006e  ld   $6e
-              f49e 0020  ld   $20
-              f49f 0062  ld   $62
-              f4a0 0079  ld   $79
-              f4a1 000a  ld   $0a
-              f4a2 004d  ld   $4d
-              f4a3 0061  ld   $61
-              f4a4 0072  ld   $72
-              f4a5 0063  ld   $63
-              f4a6 0065  ld   $65
-              f4a7 006c  ld   $6c
-              f4a8 0020  ld   $20
-              f4a9 0076  ld   $76
-              f4aa 0061  ld   $61
-              f4ab 006e  ld   $6e
+              f47c 0072  ld   $72
+              f47d 0020  ld   $20
+              f47e 0042  ld   $42
+              f47f 0065  ld   $65
+              f480 006c  ld   $6c
+              f481 0067  ld   $67
+              f482 0065  ld   $65
+              f483 0072  ld   $72
+              f484 0073  ld   $73
+              f485 002c  ld   $2c
+              f486 0020  ld   $20
+              f487 0062  ld   $62
+              f488 0061  ld   $61
+              f489 0073  ld   $73
+              f48a 0065  ld   $65
+              f48b 0064  ld   $64
+              f48c 000a  ld   $0a
+              f48d 006f  ld   $6f
+              f48e 006e  ld   $6e
+              f48f 0020  ld   $20
+              f490 0061  ld   $61
+              f491 006e  ld   $6e
+              f492 0020  ld   $20
+              f493 006f  ld   $6f
+              f494 0072  ld   $72
+              f495 0069  ld   $69
+              f496 0067  ld   $67
+              f497 0069  ld   $69
+              f498 006e  ld   $6e
+              f499 0061  ld   $61
+              f49a 006c  ld   $6c
+              f49b 0020  ld   $20
+              f49c 0064  ld   $64
+              f49d 0065  ld   $65
+              f49e 0073  ld   $73
+              f49f 0069  ld   $69
+              f4a0 0067  ld   $67
+              f4a1 006e  ld   $6e
+              f4a2 0020  ld   $20
+              f4a3 0062  ld   $62
+              f4a4 0079  ld   $79
+              f4a5 000a  ld   $0a
+              f4a6 004d  ld   $4d
+              f4a7 0061  ld   $61
+              f4a8 0072  ld   $72
+              f4a9 0063  ld   $63
+              f4aa 0065  ld   $65
+              f4ab 006c  ld   $6c
               f4ac 0020  ld   $20
-              f4ad 004b  ld   $4b
-              f4ae 0065  ld   $65
-              f4af 0072  ld   $72
-              f4b0 0076  ld   $76
-              f4b1 0069  ld   $69
-              f4b2 006e  ld   $6e
-              f4b3 0063  ld   $63
-              f4b4 006b  ld   $6b
-              f4b5 002e  ld   $2e
-              f4b6 000a  ld   $0a
-              f4b7 000a  ld   $0a
-              f4b8 0053  ld   $53
-              f4b9 0070  ld   $70
-              f4ba 0065  ld   $65
-              f4bb 0063  ld   $63
-              f4bc 0069  ld   $69
-              f4bd 0061  ld   $61
-              f4be 006c  ld   $6c
-              f4bf 0020  ld   $20
-              f4c0 0074  ld   $74
-              f4c1 0068  ld   $68
-              f4c2 0061  ld   $61
-              f4c3 006e  ld   $6e
-              f4c4 006b  ld   $6b
-              f4c5 0073  ld   $73
-              f4c6 0020  ld   $20
-              f4c7 006d  ld   $6d
-              f4c8 0075  ld   $75
+              f4ad 0076  ld   $76
+              f4ae 0061  ld   $61
+              f4af 006e  ld   $6e
+              f4b0 0020  ld   $20
+              f4b1 004b  ld   $4b
+              f4b2 0065  ld   $65
+              f4b3 0072  ld   $72
+              f4b4 0076  ld   $76
+              f4b5 0069  ld   $69
+              f4b6 006e  ld   $6e
+              f4b7 0063  ld   $63
+              f4b8 006b  ld   $6b
+              f4b9 002e  ld   $2e
+              f4ba 000a  ld   $0a
+              f4bb 000a  ld   $0a
+              f4bc 0053  ld   $53
+              f4bd 0070  ld   $70
+              f4be 0065  ld   $65
+              f4bf 0063  ld   $63
+              f4c0 0069  ld   $69
+              f4c1 0061  ld   $61
+              f4c2 006c  ld   $6c
+              f4c3 0020  ld   $20
+              f4c4 0074  ld   $74
+              f4c5 0068  ld   $68
+              f4c6 0061  ld   $61
+              f4c7 006e  ld   $6e
+              f4c8 006b  ld   $6b
               f4c9 0073  ld   $73
-              f4ca 0074  ld   $74
-              f4cb 0020  ld   $20
-              f4cc 0067  ld   $67
-              f4cd 006f  ld   $6f
-              f4ce 0020  ld   $20
-              f4cf 0074  ld   $74
-              f4d0 006f  ld   $6f
-              f4d1 0000  ld   $00
-              f4d2 002b  ld   $2b         ;03ed STW
-              f4d3 003b  ld   $3b         ;03ed 'Part1'
-              f4d4 00f9  ld   $f9         ;03ef INC
-              f4d5 001d  ld   $1d
-              f4d6 00ff  ld   $ff         ;03f1 RET
-              f4d7 0004  ld   $04         ;| RAM segment address (high byte first)
-              f4d8 0000  ld   $00         ;|
-              f4d9 00db  ld   $db         ;| Length (1..256)
-              f4da 00e1  ld   $e1         ;0400 DEF
-              f4db 008d  ld   $8d
-              f4dc 000a  ld   $0a
-              f4dd 004d  ld   $4d
-              f4de 0061  ld   $61
-              f4df 0072  ld   $72
-              f4e0 0063  ld   $63
-              f4e1 002c  ld   $2c
-              f4e2 0020  ld   $20
-              f4e3 0050  ld   $50
-              f4e4 0061  ld   $61
-              f4e5 0075  ld   $75
-              f4e6 006c  ld   $6c
-              f4e7 002c  ld   $2c
-              f4e8 0020  ld   $20
-              f4e9 0049  ld   $49
-              f4ea 0076  ld   $76
-              f4eb 0061  ld   $61
-              f4ec 006e  ld   $6e
-              f4ed 0061  ld   $61
-              f4ee 002c  ld   $2c
-              f4ef 0020  ld   $20
-              f4f0 004f  ld   $4f
-              f4f1 0073  ld   $73
-              f4f2 0063  ld   $63
-              f4f3 0061  ld   $61
-              f4f4 0072  ld   $72
-              f4f5 002c  ld   $2c
-              f4f6 000a  ld   $0a
-              f4f7 004d  ld   $4d
-              f4f8 0061  ld   $61
-              f4f9 0072  ld   $72
-              f4fa 0074  ld   $74
+              f4ca 0020  ld   $20
+              f4cb 006d  ld   $6d
+              f4cc 0075  ld   $75
+              f4cd 0073  ld   $73
+              f4ce 0074  ld   $74
+              f4cf 0020  ld   $20
+              f4d0 0067  ld   $67
+              f4d1 006f  ld   $6f
+              f4d2 0020  ld   $20
+              f4d3 0074  ld   $74
+              f4d4 006f  ld   $6f
+              f4d5 0000  ld   $00
+              f4d6 002b  ld   $2b         ;03ed STW
+              f4d7 003a  ld   $3a         ;03ed 'Part1'
+              f4d8 00f9  ld   $f9         ;03ef INC
+              f4d9 001c  ld   $1c
+              f4da 00ff  ld   $ff         ;03f1 RET
+              f4db 0004  ld   $04         ;| RAM segment address (high byte first)
+              f4dc 0000  ld   $00         ;|
+              f4dd 00db  ld   $db         ;| Length (1..256)
+              f4de 00e1  ld   $e1         ;0400 DEF
+              f4df 008d  ld   $8d
+              f4e0 000a  ld   $0a
+              f4e1 004d  ld   $4d
+              f4e2 0061  ld   $61
+              f4e3 0072  ld   $72
+              f4e4 0063  ld   $63
+              f4e5 002c  ld   $2c
+              f4e6 0020  ld   $20
+              f4e7 0050  ld   $50
+              f4e8 0061  ld   $61
+              f4e9 0075  ld   $75
+              f4ea 006c  ld   $6c
+              f4eb 002c  ld   $2c
+              f4ec 0020  ld   $20
+              f4ed 0049  ld   $49
+              f4ee 0076  ld   $76
+              f4ef 0061  ld   $61
+              f4f0 006e  ld   $6e
+              f4f1 0061  ld   $61
+              f4f2 002c  ld   $2c
+              f4f3 0020  ld   $20
+              f4f4 004f  ld   $4f
+              f4f5 0073  ld   $73
+              f4f6 0063  ld   $63
+              f4f7 0061  ld   $61
+              f4f8 0072  ld   $72
+              f4f9 002c  ld   $2c
+              f4fa 000a  ld   $0a
               f4fb fe00  bra  ac          ;+-----------------------------------+
               f4fc fcfd  bra  $f4fd       ;|                                   |
               f4fd 1403  ld   $03,y       ;| Trampoline for page $f400 lookups |
               f4fe e078  jmp  y,$78       ;|                                   |
-              f4ff 1519  ld   [$19],y     ;+-----------------------------------+
-              f500 0069  ld   $69
-              f501 006a  ld   $6a
-              f502 006e  ld   $6e
-              f503 002c  ld   $2c
-              f504 0020  ld   $20
-              f505 0045  ld   $45
-              f506 0072  ld   $72
-              f507 0069  ld   $69
-              f508 006b  ld   $6b
-              f509 002c  ld   $2c
-              f50a 0020  ld   $20
-              f50b 0042  ld   $42
-              f50c 0065  ld   $65
-              f50d 006c  ld   $6c
-              f50e 006c  ld   $6c
-              f50f 0061  ld   $61
-              f510 002c  ld   $2c
-              f511 0020  ld   $20
-              f512 0048  ld   $48
-              f513 0047  ld   $47
+              f4ff 1518  ld   [$18],y     ;+-----------------------------------+
+              f500 004d  ld   $4d
+              f501 0061  ld   $61
+              f502 0072  ld   $72
+              f503 0074  ld   $74
+              f504 0069  ld   $69
+              f505 006a  ld   $6a
+              f506 006e  ld   $6e
+              f507 002c  ld   $2c
+              f508 0020  ld   $20
+              f509 0045  ld   $45
+              f50a 0072  ld   $72
+              f50b 0069  ld   $69
+              f50c 006b  ld   $6b
+              f50d 002c  ld   $2c
+              f50e 0020  ld   $20
+              f50f 0042  ld   $42
+              f510 0065  ld   $65
+              f511 006c  ld   $6c
+              f512 006c  ld   $6c
+              f513 0061  ld   $61
               f514 002c  ld   $2c
-              f515 000a  ld   $0a
-              f516 0044  ld   $44
-              f517 0069  ld   $69
-              f518 0065  ld   $65
-              f519 0074  ld   $74
-              f51a 0065  ld   $65
-              f51b 0072  ld   $72
-              f51c 002c  ld   $2c
-              f51d 0020  ld   $20
-              f51e 0042  ld   $42
+              f515 0020  ld   $20
+              f516 0048  ld   $48
+              f517 0047  ld   $47
+              f518 002c  ld   $2c
+              f519 000a  ld   $0a
+              f51a 0044  ld   $44
+              f51b 0069  ld   $69
+              f51c 0065  ld   $65
+              f51d 0074  ld   $74
+              f51e 0065  ld   $65
               f51f 0072  ld   $72
-              f520 0069  ld   $69
-              f521 0061  ld   $61
-              f522 006e  ld   $6e
-              f523 002c  ld   $2c
-              f524 0020  ld   $20
-              f525 0042  ld   $42
-              f526 0072  ld   $72
-              f527 0061  ld   $61
-              f528 0064  ld   $64
-              f529 002c  ld   $2c
-              f52a 0020  ld   $20
-              f52b 0053  ld   $53
-              f52c 0076  ld   $76
-              f52d 0065  ld   $65
-              f52e 006e  ld   $6e
-              f52f 002c  ld   $2c
-              f530 000a  ld   $0a
-              f531 0042  ld   $42
-              f532 0065  ld   $65
-              f533 006e  ld   $6e
-              f534 002c  ld   $2c
-              f535 0020  ld   $20
-              f536 004c  ld   $4c
-              f537 006f  ld   $6f
-              f538 0075  ld   $75
+              f520 002c  ld   $2c
+              f521 0020  ld   $20
+              f522 0042  ld   $42
+              f523 0072  ld   $72
+              f524 0069  ld   $69
+              f525 0061  ld   $61
+              f526 006e  ld   $6e
+              f527 002c  ld   $2c
+              f528 0020  ld   $20
+              f529 0042  ld   $42
+              f52a 0072  ld   $72
+              f52b 0061  ld   $61
+              f52c 0064  ld   $64
+              f52d 002c  ld   $2c
+              f52e 0020  ld   $20
+              f52f 0053  ld   $53
+              f530 0076  ld   $76
+              f531 0065  ld   $65
+              f532 006e  ld   $6e
+              f533 002c  ld   $2c
+              f534 000a  ld   $0a
+              f535 0042  ld   $42
+              f536 0065  ld   $65
+              f537 006e  ld   $6e
+              f538 002c  ld   $2c
               f539 0020  ld   $20
-              f53a 0061  ld   $61
-              f53b 006e  ld   $6e
-              f53c 0064  ld   $64
+              f53a 004c  ld   $4c
+              f53b 006f  ld   $6f
+              f53c 0075  ld   $75
               f53d 0020  ld   $20
               f53e 0061  ld   $61
-              f53f 006c  ld   $6c
-              f540 006c  ld   $6c
+              f53f 006e  ld   $6e
+              f540 0064  ld   $64
               f541 0020  ld   $20
-              f542 0047  ld   $47
-              f543 0069  ld   $69
-              f544 0067  ld   $67
-              f545 0061  ld   $61
-              f546 0074  ld   $74
-              f547 0072  ld   $72
-              f548 006f  ld   $6f
-              f549 006e  ld   $6e
-              f54a 000a  ld   $0a
-              f54b 0075  ld   $75
-              f54c 0073  ld   $73
-              f54d 0065  ld   $65
-              f54e 0072  ld   $72
-              f54f 0073  ld   $73
-              f550 0021  ld   $21
-              f551 000a  ld   $0a
-              f552 0020  ld   $20
-              f553 0020  ld   $20
-              f554 0020  ld   $20
+              f542 0061  ld   $61
+              f543 006c  ld   $6c
+              f544 006c  ld   $6c
+              f545 0020  ld   $20
+              f546 0047  ld   $47
+              f547 0069  ld   $69
+              f548 0067  ld   $67
+              f549 0061  ld   $61
+              f54a 0074  ld   $74
+              f54b 0072  ld   $72
+              f54c 006f  ld   $6f
+              f54d 006e  ld   $6e
+              f54e 000a  ld   $0a
+              f54f 0075  ld   $75
+              f550 0073  ld   $73
+              f551 0065  ld   $65
+              f552 0072  ld   $72
+              f553 0073  ld   $73
+              f554 0021  ld   $21
+              f555 000a  ld   $0a
+              f556 0020  ld   $20
+              f557 0020  ld   $20
+              f558 0020  ld   $20
               * 11 times
-              f55d 004d  ld   $4d
-              f55e 0061  ld   $61
-              f55f 0072  ld   $72
-              f560 0063  ld   $63
-              f561 0065  ld   $65
-              f562 006c  ld   $6c
-              f563 0020  ld   $20
-              f564 0026  ld   $26
-              f565 0020  ld   $20
-              f566 0057  ld   $57
-              f567 0061  ld   $61
-              f568 006c  ld   $6c
-              f569 0074  ld   $74
-              f56a 0065  ld   $65
-              f56b 0072  ld   $72
-              f56c 000a  ld   $0a
-              f56d 0000  ld   $00
-              f56e 002b  ld   $2b         ;048f STW
-              f56f 003d  ld   $3d         ;048f 'Part2'
-              f570 00e1  ld   $e1         ;0491 DEF
-              f571 00c0  ld   $c0
-              f572 0011  ld   $11         ;0493 LDWI
-              f573 0000  ld   $00
-              f574 0008  ld   $08
-              f575 002b  ld   $2b         ;0496 STW
-              f576 003f  ld   $3f         ;0496 'p'
-              f577 0011  ld   $11         ;0498 LDWI
-              f578 0001  ld   $01
-              f579 0088  ld   $88
-              f57a 002b  ld   $2b         ;049b STW
-              f57b 0041  ld   $41         ;049b 'i'
-              f57c 0059  ld   $59         ;049d LDI
-              f57d 0000  ld   $00
-              f57e 005e  ld   $5e         ;049f ST
-              f57f 0025  ld   $25
-              f580 005e  ld   $5e         ;04a1 ST
-              f581 0026  ld   $26
-              f582 0021  ld   $21         ;04a3 LDW
-              f583 003f  ld   $3f         ;04a3 'p'
-              f584 002b  ld   $2b         ;04a5 STW
-              f585 0021  ld   $21
-              f586 0011  ld   $11         ;04a7 LDWI
-              f587 00db  ld   $db
-              f588 0004  ld   $04
-              f589 00a9  ld   $a9         ;04aa SYS
-              f58a 00cb  ld   $cb
-              f58b 0011  ld   $11         ;04ac LDWI
-              f58c 0000  ld   $00
-              f58d 0008  ld   $08
-              f58e 00c1  ld   $c1         ;04af ADDW
-              f58f 003f  ld   $3f         ;04af 'p'
-              f590 002b  ld   $2b         ;04b1 STW
-              f591 003f  ld   $3f         ;04b1 'p'
-              f592 0035  ld   $35         ;04b3 BCC
-              f593 004d  ld   $4d         ;04b4 GT
-              f594 00a3  ld   $a3
-              f595 00c1  ld   $c1         ;04b6 ADDW
-              f596 0041  ld   $41         ;04b6 'i'
-              f597 002b  ld   $2b         ;04b8 STW
-              f598 003f  ld   $3f         ;04b8 'p'
-              f599 0087  ld   $87         ;04ba ANDI
-              f59a 00ff  ld   $ff
-              f59b 0091  ld   $91         ;04bc XORI
-              f59c 00a0  ld   $a0
-              f59d 0035  ld   $35         ;04be BCC
-              f59e 0072  ld   $72         ;04bf NE
-              f59f 00a1  ld   $a1
-              f5a0 00ff  ld   $ff         ;04c1 RET
-              f5a1 002b  ld   $2b         ;04c2 STW
-              f5a2 0043  ld   $43         ;04c2 'ClearScreen'
-              f5a3 00e1  ld   $e1         ;04c4 DEF
-              f5a4 00d4  ld   $d4
-              f5a5 001a  ld   $1a         ;04c6 LD
-              f5a6 0011  ld   $11
-              f5a7 00c1  ld   $c1         ;04c8 ADDW
-              f5a8 0045  ld   $45         ;04c8 'Delay'
-              f5a9 0087  ld   $87         ;04ca ANDI
-              f5aa 00ff  ld   $ff
-              f5ab 002b  ld   $2b         ;04cc STW
-              f5ac 0047  ld   $47         ;04cc 'tmp'
-              f5ad 001a  ld   $1a         ;04ce LD
-              f5ae 0011  ld   $11
-              f5af 00ad  ld   $ad         ;04d0 SUBW
-              f5b0 0047  ld   $47         ;04d0 'tmp'
-              f5b1 0035  ld   $35         ;04d2 BCC
-              f5b2 0072  ld   $72         ;04d3 NE
-              f5b3 00cc  ld   $cc
-              f5b4 00ff  ld   $ff         ;04d5 RET
-              f5b5 002b  ld   $2b         ;04d6 STW
-              f5b6 0049  ld   $49         ;04d6 'Wait'
-              f5b7 00f9  ld   $f9         ;04d8 INC
-              f5b8 001d  ld   $1d
-              f5b9 00ff  ld   $ff         ;04da RET
-              f5ba 0005  ld   $05         ;| RAM segment address (high byte first)
-              f5bb 0000  ld   $00         ;|
-              f5bc 00a4  ld   $a4         ;| Length (1..256)
-              f5bd 00e1  ld   $e1         ;0500 DEF
-              f5be 006d  ld   $6d
-              f5bf 0021  ld   $21         ;0502 LDW
-              f5c0 0033  ld   $33         ;0502 'Char'
-              f5c1 00f6  ld   $f6         ;0504 SUBI
-              f5c2 0052  ld   $52
-              f5c3 0035  ld   $35         ;0506 BCC
-              f5c4 0053  ld   $53         ;0507 GE
-              f5c5 0010  ld   $10
-              f5c6 00f3  ld   $f3         ;0509 ADDI
-              f5c7 0032  ld   $32
-              f5c8 002b  ld   $2b         ;050b STW
-              f5c9 0041  ld   $41         ;050b 'i'
-              f5ca 0011  ld   $11         ;050d LDWI
-              f5cb 0000  ld   $00
-              f5cc 0007  ld   $07
-              f5cd 0095  ld   $95         ;0510 BRA
-              f5ce 0015  ld   $15
-              f5cf 002b  ld   $2b         ;0512 STW
-              f5d0 0041  ld   $41         ;0512 'i'
-              f5d1 0011  ld   $11         ;0514 LDWI
-              f5d2 0000  ld   $00
-              f5d3 0008  ld   $08
-              f5d4 002b  ld   $2b         ;0517 STW
-              f5d5 004b  ld   $4b         ;0517 'fontData'
-              f5d6 0021  ld   $21         ;0519 LDW
-              f5d7 0041  ld   $41         ;0519 'i'
-              f5d8 00c1  ld   $c1         ;051b ADDW
-              f5d9 0041  ld   $41         ;051b 'i'
-              f5da 002b  ld   $2b         ;051d STW
-              f5db 0047  ld   $47         ;051d 'tmp'
-              f5dc 00c1  ld   $c1         ;051f ADDW
-              f5dd 0047  ld   $47         ;051f 'tmp'
-              f5de 00c1  ld   $c1         ;0521 ADDW
-              f5df 0041  ld   $41         ;0521 'i'
-              f5e0 00c1  ld   $c1         ;0523 ADDW
-              f5e1 004b  ld   $4b         ;0523 'fontData'
-              f5e2 002b  ld   $2b         ;0525 STW
-              f5e3 004b  ld   $4b         ;0525 'fontData'
-              f5e4 0011  ld   $11         ;0527 LDWI
-              f5e5 0000  ld   $00
-              f5e6 0008  ld   $08
-              f5e7 00c1  ld   $c1         ;052a ADDW
-              f5e8 0035  ld   $35         ;052a 'Pos'
-              f5e9 002b  ld   $2b         ;052c STW
-              f5ea 004d  ld   $4d         ;052c 'q'
-              f5eb 0059  ld   $59         ;052e LDI
-              f5ec 0005  ld   $05
-              f5ed 002b  ld   $2b         ;0530 STW
-              f5ee 0041  ld   $41         ;0530 'i'
-              f5ef 0035  ld   $35         ;0532 BCC
-              f5f0 003f  ld   $3f         ;0533 EQ
-              f5f1 003b  ld   $3b
-              f5f2 0021  ld   $21         ;0535 LDW
-              f5f3 004b  ld   $4b         ;0535 'fontData'
-              f5f4 0075  ld   $75         ;0537 LOOKUP
-              f5f5 0000  ld   $00
-              f5f6 00f9  ld   $f9         ;0539 INC
-              f5f7 004b  ld   $4b         ;0539 'fontData'
-              f5f8 0095  ld   $95         ;053b BRA
-              f5f9 003d  ld   $3d
-              f5fa 0059  ld   $59         ;053d LDI
+              f561 004d  ld   $4d
+              f562 0061  ld   $61
+              f563 0072  ld   $72
+              f564 0063  ld   $63
+              f565 0065  ld   $65
+              f566 006c  ld   $6c
+              f567 0020  ld   $20
+              f568 0026  ld   $26
+              f569 0020  ld   $20
+              f56a 0057  ld   $57
+              f56b 0061  ld   $61
+              f56c 006c  ld   $6c
+              f56d 0074  ld   $74
+              f56e 0065  ld   $65
+              f56f 0072  ld   $72
+              f570 000a  ld   $0a
+              f571 0000  ld   $00
+              f572 002b  ld   $2b         ;048f STW
+              f573 003c  ld   $3c         ;048f 'Part2'
+              f574 00e1  ld   $e1         ;0491 DEF
+              f575 00c0  ld   $c0
+              f576 0011  ld   $11         ;0493 LDWI
+              f577 0000  ld   $00
+              f578 0008  ld   $08
+              f579 002b  ld   $2b         ;0496 STW
+              f57a 003e  ld   $3e         ;0496 'p'
+              f57b 0011  ld   $11         ;0498 LDWI
+              f57c 0001  ld   $01
+              f57d 0088  ld   $88
+              f57e 002b  ld   $2b         ;049b STW
+              f57f 0040  ld   $40         ;049b 'i'
+              f580 0059  ld   $59         ;049d LDI
+              f581 0000  ld   $00
+              f582 005e  ld   $5e         ;049f ST
+              f583 0024  ld   $24
+              f584 005e  ld   $5e         ;04a1 ST
+              f585 0025  ld   $25
+              f586 0021  ld   $21         ;04a3 LDW
+              f587 003e  ld   $3e         ;04a3 'p'
+              f588 002b  ld   $2b         ;04a5 STW
+              f589 0020  ld   $20
+              f58a 0011  ld   $11         ;04a7 LDWI
+              f58b 00e4  ld   $e4
+              f58c 0004  ld   $04
+              f58d 00a9  ld   $a9         ;04aa SYS
+              f58e 00cb  ld   $cb
+              f58f 0011  ld   $11         ;04ac LDWI
+              f590 0000  ld   $00
+              f591 0008  ld   $08
+              f592 00c1  ld   $c1         ;04af ADDW
+              f593 003e  ld   $3e         ;04af 'p'
+              f594 002b  ld   $2b         ;04b1 STW
+              f595 003e  ld   $3e         ;04b1 'p'
+              f596 0035  ld   $35         ;04b3 BCC
+              f597 004d  ld   $4d         ;04b4 GT
+              f598 00a3  ld   $a3
+              f599 00c1  ld   $c1         ;04b6 ADDW
+              f59a 0040  ld   $40         ;04b6 'i'
+              f59b 002b  ld   $2b         ;04b8 STW
+              f59c 003e  ld   $3e         ;04b8 'p'
+              f59d 0087  ld   $87         ;04ba ANDI
+              f59e 00ff  ld   $ff
+              f59f 0091  ld   $91         ;04bc XORI
+              f5a0 00a0  ld   $a0
+              f5a1 0035  ld   $35         ;04be BCC
+              f5a2 0072  ld   $72         ;04bf NE
+              f5a3 00a1  ld   $a1
+              f5a4 00ff  ld   $ff         ;04c1 RET
+              f5a5 002b  ld   $2b         ;04c2 STW
+              f5a6 0042  ld   $42         ;04c2 'ClearScreen'
+              f5a7 00e1  ld   $e1         ;04c4 DEF
+              f5a8 00d4  ld   $d4
+              f5a9 001a  ld   $1a         ;04c6 LD
+              f5aa 0010  ld   $10
+              f5ab 00c1  ld   $c1         ;04c8 ADDW
+              f5ac 0044  ld   $44         ;04c8 'Delay'
+              f5ad 0087  ld   $87         ;04ca ANDI
+              f5ae 00ff  ld   $ff
+              f5af 002b  ld   $2b         ;04cc STW
+              f5b0 0046  ld   $46         ;04cc 'tmp'
+              f5b1 001a  ld   $1a         ;04ce LD
+              f5b2 0010  ld   $10
+              f5b3 00ad  ld   $ad         ;04d0 SUBW
+              f5b4 0046  ld   $46         ;04d0 'tmp'
+              f5b5 0035  ld   $35         ;04d2 BCC
+              f5b6 0072  ld   $72         ;04d3 NE
+              f5b7 00cc  ld   $cc
+              f5b8 00ff  ld   $ff         ;04d5 RET
+              f5b9 002b  ld   $2b         ;04d6 STW
+              f5ba 0048  ld   $48         ;04d6 'Wait'
+              f5bb 00f9  ld   $f9         ;04d8 INC
+              f5bc 001c  ld   $1c
+              f5bd 00ff  ld   $ff         ;04da RET
+              f5be 0005  ld   $05         ;| RAM segment address (high byte first)
+              f5bf 0000  ld   $00         ;|
+              f5c0 00a4  ld   $a4         ;| Length (1..256)
+              f5c1 00e1  ld   $e1         ;0500 DEF
+              f5c2 006d  ld   $6d
+              f5c3 0021  ld   $21         ;0502 LDW
+              f5c4 0032  ld   $32         ;0502 'Char'
+              f5c5 00f6  ld   $f6         ;0504 SUBI
+              f5c6 0052  ld   $52
+              f5c7 0035  ld   $35         ;0506 BCC
+              f5c8 0053  ld   $53         ;0507 GE
+              f5c9 0010  ld   $10
+              f5ca 00f3  ld   $f3         ;0509 ADDI
+              f5cb 0032  ld   $32
+              f5cc 002b  ld   $2b         ;050b STW
+              f5cd 0040  ld   $40         ;050b 'i'
+              f5ce 0011  ld   $11         ;050d LDWI
+              f5cf 0000  ld   $00
+              f5d0 0007  ld   $07
+              f5d1 0095  ld   $95         ;0510 BRA
+              f5d2 0015  ld   $15
+              f5d3 002b  ld   $2b         ;0512 STW
+              f5d4 0040  ld   $40         ;0512 'i'
+              f5d5 0011  ld   $11         ;0514 LDWI
+              f5d6 0000  ld   $00
+              f5d7 0008  ld   $08
+              f5d8 002b  ld   $2b         ;0517 STW
+              f5d9 004a  ld   $4a         ;0517 'fontData'
+              f5da 0021  ld   $21         ;0519 LDW
+              f5db 0040  ld   $40         ;0519 'i'
+              f5dc 00c1  ld   $c1         ;051b ADDW
+              f5dd 0040  ld   $40         ;051b 'i'
+              f5de 002b  ld   $2b         ;051d STW
+              f5df 0046  ld   $46         ;051d 'tmp'
+              f5e0 00c1  ld   $c1         ;051f ADDW
+              f5e1 0046  ld   $46         ;051f 'tmp'
+              f5e2 00c1  ld   $c1         ;0521 ADDW
+              f5e3 0040  ld   $40         ;0521 'i'
+              f5e4 00c1  ld   $c1         ;0523 ADDW
+              f5e5 004a  ld   $4a         ;0523 'fontData'
+              f5e6 002b  ld   $2b         ;0525 STW
+              f5e7 004a  ld   $4a         ;0525 'fontData'
+              f5e8 0011  ld   $11         ;0527 LDWI
+              f5e9 0000  ld   $00
+              f5ea 0008  ld   $08
+              f5eb 00c1  ld   $c1         ;052a ADDW
+              f5ec 0034  ld   $34         ;052a 'Pos'
+              f5ed 002b  ld   $2b         ;052c STW
+              f5ee 004c  ld   $4c         ;052c 'q'
+              f5ef 0059  ld   $59         ;052e LDI
+              f5f0 0005  ld   $05
+              f5f1 002b  ld   $2b         ;0530 STW
+              f5f2 0040  ld   $40         ;0530 'i'
+              f5f3 0035  ld   $35         ;0532 BCC
+              f5f4 003f  ld   $3f         ;0533 EQ
+              f5f5 003b  ld   $3b
+              f5f6 0021  ld   $21         ;0535 LDW
+              f5f7 004a  ld   $4a         ;0535 'fontData'
+              f5f8 0075  ld   $75         ;0537 LOOKUP
+              f5f9 0000  ld   $00
+              f5fa 00f9  ld   $f9         ;0539 INC
               f5fb fe00  bra  ac          ;+-----------------------------------+
               f5fc fcfd  bra  $f5fd       ;|                                   |
               f5fd 1403  ld   $03,y       ;| Trampoline for page $f500 lookups |
               f5fe e078  jmp  y,$78       ;|                                   |
-              f5ff 1519  ld   [$19],y     ;+-----------------------------------+
-              f600 0000  ld   $00
-              f601 002b  ld   $2b         ;053f STW
-              f602 004f  ld   $4f         ;053f 'bits'
-              f603 0021  ld   $21         ;0541 LDW
-              f604 0035  ld   $35         ;0541 'Pos'
-              f605 002b  ld   $2b         ;0543 STW
-              f606 003f  ld   $3f         ;0543 'p'
-              f607 0021  ld   $21         ;0545 LDW
-              f608 004f  ld   $4f         ;0545 'bits'
-              f609 0087  ld   $87         ;0547 ANDI
-              f60a 0080  ld   $80
-              f60b 0035  ld   $35         ;0549 BCC
-              f60c 0072  ld   $72         ;054a NE
-              f60d 004e  ld   $4e
-              f60e 0059  ld   $59         ;054c LDI
-              f60f 0000  ld   $00
-              f610 0095  ld   $95         ;054e BRA
-              f611 0050  ld   $50
-              f612 0021  ld   $21         ;0550 LDW
-              f613 0051  ld   $51         ;0550 'Color'
-              f614 0098  ld   $98         ;0552 POKE
-              f615 003f  ld   $3f         ;0552 'p'
-              f616 0021  ld   $21         ;0554 LDW
-              f617 004f  ld   $4f         ;0554 'bits'
-              f618 00c1  ld   $c1         ;0556 ADDW
-              f619 004f  ld   $4f         ;0556 'bits'
-              f61a 002b  ld   $2b         ;0558 STW
-              f61b 004f  ld   $4f         ;0558 'bits'
-              f61c 00f9  ld   $f9         ;055a INC
-              f61d 0040  ld   $40         ;055a 'p'+1
-              f61e 0021  ld   $21         ;055c LDW
-              f61f 003f  ld   $3f         ;055c 'p'
-              f620 00ad  ld   $ad         ;055e SUBW
-              f621 004d  ld   $4d         ;055e 'q'
-              f622 0035  ld   $35         ;0560 BCC
-              f623 0050  ld   $50         ;0561 LT
-              f624 0043  ld   $43
-              f625 00f9  ld   $f9         ;0563 INC
-              f626 0035  ld   $35         ;0563 'Pos'
-              f627 0021  ld   $21         ;0565 LDW
-              f628 0041  ld   $41         ;0565 'i'
-              f629 00f6  ld   $f6         ;0567 SUBI
-              f62a 0001  ld   $01
-              f62b 002b  ld   $2b         ;0569 STW
-              f62c 0041  ld   $41         ;0569 'i'
-              f62d 0035  ld   $35         ;056b BCC
-              f62e 0053  ld   $53         ;056c GE
-              f62f 0030  ld   $30
-              f630 00ff  ld   $ff         ;056e RET
-              f631 002b  ld   $2b         ;056f STW
-              f632 0037  ld   $37         ;056f 'DrawChar'
-              f633 0011  ld   $11         ;0571 LDWI
-              f634 0000  ld   $00
-              f635 0008  ld   $08
-              f636 002b  ld   $2b         ;0574 STW
-              f637 0035  ld   $35         ;0574 'Pos'
-              f638 00e3  ld   $e3         ;0576 CALL
-              f639 0043  ld   $43         ;0576 'ClearScreen'
-              f63a 0059  ld   $59         ;0578 LDI
-              f63b 003e  ld   $3e
-              f63c 002b  ld   $2b         ;057a STW
-              f63d 0051  ld   $51         ;057a 'Color'
-              f63e 0011  ld   $11         ;057c LDWI
-              f63f 0000  ld   $00
-              f640 0008  ld   $08
-              f641 002b  ld   $2b         ;057f STW
-              f642 0035  ld   $35         ;057f 'Pos'
-              f643 0021  ld   $21         ;0581 LDW
-              f644 003b  ld   $3b         ;0581 'Part1'
-              f645 002b  ld   $2b         ;0583 STW
-              f646 0031  ld   $31         ;0583 'Text'
-              f647 00e3  ld   $e3         ;0585 CALL
-              f648 0039  ld   $39         ;0585 'DrawText'
-              f649 0021  ld   $21         ;0587 LDW
-              f64a 003d  ld   $3d         ;0587 'Part2'
-              f64b 002b  ld   $2b         ;0589 STW
-              f64c 0031  ld   $31         ;0589 'Text'
-              f64d 00e3  ld   $e3         ;058b CALL
-              f64e 0039  ld   $39         ;058b 'DrawText'
-              f64f 0059  ld   $59         ;058d LDI
-              f650 00f0  ld   $f0
-              f651 002b  ld   $2b         ;058f STW
-              f652 0045  ld   $45         ;058f 'Delay'
-              f653 00e3  ld   $e3         ;0591 CALL
-              f654 0049  ld   $49         ;0591 'Wait'
-              f655 0021  ld   $21         ;0593 LDW
-              f656 0051  ld   $51         ;0593 'Color'
-              f657 0091  ld   $91         ;0595 XORI
-              f658 0008  ld   $08
-              f659 0035  ld   $35         ;0597 BCC
-              f65a 003f  ld   $3f         ;0598 EQ
-              f65b 00a0  ld   $a0
-              f65c 0021  ld   $21         ;059a LDW
-              f65d 0051  ld   $51         ;059a 'Color'
-              f65e 00f6  ld   $f6         ;059c SUBI
-              f65f 0009  ld   $09
-              f660 002b  ld   $2b         ;059e STW
-              f661 0051  ld   $51         ;059e 'Color'
-              f662 0095  ld   $95         ;05a0 BRA
-              f663 007a  ld   $7a
-              f664 0095  ld   $95         ;05a2 BRA
-              f665 0076  ld   $76
-              f666 0000  ld   $00         ;End of file
-Loader:       f667 0003  ld   $03         ;| RAM segment address (high byte first)
-              f668 0000  ld   $00         ;|
-              f669 00af  ld   $af         ;| Length (1..256)
-              f66a 00e1  ld   $e1         ;0300 DEF
-              f66b 0066  ld   $66
-              f66c 002b  ld   $2b         ;0302 STW
-              f66d 0031  ld   $31         ;0302 'Char'
-              f66e 00f6  ld   $f6         ;0304 SUBI
-              f66f 0052  ld   $52
-              f670 0035  ld   $35         ;0306 BCC
-              f671 0053  ld   $53         ;0307 GE
-              f672 0010  ld   $10
-              f673 00f3  ld   $f3         ;0309 ADDI
-              f674 0032  ld   $32
-              f675 002b  ld   $2b         ;030b STW
-              f676 0033  ld   $33         ;030b 'i'
-              f677 0011  ld   $11         ;030d LDWI
-              f678 0000  ld   $00
-              f679 0007  ld   $07
-              f67a 0095  ld   $95         ;0310 BRA
-              f67b 0015  ld   $15
-              f67c 002b  ld   $2b         ;0312 STW
-              f67d 0033  ld   $33         ;0312 'i'
-              f67e 0011  ld   $11         ;0314 LDWI
-              f67f 0000  ld   $00
-              f680 0008  ld   $08
-              f681 002b  ld   $2b         ;0317 STW
-              f682 0035  ld   $35         ;0317 'fontData'
-              f683 0021  ld   $21         ;0319 LDW
-              f684 0033  ld   $33         ;0319 'i'
-              f685 00c1  ld   $c1         ;031b ADDW
-              f686 0033  ld   $33         ;031b 'i'
-              f687 002b  ld   $2b         ;031d STW
-              f688 0037  ld   $37         ;031d 'tmp'
-              f689 00c1  ld   $c1         ;031f ADDW
-              f68a 0037  ld   $37         ;031f 'tmp'
-              f68b 00c1  ld   $c1         ;0321 ADDW
-              f68c 0033  ld   $33         ;0321 'i'
-              f68d 00c1  ld   $c1         ;0323 ADDW
-              f68e 0035  ld   $35         ;0323 'fontData'
-              f68f 002b  ld   $2b         ;0325 STW
-              f690 0035  ld   $35         ;0325 'fontData'
-              f691 0011  ld   $11         ;0327 LDWI
-              f692 0000  ld   $00
-              f693 0008  ld   $08
-              f694 00c1  ld   $c1         ;032a ADDW
-              f695 0039  ld   $39         ;032a 'Pos'
-              f696 002b  ld   $2b         ;032c STW
-              f697 003b  ld   $3b         ;032c 'q'
-              f698 0059  ld   $59         ;032e LDI
-              f699 0005  ld   $05
-              f69a 002b  ld   $2b         ;0330 STW
-              f69b 0033  ld   $33         ;0330 'i'
-              f69c 0021  ld   $21         ;0332 LDW
-              f69d 0035  ld   $35         ;0332 'fontData'
-              f69e 0075  ld   $75         ;0334 LOOKUP
-              f69f 0000  ld   $00
-              f6a0 002b  ld   $2b         ;0336 STW
-              f6a1 003d  ld   $3d         ;0336 'bits'
-              f6a2 00f9  ld   $f9         ;0338 INC
-              f6a3 0035  ld   $35         ;0338 'fontData'
-              f6a4 0021  ld   $21         ;033a LDW
-              f6a5 0039  ld   $39         ;033a 'Pos'
-              f6a6 002b  ld   $2b         ;033c STW
-              f6a7 003f  ld   $3f         ;033c 'p'
-              f6a8 0021  ld   $21         ;033e LDW
-              f6a9 003d  ld   $3d         ;033e 'bits'
-              f6aa 0087  ld   $87         ;0340 ANDI
-              f6ab 0080  ld   $80
-              f6ac 0035  ld   $35         ;0342 BCC
-              f6ad 0072  ld   $72         ;0343 NE
-              f6ae 0047  ld   $47
-              f6af 0059  ld   $59         ;0345 LDI
-              f6b0 0020  ld   $20
-              f6b1 0095  ld   $95         ;0347 BRA
-              f6b2 0049  ld   $49
-              f6b3 0059  ld   $59         ;0349 LDI
-              f6b4 000f  ld   $0f
-              f6b5 0098  ld   $98         ;034b POKE
-              f6b6 003f  ld   $3f         ;034b 'p'
-              f6b7 0021  ld   $21         ;034d LDW
-              f6b8 003d  ld   $3d         ;034d 'bits'
-              f6b9 00c1  ld   $c1         ;034f ADDW
-              f6ba 003d  ld   $3d         ;034f 'bits'
-              f6bb 002b  ld   $2b         ;0351 STW
-              f6bc 003d  ld   $3d         ;0351 'bits'
-              f6bd 00f9  ld   $f9         ;0353 INC
-              f6be 0040  ld   $40         ;0353 'p'+1
-              f6bf 0021  ld   $21         ;0355 LDW
-              f6c0 003f  ld   $3f         ;0355 'p'
-              f6c1 00ad  ld   $ad         ;0357 SUBW
-              f6c2 003b  ld   $3b         ;0357 'q'
-              f6c3 0035  ld   $35         ;0359 BCC
-              f6c4 0050  ld   $50         ;035a LT
-              f6c5 003c  ld   $3c
-              f6c6 00f9  ld   $f9         ;035c INC
-              f6c7 0039  ld   $39         ;035c 'Pos'
-              f6c8 0021  ld   $21         ;035e LDW
-              f6c9 0033  ld   $33         ;035e 'i'
-              f6ca 00f6  ld   $f6         ;0360 SUBI
-              f6cb 0001  ld   $01
-              f6cc 0035  ld   $35         ;0362 BCC
-              f6cd 004d  ld   $4d         ;0363 GT
-              f6ce 002e  ld   $2e
-              f6cf 00f9  ld   $f9         ;0365 INC
-              f6d0 0039  ld   $39         ;0365 'Pos'
-              f6d1 00ff  ld   $ff         ;0367 RET
-              f6d2 002b  ld   $2b         ;0368 STW
-              f6d3 0041  ld   $41         ;0368 'PrintChar'
-              f6d4 0011  ld   $11         ;036a LDWI
-              f6d5 000c  ld   $0c
-              f6d6 0050  ld   $50
-              f6d7 002b  ld   $2b         ;036d STW
-              f6d8 0039  ld   $39         ;036d 'Pos'
-              f6d9 00e1  ld   $e1         ;036f DEF
-              f6da 007d  ld   $7d
-              f6db 0052  ld   $52
-              f6dc 0065  ld   $65
-              f6dd 0061  ld   $61
-              f6de 0064  ld   $64
-              f6df 0079  ld   $79
-              f6e0 0020  ld   $20
-              f6e1 0074  ld   $74
-              f6e2 006f  ld   $6f
-              f6e3 0020  ld   $20
-              f6e4 006c  ld   $6c
-              f6e5 006f  ld   $6f
-              f6e6 0061  ld   $61
-              f6e7 0064  ld   $64
-              f6e8 0000  ld   $00
-              f6e9 002b  ld   $2b         ;037f STW
-              f6ea 0043  ld   $43         ;037f 'Text'
-              f6eb 0021  ld   $21         ;0381 LDW
-              f6ec 0043  ld   $43         ;0381 'Text'
-              f6ed 00d5  ld   $d5         ;0383 PEEK
-              f6ee 0035  ld   $35         ;0384 BCC
-              f6ef 003f  ld   $3f         ;0385 EQ
-              f6f0 008b  ld   $8b
-              f6f1 00f9  ld   $f9         ;0387 INC
-              f6f2 0043  ld   $43         ;0387 'Text'
-              f6f3 00e3  ld   $e3         ;0389 CALL
-              f6f4 0041  ld   $41         ;0389 'PrintChar'
-              f6f5 0095  ld   $95         ;038b BRA
-              f6f6 007f  ld   $7f
-              f6f7 0011  ld   $11         ;038d LDWI
-              f6f8 003d  ld   $3d
-              f6f9 0004  ld   $04
-              f6fa 002b  ld   $2b         ;0390 STW
+              f5ff 1518  ld   [$18],y     ;+-----------------------------------+
+              f600 004a  ld   $4a         ;0539 'fontData'
+              f601 0095  ld   $95         ;053b BRA
+              f602 003d  ld   $3d
+              f603 0059  ld   $59         ;053d LDI
+              f604 0000  ld   $00
+              f605 002b  ld   $2b         ;053f STW
+              f606 004e  ld   $4e         ;053f 'bits'
+              f607 0021  ld   $21         ;0541 LDW
+              f608 0034  ld   $34         ;0541 'Pos'
+              f609 002b  ld   $2b         ;0543 STW
+              f60a 003e  ld   $3e         ;0543 'p'
+              f60b 0021  ld   $21         ;0545 LDW
+              f60c 004e  ld   $4e         ;0545 'bits'
+              f60d 0087  ld   $87         ;0547 ANDI
+              f60e 0080  ld   $80
+              f60f 0035  ld   $35         ;0549 BCC
+              f610 0072  ld   $72         ;054a NE
+              f611 004e  ld   $4e
+              f612 0059  ld   $59         ;054c LDI
+              f613 0000  ld   $00
+              f614 0095  ld   $95         ;054e BRA
+              f615 0050  ld   $50
+              f616 0021  ld   $21         ;0550 LDW
+              f617 0050  ld   $50         ;0550 'Color'
+              f618 0098  ld   $98         ;0552 POKE
+              f619 003e  ld   $3e         ;0552 'p'
+              f61a 0021  ld   $21         ;0554 LDW
+              f61b 004e  ld   $4e         ;0554 'bits'
+              f61c 00c1  ld   $c1         ;0556 ADDW
+              f61d 004e  ld   $4e         ;0556 'bits'
+              f61e 002b  ld   $2b         ;0558 STW
+              f61f 004e  ld   $4e         ;0558 'bits'
+              f620 00f9  ld   $f9         ;055a INC
+              f621 003f  ld   $3f         ;055a 'p'+1
+              f622 0021  ld   $21         ;055c LDW
+              f623 003e  ld   $3e         ;055c 'p'
+              f624 00ad  ld   $ad         ;055e SUBW
+              f625 004c  ld   $4c         ;055e 'q'
+              f626 0035  ld   $35         ;0560 BCC
+              f627 0050  ld   $50         ;0561 LT
+              f628 0043  ld   $43
+              f629 00f9  ld   $f9         ;0563 INC
+              f62a 0034  ld   $34         ;0563 'Pos'
+              f62b 0021  ld   $21         ;0565 LDW
+              f62c 0040  ld   $40         ;0565 'i'
+              f62d 00f6  ld   $f6         ;0567 SUBI
+              f62e 0001  ld   $01
+              f62f 002b  ld   $2b         ;0569 STW
+              f630 0040  ld   $40         ;0569 'i'
+              f631 0035  ld   $35         ;056b BCC
+              f632 0053  ld   $53         ;056c GE
+              f633 0030  ld   $30
+              f634 00ff  ld   $ff         ;056e RET
+              f635 002b  ld   $2b         ;056f STW
+              f636 0036  ld   $36         ;056f 'DrawChar'
+              f637 0011  ld   $11         ;0571 LDWI
+              f638 0000  ld   $00
+              f639 0008  ld   $08
+              f63a 002b  ld   $2b         ;0574 STW
+              f63b 0034  ld   $34         ;0574 'Pos'
+              f63c 00e3  ld   $e3         ;0576 CALL
+              f63d 0042  ld   $42         ;0576 'ClearScreen'
+              f63e 0059  ld   $59         ;0578 LDI
+              f63f 003e  ld   $3e
+              f640 002b  ld   $2b         ;057a STW
+              f641 0050  ld   $50         ;057a 'Color'
+              f642 0011  ld   $11         ;057c LDWI
+              f643 0000  ld   $00
+              f644 0008  ld   $08
+              f645 002b  ld   $2b         ;057f STW
+              f646 0034  ld   $34         ;057f 'Pos'
+              f647 0021  ld   $21         ;0581 LDW
+              f648 003a  ld   $3a         ;0581 'Part1'
+              f649 002b  ld   $2b         ;0583 STW
+              f64a 0030  ld   $30         ;0583 'Text'
+              f64b 00e3  ld   $e3         ;0585 CALL
+              f64c 0038  ld   $38         ;0585 'DrawText'
+              f64d 0021  ld   $21         ;0587 LDW
+              f64e 003c  ld   $3c         ;0587 'Part2'
+              f64f 002b  ld   $2b         ;0589 STW
+              f650 0030  ld   $30         ;0589 'Text'
+              f651 00e3  ld   $e3         ;058b CALL
+              f652 0038  ld   $38         ;058b 'DrawText'
+              f653 0059  ld   $59         ;058d LDI
+              f654 00f0  ld   $f0
+              f655 002b  ld   $2b         ;058f STW
+              f656 0044  ld   $44         ;058f 'Delay'
+              f657 00e3  ld   $e3         ;0591 CALL
+              f658 0048  ld   $48         ;0591 'Wait'
+              f659 0021  ld   $21         ;0593 LDW
+              f65a 0050  ld   $50         ;0593 'Color'
+              f65b 0091  ld   $91         ;0595 XORI
+              f65c 0008  ld   $08
+              f65d 0035  ld   $35         ;0597 BCC
+              f65e 003f  ld   $3f         ;0598 EQ
+              f65f 00a0  ld   $a0
+              f660 0021  ld   $21         ;059a LDW
+              f661 0050  ld   $50         ;059a 'Color'
+              f662 00f6  ld   $f6         ;059c SUBI
+              f663 0009  ld   $09
+              f664 002b  ld   $2b         ;059e STW
+              f665 0050  ld   $50         ;059e 'Color'
+              f666 0095  ld   $95         ;05a0 BRA
+              f667 007a  ld   $7a
+              f668 0095  ld   $95         ;05a2 BRA
+              f669 0076  ld   $76
+              f66a 0000  ld   $00         ;End of file
+Loader:       f66b 0003  ld   $03         ;| RAM segment address (high byte first)
+              f66c 0000  ld   $00         ;|
+              f66d 00af  ld   $af         ;| Length (1..256)
+              f66e 00e1  ld   $e1         ;0300 DEF
+              f66f 0066  ld   $66
+              f670 002b  ld   $2b         ;0302 STW
+              f671 0030  ld   $30         ;0302 'Char'
+              f672 00f6  ld   $f6         ;0304 SUBI
+              f673 0052  ld   $52
+              f674 0035  ld   $35         ;0306 BCC
+              f675 0053  ld   $53         ;0307 GE
+              f676 0010  ld   $10
+              f677 00f3  ld   $f3         ;0309 ADDI
+              f678 0032  ld   $32
+              f679 002b  ld   $2b         ;030b STW
+              f67a 0032  ld   $32         ;030b 'i'
+              f67b 0011  ld   $11         ;030d LDWI
+              f67c 0000  ld   $00
+              f67d 0007  ld   $07
+              f67e 0095  ld   $95         ;0310 BRA
+              f67f 0015  ld   $15
+              f680 002b  ld   $2b         ;0312 STW
+              f681 0032  ld   $32         ;0312 'i'
+              f682 0011  ld   $11         ;0314 LDWI
+              f683 0000  ld   $00
+              f684 0008  ld   $08
+              f685 002b  ld   $2b         ;0317 STW
+              f686 0034  ld   $34         ;0317 'fontData'
+              f687 0021  ld   $21         ;0319 LDW
+              f688 0032  ld   $32         ;0319 'i'
+              f689 00c1  ld   $c1         ;031b ADDW
+              f68a 0032  ld   $32         ;031b 'i'
+              f68b 002b  ld   $2b         ;031d STW
+              f68c 0036  ld   $36         ;031d 'tmp'
+              f68d 00c1  ld   $c1         ;031f ADDW
+              f68e 0036  ld   $36         ;031f 'tmp'
+              f68f 00c1  ld   $c1         ;0321 ADDW
+              f690 0032  ld   $32         ;0321 'i'
+              f691 00c1  ld   $c1         ;0323 ADDW
+              f692 0034  ld   $34         ;0323 'fontData'
+              f693 002b  ld   $2b         ;0325 STW
+              f694 0034  ld   $34         ;0325 'fontData'
+              f695 0011  ld   $11         ;0327 LDWI
+              f696 0000  ld   $00
+              f697 0008  ld   $08
+              f698 00c1  ld   $c1         ;032a ADDW
+              f699 0038  ld   $38         ;032a 'Pos'
+              f69a 002b  ld   $2b         ;032c STW
+              f69b 003a  ld   $3a         ;032c 'q'
+              f69c 0059  ld   $59         ;032e LDI
+              f69d 0005  ld   $05
+              f69e 002b  ld   $2b         ;0330 STW
+              f69f 0032  ld   $32         ;0330 'i'
+              f6a0 0021  ld   $21         ;0332 LDW
+              f6a1 0034  ld   $34         ;0332 'fontData'
+              f6a2 0075  ld   $75         ;0334 LOOKUP
+              f6a3 0000  ld   $00
+              f6a4 002b  ld   $2b         ;0336 STW
+              f6a5 003c  ld   $3c         ;0336 'bits'
+              f6a6 00f9  ld   $f9         ;0338 INC
+              f6a7 0034  ld   $34         ;0338 'fontData'
+              f6a8 0021  ld   $21         ;033a LDW
+              f6a9 0038  ld   $38         ;033a 'Pos'
+              f6aa 002b  ld   $2b         ;033c STW
+              f6ab 003e  ld   $3e         ;033c 'p'
+              f6ac 0021  ld   $21         ;033e LDW
+              f6ad 003c  ld   $3c         ;033e 'bits'
+              f6ae 0087  ld   $87         ;0340 ANDI
+              f6af 0080  ld   $80
+              f6b0 0035  ld   $35         ;0342 BCC
+              f6b1 0072  ld   $72         ;0343 NE
+              f6b2 0047  ld   $47
+              f6b3 0059  ld   $59         ;0345 LDI
+              f6b4 0020  ld   $20
+              f6b5 0095  ld   $95         ;0347 BRA
+              f6b6 0049  ld   $49
+              f6b7 0059  ld   $59         ;0349 LDI
+              f6b8 000f  ld   $0f
+              f6b9 0098  ld   $98         ;034b POKE
+              f6ba 003e  ld   $3e         ;034b 'p'
+              f6bb 0021  ld   $21         ;034d LDW
+              f6bc 003c  ld   $3c         ;034d 'bits'
+              f6bd 00c1  ld   $c1         ;034f ADDW
+              f6be 003c  ld   $3c         ;034f 'bits'
+              f6bf 002b  ld   $2b         ;0351 STW
+              f6c0 003c  ld   $3c         ;0351 'bits'
+              f6c1 00f9  ld   $f9         ;0353 INC
+              f6c2 003f  ld   $3f         ;0353 'p'+1
+              f6c3 0021  ld   $21         ;0355 LDW
+              f6c4 003e  ld   $3e         ;0355 'p'
+              f6c5 00ad  ld   $ad         ;0357 SUBW
+              f6c6 003a  ld   $3a         ;0357 'q'
+              f6c7 0035  ld   $35         ;0359 BCC
+              f6c8 0050  ld   $50         ;035a LT
+              f6c9 003c  ld   $3c
+              f6ca 00f9  ld   $f9         ;035c INC
+              f6cb 0038  ld   $38         ;035c 'Pos'
+              f6cc 0021  ld   $21         ;035e LDW
+              f6cd 0032  ld   $32         ;035e 'i'
+              f6ce 00f6  ld   $f6         ;0360 SUBI
+              f6cf 0001  ld   $01
+              f6d0 0035  ld   $35         ;0362 BCC
+              f6d1 004d  ld   $4d         ;0363 GT
+              f6d2 002e  ld   $2e
+              f6d3 00f9  ld   $f9         ;0365 INC
+              f6d4 0038  ld   $38         ;0365 'Pos'
+              f6d5 00ff  ld   $ff         ;0367 RET
+              f6d6 002b  ld   $2b         ;0368 STW
+              f6d7 0040  ld   $40         ;0368 'PrintChar'
+              f6d8 0011  ld   $11         ;036a LDWI
+              f6d9 000c  ld   $0c
+              f6da 0050  ld   $50
+              f6db 002b  ld   $2b         ;036d STW
+              f6dc 0038  ld   $38         ;036d 'Pos'
+              f6dd 00e1  ld   $e1         ;036f DEF
+              f6de 007d  ld   $7d
+              f6df 0052  ld   $52
+              f6e0 0065  ld   $65
+              f6e1 0061  ld   $61
+              f6e2 0064  ld   $64
+              f6e3 0079  ld   $79
+              f6e4 0020  ld   $20
+              f6e5 0074  ld   $74
+              f6e6 006f  ld   $6f
+              f6e7 0020  ld   $20
+              f6e8 006c  ld   $6c
+              f6e9 006f  ld   $6f
+              f6ea 0061  ld   $61
+              f6eb 0064  ld   $64
+              f6ec 0000  ld   $00
+              f6ed 002b  ld   $2b         ;037f STW
+              f6ee 0042  ld   $42         ;037f 'Text'
+              f6ef 0021  ld   $21         ;0381 LDW
+              f6f0 0042  ld   $42         ;0381 'Text'
+              f6f1 00d5  ld   $d5         ;0383 PEEK
+              f6f2 0035  ld   $35         ;0384 BCC
+              f6f3 003f  ld   $3f         ;0385 EQ
+              f6f4 008b  ld   $8b
+              f6f5 00f9  ld   $f9         ;0387 INC
+              f6f6 0042  ld   $42         ;0387 'Text'
+              f6f7 00e3  ld   $e3         ;0389 CALL
+              f6f8 0040  ld   $40         ;0389 'PrintChar'
+              f6f9 0095  ld   $95         ;038b BRA
+              f6fa 007f  ld   $7f
               f6fb fe00  bra  ac          ;+-----------------------------------+
               f6fc fcfd  bra  $f6fd       ;|                                   |
               f6fd 1403  ld   $03,y       ;| Trampoline for page $f600 lookups |
               f6fe e078  jmp  y,$78       ;|                                   |
-              f6ff 1519  ld   [$19],y     ;+-----------------------------------+
-              f700 0045  ld   $45         ;0390 'NextByteIn_30'
-              f701 0011  ld   $11         ;0392 LDWI
-              f702 004a  ld   $4a
-              f703 0004  ld   $04
-              f704 002b  ld   $2b         ;0395 STW
-              f705 0047  ld   $47         ;0395 'ConditionalCopy_34'
-              f706 0059  ld   $59         ;0397 LDI
-              f707 0000  ld   $00
-              f708 005e  ld   $5e         ;0399 ST
-              f709 0028  ld   $28
-              f70a 0011  ld   $11         ;039b LDWI
-              f70b 000c  ld   $0c
-              f70c 005a  ld   $5a
-              f70d 002b  ld   $2b         ;039e STW
-              f70e 0049  ld   $49         ;039e 'A'
-              f70f 0011  ld   $11         ;03a0 LDWI
-              f710 000c  ld   $0c
-              f711 005b  ld   $5b
-              f712 002b  ld   $2b         ;03a3 STW
-              f713 004b  ld   $4b         ;03a3 'B'
-              f714 0059  ld   $59         ;03a5 LDI
-              f715 0067  ld   $67
-              f716 005e  ld   $5e         ;03a7 ST
-              f717 0027  ld   $27
-              f718 0011  ld   $11         ;03a9 LDWI
-              f719 000c  ld   $0c
-              f71a 0059  ld   $59
-              f71b 002b  ld   $2b         ;03ac STW
-              f71c 001c  ld   $1c
-              f71d 00ff  ld   $ff         ;03ae RET
-              f71e 0059  ld   $59         ;| RAM segment address (high byte first)
-              f71f 000c  ld   $0c         ;|
-              f720 0082  ld   $82         ;| Length (1..256)
-              f721 0059  ld   $59         ;590c LDI
-              f722 003f  ld   $3f
-              f723 0098  ld   $98         ;590e POKE
-              f724 0049  ld   $49         ;590e 'A'
-              f725 0021  ld   $21         ;5910 LDW
-              f726 004b  ld   $4b         ;5910 'B'
-              f727 002b  ld   $2b         ;5912 STW
-              f728 0025  ld   $25
-              f729 001a  ld   $1a         ;5914 LD
-              f72a 000b  ld   $0b
-              f72b 0091  ld   $91         ;5916 XORI
-              f72c 00cd  ld   $cd
-              f72d 0035  ld   $35         ;5918 BCC
-              f72e 0072  ld   $72         ;5919 NE
-              f72f 0012  ld   $12
-              f730 0021  ld   $21         ;591b LDW
-              f731 0045  ld   $45         ;591b 'NextByteIn_30'
-              f732 00a9  ld   $a9         ;591d SYS
-              f733 00ff  ld   $ff
-              f734 001a  ld   $1a         ;591f LD
-              f735 000b  ld   $0b
-              f736 0091  ld   $91         ;5921 XORI
-              f737 00d9  ld   $d9
-              f738 0035  ld   $35         ;5923 BCC
-              f739 0072  ld   $72         ;5924 NE
-              f73a 001d  ld   $1d
-              f73b 0021  ld   $21         ;5926 LDW
-              f73c 0045  ld   $45         ;5926 'NextByteIn_30'
-              f73d 00a9  ld   $a9         ;5928 SYS
-              f73e 00ff  ld   $ff
-              f73f 001a  ld   $1a         ;592a LD
-              f740 000b  ld   $0b
-              f741 0091  ld   $91         ;592c XORI
-              f742 00e9  ld   $e9
-              f743 0035  ld   $35         ;592e BCC
-              f744 0072  ld   $72         ;592f NE
-              f745 0028  ld   $28
-              f746 0021  ld   $21         ;5931 LDW
-              f747 0045  ld   $45         ;5931 'NextByteIn_30'
-              f748 00a9  ld   $a9         ;5933 SYS
-              f749 00ff  ld   $ff
-              f74a 001a  ld   $1a         ;5935 LD
-              f74b 000b  ld   $0b
-              f74c 0091  ld   $91         ;5937 XORI
-              f74d 00f9  ld   $f9
-              f74e 0035  ld   $35         ;5939 BCC
-              f74f 0072  ld   $72         ;593a NE
-              f750 0033  ld   $33
-              f751 0021  ld   $21         ;593c LDW
-              f752 0045  ld   $45         ;593c 'NextByteIn_30'
-              f753 00a9  ld   $a9         ;593e SYS
-              f754 00ff  ld   $ff
-              f755 0021  ld   $21         ;5940 LDW
-              f756 0047  ld   $47         ;5940 'ConditionalCopy_34'
-              f757 00a9  ld   $a9         ;5942 SYS
-              f758 00fd  ld   $fd
-              f759 001a  ld   $1a         ;5944 LD
-              f75a 000e  ld   $0e
-              f75b 0035  ld   $35         ;5946 BCC
-              f75c 0072  ld   $72         ;5947 NE
-              f75d 0042  ld   $42
-              f75e 0021  ld   $21         ;5949 LDW
-              f75f 0045  ld   $45         ;5949 'NextByteIn_30'
-              f760 00a9  ld   $a9         ;594b SYS
-              f761 00ff  ld   $ff
-              f762 0059  ld   $59         ;594d LDI
-              f763 0000  ld   $00
-              f764 0021  ld   $21         ;594f LDW
-              f765 0047  ld   $47         ;594f 'ConditionalCopy_34'
-              f766 00a9  ld   $a9         ;5951 SYS
-              f767 00fd  ld   $fd
-              f768 001a  ld   $1a         ;5953 LD
-              f769 000b  ld   $0b
-              f76a 0087  ld   $87         ;5955 ANDI
-              f76b 0002  ld   $02
-              f76c 0035  ld   $35         ;5957 BCC
-              f76d 003f  ld   $3f         ;5958 EQ
-              f76e 0051  ld   $51
-              f76f 0021  ld   $21         ;595a LDW
-              f770 0045  ld   $45         ;595a 'NextByteIn_30'
-              f771 00a9  ld   $a9         ;595c SYS
-              f772 00ff  ld   $ff
-              f773 001a  ld   $1a         ;595e LD
-              f774 000b  ld   $0b
-              f775 0091  ld   $91         ;5960 XORI
-              f776 00ee  ld   $ee
-              f777 0035  ld   $35         ;5962 BCC
-              f778 0072  ld   $72         ;5963 NE
-              f779 004d  ld   $4d
-              f77a 001a  ld   $1a         ;5965 LD
-              f77b 000b  ld   $0b
-              f77c 0091  ld   $91         ;5967 XORI
-              f77d 00b7  ld   $b7
-              f77e 0035  ld   $35         ;5969 BCC
-              f77f 0072  ld   $72         ;596a NE
-              f780 0063  ld   $63
-              f781 0021  ld   $21         ;596c LDW
-              f782 0045  ld   $45         ;596c 'NextByteIn_30'
-              f783 00a9  ld   $a9         ;596e SYS
-              f784 00ff  ld   $ff
-              f785 001a  ld   $1a         ;5970 LD
-              f786 0027  ld   $27
-              f787 0035  ld   $35         ;5972 BCC
-              f788 0072  ld   $72         ;5973 NE
-              f789 0077  ld   $77
-              f78a 0059  ld   $59         ;5975 LDI
-              f78b 000c  ld   $0c
-              f78c 0095  ld   $95         ;5977 BRA
-              f78d 0079  ld   $79
-              f78e 0059  ld   $59         ;5979 LDI
-              f78f 0003  ld   $03
-              f790 0098  ld   $98         ;597b POKE
-              f791 0049  ld   $49         ;597b 'A'
-              f792 0011  ld   $11         ;597d LDWI
-              f793 005e  ld   $5e
-              f794 0004  ld   $04
-              f795 00a9  ld   $a9         ;5980 SYS
-              f796 00f6  ld   $f6
-              f797 001a  ld   $1a         ;5982 LD
-              f798 0049  ld   $49         ;5982 'A'
-              f799 00f6  ld   $f6         ;5984 SUBI
-              f79a 000b  ld   $0b
-              f79b 0087  ld   $87         ;5986 ANDI
-              f79c 007f  ld   $7f
-              f79d 00f3  ld   $f3         ;5988 ADDI
-              f79e 000c  ld   $0c
-              f79f 005e  ld   $5e         ;598a ST
-              f7a0 0049  ld   $49         ;598a 'A'
-              f7a1 0095  ld   $95         ;598c BRA
-              f7a2 000a  ld   $0a
-              f7a3 0000  ld   $00         ;End of file
-Screen:       f7a4 0003  ld   $03         ;| RAM segment address (high byte first)
-              f7a5 0000  ld   $00         ;|
-              f7a6 00d9  ld   $d9         ;| Length (1..256)
-              f7a7 0011  ld   $11         ;0300 LDWI
-              f7a8 0001  ld   $01
-              f7a9 0001  ld   $01
-              f7aa 002b  ld   $2b         ;0303 STW
-              f7ab 0031  ld   $31         ;0303 'ShiftControl'
-              f7ac 00e1  ld   $e1         ;0305 DEF
-              f7ad 00ca  ld   $ca
-              f7ae 0011  ld   $11         ;0307 LDWI
-              f7af 008e  ld   $8e
-              f7b0 0004  ld   $04
-              f7b1 00a9  ld   $a9         ;030a SYS
-              f7b2 00fd  ld   $fd
-              f7b3 002b  ld   $2b         ;030c STW
-              f7b4 0033  ld   $33         ;030c 'q'
-              f7b5 001a  ld   $1a         ;030e LD
-              f7b6 0034  ld   $34         ;030e 'q'+1
-              f7b7 00f6  ld   $f6         ;0310 SUBI
-              f7b8 0078  ld   $78
-              f7b9 0035  ld   $35         ;0312 BCC
-              f7ba 0053  ld   $53         ;0313 GE
-              f7bb 0005  ld   $05
-              f7bc 00f3  ld   $f3         ;0315 ADDI
-              f7bd 0080  ld   $80
-              f7be 005e  ld   $5e         ;0317 ST
-              f7bf 0034  ld   $34         ;0317 'q'+1
-              f7c0 0021  ld   $21         ;0319 LDW
-              f7c1 0033  ld   $33         ;0319 'q'
-              f7c2 002b  ld   $2b         ;031b STW
-              f7c3 0035  ld   $35         ;031b 'r'
-              f7c4 00f3  ld   $f3         ;031d ADDI
-              f7c5 0048  ld   $48
-              f7c6 005e  ld   $5e         ;031f ST
-              f7c7 0035  ld   $35         ;031f 'r'
-              f7c8 0059  ld   $59         ;0321 LDI
-              f7c9 0000  ld   $00
-              f7ca 002b  ld   $2b         ;0323 STW
-              f7cb 0037  ld   $37         ;0323 'i'
-              f7cc 002b  ld   $2b         ;0325 STW
-              f7cd 0039  ld   $39         ;0325 'n'
-              f7ce 0021  ld   $21         ;0327 LDW
-              f7cf 0039  ld   $39         ;0327 'n'
-              f7d0 0035  ld   $35         ;0329 BCC
-              f7d1 004d  ld   $4d         ;032a GT
-              f7d2 005b  ld   $5b
-              f7d3 0021  ld   $21         ;032c LDW
-              f7d4 0037  ld   $37         ;032c 'i'
-              f7d5 0035  ld   $35         ;032e BCC
-              f7d6 0072  ld   $72         ;032f NE
-              f7d7 0059  ld   $59
-              f7d8 0021  ld   $21         ;0331 LDW
-              f7d9 003b  ld   $3b         ;0331 'p'
-              f7da 0075  ld   $75         ;0333 LOOKUP
-              f7db 0000  ld   $00
-              f7dc 005e  ld   $5e         ;0335 ST
-              f7dd 0025  ld   $25
-              f7de 0021  ld   $21         ;0337 LDW
-              f7df 003b  ld   $3b         ;0337 'p'
-              f7e0 0075  ld   $75         ;0339 LOOKUP
-              f7e1 0001  ld   $01
-              f7e2 005e  ld   $5e         ;033b ST
-              f7e3 0026  ld   $26
-              f7e4 0021  ld   $21         ;033d LDW
-              f7e5 003b  ld   $3b         ;033d 'p'
-              f7e6 0075  ld   $75         ;033f LOOKUP
-              f7e7 0002  ld   $02
-              f7e8 005e  ld   $5e         ;0341 ST
-              f7e9 0027  ld   $27
-              f7ea 0021  ld   $21         ;0343 LDW
-              f7eb 003b  ld   $3b         ;0343 'p'
-              f7ec 00f3  ld   $f3         ;0345 ADDI
-              f7ed 0003  ld   $03
-              f7ee 002b  ld   $2b         ;0347 STW
-              f7ef 003b  ld   $3b         ;0347 'p'
-              f7f0 0087  ld   $87         ;0349 ANDI
-              f7f1 00ff  ld   $ff
-              f7f2 0091  ld   $91         ;034b XORI
-              f7f3 00f9  ld   $f9
-              f7f4 0035  ld   $35         ;034d BCC
-              f7f5 0072  ld   $72         ;034e NE
-              f7f6 0054  ld   $54
-              f7f7 0021  ld   $21         ;0350 LDW
-              f7f8 003b  ld   $3b         ;0350 'p'
-              f7f9 00f3  ld   $f3         ;0352 ADDI
-              f7fa 0007  ld   $07
+              f6ff 1518  ld   [$18],y     ;+-----------------------------------+
+              f700 0011  ld   $11         ;038d LDWI
+              f701 003d  ld   $3d
+              f702 0004  ld   $04
+              f703 002b  ld   $2b         ;0390 STW
+              f704 0044  ld   $44         ;0390 'NextByteIn_32'
+              f705 0011  ld   $11         ;0392 LDWI
+              f706 0053  ld   $53
+              f707 0004  ld   $04
+              f708 002b  ld   $2b         ;0395 STW
+              f709 0046  ld   $46         ;0395 'PayloadCopy_34'
+              f70a 0059  ld   $59         ;0397 LDI
+              f70b 0000  ld   $00
+              f70c 005e  ld   $5e         ;0399 ST
+              f70d 0027  ld   $27
+              f70e 0011  ld   $11         ;039b LDWI
+              f70f 000c  ld   $0c
+              f710 0059  ld   $59
+              f711 002b  ld   $2b         ;039e STW
+              f712 0048  ld   $48         ;039e 'A'
+              f713 0011  ld   $11         ;03a0 LDWI
+              f714 000c  ld   $0c
+              f715 005b  ld   $5b
+              f716 002b  ld   $2b         ;03a3 STW
+              f717 004a  ld   $4a         ;03a3 'B'
+              f718 0059  ld   $59         ;03a5 LDI
+              f719 0067  ld   $67
+              f71a 005e  ld   $5e         ;03a7 ST
+              f71b 0026  ld   $26
+              f71c 0011  ld   $11         ;03a9 LDWI
+              f71d 000c  ld   $0c
+              f71e 005a  ld   $5a
+              f71f 002b  ld   $2b         ;03ac STW
+              f720 001b  ld   $1b
+              f721 00ff  ld   $ff         ;03ae RET
+              f722 005a  ld   $5a         ;| RAM segment address (high byte first)
+              f723 000c  ld   $0c         ;|
+              f724 0071  ld   $71         ;| Length (1..256)
+              f725 0021  ld   $21         ;5a0c LDW
+              f726 004a  ld   $4a         ;5a0c 'B'
+              f727 002b  ld   $2b         ;5a0e STW
+              f728 0024  ld   $24
+              f729 0059  ld   $59         ;5a10 LDI
+              f72a 00cf  ld   $cf
+              f72b 005e  ld   $5e         ;5a12 ST
+              f72c 002a  ld   $2a
+              f72d 0021  ld   $21         ;5a14 LDW
+              f72e 0044  ld   $44         ;5a14 'NextByteIn_32'
+              f72f 00a9  ld   $a9         ;5a16 SYS
+              f730 00fe  ld   $fe
+              f731 0059  ld   $59         ;5a18 LDI
+              f732 00db  ld   $db
+              f733 005e  ld   $5e         ;5a1a ST
+              f734 002a  ld   $2a
+              f735 0021  ld   $21         ;5a1c LDW
+              f736 0044  ld   $44         ;5a1c 'NextByteIn_32'
+              f737 00a9  ld   $a9         ;5a1e SYS
+              f738 00fe  ld   $fe
+              f739 0059  ld   $59         ;5a20 LDI
+              f73a 00eb  ld   $eb
+              f73b 005e  ld   $5e         ;5a22 ST
+              f73c 002a  ld   $2a
+              f73d 0021  ld   $21         ;5a24 LDW
+              f73e 0044  ld   $44         ;5a24 'NextByteIn_32'
+              f73f 00a9  ld   $a9         ;5a26 SYS
+              f740 00fe  ld   $fe
+              f741 0059  ld   $59         ;5a28 LDI
+              f742 00fb  ld   $fb
+              f743 005e  ld   $5e         ;5a2a ST
+              f744 002a  ld   $2a
+              f745 0021  ld   $21         ;5a2c LDW
+              f746 0044  ld   $44         ;5a2c 'NextByteIn_32'
+              f747 00a9  ld   $a9         ;5a2e SYS
+              f748 00fe  ld   $fe
+              f749 0021  ld   $21         ;5a30 LDW
+              f74a 0046  ld   $46         ;5a30 'PayloadCopy_34'
+              f74b 00a9  ld   $a9         ;5a32 SYS
+              f74c 00fd  ld   $fd
+              f74d 0059  ld   $59         ;5a34 LDI
+              f74e 0002  ld   $02
+              f74f 005e  ld   $5e         ;5a36 ST
+              f750 002a  ld   $2a
+              f751 0021  ld   $21         ;5a38 LDW
+              f752 0044  ld   $44         ;5a38 'NextByteIn_32'
+              f753 00a9  ld   $a9         ;5a3a SYS
+              f754 00fe  ld   $fe
+              f755 0059  ld   $59         ;5a3c LDI
+              f756 0006  ld   $06
+              f757 005e  ld   $5e         ;5a3e ST
+              f758 002a  ld   $2a
+              f759 0021  ld   $21         ;5a40 LDW
+              f75a 0046  ld   $46         ;5a40 'PayloadCopy_34'
+              f75b 00a9  ld   $a9         ;5a42 SYS
+              f75c 00fd  ld   $fd
+              f75d 0021  ld   $21         ;5a44 LDW
+              f75e 0044  ld   $44         ;5a44 'NextByteIn_32'
+              f75f 00a9  ld   $a9         ;5a46 SYS
+              f760 00fe  ld   $fe
+              f761 001a  ld   $1a         ;5a48 LD
+              f762 002a  ld   $2a
+              f763 00f3  ld   $f3         ;5a4a ADDI
+              f764 0004  ld   $04
+              f765 005e  ld   $5e         ;5a4c ST
+              f766 002a  ld   $2a
+              f767 0091  ld   $91         ;5a4e XORI
+              f768 00f2  ld   $f2
+              f769 0035  ld   $35         ;5a50 BCC
+              f76a 0072  ld   $72         ;5a51 NE
+              f76b 003e  ld   $3e
+              f76c 0059  ld   $59         ;5a53 LDI
+              f76d 00b9  ld   $b9
+              f76e 005e  ld   $5e         ;5a55 ST
+              f76f 002a  ld   $2a
+              f770 0021  ld   $21         ;5a57 LDW
+              f771 0044  ld   $44         ;5a57 'NextByteIn_32'
+              f772 00a9  ld   $a9         ;5a59 SYS
+              f773 00fe  ld   $fe
+              f774 001a  ld   $1a         ;5a5b LD
+              f775 0026  ld   $26
+              f776 0035  ld   $35         ;5a5d BCC
+              f777 0072  ld   $72         ;5a5e NE
+              f778 0062  ld   $62
+              f779 0059  ld   $59         ;5a60 LDI
+              f77a 000c  ld   $0c
+              f77b 0095  ld   $95         ;5a62 BRA
+              f77c 0064  ld   $64
+              f77d 0059  ld   $59         ;5a64 LDI
+              f77e 0003  ld   $03
+              f77f 0098  ld   $98         ;5a66 POKE
+              f780 0048  ld   $48         ;5a66 'A'
+              f781 001a  ld   $1a         ;5a68 LD
+              f782 0048  ld   $48         ;5a68 'A'
+              f783 00f6  ld   $f6         ;5a6a SUBI
+              f784 000b  ld   $0b
+              f785 0087  ld   $87         ;5a6c ANDI
+              f786 007f  ld   $7f
+              f787 00f3  ld   $f3         ;5a6e ADDI
+              f788 000c  ld   $0c
+              f789 005e  ld   $5e         ;5a70 ST
+              f78a 0048  ld   $48         ;5a70 'A'
+              f78b 0059  ld   $59         ;5a72 LDI
+              f78c 003f  ld   $3f
+              f78d 0098  ld   $98         ;5a74 POKE
+              f78e 0048  ld   $48         ;5a74 'A'
+              f78f 0011  ld   $11         ;5a76 LDWI
+              f790 0067  ld   $67
+              f791 0004  ld   $04
+              f792 00a9  ld   $a9         ;5a79 SYS
+              f793 00f6  ld   $f6
+              f794 0095  ld   $95         ;5a7b BRA
+              f795 000a  ld   $0a
+              f796 0000  ld   $00         ;End of file
+Screen:       f797 0003  ld   $03         ;| RAM segment address (high byte first)
+              f798 0000  ld   $00         ;|
+              f799 00d9  ld   $d9         ;| Length (1..256)
+              f79a 0011  ld   $11         ;0300 LDWI
+              f79b 0001  ld   $01
+              f79c 0001  ld   $01
+              f79d 002b  ld   $2b         ;0303 STW
+              f79e 0030  ld   $30         ;0303 'ShiftControl'
+              f79f 00e1  ld   $e1         ;0305 DEF
+              f7a0 00ca  ld   $ca
+              f7a1 0011  ld   $11         ;0307 LDWI
+              f7a2 0097  ld   $97
+              f7a3 0004  ld   $04
+              f7a4 00a9  ld   $a9         ;030a SYS
+              f7a5 00fd  ld   $fd
+              f7a6 002b  ld   $2b         ;030c STW
+              f7a7 0032  ld   $32         ;030c 'q'
+              f7a8 001a  ld   $1a         ;030e LD
+              f7a9 0033  ld   $33         ;030e 'q'+1
+              f7aa 00f6  ld   $f6         ;0310 SUBI
+              f7ab 0078  ld   $78
+              f7ac 0035  ld   $35         ;0312 BCC
+              f7ad 0053  ld   $53         ;0313 GE
+              f7ae 0005  ld   $05
+              f7af 00f3  ld   $f3         ;0315 ADDI
+              f7b0 0080  ld   $80
+              f7b1 005e  ld   $5e         ;0317 ST
+              f7b2 0033  ld   $33         ;0317 'q'+1
+              f7b3 0021  ld   $21         ;0319 LDW
+              f7b4 0032  ld   $32         ;0319 'q'
+              f7b5 002b  ld   $2b         ;031b STW
+              f7b6 0034  ld   $34         ;031b 'r'
+              f7b7 00f3  ld   $f3         ;031d ADDI
+              f7b8 0048  ld   $48
+              f7b9 005e  ld   $5e         ;031f ST
+              f7ba 0034  ld   $34         ;031f 'r'
+              f7bb 0059  ld   $59         ;0321 LDI
+              f7bc 0000  ld   $00
+              f7bd 002b  ld   $2b         ;0323 STW
+              f7be 0036  ld   $36         ;0323 'i'
+              f7bf 002b  ld   $2b         ;0325 STW
+              f7c0 0038  ld   $38         ;0325 'n'
+              f7c1 0021  ld   $21         ;0327 LDW
+              f7c2 0038  ld   $38         ;0327 'n'
+              f7c3 0035  ld   $35         ;0329 BCC
+              f7c4 004d  ld   $4d         ;032a GT
+              f7c5 005b  ld   $5b
+              f7c6 0021  ld   $21         ;032c LDW
+              f7c7 0036  ld   $36         ;032c 'i'
+              f7c8 0035  ld   $35         ;032e BCC
+              f7c9 0072  ld   $72         ;032f NE
+              f7ca 0059  ld   $59
+              f7cb 0021  ld   $21         ;0331 LDW
+              f7cc 003a  ld   $3a         ;0331 'p'
+              f7cd 0075  ld   $75         ;0333 LOOKUP
+              f7ce 0000  ld   $00
+              f7cf 005e  ld   $5e         ;0335 ST
+              f7d0 0024  ld   $24
+              f7d1 0021  ld   $21         ;0337 LDW
+              f7d2 003a  ld   $3a         ;0337 'p'
+              f7d3 0075  ld   $75         ;0339 LOOKUP
+              f7d4 0001  ld   $01
+              f7d5 005e  ld   $5e         ;033b ST
+              f7d6 0025  ld   $25
+              f7d7 0021  ld   $21         ;033d LDW
+              f7d8 003a  ld   $3a         ;033d 'p'
+              f7d9 0075  ld   $75         ;033f LOOKUP
+              f7da 0002  ld   $02
+              f7db 005e  ld   $5e         ;0341 ST
+              f7dc 0026  ld   $26
+              f7dd 0021  ld   $21         ;0343 LDW
+              f7de 003a  ld   $3a         ;0343 'p'
+              f7df 00f3  ld   $f3         ;0345 ADDI
+              f7e0 0003  ld   $03
+              f7e1 002b  ld   $2b         ;0347 STW
+              f7e2 003a  ld   $3a         ;0347 'p'
+              f7e3 0087  ld   $87         ;0349 ANDI
+              f7e4 00ff  ld   $ff
+              f7e5 0091  ld   $91         ;034b XORI
+              f7e6 00f9  ld   $f9
+              f7e7 0035  ld   $35         ;034d BCC
+              f7e8 0072  ld   $72         ;034e NE
+              f7e9 0054  ld   $54
+              f7ea 0021  ld   $21         ;0350 LDW
+              f7eb 003a  ld   $3a         ;0350 'p'
+              f7ec 00f3  ld   $f3         ;0352 ADDI
+              f7ed 0007  ld   $07
+              f7ee 002b  ld   $2b         ;0354 STW
+              f7ef 003a  ld   $3a         ;0354 'p'
+              f7f0 0011  ld   $11         ;0356 LDWI
+              f7f1 00b0  ld   $b0
+              f7f2 0004  ld   $04
+              f7f3 00a9  ld   $a9         ;0359 SYS
+              f7f4 00f2  ld   $f2
+              f7f5 0021  ld   $21         ;035b LDW
+              f7f6 0038  ld   $38         ;035b 'n'
+              f7f7 0035  ld   $35         ;035d BCC
+              f7f8 0053  ld   $53         ;035e GE
+              f7f9 0073  ld   $73
+              f7fa 0059  ld   $59         ;0360 LDI
               f7fb fe00  bra  ac          ;+-----------------------------------+
               f7fc fcfd  bra  $f7fd       ;|                                   |
               f7fd 1403  ld   $03,y       ;| Trampoline for page $f700 lookups |
               f7fe e078  jmp  y,$78       ;|                                   |
-              f7ff 1519  ld   [$19],y     ;+-----------------------------------+
-              f800 002b  ld   $2b         ;0354 STW
-              f801 003b  ld   $3b         ;0354 'p'
-              f802 0011  ld   $11         ;0356 LDWI
-              f803 00a7  ld   $a7
-              f804 0004  ld   $04
-              f805 00a9  ld   $a9         ;0359 SYS
-              f806 00f2  ld   $f2
-              f807 0021  ld   $21         ;035b LDW
-              f808 0039  ld   $39         ;035b 'n'
-              f809 0035  ld   $35         ;035d BCC
-              f80a 0053  ld   $53         ;035e GE
-              f80b 0073  ld   $73
-              f80c 0059  ld   $59         ;0360 LDI
-              f80d 0025  ld   $25
-              f80e 00c1  ld   $c1         ;0362 ADDW
-              f80f 0037  ld   $37         ;0362 'i'
-              f810 00d5  ld   $d5         ;0364 PEEK
-              f811 002b  ld   $2b         ;0365 STW
-              f812 0039  ld   $39         ;0365 'n'
-              f813 0035  ld   $35         ;0367 BCC
-              f814 0072  ld   $72         ;0368 NE
-              f815 0069  ld   $69
-              f816 00ff  ld   $ff         ;036a RET
-              f817 0021  ld   $21         ;036b LDW
-              f818 0037  ld   $37         ;036b 'i'
-              f819 00f3  ld   $f3         ;036d ADDI
-              f81a 0001  ld   $01
-              f81b 0087  ld   $87         ;036f ANDI
-              f81c 0003  ld   $03
-              f81d 002b  ld   $2b         ;0371 STW
-              f81e 0037  ld   $37         ;0371 'i'
-              f81f 0095  ld   $95         ;0373 BRA
-              f820 00a1  ld   $a1
-              f821 0035  ld   $35         ;0375 BCC
-              f822 0056  ld   $56         ;0376 LE
-              f823 0084  ld   $84
-              f824 0059  ld   $59         ;0378 LDI
-              f825 003f  ld   $3f
-              f826 0098  ld   $98         ;037a POKE
-              f827 0033  ld   $33         ;037a 'q'
-              f828 0021  ld   $21         ;037c LDW
-              f829 0039  ld   $39         ;037c 'n'
-              f82a 00f6  ld   $f6         ;037e SUBI
-              f82b 0001  ld   $01
-              f82c 002b  ld   $2b         ;0380 STW
-              f82d 0039  ld   $39         ;0380 'n'
-              f82e 00f9  ld   $f9         ;0382 INC
-              f82f 0033  ld   $33         ;0382 'q'
-              f830 0095  ld   $95         ;0384 BRA
-              f831 00a1  ld   $a1
-              f832 0059  ld   $59         ;0386 LDI
-              f833 0025  ld   $25
-              f834 00c1  ld   $c1         ;0388 ADDW
-              f835 0037  ld   $37         ;0388 'i'
-              f836 00d5  ld   $d5         ;038a PEEK
-              f837 0035  ld   $35         ;038b BCC
-              f838 003f  ld   $3f         ;038c EQ
-              f839 0094  ld   $94
-              f83a 0091  ld   $91         ;038e XORI
-              f83b 003f  ld   $3f
-              f83c 0098  ld   $98         ;0390 POKE
-              f83d 0033  ld   $33         ;0390 'q'
-              f83e 00f9  ld   $f9         ;0392 INC
-              f83f 0033  ld   $33         ;0392 'q'
-              f840 0095  ld   $95         ;0394 BRA
-              f841 0099  ld   $99
-              f842 0011  ld   $11         ;0396 LDWI
-              f843 00ff  ld   $ff
-              f844 00ff  ld   $ff
-              f845 002b  ld   $2b         ;0399 STW
-              f846 0039  ld   $39         ;0399 'n'
-              f847 0021  ld   $21         ;039b LDW
-              f848 0037  ld   $37         ;039b 'i'
-              f849 00f3  ld   $f3         ;039d ADDI
-              f84a 0001  ld   $01
-              f84b 0087  ld   $87         ;039f ANDI
-              f84c 0003  ld   $03
-              f84d 002b  ld   $2b         ;03a1 STW
-              f84e 0037  ld   $37         ;03a1 'i'
-              f84f 0021  ld   $21         ;03a3 LDW
-              f850 0033  ld   $33         ;03a3 'q'
-              f851 00ad  ld   $ad         ;03a5 SUBW
-              f852 0035  ld   $35         ;03a5 'r'
-              f853 0035  ld   $35         ;03a7 BCC
-              f854 0072  ld   $72         ;03a8 NE
-              f855 00c4  ld   $c4
-              f856 0059  ld   $59         ;03aa LDI
-              f857 0000  ld   $00
-              f858 0098  ld   $98         ;03ac POKE
-              f859 0033  ld   $33         ;03ac 'q'
-              f85a 0021  ld   $21         ;03ae LDW
-              f85b 0033  ld   $33         ;03ae 'q'
-              f85c 00f6  ld   $f6         ;03b0 SUBI
-              f85d 0048  ld   $48
-              f85e 005e  ld   $5e         ;03b2 ST
-              f85f 0033  ld   $33         ;03b2 'q'
-              f860 00f9  ld   $f9         ;03b4 INC
-              f861 0034  ld   $34         ;03b4 'q'+1
-              f862 0021  ld   $21         ;03b6 LDW
-              f863 0033  ld   $33         ;03b6 'q'
-              f864 0035  ld   $35         ;03b8 BCC
-              f865 0053  ld   $53         ;03b9 GE
-              f866 00c0  ld   $c0
-              f867 0011  ld   $11         ;03bb LDWI
-              f868 0000  ld   $00
-              f869 0088  ld   $88
-              f86a 00c1  ld   $c1         ;03be ADDW
-              f86b 0033  ld   $33         ;03be 'q'
-              f86c 002b  ld   $2b         ;03c0 STW
-              f86d 0033  ld   $33         ;03c0 'q'
-              f86e 001a  ld   $1a         ;03c2 LD
-              f86f 0034  ld   $34         ;03c2 'q'+1
-              f870 005e  ld   $5e         ;03c4 ST
-              f871 0036  ld   $36         ;03c4 'r'+1
-              f872 001a  ld   $1a         ;03c6 LD
-              f873 0011  ld   $11
-              f874 0098  ld   $98         ;03c8 POKE
-              f875 0031  ld   $31         ;03c8 'ShiftControl'
-              f876 0095  ld   $95         ;03ca BRA
-              f877 0025  ld   $25
-              f878 002b  ld   $2b         ;03cc STW
-              f879 003d  ld   $3d         ;03cc 'Transfer'
-              f87a 0011  ld   $11         ;03ce LDWI
-              f87b 0000  ld   $00
-              f87c 000b  ld   $0b
-              f87d 002b  ld   $2b         ;03d1 STW
-              f87e 003b  ld   $3b         ;03d1 'p'
-              f87f 00e3  ld   $e3         ;03d3 CALL
-              f880 003d  ld   $3d         ;03d3 'Transfer'
-              f881 00e3  ld   $e3         ;03d5 CALL
-              f882 003d  ld   $3d         ;03d5 'Transfer'
-              f883 0095  ld   $95         ;03d7 BRA
-              f884 00cc  ld   $cc
-              f885 0000  ld   $00         ;End of file
-Main:         f886 0003  ld   $03         ;| RAM segment address (high byte first)
-              f887 0000  ld   $00         ;|
-              f888 00ee  ld   $ee         ;| Length (1..256)
-              f889 00e1  ld   $e1         ;0300 DEF
-              f88a 0066  ld   $66
-              f88b 0021  ld   $21         ;0302 LDW
-              f88c 0031  ld   $31         ;0302 'Char'
-              f88d 00f6  ld   $f6         ;0304 SUBI
-              f88e 0052  ld   $52
-              f88f 0035  ld   $35         ;0306 BCC
-              f890 0053  ld   $53         ;0307 GE
-              f891 0010  ld   $10
-              f892 00f3  ld   $f3         ;0309 ADDI
-              f893 0032  ld   $32
-              f894 002b  ld   $2b         ;030b STW
-              f895 0033  ld   $33         ;030b 'i'
-              f896 0011  ld   $11         ;030d LDWI
-              f897 0000  ld   $00
-              f898 0007  ld   $07
-              f899 0095  ld   $95         ;0310 BRA
-              f89a 0015  ld   $15
-              f89b 002b  ld   $2b         ;0312 STW
-              f89c 0033  ld   $33         ;0312 'i'
-              f89d 0011  ld   $11         ;0314 LDWI
-              f89e 0000  ld   $00
-              f89f 0008  ld   $08
-              f8a0 002b  ld   $2b         ;0317 STW
-              f8a1 0035  ld   $35         ;0317 'fontData'
-              f8a2 0021  ld   $21         ;0319 LDW
-              f8a3 0033  ld   $33         ;0319 'i'
-              f8a4 00c1  ld   $c1         ;031b ADDW
-              f8a5 0033  ld   $33         ;031b 'i'
-              f8a6 002b  ld   $2b         ;031d STW
-              f8a7 0037  ld   $37         ;031d 'tmp'
-              f8a8 00c1  ld   $c1         ;031f ADDW
-              f8a9 0037  ld   $37         ;031f 'tmp'
-              f8aa 00c1  ld   $c1         ;0321 ADDW
-              f8ab 0033  ld   $33         ;0321 'i'
-              f8ac 00c1  ld   $c1         ;0323 ADDW
-              f8ad 0035  ld   $35         ;0323 'fontData'
-              f8ae 002b  ld   $2b         ;0325 STW
-              f8af 0035  ld   $35         ;0325 'fontData'
-              f8b0 0011  ld   $11         ;0327 LDWI
+              f7ff 1518  ld   [$18],y     ;+-----------------------------------+
+              f800 0024  ld   $24
+              f801 00c1  ld   $c1         ;0362 ADDW
+              f802 0036  ld   $36         ;0362 'i'
+              f803 00d5  ld   $d5         ;0364 PEEK
+              f804 002b  ld   $2b         ;0365 STW
+              f805 0038  ld   $38         ;0365 'n'
+              f806 0035  ld   $35         ;0367 BCC
+              f807 0072  ld   $72         ;0368 NE
+              f808 0069  ld   $69
+              f809 00ff  ld   $ff         ;036a RET
+              f80a 0021  ld   $21         ;036b LDW
+              f80b 0036  ld   $36         ;036b 'i'
+              f80c 00f3  ld   $f3         ;036d ADDI
+              f80d 0001  ld   $01
+              f80e 0087  ld   $87         ;036f ANDI
+              f80f 0003  ld   $03
+              f810 002b  ld   $2b         ;0371 STW
+              f811 0036  ld   $36         ;0371 'i'
+              f812 0095  ld   $95         ;0373 BRA
+              f813 00a1  ld   $a1
+              f814 0035  ld   $35         ;0375 BCC
+              f815 0056  ld   $56         ;0376 LE
+              f816 0084  ld   $84
+              f817 0059  ld   $59         ;0378 LDI
+              f818 003f  ld   $3f
+              f819 0098  ld   $98         ;037a POKE
+              f81a 0032  ld   $32         ;037a 'q'
+              f81b 0021  ld   $21         ;037c LDW
+              f81c 0038  ld   $38         ;037c 'n'
+              f81d 00f6  ld   $f6         ;037e SUBI
+              f81e 0001  ld   $01
+              f81f 002b  ld   $2b         ;0380 STW
+              f820 0038  ld   $38         ;0380 'n'
+              f821 00f9  ld   $f9         ;0382 INC
+              f822 0032  ld   $32         ;0382 'q'
+              f823 0095  ld   $95         ;0384 BRA
+              f824 00a1  ld   $a1
+              f825 0059  ld   $59         ;0386 LDI
+              f826 0024  ld   $24
+              f827 00c1  ld   $c1         ;0388 ADDW
+              f828 0036  ld   $36         ;0388 'i'
+              f829 00d5  ld   $d5         ;038a PEEK
+              f82a 0035  ld   $35         ;038b BCC
+              f82b 003f  ld   $3f         ;038c EQ
+              f82c 0094  ld   $94
+              f82d 0091  ld   $91         ;038e XORI
+              f82e 003f  ld   $3f
+              f82f 0098  ld   $98         ;0390 POKE
+              f830 0032  ld   $32         ;0390 'q'
+              f831 00f9  ld   $f9         ;0392 INC
+              f832 0032  ld   $32         ;0392 'q'
+              f833 0095  ld   $95         ;0394 BRA
+              f834 0099  ld   $99
+              f835 0011  ld   $11         ;0396 LDWI
+              f836 00ff  ld   $ff
+              f837 00ff  ld   $ff
+              f838 002b  ld   $2b         ;0399 STW
+              f839 0038  ld   $38         ;0399 'n'
+              f83a 0021  ld   $21         ;039b LDW
+              f83b 0036  ld   $36         ;039b 'i'
+              f83c 00f3  ld   $f3         ;039d ADDI
+              f83d 0001  ld   $01
+              f83e 0087  ld   $87         ;039f ANDI
+              f83f 0003  ld   $03
+              f840 002b  ld   $2b         ;03a1 STW
+              f841 0036  ld   $36         ;03a1 'i'
+              f842 0021  ld   $21         ;03a3 LDW
+              f843 0032  ld   $32         ;03a3 'q'
+              f844 00ad  ld   $ad         ;03a5 SUBW
+              f845 0034  ld   $34         ;03a5 'r'
+              f846 0035  ld   $35         ;03a7 BCC
+              f847 0072  ld   $72         ;03a8 NE
+              f848 00c4  ld   $c4
+              f849 0059  ld   $59         ;03aa LDI
+              f84a 0000  ld   $00
+              f84b 0098  ld   $98         ;03ac POKE
+              f84c 0032  ld   $32         ;03ac 'q'
+              f84d 0021  ld   $21         ;03ae LDW
+              f84e 0032  ld   $32         ;03ae 'q'
+              f84f 00f6  ld   $f6         ;03b0 SUBI
+              f850 0048  ld   $48
+              f851 005e  ld   $5e         ;03b2 ST
+              f852 0032  ld   $32         ;03b2 'q'
+              f853 00f9  ld   $f9         ;03b4 INC
+              f854 0033  ld   $33         ;03b4 'q'+1
+              f855 0021  ld   $21         ;03b6 LDW
+              f856 0032  ld   $32         ;03b6 'q'
+              f857 0035  ld   $35         ;03b8 BCC
+              f858 0053  ld   $53         ;03b9 GE
+              f859 00c0  ld   $c0
+              f85a 0011  ld   $11         ;03bb LDWI
+              f85b 0000  ld   $00
+              f85c 0088  ld   $88
+              f85d 00c1  ld   $c1         ;03be ADDW
+              f85e 0032  ld   $32         ;03be 'q'
+              f85f 002b  ld   $2b         ;03c0 STW
+              f860 0032  ld   $32         ;03c0 'q'
+              f861 001a  ld   $1a         ;03c2 LD
+              f862 0033  ld   $33         ;03c2 'q'+1
+              f863 005e  ld   $5e         ;03c4 ST
+              f864 0035  ld   $35         ;03c4 'r'+1
+              f865 001a  ld   $1a         ;03c6 LD
+              f866 0010  ld   $10
+              f867 0098  ld   $98         ;03c8 POKE
+              f868 0030  ld   $30         ;03c8 'ShiftControl'
+              f869 0095  ld   $95         ;03ca BRA
+              f86a 0025  ld   $25
+              f86b 002b  ld   $2b         ;03cc STW
+              f86c 003c  ld   $3c         ;03cc 'Transfer'
+              f86d 0011  ld   $11         ;03ce LDWI
+              f86e 0000  ld   $00
+              f86f 000b  ld   $0b
+              f870 002b  ld   $2b         ;03d1 STW
+              f871 003a  ld   $3a         ;03d1 'p'
+              f872 00e3  ld   $e3         ;03d3 CALL
+              f873 003c  ld   $3c         ;03d3 'Transfer'
+              f874 00e3  ld   $e3         ;03d5 CALL
+              f875 003c  ld   $3c         ;03d5 'Transfer'
+              f876 0095  ld   $95         ;03d7 BRA
+              f877 00cc  ld   $cc
+              f878 0000  ld   $00         ;End of file
+Main:         f879 0003  ld   $03         ;| RAM segment address (high byte first)
+              f87a 0000  ld   $00         ;|
+              f87b 00ee  ld   $ee         ;| Length (1..256)
+              f87c 00e1  ld   $e1         ;0300 DEF
+              f87d 0066  ld   $66
+              f87e 0021  ld   $21         ;0302 LDW
+              f87f 0030  ld   $30         ;0302 'Char'
+              f880 00f6  ld   $f6         ;0304 SUBI
+              f881 0052  ld   $52
+              f882 0035  ld   $35         ;0306 BCC
+              f883 0053  ld   $53         ;0307 GE
+              f884 0010  ld   $10
+              f885 00f3  ld   $f3         ;0309 ADDI
+              f886 0032  ld   $32
+              f887 002b  ld   $2b         ;030b STW
+              f888 0032  ld   $32         ;030b 'i'
+              f889 0011  ld   $11         ;030d LDWI
+              f88a 0000  ld   $00
+              f88b 0007  ld   $07
+              f88c 0095  ld   $95         ;0310 BRA
+              f88d 0015  ld   $15
+              f88e 002b  ld   $2b         ;0312 STW
+              f88f 0032  ld   $32         ;0312 'i'
+              f890 0011  ld   $11         ;0314 LDWI
+              f891 0000  ld   $00
+              f892 0008  ld   $08
+              f893 002b  ld   $2b         ;0317 STW
+              f894 0034  ld   $34         ;0317 'fontData'
+              f895 0021  ld   $21         ;0319 LDW
+              f896 0032  ld   $32         ;0319 'i'
+              f897 00c1  ld   $c1         ;031b ADDW
+              f898 0032  ld   $32         ;031b 'i'
+              f899 002b  ld   $2b         ;031d STW
+              f89a 0036  ld   $36         ;031d 'tmp'
+              f89b 00c1  ld   $c1         ;031f ADDW
+              f89c 0036  ld   $36         ;031f 'tmp'
+              f89d 00c1  ld   $c1         ;0321 ADDW
+              f89e 0032  ld   $32         ;0321 'i'
+              f89f 00c1  ld   $c1         ;0323 ADDW
+              f8a0 0034  ld   $34         ;0323 'fontData'
+              f8a1 002b  ld   $2b         ;0325 STW
+              f8a2 0034  ld   $34         ;0325 'fontData'
+              f8a3 0011  ld   $11         ;0327 LDWI
+              f8a4 0000  ld   $00
+              f8a5 0008  ld   $08
+              f8a6 00c1  ld   $c1         ;032a ADDW
+              f8a7 0038  ld   $38         ;032a 'Pos'
+              f8a8 002b  ld   $2b         ;032c STW
+              f8a9 003a  ld   $3a         ;032c 'q'
+              f8aa 0059  ld   $59         ;032e LDI
+              f8ab 0005  ld   $05
+              f8ac 002b  ld   $2b         ;0330 STW
+              f8ad 0032  ld   $32         ;0330 'i'
+              f8ae 0021  ld   $21         ;0332 LDW
+              f8af 0034  ld   $34         ;0332 'fontData'
+              f8b0 0075  ld   $75         ;0334 LOOKUP
               f8b1 0000  ld   $00
-              f8b2 0008  ld   $08
-              f8b3 00c1  ld   $c1         ;032a ADDW
-              f8b4 0039  ld   $39         ;032a 'Pos'
-              f8b5 002b  ld   $2b         ;032c STW
-              f8b6 003b  ld   $3b         ;032c 'q'
-              f8b7 0059  ld   $59         ;032e LDI
-              f8b8 0005  ld   $05
-              f8b9 002b  ld   $2b         ;0330 STW
-              f8ba 0033  ld   $33         ;0330 'i'
-              f8bb 0021  ld   $21         ;0332 LDW
-              f8bc 0035  ld   $35         ;0332 'fontData'
-              f8bd 0075  ld   $75         ;0334 LOOKUP
-              f8be 0000  ld   $00
-              f8bf 002b  ld   $2b         ;0336 STW
-              f8c0 003d  ld   $3d         ;0336 'bits'
-              f8c1 00f9  ld   $f9         ;0338 INC
-              f8c2 0035  ld   $35         ;0338 'fontData'
-              f8c3 0021  ld   $21         ;033a LDW
-              f8c4 0039  ld   $39         ;033a 'Pos'
-              f8c5 002b  ld   $2b         ;033c STW
-              f8c6 003f  ld   $3f         ;033c 'p'
-              f8c7 0021  ld   $21         ;033e LDW
-              f8c8 003d  ld   $3d         ;033e 'bits'
-              f8c9 0087  ld   $87         ;0340 ANDI
-              f8ca 0080  ld   $80
-              f8cb 0035  ld   $35         ;0342 BCC
-              f8cc 0072  ld   $72         ;0343 NE
-              f8cd 0047  ld   $47
-              f8ce 0059  ld   $59         ;0345 LDI
-              f8cf 0020  ld   $20
-              f8d0 0095  ld   $95         ;0347 BRA
-              f8d1 0049  ld   $49
-              f8d2 0021  ld   $21         ;0349 LDW
-              f8d3 0041  ld   $41         ;0349 'Color'
-              f8d4 0098  ld   $98         ;034b POKE
-              f8d5 003f  ld   $3f         ;034b 'p'
-              f8d6 0021  ld   $21         ;034d LDW
-              f8d7 003d  ld   $3d         ;034d 'bits'
-              f8d8 00c1  ld   $c1         ;034f ADDW
-              f8d9 003d  ld   $3d         ;034f 'bits'
-              f8da 002b  ld   $2b         ;0351 STW
-              f8db 003d  ld   $3d         ;0351 'bits'
-              f8dc 00f9  ld   $f9         ;0353 INC
-              f8dd 0040  ld   $40         ;0353 'p'+1
-              f8de 0021  ld   $21         ;0355 LDW
-              f8df 003f  ld   $3f         ;0355 'p'
-              f8e0 00ad  ld   $ad         ;0357 SUBW
-              f8e1 003b  ld   $3b         ;0357 'q'
-              f8e2 0035  ld   $35         ;0359 BCC
-              f8e3 0050  ld   $50         ;035a LT
-              f8e4 003c  ld   $3c
-              f8e5 00f9  ld   $f9         ;035c INC
-              f8e6 0039  ld   $39         ;035c 'Pos'
-              f8e7 0021  ld   $21         ;035e LDW
-              f8e8 0033  ld   $33         ;035e 'i'
-              f8e9 00f6  ld   $f6         ;0360 SUBI
-              f8ea 0001  ld   $01
-              f8eb 0035  ld   $35         ;0362 BCC
-              f8ec 004d  ld   $4d         ;0363 GT
-              f8ed 002e  ld   $2e
-              f8ee 00f9  ld   $f9         ;0365 INC
-              f8ef 0039  ld   $39         ;0365 'Pos'
-              f8f0 00ff  ld   $ff         ;0367 RET
-              f8f1 002b  ld   $2b         ;0368 STW
-              f8f2 0043  ld   $43         ;0368 'PrintChar'
-              f8f3 00e1  ld   $e1         ;036a DEF
-              f8f4 0093  ld   $93
-              f8f5 007d  ld   $7d         ;036c PUSH
-              f8f6 002b  ld   $2b         ;036d STW
-              f8f7 0045  ld   $45         ;036d 'Text'
-              f8f8 0021  ld   $21         ;036f LDW
-              f8f9 0045  ld   $45         ;036f 'Text'
-              f8fa 00d5  ld   $d5         ;0371 PEEK
+              f8b2 002b  ld   $2b         ;0336 STW
+              f8b3 003c  ld   $3c         ;0336 'bits'
+              f8b4 00f9  ld   $f9         ;0338 INC
+              f8b5 0034  ld   $34         ;0338 'fontData'
+              f8b6 0021  ld   $21         ;033a LDW
+              f8b7 0038  ld   $38         ;033a 'Pos'
+              f8b8 002b  ld   $2b         ;033c STW
+              f8b9 003e  ld   $3e         ;033c 'p'
+              f8ba 0021  ld   $21         ;033e LDW
+              f8bb 003c  ld   $3c         ;033e 'bits'
+              f8bc 0087  ld   $87         ;0340 ANDI
+              f8bd 0080  ld   $80
+              f8be 0035  ld   $35         ;0342 BCC
+              f8bf 0072  ld   $72         ;0343 NE
+              f8c0 0047  ld   $47
+              f8c1 0059  ld   $59         ;0345 LDI
+              f8c2 0020  ld   $20
+              f8c3 0095  ld   $95         ;0347 BRA
+              f8c4 0049  ld   $49
+              f8c5 0021  ld   $21         ;0349 LDW
+              f8c6 0040  ld   $40         ;0349 'Color'
+              f8c7 0098  ld   $98         ;034b POKE
+              f8c8 003e  ld   $3e         ;034b 'p'
+              f8c9 0021  ld   $21         ;034d LDW
+              f8ca 003c  ld   $3c         ;034d 'bits'
+              f8cb 00c1  ld   $c1         ;034f ADDW
+              f8cc 003c  ld   $3c         ;034f 'bits'
+              f8cd 002b  ld   $2b         ;0351 STW
+              f8ce 003c  ld   $3c         ;0351 'bits'
+              f8cf 00f9  ld   $f9         ;0353 INC
+              f8d0 003f  ld   $3f         ;0353 'p'+1
+              f8d1 0021  ld   $21         ;0355 LDW
+              f8d2 003e  ld   $3e         ;0355 'p'
+              f8d3 00ad  ld   $ad         ;0357 SUBW
+              f8d4 003a  ld   $3a         ;0357 'q'
+              f8d5 0035  ld   $35         ;0359 BCC
+              f8d6 0050  ld   $50         ;035a LT
+              f8d7 003c  ld   $3c
+              f8d8 00f9  ld   $f9         ;035c INC
+              f8d9 0038  ld   $38         ;035c 'Pos'
+              f8da 0021  ld   $21         ;035e LDW
+              f8db 0032  ld   $32         ;035e 'i'
+              f8dc 00f6  ld   $f6         ;0360 SUBI
+              f8dd 0001  ld   $01
+              f8de 0035  ld   $35         ;0362 BCC
+              f8df 004d  ld   $4d         ;0363 GT
+              f8e0 002e  ld   $2e
+              f8e1 00f9  ld   $f9         ;0365 INC
+              f8e2 0038  ld   $38         ;0365 'Pos'
+              f8e3 00ff  ld   $ff         ;0367 RET
+              f8e4 002b  ld   $2b         ;0368 STW
+              f8e5 0042  ld   $42         ;0368 'PrintChar'
+              f8e6 00e1  ld   $e1         ;036a DEF
+              f8e7 0093  ld   $93
+              f8e8 007d  ld   $7d         ;036c PUSH
+              f8e9 002b  ld   $2b         ;036d STW
+              f8ea 0044  ld   $44         ;036d 'Text'
+              f8eb 0021  ld   $21         ;036f LDW
+              f8ec 0044  ld   $44         ;036f 'Text'
+              f8ed 00d5  ld   $d5         ;0371 PEEK
+              f8ee 0035  ld   $35         ;0372 BCC
+              f8ef 003f  ld   $3f         ;0373 EQ
+              f8f0 0091  ld   $91
+              f8f1 002b  ld   $2b         ;0375 STW
+              f8f2 0030  ld   $30         ;0375 'Char'
+              f8f3 00f9  ld   $f9         ;0377 INC
+              f8f4 0044  ld   $44         ;0377 'Text'
+              f8f5 0091  ld   $91         ;0379 XORI
+              f8f6 0009  ld   $09
+              f8f7 0035  ld   $35         ;037b BCC
+              f8f8 0072  ld   $72         ;037c NE
+              f8f9 0084  ld   $84
+              f8fa 0021  ld   $21         ;037e LDW
               f8fb fe00  bra  ac          ;+-----------------------------------+
               f8fc fcfd  bra  $f8fd       ;|                                   |
               f8fd 1403  ld   $03,y       ;| Trampoline for page $f800 lookups |
               f8fe e078  jmp  y,$78       ;|                                   |
-              f8ff 1519  ld   [$19],y     ;+-----------------------------------+
-              f900 0035  ld   $35         ;0372 BCC
-              f901 003f  ld   $3f         ;0373 EQ
-              f902 0091  ld   $91
-              f903 002b  ld   $2b         ;0375 STW
-              f904 0031  ld   $31         ;0375 'Char'
-              f905 00f9  ld   $f9         ;0377 INC
-              f906 0045  ld   $45         ;0377 'Text'
-              f907 0091  ld   $91         ;0379 XORI
-              f908 0009  ld   $09
-              f909 0035  ld   $35         ;037b BCC
-              f90a 0072  ld   $72         ;037c NE
-              f90b 0084  ld   $84
-              f90c 0021  ld   $21         ;037e LDW
-              f90d 0039  ld   $39         ;037e 'Pos'
-              f90e 00f3  ld   $f3         ;0380 ADDI
-              f90f 001e  ld   $1e
-              f910 002b  ld   $2b         ;0382 STW
-              f911 0039  ld   $39         ;0382 'Pos'
-              f912 0095  ld   $95         ;0384 BRA
+              f8ff 1518  ld   [$18],y     ;+-----------------------------------+
+              f900 0038  ld   $38         ;037e 'Pos'
+              f901 00f3  ld   $f3         ;0380 ADDI
+              f902 001e  ld   $1e
+              f903 002b  ld   $2b         ;0382 STW
+              f904 0038  ld   $38         ;0382 'Pos'
+              f905 0095  ld   $95         ;0384 BRA
+              f906 006d  ld   $6d
+              f907 0091  ld   $91         ;0386 XORI
+              f908 0003  ld   $03
+              f909 0035  ld   $35         ;0388 BCC
+              f90a 0072  ld   $72         ;0389 NE
+              f90b 008d  ld   $8d
+              f90c 00e3  ld   $e3         ;038b CALL
+              f90d 0046  ld   $46         ;038b 'Newline'
+              f90e 0095  ld   $95         ;038d BRA
+              f90f 006d  ld   $6d
+              f910 00e3  ld   $e3         ;038f CALL
+              f911 0042  ld   $42         ;038f 'PrintChar'
+              f912 0095  ld   $95         ;0391 BRA
               f913 006d  ld   $6d
-              f914 0091  ld   $91         ;0386 XORI
-              f915 0003  ld   $03
-              f916 0035  ld   $35         ;0388 BCC
-              f917 0072  ld   $72         ;0389 NE
-              f918 008d  ld   $8d
-              f919 00e3  ld   $e3         ;038b CALL
-              f91a 0047  ld   $47         ;038b 'Newline'
-              f91b 0095  ld   $95         ;038d BRA
-              f91c 006d  ld   $6d
-              f91d 00e3  ld   $e3         ;038f CALL
-              f91e 0043  ld   $43         ;038f 'PrintChar'
-              f91f 0095  ld   $95         ;0391 BRA
-              f920 006d  ld   $6d
-              f921 0063  ld   $63         ;0393 POP
-              f922 00ff  ld   $ff         ;0394 RET
-              f923 002b  ld   $2b         ;0395 STW
-              f924 0049  ld   $49         ;0395 'PrintText'
-              f925 00e1  ld   $e1         ;0397 DEF
-              f926 00a3  ld   $a3
-              f927 0011  ld   $11         ;0399 LDWI
-              f928 0000  ld   $00
-              f929 0008  ld   $08
-              f92a 00c1  ld   $c1         ;039c ADDW
-              f92b 0039  ld   $39         ;039c 'Pos'
-              f92c 008d  ld   $8d         ;039e ORI
-              f92d 00ff  ld   $ff
-              f92e 0091  ld   $91         ;03a0 XORI
-              f92f 00ff  ld   $ff
-              f930 002b  ld   $2b         ;03a2 STW
-              f931 0039  ld   $39         ;03a2 'Pos'
-              f932 00ff  ld   $ff         ;03a4 RET
-              f933 002b  ld   $2b         ;03a5 STW
-              f934 0047  ld   $47         ;03a5 'Newline'
-              f935 00e1  ld   $e1         ;03a7 DEF
-              f936 00bd  ld   $bd
-              f937 007d  ld   $7d         ;03a9 PUSH
-              f938 0059  ld   $59         ;03aa LDI
-              f939 002d  ld   $2d
-              f93a 002b  ld   $2b         ;03ac STW
-              f93b 0031  ld   $31         ;03ac 'Char'
-              f93c 0059  ld   $59         ;03ae LDI
-              f93d 001a  ld   $1a
-              f93e 002b  ld   $2b         ;03b0 STW
-              f93f 004b  ld   $4b         ;03b0 'j'
-              f940 00e3  ld   $e3         ;03b2 CALL
-              f941 0043  ld   $43         ;03b2 'PrintChar'
-              f942 0021  ld   $21         ;03b4 LDW
-              f943 004b  ld   $4b         ;03b4 'j'
-              f944 00f6  ld   $f6         ;03b6 SUBI
-              f945 0001  ld   $01
-              f946 0035  ld   $35         ;03b8 BCC
-              f947 004d  ld   $4d         ;03b9 GT
-              f948 00ae  ld   $ae
-              f949 00e3  ld   $e3         ;03bb CALL
-              f94a 0047  ld   $47         ;03bb 'Newline'
-              f94b 0063  ld   $63         ;03bd POP
-              f94c 00ff  ld   $ff         ;03be RET
-              f94d 002b  ld   $2b         ;03bf STW
-              f94e 004d  ld   $4d         ;03bf 'PrintDivider'
-              f94f 00e1  ld   $e1         ;03c1 DEF
-              f950 00e7  ld   $e7
-              f951 007d  ld   $7d         ;03c3 PUSH
-              f952 0011  ld   $11         ;03c4 LDWI
-              f953 000c  ld   $0c
-              f954 0020  ld   $20
-              f955 002b  ld   $2b         ;03c7 STW
-              f956 0039  ld   $39         ;03c7 'Pos'
-              f957 0021  ld   $21         ;03c9 LDW
-              f958 004f  ld   $4f         ;03c9 'Item'
-              f959 002b  ld   $2b         ;03cb STW
-              f95a 004b  ld   $4b         ;03cb 'j'
-              f95b 0011  ld   $11         ;03cd LDWI
-              f95c 0000  ld   $00
-              f95d 0008  ld   $08
-              f95e 00c1  ld   $c1         ;03d0 ADDW
-              f95f 0039  ld   $39         ;03d0 'Pos'
-              f960 002b  ld   $2b         ;03d2 STW
-              f961 0039  ld   $39         ;03d2 'Pos'
-              f962 0021  ld   $21         ;03d4 LDW
-              f963 004b  ld   $4b         ;03d4 'j'
-              f964 00f6  ld   $f6         ;03d6 SUBI
-              f965 0001  ld   $01
-              f966 0035  ld   $35         ;03d8 BCC
-              f967 0053  ld   $53         ;03d9 GE
-              f968 00c9  ld   $c9
-              f969 0059  ld   $59         ;03db LDI
-              f96a 002d  ld   $2d
-              f96b 002b  ld   $2b         ;03dd STW
-              f96c 0031  ld   $31         ;03dd 'Char'
-              f96d 00e3  ld   $e3         ;03df CALL
-              f96e 0043  ld   $43         ;03df 'PrintChar'
-              f96f 0059  ld   $59         ;03e1 LDI
-              f970 003e  ld   $3e
-              f971 002b  ld   $2b         ;03e3 STW
-              f972 0031  ld   $31         ;03e3 'Char'
-              f973 00e3  ld   $e3         ;03e5 CALL
-              f974 0043  ld   $43         ;03e5 'PrintChar'
-              f975 0063  ld   $63         ;03e7 POP
-              f976 00ff  ld   $ff         ;03e8 RET
-              f977 002b  ld   $2b         ;03e9 STW
-              f978 0051  ld   $51         ;03e9 'PrintArrow'
-              f979 00f9  ld   $f9         ;03eb INC
-              f97a 001d  ld   $1d
-              f97b 00ff  ld   $ff         ;03ed RET
-              f97c 0004  ld   $04         ;| RAM segment address (high byte first)
-              f97d 0000  ld   $00         ;|
-              f97e 00a2  ld   $a2         ;| Length (1..256)
-              f97f 00e1  ld   $e1         ;0400 DEF
-              f980 0036  ld   $36
-              f981 0009  ld   $09
-              f982 0053  ld   $53
-              f983 006e  ld   $6e
+              f914 0063  ld   $63         ;0393 POP
+              f915 00ff  ld   $ff         ;0394 RET
+              f916 002b  ld   $2b         ;0395 STW
+              f917 0048  ld   $48         ;0395 'PrintText'
+              f918 00e1  ld   $e1         ;0397 DEF
+              f919 00a3  ld   $a3
+              f91a 0011  ld   $11         ;0399 LDWI
+              f91b 0000  ld   $00
+              f91c 0008  ld   $08
+              f91d 00c1  ld   $c1         ;039c ADDW
+              f91e 0038  ld   $38         ;039c 'Pos'
+              f91f 008d  ld   $8d         ;039e ORI
+              f920 00ff  ld   $ff
+              f921 0091  ld   $91         ;03a0 XORI
+              f922 00ff  ld   $ff
+              f923 002b  ld   $2b         ;03a2 STW
+              f924 0038  ld   $38         ;03a2 'Pos'
+              f925 00ff  ld   $ff         ;03a4 RET
+              f926 002b  ld   $2b         ;03a5 STW
+              f927 0046  ld   $46         ;03a5 'Newline'
+              f928 00e1  ld   $e1         ;03a7 DEF
+              f929 00bd  ld   $bd
+              f92a 007d  ld   $7d         ;03a9 PUSH
+              f92b 0059  ld   $59         ;03aa LDI
+              f92c 002d  ld   $2d
+              f92d 002b  ld   $2b         ;03ac STW
+              f92e 0030  ld   $30         ;03ac 'Char'
+              f92f 0059  ld   $59         ;03ae LDI
+              f930 001a  ld   $1a
+              f931 002b  ld   $2b         ;03b0 STW
+              f932 004a  ld   $4a         ;03b0 'j'
+              f933 00e3  ld   $e3         ;03b2 CALL
+              f934 0042  ld   $42         ;03b2 'PrintChar'
+              f935 0021  ld   $21         ;03b4 LDW
+              f936 004a  ld   $4a         ;03b4 'j'
+              f937 00f6  ld   $f6         ;03b6 SUBI
+              f938 0001  ld   $01
+              f939 0035  ld   $35         ;03b8 BCC
+              f93a 004d  ld   $4d         ;03b9 GT
+              f93b 00ae  ld   $ae
+              f93c 00e3  ld   $e3         ;03bb CALL
+              f93d 0046  ld   $46         ;03bb 'Newline'
+              f93e 0063  ld   $63         ;03bd POP
+              f93f 00ff  ld   $ff         ;03be RET
+              f940 002b  ld   $2b         ;03bf STW
+              f941 004c  ld   $4c         ;03bf 'PrintDivider'
+              f942 00e1  ld   $e1         ;03c1 DEF
+              f943 00e7  ld   $e7
+              f944 007d  ld   $7d         ;03c3 PUSH
+              f945 0011  ld   $11         ;03c4 LDWI
+              f946 000c  ld   $0c
+              f947 0020  ld   $20
+              f948 002b  ld   $2b         ;03c7 STW
+              f949 0038  ld   $38         ;03c7 'Pos'
+              f94a 0021  ld   $21         ;03c9 LDW
+              f94b 004e  ld   $4e         ;03c9 'Item'
+              f94c 002b  ld   $2b         ;03cb STW
+              f94d 004a  ld   $4a         ;03cb 'j'
+              f94e 0011  ld   $11         ;03cd LDWI
+              f94f 0000  ld   $00
+              f950 0008  ld   $08
+              f951 00c1  ld   $c1         ;03d0 ADDW
+              f952 0038  ld   $38         ;03d0 'Pos'
+              f953 002b  ld   $2b         ;03d2 STW
+              f954 0038  ld   $38         ;03d2 'Pos'
+              f955 0021  ld   $21         ;03d4 LDW
+              f956 004a  ld   $4a         ;03d4 'j'
+              f957 00f6  ld   $f6         ;03d6 SUBI
+              f958 0001  ld   $01
+              f959 0035  ld   $35         ;03d8 BCC
+              f95a 0053  ld   $53         ;03d9 GE
+              f95b 00c9  ld   $c9
+              f95c 0059  ld   $59         ;03db LDI
+              f95d 002d  ld   $2d
+              f95e 002b  ld   $2b         ;03dd STW
+              f95f 0030  ld   $30         ;03dd 'Char'
+              f960 00e3  ld   $e3         ;03df CALL
+              f961 0042  ld   $42         ;03df 'PrintChar'
+              f962 0059  ld   $59         ;03e1 LDI
+              f963 003e  ld   $3e
+              f964 002b  ld   $2b         ;03e3 STW
+              f965 0030  ld   $30         ;03e3 'Char'
+              f966 00e3  ld   $e3         ;03e5 CALL
+              f967 0042  ld   $42         ;03e5 'PrintChar'
+              f968 0063  ld   $63         ;03e7 POP
+              f969 00ff  ld   $ff         ;03e8 RET
+              f96a 002b  ld   $2b         ;03e9 STW
+              f96b 0050  ld   $50         ;03e9 'PrintArrow'
+              f96c 00f9  ld   $f9         ;03eb INC
+              f96d 001c  ld   $1c
+              f96e 00ff  ld   $ff         ;03ed RET
+              f96f 0004  ld   $04         ;| RAM segment address (high byte first)
+              f970 0000  ld   $00         ;|
+              f971 00a2  ld   $a2         ;| Length (1..256)
+              f972 00e1  ld   $e1         ;0400 DEF
+              f973 0036  ld   $36
+              f974 0009  ld   $09
+              f975 0053  ld   $53
+              f976 006e  ld   $6e
+              f977 0061  ld   $61
+              f978 006b  ld   $6b
+              f979 0065  ld   $65
+              f97a 000a  ld   $0a
+              f97b 0009  ld   $09
+              f97c 0052  ld   $52
+              f97d 0061  ld   $61
+              f97e 0063  ld   $63
+              f97f 0065  ld   $65
+              f980 0072  ld   $72
+              f981 000a  ld   $0a
+              f982 0009  ld   $09
+              f983 004d  ld   $4d
               f984 0061  ld   $61
-              f985 006b  ld   $6b
-              f986 0065  ld   $65
-              f987 000a  ld   $0a
-              f988 0009  ld   $09
-              f989 0052  ld   $52
-              f98a 0061  ld   $61
-              f98b 0063  ld   $63
-              f98c 0065  ld   $65
-              f98d 0072  ld   $72
-              f98e 000a  ld   $0a
-              f98f 0009  ld   $09
-              f990 004d  ld   $4d
-              f991 0061  ld   $61
-              f992 006e  ld   $6e
-              f993 0064  ld   $64
-              f994 0065  ld   $65
-              f995 006c  ld   $6c
-              f996 0062  ld   $62
-              f997 0072  ld   $72
-              f998 006f  ld   $6f
-              f999 0074  ld   $74
-              f99a 000a  ld   $0a
-              f99b 0009  ld   $09
-              f99c 0050  ld   $50
+              f985 006e  ld   $6e
+              f986 0064  ld   $64
+              f987 0065  ld   $65
+              f988 006c  ld   $6c
+              f989 0062  ld   $62
+              f98a 0072  ld   $72
+              f98b 006f  ld   $6f
+              f98c 0074  ld   $74
+              f98d 000a  ld   $0a
+              f98e 0009  ld   $09
+              f98f 0050  ld   $50
+              f990 0069  ld   $69
+              f991 0063  ld   $63
+              f992 0074  ld   $74
+              f993 0075  ld   $75
+              f994 0072  ld   $72
+              f995 0065  ld   $65
+              f996 0073  ld   $73
+              f997 000a  ld   $0a
+              f998 0009  ld   $09
+              f999 0043  ld   $43
+              f99a 0072  ld   $72
+              f99b 0065  ld   $65
+              f99c 0064  ld   $64
               f99d 0069  ld   $69
-              f99e 0063  ld   $63
-              f99f 0074  ld   $74
-              f9a0 0075  ld   $75
-              f9a1 0072  ld   $72
-              f9a2 0065  ld   $65
-              f9a3 0073  ld   $73
-              f9a4 000a  ld   $0a
-              f9a5 0009  ld   $09
-              f9a6 0043  ld   $43
+              f99e 0074  ld   $74
+              f99f 0073  ld   $73
+              f9a0 000a  ld   $0a
+              f9a1 0009  ld   $09
+              f9a2 004c  ld   $4c
+              f9a3 006f  ld   $6f
+              f9a4 0061  ld   $61
+              f9a5 0064  ld   $64
+              f9a6 0065  ld   $65
               f9a7 0072  ld   $72
-              f9a8 0065  ld   $65
-              f9a9 0064  ld   $64
-              f9aa 0069  ld   $69
-              f9ab 0074  ld   $74
-              f9ac 0073  ld   $73
-              f9ad 000a  ld   $0a
-              f9ae 0009  ld   $09
-              f9af 004c  ld   $4c
-              f9b0 006f  ld   $6f
-              f9b1 0061  ld   $61
-              f9b2 0064  ld   $64
-              f9b3 0065  ld   $65
-              f9b4 0072  ld   $72
-              f9b5 000a  ld   $0a
-              f9b6 0000  ld   $00
-              f9b7 002b  ld   $2b         ;0438 STW
-              f9b8 0053  ld   $53         ;0438 'MainMenu'
-              f9b9 00e1  ld   $e1         ;043a DEF
-              f9ba 0086  ld   $86
-              f9bb 0020  ld   $20
-              f9bc 0055  ld   $55
-              f9bd 0073  ld   $73
-              f9be 0065  ld   $65
+              f9a8 000a  ld   $0a
+              f9a9 0000  ld   $00
+              f9aa 002b  ld   $2b         ;0438 STW
+              f9ab 0052  ld   $52         ;0438 'MainMenu'
+              f9ac 00e1  ld   $e1         ;043a DEF
+              f9ad 0086  ld   $86
+              f9ae 0020  ld   $20
+              f9af 0055  ld   $55
+              f9b0 0073  ld   $73
+              f9b1 0065  ld   $65
+              f9b2 0020  ld   $20
+              f9b3 005b  ld   $5b
+              f9b4 0055  ld   $55
+              f9b5 0070  ld   $70
+              f9b6 002f  ld   $2f
+              f9b7 0044  ld   $44
+              f9b8 006f  ld   $6f
+              f9b9 0077  ld   $77
+              f9ba 006e  ld   $6e
+              f9bb 005d  ld   $5d
+              f9bc 0020  ld   $20
+              f9bd 0074  ld   $74
+              f9be 006f  ld   $6f
               f9bf 0020  ld   $20
-              f9c0 005b  ld   $5b
-              f9c1 0055  ld   $55
-              f9c2 0070  ld   $70
-              f9c3 002f  ld   $2f
-              f9c4 0044  ld   $44
-              f9c5 006f  ld   $6f
-              f9c6 0077  ld   $77
-              f9c7 006e  ld   $6e
-              f9c8 005d  ld   $5d
-              f9c9 0020  ld   $20
-              f9ca 0074  ld   $74
-              f9cb 006f  ld   $6f
+              f9c0 0073  ld   $73
+              f9c1 0065  ld   $65
+              f9c2 006c  ld   $6c
+              f9c3 0065  ld   $65
+              f9c4 0063  ld   $63
+              f9c5 0074  ld   $74
+              f9c6 000a  ld   $0a
+              f9c7 0050  ld   $50
+              f9c8 0072  ld   $72
+              f9c9 0065  ld   $65
+              f9ca 0073  ld   $73
+              f9cb 0073  ld   $73
               f9cc 0020  ld   $20
-              f9cd 0073  ld   $73
-              f9ce 0065  ld   $65
-              f9cf 006c  ld   $6c
-              f9d0 0065  ld   $65
-              f9d1 0063  ld   $63
-              f9d2 0074  ld   $74
-              f9d3 000a  ld   $0a
-              f9d4 0050  ld   $50
-              f9d5 0072  ld   $72
-              f9d6 0065  ld   $65
-              f9d7 0073  ld   $73
-              f9d8 0073  ld   $73
+              f9cd 005b  ld   $5b
+              f9ce 0041  ld   $41
+              f9cf 005d  ld   $5d
+              f9d0 0020  ld   $20
+              f9d1 0074  ld   $74
+              f9d2 006f  ld   $6f
+              f9d3 0020  ld   $20
+              f9d4 0073  ld   $73
+              f9d5 0074  ld   $74
+              f9d6 0061  ld   $61
+              f9d7 0072  ld   $72
+              f9d8 0074  ld   $74
               f9d9 0020  ld   $20
-              f9da 005b  ld   $5b
-              f9db 0041  ld   $41
-              f9dc 005d  ld   $5d
-              f9dd 0020  ld   $20
-              f9de 0074  ld   $74
-              f9df 006f  ld   $6f
-              f9e0 0020  ld   $20
-              f9e1 0073  ld   $73
-              f9e2 0074  ld   $74
-              f9e3 0061  ld   $61
-              f9e4 0072  ld   $72
-              f9e5 0074  ld   $74
-              f9e6 0020  ld   $20
-              f9e7 0070  ld   $70
-              f9e8 0072  ld   $72
-              f9e9 006f  ld   $6f
-              f9ea 0067  ld   $67
-              f9eb 0072  ld   $72
-              f9ec 0061  ld   $61
-              f9ed 006d  ld   $6d
-              f9ee 000a  ld   $0a
-              f9ef 000a  ld   $0a
-              f9f0 0048  ld   $48
+              f9da 0070  ld   $70
+              f9db 0072  ld   $72
+              f9dc 006f  ld   $6f
+              f9dd 0067  ld   $67
+              f9de 0072  ld   $72
+              f9df 0061  ld   $61
+              f9e0 006d  ld   $6d
+              f9e1 000a  ld   $0a
+              f9e2 000a  ld   $0a
+              f9e3 0048  ld   $48
+              f9e4 006f  ld   $6f
+              f9e5 006c  ld   $6c
+              f9e6 0064  ld   $64
+              f9e7 0020  ld   $20
+              f9e8 005b  ld   $5b
+              f9e9 0053  ld   $53
+              f9ea 0074  ld   $74
+              f9eb 0061  ld   $61
+              f9ec 0072  ld   $72
+              f9ed 0074  ld   $74
+              f9ee 005d  ld   $5d
+              f9ef 0020  ld   $20
+              f9f0 0066  ld   $66
               f9f1 006f  ld   $6f
-              f9f2 006c  ld   $6c
-              f9f3 0064  ld   $64
-              f9f4 0020  ld   $20
-              f9f5 005b  ld   $5b
-              f9f6 0053  ld   $53
-              f9f7 0074  ld   $74
-              f9f8 0061  ld   $61
-              f9f9 0072  ld   $72
-              f9fa 0074  ld   $74
+              f9f2 0072  ld   $72
+              f9f3 0020  ld   $20
+              f9f4 0072  ld   $72
+              f9f5 0065  ld   $65
+              f9f6 0073  ld   $73
+              f9f7 0065  ld   $65
+              f9f8 0074  ld   $74
+              f9f9 0000  ld   $00
+              f9fa 002b  ld   $2b         ;0488 STW
               f9fb fe00  bra  ac          ;+-----------------------------------+
               f9fc fcfd  bra  $f9fd       ;|                                   |
               f9fd 1403  ld   $03,y       ;| Trampoline for page $f900 lookups |
               f9fe e078  jmp  y,$78       ;|                                   |
-              f9ff 1519  ld   [$19],y     ;+-----------------------------------+
-              fa00 005d  ld   $5d
-              fa01 0020  ld   $20
-              fa02 0066  ld   $66
-              fa03 006f  ld   $6f
-              fa04 0072  ld   $72
-              fa05 0020  ld   $20
-              fa06 0072  ld   $72
-              fa07 0065  ld   $65
-              fa08 0073  ld   $73
-              fa09 0065  ld   $65
-              fa0a 0074  ld   $74
-              fa0b 0000  ld   $00
-              fa0c 002b  ld   $2b         ;0488 STW
-              fa0d 0055  ld   $55         ;0488 'HelpText'
-              fa0e 00e1  ld   $e1         ;048a DEF
-              fa0f 009b  ld   $9b
-              fa10 007d  ld   $7d         ;048c PUSH
-              fa11 0021  ld   $21         ;048d LDW
-              fa12 0039  ld   $39         ;048d 'Pos'
-              fa13 00f6  ld   $f6         ;048f SUBI
-              fa14 000c  ld   $0c
-              fa15 002b  ld   $2b         ;0491 STW
-              fa16 0039  ld   $39         ;0491 'Pos'
-              fa17 0059  ld   $59         ;0493 LDI
-              fa18 0020  ld   $20
-              fa19 002b  ld   $2b         ;0495 STW
-              fa1a 0031  ld   $31         ;0495 'Char'
-              fa1b 00e3  ld   $e3         ;0497 CALL
-              fa1c 0043  ld   $43         ;0497 'PrintChar'
-              fa1d 00e3  ld   $e3         ;0499 CALL
-              fa1e 0043  ld   $43         ;0499 'PrintChar'
-              fa1f 0063  ld   $63         ;049b POP
-              fa20 00ff  ld   $ff         ;049c RET
-              fa21 002b  ld   $2b         ;049d STW
-              fa22 0057  ld   $57         ;049d 'WipeOutArrow'
-              fa23 00f9  ld   $f9         ;049f INC
-              fa24 001d  ld   $1d
-              fa25 00ff  ld   $ff         ;04a1 RET
-              fa26 0005  ld   $05         ;| RAM segment address (high byte first)
-              fa27 0000  ld   $00         ;|
-              fa28 00ff  ld   $ff         ;| Length (1..256)
-              fa29 0059  ld   $59         ;0500 LDI
-              fa2a 0078  ld   $78
-              fa2b 005e  ld   $5e         ;0502 ST
-              fa2c 002d  ld   $2d
-              fa2d 0011  ld   $11         ;0504 LDWI
-              fa2e 0000  ld   $00
-              fa2f 0020  ld   $20
-              fa30 002b  ld   $2b         ;0507 STW
-              fa31 0039  ld   $39         ;0507 'Pos'
-              fa32 0059  ld   $59         ;0509 LDI
-              fa33 002a  ld   $2a
-              fa34 002b  ld   $2b         ;050b STW
-              fa35 0041  ld   $41         ;050b 'Color'
-              fa36 00e3  ld   $e3         ;050d CALL
-              fa37 004d  ld   $4d         ;050d 'PrintDivider'
-              fa38 0059  ld   $59         ;050f LDI
-              fa39 000f  ld   $0f
-              fa3a 002b  ld   $2b         ;0511 STW
-              fa3b 0041  ld   $41         ;0511 'Color'
-              fa3c 0021  ld   $21         ;0513 LDW
-              fa3d 0053  ld   $53         ;0513 'MainMenu'
-              fa3e 00e3  ld   $e3         ;0515 CALL
-              fa3f 0049  ld   $49         ;0515 'PrintText'
-              fa40 0059  ld   $59         ;0517 LDI
-              fa41 002a  ld   $2a
-              fa42 002b  ld   $2b         ;0519 STW
-              fa43 0041  ld   $41         ;0519 'Color'
-              fa44 00e3  ld   $e3         ;051b CALL
-              fa45 004d  ld   $4d         ;051b 'PrintDivider'
-              fa46 0021  ld   $21         ;051d LDW
-              fa47 0055  ld   $55         ;051d 'HelpText'
-              fa48 00e3  ld   $e3         ;051f CALL
-              fa49 0049  ld   $49         ;051f 'PrintText'
-              fa4a 0059  ld   $59         ;0521 LDI
-              fa4b 0000  ld   $00
-              fa4c 002b  ld   $2b         ;0523 STW
-              fa4d 004f  ld   $4f         ;0523 'Item'
-              fa4e 001a  ld   $1a         ;0525 LD
-              fa4f 0011  ld   $11
-              fa50 002b  ld   $2b         ;0527 STW
-              fa51 0041  ld   $41         ;0527 'Color'
-              fa52 00e3  ld   $e3         ;0529 CALL
-              fa53 0051  ld   $51         ;0529 'PrintArrow'
-              fa54 001a  ld   $1a         ;052b LD
-              fa55 0014  ld   $14
-              fa56 0091  ld   $91         ;052d XORI
-              fa57 00f7  ld   $f7
-              fa58 0035  ld   $35         ;052f BCC
-              fa59 0072  ld   $72         ;0530 NE
-              fa5a 0045  ld   $45
-              fa5b 00e3  ld   $e3         ;0532 CALL
-              fa5c 0057  ld   $57         ;0532 'WipeOutArrow'
-              fa5d 0021  ld   $21         ;0534 LDW
-              fa5e 004f  ld   $4f         ;0534 'Item'
-              fa5f 0035  ld   $35         ;0536 BCC
-              fa60 0056  ld   $56         ;0537 LE
-              fa61 003b  ld   $3b
-              fa62 00f6  ld   $f6         ;0539 SUBI
-              fa63 0001  ld   $01
-              fa64 0095  ld   $95         ;053b BRA
-              fa65 003d  ld   $3d
-              fa66 0059  ld   $59         ;053d LDI
-              fa67 0000  ld   $00
-              fa68 002b  ld   $2b         ;053f STW
-              fa69 004f  ld   $4f         ;053f 'Item'
-              fa6a 001a  ld   $1a         ;0541 LD
-              fa6b 0014  ld   $14
-              fa6c 008d  ld   $8d         ;0543 ORI
-              fa6d 0008  ld   $08
-              fa6e 005e  ld   $5e         ;0545 ST
-              fa6f 0014  ld   $14
-              fa70 001a  ld   $1a         ;0547 LD
-              fa71 0014  ld   $14
-              fa72 0091  ld   $91         ;0549 XORI
-              fa73 00fb  ld   $fb
-              fa74 0035  ld   $35         ;054b BCC
-              fa75 0072  ld   $72         ;054c NE
-              fa76 0063  ld   $63
-              fa77 00e3  ld   $e3         ;054e CALL
-              fa78 0057  ld   $57         ;054e 'WipeOutArrow'
-              fa79 0021  ld   $21         ;0550 LDW
-              fa7a 004f  ld   $4f         ;0550 'Item'
-              fa7b 00f6  ld   $f6         ;0552 SUBI
-              fa7c 0005  ld   $05
-              fa7d 0035  ld   $35         ;0554 BCC
-              fa7e 0053  ld   $53         ;0555 GE
-              fa7f 0059  ld   $59
-              fa80 00f3  ld   $f3         ;0557 ADDI
-              fa81 0006  ld   $06
-              fa82 0095  ld   $95         ;0559 BRA
-              fa83 005b  ld   $5b
-              fa84 0059  ld   $59         ;055b LDI
-              fa85 0005  ld   $05
-              fa86 002b  ld   $2b         ;055d STW
-              fa87 004f  ld   $4f         ;055d 'Item'
-              fa88 001a  ld   $1a         ;055f LD
-              fa89 0014  ld   $14
-              fa8a 008d  ld   $8d         ;0561 ORI
-              fa8b 0004  ld   $04
-              fa8c 005e  ld   $5e         ;0563 ST
-              fa8d 0014  ld   $14
-              fa8e 001a  ld   $1a         ;0565 LD
-              fa8f 0014  ld   $14
-              fa90 0091  ld   $91         ;0567 XORI
-              fa91 007f  ld   $7f
-              fa92 0035  ld   $35         ;0569 BCC
-              fa93 0072  ld   $72         ;056a NE
-              fa94 0023  ld   $23
-              fa95 0059  ld   $59         ;056c LDI
-              fa96 002a  ld   $2a
-              fa97 002b  ld   $2b         ;056e STW
-              fa98 0041  ld   $41         ;056e 'Color'
-              fa99 00e3  ld   $e3         ;0570 CALL
-              fa9a 0051  ld   $51         ;0570 'PrintArrow'
-              fa9b 0021  ld   $21         ;0572 LDW
-              fa9c 004f  ld   $4f         ;0572 'Item'
-              fa9d 0035  ld   $35         ;0574 BCC
-              fa9e 0072  ld   $72         ;0575 NE
-              fa9f 007a  ld   $7a
-              faa0 0011  ld   $11         ;0577 LDWI
-              faa1 003c  ld   $3c
-              faa2 00e3  ld   $e3
-              faa3 0095  ld   $95         ;057a BRA
-              faa4 00ae  ld   $ae
-              faa5 00f6  ld   $f6         ;057c SUBI
-              faa6 0001  ld   $01
-              faa7 0035  ld   $35         ;057e BCC
-              faa8 0072  ld   $72         ;057f NE
-              faa9 0084  ld   $84
-              faaa 0011  ld   $11         ;0581 LDWI
-              faab 004f  ld   $4f
-              faac 00e9  ld   $e9
-              faad 0095  ld   $95         ;0584 BRA
-              faae 00ae  ld   $ae
-              faaf 00f6  ld   $f6         ;0586 SUBI
-              fab0 0001  ld   $01
-              fab1 0035  ld   $35         ;0588 BCC
-              fab2 0072  ld   $72         ;0589 NE
-              fab3 008e  ld   $8e
-              fab4 0011  ld   $11         ;058b LDWI
-              fab5 00db  ld   $db
-              fab6 00ef  ld   $ef
-              fab7 0095  ld   $95         ;058e BRA
-              fab8 00ae  ld   $ae
-              fab9 00f6  ld   $f6         ;0590 SUBI
-              faba 0001  ld   $01
-              fabb 0035  ld   $35         ;0592 BCC
-              fabc 0072  ld   $72         ;0593 NE
-              fabd 0098  ld   $98
-              fabe 0011  ld   $11         ;0595 LDWI
-              fabf 000e  ld   $0e
-              fac0 00f3  ld   $f3
-              fac1 0095  ld   $95         ;0598 BRA
-              fac2 00ae  ld   $ae
-              fac3 00f6  ld   $f6         ;059a SUBI
-              fac4 0001  ld   $01
-              fac5 0035  ld   $35         ;059c BCC
-              fac6 0072  ld   $72         ;059d NE
-              fac7 00a2  ld   $a2
-              fac8 0011  ld   $11         ;059f LDWI
-              fac9 00dd  ld   $dd
-              faca 00f3  ld   $f3
-              facb 0095  ld   $95         ;05a2 BRA
-              facc 00ae  ld   $ae
-              facd 00f6  ld   $f6         ;05a4 SUBI
-              face 0001  ld   $01
-              facf 0035  ld   $35         ;05a6 BCC
-              fad0 0072  ld   $72         ;05a7 NE
-              fad1 00ac  ld   $ac
-              fad2 0011  ld   $11         ;05a9 LDWI
-              fad3 0067  ld   $67
-              fad4 00f6  ld   $f6
-              fad5 0095  ld   $95         ;05ac BRA
-              fad6 00ae  ld   $ae
-              fad7 0095  ld   $95         ;05ae BRA
-              fad8 0023  ld   $23
-              fad9 002b  ld   $2b         ;05b0 STW
-              fada 0059  ld   $59         ;05b0 'Program'
-              fadb 0011  ld   $11         ;05b2 LDWI
-              fadc 0000  ld   $00
-              fadd 0008  ld   $08
-              fade 002b  ld   $2b         ;05b5 STW
-              fadf 003f  ld   $3f         ;05b5 'p'
-              fae0 0011  ld   $11         ;05b7 LDWI
-              fae1 0001  ld   $01
-              fae2 0088  ld   $88
-              fae3 002b  ld   $2b         ;05ba STW
-              fae4 0033  ld   $33         ;05ba 'i'
-              fae5 001a  ld   $1a         ;05bc LD
-              fae6 003a  ld   $3a         ;05bc 'Pos'+1
-              fae7 002b  ld   $2b         ;05be STW
-              fae8 003b  ld   $3b         ;05be 'q'
-              fae9 0059  ld   $59         ;05c0 LDI
-              faea 0020  ld   $20
-              faeb 005e  ld   $5e         ;05c2 ST
-              faec 0025  ld   $25
-              faed 005e  ld   $5e         ;05c4 ST
-              faee 0026  ld   $26
-              faef 001a  ld   $1a         ;05c6 LD
-              faf0 0040  ld   $40         ;05c6 'p'+1
-              faf1 00ad  ld   $ad         ;05c8 SUBW
-              faf2 003b  ld   $3b         ;05c8 'q'
-              faf3 0035  ld   $35         ;05ca BCC
-              faf4 003f  ld   $3f         ;05cb EQ
-              faf5 00db  ld   $db
-              faf6 001a  ld   $1a         ;05cd LD
-              faf7 0040  ld   $40         ;05cd 'p'+1
-              faf8 0091  ld   $91         ;05cf XORI
-              faf9 0078  ld   $78
-              fafa 0035  ld   $35         ;05d1 BCC
+              f9ff 1518  ld   [$18],y     ;+-----------------------------------+
+              fa00 0054  ld   $54         ;0488 'HelpText'
+              fa01 00e1  ld   $e1         ;048a DEF
+              fa02 009b  ld   $9b
+              fa03 007d  ld   $7d         ;048c PUSH
+              fa04 0021  ld   $21         ;048d LDW
+              fa05 0038  ld   $38         ;048d 'Pos'
+              fa06 00f6  ld   $f6         ;048f SUBI
+              fa07 000c  ld   $0c
+              fa08 002b  ld   $2b         ;0491 STW
+              fa09 0038  ld   $38         ;0491 'Pos'
+              fa0a 0059  ld   $59         ;0493 LDI
+              fa0b 0020  ld   $20
+              fa0c 002b  ld   $2b         ;0495 STW
+              fa0d 0030  ld   $30         ;0495 'Char'
+              fa0e 00e3  ld   $e3         ;0497 CALL
+              fa0f 0042  ld   $42         ;0497 'PrintChar'
+              fa10 00e3  ld   $e3         ;0499 CALL
+              fa11 0042  ld   $42         ;0499 'PrintChar'
+              fa12 0063  ld   $63         ;049b POP
+              fa13 00ff  ld   $ff         ;049c RET
+              fa14 002b  ld   $2b         ;049d STW
+              fa15 0056  ld   $56         ;049d 'WipeOutArrow'
+              fa16 00f9  ld   $f9         ;049f INC
+              fa17 001c  ld   $1c
+              fa18 00ff  ld   $ff         ;04a1 RET
+              fa19 0005  ld   $05         ;| RAM segment address (high byte first)
+              fa1a 0000  ld   $00         ;|
+              fa1b 00ff  ld   $ff         ;| Length (1..256)
+              fa1c 0059  ld   $59         ;0500 LDI
+              fa1d 0078  ld   $78
+              fa1e 005e  ld   $5e         ;0502 ST
+              fa1f 002c  ld   $2c
+              fa20 0011  ld   $11         ;0504 LDWI
+              fa21 0000  ld   $00
+              fa22 0020  ld   $20
+              fa23 002b  ld   $2b         ;0507 STW
+              fa24 0038  ld   $38         ;0507 'Pos'
+              fa25 0059  ld   $59         ;0509 LDI
+              fa26 002a  ld   $2a
+              fa27 002b  ld   $2b         ;050b STW
+              fa28 0040  ld   $40         ;050b 'Color'
+              fa29 00e3  ld   $e3         ;050d CALL
+              fa2a 004c  ld   $4c         ;050d 'PrintDivider'
+              fa2b 0059  ld   $59         ;050f LDI
+              fa2c 000f  ld   $0f
+              fa2d 002b  ld   $2b         ;0511 STW
+              fa2e 0040  ld   $40         ;0511 'Color'
+              fa2f 0021  ld   $21         ;0513 LDW
+              fa30 0052  ld   $52         ;0513 'MainMenu'
+              fa31 00e3  ld   $e3         ;0515 CALL
+              fa32 0048  ld   $48         ;0515 'PrintText'
+              fa33 0059  ld   $59         ;0517 LDI
+              fa34 002a  ld   $2a
+              fa35 002b  ld   $2b         ;0519 STW
+              fa36 0040  ld   $40         ;0519 'Color'
+              fa37 00e3  ld   $e3         ;051b CALL
+              fa38 004c  ld   $4c         ;051b 'PrintDivider'
+              fa39 0021  ld   $21         ;051d LDW
+              fa3a 0054  ld   $54         ;051d 'HelpText'
+              fa3b 00e3  ld   $e3         ;051f CALL
+              fa3c 0048  ld   $48         ;051f 'PrintText'
+              fa3d 0059  ld   $59         ;0521 LDI
+              fa3e 0000  ld   $00
+              fa3f 002b  ld   $2b         ;0523 STW
+              fa40 004e  ld   $4e         ;0523 'Item'
+              fa41 001a  ld   $1a         ;0525 LD
+              fa42 0010  ld   $10
+              fa43 002b  ld   $2b         ;0527 STW
+              fa44 0040  ld   $40         ;0527 'Color'
+              fa45 00e3  ld   $e3         ;0529 CALL
+              fa46 0050  ld   $50         ;0529 'PrintArrow'
+              fa47 001a  ld   $1a         ;052b LD
+              fa48 0013  ld   $13
+              fa49 0091  ld   $91         ;052d XORI
+              fa4a 00f7  ld   $f7
+              fa4b 0035  ld   $35         ;052f BCC
+              fa4c 0072  ld   $72         ;0530 NE
+              fa4d 0045  ld   $45
+              fa4e 00e3  ld   $e3         ;0532 CALL
+              fa4f 0056  ld   $56         ;0532 'WipeOutArrow'
+              fa50 0021  ld   $21         ;0534 LDW
+              fa51 004e  ld   $4e         ;0534 'Item'
+              fa52 0035  ld   $35         ;0536 BCC
+              fa53 0056  ld   $56         ;0537 LE
+              fa54 003b  ld   $3b
+              fa55 00f6  ld   $f6         ;0539 SUBI
+              fa56 0001  ld   $01
+              fa57 0095  ld   $95         ;053b BRA
+              fa58 003d  ld   $3d
+              fa59 0059  ld   $59         ;053d LDI
+              fa5a 0000  ld   $00
+              fa5b 002b  ld   $2b         ;053f STW
+              fa5c 004e  ld   $4e         ;053f 'Item'
+              fa5d 001a  ld   $1a         ;0541 LD
+              fa5e 0013  ld   $13
+              fa5f 008d  ld   $8d         ;0543 ORI
+              fa60 0008  ld   $08
+              fa61 005e  ld   $5e         ;0545 ST
+              fa62 0013  ld   $13
+              fa63 001a  ld   $1a         ;0547 LD
+              fa64 0013  ld   $13
+              fa65 0091  ld   $91         ;0549 XORI
+              fa66 00fb  ld   $fb
+              fa67 0035  ld   $35         ;054b BCC
+              fa68 0072  ld   $72         ;054c NE
+              fa69 0063  ld   $63
+              fa6a 00e3  ld   $e3         ;054e CALL
+              fa6b 0056  ld   $56         ;054e 'WipeOutArrow'
+              fa6c 0021  ld   $21         ;0550 LDW
+              fa6d 004e  ld   $4e         ;0550 'Item'
+              fa6e 00f6  ld   $f6         ;0552 SUBI
+              fa6f 0005  ld   $05
+              fa70 0035  ld   $35         ;0554 BCC
+              fa71 0053  ld   $53         ;0555 GE
+              fa72 0059  ld   $59
+              fa73 00f3  ld   $f3         ;0557 ADDI
+              fa74 0006  ld   $06
+              fa75 0095  ld   $95         ;0559 BRA
+              fa76 005b  ld   $5b
+              fa77 0059  ld   $59         ;055b LDI
+              fa78 0005  ld   $05
+              fa79 002b  ld   $2b         ;055d STW
+              fa7a 004e  ld   $4e         ;055d 'Item'
+              fa7b 001a  ld   $1a         ;055f LD
+              fa7c 0013  ld   $13
+              fa7d 008d  ld   $8d         ;0561 ORI
+              fa7e 0004  ld   $04
+              fa7f 005e  ld   $5e         ;0563 ST
+              fa80 0013  ld   $13
+              fa81 001a  ld   $1a         ;0565 LD
+              fa82 0013  ld   $13
+              fa83 0091  ld   $91         ;0567 XORI
+              fa84 007f  ld   $7f
+              fa85 0035  ld   $35         ;0569 BCC
+              fa86 0072  ld   $72         ;056a NE
+              fa87 0023  ld   $23
+              fa88 0059  ld   $59         ;056c LDI
+              fa89 002a  ld   $2a
+              fa8a 002b  ld   $2b         ;056e STW
+              fa8b 0040  ld   $40         ;056e 'Color'
+              fa8c 00e3  ld   $e3         ;0570 CALL
+              fa8d 0050  ld   $50         ;0570 'PrintArrow'
+              fa8e 0021  ld   $21         ;0572 LDW
+              fa8f 004e  ld   $4e         ;0572 'Item'
+              fa90 0035  ld   $35         ;0574 BCC
+              fa91 0072  ld   $72         ;0575 NE
+              fa92 007a  ld   $7a
+              fa93 0011  ld   $11         ;0577 LDWI
+              fa94 003c  ld   $3c
+              fa95 00e3  ld   $e3
+              fa96 0095  ld   $95         ;057a BRA
+              fa97 00ae  ld   $ae
+              fa98 00f6  ld   $f6         ;057c SUBI
+              fa99 0001  ld   $01
+              fa9a 0035  ld   $35         ;057e BCC
+              fa9b 0072  ld   $72         ;057f NE
+              fa9c 0084  ld   $84
+              fa9d 0011  ld   $11         ;0581 LDWI
+              fa9e 004f  ld   $4f
+              fa9f 00e9  ld   $e9
+              faa0 0095  ld   $95         ;0584 BRA
+              faa1 00ae  ld   $ae
+              faa2 00f6  ld   $f6         ;0586 SUBI
+              faa3 0001  ld   $01
+              faa4 0035  ld   $35         ;0588 BCC
+              faa5 0072  ld   $72         ;0589 NE
+              faa6 008e  ld   $8e
+              faa7 0011  ld   $11         ;058b LDWI
+              faa8 00dd  ld   $dd
+              faa9 00ef  ld   $ef
+              faaa 0095  ld   $95         ;058e BRA
+              faab 00ae  ld   $ae
+              faac 00f6  ld   $f6         ;0590 SUBI
+              faad 0001  ld   $01
+              faae 0035  ld   $35         ;0592 BCC
+              faaf 0072  ld   $72         ;0593 NE
+              fab0 0098  ld   $98
+              fab1 0011  ld   $11         ;0595 LDWI
+              fab2 0010  ld   $10
+              fab3 00f3  ld   $f3
+              fab4 0095  ld   $95         ;0598 BRA
+              fab5 00ae  ld   $ae
+              fab6 00f6  ld   $f6         ;059a SUBI
+              fab7 0001  ld   $01
+              fab8 0035  ld   $35         ;059c BCC
+              fab9 0072  ld   $72         ;059d NE
+              faba 00a2  ld   $a2
+              fabb 0011  ld   $11         ;059f LDWI
+              fabc 00e1  ld   $e1
+              fabd 00f3  ld   $f3
+              fabe 0095  ld   $95         ;05a2 BRA
+              fabf 00ae  ld   $ae
+              fac0 00f6  ld   $f6         ;05a4 SUBI
+              fac1 0001  ld   $01
+              fac2 0035  ld   $35         ;05a6 BCC
+              fac3 0072  ld   $72         ;05a7 NE
+              fac4 00ac  ld   $ac
+              fac5 0011  ld   $11         ;05a9 LDWI
+              fac6 006b  ld   $6b
+              fac7 00f6  ld   $f6
+              fac8 0095  ld   $95         ;05ac BRA
+              fac9 00ae  ld   $ae
+              faca 0095  ld   $95         ;05ae BRA
+              facb 0023  ld   $23
+              facc 002b  ld   $2b         ;05b0 STW
+              facd 0058  ld   $58         ;05b0 'Program'
+              face 0011  ld   $11         ;05b2 LDWI
+              facf 0000  ld   $00
+              fad0 0008  ld   $08
+              fad1 002b  ld   $2b         ;05b5 STW
+              fad2 003e  ld   $3e         ;05b5 'p'
+              fad3 0011  ld   $11         ;05b7 LDWI
+              fad4 0001  ld   $01
+              fad5 0088  ld   $88
+              fad6 002b  ld   $2b         ;05ba STW
+              fad7 0032  ld   $32         ;05ba 'i'
+              fad8 001a  ld   $1a         ;05bc LD
+              fad9 0039  ld   $39         ;05bc 'Pos'+1
+              fada 002b  ld   $2b         ;05be STW
+              fadb 003a  ld   $3a         ;05be 'q'
+              fadc 0059  ld   $59         ;05c0 LDI
+              fadd 0020  ld   $20
+              fade 005e  ld   $5e         ;05c2 ST
+              fadf 0024  ld   $24
+              fae0 005e  ld   $5e         ;05c4 ST
+              fae1 0025  ld   $25
+              fae2 001a  ld   $1a         ;05c6 LD
+              fae3 003f  ld   $3f         ;05c6 'p'+1
+              fae4 00ad  ld   $ad         ;05c8 SUBW
+              fae5 003a  ld   $3a         ;05c8 'q'
+              fae6 0035  ld   $35         ;05ca BCC
+              fae7 003f  ld   $3f         ;05cb EQ
+              fae8 00db  ld   $db
+              fae9 001a  ld   $1a         ;05cd LD
+              faea 003f  ld   $3f         ;05cd 'p'+1
+              faeb 0091  ld   $91         ;05cf XORI
+              faec 0078  ld   $78
+              faed 0035  ld   $35         ;05d1 BCC
+              faee 003f  ld   $3f         ;05d2 EQ
+              faef 00db  ld   $db
+              faf0 0021  ld   $21         ;05d4 LDW
+              faf1 003e  ld   $3e         ;05d4 'p'
+              faf2 002b  ld   $2b         ;05d6 STW
+              faf3 0020  ld   $20
+              faf4 0011  ld   $11         ;05d8 LDWI
+              faf5 00e4  ld   $e4
+              faf6 0004  ld   $04
+              faf7 00a9  ld   $a9         ;05db SYS
+              faf8 00cb  ld   $cb
+              faf9 0011  ld   $11         ;05dd LDWI
+              fafa 0000  ld   $00
               fafb fe00  bra  ac          ;+-----------------------------------+
               fafc fcfd  bra  $fafd       ;|                                   |
               fafd 1403  ld   $03,y       ;| Trampoline for page $fa00 lookups |
               fafe e078  jmp  y,$78       ;|                                   |
-              faff 1519  ld   [$19],y     ;+-----------------------------------+
-              fb00 003f  ld   $3f         ;05d2 EQ
-              fb01 00db  ld   $db
-              fb02 0021  ld   $21         ;05d4 LDW
-              fb03 003f  ld   $3f         ;05d4 'p'
-              fb04 002b  ld   $2b         ;05d6 STW
-              fb05 0021  ld   $21
-              fb06 0011  ld   $11         ;05d8 LDWI
-              fb07 00db  ld   $db
-              fb08 0004  ld   $04
-              fb09 00a9  ld   $a9         ;05db SYS
-              fb0a 00cb  ld   $cb
-              fb0b 0011  ld   $11         ;05dd LDWI
-              fb0c 0000  ld   $00
-              fb0d 0008  ld   $08
-              fb0e 00c1  ld   $c1         ;05e0 ADDW
-              fb0f 003f  ld   $3f         ;05e0 'p'
-              fb10 002b  ld   $2b         ;05e2 STW
-              fb11 003f  ld   $3f         ;05e2 'p'
-              fb12 0035  ld   $35         ;05e4 BCC
-              fb13 004d  ld   $4d         ;05e5 GT
-              fb14 00c4  ld   $c4
-              fb15 00c1  ld   $c1         ;05e7 ADDW
-              fb16 0033  ld   $33         ;05e7 'i'
-              fb17 002b  ld   $2b         ;05e9 STW
-              fb18 003f  ld   $3f         ;05e9 'p'
-              fb19 0087  ld   $87         ;05eb ANDI
-              fb1a 00ff  ld   $ff
-              fb1b 0091  ld   $91         ;05ed XORI
-              fb1c 00a0  ld   $a0
-              fb1d 0035  ld   $35         ;05ef BCC
-              fb1e 0072  ld   $72         ;05f0 NE
-              fb1f 00c4  ld   $c4
-              fb20 0021  ld   $21         ;05f2 LDW
-              fb21 0059  ld   $59         ;05f2 'Program'
-              fb22 002b  ld   $2b         ;05f4 STW
-              fb23 0025  ld   $25
-              fb24 0011  ld   $11         ;05f6 LDWI
-              fb25 0000  ld   $00
-              fb26 0003  ld   $03
-              fb27 002b  ld   $2b         ;05f9 STW
-              fb28 001c  ld   $1c
-              fb29 0059  ld   $59         ;05fb LDI
-              fb2a 0088  ld   $88
-              fb2b 00a9  ld   $a9         ;05fd SYS
-              fb2c 00e2  ld   $e2
-              fb2d 0000  ld   $00         ;End of file
-Reset:        fb2e 0003  ld   $03         ;| RAM segment address (high byte first)
-              fb2f 0000  ld   $00         ;|
-              fb30 00d5  ld   $d5         ;| Length (1..256)
-              fb31 00e1  ld   $e1         ;0300 DEF
-              fb32 004c  ld   $4c
-              fb33 0011  ld   $11         ;0302 LDWI
-              fb34 0000  ld   $00
-              fb35 0001  ld   $01
-              fb36 002b  ld   $2b         ;0305 STW
-              fb37 0031  ld   $31         ;0305 'p'
-              fb38 0011  ld   $11         ;0307 LDWI
-              fb39 0000  ld   $00
-              fb3a 0008  ld   $08
-              fb3b 002b  ld   $2b         ;030a STW
-              fb3c 0033  ld   $33         ;030a 'q'
-              fb3d 001a  ld   $1a         ;030c LD
-              fb3e 0034  ld   $34         ;030c 'q'+1
-              fb3f 0098  ld   $98         ;030e POKE
-              fb40 0031  ld   $31         ;030e 'p'
-              fb41 00f9  ld   $f9         ;0310 INC
-              fb42 0031  ld   $31         ;0310 'p'
-              fb43 0059  ld   $59         ;0312 LDI
+              faff 1518  ld   [$18],y     ;+-----------------------------------+
+              fb00 0008  ld   $08
+              fb01 00c1  ld   $c1         ;05e0 ADDW
+              fb02 003e  ld   $3e         ;05e0 'p'
+              fb03 002b  ld   $2b         ;05e2 STW
+              fb04 003e  ld   $3e         ;05e2 'p'
+              fb05 0035  ld   $35         ;05e4 BCC
+              fb06 004d  ld   $4d         ;05e5 GT
+              fb07 00c4  ld   $c4
+              fb08 00c1  ld   $c1         ;05e7 ADDW
+              fb09 0032  ld   $32         ;05e7 'i'
+              fb0a 002b  ld   $2b         ;05e9 STW
+              fb0b 003e  ld   $3e         ;05e9 'p'
+              fb0c 0087  ld   $87         ;05eb ANDI
+              fb0d 00ff  ld   $ff
+              fb0e 0091  ld   $91         ;05ed XORI
+              fb0f 00a0  ld   $a0
+              fb10 0035  ld   $35         ;05ef BCC
+              fb11 0072  ld   $72         ;05f0 NE
+              fb12 00c4  ld   $c4
+              fb13 0021  ld   $21         ;05f2 LDW
+              fb14 0058  ld   $58         ;05f2 'Program'
+              fb15 002b  ld   $2b         ;05f4 STW
+              fb16 0024  ld   $24
+              fb17 0011  ld   $11         ;05f6 LDWI
+              fb18 0000  ld   $00
+              fb19 0003  ld   $03
+              fb1a 002b  ld   $2b         ;05f9 STW
+              fb1b 001b  ld   $1b
+              fb1c 0059  ld   $59         ;05fb LDI
+              fb1d 0089  ld   $89
+              fb1e 00a9  ld   $a9         ;05fd SYS
+              fb1f 00e2  ld   $e2
+              fb20 0000  ld   $00         ;End of file
+Reset:        fb21 0003  ld   $03         ;| RAM segment address (high byte first)
+              fb22 0000  ld   $00         ;|
+              fb23 00d5  ld   $d5         ;| Length (1..256)
+              fb24 00e1  ld   $e1         ;0300 DEF
+              fb25 004c  ld   $4c
+              fb26 0011  ld   $11         ;0302 LDWI
+              fb27 0000  ld   $00
+              fb28 0001  ld   $01
+              fb29 002b  ld   $2b         ;0305 STW
+              fb2a 0030  ld   $30         ;0305 'p'
+              fb2b 0011  ld   $11         ;0307 LDWI
+              fb2c 0000  ld   $00
+              fb2d 0008  ld   $08
+              fb2e 002b  ld   $2b         ;030a STW
+              fb2f 0032  ld   $32         ;030a 'q'
+              fb30 001a  ld   $1a         ;030c LD
+              fb31 0033  ld   $33         ;030c 'q'+1
+              fb32 0098  ld   $98         ;030e POKE
+              fb33 0030  ld   $30         ;030e 'p'
+              fb34 00f9  ld   $f9         ;0310 INC
+              fb35 0030  ld   $30         ;0310 'p'
+              fb36 0059  ld   $59         ;0312 LDI
+              fb37 0000  ld   $00
+              fb38 0098  ld   $98         ;0314 POKE
+              fb39 0030  ld   $30         ;0314 'p'
+              fb3a 00f9  ld   $f9         ;0316 INC
+              fb3b 0030  ld   $30         ;0316 'p'
+              fb3c 00f9  ld   $f9         ;0318 INC
+              fb3d 0033  ld   $33         ;0318 'q'+1
+              fb3e 0021  ld   $21         ;031a LDW
+              fb3f 0032  ld   $32         ;031a 'q'
+              fb40 0035  ld   $35         ;031c BCC
+              fb41 004d  ld   $4d         ;031d GT
+              fb42 000a  ld   $0a
+              fb43 0011  ld   $11         ;031f LDWI
               fb44 0000  ld   $00
-              fb45 0098  ld   $98         ;0314 POKE
-              fb46 0031  ld   $31         ;0314 'p'
-              fb47 00f9  ld   $f9         ;0316 INC
-              fb48 0031  ld   $31         ;0316 'p'
-              fb49 00f9  ld   $f9         ;0318 INC
-              fb4a 0034  ld   $34         ;0318 'q'+1
-              fb4b 0021  ld   $21         ;031a LDW
-              fb4c 0033  ld   $33         ;031a 'q'
-              fb4d 0035  ld   $35         ;031c BCC
-              fb4e 004d  ld   $4d         ;031d GT
-              fb4f 000a  ld   $0a
-              fb50 0011  ld   $11         ;031f LDWI
-              fb51 0000  ld   $00
-              fb52 0008  ld   $08
-              fb53 002b  ld   $2b         ;0322 STW
-              fb54 0031  ld   $31         ;0322 'p'
-              fb55 0011  ld   $11         ;0324 LDWI
-              fb56 0001  ld   $01
-              fb57 0088  ld   $88
-              fb58 002b  ld   $2b         ;0327 STW
-              fb59 0035  ld   $35         ;0327 'i'
-              fb5a 0059  ld   $59         ;0329 LDI
-              fb5b 0020  ld   $20
-              fb5c 005e  ld   $5e         ;032b ST
-              fb5d 0025  ld   $25
-              fb5e 005e  ld   $5e         ;032d ST
-              fb5f 0026  ld   $26
-              fb60 0021  ld   $21         ;032f LDW
-              fb61 0031  ld   $31         ;032f 'p'
-              fb62 002b  ld   $2b         ;0331 STW
-              fb63 0021  ld   $21
-              fb64 0011  ld   $11         ;0333 LDWI
-              fb65 00db  ld   $db
-              fb66 0004  ld   $04
-              fb67 00a9  ld   $a9         ;0336 SYS
-              fb68 00cb  ld   $cb
-              fb69 0011  ld   $11         ;0338 LDWI
-              fb6a 0000  ld   $00
-              fb6b 0008  ld   $08
-              fb6c 00c1  ld   $c1         ;033b ADDW
-              fb6d 0031  ld   $31         ;033b 'p'
-              fb6e 002b  ld   $2b         ;033d STW
-              fb6f 0031  ld   $31         ;033d 'p'
-              fb70 0035  ld   $35         ;033f BCC
-              fb71 004d  ld   $4d         ;0340 GT
-              fb72 002f  ld   $2f
-              fb73 00c1  ld   $c1         ;0342 ADDW
-              fb74 0035  ld   $35         ;0342 'i'
-              fb75 002b  ld   $2b         ;0344 STW
-              fb76 0031  ld   $31         ;0344 'p'
-              fb77 0087  ld   $87         ;0346 ANDI
-              fb78 00ff  ld   $ff
-              fb79 0091  ld   $91         ;0348 XORI
-              fb7a 00a0  ld   $a0
-              fb7b 0035  ld   $35         ;034a BCC
-              fb7c 0072  ld   $72         ;034b NE
-              fb7d 002d  ld   $2d
-              fb7e 00ff  ld   $ff         ;034d RET
-              fb7f 002b  ld   $2b         ;034e STW
-              fb80 0037  ld   $37         ;034e 'SetupVideo'
-              fb81 00e1  ld   $e1         ;0350 DEF
-              fb82 007f  ld   $7f
-              fb83 002a  ld   $2a
-              fb84 002a  ld   $2a
-              fb85 002a  ld   $2a
+              fb45 0008  ld   $08
+              fb46 002b  ld   $2b         ;0322 STW
+              fb47 0030  ld   $30         ;0322 'p'
+              fb48 0011  ld   $11         ;0324 LDWI
+              fb49 0001  ld   $01
+              fb4a 0088  ld   $88
+              fb4b 002b  ld   $2b         ;0327 STW
+              fb4c 0034  ld   $34         ;0327 'i'
+              fb4d 0059  ld   $59         ;0329 LDI
+              fb4e 0020  ld   $20
+              fb4f 005e  ld   $5e         ;032b ST
+              fb50 0024  ld   $24
+              fb51 005e  ld   $5e         ;032d ST
+              fb52 0025  ld   $25
+              fb53 0021  ld   $21         ;032f LDW
+              fb54 0030  ld   $30         ;032f 'p'
+              fb55 002b  ld   $2b         ;0331 STW
+              fb56 0020  ld   $20
+              fb57 0011  ld   $11         ;0333 LDWI
+              fb58 00e4  ld   $e4
+              fb59 0004  ld   $04
+              fb5a 00a9  ld   $a9         ;0336 SYS
+              fb5b 00cb  ld   $cb
+              fb5c 0011  ld   $11         ;0338 LDWI
+              fb5d 0000  ld   $00
+              fb5e 0008  ld   $08
+              fb5f 00c1  ld   $c1         ;033b ADDW
+              fb60 0030  ld   $30         ;033b 'p'
+              fb61 002b  ld   $2b         ;033d STW
+              fb62 0030  ld   $30         ;033d 'p'
+              fb63 0035  ld   $35         ;033f BCC
+              fb64 004d  ld   $4d         ;0340 GT
+              fb65 002f  ld   $2f
+              fb66 00c1  ld   $c1         ;0342 ADDW
+              fb67 0034  ld   $34         ;0342 'i'
+              fb68 002b  ld   $2b         ;0344 STW
+              fb69 0030  ld   $30         ;0344 'p'
+              fb6a 0087  ld   $87         ;0346 ANDI
+              fb6b 00ff  ld   $ff
+              fb6c 0091  ld   $91         ;0348 XORI
+              fb6d 00a0  ld   $a0
+              fb6e 0035  ld   $35         ;034a BCC
+              fb6f 0072  ld   $72         ;034b NE
+              fb70 002d  ld   $2d
+              fb71 00ff  ld   $ff         ;034d RET
+              fb72 002b  ld   $2b         ;034e STW
+              fb73 0036  ld   $36         ;034e 'SetupVideo'
+              fb74 00e1  ld   $e1         ;0350 DEF
+              fb75 007f  ld   $7f
+              fb76 002a  ld   $2a
+              fb77 002a  ld   $2a
+              fb78 002a  ld   $2a
+              fb79 0020  ld   $20
+              fb7a 0047  ld   $47
+              fb7b 0069  ld   $69
+              fb7c 0067  ld   $67
+              fb7d 0061  ld   $61
+              fb7e 0074  ld   $74
+              fb7f 0072  ld   $72
+              fb80 006f  ld   $6f
+              fb81 006e  ld   $6e
+              fb82 0020  ld   $20
+              fb83 003f  ld   $3f
+              fb84 003f  ld   $3f
+              fb85 004b  ld   $4b
               fb86 0020  ld   $20
-              fb87 0047  ld   $47
-              fb88 0069  ld   $69
-              fb89 0067  ld   $67
-              fb8a 0061  ld   $61
-              fb8b 0074  ld   $74
-              fb8c 0072  ld   $72
-              fb8d 006f  ld   $6f
-              fb8e 006e  ld   $6e
-              fb8f 0020  ld   $20
-              fb90 003f  ld   $3f
-              fb91 003f  ld   $3f
-              fb92 004b  ld   $4b
-              fb93 0020  ld   $20
-              fb94 002a  ld   $2a
-              fb95 002a  ld   $2a
-              fb96 002a  ld   $2a
-              fb97 000a  ld   $0a
-              fb98 0054  ld   $54
-              fb99 0054  ld   $54
-              fb9a 004c  ld   $4c
-              fb9b 0020  ld   $20
-              fb9c 006d  ld   $6d
-              fb9d 0069  ld   $69
-              fb9e 0063  ld   $63
-              fb9f 0072  ld   $72
-              fba0 006f  ld   $6f
-              fba1 0063  ld   $63
-              fba2 006f  ld   $6f
-              fba3 006d  ld   $6d
-              fba4 0070  ld   $70
-              fba5 0075  ld   $75
-              fba6 0074  ld   $74
-              fba7 0065  ld   $65
-              fba8 0072  ld   $72
-              fba9 0020  ld   $20
-              fbaa 0052  ld   $52
-              fbab 004f  ld   $4f
-              fbac 004d  ld   $4d
-              fbad 0020  ld   $20
-              fbae 0076  ld   $76
-              fbaf 0030  ld   $30
-              fbb0 0078  ld   $78
-              fbb1 0000  ld   $00
-              fbb2 002b  ld   $2b         ;0381 STW
-              fbb3 0039  ld   $39         ;0381 'StartupMessage'
-              fbb4 00f3  ld   $f3         ;0383 ADDI
-              fbb5 000d  ld   $0d
-              fbb6 002b  ld   $2b         ;0385 STW
-              fbb7 0031  ld   $31         ;0385 'p'
-              fbb8 0011  ld   $11         ;0387 LDWI
-              fbb9 002f  ld   $2f
-              fbba 002f  ld   $2f
-              fbbb 002b  ld   $2b         ;038a STW
-              fbbc 003b  ld   $3b         ;038a 'Char'
-              fbbd 001a  ld   $1a         ;038c LD
-              fbbe 0001  ld   $01
-              fbbf 00f6  ld   $f6         ;038e SUBI
-              fbc0 0001  ld   $01
-              fbc1 0087  ld   $87         ;0390 ANDI
-              fbc2 00ff  ld   $ff
-              fbc3 00f3  ld   $f3         ;0392 ADDI
-              fbc4 0001  ld   $01
-              fbc5 00f9  ld   $f9         ;0394 INC
-              fbc6 003c  ld   $3c         ;0394 'Char'+1
-              fbc7 00f6  ld   $f6         ;0396 SUBI
-              fbc8 0028  ld   $28
-              fbc9 0035  ld   $35         ;0398 BCC
-              fbca 0053  ld   $53         ;0399 GE
-              fbcb 0092  ld   $92
-              fbcc 00f3  ld   $f3         ;039b ADDI
-              fbcd 0028  ld   $28
-              fbce 00f9  ld   $f9         ;039d INC
-              fbcf 003b  ld   $3b         ;039d 'Char'
-              fbd0 00f6  ld   $f6         ;039f SUBI
-              fbd1 0004  ld   $04
-              fbd2 0035  ld   $35         ;03a1 BCC
-              fbd3 0053  ld   $53         ;03a2 GE
-              fbd4 009b  ld   $9b
-              fbd5 001a  ld   $1a         ;03a4 LD
-              fbd6 003c  ld   $3c         ;03a4 'Char'+1
-              fbd7 0098  ld   $98         ;03a6 POKE
-              fbd8 0031  ld   $31         ;03a6 'p'
-              fbd9 00f9  ld   $f9         ;03a8 INC
-              fbda 0031  ld   $31         ;03a8 'p'
-              fbdb 0021  ld   $21         ;03aa LDW
-              fbdc 003b  ld   $3b         ;03aa 'Char'
-              fbdd 0098  ld   $98         ;03ac POKE
-              fbde 0031  ld   $31         ;03ac 'p'
-              fbdf 00e1  ld   $e1         ;03ae DEF
-              fbe0 00ce  ld   $ce
-              fbe1 007d  ld   $7d         ;03b0 PUSH
-              fbe2 0021  ld   $21         ;03b1 LDW
-              fbe3 003d  ld   $3d         ;03b1 'Text'
-              fbe4 00d5  ld   $d5         ;03b3 PEEK
-              fbe5 0035  ld   $35         ;03b4 BCC
-              fbe6 003f  ld   $3f         ;03b5 EQ
-              fbe7 00cc  ld   $cc
-              fbe8 002b  ld   $2b         ;03b7 STW
-              fbe9 003b  ld   $3b         ;03b7 'Char'
-              fbea 00f9  ld   $f9         ;03b9 INC
-              fbeb 003d  ld   $3d         ;03b9 'Text'
-              fbec 0091  ld   $91         ;03bb XORI
-              fbed 000a  ld   $0a
-              fbee 0035  ld   $35         ;03bd BCC
-              fbef 0072  ld   $72         ;03be NE
-              fbf0 00c8  ld   $c8
-              fbf1 005e  ld   $5e         ;03c0 ST
-              fbf2 003f  ld   $3f         ;03c0 'Pos'
-              fbf3 001a  ld   $1a         ;03c2 LD
-              fbf4 0040  ld   $40         ;03c2 'Pos'+1
-              fbf5 00f3  ld   $f3         ;03c4 ADDI
-              fbf6 0008  ld   $08
-              fbf7 005e  ld   $5e         ;03c6 ST
-              fbf8 0040  ld   $40         ;03c6 'Pos'+1
-              fbf9 0095  ld   $95         ;03c8 BRA
-              fbfa 00ca  ld   $ca
+              fb87 002a  ld   $2a
+              fb88 002a  ld   $2a
+              fb89 002a  ld   $2a
+              fb8a 000a  ld   $0a
+              fb8b 0054  ld   $54
+              fb8c 0054  ld   $54
+              fb8d 004c  ld   $4c
+              fb8e 0020  ld   $20
+              fb8f 006d  ld   $6d
+              fb90 0069  ld   $69
+              fb91 0063  ld   $63
+              fb92 0072  ld   $72
+              fb93 006f  ld   $6f
+              fb94 0063  ld   $63
+              fb95 006f  ld   $6f
+              fb96 006d  ld   $6d
+              fb97 0070  ld   $70
+              fb98 0075  ld   $75
+              fb99 0074  ld   $74
+              fb9a 0065  ld   $65
+              fb9b 0072  ld   $72
+              fb9c 0020  ld   $20
+              fb9d 0052  ld   $52
+              fb9e 004f  ld   $4f
+              fb9f 004d  ld   $4d
+              fba0 0020  ld   $20
+              fba1 0076  ld   $76
+              fba2 0030  ld   $30
+              fba3 0078  ld   $78
+              fba4 0000  ld   $00
+              fba5 002b  ld   $2b         ;0381 STW
+              fba6 0038  ld   $38         ;0381 'StartupMessage'
+              fba7 00f3  ld   $f3         ;0383 ADDI
+              fba8 000d  ld   $0d
+              fba9 002b  ld   $2b         ;0385 STW
+              fbaa 0030  ld   $30         ;0385 'p'
+              fbab 0011  ld   $11         ;0387 LDWI
+              fbac 002f  ld   $2f
+              fbad 002f  ld   $2f
+              fbae 002b  ld   $2b         ;038a STW
+              fbaf 003a  ld   $3a         ;038a 'Char'
+              fbb0 001a  ld   $1a         ;038c LD
+              fbb1 0001  ld   $01
+              fbb2 00f6  ld   $f6         ;038e SUBI
+              fbb3 0001  ld   $01
+              fbb4 0087  ld   $87         ;0390 ANDI
+              fbb5 00ff  ld   $ff
+              fbb6 00f3  ld   $f3         ;0392 ADDI
+              fbb7 0001  ld   $01
+              fbb8 00f9  ld   $f9         ;0394 INC
+              fbb9 003b  ld   $3b         ;0394 'Char'+1
+              fbba 00f6  ld   $f6         ;0396 SUBI
+              fbbb 0028  ld   $28
+              fbbc 0035  ld   $35         ;0398 BCC
+              fbbd 0053  ld   $53         ;0399 GE
+              fbbe 0092  ld   $92
+              fbbf 00f3  ld   $f3         ;039b ADDI
+              fbc0 0028  ld   $28
+              fbc1 00f9  ld   $f9         ;039d INC
+              fbc2 003a  ld   $3a         ;039d 'Char'
+              fbc3 00f6  ld   $f6         ;039f SUBI
+              fbc4 0004  ld   $04
+              fbc5 0035  ld   $35         ;03a1 BCC
+              fbc6 0053  ld   $53         ;03a2 GE
+              fbc7 009b  ld   $9b
+              fbc8 001a  ld   $1a         ;03a4 LD
+              fbc9 003b  ld   $3b         ;03a4 'Char'+1
+              fbca 0098  ld   $98         ;03a6 POKE
+              fbcb 0030  ld   $30         ;03a6 'p'
+              fbcc 00f9  ld   $f9         ;03a8 INC
+              fbcd 0030  ld   $30         ;03a8 'p'
+              fbce 0021  ld   $21         ;03aa LDW
+              fbcf 003a  ld   $3a         ;03aa 'Char'
+              fbd0 0098  ld   $98         ;03ac POKE
+              fbd1 0030  ld   $30         ;03ac 'p'
+              fbd2 00e1  ld   $e1         ;03ae DEF
+              fbd3 00ce  ld   $ce
+              fbd4 007d  ld   $7d         ;03b0 PUSH
+              fbd5 0021  ld   $21         ;03b1 LDW
+              fbd6 003c  ld   $3c         ;03b1 'Text'
+              fbd7 00d5  ld   $d5         ;03b3 PEEK
+              fbd8 0035  ld   $35         ;03b4 BCC
+              fbd9 003f  ld   $3f         ;03b5 EQ
+              fbda 00cc  ld   $cc
+              fbdb 002b  ld   $2b         ;03b7 STW
+              fbdc 003a  ld   $3a         ;03b7 'Char'
+              fbdd 00f9  ld   $f9         ;03b9 INC
+              fbde 003c  ld   $3c         ;03b9 'Text'
+              fbdf 0091  ld   $91         ;03bb XORI
+              fbe0 000a  ld   $0a
+              fbe1 0035  ld   $35         ;03bd BCC
+              fbe2 0072  ld   $72         ;03be NE
+              fbe3 00c8  ld   $c8
+              fbe4 005e  ld   $5e         ;03c0 ST
+              fbe5 003e  ld   $3e         ;03c0 'Pos'
+              fbe6 001a  ld   $1a         ;03c2 LD
+              fbe7 003f  ld   $3f         ;03c2 'Pos'+1
+              fbe8 00f3  ld   $f3         ;03c4 ADDI
+              fbe9 0008  ld   $08
+              fbea 005e  ld   $5e         ;03c6 ST
+              fbeb 003f  ld   $3f         ;03c6 'Pos'+1
+              fbec 0095  ld   $95         ;03c8 BRA
+              fbed 00ca  ld   $ca
+              fbee 00e3  ld   $e3         ;03ca CALL
+              fbef 0040  ld   $40         ;03ca 'DrawChar'
+              fbf0 0095  ld   $95         ;03cc BRA
+              fbf1 00af  ld   $af
+              fbf2 0063  ld   $63         ;03ce POP
+              fbf3 00ff  ld   $ff         ;03cf RET
+              fbf4 002b  ld   $2b         ;03d0 STW
+              fbf5 0042  ld   $42         ;03d0 'DrawText'
+              fbf6 00f9  ld   $f9         ;03d2 INC
+              fbf7 001c  ld   $1c
+              fbf8 00ff  ld   $ff         ;03d4 RET
+              fbf9 0004  ld   $04         ;| RAM segment address (high byte first)
+              fbfa 0000  ld   $00         ;|
               fbfb fe00  bra  ac          ;+-----------------------------------+
               fbfc fcfd  bra  $fbfd       ;|                                   |
               fbfd 1403  ld   $03,y       ;| Trampoline for page $fb00 lookups |
               fbfe e078  jmp  y,$78       ;|                                   |
-              fbff 1519  ld   [$19],y     ;+-----------------------------------+
-              fc00 00e3  ld   $e3         ;03ca CALL
-              fc01 0041  ld   $41         ;03ca 'DrawChar'
-              fc02 0095  ld   $95         ;03cc BRA
-              fc03 00af  ld   $af
-              fc04 0063  ld   $63         ;03ce POP
-              fc05 00ff  ld   $ff         ;03cf RET
-              fc06 002b  ld   $2b         ;03d0 STW
-              fc07 0043  ld   $43         ;03d0 'DrawText'
-              fc08 00f9  ld   $f9         ;03d2 INC
-              fc09 001d  ld   $1d
-              fc0a 00ff  ld   $ff         ;03d4 RET
-              fc0b 0004  ld   $04         ;| RAM segment address (high byte first)
-              fc0c 0000  ld   $00         ;|
-              fc0d 00db  ld   $db         ;| Length (1..256)
-              fc0e 00e1  ld   $e1         ;0400 DEF
-              fc0f 0062  ld   $62
-              fc10 0021  ld   $21         ;0402 LDW
-              fc11 003b  ld   $3b         ;0402 'Char'
-              fc12 00f6  ld   $f6         ;0404 SUBI
-              fc13 0052  ld   $52
-              fc14 0035  ld   $35         ;0406 BCC
-              fc15 0053  ld   $53         ;0407 GE
-              fc16 0010  ld   $10
-              fc17 00f3  ld   $f3         ;0409 ADDI
-              fc18 0032  ld   $32
-              fc19 002b  ld   $2b         ;040b STW
-              fc1a 0035  ld   $35         ;040b 'i'
-              fc1b 0011  ld   $11         ;040d LDWI
-              fc1c 0000  ld   $00
-              fc1d 0007  ld   $07
-              fc1e 0095  ld   $95         ;0410 BRA
-              fc1f 0015  ld   $15
-              fc20 002b  ld   $2b         ;0412 STW
-              fc21 0035  ld   $35         ;0412 'i'
-              fc22 0011  ld   $11         ;0414 LDWI
-              fc23 0000  ld   $00
-              fc24 0008  ld   $08
-              fc25 002b  ld   $2b         ;0417 STW
-              fc26 0045  ld   $45         ;0417 'fontData'
-              fc27 0021  ld   $21         ;0419 LDW
-              fc28 0035  ld   $35         ;0419 'i'
-              fc29 00c1  ld   $c1         ;041b ADDW
-              fc2a 0035  ld   $35         ;041b 'i'
-              fc2b 002b  ld   $2b         ;041d STW
-              fc2c 0047  ld   $47         ;041d 'tmp'
-              fc2d 00c1  ld   $c1         ;041f ADDW
-              fc2e 0047  ld   $47         ;041f 'tmp'
-              fc2f 00c1  ld   $c1         ;0421 ADDW
-              fc30 0035  ld   $35         ;0421 'i'
-              fc31 00c1  ld   $c1         ;0423 ADDW
-              fc32 0045  ld   $45         ;0423 'fontData'
-              fc33 002b  ld   $2b         ;0425 STW
-              fc34 0045  ld   $45         ;0425 'fontData'
-              fc35 0011  ld   $11         ;0427 LDWI
+              fbff 1518  ld   [$18],y     ;+-----------------------------------+
+              fc00 00db  ld   $db         ;| Length (1..256)
+              fc01 00e1  ld   $e1         ;0400 DEF
+              fc02 0062  ld   $62
+              fc03 0021  ld   $21         ;0402 LDW
+              fc04 003a  ld   $3a         ;0402 'Char'
+              fc05 00f6  ld   $f6         ;0404 SUBI
+              fc06 0052  ld   $52
+              fc07 0035  ld   $35         ;0406 BCC
+              fc08 0053  ld   $53         ;0407 GE
+              fc09 0010  ld   $10
+              fc0a 00f3  ld   $f3         ;0409 ADDI
+              fc0b 0032  ld   $32
+              fc0c 002b  ld   $2b         ;040b STW
+              fc0d 0034  ld   $34         ;040b 'i'
+              fc0e 0011  ld   $11         ;040d LDWI
+              fc0f 0000  ld   $00
+              fc10 0007  ld   $07
+              fc11 0095  ld   $95         ;0410 BRA
+              fc12 0015  ld   $15
+              fc13 002b  ld   $2b         ;0412 STW
+              fc14 0034  ld   $34         ;0412 'i'
+              fc15 0011  ld   $11         ;0414 LDWI
+              fc16 0000  ld   $00
+              fc17 0008  ld   $08
+              fc18 002b  ld   $2b         ;0417 STW
+              fc19 0044  ld   $44         ;0417 'fontData'
+              fc1a 0021  ld   $21         ;0419 LDW
+              fc1b 0034  ld   $34         ;0419 'i'
+              fc1c 00c1  ld   $c1         ;041b ADDW
+              fc1d 0034  ld   $34         ;041b 'i'
+              fc1e 002b  ld   $2b         ;041d STW
+              fc1f 0046  ld   $46         ;041d 'tmp'
+              fc20 00c1  ld   $c1         ;041f ADDW
+              fc21 0046  ld   $46         ;041f 'tmp'
+              fc22 00c1  ld   $c1         ;0421 ADDW
+              fc23 0034  ld   $34         ;0421 'i'
+              fc24 00c1  ld   $c1         ;0423 ADDW
+              fc25 0044  ld   $44         ;0423 'fontData'
+              fc26 002b  ld   $2b         ;0425 STW
+              fc27 0044  ld   $44         ;0425 'fontData'
+              fc28 0011  ld   $11         ;0427 LDWI
+              fc29 0000  ld   $00
+              fc2a 0008  ld   $08
+              fc2b 00c1  ld   $c1         ;042a ADDW
+              fc2c 003e  ld   $3e         ;042a 'Pos'
+              fc2d 002b  ld   $2b         ;042c STW
+              fc2e 0032  ld   $32         ;042c 'q'
+              fc2f 0059  ld   $59         ;042e LDI
+              fc30 0005  ld   $05
+              fc31 002b  ld   $2b         ;0430 STW
+              fc32 0034  ld   $34         ;0430 'i'
+              fc33 0021  ld   $21         ;0432 LDW
+              fc34 0044  ld   $44         ;0432 'fontData'
+              fc35 0075  ld   $75         ;0434 LOOKUP
               fc36 0000  ld   $00
-              fc37 0008  ld   $08
-              fc38 00c1  ld   $c1         ;042a ADDW
-              fc39 003f  ld   $3f         ;042a 'Pos'
-              fc3a 002b  ld   $2b         ;042c STW
-              fc3b 0033  ld   $33         ;042c 'q'
-              fc3c 0059  ld   $59         ;042e LDI
-              fc3d 0005  ld   $05
-              fc3e 002b  ld   $2b         ;0430 STW
-              fc3f 0035  ld   $35         ;0430 'i'
-              fc40 0021  ld   $21         ;0432 LDW
-              fc41 0045  ld   $45         ;0432 'fontData'
-              fc42 0075  ld   $75         ;0434 LOOKUP
-              fc43 0000  ld   $00
-              fc44 002b  ld   $2b         ;0436 STW
-              fc45 0049  ld   $49         ;0436 'bits'
-              fc46 00f9  ld   $f9         ;0438 INC
-              fc47 0045  ld   $45         ;0438 'fontData'
-              fc48 0021  ld   $21         ;043a LDW
-              fc49 003f  ld   $3f         ;043a 'Pos'
-              fc4a 002b  ld   $2b         ;043c STW
-              fc4b 0031  ld   $31         ;043c 'p'
-              fc4c 0021  ld   $21         ;043e LDW
-              fc4d 0049  ld   $49         ;043e 'bits'
-              fc4e 0087  ld   $87         ;0440 ANDI
-              fc4f 0080  ld   $80
-              fc50 0035  ld   $35         ;0442 BCC
-              fc51 003f  ld   $3f         ;0443 EQ
-              fc52 0047  ld   $47
-              fc53 0059  ld   $59         ;0445 LDI
-              fc54 003f  ld   $3f
-              fc55 0098  ld   $98         ;0447 POKE
-              fc56 0031  ld   $31         ;0447 'p'
-              fc57 0021  ld   $21         ;0449 LDW
-              fc58 0049  ld   $49         ;0449 'bits'
-              fc59 00c1  ld   $c1         ;044b ADDW
-              fc5a 0049  ld   $49         ;044b 'bits'
-              fc5b 002b  ld   $2b         ;044d STW
-              fc5c 0049  ld   $49         ;044d 'bits'
-              fc5d 00f9  ld   $f9         ;044f INC
-              fc5e 0032  ld   $32         ;044f 'p'+1
-              fc5f 0021  ld   $21         ;0451 LDW
-              fc60 0031  ld   $31         ;0451 'p'
-              fc61 00ad  ld   $ad         ;0453 SUBW
-              fc62 0033  ld   $33         ;0453 'q'
-              fc63 0035  ld   $35         ;0455 BCC
-              fc64 0050  ld   $50         ;0456 LT
-              fc65 003c  ld   $3c
-              fc66 00f9  ld   $f9         ;0458 INC
-              fc67 003f  ld   $3f         ;0458 'Pos'
-              fc68 0021  ld   $21         ;045a LDW
-              fc69 0035  ld   $35         ;045a 'i'
-              fc6a 00f6  ld   $f6         ;045c SUBI
-              fc6b 0001  ld   $01
-              fc6c 0035  ld   $35         ;045e BCC
-              fc6d 004d  ld   $4d         ;045f GT
-              fc6e 002e  ld   $2e
-              fc6f 00f9  ld   $f9         ;0461 INC
-              fc70 003f  ld   $3f         ;0461 'Pos'
-              fc71 00ff  ld   $ff         ;0463 RET
-              fc72 002b  ld   $2b         ;0464 STW
-              fc73 0041  ld   $41         ;0464 'DrawChar'
-              fc74 00e1  ld   $e1         ;0466 DEF
-              fc75 009f  ld   $9f
-              fc76 002b  ld   $2b         ;0468 STW
-              fc77 0035  ld   $35         ;0468 'i'
-              fc78 008d  ld   $8d         ;046a ORI
-              fc79 00ff  ld   $ff
-              fc7a 0091  ld   $91         ;046c XORI
-              fc7b 00ff  ld   $ff
-              fc7c 008d  ld   $8d         ;046e ORI
-              fc7d 00f9  ld   $f9
-              fc7e 002b  ld   $2b         ;0470 STW
-              fc7f 0031  ld   $31         ;0470 'p'
-              fc80 001a  ld   $1a         ;0472 LD
-              fc81 0035  ld   $35         ;0472 'i'
-              fc82 002b  ld   $2b         ;0474 STW
-              fc83 0035  ld   $35         ;0474 'i'
-              fc84 0059  ld   $59         ;0476 LDI
-              fc85 0000  ld   $00
-              fc86 0098  ld   $98         ;0478 POKE
-              fc87 0031  ld   $31         ;0478 'p'
-              fc88 00f9  ld   $f9         ;047a INC
-              fc89 0031  ld   $31         ;047a 'p'
-              fc8a 0011  ld   $11         ;047c LDWI
-              fc8b 0000  ld   $00
-              fc8c 0009  ld   $09
-              fc8d 00c1  ld   $c1         ;047f ADDW
-              fc8e 0035  ld   $35         ;047f 'i'
-              fc8f 0075  ld   $75         ;0481 LOOKUP
-              fc90 0000  ld   $00
-              fc91 0098  ld   $98         ;0483 POKE
-              fc92 0031  ld   $31         ;0483 'p'
-              fc93 00f9  ld   $f9         ;0485 INC
-              fc94 0031  ld   $31         ;0485 'p'
-              fc95 0011  ld   $11         ;0487 LDWI
+              fc37 002b  ld   $2b         ;0436 STW
+              fc38 0048  ld   $48         ;0436 'bits'
+              fc39 00f9  ld   $f9         ;0438 INC
+              fc3a 0044  ld   $44         ;0438 'fontData'
+              fc3b 0021  ld   $21         ;043a LDW
+              fc3c 003e  ld   $3e         ;043a 'Pos'
+              fc3d 002b  ld   $2b         ;043c STW
+              fc3e 0030  ld   $30         ;043c 'p'
+              fc3f 0021  ld   $21         ;043e LDW
+              fc40 0048  ld   $48         ;043e 'bits'
+              fc41 0087  ld   $87         ;0440 ANDI
+              fc42 0080  ld   $80
+              fc43 0035  ld   $35         ;0442 BCC
+              fc44 003f  ld   $3f         ;0443 EQ
+              fc45 0047  ld   $47
+              fc46 0059  ld   $59         ;0445 LDI
+              fc47 003f  ld   $3f
+              fc48 0098  ld   $98         ;0447 POKE
+              fc49 0030  ld   $30         ;0447 'p'
+              fc4a 0021  ld   $21         ;0449 LDW
+              fc4b 0048  ld   $48         ;0449 'bits'
+              fc4c 00c1  ld   $c1         ;044b ADDW
+              fc4d 0048  ld   $48         ;044b 'bits'
+              fc4e 002b  ld   $2b         ;044d STW
+              fc4f 0048  ld   $48         ;044d 'bits'
+              fc50 00f9  ld   $f9         ;044f INC
+              fc51 0031  ld   $31         ;044f 'p'+1
+              fc52 0021  ld   $21         ;0451 LDW
+              fc53 0030  ld   $30         ;0451 'p'
+              fc54 00ad  ld   $ad         ;0453 SUBW
+              fc55 0032  ld   $32         ;0453 'q'
+              fc56 0035  ld   $35         ;0455 BCC
+              fc57 0050  ld   $50         ;0456 LT
+              fc58 003c  ld   $3c
+              fc59 00f9  ld   $f9         ;0458 INC
+              fc5a 003e  ld   $3e         ;0458 'Pos'
+              fc5b 0021  ld   $21         ;045a LDW
+              fc5c 0034  ld   $34         ;045a 'i'
+              fc5d 00f6  ld   $f6         ;045c SUBI
+              fc5e 0001  ld   $01
+              fc5f 0035  ld   $35         ;045e BCC
+              fc60 004d  ld   $4d         ;045f GT
+              fc61 002e  ld   $2e
+              fc62 00f9  ld   $f9         ;0461 INC
+              fc63 003e  ld   $3e         ;0461 'Pos'
+              fc64 00ff  ld   $ff         ;0463 RET
+              fc65 002b  ld   $2b         ;0464 STW
+              fc66 0040  ld   $40         ;0464 'DrawChar'
+              fc67 00e1  ld   $e1         ;0466 DEF
+              fc68 009f  ld   $9f
+              fc69 002b  ld   $2b         ;0468 STW
+              fc6a 0034  ld   $34         ;0468 'i'
+              fc6b 008d  ld   $8d         ;046a ORI
+              fc6c 00ff  ld   $ff
+              fc6d 0091  ld   $91         ;046c XORI
+              fc6e 00ff  ld   $ff
+              fc6f 008d  ld   $8d         ;046e ORI
+              fc70 00f9  ld   $f9
+              fc71 002b  ld   $2b         ;0470 STW
+              fc72 0030  ld   $30         ;0470 'p'
+              fc73 001a  ld   $1a         ;0472 LD
+              fc74 0034  ld   $34         ;0472 'i'
+              fc75 002b  ld   $2b         ;0474 STW
+              fc76 0034  ld   $34         ;0474 'i'
+              fc77 0059  ld   $59         ;0476 LDI
+              fc78 0000  ld   $00
+              fc79 0098  ld   $98         ;0478 POKE
+              fc7a 0030  ld   $30         ;0478 'p'
+              fc7b 00f9  ld   $f9         ;047a INC
+              fc7c 0030  ld   $30         ;047a 'p'
+              fc7d 0011  ld   $11         ;047c LDWI
+              fc7e 0000  ld   $00
+              fc7f 0009  ld   $09
+              fc80 00c1  ld   $c1         ;047f ADDW
+              fc81 0034  ld   $34         ;047f 'i'
+              fc82 0075  ld   $75         ;0481 LOOKUP
+              fc83 0000  ld   $00
+              fc84 0098  ld   $98         ;0483 POKE
+              fc85 0030  ld   $30         ;0483 'p'
+              fc86 00f9  ld   $f9         ;0485 INC
+              fc87 0030  ld   $30         ;0485 'p'
+              fc88 0011  ld   $11         ;0487 LDWI
+              fc89 0000  ld   $00
+              fc8a 0009  ld   $09
+              fc8b 00c1  ld   $c1         ;048a ADDW
+              fc8c 0034  ld   $34         ;048a 'i'
+              fc8d 0075  ld   $75         ;048c LOOKUP
+              fc8e 0001  ld   $01
+              fc8f 0098  ld   $98         ;048e POKE
+              fc90 0030  ld   $30         ;048e 'p'
+              fc91 00f9  ld   $f9         ;0490 INC
+              fc92 0030  ld   $30         ;0490 'p'
+              fc93 00f9  ld   $f9         ;0492 INC
+              fc94 0030  ld   $30         ;0492 'p'
+              fc95 0059  ld   $59         ;0494 LDI
               fc96 0000  ld   $00
-              fc97 0009  ld   $09
-              fc98 00c1  ld   $c1         ;048a ADDW
-              fc99 0035  ld   $35         ;048a 'i'
-              fc9a 0075  ld   $75         ;048c LOOKUP
-              fc9b 0001  ld   $01
-              fc9c 0098  ld   $98         ;048e POKE
-              fc9d 0031  ld   $31         ;048e 'p'
-              fc9e 00f9  ld   $f9         ;0490 INC
-              fc9f 0031  ld   $31         ;0490 'p'
-              fca0 00f9  ld   $f9         ;0492 INC
-              fca1 0031  ld   $31         ;0492 'p'
-              fca2 0059  ld   $59         ;0494 LDI
-              fca3 0000  ld   $00
-              fca4 0098  ld   $98         ;0496 POKE
-              fca5 0031  ld   $31         ;0496 'p'
-              fca6 00f9  ld   $f9         ;0498 INC
-              fca7 0031  ld   $31         ;0498 'p'
-              fca8 0098  ld   $98         ;049a POKE
-              fca9 0031  ld   $31         ;049a 'p'
-              fcaa 00f9  ld   $f9         ;049c INC
-              fcab 0031  ld   $31         ;049c 'p'
-              fcac 0098  ld   $98         ;049e POKE
-              fcad 0031  ld   $31         ;049e 'p'
-              fcae 00ff  ld   $ff         ;04a0 RET
-              fcaf 002b  ld   $2b         ;04a1 STW
-              fcb0 004b  ld   $4b         ;04a1 'SetupChannel'
-              fcb1 00e1  ld   $e1         ;04a3 DEF
-              fcb2 00ba  ld   $ba
-              fcb3 007d  ld   $7d         ;04a5 PUSH
-              fcb4 0011  ld   $11         ;04a6 LDWI
-              fcb5 0058  ld   $58
-              fcb6 0001  ld   $01
-              fcb7 00e3  ld   $e3         ;04a9 CALL
-              fcb8 004b  ld   $4b         ;04a9 'SetupChannel'
-              fcb9 0011  ld   $11         ;04ab LDWI
-              fcba 0070  ld   $70
-              fcbb 0002  ld   $02
-              fcbc 00e3  ld   $e3         ;04ae CALL
-              fcbd 004b  ld   $4b         ;04ae 'SetupChannel'
-              fcbe 0011  ld   $11         ;04b0 LDWI
-              fcbf 0078  ld   $78
-              fcc0 0003  ld   $03
-              fcc1 00e3  ld   $e3         ;04b3 CALL
-              fcc2 004b  ld   $4b         ;04b3 'SetupChannel'
-              fcc3 0011  ld   $11         ;04b5 LDWI
-              fcc4 007e  ld   $7e
-              fcc5 0004  ld   $04
-              fcc6 00e3  ld   $e3         ;04b8 CALL
-              fcc7 004b  ld   $4b         ;04b8 'SetupChannel'
-              fcc8 0063  ld   $63         ;04ba POP
-              fcc9 00ff  ld   $ff         ;04bb RET
-              fcca 002b  ld   $2b         ;04bc STW
-              fccb 004d  ld   $4d         ;04bc 'SetupAudio'
-              fccc 00e3  ld   $e3         ;04be CALL
-              fccd 004d  ld   $4d         ;04be 'SetupAudio'
-              fcce 00e3  ld   $e3         ;04c0 CALL
-              fccf 0037  ld   $37         ;04c0 'SetupVideo'
-              fcd0 0011  ld   $11         ;04c2 LDWI
-              fcd1 0012  ld   $12
-              fcd2 0008  ld   $08
-              fcd3 002b  ld   $2b         ;04c5 STW
-              fcd4 003f  ld   $3f         ;04c5 'Pos'
-              fcd5 0021  ld   $21         ;04c7 LDW
-              fcd6 0039  ld   $39         ;04c7 'StartupMessage'
-              fcd7 002b  ld   $2b         ;04c9 STW
-              fcd8 003d  ld   $3d         ;04c9 'Text'
-              fcd9 00e3  ld   $e3         ;04cb CALL
-              fcda 0043  ld   $43         ;04cb 'DrawText'
-              fcdb 0011  ld   $11         ;04cd LDWI
-              fcdc 0086  ld   $86
-              fcdd 00f8  ld   $f8
-              fcde 002b  ld   $2b         ;04d0 STW
-              fcdf 0025  ld   $25
-              fce0 0011  ld   $11         ;04d2 LDWI
-              fce1 0000  ld   $00
-              fce2 0003  ld   $03
-              fce3 002b  ld   $2b         ;04d5 STW
-              fce4 001c  ld   $1c
-              fce5 0059  ld   $59         ;04d7 LDI
-              fce6 0088  ld   $88
-              fce7 00a9  ld   $a9         ;04d9 SYS
-              fce8 00e2  ld   $e2
-              fce9 0000  ld   $00         ;End of file
-              fcea 0200  nop
-              fceb 0200  nop
-              fcec 0200  nop
-              * 17 times
+              fc97 0098  ld   $98         ;0496 POKE
+              fc98 0030  ld   $30         ;0496 'p'
+              fc99 00f9  ld   $f9         ;0498 INC
+              fc9a 0030  ld   $30         ;0498 'p'
+              fc9b 0098  ld   $98         ;049a POKE
+              fc9c 0030  ld   $30         ;049a 'p'
+              fc9d 00f9  ld   $f9         ;049c INC
+              fc9e 0030  ld   $30         ;049c 'p'
+              fc9f 0098  ld   $98         ;049e POKE
+              fca0 0030  ld   $30         ;049e 'p'
+              fca1 00ff  ld   $ff         ;04a0 RET
+              fca2 002b  ld   $2b         ;04a1 STW
+              fca3 004a  ld   $4a         ;04a1 'SetupChannel'
+              fca4 00e1  ld   $e1         ;04a3 DEF
+              fca5 00ba  ld   $ba
+              fca6 007d  ld   $7d         ;04a5 PUSH
+              fca7 0011  ld   $11         ;04a6 LDWI
+              fca8 0058  ld   $58
+              fca9 0001  ld   $01
+              fcaa 00e3  ld   $e3         ;04a9 CALL
+              fcab 004a  ld   $4a         ;04a9 'SetupChannel'
+              fcac 0011  ld   $11         ;04ab LDWI
+              fcad 0070  ld   $70
+              fcae 0002  ld   $02
+              fcaf 00e3  ld   $e3         ;04ae CALL
+              fcb0 004a  ld   $4a         ;04ae 'SetupChannel'
+              fcb1 0011  ld   $11         ;04b0 LDWI
+              fcb2 0078  ld   $78
+              fcb3 0003  ld   $03
+              fcb4 00e3  ld   $e3         ;04b3 CALL
+              fcb5 004a  ld   $4a         ;04b3 'SetupChannel'
+              fcb6 0011  ld   $11         ;04b5 LDWI
+              fcb7 007e  ld   $7e
+              fcb8 0004  ld   $04
+              fcb9 00e3  ld   $e3         ;04b8 CALL
+              fcba 004a  ld   $4a         ;04b8 'SetupChannel'
+              fcbb 0063  ld   $63         ;04ba POP
+              fcbc 00ff  ld   $ff         ;04bb RET
+              fcbd 002b  ld   $2b         ;04bc STW
+              fcbe 004c  ld   $4c         ;04bc 'SetupAudio'
+              fcbf 00e3  ld   $e3         ;04be CALL
+              fcc0 004c  ld   $4c         ;04be 'SetupAudio'
+              fcc1 00e3  ld   $e3         ;04c0 CALL
+              fcc2 0036  ld   $36         ;04c0 'SetupVideo'
+              fcc3 0011  ld   $11         ;04c2 LDWI
+              fcc4 0012  ld   $12
+              fcc5 0008  ld   $08
+              fcc6 002b  ld   $2b         ;04c5 STW
+              fcc7 003e  ld   $3e         ;04c5 'Pos'
+              fcc8 0021  ld   $21         ;04c7 LDW
+              fcc9 0038  ld   $38         ;04c7 'StartupMessage'
+              fcca 002b  ld   $2b         ;04c9 STW
+              fccb 003c  ld   $3c         ;04c9 'Text'
+              fccc 00e3  ld   $e3         ;04cb CALL
+              fccd 0042  ld   $42         ;04cb 'DrawText'
+              fcce 0011  ld   $11         ;04cd LDWI
+              fccf 0079  ld   $79
+              fcd0 00f8  ld   $f8
+              fcd1 002b  ld   $2b         ;04d0 STW
+              fcd2 0024  ld   $24
+              fcd3 0011  ld   $11         ;04d2 LDWI
+              fcd4 0000  ld   $00
+              fcd5 0003  ld   $03
+              fcd6 002b  ld   $2b         ;04d5 STW
+              fcd7 001b  ld   $1b
+              fcd8 0059  ld   $59         ;04d7 LDI
+              fcd9 0089  ld   $89
+              fcda 00a9  ld   $a9         ;04d9 SYS
+              fcdb 00e2  ld   $e2
+              fcdc 0000  ld   $00         ;End of file
+              fcdd 0200  nop
+              fcde 0200  nop
+              fcdf 0200  nop
+              * 30 times
               fcfb fe00  bra  ac          ;+-----------------------------------+
               fcfc fcfd  bra  $fcfd       ;|                                   |
               fcfd 1403  ld   $03,y       ;| Trampoline for page $fc00 lookups |
               fcfe e078  jmp  y,$78       ;|                                   |
-              fcff 1519  ld   [$19],y     ;+-----------------------------------+
+              fcff 1518  ld   [$18],y     ;+-----------------------------------+
               fd00

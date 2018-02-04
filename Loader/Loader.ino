@@ -51,23 +51,25 @@ byte blinky[] = {
   0x98, 0x31,       // 0305 POKE 'p'
   0xf3, 0x01,       // 0307 ADDI 1
   0x95, 0x03        // 0309 BRA  $0305
-                    // 030b
-};
+};                  // 030b
 
 void loop() {
-  static byte message[60];
+  static byte payload[60];
+  memcpy(payload, blinky, sizeof blinky);
   noInterrupts();
   for (;;) {
-    // Setup checksum but don't start with 0
+    // Send one frame with false checksum to force
+    // a checksum resync at the receiver
+    checksum = 0;
+    sendFrame(-1, 0, 0x00ff, payload);
+
+    // Setup checksum properly
     checksum = 'g';
+    sendFrame('L', sizeof payload, 0x7f7f, payload);
+    sendFrame('L', sizeof payload, 0x7f00, payload);
 
-    // Frame 1: load
-    memcpy(message, blinky, sizeof blinky);
-    sendFrame('L', sizeof blinky, 0x7f00, message);
-
-    // Frame 2: exec
-    memset(message, 0, sizeof blinky);
-    sendFrame('L', 0, 0x7f00, message);
+    // Force execution
+    sendFrame('L', 0, 0x7f00, payload);
   }
 }
 
@@ -99,19 +101,19 @@ void sendFrame(byte firstByte, byte len, unsigned address, byte message[60])
   // have to shift everything it receives by 1 bit.
   // 2. There is a 1 bit latency inside the 74HCT595 for the data bit,
   // but (obviously) not for the sync signals.
-  // All together, we drop 2 bits from the 2nd byte in a frame to achieve
+  // All together, we drop 2 bits from the 2nd byte in a frame. This achieves
   // byte alignment for the Gigatron at visible scanline 3, 11, 19, ... etc.
 
   sendFirst(firstByte, 8);     // Protocol byte
   checksum += firstByte << 6;  // Keep Loader.gcl dumb
-  sendBits(len, 6);            // Length 1..60
+  sendBits(len, 6);            // Length 0, 1..60
   sendBits(address&255, 8);    // Low address bits
   sendBits(address>>8, 8);     // High address bits
   for (byte i=0; i<60; i++)    // Payload bytes
     sendBits(message[i], 8);
-  byte nextChecksum = -checksum;
-  sendBits(-checksum, 8);      // Checksum must come out as 0
-  checksum = nextChecksum;     // Concatenate checksums
+  byte lastByte = -checksum;   // Checksum must come out as 0
+  sendBits(lastByte, 8);
+  checksum = lastByte;         // Concatenate checksums
   PORTB |= 1<<PORTB5;          // Send 1 when idle
 }
 
