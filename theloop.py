@@ -23,7 +23,6 @@
 #  XXX vCPU: PEEKWI, POKEWI (*AC+i) [ROMv1]
 #  XXX Audio: Move shift table to page 7, then add waveform synthesis [ROMv1]
 #  XXX GCL: Stabalize zero page allocation [ROMv1]
-#  XXX Zero-page: Still need returnTo? [ROMv1]
 #  XXX Logo drawing [ROMv1]
 #  XXX Music sequencer (combined with LED sequencer) [ROMv1]
 #  XXX Pictures: speed up scrolling by splitting work over frames [ROMv1]
@@ -193,6 +192,7 @@ vAC             = zpByte(2) # Interpreter accumulator, 16-bits
 vLR             = zpByte(2) # Return address, for returning after CALL
 vSP             = zpByte(1) # Stack pointer
 vTicks          = zpByte()  # Interpreter ticks are units of 2 clocks
+vReturn         = zpByte(1 if fastRunVcpu else 2) # Return into video loop
 vTmp            = zpByte()
 
 # Registers for SYS functions XXX Remove, use sysArgs[] instead [ROMv1]
@@ -209,9 +209,6 @@ soundTimer      = zpByte()
 ledTimer        = zpByte() # Number of ticks until next LED change
 ledState        = zpByte() # Current LED state
 ledTempo        = zpByte() # Next value for ledTimer after LED state change
-
-# Generic function return address
-returnTo        = zpByte(2)
 
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 zpFree          = zpByte(0)
@@ -299,14 +296,14 @@ def runVcpu(n, ref=None):
   returnPc = pc() + (5 if fastRunVcpu else 7)
   ld(val(returnPc&255))         #0
   comment = C(comment)
-  st(d(returnTo))               #1
+  st(d(vReturn))                #1
   if fastRunVcpu:
-    # In this mode [returnTo+1] will not be used
+    # In this mode [vReturn+1] will not be used
     assert returnPc>>8 == 2
   else:
     # Allow interpreter to be called from anywhere
     ld(val(returnPc>>8))        #2
-    st(d(returnTo+1))           #3
+    st(d(vReturn+1))            #3
   ld(val(hi('ENTER')),regY)     #4
   jmpy(d(lo('ENTER')))          #5
   ld(val(n))                    #6
@@ -1091,8 +1088,8 @@ suba(val(1))                    #5
 if fastRunVcpu:
   ld(val(2),regY)               #6
 else:
-  ld(d(returnTo+1),busRAM|regY) #6
-jmpy(d(returnTo+0)|busRAM);     C('Return to caller')#7
+  ld(d(vReturn+1),busRAM|regY)  #6
+jmpy(d(vReturn+0)|busRAM);      C('Return to caller')#7
 ld(val(0))                      #8 AC should be 0 already. Still..
 assert vOverheadInt ==          9
 

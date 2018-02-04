@@ -90,16 +90,16 @@ Address   Name          Description
 0019-001a vLR           Return address, for returning after CALL
 001b      vSP           Stack pointer
 001c      vTicks        Interpreter ticks are units of 2 clocks
-001d      vTmp
-001e-001f sysPos
-0020-0021 sysData
-0022-0029 sysArgs
-002a      soundTimer
-002b      ledTimer      Number of ticks until next LED change
-002c      ledState      Current LED state
-002d      ledTempo      Next value for ledTimer after LED state change
-002e-002f returnTo
-0030-007f -             Program variables
+001d      vReturn       Return address (L) from vCPU into the loop (H is fixed)
+001e      vTmp
+001f-0020 sysPos
+0021-0022 sysData
+0023-002a sysArgs
+002b      soundTimer
+002c      ledTimer      Number of ticks until next LED change
+002d      ledState      Current LED state
+002e      ledTempo      Next value for ledTimer after LED state change
+002f-007f -             Program variables
 0080      1             Constant
 0081-.... -             Program variables
 ....-00ff <stack>
