@@ -7,6 +7,10 @@ gcl0x
 |                                                                       |
 +-----------------------------------------------------------------------}
 
+{
+  XXX Accelerated text drawing [ROMv1]
+}
+
 { Print a 5x8 character on screen with the built-in font
   Char must be in the 32-127 range (this is not checked) }
 [def {PrintChar}

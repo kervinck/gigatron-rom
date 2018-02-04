@@ -73,32 +73,32 @@ Address   Name          Description
 0004      bootCount     0 for cold boot
 0005      bootCheck     Checksum
 0006      entropy
-0009      returnTo
-000b      videoY        Counts up from 0 to 238 in steps of 2 (odd in vBlank)
-000c      frameX        Starting byte within page
-000d      frameY        Page of current pixel row (updated by videoA)
-000e      nextVideo     Jump offset to scan line handler (videoA, B, C...)
-000f      videoDorF     Handler for every 4th line (videoD or videoF)
-0010      frameCount
-0011      serialRaw     New raw serial read
-0012      serialLast    Previous serial read
-0013      buttonState   Clearable button state
-0014      resetTimer    After 2 seconds of holding 'Start', do a soft reset
-0015      xout
-0016      xoutMask      The blinkenlights and sound on/off state
-0017      vPC           Interpreter program counter, points into RAM
-0019      vAC           Interpreter accumulator, 16-bits
-001b      vLR           Return address, for returning after CALL
-001d      vSP           Stack pointer
-001e      vTicks        Interpreter ticks are units of 2 clocks
-001f      vTmp
-0020      sysPos
-0022      sysData
-0024      sysArgs
-002c      soundTimer
-002d      ledTimer      Number of ticks until next LED change
-002e      ledState      Current LED state
-002f      ledTempo      Next value for ledTimer after LED state change
+0009      videoY        Counts up from 0 to 238 in steps of 2 (odd in vBlank)
+000a      frameX        Starting byte within page
+000b      frameY        Page of current pixel row (updated by videoA)
+000c      nextVideo     Jump offset to scan line handler (videoA, B, C...)
+000d      videoDorF     Handler for every 4th line (videoD or videoF)
+000e      frameCount
+000f      serialRaw     New raw serial read
+0010      serialLast    Previous serial read
+0011      buttonState   Clearable button state
+0012      resetTimer    After 2 seconds of holding 'Start', do a soft reset
+0013      xout
+0014      xoutMask      The blinkenlights and sound on/off state
+0015-0016 vPC           Interpreter program counter, points into RAM
+0017-0018 vAC           Interpreter accumulator, 16-bits
+0019-001a vLR           Return address, for returning after CALL
+001b      vSP           Stack pointer
+001c      vTicks        Interpreter ticks are units of 2 clocks
+001d      vTmp
+001e-001f sysPos
+0020-0021 sysData
+0022-0029 sysArgs
+002a      soundTimer
+002b      ledTimer      Number of ticks until next LED change
+002c      ledState      Current LED state
+002d      ledTempo      Next value for ledTimer after LED state change
+002e-002f returnTo
 0030-007f -             Program variables
 0080      1             Constant
 0081-.... -             Program variables

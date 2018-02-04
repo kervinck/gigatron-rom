@@ -9,10 +9,10 @@ gcl0x
 
 {
 ROM v1:
-XXX Start timer at 15
-XXX Don't allow autoplayer to obtain a hi score
-XXX Don't allow reversing for playability
-XXX Rising tones
+XXX Start timer at 15, give 5 seconds bonus instead of 10 [ROMv1]
+XXX Don't allow autoplayer to obtain a hi score [ROMv1]
+XXX Don't allow reversing, for playability [ROMv1]
+XXX Rising tones [ROMv1]
 
 Maybe:
 XXX More colors, less green

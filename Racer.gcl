@@ -9,14 +9,14 @@ gcl0x
 
 {
 ROM v1:
-XXX Blinkenlights unintentionally speed up
-XXX Improve track indicator
-XXX Add more interesting camera behavior (DX0)
-XXX Positioning of "GAME OVER" message
-XXX Obstacles? Other cars / bicycles?
-XXX Drawing artefacts before and after game. "GET READY" message?
-XXX Draw hi score yellow if achieved in current game
-XXX Stop game when not completing lap in, say, 5:00 mins?
+XXX Blinkenlights unintentionally speed up [ROMv1]
+XXX Improve track indicator [ROMv1]
+XXX Add more interesting camera behavior (DX0) [ROMv1]
+XXX Positioning of "GAME OVER" message [ROMv1]
+XXX Obstacles? Other cars / bicycles? [ROMv1]
+XXX Drawing artefacts before and after game. "GET READY" message? [ROMv1]
+XXX Draw hi score yellow if achieved in current game [ROMv1]
+XXX Stop game when not completing lap in, say, 5:00 mins? [ROMv1]
 
 Maybe:
 XXX Freeze time display for the first 2 seconds after completing a lap

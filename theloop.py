@@ -13,28 +13,30 @@
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #  Hopefully in ROM v1
-#  XXX Loader: make noise when data comes in
-#  XXX Music sequencer (combined with LED sequencer)
-#  XXX Adjustable return address for LOOKUP trampolines
-#  XXX Zero-page: Still need returnTo?
-#  XXX Retire sysPos and sysData (use sysArgs instead)
-#  XXX vCPU: Rethink clobbering of vAC by SYS
-#  XXX vCPU: NEGW, ANDW, ORW, XORW, NOTW
-#  XXX vCPU: LSRW, LSLW, ASRW, CLR
-#  XXX vCPU: ALLOCA, LDLW, STLW
-#  XXX vCPU: PEEKI, POKEI (*AC+i)
-#  XXX vCPU: PEEKW, POKEW
-#  XXX vCPU: PEEKWI, POKEWI (*AC+i)
-#  XXX Audio: Move shift table to page 7, then add waveform synthesis
-#  XXX Logo drawing
-#  XXX GCL: Prefix notation for high/low byte >X++ instead of X>++
-#  XXX Pictures: speed up scrolling by splitting work over frames
+#  XXX Retire sysPos and sysData (use sysArgs instead) [ROMv1]
+#  XXX vCPU: Rethink clobbering of vAC by SYS [ROMv1]
+#  XXX vCPU: NEGW, ANDW, ORW, XORW, NOTW [ROMv1]
+#  XXX vCPU: LSRW, LSLW, ASRW, CLR [ROMv1]
+#  XXX vCPU: ALLOC, LDLW, STLW [ROMv1]
+#  XXX vCPU: PEEKI, POKEI (*AC+i) [ROMv1]
+#  XXX vCPU: PEEKW, POKEW [ROMv1]
+#  XXX vCPU: PEEKWI, POKEWI (*AC+i) [ROMv1]
+#  XXX Audio: Move shift table to page 7, then add waveform synthesis [ROMv1]
+#  XXX GCL: Stabalize zero page allocation [ROMv1]
+#  XXX Zero-page: Still need returnTo? [ROMv1]
+#  XXX Logo drawing [ROMv1]
+#  XXX Music sequencer (combined with LED sequencer) [ROMv1]
+#  XXX Pictures: speed up scrolling by splitting work over frames [ROMv1]
+#
+#  After ROM v1 release
 #  XXX Readability of asm.py instructions, esp. make d() implicit
+#  XXX GCL: Prefix notation for high/low byte >X++ instead of X>++
 #  XXX GCL: Rethink i, i. i; i= x, x. x= x: consistency
-#  XXX GCL: Stabalize zero page allocation
 #  XXX How it works memo: brief description of every software function
 #
 #  Probably not in ROM v1
+#  XXX Adjustable return address for LOOKUP trampolines
+#  XXX Loader: make noise when data comes in
 #  XXX vCPU: Multiplication (mulShift8?)
 #  XXX vCPU: PUSHA, POPA
 #  XXX vCPU: Interrupts / Task switching (e.g for clock, LED sequencer)
@@ -156,9 +158,6 @@ bootCheck       = zpByte() # Checksum
 # Entropy harvested from SRAM startup and controller input
 entropy         = zpByte(3)
 
-# Generic function return address
-returnTo        = zpByte(2)
-
 # Visible video
 videoY          = zpByte() # Counts up from 0 to 238 in steps of 2
                            # Counts up during vertical blank (-44/-40 to 0)
@@ -193,10 +192,10 @@ vPC             = zpByte(2) # Interpreter program counter, points into RAM
 vAC             = zpByte(2) # Interpreter accumulator, 16-bits
 vLR             = zpByte(2) # Return address, for returning after CALL
 vSP             = zpByte(1) # Stack pointer
-vTicks          = zpByte() # Interpreter ticks are units of 2 clocks
+vTicks          = zpByte()  # Interpreter ticks are units of 2 clocks
 vTmp            = zpByte()
 
-# Registers for SYS functions XXX Remove, use sysArgs[] instead
+# Registers for SYS functions XXX Remove, use sysArgs[] instead [ROMv1]
 sysPos          = zpByte(2)
 sysData         = zpByte(2)
 
@@ -210,6 +209,9 @@ soundTimer      = zpByte()
 ledTimer        = zpByte() # Number of ticks until next LED change
 ledState        = zpByte() # Current LED state
 ledTempo        = zpByte() # Next value for ledTimer after LED state change
+
+# Generic function return address
+returnTo        = zpByte(2)
 
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 zpFree          = zpByte(0)
@@ -1629,7 +1631,7 @@ nop()                           #25
 # sysArgs[5:6] Destination address
 
 label('SYS_PayloadCopy_34')
-ldzp(d(sysArgs+3))              #15 Copy count
+ldzp(d(sysArgs+4))              #15 Copy count
 beq(d(lo('.sysCc0')))           #16
 suba(d(1))                      #17
 st(d(sysArgs+4))                #18

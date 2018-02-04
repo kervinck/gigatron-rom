@@ -16,8 +16,8 @@ gcl0x
   - Implement multiplication in interpreter
 
   ROM v1:
-  XXX Sound for every pixel value
-  XXX Convert into a clock application
+  XXX Sound for every pixel value [ROMv1]
+  XXX Convert into a clock application [ROMv1]
 
   Later:
   XXX Lookup table for intensity mapping

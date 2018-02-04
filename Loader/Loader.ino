@@ -61,12 +61,11 @@ void loop() {
     // Send one frame with false checksum to force
     // a checksum resync at the receiver
     checksum = 0;
-    sendFrame(-1, 0, 0x00ff, payload);
+    sendFrame(-1, sizeof blinky, 0x7f00, payload);
 
     // Setup checksum properly
     checksum = 'g';
-    sendFrame('L', sizeof payload, 0x7f7f, payload);
-    sendFrame('L', sizeof payload, 0x7f00, payload);
+    sendFrame('L', sizeof blinky, 0x7f00, payload);
 
     // Force execution
     sendFrame('L', 0, 0x7f00, payload);
