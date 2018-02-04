@@ -12,11 +12,7 @@
 #  - Serial input handler
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
-#  ROM v1
-#  XXX Loader: multi-frame loading and reliable syncrhonisation
-#
 #  Hopefully in ROM v1
-#  XXX Latency of serialRaw
 #  XXX Loader: make noise when data comes in
 #  XXX Music sequencer (combined with LED sequencer)
 #  XXX Adjustable return address for LOOKUP trampolines
@@ -464,9 +460,6 @@ st(d(ledTempo))
 ld(val(0))
 st(d(ledState))
 
-# Init sound timer
-st(d(soundTimer))
-
 ld(val(0b0111));                C('LEDs |***O|')
 ld(val(syncBits^hSync),regOUT)
 ld(val(syncBits),regOUT)
@@ -774,141 +767,81 @@ st(d(0x80))                     #37
 ld(val(1-2*(vFront+vPulse+vBack-2)))#38 -2 because first and last are different
 st(d(videoY))                   #39
 
-# pChange = pNew & ~pOld
-# nChange = nNew | ~nOld {DeMorgan}
-
-# Filter raw serial input captured in last vblank (7 cycles)
-ld(val(255));                   C('Filter controller input')#40
-xora(d(serialLast),busRAM)      #41
-ora(d(serialRaw),busRAM)        #42 Catch button-press events
-anda(d(buttonState),busRAM)     #43 Keep active button presses
-ora(d(serialRaw),busRAM)        #44 Auto-reset already-released buttons
-st(d(buttonState))              #45
-ldzp(d(serialRaw))              #46
-st(d(serialLast))               #47
-
-# Respond to reset button (12 cycles)
-xora(val(~buttonStart));        C('Check for soft reset')#48
-bne(d(lo('.restart0')))         #49
-ldzp(d(resetTimer))             #50 As long as button pressed
-suba(val(1))                    #51 ... count down the timer
-st(d(resetTimer))               #52
-anda(d(127))                    #53
-beq(d(lo('.restart2')))         #54
-ld(val((vReset&255)-2))         #55 Start force reset when hitting 0
-bra(d(lo('.restart1')))         #56 ... otherwise do nothing yet
-bra(d(lo('.restart3')))         #57
-label('.restart0')
-ld(val(127))                    #51 Restore to ~2 seconds when not pressed
-st(d(resetTimer))               #52
-wait(57-53)                     #53
-bra(d(lo('.restart3')))         #57
-label('.restart1')
-nop()                           #58
-label('.restart2')
-st(d(vPC))                      #56 Continue force reset
-ld(val(vReset>>8))              #57
-st(d(vPC+1))                    #58
-label('.restart3')
-
-# TODO: move Select logic in here
-
 # Uptime frame count (3 cycles)
-ldzp(d(frameCount));            C('Frame counter')#59
-adda(val(1))                    #60
-st(d(frameCount))               #61
+ldzp(d(frameCount));            C('Frame counter')#40
+adda(val(1))                    #41
+st(d(frameCount))               #42
 
 # Mix entropy (11 cycles)
-xora(d(entropy+1),busRAM);      C('Mix entropy')#62
-xora(d(serialRaw),busRAM)       #63 Mix in serial input
-adda(d(entropy+0),busRAM)       #64
-st(d(entropy+0))                #65
-adda(d(entropy+2),busRAM)       #66 Some hidden state
-st(d(entropy+2))                #67
-bmi(d(lo('.rnd0')))             #68
-bra(d(lo('.rnd1')))             #69
-xora(val(64+16+2+1))            #70
+xora(d(entropy+1),busRAM);      C('Mix entropy')#43
+xora(d(serialRaw),busRAM)       #44 Mix in serial input
+adda(d(entropy+0),busRAM)       #45
+st(d(entropy+0))                #46
+adda(d(entropy+2),busRAM)       #47 Some hidden state
+st(d(entropy+2))                #48
+bmi(d(lo('.rnd0')))             #49
+bra(d(lo('.rnd1')))             #50
+xora(val(64+16+2+1))            #51
 label('.rnd0')
-xora(val(64+32+8+4))            #70
+xora(val(64+32+8+4))            #51
 label('.rnd1')
-adda(d(entropy+1),busRAM)       #71
-st(d(entropy+1))                #72
+adda(d(entropy+1),busRAM)       #52
+st(d(entropy+1))                #53
 
 # LED sequencer (19 cycles)
-ldzp(d(ledTimer));              C('Blinkenlight sequencer')#73
-bne(d(lo('.leds4')))            #74
-ld(d(lo('.leds0')))             #75
-adda(d(ledState)|busRAM)        #76
-bra(busAC)                      #77
-bra(d(lo('.leds1')))            #78
+ldzp(d(ledTimer));              C('Blinkenlight sequencer')#54
+bne(d(lo('.leds4')))            #55
+ld(d(lo('.leds0')))             #56
+adda(d(ledState)|busRAM)        #57
+bra(busAC)                      #58
+bra(d(lo('.leds1')))            #59
 label('.leds0')
-ld(d(0b1111));C('LEDs |****|')  #79
-ld(d(0b0111));C('LEDs |***O|')  #79
-ld(d(0b0011));C('LEDs |**OO|')  #79
-ld(d(0b0001));C('LEDs |*OOO|')  #79
-ld(d(0b0010));C('LEDs |O*OO|')  #79
-ld(d(0b0100));C('LEDs |OO*O|')  #79
-ld(d(0b1000));C('LEDs |OOO*|')  #79
-ld(d(0b0100));C('LEDs |OO*O|')  #79
-ld(d(0b0010));C('LEDs |O*OO|')  #79
-ld(d(0b0001));C('LEDs |*OOO|')  #79
-ld(d(0b0011));C('LEDs |**OO|')  #79
-ld(d(0b0111));C('LEDs |***O|')  #79
-ld(d(0b1111));C('LEDs |****|')  #79
-ld(d(0b1110));C('LEDs |O***|')  #79
-ld(d(0b1100));C('LEDs |OO**|')  #79
-ld(d(0b1000));C('LEDs |OOO*|')  #79
-ld(d(0b0100));C('LEDs |OO*O|')  #79
-ld(d(0b0010));C('LEDs |O*OO|')  #79
-ld(d(0b0001));C('LEDs |*OOO|')  #79
-ld(d(0b0010));C('LEDs |O*OO|')  #79
-ld(d(0b0100));C('LEDs |OO*O|')  #79
-ld(d(0b1000));C('LEDs |OOO*|')  #79
-ld(d(0b1100));C('LEDs |OO**|')  #79
-ld(d(0b1110+128))               #79
+ld(d(0b1111));C('LEDs |****|')  #60
+ld(d(0b0111));C('LEDs |***O|')  #60
+ld(d(0b0011));C('LEDs |**OO|')  #60
+ld(d(0b0001));C('LEDs |*OOO|')  #60
+ld(d(0b0010));C('LEDs |O*OO|')  #60
+ld(d(0b0100));C('LEDs |OO*O|')  #60
+ld(d(0b1000));C('LEDs |OOO*|')  #60
+ld(d(0b0100));C('LEDs |OO*O|')  #60
+ld(d(0b0010));C('LEDs |O*OO|')  #60
+ld(d(0b0001));C('LEDs |*OOO|')  #60
+ld(d(0b0011));C('LEDs |**OO|')  #60
+ld(d(0b0111));C('LEDs |***O|')  #60
+ld(d(0b1111));C('LEDs |****|')  #60
+ld(d(0b1110));C('LEDs |O***|')  #60
+ld(d(0b1100));C('LEDs |OO**|')  #60
+ld(d(0b1000));C('LEDs |OOO*|')  #60
+ld(d(0b0100));C('LEDs |OO*O|')  #60
+ld(d(0b0010));C('LEDs |O*OO|')  #60
+ld(d(0b0001));C('LEDs |*OOO|')  #60
+ld(d(0b0010));C('LEDs |O*OO|')  #60
+ld(d(0b0100));C('LEDs |OO*O|')  #60
+ld(d(0b1000));C('LEDs |OOO*|')  #60
+ld(d(0b1100));C('LEDs |OO**|')  #60
+ld(d(0b1110+128))               #60
 C('LEDs |O***|')
 label('.leds1')
-st(d(xoutMask))                 #80 Temporarily park new state here
-bmi(d(lo('.leds2')))            #81
-bra(d(lo('.leds3')))            #82
-ldzp(d(ledState))               #83
+st(d(xoutMask))                 #61 Temporarily park new state here
+bmi(d(lo('.leds2')))            #62
+bra(d(lo('.leds3')))            #63
+ldzp(d(ledState))               #64
 label('.leds2')
-ld(val(-1))                     #83
+ld(val(-1))                     #64
 label('.leds3')
-adda(val(1))                    #84
-st(d(ledState))                 #85
-bra(d(lo('.leds5')))            #86
-ldzp(d(ledTempo))               #87 Setup the LED timer for the next period
+adda(val(1))                    #65
+st(d(ledState))                 #66
+bra(d(lo('.leds5')))            #67
+ldzp(d(ledTempo))               #68 Setup the LED timer for the next period
 label('.leds4')
-wait(86-76)                     #76
-ldzp(d(ledTimer))               #86
-suba(d(1))                      #87
+wait(67-57)                     #57
+ldzp(d(ledTimer))               #67
+suba(d(1))                      #68
 label('.leds5')
-st(d(ledTimer))                 #88
-ldzp(d(xoutMask))               #89 Low 4 bits are the LED output
-anda(val(0b00001111))           #90 High bits will be restored below
-st(d(xoutMask))                 #91
-
-# Sound on/off (5 cycles)
-ldzp(d(soundTimer));            C('Sound on/off')#92
-bne(d(lo('.snd0')))             #93
-bra(d(lo('.snd1')))             #94
-ld(val(0))                      #95 Sound off        
-label('.snd0')
-ld(val(0xf0))                   #95 Sound on
-label('.snd1')
-ora(d(xoutMask),busRAM)         #96
-st(d(xoutMask))                 #97
-
-# Sound timer count down (XXX Replace by sequencer) (5 cycles)
-ldzp(d(soundTimer));            C('Sound timer')#98
-beq(d(lo('.snd2')))             #99
-bra(d(lo('.snd3')))             #100
-suba(val(1))                    #101
-label('.snd2')
-ld(val(0))                      #101
-label('.snd3')
-st(d(soundTimer))               #102
+st(d(ledTimer))                 #69
+ldzp(d(xoutMask))               #70 Low 4 bits are the LED output
+anda(val(0b00001111))           #71 High bits will be restored below
+st(d(xoutMask))                 #72
 
 # When the total number of scan lines per frame is not an exact multiple of the
 # (4) channels, there will be an audible discontinuity if no measure is taken.
@@ -919,13 +852,34 @@ st(d(soundTimer))               #102
 soundDiscontinuity = (vFront+vPulse+vBack) % 4
 extra = 0
 if soundDiscontinuity == 1:
-  st(val(sample), ea0DregAC|busD) # XXX We're actually swallowing 2 samples here!
+  st(val(sample), ea0DregAC|busD) # XXX We're swallowing _2_ samples here!
   C('Sound continuity')
   extra += 1
 if soundDiscontinuity > 1:
   print "Warning: sound discontinuity not supressed"
 
-runVcpu(200-103-extra, 'line0') #103 Application cycles (scan line 0)
+runVcpu(189-73-extra, 'line0')  #73 Application cycles (scan line 0)
+
+# Sound on/off (6 cycles)
+ldzp(d(soundTimer));            C('Sound on/off')#189
+bne(d(lo('.snd0')))             #190
+bra(d(lo('.snd1')))             #191
+ld(val(0))                      #192 Sound off
+label('.snd0')
+ld(val(0xf0))                   #192 Sound on
+label('.snd1')
+ora(d(xoutMask),busRAM)         #193
+st(d(xoutMask))                 #194
+
+# Sound timer count down (XXX Replace by sequencer) (5 cycles)
+ldzp(d(soundTimer));            C('Sound timer')#195
+beq(d(lo('.snd2')))             #196
+bra(d(lo('.snd3')))             #197
+suba(val(1))                    #198
+label('.snd2')
+ld(val(0))                      #198
+label('.snd3')
+st(d(soundTimer))               #199
 
 ld(d(videoSync0), busRAM|regOUT);C('<New scan line start>')#0
 
@@ -1017,25 +971,62 @@ ld(d(videoSync0), busRAM|regOUT);C('<New scan line start>')#0 Ends the vertical 
 # Last blank line before transfering to visible area
 label('vBlankLast')
 
-# --- Switch video mode when (only) select is pressed
-ldzp(d(buttonState))            #32
-xora(val(~buttonSelect))        #33
-beq(d(lo('.select0')))          #34
-bra(d(lo('.select1')))          #35
-ld(val(0))                      #36
-label('.select0')
-ld(val(lo('videoD')^lo('videoF')))#36
-label('.select1')
-xora(d(videoDorF),busRAM)       #37
-st(d(videoDorF))                #38
-ldzp(d(buttonState))            #39 XXX move to line 0
-ora(val(buttonSelect))          #40
-st(d(buttonState))              #41
+# pChange = pNew & ~pOld
+# nChange = nNew | ~nOld {DeMorgan}
 
-runVcpu(196-42, 'line40')       #42 Application cycles (scan line 40)
+# Filter raw serial input captured in last vblank (8 cycles)
+ld(val(255));                   C('Filter controller input')#32
+xora(d(serialLast),busRAM)      #33
+ora(d(serialRaw),busRAM)        #34 Catch button-press events
+anda(d(buttonState),busRAM)     #35 Keep active button presses
+ora(d(serialRaw),busRAM)        #36 Auto-reset already-released buttons
+st(d(buttonState))              #37
+ldzp(d(serialRaw))              #38
+st(d(serialLast))               #39
+
+# Respond to reset button (11 cycles)
+xora(val(~buttonStart));        C('Check for soft reset')#40
+bne(d(lo('.restart0')))         #41
+ldzp(d(resetTimer))             #42 As long as button pressed
+suba(val(1))                    #43 ... count down the timer
+st(d(resetTimer))               #44
+anda(d(127))                    #45
+beq(d(lo('.restart2')))         #46
+ld(val((vReset&255)-2))         #47 Start force reset when hitting 0
+bra(d(lo('.restart1')))         #48 ... otherwise do nothing yet
+bra(d(lo('.restart3')))         #49
+label('.restart0')
+ld(val(127))                    #43 Restore to ~2 seconds when not pressed
+st(d(resetTimer))               #44
+wait(49-45)                     #45
+bra(d(lo('.restart3')))         #49
+label('.restart1')
+nop()                           #50
+label('.restart2')
+st(d(vPC))                      #48 Continue force reset
+ld(val(vReset>>8))              #49
+st(d(vPC+1))                    #50
+label('.restart3')
+
+# --- Switch video mode when (only) select is pressed
+ldzp(d(buttonState))            #51
+xora(val(~buttonSelect))        #52
+beq(d(lo('.select0')))          #53
+bra(d(lo('.select1')))          #54
+ld(val(0))                      #55
+label('.select0')
+ld(val(lo('videoD')^lo('videoF')))#55
+label('.select1')
+xora(d(videoDorF),busRAM)       #56
+st(d(videoDorF))                #57
+ldzp(d(buttonState))            #58
+ora(val(buttonSelect))          #59
+st(d(buttonState))              #60
+
+runVcpu(196-61, 'line40')       #61 Application cycles (scan line 40)
 # vAC==0 now
 st(d(videoY))                   #196
-st(d(frameX))                   #197 
+st(d(frameX))                   #197
 st(d(nextVideo))                #198 videoA=0
 ldzp(d(channel))                #199 Advance to next sound channel
 anda(val(3));                   C('<New scan line start>')#0
@@ -1343,7 +1334,7 @@ ld(val(-22/2))                  #21
 # next scan line if the current slice is almost out of time. Then a jump to native
 # code is made. This code can do whatever it wants, but it must return to the
 # 'REENTER' label when done. When returning, AC must hold (the negative of) the
-# actual consumed number of whole ticks for the entire virtual instruction cycle 
+# actual consumed number of whole ticks for the entire virtual instruction cycle
 # (from NEXT to NEXT). This duration may not exceed the prior declared duration
 # in the operand + 28 (or maxTicks). The operand specifies the (negative) of the
 # maximum number of *extra* ticks that the native call will need. The GCL compiler
@@ -1601,11 +1592,11 @@ ld(val(-24/2))                  #21
 
 # sysArgs[0:1] Current address
 # sysArgs[2]   Checksum
-# sysArgs[6]   Wait value (videoY)
+# sysArgs[3]   Wait value (videoY)
 
 label('SYS_NextByteIn_32')
 ldzp(d(videoY))                 #15
-xora(d(sysArgs+6),busRAM)       #16
+xora(d(sysArgs+3),busRAM)       #16
 bne(d(lo('.sysNbi')))           #17
 ld(d(sysArgs+0),busRAM|regX)    #18
 ld(d(sysArgs+1),busRAM|regY)    #19
@@ -1629,31 +1620,28 @@ ld(val(hi('REENTER')),regY)     #23
 jmpy(d(lo('REENTER')))          #24
 nop()                           #25
 
-# XXX Clocked byte in
-# Wait for raster to reach videoY
-
 #-----------------------------------------------------------------------
 # Extension SYS_PayloadCopy_34
 #-----------------------------------------------------------------------
 
 # sysArgs[0:1] Source address
-# sysArgs[3]   Copy count
-# sysArgs[4:5] Destination address
+# sysArgs[4]   Copy count
+# sysArgs[5:6] Destination address
 
 label('SYS_PayloadCopy_34')
 ldzp(d(sysArgs+3))              #15 Copy count
 beq(d(lo('.sysCc0')))           #16
 suba(d(1))                      #17
-st(d(sysArgs+3))                #18
+st(d(sysArgs+4))                #18
 ld(d(sysArgs+0),busRAM|regX)    #19 Current pointer
 ld(d(sysArgs+1),busRAM|regY)    #20
 ld(eaYXregAC,busRAM)            #21
-ld(d(sysArgs+4),busRAM|regX)    #22 Target pointer
-ld(d(sysArgs+5),busRAM|regY)    #23
+ld(d(sysArgs+5),busRAM|regX)    #22 Target pointer
+ld(d(sysArgs+6),busRAM|regY)    #23
 st(eaYXregAC)                   #24
-ldzp(d(sysArgs+4))              #25 Increment target
+ldzp(d(sysArgs+5))              #25 Increment target
 adda(d(1))                      #26
-st(d(sysArgs+4))                #27
+st(d(sysArgs+5))                #27
 bra(d(lo('.sysCc1')))           #28
 label('.sysCc0')
 ld(val(hi('REENTER')),regY)     #18,29
@@ -1668,8 +1656,8 @@ ld(d(-34/2))                    #31
 
 # sysArgs[0:1] Source address
 # sysArgs[2]   Checksum
-# sysArgs[3]   Copy count
-# sysArgs[4:5] Destination address
+# sysArgs[4]   Copy count
+# sysArgs[5:6] Destination address
 
 label('SYS_ProcessInput_48')
 ld(d(sysArgs+1),busRAM|regY)    #15
@@ -1684,21 +1672,21 @@ bne(d(lo('.sysPi1')))           #23
 ld(eaYXregAC,busRAM);           C('Valid command')#24 Length byte
 st(eaYXregOUTIX)                #25 X++
 anda(d(63))                     #26 Bit 6:7 are garbage
-st(d(sysArgs+3))                #27 Copy count
+st(d(sysArgs+4))                #27 Copy count
 ld(eaYXregAC,busRAM)            #28 Low copy address
 st(eaYXregOUTIX)                #29 X++
-st(d(sysArgs+4))                #30
+st(d(sysArgs+5))                #30
 ld(eaYXregAC,busRAM)            #31 High copy address
 st(eaYXregOUTIX)                #32 X++
-st(d(sysArgs+5))                #33
-ldzp(d(sysArgs+3))              #34
+st(d(sysArgs+6))                #33
+ldzp(d(sysArgs+4))              #34
 bne(d(lo('.sysPi2')))           #35
 # Execute code (don't care about checksum anymore)
-ldzp(d(sysArgs+4));             C('Execute')#36 Low run address
+ldzp(d(sysArgs+5));             C('Execute')#36 Low run address
 suba(d(2))                      #37
 st(d(vPC))                      #38
 st(d(vLR))                      #39
-ldzp(d(sysArgs+5))              #40 High run address
+ldzp(d(sysArgs+6))              #40 High run address
 st(d(vPC+1))                    #41
 st(d(vLR+1))                    #42
 ld(val(hi('REENTER')),regY)     #43

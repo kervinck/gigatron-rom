@@ -43,7 +43,7 @@ $500c Pos=
 \SYS_NextByteIn_32  NextByteIn_32=
 \SYS_PayloadCopy_34 PayloadCopy_34=
 
-0 \sysArgs3.            {Clears the copy counter}
+0 \sysArgs4.            {Clears the copy counter}
 $590c A=                {Activity indicator}
 $5b0c B=                {Buffer}
 103 {'g'} \sysArgs2.    {Reset checksum}
@@ -58,18 +58,18 @@ $5a0c:
 [do
   {Receive the next transmission frame}
   B   \sysArgs0=                   {Input buffer}
-  207 \sysArgs6. NextByteIn_32 32@ {Protocol byte}
-  219 \sysArgs6. NextByteIn_32 32@ {Length, 6 new bits}
-  235 \sysArgs6. NextByteIn_32 32@ {Low address}
-  251 \sysArgs6. NextByteIn_32 32@ {High address}
+  207 \sysArgs3. NextByteIn_32 32@ {Protocol byte}
+  219 \sysArgs3. NextByteIn_32 32@ {Length, 6 new bits}
+  235 \sysArgs3. NextByteIn_32 32@ {Low address}
+  251 \sysArgs3. NextByteIn_32 32@ {High address}
                 PayloadCopy_34 34@ {Copy previous bytes}
-  2   \sysArgs6. NextByteIn_32 32@ {Payload 0}
-  6   \sysArgs6.
+  2   \sysArgs3. NextByteIn_32 32@ {Payload 0}
+  6   \sysArgs3.
   [do           PayloadCopy_34 34@ {Copy previous bytes}
                  NextByteIn_32 32@ {Payload 1-59}
-    \sysArgs6, 4+ \sysArgs6.
+    \sysArgs3, 4+ \sysArgs3.
     242^ if<>0loop]
-  185 \sysArgs6. NextByteIn_32 32@ {Checksum byte}
+  185 \sysArgs3. NextByteIn_32 32@ {Checksum byte}
 
   {Plot green or red indicator}
   \sysArgs2, [if=0 12 else 3] A.
