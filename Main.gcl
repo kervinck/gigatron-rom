@@ -168,7 +168,7 @@ Pos>, q= {Y position of current cursor}
 [do
   p>, q- [if<>0
     p>, $78^ if<>0
-    p \sysPos= \SYS_VDrawBits_134 134@ {Clears 8 pixels vertically}
+    p \sysArgs4= \SYS_VDrawBits_134 134@ {Clears 8 pixels vertically}
   ]
   $800 p+ p= if>0loop
   i+ p=

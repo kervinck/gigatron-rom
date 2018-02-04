@@ -1,7 +1,9 @@
 CFLAGS:=-std=c11 -O3 -Wall
 
+romType=0x10
+
 theloop.2.rom: *.py *.gcl Images/*.rgb Makefile
-	./theloop.py\
+	env romType="$(romType)" python theloop.py\
 		Snake.gcl\
 		Racer.gcl\
 		Mandelbrot.gcl\

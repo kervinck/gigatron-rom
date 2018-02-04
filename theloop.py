@@ -13,7 +13,6 @@
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #  Hopefully in ROM v1
-#  XXX Retire sysPos and sysData (use sysArgs instead) [ROMv1]
 #  XXX vCPU: Rethink clobbering of vAC by SYS [ROMv1]
 #  XXX vCPU: NEGW, ANDW, ORW, XORW, NOTW [ROMv1]
 #  XXX vCPU: LSRW, LSLW, ASRW, CLR [ROMv1]
@@ -22,7 +21,6 @@
 #  XXX vCPU: PEEKW, POKEW [ROMv1]
 #  XXX vCPU: PEEKWI, POKEWI (*AC+i) [ROMv1]
 #  XXX Audio: Move shift table to page 7, then add waveform synthesis [ROMv1]
-#  XXX GCL: Stabalize zero page allocation [ROMv1]
 #  XXX Logo drawing [ROMv1]
 #  XXX Music sequencer (combined with LED sequencer) [ROMv1]
 #  XXX Pictures: speed up scrolling by splitting work over frames [ROMv1]
@@ -63,7 +61,8 @@
 #  XXX Exhibition mode: flip between applications in auto-play mode
 #-----------------------------------------------------------------------
 
-import sys
+from sys import argv
+from os  import getenv
 
 from asm import *
 import gcl
@@ -195,9 +194,16 @@ vTicks          = zpByte()  # Interpreter ticks are units of 2 clocks
 vReturn         = zpByte(1 if fastRunVcpu else 2) # Return into video loop
 vTmp            = zpByte()
 
-# Registers for SYS functions XXX Remove, use sysArgs[] instead [ROMv1]
-sysPos          = zpByte(2)
-sysData         = zpByte(2)
+# For future ROM extensions
+reserved        = zpByte(4)
+
+# ROM type/version, numbering scheme to be determined, could be as follows:
+# bit 4:7       Version
+# bit 0:3       >=8 Formal revisions 8=alpa, 9=beta, 10=beta2...c=release, d=patch
+#                <8 experimental/informal revisions
+# Perhaps it should just identify the application bindings,
+# so don't call it romVersion already
+romType         = zpByte(1)
 
 # SYS arguments and results
 sysArgs         = zpByte(8)
@@ -365,8 +371,8 @@ ld(val(syncBits),regOUT)
 # Scan the entire RAM space to collect entropy for a random number generator.
 # The 16-bit address space is scanned, even if less RAM was detected.
 ld(val(0));                     C('Collect entropy from RAM')
-st(d(zpFree+0),busAC|ea0DregX)
-st(d(zpFree+1),busAC|ea0DregY)
+st(d(reserved+0),busAC|ea0DregX)
+st(d(reserved+1),busAC|ea0DregY)
 label('.initEnt0')
 ldzp(d(entropy+0))
 bpl(d(lo('.initEnt1')))
@@ -382,14 +388,14 @@ label('.initEnt2')
 st(d(entropy+1))
 adda(d(entropy+2),busRAM)
 st(d(entropy+2))
-ldzp(d(zpFree+0))
+ldzp(d(reserved+0))
 adda(val(1))
 bne(d(lo('.initEnt0')))
-st(d(zpFree+0),busAC|ea0DregX)
-ldzp(d(zpFree+1))
+st(d(reserved+0),busAC|ea0DregX)
+ldzp(d(reserved+1))
 adda(val(1))
 bne(d(lo('.initEnt0')))
-st(d(zpFree+1),busAC|ea0DregY)
+st(d(reserved+1),busAC|ea0DregY)
 
 # Update LEDs
 ld(val(0b0011));                 C('LEDs |**OO|')
@@ -422,8 +428,8 @@ adda(val(2),regX)
 ld(val(vReset>>8))
 st(d(vPC+1),busAC|regY)
 st(d(lo('LDWI')),        eaYXregOUTIX)
-st(d(lo('SYS_Reset_42')),eaYXregOUTIX)
-st(d(hi('SYS_Reset_42')),eaYXregOUTIX)
+st(d(lo('SYS_Reset_44')),eaYXregOUTIX)
+st(d(hi('SYS_Reset_44')),eaYXregOUTIX)
 st(d(lo('SYS')),         eaYXregOUTIX)
 st(d(256-42/2+maxTicks), eaYXregOUTIX)
 
@@ -441,10 +447,10 @@ ld(val(audioTable>>8),regY);    C('Setup shift2 table')
 ld(val(0))
 st(d(channel))
 label('.loop')
-st(d(zpFree+0))
+st(d(reserved+0))
 adda(busAC)
 adda(busAC, regX)
-ldzp(d(zpFree+0))
+ldzp(d(reserved+0))
 st(eaYXregAC)
 adda(val(1))
 xora(val(0x40))
@@ -474,10 +480,10 @@ jmpy(d(lo('vBlankStart')))
 ld(val(syncBits))
 
 #-----------------------------------------------------------------------
-# Extension SYS_Reset_42: Soft reset
+# Extension SYS_Reset_44: Soft reset
 #-----------------------------------------------------------------------
 
-# SYS_Reset_42 initiates an immediate Gigatron reset from within the vCPU.
+# SYS_Reset_44 initiates an immediate Gigatron reset from within the vCPU.
 # The reset sequence itself is mostly implemented in GCL by Reset.gcl .
 # This must first be loaded into RAM. But as that takes more than 1 scanline,
 # some vCPU bootstrapping code gets loaded into the high part of the zero page,
@@ -485,35 +491,39 @@ ld(val(syncBits))
 
 vCpuBoot = 0x00f6
 
-label('SYS_Reset_42')
-ld(val(vCpuBoot-2))                     #15 vPC
-st(d(vPC))                              #16
-ld(val(vCpuBoot),regX)                  #17 vPC
-ld(val(0))                              #18
-st(d(vPC+1),busAC|regY)                 #19 Boot on zero page
-st(d(vSP))                              #20 Reset stack pointer
+label('SYS_Reset_44')
+value = getenv('romType')
+value = int(value, 0) if value else 0
+ld(d(value));                           C('Set ROM type/version')#15
+st(d(romType))                          #16
+ld(val(vCpuBoot-2))                     #17 vPC
+st(d(vPC))                              #18
+ld(val(vCpuBoot),regX)                  #19 vPC
+ld(val(0))                              #20
+st(d(vPC+1),busAC|regY)                 #21 Boot on zero page
+st(d(vSP))                              #22 Reset stack pointer
 assert(vCpuStart&255==0)
-st(d(vLR))                              #21
-st(d(soundTimer))                       #22
-ld(val(vCpuStart>>8))                   #23
-st(d(vLR+1))                            #24
-ld(d(lo('videoF')))                     #25 Do this before first visible pixels
-st(d(videoDorF))                        #26
+st(d(vLR))                              #23
+st(d(soundTimer))                       #24
+ld(val(vCpuStart>>8))                   #25
+st(d(vLR+1))                            #26
+ld(d(lo('videoF')))                     #27 Do this before first visible pixels
+st(d(videoDorF))                        #28
 # Start of manually compiled vCPU section
-st(d(lo('LDWI')    ),eaYXregOUTIX)      #27 00f6 Where to read from ROM
-st(d(lo('Reset')   ),eaYXregOUTIX)      #28 00f7
-st(d(hi('Reset')   ),eaYXregOUTIX)      #29 00f8
-st(d(lo('STW')     ),eaYXregOUTIX)      #30 00f9
-st(d(sysArgs       ),eaYXregOUTIX)      #31 00fa
-st(d(lo('LDWI')    ),eaYXregOUTIX)      #32 00fb Call SYS_Exec_88
-st(d(lo('SYS_Exec_88')),eaYXregOUTIX)   #33 00fc
-st(d(hi('SYS_Exec_88')),eaYXregOUTIX)   #34 00fd (is 0...)
-st(d(lo('SYS')     ),eaYXregOUTIX)      #35 00fe
-st(d(256-88/2+maxTicks),eaYXregOUTIX)   #36 00ff
+st(d(lo('LDWI')    ),eaYXregOUTIX)      #29 00f6 Where to read from ROM
+st(d(lo('Reset')   ),eaYXregOUTIX)      #30 00f7
+st(d(hi('Reset')   ),eaYXregOUTIX)      #31 00f8
+st(d(lo('STW')     ),eaYXregOUTIX)      #32 00f9
+st(d(sysArgs       ),eaYXregOUTIX)      #33 00fa
+st(d(lo('LDWI')    ),eaYXregOUTIX)      #34 00fb Call SYS_Exec_88
+st(d(lo('SYS_Exec_88')),eaYXregOUTIX)   #34 00fc
+st(d(hi('SYS_Exec_88')),eaYXregOUTIX)   #36 00fd (is 0...)
+st(d(lo('SYS')     ),eaYXregOUTIX)      #37 00fe
+st(d(256-88/2+maxTicks),eaYXregOUTIX)   #38 00ff
 # Return to interpreter
-ld(val(hi('REENTER')),regY)             #37
-jmpy(d(lo('REENTER')))                  #38
-ld(val(-42/2))                          #39
+ld(val(hi('REENTER')),regY)             #39
+jmpy(d(lo('REENTER')))                  #40
+ld(val(-44/2))                          #41
 
 #-----------------------------------------------------------------------
 # Extension SYS_Exec_88: Load code from ROM into memory and execute it
@@ -1747,10 +1757,13 @@ ld(val(-34/2))                  #31
 # Extension SYS_Read3_40: Read 3 consecutive bytes from ROM
 #-----------------------------------------------------------------------
 
+# sysArgs[0:2]  Bytes (output)
+# sysArgs[6:7]  ROM pointer (input)
+
 label('SYS_Read3_40')
-ld(d(sysData+1),busRAM|regY)    #15
+ld(d(sysArgs+7),busRAM|regY)    #15
 jmpy(d(128-7))                  #16 trampoline3a
-ldzp(d(sysData+0))              #17
+ldzp(d(sysArgs+6))              #17
 label('txReturn')
 st(d(sysArgs+2))                #34
 ld(val(hi('REENTER')),regY)     #35
@@ -1765,7 +1778,7 @@ def trampoline3a():
   C('Trampoline for page $%02x00 reading (entry)' % (pc()>>8))
   bra(d(123))                   #19
   st(d(sysArgs+0))              #21
-  ldzp(d(sysData+0))            #22
+  ldzp(d(sysArgs+6))            #22
   adda(val(1))                  #23
   bra(busAC)                    #24
   bra(d(250))                   #25 trampoline3b
@@ -1776,7 +1789,7 @@ def trampoline3b():
     nop()
   st(d(sysArgs+1))              #27
   C('Trampoline for page $%02x00 reading (continue)' % (pc()>>8))
-  ldzp(d(sysData+0))            #28
+  ldzp(d(sysArgs+6))            #28
   adda(val(2))                  #29
   ld(d(hi('txReturn')),regY)    #30
   bra(busAC)                    #31
@@ -1785,6 +1798,9 @@ def trampoline3b():
 #-----------------------------------------------------------------------
 # Extension SYS_Unpack_56: Unpack 3 bytes into 4 pixels
 #-----------------------------------------------------------------------
+
+# sysArgs[0:2]  Packed bytes (input)
+# sysArgs[0:3]  Pixels (output)
 
 label('SYS_Unpack_56')
 ld(val(audioTable>>8),regY)     #15
@@ -1837,9 +1853,12 @@ ld(val(-56/2))                  #53
 # Extension SYS_Draw4_30:
 #-----------------------------------------------------------------------
 
+# sysArgs[0:3]  Pixels
+# sysArgs[4:5]  Position on screen
+
 label('SYS_Draw4_30')
-ld(d(sysPos+0),busRAM|regX)     #15
-ld(d(sysPos+1),busRAM|regY)     #16
+ld(d(sysArgs+4),busRAM|regX)    #15
+ld(d(sysArgs+5),busRAM|regY)    #16
 ldzp(d(sysArgs+0))              #17
 st(eaYXregOUTIX)                #18
 ldzp(d(sysArgs+1))              #19
@@ -1857,17 +1876,17 @@ ld(val(-30/2))                  #27
 #-----------------------------------------------------------------------
 
 # Draw slice of a character
-# sysPos        Position on screen
-# sysArgs+0     Color 0 (background)
-# sysArgs+1     Color 1 (pen)
-# sysArgs+2     8 bits, highest bit first (destructive)
+# sysArgs[0]    Color 0 (background)
+# sysArgs[1]    Color 1 (pen)
+# sysArgs[2]    8 bits, highest bit first (destructive)
+# sysArgs[4:5]  Position on screen
 
 label('SYS_VDrawBits_134')
-ld(d(sysPos+0),busRAM|regX)     #15
+ld(d(sysArgs+4),busRAM|regX)    #15
 ld(val(0))                      #16
 label('.vdb0')
 st(d(vTmp))                     #17+i*14
-adda(d(sysPos+1),busRAM|regY)   #18+i*14 Y=[sysPos+1]+vTmp
+adda(d(sysArgs+5),busRAM|regY)  #18+i*14 Y=[sysPos+1]+vTmp
 ldzp(d(sysArgs+2))              #19+i*14 Select color
 bmi(d(lo('.vdb1')))             #20+i*14
 bra(d(lo('.vdb2')))             #21+i*14
@@ -2175,8 +2194,6 @@ define('buttonState', buttonState)
 for i in range(8):
   define('sysArgs%d' % i, sysArgs+i)
 define('soundTimer', soundTimer)
-define('sysData',    sysData)
-define('sysPos',     sysPos)
 define('vAC',        vAC)
 define('vACH',       vAC+1)
 define('vLR',        vLR)
@@ -2187,7 +2204,7 @@ define('vPC+1',      vPC+1) # XXX trampoline() is probably in the wrong module
 
 # Compile test GCL program
 
-for gclSource in sys.argv[1:]:
+for gclSource in argv[1:]:
   name = gclSource.rsplit('.', 1)[0]
   print
   print 'Compile file %s label %s ROM %04x' % (gclSource, name, pc())

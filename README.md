@@ -66,24 +66,24 @@ page 128-255 | Not used in the 32K system: mirror of page 0-127         |
 
 Address   Name          Description
 --------  ------------- -----------
-0000      0
-0001      memSize
-0002      channel
-0003      sample
-0004      bootCount     0 for cold boot
-0005      bootCheck     Checksum
-0006      entropy
+0000      0             Constant
+0001      memSize       Number of RAM pages detected at hard reset (64kB=0)
+0002      channel       Sound channel update on current scanline
+0003      sample        Accumulator for synthesizing next sound sample
+0004      bootCount     0 for cold boot, >0 for warm boot
+0005      bootCheck     Checksum of bootCount
+0006-0008 entropy       Randomness from SRAM boot and input, updated each frame
 0009      videoY        Counts up from 0 to 238 in steps of 2 (odd in vBlank)
-000a      frameX        Starting byte within page
+000a      frameX        Starting byte within page for pixel burst
 000b      frameY        Page of current pixel row (updated by videoA)
 000c      nextVideo     Jump offset to scan line handler (videoA, B, C...)
 000d      videoDorF     Handler for every 4th line (videoD or videoF)
-000e      frameCount
+000e      frameCount    Continuous video frame counter
 000f      serialRaw     New raw serial read
 0010      serialLast    Previous serial read
 0011      buttonState   Clearable button state
 0012      resetTimer    After 2 seconds of holding 'Start', do a soft reset
-0013      xout
+0013      xout          Memory cache for XOUT register
 0014      xoutMask      The blinkenlights and sound on/off state
 0015-0016 vPC           Interpreter program counter, points into RAM
 0017-0018 vAC           Interpreter accumulator, 16-bits
@@ -91,15 +91,15 @@ Address   Name          Description
 001b      vSP           Stack pointer
 001c      vTicks        Interpreter ticks are units of 2 clocks
 001d      vReturn       Return address (L) from vCPU into the loop (H is fixed)
-001e      vTmp
-001f-0020 sysPos
-0021-0022 sysData
-0023-002a sysArgs
-002b      soundTimer
-002c      ledTimer      Number of ticks until next LED change
-002d      ledState      Current LED state
-002e      ledTempo      Next value for ledTimer after LED state change
-002f-007f -             Program variables
+001e      vTmp          Scratch storage location for vCPU
+002f-0022 reserved      Reserved for ROM extensions
+0023      romType       0x1c for ROMv1 release
+0024-002b sysArgs       Arguments for SYS functions
+002c      soundTimer    Countdown timer for playing sound
+002d      ledTimer      Number of ticks until next LED change
+002e      ledState      Current LED state
+002f      ledTempo      Next value for ledTimer after LED state change
+0030-007f -             Program variables
 0080      1             Constant
 0081-.... -             Program variables
 ....-00ff <stack>

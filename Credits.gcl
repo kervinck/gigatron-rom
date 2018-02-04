@@ -80,7 +80,7 @@ $0400:
   0 \sysArgs0. \sysArgs1. {Black}
   [do
     p [do
-      \sysPos= \SYS_VDrawBits_134 134@ {Clears 8 pixels vertically}
+      \sysArgs4= \SYS_VDrawBits_134 134@ {Clears 8 pixels vertically}
       $800 p+ p= if>0loop]
     i+ p=
     255& 160^ if<>0loop]

@@ -53,10 +53,10 @@ XXX Image compression?
   {Draw 6 vertical slices: 5 using font data, the last with all-zeros}
   BgColor \sysArgs0.
   Color   \sysArgs1.
-  Pos     \sysPos=
+  Pos     \sysArgs4=
   $fb i= [do
     fontData 0? fontData<++ \sysArgs2. \SYS_VDrawBits_134 134@
-    \sysPos<++
+    \sysArgs4<++
     i<++ i if<>0loop]
   Pos ret
 ] QDrawChar=
@@ -513,11 +513,11 @@ $0ba0:
   48 BgColor=
 
   BgColor \sysArgs0. \sysArgs1.
-  $800    \sysPos=
+  $800    \sysArgs4=
   [do
     \SYS_VDrawBits_134 134@
-    \sysPos<++
-    \sysPos, 160^ if<>0loop]
+    \sysArgs4<++
+    \sysArgs4, 160^ if<>0loop]
 
   63 Color=
   $801 Pos= EmptyTimeText Text= DrawText!
@@ -551,9 +551,8 @@ $0ea0:
   [do
     p 0? \sysArgs0. tmp!
       0? \sysArgs1. tmp!
-      0? \sysArgs2. tmp!
-                     \SYS_Unpack_56 56@
-    q \sysPos= 4+ q= \SYS_Draw4_30  30@
+      0? \sysArgs2. tmp! \SYS_Unpack_56 56@
+      q \sysArgs4= 4+ q= \SYS_Draw4_30  30@
     q>, $20^ if<>0loop]
 
   pop ret
