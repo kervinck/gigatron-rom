@@ -35,4 +35,8 @@ burn: theloop.2.rom
 todo:
 	@git ls-files | sed 's/ /\\ /g' | xargs grep -I -E '(TODO|XXX)'
 
+v1:
+	@git ls-files | sed 's/ /\\ /g' | xargs grep -I '\[ROMv1\]'
+	@git ls-files | sed 's/ /\\ /g' | xargs grep -I '\[ROMv1\]' | wc -l
+
 # vi: noexpandtab

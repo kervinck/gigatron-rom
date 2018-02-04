@@ -9,6 +9,7 @@ gcl0x
 
 {
   XXX Accelerated text drawing [ROMv1]
+  XXX Logo drawing [ROMv1]
 }
 
 { Print a 5x8 character on screen with the built-in font

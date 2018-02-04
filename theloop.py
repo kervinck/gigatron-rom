@@ -13,17 +13,13 @@
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #  Hopefully in ROM v1
-#  XXX vCPU: Rethink clobbering of vAC by SYS [ROMv1]
-#  XXX vCPU: NEGW, ANDW, ORW, XORW, NOTW [ROMv1]
-#  XXX vCPU: LSRW, LSLW, ASRW, CLR [ROMv1]
-#  XXX vCPU: ALLOC, LDLW, STLW [ROMv1]
-#  XXX vCPU: PEEKI, POKEI (*AC+i) [ROMv1]
-#  XXX vCPU: PEEKW, POKEW [ROMv1]
-#  XXX vCPU: PEEKWI, POKEWI (*AC+i) [ROMv1]
+#  XXX vCPU: Rethink clobbering of vAC by SYS, for sanity [ROMv1]
+#  XXX vCPU: NEGW, ANDW, ORW, XORW, NOTW, for completeness (n-Queens) [ROMv1]
+#  XXX vCPU: LSRW, LSLW, ASRW, CLR, for speed (n-Queens) [ROMv1]
+#  XXX vCPU: ALLOC, LDLW, STLW, for true local variables (n-Queens) [ROMv1]
+#  XXX vCPU: PEEKW, POKEW, for dynamic data structures [ROMv1]
 #  XXX Audio: Move shift table to page 7, then add waveform synthesis [ROMv1]
-#  XXX Logo drawing [ROMv1]
 #  XXX Music sequencer (combined with LED sequencer) [ROMv1]
-#  XXX Pictures: speed up scrolling by splitting work over frames [ROMv1]
 #
 #  After ROM v1 release
 #  XXX Readability of asm.py instructions, esp. make d() implicit
@@ -32,6 +28,8 @@
 #  XXX How it works memo: brief description of every software function
 #
 #  Probably not in ROM v1
+#  XXX vCPU: PEEKI, POKEI (*AC+i) [ROMv1]
+#  XXX vCPU: PEEKWI, POKEWI (*AC+i) [ROMv1]
 #  XXX Adjustable return address for LOOKUP trampolines
 #  XXX Loader: make noise when data comes in
 #  XXX vCPU: Multiplication (mulShift8?)
