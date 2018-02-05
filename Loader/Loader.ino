@@ -8,8 +8,8 @@
 // Uno     Name   OUT bit            CD4021     74HC595 (U39)
 // ------- ------ -------- --------- ---------- ----------------
 // Pin 13  PORTB5 None     SER_DATA  11 SER INP 14 SER
-// Pin 12  PORTB4 6 vSync  SER_LATCH  0 PAR/SER None
-// Pin 11  PORTB3 7 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK
+// Pin 12  PORTB4 7 vSync  SER_LATCH  0 PAR/SER None
+// Pin 11  PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK
 
 #define buttonDown  4
 #define buttonStart 16
