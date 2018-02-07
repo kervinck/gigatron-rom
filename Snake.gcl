@@ -9,7 +9,6 @@ gcl0x
 
 {
 ROM v1:
-XXX Start timer at 15, give 5 seconds bonus instead of 10 [ROMv1]
 XXX Don't allow autoplayer to obtain a hi score [ROMv1]
 XXX Don't allow reversing, for playability [ROMv1]
 XXX Rising tones [ROMv1]
@@ -233,7 +232,7 @@ $0500:
       2 \soundTimer.
       Score Timer+ Score=
       DrawScore!
-      AddTimer!
+      5 AddTimer!
       Grow<++ Drops<++
     ]
     DrawHead!
@@ -313,7 +312,7 @@ $0600:
 
 [def
   push
-  Timer 10+ Timer=
+  Timer+ Timer=
   15- [if>0 15 Timer=]
   \frameCount, TimeOut=
   DrawTimer!
@@ -379,7 +378,7 @@ $0700:
   2 Delay= {Game speed}
 
   0 Timer=
-  AddTimer!
+  15 AddTimer!
 
   LaunchControl Control=
 
