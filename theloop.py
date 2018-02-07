@@ -27,8 +27,6 @@
 #  XXX How it works memo: brief description of every software function
 #
 #  Probably not in ROM v1
-#  XXX vCPU: PEEKI, POKEI (*AC+i) [ROMv1]
-#  XXX vCPU: PEEKWI, POKEWI (*AC+i) [ROMv1]
 #  XXX Adjustable return address for LOOKUP trampolines
 #  XXX Loader: make noise when data comes in
 #  XXX vCPU: Multiplication (mulShift8?)
