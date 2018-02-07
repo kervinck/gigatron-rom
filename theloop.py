@@ -13,12 +13,11 @@
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #  Hopefully in ROM v1
-#  XXX vCPU: NEGW, ANDW, ORW, XORW, NOTW, for completeness (n-Queens) [ROMv1]
-#  XXX vCPU: LSRW, LSLW, ASRW, CLR, for speed (n-Queens) [ROMv1]
-#  XXX vCPU: ALLOC, LDLW, STLW, for true local variables (n-Queens) [ROMv1]
-#  XXX vCPU: PEEKW, POKEW, for dynamic data structures [ROMv1]
+#  XXX vCPU: NEGW (NOTW), CLR for for speed [ROMv1]
+#  XXX SYS: LSRW, LSLW, ASRW etc for completeness (n-Queens) [ROMv1]
 #  XXX Audio: Move shift table to page 7, then add waveform synthesis [ROMv1]
 #  XXX Music sequencer (combined with LED sequencer) [ROMv1]
+#  XXX Reshuffle ROM layout a bit, attempt to win space
 #
 #  After ROM v1 release
 #  XXX Readability of asm.py instructions, esp. make d() implicit
@@ -1108,7 +1107,7 @@ bra(d(lo('NEXT')))              #18
 #
 # Instruction LD: Load from zero page (AC=[D]), 18 cycles
 label('LD')
-ld(busAC,regX)                  #10 (overlap with LDWI)
+ld(busAC,regX)                  #10,19 (overlap with LDWI)
 ldzp(busRAM|ea0XregAC)          #11
 st(d(vAC))                      #12
 ld(val(0))                      #13
@@ -1119,7 +1118,7 @@ bra(d(lo('NEXT')))              #16
 #
 # Instruction LDW: Word load from zero page (AC=[D],[D+1]), 20 cycles
 label('LDW')
-ld(busAC,regX)                  #10 (overlap with LD)
+ld(busAC,regX)                  #10,17 (overlap with LD)
 adda(val(1))                    #11
 st(d(vTmp))                     #12 Address of high byte
 ld(busRAM|ea0XregAC)            #13
@@ -1133,7 +1132,7 @@ ld(val(-20/2))                  #19
 #
 # Instruction STW: Word load from zero page (AC=[D],[D+1]), 20 cycles
 label('STW')
-ld(busAC,regX)                  #10 (overlap with LDW)
+ld(busAC,regX)                  #10,20 (overlap with LDW)
 adda(val(1))                    #11
 st(d(vTmp))                     #12 Address of high byte
 ldzp(d(vAC))                    #13
@@ -1220,17 +1219,16 @@ bra(d(lo('NEXT')))              #14
 #
 # Instruction ST: Store in zero page ([D]=ACL), 16 cycles
 label('ST')
-ld(busAC,regX)                  #10 (overlap with LDI)
+ld(busAC,regX)                  #10,15 (overlap with LDI)
 ldzp(d(vAC))                    #11
 st(d(vAC),busAC|ea0XregAC)      #12
 ld(val(-16/2))                  #13
 bra(d(lo('NEXT')))              #14
 #nop()                          #(15)
 #
-# Instruction POP, (LR=[SP++]), 22 cycles
-# XXX Candidate for moving to next page -> 15 words = 5 instructions
+# Instruction POP, (LR=[SP++]), 26 cycles
 label('POP')
-ld(d(vSP),busRAM|regX)          #10 (overlap with ST)
+ld(d(vSP),busRAM|regX)          #10,15 (overlap with ST)
 ld(busRAM,ea0XregAC)            #11
 st(d(vLR))                      #12
 ldzp(d(vSP))                    #13
@@ -1250,11 +1248,11 @@ bra(d(lo('NEXT')))              #24
 #
 # Conditional NE: Branch if not zero (if(ALC!=0)PCL=D)
 label('NE')
-beq(d(lo('.cond4')))            #20 (overlap with POP)
+beq(d(lo('.cond4')))            #20,25 (overlap with POP)
 bne(d(lo('.cond5')))            #21
 ld(busRAM|eaYXregAC)            #22
 
-# Instruction LOOKUP, (AC=ROM[AC+256*D]), 24 cycles
+# Instruction LOOKUP: (AC=ROM[AC+256*D]), 24 cycles
 label('LOOKUP')
 ld(d(vAC+1),busRAM|regY)        #10
 jmpy(d(251));                   C('Trampoline offset')#11
@@ -1266,7 +1264,7 @@ st(d(vAC+1))                    #21
 bra(d(lo('NEXT')))              #22
 ld(val(-24/2))                  #23
 
-# Instruction PUSH, ([--SP]=LR), 14 cycles
+# Instruction PUSH: ([--SP]=LR), 26 cycles
 label('PUSH')
 ldzp(d(vSP))                    #10
 suba(d(1),regX)                 #11
@@ -1309,21 +1307,14 @@ ld(val(-14/2))                  #11
 bra(d(lo('NEXT')))              #12
 #nop()                          #(13)
 #
-# Instruction POKE ([[D+1],[D]]=ACL), 22 cycles
-# XXX Candidate for moving to next page -> 12 words = 4 instructions
-label('POKE')
-st(d(vTmp))                     #10 (overlap with BRA)
-adda(val(1),regX)               #11
-ld(busRAM,ea0XregAC)            #12
-ld(busAC,regY)                  #13
-ld(d(vTmp),busRAM|regX)         #14
-ld(busRAM,ea0XregAC)            #15
-ld(busAC,regX)                  #16
-ldzp(d(vAC))                    #17
-st(eaYXregAC)                   #18
-ld(d(vPC+1),busRAM|regY)        #19
-bra(d(lo('NEXT')))              #20
-ld(val(-22/2))                  #21
+# Instruction INC, Increment zero page byte ([D]++), 16 cycles
+label('INC')
+ld(busAC,regX)                  #10,13 (overlap with BRA)
+ld(busRAM,ea0XregAC)            #11
+adda(val(1))                    #12
+st(ea0XregAC)                   #13
+bra(d(lo('NEXT')))              #14
+ld(val(-16/2))                  #15
 
 # Instruction SYS: Native function call, <=256 cycles (<=128 ticks, in reality less)
 #
@@ -1353,12 +1344,11 @@ blt(d(lo('retry')))             #11
 ld(d(sysFn+1),busRAM|regY)      #12
 jmpy(d(sysFn)|busRAM)           #13
 #nop()                          #(14)
-
 #
 # Instruction SUBW: Word subtraction with zero page (AC-=[D]+256*[D+1]), 28 cycles
 # All cases can be done in 26 cycles, but the code will become much larger
 label('SUBW')
-ld(busAC,regX)                  #10 (overlap with SYS) Address of low byte to be subtracted
+ld(busAC,regX)                  #10,14 (overlap with SYS) Address of low byte to be subtracted
 adda(val(1))                    #11
 st(d(vTmp))                     #12 Address of high byte to be subtracted
 ldzp(d(vAC))                    #13
@@ -1379,15 +1369,16 @@ ld(d(vTmp),busRAM|regX)         #22
 suba(busRAM|ea0XregAC)          #23
 st(d(vAC+1))                    #24
 ld(val(-28/2))                  #25
-bra(d(lo('NEXT')))              #26
-#nop()                          #(27)
-#
+label('REENTER')
+bra(d(lo('NEXT')));             C('Return from SYS calls')#26
+ld(d(vPC+1),busRAM|regY)        #27
+
 # Instruction ADDW: Word addition with zero page (AC+=[D]+256*[D+1]), 28 cycles
 label('ADDW')
 # The non-carry paths could be 26 cycles at the expense of (much) more code.
 # But a smaller size is better so more instructions fit in this code page.
 # 28 cycles is still 4.5 usec. The 6502 equivalent takes 20 cycles or 20 usec.
-ld(busAC,regX)                  #10 (overlap with SUBW) Address of low byte to be added
+ld(busAC,regX)                  #10 Address of low byte to be added
 adda(val(1))                    #11
 st(d(vTmp))                     #12 Address of high byte to be added
 ldzp(d(vAC))                    #13 Add the low bytes
@@ -1410,23 +1401,6 @@ st(d(vAC+1))                    #25 Store high result
 bra(d(lo('NEXT')))              #26
 ld(val(-28/2))                  #27
 
-# Instruction PEEK (AC=[AC]), 22 cycles
-# XXX Candidate for moving to next page
-label('PEEK')
-ldzp(d(vPC))                    #10
-suba(val(1))                    #11
-st(d(vPC))                      #12
-ld(d(vAC),busRAM|regX)          #13
-ld(d(vAC+1),busRAM|regY)        #14
-ld(busRAM|eaYXregAC)            #15
-st(d(vAC))                      #16
-ld(val(0))                      #17
-st(d(vAC+1))                    #18
-ld(val(-22/2))                  #19
-label('REENTER')
-bra(d(lo('NEXT')));             C('Return from SYS calls')#20
-ld(d(vPC+1),busRAM|regY)        #21
-
 # Instruction DEF, Define data or code (AC,PCL=PC+2,D), 18 cycles
 label('DEF')
 ld(val(hi('def')),regY)         #10
@@ -1435,7 +1409,7 @@ jmpy(d(lo('def')))              #11
 #
 # Instruction CALL, (LR=PC+2,PC=[D]-2), 26 cycles
 label('CALL')
-st(d(vTmp))                     #10 (overlap with DEF)
+st(d(vTmp))                     #10,12 (overlap with DEF)
 ldzp(d(vPC))                    #11
 adda(val(2));                   C('Point to instruction after CALL')#12
 st(d(vLR))                      #13
@@ -1452,6 +1426,55 @@ st(d(vPC+1),busAC|regY)         #23
 bra(d(lo('NEXT')))              #24
 ld(val(-26/2))                  #25
 
+# Instruction ALLOC, (SP+=D), 14 cycles
+label('ALLOC')
+ld(val(hi('alloc')),regY)       #10
+jmpy(d(lo('alloc')))            #11
+#
+label('STLW')
+ld(val(hi('stlw')),regY)        #10,13
+jmpy(d(lo('stlw')))             #11
+#
+label('LDLW')
+ld(val(hi('ldlw')),regY)        #10,13
+jmpy(d(lo('ldlw')))             #11
+#
+# Instruction POKE ([[D+1],[D]]=ACL), 26 cycles
+label('POKE')
+ld(val(hi('poke')),regY)        #10,13
+jmpy(d(lo('poke')))             #11
+st(d(vTmp))                     #12
+
+# Instruction PEEK (AC=[AC]), 26 cycles
+label('PEEK')
+ld(val(hi('peek')),regY)        #10
+jmpy(d(lo('peek')))             #11
+
+label('POKEW')
+ld(val(hi('pokew')),regY)       #10,12
+jmpy(d(lo('pokew')))            #11
+st(d(vTmp))                     #12
+
+label('PEEKW')
+ld(val(hi('peekw')),regY)       #10,12
+jmpy(d(lo('peekw')))            #11
+#
+# Instruction ANDW (AC&=[D]+256*[D+1]), 26 cycles
+label('ANDW')
+ld(val(hi('andw')),regY)        #10,12
+jmpy(d(lo('andw')))             #11
+#
+# Instruction ORW (AC|=[D]+256*[D+1]), 26 cycles
+label('ORW')
+ld(val(hi('orw')),regY)         #10,12
+jmpy(d(lo('orw')))              #11
+#
+# Instruction XORW (AC^=[D]+256*[D+1]), 26 cycles
+label('XORW')
+ld(val(hi('xorw')),regY)        #10,12
+jmpy(d(lo('xorw')))             #11
+st(d(vTmp))                     #12
+
 # Instruction ADDI, Add small positive constant (AC+=D), 28 cycles
 label('ADDI')
 ld(val(hi('addi')),regY)        #10
@@ -1464,16 +1487,7 @@ ld(val(hi('subi')),regY)        #10
 jmpy(d(lo('subi')))             #11
 st(d(vTmp))                     #12
 
-# Instruction INC, Increment zero page byte ([D]++), 16 cycles
-label('INC')
-ld(busAC,regX)                  #10
-ld(busRAM,ea0XregAC)            #11
-adda(val(1))                    #12
-st(ea0XregAC)                   #13
-bra(d(lo('NEXT')))              #14
-ld(val(-16/2))                  #15
-
-# Instruction RET, To be defined, 16 cycles
+# Instruction RET, Function return (PC=LR-2), 16 cycles
 label('RET')
 ldzp(d(vLR))                    #10
 assert(pc()&255 == 0)
@@ -1548,6 +1562,150 @@ ld(val(hi('REENTER')),regY)     #20
 ld(val(-26/2))                  #21
 jmpy(d(lo('REENTER')))          #22
 nop()                           #23
+
+# POKE implementation
+label('poke')
+adda(d(1),regX)                 #13
+ld(busRAM,ea0XregAC)            #14
+ld(busAC,regY)                  #15
+ld(d(vTmp),busRAM|regX)         #16
+ld(busRAM,ea0XregAC)            #17
+ld(busAC,regX)                  #18
+ldzp(d(vAC))                    #19
+st(eaYXregAC)                   #20
+ld(val(hi('REENTER')),regY)     #21
+jmpy(d(lo('REENTER')))          #22
+ld(val(-26/2))                  #23
+
+# PEEK implementation
+label('peek')
+ldzp(d(vPC))                    #13
+suba(val(1))                    #14
+st(d(vPC))                      #15
+ld(d(vAC),busRAM|regX)          #16
+ld(d(vAC+1),busRAM|regY)        #17
+ld(busRAM|eaYXregAC)            #18
+st(d(vAC))                      #19
+ld(val(0))                      #20
+st(d(vAC+1))                    #21
+ld(val(-28/2))                  #22
+ld(val(hi('REENTER')),regY)     #23
+jmpy(d(lo('REENTER')))          #24
+nop()
+
+# POKEW implementation
+label('pokew')
+adda(d(1),regX)                 #13
+ld(busRAM,ea0XregAC)            #14
+ld(busAC,regY)                  #15
+ld(d(vTmp),busRAM|regX)         #16
+ld(busRAM,ea0XregAC)            #17
+ld(busAC,regX)                  #18
+ldzp(d(vAC))                    #19
+st(eaYXregOUTIX)                #20
+ldzp(d(vAC+1))                  #21
+st(eaYXregAC)                   #22
+ld(val(hi('REENTER')),regY)     #23
+jmpy(d(lo('REENTER')))          #24
+ld(val(-28/2))                  #25
+
+# PEEKW implementation
+label('peekw')
+ldzp(d(vPC))                    #13
+suba(val(1))                    #14
+st(d(vPC))                      #15
+ld(d(vAC),busRAM|regX)          #16
+ld(d(vAC+1),busRAM|regY)        #17
+ld(busRAM|eaYXregAC)            #18
+st(eaYXregOUTIX)                #19
+st(d(vAC))                      #20
+ld(busRAM|eaYXregAC)            #21
+st(d(vAC+1))                    #22
+ld(val(hi('REENTER')),regY)     #23
+jmpy(d(lo('REENTER')))          #24
+ld(val(-28/2))                  #25
+
+# ANDW implementation
+label('andw')
+st(d(vTmp))                     #13
+adda(d(1),regX)                 #14
+ld(busRAM|ea0XregAC)            #15
+anda(d(vAC+1),busRAM)           #16
+st(d(vAC+1))                    #17
+ld(d(vTmp),busRAM|regX)         #18
+ld(busRAM|ea0XregAC)            #19
+anda(d(vAC),busRAM)             #20
+st(d(vAC))                      #21
+ld(val(-28/2))                  #22
+ld(val(hi('REENTER')),regY)     #23
+jmpy(d(lo('REENTER')))          #24
+nop()                           #25
+
+# ORW implementation
+label('orw')
+st(d(vTmp))                     #13
+adda(d(1),regX)                 #14
+ld(busRAM|ea0XregAC)            #15
+ora(d(vAC+1),busRAM)            #16
+st(d(vAC+1))                    #17
+ld(d(vTmp),busRAM|regX)         #18
+ld(busRAM|ea0XregAC)            #19
+ora(d(vAC),busRAM)              #20
+st(d(vAC))                      #21
+ld(val(-26/2))                  #22
+ld(val(hi('REENTER')),regY)     #23
+jmpy(d(lo('REENTER')))          #24
+nop()                           #25
+
+# XORW implementation
+label('xorw')
+adda(d(1),regX)                 #13
+ld(busRAM|ea0XregAC)            #14
+xora(d(vAC+1),busRAM)           #15
+st(d(vAC+1))                    #16
+ld(d(vTmp),busRAM|regX)         #17
+ld(busRAM|ea0XregAC)            #18
+xora(d(vAC),busRAM)             #19
+st(d(vAC))                      #20
+ld(val(hi('REENTER')),regY)     #21
+jmpy(d(lo('REENTER')))          #22
+ld(val(-26/2))                  #23
+
+# ALLOC implementation
+label('alloc')
+adda(d(vSP),busRAM)             #13
+st(d(vSP))                      #14
+ld(val(hi('REENTER')),regY)     #15
+jmpy(d(lo('REENTER')))          #16
+ld(val(-20/2))                  #17
+
+# STLW implementation
+label('stlw')
+adda(d(vSP),busRAM)             #13
+st(d(vTmp))                     #14
+adda(d(1),regX)                 #15
+ldzp(d(vAC+1))                  #16
+st(ea0XregAC)                   #17
+ld(d(vTmp),busRAM|regX)         #18
+ldzp(d(vAC))                    #19
+st(ea0XregAC)                   #20
+ld(val(hi('REENTER')),regY)     #21
+jmpy(d(lo('REENTER')))          #22
+ld(val(-26/2))                  #23
+
+# LDLW implementation
+label('ldlw')
+adda(d(vSP),busRAM)             #13
+st(d(vTmp))                     #14
+adda(d(1),regX)                 #15
+ld(ea0XregAC,busRAM)            #16
+st(d(vAC+1))                    #17
+ld(d(vTmp),busRAM|regX)         #18
+ld(ea0XregAC,busRAM)            #19
+st(d(vAC))                      #20
+ld(val(hi('REENTER')),regY)     #21
+jmpy(d(lo('REENTER')))          #22
+ld(val(-26/2))                  #23
 
 #-----------------------------------------------------------------------
 #

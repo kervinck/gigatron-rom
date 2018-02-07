@@ -153,35 +153,43 @@ $X                      For localized variables
 ----------------------
 vCPU instruction table
 ----------------------
-The vCPU interpreter has 25 core instructions. Each opcode is just a jump offset
+The vCPU interpreter has 33 core instructions. Each opcode is just a jump offset
 into the interpreter code page to the code that implements its behavior. Most
 instructions take a single byte operand, but some have two and others none.
 
 Opcode Operands Description
 ------ -------- -----------
-LDWI   $DDDD    Load immediate constant (vAC=$DDDD)
-LDI    $DD      Load immediate constant (vAC=$DD)
-LD     $DD      Load byte from zero page (vAC=[D])
 ST     $DD      Store byte in zero page ([D]=vAC)
-LDW    $DD      Word load from zero page (vAC=[D]+256*[D+1])
 STW    $DD      Store word into zero page ([D]=vAC&255,[D+1]=vAC>>8)
+STLW   $DD      Store word in stack frame (vSP[D],vSP[D+1]=vAC&255,vAC>>8)
+LD     $DD      Load byte from zero page (vAC=[D])
+LDI    $DD      Load immediate constant (vAC=$DD)
+LDWI   $DDDD    Load immediate constant (vAC=$DDDD)
+LDW    $DD      Word load from zero page (vAC=[D]+256*[D+1])
+LDLW   $DD      Load word from stack frame (vAC=vSP[D]+256*vSP[D+1]
 ADDW   $DD      Word addition with zero page (vAC+=[D]+256*[D+1])
 SUBW   $DD      Word subtraction with zero page (vAC-=[D]+256*[D+1])
 ADDI   $DD      Add small positive constant (vAC+=D)
 SUBI   $DD      Subtract small positive constant (vAC+=D)
 INC    $DD      Increment zero page byte ([D]++)
 ANDI   $DD      Logical-AND with constant (vAC&=D)
+ANDW   $DD      Word logical-AND with zero page (vAC&=[D]+256*[D+1])
 ORI    $DD      Logical-OR with constant (vAC|=D)
+ORW    $DD      Word logical-OR with zero page (vAC|=[D]+256*[D+1])
 XORI   $DD      Logical-XOR with constant (vAC^=D)
+XORW   $DD      Word logical-XOR with zero page (vAC^=[D]+256*[D+1])
 PEEK   -        Read byte from memory (vAC=[vAC])
+PEEKW  -        Read word from memory (vAC=[vAC]+256*[vAC+1])
 POKE   $DD      Write byte in memory ([[D+1],[D]]=vAC&255)
-LOOKUP $DD      ROM lookup (vAC=ROM[AC+256*D])
+POKEW  $DD      Write word in memory ([[D+1],[D]],[[D+1],[D]+1]=vAC&255,vAC>>8)
+LOOKUP $DD      ROM lookup (vAC=ROM[D,AC])
 BRA    $DD      Branch unconditionally (vPC=(vPC&0xff00)+D)
 BCC    $CC $DD  Test vAC and branch conditionally. CC can be EQ,NE,LT,GT,LE,GE
 CALL   $DD      Goto address but remember vPC (vLR,vPC=vPC+2,[D]+256*[D+1]-2)
 RET    -        Leaf return (vPC=vLR-2)
 PUSH   -        Push vLR on stack ([--vSP]=vLR&255,[--vSP]=vLR>>8)
 POP    -        Pop value from stack (vAC=[vSP]+256*[vSP+1],vSP+=2)
+ALLOC  $DD      Create or destroy stack frame (vSP+=D)
 SYS    $DD      Native function call for at most $DD ticks ($DD*2 cycles)
 DEF    $DD      Define data or code (vAC,vPC=vPC+2,D+256*(vPC>>8))
 
