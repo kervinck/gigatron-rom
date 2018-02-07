@@ -57,7 +57,7 @@ $5a0c:
 
 [do
   {Receive the next transmission frame}
-  B   \sysArgs0=                   {Input buffer}
+  B   \sysArgs0=                           {Input buffer}
   207 \sysArgs3. NextByteIn_32 \sysFn= 32! {Protocol byte}
   219 \sysArgs3.                       32! {Length, 6 new bits}
   235 \sysArgs3.                       32! {Low address}

@@ -13,11 +13,10 @@
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #  Hopefully in ROM v1
-#  XXX vCPU: NEGW (NOTW), CLR for for speed [ROMv1]
-#  XXX SYS: LSRW, LSLW, ASRW etc for completeness (n-Queens) [ROMv1]
+#  XXX vCPU: NEGW, CLR for for speed [ROMv1]
+#  XXX SYS: LSRW, LSLW, ASRW etc (with jumptable?)for completeness (n-Queens) [ROMv1]
 #  XXX Audio: Move shift table to page 7, then add waveform synthesis [ROMv1]
 #  XXX Music sequencer (combined with LED sequencer) [ROMv1]
-#  XXX Reshuffle ROM layout a bit, attempt to win space
 #
 #  After ROM v1 release
 #  XXX Readability of asm.py instructions, esp. make d() implicit
@@ -607,6 +606,60 @@ nop()                                   #82
 ld(val(hi('REENTER')),regY)             #83
 jmpy(d(lo('REENTER')))                  #84
 ld(val(-88/2))                          #85
+
+#-----------------------------------------------------------------------
+# Extension SYS_Out_22: Send byte to output port
+#-----------------------------------------------------------------------
+
+label('SYS_Out_22')
+ld(d(sysArgs+0),busRAM|regOUT)  #15
+nop()                           #16
+ld(val(hi('REENTER')),regY)     #17
+jmpy(d(lo('REENTER')))          #18
+ld(val(-22/2))                  #19
+
+#-----------------------------------------------------------------------
+# Extension SYS_In_24: Read a byte from the input port
+#-----------------------------------------------------------------------
+
+label('SYS_In_24')
+st(d(vAC),busIN)                #15
+ld(val(0))                      #16
+st(d(vAC+1))                    #17
+nop()                           #18
+ld(val(hi('REENTER')),regY)     #19
+jmpy(d(lo('REENTER')))          #20
+ld(val(-24/2))                  #21
+
+#-----------------------------------------------------------------------
+# Extension SYS_Random_34: Update entropy and copy to vAC
+#-----------------------------------------------------------------------
+
+# This same algorithm runs automatically once per vertical blank.
+# Use this function to get numbers at a higher rate.
+label('SYS_Random_34')
+ldzp(d(frameCount))             #15
+xora(d(entropy+1),busRAM)       #16
+xora(d(serialRaw),busRAM)       #17
+adda(d(entropy+0),busRAM)       #18
+st(d(entropy+0))                #19
+st(d(vAC+0))                    #20
+adda(d(entropy+2),busRAM)       #21
+st(d(entropy+2))                #22
+bmi(d(lo('.sysRnd0')))          #23
+bra(d(lo('.sysRnd1')))          #24
+xora(val(64+16+2+1))            #25
+label('.sysRnd0')
+xora(val(64+32+8+4))            #25
+label('.sysRnd1')
+adda(d(entropy+1),busRAM)       #26
+st(d(entropy+1))                #27
+st(d(vAC+1))                    #28
+ld(val(hi('REENTER')),regY)     #29
+jmpy(d(lo('REENTER')))          #30
+ld(val(-34/2))                  #31
+
+# XXX This would be a good place for a SYS_LSRW<n> jump table
 
 #-----------------------------------------------------------------------
 #
@@ -1439,13 +1492,13 @@ label('LDLW')
 ld(val(hi('ldlw')),regY)        #10,13
 jmpy(d(lo('ldlw')))             #11
 #
-# Instruction POKE ([[D+1],[D]]=ACL), 26 cycles
+# Instruction POKE ([[D+1],[D]]=ACL), 28 cycles
 label('POKE')
 ld(val(hi('poke')),regY)        #10,13
 jmpy(d(lo('poke')))             #11
 st(d(vTmp))                     #12
 
-# Instruction PEEK (AC=[AC]), 26 cycles
+# Instruction PEEK (AC=[AC]), 28 cycles
 label('PEEK')
 ld(val(hi('peek')),regY)        #10
 jmpy(d(lo('peek')))             #11
@@ -1459,12 +1512,12 @@ label('PEEKW')
 ld(val(hi('peekw')),regY)       #10,12
 jmpy(d(lo('peekw')))            #11
 #
-# Instruction ANDW (AC&=[D]+256*[D+1]), 26 cycles
+# Instruction ANDW (AC&=[D]+256*[D+1]), 28 cycles
 label('ANDW')
 ld(val(hi('andw')),regY)        #10,12
 jmpy(d(lo('andw')))             #11
 #
-# Instruction ORW (AC|=[D]+256*[D+1]), 26 cycles
+# Instruction ORW (AC|=[D]+256*[D+1]), 28 cycles
 label('ORW')
 ld(val(hi('orw')),regY)         #10,12
 jmpy(d(lo('orw')))              #11
@@ -1591,11 +1644,11 @@ st(d(vAC+1))                    #21
 ld(val(-28/2))                  #22
 ld(val(hi('REENTER')),regY)     #23
 jmpy(d(lo('REENTER')))          #24
-nop()
-
+#nop()                          #(25)
+#
 # POKEW implementation
 label('pokew')
-adda(d(1),regX)                 #13
+adda(d(1),regX)                 #13,25
 ld(busRAM,ea0XregAC)            #14
 ld(busAC,regY)                  #15
 ld(d(vTmp),busRAM|regX)         #16
@@ -1639,11 +1692,11 @@ st(d(vAC))                      #21
 ld(val(-28/2))                  #22
 ld(val(hi('REENTER')),regY)     #23
 jmpy(d(lo('REENTER')))          #24
-nop()                           #25
+#nop()                          #(25)
 
 # ORW implementation
 label('orw')
-st(d(vTmp))                     #13
+st(d(vTmp))                     #13,25
 adda(d(1),regX)                 #14
 ld(busRAM|ea0XregAC)            #15
 ora(d(vAC+1),busRAM)            #16
@@ -1652,14 +1705,14 @@ ld(d(vTmp),busRAM|regX)         #18
 ld(busRAM|ea0XregAC)            #19
 ora(d(vAC),busRAM)              #20
 st(d(vAC))                      #21
-ld(val(-26/2))                  #22
+ld(val(-28/2))                  #22
 ld(val(hi('REENTER')),regY)     #23
 jmpy(d(lo('REENTER')))          #24
-nop()                           #25
+#nop()                          #(25)
 
 # XORW implementation
 label('xorw')
-adda(d(1),regX)                 #13
+adda(d(1),regX)                 #13,25
 ld(busRAM|ea0XregAC)            #14
 xora(d(vAC+1),busRAM)           #15
 st(d(vAC+1))                    #16
@@ -1719,30 +1772,6 @@ ld(val(-26/2))                  #23
 #  appear in the GCL code upon use.
 #
 #-----------------------------------------------------------------------
-
-#-----------------------------------------------------------------------
-# Extension SYS_Out_22: Send byte to output port
-#-----------------------------------------------------------------------
-
-label('SYS_Out_22')
-ld(d(sysArgs+0),busRAM|regOUT)  #15
-nop()                           #16
-ld(val(hi('REENTER')),regY)     #17
-jmpy(d(lo('REENTER')))          #18
-ld(val(-22/2))                  #19
-
-#-----------------------------------------------------------------------
-# Extension SYS_In_24: Read a byte from the input port
-#-----------------------------------------------------------------------
-
-label('SYS_In_24')
-st(d(vAC),busIN)                #15
-ld(val(0))                      #16
-st(d(vAC+1))                    #17
-nop()                           #18
-ld(val(hi('REENTER')),regY)     #19
-jmpy(d(lo('REENTER')))          #20
-ld(val(-24/2))                  #21
 
 #-----------------------------------------------------------------------
 # Extension SYS_NextByteIn_32
@@ -1852,11 +1881,7 @@ jmpy(d(lo('REENTER')))          #44
 ld(d(-48/2))                    #45
 # Invalid checksum
 label('.sysPi0')
-ld(d(ord('g')));                C('Invalid checksum')#21 Reset checksum
-st(d(sysArgs+2))                #22
-ld(val(hi('REENTER')),regY)     #23
-jmpy(d(lo('REENTER')))          #24
-ld(d(-26/2))                    #25
+wait(25-19);                    C('Invalid checksum')#19 Reset checksum
 # Unknown command
 label('.sysPi1')
 ld(d(ord('g')));                C('Unknown command')#25 Reset checksum
@@ -1875,32 +1900,70 @@ jmpy(d(lo('REENTER')))          #42
 ld(d(-46/2))                    #43
 
 #-----------------------------------------------------------------------
-# Extension SYS_Random_34: Update entropy and copy to vAC
+#  ROM page 5-6: Shift table
 #-----------------------------------------------------------------------
 
-# This same algorithm runs automatically once per vertical blank.
-# Use this function to get numbers at a higher rate.
-label('SYS_Random_34')
-ldzp(d(frameCount))             #15
-xora(d(entropy+1),busRAM)       #16
-xora(d(serialRaw),busRAM)       #17
-adda(d(entropy+0),busRAM)       #18
-st(d(entropy+0))                #19
-st(d(vAC+0))                    #20
-adda(d(entropy+2),busRAM)       #21
-st(d(entropy+2))                #22
-bmi(d(lo('.sysRnd0')))          #23
-bra(d(lo('.sysRnd1')))          #24
-xora(val(64+16+2+1))            #25
-label('.sysRnd0')
-xora(val(64+32+8+4))            #25
-label('.sysRnd1')
-adda(d(entropy+1),busRAM)       #26
-st(d(entropy+1))                #27
-st(d(vAC+1))                    #28
-ld(val(hi('REENTER')),regY)     #29
-jmpy(d(lo('REENTER')))          #30
-ld(val(-34/2))                  #31
+# Lookup table for i>>n, with n in 1..6
+# Indexing ix = i & ~b | (b-1), where b = 1<<(n-1)
+#       ...
+#       lda  <.ret
+#       st   [vTmp]
+#       ld   >shiftTable,y
+#       <calculate ix>
+#       jmp  y,ac
+#       bra  $ff
+# .ret: ...
+#
+# i >> 7 can be always be done with RAM: [i&128]
+#       ...
+#       anda $80,x
+#       ld   [x]
+#       ...
+
+align(0x100, 0x200)
+
+label('shiftTable')
+shiftTable = pc()
+for ix in range(255):
+  for n in range(1,7): # Find first zero
+    if ~ix & (1 << (n-1)):
+      break
+  pattern = ['x' if i<n else '1' if ix&(1<<i) else '0' for i in range(8)]
+  ld(val(ix>>n)); C('0b%s >> %d' % (''.join(reversed(pattern)), n))
+
+assert(pc()&255 == 255)
+bra(d(vTmp)|busRAM); C('Jumps back into next page')
+
+# 16-bits logical shift right
+label('SYS_LSRW_48')
+assert(pc()&255 == 0)#First instruction on this page must be a nop
+nop()                           #15
+ld(d(hi('shiftTable')),regY)    #16
+ld(d(lo('.sysLsrw0')));         C('Shift low byte')#17
+st(d(vTmp))                     #18
+ldzp(d(sysArgs+0))              #19
+anda(d(254))                    #20
+jmpy(busAC)                     #21
+bra(d(255));                    C('Actually $%04x' % (shiftTable+255))#22
+label('.sysLsrw0')
+st(d(vAC))                      #26
+ld(d(lo('.sysLsrw1')));         C('Shift high byte')#27
+st(d(vTmp))                     #28
+ldzp(d(sysArgs+1))              #29
+anda(d(254))                    #30
+jmpy(busAC)                     #31
+bra(d(255));                    C('Actually $%04x' % (shiftTable+255))#32
+label('.sysLsrw1')
+st(d(vAC+1))                    #36
+ldzp(d(sysArgs+1));             C('Transfer bit 8')#37
+anda(d(1))                      #38
+adda(d(127))                    #39
+anda(d(128))                    #40
+ora(d(vAC)|busRAM)              #41
+st(d(vAC))                      #42
+ld(d(hi('REENTER')),regY)       #43
+jmpy(d(lo('REENTER')))          #44
+ld(d(-48/2))                    #45
 
 #-----------------------------------------------------------------------
 # Extension SYS_Read3_40: Read 3 consecutive bytes from ROM
@@ -2054,72 +2117,6 @@ adda(val(8))                    #30+i*14
 ld(val(hi('REENTER')),regY)     #129
 jmpy(d(lo('REENTER')))          #130
 ld(val(-134/2))                 #131
-
-#-----------------------------------------------------------------------
-#  ROM page 5-6: Shift table
-#-----------------------------------------------------------------------
-
-# Lookup table for i>>n, with n in 1..6
-# Indexing ix = i & ~b | (b-1), where b = 1<<(n-1)
-#       ...
-#       lda  <.ret
-#       st   [vTmp]
-#       ld   >shiftTable,y
-#       <calculate ix>
-#       jmp  y,ac
-#       bra  $ff
-# .ret: ...
-#
-# i >> 7 can be always be done with RAM: [i&128]
-#       ...
-#       anda $80,x
-#       ld   [x]
-#       ...
-
-align(0x100, 0x200)
-
-label('shiftTable')
-shiftTable = pc()
-for ix in range(255):
-  for n in range(1,7): # Find first zero
-    if ~ix & (1 << (n-1)):
-      break
-  pattern = ['x' if i<n else '1' if ix&(1<<i) else '0' for i in range(8)]
-  ld(val(ix>>n)); C('0b%s >> %d' % (''.join(reversed(pattern)), n))
-
-assert(pc()&255 == 255)
-bra(d(vTmp)|busRAM); C('Jumps back into next page')
-
-# 16-bits logical shift right
-label('SYS_LSRW_48')
-assert(pc()&255 == 0)#First instruction on this page must be a nop
-nop()                           #15
-ld(d(hi('shiftTable')),regY)    #16
-ld(d(lo('.sysLsrw0')));         C('Shift low byte')#17
-st(d(vTmp))                     #18
-ldzp(d(sysArgs+0))              #19
-anda(d(254))                    #20
-jmpy(busAC)                     #21
-bra(d(255));                    C('Actually $%04x' % (shiftTable+255))#22
-label('.sysLsrw0')
-st(d(vAC))                      #26
-ld(d(lo('.sysLsrw1')));         C('Shift high byte')#27
-st(d(vTmp))                     #28
-ldzp(d(sysArgs+1))              #29
-anda(d(254))                    #30
-jmpy(busAC)                     #31
-bra(d(255));                    C('Actually $%04x' % (shiftTable+255))#32
-label('.sysLsrw1')
-st(d(vAC+1))                    #36
-ldzp(d(sysArgs+1));             C('Transfer bit 8')#37
-anda(d(1))                      #38
-adda(d(127))                    #39
-anda(d(128))                    #40
-ora(d(vAC)|busRAM)              #41
-st(d(vAC))                      #42
-ld(d(hi('REENTER')),regY)       #43
-jmpy(d(lo('REENTER')))          #44
-ld(d(-48/2))                    #45
 
 #-----------------------------------------------------------------------
 #  Application specific SYS extensions
