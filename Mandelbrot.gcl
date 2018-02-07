@@ -48,7 +48,7 @@ $0300:
       C C+ C=
     else
       {Shift prematurely in an attempt to avoid overflow}
-      B ShiftRight! B=
+      B \sysArgs0= 48! {ShiftRight} B=
       shift 1- shift=]
 
     {Add partial product}
@@ -56,11 +56,11 @@ $0300:
       A=
       C B+ C=]
 
-    bit ShiftRight! if<>0loop]
+    bit \sysArgs0= 48! {ShiftRight} if<>0loop]
 
   {Shift}
   [do
-    C ShiftRight! C=
+    C \sysArgs0= 48! {ShiftRight} C=
     shift 1- shift= if>0loop]
 
   {Apply sign to return value}
@@ -180,7 +180,7 @@ $0500:
     32 [do
       i=
       p, 63& i- [if>=0 p. i 21& [if<>0 1 else 2] Level+ Level=]
-      i ShiftRight!
+      i \sysArgs0= 48! {ShiftRight}
       if>0loop]
     {Level in 0..9}
     p. {Paint it black}
@@ -222,11 +222,8 @@ $0500:
   pop ret
 ] GreyOut=
 
-{ Shift-right function (wrapper for SYS extension) }
-[def
-  \sysArgs0= \SYS_LSRW_48 48@
-  ret
-] ShiftRight=
+{ Shift-right function (the only SYS function we use, so set it once) }
+\SYS_LSRW_48 \sysFn=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 6                                      |
@@ -235,12 +232,12 @@ $0600:
 
 { Main }
 [do
-  -180 Y0= -320 X0= 3 Step= CalcSet!    {Global 1702.513 seconds}
-  -148 Y0=  -98 X0= 1 Step= CalcSet!    {Zoom1  3227.751 seconds}
-   -60 Y0= -256 X0= 1 Step= CalcSet!    {Zoom2  3108.196 seconds}
-  -320 Y0= -360 X0= 9 Step= CalcSet!    {Wide    513.833 seconds}
-     0 Y0= -100 X0= 1 Step= CalcSet!    {Zoom3  3571.411 seconds}
-   -60 Y0=    0 X0= 1 Step= CalcSet!    {Zoom4  2147.072 seconds}
+  -180 Y0= -320 X0= 3 Step= CalcSet!    {Global 1429.876 seconds}
+  -148 Y0=  -98 X0= 1 Step= CalcSet!    {Zoom1  2710.835 seconds}
+   -60 Y0= -256 X0= 1 Step= CalcSet!    {Zoom2  2609.470 seconds}
+  -320 Y0= -360 X0= 9 Step= CalcSet!    {Wide    431.390 seconds}
+     0 Y0= -100 X0= 1 Step= CalcSet!    {Zoom3  2995.293 seconds}
+   -60 Y0=    0 X0= 1 Step= CalcSet!    {Zoom4  1799.677 seconds}
   loop]
 
 {-----------------------------------------------------------------------+

@@ -13,7 +13,6 @@
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #  Hopefully in ROM v1
-#  XXX vCPU: Rethink clobbering of vAC by SYS, for sanity [ROMv1]
 #  XXX vCPU: NEGW, ANDW, ORW, XORW, NOTW, for completeness (n-Queens) [ROMv1]
 #  XXX vCPU: LSRW, LSLW, ASRW, CLR, for speed (n-Queens) [ROMv1]
 #  XXX vCPU: ALLOC, LDLW, STLW, for true local variables (n-Queens) [ROMv1]
@@ -189,11 +188,11 @@ vAC             = zpByte(2) # Interpreter accumulator, 16-bits
 vLR             = zpByte(2) # Return address, for returning after CALL
 vSP             = zpByte(1) # Stack pointer
 vTicks          = zpByte()  # Interpreter ticks are units of 2 clocks
-vReturn         = zpByte(1 if fastRunVcpu else 2) # Return into video loop
 vTmp            = zpByte()
+vReturn         = zpByte(1 if fastRunVcpu else 2) # Return into video loop
 
 # For future ROM extensions
-reserved        = zpByte(4)
+reserved        = zpByte(2 if fastRunVcpu else 1)
 
 # ROM type/version, numbering scheme to be determined, could be as follows:
 # bit 4:7       Version
@@ -203,7 +202,8 @@ reserved        = zpByte(4)
 # so don't call it romVersion already
 romType         = zpByte(1)
 
-# SYS arguments and results
+# SYS function arguments and results/scratch
+sysFn           = zpByte(2)
 sysArgs         = zpByte(8)
 
 # Play sound if non-zero, count down and stop sound when zero
@@ -425,11 +425,14 @@ st(d(vPC))
 adda(val(2),regX)
 ld(val(vReset>>8))
 st(d(vPC+1),busAC|regY)
-st(d(lo('LDWI')),        eaYXregOUTIX)
-st(d(lo('SYS_Reset_44')),eaYXregOUTIX)
-st(d(hi('SYS_Reset_44')),eaYXregOUTIX)
+st(d(lo('LDI')),         eaYXregOUTIX)
+st(d(lo('SYS_Reset_36')),eaYXregOUTIX)
+st(d(lo('STW')),         eaYXregOUTIX)
+st(d(sysFn),             eaYXregOUTIX)
 st(d(lo('SYS')),         eaYXregOUTIX)
-st(d(256-42/2+maxTicks), eaYXregOUTIX)
+st(d(256-36/2+maxTicks), eaYXregOUTIX)
+st(d(lo('SYS')),         eaYXregOUTIX) # SYS_Exec_88
+st(d(256-88/2+maxTicks), eaYXregOUTIX)
 
 ld(val(255));                   C('Setup serial input')
 st(d(frameCount))
@@ -478,50 +481,40 @@ jmpy(d(lo('vBlankStart')))
 ld(val(syncBits))
 
 #-----------------------------------------------------------------------
-# Extension SYS_Reset_44: Soft reset
+# Extension SYS_Reset_36: Soft reset
 #-----------------------------------------------------------------------
 
-# SYS_Reset_44 initiates an immediate Gigatron reset from within the vCPU.
+# SYS_Reset_36 initiates an immediate Gigatron reset from within the vCPU.
 # The reset sequence itself is mostly implemented in GCL by Reset.gcl .
 # This must first be loaded into RAM. But as that takes more than 1 scanline,
-# some vCPU bootstrapping code gets loaded into the high part of the zero page,
-# and then the vCPU is redircted to execute that.
+# some vCPU bootstrapping code gets loaded with SYS_Exec_88. The caller of
+# SYS_Reset_36 provides the SYS instruction to execute that.
 
-vCpuBoot = 0x00f6
-
-label('SYS_Reset_44')
+label('SYS_Reset_36')
+assert(pc()>>8==0)
 value = getenv('romType')
 value = int(value, 0) if value else 0
 ld(d(value));                           C('Set ROM type/version')#15
 st(d(romType))                          #16
-ld(val(vCpuBoot-2))                     #17 vPC
-st(d(vPC))                              #18
-ld(val(vCpuBoot),regX)                  #19 vPC
-ld(val(0))                              #20
-st(d(vPC+1),busAC|regY)                 #21 Boot on zero page
-st(d(vSP))                              #22 Reset stack pointer
+ld(val(0))                              #17
+st(d(vSP))                              #18 Reset stack pointer
 assert(vCpuStart&255==0)
-st(d(vLR))                              #23
-st(d(soundTimer))                       #24
-ld(val(vCpuStart>>8))                   #25
-st(d(vLR+1))                            #26
-ld(d(lo('videoF')))                     #27 Do this before first visible pixels
-st(d(videoDorF))                        #28
-# Start of manually compiled vCPU section
-st(d(lo('LDWI')    ),eaYXregOUTIX)      #29 00f6 Where to read from ROM
-st(d(lo('Reset')   ),eaYXregOUTIX)      #30 00f7
-st(d(hi('Reset')   ),eaYXregOUTIX)      #31 00f8
-st(d(lo('STW')     ),eaYXregOUTIX)      #32 00f9
-st(d(sysArgs       ),eaYXregOUTIX)      #33 00fa
-st(d(lo('LDWI')    ),eaYXregOUTIX)      #34 00fb Call SYS_Exec_88
-st(d(lo('SYS_Exec_88')),eaYXregOUTIX)   #34 00fc
-st(d(hi('SYS_Exec_88')),eaYXregOUTIX)   #36 00fd (is 0...)
-st(d(lo('SYS')     ),eaYXregOUTIX)      #37 00fe
-st(d(256-88/2+maxTicks),eaYXregOUTIX)   #38 00ff
+st(d(vLR))                              #19
+st(d(soundTimer))                       #20
+ld(val(vCpuStart>>8))                   #21
+st(d(vLR+1))                            #22
+ld(d(lo('videoF')))                     #23 Do this before first visible pixels
+st(d(videoDorF))                        #24
+ld(d(lo('SYS_Exec_88')))                #25
+st(d(sysFn))                            #26 High byte (remains) 0
+ld(d(lo('Reset')))                      #27
+st(d(sysArgs+0))                        #28
+ld(d(hi('Reset')))                      #29
+st(d(sysArgs+1))                        #30
 # Return to interpreter
-ld(val(hi('REENTER')),regY)             #39
-jmpy(d(lo('REENTER')))                  #40
-ld(val(-44/2))                          #41
+ld(val(hi('REENTER')),regY)             #31
+jmpy(d(lo('REENTER')))                  #32
+ld(val(-36/2))                          #33
 
 #-----------------------------------------------------------------------
 # Extension SYS_Exec_88: Load code from ROM into memory and execute it
@@ -541,6 +534,7 @@ ld(val(-44/2))                          #41
 #       vLR             vCPU continues here (input set by caller)
 
 label('SYS_Exec_88')
+assert(pc()>>8==0)
 ld(val(0))                              #15 Address of loader on zero page
 st(d(vPC+1),busAC|regY)                 #16
 ldzp(d(vSP))                            #17 Below the current stack pointer
@@ -1333,20 +1327,20 @@ ld(d(vPC+1),busRAM|regY)        #19
 bra(d(lo('NEXT')))              #20
 ld(val(-22/2))                  #21
 
-# Instruction SYS, Native function call, <=256 cycles (<=128 ticks, in reality less)
+# Instruction SYS: Native function call, <=256 cycles (<=128 ticks, in reality less)
 #
 # The 'SYS' vCPU instruction first checks the number of desired ticks given by
 # the operand. As long as there are insufficient ticks available in the current
-# time slice, the instruction will be retried. This will effectively wait for the
-# next scan line if the current slice is almost out of time. Then a jump to native
-# code is made. This code can do whatever it wants, but it must return to the
-# 'REENTER' label when done. When returning, AC must hold (the negative of) the
-# actual consumed number of whole ticks for the entire virtual instruction cycle
-# (from NEXT to NEXT). This duration may not exceed the prior declared duration
-# in the operand + 28 (or maxTicks). The operand specifies the (negative) of the
-# maximum number of *extra* ticks that the native call will need. The GCL compiler
-# automatically makes this calculation from gross number of cycles to excess
-# number of ticks.
+# time slice, the instruction will be retried. This will effectively wait for
+# the next scan line if the current slice is almost out of time. Then a jump to
+# native code is made. This code can do whatever it wants, but it must return
+# to the 'REENTER' label when done. When returning, AC must hold (the negative
+# of) the actual consumed number of whole ticks for the entire virtual
+# instruction cycle (from NEXT to NEXT). This duration may not exceed the prior
+# declared duration in the operand + 28 (or maxTicks). The operand specifies the
+# (negative) of the maximum number of *extra* ticks that the native call will
+# need. The GCL compiler automatically makes this calculation from gross number
+# of cycles to excess number of ticks.
 # SYS functions can modify vPC to implement repetition. For example to split
 # up work into multiple chucks.
 label('retry')
@@ -1358,9 +1352,10 @@ ld(val(-20/2))                  #17
 label('SYS')
 adda(d(vTicks),busRAM)          #10
 blt(d(lo('retry')))             #11
-ld(d(vAC+1),busRAM|regY)        #12 XXX Consider using another location (sysArgs0 is more natural)
-jmpy(d(vAC)|busRAM)             #13
+ld(d(sysFn+1),busRAM|regY)      #12
+jmpy(d(sysFn)|busRAM)           #13
 #nop()                          #(14)
+
 #
 # Instruction SUBW: Word subtraction with zero page (AC-=[D]+256*[D+1]), 28 cycles
 # All cases can be done in 26 cycles, but the code will become much larger
@@ -2189,6 +2184,7 @@ define('entropy',    entropy)
 define('frameCount', frameCount)
 define('serialRaw',  serialRaw)
 define('buttonState', buttonState)
+define('sysFn',      sysFn)
 for i in range(8):
   define('sysArgs%d' % i, sysArgs+i)
 define('soundTimer', soundTimer)

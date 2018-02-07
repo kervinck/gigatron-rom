@@ -130,7 +130,7 @@ ret                     Jump to vLR, to return from a leaf subroutine. Non-leaf
                         subroutines should use "pop ret" as return sequence
 push                    Push vLR onto stack, for entering a non-leaf subroutine
 pop                     Remove top of stack and put value in vLR
-i!                      Call native code pointed by vAC, not exceeding i cycles
+i!                      Call native code pointed by sysFn, not exceeding i cycles
 call                    Jump to function pointed by vAC (Same as "\vAC!")
 
 Data

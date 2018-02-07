@@ -78,9 +78,10 @@ $0400:
 [def { Clear screen }
   $800 p= $8801 i=
   0 \sysArgs0. \sysArgs1. {Black}
+  \SYS_VDrawBits_134 \sysFn=
   [do
     p [do
-      \sysArgs4= \SYS_VDrawBits_134 134@ {Clears 8 pixels vertically}
+      \sysArgs4= 134! {Clears 8 pixels vertically}
       $800 p+ p= if>0loop]
     i+ p=
     255& 160^ if<>0loop]

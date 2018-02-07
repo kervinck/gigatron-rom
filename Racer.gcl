@@ -54,8 +54,9 @@ XXX Image compression?
   BgColor \sysArgs0.
   Color   \sysArgs1.
   Pos     \sysArgs4=
+  \SYS_VDrawBits_134 \sysFn=
   $fb i= [do
-    fontData 0? fontData<++ \sysArgs2. \SYS_VDrawBits_134 134@
+    fontData 0? fontData<++ \sysArgs2. 134!
     \sysArgs4<++
     i<++ i if<>0loop]
   Pos ret
@@ -306,7 +307,7 @@ $0600:
   HorizonX>, s.
 
   {Copy to video table. This is most timing-critical for a smooth road update}
-  \SYS_RacerUpdateVideoX_40 40@
+  \SYS_RacerUpdateVideoX_40 \sysFn= 40!
   {This SYS call self-repeats for a total of 47 times and is equivalent to:
     [do
       q, X- p. p 4- p=
@@ -411,23 +412,23 @@ $0700:
   pop ret
 ] PlayGame=
 
-[def $2d# $3a# $2d# $2d# $2e# $2d# 0#] EmptyTimeText=
-
 {
   Car sprite. Black is 0 but also the teminator, therfore use 64 for black.
   XXX Reduce footprint by bringing all lines under one 'def'
 }
 [def 2#         64# 64# 64# 40# 60# 60# 40# 64# 64# 64#         0#] Car0=
 [def 3#             40# 20# 20# 63# 63# 20# 20# 40#             0#] Car1=
+[def 2#         40# 20# 20# 20# 40# 40# 20# 20# 20# 40#         0#] Car2=
 
 {-----------------------------------------------------------------------+
 |}$08a0 \vLR= ret{      RAM page 8                                      |
 +-----------------------------------------------------------------------}
 $08a0:
 
-[def 2#         40# 20# 20# 20# 40# 40# 20# 20# 20# 40#         0#] Car2=
 [def 0# 64# 64# 64# 64# 40# 20# 20# 20# 20# 40# 64# 64# 64# 64# 0#] Car3=
 [def 0# 64# 64# 64# 64# 21# 21# 21# 21# 21# 21# 64# 64# 64# 64# 0#] Car4=
+
+[def $2d# $3a# $2d# $2d# $2e# $2d# 0#] EmptyTimeText=
 
 [def
   {Update video table high bytes for road width and color scheme}
@@ -455,10 +456,10 @@ $08a0:
   $012e \sysArgs0= {"p"}
   $20   \sysArgs2. {"SegmentY"}
   \invTable q=
+  \SYS_RacerUpdateVideoY_40 \sysFn=
   [do
     q 8?
-    Distance+ \sysArgs3.
-    \SYS_RacerUpdateVideoY_40 40@
+    Distance+ \sysArgs3. 40!
     q<++
     if<>0loop]
 
@@ -514,8 +515,9 @@ $0ba0:
 
   BgColor \sysArgs0. \sysArgs1.
   $800    \sysArgs4=
+  \SYS_VDrawBits_134 \sysFn=
   [do
-    \SYS_VDrawBits_134 134@
+    134!
     \sysArgs4<++
     \sysArgs4, 160^ if<>0loop]
 
@@ -551,8 +553,8 @@ $0ea0:
   [do
     p 0? \sysArgs0. tmp!
       0? \sysArgs1. tmp!
-      0? \sysArgs2. tmp! \SYS_Unpack_56 56@
-      q \sysArgs4= 4+ q= \SYS_Draw4_30  30@
+      0? \sysArgs2. tmp! \SYS_Unpack_56 \sysFn= 56!
+      q \sysArgs4= 4+ q= \SYS_Draw4_30  \sysFn= 30!
     q>, $20^ if<>0loop]
 
   pop ret

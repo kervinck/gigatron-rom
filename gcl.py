@@ -282,7 +282,7 @@ class Program:
       elif op == '!' and var:
           self.opcode('CALL')
           self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '@' and con:
+      elif op == '!' and con:
           if con&1:
             self.error('Invalid value %s (must be even)' % repr(con))
           minSYS, maxSYS = symbol('$minSYS'), symbol('$maxSYS')

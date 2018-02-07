@@ -92,8 +92,9 @@ Address   Name          Description
 001c      vTicks        Interpreter ticks are units of 2 clocks
 001d      vReturn       Return address (L) from vCPU into the loop (H is fixed)
 001e      vTmp          Scratch storage location for vCPU
-002f-0022 reserved      Reserved for ROM extensions
-0023      romType       0x1c for ROMv1 release
+001f-0020 reserved      Reserved for ROM extensions
+0021      romType       0x1c for ROMv1 release
+0022-0023 sysFn         Address for SYS function call
 0024-002b sysArgs       Arguments for SYS functions
 002c      soundTimer    Countdown timer for playing sound
 002d      ledTimer      Number of ticks until next LED change
