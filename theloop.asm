@@ -79,9 +79,9 @@ cold:         003e c204  st   [$04]
               0048 dc72  st   $72,[y,x++]
               0049 dc2b  st   $2b,[y,x++]
               004a dc22  st   $22,[y,x++]
-              004b dca3  st   $a3,[y,x++]
+              004b dcb2  st   $b2,[y,x++]
               004c dcfc  st   $fc,[y,x++]
-              004d dca3  st   $a3,[y,x++]
+              004d dcb2  st   $b2,[y,x++]
               004e dce2  st   $e2,[y,x++]
               004f 00ff  ld   $ff         ;Setup serial input
               0050 c20e  st   [$0e]
@@ -135,7 +135,7 @@ SYS_Reset_36: 0072 0010  ld   $10         ;Set ROM type/version
               0080 00fb  ld   $fb
               0081 c225  st   [$25]
               0082 1403  ld   $03,y
-              0083 e0ba  jmp  y,$ba
+              0083 e0c9  jmp  y,$c9
               0084 00ee  ld   $ee
 SYS_Exec_88:  0085 0000  ld   $00
               0086 d616  st   [$16],y
@@ -144,36 +144,36 @@ SYS_Exec_88:  0085 0000  ld   $00
               0089 d21d  st   [$1d],x
               008a 80fe  adda $fe
               008b c215  st   [$15]
-              008c dc7d  st   $7d,[y,x++]
-              008d dc95  st   $95,[y,x++]
+              008c dc75  st   $75,[y,x++]
+              008d dc90  st   $90,[y,x++]
               008e 801a  adda $1a
               008f de00  st   [y,x++]
               0090 dc5e  st   $5e,[y,x++]
               0091 dc27  st   $27,[y,x++]
-              0092 dcd2  st   $d2,[y,x++]
+              0092 dccd  st   $cd,[y,x++]
               0093 8009  adda $09
               0094 de00  st   [y,x++]
               0095 dc5e  st   $5e,[y,x++]
               0096 dc26  st   $26,[y,x++]
-              0097 dcd2  st   $d2,[y,x++]
+              0097 dccd  st   $cd,[y,x++]
               0098 de00  st   [y,x++]
               0099 dc5e  st   $5e,[y,x++]
               009a dc28  st   $28,[y,x++]
-              009b dcd2  st   $d2,[y,x++]
+              009b dccd  st   $cd,[y,x++]
               009c de00  st   [y,x++]
-              009d dce8  st   $e8,[y,x++]
+              009d dcee  st   $ee,[y,x++]
               009e dc26  st   $26,[y,x++]
-              009f dc98  st   $98,[y,x++]
+              009f dc93  st   $93,[y,x++]
               00a0 dc26  st   $26,[y,x++]
               00a1 dc1a  st   $1a,[y,x++]
               00a2 dc28  st   $28,[y,x++]
-              00a3 dcfc  st   $fc,[y,x++]
+              00a3 dce0  st   $e0,[y,x++]
               00a4 dc01  st   $01,[y,x++]
               00a5 dc35  st   $35,[y,x++]
               00a6 dc72  st   $72,[y,x++]
               00a7 80e8  adda $e8
               00a8 de00  st   [y,x++]
-              00a9 dcd2  st   $d2,[y,x++]
+              00a9 dccd  st   $cd,[y,x++]
               00aa 8018  adda $18
               00ab de00  st   [y,x++]
               00ac dc35  st   $35,[y,x++]
@@ -187,7 +187,7 @@ SYS_Exec_88:  0085 0000  ld   $00
               00b4 dc00  st   $00,[y,x++]
               00b5 dc1a  st   $1a,[y,x++]
               00b6 dc24  st   $24,[y,x++]
-              00b7 dc91  st   $91,[y,x++]
+              00b7 dc8c  st   $8c,[y,x++]
               00b8 dcfb  st   $fb,[y,x++]
               00b9 dc35  st   $35,[y,x++]
               00ba dc72  st   $72,[y,x++]
@@ -195,30 +195,30 @@ SYS_Exec_88:  0085 0000  ld   $00
               00bc de00  st   [y,x++]
               00bd dc5e  st   $5e,[y,x++]
               00be dc24  st   $24,[y,x++]
-              00bf dc98  st   $98,[y,x++]
+              00bf dc93  st   $93,[y,x++]
               00c0 dc25  st   $25,[y,x++]
               00c1 dc21  st   $21,[y,x++]
               00c2 dc24  st   $24,[y,x++]
-              00c3 dc75  st   $75,[y,x++]
+              00c3 dc7f  st   $7f,[y,x++]
               00c4 dc00  st   $00,[y,x++]
-              00c5 dc98  st   $98,[y,x++]
+              00c5 dc93  st   $93,[y,x++]
               00c6 dc24  st   $24,[y,x++]
               00c7 dcff  st   $ff,[y,x++]
               00c8 0200  nop
               00c9 1403  ld   $03,y
-              00ca e0ba  jmp  y,$ba
+              00ca e0c9  jmp  y,$c9
               00cb 00d4  ld   $d4
 SYS_Out_22:   00cc 1924  ld   [$24],out
               00cd 0200  nop
               00ce 1403  ld   $03,y
-              00cf e0ba  jmp  y,$ba
+              00cf e0c9  jmp  y,$c9
               00d0 00f5  ld   $f5
 SYS_In_24:    00d1 c317  st   in,[$17]
               00d2 0000  ld   $00
               00d3 c218  st   [$18]
               00d4 0200  nop
               00d5 1403  ld   $03,y
-              00d6 e0ba  jmp  y,$ba
+              00d6 e0c9  jmp  y,$c9
               00d7 00f4  ld   $f4
 SYS_Random_34:
               00d8 010e  ld   [$0e]
@@ -237,7 +237,7 @@ SYS_Random_34:
               00e5 c207  st   [$07]
               00e6 c218  st   [$18]
               00e7 1403  ld   $03,y
-              00e8 e0ba  jmp  y,$ba
+              00e8 e0c9  jmp  y,$c9
               00e9 00ef  ld   $ef
               00ea 0200  nop
               00eb 0200  nop
@@ -691,143 +691,143 @@ next1:        036d 0115  ld   [$15]
 NE:           0372 f045  beq  .cond4
               0373 ec48  bne  .cond5
               0374 0d00  ld   [y,x]
-LOOKUP:       0375 1518  ld   [$18],y
-              0376 e0fb  jmp  y,$fb       ;Trampoline offset
-              0377 8117  adda [$17]
-luReturn:     0378 c217  st   [$17]
-              0379 0000  ld   $00
-              037a c218  st   [$18]
-              037b fc01  bra  NEXT
-              037c 00f4  ld   $f4
-PUSH:         037d 011b  ld   [$1b]
-              037e b001  suba $01,x
-              037f 011a  ld   [$1a]
-              0380 c600  st   [x]
-              0381 011b  ld   [$1b]
-              0382 a002  suba $02
-              0383 d21b  st   [$1b],x
-              0384 0119  ld   [$19]
-              0385 fc6d  bra  next1
-              0386 c600  st   [x]
-ANDI:         0387 2117  anda [$17]
-              0388 c217  st   [$17]
-              0389 0000  ld   $00
-              038a c218  st   [$18]
-              038b fc01  bra  NEXT
-              038c 00f8  ld   $f8
-ORI:          038d 4117  ora  [$17]
-              038e c217  st   [$17]
-              038f fc01  bra  NEXT
-              0390 00f9  ld   $f9
-XORI:         0391 6117  xora [$17]
-              0392 c217  st   [$17]
-              0393 fc01  bra  NEXT
-              0394 00f9  ld   $f9
-BRA:          0395 c215  st   [$15]
-              0396 00f9  ld   $f9
+PUSH:         0375 011b  ld   [$1b]
+              0376 b001  suba $01,x
+              0377 011a  ld   [$1a]
+              0378 c600  st   [x]
+              0379 011b  ld   [$1b]
+              037a a002  suba $02
+              037b d21b  st   [$1b],x
+              037c 0119  ld   [$19]
+              037d fc6d  bra  next1
+              037e c600  st   [x]
+LOOKUP:       037f 1518  ld   [$18],y
+              0380 e0fb  jmp  y,$fb       ;Trampoline offset
+              0381 8117  adda [$17]
+ANDI:         0382 2117  anda [$17]
+              0383 c217  st   [$17]
+              0384 0000  ld   $00
+              0385 c218  st   [$18]
+              0386 fc01  bra  NEXT
+              0387 00f8  ld   $f8
+ORI:          0388 4117  ora  [$17]
+              0389 c217  st   [$17]
+              038a fc01  bra  NEXT
+              038b 00f9  ld   $f9
+XORI:         038c 6117  xora [$17]
+              038d c217  st   [$17]
+              038e fc01  bra  NEXT
+              038f 00f9  ld   $f9
+BRA:          0390 c215  st   [$15]
+              0391 00f9  ld   $f9
+              0392 fc01  bra  NEXT
+INC:          0393 1200  ld   ac,x
+              0394 0500  ld   [x]
+              0395 8001  adda $01
+              0396 c600  st   [x]
               0397 fc01  bra  NEXT
-INC:          0398 1200  ld   ac,x
-              0399 0500  ld   [x]
+              0398 00f8  ld   $f8
+ADDW:         0399 1200  ld   ac,x
               039a 8001  adda $01
-              039b c600  st   [x]
-              039c fc01  bra  NEXT
-              039d 00f8  ld   $f8
-retry:        039e 0115  ld   [$15]       ;Retry until sufficient time
-              039f a002  suba $02
-              03a0 c215  st   [$15]
-              03a1 fcba  bra  REENTER
-              03a2 00f6  ld   $f6
-SYS:          03a3 811c  adda [$1c]
-              03a4 e89e  blt  retry
-              03a5 1523  ld   [$23],y
-              03a6 e122  jmp  y,[$22]
-SUBW:         03a7 1200  ld   ac,x
-              03a8 8001  adda $01
-              03a9 c21d  st   [$1d]
-              03aa 0117  ld   [$17]
-              03ab e8b0  blt  .subw0
-              03ac a500  suba [x]
-              03ad c217  st   [$17]
-              03ae fcb3  bra  .subw1
-              03af 4500  ora  [x]
-.subw0:       03b0 c217  st   [$17]
-              03b1 2500  anda [x]
-              03b2 0200  nop
-.subw1:       03b3 3080  anda $80,x
-              03b4 0118  ld   [$18]
-              03b5 a500  suba [x]
-              03b6 111d  ld   [$1d],x
-              03b7 a500  suba [x]
-              03b8 c218  st   [$18]
-              03b9 00f2  ld   $f2
-REENTER:      03ba fc01  bra  NEXT        ;Return from SYS calls
-              03bb 1516  ld   [$16],y
-ADDW:         03bc 1200  ld   ac,x
-              03bd 8001  adda $01
-              03be c21d  st   [$1d]
-              03bf 0117  ld   [$17]
-              03c0 8500  adda [x]
-              03c1 c217  st   [$17]
-              03c2 e8c6  blt  .addw0
-              03c3 a500  suba [x]
-              03c4 fcc8  bra  .addw1
-              03c5 4500  ora  [x]
-.addw0:       03c6 2500  anda [x]
-              03c7 0200  nop
-.addw1:       03c8 3080  anda $80,x
-              03c9 0500  ld   [x]
-              03ca 8118  adda [$18]
-              03cb 111d  ld   [$1d],x
-              03cc 8500  adda [x]
-              03cd c218  st   [$18]
-              03ce fc01  bra  NEXT
-              03cf 00f2  ld   $f2
-DEF:          03d0 1404  ld   $04,y
-              03d1 e026  jmp  y,$26
-CALL:         03d2 c21d  st   [$1d]
-              03d3 0115  ld   [$15]
-              03d4 8002  adda $02         ;Point to instruction after CALL
-              03d5 c219  st   [$19]
-              03d6 0116  ld   [$16]
-              03d7 c21a  st   [$1a]
-              03d8 111d  ld   [$1d],x
+              039b c21d  st   [$1d]
+              039c 0117  ld   [$17]
+              039d 8500  adda [x]
+              039e c217  st   [$17]
+              039f e8a3  blt  .addw0
+              03a0 a500  suba [x]
+              03a1 fca5  bra  .addw1
+              03a2 4500  ora  [x]
+.addw0:       03a3 2500  anda [x]
+              03a4 0200  nop
+.addw1:       03a5 3080  anda $80,x
+              03a6 0500  ld   [x]
+              03a7 8118  adda [$18]
+              03a8 111d  ld   [$1d],x
+              03a9 8500  adda [x]
+              03aa c218  st   [$18]
+              03ab fc01  bra  NEXT
+              03ac 00f2  ld   $f2
+retry:        03ad 0115  ld   [$15]       ;Retry until sufficient time
+              03ae a002  suba $02
+              03af c215  st   [$15]
+              03b0 fcc9  bra  REENTER
+              03b1 00f6  ld   $f6
+SYS:          03b2 811c  adda [$1c]
+              03b3 e8ad  blt  retry
+              03b4 1523  ld   [$23],y
+              03b5 e122  jmp  y,[$22]
+SUBW:         03b6 1200  ld   ac,x
+              03b7 8001  adda $01
+              03b8 c21d  st   [$1d]
+              03b9 0117  ld   [$17]
+              03ba e8bf  blt  .subw0
+              03bb a500  suba [x]
+              03bc c217  st   [$17]
+              03bd fcc2  bra  .subw1
+              03be 4500  ora  [x]
+.subw0:       03bf c217  st   [$17]
+              03c0 2500  anda [x]
+              03c1 0200  nop
+.subw1:       03c2 3080  anda $80,x
+              03c3 0118  ld   [$18]
+              03c4 a500  suba [x]
+              03c5 111d  ld   [$1d],x
+              03c6 a500  suba [x]
+              03c7 c218  st   [$18]
+              03c8 00f2  ld   $f2
+REENTER:      03c9 fc01  bra  NEXT        ;Return from SYS calls
+              03ca 1516  ld   [$16],y
+DEF:          03cb 1404  ld   $04,y
+              03cc e007  jmp  y,$07
+CALL:         03cd c21d  st   [$1d]
+              03ce 0115  ld   [$15]
+              03cf 8002  adda $02         ;Point to instruction after CALL
+              03d0 c219  st   [$19]
+              03d1 0116  ld   [$16]
+              03d2 c21a  st   [$1a]
+              03d3 111d  ld   [$1d],x
+              03d4 0500  ld   [x]
+              03d5 a002  suba $02         ;Because NEXT will add 2
+              03d6 c215  st   [$15]
+              03d7 011d  ld   [$1d]
+              03d8 9001  adda $01,x
               03d9 0500  ld   [x]
-              03da a002  suba $02         ;Because NEXT will add 2
-              03db c215  st   [$15]
-              03dc 011d  ld   [$1d]
-              03dd 9001  adda $01,x
-              03de 0500  ld   [x]
-              03df d616  st   [$16],y
-              03e0 fc01  bra  NEXT
-              03e1 00f3  ld   $f3
-ALLOC:        03e2 1404  ld   $04,y
-              03e3 e085  jmp  y,$85
-STLW:         03e4 1404  ld   $04,y
-              03e5 e08a  jmp  y,$8a
-LDLW:         03e6 1404  ld   $04,y
-              03e7 e095  jmp  y,$95
-POKE:         03e8 1404  ld   $04,y
-              03e9 e031  jmp  y,$31
-              03ea c21d  st   [$1d]
-PEEK:         03eb 1404  ld   $04,y
-              03ec e03c  jmp  y,$3c
-POKEW:        03ed 1404  ld   $04,y
-              03ee e048  jmp  y,$48
-              03ef c21d  st   [$1d]
-PEEKW:        03f0 1404  ld   $04,y
-              03f1 e055  jmp  y,$55
-ANDW:         03f2 1404  ld   $04,y
-              03f3 e062  jmp  y,$62
-ORW:          03f4 1404  ld   $04,y
-              03f5 e06e  jmp  y,$6e
-XORW:         03f6 1404  ld   $04,y
-              03f7 e07a  jmp  y,$7a
-              03f8 c21d  st   [$1d]
-ADDI:         03f9 1404  ld   $04,y
-              03fa e007  jmp  y,$07
-              03fb c21d  st   [$1d]
-SUBI:         03fc 1404  ld   $04,y
-              03fd e016  jmp  y,$16
+              03da d616  st   [$16],y
+              03db fc01  bra  NEXT
+              03dc 00f3  ld   $f3
+ADDI:         03dd 1404  ld   $04,y
+              03de e012  jmp  y,$12
+              03df c21d  st   [$1d]
+SUBI:         03e0 1404  ld   $04,y
+              03e1 e021  jmp  y,$21
+              03e2 c21d  st   [$1d]
+CLR:          03e3 1404  ld   $04,y
+              03e4 e031  jmp  y,$31
+NEGW:         03e5 1404  ld   $04,y
+              03e6 e038  jmp  y,$38
+              03e7 0000  ld   $00
+ALLOC:        03e8 1404  ld   $04,y
+              03e9 e046  jmp  y,$46
+STLW:         03ea 1404  ld   $04,y
+              03eb e04b  jmp  y,$4b
+LDLW:         03ec 1404  ld   $04,y
+              03ed e056  jmp  y,$56
+POKE:         03ee 1404  ld   $04,y
+              03ef e061  jmp  y,$61
+              03f0 c21d  st   [$1d]
+PEEK:         03f1 1404  ld   $04,y
+              03f2 e06c  jmp  y,$6c
+POKEW:        03f3 1404  ld   $04,y
+              03f4 e078  jmp  y,$78
+              03f5 c21d  st   [$1d]
+PEEKW:        03f6 1404  ld   $04,y
+              03f7 e085  jmp  y,$85
+ANDW:         03f8 1404  ld   $04,y
+              03f9 e092  jmp  y,$92
+ORW:          03fa 1404  ld   $04,y
+              03fb e09e  jmp  y,$9e
+XORW:         03fc 1404  ld   $04,y
+              03fd e0aa  jmp  y,$aa
               03fe c21d  st   [$1d]
 RET:          03ff 0119  ld   [$19]
               0400 a002  suba $02
@@ -835,257 +835,260 @@ RET:          03ff 0119  ld   [$19]
               0402 011a  ld   [$1a]
               0403 c216  st   [$16]
               0404 1403  ld   $03,y
-              0405 e0ba  jmp  y,$ba
+              0405 e0c9  jmp  y,$c9
               0406 00f6  ld   $f6
-addi:         0407 8117  adda [$17]
-              0408 c217  st   [$17]
-              0409 e80d  blt  .addi0
-              040a a11d  suba [$1d]
-              040b fc0f  bra  .addi1
-              040c 411d  ora  [$1d]
-.addi0:       040d 211d  anda [$1d]
-              040e 0200  nop
-.addi1:       040f 3080  anda $80,x
-              0410 0500  ld   [x]
-              0411 8118  adda [$18]
-              0412 c218  st   [$18]
-              0413 1403  ld   $03,y
-              0414 e0ba  jmp  y,$ba
-              0415 00f2  ld   $f2
-subi:         0416 0117  ld   [$17]
-              0417 e81c  blt  .subi0
-              0418 a11d  suba [$1d]
-              0419 c217  st   [$17]
-              041a fc1f  bra  .subi1
-              041b 411d  ora  [$1d]
-.subi0:       041c c217  st   [$17]
-              041d 211d  anda [$1d]
-              041e 0200  nop
-.subi1:       041f 3080  anda $80,x
-              0420 0118  ld   [$18]
-              0421 a500  suba [x]
-              0422 c218  st   [$18]
-              0423 1403  ld   $03,y
-              0424 e0ba  jmp  y,$ba
-              0425 00f2  ld   $f2
-def:          0426 0115  ld   [$15]
-              0427 8002  adda $02
-              0428 c217  st   [$17]
-              0429 0116  ld   [$16]
-              042a c218  st   [$18]
-              042b 011d  ld   [$1d]
-              042c c215  st   [$15]
-              042d 1403  ld   $03,y
-              042e 00f3  ld   $f3
-              042f e0ba  jmp  y,$ba
-              0430 0200  nop
-poke:         0431 9001  adda $01,x
-              0432 0500  ld   [x]
-              0433 1600  ld   ac,y
-              0434 111d  ld   [$1d],x
-              0435 0500  ld   [x]
-              0436 1200  ld   ac,x
-              0437 0117  ld   [$17]
-              0438 ce00  st   [y,x]
-              0439 1403  ld   $03,y
-              043a e0ba  jmp  y,$ba
-              043b 00f3  ld   $f3
-peek:         043c 0115  ld   [$15]
-              043d a001  suba $01
-              043e c215  st   [$15]
-              043f 1117  ld   [$17],x
-              0440 1518  ld   [$18],y
-              0441 0d00  ld   [y,x]
-              0442 c217  st   [$17]
-              0443 0000  ld   $00
-              0444 c218  st   [$18]
-              0445 00f2  ld   $f2
-              0446 1403  ld   $03,y
-              0447 e0ba  jmp  y,$ba
-pokew:        0448 9001  adda $01,x
-              0449 0500  ld   [x]
-              044a 1600  ld   ac,y
-              044b 111d  ld   [$1d],x
-              044c 0500  ld   [x]
-              044d 1200  ld   ac,x
-              044e 0117  ld   [$17]
-              044f de00  st   [y,x++]
-              0450 0118  ld   [$18]
-              0451 ce00  st   [y,x]
-              0452 1403  ld   $03,y
-              0453 e0ba  jmp  y,$ba
-              0454 00f2  ld   $f2
-peekw:        0455 0115  ld   [$15]
-              0456 a001  suba $01
-              0457 c215  st   [$15]
-              0458 1117  ld   [$17],x
-              0459 1518  ld   [$18],y
-              045a 0d00  ld   [y,x]
-              045b de00  st   [y,x++]
-              045c c217  st   [$17]
-              045d 0d00  ld   [y,x]
-              045e c218  st   [$18]
-              045f 1403  ld   $03,y
-              0460 e0ba  jmp  y,$ba
-              0461 00f2  ld   $f2
-andw:         0462 c21d  st   [$1d]
-              0463 9001  adda $01,x
-              0464 0500  ld   [x]
-              0465 2118  anda [$18]
-              0466 c218  st   [$18]
-              0467 111d  ld   [$1d],x
-              0468 0500  ld   [x]
-              0469 2117  anda [$17]
-              046a c217  st   [$17]
-              046b 00f2  ld   $f2
-              046c 1403  ld   $03,y
-              046d e0ba  jmp  y,$ba
-orw:          046e c21d  st   [$1d]
-              046f 9001  adda $01,x
-              0470 0500  ld   [x]
-              0471 4118  ora  [$18]
-              0472 c218  st   [$18]
-              0473 111d  ld   [$1d],x
-              0474 0500  ld   [x]
-              0475 4117  ora  [$17]
-              0476 c217  st   [$17]
-              0477 00f2  ld   $f2
-              0478 1403  ld   $03,y
-              0479 e0ba  jmp  y,$ba
-xorw:         047a 9001  adda $01,x
-              047b 0500  ld   [x]
-              047c 6118  xora [$18]
-              047d c218  st   [$18]
-              047e 111d  ld   [$1d],x
-              047f 0500  ld   [x]
-              0480 6117  xora [$17]
-              0481 c217  st   [$17]
+def:          0407 0115  ld   [$15]
+              0408 8002  adda $02
+              0409 c217  st   [$17]
+              040a 0116  ld   [$16]
+              040b c218  st   [$18]
+              040c 011d  ld   [$1d]
+              040d c215  st   [$15]
+              040e 1403  ld   $03,y
+              040f 00f3  ld   $f3
+              0410 e0c9  jmp  y,$c9
+              0411 0200  nop
+addi:         0412 8117  adda [$17]
+              0413 c217  st   [$17]
+              0414 e818  blt  .addi0
+              0415 a11d  suba [$1d]
+              0416 fc1a  bra  .addi1
+              0417 411d  ora  [$1d]
+.addi0:       0418 211d  anda [$1d]
+              0419 0200  nop
+.addi1:       041a 3080  anda $80,x
+              041b 0500  ld   [x]
+              041c 8118  adda [$18]
+              041d c218  st   [$18]
+              041e 1403  ld   $03,y
+              041f e0c9  jmp  y,$c9
+              0420 00f2  ld   $f2
+subi:         0421 0117  ld   [$17]
+              0422 e827  blt  .subi0
+              0423 a11d  suba [$1d]
+              0424 c217  st   [$17]
+              0425 fc2a  bra  .subi1
+              0426 411d  ora  [$1d]
+.subi0:       0427 c217  st   [$17]
+              0428 211d  anda [$1d]
+              0429 0200  nop
+.subi1:       042a 3080  anda $80,x
+              042b 0118  ld   [$18]
+              042c a500  suba [x]
+              042d c218  st   [$18]
+              042e 1403  ld   $03,y
+              042f e0c9  jmp  y,$c9
+              0430 00f2  ld   $f2
+clr:          0431 1200  ld   ac,x
+              0432 0000  ld   $00
+              0433 c600  st   [x]
+              0434 00f5  ld   $f5
+              0435 1403  ld   $03,y
+              0436 e0c9  jmp  y,$c9
+              0437 0200  nop
+negw:         0438 a117  suba [$17]
+              0439 c217  st   [$17]
+              043a ec3d  bne  .negw0
+              043b fc3e  bra  .negw1
+              043c 0000  ld   $00
+.negw0:       043d 00ff  ld   $ff
+.negw1:       043e a118  suba [$18]
+              043f c218  st   [$18]
+              0440 0115  ld   [$15]
+              0441 a002  suba $02
+              0442 c215  st   [$15]
+              0443 1403  ld   $03,y
+              0444 e0c9  jmp  y,$c9
+              0445 00f3  ld   $f3
+alloc:        0446 811b  adda [$1b]
+              0447 c21b  st   [$1b]
+              0448 1403  ld   $03,y
+              0449 e0c9  jmp  y,$c9
+              044a 00f6  ld   $f6
+stlw:         044b 811b  adda [$1b]
+              044c c21d  st   [$1d]
+              044d 9001  adda $01,x
+              044e 0118  ld   [$18]
+              044f c600  st   [x]
+              0450 111d  ld   [$1d],x
+              0451 0117  ld   [$17]
+              0452 c600  st   [x]
+              0453 1403  ld   $03,y
+              0454 e0c9  jmp  y,$c9
+              0455 00f3  ld   $f3
+ldlw:         0456 811b  adda [$1b]
+              0457 c21d  st   [$1d]
+              0458 9001  adda $01,x
+              0459 0500  ld   [x]
+              045a c218  st   [$18]
+              045b 111d  ld   [$1d],x
+              045c 0500  ld   [x]
+              045d c217  st   [$17]
+              045e 1403  ld   $03,y
+              045f e0c9  jmp  y,$c9
+              0460 00f3  ld   $f3
+poke:         0461 9001  adda $01,x
+              0462 0500  ld   [x]
+              0463 1600  ld   ac,y
+              0464 111d  ld   [$1d],x
+              0465 0500  ld   [x]
+              0466 1200  ld   ac,x
+              0467 0117  ld   [$17]
+              0468 ce00  st   [y,x]
+              0469 1403  ld   $03,y
+              046a e0c9  jmp  y,$c9
+              046b 00f3  ld   $f3
+peek:         046c 0115  ld   [$15]
+              046d a001  suba $01
+              046e c215  st   [$15]
+              046f 1117  ld   [$17],x
+              0470 1518  ld   [$18],y
+              0471 0d00  ld   [y,x]
+luReturn:     0472 c217  st   [$17]
+              0473 0000  ld   $00
+              0474 c218  st   [$18]
+              0475 00f2  ld   $f2
+              0476 1403  ld   $03,y
+              0477 e0c9  jmp  y,$c9
+pokew:        0478 9001  adda $01,x
+              0479 0500  ld   [x]
+              047a 1600  ld   ac,y
+              047b 111d  ld   [$1d],x
+              047c 0500  ld   [x]
+              047d 1200  ld   ac,x
+              047e 0117  ld   [$17]
+              047f de00  st   [y,x++]
+              0480 0118  ld   [$18]
+              0481 ce00  st   [y,x]
               0482 1403  ld   $03,y
-              0483 e0ba  jmp  y,$ba
-              0484 00f3  ld   $f3
-alloc:        0485 811b  adda [$1b]
-              0486 c21b  st   [$1b]
-              0487 1403  ld   $03,y
-              0488 e0ba  jmp  y,$ba
-              0489 00f6  ld   $f6
-stlw:         048a 811b  adda [$1b]
-              048b c21d  st   [$1d]
-              048c 9001  adda $01,x
-              048d 0118  ld   [$18]
-              048e c600  st   [x]
-              048f 111d  ld   [$1d],x
-              0490 0117  ld   [$17]
-              0491 c600  st   [x]
-              0492 1403  ld   $03,y
-              0493 e0ba  jmp  y,$ba
-              0494 00f3  ld   $f3
-ldlw:         0495 811b  adda [$1b]
-              0496 c21d  st   [$1d]
-              0497 9001  adda $01,x
+              0483 e0c9  jmp  y,$c9
+              0484 00f2  ld   $f2
+peekw:        0485 0115  ld   [$15]
+              0486 a001  suba $01
+              0487 c215  st   [$15]
+              0488 1117  ld   [$17],x
+              0489 1518  ld   [$18],y
+              048a 0d00  ld   [y,x]
+              048b de00  st   [y,x++]
+              048c c217  st   [$17]
+              048d 0d00  ld   [y,x]
+              048e c218  st   [$18]
+              048f 1403  ld   $03,y
+              0490 e0c9  jmp  y,$c9
+              0491 00f2  ld   $f2
+andw:         0492 c21d  st   [$1d]
+              0493 9001  adda $01,x
+              0494 0500  ld   [x]
+              0495 2118  anda [$18]
+              0496 c218  st   [$18]
+              0497 111d  ld   [$1d],x
               0498 0500  ld   [x]
-              0499 c218  st   [$18]
-              049a 111d  ld   [$1d],x
-              049b 0500  ld   [x]
-              049c c217  st   [$17]
-              049d 1403  ld   $03,y
-              049e e0ba  jmp  y,$ba
-              049f 00f3  ld   $f3
+              0499 2117  anda [$17]
+              049a c217  st   [$17]
+              049b 00f2  ld   $f2
+              049c 1403  ld   $03,y
+              049d e0c9  jmp  y,$c9
+orw:          049e c21d  st   [$1d]
+              049f 9001  adda $01,x
+              04a0 0500  ld   [x]
+              04a1 4118  ora  [$18]
+              04a2 c218  st   [$18]
+              04a3 111d  ld   [$1d],x
+              04a4 0500  ld   [x]
+              04a5 4117  ora  [$17]
+              04a6 c217  st   [$17]
+              04a7 00f2  ld   $f2
+              04a8 1403  ld   $03,y
+              04a9 e0c9  jmp  y,$c9
+xorw:         04aa 9001  adda $01,x
+              04ab 0500  ld   [x]
+              04ac 6118  xora [$18]
+              04ad c218  st   [$18]
+              04ae 111d  ld   [$1d],x
+              04af 0500  ld   [x]
+              04b0 6117  xora [$17]
+              04b1 c217  st   [$17]
+              04b2 1403  ld   $03,y
+              04b3 e0c9  jmp  y,$c9
+              04b4 00f3  ld   $f3
 SYS_NextByteIn_32:
-              04a0 0109  ld   [$09]
-              04a1 6127  xora [$27]
-              04a2 ecaf  bne  .sysNbi
-              04a3 1124  ld   [$24],x
-              04a4 1525  ld   [$25],y
-              04a5 0300  ld   in
-              04a6 ce00  st   [y,x]
-              04a7 8126  adda [$26]
-              04a8 c226  st   [$26]
-              04a9 0124  ld   [$24]
-              04aa 8001  adda $01
-              04ab c224  st   [$24]
-              04ac 1403  ld   $03,y
-              04ad e0ba  jmp  y,$ba
-              04ae 00f0  ld   $f0
-.sysNbi:      04af 0115  ld   [$15]
-              04b0 a002  suba $02
-              04b1 c215  st   [$15]
-              04b2 00f2  ld   $f2
-              04b3 1403  ld   $03,y
-              04b4 e0ba  jmp  y,$ba
-              04b5 0200  nop
+              04b5 0109  ld   [$09]
+              04b6 6127  xora [$27]
+              04b7 ecc4  bne  .sysNbi
+              04b8 1124  ld   [$24],x
+              04b9 1525  ld   [$25],y
+              04ba 0300  ld   in
+              04bb ce00  st   [y,x]
+              04bc 8126  adda [$26]
+              04bd c226  st   [$26]
+              04be 0124  ld   [$24]
+              04bf 8001  adda $01
+              04c0 c224  st   [$24]
+              04c1 1403  ld   $03,y
+              04c2 e0c9  jmp  y,$c9
+              04c3 00f0  ld   $f0
+.sysNbi:      04c4 0115  ld   [$15]
+              04c5 a002  suba $02
+              04c6 c215  st   [$15]
+              04c7 00f2  ld   $f2
+              04c8 1403  ld   $03,y
+              04c9 e0c9  jmp  y,$c9
+              04ca 0200  nop
 SYS_PayloadCopy_34:
-              04b6 0128  ld   [$28]
-              04b7 f0c4  beq  .sysCc0
-              04b8 a001  suba $01
-              04b9 c228  st   [$28]
-              04ba 1124  ld   [$24],x
-              04bb 1525  ld   [$25],y
-              04bc 0d00  ld   [y,x]
-              04bd 1129  ld   [$29],x
-              04be 152a  ld   [$2a],y
-              04bf ce00  st   [y,x]
-              04c0 0129  ld   [$29]
-              04c1 8001  adda $01
-              04c2 c229  st   [$29]
-              04c3 fcc8  bra  .sysCc1
-.sysCc0:      04c4 1403  ld   $03,y
-              04c5 0004  ld   $04         ;Wait 11 cycles
-              04c6 ecc6  bne  $04c6
-              04c7 a001  suba $01
-.sysCc1:      04c8 e0ba  jmp  y,$ba
-              04c9 00ef  ld   $ef
-SYS_ProcessInput_48:
-              04ca 1525  ld   [$25],y
-              04cb 0126  ld   [$26]
-              04cc ece9  bne  .sysPi0
-              04cd 0124  ld   [$24]
-              04ce b041  suba $41,x
-              04cf 0d00  ld   [y,x]
-              04d0 de00  st   [y,x++]
-              04d1 604c  xora $4c
-              04d2 eced  bne  .sysPi1
-              04d3 0d00  ld   [y,x]       ;Valid command
-              04d4 de00  st   [y,x++]
-              04d5 203f  anda $3f
-              04d6 c228  st   [$28]
-              04d7 0d00  ld   [y,x]
-              04d8 de00  st   [y,x++]
-              04d9 c229  st   [$29]
-              04da 0d00  ld   [y,x]
-              04db de00  st   [y,x++]
-              04dc c22a  st   [$2a]
-              04dd 0128  ld   [$28]
-              04de ecf2  bne  .sysPi2
-              04df 0129  ld   [$29]       ;Execute
-              04e0 a002  suba $02
-              04e1 c215  st   [$15]
-              04e2 c219  st   [$19]
-              04e3 012a  ld   [$2a]
-              04e4 c216  st   [$16]
-              04e5 c21a  st   [$1a]
-              04e6 1403  ld   $03,y
-              04e7 e0ba  jmp  y,$ba
-              04e8 00e8  ld   $e8
-.sysPi0:      04e9 0001  ld   $01         ;Wait 6 cycles
-              04ea ecea  bne  $04ea
-              04eb a001  suba $01
-              04ec 0200  nop              ;Invalid checksum
-.sysPi1:      04ed 0067  ld   $67         ;Unknown command
-              04ee c226  st   [$26]
-              04ef 1403  ld   $03,y
-              04f0 e0ba  jmp  y,$ba
-              04f1 00f0  ld   $f0
-.sysPi2:      04f2 0124  ld   [$24]       ;Loading data
-              04f3 b001  suba $01,x
-              04f4 0d00  ld   [y,x]
-              04f5 c226  st   [$26]
-              04f6 1403  ld   $03,y
-              04f7 e0ba  jmp  y,$ba
-              04f8 00e9  ld   $e9
-              04f9 0200  nop
-              04fa 0200  nop
-              04fb 0200  nop
-              * 7 times
+              04cb 0128  ld   [$28]
+              04cc f0d9  beq  .sysCc0
+              04cd a001  suba $01
+              04ce c228  st   [$28]
+              04cf 1124  ld   [$24],x
+              04d0 1525  ld   [$25],y
+              04d1 0d00  ld   [y,x]
+              04d2 1129  ld   [$29],x
+              04d3 152a  ld   [$2a],y
+              04d4 ce00  st   [y,x]
+              04d5 0129  ld   [$29]
+              04d6 8001  adda $01
+              04d7 c229  st   [$29]
+              04d8 fcdd  bra  .sysCc1
+.sysCc0:      04d9 1403  ld   $03,y
+              04da 0004  ld   $04         ;Wait 11 cycles
+              04db ecdb  bne  $04db
+              04dc a001  suba $01
+.sysCc1:      04dd e0c9  jmp  y,$c9
+              04de 00ef  ld   $ef
+SYS_Draw4_30: 04df 1128  ld   [$28],x
+              04e0 1529  ld   [$29],y
+              04e1 0124  ld   [$24]
+              04e2 de00  st   [y,x++]
+              04e3 0125  ld   [$25]
+              04e4 de00  st   [y,x++]
+              04e5 0126  ld   [$26]
+              04e6 de00  st   [y,x++]
+              04e7 0127  ld   [$27]
+              04e8 de00  st   [y,x++]
+              04e9 1403  ld   $03,y
+              04ea e0c9  jmp  y,$c9
+              04eb 00f1  ld   $f1
+SYS_VDrawBits_134:
+              04ec 1128  ld   [$28],x
+              04ed 0000  ld   $00
+.vdb0:        04ee c21d  st   [$1d]
+              04ef 9529  adda [$29],y
+              04f0 0126  ld   [$26]
+              04f1 e8f4  blt  .vdb1
+              04f2 fcf5  bra  .vdb2
+              04f3 0124  ld   [$24]
+.vdb1:        04f4 0125  ld   [$25]
+.vdb2:        04f5 ce00  st   [y,x]
+              04f6 0126  ld   [$26]
+              04f7 8200  adda ac
+              04f8 c226  st   [$26]
+              04f9 011d  ld   [$1d]
+              04fa a007  suba $07
+              04fb ecee  bne  .vdb0
+              04fc 8008  adda $08
+              04fd 1403  ld   $03,y
+              04fe e0c9  jmp  y,$c9
+              04ff 00bd  ld   $bd
 shiftTable:   0500 0000  ld   $00         ;0b0000000x >> 1
               0501 0000  ld   $00         ;0b000000xx >> 2
               0502 0001  ld   $01         ;0b0000001x >> 1
@@ -1365,14 +1368,14 @@ SYS_LSRW_48:  0600 0200  nop
               0614 4117  ora  [$17]
               0615 c217  st   [$17]
               0616 1403  ld   $03,y
-              0617 e0ba  jmp  y,$ba
+              0617 e0c9  jmp  y,$c9
               0618 00e8  ld   $e8
 SYS_Read3_40: 0619 152b  ld   [$2b],y
               061a e079  jmp  y,$79
               061b 012a  ld   [$2a]
 txReturn:     061c c226  st   [$26]
               061d 1403  ld   $03,y
-              061e e0ba  jmp  y,$ba
+              061e e0c9  jmp  y,$c9
               061f 00ec  ld   $ec
 SYS_Unpack_56:
               0620 1402  ld   $02,y
@@ -1412,97 +1415,111 @@ SYS_Unpack_56:
               0642 203f  anda $3f
               0643 c224  st   [$24]       ;-> Pixel 0
               0644 1403  ld   $03,y
-              0645 e0ba  jmp  y,$ba
+              0645 e0c9  jmp  y,$c9
               0646 00e4  ld   $e4
-SYS_Draw4_30: 0647 1128  ld   [$28],x
-              0648 1529  ld   [$29],y
-              0649 0124  ld   [$24]
-              064a de00  st   [y,x++]
-              064b 0125  ld   [$25]
-              064c de00  st   [y,x++]
-              064d 0126  ld   [$26]
-              064e de00  st   [y,x++]
-              064f 0127  ld   [$27]
-              0650 de00  st   [y,x++]
-              0651 1403  ld   $03,y
-              0652 e0ba  jmp  y,$ba
-              0653 00f1  ld   $f1
-SYS_VDrawBits_134:
-              0654 1128  ld   [$28],x
-              0655 0000  ld   $00
-.vdb0:        0656 c21d  st   [$1d]
-              0657 9529  adda [$29],y
-              0658 0126  ld   [$26]
-              0659 e85c  blt  .vdb1
-              065a fc5d  bra  .vdb2
-              065b 0124  ld   [$24]
-.vdb1:        065c 0125  ld   [$25]
-.vdb2:        065d ce00  st   [y,x]
-              065e 0126  ld   [$26]
-              065f 8200  adda ac
-              0660 c226  st   [$26]
-              0661 011d  ld   [$1d]
-              0662 a007  suba $07
-              0663 ec56  bne  .vdb0
-              0664 8008  adda $08
-              0665 1403  ld   $03,y
-              0666 e0ba  jmp  y,$ba
-              0667 00bd  ld   $bd
+SYS_ProcessInput_48:
+              0647 1525  ld   [$25],y
+              0648 0126  ld   [$26]
+              0649 ec66  bne  .sysPi0
+              064a 0124  ld   [$24]
+              064b b041  suba $41,x
+              064c 0d00  ld   [y,x]
+              064d de00  st   [y,x++]
+              064e 604c  xora $4c
+              064f ec6a  bne  .sysPi1
+              0650 0d00  ld   [y,x]       ;Valid command
+              0651 de00  st   [y,x++]
+              0652 203f  anda $3f
+              0653 c228  st   [$28]
+              0654 0d00  ld   [y,x]
+              0655 de00  st   [y,x++]
+              0656 c229  st   [$29]
+              0657 0d00  ld   [y,x]
+              0658 de00  st   [y,x++]
+              0659 c22a  st   [$2a]
+              065a 0128  ld   [$28]
+              065b ec6f  bne  .sysPi2
+              065c 0129  ld   [$29]       ;Execute
+              065d a002  suba $02
+              065e c215  st   [$15]
+              065f c219  st   [$19]
+              0660 012a  ld   [$2a]
+              0661 c216  st   [$16]
+              0662 c21a  st   [$1a]
+              0663 1403  ld   $03,y
+              0664 e0c9  jmp  y,$c9
+              0665 00e8  ld   $e8
+.sysPi0:      0666 0001  ld   $01         ;Wait 6 cycles
+              0667 ec67  bne  $0667
+              0668 a001  suba $01
+              0669 0200  nop              ;Invalid checksum
+.sysPi1:      066a 0067  ld   $67         ;Unknown command
+              066b c226  st   [$26]
+              066c 1403  ld   $03,y
+              066d e0c9  jmp  y,$c9
+              066e 00f0  ld   $f0
+.sysPi2:      066f 0124  ld   [$24]       ;Loading data
+              0670 b001  suba $01,x
+              0671 0d00  ld   [y,x]
+              0672 c226  st   [$26]
+              0673 1403  ld   $03,y
+              0674 e0c9  jmp  y,$c9
+              0675 00e9  ld   $e9
 SYS_RacerUpdateVideoX_40:
-              0668 1126  ld   [$26],x
-              0669 1527  ld   [$27],y
-              066a 0d00  ld   [y,x]
-              066b c21d  st   [$1d]
-              066c a128  suba [$28]
-              066d 1124  ld   [$24],x
-              066e 1525  ld   [$25],y
-              066f ce00  st   [y,x]
-              0670 0124  ld   [$24]
-              0671 a004  suba $04
-              0672 c224  st   [$24]
-              0673 011d  ld   [$1d]
-              0674 c228  st   [$28]
-              0675 0126  ld   [$26]
-              0676 8001  adda $01
-              0677 c226  st   [$26]
-              0678 ec7c  bne  .sysRacer0
-              0679 0115  ld   [$15]
-              067a fc7e  bra  .sysRacer1
-              067b 0200  nop
-.sysRacer0:   067c a002  suba $02
-              067d c215  st   [$15]
-.sysRacer1:   067e 1403  ld   $03,y
-              067f e0ba  jmp  y,$ba
-              0680 00ec  ld   $ec
+              0676 1126  ld   [$26],x
+              0677 1527  ld   [$27],y
+              0678 0d00  ld   [y,x]
+              0679 c21d  st   [$1d]
+              067a a128  suba [$28]
+              067b 1124  ld   [$24],x
+              067c 1525  ld   [$25],y
+              067d ce00  st   [y,x]
+              067e 0124  ld   [$24]
+              067f a004  suba $04
+              0680 c224  st   [$24]
+              0681 011d  ld   [$1d]
+              0682 c228  st   [$28]
+              0683 0126  ld   [$26]
+              0684 8001  adda $01
+              0685 c226  st   [$26]
+              0686 ec8a  bne  .sysRacer0
+              0687 0115  ld   [$15]
+              0688 fc8c  bra  .sysRacer1
+              0689 0200  nop
+.sysRacer0:   068a a002  suba $02
+              068b c215  st   [$15]
+.sysRacer1:   068c 1403  ld   $03,y
+              068d e0c9  jmp  y,$c9
+              068e 00ec  ld   $ec
 SYS_RacerUpdateVideoY_40:
-              0681 0127  ld   [$27]
-              0682 2008  anda $08
-              0683 ec86  bne  .sysRacer2
-              0684 fc87  bra  .sysRacer3
-              0685 0000  ld   $00
-.sysRacer2:   0686 0001  ld   $01
-.sysRacer3:   0687 c21d  st   [$1d]
-              0688 1525  ld   [$25],y
-              0689 0124  ld   [$24]
-              068a 8002  adda $02
-              068b d224  st   [$24],x
-              068c 60ee  xora $ee
-              068d c217  st   [$17]
-              068e c218  st   [$18]
-              068f 0126  ld   [$26]
-              0690 20fe  anda $fe
-              0691 811d  adda [$1d]
-              0692 ce00  st   [y,x]
-              0693 0126  ld   [$26]
-              0694 8001  adda $01
-              0695 c226  st   [$26]
-              0696 1403  ld   $03,y
-              0697 e0ba  jmp  y,$ba
-              0698 00ec  ld   $ec
-              0699 0200  nop
-              069a 0200  nop
-              069b 0200  nop
-              * 103 times
+              068f 0127  ld   [$27]
+              0690 2008  anda $08
+              0691 ec94  bne  .sysRacer2
+              0692 fc95  bra  .sysRacer3
+              0693 0000  ld   $00
+.sysRacer2:   0694 0001  ld   $01
+.sysRacer3:   0695 c21d  st   [$1d]
+              0696 1525  ld   [$25],y
+              0697 0124  ld   [$24]
+              0698 8002  adda $02
+              0699 d224  st   [$24],x
+              069a 60ee  xora $ee
+              069b c217  st   [$17]
+              069c c218  st   [$18]
+              069d 0126  ld   [$26]
+              069e 20fe  anda $fe
+              069f 811d  adda [$1d]
+              06a0 ce00  st   [y,x]
+              06a1 0126  ld   [$26]
+              06a2 8001  adda $01
+              06a3 c226  st   [$26]
+              06a4 1403  ld   $03,y
+              06a5 e0c9  jmp  y,$c9
+              06a6 00ec  ld   $ec
+              06a7 0200  nop
+              06a8 0200  nop
+              06a9 0200  nop
+              * 89 times
 font32up:     0700 0000  ld   $00         ;Char ' '
               0701 0000  ld   $00
               0702 0000  ld   $00
@@ -1753,8 +1770,8 @@ font32up:     0700 0000  ld   $00         ;Char ' '
               07fa 0200  nop
               07fb fe00  bra  ac          ;+-----------------------------------+
               07fc fcfd  bra  $07fd       ;|                                   |
-              07fd 1403  ld   $03,y       ;| Trampoline for page $0700 lookups |
-              07fe e078  jmp  y,$78       ;|                                   |
+              07fd 1404  ld   $04,y       ;| Trampoline for page $0700 lookups |
+              07fe e072  jmp  y,$72       ;|                                   |
               07ff 1516  ld   [$16],y     ;+-----------------------------------+
 font82up:     0800 00fe  ld   $fe         ;Char 'R'
               0801 0090  ld   $90
@@ -1990,8 +2007,8 @@ font82up:     0800 00fe  ld   $fe         ;Char 'R'
               * 21 times
               08fb fe00  bra  ac          ;+-----------------------------------+
               08fc fcfd  bra  $08fd       ;|                                   |
-              08fd 1403  ld   $03,y       ;| Trampoline for page $0800 lookups |
-              08fe e078  jmp  y,$78       ;|                                   |
+              08fd 1404  ld   $04,y       ;| Trampoline for page $0800 lookups |
+              08fe e072  jmp  y,$72       ;|                                   |
               08ff 1516  ld   [$16],y     ;+-----------------------------------+
 notesTable:   0900 0000  ld   $00
               0901 0000  ld   $00
@@ -2192,8 +2209,8 @@ notesTable:   0900 0000  ld   $00
               09fa 0200  nop
               09fb fe00  bra  ac          ;+-----------------------------------+
               09fc fcfd  bra  $09fd       ;|                                   |
-              09fd 1403  ld   $03,y       ;| Trampoline for page $0900 lookups |
-              09fe e078  jmp  y,$78       ;|                                   |
+              09fd 1404  ld   $04,y       ;| Trampoline for page $0900 lookups |
+              09fe e072  jmp  y,$72       ;|                                   |
               09ff 1516  ld   [$16],y     ;+-----------------------------------+
 invTable:     0a00 00ff  ld   $ff
               0a01 00ef  ld   $ef
@@ -2378,8 +2395,8 @@ invTable:     0a00 00ff  ld   $ff
               * 10 times
               0afb fe00  bra  ac          ;+-----------------------------------+
               0afc fcfd  bra  $0afd       ;|                                   |
-              0afd 1403  ld   $03,y       ;| Trampoline for page $0a00 lookups |
-              0afe e078  jmp  y,$78       ;|                                   |
+              0afd 1404  ld   $04,y       ;| Trampoline for page $0a00 lookups |
+              0afe e072  jmp  y,$72       ;|                                   |
               0aff 1516  ld   [$16],y     ;+-----------------------------------+
 gigatronRaw:  0b00 00aa  ld   $aa
               0b01 00aa  ld   $aa
@@ -2628,8 +2645,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               0bfa 0000  ld   $00
               0bfb fe00  bra  ac          ;+-----------------------------------+
               0bfc fcfd  bra  $0bfd       ;|                                   |
-              0bfd 1403  ld   $03,y       ;| Trampoline for page $0b00 lookups |
-              0bfe e078  jmp  y,$78       ;|                                   |
+              0bfd 1404  ld   $04,y       ;| Trampoline for page $0b00 lookups |
+              0bfe e072  jmp  y,$72       ;|                                   |
               0bff 1516  ld   [$16],y     ;+-----------------------------------+
               0c00 00a5  ld   $a5
               0c01 0056  ld   $56
@@ -2883,8 +2900,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               0cfa 0000  ld   $00
               0cfb fe00  bra  ac          ;+-----------------------------------+
               0cfc fcfd  bra  $0cfd       ;|                                   |
-              0cfd 1403  ld   $03,y       ;| Trampoline for page $0c00 lookups |
-              0cfe e078  jmp  y,$78       ;|                                   |
+              0cfd 1404  ld   $04,y       ;| Trampoline for page $0c00 lookups |
+              0cfe e072  jmp  y,$72       ;|                                   |
               0cff 1516  ld   [$16],y     ;+-----------------------------------+
               0d00 00aa  ld   $aa
               0d01 005a  ld   $5a
@@ -3132,8 +3149,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               0dfa 0000  ld   $00
               0dfb fe00  bra  ac          ;+-----------------------------------+
               0dfc fcfd  bra  $0dfd       ;|                                   |
-              0dfd 1403  ld   $03,y       ;| Trampoline for page $0d00 lookups |
-              0dfe e078  jmp  y,$78       ;|                                   |
+              0dfd 1404  ld   $04,y       ;| Trampoline for page $0d00 lookups |
+              0dfe e072  jmp  y,$72       ;|                                   |
               0dff 1516  ld   [$16],y     ;+-----------------------------------+
               0e00 0054  ld   $54
               0e01 0055  ld   $55
@@ -3387,8 +3404,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               0efa 0000  ld   $00
               0efb fe00  bra  ac          ;+-----------------------------------+
               0efc fcfd  bra  $0efd       ;|                                   |
-              0efd 1403  ld   $03,y       ;| Trampoline for page $0e00 lookups |
-              0efe e078  jmp  y,$78       ;|                                   |
+              0efd 1404  ld   $04,y       ;| Trampoline for page $0e00 lookups |
+              0efe e072  jmp  y,$72       ;|                                   |
               0eff 1516  ld   [$16],y     ;+-----------------------------------+
               0f00 006a  ld   $6a
               0f01 00aa  ld   $aa
@@ -3636,8 +3653,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               0ffa 0000  ld   $00
               0ffb fe00  bra  ac          ;+-----------------------------------+
               0ffc fcfd  bra  $0ffd       ;|                                   |
-              0ffd 1403  ld   $03,y       ;| Trampoline for page $0f00 lookups |
-              0ffe e078  jmp  y,$78       ;|                                   |
+              0ffd 1404  ld   $04,y       ;| Trampoline for page $0f00 lookups |
+              0ffe e072  jmp  y,$72       ;|                                   |
               0fff 1516  ld   [$16],y     ;+-----------------------------------+
               1000 00aa  ld   $aa
               1001 00aa  ld   $aa
@@ -3892,8 +3909,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               10fa 0000  ld   $00
               10fb fe00  bra  ac          ;+-----------------------------------+
               10fc fcfd  bra  $10fd       ;|                                   |
-              10fd 1403  ld   $03,y       ;| Trampoline for page $1000 lookups |
-              10fe e078  jmp  y,$78       ;|                                   |
+              10fd 1404  ld   $04,y       ;| Trampoline for page $1000 lookups |
+              10fe e072  jmp  y,$72       ;|                                   |
               10ff 1516  ld   [$16],y     ;+-----------------------------------+
               1100 00ff  ld   $ff
               1101 00ff  ld   $ff
@@ -4144,8 +4161,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               11fa 0000  ld   $00
               11fb fe00  bra  ac          ;+-----------------------------------+
               11fc fcfd  bra  $11fd       ;|                                   |
-              11fd 1403  ld   $03,y       ;| Trampoline for page $1100 lookups |
-              11fe e078  jmp  y,$78       ;|                                   |
+              11fd 1404  ld   $04,y       ;| Trampoline for page $1100 lookups |
+              11fe e072  jmp  y,$72       ;|                                   |
               11ff 1516  ld   [$16],y     ;+-----------------------------------+
               1200 00c5  ld   $c5
               1201 00ff  ld   $ff
@@ -4400,8 +4417,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               12fa 0000  ld   $00
               12fb fe00  bra  ac          ;+-----------------------------------+
               12fc fcfd  bra  $12fd       ;|                                   |
-              12fd 1403  ld   $03,y       ;| Trampoline for page $1200 lookups |
-              12fe e078  jmp  y,$78       ;|                                   |
+              12fd 1404  ld   $04,y       ;| Trampoline for page $1200 lookups |
+              12fe e072  jmp  y,$72       ;|                                   |
               12ff 1516  ld   [$16],y     ;+-----------------------------------+
               1300 0069  ld   $69
               1301 0099  ld   $99
@@ -4655,8 +4672,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               13fa 0000  ld   $00
               13fb fe00  bra  ac          ;+-----------------------------------+
               13fc fcfd  bra  $13fd       ;|                                   |
-              13fd 1403  ld   $03,y       ;| Trampoline for page $1300 lookups |
-              13fe e078  jmp  y,$78       ;|                                   |
+              13fd 1404  ld   $04,y       ;| Trampoline for page $1300 lookups |
+              13fe e072  jmp  y,$72       ;|                                   |
               13ff 1516  ld   [$16],y     ;+-----------------------------------+
               1400 0069  ld   $69
               1401 00ae  ld   $ae
@@ -4911,8 +4928,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               14fa 0000  ld   $00
               14fb fe00  bra  ac          ;+-----------------------------------+
               14fc fcfd  bra  $14fd       ;|                                   |
-              14fd 1403  ld   $03,y       ;| Trampoline for page $1400 lookups |
-              14fe e078  jmp  y,$78       ;|                                   |
+              14fd 1404  ld   $04,y       ;| Trampoline for page $1400 lookups |
+              14fe e072  jmp  y,$72       ;|                                   |
               14ff 1516  ld   [$16],y     ;+-----------------------------------+
               1500 00a5  ld   $a5
               1501 00aa  ld   $aa
@@ -5162,8 +5179,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               15fa 0000  ld   $00
               15fb fe00  bra  ac          ;+-----------------------------------+
               15fc fcfd  bra  $15fd       ;|                                   |
-              15fd 1403  ld   $03,y       ;| Trampoline for page $1500 lookups |
-              15fe e078  jmp  y,$78       ;|                                   |
+              15fd 1404  ld   $04,y       ;| Trampoline for page $1500 lookups |
+              15fe e072  jmp  y,$72       ;|                                   |
               15ff 1516  ld   [$16],y     ;+-----------------------------------+
               1600 0069  ld   $69
               1601 009a  ld   $9a
@@ -5418,8 +5435,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               16fa 0000  ld   $00
               16fb fe00  bra  ac          ;+-----------------------------------+
               16fc fcfd  bra  $16fd       ;|                                   |
-              16fd 1403  ld   $03,y       ;| Trampoline for page $1600 lookups |
-              16fe e078  jmp  y,$78       ;|                                   |
+              16fd 1404  ld   $04,y       ;| Trampoline for page $1600 lookups |
+              16fe e072  jmp  y,$72       ;|                                   |
               16ff 1516  ld   [$16],y     ;+-----------------------------------+
               1700 00aa  ld   $aa
               1701 00ba  ld   $ba
@@ -5674,8 +5691,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               17fa 0000  ld   $00
               17fb fe00  bra  ac          ;+-----------------------------------+
               17fc fcfd  bra  $17fd       ;|                                   |
-              17fd 1403  ld   $03,y       ;| Trampoline for page $1700 lookups |
-              17fe e078  jmp  y,$78       ;|                                   |
+              17fd 1404  ld   $04,y       ;| Trampoline for page $1700 lookups |
+              17fe e072  jmp  y,$72       ;|                                   |
               17ff 1516  ld   [$16],y     ;+-----------------------------------+
               1800 0095  ld   $95
               1801 00fa  ld   $fa
@@ -5925,8 +5942,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               18fa 0000  ld   $00
               18fb fe00  bra  ac          ;+-----------------------------------+
               18fc fcfd  bra  $18fd       ;|                                   |
-              18fd 1403  ld   $03,y       ;| Trampoline for page $1800 lookups |
-              18fe e078  jmp  y,$78       ;|                                   |
+              18fd 1404  ld   $04,y       ;| Trampoline for page $1800 lookups |
+              18fe e072  jmp  y,$72       ;|                                   |
               18ff 1516  ld   [$16],y     ;+-----------------------------------+
               1900 00fa  ld   $fa
               1901 00ae  ld   $ae
@@ -6181,8 +6198,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               19fa 0000  ld   $00
               19fb fe00  bra  ac          ;+-----------------------------------+
               19fc fcfd  bra  $19fd       ;|                                   |
-              19fd 1403  ld   $03,y       ;| Trampoline for page $1900 lookups |
-              19fe e078  jmp  y,$78       ;|                                   |
+              19fd 1404  ld   $04,y       ;| Trampoline for page $1900 lookups |
+              19fe e072  jmp  y,$72       ;|                                   |
               19ff 1516  ld   [$16],y     ;+-----------------------------------+
               1a00 0069  ld   $69
               1a01 0099  ld   $99
@@ -6437,8 +6454,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               1afa 0000  ld   $00
               1afb fe00  bra  ac          ;+-----------------------------------+
               1afc fcfd  bra  $1afd       ;|                                   |
-              1afd 1403  ld   $03,y       ;| Trampoline for page $1a00 lookups |
-              1afe e078  jmp  y,$78       ;|                                   |
+              1afd 1404  ld   $04,y       ;| Trampoline for page $1a00 lookups |
+              1afe e072  jmp  y,$72       ;|                                   |
               1aff 1516  ld   [$16],y     ;+-----------------------------------+
               1b00 0055  ld   $55
               1b01 0055  ld   $55
@@ -6693,8 +6710,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               1bfa 0000  ld   $00
               1bfb fe00  bra  ac          ;+-----------------------------------+
               1bfc fcfd  bra  $1bfd       ;|                                   |
-              1bfd 1403  ld   $03,y       ;| Trampoline for page $1b00 lookups |
-              1bfe e078  jmp  y,$78       ;|                                   |
+              1bfd 1404  ld   $04,y       ;| Trampoline for page $1b00 lookups |
+              1bfe e072  jmp  y,$72       ;|                                   |
               1bff 1516  ld   [$16],y     ;+-----------------------------------+
               1c00 005c  ld   $5c
               1c01 00a5  ld   $a5
@@ -6949,8 +6966,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               1cfa 0000  ld   $00
               1cfb fe00  bra  ac          ;+-----------------------------------+
               1cfc fcfd  bra  $1cfd       ;|                                   |
-              1cfd 1403  ld   $03,y       ;| Trampoline for page $1c00 lookups |
-              1cfe e078  jmp  y,$78       ;|                                   |
+              1cfd 1404  ld   $04,y       ;| Trampoline for page $1c00 lookups |
+              1cfe e072  jmp  y,$72       ;|                                   |
               1cff 1516  ld   [$16],y     ;+-----------------------------------+
               1d00 0015  ld   $15
               1d01 0070  ld   $70
@@ -7205,8 +7222,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               1dfa 0000  ld   $00
               1dfb fe00  bra  ac          ;+-----------------------------------+
               1dfc fcfd  bra  $1dfd       ;|                                   |
-              1dfd 1403  ld   $03,y       ;| Trampoline for page $1d00 lookups |
-              1dfe e078  jmp  y,$78       ;|                                   |
+              1dfd 1404  ld   $04,y       ;| Trampoline for page $1d00 lookups |
+              1dfe e072  jmp  y,$72       ;|                                   |
               1dff 1516  ld   [$16],y     ;+-----------------------------------+
               1e00 00be  ld   $be
               1e01 00af  ld   $af
@@ -7460,8 +7477,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               1efa 0000  ld   $00
               1efb fe00  bra  ac          ;+-----------------------------------+
               1efc fcfd  bra  $1efd       ;|                                   |
-              1efd 1403  ld   $03,y       ;| Trampoline for page $1e00 lookups |
-              1efe e078  jmp  y,$78       ;|                                   |
+              1efd 1404  ld   $04,y       ;| Trampoline for page $1e00 lookups |
+              1efe e072  jmp  y,$72       ;|                                   |
               1eff 1516  ld   [$16],y     ;+-----------------------------------+
               1f00 0069  ld   $69
               1f01 0055  ld   $55
@@ -7716,8 +7733,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               1ffa 0000  ld   $00
               1ffb fe00  bra  ac          ;+-----------------------------------+
               1ffc fcfd  bra  $1ffd       ;|                                   |
-              1ffd 1403  ld   $03,y       ;| Trampoline for page $1f00 lookups |
-              1ffe e078  jmp  y,$78       ;|                                   |
+              1ffd 1404  ld   $04,y       ;| Trampoline for page $1f00 lookups |
+              1ffe e072  jmp  y,$72       ;|                                   |
               1fff 1516  ld   [$16],y     ;+-----------------------------------+
               2000 00aa  ld   $aa
               2001 00ee  ld   $ee
@@ -7972,8 +7989,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               20fa 0000  ld   $00
               20fb fe00  bra  ac          ;+-----------------------------------+
               20fc fcfd  bra  $20fd       ;|                                   |
-              20fd 1403  ld   $03,y       ;| Trampoline for page $2000 lookups |
-              20fe e078  jmp  y,$78       ;|                                   |
+              20fd 1404  ld   $04,y       ;| Trampoline for page $2000 lookups |
+              20fe e072  jmp  y,$72       ;|                                   |
               20ff 1516  ld   [$16],y     ;+-----------------------------------+
               2100 00fe  ld   $fe
               2101 00ea  ld   $ea
@@ -8226,8 +8243,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               21fa 0000  ld   $00
               21fb fe00  bra  ac          ;+-----------------------------------+
               21fc fcfd  bra  $21fd       ;|                                   |
-              21fd 1403  ld   $03,y       ;| Trampoline for page $2100 lookups |
-              21fe e078  jmp  y,$78       ;|                                   |
+              21fd 1404  ld   $04,y       ;| Trampoline for page $2100 lookups |
+              21fe e072  jmp  y,$72       ;|                                   |
               21ff 1516  ld   [$16],y     ;+-----------------------------------+
               2200 00c0  ld   $c0
               2201 0061  ld   $61
@@ -8468,8 +8485,8 @@ gigatronRaw:  0b00 00aa  ld   $aa
               * 18 times
               22fb fe00  bra  ac          ;+-----------------------------------+
               22fc fcfd  bra  $22fd       ;|                                   |
-              22fd 1403  ld   $03,y       ;| Trampoline for page $2200 lookups |
-              22fe e078  jmp  y,$78       ;|                                   |
+              22fd 1404  ld   $04,y       ;| Trampoline for page $2200 lookups |
+              22fe e072  jmp  y,$72       ;|                                   |
               22ff 1516  ld   [$16],y     ;+-----------------------------------+
 packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               2301 0000  ld   $00
@@ -48904,8 +48921,8 @@ zippedRacerHorizon:
               d7fa 000c  ld   $0c
               d7fb fe00  bra  ac          ;+-----------------------------------+
               d7fc fcfd  bra  $d7fd       ;|                                   |
-              d7fd 1403  ld   $03,y       ;| Trampoline for page $d700 lookups |
-              d7fe e078  jmp  y,$78       ;|                                   |
+              d7fd 1404  ld   $04,y       ;| Trampoline for page $d700 lookups |
+              d7fe e072  jmp  y,$72       ;|                                   |
               d7ff 1516  ld   [$16],y     ;+-----------------------------------+
               d800 00c3  ld   $c3
               d801 00f0  ld   $f0
@@ -49160,8 +49177,8 @@ zippedRacerHorizon:
               d8fa 00b0  ld   $b0
               d8fb fe00  bra  ac          ;+-----------------------------------+
               d8fc fcfd  bra  $d8fd       ;|                                   |
-              d8fd 1403  ld   $03,y       ;| Trampoline for page $d800 lookups |
-              d8fe e078  jmp  y,$78       ;|                                   |
+              d8fd 1404  ld   $04,y       ;| Trampoline for page $d800 lookups |
+              d8fe e072  jmp  y,$72       ;|                                   |
               d8ff 1516  ld   [$16],y     ;+-----------------------------------+
               d900 00aa  ld   $aa
               d901 00aa  ld   $aa
@@ -49406,8 +49423,8 @@ zippedRacerHorizon:
               d9fa 00ff  ld   $ff
               d9fb fe00  bra  ac          ;+-----------------------------------+
               d9fc fcfd  bra  $d9fd       ;|                                   |
-              d9fd 1403  ld   $03,y       ;| Trampoline for page $d900 lookups |
-              d9fe e078  jmp  y,$78       ;|                                   |
+              d9fd 1404  ld   $04,y       ;| Trampoline for page $d900 lookups |
+              d9fe e072  jmp  y,$72       ;|                                   |
               d9ff 1516  ld   [$16],y     ;+-----------------------------------+
               da00 0030  ld   $30
               da01 000c  ld   $0c
@@ -49662,8 +49679,8 @@ zippedRacerHorizon:
               dafa 00af  ld   $af
               dafb fe00  bra  ac          ;+-----------------------------------+
               dafc fcfd  bra  $dafd       ;|                                   |
-              dafd 1403  ld   $03,y       ;| Trampoline for page $da00 lookups |
-              dafe e078  jmp  y,$78       ;|                                   |
+              dafd 1404  ld   $04,y       ;| Trampoline for page $da00 lookups |
+              dafe e072  jmp  y,$72       ;|                                   |
               daff 1516  ld   [$16],y     ;+-----------------------------------+
               db00 00ab  ld   $ab
               db01 00bf  ld   $bf
@@ -49918,8 +49935,8 @@ zippedRacerHorizon:
               dbfa 0030  ld   $30
               dbfb fe00  bra  ac          ;+-----------------------------------+
               dbfc fcfd  bra  $dbfd       ;|                                   |
-              dbfd 1403  ld   $03,y       ;| Trampoline for page $db00 lookups |
-              dbfe e078  jmp  y,$78       ;|                                   |
+              dbfd 1404  ld   $04,y       ;| Trampoline for page $db00 lookups |
+              dbfe e072  jmp  y,$72       ;|                                   |
               dbff 1516  ld   [$16],y     ;+-----------------------------------+
               dc00 000c  ld   $0c
               dc01 00c3  ld   $c3
@@ -50170,8 +50187,8 @@ zippedRacerHorizon:
               dcfa 0059  ld   $59
               dcfb fe00  bra  ac          ;+-----------------------------------+
               dcfc fcfd  bra  $dcfd       ;|                                   |
-              dcfd 1403  ld   $03,y       ;| Trampoline for page $dc00 lookups |
-              dcfe e078  jmp  y,$78       ;|                                   |
+              dcfd 1404  ld   $04,y       ;| Trampoline for page $dc00 lookups |
+              dcfe e072  jmp  y,$72       ;|                                   |
               dcff 1516  ld   [$16],y     ;+-----------------------------------+
               dd00 0086  ld   $86
               dd01 00aa  ld   $aa
@@ -50422,8 +50439,8 @@ zippedRacerHorizon:
               ddfa 001a  ld   $1a
               ddfb fe00  bra  ac          ;+-----------------------------------+
               ddfc fcfd  bra  $ddfd       ;|                                   |
-              ddfd 1403  ld   $03,y       ;| Trampoline for page $dd00 lookups |
-              ddfe e078  jmp  y,$78       ;|                                   |
+              ddfd 1404  ld   $04,y       ;| Trampoline for page $dd00 lookups |
+              ddfe e072  jmp  y,$72       ;|                                   |
               ddff 1516  ld   [$16],y     ;+-----------------------------------+
               de00 0004  ld   $04
               de01 0041  ld   $41
@@ -50675,8 +50692,8 @@ zippedRacerHorizon:
               defa 0030  ld   $30
               defb fe00  bra  ac          ;+-----------------------------------+
               defc fcfd  bra  $defd       ;|                                   |
-              defd 1403  ld   $03,y       ;| Trampoline for page $de00 lookups |
-              defe e078  jmp  y,$78       ;|                                   |
+              defd 1404  ld   $04,y       ;| Trampoline for page $de00 lookups |
+              defe e072  jmp  y,$72       ;|                                   |
               deff 1516  ld   [$16],y     ;+-----------------------------------+
               df00 000c  ld   $0c
               df01 00c3  ld   $c3
@@ -50930,8 +50947,8 @@ zippedRacerHorizon:
               dffa 00c3  ld   $c3
               dffb fe00  bra  ac          ;+-----------------------------------+
               dffc fcfd  bra  $dffd       ;|                                   |
-              dffd 1403  ld   $03,y       ;| Trampoline for page $df00 lookups |
-              dffe e078  jmp  y,$78       ;|                                   |
+              dffd 1404  ld   $04,y       ;| Trampoline for page $df00 lookups |
+              dffe e072  jmp  y,$72       ;|                                   |
               dfff 1516  ld   [$16],y     ;+-----------------------------------+
               e000 0030  ld   $30
               e001 00ac  ld   $ac
@@ -51180,8 +51197,8 @@ zippedRacerHorizon:
               * 5 times
               e0fb fe00  bra  ac          ;+-----------------------------------+
               e0fc fcfd  bra  $e0fd       ;|                                   |
-              e0fd 1403  ld   $03,y       ;| Trampoline for page $e000 lookups |
-              e0fe e078  jmp  y,$78       ;|                                   |
+              e0fd 1404  ld   $04,y       ;| Trampoline for page $e000 lookups |
+              e0fe e072  jmp  y,$72       ;|                                   |
               e0ff 1516  ld   [$16],y     ;+-----------------------------------+
               e100 0000  ld   $00
               e101 0000  ld   $00
@@ -51428,8 +51445,8 @@ zippedRacerHorizon:
               e1fa 00ef  ld   $ef
               e1fb fe00  bra  ac          ;+-----------------------------------+
               e1fc fcfd  bra  $e1fd       ;|                                   |
-              e1fd 1403  ld   $03,y       ;| Trampoline for page $e100 lookups |
-              e1fe e078  jmp  y,$78       ;|                                   |
+              e1fd 1404  ld   $04,y       ;| Trampoline for page $e100 lookups |
+              e1fe e072  jmp  y,$72       ;|                                   |
               e1ff 1516  ld   [$16],y     ;+-----------------------------------+
               e200 00ff  ld   $ff
               e201 00fe  ld   $fe
@@ -51673,8 +51690,8 @@ zippedRacerHorizon:
               e2fa 00ff  ld   $ff
               e2fb fe00  bra  ac          ;+-----------------------------------+
               e2fc fcfd  bra  $e2fd       ;|                                   |
-              e2fd 1403  ld   $03,y       ;| Trampoline for page $e200 lookups |
-              e2fe e078  jmp  y,$78       ;|                                   |
+              e2fd 1404  ld   $04,y       ;| Trampoline for page $e200 lookups |
+              e2fe e072  jmp  y,$72       ;|                                   |
               e2ff 1516  ld   [$16],y     ;+-----------------------------------+
               e300 00ff  ld   $ff
               e301 00ff  ld   $ff
@@ -51737,23 +51754,23 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e340 0000  ld   $00
               e341 002b  ld   $2b         ;0302 STW
               e342 0030  ld   $30         ;0302 'HighScore'
-              e343 00d0  ld   $d0         ;0304 DEF
+              e343 00cb  ld   $cb         ;0304 DEF
               e344 0071  ld   $71
               e345 0021  ld   $21         ;0306 LDW
               e346 0032  ld   $32         ;0306 'Char'
-              e347 00fc  ld   $fc         ;0308 SUBI
+              e347 00e0  ld   $e0         ;0308 SUBI
               e348 0052  ld   $52
               e349 0035  ld   $35         ;030a BCC
               e34a 0053  ld   $53         ;030b GE
               e34b 0014  ld   $14
-              e34c 00f9  ld   $f9         ;030d ADDI
+              e34c 00dd  ld   $dd         ;030d ADDI
               e34d 0032  ld   $32
               e34e 002b  ld   $2b         ;030f STW
               e34f 0034  ld   $34         ;030f 'i'
               e350 0011  ld   $11         ;0311 LDWI
               e351 0000  ld   $00
               e352 0007  ld   $07
-              e353 0095  ld   $95         ;0314 BRA
+              e353 0090  ld   $90         ;0314 BRA
               e354 0019  ld   $19
               e355 002b  ld   $2b         ;0316 STW
               e356 0034  ld   $34         ;0316 'i'
@@ -51764,22 +51781,22 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e35b 0036  ld   $36         ;031b 'fontData'
               e35c 0021  ld   $21         ;031d LDW
               e35d 0034  ld   $34         ;031d 'i'
-              e35e 00bc  ld   $bc         ;031f ADDW
+              e35e 0099  ld   $99         ;031f ADDW
               e35f 0034  ld   $34         ;031f 'i'
               e360 002b  ld   $2b         ;0321 STW
               e361 0038  ld   $38         ;0321 'tmp'
-              e362 00bc  ld   $bc         ;0323 ADDW
+              e362 0099  ld   $99         ;0323 ADDW
               e363 0038  ld   $38         ;0323 'tmp'
-              e364 00bc  ld   $bc         ;0325 ADDW
+              e364 0099  ld   $99         ;0325 ADDW
               e365 0034  ld   $34         ;0325 'i'
-              e366 00bc  ld   $bc         ;0327 ADDW
+              e366 0099  ld   $99         ;0327 ADDW
               e367 0036  ld   $36         ;0327 'fontData'
               e368 002b  ld   $2b         ;0329 STW
               e369 0036  ld   $36         ;0329 'fontData'
               e36a 0011  ld   $11         ;032b LDWI
               e36b 0000  ld   $00
               e36c 0008  ld   $08
-              e36d 00bc  ld   $bc         ;032e ADDW
+              e36d 0099  ld   $99         ;032e ADDW
               e36e 003a  ld   $3a         ;032e 'Pos'
               e36f 002b  ld   $2b         ;0330 STW
               e370 003c  ld   $3c         ;0330 'q'
@@ -51792,11 +51809,11 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e377 003f  ld   $3f
               e378 0021  ld   $21         ;0339 LDW
               e379 0036  ld   $36         ;0339 'fontData'
-              e37a 0075  ld   $75         ;033b LOOKUP
+              e37a 007f  ld   $7f         ;033b LOOKUP
               e37b 0000  ld   $00
-              e37c 0098  ld   $98         ;033d INC
+              e37c 0093  ld   $93         ;033d INC
               e37d 0036  ld   $36         ;033d 'fontData'
-              e37e 0095  ld   $95         ;033f BRA
+              e37e 0090  ld   $90         ;033f BRA
               e37f 0041  ld   $41
               e380 0059  ld   $59         ;0341 LDI
               e381 0000  ld   $00
@@ -51808,39 +51825,39 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e387 0040  ld   $40         ;0347 'p'
               e388 0021  ld   $21         ;0349 LDW
               e389 003e  ld   $3e         ;0349 'bits'
-              e38a 0087  ld   $87         ;034b ANDI
+              e38a 0082  ld   $82         ;034b ANDI
               e38b 0080  ld   $80
               e38c 0035  ld   $35         ;034d BCC
               e38d 0072  ld   $72         ;034e NE
               e38e 0052  ld   $52
               e38f 0021  ld   $21         ;0350 LDW
               e390 0042  ld   $42         ;0350 'BgColor'
-              e391 0095  ld   $95         ;0352 BRA
+              e391 0090  ld   $90         ;0352 BRA
               e392 0054  ld   $54
               e393 0021  ld   $21         ;0354 LDW
               e394 0044  ld   $44         ;0354 'Color'
-              e395 00e8  ld   $e8         ;0356 POKE
+              e395 00ee  ld   $ee         ;0356 POKE
               e396 0040  ld   $40         ;0356 'p'
               e397 0021  ld   $21         ;0358 LDW
               e398 003e  ld   $3e         ;0358 'bits'
-              e399 00bc  ld   $bc         ;035a ADDW
+              e399 0099  ld   $99         ;035a ADDW
               e39a 003e  ld   $3e         ;035a 'bits'
               e39b 002b  ld   $2b         ;035c STW
               e39c 003e  ld   $3e         ;035c 'bits'
-              e39d 0098  ld   $98         ;035e INC
+              e39d 0093  ld   $93         ;035e INC
               e39e 0041  ld   $41         ;035e 'p'+1
               e39f 0021  ld   $21         ;0360 LDW
               e3a0 0040  ld   $40         ;0360 'p'
-              e3a1 00a7  ld   $a7         ;0362 SUBW
+              e3a1 00b6  ld   $b6         ;0362 SUBW
               e3a2 003c  ld   $3c         ;0362 'q'
               e3a3 0035  ld   $35         ;0364 BCC
               e3a4 0050  ld   $50         ;0365 LT
               e3a5 0047  ld   $47
-              e3a6 0098  ld   $98         ;0367 INC
+              e3a6 0093  ld   $93         ;0367 INC
               e3a7 003a  ld   $3a         ;0367 'Pos'
               e3a8 0021  ld   $21         ;0369 LDW
               e3a9 0034  ld   $34         ;0369 'i'
-              e3aa 00fc  ld   $fc         ;036b SUBI
+              e3aa 00e0  ld   $e0         ;036b SUBI
               e3ab 0001  ld   $01
               e3ac 002b  ld   $2b         ;036d STW
               e3ad 0034  ld   $34         ;036d 'i'
@@ -51850,22 +51867,22 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e3b1 00ff  ld   $ff         ;0372 RET
               e3b2 002b  ld   $2b         ;0373 STW
               e3b3 0046  ld   $46         ;0373 'DrawChar'
-              e3b4 00d0  ld   $d0         ;0375 DEF
+              e3b4 00cb  ld   $cb         ;0375 DEF
               e3b5 0098  ld   $98
-              e3b6 007d  ld   $7d         ;0377 PUSH
+              e3b6 0075  ld   $75         ;0377 PUSH
               e3b7 0021  ld   $21         ;0378 LDW
               e3b8 0048  ld   $48         ;0378 'Text'
-              e3b9 00eb  ld   $eb         ;037a PEEK
+              e3b9 00f1  ld   $f1         ;037a PEEK
               e3ba 002b  ld   $2b         ;037b STW
               e3bb 0032  ld   $32         ;037b 'Char'
               e3bc 0035  ld   $35         ;037d BCC
               e3bd 003f  ld   $3f         ;037e EQ
               e3be 0096  ld   $96
-              e3bf 0098  ld   $98         ;0380 INC
+              e3bf 0093  ld   $93         ;0380 INC
               e3c0 0048  ld   $48         ;0380 'Text'
               e3c1 0021  ld   $21         ;0382 LDW
               e3c2 0032  ld   $32         ;0382 'Char'
-              e3c3 0091  ld   $91         ;0384 XORI
+              e3c3 008c  ld   $8c         ;0384 XORI
               e3c4 000a  ld   $0a
               e3c5 0035  ld   $35         ;0386 BCC
               e3c6 0072  ld   $72         ;0387 NE
@@ -51875,21 +51892,21 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e3ca 0011  ld   $11         ;038b LDWI
               e3cb 0000  ld   $00
               e3cc 0008  ld   $08
-              e3cd 00bc  ld   $bc         ;038e ADDW
+              e3cd 0099  ld   $99         ;038e ADDW
               e3ce 003a  ld   $3a         ;038e 'Pos'
               e3cf 002b  ld   $2b         ;0390 STW
               e3d0 003a  ld   $3a         ;0390 'Pos'
-              e3d1 0095  ld   $95         ;0392 BRA
+              e3d1 0090  ld   $90         ;0392 BRA
               e3d2 0094  ld   $94
-              e3d3 00d2  ld   $d2         ;0394 CALL
+              e3d3 00cd  ld   $cd         ;0394 CALL
               e3d4 0046  ld   $46         ;0394 'DrawChar'
-              e3d5 0095  ld   $95         ;0396 BRA
+              e3d5 0090  ld   $90         ;0396 BRA
               e3d6 0076  ld   $76
               e3d7 0063  ld   $63         ;0398 POP
               e3d8 00ff  ld   $ff         ;0399 RET
               e3d9 002b  ld   $2b         ;039a STW
               e3da 004a  ld   $4a         ;039a 'DrawText'
-              e3db 00d0  ld   $d0         ;039c DEF
+              e3db 00cb  ld   $cb         ;039c DEF
               e3dc 00a5  ld   $a5
               e3dd 0047  ld   $47
               e3de 0069  ld   $69
@@ -51902,7 +51919,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e3e5 0000  ld   $00
               e3e6 002b  ld   $2b         ;03a7 STW
               e3e7 004c  ld   $4c         ;03a7 'Title'
-              e3e8 00d0  ld   $d0         ;03a9 DEF
+              e3e8 00cb  ld   $cb         ;03a9 DEF
               e3e9 00c3  ld   $c3
               e3ea 0021  ld   $21         ;03ab LDW
               e3eb 004e  ld   $4e         ;03ab 'Count'
@@ -51913,38 +51930,38 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e3f0 00c2  ld   $c2
               e3f1 0021  ld   $21         ;03b2 LDW
               e3f2 0044  ld   $44         ;03b2 'Color'
-              e3f3 00e8  ld   $e8         ;03b4 POKE
+              e3f3 00ee  ld   $ee         ;03b4 POKE
               e3f4 003a  ld   $3a         ;03b4 'Pos'
               e3f5 0021  ld   $21         ;03b6 LDW
               e3f6 003a  ld   $3a         ;03b6 'Pos'
-              e3f7 00bc  ld   $bc         ;03b8 ADDW
+              e3f7 0099  ld   $99         ;03b8 ADDW
               e3f8 0050  ld   $50         ;03b8 'Step'
               e3f9 002b  ld   $2b         ;03ba STW
               e3fa 003a  ld   $3a         ;03ba 'Pos'
               e3fb fe00  bra  ac          ;+-----------------------------------+
               e3fc fcfd  bra  $e3fd       ;|                                   |
-              e3fd 1403  ld   $03,y       ;| Trampoline for page $e300 lookups |
-              e3fe e078  jmp  y,$78       ;|                                   |
+              e3fd 1404  ld   $04,y       ;| Trampoline for page $e300 lookups |
+              e3fe e072  jmp  y,$72       ;|                                   |
               e3ff 1516  ld   [$16],y     ;+-----------------------------------+
               e400 0021  ld   $21         ;03bc LDW
               e401 0034  ld   $34         ;03bc 'i'
-              e402 00fc  ld   $fc         ;03be SUBI
+              e402 00e0  ld   $e0         ;03be SUBI
               e403 0001  ld   $01
               e404 002b  ld   $2b         ;03c0 STW
               e405 0034  ld   $34         ;03c0 'i'
-              e406 0095  ld   $95         ;03c2 BRA
+              e406 0090  ld   $90         ;03c2 BRA
               e407 00ad  ld   $ad
               e408 00ff  ld   $ff         ;03c4 RET
               e409 002b  ld   $2b         ;03c5 STW
               e40a 0052  ld   $52         ;03c5 'DrawLine'
-              e40b 00d0  ld   $d0         ;03c7 DEF
+              e40b 00cb  ld   $cb         ;03c7 DEF
               e40c 00de  ld   $de
-              e40d 007d  ld   $7d         ;03c9 PUSH
+              e40d 0075  ld   $75         ;03c9 PUSH
               e40e 001a  ld   $1a         ;03ca LD
               e40f 000e  ld   $0e
-              e410 00a7  ld   $a7         ;03cc SUBW
+              e410 00b6  ld   $b6         ;03cc SUBW
               e411 0054  ld   $54         ;03cc 'TimeOut'
-              e412 0087  ld   $87         ;03ce ANDI
+              e412 0082  ld   $82         ;03ce ANDI
               e413 0080  ld   $80
               e414 0035  ld   $35         ;03d0 BCC
               e415 0072  ld   $72         ;03d1 NE
@@ -51954,19 +51971,19 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e419 0035  ld   $35         ;03d5 BCC
               e41a 0056  ld   $56         ;03d6 LE
               e41b 00da  ld   $da
-              e41c 00fc  ld   $fc         ;03d8 SUBI
+              e41c 00e0  ld   $e0         ;03d8 SUBI
               e41d 0001  ld   $01
               e41e 002b  ld   $2b         ;03da STW
               e41f 0056  ld   $56         ;03da 'Timer'
-              e420 00d2  ld   $d2         ;03dc CALL
+              e420 00cd  ld   $cd         ;03dc CALL
               e421 0058  ld   $58         ;03dc 'DrawTimer'
               e422 0063  ld   $63         ;03de POP
               e423 00ff  ld   $ff         ;03df RET
               e424 002b  ld   $2b         ;03e0 STW
               e425 005a  ld   $5a         ;03e0 'UpdateTimer'
-              e426 00d0  ld   $d0         ;03e2 DEF
+              e426 00cb  ld   $cb         ;03e2 DEF
               e427 00ef  ld   $ef
-              e428 007d  ld   $7d         ;03e4 PUSH
+              e428 0075  ld   $75         ;03e4 PUSH
               e429 0021  ld   $21         ;03e5 LDW
               e42a 005c  ld   $5c         ;03e5 'Head'
               e42b 002b  ld   $2b         ;03e7 STW
@@ -51975,27 +51992,27 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e42e 003f  ld   $3f
               e42f 002b  ld   $2b         ;03eb STW
               e430 0044  ld   $44         ;03eb 'Color'
-              e431 00d2  ld   $d2         ;03ed CALL
+              e431 00cd  ld   $cd         ;03ed CALL
               e432 005e  ld   $5e         ;03ed 'DrawBlock'
               e433 0063  ld   $63         ;03ef POP
               e434 00ff  ld   $ff         ;03f0 RET
               e435 002b  ld   $2b         ;03f1 STW
               e436 0060  ld   $60         ;03f1 'DrawHead'
-              e437 0098  ld   $98         ;03f3 INC
+              e437 0093  ld   $93         ;03f3 INC
               e438 001a  ld   $1a
               e439 00ff  ld   $ff         ;03f5 RET
               e43a 0004  ld   $04         ;| RAM segment address (high byte first)
               e43b 0000  ld   $00         ;|
               e43c 00e1  ld   $e1         ;| Length (1..256)
-              e43d 00d0  ld   $d0         ;0400 DEF
+              e43d 00cb  ld   $cb         ;0400 DEF
               e43e 002d  ld   $2d
-              e43f 007d  ld   $7d         ;0402 PUSH
+              e43f 0075  ld   $75         ;0402 PUSH
               e440 0011  ld   $11         ;0403 LDWI
               e441 0035  ld   $35
               e442 0044  ld   $44
               e443 002b  ld   $2b         ;0406 STW
               e444 003a  ld   $3a         ;0406 'Pos'
-              e445 00d0  ld   $d0         ;0408 DEF
+              e445 00cb  ld   $cb         ;0408 DEF
               e446 0012  ld   $12
               e447 0047  ld   $47
               e448 0041  ld   $41
@@ -52013,11 +52030,11 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e454 0004  ld   $04
               e455 002b  ld   $2b         ;0418 STW
               e456 0042  ld   $42         ;0418 'BgColor'
-              e457 00d2  ld   $d2         ;041a CALL
+              e457 00cd  ld   $cd         ;041a CALL
               e458 004a  ld   $4a         ;041a 'DrawText'
               e459 0021  ld   $21         ;041c LDW
               e45a 0062  ld   $62         ;041c 'Score'
-              e45b 00a7  ld   $a7         ;041e SUBW
+              e45b 00b6  ld   $b6         ;041e SUBW
               e45c 0030  ld   $30         ;041e 'HighScore'
               e45d 0035  ld   $35         ;0420 BCC
               e45e 0056  ld   $56         ;0421 LE
@@ -52030,25 +52047,25 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e465 001e  ld   $1e
               e466 002b  ld   $2b         ;0429 STW
               e467 0044  ld   $44         ;0429 'Color'
-              e468 00d2  ld   $d2         ;042b CALL
+              e468 00cd  ld   $cd         ;042b CALL
               e469 0064  ld   $64         ;042b 'DrawHighScore'
               e46a 0063  ld   $63         ;042d POP
               e46b 00ff  ld   $ff         ;042e RET
               e46c 002b  ld   $2b         ;042f STW
               e46d 0066  ld   $66         ;042f 'GameOver'
-              e46e 00d0  ld   $d0         ;0431 DEF
+              e46e 00cb  ld   $cb         ;0431 DEF
               e46f 0041  ld   $41
               e470 001a  ld   $1a         ;0433 LD
               e471 000e  ld   $0e
-              e472 00bc  ld   $bc         ;0435 ADDW
+              e472 0099  ld   $99         ;0435 ADDW
               e473 0068  ld   $68         ;0435 'Delay'
-              e474 0087  ld   $87         ;0437 ANDI
+              e474 0082  ld   $82         ;0437 ANDI
               e475 00ff  ld   $ff
               e476 002b  ld   $2b         ;0439 STW
               e477 0038  ld   $38         ;0439 'tmp'
               e478 001a  ld   $1a         ;043b LD
               e479 000e  ld   $0e
-              e47a 00a7  ld   $a7         ;043d SUBW
+              e47a 00b6  ld   $b6         ;043d SUBW
               e47b 0038  ld   $38         ;043d 'tmp'
               e47c 0035  ld   $35         ;043f BCC
               e47d 0072  ld   $72         ;0440 NE
@@ -52056,9 +52073,9 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e47f 00ff  ld   $ff         ;0442 RET
               e480 002b  ld   $2b         ;0443 STW
               e481 006a  ld   $6a         ;0443 'Wait'
-              e482 00d0  ld   $d0         ;0445 DEF
+              e482 00cb  ld   $cb         ;0445 DEF
               e483 0068  ld   $68
-              e484 007d  ld   $7d         ;0447 PUSH
+              e484 0075  ld   $75         ;0447 PUSH
               e485 0059  ld   $59         ;0448 LDI
               e486 0008  ld   $08
               e487 002b  ld   $2b         ;044a STW
@@ -52072,7 +52089,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e48f 0008  ld   $08
               e490 002b  ld   $2b         ;0453 STW
               e491 003a  ld   $3a         ;0453 'Pos'
-              e492 00d2  ld   $d2         ;0455 CALL
+              e492 00cd  ld   $cd         ;0455 CALL
               e493 006c  ld   $6c         ;0455 'ClearScreen'
               e494 0011  ld   $11         ;0457 LDWI
               e495 0038  ld   $38
@@ -52083,19 +52100,19 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e49a 004c  ld   $4c         ;045c 'Title'
               e49b 002b  ld   $2b         ;045e STW
               e49c 0048  ld   $48         ;045e 'Text'
-              e49d 00d2  ld   $d2         ;0460 CALL
+              e49d 00cd  ld   $cd         ;0460 CALL
               e49e 004a  ld   $4a         ;0460 'DrawText'
               e49f 0059  ld   $59         ;0462 LDI
               e4a0 003c  ld   $3c
               e4a1 002b  ld   $2b         ;0464 STW
               e4a2 0068  ld   $68         ;0464 'Delay'
-              e4a3 00d2  ld   $d2         ;0466 CALL
+              e4a3 00cd  ld   $cd         ;0466 CALL
               e4a4 006a  ld   $6a         ;0466 'Wait'
               e4a5 0063  ld   $63         ;0468 POP
               e4a6 00ff  ld   $ff         ;0469 RET
               e4a7 002b  ld   $2b         ;046a STW
               e4a8 006e  ld   $6e         ;046a 'Intro'
-              e4a9 00d0  ld   $d0         ;046c DEF
+              e4a9 00cb  ld   $cb         ;046c DEF
               e4aa 009b  ld   $9b
               e4ab 0021  ld   $21         ;046e LDW
               e4ac 003a  ld   $3a         ;046e 'Pos'
@@ -52103,16 +52120,16 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e4ae 0040  ld   $40         ;0470 'p'
               e4af 0021  ld   $21         ;0472 LDW
               e4b0 003a  ld   $3a         ;0472 'Pos'
-              e4b1 008d  ld   $8d         ;0474 ORI
+              e4b1 0088  ld   $88         ;0474 ORI
               e4b2 00ff  ld   $ff
-              e4b3 0091  ld   $91         ;0476 XORI
+              e4b3 008c  ld   $8c         ;0476 XORI
               e4b4 00ff  ld   $ff
               e4b5 002b  ld   $2b         ;0478 STW
               e4b6 0034  ld   $34         ;0478 'i'
               e4b7 0011  ld   $11         ;047a LDWI
               e4b8 0001  ld   $01
               e4b9 0080  ld   $80
-              e4ba 00bc  ld   $bc         ;047d ADDW
+              e4ba 0099  ld   $99         ;047d ADDW
               e4bb 0034  ld   $34         ;047d 'i'
               e4bc 002b  ld   $2b         ;047f STW
               e4bd 0034  ld   $34         ;047f 'i'
@@ -52120,25 +52137,25 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e4bf 0040  ld   $40         ;0481 'p'
               e4c0 0021  ld   $21         ;0483 LDW
               e4c1 0042  ld   $42         ;0483 'BgColor'
-              e4c2 00e8  ld   $e8         ;0485 POKE
+              e4c2 00ee  ld   $ee         ;0485 POKE
               e4c3 0040  ld   $40         ;0485 'p'
               e4c4 0011  ld   $11         ;0487 LDWI
               e4c5 0000  ld   $00
               e4c6 0001  ld   $01
-              e4c7 00bc  ld   $bc         ;048a ADDW
+              e4c7 0099  ld   $99         ;048a ADDW
               e4c8 0040  ld   $40         ;048a 'p'
               e4c9 002b  ld   $2b         ;048c STW
               e4ca 0040  ld   $40         ;048c 'p'
               e4cb 0035  ld   $35         ;048e BCC
               e4cc 0053  ld   $53         ;048f GE
               e4cd 0081  ld   $81
-              e4ce 00bc  ld   $bc         ;0491 ADDW
+              e4ce 0099  ld   $99         ;0491 ADDW
               e4cf 0034  ld   $34         ;0491 'i'
               e4d0 002b  ld   $2b         ;0493 STW
               e4d1 0040  ld   $40         ;0493 'p'
-              e4d2 0087  ld   $87         ;0495 ANDI
+              e4d2 0082  ld   $82         ;0495 ANDI
               e4d3 00ff  ld   $ff
-              e4d4 0091  ld   $91         ;0497 XORI
+              e4d4 008c  ld   $8c         ;0497 XORI
               e4d5 00a0  ld   $a0
               e4d6 0035  ld   $35         ;0499 BCC
               e4d7 0072  ld   $72         ;049a NE
@@ -52146,11 +52163,11 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e4d9 00ff  ld   $ff         ;049c RET
               e4da 002b  ld   $2b         ;049d STW
               e4db 006c  ld   $6c         ;049d 'ClearScreen'
-              e4dc 00d0  ld   $d0         ;049f DEF
+              e4dc 00cb  ld   $cb         ;049f DEF
               e4dd 00ae  ld   $ae
               e4de 0059  ld   $59         ;04a1 LDI
               e4df 0000  ld   $00
-              e4e0 00a7  ld   $a7         ;04a3 SUBW
+              e4e0 00b6  ld   $b6         ;04a3 SUBW
               e4e1 0070  ld   $70         ;04a3 'stepV'
               e4e2 002b  ld   $2b         ;04a5 STW
               e4e3 0038  ld   $38         ;04a5 'tmp'
@@ -52165,11 +52182,11 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e4ec 00ff  ld   $ff         ;04af RET
               e4ed 002b  ld   $2b         ;04b0 STW
               e4ee 0074  ld   $74         ;04b0 'TurnL'
-              e4ef 00d0  ld   $d0         ;04b2 DEF
+              e4ef 00cb  ld   $cb         ;04b2 DEF
               e4f0 00c1  ld   $c1
               e4f1 0059  ld   $59         ;04b4 LDI
               e4f2 0000  ld   $00
-              e4f3 00a7  ld   $a7         ;04b6 SUBW
+              e4f3 00b6  ld   $b6         ;04b6 SUBW
               e4f4 0072  ld   $72         ;04b6 'stepU'
               e4f5 002b  ld   $2b         ;04b8 STW
               e4f6 0038  ld   $38         ;04b8 'tmp'
@@ -52179,8 +52196,8 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e4fa 0072  ld   $72         ;04bc 'stepU'
               e4fb fe00  bra  ac          ;+-----------------------------------+
               e4fc fcfd  bra  $e4fd       ;|                                   |
-              e4fd 1403  ld   $03,y       ;| Trampoline for page $e400 lookups |
-              e4fe e078  jmp  y,$78       ;|                                   |
+              e4fd 1404  ld   $04,y       ;| Trampoline for page $e400 lookups |
+              e4fe e072  jmp  y,$72       ;|                                   |
               e4ff 1516  ld   [$16],y     ;+-----------------------------------+
               e500 0021  ld   $21         ;04be LDW
               e501 0038  ld   $38         ;04be 'tmp'
@@ -52189,7 +52206,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e504 00ff  ld   $ff         ;04c2 RET
               e505 002b  ld   $2b         ;04c3 STW
               e506 0076  ld   $76         ;04c3 'TurnR'
-              e507 00d0  ld   $d0         ;04c5 DEF
+              e507 00cb  ld   $cb         ;04c5 DEF
               e508 00da  ld   $da
               e509 0021  ld   $21         ;04c7 LDW
               e50a 003a  ld   $3a         ;04c7 'Pos'
@@ -52197,52 +52214,52 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e50c 0040  ld   $40         ;04c9 'p'
               e50d 0021  ld   $21         ;04cb LDW
               e50e 0044  ld   $44         ;04cb 'Color'
-              e50f 00e8  ld   $e8         ;04cd POKE
+              e50f 00ee  ld   $ee         ;04cd POKE
               e510 003a  ld   $3a         ;04cd 'Pos'
-              e511 0098  ld   $98         ;04cf INC
+              e511 0093  ld   $93         ;04cf INC
               e512 003a  ld   $3a         ;04cf 'Pos'
-              e513 00e8  ld   $e8         ;04d1 POKE
+              e513 00ee  ld   $ee         ;04d1 POKE
               e514 003a  ld   $3a         ;04d1 'Pos'
-              e515 0098  ld   $98         ;04d3 INC
+              e515 0093  ld   $93         ;04d3 INC
               e516 003b  ld   $3b         ;04d3 'Pos'+1
-              e517 00e8  ld   $e8         ;04d5 POKE
+              e517 00ee  ld   $ee         ;04d5 POKE
               e518 003a  ld   $3a         ;04d5 'Pos'
-              e519 0098  ld   $98         ;04d7 INC
+              e519 0093  ld   $93         ;04d7 INC
               e51a 0041  ld   $41         ;04d7 'p'+1
-              e51b 00e8  ld   $e8         ;04d9 POKE
+              e51b 00ee  ld   $ee         ;04d9 POKE
               e51c 0040  ld   $40         ;04d9 'p'
               e51d 00ff  ld   $ff         ;04db RET
               e51e 002b  ld   $2b         ;04dc STW
               e51f 005e  ld   $5e         ;04dc 'DrawBlock'
-              e520 0098  ld   $98         ;04de INC
+              e520 0093  ld   $93         ;04de INC
               e521 001a  ld   $1a
               e522 00ff  ld   $ff         ;04e0 RET
               e523 0005  ld   $05         ;| RAM segment address (high byte first)
               e524 0000  ld   $00         ;|
               e525 00ea  ld   $ea         ;| Length (1..256)
-              e526 00d0  ld   $d0         ;0500 DEF
+              e526 00cb  ld   $cb         ;0500 DEF
               e527 00a6  ld   $a6
-              e528 007d  ld   $7d         ;0502 PUSH
-              e529 00d2  ld   $d2         ;0503 CALL
+              e528 0075  ld   $75         ;0502 PUSH
+              e529 00cd  ld   $cd         ;0503 CALL
               e52a 0078  ld   $78         ;0503 'Control'
               e52b 001a  ld   $1a         ;0505 LD
               e52c 0073  ld   $73         ;0505 'stepU'+1
-              e52d 0087  ld   $87         ;0507 ANDI
+              e52d 0082  ld   $82         ;0507 ANDI
               e52e 0080  ld   $80
               e52f 002b  ld   $2b         ;0509 STW
               e530 0038  ld   $38         ;0509 'tmp'
               e531 0021  ld   $21         ;050b LDW
               e532 0072  ld   $72         ;050b 'stepU'
-              e533 0087  ld   $87         ;050d ANDI
+              e533 0082  ld   $82         ;050d ANDI
               e534 0001  ld   $01
               e535 0035  ld   $35         ;050f BCC
               e536 003f  ld   $3f         ;0510 EQ
               e537 0012  ld   $12
               e538 0059  ld   $59         ;0512 LDI
               e539 0040  ld   $40
-              e53a 00bc  ld   $bc         ;0514 ADDW
+              e53a 0099  ld   $99         ;0514 ADDW
               e53b 0038  ld   $38         ;0514 'tmp'
-              e53c 00f9  ld   $f9         ;0516 ADDI
+              e53c 00dd  ld   $dd         ;0516 ADDI
               e53d 001e  ld   $1e
               e53e 002b  ld   $2b         ;0518 STW
               e53f 0044  ld   $44         ;0518 'Color'
@@ -52250,20 +52267,20 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e541 005c  ld   $5c         ;051a 'Head'
               e542 002b  ld   $2b         ;051c STW
               e543 003a  ld   $3a         ;051c 'Pos'
-              e544 00d2  ld   $d2         ;051e CALL
+              e544 00cd  ld   $cd         ;051e CALL
               e545 005e  ld   $5e         ;051e 'DrawBlock'
               e546 0021  ld   $21         ;0520 LDW
               e547 005c  ld   $5c         ;0520 'Head'
-              e548 00bc  ld   $bc         ;0522 ADDW
+              e548 0099  ld   $99         ;0522 ADDW
               e549 0072  ld   $72         ;0522 'stepU'
-              e54a 00bc  ld   $bc         ;0524 ADDW
+              e54a 0099  ld   $99         ;0524 ADDW
               e54b 0072  ld   $72         ;0524 'stepU'
               e54c 002b  ld   $2b         ;0526 STW
               e54d 005c  ld   $5c         ;0526 'Head'
               e54e 0021  ld   $21         ;0528 LDW
               e54f 005c  ld   $5c         ;0528 'Head'
-              e550 00eb  ld   $eb         ;052a PEEK
-              e551 0087  ld   $87         ;052b ANDI
+              e550 00f1  ld   $f1         ;052a PEEK
+              e551 0082  ld   $82         ;052b ANDI
               e552 0033  ld   $33
               e553 0035  ld   $35         ;052d BCC
               e554 003f  ld   $3f         ;052e EQ
@@ -52272,8 +52289,8 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e557 00ff  ld   $ff         ;0531 RET
               e558 0021  ld   $21         ;0532 LDW
               e559 005c  ld   $5c         ;0532 'Head'
-              e55a 00eb  ld   $eb         ;0534 PEEK
-              e55b 0091  ld   $91         ;0535 XORI
+              e55a 00f1  ld   $f1         ;0534 PEEK
+              e55b 008c  ld   $8c         ;0535 XORI
               e55c 0008  ld   $08
               e55d 0035  ld   $35         ;0537 BCC
               e55e 0072  ld   $72         ;0538 NE
@@ -52284,38 +52301,38 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e563 002c  ld   $2c
               e564 0021  ld   $21         ;053e LDW
               e565 0062  ld   $62         ;053e 'Score'
-              e566 00bc  ld   $bc         ;0540 ADDW
+              e566 0099  ld   $99         ;0540 ADDW
               e567 0056  ld   $56         ;0540 'Timer'
               e568 002b  ld   $2b         ;0542 STW
               e569 0062  ld   $62         ;0542 'Score'
-              e56a 00d2  ld   $d2         ;0544 CALL
+              e56a 00cd  ld   $cd         ;0544 CALL
               e56b 007a  ld   $7a         ;0544 'DrawScore'
               e56c 0059  ld   $59         ;0546 LDI
               e56d 0005  ld   $05
-              e56e 00d2  ld   $d2         ;0548 CALL
+              e56e 00cd  ld   $cd         ;0548 CALL
               e56f 007c  ld   $7c         ;0548 'AddTimer'
-              e570 0098  ld   $98         ;054a INC
+              e570 0093  ld   $93         ;054a INC
               e571 007e  ld   $7e         ;054a 'Grow'
-              e572 0098  ld   $98         ;054c INC
+              e572 0093  ld   $93         ;054c INC
               e573 0081  ld   $81         ;054c 'Drops'
-              e574 00d2  ld   $d2         ;054e CALL
+              e574 00cd  ld   $cd         ;054e CALL
               e575 0060  ld   $60         ;054e 'DrawHead'
               e576 0021  ld   $21         ;0550 LDW
               e577 007e  ld   $7e         ;0550 'Grow'
               e578 0035  ld   $35         ;0552 BCC
               e579 0056  ld   $56         ;0553 LE
               e57a 005b  ld   $5b
-              e57b 00fc  ld   $fc         ;0555 SUBI
+              e57b 00e0  ld   $e0         ;0555 SUBI
               e57c 0001  ld   $01
               e57d 002b  ld   $2b         ;0557 STW
               e57e 007e  ld   $7e         ;0557 'Grow'
-              e57f 00d2  ld   $d2         ;0559 CALL
+              e57f 00cd  ld   $cd         ;0559 CALL
               e580 0083  ld   $83         ;0559 'AddFood'
-              e581 0095  ld   $95         ;055b BRA
+              e581 0090  ld   $90         ;055b BRA
               e582 00a0  ld   $a0
               e583 0021  ld   $21         ;055d LDW
               e584 0085  ld   $85         ;055d 'Tail'
-              e585 00eb  ld   $eb         ;055f PEEK
+              e585 00f1  ld   $f1         ;055f PEEK
               e586 002b  ld   $2b         ;0560 STW
               e587 0038  ld   $38         ;0560 'tmp'
               e588 0021  ld   $21         ;0562 LDW
@@ -52323,13 +52340,13 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e58a 0035  ld   $35         ;0564 BCC
               e58b 0056  ld   $56         ;0565 LE
               e58c 006d  ld   $6d
-              e58d 00fc  ld   $fc         ;0567 SUBI
+              e58d 00e0  ld   $e0         ;0567 SUBI
               e58e 0001  ld   $01
               e58f 002b  ld   $2b         ;0569 STW
               e590 0081  ld   $81         ;0569 'Drops'
               e591 0059  ld   $59         ;056b LDI
               e592 000b  ld   $0b
-              e593 0095  ld   $95         ;056d BRA
+              e593 0090  ld   $90         ;056d BRA
               e594 006f  ld   $6f
               e595 0059  ld   $59         ;056f LDI
               e596 0004  ld   $04
@@ -52339,11 +52356,11 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e59a 0085  ld   $85         ;0573 'Tail'
               e59b 002b  ld   $2b         ;0575 STW
               e59c 003a  ld   $3a         ;0575 'Pos'
-              e59d 00d2  ld   $d2         ;0577 CALL
+              e59d 00cd  ld   $cd         ;0577 CALL
               e59e 005e  ld   $5e         ;0577 'DrawBlock'
               e59f 0021  ld   $21         ;0579 LDW
               e5a0 0038  ld   $38         ;0579 'tmp'
-              e5a1 0087  ld   $87         ;057b ANDI
+              e5a1 0082  ld   $82         ;057b ANDI
               e5a2 0040  ld   $40
               e5a3 0035  ld   $35         ;057d BCC
               e5a4 0072  ld   $72         ;057e NE
@@ -52351,7 +52368,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e5a6 0011  ld   $11         ;0580 LDWI
               e5a7 0000  ld   $00
               e5a8 0001  ld   $01
-              e5a9 0095  ld   $95         ;0583 BRA
+              e5a9 0090  ld   $90         ;0583 BRA
               e5aa 0085  ld   $85
               e5ab 0059  ld   $59         ;0585 LDI
               e5ac 0001  ld   $01
@@ -52359,40 +52376,40 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e5ae 0087  ld   $87         ;0587 'x'
               e5af 0021  ld   $21         ;0589 LDW
               e5b0 0038  ld   $38         ;0589 'tmp'
-              e5b1 0087  ld   $87         ;058b ANDI
+              e5b1 0082  ld   $82         ;058b ANDI
               e5b2 0080  ld   $80
               e5b3 0035  ld   $35         ;058d BCC
               e5b4 0072  ld   $72         ;058e NE
               e5b5 0092  ld   $92
               e5b6 0021  ld   $21         ;0590 LDW
               e5b7 0087  ld   $87         ;0590 'x'
-              e5b8 0095  ld   $95         ;0592 BRA
+              e5b8 0090  ld   $90         ;0592 BRA
               e5b9 0096  ld   $96
               e5ba 0059  ld   $59         ;0594 LDI
               e5bb 0000  ld   $00
-              e5bc 00a7  ld   $a7         ;0596 SUBW
+              e5bc 00b6  ld   $b6         ;0596 SUBW
               e5bd 0087  ld   $87         ;0596 'x'
               e5be 002b  ld   $2b         ;0598 STW
               e5bf 0038  ld   $38         ;0598 'tmp'
               e5c0 0021  ld   $21         ;059a LDW
               e5c1 0085  ld   $85         ;059a 'Tail'
-              e5c2 00bc  ld   $bc         ;059c ADDW
+              e5c2 0099  ld   $99         ;059c ADDW
               e5c3 0038  ld   $38         ;059c 'tmp'
-              e5c4 00bc  ld   $bc         ;059e ADDW
+              e5c4 0099  ld   $99         ;059e ADDW
               e5c5 0038  ld   $38         ;059e 'tmp'
               e5c6 002b  ld   $2b         ;05a0 STW
               e5c7 0085  ld   $85         ;05a0 'Tail'
-              e5c8 00d2  ld   $d2         ;05a2 CALL
+              e5c8 00cd  ld   $cd         ;05a2 CALL
               e5c9 005a  ld   $5a         ;05a2 'UpdateTimer'
-              e5ca 00d2  ld   $d2         ;05a4 CALL
+              e5ca 00cd  ld   $cd         ;05a4 CALL
               e5cb 006a  ld   $6a         ;05a4 'Wait'
-              e5cc 0095  ld   $95         ;05a6 BRA
+              e5cc 0090  ld   $90         ;05a6 BRA
               e5cd 0001  ld   $01
               e5ce 002b  ld   $2b         ;05a8 STW
               e5cf 0089  ld   $89         ;05a8 'RunGame'
-              e5d0 00d0  ld   $d0         ;05aa DEF
+              e5d0 00cb  ld   $cb         ;05aa DEF
               e5d1 00e3  ld   $e3
-              e5d2 007d  ld   $7d         ;05ac PUSH
+              e5d2 0075  ld   $75         ;05ac PUSH
               e5d3 0059  ld   $59         ;05ad LDI
               e5d4 0008  ld   $08
               e5d5 002b  ld   $2b         ;05af STW
@@ -52401,80 +52418,80 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e5d8 00d8  ld   $d8
               e5d9 002b  ld   $2b         ;05b3 STW
               e5da 0022  ld   $22
-              e5db 00a3  ld   $a3         ;05b5 SYS
+              e5db 00b2  ld   $b2         ;05b5 SYS
               e5dc 00fd  ld   $fd
               e5dd 002b  ld   $2b         ;05b7 STW
               e5de 003a  ld   $3a         ;05b7 'Pos'
               e5df 001a  ld   $1a         ;05b9 LD
               e5e0 003a  ld   $3a         ;05b9 'Pos'
-              e5e1 00fc  ld   $fc         ;05bb SUBI
+              e5e1 00e0  ld   $e0         ;05bb SUBI
               e5e2 0080  ld   $80
               e5e3 0035  ld   $35         ;05bd BCC
               e5e4 0053  ld   $53         ;05be GE
               e5e5 00c0  ld   $c0
-              e5e6 00f9  ld   $f9         ;05c0 ADDI
+              e5e6 00dd  ld   $dd         ;05c0 ADDI
               e5e7 009d  ld   $9d
-              e5e8 00f9  ld   $f9         ;05c2 ADDI
+              e5e8 00dd  ld   $dd         ;05c2 ADDI
               e5e9 0001  ld   $01
-              e5ea 0087  ld   $87         ;05c4 ANDI
+              e5ea 0082  ld   $82         ;05c4 ANDI
               e5eb 00fe  ld   $fe
               e5ec 005e  ld   $5e         ;05c6 ST
               e5ed 003a  ld   $3a         ;05c6 'Pos'
               e5ee 001a  ld   $1a         ;05c8 LD
               e5ef 003b  ld   $3b         ;05c8 'Pos'+1
-              e5f0 0087  ld   $87         ;05ca ANDI
+              e5f0 0082  ld   $82         ;05ca ANDI
               e5f1 007f  ld   $7f
-              e5f2 00fc  ld   $fc         ;05cc SUBI
+              e5f2 00e0  ld   $e0         ;05cc SUBI
               e5f3 0040  ld   $40
               e5f4 0035  ld   $35         ;05ce BCC
               e5f5 0053  ld   $53         ;05cf GE
               e5f6 00d1  ld   $d1
-              e5f7 00f9  ld   $f9         ;05d1 ADDI
+              e5f7 00dd  ld   $dd         ;05d1 ADDI
               e5f8 006d  ld   $6d
-              e5f9 00f9  ld   $f9         ;05d3 ADDI
+              e5f9 00dd  ld   $dd         ;05d3 ADDI
               e5fa 0011  ld   $11
               e5fb fe00  bra  ac          ;+-----------------------------------+
               e5fc fcfd  bra  $e5fd       ;|                                   |
-              e5fd 1403  ld   $03,y       ;| Trampoline for page $e500 lookups |
-              e5fe e078  jmp  y,$78       ;|                                   |
+              e5fd 1404  ld   $04,y       ;| Trampoline for page $e500 lookups |
+              e5fe e072  jmp  y,$72       ;|                                   |
               e5ff 1516  ld   [$16],y     ;+-----------------------------------+
-              e600 0087  ld   $87         ;05d5 ANDI
+              e600 0082  ld   $82         ;05d5 ANDI
               e601 00fe  ld   $fe
               e602 005e  ld   $5e         ;05d7 ST
               e603 003b  ld   $3b         ;05d7 'Pos'+1
               e604 0021  ld   $21         ;05d9 LDW
               e605 003a  ld   $3a         ;05d9 'Pos'
-              e606 00eb  ld   $eb         ;05db PEEK
-              e607 0091  ld   $91         ;05dc XORI
+              e606 00f1  ld   $f1         ;05db PEEK
+              e607 008c  ld   $8c         ;05dc XORI
               e608 0004  ld   $04
               e609 0035  ld   $35         ;05de BCC
               e60a 0072  ld   $72         ;05df NE
               e60b 00af  ld   $af
-              e60c 00d2  ld   $d2         ;05e1 CALL
+              e60c 00cd  ld   $cd         ;05e1 CALL
               e60d 005e  ld   $5e         ;05e1 'DrawBlock'
               e60e 0063  ld   $63         ;05e3 POP
               e60f 00ff  ld   $ff         ;05e4 RET
               e610 002b  ld   $2b         ;05e5 STW
               e611 0083  ld   $83         ;05e5 'AddFood'
-              e612 0098  ld   $98         ;05e7 INC
+              e612 0093  ld   $93         ;05e7 INC
               e613 001a  ld   $1a
               e614 00ff  ld   $ff         ;05e9 RET
               e615 0006  ld   $06         ;| RAM segment address (high byte first)
               e616 0000  ld   $00         ;|
               e617 00f6  ld   $f6         ;| Length (1..256)
-              e618 00d0  ld   $d0         ;0600 DEF
+              e618 00cb  ld   $cb         ;0600 DEF
               e619 00a1  ld   $a1
-              e61a 007d  ld   $7d         ;0602 PUSH
+              e61a 0075  ld   $75         ;0602 PUSH
               e61b 001a  ld   $1a         ;0603 LD
               e61c 000f  ld   $0f
-              e61d 0087  ld   $87         ;0605 ANDI
+              e61d 0082  ld   $82         ;0605 ANDI
               e61e 00cf  ld   $cf
-              e61f 0091  ld   $91         ;0607 XORI
+              e61f 008c  ld   $8c         ;0607 XORI
               e620 00cf  ld   $cf
               e621 0035  ld   $35         ;0609 BCC
               e622 003f  ld   $3f         ;060a EQ
               e623 000e  ld   $0e
-              e624 00d2  ld   $d2         ;060c CALL
+              e624 00cd  ld   $cd         ;060c CALL
               e625 008b  ld   $8b         ;060c 'SetupGame'
               e626 0063  ld   $63         ;060e POP
               e627 00ff  ld   $ff         ;060f RET
@@ -52488,28 +52505,28 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e62f 003c  ld   $3c         ;0616 'q'
               e630 0021  ld   $21         ;0618 LDW
               e631 005c  ld   $5c         ;0618 'Head'
-              e632 00bc  ld   $bc         ;061a ADDW
+              e632 0099  ld   $99         ;061a ADDW
               e633 0072  ld   $72         ;061a 'stepU'
-              e634 00bc  ld   $bc         ;061c ADDW
+              e634 0099  ld   $99         ;061c ADDW
               e635 0072  ld   $72         ;061c 'stepU'
-              e636 00eb  ld   $eb         ;061e PEEK
-              e637 0091  ld   $91         ;061f XORI
+              e636 00f1  ld   $f1         ;061e PEEK
+              e637 008c  ld   $8c         ;061f XORI
               e638 0004  ld   $04
               e639 002b  ld   $2b         ;0621 STW
               e63a 0038  ld   $38         ;0621 'tmp'
               e63b 0021  ld   $21         ;0623 LDW
               e63c 005c  ld   $5c         ;0623 'Head'
-              e63d 00a7  ld   $a7         ;0625 SUBW
+              e63d 00b6  ld   $b6         ;0625 SUBW
               e63e 0070  ld   $70         ;0625 'stepV'
-              e63f 00a7  ld   $a7         ;0627 SUBW
+              e63f 00b6  ld   $b6         ;0627 SUBW
               e640 0070  ld   $70         ;0627 'stepV'
-              e641 00eb  ld   $eb         ;0629 PEEK
-              e642 0091  ld   $91         ;062a XORI
+              e641 00f1  ld   $f1         ;0629 PEEK
+              e642 008c  ld   $8c         ;062a XORI
               e643 0004  ld   $04
               e644 0035  ld   $35         ;062c BCC
               e645 003f  ld   $3f         ;062d EQ
               e646 0040  ld   $40
-              e647 0091  ld   $91         ;062f XORI
+              e647 008c  ld   $8c         ;062f XORI
               e648 000c  ld   $0c
               e649 0035  ld   $35         ;0631 BCC
               e64a 003f  ld   $3f         ;0632 EQ
@@ -52518,7 +52535,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e64d 0000  ld   $00
               e64e 002b  ld   $2b         ;0636 STW
               e64f 0040  ld   $40         ;0636 'p'
-              e650 0095  ld   $95         ;0638 BRA
+              e650 0090  ld   $90         ;0638 BRA
               e651 0040  ld   $40
               e652 0059  ld   $59         ;063a LDI
               e653 0000  ld   $00
@@ -52530,17 +52547,17 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e659 0038  ld   $38         ;0640 'tmp'
               e65a 0021  ld   $21         ;0642 LDW
               e65b 005c  ld   $5c         ;0642 'Head'
-              e65c 00bc  ld   $bc         ;0644 ADDW
+              e65c 0099  ld   $99         ;0644 ADDW
               e65d 0070  ld   $70         ;0644 'stepV'
-              e65e 00bc  ld   $bc         ;0646 ADDW
+              e65e 0099  ld   $99         ;0646 ADDW
               e65f 0070  ld   $70         ;0646 'stepV'
-              e660 00eb  ld   $eb         ;0648 PEEK
-              e661 0091  ld   $91         ;0649 XORI
+              e660 00f1  ld   $f1         ;0648 PEEK
+              e661 008c  ld   $8c         ;0649 XORI
               e662 0004  ld   $04
               e663 0035  ld   $35         ;064b BCC
               e664 003f  ld   $3f         ;064c EQ
               e665 005f  ld   $5f
-              e666 0091  ld   $91         ;064e XORI
+              e666 008c  ld   $8c         ;064e XORI
               e667 000c  ld   $0c
               e668 0035  ld   $35         ;0650 BCC
               e669 003f  ld   $3f         ;0651 EQ
@@ -52549,7 +52566,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e66c 0000  ld   $00
               e66d 002b  ld   $2b         ;0655 STW
               e66e 003c  ld   $3c         ;0655 'q'
-              e66f 0095  ld   $95         ;0657 BRA
+              e66f 0090  ld   $90         ;0657 BRA
               e670 005f  ld   $5f
               e671 0059  ld   $59         ;0659 LDI
               e672 0000  ld   $00
@@ -52566,23 +52583,23 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e67d 0073  ld   $73
               e67e 001a  ld   $1a         ;0666 LD
               e67f 0006  ld   $06
-              e680 0087  ld   $87         ;0668 ANDI
+              e680 0082  ld   $82         ;0668 ANDI
               e681 007f  ld   $7f
-              e682 00fc  ld   $fc         ;066a SUBI
+              e682 00e0  ld   $e0         ;066a SUBI
               e683 0006  ld   $06
               e684 0035  ld   $35         ;066c BCC
               e685 0053  ld   $53         ;066d GE
               e686 0071  ld   $71
               e687 0059  ld   $59         ;066f LDI
               e688 0001  ld   $01
-              e689 0095  ld   $95         ;0671 BRA
+              e689 0090  ld   $90         ;0671 BRA
               e68a 0073  ld   $73
               e68b 0059  ld   $59         ;0673 LDI
               e68c 0000  ld   $00
               e68d 0035  ld   $35         ;0675 BCC
               e68e 003f  ld   $3f         ;0676 EQ
               e68f 009f  ld   $9f
-              e690 0091  ld   $91         ;0678 XORI
+              e690 008c  ld   $8c         ;0678 XORI
               e691 000c  ld   $0c
               e692 0035  ld   $35         ;067a BCC
               e693 003f  ld   $3f         ;067b EQ
@@ -52594,7 +52611,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e699 0084  ld   $84
               e69a 0021  ld   $21         ;0682 LDW
               e69b 003c  ld   $3c         ;0682 'q'
-              e69c 0095  ld   $95         ;0684 BRA
+              e69c 0090  ld   $90         ;0684 BRA
               e69d 009a  ld   $9a
               e69e 0021  ld   $21         ;0686 LDW
               e69f 003c  ld   $3c         ;0686 'q'
@@ -52603,35 +52620,35 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e6a2 008d  ld   $8d
               e6a3 0021  ld   $21         ;068b LDW
               e6a4 0040  ld   $40         ;068b 'p'
-              e6a5 0095  ld   $95         ;068d BRA
+              e6a5 0090  ld   $90         ;068d BRA
               e6a6 009a  ld   $9a
               e6a7 001a  ld   $1a         ;068f LD
               e6a8 0006  ld   $06
-              e6a9 0087  ld   $87         ;0691 ANDI
+              e6a9 0082  ld   $82         ;0691 ANDI
               e6aa 0001  ld   $01
               e6ab 0035  ld   $35         ;0693 BCC
               e6ac 0072  ld   $72         ;0694 NE
               e6ad 0098  ld   $98
               e6ae 0021  ld   $21         ;0696 LDW
               e6af 0040  ld   $40         ;0696 'p'
-              e6b0 0095  ld   $95         ;0698 BRA
+              e6b0 0090  ld   $90         ;0698 BRA
               e6b1 009a  ld   $9a
               e6b2 0021  ld   $21         ;069a LDW
               e6b3 003c  ld   $3c         ;069a 'q'
               e6b4 0035  ld   $35         ;069c BCC
               e6b5 003f  ld   $3f         ;069d EQ
               e6b6 009f  ld   $9f
-              e6b7 00d2  ld   $d2         ;069f CALL
+              e6b7 00cd  ld   $cd         ;069f CALL
               e6b8 0017  ld   $17         ;069f vAC
               e6b9 0063  ld   $63         ;06a1 POP
               e6ba 00ff  ld   $ff         ;06a2 RET
               e6bb 002b  ld   $2b         ;06a3 STW
               e6bc 008d  ld   $8d         ;06a3 'AutoControl'
-              e6bd 00d0  ld   $d0         ;06a5 DEF
+              e6bd 00cb  ld   $cb         ;06a5 DEF
               e6be 00d5  ld   $d5
               e6bf 001a  ld   $1a         ;06a7 LD
               e6c0 000f  ld   $0f
-              e6c1 0091  ld   $91         ;06a9 XORI
+              e6c1 008c  ld   $8c         ;06a9 XORI
               e6c2 00fe  ld   $fe
               e6c3 0035  ld   $35         ;06ab BCC
               e6c4 0072  ld   $72         ;06ac NE
@@ -52642,7 +52659,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e6c9 0072  ld   $72         ;06b0 'stepU'
               e6ca 001a  ld   $1a         ;06b2 LD
               e6cb 000f  ld   $0f
-              e6cc 0091  ld   $91         ;06b4 XORI
+              e6cc 008c  ld   $8c         ;06b4 XORI
               e6cd 00fd  ld   $fd
               e6ce 0035  ld   $35         ;06b6 BCC
               e6cf 0072  ld   $72         ;06b7 NE
@@ -52654,7 +52671,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e6d5 0072  ld   $72         ;06bc 'stepU'
               e6d6 001a  ld   $1a         ;06be LD
               e6d7 000f  ld   $0f
-              e6d8 0091  ld   $91         ;06c0 XORI
+              e6d8 008c  ld   $8c         ;06c0 XORI
               e6d9 00fb  ld   $fb
               e6da 0035  ld   $35         ;06c2 BCC
               e6db 0072  ld   $72         ;06c3 NE
@@ -52666,7 +52683,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e6e1 0072  ld   $72         ;06c8 'stepU'
               e6e2 001a  ld   $1a         ;06ca LD
               e6e3 000f  ld   $0f
-              e6e4 0091  ld   $91         ;06cc XORI
+              e6e4 008c  ld   $8c         ;06cc XORI
               e6e5 00f7  ld   $f7
               e6e6 0035  ld   $35         ;06ce BCC
               e6e7 0072  ld   $72         ;06cf NE
@@ -52679,20 +52696,20 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e6ee 00ff  ld   $ff         ;06d6 RET
               e6ef 002b  ld   $2b         ;06d7 STW
               e6f0 008f  ld   $8f         ;06d7 'PlayerControl'
-              e6f1 00d0  ld   $d0         ;06d9 DEF
+              e6f1 00cb  ld   $cb         ;06d9 DEF
               e6f2 00ef  ld   $ef
-              e6f3 007d  ld   $7d         ;06db PUSH
-              e6f4 00bc  ld   $bc         ;06dc ADDW
+              e6f3 0075  ld   $75         ;06db PUSH
+              e6f4 0099  ld   $99         ;06dc ADDW
               e6f5 0056  ld   $56         ;06dc 'Timer'
               e6f6 002b  ld   $2b         ;06de STW
               e6f7 0056  ld   $56         ;06de 'Timer'
-              e6f8 00fc  ld   $fc         ;06e0 SUBI
+              e6f8 00e0  ld   $e0         ;06e0 SUBI
               e6f9 000f  ld   $0f
               e6fa 0035  ld   $35         ;06e2 BCC
               e6fb fe00  bra  ac          ;+-----------------------------------+
               e6fc fcfd  bra  $e6fd       ;|                                   |
-              e6fd 1403  ld   $03,y       ;| Trampoline for page $e600 lookups |
-              e6fe e078  jmp  y,$78       ;|                                   |
+              e6fd 1404  ld   $04,y       ;| Trampoline for page $e600 lookups |
+              e6fe e072  jmp  y,$72       ;|                                   |
               e6ff 1516  ld   [$16],y     ;+-----------------------------------+
               e700 0056  ld   $56         ;06e3 LE
               e701 00e7  ld   $e7
@@ -52704,36 +52721,36 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e707 000e  ld   $0e
               e708 002b  ld   $2b         ;06eb STW
               e709 0054  ld   $54         ;06eb 'TimeOut'
-              e70a 00d2  ld   $d2         ;06ed CALL
+              e70a 00cd  ld   $cd         ;06ed CALL
               e70b 0058  ld   $58         ;06ed 'DrawTimer'
               e70c 0063  ld   $63         ;06ef POP
               e70d 00ff  ld   $ff         ;06f0 RET
               e70e 002b  ld   $2b         ;06f1 STW
               e70f 007c  ld   $7c         ;06f1 'AddTimer'
-              e710 0098  ld   $98         ;06f3 INC
+              e710 0093  ld   $93         ;06f3 INC
               e711 001a  ld   $1a
               e712 00ff  ld   $ff         ;06f5 RET
               e713 0007  ld   $07         ;| RAM segment address (high byte first)
               e714 0000  ld   $00         ;|
               e715 00ef  ld   $ef         ;| Length (1..256)
-              e716 00d0  ld   $d0         ;0700 DEF
+              e716 00cb  ld   $cb         ;0700 DEF
               e717 00e5  ld   $e5
-              e718 007d  ld   $7d         ;0702 PUSH
+              e718 0075  ld   $75         ;0702 PUSH
               e719 0059  ld   $59         ;0703 LDI
               e71a 0000  ld   $00
               e71b 002b  ld   $2b         ;0705 STW
               e71c 0062  ld   $62         ;0705 'Score'
               e71d 002b  ld   $2b         ;0707 STW
               e71e 0056  ld   $56         ;0707 'Timer'
-              e71f 00d2  ld   $d2         ;0709 CALL
+              e71f 00cd  ld   $cd         ;0709 CALL
               e720 007a  ld   $7a         ;0709 'DrawScore'
               e721 0059  ld   $59         ;070b LDI
               e722 000f  ld   $0f
               e723 002b  ld   $2b         ;070d STW
               e724 0056  ld   $56         ;070d 'Timer'
-              e725 00d2  ld   $d2         ;070f CALL
+              e725 00cd  ld   $cd         ;070f CALL
               e726 0058  ld   $58         ;070f 'DrawTimer'
-              e727 00d2  ld   $d2         ;0711 CALL
+              e727 00cd  ld   $cd         ;0711 CALL
               e728 0064  ld   $64         ;0711 'DrawHighScore'
               e729 0011  ld   $11         ;0713 LDWI
               e72a 0000  ld   $00
@@ -52744,7 +52761,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e72f 0004  ld   $04
               e730 002b  ld   $2b         ;071a STW
               e731 0042  ld   $42         ;071a 'BgColor'
-              e732 00d2  ld   $d2         ;071c CALL
+              e732 00cd  ld   $cd         ;071c CALL
               e733 006c  ld   $6c         ;071c 'ClearScreen'
               e734 0059  ld   $59         ;071e LDI
               e735 001a  ld   $1a
@@ -52758,7 +52775,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e73d 009f  ld   $9f
               e73e 002b  ld   $2b         ;0728 STW
               e73f 004e  ld   $4e         ;0728 'Count'
-              e740 00d2  ld   $d2         ;072a CALL
+              e740 00cd  ld   $cd         ;072a CALL
               e741 0052  ld   $52         ;072a 'DrawLine'
               e742 0011  ld   $11         ;072c LDWI
               e743 0000  ld   $00
@@ -52769,7 +52786,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e748 006f  ld   $6f
               e749 002b  ld   $2b         ;0733 STW
               e74a 004e  ld   $4e         ;0733 'Count'
-              e74b 00d2  ld   $d2         ;0735 CALL
+              e74b 00cd  ld   $cd         ;0735 CALL
               e74c 0052  ld   $52         ;0735 'DrawLine'
               e74d 0011  ld   $11         ;0737 LDWI
               e74e 00ff  ld   $ff
@@ -52780,7 +52797,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e753 009f  ld   $9f
               e754 002b  ld   $2b         ;073e STW
               e755 004e  ld   $4e         ;073e 'Count'
-              e756 00d2  ld   $d2         ;0740 CALL
+              e756 00cd  ld   $cd         ;0740 CALL
               e757 0052  ld   $52         ;0740 'DrawLine'
               e758 0011  ld   $11         ;0742 LDWI
               e759 0000  ld   $00
@@ -52791,7 +52808,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e75e 006e  ld   $6e
               e75f 002b  ld   $2b         ;0749 STW
               e760 004e  ld   $4e         ;0749 'Count'
-              e761 00d2  ld   $d2         ;074b CALL
+              e761 00cd  ld   $cd         ;074b CALL
               e762 0052  ld   $52         ;074b 'DrawLine'
               e763 0059  ld   $59         ;074d LDI
               e764 0001  ld   $01
@@ -52801,7 +52818,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e768 009e  ld   $9e
               e769 002b  ld   $2b         ;0753 STW
               e76a 004e  ld   $4e         ;0753 'Count'
-              e76b 00d2  ld   $d2         ;0755 CALL
+              e76b 00cd  ld   $cd         ;0755 CALL
               e76c 0052  ld   $52         ;0755 'DrawLine'
               e76d 0011  ld   $11         ;0757 LDWI
               e76e 0000  ld   $00
@@ -52812,7 +52829,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e773 006d  ld   $6d
               e774 002b  ld   $2b         ;075e STW
               e775 004e  ld   $4e         ;075e 'Count'
-              e776 00d2  ld   $d2         ;0760 CALL
+              e776 00cd  ld   $cd         ;0760 CALL
               e777 0052  ld   $52         ;0760 'DrawLine'
               e778 0011  ld   $11         ;0762 LDWI
               e779 00ff  ld   $ff
@@ -52823,7 +52840,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e77e 009d  ld   $9d
               e77f 002b  ld   $2b         ;0769 STW
               e780 004e  ld   $4e         ;0769 'Count'
-              e781 00d2  ld   $d2         ;076b CALL
+              e781 00cd  ld   $cd         ;076b CALL
               e782 0052  ld   $52         ;076b 'DrawLine'
               e783 0011  ld   $11         ;076d LDWI
               e784 0000  ld   $00
@@ -52834,7 +52851,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e789 006d  ld   $6d
               e78a 002b  ld   $2b         ;0774 STW
               e78b 004e  ld   $4e         ;0774 'Count'
-              e78c 00d2  ld   $d2         ;0776 CALL
+              e78c 00cd  ld   $cd         ;0776 CALL
               e78d 0052  ld   $52         ;0776 'DrawLine'
               e78e 0011  ld   $11         ;0778 LDWI
               e78f 0032  ld   $32
@@ -52845,7 +52862,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e794 0003  ld   $03
               e795 002b  ld   $2b         ;077f STW
               e796 0044  ld   $44         ;077f 'Color'
-              e797 00d0  ld   $d0         ;0781 DEF
+              e797 00cb  ld   $cb         ;0781 DEF
               e798 008c  ld   $8c
               e799 0047  ld   $47
               e79a 0045  ld   $45
@@ -52860,20 +52877,20 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e7a3 0000  ld   $00
               e7a4 002b  ld   $2b         ;078e STW
               e7a5 0048  ld   $48         ;078e 'Text'
-              e7a6 00d2  ld   $d2         ;0790 CALL
+              e7a6 00cd  ld   $cd         ;0790 CALL
               e7a7 004a  ld   $4a         ;0790 'DrawText'
               e7a8 0059  ld   $59         ;0792 LDI
               e7a9 003c  ld   $3c
               e7aa 002b  ld   $2b         ;0794 STW
               e7ab 0068  ld   $68         ;0794 'Delay'
-              e7ac 00d2  ld   $d2         ;0796 CALL
+              e7ac 00cd  ld   $cd         ;0796 CALL
               e7ad 006a  ld   $6a         ;0796 'Wait'
               e7ae 0011  ld   $11         ;0798 LDWI
               e7af 0032  ld   $32
               e7b0 0044  ld   $44
               e7b1 002b  ld   $2b         ;079b STW
               e7b2 003a  ld   $3a         ;079b 'Pos'
-              e7b3 00d0  ld   $d0         ;079d DEF
+              e7b3 00cb  ld   $cb         ;079d DEF
               e7b4 00a8  ld   $a8
               e7b5 0020  ld   $20
               e7b6 0020  ld   $20
@@ -52882,7 +52899,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e7bf 0000  ld   $00
               e7c0 002b  ld   $2b         ;07aa STW
               e7c1 0048  ld   $48         ;07aa 'Text'
-              e7c2 00d2  ld   $d2         ;07ac CALL
+              e7c2 00cd  ld   $cd         ;07ac CALL
               e7c3 004a  ld   $4a         ;07ac 'DrawText'
               e7c4 0011  ld   $11         ;07ae LDWI
               e7c5 0030  ld   $30
@@ -52891,7 +52908,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e7c8 005c  ld   $5c         ;07b1 'Head'
               e7c9 002b  ld   $2b         ;07b3 STW
               e7ca 0085  ld   $85         ;07b3 'Tail'
-              e7cb 00d2  ld   $d2         ;07b5 CALL
+              e7cb 00cd  ld   $cd         ;07b5 CALL
               e7cc 0060  ld   $60         ;07b5 'DrawHead'
               e7cd 0059  ld   $59         ;07b7 LDI
               e7ce 0000  ld   $00
@@ -52912,11 +52929,11 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e7dd 0019  ld   $19
               e7de 002b  ld   $2b         ;07c8 STW
               e7df 0034  ld   $34         ;07c8 'i'
-              e7e0 00d2  ld   $d2         ;07ca CALL
+              e7e0 00cd  ld   $cd         ;07ca CALL
               e7e1 0083  ld   $83         ;07ca 'AddFood'
               e7e2 0021  ld   $21         ;07cc LDW
               e7e3 0034  ld   $34         ;07cc 'i'
-              e7e4 00fc  ld   $fc         ;07ce SUBI
+              e7e4 00e0  ld   $e0         ;07ce SUBI
               e7e5 0001  ld   $01
               e7e6 002b  ld   $2b         ;07d0 STW
               e7e7 0034  ld   $34         ;07d0 'i'
@@ -52933,7 +52950,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e7f2 0056  ld   $56         ;07db 'Timer'
               e7f3 0059  ld   $59         ;07dd LDI
               e7f4 000f  ld   $0f
-              e7f5 00d2  ld   $d2         ;07df CALL
+              e7f5 00cd  ld   $cd         ;07df CALL
               e7f6 007c  ld   $7c         ;07df 'AddTimer'
               e7f7 0021  ld   $21         ;07e1 LDW
               e7f8 0091  ld   $91         ;07e1 'LaunchControl'
@@ -52941,8 +52958,8 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e7fa 0078  ld   $78         ;07e3 'Control'
               e7fb fe00  bra  ac          ;+-----------------------------------+
               e7fc fcfd  bra  $e7fd       ;|                                   |
-              e7fd 1403  ld   $03,y       ;| Trampoline for page $e700 lookups |
-              e7fe e078  jmp  y,$78       ;|                                   |
+              e7fd 1404  ld   $04,y       ;| Trampoline for page $e700 lookups |
+              e7fe e072  jmp  y,$72       ;|                                   |
               e7ff 1516  ld   [$16],y     ;+-----------------------------------+
               e800 0063  ld   $63         ;07e5 POP
               e801 00ff  ld   $ff         ;07e6 RET
@@ -52957,13 +52974,13 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e80a 0008  ld   $08         ;| RAM segment address (high byte first)
               e80b 00a0  ld   $a0         ;|
               e80c 0058  ld   $58         ;| Length (1..256)
-              e80d 00d0  ld   $d0         ;08a0 DEF
+              e80d 00cb  ld   $cb         ;08a0 DEF
               e80e 00d6  ld   $d6
-              e80f 007d  ld   $7d         ;08a2 PUSH
+              e80f 0075  ld   $75         ;08a2 PUSH
               e810 0011  ld   $11         ;08a3 LDWI
               e811 009c  ld   $9c
               e812 0044  ld   $44
-              e813 00a7  ld   $a7         ;08a6 SUBW
+              e813 00b6  ld   $b6         ;08a6 SUBW
               e814 005c  ld   $5c         ;08a6 'Head'
               e815 0035  ld   $35         ;08a8 BCC
               e816 0072  ld   $72         ;08a9 NE
@@ -52977,7 +52994,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e81e 0008  ld   $08
               e81f 002b  ld   $2b         ;08b2 STW
               e820 003a  ld   $3a         ;08b2 'Pos'
-              e821 00d0  ld   $d0         ;08b4 DEF
+              e821 00cb  ld   $cb         ;08b4 DEF
               e822 00b9  ld   $b9
               e823 0041  ld   $41
               e824 0055  ld   $55
@@ -52986,21 +53003,21 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e827 0000  ld   $00
               e828 002b  ld   $2b         ;08bb STW
               e829 0048  ld   $48         ;08bb 'Text'
-              e82a 00d2  ld   $d2         ;08bd CALL
+              e82a 00cd  ld   $cd         ;08bd CALL
               e82b 004a  ld   $4a         ;08bd 'DrawText'
               e82c 0021  ld   $21         ;08bf LDW
               e82d 008d  ld   $8d         ;08bf 'AutoControl'
               e82e 002b  ld   $2b         ;08c1 STW
               e82f 0078  ld   $78         ;08c1 'Control'
-              e830 00d2  ld   $d2         ;08c3 CALL
+              e830 00cd  ld   $cd         ;08c3 CALL
               e831 0017  ld   $17         ;08c3 vAC
-              e832 0095  ld   $95         ;08c5 BRA
+              e832 0090  ld   $90         ;08c5 BRA
               e833 00d4  ld   $d4
               e834 001a  ld   $1a         ;08c7 LD
               e835 000f  ld   $0f
-              e836 0087  ld   $87         ;08c9 ANDI
+              e836 0082  ld   $82         ;08c9 ANDI
               e837 00cf  ld   $cf
-              e838 0091  ld   $91         ;08cb XORI
+              e838 008c  ld   $8c         ;08cb XORI
               e839 00cf  ld   $cf
               e83a 0035  ld   $35         ;08cd BCC
               e83b 003f  ld   $3f         ;08ce EQ
@@ -53009,15 +53026,15 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e83e 008f  ld   $8f         ;08d0 'PlayerControl'
               e83f 002b  ld   $2b         ;08d2 STW
               e840 0078  ld   $78         ;08d2 'Control'
-              e841 00d2  ld   $d2         ;08d4 CALL
+              e841 00cd  ld   $cd         ;08d4 CALL
               e842 0017  ld   $17         ;08d4 vAC
               e843 0063  ld   $63         ;08d6 POP
               e844 00ff  ld   $ff         ;08d7 RET
               e845 002b  ld   $2b         ;08d8 STW
               e846 0091  ld   $91         ;08d8 'LaunchControl'
-              e847 00d0  ld   $d0         ;08da DEF
+              e847 00cb  ld   $cb         ;08da DEF
               e848 00f1  ld   $f1
-              e849 007d  ld   $7d         ;08dc PUSH
+              e849 0075  ld   $75         ;08dc PUSH
               e84a 0059  ld   $59         ;08dd LDI
               e84b 0020  ld   $20
               e84c 002b  ld   $2b         ;08df STW
@@ -53026,7 +53043,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e84f 000a  ld   $0a
               e850 002b  ld   $2b         ;08e3 STW
               e851 0093  ld   $93         ;08e3 'Radix'
-              e852 00d2  ld   $d2         ;08e5 CALL
+              e852 00cd  ld   $cd         ;08e5 CALL
               e853 0095  ld   $95         ;08e5 'DrawNextDigit'
               e854 0059  ld   $59         ;08e7 LDI
               e855 0030  ld   $30
@@ -53036,24 +53053,24 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e859 0001  ld   $01
               e85a 002b  ld   $2b         ;08ed STW
               e85b 0093  ld   $93         ;08ed 'Radix'
-              e85c 00d2  ld   $d2         ;08ef CALL
+              e85c 00cd  ld   $cd         ;08ef CALL
               e85d 0095  ld   $95         ;08ef 'DrawNextDigit'
               e85e 0063  ld   $63         ;08f1 POP
               e85f 00ff  ld   $ff         ;08f2 RET
               e860 002b  ld   $2b         ;08f3 STW
               e861 0097  ld   $97         ;08f3 'DrawNumber2'
-              e862 0098  ld   $98         ;08f5 INC
+              e862 0093  ld   $93         ;08f5 INC
               e863 001a  ld   $1a
               e864 00ff  ld   $ff         ;08f7 RET
               e865 0009  ld   $09         ;| RAM segment address (high byte first)
               e866 00a0  ld   $a0         ;|
               e867 0056  ld   $56         ;| Length (1..256)
-              e868 00d0  ld   $d0         ;09a0 DEF
+              e868 00cb  ld   $cb         ;09a0 DEF
               e869 00c7  ld   $c7
-              e86a 007d  ld   $7d         ;09a2 PUSH
+              e86a 0075  ld   $75         ;09a2 PUSH
               e86b 0021  ld   $21         ;09a3 LDW
               e86c 0099  ld   $99         ;09a3 'Value'
-              e86d 00a7  ld   $a7         ;09a5 SUBW
+              e86d 00b6  ld   $b6         ;09a5 SUBW
               e86e 0093  ld   $93         ;09a5 'Radix'
               e86f 0035  ld   $35         ;09a7 BCC
               e870 0050  ld   $50         ;09a8 LT
@@ -53066,34 +53083,34 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e877 0032  ld   $32         ;09ae 'Char'
               e878 0021  ld   $21         ;09b0 LDW
               e879 0099  ld   $99         ;09b0 'Value'
-              e87a 00a7  ld   $a7         ;09b2 SUBW
+              e87a 00b6  ld   $b6         ;09b2 SUBW
               e87b 0093  ld   $93         ;09b2 'Radix'
               e87c 0035  ld   $35         ;09b4 BCC
               e87d 0050  ld   $50         ;09b5 LT
               e87e 00bb  ld   $bb
               e87f 002b  ld   $2b         ;09b7 STW
               e880 0099  ld   $99         ;09b7 'Value'
-              e881 0098  ld   $98         ;09b9 INC
+              e881 0093  ld   $93         ;09b9 INC
               e882 0032  ld   $32         ;09b9 'Char'
-              e883 0095  ld   $95         ;09bb BRA
+              e883 0090  ld   $90         ;09bb BRA
               e884 00b0  ld   $b0
-              e885 00d2  ld   $d2         ;09bd CALL
+              e885 00cd  ld   $cd         ;09bd CALL
               e886 0046  ld   $46         ;09bd 'DrawChar'
               e887 0059  ld   $59         ;09bf LDI
               e888 0030  ld   $30
               e889 002b  ld   $2b         ;09c1 STW
               e88a 0032  ld   $32         ;09c1 'Char'
-              e88b 0095  ld   $95         ;09c3 BRA
+              e88b 0090  ld   $90         ;09c3 BRA
               e88c 00c5  ld   $c5
-              e88d 00d2  ld   $d2         ;09c5 CALL
+              e88d 00cd  ld   $cd         ;09c5 CALL
               e88e 0046  ld   $46         ;09c5 'DrawChar'
               e88f 0063  ld   $63         ;09c7 POP
               e890 00ff  ld   $ff         ;09c8 RET
               e891 002b  ld   $2b         ;09c9 STW
               e892 0095  ld   $95         ;09c9 'DrawNextDigit'
-              e893 00d0  ld   $d0         ;09cb DEF
+              e893 00cb  ld   $cb         ;09cb DEF
               e894 00ef  ld   $ef
-              e895 007d  ld   $7d         ;09cd PUSH
+              e895 0075  ld   $75         ;09cd PUSH
               e896 0059  ld   $59         ;09ce LDI
               e897 0020  ld   $20
               e898 002b  ld   $2b         ;09d0 STW
@@ -53103,19 +53120,19 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e89c 0003  ld   $03
               e89d 002b  ld   $2b         ;09d5 STW
               e89e 0093  ld   $93         ;09d5 'Radix'
-              e89f 00d2  ld   $d2         ;09d7 CALL
+              e89f 00cd  ld   $cd         ;09d7 CALL
               e8a0 0095  ld   $95         ;09d7 'DrawNextDigit'
               e8a1 0059  ld   $59         ;09d9 LDI
               e8a2 0064  ld   $64
               e8a3 002b  ld   $2b         ;09db STW
               e8a4 0093  ld   $93         ;09db 'Radix'
-              e8a5 00d2  ld   $d2         ;09dd CALL
+              e8a5 00cd  ld   $cd         ;09dd CALL
               e8a6 0095  ld   $95         ;09dd 'DrawNextDigit'
               e8a7 0059  ld   $59         ;09df LDI
               e8a8 000a  ld   $0a
               e8a9 002b  ld   $2b         ;09e1 STW
               e8aa 0093  ld   $93         ;09e1 'Radix'
-              e8ab 00d2  ld   $d2         ;09e3 CALL
+              e8ab 00cd  ld   $cd         ;09e3 CALL
               e8ac 0095  ld   $95         ;09e3 'DrawNextDigit'
               e8ad 0059  ld   $59         ;09e5 LDI
               e8ae 0030  ld   $30
@@ -53125,21 +53142,21 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e8b2 0001  ld   $01
               e8b3 002b  ld   $2b         ;09eb STW
               e8b4 0093  ld   $93         ;09eb 'Radix'
-              e8b5 00d2  ld   $d2         ;09ed CALL
+              e8b5 00cd  ld   $cd         ;09ed CALL
               e8b6 0095  ld   $95         ;09ed 'DrawNextDigit'
               e8b7 0063  ld   $63         ;09ef POP
               e8b8 00ff  ld   $ff         ;09f0 RET
               e8b9 002b  ld   $2b         ;09f1 STW
               e8ba 009b  ld   $9b         ;09f1 'DrawNumber4'
-              e8bb 0098  ld   $98         ;09f3 INC
+              e8bb 0093  ld   $93         ;09f3 INC
               e8bc 001a  ld   $1a
               e8bd 00ff  ld   $ff         ;09f5 RET
               e8be 000a  ld   $0a         ;| RAM segment address (high byte first)
               e8bf 00a0  ld   $a0         ;|
               e8c0 004a  ld   $4a         ;| Length (1..256)
-              e8c1 00d0  ld   $d0         ;0aa0 DEF
+              e8c1 00cb  ld   $cb         ;0aa0 DEF
               e8c2 00c1  ld   $c1
-              e8c3 007d  ld   $7d         ;0aa2 PUSH
+              e8c3 0075  ld   $75         ;0aa2 PUSH
               e8c4 0011  ld   $11         ;0aa3 LDWI
               e8c5 0002  ld   $02
               e8c6 0008  ld   $08
@@ -53147,14 +53164,14 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e8c8 003a  ld   $3a         ;0aa6 'Pos'
               e8c9 0021  ld   $21         ;0aa8 LDW
               e8ca 0062  ld   $62         ;0aa8 'Score'
-              e8cb 00a7  ld   $a7         ;0aaa SUBW
+              e8cb 00b6  ld   $b6         ;0aaa SUBW
               e8cc 0030  ld   $30         ;0aaa 'HighScore'
               e8cd 0035  ld   $35         ;0aac BCC
               e8ce 0056  ld   $56         ;0aad LE
               e8cf 00b1  ld   $b1
               e8d0 0059  ld   $59         ;0aaf LDI
               e8d1 001e  ld   $1e
-              e8d2 0095  ld   $95         ;0ab1 BRA
+              e8d2 0090  ld   $90         ;0ab1 BRA
               e8d3 00b3  ld   $b3
               e8d4 0059  ld   $59         ;0ab3 LDI
               e8d5 0008  ld   $08
@@ -53168,15 +53185,15 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e8dd 0062  ld   $62         ;0abb 'Score'
               e8de 002b  ld   $2b         ;0abd STW
               e8df 0099  ld   $99         ;0abd 'Value'
-              e8e0 00d2  ld   $d2         ;0abf CALL
+              e8e0 00cd  ld   $cd         ;0abf CALL
               e8e1 009b  ld   $9b         ;0abf 'DrawNumber4'
               e8e2 0063  ld   $63         ;0ac1 POP
               e8e3 00ff  ld   $ff         ;0ac2 RET
               e8e4 002b  ld   $2b         ;0ac3 STW
               e8e5 007a  ld   $7a         ;0ac3 'DrawScore'
-              e8e6 00d0  ld   $d0         ;0ac5 DEF
+              e8e6 00cb  ld   $cb         ;0ac5 DEF
               e8e7 00e3  ld   $e3
-              e8e8 007d  ld   $7d         ;0ac7 PUSH
+              e8e8 0075  ld   $75         ;0ac7 PUSH
               e8e9 0011  ld   $11         ;0ac8 LDWI
               e8ea 0020  ld   $20
               e8eb 0008  ld   $08
@@ -53194,18 +53211,18 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e8f7 0056  ld   $56         ;0ad5 'Timer'
               e8f8 002b  ld   $2b         ;0ad7 STW
               e8f9 0099  ld   $99         ;0ad7 'Value'
-              e8fa 00d2  ld   $d2         ;0ad9 CALL
+              e8fa 00cd  ld   $cd         ;0ad9 CALL
               e8fb fe00  bra  ac          ;+-----------------------------------+
               e8fc fcfd  bra  $e8fd       ;|                                   |
-              e8fd 1403  ld   $03,y       ;| Trampoline for page $e800 lookups |
-              e8fe e078  jmp  y,$78       ;|                                   |
+              e8fd 1404  ld   $04,y       ;| Trampoline for page $e800 lookups |
+              e8fe e072  jmp  y,$72       ;|                                   |
               e8ff 1516  ld   [$16],y     ;+-----------------------------------+
               e900 0097  ld   $97         ;0ad9 'DrawNumber2'
               e901 0021  ld   $21         ;0adb LDW
               e902 0054  ld   $54         ;0adb 'TimeOut'
-              e903 00f9  ld   $f9         ;0add ADDI
+              e903 00dd  ld   $dd         ;0add ADDI
               e904 003c  ld   $3c
-              e905 0087  ld   $87         ;0adf ANDI
+              e905 0082  ld   $82         ;0adf ANDI
               e906 00ff  ld   $ff
               e907 002b  ld   $2b         ;0ae1 STW
               e908 0054  ld   $54         ;0ae1 'TimeOut'
@@ -53213,15 +53230,15 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e90a 00ff  ld   $ff         ;0ae4 RET
               e90b 002b  ld   $2b         ;0ae5 STW
               e90c 0058  ld   $58         ;0ae5 'DrawTimer'
-              e90d 0098  ld   $98         ;0ae7 INC
+              e90d 0093  ld   $93         ;0ae7 INC
               e90e 001a  ld   $1a
               e90f 00ff  ld   $ff         ;0ae9 RET
               e910 000b  ld   $0b         ;| RAM segment address (high byte first)
               e911 00a0  ld   $a0         ;|
               e912 003e  ld   $3e         ;| Length (1..256)
-              e913 00d0  ld   $d0         ;0ba0 DEF
+              e913 00cb  ld   $cb         ;0ba0 DEF
               e914 00bc  ld   $bc
-              e915 007d  ld   $7d         ;0ba2 PUSH
+              e915 0075  ld   $75         ;0ba2 PUSH
               e916 0011  ld   $11         ;0ba3 LDWI
               e917 0074  ld   $74
               e918 0008  ld   $08
@@ -53231,7 +53248,7 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e91c 0000  ld   $00
               e91d 002b  ld   $2b         ;0baa STW
               e91e 0042  ld   $42         ;0baa 'BgColor'
-              e91f 00d0  ld   $d0         ;0bac DEF
+              e91f 00cb  ld   $cb         ;0bac DEF
               e920 00b0  ld   $b0
               e921 0048  ld   $48
               e922 0049  ld   $49
@@ -53239,23 +53256,23 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e924 0000  ld   $00
               e925 002b  ld   $2b         ;0bb2 STW
               e926 0048  ld   $48         ;0bb2 'Text'
-              e927 00d2  ld   $d2         ;0bb4 CALL
+              e927 00cd  ld   $cd         ;0bb4 CALL
               e928 004a  ld   $4a         ;0bb4 'DrawText'
               e929 0021  ld   $21         ;0bb6 LDW
               e92a 0030  ld   $30         ;0bb6 'HighScore'
               e92b 002b  ld   $2b         ;0bb8 STW
               e92c 0099  ld   $99         ;0bb8 'Value'
-              e92d 00d2  ld   $d2         ;0bba CALL
+              e92d 00cd  ld   $cd         ;0bba CALL
               e92e 009b  ld   $9b         ;0bba 'DrawNumber4'
               e92f 0063  ld   $63         ;0bbc POP
               e930 00ff  ld   $ff         ;0bbd RET
               e931 002b  ld   $2b         ;0bbe STW
               e932 0064  ld   $64         ;0bbe 'DrawHighScore'
-              e933 00d2  ld   $d2         ;0bc0 CALL
+              e933 00cd  ld   $cd         ;0bc0 CALL
               e934 006e  ld   $6e         ;0bc0 'Intro'
-              e935 00d2  ld   $d2         ;0bc2 CALL
+              e935 00cd  ld   $cd         ;0bc2 CALL
               e936 008b  ld   $8b         ;0bc2 'SetupGame'
-              e937 00d2  ld   $d2         ;0bc4 CALL
+              e937 00cd  ld   $cd         ;0bc4 CALL
               e938 0089  ld   $89         ;0bc4 'RunGame'
               e939 0059  ld   $59         ;0bc6 LDI
               e93a 0078  ld   $78
@@ -53269,39 +53286,39 @@ Snake:        e33c 0003  ld   $03         ;| RAM segment address (high byte firs
               e942 005c  ld   $5c         ;0bce 'Head'
               e943 002b  ld   $2b         ;0bd0 STW
               e944 003a  ld   $3a         ;0bd0 'Pos'
-              e945 00d2  ld   $d2         ;0bd2 CALL
+              e945 00cd  ld   $cd         ;0bd2 CALL
               e946 005e  ld   $5e         ;0bd2 'DrawBlock'
-              e947 00d2  ld   $d2         ;0bd4 CALL
+              e947 00cd  ld   $cd         ;0bd4 CALL
               e948 0066  ld   $66         ;0bd4 'GameOver'
               e949 0059  ld   $59         ;0bd6 LDI
               e94a 00f0  ld   $f0
               e94b 002b  ld   $2b         ;0bd8 STW
               e94c 0068  ld   $68         ;0bd8 'Delay'
-              e94d 00d2  ld   $d2         ;0bda CALL
+              e94d 00cd  ld   $cd         ;0bda CALL
               e94e 006a  ld   $6a         ;0bda 'Wait'
-              e94f 0095  ld   $95         ;0bdc BRA
+              e94f 0090  ld   $90         ;0bdc BRA
               e950 00c0  ld   $c0
               e951 0000  ld   $00         ;End of file
 Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte first)
               e953 0000  ld   $00         ;|
               e954 00f0  ld   $f0         ;| Length (1..256)
-              e955 00d0  ld   $d0         ;0300 DEF
+              e955 00cb  ld   $cb         ;0300 DEF
               e956 0050  ld   $50
               e957 0021  ld   $21         ;0302 LDW
               e958 0030  ld   $30         ;0302 'Char'
-              e959 00fc  ld   $fc         ;0304 SUBI
+              e959 00e0  ld   $e0         ;0304 SUBI
               e95a 0052  ld   $52
               e95b 0035  ld   $35         ;0306 BCC
               e95c 0053  ld   $53         ;0307 GE
               e95d 0010  ld   $10
-              e95e 00f9  ld   $f9         ;0309 ADDI
+              e95e 00dd  ld   $dd         ;0309 ADDI
               e95f 0032  ld   $32
               e960 002b  ld   $2b         ;030b STW
               e961 0032  ld   $32         ;030b 'i'
               e962 0011  ld   $11         ;030d LDWI
               e963 0000  ld   $00
               e964 0007  ld   $07
-              e965 0095  ld   $95         ;0310 BRA
+              e965 0090  ld   $90         ;0310 BRA
               e966 0015  ld   $15
               e967 002b  ld   $2b         ;0312 STW
               e968 0032  ld   $32         ;0312 'i'
@@ -53312,15 +53329,15 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               e96d 0034  ld   $34         ;0317 'fontData'
               e96e 0021  ld   $21         ;0319 LDW
               e96f 0032  ld   $32         ;0319 'i'
-              e970 00bc  ld   $bc         ;031b ADDW
+              e970 0099  ld   $99         ;031b ADDW
               e971 0032  ld   $32         ;031b 'i'
               e972 002b  ld   $2b         ;031d STW
               e973 0036  ld   $36         ;031d 'tmp'
-              e974 00bc  ld   $bc         ;031f ADDW
+              e974 0099  ld   $99         ;031f ADDW
               e975 0036  ld   $36         ;031f 'tmp'
-              e976 00bc  ld   $bc         ;0321 ADDW
+              e976 0099  ld   $99         ;0321 ADDW
               e977 0032  ld   $32         ;0321 'i'
-              e978 00bc  ld   $bc         ;0323 ADDW
+              e978 0099  ld   $99         ;0323 ADDW
               e979 0034  ld   $34         ;0323 'fontData'
               e97a 002b  ld   $2b         ;0325 STW
               e97b 0034  ld   $34         ;0325 'fontData'
@@ -53337,8 +53354,8 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               e986 002b  ld   $2b         ;0331 STW
               e987 0028  ld   $28
               e988 0011  ld   $11         ;0333 LDWI
-              e989 0054  ld   $54
-              e98a 0006  ld   $06
+              e989 00ec  ld   $ec
+              e98a 0004  ld   $04
               e98b 002b  ld   $2b         ;0336 STW
               e98c 0022  ld   $22
               e98d 0059  ld   $59         ;0338 LDI
@@ -53347,17 +53364,17 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               e990 0032  ld   $32         ;033a 'i'
               e991 0021  ld   $21         ;033c LDW
               e992 0034  ld   $34         ;033c 'fontData'
-              e993 0075  ld   $75         ;033e LOOKUP
+              e993 007f  ld   $7f         ;033e LOOKUP
               e994 0000  ld   $00
-              e995 0098  ld   $98         ;0340 INC
+              e995 0093  ld   $93         ;0340 INC
               e996 0034  ld   $34         ;0340 'fontData'
               e997 005e  ld   $5e         ;0342 ST
               e998 0026  ld   $26
-              e999 00a3  ld   $a3         ;0344 SYS
+              e999 00b2  ld   $b2         ;0344 SYS
               e99a 00cb  ld   $cb
-              e99b 0098  ld   $98         ;0346 INC
+              e99b 0093  ld   $93         ;0346 INC
               e99c 0028  ld   $28
-              e99d 0098  ld   $98         ;0348 INC
+              e99d 0093  ld   $93         ;0348 INC
               e99e 0032  ld   $32         ;0348 'i'
               e99f 0021  ld   $21         ;034a LDW
               e9a0 0032  ld   $32         ;034a 'i'
@@ -53369,17 +53386,17 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               e9a6 00ff  ld   $ff         ;0351 RET
               e9a7 002b  ld   $2b         ;0352 STW
               e9a8 003e  ld   $3e         ;0352 'QDrawChar'
-              e9a9 00d0  ld   $d0         ;0354 DEF
+              e9a9 00cb  ld   $cb         ;0354 DEF
               e9aa 00e9  ld   $e9
               e9ab 001a  ld   $1a         ;0356 LD
               e9ac 000e  ld   $0e
-              e9ad 00a7  ld   $a7         ;0358 SUBW
+              e9ad 00b6  ld   $b6         ;0358 SUBW
               e9ae 0040  ld   $40         ;0358 'LastFrame'
-              e9af 0087  ld   $87         ;035a ANDI
+              e9af 0082  ld   $82         ;035a ANDI
               e9b0 00ff  ld   $ff
               e9b1 005e  ld   $5e         ;035c ST
               e9b2 002b  ld   $2b
-              e9b3 00bc  ld   $bc         ;035e ADDW
+              e9b3 0099  ld   $99         ;035e ADDW
               e9b4 0042  ld   $42         ;035e 'Time'
               e9b5 0035  ld   $35         ;0360 BCC
               e9b6 0053  ld   $53         ;0361 GE
@@ -53402,21 +53419,21 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               e9c7 0032  ld   $32         ;0371 'i'
               e9c8 0021  ld   $21         ;0373 LDW
               e9c9 0046  ld   $46         ;0373 'CarX'
-              e9ca 00a7  ld   $a7         ;0375 SUBW
+              e9ca 00b6  ld   $b6         ;0375 SUBW
               e9cb 0048  ld   $48         ;0375 'DriftX'
               e9cc 002b  ld   $2b         ;0377 STW
               e9cd 0046  ld   $46         ;0377 'CarX'
               e9ce 0021  ld   $21         ;0379 LDW
               e9cf 004a  ld   $4a         ;0379 'HorizonX'
-              e9d0 00bc  ld   $bc         ;037b ADDW
+              e9d0 0099  ld   $99         ;037b ADDW
               e9d1 004c  ld   $4c         ;037b 'HorizonDX'
               e9d2 002b  ld   $2b         ;037d STW
               e9d3 004a  ld   $4a         ;037d 'HorizonX'
               e9d4 0021  ld   $21         ;037f LDW
               e9d5 0032  ld   $32         ;037f 'i'
-              e9d6 00fc  ld   $fc         ;0381 SUBI
+              e9d6 00e0  ld   $e0         ;0381 SUBI
               e9d7 0001  ld   $01
-              e9d8 0095  ld   $95         ;0383 BRA
+              e9d8 0090  ld   $90         ;0383 BRA
               e9d9 006c  ld   $6c
               e9da 0059  ld   $59         ;0385 LDI
               e9db 0000  ld   $00
@@ -53424,7 +53441,7 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               e9dd 004e  ld   $4e         ;0387 'Steer'
               e9de 001a  ld   $1a         ;0389 LD
               e9df 000f  ld   $0f
-              e9e0 0087  ld   $87         ;038b ANDI
+              e9e0 0082  ld   $82         ;038b ANDI
               e9e1 0001  ld   $01
               e9e2 0035  ld   $35         ;038d BCC
               e9e3 0072  ld   $72         ;038e NE
@@ -53432,7 +53449,7 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               e9e5 0011  ld   $11         ;0390 LDWI
               e9e6 0000  ld   $00
               e9e7 0002  ld   $02
-              e9e8 00bc  ld   $bc         ;0393 ADDW
+              e9e8 0099  ld   $99         ;0393 ADDW
               e9e9 0046  ld   $46         ;0393 'CarX'
               e9ea 002b  ld   $2b         ;0395 STW
               e9eb 0046  ld   $46         ;0395 'CarX'
@@ -53442,7 +53459,7 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               e9ef 004e  ld   $4e         ;0399 'Steer'
               e9f0 001a  ld   $1a         ;039b LD
               e9f1 000f  ld   $0f
-              e9f2 0087  ld   $87         ;039d ANDI
+              e9f2 0082  ld   $82         ;039d ANDI
               e9f3 0002  ld   $02
               e9f4 0035  ld   $35         ;039f BCC
               e9f5 0072  ld   $72         ;03a0 NE
@@ -53450,11 +53467,11 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               e9f7 0011  ld   $11         ;03a2 LDWI
               e9f8 0000  ld   $00
               e9f9 00fe  ld   $fe
-              e9fa 00bc  ld   $bc         ;03a5 ADDW
+              e9fa 0099  ld   $99         ;03a5 ADDW
               e9fb fe00  bra  ac          ;+-----------------------------------+
               e9fc fcfd  bra  $e9fd       ;|                                   |
-              e9fd 1403  ld   $03,y       ;| Trampoline for page $e900 lookups |
-              e9fe e078  jmp  y,$78       ;|                                   |
+              e9fd 1404  ld   $04,y       ;| Trampoline for page $e900 lookups |
+              e9fe e072  jmp  y,$72       ;|                                   |
               e9ff 1516  ld   [$16],y     ;+-----------------------------------+
               ea00 0046  ld   $46         ;03a5 'CarX'
               ea01 002b  ld   $2b         ;03a7 STW
@@ -53466,21 +53483,21 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ea07 004e  ld   $4e         ;03ac 'Steer'
               ea08 001a  ld   $1a         ;03ae LD
               ea09 000f  ld   $0f
-              ea0a 0087  ld   $87         ;03b0 ANDI
+              ea0a 0082  ld   $82         ;03b0 ANDI
               ea0b 0080  ld   $80
               ea0c 0035  ld   $35         ;03b2 BCC
               ea0d 0072  ld   $72         ;03b3 NE
               ea0e 00c8  ld   $c8
               ea0f 0021  ld   $21         ;03b5 LDW
               ea10 0044  ld   $44         ;03b5 'Speed'
-              ea11 00f9  ld   $f9         ;03b7 ADDI
+              ea11 00dd  ld   $dd         ;03b7 ADDI
               ea12 0010  ld   $10
               ea13 002b  ld   $2b         ;03b9 STW
               ea14 0044  ld   $44         ;03b9 'Speed'
               ea15 0011  ld   $11         ;03bb LDWI
               ea16 00ff  ld   $ff
               ea17 0005  ld   $05
-              ea18 00a7  ld   $a7         ;03be SUBW
+              ea18 00b6  ld   $b6         ;03be SUBW
               ea19 0044  ld   $44         ;03be 'Speed'
               ea1a 0035  ld   $35         ;03c0 BCC
               ea1b 0053  ld   $53         ;03c1 GE
@@ -53490,32 +53507,32 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ea1f 0005  ld   $05
               ea20 002b  ld   $2b         ;03c6 STW
               ea21 0044  ld   $44         ;03c6 'Speed'
-              ea22 0095  ld   $95         ;03c8 BRA
+              ea22 0090  ld   $90         ;03c8 BRA
               ea23 00d6  ld   $d6
               ea24 0011  ld   $11         ;03ca LDWI
               ea25 00f8  ld   $f8
               ea26 00fe  ld   $fe
-              ea27 00bc  ld   $bc         ;03cd ADDW
+              ea27 0099  ld   $99         ;03cd ADDW
               ea28 0044  ld   $44         ;03cd 'Speed'
               ea29 0035  ld   $35         ;03cf BCC
               ea2a 0050  ld   $50         ;03d0 LT
               ea2b 00d6  ld   $d6
               ea2c 0021  ld   $21         ;03d2 LDW
               ea2d 0044  ld   $44         ;03d2 'Speed'
-              ea2e 00fc  ld   $fc         ;03d4 SUBI
+              ea2e 00e0  ld   $e0         ;03d4 SUBI
               ea2f 0008  ld   $08
               ea30 002b  ld   $2b         ;03d6 STW
               ea31 0044  ld   $44         ;03d6 'Speed'
               ea32 001a  ld   $1a         ;03d8 LD
               ea33 000f  ld   $0f
-              ea34 0087  ld   $87         ;03da ANDI
+              ea34 0082  ld   $82         ;03da ANDI
               ea35 0040  ld   $40
               ea36 0035  ld   $35         ;03dc BCC
               ea37 0072  ld   $72         ;03dd NE
               ea38 00e8  ld   $e8
               ea39 0021  ld   $21         ;03df LDW
               ea3a 0044  ld   $44         ;03df 'Speed'
-              ea3b 00fc  ld   $fc         ;03e1 SUBI
+              ea3b 00e0  ld   $e0         ;03e1 SUBI
               ea3c 0040  ld   $40
               ea3d 0035  ld   $35         ;03e3 BCC
               ea3e 0053  ld   $53         ;03e4 GE
@@ -53527,13 +53544,13 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ea44 00ff  ld   $ff         ;03ea RET
               ea45 002b  ld   $2b         ;03eb STW
               ea46 0050  ld   $50         ;03eb 'ControlRaceCar'
-              ea47 0098  ld   $98         ;03ed INC
+              ea47 0093  ld   $93         ;03ed INC
               ea48 001a  ld   $1a
               ea49 00ff  ld   $ff         ;03ef RET
               ea4a 0004  ld   $04         ;| RAM segment address (high byte first)
               ea4b 0000  ld   $00         ;|
               ea4c 00c1  ld   $c1         ;| Length (1..256)
-              ea4d 00d0  ld   $d0         ;0400 DEF
+              ea4d 00cb  ld   $cb         ;0400 DEF
               ea4e 0009  ld   $09
               ea4f 0047  ld   $47
               ea50 0069  ld   $69
@@ -53546,19 +53563,19 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ea57 0000  ld   $00
               ea58 002b  ld   $2b         ;040b STW
               ea59 0052  ld   $52         ;040b 'GigatronText'
-              ea5a 00d0  ld   $d0         ;040d DEF
+              ea5a 00cb  ld   $cb         ;040d DEF
               ea5b 001d  ld   $1d
               ea5c 001a  ld   $1a         ;040f LD
               ea5d 000e  ld   $0e
-              ea5e 00bc  ld   $bc         ;0411 ADDW
+              ea5e 0099  ld   $99         ;0411 ADDW
               ea5f 0054  ld   $54         ;0411 'Delay'
-              ea60 0087  ld   $87         ;0413 ANDI
+              ea60 0082  ld   $82         ;0413 ANDI
               ea61 00ff  ld   $ff
               ea62 002b  ld   $2b         ;0415 STW
               ea63 0036  ld   $36         ;0415 'tmp'
               ea64 001a  ld   $1a         ;0417 LD
               ea65 000e  ld   $0e
-              ea66 00a7  ld   $a7         ;0419 SUBW
+              ea66 00b6  ld   $b6         ;0419 SUBW
               ea67 0036  ld   $36         ;0419 'tmp'
               ea68 0035  ld   $35         ;041b BCC
               ea69 0072  ld   $72         ;041c NE
@@ -53566,7 +53583,7 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ea6b 00ff  ld   $ff         ;041e RET
               ea6c 002b  ld   $2b         ;041f STW
               ea6d 0056  ld   $56         ;041f 'Wait'
-              ea6e 00d0  ld   $d0         ;0421 DEF
+              ea6e 00cb  ld   $cb         ;0421 DEF
               ea6f 0036  ld   $36
               ea70 0059  ld   $59         ;0423 LDI
               ea71 0030  ld   $30
@@ -53574,16 +53591,16 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ea73 0030  ld   $30         ;0425 'Char'
               ea74 0021  ld   $21         ;0427 LDW
               ea75 0058  ld   $58         ;0427 'Value'
-              ea76 00a7  ld   $a7         ;0429 SUBW
+              ea76 00b6  ld   $b6         ;0429 SUBW
               ea77 005a  ld   $5a         ;0429 'Radix'
               ea78 0035  ld   $35         ;042b BCC
               ea79 0050  ld   $50         ;042c LT
               ea7a 0035  ld   $35
               ea7b 002b  ld   $2b         ;042e STW
               ea7c 0058  ld   $58         ;042e 'Value'
-              ea7d 0098  ld   $98         ;0430 INC
+              ea7d 0093  ld   $93         ;0430 INC
               ea7e 0030  ld   $30         ;0430 'Char'
-              ea7f 00a7  ld   $a7         ;0432 SUBW
+              ea7f 00b6  ld   $b6         ;0432 SUBW
               ea80 005a  ld   $5a         ;0432 'Radix'
               ea81 0035  ld   $35         ;0434 BCC
               ea82 0053  ld   $53         ;0435 GE
@@ -53591,20 +53608,20 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ea84 00ff  ld   $ff         ;0437 RET
               ea85 002b  ld   $2b         ;0438 STW
               ea86 005c  ld   $5c         ;0438 'ExtractDigit'
-              ea87 00d0  ld   $d0         ;043a DEF
+              ea87 00cb  ld   $cb         ;043a DEF
               ea88 00ba  ld   $ba
               ea89 0021  ld   $21         ;043c LDW
               ea8a 005e  ld   $5e         ;043c 'Video'
-              ea8b 00eb  ld   $eb         ;043e PEEK
-              ea8c 0087  ld   $87         ;043f ANDI
+              ea8b 00f1  ld   $f1         ;043e PEEK
+              ea8c 0082  ld   $82         ;043f ANDI
               ea8d 00fe  ld   $fe
               ea8e 005e  ld   $5e         ;0441 ST
               ea8f 0061  ld   $61         ;0441 'p'+1
-              ea90 008d  ld   $8d         ;0443 ORI
+              ea90 0088  ld   $88         ;0443 ORI
               ea91 0001  ld   $01
               ea92 005e  ld   $5e         ;0445 ST
               ea93 0063  ld   $63         ;0445 'q'+1
-              ea94 0098  ld   $98         ;0447 INC
+              ea94 0093  ld   $93         ;0447 INC
               ea95 005e  ld   $5e         ;0447 'Video'
               ea96 0059  ld   $59         ;0449 LDI
               ea97 0000  ld   $00
@@ -53614,36 +53631,36 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ea9b 0062  ld   $62         ;044d 'q'
               ea9c 0021  ld   $21         ;044f LDW
               ea9d 0060  ld   $60         ;044f 'p'
-              ea9e 00eb  ld   $eb         ;0451 PEEK
+              ea9e 00f1  ld   $f1         ;0451 PEEK
               ea9f 002b  ld   $2b         ;0452 STW
               eaa0 0032  ld   $32         ;0452 'i'
               eaa1 0021  ld   $21         ;0454 LDW
               eaa2 0062  ld   $62         ;0454 'q'
-              eaa3 00eb  ld   $eb         ;0456 PEEK
-              eaa4 00a7  ld   $a7         ;0457 SUBW
+              eaa3 00f1  ld   $f1         ;0456 PEEK
+              eaa4 00b6  ld   $b6         ;0457 SUBW
               eaa5 0032  ld   $32         ;0457 'i'
               eaa6 002b  ld   $2b         ;0459 STW
               eaa7 0032  ld   $32         ;0459 'i'
               eaa8 0021  ld   $21         ;045b LDW
               eaa9 0060  ld   $60         ;045b 'p'
-              eaaa 00eb  ld   $eb         ;045d PEEK
+              eaaa 00f1  ld   $f1         ;045d PEEK
               eaab 005e  ld   $5e         ;045e ST
               eaac 0060  ld   $60         ;045e 'p'
               eaad 005e  ld   $5e         ;0460 ST
               eaae 0062  ld   $62         ;0460 'q'
               eaaf 0059  ld   $59         ;0462 LDI
               eab0 0015  ld   $15
-              eab1 00e8  ld   $e8         ;0464 POKE
+              eab1 00ee  ld   $ee         ;0464 POKE
               eab2 0060  ld   $60         ;0464 'p'
-              eab3 00e8  ld   $e8         ;0466 POKE
+              eab3 00ee  ld   $ee         ;0466 POKE
               eab4 0062  ld   $62         ;0466 'q'
-              eab5 0098  ld   $98         ;0468 INC
+              eab5 0093  ld   $93         ;0468 INC
               eab6 0060  ld   $60         ;0468 'p'
-              eab7 0098  ld   $98         ;046a INC
+              eab7 0093  ld   $93         ;046a INC
               eab8 0062  ld   $62         ;046a 'q'
               eab9 0021  ld   $21         ;046c LDW
               eaba 0032  ld   $32         ;046c 'i'
-              eabb 00fc  ld   $fc         ;046e SUBI
+              eabb 00e0  ld   $e0         ;046e SUBI
               eabc 0001  ld   $01
               eabd 002b  ld   $2b         ;0470 STW
               eabe 0032  ld   $32         ;0470 'i'
@@ -53660,83 +53677,83 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               eac9 0060  ld   $60         ;047b 'p'
               eaca 0021  ld   $21         ;047d LDW
               eacb 005e  ld   $5e         ;047d 'Video'
-              eacc 00eb  ld   $eb         ;047f PEEK
-              eacd 00bc  ld   $bc         ;0480 ADDW
+              eacc 00f1  ld   $f1         ;047f PEEK
+              eacd 0099  ld   $99         ;0480 ADDW
               eace 0068  ld   $68         ;0480 'X'
               eacf 002b  ld   $2b         ;0482 STW
               ead0 0068  ld   $68         ;0482 'X'
               ead1 0021  ld   $21         ;0484 LDW
               ead2 0066  ld   $66         ;0484 's'
-              ead3 00eb  ld   $eb         ;0486 PEEK
-              ead4 00bc  ld   $bc         ;0487 ADDW
+              ead3 00f1  ld   $f1         ;0486 PEEK
+              ead4 0099  ld   $99         ;0487 ADDW
               ead5 0068  ld   $68         ;0487 'X'
-              ead6 00e8  ld   $e8         ;0489 POKE
+              ead6 00ee  ld   $ee         ;0489 POKE
               ead7 0060  ld   $60         ;0489 'p'
               ead8 005e  ld   $5e         ;048b ST
               ead9 0060  ld   $60         ;048b 'p'
               eada 005e  ld   $5e         ;048d ST
               eadb 0062  ld   $62         ;048d 'q'
-              eadc 0098  ld   $98         ;048f INC
+              eadc 0093  ld   $93         ;048f INC
               eadd 0066  ld   $66         ;048f 's'
               eade 0021  ld   $21         ;0491 LDW
               eadf 0060  ld   $60         ;0491 'p'
-              eae0 00eb  ld   $eb         ;0493 PEEK
-              eae1 0091  ld   $91         ;0494 XORI
+              eae0 00f1  ld   $f1         ;0493 PEEK
+              eae1 008c  ld   $8c         ;0494 XORI
               eae2 0015  ld   $15
-              eae3 00bc  ld   $bc         ;0496 ADDW
+              eae3 0099  ld   $99         ;0496 ADDW
               eae4 006a  ld   $6a         ;0496 'Collision'
               eae5 002b  ld   $2b         ;0498 STW
               eae6 006a  ld   $6a         ;0498 'Collision'
               eae7 0021  ld   $21         ;049a LDW
               eae8 0066  ld   $66         ;049a 's'
-              eae9 00eb  ld   $eb         ;049c PEEK
-              eaea 00e8  ld   $e8         ;049d POKE
+              eae9 00f1  ld   $f1         ;049c PEEK
+              eaea 00ee  ld   $ee         ;049d POKE
               eaeb 0060  ld   $60         ;049d 'p'
-              eaec 0098  ld   $98         ;049f INC
+              eaec 0093  ld   $93         ;049f INC
               eaed 0060  ld   $60         ;049f 'p'
-              eaee 00e8  ld   $e8         ;04a1 POKE
+              eaee 00ee  ld   $ee         ;04a1 POKE
               eaef 0062  ld   $62         ;04a1 'q'
-              eaf0 0098  ld   $98         ;04a3 INC
+              eaf0 0093  ld   $93         ;04a3 INC
               eaf1 0062  ld   $62         ;04a3 'q'
-              eaf2 0098  ld   $98         ;04a5 INC
+              eaf2 0093  ld   $93         ;04a5 INC
               eaf3 0066  ld   $66         ;04a5 's'
               eaf4 0021  ld   $21         ;04a7 LDW
               eaf5 0066  ld   $66         ;04a7 's'
-              eaf6 00eb  ld   $eb         ;04a9 PEEK
+              eaf6 00f1  ld   $f1         ;04a9 PEEK
               eaf7 0035  ld   $35         ;04aa BCC
               eaf8 0072  ld   $72         ;04ab NE
               eaf9 008f  ld   $8f
               eafa 0059  ld   $59         ;04ad LDI
               eafb fe00  bra  ac          ;+-----------------------------------+
               eafc fcfd  bra  $eafd       ;|                                   |
-              eafd 1403  ld   $03,y       ;| Trampoline for page $ea00 lookups |
-              eafe e078  jmp  y,$78       ;|                                   |
+              eafd 1404  ld   $04,y       ;| Trampoline for page $ea00 lookups |
+              eafe e072  jmp  y,$72       ;|                                   |
               eaff 1516  ld   [$16],y     ;+-----------------------------------+
               eb00 0000  ld   $00
               eb01 005e  ld   $5e         ;04af ST
               eb02 0062  ld   $62         ;04af 'q'
               eb03 001a  ld   $1a         ;04b1 LD
               eb04 0060  ld   $60         ;04b1 'p'
-              eb05 00e8  ld   $e8         ;04b3 POKE
+              eb05 00ee  ld   $ee         ;04b3 POKE
               eb06 0062  ld   $62         ;04b3 'q'
               eb07 0021  ld   $21         ;04b5 LDW
               eb08 005e  ld   $5e         ;04b5 'Video'
-              eb09 00f9  ld   $f9         ;04b7 ADDI
+              eb09 00dd  ld   $dd         ;04b7 ADDI
               eb0a 0003  ld   $03
               eb0b 002b  ld   $2b         ;04b9 STW
               eb0c 005e  ld   $5e         ;04b9 'Video'
               eb0d 00ff  ld   $ff         ;04bb RET
               eb0e 002b  ld   $2b         ;04bc STW
               eb0f 006c  ld   $6c         ;04bc 'DrawPixels'
-              eb10 0098  ld   $98         ;04be INC
+              eb10 0093  ld   $93         ;04be INC
               eb11 001a  ld   $1a
               eb12 00ff  ld   $ff         ;04c0 RET
               eb13 0005  ld   $05         ;| RAM segment address (high byte first)
               eb14 0000  ld   $00         ;|
               eb15 00f2  ld   $f2         ;| Length (1..256)
-              eb16 00d0  ld   $d0         ;0500 DEF
+              eb16 00cb  ld   $cb         ;0500 DEF
               eb17 0039  ld   $39
-              eb18 007d  ld   $7d         ;0502 PUSH
+              eb18 0075  ld   $75         ;0502 PUSH
               eb19 0011  ld   $11         ;0503 LDWI
               eb1a 0080  ld   $80
               eb1b 0020  ld   $20
@@ -53748,7 +53765,7 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               eb21 006e  ld   $6e         ;050a 'Width'
               eb22 0021  ld   $21         ;050c LDW
               eb23 006e  ld   $6e         ;050c 'Width'
-              eb24 00f9  ld   $f9         ;050e ADDI
+              eb24 00dd  ld   $dd         ;050e ADDI
               eb25 0001  ld   $01
               eb26 002b  ld   $2b         ;0510 STW
               eb27 006e  ld   $6e         ;0510 'Width'
@@ -53760,9 +53777,9 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               eb2d 000c  ld   $0c
               eb2e 002b  ld   $2b         ;0518 STW
               eb2f 0072  ld   $72         ;0518 'GrassColor'
-              eb30 00d2  ld   $d2         ;051a CALL
+              eb30 00cd  ld   $cd         ;051a CALL
               eb31 0074  ld   $74         ;051a 'SetupSegment'
-              eb32 0098  ld   $98         ;051c INC
+              eb32 0093  ld   $93         ;051c INC
               eb33 003d  ld   $3d         ;051c 'Pos'+1
               eb34 0059  ld   $59         ;051e LDI
               eb35 0003  ld   $03
@@ -53772,9 +53789,9 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               eb39 0008  ld   $08
               eb3a 002b  ld   $2b         ;0524 STW
               eb3b 0072  ld   $72         ;0524 'GrassColor'
-              eb3c 00d2  ld   $d2         ;0526 CALL
+              eb3c 00cd  ld   $cd         ;0526 CALL
               eb3d 0074  ld   $74         ;0526 'SetupSegment'
-              eb3e 0098  ld   $98         ;0528 INC
+              eb3e 0093  ld   $93         ;0528 INC
               eb3f 003d  ld   $3d         ;0528 'Pos'+1
               eb40 0021  ld   $21         ;052a LDW
               eb41 003c  ld   $3c         ;052a 'Pos'
@@ -53784,9 +53801,9 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               eb45 0011  ld   $11         ;052f LDWI
               eb46 0000  ld   $00
               eb47 0074  ld   $74
-              eb48 00e8  ld   $e8
+              eb48 00ee  ld   $ee
               eb49 0017  ld   $17
-              eb4a 0098  ld   $98         ;0534 INC
+              eb4a 0093  ld   $93         ;0534 INC
               eb4b 0018  ld   $18
               eb4c 0035  ld   $35         ;0536 BCC
               eb4d 004d  ld   $4d         ;0537 GT
@@ -53795,7 +53812,7 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               eb50 00ff  ld   $ff         ;053a RET
               eb51 002b  ld   $2b         ;053b STW
               eb52 0076  ld   $76         ;053b 'SetupRoad'
-              eb53 00d0  ld   $d0         ;053d DEF
+              eb53 00cb  ld   $cb         ;053d DEF
               eb54 0089  ld   $89
               eb55 0021  ld   $21         ;053f LDW
               eb56 003c  ld   $3c         ;053f 'Pos'
@@ -53807,13 +53824,13 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               eb5c 0036  ld   $36         ;0545 'tmp'
               eb5d 0059  ld   $59         ;0547 LDI
               eb5e 0015  ld   $15
-              eb5f 00e8  ld   $e8         ;0549 POKE
+              eb5f 00ee  ld   $ee         ;0549 POKE
               eb60 0060  ld   $60         ;0549 'p'
-              eb61 0098  ld   $98         ;054b INC
+              eb61 0093  ld   $93         ;054b INC
               eb62 0060  ld   $60         ;054b 'p'
               eb63 0021  ld   $21         ;054d LDW
               eb64 0036  ld   $36         ;054d 'tmp'
-              eb65 00fc  ld   $fc         ;054f SUBI
+              eb65 00e0  ld   $e0         ;054f SUBI
               eb66 0001  ld   $01
               eb67 0035  ld   $35         ;0551 BCC
               eb68 004d  ld   $4d         ;0552 GT
@@ -53824,7 +53841,7 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               eb6d 0062  ld   $62         ;0556 'q'
               eb6e 0021  ld   $21         ;0558 LDW
               eb6f 006e  ld   $6e         ;0558 'Width'
-              eb70 00fc  ld   $fc         ;055a SUBI
+              eb70 00e0  ld   $e0         ;055a SUBI
               eb71 0008  ld   $08
               eb72 0035  ld   $35         ;055c BCC
               eb73 0056  ld   $56         ;055d LE
@@ -53833,23 +53850,23 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               eb76 0036  ld   $36         ;055f 'tmp'
               eb77 0021  ld   $21         ;0561 LDW
               eb78 0062  ld   $62         ;0561 'q'
-              eb79 00fc  ld   $fc         ;0563 SUBI
+              eb79 00e0  ld   $e0         ;0563 SUBI
               eb7a 0001  ld   $01
               eb7b 002b  ld   $2b         ;0565 STW
               eb7c 0062  ld   $62         ;0565 'q'
               eb7d 0021  ld   $21         ;0567 LDW
               eb7e 0070  ld   $70         ;0567 'CurbColor'
-              eb7f 00e8  ld   $e8         ;0569 POKE
+              eb7f 00ee  ld   $ee         ;0569 POKE
               eb80 0062  ld   $62         ;0569 'q'
               eb81 0021  ld   $21         ;056b LDW
               eb82 0036  ld   $36         ;056b 'tmp'
-              eb83 0095  ld   $95         ;056d BRA
+              eb83 0090  ld   $90         ;056d BRA
               eb84 0058  ld   $58
               eb85 0021  ld   $21         ;056f LDW
               eb86 0072  ld   $72         ;056f 'GrassColor'
-              eb87 00e8  ld   $e8         ;0571 POKE
+              eb87 00ee  ld   $ee         ;0571 POKE
               eb88 0060  ld   $60         ;0571 'p'
-              eb89 0098  ld   $98         ;0573 INC
+              eb89 0093  ld   $93         ;0573 INC
               eb8a 0060  ld   $60         ;0573 'p'
               eb8b 001a  ld   $1a         ;0575 LD
               eb8c 0060  ld   $60         ;0575 'p'
@@ -53858,16 +53875,16 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               eb8f 006d  ld   $6d
               eb90 0021  ld   $21         ;057a LDW
               eb91 0060  ld   $60         ;057a 'p'
-              eb92 0091  ld   $91         ;057c XORI
+              eb92 008c  ld   $8c         ;057c XORI
               eb93 00ff  ld   $ff
-              eb94 00eb  ld   $eb         ;057e PEEK
-              eb95 00e8  ld   $e8         ;057f POKE
+              eb94 00f1  ld   $f1         ;057e PEEK
+              eb95 00ee  ld   $ee         ;057f POKE
               eb96 0060  ld   $60         ;057f 'p'
-              eb97 0098  ld   $98         ;0581 INC
+              eb97 0093  ld   $93         ;0581 INC
               eb98 0060  ld   $60         ;0581 'p'
               eb99 001a  ld   $1a         ;0583 LD
               eb9a 0060  ld   $60         ;0583 'p'
-              eb9b 0091  ld   $91         ;0585 XORI
+              eb9b 008c  ld   $8c         ;0585 XORI
               eb9c 0080  ld   $80
               eb9d 0035  ld   $35         ;0587 BCC
               eb9e 0072  ld   $72         ;0588 NE
@@ -53875,19 +53892,19 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               eba0 00ff  ld   $ff         ;058a RET
               eba1 002b  ld   $2b         ;058b STW
               eba2 0074  ld   $74         ;058b 'SetupSegment'
-              eba3 00d0  ld   $d0         ;058d DEF
+              eba3 00cb  ld   $cb         ;058d DEF
               eba4 00eb  ld   $eb
-              eba5 007d  ld   $7d         ;058f PUSH
+              eba5 0075  ld   $75         ;058f PUSH
               eba6 0011  ld   $11         ;0590 LDWI
               eba7 000f  ld   $0f
               eba8 000e  ld   $0e
               eba9 002b  ld   $2b         ;0593 STW
               ebaa 005a  ld   $5a         ;0593 'Radix'
-              ebab 00d2  ld   $d2         ;0595 CALL
+              ebab 00cd  ld   $cd         ;0595 CALL
               ebac 005c  ld   $5c         ;0595 'ExtractDigit'
               ebad 0021  ld   $21         ;0597 LDW
               ebae 0078  ld   $78         ;0597 'Prev3'
-              ebaf 00a7  ld   $a7         ;0599 SUBW
+              ebaf 00b6  ld   $b6         ;0599 SUBW
               ebb0 0030  ld   $30         ;0599 'Char'
               ebb1 0035  ld   $35         ;059b BCC
               ebb2 003f  ld   $3f         ;059c EQ
@@ -53896,13 +53913,13 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ebb5 0030  ld   $30         ;059e 'Char'
               ebb6 002b  ld   $2b         ;05a0 STW
               ebb7 0078  ld   $78         ;05a0 'Prev3'
-              ebb8 00d2  ld   $d2         ;05a2 CALL
+              ebb8 00cd  ld   $cd         ;05a2 CALL
               ebb9 003e  ld   $3e         ;05a2 'QDrawChar'
-              ebba 0095  ld   $95         ;05a4 BRA
+              ebba 0090  ld   $90         ;05a4 BRA
               ebbb 00a6  ld   $a6
               ebbc 0021  ld   $21         ;05a6 LDW
               ebbd 003c  ld   $3c         ;05a6 'Pos'
-              ebbe 00f9  ld   $f9         ;05a8 ADDI
+              ebbe 00dd  ld   $dd         ;05a8 ADDI
               ebbf 000c  ld   $0c
               ebc0 002b  ld   $2b         ;05aa STW
               ebc1 003c  ld   $3c         ;05aa 'Pos'
@@ -53911,11 +53928,11 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ebc4 0002  ld   $02
               ebc5 002b  ld   $2b         ;05af STW
               ebc6 005a  ld   $5a         ;05af 'Radix'
-              ebc7 00d2  ld   $d2         ;05b1 CALL
+              ebc7 00cd  ld   $cd         ;05b1 CALL
               ebc8 005c  ld   $5c         ;05b1 'ExtractDigit'
               ebc9 0021  ld   $21         ;05b3 LDW
               ebca 007a  ld   $7a         ;05b3 'Prev2'
-              ebcb 00a7  ld   $a7         ;05b5 SUBW
+              ebcb 00b6  ld   $b6         ;05b5 SUBW
               ebcc 0030  ld   $30         ;05b5 'Char'
               ebcd 0035  ld   $35         ;05b7 BCC
               ebce 003f  ld   $3f         ;05b8 EQ
@@ -53924,13 +53941,13 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ebd1 0030  ld   $30         ;05ba 'Char'
               ebd2 002b  ld   $2b         ;05bc STW
               ebd3 007a  ld   $7a         ;05bc 'Prev2'
-              ebd4 00d2  ld   $d2         ;05be CALL
+              ebd4 00cd  ld   $cd         ;05be CALL
               ebd5 003e  ld   $3e         ;05be 'QDrawChar'
-              ebd6 0095  ld   $95         ;05c0 BRA
+              ebd6 0090  ld   $90         ;05c0 BRA
               ebd7 00c2  ld   $c2
               ebd8 0021  ld   $21         ;05c2 LDW
               ebd9 003c  ld   $3c         ;05c2 'Pos'
-              ebda 00f9  ld   $f9         ;05c4 ADDI
+              ebda 00dd  ld   $dd         ;05c4 ADDI
               ebdb 0006  ld   $06
               ebdc 002b  ld   $2b         ;05c6 STW
               ebdd 003c  ld   $3c         ;05c6 'Pos'
@@ -53938,11 +53955,11 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ebdf 003c  ld   $3c
               ebe0 002b  ld   $2b         ;05ca STW
               ebe1 005a  ld   $5a         ;05ca 'Radix'
-              ebe2 00d2  ld   $d2         ;05cc CALL
+              ebe2 00cd  ld   $cd         ;05cc CALL
               ebe3 005c  ld   $5c         ;05cc 'ExtractDigit'
               ebe4 0021  ld   $21         ;05ce LDW
               ebe5 007c  ld   $7c         ;05ce 'Prev1'
-              ebe6 00a7  ld   $a7         ;05d0 SUBW
+              ebe6 00b6  ld   $b6         ;05d0 SUBW
               ebe7 0030  ld   $30         ;05d0 'Char'
               ebe8 0035  ld   $35         ;05d2 BCC
               ebe9 003f  ld   $3f         ;05d3 EQ
@@ -53951,13 +53968,13 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ebec 0030  ld   $30         ;05d5 'Char'
               ebed 002b  ld   $2b         ;05d7 STW
               ebee 007c  ld   $7c         ;05d7 'Prev1'
-              ebef 00d2  ld   $d2         ;05d9 CALL
+              ebef 00cd  ld   $cd         ;05d9 CALL
               ebf0 003e  ld   $3e         ;05d9 'QDrawChar'
-              ebf1 0095  ld   $95         ;05db BRA
+              ebf1 0090  ld   $90         ;05db BRA
               ebf2 00dd  ld   $dd
               ebf3 0021  ld   $21         ;05dd LDW
               ebf4 003c  ld   $3c         ;05dd 'Pos'
-              ebf5 00f9  ld   $f9         ;05df ADDI
+              ebf5 00dd  ld   $dd         ;05df ADDI
               ebf6 000c  ld   $0c
               ebf7 002b  ld   $2b         ;05e1 STW
               ebf8 003c  ld   $3c         ;05e1 'Pos'
@@ -53965,51 +53982,51 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ebfa 0006  ld   $06
               ebfb fe00  bra  ac          ;+-----------------------------------+
               ebfc fcfd  bra  $ebfd       ;|                                   |
-              ebfd 1403  ld   $03,y       ;| Trampoline for page $eb00 lookups |
-              ebfe e078  jmp  y,$78       ;|                                   |
+              ebfd 1404  ld   $04,y       ;| Trampoline for page $eb00 lookups |
+              ebfe e072  jmp  y,$72       ;|                                   |
               ebff 1516  ld   [$16],y     ;+-----------------------------------+
               ec00 002b  ld   $2b         ;05e5 STW
               ec01 005a  ld   $5a         ;05e5 'Radix'
-              ec02 00d2  ld   $d2         ;05e7 CALL
+              ec02 00cd  ld   $cd         ;05e7 CALL
               ec03 005c  ld   $5c         ;05e7 'ExtractDigit'
-              ec04 00d2  ld   $d2         ;05e9 CALL
+              ec04 00cd  ld   $cd         ;05e9 CALL
               ec05 003e  ld   $3e         ;05e9 'QDrawChar'
               ec06 0063  ld   $63         ;05eb POP
               ec07 00ff  ld   $ff         ;05ec RET
               ec08 002b  ld   $2b         ;05ed STW
               ec09 007e  ld   $7e         ;05ed 'DrawTime'
-              ec0a 0098  ld   $98         ;05ef INC
+              ec0a 0093  ld   $93         ;05ef INC
               ec0b 001a  ld   $1a
               ec0c 00ff  ld   $ff         ;05f1 RET
               ec0d 0006  ld   $06         ;| RAM segment address (high byte first)
               ec0e 0000  ld   $00         ;|
               ec0f 00ed  ld   $ed         ;| Length (1..256)
-              ec10 00d0  ld   $d0         ;0600 DEF
+              ec10 00cb  ld   $cb         ;0600 DEF
               ec11 0015  ld   $15
-              ec12 007d  ld   $7d         ;0602 PUSH
+              ec12 0075  ld   $75         ;0602 PUSH
               ec13 0021  ld   $21         ;0603 LDW
               ec14 0081  ld   $81         ;0603 'Text'
-              ec15 00eb  ld   $eb         ;0605 PEEK
+              ec15 00f1  ld   $f1         ;0605 PEEK
               ec16 002b  ld   $2b         ;0606 STW
               ec17 0030  ld   $30         ;0606 'Char'
               ec18 0035  ld   $35         ;0608 BCC
               ec19 003f  ld   $3f         ;0609 EQ
               ec1a 0013  ld   $13
-              ec1b 0098  ld   $98         ;060b INC
+              ec1b 0093  ld   $93         ;060b INC
               ec1c 0081  ld   $81         ;060b 'Text'
-              ec1d 00d2  ld   $d2         ;060d CALL
+              ec1d 00cd  ld   $cd         ;060d CALL
               ec1e 003e  ld   $3e         ;060d 'QDrawChar'
-              ec1f 00f9  ld   $f9         ;060f ADDI
+              ec1f 00dd  ld   $dd         ;060f ADDI
               ec20 0006  ld   $06
               ec21 002b  ld   $2b         ;0611 STW
               ec22 003c  ld   $3c         ;0611 'Pos'
-              ec23 0095  ld   $95         ;0613 BRA
+              ec23 0090  ld   $90         ;0613 BRA
               ec24 0001  ld   $01
               ec25 0063  ld   $63         ;0615 POP
               ec26 00ff  ld   $ff         ;0616 RET
               ec27 002b  ld   $2b         ;0617 STW
               ec28 0083  ld   $83         ;0617 'DrawText'
-              ec29 00d0  ld   $d0         ;0619 DEF
+              ec29 00cb  ld   $cb         ;0619 DEF
               ec2a 00ad  ld   $ad
               ec2b 0011  ld   $11         ;061b LDWI
               ec2c 00d0  ld   $d0
@@ -54024,46 +54041,46 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ec35 0085  ld   $85         ;0624 'DX'
               ec36 0021  ld   $21         ;0626 LDW
               ec37 0087  ld   $87         ;0626 'NextTurn'
-              ec38 00a7  ld   $a7         ;0628 SUBW
+              ec38 00b6  ld   $b6         ;0628 SUBW
               ec39 0089  ld   $89         ;0628 'Distance'
               ec3a 002b  ld   $2b         ;062a STW
               ec3b 0036  ld   $36         ;062a 'tmp'
-              ec3c 00bc  ld   $bc         ;062c ADDW
+              ec3c 0099  ld   $99         ;062c ADDW
               ec3d 0036  ld   $36         ;062c 'tmp'
               ec3e 002b  ld   $2b         ;062e STW
               ec3f 0036  ld   $36         ;062e 'tmp'
               ec40 0011  ld   $11         ;0630 LDWI
               ec41 0000  ld   $00
               ec42 000a  ld   $0a
-              ec43 00bc  ld   $bc         ;0633 ADDW
+              ec43 0099  ld   $99         ;0633 ADDW
               ec44 0036  ld   $36         ;0633 'tmp'
-              ec45 0075  ld   $75         ;0635 LOOKUP
+              ec45 007f  ld   $7f         ;0635 LOOKUP
               ec46 0035  ld   $35
               ec47 002b  ld   $2b         ;0637 STW
               ec48 0036  ld   $36         ;0637 'tmp'
               ec49 0059  ld   $59         ;0639 LDI
               ec4a 00c5  ld   $c5
-              ec4b 00bc  ld   $bc         ;063b ADDW
+              ec4b 0099  ld   $99         ;063b ADDW
               ec4c 0036  ld   $36         ;063b 'tmp'
               ec4d 002b  ld   $2b         ;063d STW
               ec4e 0032  ld   $32         ;063d 'i'
               ec4f 001a  ld   $1a         ;063f LD
               ec50 0069  ld   $69         ;063f 'X'+1
-              ec51 00e8  ld   $e8         ;0641 POKE
+              ec51 00ee  ld   $ee         ;0641 POKE
               ec52 0060  ld   $60         ;0641 'p'
-              ec53 0098  ld   $98         ;0643 INC
+              ec53 0093  ld   $93         ;0643 INC
               ec54 0060  ld   $60         ;0643 'p'
               ec55 0021  ld   $21         ;0645 LDW
               ec56 0085  ld   $85         ;0645 'DX'
-              ec57 00bc  ld   $bc         ;0647 ADDW
+              ec57 0099  ld   $99         ;0647 ADDW
               ec58 008b  ld   $8b         ;0647 'DDX'
               ec59 002b  ld   $2b         ;0649 STW
               ec5a 0085  ld   $85         ;0649 'DX'
-              ec5b 00bc  ld   $bc         ;064b ADDW
+              ec5b 0099  ld   $99         ;064b ADDW
               ec5c 0068  ld   $68         ;064b 'X'
               ec5d 002b  ld   $2b         ;064d STW
               ec5e 0068  ld   $68         ;064d 'X'
-              ec5f 0098  ld   $98         ;064f INC
+              ec5f 0093  ld   $93         ;064f INC
               ec60 0032  ld   $32         ;064f 'i'
               ec61 0021  ld   $21         ;0651 LDW
               ec62 0032  ld   $32         ;0651 'i'
@@ -54072,17 +54089,17 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ec65 003d  ld   $3d
               ec66 001a  ld   $1a         ;0656 LD
               ec67 0069  ld   $69         ;0656 'X'+1
-              ec68 00e8  ld   $e8         ;0658 POKE
+              ec68 00ee  ld   $ee         ;0658 POKE
               ec69 0060  ld   $60         ;0658 'p'
-              ec6a 0098  ld   $98         ;065a INC
+              ec6a 0093  ld   $93         ;065a INC
               ec6b 0060  ld   $60         ;065a 'p'
               ec6c 0021  ld   $21         ;065c LDW
               ec6d 0085  ld   $85         ;065c 'DX'
-              ec6e 00bc  ld   $bc         ;065e ADDW
+              ec6e 0099  ld   $99         ;065e ADDW
               ec6f 008d  ld   $8d         ;065e 'NextDDX'
               ec70 002b  ld   $2b         ;0660 STW
               ec71 0085  ld   $85         ;0660 'DX'
-              ec72 00bc  ld   $bc         ;0662 ADDW
+              ec72 0099  ld   $99         ;0662 ADDW
               ec73 0068  ld   $68         ;0662 'X'
               ec74 002b  ld   $2b         ;0664 STW
               ec75 0068  ld   $68         ;0664 'X'
@@ -54104,7 +54121,7 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ec85 0011  ld   $11         ;0675 LDWI
               ec86 00d0  ld   $d0
               ec87 0074  ld   $74
-              ec88 00eb  ld   $eb         ;0678 PEEK
+              ec88 00f1  ld   $f1         ;0678 PEEK
               ec89 002b  ld   $2b         ;0679 STW
               ec8a 0028  ld   $28
               ec8b 001a  ld   $1a         ;067b LD
@@ -54114,10 +54131,10 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ec8f 0011  ld   $11         ;067f LDWI
               ec90 00d5  ld   $d5
               ec91 0074  ld   $74
-              ec92 00eb  ld   $eb         ;0682 PEEK
-              ec93 00f9  ld   $f9         ;0683 ADDI
+              ec92 00f1  ld   $f1         ;0682 PEEK
+              ec93 00dd  ld   $dd         ;0683 ADDI
               ec94 0030  ld   $30
-              ec95 00a7  ld   $a7         ;0685 SUBW
+              ec95 00b6  ld   $b6         ;0685 SUBW
               ec96 0036  ld   $36         ;0685 'tmp'
               ec97 002b  ld   $2b         ;0687 STW
               ec98 0036  ld   $36         ;0687 'tmp'
@@ -54128,21 +54145,21 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ec9d 0066  ld   $66         ;068c 's'
               ec9e 001a  ld   $1a         ;068e LD
               ec9f 0009  ld   $09
-              eca0 0087  ld   $87         ;0690 ANDI
+              eca0 0082  ld   $82         ;0690 ANDI
               eca1 0001  ld   $01
               eca2 0035  ld   $35         ;0692 BCC
               eca3 003f  ld   $3f         ;0693 EQ
               eca4 008c  ld   $8c
               eca5 001a  ld   $1a         ;0695 LD
               eca6 004b  ld   $4b         ;0695 'HorizonX'+1
-              eca7 00e8  ld   $e8         ;0697 POKE
+              eca7 00ee  ld   $ee         ;0697 POKE
               eca8 0066  ld   $66         ;0697 's'
               eca9 0011  ld   $11         ;0699 LDWI
-              ecaa 0068  ld   $68
+              ecaa 0076  ld   $76
               ecab 0006  ld   $06
               ecac 002b  ld   $2b         ;069c STW
               ecad 0022  ld   $22
-              ecae 00a3  ld   $a3         ;069e SYS
+              ecae 00b2  ld   $b2         ;069e SYS
               ecaf 00fa  ld   $fa
               ecb0 0021  ld   $21         ;06a0 LDW
               ecb1 0024  ld   $24
@@ -54154,14 +54171,14 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ecb7 0068  ld   $68         ;06a6 'X'
               ecb8 0021  ld   $21         ;06a8 LDW
               ecb9 0036  ld   $36         ;06a8 'tmp'
-              ecba 00a7  ld   $a7         ;06aa SUBW
+              ecba 00b6  ld   $b6         ;06aa SUBW
               ecbb 0068  ld   $68         ;06aa 'X'
-              ecbc 00e8  ld   $e8         ;06ac POKE
+              ecbc 00ee  ld   $ee         ;06ac POKE
               ecbd 0066  ld   $66         ;06ac 's'
               ecbe 00ff  ld   $ff         ;06ae RET
               ecbf 002b  ld   $2b         ;06af STW
               ecc0 008f  ld   $8f         ;06af 'DrawRoad'
-              ecc1 00d0  ld   $d0         ;06b1 DEF
+              ecc1 00cb  ld   $cb         ;06b1 DEF
               ecc2 00e6  ld   $e6
               ecc3 0011  ld   $11         ;06b3 LDWI
               ecc4 00fb  ld   $fb
@@ -54170,23 +54187,23 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ecc7 0060  ld   $60         ;06b6 'p'
               ecc8 0021  ld   $21         ;06b8 LDW
               ecc9 0044  ld   $44         ;06b8 'Speed'
-              ecca 00bc  ld   $bc         ;06ba ADDW
+              ecca 0099  ld   $99         ;06ba ADDW
               eccb 0044  ld   $44         ;06ba 'Speed'
               eccc 001a  ld   $1a         ;06bc LD
               eccd 0018  ld   $18
-              ecce 00e8  ld   $e8         ;06be POKE
+              ecce 00ee  ld   $ee         ;06be POKE
               eccf 0060  ld   $60         ;06be 'p'
-              ecd0 0098  ld   $98         ;06c0 INC
+              ecd0 0093  ld   $93         ;06c0 INC
               ecd1 0061  ld   $61         ;06c0 'p'+1
-              ecd2 00e8  ld   $e8         ;06c2 POKE
+              ecd2 00ee  ld   $ee         ;06c2 POKE
               ecd3 0060  ld   $60         ;06c2 'p'
-              ecd4 0098  ld   $98         ;06c4 INC
+              ecd4 0093  ld   $93         ;06c4 INC
               ecd5 0061  ld   $61         ;06c4 'p'+1
-              ecd6 00e8  ld   $e8         ;06c6 POKE
+              ecd6 00ee  ld   $ee         ;06c6 POKE
               ecd7 0060  ld   $60         ;06c6 'p'
-              ecd8 0098  ld   $98         ;06c8 INC
+              ecd8 0093  ld   $93         ;06c8 INC
               ecd9 0061  ld   $61         ;06c8 'p'+1
-              ecda 00e8  ld   $e8         ;06ca POKE
+              ecda 00ee  ld   $ee         ;06ca POKE
               ecdb 0060  ld   $60         ;06ca 'p'
               ecdc 0011  ld   $11         ;06cc LDWI
               ecdd 00fa  ld   $fa
@@ -54195,21 +54212,21 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ece0 0060  ld   $60         ;06cf 'p'
               ece1 0021  ld   $21         ;06d1 LDW
               ece2 0044  ld   $44         ;06d1 'Speed'
-              ece3 0087  ld   $87         ;06d3 ANDI
+              ece3 0082  ld   $82         ;06d3 ANDI
               ece4 007f  ld   $7f
-              ece5 00e8  ld   $e8         ;06d5 POKE
+              ece5 00ee  ld   $ee         ;06d5 POKE
               ece6 0060  ld   $60         ;06d5 'p'
-              ece7 0098  ld   $98         ;06d7 INC
+              ece7 0093  ld   $93         ;06d7 INC
               ece8 0061  ld   $61         ;06d7 'p'+1
-              ece9 00e8  ld   $e8         ;06d9 POKE
+              ece9 00ee  ld   $ee         ;06d9 POKE
               ecea 0060  ld   $60         ;06d9 'p'
-              eceb 0098  ld   $98         ;06db INC
+              eceb 0093  ld   $93         ;06db INC
               ecec 0061  ld   $61         ;06db 'p'+1
-              eced 00e8  ld   $e8         ;06dd POKE
+              eced 00ee  ld   $ee         ;06dd POKE
               ecee 0060  ld   $60         ;06dd 'p'
-              ecef 0098  ld   $98         ;06df INC
+              ecef 0093  ld   $93         ;06df INC
               ecf0 0061  ld   $61         ;06df 'p'+1
-              ecf1 00e8  ld   $e8         ;06e1 POKE
+              ecf1 00ee  ld   $ee         ;06e1 POKE
               ecf2 0060  ld   $60         ;06e1 'p'
               ecf3 0059  ld   $59         ;06e3 LDI
               ecf4 003c  ld   $3c
@@ -54218,20 +54235,20 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ecf7 00ff  ld   $ff         ;06e7 RET
               ecf8 002b  ld   $2b         ;06e8 STW
               ecf9 0091  ld   $91         ;06e8 'PlayEngineSound'
-              ecfa 0098  ld   $98         ;06ea INC
+              ecfa 0093  ld   $93         ;06ea INC
               ecfb fe00  bra  ac          ;+-----------------------------------+
               ecfc fcfd  bra  $ecfd       ;|                                   |
-              ecfd 1403  ld   $03,y       ;| Trampoline for page $ec00 lookups |
-              ecfe e078  jmp  y,$78       ;|                                   |
+              ecfd 1404  ld   $04,y       ;| Trampoline for page $ec00 lookups |
+              ecfe e072  jmp  y,$72       ;|                                   |
               ecff 1516  ld   [$16],y     ;+-----------------------------------+
               ed00 001a  ld   $1a
               ed01 00ff  ld   $ff         ;06ec RET
               ed02 0007  ld   $07         ;| RAM segment address (high byte first)
               ed03 0000  ld   $00         ;|
               ed04 00f8  ld   $f8         ;| Length (1..256)
-              ed05 00d0  ld   $d0         ;0700 DEF
+              ed05 00cb  ld   $cb         ;0700 DEF
               ed06 00c0  ld   $c0
-              ed07 007d  ld   $7d         ;0702 PUSH
+              ed07 0075  ld   $75         ;0702 PUSH
               ed08 0059  ld   $59         ;0703 LDI
               ed09 0000  ld   $00
               ed0a 002b  ld   $2b         ;0705 STW
@@ -54242,7 +54259,7 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ed0f 007a  ld   $7a         ;0709 'Prev2'
               ed10 002b  ld   $2b         ;070b STW
               ed11 007c  ld   $7c         ;070b 'Prev1'
-              ed12 00d2  ld   $d2         ;070d CALL
+              ed12 00cd  ld   $cd         ;070d CALL
               ed13 0093  ld   $93         ;070d 'AdvanceCar'
               ed14 0021  ld   $21         ;070f LDW
               ed15 0089  ld   $89         ;070f 'Distance'
@@ -54251,7 +54268,7 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ed18 0046  ld   $46
               ed19 0021  ld   $21         ;0714 LDW
               ed1a 0042  ld   $42         ;0714 'Time'
-              ed1b 00a7  ld   $a7         ;0716 SUBW
+              ed1b 00b6  ld   $b6         ;0716 SUBW
               ed1c 0095  ld   $95         ;0716 'BestTime'
               ed1d 0035  ld   $35         ;0718 BCC
               ed1e 0053  ld   $53         ;0719 GE
@@ -54279,11 +54296,11 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ed34 0008  ld   $08
               ed35 002b  ld   $2b         ;0730 STW
               ed36 003c  ld   $3c         ;0730 'Pos'
-              ed37 00d2  ld   $d2         ;0732 CALL
+              ed37 00cd  ld   $cd         ;0732 CALL
               ed38 007e  ld   $7e         ;0732 'DrawTime'
               ed39 0021  ld   $21         ;0734 LDW
               ed3a 0097  ld   $97         ;0734 'j'
-              ed3b 00fc  ld   $fc         ;0736 SUBI
+              ed3b 00e0  ld   $e0         ;0736 SUBI
               ed3c 0001  ld   $01
               ed3d 0035  ld   $35         ;0738 BCC
               ed3e 004d  ld   $4d         ;0739 GT
@@ -54301,42 +54318,42 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ed4a 0089  ld   $89         ;0744 'Distance'
               ed4b 002b  ld   $2b         ;0746 STW
               ed4c 0087  ld   $87         ;0746 'NextTurn'
-              ed4d 00a7  ld   $a7         ;0748 SUBW
+              ed4d 00b6  ld   $b6         ;0748 SUBW
               ed4e 0087  ld   $87         ;0748 'NextTurn'
               ed4f 0035  ld   $35         ;074a BCC
               ed50 0056  ld   $56         ;074b LE
               ed51 008e  ld   $8e
               ed52 0021  ld   $21         ;074d LDW
               ed53 0099  ld   $99         ;074d 'Random'
-              ed54 00bc  ld   $bc         ;074f ADDW
+              ed54 0099  ld   $99         ;074f ADDW
               ed55 0087  ld   $87         ;074f 'NextTurn'
-              ed56 0091  ld   $91         ;0751 XORI
+              ed56 008c  ld   $8c         ;0751 XORI
               ed57 006d  ld   $6d
               ed58 002b  ld   $2b         ;0753 STW
               ed59 0099  ld   $99         ;0753 'Random'
-              ed5a 0087  ld   $87         ;0755 ANDI
+              ed5a 0082  ld   $82         ;0755 ANDI
               ed5b 001f  ld   $1f
-              ed5c 00f9  ld   $f9         ;0757 ADDI
+              ed5c 00dd  ld   $dd         ;0757 ADDI
               ed5d 0028  ld   $28
-              ed5e 00bc  ld   $bc         ;0759 ADDW
+              ed5e 0099  ld   $99         ;0759 ADDW
               ed5f 0087  ld   $87         ;0759 'NextTurn'
               ed60 002b  ld   $2b         ;075b STW
               ed61 0087  ld   $87         ;075b 'NextTurn'
               ed62 001a  ld   $1a         ;075d LD
               ed63 009a  ld   $9a         ;075d 'Random'+1
-              ed64 0087  ld   $87         ;075f ANDI
+              ed64 0082  ld   $82         ;075f ANDI
               ed65 0003  ld   $03
-              ed66 00f9  ld   $f9         ;0761 ADDI
+              ed66 00dd  ld   $dd         ;0761 ADDI
               ed67 0001  ld   $01
               ed68 002b  ld   $2b         ;0763 STW
               ed69 0032  ld   $32         ;0763 'i'
-              ed6a 00bc  ld   $bc         ;0765 ADDW
+              ed6a 0099  ld   $99         ;0765 ADDW
               ed6b 0032  ld   $32         ;0765 'i'
-              ed6c 00bc  ld   $bc         ;0767 ADDW
+              ed6c 0099  ld   $99         ;0767 ADDW
               ed6d 0032  ld   $32         ;0767 'i'
               ed6e 002b  ld   $2b         ;0769 STW
               ed6f 0032  ld   $32         ;0769 'i'
-              ed70 00bc  ld   $bc         ;076b ADDW
+              ed70 0099  ld   $99         ;076b ADDW
               ed71 0032  ld   $32         ;076b 'i'
               ed72 002b  ld   $2b         ;076d STW
               ed73 0032  ld   $32         ;076d 'i'
@@ -54347,16 +54364,16 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ed78 0035  ld   $35         ;0773 BCC
               ed79 0053  ld   $53         ;0774 GE
               ed7a 0078  ld   $78
-              ed7b 00bc  ld   $bc         ;0776 ADDW
+              ed7b 0099  ld   $99         ;0776 ADDW
               ed7c 0032  ld   $32         ;0776 'i'
-              ed7d 0095  ld   $95         ;0778 BRA
+              ed7d 0090  ld   $90         ;0778 BRA
               ed7e 008c  ld   $8c
               ed7f 0035  ld   $35         ;077a BCC
               ed80 0056  ld   $56         ;077b LE
               ed81 007f  ld   $7f
-              ed82 00a7  ld   $a7         ;077d SUBW
+              ed82 00b6  ld   $b6         ;077d SUBW
               ed83 0032  ld   $32         ;077d 'i'
-              ed84 0095  ld   $95         ;077f BRA
+              ed84 0090  ld   $90         ;077f BRA
               ed85 008c  ld   $8c
               ed86 0021  ld   $21         ;0781 LDW
               ed87 0099  ld   $99         ;0781 'Random'
@@ -54365,41 +54382,41 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ed8a 0088  ld   $88
               ed8b 0021  ld   $21         ;0786 LDW
               ed8c 0032  ld   $32         ;0786 'i'
-              ed8d 0095  ld   $95         ;0788 BRA
+              ed8d 0090  ld   $90         ;0788 BRA
               ed8e 008c  ld   $8c
               ed8f 0059  ld   $59         ;078a LDI
               ed90 0000  ld   $00
-              ed91 00a7  ld   $a7         ;078c SUBW
+              ed91 00b6  ld   $b6         ;078c SUBW
               ed92 0032  ld   $32         ;078c 'i'
               ed93 002b  ld   $2b         ;078e STW
               ed94 008d  ld   $8d         ;078e 'NextDDX'
-              ed95 00d2  ld   $d2         ;0790 CALL
+              ed95 00cd  ld   $cd         ;0790 CALL
               ed96 008f  ld   $8f         ;0790 'DrawRoad'
               ed97 0021  ld   $21         ;0792 LDW
               ed98 008b  ld   $8b         ;0792 'DDX'
               ed99 002b  ld   $2b         ;0794 STW
               ed9a 0048  ld   $48         ;0794 'DriftX'
-              ed9b 00bc  ld   $bc         ;0796 ADDW
+              ed9b 0099  ld   $99         ;0796 ADDW
               ed9c 0048  ld   $48         ;0796 'DriftX'
               ed9d 002b  ld   $2b         ;0798 STW
               ed9e 0048  ld   $48         ;0798 'DriftX'
-              ed9f 00bc  ld   $bc         ;079a ADDW
+              ed9f 0099  ld   $99         ;079a ADDW
               eda0 0048  ld   $48         ;079a 'DriftX'
               eda1 002b  ld   $2b         ;079c STW
               eda2 0048  ld   $48         ;079c 'DriftX'
-              eda3 00bc  ld   $bc         ;079e ADDW
+              eda3 0099  ld   $99         ;079e ADDW
               eda4 0048  ld   $48         ;079e 'DriftX'
               eda5 002b  ld   $2b         ;07a0 STW
               eda6 0048  ld   $48         ;07a0 'DriftX'
               eda7 002b  ld   $2b         ;07a2 STW
               eda8 004c  ld   $4c         ;07a2 'HorizonDX'
-              eda9 00d2  ld   $d2         ;07a4 CALL
+              eda9 00cd  ld   $cd         ;07a4 CALL
               edaa 0050  ld   $50         ;07a4 'ControlRaceCar'
-              edab 00d2  ld   $d2         ;07a6 CALL
+              edab 00cd  ld   $cd         ;07a6 CALL
               edac 0091  ld   $91         ;07a6 'PlayEngineSound'
-              edad 00d2  ld   $d2         ;07a8 CALL
+              edad 00cd  ld   $cd         ;07a8 CALL
               edae 009b  ld   $9b         ;07a8 'DrawRaceCar'
-              edaf 00d2  ld   $d2         ;07aa CALL
+              edaf 00cd  ld   $cd         ;07aa CALL
               edb0 009d  ld   $9d         ;07aa 'DrawGrass'
               edb1 0021  ld   $21         ;07ac LDW
               edb2 0042  ld   $42         ;07ac 'Time'
@@ -54414,7 +54431,7 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               edbb 003f  ld   $3f
               edbc 002b  ld   $2b         ;07b7 STW
               edbd 003a  ld   $3a         ;07b7 'Color'
-              edbe 00d2  ld   $d2         ;07b9 CALL
+              edbe 00cd  ld   $cd         ;07b9 CALL
               edbf 007e  ld   $7e         ;07b9 'DrawTime'
               edc0 0021  ld   $21         ;07bb LDW
               edc1 006a  ld   $6a         ;07bb 'Collision'
@@ -54425,7 +54442,7 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               edc6 00ff  ld   $ff         ;07c1 RET
               edc7 002b  ld   $2b         ;07c2 STW
               edc8 009f  ld   $9f         ;07c2 'PlayGame'
-              edc9 00d0  ld   $d0         ;07c4 DEF
+              edc9 00cb  ld   $cb         ;07c4 DEF
               edca 00d0  ld   $d0
               edcb 0002  ld   $02
               edcc 0040  ld   $40
@@ -54441,7 +54458,7 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               edd6 0000  ld   $00
               edd7 002b  ld   $2b         ;07d2 STW
               edd8 00a1  ld   $a1         ;07d2 'Car0'
-              edd9 00d0  ld   $d0         ;07d4 DEF
+              edd9 00cb  ld   $cb         ;07d4 DEF
               edda 00de  ld   $de
               eddb 0003  ld   $03
               eddc 0028  ld   $28
@@ -54455,7 +54472,7 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ede4 0000  ld   $00
               ede5 002b  ld   $2b         ;07e0 STW
               ede6 00a3  ld   $a3         ;07e0 'Car1'
-              ede7 00d0  ld   $d0         ;07e2 DEF
+              ede7 00cb  ld   $cb         ;07e2 DEF
               ede8 00ee  ld   $ee
               ede9 0002  ld   $02
               edea 0028  ld   $28
@@ -54477,15 +54494,15 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               edfa 002b  ld   $2b         ;07f5 STW
               edfb fe00  bra  ac          ;+-----------------------------------+
               edfc fcfd  bra  $edfd       ;|                                   |
-              edfd 1403  ld   $03,y       ;| Trampoline for page $ed00 lookups |
-              edfe e078  jmp  y,$78       ;|                                   |
+              edfd 1404  ld   $04,y       ;| Trampoline for page $ed00 lookups |
+              edfe e072  jmp  y,$72       ;|                                   |
               edff 1516  ld   [$16],y     ;+-----------------------------------+
               ee00 0019  ld   $19
               ee01 00ff  ld   $ff         ;07f7 RET
               ee02 0008  ld   $08         ;| RAM segment address (high byte first)
               ee03 00a0  ld   $a0         ;|
               ee04 005d  ld   $5d         ;| Length (1..256)
-              ee05 00d0  ld   $d0         ;08a0 DEF
+              ee05 00cb  ld   $cb         ;08a0 DEF
               ee06 00b0  ld   $b0
               ee07 0000  ld   $00
               ee08 0040  ld   $40
@@ -54505,7 +54522,7 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ee16 0000  ld   $00
               ee17 002b  ld   $2b         ;08b2 STW
               ee18 00a7  ld   $a7         ;08b2 'Car3'
-              ee19 00d0  ld   $d0         ;08b4 DEF
+              ee19 00cb  ld   $cb         ;08b4 DEF
               ee1a 00c4  ld   $c4
               ee1b 0000  ld   $00
               ee1c 0040  ld   $40
@@ -54523,7 +54540,7 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ee2a 0000  ld   $00
               ee2b 002b  ld   $2b         ;08c6 STW
               ee2c 00a9  ld   $a9         ;08c6 'Car4'
-              ee2d 00d0  ld   $d0         ;08c8 DEF
+              ee2d 00cb  ld   $cb         ;08c8 DEF
               ee2e 00cf  ld   $cf
               ee2f 002d  ld   $2d
               ee30 003a  ld   $3a
@@ -54534,7 +54551,7 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ee35 0000  ld   $00
               ee36 002b  ld   $2b         ;08d1 STW
               ee37 00ab  ld   $ab         ;08d1 'EmptyTimeText'
-              ee38 00d0  ld   $d0         ;08d3 DEF
+              ee38 00cb  ld   $cb         ;08d3 DEF
               ee39 00f6  ld   $f6
               ee3a 0011  ld   $11         ;08d5 LDWI
               ee3b 002e  ld   $2e
@@ -54551,21 +54568,21 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ee46 002b  ld   $2b         ;08e1 STW
               ee47 0062  ld   $62         ;08e1 'q'
               ee48 0011  ld   $11         ;08e3 LDWI
-              ee49 0081  ld   $81
+              ee49 008f  ld   $8f
               ee4a 0006  ld   $06
               ee4b 002b  ld   $2b         ;08e6 STW
               ee4c 0022  ld   $22
               ee4d 0021  ld   $21         ;08e8 LDW
               ee4e 0062  ld   $62         ;08e8 'q'
-              ee4f 0075  ld   $75         ;08ea LOOKUP
+              ee4f 007f  ld   $7f         ;08ea LOOKUP
               ee50 0008  ld   $08
-              ee51 00bc  ld   $bc         ;08ec ADDW
+              ee51 0099  ld   $99         ;08ec ADDW
               ee52 0089  ld   $89         ;08ec 'Distance'
               ee53 005e  ld   $5e         ;08ee ST
               ee54 0027  ld   $27
-              ee55 00a3  ld   $a3         ;08f0 SYS
+              ee55 00b2  ld   $b2         ;08f0 SYS
               ee56 00fa  ld   $fa
-              ee57 0098  ld   $98         ;08f2 INC
+              ee57 0093  ld   $93         ;08f2 INC
               ee58 0062  ld   $62         ;08f2 'q'
               ee59 0035  ld   $35         ;08f4 BCC
               ee5a 0072  ld   $72         ;08f5 NE
@@ -54573,17 +54590,17 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ee5c 00ff  ld   $ff         ;08f7 RET
               ee5d 002b  ld   $2b         ;08f8 STW
               ee5e 009d  ld   $9d         ;08f8 'DrawGrass'
-              ee5f 0098  ld   $98         ;08fa INC
+              ee5f 0093  ld   $93         ;08fa INC
               ee60 001a  ld   $1a
               ee61 00ff  ld   $ff         ;08fc RET
               ee62 0009  ld   $09         ;| RAM segment address (high byte first)
               ee63 00a0  ld   $a0         ;|
               ee64 0023  ld   $23         ;| Length (1..256)
-              ee65 00d0  ld   $d0         ;09a0 DEF
+              ee65 00cb  ld   $cb         ;09a0 DEF
               ee66 00bc  ld   $bc
               ee67 001a  ld   $1a         ;09a2 LD
               ee68 0045  ld   $45         ;09a2 'Speed'+1
-              ee69 00bc  ld   $bc         ;09a4 ADDW
+              ee69 0099  ld   $99         ;09a4 ADDW
               ee6a 0089  ld   $89         ;09a4 'Distance'
               ee6b 002b  ld   $2b         ;09a6 STW
               ee6c 0089  ld   $89         ;09a6 'Distance'
@@ -54594,43 +54611,43 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ee71 0060  ld   $60         ;09ab 'p'
               ee72 001a  ld   $1a         ;09ad LD
               ee73 008a  ld   $8a         ;09ad 'Distance'+1
-              ee74 00bc  ld   $bc         ;09af ADDW
+              ee74 0099  ld   $99         ;09af ADDW
               ee75 0060  ld   $60         ;09af 'p'
               ee76 002b  ld   $2b         ;09b1 STW
               ee77 0060  ld   $60         ;09b1 'p'
               ee78 0059  ld   $59         ;09b3 LDI
               ee79 0015  ld   $15
-              ee7a 00e8  ld   $e8         ;09b5 POKE
+              ee7a 00ee  ld   $ee         ;09b5 POKE
               ee7b 0060  ld   $60         ;09b5 'p'
-              ee7c 0098  ld   $98         ;09b7 INC
+              ee7c 0093  ld   $93         ;09b7 INC
               ee7d 0060  ld   $60         ;09b7 'p'
               ee7e 0059  ld   $59         ;09b9 LDI
               ee7f 003c  ld   $3c
-              ee80 00e8  ld   $e8         ;09bb POKE
+              ee80 00ee  ld   $ee         ;09bb POKE
               ee81 0060  ld   $60         ;09bb 'p'
               ee82 00ff  ld   $ff         ;09bd RET
               ee83 002b  ld   $2b         ;09be STW
               ee84 0093  ld   $93         ;09be 'AdvanceCar'
-              ee85 0098  ld   $98         ;09c0 INC
+              ee85 0093  ld   $93         ;09c0 INC
               ee86 001a  ld   $1a
               ee87 00ff  ld   $ff         ;09c2 RET
               ee88 000a  ld   $0a         ;| RAM segment address (high byte first)
               ee89 00a0  ld   $a0         ;|
               ee8a 0041  ld   $41         ;| Length (1..256)
-              ee8b 00d0  ld   $d0         ;0aa0 DEF
+              ee8b 00cb  ld   $cb         ;0aa0 DEF
               ee8c 00da  ld   $da
-              ee8d 007d  ld   $7d         ;0aa2 PUSH
+              ee8d 0075  ld   $75         ;0aa2 PUSH
               ee8e 0011  ld   $11         ;0aa3 LDWI
               ee8f 00d9  ld   $d9
               ee90 0001  ld   $01
-              ee91 00eb  ld   $eb         ;0aa6 PEEK
-              ee92 0091  ld   $91         ;0aa7 XORI
+              ee91 00f1  ld   $f1         ;0aa6 PEEK
+              ee92 008c  ld   $8c         ;0aa7 XORI
               ee93 00ff  ld   $ff
               ee94 002b  ld   $2b         ;0aa9 STW
               ee95 0068  ld   $68         ;0aa9 'X'
               ee96 001a  ld   $1a         ;0aab LD
               ee97 0047  ld   $47         ;0aab 'CarX'+1
-              ee98 00bc  ld   $bc         ;0aad ADDW
+              ee98 0099  ld   $99         ;0aad ADDW
               ee99 0068  ld   $68         ;0aad 'X'
               ee9a 002b  ld   $2b         ;0aaf STW
               ee9b 0068  ld   $68         ;0aaf 'X'
@@ -54643,17 +54660,17 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               eea2 00a1  ld   $a1         ;0ab6 'Car0'
               eea3 002b  ld   $2b         ;0ab8 STW
               eea4 0064  ld   $64         ;0ab8 'Sprite'
-              eea5 00d2  ld   $d2         ;0aba CALL
+              eea5 00cd  ld   $cd         ;0aba CALL
               eea6 006c  ld   $6c         ;0aba 'DrawPixels'
               eea7 0021  ld   $21         ;0abc LDW
               eea8 00a3  ld   $a3         ;0abc 'Car1'
               eea9 002b  ld   $2b         ;0abe STW
               eeaa 0064  ld   $64         ;0abe 'Sprite'
-              eeab 00d2  ld   $d2         ;0ac0 CALL
+              eeab 00cd  ld   $cd         ;0ac0 CALL
               eeac 006c  ld   $6c         ;0ac0 'DrawPixels'
               eead 0021  ld   $21         ;0ac2 LDW
               eeae 0068  ld   $68         ;0ac2 'X'
-              eeaf 00a7  ld   $a7         ;0ac4 SUBW
+              eeaf 00b6  ld   $b6         ;0ac4 SUBW
               eeb0 004e  ld   $4e         ;0ac4 'Steer'
               eeb1 002b  ld   $2b         ;0ac6 STW
               eeb2 0068  ld   $68         ;0ac6 'X'
@@ -54661,33 +54678,33 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               eeb4 00a5  ld   $a5         ;0ac8 'Car2'
               eeb5 002b  ld   $2b         ;0aca STW
               eeb6 0064  ld   $64         ;0aca 'Sprite'
-              eeb7 00d2  ld   $d2         ;0acc CALL
+              eeb7 00cd  ld   $cd         ;0acc CALL
               eeb8 006c  ld   $6c         ;0acc 'DrawPixels'
               eeb9 0021  ld   $21         ;0ace LDW
               eeba 00a7  ld   $a7         ;0ace 'Car3'
               eebb 002b  ld   $2b         ;0ad0 STW
               eebc 0064  ld   $64         ;0ad0 'Sprite'
-              eebd 00d2  ld   $d2         ;0ad2 CALL
+              eebd 00cd  ld   $cd         ;0ad2 CALL
               eebe 006c  ld   $6c         ;0ad2 'DrawPixels'
               eebf 0021  ld   $21         ;0ad4 LDW
               eec0 00a9  ld   $a9         ;0ad4 'Car4'
               eec1 002b  ld   $2b         ;0ad6 STW
               eec2 0064  ld   $64         ;0ad6 'Sprite'
-              eec3 00d2  ld   $d2         ;0ad8 CALL
+              eec3 00cd  ld   $cd         ;0ad8 CALL
               eec4 006c  ld   $6c         ;0ad8 'DrawPixels'
               eec5 0063  ld   $63         ;0ada POP
               eec6 00ff  ld   $ff         ;0adb RET
               eec7 002b  ld   $2b         ;0adc STW
               eec8 009b  ld   $9b         ;0adc 'DrawRaceCar'
-              eec9 0098  ld   $98         ;0ade INC
+              eec9 0093  ld   $93         ;0ade INC
               eeca 001a  ld   $1a
               eecb 00ff  ld   $ff         ;0ae0 RET
               eecc 000b  ld   $0b         ;| RAM segment address (high byte first)
               eecd 00a0  ld   $a0         ;|
               eece 0054  ld   $54         ;| Length (1..256)
-              eecf 00d0  ld   $d0         ;0ba0 DEF
+              eecf 00cb  ld   $cb         ;0ba0 DEF
               eed0 00ed  ld   $ed
-              eed1 007d  ld   $7d         ;0ba2 PUSH
+              eed1 0075  ld   $75         ;0ba2 PUSH
               eed2 0059  ld   $59         ;0ba3 LDI
               eed3 0030  ld   $30
               eed4 002b  ld   $2b         ;0ba5 STW
@@ -54704,17 +54721,17 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               eedf 002b  ld   $2b         ;0bb0 STW
               eee0 0028  ld   $28
               eee1 0011  ld   $11         ;0bb2 LDWI
-              eee2 0054  ld   $54
-              eee3 0006  ld   $06
+              eee2 00ec  ld   $ec
+              eee3 0004  ld   $04
               eee4 002b  ld   $2b         ;0bb5 STW
               eee5 0022  ld   $22
-              eee6 00a3  ld   $a3         ;0bb7 SYS
+              eee6 00b2  ld   $b2         ;0bb7 SYS
               eee7 00cb  ld   $cb
-              eee8 0098  ld   $98         ;0bb9 INC
+              eee8 0093  ld   $93         ;0bb9 INC
               eee9 0028  ld   $28
               eeea 001a  ld   $1a         ;0bbb LD
               eeeb 0028  ld   $28
-              eeec 0091  ld   $91         ;0bbd XORI
+              eeec 008c  ld   $8c         ;0bbd XORI
               eeed 00a0  ld   $a0
               eeee 0035  ld   $35         ;0bbf BCC
               eeef 0072  ld   $72         ;0bc0 NE
@@ -54731,13 +54748,13 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               eefa 0021  ld   $21         ;0bcb LDW
               eefb fe00  bra  ac          ;+-----------------------------------+
               eefc fcfd  bra  $eefd       ;|                                   |
-              eefd 1403  ld   $03,y       ;| Trampoline for page $ee00 lookups |
-              eefe e078  jmp  y,$78       ;|                                   |
+              eefd 1404  ld   $04,y       ;| Trampoline for page $ee00 lookups |
+              eefe e072  jmp  y,$72       ;|                                   |
               eeff 1516  ld   [$16],y     ;+-----------------------------------+
               ef00 00ab  ld   $ab         ;0bcb 'EmptyTimeText'
               ef01 002b  ld   $2b         ;0bcd STW
               ef02 0081  ld   $81         ;0bcd 'Text'
-              ef03 00d2  ld   $d2         ;0bcf CALL
+              ef03 00cd  ld   $cd         ;0bcf CALL
               ef04 0083  ld   $83         ;0bcf 'DrawText'
               ef05 0011  ld   $11         ;0bd1 LDWI
               ef06 007c  ld   $7c
@@ -54748,7 +54765,7 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ef0b 00ab  ld   $ab         ;0bd6 'EmptyTimeText'
               ef0c 002b  ld   $2b         ;0bd8 STW
               ef0d 0081  ld   $81         ;0bd8 'Text'
-              ef0e 00d2  ld   $d2         ;0bda CALL
+              ef0e 00cd  ld   $cd         ;0bda CALL
               ef0f 0083  ld   $83         ;0bda 'DrawText'
               ef10 0011  ld   $11         ;0bdc LDWI
               ef11 0038  ld   $38
@@ -54759,39 +54776,39 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ef16 0052  ld   $52         ;0be1 'GigatronText'
               ef17 002b  ld   $2b         ;0be3 STW
               ef18 0081  ld   $81         ;0be3 'Text'
-              ef19 00d2  ld   $d2         ;0be5 CALL
+              ef19 00cd  ld   $cd         ;0be5 CALL
               ef1a 0083  ld   $83         ;0be5 'DrawText'
               ef1b 0059  ld   $59         ;0be7 LDI
               ef1c 003c  ld   $3c
               ef1d 002b  ld   $2b         ;0be9 STW
               ef1e 0054  ld   $54         ;0be9 'Delay'
-              ef1f 00d2  ld   $d2         ;0beb CALL
+              ef1f 00cd  ld   $cd         ;0beb CALL
               ef20 0056  ld   $56         ;0beb 'Wait'
               ef21 0063  ld   $63         ;0bed POP
               ef22 00ff  ld   $ff         ;0bee RET
               ef23 002b  ld   $2b         ;0bef STW
               ef24 00ad  ld   $ad         ;0bef 'Intro'
-              ef25 0098  ld   $98         ;0bf1 INC
+              ef25 0093  ld   $93         ;0bf1 INC
               ef26 001a  ld   $1a
               ef27 00ff  ld   $ff         ;0bf3 RET
               ef28 000c  ld   $0c         ;| RAM segment address (high byte first)
               ef29 00a0  ld   $a0         ;|
               ef2a 0003  ld   $03         ;| Length (1..256)
-              ef2b 0098  ld   $98         ;0ca0 INC
+              ef2b 0093  ld   $93         ;0ca0 INC
               ef2c 001a  ld   $1a
               ef2d 00ff  ld   $ff         ;0ca2 RET
               ef2e 000d  ld   $0d         ;| RAM segment address (high byte first)
               ef2f 00a0  ld   $a0         ;|
               ef30 0003  ld   $03         ;| Length (1..256)
-              ef31 0098  ld   $98         ;0da0 INC
+              ef31 0093  ld   $93         ;0da0 INC
               ef32 001a  ld   $1a
               ef33 00ff  ld   $ff         ;0da2 RET
               ef34 000e  ld   $0e         ;| RAM segment address (high byte first)
               ef35 00a0  ld   $a0         ;|
               ef36 005b  ld   $5b         ;| Length (1..256)
-              ef37 00d0  ld   $d0         ;0ea0 DEF
+              ef37 00cb  ld   $cb         ;0ea0 DEF
               ef38 00f4  ld   $f4
-              ef39 007d  ld   $7d         ;0ea2 PUSH
+              ef39 0075  ld   $75         ;0ea2 PUSH
               ef3a 0011  ld   $11         ;0ea3 LDWI
               ef3b 0000  ld   $00
               ef3c 00d7  ld   $d7
@@ -54802,22 +54819,22 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ef41 0010  ld   $10
               ef42 002b  ld   $2b         ;0eab STW
               ef43 0062  ld   $62         ;0eab 'q'
-              ef44 00d0  ld   $d0         ;0ead DEF
+              ef44 00cb  ld   $cb         ;0ead DEF
               ef45 00bf  ld   $bf
               ef46 001a  ld   $1a         ;0eaf LD
               ef47 0060  ld   $60         ;0eaf 'p'
-              ef48 0091  ld   $91         ;0eb1 XORI
+              ef48 008c  ld   $8c         ;0eb1 XORI
               ef49 00fa  ld   $fa
               ef4a 0035  ld   $35         ;0eb3 BCC
               ef4b 003f  ld   $3f         ;0eb4 EQ
               ef4c 00b8  ld   $b8
               ef4d 0059  ld   $59         ;0eb6 LDI
               ef4e 0001  ld   $01
-              ef4f 0095  ld   $95         ;0eb8 BRA
+              ef4f 0090  ld   $90         ;0eb8 BRA
               ef50 00ba  ld   $ba
               ef51 0059  ld   $59         ;0eba LDI
               ef52 0006  ld   $06
-              ef53 00bc  ld   $bc         ;0ebc ADDW
+              ef53 0099  ld   $99         ;0ebc ADDW
               ef54 0060  ld   $60         ;0ebc 'p'
               ef55 002b  ld   $2b         ;0ebe STW
               ef56 0060  ld   $60         ;0ebe 'p'
@@ -54826,49 +54843,49 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ef59 0036  ld   $36         ;0ec1 'tmp'
               ef5a 0021  ld   $21         ;0ec3 LDW
               ef5b 0060  ld   $60         ;0ec3 'p'
-              ef5c 0075  ld   $75         ;0ec5 LOOKUP
+              ef5c 007f  ld   $7f         ;0ec5 LOOKUP
               ef5d 0000  ld   $00
               ef5e 005e  ld   $5e         ;0ec7 ST
               ef5f 0024  ld   $24
-              ef60 00d2  ld   $d2         ;0ec9 CALL
+              ef60 00cd  ld   $cd         ;0ec9 CALL
               ef61 0036  ld   $36         ;0ec9 'tmp'
-              ef62 0075  ld   $75         ;0ecb LOOKUP
+              ef62 007f  ld   $7f         ;0ecb LOOKUP
               ef63 0000  ld   $00
               ef64 005e  ld   $5e         ;0ecd ST
               ef65 0025  ld   $25
-              ef66 00d2  ld   $d2         ;0ecf CALL
+              ef66 00cd  ld   $cd         ;0ecf CALL
               ef67 0036  ld   $36         ;0ecf 'tmp'
-              ef68 0075  ld   $75         ;0ed1 LOOKUP
+              ef68 007f  ld   $7f         ;0ed1 LOOKUP
               ef69 0000  ld   $00
               ef6a 005e  ld   $5e         ;0ed3 ST
               ef6b 0026  ld   $26
-              ef6c 00d2  ld   $d2         ;0ed5 CALL
+              ef6c 00cd  ld   $cd         ;0ed5 CALL
               ef6d 0036  ld   $36         ;0ed5 'tmp'
               ef6e 0011  ld   $11         ;0ed7 LDWI
               ef6f 0020  ld   $20
               ef70 0006  ld   $06
               ef71 002b  ld   $2b         ;0eda STW
               ef72 0022  ld   $22
-              ef73 00a3  ld   $a3         ;0edc SYS
+              ef73 00b2  ld   $b2         ;0edc SYS
               ef74 00f2  ld   $f2
               ef75 0021  ld   $21         ;0ede LDW
               ef76 0062  ld   $62         ;0ede 'q'
               ef77 002b  ld   $2b         ;0ee0 STW
               ef78 0028  ld   $28
-              ef79 00f9  ld   $f9         ;0ee2 ADDI
+              ef79 00dd  ld   $dd         ;0ee2 ADDI
               ef7a 0004  ld   $04
               ef7b 002b  ld   $2b         ;0ee4 STW
               ef7c 0062  ld   $62         ;0ee4 'q'
               ef7d 0011  ld   $11         ;0ee6 LDWI
-              ef7e 0047  ld   $47
-              ef7f 0006  ld   $06
+              ef7e 00df  ld   $df
+              ef7f 0004  ld   $04
               ef80 002b  ld   $2b         ;0ee9 STW
               ef81 0022  ld   $22
-              ef82 00a3  ld   $a3         ;0eeb SYS
+              ef82 00b2  ld   $b2         ;0eeb SYS
               ef83 00ff  ld   $ff
               ef84 001a  ld   $1a         ;0eed LD
               ef85 0063  ld   $63         ;0eed 'q'+1
-              ef86 0091  ld   $91         ;0eef XORI
+              ef86 008c  ld   $8c         ;0eef XORI
               ef87 0020  ld   $20
               ef88 0035  ld   $35         ;0ef1 BCC
               ef89 0072  ld   $72         ;0ef2 NE
@@ -54877,13 +54894,13 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               ef8c 00ff  ld   $ff         ;0ef5 RET
               ef8d 002b  ld   $2b         ;0ef6 STW
               ef8e 00af  ld   $af         ;0ef6 'SetupHorizon'
-              ef8f 0098  ld   $98         ;0ef8 INC
+              ef8f 0093  ld   $93         ;0ef8 INC
               ef90 001a  ld   $1a
               ef91 00ff  ld   $ff         ;0efa RET
               ef92 000f  ld   $0f         ;| RAM segment address (high byte first)
               ef93 00a0  ld   $a0         ;|
               ef94 0056  ld   $56         ;| Length (1..256)
-              ef95 00d2  ld   $d2         ;0fa0 CALL
+              ef95 00cd  ld   $cd         ;0fa0 CALL
               ef96 00ad  ld   $ad         ;0fa0 'Intro'
               ef97 0011  ld   $11         ;0fa2 LDWI
               ef98 0000  ld   $00
@@ -54900,13 +54917,13 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               efa3 008b  ld   $8b         ;0fad 'DDX'
               efa4 002b  ld   $2b         ;0faf STW
               efa5 008d  ld   $8d         ;0faf 'NextDDX'
-              efa6 00d2  ld   $d2         ;0fb1 CALL
+              efa6 00cd  ld   $cd         ;0fb1 CALL
               efa7 008f  ld   $8f         ;0fb1 'DrawRoad'
-              efa8 00d2  ld   $d2         ;0fb3 CALL
+              efa8 00cd  ld   $cd         ;0fb3 CALL
               efa9 009d  ld   $9d         ;0fb3 'DrawGrass'
-              efaa 00d2  ld   $d2         ;0fb5 CALL
+              efaa 00cd  ld   $cd         ;0fb5 CALL
               efab 00af  ld   $af         ;0fb5 'SetupHorizon'
-              efac 00d2  ld   $d2         ;0fb7 CALL
+              efac 00cd  ld   $cd         ;0fb7 CALL
               efad 0076  ld   $76         ;0fb7 'SetupRoad'
               efae 0011  ld   $11         ;0fb9 LDWI
               efaf 00ff  ld   $ff
@@ -54934,14 +54951,14 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               efc5 000e  ld   $0e
               efc6 002b  ld   $2b         ;0fd1 STW
               efc7 0040  ld   $40         ;0fd1 'LastFrame'
-              efc8 00d2  ld   $d2         ;0fd3 CALL
+              efc8 00cd  ld   $cd         ;0fd3 CALL
               efc9 009f  ld   $9f         ;0fd3 'PlayGame'
               efca 0011  ld   $11         ;0fd5 LDWI
               efcb 0035  ld   $35
               efcc 0014  ld   $14
               efcd 002b  ld   $2b         ;0fd8 STW
               efce 003c  ld   $3c         ;0fd8 'Pos'
-              efcf 00d0  ld   $d0         ;0fda DEF
+              efcf 00cb  ld   $cb         ;0fda DEF
               efd0 00e4  ld   $e4
               efd1 0047  ld   $47
               efd2 0041  ld   $41
@@ -54959,36 +54976,36 @@ Racer:        e952 0003  ld   $03         ;| RAM segment address (high byte firs
               efde 000f  ld   $0f
               efdf 002b  ld   $2b         ;0fea STW
               efe0 003a  ld   $3a         ;0fea 'Color'
-              efe1 00d2  ld   $d2         ;0fec CALL
+              efe1 00cd  ld   $cd         ;0fec CALL
               efe2 0083  ld   $83         ;0fec 'DrawText'
               efe3 0059  ld   $59         ;0fee LDI
               efe4 00f0  ld   $f0
               efe5 002b  ld   $2b         ;0ff0 STW
               efe6 0054  ld   $54         ;0ff0 'Delay'
-              efe7 00d2  ld   $d2         ;0ff2 CALL
+              efe7 00cd  ld   $cd         ;0ff2 CALL
               efe8 0056  ld   $56         ;0ff2 'Wait'
-              efe9 0095  ld   $95         ;0ff4 BRA
+              efe9 0090  ld   $90         ;0ff4 BRA
               efea 00a0  ld   $a0
               efeb 0000  ld   $00         ;End of file
 Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte first)
               efed 0000  ld   $00         ;|
               efee 00db  ld   $db         ;| Length (1..256)
-              efef 00d0  ld   $d0         ;0300 DEF
+              efef 00cb  ld   $cb         ;0300 DEF
               eff0 0080  ld   $80
-              eff1 007d  ld   $7d         ;0302 PUSH
+              eff1 0075  ld   $75         ;0302 PUSH
               eff2 0059  ld   $59         ;0303 LDI
               eff3 0000  ld   $00
               eff4 002b  ld   $2b         ;0305 STW
               eff5 0030  ld   $30         ;0305 'sign'
               eff6 002b  ld   $2b         ;0307 STW
               eff7 0032  ld   $32         ;0307 'C'
-              eff8 00a7  ld   $a7         ;0309 SUBW
+              eff8 00b6  ld   $b6         ;0309 SUBW
               eff9 0034  ld   $34         ;0309 'A'
               effa 0035  ld   $35         ;030b BCC
               effb fe00  bra  ac          ;+-----------------------------------+
               effc fcfd  bra  $effd       ;|                                   |
-              effd 1403  ld   $03,y       ;| Trampoline for page $ef00 lookups |
-              effe e078  jmp  y,$78       ;|                                   |
+              effd 1404  ld   $04,y       ;| Trampoline for page $ef00 lookups |
+              effe e072  jmp  y,$72       ;|                                   |
               efff 1516  ld   [$16],y     ;+-----------------------------------+
               f000 0056  ld   $56         ;030c LE
               f001 0012  ld   $12
@@ -55000,7 +55017,7 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f007 0030  ld   $30         ;0312 'sign'
               f008 0059  ld   $59         ;0314 LDI
               f009 0000  ld   $00
-              f00a 00a7  ld   $a7         ;0316 SUBW
+              f00a 00b6  ld   $b6         ;0316 SUBW
               f00b 0036  ld   $36         ;0316 'B'
               f00c 0035  ld   $35         ;0318 BCC
               f00d 0056  ld   $56         ;0319 LE
@@ -55009,7 +55026,7 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f010 0036  ld   $36         ;031b 'B'
               f011 0021  ld   $21         ;031d LDW
               f012 0030  ld   $30         ;031d 'sign'
-              f013 0091  ld   $91         ;031f XORI
+              f013 008c  ld   $8c         ;031f XORI
               f014 0001  ld   $01
               f015 002b  ld   $2b         ;0321 STW
               f016 0030  ld   $30         ;0321 'sign'
@@ -55025,36 +55042,36 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f020 0011  ld   $11         ;032c LDWI
               f021 0000  ld   $00
               f022 00c0  ld   $c0
-              f023 00bc  ld   $bc         ;032f ADDW
+              f023 0099  ld   $99         ;032f ADDW
               f024 0032  ld   $32         ;032f 'C'
               f025 0035  ld   $35         ;0331 BCC
               f026 0053  ld   $53         ;0332 GE
               f027 003a  ld   $3a
               f028 0021  ld   $21         ;0334 LDW
               f029 0032  ld   $32         ;0334 'C'
-              f02a 00bc  ld   $bc         ;0336 ADDW
+              f02a 0099  ld   $99         ;0336 ADDW
               f02b 0032  ld   $32         ;0336 'C'
               f02c 002b  ld   $2b         ;0338 STW
               f02d 0032  ld   $32         ;0338 'C'
-              f02e 0095  ld   $95         ;033a BRA
+              f02e 0090  ld   $90         ;033a BRA
               f02f 0048  ld   $48
               f030 0021  ld   $21         ;033c LDW
               f031 0036  ld   $36         ;033c 'B'
               f032 002b  ld   $2b         ;033e STW
               f033 0024  ld   $24
-              f034 00a3  ld   $a3         ;0340 SYS
+              f034 00b2  ld   $b2         ;0340 SYS
               f035 00f6  ld   $f6
               f036 002b  ld   $2b         ;0342 STW
               f037 0036  ld   $36         ;0342 'B'
               f038 0021  ld   $21         ;0344 LDW
               f039 0038  ld   $38         ;0344 'shift'
-              f03a 00fc  ld   $fc         ;0346 SUBI
+              f03a 00e0  ld   $e0         ;0346 SUBI
               f03b 0001  ld   $01
               f03c 002b  ld   $2b         ;0348 STW
               f03d 0038  ld   $38         ;0348 'shift'
               f03e 0021  ld   $21         ;034a LDW
               f03f 0034  ld   $34         ;034a 'A'
-              f040 00a7  ld   $a7         ;034c SUBW
+              f040 00b6  ld   $b6         ;034c SUBW
               f041 003a  ld   $3a         ;034c 'bit'
               f042 0035  ld   $35         ;034e BCC
               f043 0050  ld   $50         ;034f LT
@@ -55063,7 +55080,7 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f046 0034  ld   $34         ;0351 'A'
               f047 0021  ld   $21         ;0353 LDW
               f048 0032  ld   $32         ;0353 'C'
-              f049 00bc  ld   $bc         ;0355 ADDW
+              f049 0099  ld   $99         ;0355 ADDW
               f04a 0036  ld   $36         ;0355 'B'
               f04b 002b  ld   $2b         ;0357 STW
               f04c 0032  ld   $32         ;0357 'C'
@@ -55071,7 +55088,7 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f04e 003a  ld   $3a         ;0359 'bit'
               f04f 002b  ld   $2b         ;035b STW
               f050 0024  ld   $24
-              f051 00a3  ld   $a3         ;035d SYS
+              f051 00b2  ld   $b2         ;035d SYS
               f052 00f6  ld   $f6
               f053 0035  ld   $35         ;035f BCC
               f054 0072  ld   $72         ;0360 NE
@@ -55080,13 +55097,13 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f057 0032  ld   $32         ;0362 'C'
               f058 002b  ld   $2b         ;0364 STW
               f059 0024  ld   $24
-              f05a 00a3  ld   $a3         ;0366 SYS
+              f05a 00b2  ld   $b2         ;0366 SYS
               f05b 00f6  ld   $f6
               f05c 002b  ld   $2b         ;0368 STW
               f05d 0032  ld   $32         ;0368 'C'
               f05e 0021  ld   $21         ;036a LDW
               f05f 0038  ld   $38         ;036a 'shift'
-              f060 00fc  ld   $fc         ;036c SUBI
+              f060 00e0  ld   $e0         ;036c SUBI
               f061 0001  ld   $01
               f062 002b  ld   $2b         ;036e STW
               f063 0038  ld   $38         ;036e 'shift'
@@ -55100,9 +55117,9 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f06b 007c  ld   $7c
               f06c 0059  ld   $59         ;0378 LDI
               f06d 0000  ld   $00
-              f06e 00a7  ld   $a7         ;037a SUBW
+              f06e 00b6  ld   $b6         ;037a SUBW
               f06f 0032  ld   $32         ;037a 'C'
-              f070 0095  ld   $95         ;037c BRA
+              f070 0090  ld   $90         ;037c BRA
               f071 007e  ld   $7e
               f072 0021  ld   $21         ;037e LDW
               f073 0032  ld   $32         ;037e 'C'
@@ -55110,9 +55127,9 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f075 00ff  ld   $ff         ;0381 RET
               f076 002b  ld   $2b         ;0382 STW
               f077 003c  ld   $3c         ;0382 'MulShift7'
-              f078 00d0  ld   $d0         ;0384 DEF
+              f078 00cb  ld   $cb         ;0384 DEF
               f079 00d4  ld   $d4
-              f07a 007d  ld   $7d         ;0386 PUSH
+              f07a 0075  ld   $75         ;0386 PUSH
               f07b 0059  ld   $59         ;0387 LDI
               f07c 0000  ld   $00
               f07d 002b  ld   $2b         ;0389 STW
@@ -55127,11 +55144,11 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f086 0046  ld   $46         ;0391 'i'
               f087 0021  ld   $21         ;0393 LDW
               f088 0046  ld   $46         ;0393 'i'
-              f089 00f9  ld   $f9         ;0395 ADDI
+              f089 00dd  ld   $dd         ;0395 ADDI
               f08a 0001  ld   $01
               f08b 002b  ld   $2b         ;0397 STW
               f08c 0046  ld   $46         ;0397 'i'
-              f08d 0091  ld   $91         ;0399 XORI
+              f08d 008c  ld   $8c         ;0399 XORI
               f08e 0040  ld   $40
               f08f 0035  ld   $35         ;039b BCC
               f090 003f  ld   $3f         ;039c EQ
@@ -55142,21 +55159,21 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f095 0034  ld   $34         ;03a0 'A'
               f096 0021  ld   $21         ;03a2 LDW
               f097 0042  ld   $42         ;03a2 'Y'
-              f098 00bc  ld   $bc         ;03a4 ADDW
+              f098 0099  ld   $99         ;03a4 ADDW
               f099 0042  ld   $42         ;03a4 'Y'
               f09a 002b  ld   $2b         ;03a6 STW
               f09b 0036  ld   $36         ;03a6 'B'
-              f09c 00d2  ld   $d2         ;03a8 CALL
+              f09c 00cd  ld   $cd         ;03a8 CALL
               f09d 003c  ld   $3c         ;03a8 'MulShift7'
-              f09e 00bc  ld   $bc         ;03aa ADDW
+              f09e 0099  ld   $99         ;03aa ADDW
               f09f 0048  ld   $48         ;03aa 'Y0'
               f0a0 002b  ld   $2b         ;03ac STW
               f0a1 0042  ld   $42         ;03ac 'Y'
               f0a2 0021  ld   $21         ;03ae LDW
               f0a3 0040  ld   $40         ;03ae 'XX'
-              f0a4 00a7  ld   $a7         ;03b0 SUBW
+              f0a4 00b6  ld   $b6         ;03b0 SUBW
               f0a5 0044  ld   $44         ;03b0 'YY'
-              f0a6 00bc  ld   $bc         ;03b2 ADDW
+              f0a6 0099  ld   $99         ;03b2 ADDW
               f0a7 004a  ld   $4a         ;03b2 'X0'
               f0a8 002b  ld   $2b         ;03b4 STW
               f0a9 003e  ld   $3e         ;03b4 'X'
@@ -55164,7 +55181,7 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f0ab 0034  ld   $34         ;03b6 'A'
               f0ac 002b  ld   $2b         ;03b8 STW
               f0ad 0036  ld   $36         ;03b8 'B'
-              f0ae 00d2  ld   $d2         ;03ba CALL
+              f0ae 00cd  ld   $cd         ;03ba CALL
               f0af 003c  ld   $3c         ;03ba 'MulShift7'
               f0b0 002b  ld   $2b         ;03bc STW
               f0b1 0040  ld   $40         ;03bc 'XX'
@@ -55174,16 +55191,16 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f0b5 0034  ld   $34         ;03c0 'A'
               f0b6 002b  ld   $2b         ;03c2 STW
               f0b7 0036  ld   $36         ;03c2 'B'
-              f0b8 00d2  ld   $d2         ;03c4 CALL
+              f0b8 00cd  ld   $cd         ;03c4 CALL
               f0b9 003c  ld   $3c         ;03c4 'MulShift7'
               f0ba 002b  ld   $2b         ;03c6 STW
               f0bb 0044  ld   $44         ;03c6 'YY'
               f0bc 0011  ld   $11         ;03c8 LDWI
               f0bd 0000  ld   $00
               f0be 00fe  ld   $fe
-              f0bf 00bc  ld   $bc         ;03cb ADDW
+              f0bf 0099  ld   $99         ;03cb ADDW
               f0c0 0040  ld   $40         ;03cb 'XX'
-              f0c1 00bc  ld   $bc         ;03cd ADDW
+              f0c1 0099  ld   $99         ;03cd ADDW
               f0c2 0044  ld   $44         ;03cd 'YY'
               f0c3 0035  ld   $35         ;03cf BCC
               f0c4 0056  ld   $56         ;03d0 LE
@@ -55194,15 +55211,15 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f0c9 00ff  ld   $ff         ;03d5 RET
               f0ca 002b  ld   $2b         ;03d6 STW
               f0cb 004c  ld   $4c         ;03d6 'CalcPixel'
-              f0cc 0098  ld   $98         ;03d8 INC
+              f0cc 0093  ld   $93         ;03d8 INC
               f0cd 001a  ld   $1a
               f0ce 00ff  ld   $ff         ;03da RET
               f0cf 0004  ld   $04         ;| RAM segment address (high byte first)
               f0d0 0000  ld   $00         ;|
               f0d1 00ed  ld   $ed         ;| Length (1..256)
-              f0d2 00d0  ld   $d0         ;0400 DEF
+              f0d2 00cb  ld   $cb         ;0400 DEF
               f0d3 00e6  ld   $e6
-              f0d4 007d  ld   $7d         ;0402 PUSH
+              f0d4 0075  ld   $75         ;0402 PUSH
               f0d5 0011  ld   $11         ;0403 LDWI
               f0d6 0000  ld   $00
               f0d7 0008  ld   $08
@@ -55230,7 +55247,7 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f0ed 005c  ld   $5c         ;041a 'DX'
               f0ee 0059  ld   $59         ;041c LDI
               f0ef 003f  ld   $3f
-              f0f0 00e8  ld   $e8         ;041e POKE
+              f0f0 00ee  ld   $ee         ;041e POKE
               f0f1 004e  ld   $4e         ;041e 'p'
               f0f2 0021  ld   $21         ;0420 LDW
               f0f3 0056  ld   $56         ;0420 'LastPixel'
@@ -55243,90 +55260,90 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f0fa 0034  ld   $34         ;0427 'A'
               f0fb fe00  bra  ac          ;+-----------------------------------+
               f0fc fcfd  bra  $f0fd       ;|                                   |
-              f0fd 1403  ld   $03,y       ;| Trampoline for page $f000 lookups |
-              f0fe e078  jmp  y,$78       ;|                                   |
+              f0fd 1404  ld   $04,y       ;| Trampoline for page $f000 lookups |
+              f0fe e072  jmp  y,$72       ;|                                   |
               f0ff 1516  ld   [$16],y     ;+-----------------------------------+
               f100 002b  ld   $2b         ;0429 STW
               f101 0036  ld   $36         ;0429 'B'
-              f102 00d2  ld   $d2         ;042b CALL
+              f102 00cd  ld   $cd         ;042b CALL
               f103 003c  ld   $3c         ;042b 'MulShift7'
               f104 002b  ld   $2b         ;042d STW
               f105 0044  ld   $44         ;042d 'YY'
               f106 0021  ld   $21         ;042f LDW
               f107 004a  ld   $4a         ;042f 'X0'
-              f108 00f9  ld   $f9         ;0431 ADDI
+              f108 00dd  ld   $dd         ;0431 ADDI
               f109 0080  ld   $80
               f10a 002b  ld   $2b         ;0433 STW
               f10b 0034  ld   $34         ;0433 'A'
               f10c 002b  ld   $2b         ;0435 STW
               f10d 0036  ld   $36         ;0435 'B'
-              f10e 00d2  ld   $d2         ;0437 CALL
+              f10e 00cd  ld   $cd         ;0437 CALL
               f10f 003c  ld   $3c         ;0437 'MulShift7'
-              f110 00bc  ld   $bc         ;0439 ADDW
+              f110 0099  ld   $99         ;0439 ADDW
               f111 0044  ld   $44         ;0439 'YY'
-              f112 00fc  ld   $fc         ;043b SUBI
+              f112 00e0  ld   $e0         ;043b SUBI
               f113 0008  ld   $08
               f114 0035  ld   $35         ;043d BCC
               f115 0053  ld   $53         ;043e GE
               f116 0042  ld   $42
               f117 0059  ld   $59         ;0440 LDI
               f118 0000  ld   $00
-              f119 0095  ld   $95         ;0442 BRA
+              f119 0090  ld   $90         ;0442 BRA
               f11a 006d  ld   $6d
               f11b 0021  ld   $21         ;0444 LDW
               f11c 004a  ld   $4a         ;0444 'X0'
-              f11d 00fc  ld   $fc         ;0446 SUBI
+              f11d 00e0  ld   $e0         ;0446 SUBI
               f11e 0020  ld   $20
               f11f 002b  ld   $2b         ;0448 STW
               f120 0034  ld   $34         ;0448 'A'
               f121 002b  ld   $2b         ;044a STW
               f122 0036  ld   $36         ;044a 'B'
-              f123 00d2  ld   $d2         ;044c CALL
+              f123 00cd  ld   $cd         ;044c CALL
               f124 003c  ld   $3c         ;044c 'MulShift7'
-              f125 00bc  ld   $bc         ;044e ADDW
+              f125 0099  ld   $99         ;044e ADDW
               f126 0044  ld   $44         ;044e 'YY'
               f127 002b  ld   $2b         ;0450 STW
               f128 0034  ld   $34         ;0450 'A'
-              f129 00bc  ld   $bc         ;0452 ADDW
+              f129 0099  ld   $99         ;0452 ADDW
               f12a 004a  ld   $4a         ;0452 'X0'
-              f12b 00fc  ld   $fc         ;0454 SUBI
+              f12b 00e0  ld   $e0         ;0454 SUBI
               f12c 0020  ld   $20
               f12d 002b  ld   $2b         ;0456 STW
               f12e 0036  ld   $36         ;0456 'B'
-              f12f 00d2  ld   $d2         ;0458 CALL
+              f12f 00cd  ld   $cd         ;0458 CALL
               f130 003c  ld   $3c         ;0458 'MulShift7'
               f131 002b  ld   $2b         ;045a STW
               f132 005e  ld   $5e         ;045a 'tmp'
-              f133 00bc  ld   $bc         ;045c ADDW
+              f133 0099  ld   $99         ;045c ADDW
               f134 005e  ld   $5e         ;045c 'tmp'
               f135 002b  ld   $2b         ;045e STW
               f136 005e  ld   $5e         ;045e 'tmp'
-              f137 00bc  ld   $bc         ;0460 ADDW
+              f137 0099  ld   $99         ;0460 ADDW
               f138 005e  ld   $5e         ;0460 'tmp'
               f139 002b  ld   $2b         ;0462 STW
               f13a 005e  ld   $5e         ;0462 'tmp'
-              f13b 00a7  ld   $a7         ;0464 SUBW
+              f13b 00b6  ld   $b6         ;0464 SUBW
               f13c 0044  ld   $44         ;0464 'YY'
               f13d 0035  ld   $35         ;0466 BCC
               f13e 0053  ld   $53         ;0467 GE
               f13f 006b  ld   $6b
               f140 0059  ld   $59         ;0469 LDI
               f141 0000  ld   $00
-              f142 0095  ld   $95         ;046b BRA
+              f142 0090  ld   $90         ;046b BRA
               f143 006d  ld   $6d
-              f144 00d2  ld   $d2         ;046d CALL
+              f144 00cd  ld   $cd         ;046d CALL
               f145 004c  ld   $4c         ;046d 'CalcPixel'
-              f146 0095  ld   $95         ;046f BRA
+              f146 0090  ld   $90         ;046f BRA
               f147 0071  ld   $71
-              f148 00d2  ld   $d2         ;0471 CALL
+              f148 00cd  ld   $cd         ;0471 CALL
               f149 004c  ld   $4c         ;0471 'CalcPixel'
               f14a 002b  ld   $2b         ;0473 STW
               f14b 0056  ld   $56         ;0473 'LastPixel'
-              f14c 00e8  ld   $e8         ;0475 POKE
+              f14c 00ee  ld   $ee         ;0475 POKE
               f14d 004e  ld   $4e         ;0475 'p'
               f14e 0021  ld   $21         ;0477 LDW
               f14f 0054  ld   $54         ;0477 'len'
-              f150 00fc  ld   $fc         ;0479 SUBI
+              f150 00e0  ld   $e0         ;0479 SUBI
               f151 0001  ld   $01
               f152 0035  ld   $35         ;047b BCC
               f153 004d  ld   $4d         ;047c GT
@@ -55341,7 +55358,7 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f15c 0058  ld   $58         ;0484 'DY'
               f15d 0059  ld   $59         ;0486 LDI
               f15e 0000  ld   $00
-              f15f 00a7  ld   $a7         ;0488 SUBW
+              f15f 00b6  ld   $b6         ;0488 SUBW
               f160 005e  ld   $5e         ;0488 'tmp'
               f161 002b  ld   $2b         ;048a STW
               f162 005c  ld   $5c         ;048a 'DX'
@@ -55352,15 +55369,15 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f167 0097  ld   $97
               f168 0021  ld   $21         ;0491 LDW
               f169 0052  ld   $52         ;0491 'Width'
-              f16a 00fc  ld   $fc         ;0493 SUBI
+              f16a 00e0  ld   $e0         ;0493 SUBI
               f16b 0001  ld   $01
               f16c 002b  ld   $2b         ;0495 STW
               f16d 0052  ld   $52         ;0495 'Width'
-              f16e 0095  ld   $95         ;0497 BRA
+              f16e 0090  ld   $90         ;0497 BRA
               f16f 009d  ld   $9d
               f170 0021  ld   $21         ;0499 LDW
               f171 0050  ld   $50         ;0499 'Height'
-              f172 00fc  ld   $fc         ;049b SUBI
+              f172 00e0  ld   $e0         ;049b SUBI
               f173 0001  ld   $01
               f174 002b  ld   $2b         ;049d STW
               f175 0050  ld   $50         ;049d 'Height'
@@ -55371,13 +55388,13 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f17a 00de  ld   $de
               f17b 0021  ld   $21         ;04a4 LDW
               f17c 004a  ld   $4a         ;04a4 'X0'
-              f17d 00bc  ld   $bc         ;04a6 ADDW
+              f17d 0099  ld   $99         ;04a6 ADDW
               f17e 005c  ld   $5c         ;04a6 'DX'
               f17f 002b  ld   $2b         ;04a8 STW
               f180 004a  ld   $4a         ;04a8 'X0'
               f181 0021  ld   $21         ;04aa LDW
               f182 0048  ld   $48         ;04aa 'Y0'
-              f183 00bc  ld   $bc         ;04ac ADDW
+              f183 0099  ld   $99         ;04ac ADDW
               f184 0058  ld   $58         ;04ac 'DY'
               f185 002b  ld   $2b         ;04ae STW
               f186 0048  ld   $48         ;04ae 'Y0'
@@ -55388,7 +55405,7 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f18b 00b9  ld   $b9
               f18c 0021  ld   $21         ;04b5 LDW
               f18d 004e  ld   $4e         ;04b5 'p'
-              f18e 00fc  ld   $fc         ;04b7 SUBI
+              f18e 00e0  ld   $e0         ;04b7 SUBI
               f18f 0001  ld   $01
               f190 002b  ld   $2b         ;04b9 STW
               f191 004e  ld   $4e         ;04b9 'p'
@@ -55399,7 +55416,7 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f196 00c4  ld   $c4
               f197 0021  ld   $21         ;04c0 LDW
               f198 004e  ld   $4e         ;04c0 'p'
-              f199 00f9  ld   $f9         ;04c2 ADDI
+              f199 00dd  ld   $dd         ;04c2 ADDI
               f19a 0001  ld   $01
               f19b 002b  ld   $2b         ;04c4 STW
               f19c 004e  ld   $4e         ;04c4 'p'
@@ -55411,7 +55428,7 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f1a2 0011  ld   $11         ;04cb LDWI
               f1a3 0000  ld   $00
               f1a4 00ff  ld   $ff
-              f1a5 00bc  ld   $bc         ;04ce ADDW
+              f1a5 0099  ld   $99         ;04ce ADDW
               f1a6 004e  ld   $4e         ;04ce 'p'
               f1a7 002b  ld   $2b         ;04d0 STW
               f1a8 004e  ld   $4e         ;04d0 'p'
@@ -55423,31 +55440,31 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f1ae 0011  ld   $11         ;04d7 LDWI
               f1af 0000  ld   $00
               f1b0 0001  ld   $01
-              f1b1 00bc  ld   $bc         ;04da ADDW
+              f1b1 0099  ld   $99         ;04da ADDW
               f1b2 004e  ld   $4e         ;04da 'p'
               f1b3 002b  ld   $2b         ;04dc STW
               f1b4 004e  ld   $4e         ;04dc 'p'
-              f1b5 0095  ld   $95         ;04de BRA
+              f1b5 0090  ld   $90         ;04de BRA
               f1b6 001a  ld   $1a
               f1b7 0059  ld   $59         ;04e0 LDI
               f1b8 003c  ld   $3c
               f1b9 005e  ld   $5e         ;04e2 ST
               f1ba 002c  ld   $2c
-              f1bb 00d2  ld   $d2         ;04e4 CALL
+              f1bb 00cd  ld   $cd         ;04e4 CALL
               f1bc 0060  ld   $60         ;04e4 'GreyOut'
               f1bd 0063  ld   $63         ;04e6 POP
               f1be 00ff  ld   $ff         ;04e7 RET
               f1bf 002b  ld   $2b         ;04e8 STW
               f1c0 0062  ld   $62         ;04e8 'CalcSet'
-              f1c1 0098  ld   $98         ;04ea INC
+              f1c1 0093  ld   $93         ;04ea INC
               f1c2 001a  ld   $1a
               f1c3 00ff  ld   $ff         ;04ec RET
               f1c4 0005  ld   $05         ;| RAM segment address (high byte first)
               f1c5 0000  ld   $00         ;|
               f1c6 00eb  ld   $eb         ;| Length (1..256)
-              f1c7 00d0  ld   $d0         ;0500 DEF
+              f1c7 00cb  ld   $cb         ;0500 DEF
               f1c8 00df  ld   $df
-              f1c9 007d  ld   $7d         ;0502 PUSH
+              f1c9 0075  ld   $75         ;0502 PUSH
               f1ca 0011  ld   $11         ;0503 LDWI
               f1cb 0000  ld   $00
               f1cc 0008  ld   $08
@@ -55481,35 +55498,35 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f1e8 0046  ld   $46         ;0520 'i'
               f1e9 0021  ld   $21         ;0522 LDW
               f1ea 004e  ld   $4e         ;0522 'p'
-              f1eb 00eb  ld   $eb         ;0524 PEEK
-              f1ec 0087  ld   $87         ;0525 ANDI
+              f1eb 00f1  ld   $f1         ;0524 PEEK
+              f1ec 0082  ld   $82         ;0525 ANDI
               f1ed 003f  ld   $3f
-              f1ee 00a7  ld   $a7         ;0527 SUBW
+              f1ee 00b6  ld   $b6         ;0527 SUBW
               f1ef 0046  ld   $46         ;0527 'i'
               f1f0 0035  ld   $35         ;0529 BCC
               f1f1 0050  ld   $50         ;052a LT
               f1f2 003d  ld   $3d
-              f1f3 00e8  ld   $e8         ;052c POKE
+              f1f3 00ee  ld   $ee         ;052c POKE
               f1f4 004e  ld   $4e         ;052c 'p'
               f1f5 0021  ld   $21         ;052e LDW
               f1f6 0046  ld   $46         ;052e 'i'
-              f1f7 0087  ld   $87         ;0530 ANDI
+              f1f7 0082  ld   $82         ;0530 ANDI
               f1f8 0015  ld   $15
               f1f9 0035  ld   $35         ;0532 BCC
               f1fa 003f  ld   $3f         ;0533 EQ
               f1fb fe00  bra  ac          ;+-----------------------------------+
               f1fc fcfd  bra  $f1fd       ;|                                   |
-              f1fd 1403  ld   $03,y       ;| Trampoline for page $f100 lookups |
-              f1fe e078  jmp  y,$78       ;|                                   |
+              f1fd 1404  ld   $04,y       ;| Trampoline for page $f100 lookups |
+              f1fe e072  jmp  y,$72       ;|                                   |
               f1ff 1516  ld   [$16],y     ;+-----------------------------------+
               f200 0037  ld   $37
               f201 0059  ld   $59         ;0535 LDI
               f202 0001  ld   $01
-              f203 0095  ld   $95         ;0537 BRA
+              f203 0090  ld   $90         ;0537 BRA
               f204 0039  ld   $39
               f205 0059  ld   $59         ;0539 LDI
               f206 0002  ld   $02
-              f207 00bc  ld   $bc         ;053b ADDW
+              f207 0099  ld   $99         ;053b ADDW
               f208 0064  ld   $64         ;053b 'Level'
               f209 002b  ld   $2b         ;053d STW
               f20a 0064  ld   $64         ;053d 'Level'
@@ -55517,12 +55534,12 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f20c 0046  ld   $46         ;053f 'i'
               f20d 002b  ld   $2b         ;0541 STW
               f20e 0024  ld   $24
-              f20f 00a3  ld   $a3         ;0543 SYS
+              f20f 00b2  ld   $b2         ;0543 SYS
               f210 00f6  ld   $f6
               f211 0035  ld   $35         ;0545 BCC
               f212 004d  ld   $4d         ;0546 GT
               f213 001e  ld   $1e
-              f214 00e8  ld   $e8         ;0548 POKE
+              f214 00ee  ld   $ee         ;0548 POKE
               f215 004e  ld   $4e         ;0548 'p'
               f216 0021  ld   $21         ;054a LDW
               f217 0064  ld   $64         ;054a 'Level'
@@ -55531,40 +55548,40 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f21a 0080  ld   $80
               f21b 001a  ld   $1a         ;054f LD
               f21c 004f  ld   $4f         ;054f 'p'+1
-              f21d 0087  ld   $87         ;0551 ANDI
+              f21d 0082  ld   $82         ;0551 ANDI
               f21e 0001  ld   $01
               f21f 002b  ld   $2b         ;0553 STW
               f220 0046  ld   $46         ;0553 'i'
-              f221 00bc  ld   $bc         ;0555 ADDW
+              f221 0099  ld   $99         ;0555 ADDW
               f222 0046  ld   $46         ;0555 'i'
               f223 002b  ld   $2b         ;0557 STW
               f224 0046  ld   $46         ;0557 'i'
               f225 0021  ld   $21         ;0559 LDW
               f226 004e  ld   $4e         ;0559 'p'
-              f227 0087  ld   $87         ;055b ANDI
+              f227 0082  ld   $82         ;055b ANDI
               f228 0001  ld   $01
-              f229 00bc  ld   $bc         ;055d ADDW
+              f229 0099  ld   $99         ;055d ADDW
               f22a 0046  ld   $46         ;055d 'i'
               f22b 002b  ld   $2b         ;055f STW
               f22c 0046  ld   $46         ;055f 'i'
-              f22d 00d0  ld   $d0         ;0561 DEF
+              f22d 00cb  ld   $cb         ;0561 DEF
               f22e 0065  ld   $65
               f22f 0000  ld   $00
               f230 0002  ld   $02
               f231 0003  ld   $03
               f232 0001  ld   $01
-              f233 00bc  ld   $bc         ;0567 ADDW
+              f233 0099  ld   $99         ;0567 ADDW
               f234 0046  ld   $46         ;0567 'i'
-              f235 00eb  ld   $eb         ;0569 PEEK
-              f236 00bc  ld   $bc         ;056a ADDW
+              f235 00f1  ld   $f1         ;0569 PEEK
+              f236 0099  ld   $99         ;056a ADDW
               f237 0064  ld   $64         ;056a 'Level'
-              f238 00fc  ld   $fc         ;056c SUBI
+              f238 00e0  ld   $e0         ;056c SUBI
               f239 0001  ld   $01
               f23a 002b  ld   $2b         ;056e STW
               f23b 0064  ld   $64         ;056e 'Level'
               f23c 0021  ld   $21         ;0570 LDW
               f23d 0064  ld   $64         ;0570 'Level'
-              f23e 00fc  ld   $fc         ;0572 SUBI
+              f23e 00e0  ld   $e0         ;0572 SUBI
               f23f 0003  ld   $03
               f240 0035  ld   $35         ;0574 BCC
               f241 0050  ld   $50         ;0575 LT
@@ -55573,16 +55590,16 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f244 0064  ld   $64         ;0577 'Level'
               f245 0021  ld   $21         ;0579 LDW
               f246 004e  ld   $4e         ;0579 'p'
-              f247 00eb  ld   $eb         ;057b PEEK
-              f248 00f9  ld   $f9         ;057c ADDI
+              f247 00f1  ld   $f1         ;057b PEEK
+              f248 00dd  ld   $dd         ;057c ADDI
               f249 0015  ld   $15
-              f24a 00e8  ld   $e8         ;057e POKE
+              f24a 00ee  ld   $ee         ;057e POKE
               f24b 004e  ld   $4e         ;057e 'p'
-              f24c 0095  ld   $95         ;0580 BRA
+              f24c 0090  ld   $90         ;0580 BRA
               f24d 006e  ld   $6e
               f24e 0021  ld   $21         ;0582 LDW
               f24f 0054  ld   $54         ;0582 'len'
-              f250 00fc  ld   $fc         ;0584 SUBI
+              f250 00e0  ld   $e0         ;0584 SUBI
               f251 0001  ld   $01
               f252 0035  ld   $35         ;0586 BCC
               f253 004d  ld   $4d         ;0587 GT
@@ -55597,7 +55614,7 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f25c 0058  ld   $58         ;058f 'DY'
               f25d 0059  ld   $59         ;0591 LDI
               f25e 0000  ld   $00
-              f25f 00a7  ld   $a7         ;0593 SUBW
+              f25f 00b6  ld   $b6         ;0593 SUBW
               f260 005e  ld   $5e         ;0593 'tmp'
               f261 002b  ld   $2b         ;0595 STW
               f262 005c  ld   $5c         ;0595 'DX'
@@ -55608,15 +55625,15 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f267 00a2  ld   $a2
               f268 0021  ld   $21         ;059c LDW
               f269 0052  ld   $52         ;059c 'Width'
-              f26a 00fc  ld   $fc         ;059e SUBI
+              f26a 00e0  ld   $e0         ;059e SUBI
               f26b 0001  ld   $01
               f26c 002b  ld   $2b         ;05a0 STW
               f26d 0052  ld   $52         ;05a0 'Width'
-              f26e 0095  ld   $95         ;05a2 BRA
+              f26e 0090  ld   $90         ;05a2 BRA
               f26f 00a8  ld   $a8
               f270 0021  ld   $21         ;05a4 LDW
               f271 0050  ld   $50         ;05a4 'Height'
-              f272 00fc  ld   $fc         ;05a6 SUBI
+              f272 00e0  ld   $e0         ;05a6 SUBI
               f273 0001  ld   $01
               f274 002b  ld   $2b         ;05a8 STW
               f275 0050  ld   $50         ;05a8 'Height'
@@ -55632,7 +55649,7 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f27f 00b8  ld   $b8
               f280 0021  ld   $21         ;05b4 LDW
               f281 004e  ld   $4e         ;05b4 'p'
-              f282 00fc  ld   $fc         ;05b6 SUBI
+              f282 00e0  ld   $e0         ;05b6 SUBI
               f283 0001  ld   $01
               f284 002b  ld   $2b         ;05b8 STW
               f285 004e  ld   $4e         ;05b8 'p'
@@ -55643,7 +55660,7 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f28a 00c3  ld   $c3
               f28b 0021  ld   $21         ;05bf LDW
               f28c 004e  ld   $4e         ;05bf 'p'
-              f28d 00f9  ld   $f9         ;05c1 ADDI
+              f28d 00dd  ld   $dd         ;05c1 ADDI
               f28e 0001  ld   $01
               f28f 002b  ld   $2b         ;05c3 STW
               f290 004e  ld   $4e         ;05c3 'p'
@@ -55655,7 +55672,7 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f296 0011  ld   $11         ;05ca LDWI
               f297 0000  ld   $00
               f298 00ff  ld   $ff
-              f299 00bc  ld   $bc         ;05cd ADDW
+              f299 0099  ld   $99         ;05cd ADDW
               f29a 004e  ld   $4e         ;05cd 'p'
               f29b 002b  ld   $2b         ;05cf STW
               f29c 004e  ld   $4e         ;05cf 'p'
@@ -55667,11 +55684,11 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f2a2 0011  ld   $11         ;05d6 LDWI
               f2a3 0000  ld   $00
               f2a4 0001  ld   $01
-              f2a5 00bc  ld   $bc         ;05d9 ADDW
+              f2a5 0099  ld   $99         ;05d9 ADDW
               f2a6 004e  ld   $4e         ;05d9 'p'
               f2a7 002b  ld   $2b         ;05db STW
               f2a8 004e  ld   $4e         ;05db 'p'
-              f2a9 0095  ld   $95         ;05dd BRA
+              f2a9 0090  ld   $90         ;05dd BRA
               f2aa 0018  ld   $18
               f2ab 0063  ld   $63         ;05df POP
               f2ac 00ff  ld   $ff         ;05e0 RET
@@ -55682,7 +55699,7 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f2b1 0006  ld   $06
               f2b2 002b  ld   $2b         ;05e6 STW
               f2b3 0022  ld   $22
-              f2b4 0098  ld   $98         ;05e8 INC
+              f2b4 0093  ld   $93         ;05e8 INC
               f2b5 001a  ld   $1a
               f2b6 00ff  ld   $ff         ;05ea RET
               f2b7 0006  ld   $06         ;| RAM segment address (high byte first)
@@ -55702,7 +55719,7 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f2c5 0003  ld   $03
               f2c6 002b  ld   $2b         ;060c STW
               f2c7 005a  ld   $5a         ;060c 'Step'
-              f2c8 00d2  ld   $d2         ;060e CALL
+              f2c8 00cd  ld   $cd         ;060e CALL
               f2c9 0062  ld   $62         ;060e 'CalcSet'
               f2ca 0011  ld   $11         ;0610 LDWI
               f2cb 006c  ld   $6c
@@ -55718,7 +55735,7 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f2d5 0001  ld   $01
               f2d6 002b  ld   $2b         ;061c STW
               f2d7 005a  ld   $5a         ;061c 'Step'
-              f2d8 00d2  ld   $d2         ;061e CALL
+              f2d8 00cd  ld   $cd         ;061e CALL
               f2d9 0062  ld   $62         ;061e 'CalcSet'
               f2da 0011  ld   $11         ;0620 LDWI
               f2db 00c4  ld   $c4
@@ -55734,7 +55751,7 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f2e5 0001  ld   $01
               f2e6 002b  ld   $2b         ;062c STW
               f2e7 005a  ld   $5a         ;062c 'Step'
-              f2e8 00d2  ld   $d2         ;062e CALL
+              f2e8 00cd  ld   $cd         ;062e CALL
               f2e9 0062  ld   $62         ;062e 'CalcSet'
               f2ea 0011  ld   $11         ;0630 LDWI
               f2eb 00c0  ld   $c0
@@ -55750,13 +55767,13 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f2f5 0009  ld   $09
               f2f6 002b  ld   $2b         ;063c STW
               f2f7 005a  ld   $5a         ;063c 'Step'
-              f2f8 00d2  ld   $d2         ;063e CALL
+              f2f8 00cd  ld   $cd         ;063e CALL
               f2f9 0062  ld   $62         ;063e 'CalcSet'
               f2fa 0059  ld   $59         ;0640 LDI
               f2fb fe00  bra  ac          ;+-----------------------------------+
               f2fc fcfd  bra  $f2fd       ;|                                   |
-              f2fd 1403  ld   $03,y       ;| Trampoline for page $f200 lookups |
-              f2fe e078  jmp  y,$78       ;|                                   |
+              f2fd 1404  ld   $04,y       ;| Trampoline for page $f200 lookups |
+              f2fe e072  jmp  y,$72       ;|                                   |
               f2ff 1516  ld   [$16],y     ;+-----------------------------------+
               f300 0000  ld   $00
               f301 002b  ld   $2b         ;0642 STW
@@ -55770,7 +55787,7 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f309 0001  ld   $01
               f30a 002b  ld   $2b         ;064b STW
               f30b 005a  ld   $5a         ;064b 'Step'
-              f30c 00d2  ld   $d2         ;064d CALL
+              f30c 00cd  ld   $cd         ;064d CALL
               f30d 0062  ld   $62         ;064d 'CalcSet'
               f30e 0011  ld   $11         ;064f LDWI
               f30f 00c4  ld   $c4
@@ -55785,15 +55802,15 @@ Mandelbrot:   efec 0003  ld   $03         ;| RAM segment address (high byte firs
               f318 0001  ld   $01
               f319 002b  ld   $2b         ;065a STW
               f31a 005a  ld   $5a         ;065a 'Step'
-              f31b 00d2  ld   $d2         ;065c CALL
+              f31b 00cd  ld   $cd         ;065c CALL
               f31c 0062  ld   $62         ;065c 'CalcSet'
-              f31d 0095  ld   $95         ;065e BRA
+              f31d 0090  ld   $90         ;065e BRA
               f31e 00fe  ld   $fe
               f31f 0000  ld   $00         ;End of file
 Pictures:     f320 0003  ld   $03         ;| RAM segment address (high byte first)
               f321 0000  ld   $00         ;|
               f322 00d3  ld   $d3         ;| Length (1..256)
-              f323 00d0  ld   $d0         ;0300 DEF
+              f323 00cb  ld   $cb         ;0300 DEF
               f324 0083  ld   $83
               f325 002b  ld   $2b         ;0302 STW
               f326 0030  ld   $30         ;0302 'p'
@@ -55813,7 +55830,7 @@ Pictures:     f320 0003  ld   $03         ;| RAM segment address (high byte firs
               f334 0036  ld   $36         ;0310 'FrameRate'
               f335 001a  ld   $1a         ;0312 LD
               f336 0009  ld   $09
-              f337 0087  ld   $87         ;0314 ANDI
+              f337 0082  ld   $82         ;0314 ANDI
               f338 0001  ld   $01
               f339 0035  ld   $35         ;0316 BCC
               f33a 003f  ld   $3f         ;0317 EQ
@@ -55828,10 +55845,10 @@ Pictures:     f320 0003  ld   $03         ;| RAM segment address (high byte firs
               f343 003a  ld   $3a         ;031f 'i'
               f344 0021  ld   $21         ;0321 LDW
               f345 0032  ld   $32         ;0321 'v'
-              f346 00eb  ld   $eb         ;0323 PEEK
-              f347 00f9  ld   $f9         ;0324 ADDI
+              f346 00f1  ld   $f1         ;0323 PEEK
+              f347 00dd  ld   $dd         ;0324 ADDI
               f348 00a0  ld   $a0
-              f349 0087  ld   $87         ;0326 ANDI
+              f349 0082  ld   $82         ;0326 ANDI
               f34a 00ff  ld   $ff
               f34b 005e  ld   $5e         ;0328 ST
               f34c 0034  ld   $34         ;0328 'q'
@@ -55844,33 +55861,33 @@ Pictures:     f320 0003  ld   $03         ;| RAM segment address (high byte firs
               f353 0006  ld   $06
               f354 002b  ld   $2b         ;0331 STW
               f355 0022  ld   $22
-              f356 00a3  ld   $a3         ;0333 SYS
+              f356 00b2  ld   $b2         ;0333 SYS
               f357 00fa  ld   $fa
               f358 0011  ld   $11         ;0335 LDWI
               f359 0020  ld   $20
               f35a 0006  ld   $06
               f35b 002b  ld   $2b         ;0338 STW
               f35c 0022  ld   $22
-              f35d 00a3  ld   $a3         ;033a SYS
+              f35d 00b2  ld   $b2         ;033a SYS
               f35e 00f2  ld   $f2
               f35f 0021  ld   $21         ;033c LDW
               f360 0034  ld   $34         ;033c 'q'
               f361 002b  ld   $2b         ;033e STW
               f362 0028  ld   $28
               f363 0011  ld   $11         ;0340 LDWI
-              f364 0047  ld   $47
-              f365 0006  ld   $06
+              f364 00df  ld   $df
+              f365 0004  ld   $04
               f366 002b  ld   $2b         ;0343 STW
               f367 0022  ld   $22
-              f368 00a3  ld   $a3         ;0345 SYS
+              f368 00b2  ld   $b2         ;0345 SYS
               f369 00ff  ld   $ff
               f36a 0059  ld   $59         ;0347 LDI
               f36b 0080  ld   $80
-              f36c 00bc  ld   $bc         ;0349 ADDW
+              f36c 0099  ld   $99         ;0349 ADDW
               f36d 0030  ld   $30         ;0349 'p'
               f36e 002b  ld   $2b         ;034b STW
               f36f 0030  ld   $30         ;034b 'p'
-              f370 0098  ld   $98         ;034d INC
+              f370 0093  ld   $93         ;034d INC
               f371 0035  ld   $35         ;034d 'q'+1
               f372 0021  ld   $21         ;034f LDW
               f373 0034  ld   $34         ;034f 'q'
@@ -55879,27 +55896,27 @@ Pictures:     f320 0003  ld   $03         ;| RAM segment address (high byte firs
               f376 0028  ld   $28
               f377 0021  ld   $21         ;0354 LDW
               f378 0038  ld   $38         ;0354 't'
-              f379 00bc  ld   $bc         ;0356 ADDW
+              f379 0099  ld   $99         ;0356 ADDW
               f37a 0036  ld   $36         ;0356 'FrameRate'
-              f37b 0087  ld   $87         ;0358 ANDI
+              f37b 0082  ld   $82         ;0358 ANDI
               f37c 00ff  ld   $ff
               f37d 002b  ld   $2b         ;035a STW
               f37e 0038  ld   $38         ;035a 't'
               f37f 001a  ld   $1a         ;035c LD
               f380 000e  ld   $0e
-              f381 00a7  ld   $a7         ;035e SUBW
+              f381 00b6  ld   $b6         ;035e SUBW
               f382 0038  ld   $38         ;035e 't'
               f383 0035  ld   $35         ;0360 BCC
               f384 0072  ld   $72         ;0361 NE
               f385 005a  ld   $5a
               f386 0021  ld   $21         ;0363 LDW
               f387 0032  ld   $32         ;0363 'v'
-              f388 00eb  ld   $eb         ;0365 PEEK
-              f389 00f9  ld   $f9         ;0366 ADDI
+              f388 00f1  ld   $f1         ;0365 PEEK
+              f389 00dd  ld   $dd         ;0366 ADDI
               f38a 0001  ld   $01
-              f38b 00e8  ld   $e8         ;0368 POKE
+              f38b 00ee  ld   $ee         ;0368 POKE
               f38c 0032  ld   $32         ;0368 'v'
-              f38d 0087  ld   $87         ;036a ANDI
+              f38d 0082  ld   $82         ;036a ANDI
               f38e 0003  ld   $03
               f38f 0035  ld   $35         ;036c BCC
               f390 0072  ld   $72         ;036d NE
@@ -55907,20 +55924,20 @@ Pictures:     f320 0003  ld   $03         ;| RAM segment address (high byte firs
               f392 0011  ld   $11         ;036f LDWI
               f393 0003  ld   $03
               f394 00c4  ld   $c4
-              f395 00bc  ld   $bc         ;0372 ADDW
+              f395 0099  ld   $99         ;0372 ADDW
               f396 0030  ld   $30         ;0372 'p'
               f397 002b  ld   $2b         ;0374 STW
               f398 0030  ld   $30         ;0374 'p'
               f399 0011  ld   $11         ;0376 LDWI
               f39a 0000  ld   $00
               f39b 0088  ld   $88
-              f39c 00bc  ld   $bc         ;0379 ADDW
+              f39c 0099  ld   $99         ;0379 ADDW
               f39d 0034  ld   $34         ;0379 'q'
               f39e 002b  ld   $2b         ;037b STW
               f39f 0034  ld   $34         ;037b 'q'
               f3a0 0021  ld   $21         ;037d LDW
               f3a1 003a  ld   $3a         ;037d 'i'
-              f3a2 00fc  ld   $fc         ;037f SUBI
+              f3a2 00e0  ld   $e0         ;037f SUBI
               f3a3 0004  ld   $04
               f3a4 0035  ld   $35         ;0381 BCC
               f3a5 004d  ld   $4d         ;0382 GT
@@ -55928,28 +55945,28 @@ Pictures:     f320 0003  ld   $03         ;| RAM segment address (high byte firs
               f3a7 00ff  ld   $ff         ;0384 RET
               f3a8 002b  ld   $2b         ;0385 STW
               f3a9 003c  ld   $3c         ;0385 'DrawImage'
-              f3aa 00d0  ld   $d0         ;0387 DEF
+              f3aa 00cb  ld   $cb         ;0387 DEF
               f3ab 00a0  ld   $a0
               f3ac 002b  ld   $2b         ;0389 STW
               f3ad 003e  ld   $3e         ;0389 'Delay'
               f3ae 001a  ld   $1a         ;038b LD
               f3af 000e  ld   $0e
-              f3b0 00f9  ld   $f9         ;038d ADDI
+              f3b0 00dd  ld   $dd         ;038d ADDI
               f3b1 003c  ld   $3c
-              f3b2 0087  ld   $87         ;038f ANDI
+              f3b2 0082  ld   $82         ;038f ANDI
               f3b3 00ff  ld   $ff
               f3b4 002b  ld   $2b         ;0391 STW
               f3b5 0040  ld   $40         ;0391 'tmp'
               f3b6 001a  ld   $1a         ;0393 LD
               f3b7 000e  ld   $0e
-              f3b8 00a7  ld   $a7         ;0395 SUBW
+              f3b8 00b6  ld   $b6         ;0395 SUBW
               f3b9 0040  ld   $40         ;0395 'tmp'
               f3ba 0035  ld   $35         ;0397 BCC
               f3bb 0072  ld   $72         ;0398 NE
               f3bc 0091  ld   $91
               f3bd 0021  ld   $21         ;039a LDW
               f3be 003e  ld   $3e         ;039a 'Delay'
-              f3bf 00fc  ld   $fc         ;039c SUBI
+              f3bf 00e0  ld   $e0         ;039c SUBI
               f3c0 0001  ld   $01
               f3c1 0035  ld   $35         ;039e BCC
               f3c2 004d  ld   $4d         ;039f GT
@@ -55957,11 +55974,11 @@ Pictures:     f320 0003  ld   $03         ;| RAM segment address (high byte firs
               f3c4 00ff  ld   $ff         ;03a1 RET
               f3c5 002b  ld   $2b         ;03a2 STW
               f3c6 0042  ld   $42         ;03a2 'WaitSeconds'
-              f3c7 00d0  ld   $d0         ;03a4 DEF
+              f3c7 00cb  ld   $cb         ;03a4 DEF
               f3c8 00ac  ld   $ac
               f3c9 001a  ld   $1a         ;03a6 LD
               f3ca 000f  ld   $0f
-              f3cb 0091  ld   $91         ;03a8 XORI
+              f3cb 008c  ld   $8c         ;03a8 XORI
               f3cc 00ff  ld   $ff
               f3cd 0035  ld   $35         ;03aa BCC
               f3ce 0072  ld   $72         ;03ab NE
@@ -55972,63 +55989,63 @@ Pictures:     f320 0003  ld   $03         ;| RAM segment address (high byte firs
               f3d3 0011  ld   $11         ;03b0 LDWI
               f3d4 0000  ld   $00
               f3d5 005f  ld   $5f
-              f3d6 00d2  ld   $d2         ;03b3 CALL
+              f3d6 00cd  ld   $cd         ;03b3 CALL
               f3d7 003c  ld   $3c         ;03b3 'DrawImage'
               f3d8 0059  ld   $59         ;03b5 LDI
               f3d9 000f  ld   $0f
-              f3da 00d2  ld   $d2         ;03b7 CALL
+              f3da 00cd  ld   $cd         ;03b7 CALL
               f3db 0042  ld   $42         ;03b7 'WaitSeconds'
-              f3dc 00d2  ld   $d2         ;03b9 CALL
+              f3dc 00cd  ld   $cd         ;03b9 CALL
               f3dd 0044  ld   $44         ;03b9 'WaitController'
               f3de 0011  ld   $11         ;03bb LDWI
               f3df 0000  ld   $00
               f3e0 0023  ld   $23
-              f3e1 00d2  ld   $d2         ;03be CALL
+              f3e1 00cd  ld   $cd         ;03be CALL
               f3e2 003c  ld   $3c         ;03be 'DrawImage'
               f3e3 0059  ld   $59         ;03c0 LDI
               f3e4 000f  ld   $0f
-              f3e5 00d2  ld   $d2         ;03c2 CALL
+              f3e5 00cd  ld   $cd         ;03c2 CALL
               f3e6 0042  ld   $42         ;03c2 'WaitSeconds'
-              f3e7 00d2  ld   $d2         ;03c4 CALL
+              f3e7 00cd  ld   $cd         ;03c4 CALL
               f3e8 0044  ld   $44         ;03c4 'WaitController'
               f3e9 0011  ld   $11         ;03c6 LDWI
               f3ea 0000  ld   $00
               f3eb 009b  ld   $9b
-              f3ec 00d2  ld   $d2         ;03c9 CALL
+              f3ec 00cd  ld   $cd         ;03c9 CALL
               f3ed 003c  ld   $3c         ;03c9 'DrawImage'
               f3ee 0059  ld   $59         ;03cb LDI
               f3ef 000f  ld   $0f
-              f3f0 00d2  ld   $d2         ;03cd CALL
+              f3f0 00cd  ld   $cd         ;03cd CALL
               f3f1 0042  ld   $42         ;03cd 'WaitSeconds'
-              f3f2 00d2  ld   $d2         ;03cf CALL
+              f3f2 00cd  ld   $cd         ;03cf CALL
               f3f3 0044  ld   $44         ;03cf 'WaitController'
-              f3f4 0095  ld   $95         ;03d1 BRA
+              f3f4 0090  ld   $90         ;03d1 BRA
               f3f5 00ae  ld   $ae
               f3f6 0000  ld   $00         ;End of file
 Credits:      f3f7 0003  ld   $03         ;| RAM segment address (high byte first)
               f3f8 0000  ld   $00         ;|
               f3f9 00f2  ld   $f2         ;| Length (1..256)
-              f3fa 00d0  ld   $d0         ;0300 DEF
+              f3fa 00cb  ld   $cb         ;0300 DEF
               f3fb fe00  bra  ac          ;+-----------------------------------+
               f3fc fcfd  bra  $f3fd       ;|                                   |
-              f3fd 1403  ld   $03,y       ;| Trampoline for page $f300 lookups |
-              f3fe e078  jmp  y,$78       ;|                                   |
+              f3fd 1404  ld   $04,y       ;| Trampoline for page $f300 lookups |
+              f3fe e072  jmp  y,$72       ;|                                   |
               f3ff 1516  ld   [$16],y     ;+-----------------------------------+
               f400 0023  ld   $23
-              f401 007d  ld   $7d         ;0302 PUSH
+              f401 0075  ld   $75         ;0302 PUSH
               f402 0021  ld   $21         ;0303 LDW
               f403 0030  ld   $30         ;0303 'Text'
-              f404 00eb  ld   $eb         ;0305 PEEK
+              f404 00f1  ld   $f1         ;0305 PEEK
               f405 002b  ld   $2b         ;0306 STW
               f406 0032  ld   $32         ;0306 'Char'
               f407 0035  ld   $35         ;0308 BCC
               f408 003f  ld   $3f         ;0309 EQ
               f409 0021  ld   $21
-              f40a 0098  ld   $98         ;030b INC
+              f40a 0093  ld   $93         ;030b INC
               f40b 0030  ld   $30         ;030b 'Text'
               f40c 0021  ld   $21         ;030d LDW
               f40d 0032  ld   $32         ;030d 'Char'
-              f40e 0091  ld   $91         ;030f XORI
+              f40e 008c  ld   $8c         ;030f XORI
               f40f 000a  ld   $0a
               f410 0035  ld   $35         ;0311 BCC
               f411 0072  ld   $72         ;0312 NE
@@ -56038,21 +56055,21 @@ Credits:      f3f7 0003  ld   $03         ;| RAM segment address (high byte firs
               f415 0011  ld   $11         ;0316 LDWI
               f416 0000  ld   $00
               f417 0008  ld   $08
-              f418 00bc  ld   $bc         ;0319 ADDW
+              f418 0099  ld   $99         ;0319 ADDW
               f419 0034  ld   $34         ;0319 'Pos'
               f41a 002b  ld   $2b         ;031b STW
               f41b 0034  ld   $34         ;031b 'Pos'
-              f41c 0095  ld   $95         ;031d BRA
+              f41c 0090  ld   $90         ;031d BRA
               f41d 001f  ld   $1f
-              f41e 00d2  ld   $d2         ;031f CALL
+              f41e 00cd  ld   $cd         ;031f CALL
               f41f 0036  ld   $36         ;031f 'DrawChar'
-              f420 0095  ld   $95         ;0321 BRA
+              f420 0090  ld   $90         ;0321 BRA
               f421 0001  ld   $01
               f422 0063  ld   $63         ;0323 POP
               f423 00ff  ld   $ff         ;0324 RET
               f424 002b  ld   $2b         ;0325 STW
               f425 0038  ld   $38         ;0325 'DrawText'
-              f426 00d0  ld   $d0         ;0327 DEF
+              f426 00cb  ld   $cb         ;0327 DEF
               f427 00eb  ld   $eb
               f428 0054  ld   $54
               f429 0068  ld   $68
@@ -56252,13 +56269,13 @@ Credits:      f3f7 0003  ld   $03         ;| RAM segment address (high byte firs
               f4eb 0000  ld   $00
               f4ec 002b  ld   $2b         ;03ed STW
               f4ed 003a  ld   $3a         ;03ed 'Part1'
-              f4ee 0098  ld   $98         ;03ef INC
+              f4ee 0093  ld   $93         ;03ef INC
               f4ef 001a  ld   $1a
               f4f0 00ff  ld   $ff         ;03f1 RET
               f4f1 0004  ld   $04         ;| RAM segment address (high byte first)
               f4f2 0000  ld   $00         ;|
               f4f3 00dd  ld   $dd         ;| Length (1..256)
-              f4f4 00d0  ld   $d0         ;0400 DEF
+              f4f4 00cb  ld   $cb         ;0400 DEF
               f4f5 008d  ld   $8d
               f4f6 000a  ld   $0a
               f4f7 004d  ld   $4d
@@ -56267,8 +56284,8 @@ Credits:      f3f7 0003  ld   $03         ;| RAM segment address (high byte firs
               f4fa 0063  ld   $63
               f4fb fe00  bra  ac          ;+-----------------------------------+
               f4fc fcfd  bra  $f4fd       ;|                                   |
-              f4fd 1403  ld   $03,y       ;| Trampoline for page $f400 lookups |
-              f4fe e078  jmp  y,$78       ;|                                   |
+              f4fd 1404  ld   $04,y       ;| Trampoline for page $f400 lookups |
+              f4fe e072  jmp  y,$72       ;|                                   |
               f4ff 1516  ld   [$16],y     ;+-----------------------------------+
               f500 002c  ld   $2c
               f501 0020  ld   $20
@@ -56401,7 +56418,7 @@ Credits:      f3f7 0003  ld   $03         ;| RAM segment address (high byte firs
               f587 0000  ld   $00
               f588 002b  ld   $2b         ;048f STW
               f589 003c  ld   $3c         ;048f 'Part2'
-              f58a 00d0  ld   $d0         ;0491 DEF
+              f58a 00cb  ld   $cb         ;0491 DEF
               f58b 00c2  ld   $c2
               f58c 0011  ld   $11         ;0493 LDWI
               f58d 0000  ld   $00
@@ -56420,33 +56437,33 @@ Credits:      f3f7 0003  ld   $03         ;| RAM segment address (high byte firs
               f59a 005e  ld   $5e         ;04a1 ST
               f59b 0025  ld   $25
               f59c 0011  ld   $11         ;04a3 LDWI
-              f59d 0054  ld   $54
-              f59e 0006  ld   $06
+              f59d 00ec  ld   $ec
+              f59e 0004  ld   $04
               f59f 002b  ld   $2b         ;04a6 STW
               f5a0 0022  ld   $22
               f5a1 0021  ld   $21         ;04a8 LDW
               f5a2 003e  ld   $3e         ;04a8 'p'
               f5a3 002b  ld   $2b         ;04aa STW
               f5a4 0028  ld   $28
-              f5a5 00a3  ld   $a3         ;04ac SYS
+              f5a5 00b2  ld   $b2         ;04ac SYS
               f5a6 00cb  ld   $cb
               f5a7 0011  ld   $11         ;04ae LDWI
               f5a8 0000  ld   $00
               f5a9 0008  ld   $08
-              f5aa 00bc  ld   $bc         ;04b1 ADDW
+              f5aa 0099  ld   $99         ;04b1 ADDW
               f5ab 003e  ld   $3e         ;04b1 'p'
               f5ac 002b  ld   $2b         ;04b3 STW
               f5ad 003e  ld   $3e         ;04b3 'p'
               f5ae 0035  ld   $35         ;04b5 BCC
               f5af 004d  ld   $4d         ;04b6 GT
               f5b0 00a8  ld   $a8
-              f5b1 00bc  ld   $bc         ;04b8 ADDW
+              f5b1 0099  ld   $99         ;04b8 ADDW
               f5b2 0040  ld   $40         ;04b8 'i'
               f5b3 002b  ld   $2b         ;04ba STW
               f5b4 003e  ld   $3e         ;04ba 'p'
-              f5b5 0087  ld   $87         ;04bc ANDI
+              f5b5 0082  ld   $82         ;04bc ANDI
               f5b6 00ff  ld   $ff
-              f5b7 0091  ld   $91         ;04be XORI
+              f5b7 008c  ld   $8c         ;04be XORI
               f5b8 00a0  ld   $a0
               f5b9 0035  ld   $35         ;04c0 BCC
               f5ba 0072  ld   $72         ;04c1 NE
@@ -56454,19 +56471,19 @@ Credits:      f3f7 0003  ld   $03         ;| RAM segment address (high byte firs
               f5bc 00ff  ld   $ff         ;04c3 RET
               f5bd 002b  ld   $2b         ;04c4 STW
               f5be 0042  ld   $42         ;04c4 'ClearScreen'
-              f5bf 00d0  ld   $d0         ;04c6 DEF
+              f5bf 00cb  ld   $cb         ;04c6 DEF
               f5c0 00d6  ld   $d6
               f5c1 001a  ld   $1a         ;04c8 LD
               f5c2 000e  ld   $0e
-              f5c3 00bc  ld   $bc         ;04ca ADDW
+              f5c3 0099  ld   $99         ;04ca ADDW
               f5c4 0044  ld   $44         ;04ca 'Delay'
-              f5c5 0087  ld   $87         ;04cc ANDI
+              f5c5 0082  ld   $82         ;04cc ANDI
               f5c6 00ff  ld   $ff
               f5c7 002b  ld   $2b         ;04ce STW
               f5c8 0046  ld   $46         ;04ce 'tmp'
               f5c9 001a  ld   $1a         ;04d0 LD
               f5ca 000e  ld   $0e
-              f5cb 00a7  ld   $a7         ;04d2 SUBW
+              f5cb 00b6  ld   $b6         ;04d2 SUBW
               f5cc 0046  ld   $46         ;04d2 'tmp'
               f5cd 0035  ld   $35         ;04d4 BCC
               f5ce 0072  ld   $72         ;04d5 NE
@@ -56474,29 +56491,29 @@ Credits:      f3f7 0003  ld   $03         ;| RAM segment address (high byte firs
               f5d0 00ff  ld   $ff         ;04d7 RET
               f5d1 002b  ld   $2b         ;04d8 STW
               f5d2 0048  ld   $48         ;04d8 'Wait'
-              f5d3 0098  ld   $98         ;04da INC
+              f5d3 0093  ld   $93         ;04da INC
               f5d4 001a  ld   $1a
               f5d5 00ff  ld   $ff         ;04dc RET
               f5d6 0005  ld   $05         ;| RAM segment address (high byte first)
               f5d7 0000  ld   $00         ;|
               f5d8 00a4  ld   $a4         ;| Length (1..256)
-              f5d9 00d0  ld   $d0         ;0500 DEF
+              f5d9 00cb  ld   $cb         ;0500 DEF
               f5da 006d  ld   $6d
               f5db 0021  ld   $21         ;0502 LDW
               f5dc 0032  ld   $32         ;0502 'Char'
-              f5dd 00fc  ld   $fc         ;0504 SUBI
+              f5dd 00e0  ld   $e0         ;0504 SUBI
               f5de 0052  ld   $52
               f5df 0035  ld   $35         ;0506 BCC
               f5e0 0053  ld   $53         ;0507 GE
               f5e1 0010  ld   $10
-              f5e2 00f9  ld   $f9         ;0509 ADDI
+              f5e2 00dd  ld   $dd         ;0509 ADDI
               f5e3 0032  ld   $32
               f5e4 002b  ld   $2b         ;050b STW
               f5e5 0040  ld   $40         ;050b 'i'
               f5e6 0011  ld   $11         ;050d LDWI
               f5e7 0000  ld   $00
               f5e8 0007  ld   $07
-              f5e9 0095  ld   $95         ;0510 BRA
+              f5e9 0090  ld   $90         ;0510 BRA
               f5ea 0015  ld   $15
               f5eb 002b  ld   $2b         ;0512 STW
               f5ec 0040  ld   $40         ;0512 'i'
@@ -56507,27 +56524,27 @@ Credits:      f3f7 0003  ld   $03         ;| RAM segment address (high byte firs
               f5f1 004a  ld   $4a         ;0517 'fontData'
               f5f2 0021  ld   $21         ;0519 LDW
               f5f3 0040  ld   $40         ;0519 'i'
-              f5f4 00bc  ld   $bc         ;051b ADDW
+              f5f4 0099  ld   $99         ;051b ADDW
               f5f5 0040  ld   $40         ;051b 'i'
               f5f6 002b  ld   $2b         ;051d STW
               f5f7 0046  ld   $46         ;051d 'tmp'
-              f5f8 00bc  ld   $bc         ;051f ADDW
+              f5f8 0099  ld   $99         ;051f ADDW
               f5f9 0046  ld   $46         ;051f 'tmp'
-              f5fa 00bc  ld   $bc         ;0521 ADDW
+              f5fa 0099  ld   $99         ;0521 ADDW
               f5fb fe00  bra  ac          ;+-----------------------------------+
               f5fc fcfd  bra  $f5fd       ;|                                   |
-              f5fd 1403  ld   $03,y       ;| Trampoline for page $f500 lookups |
-              f5fe e078  jmp  y,$78       ;|                                   |
+              f5fd 1404  ld   $04,y       ;| Trampoline for page $f500 lookups |
+              f5fe e072  jmp  y,$72       ;|                                   |
               f5ff 1516  ld   [$16],y     ;+-----------------------------------+
               f600 0040  ld   $40         ;0521 'i'
-              f601 00bc  ld   $bc         ;0523 ADDW
+              f601 0099  ld   $99         ;0523 ADDW
               f602 004a  ld   $4a         ;0523 'fontData'
               f603 002b  ld   $2b         ;0525 STW
               f604 004a  ld   $4a         ;0525 'fontData'
               f605 0011  ld   $11         ;0527 LDWI
               f606 0000  ld   $00
               f607 0008  ld   $08
-              f608 00bc  ld   $bc         ;052a ADDW
+              f608 0099  ld   $99         ;052a ADDW
               f609 0034  ld   $34         ;052a 'Pos'
               f60a 002b  ld   $2b         ;052c STW
               f60b 004c  ld   $4c         ;052c 'q'
@@ -56540,11 +56557,11 @@ Credits:      f3f7 0003  ld   $03         ;| RAM segment address (high byte firs
               f612 003b  ld   $3b
               f613 0021  ld   $21         ;0535 LDW
               f614 004a  ld   $4a         ;0535 'fontData'
-              f615 0075  ld   $75         ;0537 LOOKUP
+              f615 007f  ld   $7f         ;0537 LOOKUP
               f616 0000  ld   $00
-              f617 0098  ld   $98         ;0539 INC
+              f617 0093  ld   $93         ;0539 INC
               f618 004a  ld   $4a         ;0539 'fontData'
-              f619 0095  ld   $95         ;053b BRA
+              f619 0090  ld   $90         ;053b BRA
               f61a 003d  ld   $3d
               f61b 0059  ld   $59         ;053d LDI
               f61c 0000  ld   $00
@@ -56556,39 +56573,39 @@ Credits:      f3f7 0003  ld   $03         ;| RAM segment address (high byte firs
               f622 003e  ld   $3e         ;0543 'p'
               f623 0021  ld   $21         ;0545 LDW
               f624 004e  ld   $4e         ;0545 'bits'
-              f625 0087  ld   $87         ;0547 ANDI
+              f625 0082  ld   $82         ;0547 ANDI
               f626 0080  ld   $80
               f627 0035  ld   $35         ;0549 BCC
               f628 0072  ld   $72         ;054a NE
               f629 004e  ld   $4e
               f62a 0059  ld   $59         ;054c LDI
               f62b 0000  ld   $00
-              f62c 0095  ld   $95         ;054e BRA
+              f62c 0090  ld   $90         ;054e BRA
               f62d 0050  ld   $50
               f62e 0021  ld   $21         ;0550 LDW
               f62f 0050  ld   $50         ;0550 'Color'
-              f630 00e8  ld   $e8         ;0552 POKE
+              f630 00ee  ld   $ee         ;0552 POKE
               f631 003e  ld   $3e         ;0552 'p'
               f632 0021  ld   $21         ;0554 LDW
               f633 004e  ld   $4e         ;0554 'bits'
-              f634 00bc  ld   $bc         ;0556 ADDW
+              f634 0099  ld   $99         ;0556 ADDW
               f635 004e  ld   $4e         ;0556 'bits'
               f636 002b  ld   $2b         ;0558 STW
               f637 004e  ld   $4e         ;0558 'bits'
-              f638 0098  ld   $98         ;055a INC
+              f638 0093  ld   $93         ;055a INC
               f639 003f  ld   $3f         ;055a 'p'+1
               f63a 0021  ld   $21         ;055c LDW
               f63b 003e  ld   $3e         ;055c 'p'
-              f63c 00a7  ld   $a7         ;055e SUBW
+              f63c 00b6  ld   $b6         ;055e SUBW
               f63d 004c  ld   $4c         ;055e 'q'
               f63e 0035  ld   $35         ;0560 BCC
               f63f 0050  ld   $50         ;0561 LT
               f640 0043  ld   $43
-              f641 0098  ld   $98         ;0563 INC
+              f641 0093  ld   $93         ;0563 INC
               f642 0034  ld   $34         ;0563 'Pos'
               f643 0021  ld   $21         ;0565 LDW
               f644 0040  ld   $40         ;0565 'i'
-              f645 00fc  ld   $fc         ;0567 SUBI
+              f645 00e0  ld   $e0         ;0567 SUBI
               f646 0001  ld   $01
               f647 002b  ld   $2b         ;0569 STW
               f648 0040  ld   $40         ;0569 'i'
@@ -56603,7 +56620,7 @@ Credits:      f3f7 0003  ld   $03         ;| RAM segment address (high byte firs
               f651 0008  ld   $08
               f652 002b  ld   $2b         ;0574 STW
               f653 0034  ld   $34         ;0574 'Pos'
-              f654 00d2  ld   $d2         ;0576 CALL
+              f654 00cd  ld   $cd         ;0576 CALL
               f655 0042  ld   $42         ;0576 'ClearScreen'
               f656 0059  ld   $59         ;0578 LDI
               f657 003e  ld   $3e
@@ -56618,58 +56635,58 @@ Credits:      f3f7 0003  ld   $03         ;| RAM segment address (high byte firs
               f660 003a  ld   $3a         ;0581 'Part1'
               f661 002b  ld   $2b         ;0583 STW
               f662 0030  ld   $30         ;0583 'Text'
-              f663 00d2  ld   $d2         ;0585 CALL
+              f663 00cd  ld   $cd         ;0585 CALL
               f664 0038  ld   $38         ;0585 'DrawText'
               f665 0021  ld   $21         ;0587 LDW
               f666 003c  ld   $3c         ;0587 'Part2'
               f667 002b  ld   $2b         ;0589 STW
               f668 0030  ld   $30         ;0589 'Text'
-              f669 00d2  ld   $d2         ;058b CALL
+              f669 00cd  ld   $cd         ;058b CALL
               f66a 0038  ld   $38         ;058b 'DrawText'
               f66b 0059  ld   $59         ;058d LDI
               f66c 00f0  ld   $f0
               f66d 002b  ld   $2b         ;058f STW
               f66e 0044  ld   $44         ;058f 'Delay'
-              f66f 00d2  ld   $d2         ;0591 CALL
+              f66f 00cd  ld   $cd         ;0591 CALL
               f670 0048  ld   $48         ;0591 'Wait'
               f671 0021  ld   $21         ;0593 LDW
               f672 0050  ld   $50         ;0593 'Color'
-              f673 0091  ld   $91         ;0595 XORI
+              f673 008c  ld   $8c         ;0595 XORI
               f674 0008  ld   $08
               f675 0035  ld   $35         ;0597 BCC
               f676 003f  ld   $3f         ;0598 EQ
               f677 00a0  ld   $a0
               f678 0021  ld   $21         ;059a LDW
               f679 0050  ld   $50         ;059a 'Color'
-              f67a 00fc  ld   $fc         ;059c SUBI
+              f67a 00e0  ld   $e0         ;059c SUBI
               f67b 0009  ld   $09
               f67c 002b  ld   $2b         ;059e STW
               f67d 0050  ld   $50         ;059e 'Color'
-              f67e 0095  ld   $95         ;05a0 BRA
+              f67e 0090  ld   $90         ;05a0 BRA
               f67f 007a  ld   $7a
-              f680 0095  ld   $95         ;05a2 BRA
+              f680 0090  ld   $90         ;05a2 BRA
               f681 0076  ld   $76
               f682 0000  ld   $00         ;End of file
 Loader:       f683 0003  ld   $03         ;| RAM segment address (high byte first)
               f684 0000  ld   $00         ;|
               f685 00af  ld   $af         ;| Length (1..256)
-              f686 00d0  ld   $d0         ;0300 DEF
+              f686 00cb  ld   $cb         ;0300 DEF
               f687 0066  ld   $66
               f688 002b  ld   $2b         ;0302 STW
               f689 0030  ld   $30         ;0302 'Char'
-              f68a 00fc  ld   $fc         ;0304 SUBI
+              f68a 00e0  ld   $e0         ;0304 SUBI
               f68b 0052  ld   $52
               f68c 0035  ld   $35         ;0306 BCC
               f68d 0053  ld   $53         ;0307 GE
               f68e 0010  ld   $10
-              f68f 00f9  ld   $f9         ;0309 ADDI
+              f68f 00dd  ld   $dd         ;0309 ADDI
               f690 0032  ld   $32
               f691 002b  ld   $2b         ;030b STW
               f692 0032  ld   $32         ;030b 'i'
               f693 0011  ld   $11         ;030d LDWI
               f694 0000  ld   $00
               f695 0007  ld   $07
-              f696 0095  ld   $95         ;0310 BRA
+              f696 0090  ld   $90         ;0310 BRA
               f697 0015  ld   $15
               f698 002b  ld   $2b         ;0312 STW
               f699 0032  ld   $32         ;0312 'i'
@@ -56680,22 +56697,22 @@ Loader:       f683 0003  ld   $03         ;| RAM segment address (high byte firs
               f69e 0034  ld   $34         ;0317 'fontData'
               f69f 0021  ld   $21         ;0319 LDW
               f6a0 0032  ld   $32         ;0319 'i'
-              f6a1 00bc  ld   $bc         ;031b ADDW
+              f6a1 0099  ld   $99         ;031b ADDW
               f6a2 0032  ld   $32         ;031b 'i'
               f6a3 002b  ld   $2b         ;031d STW
               f6a4 0036  ld   $36         ;031d 'tmp'
-              f6a5 00bc  ld   $bc         ;031f ADDW
+              f6a5 0099  ld   $99         ;031f ADDW
               f6a6 0036  ld   $36         ;031f 'tmp'
-              f6a7 00bc  ld   $bc         ;0321 ADDW
+              f6a7 0099  ld   $99         ;0321 ADDW
               f6a8 0032  ld   $32         ;0321 'i'
-              f6a9 00bc  ld   $bc         ;0323 ADDW
+              f6a9 0099  ld   $99         ;0323 ADDW
               f6aa 0034  ld   $34         ;0323 'fontData'
               f6ab 002b  ld   $2b         ;0325 STW
               f6ac 0034  ld   $34         ;0325 'fontData'
               f6ad 0011  ld   $11         ;0327 LDWI
               f6ae 0000  ld   $00
               f6af 0008  ld   $08
-              f6b0 00bc  ld   $bc         ;032a ADDW
+              f6b0 0099  ld   $99         ;032a ADDW
               f6b1 0038  ld   $38         ;032a 'Pos'
               f6b2 002b  ld   $2b         ;032c STW
               f6b3 003a  ld   $3a         ;032c 'q'
@@ -56705,11 +56722,11 @@ Loader:       f683 0003  ld   $03         ;| RAM segment address (high byte firs
               f6b7 0032  ld   $32         ;0330 'i'
               f6b8 0021  ld   $21         ;0332 LDW
               f6b9 0034  ld   $34         ;0332 'fontData'
-              f6ba 0075  ld   $75         ;0334 LOOKUP
+              f6ba 007f  ld   $7f         ;0334 LOOKUP
               f6bb 0000  ld   $00
               f6bc 002b  ld   $2b         ;0336 STW
               f6bd 003c  ld   $3c         ;0336 'bits'
-              f6be 0098  ld   $98         ;0338 INC
+              f6be 0093  ld   $93         ;0338 INC
               f6bf 0034  ld   $34         ;0338 'fontData'
               f6c0 0021  ld   $21         ;033a LDW
               f6c1 0038  ld   $38         ;033a 'Pos'
@@ -56717,44 +56734,44 @@ Loader:       f683 0003  ld   $03         ;| RAM segment address (high byte firs
               f6c3 003e  ld   $3e         ;033c 'p'
               f6c4 0021  ld   $21         ;033e LDW
               f6c5 003c  ld   $3c         ;033e 'bits'
-              f6c6 0087  ld   $87         ;0340 ANDI
+              f6c6 0082  ld   $82         ;0340 ANDI
               f6c7 0080  ld   $80
               f6c8 0035  ld   $35         ;0342 BCC
               f6c9 0072  ld   $72         ;0343 NE
               f6ca 0047  ld   $47
               f6cb 0059  ld   $59         ;0345 LDI
               f6cc 0020  ld   $20
-              f6cd 0095  ld   $95         ;0347 BRA
+              f6cd 0090  ld   $90         ;0347 BRA
               f6ce 0049  ld   $49
               f6cf 0059  ld   $59         ;0349 LDI
               f6d0 000f  ld   $0f
-              f6d1 00e8  ld   $e8         ;034b POKE
+              f6d1 00ee  ld   $ee         ;034b POKE
               f6d2 003e  ld   $3e         ;034b 'p'
               f6d3 0021  ld   $21         ;034d LDW
               f6d4 003c  ld   $3c         ;034d 'bits'
-              f6d5 00bc  ld   $bc         ;034f ADDW
+              f6d5 0099  ld   $99         ;034f ADDW
               f6d6 003c  ld   $3c         ;034f 'bits'
               f6d7 002b  ld   $2b         ;0351 STW
               f6d8 003c  ld   $3c         ;0351 'bits'
-              f6d9 0098  ld   $98         ;0353 INC
+              f6d9 0093  ld   $93         ;0353 INC
               f6da 003f  ld   $3f         ;0353 'p'+1
               f6db 0021  ld   $21         ;0355 LDW
               f6dc 003e  ld   $3e         ;0355 'p'
-              f6dd 00a7  ld   $a7         ;0357 SUBW
+              f6dd 00b6  ld   $b6         ;0357 SUBW
               f6de 003a  ld   $3a         ;0357 'q'
               f6df 0035  ld   $35         ;0359 BCC
               f6e0 0050  ld   $50         ;035a LT
               f6e1 003c  ld   $3c
-              f6e2 0098  ld   $98         ;035c INC
+              f6e2 0093  ld   $93         ;035c INC
               f6e3 0038  ld   $38         ;035c 'Pos'
               f6e4 0021  ld   $21         ;035e LDW
               f6e5 0032  ld   $32         ;035e 'i'
-              f6e6 00fc  ld   $fc         ;0360 SUBI
+              f6e6 00e0  ld   $e0         ;0360 SUBI
               f6e7 0001  ld   $01
               f6e8 0035  ld   $35         ;0362 BCC
               f6e9 004d  ld   $4d         ;0363 GT
               f6ea 002e  ld   $2e
-              f6eb 0098  ld   $98         ;0365 INC
+              f6eb 0093  ld   $93         ;0365 INC
               f6ec 0038  ld   $38         ;0365 'Pos'
               f6ed 00ff  ld   $ff         ;0367 RET
               f6ee 002b  ld   $2b         ;0368 STW
@@ -56764,7 +56781,7 @@ Loader:       f683 0003  ld   $03         ;| RAM segment address (high byte firs
               f6f2 0050  ld   $50
               f6f3 002b  ld   $2b         ;036d STW
               f6f4 0038  ld   $38         ;036d 'Pos'
-              f6f5 00d0  ld   $d0         ;036f DEF
+              f6f5 00cb  ld   $cb         ;036f DEF
               f6f6 007d  ld   $7d
               f6f7 0052  ld   $52
               f6f8 0065  ld   $65
@@ -56772,8 +56789,8 @@ Loader:       f683 0003  ld   $03         ;| RAM segment address (high byte firs
               f6fa 0064  ld   $64
               f6fb fe00  bra  ac          ;+-----------------------------------+
               f6fc fcfd  bra  $f6fd       ;|                                   |
-              f6fd 1403  ld   $03,y       ;| Trampoline for page $f600 lookups |
-              f6fe e078  jmp  y,$78       ;|                                   |
+              f6fd 1404  ld   $04,y       ;| Trampoline for page $f600 lookups |
+              f6fe e072  jmp  y,$72       ;|                                   |
               f6ff 1516  ld   [$16],y     ;+-----------------------------------+
               f700 0079  ld   $79
               f701 0020  ld   $20
@@ -56789,23 +56806,23 @@ Loader:       f683 0003  ld   $03         ;| RAM segment address (high byte firs
               f70b 0042  ld   $42         ;037f 'Text'
               f70c 0021  ld   $21         ;0381 LDW
               f70d 0042  ld   $42         ;0381 'Text'
-              f70e 00eb  ld   $eb         ;0383 PEEK
+              f70e 00f1  ld   $f1         ;0383 PEEK
               f70f 0035  ld   $35         ;0384 BCC
               f710 003f  ld   $3f         ;0385 EQ
               f711 008b  ld   $8b
-              f712 0098  ld   $98         ;0387 INC
+              f712 0093  ld   $93         ;0387 INC
               f713 0042  ld   $42         ;0387 'Text'
-              f714 00d2  ld   $d2         ;0389 CALL
+              f714 00cd  ld   $cd         ;0389 CALL
               f715 0040  ld   $40         ;0389 'PrintChar'
-              f716 0095  ld   $95         ;038b BRA
+              f716 0090  ld   $90         ;038b BRA
               f717 007f  ld   $7f
               f718 0011  ld   $11         ;038d LDWI
-              f719 00a0  ld   $a0
+              f719 00b5  ld   $b5
               f71a 0004  ld   $04
               f71b 002b  ld   $2b         ;0390 STW
               f71c 0044  ld   $44         ;0390 'NextByteIn_32'
               f71d 0011  ld   $11         ;0392 LDWI
-              f71e 00b6  ld   $b6
+              f71e 00cb  ld   $cb
               f71f 0004  ld   $04
               f720 002b  ld   $2b         ;0395 STW
               f721 0046  ld   $46         ;0395 'PayloadCopy_34'
@@ -56848,31 +56865,31 @@ Loader:       f683 0003  ld   $03         ;| RAM segment address (high byte firs
               f746 0044  ld   $44         ;5a14 'NextByteIn_32'
               f747 002b  ld   $2b         ;5a16 STW
               f748 0022  ld   $22
-              f749 00a3  ld   $a3         ;5a18 SYS
+              f749 00b2  ld   $b2         ;5a18 SYS
               f74a 00fe  ld   $fe
               f74b 0059  ld   $59         ;5a1a LDI
               f74c 00db  ld   $db
               f74d 005e  ld   $5e         ;5a1c ST
               f74e 0027  ld   $27
-              f74f 00a3  ld   $a3         ;5a1e SYS
+              f74f 00b2  ld   $b2         ;5a1e SYS
               f750 00fe  ld   $fe
               f751 0059  ld   $59         ;5a20 LDI
               f752 00eb  ld   $eb
               f753 005e  ld   $5e         ;5a22 ST
               f754 0027  ld   $27
-              f755 00a3  ld   $a3         ;5a24 SYS
+              f755 00b2  ld   $b2         ;5a24 SYS
               f756 00fe  ld   $fe
               f757 0059  ld   $59         ;5a26 LDI
               f758 00fb  ld   $fb
               f759 005e  ld   $5e         ;5a28 ST
               f75a 0027  ld   $27
-              f75b 00a3  ld   $a3         ;5a2a SYS
+              f75b 00b2  ld   $b2         ;5a2a SYS
               f75c 00fe  ld   $fe
               f75d 0021  ld   $21         ;5a2c LDW
               f75e 0046  ld   $46         ;5a2c 'PayloadCopy_34'
               f75f 002b  ld   $2b         ;5a2e STW
               f760 0022  ld   $22
-              f761 00a3  ld   $a3         ;5a30 SYS
+              f761 00b2  ld   $b2         ;5a30 SYS
               f762 00fd  ld   $fd
               f763 0059  ld   $59         ;5a32 LDI
               f764 0002  ld   $02
@@ -56882,7 +56899,7 @@ Loader:       f683 0003  ld   $03         ;| RAM segment address (high byte firs
               f768 0044  ld   $44         ;5a36 'NextByteIn_32'
               f769 002b  ld   $2b         ;5a38 STW
               f76a 0022  ld   $22
-              f76b 00a3  ld   $a3         ;5a3a SYS
+              f76b 00b2  ld   $b2         ;5a3a SYS
               f76c 00fe  ld   $fe
               f76d 0059  ld   $59         ;5a3c LDI
               f76e 0006  ld   $06
@@ -56892,21 +56909,21 @@ Loader:       f683 0003  ld   $03         ;| RAM segment address (high byte firs
               f772 0046  ld   $46         ;5a40 'PayloadCopy_34'
               f773 002b  ld   $2b         ;5a42 STW
               f774 0022  ld   $22
-              f775 00a3  ld   $a3         ;5a44 SYS
+              f775 00b2  ld   $b2         ;5a44 SYS
               f776 00fd  ld   $fd
               f777 0021  ld   $21         ;5a46 LDW
               f778 0044  ld   $44         ;5a46 'NextByteIn_32'
               f779 002b  ld   $2b         ;5a48 STW
               f77a 0022  ld   $22
-              f77b 00a3  ld   $a3         ;5a4a SYS
+              f77b 00b2  ld   $b2         ;5a4a SYS
               f77c 00fe  ld   $fe
               f77d 001a  ld   $1a         ;5a4c LD
               f77e 0027  ld   $27
-              f77f 00f9  ld   $f9         ;5a4e ADDI
+              f77f 00dd  ld   $dd         ;5a4e ADDI
               f780 0004  ld   $04
               f781 005e  ld   $5e         ;5a50 ST
               f782 0027  ld   $27
-              f783 0091  ld   $91         ;5a52 XORI
+              f783 008c  ld   $8c         ;5a52 XORI
               f784 00f2  ld   $f2
               f785 0035  ld   $35         ;5a54 BCC
               f786 0072  ld   $72         ;5a55 NE
@@ -56915,7 +56932,7 @@ Loader:       f683 0003  ld   $03         ;| RAM segment address (high byte firs
               f789 00b9  ld   $b9
               f78a 005e  ld   $5e         ;5a59 ST
               f78b 0027  ld   $27
-              f78c 00a3  ld   $a3         ;5a5b SYS
+              f78c 00b2  ld   $b2         ;5a5b SYS
               f78d 00fe  ld   $fe
               f78e 001a  ld   $1a         ;5a5d LD
               f78f 0026  ld   $26
@@ -56924,34 +56941,34 @@ Loader:       f683 0003  ld   $03         ;| RAM segment address (high byte firs
               f792 0064  ld   $64
               f793 0059  ld   $59         ;5a62 LDI
               f794 000c  ld   $0c
-              f795 0095  ld   $95         ;5a64 BRA
+              f795 0090  ld   $90         ;5a64 BRA
               f796 0066  ld   $66
               f797 0059  ld   $59         ;5a66 LDI
               f798 0003  ld   $03
-              f799 00e8  ld   $e8         ;5a68 POKE
+              f799 00ee  ld   $ee         ;5a68 POKE
               f79a 0048  ld   $48         ;5a68 'A'
               f79b 001a  ld   $1a         ;5a6a LD
               f79c 0048  ld   $48         ;5a6a 'A'
-              f79d 00fc  ld   $fc         ;5a6c SUBI
+              f79d 00e0  ld   $e0         ;5a6c SUBI
               f79e 000b  ld   $0b
-              f79f 0087  ld   $87         ;5a6e ANDI
+              f79f 0082  ld   $82         ;5a6e ANDI
               f7a0 007f  ld   $7f
-              f7a1 00f9  ld   $f9         ;5a70 ADDI
+              f7a1 00dd  ld   $dd         ;5a70 ADDI
               f7a2 000c  ld   $0c
               f7a3 005e  ld   $5e         ;5a72 ST
               f7a4 0048  ld   $48         ;5a72 'A'
               f7a5 0059  ld   $59         ;5a74 LDI
               f7a6 003f  ld   $3f
-              f7a7 00e8  ld   $e8         ;5a76 POKE
+              f7a7 00ee  ld   $ee         ;5a76 POKE
               f7a8 0048  ld   $48         ;5a76 'A'
               f7a9 0011  ld   $11         ;5a78 LDWI
-              f7aa 00ca  ld   $ca
-              f7ab 0004  ld   $04
+              f7aa 0047  ld   $47
+              f7ab 0006  ld   $06
               f7ac 002b  ld   $2b         ;5a7b STW
               f7ad 0022  ld   $22
-              f7ae 00a3  ld   $a3         ;5a7d SYS
+              f7ae 00b2  ld   $b2         ;5a7d SYS
               f7af 00f6  ld   $f6
-              f7b0 0095  ld   $95         ;5a7f BRA
+              f7b0 0090  ld   $90         ;5a7f BRA
               f7b1 000a  ld   $0a
               f7b2 0000  ld   $00         ;End of file
 Screen:       f7b3 0003  ld   $03         ;| RAM segment address (high byte first)
@@ -56962,24 +56979,24 @@ Screen:       f7b3 0003  ld   $03         ;| RAM segment address (high byte firs
               f7b8 0001  ld   $01
               f7b9 002b  ld   $2b         ;0303 STW
               f7ba 0030  ld   $30         ;0303 'ShiftControl'
-              f7bb 00d0  ld   $d0         ;0305 DEF
+              f7bb 00cb  ld   $cb         ;0305 DEF
               f7bc 00cd  ld   $cd
               f7bd 0059  ld   $59         ;0307 LDI
               f7be 00d8  ld   $d8
               f7bf 002b  ld   $2b         ;0309 STW
               f7c0 0022  ld   $22
-              f7c1 00a3  ld   $a3         ;030b SYS
+              f7c1 00b2  ld   $b2         ;030b SYS
               f7c2 00fd  ld   $fd
               f7c3 002b  ld   $2b         ;030d STW
               f7c4 0032  ld   $32         ;030d 'q'
               f7c5 001a  ld   $1a         ;030f LD
               f7c6 0033  ld   $33         ;030f 'q'+1
-              f7c7 00fc  ld   $fc         ;0311 SUBI
+              f7c7 00e0  ld   $e0         ;0311 SUBI
               f7c8 0078  ld   $78
               f7c9 0035  ld   $35         ;0313 BCC
               f7ca 0053  ld   $53         ;0314 GE
               f7cb 0005  ld   $05
-              f7cc 00f9  ld   $f9         ;0316 ADDI
+              f7cc 00dd  ld   $dd         ;0316 ADDI
               f7cd 0080  ld   $80
               f7ce 005e  ld   $5e         ;0318 ST
               f7cf 0033  ld   $33         ;0318 'q'+1
@@ -56987,7 +57004,7 @@ Screen:       f7b3 0003  ld   $03         ;| RAM segment address (high byte firs
               f7d1 0032  ld   $32         ;031a 'q'
               f7d2 002b  ld   $2b         ;031c STW
               f7d3 0034  ld   $34         ;031c 'r'
-              f7d4 00f9  ld   $f9         ;031e ADDI
+              f7d4 00dd  ld   $dd         ;031e ADDI
               f7d5 0048  ld   $48
               f7d6 005e  ld   $5e         ;0320 ST
               f7d7 0034  ld   $34         ;0320 'r'
@@ -57009,43 +57026,43 @@ Screen:       f7b3 0003  ld   $03         ;| RAM segment address (high byte firs
               f7e7 005c  ld   $5c
               f7e8 0021  ld   $21         ;0332 LDW
               f7e9 003a  ld   $3a         ;0332 'p'
-              f7ea 0075  ld   $75         ;0334 LOOKUP
+              f7ea 007f  ld   $7f         ;0334 LOOKUP
               f7eb 0000  ld   $00
               f7ec 005e  ld   $5e         ;0336 ST
               f7ed 0024  ld   $24
               f7ee 0021  ld   $21         ;0338 LDW
               f7ef 003a  ld   $3a         ;0338 'p'
-              f7f0 0075  ld   $75         ;033a LOOKUP
+              f7f0 007f  ld   $7f         ;033a LOOKUP
               f7f1 0001  ld   $01
               f7f2 005e  ld   $5e         ;033c ST
               f7f3 0025  ld   $25
               f7f4 0021  ld   $21         ;033e LDW
               f7f5 003a  ld   $3a         ;033e 'p'
-              f7f6 0075  ld   $75         ;0340 LOOKUP
+              f7f6 007f  ld   $7f         ;0340 LOOKUP
               f7f7 0002  ld   $02
               f7f8 005e  ld   $5e         ;0342 ST
               f7f9 0026  ld   $26
               f7fa 0021  ld   $21         ;0344 LDW
               f7fb fe00  bra  ac          ;+-----------------------------------+
               f7fc fcfd  bra  $f7fd       ;|                                   |
-              f7fd 1403  ld   $03,y       ;| Trampoline for page $f700 lookups |
-              f7fe e078  jmp  y,$78       ;|                                   |
+              f7fd 1404  ld   $04,y       ;| Trampoline for page $f700 lookups |
+              f7fe e072  jmp  y,$72       ;|                                   |
               f7ff 1516  ld   [$16],y     ;+-----------------------------------+
               f800 003a  ld   $3a         ;0344 'p'
-              f801 00f9  ld   $f9         ;0346 ADDI
+              f801 00dd  ld   $dd         ;0346 ADDI
               f802 0003  ld   $03
               f803 002b  ld   $2b         ;0348 STW
               f804 003a  ld   $3a         ;0348 'p'
-              f805 0087  ld   $87         ;034a ANDI
+              f805 0082  ld   $82         ;034a ANDI
               f806 00ff  ld   $ff
-              f807 0091  ld   $91         ;034c XORI
+              f807 008c  ld   $8c         ;034c XORI
               f808 00f9  ld   $f9
               f809 0035  ld   $35         ;034e BCC
               f80a 0072  ld   $72         ;034f NE
               f80b 0055  ld   $55
               f80c 0021  ld   $21         ;0351 LDW
               f80d 003a  ld   $3a         ;0351 'p'
-              f80e 00f9  ld   $f9         ;0353 ADDI
+              f80e 00dd  ld   $dd         ;0353 ADDI
               f80f 0007  ld   $07
               f810 002b  ld   $2b         ;0355 STW
               f811 003a  ld   $3a         ;0355 'p'
@@ -57054,7 +57071,7 @@ Screen:       f7b3 0003  ld   $03         ;| RAM segment address (high byte firs
               f814 0006  ld   $06
               f815 002b  ld   $2b         ;035a STW
               f816 0022  ld   $22
-              f817 00a3  ld   $a3         ;035c SYS
+              f817 00b2  ld   $b2         ;035c SYS
               f818 00f2  ld   $f2
               f819 0021  ld   $21         ;035e LDW
               f81a 0038  ld   $38         ;035e 'n'
@@ -57063,9 +57080,9 @@ Screen:       f7b3 0003  ld   $03         ;| RAM segment address (high byte firs
               f81d 0076  ld   $76
               f81e 0059  ld   $59         ;0363 LDI
               f81f 0024  ld   $24
-              f820 00bc  ld   $bc         ;0365 ADDW
+              f820 0099  ld   $99         ;0365 ADDW
               f821 0036  ld   $36         ;0365 'i'
-              f822 00eb  ld   $eb         ;0367 PEEK
+              f822 00f1  ld   $f1         ;0367 PEEK
               f823 002b  ld   $2b         ;0368 STW
               f824 0038  ld   $38         ;0368 'n'
               f825 0035  ld   $35         ;036a BCC
@@ -57074,46 +57091,46 @@ Screen:       f7b3 0003  ld   $03         ;| RAM segment address (high byte firs
               f828 00ff  ld   $ff         ;036d RET
               f829 0021  ld   $21         ;036e LDW
               f82a 0036  ld   $36         ;036e 'i'
-              f82b 00f9  ld   $f9         ;0370 ADDI
+              f82b 00dd  ld   $dd         ;0370 ADDI
               f82c 0001  ld   $01
-              f82d 0087  ld   $87         ;0372 ANDI
+              f82d 0082  ld   $82         ;0372 ANDI
               f82e 0003  ld   $03
               f82f 002b  ld   $2b         ;0374 STW
               f830 0036  ld   $36         ;0374 'i'
-              f831 0095  ld   $95         ;0376 BRA
+              f831 0090  ld   $90         ;0376 BRA
               f832 00a4  ld   $a4
               f833 0035  ld   $35         ;0378 BCC
               f834 0056  ld   $56         ;0379 LE
               f835 0087  ld   $87
               f836 0059  ld   $59         ;037b LDI
               f837 003f  ld   $3f
-              f838 00e8  ld   $e8         ;037d POKE
+              f838 00ee  ld   $ee         ;037d POKE
               f839 0032  ld   $32         ;037d 'q'
               f83a 0021  ld   $21         ;037f LDW
               f83b 0038  ld   $38         ;037f 'n'
-              f83c 00fc  ld   $fc         ;0381 SUBI
+              f83c 00e0  ld   $e0         ;0381 SUBI
               f83d 0001  ld   $01
               f83e 002b  ld   $2b         ;0383 STW
               f83f 0038  ld   $38         ;0383 'n'
-              f840 0098  ld   $98         ;0385 INC
+              f840 0093  ld   $93         ;0385 INC
               f841 0032  ld   $32         ;0385 'q'
-              f842 0095  ld   $95         ;0387 BRA
+              f842 0090  ld   $90         ;0387 BRA
               f843 00a4  ld   $a4
               f844 0059  ld   $59         ;0389 LDI
               f845 0024  ld   $24
-              f846 00bc  ld   $bc         ;038b ADDW
+              f846 0099  ld   $99         ;038b ADDW
               f847 0036  ld   $36         ;038b 'i'
-              f848 00eb  ld   $eb         ;038d PEEK
+              f848 00f1  ld   $f1         ;038d PEEK
               f849 0035  ld   $35         ;038e BCC
               f84a 003f  ld   $3f         ;038f EQ
               f84b 0097  ld   $97
-              f84c 0091  ld   $91         ;0391 XORI
+              f84c 008c  ld   $8c         ;0391 XORI
               f84d 003f  ld   $3f
-              f84e 00e8  ld   $e8         ;0393 POKE
+              f84e 00ee  ld   $ee         ;0393 POKE
               f84f 0032  ld   $32         ;0393 'q'
-              f850 0098  ld   $98         ;0395 INC
+              f850 0093  ld   $93         ;0395 INC
               f851 0032  ld   $32         ;0395 'q'
-              f852 0095  ld   $95         ;0397 BRA
+              f852 0090  ld   $90         ;0397 BRA
               f853 009c  ld   $9c
               f854 0011  ld   $11         ;0399 LDWI
               f855 00ff  ld   $ff
@@ -57122,30 +57139,30 @@ Screen:       f7b3 0003  ld   $03         ;| RAM segment address (high byte firs
               f858 0038  ld   $38         ;039c 'n'
               f859 0021  ld   $21         ;039e LDW
               f85a 0036  ld   $36         ;039e 'i'
-              f85b 00f9  ld   $f9         ;03a0 ADDI
+              f85b 00dd  ld   $dd         ;03a0 ADDI
               f85c 0001  ld   $01
-              f85d 0087  ld   $87         ;03a2 ANDI
+              f85d 0082  ld   $82         ;03a2 ANDI
               f85e 0003  ld   $03
               f85f 002b  ld   $2b         ;03a4 STW
               f860 0036  ld   $36         ;03a4 'i'
               f861 0021  ld   $21         ;03a6 LDW
               f862 0032  ld   $32         ;03a6 'q'
-              f863 00a7  ld   $a7         ;03a8 SUBW
+              f863 00b6  ld   $b6         ;03a8 SUBW
               f864 0034  ld   $34         ;03a8 'r'
               f865 0035  ld   $35         ;03aa BCC
               f866 0072  ld   $72         ;03ab NE
               f867 00c7  ld   $c7
               f868 0059  ld   $59         ;03ad LDI
               f869 0000  ld   $00
-              f86a 00e8  ld   $e8         ;03af POKE
+              f86a 00ee  ld   $ee         ;03af POKE
               f86b 0032  ld   $32         ;03af 'q'
               f86c 0021  ld   $21         ;03b1 LDW
               f86d 0032  ld   $32         ;03b1 'q'
-              f86e 00fc  ld   $fc         ;03b3 SUBI
+              f86e 00e0  ld   $e0         ;03b3 SUBI
               f86f 0048  ld   $48
               f870 005e  ld   $5e         ;03b5 ST
               f871 0032  ld   $32         ;03b5 'q'
-              f872 0098  ld   $98         ;03b7 INC
+              f872 0093  ld   $93         ;03b7 INC
               f873 0033  ld   $33         ;03b7 'q'+1
               f874 0021  ld   $21         ;03b9 LDW
               f875 0032  ld   $32         ;03b9 'q'
@@ -57155,7 +57172,7 @@ Screen:       f7b3 0003  ld   $03         ;| RAM segment address (high byte firs
               f879 0011  ld   $11         ;03be LDWI
               f87a 0000  ld   $00
               f87b 0088  ld   $88
-              f87c 00bc  ld   $bc         ;03c1 ADDW
+              f87c 0099  ld   $99         ;03c1 ADDW
               f87d 0032  ld   $32         ;03c1 'q'
               f87e 002b  ld   $2b         ;03c3 STW
               f87f 0032  ld   $32         ;03c3 'q'
@@ -57165,9 +57182,9 @@ Screen:       f7b3 0003  ld   $03         ;| RAM segment address (high byte firs
               f883 0035  ld   $35         ;03c7 'r'+1
               f884 001a  ld   $1a         ;03c9 LD
               f885 000e  ld   $0e
-              f886 00e8  ld   $e8         ;03cb POKE
+              f886 00ee  ld   $ee         ;03cb POKE
               f887 0030  ld   $30         ;03cb 'ShiftControl'
-              f888 0095  ld   $95         ;03cd BRA
+              f888 0090  ld   $90         ;03cd BRA
               f889 0026  ld   $26
               f88a 002b  ld   $2b         ;03cf STW
               f88b 003c  ld   $3c         ;03cf 'Transfer'
@@ -57176,33 +57193,33 @@ Screen:       f7b3 0003  ld   $03         ;| RAM segment address (high byte firs
               f88e 000b  ld   $0b
               f88f 002b  ld   $2b         ;03d4 STW
               f890 003a  ld   $3a         ;03d4 'p'
-              f891 00d2  ld   $d2         ;03d6 CALL
+              f891 00cd  ld   $cd         ;03d6 CALL
               f892 003c  ld   $3c         ;03d6 'Transfer'
-              f893 00d2  ld   $d2         ;03d8 CALL
+              f893 00cd  ld   $cd         ;03d8 CALL
               f894 003c  ld   $3c         ;03d8 'Transfer'
-              f895 0095  ld   $95         ;03da BRA
+              f895 0090  ld   $90         ;03da BRA
               f896 00cf  ld   $cf
               f897 0000  ld   $00         ;End of file
 Main:         f898 0003  ld   $03         ;| RAM segment address (high byte first)
               f899 0000  ld   $00         ;|
               f89a 00ee  ld   $ee         ;| Length (1..256)
-              f89b 00d0  ld   $d0         ;0300 DEF
+              f89b 00cb  ld   $cb         ;0300 DEF
               f89c 0066  ld   $66
               f89d 0021  ld   $21         ;0302 LDW
               f89e 0030  ld   $30         ;0302 'Char'
-              f89f 00fc  ld   $fc         ;0304 SUBI
+              f89f 00e0  ld   $e0         ;0304 SUBI
               f8a0 0052  ld   $52
               f8a1 0035  ld   $35         ;0306 BCC
               f8a2 0053  ld   $53         ;0307 GE
               f8a3 0010  ld   $10
-              f8a4 00f9  ld   $f9         ;0309 ADDI
+              f8a4 00dd  ld   $dd         ;0309 ADDI
               f8a5 0032  ld   $32
               f8a6 002b  ld   $2b         ;030b STW
               f8a7 0032  ld   $32         ;030b 'i'
               f8a8 0011  ld   $11         ;030d LDWI
               f8a9 0000  ld   $00
               f8aa 0007  ld   $07
-              f8ab 0095  ld   $95         ;0310 BRA
+              f8ab 0090  ld   $90         ;0310 BRA
               f8ac 0015  ld   $15
               f8ad 002b  ld   $2b         ;0312 STW
               f8ae 0032  ld   $32         ;0312 'i'
@@ -57213,22 +57230,22 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               f8b3 0034  ld   $34         ;0317 'fontData'
               f8b4 0021  ld   $21         ;0319 LDW
               f8b5 0032  ld   $32         ;0319 'i'
-              f8b6 00bc  ld   $bc         ;031b ADDW
+              f8b6 0099  ld   $99         ;031b ADDW
               f8b7 0032  ld   $32         ;031b 'i'
               f8b8 002b  ld   $2b         ;031d STW
               f8b9 0036  ld   $36         ;031d 'tmp'
-              f8ba 00bc  ld   $bc         ;031f ADDW
+              f8ba 0099  ld   $99         ;031f ADDW
               f8bb 0036  ld   $36         ;031f 'tmp'
-              f8bc 00bc  ld   $bc         ;0321 ADDW
+              f8bc 0099  ld   $99         ;0321 ADDW
               f8bd 0032  ld   $32         ;0321 'i'
-              f8be 00bc  ld   $bc         ;0323 ADDW
+              f8be 0099  ld   $99         ;0323 ADDW
               f8bf 0034  ld   $34         ;0323 'fontData'
               f8c0 002b  ld   $2b         ;0325 STW
               f8c1 0034  ld   $34         ;0325 'fontData'
               f8c2 0011  ld   $11         ;0327 LDWI
               f8c3 0000  ld   $00
               f8c4 0008  ld   $08
-              f8c5 00bc  ld   $bc         ;032a ADDW
+              f8c5 0099  ld   $99         ;032a ADDW
               f8c6 0038  ld   $38         ;032a 'Pos'
               f8c7 002b  ld   $2b         ;032c STW
               f8c8 003a  ld   $3a         ;032c 'q'
@@ -57238,11 +57255,11 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               f8cc 0032  ld   $32         ;0330 'i'
               f8cd 0021  ld   $21         ;0332 LDW
               f8ce 0034  ld   $34         ;0332 'fontData'
-              f8cf 0075  ld   $75         ;0334 LOOKUP
+              f8cf 007f  ld   $7f         ;0334 LOOKUP
               f8d0 0000  ld   $00
               f8d1 002b  ld   $2b         ;0336 STW
               f8d2 003c  ld   $3c         ;0336 'bits'
-              f8d3 0098  ld   $98         ;0338 INC
+              f8d3 0093  ld   $93         ;0338 INC
               f8d4 0034  ld   $34         ;0338 'fontData'
               f8d5 0021  ld   $21         ;033a LDW
               f8d6 0038  ld   $38         ;033a 'Pos'
@@ -57250,117 +57267,117 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               f8d8 003e  ld   $3e         ;033c 'p'
               f8d9 0021  ld   $21         ;033e LDW
               f8da 003c  ld   $3c         ;033e 'bits'
-              f8db 0087  ld   $87         ;0340 ANDI
+              f8db 0082  ld   $82         ;0340 ANDI
               f8dc 0080  ld   $80
               f8dd 0035  ld   $35         ;0342 BCC
               f8de 0072  ld   $72         ;0343 NE
               f8df 0047  ld   $47
               f8e0 0059  ld   $59         ;0345 LDI
               f8e1 0020  ld   $20
-              f8e2 0095  ld   $95         ;0347 BRA
+              f8e2 0090  ld   $90         ;0347 BRA
               f8e3 0049  ld   $49
               f8e4 0021  ld   $21         ;0349 LDW
               f8e5 0040  ld   $40         ;0349 'Color'
-              f8e6 00e8  ld   $e8         ;034b POKE
+              f8e6 00ee  ld   $ee         ;034b POKE
               f8e7 003e  ld   $3e         ;034b 'p'
               f8e8 0021  ld   $21         ;034d LDW
               f8e9 003c  ld   $3c         ;034d 'bits'
-              f8ea 00bc  ld   $bc         ;034f ADDW
+              f8ea 0099  ld   $99         ;034f ADDW
               f8eb 003c  ld   $3c         ;034f 'bits'
               f8ec 002b  ld   $2b         ;0351 STW
               f8ed 003c  ld   $3c         ;0351 'bits'
-              f8ee 0098  ld   $98         ;0353 INC
+              f8ee 0093  ld   $93         ;0353 INC
               f8ef 003f  ld   $3f         ;0353 'p'+1
               f8f0 0021  ld   $21         ;0355 LDW
               f8f1 003e  ld   $3e         ;0355 'p'
-              f8f2 00a7  ld   $a7         ;0357 SUBW
+              f8f2 00b6  ld   $b6         ;0357 SUBW
               f8f3 003a  ld   $3a         ;0357 'q'
               f8f4 0035  ld   $35         ;0359 BCC
               f8f5 0050  ld   $50         ;035a LT
               f8f6 003c  ld   $3c
-              f8f7 0098  ld   $98         ;035c INC
+              f8f7 0093  ld   $93         ;035c INC
               f8f8 0038  ld   $38         ;035c 'Pos'
               f8f9 0021  ld   $21         ;035e LDW
               f8fa 0032  ld   $32         ;035e 'i'
               f8fb fe00  bra  ac          ;+-----------------------------------+
               f8fc fcfd  bra  $f8fd       ;|                                   |
-              f8fd 1403  ld   $03,y       ;| Trampoline for page $f800 lookups |
-              f8fe e078  jmp  y,$78       ;|                                   |
+              f8fd 1404  ld   $04,y       ;| Trampoline for page $f800 lookups |
+              f8fe e072  jmp  y,$72       ;|                                   |
               f8ff 1516  ld   [$16],y     ;+-----------------------------------+
-              f900 00fc  ld   $fc         ;0360 SUBI
+              f900 00e0  ld   $e0         ;0360 SUBI
               f901 0001  ld   $01
               f902 0035  ld   $35         ;0362 BCC
               f903 004d  ld   $4d         ;0363 GT
               f904 002e  ld   $2e
-              f905 0098  ld   $98         ;0365 INC
+              f905 0093  ld   $93         ;0365 INC
               f906 0038  ld   $38         ;0365 'Pos'
               f907 00ff  ld   $ff         ;0367 RET
               f908 002b  ld   $2b         ;0368 STW
               f909 0042  ld   $42         ;0368 'PrintChar'
-              f90a 00d0  ld   $d0         ;036a DEF
+              f90a 00cb  ld   $cb         ;036a DEF
               f90b 0093  ld   $93
-              f90c 007d  ld   $7d         ;036c PUSH
+              f90c 0075  ld   $75         ;036c PUSH
               f90d 002b  ld   $2b         ;036d STW
               f90e 0044  ld   $44         ;036d 'Text'
               f90f 0021  ld   $21         ;036f LDW
               f910 0044  ld   $44         ;036f 'Text'
-              f911 00eb  ld   $eb         ;0371 PEEK
+              f911 00f1  ld   $f1         ;0371 PEEK
               f912 0035  ld   $35         ;0372 BCC
               f913 003f  ld   $3f         ;0373 EQ
               f914 0091  ld   $91
               f915 002b  ld   $2b         ;0375 STW
               f916 0030  ld   $30         ;0375 'Char'
-              f917 0098  ld   $98         ;0377 INC
+              f917 0093  ld   $93         ;0377 INC
               f918 0044  ld   $44         ;0377 'Text'
-              f919 0091  ld   $91         ;0379 XORI
+              f919 008c  ld   $8c         ;0379 XORI
               f91a 0009  ld   $09
               f91b 0035  ld   $35         ;037b BCC
               f91c 0072  ld   $72         ;037c NE
               f91d 0084  ld   $84
               f91e 0021  ld   $21         ;037e LDW
               f91f 0038  ld   $38         ;037e 'Pos'
-              f920 00f9  ld   $f9         ;0380 ADDI
+              f920 00dd  ld   $dd         ;0380 ADDI
               f921 001e  ld   $1e
               f922 002b  ld   $2b         ;0382 STW
               f923 0038  ld   $38         ;0382 'Pos'
-              f924 0095  ld   $95         ;0384 BRA
+              f924 0090  ld   $90         ;0384 BRA
               f925 006d  ld   $6d
-              f926 0091  ld   $91         ;0386 XORI
+              f926 008c  ld   $8c         ;0386 XORI
               f927 0003  ld   $03
               f928 0035  ld   $35         ;0388 BCC
               f929 0072  ld   $72         ;0389 NE
               f92a 008d  ld   $8d
-              f92b 00d2  ld   $d2         ;038b CALL
+              f92b 00cd  ld   $cd         ;038b CALL
               f92c 0046  ld   $46         ;038b 'Newline'
-              f92d 0095  ld   $95         ;038d BRA
+              f92d 0090  ld   $90         ;038d BRA
               f92e 006d  ld   $6d
-              f92f 00d2  ld   $d2         ;038f CALL
+              f92f 00cd  ld   $cd         ;038f CALL
               f930 0042  ld   $42         ;038f 'PrintChar'
-              f931 0095  ld   $95         ;0391 BRA
+              f931 0090  ld   $90         ;0391 BRA
               f932 006d  ld   $6d
               f933 0063  ld   $63         ;0393 POP
               f934 00ff  ld   $ff         ;0394 RET
               f935 002b  ld   $2b         ;0395 STW
               f936 0048  ld   $48         ;0395 'PrintText'
-              f937 00d0  ld   $d0         ;0397 DEF
+              f937 00cb  ld   $cb         ;0397 DEF
               f938 00a3  ld   $a3
               f939 0011  ld   $11         ;0399 LDWI
               f93a 0000  ld   $00
               f93b 0008  ld   $08
-              f93c 00bc  ld   $bc         ;039c ADDW
+              f93c 0099  ld   $99         ;039c ADDW
               f93d 0038  ld   $38         ;039c 'Pos'
-              f93e 008d  ld   $8d         ;039e ORI
+              f93e 0088  ld   $88         ;039e ORI
               f93f 00ff  ld   $ff
-              f940 0091  ld   $91         ;03a0 XORI
+              f940 008c  ld   $8c         ;03a0 XORI
               f941 00ff  ld   $ff
               f942 002b  ld   $2b         ;03a2 STW
               f943 0038  ld   $38         ;03a2 'Pos'
               f944 00ff  ld   $ff         ;03a4 RET
               f945 002b  ld   $2b         ;03a5 STW
               f946 0046  ld   $46         ;03a5 'Newline'
-              f947 00d0  ld   $d0         ;03a7 DEF
+              f947 00cb  ld   $cb         ;03a7 DEF
               f948 00bd  ld   $bd
-              f949 007d  ld   $7d         ;03a9 PUSH
+              f949 0075  ld   $75         ;03a9 PUSH
               f94a 0059  ld   $59         ;03aa LDI
               f94b 002d  ld   $2d
               f94c 002b  ld   $2b         ;03ac STW
@@ -57369,24 +57386,24 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               f94f 001a  ld   $1a
               f950 002b  ld   $2b         ;03b0 STW
               f951 004a  ld   $4a         ;03b0 'j'
-              f952 00d2  ld   $d2         ;03b2 CALL
+              f952 00cd  ld   $cd         ;03b2 CALL
               f953 0042  ld   $42         ;03b2 'PrintChar'
               f954 0021  ld   $21         ;03b4 LDW
               f955 004a  ld   $4a         ;03b4 'j'
-              f956 00fc  ld   $fc         ;03b6 SUBI
+              f956 00e0  ld   $e0         ;03b6 SUBI
               f957 0001  ld   $01
               f958 0035  ld   $35         ;03b8 BCC
               f959 004d  ld   $4d         ;03b9 GT
               f95a 00ae  ld   $ae
-              f95b 00d2  ld   $d2         ;03bb CALL
+              f95b 00cd  ld   $cd         ;03bb CALL
               f95c 0046  ld   $46         ;03bb 'Newline'
               f95d 0063  ld   $63         ;03bd POP
               f95e 00ff  ld   $ff         ;03be RET
               f95f 002b  ld   $2b         ;03bf STW
               f960 004c  ld   $4c         ;03bf 'PrintDivider'
-              f961 00d0  ld   $d0         ;03c1 DEF
+              f961 00cb  ld   $cb         ;03c1 DEF
               f962 00e7  ld   $e7
-              f963 007d  ld   $7d         ;03c3 PUSH
+              f963 0075  ld   $75         ;03c3 PUSH
               f964 0011  ld   $11         ;03c4 LDWI
               f965 000c  ld   $0c
               f966 0020  ld   $20
@@ -57399,13 +57416,13 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               f96d 0011  ld   $11         ;03cd LDWI
               f96e 0000  ld   $00
               f96f 0008  ld   $08
-              f970 00bc  ld   $bc         ;03d0 ADDW
+              f970 0099  ld   $99         ;03d0 ADDW
               f971 0038  ld   $38         ;03d0 'Pos'
               f972 002b  ld   $2b         ;03d2 STW
               f973 0038  ld   $38         ;03d2 'Pos'
               f974 0021  ld   $21         ;03d4 LDW
               f975 004a  ld   $4a         ;03d4 'j'
-              f976 00fc  ld   $fc         ;03d6 SUBI
+              f976 00e0  ld   $e0         ;03d6 SUBI
               f977 0001  ld   $01
               f978 0035  ld   $35         ;03d8 BCC
               f979 0053  ld   $53         ;03d9 GE
@@ -57414,25 +57431,25 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               f97c 002d  ld   $2d
               f97d 002b  ld   $2b         ;03dd STW
               f97e 0030  ld   $30         ;03dd 'Char'
-              f97f 00d2  ld   $d2         ;03df CALL
+              f97f 00cd  ld   $cd         ;03df CALL
               f980 0042  ld   $42         ;03df 'PrintChar'
               f981 0059  ld   $59         ;03e1 LDI
               f982 003e  ld   $3e
               f983 002b  ld   $2b         ;03e3 STW
               f984 0030  ld   $30         ;03e3 'Char'
-              f985 00d2  ld   $d2         ;03e5 CALL
+              f985 00cd  ld   $cd         ;03e5 CALL
               f986 0042  ld   $42         ;03e5 'PrintChar'
               f987 0063  ld   $63         ;03e7 POP
               f988 00ff  ld   $ff         ;03e8 RET
               f989 002b  ld   $2b         ;03e9 STW
               f98a 0050  ld   $50         ;03e9 'PrintArrow'
-              f98b 0098  ld   $98         ;03eb INC
+              f98b 0093  ld   $93         ;03eb INC
               f98c 001a  ld   $1a
               f98d 00ff  ld   $ff         ;03ed RET
               f98e 0004  ld   $04         ;| RAM segment address (high byte first)
               f98f 0000  ld   $00         ;|
               f990 00a6  ld   $a6         ;| Length (1..256)
-              f991 00d0  ld   $d0         ;0400 DEF
+              f991 00cb  ld   $cb         ;0400 DEF
               f992 0036  ld   $36
               f993 0009  ld   $09
               f994 0053  ld   $53
@@ -57490,7 +57507,7 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               f9c8 0000  ld   $00
               f9c9 002b  ld   $2b         ;0438 STW
               f9ca 0052  ld   $52         ;0438 'MainMenu'
-              f9cb 00d0  ld   $d0         ;043a DEF
+              f9cb 00cb  ld   $cb         ;043a DEF
               f9cc 0086  ld   $86
               f9cd 0020  ld   $20
               f9ce 0055  ld   $55
@@ -57540,8 +57557,8 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               f9fa 0072  ld   $72
               f9fb fe00  bra  ac          ;+-----------------------------------+
               f9fc fcfd  bra  $f9fd       ;|                                   |
-              f9fd 1403  ld   $03,y       ;| Trampoline for page $f900 lookups |
-              f9fe e078  jmp  y,$78       ;|                                   |
+              f9fd 1404  ld   $04,y       ;| Trampoline for page $f900 lookups |
+              f9fe e072  jmp  y,$72       ;|                                   |
               f9ff 1516  ld   [$16],y     ;+-----------------------------------+
               fa00 006f  ld   $6f
               fa01 0067  ld   $67
@@ -57575,12 +57592,12 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               fa1d 0000  ld   $00
               fa1e 002b  ld   $2b         ;0488 STW
               fa1f 0054  ld   $54         ;0488 'HelpText'
-              fa20 00d0  ld   $d0         ;048a DEF
+              fa20 00cb  ld   $cb         ;048a DEF
               fa21 009b  ld   $9b
-              fa22 007d  ld   $7d         ;048c PUSH
+              fa22 0075  ld   $75         ;048c PUSH
               fa23 0021  ld   $21         ;048d LDW
               fa24 0038  ld   $38         ;048d 'Pos'
-              fa25 00fc  ld   $fc         ;048f SUBI
+              fa25 00e0  ld   $e0         ;048f SUBI
               fa26 000c  ld   $0c
               fa27 002b  ld   $2b         ;0491 STW
               fa28 0038  ld   $38         ;0491 'Pos'
@@ -57588,9 +57605,9 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               fa2a 0020  ld   $20
               fa2b 002b  ld   $2b         ;0495 STW
               fa2c 0030  ld   $30         ;0495 'Char'
-              fa2d 00d2  ld   $d2         ;0497 CALL
+              fa2d 00cd  ld   $cd         ;0497 CALL
               fa2e 0042  ld   $42         ;0497 'PrintChar'
-              fa2f 00d2  ld   $d2         ;0499 CALL
+              fa2f 00cd  ld   $cd         ;0499 CALL
               fa30 0042  ld   $42         ;0499 'PrintChar'
               fa31 0063  ld   $63         ;049b POP
               fa32 00ff  ld   $ff         ;049c RET
@@ -57600,7 +57617,7 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               fa36 0078  ld   $78
               fa37 005e  ld   $5e         ;04a1 ST
               fa38 002c  ld   $2c
-              fa39 0098  ld   $98         ;04a3 INC
+              fa39 0093  ld   $93         ;04a3 INC
               fa3a 001a  ld   $1a
               fa3b 00ff  ld   $ff         ;04a5 RET
               fa3c 0005  ld   $05         ;| RAM segment address (high byte first)
@@ -57615,7 +57632,7 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               fa45 002a  ld   $2a
               fa46 002b  ld   $2b         ;0507 STW
               fa47 0040  ld   $40         ;0507 'Color'
-              fa48 00d2  ld   $d2         ;0509 CALL
+              fa48 00cd  ld   $cd         ;0509 CALL
               fa49 004c  ld   $4c         ;0509 'PrintDivider'
               fa4a 0059  ld   $59         ;050b LDI
               fa4b 000f  ld   $0f
@@ -57623,17 +57640,17 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               fa4d 0040  ld   $40         ;050d 'Color'
               fa4e 0021  ld   $21         ;050f LDW
               fa4f 0052  ld   $52         ;050f 'MainMenu'
-              fa50 00d2  ld   $d2         ;0511 CALL
+              fa50 00cd  ld   $cd         ;0511 CALL
               fa51 0048  ld   $48         ;0511 'PrintText'
               fa52 0059  ld   $59         ;0513 LDI
               fa53 002a  ld   $2a
               fa54 002b  ld   $2b         ;0515 STW
               fa55 0040  ld   $40         ;0515 'Color'
-              fa56 00d2  ld   $d2         ;0517 CALL
+              fa56 00cd  ld   $cd         ;0517 CALL
               fa57 004c  ld   $4c         ;0517 'PrintDivider'
               fa58 0021  ld   $21         ;0519 LDW
               fa59 0054  ld   $54         ;0519 'HelpText'
-              fa5a 00d2  ld   $d2         ;051b CALL
+              fa5a 00cd  ld   $cd         ;051b CALL
               fa5b 0048  ld   $48         ;051b 'PrintText'
               fa5c 0059  ld   $59         ;051d LDI
               fa5d 0000  ld   $00
@@ -57643,25 +57660,25 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               fa61 000e  ld   $0e
               fa62 002b  ld   $2b         ;0523 STW
               fa63 0040  ld   $40         ;0523 'Color'
-              fa64 00d2  ld   $d2         ;0525 CALL
+              fa64 00cd  ld   $cd         ;0525 CALL
               fa65 0050  ld   $50         ;0525 'PrintArrow'
               fa66 001a  ld   $1a         ;0527 LD
               fa67 0011  ld   $11
-              fa68 0091  ld   $91         ;0529 XORI
+              fa68 008c  ld   $8c         ;0529 XORI
               fa69 00f7  ld   $f7
               fa6a 0035  ld   $35         ;052b BCC
               fa6b 0072  ld   $72         ;052c NE
               fa6c 0041  ld   $41
-              fa6d 00d2  ld   $d2         ;052e CALL
+              fa6d 00cd  ld   $cd         ;052e CALL
               fa6e 0056  ld   $56         ;052e 'WipeOutArrow'
               fa6f 0021  ld   $21         ;0530 LDW
               fa70 004e  ld   $4e         ;0530 'Item'
               fa71 0035  ld   $35         ;0532 BCC
               fa72 0056  ld   $56         ;0533 LE
               fa73 0037  ld   $37
-              fa74 00fc  ld   $fc         ;0535 SUBI
+              fa74 00e0  ld   $e0         ;0535 SUBI
               fa75 0001  ld   $01
-              fa76 0095  ld   $95         ;0537 BRA
+              fa76 0090  ld   $90         ;0537 BRA
               fa77 0039  ld   $39
               fa78 0059  ld   $59         ;0539 LDI
               fa79 0000  ld   $00
@@ -57669,29 +57686,29 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               fa7b 004e  ld   $4e         ;053b 'Item'
               fa7c 001a  ld   $1a         ;053d LD
               fa7d 0011  ld   $11
-              fa7e 008d  ld   $8d         ;053f ORI
+              fa7e 0088  ld   $88         ;053f ORI
               fa7f 0008  ld   $08
               fa80 005e  ld   $5e         ;0541 ST
               fa81 0011  ld   $11
               fa82 001a  ld   $1a         ;0543 LD
               fa83 0011  ld   $11
-              fa84 0091  ld   $91         ;0545 XORI
+              fa84 008c  ld   $8c         ;0545 XORI
               fa85 00fb  ld   $fb
               fa86 0035  ld   $35         ;0547 BCC
               fa87 0072  ld   $72         ;0548 NE
               fa88 005f  ld   $5f
-              fa89 00d2  ld   $d2         ;054a CALL
+              fa89 00cd  ld   $cd         ;054a CALL
               fa8a 0056  ld   $56         ;054a 'WipeOutArrow'
               fa8b 0021  ld   $21         ;054c LDW
               fa8c 004e  ld   $4e         ;054c 'Item'
-              fa8d 00fc  ld   $fc         ;054e SUBI
+              fa8d 00e0  ld   $e0         ;054e SUBI
               fa8e 0005  ld   $05
               fa8f 0035  ld   $35         ;0550 BCC
               fa90 0053  ld   $53         ;0551 GE
               fa91 0055  ld   $55
-              fa92 00f9  ld   $f9         ;0553 ADDI
+              fa92 00dd  ld   $dd         ;0553 ADDI
               fa93 0006  ld   $06
-              fa94 0095  ld   $95         ;0555 BRA
+              fa94 0090  ld   $90         ;0555 BRA
               fa95 0057  ld   $57
               fa96 0059  ld   $59         ;0557 LDI
               fa97 0005  ld   $05
@@ -57699,13 +57716,13 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               fa99 004e  ld   $4e         ;0559 'Item'
               fa9a 001a  ld   $1a         ;055b LD
               fa9b 0011  ld   $11
-              fa9c 008d  ld   $8d         ;055d ORI
+              fa9c 0088  ld   $88         ;055d ORI
               fa9d 0004  ld   $04
               fa9e 005e  ld   $5e         ;055f ST
               fa9f 0011  ld   $11
               faa0 001a  ld   $1a         ;0561 LD
               faa1 0011  ld   $11
-              faa2 0091  ld   $91         ;0563 XORI
+              faa2 008c  ld   $8c         ;0563 XORI
               faa3 007f  ld   $7f
               faa4 0035  ld   $35         ;0565 BCC
               faa5 0072  ld   $72         ;0566 NE
@@ -57714,7 +57731,7 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               faa8 002a  ld   $2a
               faa9 002b  ld   $2b         ;056a STW
               faaa 0040  ld   $40         ;056a 'Color'
-              faab 00d2  ld   $d2         ;056c CALL
+              faab 00cd  ld   $cd         ;056c CALL
               faac 0050  ld   $50         ;056c 'PrintArrow'
               faad 0021  ld   $21         ;056e LDW
               faae 004e  ld   $4e         ;056e 'Item'
@@ -57724,9 +57741,9 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               fab2 0011  ld   $11         ;0573 LDWI
               fab3 003c  ld   $3c
               fab4 00e3  ld   $e3
-              fab5 0095  ld   $95         ;0576 BRA
+              fab5 0090  ld   $90         ;0576 BRA
               fab6 00aa  ld   $aa
-              fab7 00fc  ld   $fc         ;0578 SUBI
+              fab7 00e0  ld   $e0         ;0578 SUBI
               fab8 0001  ld   $01
               fab9 0035  ld   $35         ;057a BCC
               faba 0072  ld   $72         ;057b NE
@@ -57734,9 +57751,9 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               fabc 0011  ld   $11         ;057d LDWI
               fabd 0052  ld   $52
               fabe 00e9  ld   $e9
-              fabf 0095  ld   $95         ;0580 BRA
+              fabf 0090  ld   $90         ;0580 BRA
               fac0 00aa  ld   $aa
-              fac1 00fc  ld   $fc         ;0582 SUBI
+              fac1 00e0  ld   $e0         ;0582 SUBI
               fac2 0001  ld   $01
               fac3 0035  ld   $35         ;0584 BCC
               fac4 0072  ld   $72         ;0585 NE
@@ -57744,9 +57761,9 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               fac6 0011  ld   $11         ;0587 LDWI
               fac7 00ec  ld   $ec
               fac8 00ef  ld   $ef
-              fac9 0095  ld   $95         ;058a BRA
+              fac9 0090  ld   $90         ;058a BRA
               faca 00aa  ld   $aa
-              facb 00fc  ld   $fc         ;058c SUBI
+              facb 00e0  ld   $e0         ;058c SUBI
               facc 0001  ld   $01
               facd 0035  ld   $35         ;058e BCC
               face 0072  ld   $72         ;058f NE
@@ -57754,9 +57771,9 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               fad0 0011  ld   $11         ;0591 LDWI
               fad1 0020  ld   $20
               fad2 00f3  ld   $f3
-              fad3 0095  ld   $95         ;0594 BRA
+              fad3 0090  ld   $90         ;0594 BRA
               fad4 00aa  ld   $aa
-              fad5 00fc  ld   $fc         ;0596 SUBI
+              fad5 00e0  ld   $e0         ;0596 SUBI
               fad6 0001  ld   $01
               fad7 0035  ld   $35         ;0598 BCC
               fad8 0072  ld   $72         ;0599 NE
@@ -57764,9 +57781,9 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               fada 0011  ld   $11         ;059b LDWI
               fadb 00f7  ld   $f7
               fadc 00f3  ld   $f3
-              fadd 0095  ld   $95         ;059e BRA
+              fadd 0090  ld   $90         ;059e BRA
               fade 00aa  ld   $aa
-              fadf 00fc  ld   $fc         ;05a0 SUBI
+              fadf 00e0  ld   $e0         ;05a0 SUBI
               fae0 0001  ld   $01
               fae1 0035  ld   $35         ;05a2 BCC
               fae2 0072  ld   $72         ;05a3 NE
@@ -57774,9 +57791,9 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               fae4 0011  ld   $11         ;05a5 LDWI
               fae5 0083  ld   $83
               fae6 00f6  ld   $f6
-              fae7 0095  ld   $95         ;05a8 BRA
+              fae7 0090  ld   $90         ;05a8 BRA
               fae8 00aa  ld   $aa
-              fae9 0095  ld   $95         ;05aa BRA
+              fae9 0090  ld   $90         ;05aa BRA
               faea 001f  ld   $1f
               faeb 002b  ld   $2b         ;05ac STW
               faec 0058  ld   $58         ;05ac 'Program'
@@ -57796,12 +57813,12 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               fafa 003a  ld   $3a         ;05ba 'q'
               fafb fe00  bra  ac          ;+-----------------------------------+
               fafc fcfd  bra  $fafd       ;|                                   |
-              fafd 1403  ld   $03,y       ;| Trampoline for page $fa00 lookups |
-              fafe e078  jmp  y,$78       ;|                                   |
+              fafd 1404  ld   $04,y       ;| Trampoline for page $fa00 lookups |
+              fafe e072  jmp  y,$72       ;|                                   |
               faff 1516  ld   [$16],y     ;+-----------------------------------+
               fb00 0011  ld   $11         ;05bc LDWI
-              fb01 0054  ld   $54
-              fb02 0006  ld   $06
+              fb01 00ec  ld   $ec
+              fb02 0004  ld   $04
               fb03 002b  ld   $2b         ;05bf STW
               fb04 0022  ld   $22
               fb05 0059  ld   $59         ;05c1 LDI
@@ -57812,14 +57829,14 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               fb0a 0025  ld   $25
               fb0b 001a  ld   $1a         ;05c7 LD
               fb0c 003f  ld   $3f         ;05c7 'p'+1
-              fb0d 00a7  ld   $a7         ;05c9 SUBW
+              fb0d 00b6  ld   $b6         ;05c9 SUBW
               fb0e 003a  ld   $3a         ;05c9 'q'
               fb0f 0035  ld   $35         ;05cb BCC
               fb10 003f  ld   $3f         ;05cc EQ
               fb11 00d9  ld   $d9
               fb12 001a  ld   $1a         ;05ce LD
               fb13 003f  ld   $3f         ;05ce 'p'+1
-              fb14 0091  ld   $91         ;05d0 XORI
+              fb14 008c  ld   $8c         ;05d0 XORI
               fb15 0078  ld   $78
               fb16 0035  ld   $35         ;05d2 BCC
               fb17 003f  ld   $3f         ;05d3 EQ
@@ -57828,25 +57845,25 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               fb1a 003e  ld   $3e         ;05d5 'p'
               fb1b 002b  ld   $2b         ;05d7 STW
               fb1c 0028  ld   $28
-              fb1d 00a3  ld   $a3         ;05d9 SYS
+              fb1d 00b2  ld   $b2         ;05d9 SYS
               fb1e 00cb  ld   $cb
               fb1f 0011  ld   $11         ;05db LDWI
               fb20 0000  ld   $00
               fb21 0008  ld   $08
-              fb22 00bc  ld   $bc         ;05de ADDW
+              fb22 0099  ld   $99         ;05de ADDW
               fb23 003e  ld   $3e         ;05de 'p'
               fb24 002b  ld   $2b         ;05e0 STW
               fb25 003e  ld   $3e         ;05e0 'p'
               fb26 0035  ld   $35         ;05e2 BCC
               fb27 004d  ld   $4d         ;05e3 GT
               fb28 00c5  ld   $c5
-              fb29 00bc  ld   $bc         ;05e5 ADDW
+              fb29 0099  ld   $99         ;05e5 ADDW
               fb2a 0032  ld   $32         ;05e5 'i'
               fb2b 002b  ld   $2b         ;05e7 STW
               fb2c 003e  ld   $3e         ;05e7 'p'
-              fb2d 0087  ld   $87         ;05e9 ANDI
+              fb2d 0082  ld   $82         ;05e9 ANDI
               fb2e 00ff  ld   $ff
-              fb2f 0091  ld   $91         ;05eb XORI
+              fb2f 008c  ld   $8c         ;05eb XORI
               fb30 00a0  ld   $a0
               fb31 0035  ld   $35         ;05ed BCC
               fb32 0072  ld   $72         ;05ee NE
@@ -57864,13 +57881,13 @@ Main:         f898 0003  ld   $03         ;| RAM segment address (high byte firs
               fb3e 0085  ld   $85
               fb3f 002b  ld   $2b         ;05fb STW
               fb40 0022  ld   $22
-              fb41 00a3  ld   $a3         ;05fd SYS
+              fb41 00b2  ld   $b2         ;05fd SYS
               fb42 00e2  ld   $e2
               fb43 0000  ld   $00         ;End of file
 Reset:        fb44 0003  ld   $03         ;| RAM segment address (high byte first)
               fb45 0000  ld   $00         ;|
               fb46 00dd  ld   $dd         ;| Length (1..256)
-              fb47 00d0  ld   $d0         ;0300 DEF
+              fb47 00cb  ld   $cb         ;0300 DEF
               fb48 004e  ld   $4e
               fb49 0011  ld   $11         ;0302 LDWI
               fb4a 0000  ld   $00
@@ -57884,17 +57901,17 @@ Reset:        fb44 0003  ld   $03         ;| RAM segment address (high byte firs
               fb52 0032  ld   $32         ;030a 'q'
               fb53 001a  ld   $1a         ;030c LD
               fb54 0033  ld   $33         ;030c 'q'+1
-              fb55 00e8  ld   $e8         ;030e POKE
+              fb55 00ee  ld   $ee         ;030e POKE
               fb56 0030  ld   $30         ;030e 'p'
-              fb57 0098  ld   $98         ;0310 INC
+              fb57 0093  ld   $93         ;0310 INC
               fb58 0030  ld   $30         ;0310 'p'
               fb59 0059  ld   $59         ;0312 LDI
               fb5a 0000  ld   $00
-              fb5b 00e8  ld   $e8         ;0314 POKE
+              fb5b 00ee  ld   $ee         ;0314 POKE
               fb5c 0030  ld   $30         ;0314 'p'
-              fb5d 0098  ld   $98         ;0316 INC
+              fb5d 0093  ld   $93         ;0316 INC
               fb5e 0030  ld   $30         ;0316 'p'
-              fb5f 0098  ld   $98         ;0318 INC
+              fb5f 0093  ld   $93         ;0318 INC
               fb60 0033  ld   $33         ;0318 'q'+1
               fb61 0021  ld   $21         ;031a LDW
               fb62 0032  ld   $32         ;031a 'q'
@@ -57912,8 +57929,8 @@ Reset:        fb44 0003  ld   $03         ;| RAM segment address (high byte firs
               fb6e 002b  ld   $2b         ;0327 STW
               fb6f 0034  ld   $34         ;0327 'i'
               fb70 0011  ld   $11         ;0329 LDWI
-              fb71 0054  ld   $54
-              fb72 0006  ld   $06
+              fb71 00ec  ld   $ec
+              fb72 0004  ld   $04
               fb73 002b  ld   $2b         ;032c STW
               fb74 0022  ld   $22
               fb75 0059  ld   $59         ;032e LDI
@@ -57926,25 +57943,25 @@ Reset:        fb44 0003  ld   $03         ;| RAM segment address (high byte firs
               fb7c 0030  ld   $30         ;0334 'p'
               fb7d 002b  ld   $2b         ;0336 STW
               fb7e 0028  ld   $28
-              fb7f 00a3  ld   $a3         ;0338 SYS
+              fb7f 00b2  ld   $b2         ;0338 SYS
               fb80 00cb  ld   $cb
               fb81 0011  ld   $11         ;033a LDWI
               fb82 0000  ld   $00
               fb83 0008  ld   $08
-              fb84 00bc  ld   $bc         ;033d ADDW
+              fb84 0099  ld   $99         ;033d ADDW
               fb85 0030  ld   $30         ;033d 'p'
               fb86 002b  ld   $2b         ;033f STW
               fb87 0030  ld   $30         ;033f 'p'
               fb88 0035  ld   $35         ;0341 BCC
               fb89 004d  ld   $4d         ;0342 GT
               fb8a 0034  ld   $34
-              fb8b 00bc  ld   $bc         ;0344 ADDW
+              fb8b 0099  ld   $99         ;0344 ADDW
               fb8c 0034  ld   $34         ;0344 'i'
               fb8d 002b  ld   $2b         ;0346 STW
               fb8e 0030  ld   $30         ;0346 'p'
-              fb8f 0087  ld   $87         ;0348 ANDI
+              fb8f 0082  ld   $82         ;0348 ANDI
               fb90 00ff  ld   $ff
-              fb91 0091  ld   $91         ;034a XORI
+              fb91 008c  ld   $8c         ;034a XORI
               fb92 00a0  ld   $a0
               fb93 0035  ld   $35         ;034c BCC
               fb94 0072  ld   $72         ;034d NE
@@ -57952,7 +57969,7 @@ Reset:        fb44 0003  ld   $03         ;| RAM segment address (high byte firs
               fb96 00ff  ld   $ff         ;034f RET
               fb97 002b  ld   $2b         ;0350 STW
               fb98 0036  ld   $36         ;0350 'SetupVideo'
-              fb99 00d0  ld   $d0         ;0352 DEF
+              fb99 00cb  ld   $cb         ;0352 DEF
               fb9a 0081  ld   $81
               fb9b 002a  ld   $2a
               fb9c 002a  ld   $2a
@@ -58003,7 +58020,7 @@ Reset:        fb44 0003  ld   $03         ;| RAM segment address (high byte firs
               fbc9 0000  ld   $00
               fbca 002b  ld   $2b         ;0383 STW
               fbcb 0038  ld   $38         ;0383 'StartupMessage'
-              fbcc 00f9  ld   $f9         ;0385 ADDI
+              fbcc 00dd  ld   $dd         ;0385 ADDI
               fbcd 000d  ld   $0d
               fbce 002b  ld   $2b         ;0387 STW
               fbcf 0030  ld   $30         ;0387 'p'
@@ -58014,57 +58031,57 @@ Reset:        fb44 0003  ld   $03         ;| RAM segment address (high byte firs
               fbd4 003a  ld   $3a         ;038c 'Char'
               fbd5 001a  ld   $1a         ;038e LD
               fbd6 0001  ld   $01
-              fbd7 00fc  ld   $fc         ;0390 SUBI
+              fbd7 00e0  ld   $e0         ;0390 SUBI
               fbd8 0001  ld   $01
-              fbd9 0087  ld   $87         ;0392 ANDI
+              fbd9 0082  ld   $82         ;0392 ANDI
               fbda 00ff  ld   $ff
-              fbdb 00f9  ld   $f9         ;0394 ADDI
+              fbdb 00dd  ld   $dd         ;0394 ADDI
               fbdc 0001  ld   $01
-              fbdd 0098  ld   $98         ;0396 INC
+              fbdd 0093  ld   $93         ;0396 INC
               fbde 003b  ld   $3b         ;0396 'Char'+1
-              fbdf 00fc  ld   $fc         ;0398 SUBI
+              fbdf 00e0  ld   $e0         ;0398 SUBI
               fbe0 0028  ld   $28
               fbe1 0035  ld   $35         ;039a BCC
               fbe2 0053  ld   $53         ;039b GE
               fbe3 0094  ld   $94
-              fbe4 00f9  ld   $f9         ;039d ADDI
+              fbe4 00dd  ld   $dd         ;039d ADDI
               fbe5 0028  ld   $28
-              fbe6 0098  ld   $98         ;039f INC
+              fbe6 0093  ld   $93         ;039f INC
               fbe7 003a  ld   $3a         ;039f 'Char'
-              fbe8 00fc  ld   $fc         ;03a1 SUBI
+              fbe8 00e0  ld   $e0         ;03a1 SUBI
               fbe9 0004  ld   $04
               fbea 0035  ld   $35         ;03a3 BCC
               fbeb 0053  ld   $53         ;03a4 GE
               fbec 009d  ld   $9d
               fbed 001a  ld   $1a         ;03a6 LD
               fbee 003b  ld   $3b         ;03a6 'Char'+1
-              fbef 00e8  ld   $e8         ;03a8 POKE
+              fbef 00ee  ld   $ee         ;03a8 POKE
               fbf0 0030  ld   $30         ;03a8 'p'
-              fbf1 0098  ld   $98         ;03aa INC
+              fbf1 0093  ld   $93         ;03aa INC
               fbf2 0030  ld   $30         ;03aa 'p'
               fbf3 0021  ld   $21         ;03ac LDW
               fbf4 003a  ld   $3a         ;03ac 'Char'
-              fbf5 00e8  ld   $e8         ;03ae POKE
+              fbf5 00ee  ld   $ee         ;03ae POKE
               fbf6 0030  ld   $30         ;03ae 'p'
-              fbf7 00d0  ld   $d0         ;03b0 DEF
+              fbf7 00cb  ld   $cb         ;03b0 DEF
               fbf8 00d0  ld   $d0
-              fbf9 007d  ld   $7d         ;03b2 PUSH
+              fbf9 0075  ld   $75         ;03b2 PUSH
               fbfa 0021  ld   $21         ;03b3 LDW
               fbfb fe00  bra  ac          ;+-----------------------------------+
               fbfc fcfd  bra  $fbfd       ;|                                   |
-              fbfd 1403  ld   $03,y       ;| Trampoline for page $fb00 lookups |
-              fbfe e078  jmp  y,$78       ;|                                   |
+              fbfd 1404  ld   $04,y       ;| Trampoline for page $fb00 lookups |
+              fbfe e072  jmp  y,$72       ;|                                   |
               fbff 1516  ld   [$16],y     ;+-----------------------------------+
               fc00 003c  ld   $3c         ;03b3 'Text'
-              fc01 00eb  ld   $eb         ;03b5 PEEK
+              fc01 00f1  ld   $f1         ;03b5 PEEK
               fc02 0035  ld   $35         ;03b6 BCC
               fc03 003f  ld   $3f         ;03b7 EQ
               fc04 00ce  ld   $ce
               fc05 002b  ld   $2b         ;03b9 STW
               fc06 003a  ld   $3a         ;03b9 'Char'
-              fc07 0098  ld   $98         ;03bb INC
+              fc07 0093  ld   $93         ;03bb INC
               fc08 003c  ld   $3c         ;03bb 'Text'
-              fc09 0091  ld   $91         ;03bd XORI
+              fc09 008c  ld   $8c         ;03bd XORI
               fc0a 000a  ld   $0a
               fc0b 0035  ld   $35         ;03bf BCC
               fc0c 0072  ld   $72         ;03c0 NE
@@ -58073,15 +58090,15 @@ Reset:        fb44 0003  ld   $03         ;| RAM segment address (high byte firs
               fc0f 003e  ld   $3e         ;03c2 'Pos'
               fc10 001a  ld   $1a         ;03c4 LD
               fc11 003f  ld   $3f         ;03c4 'Pos'+1
-              fc12 00f9  ld   $f9         ;03c6 ADDI
+              fc12 00dd  ld   $dd         ;03c6 ADDI
               fc13 0008  ld   $08
               fc14 005e  ld   $5e         ;03c8 ST
               fc15 003f  ld   $3f         ;03c8 'Pos'+1
-              fc16 0095  ld   $95         ;03ca BRA
+              fc16 0090  ld   $90         ;03ca BRA
               fc17 00cc  ld   $cc
-              fc18 00d2  ld   $d2         ;03cc CALL
+              fc18 00cd  ld   $cd         ;03cc CALL
               fc19 0040  ld   $40         ;03cc 'DrawChar'
-              fc1a 0095  ld   $95         ;03ce BRA
+              fc1a 0090  ld   $90         ;03ce BRA
               fc1b 00b1  ld   $b1
               fc1c 0063  ld   $63         ;03d0 POP
               fc1d 00ff  ld   $ff         ;03d1 RET
@@ -58093,29 +58110,29 @@ Reset:        fb44 0003  ld   $03         ;| RAM segment address (high byte firs
               fc23 002b  ld   $2b         ;03d7 STW
               fc24 0019  ld   $19
               fc25 00ff  ld   $ff         ;03d9 RET
-              fc26 0098  ld   $98         ;03da INC
+              fc26 0093  ld   $93         ;03da INC
               fc27 001a  ld   $1a
               fc28 00ff  ld   $ff         ;03dc RET
               fc29 0004  ld   $04         ;| RAM segment address (high byte first)
               fc2a 0000  ld   $00         ;|
               fc2b 00dd  ld   $dd         ;| Length (1..256)
-              fc2c 00d0  ld   $d0         ;0400 DEF
+              fc2c 00cb  ld   $cb         ;0400 DEF
               fc2d 0062  ld   $62
               fc2e 0021  ld   $21         ;0402 LDW
               fc2f 003a  ld   $3a         ;0402 'Char'
-              fc30 00fc  ld   $fc         ;0404 SUBI
+              fc30 00e0  ld   $e0         ;0404 SUBI
               fc31 0052  ld   $52
               fc32 0035  ld   $35         ;0406 BCC
               fc33 0053  ld   $53         ;0407 GE
               fc34 0010  ld   $10
-              fc35 00f9  ld   $f9         ;0409 ADDI
+              fc35 00dd  ld   $dd         ;0409 ADDI
               fc36 0032  ld   $32
               fc37 002b  ld   $2b         ;040b STW
               fc38 0034  ld   $34         ;040b 'i'
               fc39 0011  ld   $11         ;040d LDWI
               fc3a 0000  ld   $00
               fc3b 0007  ld   $07
-              fc3c 0095  ld   $95         ;0410 BRA
+              fc3c 0090  ld   $90         ;0410 BRA
               fc3d 0015  ld   $15
               fc3e 002b  ld   $2b         ;0412 STW
               fc3f 0034  ld   $34         ;0412 'i'
@@ -58126,22 +58143,22 @@ Reset:        fb44 0003  ld   $03         ;| RAM segment address (high byte firs
               fc44 0044  ld   $44         ;0417 'fontData'
               fc45 0021  ld   $21         ;0419 LDW
               fc46 0034  ld   $34         ;0419 'i'
-              fc47 00bc  ld   $bc         ;041b ADDW
+              fc47 0099  ld   $99         ;041b ADDW
               fc48 0034  ld   $34         ;041b 'i'
               fc49 002b  ld   $2b         ;041d STW
               fc4a 0046  ld   $46         ;041d 'tmp'
-              fc4b 00bc  ld   $bc         ;041f ADDW
+              fc4b 0099  ld   $99         ;041f ADDW
               fc4c 0046  ld   $46         ;041f 'tmp'
-              fc4d 00bc  ld   $bc         ;0421 ADDW
+              fc4d 0099  ld   $99         ;0421 ADDW
               fc4e 0034  ld   $34         ;0421 'i'
-              fc4f 00bc  ld   $bc         ;0423 ADDW
+              fc4f 0099  ld   $99         ;0423 ADDW
               fc50 0044  ld   $44         ;0423 'fontData'
               fc51 002b  ld   $2b         ;0425 STW
               fc52 0044  ld   $44         ;0425 'fontData'
               fc53 0011  ld   $11         ;0427 LDWI
               fc54 0000  ld   $00
               fc55 0008  ld   $08
-              fc56 00bc  ld   $bc         ;042a ADDW
+              fc56 0099  ld   $99         ;042a ADDW
               fc57 003e  ld   $3e         ;042a 'Pos'
               fc58 002b  ld   $2b         ;042c STW
               fc59 0032  ld   $32         ;042c 'q'
@@ -58151,11 +58168,11 @@ Reset:        fb44 0003  ld   $03         ;| RAM segment address (high byte firs
               fc5d 0034  ld   $34         ;0430 'i'
               fc5e 0021  ld   $21         ;0432 LDW
               fc5f 0044  ld   $44         ;0432 'fontData'
-              fc60 0075  ld   $75         ;0434 LOOKUP
+              fc60 007f  ld   $7f         ;0434 LOOKUP
               fc61 0000  ld   $00
               fc62 002b  ld   $2b         ;0436 STW
               fc63 0048  ld   $48         ;0436 'bits'
-              fc64 0098  ld   $98         ;0438 INC
+              fc64 0093  ld   $93         ;0438 INC
               fc65 0044  ld   $44         ;0438 'fontData'
               fc66 0021  ld   $21         ;043a LDW
               fc67 003e  ld   $3e         ;043a 'Pos'
@@ -58163,53 +58180,53 @@ Reset:        fb44 0003  ld   $03         ;| RAM segment address (high byte firs
               fc69 0030  ld   $30         ;043c 'p'
               fc6a 0021  ld   $21         ;043e LDW
               fc6b 0048  ld   $48         ;043e 'bits'
-              fc6c 0087  ld   $87         ;0440 ANDI
+              fc6c 0082  ld   $82         ;0440 ANDI
               fc6d 0080  ld   $80
               fc6e 0035  ld   $35         ;0442 BCC
               fc6f 003f  ld   $3f         ;0443 EQ
               fc70 0047  ld   $47
               fc71 0059  ld   $59         ;0445 LDI
               fc72 003f  ld   $3f
-              fc73 00e8  ld   $e8         ;0447 POKE
+              fc73 00ee  ld   $ee         ;0447 POKE
               fc74 0030  ld   $30         ;0447 'p'
               fc75 0021  ld   $21         ;0449 LDW
               fc76 0048  ld   $48         ;0449 'bits'
-              fc77 00bc  ld   $bc         ;044b ADDW
+              fc77 0099  ld   $99         ;044b ADDW
               fc78 0048  ld   $48         ;044b 'bits'
               fc79 002b  ld   $2b         ;044d STW
               fc7a 0048  ld   $48         ;044d 'bits'
-              fc7b 0098  ld   $98         ;044f INC
+              fc7b 0093  ld   $93         ;044f INC
               fc7c 0031  ld   $31         ;044f 'p'+1
               fc7d 0021  ld   $21         ;0451 LDW
               fc7e 0030  ld   $30         ;0451 'p'
-              fc7f 00a7  ld   $a7         ;0453 SUBW
+              fc7f 00b6  ld   $b6         ;0453 SUBW
               fc80 0032  ld   $32         ;0453 'q'
               fc81 0035  ld   $35         ;0455 BCC
               fc82 0050  ld   $50         ;0456 LT
               fc83 003c  ld   $3c
-              fc84 0098  ld   $98         ;0458 INC
+              fc84 0093  ld   $93         ;0458 INC
               fc85 003e  ld   $3e         ;0458 'Pos'
               fc86 0021  ld   $21         ;045a LDW
               fc87 0034  ld   $34         ;045a 'i'
-              fc88 00fc  ld   $fc         ;045c SUBI
+              fc88 00e0  ld   $e0         ;045c SUBI
               fc89 0001  ld   $01
               fc8a 0035  ld   $35         ;045e BCC
               fc8b 004d  ld   $4d         ;045f GT
               fc8c 002e  ld   $2e
-              fc8d 0098  ld   $98         ;0461 INC
+              fc8d 0093  ld   $93         ;0461 INC
               fc8e 003e  ld   $3e         ;0461 'Pos'
               fc8f 00ff  ld   $ff         ;0463 RET
               fc90 002b  ld   $2b         ;0464 STW
               fc91 0040  ld   $40         ;0464 'DrawChar'
-              fc92 00d0  ld   $d0         ;0466 DEF
+              fc92 00cb  ld   $cb         ;0466 DEF
               fc93 009f  ld   $9f
               fc94 002b  ld   $2b         ;0468 STW
               fc95 0034  ld   $34         ;0468 'i'
-              fc96 008d  ld   $8d         ;046a ORI
+              fc96 0088  ld   $88         ;046a ORI
               fc97 00ff  ld   $ff
-              fc98 0091  ld   $91         ;046c XORI
+              fc98 008c  ld   $8c         ;046c XORI
               fc99 00ff  ld   $ff
-              fc9a 008d  ld   $8d         ;046e ORI
+              fc9a 0088  ld   $88         ;046e ORI
               fc9b 00f9  ld   $f9
               fc9c 002b  ld   $2b         ;0470 STW
               fc9d 0030  ld   $30         ;0470 'p'
@@ -58219,79 +58236,79 @@ Reset:        fb44 0003  ld   $03         ;| RAM segment address (high byte firs
               fca1 0034  ld   $34         ;0474 'i'
               fca2 0059  ld   $59         ;0476 LDI
               fca3 0000  ld   $00
-              fca4 00e8  ld   $e8         ;0478 POKE
+              fca4 00ee  ld   $ee         ;0478 POKE
               fca5 0030  ld   $30         ;0478 'p'
-              fca6 0098  ld   $98         ;047a INC
+              fca6 0093  ld   $93         ;047a INC
               fca7 0030  ld   $30         ;047a 'p'
               fca8 0011  ld   $11         ;047c LDWI
               fca9 0000  ld   $00
               fcaa 0009  ld   $09
-              fcab 00bc  ld   $bc         ;047f ADDW
+              fcab 0099  ld   $99         ;047f ADDW
               fcac 0034  ld   $34         ;047f 'i'
-              fcad 0075  ld   $75         ;0481 LOOKUP
+              fcad 007f  ld   $7f         ;0481 LOOKUP
               fcae 0000  ld   $00
-              fcaf 00e8  ld   $e8         ;0483 POKE
+              fcaf 00ee  ld   $ee         ;0483 POKE
               fcb0 0030  ld   $30         ;0483 'p'
-              fcb1 0098  ld   $98         ;0485 INC
+              fcb1 0093  ld   $93         ;0485 INC
               fcb2 0030  ld   $30         ;0485 'p'
               fcb3 0011  ld   $11         ;0487 LDWI
               fcb4 0000  ld   $00
               fcb5 0009  ld   $09
-              fcb6 00bc  ld   $bc         ;048a ADDW
+              fcb6 0099  ld   $99         ;048a ADDW
               fcb7 0034  ld   $34         ;048a 'i'
-              fcb8 0075  ld   $75         ;048c LOOKUP
+              fcb8 007f  ld   $7f         ;048c LOOKUP
               fcb9 0001  ld   $01
-              fcba 00e8  ld   $e8         ;048e POKE
+              fcba 00ee  ld   $ee         ;048e POKE
               fcbb 0030  ld   $30         ;048e 'p'
-              fcbc 0098  ld   $98         ;0490 INC
+              fcbc 0093  ld   $93         ;0490 INC
               fcbd 0030  ld   $30         ;0490 'p'
-              fcbe 0098  ld   $98         ;0492 INC
+              fcbe 0093  ld   $93         ;0492 INC
               fcbf 0030  ld   $30         ;0492 'p'
               fcc0 0059  ld   $59         ;0494 LDI
               fcc1 0000  ld   $00
-              fcc2 00e8  ld   $e8         ;0496 POKE
+              fcc2 00ee  ld   $ee         ;0496 POKE
               fcc3 0030  ld   $30         ;0496 'p'
-              fcc4 0098  ld   $98         ;0498 INC
+              fcc4 0093  ld   $93         ;0498 INC
               fcc5 0030  ld   $30         ;0498 'p'
-              fcc6 00e8  ld   $e8         ;049a POKE
+              fcc6 00ee  ld   $ee         ;049a POKE
               fcc7 0030  ld   $30         ;049a 'p'
-              fcc8 0098  ld   $98         ;049c INC
+              fcc8 0093  ld   $93         ;049c INC
               fcc9 0030  ld   $30         ;049c 'p'
-              fcca 00e8  ld   $e8         ;049e POKE
+              fcca 00ee  ld   $ee         ;049e POKE
               fccb 0030  ld   $30         ;049e 'p'
               fccc 00ff  ld   $ff         ;04a0 RET
               fccd 002b  ld   $2b         ;04a1 STW
               fcce 004a  ld   $4a         ;04a1 'SetupChannel'
-              fccf 00d0  ld   $d0         ;04a3 DEF
+              fccf 00cb  ld   $cb         ;04a3 DEF
               fcd0 00ba  ld   $ba
-              fcd1 007d  ld   $7d         ;04a5 PUSH
+              fcd1 0075  ld   $75         ;04a5 PUSH
               fcd2 0011  ld   $11         ;04a6 LDWI
               fcd3 0058  ld   $58
               fcd4 0001  ld   $01
-              fcd5 00d2  ld   $d2         ;04a9 CALL
+              fcd5 00cd  ld   $cd         ;04a9 CALL
               fcd6 004a  ld   $4a         ;04a9 'SetupChannel'
               fcd7 0011  ld   $11         ;04ab LDWI
               fcd8 0070  ld   $70
               fcd9 0002  ld   $02
-              fcda 00d2  ld   $d2         ;04ae CALL
+              fcda 00cd  ld   $cd         ;04ae CALL
               fcdb 004a  ld   $4a         ;04ae 'SetupChannel'
               fcdc 0011  ld   $11         ;04b0 LDWI
               fcdd 0078  ld   $78
               fcde 0003  ld   $03
-              fcdf 00d2  ld   $d2         ;04b3 CALL
+              fcdf 00cd  ld   $cd         ;04b3 CALL
               fce0 004a  ld   $4a         ;04b3 'SetupChannel'
               fce1 0011  ld   $11         ;04b5 LDWI
               fce2 007e  ld   $7e
               fce3 0004  ld   $04
-              fce4 00d2  ld   $d2         ;04b8 CALL
+              fce4 00cd  ld   $cd         ;04b8 CALL
               fce5 004a  ld   $4a         ;04b8 'SetupChannel'
               fce6 0063  ld   $63         ;04ba POP
               fce7 00ff  ld   $ff         ;04bb RET
               fce8 002b  ld   $2b         ;04bc STW
               fce9 004c  ld   $4c         ;04bc 'SetupAudio'
-              fcea 00d2  ld   $d2         ;04be CALL
+              fcea 00cd  ld   $cd         ;04be CALL
               fceb 004c  ld   $4c         ;04be 'SetupAudio'
-              fcec 00d2  ld   $d2         ;04c0 CALL
+              fcec 00cd  ld   $cd         ;04c0 CALL
               fced 0036  ld   $36         ;04c0 'SetupVideo'
               fcee 0011  ld   $11         ;04c2 LDWI
               fcef 0012  ld   $12
@@ -58302,14 +58319,14 @@ Reset:        fb44 0003  ld   $03         ;| RAM segment address (high byte firs
               fcf4 0038  ld   $38         ;04c7 'StartupMessage'
               fcf5 002b  ld   $2b         ;04c9 STW
               fcf6 003c  ld   $3c         ;04c9 'Text'
-              fcf7 00d2  ld   $d2         ;04cb CALL
+              fcf7 00cd  ld   $cd         ;04cb CALL
               fcf8 0042  ld   $42         ;04cb 'DrawText'
               fcf9 0011  ld   $11         ;04cd LDWI
               fcfa 0098  ld   $98
               fcfb fe00  bra  ac          ;+-----------------------------------+
               fcfc fcfd  bra  $fcfd       ;|                                   |
-              fcfd 1403  ld   $03,y       ;| Trampoline for page $fc00 lookups |
-              fcfe e078  jmp  y,$78       ;|                                   |
+              fcfd 1404  ld   $04,y       ;| Trampoline for page $fc00 lookups |
+              fcfe e072  jmp  y,$72       ;|                                   |
               fcff 1516  ld   [$16],y     ;+-----------------------------------+
               fd00 00f8  ld   $f8
               fd01 002b  ld   $2b         ;04d0 STW
@@ -58323,7 +58340,7 @@ Reset:        fb44 0003  ld   $03         ;| RAM segment address (high byte firs
               fd09 0085  ld   $85
               fd0a 002b  ld   $2b         ;04d9 STW
               fd0b 0022  ld   $22
-              fd0c 00a3  ld   $a3         ;04db SYS
+              fd0c 00b2  ld   $b2         ;04db SYS
               fd0d 00e2  ld   $e2
               fd0e 0000  ld   $00         ;End of file
               fd0f 0200  nop
@@ -58332,7 +58349,7 @@ Reset:        fb44 0003  ld   $03         ;| RAM segment address (high byte firs
               * 236 times
               fdfb fe00  bra  ac          ;+-----------------------------------+
               fdfc fcfd  bra  $fdfd       ;|                                   |
-              fdfd 1403  ld   $03,y       ;| Trampoline for page $fd00 lookups |
-              fdfe e078  jmp  y,$78       ;|                                   |
+              fdfd 1404  ld   $04,y       ;| Trampoline for page $fd00 lookups |
+              fdfe e072  jmp  y,$72       ;|                                   |
               fdff 1516  ld   [$16],y     ;+-----------------------------------+
               fe00
