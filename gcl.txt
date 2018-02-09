@@ -153,11 +153,11 @@ $X                      For localized variables
 ----------------------
 vCPU instruction table
 ----------------------
-The vCPU interpreter has 33 core instructions. Each opcode is just a jump offset
+The vCPU interpreter has 35 core instructions. Each opcode is just a jump offset
 into the interpreter code page to the code that implements its behavior. Most
 instructions take a single byte operand, but some have two and others none.
 
-Opcode Operands Description
+Mnem.  Operands Description
 ------ -------- -----------
 ST     $DD      Store byte in zero page ([D]=vAC)
 STW    $DD      Store word into zero page ([D]=vAC&255,[D+1]=vAC>>8)
@@ -194,5 +194,25 @@ POP    -        Pop value from stack (vAC=[vSP]+256*[vSP+1],vSP+=2)
 ALLOC  $DD      Create or destroy stack frame (vSP+=D)
 SYS    $DD      Native function call for at most $DD ticks ($DD*2 cycles)
 DEF    $DD      Define data or code (vAC,vPC=vPC+2,D+256*(vPC>>8))
+
+-------------
+SYS extension
+XXX Document address and function
+-------------
+SYS_Reset_36                    x
+SYS_Exec_88                     x
+SYS_Random_34                   x
+SYS_LSRW_48                     x
+SYS_VDrawBits_134               x
+SYS_Read3_40                    (Pictures)
+SYS_Unpack_56                   x
+SYS_Draw4_30                    x
+SYS_Out_22                      x
+SYS_In_24                       x
+SYS_NextByteIn_32               x
+SYS_PayloadCopy_34              x
+SYS_ProcessInput_48             (Loader)
+SYS_RacerUpdateVideoX_40        (Racer)
+SYS_RacerUpdateVideoY_40        (Racer)
 
 -- End of document --

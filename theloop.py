@@ -178,16 +178,20 @@ xout            = zpByte()
 xoutMask        = zpByte() # The blinkenlights and sound on/off state
 
 # vCPU interpreter
+vTicks          = zpByte()  # Interpreter ticks are units of 2 clocks
 vPC             = zpByte(2) # Interpreter program counter, points into RAM
 vAC             = zpByte(2) # Interpreter accumulator, 16-bits
 vLR             = zpByte(2) # Return address, for returning after CALL
 vSP             = zpByte(1) # Stack pointer
-vTicks          = zpByte()  # Interpreter ticks are units of 2 clocks
 vTmp            = zpByte()
-vReturn         = zpByte(1 if fastRunVcpu else 2) # Return into video loop
+if fastRunVcpu:
+  vReturn       = zpByte(1) # Return into video loop
+  reserved31    = zpByte(1)
+else:
+  vReturn       = zpByte(2) # Return into video loop
 
 # For future ROM extensions
-reserved        = zpByte(2 if fastRunVcpu else 1)
+reserved32       = zpByte()
 
 # ROM type/version, numbering scheme to be determined, could be as follows:
 # bit 4:7       Version
@@ -364,8 +368,8 @@ ld(val(syncBits),regOUT)
 # Scan the entire RAM space to collect entropy for a random number generator.
 # The 16-bit address space is scanned, even if less RAM was detected.
 ld(val(0));                     C('Collect entropy from RAM')
-st(d(reserved+0),busAC|ea0DregX)
-st(d(reserved+1),busAC|ea0DregY)
+st(d(vAC+0),busAC|ea0DregX)
+st(d(vAC+1),busAC|ea0DregY)
 label('.initEnt0')
 ldzp(d(entropy+0))
 bpl(d(lo('.initEnt1')))
@@ -381,14 +385,14 @@ label('.initEnt2')
 st(d(entropy+1))
 adda(d(entropy+2),busRAM)
 st(d(entropy+2))
-ldzp(d(reserved+0))
+ldzp(d(vAC+0))
 adda(val(1))
 bne(d(lo('.initEnt0')))
-st(d(reserved+0),busAC|ea0DregX)
-ldzp(d(reserved+1))
+st(d(vAC+0),busAC|ea0DregX)
+ldzp(d(vAC+1))
 adda(val(1))
 bne(d(lo('.initEnt0')))
-st(d(reserved+1),busAC|ea0DregY)
+st(d(vAC+1),busAC|ea0DregY)
 
 # Update LEDs
 ld(val(0b0011));                 C('LEDs |**OO|')
@@ -443,10 +447,10 @@ ld(val(audioTable>>8),regY);    C('Setup shift2 table')
 ld(val(0))
 st(d(channel))
 label('.loop')
-st(d(reserved+0))
+st(d(vAC+0))
 adda(busAC)
 adda(busAC, regX)
-ldzp(d(reserved+0))
+ldzp(d(vAC+0))
 st(eaYXregAC)
 adda(val(1))
 xora(val(0x40))
@@ -1087,7 +1091,7 @@ ld(val(syncBits^hSync), regOUT) #4 Start horizontal pulse
 
 #-----------------------------------------------------------------------
 #
-#  ROM page 3: Application interpreter
+#  ROM page 3: Application interpreter primary page
 #
 #-----------------------------------------------------------------------
 
@@ -1497,7 +1501,7 @@ ld(val(hi('clr')),regY)         #10
 jmpy(d(lo('clr')))              #11
 #nop()                          #12
 #
-# Instruction NEGW: Negate (AC=-AC), 28 cycles
+# Instruction NEGW: Negate (AC=-AC), 26 cycles
 label('NEGW')
 ld(val(hi('negw')),regY)        #10,12 (overlap with CLR)
 jmpy(d(lo('negw')))             #11
@@ -1654,22 +1658,22 @@ nop()                           #19
 
 # NEGW implementation
 label('negw')
-suba(d(vAC),busRAM)             #14
-st(d(vAC))                      #15
-bne(d(lo('.negw0')))            #16
-bra(d(lo('.negw1')))            #17
-ld(d(0))                        #18
+suba(d(vAC),busRAM)             #13
+st(d(vAC))                      #14
+bne(d(lo('.negw0')))            #15
+bra(d(lo('.negw1')))            #16
+ld(d(0))                        #17
 label('.negw0')
-ld(d(-1))                       #18
+ld(d(-1))                       #17
 label('.negw1')
-suba(d(vAC+1),busRAM)           #19
-st(d(vAC+1))                    #20
-ldzp(d(vPC))
-suba(d(2))
-st(d(vPC))
-ld(val(hi('REENTER')),regY)     #21
-jmpy(d(lo('REENTER')))          #22
-ld(val(-26/2))                  #23
+suba(d(vAC+1),busRAM)           #18
+st(d(vAC+1))                    #19
+ldzp(d(vPC))                    #20
+suba(d(1))                      #21
+st(d(vPC))                      #22
+ld(val(hi('REENTER')),regY)     #23
+jmpy(d(lo('REENTER')))          #24
+ld(val(-26/2))                  #25
 
 # ALLOC implementation
 label('alloc')
@@ -1951,7 +1955,7 @@ jmpy(d(lo('REENTER')))          #130
 ld(val(-134/2))                 #131
 
 #-----------------------------------------------------------------------
-#  ROM page 5-6: Shift table
+#  ROM page 5-6: Shift table and code
 #-----------------------------------------------------------------------
 
 # Lookup table for i>>n, with n in 1..6
@@ -2175,69 +2179,8 @@ jmpy(d(lo('REENTER')))          #42
 ld(d(-46/2))                    #43
 
 #-----------------------------------------------------------------------
-#  Application specific SYS extensions
-#-----------------------------------------------------------------------
-
-label('SYS_RacerUpdateVideoX_40')
-ld(d(sysArgs+2),busRAM|regX)    #15 q,
-ld(d(sysArgs+3),busRAM|regY)    #16
-ld(eaYXregAC,busRAM)            #17
-st(d(vTmp))                     #18
-suba(d(sysArgs+4),busRAM)       #19 X-
-ld(d(sysArgs+0),busRAM|regX)    #20 p.
-ld(d(sysArgs+1),busRAM|regY)    #21
-st(eaYXregAC,busAC)             #22
-ld(d(sysArgs+0),busRAM)         #23 p 4- p=
-suba(d(4))                      #24
-st(d(sysArgs+0))                #25
-ldzp(d(vTmp))                   #26 q,
-st(d(sysArgs+4))                #27 X=
-ld(d(sysArgs+2),busRAM)         #28 q<++
-adda(d(1))                      #29
-st(d(sysArgs+2))                #30
-bne(d(lo('.sysRacer0')))        #31 Self-repeat by adjusting vPC
-ldzp(d(vPC))                    #32
-bra(d(lo('.sysRacer1')))        #33
-nop()                           #34
-label('.sysRacer0')
-suba(d(2))                      #33
-st(d(vPC))                      #34
-label('.sysRacer1')
-ld(val(hi('REENTER')),regY)     #35
-jmpy(d(lo('REENTER')))          #36
-ld(val(-40/2))                  #37
-
-label('SYS_RacerUpdateVideoY_40')
-ldzp(d(sysArgs+3))              #15 8&
-anda(d(8))                      #16
-bne(d(lo('.sysRacer2')))        #17 [if<>0 1]
-bra(d(lo('.sysRacer3')))        #18
-ld(d(0))                        #19
-label('.sysRacer2')
-ld(d(1))                        #19
-label('.sysRacer3')
-st(d(vTmp))                     #20 tmp=
-ld(d(sysArgs+1),busRAM|regY)    #21
-ld(d(sysArgs+0),busRAM)         #22 p<++ p<++
-adda(d(2))                      #23
-st(d(sysArgs+0),busAC|regX)     #24
-xora(d(238))                    #25 238^
-st(d(vAC))                      #26
-st(d(vAC+1))                    #27
-ldzp(d(sysArgs+2))              #28 SegmentY
-anda(d(254))                    #29 254&
-adda(d(vTmp),busRAM)            #30 tmp+
-st(eaYXregAC,busAC)             #31
-ldzp(d(sysArgs+2))              #32 SegmentY<++
-adda(d(1))                      #33
-st(d(sysArgs+2))                #34
-ld(val(hi('REENTER')),regY)     #35
-jmpy(d(lo('REENTER')))          #36
-ld(val(-40/2))                  #37
-
-#-----------------------------------------------------------------------
 #
-#  ROM page 5-6: Gigatron font data
+#  ROM page 7-8: Gigatron font data
 #
 #-----------------------------------------------------------------------
 
@@ -2351,6 +2294,67 @@ importImage('Images/Baboon-160x120.rgb',  160, 120, 'packedBaboon')
 importImage('Images/Jupiter-160x120.rgb', 160, 120, 'packedJupiter')
 
 #-----------------------------------------------------------------------
+#  Application specific SYS extensions
+#-----------------------------------------------------------------------
+
+label('SYS_RacerUpdateVideoX_40')
+ld(d(sysArgs+2),busRAM|regX)    #15 q,
+ld(d(sysArgs+3),busRAM|regY)    #16
+ld(eaYXregAC,busRAM)            #17
+st(d(vTmp))                     #18
+suba(d(sysArgs+4),busRAM)       #19 X-
+ld(d(sysArgs+0),busRAM|regX)    #20 p.
+ld(d(sysArgs+1),busRAM|regY)    #21
+st(eaYXregAC,busAC)             #22
+ld(d(sysArgs+0),busRAM)         #23 p 4- p=
+suba(d(4))                      #24
+st(d(sysArgs+0))                #25
+ldzp(d(vTmp))                   #26 q,
+st(d(sysArgs+4))                #27 X=
+ld(d(sysArgs+2),busRAM)         #28 q<++
+adda(d(1))                      #29
+st(d(sysArgs+2))                #30
+bne(d(lo('.sysRacer0')))        #31 Self-repeat by adjusting vPC
+ldzp(d(vPC))                    #32
+bra(d(lo('.sysRacer1')))        #33
+nop()                           #34
+label('.sysRacer0')
+suba(d(2))                      #33
+st(d(vPC))                      #34
+label('.sysRacer1')
+ld(val(hi('REENTER')),regY)     #35
+jmpy(d(lo('REENTER')))          #36
+ld(val(-40/2))                  #37
+
+label('SYS_RacerUpdateVideoY_40')
+ldzp(d(sysArgs+3))              #15 8&
+anda(d(8))                      #16
+bne(d(lo('.sysRacer2')))        #17 [if<>0 1]
+bra(d(lo('.sysRacer3')))        #18
+ld(d(0))                        #19
+label('.sysRacer2')
+ld(d(1))                        #19
+label('.sysRacer3')
+st(d(vTmp))                     #20 tmp=
+ld(d(sysArgs+1),busRAM|regY)    #21
+ld(d(sysArgs+0),busRAM)         #22 p<++ p<++
+adda(d(2))                      #23
+st(d(sysArgs+0),busAC|regX)     #24
+xora(d(238))                    #25 238^
+st(d(vAC))                      #26
+st(d(vAC+1))                    #27
+ldzp(d(sysArgs+2))              #28 SegmentY
+anda(d(254))                    #29 254&
+adda(d(vTmp),busRAM)            #30 tmp+
+st(eaYXregAC,busAC)             #31
+ldzp(d(sysArgs+2))              #32 SegmentY<++
+adda(d(1))                      #33
+st(d(sysArgs+2))                #34
+ld(val(hi('REENTER')),regY)     #35
+jmpy(d(lo('REENTER')))          #36
+ld(val(-40/2))                  #37
+
+#-----------------------------------------------------------------------
 #
 #  ROM page XX: Skyline for Racer
 #
@@ -2374,7 +2378,7 @@ for i in xrange(0, len(raw), 3):
 label('zippedRacerHorizon')
 for i in xrange(len(packed)):
   ld(val(packed[i]))
-  if i%251 == 250:
+  if pc()&255 == 251:
     trampoline()
 
 #-----------------------------------------------------------------------

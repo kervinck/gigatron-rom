@@ -85,13 +85,13 @@ Address   Name          Description
 0012      resetTimer    After 2 seconds of holding 'Start', do a soft reset
 0013      xout          Memory cache for XOUT register
 0014      xoutMask      The blinkenlights and sound on/off state
-0015-0016 vPC           Interpreter program counter, points into RAM
-0017-0018 vAC           Interpreter accumulator, 16-bits
-0019-001a vLR           Return address, for returning after CALL
-001b      vSP           Stack pointer
-001c      vTicks        Interpreter ticks are units of 2 clocks
-001d      vReturn       Return address (L) from vCPU into the loop (H is fixed)
-001e      vTmp          Scratch storage location for vCPU
+0015      vTicks        Interpreter ticks are units of 2 clocks
+0016-0017 vPC           Interpreter program counter, points into RAM
+0018-0019 vAC           Interpreter accumulator, 16-bits
+001a-001b vLR           Return address, for returning after CALL
+001c      vSP           Stack pointer
+001d      vTmp          Scratch storage location for vCPU
+001e      vReturn       Return address (L) from vCPU into the loop (H is fixed)
 001f-0020 reserved      Reserved for ROM extensions
 0021      romType       0x1c for ROMv1 release
 0022-0023 sysFn         Address for SYS function call
