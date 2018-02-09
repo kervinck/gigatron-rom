@@ -9,11 +9,12 @@ gcl0x
 
 {
 ROM v1:
-XXX Don't allow autoplayer to obtain a hi score [ROMv1]
 XXX Don't allow reversing, for playability [ROMv1]
 XXX Rising tones [ROMv1]
 
 Maybe:
+XXX Don't allow autoplayer to obtain a hi score
+XXX Use POKEW to plot fat pixels
 XXX More colors, less green
 XXX Accelerated text drawing
 XXX Smarter border drawing (spiral draw)
