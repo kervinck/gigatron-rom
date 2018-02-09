@@ -228,10 +228,13 @@ class Program:
       elif op == '-' and con is not None:
           self.opcode('SUBI')
           self.emit(con)
+      elif op == '<<' and con:
+          for i in range(con):
+            self.opcode('LSLW')
       elif op == '#' and con is not None:
           self.emit(con & 255)
       elif op == '?' and con is not None:
-          self.opcode('LOOKUP')
+          self.opcode('LUP')
           self.emit(con)
       elif op == '&' and con is not None:
           self.opcode('ANDI')

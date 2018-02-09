@@ -13,7 +13,7 @@
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #  Hopefully in ROM v1
-#  XXX SYS: LSRW, LSLW, ASRW etc (with jumptable?)for completeness (n-Queens) [ROMv1]
+#  XXX SYS: LSRW, (ASRW?, jumptable?) for completeness (n-Queens) [ROMv1]
 #  XXX Audio: Move shift table to page 7, then add waveform synthesis [ROMv1]
 #  XXX Music sequencer (combined with LED sequencer) [ROMv1]
 #
@@ -24,7 +24,7 @@
 #  XXX How it works memo: brief description of every software function
 #
 #  Probably not in ROM v1
-#  XXX Adjustable return address for LOOKUP trampolines
+#  XXX Adjustable return address for LUP/LOOKUP trampolines
 #  XXX Loader: make noise when data comes in
 #  XXX vCPU: Multiplication (mulShift8?)
 #  XXX vCPU: PUSHA, POPA
@@ -599,7 +599,7 @@ st(d(lo('INC')     ),eaYXregOUTIX)      #73 *+44
 st(d(sysArgs+1     ),eaYXregOUTIX)      #74 *+45
 st(d(lo('LDW')     ),eaYXregOUTIX)      #75 *+46 Read next byte from ROM table
 st(d(sysArgs+0     ),eaYXregOUTIX)      #76 *+47
-st(d(lo('LOOKUP')  ),eaYXregOUTIX)      #77 *+48
+st(d(lo('LUP')     ),eaYXregOUTIX)      #77 *+48
 st(d(0             ),eaYXregOUTIX)      #78 *+49
 st(d(lo('INC')     ),eaYXregOUTIX)      #79 *+50 Increment read pointer
 st(d(sysArgs+0     ),eaYXregOUTIX)      #80 *+51
@@ -1321,8 +1321,8 @@ ldzp(d(vLR))                    #17
 bra(d(lo('next1')))             #18
 st(ea0XregAC)                   #19
 
-# Instruction LOOKUP: (AC=ROM[AC+256*D]), 28 cycles
-label('LOOKUP')
+# Instruction LUP: ROM lookup (AC=ROM[AC+256*D]), 26 cycles
+label('LUP')
 ld(d(vAC+1),busRAM|regY)        #10
 jmpy(d(251));                   C('Trampoline offset')#11
 adda(d(vAC),busRAM)             #12
@@ -1394,6 +1394,12 @@ st(d(vAC+1))                    #25 Store high result
 bra(d(lo('NEXT')))              #26
 ld(val(-28/2))                  #27
 
+# Instruction PEEK: (AC=[AC]), 26 cycles
+label('PEEK')
+ld(val(hi('peek')),regY)        #10
+jmpy(d(lo('peek')))             #11
+#ldzp(d(vPC))                   #12
+#
 # Instruction SYS: Native call, <=256 cycles (<=128 ticks, in reality less)
 #
 # The 'SYS' vCPU instruction first checks the number of desired ticks given by
@@ -1411,7 +1417,7 @@ ld(val(-28/2))                  #27
 # SYS functions can modify vPC to implement repetition. For example to split
 # up work into multiple chucks.
 label('retry')
-ldzp(d(vPC));                   C('Retry until sufficient time')#13
+ldzp(d(vPC));                   C('Retry until sufficient time')#13,12 (overlap with PEEK)
 suba(val(2))                    #14
 st(d(vPC))                      #15
 bra(d(lo('REENTER')))           #16
@@ -1476,6 +1482,14 @@ st(d(vPC+1),busAC|regY)         #23
 bra(d(lo('NEXT')))              #24
 ld(val(-26/2))                  #25
 
+# ALLOCA implementation
+# Instruction ALLOCA: (SP+=D), 14 cycles
+label('ALLOC')
+adda(d(vSP),busRAM)             #10
+st(d(vSP))                      #11
+bra(d(lo('NEXT')))              #12
+ld(val(-14/2))                  #13
+
 # The instructions below are all implemented in the second code page. Jumping
 # back and forth makes each 6 cycles slower, but it also saves space in the
 # primary page for the instructions above. Most of them are in fact not very
@@ -1495,31 +1509,20 @@ ld(val(hi('subi')),regY)        #10
 jmpy(d(lo('subi')))             #11
 st(d(vTmp))                     #12
 
-# Instruction CLR: ([D]=0), 22 cycles
-label('CLR')
-ld(val(hi('clr')),regY)         #10
-jmpy(d(lo('clr')))              #11
-#nop()                          #12
-#
-# Instruction NEGW: Negate (AC=-AC), 26 cycles
-label('NEGW')
-ld(val(hi('negw')),regY)        #10,12 (overlap with CLR)
-jmpy(d(lo('negw')))             #11
-ld(d(0))                        #12
+# Instruction LSLW: Logical shift left (AC<<=1), 28 cycles
+# Useful, because ADDW can't add vAC to itself. Also more compact.
+label('LSLW')
+ld(val(hi('lslw')),regY)        #10
+jmpy(d(lo('lslw')))             #11
+ldzp(d(vAC))                    #12
 
-# Instruction ALLOC: (SP+=D), 20 cycles
-label('ALLOC')
-ld(val(hi('alloc')),regY)       #10
-jmpy(d(lo('alloc')))            #11
-#nop()                          #12
-#
-# Instruction STLW: (), 26 cycles
+# Instruction STLW: Store on stack (), 26 cycles
 label('STLW')
-ld(val(hi('stlw')),regY)        #10,12 (overlap with ALLOC)
+ld(val(hi('stlw')),regY)        #10
 jmpy(d(lo('stlw')))             #11
 #nop()                          #12
 #
-# Instruction LDLW: (), 26 cycles
+# Instruction LDLW: Load from stack (), 26 cycles
 label('LDLW')
 ld(val(hi('ldlw')),regY)        #10,12 (overlap with STLW)
 jmpy(d(lo('ldlw')))             #11
@@ -1527,19 +1530,13 @@ jmpy(d(lo('ldlw')))             #11
 #
 # Instruction POKE: ([[D+1],[D]]=ACL), 28 cycles
 label('POKE')
-ld(val(hi('poke')),regY)        #10,12 (overlap with PEEKW)
+ld(val(hi('poke')),regY)        #10,12 (overlap with LDLW)
 jmpy(d(lo('poke')))             #11
 st(d(vTmp))                     #12
 
-# Instruction PEEK: (AC=[AC]), 28 cycles
-label('PEEK')
-ld(val(hi('peek')),regY)        #10
-jmpy(d(lo('peek')))             #11
-#nop()                          #12
-#
 # Instruction POKEW: (), 28 cycles
 label('POKEW')
-ld(val(hi('pokew')),regY)       #10,12 (overlap with PEEK)
+ld(val(hi('pokew')),regY)       #10
 jmpy(d(lo('pokew')))            #11
 st(d(vTmp))                     #12
 
@@ -1646,42 +1643,21 @@ ld(val(hi('REENTER')),regY)     #23
 jmpy(d(lo('REENTER')))          #24
 ld(val(-28/2))                  #25
 
-# CLR implementation
-label('clr')
-ld(busAC,regX)                  #13
-ld(d(0))                        #14
-st(ea0XregAC)                   #15
-ld(val(-22/2))                  #16
-ld(val(hi('REENTER')),regY)     #17
-jmpy(d(lo('REENTER')))          #18
-nop()                           #19
-
-# NEGW implementation
-label('negw')
-suba(d(vAC),busRAM)             #13
-st(d(vAC))                      #14
-bne(d(lo('.negw0')))            #15
-bra(d(lo('.negw1')))            #16
-ld(d(0))                        #17
-label('.negw0')
-ld(d(-1))                       #17
-label('.negw1')
-suba(d(vAC+1),busRAM)           #18
+# LSLW implementation
+label('lslw')
+anda(d(128),regX)               #13
+adda(d(vAC),busRAM)             #14
+st(d(vAC))                      #15
+ld(ea0XregAC,busRAM)            #16
+adda(d(vAC+1),busRAM)           #17
+adda(d(vAC+1),busRAM)           #18
 st(d(vAC+1))                    #19
 ldzp(d(vPC))                    #20
 suba(d(1))                      #21
 st(d(vPC))                      #22
 ld(val(hi('REENTER')),regY)     #23
 jmpy(d(lo('REENTER')))          #24
-ld(val(-26/2))                  #25
-
-# ALLOC implementation
-label('alloc')
-adda(d(vSP),busRAM)             #13
-st(d(vSP))                      #14
-ld(val(hi('REENTER')),regY)     #15
-jmpy(d(lo('REENTER')))          #16
-ld(val(-20/2))                  #17
+ld(val(-28/2))                  #25
 
 # STLW implementation
 label('stlw')
@@ -1727,20 +1703,18 @@ ld(val(-26/2))                  #23
 
 # PEEK implementation
 label('peek')
-ldzp(d(vPC))                    #13
-suba(val(1))                    #14
-st(d(vPC))                      #15
-ld(d(vAC),busRAM|regX)          #16
-ld(d(vAC+1),busRAM|regY)        #17
-ld(busRAM|eaYXregAC)            #18
-label('luReturn')               #Nice coincidence that luReturn can be here
-st(d(vAC))                      #19
-ld(val(0))                      #20
-st(d(vAC+1))                    #21
-ld(val(-28/2))                  #22
-ld(val(hi('REENTER')),regY)     #23
-jmpy(d(lo('REENTER')))          #24
-#nop()                          #(25)
+suba(val(1))                    #13
+st(d(vPC))                      #14
+ld(d(vAC),busRAM|regX)          #15
+ld(d(vAC+1),busRAM|regY)        #16
+ld(busRAM|eaYXregAC)            #17
+st(d(vAC))                      #18
+label('lupReturn')              #Nice coincidence that lupReturn can be here
+ld(val(0))                      #19
+st(d(vAC+1))                    #20
+ld(val(hi('REENTER')),regY)     #21
+jmpy(d(lo('REENTER')))          #22
+ld(val(-26/2))                  #23
 #
 # POKEW implementation
 label('pokew')

@@ -317,16 +317,16 @@ def trampoline():
      It is possible to make this section 2 bytes shorter
      and 1 cycle faster by entering directly wih "jmp y,ac"
      instead of "jmp y,251". However, this will cost two
-     words at LOOKUP in vCPU and space is expensive there.
+     words at 'LUP' in vCPU and space is expensive there.
   """
   C('+-----------------------------------+')
   bra(val(253))                 #14
   C('|                                   |')
-  ld(d(hi('luReturn')),regY)    #16
+  ld(d(hi('lupReturn')),regY)   #15
   C('| Trampoline for page $%04x lookups |' % (pc()&~255))
-  jmpy(d(lo('luReturn')))       #17
+  jmpy(d(lo('lupReturn')))      #17
   C('|                                   |')
-  ld(d(lo('vPC+1')),busRAM|regY)#18 Restore
+  st(d(lo('vAC')))              #18
   C('+-----------------------------------+')
 
 def end():

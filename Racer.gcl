@@ -388,10 +388,7 @@ $0700:
     DrawRoad!
 
     {Drift and horizon movement}
-    DDX     DriftX=
-    DriftX+ DriftX=
-    DriftX+ DriftX=
-    DriftX+ DriftX= HorizonDX=
+    DDX 3<< DriftX= HorizonDX=
 
     {Car "physics" and driver input}
     ControlRaceCar!

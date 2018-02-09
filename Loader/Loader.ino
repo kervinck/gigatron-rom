@@ -48,8 +48,8 @@ void setup() {
 byte blinky[] = {
   0x11, 0x50, 0x44, // 0300 LDWI $4450
   0x2b, 0x30,       // 0303 STW  'p'
-  0xee, 0x30,       // 0305 POKE 'p'
-  0xdd, 0x01,       // 0307 ADDI 1
+  0xf0, 0x30,       // 0305 POKE 'p'
+  0xe3, 0x01,       // 0307 ADDI 1
   0x90, 0x03        // 0309 BRA  $0305
 };                  // 030b
 

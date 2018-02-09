@@ -45,7 +45,7 @@ $0300:
   [do
     bit=
     -$4000 C+ [if<0
-      C C+ C=
+      C 1<< C=
     else
       {Shift prematurely in an attempt to avoid overflow}
       B \sysArgs0= 48! {ShiftRight} B=
