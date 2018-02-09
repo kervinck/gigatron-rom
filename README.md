@@ -147,3 +147,34 @@ Address   Name          Description
 7fa0-7fff -             vCPU code/data
 --------  ------------- -----------
 ```
+
+Memory map (ROM)
+================
+```
+             +----------------------------------------------------------+
+page 0       | Boot and reset sequences                                 |
+             +----------------------------------------------------------+
+page 1       | Video and audio loop (visible lines)                     |
+             |                                                          |
+page 2       | Video and audio loop (vertical blank)                    |
+             +----------------------------------------------------------+
+page 3       | vCPU interpreter loop (primary page)                     |
+             |                                                          |
+page 4       | vCPU extended instructions and SYS functions             |
+             +----------------------------------------------------------+
+page 5       | Shift tables                                             |
+             |                                                          |
+page 6       | SYS functions (LSRW and ohers)                           |
+             +----------------------------------------------------------+
+page 7-8     | Font table                                               |
+             +----------------------------------------------------------+
+page 9       | Note table                                               |
+             +----------------------------------------------------------+
+page 10      | Inversion table                                          |
+             +----------------------------------------------------------+
+page 11-214  | ROM files: Embedded high-resolution images               |
+             |                                                          |
+page 215-255 | ROM files: Embedded applications                         |
+             +----------------------------------------------------------+
+              0                                                      255
+```
