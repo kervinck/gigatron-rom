@@ -60,10 +60,15 @@ $0300:
 
     bit 48! {ShiftRight} if<>0loop]
 
-  {Normalise by shifting the word right, like a barrel shifter}
-  shift 4& [if<>0 \SYS_LSRW4_50 \sysFn= {Shift Right 4} C 50! C=]
-  shift 2& [if<>0 \SYS_LSRW2_52 \sysFn= {Shift Right 2} C 52! C=]
-  shift 1& [if<>0 \SYS_LSRW1_48 \sysFn= {Shift Right 1} C 48! C=]
+  {Normalise by shifting the word right}
+  {Organized as a switch statement for some more speed}
+  shift 7^ [if=0 \SYS_LSRW7_30 \sysFn= {Shift Right 7} C 30! else
+  shift 6^ [if=0 \SYS_LSRW6_48 \sysFn= {Shift Right 6} C 48! else
+  shift 5^ [if=0 \SYS_LSRW5_50 \sysFn= {Shift Right 5} C 50! else
+  shift 4^ [if=0 \SYS_LSRW4_50 \sysFn= {Shift Right 4} C 50! else
+  shift 3^ [if=0 \SYS_LSRW3_52 \sysFn= {Shift Right 3} C 52! else
+  shift 2^ [if=0 \SYS_LSRW2_52 \sysFn= {Shift Right 2} C 52! else
+  shift 1^ [if=0{\SYS_LSRW1_48 \sysFn=}{Shift Right 1} C 48!]]]]]]] C=
 
   {Apply sign to return value}
   sign [if<>0 0 C- else C]
@@ -232,12 +237,12 @@ $0600:
 
 { Main }
 [do
-  -180 Y0= -320 X0= 3 Step= CalcSet!    {Global 1217.441 seconds}
-  -148 Y0=  -98 X0= 1 Step= CalcSet!    {Zoom1  2304.389 seconds}
-   -60 Y0= -256 X0= 1 Step= CalcSet!    {Zoom2  2218.328 seconds}
-  -320 Y0= -360 X0= 9 Step= CalcSet!    {Wide    375.422 seconds}
-     0 Y0= -100 X0= 1 Step= CalcSet!    {Zoom3  2540.798 seconds}
-   -60 Y0=    0 X0= 1 Step= CalcSet!    {Zoom4  1528.291 seconds}
+  -180 Y0= -320 X0= 3 Step= CalcSet!    {Global 1127.446 seconds}
+  -148 Y0=  -98 X0= 1 Step= CalcSet!    {Zoom1  2125.648 seconds}
+   -60 Y0= -256 X0= 1 Step= CalcSet!    {Zoom2  2050.341 seconds}
+  -320 Y0= -360 X0= 9 Step= CalcSet!    {Wide    356.482 seconds}
+     0 Y0= -100 X0= 1 Step= CalcSet!    {Zoom3  2337.633 seconds}
+   -60 Y0=    0 X0= 1 Step= CalcSet!    {Zoom4  1409.569 seconds}
   loop]
 
 {-----------------------------------------------------------------------+
