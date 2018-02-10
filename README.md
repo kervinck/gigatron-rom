@@ -172,9 +172,9 @@ page 9       | Note table                                               |
              +----------------------------------------------------------+
 page 10      | Inversion table                                          |
              +----------------------------------------------------------+
-page 11-214  | ROM files: Embedded high-resolution images               |
+page 11-214  | ROM tables: Embedded high-resolution images (packed)     |
              |                                                          |
-page 215-255 | ROM files: Embedded applications                         |
+page 215-255 | ROM files: Embedded vCPU applications (serial)           |
              +----------------------------------------------------------+
               0                                                      255
 ```
