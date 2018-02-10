@@ -201,7 +201,16 @@ SYS extension
 SYS_Reset_36                    x
 SYS_Exec_88                     x
 SYS_Random_34                   x
-SYS_LSRW_48                     x
+SYS_LSRW1_48                    x
+SYS_LSRW2_52                    x
+SYS_LSRW3_52                    x
+SYS_LSRW4_50                    x
+SYS_LSRW5_50                    x
+SYS_LSRW6_48                    x
+SYS_LSRW7_30                    x
+SYS_LSRW8_24                    x
+SYS_LSLW4_46                    x
+SYS_LSLW8_24                    x
 SYS_VDrawBits_134               x
 SYS_Read3_40                    (Pictures)
 SYS_Unpack_56                   x
@@ -210,7 +219,7 @@ SYS_Out_22                      x
 SYS_In_24                       x
 SYS_NextByteIn_32               x
 SYS_PayloadCopy_34              x
-SYS_ProcessInput_48             (Loader)
+SYS_LoaderProcessInput_48       (Loader)
 SYS_RacerUpdateVideoX_40        (Racer)
 SYS_RacerUpdateVideoY_40        (Racer)
 

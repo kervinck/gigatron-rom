@@ -14,7 +14,8 @@
 #
 #  Hopefully in ROM v1
 #  XXX Perhaps SYS_Exec_88 shouldn't set vLR [ROMv1]
-#  XXX SYS: LSRW, (ASRW?, jumptable?) for completeness (n-Queens) [ROMv1]
+#  XXX SYS: Make SYS shifting operate on vAC directly [ROMv1]
+#  XXX SYS: n-Queens [ROMv1]
 #  XXX Audio: Move shift table to page 7, then add waveform synthesis [ROMv1]
 #
 #  After ROM v1 release
@@ -663,7 +664,20 @@ ld(val(hi('REENTER')),regY)     #29
 jmpy(d(lo('REENTER')))          #30
 ld(val(-34/2))                  #31
 
-# XXX This would be a good place for a SYS_LSRW<n> jump table
+label('SYS_LSRW7_30')
+ldzp(d(sysArgs+0))              #15
+anda(d(128),regX)               #16
+ldzp(d(sysArgs+1))              #17
+adda(busAC)                     #18
+ora(ea0XregAC,busRAM)           #19
+st(d(vAC))                      #20
+ldzp(d(sysArgs+1))              #21
+anda(d(128),regX)               #22
+ld(ea0XregAC,busRAM)            #23
+st(d(vAC+1))                    #24
+ld(d(hi('REENTER')),regY)       #25
+jmpy(d(lo('REENTER')))          #26
+ld(d(-30/2))                    #27
 
 #-----------------------------------------------------------------------
 #
@@ -1929,6 +1943,24 @@ ld(val(hi('REENTER')),regY)     #129
 jmpy(d(lo('REENTER')))          #130
 ld(val(-134/2))                 #131
 
+label('SYS_LSRW8_24')
+ldzp(d(sysArgs+1))              #15
+st(d(vAC))                      #16
+ld(d(0))                        #17
+st(d(vAC+1))                    #18
+ld(d(hi('REENTER')),regY)       #19
+jmpy(d(lo('REENTER')))          #20
+ld(d(-24/2))                    #21
+
+label('SYS_LSLW8_24')
+ldzp(d(sysArgs+0))              #15
+st(d(vAC+1))                    #16
+ld(d(0))                        #17
+st(d(vAC))                      #18
+ld(d(hi('REENTER')),regY)       #19
+jmpy(d(lo('REENTER')))          #20
+ld(d(-24/2))                    #21
+
 #-----------------------------------------------------------------------
 #  ROM page 5-6: Shift table and code
 #-----------------------------------------------------------------------
@@ -1964,26 +1996,25 @@ for ix in range(255):
 assert(pc()&255 == 255)
 bra(d(vTmp)|busRAM); C('Jumps back into next page')
 
-# 16-bits logical shift right
-label('SYS_LSRW_48')
+label('SYS_LSRW1_48')
 assert(pc()&255 == 0)#First instruction on this page must be a nop
 nop()                           #15
-ld(d(hi('shiftTable')),regY)    #16
-ld(d(lo('.sysLsrw0')));         C('Shift low byte')#17
+ld(d(hi('shiftTable')),regY);   C('Logical shift right 1x (X >> 1)')#16
+ld(d(lo('.sysLsrw1a')));        C('Shift low byte')#17
 st(d(vTmp))                     #18
 ldzp(d(sysArgs+0))              #19
-anda(d(254))                    #20
+anda(d(0b11111110))             #20
 jmpy(busAC)                     #21
-bra(d(255));                    C('Actually $%04x' % (shiftTable+255))#22
-label('.sysLsrw0')
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
+label('.sysLsrw1a')
 st(d(vAC))                      #26
-ld(d(lo('.sysLsrw1')));         C('Shift high byte')#27
+ld(d(lo('.sysLsrw1b')));        C('Shift high byte')#27
 st(d(vTmp))                     #28
 ldzp(d(sysArgs+1))              #29
-anda(d(254))                    #30
+anda(d(0b11111110))             #30
 jmpy(busAC)                     #31
-bra(d(255));                    C('Actually $%04x' % (shiftTable+255))#32
-label('.sysLsrw1')
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#32
+label('.sysLsrw1b')
 st(d(vAC+1))                    #36
 ldzp(d(sysArgs+1));             C('Transfer bit 8')#37
 anda(d(1))                      #38
@@ -1994,6 +2025,192 @@ st(d(vAC))                      #42
 ld(d(hi('REENTER')),regY)       #43
 jmpy(d(lo('REENTER')))          #44
 ld(d(-48/2))                    #45
+
+label('SYS_LSRW2_52')
+ld(d(hi('shiftTable')),regY);   C('Logical shift right 2 (X >> 2)')#15
+ld(d(lo('.sysLsrw2a')));        C('Shift low byte')#16
+st(d(vTmp))                     #17
+ldzp(d(sysArgs+0))              #18
+anda(d(0b11111100))             #19
+ora( d(0b00000001))             #20
+jmpy(busAC)                     #21
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
+label('.sysLsrw2a')
+st(d(vAC))                      #26
+ld(d(lo('.sysLsrw2b')));        C('Shift high byte')#27
+st(d(vTmp))                     #28
+ldzp(d(sysArgs+1))              #29
+anda(d(0b11111100))             #30
+ora( d(0b00000001))             #31
+jmpy(busAC)                     #32
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#33
+label('.sysLsrw2b')
+st(d(vAC+1))                    #37
+ldzp(d(sysArgs+1));             C('Transfer bit 8:9')#38
+adda(busAC)                     #39
+adda(busAC)                     #40
+adda(busAC)                     #41
+adda(busAC)                     #42
+adda(busAC)                     #43
+adda(busAC)                     #44
+ora(d(vAC)|busRAM)              #45
+st(d(vAC))                      #46
+ld(d(hi('REENTER')),regY)       #47
+jmpy(d(lo('REENTER')))          #48
+ld(d(-52/2))                    #49
+
+label('SYS_LSRW3_52')
+ld(d(hi('shiftTable')),regY);   C('Logical shift right 3 (X >> 3)')#15
+ld(d(lo('.sysLsrw3a')));        C('Shift low byte')#16
+st(d(vTmp))                     #17
+ldzp(d(sysArgs+0))              #18
+anda(d(0b11111000))             #19
+ora( d(0b00000011))             #20
+jmpy(busAC)                     #21
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
+label('.sysLsrw3a')
+st(d(vAC))                      #26
+ld(d(lo('.sysLsrw3b')));        C('Shift high byte')#27
+st(d(vTmp))                     #28
+ldzp(d(sysArgs+1))              #29
+anda(d(0b11111000))             #30
+ora( d(0b00000011))             #31
+jmpy(busAC)                     #32
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#33
+label('.sysLsrw3b')
+st(d(vAC+1))                    #37
+ldzp(d(sysArgs+1));             C('Transfer bit 8:10')#38
+adda(busAC)                     #39
+adda(busAC)                     #40
+adda(busAC)                     #41
+adda(busAC)                     #42
+adda(busAC)                     #43
+nop()                           #44
+ora(d(vAC)|busRAM)              #45
+st(d(vAC))                      #46
+ld(d(hi('REENTER')),regY)       #47
+jmpy(d(lo('REENTER')))          #48
+ld(d(-52/2))                    #49
+
+label('SYS_LSRW4_50')
+ld(d(hi('shiftTable')),regY);   C('Logical shift right 4 (X >> 4)')#15
+ld(d(lo('.sysLsrw4a')));        C('Shift low byte')#16
+st(d(vTmp))                     #17
+ldzp(d(sysArgs+0))              #18
+anda(d(0b11110000))             #19
+ora( d(0b00000111))             #20
+jmpy(busAC)                     #21
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
+label('.sysLsrw4a')
+st(d(vAC))                      #26
+ld(d(lo('.sysLsrw4b')));        C('Shift high byte')#27
+st(d(vTmp))                     #28
+ldzp(d(sysArgs+1))              #29
+anda(d(0b11110000))             #30
+ora( d(0b00000111))             #31
+jmpy(busAC)                     #32
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#33
+label('.sysLsrw4b')
+st(d(vAC+1))                    #37
+ldzp(d(sysArgs+1));             C('Transfer bit 8:11')#38
+adda(busAC)                     #39
+adda(busAC)                     #40
+adda(busAC)                     #41
+adda(busAC)                     #42
+ora(d(vAC)|busRAM)              #43
+st(d(vAC))                      #44
+ld(d(hi('REENTER')),regY)       #45
+jmpy(d(lo('REENTER')))          #46
+ld(d(-50/2))                    #47
+
+label('SYS_LSRW5_50')
+ld(d(hi('shiftTable')),regY);   C('Logical shift right 5 (X >> 5)')#15
+ld(d(lo('.sysLsrw5a')));        C('Shift low byte')#16
+st(d(vTmp))                     #17
+ldzp(d(sysArgs+0))              #18
+anda(d(0b11100000))             #19
+ora( d(0b00001111))             #20
+jmpy(busAC)                     #21
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
+label('.sysLsrw5a')
+st(d(vAC))                      #26
+ld(d(lo('.sysLsrw5b')));        C('Shift high byte')#27
+st(d(vTmp))                     #28
+ldzp(d(sysArgs+1))              #29
+anda(d(0b11100000))             #30
+ora( d(0b00001111))             #31
+jmpy(busAC)                     #32
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#33
+label('.sysLsrw5b')
+st(d(vAC+1))                    #37
+ldzp(d(sysArgs+1));             C('Transfer bit 8:13')#38
+adda(busAC)                     #39
+adda(busAC)                     #40
+adda(busAC)                     #41
+nop()                           #42
+ora(d(vAC)|busRAM)              #43
+st(d(vAC))                      #44
+ld(d(hi('REENTER')),regY)       #45
+jmpy(d(lo('REENTER')))          #46
+ld(d(-50/2))                    #47
+
+label('SYS_LSRW6_48')
+ld(d(hi('shiftTable')),regY);   C('Logical shift right 6 (X >> 6)')#15
+ld(d(lo('.sysLsrw6a')));        C('Shift low byte')#16
+st(d(vTmp))                     #17
+ldzp(d(sysArgs+0))              #18
+anda(d(0b11000000))             #19
+ora( d(0b00011111))             #20
+jmpy(busAC)                     #21
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
+label('.sysLsrw6a')
+st(d(vAC))                      #26
+ld(d(lo('.sysLsrw6b')));        C('Shift high byte')#27
+st(d(vTmp))                     #28
+ldzp(d(sysArgs+1))              #29
+anda(d(0b11000000))             #30
+ora( d(0b00011111))             #31
+jmpy(busAC)                     #32
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#33
+label('.sysLsrw6b')
+st(d(vAC+1))                    #37
+ldzp(d(sysArgs+1));             C('Transfer bit 8:13')#38
+adda(busAC)                     #39
+adda(busAC)                     #40
+ora(d(vAC)|busRAM)              #41
+st(d(vAC))                      #42
+ld(d(hi('REENTER')),regY)       #43
+jmpy(d(lo('REENTER')))          #44
+ld(d(-48/2))                    #45
+
+label('SYS_LSLW4_46')
+ld(d(hi('shiftTable')),regY);   C('Logical shift left 4 (X << 4)')#15
+ld(d(lo('.sysLsrl4')))          #16
+st(d(vTmp))                     #17
+ldzp(d(sysArgs+0))              #18
+anda(d(0b11110000))             #19
+ora( d(0b00000111))             #20
+jmpy(busAC)                     #21
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
+label('.sysLsrl4')
+st(d(vAC+1))                    #26
+ldzp(d(sysArgs+1))              #27
+adda(busAC)                     #28
+adda(busAC)                     #29
+adda(busAC)                     #30
+adda(busAC)                     #31
+ora(d(vAC+1),busRAM)            #32
+st(d(vAC+1))                    #33
+ldzp(d(sysArgs+0))              #34
+adda(busAC)                     #35
+adda(busAC)                     #36
+adda(busAC)                     #37
+adda(busAC)                     #38
+ora(d(vAC),busRAM)              #39
+st(d(vAC))                      #40
+ld(d(hi('REENTER')),regY)       #41
+jmpy(d(lo('REENTER')))          #42
+ld(d(-46/2))                    #43
 
 #-----------------------------------------------------------------------
 # Extension SYS_Read3_40: Read 3 consecutive bytes from ROM
@@ -2090,68 +2307,6 @@ st(d(sysArgs+0));               C('-> Pixel 0')#50
 ld(val(hi('REENTER')),regY)     #51
 jmpy(d(lo('REENTER')))          #52
 ld(val(-56/2))                  #53
-
-#-----------------------------------------------------------------------
-# Extension SYS_ProcessInput_48
-#-----------------------------------------------------------------------
-
-# sysArgs[0:1] Source address
-# sysArgs[2]   Checksum
-# sysArgs[4]   Copy count
-# sysArgs[5:6] Destination address
-
-label('SYS_ProcessInput_48')
-ld(d(sysArgs+1),busRAM|regY)    #15
-ldzp(d(sysArgs+2))              #16
-bne(d(lo('.sysPi0')))           #17
-ld(d(sysArgs+0),busRAM)         #18
-suba(d(65),regX)                #19 Point at first byte of buffer
-ld(eaYXregAC,busRAM)            #20 Command byte
-st(eaYXregOUTIX)                #21 X++
-xora(d(ord('L')))               #22 This loader lumps everything under 'L'
-bne(d(lo('.sysPi1')))           #23
-ld(eaYXregAC,busRAM);           C('Valid command')#24 Length byte
-st(eaYXregOUTIX)                #25 X++
-anda(d(63))                     #26 Bit 6:7 are garbage
-st(d(sysArgs+4))                #27 Copy count
-ld(eaYXregAC,busRAM)            #28 Low copy address
-st(eaYXregOUTIX)                #29 X++
-st(d(sysArgs+5))                #30
-ld(eaYXregAC,busRAM)            #31 High copy address
-st(eaYXregOUTIX)                #32 X++
-st(d(sysArgs+6))                #33
-ldzp(d(sysArgs+4))              #34
-bne(d(lo('.sysPi2')))           #35
-# Execute code (don't care about checksum anymore)
-ldzp(d(sysArgs+5));             C('Execute')#36 Low run address
-suba(d(2))                      #37
-st(d(vPC))                      #38
-st(d(vLR))                      #39
-ldzp(d(sysArgs+6))              #40 High run address
-st(d(vPC+1))                    #41
-st(d(vLR+1))                    #42
-ld(val(hi('REENTER')),regY)     #43
-jmpy(d(lo('REENTER')))          #44
-ld(d(-48/2))                    #45
-# Invalid checksum
-label('.sysPi0')
-wait(25-19);                    C('Invalid checksum')#19 Reset checksum
-# Unknown command
-label('.sysPi1')
-ld(d(ord('g')));                C('Unknown command')#25 Reset checksum
-st(d(sysArgs+2))                #26
-ld(val(hi('REENTER')),regY)     #27
-jmpy(d(lo('REENTER')))          #28
-ld(d(-32/2))                    #29
-# Loading data
-label('.sysPi2')
-ld(d(sysArgs+0),busRAM);        C('Loading data')#37 Continue checksum
-suba(d(1),regX)                 #38 Point at last byte
-ld(eaYXregAC,busRAM)            #39
-st(d(sysArgs+2))                #40
-ld(val(hi('REENTER')),regY)     #41
-jmpy(d(lo('REENTER')))          #42
-ld(d(-46/2))                    #43
 
 #-----------------------------------------------------------------------
 #
@@ -2328,6 +2483,68 @@ st(d(sysArgs+2))                #34
 ld(val(hi('REENTER')),regY)     #35
 jmpy(d(lo('REENTER')))          #36
 ld(val(-40/2))                  #37
+
+#-----------------------------------------------------------------------
+# Extension SYS_LoaderProcessInput_48
+#-----------------------------------------------------------------------
+
+# sysArgs[0:1] Source address
+# sysArgs[2]   Checksum
+# sysArgs[4]   Copy count
+# sysArgs[5:6] Destination address
+
+label('SYS_LoaderProcessInput_48')
+ld(d(sysArgs+1),busRAM|regY)    #15
+ldzp(d(sysArgs+2))              #16
+bne(d(lo('.sysPi0')))           #17
+ld(d(sysArgs+0),busRAM)         #18
+suba(d(65),regX)                #19 Point at first byte of buffer
+ld(eaYXregAC,busRAM)            #20 Command byte
+st(eaYXregOUTIX)                #21 X++
+xora(d(ord('L')))               #22 This loader lumps everything under 'L'
+bne(d(lo('.sysPi1')))           #23
+ld(eaYXregAC,busRAM);           C('Valid command')#24 Length byte
+st(eaYXregOUTIX)                #25 X++
+anda(d(63))                     #26 Bit 6:7 are garbage
+st(d(sysArgs+4))                #27 Copy count
+ld(eaYXregAC,busRAM)            #28 Low copy address
+st(eaYXregOUTIX)                #29 X++
+st(d(sysArgs+5))                #30
+ld(eaYXregAC,busRAM)            #31 High copy address
+st(eaYXregOUTIX)                #32 X++
+st(d(sysArgs+6))                #33
+ldzp(d(sysArgs+4))              #34
+bne(d(lo('.sysPi2')))           #35
+# Execute code (don't care about checksum anymore)
+ldzp(d(sysArgs+5));             C('Execute')#36 Low run address
+suba(d(2))                      #37
+st(d(vPC))                      #38
+st(d(vLR))                      #39
+ldzp(d(sysArgs+6))              #40 High run address
+st(d(vPC+1))                    #41
+st(d(vLR+1))                    #42
+ld(val(hi('REENTER')),regY)     #43
+jmpy(d(lo('REENTER')))          #44
+ld(d(-48/2))                    #45
+# Invalid checksum
+label('.sysPi0')
+wait(25-19);                    C('Invalid checksum')#19 Reset checksum
+# Unknown command
+label('.sysPi1')
+ld(d(ord('g')));                C('Unknown command')#25 Reset checksum
+st(d(sysArgs+2))                #26
+ld(val(hi('REENTER')),regY)     #27
+jmpy(d(lo('REENTER')))          #28
+ld(d(-32/2))                    #29
+# Loading data
+label('.sysPi2')
+ld(d(sysArgs+0),busRAM);        C('Loading data')#37 Continue checksum
+suba(d(1),regX)                 #38 Point at last byte
+ld(eaYXregAC,busRAM)            #39
+st(d(sysArgs+2))                #40
+ld(val(hi('REENTER')),regY)     #41
+jmpy(d(lo('REENTER')))          #42
+ld(d(-46/2))                    #43
 
 #-----------------------------------------------------------------------
 #

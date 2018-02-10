@@ -81,7 +81,7 @@ $5a0c:
   63 A.
 
   {Check checksum and command, and execute if OK. Also reset checksum.}
-  \SYS_ProcessInput_48 \sysFn= 48!
+  \SYS_LoaderProcessInput_48 \sysFn= 48!
 loop]
 
 {

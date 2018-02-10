@@ -40,14 +40,16 @@ $0300:
   0 B- [if>0 B= sign 1^ sign=]
 
   {Multiply}
-  7 shift= {Pending shift}
+  7 shift= {Maximum renormalisation shift pending}
+  \SYS_LSRW1_48 \sysFn=
   $200
   [do
     bit=
     -$4000 C+ [if<0
       C 1<< C=
     else
-      {Shift prematurely in an attempt to avoid overflow}
+      {Shift prematurely in an attempt to avoid overflow, this is where
+       the algorithm loses some accuracy}
       B \sysArgs0= 48! {ShiftRight} B=
       shift 1- shift=]
 
@@ -58,37 +60,16 @@ $0300:
 
     bit \sysArgs0= 48! {ShiftRight} if<>0loop]
 
-  {Shift}
-  [do
-    C \sysArgs0= 48! {ShiftRight} C=
-    shift 1- shift= if>0loop]
+  {Shift word right, like a barrel shifter}
+  shift 4& [if<>0 \SYS_LSRW4_50 \sysFn= C \sysArgs0= 50! C=]
+  shift 2& [if<>0 \SYS_LSRW2_52 \sysFn= C \sysArgs0= 52! C=]
+  shift 1& [if<>0 \SYS_LSRW1_48 \sysFn= C \sysArgs0= 48! C=]
 
   {Apply sign to return value}
   sign [if<>0 0 C- else C]
 
   pop ret
 ] MulShift7=
-
-{ Calculate color for (X0,Y0) }
-[def {CalcPixel}
-  push
-  0 X= XX= Y= YY= i=
-  [do
-    i 1+ i= 64^ if<>0           {Break after completing 63 iterations}
-
-                                {Mandelbrot function: z' := z^2 + c}
-    X A= Y Y+ B= MulShift7! Y0+ Y= {Y = 2*X*Y + Y0}
-    XX YY- X0+                  X= {X = X^2 - Y^2 + X0}
-
-                                {Calculate squares}
-   {X}A= B= MulShift7!          XX=
-    Y A= B= MulShift7!          YY=
-
-    -$200 XX+ YY+
-    if<=0loop {else} i          {Also break when X^2 + Y^2 > 4}
-  ]
-  pop ret
-] CalcPixel=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 4                                      |
@@ -174,6 +155,7 @@ $0500:
   $800 p=
   120 Height= 160 Width= len=
   1 DX= 0 DY=
+  \SYS_LSRW1_48 \sysFn=
 
   [do
     0 Level=
@@ -222,22 +204,40 @@ $0500:
   pop ret
 ] GreyOut=
 
-{ Shift-right function (the only SYS function we use, so set it once) }
-\SYS_LSRW_48 \sysFn=
-
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
 $0600:
 
+{ Calculate color for (X0,Y0) using the escape time algorithm }
+[def {CalcPixel}
+  push
+  0 X= XX= Y= YY= i=
+  [do
+    i 1+ i= 64^ if<>0           {Break after completing 63 iterations}
+
+                                {Mandelbrot function: z' := z^2 + c}
+    X A= Y Y+ B= MulShift7! Y0+ Y= {Y = 2*X*Y + Y0}
+    XX YY- X0+                  X= {X = X^2 - Y^2 + X0}
+
+                                {Calculate squares}
+   {X}A= B= MulShift7!          XX=
+    Y A= B= MulShift7!          YY=
+
+    -$200 XX+ YY+
+    if<=0loop {else} i          {Also break when X^2 + Y^2 > 4}
+  ]
+  pop ret
+] CalcPixel=
+
 { Main }
 [do
-  -180 Y0= -320 X0= 3 Step= CalcSet!    {Global 1429.876 seconds}
-  -148 Y0=  -98 X0= 1 Step= CalcSet!    {Zoom1  2710.835 seconds}
-   -60 Y0= -256 X0= 1 Step= CalcSet!    {Zoom2  2609.470 seconds}
-  -320 Y0= -360 X0= 9 Step= CalcSet!    {Wide    431.390 seconds}
-     0 Y0= -100 X0= 1 Step= CalcSet!    {Zoom3  2995.293 seconds}
-   -60 Y0=    0 X0= 1 Step= CalcSet!    {Zoom4  1799.677 seconds}
+  -180 Y0= -320 X0= 3 Step= CalcSet!    {Global 1263.272 seconds}
+  -148 Y0=  -98 X0= 1 Step= CalcSet!    {Zoom1  2392.117 seconds}
+   -60 Y0= -256 X0= 1 Step= CalcSet!    {Zoom2  2301.905 seconds}
+  -320 Y0= -360 X0= 9 Step= CalcSet!    {Wide    389.910 seconds}
+     0 Y0= -100 X0= 1 Step= CalcSet!    {Zoom3  2635.845 seconds}
+   -60 Y0=    0 X0= 1 Step= CalcSet!    {Zoom4  1586.092 seconds}
   loop]
 
 {-----------------------------------------------------------------------+
