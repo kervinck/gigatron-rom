@@ -13,14 +13,14 @@
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #  Hopefully in ROM v1
-#  XXX Perhaps SYS_Exec_88 shouldn't set vLR [ROMv1]
-#  XXX SYS: n-Queens [ROMv1]
 #  XXX Audio: Move shift table to page 7, then add waveform synthesis [ROMv1]
+#  XXX Perhaps SYS_Exec_88 shouldn't set vLR [ROMv1]
+#  XXX SYS: n-Queens to test logic functions[ROMv1]
 #
 #  After ROM v1 release
 #  XXX Readability of asm.py instructions, esp. make d() implicit
 #  XXX GCL: Prefix notation for high/low byte >X++ instead of X>++
-#  XXX GCL: Rethink i, i. i; i= x, x. x= x: consistency
+#  XXX GCL: Rethink i, i. i; i= x, x. x= x: consistency, also POKEW, STLW etc
 #  XXX How it works memo: brief description of every software function
 #
 #  Probably not in ROM v1

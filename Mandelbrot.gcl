@@ -245,6 +245,13 @@ $0600:
    -60 Y0=    0 X0= 1 Step= CalcSet!    {Zoom4  1409.569 seconds}
   loop]
 
+{ Benchmark settings:
++  $1c10 p= {Start of video}
++  96 Height= 128 Width= len=
++    i 1+ i= 27^ if<>0           {Break after completing 26 iterations}
++  -144 Y0= -256 X0= 3 Step= CalcSet!    {Global  736.586 seconds}
+}
+
 {-----------------------------------------------------------------------+
 |       End                                                             |
 +-----------------------------------------------------------------------}
