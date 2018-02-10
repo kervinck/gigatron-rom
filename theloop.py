@@ -14,7 +14,6 @@
 #
 #  Hopefully in ROM v1
 #  XXX Perhaps SYS_Exec_88 shouldn't set vLR [ROMv1]
-#  XXX SYS: Make SYS shifting operate on vAC directly [ROMv1]
 #  XXX SYS: n-Queens [ROMv1]
 #  XXX Audio: Move shift table to page 7, then add waveform synthesis [ROMv1]
 #
@@ -665,13 +664,13 @@ jmpy(d(lo('REENTER')))          #30
 ld(val(-34/2))                  #31
 
 label('SYS_LSRW7_30')
-ldzp(d(sysArgs+0))              #15
+ldzp(d(vAC))                    #15
 anda(d(128),regX)               #16
-ldzp(d(sysArgs+1))              #17
+ldzp(d(vAC+1))                  #17
 adda(busAC)                     #18
 ora(ea0XregAC,busRAM)           #19
 st(d(vAC))                      #20
-ldzp(d(sysArgs+1))              #21
+ldzp(d(vAC+1))                  #21
 anda(d(128),regX)               #22
 ld(ea0XregAC,busRAM)            #23
 st(d(vAC+1))                    #24
@@ -1944,7 +1943,7 @@ jmpy(d(lo('REENTER')))          #130
 ld(val(-134/2))                 #131
 
 label('SYS_LSRW8_24')
-ldzp(d(sysArgs+1))              #15
+ldzp(d(vAC+1))                  #15
 st(d(vAC))                      #16
 ld(d(0))                        #17
 st(d(vAC+1))                    #18
@@ -1953,7 +1952,7 @@ jmpy(d(lo('REENTER')))          #20
 ld(d(-24/2))                    #21
 
 label('SYS_LSLW8_24')
-ldzp(d(sysArgs+0))              #15
+ldzp(d(vAC))                    #15
 st(d(vAC+1))                    #16
 ld(d(0))                        #17
 st(d(vAC))                      #18
@@ -1999,218 +1998,218 @@ bra(d(vTmp)|busRAM); C('Jumps back into next page')
 label('SYS_LSRW1_48')
 assert(pc()&255 == 0)#First instruction on this page must be a nop
 nop()                           #15
-ld(d(hi('shiftTable')),regY);   C('Logical shift right 1x (X >> 1)')#16
+ld(d(hi('shiftTable')),regY);   C('Logical shift right 1 bit (X >> 1)')#16
 ld(d(lo('.sysLsrw1a')));        C('Shift low byte')#17
 st(d(vTmp))                     #18
-ldzp(d(sysArgs+0))              #19
+ldzp(d(vAC))                    #19
 anda(d(0b11111110))             #20
 jmpy(busAC)                     #21
 bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw1a')
 st(d(vAC))                      #26
-ld(d(lo('.sysLsrw1b')));        C('Shift high byte')#27
-st(d(vTmp))                     #28
-ldzp(d(sysArgs+1))              #29
-anda(d(0b11111110))             #30
-jmpy(busAC)                     #31
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#32
+ldzp(d(vAC+1));                 C('Transfer bit 8')#27
+anda(d(1))                      #28
+adda(d(127))                    #29
+anda(d(128))                    #30
+ora(d(vAC)|busRAM)              #31
+st(d(vAC))                      #32
+ld(d(lo('.sysLsrw1b')));        C('Shift high byte')#33
+st(d(vTmp))                     #34
+ldzp(d(vAC+1))                  #35
+anda(d(0b11111110))             #36
+jmpy(busAC)                     #37
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#38
 label('.sysLsrw1b')
-st(d(vAC+1))                    #36
-ldzp(d(sysArgs+1));             C('Transfer bit 8')#37
-anda(d(1))                      #38
-adda(d(127))                    #39
-anda(d(128))                    #40
-ora(d(vAC)|busRAM)              #41
-st(d(vAC))                      #42
+st(d(vAC+1))                    #42
 ld(d(hi('REENTER')),regY)       #43
 jmpy(d(lo('REENTER')))          #44
 ld(d(-48/2))                    #45
 
 label('SYS_LSRW2_52')
-ld(d(hi('shiftTable')),regY);   C('Logical shift right 2 (X >> 2)')#15
+ld(d(hi('shiftTable')),regY);   C('Logical shift right 2 bit (X >> 2)')#15
 ld(d(lo('.sysLsrw2a')));        C('Shift low byte')#16
 st(d(vTmp))                     #17
-ldzp(d(sysArgs+0))              #18
+ldzp(d(vAC))                    #18
 anda(d(0b11111100))             #19
 ora( d(0b00000001))             #20
 jmpy(busAC)                     #21
 bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw2a')
 st(d(vAC))                      #26
-ld(d(lo('.sysLsrw2b')));        C('Shift high byte')#27
-st(d(vTmp))                     #28
-ldzp(d(sysArgs+1))              #29
-anda(d(0b11111100))             #30
-ora( d(0b00000001))             #31
-jmpy(busAC)                     #32
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#33
+ldzp(d(vAC+1));                 C('Transfer bit 8:9')#27
+adda(busAC)                     #28
+adda(busAC)                     #29
+adda(busAC)                     #30
+adda(busAC)                     #31
+adda(busAC)                     #32
+adda(busAC)                     #33
+ora(d(vAC)|busRAM)              #34
+st(d(vAC))                      #35
+ld(d(lo('.sysLsrw2b')));        C('Shift high byte')#36
+st(d(vTmp))                     #37
+ldzp(d(vAC+1))                  #38
+anda(d(0b11111100))             #39
+ora( d(0b00000001))             #40
+jmpy(busAC)                     #41
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#42
 label('.sysLsrw2b')
-st(d(vAC+1))                    #37
-ldzp(d(sysArgs+1));             C('Transfer bit 8:9')#38
-adda(busAC)                     #39
-adda(busAC)                     #40
-adda(busAC)                     #41
-adda(busAC)                     #42
-adda(busAC)                     #43
-adda(busAC)                     #44
-ora(d(vAC)|busRAM)              #45
-st(d(vAC))                      #46
+st(d(vAC+1))                    #46
 ld(d(hi('REENTER')),regY)       #47
 jmpy(d(lo('REENTER')))          #48
 ld(d(-52/2))                    #49
 
 label('SYS_LSRW3_52')
-ld(d(hi('shiftTable')),regY);   C('Logical shift right 3 (X >> 3)')#15
+ld(d(hi('shiftTable')),regY);   C('Logical shift right 3 bit (X >> 3)')#15
 ld(d(lo('.sysLsrw3a')));        C('Shift low byte')#16
 st(d(vTmp))                     #17
-ldzp(d(sysArgs+0))              #18
+ldzp(d(vAC))                    #18
 anda(d(0b11111000))             #19
 ora( d(0b00000011))             #20
 jmpy(busAC)                     #21
 bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw3a')
 st(d(vAC))                      #26
-ld(d(lo('.sysLsrw3b')));        C('Shift high byte')#27
-st(d(vTmp))                     #28
-ldzp(d(sysArgs+1))              #29
-anda(d(0b11111000))             #30
-ora( d(0b00000011))             #31
-jmpy(busAC)                     #32
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#33
+ldzp(d(vAC+1));                 C('Transfer bit 8:10')#27
+adda(busAC)                     #28
+adda(busAC)                     #29
+adda(busAC)                     #30
+adda(busAC)                     #31
+adda(busAC)                     #32
+ora(d(vAC)|busRAM)              #33
+st(d(vAC))                      #34
+ld(d(lo('.sysLsrw3b')));        C('Shift high byte')#35
+st(d(vTmp))                     #36
+ldzp(d(vAC+1))                  #37
+anda(d(0b11111000))             #38
+ora( d(0b00000011))             #39
+jmpy(busAC)                     #40
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#41
 label('.sysLsrw3b')
-st(d(vAC+1))                    #37
-ldzp(d(sysArgs+1));             C('Transfer bit 8:10')#38
-adda(busAC)                     #39
-adda(busAC)                     #40
-adda(busAC)                     #41
-adda(busAC)                     #42
-adda(busAC)                     #43
-nop()                           #44
-ora(d(vAC)|busRAM)              #45
-st(d(vAC))                      #46
+st(d(vAC+1))                    #45
+ld(d(-52/2))                    #46
 ld(d(hi('REENTER')),regY)       #47
 jmpy(d(lo('REENTER')))          #48
-ld(d(-52/2))                    #49
+#nop()                          #49
 
 label('SYS_LSRW4_50')
-ld(d(hi('shiftTable')),regY);   C('Logical shift right 4 (X >> 4)')#15
+ld(d(hi('shiftTable')),regY);   C('Logical shift right 4 bit (X >> 4)')#15,49
 ld(d(lo('.sysLsrw4a')));        C('Shift low byte')#16
 st(d(vTmp))                     #17
-ldzp(d(sysArgs+0))              #18
+ldzp(d(vAC))                    #18
 anda(d(0b11110000))             #19
 ora( d(0b00000111))             #20
 jmpy(busAC)                     #21
 bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw4a')
 st(d(vAC))                      #26
-ld(d(lo('.sysLsrw4b')));        C('Shift high byte')#27
-st(d(vTmp))                     #28
-ldzp(d(sysArgs+1))              #29
-anda(d(0b11110000))             #30
-ora( d(0b00000111))             #31
-jmpy(busAC)                     #32
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#33
+ldzp(d(vAC+1));                 C('Transfer bit 8:11')#27
+adda(busAC)                     #28
+adda(busAC)                     #29
+adda(busAC)                     #30
+adda(busAC)                     #31
+ora(d(vAC)|busRAM)              #32
+st(d(vAC))                      #33
+ld(d(lo('.sysLsrw4b')));        C('Shift high byte')#34
+st(d(vTmp))                     #35
+ldzp(d(vAC+1))                  #36
+anda(d(0b11110000))             #37
+ora( d(0b00000111))             #38
+jmpy(busAC)                     #39
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#40
 label('.sysLsrw4b')
-st(d(vAC+1))                    #37
-ldzp(d(sysArgs+1));             C('Transfer bit 8:11')#38
-adda(busAC)                     #39
-adda(busAC)                     #40
-adda(busAC)                     #41
-adda(busAC)                     #42
-ora(d(vAC)|busRAM)              #43
-st(d(vAC))                      #44
+st(d(vAC+1))                    #44
 ld(d(hi('REENTER')),regY)       #45
 jmpy(d(lo('REENTER')))          #46
 ld(d(-50/2))                    #47
 
 label('SYS_LSRW5_50')
-ld(d(hi('shiftTable')),regY);   C('Logical shift right 5 (X >> 5)')#15
+ld(d(hi('shiftTable')),regY);   C('Logical shift right 5 bit (X >> 5)')#15
 ld(d(lo('.sysLsrw5a')));        C('Shift low byte')#16
 st(d(vTmp))                     #17
-ldzp(d(sysArgs+0))              #18
+ldzp(d(vAC))                    #18
 anda(d(0b11100000))             #19
 ora( d(0b00001111))             #20
 jmpy(busAC)                     #21
 bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw5a')
 st(d(vAC))                      #26
-ld(d(lo('.sysLsrw5b')));        C('Shift high byte')#27
-st(d(vTmp))                     #28
-ldzp(d(sysArgs+1))              #29
-anda(d(0b11100000))             #30
-ora( d(0b00001111))             #31
-jmpy(busAC)                     #32
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#33
+ldzp(d(vAC+1));             C('Transfer bit 8:13')#27
+adda(busAC)                     #28
+adda(busAC)                     #29
+adda(busAC)                     #30
+ora(d(vAC)|busRAM)              #31
+st(d(vAC))                      #32
+ld(d(lo('.sysLsrw5b')));        C('Shift high byte')#33
+st(d(vTmp))                     #34
+ldzp(d(vAC+1))                  #35
+anda(d(0b11100000))             #36
+ora( d(0b00001111))             #37
+jmpy(busAC)                     #38
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#39
 label('.sysLsrw5b')
-st(d(vAC+1))                    #37
-ldzp(d(sysArgs+1));             C('Transfer bit 8:13')#38
-adda(busAC)                     #39
-adda(busAC)                     #40
-adda(busAC)                     #41
-nop()                           #42
-ora(d(vAC)|busRAM)              #43
-st(d(vAC))                      #44
-ld(d(hi('REENTER')),regY)       #45
-jmpy(d(lo('REENTER')))          #46
-ld(d(-50/2))                    #47
+st(d(vAC+1))                    #44
+ld(d(-50/2))                    #45
+ld(d(hi('REENTER')),regY)       #46
+jmpy(d(lo('REENTER')))          #47
+#nop()                          #48
 
 label('SYS_LSRW6_48')
-ld(d(hi('shiftTable')),regY);   C('Logical shift right 6 (X >> 6)')#15
+ld(d(hi('shiftTable')),regY);   C('Logical shift right 6 bit (X >> 6)')#15,44
 ld(d(lo('.sysLsrw6a')));        C('Shift low byte')#16
 st(d(vTmp))                     #17
-ldzp(d(sysArgs+0))              #18
+ldzp(d(vAC))                    #18
 anda(d(0b11000000))             #19
 ora( d(0b00011111))             #20
 jmpy(busAC)                     #21
 bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw6a')
 st(d(vAC))                      #26
-ld(d(lo('.sysLsrw6b')));        C('Shift high byte')#27
-st(d(vTmp))                     #28
-ldzp(d(sysArgs+1))              #29
-anda(d(0b11000000))             #30
-ora( d(0b00011111))             #31
-jmpy(busAC)                     #32
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#33
+ldzp(d(vAC+1));                 C('Transfer bit 8:13')#27
+adda(busAC)                     #28
+adda(busAC)                     #29
+ora(d(vAC)|busRAM)              #30
+st(d(vAC))                      #31
+ld(d(lo('.sysLsrw6b')));        C('Shift high byte')#32
+st(d(vTmp))                     #33
+ldzp(d(vAC+1))                  #34
+anda(d(0b11000000))             #35
+ora( d(0b00011111))             #36
+jmpy(busAC)                     #37
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#38
 label('.sysLsrw6b')
-st(d(vAC+1))                    #37
-ldzp(d(sysArgs+1));             C('Transfer bit 8:13')#38
-adda(busAC)                     #39
-adda(busAC)                     #40
-ora(d(vAC)|busRAM)              #41
-st(d(vAC))                      #42
+st(d(vAC+1))                    #42
 ld(d(hi('REENTER')),regY)       #43
 jmpy(d(lo('REENTER')))          #44
 ld(d(-48/2))                    #45
 
 label('SYS_LSLW4_46')
-ld(d(hi('shiftTable')),regY);   C('Logical shift left 4 (X << 4)')#15
+ld(d(hi('shiftTable')),regY);   C('Logical shift left 4 bit (X << 4)')#15
 ld(d(lo('.sysLsrl4')))          #16
 st(d(vTmp))                     #17
-ldzp(d(sysArgs+0))              #18
-anda(d(0b11110000))             #19
-ora( d(0b00000111))             #20
-jmpy(busAC)                     #21
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
+ldzp(d(vAC+1))                  #18
+adda(busAC)                     #19
+adda(busAC)                     #20
+adda(busAC)                     #21
+adda(busAC)                     #22
+st(d(vAC+1))                    #23
+ldzp(d(vAC))                    #24
+anda(d(0b11110000))             #25
+ora( d(0b00000111))             #26
+jmpy(busAC)                     #27
+bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#28
 label('.sysLsrl4')
-st(d(vAC+1))                    #26
-ldzp(d(sysArgs+1))              #27
-adda(busAC)                     #28
-adda(busAC)                     #29
-adda(busAC)                     #30
-adda(busAC)                     #31
 ora(d(vAC+1),busRAM)            #32
 st(d(vAC+1))                    #33
-ldzp(d(sysArgs+0))              #34
+ldzp(d(vAC))                    #34
 adda(busAC)                     #35
 adda(busAC)                     #36
 adda(busAC)                     #37
 adda(busAC)                     #38
-ora(d(vAC),busRAM)              #39
-st(d(vAC))                      #40
+st(d(vAC))                      #39
+ld(d(-46/2))                    #40
 ld(d(hi('REENTER')),regY)       #41
 jmpy(d(lo('REENTER')))          #42
-ld(d(-46/2))                    #43
+#nop()                          #43
 
 #-----------------------------------------------------------------------
 # Extension SYS_Read3_40: Read 3 consecutive bytes from ROM
@@ -2220,7 +2219,7 @@ ld(d(-46/2))                    #43
 # sysArgs[6:7]  ROM pointer (input)
 
 label('SYS_Read3_40')
-ld(d(sysArgs+7),busRAM|regY)    #15
+ld(d(sysArgs+7),busRAM|regY)    #15,32
 jmpy(d(128-7))                  #16 trampoline3a
 ldzp(d(sysArgs+6))              #17
 label('txReturn')

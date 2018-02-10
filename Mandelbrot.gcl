@@ -40,7 +40,7 @@ $0300:
   0 B- [if>0 B= sign 1^ sign=]
 
   {Multiply}
-  7 shift= {Maximum renormalisation shift pending}
+  7 shift= {Maximum pending normalisation shift}
   \SYS_LSRW1_48 \sysFn=
   $200
   [do
@@ -50,7 +50,7 @@ $0300:
     else
       {Shift prematurely in an attempt to avoid overflow, this is where
        the algorithm loses some accuracy}
-      B \sysArgs0= 48! {ShiftRight} B=
+      B 48! {ShiftRight} B=
       shift 1- shift=]
 
     {Add partial product}
@@ -58,12 +58,12 @@ $0300:
       A=
       C B+ C=]
 
-    bit \sysArgs0= 48! {ShiftRight} if<>0loop]
+    bit 48! {ShiftRight} if<>0loop]
 
-  {Shift word right, like a barrel shifter}
-  shift 4& [if<>0 \SYS_LSRW4_50 \sysFn= C \sysArgs0= 50! C=]
-  shift 2& [if<>0 \SYS_LSRW2_52 \sysFn= C \sysArgs0= 52! C=]
-  shift 1& [if<>0 \SYS_LSRW1_48 \sysFn= C \sysArgs0= 48! C=]
+  {Normalise by shifting the word right, like a barrel shifter}
+  shift 4& [if<>0 \SYS_LSRW4_50 \sysFn= {Shift Right 4} C 50! C=]
+  shift 2& [if<>0 \SYS_LSRW2_52 \sysFn= {Shift Right 2} C 52! C=]
+  shift 1& [if<>0 \SYS_LSRW1_48 \sysFn= {Shift Right 1} C 48! C=]
 
   {Apply sign to return value}
   sign [if<>0 0 C- else C]
@@ -162,7 +162,7 @@ $0500:
     32 [do
       i=
       p, 63& i- [if>=0 p. i 21& [if<>0 1 else 2] Level+ Level=]
-      i \sysArgs0= 48! {ShiftRight}
+      i 48! {ShiftRight}
       if>0loop]
     {Level in 0..9}
     p. {Paint it black}
@@ -232,12 +232,12 @@ $0600:
 
 { Main }
 [do
-  -180 Y0= -320 X0= 3 Step= CalcSet!    {Global 1263.272 seconds}
-  -148 Y0=  -98 X0= 1 Step= CalcSet!    {Zoom1  2392.117 seconds}
-   -60 Y0= -256 X0= 1 Step= CalcSet!    {Zoom2  2301.905 seconds}
-  -320 Y0= -360 X0= 9 Step= CalcSet!    {Wide    389.910 seconds}
-     0 Y0= -100 X0= 1 Step= CalcSet!    {Zoom3  2635.845 seconds}
-   -60 Y0=    0 X0= 1 Step= CalcSet!    {Zoom4  1586.092 seconds}
+  -180 Y0= -320 X0= 3 Step= CalcSet!    {Global 1217.441 seconds}
+  -148 Y0=  -98 X0= 1 Step= CalcSet!    {Zoom1  2304.389 seconds}
+   -60 Y0= -256 X0= 1 Step= CalcSet!    {Zoom2  2218.328 seconds}
+  -320 Y0= -360 X0= 9 Step= CalcSet!    {Wide    375.422 seconds}
+     0 Y0= -100 X0= 1 Step= CalcSet!    {Zoom3  2540.798 seconds}
+   -60 Y0=    0 X0= 1 Step= CalcSet!    {Zoom4  1528.291 seconds}
   loop]
 
 {-----------------------------------------------------------------------+
