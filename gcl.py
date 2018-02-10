@@ -3,6 +3,11 @@
 from asm import *
 import sys
 
+# XXX Notation for local variabled (12++, 12--, 10%=, 10%)
+# XXX Give warning for redefining a label
+# XXX Make dot-labels local ('.loop:')
+# XXX Make inline vCPU assembly possible
+# XXX Notation for POKEW/PEEKW
 # XXX Give a warning when starting new block after calls were made
 # XXX Give warning when def-block contains 'call' put no 'push'
 # XXX Give warning when def-block contains code but no 'ret'
