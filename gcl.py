@@ -210,7 +210,7 @@ class Program:
             self.opcode('LDWI')
             self.emit( con    &0xff)
             self.emit((con>>8)&0xff)
-      elif op == ';' and con:
+      elif op == ';' and con is not None:
           self.opcode('LDW')
           self.emit(con)
       elif op == ':' and con is not None: # XXX Replace with automatic allocation ('page')
@@ -218,7 +218,7 @@ class Program:
       elif op == '=' and var:
           self.opcode('STW')
           self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '=' and con:
+      elif op == '=' and con is not None:
           self.opcode('STW')
           self.emit(con)
       elif op == '+' and var:
@@ -233,20 +233,41 @@ class Program:
       elif op == '-' and con is not None:
           self.opcode('SUBI')
           self.emit(con)
-      elif op == '<<' and con:
+      elif op == '<<' and con is not None:
           for i in range(con):
             self.opcode('LSLW')
+      elif op == '--' and con is not None:
+          self.opcode('ALLOC')
+          self.emit(-con&255)
+      elif op == '++' and con is not None:
+          self.opcode('ALLOC')
+          self.emit(con)
+      elif op == '%=' and con is not None:
+          self.opcode('STLW')
+          self.emit(con)
+      elif op == '%' and con is not None:
+          self.opcode('LDLW')
+          self.emit(con)
       elif op == '#' and con is not None:
           self.emit(con & 255)
       elif op == '?' and con is not None:
           self.opcode('LUP')
           self.emit(con)
+      elif op == '&' and var:
+          self.opcode('ANDW')
+          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
       elif op == '&' and con is not None:
           self.opcode('ANDI')
           self.emit(con)
+      elif op == '|' and var:
+          self.opcode('ORW')
+          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
       elif op == '|' and con is not None:
           self.opcode('ORI')
           self.emit(con)
+      elif op == '^' and var:
+          self.opcode('XORW')
+          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
       elif op == '^' and con is not None:
           self.opcode('XORI')
           self.emit(con)
@@ -272,13 +293,13 @@ class Program:
       elif op == '<++' and var:
           self.opcode('INC')
           self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '<++' and con:
+      elif op == '<++' and con is not None:
           self.opcode('INC')
           self.emit(con)
       elif op == '>++' and var:
           self.opcode('INC')
           self.emit(self.getAddress(var)+1, '%04x %s+1' % (prev(self.vPC, 1), repr(var)))
-      elif op == '>++' and con:
+      elif op == '>++' and con is not None:
           self.opcode('INC')
           self.emit(con+1)
       elif op == '<,' and var:
@@ -290,7 +311,7 @@ class Program:
       elif op == '!' and var:
           self.opcode('CALL')
           self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '!' and con:
+      elif op == '!' and con is not None:
           if con&1:
             self.error('Invalid value %s (must be even)' % repr(con))
           minSYS, maxSYS = symbol('$minSYS'), symbol('$maxSYS')

@@ -15,7 +15,6 @@
 #  Hopefully in ROM v1
 #  XXX Audio: Move shift table to page 7, then add waveform synthesis [ROMv1]
 #  XXX Perhaps SYS_Exec_88 shouldn't set vLR [ROMv1]
-#  XXX SYS: n-Queens to test logic functions[ROMv1]
 #
 #  After ROM v1 release
 #  XXX Readability of asm.py instructions, esp. make d() implicit

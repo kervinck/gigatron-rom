@@ -98,6 +98,7 @@ X+ X-                   Add/subtract variable X to/from vAC
 i+ i-                   Add/subtract small constant to/from vAC
 i<<                     Shift vAC i bits left
 i& i| i^                Logical AND/OR/XOR vAC with small constant
+X& X| X^                Logical AND/OR/XOR vAC with variable X
 X<. X>.                 Store vAC as byte into the low/high byte of variable X
 X<, X>,                 Read low/high byte of variable X
 X<++ X>++               Increment low/high byte of variable X
