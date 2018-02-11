@@ -3,7 +3,6 @@
 from asm import *
 import sys
 
-# XXX Notation for local variabled (12++, 12--, 10%=, 10%)
 # XXX Give warning for redefining a label
 # XXX Make dot-labels local ('.loop:')
 # XXX Make inline vCPU assembly possible
@@ -13,6 +12,7 @@ import sys
 # XXX Give warning when def-block contains code but no 'ret'
 # XXX Primitive or macro to clear just lower byte of vAC
 # XXX Give warning when not all comments are closed
+# XXX Give warning when a variable is not both written and read 
 # XXX Macros
 # XXX 'page' macro
 
