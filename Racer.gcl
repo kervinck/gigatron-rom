@@ -322,11 +322,11 @@ $0500:
 [def {PlayEngineSound}
 
   {High key is Speed[7:14]}
-  $01fb {keyH} p= Speed Speed+ \vACH,
+  $01fd {keyH} p= Speed Speed+ \vACH,
   p. p>++ p. p>++ p. p>++ p. {Sound channel 1-4}
 
   {Low key is Speed[0:6]}
-  $01fa {keyL} p= Speed 127&
+  $01fc {keyL} p= Speed 127&
   p. p>++ p. p>++ p. p>++ p. {Sound channel 1-4}
 
   60 \soundTimer= {Keep sound for another second}

@@ -228,11 +228,10 @@ videoTable = 0x0100 # Indirection table: Y[0] dX[0]  ..., Y[119] dX[119]
 # Highest bytes are for channel 1 variables
 
 # Sound synthesis  ch1   ch2   ch3   ch4
-wavX = 249
-keyL = 250
-keyH = 251
-     # 252 reserved for shift table
-wavA = 253
+wavA = 250
+wavX = 251
+keyL = 252
+keyH = 253
 oscL = 254
 oscH = 255
 
@@ -417,7 +416,7 @@ suba(val(0x5a-1))
 st(d(bootCheck))
 
 # vCPU reset handler
-vReset = videoTable + 240 # we have 9 unused bytes behind the video table
+vReset = videoTable + 240 # we have 10 unused bytes behind the video table
 ld(val((vReset&255)-2));     C('Setup vCPU reset handler')
 st(d(vPC))
 adda(val(2),regX)

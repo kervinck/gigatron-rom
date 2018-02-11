@@ -98,13 +98,12 @@ $0300:
   High byte is channel, low byte is note (should be even)
   Reset the oscillators and channel variables }
 [def {SetupChannel}
-  i= 255| 255^ $f9| p=          {Pointer to channel struct}
+  i= 255| 255^ $fa| p=          {Pointer to channel struct}
   i<, i=                        {Extract note}
+  0 p. p<++                     {.wavA}
   0 p. p<++                     {.wavX}
   \notesTable i+ 0? p. p<++     {.keyL}
   \notesTable i+ 1? p. p<++     {.keyH}
-  p<++                          {Reserved for use by shift table}
-  0 p. p<++                     {.wavA}
   p. p<++                       {.oscL}
   p.                            {.oscH}
   ret

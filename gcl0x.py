@@ -51,7 +51,7 @@ class Program:
       putInRomTable(lo('$%s.seg.%d' % (self.name, self.segId)), '| Length (1..256)')
     self.segStart = address
     page = address & ~255
-    self.segEnd = page + (249 if page <= 0x400 else 256)
+    self.segEnd = page + (250 if page <= 0x400 else 256)
     self.vPC = self.segStart
 
   def thisBlock(self):
