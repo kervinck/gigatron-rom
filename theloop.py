@@ -13,7 +13,7 @@
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #  Hopefully in ROM v1
-#  XXX Audio: Move shift table to page 7, then add waveform synthesis [ROMv1]
+#  XXX Audio: Add waveform synthesis [ROMv1]
 #
 #  After ROM v1 release
 #  XXX Readability of asm.py instructions, esp. make d() implicit
@@ -242,7 +242,7 @@ oscH = 255
 #
 #-----------------------------------------------------------------------
 
-audioTable = 0x0200
+audioTable = 0x0700
 
 #-----------------------------------------------------------------------
 #
@@ -250,7 +250,7 @@ audioTable = 0x0200
 #
 #-----------------------------------------------------------------------
 
-vCpuStart = 0x0300
+vCpuStart = 0x0200
 
 #-----------------------------------------------------------------------
 #  Memory layout

@@ -73,9 +73,9 @@ gcl0x
 ] PrintArrow=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 4                                      |
+|}\vLR>++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
-$0400:
+$0300:
 
 [def
   9# $53# $6e# $61# $6b# $65# 10#                          {Snake}
@@ -114,19 +114,25 @@ $0400:
   pop ret
 ] WipeOutArrow=
 
-120 \soundTimer.
+[def {PrintMenu}
+  push
+  42 {Grey}   Color= PrintDivider!
+  15 {Yellow} Color= MainMenu PrintText!
+  42 {Grey}   Color= PrintDivider!
+                     HelpText PrintText!
+  pop ret
+] PrintMenu=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 5                                      |
+|}\vLR>++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
-$0500:
+$0400:
+
+120 \soundTimer.
 
 { Print menu }
 $2000 Pos=
-42 {Grey}   Color= PrintDivider!
-15 {Yellow} Color= MainMenu PrintText!
-42 {Grey}   Color= PrintDivider!
-                   HelpText PrintText!
+PrintMenu!
 
 { Operate menu }
 0 Item=
@@ -176,7 +182,7 @@ Pos>, q= {Y position of current cursor}
   255& 160^ if<>0loop]
 
 { Load and start the selected program }
-Program \sysArgs0= $300 \vLR= \SYS_Exec_88 \sysFn= 88!
+Program \sysArgs0= $200 \vLR= \SYS_Exec_88 \sysFn= 88!
 
 {-----------------------------------------------------------------------+
 |                                                                       |

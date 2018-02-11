@@ -39,24 +39,27 @@ theloop.2.rom                   ROM file for 27C1024 (PCB versions)
 Memory map (RAM)
 ================
 ```
-             +------------------------------------+---------------------+
-page 0       | System and program variables     <-|-> vCPU stack at top |
-             +------------------------------+-----+--+------------------+
+              0          47 48
+             +-------------+----------------------+---------------------+
+page 0       | System data | Program variables  <-|-> vCPU stack at top |
+             +-------------+----------------+-----+--+------------------+
 page 1       | Video table               239| vReset | Channel 1 at top |
              +------------------------------+--------+------------------+
-page 2       | Shift table for sound                 | Channel 2 at top |
-             +---------------------------------------+------------------+
-page 3       | vCPU code                          248| Channel 3 at top |
+page 2       | vCPU code                          248| Channel 2 at top |
+             |                                       +------------------+
+page 3       |                                       | Channel 3 at top |
              |                                       +------------------+
 page 4       |                                       | Channel 4 at top |
              |                                       +------------------+
-page 5-7     |                                                          |
-             =                                                          =
-             |0                       159 160                        255|
+page 5-6     |                                        249            255|
+             |                                                          |
+             |                                                          |
+             +----------------------------------------------------------+
+page 7       | Sound tables                                             |
              +---------------------------+------------------------------+
-page 8-127   | 120 lines of 160 pixels   | Extra video/code/data at top |
+page 8-127   |0                       159|160                        255|
+             | 120 lines of 160 pixels   | Extra video/code/data at top |
              | Default video memory      |                              |
-             |                           |                              |
              =                           =                              =
              |                           |                              |
              +---------------------------+------------------------------+
@@ -168,7 +171,7 @@ page 6       | SYS functions (LSRW and ohers)                           |
              +----------------------------------------------------------+
 page 7-8     | Font table                                               |
              +----------------------------------------------------------+
-page 9       | Note table                                               |
+page 9       | Notes table                                              |
              +----------------------------------------------------------+
 page 10      | Inversion table                                          |
              +----------------------------------------------------------+

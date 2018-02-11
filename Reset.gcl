@@ -63,11 +63,10 @@ Char>, p. p<++ Char p.          {Put decimals into StartupMessage}
   pop ret
 ] DrawText=
 
-$400 \vLR= ret
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 4                                      |
+|}\vLR>++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
-$0400:
+$0300:
 
 { Draw a 5x8 character on screen with the built-in font
   Char must be in the 32-127 range (this is not checked) }
@@ -127,7 +126,7 @@ SetupVideo!
 $812 Pos= StartupMessage Text= DrawText!
 
 { Load and start main program }
-\Main \sysArgs0= $300 \vLR= \SYS_Exec_88 \sysFn= 88!
+\Main \sysArgs0= $200 \vLR= \SYS_Exec_88 \sysFn= 88!
 
 {-----------------------------------------------------------------------+
 |                                                                       |
