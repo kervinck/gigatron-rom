@@ -7,7 +7,7 @@ Files
 theloop.py                      Video/audio/io/interpreter loops
                                 Built-in vCPU applications and data
                                 Execute theloop.py to build ROM files
-gcl.txt                         Gigatron Control Language explanation
+GCL-language.txt                Gigatron Control Language and vCPU explanation
 gtemu.c                         Emulator / executable instruction set definition
 LICENSE                         2-Clause BSD License
 Makefile                        Marcel's Makefile
@@ -19,7 +19,7 @@ Files processed by theloop.py
 ```
 Reset.gcl                       System reset code
 Main.gcl *.gcl                  Application code
-gcl.py                          Module: GCL to vCPU compiler
+gcl0x.py                        Module: GCL to vCPU compiler
 asm.py                          Module: Assembler functions
 font.py                         Module: Gigatron font definition
 Images/Baboon-160x120.rgb       Raw RGB image file (source: Baboon-160x120.png)

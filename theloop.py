@@ -56,7 +56,7 @@ from sys import argv
 from os  import getenv
 
 from asm import *
-import gcl
+import gcl0x as gcl
 import font
 
 # Gigatron clock
