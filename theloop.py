@@ -14,7 +14,6 @@
 #
 #  Hopefully in ROM v1
 #  XXX Audio: Move shift table to page 7, then add waveform synthesis [ROMv1]
-#  XXX Perhaps SYS_Exec_88 shouldn't set vLR [ROMv1]
 #
 #  After ROM v1 release
 #  XXX Readability of asm.py instructions, esp. make d() implicit
@@ -480,6 +479,20 @@ jmpy(d(lo('vBlankStart')))
 ld(val(syncBits))
 
 #-----------------------------------------------------------------------
+# Room for extension
+#-----------------------------------------------------------------------
+
+nop()
+nop()
+nop()
+nop()
+nop()
+nop()
+nop()
+nop()
+nop()
+
+#-----------------------------------------------------------------------
 # Extension SYS_Reset_36: Soft reset
 #-----------------------------------------------------------------------
 
@@ -676,6 +689,8 @@ st(d(vAC+1))                    #24
 ld(d(hi('REENTER')),regY)       #25
 jmpy(d(lo('REENTER')))          #26
 ld(d(-30/2))                    #27
+
+assert pc()&255==0
 
 #-----------------------------------------------------------------------
 #
