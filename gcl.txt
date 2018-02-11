@@ -102,6 +102,9 @@ X& X| X^                Logical AND/OR/XOR vAC with variable X
 X<. X>.                 Store vAC as byte into the low/high byte of variable X
 X<, X>,                 Read low/high byte of variable X
 X<++ X>++               Increment low/high byte of variable X
+i-- i++                 Subtract/add constant value from/to stack pointer
+i%                      Load stack variable at relative byte offset i into vAC
+i%=                     Store vAC on stack at relative byte offset i
 
 Memory
 ------
