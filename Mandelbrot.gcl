@@ -20,6 +20,7 @@ gcl0x
   XXX Convert into a clock application [ROMv1]
 
   Later:
+  XXX Random color offset for each new rendering
   XXX Lookup table for intensity mapping
   XXX Refactor pixel order from what to do with it
   XXX Double vertical resolution by exploiting vertical symmetry
