@@ -108,41 +108,37 @@ Address   Name          Description
 0081-.... -             Program variables
 ....-00ff <stack>
 0100-01ef videoTable
-01f0-01f8 vCpuBoot
-01f9      wavX[1]       Sound channel 1
-01fa      keyL[1]
-01fb      keyH[1]
-01fc      -
-01fd      wavA[1]
+01f0-01f9 vCpuBoot
+01fa      wavA[1]       Sound channel 1
+01fb      wavX[1]
+01fc      keyL[1]
+01fd      keyH[1]
 01fe      oscL[1]
 01ff      oscL[1]
-0200-02f8 audioTable
-02f9      wavX[2]       Sound channel 2
-02fa      keyL[2]
-02fb      keyH[2]
-02fc      audioTable
-02fd      wavA[2]
+0200-02f9 -             vCPU code/data (standard start address)
+02fa      wavA[2]
+02fb      wavX[2]       Sound channel 2
+02fc      keyL[2]
+02fd      keyH[2]
 02fe      oscL[2]
 02ff      oscL[2]
-0300-03f8 -             vCPU code/data (standard start address)
-03f9      wavX[3]       Sound channel 3
-03fa      keyL[3]
-03fb      keyH[3]
-03fc      -
-03fd      wavA[3]
+0300-03f9 -             vCPU code/data
+03fa      wavA[3]       Sound channel 3
+03fb      wavX[3]
+03fc      keyL[3]
+03fd      keyH[3]
 03fe      oscL[3]
 03ff      oscL[3]
-0400-04f8 -             vCPU code/data
-04f9      wavX[4]       Sound channel 4
-04fa      keyL[4]
-04fb      keyH[4]
-04fc      -
-04fd      wavA[4]
+0400-04f9 -             vCPU code/data
+04fa      wavA[4]       Sound channel 4
+04fb      wavX[4]
+04fc      keyL[4]
+04fd      keyH[4]
 04fe      oscL[4]
 04ff      oscL[4]
 0500-05ff -             vCPU code/data
 0600-06ff -             vCPU code/data
-0700-07ff -             vCPU code/data
+0700-07ff soundTable
 0800-089f pixel line 0
 08a0-08ff -             vCPU code/data
 ...

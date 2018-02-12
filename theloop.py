@@ -241,7 +241,7 @@ oscH = 255
 #
 #-----------------------------------------------------------------------
 
-audioTable = 0x0700
+soundTable = 0x0700
 
 #-----------------------------------------------------------------------
 #
@@ -441,7 +441,7 @@ st(d(resetTimer))
 # XXX Everything below should at one point migrate to Reset.gcl
 
 # Init the shift2-right table for sound
-ld(val(audioTable>>8),regY);    C('Setup shift2 table')
+ld(val(soundTable>>8),regY);    C('Setup shift2 table')
 ld(val(0))
 st(d(channel))
 label('.loop')
@@ -742,15 +742,18 @@ ld(busRAM|ea0XregAC)            #11
 adda(d(oscH), busRAM|eaYDregAC) #12
 adda(d(keyH), busRAM|eaYDregAC) #13
 st(d(oscH), busAC|eaYDregAC)    #14
-nop()                           #15 Was: xora [y,wavX]
-nop()                           #16 Was: adda [y,wavA]
-anda(val(0xfc),regX)            #17
-ld(d(audioTable>>8),regY)       #18
-ld(busRAM|eaYXregAC)            #19
-adda(d(sample), busRAM|ea0DregAC)#20
-st(d(sample))                   #21
-wait(26-22)                     #22
-ldzp(d(xout))                   #26
+anda(val(0xfc))                 #15
+xora(d(wavX),busRAM|eaYDregAC)  #16
+ld(busAC,regX)                  #17
+ld(d(wavA),busRAM|eaYDregAC)    #18
+st(d(vTmp))                     #19
+ld(d(soundTable>>8),regY)       #20
+ld(busRAM|eaYXregAC)            #21
+adda(d(vTmp),busRAM|regX)       #22
+ld(busRAM|eaYXregAC)            #23
+adda(d(sample), busRAM|ea0DregAC)#24
+st(d(sample))                   #25
+ldzp(d(xout));                  C('Gets copied to XOUT')#26
 bra(d(nextVideo) | busRAM)      #27
 ld(val(syncBits), regOUT);      C('End horizontal pulse')#28
 
@@ -979,17 +982,20 @@ ld(busRAM|ea0XregAC)            #11
 adda(d(oscH), busRAM|eaYDregAC) #12
 adda(d(keyH), busRAM|eaYDregAC) #13
 st(d(oscH), busAC|eaYDregAC)    #14
-nop()                           #15 Was: xora [y,wavX]
-nop()                           #16 Was: adda [y,wavA]
-anda(val(0b11111100),regX)      #17
-ld(d(audioTable>>8),regY)       #18
-ld(busRAM|eaYXregAC)            #19
-adda(d(sample), busRAM|ea0DregAC)#20
-st(d(sample))                   #21
-wait(26-22)                     #22
-ldzp(d(xout))                   #26
+anda(d(0xfc))                   #15
+xora(d(wavX),busRAM|eaYDregAC)  #16
+ld(busAC,regX)                  #17
+ld(d(wavA),busRAM|eaYDregAC)    #18
+st(d(vTmp))                     #19
+ld(d(soundTable>>8),regY)       #20
+ld(busRAM|eaYXregAC)            #21
+adda(d(vTmp),busRAM|regX)       #22
+ld(busRAM|eaYXregAC)            #23
+adda(d(sample),busRAM|ea0DregAC)#24
+st(d(sample))                   #25
+ldzp(d(xout));                  C('Gets copied to XOUT')#26
 nop()                           #27
-ld(d(videoSync0), busRAM|regOUT);C('End horizontal pulse')#28
+ld(d(videoSync0),busRAM|regOUT);C('End horizontal pulse')#28
 
 # Count through the vertical blank interval until its last scan line
 ldzp(d(videoY))                 #29
@@ -2274,7 +2280,7 @@ def trampoline3b():
 # sysArgs[0:3]  Pixels (output)
 
 label('SYS_Unpack_56')
-ld(val(audioTable>>8),regY)     #15
+ld(val(soundTable>>8),regY)     #15
 ldzp(d(sysArgs+2))              #16 a[2]>>2
 anda(val(0xfc),regX)            #17
 ld(eaYXregAC|busRAM)            #18
