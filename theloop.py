@@ -749,8 +749,10 @@ ld(d(wavA),busRAM|eaYDregAC)    #18
 st(d(vTmp))                     #19
 ld(d(soundTable>>8),regY)       #20
 ld(busRAM|eaYXregAC)            #21
-adda(d(vTmp),busRAM|regX)       #22
-ld(busRAM|eaYXregAC)            #23
+#adda(d(vTmp),busRAM|regX)       #22
+#ld(busRAM|eaYXregAC)            #23
+nop()
+nop()
 adda(d(sample), busRAM|ea0DregAC)#24
 st(d(sample))                   #25
 ldzp(d(xout));                  C('Gets copied to XOUT')#26
@@ -989,8 +991,10 @@ ld(d(wavA),busRAM|eaYDregAC)    #18
 st(d(vTmp))                     #19
 ld(d(soundTable>>8),regY)       #20
 ld(busRAM|eaYXregAC)            #21
-adda(d(vTmp),busRAM|regX)       #22
-ld(busRAM|eaYXregAC)            #23
+#adda(d(vTmp),busRAM|regX)       #22
+#ld(busRAM|eaYXregAC)            #23
+nop()
+nop()
 adda(d(sample),busRAM|ea0DregAC)#24
 st(d(sample))                   #25
 ldzp(d(xout));                  C('Gets copied to XOUT')#26
