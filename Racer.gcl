@@ -9,7 +9,6 @@ gcl0x
 
 {
 ROM v1:
-XXX Blinkenlights unintentionally speed up [ROMv1]
 XXX Improve track indicator [ROMv1]
 XXX Add more interesting camera behavior (DX0) [ROMv1]
 XXX Positioning of "GAME OVER" message [ROMv1]
@@ -329,7 +328,7 @@ $0500:
   $01fc {keyL} p= Speed 127&
   p. p>++ p. p>++ p. p>++ p. {Sound channel 1-4}
 
-  60 \soundTimer= {Keep sound for another second}
+  60 \soundTimer. {Keep sound for another second}
 
   ret
 ] PlayEngineSound=
