@@ -101,7 +101,7 @@ $0300:
   i= 255| 255^ $fa| p=          {Pointer to channel struct}
   i<, i=                        {Extract note}
   0 p. p<++                     {.wavA}
-  0 p. p<++                     {.wavX}
+  3 p. p<++                     {.wavX: 0 "Noise", 1 Triangle, 2 Pulse, 3 Sawtooth}
   \notesTable i+ 0? p. p<++     {.keyL}
   \notesTable i+ 1? p. p<++     {.keyH}
   p. p<++                       {.oscL}

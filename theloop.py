@@ -12,9 +12,6 @@
 #  - Serial input handler
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
-#  Hopefully in ROM v1
-#  XXX Audio: Add waveform synthesis [ROMv1]
-#
 #  After ROM v1 release
 #  XXX Readability of asm.py instructions, esp. make d() implicit
 #  XXX GCL: Prefix notation for high/low byte >X++ instead of X>++
@@ -438,22 +435,69 @@ st(d(serialLast))
 st(d(buttonState))
 st(d(resetTimer))
 
+ld(val(0b0111));                C('LEDs |***O|')
+ld(val(syncBits^hSync),regOUT)
+ld(val(syncBits),regOUT)
+
 # XXX Everything below should at one point migrate to Reset.gcl
 
-# Init the shift2-right table for sound
-ld(val(soundTable>>8),regY);    C('Setup shift2 table')
+# Init sound tables
+ld(val(soundTable>>8),regY);    C('Setup sound tables')
 ld(val(0))
 st(d(channel))
-label('.loop')
-st(d(vAC+0))
-adda(busAC)
-adda(busAC, regX)
-ldzp(d(vAC+0))
-st(eaYXregAC)
+ld(val(0),regX)
+label('.loop0')
+st(d(vTmp));                    C('Noise: T[4x+0] = x (permutate below)')
+st(eaYXregOUTIX)
+anda(d(0x20));                  C('Triangle: T[4x+1] = 2x if x<32 else 127-2x')
+bne(d(lo('.initTri0')))
+ldzp(d(vTmp))
+bra(d(lo('.initTri1')))
+label('.initTri0')
+adda(d(vTmp),busRAM)
+xora(d(127))
+label('.initTri1')
+st(eaYXregOUTIX)
+ldzp(d(vTmp));                  C('Pulse: T[4x+2] = 0 if x<32 else 63')
+anda(d(0x20))
+beq(d(lo('.initPul')))
+ld(d(0))
+ld(d(63))
+label('.initPul')
+st(eaYXregOUTIX)
+ldzp(d(vTmp));                  C('Sawtooth: T[4x+3] = x')
+st(eaYXregOUTIX)
 adda(val(1))
 xora(val(0x40))
-bne(d(lo('.loop')))
+bne(d(lo('.loop0')))
 xora(val(0x40))
+
+ld(d(0));                       C('Permutate noise table T[4i]')
+st(d(vAC+0));                   C('x')
+st(d(vAC+1));                   C('4y')
+label('.loop1')
+ld(d(vAC+1),busRAM|regX);       C('tmp = T[4y]')
+ld(eaYXregAC,busRAM)
+st(d(vTmp))
+ld(d(vAC+0),busRAM);            C('T[4y] = T[4x]')
+adda(busAC)
+adda(busAC,regX)
+ld(eaYXregAC,busRAM)
+ld(d(vAC+1),busRAM|regX)
+st(eaYXregAC)
+adda(busAC);                    C('y += T[4x]')
+adda(busAC)
+adda(d(vAC+1),busRAM)
+st(d(vAC+1))
+ld(d(vAC+0),busRAM);            C('T[x] = tmp')
+adda(busAC)
+adda(busAC,regX)
+ldzp(d(vTmp))
+st(eaYXregAC)
+ldzp(d(vAC+0));                 C('while(++x)')
+adda(d(1))
+bne(d(lo('.loop1')))
+st(d(vAC+0))
 
 # Init LED sequencer
 ld(val(120));                   C('Setup LED sequencer')
@@ -462,10 +506,6 @@ ld(val(60/6))
 st(d(ledTempo))
 ld(val(0))
 st(d(ledState))
-
-ld(val(0b0111));                C('LEDs |***O|')
-ld(val(syncBits^hSync),regOUT)
-ld(val(syncBits),regOUT)
 
 ld(val(0b1111));                C('LEDs |****|')
 ld(val(syncBits^hSync),regOUT)
@@ -477,17 +517,6 @@ ld(d(hi('vBlankStart')),busD|ea0DregY);C('Enter video loop')
 jmpy(d(lo('vBlankStart')))
 ld(val(syncBits))
 
-#-----------------------------------------------------------------------
-# Room for extension
-#-----------------------------------------------------------------------
-
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
 nop()
 nop()
 
@@ -526,6 +555,7 @@ st(d(sysArgs+1))                        #30
 ld(val(hi('REENTER')),regY)             #31
 jmpy(d(lo('REENTER')))                  #32
 ld(val(-36/2))                          #33
+
 
 #-----------------------------------------------------------------------
 # Extension SYS_Exec_88: Load code from ROM into memory and execute it
@@ -646,49 +676,6 @@ ld(val(hi('REENTER')),regY)     #19
 jmpy(d(lo('REENTER')))          #20
 ld(val(-24/2))                  #21
 
-#-----------------------------------------------------------------------
-# Extension SYS_Random_34: Update entropy and copy to vAC
-#-----------------------------------------------------------------------
-
-# This same algorithm runs automatically once per vertical blank.
-# Use this function to get numbers at a higher rate.
-label('SYS_Random_34')
-ldzp(d(frameCount))             #15
-xora(d(entropy+1),busRAM)       #16
-xora(d(serialRaw),busRAM)       #17
-adda(d(entropy+0),busRAM)       #18
-st(d(entropy+0))                #19
-st(d(vAC+0))                    #20
-adda(d(entropy+2),busRAM)       #21
-st(d(entropy+2))                #22
-bmi(d(lo('.sysRnd0')))          #23
-bra(d(lo('.sysRnd1')))          #24
-xora(val(64+16+2+1))            #25
-label('.sysRnd0')
-xora(val(64+32+8+4))            #25
-label('.sysRnd1')
-adda(d(entropy+1),busRAM)       #26
-st(d(entropy+1))                #27
-st(d(vAC+1))                    #28
-ld(val(hi('REENTER')),regY)     #29
-jmpy(d(lo('REENTER')))          #30
-ld(val(-34/2))                  #31
-
-label('SYS_LSRW7_30')
-ldzp(d(vAC))                    #15
-anda(d(128),regX)               #16
-ldzp(d(vAC+1))                  #17
-adda(busAC)                     #18
-ora(ea0XregAC,busRAM)           #19
-st(d(vAC))                      #20
-ldzp(d(vAC+1))                  #21
-anda(d(128),regX)               #22
-ld(ea0XregAC,busRAM)            #23
-st(d(vAC+1))                    #24
-ld(d(hi('REENTER')),regY)       #25
-jmpy(d(lo('REENTER')))          #26
-ld(d(-30/2))                    #27
-
 assert pc()&255==0
 
 #-----------------------------------------------------------------------
@@ -732,31 +719,33 @@ ld(val(syncBits^hSync), regOUT);C('Start horizontal pulse')#4
 
 # Horizontal sync
 label('sound2')
-st(d(channel), busAC|ea0DregY)  #5 Sound
+st(d(channel),busAC|ea0DregY)   #5 Sound
 ld(val(0x7f))                   #6
-anda(d(oscL), busRAM|eaYDregAC) #7
-adda(d(keyL), busRAM|eaYDregAC) #8
-st(d(oscL), busAC|eaYDregAC)    #9
-anda(val(0x80), regX)           #10
+anda(d(oscL),busRAM|eaYDregAC)  #7
+adda(d(keyL),busRAM|eaYDregAC)  #8
+st(d(oscL),busAC|eaYDregAC)     #9
+anda(val(0x80),regX)            #10
 ld(busRAM|ea0XregAC)            #11
-adda(d(oscH), busRAM|eaYDregAC) #12
-adda(d(keyH), busRAM|eaYDregAC) #13
+adda(d(oscH),busRAM|eaYDregAC)  #12
+adda(d(keyH),busRAM|eaYDregAC)  #13
 st(d(oscH), busAC|eaYDregAC)    #14
 anda(val(0xfc))                 #15
 xora(d(wavX),busRAM|eaYDregAC)  #16
 ld(busAC,regX)                  #17
 ld(d(wavA),busRAM|eaYDregAC)    #18
-st(d(vTmp))                     #19
-ld(d(soundTable>>8),regY)       #20
-ld(busRAM|eaYXregAC)            #21
-#adda(d(vTmp),busRAM|regX)       #22
-#ld(busRAM|eaYXregAC)            #23
-nop()
-nop()
+ld(d(soundTable>>8),regY)       #19
+adda(busRAM|eaYXregAC)          #20
+bmi(d(lo('.sound2a')))          #21
+bra(d(lo('.sound2b')))          #22
+anda(d(63))                     #23
+label('.sound2a')
+ld(d(63))                       #23
+label('.sound2b')
 adda(d(sample), busRAM|ea0DregAC)#24
 st(d(sample))                   #25
+
 ldzp(d(xout));                  C('Gets copied to XOUT')#26
-bra(d(nextVideo) | busRAM)      #27
+bra(d(nextVideo)|busRAM)        #27
 ld(val(syncBits), regOUT);      C('End horizontal pulse')#28
 
 # Back porch B: second of 4 repeated scan lines
@@ -973,33 +962,35 @@ label('sound1')
 ldzp(d(channel));               C('Advance to next sound channel')#1
 anda(val(3))                    #2
 adda(val(1))                    #3
-ld(d(videoSync1), busRAM|regOUT);C('Start horizontal pulse')#4
-st(d(channel), busAC|ea0DregY)  #5
+ld(d(videoSync1),busRAM|regOUT) ;C('Start horizontal pulse')#4
+st(d(channel),busAC|ea0DregY)   #5
 ld(val(0x7f))                   ;C('Update sound channel')#6
-anda(d(oscL), busRAM|eaYDregAC) #7
-adda(d(keyL), busRAM|eaYDregAC) #8
+anda(d(oscL),busRAM|eaYDregAC)  #7
+adda(d(keyL),busRAM|eaYDregAC)  #8
 st(d(oscL), busAC|eaYDregAC)    #9
 anda(val(0x80), regX)           #10
 ld(busRAM|ea0XregAC)            #11
-adda(d(oscH), busRAM|eaYDregAC) #12
-adda(d(keyH), busRAM|eaYDregAC) #13
-st(d(oscH), busAC|eaYDregAC)    #14
+adda(d(oscH),busRAM|eaYDregAC)  #12
+adda(d(keyH),busRAM|eaYDregAC)  #13
+st(d(oscH),busAC|eaYDregAC)     #14
 anda(d(0xfc))                   #15
 xora(d(wavX),busRAM|eaYDregAC)  #16
 ld(busAC,regX)                  #17
 ld(d(wavA),busRAM|eaYDregAC)    #18
-st(d(vTmp))                     #19
-ld(d(soundTable>>8),regY)       #20
-ld(busRAM|eaYXregAC)            #21
-#adda(d(vTmp),busRAM|regX)       #22
-#ld(busRAM|eaYXregAC)            #23
-nop()
-nop()
+ld(d(soundTable>>8),regY)       #19
+adda(busRAM|eaYXregAC)          #20
+bmi(d(lo('.sound1a')))          #21
+bra(d(lo('.sound1b')))          #22
+anda(d(63))                     #23
+label('.sound1a')
+ld(d(63))                       #23
+label('.sound1b')
 adda(d(sample),busRAM|ea0DregAC)#24
 st(d(sample))                   #25
+
 ldzp(d(xout));                  C('Gets copied to XOUT')#26
 nop()                           #27
-ld(d(videoSync0),busRAM|regOUT);C('End horizontal pulse')#28
+ld(d(videoSync0),busRAM|regOUT) ;C('End horizontal pulse')#28
 
 # Count through the vertical blank interval until its last scan line
 ldzp(d(videoY))                 #29
@@ -1845,68 +1836,65 @@ ld(val(-26/2))                  #23
 #-----------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
-# Extension SYS_NextByteIn_32
+# Extension SYS_Random_34: Update entropy and copy to vAC
 #-----------------------------------------------------------------------
 
-# sysArgs[0:1] Current address
-# sysArgs[2]   Checksum
-# sysArgs[3]   Wait value (videoY)
-
-label('SYS_NextByteIn_32')
-ldzp(d(videoY))                 #15
-xora(d(sysArgs+3),busRAM)       #16
-bne(d(lo('.sysNbi')))           #17
-ld(d(sysArgs+0),busRAM|regX)    #18
-ld(d(sysArgs+1),busRAM|regY)    #19
-ld(busIN)                       #20
-st(eaYXregAC)                   #21
-adda(d(sysArgs+2),busRAM)       #22
-st(d(sysArgs+2))                #23
-ldzp(d(sysArgs+0))              #24
-adda(d(1))                      #25
-st(d(sysArgs+0))                #26
-ld(val(hi('REENTER')),regY)     #27
-jmpy(d(lo('REENTER')))          #28
-ld(val(-32/2))                  #29
-# Restart instruction
-label('.sysNbi')
-ldzp(d(vPC))                    #19
-suba(d(2))                      #20
-st(d(vPC))                      #21
-ld(val(-28/2))                  #22
-ld(val(hi('REENTER')),regY)     #23
-jmpy(d(lo('REENTER')))          #24
-nop()                           #25
-
-#-----------------------------------------------------------------------
-# Extension SYS_PayloadCopy_34
-#-----------------------------------------------------------------------
-
-# sysArgs[0:1] Source address
-# sysArgs[4]   Copy count
-# sysArgs[5:6] Destination address
-
-label('SYS_PayloadCopy_34')
-ldzp(d(sysArgs+4))              #15 Copy count
-beq(d(lo('.sysCc0')))           #16
-suba(d(1))                      #17
-st(d(sysArgs+4))                #18
-ld(d(sysArgs+0),busRAM|regX)    #19 Current pointer
-ld(d(sysArgs+1),busRAM|regY)    #20
-ld(eaYXregAC,busRAM)            #21
-ld(d(sysArgs+5),busRAM|regX)    #22 Target pointer
-ld(d(sysArgs+6),busRAM|regY)    #23
-st(eaYXregAC)                   #24
-ldzp(d(sysArgs+5))              #25 Increment target
-adda(d(1))                      #26
-st(d(sysArgs+5))                #27
-bra(d(lo('.sysCc1')))           #28
-label('.sysCc0')
-ld(val(hi('REENTER')),regY)     #18,29
-wait(30-19)                     #19
-label('.sysCc1')
+# This same algorithm runs automatically once per vertical blank.
+# Use this function to get numbers at a higher rate.
+label('SYS_Random_34')
+ldzp(d(frameCount))             #15
+xora(d(entropy+1),busRAM)       #16
+xora(d(serialRaw),busRAM)       #17
+adda(d(entropy+0),busRAM)       #18
+st(d(entropy+0))                #19
+st(d(vAC+0))                    #20
+adda(d(entropy+2),busRAM)       #21
+st(d(entropy+2))                #22
+bmi(d(lo('.sysRnd0')))          #23
+bra(d(lo('.sysRnd1')))          #24
+xora(val(64+16+2+1))            #25
+label('.sysRnd0')
+xora(val(64+32+8+4))            #25
+label('.sysRnd1')
+adda(d(entropy+1),busRAM)       #26
+st(d(entropy+1))                #27
+st(d(vAC+1))                    #28
+ld(val(hi('REENTER')),regY)     #29
 jmpy(d(lo('REENTER')))          #30
-ld(d(-34/2))                    #31
+ld(val(-34/2))                  #31
+
+label('SYS_LSRW7_30')
+ldzp(d(vAC))                    #15
+anda(d(128),regX)               #16
+ldzp(d(vAC+1))                  #17
+adda(busAC)                     #18
+ora(ea0XregAC,busRAM)           #19
+st(d(vAC))                      #20
+ldzp(d(vAC+1))                  #21
+anda(d(128),regX)               #22
+ld(ea0XregAC,busRAM)            #23
+st(d(vAC+1))                    #24
+ld(d(hi('REENTER')),regY)       #25
+jmpy(d(lo('REENTER')))          #26
+ld(d(-30/2))                    #27
+
+label('SYS_LSRW8_24')
+ldzp(d(vAC+1))                  #15
+st(d(vAC))                      #16
+ld(d(0))                        #17
+st(d(vAC+1))                    #18
+ld(d(hi('REENTER')),regY)       #19
+jmpy(d(lo('REENTER')))          #20
+ld(d(-24/2))                    #21
+
+label('SYS_LSLW8_24')
+ldzp(d(vAC))                    #15
+st(d(vAC+1))                    #16
+ld(d(0))                        #17
+st(d(vAC))                      #18
+ld(d(hi('REENTER')),regY)       #19
+jmpy(d(lo('REENTER')))          #20
+ld(d(-24/2))                    #21
 
 #-----------------------------------------------------------------------
 # Extension SYS_Draw4_30:
@@ -1964,24 +1952,6 @@ adda(val(8))                    #30+i*14
 ld(val(hi('REENTER')),regY)     #129
 jmpy(d(lo('REENTER')))          #130
 ld(val(-134/2))                 #131
-
-label('SYS_LSRW8_24')
-ldzp(d(vAC+1))                  #15
-st(d(vAC))                      #16
-ld(d(0))                        #17
-st(d(vAC+1))                    #18
-ld(d(hi('REENTER')),regY)       #19
-jmpy(d(lo('REENTER')))          #20
-ld(d(-24/2))                    #21
-
-label('SYS_LSLW8_24')
-ldzp(d(vAC))                    #15
-st(d(vAC+1))                    #16
-ld(d(0))                        #17
-st(d(vAC))                      #18
-ld(d(hi('REENTER')),regY)       #19
-jmpy(d(lo('REENTER')))          #20
-ld(d(-24/2))                    #21
 
 #-----------------------------------------------------------------------
 #  ROM page 5-6: Shift table and code
@@ -2286,7 +2256,7 @@ def trampoline3b():
 label('SYS_Unpack_56')
 ld(val(soundTable>>8),regY)     #15
 ldzp(d(sysArgs+2))              #16 a[2]>>2
-anda(val(0xfc),regX)            #17
+ora(val(0x03),regX)             #17
 ld(eaYXregAC|busRAM)            #18
 st(d(sysArgs+3));               C('-> Pixel 3')#19
 
@@ -2299,9 +2269,9 @@ adda(busAC)                     #25
 st(d(sysArgs+2));               #26
 
 ldzp(d(sysArgs+1))              #27 | a[1]>>4
-anda(val(0xfc),regX)            #28
+ora(val(0x03),regX)             #28
 ld(eaYXregAC|busRAM)            #29
-anda(val(0xfc),regX)            #30
+ora(val(0x03),regX)             #30
 ld(eaYXregAC|busRAM)            #31
 ora(d(sysArgs+2),busRAM)        #32
 st(d(sysArgs+2));               C('-> Pixel 2')#33
@@ -2313,11 +2283,11 @@ adda(busAC)                     #37
 st(d(sysArgs+1))                #38
 
 ldzp(d(sysArgs+0))              #39 | a[0]>>6
-anda(val(0xfc),regX)            #40
+ora(val(0x03),regX)             #40
 ld(eaYXregAC|busRAM)            #41
-anda(val(0xfc),regX)            #42
+ora(val(0x03),regX)             #42
 ld(eaYXregAC|busRAM)            #43
-anda(val(0xfc),regX)            #44
+ora(val(0x03),regX)             #44
 ld(eaYXregAC|busRAM)            #45
 ora(d(sysArgs+1),busRAM)        #46
 st(d(sysArgs+1));               C('-> Pixel 1')#47
@@ -2505,6 +2475,70 @@ st(d(sysArgs+2))                #34
 ld(val(hi('REENTER')),regY)     #35
 jmpy(d(lo('REENTER')))          #36
 ld(val(-40/2))                  #37
+
+#-----------------------------------------------------------------------
+# Extension SYS_NextByteIn_32
+#-----------------------------------------------------------------------
+
+# sysArgs[0:1] Current address
+# sysArgs[2]   Checksum
+# sysArgs[3]   Wait value (videoY)
+
+label('SYS_NextByteIn_32')
+ldzp(d(videoY))                 #15
+xora(d(sysArgs+3),busRAM)       #16
+bne(d(lo('.sysNbi')))           #17
+ld(d(sysArgs+0),busRAM|regX)    #18
+ld(d(sysArgs+1),busRAM|regY)    #19
+ld(busIN)                       #20
+st(eaYXregAC)                   #21
+adda(d(sysArgs+2),busRAM)       #22
+st(d(sysArgs+2))                #23
+ldzp(d(sysArgs+0))              #24
+adda(d(1))                      #25
+st(d(sysArgs+0))                #26
+ld(val(hi('REENTER')),regY)     #27
+jmpy(d(lo('REENTER')))          #28
+ld(val(-32/2))                  #29
+# Restart instruction
+label('.sysNbi')
+ldzp(d(vPC))                    #19
+suba(d(2))                      #20
+st(d(vPC))                      #21
+ld(val(-28/2))                  #22
+ld(val(hi('REENTER')),regY)     #23
+jmpy(d(lo('REENTER')))          #24
+nop()                           #25
+
+#-----------------------------------------------------------------------
+# Extension SYS_PayloadCopy_34
+#-----------------------------------------------------------------------
+
+# sysArgs[0:1] Source address
+# sysArgs[4]   Copy count
+# sysArgs[5:6] Destination address
+
+label('SYS_PayloadCopy_34')
+ldzp(d(sysArgs+4))              #15 Copy count
+beq(d(lo('.sysCc0')))           #16
+suba(d(1))                      #17
+st(d(sysArgs+4))                #18
+ld(d(sysArgs+0),busRAM|regX)    #19 Current pointer
+ld(d(sysArgs+1),busRAM|regY)    #20
+ld(eaYXregAC,busRAM)            #21
+ld(d(sysArgs+5),busRAM|regX)    #22 Target pointer
+ld(d(sysArgs+6),busRAM|regY)    #23
+st(eaYXregAC)                   #24
+ldzp(d(sysArgs+5))              #25 Increment target
+adda(d(1))                      #26
+st(d(sysArgs+5))                #27
+bra(d(lo('.sysCc1')))           #28
+label('.sysCc0')
+ld(val(hi('REENTER')),regY)     #18,29
+wait(30-19)                     #19
+label('.sysCc1')
+jmpy(d(lo('REENTER')))          #30
+ld(d(-34/2))                    #31
 
 #-----------------------------------------------------------------------
 # Extension SYS_LoaderProcessInput_48
