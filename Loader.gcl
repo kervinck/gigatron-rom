@@ -7,28 +7,27 @@ gcl0x
 
 { Setup }
 
+{ Print a 5x8 character on screen with the built-in font
+  Char must be in the 32-127 range (this is not checked) }
 [def {PrintChar}
   Char=
   {Map ASCII code to offset in font table}
-  82- [if<0 50+ i= \font32up
-       else     i= \font82up] fontData= {Select low or high page}
+  Char 82- [if<0 50+ i= \font32up
+            else     i= \font82up] fontData= {Select low or high page}
   i i+ tmp= tmp+ i+    {Multiply by 5}
   fontData+ fontData=  {Add to page address to reach bitmap data for Char}
-  $800 Pos+ q=           {Where to stop the inner drawing loop}
-  {Draw 5 vertical slices}
-  5 [do
-    i=
-    fontData 0? bits= fontData<++
-    Pos p=
-    {Draw vertical slice}
-    [do
-      bits 128& [if=0 32 {Blue} else 15] p.
-      bits bits+ bits= {Shift left}
-      p>++
-      p q- if<0loop]
-    Pos<++
-    i 1- if>0loop]
-  Pos<++ {Skip one slice for spacing}
+  $800 Pos+ q=         {Where to stop the inner drawing loop}
+
+  {Draw 5 vertical slices: 5 using font data}
+  32      \sysArgs0. {Blue}
+  15      \sysArgs1. {Yellow}
+  Pos     \sysArgs4=
+  6+      Pos=
+  \SYS_VDrawBits_134 \sysFn=
+  $fb i= [do
+    fontData 0? fontData<++ \sysArgs2. 134!
+    \sysArgs4<++
+    i<++ i if<>0loop]
   ret
 ] PrintChar=
 

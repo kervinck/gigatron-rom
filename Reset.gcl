@@ -54,45 +54,41 @@ $2f2f Char=                     {Two ASCII counters, both starting at '0'-1}
 [do Char<++  4- if>=0loop]      {Count number of 1K chunks}
 Char>, p. p<++ Char p.          {Put decimals into StartupMessage}
 
-[def {DrawText}
+[def {PrintText}
   push
   [do
     Text, if<>0 Char= Text<++ {while((Char=*Text++)!=0)...}
-    10^ [if=0 Pos<. Pos>, 8+ Pos>. else DrawChar!]
+    10^ [if=0 Pos<. Pos>, 8+ Pos>. else PrintChar!]
     loop]
   pop ret
-] DrawText=
+] PrintText=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
 $0300:
 
-{ Draw a 5x8 character on screen with the built-in font
+{ Print a 5x8 character on screen with the built-in font
   Char must be in the 32-127 range (this is not checked) }
-[def {DrawChar}
+[def {PrintChar}
   {Map ASCII code to offset in font table}
   Char 82- [if<0 50+ i= \font32up
             else     i= \font82up] fontData= {Select low or high page}
   i i+ tmp= tmp+ i+    {Multiply by 5}
   fontData+ fontData=  {Add to page address to reach bitmap data for Char}
   $800 Pos+ q=         {Where to stop the inner drawing loop}
-  {Draw 5 vertical slices}
-  5 [do
-    i=
-    fontData 0? bits= fontData<++
-    Pos p=
-    {Draw vertical slice}
-    [do
-      bits 128& [if<>0 63 {White} p.]
-      bits bits+ bits= {Shift left}
-      p>++
-      p q- if<0loop]
-    Pos<++
-    i 1- if>0loop]
-  Pos<++ {Skip one empty line}
+
+  {Draw 5 vertical slices: 5 using font data}
+  63      \sysArgs1. {White}
+  Pos     \sysArgs4=
+  6+      Pos=
+  \SYS_VDrawBits_134 \sysFn=
+  $fb i= [do
+    fontData 0? fontData<++ \sysArgs2. 134!
+    \sysArgs4<++
+    i<++ i if<>0loop]
   ret
-] DrawChar=
+] PrintChar=
 
 { Play a note on one channel
   High byte is channel, low byte is note (should be even)
@@ -122,7 +118,7 @@ $0300:
 { Now it is safe to call functions }
 SetupAudio!
 SetupVideo!
-$812 Pos= StartupMessage Text= DrawText!
+$812 Pos= StartupMessage Text= PrintText!
 
 { Load and start main program }
 \Main \sysArgs0= $200 \vLR= \SYS_Exec_88 \sysFn= 88!

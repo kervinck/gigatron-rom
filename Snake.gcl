@@ -31,13 +31,9 @@ XXX Increase speed when pressing button
 
 0 HighScore=
 
-[def
-{-
-  DrawChar -- Pos Color Char
-
-  Draw a 5x8 character on screen with the built-in font.
-  `Char' must be in the 32-127 range (this is not checked)
--}
+{ Print a 5x8 character on screen with the built-in font
+  Char must be in the 32-127 range (this is not checked) }
+[def {PrintChar}
   {Map ASCII code to offset in font table}
   Char 82- [if<0 50+ i= \font32up
             else     i= \font82up] fontData= {Select low or high page}
@@ -45,24 +41,22 @@ XXX Increase speed when pressing button
   fontData+ fontData=  {Add to page address to reach bitmap data for Char}
   $800 Pos+ q=         {Where to stop the inner drawing loop}
 
-  {Draw 6 vertical slices: 5 using font data, the last with all-zeros}
-  5 i= [do
-    [if<>0 fontData 0? fontData<++ else 0] bits=
-    Pos p=
-    {Draw vertical slice}
-    [do
-      bits 128& [if=0 BgColor else Color] p.
-      bits bits+ bits=
-      p>++
-      p q- if<0loop]
-    Pos<++
-    i 1- i= if>=0loop]
+  {Draw 5 vertical slices: 5 using font data}
+  BgColor \sysArgs0.
+  Color   \sysArgs1.
+  Pos     \sysArgs4=
+  6+      Pos=
+  \SYS_VDrawBits_134 \sysFn=
+  $fb i= [do
+    fontData 0? fontData<++ \sysArgs2. 134!
+    \sysArgs4<++
+    i<++ i if<>0loop]
   ret
-] DrawChar=
+] PrintChar=
 
 [def
 {-
-  DrawText(Text,Pos)
+  PrintText(Text,Pos)
 
   Draw a zero-terminated text string to the screen.
   Character 10 acts as newline.
@@ -74,10 +68,10 @@ XXX Increase speed when pressing button
     if<>0       {Zero termination}
       Text<++   {Advance text pointer}
       Char 10^ [if=0 Pos<. $800 Pos+ Pos=
-                else DrawChar!]
+                else PrintChar!]
       loop]
   pop ret
-] DrawText=
+] PrintText=
 
 [def
    $47# $69# $67# $61# $74# $72# $6f# $6e# 0# {Gigatron}
@@ -126,7 +120,7 @@ $0300:
     $47# $41# $4d# $45# $20# $4f# $56# $45# $52# 0# {GAME OVER}
   ] Text=
   4 BgColor=
-  DrawText!
+  PrintText!
   Score HighScore- [if>0
     Score HighScore=
     30 Color= DrawHighScore!
@@ -153,7 +147,7 @@ $0300:
   8 {Green} Color=
   0 BgColor=
   $800 Pos= ClearScreen!
-  $838 Pos= Title Text= DrawText!
+  $838 Pos= Title Text= PrintText!
   60 Delay= Wait!
 
   pop ret
@@ -352,12 +346,12 @@ $0600:
   $4432 Pos= 3 {Red} Color=
   [def
     $47# $45# $54# $20# $52# $45# $41# $44# $59# $21# 0# {GET READY!}
-  ] Text= DrawText!
+  ] Text= PrintText!
   60 Delay= Wait!
   $4432 Pos=
   [def
     $20# $20# $20# $20# $20# $20# $20# $20# $20# $20# 0#
-  ] Text= DrawText!
+  ] Text= PrintText!
 
   {Place snake}
   $4430 Head= Tail=
@@ -397,7 +391,7 @@ $08a0:
     {Switch to autopilot when reaching this position}
     30 {XXX} Color=
     $0802 Pos=
-    [def $41# $55# $54# $4f# 0#{AUTO}] Text= DrawText!
+    [def $41# $55# $54# $4f# 0#{AUTO}] Text= PrintText!
     AutoControl Control= call
   else
     {Disable launch control once a button is pressed}
@@ -432,10 +426,10 @@ $09a0:
         Char<++
         loop
     ]
-    DrawChar!
+    PrintChar!
     $30 Char=
   else
-    DrawChar!
+    PrintChar!
   ]
   pop ret
 ] DrawNextDigit=
@@ -483,7 +477,7 @@ $0ba0:
 [def
   push
   $874 Pos= 0 BgColor=
-  [def $48# $49# $20# 0# {HI }] Text= DrawText!
+  [def $48# $49# $20# 0# {HI }] Text= PrintText!
   HighScore Value= DrawNumber4!
   pop ret
 ] DrawHighScore=

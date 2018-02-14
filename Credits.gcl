@@ -15,7 +15,7 @@ gcl0x
 
 [def
 {-
-  DrawText(Text,Pos)
+  PrintText(Text,Pos)
 
   Draw a zero-terminated text string to the screen.
   Character 10 acts as newline.
@@ -27,10 +27,10 @@ gcl0x
     if<>0       {Zero termination}
       Text<++   {Advance text pointer}
       Char 10^ [if=0 Pos<. $800 Pos+ Pos=
-                else DrawChar!]
+                else PrintChar!]
       loop]
   pop ret
-] DrawText=
+] PrintText=
 
 [def {Message}
  $54# $68# $69# $73# $20# $47# $69# $67# $61# $74# $72# $6f# $6e#
@@ -97,13 +97,9 @@ $0300:
 +-----------------------------------------------------------------------}
 $0400:
 
-[def
-{-
-  DrawChar(Char)
-
-  Draw a 5x8 character on screen with the built-in font.
-  `Char' must be in the 32-127 range (this is not checked)
--}
+{ Print a 5x8 character on screen with the built-in font
+  Char must be in the 32-127 range (this is not checked) }
+[def {PrintChar}
   {Map ASCII code to offset in font table}
   Char 82- [if<0 50+ i= \font32up
             else     i= \font82up] fontData= {Select low or high page}
@@ -111,20 +107,17 @@ $0400:
   fontData+ fontData=  {Add to page address to reach bitmap data for Char}
   $800 Pos+ q=         {Where to stop the inner drawing loop}
 
-  {Draw 6 vertical slices: 5 using font data, the last with all-zeros}
-  5 i= [do
-    [if<>0 fontData 0? fontData<++ else 0] bits=
-    Pos p=
-    {Draw vertical slice}
-    [do
-      bits 128& [if=0 0 {Black} else Color] p.
-      bits bits+ bits=
-      p>++
-      p q- if<0loop]
-    Pos<++
-    i 1- i= if>=0loop]
+  {Draw 5 vertical slices: 5 using font data}
+  Color   \sysArgs1.
+  Pos     \sysArgs4=
+  6+      Pos=
+  \SYS_VDrawBits_134 \sysFn=
+  $fb i= [do
+    fontData 0? fontData<++ \sysArgs2. 134!
+    \sysArgs4<++
+    i<++ i if<>0loop]
   ret
-] DrawChar=
+] PrintChar=
 
 {--- Setup ---}
 
@@ -135,8 +128,8 @@ $800 Pos= ClearScreen!
  62 Color= {Pen color}
  [do
    $800 Pos= {Pen position at top of screen}
-   Part1 Text= DrawText!
-   Part2 Text= DrawText!
+   Part1 Text= PrintText!
+   Part2 Text= PrintText!
    240 Delay= Wait!
    Color 8^ if<>0 Color 9- Color= loop]
 

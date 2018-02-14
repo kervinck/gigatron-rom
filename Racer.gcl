@@ -34,7 +34,7 @@ XXX Image compression?
  http://www.extentofthejam.com/pseudo/
 }
 
-[def {QDrawChar -- Pos Color Char
+[def {QPrintChar -- Pos Color Char
 
   Draw a 5x8 character on screen with the built-in font.
   `Char' must be in the 32-127 range (this is not checked)
@@ -55,7 +55,7 @@ XXX Image compression?
     \sysArgs4<++
     i<++ i if<>0loop]
   Pos ret
-] QDrawChar=
+] QPrintChar=
 
 [def {ControlRaceCar}
   {Update time with actual elapsed frames}
@@ -227,12 +227,12 @@ $0400:
    overall timekeeping error is within the tolerances of the crystal itself.}
   3599 Radix= ExtractDigit!
        {\sysArgs7, $30+ Char= {Show frame speed for debugging}}
-       Prev3 Char- [if<>0 Char Prev3= QDrawChar! else Pos] 12+ Pos=
+       Prev3 Char- [if<>0 Char Prev3= QPrintChar! else Pos] 12+ Pos=
    600 Radix= ExtractDigit!
-       Prev2 Char- [if<>0 Char Prev2= QDrawChar! else Pos]  6+ Pos=
+       Prev2 Char- [if<>0 Char Prev2= QPrintChar! else Pos]  6+ Pos=
     60 Radix= ExtractDigit!
-       Prev1 Char- [if<>0 Char Prev1= QDrawChar! else Pos] 12+ Pos=
-     6 Radix= ExtractDigit! QDrawChar!
+       Prev1 Char- [if<>0 Char Prev1= QPrintChar! else Pos] 12+ Pos=
+     6 Radix= ExtractDigit! QPrintChar!
   pop ret
 ] DrawTime=
 
@@ -242,7 +242,7 @@ $0400:
 $0500:
 
 [def {
-  DrawText(Text,Pos)
+  PrintText(Text,Pos)
 
   Draw a zero-terminated text string to the screen.
   There is no check for running off screen.
@@ -252,10 +252,10 @@ $0500:
     Text, Char= {Next character to be printed}
     if<>0       {Zero termination}
       Text<++   {Advance text pointer}
-      QDrawChar! 6+ Pos=
+      QPrintChar! 6+ Pos=
       loop]
   pop ret
-] DrawText=
+] PrintText=
 
 [def {DrawRoad}
   $74d0 p=                      {array[48], in display memory but out of view}
@@ -514,9 +514,9 @@ $0ba0:
     \sysArgs4, 160^ if<>0loop]
 
   63 Color=
-  $801 Pos= EmptyTimeText Text= DrawText!
-  $87c Pos= EmptyTimeText Text= DrawText!
-  $838 Pos= GigatronText  Text= DrawText!
+  $801 Pos= EmptyTimeText Text= PrintText!
+  $87c Pos= EmptyTimeText Text= PrintText!
+  $838 Pos= GigatronText  Text= PrintText!
   60 Delay= Wait!
 
   pop ret
@@ -586,7 +586,7 @@ Intro!
     $47# $41# $4d# $45# $20# $4f# $56# $45# $52# 0# {GAME OVER}
   ] Text=
   15 Color=
-  DrawText!
+  PrintText!
 
   240 Delay= Wait!
 
