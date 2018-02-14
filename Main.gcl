@@ -8,8 +8,7 @@ gcl0x
 +-----------------------------------------------------------------------}
 
 {
-  XXX Accelerated text drawing
-  XXX Logo drawing
+  XXX Gigatron logo drawing
 }
 
 { Print a 5x8 character on screen with the built-in font
