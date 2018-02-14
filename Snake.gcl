@@ -9,7 +9,6 @@ gcl0x
 
 {
 ROM v1:
-XXX Don't allow reversing, for playability [ROMv1]
 XXX Rising tones [ROMv1]
 
 Maybe:
@@ -53,15 +52,9 @@ XXX Increase speed when pressing button
   ret
 ] PrintChar=
 
-[def
-{-
-  PrintText(Text,Pos)
-
-  Draw a zero-terminated text string to the screen.
-  Character 10 acts as newline.
-  There is no check for running off screen.
--}
+[def {PrintText}
   push
+  Text=
   [do
     Text, Char= {Next character to be printed}
     if<>0       {Zero termination}
@@ -115,11 +108,10 @@ $0300:
 -}
   push
   $4435 Pos=
+  4 BgColor=
   [def
     $47# $41# $4d# $45# $20# $4f# $56# $45# $52# 0# {GAME OVER}
-  ] Text=
-  4 BgColor=
-  PrintText!
+  ] PrintText!
   Score HighScore- [if>0
     Score HighScore=
     30 Color= DrawHighScore!
@@ -145,18 +137,15 @@ $0300:
   {Display welcome tekst}
   8 {Green} Color=
   0 BgColor=
-  $800 Pos= ClearScreen!
-  $838 Pos= Title Text= PrintText!
+  $800 ClearScreen!
+  $838 Pos= Title PrintText!
   60 Delay= Wait!
 
   pop ret
 ] Intro=
 
-[def
-{-
-  ClearScreen -- Clear screen from current position to bottom right
--}
-  Pos p=
+[def {ClearScreen -- Clear screen from current position to bottom right}
+  Pos= p=
   Pos 255| 255^         {Clear low byte}
   i= $8001 i+ i=        {Offset to move to next stripe}
   [do
@@ -239,8 +228,7 @@ $0400:
 
       tmp 64&  [if=0 $0100 else $0001] x=
       tmp 128& [if=0 x else 0 x-]
-      {XXX Tail+ Tail=}
-      tmp= Tail tmp+ tmp+ Tail=
+      1<< Tail+ Tail=
     ]
 
     UpdateTimer!
@@ -292,15 +280,25 @@ $0500:
 ] AutoControl=
 
 [def
-  \serialRaw, $fe^ {~buttonRight} [if=0 $0001 stepU=]
-  \serialRaw, $fd^ {~buttonLeft}  [if=0 $ffff stepU=]
-  \serialRaw, $fb^ {~buttonDown}  [if=0 $0100 stepU=]
-  \serialRaw, $f7^ {~buttonUp}    [if=0 $ff00 stepU=]
+  stepU tmp= {Default keep running in same direction}
+  \serialRaw, $fe^ {~buttonRight} [if=0 $0001 tmp=]
+  \serialRaw, $fd^ {~buttonLeft}  [if=0 $ffff tmp=]
+  \serialRaw, $fb^ {~buttonDown}  [if=0 $0100 tmp=]
+  \serialRaw, $f7^ {~buttonUp}    [if=0 $ff00 tmp=]
+  {Only turn if not reversing 180 degrees}
+  tmp stepU+ [if<>0 tmp stepU=]
+  {Or if there is no tail yet in the beginning of the game}
+  Tail Head- [if=0 tmp stepU=]
   {Note: `stepV' is not used once under player control}
   ret
 ] PlayerControl=
 
-[def
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 6                                      |
++-----------------------------------------------------------------------}
+$0600:
+
+[def {AddTimer}
   push
   Timer+ Timer=
   15- [if>0 15 Timer=]
@@ -309,15 +307,7 @@ $0500:
   pop ret
 ] AddTimer=
 
-{-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 6                                      |
-+-----------------------------------------------------------------------}
-$0600:
-
-[def
-{-
-  Setup game
--}
+[def {SetupGame}
   push
 
   {Reset score}
@@ -326,9 +316,8 @@ $0600:
   DrawHighScore!
 
   {ClearScreen}
-  $1000 Pos=
   4 BgColor=
-  ClearScreen!
+  $1000 ClearScreen!
 
   {Draw bounding box}
   26 Color=
@@ -345,30 +334,25 @@ $0600:
   $4432 Pos= 3 {Red} Color=
   [def
     $47# $45# $54# $20# $52# $45# $41# $44# $59# $21# 0# {GET READY!}
-  ] Text= PrintText!
+  ] PrintText!
   60 Delay= Wait!
   $4432 Pos=
   [def
     $20# $20# $20# $20# $20# $20# $20# $20# $20# $20# 0#
-  ] Text= PrintText!
+  ] PrintText!
 
   {Place snake}
   $4430 Head= Tail=
   DrawHead!
 
   0 Grow= Drops=
+  Timer= 15 AddTimer!
   $0001 stepU= $0100 stepV= {Start right}
 
-  25 i=
-  [do
-    AddFood!
-    i 1- i=
-  if>0loop]
+  {Place 25 foods}
+  25 [do i= AddFood! i 1- if>0loop]
 
   2 Delay= {Game speed}
-
-  0 Timer=
-  15 AddTimer!
 
   LaunchControl Control=
 
@@ -380,7 +364,7 @@ $0600:
 +-----------------------------------------------------------------------}
 $08a0:
 
-[def
+[def {LaunchControl}
 {-
   XXX better strategy: run both PlayerControl and AutoControl.
   The first one to take control will take over the game...
@@ -390,7 +374,7 @@ $08a0:
     {Switch to autopilot when reaching this position}
     30 {XXX} Color=
     $0802 Pos=
-    [def $41# $55# $54# $4f# 0#{AUTO}] Text= PrintText!
+    [def $41# $55# $54# $4f# 0#{AUTO}] PrintText!
     AutoControl Control= call
   else
     {Disable launch control once a button is pressed}
@@ -476,7 +460,7 @@ $0ba0:
 [def
   push
   $874 Pos= 0 BgColor=
-  [def $48# $49# $20# 0# {HI }] Text= PrintText!
+  [def $48# $49# $20# 0# {HI }] PrintText!
   HighScore Value= DrawNumber4!
   pop ret
 ] DrawHighScore=
