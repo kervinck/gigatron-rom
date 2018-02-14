@@ -16,7 +16,6 @@ gcl0x
   - Implement multiplication in interpreter
 
   ROM v1:
-  XXX Sound for every pixel value [ROMv1]
   XXX Convert into a clock application [ROMv1]
 
   Later:
@@ -138,7 +137,7 @@ $0300:
 
   loop]
 
-  60 \soundTimer. {For debugging}
+  {60 \soundTimer. {For debugging}}
 
   GreyOut!
 
