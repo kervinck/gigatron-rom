@@ -8,9 +8,6 @@
 gcl0x
 
 {
-ROM v1:
-XXX Rising tones [ROMv1]
-
 Maybe:
 XXX Don't allow autoplayer to obtain a hi score
 XXX Use POKEW to plot fat pixels
@@ -112,6 +109,9 @@ $0300:
   [def
     $47# $41# $4d# $45# $20# $4f# $56# $45# $52# 0# {GAME OVER}
   ] PrintText!
+
+  PlayGameOverSound!
+
   Score HighScore- [if>0
     Score HighScore=
     30 Color= DrawHighScore!
@@ -208,6 +208,7 @@ $0400:
     Head, $33& [if<>0 {Hit wall or poison} pop ret]
     Head, 8^ {Food?} [if=0
       {Eat food}
+      $40 Timer+ SetTone!
       2 \soundTimer.
       Score Timer+ Score=
       DrawScore!
@@ -465,9 +466,52 @@ $0ba0:
   pop ret
 ] DrawHighScore=
 
+[def {SetupChannel}
+  i= 255| 255^ $fa| p=          {Pointer to channel struct}
+  i<, i=                        {Extract note}
+  0 p. p<++                     {.wavA}
+  1 p. p<++                     {.wavX: 0 "Noise", 1 Triangle, 2 Pulse, 3 Sawtooth}
+  \notesTable i+ 0? p. p<++     {.keyL}
+  \notesTable i+ 1? p. p<++     {.keyH}
+  ret
+] SetupChannel=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 12                                     |
++-----------------------------------------------------------------------}
+$0ca0:
+
+{ Setup a G-major chord with 4 channels but don't play it yet }
+[def {SetTone}
+  push
+  1<< tmp=
+  $100 tmp| {Channel 1} SetupChannel!
+  $200 tmp| {Channel 2} SetupChannel!
+  $300 tmp| {Channel 3} SetupChannel!
+  $400 tmp| {Channel 4} SetupChannel!
+  pop ret
+] SetTone=
+
+[def
+  push
+  $49 j= [do
+    j SetTone!
+    5 \soundTimer.
+    [do \soundTimer, if<>0loop]
+    j 1- j= $30^ if<>0loop]
+  pop ret
+] PlayGameOverSound=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 13                                     |
++-----------------------------------------------------------------------}
+$0da0:
+
 {--- Run ---}
 
 Intro!
+
+$49 SetTone!
 
 [do
   SetupGame!
