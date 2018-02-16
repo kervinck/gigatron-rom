@@ -34,7 +34,6 @@ XXX Increase speed when pressing button
             else     i= \font82up] fontData= {Select low or high page}
   i i+ tmp= tmp+ i+    {Multiply by 5}
   fontData+ fontData=  {Add to page address to reach bitmap data for Char}
-  $800 Pos+ q=         {Where to stop the inner drawing loop}
 
   {Draw 5 vertical slices: 5 using font data}
   BgColor \sysArgs0.
