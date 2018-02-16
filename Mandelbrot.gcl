@@ -16,7 +16,7 @@ gcl0x
   - Implement multiplication in interpreter
 
   ROM v1:
-  XXX Convert into a clock application [ROMv1]
+  XXX Make clock adjustable [ROMv1]
 
   Later:
   XXX Random color offset for each new rendering
@@ -79,7 +79,7 @@ $0300:
 [def {CalcSet}
   push
 
-  $800 p= {Start of video}
+  $800 Pen= {Start of video}
   120 Height= 160 Width= len=
   LastPixel= {Anything well-defined}
   0 DY=
@@ -87,7 +87,10 @@ $0300:
 
   [do
     {Draw white pixel while busy here}
-    63 p.
+    63 Pen.
+
+    {Update clock}
+    UpdateClock!
 
     LastPixel [if=0
       {Check if we are inside one of the main bulbs for
@@ -112,7 +115,7 @@ $0300:
       CalcPixel!
     ]
 
-    LastPixel= p. {Plot pixel}
+    LastPixel= Pen. {Plot pixel}
 
     len 1- [if<=0
       {Turn right}
@@ -130,10 +133,10 @@ $0300:
     Y0 DY+ Y0=
 
     {Matching step in video frame}
-    DX [if<0 p 1-     p=]
-    DX [if>0 p 1+     p=]
-    DY [if<0 -$100 p+ p=]
-    DY [if>0  $100 p+ p=]
+    DX [if<0 Pen 1-     Pen=]
+    DX [if>0 Pen 1+     Pen=]
+    DY [if<0 -$100 Pen+ Pen=]
+    DY [if>0  $100 Pen+ Pen=]
 
   loop]
 
@@ -200,6 +203,9 @@ $0400:
     DY [if<0 -$100 p+ p=]
     DY [if>0  $100 p+ p=]
 
+    {Update clock}
+    UpdateClock!
+
   loop]
   pop ret
 ] GreyOut=
@@ -208,6 +214,74 @@ $0400:
 |}\vLR>++ ret{          RAM page 5                                      |
 +-----------------------------------------------------------------------}
 $0500:
+
+{Update 24-hour clock}
+[def
+  \frameCount, tmp=
+  LastFrame- 255&
+  60- [if<0 ret]
+
+  push
+
+  60+ Clock0+ Clock0=
+  tmp LastFrame=
+
+  -3599 Clock0+ [if>=0
+    Clock0=
+    Clock1 1+ Clock1=
+    -1440 Clock1+ [if>=0 Clock1=]
+  ]
+
+  Digit 1& [if=0 $3a else $20] Separator=
+
+  {Convert to HH:MM:SS and draw on screen}
+  $4450 Pos=
+  Clock1 Value= 600 NextDigit! {10-hour}
+                 60 NextDigit! { 1-hour}
+          Separator PrintChar!  {:}
+                 10 NextDigit! {10-minute}
+                  1 NextDigit! { 1-minute}
+          Separator PrintChar!  {:}
+  Clock0 Value= 600 NextDigit! {10-second}
+                 60 NextDigit! { 1-second}
+
+  pop ret
+] UpdateClock=
+
+[def {NextDigit -- Value Radix}
+  push
+  Radix=
+  $30 Digit=
+  Value Radix- [if>=0
+    [do Value= Digit<++ Radix- if>=0loop]
+  ]
+  Digit PrintChar!
+  pop ret
+] NextDigit=
+
+[def {PrintChar}
+  32- i= \font32up fontData= {All of '0'-'9' and ':' are in the first page}
+  i i+ tmp= tmp+ i+          {Multiply by 5}
+  fontData+ fontData=        {Add to page address to reach bitmap data}
+  $800 Pos+ q=               {Where to stop the inner drawing loop}
+
+  {Draw 5 vertical slices: 5 using font data}
+  0       \sysArgs0. {Black}
+  63      \sysArgs1. {White}
+  Pos     \sysArgs4=
+  6+      Pos=
+  \SYS_VDrawBits_134 \sysFn=
+  $fb i= [do
+    fontData 0? fontData<++ \sysArgs2. 134!
+    \sysArgs4<++
+    i<++ i if<>0loop]
+  ret
+] PrintChar=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 6                                      |
++-----------------------------------------------------------------------}
+$0600:
 
 { Calculate color for (X0,Y0) using the escape time algorithm }
 [def {CalcPixel}
@@ -231,6 +305,11 @@ $0500:
 ] CalcPixel=
 
 { Main }
+
+0 Clock0= Clock1= {Frames and minutes}
+Digit=
+\frameCount, LastFrame=
+
 [do
   -180 Y0= -320 X0= 3 Step= CalcSet!    {Global 1127.446 seconds}
   -148 Y0=  -98 X0= 1 Step= CalcSet!    {Zoom1  2125.648 seconds}
