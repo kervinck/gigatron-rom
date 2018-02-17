@@ -10,8 +10,6 @@ gcl0x
 {
 ROM v1:
 XXX Add more interesting camera behavior (DX0) [ROMv1]
-XXX Positioning of "GAME OVER" message [ROMv1]
-XXX Drawing artefacts before and after game. "GET READY" message? [ROMv1]
 XXX Draw hi score yellow if achieved in current game [ROMv1]
 XXX Stop game when not completing lap in, say, 5:00 mins? [ROMv1]
 
@@ -247,6 +245,7 @@ $0500:
   There is no check for running off screen.
 }
   push
+  Text=
   [do
     Text, Char= {Next character to be printed}
     if<>0       {Zero termination}
@@ -327,7 +326,7 @@ $0500:
   $01fc {keyL} p= Speed 127&
   p. p>++ p. p>++ p. p>++ p. {Sound channel 1-4}
 
-  60 \soundTimer. {Keep sound for another second}
+  10 \soundTimer. {Keep sound on a bit longer}
 
   ret
 ] PlayEngineSound=
@@ -522,9 +521,9 @@ $0ba0:
     \sysArgs4, 160^ if<>0loop]
 
   63 Color=
-  $801 Pos= EmptyTimeText Text= PrintText!
-  $87c Pos= EmptyTimeText Text= PrintText!
-  $838 Pos= GigatronText  Text= PrintText!
+  $801 Pos= EmptyTimeText PrintText!
+  $87c Pos= EmptyTimeText PrintText!
+  $838 Pos= GigatronText  PrintText!
   60 Delay= Wait!
 
   pop ret
@@ -539,6 +538,29 @@ $0ca0:
 |}\vLR>++ ret{          RAM page 14                                     |
 +-----------------------------------------------------------------------}
 $0da0:
+
+[def
+  push
+
+  {"GAME OVER" message}
+  $1435 Pos=
+  [def
+    $47# $41# $4d# $45# $20# $4f# $56# $45# $52# 0# {GAME OVER}
+  ] PrintText!
+
+  $111 s=
+  $131 t=
+  1 Delay=
+  s, 128& [if=0 +1 else -1] i= {Scroll direction}
+  [do Wait!
+    t, i- t.
+    s, i+ s.
+    255& if<>0loop]
+
+  30 Delay= Wait!
+
+  pop ret
+] GameOver=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 15                                     |
@@ -573,14 +595,24 @@ Intro!
   {Setup new game}
   $7400 Distance= NextTurn=
 
+  $7fff BestTime=
+  0 Time= Value= HorizonX= DriftX= Speed=
+
   0 Random= DDX= NextDDX= DrawRoad!
   DrawGrass!
   SetupHorizon!
+
+  {"GET READY" message}
+  $1435 Pos=
+  [def
+   $47# $45# $54# $20# $52# $45# $41# $44# $59# 0# {GET READY}
+  ] PrintText!
+
   SetupRoad!
+  SetupHorizon! {To delete the GET READY message}
   SetupIndicator!
 
-  $7fff BestTime=
-  0 Time= Value= HorizonX= DriftX= Speed=
+
   $7900 CarX=
 
   {XXX "Get ready" message}
@@ -588,16 +620,7 @@ Intro!
   {Play game until finished}
   \frameCount, LastFrame=
   PlayGame!
-
-  {"Game over" message}
-  $1435 Pos= {XXX Adjust for horizon position}
-  [def
-    $47# $41# $4d# $45# $20# $4f# $56# $45# $52# 0# {GAME OVER}
-  ] Text=
-  15 Color=
-  PrintText!
-
-  240 Delay= Wait!
+  GameOver!
 
  loop]
 
