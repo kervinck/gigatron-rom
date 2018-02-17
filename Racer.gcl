@@ -8,10 +8,7 @@
 gcl0x
 
 {
-ROM v1:
-XXX Add more interesting camera behavior (DX0) [ROMv1]
-
-Maybe:
+Ideas for after ROMv1:
 XXX Less drift or lower max speed
 XXX Make time red in last 30 seconds
 XXX Readability of GET READY and GAME OVER messages
@@ -82,6 +79,7 @@ XXX Image compression?
   ret
 ] ControlRaceCar=
 
+
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
@@ -89,26 +87,11 @@ $0300:
 
 [def $47# $69# $67# $61# $74# $72# $6f# $6e# 0# ] GigatronText=
 
-[def {
-  Wait -- Wait Delay number of frames (range 1..255)
-}
+[def { Wait -- Wait Delay number of frames (range 1..255) }
   \frameCount, Delay+ 255& tmp=
   [do \frameCount, tmp- if<>0loop]
   ret
 ] Wait=
-
-[def {ExtractDigit -- Value Radix}
-  $30 Char=
-  Value Radix- [if>=0
-    [do
-      Value=
-      Char<++
-      Radix-
-      if>=0loop]
-  ]
-  Char
-  ret
-] ExtractDigit=
 
 [def {
   DrawPixels -- Write a single line of pixels on two correspinding
@@ -154,6 +137,21 @@ $0300:
   Video 3+ Video=
   ret
 ] DrawPixels=
+
+[def {PlayEngineSound}
+
+  {High key is Speed[7:14]}
+  $01fd {keyH} p= Speed Speed+ \vACH,
+  p. p>++ p. p>++ p. p>++ p. {Sound channel 1-4}
+
+  {Low key is Speed[0:6]}
+  $01fc {keyL} p= Speed 127&
+  p. p>++ p. p>++ p. p>++ p. {Sound channel 1-4}
+
+  10 \soundTimer. {Keep sound on a bit longer}
+
+  ret
+] PlayEngineSound=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 4                                      |
@@ -240,6 +238,19 @@ $0400:
 +-----------------------------------------------------------------------}
 $0500:
 
+[def {ExtractDigit -- Value Radix}
+  $30 Char=
+  Value Radix- [if>=0
+    [do
+      Value=
+      Char<++
+      Radix-
+      if>=0loop]
+  ]
+  Char
+  ret
+] ExtractDigit=
+
 [def {
   PrintText(Text,Pos)
 
@@ -259,7 +270,8 @@ $0500:
 
 [def {DrawRoad}
   $74d0 p=                      {array[48], in display memory but out of view}
-  0 X= DX=
+  0 X=
+  DX0 DX=
 
   NextTurn Distance- tmp=
   tmp+ tmp=
@@ -293,6 +305,10 @@ $0500:
   HorizonX>, tmp=                    {Pivot 12px from bottom (front of car)}
   $74d5 peek 48+ tmp- tmp=
 
+  {Update DX0 based on }
+  $74d4 peek DX0=
+  $74ec peek DX0- 255& 128^ 128- DX0=
+
   $0111 s=                           {Video table: start of sky}
 
   {Sync with video loop}
@@ -317,21 +333,6 @@ $0500:
 
   ret
 ] DrawRoad=
-
-[def {PlayEngineSound}
-
-  {High key is Speed[7:14]}
-  $01fd {keyH} p= Speed Speed+ \vACH,
-  p. p>++ p. p>++ p. p>++ p. {Sound channel 1-4}
-
-  {Low key is Speed[0:6]}
-  $01fc {keyL} p= Speed 127&
-  p. p>++ p. p>++ p. p>++ p. {Sound channel 1-4}
-
-  10 \soundTimer. {Keep sound on a bit longer}
-
-  ret
-] PlayEngineSound=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 6                                      |
@@ -366,7 +367,7 @@ $0600:
     [if>0
       Random NextTurn+ 109^ Random=     {Circuit formula}
       31& 40+ NextTurn+ NextTurn=       {40..71 units until next turn}
-      Random>, 3& 1+ i= i+ i+ i= i+ i=  {Bending magnitude 6,12,18,24}
+      Random>, 3& 1+ i= i+ i+ 1<< i=    {Bending magnitude 6,12,18,24}
       NextDDX DDX=                      {Shift to next segment}
      {DDX} [if<0  i+                    {Adjust bending of road}
       else [if>0  i-
@@ -394,7 +395,7 @@ $0600:
     DrawGrass!
 
     {Force end of game after 5m00s}
-    -17995 Time+ [if>=0 Collision=]
+    -17995 Time+ [if>0 Collision=]
 
     {Draw current time}
     Time Value= $801 Pos= 63 Color= PrintTime!
@@ -612,8 +613,7 @@ Intro!
 
   $7fff BestTime=
   0 Time= Value= HorizonX= DriftX= Speed=
-
-  0 Random= DDX= NextDDX= DrawRoad!
+  Random= DX0= DDX= NextDDX= DrawRoad!
   DrawGrass!
   SetupHorizon!
   $1435 Pos=
