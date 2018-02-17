@@ -242,10 +242,10 @@ $0500:
   Separator>, Separator^ Separator>.
 
   {Check if user is adjusting the time}
-  \buttonState, 136& {A+Up}    [if=0 Clock0=  +1 else
-  \buttonState, 132& {A+Down}  [if=0 Clock0=  -1 else
-  \buttonState, 130& {A+Left}  [if=0 Clock0= -60 else
-  \buttonState, 129& {A+Right} [if=0 Clock0= +60 else 0]]]]
+  \buttonState, 119^ {A+Up}    [if=0 Clock0=  +1 else
+                 12^ {A+Down}  [if=0 Clock0=  -1 else
+                  6^ {A+Left}  [if=0 Clock0= -60 else
+                  3^ {A+Right} [if=0 Clock0= +60 else 0]]]]
   [if<>0
        AddMinutes!      {Adjust minutes/hours clock}
        0 Clock0=        {Reset seconds/subseconds clock}
