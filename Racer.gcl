@@ -12,6 +12,9 @@ ROM v1:
 XXX Add more interesting camera behavior (DX0) [ROMv1]
 
 Maybe:
+XXX Less drift or lower max speed
+XXX Make time red in last 30 seconds
+XXX Readability of GET READY and GAME OVER messages
 XXX Obstacles? Other cars / bicycles?
 XXX Freeze time display for the first 2 seconds after completing a lap
 XXX Increase minimum speed when completing a lap
