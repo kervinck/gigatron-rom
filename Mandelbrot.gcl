@@ -266,7 +266,7 @@ $0500:
 
 [def {PrintChar}
   32- i= \font32up fontData= {All of '0'-'9' and ':' are in the first page}
-  i i+ tmp= tmp+ i+          {Multiply by 5}
+  i 2<< i+                   {Multiply by 5}
   fontData+ fontData=        {Add to page address to reach bitmap data}
   $800 Pos+ q=               {Where to stop the inner drawing loop}
 

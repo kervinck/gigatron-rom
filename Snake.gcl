@@ -32,7 +32,7 @@ XXX Increase speed when pressing button
   {Map ASCII code to offset in font table}
   Char 82- [if<0 50+ i= \font32up
             else     i= \font82up] fontData= {Select low or high page}
-  i i+ tmp= tmp+ i+    {Multiply by 5}
+  i 2<< i+             {Multiply by 5}
   fontData+ fontData=  {Add to page address to reach bitmap data for Char}
 
   {Draw 5 vertical slices: 5 using font data}
@@ -118,11 +118,8 @@ $0300:
   pop ret
 ] GameOver=
 
-[def
-{-
-  Wait -- Wait Delay number of frames (range 1..255)
--}
-  \frameCount, Delay+ 255& tmp=
+[def {Wait -- Wait Delay number of frames (range 1..255)}
+  tmp= \frameCount, tmp+ 255& tmp=
   [do \frameCount, tmp- if<>0loop]
   ret
 ] Wait=
@@ -138,7 +135,7 @@ $0300:
   0 BgColor=
   $800 ClearScreen!
   $838 Pos= Title PrintText!
-  60 Delay= Wait!
+  60 Wait!
 
   pop ret
 ] Intro=
@@ -233,7 +230,7 @@ $0400:
 
     UpdateTimer!
 
-    Wait!
+    2 Wait! {Fixed game speed}
     loop]
 ] RunGame=
 
@@ -335,7 +332,7 @@ $0600:
   [def
     $47# $45# $54# $20# $52# $45# $41# $44# $59# $21# 0# {GET READY!}
   ] PrintText!
-  60 Delay= Wait!
+  60 Wait!
   $4432 Pos=
   [def
     $20# $20# $20# $20# $20# $20# $20# $20# $20# $20# 0#
@@ -351,8 +348,6 @@ $0600:
 
   {Place 25 foods}
   25 [do i= AddFood! i 1- if>0loop]
-
-  2 Delay= {Game speed}
 
   LaunchControl Control=
 
@@ -519,7 +514,7 @@ $49 SetTone!
   120 \soundTimer.
   3 {Bright Red} Color= Head Pos= DrawBlock!
   GameOver!
-  240 Delay= Wait!
+  240 Wait!
 
   loop
 ]

@@ -30,38 +30,39 @@ gcl0x
   ret
 ] SetupVideo=
 
-{ Startup message:
-  +--------------------------+
-  |   *** Gigatron ??K ***   |
-  |TTL microcomputer ROM v0x | }
-[def
-  {Line 1}
-  $2a# $2a# $2a# $20# $47# $69# $67# $61#
-  $74# $72# $6f# $6e# $20# $3f# $3f# $4b#
-  $20# $2a# $2a# $2a# 10#
-  {Line 2}
-  $54# $54# $4c# $20# $6d# $69# $63# $72#
-  $6f# $63# $6f# $6d# $70# $75# $74# $65#
-  $72# $20# $52# $4f# $4d# $20# $76# $30#
-  $78# 0#
-] StartupMessage=
-
-{ Convert memory size into decimal text }
-{StartupMessage} 13+ p=         {Position within StartupMessage for memory size}
-$2f2f Char=                     {Two ASCII counters, both starting at '0'-1}
-\memSize, 1- 255& 1+            {Number of pages as counted at boot}
-[do Char>++ 40- if>=0loop] 40+  {Count number of 10K chunks}
-[do Char<++  4- if>=0loop]      {Count number of 1K chunks}
-Char>, p. p<++ Char p.          {Put decimals into StartupMessage}
-
-[def {PrintText}
+[def {PrintStartupMessage}
   push
+
+  { Startup message:
+    +--------------------------+
+    |   *** Gigatron ??K ***   |
+    |TTL microcomputer ROM v1a | }
+  [def
+    {Line 1}
+    $2a# $2a# $2a# $20# $47# $69# $67# $61#
+    $74# $72# $6f# $6e# $20# $3f# $3f# $4b#
+    $20# $2a# $2a# $2a# 10#
+    {Line 2}
+    $54# $54# $4c# $20# $6d# $69# $63# $72#
+    $6f# $63# $6f# $6d# $70# $75# $74# $65#
+    $72# $20# $52# $4f# $4d# $20# $76# $31#
+    $61# 0#
+  ] Text=
+
+  { Convert memory size into decimal text }
+  {StartupMessage} 13+ p=         {Position within StartupMessage for memory size}
+  $2f2f Char=                     {Two ASCII counters, both starting at '0'-1}
+  \memSize, 1- 255& 1+            {Number of pages as counted at boot}
+  [do Char>++ 40- if>=0loop] 40+  {Count number of 10K chunks}
+  [do Char<++  4- if>=0loop]      {Count number of 1K chunks}
+  Char>, p. p<++ Char p.          {Put decimals into StartupMessage}
+
   [do
     Text, if<>0 Char= Text<++ {while((Char=*Text++)!=0)...}
     10^ [if=0 Pos<. Pos>, 8+ Pos>. else PrintChar!]
     loop]
   pop ret
-] PrintText=
+] PrintStartupMessage=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 3                                      |
@@ -74,7 +75,7 @@ $0300:
   {Map ASCII code to offset in font table}
   Char 82- [if<0 50+ i= \font32up
             else     i= \font82up] fontData= {Select low or high page}
-  i i+ tmp= tmp+ i+    {Multiply by 5}
+  i 2<< i+             {Multiply by 5}
   fontData+ fontData=  {Add to page address to reach bitmap data for Char}
 
   {Draw 5 vertical slices: 5 using font data}
@@ -117,7 +118,7 @@ $0300:
 { Now it is safe to call functions }
 SetupAudio!
 SetupVideo!
-$812 Pos= StartupMessage Text= PrintText!
+$812 Pos= PrintStartupMessage!
 
 { Load and start main program }
 \Main \sysArgs0= $200 \vLR= \SYS_Exec_88 \sysFn= 88!

@@ -103,7 +103,7 @@ $0400:
   {Map ASCII code to offset in font table}
   Char 82- [if<0 50+ i= \font32up
             else     i= \font82up] fontData= {Select low or high page}
-  i i+ tmp= tmp+ i+    {Multiply by 5}
+  i 2<< i+             {Multiply by 5}
   fontData+ fontData=  {Add to page address to reach bitmap data for Char}
 
   {Draw 5 vertical slices: 5 using font data}

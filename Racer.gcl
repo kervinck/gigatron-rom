@@ -35,9 +35,9 @@ XXX Image compression?
   `Char' must be in the 32-127 range (this is not checked)
 }
   {Map ASCII code to offset in font table}
-  Char= 82- [if<0 50+ i= \font32up
-            else     i= \font82up] fontData= {Select low or high page}
-  i i+ tmp= tmp+ i+    {Multiply by 5}
+  82- [if<0 50+ i= \font32up
+       else     i= \font82up] fontData= {Select low or high page}
+  i 2<< i+             {Multiply by 5}
   fontData+ fontData=  {Add to page address to reach bitmap data for Char}
 
   {Draw 6 vertical slices: 5 using font data, the last with all-zeros}
@@ -298,14 +298,14 @@ $0500:
   {Update video table low bytes for road}
 
   {Prepare SYS call}
-  $01ed      \sysArgs0= {"p"}
-  $74d1      \sysArgs2= {"q"}
-  $74d0 peek \sysArgs4= {"X"}
+  $01ed           \sysArgs0= {"p"}
+  $74d1           \sysArgs2= {"q"}
+ {$74d0} 1-  peek \sysArgs4= {"X"}
 
   HorizonX>, tmp=                    {Pivot 12px from bottom (front of car)}
   $74d5 peek 48+ tmp- tmp=
 
-  {Update DX0 based on }
+  {Update DX0 based on overall curvature in bottom part of screen}
   $74d4 peek DX0=
   $74ec peek DX0- 255& 128^ 128- DX0=
 
@@ -339,9 +339,7 @@ $0500:
 +-----------------------------------------------------------------------}
 $0600:
 
-[def {
-  Play a single game until the end
-}
+[def {Play a single game until the end }
   push
 
   {Run game loop}
@@ -630,7 +628,7 @@ Intro!
   \frameCount, LastFrame=
   PlayGame!
   GameOver!
-  63 PrintBestTime!
+  63 {White} PrintBestTime!
 
  loop]
 
