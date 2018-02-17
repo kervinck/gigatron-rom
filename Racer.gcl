@@ -9,7 +9,6 @@ gcl0x
 
 {
 ROM v1:
-XXX Improve track indicator [ROMv1]
 XXX Add more interesting camera behavior (DX0) [ROMv1]
 XXX Positioning of "GAME OVER" message [ROMv1]
 XXX Drawing artefacts before and after game. "GET READY" message? [ROMv1]
@@ -464,11 +463,20 @@ $08a0:
 $09a0:
 
 [def
+  {Clear progress indicator in title bar}
+  $0bf7 Indicator=
+  $0c6b Tracking=
+  [do 0 {Black} Tracking. Tracking<++ Tracking<, $76^ if<>0loop]
+  ret
+] SetupIndicator=
+
+[def
   {Advance car along track}
   Speed>, Distance+ Distance=
 
   {Update progress indicator}
-  $0ef4 p= Distance>, p+ p= 21 p. p<++ 60 p.
+  0 Tracking.
+  Distance>, Indicator+ Tracking= 60 Tracking.
 
   ret
 ] AdvanceCar=
@@ -569,6 +577,7 @@ Intro!
   DrawGrass!
   SetupHorizon!
   SetupRoad!
+  SetupIndicator!
 
   $7fff BestTime=
   0 Time= Value= HorizonX= DriftX= Speed=
