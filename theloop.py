@@ -1117,6 +1117,47 @@ ld(d(hi('sound2')), busD|ea0DregY)#2
 jmpy(d(lo('sound2')))           #3
 ld(val(syncBits^hSync), regOUT) #4 Start horizontal pulse
 
+nop()
+nop()
+nop()
+nop()
+nop()
+
+#-----------------------------------------------------------------------
+# Extension SYS_NextByteIn_32
+#-----------------------------------------------------------------------
+
+# sysArgs[0:1] Current address
+# sysArgs[2]   Checksum
+# sysArgs[3]   Wait value (videoY)
+
+label('SYS_NextByteIn_32')
+ldzp(d(videoY))                 #15
+xora(d(sysArgs+3),busRAM)       #16
+bne(d(lo('.sysNbi')))           #17
+ld(d(sysArgs+0),busRAM|regX)    #18
+ld(d(sysArgs+1),busRAM|regY)    #19
+ld(busIN)                       #20
+st(eaYXregAC)                   #21
+adda(d(sysArgs+2),busRAM)       #22
+st(d(sysArgs+2))                #23
+ldzp(d(sysArgs+0))              #24
+adda(d(1))                      #25
+st(d(sysArgs+0))                #26
+ld(val(hi('REENTER')),regY)     #27
+jmpy(d(lo('REENTER')))          #28
+ld(val(-32/2))                  #29
+# Restart instruction
+label('.sysNbi')
+ldzp(d(vPC))                    #19
+suba(d(2))                      #20
+st(d(vPC))                      #21
+ld(val(-28/2))                  #22
+ld(val(hi('REENTER')),regY)     #23
+jmpy(d(lo('REENTER')))          #24
+nop()                           #25
+assert(pc()&255 == 255)
+
 #-----------------------------------------------------------------------
 #
 #  ROM page 3: Application interpreter primary page
@@ -2475,40 +2516,6 @@ st(d(sysArgs+2))                #34
 ld(val(hi('REENTER')),regY)     #35
 jmpy(d(lo('REENTER')))          #36
 ld(val(-40/2))                  #37
-
-#-----------------------------------------------------------------------
-# Extension SYS_NextByteIn_32
-#-----------------------------------------------------------------------
-
-# sysArgs[0:1] Current address
-# sysArgs[2]   Checksum
-# sysArgs[3]   Wait value (videoY)
-
-label('SYS_NextByteIn_32')
-ldzp(d(videoY))                 #15
-xora(d(sysArgs+3),busRAM)       #16
-bne(d(lo('.sysNbi')))           #17
-ld(d(sysArgs+0),busRAM|regX)    #18
-ld(d(sysArgs+1),busRAM|regY)    #19
-ld(busIN)                       #20
-st(eaYXregAC)                   #21
-adda(d(sysArgs+2),busRAM)       #22
-st(d(sysArgs+2))                #23
-ldzp(d(sysArgs+0))              #24
-adda(d(1))                      #25
-st(d(sysArgs+0))                #26
-ld(val(hi('REENTER')),regY)     #27
-jmpy(d(lo('REENTER')))          #28
-ld(val(-32/2))                  #29
-# Restart instruction
-label('.sysNbi')
-ldzp(d(vPC))                    #19
-suba(d(2))                      #20
-st(d(vPC))                      #21
-ld(val(-28/2))                  #22
-ld(val(hi('REENTER')),regY)     #23
-jmpy(d(lo('REENTER')))          #24
-nop()                           #25
 
 #-----------------------------------------------------------------------
 # Extension SYS_PayloadCopy_34
