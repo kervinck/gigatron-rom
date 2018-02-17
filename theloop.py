@@ -2342,6 +2342,36 @@ jmpy(d(lo('REENTER')))          #52
 ld(val(-56/2))                  #53
 
 #-----------------------------------------------------------------------
+# Extension SYS_PayloadCopy_34
+#-----------------------------------------------------------------------
+
+# sysArgs[0:1] Source address
+# sysArgs[4]   Copy count
+# sysArgs[5:6] Destination address
+
+label('SYS_PayloadCopy_34')
+ldzp(d(sysArgs+4))              #15 Copy count
+beq(d(lo('.sysCc0')))           #16
+suba(d(1))                      #17
+st(d(sysArgs+4))                #18
+ld(d(sysArgs+0),busRAM|regX)    #19 Current pointer
+ld(d(sysArgs+1),busRAM|regY)    #20
+ld(eaYXregAC,busRAM)            #21
+ld(d(sysArgs+5),busRAM|regX)    #22 Target pointer
+ld(d(sysArgs+6),busRAM|regY)    #23
+st(eaYXregAC)                   #24
+ldzp(d(sysArgs+5))              #25 Increment target
+adda(d(1))                      #26
+st(d(sysArgs+5))                #27
+bra(d(lo('.sysCc1')))           #28
+label('.sysCc0')
+ld(val(hi('REENTER')),regY)     #18,29
+wait(30-19)                     #19
+label('.sysCc1')
+jmpy(d(lo('REENTER')))          #30
+ld(d(-34/2))                    #31
+
+#-----------------------------------------------------------------------
 #
 #  ROM page 7-8: Gigatron font data
 #
@@ -2516,36 +2546,6 @@ st(d(sysArgs+2))                #34
 ld(val(hi('REENTER')),regY)     #35
 jmpy(d(lo('REENTER')))          #36
 ld(val(-40/2))                  #37
-
-#-----------------------------------------------------------------------
-# Extension SYS_PayloadCopy_34
-#-----------------------------------------------------------------------
-
-# sysArgs[0:1] Source address
-# sysArgs[4]   Copy count
-# sysArgs[5:6] Destination address
-
-label('SYS_PayloadCopy_34')
-ldzp(d(sysArgs+4))              #15 Copy count
-beq(d(lo('.sysCc0')))           #16
-suba(d(1))                      #17
-st(d(sysArgs+4))                #18
-ld(d(sysArgs+0),busRAM|regX)    #19 Current pointer
-ld(d(sysArgs+1),busRAM|regY)    #20
-ld(eaYXregAC,busRAM)            #21
-ld(d(sysArgs+5),busRAM|regX)    #22 Target pointer
-ld(d(sysArgs+6),busRAM|regY)    #23
-st(eaYXregAC)                   #24
-ldzp(d(sysArgs+5))              #25 Increment target
-adda(d(1))                      #26
-st(d(sysArgs+5))                #27
-bra(d(lo('.sysCc1')))           #28
-label('.sysCc0')
-ld(val(hi('REENTER')),regY)     #18,29
-wait(30-19)                     #19
-label('.sysCc1')
-jmpy(d(lo('REENTER')))          #30
-ld(d(-34/2))                    #31
 
 #-----------------------------------------------------------------------
 # Extension SYS_LoaderProcessInput_48
