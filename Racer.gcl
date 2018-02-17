@@ -10,7 +10,6 @@ gcl0x
 {
 ROM v1:
 XXX Add more interesting camera behavior (DX0) [ROMv1]
-XXX Draw hi score yellow if achieved in current game [ROMv1]
 XXX Stop game when not completing lap in, say, 5:00 mins? [ROMv1]
 
 Maybe:
@@ -37,7 +36,7 @@ XXX Image compression?
   `Char' must be in the 32-127 range (this is not checked)
 }
   {Map ASCII code to offset in font table}
-  Char 82- [if<0 50+ i= \font32up
+  Char= 82- [if<0 50+ i= \font32up
             else     i= \font82up] fontData= {Select low or high page}
   i i+ tmp= tmp+ i+    {Multiply by 5}
   fontData+ fontData=  {Add to page address to reach bitmap data for Char}
@@ -105,6 +104,7 @@ $0300:
       Radix-
       if>=0loop]
   ]
+  Char
   ret
 ] ExtractDigit=
 
@@ -214,7 +214,7 @@ $0400:
 ] SetupSegment=
 
 [def {
-  DrawTime -- Render elapsed time (in frams) as M:SS.s -- Value Radix
+  PrintTime -- Render elapsed time (in frams) as M:SS.s -- Value Radix
               Skip unchanged digits
 }
   push
@@ -224,14 +224,14 @@ $0400:
    overall timekeeping error is within the tolerances of the crystal itself.}
   3599 Radix= ExtractDigit!
        {\sysArgs7, $30+ Char= {Show frame speed for debugging}}
-       Prev3 Char- [if<>0 Char Prev3= QPrintChar! else Pos] 12+ Pos=
+       Prev3 Char^ [if<>0 Char Prev3= QPrintChar! else Pos] 12+ Pos=
    600 Radix= ExtractDigit!
-       Prev2 Char- [if<>0 Char Prev2= QPrintChar! else Pos]  6+ Pos=
+       Prev2 Char^ [if<>0 Char Prev2= QPrintChar! else Pos]  6+ Pos=
     60 Radix= ExtractDigit!
-       Prev1 Char- [if<>0 Char Prev1= QPrintChar! else Pos] 12+ Pos=
+       Prev1 Char^ [if<>0 Char Prev1= QPrintChar! else Pos] 12+ Pos=
      6 Radix= ExtractDigit! QPrintChar!
   pop ret
-] DrawTime=
+] PrintTime=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 5                                      |
@@ -352,11 +352,7 @@ $0600:
     [if<0
       Time BestTime- [if<0 Time BestTime=]
 
-      {XXX Too complex. Just don't use DrawTime here}
-      4 Prev1= Prev2= Prev3=
-      [do j=
-        BestTime Value= $87c Pos= DrawTime!
-        j 1- if>0loop]
+      15 {Yellow} PrintBestTime!
 
       {New lap}
       0 Time= Random=
@@ -396,7 +392,7 @@ $0600:
     DrawGrass!
 
     {Draw current time}
-    Time Value= $801 Pos= 63 Color= DrawTime!
+    Time Value= $801 Pos= 63 Color= PrintTime!
 
     Collision if=0loop]
   pop ret
@@ -417,8 +413,6 @@ $08a0:
 
 [def 0# 64# 64# 64# 64# 40# 20# 20# 20# 20# 40# 64# 64# 64# 64# 0#] Car3=
 [def 0# 64# 64# 64# 64# 21# 21# 21# 21# 21# 21# 64# 64# 64# 64# 0#] Car4=
-
-[def $2d# $3a# $2d# $2d# $2e# $2d# 0#] EmptyTimeText=
 
 [def
   {Update video table high bytes for road width and color scheme}
@@ -470,12 +464,12 @@ $09a0:
 ] SetupIndicator=
 
 [def
-  {Advance car along track}
-  Speed>, Distance+ Distance=
-
   {Update progress indicator}
   0 Tracking.
   Distance>, Indicator+ Tracking= 60 Tracking.
+
+  {Advance car along track}
+  Speed>, Distance+ Distance=
 
   ret
 ] AdvanceCar=
@@ -521,8 +515,9 @@ $0ba0:
     \sysArgs4, 160^ if<>0loop]
 
   63 Color=
-  $801 Pos= EmptyTimeText PrintText!
-  $87c Pos= EmptyTimeText PrintText!
+
+  $807 Pos= $3a QPrintChar!
+  $819 Pos= $2e QPrintChar!
   $838 Pos= GigatronText  PrintText!
   60 Delay= Wait!
 
@@ -533,6 +528,21 @@ $0ba0:
 |}\vLR>++ ret{          RAM page 13                                     |
 +-----------------------------------------------------------------------}
 $0ca0:
+
+[def {PrintBestTime}
+  Color=
+  BestTime Value=
+  1+ [if<0 ret] {No best time set yet}
+  push
+  $87c Pos=
+  3599 Radix= ExtractDigit! QPrintChar! 6+ Pos=
+                        $3a QPrintChar! 6+ Pos=
+   600 Radix= ExtractDigit! QPrintChar! 6+ Pos=
+    60 Radix= ExtractDigit! QPrintChar! 6+ Pos=
+                        $2e QPrintChar! 6+ Pos=
+     6 Radix= ExtractDigit! QPrintChar!
+  pop ret
+] PrintBestTime=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 14                                     |
@@ -601,26 +611,21 @@ Intro!
   0 Random= DDX= NextDDX= DrawRoad!
   DrawGrass!
   SetupHorizon!
-
-  {"GET READY" message}
   $1435 Pos=
   [def
    $47# $45# $54# $20# $52# $45# $41# $44# $59# 0# {GET READY}
   ] PrintText!
-
   SetupRoad!
   SetupHorizon! {To delete the GET READY message}
   SetupIndicator!
 
-
   $7900 CarX=
-
-  {XXX "Get ready" message}
 
   {Play game until finished}
   \frameCount, LastFrame=
   PlayGame!
   GameOver!
+  63 PrintBestTime!
 
  loop]
 
