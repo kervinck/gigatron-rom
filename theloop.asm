@@ -55820,7 +55820,7 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f2e2 0000  ld   $00
               f2e3 0008  ld   $08
               f2e4 002b  ld   $2b         ;0406 STW
-              f2e5 005e  ld   $5e         ;0406 'p'
+              f2e5 003e  ld   $3e         ;0406 'Pen'
               f2e6 0059  ld   $59         ;0408 LDI
               f2e7 0078  ld   $78
               f2e8 002b  ld   $2b         ;040a STW
@@ -55852,25 +55852,25 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f302 0059  ld   $59         ;041f LDI
               f303 0000  ld   $00
               f304 002b  ld   $2b         ;0421 STW
-              f305 0060  ld   $60         ;0421 'Level'
+              f305 005e  ld   $5e         ;0421 'Level'
               f306 0059  ld   $59         ;0423 LDI
               f307 0020  ld   $20
               f308 002b  ld   $2b         ;0425 STW
-              f309 0062  ld   $62         ;0425 'i'
+              f309 0060  ld   $60         ;0425 'i'
               f30a 0021  ld   $21         ;0427 LDW
-              f30b 005e  ld   $5e         ;0427 'p'
+              f30b 003e  ld   $3e         ;0427 'Pen'
               f30c 00ad  ld   $ad         ;0429 PEEK
               f30d 0082  ld   $82         ;042a ANDI
               f30e 003f  ld   $3f
               f30f 00b8  ld   $b8         ;042c SUBW
-              f310 0062  ld   $62         ;042c 'i'
+              f310 0060  ld   $60         ;042c 'i'
               f311 0035  ld   $35         ;042e BCC
               f312 0050  ld   $50         ;042f LT
               f313 0042  ld   $42
               f314 00f0  ld   $f0         ;0431 POKE
-              f315 005e  ld   $5e         ;0431 'p'
+              f315 003e  ld   $3e         ;0431 'Pen'
               f316 0021  ld   $21         ;0433 LDW
-              f317 0062  ld   $62         ;0433 'i'
+              f317 0060  ld   $60         ;0433 'i'
               f318 0082  ld   $82         ;0435 ANDI
               f319 0015  ld   $15
               f31a 0035  ld   $35         ;0437 BCC
@@ -55883,41 +55883,41 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f321 0059  ld   $59         ;043e LDI
               f322 0002  ld   $02
               f323 0099  ld   $99         ;0440 ADDW
-              f324 0060  ld   $60         ;0440 'Level'
+              f324 005e  ld   $5e         ;0440 'Level'
               f325 002b  ld   $2b         ;0442 STW
-              f326 0060  ld   $60         ;0442 'Level'
+              f326 005e  ld   $5e         ;0442 'Level'
               f327 0021  ld   $21         ;0444 LDW
-              f328 0062  ld   $62         ;0444 'i'
+              f328 0060  ld   $60         ;0444 'i'
               f329 00b4  ld   $b4         ;0446 SYS
               f32a 00f6  ld   $f6
               f32b 0035  ld   $35         ;0448 BCC
               f32c 004d  ld   $4d         ;0449 GT
               f32d 0023  ld   $23
               f32e 00f0  ld   $f0         ;044b POKE
-              f32f 005e  ld   $5e         ;044b 'p'
+              f32f 003e  ld   $3e         ;044b 'Pen'
               f330 0021  ld   $21         ;044d LDW
-              f331 0060  ld   $60         ;044d 'Level'
+              f331 005e  ld   $5e         ;044d 'Level'
               f332 0035  ld   $35         ;044f BCC
               f333 003f  ld   $3f         ;0450 EQ
               f334 0083  ld   $83
               f335 001a  ld   $1a         ;0452 LD
-              f336 005f  ld   $5f         ;0452 'p'+1
+              f336 003f  ld   $3f         ;0452 'Pen'+1
               f337 0082  ld   $82         ;0454 ANDI
               f338 0001  ld   $01
               f339 002b  ld   $2b         ;0456 STW
-              f33a 0062  ld   $62         ;0456 'i'
+              f33a 0060  ld   $60         ;0456 'i'
               f33b 0099  ld   $99         ;0458 ADDW
-              f33c 0062  ld   $62         ;0458 'i'
+              f33c 0060  ld   $60         ;0458 'i'
               f33d 002b  ld   $2b         ;045a STW
-              f33e 0062  ld   $62         ;045a 'i'
+              f33e 0060  ld   $60         ;045a 'i'
               f33f 0021  ld   $21         ;045c LDW
-              f340 005e  ld   $5e         ;045c 'p'
+              f340 003e  ld   $3e         ;045c 'Pen'
               f341 0082  ld   $82         ;045e ANDI
               f342 0001  ld   $01
               f343 0099  ld   $99         ;0460 ADDW
-              f344 0062  ld   $62         ;0460 'i'
+              f344 0060  ld   $60         ;0460 'i'
               f345 002b  ld   $2b         ;0462 STW
-              f346 0062  ld   $62         ;0462 'i'
+              f346 0060  ld   $60         ;0462 'i'
               f347 00cd  ld   $cd         ;0464 DEF
               f348 0068  ld   $68
               f349 0000  ld   $00
@@ -55925,30 +55925,30 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f34b 0003  ld   $03
               f34c 0001  ld   $01
               f34d 0099  ld   $99         ;046a ADDW
-              f34e 0062  ld   $62         ;046a 'i'
+              f34e 0060  ld   $60         ;046a 'i'
               f34f 00ad  ld   $ad         ;046c PEEK
               f350 0099  ld   $99         ;046d ADDW
-              f351 0060  ld   $60         ;046d 'Level'
+              f351 005e  ld   $5e         ;046d 'Level'
               f352 00e6  ld   $e6         ;046f SUBI
               f353 0001  ld   $01
               f354 002b  ld   $2b         ;0471 STW
-              f355 0060  ld   $60         ;0471 'Level'
+              f355 005e  ld   $5e         ;0471 'Level'
               f356 0021  ld   $21         ;0473 LDW
-              f357 0060  ld   $60         ;0473 'Level'
+              f357 005e  ld   $5e         ;0473 'Level'
               f358 00e6  ld   $e6         ;0475 SUBI
               f359 0003  ld   $03
               f35a 0035  ld   $35         ;0477 BCC
               f35b 0050  ld   $50         ;0478 LT
               f35c 0083  ld   $83
               f35d 002b  ld   $2b         ;047a STW
-              f35e 0060  ld   $60         ;047a 'Level'
+              f35e 005e  ld   $5e         ;047a 'Level'
               f35f 0021  ld   $21         ;047c LDW
-              f360 005e  ld   $5e         ;047c 'p'
+              f360 003e  ld   $3e         ;047c 'Pen'
               f361 00ad  ld   $ad         ;047e PEEK
               f362 00e3  ld   $e3         ;047f ADDI
               f363 0015  ld   $15
               f364 00f0  ld   $f0         ;0481 POKE
-              f365 005e  ld   $5e         ;0481 'p'
+              f365 003e  ld   $3e         ;0481 'Pen'
               f366 0090  ld   $90         ;0483 BRA
               f367 0071  ld   $71
               f368 0021  ld   $21         ;0485 LDW
@@ -56002,22 +56002,22 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f398 0053  ld   $53         ;04b5 GE
               f399 00bb  ld   $bb
               f39a 0021  ld   $21         ;04b7 LDW
-              f39b 005e  ld   $5e         ;04b7 'p'
+              f39b 003e  ld   $3e         ;04b7 'Pen'
               f39c 00e6  ld   $e6         ;04b9 SUBI
               f39d 0001  ld   $01
               f39e 002b  ld   $2b         ;04bb STW
-              f39f 005e  ld   $5e         ;04bb 'p'
+              f39f 003e  ld   $3e         ;04bb 'Pen'
               f3a0 0021  ld   $21         ;04bd LDW
               f3a1 004c  ld   $4c         ;04bd 'DX'
               f3a2 0035  ld   $35         ;04bf BCC
               f3a3 0056  ld   $56         ;04c0 LE
               f3a4 00c6  ld   $c6
               f3a5 0021  ld   $21         ;04c2 LDW
-              f3a6 005e  ld   $5e         ;04c2 'p'
+              f3a6 003e  ld   $3e         ;04c2 'Pen'
               f3a7 00e3  ld   $e3         ;04c4 ADDI
               f3a8 0001  ld   $01
               f3a9 002b  ld   $2b         ;04c6 STW
-              f3aa 005e  ld   $5e         ;04c6 'p'
+              f3aa 003e  ld   $3e         ;04c6 'Pen'
               f3ab 0021  ld   $21         ;04c8 LDW
               f3ac 0048  ld   $48         ;04c8 'DY'
               f3ad 0035  ld   $35         ;04ca BCC
@@ -56027,9 +56027,9 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f3b1 0000  ld   $00
               f3b2 00ff  ld   $ff
               f3b3 0099  ld   $99         ;04d0 ADDW
-              f3b4 005e  ld   $5e         ;04d0 'p'
+              f3b4 003e  ld   $3e         ;04d0 'Pen'
               f3b5 002b  ld   $2b         ;04d2 STW
-              f3b6 005e  ld   $5e         ;04d2 'p'
+              f3b6 003e  ld   $3e         ;04d2 'Pen'
               f3b7 0021  ld   $21         ;04d4 LDW
               f3b8 0048  ld   $48         ;04d4 'DY'
               f3b9 0035  ld   $35         ;04d6 BCC
@@ -56039,13 +56039,13 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f3bd 0000  ld   $00
               f3be 0001  ld   $01
               f3bf 0099  ld   $99         ;04dc ADDW
-              f3c0 005e  ld   $5e         ;04dc 'p'
+              f3c0 003e  ld   $3e         ;04dc 'Pen'
               f3c1 002b  ld   $2b         ;04de STW
-              f3c2 005e  ld   $5e         ;04de 'p'
+              f3c2 003e  ld   $3e         ;04de 'Pen'
               f3c3 00cf  ld   $cf         ;04e0 CALL
               f3c4 004e  ld   $4e         ;04e0 'UpdateClock'
               f3c5 0090  ld   $90         ;04e2 BRA
-              f3c6 001d  ld   $1d
+              f3c6 0018  ld   $18
               f3c7 0063  ld   $63         ;04e4 POP
               f3c8 00ff  ld   $ff         ;04e5 RET
               f3c9 002b  ld   $2b         ;04e6 STW
@@ -56063,7 +56063,7 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f3d5 002b  ld   $2b         ;0504 STW
               f3d6 0056  ld   $56         ;0504 'tmp'
               f3d7 00b8  ld   $b8         ;0506 SUBW
-              f3d8 0064  ld   $64         ;0506 'LastFrame'
+              f3d8 0062  ld   $62         ;0506 'LastFrame'
               f3d9 0082  ld   $82         ;0508 ANDI
               f3da 00ff  ld   $ff
               f3db 00e6  ld   $e6         ;050a SUBI
@@ -56076,25 +56076,25 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f3e2 00e3  ld   $e3         ;0511 ADDI
               f3e3 003c  ld   $3c
               f3e4 0099  ld   $99         ;0513 ADDW
-              f3e5 0066  ld   $66         ;0513 'Clock0'
+              f3e5 0064  ld   $64         ;0513 'Clock0'
               f3e6 002b  ld   $2b         ;0515 STW
-              f3e7 0066  ld   $66         ;0515 'Clock0'
+              f3e7 0064  ld   $64         ;0515 'Clock0'
               f3e8 0021  ld   $21         ;0517 LDW
               f3e9 0056  ld   $56         ;0517 'tmp'
               f3ea 002b  ld   $2b         ;0519 STW
-              f3eb 0064  ld   $64         ;0519 'LastFrame'
+              f3eb 0062  ld   $62         ;0519 'LastFrame'
               f3ec 0011  ld   $11         ;051b LDWI
               f3ed 00f1  ld   $f1
               f3ee 00f1  ld   $f1
               f3ef 0099  ld   $99         ;051e ADDW
-              f3f0 0066  ld   $66         ;051e 'Clock0'
+              f3f0 0064  ld   $64         ;051e 'Clock0'
               f3f1 0035  ld   $35         ;0520 BCC
               f3f2 0050  ld   $50         ;0521 LT
               f3f3 0033  ld   $33
               f3f4 002b  ld   $2b         ;0523 STW
-              f3f5 0066  ld   $66         ;0523 'Clock0'
+              f3f5 0064  ld   $64         ;0523 'Clock0'
               f3f6 0021  ld   $21         ;0525 LDW
-              f3f7 0068  ld   $68         ;0525 'Clock1'
+              f3f7 0066  ld   $66         ;0525 'Clock1'
               f3f8 00e3  ld   $e3         ;0527 ADDI
               f3f9 0001  ld   $01
               f3fa 002b  ld   $2b         ;0529 STW
@@ -56103,19 +56103,19 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f3fd 1404  ld   $04,y       ;| Trampoline for page $f300 lookups |
               f3fe e065  jmp  y,$65       ;|                                   |
               f3ff c218  st   [$18]       ;+-----------------------------------+
-              f400 0068  ld   $68         ;0529 'Clock1'
+              f400 0066  ld   $66         ;0529 'Clock1'
               f401 0011  ld   $11         ;052b LDWI
               f402 0060  ld   $60
               f403 00fa  ld   $fa
               f404 0099  ld   $99         ;052e ADDW
-              f405 0068  ld   $68         ;052e 'Clock1'
+              f405 0066  ld   $66         ;052e 'Clock1'
               f406 0035  ld   $35         ;0530 BCC
               f407 0050  ld   $50         ;0531 LT
               f408 0033  ld   $33
               f409 002b  ld   $2b         ;0533 STW
-              f40a 0068  ld   $68         ;0533 'Clock1'
+              f40a 0066  ld   $66         ;0533 'Clock1'
               f40b 0021  ld   $21         ;0535 LDW
-              f40c 006a  ld   $6a         ;0535 'Digit'
+              f40c 0068  ld   $68         ;0535 'Digit'
               f40d 0082  ld   $82         ;0537 ANDI
               f40e 0001  ld   $01
               f40f 0035  ld   $35         ;0539 BCC
@@ -56128,54 +56128,54 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f416 0059  ld   $59         ;0540 LDI
               f417 0020  ld   $20
               f418 002b  ld   $2b         ;0542 STW
-              f419 006c  ld   $6c         ;0542 'Separator'
+              f419 006a  ld   $6a         ;0542 'Separator'
               f41a 0011  ld   $11         ;0544 LDWI
               f41b 0050  ld   $50
               f41c 0044  ld   $44
               f41d 002b  ld   $2b         ;0547 STW
-              f41e 006e  ld   $6e         ;0547 'Pos'
+              f41e 006c  ld   $6c         ;0547 'Pos'
               f41f 0021  ld   $21         ;0549 LDW
-              f420 0068  ld   $68         ;0549 'Clock1'
+              f420 0066  ld   $66         ;0549 'Clock1'
               f421 002b  ld   $2b         ;054b STW
-              f422 0070  ld   $70         ;054b 'Value'
+              f422 006e  ld   $6e         ;054b 'Value'
               f423 0011  ld   $11         ;054d LDWI
               f424 0058  ld   $58
               f425 0002  ld   $02
               f426 00cf  ld   $cf         ;0550 CALL
-              f427 0072  ld   $72         ;0550 'NextDigit'
+              f427 0070  ld   $70         ;0550 'NextDigit'
               f428 0059  ld   $59         ;0552 LDI
               f429 003c  ld   $3c
               f42a 00cf  ld   $cf         ;0554 CALL
-              f42b 0072  ld   $72         ;0554 'NextDigit'
+              f42b 0070  ld   $70         ;0554 'NextDigit'
               f42c 0021  ld   $21         ;0556 LDW
-              f42d 006c  ld   $6c         ;0556 'Separator'
+              f42d 006a  ld   $6a         ;0556 'Separator'
               f42e 00cf  ld   $cf         ;0558 CALL
-              f42f 0074  ld   $74         ;0558 'PrintChar'
+              f42f 0072  ld   $72         ;0558 'PrintChar'
               f430 0059  ld   $59         ;055a LDI
               f431 000a  ld   $0a
               f432 00cf  ld   $cf         ;055c CALL
-              f433 0072  ld   $72         ;055c 'NextDigit'
+              f433 0070  ld   $70         ;055c 'NextDigit'
               f434 0059  ld   $59         ;055e LDI
               f435 0001  ld   $01
               f436 00cf  ld   $cf         ;0560 CALL
-              f437 0072  ld   $72         ;0560 'NextDigit'
+              f437 0070  ld   $70         ;0560 'NextDigit'
               f438 0021  ld   $21         ;0562 LDW
-              f439 006c  ld   $6c         ;0562 'Separator'
+              f439 006a  ld   $6a         ;0562 'Separator'
               f43a 00cf  ld   $cf         ;0564 CALL
-              f43b 0074  ld   $74         ;0564 'PrintChar'
+              f43b 0072  ld   $72         ;0564 'PrintChar'
               f43c 0021  ld   $21         ;0566 LDW
-              f43d 0066  ld   $66         ;0566 'Clock0'
+              f43d 0064  ld   $64         ;0566 'Clock0'
               f43e 002b  ld   $2b         ;0568 STW
-              f43f 0070  ld   $70         ;0568 'Value'
+              f43f 006e  ld   $6e         ;0568 'Value'
               f440 0011  ld   $11         ;056a LDWI
               f441 0058  ld   $58
               f442 0002  ld   $02
               f443 00cf  ld   $cf         ;056d CALL
-              f444 0072  ld   $72         ;056d 'NextDigit'
+              f444 0070  ld   $70         ;056d 'NextDigit'
               f445 0059  ld   $59         ;056f LDI
               f446 003c  ld   $3c
               f447 00cf  ld   $cf         ;0571 CALL
-              f448 0072  ld   $72         ;0571 'NextDigit'
+              f448 0070  ld   $70         ;0571 'NextDigit'
               f449 0063  ld   $63         ;0573 POP
               f44a 00ff  ld   $ff         ;0574 RET
               f44b 002b  ld   $2b         ;0575 STW
@@ -56184,67 +56184,67 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f44e 0094  ld   $94
               f44f 0075  ld   $75         ;0579 PUSH
               f450 002b  ld   $2b         ;057a STW
-              f451 0076  ld   $76         ;057a 'Radix'
+              f451 0074  ld   $74         ;057a 'Radix'
               f452 0059  ld   $59         ;057c LDI
               f453 0030  ld   $30
               f454 002b  ld   $2b         ;057e STW
-              f455 006a  ld   $6a         ;057e 'Digit'
+              f455 0068  ld   $68         ;057e 'Digit'
               f456 0021  ld   $21         ;0580 LDW
-              f457 0070  ld   $70         ;0580 'Value'
+              f457 006e  ld   $6e         ;0580 'Value'
               f458 00b8  ld   $b8         ;0582 SUBW
-              f459 0076  ld   $76         ;0582 'Radix'
+              f459 0074  ld   $74         ;0582 'Radix'
               f45a 0035  ld   $35         ;0584 BCC
               f45b 0050  ld   $50         ;0585 LT
               f45c 008e  ld   $8e
               f45d 002b  ld   $2b         ;0587 STW
-              f45e 0070  ld   $70         ;0587 'Value'
+              f45e 006e  ld   $6e         ;0587 'Value'
               f45f 0093  ld   $93         ;0589 INC
-              f460 006a  ld   $6a         ;0589 'Digit'
+              f460 0068  ld   $68         ;0589 'Digit'
               f461 00b8  ld   $b8         ;058b SUBW
-              f462 0076  ld   $76         ;058b 'Radix'
+              f462 0074  ld   $74         ;058b 'Radix'
               f463 0035  ld   $35         ;058d BCC
               f464 0053  ld   $53         ;058e GE
               f465 0085  ld   $85
               f466 0021  ld   $21         ;0590 LDW
-              f467 006a  ld   $6a         ;0590 'Digit'
+              f467 0068  ld   $68         ;0590 'Digit'
               f468 00cf  ld   $cf         ;0592 CALL
-              f469 0074  ld   $74         ;0592 'PrintChar'
+              f469 0072  ld   $72         ;0592 'PrintChar'
               f46a 0063  ld   $63         ;0594 POP
               f46b 00ff  ld   $ff         ;0595 RET
               f46c 002b  ld   $2b         ;0596 STW
-              f46d 0072  ld   $72         ;0596 'NextDigit'
+              f46d 0070  ld   $70         ;0596 'NextDigit'
               f46e 00cd  ld   $cd         ;0598 DEF
               f46f 00e3  ld   $e3
               f470 00e6  ld   $e6         ;059a SUBI
               f471 0020  ld   $20
               f472 002b  ld   $2b         ;059c STW
-              f473 0062  ld   $62         ;059c 'i'
+              f473 0060  ld   $60         ;059c 'i'
               f474 0011  ld   $11         ;059e LDWI
               f475 0000  ld   $00
               f476 0007  ld   $07
               f477 002b  ld   $2b         ;05a1 STW
-              f478 0078  ld   $78         ;05a1 'fontData'
+              f478 0076  ld   $76         ;05a1 'fontData'
               f479 0021  ld   $21         ;05a3 LDW
-              f47a 0062  ld   $62         ;05a3 'i'
+              f47a 0060  ld   $60         ;05a3 'i'
               f47b 0099  ld   $99         ;05a5 ADDW
-              f47c 0062  ld   $62         ;05a5 'i'
+              f47c 0060  ld   $60         ;05a5 'i'
               f47d 002b  ld   $2b         ;05a7 STW
               f47e 0056  ld   $56         ;05a7 'tmp'
               f47f 0099  ld   $99         ;05a9 ADDW
               f480 0056  ld   $56         ;05a9 'tmp'
               f481 0099  ld   $99         ;05ab ADDW
-              f482 0062  ld   $62         ;05ab 'i'
+              f482 0060  ld   $60         ;05ab 'i'
               f483 0099  ld   $99         ;05ad ADDW
-              f484 0078  ld   $78         ;05ad 'fontData'
+              f484 0076  ld   $76         ;05ad 'fontData'
               f485 002b  ld   $2b         ;05af STW
-              f486 0078  ld   $78         ;05af 'fontData'
+              f486 0076  ld   $76         ;05af 'fontData'
               f487 0011  ld   $11         ;05b1 LDWI
               f488 0000  ld   $00
               f489 0008  ld   $08
               f48a 0099  ld   $99         ;05b4 ADDW
-              f48b 006e  ld   $6e         ;05b4 'Pos'
+              f48b 006c  ld   $6c         ;05b4 'Pos'
               f48c 002b  ld   $2b         ;05b6 STW
-              f48d 007a  ld   $7a         ;05b6 'q'
+              f48d 0078  ld   $78         ;05b6 'q'
               f48e 0059  ld   $59         ;05b8 LDI
               f48f 0000  ld   $00
               f490 005e  ld   $5e         ;05ba ST
@@ -56254,13 +56254,13 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f494 005e  ld   $5e         ;05be ST
               f495 0025  ld   $25
               f496 0021  ld   $21         ;05c0 LDW
-              f497 006e  ld   $6e         ;05c0 'Pos'
+              f497 006c  ld   $6c         ;05c0 'Pos'
               f498 002b  ld   $2b         ;05c2 STW
               f499 0028  ld   $28
               f49a 00e3  ld   $e3         ;05c4 ADDI
               f49b 0006  ld   $06
               f49c 002b  ld   $2b         ;05c6 STW
-              f49d 006e  ld   $6e         ;05c6 'Pos'
+              f49d 006c  ld   $6c         ;05c6 'Pos'
               f49e 0011  ld   $11         ;05c8 LDWI
               f49f 00e1  ld   $e1
               f4a0 0004  ld   $04
@@ -56269,13 +56269,13 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f4a3 0059  ld   $59         ;05cd LDI
               f4a4 00fb  ld   $fb
               f4a5 002b  ld   $2b         ;05cf STW
-              f4a6 0062  ld   $62         ;05cf 'i'
+              f4a6 0060  ld   $60         ;05cf 'i'
               f4a7 0021  ld   $21         ;05d1 LDW
-              f4a8 0078  ld   $78         ;05d1 'fontData'
+              f4a8 0076  ld   $76         ;05d1 'fontData'
               f4a9 007f  ld   $7f         ;05d3 LUP
               f4aa 0000  ld   $00
               f4ab 0093  ld   $93         ;05d5 INC
-              f4ac 0078  ld   $78         ;05d5 'fontData'
+              f4ac 0076  ld   $76         ;05d5 'fontData'
               f4ad 005e  ld   $5e         ;05d7 ST
               f4ae 0026  ld   $26
               f4af 00b4  ld   $b4         ;05d9 SYS
@@ -56283,15 +56283,15 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f4b1 0093  ld   $93         ;05db INC
               f4b2 0028  ld   $28
               f4b3 0093  ld   $93         ;05dd INC
-              f4b4 0062  ld   $62         ;05dd 'i'
+              f4b4 0060  ld   $60         ;05dd 'i'
               f4b5 0021  ld   $21         ;05df LDW
-              f4b6 0062  ld   $62         ;05df 'i'
+              f4b6 0060  ld   $60         ;05df 'i'
               f4b7 0035  ld   $35         ;05e1 BCC
               f4b8 0072  ld   $72         ;05e2 NE
               f4b9 00cf  ld   $cf
               f4ba 00ff  ld   $ff         ;05e4 RET
               f4bb 002b  ld   $2b         ;05e5 STW
-              f4bc 0074  ld   $74         ;05e5 'PrintChar'
+              f4bc 0072  ld   $72         ;05e5 'PrintChar'
               f4bd 0093  ld   $93         ;05e7 INC
               f4be 001b  ld   $1b
               f4bf 00ff  ld   $ff         ;05e9 RET
@@ -56304,34 +56304,34 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f4c6 0059  ld   $59         ;0603 LDI
               f4c7 0000  ld   $00
               f4c8 002b  ld   $2b         ;0605 STW
-              f4c9 007c  ld   $7c         ;0605 'X'
+              f4c9 007a  ld   $7a         ;0605 'X'
               f4ca 002b  ld   $2b         ;0607 STW
-              f4cb 007e  ld   $7e         ;0607 'XX'
+              f4cb 007c  ld   $7c         ;0607 'XX'
               f4cc 002b  ld   $2b         ;0609 STW
-              f4cd 0081  ld   $81         ;0609 'Y'
+              f4cd 007e  ld   $7e         ;0609 'Y'
               f4ce 002b  ld   $2b         ;060b STW
               f4cf 0052  ld   $52         ;060b 'YY'
               f4d0 002b  ld   $2b         ;060d STW
-              f4d1 0062  ld   $62         ;060d 'i'
+              f4d1 0060  ld   $60         ;060d 'i'
               f4d2 0021  ld   $21         ;060f LDW
-              f4d3 0062  ld   $62         ;060f 'i'
+              f4d3 0060  ld   $60         ;060f 'i'
               f4d4 00e3  ld   $e3         ;0611 ADDI
               f4d5 0001  ld   $01
               f4d6 002b  ld   $2b         ;0613 STW
-              f4d7 0062  ld   $62         ;0613 'i'
+              f4d7 0060  ld   $60         ;0613 'i'
               f4d8 008c  ld   $8c         ;0615 XORI
               f4d9 0040  ld   $40
               f4da 0035  ld   $35         ;0617 BCC
               f4db 003f  ld   $3f         ;0618 EQ
               f4dc 004e  ld   $4e
               f4dd 0021  ld   $21         ;061a LDW
-              f4de 007c  ld   $7c         ;061a 'X'
+              f4de 007a  ld   $7a         ;061a 'X'
               f4df 002b  ld   $2b         ;061c STW
               f4e0 0034  ld   $34         ;061c 'A'
               f4e1 0021  ld   $21         ;061e LDW
-              f4e2 0081  ld   $81         ;061e 'Y'
+              f4e2 007e  ld   $7e         ;061e 'Y'
               f4e3 0099  ld   $99         ;0620 ADDW
-              f4e4 0081  ld   $81         ;0620 'Y'
+              f4e4 007e  ld   $7e         ;0620 'Y'
               f4e5 002b  ld   $2b         ;0622 STW
               f4e6 0036  ld   $36         ;0622 'B'
               f4e7 00cf  ld   $cf         ;0624 CALL
@@ -56339,15 +56339,15 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f4e9 0099  ld   $99         ;0626 ADDW
               f4ea 0050  ld   $50         ;0626 'Y0'
               f4eb 002b  ld   $2b         ;0628 STW
-              f4ec 0081  ld   $81         ;0628 'Y'
+              f4ec 007e  ld   $7e         ;0628 'Y'
               f4ed 0021  ld   $21         ;062a LDW
-              f4ee 007e  ld   $7e         ;062a 'XX'
+              f4ee 007c  ld   $7c         ;062a 'XX'
               f4ef 00b8  ld   $b8         ;062c SUBW
               f4f0 0052  ld   $52         ;062c 'YY'
               f4f1 0099  ld   $99         ;062e ADDW
               f4f2 0054  ld   $54         ;062e 'X0'
               f4f3 002b  ld   $2b         ;0630 STW
-              f4f4 007c  ld   $7c         ;0630 'X'
+              f4f4 007a  ld   $7a         ;0630 'X'
               f4f5 002b  ld   $2b         ;0632 STW
               f4f6 0034  ld   $34         ;0632 'A'
               f4f7 002b  ld   $2b         ;0634 STW
@@ -56360,9 +56360,9 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f4fe e065  jmp  y,$65       ;|                                   |
               f4ff c218  st   [$18]       ;+-----------------------------------+
               f500 002b  ld   $2b         ;0638 STW
-              f501 007e  ld   $7e         ;0638 'XX'
+              f501 007c  ld   $7c         ;0638 'XX'
               f502 0021  ld   $21         ;063a LDW
-              f503 0081  ld   $81         ;063a 'Y'
+              f503 007e  ld   $7e         ;063a 'Y'
               f504 002b  ld   $2b         ;063c STW
               f505 0034  ld   $34         ;063c 'A'
               f506 002b  ld   $2b         ;063e STW
@@ -56375,14 +56375,14 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f50d 0000  ld   $00
               f50e 00fe  ld   $fe
               f50f 0099  ld   $99         ;0647 ADDW
-              f510 007e  ld   $7e         ;0647 'XX'
+              f510 007c  ld   $7c         ;0647 'XX'
               f511 0099  ld   $99         ;0649 ADDW
               f512 0052  ld   $52         ;0649 'YY'
               f513 0035  ld   $35         ;064b BCC
               f514 0056  ld   $56         ;064c LE
               f515 000d  ld   $0d
               f516 0021  ld   $21         ;064e LDW
-              f517 0062  ld   $62         ;064e 'i'
+              f517 0060  ld   $60         ;064e 'i'
               f518 0063  ld   $63         ;0650 POP
               f519 00ff  ld   $ff         ;0651 RET
               f51a 002b  ld   $2b         ;0652 STW
@@ -56390,15 +56390,15 @@ Mandelbrot:   f0f1 0002  ld   $02         ;| RAM segment address (high byte firs
               f51c 0059  ld   $59         ;0654 LDI
               f51d 0000  ld   $00
               f51e 002b  ld   $2b         ;0656 STW
-              f51f 0066  ld   $66         ;0656 'Clock0'
+              f51f 0064  ld   $64         ;0656 'Clock0'
               f520 002b  ld   $2b         ;0658 STW
-              f521 0068  ld   $68         ;0658 'Clock1'
+              f521 0066  ld   $66         ;0658 'Clock1'
               f522 002b  ld   $2b         ;065a STW
-              f523 006a  ld   $6a         ;065a 'Digit'
+              f523 0068  ld   $68         ;065a 'Digit'
               f524 001a  ld   $1a         ;065c LD
               f525 000e  ld   $0e
               f526 002b  ld   $2b         ;065e STW
-              f527 0064  ld   $64         ;065e 'LastFrame'
+              f527 0062  ld   $62         ;065e 'LastFrame'
               f528 0011  ld   $11         ;0660 LDWI
               f529 004c  ld   $4c
               f52a 00ff  ld   $ff

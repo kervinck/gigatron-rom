@@ -155,34 +155,34 @@ $0400:
 [def {GreyOut}
   push
 
-  $800 p=
+  $800 Pen=
   120 Height= 160 Width= len=
   1 DX= 0 DY=
-  \SYS_LSRW1_48 \sysFn=
 
   [do
+    \SYS_LSRW1_48 \sysFn=
     0 Level=
     32 [do
       i=
-      p, 63& i- [if>=0 p. i 21& [if<>0 1 else 2] Level+ Level=]
+      Pen, 63& i- [if>=0 Pen. i 21& [if<>0 1 else 2] Level+ Level=]
       i 48! {ShiftRight}
       if>0loop]
     {Level in 0..9}
-    p. {Paint it black}
+    Pen. {Paint it black}
 
     Level [if<>0
       {Level in 1..9}
 
       {Ordered dithering}
-      p>, 1& i= i+ i= {2 * bit 0 of y}
-      p   1&    i+ i= {+   bit 0 of x}
+      Pen>, 1& i= i+ i= {2 * bit 0 of y}
+      Pen   1&    i+ i= {+   bit 0 of x}
       [def 0# 2# {Bayer matrix (Wikipedia)}
            3# 1#]
       i+ peek Level+ 1- Level=
       {Level in 0..11}
      
       {Map intensity level to actual grey color (multiple of 1+4+16)}
-      [do Level 3- if>=0 Level= p, 21+ p. loop]
+      [do Level 3- if>=0 Level= Pen, 21+ Pen. loop]
     ]
 
     {Advance to next pixel}
@@ -198,15 +198,16 @@ $0400:
     len= if>0
 
     {Matching step in video frame}
-    DX [if<0 p 1-     p=]
-    DX [if>0 p 1+     p=]
-    DY [if<0 -$100 p+ p=]
-    DY [if>0  $100 p+ p=]
+    DX [if<0 Pen 1-     Pen=]
+    DX [if>0 Pen 1+     Pen=]
+    DY [if<0 -$100 Pen+ Pen=]
+    DY [if>0  $100 Pen+ Pen=]
 
     {Update clock}
     UpdateClock!
 
   loop]
+
   pop ret
 ] GreyOut=
 
