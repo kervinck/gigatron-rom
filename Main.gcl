@@ -13,6 +13,7 @@ gcl0x
 
 { Print a 5x8 character on screen with the built-in font
   Char must be in the 32-127 range (this is not checked) }
+  \Screen \sysArgs0= $11; [if>0 16& [if=0 88!]]
 [def {PrintChar}
   {Map ASCII code to offset in font table}
   Char 82- [if<0 50+ i= \font32up
