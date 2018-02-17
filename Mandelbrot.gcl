@@ -14,11 +14,9 @@ gcl0x
   - Faithful translation of mandelbrot.c pre-study
   - Use 16-bit vCPU math as 7-bit fixed point arithmetic (1.00 -> 128)
   - Implement multiplication in interpreter
+  - Show settable clock, with blinking colon as long as unset
 
-  ROM v1:
-  XXX Make clock adjustable [ROMv1]
-
-  Later:
+  Ideas for after ROMv1:
   XXX Random color offset for each new rendering
   XXX Lookup table for intensity mapping
   XXX Refactor pixel order from what to do with it
@@ -211,6 +209,8 @@ $0400:
   pop ret
 ] GreyOut=
 
+$201a Separator= {High: separator character, Low: XOR when blinking}
+
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 5                                      |
 +-----------------------------------------------------------------------}
@@ -218,47 +218,51 @@ $0500:
 
 {Update 24-hour clock}
 [def
-  \frameCount, tmp=
-  LastFrame- 255&
-  60- [if<0 ret]
+  \frameCount,
+  LastFrame- 255& Elapsed=
+  60- [if<0
+    \buttonState, 128& [if<>0 ret]
+    15 {Yellow}
+  else
+    63 {White}]
+  Color=
+  {1 second has elapsed, or button A was pressed}
 
   push
 
-  60+ Clock0+ Clock0=
-  tmp LastFrame=
+  Clock0 Elapsed+ Clock0=
+  LastFrame Elapsed+ LastFrame=
 
   -3599 Clock0+ [if>=0
     Clock0=
-    Clock1 1+ Clock1=
-    -1440 Clock1+ [if>=0 Clock1=]
+    1 AddMinutes!
   ]
 
-  Digit 1& [if=0 $3a else $20] Separator=
+  {Change separator between on/off ($3a/$20)}
+  Separator>, Separator^ Separator>.
+
+  {Check if user is adjusting the time}
+  \buttonState, 136& {A+Up}    [if=0 Clock0=  +1 else
+  \buttonState, 132& {A+Down}  [if=0 Clock0=  -1 else
+  \buttonState, 130& {A+Left}  [if=0 Clock0= -60 else
+  \buttonState, 129& {A+Right} [if=0 Clock0= +60 else 0]]]]
+  [if<>0
+       AddMinutes!      {Adjust minutes/hours clock}
+       0 Clock0=        {Reset seconds/subseconds clock}
+       $3a00 Separator= {Stop blinking once adjusted}
+  ]
+  \buttonState, 15| \buttonState. {Reset arrow presses, but not the others}
 
   {Convert to HH:MM:SS and draw on screen}
-  $4450 Pos=
-  Clock1 Value= 600 NextDigit! {10-hour}
-                 60 NextDigit! { 1-hour}
-          Separator PrintChar!  {:}
-                 10 NextDigit! {10-minute}
-                  1 NextDigit! { 1-minute}
-          Separator PrintChar!  {:}
-  Clock0 Value= 600 NextDigit! {10-second}
-                 60 NextDigit! { 1-second}
+  $445c Pos=
+  Clock1 Value= 600 NextDigit! {10-hour digit}
+                 60 NextDigit! { 1-hour digit}
+        Separator>, PrintChar! {Colon or space}
+                 10 NextDigit! {10-minute digit}
+                  1 NextDigit! { 1-minute digit}
 
   pop ret
 ] UpdateClock=
-
-[def {NextDigit -- Value Radix}
-  push
-  Radix=
-  $30 Digit=
-  Value Radix- [if>=0
-    [do Value= Digit<++ Radix- if>=0loop]
-  ]
-  Digit PrintChar!
-  pop ret
-] NextDigit=
 
 [def {PrintChar}
   32- i= \font32up fontData= {All of '0'-'9' and ':' are in the first page}
@@ -268,7 +272,7 @@ $0500:
 
   {Draw 5 vertical slices: 5 using font data}
   0       \sysArgs0. {Black}
-  63      \sysArgs1. {White}
+  Color   \sysArgs1.
   Pos     \sysArgs4=
   6+      Pos=
   \SYS_VDrawBits_134 \sysFn=
@@ -283,6 +287,24 @@ $0500:
 |}\vLR>++ ret{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
 $0600:
+
+[def {NextDigit -- Value Radix}
+  push
+  Radix=
+  $30 Digit=
+  Value Radix- [if>=0
+    [do Value= Digit<++ Radix- if>=0loop]
+  ]
+  Digit PrintChar!
+  pop ret
+] NextDigit=
+
+[def {AddMinutes}
+  Clock1+ Clock1=
+  [if<0 1440 Clock1+ Clock1=]
+  -1440 Clock1+ [if>=0 Clock1=]
+  ret
+] AddMinutes=
 
 { Calculate color for (X0,Y0) using the escape time algorithm }
 [def {CalcPixel}
