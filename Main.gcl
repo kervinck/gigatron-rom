@@ -112,9 +112,9 @@ $0300:
 
 [def {PrintMenu}
   push
-  42 {Grey}   Color= PrintDivider!
+  42 {Gray}   Color= PrintDivider!
   15 {Yellow} Color= MainMenu PrintText!
-  42 {Grey}   Color= PrintDivider!
+  42 {Gray}   Color= PrintDivider!
                      HelpText PrintText!
   pop ret
 ] PrintMenu=
@@ -152,7 +152,7 @@ PrintMenu!
   {buttonA}
   \buttonState, 127^ if<>0loop
 
-  42 {Grey} Color= PrintArrow!
+  42 {Gray} Color= PrintArrow!
 
   { Map menu item to program }
   Item [if=0 \Snake      else

@@ -140,7 +140,7 @@ $0300:
 
   {60 \soundTimer. {For debugging}}
 
-  GreyOut!
+  GrayOut!
 
   pop ret
 ] CalcSet=
@@ -150,7 +150,7 @@ $0300:
 +-----------------------------------------------------------------------}
 $0400:
 
-[def {GreyOut}
+[def {GrayOut}
   push
 
   $800 Pen=
@@ -179,7 +179,7 @@ $0400:
       i+ peek Level+ 1- Level=
       {Level in 0..11}
      
-      {Map intensity level to actual grey color (multiple of 1+4+16)}
+      {Map intensity level to actual gray color (multiple of 1+4+16)}
       [do Level 3- if>=0 Level= Pen, 21+ Pen. loop]
     ]
 
@@ -207,7 +207,7 @@ $0400:
   loop]
 
   pop ret
-] GreyOut=
+] GrayOut=
 
 $201a Separator= {High: separator character, Low: XOR when blinking}
 
