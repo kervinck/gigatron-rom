@@ -10,7 +10,6 @@ gcl0x
 {
 ROM v1:
 XXX Add more interesting camera behavior (DX0) [ROMv1]
-XXX Stop game when not completing lap in, say, 5:00 mins? [ROMv1]
 
 Maybe:
 XXX Obstacles? Other cars / bicycles?
@@ -390,6 +389,9 @@ $0600:
 
     {Update the perspective illusion}
     DrawGrass!
+
+    {Force end of game after 5m00s}
+    -17995 Time+ [if>=0 Collision=]
 
     {Draw current time}
     Time Value= $801 Pos= 63 Color= PrintTime!
