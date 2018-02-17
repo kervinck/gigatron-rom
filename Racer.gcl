@@ -522,8 +522,8 @@ $0ba0:
   63 Color=
 
   $807 Pos= $3a QPrintChar!
-  $819 Pos= $2e QPrintChar!
-  $838 Pos= GigatronText  PrintText!
+   18+ Pos= $2e QPrintChar!
+   31+ Pos= GigatronText PrintText!
   60 Delay= Wait!
 
   pop ret
@@ -564,7 +564,7 @@ $0da0:
   ] PrintText!
 
   $111 s=
-  $131 t=
+  $20+ t=
   1 Delay=
   s, 128& [if=0 +1 else -1] i= {Scroll direction}
   [do Wait!
