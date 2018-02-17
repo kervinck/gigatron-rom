@@ -22185,7 +22185,7 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5a4b 00aa  ld   $aa
               5a4c 009a  ld   $9a
               5a4d 0025  ld   $25
-              5a4e 0059  ld   $59
+              5a4e 007f  ld   $7f
               5a4f 0092  ld   $92
               5a50 0024  ld   $24
               5a51 0049  ld   $49
@@ -22200,7 +22200,7 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5a5a 0044  ld   $44
               5a5b 0041  ld   $41
               5a5c 0000  ld   $00
-              5a5d 0005  ld   $05
+              5a5d 003f  ld   $3f
               5a5e 0000  ld   $00
               5a5f 0000  ld   $00
               5a60 0000  ld   $00
@@ -22307,8 +22307,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5acb 00ab  ld   $ab
               5acc 00a9  ld   $a9
               5acd 0024  ld   $24
-              5ace 0049  ld   $49
-              5acf 0092  ld   $92
+              5ace 0000  ld   $00
+              5acf 0090  ld   $90
               5ad0 0024  ld   $24
               5ad1 0049  ld   $49
               5ad2 0092  ld   $92
@@ -22322,8 +22322,8 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5ada 0004  ld   $04
               5adb 0040  ld   $40
               5adc 0014  ld   $14
-              5add 0004  ld   $04
-              5ade 0001  ld   $01
+              5add 003f  ld   $3f
+              5ade 0000  ld   $00
               5adf 0010  ld   $10
               5ae0 0010  ld   $10
               5ae1 0000  ld   $00
@@ -22423,52 +22423,47 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5b44 0059  ld   $59
               5b45 0095  ld   $95
               5b46 0065  ld   $65
-              5b47 0055  ld   $55
-              5b48 0095  ld   $95
-              5b49 00b5  ld   $b5
-              5b4a 0059  ld   $59
-              5b4b 006b  ld   $6b
-              5b4c 0095  ld   $95
-              5b4d 0025  ld   $25
-              5b4e 0045  ld   $45
-              5b4f 0052  ld   $52
-              5b50 0010  ld   $10
-              5b51 0001  ld   $01
-              5b52 0011  ld   $11
-              5b53 0010  ld   $10
-              5b54 0040  ld   $40
-              5b55 0040  ld   $40
-              5b56 0001  ld   $01
-              5b57 0004  ld   $04
-              5b58 0051  ld   $51
-              5b59 0010  ld   $10
-              5b5a 0045  ld   $45
-              5b5b 0041  ld   $41
-              5b5c 0010  ld   $10
-              5b5d 0044  ld   $44
-              5b5e 0001  ld   $01
-              5b5f 0014  ld   $14
-              5b60 0040  ld   $40
-              5b61 0001  ld   $01
-              5b62 0000  ld   $00
-              5b63 0000  ld   $00
-              5b64 0000  ld   $00
-              5b65 0014  ld   $14
-              5b66 0010  ld   $10
-              5b67 0050  ld   $50
-              5b68 0040  ld   $40
-              5b69 0004  ld   $04
-              5b6a 0000  ld   $00
-              5b6b 0000  ld   $00
-              5b6c 0000  ld   $00
-              * 7 times
-              5b71 0040  ld   $40
-              5b72 0000  ld   $00
-              5b73 0001  ld   $01
-              5b74 0000  ld   $00
-              5b75 0000  ld   $00
-              5b76 0000  ld   $00
-              5b77 0000  ld   $00
+              5b47 00fd  ld   $fd
+              5b48 00ff  ld   $ff
+              5b49 00ff  ld   $ff
+              5b4a 00ff  ld   $ff
+              * 5 times
+              5b4d 0027  ld   $27
+              5b4e 007f  ld   $7f
+              5b4f 00f2  ld   $f2
+              5b50 00ff  ld   $ff
+              5b51 00ff  ld   $ff
+              5b52 00ff  ld   $ff
+              * 5 times
+              5b55 004f  ld   $4f
+              5b56 00fd  ld   $fd
+              5b57 00ff  ld   $ff
+              5b58 00ff  ld   $ff
+              5b59 00ff  ld   $ff
+              * 5 times
+              5b5c 0013  ld   $13
+              5b5d 00ff  ld   $ff
+              5b5e 00ff  ld   $ff
+              5b5f 00ff  ld   $ff
+              * 6 times
+              5b63 00c0  ld   $c0
+              5b64 00ff  ld   $ff
+              5b65 00ff  ld   $ff
+              5b66 00ff  ld   $ff
+              * 5 times
+              5b69 003f  ld   $3f
+              5b6a 00f0  ld   $f0
+              5b6b 00ff  ld   $ff
+              5b6c 00ff  ld   $ff
+              5b6d 00ff  ld   $ff
+              * 5 times
+              5b70 000f  ld   $0f
+              5b71 00fc  ld   $fc
+              5b72 00ff  ld   $ff
+              5b73 00ff  ld   $ff
+              5b74 00ff  ld   $ff
+              * 5 times
+              5b77 0003  ld   $03
               5b78 0200  nop
               5b79 fe00  bra  ac          ;Trampoline for page $5b00 reading (entry)
               5b7a fc7b  bra  $5b7b
@@ -22548,51 +22543,52 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5bc4 0099  ld   $99
               5bc5 0096  ld   $96
               5bc6 0065  ld   $65
-              5bc7 0055  ld   $55
-              5bc8 00d6  ld   $d6
-              5bc9 0065  ld   $65
-              5bca 00a9  ld   $a9
-              5bcb 006a  ld   $6a
-              5bcc 00a5  ld   $a5
-              5bcd 0015  ld   $15
-              5bce 0055  ld   $55
-              5bcf 0001  ld   $01
-              5bd0 0014  ld   $14
-              5bd1 0010  ld   $10
+              5bc7 00fd  ld   $fd
+              5bc8 0000  ld   $00
+              5bc9 0000  ld   $00
+              5bca 0000  ld   $00
+              5bcb 0000  ld   $00
+              5bcc 00f0  ld   $f0
+              5bcd 0003  ld   $03
+              5bce 003f  ld   $3f
+              5bcf 00f0  ld   $f0
+              5bd0 0003  ld   $03
+              5bd1 0000  ld   $00
               5bd2 0000  ld   $00
               5bd3 0000  ld   $00
-              5bd4 0050  ld   $50
-              5bd5 0001  ld   $01
-              5bd6 0054  ld   $54
-              5bd7 0001  ld   $01
-              5bd8 0044  ld   $44
-              5bd9 0014  ld   $14
-              5bda 0054  ld   $54
-              5bdb 0041  ld   $41
-              5bdc 0014  ld   $14
-              5bdd 0004  ld   $04
-              5bde 0055  ld   $55
-              5bdf 0010  ld   $10
-              5be0 0010  ld   $10
-              5be1 0000  ld   $00
-              5be2 0000  ld   $00
-              5be3 0000  ld   $00
-              5be4 0004  ld   $04
+              5bd4 00c0  ld   $c0
+              5bd5 000f  ld   $0f
+              5bd6 0000  ld   $00
+              5bd7 0000  ld   $00
+              5bd8 0000  ld   $00
+              * 5 times
+              5bdb 00f0  ld   $f0
+              5bdc 0003  ld   $03
+              5bdd 003f  ld   $3f
+              5bde 0000  ld   $00
+              5bdf 0000  ld   $00
+              5be0 0000  ld   $00
+              * 5 times
+              5be3 00c0  ld   $c0
+              5be4 000f  ld   $0f
               5be5 0000  ld   $00
-              5be6 0005  ld   $05
-              5be7 0001  ld   $01
-              5be8 0000  ld   $00
-              5be9 0040  ld   $40
-              5bea 0004  ld   $04
-              5beb 0000  ld   $00
+              5be6 0000  ld   $00
+              5be7 0000  ld   $00
+              * 5 times
+              5bea 00f0  ld   $f0
+              5beb 0003  ld   $03
               5bec 0000  ld   $00
-              5bed 0050  ld   $50
-              5bee 0040  ld   $40
-              5bef 0004  ld   $04
-              5bf0 0000  ld   $00
-              5bf1 0000  ld   $00
+              5bed 0000  ld   $00
+              5bee 0000  ld   $00
+              5bef 00c0  ld   $c0
+              5bf0 000f  ld   $0f
+              5bf1 00fc  ld   $fc
               5bf2 0000  ld   $00
-              * 8 times
+              5bf3 0000  ld   $00
+              5bf4 0000  ld   $00
+              5bf5 0000  ld   $00
+              5bf6 00f0  ld   $f0
+              5bf7 0003  ld   $03
               5bf8 0200  nop
               5bf9 0200  nop
               5bfa c225  st   [$25]       ;Trampoline for page $5b00 reading (continue)
@@ -22672,45 +22668,53 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5c44 0059  ld   $59
               5c45 0096  ld   $96
               5c46 0055  ld   $55
-              5c47 0055  ld   $55
-              5c48 0096  ld   $96
+              5c47 00fd  ld   $fd
+              5c48 0080  ld   $80
               5c49 00b5  ld   $b5
               5c4a 00ad  ld   $ad
               5c4b 0066  ld   $66
-              5c4c 00a5  ld   $a5
-              5c4d 0015  ld   $15
-              5c4e 0005  ld   $05
-              5c4f 0000  ld   $00
-              5c50 0000  ld   $00
+              5c4c 00f5  ld   $f5
+              5c4d 0003  ld   $03
+              5c4e 003f  ld   $3f
+              5c4f 00f0  ld   $f0
+              5c50 0003  ld   $03
               5c51 0000  ld   $00
               5c52 0010  ld   $10
               5c53 0000  ld   $00
-              5c54 0001  ld   $01
-              5c55 0010  ld   $10
-              5c56 0011  ld   $11
-              5c57 0044  ld   $44
-              5c58 0040  ld   $40
-              5c59 0054  ld   $54
-              5c5a 0005  ld   $05
-              5c5b 0051  ld   $51
-              5c5c 0010  ld   $10
-              5c5d 0005  ld   $05
+              5c54 00c1  ld   $c1
+              5c55 000f  ld   $0f
+              5c56 00fc  ld   $fc
+              5c57 00ff  ld   $ff
+              5c58 00ff  ld   $ff
+              5c59 00ff  ld   $ff
+              * 5 times
+              5c5c 0003  ld   $03
+              5c5d 003f  ld   $3f
               5c5e 0000  ld   $00
               5c5f 0014  ld   $14
               5c60 0000  ld   $00
               5c61 0000  ld   $00
               5c62 0000  ld   $00
-              * 10 times
-              5c6a 0040  ld   $40
-              5c6b 0000  ld   $00
+              5c63 00c0  ld   $c0
+              5c64 000f  ld   $0f
+              5c65 0000  ld   $00
+              5c66 0000  ld   $00
+              5c67 0000  ld   $00
+              * 5 times
+              5c6a 00f0  ld   $f0
+              5c6b 0003  ld   $03
               5c6c 0000  ld   $00
               5c6d 0050  ld   $50
               5c6e 0010  ld   $10
-              5c6f 0001  ld   $01
-              5c70 0000  ld   $00
-              5c71 0000  ld   $00
+              5c6f 00c1  ld   $c1
+              5c70 000f  ld   $0f
+              5c71 00fc  ld   $fc
               5c72 0000  ld   $00
-              * 8 times
+              5c73 0000  ld   $00
+              5c74 0000  ld   $00
+              5c75 0000  ld   $00
+              5c76 00f0  ld   $f0
+              5c77 0003  ld   $03
               5c78 0200  nop
               5c79 fe00  bra  ac          ;Trampoline for page $5c00 reading (entry)
               5c7a fc7b  bra  $5c7b
@@ -22790,50 +22794,55 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5cc4 0099  ld   $99
               5cc5 0096  ld   $96
               5cc6 0055  ld   $55
-              5cc7 0059  ld   $59
-              5cc8 00da  ld   $da
+              5cc7 00fd  ld   $fd
+              5cc8 00c0  ld   $c0
               5cc9 00a5  ld   $a5
               5cca 00ae  ld   $ae
               5ccb 0099  ld   $99
-              5ccc 0059  ld   $59
-              5ccd 0010  ld   $10
-              5cce 0005  ld   $05
-              5ccf 0051  ld   $51
-              5cd0 0014  ld   $14
+              5ccc 00f9  ld   $f9
+              5ccd 0003  ld   $03
+              5cce 003f  ld   $3f
+              5ccf 00f0  ld   $f0
+              5cd0 0003  ld   $03
               5cd1 0000  ld   $00
               5cd2 0011  ld   $11
               5cd3 0011  ld   $11
-              5cd4 0000  ld   $00
-              5cd5 0001  ld   $01
-              5cd6 0014  ld   $14
-              5cd7 0011  ld   $11
+              5cd4 00c0  ld   $c0
+              5cd5 000f  ld   $0f
+              5cd6 00fc  ld   $fc
+              5cd7 0000  ld   $00
               5cd8 0000  ld   $00
-              5cd9 0014  ld   $14
-              5cda 0044  ld   $44
-              5cdb 0041  ld   $41
-              5cdc 0014  ld   $14
-              5cdd 0005  ld   $05
-              5cde 0051  ld   $51
+              5cd9 0000  ld   $00
+              5cda 0000  ld   $00
+              5cdb 00f0  ld   $f0
+              5cdc 0003  ld   $03
+              5cdd 003f  ld   $3f
+              5cde 0050  ld   $50
               5cdf 0000  ld   $00
               5ce0 0000  ld   $00
               5ce1 0051  ld   $51
               5ce2 0054  ld   $54
-              5ce3 0054  ld   $54
-              5ce4 0005  ld   $05
+              5ce3 00d4  ld   $d4
+              5ce4 000f  ld   $0f
               5ce5 0000  ld   $00
               5ce6 0000  ld   $00
               5ce7 0000  ld   $00
               5ce8 0004  ld   $04
               5ce9 0004  ld   $04
-              5cea 0000  ld   $00
-              5ceb 0000  ld   $00
+              5cea 00f0  ld   $f0
+              5ceb 0003  ld   $03
               5cec 0000  ld   $00
-              * 5 times
-              5cef 0004  ld   $04
-              5cf0 0000  ld   $00
-              5cf1 0000  ld   $00
+              5ced 0000  ld   $00
+              5cee 0000  ld   $00
+              5cef 00c4  ld   $c4
+              5cf0 000f  ld   $0f
+              5cf1 00fc  ld   $fc
               5cf2 0000  ld   $00
-              * 8 times
+              5cf3 0000  ld   $00
+              5cf4 0000  ld   $00
+              5cf5 0000  ld   $00
+              5cf6 00f0  ld   $f0
+              5cf7 0003  ld   $03
               5cf8 0200  nop
               5cf9 0200  nop
               5cfa c225  st   [$25]       ;Trampoline for page $5c00 reading (continue)
@@ -22913,48 +22922,49 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5d44 006a  ld   $6a
               5d45 0096  ld   $96
               5d46 0055  ld   $55
-              5d47 0059  ld   $59
-              5d48 0097  ld   $97
-              5d49 00a6  ld   $a6
-              5d4a 00aa  ld   $aa
-              5d4b 0096  ld   $96
-              5d4c 0095  ld   $95
-              5d4d 0024  ld   $24
-              5d4e 0049  ld   $49
-              5d4f 0056  ld   $56
-              5d50 0024  ld   $24
-              5d51 0045  ld   $45
-              5d52 0091  ld   $91
-              5d53 0055  ld   $55
-              5d54 0055  ld   $55
-              5d55 0055  ld   $55
-              5d56 0050  ld   $50
-              5d57 0005  ld   $05
-              5d58 0040  ld   $40
-              5d59 0014  ld   $14
-              5d5a 0044  ld   $44
-              5d5b 0096  ld   $96
-              5d5c 0024  ld   $24
-              5d5d 0044  ld   $44
-              5d5e 0045  ld   $45
-              5d5f 0054  ld   $54
-              5d60 0044  ld   $44
-              5d61 0055  ld   $55
-              5d62 0066  ld   $66
-              5d63 0055  ld   $55
-              5d64 0056  ld   $56
-              5d65 0011  ld   $11
+              5d47 00fd  ld   $fd
+              5d48 00ff  ld   $ff
+              5d49 00ff  ld   $ff
+              5d4a 00ff  ld   $ff
+              * 5 times
+              5d4d 0003  ld   $03
+              5d4e 003f  ld   $3f
+              5d4f 00f0  ld   $f0
+              5d50 00ff  ld   $ff
+              5d51 00ff  ld   $ff
+              5d52 00ff  ld   $ff
+              * 5 times
+              5d55 000f  ld   $0f
+              5d56 00fc  ld   $fc
+              5d57 00ff  ld   $ff
+              5d58 00ff  ld   $ff
+              5d59 00ff  ld   $ff
+              * 5 times
+              5d5c 0003  ld   $03
+              5d5d 00ff  ld   $ff
+              5d5e 00ff  ld   $ff
+              5d5f 00ff  ld   $ff
+              * 6 times
+              5d63 00d5  ld   $d5
+              5d64 000f  ld   $0f
+              5d65 0010  ld   $10
               5d66 0000  ld   $00
               5d67 0000  ld   $00
               5d68 0001  ld   $01
               5d69 0040  ld   $40
-              5d6a 0000  ld   $00
-              5d6b 0000  ld   $00
-              5d6c 0010  ld   $10
-              5d6d 0000  ld   $00
-              5d6e 0000  ld   $00
-              5d6f 0000  ld   $00
-              * 11 times
+              5d6a 00f0  ld   $f0
+              5d6b 00ff  ld   $ff
+              5d6c 00ff  ld   $ff
+              5d6d 00ff  ld   $ff
+              * 5 times
+              5d70 000f  ld   $0f
+              5d71 00fc  ld   $fc
+              5d72 0000  ld   $00
+              5d73 0000  ld   $00
+              5d74 0000  ld   $00
+              5d75 0000  ld   $00
+              5d76 00f0  ld   $f0
+              5d77 0003  ld   $03
               5d78 0200  nop
               5d79 fe00  bra  ac          ;Trampoline for page $5d00 reading (entry)
               5d7a fc7b  bra  $5d7b
@@ -23032,49 +23042,33 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5dc4 0099  ld   $99
               5dc5 009a  ld   $9a
               5dc6 0065  ld   $65
-              5dc7 0059  ld   $59
-              5dc8 009b  ld   $9b
-              5dc9 00b5  ld   $b5
-              5dca 005a  ld   $5a
-              5dcb 0056  ld   $56
-              5dcc 0055  ld   $55
-              5dcd 0015  ld   $15
-              5dce 0045  ld   $45
-              5dcf 0051  ld   $51
-              5dd0 0064  ld   $64
-              5dd1 0045  ld   $45
-              5dd2 0052  ld   $52
-              5dd3 0064  ld   $64
-              5dd4 0059  ld   $59
-              5dd5 0096  ld   $96
-              5dd6 0015  ld   $15
-              5dd7 0055  ld   $55
-              5dd8 0051  ld   $51
-              5dd9 0014  ld   $14
-              5dda 0045  ld   $45
-              5ddb 0041  ld   $41
-              5ddc 0014  ld   $14
-              5ddd 0044  ld   $44
-              5dde 0055  ld   $55
-              5ddf 0064  ld   $64
-              5de0 0005  ld   $05
-              5de1 0051  ld   $51
-              5de2 0014  ld   $14
-              5de3 0055  ld   $55
-              5de4 0055  ld   $55
+              5dc7 0001  ld   $01
+              5dc8 0000  ld   $00
+              5dc9 0000  ld   $00
+              5dca 0000  ld   $00
+              5dcb 0000  ld   $00
+              5dcc 00f0  ld   $f0
+              5dcd 0003  ld   $03
+              5dce 0000  ld   $00
+              5dcf 0000  ld   $00
+              5dd0 0000  ld   $00
+              * 6 times
+              5dd4 00c0  ld   $c0
+              5dd5 000f  ld   $0f
+              5dd6 0000  ld   $00
+              5dd7 0000  ld   $00
+              5dd8 0000  ld   $00
+              * 15 times
               5de5 0054  ld   $54
               5de6 0001  ld   $01
               5de7 0001  ld   $01
               5de8 0000  ld   $00
               5de9 0000  ld   $00
               5dea 0005  ld   $05
-              5deb 0014  ld   $14
-              5dec 0044  ld   $44
+              5deb 0000  ld   $00
+              5dec 0000  ld   $00
               5ded 0000  ld   $00
-              5dee 0001  ld   $01
-              5def 0000  ld   $00
-              5df0 0000  ld   $00
-              5df1 0000  ld   $00
+              * 7 times
               5df2 0040  ld   $40
               5df3 0001  ld   $01
               5df4 0010  ld   $10
@@ -23160,21 +23154,19 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5e44 0059  ld   $59
               5e45 0056  ld   $56
               5e46 00a5  ld   $a5
-              5e47 005d  ld   $5d
-              5e48 00ea  ld   $ea
-              5e49 00aa  ld   $aa
-              5e4a 0056  ld   $56
-              5e4b 00a6  ld   $a6
-              5e4c 0006  ld   $06
-              5e4d 0000  ld   $00
+              5e47 00fd  ld   $fd
+              5e48 00ff  ld   $ff
+              5e49 00ff  ld   $ff
+              5e4a 00ff  ld   $ff
+              * 5 times
+              5e4d 0003  ld   $03
               5e4e 0005  ld   $05
-              5e4f 0041  ld   $41
-              5e50 0014  ld   $14
-              5e51 0009  ld   $09
-              5e52 0091  ld   $91
-              5e53 0054  ld   $54
-              5e54 0045  ld   $45
-              5e55 0055  ld   $55
+              5e4f 00f1  ld   $f1
+              5e50 00ff  ld   $ff
+              5e51 00ff  ld   $ff
+              5e52 00ff  ld   $ff
+              * 5 times
+              5e55 000f  ld   $0f
               5e56 0024  ld   $24
               5e57 0045  ld   $45
               5e58 0056  ld   $56
@@ -23285,21 +23277,17 @@ packedParrot: 2300 0000  ld   $00         ;Pixels for packedParrot line 0
               5ec4 009d  ld   $9d
               5ec5 005a  ld   $5a
               5ec6 0075  ld   $75
-              5ec7 0059  ld   $59
-              5ec8 0097  ld   $97
-              5ec9 00aa  ld   $aa
-              5eca 005a  ld   $5a
-              5ecb 009a  ld   $9a
-              5ecc 0059  ld   $59
-              5ecd 0015  ld   $15
+              5ec7 0001  ld   $01
+              5ec8 0000  ld   $00
+              5ec9 0000  ld   $00
+              5eca 0000  ld   $00
+              * 6 times
               5ece 0055  ld   $55
-              5ecf 0052  ld   $52
-              5ed0 0020  ld   $20
-              5ed1 0045  ld   $45
-              5ed2 0051  ld   $51
-              5ed3 0024  ld   $24
-              5ed4 0059  ld   $59
-              5ed5 0092  ld   $92
+              5ecf 0002  ld   $02
+              5ed0 0000  ld   $00
+              5ed1 0000  ld   $00
+              5ed2 0000  ld   $00
+              * 6 times
               5ed6 0014  ld   $14
               5ed7 0005  ld   $05
               5ed8 0041  ld   $41
@@ -37327,7 +37315,7 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               964b 00aa  ld   $aa
               964c 005a  ld   $5a
               964d 0059  ld   $59
-              964e 006a  ld   $6a
+              964e 007f  ld   $7f
               964f 0055  ld   $55
               9650 00a9  ld   $a9
               9651 00a9  ld   $a9
@@ -37342,7 +37330,7 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               965a 00aa  ld   $aa
               965b 00aa  ld   $aa
               965c 00a9  ld   $a9
-              965d 0095  ld   $95
+              965d 00bf  ld   $bf
               965e 0096  ld   $96
               965f 0069  ld   $69
               9660 0056  ld   $56
@@ -37453,8 +37441,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               96cb 00aa  ld   $aa
               96cc 006a  ld   $6a
               96cd 0055  ld   $55
-              96ce 0095  ld   $95
-              96cf 005a  ld   $5a
+              96ce 0000  ld   $00
+              96cf 0050  ld   $50
               96d0 0055  ld   $55
               96d1 00aa  ld   $aa
               96d2 009a  ld   $9a
@@ -37468,8 +37456,8 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               96da 0099  ld   $99
               96db 005a  ld   $5a
               96dc 0069  ld   $69
-              96dd 00aa  ld   $aa
-              96de 00a6  ld   $a6
+              96dd 003f  ld   $3f
+              96de 00a0  ld   $a0
               96df 0059  ld   $59
               96e0 0099  ld   $99
               96e1 0095  ld   $95
@@ -37574,55 +37562,47 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9744 0059  ld   $59
               9745 0096  ld   $96
               9746 006a  ld   $6a
-              9747 0055  ld   $55
-              9748 0096  ld   $96
-              9749 00aa  ld   $aa
-              974a 00aa  ld   $aa
-              974b 0066  ld   $66
-              974c 00a5  ld   $a5
-              974d 0096  ld   $96
-              974e 009a  ld   $9a
-              974f 00a9  ld   $a9
-              9750 0095  ld   $95
-              9751 00aa  ld   $aa
-              9752 00aa  ld   $aa
-              9753 005a  ld   $5a
-              9754 0099  ld   $99
-              9755 00aa  ld   $aa
-              9756 006a  ld   $6a
-              9757 006a  ld   $6a
-              9758 00a5  ld   $a5
-              9759 0095  ld   $95
-              975a 0096  ld   $96
-              975b 00aa  ld   $aa
-              975c 0065  ld   $65
-              975d 0096  ld   $96
-              975e 005a  ld   $5a
-              975f 0069  ld   $69
-              9760 0095  ld   $95
-              9761 00a6  ld   $a6
-              9762 0055  ld   $55
-              9763 0056  ld   $56
-              9764 0066  ld   $66
-              9765 0065  ld   $65
-              9766 0056  ld   $56
-              9767 00a5  ld   $a5
-              9768 0055  ld   $55
-              9769 0056  ld   $56
-              976a 0056  ld   $56
-              976b 0055  ld   $55
-              976c 006a  ld   $6a
-              976d 0065  ld   $65
-              976e 0055  ld   $55
-              976f 00a5  ld   $a5
-              9770 0096  ld   $96
-              9771 009a  ld   $9a
-              9772 0099  ld   $99
-              9773 0059  ld   $59
-              9774 0059  ld   $59
-              9775 0065  ld   $65
-              9776 006a  ld   $6a
-              9777 00a5  ld   $a5
+              9747 00fd  ld   $fd
+              9748 00ff  ld   $ff
+              9749 00ff  ld   $ff
+              974a 00ff  ld   $ff
+              * 5 times
+              974d 0097  ld   $97
+              974e 00bf  ld   $bf
+              974f 00f9  ld   $f9
+              9750 00ff  ld   $ff
+              9751 00ff  ld   $ff
+              9752 00ff  ld   $ff
+              * 5 times
+              9755 00af  ld   $af
+              9756 00fe  ld   $fe
+              9757 00ff  ld   $ff
+              9758 00ff  ld   $ff
+              9759 00ff  ld   $ff
+              * 5 times
+              975c 0067  ld   $67
+              975d 00ff  ld   $ff
+              975e 00ff  ld   $ff
+              975f 00ff  ld   $ff
+              * 6 times
+              9763 00d6  ld   $d6
+              9764 00ff  ld   $ff
+              9765 00ff  ld   $ff
+              9766 00ff  ld   $ff
+              * 5 times
+              9769 007f  ld   $7f
+              976a 00f6  ld   $f6
+              976b 00ff  ld   $ff
+              976c 00ff  ld   $ff
+              976d 00ff  ld   $ff
+              * 5 times
+              9770 009f  ld   $9f
+              9771 00fe  ld   $fe
+              9772 00ff  ld   $ff
+              9773 00ff  ld   $ff
+              9774 00ff  ld   $ff
+              * 5 times
+              9777 00a7  ld   $a7
               9778 0200  nop
               9779 fe00  bra  ac          ;Trampoline for page $9700 reading (entry)
               977a fc7b  bra  $977b
@@ -37702,55 +37682,52 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               97c4 0069  ld   $69
               97c5 0096  ld   $96
               97c6 006a  ld   $6a
-              97c7 0069  ld   $69
-              97c8 0095  ld   $95
-              97c9 00a9  ld   $a9
-              97ca 00aa  ld   $aa
-              97cb 006a  ld   $6a
-              97cc 0066  ld   $66
-              97cd 006a  ld   $6a
-              97ce 00a5  ld   $a5
-              97cf 005a  ld   $5a
-              97d0 00a9  ld   $a9
-              97d1 00aa  ld   $aa
-              97d2 00aa  ld   $aa
-              97d3 00aa  ld   $aa
-              97d4 009a  ld   $9a
-              97d5 00a9  ld   $a9
-              97d6 00aa  ld   $aa
-              97d7 009a  ld   $9a
-              97d8 00aa  ld   $aa
-              97d9 0065  ld   $65
-              97da 0056  ld   $56
-              97db 006a  ld   $6a
-              97dc 0055  ld   $55
-              97dd 005a  ld   $5a
-              97de 00a5  ld   $a5
-              97df 0069  ld   $69
-              97e0 0099  ld   $99
-              97e1 0095  ld   $95
-              97e2 0019  ld   $19
-              97e3 0059  ld   $59
-              97e4 0055  ld   $55
-              97e5 0069  ld   $69
-              97e6 0055  ld   $55
-              97e7 0056  ld   $56
-              97e8 0069  ld   $69
-              97e9 0055  ld   $55
-              97ea 0055  ld   $55
-              97eb 0069  ld   $69
-              97ec 0095  ld   $95
-              97ed 0056  ld   $56
-              97ee 0065  ld   $65
-              97ef 0056  ld   $56
-              97f0 0099  ld   $99
-              97f1 0095  ld   $95
-              97f2 0056  ld   $56
-              97f3 0096  ld   $96
-              97f4 0056  ld   $56
-              97f5 00a9  ld   $a9
-              97f6 0095  ld   $95
-              97f7 0056  ld   $56
+              97c7 00fd  ld   $fd
+              97c8 0000  ld   $00
+              97c9 0000  ld   $00
+              97ca 0000  ld   $00
+              97cb 0000  ld   $00
+              97cc 00f0  ld   $f0
+              97cd 0003  ld   $03
+              97ce 003f  ld   $3f
+              97cf 00f0  ld   $f0
+              97d0 0003  ld   $03
+              97d1 0000  ld   $00
+              97d2 0000  ld   $00
+              97d3 0000  ld   $00
+              97d4 00c0  ld   $c0
+              97d5 000f  ld   $0f
+              97d6 0000  ld   $00
+              97d7 0000  ld   $00
+              97d8 0000  ld   $00
+              * 5 times
+              97db 00f0  ld   $f0
+              97dc 0003  ld   $03
+              97dd 003f  ld   $3f
+              97de 0000  ld   $00
+              97df 0000  ld   $00
+              97e0 0000  ld   $00
+              * 5 times
+              97e3 00c0  ld   $c0
+              97e4 000f  ld   $0f
+              97e5 0000  ld   $00
+              97e6 0000  ld   $00
+              97e7 0000  ld   $00
+              * 5 times
+              97ea 00f0  ld   $f0
+              97eb 0003  ld   $03
+              97ec 0000  ld   $00
+              97ed 0000  ld   $00
+              97ee 0000  ld   $00
+              97ef 00c0  ld   $c0
+              97f0 000f  ld   $0f
+              97f1 00fc  ld   $fc
+              97f2 0000  ld   $00
+              97f3 0000  ld   $00
+              97f4 0000  ld   $00
+              97f5 0000  ld   $00
+              97f6 00f0  ld   $f0
+              97f7 0003  ld   $03
               97f8 0200  nop
               97f9 0200  nop
               97fa c225  st   [$25]       ;Trampoline for page $9700 reading (continue)
@@ -37830,55 +37807,54 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9844 006a  ld   $6a
               9845 0096  ld   $96
               9846 00a6  ld   $a6
-              9847 009a  ld   $9a
-              9848 0096  ld   $96
+              9847 00fe  ld   $fe
+              9848 0080  ld   $80
               9849 005a  ld   $5a
               984a 00a9  ld   $a9
               984b 00aa  ld   $aa
-              984c 005a  ld   $5a
-              984d 005a  ld   $5a
-              984e 0099  ld   $99
-              984f 00aa  ld   $aa
-              9850 00aa  ld   $aa
+              984c 00fa  ld   $fa
+              984d 0003  ld   $03
+              984e 003f  ld   $3f
+              984f 00f0  ld   $f0
+              9850 0003  ld   $03
               9851 00a9  ld   $a9
               9852 00aa  ld   $aa
               9853 00aa  ld   $aa
-              9854 00a9  ld   $a9
-              9855 00a6  ld   $a6
-              9856 00a6  ld   $a6
-              9857 00aa  ld   $aa
-              9858 00aa  ld   $aa
-              9859 0069  ld   $69
-              985a 0096  ld   $96
-              985b 00a6  ld   $a6
-              985c 0055  ld   $55
-              985d 005a  ld   $5a
-              985e 00a5  ld   $a5
+              9854 00e9  ld   $e9
+              9855 000f  ld   $0f
+              9856 00fc  ld   $fc
+              9857 00ff  ld   $ff
+              9858 00ff  ld   $ff
+              9859 00ff  ld   $ff
+              * 5 times
+              985c 0003  ld   $03
+              985d 003f  ld   $3f
+              985e 00a0  ld   $a0
               985f 0055  ld   $55
               9860 005a  ld   $5a
               9861 00a5  ld   $a5
               9862 0055  ld   $55
-              9863 0056  ld   $56
-              9864 0066  ld   $66
-              9865 0055  ld   $55
+              9863 00d6  ld   $d6
+              9864 000f  ld   $0f
+              9865 0054  ld   $54
               9866 0095  ld   $95
               9867 0095  ld   $95
               9868 0055  ld   $55
               9869 0055  ld   $55
-              986a 0065  ld   $65
-              986b 0055  ld   $55
+              986a 00f5  ld   $f5
+              986b 0003  ld   $03
               986c 006a  ld   $6a
               986d 0055  ld   $55
               986e 00aa  ld   $aa
-              986f 0055  ld   $55
-              9870 0065  ld   $65
-              9871 0055  ld   $55
-              9872 0059  ld   $59
+              986f 00d5  ld   $d5
+              9870 000f  ld   $0f
+              9871 00fc  ld   $fc
+              9872 0040  ld   $40
               9873 0069  ld   $69
               9874 0065  ld   $65
               9875 0055  ld   $55
-              9876 0055  ld   $55
-              9877 0055  ld   $55
+              9876 00f5  ld   $f5
+              9877 0003  ld   $03
               9878 0200  nop
               9879 fe00  bra  ac          ;Trampoline for page $9800 reading (entry)
               987a fc7b  bra  $987b
@@ -37958,51 +37934,55 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               98c4 00a9  ld   $a9
               98c5 00aa  ld   $aa
               98c6 00a9  ld   $a9
-              98c7 00aa  ld   $aa
-              98c8 009a  ld   $9a
+              98c7 00fe  ld   $fe
+              98c8 0080  ld   $80
               98c9 00aa  ld   $aa
               98ca 005a  ld   $5a
               98cb 00aa  ld   $aa
-              98cc 00a6  ld   $a6
-              98cd 00aa  ld   $aa
-              98ce 00aa  ld   $aa
-              98cf 00aa  ld   $aa
-              * 8 times
-              98d5 00a5  ld   $a5
-              98d6 0069  ld   $69
-              98d7 0095  ld   $95
-              98d8 00a6  ld   $a6
-              98d9 005a  ld   $5a
-              98da 0099  ld   $99
-              98db 00a6  ld   $a6
-              98dc 0016  ld   $16
-              98dd 0055  ld   $55
-              98de 00a5  ld   $a5
+              98cc 00f6  ld   $f6
+              98cd 0003  ld   $03
+              98ce 003f  ld   $3f
+              98cf 00f0  ld   $f0
+              98d0 0003  ld   $03
+              98d1 00aa  ld   $aa
+              98d2 00aa  ld   $aa
+              98d3 00aa  ld   $aa
+              98d4 00ea  ld   $ea
+              98d5 000f  ld   $0f
+              98d6 00fc  ld   $fc
+              98d7 0000  ld   $00
+              98d8 0000  ld   $00
+              98d9 0000  ld   $00
+              98da 0000  ld   $00
+              98db 00f0  ld   $f0
+              98dc 0003  ld   $03
+              98dd 003f  ld   $3f
+              98de 00a0  ld   $a0
               98df 0055  ld   $55
               98e0 005a  ld   $5a
               98e1 0095  ld   $95
               98e2 0059  ld   $59
-              98e3 0059  ld   $59
-              98e4 0095  ld   $95
-              98e5 0055  ld   $55
+              98e3 00d9  ld   $d9
+              98e4 000f  ld   $0f
+              98e5 0054  ld   $54
               98e6 0059  ld   $59
               98e7 0065  ld   $65
               98e8 0055  ld   $55
               98e9 0056  ld   $56
-              98ea 0055  ld   $55
-              98eb 0055  ld   $55
+              98ea 00f5  ld   $f5
+              98eb 0003  ld   $03
               98ec 0059  ld   $59
               98ed 00a5  ld   $a5
               98ee 00a5  ld   $a5
-              98ef 0056  ld   $56
-              98f0 0056  ld   $56
-              98f1 0055  ld   $55
-              98f2 0056  ld   $56
+              98ef 00d6  ld   $d6
+              98f0 000f  ld   $0f
+              98f1 00fc  ld   $fc
+              98f2 0040  ld   $40
               98f3 0055  ld   $55
               98f4 0056  ld   $56
               98f5 0055  ld   $55
-              98f6 0055  ld   $55
-              98f7 0055  ld   $55
+              98f6 00f5  ld   $f5
+              98f7 0003  ld   $03
               98f8 0200  nop
               98f9 0200  nop
               98fa c225  st   [$25]       ;Trampoline for page $9800 reading (continue)
@@ -38080,46 +38060,49 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9944 00aa  ld   $aa
               9945 00ab  ld   $ab
               9946 00aa  ld   $aa
-              9947 00aa  ld   $aa
-              9948 00aa  ld   $aa
-              * 13 times
-              9953 00ba  ld   $ba
-              9954 009a  ld   $9a
-              9955 00a6  ld   $a6
-              9956 00a9  ld   $a9
-              9957 009a  ld   $9a
-              9958 0095  ld   $95
-              9959 0069  ld   $69
-              995a 0056  ld   $56
-              995b 00a6  ld   $a6
-              995c 0059  ld   $59
-              995d 0085  ld   $85
-              995e 0056  ld   $56
-              995f 0055  ld   $55
-              9960 005a  ld   $5a
-              9961 0065  ld   $65
-              9962 0065  ld   $65
-              9963 0095  ld   $95
-              9964 0055  ld   $55
-              9965 0059  ld   $59
+              9947 00fe  ld   $fe
+              9948 00ff  ld   $ff
+              9949 00ff  ld   $ff
+              994a 00ff  ld   $ff
+              * 5 times
+              994d 0003  ld   $03
+              994e 003f  ld   $3f
+              994f 00f0  ld   $f0
+              9950 00ff  ld   $ff
+              9951 00ff  ld   $ff
+              9952 00ff  ld   $ff
+              * 5 times
+              9955 000f  ld   $0f
+              9956 00fc  ld   $fc
+              9957 00ff  ld   $ff
+              9958 00ff  ld   $ff
+              9959 00ff  ld   $ff
+              * 5 times
+              995c 0003  ld   $03
+              995d 00ff  ld   $ff
+              995e 00ff  ld   $ff
+              995f 00ff  ld   $ff
+              * 6 times
+              9963 00d5  ld   $d5
+              9964 000f  ld   $0f
+              9965 0058  ld   $58
               9966 0045  ld   $45
               9967 0095  ld   $95
               9968 0055  ld   $55
               9969 0055  ld   $55
-              996a 0055  ld   $55
-              996b 0059  ld   $59
-              996c 00a9  ld   $a9
-              996d 0095  ld   $95
-              996e 0056  ld   $56
-              996f 0055  ld   $55
-              9970 0055  ld   $55
-              9971 0055  ld   $55
-              9972 0069  ld   $69
+              996a 00f5  ld   $f5
+              996b 00ff  ld   $ff
+              996c 00ff  ld   $ff
+              996d 00ff  ld   $ff
+              * 5 times
+              9970 000f  ld   $0f
+              9971 00fc  ld   $fc
+              9972 0040  ld   $40
               9973 0055  ld   $55
               9974 0059  ld   $59
               9975 0055  ld   $55
-              9976 0055  ld   $55
-              9977 0055  ld   $55
+              9976 00f5  ld   $f5
+              9977 0003  ld   $03
               9978 0200  nop
               9979 fe00  bra  ac          ;Trampoline for page $9900 reading (entry)
               997a fc7b  bra  $997b
@@ -38199,54 +38182,39 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               99c4 00aa  ld   $aa
               99c5 00aa  ld   $aa
               99c6 00ba  ld   $ba
-              99c7 00a9  ld   $a9
-              99c8 00aa  ld   $aa
-              99c9 00a6  ld   $a6
-              99ca 00aa  ld   $aa
-              99cb 00aa  ld   $aa
-              99cc 00aa  ld   $aa
-              * 5 times
-              99cf 00ba  ld   $ba
-              99d0 00ba  ld   $ba
-              99d1 00ab  ld   $ab
-              99d2 00b6  ld   $b6
-              99d3 00aa  ld   $aa
-              99d4 00aa  ld   $aa
-              99d5 00a6  ld   $a6
-              99d6 0059  ld   $59
-              99d7 009a  ld   $9a
-              99d8 0066  ld   $66
-              99d9 0055  ld   $55
-              99da 009a  ld   $9a
-              99db 0095  ld   $95
-              99dc 0069  ld   $69
-              99dd 0055  ld   $55
-              99de 0051  ld   $51
-              99df 0015  ld   $15
-              99e0 0055  ld   $55
-              99e1 0051  ld   $51
-              99e2 0015  ld   $15
-              99e3 0055  ld   $55
-              99e4 0056  ld   $56
+              99c7 0001  ld   $01
+              99c8 0000  ld   $00
+              99c9 0000  ld   $00
+              99ca 0000  ld   $00
+              99cb 0000  ld   $00
+              99cc 00f0  ld   $f0
+              99cd 0003  ld   $03
+              99ce 0000  ld   $00
+              99cf 0000  ld   $00
+              99d0 0000  ld   $00
+              * 6 times
+              99d4 00c0  ld   $c0
+              99d5 000f  ld   $0f
+              99d6 0000  ld   $00
+              99d7 0000  ld   $00
+              99d8 0000  ld   $00
+              * 15 times
               99e5 0064  ld   $64
               99e6 0055  ld   $55
               99e7 0055  ld   $55
               99e8 0055  ld   $55
               99e9 005a  ld   $5a
-              99ea 0055  ld   $55
-              99eb 0065  ld   $65
-              99ec 0055  ld   $55
-              99ed 00a5  ld   $a5
-              99ee 0069  ld   $69
-              99ef 0055  ld   $55
-              99f0 0056  ld   $56
-              99f1 0055  ld   $55
-              99f2 0056  ld   $56
+              99ea 0005  ld   $05
+              99eb 0000  ld   $00
+              99ec 0000  ld   $00
+              99ed 0000  ld   $00
+              * 7 times
+              99f2 0040  ld   $40
               99f3 0056  ld   $56
               99f4 0055  ld   $55
               99f5 0055  ld   $55
-              99f6 0055  ld   $55
-              99f7 0055  ld   $55
+              99f6 0005  ld   $05
+              99f7 0000  ld   $00
               99f8 0200  nop
               99f9 0200  nop
               99fa c225  st   [$25]       ;Trampoline for page $9900 reading (continue)
@@ -38326,22 +38294,20 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9a44 00ae  ld   $ae
               9a45 00ea  ld   $ea
               9a46 00aa  ld   $aa
-              9a47 00aa  ld   $aa
-              9a48 00ab  ld   $ab
-              9a49 00ba  ld   $ba
-              9a4a 00aa  ld   $aa
-              9a4b 00ab  ld   $ab
-              9a4c 00bb  ld   $bb
-              9a4d 00ba  ld   $ba
+              9a47 00fe  ld   $fe
+              9a48 00ff  ld   $ff
+              9a49 00ff  ld   $ff
+              9a4a 00ff  ld   $ff
+              * 5 times
+              9a4d 0003  ld   $03
               9a4e 00ab  ld   $ab
-              9a4f 00e6  ld   $e6
-              9a50 00ae  ld   $ae
-              9a51 009a  ld   $9a
-              9a52 00aa  ld   $aa
-              9a53 00a9  ld   $a9
-              9a54 009b  ld   $9b
-              9a55 00a6  ld   $a6
-              9a56 0069  ld   $69
+              9a4f 00f6  ld   $f6
+              9a50 00ff  ld   $ff
+              9a51 00ff  ld   $ff
+              9a52 00ff  ld   $ff
+              * 5 times
+              9a55 000f  ld   $0f
+              9a56 0068  ld   $68
               9a57 005a  ld   $5a
               9a58 0066  ld   $66
               9a59 0065  ld   $65
@@ -38450,22 +38416,18 @@ packedBaboon: 5f00 0045  ld   $45         ;Pixels for packedBaboon line 0
               9ac4 006a  ld   $6a
               9ac5 009a  ld   $9a
               9ac6 00aa  ld   $aa
-              9ac7 00a9  ld   $a9
-              9ac8 009a  ld   $9a
-              9ac9 00aa  ld   $aa
-              9aca 0069  ld   $69
-              9acb 009a  ld   $9a
-              9acc 00aa  ld   $aa
-              9acd 0059  ld   $59
+              9ac7 0001  ld   $01
+              9ac8 0000  ld   $00
+              9ac9 0000  ld   $00
+              9aca 0000  ld   $00
+              * 6 times
               9ace 009a  ld   $9a
-              9acf 00aa  ld   $aa
-              9ad0 0069  ld   $69
-              9ad1 009a  ld   $9a
-              9ad2 00a6  ld   $a6
-              9ad3 0069  ld   $69
-              9ad4 0099  ld   $99
-              9ad5 0056  ld   $56
-              9ad6 0015  ld   $15
+              9acf 000a  ld   $0a
+              9ad0 0000  ld   $00
+              9ad1 0000  ld   $00
+              9ad2 0000  ld   $00
+              * 6 times
+              9ad6 0014  ld   $14
               9ad7 0056  ld   $56
               9ad8 0065  ld   $65
               9ad9 0015  ld   $15
@@ -48414,12 +48376,17 @@ packedJupiter:
               d24b 0040  ld   $40
               d24c 0015  ld   $15
               d24d 0014  ld   $14
-              d24e 0055  ld   $55
+              d24e 007f  ld   $7f
               d24f 0050  ld   $50
               d250 0000  ld   $00
               d251 0000  ld   $00
               d252 0000  ld   $00
-              * 40 times
+              * 13 times
+              d25d 003f  ld   $3f
+              d25e 0000  ld   $00
+              d25f 0000  ld   $00
+              d260 0000  ld   $00
+              * 26 times
               d278 0200  nop
               d279 fe00  bra  ac          ;Trampoline for page $d200 reading (entry)
               d27a fc7b  bra  $d27b
@@ -48477,7 +48444,12 @@ packedJupiter:
               d2d1 0000  ld   $00
               d2d2 0000  ld   $00
               d2d3 0000  ld   $00
-              * 39 times
+              * 12 times
+              d2dd 003f  ld   $3f
+              d2de 0000  ld   $00
+              d2df 0000  ld   $00
+              d2e0 0000  ld   $00
+              * 26 times
               d2f8 0200  nop
               d2f9 0200  nop
               d2fa c225  st   [$25]       ;Trampoline for page $d200 reading (continue)
@@ -48520,17 +48492,47 @@ packedJupiter:
               d344 0014  ld   $14
               d345 0051  ld   $51
               d346 0051  ld   $51
-              d347 0040  ld   $40
-              d348 0005  ld   $05
-              d349 0050  ld   $50
-              d34a 0015  ld   $15
-              d34b 0051  ld   $51
-              d34c 0001  ld   $01
-              d34d 0004  ld   $04
-              d34e 0000  ld   $00
-              d34f 0000  ld   $00
-              d350 0000  ld   $00
-              * 42 times
+              d347 00fc  ld   $fc
+              d348 00ff  ld   $ff
+              d349 00ff  ld   $ff
+              d34a 00ff  ld   $ff
+              * 5 times
+              d34d 0007  ld   $07
+              d34e 003f  ld   $3f
+              d34f 00f0  ld   $f0
+              d350 00ff  ld   $ff
+              d351 00ff  ld   $ff
+              d352 00ff  ld   $ff
+              * 5 times
+              d355 000f  ld   $0f
+              d356 00fc  ld   $fc
+              d357 00ff  ld   $ff
+              d358 00ff  ld   $ff
+              d359 00ff  ld   $ff
+              * 5 times
+              d35c 0003  ld   $03
+              d35d 00ff  ld   $ff
+              d35e 00ff  ld   $ff
+              d35f 00ff  ld   $ff
+              * 6 times
+              d363 00c0  ld   $c0
+              d364 00ff  ld   $ff
+              d365 00ff  ld   $ff
+              d366 00ff  ld   $ff
+              * 5 times
+              d369 003f  ld   $3f
+              d36a 00f0  ld   $f0
+              d36b 00ff  ld   $ff
+              d36c 00ff  ld   $ff
+              d36d 00ff  ld   $ff
+              * 5 times
+              d370 000f  ld   $0f
+              d371 00fc  ld   $fc
+              d372 00ff  ld   $ff
+              d373 00ff  ld   $ff
+              d374 00ff  ld   $ff
+              * 5 times
+              d377 0003  ld   $03
               d378 0200  nop
               d379 fe00  bra  ac          ;Trampoline for page $d300 reading (entry)
               d37a fc7b  bra  $d37b
@@ -48571,14 +48573,52 @@ packedJupiter:
               d3c4 0001  ld   $01
               d3c5 0005  ld   $05
               d3c6 0014  ld   $14
-              d3c7 0014  ld   $14
+              d3c7 00fc  ld   $fc
               d3c8 0051  ld   $51
               d3c9 0001  ld   $01
               d3ca 0054  ld   $54
               d3cb 0000  ld   $00
-              d3cc 0000  ld   $00
-              d3cd 0000  ld   $00
-              * 45 times
+              d3cc 00f0  ld   $f0
+              d3cd 0003  ld   $03
+              d3ce 003f  ld   $3f
+              d3cf 00f0  ld   $f0
+              d3d0 0003  ld   $03
+              d3d1 0000  ld   $00
+              d3d2 0000  ld   $00
+              d3d3 0000  ld   $00
+              d3d4 00c0  ld   $c0
+              d3d5 000f  ld   $0f
+              d3d6 0000  ld   $00
+              d3d7 0000  ld   $00
+              d3d8 0000  ld   $00
+              * 5 times
+              d3db 00f0  ld   $f0
+              d3dc 0003  ld   $03
+              d3dd 003f  ld   $3f
+              d3de 0000  ld   $00
+              d3df 0000  ld   $00
+              d3e0 0000  ld   $00
+              * 5 times
+              d3e3 00c0  ld   $c0
+              d3e4 000f  ld   $0f
+              d3e5 0000  ld   $00
+              d3e6 0000  ld   $00
+              d3e7 0000  ld   $00
+              * 5 times
+              d3ea 00f0  ld   $f0
+              d3eb 0003  ld   $03
+              d3ec 0000  ld   $00
+              d3ed 0000  ld   $00
+              d3ee 0000  ld   $00
+              d3ef 00c0  ld   $c0
+              d3f0 000f  ld   $0f
+              d3f1 00fc  ld   $fc
+              d3f2 0000  ld   $00
+              d3f3 0000  ld   $00
+              d3f4 0000  ld   $00
+              d3f5 0000  ld   $00
+              d3f6 00f0  ld   $f0
+              d3f7 0003  ld   $03
               d3f8 0200  nop
               d3f9 0200  nop
               d3fa c225  st   [$25]       ;Trampoline for page $d300 reading (continue)
@@ -48617,12 +48657,52 @@ packedJupiter:
               d444 0004  ld   $04
               d445 0055  ld   $55
               d446 0051  ld   $51
-              d447 0001  ld   $01
+              d447 00fd  ld   $fd
               d448 0005  ld   $05
               d449 0000  ld   $00
               d44a 0000  ld   $00
               d44b 0000  ld   $00
-              * 47 times
+              d44c 00f0  ld   $f0
+              d44d 0003  ld   $03
+              d44e 003f  ld   $3f
+              d44f 00f0  ld   $f0
+              d450 0003  ld   $03
+              d451 0000  ld   $00
+              d452 0000  ld   $00
+              d453 0000  ld   $00
+              d454 00c0  ld   $c0
+              d455 000f  ld   $0f
+              d456 00fc  ld   $fc
+              d457 00ff  ld   $ff
+              d458 00ff  ld   $ff
+              d459 00ff  ld   $ff
+              * 5 times
+              d45c 0003  ld   $03
+              d45d 003f  ld   $3f
+              d45e 0000  ld   $00
+              d45f 0000  ld   $00
+              d460 0000  ld   $00
+              * 5 times
+              d463 00c0  ld   $c0
+              d464 000f  ld   $0f
+              d465 0000  ld   $00
+              d466 0000  ld   $00
+              d467 0000  ld   $00
+              * 5 times
+              d46a 00f0  ld   $f0
+              d46b 0003  ld   $03
+              d46c 0000  ld   $00
+              d46d 0000  ld   $00
+              d46e 0000  ld   $00
+              d46f 00c0  ld   $c0
+              d470 000f  ld   $0f
+              d471 00fc  ld   $fc
+              d472 0000  ld   $00
+              d473 0000  ld   $00
+              d474 0000  ld   $00
+              d475 0000  ld   $00
+              d476 00f0  ld   $f0
+              d477 0003  ld   $03
               d478 0200  nop
               d479 fe00  bra  ac          ;Trampoline for page $d400 reading (entry)
               d47a fc7b  bra  $d47b
@@ -48656,10 +48736,53 @@ packedJupiter:
               d4c4 0054  ld   $54
               d4c5 0000  ld   $00
               d4c6 0010  ld   $10
-              d4c7 0000  ld   $00
+              d4c7 00fc  ld   $fc
               d4c8 0000  ld   $00
               d4c9 0000  ld   $00
-              * 49 times
+              d4ca 0000  ld   $00
+              d4cb 0000  ld   $00
+              d4cc 00f0  ld   $f0
+              d4cd 0003  ld   $03
+              d4ce 003f  ld   $3f
+              d4cf 00f0  ld   $f0
+              d4d0 0003  ld   $03
+              d4d1 0000  ld   $00
+              d4d2 0000  ld   $00
+              d4d3 0000  ld   $00
+              d4d4 00c0  ld   $c0
+              d4d5 000f  ld   $0f
+              d4d6 00fc  ld   $fc
+              d4d7 0000  ld   $00
+              d4d8 0000  ld   $00
+              d4d9 0000  ld   $00
+              d4da 0000  ld   $00
+              d4db 00f0  ld   $f0
+              d4dc 0003  ld   $03
+              d4dd 003f  ld   $3f
+              d4de 0000  ld   $00
+              d4df 0000  ld   $00
+              d4e0 0000  ld   $00
+              * 5 times
+              d4e3 00c0  ld   $c0
+              d4e4 000f  ld   $0f
+              d4e5 0000  ld   $00
+              d4e6 0000  ld   $00
+              d4e7 0000  ld   $00
+              * 5 times
+              d4ea 00f0  ld   $f0
+              d4eb 0003  ld   $03
+              d4ec 0000  ld   $00
+              d4ed 0000  ld   $00
+              d4ee 0000  ld   $00
+              d4ef 00c0  ld   $c0
+              d4f0 000f  ld   $0f
+              d4f1 00fc  ld   $fc
+              d4f2 0000  ld   $00
+              d4f3 0000  ld   $00
+              d4f4 0000  ld   $00
+              d4f5 0000  ld   $00
+              d4f6 00f0  ld   $f0
+              d4f7 0003  ld   $03
               d4f8 0200  nop
               d4f9 0200  nop
               d4fa c225  st   [$25]       ;Trampoline for page $d400 reading (continue)
@@ -48686,7 +48809,49 @@ packedJupiter:
               d541 0000  ld   $00
               d542 0000  ld   $00
               d543 0000  ld   $00
-              * 55 times
+              * 6 times
+              d547 00fc  ld   $fc
+              d548 00ff  ld   $ff
+              d549 00ff  ld   $ff
+              d54a 00ff  ld   $ff
+              * 5 times
+              d54d 0003  ld   $03
+              d54e 003f  ld   $3f
+              d54f 00f0  ld   $f0
+              d550 00ff  ld   $ff
+              d551 00ff  ld   $ff
+              d552 00ff  ld   $ff
+              * 5 times
+              d555 000f  ld   $0f
+              d556 00fc  ld   $fc
+              d557 00ff  ld   $ff
+              d558 00ff  ld   $ff
+              d559 00ff  ld   $ff
+              * 5 times
+              d55c 0003  ld   $03
+              d55d 00ff  ld   $ff
+              d55e 00ff  ld   $ff
+              d55f 00ff  ld   $ff
+              * 6 times
+              d563 00c0  ld   $c0
+              d564 000f  ld   $0f
+              d565 0000  ld   $00
+              d566 0000  ld   $00
+              d567 0000  ld   $00
+              * 5 times
+              d56a 00f0  ld   $f0
+              d56b 00ff  ld   $ff
+              d56c 00ff  ld   $ff
+              d56d 00ff  ld   $ff
+              * 5 times
+              d570 000f  ld   $0f
+              d571 00fc  ld   $fc
+              d572 0000  ld   $00
+              d573 0000  ld   $00
+              d574 0000  ld   $00
+              d575 0000  ld   $00
+              d576 00f0  ld   $f0
+              d577 0003  ld   $03
               d578 0200  nop
               d579 fe00  bra  ac          ;Trampoline for page $d500 reading (entry)
               d57a fc7b  bra  $d57b
@@ -48703,7 +48868,19 @@ packedJupiter:
               d5bf 0000  ld   $00
               d5c0 0000  ld   $00
               d5c1 0000  ld   $00
-              * 57 times
+              * 13 times
+              d5cc 00f0  ld   $f0
+              d5cd 0003  ld   $03
+              d5ce 0000  ld   $00
+              d5cf 0000  ld   $00
+              d5d0 0000  ld   $00
+              * 6 times
+              d5d4 00c0  ld   $c0
+              d5d5 000f  ld   $0f
+              d5d6 0000  ld   $00
+              d5d7 0000  ld   $00
+              d5d8 0000  ld   $00
+              * 34 times
               d5f8 0200  nop
               d5f9 0200  nop
               d5fa c225  st   [$25]       ;Trampoline for page $d500 reading (continue)
@@ -48715,7 +48892,24 @@ packedJupiter:
               d600 0000  ld   $00         ;Pixels for packedJupiter line 118
               d601 0000  ld   $00
               d602 0000  ld   $00
-              * 120 times
+              * 71 times
+              d647 00fc  ld   $fc
+              d648 00ff  ld   $ff
+              d649 00ff  ld   $ff
+              d64a 00ff  ld   $ff
+              * 5 times
+              d64d 0003  ld   $03
+              d64e 0000  ld   $00
+              d64f 00f0  ld   $f0
+              d650 00ff  ld   $ff
+              d651 00ff  ld   $ff
+              d652 00ff  ld   $ff
+              * 5 times
+              d655 000f  ld   $0f
+              d656 0000  ld   $00
+              d657 0000  ld   $00
+              d658 0000  ld   $00
+              * 34 times
               d678 0200  nop
               d679 fe00  bra  ac          ;Trampoline for page $d600 reading (entry)
               d67a fc7b  bra  $d67b

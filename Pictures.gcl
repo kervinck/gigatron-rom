@@ -8,7 +8,6 @@
 gcl0x
 
 {
-  XXX Add Gigatron text in frame in shadow letters [ROMv1]
   XXX Speed up scrolling by splitting work over frames
   XXX More interesting transitions
 }
