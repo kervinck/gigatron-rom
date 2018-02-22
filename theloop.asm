@@ -158,7 +158,7 @@ cold:         003e c204  st   [$04]
               0097 00c0  ld   $c0
               0098 0200  nop
               0099 0200  nop
-SYS_Reset_36: 009a 001a  ld   $1a         ;Set ROM type/version
+SYS_Reset_36: 009a 001c  ld   $1c         ;Set ROM type/version
               009b c221  st   [$21]
               009c 0000  ld   $00
               009d c21c  st   [$1c]
@@ -49074,8 +49074,8 @@ SYS_LoaderProcessInput_48:
               d75e e0cb  jmp  y,$cb
               d75f 00e9  ld   $e9
 zippedRacerHorizon:
-              d760 0030  ld   $30
-              d761 000c  ld   $0c
+              d760 0041  ld   $41
+              d761 0000  ld   $00
               d762 00c3  ld   $c3
               d763 0030  ld   $30
               d764 000c  ld   $0c
@@ -49092,21 +49092,21 @@ zippedRacerHorizon:
               d76f 0030  ld   $30
               d770 000c  ld   $0c
               d771 00c3  ld   $c3
-              d772 0015  ld   $15
+              d772 0030  ld   $30
               d773 000c  ld   $0c
               d774 00c3  ld   $c3
               d775 0030  ld   $30
               d776 000c  ld   $0c
               d777 00c3  ld   $c3
-              d778 0030  ld   $30
+              d778 0000  ld   $00
               d779 000c  ld   $0c
               d77a 00c3  ld   $c3
               d77b 0030  ld   $30
-              d77c 001c  ld   $1c
-              d77d 0004  ld   $04
-              d77e 0041  ld   $41
-              d77f 0000  ld   $00
-              d780 00c3  ld   $c3
+              d77c 000c  ld   $0c
+              d77d 00c3  ld   $c3
+              d77e 0030  ld   $30
+              d77f 00fc  ld   $fc
+              d780 0002  ld   $02
               d781 0030  ld   $30
               d782 000c  ld   $0c
               d783 00c3  ld   $c3
@@ -49128,15 +49128,15 @@ zippedRacerHorizon:
               d793 0030  ld   $30
               d794 000c  ld   $0c
               d795 00c3  ld   $c3
-              d796 0000  ld   $00
+              d796 0030  ld   $30
               d797 000c  ld   $0c
               d798 00c3  ld   $c3
               d799 0030  ld   $30
               d79a 000c  ld   $0c
               d79b 00c3  ld   $c3
               d79c 0030  ld   $30
-              d79d 00fc  ld   $fc
-              d79e 0002  ld   $02
+              d79d 000c  ld   $0c
+              d79e 00c3  ld   $c3
               d79f 0030  ld   $30
               d7a0 000c  ld   $0c
               d7a1 00c3  ld   $c3
@@ -49158,13 +49158,13 @@ zippedRacerHorizon:
               d7b1 0030  ld   $30
               d7b2 000c  ld   $0c
               d7b3 00c3  ld   $c3
-              d7b4 0030  ld   $30
+              d7b4 0013  ld   $13
               d7b5 000c  ld   $0c
               d7b6 00c3  ld   $c3
               d7b7 0030  ld   $30
               d7b8 000c  ld   $0c
               d7b9 00c3  ld   $c3
-              d7ba 0030  ld   $30
+              d7ba 002a  ld   $2a
               d7bb 000c  ld   $0c
               d7bc 00c3  ld   $c3
               d7bd 0030  ld   $30
@@ -49188,13 +49188,13 @@ zippedRacerHorizon:
               d7cf 0030  ld   $30
               d7d0 000c  ld   $0c
               d7d1 00c3  ld   $c3
-              d7d2 0013  ld   $13
+              d7d2 0030  ld   $30
               d7d3 000c  ld   $0c
               d7d4 00c3  ld   $c3
               d7d5 0030  ld   $30
               d7d6 000c  ld   $0c
               d7d7 00c3  ld   $c3
-              d7d8 002a  ld   $2a
+              d7d8 0030  ld   $30
               d7d9 000c  ld   $0c
               d7da 00c3  ld   $c3
               d7db 0030  ld   $30
@@ -49202,8 +49202,8 @@ zippedRacerHorizon:
               d7dd 00c3  ld   $c3
               d7de 0030  ld   $30
               d7df 000c  ld   $0c
-              d7e0 00c3  ld   $c3
-              d7e1 0030  ld   $30
+              d7e0 00ab  ld   $ab
+              d7e1 002a  ld   $2a
               d7e2 000c  ld   $0c
               d7e3 00c3  ld   $c3
               d7e4 0030  ld   $30
@@ -49218,14 +49218,14 @@ zippedRacerHorizon:
               d7ed 0030  ld   $30
               d7ee 000c  ld   $0c
               d7ef 00c3  ld   $c3
-              d7f0 0030  ld   $30
-              d7f1 000c  ld   $0c
+              d7f0 00f0  ld   $f0
+              d7f1 000f  ld   $0f
               d7f2 00c3  ld   $c3
               d7f3 0030  ld   $30
               d7f4 000c  ld   $0c
               d7f5 00c3  ld   $c3
-              d7f6 0030  ld   $30
-              d7f7 000c  ld   $0c
+              d7f6 00f0  ld   $f0
+              d7f7 000f  ld   $0f
               d7f8 00c3  ld   $c3
               d7f9 0030  ld   $30
               d7fa 000c  ld   $0c
@@ -49235,10 +49235,10 @@ zippedRacerHorizon:
               d7fe e065  jmp  y,$65       ;|                                   |
               d7ff c218  st   [$18]       ;+-----------------------------------+
               d800 00c3  ld   $c3
-              d801 0030  ld   $30
+              d801 003f  ld   $3f
               d802 000c  ld   $0c
-              d803 00ab  ld   $ab
-              d804 002a  ld   $2a
+              d803 00c3  ld   $c3
+              d804 0030  ld   $30
               d805 000c  ld   $0c
               d806 00c3  ld   $c3
               d807 0030  ld   $30
@@ -49253,26 +49253,26 @@ zippedRacerHorizon:
               d810 0030  ld   $30
               d811 000c  ld   $0c
               d812 00c3  ld   $c3
-              d813 00f0  ld   $f0
-              d814 000f  ld   $0f
+              d813 0030  ld   $30
+              d814 000c  ld   $0c
               d815 00c3  ld   $c3
               d816 0030  ld   $30
               d817 000c  ld   $0c
               d818 00c3  ld   $c3
-              d819 00f0  ld   $f0
-              d81a 000f  ld   $0f
+              d819 0015  ld   $15
+              d81a 000c  ld   $0c
               d81b 00c3  ld   $c3
               d81c 0030  ld   $30
               d81d 000c  ld   $0c
               d81e 00c3  ld   $c3
-              d81f 003f  ld   $3f
+              d81f 0030  ld   $30
               d820 000c  ld   $0c
               d821 00c3  ld   $c3
               d822 0030  ld   $30
-              d823 000c  ld   $0c
-              d824 00c3  ld   $c3
-              d825 0030  ld   $30
-              d826 000c  ld   $0c
+              d823 001c  ld   $1c
+              d824 0004  ld   $04
+              d825 006b  ld   $6b
+              d826 0000  ld   $00
               d827 00c3  ld   $c3
               d828 0030  ld   $30
               d829 000c  ld   $0c
@@ -49289,21 +49289,21 @@ zippedRacerHorizon:
               d834 0030  ld   $30
               d835 000c  ld   $0c
               d836 00c3  ld   $c3
-              d837 0015  ld   $15
+              d837 0030  ld   $30
               d838 000c  ld   $0c
               d839 00c3  ld   $c3
               d83a 0030  ld   $30
               d83b 000c  ld   $0c
               d83c 00c3  ld   $c3
-              d83d 0030  ld   $30
-              d83e 000c  ld   $0c
+              d83d 003f  ld   $3f
+              d83e 0000  ld   $00
               d83f 00c3  ld   $c3
               d840 0030  ld   $30
-              d841 001c  ld   $1c
-              d842 00ac  ld   $ac
-              d843 006b  ld   $6b
-              d844 0000  ld   $00
-              d845 00c3  ld   $c3
+              d841 000c  ld   $0c
+              d842 00c3  ld   $c3
+              d843 00f0  ld   $f0
+              d844 000f  ld   $0f
+              d845 00c0  ld   $c0
               d846 0030  ld   $30
               d847 000c  ld   $0c
               d848 00c3  ld   $c3
@@ -49325,15 +49325,15 @@ zippedRacerHorizon:
               d858 0030  ld   $30
               d859 000c  ld   $0c
               d85a 00c3  ld   $c3
-              d85b 003f  ld   $3f
-              d85c 0000  ld   $00
+              d85b 0030  ld   $30
+              d85c 000c  ld   $0c
               d85d 00c3  ld   $c3
               d85e 0030  ld   $30
               d85f 000c  ld   $0c
               d860 00c3  ld   $c3
-              d861 00f0  ld   $f0
-              d862 000f  ld   $0f
-              d863 00c0  ld   $c0
+              d861 0030  ld   $30
+              d862 000c  ld   $0c
+              d863 00c3  ld   $c3
               d864 0030  ld   $30
               d865 000c  ld   $0c
               d866 00c3  ld   $c3
@@ -49355,13 +49355,13 @@ zippedRacerHorizon:
               d876 0030  ld   $30
               d877 000c  ld   $0c
               d878 00c3  ld   $c3
-              d879 0030  ld   $30
+              d879 002a  ld   $2a
               d87a 000c  ld   $0c
               d87b 00c3  ld   $c3
               d87c 0030  ld   $30
               d87d 000c  ld   $0c
-              d87e 00c3  ld   $c3
-              d87f 0030  ld   $30
+              d87e 00ab  ld   $ab
+              d87f 002a  ld   $2a
               d880 000c  ld   $0c
               d881 00c3  ld   $c3
               d882 0030  ld   $30
@@ -49376,62 +49376,62 @@ zippedRacerHorizon:
               d88b 0030  ld   $30
               d88c 000c  ld   $0c
               d88d 00c3  ld   $c3
-              d88e 0030  ld   $30
-              d88f 000c  ld   $0c
-              d890 00c3  ld   $c3
-              d891 0030  ld   $30
+              d88e 00ff  ld   $ff
+              d88f 00fb  ld   $fb
+              d890 00bf  ld   $bf
+              d891 003f  ld   $3f
               d892 000c  ld   $0c
               d893 00c3  ld   $c3
               d894 0030  ld   $30
               d895 000c  ld   $0c
               d896 00c3  ld   $c3
-              d897 002a  ld   $2a
+              d897 0030  ld   $30
               d898 000c  ld   $0c
               d899 00c3  ld   $c3
               d89a 0030  ld   $30
               d89b 000c  ld   $0c
-              d89c 00ab  ld   $ab
-              d89d 002a  ld   $2a
+              d89c 00c3  ld   $c3
+              d89d 0030  ld   $30
               d89e 000c  ld   $0c
               d89f 00c3  ld   $c3
               d8a0 0030  ld   $30
               d8a1 000c  ld   $0c
               d8a2 00c3  ld   $c3
               d8a3 0030  ld   $30
-              d8a4 000c  ld   $0c
-              d8a5 00c3  ld   $c3
-              d8a6 0030  ld   $30
-              d8a7 000c  ld   $0c
+              d8a4 00ac  ld   $ac
+              d8a5 0056  ld   $56
+              d8a6 0095  ld   $95
+              d8a7 000a  ld   $0a
               d8a8 00c3  ld   $c3
               d8a9 0030  ld   $30
               d8aa 000c  ld   $0c
               d8ab 00c3  ld   $c3
-              d8ac 00ff  ld   $ff
-              d8ad 00fb  ld   $fb
-              d8ae 00bf  ld   $bf
-              d8af 003f  ld   $3f
+              d8ac 0030  ld   $30
+              d8ad 000c  ld   $0c
+              d8ae 00c3  ld   $c3
+              d8af 0030  ld   $30
               d8b0 000c  ld   $0c
               d8b1 00c3  ld   $c3
               d8b2 0030  ld   $30
               d8b3 000c  ld   $0c
               d8b4 00c3  ld   $c3
-              d8b5 0030  ld   $30
-              d8b6 000c  ld   $0c
+              d8b5 00f0  ld   $f0
+              d8b6 00ff  ld   $ff
               d8b7 00c3  ld   $c3
               d8b8 0030  ld   $30
               d8b9 000c  ld   $0c
               d8ba 00c3  ld   $c3
-              d8bb 0030  ld   $30
-              d8bc 000c  ld   $0c
+              d8bb 00f0  ld   $f0
+              d8bc 00ff  ld   $ff
               d8bd 00c3  ld   $c3
               d8be 0030  ld   $30
               d8bf 000c  ld   $0c
               d8c0 00c3  ld   $c3
-              d8c1 0030  ld   $30
-              d8c2 00ac  ld   $ac
-              d8c3 0056  ld   $56
-              d8c4 0095  ld   $95
-              d8c5 000a  ld   $0a
+              d8c1 00ff  ld   $ff
+              d8c2 000f  ld   $0f
+              d8c3 00c3  ld   $c3
+              d8c4 0030  ld   $30
+              d8c5 000c  ld   $0c
               d8c6 00c3  ld   $c3
               d8c7 0030  ld   $30
               d8c8 000c  ld   $0c
@@ -49445,42 +49445,42 @@ zippedRacerHorizon:
               d8d0 0030  ld   $30
               d8d1 000c  ld   $0c
               d8d2 00c3  ld   $c3
-              d8d3 00f0  ld   $f0
-              d8d4 00ff  ld   $ff
+              d8d3 0030  ld   $30
+              d8d4 000c  ld   $0c
               d8d5 00c3  ld   $c3
               d8d6 0030  ld   $30
               d8d7 000c  ld   $0c
               d8d8 00c3  ld   $c3
-              d8d9 00f0  ld   $f0
-              d8da 00ff  ld   $ff
+              d8d9 0015  ld   $15
+              d8da 000c  ld   $0c
               d8db 00c3  ld   $c3
               d8dc 0030  ld   $30
               d8dd 000c  ld   $0c
               d8de 00c3  ld   $c3
-              d8df 00ff  ld   $ff
-              d8e0 000f  ld   $0f
+              d8df 0030  ld   $30
+              d8e0 000c  ld   $0c
               d8e1 00c3  ld   $c3
               d8e2 0030  ld   $30
-              d8e3 000c  ld   $0c
-              d8e4 00c3  ld   $c3
-              d8e5 0030  ld   $30
-              d8e6 000c  ld   $0c
-              d8e7 00c3  ld   $c3
+              d8e3 001c  ld   $1c
+              d8e4 00ac  ld   $ac
+              d8e5 0056  ld   $56
+              d8e6 0060  ld   $60
+              d8e7 0059  ld   $59
               d8e8 0030  ld   $30
               d8e9 000c  ld   $0c
               d8ea 00c3  ld   $c3
-              d8eb 0030  ld   $30
-              d8ec 000c  ld   $0c
-              d8ed 00c3  ld   $c3
-              d8ee 0030  ld   $30
-              d8ef 000c  ld   $0c
-              d8f0 00c3  ld   $c3
-              d8f1 0030  ld   $30
-              d8f2 000c  ld   $0c
-              d8f3 00c3  ld   $c3
-              d8f4 0030  ld   $30
-              d8f5 000c  ld   $0c
-              d8f6 0057  ld   $57
+              d8eb 0070  ld   $70
+              d8ec 0055  ld   $55
+              d8ed 00fd  ld   $fd
+              d8ee 0055  ld   $55
+              d8ef 00f5  ld   $f5
+              d8f0 0057  ld   $57
+              d8f1 00d5  ld   $d5
+              d8f2 005f  ld   $5f
+              d8f3 0055  ld   $55
+              d8f4 007f  ld   $7f
+              d8f5 0055  ld   $55
+              d8f6 00fd  ld   $fd
               d8f7 0055  ld   $55
               d8f8 0005  ld   $05
               d8f9 00c3  ld   $c3
@@ -49492,44 +49492,44 @@ zippedRacerHorizon:
               d8ff c218  st   [$18]       ;+-----------------------------------+
               d900 000c  ld   $0c
               d901 00c3  ld   $c3
-              d902 0030  ld   $30
-              d903 000c  ld   $0c
-              d904 00c3  ld   $c3
-              d905 0096  ld   $96
-              d906 0015  ld   $15
-              d907 0058  ld   $58
-              d908 0056  ld   $56
-              d909 0060  ld   $60
-              d90a 0059  ld   $59
+              d902 00f0  ld   $f0
+              d903 000b  ld   $0b
+              d904 00c0  ld   $c0
+              d905 0030  ld   $30
+              d906 000c  ld   $0c
+              d907 00c3  ld   $c3
+              d908 002f  ld   $2f
+              d909 0000  ld   $00
+              d90a 00c3  ld   $c3
               d90b 0030  ld   $30
               d90c 000c  ld   $0c
               d90d 00c3  ld   $c3
-              d90e 0070  ld   $70
-              d90f 0055  ld   $55
-              d910 00fd  ld   $fd
-              d911 0055  ld   $55
-              d912 00f5  ld   $f5
-              d913 0057  ld   $57
-              d914 00d5  ld   $d5
-              d915 005f  ld   $5f
-              d916 0055  ld   $55
-              d917 007f  ld   $7f
-              d918 0055  ld   $55
-              d919 00fd  ld   $fd
-              d91a 0055  ld   $55
-              d91b 0005  ld   $05
+              d90e 0030  ld   $30
+              d90f 000c  ld   $0c
+              d910 00c3  ld   $c3
+              d911 0030  ld   $30
+              d912 000c  ld   $0c
+              d913 00c3  ld   $c3
+              d914 0030  ld   $30
+              d915 000c  ld   $0c
+              d916 00c3  ld   $c3
+              d917 0030  ld   $30
+              d918 000c  ld   $0c
+              d919 00c3  ld   $c3
+              d91a 0030  ld   $30
+              d91b 000c  ld   $0c
               d91c 00c3  ld   $c3
               d91d 0030  ld   $30
               d91e 000c  ld   $0c
               d91f 00c3  ld   $c3
-              d920 00f0  ld   $f0
-              d921 000b  ld   $0b
-              d922 00c0  ld   $c0
+              d920 0030  ld   $30
+              d921 000c  ld   $0c
+              d922 00c3  ld   $c3
               d923 0030  ld   $30
               d924 000c  ld   $0c
               d925 00c3  ld   $c3
-              d926 002f  ld   $2f
-              d927 0000  ld   $00
+              d926 0030  ld   $30
+              d927 000c  ld   $0c
               d928 00c3  ld   $c3
               d929 0030  ld   $30
               d92a 000c  ld   $0c
@@ -49552,13 +49552,13 @@ zippedRacerHorizon:
               d93b 0030  ld   $30
               d93c 000c  ld   $0c
               d93d 00c3  ld   $c3
-              d93e 0030  ld   $30
+              d93e 002a  ld   $2a
               d93f 000c  ld   $0c
               d940 00c3  ld   $c3
-              d941 0030  ld   $30
-              d942 000c  ld   $0c
-              d943 00c3  ld   $c3
-              d944 0030  ld   $30
+              d941 00b0  ld   $b0
+              d942 00aa  ld   $aa
+              d943 00aa  ld   $aa
+              d944 002a  ld   $2a
               d945 000c  ld   $0c
               d946 00c3  ld   $c3
               d947 0030  ld   $30
@@ -49572,66 +49572,66 @@ zippedRacerHorizon:
               d94f 00c3  ld   $c3
               d950 0030  ld   $30
               d951 000c  ld   $0c
-              d952 00c3  ld   $c3
-              d953 0030  ld   $30
-              d954 000c  ld   $0c
-              d955 00c3  ld   $c3
-              d956 0030  ld   $30
-              d957 000c  ld   $0c
+              d952 00bf  ld   $bf
+              d953 0091  ld   $91
+              d954 00f4  ld   $f4
+              d955 0046  ld   $46
+              d956 00d2  ld   $d2
+              d957 000b  ld   $0b
               d958 00c3  ld   $c3
               d959 0030  ld   $30
               d95a 000c  ld   $0c
               d95b 00c3  ld   $c3
-              d95c 002a  ld   $2a
+              d95c 0030  ld   $30
               d95d 000c  ld   $0c
               d95e 00c3  ld   $c3
-              d95f 00b0  ld   $b0
-              d960 00aa  ld   $aa
-              d961 00aa  ld   $aa
-              d962 002a  ld   $2a
+              d95f 0030  ld   $30
+              d960 000c  ld   $0c
+              d961 00c3  ld   $c3
+              d962 0030  ld   $30
               d963 000c  ld   $0c
               d964 00c3  ld   $c3
               d965 0030  ld   $30
-              d966 000c  ld   $0c
-              d967 00c3  ld   $c3
-              d968 0030  ld   $30
-              d969 000c  ld   $0c
-              d96a 00c3  ld   $c3
-              d96b 0030  ld   $30
-              d96c 000c  ld   $0c
-              d96d 00c3  ld   $c3
-              d96e 0030  ld   $30
-              d96f 000c  ld   $0c
-              d970 00bf  ld   $bf
-              d971 0091  ld   $91
-              d972 00f4  ld   $f4
-              d973 0046  ld   $46
-              d974 00d2  ld   $d2
-              d975 000b  ld   $0b
+              d966 00ac  ld   $ac
+              d967 00c2  ld   $c2
+              d968 00b0  ld   $b0
+              d969 00aa  ld   $aa
+              d96a 00aa  ld   $aa
+              d96b 00aa  ld   $aa
+              d96c 00aa  ld   $aa
+              d96d 00c2  ld   $c2
+              d96e 00b0  ld   $b0
+              d96f 000a  ld   $0a
+              d970 00c3  ld   $c3
+              d971 0030  ld   $30
+              d972 000c  ld   $0c
+              d973 00c3  ld   $c3
+              d974 0030  ld   $30
+              d975 000c  ld   $0c
               d976 00c3  ld   $c3
               d977 0030  ld   $30
               d978 000c  ld   $0c
               d979 00c3  ld   $c3
               d97a 0030  ld   $30
-              d97b 000c  ld   $0c
-              d97c 00c3  ld   $c3
-              d97d 0030  ld   $30
-              d97e 000c  ld   $0c
-              d97f 00c3  ld   $c3
+              d97b 00ac  ld   $ac
+              d97c 00fe  ld   $fe
+              d97d 00ff  ld   $ff
+              d97e 003f  ld   $3f
+              d97f 00c0  ld   $c0
               d980 0030  ld   $30
-              d981 000c  ld   $0c
-              d982 00c3  ld   $c3
-              d983 0030  ld   $30
-              d984 00ac  ld   $ac
-              d985 00c2  ld   $c2
+              d981 00ac  ld   $ac
+              d982 00fe  ld   $fe
+              d983 00ff  ld   $ff
+              d984 003f  ld   $3f
+              d985 00c0  ld   $c0
               d986 00b0  ld   $b0
-              d987 00aa  ld   $aa
-              d988 00aa  ld   $aa
-              d989 00aa  ld   $aa
-              d98a 00aa  ld   $aa
-              d98b 00c2  ld   $c2
-              d98c 00b0  ld   $b0
-              d98d 000a  ld   $0a
+              d987 00fa  ld   $fa
+              d988 00ff  ld   $ff
+              d989 00ff  ld   $ff
+              d98a 0000  ld   $00
+              d98b 00c3  ld   $c3
+              d98c 0030  ld   $30
+              d98d 000c  ld   $0c
               d98e 00c3  ld   $c3
               d98f 0030  ld   $30
               d990 000c  ld   $0c
@@ -49643,84 +49643,84 @@ zippedRacerHorizon:
               d996 000c  ld   $0c
               d997 00c3  ld   $c3
               d998 0030  ld   $30
-              d999 00ac  ld   $ac
-              d99a 00fe  ld   $fe
-              d99b 00ff  ld   $ff
-              d99c 003f  ld   $3f
-              d99d 00c0  ld   $c0
-              d99e 0030  ld   $30
-              d99f 00ac  ld   $ac
-              d9a0 00fe  ld   $fe
-              d9a1 00ff  ld   $ff
-              d9a2 003f  ld   $3f
-              d9a3 00c0  ld   $c0
-              d9a4 00b0  ld   $b0
-              d9a5 00fa  ld   $fa
-              d9a6 00ff  ld   $ff
-              d9a7 00ff  ld   $ff
-              d9a8 0000  ld   $00
-              d9a9 00c3  ld   $c3
-              d9aa 0030  ld   $30
-              d9ab 000c  ld   $0c
-              d9ac 00c3  ld   $c3
+              d999 000c  ld   $0c
+              d99a 00c3  ld   $c3
+              d99b 0030  ld   $30
+              d99c 000c  ld   $0c
+              d99d 0057  ld   $57
+              d99e 0055  ld   $55
+              d99f 0005  ld   $05
+              d9a0 00c3  ld   $c3
+              d9a1 0030  ld   $30
+              d9a2 000c  ld   $0c
+              d9a3 00c3  ld   $c3
+              d9a4 0030  ld   $30
+              d9a5 000c  ld   $0c
+              d9a6 00c3  ld   $c3
+              d9a7 0096  ld   $96
+              d9a8 0015  ld   $15
+              d9a9 0058  ld   $58
+              d9aa 006b  ld   $6b
+              d9ab 00b0  ld   $b0
+              d9ac 00ae  ld   $ae
               d9ad 0030  ld   $30
               d9ae 000c  ld   $0c
               d9af 00c3  ld   $c3
-              d9b0 0030  ld   $30
-              d9b1 000c  ld   $0c
-              d9b2 00c3  ld   $c3
-              d9b3 0030  ld   $30
-              d9b4 000c  ld   $0c
-              d9b5 00c3  ld   $c3
-              d9b6 0030  ld   $30
-              d9b7 000c  ld   $0c
-              d9b8 00c3  ld   $c3
-              d9b9 0030  ld   $30
-              d9ba 000c  ld   $0c
-              d9bb 00c3  ld   $c3
-              d9bc 0015  ld   $15
-              d9bd 000c  ld   $0c
+              d9b0 00f0  ld   $f0
+              d9b1 00ff  ld   $ff
+              d9b2 00ff  ld   $ff
+              d9b3 00ff  ld   $ff
+              * 12 times
+              d9bd 000f  ld   $0f
               d9be 00c3  ld   $c3
               d9bf 0030  ld   $30
               d9c0 000c  ld   $0c
               d9c1 00c3  ld   $c3
               d9c2 0030  ld   $30
-              d9c3 000c  ld   $0c
-              d9c4 00c3  ld   $c3
-              d9c5 00eb  ld   $eb
-              d9c6 001a  ld   $1a
-              d9c7 00ac  ld   $ac
-              d9c8 006b  ld   $6b
-              d9c9 00b0  ld   $b0
-              d9ca 00ae  ld   $ae
+              d9c3 00fc  ld   $fc
+              d9c4 0003  ld   $03
+              d9c5 0030  ld   $30
+              d9c6 000c  ld   $0c
+              d9c7 00ff  ld   $ff
+              d9c8 0000  ld   $00
+              d9c9 000c  ld   $0c
+              d9ca 00c3  ld   $c3
               d9cb 0030  ld   $30
               d9cc 000c  ld   $0c
               d9cd 00c3  ld   $c3
-              d9ce 00f0  ld   $f0
-              d9cf 00ff  ld   $ff
-              d9d0 00ff  ld   $ff
-              d9d1 00ff  ld   $ff
-              * 12 times
-              d9db 000f  ld   $0f
+              d9ce 0030  ld   $30
+              d9cf 00fc  ld   $fc
+              d9d0 00bf  ld   $bf
+              d9d1 0030  ld   $30
+              d9d2 000c  ld   $0c
+              d9d3 00c3  ld   $c3
+              d9d4 0030  ld   $30
+              d9d5 000c  ld   $0c
+              d9d6 00c3  ld   $c3
+              d9d7 0030  ld   $30
+              d9d8 000c  ld   $0c
+              d9d9 00c3  ld   $c3
+              d9da 0030  ld   $30
+              d9db 000c  ld   $0c
               d9dc 00c3  ld   $c3
               d9dd 0030  ld   $30
               d9de 000c  ld   $0c
               d9df 00c3  ld   $c3
               d9e0 0030  ld   $30
-              d9e1 00fc  ld   $fc
-              d9e2 0003  ld   $03
+              d9e1 000c  ld   $0c
+              d9e2 00c3  ld   $c3
               d9e3 0030  ld   $30
               d9e4 000c  ld   $0c
-              d9e5 00ff  ld   $ff
-              d9e6 0000  ld   $00
+              d9e5 00c3  ld   $c3
+              d9e6 0030  ld   $30
               d9e7 000c  ld   $0c
               d9e8 00c3  ld   $c3
               d9e9 0030  ld   $30
               d9ea 000c  ld   $0c
               d9eb 00c3  ld   $c3
               d9ec 0030  ld   $30
-              d9ed 00fc  ld   $fc
-              d9ee 00bf  ld   $bf
+              d9ed 000c  ld   $0c
+              d9ee 00c3  ld   $c3
               d9ef 0030  ld   $30
               d9f0 000c  ld   $0c
               d9f1 00c3  ld   $c3
@@ -49738,16 +49738,16 @@ zippedRacerHorizon:
               d9fd 1404  ld   $04,y       ;| Trampoline for page $d900 lookups |
               d9fe e065  jmp  y,$65       ;|                                   |
               d9ff c218  st   [$18]       ;+-----------------------------------+
-              da00 0030  ld   $30
-              da01 000c  ld   $0c
-              da02 00c3  ld   $c3
-              da03 0030  ld   $30
-              da04 000c  ld   $0c
+              da00 00f0  ld   $f0
+              da01 00ff  ld   $ff
+              da02 00ab  ld   $ab
+              da03 00ff  ld   $ff
+              da04 000f  ld   $0f
               da05 00c3  ld   $c3
-              da06 0030  ld   $30
-              da07 000c  ld   $0c
-              da08 00c3  ld   $c3
-              da09 0030  ld   $30
+              da06 006a  ld   $6a
+              da07 00a5  ld   $a5
+              da08 0056  ld   $56
+              da09 002a  ld   $2a
               da0a 000c  ld   $0c
               da0b 00c3  ld   $c3
               da0c 0030  ld   $30
@@ -49760,65 +49760,65 @@ zippedRacerHorizon:
               da13 000c  ld   $0c
               da14 00c3  ld   $c3
               da15 0030  ld   $30
-              da16 000c  ld   $0c
-              da17 00c3  ld   $c3
+              da16 00fc  ld   $fc
+              da17 004a  ld   $4a
               da18 0030  ld   $30
-              da19 000c  ld   $0c
-              da1a 00c3  ld   $c3
-              da1b 0030  ld   $30
-              da1c 000c  ld   $0c
-              da1d 00c3  ld   $c3
-              da1e 00f0  ld   $f0
-              da1f 00ff  ld   $ff
-              da20 00ab  ld   $ab
-              da21 00ff  ld   $ff
-              da22 000f  ld   $0f
+              da19 00fc  ld   $fc
+              da1a 00c2  ld   $c2
+              da1b 0070  ld   $70
+              da1c 00f4  ld   $f4
+              da1d 00c2  ld   $c2
+              da1e 0030  ld   $30
+              da1f 000c  ld   $0c
+              da20 00c3  ld   $c3
+              da21 0030  ld   $30
+              da22 000c  ld   $0c
               da23 00c3  ld   $c3
-              da24 006a  ld   $6a
-              da25 00a5  ld   $a5
-              da26 0056  ld   $56
-              da27 002a  ld   $2a
+              da24 0030  ld   $30
+              da25 000c  ld   $0c
+              da26 00c3  ld   $c3
+              da27 0030  ld   $30
               da28 000c  ld   $0c
               da29 00c3  ld   $c3
-              da2a 0030  ld   $30
-              da2b 000c  ld   $0c
-              da2c 00c3  ld   $c3
-              da2d 0030  ld   $30
-              da2e 000c  ld   $0c
-              da2f 00c3  ld   $c3
-              da30 0030  ld   $30
-              da31 000c  ld   $0c
-              da32 00c3  ld   $c3
-              da33 0030  ld   $30
-              da34 00fc  ld   $fc
-              da35 004a  ld   $4a
+              da2a 00f0  ld   $f0
+              da2b 00af  ld   $af
+              da2c 00fe  ld   $fe
+              da2d 00aa  ld   $aa
+              da2e 00aa  ld   $aa
+              da2f 00aa  ld   $aa
+              * 6 times
+              da33 00bf  ld   $bf
+              da34 00fa  ld   $fa
+              da35 00c3  ld   $c3
               da36 0030  ld   $30
-              da37 00fc  ld   $fc
-              da38 00c2  ld   $c2
-              da39 0070  ld   $70
-              da3a 00f4  ld   $f4
-              da3b 00c2  ld   $c2
+              da37 000c  ld   $0c
+              da38 00c3  ld   $c3
+              da39 0030  ld   $30
+              da3a 000c  ld   $0c
+              da3b 00c3  ld   $c3
               da3c 0030  ld   $30
               da3d 000c  ld   $0c
               da3e 00c3  ld   $c3
-              da3f 0030  ld   $30
-              da40 000c  ld   $0c
-              da41 00c3  ld   $c3
+              da3f 00f0  ld   $f0
+              da40 00ff  ld   $ff
+              da41 00ff  ld   $ff
               da42 0030  ld   $30
               da43 000c  ld   $0c
               da44 00c3  ld   $c3
-              da45 0030  ld   $30
-              da46 000c  ld   $0c
-              da47 00c3  ld   $c3
-              da48 00f0  ld   $f0
-              da49 00af  ld   $af
-              da4a 00fe  ld   $fe
-              da4b 00aa  ld   $aa
-              da4c 00aa  ld   $aa
-              da4d 00aa  ld   $aa
-              * 6 times
-              da51 00bf  ld   $bf
-              da52 00fa  ld   $fa
+              da45 00f0  ld   $f0
+              da46 00ff  ld   $ff
+              da47 00ff  ld   $ff
+              da48 0030  ld   $30
+              da49 000c  ld   $0c
+              da4a 00c3  ld   $c3
+              da4b 00ff  ld   $ff
+              da4c 00ff  ld   $ff
+              da4d 00c3  ld   $c3
+              da4e 0030  ld   $30
+              da4f 000c  ld   $0c
+              da50 00c3  ld   $c3
+              da51 0030  ld   $30
+              da52 000c  ld   $0c
               da53 00c3  ld   $c3
               da54 0030  ld   $30
               da55 000c  ld   $0c
@@ -49829,84 +49829,84 @@ zippedRacerHorizon:
               da5a 0030  ld   $30
               da5b 000c  ld   $0c
               da5c 00c3  ld   $c3
-              da5d 00f0  ld   $f0
-              da5e 00ff  ld   $ff
-              da5f 00ff  ld   $ff
+              da5d 0030  ld   $30
+              da5e 000c  ld   $0c
+              da5f 00c3  ld   $c3
               da60 0030  ld   $30
               da61 000c  ld   $0c
               da62 00c3  ld   $c3
-              da63 00f0  ld   $f0
-              da64 00ff  ld   $ff
-              da65 00ff  ld   $ff
+              da63 0015  ld   $15
+              da64 000c  ld   $0c
+              da65 00c3  ld   $c3
               da66 0030  ld   $30
               da67 000c  ld   $0c
               da68 00c3  ld   $c3
-              da69 00ff  ld   $ff
-              da6a 00ff  ld   $ff
+              da69 0030  ld   $30
+              da6a 000c  ld   $0c
               da6b 00c3  ld   $c3
-              da6c 0030  ld   $30
-              da6d 000c  ld   $0c
-              da6e 00c3  ld   $c3
-              da6f 0030  ld   $30
-              da70 000c  ld   $0c
-              da71 00c3  ld   $c3
+              da6c 00eb  ld   $eb
+              da6d 001a  ld   $1a
+              da6e 00ac  ld   $ac
+              da6f 0056  ld   $56
+              da70 00b0  ld   $b0
+              da71 00a6  ld   $a6
               da72 0030  ld   $30
               da73 000c  ld   $0c
               da74 00c3  ld   $c3
-              da75 0030  ld   $30
-              da76 000c  ld   $0c
-              da77 00c3  ld   $c3
-              da78 0030  ld   $30
-              da79 000c  ld   $0c
-              da7a 00c3  ld   $c3
-              da7b 0030  ld   $30
-              da7c 000c  ld   $0c
-              da7d 00c3  ld   $c3
-              da7e 0030  ld   $30
-              da7f 000c  ld   $0c
-              da80 00ab  ld   $ab
-              da81 0095  ld   $95
-              da82 000a  ld   $0a
+              da75 0070  ld   $70
+              da76 0055  ld   $55
+              da77 00fd  ld   $fd
+              da78 0055  ld   $55
+              da79 00f5  ld   $f5
+              da7a 0057  ld   $57
+              da7b 00d5  ld   $d5
+              da7c 005f  ld   $5f
+              da7d 0055  ld   $55
+              da7e 007f  ld   $7f
+              da7f 0055  ld   $55
+              da80 00fd  ld   $fd
+              da81 0055  ld   $55
+              da82 0005  ld   $05
               da83 00c3  ld   $c3
               da84 0030  ld   $30
               da85 000c  ld   $0c
               da86 00c3  ld   $c3
               da87 0030  ld   $30
               da88 000c  ld   $0c
-              da89 00c3  ld   $c3
-              da8a 00e9  ld   $e9
-              da8b 001a  ld   $1a
-              da8c 0058  ld   $58
-              da8d 0056  ld   $56
-              da8e 00b0  ld   $b0
-              da8f 00a6  ld   $a6
+              da89 00bf  ld   $bf
+              da8a 0000  ld   $00
+              da8b 00fc  ld   $fc
+              da8c 0002  ld   $02
+              da8d 0030  ld   $30
+              da8e 000c  ld   $0c
+              da8f 00c3  ld   $c3
               da90 0030  ld   $30
               da91 000c  ld   $0c
               da92 00c3  ld   $c3
-              da93 0070  ld   $70
-              da94 0055  ld   $55
-              da95 00fd  ld   $fd
-              da96 0055  ld   $55
-              da97 00f5  ld   $f5
-              da98 0057  ld   $57
-              da99 00d5  ld   $d5
-              da9a 005f  ld   $5f
-              da9b 0055  ld   $55
-              da9c 007f  ld   $7f
-              da9d 0055  ld   $55
-              da9e 00fd  ld   $fd
-              da9f 0055  ld   $55
-              daa0 0005  ld   $05
+              da93 0030  ld   $30
+              da94 006c  ld   $6c
+              da95 00fc  ld   $fc
+              da96 0030  ld   $30
+              da97 000c  ld   $0c
+              da98 00c3  ld   $c3
+              da99 0030  ld   $30
+              da9a 000c  ld   $0c
+              da9b 00c3  ld   $c3
+              da9c 0030  ld   $30
+              da9d 000c  ld   $0c
+              da9e 00c3  ld   $c3
+              da9f 0030  ld   $30
+              daa0 000c  ld   $0c
               daa1 00c3  ld   $c3
               daa2 0030  ld   $30
               daa3 000c  ld   $0c
               daa4 00c3  ld   $c3
               daa5 0030  ld   $30
               daa6 000c  ld   $0c
-              daa7 00bf  ld   $bf
-              daa8 0000  ld   $00
-              daa9 00fc  ld   $fc
-              daaa 0002  ld   $02
+              daa7 00c3  ld   $c3
+              daa8 0030  ld   $30
+              daa9 000c  ld   $0c
+              daaa 00c3  ld   $c3
               daab 0030  ld   $30
               daac 000c  ld   $0c
               daad 00c3  ld   $c3
@@ -49914,8 +49914,8 @@ zippedRacerHorizon:
               daaf 000c  ld   $0c
               dab0 00c3  ld   $c3
               dab1 0030  ld   $30
-              dab2 006c  ld   $6c
-              dab3 00fc  ld   $fc
+              dab2 000c  ld   $0c
+              dab3 00c3  ld   $c3
               dab4 0030  ld   $30
               dab5 000c  ld   $0c
               dab6 00c3  ld   $c3
@@ -49928,16 +49928,16 @@ zippedRacerHorizon:
               dabd 0030  ld   $30
               dabe 000c  ld   $0c
               dabf 00c3  ld   $c3
-              dac0 0030  ld   $30
-              dac1 000c  ld   $0c
-              dac2 00c3  ld   $c3
-              dac3 0030  ld   $30
-              dac4 000c  ld   $0c
-              dac5 00c3  ld   $c3
-              dac6 0030  ld   $30
-              dac7 000c  ld   $0c
-              dac8 00c3  ld   $c3
-              dac9 0030  ld   $30
+              dac0 00f0  ld   $f0
+              dac1 00af  ld   $af
+              dac2 00fe  ld   $fe
+              dac3 00ea  ld   $ea
+              dac4 000f  ld   $0f
+              dac5 00ab  ld   $ab
+              dac6 00aa  ld   $aa
+              dac7 00aa  ld   $aa
+              dac8 00aa  ld   $aa
+              dac9 002a  ld   $2a
               daca 000c  ld   $0c
               dacb 00c3  ld   $c3
               dacc 0030  ld   $30
@@ -49949,73 +49949,73 @@ zippedRacerHorizon:
               dad2 0030  ld   $30
               dad3 000c  ld   $0c
               dad4 00c3  ld   $c3
-              dad5 0030  ld   $30
-              dad6 000c  ld   $0c
-              dad7 00c3  ld   $c3
+              dad5 00f0  ld   $f0
+              dad6 001b  ld   $1b
+              dad7 00bd  ld   $bd
               dad8 0030  ld   $30
-              dad9 000c  ld   $0c
-              dada 00c3  ld   $c3
-              dadb 0030  ld   $30
-              dadc 000c  ld   $0c
-              dadd 00c3  ld   $c3
-              dade 00f0  ld   $f0
-              dadf 00af  ld   $af
-              dae0 00fe  ld   $fe
-              dae1 00ea  ld   $ea
-              dae2 000f  ld   $0f
-              dae3 00ab  ld   $ab
-              dae4 00aa  ld   $aa
-              dae5 00aa  ld   $aa
-              dae6 00aa  ld   $aa
-              dae7 002a  ld   $2a
+              dad9 00fc  ld   $fc
+              dada 00c2  ld   $c2
+              dadb 00f0  ld   $f0
+              dadc 002b  ld   $2b
+              dadd 00bd  ld   $bd
+              dade 0030  ld   $30
+              dadf 000c  ld   $0c
+              dae0 00c3  ld   $c3
+              dae1 0030  ld   $30
+              dae2 000c  ld   $0c
+              dae3 00c3  ld   $c3
+              dae4 0030  ld   $30
+              dae5 000c  ld   $0c
+              dae6 00c3  ld   $c3
+              dae7 0030  ld   $30
               dae8 000c  ld   $0c
               dae9 00c3  ld   $c3
-              daea 0030  ld   $30
-              daeb 000c  ld   $0c
-              daec 00c3  ld   $c3
-              daed 0030  ld   $30
-              daee 000c  ld   $0c
-              daef 00c3  ld   $c3
-              daf0 0030  ld   $30
-              daf1 000c  ld   $0c
-              daf2 00c3  ld   $c3
-              daf3 00f0  ld   $f0
-              daf4 001b  ld   $1b
-              daf5 00bd  ld   $bd
+              daea 00f0  ld   $f0
+              daeb 00af  ld   $af
+              daec 00ab  ld   $ab
+              daed 0095  ld   $95
+              daee 005a  ld   $5a
+              daef 0055  ld   $55
+              daf0 006a  ld   $6a
+              daf1 00a5  ld   $a5
+              daf2 0056  ld   $56
+              daf3 00aa  ld   $aa
+              daf4 00fe  ld   $fe
+              daf5 00c3  ld   $c3
               daf6 0030  ld   $30
-              daf7 00fc  ld   $fc
-              daf8 00c2  ld   $c2
-              daf9 00f0  ld   $f0
-              dafa 002b  ld   $2b
+              daf7 000c  ld   $0c
+              daf8 00c3  ld   $c3
+              daf9 0030  ld   $30
+              dafa 000c  ld   $0c
               dafb fe00  bra  ac          ;+-----------------------------------+
               dafc fcfd  bra  $dafd       ;|                                   |
               dafd 1404  ld   $04,y       ;| Trampoline for page $da00 lookups |
               dafe e065  jmp  y,$65       ;|                                   |
               daff c218  st   [$18]       ;+-----------------------------------+
-              db00 00bd  ld   $bd
+              db00 00c3  ld   $c3
               db01 0030  ld   $30
               db02 000c  ld   $0c
               db03 00c3  ld   $c3
-              db04 0030  ld   $30
-              db05 000c  ld   $0c
-              db06 00c3  ld   $c3
+              db04 00ff  ld   $ff
+              db05 00af  ld   $af
+              db06 00fe  ld   $fe
               db07 0030  ld   $30
               db08 000c  ld   $0c
               db09 00c3  ld   $c3
-              db0a 0030  ld   $30
-              db0b 000c  ld   $0c
-              db0c 00c3  ld   $c3
-              db0d 00f0  ld   $f0
-              db0e 00af  ld   $af
-              db0f 00ab  ld   $ab
-              db10 0095  ld   $95
-              db11 005a  ld   $5a
-              db12 0055  ld   $55
-              db13 006a  ld   $6a
-              db14 00a5  ld   $a5
-              db15 0056  ld   $56
-              db16 00aa  ld   $aa
-              db17 00fe  ld   $fe
+              db0a 00ff  ld   $ff
+              db0b 00af  ld   $af
+              db0c 00fe  ld   $fe
+              db0d 0030  ld   $30
+              db0e 000c  ld   $0c
+              db0f 00ff  ld   $ff
+              db10 00bf  ld   $bf
+              db11 00fa  ld   $fa
+              db12 00c3  ld   $c3
+              db13 0030  ld   $30
+              db14 000c  ld   $0c
+              db15 00c3  ld   $c3
+              db16 0030  ld   $30
+              db17 000c  ld   $0c
               db18 00c3  ld   $c3
               db19 0030  ld   $30
               db1a 000c  ld   $0c
@@ -50026,44 +50026,44 @@ zippedRacerHorizon:
               db1f 0030  ld   $30
               db20 000c  ld   $0c
               db21 00c3  ld   $c3
-              db22 00ff  ld   $ff
-              db23 00af  ld   $af
-              db24 00fe  ld   $fe
+              db22 0030  ld   $30
+              db23 000c  ld   $0c
+              db24 00c3  ld   $c3
               db25 0030  ld   $30
               db26 000c  ld   $0c
-              db27 00c3  ld   $c3
-              db28 00ff  ld   $ff
-              db29 00af  ld   $af
-              db2a 00fe  ld   $fe
+              db27 00ab  ld   $ab
+              db28 0095  ld   $95
+              db29 000a  ld   $0a
+              db2a 00c3  ld   $c3
               db2b 0030  ld   $30
               db2c 000c  ld   $0c
-              db2d 00ff  ld   $ff
-              db2e 00bf  ld   $bf
-              db2f 00fa  ld   $fa
+              db2d 00c3  ld   $c3
+              db2e 0030  ld   $30
+              db2f 000c  ld   $0c
               db30 00c3  ld   $c3
-              db31 0030  ld   $30
-              db32 000c  ld   $0c
-              db33 00c3  ld   $c3
-              db34 0030  ld   $30
-              db35 000c  ld   $0c
-              db36 00c3  ld   $c3
+              db31 00e9  ld   $e9
+              db32 001a  ld   $1a
+              db33 0058  ld   $58
+              db34 0041  ld   $41
+              db35 00b0  ld   $b0
+              db36 00ae  ld   $ae
               db37 0030  ld   $30
               db38 000c  ld   $0c
               db39 00c3  ld   $c3
-              db3a 0030  ld   $30
-              db3b 000c  ld   $0c
-              db3c 00c3  ld   $c3
-              db3d 0030  ld   $30
-              db3e 000c  ld   $0c
-              db3f 00c3  ld   $c3
-              db40 0030  ld   $30
-              db41 000c  ld   $0c
-              db42 00c3  ld   $c3
-              db43 0030  ld   $30
-              db44 000c  ld   $0c
-              db45 00c3  ld   $c3
-              db46 0015  ld   $15
-              db47 000c  ld   $0c
+              db3a 00b0  ld   $b0
+              db3b 00ae  ld   $ae
+              db3c 00fe  ld   $fe
+              db3d 00aa  ld   $aa
+              db3e 00fe  ld   $fe
+              db3f 00ab  ld   $ab
+              db40 00ea  ld   $ea
+              db41 00af  ld   $af
+              db42 00ab  ld   $ab
+              db43 00bf  ld   $bf
+              db44 00aa  ld   $aa
+              db45 00ff  ld   $ff
+              db46 00aa  ld   $aa
+              db47 000e  ld   $0e
               db48 00c3  ld   $c3
               db49 0030  ld   $30
               db4a 000c  ld   $0c
@@ -50071,29 +50071,29 @@ zippedRacerHorizon:
               db4c 0030  ld   $30
               db4d 000c  ld   $0c
               db4e 00c3  ld   $c3
-              db4f 00eb  ld   $eb
-              db50 001a  ld   $1a
-              db51 0004  ld   $04
-              db52 0041  ld   $41
-              db53 00b0  ld   $b0
-              db54 00ae  ld   $ae
+              db4f 007f  ld   $7f
+              db50 0005  ld   $05
+              db51 00c0  ld   $c0
+              db52 0030  ld   $30
+              db53 000c  ld   $0c
+              db54 00c3  ld   $c3
               db55 0030  ld   $30
               db56 000c  ld   $0c
               db57 00c3  ld   $c3
-              db58 00b0  ld   $b0
-              db59 00ae  ld   $ae
-              db5a 00fe  ld   $fe
-              db5b 00aa  ld   $aa
-              db5c 00fe  ld   $fe
-              db5d 00ab  ld   $ab
-              db5e 00ea  ld   $ea
-              db5f 00af  ld   $af
-              db60 00ab  ld   $ab
-              db61 00bf  ld   $bf
-              db62 00aa  ld   $aa
-              db63 00ff  ld   $ff
-              db64 00aa  ld   $aa
-              db65 000e  ld   $0e
+              db58 0030  ld   $30
+              db59 00bc  ld   $bc
+              db5a 00bc  ld   $bc
+              db5b 0030  ld   $30
+              db5c 000c  ld   $0c
+              db5d 00c3  ld   $c3
+              db5e 0030  ld   $30
+              db5f 000c  ld   $0c
+              db60 00c3  ld   $c3
+              db61 0030  ld   $30
+              db62 000c  ld   $0c
+              db63 00c3  ld   $c3
+              db64 0030  ld   $30
+              db65 000c  ld   $0c
               db66 00c3  ld   $c3
               db67 0030  ld   $30
               db68 000c  ld   $0c
@@ -50101,9 +50101,9 @@ zippedRacerHorizon:
               db6a 0030  ld   $30
               db6b 000c  ld   $0c
               db6c 00c3  ld   $c3
-              db6d 007f  ld   $7f
-              db6e 0005  ld   $05
-              db6f 00c0  ld   $c0
+              db6d 0030  ld   $30
+              db6e 000c  ld   $0c
+              db6f 00c3  ld   $c3
               db70 0030  ld   $30
               db71 000c  ld   $0c
               db72 00c3  ld   $c3
@@ -50111,8 +50111,8 @@ zippedRacerHorizon:
               db74 000c  ld   $0c
               db75 00c3  ld   $c3
               db76 0030  ld   $30
-              db77 00bc  ld   $bc
-              db78 00bc  ld   $bc
+              db77 000c  ld   $0c
+              db78 00c3  ld   $c3
               db79 0030  ld   $30
               db7a 000c  ld   $0c
               db7b 00c3  ld   $c3
@@ -50125,90 +50125,90 @@ zippedRacerHorizon:
               db82 0030  ld   $30
               db83 000c  ld   $0c
               db84 00c3  ld   $c3
-              db85 0030  ld   $30
-              db86 000c  ld   $0c
-              db87 00c3  ld   $c3
-              db88 0030  ld   $30
-              db89 000c  ld   $0c
-              db8a 00c3  ld   $c3
-              db8b 0030  ld   $30
-              db8c 000c  ld   $0c
-              db8d 00c3  ld   $c3
-              db8e 0030  ld   $30
+              db85 00b0  ld   $b0
+              db86 00fa  ld   $fa
+              db87 00ab  ld   $ab
+              db88 00bf  ld   $bf
+              db89 000a  ld   $0a
+              db8a 00ab  ld   $ab
+              db8b 0095  ld   $95
+              db8c 005a  ld   $5a
+              db8d 00a9  ld   $a9
+              db8e 002a  ld   $2a
               db8f 000c  ld   $0c
               db90 00c3  ld   $c3
-              db91 0030  ld   $30
-              db92 000c  ld   $0c
-              db93 00c3  ld   $c3
+              db91 0012  ld   $12
+              db92 005c  ld   $5c
+              db93 00c2  ld   $c2
               db94 0030  ld   $30
               db95 000c  ld   $0c
               db96 00c3  ld   $c3
               db97 0030  ld   $30
               db98 000c  ld   $0c
               db99 00c3  ld   $c3
-              db9a 0030  ld   $30
-              db9b 000c  ld   $0c
+              db9a 00bf  ld   $bf
+              db9b 0004  ld   $04
               db9c 00c3  ld   $c3
-              db9d 0030  ld   $30
-              db9e 000c  ld   $0c
-              db9f 00c3  ld   $c3
-              dba0 0030  ld   $30
+              db9d 002f  ld   $2f
+              db9e 00fc  ld   $fc
+              db9f 00c2  ld   $c2
+              dba0 002f  ld   $2f
               dba1 000c  ld   $0c
-              dba2 00c3  ld   $c3
-              dba3 00b0  ld   $b0
-              dba4 00fa  ld   $fa
-              dba5 00ab  ld   $ab
-              dba6 00bf  ld   $bf
-              dba7 000a  ld   $0a
-              dba8 00ab  ld   $ab
-              dba9 0095  ld   $95
-              dbaa 005a  ld   $5a
-              dbab 00a9  ld   $a9
-              dbac 002a  ld   $2a
+              dba2 0047  ld   $47
+              dba3 003f  ld   $3f
+              dba4 000c  ld   $0c
+              dba5 00c3  ld   $c3
+              dba6 0030  ld   $30
+              dba7 000c  ld   $0c
+              dba8 00c3  ld   $c3
+              dba9 0030  ld   $30
+              dbaa 000c  ld   $0c
+              dbab 00c3  ld   $c3
+              dbac 0030  ld   $30
               dbad 000c  ld   $0c
               dbae 00c3  ld   $c3
-              dbaf 0012  ld   $12
-              dbb0 005c  ld   $5c
-              dbb1 00c2  ld   $c2
-              dbb2 0030  ld   $30
-              dbb3 000c  ld   $0c
-              dbb4 00c3  ld   $c3
-              dbb5 0030  ld   $30
-              dbb6 000c  ld   $0c
-              dbb7 00c3  ld   $c3
-              dbb8 00bf  ld   $bf
-              dbb9 0004  ld   $04
-              dbba 00c3  ld   $c3
-              dbbb 002f  ld   $2f
-              dbbc 00fc  ld   $fc
-              dbbd 00c2  ld   $c2
-              dbbe 002f  ld   $2f
+              dbaf 00b0  ld   $b0
+              dbb0 00aa  ld   $aa
+              dbb1 00aa  ld   $aa
+              dbb2 0095  ld   $95
+              dbb3 005a  ld   $5a
+              dbb4 00a9  ld   $a9
+              dbb5 006a  ld   $6a
+              dbb6 00a5  ld   $a5
+              dbb7 0056  ld   $56
+              dbb8 00aa  ld   $aa
+              dbb9 00aa  ld   $aa
+              dbba 00c2  ld   $c2
+              dbbb 0030  ld   $30
+              dbbc 000c  ld   $0c
+              dbbd 00c3  ld   $c3
+              dbbe 0030  ld   $30
               dbbf 000c  ld   $0c
-              dbc0 0047  ld   $47
-              dbc1 003f  ld   $3f
+              dbc0 00c3  ld   $c3
+              dbc1 0030  ld   $30
               dbc2 000c  ld   $0c
-              dbc3 00c3  ld   $c3
-              dbc4 0030  ld   $30
-              dbc5 000c  ld   $0c
-              dbc6 00c3  ld   $c3
+              dbc3 000f  ld   $0f
+              dbc4 003f  ld   $3f
+              dbc5 00ac  ld   $ac
+              dbc6 00fe  ld   $fe
               dbc7 0030  ld   $30
               dbc8 000c  ld   $0c
-              dbc9 00c3  ld   $c3
-              dbca 0030  ld   $30
-              dbcb 000c  ld   $0c
-              dbcc 00c3  ld   $c3
-              dbcd 00b0  ld   $b0
-              dbce 00aa  ld   $aa
-              dbcf 00aa  ld   $aa
-              dbd0 0095  ld   $95
-              dbd1 005a  ld   $5a
-              dbd2 00a9  ld   $a9
-              dbd3 006a  ld   $6a
-              dbd4 00a5  ld   $a5
-              dbd5 0056  ld   $56
-              dbd6 00aa  ld   $aa
-              dbd7 00aa  ld   $aa
-              dbd8 00c2  ld   $c2
+              dbc9 000f  ld   $0f
+              dbca 003f  ld   $3f
+              dbcb 00ac  ld   $ac
+              dbcc 00fe  ld   $fe
+              dbcd 0030  ld   $30
+              dbce 003c  ld   $3c
+              dbcf 00fc  ld   $fc
+              dbd0 00b0  ld   $b0
+              dbd1 00fa  ld   $fa
+              dbd2 00c3  ld   $c3
+              dbd3 0030  ld   $30
+              dbd4 000c  ld   $0c
+              dbd5 00c3  ld   $c3
+              dbd6 0030  ld   $30
+              dbd7 000c  ld   $0c
+              dbd8 00c3  ld   $c3
               dbd9 0030  ld   $30
               dbda 000c  ld   $0c
               dbdb 00c3  ld   $c3
@@ -50217,50 +50217,50 @@ zippedRacerHorizon:
               dbde 00c3  ld   $c3
               dbdf 0030  ld   $30
               dbe0 000c  ld   $0c
-              dbe1 000f  ld   $0f
-              dbe2 003f  ld   $3f
-              dbe3 00ac  ld   $ac
-              dbe4 00fe  ld   $fe
+              dbe1 00c3  ld   $c3
+              dbe2 0030  ld   $30
+              dbe3 000c  ld   $0c
+              dbe4 00c3  ld   $c3
               dbe5 0030  ld   $30
               dbe6 000c  ld   $0c
-              dbe7 000f  ld   $0f
-              dbe8 003f  ld   $3f
-              dbe9 00ac  ld   $ac
-              dbea 00fe  ld   $fe
+              dbe7 00c3  ld   $c3
+              dbe8 0015  ld   $15
+              dbe9 000c  ld   $0c
+              dbea 00c3  ld   $c3
               dbeb 0030  ld   $30
-              dbec 003c  ld   $3c
-              dbed 00fc  ld   $fc
-              dbee 00b0  ld   $b0
-              dbef 00fa  ld   $fa
+              dbec 000c  ld   $0c
+              dbed 00c3  ld   $c3
+              dbee 0030  ld   $30
+              dbef 000c  ld   $0c
               dbf0 00c3  ld   $c3
-              dbf1 0030  ld   $30
-              dbf2 000c  ld   $0c
-              dbf3 00c3  ld   $c3
-              dbf4 0030  ld   $30
-              dbf5 000c  ld   $0c
-              dbf6 00c3  ld   $c3
+              dbf1 00eb  ld   $eb
+              dbf2 001a  ld   $1a
+              dbf3 0004  ld   $04
+              dbf4 0069  ld   $69
+              dbf5 00b0  ld   $b0
+              dbf6 00a6  ld   $a6
               dbf7 0030  ld   $30
               dbf8 000c  ld   $0c
               dbf9 00c3  ld   $c3
-              dbfa 0030  ld   $30
+              dbfa 0070  ld   $70
               dbfb fe00  bra  ac          ;+-----------------------------------+
               dbfc fcfd  bra  $dbfd       ;|                                   |
               dbfd 1404  ld   $04,y       ;| Trampoline for page $db00 lookups |
               dbfe e065  jmp  y,$65       ;|                                   |
               dbff c218  st   [$18]       ;+-----------------------------------+
-              dc00 000c  ld   $0c
-              dc01 00c3  ld   $c3
-              dc02 0030  ld   $30
-              dc03 000c  ld   $0c
-              dc04 00c3  ld   $c3
-              dc05 0030  ld   $30
-              dc06 000c  ld   $0c
-              dc07 00c3  ld   $c3
-              dc08 0030  ld   $30
-              dc09 000c  ld   $0c
-              dc0a 00c3  ld   $c3
-              dc0b 0015  ld   $15
-              dc0c 000c  ld   $0c
+              dc00 0055  ld   $55
+              dc01 00fd  ld   $fd
+              dc02 0055  ld   $55
+              dc03 00f5  ld   $f5
+              dc04 0057  ld   $57
+              dc05 00d5  ld   $d5
+              dc06 005f  ld   $5f
+              dc07 0055  ld   $55
+              dc08 007f  ld   $7f
+              dc09 0055  ld   $55
+              dc0a 00fd  ld   $fd
+              dc0b 0055  ld   $55
+              dc0c 0005  ld   $05
               dc0d 00c3  ld   $c3
               dc0e 0030  ld   $30
               dc0f 000c  ld   $0c
@@ -50268,29 +50268,29 @@ zippedRacerHorizon:
               dc11 0030  ld   $30
               dc12 000c  ld   $0c
               dc13 00c3  ld   $c3
-              dc14 00e9  ld   $e9
-              dc15 001a  ld   $1a
-              dc16 00a4  ld   $a4
-              dc17 0069  ld   $69
-              dc18 00b0  ld   $b0
-              dc19 00a6  ld   $a6
+              dc14 0030  ld   $30
+              dc15 0050  ld   $50
+              dc16 00fd  ld   $fd
+              dc17 0030  ld   $30
+              dc18 000c  ld   $0c
+              dc19 00c3  ld   $c3
               dc1a 0030  ld   $30
               dc1b 000c  ld   $0c
               dc1c 00c3  ld   $c3
-              dc1d 0070  ld   $70
-              dc1e 0055  ld   $55
-              dc1f 00fd  ld   $fd
-              dc20 0055  ld   $55
-              dc21 00f5  ld   $f5
-              dc22 0057  ld   $57
-              dc23 00d5  ld   $d5
-              dc24 005f  ld   $5f
-              dc25 0055  ld   $55
-              dc26 007f  ld   $7f
-              dc27 0055  ld   $55
-              dc28 00fd  ld   $fd
-              dc29 0055  ld   $55
-              dc2a 0005  ld   $05
+              dc1d 0030  ld   $30
+              dc1e 006c  ld   $6c
+              dc1f 00fc  ld   $fc
+              dc20 0030  ld   $30
+              dc21 000c  ld   $0c
+              dc22 00c3  ld   $c3
+              dc23 0030  ld   $30
+              dc24 000c  ld   $0c
+              dc25 00c3  ld   $c3
+              dc26 0030  ld   $30
+              dc27 000c  ld   $0c
+              dc28 00c3  ld   $c3
+              dc29 0030  ld   $30
+              dc2a 000c  ld   $0c
               dc2b 00c3  ld   $c3
               dc2c 0030  ld   $30
               dc2d 000c  ld   $0c
@@ -50299,8 +50299,8 @@ zippedRacerHorizon:
               dc30 000c  ld   $0c
               dc31 00c3  ld   $c3
               dc32 0030  ld   $30
-              dc33 0050  ld   $50
-              dc34 00fd  ld   $fd
+              dc33 000c  ld   $0c
+              dc34 00c3  ld   $c3
               dc35 0030  ld   $30
               dc36 000c  ld   $0c
               dc37 00c3  ld   $c3
@@ -50308,8 +50308,8 @@ zippedRacerHorizon:
               dc39 000c  ld   $0c
               dc3a 00c3  ld   $c3
               dc3b 0030  ld   $30
-              dc3c 006c  ld   $6c
-              dc3d 00fc  ld   $fc
+              dc3c 000c  ld   $0c
+              dc3d 00c3  ld   $c3
               dc3e 0030  ld   $30
               dc3f 000c  ld   $0c
               dc40 00c3  ld   $c3
@@ -50322,133 +50322,134 @@ zippedRacerHorizon:
               dc47 0030  ld   $30
               dc48 000c  ld   $0c
               dc49 00c3  ld   $c3
-              dc4a 0030  ld   $30
-              dc4b 000c  ld   $0c
-              dc4c 00c3  ld   $c3
-              dc4d 0030  ld   $30
-              dc4e 000c  ld   $0c
-              dc4f 00c3  ld   $c3
-              dc50 0030  ld   $30
-              dc51 000c  ld   $0c
-              dc52 00c3  ld   $c3
-              dc53 0030  ld   $30
+              dc4a 0070  ld   $70
+              dc4b 00a5  ld   $a5
+              dc4c 00fe  ld   $fe
+              dc4d 00ea  ld   $ea
+              dc4e 000f  ld   $0f
+              dc4f 00ab  ld   $ab
+              dc50 006a  ld   $6a
+              dc51 00a5  ld   $a5
+              dc52 0056  ld   $56
+              dc53 002a  ld   $2a
               dc54 000c  ld   $0c
-              dc55 00c3  ld   $c3
-              dc56 0030  ld   $30
-              dc57 000c  ld   $0c
-              dc58 00c3  ld   $c3
+              dc55 004b  ld   $4b
+              dc56 0092  ld   $92
+              dc57 0054  ld   $54
+              dc58 0096  ld   $96
               dc59 0030  ld   $30
               dc5a 000c  ld   $0c
               dc5b 00c3  ld   $c3
               dc5c 0030  ld   $30
               dc5d 000c  ld   $0c
               dc5e 00c3  ld   $c3
-              dc5f 0030  ld   $30
-              dc60 000c  ld   $0c
+              dc5f 006f  ld   $6f
+              dc60 0004  ld   $04
               dc61 00c3  ld   $c3
-              dc62 0030  ld   $30
-              dc63 000c  ld   $0c
-              dc64 00c3  ld   $c3
+              dc62 00f0  ld   $f0
+              dc63 000b  ld   $0b
+              dc64 00bf  ld   $bf
               dc65 0030  ld   $30
               dc66 000c  ld   $0c
-              dc67 00c3  ld   $c3
-              dc68 0070  ld   $70
-              dc69 00a5  ld   $a5
-              dc6a 00fe  ld   $fe
-              dc6b 00ea  ld   $ea
-              dc6c 000f  ld   $0f
-              dc6d 00ab  ld   $ab
-              dc6e 006a  ld   $6a
-              dc6f 00a5  ld   $a5
-              dc70 0056  ld   $56
-              dc71 002a  ld   $2a
-              dc72 000c  ld   $0c
-              dc73 004b  ld   $4b
-              dc74 0092  ld   $92
-              dc75 0054  ld   $54
-              dc76 0096  ld   $96
-              dc77 0030  ld   $30
-              dc78 000c  ld   $0c
-              dc79 00c3  ld   $c3
-              dc7a 0030  ld   $30
-              dc7b 000c  ld   $0c
-              dc7c 00c3  ld   $c3
-              dc7d 006f  ld   $6f
-              dc7e 0004  ld   $04
-              dc7f 00c3  ld   $c3
-              dc80 00f0  ld   $f0
-              dc81 000b  ld   $0b
-              dc82 00bf  ld   $bf
-              dc83 0030  ld   $30
-              dc84 000c  ld   $0c
-              dc85 004b  ld   $4b
-              dc86 002f  ld   $2f
+              dc67 004b  ld   $4b
+              dc68 002f  ld   $2f
+              dc69 000c  ld   $0c
+              dc6a 00c3  ld   $c3
+              dc6b 0030  ld   $30
+              dc6c 000c  ld   $0c
+              dc6d 00c3  ld   $c3
+              dc6e 0030  ld   $30
+              dc6f 00fc  ld   $fc
+              dc70 00ff  ld   $ff
+              dc71 00ff  ld   $ff
+              dc72 00ff  ld   $ff
+              dc73 00ff  ld   $ff
+              dc74 00aa  ld   $aa
+              dc75 0065  ld   $65
+              dc76 00a9  ld   $a9
+              dc77 00aa  ld   $aa
+              dc78 00aa  ld   $aa
+              dc79 00aa  ld   $aa
+              * 7 times
+              dc7e 0065  ld   $65
+              dc7f 00a9  ld   $a9
+              dc80 00ff  ld   $ff
+              dc81 00ff  ld   $ff
+              dc82 00ff  ld   $ff
+              dc83 00ff  ld   $ff
+              dc84 000f  ld   $0f
+              dc85 00c3  ld   $c3
+              dc86 0030  ld   $30
               dc87 000c  ld   $0c
               dc88 00c3  ld   $c3
               dc89 0030  ld   $30
-              dc8a 000c  ld   $0c
-              dc8b 00c3  ld   $c3
+              dc8a 00ac  ld   $ac
+              dc8b 00fe  ld   $fe
               dc8c 0030  ld   $30
-              dc8d 00fc  ld   $fc
-              dc8e 00ff  ld   $ff
-              dc8f 00ff  ld   $ff
-              dc90 00ff  ld   $ff
-              dc91 00ff  ld   $ff
-              dc92 00aa  ld   $aa
-              dc93 0065  ld   $65
-              dc94 00a9  ld   $a9
-              dc95 00aa  ld   $aa
-              dc96 00aa  ld   $aa
-              dc97 00aa  ld   $aa
-              * 7 times
-              dc9c 0065  ld   $65
-              dc9d 00a9  ld   $a9
-              dc9e 00ff  ld   $ff
-              dc9f 00ff  ld   $ff
-              dca0 00ff  ld   $ff
-              dca1 00ff  ld   $ff
-              dca2 000f  ld   $0f
+              dc8d 000c  ld   $0c
+              dc8e 00c3  ld   $c3
+              dc8f 0030  ld   $30
+              dc90 00ac  ld   $ac
+              dc91 00fe  ld   $fe
+              dc92 0030  ld   $30
+              dc93 000c  ld   $0c
+              dc94 00c3  ld   $c3
+              dc95 00b0  ld   $b0
+              dc96 00fa  ld   $fa
+              dc97 00c3  ld   $c3
+              dc98 0030  ld   $30
+              dc99 000c  ld   $0c
+              dc9a 00c3  ld   $c3
+              dc9b 0030  ld   $30
+              dc9c 000c  ld   $0c
+              dc9d 00c3  ld   $c3
+              dc9e 0030  ld   $30
+              dc9f 000c  ld   $0c
+              dca0 00c3  ld   $c3
+              dca1 0030  ld   $30
+              dca2 000c  ld   $0c
               dca3 00c3  ld   $c3
               dca4 0030  ld   $30
               dca5 000c  ld   $0c
               dca6 00c3  ld   $c3
               dca7 0030  ld   $30
-              dca8 00ac  ld   $ac
-              dca9 00fe  ld   $fe
+              dca8 000c  ld   $0c
+              dca9 00c3  ld   $c3
               dcaa 0030  ld   $30
               dcab 000c  ld   $0c
               dcac 00c3  ld   $c3
-              dcad 0030  ld   $30
-              dcae 00ac  ld   $ac
-              dcaf 00fe  ld   $fe
+              dcad 0015  ld   $15
+              dcae 000c  ld   $0c
+              dcaf 00c3  ld   $c3
               dcb0 0030  ld   $30
               dcb1 000c  ld   $0c
               dcb2 00c3  ld   $c3
-              dcb3 00b0  ld   $b0
-              dcb4 00fa  ld   $fa
+              dcb3 0030  ld   $30
+              dcb4 000c  ld   $0c
               dcb5 00c3  ld   $c3
-              dcb6 0030  ld   $30
-              dcb7 000c  ld   $0c
-              dcb8 00c3  ld   $c3
-              dcb9 0030  ld   $30
-              dcba 000c  ld   $0c
-              dcbb 00c3  ld   $c3
+              dcb6 00e9  ld   $e9
+              dcb7 001a  ld   $1a
+              dcb8 00a4  ld   $a4
+              dcb9 0041  ld   $41
+              dcba 00b0  ld   $b0
+              dcbb 00ae  ld   $ae
               dcbc 0030  ld   $30
               dcbd 000c  ld   $0c
               dcbe 00c3  ld   $c3
-              dcbf 0030  ld   $30
-              dcc0 000c  ld   $0c
-              dcc1 00c3  ld   $c3
-              dcc2 0030  ld   $30
-              dcc3 00ac  ld   $ac
-              dcc4 00aa  ld   $aa
-              dcc5 00ff  ld   $ff
-              dcc6 00ff  ld   $ff
-              dcc7 00ff  ld   $ff
-              * 5 times
-              dcca 00c3  ld   $c3
-              dccb 0015  ld   $15
-              dccc 000c  ld   $0c
+              dcbf 00b0  ld   $b0
+              dcc0 00aa  ld   $aa
+              dcc1 00ff  ld   $ff
+              dcc2 00ba  ld   $ba
+              dcc3 00fa  ld   $fa
+              dcc4 00ab  ld   $ab
+              dcc5 00fa  ld   $fa
+              dcc6 00af  ld   $af
+              dcc7 00aa  ld   $aa
+              dcc8 00bf  ld   $bf
+              dcc9 00ae  ld   $ae
+              dcca 00fe  ld   $fe
+              dccb 00ba  ld   $ba
+              dccc 000a  ld   $0a
               dccd 00c3  ld   $c3
               dcce 0030  ld   $30
               dccf 000c  ld   $0c
@@ -50456,29 +50457,29 @@ zippedRacerHorizon:
               dcd1 0030  ld   $30
               dcd2 000c  ld   $0c
               dcd3 00c3  ld   $c3
-              dcd4 00eb  ld   $eb
-              dcd5 001a  ld   $1a
-              dcd6 0004  ld   $04
-              dcd7 0041  ld   $41
-              dcd8 00b0  ld   $b0
-              dcd9 00ae  ld   $ae
+              dcd4 00c0  ld   $c0
+              dcd5 006b  ld   $6b
+              dcd6 0001  ld   $01
+              dcd7 002f  ld   $2f
+              dcd8 000c  ld   $0c
+              dcd9 00c3  ld   $c3
               dcda 0030  ld   $30
               dcdb 000c  ld   $0c
               dcdc 00c3  ld   $c3
-              dcdd 00b0  ld   $b0
-              dcde 00aa  ld   $aa
-              dcdf 00ff  ld   $ff
-              dce0 00ba  ld   $ba
-              dce1 00fa  ld   $fa
-              dce2 00ab  ld   $ab
-              dce3 00fa  ld   $fa
-              dce4 00af  ld   $af
-              dce5 00aa  ld   $aa
-              dce6 00bf  ld   $bf
-              dce7 00ae  ld   $ae
-              dce8 00fe  ld   $fe
-              dce9 00ba  ld   $ba
-              dcea 000a  ld   $0a
+              dcdd 0030  ld   $30
+              dcde 00bc  ld   $bc
+              dcdf 00bc  ld   $bc
+              dce0 0030  ld   $30
+              dce1 000c  ld   $0c
+              dce2 00c3  ld   $c3
+              dce3 0030  ld   $30
+              dce4 000c  ld   $0c
+              dce5 00c3  ld   $c3
+              dce6 0030  ld   $30
+              dce7 000c  ld   $0c
+              dce8 00c3  ld   $c3
+              dce9 0030  ld   $30
+              dcea 000c  ld   $0c
               dceb 00c3  ld   $c3
               dcec 0030  ld   $30
               dced 000c  ld   $0c
@@ -50486,10 +50487,10 @@ zippedRacerHorizon:
               dcef 0030  ld   $30
               dcf0 000c  ld   $0c
               dcf1 00c3  ld   $c3
-              dcf2 00c0  ld   $c0
-              dcf3 006b  ld   $6b
-              dcf4 0001  ld   $01
-              dcf5 002f  ld   $2f
+              dcf2 0030  ld   $30
+              dcf3 000c  ld   $0c
+              dcf4 00c3  ld   $c3
+              dcf5 0030  ld   $30
               dcf6 000c  ld   $0c
               dcf7 00c3  ld   $c3
               dcf8 0030  ld   $30
@@ -50501,8 +50502,8 @@ zippedRacerHorizon:
               dcfe e065  jmp  y,$65       ;|                                   |
               dcff c218  st   [$18]       ;+-----------------------------------+
               dd00 0030  ld   $30
-              dd01 00bc  ld   $bc
-              dd02 00bc  ld   $bc
+              dd01 000c  ld   $0c
+              dd02 00c3  ld   $c3
               dd03 0030  ld   $30
               dd04 000c  ld   $0c
               dd05 00c3  ld   $c3
@@ -50515,494 +50516,493 @@ zippedRacerHorizon:
               dd0c 0030  ld   $30
               dd0d 000c  ld   $0c
               dd0e 00c3  ld   $c3
-              dd0f 0030  ld   $30
-              dd10 000c  ld   $0c
-              dd11 00c3  ld   $c3
-              dd12 0030  ld   $30
-              dd13 000c  ld   $0c
-              dd14 00c3  ld   $c3
-              dd15 0030  ld   $30
-              dd16 000c  ld   $0c
-              dd17 00c3  ld   $c3
-              dd18 0030  ld   $30
+              dd0f 00b0  ld   $b0
+              dd10 005a  ld   $5a
+              dd11 00a9  ld   $a9
+              dd12 00bf  ld   $bf
+              dd13 000a  ld   $0a
+              dd14 00ab  ld   $ab
+              dd15 0095  ld   $95
+              dd16 005a  ld   $5a
+              dd17 00a9  ld   $a9
+              dd18 002a  ld   $2a
               dd19 000c  ld   $0c
-              dd1a 00c3  ld   $c3
-              dd1b 0030  ld   $30
-              dd1c 000c  ld   $0c
-              dd1d 00c3  ld   $c3
+              dd1a 004b  ld   $4b
+              dd1b 00a3  ld   $a3
+              dd1c 0094  ld   $94
+              dd1d 0097  ld   $97
               dd1e 0030  ld   $30
               dd1f 000c  ld   $0c
               dd20 00c3  ld   $c3
               dd21 0030  ld   $30
               dd22 000c  ld   $0c
               dd23 00c3  ld   $c3
-              dd24 0030  ld   $30
-              dd25 000c  ld   $0c
-              dd26 00c3  ld   $c3
-              dd27 0030  ld   $30
-              dd28 000c  ld   $0c
+              dd24 00ff  ld   $ff
+              dd25 00fb  ld   $fb
+              dd26 00be  ld   $be
+              dd27 002f  ld   $2f
+              dd28 00fc  ld   $fc
               dd29 00c3  ld   $c3
-              dd2a 0030  ld   $30
-              dd2b 000c  ld   $0c
-              dd2c 00c3  ld   $c3
-              dd2d 00b0  ld   $b0
-              dd2e 005a  ld   $5a
-              dd2f 00a9  ld   $a9
-              dd30 00bf  ld   $bf
-              dd31 000a  ld   $0a
-              dd32 00ab  ld   $ab
-              dd33 0095  ld   $95
-              dd34 005a  ld   $5a
-              dd35 00a9  ld   $a9
-              dd36 002a  ld   $2a
-              dd37 000c  ld   $0c
-              dd38 004b  ld   $4b
-              dd39 00a3  ld   $a3
-              dd3a 0094  ld   $94
-              dd3b 0097  ld   $97
-              dd3c 0030  ld   $30
-              dd3d 000c  ld   $0c
-              dd3e 00c3  ld   $c3
-              dd3f 0030  ld   $30
-              dd40 000c  ld   $0c
-              dd41 00c3  ld   $c3
-              dd42 00ff  ld   $ff
-              dd43 00fb  ld   $fb
-              dd44 00be  ld   $be
-              dd45 002f  ld   $2f
-              dd46 00fc  ld   $fc
-              dd47 00c3  ld   $c3
-              dd48 00ef  ld   $ef
-              dd49 00fb  ld   $fb
-              dd4a 00be  ld   $be
-              dd4b 003f  ld   $3f
+              dd2a 00ef  ld   $ef
+              dd2b 00fb  ld   $fb
+              dd2c 00be  ld   $be
+              dd2d 003f  ld   $3f
+              dd2e 000c  ld   $0c
+              dd2f 00c3  ld   $c3
+              dd30 0030  ld   $30
+              dd31 000c  ld   $0c
+              dd32 00c3  ld   $c3
+              dd33 0030  ld   $30
+              dd34 00ac  ld   $ac
+              dd35 0069  ld   $69
+              dd36 009a  ld   $9a
+              dd37 00a6  ld   $a6
+              dd38 0069  ld   $69
+              dd39 0096  ld   $96
+              dd3a 00aa  ld   $aa
+              dd3b 001a  ld   $1a
+              dd3c 0096  ld   $96
+              dd3d 0065  ld   $65
+              dd3e 0059  ld   $59
+              dd3f 0096  ld   $96
+              dd40 0065  ld   $65
+              dd41 0059  ld   $59
+              dd42 0086  ld   $86
+              dd43 00aa  ld   $aa
+              dd44 005a  ld   $5a
+              dd45 009a  ld   $9a
+              dd46 00a6  ld   $a6
+              dd47 0069  ld   $69
+              dd48 009a  ld   $9a
+              dd49 0006  ld   $06
+              dd4a 00c3  ld   $c3
+              dd4b 0030  ld   $30
               dd4c 000c  ld   $0c
               dd4d 00c3  ld   $c3
               dd4e 0030  ld   $30
-              dd4f 000c  ld   $0c
-              dd50 00c3  ld   $c3
+              dd4f 00ac  ld   $ac
+              dd50 00fe  ld   $fe
               dd51 0030  ld   $30
-              dd52 00ac  ld   $ac
-              dd53 0069  ld   $69
-              dd54 009a  ld   $9a
-              dd55 00a6  ld   $a6
-              dd56 0069  ld   $69
-              dd57 0096  ld   $96
-              dd58 00aa  ld   $aa
-              dd59 001a  ld   $1a
-              dd5a 0096  ld   $96
-              dd5b 0065  ld   $65
-              dd5c 0059  ld   $59
-              dd5d 0096  ld   $96
-              dd5e 0065  ld   $65
-              dd5f 0059  ld   $59
-              dd60 0086  ld   $86
-              dd61 00aa  ld   $aa
-              dd62 005a  ld   $5a
-              dd63 009a  ld   $9a
-              dd64 00a6  ld   $a6
-              dd65 0069  ld   $69
-              dd66 009a  ld   $9a
-              dd67 0006  ld   $06
+              dd52 000c  ld   $0c
+              dd53 00c3  ld   $c3
+              dd54 0030  ld   $30
+              dd55 00ac  ld   $ac
+              dd56 00fe  ld   $fe
+              dd57 0030  ld   $30
+              dd58 000c  ld   $0c
+              dd59 00c3  ld   $c3
+              dd5a 00b0  ld   $b0
+              dd5b 00fa  ld   $fa
+              dd5c 00c3  ld   $c3
+              dd5d 0030  ld   $30
+              dd5e 000c  ld   $0c
+              dd5f 00c3  ld   $c3
+              dd60 0030  ld   $30
+              dd61 000c  ld   $0c
+              dd62 00c3  ld   $c3
+              dd63 0030  ld   $30
+              dd64 000c  ld   $0c
+              dd65 00c3  ld   $c3
+              dd66 0030  ld   $30
+              dd67 000c  ld   $0c
               dd68 00c3  ld   $c3
               dd69 0030  ld   $30
-              dd6a 000c  ld   $0c
-              dd6b 00c3  ld   $c3
-              dd6c 0030  ld   $30
-              dd6d 00ac  ld   $ac
-              dd6e 00fe  ld   $fe
-              dd6f 0030  ld   $30
-              dd70 000c  ld   $0c
+              dd6a 00ac  ld   $ac
+              dd6b 00aa  ld   $aa
+              dd6c 00ff  ld   $ff
+              dd6d 00ff  ld   $ff
+              dd6e 00ff  ld   $ff
+              * 5 times
               dd71 00c3  ld   $c3
-              dd72 0030  ld   $30
-              dd73 00ac  ld   $ac
-              dd74 00fe  ld   $fe
+              dd72 0015  ld   $15
+              dd73 000c  ld   $0c
+              dd74 00c3  ld   $c3
               dd75 0030  ld   $30
               dd76 000c  ld   $0c
               dd77 00c3  ld   $c3
-              dd78 00b0  ld   $b0
-              dd79 00fa  ld   $fa
+              dd78 0030  ld   $30
+              dd79 000c  ld   $0c
               dd7a 00c3  ld   $c3
-              dd7b 0030  ld   $30
-              dd7c 000c  ld   $0c
-              dd7d 00c3  ld   $c3
-              dd7e 0030  ld   $30
-              dd7f 000c  ld   $0c
-              dd80 00c3  ld   $c3
+              dd7b 00eb  ld   $eb
+              dd7c 001a  ld   $1a
+              dd7d 0004  ld   $04
+              dd7e 0069  ld   $69
+              dd7f 00b0  ld   $b0
+              dd80 00a6  ld   $a6
               dd81 0030  ld   $30
               dd82 000c  ld   $0c
               dd83 00c3  ld   $c3
-              dd84 0030  ld   $30
-              dd85 000c  ld   $0c
-              dd86 00ab  ld   $ab
-              dd87 00aa  ld   $aa
-              dd88 00aa  ld   $aa
-              dd89 00aa  ld   $aa
-              dd8a 00aa  ld   $aa
-              dd8b 00fa  ld   $fa
-              dd8c 00ff  ld   $ff
-              dd8d 00ff  ld   $ff
-              dd8e 00ff  ld   $ff
-              * 5 times
-              dd91 000f  ld   $0f
+              dd84 0070  ld   $70
+              dd85 0055  ld   $55
+              dd86 00fd  ld   $fd
+              dd87 0055  ld   $55
+              dd88 00f5  ld   $f5
+              dd89 0057  ld   $57
+              dd8a 00d5  ld   $d5
+              dd8b 005f  ld   $5f
+              dd8c 0055  ld   $55
+              dd8d 007f  ld   $7f
+              dd8e 0055  ld   $55
+              dd8f 00fd  ld   $fd
+              dd90 0055  ld   $55
+              dd91 0005  ld   $05
               dd92 00c3  ld   $c3
               dd93 0030  ld   $30
               dd94 000c  ld   $0c
               dd95 00c3  ld   $c3
               dd96 0030  ld   $30
               dd97 000c  ld   $0c
-              dd98 00c3  ld   $c3
-              dd99 00e9  ld   $e9
-              dd9a 001a  ld   $1a
-              dd9b 00a4  ld   $a4
-              dd9c 0069  ld   $69
-              dd9d 00b0  ld   $b0
-              dd9e 00a6  ld   $a6
+              dd98 0003  ld   $03
+              dd99 007f  ld   $7f
+              dd9a 0010  ld   $10
+              dd9b 0004  ld   $04
+              dd9c 00c0  ld   $c0
+              dd9d 000f  ld   $0f
+              dd9e 00c3  ld   $c3
               dd9f 0030  ld   $30
               dda0 000c  ld   $0c
               dda1 00c3  ld   $c3
-              dda2 0070  ld   $70
-              dda3 0055  ld   $55
-              dda4 00fd  ld   $fd
-              dda5 0055  ld   $55
-              dda6 00f5  ld   $f5
-              dda7 0057  ld   $57
-              dda8 00d5  ld   $d5
-              dda9 005f  ld   $5f
-              ddaa 0055  ld   $55
-              ddab 007f  ld   $7f
-              ddac 0055  ld   $55
-              ddad 00fd  ld   $fd
-              ddae 0055  ld   $55
-              ddaf 0005  ld   $05
-              ddb0 00c3  ld   $c3
-              ddb1 0030  ld   $30
-              ddb2 000c  ld   $0c
-              ddb3 00c3  ld   $c3
+              dda2 0030  ld   $30
+              dda3 006c  ld   $6c
+              dda4 00fc  ld   $fc
+              dda5 0041  ld   $41
+              dda6 0010  ld   $10
+              dda7 0004  ld   $04
+              dda8 0041  ld   $41
+              dda9 0010  ld   $10
+              ddaa 0004  ld   $04
+              ddab 0041  ld   $41
+              ddac 0010  ld   $10
+              ddad 0004  ld   $04
+              ddae 0041  ld   $41
+              ddaf 0010  ld   $10
+              ddb0 0004  ld   $04
+              ddb1 0041  ld   $41
+              ddb2 0010  ld   $10
+              ddb3 0004  ld   $04
               ddb4 0030  ld   $30
               ddb5 000c  ld   $0c
-              ddb6 0003  ld   $03
-              ddb7 007f  ld   $7f
-              ddb8 0010  ld   $10
-              ddb9 0004  ld   $04
-              ddba 00c0  ld   $c0
-              ddbb 000f  ld   $0f
+              ddb6 00c3  ld   $c3
+              ddb7 0030  ld   $30
+              ddb8 000c  ld   $0c
+              ddb9 00c3  ld   $c3
+              ddba 0030  ld   $30
+              ddbb 000c  ld   $0c
               ddbc 00c3  ld   $c3
               ddbd 0030  ld   $30
               ddbe 000c  ld   $0c
               ddbf 00c3  ld   $c3
               ddc0 0030  ld   $30
-              ddc1 006c  ld   $6c
-              ddc2 00fc  ld   $fc
-              ddc3 0041  ld   $41
-              ddc4 0010  ld   $10
-              ddc5 0004  ld   $04
-              ddc6 0041  ld   $41
-              ddc7 0010  ld   $10
-              ddc8 0004  ld   $04
-              ddc9 0041  ld   $41
-              ddca 0010  ld   $10
-              ddcb 0004  ld   $04
-              ddcc 0041  ld   $41
-              ddcd 0010  ld   $10
-              ddce 0004  ld   $04
-              ddcf 0041  ld   $41
-              ddd0 0010  ld   $10
-              ddd1 0004  ld   $04
-              ddd2 0030  ld   $30
-              ddd3 000c  ld   $0c
-              ddd4 00c3  ld   $c3
-              ddd5 0030  ld   $30
-              ddd6 000c  ld   $0c
-              ddd7 00c3  ld   $c3
-              ddd8 0030  ld   $30
-              ddd9 000c  ld   $0c
-              ddda 00c3  ld   $c3
-              dddb 0030  ld   $30
-              dddc 000c  ld   $0c
-              dddd 00c3  ld   $c3
-              ddde 0030  ld   $30
+              ddc1 000c  ld   $0c
+              ddc2 00c3  ld   $c3
+              ddc3 0030  ld   $30
+              ddc4 000c  ld   $0c
+              ddc5 00c3  ld   $c3
+              ddc6 0030  ld   $30
+              ddc7 000c  ld   $0c
+              ddc8 00c3  ld   $c3
+              ddc9 0030  ld   $30
+              ddca 000c  ld   $0c
+              ddcb 00c3  ld   $c3
+              ddcc 0030  ld   $30
+              ddcd 000c  ld   $0c
+              ddce 00c3  ld   $c3
+              ddcf 0070  ld   $70
+              ddd0 00a5  ld   $a5
+              ddd1 00fe  ld   $fe
+              ddd2 00ea  ld   $ea
+              ddd3 000f  ld   $0f
+              ddd4 00ab  ld   $ab
+              ddd5 006a  ld   $6a
+              ddd6 00a5  ld   $a5
+              ddd7 0056  ld   $56
+              ddd8 002a  ld   $2a
+              ddd9 001c  ld   $1c
+              ddda 0058  ld   $58
+              dddb 0081  ld   $81
+              dddc 0015  ld   $15
+              dddd 0058  ld   $58
+              ddde 0011  ld   $11
               dddf 000c  ld   $0c
               dde0 00c3  ld   $c3
               dde1 0030  ld   $30
               dde2 000c  ld   $0c
               dde3 00c3  ld   $c3
-              dde4 0030  ld   $30
-              dde5 000c  ld   $0c
+              dde4 00af  ld   $af
+              dde5 0004  ld   $04
               dde6 00c3  ld   $c3
-              dde7 0030  ld   $30
-              dde8 000c  ld   $0c
-              dde9 00c3  ld   $c3
+              dde7 00f0  ld   $f0
+              dde8 000f  ld   $0f
+              dde9 00ff  ld   $ff
               ddea 0030  ld   $30
               ddeb 000c  ld   $0c
-              ddec 00c3  ld   $c3
-              dded 0070  ld   $70
-              ddee 00a5  ld   $a5
-              ddef 00fe  ld   $fe
-              ddf0 00ea  ld   $ea
-              ddf1 000f  ld   $0f
-              ddf2 00ab  ld   $ab
-              ddf3 006a  ld   $6a
-              ddf4 00a5  ld   $a5
-              ddf5 0056  ld   $56
-              ddf6 002a  ld   $2a
-              ddf7 001c  ld   $1c
-              ddf8 0058  ld   $58
-              ddf9 0081  ld   $81
-              ddfa 0015  ld   $15
+              ddec 0047  ld   $47
+              dded 002f  ld   $2f
+              ddee 000c  ld   $0c
+              ddef 00c3  ld   $c3
+              ddf0 0030  ld   $30
+              ddf1 000c  ld   $0c
+              ddf2 00c3  ld   $c3
+              ddf3 0030  ld   $30
+              ddf4 005c  ld   $5c
+              ddf5 0055  ld   $55
+              ddf6 0055  ld   $55
+              ddf7 0055  ld   $55
+              ddf8 0055  ld   $55
+              ddf9 00d6  ld   $d6
+              ddfa 00fa  ld   $fa
               ddfb fe00  bra  ac          ;+-----------------------------------+
               ddfc fcfd  bra  $ddfd       ;|                                   |
               ddfd 1404  ld   $04,y       ;| Trampoline for page $dd00 lookups |
               ddfe e065  jmp  y,$65       ;|                                   |
               ddff c218  st   [$18]       ;+-----------------------------------+
-              de00 0058  ld   $58
-              de01 0011  ld   $11
-              de02 000c  ld   $0c
-              de03 00c3  ld   $c3
-              de04 0030  ld   $30
-              de05 000c  ld   $0c
-              de06 00c3  ld   $c3
-              de07 00af  ld   $af
-              de08 0004  ld   $04
-              de09 00c3  ld   $c3
-              de0a 00f0  ld   $f0
-              de0b 000f  ld   $0f
-              de0c 00ff  ld   $ff
-              de0d 0030  ld   $30
-              de0e 000c  ld   $0c
-              de0f 0047  ld   $47
-              de10 002f  ld   $2f
+              de00 005a  ld   $5a
+              de01 0069  ld   $69
+              de02 009a  ld   $9a
+              de03 00a6  ld   $a6
+              de04 0069  ld   $69
+              de05 009a  ld   $9a
+              de06 00a6  ld   $a6
+              de07 00d6  ld   $d6
+              de08 00bb  ld   $bb
+              de09 005a  ld   $5a
+              de0a 0055  ld   $55
+              de0b 0055  ld   $55
+              de0c 0055  ld   $55
+              de0d 0055  ld   $55
+              de0e 0005  ld   $05
+              de0f 00c3  ld   $c3
+              de10 0030  ld   $30
               de11 000c  ld   $0c
               de12 00c3  ld   $c3
               de13 0030  ld   $30
-              de14 000c  ld   $0c
-              de15 00c3  ld   $c3
+              de14 00ac  ld   $ac
+              de15 00fe  ld   $fe
               de16 0030  ld   $30
-              de17 005c  ld   $5c
-              de18 0055  ld   $55
-              de19 0055  ld   $55
-              de1a 0055  ld   $55
-              de1b 0055  ld   $55
-              de1c 00d6  ld   $d6
-              de1d 00fa  ld   $fa
-              de1e 005a  ld   $5a
-              de1f 0069  ld   $69
-              de20 009a  ld   $9a
-              de21 00a6  ld   $a6
-              de22 0069  ld   $69
-              de23 009a  ld   $9a
-              de24 00a6  ld   $a6
-              de25 00d6  ld   $d6
-              de26 00bb  ld   $bb
-              de27 005a  ld   $5a
-              de28 0055  ld   $55
-              de29 0055  ld   $55
-              de2a 0055  ld   $55
-              de2b 0055  ld   $55
-              de2c 0005  ld   $05
-              de2d 00c3  ld   $c3
-              de2e 0030  ld   $30
-              de2f 000c  ld   $0c
-              de30 00c3  ld   $c3
-              de31 0030  ld   $30
-              de32 00ac  ld   $ac
-              de33 00fe  ld   $fe
-              de34 0030  ld   $30
-              de35 000c  ld   $0c
-              de36 00c3  ld   $c3
-              de37 0030  ld   $30
-              de38 00ac  ld   $ac
-              de39 00fe  ld   $fe
+              de17 000c  ld   $0c
+              de18 00c3  ld   $c3
+              de19 0030  ld   $30
+              de1a 00ac  ld   $ac
+              de1b 00fe  ld   $fe
+              de1c 0030  ld   $30
+              de1d 000c  ld   $0c
+              de1e 00c3  ld   $c3
+              de1f 00b0  ld   $b0
+              de20 00fa  ld   $fa
+              de21 00c3  ld   $c3
+              de22 0030  ld   $30
+              de23 000c  ld   $0c
+              de24 00c3  ld   $c3
+              de25 0030  ld   $30
+              de26 000c  ld   $0c
+              de27 00c3  ld   $c3
+              de28 0030  ld   $30
+              de29 000c  ld   $0c
+              de2a 00c3  ld   $c3
+              de2b 0030  ld   $30
+              de2c 000c  ld   $0c
+              de2d 00ab  ld   $ab
+              de2e 00aa  ld   $aa
+              de2f 00aa  ld   $aa
+              de30 00aa  ld   $aa
+              de31 00aa  ld   $aa
+              de32 00fa  ld   $fa
+              de33 00ff  ld   $ff
+              de34 00ff  ld   $ff
+              de35 00ff  ld   $ff
+              * 5 times
+              de38 000f  ld   $0f
+              de39 00c3  ld   $c3
               de3a 0030  ld   $30
               de3b 000c  ld   $0c
               de3c 00c3  ld   $c3
-              de3d 00b0  ld   $b0
-              de3e 00fa  ld   $fa
+              de3d 0030  ld   $30
+              de3e 000c  ld   $0c
               de3f 00c3  ld   $c3
-              de40 0030  ld   $30
-              de41 000c  ld   $0c
-              de42 00c3  ld   $c3
-              de43 0030  ld   $30
-              de44 000c  ld   $0c
-              de45 00c3  ld   $c3
+              de40 00e9  ld   $e9
+              de41 001a  ld   $1a
+              de42 00a4  ld   $a4
+              de43 0041  ld   $41
+              de44 00b0  ld   $b0
+              de45 00ae  ld   $ae
               de46 0030  ld   $30
               de47 000c  ld   $0c
               de48 00c3  ld   $c3
-              de49 0055  ld   $55
-              de4a 0055  ld   $55
-              de4b 0055  ld   $55
-              * 6 times
-              de4f 00aa  ld   $aa
-              de50 00aa  ld   $aa
-              de51 00aa  ld   $aa
-              de52 00ea  ld   $ea
-              de53 00ff  ld   $ff
+              de49 00b0  ld   $b0
+              de4a 00aa  ld   $aa
+              de4b 00ff  ld   $ff
+              de4c 00aa  ld   $aa
+              de4d 00fe  ld   $fe
+              de4e 00ab  ld   $ab
+              de4f 00ea  ld   $ea
+              de50 00af  ld   $af
+              de51 00ea  ld   $ea
+              de52 00bf  ld   $bf
+              de53 00aa  ld   $aa
               de54 00ff  ld   $ff
-              de55 00ff  ld   $ff
-              * 5 times
-              de58 003f  ld   $3f
+              de55 00aa  ld   $aa
+              de56 000e  ld   $0e
+              de57 00c3  ld   $c3
+              de58 0030  ld   $30
               de59 000c  ld   $0c
               de5a 00c3  ld   $c3
               de5b 0030  ld   $30
               de5c 000c  ld   $0c
-              de5d 00c3  ld   $c3
-              de5e 00eb  ld   $eb
-              de5f 001a  ld   $1a
-              de60 0004  ld   $04
-              de61 0041  ld   $41
-              de62 00b0  ld   $b0
-              de63 00ae  ld   $ae
+              de5d 00bc  ld   $bc
+              de5e 0081  ld   $81
+              de5f 0065  ld   $65
+              de60 0005  ld   $05
+              de61 0020  ld   $20
+              de62 00f0  ld   $f0
+              de63 00c2  ld   $c2
               de64 0030  ld   $30
               de65 000c  ld   $0c
               de66 00c3  ld   $c3
-              de67 00b0  ld   $b0
-              de68 00aa  ld   $aa
-              de69 00ff  ld   $ff
-              de6a 00aa  ld   $aa
-              de6b 00fe  ld   $fe
-              de6c 00ab  ld   $ab
-              de6d 00ea  ld   $ea
-              de6e 00af  ld   $af
-              de6f 00ea  ld   $ea
-              de70 00bf  ld   $bf
-              de71 00aa  ld   $aa
-              de72 00ff  ld   $ff
-              de73 00aa  ld   $aa
-              de74 000e  ld   $0e
-              de75 00c3  ld   $c3
-              de76 0030  ld   $30
-              de77 000c  ld   $0c
-              de78 00c3  ld   $c3
+              de67 0030  ld   $30
+              de68 00bc  ld   $bc
+              de69 00bc  ld   $bc
+              de6a 00ff  ld   $ff
+              de6b 00fb  ld   $fb
+              de6c 00bf  ld   $bf
+              de6d 00ff  ld   $ff
+              de6e 00fb  ld   $fb
+              de6f 00bf  ld   $bf
+              de70 00ff  ld   $ff
+              de71 00fb  ld   $fb
+              de72 00bf  ld   $bf
+              de73 00ff  ld   $ff
+              de74 00fb  ld   $fb
+              de75 00bf  ld   $bf
+              de76 00ff  ld   $ff
+              de77 00fb  ld   $fb
+              de78 0007  ld   $07
               de79 0030  ld   $30
               de7a 000c  ld   $0c
-              de7b 00bc  ld   $bc
-              de7c 0081  ld   $81
-              de7d 0065  ld   $65
-              de7e 0005  ld   $05
-              de7f 0020  ld   $20
-              de80 00f0  ld   $f0
-              de81 00c2  ld   $c2
+              de7b 00c3  ld   $c3
+              de7c 0030  ld   $30
+              de7d 000c  ld   $0c
+              de7e 00c3  ld   $c3
+              de7f 0030  ld   $30
+              de80 000c  ld   $0c
+              de81 00c3  ld   $c3
               de82 0030  ld   $30
               de83 000c  ld   $0c
               de84 00c3  ld   $c3
               de85 0030  ld   $30
-              de86 00bc  ld   $bc
-              de87 00bc  ld   $bc
-              de88 00ff  ld   $ff
-              de89 00fb  ld   $fb
-              de8a 00bf  ld   $bf
-              de8b 00ff  ld   $ff
-              de8c 00fb  ld   $fb
-              de8d 00bf  ld   $bf
-              de8e 00ff  ld   $ff
-              de8f 00fb  ld   $fb
-              de90 00bf  ld   $bf
-              de91 00ff  ld   $ff
-              de92 00fb  ld   $fb
-              de93 00bf  ld   $bf
-              de94 00ff  ld   $ff
-              de95 00fb  ld   $fb
-              de96 0007  ld   $07
-              de97 0030  ld   $30
-              de98 000c  ld   $0c
-              de99 00c3  ld   $c3
-              de9a 0030  ld   $30
-              de9b 000c  ld   $0c
-              de9c 00c3  ld   $c3
-              de9d 0030  ld   $30
-              de9e 000c  ld   $0c
-              de9f 00c3  ld   $c3
-              dea0 0030  ld   $30
-              dea1 000c  ld   $0c
-              dea2 00c3  ld   $c3
-              dea3 0030  ld   $30
+              de86 000c  ld   $0c
+              de87 00c3  ld   $c3
+              de88 0030  ld   $30
+              de89 000c  ld   $0c
+              de8a 00c3  ld   $c3
+              de8b 0030  ld   $30
+              de8c 000c  ld   $0c
+              de8d 00c3  ld   $c3
+              de8e 0030  ld   $30
+              de8f 000c  ld   $0c
+              de90 00c3  ld   $c3
+              de91 0030  ld   $30
+              de92 000c  ld   $0c
+              de93 00c3  ld   $c3
+              de94 00b0  ld   $b0
+              de95 005a  ld   $5a
+              de96 00a9  ld   $a9
+              de97 00bf  ld   $bf
+              de98 000a  ld   $0a
+              de99 00ab  ld   $ab
+              de9a 0095  ld   $95
+              de9b 005a  ld   $5a
+              de9c 00a9  ld   $a9
+              de9d 002a  ld   $2a
+              de9e 001c  ld   $1c
+              de9f 0004  ld   $04
+              dea0 0041  ld   $41
+              dea1 0010  ld   $10
+              dea2 0044  ld   $44
+              dea3 0011  ld   $11
               dea4 000c  ld   $0c
               dea5 00c3  ld   $c3
               dea6 0030  ld   $30
               dea7 000c  ld   $0c
               dea8 00c3  ld   $c3
-              dea9 0030  ld   $30
-              deaa 000c  ld   $0c
+              dea9 007f  ld   $7f
+              deaa 0004  ld   $04
               deab 00c3  ld   $c3
-              deac 0030  ld   $30
-              dead 000c  ld   $0c
-              deae 00c3  ld   $c3
-              deaf 0030  ld   $30
+              deac 00ef  ld   $ef
+              dead 00ff  ld   $ff
+              deae 00fe  ld   $fe
+              deaf 003f  ld   $3f
               deb0 000c  ld   $0c
-              deb1 00c3  ld   $c3
-              deb2 00b0  ld   $b0
-              deb3 005a  ld   $5a
-              deb4 00a9  ld   $a9
-              deb5 00bf  ld   $bf
-              deb6 000a  ld   $0a
-              deb7 00ab  ld   $ab
-              deb8 0095  ld   $95
-              deb9 005a  ld   $5a
-              deba 00a9  ld   $a9
-              debb 002a  ld   $2a
-              debc 001c  ld   $1c
-              debd 0004  ld   $04
-              debe 0041  ld   $41
-              debf 0010  ld   $10
-              dec0 0044  ld   $44
-              dec1 0011  ld   $11
-              dec2 000c  ld   $0c
-              dec3 00c3  ld   $c3
-              dec4 0030  ld   $30
-              dec5 000c  ld   $0c
-              dec6 00c3  ld   $c3
-              dec7 007f  ld   $7f
-              dec8 0004  ld   $04
-              dec9 00c3  ld   $c3
-              deca 00ef  ld   $ef
-              decb 00ff  ld   $ff
-              decc 00fe  ld   $fe
-              decd 003f  ld   $3f
-              dece 000c  ld   $0c
-              decf 004b  ld   $4b
-              ded0 003f  ld   $3f
+              deb1 004b  ld   $4b
+              deb2 003f  ld   $3f
+              deb3 000c  ld   $0c
+              deb4 00c3  ld   $c3
+              deb5 0030  ld   $30
+              deb6 000c  ld   $0c
+              deb7 00c3  ld   $c3
+              deb8 0030  ld   $30
+              deb9 00ac  ld   $ac
+              deba 00aa  ld   $aa
+              debb 0095  ld   $95
+              debc 00aa  ld   $aa
+              debd 0056  ld   $56
+              debe 00d6  ld   $d6
+              debf 00fa  ld   $fa
+              dec0 005a  ld   $5a
+              dec1 006a  ld   $6a
+              dec2 00a5  ld   $a5
+              dec3 00aa  ld   $aa
+              dec4 006a  ld   $6a
+              dec5 00a5  ld   $a5
+              dec6 00aa  ld   $aa
+              dec7 00d6  ld   $d6
+              dec8 00bb  ld   $bb
+              dec9 005a  ld   $5a
+              deca 0095  ld   $95
+              decb 00aa  ld   $aa
+              decc 0056  ld   $56
+              decd 00aa  ld   $aa
+              dece 000a  ld   $0a
+              decf 00c3  ld   $c3
+              ded0 0030  ld   $30
               ded1 000c  ld   $0c
               ded2 00c3  ld   $c3
               ded3 0030  ld   $30
-              ded4 000c  ld   $0c
-              ded5 00c3  ld   $c3
+              ded4 00ac  ld   $ac
+              ded5 00fe  ld   $fe
               ded6 0030  ld   $30
-              ded7 00ac  ld   $ac
-              ded8 00aa  ld   $aa
-              ded9 0095  ld   $95
-              deda 00aa  ld   $aa
-              dedb 0056  ld   $56
-              dedc 00d6  ld   $d6
-              dedd 00fa  ld   $fa
-              dede 005a  ld   $5a
-              dedf 006a  ld   $6a
-              dee0 00a5  ld   $a5
-              dee1 00aa  ld   $aa
-              dee2 006a  ld   $6a
-              dee3 00a5  ld   $a5
-              dee4 00aa  ld   $aa
-              dee5 00d6  ld   $d6
-              dee6 00bb  ld   $bb
-              dee7 005a  ld   $5a
-              dee8 0095  ld   $95
-              dee9 00aa  ld   $aa
-              deea 0056  ld   $56
-              deeb 00aa  ld   $aa
-              deec 000a  ld   $0a
-              deed 00c3  ld   $c3
-              deee 0030  ld   $30
-              deef 000c  ld   $0c
-              def0 00c3  ld   $c3
-              def1 0030  ld   $30
-              def2 00ac  ld   $ac
-              def3 00fe  ld   $fe
-              def4 0030  ld   $30
-              def5 000c  ld   $0c
-              def6 00c3  ld   $c3
-              def7 0030  ld   $30
-              def8 00ac  ld   $ac
-              def9 00fe  ld   $fe
-              defa 0030  ld   $30
+              ded7 000c  ld   $0c
+              ded8 00c3  ld   $c3
+              ded9 0030  ld   $30
+              deda 00ac  ld   $ac
+              dedb 00fe  ld   $fe
+              dedc 0030  ld   $30
+              dedd 000c  ld   $0c
+              dede 00c3  ld   $c3
+              dedf 00b0  ld   $b0
+              dee0 00fa  ld   $fa
+              dee1 00c3  ld   $c3
+              dee2 0030  ld   $30
+              dee3 000c  ld   $0c
+              dee4 00c3  ld   $c3
+              dee5 0030  ld   $30
+              dee6 000c  ld   $0c
+              dee7 00c3  ld   $c3
+              dee8 0030  ld   $30
+              dee9 000c  ld   $0c
+              deea 00c3  ld   $c3
+              deeb 0055  ld   $55
+              deec 0055  ld   $55
+              deed 0055  ld   $55
+              * 6 times
+              def1 00aa  ld   $aa
+              def2 00aa  ld   $aa
+              def3 00aa  ld   $aa
+              def4 00ea  ld   $ea
+              def5 00ff  ld   $ff
+              def6 00ff  ld   $ff
+              def7 00ff  ld   $ff
+              * 5 times
+              defa 003f  ld   $3f
               defb fe00  bra  ac          ;+-----------------------------------+
               defc fcfd  bra  $defd       ;|                                   |
               defd 1404  ld   $04,y       ;| Trampoline for page $de00 lookups |
@@ -51010,997 +51010,997 @@ zippedRacerHorizon:
               deff c218  st   [$18]       ;+-----------------------------------+
               df00 000c  ld   $0c
               df01 00c3  ld   $c3
-              df02 00b0  ld   $b0
-              df03 00fa  ld   $fa
+              df02 0030  ld   $30
+              df03 000c  ld   $0c
               df04 00c3  ld   $c3
-              df05 0030  ld   $30
-              df06 000c  ld   $0c
-              df07 00c3  ld   $c3
-              df08 0030  ld   $30
-              df09 000c  ld   $0c
-              df0a 00c3  ld   $c3
+              df05 00eb  ld   $eb
+              df06 001a  ld   $1a
+              df07 0004  ld   $04
+              df08 0069  ld   $69
+              df09 00b0  ld   $b0
+              df0a 00a6  ld   $a6
               df0b 0030  ld   $30
-              df0c 0000  ld   $00
-              df0d 0000  ld   $00
-              df0e 0000  ld   $00
-              * 5 times
+              df0c 000c  ld   $0c
+              df0d 00c3  ld   $c3
+              df0e 0070  ld   $70
+              df0f 0055  ld   $55
+              df10 00fd  ld   $fd
               df11 0055  ld   $55
-              df12 0055  ld   $55
-              df13 0055  ld   $55
-              df14 0055  ld   $55
-              df15 00a5  ld   $a5
-              df16 00aa  ld   $aa
-              df17 00aa  ld   $aa
-              df18 00aa  ld   $aa
-              df19 00fe  ld   $fe
-              df1a 00ff  ld   $ff
-              df1b 00ff  ld   $ff
-              df1c 00ff  ld   $ff
-              * 6 times
+              df12 00f5  ld   $f5
+              df13 0057  ld   $57
+              df14 00d5  ld   $d5
+              df15 005f  ld   $5f
+              df16 0055  ld   $55
+              df17 007f  ld   $7f
+              df18 0055  ld   $55
+              df19 00fd  ld   $fd
+              df1a 0055  ld   $55
+              df1b 0005  ld   $05
+              df1c 00c3  ld   $c3
+              df1d 0030  ld   $30
+              df1e 000c  ld   $0c
+              df1f 00c3  ld   $c3
               df20 0030  ld   $30
-              df21 000c  ld   $0c
-              df22 00c3  ld   $c3
-              df23 00e9  ld   $e9
-              df24 001a  ld   $1a
-              df25 00a4  ld   $a4
-              df26 0069  ld   $69
-              df27 00b0  ld   $b0
-              df28 00a6  ld   $a6
+              df21 00f0  ld   $f0
+              df22 0083  ld   $83
+              df23 0081  ld   $81
+              df24 0065  ld   $65
+              df25 0005  ld   $05
+              df26 0020  ld   $20
+              df27 0008  ld   $08
+              df28 00fc  ld   $fc
               df29 0030  ld   $30
               df2a 000c  ld   $0c
               df2b 00c3  ld   $c3
-              df2c 0070  ld   $70
-              df2d 0055  ld   $55
-              df2e 00fd  ld   $fd
-              df2f 0055  ld   $55
-              df30 00f5  ld   $f5
-              df31 0057  ld   $57
-              df32 00d5  ld   $d5
-              df33 005f  ld   $5f
-              df34 0055  ld   $55
-              df35 007f  ld   $7f
-              df36 0055  ld   $55
-              df37 00fd  ld   $fd
-              df38 0055  ld   $55
-              df39 0005  ld   $05
-              df3a 00c3  ld   $c3
-              df3b 0030  ld   $30
-              df3c 000c  ld   $0c
-              df3d 00c3  ld   $c3
+              df2c 0030  ld   $30
+              df2d 006c  ld   $6c
+              df2e 00fc  ld   $fc
+              df2f 006f  ld   $6f
+              df30 0060  ld   $60
+              df31 0004  ld   $04
+              df32 0046  ld   $46
+              df33 0060  ld   $60
+              df34 0004  ld   $04
+              df35 0046  ld   $46
+              df36 0060  ld   $60
+              df37 0004  ld   $04
+              df38 00c6  ld   $c6
+              df39 006f  ld   $6f
+              df3a 002c  ld   $2c
+              df3b 0056  ld   $56
+              df3c 00f0  ld   $f0
+              df3d 0006  ld   $06
               df3e 0030  ld   $30
-              df3f 00f0  ld   $f0
-              df40 0083  ld   $83
-              df41 0081  ld   $81
-              df42 0065  ld   $65
-              df43 0005  ld   $05
-              df44 0020  ld   $20
-              df45 0008  ld   $08
-              df46 00fc  ld   $fc
+              df3f 000c  ld   $0c
+              df40 00c3  ld   $c3
+              df41 0030  ld   $30
+              df42 000c  ld   $0c
+              df43 00c3  ld   $c3
+              df44 0030  ld   $30
+              df45 000c  ld   $0c
+              df46 00c3  ld   $c3
               df47 0030  ld   $30
               df48 000c  ld   $0c
               df49 00c3  ld   $c3
               df4a 0030  ld   $30
-              df4b 006c  ld   $6c
-              df4c 00fc  ld   $fc
-              df4d 006f  ld   $6f
-              df4e 0060  ld   $60
-              df4f 0004  ld   $04
-              df50 0046  ld   $46
-              df51 0060  ld   $60
-              df52 0004  ld   $04
-              df53 0046  ld   $46
-              df54 0060  ld   $60
-              df55 0004  ld   $04
-              df56 00c6  ld   $c6
-              df57 006f  ld   $6f
-              df58 002c  ld   $2c
-              df59 0056  ld   $56
-              df5a 00f0  ld   $f0
-              df5b 0006  ld   $06
-              df5c 0030  ld   $30
-              df5d 000c  ld   $0c
-              df5e 00c3  ld   $c3
-              df5f 0030  ld   $30
-              df60 000c  ld   $0c
-              df61 00c3  ld   $c3
-              df62 0030  ld   $30
-              df63 000c  ld   $0c
-              df64 00c3  ld   $c3
-              df65 0030  ld   $30
-              df66 000c  ld   $0c
-              df67 00c3  ld   $c3
-              df68 0030  ld   $30
+              df4b 000c  ld   $0c
+              df4c 00c3  ld   $c3
+              df4d 0030  ld   $30
+              df4e 000c  ld   $0c
+              df4f 00c3  ld   $c3
+              df50 0030  ld   $30
+              df51 000c  ld   $0c
+              df52 00c3  ld   $c3
+              df53 0030  ld   $30
+              df54 000c  ld   $0c
+              df55 00c3  ld   $c3
+              df56 0030  ld   $30
+              df57 000c  ld   $0c
+              df58 00c3  ld   $c3
+              df59 0070  ld   $70
+              df5a 00a5  ld   $a5
+              df5b 00fe  ld   $fe
+              df5c 00ea  ld   $ea
+              df5d 000f  ld   $0f
+              df5e 00ab  ld   $ab
+              df5f 006a  ld   $6a
+              df60 00a5  ld   $a5
+              df61 0056  ld   $56
+              df62 002a  ld   $2a
+              df63 001c  ld   $1c
+              df64 0058  ld   $58
+              df65 0081  ld   $81
+              df66 0015  ld   $15
+              df67 0058  ld   $58
+              df68 0011  ld   $11
               df69 000c  ld   $0c
               df6a 00c3  ld   $c3
               df6b 0030  ld   $30
               df6c 000c  ld   $0c
               df6d 00c3  ld   $c3
-              df6e 0030  ld   $30
-              df6f 000c  ld   $0c
-              df70 00c3  ld   $c3
-              df71 0030  ld   $30
-              df72 000c  ld   $0c
-              df73 00c3  ld   $c3
-              df74 0030  ld   $30
-              df75 000c  ld   $0c
-              df76 00c3  ld   $c3
-              df77 0070  ld   $70
-              df78 00a5  ld   $a5
-              df79 00fe  ld   $fe
-              df7a 00ea  ld   $ea
-              df7b 000f  ld   $0f
-              df7c 00ab  ld   $ab
-              df7d 006a  ld   $6a
-              df7e 00a5  ld   $a5
-              df7f 0056  ld   $56
-              df80 002a  ld   $2a
-              df81 001c  ld   $1c
-              df82 0058  ld   $58
-              df83 0081  ld   $81
-              df84 0015  ld   $15
-              df85 0058  ld   $58
-              df86 0011  ld   $11
-              df87 000c  ld   $0c
-              df88 00c3  ld   $c3
-              df89 0030  ld   $30
-              df8a 000c  ld   $0c
-              df8b 00c3  ld   $c3
-              df8c 00f0  ld   $f0
-              df8d 000b  ld   $0b
-              df8e 00bf  ld   $bf
-              df8f 003f  ld   $3f
-              df90 00fc  ld   $fc
-              df91 00c2  ld   $c2
-              df92 00ff  ld   $ff
-              df93 000f  ld   $0f
-              df94 00bf  ld   $bf
+              df6e 00f0  ld   $f0
+              df6f 000b  ld   $0b
+              df70 00bf  ld   $bf
+              df71 003f  ld   $3f
+              df72 00fc  ld   $fc
+              df73 00c2  ld   $c2
+              df74 00ff  ld   $ff
+              df75 000f  ld   $0f
+              df76 00bf  ld   $bf
+              df77 0030  ld   $30
+              df78 000c  ld   $0c
+              df79 00c3  ld   $c3
+              df7a 0030  ld   $30
+              df7b 000c  ld   $0c
+              df7c 00c3  ld   $c3
+              df7d 0030  ld   $30
+              df7e 00ac  ld   $ac
+              df7f 0069  ld   $69
+              df80 0055  ld   $55
+              df81 0055  ld   $55
+              df82 0055  ld   $55
+              df83 0096  ld   $96
+              df84 00aa  ld   $aa
+              df85 005a  ld   $5a
+              df86 00aa  ld   $aa
+              df87 006a  ld   $6a
+              df88 00a9  ld   $a9
+              df89 0096  ld   $96
+              df8a 00aa  ld   $aa
+              df8b 00aa  ld   $aa
+              df8c 0096  ld   $96
+              df8d 00aa  ld   $aa
+              df8e 005a  ld   $5a
+              df8f 0055  ld   $55
+              df90 0055  ld   $55
+              df91 0055  ld   $55
+              df92 009a  ld   $9a
+              df93 0006  ld   $06
+              df94 00c3  ld   $c3
               df95 0030  ld   $30
               df96 000c  ld   $0c
               df97 00c3  ld   $c3
               df98 0030  ld   $30
-              df99 000c  ld   $0c
-              df9a 00c3  ld   $c3
+              df99 00ac  ld   $ac
+              df9a 00fe  ld   $fe
               df9b 0030  ld   $30
-              df9c 00ac  ld   $ac
-              df9d 0069  ld   $69
-              df9e 0055  ld   $55
-              df9f 0055  ld   $55
-              dfa0 0055  ld   $55
-              dfa1 0096  ld   $96
-              dfa2 00aa  ld   $aa
-              dfa3 005a  ld   $5a
-              dfa4 00aa  ld   $aa
-              dfa5 006a  ld   $6a
-              dfa6 00a9  ld   $a9
-              dfa7 0096  ld   $96
-              dfa8 00aa  ld   $aa
-              dfa9 00aa  ld   $aa
-              dfaa 0096  ld   $96
-              dfab 00aa  ld   $aa
-              dfac 005a  ld   $5a
-              dfad 0055  ld   $55
-              dfae 0055  ld   $55
-              dfaf 0055  ld   $55
-              dfb0 009a  ld   $9a
-              dfb1 0006  ld   $06
-              dfb2 00c3  ld   $c3
-              dfb3 0030  ld   $30
-              dfb4 000c  ld   $0c
-              dfb5 00c3  ld   $c3
-              dfb6 0030  ld   $30
-              dfb7 00ac  ld   $ac
-              dfb8 00fe  ld   $fe
-              dfb9 0030  ld   $30
-              dfba 000c  ld   $0c
-              dfbb 00c3  ld   $c3
-              dfbc 0030  ld   $30
-              dfbd 00ac  ld   $ac
-              dfbe 00fe  ld   $fe
-              dfbf 0030  ld   $30
-              dfc0 000c  ld   $0c
-              dfc1 00c3  ld   $c3
-              dfc2 00b0  ld   $b0
-              dfc3 00fa  ld   $fa
+              df9c 000c  ld   $0c
+              df9d 00c3  ld   $c3
+              df9e 0030  ld   $30
+              df9f 00ac  ld   $ac
+              dfa0 00fe  ld   $fe
+              dfa1 0030  ld   $30
+              dfa2 000c  ld   $0c
+              dfa3 00c3  ld   $c3
+              dfa4 00b0  ld   $b0
+              dfa5 00fa  ld   $fa
+              dfa6 00c3  ld   $c3
+              dfa7 0030  ld   $30
+              dfa8 000c  ld   $0c
+              dfa9 00c3  ld   $c3
+              dfaa 0030  ld   $30
+              dfab 000c  ld   $0c
+              dfac 00c3  ld   $c3
+              dfad 0030  ld   $30
+              dfae 0000  ld   $00
+              dfaf 0000  ld   $00
+              dfb0 0000  ld   $00
+              * 5 times
+              dfb3 0055  ld   $55
+              dfb4 0055  ld   $55
+              dfb5 0055  ld   $55
+              dfb6 0055  ld   $55
+              dfb7 00a5  ld   $a5
+              dfb8 00aa  ld   $aa
+              dfb9 00aa  ld   $aa
+              dfba 00aa  ld   $aa
+              dfbb 00fe  ld   $fe
+              dfbc 00ff  ld   $ff
+              dfbd 00ff  ld   $ff
+              dfbe 00ff  ld   $ff
+              * 6 times
+              dfc2 0030  ld   $30
+              dfc3 000c  ld   $0c
               dfc4 00c3  ld   $c3
-              dfc5 0030  ld   $30
-              dfc6 000c  ld   $0c
-              dfc7 00c3  ld   $c3
-              dfc8 0030  ld   $30
-              dfc9 000c  ld   $0c
-              dfca 00c3  ld   $c3
+              dfc5 00e9  ld   $e9
+              dfc6 001a  ld   $1a
+              dfc7 00a4  ld   $a4
+              dfc8 0041  ld   $41
+              dfc9 00b0  ld   $b0
+              dfca 00ae  ld   $ae
               dfcb 0030  ld   $30
               dfcc 000c  ld   $0c
-              dfcd 0003  ld   $03
-              dfce 0000  ld   $00
-              dfcf 0000  ld   $00
-              dfd0 0000  ld   $00
-              * 5 times
-              dfd3 0054  ld   $54
-              dfd4 0055  ld   $55
-              dfd5 0055  ld   $55
-              dfd6 0055  ld   $55
-              dfd7 0055  ld   $55
-              dfd8 00a5  ld   $a5
-              dfd9 00aa  ld   $aa
+              dfcd 00c3  ld   $c3
+              dfce 00b0  ld   $b0
+              dfcf 00ae  ld   $ae
+              dfd0 00fe  ld   $fe
+              dfd1 00ba  ld   $ba
+              dfd2 00fa  ld   $fa
+              dfd3 00ab  ld   $ab
+              dfd4 00fa  ld   $fa
+              dfd5 00af  ld   $af
+              dfd6 00aa  ld   $aa
+              dfd7 00bf  ld   $bf
+              dfd8 00ae  ld   $ae
+              dfd9 00fe  ld   $fe
               dfda 00aa  ld   $aa
-              dfdb 00fa  ld   $fa
-              dfdc 00ff  ld   $ff
-              dfdd 00ff  ld   $ff
-              dfde 000f  ld   $0f
+              dfdb 000e  ld   $0e
+              dfdc 00c3  ld   $c3
+              dfdd 0030  ld   $30
+              dfde 000c  ld   $0c
               dfdf 00c3  ld   $c3
-              dfe0 0030  ld   $30
-              dfe1 000c  ld   $0c
-              dfe2 00c3  ld   $c3
-              dfe3 00eb  ld   $eb
-              dfe4 001a  ld   $1a
+              dfe0 00c0  ld   $c0
+              dfe1 001b  ld   $1b
+              dfe2 0004  ld   $04
+              dfe3 0041  ld   $41
+              dfe4 0010  ld   $10
               dfe5 0004  ld   $04
               dfe6 0041  ld   $41
-              dfe7 00b0  ld   $b0
-              dfe8 00ae  ld   $ae
+              dfe7 0000  ld   $00
+              dfe8 0003  ld   $03
               dfe9 0030  ld   $30
               dfea 000c  ld   $0c
               dfeb 00c3  ld   $c3
-              dfec 00b0  ld   $b0
-              dfed 00ae  ld   $ae
-              dfee 00fe  ld   $fe
-              dfef 00ba  ld   $ba
-              dff0 00fa  ld   $fa
-              dff1 00ab  ld   $ab
-              dff2 00fa  ld   $fa
-              dff3 00af  ld   $af
-              dff4 00aa  ld   $aa
-              dff5 00bf  ld   $bf
-              dff6 00ae  ld   $ae
-              dff7 00fe  ld   $fe
-              dff8 00aa  ld   $aa
-              dff9 000e  ld   $0e
-              dffa 00c3  ld   $c3
+              dfec 0030  ld   $30
+              dfed 00bc  ld   $bc
+              dfee 00bc  ld   $bc
+              dfef 00bf  ld   $bf
+              dff0 00f1  ld   $f1
+              dff1 001a  ld   $1a
+              dff2 008b  ld   $8b
+              dff3 00b1  ld   $b1
+              dff4 0018  ld   $18
+              dff5 008b  ld   $8b
+              dff6 00b1  ld   $b1
+              dff7 0018  ld   $18
+              dff8 00c1  ld   $c1
+              dff9 00bb  ld   $bb
+              dffa 0058  ld   $58
               dffb fe00  bra  ac          ;+-----------------------------------+
               dffc fcfd  bra  $dffd       ;|                                   |
               dffd 1404  ld   $04,y       ;| Trampoline for page $df00 lookups |
               dffe e065  jmp  y,$65       ;|                                   |
               dfff c218  st   [$18]       ;+-----------------------------------+
-              e000 0030  ld   $30
-              e001 000c  ld   $0c
-              e002 00c3  ld   $c3
-              e003 00c0  ld   $c0
-              e004 001b  ld   $1b
-              e005 0004  ld   $04
-              e006 0041  ld   $41
-              e007 0010  ld   $10
-              e008 0004  ld   $04
-              e009 0041  ld   $41
-              e00a 0000  ld   $00
-              e00b 0003  ld   $03
+              e000 0046  ld   $46
+              e001 00f0  ld   $f0
+              e002 0007  ld   $07
+              e003 0030  ld   $30
+              e004 000c  ld   $0c
+              e005 00c3  ld   $c3
+              e006 0030  ld   $30
+              e007 000c  ld   $0c
+              e008 00c3  ld   $c3
+              e009 0030  ld   $30
+              e00a 000c  ld   $0c
+              e00b 00c3  ld   $c3
               e00c 0030  ld   $30
               e00d 000c  ld   $0c
               e00e 00c3  ld   $c3
               e00f 0030  ld   $30
-              e010 00bc  ld   $bc
-              e011 00bc  ld   $bc
-              e012 00bf  ld   $bf
-              e013 00f1  ld   $f1
-              e014 001a  ld   $1a
-              e015 008b  ld   $8b
-              e016 00b1  ld   $b1
-              e017 0018  ld   $18
-              e018 008b  ld   $8b
-              e019 00b1  ld   $b1
-              e01a 0018  ld   $18
-              e01b 00c1  ld   $c1
-              e01c 00bb  ld   $bb
-              e01d 0058  ld   $58
-              e01e 0046  ld   $46
-              e01f 00f0  ld   $f0
-              e020 0007  ld   $07
-              e021 0030  ld   $30
-              e022 000c  ld   $0c
-              e023 00c3  ld   $c3
-              e024 0030  ld   $30
-              e025 000c  ld   $0c
-              e026 00c3  ld   $c3
-              e027 0030  ld   $30
-              e028 000c  ld   $0c
-              e029 00c3  ld   $c3
-              e02a 0030  ld   $30
-              e02b 000c  ld   $0c
-              e02c 00c3  ld   $c3
-              e02d 0030  ld   $30
+              e010 000c  ld   $0c
+              e011 00c3  ld   $c3
+              e012 0030  ld   $30
+              e013 000c  ld   $0c
+              e014 00c3  ld   $c3
+              e015 0030  ld   $30
+              e016 000c  ld   $0c
+              e017 00c3  ld   $c3
+              e018 0030  ld   $30
+              e019 000c  ld   $0c
+              e01a 00c3  ld   $c3
+              e01b 0030  ld   $30
+              e01c 000c  ld   $0c
+              e01d 00c3  ld   $c3
+              e01e 00b0  ld   $b0
+              e01f 005a  ld   $5a
+              e020 00a9  ld   $a9
+              e021 00bf  ld   $bf
+              e022 000a  ld   $0a
+              e023 00ab  ld   $ab
+              e024 0095  ld   $95
+              e025 005a  ld   $5a
+              e026 00a9  ld   $a9
+              e027 002a  ld   $2a
+              e028 001c  ld   $1c
+              e029 0004  ld   $04
+              e02a 0041  ld   $41
+              e02b 0010  ld   $10
+              e02c 0044  ld   $44
+              e02d 0011  ld   $11
               e02e 000c  ld   $0c
               e02f 00c3  ld   $c3
               e030 0030  ld   $30
               e031 000c  ld   $0c
               e032 00c3  ld   $c3
-              e033 0030  ld   $30
-              e034 000c  ld   $0c
-              e035 00c3  ld   $c3
+              e033 0070  ld   $70
+              e034 00f4  ld   $f4
+              e035 00fe  ld   $fe
               e036 0030  ld   $30
-              e037 000c  ld   $0c
-              e038 00c3  ld   $c3
-              e039 0030  ld   $30
-              e03a 000c  ld   $0c
-              e03b 00c3  ld   $c3
-              e03c 00b0  ld   $b0
-              e03d 005a  ld   $5a
-              e03e 00a9  ld   $a9
-              e03f 00bf  ld   $bf
-              e040 000a  ld   $0a
-              e041 00ab  ld   $ab
-              e042 0095  ld   $95
-              e043 005a  ld   $5a
-              e044 00a9  ld   $a9
-              e045 002a  ld   $2a
-              e046 001c  ld   $1c
-              e047 0004  ld   $04
-              e048 0041  ld   $41
-              e049 0010  ld   $10
-              e04a 0044  ld   $44
-              e04b 0011  ld   $11
-              e04c 000c  ld   $0c
-              e04d 00c3  ld   $c3
-              e04e 0030  ld   $30
-              e04f 000c  ld   $0c
-              e050 00c3  ld   $c3
-              e051 0070  ld   $70
-              e052 00f4  ld   $f4
-              e053 00fe  ld   $fe
-              e054 0030  ld   $30
-              e055 00fc  ld   $fc
-              e056 00c2  ld   $c2
-              e057 00f0  ld   $f0
-              e058 00ff  ld   $ff
-              e059 004b  ld   $4b
+              e037 00fc  ld   $fc
+              e038 00c2  ld   $c2
+              e039 00f0  ld   $f0
+              e03a 00ff  ld   $ff
+              e03b 004b  ld   $4b
+              e03c 0030  ld   $30
+              e03d 000c  ld   $0c
+              e03e 00c3  ld   $c3
+              e03f 0030  ld   $30
+              e040 000c  ld   $0c
+              e041 00c3  ld   $c3
+              e042 0030  ld   $30
+              e043 00ac  ld   $ac
+              e044 0069  ld   $69
+              e045 009a  ld   $9a
+              e046 00aa  ld   $aa
+              e047 006a  ld   $6a
+              e048 0016  ld   $16
+              e049 00a5  ld   $a5
+              e04a 005a  ld   $5a
+              e04b 00aa  ld   $aa
+              e04c 0061  ld   $61
+              e04d 00a9  ld   $a9
+              e04e 0056  ld   $56
+              e04f 0065  ld   $65
+              e050 00a8  ld   $a8
+              e051 0056  ld   $56
+              e052 0095  ld   $95
+              e053 005a  ld   $5a
+              e054 009a  ld   $9a
+              e055 00aa  ld   $aa
+              e056 006a  ld   $6a
+              e057 009a  ld   $9a
+              e058 0006  ld   $06
+              e059 00c3  ld   $c3
               e05a 0030  ld   $30
               e05b 000c  ld   $0c
               e05c 00c3  ld   $c3
               e05d 0030  ld   $30
-              e05e 000c  ld   $0c
-              e05f 00c3  ld   $c3
+              e05e 00ac  ld   $ac
+              e05f 00fe  ld   $fe
               e060 0030  ld   $30
-              e061 00ac  ld   $ac
-              e062 0069  ld   $69
-              e063 009a  ld   $9a
-              e064 00aa  ld   $aa
-              e065 006a  ld   $6a
-              e066 0016  ld   $16
-              e067 00a5  ld   $a5
-              e068 005a  ld   $5a
-              e069 00aa  ld   $aa
-              e06a 0061  ld   $61
-              e06b 00a9  ld   $a9
-              e06c 0056  ld   $56
-              e06d 0065  ld   $65
-              e06e 00a8  ld   $a8
-              e06f 0056  ld   $56
-              e070 0095  ld   $95
-              e071 005a  ld   $5a
-              e072 009a  ld   $9a
-              e073 00aa  ld   $aa
-              e074 006a  ld   $6a
-              e075 009a  ld   $9a
-              e076 0006  ld   $06
-              e077 00c3  ld   $c3
-              e078 0030  ld   $30
-              e079 000c  ld   $0c
-              e07a 00c3  ld   $c3
-              e07b 0030  ld   $30
-              e07c 00ac  ld   $ac
-              e07d 00fe  ld   $fe
-              e07e 0030  ld   $30
-              e07f 000c  ld   $0c
-              e080 00c3  ld   $c3
-              e081 0030  ld   $30
-              e082 00ac  ld   $ac
-              e083 00fe  ld   $fe
-              e084 0030  ld   $30
-              e085 000c  ld   $0c
+              e061 000c  ld   $0c
+              e062 00c3  ld   $c3
+              e063 0030  ld   $30
+              e064 00ac  ld   $ac
+              e065 00fe  ld   $fe
+              e066 0030  ld   $30
+              e067 000c  ld   $0c
+              e068 00c3  ld   $c3
+              e069 00b0  ld   $b0
+              e06a 00fa  ld   $fa
+              e06b 00c3  ld   $c3
+              e06c 0030  ld   $30
+              e06d 000c  ld   $0c
+              e06e 00c3  ld   $c3
+              e06f 0030  ld   $30
+              e070 000c  ld   $0c
+              e071 00c3  ld   $c3
+              e072 0030  ld   $30
+              e073 000c  ld   $0c
+              e074 0003  ld   $03
+              e075 0000  ld   $00
+              e076 0000  ld   $00
+              e077 0000  ld   $00
+              * 5 times
+              e07a 0054  ld   $54
+              e07b 0055  ld   $55
+              e07c 0055  ld   $55
+              e07d 0055  ld   $55
+              e07e 0055  ld   $55
+              e07f 00a5  ld   $a5
+              e080 00aa  ld   $aa
+              e081 00aa  ld   $aa
+              e082 00fa  ld   $fa
+              e083 00ff  ld   $ff
+              e084 00ff  ld   $ff
+              e085 000f  ld   $0f
               e086 00c3  ld   $c3
-              e087 00b0  ld   $b0
-              e088 00fa  ld   $fa
+              e087 0030  ld   $30
+              e088 000c  ld   $0c
               e089 00c3  ld   $c3
-              e08a 0030  ld   $30
-              e08b 000c  ld   $0c
-              e08c 00c3  ld   $c3
-              e08d 0030  ld   $30
-              e08e 000c  ld   $0c
-              e08f 00c3  ld   $c3
+              e08a 00eb  ld   $eb
+              e08b 001a  ld   $1a
+              e08c 0004  ld   $04
+              e08d 0069  ld   $69
+              e08e 00b0  ld   $b0
+              e08f 00a6  ld   $a6
               e090 0030  ld   $30
               e091 000c  ld   $0c
               e092 00c3  ld   $c3
-              e093 0030  ld   $30
-              e094 0000  ld   $00
-              e095 0000  ld   $00
-              e096 0000  ld   $00
-              * 8 times
-              e09c 0040  ld   $40
+              e093 0070  ld   $70
+              e094 0055  ld   $55
+              e095 00fd  ld   $fd
+              e096 0055  ld   $55
+              e097 00f5  ld   $f5
+              e098 0057  ld   $57
+              e099 00d5  ld   $d5
+              e09a 005f  ld   $5f
+              e09b 0055  ld   $55
+              e09c 007f  ld   $7f
               e09d 0055  ld   $55
-              e09e 0055  ld   $55
+              e09e 00fd  ld   $fd
               e09f 0055  ld   $55
-              * 5 times
+              e0a0 0005  ld   $05
+              e0a1 00c3  ld   $c3
               e0a2 0030  ld   $30
               e0a3 000c  ld   $0c
               e0a4 00c3  ld   $c3
               e0a5 0030  ld   $30
               e0a6 000c  ld   $0c
-              e0a7 00c3  ld   $c3
-              e0a8 00e9  ld   $e9
-              e0a9 001a  ld   $1a
-              e0aa 00a4  ld   $a4
-              e0ab 0069  ld   $69
-              e0ac 00b0  ld   $b0
-              e0ad 00a6  ld   $a6
+              e0a7 0007  ld   $07
+              e0a8 0096  ld   $96
+              e0a9 0065  ld   $65
+              e0aa 0059  ld   $59
+              e0ab 0001  ld   $01
+              e0ac 000c  ld   $0c
+              e0ad 00c3  ld   $c3
               e0ae 0030  ld   $30
               e0af 000c  ld   $0c
               e0b0 00c3  ld   $c3
-              e0b1 0070  ld   $70
-              e0b2 0055  ld   $55
-              e0b3 00fd  ld   $fd
-              e0b4 0055  ld   $55
-              e0b5 00f5  ld   $f5
-              e0b6 0057  ld   $57
-              e0b7 00d5  ld   $d5
-              e0b8 005f  ld   $5f
-              e0b9 0055  ld   $55
-              e0ba 007f  ld   $7f
-              e0bb 0055  ld   $55
-              e0bc 00fd  ld   $fd
-              e0bd 0055  ld   $55
-              e0be 0005  ld   $05
-              e0bf 00c3  ld   $c3
-              e0c0 0030  ld   $30
-              e0c1 000c  ld   $0c
-              e0c2 00c3  ld   $c3
+              e0b1 0030  ld   $30
+              e0b2 006c  ld   $6c
+              e0b3 00fc  ld   $fc
+              e0b4 006f  ld   $6f
+              e0b5 0060  ld   $60
+              e0b6 002c  ld   $2c
+              e0b7 00c6  ld   $c6
+              e0b8 0062  ld   $62
+              e0b9 002c  ld   $2c
+              e0ba 00c6  ld   $c6
+              e0bb 0062  ld   $62
+              e0bc 002c  ld   $2c
+              e0bd 00c6  ld   $c6
+              e0be 006f  ld   $6f
+              e0bf 0019  ld   $19
+              e0c0 0056  ld   $56
+              e0c1 00f0  ld   $f0
+              e0c2 0006  ld   $06
               e0c3 0030  ld   $30
               e0c4 000c  ld   $0c
-              e0c5 0007  ld   $07
-              e0c6 0096  ld   $96
-              e0c7 0065  ld   $65
-              e0c8 0059  ld   $59
-              e0c9 0001  ld   $01
+              e0c5 00c3  ld   $c3
+              e0c6 0030  ld   $30
+              e0c7 000c  ld   $0c
+              e0c8 00c3  ld   $c3
+              e0c9 0030  ld   $30
               e0ca 000c  ld   $0c
               e0cb 00c3  ld   $c3
               e0cc 0030  ld   $30
               e0cd 000c  ld   $0c
               e0ce 00c3  ld   $c3
               e0cf 0030  ld   $30
-              e0d0 006c  ld   $6c
-              e0d1 00fc  ld   $fc
-              e0d2 006f  ld   $6f
-              e0d3 0060  ld   $60
-              e0d4 002c  ld   $2c
-              e0d5 00c6  ld   $c6
-              e0d6 0062  ld   $62
-              e0d7 002c  ld   $2c
-              e0d8 00c6  ld   $c6
-              e0d9 0062  ld   $62
-              e0da 002c  ld   $2c
-              e0db 00c6  ld   $c6
-              e0dc 006f  ld   $6f
-              e0dd 0019  ld   $19
-              e0de 0056  ld   $56
-              e0df 00f0  ld   $f0
-              e0e0 0006  ld   $06
-              e0e1 0030  ld   $30
-              e0e2 000c  ld   $0c
-              e0e3 00c3  ld   $c3
-              e0e4 0030  ld   $30
-              e0e5 000c  ld   $0c
-              e0e6 00c3  ld   $c3
-              e0e7 0030  ld   $30
-              e0e8 000c  ld   $0c
-              e0e9 00c3  ld   $c3
-              e0ea 0030  ld   $30
-              e0eb 000c  ld   $0c
-              e0ec 00c3  ld   $c3
-              e0ed 0030  ld   $30
+              e0d0 000c  ld   $0c
+              e0d1 00c3  ld   $c3
+              e0d2 0030  ld   $30
+              e0d3 000c  ld   $0c
+              e0d4 00c3  ld   $c3
+              e0d5 0030  ld   $30
+              e0d6 000c  ld   $0c
+              e0d7 00c3  ld   $c3
+              e0d8 0030  ld   $30
+              e0d9 000c  ld   $0c
+              e0da 00c3  ld   $c3
+              e0db 0030  ld   $30
+              e0dc 000c  ld   $0c
+              e0dd 00c3  ld   $c3
+              e0de 0070  ld   $70
+              e0df 00a5  ld   $a5
+              e0e0 00fe  ld   $fe
+              e0e1 00ea  ld   $ea
+              e0e2 000f  ld   $0f
+              e0e3 00ab  ld   $ab
+              e0e4 006a  ld   $6a
+              e0e5 00a5  ld   $a5
+              e0e6 0056  ld   $56
+              e0e7 002a  ld   $2a
+              e0e8 001c  ld   $1c
+              e0e9 0058  ld   $58
+              e0ea 0081  ld   $81
+              e0eb 0015  ld   $15
+              e0ec 0058  ld   $58
+              e0ed 0011  ld   $11
               e0ee 000c  ld   $0c
               e0ef 00c3  ld   $c3
               e0f0 0030  ld   $30
               e0f1 000c  ld   $0c
               e0f2 00c3  ld   $c3
               e0f3 0030  ld   $30
-              e0f4 000c  ld   $0c
-              e0f5 00c3  ld   $c3
+              e0f4 00fc  ld   $fc
+              e0f5 00bf  ld   $bf
               e0f6 0030  ld   $30
-              e0f7 000c  ld   $0c
-              e0f8 00c3  ld   $c3
-              e0f9 0030  ld   $30
-              e0fa 000c  ld   $0c
+              e0f7 00fc  ld   $fc
+              e0f8 00c2  ld   $c2
+              e0f9 00f0  ld   $f0
+              e0fa 00fb  ld   $fb
               e0fb fe00  bra  ac          ;+-----------------------------------+
               e0fc fcfd  bra  $e0fd       ;|                                   |
               e0fd 1404  ld   $04,y       ;| Trampoline for page $e000 lookups |
               e0fe e065  jmp  y,$65       ;|                                   |
               e0ff c218  st   [$18]       ;+-----------------------------------+
               e100 00c3  ld   $c3
-              e101 0070  ld   $70
-              e102 00a5  ld   $a5
-              e103 00fe  ld   $fe
-              e104 00ea  ld   $ea
-              e105 000f  ld   $0f
-              e106 00ab  ld   $ab
-              e107 006a  ld   $6a
-              e108 00a5  ld   $a5
-              e109 0056  ld   $56
-              e10a 002a  ld   $2a
-              e10b 001c  ld   $1c
-              e10c 0058  ld   $58
-              e10d 0081  ld   $81
-              e10e 0015  ld   $15
-              e10f 0058  ld   $58
-              e110 0011  ld   $11
-              e111 000c  ld   $0c
-              e112 00c3  ld   $c3
-              e113 0030  ld   $30
-              e114 000c  ld   $0c
-              e115 00c3  ld   $c3
-              e116 0030  ld   $30
-              e117 00fc  ld   $fc
-              e118 00bf  ld   $bf
-              e119 0030  ld   $30
-              e11a 00fc  ld   $fc
-              e11b 00c2  ld   $c2
-              e11c 00f0  ld   $f0
-              e11d 00fb  ld   $fb
+              e101 0030  ld   $30
+              e102 000c  ld   $0c
+              e103 00c3  ld   $c3
+              e104 0030  ld   $30
+              e105 000c  ld   $0c
+              e106 00c3  ld   $c3
+              e107 0030  ld   $30
+              e108 005c  ld   $5c
+              e109 00a9  ld   $a9
+              e10a 0069  ld   $69
+              e10b 0055  ld   $55
+              e10c 0055  ld   $55
+              e10d 0029  ld   $29
+              e10e 0055  ld   $55
+              e10f 0055  ld   $55
+              e110 0055  ld   $55
+              e111 0055  ld   $55
+              e112 0051  ld   $51
+              e113 0054  ld   $54
+              e114 0055  ld   $55
+              e115 0055  ld   $55
+              e116 0014  ld   $14
+              e117 0090  ld   $90
+              e118 0052  ld   $52
+              e119 0055  ld   $55
+              e11a 0055  ld   $55
+              e11b 0055  ld   $55
+              e11c 006a  ld   $6a
+              e11d 0005  ld   $05
               e11e 00c3  ld   $c3
               e11f 0030  ld   $30
               e120 000c  ld   $0c
               e121 00c3  ld   $c3
               e122 0030  ld   $30
-              e123 000c  ld   $0c
-              e124 00c3  ld   $c3
+              e123 00ac  ld   $ac
+              e124 00fe  ld   $fe
               e125 0030  ld   $30
-              e126 005c  ld   $5c
-              e127 00a9  ld   $a9
-              e128 0069  ld   $69
-              e129 0055  ld   $55
-              e12a 0055  ld   $55
-              e12b 0029  ld   $29
-              e12c 0055  ld   $55
-              e12d 0055  ld   $55
-              e12e 0055  ld   $55
-              e12f 0055  ld   $55
-              e130 0051  ld   $51
-              e131 0054  ld   $54
-              e132 0055  ld   $55
-              e133 0055  ld   $55
-              e134 0014  ld   $14
-              e135 0090  ld   $90
-              e136 0052  ld   $52
-              e137 0055  ld   $55
-              e138 0055  ld   $55
-              e139 0055  ld   $55
-              e13a 006a  ld   $6a
-              e13b 0005  ld   $05
-              e13c 00c3  ld   $c3
-              e13d 0030  ld   $30
-              e13e 000c  ld   $0c
-              e13f 00c3  ld   $c3
-              e140 0030  ld   $30
-              e141 00ac  ld   $ac
-              e142 00fe  ld   $fe
-              e143 0030  ld   $30
-              e144 000c  ld   $0c
-              e145 00c3  ld   $c3
-              e146 0030  ld   $30
-              e147 00ac  ld   $ac
-              e148 00fe  ld   $fe
+              e126 000c  ld   $0c
+              e127 00c3  ld   $c3
+              e128 0030  ld   $30
+              e129 00ac  ld   $ac
+              e12a 00fe  ld   $fe
+              e12b 0030  ld   $30
+              e12c 000c  ld   $0c
+              e12d 00c3  ld   $c3
+              e12e 00b0  ld   $b0
+              e12f 00fa  ld   $fa
+              e130 00c3  ld   $c3
+              e131 0030  ld   $30
+              e132 000c  ld   $0c
+              e133 00c3  ld   $c3
+              e134 0030  ld   $30
+              e135 000c  ld   $0c
+              e136 00c3  ld   $c3
+              e137 0030  ld   $30
+              e138 000c  ld   $0c
+              e139 00c3  ld   $c3
+              e13a 0030  ld   $30
+              e13b 0000  ld   $00
+              e13c 0000  ld   $00
+              e13d 0000  ld   $00
+              * 8 times
+              e143 0040  ld   $40
+              e144 0055  ld   $55
+              e145 0055  ld   $55
+              e146 0055  ld   $55
+              * 5 times
               e149 0030  ld   $30
               e14a 000c  ld   $0c
               e14b 00c3  ld   $c3
-              e14c 00b0  ld   $b0
-              e14d 00fa  ld   $fa
+              e14c 0030  ld   $30
+              e14d 000c  ld   $0c
               e14e 00c3  ld   $c3
-              e14f 0030  ld   $30
-              e150 000c  ld   $0c
-              e151 00c3  ld   $c3
-              e152 0030  ld   $30
-              e153 000c  ld   $0c
-              e154 00c3  ld   $c3
+              e14f 00e9  ld   $e9
+              e150 001a  ld   $1a
+              e151 00a4  ld   $a4
+              e152 0041  ld   $41
+              e153 00b0  ld   $b0
+              e154 00ae  ld   $ae
               e155 0030  ld   $30
               e156 000c  ld   $0c
               e157 00c3  ld   $c3
-              e158 0030  ld   $30
-              e159 000c  ld   $0c
-              e15a 0003  ld   $03
-              e15b 0000  ld   $00
-              e15c 0000  ld   $00
-              e15d 0000  ld   $00
-              * 11 times
+              e158 00b0  ld   $b0
+              e159 004a  ld   $4a
+              e15a 00d3  ld   $d3
+              e15b 0034  ld   $34
+              e15c 004d  ld   $4d
+              e15d 00d3  ld   $d3
+              e15e 0034  ld   $34
+              e15f 004d  ld   $4d
+              e160 00d3  ld   $d3
+              e161 0034  ld   $34
+              e162 004d  ld   $4d
+              e163 00d3  ld   $d3
+              e164 00b4  ld   $b4
+              e165 000a  ld   $0a
               e166 00c3  ld   $c3
               e167 0030  ld   $30
               e168 000c  ld   $0c
               e169 00c3  ld   $c3
               e16a 0030  ld   $30
               e16b 000c  ld   $0c
-              e16c 00c3  ld   $c3
-              e16d 00eb  ld   $eb
-              e16e 001a  ld   $1a
-              e16f 0004  ld   $04
-              e170 0041  ld   $41
-              e171 00b0  ld   $b0
-              e172 00ae  ld   $ae
+              e16c 0007  ld   $07
+              e16d 0096  ld   $96
+              e16e 0045  ld   $45
+              e16f 0058  ld   $58
+              e170 0001  ld   $01
+              e171 000c  ld   $0c
+              e172 00c3  ld   $c3
               e173 0030  ld   $30
               e174 000c  ld   $0c
               e175 00c3  ld   $c3
-              e176 00b0  ld   $b0
-              e177 004a  ld   $4a
-              e178 00d3  ld   $d3
-              e179 0034  ld   $34
-              e17a 004d  ld   $4d
-              e17b 00d3  ld   $d3
-              e17c 0034  ld   $34
-              e17d 004d  ld   $4d
-              e17e 00d3  ld   $d3
-              e17f 0034  ld   $34
-              e180 004d  ld   $4d
-              e181 00d3  ld   $d3
-              e182 00b4  ld   $b4
-              e183 000a  ld   $0a
-              e184 00c3  ld   $c3
-              e185 0030  ld   $30
-              e186 000c  ld   $0c
-              e187 00c3  ld   $c3
+              e176 0030  ld   $30
+              e177 00bc  ld   $bc
+              e178 00bc  ld   $bc
+              e179 00bf  ld   $bf
+              e17a 0011  ld   $11
+              e17b 0018  ld   $18
+              e17c 0081  ld   $81
+              e17d 0011  ld   $11
+              e17e 0018  ld   $18
+              e17f 0081  ld   $81
+              e180 0011  ld   $11
+              e181 0018  ld   $18
+              e182 00c1  ld   $c1
+              e183 001b  ld   $1b
+              e184 0004  ld   $04
+              e185 0041  ld   $41
+              e186 00f0  ld   $f0
+              e187 0007  ld   $07
               e188 0030  ld   $30
               e189 000c  ld   $0c
-              e18a 0007  ld   $07
-              e18b 0096  ld   $96
-              e18c 0045  ld   $45
-              e18d 0058  ld   $58
-              e18e 0001  ld   $01
+              e18a 00c3  ld   $c3
+              e18b 0030  ld   $30
+              e18c 000c  ld   $0c
+              e18d 00fc  ld   $fc
+              e18e 0030  ld   $30
               e18f 000c  ld   $0c
-              e190 00c3  ld   $c3
-              e191 0030  ld   $30
+              e190 00ff  ld   $ff
+              e191 003f  ld   $3f
               e192 000c  ld   $0c
               e193 00c3  ld   $c3
-              e194 0030  ld   $30
-              e195 00bc  ld   $bc
-              e196 00bc  ld   $bc
-              e197 00bf  ld   $bf
-              e198 0011  ld   $11
-              e199 0018  ld   $18
-              e19a 0081  ld   $81
-              e19b 0011  ld   $11
-              e19c 0018  ld   $18
-              e19d 0081  ld   $81
-              e19e 0011  ld   $11
-              e19f 0018  ld   $18
-              e1a0 00c1  ld   $c1
-              e1a1 001b  ld   $1b
-              e1a2 0004  ld   $04
-              e1a3 0041  ld   $41
-              e1a4 00f0  ld   $f0
-              e1a5 0007  ld   $07
-              e1a6 0030  ld   $30
-              e1a7 000c  ld   $0c
-              e1a8 00c3  ld   $c3
-              e1a9 0030  ld   $30
-              e1aa 000c  ld   $0c
-              e1ab 00fc  ld   $fc
-              e1ac 0030  ld   $30
-              e1ad 000c  ld   $0c
-              e1ae 00ff  ld   $ff
-              e1af 003f  ld   $3f
-              e1b0 000c  ld   $0c
-              e1b1 00c3  ld   $c3
-              e1b2 003f  ld   $3f
-              e1b3 00f0  ld   $f0
+              e194 003f  ld   $3f
+              e195 00f0  ld   $f0
+              e196 00c3  ld   $c3
+              e197 0030  ld   $30
+              e198 000c  ld   $0c
+              e199 00ff  ld   $ff
+              e19a 00c0  ld   $c0
+              e19b 000f  ld   $0f
+              e19c 00c3  ld   $c3
+              e19d 00ff  ld   $ff
+              e19e 000f  ld   $0f
+              e19f 00c3  ld   $c3
+              e1a0 0030  ld   $30
+              e1a1 000c  ld   $0c
+              e1a2 00c3  ld   $c3
+              e1a3 00b0  ld   $b0
+              e1a4 005a  ld   $5a
+              e1a5 00a9  ld   $a9
+              e1a6 00bf  ld   $bf
+              e1a7 000a  ld   $0a
+              e1a8 00ab  ld   $ab
+              e1a9 0095  ld   $95
+              e1aa 005a  ld   $5a
+              e1ab 00a9  ld   $a9
+              e1ac 002a  ld   $2a
+              e1ad 001c  ld   $1c
+              e1ae 0004  ld   $04
+              e1af 0041  ld   $41
+              e1b0 0010  ld   $10
+              e1b1 0044  ld   $44
+              e1b2 0011  ld   $11
+              e1b3 000c  ld   $0c
               e1b4 00c3  ld   $c3
               e1b5 0030  ld   $30
               e1b6 000c  ld   $0c
-              e1b7 00ff  ld   $ff
-              e1b8 00c0  ld   $c0
-              e1b9 000f  ld   $0f
-              e1ba 00c3  ld   $c3
+              e1b7 00c3  ld   $c3
+              e1b8 00f0  ld   $f0
+              e1b9 00ff  ld   $ff
+              e1ba 004b  ld   $4b
               e1bb 00ff  ld   $ff
-              e1bc 000f  ld   $0f
-              e1bd 00c3  ld   $c3
-              e1be 0030  ld   $30
-              e1bf 000c  ld   $0c
-              e1c0 00c3  ld   $c3
-              e1c1 00b0  ld   $b0
-              e1c2 005a  ld   $5a
-              e1c3 00a9  ld   $a9
-              e1c4 00bf  ld   $bf
-              e1c5 000a  ld   $0a
-              e1c6 00ab  ld   $ab
-              e1c7 0095  ld   $95
-              e1c8 005a  ld   $5a
-              e1c9 00a9  ld   $a9
-              e1ca 002a  ld   $2a
-              e1cb 001c  ld   $1c
-              e1cc 0004  ld   $04
-              e1cd 0041  ld   $41
-              e1ce 0010  ld   $10
-              e1cf 0044  ld   $44
-              e1d0 0011  ld   $11
-              e1d1 000c  ld   $0c
-              e1d2 00c3  ld   $c3
-              e1d3 0030  ld   $30
-              e1d4 000c  ld   $0c
-              e1d5 00c3  ld   $c3
-              e1d6 00f0  ld   $f0
-              e1d7 00ff  ld   $ff
-              e1d8 004b  ld   $4b
-              e1d9 00ff  ld   $ff
-              e1da 00fb  ld   $fb
-              e1db 00bf  ld   $bf
-              e1dc 00bf  ld   $bf
-              e1dd 00f4  ld   $f4
-              e1de 00ff  ld   $ff
+              e1bc 00fb  ld   $fb
+              e1bd 00bf  ld   $bf
+              e1be 00bf  ld   $bf
+              e1bf 00f4  ld   $f4
+              e1c0 00ff  ld   $ff
+              e1c1 0030  ld   $30
+              e1c2 000c  ld   $0c
+              e1c3 00c3  ld   $c3
+              e1c4 0030  ld   $30
+              e1c5 000c  ld   $0c
+              e1c6 00c3  ld   $c3
+              e1c7 0030  ld   $30
+              e1c8 00ac  ld   $ac
+              e1c9 00aa  ld   $aa
+              e1ca 00aa  ld   $aa
+              e1cb 005a  ld   $5a
+              e1cc 00a9  ld   $a9
+              e1cd 00aa  ld   $aa
+              e1ce 00aa  ld   $aa
+              e1cf 00aa  ld   $aa
+              * 5 times
+              e1d2 006a  ld   $6a
+              e1d3 009a  ld   $9a
+              e1d4 00aa  ld   $aa
+              e1d5 00aa  ld   $aa
+              e1d6 00aa  ld   $aa
+              * 5 times
+              e1d9 006a  ld   $6a
+              e1da 00a5  ld   $a5
+              e1db 0069  ld   $69
+              e1dc 009a  ld   $9a
+              e1dd 0006  ld   $06
+              e1de 00c3  ld   $c3
               e1df 0030  ld   $30
               e1e0 000c  ld   $0c
               e1e1 00c3  ld   $c3
               e1e2 0030  ld   $30
-              e1e3 000c  ld   $0c
-              e1e4 00c3  ld   $c3
+              e1e3 00ac  ld   $ac
+              e1e4 00fe  ld   $fe
               e1e5 0030  ld   $30
-              e1e6 00ac  ld   $ac
-              e1e7 00aa  ld   $aa
-              e1e8 00aa  ld   $aa
-              e1e9 005a  ld   $5a
-              e1ea 00a9  ld   $a9
-              e1eb 00aa  ld   $aa
-              e1ec 00aa  ld   $aa
-              e1ed 00aa  ld   $aa
-              * 5 times
-              e1f0 006a  ld   $6a
-              e1f1 009a  ld   $9a
-              e1f2 00aa  ld   $aa
-              e1f3 00aa  ld   $aa
-              e1f4 00aa  ld   $aa
-              * 5 times
-              e1f7 006a  ld   $6a
-              e1f8 00a5  ld   $a5
-              e1f9 0069  ld   $69
-              e1fa 009a  ld   $9a
+              e1e6 000c  ld   $0c
+              e1e7 00c3  ld   $c3
+              e1e8 0030  ld   $30
+              e1e9 00ac  ld   $ac
+              e1ea 00fe  ld   $fe
+              e1eb 0030  ld   $30
+              e1ec 000c  ld   $0c
+              e1ed 00c3  ld   $c3
+              e1ee 00b0  ld   $b0
+              e1ef 00fa  ld   $fa
+              e1f0 00c3  ld   $c3
+              e1f1 0030  ld   $30
+              e1f2 000c  ld   $0c
+              e1f3 00c3  ld   $c3
+              e1f4 0030  ld   $30
+              e1f5 000c  ld   $0c
+              e1f6 00c3  ld   $c3
+              e1f7 0030  ld   $30
+              e1f8 000c  ld   $0c
+              e1f9 00c3  ld   $c3
+              e1fa 0030  ld   $30
               e1fb fe00  bra  ac          ;+-----------------------------------+
               e1fc fcfd  bra  $e1fd       ;|                                   |
               e1fd 1404  ld   $04,y       ;| Trampoline for page $e100 lookups |
               e1fe e065  jmp  y,$65       ;|                                   |
               e1ff c218  st   [$18]       ;+-----------------------------------+
-              e200 0006  ld   $06
-              e201 00c3  ld   $c3
-              e202 0030  ld   $30
-              e203 000c  ld   $0c
-              e204 00c3  ld   $c3
-              e205 0030  ld   $30
-              e206 00ac  ld   $ac
-              e207 00fe  ld   $fe
-              e208 0030  ld   $30
-              e209 000c  ld   $0c
-              e20a 00c3  ld   $c3
-              e20b 0030  ld   $30
-              e20c 00ac  ld   $ac
-              e20d 00fe  ld   $fe
+              e200 000c  ld   $0c
+              e201 0003  ld   $03
+              e202 0000  ld   $00
+              e203 0000  ld   $00
+              e204 0000  ld   $00
+              * 11 times
+              e20d 00c3  ld   $c3
               e20e 0030  ld   $30
               e20f 000c  ld   $0c
               e210 00c3  ld   $c3
-              e211 00b0  ld   $b0
-              e212 00fa  ld   $fa
+              e211 0030  ld   $30
+              e212 000c  ld   $0c
               e213 00c3  ld   $c3
-              e214 0030  ld   $30
-              e215 000c  ld   $0c
-              e216 00c3  ld   $c3
-              e217 0030  ld   $30
-              e218 000c  ld   $0c
-              e219 00c3  ld   $c3
+              e214 00eb  ld   $eb
+              e215 001a  ld   $1a
+              e216 0004  ld   $04
+              e217 0069  ld   $69
+              e218 00b0  ld   $b0
+              e219 00a6  ld   $a6
               e21a 0030  ld   $30
               e21b 000c  ld   $0c
               e21c 00c3  ld   $c3
-              e21d 0030  ld   $30
-              e21e 000c  ld   $0c
+              e21d 0070  ld   $70
+              e21e 0005  ld   $05
               e21f 00c3  ld   $c3
-              e220 0030  ld   $30
-              e221 0000  ld   $00
-              e222 0000  ld   $00
-              e223 0000  ld   $00
-              * 8 times
-              e229 0015  ld   $15
-              e22a 000c  ld   $0c
+              e220 00fe  ld   $fe
+              e221 00ef  ld   $ef
+              e222 00ff  ld   $ff
+              e223 00fe  ld   $fe
+              e224 00ef  ld   $ef
+              e225 00ff  ld   $ff
+              e226 00fe  ld   $fe
+              e227 00ef  ld   $ef
+              e228 00c3  ld   $c3
+              e229 0070  ld   $70
+              e22a 0005  ld   $05
               e22b 00c3  ld   $c3
               e22c 0030  ld   $30
               e22d 000c  ld   $0c
               e22e 00c3  ld   $c3
               e22f 0030  ld   $30
               e230 000c  ld   $0c
-              e231 00c3  ld   $c3
-              e232 00e9  ld   $e9
-              e233 001a  ld   $1a
-              e234 00a4  ld   $a4
-              e235 0069  ld   $69
-              e236 00b0  ld   $b0
-              e237 00a6  ld   $a6
+              e231 0007  ld   $07
+              e232 0084  ld   $84
+              e233 0065  ld   $65
+              e234 0059  ld   $59
+              e235 0001  ld   $01
+              e236 000c  ld   $0c
+              e237 00c3  ld   $c3
               e238 0030  ld   $30
               e239 000c  ld   $0c
               e23a 00c3  ld   $c3
-              e23b 0070  ld   $70
-              e23c 0005  ld   $05
-              e23d 00c3  ld   $c3
-              e23e 00fe  ld   $fe
-              e23f 00ef  ld   $ef
-              e240 00ff  ld   $ff
-              e241 00fe  ld   $fe
-              e242 00ef  ld   $ef
-              e243 00ff  ld   $ff
-              e244 00fe  ld   $fe
-              e245 00ef  ld   $ef
-              e246 00c3  ld   $c3
-              e247 0070  ld   $70
-              e248 0005  ld   $05
-              e249 00c3  ld   $c3
-              e24a 0030  ld   $30
-              e24b 000c  ld   $0c
-              e24c 00c3  ld   $c3
+              e23b 0030  ld   $30
+              e23c 006c  ld   $6c
+              e23d 00fc  ld   $fc
+              e23e 00ef  ld   $ef
+              e23f 00ff  ld   $ff
+              e240 00fe  ld   $fe
+              e241 00ef  ld   $ef
+              e242 00ff  ld   $ff
+              e243 00fe  ld   $fe
+              e244 00ef  ld   $ef
+              e245 00ff  ld   $ff
+              e246 00fe  ld   $fe
+              e247 00ef  ld   $ef
+              e248 00ff  ld   $ff
+              e249 00fe  ld   $fe
+              e24a 00ef  ld   $ef
+              e24b 00ff  ld   $ff
+              e24c 0006  ld   $06
               e24d 0030  ld   $30
               e24e 000c  ld   $0c
-              e24f 0007  ld   $07
-              e250 0084  ld   $84
-              e251 0065  ld   $65
-              e252 0059  ld   $59
-              e253 0001  ld   $01
-              e254 000c  ld   $0c
-              e255 00c3  ld   $c3
-              e256 0030  ld   $30
-              e257 000c  ld   $0c
-              e258 00c3  ld   $c3
-              e259 0030  ld   $30
-              e25a 006c  ld   $6c
-              e25b 00fc  ld   $fc
-              e25c 00ef  ld   $ef
-              e25d 00ff  ld   $ff
-              e25e 00fe  ld   $fe
-              e25f 00ef  ld   $ef
-              e260 00ff  ld   $ff
-              e261 00fe  ld   $fe
-              e262 00ef  ld   $ef
-              e263 00ff  ld   $ff
-              e264 00fe  ld   $fe
-              e265 00ef  ld   $ef
-              e266 00ff  ld   $ff
-              e267 00fe  ld   $fe
-              e268 00ef  ld   $ef
-              e269 00ff  ld   $ff
-              e26a 0006  ld   $06
-              e26b 0030  ld   $30
-              e26c 000c  ld   $0c
-              e26d 00c3  ld   $c3
-              e26e 000c  ld   $0c
-              e26f 00f3  ld   $f3
-              e270 0003  ld   $03
-              e271 000c  ld   $0c
-              e272 00c3  ld   $c3
-              e273 0030  ld   $30
-              e274 000c  ld   $0c
-              e275 00c3  ld   $c3
-              e276 0030  ld   $30
-              e277 00cc  ld   $cc
-              e278 00ff  ld   $ff
-              e279 0033  ld   $33
-              e27a 000c  ld   $0c
-              e27b 00c3  ld   $c3
-              e27c 0000  ld   $00
-              e27d 003f  ld   $3f
-              e27e 00c3  ld   $c3
-              e27f 0030  ld   $30
-              e280 000c  ld   $0c
-              e281 00c3  ld   $c3
-              e282 0030  ld   $30
-              e283 000c  ld   $0c
+              e24f 00c3  ld   $c3
+              e250 000c  ld   $0c
+              e251 00f3  ld   $f3
+              e252 0003  ld   $03
+              e253 000c  ld   $0c
+              e254 00c3  ld   $c3
+              e255 0030  ld   $30
+              e256 000c  ld   $0c
+              e257 00c3  ld   $c3
+              e258 0030  ld   $30
+              e259 00cc  ld   $cc
+              e25a 00ff  ld   $ff
+              e25b 0033  ld   $33
+              e25c 000c  ld   $0c
+              e25d 00c3  ld   $c3
+              e25e 0000  ld   $00
+              e25f 003f  ld   $3f
+              e260 00c3  ld   $c3
+              e261 0030  ld   $30
+              e262 000c  ld   $0c
+              e263 00c3  ld   $c3
+              e264 0030  ld   $30
+              e265 000c  ld   $0c
+              e266 000c  ld   $0c
+              e267 00c3  ld   $c3
+              e268 0070  ld   $70
+              e269 00a5  ld   $a5
+              e26a 00fe  ld   $fe
+              e26b 00ea  ld   $ea
+              e26c 000f  ld   $0f
+              e26d 00ab  ld   $ab
+              e26e 006a  ld   $6a
+              e26f 00a5  ld   $a5
+              e270 0056  ld   $56
+              e271 002a  ld   $2a
+              e272 001c  ld   $1c
+              e273 0058  ld   $58
+              e274 0081  ld   $81
+              e275 0015  ld   $15
+              e276 0058  ld   $58
+              e277 0011  ld   $11
+              e278 000c  ld   $0c
+              e279 00c3  ld   $c3
+              e27a 0030  ld   $30
+              e27b 000c  ld   $0c
+              e27c 00c3  ld   $c3
+              e27d 00f0  ld   $f0
+              e27e 000f  ld   $0f
+              e27f 00c3  ld   $c3
+              e280 0052  ld   $52
+              e281 0024  ld   $24
+              e282 0005  ld   $05
+              e283 0012  ld   $12
               e284 000c  ld   $0c
-              e285 00c3  ld   $c3
-              e286 0070  ld   $70
-              e287 00a5  ld   $a5
-              e288 00fe  ld   $fe
-              e289 00ea  ld   $ea
-              e28a 000f  ld   $0f
-              e28b 00ab  ld   $ab
-              e28c 006a  ld   $6a
-              e28d 00a5  ld   $a5
-              e28e 0056  ld   $56
-              e28f 002a  ld   $2a
-              e290 001c  ld   $1c
-              e291 0058  ld   $58
-              e292 0081  ld   $81
-              e293 0015  ld   $15
-              e294 0058  ld   $58
-              e295 0011  ld   $11
-              e296 000c  ld   $0c
-              e297 00c3  ld   $c3
-              e298 0030  ld   $30
-              e299 000c  ld   $0c
-              e29a 00c3  ld   $c3
-              e29b 00f0  ld   $f0
-              e29c 000f  ld   $0f
-              e29d 00c3  ld   $c3
-              e29e 0052  ld   $52
-              e29f 0024  ld   $24
+              e285 00ff  ld   $ff
+              e286 0030  ld   $30
+              e287 000c  ld   $0c
+              e288 00c3  ld   $c3
+              e289 0030  ld   $30
+              e28a 000c  ld   $0c
+              e28b 00c3  ld   $c3
+              e28c 0030  ld   $30
+              e28d 005c  ld   $5c
+              e28e 0055  ld   $55
+              e28f 0055  ld   $55
+              e290 0055  ld   $55
+              e291 0055  ld   $55
+              e292 0015  ld   $15
+              e293 0055  ld   $55
+              e294 00a9  ld   $a9
+              e295 0095  ld   $95
+              e296 00aa  ld   $aa
+              e297 00aa  ld   $aa
+              e298 00aa  ld   $aa
+              e299 001a  ld   $1a
+              e29a 0054  ld   $54
+              e29b 0041  ld   $41
+              e29c 0055  ld   $55
+              e29d 0055  ld   $55
+              e29e 0055  ld   $55
+              e29f 0055  ld   $55
               e2a0 0005  ld   $05
-              e2a1 0012  ld   $12
-              e2a2 000c  ld   $0c
-              e2a3 00ff  ld   $ff
+              e2a1 0095  ld   $95
+              e2a2 000a  ld   $0a
+              e2a3 00c3  ld   $c3
               e2a4 0030  ld   $30
-              e2a5 000c  ld   $0c
-              e2a6 00c3  ld   $c3
-              e2a7 0030  ld   $30
-              e2a8 000c  ld   $0c
-              e2a9 00c3  ld   $c3
-              e2aa 0030  ld   $30
-              e2ab 005c  ld   $5c
-              e2ac 0055  ld   $55
-              e2ad 0055  ld   $55
-              e2ae 0055  ld   $55
-              e2af 0055  ld   $55
-              e2b0 0015  ld   $15
-              e2b1 0055  ld   $55
-              e2b2 00a9  ld   $a9
-              e2b3 0095  ld   $95
-              e2b4 00aa  ld   $aa
-              e2b5 00aa  ld   $aa
-              e2b6 00aa  ld   $aa
-              e2b7 001a  ld   $1a
-              e2b8 0054  ld   $54
-              e2b9 0041  ld   $41
-              e2ba 0055  ld   $55
-              e2bb 0055  ld   $55
-              e2bc 0055  ld   $55
-              e2bd 0055  ld   $55
-              e2be 0005  ld   $05
-              e2bf 0095  ld   $95
-              e2c0 000a  ld   $0a
+              e2a5 00cc  ld   $cc
+              e2a6 0030  ld   $30
+              e2a7 008c  ld   $8c
+              e2a8 00fa  ld   $fa
+              e2a9 00ff  ld   $ff
+              e2aa 003f  ld   $3f
+              e2ab 00c3  ld   $c3
+              e2ac 0030  ld   $30
+              e2ad 008c  ld   $8c
+              e2ae 00fa  ld   $fa
+              e2af 00ff  ld   $ff
+              e2b0 003f  ld   $3f
+              e2b1 00c3  ld   $c3
+              e2b2 0030  ld   $30
+              e2b3 00ea  ld   $ea
+              e2b4 00ff  ld   $ff
+              e2b5 00ff  ld   $ff
+              e2b6 000c  ld   $0c
+              e2b7 00c3  ld   $c3
+              e2b8 00c0  ld   $c0
+              e2b9 0030  ld   $30
+              e2ba 000c  ld   $0c
+              e2bb 00c3  ld   $c3
+              e2bc 0030  ld   $30
+              e2bd 000c  ld   $0c
+              e2be 00c3  ld   $c3
+              e2bf 0030  ld   $30
+              e2c0 000c  ld   $0c
               e2c1 00c3  ld   $c3
               e2c2 0030  ld   $30
-              e2c3 00cc  ld   $cc
-              e2c4 0030  ld   $30
-              e2c5 008c  ld   $8c
-              e2c6 00fa  ld   $fa
-              e2c7 00ff  ld   $ff
-              e2c8 003f  ld   $3f
-              e2c9 00c3  ld   $c3
-              e2ca 0030  ld   $30
-              e2cb 008c  ld   $8c
-              e2cc 00fa  ld   $fa
-              e2cd 00ff  ld   $ff
-              e2ce 003f  ld   $3f
-              e2cf 00c3  ld   $c3
-              e2d0 0030  ld   $30
-              e2d1 00ea  ld   $ea
-              e2d2 00ff  ld   $ff
-              e2d3 00ff  ld   $ff
-              e2d4 000c  ld   $0c
-              e2d5 00c3  ld   $c3
-              e2d6 0030  ld   $30
-              e2d7 0030  ld   $30
-              e2d8 000c  ld   $0c
-              e2d9 00c3  ld   $c3
+              e2c3 0000  ld   $00
+              e2c4 0000  ld   $00
+              e2c5 0000  ld   $00
+              * 8 times
+              e2cb 0015  ld   $15
+              e2cc 000c  ld   $0c
+              e2cd 00c3  ld   $c3
+              e2ce 0030  ld   $30
+              e2cf 000c  ld   $0c
+              e2d0 00c3  ld   $c3
+              e2d1 0030  ld   $30
+              e2d2 000c  ld   $0c
+              e2d3 00c3  ld   $c3
+              e2d4 00e9  ld   $e9
+              e2d5 001a  ld   $1a
+              e2d6 00a4  ld   $a4
+              e2d7 0041  ld   $41
+              e2d8 00b0  ld   $b0
+              e2d9 00ae  ld   $ae
               e2da 0030  ld   $30
               e2db 000c  ld   $0c
               e2dc 00c3  ld   $c3
-              e2dd 0030  ld   $30
-              e2de 000c  ld   $0c
-              e2df 00c3  ld   $c3
-              e2e0 0030  ld   $30
-              e2e1 000c  ld   $0c
-              e2e2 0003  ld   $03
-              e2e3 0000  ld   $00
-              e2e4 0000  ld   $00
-              e2e5 0000  ld   $00
+              e2dd 0070  ld   $70
+              e2de 00f5  ld   $f5
+              e2df 00fb  ld   $fb
+              e2e0 00bf  ld   $bf
+              e2e1 00af  ld   $af
+              e2e2 00aa  ld   $aa
+              e2e3 00aa  ld   $aa
+              e2e4 00aa  ld   $aa
               * 5 times
-              e2e8 00c3  ld   $c3
-              e2e9 0015  ld   $15
-              e2ea 000c  ld   $0c
+              e2e7 00fa  ld   $fa
+              e2e8 00fb  ld   $fb
+              e2e9 007f  ld   $7f
+              e2ea 0005  ld   $05
               e2eb 00c3  ld   $c3
               e2ec 0030  ld   $30
               e2ed 000c  ld   $0c
               e2ee 00c3  ld   $c3
               e2ef 0030  ld   $30
               e2f0 000c  ld   $0c
-              e2f1 00c3  ld   $c3
-              e2f2 00eb  ld   $eb
-              e2f3 001a  ld   $1a
-              e2f4 0004  ld   $04
-              e2f5 0041  ld   $41
-              e2f6 00b0  ld   $b0
-              e2f7 00ae  ld   $ae
+              e2f1 0007  ld   $07
+              e2f2 0084  ld   $84
+              e2f3 0065  ld   $65
+              e2f4 0059  ld   $59
+              e2f5 0001  ld   $01
+              e2f6 000c  ld   $0c
+              e2f7 00c3  ld   $c3
               e2f8 0030  ld   $30
               e2f9 000c  ld   $0c
               e2fa 00c3  ld   $c3
@@ -52009,145 +52009,145 @@ zippedRacerHorizon:
               e2fd 1404  ld   $04,y       ;| Trampoline for page $e200 lookups |
               e2fe e065  jmp  y,$65       ;|                                   |
               e2ff c218  st   [$18]       ;+-----------------------------------+
-              e300 0070  ld   $70
-              e301 00f5  ld   $f5
-              e302 00fb  ld   $fb
-              e303 00bf  ld   $bf
-              e304 00af  ld   $af
-              e305 00aa  ld   $aa
-              e306 00aa  ld   $aa
-              e307 00aa  ld   $aa
-              * 5 times
-              e30a 00fa  ld   $fa
-              e30b 00fb  ld   $fb
-              e30c 007f  ld   $7f
-              e30d 0005  ld   $05
-              e30e 00c3  ld   $c3
-              e30f 0030  ld   $30
-              e310 000c  ld   $0c
-              e311 00c3  ld   $c3
+              e300 0030  ld   $30
+              e301 00bc  ld   $bc
+              e302 00bc  ld   $bc
+              e303 0000  ld   $00
+              e304 0000  ld   $00
+              e305 0000  ld   $00
+              * 13 times
+              e310 00f0  ld   $f0
+              e311 0007  ld   $07
               e312 0030  ld   $30
               e313 000c  ld   $0c
-              e314 0007  ld   $07
-              e315 0084  ld   $84
-              e316 0065  ld   $65
-              e317 0059  ld   $59
-              e318 0001  ld   $01
-              e319 000c  ld   $0c
-              e31a 00c3  ld   $c3
-              e31b 0030  ld   $30
-              e31c 000c  ld   $0c
-              e31d 00c3  ld   $c3
-              e31e 0030  ld   $30
-              e31f 00bc  ld   $bc
-              e320 00bc  ld   $bc
-              e321 0000  ld   $00
-              e322 0000  ld   $00
-              e323 0000  ld   $00
-              * 13 times
-              e32e 00f0  ld   $f0
-              e32f 0007  ld   $07
-              e330 0030  ld   $30
-              e331 000c  ld   $0c
-              e332 0033  ld   $33
-              e333 0008  ld   $08
-              e334 0082  ld   $82
-              e335 0020  ld   $20
-              e336 0008  ld   $08
-              e337 0082  ld   $82
-              e338 0020  ld   $20
-              e339 0008  ld   $08
-              e33a 0082  ld   $82
-              e33b 0020  ld   $20
-              e33c 0008  ld   $08
-              e33d 0082  ld   $82
-              e33e 0020  ld   $20
-              e33f 0008  ld   $08
-              e340 0082  ld   $82
-              e341 0020  ld   $20
-              e342 0008  ld   $08
-              e343 0082  ld   $82
-              e344 0020  ld   $20
-              e345 0008  ld   $08
-              e346 0082  ld   $82
-              e347 0020  ld   $20
-              e348 0008  ld   $08
-              e349 0003  ld   $03
-              e34a 00c3  ld   $c3
-              e34b 00b0  ld   $b0
-              e34c 005a  ld   $5a
-              e34d 00a9  ld   $a9
-              e34e 00bf  ld   $bf
-              e34f 000a  ld   $0a
-              e350 00ab  ld   $ab
-              e351 00aa  ld   $aa
-              e352 00aa  ld   $aa
-              e353 00aa  ld   $aa
-              e354 002a  ld   $2a
-              e355 001c  ld   $1c
-              e356 0004  ld   $04
-              e357 0041  ld   $41
-              e358 0010  ld   $10
-              e359 0044  ld   $44
-              e35a 0011  ld   $11
-              e35b 000c  ld   $0c
-              e35c 00c3  ld   $c3
-              e35d 0030  ld   $30
-              e35e 000c  ld   $0c
-              e35f 00ff  ld   $ff
-              e360 00ff  ld   $ff
-              e361 00ff  ld   $ff
+              e314 0033  ld   $33
+              e315 0008  ld   $08
+              e316 0082  ld   $82
+              e317 0020  ld   $20
+              e318 0008  ld   $08
+              e319 0082  ld   $82
+              e31a 0020  ld   $20
+              e31b 0008  ld   $08
+              e31c 0082  ld   $82
+              e31d 0020  ld   $20
+              e31e 0008  ld   $08
+              e31f 0082  ld   $82
+              e320 0020  ld   $20
+              e321 0008  ld   $08
+              e322 0082  ld   $82
+              e323 0020  ld   $20
+              e324 0008  ld   $08
+              e325 0082  ld   $82
+              e326 0020  ld   $20
+              e327 0008  ld   $08
+              e328 0082  ld   $82
+              e329 0020  ld   $20
+              e32a 0008  ld   $08
+              e32b 0003  ld   $03
+              e32c 00c3  ld   $c3
+              e32d 00b0  ld   $b0
+              e32e 005a  ld   $5a
+              e32f 00a9  ld   $a9
+              e330 00bf  ld   $bf
+              e331 000a  ld   $0a
+              e332 00ab  ld   $ab
+              e333 00aa  ld   $aa
+              e334 00aa  ld   $aa
+              e335 00aa  ld   $aa
+              e336 002a  ld   $2a
+              e337 001c  ld   $1c
+              e338 0004  ld   $04
+              e339 0041  ld   $41
+              e33a 0010  ld   $10
+              e33b 0044  ld   $44
+              e33c 0011  ld   $11
+              e33d 000c  ld   $0c
+              e33e 00c3  ld   $c3
+              e33f 0030  ld   $30
+              e340 000c  ld   $0c
+              e341 00ff  ld   $ff
+              e342 00ff  ld   $ff
+              e343 00ff  ld   $ff
               * 11 times
-              e36a 000f  ld   $0f
-              e36b 00c3  ld   $c3
-              e36c 0030  ld   $30
-              e36d 000c  ld   $0c
-              e36e 00c3  ld   $c3
-              e36f 0030  ld   $30
-              e370 005c  ld   $5c
-              e371 0014  ld   $14
-              e372 0045  ld   $45
-              e373 0051  ld   $51
-              e374 0014  ld   $14
-              e375 0045  ld   $45
-              e376 0051  ld   $51
-              e377 0014  ld   $14
-              e378 0045  ld   $45
-              e379 0051  ld   $51
-              e37a 0014  ld   $14
-              e37b 0045  ld   $45
-              e37c 0051  ld   $51
-              e37d 0014  ld   $14
-              e37e 0045  ld   $45
-              e37f 0051  ld   $51
-              e380 0014  ld   $14
-              e381 0045  ld   $45
-              e382 0051  ld   $51
-              e383 0014  ld   $14
-              e384 0045  ld   $45
-              e385 0001  ld   $01
+              e34c 000f  ld   $0f
+              e34d 00c3  ld   $c3
+              e34e 0030  ld   $30
+              e34f 000c  ld   $0c
+              e350 00c3  ld   $c3
+              e351 0030  ld   $30
+              e352 005c  ld   $5c
+              e353 0014  ld   $14
+              e354 0045  ld   $45
+              e355 0051  ld   $51
+              e356 0014  ld   $14
+              e357 0045  ld   $45
+              e358 0051  ld   $51
+              e359 0014  ld   $14
+              e35a 0045  ld   $45
+              e35b 0051  ld   $51
+              e35c 0014  ld   $14
+              e35d 0045  ld   $45
+              e35e 0051  ld   $51
+              e35f 0014  ld   $14
+              e360 0045  ld   $45
+              e361 0051  ld   $51
+              e362 0014  ld   $14
+              e363 0045  ld   $45
+              e364 0051  ld   $51
+              e365 0014  ld   $14
+              e366 0045  ld   $45
+              e367 0001  ld   $01
+              e368 00c3  ld   $c3
+              e369 0030  ld   $30
+              e36a 0083  ld   $83
+              e36b 0020  ld   $20
+              e36c 0008  ld   $08
+              e36d 0082  ld   $82
+              e36e 0020  ld   $20
+              e36f 0008  ld   $08
+              e370 0082  ld   $82
+              e371 0020  ld   $20
+              e372 0008  ld   $08
+              e373 0082  ld   $82
+              e374 0020  ld   $20
+              e375 0008  ld   $08
+              e376 0082  ld   $82
+              e377 0020  ld   $20
+              e378 0008  ld   $08
+              e379 0082  ld   $82
+              e37a 0020  ld   $20
+              e37b 0008  ld   $08
+              e37c 0082  ld   $82
+              e37d 0030  ld   $30
+              e37e 0030  ld   $30
+              e37f 000c  ld   $0c
+              e380 00c3  ld   $c3
+              e381 0030  ld   $30
+              e382 000c  ld   $0c
+              e383 00c3  ld   $c3
+              e384 0030  ld   $30
+              e385 000c  ld   $0c
               e386 00c3  ld   $c3
               e387 0030  ld   $30
-              e388 0083  ld   $83
-              e389 0020  ld   $20
-              e38a 0008  ld   $08
-              e38b 0082  ld   $82
-              e38c 0020  ld   $20
-              e38d 0008  ld   $08
-              e38e 0082  ld   $82
-              e38f 0020  ld   $20
-              e390 0008  ld   $08
-              e391 0082  ld   $82
-              e392 0020  ld   $20
-              e393 0008  ld   $08
-              e394 0082  ld   $82
-              e395 0020  ld   $20
-              e396 0008  ld   $08
-              e397 0082  ld   $82
-              e398 0020  ld   $20
-              e399 0008  ld   $08
-              e39a 0082  ld   $82
-              e39b 0020  ld   $20
+              e388 000c  ld   $0c
+              e389 0003  ld   $03
+              e38a 0000  ld   $00
+              e38b 0000  ld   $00
+              e38c 0000  ld   $00
+              * 5 times
+              e38f 00c3  ld   $c3
+              e390 0015  ld   $15
+              e391 000c  ld   $0c
+              e392 00c3  ld   $c3
+              e393 0030  ld   $30
+              e394 000c  ld   $0c
+              e395 00c3  ld   $c3
+              e396 0030  ld   $30
+              e397 000c  ld   $0c
+              e398 00c3  ld   $c3
+              e399 00eb  ld   $eb
+              e39a 001a  ld   $1a
+              e39b 0004  ld   $04
 Snake:        e39c 0002  ld   $02         ;| RAM segment address (high byte first)
               e39d 0000  ld   $00         ;|
               e39e 00d9  ld   $d9         ;| Length (1..256)
@@ -59066,31 +59066,31 @@ Reset:        fe42 0002  ld   $02         ;| RAM segment address (high byte firs
               feae 002a  ld   $2a
               feaf 002a  ld   $2a
               feb0 000a  ld   $0a
-              feb1 0054  ld   $54
+              feb1 0020  ld   $20
               feb2 0054  ld   $54
-              feb3 004c  ld   $4c
-              feb4 0020  ld   $20
-              feb5 006d  ld   $6d
-              feb6 0069  ld   $69
-              feb7 0063  ld   $63
-              feb8 0072  ld   $72
-              feb9 006f  ld   $6f
-              feba 0063  ld   $63
-              febb 006f  ld   $6f
-              febc 006d  ld   $6d
-              febd 0070  ld   $70
-              febe 0075  ld   $75
-              febf 0074  ld   $74
-              fec0 0065  ld   $65
-              fec1 0072  ld   $72
-              fec2 0020  ld   $20
-              fec3 0052  ld   $52
-              fec4 004f  ld   $4f
-              fec5 004d  ld   $4d
-              fec6 0020  ld   $20
-              fec7 0076  ld   $76
-              fec8 0031  ld   $31
-              fec9 0061  ld   $61
+              feb3 0054  ld   $54
+              feb4 004c  ld   $4c
+              feb5 0020  ld   $20
+              feb6 006d  ld   $6d
+              feb7 0069  ld   $69
+              feb8 0063  ld   $63
+              feb9 0072  ld   $72
+              feba 006f  ld   $6f
+              febb 0063  ld   $63
+              febc 006f  ld   $6f
+              febd 006d  ld   $6d
+              febe 0070  ld   $70
+              febf 0075  ld   $75
+              fec0 0074  ld   $74
+              fec1 0065  ld   $65
+              fec2 0072  ld   $72
+              fec3 0020  ld   $20
+              fec4 0052  ld   $52
+              fec5 004f  ld   $4f
+              fec6 004d  ld   $4d
+              fec7 0020  ld   $20
+              fec8 0076  ld   $76
+              fec9 0031  ld   $31
               feca 0000  ld   $00
               fecb 002b  ld   $2b         ;0286 STW
               fecc 0038  ld   $38         ;0286 'Text'
