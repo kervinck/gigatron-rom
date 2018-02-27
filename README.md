@@ -17,11 +17,11 @@ README.md                       This file...
 Files processed by theloop.py
 =============================
 ```
-Reset.gcl                       System reset code
-Main.gcl *.gcl                  Application code
-gcl0x.py                        Module: GCL to vCPU compiler
-asm.py                          Module: Assembler functions
-font.py                         Module: Gigatron font definition
+Core/Reset.gcl                  System reset code
+Core/gcl0x.py                   Module: GCL to vCPU compiler
+Core/asm.py                     Module: Assembler functions
+Core/font.py                    Module: Gigatron font definition
+Apps/*.gcl                      Application code
 Images/Baboon-160x120.rgb       Raw RGB image file (source: Baboon-160x120.png)
 Images/Jupiter-160x120.rgb      Raw RGB image file (source: Jupiter-160x120.png)
 Images/Parrot-160x120.rgb       Raw RGB image file (source: Parrot-160x120.png)

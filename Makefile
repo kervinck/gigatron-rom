@@ -1,9 +1,11 @@
 CFLAGS:=-std=c11 -O3 -Wall
 
-romType=0x1c
+romType=0x1c # ROMv1 gets 0x1c. Further numbers to be decided.
 
-theloop.2.rom: *.py *.gcl Images/*.rgb Makefile
-	env romType="$(romType)" python theloop.py\
+theloop.2.rom: Core/* Apps/* Images/* Makefile
+	env romType="$(romType)"\
+	    PYTHONPATH="Core:$(PYTHONPATH)"\
+	    python Core/theloop.py\
 		Apps/Snake.gcl\
 		Apps/Racer.gcl\
 		Apps/Mandelbrot.gcl\
@@ -12,7 +14,7 @@ theloop.2.rom: *.py *.gcl Images/*.rgb Makefile
 		Apps/Loader.gcl\
 		Apps/Screen.gcl\
 		Apps/Main.gcl\
-		Reset.gcl
+		Core/Reset.gcl
 
 run: gtemu theloop.2.rom
 	./gtemu
@@ -34,9 +36,5 @@ burn: theloop.2.rom
 
 todo:
 	@git ls-files | sed 's/ /\\ /g' | xargs grep -I -E '(TODO|XXX)'
-
-v1:
-	@git ls-files | sed 's/ /\\ /g' | xargs grep -I '\[ROMv1\]'
-	@git ls-files | sed 's/ /\\ /g' | xargs grep -I '\[ROMv1\]' | wc -l
 
 # vi: noexpandtab
