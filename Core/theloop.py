@@ -12,21 +12,19 @@
 #  - Serial input handler
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
-#  After ROM v1 release
+#  Cleanup after ROM v1 release
 #  XXX Readability of asm.py instructions, esp. make d() implicit
 #  XXX GCL: Prefix notation for high/low byte >X++ instead of X>++
 #  XXX GCL: Rethink i, i. i; i= x, x. x= x: consistency, also POKEW, STLW etc
 #  XXX How it works memo: brief description of every software function
 #
-#  Probably not in ROM v1
-#  XXX Music sequencer (combined with LED sequencer)
-#  XXX Adjustable return address for LUP/LOOKUP trampolines
+#  Ideas for ROM v2
+#  XXX Music sequencer (combined with LED sequencer, but retire soundTimer???)
+#  XXX Adjustable return for LUP trampolines (in case SYS functions need it)
 #  XXX Loader: make noise when data comes in
 #  XXX vCPU: Multiplication (mulShift8?)
-#  XXX vCPU: PUSHA, POPA
 #  XXX vCPU: Interrupts / Task switching (e.g for clock, LED sequencer)
 #  XXX Scroll out the top line of text, or generic vertical scroll SYS call
-#  XXX Intro: Rising planet?
 #  XXX Multitasking/threading/sleeping (start with date/time clock in GCL)
 #  XXX Scoping for variables or some form of local variables? $i ("localized")
 #  XXX Simple GCL programs might be compiled by the host instead of offline?
@@ -34,13 +32,14 @@
 #  XXX Random dots screensaver
 #  XXX Star field
 #
-#  Future applications after ROM v1
+#  Application ideas:
 #  XXX Pacman ghosts. Sprites by scan line 4 reset method? ("videoG"=graphics)
 #  XXX Audio: Decay, using Karplus-Strong
 #  XXX ROM data compression (starting with Jupiter and Racer image)
 #  XXX Font screen 16x8 chars
 #  XXX Info screen (zero page)
 #  XXX Gigatron layout balls/bricks game
+#  XXX Embedded schematics
 #  XXX Maze game. Berzerk/Robotron? Pac Mac
 #  XXX Horizontal scroller. Flappy Bird
 #  XXX Primes, Fibonacci (bignum), Queens
@@ -946,7 +945,7 @@ label('.snd1')
 ora(d(xoutMask),busRAM)         #193
 st(d(xoutMask))                 #194
 
-# Sound timer count down (XXX Replace by sequencer) (5 cycles)
+# Sound timer count down (5 cycles)
 ldzp(d(soundTimer));            C('Sound timer')#195
 beq(d(lo('.snd2')))             #196
 bra(d(lo('.snd3')))             #197
@@ -1019,7 +1018,6 @@ xora(d(hSync))                  #40 Precompute, as during the pulse there is no 
 st(d(videoSync1))               #41
 
 # Capture the serial input before the '595 shifts it out
-# Note: postpone post-processing until back at scan line 0
 ldzp(d(videoY));                C('Capture serial input')#42
 xora(val(1-2*(vBack-1-1)))      #43 Exactly when the 74HC595 has captured all 8 controller bits
 bne(d(lo('.ser0')))             #44

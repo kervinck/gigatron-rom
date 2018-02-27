@@ -4,11 +4,11 @@ Software for Gigatron ROM
 Files
 =====
 ```
-theloop.py                      Video/audio/io/interpreter loops
+Core/theloop.py                 Video/audio/io/interpreter loops
                                 Built-in vCPU applications and data
                                 Execute theloop.py to build ROM files
 GCL-language.txt                Gigatron Control Language and vCPU explanation
-gtemu.c                         Emulator / executable instruction set definition
+gtemu.c                         Executable instruction set definition
 LICENSE                         2-Clause BSD License
 Makefile                        Marcel's Makefile
 README.md                       This file...
