@@ -2668,6 +2668,7 @@ define('vPC+1',      vPC+1) # XXX trampoline() is probably in the wrong module
 
 for gclSource in argv[1:]:
   name = gclSource.rsplit('.', 1)[0]
+  name = name.rsplit('/', 1)[-1]
   print
   print 'Compile file %s label %s ROM %04x' % (gclSource, name, pc())
   label(name)

@@ -4,14 +4,14 @@ romType=0x1c
 
 theloop.2.rom: *.py *.gcl Images/*.rgb Makefile
 	env romType="$(romType)" python theloop.py\
-		Snake.gcl\
-		Racer.gcl\
-		Mandelbrot.gcl\
-		Pictures.gcl\
-		Credits.gcl\
-		Loader.gcl\
-		Screen.gcl\
-		Main.gcl\
+		Apps/Snake.gcl\
+		Apps/Racer.gcl\
+		Apps/Mandelbrot.gcl\
+		Apps/Pictures.gcl\
+		Apps/Credits.gcl\
+		Apps/Loader.gcl\
+		Apps/Screen.gcl\
+		Apps/Main.gcl\
 		Reset.gcl
 
 run: gtemu theloop.2.rom
