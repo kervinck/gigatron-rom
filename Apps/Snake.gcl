@@ -10,7 +10,7 @@ gcl0x
 {
 Maybe:
 XXX Don't allow autoplayer to obtain a hi score
-XXX Use POKEW to plot fat pixels
+XXX Use DOKE to plot fat pixels
 XXX More colors, less green
 XXX Smarter border drawing (spiral draw)
 XXX Use same drawing techique for clearing playfield

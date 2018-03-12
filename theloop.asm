@@ -859,10 +859,10 @@ LDLW:         03ee 1404  ld   $04,y
 POKE:         03f0 1404  ld   $04,y
               03f1 e054  jmp  y,$54
               03f2 c21d  st   [$1d]
-POKEW:        03f3 1404  ld   $04,y
+DOKE:         03f3 1404  ld   $04,y
               03f4 e06a  jmp  y,$6a
               03f5 c21d  st   [$1d]
-PEEKW:        03f6 1404  ld   $04,y
+DEEK:         03f6 1404  ld   $04,y
               03f7 e077  jmp  y,$77
 ANDW:         03f8 1404  ld   $04,y
               03f9 e084  jmp  y,$84
@@ -978,7 +978,7 @@ lupReturn:    0465 0000  ld   $00
               0467 1403  ld   $03,y
               0468 e0cb  jmp  y,$cb
               0469 00f3  ld   $f3
-pokew:        046a 9001  adda $01,x
+doke:         046a 9001  adda $01,x
               046b 0500  ld   [x]
               046c 1600  ld   ac,y
               046d 111d  ld   [$1d],x
@@ -991,7 +991,7 @@ pokew:        046a 9001  adda $01,x
               0474 1403  ld   $03,y
               0475 e0cb  jmp  y,$cb
               0476 00f2  ld   $f2
-peekw:        0477 0116  ld   [$16]
+deek:         0477 0116  ld   [$16]
               0478 a001  suba $01
               0479 c216  st   [$16]
               047a 1118  ld   [$18],x

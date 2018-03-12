@@ -15,7 +15,7 @@
 #  Cleanup after ROM v1 release
 #  XXX Readability of asm.py instructions, esp. make d() implicit
 #  XXX GCL: Prefix notation for high/low byte >X++ instead of X>++
-#  XXX GCL: Rethink i, i. i; i= x, x. x= x: consistency, also POKEW, STLW etc
+#  XXX GCL: Rethink i, i. i; i= x, x. x= x: consistency, also DOKE, STLW etc
 #  XXX How it works memo: brief description of every software function
 #
 #  Ideas for ROM v2
@@ -1601,21 +1601,21 @@ ld(val(hi('poke')),regY)        #10,12 (overlap with LDLW)
 jmpy(d(lo('poke')))             #11
 st(d(vTmp))                     #12
 
-# Instruction POKEW: (), 28 cycles
-label('POKEW')
-ld(val(hi('pokew')),regY)       #10
-jmpy(d(lo('pokew')))            #11
+# Instruction DOKE: (), 28 cycles
+label('DOKE')
+ld(val(hi('doke')),regY)        #10
+jmpy(d(lo('doke')))             #11
 st(d(vTmp))                     #12
 
-# Instruction PEEKW: (), 28 cycles
-label('PEEKW')
-ld(val(hi('peekw')),regY)       #10
-jmpy(d(lo('peekw')))            #11
+# Instruction DEEK: (), 28 cycles
+label('DEEK')
+ld(val(hi('deek')),regY)        #10
+jmpy(d(lo('deek')))             #11
 #nop()                          #12
 #
 # Instruction ANDW: (AC&=[D]+256*[D+1]), 28 cycles
 label('ANDW')
-ld(val(hi('andw')),regY)        #10,12 (overlap with PEEKW)
+ld(val(hi('andw')),regY)        #10,12 (overlap with DEEK)
 jmpy(d(lo('andw')))             #11
 #nop()                          #12
 #
@@ -1783,8 +1783,8 @@ ld(val(hi('REENTER')),regY)     #21
 jmpy(d(lo('REENTER')))          #22
 ld(val(-26/2))                  #23
 #
-# POKEW implementation
-label('pokew')
+# DOKE implementation
+label('doke')
 adda(d(1),regX)                 #13,25 (overlap with peek)
 ld(busRAM,ea0XregAC)            #14
 ld(busAC,regY)                  #15
@@ -1799,8 +1799,8 @@ ld(val(hi('REENTER')),regY)     #23
 jmpy(d(lo('REENTER')))          #24
 ld(val(-28/2))                  #25
 
-# PEEKW implementation
-label('peekw')
+# DEEK implementation
+label('deek')
 ldzp(d(vPC))                    #13
 suba(val(1))                    #14
 st(d(vPC))                      #15
