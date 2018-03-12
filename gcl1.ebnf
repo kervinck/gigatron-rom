@@ -11,7 +11,7 @@ Keyword     ::= 'call' | 'def' | 'do' | 'else' |
                 'loop' | 'peek' | 'peekw' | 'pop' | 'push' | 'ret'
 Prefix      ::= [<>\%]
 Name        ::= Letter (Letter | '_' | Decimal)*
-Operator    ::= [-+&|^.,:;!?^] | '++' | '--' | '<<'
+Operator    ::= [-+&|^=.,:;!?^] | '++' | '--' | '<<'
 Number      ::= [-+]? (Decimal+ | '$' Hexadecimal+)
 Comment     ::= '{' (Space | [#x21-#x7A] | #x7C | #x7E)* '}'
 Letter      ::= [a-zA-Z]
