@@ -1,0 +1,20 @@
+/*
+ *  Gigatron Control Language v1 definition
+ *  EBNF in W3C notation
+ *  Recommended railroad diagram generator: http://www.bottlecaps.de/rr/ui
+ */
+Gcl1File    ::= Whitespace? 'gcl1' ((Whitespace|Block) Word?)* Newline
+Block       ::= '[' Word? ((Whitespace|Block) Word?)* ']'
+Word        ::= Keyword | Prefix? (Name | Number) Operator?
+Keyword     ::= Conditional | 'call' | 'def' | 'do' | 'else' | 'loop' | 'peek' | 'peekw' | 'pop' | 'push' | 'ret'
+Conditional ::= 'if' ('<' | '=' | '>' | '<=' | '<>' | '>=') '0' 'loop'?
+Prefix      ::= [<>\%]
+Name        ::= Letter (Letter | '_' | Decimal)*
+Operator    ::= [-+&|^.,:;!?^] | '++' | '--' | '<<'
+Number      ::= [-+]? (Decimal+ | '$' Hexadecimal+)
+Comment     ::= '{' (Whitespace | [#x21-#x7A] | #x7C | #x7E)* '}'
+Letter      ::= [a-zA-Z]
+Decimal     ::= [0-9]
+Hexadecimal ::= [0-9a-fA-F]
+Whitespace  ::= (#x20 | Newline | Comment)+
+Newline     ::= #x09? #x0A

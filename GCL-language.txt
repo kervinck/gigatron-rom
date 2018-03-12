@@ -153,7 +153,7 @@ Future extensions
 "Text"                  Text string?
 ()                      Macros?
 $X                      For localized variables
-=12                     For raw byte values (better readable than 12#)
+\12                     For raw byte values (better readable than 12#)
 
 ----------------------
 vCPU instruction table
