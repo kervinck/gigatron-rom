@@ -6,8 +6,9 @@
 Gcl1File    ::= Space* 'gcl1' ((Space|Block) Word?)* Newline
 Block       ::= '[' Word? ((Space|Block) Word?)* ']'
 Word        ::= Keyword | Prefix? (Name | Number) Operator?
-Keyword     ::= Conditional | 'call' | 'def' | 'do' | 'else' | 'loop' | 'peek' | 'peekw' | 'pop' | 'push' | 'ret'
-Conditional ::= 'if' ('<' | '=' | '>' | '<=' | '<>' | '>=') '0' 'loop'?
+Keyword     ::= 'call' | 'def' | 'do' | 'else' |
+                'if' ('<' | '=' | '>' | '<=' | '<>' | '>=') '0' 'loop'?  |
+                'loop' | 'peek' | 'peekw' | 'pop' | 'push' | 'ret'
 Prefix      ::= [<>\%]
 Name        ::= Letter (Letter | '_' | Decimal)*
 Operator    ::= [-+&|^.,:;!?^] | '++' | '--' | '<<'
