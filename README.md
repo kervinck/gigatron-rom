@@ -8,10 +8,13 @@ Core/theloop.py                 Video/audio/io/interpreter loops
                                 Built-in vCPU applications and data
                                 Execute theloop.py to build ROM files
 GCL-language.txt                Gigatron Control Language and vCPU explanation
+gcl1.ebnf                       Formal definition
+EBNF.xhtml                      Railroad diagram
 gtemu.c                         Executable instruction set definition
 LICENSE                         2-Clause BSD License
 Makefile                        Marcel's Makefile
 README.md                       This file...
+Loader/Loader.ino               Arduino sketch for "Loader" demonstration
 ```
 
 Files processed by theloop.py
@@ -116,8 +119,8 @@ Address   Name          Description
 01fe      oscL[1]
 01ff      oscL[1]
 0200-02f9 -             vCPU code/data (standard start address)
-02fa      wavA[2]
-02fb      wavX[2]       Sound channel 2
+02fa      wavA[2]       Sound channel 2
+02fb      wavX[2]
 02fc      keyL[2]
 02fd      keyH[2]
 02fe      oscL[2]
