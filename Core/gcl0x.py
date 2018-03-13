@@ -148,24 +148,6 @@ class Program:
       self.emit(lo('$%s.def.%d' % (self.name, pc)))
     elif word == 'do':
       self.loops[self.thisBlock()] = self.vPC
-    elif word == 'if<0':
-      self.opcode('BCC')
-      self.opcode('GE')
-      block = self.thisBlock()
-      self.emit(lo('$%s.if.%d.0' % (self.name, block)))
-      self.conds[block] = 0
-    elif word == 'if>0':
-      self.opcode('BCC')
-      self.opcode('LE')
-      block = self.thisBlock()
-      self.emit(lo('$%s.if.%d.0' % (self.name, block)))
-      self.conds[block] = 0
-    elif word == 'if=0':
-      self.opcode('BCC')
-      self.opcode('NE')
-      block = self.thisBlock()
-      self.emit(lo('$%s.if.%d.0' % (self.name, block)))
-      self.conds[block] = 0
     elif word == 'if<>0': self._emitIf('EQ')
     elif word == 'if=0':  self._emitIf('NE')
     elif word == 'if>=0': self._emitIf('LT')
