@@ -43,10 +43,11 @@ gcl1 {GCL version}
 Programming model
 -----------------
 GCL draws most of its inspiration from two notable mini-languages: SWEET16
-(Apple II) and FALSE (Amiga). There is also a little bit of FORTH influence.
-The GCL programming model is primarily "accumulator oriented".
-To accommodate the lack of relative addressing and hardware stack on the host
-CPU, expression and call stacks will be (mostly) static instead of dynamic.
+(Apple II) and FALSE (Amiga). There is also a little bit of a FORTH influence.
+The GCL programming model is "accumulator oriented": there is no implicit
+expression stack. vCPU does have a call stack however, and it is also possible
+to hold variables there. GCL programs typically are made from of many small
+functions that operate on global variables and that are called from a main loop.
 
 The virtual regisers are 16-bits (except vSP) and reside in the zero page.
 

@@ -111,34 +111,34 @@ Address   Name          Description
 0081-.... -             Program variables
 ....-00ff <stack>
 0100-01ef videoTable
-01f0-01f9 vCpuBoot
+01f0-01f9 vReset
 01fa      wavA[1]       Sound channel 1
 01fb      wavX[1]
 01fc      keyL[1]
 01fd      keyH[1]
 01fe      oscL[1]
-01ff      oscL[1]
+01ff      oscH[1]
 0200-02f9 -             vCPU code/data (standard start address)
 02fa      wavA[2]       Sound channel 2
 02fb      wavX[2]
 02fc      keyL[2]
 02fd      keyH[2]
 02fe      oscL[2]
-02ff      oscL[2]
+02ff      oscH[2]
 0300-03f9 -             vCPU code/data
 03fa      wavA[3]       Sound channel 3
 03fb      wavX[3]
 03fc      keyL[3]
 03fd      keyH[3]
 03fe      oscL[3]
-03ff      oscL[3]
+03ff      oscH[3]
 0400-04f9 -             vCPU code/data
 04fa      wavA[4]       Sound channel 4
 04fb      wavX[4]
 04fc      keyL[4]
 04fd      keyH[4]
 04fe      oscL[4]
-04ff      oscL[4]
+04ff      oscH[4]
 0500-05ff -             vCPU code/data
 0600-06ff -             vCPU code/data
 0700-07ff soundTable

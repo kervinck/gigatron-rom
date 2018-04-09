@@ -2657,10 +2657,9 @@ define('soundTimer', soundTimer)
 define('vAC',        vAC)
 define('vACH',       vAC+1)
 define('vLR',        vLR)
-# All these are hacks:
 define('videoY',     videoY)
-define('nextVideo',  nextVideo)
-define('vPC+1',      vPC+1) # XXX trampoline() is probably in the wrong module
+# XXX This is a hack (trampoline() is probably in the wrong module):
+define('vPC+1',      vPC+1)
 
 # Compile test GCL program
 

@@ -46,12 +46,12 @@ void setup() {
 }
 
 byte blinky[] = {
-  0x11, 0x50, 0x44, // 0300 LDWI $4450
-  0x2b, 0x30,       // 0303 STW  'p'
-  0xf0, 0x30,       // 0305 POKE 'p'
-  0xe3, 0x01,       // 0307 ADDI 1
-  0x90, 0x03        // 0309 BRA  $0305
-};                  // 030b
+  0x11, 0x50, 0x44, // 7f00 LDWI $4450  ; Load address of center of screen
+  0x2b, 0x30,       // 7f03 STW  'p'    ; Store in variable 'p' (at $0030)
+  0xf0, 0x30,       // 7f05 POKE 'p'    ; Write low byte of accumulator there
+  0xe3, 0x01,       // 7f07 ADDI 1      ; Increment accumulator
+  0x90, 0x03        // 7f09 BRA  $7f05  ; Loop forever
+};                  // 7f0b
 
 void loop() {
   static byte payload[60];
