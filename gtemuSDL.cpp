@@ -19,15 +19,15 @@ Installation:
 - After building, copy the executable, SDL2 shared library/DLL and "theloop2.rom" to an appropriate directory; run the executable from there.
 
 Controls:
-- <ESC>		quits the application.
-- <RIGHT>	Right.
-- <LEFT>	Left.
-- <UP>		Up.
-- <DOWN>	Down.
-- <SPACE>	Start.
-- <s>		Select.
-- <b>		B.
-- <a>		A.
+- <ESC>     quits the application.
+- <RIGHT>   Right.
+- <LEFT>    Left.
+- <UP>      Up.
+- <DOWN>    Down.
+- <SPACE>   Start.
+- <s>       Select.
+- <b>       B.
+- <a>       A.
 
 Limitations:
 - The simulation is timed using VSYNC or performance counters or both; this can lead to incorrect drift over time, especially with the Audio.
@@ -226,21 +226,21 @@ void initialise(CpuState& S, SDL_Window** window, SDL_Renderer** renderer, SDL_T
 
     // Colour palette    
     for(int i=0; i<COLOUR_PALETTE; i++)
-	{
-		int r = (i>>0) & 3;
-		int g = (i>>2) & 3;
-		int b = (i>>4) & 3;
+    {
+        int r = (i>>0) & 3;
+        int g = (i>>2) & 3;
+        int b = (i>>4) & 3;
 
-		r = r | (r << 2) | (r << 4) | (r << 6);
-		g = g | (g << 2) | (g << 4) | (g << 6);
-		b = b | (b << 2) | (b << 4) | (b << 6);
+        r = r | (r << 2) | (r << 4) | (r << 6);
+        g = g | (g << 2) | (g << 4) | (g << 6);
+        b = b | (b << 2) | (b << 4) | (b << 6);
 
-		uint32_t p = 0xFF000000;
-		p |= r << 16;
-		p |= g << 8;
-		p |= b << 0;
-		Colours[i] = p;
-	}
+        uint32_t p = 0xFF000000;
+        p |= r << 16;
+        p |= g << 8;
+        p |= b << 0;
+        Colours[i] = p;
+    }
 
     // SDL initialisation
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS) < 0)
@@ -284,7 +284,7 @@ void initialise(CpuState& S, SDL_Window** window, SDL_Renderer** renderer, SDL_T
 
 void input(void)
 {
-	SDL_Event event;
+    SDL_Event event;
     while(SDL_PollEvent(&event))
     {
         switch(event.type)
@@ -339,16 +339,16 @@ void input(void)
 void updateLeds(void)
 {
     for(int i=0; i<NUM_LEDS; i++)
-	{
-		int mask = 1 << (NUM_LEDS-1 - i);
-		int state = (XOUT & mask) != 0;
-		uint32_t colour = state ? 0xFF00FF00 : 0xFF770000;
+    {
+        int mask = 1 << (NUM_LEDS-1 - i);
+        int state = (XOUT & mask) != 0;
+        uint32_t colour = state ? 0xFF00FF00 : 0xFF770000;
 
-		int address = int(float(SCREEN_WIDTH) * 0.9f) + i*NUM_LEDS;
+        int address = int(float(SCREEN_WIDTH) * 0.9f) + i*NUM_LEDS;
         Pixels[address + 0] = colour;
         Pixels[address + 1] = colour;
         Pixels[address + 2] = colour;
-	}
+    }
 }
 
 void updatePixel(const CpuState& S, int vgaX, int vgaY)
@@ -362,9 +362,9 @@ void updatePixel(const CpuState& S, int vgaX, int vgaY)
 
 void render(SDL_Renderer* renderer, SDL_Texture* texture)
 {
-	SDL_UpdateTexture(texture, NULL, Pixels, SCREEN_WIDTH * sizeof(Uint32));
-	SDL_RenderCopy(renderer, texture, NULL, NULL);
-	SDL_RenderPresent(renderer);
+    SDL_UpdateTexture(texture, NULL, Pixels, SCREEN_WIDTH * sizeof(Uint32));
+    SDL_RenderCopy(renderer, texture, NULL, NULL);
+    SDL_RenderPresent(renderer);
 
     static uint64_t prevFrameCounter = 0;
     uint64_t frameCounter;
@@ -403,12 +403,12 @@ int main(int argc, char* argv[])
     int vgaX=0, vgaY=0;
     for(long long t=-2; ; t++)
     {
-	    if(t < 0) S.PC = 0; // MCP100 Power-On Reset
+        if(t < 0) S.PC = 0; // MCP100 Power-On Reset
 
-	    CpuState T = cpuCycle(S); // Update CPU
+        CpuState T = cpuCycle(S); // Update CPU
 
-	    int hSync = (T.OUT & 0x40) - (S.OUT & 0x40); // "VGA monitor" (use simple stdout)
-	    int vSync = (T.OUT & 0x80) - (S.OUT & 0x80);
+        int hSync = (T.OUT & 0x40) - (S.OUT & 0x40); // "VGA monitor" (use simple stdout)
+        int vSync = (T.OUT & 0x80) - (S.OUT & 0x80);
         if(vSync < 0) // Falling vSync edge
         {
             vgaY = VSYNC_START;
@@ -418,17 +418,17 @@ int main(int argc, char* argv[])
             updateLeds();
             render(renderer, texture);
         }
-	    if(vgaX++ < HLINE_END)
+        if(vgaX++ < HLINE_END)
         {
-		    if(hSync) { }              // Visual indicator of hSync
-		    else if(vgaX == HLINE_END) { }   // Too many pixels
-		    else if(~S.OUT & 0x80) { } // Visualize vBlank pulse
-		    else if(vgaX >=0  &&  vgaX < HLINE_END  &&  vgaY >= 0  &&  vgaY < SCREEN_HEIGHT)
+            if(hSync) { }              // Visual indicator of hSync
+            else if(vgaX == HLINE_END) { }   // Too many pixels
+            else if(~S.OUT & 0x80) { } // Visualize vBlank pulse
+            else if(vgaX >=0  &&  vgaX < HLINE_END  &&  vgaY >= 0  &&  vgaY < SCREEN_HEIGHT)
             {
                 updatePixel(S, vgaX, vgaY);
-		    }
-	    }
-	    if(hSync > 0) // Rising hSync edge
+            }
+        }
+        if(hSync > 0) // Rising hSync edge
         {
             XOUT = T.AC;
             
@@ -439,12 +439,12 @@ int main(int argc, char* argv[])
                 playAudioBuffer();
             }
 
-		    vgaX = 0;
-		    vgaY++;
-		    T.undef = rand() & 0xff; // Change this once in a while
-	    }
+            vgaX = 0;
+            vgaY++;
+            T.undef = rand() & 0xff; // Change this once in a while
+        }
 
-	    S=T;
+        S=T;
     }
 
     return 0;
