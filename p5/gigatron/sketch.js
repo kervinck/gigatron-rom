@@ -56,7 +56,8 @@ function setup() {
 		b:      "B".codePointAt(0),
 	});
 
-	loadRom(cpu);
+	const romurl = "ROMv1.rom";
+	loadRom(romurl, cpu);
 }
 
 function start() {
@@ -80,9 +81,9 @@ function tick() {
 function keyPressed() {	return gamepad.keyPressed(keyCode); }
 function keyReleased() { return gamepad.keyReleased(keyCode); }
 
-function loadRom(cpu) {
+function loadRom(url, cpu) {
 	let oReq = new XMLHttpRequest();
-	oReq.open("GET", "ROMv1.rom", true);
+	oReq.open("GET", url, true);
 	oReq.responseType = "arraybuffer";
 
 	oReq.onload = function (oEvent) {
