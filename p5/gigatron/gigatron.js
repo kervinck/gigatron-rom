@@ -1,3 +1,5 @@
+"use strict";
+
 function randomUint8() { return Math.floor(Math.random() * 256); }
 
 class Gigatron {
@@ -10,34 +12,28 @@ class Gigatron {
     this.ac = 0;
     this.x = 0;
     this.y = 0;
-    this.outReg = 0;
-    this.outxReg = 0;
+    this.out = 0;
+    this.outx = 0;
     this.inReg = 0xff;  // active low!
-    this.trace = false;
-    this.symtab = options.symtab || {};
-    this.row = 0;
-    this.minRow = options.vertical.backPorch;
-    this.maxRow = this.minRow + options.vertical.visible;
-    this.col = 0;
-    this.minCol = options.horizontal.backPorch;
-    this.maxCol = this.minCol + options.horizontal.visible;
-    this.poff = 0;
-    this.vsync = false;
+    this.onOut = options.onOut;
+    this.onOutx = options.onOutx;
 
+    // randomize ram
     for (let i = 0; i < this.ram.length; i++) {
       this.ram[i] = randomUint8();
     }
   }
 
-  step() {
-    let pc = this.currpc = this.pc & 0xffff;
+  tick() {
+    let pc = this.currpc = this.pc & 0xffff; // (this.rom.length-1);
     this.pc = this.nextpc;
     this.nextpc = this.pc + 1;
+
     let instruction = this.rom[pc];
-    let op = (instruction >> 13) & 7;
-    let mode = (instruction >> 10) & 7;
-    let bus = (instruction >> 8) & 3;
-    let d = (instruction >> 0) & 0xff;
+    let op   = (instruction >> 13) & 0x0007;
+    let mode = (instruction >> 10) & 0x0007;
+    let bus  = (instruction >>  8) & 0x0003;
+    let d    = (instruction >>  0) & 0x00ff;
 
     switch (op) {
       case 0: this.aluOp(mode, bus, d, b => b); break;
@@ -49,33 +45,19 @@ class Gigatron {
       case 6: this.storeOp(mode, bus, d); break;
       case 7: this.branchOp(mode, bus, d); break;
     }
-
-    if ((this.outReg & 0xc0) == 0xc0) {
-      if (this.row >= this.minRow &&this.row < this.maxRow && this.col >= this.minCol && this.col < this.maxCol) {
-        let r = ((this.outReg >> 0) & 3) << 6;
-        let g = ((this.outReg >> 2) & 3) << 6;
-        let b = ((this.outReg >> 4) & 3) << 6;
-
-        for (let i = 0; i < 4; i++) {
-          pixels[this.poff++] = r;
-          pixels[this.poff++] = g;
-          pixels[this.poff++] = b;
-          pixels[this.poff++] = 255;
-        }
-      }
-
-      this.col += 4;
-    }
   }
 
   aluOp(mode, bus, d, f) {
     let b;
 
     switch (bus) {
-      case 0: b = d; break;
-      case 1: b = this.load(mode, d); break;
-      case 2: b = this.ac; break;
-      case 3: b = this.inReg; break;
+    case 0: b = d; break;
+    case 1:
+      let addr = this.addr(mode, d) & (this.ram.length-1);
+      b = this.ram[addr];
+      break;
+    case 2: b = this.ac; break;
+    case 3: b = this.inReg; break;
     }
 
     b = f(b);
@@ -89,30 +71,19 @@ class Gigatron {
       case 5: this.y = b; break;
       case 6:
       case 7:
-      let rising = ~this.outReg & b;
-      let falling = this.outReg & ~b;
+      let rising = ~this.out & b;
 
-      // vsync starts on falling edge of out[7]
-      if (falling & 0x80) {
-        this.vsyncStart();
-      }
-      // vsync ends on rising edge of out[7]
-      else if (rising & 0x80) {
-        this.vsyncEnd();
-      }
-      // hsync starts on falling edge of out[6]
-      if (falling & 0x40) {
-        this.hsyncStart();
-      }
-      // hsync ends on rising edge of out[6]
-      else if (rising & 0x40) {
-        this.hsyncEnd();
+      this.out = b;
+      this.onOut(this.out);
 
-        // hsync end also latches outx from ac
-        this.outxReg = this.ac;
+      // rising edge of out[6] registers outx from ac
+      if (rising & 0x40) {
+        if (this.outx != this.ac) {
+          this.outx = this.ac;
+          this.onOutx(this.outx);
+        }
       }
 
-      this.outReg = b;
       break;
     }
   }
@@ -127,27 +98,29 @@ class Gigatron {
       case 3: b = this.inReg; break;
     }
 
-    this.store(mode, d, b);
+    let addr = this.addr(mode, d) & (this.ram.length-1);
+    this.ram[addr] = b;
 
     switch (mode) {
-      case 4: this.x = b; break;
+      case 4: this.x = b; break; // not clear whether x++ mode takes priority
       case 5: this.y = b; break;
     }
   }
 
   branchOp(mode, bus, d) {
+    const ZERO = 0x80;
     let c;
-    let ac = this.ac ^ 0x80;
-    let base = this.nextpc & 0xff00;
+    let ac = this.ac ^ ZERO;
+    let base = this.pc & 0xff00;
 
     switch (mode) {
       case 0: c = true; base = this.y << 8; break; // jmp
-      case 1: c = ac >  0x80; break;               // bgt
-      case 2: c = ac <  0x80; break;               // blt
-      case 3: c = ac != 0x80; break;               // bne
-      case 4: c = ac == 0x80; break;               // beq
-      case 5: c = ac >= 0x80; break;               // bge
-      case 6: c = ac <= 0x80; break;               // ble
+      case 1: c = ac >  ZERO; break;               // bgt
+      case 2: c = ac <  ZERO; break;               // blt
+      case 3: c = ac != ZERO; break;               // bne
+      case 4: c = ac == ZERO; break;               // beq
+      case 5: c = ac >= ZERO; break;               // bge
+      case 6: c = ac <= ZERO; break;               // ble
       case 7: c = true; break;                     // bra
     }
 
@@ -155,23 +128,6 @@ class Gigatron {
       let b = this.offset(bus, d);
       this.nextpc = base | b;
     }
-  }
-
-  vsyncStart() {
-    this.row = 0;
-    this.vsync = true;
-    this.poff = 0;
-  }
-
-  vsyncEnd() {
-  }
-
-  hsyncStart() {
-    this.col = 0;
-    this.row++;
-  }
-
-  hsyncEnd() {
   }
 
   addr(mode, d) {
@@ -184,9 +140,9 @@ class Gigatron {
       case 2: return (this.y << 8) | d;
       case 3: return (this.y << 8) | this.x;
       case 7:
-      let addr = (this.y << 8) | this.x;
-      this.x = (this.x + 1) & 0xff;
-      return addr;
+        let addr = (this.y << 8) | this.x;
+        this.x = (this.x + 1) & 0xff;
+        return addr;
     }
   }
 
@@ -197,16 +153,5 @@ class Gigatron {
       case 2: return this.ac;
       case 3: return this.inReg;
     }
-  }
-
-  load(mode, d) {
-    let addr = this.addr(mode, d) & (this.ram.length-1);
-    let b = this.ram[addr];
-    return b;
-  }
-
-  store(mode, d, b) {
-    let addr = this.addr(mode, d) & (this.ram.length-1);
-    this.ram[addr] = b;
   }
 }
