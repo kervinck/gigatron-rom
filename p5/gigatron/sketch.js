@@ -56,7 +56,7 @@ function setup() {
 		b:      "B".codePointAt(0),
 	});
 
-	const romurl = "ROMv1.rom";
+	const romurl = "theloop.2.rom";
 	loadRom(romurl, cpu);
 }
 
