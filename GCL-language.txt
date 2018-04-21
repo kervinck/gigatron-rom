@@ -171,14 +171,14 @@ ST    $DD      Store byte in zero page ([D]=vAC)
 STW   $DD      Store word into zero page ([D]=vAC&255,[D+1]=vAC>>8)
 STLW  $DD      Store word in stack frame (vSP[D],vSP[D+1]=vAC&255,vAC>>8)
 LD    $DD      Load byte from zero page (vAC=[D])
-LDI   $DD      Load immediate constant (vAC=$DD)
-LDWI  $DDDD    Load immediate constant (vAC=$DDDD)
+LDI   $DD      Load immediate small positive constant (vAC=D)
+LDWI  $DDDD    Load immediate arbitrary constant (vAC=D)
 LDW   $DD      Word load from zero page (vAC=[D]+256*[D+1])
 LDLW  $DD      Load word from stack frame (vAC=vSP[D]+256*vSP[D+1]
 ADDW  $DD      Word addition with zero page (vAC+=[D]+256*[D+1])
 SUBW  $DD      Word subtraction with zero page (vAC-=[D]+256*[D+1])
 ADDI  $DD      Add small positive constant (vAC+=D)
-SUBI  $DD      Subtract small positive constant (vAC+=D)
+SUBI  $DD      Subtract small positive constant (vAC-=D)
 LSLW  -        Shift left (because 'ADDW vAC' will not work!) (vAC+=vAC)
 INC   $DD      Increment zero page byte ([D]++)
 ANDI  $DD      Logical-AND with constant (vAC&=D)
@@ -199,35 +199,39 @@ RET   -        Leaf return (vPC=vLR-2)
 PUSH  -        Push vLR on stack ([--vSP]=vLR&255,[--vSP]=vLR>>8)
 POP   -        Pop value from stack (vAC=[vSP]+256*[vSP+1],vSP+=2)
 ALLOC $DD      Create or destroy stack frame (vSP+=D)
-SYS   $DD      Native function call for at most $DD ticks ($DD*2 cycles)
+SYS   $DD      Native function call using at most 2*T cycles, D=270-max(14,T)
 DEF   $DD      Define data or code (vAC,vPC=vPC+2,D+256*(vPC>>8))
 
 -------------
 SYS extension
 -------------
-SYS_Reset_36                    x
-SYS_Exec_88                     x
-SYS_Random_34                   x
-SYS_LSRW1_48                    x
-SYS_LSRW2_52                    x
-SYS_LSRW3_52                    x
-SYS_LSRW4_50                    x
-SYS_LSRW5_50                    x
-SYS_LSRW6_48                    x
-SYS_LSRW7_30                    x
-SYS_LSRW8_24                    x
-SYS_LSLW4_46                    x
-SYS_LSLW8_24                    x
-SYS_VDrawBits_134               x
-SYS_Read3_40                    (Pictures)
-SYS_Unpack_56                   x
-SYS_Draw4_30                    x
-SYS_Out_22                      x
-SYS_In_24                       x
-SYS_NextByteIn_32               x
-SYS_PayloadCopy_34              x
-SYS_LoaderProcessInput_48       (Loader)
-SYS_RacerUpdateVideoX_40        (Racer)
-SYS_RacerUpdateVideoY_40        (Racer)
+Addresses of SYS functions that are part of the ABI:
+
+009a    SYS_Reset_36            Soft reset
+00ad    SYS_Exec_88             Load serialized vCPU code from ROM and execute
+04a7    SYS_Random_34           Get random number and update entropy
+0600    SYS_LSRW1_48            Shift right 1 bit
+0619    SYS_LSRW2_52            Shift right 2 bits
+0636    SYS_LSRW3_52            Shift right 3 bits
+0652    SYS_LSRW4_50            Shift right 4 bits
+066d    SYS_LSRW5_50            Shift right 5 bits
+0687    SYS_LSRW6_48            Shift right 6 bits
+04b9    SYS_LSRW7_30            Shift right 7 bits
+04c6    SYS_LSRW8_24            Shift right 8 bits
+06a0    SYS_LSLW4_46            Shift left 4 bits
+04cd    SYS_LSLW8_24            Shift left 8 bits
+04e1    SYS_VDrawBits_134       Draw 8 vertical pixels
+06c0    SYS_Unpack_56           Unpack 3 bytes into 4 pixels
+04d4    SYS_Draw4_30            Copy 4 pixels to screen memory
+00f4    SYS_Out_22              Write byte to hardware OUT register
+00f9    SYS_In_24               Read byte from hardwar IN register
+02e9    SYS_NextByteIn_32       Receive next byte and put in load buffer
+06e7    SYS_PayloadCopy_34      Copy byte from load buffer to RAM destination
+
+Application specific SYS calls in ROM v1 that are -not- part of the ABI:
+SYS_Read3_40               (Pictures)
+SYS_LoaderProcessInput_48  (Loader)
+SYS_RacerUpdateVideoX_40   (Racer)
+SYS_RacerUpdateVideoY_40   (Racer)
 
 -- End of document --

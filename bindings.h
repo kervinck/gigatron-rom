@@ -113,7 +113,7 @@ enum ROMv1bindings {
  SYS_LSRW8_24           = 0x04c6,
  SYS_LSLW8_24           = 0x04cd,
  SYS_Draw4_30           = 0x04d4,
- SYS_VDrawBits_1348     = 0x04e1,
+ SYS_VDrawBits_134      = 0x04e1,
  SYS_LSRW1_48           = 0x0600,
  SYS_LSRW2_52           = 0x0619,
  SYS_LSRW3_52           = 0x0636,
@@ -122,8 +122,8 @@ enum ROMv1bindings {
  SYS_LSRW6_48           = 0x0687,
  SYS_LSLW4_46           = 0x06a0,
  SYS_Read3_40           = 0x06b9,
- SYS_Unpack_568         = 0x06c0,
- SYS_PayloadCopy_348    = 0x06e7,
+ SYS_Unpack_56          = 0x06c0,
+ SYS_PayloadCopy_34     = 0x06e7,
 
  /* Built-in font */
  font32up               = 0x0700,
