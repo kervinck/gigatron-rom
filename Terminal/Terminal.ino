@@ -6,7 +6,6 @@
 
 // XXX Read real user input from serial port of Arduino
 // XXX Write a character on screen instead of changing a pixel
-// XXX Don't use Loader application for reading more data
 
 // Arduino AVR    Gigatron Schematic Controller PCB
 // Uno     Name   OUT bit            CD4021     74HC595 (U39)
@@ -50,40 +49,106 @@ void setup() {
 }
 
 byte terminal[] = {
-  // XXX Replace with writing a letter on screen
-  0x11, 0x50, 0x44, // LDWI $4450        ; Load address of center of screen
-
-  0x2b, 0x30,       // STW  'p'          ; Store in variable 'p' (at $0030)
-  0xad,             // PEEK              ; Read current pixel value
-  0xe3, 0x01,       // ADDI 1            ; Increment
-  0xf0, 0x30,       // POKE 'p'          ; Write back pixel
-
-  // XXX Replace with own serial reader
-  0x11, 0x00, 0x02, // LDWI 'vCpuStart'  ; Where to go after SYS_Exec_88
-  0x2b, 0x1a,       // STW  'vLR'
-  0x11, 0x97, 0xf9, // LDWI 'Loader'     ; Loader image (XXX IHACK)
-  0x2b, 0x24,       // STW  'sysArgs+0'
-  0x59, 0xad,       // LDI  'SYS_Exec_88'
-  0x2b, 0x22,       // STW  'sysFn'
-  0xb4, 0xe2,       // SYS  $e2          ; 270-88/2
+ 0x11, // 0200 LDWI
+ 0xe9,
+ 0x02,
+ 0x2b, // 0203 STW
+ 0x30, // 0203 'NextByteIn_32'
+ 0x11, // 0205 LDWI
+ 0x0c,
+ 0x5b,
+ 0x2b, // 0208 STW
+ 0x32, // 0208 'B'
+ 0x21, // 020a LDW
+ 0x32, // 020a 'B'
+ 0x2b, // 020c STW
+ 0x24,
+ 0x59, // 020e LDI
+ 0xcf,
+ 0x5e, // 0210 ST
+ 0x27,
+ 0x21, // 0212 LDW
+ 0x30, // 0212 'NextByteIn_32'
+ 0x2b, // 0214 STW
+ 0x22,
+ 0xb4, // 0216 SYS
+ 0xfe,
+ 0x59, // 0218 LDI
+ 0xdb,
+ 0x5e, // 021a ST
+ 0x27,
+ 0xb4, // 021c SYS
+ 0xfe,
+ 0x59, // 021e LDI
+ 0xeb,
+ 0x5e, // 0220 ST
+ 0x27,
+ 0xb4, // 0222 SYS
+ 0xfe,
+ 0x59, // 0224 LDI
+ 0xfb,
+ 0x5e, // 0226 ST
+ 0x27,
+ 0xb4, // 0228 SYS
+ 0xfe,
+ 0x59, // 022a LDI
+ 0x02,
+ 0x5e, // 022c ST
+ 0x27,
+ 0x21, // 022e LDW
+ 0x30, // 022e 'NextByteIn_32'
+ 0x2b, // 0230 STW
+ 0x22,
+ 0xb4, // 0232 SYS
+ 0xfe,
+ 0x59, // 0234 LDI
+ 0x06,
+ 0x5e, // 0236 ST
+ 0x27,
+ 0x21, // 0238 LDW
+ 0x30, // 0238 'NextByteIn_32'
+ 0x2b, // 023a STW
+ 0x22,
+ 0xb4, // 023c SYS
+ 0xfe,
+ 0x1a, // 023e LD
+ 0x27,
+ 0xe3, // 0240 ADDI
+ 0x04,
+ 0x5e, // 0242 ST
+ 0x27,
+ 0x8c, // 0244 XORI
+ 0xf2,
+ 0x35, // 0246 BCC
+ 0x72, // 0247 NE
+ 0x36,
+ 0x59, // 0249 LDI
+ 0xb9,
+ 0x5e, // 024b ST
+ 0x27,
+ 0xb4, // 024d SYS
+ 0xfe,
+ 0x90, // 024f BRA
+ 0x08,
 };
 
 void loop() {
-  static byte payload[60];
+  static byte payload[2*60];
   memcpy(payload, terminal, sizeof terminal);
   noInterrupts();
   for (;;) {
     // Send one frame with false checksum to force
     // a checksum resync at the receiver
     checksum = 0;
-    sendFrame(-1, sizeof terminal, 0x7f00, payload);
+    sendFrame(-1, 60, 0x200, payload);
 
     // Setup checksum properly
     checksum = 'g';
-    sendFrame('L', sizeof terminal, 0x7f00, payload);
+    sendFrame('L', 60,                   0x200,      payload);
+    sendFrame('L', sizeof terminal - 60, 0x200 + 60, payload + 60);
 
     // Force execution
-    sendFrame('L', 0, 0x7f00, payload);
+    sendFrame('L', 0, 0x0200, payload + 60);
   }
 }
 
