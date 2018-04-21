@@ -1,9 +1,19 @@
-"use strict";
+'use strict';
 
-function randomUint8() { return Math.floor(Math.random() * 256); }
+/* exported Gigatron */
 
+/**
+ * @return {Uint8} a random Uint8
+ * */
+function randomUint8() {
+  return Math.floor(Math.random() * 256);
+}
+
+/** Gigatron processor */
 class Gigatron {
-
+  /** Create a Gigatron
+   * @param {Object} options
+   */
   constructor(options) {
     this.rom = new Uint16Array(1<<(options.log2rom || 16));
     this.ram = new Uint8Array(1<<(options.log2ram || 15));
@@ -14,7 +24,7 @@ class Gigatron {
     this.y = 0;
     this.out = 0;
     this.outx = 0;
-    this.inReg = 0xff;  // active low!
+    this.inReg = 0xff; // active low!
     this.onOut = options.onOut;
     this.onOutx = options.onOutx;
 
@@ -24,29 +34,36 @@ class Gigatron {
     }
   }
 
+  /** advance simulation by one tick */
   tick() {
     let pc = this.currpc = this.pc & 0xffff; // (this.rom.length-1);
     this.pc = this.nextpc;
     this.nextpc = this.pc + 1;
 
     let instruction = this.rom[pc];
-    let op   = (instruction >> 13) & 0x0007;
+    let op = (instruction >> 13) & 0x0007;
     let mode = (instruction >> 10) & 0x0007;
-    let bus  = (instruction >>  8) & 0x0003;
-    let d    = (instruction >>  0) & 0x00ff;
+    let bus = (instruction >> 8) & 0x0003;
+    let d = (instruction >> 0) & 0x00ff;
 
     switch (op) {
-      case 0: this.aluOp(mode, bus, d, b => b); break;
-      case 1: this.aluOp(mode, bus, d, b => this.ac & b); break;
-      case 2: this.aluOp(mode, bus, d, b => this.ac | b); break;
-      case 3: this.aluOp(mode, bus, d, b => this.ac ^ b); break;
-      case 4: this.aluOp(mode, bus, d, b => (this.ac + b) & 0xff); break;
-      case 5: this.aluOp(mode, bus, d, b => (this.ac - b) & 0xff); break;
+      case 0: this.aluOp(mode, bus, d, (b) => b); break;
+      case 1: this.aluOp(mode, bus, d, (b) => this.ac & b); break;
+      case 2: this.aluOp(mode, bus, d, (b) => this.ac | b); break;
+      case 3: this.aluOp(mode, bus, d, (b) => this.ac ^ b); break;
+      case 4: this.aluOp(mode, bus, d, (b) => (this.ac + b) & 0xff); break;
+      case 5: this.aluOp(mode, bus, d, (b) => (this.ac - b) & 0xff); break;
       case 6: this.storeOp(mode, bus, d); break;
       case 7: this.branchOp(mode, bus, d); break;
     }
   }
 
+  /** perform an alu op
+   * @param {number} mode
+   * @param {number} bus
+   * @param {number} d
+   * @param {number} f
+   */
   aluOp(mode, bus, d, f) {
     let b;
 
@@ -88,12 +105,17 @@ class Gigatron {
     }
   }
 
+  /** perform a store op
+   * @param {number} mode
+   * @param {number} bus
+   * @param {number} d
+   */
   storeOp(mode, bus, d) {
     let b;
 
     switch (bus) {
       case 0: b = d; break;
-      case 1: b = 0; console.error("UNDEFINED BEHAVIOR!"); break;
+      case 1: b = 0; console.error('UNDEFINED BEHAVIOR!'); break;
       case 2: b = this.ac; break;
       case 3: b = this.inReg; break;
     }
@@ -107,6 +129,11 @@ class Gigatron {
     }
   }
 
+  /** perform a branch op
+   * @param {number} mode
+   * @param {number} bus
+   * @param {number} d
+   */
   branchOp(mode, bus, d) {
     const ZERO = 0x80;
     let c;
@@ -115,13 +142,13 @@ class Gigatron {
 
     switch (mode) {
       case 0: c = true; base = this.y << 8; break; // jmp
-      case 1: c = ac >  ZERO; break;               // bgt
-      case 2: c = ac <  ZERO; break;               // blt
-      case 3: c = ac != ZERO; break;               // bne
-      case 4: c = ac == ZERO; break;               // beq
-      case 5: c = ac >= ZERO; break;               // bge
-      case 6: c = ac <= ZERO; break;               // ble
-      case 7: c = true; break;                     // bra
+      case 1: c = ac > ZERO; break; // bgt
+      case 2: c = ac < ZERO; break; // blt
+      case 3: c = ac != ZERO; break; // bne
+      case 4: c = ac == ZERO; break; // beq
+      case 5: c = ac >= ZERO; break; // bge
+      case 6: c = ac <= ZERO; break; // ble
+      case 7: c = true; break; // bra
     }
 
     if (c) {
@@ -130,6 +157,11 @@ class Gigatron {
     }
   }
 
+  /** calculate a ram address
+   * @param {number} mode
+   * @param {number} d
+   * @return {number} the address
+   */
   addr(mode, d) {
     switch (mode) {
       case 0:
@@ -146,6 +178,11 @@ class Gigatron {
     }
   }
 
+  /** calculate a branch page offset
+   * @param {number} bus
+   * @param {number} d
+   * @return {number} page offset
+   */
   offset(bus, d) {
     switch (bus) {
       case 0: return d;

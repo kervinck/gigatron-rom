@@ -6,6 +6,20 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC"
+  "author": "Phil Thomas",
+  "license": "SEE LICENSE IN LICENSE",
+  "devDependencies": {
+    "eslint-config-google": "^0.9.1"
+  },
+  "dependencies": {
+    "eslint": "^4.19.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PhilThomas/gigatron.git"
+  },
+  "bugs": {
+    "url": "https://github.com/PhilThomas/gigatron/issues"
+  },
+  "homepage": "https://github.com/PhilThomas/gigatron#readme"
 }

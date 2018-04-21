@@ -1,11 +1,19 @@
-"use strict";
+'use strict';
 
+/* exported Audio */
+
+/** Audio output */
 class Audio {
+	/**
+	 * Create an Audio.
+	 * @param {Gigatron} cpu - The CPU
+	 */
 	constructor(cpu) {
 		this.cpu = cpu;
 		this.cycle = 0;
 		let context = getAudioContext();
-		this.buffer = context.createBuffer(1, 521, 31260); // 4 video frame of audio @ 31.26KHz
+		// eslint-disable-line no-unused-vars
+		this.buffer = context.createBuffer(1, 521, 31260);
 		this.source = context.createBufferSource();
 		this.source.buffer = this.buffer;
 		this.source.loop = true;
@@ -19,6 +27,7 @@ class Audio {
 		this.popcount = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4];
 	}
 
+	/** advance simulation by one tick */
 	tick() {
 		this.count += this.popcount[this.cpu.outx >> 4];
 		if (++this.cycle == 50) {
