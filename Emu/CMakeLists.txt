@@ -17,5 +17,4 @@ else()
     add_executable(gtemuSDL ${headers} ${sources})
 endif()
 
-
 target_link_libraries(gtemuSDL ${SDL2_LIBRARY} ${SDL2MAIN_LIBRARY})

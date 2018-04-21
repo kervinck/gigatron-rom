@@ -29,6 +29,8 @@ namespace Editor
     uint8_t getMemoryDigit(void);
     uint8_t getAddressDigit(void);
     uint16_t getHexBaseAddress(void);
+    uint16_t getLoadBaseAddress(void);
+    uint16_t getVarsBaseAddress(void);
     int getDirectoryNamesIndex(void);
     int getDirectoryNamesSize(void);
     std::string* getDirectoryName(int index);

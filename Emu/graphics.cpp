@@ -71,7 +71,7 @@ namespace Graphics
         }
 
         // Text
-        SDL_Surface* fontSurface = SDL_LoadBMP("EmuFont-256x128.bmp"); 
+        SDL_Surface* fontSurface = SDL_LoadBMP("EmuFont-96x48.bmp"); 
         if(fontSurface == NULL)
         {
             SDL_Quit();
@@ -108,7 +108,7 @@ namespace Graphics
                 int state = (Cpu::getXOUT() & mask) != 0;
                 uint32_t colour = state ? 0xFF00FF00 : 0xFF770000;
 
-                int address = int(float(SCREEN_WIDTH) * 0.875f) + i*NUM_LEDS + 6*SCREEN_WIDTH;
+                int address = int(float(SCREEN_WIDTH) * 0.866f) + i*NUM_LEDS + 3*SCREEN_WIDTH;
                 _pixels[address + 0] = colour;
                 _pixels[address + 1] = colour;
                 _pixels[address + 2] = colour;
@@ -128,7 +128,7 @@ namespace Graphics
         uint32_t* fontPixels = (uint32_t*)_fontSurface->pixels;
         for(int i=0; i<text.size(); i++)
         {
-            uint8_t chr = text.c_str()[i];
+            uint8_t chr = text.c_str()[i] - 32;
             uint8_t row = chr % CHARS_PER_ROW;
             uint8_t col = chr / CHARS_PER_ROW;
 
@@ -163,14 +163,17 @@ namespace Graphics
     {
         uint32_t pixelAddress = x + digit*FONT_WIDTH + y*SCREEN_WIDTH;
 
-        pixelAddress += (FONT_HEIGHT-4)*SCREEN_WIDTH;
+        pixelAddress += (FONT_HEIGHT-1)*SCREEN_WIDTH;
         for(int i=0; i<FONT_WIDTH; i++) _pixels[pixelAddress+i] = colour;
-        pixelAddress += SCREEN_WIDTH;
-        for(int i=0; i<FONT_WIDTH; i++) _pixels[pixelAddress+i] = colour;
-        pixelAddress += SCREEN_WIDTH;
-        for(int i=0; i<FONT_WIDTH; i++) _pixels[pixelAddress+i] = colour;
-        pixelAddress += SCREEN_WIDTH;
-        for(int i=0; i<FONT_WIDTH; i++) _pixels[pixelAddress+i] = colour;
+
+        //pixelAddress += (FONT_HEIGHT-4)*SCREEN_WIDTH;
+        //for(int i=0; i<FONT_WIDTH; i++) _pixels[pixelAddress+i] = colour;
+        //pixelAddress += SCREEN_WIDTH;
+        //for(int i=0; i<FONT_WIDTH; i++) _pixels[pixelAddress+i] = colour;
+        //pixelAddress += SCREEN_WIDTH;
+        //for(int i=0; i<FONT_WIDTH; i++) _pixels[pixelAddress+i] = colour;
+        //pixelAddress += SCREEN_WIDTH;
+        //for(int i=0; i<FONT_WIDTH; i++) _pixels[pixelAddress+i] = colour;
 
         //for(int i=0; i<FONT_WIDTH-1; i++) _pixels[pixelAddress+i] = colour;
         //pixelAddress += (FONT_HEIGHT-1)*SCREEN_WIDTH;
@@ -189,16 +192,16 @@ namespace Graphics
             sprintf(str, "%3.2f    ", 1.0f / Timing::getFrameTime());
 
             drawText(std::string("LEDS:"), 485, 0, 0xFFFFFFFF, false, 0);
-            drawText(std::string("FPS:"), 485, 20, 0xFFFFFFFF, false, 0);
-            drawText(std::string(str), 548, 20, 0xFFFFFF00, false, 0);
-            drawText(std::string(VERSION_STR), 525, 464, 0xFFFFFF00, false, 0);
+            drawText(std::string("FPS:"), 485, FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+            drawText(std::string(str), 547, FONT_CELL_Y, 0xFFFFFF00, false, 0);
+            drawText(std::string(VERSION_STR), 531, 472, 0xFFFFFF00, false, 0);
             sprintf(str, "XOUT: %02X  IN: %02X", Cpu::getXOUT(), Cpu::getIN());
-            drawText(std::string(str), 485, 40, 0xFFFFFFFF, false, 0);
-            drawText("Mode:       ", 485, 448, 0xFFFFFFFF, false, 0);
+            drawText(std::string(str), 485, FONT_CELL_Y*2, 0xFFFFFFFF, false, 0);
+            drawText("Mode:       ", 485, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
             sprintf(str, "Hex ");
             if(Editor::getHexEdit() == true) sprintf(str, "Edit");
             if(Editor::getLoadFile() == true) sprintf(str, "Load");
-            drawText(std::string(str), 541, 448, 0xFF00FF00, false, 0);
+            drawText(std::string(str), 553, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
         }
     }
 
@@ -212,19 +215,43 @@ namespace Graphics
             // File load
             if(Editor::getLoadFile() == true)
             {
-                if(Editor::getCursorY() == -1) Editor::setCursorY(HEX_CHARS_Y-1);
-                if(Editor::getCursorY() >= Editor::getDirectoryNamesSize()) Editor::setCursorY(0);
-                if(Editor::getCursorY() < 0) Editor::setCursorY(std::min(int(Editor::getDirectoryNamesSize()), HEX_CHARS_Y) - 1);
-                drawText("vCPU Files:", 485, 60, 0xFFFFFFFF, false, 0);
+                // File list
+                drawText("Load:       Vars:", 485, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0);
+                uint16_t loadAddress = Editor::getLoadBaseAddress();
+                uint16_t varsAddress = Editor::getVarsBaseAddress();
+                bool onCursor0 = Editor::getCursorY() == -1  &&  (Editor::getCursorX() & 0x01) == 0;
+                bool onCursor1 = Editor::getCursorY() == -1  &&  (Editor::getCursorX() & 0x01) == 1;
+                sprintf(str, "%04X", loadAddress);
+                drawText(std::string(str), 521, FONT_CELL_Y*3, (Editor::getHexEdit() && onCursor0) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor0, 4);
+                sprintf(str, "%04X", varsAddress);
+                drawText(std::string(str), 593, FONT_CELL_Y*3, (Editor::getHexEdit() && onCursor1) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor1, 4);
                 for(int i=0; i<HEX_CHARS_Y; i++)
                 {
-                    drawText("                  ", 493, 80 + i*FONT_HEIGHT, 0xFFFFFFFF, false, 0);
+                    drawText("                       ", 493, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
                 }
                 for(int i=0; i<HEX_CHARS_Y; i++)
                 {
                     int index = Editor::getDirectoryNamesIndex() + i;
                     if(index >= int(Editor::getDirectoryNamesSize())) break;
-                    drawText(*Editor::getDirectoryName(Editor::getDirectoryNamesIndex() + i), 493, 80 + i*FONT_HEIGHT, 0xFFFFFFFF, i == Editor::getCursorY(), 18);
+                    drawText(*Editor::getDirectoryName(Editor::getDirectoryNamesIndex() + i), 493, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, i == Editor::getCursorY(), 18);
+                }
+
+                // 8 * 2 hex display of vCPU program variables
+                for(int j=0; j<2; j++)
+                {
+                    for(int i=0; i<HEX_CHARS_X; i++)
+                    {
+                        sprintf(str, "%02X ", Cpu::getRAM(varsAddress++));
+                        drawText(std::string(str), 493 + i*HEX_CHAR_WIDE, int(FONT_CELL_Y*4.25) + FONT_CELL_Y*HEX_CHARS_Y + j*(FONT_HEIGHT+FONT_GAP_Y), 0xFF00FFFF, false, 0);
+                    }
+                }
+
+                // Edit digit select
+                if(Editor::getHexEdit() == true)
+                {
+                    // Draw address digit selection box
+                    if(onCursor0 == true) drawDigitBox(Editor::getAddressDigit(), 521, FONT_CELL_Y*3, 0xFFFF00FF);
+                    if(onCursor1 == true) drawDigitBox(Editor::getAddressDigit(), 593, FONT_CELL_Y*3, 0xFFFF00FF);
                 }
             }
             // Hex monitor
@@ -232,15 +259,21 @@ namespace Graphics
             {
                 switch(Editor::getHexRomMode())
                 {
-                    case 0: drawText("RAM:   ", 485, 60, 0xFFFFFFFF, false, 0); break;
-                    case 1: drawText("ROM 0: ", 485, 60, 0xFFFFFFFF, false, 0); break;
-                    case 2: drawText("ROM 1: ", 485, 60, 0xFFFFFFFF, false, 0); break;
+                    case 0: drawText("RAM:        Vars:", 485, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
+                    case 1: drawText("ROM0:       Vars:", 485, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
+                    case 2: drawText("ROM1:       Vars:", 485, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
                 }
 
-                uint16_t address = Editor::getHexBaseAddress();
+                // 8 * 32 hex display of memory
+                uint16_t hexddress = Editor::getHexBaseAddress();
+                uint16_t varsAddress = Editor::getVarsBaseAddress();
                 bool onCursor = Editor::getCursorY() == -1;
-                sprintf(str, "%04X  ", address);
-                drawText(std::string(str), 541, 60, (Editor::getHexEdit() && onCursor) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor, 4);
+                bool onCursor0 = Editor::getCursorY() == -1  &&  (Editor::getCursorX() & 0x01) == 0;
+                bool onCursor1 = Editor::getCursorY() == -1  &&  (Editor::getCursorX() & 0x01) == 1;
+                sprintf(str, "%04X", hexddress);
+                drawText(std::string(str), 521, FONT_CELL_Y*3, (Editor::getHexEdit() && onCursor0) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor0, 4);
+                sprintf(str, "%04X", varsAddress);
+                drawText(std::string(str), 593, FONT_CELL_Y*3, (Editor::getHexEdit() && onCursor1) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor1, 4);
                 for(int j=0; j<HEX_CHARS_Y; j++)
                 {
                     for(int i=0; i<HEX_CHARS_X; i++)
@@ -248,22 +281,35 @@ namespace Graphics
                         uint8_t value = 0;
                         switch(Editor::getHexRomMode())
                         {
-                            case 0: value = Cpu::getRAM(address++);    break;
-                            case 1: value = Cpu::getROM(address++, 0); break;
-                            case 2: value = Cpu::getROM(address++, 1); break;
+                            case 0: value = Cpu::getRAM(hexddress++);    break;
+                            case 1: value = Cpu::getROM(hexddress++, 0); break;
+                            case 2: value = Cpu::getROM(hexddress++, 1); break;
                         }
                         sprintf(str, "%02X ", value);
                         bool onCursor = (i == Editor::getCursorX()  &&  j == Editor::getCursorY());
-                        drawText(std::string(str), 493 + i*HEX_CHAR_WIDE, 80 + j*FONT_HEIGHT, (Editor::getHexEdit() && Editor::getHexRomMode() ==0 && onCursor) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor, 2);
+                        drawText(std::string(str), 493 + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), (Editor::getHexEdit() && Editor::getHexRomMode() ==0 && onCursor) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor, 2);
                     }
                 }
+
+                // 8 * 2 hex display of vCPU program variables
+                for(int j=0; j<2; j++)
+                {
+                    for(int i=0; i<HEX_CHARS_X; i++)
+                    {
+                        sprintf(str, "%02X ", Cpu::getRAM(varsAddress++));
+                        drawText(std::string(str), 493 + i*HEX_CHAR_WIDE, int(FONT_CELL_Y*4.25) + FONT_CELL_Y*HEX_CHARS_Y + j*(FONT_HEIGHT+FONT_GAP_Y), 0xFF00FFFF, false, 0);
+                    }
+                }
+
+                // Edit digit select
                 if(Editor::getHexEdit() == true)
                 {
                     // Draw address digit selection box
-                    if(Editor::getCursorY() == -1) drawDigitBox(Editor::getAddressDigit(), 541, 60, 0xFFFF00FF);
+                    if(onCursor0 == true) drawDigitBox(Editor::getAddressDigit(), 521, FONT_CELL_Y*3, 0xFFFF00FF);
+                    if(onCursor1 == true) drawDigitBox(Editor::getAddressDigit(), 593, FONT_CELL_Y*3, 0xFFFF00FF);
 
                     // Draw memory digit selection box                
-                    if(Editor::getCursorY() >= 0  &&  Editor::getHexRomMode() == 0) drawDigitBox(Editor::getMemoryDigit(), 493 + Editor::getCursorX()*HEX_CHAR_WIDE, 80 + Editor::getCursorY()*FONT_HEIGHT, 0xFFFF00FF);
+                    if(Editor::getCursorY() >= 0  &&  Editor::getHexRomMode() == 0) drawDigitBox(Editor::getMemoryDigit(), 493 + Editor::getCursorX()*HEX_CHAR_WIDE, FONT_CELL_Y*4 + Editor::getCursorY()*FONT_CELL_Y, 0xFFFF00FF);
                 }
             }
         }

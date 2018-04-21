@@ -129,7 +129,7 @@ namespace Loader
 
         if(_startUploading == true  ||  frameUploading == true)
         {
-            uint16_t hexBaseAddress = Editor::getHexBaseAddress();
+            uint16_t loadBaseAddress = Editor::getLoadBaseAddress();
             if(_startUploading == true)
             {
                 _startUploading = false;
@@ -145,12 +145,12 @@ namespace Loader
                 payloadSize = uint8_t(fread(payload, 1, PAYLOAD_SIZE, fileToUpload));
                 fclose(fileToUpload);
 
-                for(int i=0; i<payloadSize; i++) Cpu::setRAM(hexBaseAddress+i, payload[i]);
+                for(int i=0; i<payloadSize; i++) Cpu::setRAM(loadBaseAddress+i, payload[i]);
 
-                Cpu::setRAM(0x0016, hexBaseAddress-2 & 0x00FF);
-                Cpu::setRAM(0x0017, (hexBaseAddress & 0xFF00) >>8);
-                Cpu::setRAM(0x001a, hexBaseAddress-2 & 0x00FF);
-                Cpu::setRAM(0x001b, (hexBaseAddress & 0xFF00) >>8);
+                Cpu::setRAM(0x0016, loadBaseAddress-2 & 0x00FF);
+                Cpu::setRAM(0x0017, (loadBaseAddress & 0xFF00) >>8);
+                Cpu::setRAM(0x001a, loadBaseAddress-2 & 0x00FF);
+                Cpu::setRAM(0x001b, (loadBaseAddress & 0xFF00) >>8);
                 frameUploading = false;
                 return;
             }
@@ -162,7 +162,7 @@ namespace Loader
             {
                 case FrameState::Resync:
                 {
-                    if(sendFrame(vgaY, -1, payload, payloadSize, hexBaseAddress, checksum) == false)
+                    if(sendFrame(vgaY, -1, payload, payloadSize, loadBaseAddress, checksum) == false)
                     {
                         checksum = 'g'; // loader resets checksum
                         frameState = FrameState::Frame;
@@ -172,7 +172,7 @@ namespace Loader
 
                 case FrameState::Frame:
                 {
-                    if(sendFrame(vgaY,'L', payload, payloadSize, hexBaseAddress, checksum) == false)
+                    if(sendFrame(vgaY,'L', payload, payloadSize, loadBaseAddress, checksum) == false)
                     {
                         frameState = FrameState::Execute;
                     }
@@ -181,7 +181,7 @@ namespace Loader
 
                 case FrameState::Execute:
                 {
-                    if(sendFrame(vgaY, 'L', payload, 0, hexBaseAddress, checksum) == false)
+                    if(sendFrame(vgaY, 'L', payload, 0, loadBaseAddress, checksum) == false)
                     {
                         checksum = 0;
                         frameState = FrameState::Resync;

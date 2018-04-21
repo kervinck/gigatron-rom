@@ -1,5 +1,5 @@
 /*
-Ver 0.2.1
+Ver 0.2.2
 - YouTube https://youtu.be/fH30TR6jeQM
 
 Features:
@@ -12,32 +12,43 @@ Features:
 - Supports Gigatron TTL audio channels.
 - Supports Gigatron TTL loading of external vCPU code with a file browser.
 - Displays Gigatron TTL IN and XOUT registers.
-- Displays memory monitor of RAM, ROM0 and ROM1 at any start address.
+- Displays memory monitor of RAM, (RAM is editable), ROM0 and ROM1 at any start address.
+- Displays read only contents of vCPU variable space.
 - Can execute hand crafted code within the Hex Editor.
+- Three seperate editable start addresses are provided; memory display address,
+vCPU vars display address and load start address.
 
 Adapted from:
 - gigatron-rom https://github.com/kervinck/gigatron-rom
 - SDL(2) graphics https://github.com/kervinck/gigatron-rom/pull/1
-- http://talkchess.com/forum/viewtopic.php?topic_view=threads&p=742122&t=65944 and http://talkchess.com/forum/viewtopic.php?t=65944&start=11
+- http://talkchess.com/forum/viewtopic.php?topic_view=threads&p=742122&t=65944 and
+http://talkchess.com/forum/viewtopic.php?t=65944&start=11
 
 Building:
 - CMake 3.7 or higher is required for building, has only been tested on Windows so far.
-- A C++17 compatible compiler will be needed to build this code, if one is not available, then the std::filesystem section of code may be commented out.
+- A C++17 compatible compiler will be needed to build this code, if one is not available,
+then the std::filesystem section of code may be commented out.
 - Requires the latest version of SDL2 and it's appropriate include/library/shared files.
 
 Installation:
-- After building, copy the executable, SDL2 shared library/DLL, "theloop2.rom" and "EmuFont-256x128.bmp" to an appropriate directory; run the executable from there.
-- Create a vCPU directory within the above directory and add any user generated vCPU files that you want to upload to the emulator.
+- After building, copy the executable, SDL2 shared library/DLL, "theloop2.rom" and
+"EmuFont-96x48.bmp" to an appropriate directory; run the executable from there.
+- Create a vCPU directory within the above directory and add any user generated vCPU files
+that you want to upload to the emulator.
 
 Controls:
 - <ESC>     Quits the application.
-- <l>       Loads external vCPU files within the vCPU directory, this code is uploaded to the Hex Editor's current address, (i.e. pay attention).
+- <l>       Loads external vCPU files within the vCPU directory, this code is uploaded to
+            an editable load address. Loading user vCPU code to system critical addresses
+            can cause the emulator to hang, 0x0200 is guaranteed to be safe.
 - <r>       Switches Hex Editor between RAM, ROM(0) and ROM(1).
-- <F5>      Executes whatever code is present at the Hex Editor's address.
-- <CR>      Directly loads external vCPU code if editor is in file browese mode, otherwise switches to edit mode.
-- <-/+>     Decrease/increase the speed of the emulation, from a minimum of 60FPS to a maximum determined by your PC's CPU.
+- <F5>      Executes whatever code is present at the load address.
+- <CR>      Directly loads external vCPU code if editor is in file browse mode, otherwise
+            switches to edit mode.
+- <-/+>     Decrease/increase the speed of the emulation, from a minimum of 60FPS to a
+            maximum determined by your PC's CPU.
 
-- <Left>    Navigate the Hex editor one hex digit at a time or the file browser one file at a time.
+- <Left>    Navigate the Hex editor one byte at a time or the file browser one file at a time.
 - <Right>
 - <Up/Down>
 
@@ -56,14 +67,14 @@ Controls:
 - <.>       A.
 
 Limitations:
-- RAM is modifiable between 32K and 64K, any other value causes the simulation to fail or is ignored.
-- Controls and VSync are modifiable in the code, VSync currently seems to have little value as an option as the main loop is synchronised using the performance counters.
+- RAM is modifiable between 32K and 64K, any other value causes the simulation to fail.
+- Controls and VSync are modifiable in the code, VSync currently seems to have little value
+as an option as the main loop is synchronised using the performance counters.
 
 TODO:
 - Test under Linux, MAC and Android.
 - Allow for uploading of vCPU payloads larger than 60 bytes in size.
 - Add single step debugging of vCPU code within the Hex Editor.
-- Display vCPU variables within the Hex Editor.
 /*
 
 /*
@@ -111,7 +122,7 @@ int main(int argc, char* argv[])
     Audio::initialise();
     Graphics::initialise();
 
-    int vgaX=0, vgaY=0;
+    int vgaX = 0, vgaY = 0;
     int HSync = 0, VSync = 0;
     for(long long t=-2; ; t++) 
     {

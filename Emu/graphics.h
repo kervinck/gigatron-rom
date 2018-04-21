@@ -10,14 +10,16 @@
 
 #define SCREEN_WIDTH     640
 #define SCREEN_HEIGHT    480
-#define FONT_BMP_WIDTH   256
-#define FONT_BMP_HEIGHT  128
-#define FONT_WIDTH       8
-#define FONT_HEIGHT      16
-#define CHARS_PER_ROW    32
-#define HEX_CHARS_X      6
-#define HEX_CHARS_Y      23
-#define HEX_CHAR_WIDE    24
+#define FONT_BMP_WIDTH   96
+#define FONT_BMP_HEIGHT  48
+#define FONT_WIDTH       6
+#define FONT_HEIGHT      8
+#define FONT_GAP_Y       4
+#define FONT_CELL_Y      (FONT_HEIGHT+FONT_GAP_Y)
+#define CHARS_PER_ROW    16
+#define HEX_CHARS_X      8
+#define HEX_CHARS_Y      32
+#define HEX_CHAR_WIDE    18
 #define COLOUR_PALETTE   64
 #define NUM_LEDS         4
 
