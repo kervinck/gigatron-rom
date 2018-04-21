@@ -3,6 +3,7 @@
 var cpu;
 var vga;
 var blinkenLights;
+var audio;
 var gamepad;
 var perf;
 
@@ -13,14 +14,20 @@ class Perf {
 		this.startTime = millis();
 	}
 
+	startOfFrame() {
+		//this.cycles = 0;
+	}
+
 	refresh() {
-		if (this.cycles > 1000000) {
+		if (this.cycles > 5000000) {
 			let endTime = millis();
 			let mhz = this.cycles / (1000 * (endTime-this.startTime));
 			this.elt.html(nf(mhz, 1, 3) + "MHz");
 			this.startTime = endTime;
 			this.cycles = 0;
 		}
+		// this.elt.html(this.cycles);
+		// this.cycles = 0;
 	}
 }
 
@@ -45,6 +52,8 @@ function setup() {
 		onOutx:  outx => blinkenLights.onOutx(outx),
 	});
 
+	audio = new Audio(cpu);
+
 	gamepad = new Gamepad(cpu, {
 		up:     UP_ARROW,
 		down:   DOWN_ARROW,
@@ -67,10 +76,13 @@ function start() {
 function tick() {
 	vga.vsyncOccurred = false;
 
+	perf.startOfFrame();
+
 	// step simulation until next vsync (hope there is one!)
 	while(!vga.vsyncOccurred) {
 		cpu.tick();
 		vga.tick();
+		//audio.tick();
 		perf.cycles++;
 	}
 
