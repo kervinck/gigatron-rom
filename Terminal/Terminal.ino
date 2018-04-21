@@ -1,8 +1,12 @@
 
-// Concept tester for loading programs into the
+// Concept tester for writing on screen
 // Gigatron TTL microcomputer
 // Marcel van Kervinck
-// Jan 2018
+// Apr 2018
+
+// XXX Read real user input from serial port of Arduino
+// XXX Write a character on screen instead of changing a pixel
+// XXX Don't use Loader application for reading more data
 
 // Arduino AVR    Gigatron Schematic Controller PCB
 // Uno     Name   OUT bit            CD4021     74HC595 (U39)
@@ -45,27 +49,38 @@ void setup() {
   }
 }
 
-byte blinky[] = {
-  0x11, 0x50, 0x44, // 7f00 LDWI $4450  ; Load address of center of screen
-  0x2b, 0x30,       // 7f03 STW  'p'    ; Store in variable 'p' (at $0030)
-  0xf0, 0x30,       // 7f05 POKE 'p'    ; Write low byte of accumulator there
-  0xe3, 0x01,       // 7f07 ADDI 1      ; Increment accumulator
-  0x90, 0x03        // 7f09 BRA  $7f05  ; Loop forever
-};                  // 7f0b
+byte terminal[] = {
+  // XXX Replace with writing a letter on screen
+  0x11, 0x50, 0x44, // LDWI $4450        ; Load address of center of screen
+
+  0x2b, 0x30,       // STW  'p'          ; Store in variable 'p' (at $0030)
+  0xad,             // PEEK              ; Read current pixel value
+  0xe3, 0x01,       // ADDI 1            ; Increment
+  0xf0, 0x30,       // POKE 'p'          ; Write back pixel
+
+  // XXX Replace with own serial reader
+  0x11, 0x00, 0x02, // LDWI 'vCpuStart'  ; Where to go after SYS_Exec_88
+  0x2b, 0x1a,       // STW  'vLR'
+  0x11, 0x97, 0xf9, // LDWI 'Loader'     ; Loader image (XXX IHACK)
+  0x2b, 0x24,       // STW  'sysArgs+0'
+  0x59, 0xad,       // LDI  'SYS_Exec_88'
+  0x2b, 0x22,       // STW  'sysFn'
+  0xb4, 0xe2,       // SYS  $e2          ; 270-88/2
+};
 
 void loop() {
   static byte payload[60];
-  memcpy(payload, blinky, sizeof blinky);
+  memcpy(payload, terminal, sizeof terminal);
   noInterrupts();
   for (;;) {
     // Send one frame with false checksum to force
     // a checksum resync at the receiver
     checksum = 0;
-    sendFrame(-1, sizeof blinky, 0x7f00, payload);
+    sendFrame(-1, sizeof terminal, 0x7f00, payload);
 
     // Setup checksum properly
     checksum = 'g';
-    sendFrame('L', sizeof blinky, 0x7f00, payload);
+    sendFrame('L', sizeof terminal, 0x7f00, payload);
 
     // Force execution
     sendFrame('L', 0, 0x7f00, payload);
@@ -142,7 +157,7 @@ void sendBits(byte value, byte n)
     while (PINB & (1<<PORTB3))  // Ensure hSync is LOW first
       ;
     while (~PINB & (1<<PORTB3)) // Then wait for hSync to rise
-      ;    
+      ;
   }
   checksum += value;
 }
