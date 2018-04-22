@@ -16,7 +16,9 @@ class Gigatron {
    */
   constructor(options) {
     this.rom = new Uint16Array(1<<(options.log2rom || 16));
+    this.romMask = this.rom.length-1;
     this.ram = new Uint8Array(1<<(options.log2ram || 15));
+    this.ramMask = this.ram.length-1;
     this.currpc = this.pc = 0x0000;
     this.nextpc = this.pc + 1;
     this.ac = 0;
@@ -36,7 +38,7 @@ class Gigatron {
 
   /** advance simulation by one tick */
   tick() {
-    let pc = this.currpc = this.pc & 0xffff; // (this.rom.length-1);
+    let pc = this.currpc = this.pc & this.romMask;
     this.pc = this.nextpc;
     this.nextpc = this.pc + 1;
 
@@ -47,37 +49,43 @@ class Gigatron {
     let d = (instruction >> 0) & 0x00ff;
 
     switch (op) {
-      case 0: this.aluOp(mode, bus, d, (b) => b); break;
-      case 1: this.aluOp(mode, bus, d, (b) => this.ac & b); break;
-      case 2: this.aluOp(mode, bus, d, (b) => this.ac | b); break;
-      case 3: this.aluOp(mode, bus, d, (b) => this.ac ^ b); break;
-      case 4: this.aluOp(mode, bus, d, (b) => (this.ac + b) & 0xff); break;
-      case 5: this.aluOp(mode, bus, d, (b) => (this.ac - b) & 0xff); break;
+      case 0:
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5: this.aluOp(op, mode, bus, d); break;
       case 6: this.storeOp(mode, bus, d); break;
       case 7: this.branchOp(mode, bus, d); break;
     }
 }
 
   /** perform an alu op
+   * @param {number} op
    * @param {number} mode
    * @param {number} bus
    * @param {number} d
-   * @param {number} f
    */
-  aluOp(mode, bus, d, f) {
+  aluOp(op, mode, bus, d) {
     let b;
 
     switch (bus) {
     case 0: b = d; break;
     case 1:
-      let addr = this.addr(mode, d) & (this.ram.length-1);
+      let addr = this.addr(mode, d) & this.ramMask;
       b = this.ram[addr];
       break;
     case 2: b = this.ac; break;
     case 3: b = this.inReg; break;
     }
 
-    b = f(b);
+    switch (op) {
+      case 1: b = this.ac & b; break;
+      case 2: b = this.ac | b; break;
+      case 3: b = this.ac ^ b; break;
+      case 4: b = (this.ac + b) & 0xff; break;
+      case 5: b = (this.ac - b) & 0xff; break;
+    }
 
     switch (mode) {
       case 0:
@@ -120,7 +128,7 @@ class Gigatron {
       case 3: b = this.inReg; break;
     }
 
-    let addr = this.addr(mode, d) & (this.ram.length-1);
+    let addr = this.addr(mode, d) & this.ramMask;
     this.ram[addr] = b;
 
     switch (mode) {
@@ -185,10 +193,15 @@ class Gigatron {
    */
   offset(bus, d) {
     switch (bus) {
-      case 0: return d;
-      case 1: return this.ram[d];
-      case 2: return this.ac;
-      case 3: return this.inReg;
+      case 0:
+        return d;
+      case 1:
+        // no need to mask since RAM always has at least 1 page
+        return this.ram[d];
+      case 2:
+        return this.ac;
+      case 3:
+        return this.inReg;
     }
   }
 }
