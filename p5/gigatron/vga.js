@@ -21,7 +21,6 @@ class Vga {
 		this.maxCol = this.minCol + options.horizontal.visible;
 		this.pixel = 0;
 		this.out = 0;
-		this.vsyncOccurred = false;
 		this.image = createImage(
 			options.horizontal.visible,
 			options.vertical.visible);
@@ -41,7 +40,6 @@ class Vga {
 		if (falling & VSYNC) {
 			this.row = 0;
 			this.pixel = 0;
-			this.vsyncOccurred = true;
 			this.image.updatePixels();
 			image(this.image, 0, 0);
 		}

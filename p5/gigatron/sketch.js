@@ -5,7 +5,7 @@
 var cpu;
 var vga;
 var blinkenLights;
-var audio; // eslint-disable-line no-unused-vars
+var audio;
 var gamepad;
 var perf;
 
@@ -35,6 +35,7 @@ class Perf {
 /** p5 setup function */
 function setup() {
 	let mhzText = createElement('h2', '--');
+	let schedText = createElement('h2', '--');
 	let button = createButton('Load');
 
 	createCanvas(640, 480 + 44);
@@ -54,7 +55,7 @@ function setup() {
 
 	blinkenLights = new BlinkenLights(cpu);
 
-	audio = new Audio(cpu);
+	audio = new Audio(cpu, schedText);
 
 	gamepad = new Gamepad(cpu, {
 		up: UP_ARROW,
@@ -104,20 +105,20 @@ function load(loader) {
 
 /** start the periodic */
 function start() {
-	setInterval(tick, 1000/60);
+	setInterval(ticks, 1000/60);
 }
 
-/** advance the simulation by one tick */
-function tick() {
-	vga.vsyncOccurred = false;
+/** advance the simulation by many ticks */
+function ticks() {
+	audio.drain();
 
 	// step simulation until next vsync (hope there is one!)
-	while (!vga.vsyncOccurred) {
+	for (let i = 0; i < 1000000 && audio.scheduled < 4; i++) {
+		perf.tick();
 		cpu.tick();
 		vga.tick();
 		blinkenLights.tick();
-		// audio.tick();
-		perf.tick();
+		audio.tick();
 	}
 }
 

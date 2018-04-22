@@ -39,19 +39,19 @@ class Loader {
                     this.sendFrame(0xff, l, address, payload);
 
                     // Setup checksum properly
-                    loader.checksum = 'g'.charCodeAt(0);
+                    this.checksum = 'g'.charCodeAt(0);
 
                     sync = false;
                 }
 
-                loader.sendFrame('L'.charCodeAt(0), l, address, payload);
+                this.sendFrame('L'.charCodeAt(0), l, address, payload);
                 n -= l;
                 address += l;
             }
         }
 
         // Force execution
-        loader.sendFrame('L'.charCodeAt(0), 0, options.startAddress, payload);
+        this.sendFrame('L'.charCodeAt(0), 0, options.startAddress, payload);
     }
 
     /** load an image asynchronously
