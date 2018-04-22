@@ -1,5 +1,5 @@
 /*
-Ver 0.2.2
+Ver 0.2.5
 - YouTube https://youtu.be/fH30TR6jeQM
 
 Features:
@@ -17,6 +17,12 @@ Features:
 - Can execute hand crafted code within the Hex Editor.
 - Three seperate editable start addresses are provided; memory display address,
 vCPU vars display address and load start address.
+- A built in assembler can now load vCPU nmemonics, it's a toy assembler but has labels
+non arithmetic equates, starting address and mutables, (labels for self modifying code).
+- A debugging mode that lets you pause the simulation or single step through the vCPU
+code, the single step feature is not a true instruction stepper, but rather a variable
+change stepper; by judicious variable selection, the single step feature can advance your
+code on a memory location that changes once per loop or once every few instructions, etc.
 
 Adapted from:
 - gigatron-rom https://github.com/kervinck/gigatron-rom
@@ -43,6 +49,10 @@ Controls:
             can cause the emulator to hang, 0x0200 is guaranteed to be safe.
 - <r>       Switches Hex Editor between RAM, ROM(0) and ROM(1).
 - <F5>      Executes whatever code is present at the load address.
+- <F6>      Toggles debugging mode, simulation will pause, only 3 keys currently work in this
+            mode, F6, F10 and ESC.
+- <F10>     Only functions in debugging mode, will single step the simulation based on a
+            memory location changing it's value.
 - <CR>      Directly loads external vCPU code if editor is in file browse mode, otherwise
             switches to edit mode.
 - <-/+>     Decrease/increase the speed of the emulation, from a minimum of 60FPS to a
@@ -74,7 +84,8 @@ as an option as the main loop is synchronised using the performance counters.
 TODO:
 - Test under Linux, MAC and Android.
 - Allow for uploading of vCPU payloads larger than 60 bytes in size.
-- Add single step debugging of vCPU code within the Hex Editor.
+- Add a inbuilt vCPU disassembler.
+- Add a help menu.
 /*
 
 /*
@@ -112,6 +123,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "loader.h"
 #include "timing.h"
 #include "graphics.h"
+#include "assembler.h"
 
 
 int main(int argc, char* argv[])
@@ -122,8 +134,11 @@ int main(int argc, char* argv[])
     Audio::initialise();
     Graphics::initialise();
 
+    bool debugging = false;
+
     int vgaX = 0, vgaY = 0;
     int HSync = 0, VSync = 0;
+
     for(long long t=-2; ; t++) 
     {
         if(t < 0) S._PC = 0; // MCP100 Power-On Reset
@@ -137,8 +152,11 @@ int main(int argc, char* argv[])
             vgaY = VSYNC_START;
 
             // Input and graphics
-            Editor::handleInput();
-            Graphics::render();
+            if(debugging == false)
+            {
+                Editor::handleInput();
+                Graphics::render();
+            }
         }
         if(vgaX++ < HLINE_END)
         {
@@ -147,7 +165,7 @@ int main(int argc, char* argv[])
             else if(~S._OUT & 0x80) { } // Visualize vBlank pulse
             else if(vgaX >=HPIXELS_START  &&  vgaX < HPIXELS_END  &&  vgaY >= 0  &&  vgaY < SCREEN_HEIGHT)
             {
-                Graphics::drawPixel(S, vgaX-HPIXELS_START, vgaY);
+                if(debugging == false) Graphics::refreshPixel(S, vgaX-HPIXELS_START, vgaY);
             }
         }
         if(HSync > 0) // Rising hSync edge
@@ -164,6 +182,8 @@ int main(int argc, char* argv[])
             vgaY++;
             T._undef = rand() & 0xff; // Change this once in a while
         }
+
+        debugging = Editor::singleStepDebug();
 
         S=T;
     }

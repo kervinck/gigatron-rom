@@ -6,6 +6,7 @@
 #include "editor.h"
 #include "loader.h"
 #include "timing.h"
+#include "assembler.h"
 
 
 namespace Loader
@@ -19,6 +20,7 @@ namespace Loader
 
     bool getStartUploading(void) {return _startUploading;}
     void setStartUploading(bool start) {_startUploading = start;}
+
 
     void sendByte(uint8_t value, uint8_t& checksum)
     {
@@ -134,24 +136,45 @@ namespace Loader
             {
                 _startUploading = false;
                 frameUploading = true;
-                std::string filename = std::string(".//vCPU//" + *Editor::getDirectoryName(Editor::getCursorY()));
-                fileToUpload = fopen(filename.c_str(), "rb");
-                if(fileToUpload == NULL)
+
+                // Upload raw vCPU code
+                std::string filename = *Editor::getFileName(Editor::getCursorY());
+                std::string filepath = std::string("./vCPU/" + filename);
+                if(filename.find(".vcpu") != filename.npos)
                 {
-                    frameUploading = false;
-                    return;
+                    fileToUpload = fopen(filepath.c_str(), "rb");
+                    if(fileToUpload == NULL)
+                    {
+                        frameUploading = false;
+                        return;
+                    }
+
+                    payloadSize = uint8_t(fread(payload, 1, PAYLOAD_SIZE, fileToUpload));
+                    fclose(fileToUpload);
+
+                    for(int i=0; i<payloadSize; i++) Cpu::setRAM(loadBaseAddress+i, payload[i]);
                 }
 
-                payloadSize = uint8_t(fread(payload, 1, PAYLOAD_SIZE, fileToUpload));
-                fclose(fileToUpload);
-
-                for(int i=0; i<payloadSize; i++) Cpu::setRAM(loadBaseAddress+i, payload[i]);
+                // Upload vCPU assembly code
+                if(filename.find(".vasm") != filename.npos)
+                {
+                    Assembler::assemble(filepath, 0x0200);
+                    loadBaseAddress = Assembler::getStartAddress();
+                    Editor::setLoadBaseAddress(loadBaseAddress);
+                    uint8_t data;
+                    uint16_t address = loadBaseAddress;
+                    while(Assembler::getNextAssembledByte(data) == false)
+                    {
+                        Cpu::setRAM(address++, data);
+                    }
+                }
 
                 Cpu::setRAM(0x0016, loadBaseAddress-2 & 0x00FF);
                 Cpu::setRAM(0x0017, (loadBaseAddress & 0xFF00) >>8);
                 Cpu::setRAM(0x001a, loadBaseAddress-2 & 0x00FF);
                 Cpu::setRAM(0x001b, (loadBaseAddress & 0xFF00) >>8);
                 frameUploading = false;
+                //Editor::setSingleStep(true);
                 return;
             }
             
@@ -192,5 +215,4 @@ namespace Loader
             }
         }
     }
-
 }

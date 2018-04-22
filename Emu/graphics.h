@@ -10,6 +10,9 @@
 
 #define SCREEN_WIDTH     640
 #define SCREEN_HEIGHT    480
+#define GIGA_WIDTH       160
+#define GIGA_HEIGHT      120
+#define GIGA_VRAM        0x0800
 #define FONT_BMP_WIDTH   96
 #define FONT_BMP_HEIGHT  48
 #define FONT_WIDTH       6
@@ -38,14 +41,16 @@ namespace Graphics
 
     void initialise(void);
 
-    void drawPixel(const Cpu::State& S, int vgaX, int vgaY);
+    void refreshPixel(const Cpu::State& S, int vgaX, int vgaY);
+    void refreshScreen(void);
+
     void drawLeds(void);
     bool drawText(const std::string& text, int x, int y, uint32_t colour, bool invert, int invertSize);
     void drawDigitBox(uint8_t digit, int x, int y, uint32_t colour);
 
     void renderText(void);
     void renderTextWindow(void);
-    void render(void);
+    void render(bool synchronise=true);
 }
 
 #endif

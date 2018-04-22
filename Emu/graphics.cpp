@@ -88,13 +88,31 @@ namespace Graphics
         }
     }
 
-    void drawPixel(const Cpu::State& S, int vgaX, int vgaY)
+    void refreshPixel(const Cpu::State& S, int vgaX, int vgaY)
     {
         uint32_t colour = _colours[S._OUT & (COLOUR_PALETTE-1)];
-        uint32_t address = vgaX*3 + vgaY*SCREEN_WIDTH - 0;
+        uint32_t address = vgaX*3 + vgaY*SCREEN_WIDTH;
         _pixels[address + 0] = colour;
         _pixels[address + 1] = colour;
         _pixels[address + 2] = colour;
+    }
+
+    void refreshScreen(void)
+    {
+        for(int y=0; y<GIGA_HEIGHT; y++)
+        {
+            for(int x=0; x<GIGA_WIDTH; x++)
+            {
+                uint16_t address = GIGA_VRAM + x + (y <<8);
+                uint32_t screen = x*3 + y*4*SCREEN_WIDTH;
+                uint32_t colour = _colours[Cpu::getRAM(address) & (COLOUR_PALETTE-1)];
+
+                _pixels[screen + 0 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 0*SCREEN_WIDTH] = colour;
+                _pixels[screen + 0 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 1*SCREEN_WIDTH] = colour;
+                _pixels[screen + 0 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 2*SCREEN_WIDTH] = colour;
+                _pixels[screen + 0 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 1 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 2 + 3*SCREEN_WIDTH] = 0x00;
+            }
+        }
     }
 
     void drawLeds(void)
@@ -120,7 +138,7 @@ namespace Graphics
         }
     }
 
-    // Simple text routine, font is a non proportional 8*16 font loaded from a 256*128 BMP file
+    // Simple text routine, font is a non proportional 6*8 font loaded from a 96*48 BMP file
     bool drawText(const std::string& text, int x, int y, uint32_t colour, bool invert, int invertSize)
     {
         if(x<0 || x>=SCREEN_WIDTH || y<0 || y>=SCREEN_HEIGHT) return false;
@@ -231,9 +249,9 @@ namespace Graphics
                 }
                 for(int i=0; i<HEX_CHARS_Y; i++)
                 {
-                    int index = Editor::getDirectoryNamesIndex() + i;
-                    if(index >= int(Editor::getDirectoryNamesSize())) break;
-                    drawText(*Editor::getDirectoryName(Editor::getDirectoryNamesIndex() + i), 493, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, i == Editor::getCursorY(), 18);
+                    int index = Editor::getFileNamesIndex() + i;
+                    if(index >= int(Editor::getFileNamesSize())) break;
+                    drawText(*Editor::getFileName(Editor::getFileNamesIndex() + i), 493, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, i == Editor::getCursorY(), 18);
                 }
 
                 // 8 * 2 hex display of vCPU program variables
@@ -315,7 +333,7 @@ namespace Graphics
         }
     }
 
-    void render(void)
+    void render(bool synchronise)
     {
         drawLeds();
         renderText();
@@ -325,6 +343,6 @@ namespace Graphics
         SDL_RenderCopy(_renderer, _texture, NULL, NULL);
         SDL_RenderPresent(_renderer);
 
-        Timing::synchronise();
+        if(synchronise == true) Timing::synchronise();
     }
 }

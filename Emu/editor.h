@@ -24,6 +24,7 @@ namespace Editor
     int getCursorY(void);
     bool getHexEdit(void);
     bool getLoadFile(void);
+    bool getSingleStepMode(void);
     int getEditorMode(void);
     int getHexRomMode(void);
     uint8_t getMemoryDigit(void);
@@ -31,13 +32,17 @@ namespace Editor
     uint16_t getHexBaseAddress(void);
     uint16_t getLoadBaseAddress(void);
     uint16_t getVarsBaseAddress(void);
-    int getDirectoryNamesIndex(void);
-    int getDirectoryNamesSize(void);
-    std::string* getDirectoryName(int index);
+    int getFileNamesIndex(void);
+    int getFileNamesSize(void);
+    std::string* getFileName(int index);
 
     void setCursorX(int x);
     void setCursorY(int y);
+    void setSingleStep(bool singleStep);
+    void setSingleStepMode(bool singleStepMode);
+    void setLoadBaseAddress(uint16_t address);
 
+    bool singleStepDebug(void);
     void handleInput(void);
 }
 

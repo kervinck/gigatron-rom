@@ -20,6 +20,8 @@ namespace Editor
     int _cursorY = 0;
     bool _hexEdit = false;
     bool _loadFile = false;
+    bool _singleStep = false;
+    bool _singleStepMode = false;
     int _editorMode = EditorModes::Hex;
     int _hexRomMode = 0;
     uint8_t _memoryDigit = 0;
@@ -27,14 +29,16 @@ namespace Editor
     uint16_t _hexBaseAddress = 0x0200;
     uint16_t _loadBaseAddress = 0x0200;
     uint16_t _varsBaseAddress = 0x0030;
-    int _directoryNamesIndex = 0;
-    std::vector<std::string> _directoryNames;
+    int _fileNamesIndex = 0;
+    std::vector<std::string> _fileNames;
 
 
     int getCursorX(void) {return _cursorX;}
     int getCursorY(void) {return _cursorY;}
     bool getHexEdit(void) {return _hexEdit;}
     bool getLoadFile(void) {return _loadFile;}
+    bool getSingleStep(void) {return _singleStep;}
+    bool getSingleStepMode(void) {return _singleStepMode;}
     int getEditorMode(void) {return _editorMode;}
     int getHexRomMode(void) {return _hexRomMode;}
     uint8_t getMemoryDigit(void) {return _memoryDigit;}
@@ -42,12 +46,16 @@ namespace Editor
     uint16_t getHexBaseAddress(void) {return _hexBaseAddress;}
     uint16_t getLoadBaseAddress(void) {return _loadBaseAddress;}
     uint16_t getVarsBaseAddress(void) {return _varsBaseAddress;}
-    int getDirectoryNamesIndex(void) {return _directoryNamesIndex;}
-    int getDirectoryNamesSize(void) {return int(_directoryNames.size());}
-    std::string* getDirectoryName(int index) {return &_directoryNames[index % _directoryNames.size()];}
+    int getFileNamesIndex(void) {return _fileNamesIndex;}
+    int getFileNamesSize(void) {return int(_fileNames.size());}
+    std::string* getFileName(int index) {return &_fileNames[index % _fileNames.size()];}
 
     void setCursorX(int x) {_cursorX = x;}
     void setCursorY(int y) {_cursorY = y;}
+    void setSingleStep(bool singleStep) {_singleStep = singleStep;}
+    void setSingleStepMode(bool singleStepMode) {_singleStepMode = singleStepMode;}
+    void setLoadBaseAddress(uint16_t address) {_loadBaseAddress = address;}
+
 
     void handleMouseWheel(const SDL_Event& event)
     {
@@ -55,8 +63,8 @@ namespace Editor
         {
             if(_loadFile == true)
             {
-                _directoryNamesIndex--;
-                if(_directoryNamesIndex < 0) _directoryNamesIndex = 0;
+                _fileNamesIndex--;
+                if(_fileNamesIndex < 0) _fileNamesIndex = 0;
             }
             else
             {
@@ -67,10 +75,10 @@ namespace Editor
         {
             if(_loadFile == true)
             {
-                if(_directoryNames.size() > HEX_CHARS_Y)
+                if(_fileNames.size() > HEX_CHARS_Y)
                 {
-                    _directoryNamesIndex++;
-                    if(_directoryNames.size() - _directoryNamesIndex < HEX_CHARS_Y) _directoryNamesIndex--;
+                    _fileNamesIndex++;
+                    if(_fileNames.size() - _fileNamesIndex < HEX_CHARS_Y) _fileNamesIndex--;
                 }
             }
             else
@@ -82,7 +90,7 @@ namespace Editor
 
     void handleKeyDown(SDL_Keycode keyCode)
     {
-        int limitY = (_loadFile == false) ? HEX_CHARS_Y : int(_directoryNames.size());
+        int limitY = (_loadFile == false) ? HEX_CHARS_Y : int(_fileNames.size());
 
         switch(keyCode)
         {
@@ -104,8 +112,8 @@ namespace Editor
             {
                 if(_loadFile == true)
                 {
-                    _directoryNamesIndex--;
-                    if(_directoryNamesIndex < 0) _directoryNamesIndex = 0;
+                    _fileNamesIndex--;
+                    if(_fileNamesIndex < 0) _fileNamesIndex = 0;
                 }
                 else
                 {
@@ -118,10 +126,10 @@ namespace Editor
             {
                 if(_loadFile == true)
                 {
-                    if(_directoryNames.size() > HEX_CHARS_Y)
+                    if(_fileNames.size() > HEX_CHARS_Y)
                     {
-                        _directoryNamesIndex++;
-                        if(_directoryNames.size() - _directoryNamesIndex < HEX_CHARS_Y) _directoryNamesIndex--;
+                        _fileNamesIndex++;
+                        if(_fileNames.size() - _fileNamesIndex < HEX_CHARS_Y) _fileNamesIndex--;
                     }
                 }
                 else
@@ -226,20 +234,20 @@ namespace Editor
     void browseDirectory(void)
     {
         std::string path = "./vCPU";
-        _directoryNames.clear();
+        _fileNames.clear();
 
 #if defined(_WIN32)
         for(std::experimental::filesystem::directory_iterator next(path), end; next!=end; ++next)
         {
-            _directoryNames.push_back(next->path().filename().string());
+            _fileNames.push_back(next->path().filename().string());
         }
-        std::sort(_directoryNames.begin(), _directoryNames.end());
+        std::sort(_fileNames.begin(), _fileNames.end());
 #else
         for(std::filesystem::directory_iterator next(path), end; next!=end; ++next)
         {
-            _directoryNames.push_back(next->path().filename().string());
+            _fileNames.push_back(next->path().filename().string());
         }
-        std::sort(_directoryNames.begin(), _directoryNames.end());
+        std::sort(_fileNames.begin(), _fileNames.end());
 #endif
     }
 
@@ -275,6 +283,9 @@ namespace Editor
             }
             break;
 
+            // Enter debug mode
+            case SDLK_F6: _singleStepMode = true;
+
             // RAM/ROM mode
             case SDLK_r: _hexRomMode = (++_hexRomMode) % 3; break;
 
@@ -283,6 +294,84 @@ namespace Editor
         }
 
         updateEditor(keyCode);
+    }
+
+    // Debug mode, handles it's own input and rendering
+    bool singleStepDebug(void)
+    {
+        static uint8_t oldWatch = Cpu::getRAM(0x0034);
+
+        // Single step
+        if(_singleStep == true)
+        {
+            // Watch variable 
+            if(Cpu::getRAM(0x0034) != oldWatch) 
+            {
+                _singleStep = false;
+                _singleStepMode = true;
+            }
+            // Update graphics but only once every 16.66667ms
+            else
+            {
+                static uint64_t prevFrameCounter = 0;
+                double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
+
+                Timing::setFrameUpdate(false);
+                if(frameTime > TIMING_HACK)
+                {
+                    Timing::setFrameUpdate(true);
+                    Graphics::refreshScreen();
+                    Graphics::render(false);
+                    prevFrameCounter = SDL_GetPerformanceCounter();
+                }
+            }
+        }
+
+        // Pause simulation and handle debugging keys
+        while(_singleStepMode == true)
+        {
+            SDL_Event event;
+            while(SDL_PollEvent(&event))
+            {
+                switch(event.type)
+                {
+                    case SDL_KEYUP:
+                    {
+                        // Leave debug mode
+                        switch(event.key.keysym.sym)
+                        {
+                            case SDLK_F6: _singleStepMode = false; break; 
+                        }
+                    }
+                    break;
+
+                    case SDL_KEYDOWN:
+                    {
+                        switch(event.key.keysym.sym)
+                        {
+                            // Single step
+                            case SDLK_F10:
+                            {
+                                _singleStep = true;
+                                _singleStepMode = false;
+                                oldWatch = Cpu::getRAM(0x0034);
+                            }
+                            break;
+
+                            // Quit
+                            case SDLK_ESCAPE:
+                            {
+                                SDL_Quit();
+                                exit(0);
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        return _singleStep;
     }
 
     void handleInput(void)

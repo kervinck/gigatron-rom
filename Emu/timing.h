@@ -21,6 +21,7 @@ namespace Timing
     double getFrameTime(void);
     double getTimingHack(void);
 
+    void setFrameUpdate(bool update);
     void setTimingHack(double hack);
 
     void synchronise(void);
