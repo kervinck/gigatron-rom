@@ -7,7 +7,6 @@ var vga;
 var blinkenLights;
 var audio; // eslint-disable-line no-unused-vars
 var gamepad;
-var loader;
 var perf;
 
 /** Performance Monitor */
@@ -21,22 +20,15 @@ class Perf {
 		this.startTime = millis();
 	}
 
-	/** Called on start of frame */
-	startOfFrame() {
-		// this.cycles = 0;
-	}
-
-	/** Called at end of frame */
-	refresh() {
-		if (this.cycles > 5000000) {
+	/** advance simulation by one tick */
+	tick() {
+		if (this.cycles++ > 5000000) {
 			let endTime = millis();
 			let mhz = this.cycles / (1000 * (endTime-this.startTime));
 			this.elt.html(nf(mhz, 1, 3) + 'MHz');
 			this.startTime = endTime;
 			this.cycles = 0;
 		}
-		// this.elt.html(this.cycles);
-		// this.cycles = 0;
 	}
 }
 
@@ -45,24 +37,22 @@ function setup() {
 	let mhzText = createElement('h2', '--');
 	let button = createButton('Load');
 
-	perf = new Perf(mhzText);
-
 	createCanvas(640, 480 + 44);
 	noLoop();
 
-	vga = new Vga({
-		horizontal: {frontPorch: 16, backPorch: 48, visible: 640},
-		vertical: {frontPorch: 10, backPorch: 34, visible: 480},
-	});
-
-	blinkenLights = new BlinkenLights();
+	perf = new Perf(mhzText);
 
 	cpu = new Gigatron({
 		log2rom: 16,
 		log2ram: 15,
-		onOut: (out) => vga.onOut(out),
-		onOutx: (outx) => blinkenLights.onOutx(outx),
 	});
+
+	vga = new Vga(cpu, {
+		horizontal: {frontPorch: 16, backPorch: 48, visible: 640},
+		vertical: {frontPorch: 10, backPorch: 34, visible: 480},
+	});
+
+	blinkenLights = new BlinkenLights(cpu);
 
 	audio = new Audio(cpu);
 
@@ -77,15 +67,17 @@ function setup() {
 		b: 'B'.codePointAt(0),
 	});
 
-	loader = new Loader(cpu);
-	button.mousePressed(load);
+	let loader = new Loader(cpu);
+	button.mousePressed(() => load(loader));
 
 	const romurl = 'theloop.2.rom';
 	loadRom(romurl, cpu);
 }
 
-/** load blinky program */
-function load() {
+/** load blinky program
+ * @param {Loader} loader
+*/
+function load(loader) {
 	console.log('Loading');
 
 	/* eslint-disable no-multi-spaces, max-len */
@@ -119,18 +111,14 @@ function start() {
 function tick() {
 	vga.vsyncOccurred = false;
 
-	perf.startOfFrame();
-
 	// step simulation until next vsync (hope there is one!)
 	while (!vga.vsyncOccurred) {
 		cpu.tick();
 		vga.tick();
+		blinkenLights.tick();
 		// audio.tick();
-		perf.cycles++;
+		perf.tick();
 	}
-
-	vga.refresh();
-	perf.refresh();
 }
 
 /** KeyPressed event handler

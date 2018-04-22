@@ -99,13 +99,11 @@ class Gigatron {
       let rising = ~this.out & b;
 
       this.out = b;
-      this.onOut(this.out);
 
       // rising edge of out[6] registers outx from ac
       if (rising & 0x40) {
         if (this.outx != this.ac) {
           this.outx = this.ac;
-          this.onOutx(this.outx);
         }
       }
 

@@ -1,10 +1,18 @@
-"use strict";
+'use strict';
+
+/* exported Vga */
 
 const VSYNC = 0x80;
 const HSYNC = 0x40;
 
+/** Vga */
 class Vga {
-	constructor(options) {
+	/** Create a new Vga
+	 * @param {Gigatron} cpu
+	 * @param {object} options
+	 */
+	constructor(cpu, options) {
+		this.cpu = cpu;
 		this.row = 0;
 		this.minRow = options.vertical.backPorch;
 		this.maxRow = this.minRow + options.vertical.visible;
@@ -23,16 +31,33 @@ class Vga {
 		}
 	}
 
+	/** advance simulation by one tick */
 	tick() {
-		let out = this.out;
+		let out = this.cpu.out;
 
-    if ((out & (VSYNC|HSYNC)) != (VSYNC|HSYNC)) {
+		let falling = this.out & ~out;
+		this.out = out;
+
+		if (falling & VSYNC) {
+			this.row = 0;
+			this.pixel = 0;
+			this.vsyncOccurred = true;
+			this.image.updatePixels();
+			image(this.image, 0, 0);
+		}
+
+		if (falling & HSYNC) {
+			this.col = 0;
+			this.row++;
+		}
+
+		if ((out & (VSYNC|HSYNC)) != (VSYNC|HSYNC)) {
 			// blanking interval
 			return;
 		}
 
-		if (this.row >= this.minRow && this.row < this.maxRow &&
-			  this.col >= this.minCol && this.col < this.maxCol) {
+		if ((this.row >= this.minRow && this.row < this.maxRow) &&
+			(this.col >= this.minCol && this.col < this.maxCol)) {
 			let pixels = this.image.pixels;
 			let pixel = this.pixel;
 			let r = (out << 6) & 0xc0;
@@ -50,27 +75,5 @@ class Vga {
 		}
 
 		this.col += 4;
-	}
-
-	onOut(out) {
-		let falling = this.out & ~out;
-
-		this.out = out;
-
-		if (falling & VSYNC) {
-			this.row = 0;
-			this.pixel = 0;
-			this.vsyncOccurred = true;
-		}
-
-		if (falling & HSYNC) {
-			this.col = 0;
-			this.row++;
-		}
-	}
-
-	refresh() {
-		this.image.updatePixels();
-		image(this.image, 0, 0);
 	}
 }
