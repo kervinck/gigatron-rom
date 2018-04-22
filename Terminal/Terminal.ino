@@ -19,6 +19,7 @@
 #define buttonA     128
 
 byte checksum; // Global is simplest
+byte payload[60];
 
 void setup() {
   // Enable output pin (pins are set to input by default)
@@ -48,7 +49,7 @@ void setup() {
   }
 }
 
-byte terminal[] = {
+byte terminalApp[] = {
  0x11, // 0200 LDWI
  0xe9,
  0x02,
@@ -133,22 +134,26 @@ byte terminal[] = {
 };
 
 void loop() {
-  static byte payload[2*60];
-  memcpy(payload, terminal, sizeof terminal);
   noInterrupts();
   for (;;) {
-    // Send one frame with false checksum to force
-    // a checksum resync at the receiver
+    // Send one frame with false checksum to force a checksum
+    // resync at the receiver. (This is a bit pedantic.)
     checksum = 0;
-    sendFrame(-1, 60, 0x200, payload);
+    memset(payload, 0, sizeof payload);
+    sendFrame(-1, 0, 0, payload);
 
     // Setup checksum properly
     checksum = 'g';
-    sendFrame('L', 60,                   0x200,      payload);
-    sendFrame('L', sizeof terminal - 60, 0x200 + 60, payload + 60);
+
+    // Send application bytes in chunks
+    for (int ix=0; ix<sizeof terminalApp; ix+=sizeof payload) {
+      int chunkSize = min(sizeof payload, sizeof terminalApp - ix);
+      memcpy(payload, terminalApp+ix, chunkSize);
+      sendFrame('L', chunkSize, 0x200+ix, payload);
+    }
 
     // Force execution
-    sendFrame('L', 0, 0x0200, payload + 60);
+    sendFrame('L', 0, 0x0200, payload);
   }
 }
 

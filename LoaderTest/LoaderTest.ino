@@ -142,7 +142,7 @@ void sendBits(byte value, byte n)
     while (PINB & (1<<PORTB3))  // Ensure hSync is LOW first
       ;
     while (~PINB & (1<<PORTB3)) // Then wait for hSync to rise
-      ;    
+      ;
   }
   checksum += value;
 }
