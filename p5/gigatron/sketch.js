@@ -36,7 +36,8 @@ class Perf {
 function setup() {
 	let mhzText = createElement('h2', '--');
 	let schedText = createElement('h2', '--');
-	let button = createButton('Load');
+	let loadButton = createButton('Load');
+	let muteCheckbox = createCheckbox('Mute', false);
 
 	createCanvas(640, 480 + 44);
 	noLoop();
@@ -69,7 +70,10 @@ function setup() {
 	});
 
 	let loader = new Loader(cpu);
-	button.mousePressed(() => load(loader));
+	loadButton.mousePressed(() => load(loader));
+	muteCheckbox.changed(function() {
+		audio.mute = this.checked();
+	});
 
 	const romurl = 'theloop.2.rom';
 	loadRom(romurl, cpu);
@@ -105,21 +109,19 @@ function load(loader) {
 
 /** start the periodic */
 function start() {
-	setInterval(ticks, 1000/60);
+	setInterval(ticks, 2*audio.buffers[0].duration);
 }
 
 /** advance the simulation by many ticks */
 function ticks() {
-	audio.drain();
-
-	// step simulation until next vsync (hope there is one!)
-	for (let i = 0; i < 1000000 && audio.scheduled < 4; i++) {
-		perf.tick();
+	while (audio.scheduled < 4) {
+		//perf.tick();
 		cpu.tick();
 		vga.tick();
-		blinkenLights.tick();
+		//blinkenLights.tick();
 		audio.tick();
 	}
+	audio.drain();
 }
 
 /** KeyPressed event handler

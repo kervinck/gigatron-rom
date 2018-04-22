@@ -2,6 +2,9 @@
 
 /* exported Audio */
 
+const HZ = 6250000;
+const SAMPLES_PER_SECOND = 44100;
+
 /** Audio output */
 class Audio {
 	/**
@@ -13,14 +16,15 @@ class Audio {
 		this.cpu = cpu;
 		this.schedText = schedText;
 		let context = this.context = getAudioContext();
-		this.out = cpu.out;
+		this.mute = false;
+		this.cycle = 0;
 		this.scheduled = 0;
 		this.tailTime = 0; // time at which tail buffer will start
 		this.headTime = 0; // time at which head buffer will end
 
 		this.buffers = [];
 		for (let i = 0; i < 4; i++) {
-			let buffer = context.createBuffer(1, 2*521, 31260);
+			let buffer = context.createBuffer(1, int(SAMPLES_PER_SECOND/100), SAMPLES_PER_SECOND);
 			this.buffers.push(buffer);
 		}
 
@@ -47,7 +51,6 @@ class Audio {
 
 		this.headTime = headTime;
 		this.scheduled = scheduled;
-		// this.schedText.html(scheduled + ' scheduled');
 	}
 
 	/** flush current tail buffer */
@@ -59,17 +62,20 @@ class Audio {
 
 		/* if the tail can't keep up with realtime, jump it to now */
 		if (this.tailTime < currentTime) {
-			console.log('catchup');
+			console.log('audio skip');
 			this.tailTime = currentTime;
 			this.headTime + buffer.duration;
 			this.headBufferIndex = tailBufferIndex;
 			this.scheduled = 0;
 		}
 
-		let source = context.createBufferSource();
-		source.buffer = buffer;
-		source.connect(context.destination);
-		source.start(this.tailTime);
+		if (!this.mute) {
+			let source = context.createBufferSource();
+			source.buffer = buffer;
+			source.connect(context.destination);
+			source.start(this.tailTime);
+		}
+
 		this.scheduled++;
 		this.tailTime += buffer.duration;
 
@@ -84,13 +90,10 @@ class Audio {
 
 	/** advance simulation by one tick */
 	tick() {
-		let out = this.cpu.out;
-		let rising = ~this.out & out;
-		this.out = out;
-
-		// capture sample on rising edge of HSYNC
-		if ((rising & 0x40)) {
-			let sample = ((this.cpu.outx >> 4) - 0) / 16;
+		this.cycle += SAMPLES_PER_SECOND;
+		if (this.cycle >= HZ) {
+			this.cycle -= HZ;
+			let sample = ((this.cpu.outx >> 4) - 8) / 8;
 			this.channelData[this.sampleIndex++] = sample;
 
 			if (this.sampleIndex == this.channelData.length) {
