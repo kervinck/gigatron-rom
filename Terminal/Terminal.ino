@@ -102,15 +102,15 @@ void setup() {
 void loop() {
 
   // Now send key strokes, simulating a user
-  static int n = 0;
+  static int n = 1;
   char text[200];
-  sprintf(text, "Test %d\n\n"
+  sprintf(text, " *** Test %d ***\n\n"
                 "Hello Gigatron!\n"
                 "This is Arduino Uno pretending to be an ASCII keyboard. Hope you like it!\n"
                 "The quick brown fox jumps over the lazy dog.\n\n", n++);
   for (int i=0; text[i]; i++) {
     sendController(text[i], 2);
-    delay(text[i] == '\n' ? 50 : 20);
+    delay(40);
   }
   delay(500);
 }
