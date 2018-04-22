@@ -38,6 +38,8 @@ function setup() {
 	let schedText = createElement('h2', '--');
 	let loadButton = createButton('Load');
 	let muteCheckbox = createCheckbox('Mute', false);
+	let volumeSlider = createSlider(0, 100, 50, 1);
+	let volumeLabel = createP(volumeSlider.value()+'%');
 
 	createCanvas(640, 480 + 44);
 	noLoop();
@@ -73,6 +75,10 @@ function setup() {
 	loadButton.mousePressed(() => load(loader));
 	muteCheckbox.changed(function() {
 		audio.mute = this.checked();
+	});
+	volumeSlider.input(function() {
+		volumeLabel.html(volumeSlider.value()+'%');
+		audio.volume = volumeSlider.value() / 100;
 	});
 
 	const romurl = 'theloop.2.rom';

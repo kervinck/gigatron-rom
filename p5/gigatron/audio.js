@@ -17,6 +17,7 @@ class Audio {
 		this.schedText = schedText;
 		let context = this.context = getAudioContext();
 		this.mute = false;
+		this.volume = 0.5;
 		this.cycle = 0;
 		this.scheduled = 0;
 		this.tailTime = 0; // time at which tail buffer will start
@@ -93,8 +94,8 @@ class Audio {
 		this.cycle += SAMPLES_PER_SECOND;
 		if (this.cycle >= HZ) {
 			this.cycle -= HZ;
-			let sample = ((this.cpu.outx >> 4) - 8) / 8;
-			this.channelData[this.sampleIndex++] = sample;
+			let sample = ((this.cpu.outx >> 4) - 0) / 16;
+			this.channelData[this.sampleIndex++] = sample * this.volume;
 
 			if (this.sampleIndex == this.channelData.length) {
 				this.flushChannelData();
