@@ -1,0 +1,67 @@
+; equates are non arithmetic string substitutions
+vram    EQU     0x0800
+base    EQU     0x30
+pixels  EQU     0x32    
+xyPos0  EQU     0x34
+xyPos1  EQU     0x35
+xyVel0  EQU     0x36
+xyVel1  EQU     0x37
+xyV0add EQU     0x38
+xyV1add EQU     0x40
+
+xBounds EQU     0x9F
+yBounds EQU     0x77
+
+
+; start address is used by the loader, defaults to 0x0200 if absent, can't be lower than 0x0200
+0x0300  LDWI    vram     
+        STW     base        ; base address
+        STW     pixels      ; pixel address
+        LDWI    0x2101     
+        STW     xyPos0      ; XY position
+        LDWI    0x0101     
+        STW     xyVel0      ; XY velocity
+        LDWI    .xvel       ; self modifying code address
+        STW     xyV0add
+        LDWI    .yvel       ; self modifying code address
+        STW     xyV1add
+
+; labels are parsed to generate the correct offsets for branches        
+plot    LD      xyPos0      ; x position bounds checking
+        BEQ     flip0
+        SUBI    xBounds
+        BLT     skip0
+    
+flip0   LD      xyVel0
+        XORI    0xFE        ; flip x velocity
+        ST      xyVel0
+    
+skip0   LD      xyPos1      ; y position bounds checking
+        BEQ     flip1
+        SUBI    yBounds
+        BLT     skip1
+    
+flip1   LD      xyVel1
+        XORI    0xFE        ; flip y velocity
+        ST      xyVel1
+    
+skip1   LD      xyVel0
+        POKE    xyV0add     ; modify ADDI x literal with x velocity
+        LD      xyPos0
+.xvel,1 ADDI    0x01        ; self modifying code, (label starting with '.'), the offset '1' means the next byte, '0x01', is modified, offsets can be 0<->9
+        ST      xyPos0
+
+        LD      xyVel1
+        POKE    xyV1add     ; modify ADDI y literal with y velocity
+        LD      xyPos1
+.yvel,1 ADDI    0x01        ; self modifying code
+        ST      xyPos1
+        
+        LDW     base        ; generate vram address
+        ADDW    xyPos0
+        STW     pixels
+        LDI     xyPos0      ; grab an interesting colour
+        PEEK 
+        POKE    pixels      ; plot new pixel
+        
+        BRA     plot
