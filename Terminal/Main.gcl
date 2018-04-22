@@ -1,0 +1,90 @@
+{
+  Gigatron code that takes the role a dumb terminal.
+}
+
+gcl0x
+
+{ Setup }
+
+{ Print a 5x8 character on screen with the built-in font
+  Char must be in the 32-127 range (this is not checked) }
+[def {PrintChar}
+  Char=
+  {Map ASCII code to offset in font table}
+  82- [if<0 50+ i= \font32up
+       else     i= \font82up] fontData= {Select low or high page}
+  i 2<< i+             {Multiply by 5}
+  fontData+ fontData=  {Add to page address to reach bitmap data for Char}
+
+  {Draw 5 vertical slices: 5 using font data}
+  32      \sysArgs0. {Blue}
+  15      \sysArgs1. {Yellow}
+  Pos     \sysArgs4=
+  \SYS_VDrawBits_134 \sysFn=
+  $fb i= [do
+    fontData 0? fontData<++ \sysArgs2. 134!
+    \sysArgs4<++
+    i<++ i if<>0loop]
+  ret
+] PrintChar=
+
+$7800 Pos=
+
+{ Newline }
+[def
+  {Go back to start}
+  0 Pos<.
+  $800 Pos+ [if<0 $0800] Pos=
+
+  {Clear line}
+  Pos \sysArgs4=
+  32 \sysArgs0. \sysArgs1. {All blue}
+  \SYS_VDrawBits_134 \sysFn=
+  [do
+    134!
+    \sysArgs4<++
+    \sysArgs4, 160^ if<>0loop]
+
+  {Scroll up by modifying videoTable}
+  $01ee p=
+  [do
+    p, 120- [if<0 128^ else 8^] p.
+    p 2- p=
+    $fe^ if<>0loop]
+
+  ret
+] Newline=
+
+call {Clears last line}
+
+{ Input loop, pretend some kind of ASCII keyboard is hooked up }
+[do
+  {Draw cursor}
+  127 PrintChar!
+
+  \serialRaw,
+  [do
+    serialLast=
+
+    {Wait for key change}
+    \serialRaw, Char=
+    serialLast^ if=0 Char loop]
+
+  {New line?}
+  Char 10^ [if=0
+    32 PrintChar! {Remove cursor}
+    Newline!
+    loop]
+
+  {Printable or garbage?}
+  Char 32- if<0loop 95- if>=0loop
+
+  {Print it}
+  Char PrintChar!
+
+  {Advance cursor position}
+  Pos 6+ Pos=
+  255& 155- [if>=0 Newline!]
+
+loop]
+
