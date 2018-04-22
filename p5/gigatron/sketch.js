@@ -7,6 +7,7 @@ var vga;
 var blinkenLights;
 var audio; // eslint-disable-line no-unused-vars
 var gamepad;
+var loader;
 var perf;
 
 /** Performance Monitor */
@@ -42,6 +43,8 @@ class Perf {
 /** p5 setup function */
 function setup() {
 	let mhzText = createElement('h2', '--');
+	let button = createButton('Load');
+
 	perf = new Perf(mhzText);
 
 	createCanvas(640, 480 + 44);
@@ -52,7 +55,7 @@ function setup() {
 		vertical: {frontPorch: 10, backPorch: 34, visible: 480},
 	});
 
-  blinkenLights = new BlinkenLights();
+	blinkenLights = new BlinkenLights();
 
 	cpu = new Gigatron({
 		log2rom: 16,
@@ -74,8 +77,37 @@ function setup() {
 		b: 'B'.codePointAt(0),
 	});
 
+	loader = new Loader(cpu);
+	button.mousePressed(load);
+
 	const romurl = 'theloop.2.rom';
 	loadRom(romurl, cpu);
+}
+
+/** load blinky program */
+function load() {
+	console.log('Loading');
+
+	/* eslint-disable no-multi-spaces, max-len */
+	loader.load({
+		startAddress: 0x7f00,
+		blocks: [
+			{
+				address: 0x7f00,
+				bytes: [
+					0x11, 0x50, 0x44, // 7f00 LDWI $4450  ; Load address of center of screen
+					0x2b, 0x30,       // 7f03 STW  'p'    ; Store in variable 'p' (at $0030)
+					0xf0, 0x30,       // 7f05 POKE 'p'    ; Write low byte of accumulator there
+					0xe3, 0x01,       // 7f07 ADDI 1      ; Increment accumulator
+					0x90, 0x03,       // 7f09 BRA  $7f05  ; Loop forever
+                                      // 7f0b
+				],
+			},
+		],
+	});
+	/* eslint-enable no-multi-spaces, max-len */
+
+	console.log('Loaded');
 }
 
 /** start the periodic */
@@ -105,14 +137,14 @@ function tick() {
  * @return {boolean} whether event should be default processed
 */
 function keyPressed() {
-return gamepad.keyPressed(keyCode);
+	return gamepad.keyPressed(keyCode);
 }
 
 /** KeyReleased event handler
  * @return {boolean} whether event should be default processed
 */
 function keyReleased() {
-return gamepad.keyReleased(keyCode);
+	return gamepad.keyReleased(keyCode);
 }
 
 /** async rom loader

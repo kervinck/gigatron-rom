@@ -56,7 +56,7 @@ class Gigatron {
       case 6: this.storeOp(mode, bus, d); break;
       case 7: this.branchOp(mode, bus, d); break;
     }
-  }
+}
 
   /** perform an alu op
    * @param {number} mode

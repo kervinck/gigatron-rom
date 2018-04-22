@@ -6,5 +6,8 @@
     "rules": {
       "no-tabs": "off",
       "no-var": "off"
+    },
+    "env": {
+        "browser": true
     }
 }
