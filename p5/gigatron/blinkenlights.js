@@ -31,16 +31,33 @@ class BlinkenLights {
 
 		let ctx = this.ctx;
 
-		ctx.strokeStyle = '#ff0000';
-		ctx.lineWidth = 2;
 
+		ctx.save();
+		ctx.translate(w, this.canvas.height/2);
 		for (let i = 0; i < 4; i++) {
 			ctx.fillStyle = (this.outx & (1 << i)) ? '#ff0000' : '#640000';
+			ctx.strokeStyle = '#ff0000';
+			ctx.lineWidth = 1;
 			ctx.beginPath();
-			ctx.arc(this.canvas.width/2 + w + 2*w*(i-2), this.canvas.height/2, r, 0, 2*Math.PI);
+			ctx.arc(0, 0, r, 0, 2*Math.PI);
 			ctx.closePath();
 			ctx.fill();
-			ctx.stroke()
+			ctx.stroke();
+
+			ctx.strokeStyle = '#888';
+			ctx.lineWidth = 1;
+			ctx.beginPath();
+			ctx.arc(0, 0, r-2, -Math.PI/2, 0);
+			ctx.stroke();
+
+			ctx.strokeStyle = '#ccc';
+			ctx.lineWidth = 1;
+			ctx.beginPath();
+			ctx.arc(0, 0, r-2, Math.PI/2, 2*Math.PI/2);
+			ctx.stroke();
+
+			ctx.translate(2*w, 0);
 		}
+		ctx.restore();
 	}
 }
