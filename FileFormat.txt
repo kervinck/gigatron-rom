@@ -1,41 +1,60 @@
-I want to set a standard for precompiled vCPU programs.
-There are many emulators getting born, and Loader.ino will need to adopt something as well.
-Both users of real Gigatrons and emulators benefit from a single standard.
+I want to set a standard for precompiled vCPU programs.  There are
+many emulators getting born, and Loader.ino will need to adopt
+something as well.  Both users of real Gigatrons and users of
+emulators benefit from a single standard.
 
-Here is my proposal (made while very tired, but please feedback and I want to consolidate
-this in a few days from now. So please shoot):
+Here is my proposal (made while very tired, but please feedback and
+I want to consolidate this in a few days from now. So please shoot):
 
 Marcel
 
 === DRAFT ===
 
-My proposal is to use the same byte sequence that the ROM-to-RAM routine “sees”.
-That is essentially the ROM sequence, but skipping the “trampolines” in the top 5 bytes of every
-ROM page. Those bytes are not part of the program but part of the mechanism for accessing the data.
+My proposal is to use the same byte sequence that the ROM-to-RAM
+routine sees.  That is essentially the in-ROM sequence, but skipping
+the trampolines in the top 5 bytes of every ROM page. Those bytes
+are not part of the program but part of the mechanism for accessing
+the data.
 
 Something like this (from the top of my head):
 
-n * [ <hiAddres> + <loAddress> + <segmentSize&255> + ( segmentSize * <dataByte> ) ] + 0
+n * [ <hiAddress> + <loAddress> + <segmentSize&255> + ( segmentSize * <dataByte> ) ] + <0>
 
-Programs are fragmented into RAM, in n>0 segments of 1 to 256 bytes each.
-A segment don't cross a page boundaries. Segments may be in any order in the file.
-They are loaded sequentially. So in case of overlap, the later one overwrites
-the earlier one. (We can make movies with that!)
+<..> represents a single byte. The rest is meta. Hope the idea is
+clear. To be specific: The number "n" itself will not appear at the
+start of the file.
 
-This will means that there is a translation to do in Loader.ino when loading such files,
-but I think that is ok: The limitations on the Loader packets are influenced by what
-the video signal looks like, I suggest we keep that kind of entanglement out of the
-file format.
+The first two bytes are the RAM address of the first byte to be
+loaded, in big-endian order.  (I'm a little-endian guy, but this
+order is useful in the ROM-to-RAM loader).  The end of the sequence
+is implied by the terminating zero-byte.
 
-The ROM sequence ends with a terminating zero. This acts as an EOF for the “ROM file".
-But I don’t have a strong argument in favour of it or against.
-I feel it helps files readers to know when to expect the real EOF.
-So my idea is to keep it in the file format:
-hiAddress=0 indicates the end of the program stream.
-And about loading code/data into zero page with such a file: do so in the first segment.
+Programs are fragmented into RAM, in n>0 segments of 1 to 256 bytes
+each, because the RAM organisation fragmented. Both Snake and Racer
+extend in the unused bytes of the video area.  A segment isn't
+allowed to cross a page boundary. Segments may be in any order in
+the file.  They are loaded sequentially. So in case of overlap, the
+later one overwrites the earlier one. (We can make movies with
+that!) (There is no encoding for a zero-length program. Use an
+zero-length file for that use case, for all I care... or encode a
+known constant, such as [0]=0)
 
-File name extension: .gt1 (For gigatron-1)
+This implies that there is a translation to do in Loader.ino when
+loading such files into a Gigatron, but I think that is ok: The
+limitations on the Loader packets (60 bytes) are influenced by what
+the video signal looks like. I suggest we keep that kind of
+entanglement out of the file format.
 
-I feel that .vcpu is the lesser choice because it is a generic abbreviation for virtual CPU.
-For example, the MyCPU uses the same abbreviation.
-And retro-extensions should be 3 characters of course….
+The ROM sequence ends with a terminating zero. This acts as an EOF
+for the ROM file".  But I dont have a strong argument in favour of
+it or against.  I feel it helps files readers to know when to expect
+the real EOF.  So my idea is to keep it in the file format: hiAddress=0
+indicates the end of the program stream.  And about loading code/data
+into zero page with such a file: do so in the first segment.
+
+File name extension: .gt1 (For Gigatron-1)
+
+I feel that .vcpu is the lesser choice because it is a generic
+abbreviation for virtual CPU.  For example, the MyCPU uses the same
+abbreviation for something similar.  And ... retro-extensions should
+be 3 characters of course...
