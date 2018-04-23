@@ -32,16 +32,36 @@ class Perf {
 	}
 }
 
+function toHex(value, width) {
+	let s = value.toString(16);
+	if (s.length < width) {
+		s = '0'.repeat(width-s.length) + s;
+	}
+	return s;
+}
+
 /** p5 setup function */
 function setup() {
-	let mhzText = createElement('h2', '--');
-	let schedText = createElement('h2', '--');
-	let loadButton = createButton('Load');
-	let muteCheckbox = createCheckbox('Mute', false);
-	let volumeSlider = createSlider(0, 100, 50, 1);
-	let volumeLabel = createP(volumeSlider.value()+'%');
+	let mhzText = select('#mhz');
+	let runButton = select('#run');
+	let stepButton = select('#step');
+	let resetButton = select('#reset');
+	let loadButton = select('#load');
+	let muteButton = select('#mute');
+	let volumeSlider = select('#volume');
+	let volumeLabel = select('#volume-label');
+	let vgaCanvas = select('#vga');
+	let vgaCtx = vgaCanvas.elt.getContext('2d');
+	let blinkenLightsCanvas = select('#blinken-lights').elt;
+	let romFileInput = select('#rom-file');
+	let pcSpan = select('#reg-pc');
+	let nextpcSpan = select('#reg-nextpc');
+	let acSpan = select('#reg-ac');
+	let xSpan = select('#reg-x');
+	let ySpan = select('#reg-y');
+	let outSpan = select('#reg-out');
+	let outxSpan = select('#reg-outx');
 
-	createCanvas(640, 480 + 44);
 	noLoop();
 
 	perf = new Perf(mhzText);
@@ -51,38 +71,108 @@ function setup() {
 		log2ram: 15,
 	});
 
-	vga = new Vga(cpu, {
+	vga = new Vga(vgaCtx, cpu, {
 		horizontal: {frontPorch: 16, backPorch: 48, visible: 640},
 		vertical: {frontPorch: 10, backPorch: 34, visible: 480},
 	});
 
-	blinkenLights = new BlinkenLights(cpu);
+	blinkenLights = new BlinkenLights(blinkenLightsCanvas, cpu);
 
-	audio = new Audio(cpu, schedText);
+	audio = new Audio(cpu);
 
 	gamepad = new Gamepad(cpu, {
 		up: UP_ARROW,
 		down: DOWN_ARROW,
 		left: LEFT_ARROW,
 		right: RIGHT_ARROW,
-		select: RETURN,
-		start: ' '.codePointAt(0),
+		select: 'Q'.codePointAt(0),
+		start: 'W'.codePointAt(0),
 		a: 'A'.codePointAt(0),
-		b: 'B'.codePointAt(0),
+		b: 'S'.codePointAt(0),
 	});
 
+	let gdb = {
+		timer: null,
+	};
+
+	function updateRegs() {
+		pcSpan.html('$'+toHex(cpu.pc, 4));
+		nextpcSpan.html('$'+toHex(cpu.nextpc, 4));
+		acSpan.html('$'+toHex(cpu.ac, 2));
+		xSpan.html('$'+toHex(cpu.x, 2));
+		ySpan.html('$'+toHex(cpu.y, 2));
+		outSpan.html('$'+toHex(cpu.out, 2));
+		outxSpan.html('$'+toHex(cpu.out, 2));
+	}
+
+	updateRegs();
+
 	let loader = new Loader(cpu);
-	loadButton.mousePressed(() => load(loader));
-	muteCheckbox.changed(function() {
-		audio.mute = this.checked();
+	loadButton.mousePressed(function() { load(loader); });
+	resetButton.mousePressed(function() {
+		cpu.reset();
+		updateRegs();
 	});
+
+	runButton.mousePressed(function() {
+		if (gdb.timer) {
+			clearTimeout(gdb.timer);
+			gdb.timer = null;
+			this.elt.textContent = 'Go';
+			this.removeClass('btn-danger');
+			this.addClass('btn-success');
+			updateRegs();
+		}
+		else {
+			gdb.timer = setInterval(ticks, audio.duration);
+			this.elt.textContent = "Stop";
+			this.addClass('btn-danger');
+			this.removeClass('btn-success');
+		}
+	});
+
+	stepButton.mousePressed(function() {
+		perf.tick();
+		cpu.tick();
+		vga.tick();
+		blinkenLights.tick();
+		updateRegs();
+	});
+
+	muteButton.mousePressed(function() {
+		audio.mute = !audio.mute;
+		if (audio.mute) {
+			this.elt.textContent = 'Unmute';
+			this.removeClass('btn-danger');
+			this.addClass('btn-success');
+		}
+		else {
+			this.elt.textContent = 'Mute';
+			this.addClass('btn-danger');
+			this.removeClass('btn-success');
+		}
+	});
+
 	volumeSlider.input(function() {
 		volumeLabel.html(volumeSlider.value()+'%');
 		audio.volume = volumeSlider.value() / 100;
 	});
 
-	const romurl = 'theloop.2.rom';
-	loadRom(romurl, cpu);
+	romFileInput.input(function() {
+		let file = this.elt.files[0];
+		this.elt.labels[0].textContent = file.name;
+		let fileReader = new FileReader();
+		fileReader.onload = function() {
+			let buffer = this.result;
+			let n = buffer.byteLength >> 1;
+			let view = new DataView(buffer);
+			for (let i = 0; i < n; i++) {
+				cpu.rom[i] = view.getUint16(i<<1);
+			}
+			cpu.romMask = file.size-1;
+		};
+		fileReader.readAsArrayBuffer(file);
+	});
 }
 
 /** load blinky program
@@ -113,20 +203,15 @@ function load(loader) {
 	console.log('Loaded');
 }
 
-/** start the periodic */
-function start() {
-	setInterval(ticks, 2*audio.buffers[0].duration);
-}
-
 /** advance the simulation by many ticks */
 function ticks() {
 	while (audio.scheduled < 4) {
-		//perf.tick();
+		perf.tick();
 		cpu.tick();
 		vga.tick();
-		//blinkenLights.tick();
 		audio.tick();
 	}
+	blinkenLights.tick();
 	audio.drain();
 }
 
@@ -142,29 +227,4 @@ function keyPressed() {
 */
 function keyReleased() {
 	return gamepad.keyReleased(keyCode);
-}
-
-/** async rom loader
- * @param {string} url - Url of rom file
- * @param {Gigatron} cpu - CPU to load
- */
-function loadRom(url, cpu) {
-	let oReq = new XMLHttpRequest();
-	oReq.open('GET', url, true);
-	oReq.responseType = 'arraybuffer';
-
-	oReq.onload = function(oEvent) {
-		let buffer = oReq.response;
-		if (buffer) {
-			let n = buffer.byteLength >> 1;
-			let view = new DataView(buffer);
-			for (let i = 0; i < n; i++) {
-				cpu.rom[i] = view.getUint16(i<<1);
-			}
-			console.log('ROM loaded');
-			start();
-		}
-	};
-
-	oReq.send(null);
 }

@@ -36,6 +36,11 @@ class Gigatron {
     }
   }
 
+  reset() {
+    this.pc = this.currpc = 0;
+    this.nextpc = 1;
+  }
+  
   /** advance simulation by one tick */
   tick() {
     let pc = this.currpc = this.pc & this.romMask;

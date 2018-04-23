@@ -10,15 +10,21 @@ class Audio {
 	/**
 	 * Create an Audio.
 	 * @param {Gigatron} cpu - The CPU
-	 * @param {Element} schedText
 	 */
-	constructor(cpu, schedText) {
+	constructor(cpu) {
 		this.cpu = cpu;
-		this.schedText = schedText;
 		let context = this.context = getAudioContext();
+		let filter = this.filter = context.createBiquadFilter();
+		filter.connect(context.destination);
+		filter.type = 'lowpass';
+		filter.frequency.value = 4000;
+		filter.Q.value = 2;
+
 		this.mute = false;
 		this.volume = 0.5;
 		this.cycle = 0;
+		this.bias = 0;
+		this.alpha = 0.8;
 		this.scheduled = 0;
 		this.tailTime = 0; // time at which tail buffer will start
 		this.headTime = 0; // time at which head buffer will end
@@ -31,7 +37,8 @@ class Audio {
 
 		this.headBufferIndex = 0;
 		this.tailBufferIndex = 0;
-		this.channelData = this.buffers[this.tailBufferIndex].getChannelData(0);
+		this.duration = this.buffers[0].duration;
+		this.channelData = this.buffers[0].getChannelData(0);
 		this.sampleIndex = 0;
 	}
 
@@ -46,7 +53,7 @@ class Audio {
 			if (++headBufferIndex == this.buffers.length) {
 				headBufferIndex = 0;
 			}
-			headTime += this.buffers[headBufferIndex].duration;
+			headTime += this.duration;
 			scheduled--;
 		}
 
@@ -61,11 +68,11 @@ class Audio {
 		let tailBufferIndex = this.tailBufferIndex;
 		let buffer = this.buffers[tailBufferIndex];
 
-		/* if the tail can't keep up with realtime, jump it to now */
+		/* if the tail can't keep ahead of realtime, jump it to now */
 		if (this.tailTime < currentTime) {
 			console.log('audio skip');
 			this.tailTime = currentTime;
-			this.headTime + buffer.duration;
+			this.headTime = currentTime + this.duration;
 			this.headBufferIndex = tailBufferIndex;
 			this.scheduled = 0;
 		}
@@ -73,12 +80,12 @@ class Audio {
 		if (!this.mute) {
 			let source = context.createBufferSource();
 			source.buffer = buffer;
-			source.connect(context.destination);
+			source.connect(this.filter);
 			source.start(this.tailTime);
 		}
 
 		this.scheduled++;
-		this.tailTime += buffer.duration;
+		this.tailTime += this.duration;
 
 		if (++tailBufferIndex == this.buffers.length) {
 			tailBufferIndex = 0;
@@ -94,8 +101,10 @@ class Audio {
 		this.cycle += SAMPLES_PER_SECOND;
 		if (this.cycle >= HZ) {
 			this.cycle -= HZ;
-			let sample = ((this.cpu.outx >> 4) - 0) / 16;
-			this.channelData[this.sampleIndex++] = sample * this.volume;
+
+			let sample = (this.cpu.outx >> 4) / 0x10;
+			this.bias = (this.alpha * this.bias) + ((1-this.alpha) * sample);
+			this.channelData[this.sampleIndex++] = (sample-this.bias) * this.volume;
 
 			if (this.sampleIndex == this.channelData.length) {
 				this.flushChannelData();

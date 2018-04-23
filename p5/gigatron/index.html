@@ -5,8 +5,9 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
-	<title>gigatron</title>
-
+	<title>Gigatron</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha256-NJWeQ+bs82iAeoT5Ktmqbi3NXwxcHlfaVejzJI2dklU=" crossorigin="anonymous" />
+	<link href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.0/slate/bootstrap.min.css" rel="stylesheet" integrity="sha384-A0hm/Pn0Gvk8w7szlEuTOZrIyQCCBNXQF9ccseoCI36nWRfMEAapo5UJ56zLPvPw" crossorigin="anonymous">
 	<script src="../libraries/p5.js"></script>
 	<script src="../libraries/p5.dom.js"></script>
 	<script src="../libraries/p5.sound.js"></script>
@@ -20,8 +21,8 @@
 
 	<style>
 		body {
-			background: lightgray;
-      		margin:0;
+			/*background: black;*/
+  		margin:0;
 			margin-left:45px;
 			padding:0;
 			overflow: hidden;
@@ -29,10 +30,71 @@
 		canvas {
 			margin:auto;
 		}
+
+		.btn {
+			width: 100px;
+		}
 	</style>
 </head>
 <body>
-	<h1>Gigatron</h1>
-	<h2>Start = SPACE, Select = ENTER, A = "A", B = "B"</h2>
+	<div class="container">
+		<h1 class="display-4">Gigatron <code id="mhz">0.000 MHz</code></h1>
+		<canvas id="blinken-lights" width="88" height="32"></canvas>
+		<div class="row">
+			<div class="col">
+				<table class="table table-sm table-light">
+					<tr><th>Controller<th>Keyboard
+					<tr><td><pre>select</pre><td><kbd>Q</kbd>
+					<tr><td><pre>start</pre><td><kbd>W</kbd>
+					<tr><td><pre>A</pre><td><kbd>A</kbd>
+					<tr><td><pre>B</pre><td><kbd>S</kdb>
+				</table>
+				<form>
+					<div class="input-group mb-3">
+						<div class="input-group-prepend">
+							<span class="input-group-text">ROM</span>
+						</div>
+					  <div class="custom-file">
+					    <input type="file" accept=".rom" class="custom-file-input" id="rom-file">
+					    <label class="custom-file-label" for="rom-file">Choose file</label>
+					  </div>
+					</div>
+
+					<div class="form-group">
+						<button id="run" type="button" class="btn btn-success">Go</button>
+						<button id="step" type="button" class="btn btn-secondary">Step</button>
+						<button id="reset" type="button" class="btn btn-primary">Reset</button>
+					</div>
+				</form>
+
+				<table class="table table-sm table-light">
+					<tr><th>PC<td><code id="reg-pc"></code>
+					<tr><th>NEXTPC<td><code id="reg-nextpc"></code>
+					<tr><th>AC<td><code id="reg-ac"></code>
+					<tr><th>X<td><code id="reg-x"></code>
+					<tr><th>Y<td><code id="reg-y"></code>
+					<tr><th>OUT<td><code id="reg-out"></code>
+					<tr><th>OUTX<td><code id="reg-outx"></code>
+				</table>
+
+				<div class="form-group">
+					<button id="load" type="button" class="btn btn-warning">Loader</button>
+				</div>
+			</div>
+			<div class="col">
+				<canvas id="vga" class="border border-white rounded" width="640" height="480"></canvas>
+				<form>
+					<div class="form-group">
+						Volume
+						<label id="volume-label" for="volume">50%</label>
+						<input id="volume" type="range" class="form-control-range fluid">
+					</div>
+					<div class="form-group">
+						<button id="mute" type="button" class="btn btn-danger">Mute</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
 </body>
 </html>

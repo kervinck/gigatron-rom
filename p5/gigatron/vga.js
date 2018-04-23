@@ -11,7 +11,10 @@ class Vga {
 	 * @param {Gigatron} cpu
 	 * @param {object} options
 	 */
-	constructor(cpu, options) {
+	constructor(ctx, cpu, options) {
+		this.ctx = ctx;
+		this.imageData = ctx.getImageData(0, 0, 640, 480);
+		this.pixels = this.imageData.data;
 		this.cpu = cpu;
 		this.row = 0;
 		this.minRow = options.vertical.backPorch;
@@ -25,8 +28,8 @@ class Vga {
 			options.horizontal.visible,
 			options.vertical.visible);
 		this.image.loadPixels();
-		for (let i = 0; i < this.image.pixels.length; i++) {
-			this.image.pixels[i] = 255;
+		for (let i = 0; i < this.pixels.length; i++) {
+			this.pixels[i] = 255;
 		}
 	}
 
@@ -40,8 +43,7 @@ class Vga {
 		if (falling & VSYNC) {
 			this.row = 0;
 			this.pixel = 0;
-			this.image.updatePixels();
-			image(this.image, 0, 0);
+			this.ctx.putImageData(this.imageData, 0, 0);
 		}
 
 		if (falling & HSYNC) {
@@ -56,7 +58,7 @@ class Vga {
 
 		if ((this.row >= this.minRow && this.row < this.maxRow) &&
 			(this.col >= this.minCol && this.col < this.maxCol)) {
-			let pixels = this.image.pixels;
+			let pixels = this.pixels;
 			let pixel = this.pixel;
 			let r = (out << 6) & 0xc0;
 			let g = (out << 4) & 0xc0;

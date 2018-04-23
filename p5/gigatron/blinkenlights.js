@@ -7,9 +7,12 @@ class BlinkenLights {
 	/** Create a new BlinkenLights
 	 * @param {Gigatron} cpu
 	*/
-	constructor(cpu) {
+	constructor(canvas, cpu) {
+		this.canvas = canvas;
+		this.ctx = canvas.getContext('2d');
 		this.cpu = cpu;
 		this.outx = cpu.outx;
+		this.draw();
 	}
 
 	/** advance simulation by one tick */
@@ -18,12 +21,26 @@ class BlinkenLights {
 
 		if (this.outx != outx) {
 			this.outx = outx;
+			this.draw();
+		}
+	}
 
-			for (let i = 0; i < 4; i++) {
-				fill((outx & (1 << i)) ? 255 : 100, 0, 0);
-				noStroke();
-				ellipse(320 + 32*(i-2), 490 + 17, 30, 30);
-			}
+	draw() {
+		const r = 8;
+		const w = r+2;
+
+		let ctx = this.ctx;
+
+		ctx.strokeStyle = '#ff0000';
+		ctx.lineWidth = 2;
+
+		for (let i = 0; i < 4; i++) {
+			ctx.fillStyle = (this.outx & (1 << i)) ? '#ff0000' : '#640000';
+			ctx.beginPath();
+			ctx.arc(this.canvas.width/2 + w + 2*w*(i-2), this.canvas.height/2, r, 0, 2*Math.PI);
+			ctx.closePath();
+			ctx.fill();
+			ctx.stroke()
 		}
 	}
 }
