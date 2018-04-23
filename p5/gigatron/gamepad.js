@@ -20,6 +20,18 @@ class Gamepad {
 		bits[codes.b] = 0x40;
 		bits[codes.a] = 0x80;
 		this.bits = bits;
+
+		document.addEventListener('keydown', (event) => {
+			if (!this.keyPressed(event.key)) {
+				event.preventDefault();
+			}
+		});
+
+		document.addEventListener('keyup', (event) => {
+			if (!this.keyReleased(event.key)) {
+				event.preventDefault();
+			}
+		});
 	}
 
 	/** called when key is pressed

@@ -5,6 +5,8 @@
 const HZ = 6250000;
 const SAMPLES_PER_SECOND = 44100;
 
+var AudioContext = window.AudioContext || window.webkitAudioContext;
+
 /** Audio output */
 class Audio {
 	/**
@@ -13,7 +15,7 @@ class Audio {
 	 */
 	constructor(cpu) {
 		this.cpu = cpu;
-		let context = this.context = getAudioContext();
+		let context = this.context = new AudioContext();
 		let filter = this.filter = context.createBiquadFilter();
 		filter.connect(context.destination);
 		filter.type = 'lowpass';
@@ -31,7 +33,7 @@ class Audio {
 
 		this.buffers = [];
 		for (let i = 0; i < 4; i++) {
-			let buffer = context.createBuffer(1, int(SAMPLES_PER_SECOND/100), SAMPLES_PER_SECOND);
+			let buffer = context.createBuffer(1, Math.floor(SAMPLES_PER_SECOND/100), SAMPLES_PER_SECOND);
 			this.buffers.push(buffer);
 		}
 

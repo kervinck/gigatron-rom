@@ -11,9 +11,10 @@ class Vga {
 	 * @param {Gigatron} cpu
 	 * @param {object} options
 	 */
-	constructor(ctx, cpu, options) {
-		this.ctx = ctx;
-		this.imageData = ctx.getImageData(0, 0, 640, 480);
+	constructor(canvas, cpu, options) {
+		this.canvas = canvas;
+		this.ctx = canvas.getContext('2d');
+		this.imageData = this.ctx.getImageData(0, 0, canvas.width, canvas.height);
 		this.pixels = this.imageData.data;
 		this.cpu = cpu;
 		this.row = 0;
@@ -24,13 +25,10 @@ class Vga {
 		this.maxCol = this.minCol + options.horizontal.visible;
 		this.pixel = 0;
 		this.out = 0;
-		this.image = createImage(
-			options.horizontal.visible,
-			options.vertical.visible);
-		this.image.loadPixels();
 		for (let i = 0; i < this.pixels.length; i++) {
-			this.pixels[i] = 255;
+			this.pixels[i] = (i % 4) == 3 ? 255 : 0;
 		}
+		this.ctx.putImageData(this.imageData, 0, 0);
 	}
 
 	/** advance simulation by one tick */
