@@ -15,11 +15,15 @@ class Gigatron {
    * @param {Object} options
    */
   constructor(options) {
-    this.rom = new Uint16Array(1<<(options.log2rom || 16));
+    this.rom = new Uint16Array(1<<(options.romAddressWidth || 16));
     this.romMask = this.rom.length-1;
-    this.ram = new Uint8Array(1<<(options.log2ram || 15));
+    this.ram = new Uint8Array(1<<(options.ramAddressWidth || 15));
     this.ramMask = this.ram.length-1;
-    this.currpc = this.pc = 0x0000;
+    this.reset();
+  }
+
+  reset() {
+    this.pc = 0;
     this.nextpc = this.pc + 1;
     this.ac = 0;
     this.x = 0;
@@ -27,8 +31,6 @@ class Gigatron {
     this.out = 0;
     this.outx = 0;
     this.inReg = 0xff; // active low!
-    this.onOut = options.onOut;
-    this.onOutx = options.onOutx;
 
     // randomize ram
     for (let i = 0; i < this.ram.length; i++) {
@@ -36,22 +38,17 @@ class Gigatron {
     }
   }
 
-  reset() {
-    this.pc = this.currpc = 0;
-    this.nextpc = 1;
-  }
-  
   /** advance simulation by one tick */
   tick() {
-    let pc = this.currpc = this.pc & this.romMask;
+    let pc = this.pc & this.romMask;
     this.pc = this.nextpc;
     this.nextpc = this.pc + 1;
 
-    let instruction = this.rom[pc];
-    let op = (instruction >> 13) & 0x0007;
-    let mode = (instruction >> 10) & 0x0007;
-    let bus = (instruction >> 8) & 0x0003;
-    let d = (instruction >> 0) & 0x00ff;
+    let ir = this.rom[pc];
+    let op = (ir >> 13) & 0x0007;
+    let mode = (ir >> 10) & 0x0007;
+    let bus = (ir >> 8) & 0x0003;
+    let d = (ir >> 0) & 0x00ff;
 
     switch (op) {
       case 0:
@@ -101,18 +98,15 @@ class Gigatron {
       case 5: this.y = b; break;
       case 6:
       case 7:
-      let rising = ~this.out & b;
+        let rising = ~this.out & b;
+        this.out = b;
 
-      this.out = b;
-
-      // rising edge of out[6] registers outx from ac
-      if (rising & 0x40) {
-        if (this.outx != this.ac) {
+        // rising edge of out[6] registers outx from ac
+        if (rising & 0x40) {
           this.outx = this.ac;
         }
-      }
 
-      break;
+        break;
     }
   }
 
@@ -153,13 +147,13 @@ class Gigatron {
 
     switch (mode) {
       case 0: c = true; base = this.y << 8; break; // jmp
-      case 1: c = ac > ZERO; break; // bgt
-      case 2: c = ac < ZERO; break; // blt
+      case 1: c = ac > ZERO; break;  // bgt
+      case 2: c = ac < ZERO; break;  // blt
       case 3: c = ac != ZERO; break; // bne
       case 4: c = ac == ZERO; break; // beq
       case 5: c = ac >= ZERO; break; // bge
       case 6: c = ac <= ZERO; break; // ble
-      case 7: c = true; break; // bra
+      case 7: c = true; break;       // bra
     }
 
     if (c) {
@@ -196,15 +190,10 @@ class Gigatron {
    */
   offset(bus, d) {
     switch (bus) {
-      case 0:
-        return d;
-      case 1:
-        // no need to mask since RAM always has at least 1 page
-        return this.ram[d];
-      case 2:
-        return this.ac;
-      case 3:
-        return this.inReg;
+      case 0: return d;
+      case 1: return this.ram[d]; // RAM always has at least 1 page
+      case 2: return this.ac;
+      case 3: return this.inReg;
     }
   }
 }

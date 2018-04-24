@@ -25,6 +25,7 @@ class Vga {
 		this.maxCol = this.minCol + options.horizontal.visible;
 		this.pixel = 0;
 		this.out = 0;
+		// turn all pixels black with full alpha
 		for (let i = 0; i < this.pixels.length; i++) {
 			this.pixels[i] = (i % 4) == 3 ? 255 : 0;
 		}
@@ -34,7 +35,6 @@ class Vga {
 	/** advance simulation by one tick */
 	tick() {
 		let out = this.cpu.out;
-
 		let falling = this.out & ~out;
 		this.out = out;
 
@@ -55,7 +55,7 @@ class Vga {
 		}
 
 		if ((this.row >= this.minRow && this.row < this.maxRow) &&
-			(this.col >= this.minCol && this.col < this.maxCol)) {
+  			(this.col >= this.minCol && this.col < this.maxCol)) {
 			let pixels = this.pixels;
 			let pixel = this.pixel;
 			let r = (out << 6) & 0xc0;

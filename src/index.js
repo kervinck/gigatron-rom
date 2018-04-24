@@ -40,8 +40,7 @@ function toHex(value, width) {
 	return s;
 }
 
-/** p5 setup function */
-window.onload = function setup() {
+window.onload = function() {
 	let mhzText = document.getElementById('mhz');
 	let runButton = document.getElementById('run');
 	let stepButton = document.getElementById('step');
@@ -61,13 +60,11 @@ window.onload = function setup() {
 	let outSpan = document.getElementById('reg-out');
 	let outxSpan = document.getElementById('reg-outx');
 
-	//noLoop();
-
 	perf = new Perf(mhzText);
 
 	cpu = new Gigatron({
-		log2rom: 16,
-		log2ram: 15,
+		romAddressWidth: 16,
+		ramAddressWidth: 15,
 	});
 
 	vga = new Vga(vgaCanvas, cpu, {
@@ -80,14 +77,14 @@ window.onload = function setup() {
 	audio = new Audio(cpu);
 
 	gamepad = new Gamepad(cpu, {
-		up: 'ArrowUp',
-		down: 'ArrowDown',
-		left: 'ArrowLeft',
-		right: 'ArrowRight',
+		up:     'ArrowUp',
+		down:   'ArrowDown',
+		left:   'ArrowLeft',
+		right:  'ArrowRight',
 		select: 'q',
-		start: 'w',
-		a: 'a',
-		b: 's',
+		start:  'w',
+		a:      'a',
+		b:      's',
 	});
 
 	let gdb = {
@@ -199,9 +196,12 @@ function load(loader) {
 	console.log('Loaded');
 }
 
-/** advance the simulation by many ticks */
+/** advance the simulation until the audio queue is full,
+ * or a second of simulated time has passed.
+ */
 function ticks() {
 	let cycles = 0;
+	audio.drain();
 	while (cycles++ < 625000 && audio.scheduled < 4) {
 		perf.tick();
 		cpu.tick();
@@ -209,5 +209,4 @@ function ticks() {
 		audio.tick();
 	}
 	blinkenLights.tick();
-	audio.drain();
 }

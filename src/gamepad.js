@@ -10,53 +10,31 @@ class Gamepad {
 	 */
 	constructor(cpu, codes) {
 		this.cpu = cpu;
-		let bits = {};
-		bits[codes.right] = 0x01;
-		bits[codes.left] = 0x02;
-		bits[codes.down] = 0x04;
-		bits[codes.up] = 0x08;
-		bits[codes.start] = 0x10;
-		bits[codes.select] = 0x20;
-		bits[codes.b] = 0x40;
-		bits[codes.a] = 0x80;
-		this.bits = bits;
+		this.bits = {
+			[codes.right]:  0x01,
+			[codes.left]:   0x02,
+			[codes.down]:   0x04,
+			[codes.up]:     0x08,
+			[codes.start]:  0x10,
+			[codes.select]: 0x20,
+			[codes.b]:      0x40,
+			[codes.a]:      0x80,
+		};
 
 		document.addEventListener('keydown', (event) => {
-			if (!this.keyPressed(event.key)) {
+			let bit = this.bits[event.key];
+			if (bit) {
+				this.cpu.inReg &= ~bit;
 				event.preventDefault();
 			}
 		});
 
 		document.addEventListener('keyup', (event) => {
-			if (!this.keyReleased(event.key)) {
+			let bit = this.bits[event.key];
+			if (bit) {
+				this.cpu.inReg |= bit;
 				event.preventDefault();
 			}
 		});
-	}
-
-	/** called when key is pressed
-	 * @param {number} code - key code of pressed key
-	 * @return {boolean} whether to default process event
-	 */
-	keyPressed(code) {
-		let bit = this.bits[code];
-		if (bit) {
-			this.cpu.inReg &= ~bit;
-			return false;
-		}
-		return true;
-	}
-
-	/** called when key is released
-	 * @param {number} code - key code of released key
-	 * @return {boolean} whether to default process event
-	 */
-	keyReleased(code) {
-		let bit = this.bits[code];
-		if (bit) {
-			this.cpu.inReg |= bit;
-			return false;
-		}
-		return true;
 	}
 }

@@ -31,7 +31,6 @@ class BlinkenLights {
 
 		let ctx = this.ctx;
 
-
 		ctx.save();
 		ctx.translate(w, this.canvas.height/2);
 		for (let i = 0; i < 4; i++) {
