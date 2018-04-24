@@ -13,6 +13,8 @@ class Vga {
 	 */
 	constructor(canvas, cpu, options) {
 		this.canvas = canvas;
+		this.canvas.width = options.horizontal.visible;
+		this.canvas.height = options.vertical.visible;
 		this.ctx = canvas.getContext('2d');
 		this.imageData = this.ctx.getImageData(0, 0, canvas.width, canvas.height);
 		this.pixels = this.imageData.data;

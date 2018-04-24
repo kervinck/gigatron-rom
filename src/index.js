@@ -2,6 +2,8 @@
 
 /* exported setup, keyPressed, keyReleased */
 
+const HZ = 6250000;
+
 var cpu;
 var vga;
 var blinkenLights;
@@ -22,7 +24,8 @@ class Perf {
 
 	/** advance simulation by one tick */
 	tick() {
-		if (this.cycles++ > 6250000) {
+		/* update real frequency every second of simulated time */
+		if (this.cycles++ > HZ) {
 			let endTime = Date.now();
 			let mhz = this.cycles / (1000 * (endTime-this.startTime));
 			this.elt.textContent = mhz.toFixed(3) + 'MHz';
@@ -47,8 +50,7 @@ window.onload = function() {
 	let resetButton = document.getElementById('reset');
 	let loadButton = document.getElementById('load');
 	let muteButton = document.getElementById('mute');
-	let volumeSlider = document.getElementById('volume');
-	let volumeLabel = document.getElementById('volume-label');
+	let volumeSlider = document.getElementById('volume-slider');
 	let vgaCanvas = document.getElementById('vga');
 	let blinkenLightsCanvas = document.getElementById('blinken-lights');
 	let romFileInput = document.getElementById('rom-file');
@@ -63,6 +65,7 @@ window.onload = function() {
 	perf = new Perf(mhzText);
 
 	cpu = new Gigatron({
+		hz: HZ,
 		romAddressWidth: 16,
 		ramAddressWidth: 15,
 	});
@@ -100,7 +103,6 @@ window.onload = function() {
 		outSpan.textContent = '$'+toHex(cpu.out, 2);
 		outxSpan.textContent = '$'+toHex(cpu.out, 2);
 	}
-
 	updateRegs();
 
 	let loader = new Loader(cpu);
@@ -113,6 +115,7 @@ window.onload = function() {
 
 	runButton.onclick = function() {
 		if (gdb.timer) {
+			/* stop */
 			clearTimeout(gdb.timer);
 			gdb.timer = null;
 			this.textContent = 'Go';
@@ -120,7 +123,22 @@ window.onload = function() {
 			updateRegs();
 		}
 		else {
-			gdb.timer = setInterval(ticks, audio.duration);
+			/* go */
+			gdb.timer = setInterval(function ticks() {
+				/* advance the simulation until the audio queue is full,
+				 * or 100ms of simulated time has passed.
+				 */
+				let cycles = this.cpu.hz/10;
+				audio.drain();
+				while (cycles-- >= 0 && audio.scheduled < 4) {
+					perf.tick();
+					cpu.tick();
+					vga.tick();
+					audio.tick();
+				}
+				/* blinkenlights don't need to redraw every tick */
+				blinkenLights.tick();
+			}, audio.duration);
 			this.textContent = "Stop";
 			this.classList.replace('btn-success', 'btn-danger');
 		}
@@ -147,9 +165,10 @@ window.onload = function() {
 	};
 
 	volumeSlider.oninput = function() {
-		volumeLabel.textContent = this.value+'%';
+		this.labels[0].textContent = this.value+'%';
 		audio.volume = this.value / 100;
 	};
+	volumeSlider.oninput();
 
 	romFileInput.onchange = function() {
 		let file = this.files[0];
@@ -194,19 +213,4 @@ function load(loader) {
 	/* eslint-enable no-multi-spaces, max-len */
 
 	console.log('Loaded');
-}
-
-/** advance the simulation until the audio queue is full,
- * or a second of simulated time has passed.
- */
-function ticks() {
-	let cycles = 0;
-	audio.drain();
-	while (cycles++ < 625000 && audio.scheduled < 4) {
-		perf.tick();
-		cpu.tick();
-		vga.tick();
-		audio.tick();
-	}
-	blinkenLights.tick();
 }

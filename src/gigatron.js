@@ -15,6 +15,7 @@ class Gigatron {
    * @param {Object} options
    */
   constructor(options) {
+    this.hz = options.hz || 6250000;
     this.rom = new Uint16Array(1<<(options.romAddressWidth || 16));
     this.romMask = this.rom.length-1;
     this.ram = new Uint8Array(1<<(options.ramAddressWidth || 15));

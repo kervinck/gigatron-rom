@@ -8,7 +8,11 @@ class BlinkenLights {
 	 * @param {Gigatron} cpu
 	*/
 	constructor(canvas, cpu) {
+		this.r1 = 8;  // led radius
+		this.r2 = 10; // spacing radius
 		this.canvas = canvas;
+		this.canvas.width = 4 * 2*this.r2;
+		this.canvas.height = 2*this.r2;
 		this.ctx = canvas.getContext('2d');
 		this.cpu = cpu;
 		this.outx = cpu.outx;
@@ -26,8 +30,8 @@ class BlinkenLights {
 	}
 
 	draw() {
-		const r = 8;
-		const w = r+2;
+		const r = this.r1;
+		const w = this.r2;
 
 		let ctx = this.ctx;
 

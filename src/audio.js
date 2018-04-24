@@ -2,7 +2,6 @@
 
 /* exported Audio */
 
-const HZ = 6250000;
 const SAMPLES_PER_SECOND = 44100;
 
 var AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -101,8 +100,8 @@ class Audio {
 	/** advance simulation by one tick */
 	tick() {
 		this.cycle += SAMPLES_PER_SECOND;
-		if (this.cycle >= HZ) {
-			this.cycle -= HZ;
+		if (this.cycle >= this.cpu.hz) {
+			this.cycle -= this.cpu.hz;
 
 			let sample = (this.cpu.outx >> 4) / 0x10;
 			this.bias = (this.alpha * this.bias) + ((1-this.alpha) * sample);

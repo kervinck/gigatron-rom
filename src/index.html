@@ -35,8 +35,8 @@
 </head>
 <body>
 	<div class="container">
-		<h1 class="display-4">Gigatron <code id="mhz">0.000 MHz</code></h1>
-		<canvas id="blinken-lights" width="80" height="34"></canvas>
+		<h1 class="display-4">Gigatron <code id="mhz"></code></h1>
+		<canvas id="blinken-lights"></canvas>
 		<div class="row">
 			<div class="col">
 				<table class="table table-sm table-light">
@@ -79,12 +79,11 @@
 				</div>
 			</div>
 			<div class="col">
-				<canvas id="vga" class="border border-white rounded" width="640" height="480"></canvas>
+				<canvas id="vga" class="border border-white rounded"></canvas>
 				<form>
 					<div class="form-group">
-						Volume
-						<label id="volume-label" for="volume">50%</label>
-						<input id="volume" type="range" class="form-control-range fluid">
+						Volume <label for="volume-slider"></label>
+						<input id="volume-slider" type="range" class="form-control-range fluid">
 					</div>
 					<div class="form-group">
 						<button id="mute" type="button" class="btn btn-danger">Mute</button>
