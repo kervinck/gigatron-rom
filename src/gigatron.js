@@ -40,9 +40,9 @@ class Gigatron {
 
   /** advance simulation by one tick */
   tick() {
-    let pc = this.pc & this.romMask;
+    let pc = this.pc;
     this.pc = this.nextpc;
-    this.nextpc = this.pc + 1;
+    this.nextpc = (this.pc + 1) & this.romMask;
 
     let ir = this.rom[pc];
     let op = (ir >> 13) & 0x0007;
