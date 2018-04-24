@@ -14,22 +14,22 @@
 	<script src="blinkenlights.js"></script>
 	<script src="gamepad.js"></script>
 	<script src="loader.js"></script>
+	<script src="memory-view.js"></script>
 	<script src="index.js"></script>
 
 	<style>
-		body {
-			/*background: black;*/
-  		margin:0;
-			margin-left:45px;
-			padding:0;
-			overflow: hidden;
-		}
 		canvas {
 			margin:auto;
 		}
 
 		.btn {
 			width: 100px;
+		}
+
+		#ram-textarea, #rom-textarea {
+			font: 1.5em monospace;
+			background-color: black;
+			color: green;
 		}
 	</style>
 </head>
@@ -64,19 +64,15 @@
 					</div>
 				</form>
 
-				<table class="table table-sm table-light">
-					<tr><th>PC<td><code id="reg-pc"></code>
-					<tr><th>NEXTPC<td><code id="reg-nextpc"></code>
-					<tr><th>AC<td><code id="reg-ac"></code>
-					<tr><th>X<td><code id="reg-x"></code>
-					<tr><th>Y<td><code id="reg-y"></code>
-					<tr><th>OUT<td><code id="reg-out"></code>
-					<tr><th>OUTX<td><code id="reg-outx"></code>
+				<table class="table table-sm">
+					<tr><th>PC<td><samp id="reg-pc"></samp>
+					<tr><th>NEXTPC<td><samp id="reg-nextpc"></samp>
+					<tr><th>AC<td><samp id="reg-ac"></samp>
+					<tr><th>X<td><samp id="reg-x"></samp>
+					<tr><th>Y<td><samp id="reg-y"></samp>
+					<tr><th>OUT<td><samp id="reg-out"></samp>
+					<tr><th>OUTX<td><samp id="reg-outx"></samp>
 				</table>
-
-				<div class="form-group">
-					<button id="load" type="button" class="btn btn-warning">Loader</button>
-				</div>
 			</div>
 			<div class="col">
 				<canvas id="vga" class="border border-white rounded"></canvas>
@@ -91,6 +87,21 @@
 				</form>
 			</div>
 		</div>
+		<div class="row">
+			<div class="col-sm-6">
+				<label>ROM
+					<textarea id="rom-textarea" spellcheck="false" rows="25" cols="75"></textarea>
+				</label>
+			</div>
+			<div class="col-sm-6">
+				<label>RAM
+					<textarea id="ram-textarea" readonly="true" spellcheck="false" rows="25" cols="75"></textarea>
+				</label>
+			</div>
+		</div>
+		<!--div class="form-group">
+			<button id="load" type="button" class="btn btn-warning">Loader</button>
+		</div-->
 	</div>
 </body>
 </html>

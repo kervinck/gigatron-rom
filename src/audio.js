@@ -103,7 +103,7 @@ class Audio {
 		if (this.cycle >= this.cpu.hz) {
 			this.cycle -= this.cpu.hz;
 
-			let sample = (this.cpu.outx >> 4) / 0x10;
+			let sample = (this.cpu.outx >> 4) / 8;
 			this.bias = (this.alpha * this.bias) + ((1-this.alpha) * sample);
 			this.channelData[this.sampleIndex++] = (sample-this.bias) * this.volume;
 

@@ -61,6 +61,7 @@ window.onload = function() {
 	let ySpan = document.getElementById('reg-y');
 	let outSpan = document.getElementById('reg-out');
 	let outxSpan = document.getElementById('reg-outx');
+	let ramTextarea = document.getElementById('ram-textarea');
 
 	perf = new Perf(mhzText);
 
@@ -90,6 +91,8 @@ window.onload = function() {
 		b:      's',
 	});
 
+	let memoryView = new MemoryView(ramTextarea, cpu.ram);
+
 	let gdb = {
 		timer: null,
 	};
@@ -102,11 +105,14 @@ window.onload = function() {
 		ySpan.textContent = '$'+toHex(cpu.y, 2);
 		outSpan.textContent = '$'+toHex(cpu.out, 2);
 		outxSpan.textContent = '$'+toHex(cpu.out, 2);
+		memoryView.render();
 	}
 	updateRegs();
 
-	let loader = new Loader(cpu);
-	loadButton.onclick = function() { load(loader); };
+	if (loadButton) {
+		let loader = new Loader(cpu);
+		loadButton.onclick = function() { load(loader); };
+	}
 
 	resetButton.onclick = function() {
 		cpu.reset();
