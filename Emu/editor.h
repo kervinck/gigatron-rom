@@ -14,24 +14,29 @@
 #define INPUT_B       0x40
 #define INPUT_A       0x80
 
+#define HEX_BASE_ADDRESS   0x0200
+#define LOAD_BASE_ADDRESS  0x0200
+#define VARS_BASE_ADDRESS  0x0030
+
 
 namespace Editor
 {
-    enum EditorModes {Hex=0, Load, GigaLoad, NumEditorModes};
+    enum MemoryMode {RAM=0, ROM0, ROM1, NumMemoryModes};
+    enum EditorMode {Hex=0, Load, GigaLoad, Debug, NumEditorModes};
 
 
     int getCursorX(void);
     int getCursorY(void);
     bool getHexEdit(void);
-    bool getLoadFile(void);
     bool getSingleStepMode(void);
-    int getEditorMode(void);
-    int getHexRomMode(void);
+    MemoryMode getMemoryMode(void);
+    EditorMode getEditorMode(void);
     uint8_t getMemoryDigit(void);
     uint8_t getAddressDigit(void);
     uint16_t getHexBaseAddress(void);
     uint16_t getLoadBaseAddress(void);
     uint16_t getVarsBaseAddress(void);
+    uint16_t getSingleStepWatchAddress(void);
     int getFileNamesIndex(void);
     int getFileNamesSize(void);
     std::string* getFileName(int index);
@@ -41,6 +46,7 @@ namespace Editor
     void setSingleStep(bool singleStep);
     void setSingleStepMode(bool singleStepMode);
     void setLoadBaseAddress(uint16_t address);
+    void setSingleStepWatchAddress(uint16_t address);
 
     bool singleStepDebug(void);
     void handleInput(void);

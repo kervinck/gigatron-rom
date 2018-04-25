@@ -121,7 +121,7 @@ namespace Loader
         return sending;
     }
 
-    // TODO: fix the Gigatron version of upload so that it can send more than 60 bytes, (i.e. break up the payload into multiple packets of 60, 1 per packet per frame)
+    // TODO: fix the Gigatron version of upload so that it can send more than 60 total bytes, (i.e. break up the payload into multiple packets of 60, 1 packet per frame)
     void upload(int vgaY)
     {
         static bool frameUploading = false;
@@ -140,7 +140,7 @@ namespace Loader
                 // Upload raw vCPU code
                 std::string filename = *Editor::getFileName(Editor::getCursorY());
                 std::string filepath = std::string("./vCPU/" + filename);
-                if(filename.find(".vcpu") != filename.npos)
+                if(filename.find(".vcpu") != filename.npos  ||  filename.find(".gt1") != filename.npos)
                 {
                     fileToUpload = fopen(filepath.c_str(), "rb");
                     if(fileToUpload == NULL)
@@ -156,16 +156,18 @@ namespace Loader
                 }
 
                 // Upload vCPU assembly code
-                if(filename.find(".vasm") != filename.npos)
+                if(filename.find(".vasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
                 {
-                    Assembler::assemble(filepath, 0x0200);
+                    Assembler::assemble(filepath, DEFAULT_START_ADDRESS);
                     loadBaseAddress = Assembler::getStartAddress();
                     Editor::setLoadBaseAddress(loadBaseAddress);
-                    uint8_t data;
                     uint16_t address = loadBaseAddress;
-                    while(Assembler::getNextAssembledByte(data) == false)
+                    Assembler::ByteCode byteCode;
+                    while(Assembler::getNextAssembledByte(byteCode) == false)
                     {
-                        Cpu::setRAM(address++, data);
+                        // Custom address
+                        if(byteCode._address) address = byteCode._address;
+                        Cpu::setRAM(address++, byteCode._data);
                     }
                 }
 

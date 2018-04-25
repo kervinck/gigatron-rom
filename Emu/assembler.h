@@ -4,14 +4,22 @@
 #include <stdint.h>
 
 
-#define DEFAULT_START_ADDRESS 0x0200
+#define DEFAULT_START_ADDRESS  0x0200
 
 
 namespace Assembler
 {
+    struct ByteCode
+    {
+        uint8_t _data;
+        uint16_t _address;
+    };
+
+
     uint16_t getStartAddress(void);
 
-    bool getNextAssembledByte(uint8_t& data);
+    void initialise(void);
+    bool getNextAssembledByte(ByteCode& byteCode);
     bool assemble(const std::string& filename, uint16_t startAddress=DEFAULT_START_ADDRESS);
 }
 

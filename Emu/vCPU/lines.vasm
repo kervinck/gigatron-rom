@@ -1,0 +1,201 @@
+rand_x1     EQU     0x0006
+rand_y1     EQU     0x0007
+rand_x2     EQU     0x0008
+rand_y2     EQU     0x000b
+rand_colour EQU     0x0006
+                          
+vram        EQU     0x0800
+base        EQU     0x30
+pixels      EQU     0x32
+x1          EQU     0x34
+y1          EQU     0x36
+x2          EQU     0x38
+y2          EQU     0x3A
+dx1         EQU     0x3C
+dy1         EQU     0x3E
+dx2         EQU     0x40
+dy2         EQU     0x42
+w           EQU     0x44
+h           EQU     0x46
+absw        EQU     0x48
+absh        EQU     0x4A
+long        EQU     0x4C
+short       EQU     0x4E
+numerator   EQU     0x50
+ushort_max  EQU     0x52
+count       EQU     0x54
+xypos_low   EQU     0x56
+xypos_hi    EQU     0x57
+
+x_bounds    EQU     0x009F
+y_bounds    EQU     0x0077
+
+
+_callTable_         EQU     0x007E      ; call adresses are automatically stored here by the assembler, it grows downwards,
+                                        ; make sure it doesn't crash into anything important
+_singleStepWatch_   EQU     count       ; the single step debugger watches this variable location to decide when to step,
+                                        ; choose a variable that is updated often
+
+plot_pixel  EQU     0x0400      ; custom start address, this allows you to store code modules into any page, (0xNN00 <-> 0xNNFF),
+                                ; make sure no individual code module straddles a page boundary. cannot be less than 0x0200
+
+data        EQU     0x0500      ; custom address for constant data space defined with DB and/or DW
+
+
+0x0300      LDWI    vram        ; start address = 0x0300
+            STW     base        ; vram base address
+            STW     pixels      ; pixel address
+
+            LDWI    0x0000      
+            STW     x1
+            STW     y1
+            STW     x2 
+            STW     y2
+
+line        LD      rand_x1     ; x1 position
+            ST      x1
+            SUBI    x_bounds    ; works as (rand_x1 % x_bounds), but only because x_bounds is > 0x00FF/2, fails otherwise
+            BLE     y1_load
+            ST      x1
+
+y1_load     LD      rand_y1     ; y1 position
+            ST      y1
+            SUBI    y_bounds    ; works as (rand_y1 % y_bounds), but only because y_bounds is > 0x00FF/3, fails otherwise
+            BLE     x2_load
+            ST      y1
+            SUBI    y_bounds
+            BLE     x2_load
+            ST      y1
+            
+x2_load     LD      rand_x2     ; x2 position
+            ST      x2
+            SUBI    x_bounds    ; works as (rand_x2 % x_bounds), but only because x_bounds is > 0x00FF/2, fails otherwise
+            BLE     y2_load
+            ST      x2
+
+y2_load     LD      rand_y2     ; y2 position
+            ST      y2
+            SUBI    y_bounds    ; works as (rand_y2 % y_bounds), but only because y_bounds is > 0x00FF/3, fails otherwise
+            BLE     start
+            ST      y2
+            SUBI    y_bounds
+            BLE     start
+            ST      y2
+      
+start       LDWI    0x7FFF
+            STW     ushort_max
+
+            LDWI    0x0001
+            STW     dx1
+            STW     dy1
+            
+            LDWI    0x0000
+            STW     dx2
+            STW     dy2
+
+deltax      LDW     x2          ; absw = w = x2 - x1
+            SUBW    x1
+            STW     w
+            STW     absw
+            SUBW    ushort_max  ; dx1 = dx2 = (w > 0x7FFF) ? 0xFFFF : 1;
+            BLE     deltay
+            
+            LDWI    0xFFFF
+            STW     dx1
+            STW     dx2
+            LDWI    0x0000      ; absw = (w > 0x7FFF) ? 0 - w : w;
+            SUBW    w
+            STW     absw
+            
+deltay      LDW     y2
+            SUBW    y1
+            STW     h
+            STW     absh
+            SUBW    ushort_max  ; dy1 = (h > 0x7FFF) ? 0xFFFF : 1;
+            BLE     length
+            
+            LDWI    0xFFFF
+            STW     dy1
+            LDWI    0x0000      ; absh = (h > 0x7FFF) ? 0 - h : h;
+            SUBW    h
+            STW     absh
+            
+length      LDW     absh        ; short = absh
+            STW     short
+            LDW     absw        ; long = absw
+            STW     long
+            SUBW    short       ; if(longest >= shortest) goto init
+            BGE     init_num
+
+            LDW     absh        ; long = absh
+            STW     long
+            LDW     absw        ; short = absw
+            STW     short
+
+            LDW     h
+            SUBW    ushort_max  ; dy2 = (h > 0x7FFF) ? 0xFFFF : 1;
+            BLE     init_dy2
+            
+            LDWI    0xFFFF
+            STW     dy2
+            BRA     init_dx2
+            
+init_dy2    LDWI    0x0001
+            STW     dy2
+            
+init_dx2    LDWI    0x0000
+            STW     dx2         ; dx2 = 0   
+            
+init_num    LDW     long        ; numerator = long
+            STW     numerator
+            STW     count       ; for(uint16_t count=long; counti>=0; --i)
+            
+loop        CALL    plot_pixel
+            
+            LDW     numerator   ; numerator += short
+            ADDW    short
+            STW     numerator
+            SUBW    long
+            BLE     swap        ; if(numerator <= longest) goto swap
+            
+            STW     numerator   ; numerator -= long
+            LDW     dx1         ; x1 += dx1
+            ADDW    x1
+            STW     x1
+            LDW     dy1         ; y1 += dy1
+            ADDW    y1
+            STW     y1
+            BRA     counter
+            
+swap        LDW     dx2         ; x1 += dx2
+            ADDW    x1
+            STW     x1
+            LDW     dy2         ; y1 += dy2
+            ADDW    y1
+            STW     y1
+            
+counter     LDW     count
+            SUBI    0x01
+            STW     count
+            BGT     loop
+            BRA     line       
+
+            
+plot_pixel  LD      x1          ; generate pixel address
+            ST      xypos_low
+            LD      y1
+            ST      xypos_hi
+
+            LDW     base        ; generate vram address
+            ADDW    xypos_low
+            STW     pixels
+            LD      rand_colour
+            POKE    pixels      ; plot new pixel
+            RET
+   
+            
+            ; an example of how to define your own data
+data        DB      x_bounds y_bounds 2 3 4 5 6 7 8 9 0
+            DB      0x17 9 8 7 6 5 4 3 2 1 0 1 2 3 4 
+            DW      0xDEAD 0xB00B vram data 0 1 2 3 4 5 6 7 8 9 0
+            DW      0xBEEF $FFFF $0 0 1 2 3 4 5 6 7 8 9 0

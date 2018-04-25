@@ -19,16 +19,16 @@ namespace Editor
     int _cursorX = 0;
     int _cursorY = 0;
     bool _hexEdit = false;
-    bool _loadFile = false;
     bool _singleStep = false;
     bool _singleStepMode = false;
-    int _editorMode = EditorModes::Hex;
-    int _hexRomMode = 0;
+    MemoryMode _memoryMode = RAM;
+    EditorMode _editorMode = Hex, _prevEditorMode = Hex;
     uint8_t _memoryDigit = 0;
     uint8_t _addressDigit = 0;
-    uint16_t _hexBaseAddress = 0x0200;
-    uint16_t _loadBaseAddress = 0x0200;
-    uint16_t _varsBaseAddress = 0x0030;
+    uint16_t _hexBaseAddress = HEX_BASE_ADDRESS;
+    uint16_t _loadBaseAddress = LOAD_BASE_ADDRESS;
+    uint16_t _varsBaseAddress = VARS_BASE_ADDRESS;
+    uint16_t _singleStepWatchAddress = VARS_BASE_ADDRESS;
     int _fileNamesIndex = 0;
     std::vector<std::string> _fileNames;
 
@@ -36,16 +36,16 @@ namespace Editor
     int getCursorX(void) {return _cursorX;}
     int getCursorY(void) {return _cursorY;}
     bool getHexEdit(void) {return _hexEdit;}
-    bool getLoadFile(void) {return _loadFile;}
     bool getSingleStep(void) {return _singleStep;}
     bool getSingleStepMode(void) {return _singleStepMode;}
-    int getEditorMode(void) {return _editorMode;}
-    int getHexRomMode(void) {return _hexRomMode;}
+    MemoryMode getMemoryMode(void) {return _memoryMode;}
+    EditorMode getEditorMode(void) {return _editorMode;}
     uint8_t getMemoryDigit(void) {return _memoryDigit;}
     uint8_t getAddressDigit(void) {return _addressDigit;}
     uint16_t getHexBaseAddress(void) {return _hexBaseAddress;}
     uint16_t getLoadBaseAddress(void) {return _loadBaseAddress;}
     uint16_t getVarsBaseAddress(void) {return _varsBaseAddress;}
+    uint16_t getSingleStepWatchAddress(void) {return _singleStepWatchAddress;}
     int getFileNamesIndex(void) {return _fileNamesIndex;}
     int getFileNamesSize(void) {return int(_fileNames.size());}
     std::string* getFileName(int index) {return &_fileNames[index % _fileNames.size()];}
@@ -55,13 +55,14 @@ namespace Editor
     void setSingleStep(bool singleStep) {_singleStep = singleStep;}
     void setSingleStepMode(bool singleStepMode) {_singleStepMode = singleStepMode;}
     void setLoadBaseAddress(uint16_t address) {_loadBaseAddress = address;}
+    void setSingleStepWatchAddress(uint16_t address) {_singleStepWatchAddress = address;}
 
 
     void handleMouseWheel(const SDL_Event& event)
     {
         if(event.wheel.y > 0)
         {
-            if(_loadFile == true)
+            if(_editorMode == Load)
             {
                 _fileNamesIndex--;
                 if(_fileNamesIndex < 0) _fileNamesIndex = 0;
@@ -73,7 +74,7 @@ namespace Editor
         }
         if(event.wheel.y < 0)
         {
-            if(_loadFile == true)
+            if(_editorMode == Load)
             {
                 if(_fileNames.size() > HEX_CHARS_Y)
                 {
@@ -90,7 +91,7 @@ namespace Editor
 
     void handleKeyDown(SDL_Keycode keyCode)
     {
-        int limitY = (_loadFile == false) ? HEX_CHARS_Y : int(_fileNames.size());
+        int limitY = (_editorMode != Load) ? HEX_CHARS_Y : int(_fileNames.size());
 
         switch(keyCode)
         {
@@ -110,7 +111,7 @@ namespace Editor
 
             case SDLK_PAGEUP:
             {
-                if(_loadFile == true)
+                if(_editorMode == Load)
                 {
                     _fileNamesIndex--;
                     if(_fileNamesIndex < 0) _fileNamesIndex = 0;
@@ -124,7 +125,7 @@ namespace Editor
 
             case SDLK_PAGEDOWN:
             {
-                if(_loadFile == true)
+                if(_editorMode == Load)
                 {
                     if(_fileNames.size() > HEX_CHARS_Y)
                     {
@@ -157,6 +158,19 @@ namespace Editor
                 SDL_Quit();
                 exit(0);
             }
+
+            // Testing
+            case SDLK_F1:
+            {
+                uint8_t x1 = rand() % GIGA_WIDTH;
+                uint8_t x2 = rand() % GIGA_WIDTH;
+                uint8_t y1 = rand() % GIGA_HEIGHT;
+                uint8_t y2 = rand() % GIGA_HEIGHT;
+                uint8_t colour = rand() % 256;
+                //Graphics::drawLine(x1, y1, x2, y2, colour);
+                Graphics::drawLineGiga(x1, y1, x2, y2, colour);
+            }
+            break;
         }
     }
 
@@ -175,13 +189,13 @@ namespace Editor
             }
 
             // Edit address
-            if(_cursorY == -1)
+            if(_cursorY == -1  &&   _hexEdit == true)
             {
                 // Hex address or load address
                 if((_cursorX & 0x01) == 0)
                 {
                     // Hex address
-                    if(_loadFile == false)
+                    if(_editorMode != Load)
                     {
                         switch(_addressDigit)
                         {
@@ -201,6 +215,8 @@ namespace Editor
                             case 2: value = (value << 4)  & 0x00F0; _loadBaseAddress = _loadBaseAddress & 0xFF0F | value; break;
                             case 3: value = (value << 0)  & 0x000F; _loadBaseAddress = _loadBaseAddress & 0xFFF0 | value; break;
                         }
+
+                        if(_loadBaseAddress < LOAD_BASE_ADDRESS) _loadBaseAddress = LOAD_BASE_ADDRESS;
                     }
                 }
                 // Vars address
@@ -218,7 +234,7 @@ namespace Editor
                 _addressDigit = (++_addressDigit) & 0x03;
             }
             // Edit memory
-            else if(_hexRomMode == 0  &&  _hexEdit == true)
+            else if(_memoryMode == RAM  &&  _hexEdit == true)
             {
                 uint16_t address = _hexBaseAddress + _cursorX + _cursorY*HEX_CHARS_X;
                 switch(_memoryDigit)
@@ -268,8 +284,8 @@ namespace Editor
             case SDLK_l:
             {
                 _cursorX = 0; _cursorY = 0;
-                _loadFile = !_loadFile;
-                if(_loadFile == true) browseDirectory();
+                _editorMode = _editorMode == Load ? Hex : Load;
+                if(_editorMode == Load) browseDirectory();
             }
             break;
 
@@ -284,13 +300,25 @@ namespace Editor
             break;
 
             // Enter debug mode
-            case SDLK_F6: _singleStepMode = true;
+            case SDLK_F6:
+            {
+                _prevEditorMode = _editorMode;
+                _editorMode = Debug;
+                _singleStepMode = true;
+            }
+            break;
 
             // RAM/ROM mode
-            case SDLK_r: _hexRomMode = (++_hexRomMode) % 3; break;
+            case SDLK_r:
+            {
+                static int memoryMode = RAM;
+                memoryMode = (++memoryMode) % NumMemoryModes;
+                _memoryMode = (MemoryMode)memoryMode;
+            }
+            break;
 
             // Toggle hex edit or start an upload
-            case SDLK_RETURN: (_loadFile == false  ||  _cursorY == -1) ? _hexEdit = !_hexEdit : Loader::setStartUploading(true); break;
+            case SDLK_RETURN: (_editorMode != Load  ||  _cursorY == -1) ? _hexEdit = !_hexEdit : Loader::setStartUploading(true); break;
         }
 
         updateEditor(keyCode);
@@ -299,13 +327,13 @@ namespace Editor
     // Debug mode, handles it's own input and rendering
     bool singleStepDebug(void)
     {
-        static uint8_t oldWatch = Cpu::getRAM(0x0034);
+        static uint8_t oldWatch = Cpu::getRAM(_singleStepWatchAddress);
 
         // Single step
         if(_singleStep == true)
         {
             // Watch variable 
-            if(Cpu::getRAM(0x0034) != oldWatch) 
+            if(Cpu::getRAM(_singleStepWatchAddress) != oldWatch) 
             {
                 _singleStep = false;
                 _singleStepMode = true;
@@ -340,7 +368,12 @@ namespace Editor
                         // Leave debug mode
                         switch(event.key.keysym.sym)
                         {
-                            case SDLK_F6: _singleStepMode = false; break; 
+                            case SDLK_F6:
+                            {
+                                _editorMode = _prevEditorMode;
+                                _singleStepMode = false;
+                            }
+                            break; 
                         }
                     }
                     break;
@@ -354,7 +387,7 @@ namespace Editor
                             {
                                 _singleStep = true;
                                 _singleStepMode = false;
-                                oldWatch = Cpu::getRAM(0x0034);
+                                oldWatch = Cpu::getRAM(_singleStepWatchAddress);
                             }
                             break;
 

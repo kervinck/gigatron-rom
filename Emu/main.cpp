@@ -1,5 +1,5 @@
 /*
-Ver 0.2.5
+Ver 0.2.6
 - YouTube https://youtu.be/fH30TR6jeQM
 
 Features:
@@ -17,7 +17,7 @@ Features:
 - Can execute hand crafted code within the Hex Editor.
 - Three seperate editable start addresses are provided; memory display address,
 vCPU vars display address and load start address.
-- A built in assembler can now load vCPU nmemonics, it's a toy assembler but has labels
+- A built in assembler can now load vCPU mnemonics, it's a toy assembler but has labels
 non arithmetic equates, starting address and mutables, (labels for self modifying code).
 - A debugging mode that lets you pause the simulation or single step through the vCPU
 code, the single step feature is not a true instruction stepper, but rather a variable
@@ -133,6 +133,7 @@ int main(int argc, char* argv[])
     Cpu::initialise(S);
     Audio::initialise();
     Graphics::initialise();
+    Assembler::initialise();
 
     bool debugging = false;
 

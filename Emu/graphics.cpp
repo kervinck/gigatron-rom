@@ -216,9 +216,10 @@ namespace Graphics
             sprintf(str, "XOUT: %02X  IN: %02X", Cpu::getXOUT(), Cpu::getIN());
             drawText(std::string(str), 485, FONT_CELL_Y*2, 0xFFFFFFFF, false, 0);
             drawText("Mode:       ", 485, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
-            sprintf(str, "Hex ");
-            if(Editor::getHexEdit() == true) sprintf(str, "Edit");
-            if(Editor::getLoadFile() == true) sprintf(str, "Load");
+            sprintf(str, "Hex  ");
+            if(Editor::getHexEdit() == true) sprintf(str, "Edit ");
+            else if(Editor::getEditorMode() == Editor::Load) sprintf(str, "Load ");
+            else if(Editor::getEditorMode() == Editor::Debug) sprintf(str, "Debug");
             drawText(std::string(str), 553, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
         }
     }
@@ -231,7 +232,7 @@ namespace Graphics
             char str[32] = "";
 
             // File load
-            if(Editor::getLoadFile() == true)
+            if(Editor::getEditorMode() == Editor::Load)
             {
                 // File list
                 drawText("Load:       Vars:", 485, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0);
@@ -275,11 +276,11 @@ namespace Graphics
             // Hex monitor
             else
             {
-                switch(Editor::getHexRomMode())
+                switch(Editor::getMemoryMode())
                 {
-                    case 0: drawText("RAM:        Vars:", 485, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
-                    case 1: drawText("ROM0:       Vars:", 485, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
-                    case 2: drawText("ROM1:       Vars:", 485, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
+                    case Editor::RAM:  drawText("RAM:        Vars:", 485, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
+                    case Editor::ROM0: drawText("ROM0:       Vars:", 485, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
+                    case Editor::ROM1: drawText("ROM1:       Vars:", 485, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
                 }
 
                 // 8 * 32 hex display of memory
@@ -297,15 +298,15 @@ namespace Graphics
                     for(int i=0; i<HEX_CHARS_X; i++)
                     {
                         uint8_t value = 0;
-                        switch(Editor::getHexRomMode())
+                        switch(Editor::getMemoryMode())
                         {
-                            case 0: value = Cpu::getRAM(hexddress++);    break;
-                            case 1: value = Cpu::getROM(hexddress++, 0); break;
-                            case 2: value = Cpu::getROM(hexddress++, 1); break;
+                            case Editor::RAM:  value = Cpu::getRAM(hexddress++);    break;
+                            case Editor::ROM0: value = Cpu::getROM(hexddress++, 0); break;
+                            case Editor::ROM1: value = Cpu::getROM(hexddress++, 1); break;
                         }
                         sprintf(str, "%02X ", value);
                         bool onCursor = (i == Editor::getCursorX()  &&  j == Editor::getCursorY());
-                        drawText(std::string(str), 493 + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), (Editor::getHexEdit() && Editor::getHexRomMode() ==0 && onCursor) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor, 2);
+                        drawText(std::string(str), 493 + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), (Editor::getHexEdit() && Editor::getMemoryMode() == Editor::RAM && onCursor) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor, 2);
                     }
                 }
 
@@ -327,7 +328,7 @@ namespace Graphics
                     if(onCursor1 == true) drawDigitBox(Editor::getAddressDigit(), 593, FONT_CELL_Y*3, 0xFFFF00FF);
 
                     // Draw memory digit selection box                
-                    if(Editor::getCursorY() >= 0  &&  Editor::getHexRomMode() == 0) drawDigitBox(Editor::getMemoryDigit(), 493 + Editor::getCursorX()*HEX_CHAR_WIDE, FONT_CELL_Y*4 + Editor::getCursorY()*FONT_CELL_Y, 0xFFFF00FF);
+                    if(Editor::getCursorY() >= 0  &&  Editor::getMemoryMode() == Editor::RAM) drawDigitBox(Editor::getMemoryDigit(), 493 + Editor::getCursorX()*HEX_CHAR_WIDE, FONT_CELL_Y*4 + Editor::getCursorY()*FONT_CELL_Y, 0xFFFF00FF);
                 }
             }
         }
@@ -344,5 +345,131 @@ namespace Graphics
         SDL_RenderPresent(_renderer);
 
         if(synchronise == true) Timing::synchronise();
+    }
+
+
+    void drawPixel(uint8_t x, uint8_t y, uint32_t colour)
+    {
+        x = x % GIGA_WIDTH;
+        y = y % GIGA_HEIGHT;
+        uint16_t address = GIGA_VRAM + x + (y <<8);
+        uint32_t screen = x*3 + y*4*SCREEN_WIDTH;
+
+        _pixels[screen + 0 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 0*SCREEN_WIDTH] = colour;
+        _pixels[screen + 0 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 1*SCREEN_WIDTH] = colour;
+        _pixels[screen + 0 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 2*SCREEN_WIDTH] = colour;
+        _pixels[screen + 0 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 1 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 2 + 3*SCREEN_WIDTH] = 0x00;
+    }
+
+
+    void drawLine(int x, int y, int x2, int y2, uint32_t colour)
+    {
+   	    bool yLonger = false;
+	    int shortLen = y2 - y;
+	    int longLen = x2 - x;
+	
+        if(abs(shortLen) > abs(longLen))
+        {
+		    uint8_t swap = shortLen;
+		    shortLen = longLen;
+		    longLen = swap;				
+		    yLonger = true;
+	    }
+
+	    int decInc;
+	    if(longLen ==0 ) decInc=0;
+	    else decInc = (shortLen << 8) / longLen;
+
+	    if(yLonger)
+        {
+		    if(longLen > 0)
+            {
+			    longLen += y;
+			    for(int j=0x80+(x<<8); y<=longLen; ++y)
+                {
+				    drawPixel(uint8_t(j>>8), uint8_t(y), colour);	
+				    j+=decInc;
+			    }
+			    return;
+		    }
+		    longLen += y;
+		    for(int j=0x80+(x<<8); y>=longLen; --y)
+            {
+			    drawPixel(uint8_t(j>>8), uint8_t(y), colour);	
+			    j-=decInc;
+		    }
+		    return;	
+	    }
+
+	    if(longLen>0)
+        {
+		    longLen += x;
+		    for(int j=0x80+(y<<8); x<=longLen; ++x)
+            {
+			    drawPixel(uint8_t(x), uint8_t(j>>8), colour);
+			    j+=decInc;
+		    }
+		    return;
+	    }
+	    longLen += x;
+	    for(int j=0x80+(y<<8); x>=longLen;--x)
+        {
+		    drawPixel(uint8_t(x), uint8_t(j>>8), colour);
+		    j-=decInc;
+	    }
+    }
+
+    void drawPixelGiga(uint8_t x, uint8_t y, uint8_t colour)
+    {
+        x = x % GIGA_WIDTH;
+        y = y % GIGA_HEIGHT;
+        uint16_t address = GIGA_VRAM + x + (y <<8);
+        Cpu::setRAM(address, colour);
+    }
+
+    void drawLineGiga(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t colour)
+    {
+        x1 = y1 = 0;
+        x2 = y2 = 5;
+
+        uint16_t w = x2 - x1;
+        uint16_t h = y2 - y1;
+        uint16_t dx1 = 1, dy1 = 1, dx2 = 0, dy2 = 0;
+
+        dx1 = dx2 = (w > 0x7FFF) ? 0xFFFF : 1;
+        dy1 = (h > 0x7FFF) ? 0xFFFF : dy1 = 1;
+
+        uint16_t absw = (w > 0x7FFF) ? 0 - w : w;
+        uint16_t absh = (h > 0x7FFF) ? 0 - h : h;
+
+        uint16_t longest = absw;
+        uint16_t shortest = absh;
+
+        if(longest < shortest) 
+        {
+            longest = absh;
+            shortest = absw; 
+            if(h > 0x7FFF) dy2 = 0xFFFF; 
+            else if (h > 0) dy2 = 1;
+            dx2 = 0;            
+        }
+
+        uint16_t numerator = longest;// >> 1;
+        for(uint16_t i=0; i<=longest; i++) 
+        {
+            drawPixelGiga(uint8_t(x1), uint8_t(y1), colour);
+            numerator += shortest;
+            if(numerator > longest) 
+            {
+                numerator -= longest;
+                x1 += dx1;
+                y1 += dy1;
+            }
+            else
+            {
+                x1 += dx2;
+                y1 += dy2;
+            }
+        }     
     }
 }
