@@ -28,7 +28,7 @@ class Perf {
 		if (this.cycles++ > HZ) {
 			let endTime = Date.now();
 			let mhz = this.cycles / (1000 * (endTime-this.startTime));
-			this.elt.textContent = mhz.toFixed(3) + 'MHz';
+			this.elt.text(mhz.toFixed(3) + 'MHz');
 			this.startTime = endTime;
 			this.cycles = 0;
 		}
@@ -49,26 +49,20 @@ function toHex(value, width) {
 	return lpad(value.toString(16), width, '0');
 }
 
-window.onload = function() {
-	let mhzText = document.getElementById('mhz');
-	let runButton = document.getElementById('run');
-	let stepButton = document.getElementById('step');
-	let resetButton = document.getElementById('reset');
-	let loadButton = document.getElementById('load');
-	let muteButton = document.getElementById('mute');
-	let volumeSlider = document.getElementById('volume-slider');
-	let vgaCanvas = document.getElementById('vga');
-	let blinkenLightsCanvas = document.getElementById('blinken-lights');
-	let romFileInput = document.getElementById('rom-file');
-	let pcSpan = document.getElementById('reg-pc');
-	let nextpcSpan = document.getElementById('reg-nextpc');
-	let acSpan = document.getElementById('reg-ac');
-	let xSpan = document.getElementById('reg-x');
-	let ySpan = document.getElementById('reg-y');
-	let outSpan = document.getElementById('reg-out');
-	let outxSpan = document.getElementById('reg-outx');
-	let ramTextarea = document.getElementById('ram-textarea');
-	let romTextarea = document.getElementById('rom-textarea');
+$(function() {
+	let mhzText = $('#mhz');
+	let runButton = $('#run');
+	let stepButton = $('#step');
+	let resetButton = $('#reset');
+	let loadButton = $('#load');
+	let muteButton = $('#mute');
+	let volumeSlider = $('#volume-slider');
+	let vgaCanvas = $('#vga').get(0);
+	let blinkenLightsCanvas = $('#blinken-lights').get(0);
+	let romFileInput = $('#rom-file');
+	let regsTable = $('#regs-table');
+	let ramTextarea = $('#ram-textarea').get(0);
+	let romTable = $('#rom-table');
 
 	perf = new Perf(mhzText);
 
@@ -99,43 +93,52 @@ window.onload = function() {
 	});
 
 	let ramView = new RamView(ramTextarea, cpu.ram);
-	let romView = new RomView(romTextarea, cpu.rom);
+	let romView = new RomView(romTable, cpu.rom);
 
 	let gdb = {
 		timer: null,
 	};
 
-	function updateRegs() {
-		pcSpan.textContent = '$'+toHex(cpu.pc, 4);
-		nextpcSpan.textContent = '$'+toHex(cpu.nextpc, 4);
-		acSpan.textContent = '$'+toHex(cpu.ac, 2);
-		xSpan.textContent = '$'+toHex(cpu.x, 2);
-		ySpan.textContent = '$'+toHex(cpu.y, 2);
-		outSpan.textContent = '$'+toHex(cpu.out, 2);
-		outxSpan.textContent = '$'+toHex(cpu.out, 2);
+	function updateView() {
+		regsTable.empty();
+		for (let [reg, width] of [['pc',     4],
+													    ['nextpc', 4],
+															['ac',     2],
+															['x',      2],
+															['y',      2],
+															['out',    2],
+															['outx',   2]]) {
+			$('<tr>').append([
+				$('<th>').text(reg),
+				$('<td>').text(toHex(cpu[reg], width)),
+			])
+			.appendTo(regsTable);
+		}
 		ramView.render();
+		romView.render(0, {
+			[cpu.pc]: 'bg-success text-dark',
+			[cpu.nextpc]: 'bg-secondary text-dark',
+		});
 	}
-	updateRegs();
-	romView.render();
+	updateView();
 
-	if (loadButton) {
-		let loader = new Loader(cpu);
-		loadButton.onclick = function() { load(loader); };
-	}
+	let loader = new Loader(cpu);
+	loadButton.click(function() { load(loader); });
 
-	resetButton.onclick = function() {
+	resetButton.click(function() {
 		cpu.reset();
-		updateRegs();
-	};
+		updateView();
+	});
 
-	runButton.onclick = function() {
+	runButton.click(function() {
+		runButton.toggleClass('btn-danger btn-success');
+
 		if (gdb.timer) {
 			/* stop */
 			clearTimeout(gdb.timer);
 			gdb.timer = null;
-			this.textContent = 'Go';
-			this.classList.replace('btn-danger', 'btn-success');
-			updateRegs();
+			runButton.text('Go');
+			updateView();
 		}
 		else {
 			/* go */
@@ -154,38 +157,31 @@ window.onload = function() {
 				/* blinkenlights don't need to redraw every tick */
 				blinkenLights.tick();
 			}, audio.duration);
-			this.textContent = "Stop";
-			this.classList.replace('btn-success', 'btn-danger');
+			runButton.text('Stop');
 		}
-	};
+	});
 
-	stepButton.onclick = function() {
+	stepButton.click(function() {
 		perf.tick();
 		cpu.tick();
 		vga.tick();
 		blinkenLights.tick();
-		updateRegs();
-	};
+		updateView();
+	});
 
-	muteButton.onclick = function() {
+	muteButton.click(function() {
 		audio.mute = !audio.mute;
-		if (audio.mute) {
-			this.textContent = 'Unmute';
-			this.classList.replace('btn-danger', 'btn-success');
-		}
-		else {
-			this.textContent = 'Mute';
-			this.classList.replace('btn-success', 'btn-danger');
-		}
-	};
+		muteButton.toggleClass('btn-danger btn-success');
+		muteButton.text(audio.mute ? 'Unmute' : 'Mute');
+	});
 
-	volumeSlider.oninput = function() {
+	volumeSlider.on('input', function() {
 		this.labels[0].textContent = this.value+'%';
 		audio.volume = this.value / 100;
-	};
-	volumeSlider.oninput();
+	});
+	volumeSlider.trigger('input');
 
-	romFileInput.onchange = function() {
+	romFileInput.change(function() {
 		let file = this.files[0];
 		this.labels[0].textContent = file.name;
 		let fileReader = new FileReader();
@@ -197,11 +193,11 @@ window.onload = function() {
 				cpu.rom[i] = view.getUint16(i<<1);
 			}
 			cpu.romMask = file.size-1;
-			romView.render();
+			updateView();
 		};
 		fileReader.readAsArrayBuffer(file);
-	};
-};
+	});
+});
 
 /** load blinky program
  * @param {Loader} loader

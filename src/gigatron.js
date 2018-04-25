@@ -21,6 +21,10 @@ class Gigatron {
     this.ram = new Uint8Array(1<<(options.ramAddressWidth || 15));
     this.ramMask = this.ram.length-1;
     this.reset();
+    // randomize ram
+    for (let i = 0; i < this.ram.length; i++) {
+      this.ram[i] = randomUint8();
+    }
   }
 
   reset() {
@@ -32,11 +36,6 @@ class Gigatron {
     this.out = 0;
     this.outx = 0;
     this.inReg = 0xff; // active low!
-
-    // randomize ram
-    for (let i = 0; i < this.ram.length; i++) {
-      this.ram[i] = randomUint8();
-    }
   }
 
   /** advance simulation by one tick */

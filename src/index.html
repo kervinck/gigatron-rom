@@ -8,6 +8,7 @@
 	<title>Gigatron</title>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha256-NJWeQ+bs82iAeoT5Ktmqbi3NXwxcHlfaVejzJI2dklU=" crossorigin="anonymous" />
 	<link href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.0/slate/bootstrap.min.css" rel="stylesheet" integrity="sha384-A0hm/Pn0Gvk8w7szlEuTOZrIyQCCBNXQF9ccseoCI36nWRfMEAapo5UJ56zLPvPw" crossorigin="anonymous">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 	<script src="disassembler.js"></script>
 	<script src="gigatron.js"></script>
 	<script src="vga.js"></script>
@@ -28,7 +29,7 @@
 			width: 100px;
 		}
 
-		#ram-textarea, #rom-textarea {
+		#ram-textarea, #rom-table, #regs-table {
 			font-size: 12pt;
 			font-family: monospace;
 			/*
@@ -41,7 +42,7 @@
 <body>
 	<div class="container">
 		<h1 class="display-4">Gigatron <code id="mhz"></code></h1>
-		<canvas id="blinken-lights"></canvas>
+		<canvas id="blinken-lights" width="0" height="0"></canvas>
 		<div class="row">
 			<div class="col-sm-4">
 				<table class="table table-sm table-light">
@@ -69,20 +70,13 @@
 					</div>
 				</form>
 
-				<table class="table table-sm">
-					<tr><th>PC<td><samp id="reg-pc"></samp>
-					<tr><th>NEXTPC<td><samp id="reg-nextpc"></samp>
-					<tr><th>AC<td><samp id="reg-ac"></samp>
-					<tr><th>X<td><samp id="reg-x"></samp>
-					<tr><th>Y<td><samp id="reg-y"></samp>
-					<tr><th>OUT<td><samp id="reg-out"></samp>
-					<tr><th>OUTX<td><samp id="reg-outx"></samp>
+				<table id="regs-table" class="table table-sm">
 				</table>
 			</div>
 
 			<div class="col-sm-8">
 				<div class="mx-auto" style="width:650px;">
-					<canvas id="vga" class="border border-white rounded mx-auto"></canvas>
+					<canvas id="vga" class="border border-white rounded mx-auto" width="0" height="0"></canvas>
 
 					<form class="mt-4">
 						<div class="form-row">
@@ -99,16 +93,17 @@
 
 			</div>
 		</div>
+
 		<div class="row">
 			<div class="col-sm-4">
-				<label>ROM
-					<textarea id="rom-textarea" spellcheck="false" rows="15" cols="35"></textarea>
-				</label>
+				<p>ROM</p>
+				<table class="table table-sm table-striped" style="height: 500px; overflow: scroll;">
+					<tbody id="rom-table"></tbody>
+				</table>
 			</div>
 			<div class="col-sm-8">
-				<label>RAM
-					<textarea id="ram-textarea" readonly="true" spellcheck="false" rows="15" cols="75"></textarea>
-				</label>
+				<p>RAM</p>
+				<textarea id="ram-textarea" readonly="true" spellcheck="false" rows="15" cols="75"></textarea>
 			</div>
 		</div>
 		<!--div class="form-group">
