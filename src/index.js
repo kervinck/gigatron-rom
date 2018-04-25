@@ -35,12 +35,18 @@ class Perf {
 	}
 }
 
+function rpad(value, width, pad) {
+	pad = pad || ' ';
+	return value + (value.length < width ? pad.repeat(width-value.length) : '');
+}
+
+function lpad(value, width, pad) {
+	pad = pad || ' ';
+	return (value.length < width ? pad.repeat(width-value.length) : '') + value;
+}
+
 function toHex(value, width) {
-	let s = value.toString(16);
-	if (s.length < width) {
-		s = '0'.repeat(width-s.length) + s;
-	}
-	return s;
+	return lpad(value.toString(16), width, '0');
 }
 
 window.onload = function() {
@@ -62,6 +68,7 @@ window.onload = function() {
 	let outSpan = document.getElementById('reg-out');
 	let outxSpan = document.getElementById('reg-outx');
 	let ramTextarea = document.getElementById('ram-textarea');
+	let romTextarea = document.getElementById('rom-textarea');
 
 	perf = new Perf(mhzText);
 
@@ -91,7 +98,8 @@ window.onload = function() {
 		b:      's',
 	});
 
-	let memoryView = new MemoryView(ramTextarea, cpu.ram);
+	let ramView = new RamView(ramTextarea, cpu.ram);
+	let romView = new RomView(romTextarea, cpu.rom);
 
 	let gdb = {
 		timer: null,
@@ -105,9 +113,10 @@ window.onload = function() {
 		ySpan.textContent = '$'+toHex(cpu.y, 2);
 		outSpan.textContent = '$'+toHex(cpu.out, 2);
 		outxSpan.textContent = '$'+toHex(cpu.out, 2);
-		memoryView.render();
+		ramView.render();
 	}
 	updateRegs();
+	romView.render();
 
 	if (loadButton) {
 		let loader = new Loader(cpu);
@@ -188,6 +197,7 @@ window.onload = function() {
 				cpu.rom[i] = view.getUint16(i<<1);
 			}
 			cpu.romMask = file.size-1;
+			romView.render();
 		};
 		fileReader.readAsArrayBuffer(file);
 	};

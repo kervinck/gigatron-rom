@@ -1,9 +1,13 @@
+'use strict';
+
+/* exported RamView */
+
 function isprint(char) {
   let code = char.charCodeAt(0);
   return code >= 0x20 && code < 0x7f;
 }
 
-class MemoryView {
+class RamView {
   constructor(textarea, memory) {
     this.textarea = textarea;
     this.memory = memory;
