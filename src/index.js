@@ -62,7 +62,7 @@ $(function() {
 	let romFileInput = $('#rom-file');
 	let regsTable = $('#regs-table');
 	let ramTextarea = $('#ram-textarea').get(0);
-	let romTable = $('#rom-table');
+	let romDiv = $('#rom-div');
 
 	perf = new Perf(mhzText);
 
@@ -93,7 +93,7 @@ $(function() {
 	});
 
 	let ramView = new RamView(ramTextarea, cpu.ram);
-	let romView = new RomView(romTable, cpu.rom);
+	let romView = new RomView(romDiv, cpu.rom);
 
 	let gdb = {
 		timer: null,
@@ -115,10 +115,11 @@ $(function() {
 			.appendTo(regsTable);
 		}
 		ramView.render();
-		romView.render(0, {
+		romView.render(cpu.pc, {
 			[cpu.pc]: 'bg-success text-dark',
 			[cpu.nextpc]: 'bg-secondary text-dark',
 		});
+		vga.render();
 	}
 	updateView();
 

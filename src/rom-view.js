@@ -7,24 +7,33 @@ class RomView {
     this.view = view;
     this.rom = rom;
     this.disassembler = new Disassembler();
+    this.scroller = new Scroller(view, {
+      createRow: (index) => this.createRow(index),
+      rowCount: rom.length,
+    });
+    this.hilights = {};
+  }
+
+  createRow(index) {
+    if (index < 0 || index >= this.rom.length) {
+      return null;
+    }
+
+    let instruction = this.rom[index];
+    let decode = this.disassembler.disassemble(instruction);
+
+    return $('<div>')
+      .addClass(this.hilights[index] || '')
+      .append($('<span>')
+        .html(toHex(index, 4) + '&nbsp;' +
+              toHex(instruction, 4) + '&nbsp;&nbsp;' +
+              rpad(decode.mnemonic, 4, '&nbsp;') + '&nbsp;' +
+              decode.operands.join(',')));
   }
 
   render(startAddress, hilights) {
-    this.view.empty();
-
-    let rom = this.rom;
-    let disassembler = this.disassembler;
-
-    for (let address = startAddress; address < startAddress+50 /*rom.length*/; address++) {
-      let instruction = rom[address];
-      let decode = disassembler.disassemble(instruction);
-        $('<tr>')
-          .addClass(hilights[address] || '')
-          .append([
-            $('<td>').text(toHex(address, 4)),
-            $('<td>').text(toHex(instruction, 4)),
-            $('<td>').text(`${rpad(decode.mnemonic, 4)} ${decode.operands.join(',')}`)])
-          .appendTo(this.view);
-    }
+    this.hilights = hilights;
+    this.scroller.scrollTopIndex = Math.max(0, startAddress-10);
+    this.scroller.render();
   }
 }

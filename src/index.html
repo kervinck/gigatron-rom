@@ -18,6 +18,7 @@
 	<script src="loader.js"></script>
 	<script src="ram-view.js"></script>
 	<script src="rom-view.js"></script>
+	<script src="scroller.js"></script>
 	<script src="index.js"></script>
 
 	<style>
@@ -29,13 +30,21 @@
 			width: 100px;
 		}
 
-		#ram-textarea, #rom-table, #regs-table {
+		#ram-textarea, #rom-div, #regs-table {
 			font-size: 12pt;
 			font-family: monospace;
 			/*
 			background-color: black;
 			color: green;
 			*/
+		}
+
+		#rom-div {
+			height: 22em;
+			overflow-y: auto;
+		}
+		#rom-div div span {
+			padding-left: 10px;
 		}
 	</style>
 </head>
@@ -45,13 +54,24 @@
 		<canvas id="blinken-lights" width="0" height="0"></canvas>
 		<div class="row">
 			<div class="col-sm-4">
-				<table class="table table-sm table-light">
-					<tr><th>Controller<th>Keyboard
-					<tr><th><pre>select</pre><td><kbd>Q</kbd>
-					<tr><th><pre>start</pre><td><kbd>W</kbd>
-					<tr><th><pre>A</pre><td><kbd>A</kbd>
-					<tr><th><pre>B</pre><td><kbd>S</kdb>
+				<dl class="row pt-2">
+					<dt class="col-sm-2"><span class="badge badge-pill badge-secondary">select</span></dt>
+				  <dd class="col-sm-4"><kbd>Q</kbd></dd>
+
+					<dt class="col-sm-2"><span class="badge badge-pill badge-secondary">start</span></dt>
+					<dd class="col-sm-4"><kbd>W</kbd></dd>
+
+					<dt class="col-sm-2"><span class="badge badge-pill badge-secondary">A</span></dt>
+					<dd class="col-sm-4"><kbd>A</kbd></dd>
+
+					<dt class="col-sm-2"><span class="badge badge-pill badge-secondary">B</span></dt>
+					<dd class="col-sm-4"><kbd>S</kdb></dd>
+				</dl>
+
+				<p>Registers</p>
+				<table id="regs-table" class="table table-sm">
 				</table>
+
 				<form>
 					<div class="input-group mb-3">
 						<div class="input-group-prepend">
@@ -64,14 +84,11 @@
 					</div>
 
 					<div class="form-group">
-						<button id="run" type="button" class="btn btn-success">Go</button>
-						<button id="step" type="button" class="btn btn-secondary">Step</button>
-						<button id="reset" type="button" class="btn btn-primary">Reset</button>
+						<button id="run" type="button" class="btn btn-sm btn-success">Go</button>
+						<button id="step" type="button" class="btn btn-sm btn-secondary">Step</button>
+						<button id="reset" type="button" class="btn btn-sm btn-primary">Reset</button>
 					</div>
 				</form>
-
-				<table id="regs-table" class="table table-sm">
-				</table>
 			</div>
 
 			<div class="col-sm-8">
@@ -80,12 +97,12 @@
 
 					<form class="mt-4">
 						<div class="form-row">
-							<div class="col-2">
-								<button id="mute" type="button" class="btn btn-danger">Mute</button>
-							</div>
 							<div class="col-sm-3">
 								<input id="volume-slider" type="range" class="custom-range">
 								Volume <label for="volume-slider"></label>
+							</div>
+							<div class="col-sm-2">
+								<button id="mute" type="button" class="btn btn-sm btn-danger">Mute</button>
 							</div>
 						</div>
 					</form>
@@ -97,9 +114,8 @@
 		<div class="row">
 			<div class="col-sm-4">
 				<p>ROM</p>
-				<table class="table table-sm table-striped" style="height: 500px; overflow: scroll;">
-					<tbody id="rom-table"></tbody>
-				</table>
+				<div id="rom-div">
+				</div>
 			</div>
 			<div class="col-sm-8">
 				<p>RAM</p>

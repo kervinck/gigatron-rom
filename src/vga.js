@@ -31,6 +31,10 @@ class Vga {
 		for (let i = 0; i < this.pixels.length; i++) {
 			this.pixels[i] = (i % 4) == 3 ? 255 : 0;
 		}
+		this.render();
+	}
+
+	render() {
 		this.ctx.putImageData(this.imageData, 0, 0);
 	}
 
@@ -43,7 +47,7 @@ class Vga {
 		if (falling & VSYNC) {
 			this.row = 0;
 			this.pixel = 0;
-			this.ctx.putImageData(this.imageData, 0, 0);
+			this.ctx.putImageData(this.imageData, 0, 0); // calling render slows down critical loop
 		}
 
 		if (falling & HSYNC) {
