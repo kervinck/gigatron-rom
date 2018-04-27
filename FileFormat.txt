@@ -16,9 +16,15 @@ the trampolines in the top 5 bytes of every ROM page. Those bytes
 are not part of the program but part of the mechanism for accessing
 the data.
 
-Something like this (from the top of my head):
-
-n * [ <hiAddress> + <loAddress> + <segmentSize&255> + ( segmentSize * <dataByte> ) ] + <0>
+Gt1File :=
+        n * ( <hiAddress>
+            + <loAddress>
+            + <segmentSize&255>
+            + segmentSize * <dataByte> )
+        + <0>
+        + <hiStart>
+        + <loStart>
+        EOF
 
 <..> represents a single byte. The rest is meta. Hope the idea is
 clear. To be specific: The number "n" itself will not appear at the
@@ -28,6 +34,11 @@ The first two bytes are the RAM address of the first byte to be
 loaded, in big-endian order.  (I'm a little-endian guy, but this
 order is useful in the ROM-to-RAM loader).  The end of the sequence
 is implied by the terminating zero-byte.
+
+Additionally, 2 bytes are appended that indicate the start address
+for execution. The ROM format doesn't have these bytes. Zero means
+"no execution". Although the Gigagron ROM is little-endian where
+possible, in this case all 16-bit values are stored in big-endian.
 
 Programs are fragmented into RAM, in n>0 segments of 1 to 256 bytes
 each, because the RAM organisation fragmented. Both Snake and Racer
