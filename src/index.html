@@ -6,9 +6,15 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
 	<title>Gigatron</title>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha256-NJWeQ+bs82iAeoT5Ktmqbi3NXwxcHlfaVejzJI2dklU=" crossorigin="anonymous" />
-	<link href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.0/slate/bootstrap.min.css" rel="stylesheet" integrity="sha384-A0hm/Pn0Gvk8w7szlEuTOZrIyQCCBNXQF9ccseoCI36nWRfMEAapo5UJ56zLPvPw" crossorigin="anonymous">
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
+
+
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.0/slate/bootstrap.min.css" integrity="sha384-A0hm/Pn0Gvk8w7szlEuTOZrIyQCCBNXQF9ccseoCI36nWRfMEAapo5UJ56zLPvPw" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/open-iconic/1.1.1/font/css/open-iconic-bootstrap.min.css" integrity="sha256-BJ/G+e+y7bQdrYkS2RBTyNfBHpA9IuGaPmf9htub5MQ=" crossorigin="anonymous" />
 	<script src="disassembler.js"></script>
 	<script src="gigatron.js"></script>
 	<script src="vga.js"></script>
@@ -26,24 +32,16 @@
 			margin:auto;
 		}
 
-		.btn {
-			width: 100px;
-		}
-
 		#ram-textarea, #rom-div, #regs-table {
 			font-size: 12pt;
 			font-family: monospace;
-			/*
-			background-color: black;
-			color: green;
-			*/
 		}
 
 		#rom-div {
-			height: 22em;
-			overflow-y: auto;
+			height: 600px;
+			overflow: hidden;
 		}
-		#rom-div div span {
+		#rom-div div {
 			padding-left: 10px;
 		}
 	</style>
@@ -54,6 +52,8 @@
 		<canvas id="blinken-lights" width="0" height="0"></canvas>
 		<div class="row">
 			<div class="col-sm-4">
+
+				<!-- KEYMAP -->
 				<dl class="row pt-2">
 					<dt class="col-sm-2"><span class="badge badge-pill badge-secondary">select</span></dt>
 				  <dd class="col-sm-4"><kbd>Q</kbd></dd>
@@ -68,60 +68,55 @@
 					<dd class="col-sm-4"><kbd>S</kdb></dd>
 				</dl>
 
-				<p>Registers</p>
+				<!-- REGISTERS -->
 				<table id="regs-table" class="table table-sm">
 				</table>
 
-				<form>
-					<div class="input-group mb-3">
-						<div class="input-group-prepend">
-							<span class="input-group-text">ROM</span>
-						</div>
-					  <div class="custom-file">
-					    <input type="file" accept=".rom" class="custom-file-input" id="rom-file">
-					    <label class="custom-file-label" for="rom-file">Choose file</label>
-					  </div>
+				<!-- FILE INPUT -->
+				<div class="input-group mb-3">
+					<div class="input-group-prepend">
+						<span class="input-group-text">ROM</span>
 					</div>
+				  <div class="custom-file">
+				    <input type="file" accept=".rom" class="custom-file-input" id="rom-file">
+				    <label class="custom-file-label" for="rom-file">Choose file</label>
+				  </div>
+				</div>
 
-					<div class="form-group">
-						<button id="run" type="button" class="btn btn-sm btn-success">Go</button>
-						<button id="step" type="button" class="btn btn-sm btn-secondary">Step</button>
-						<button id="reset" type="button" class="btn btn-sm btn-primary">Reset</button>
-					</div>
-				</form>
+				<!-- PLAY/PAUSE/STEP/RESET -->
+				<div class="input-group">
+					<span id="play" class="form-control btn btn-sm btn-success oi oi-media-play" data-toggle="tooltip" data-placement="top" title="Play"></span>
+					<span id="pause" class="form-control d-none btn btn-sm btn-danger oi oi-media-pause" data-toggle="tooltip" data-placement="top" title="Pause"></span>
+					<span id="step" class="form-control btn btn-sm btn-secondary oi oi-media-step-forward" data-toggle="tooltip" data-placement="top" title="Step"></span>
+					<span id="reset" class="form-control btn btn-sm btn-primary oi oi-loop-square" data-toggle="tooltip" data-placement="top" title="Reset"></span>
+				</div>
+
+				<!-- ROM VIEW -->
+				<div id="rom-div" class="mt-3 border border-white rounded">
+				</div>
 			</div>
 
 			<div class="col-sm-8">
 				<div class="mx-auto" style="width:650px;">
 					<canvas id="vga" class="border border-white rounded mx-auto" width="0" height="0"></canvas>
 
-					<form class="mt-4">
-						<div class="form-row">
-							<div class="col-sm-3">
-								<input id="volume-slider" type="range" class="custom-range">
-								Volume <label for="volume-slider"></label>
-							</div>
-							<div class="col-sm-2">
-								<button id="mute" type="button" class="btn btn-sm btn-danger">Mute</button>
-							</div>
+					<div class="form-row">
+						<div class="col-sm-3">
+							<input id="volume-slider" type="range" class="custom-range">
+							Volume <label for="volume-slider"></label>
 						</div>
-					</form>
+						<div class="col-sm-2">
+							<span id="mute" class="btn btn-sm btn-danger oi oi-volume-off" style="width:30px;" data-toggle="tooltip" title="Mute"></span>
+							<span id="unmute" class="btn btn-sm btn-success oi oi-volume-high d-none" style="width:30px;" data-toggle="tooltip" title="Unmute"></span>
+						</div>
+					</div>
+
+					<textarea id="ram-textarea" readonly="true" spellcheck="false" rows="15" cols="75"></textarea>
 				</div>
 
 			</div>
 		</div>
 
-		<div class="row">
-			<div class="col-sm-4">
-				<p>ROM</p>
-				<div id="rom-div">
-				</div>
-			</div>
-			<div class="col-sm-8">
-				<p>RAM</p>
-				<textarea id="ram-textarea" readonly="true" spellcheck="false" rows="15" cols="75"></textarea>
-			</div>
-		</div>
 		<!--div class="form-group">
 			<button id="load" type="button" class="btn btn-warning">Loader</button>
 		</div-->

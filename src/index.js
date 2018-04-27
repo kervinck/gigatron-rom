@@ -50,12 +50,21 @@ function toHex(value, width) {
 }
 
 $(function() {
+	$('[data-toggle="tooltip"]').tooltip({
+		delay: {
+			show: 500,
+			hide: 100,
+		},
+	});
+
 	let mhzText = $('#mhz');
-	let runButton = $('#run');
+	let playButton = $('#play');
+	let pauseButton = $('#pause');
 	let stepButton = $('#step');
 	let resetButton = $('#reset');
 	let loadButton = $('#load');
 	let muteButton = $('#mute');
+	let unmuteButton = $('#unmute');
 	let volumeSlider = $('#volume-slider');
 	let vgaCanvas = $('#vga').get(0);
 	let blinkenLightsCanvas = $('#blinken-lights').get(0);
@@ -101,24 +110,29 @@ $(function() {
 
 	function updateView() {
 		regsTable.empty();
-		for (let [reg, width] of [['pc',     4],
-													    ['nextpc', 4],
-															['ac',     2],
-															['x',      2],
-															['y',      2],
-															['out',    2],
-															['outx',   2]]) {
-			$('<tr>').append([
+		for (let [reg, width, click] of [['pc',     4, () => romView.render(cpu.pc)],
+													    			 ['nextpc', 4, () => romView.render(cpu.nextpc)],
+																		 ['ac',     2],
+ 																		 ['x',      2],
+																		 ['y',      2],
+																		 ['out',    2],
+																		 ['outx',   2]]) {
+			let row = $('<tr>').append([
 				$('<th>').text(reg),
 				$('<td>').text(toHex(cpu[reg], width)),
 			])
 			.appendTo(regsTable);
+			if (click) {
+				row.css('cursor', 'pointer');
+				row.click(click);
+			}
 		}
 		ramView.render();
-		romView.render(cpu.pc, {
+		romView.hilights = {
 			[cpu.pc]: 'bg-success text-dark',
 			[cpu.nextpc]: 'bg-secondary text-dark',
-		});
+		};
+		romView.render(cpu.pc);
 		vga.render();
 	}
 	updateView();
@@ -131,35 +145,30 @@ $(function() {
 		updateView();
 	});
 
-	runButton.click(function() {
-		runButton.toggleClass('btn-danger btn-success');
+	playButton.click(function() {
+		gdb.timer = setInterval(function ticks() {
+			/* advance the simulation until the audio queue is full,
+			 * or 100ms of simulated time has passed.
+			 */
+			let cycles = this.cpu.hz/10;
+			audio.drain();
+			while (cycles-- >= 0 && audio.scheduled < 4) {
+				perf.tick();
+				cpu.tick();
+				vga.tick();
+				audio.tick();
+			}
+			/* blinkenlights don't need to redraw every tick */
+			blinkenLights.tick();
+		}, audio.duration);
+		$([playButton, pauseButton]).toggleClass('d-none');
+	});
 
-		if (gdb.timer) {
-			/* stop */
-			clearTimeout(gdb.timer);
-			gdb.timer = null;
-			runButton.text('Go');
-			updateView();
-		}
-		else {
-			/* go */
-			gdb.timer = setInterval(function ticks() {
-				/* advance the simulation until the audio queue is full,
-				 * or 100ms of simulated time has passed.
-				 */
-				let cycles = this.cpu.hz/10;
-				audio.drain();
-				while (cycles-- >= 0 && audio.scheduled < 4) {
-					perf.tick();
-					cpu.tick();
-					vga.tick();
-					audio.tick();
-				}
-				/* blinkenlights don't need to redraw every tick */
-				blinkenLights.tick();
-			}, audio.duration);
-			runButton.text('Stop');
-		}
+	pauseButton.click(function() {
+		clearTimeout(gdb.timer);
+		gdb.timer = null;
+		$([playButton, pauseButton]).toggleClass('d-none');
+		updateView();
 	});
 
 	stepButton.click(function() {
@@ -171,9 +180,13 @@ $(function() {
 	});
 
 	muteButton.click(function() {
-		audio.mute = !audio.mute;
-		muteButton.toggleClass('btn-danger btn-success');
-		muteButton.text(audio.mute ? 'Unmute' : 'Mute');
+		audio.mute = true;
+		$([muteButton, unmuteButton]).toggleClass('d-none');
+	});
+
+	unmuteButton.click(function() {
+		audio.mute = false;
+		$([muteButton, unmuteButton]).toggleClass('d-none');
 	});
 
 	volumeSlider.on('input', function() {
