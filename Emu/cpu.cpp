@@ -39,7 +39,7 @@ namespace Cpu
         FILE *fp = fopen("theloop.2.rom", "rb");
         if(!fp)
         {
-            fprintf(stderr, "Error: failed to open ROM file\n");
+            fprintf(stderr, "Cpu::initialise() : failed to open ROM file\n");
             exit(EXIT_FAILURE);
         }
         fread(_ROM, 1, sizeof _ROM, fp);
@@ -48,7 +48,7 @@ namespace Cpu
         // SDL initialisation
         if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS) < 0)
         {
-            fprintf(stderr, "Error: failed to initialise SDL\n");
+            fprintf(stderr, "Cpu::initialise() : failed to initialise SDL\n");
             exit(EXIT_FAILURE);
         }
     }

@@ -46,11 +46,14 @@ namespace Graphics
             _colours[i] = p;
         }
 
+        SDL_DisplayMode DM;
+        SDL_GetCurrentDisplayMode(0, &DM);
+
         //SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
-        if(SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP, &_window, &_renderer) < 0)
+        if(SDL_CreateWindowAndRenderer(DM.w, DM.h-1, 0, &_window, &_renderer) < 0) //SDL_WINDOW_FULLSCREEN SDL_WINDOW_FULLSCREEN_DESKTOP
         {
             SDL_Quit();
-            fprintf(stderr, "Error: failed to create SDL _window\n");
+            fprintf(stderr, "Graphics::initialise() : failed to create SDL window\n");
             exit(EXIT_FAILURE);
         }
 
@@ -58,7 +61,7 @@ namespace Graphics
         if(_texture == NULL)
         {
             SDL_Quit();
-            fprintf(stderr, "Error: failed to create SDL _texture\n");
+            fprintf(stderr, "Graphics::initialise() :  failed to create SDL texture\n");
             exit(EXIT_FAILURE);
         }
 
@@ -66,7 +69,7 @@ namespace Graphics
         if(_surface == NULL)
         {
             SDL_Quit();
-            fprintf(stderr, "Error: failed to create SDL _surface\n");
+            fprintf(stderr, "Graphics::initialise() :  failed to create SDL surface\n");
             exit(EXIT_FAILURE);
         }
 
@@ -75,7 +78,7 @@ namespace Graphics
         if(fontSurface == NULL)
         {
             SDL_Quit();
-            fprintf(stderr, "Error: failed to create SDL font _surface\n");
+            fprintf(stderr, "Graphics::initialise() : failed to create SDL font _surface\n");
             exit(EXIT_FAILURE);
         }
         _fontSurface = SDL_ConvertSurfaceFormat(fontSurface, _surface->format->format, NULL);
@@ -83,7 +86,7 @@ namespace Graphics
         if(_fontSurface == NULL)
         {
             SDL_Quit();
-            fprintf(stderr, "Error: failed to create SDL converted font _surface\n");
+            fprintf(stderr, "Graphics::initialise() : failed to create SDL converted font _surface\n");
             exit(EXIT_FAILURE);
         }
     }
@@ -217,7 +220,7 @@ namespace Graphics
             drawText(std::string(str), 485, FONT_CELL_Y*2, 0xFFFFFFFF, false, 0);
             drawText("Mode:       ", 485, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
             sprintf(str, "Hex  ");
-            if(Editor::getHexEdit() == true) sprintf(str, "Edit ");
+            if(Editor::getHexEdit()) sprintf(str, "Edit ");
             else if(Editor::getEditorMode() == Editor::Load) sprintf(str, "Load ");
             else if(Editor::getEditorMode() == Editor::Debug) sprintf(str, "Debug");
             drawText(std::string(str), 553, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
@@ -266,11 +269,11 @@ namespace Graphics
                 }
 
                 // Edit digit select
-                if(Editor::getHexEdit() == true)
+                if(Editor::getHexEdit())
                 {
                     // Draw address digit selection box
-                    if(onCursor0 == true) drawDigitBox(Editor::getAddressDigit(), 521, FONT_CELL_Y*3, 0xFFFF00FF);
-                    if(onCursor1 == true) drawDigitBox(Editor::getAddressDigit(), 593, FONT_CELL_Y*3, 0xFFFF00FF);
+                    if(onCursor0) drawDigitBox(Editor::getAddressDigit(), 521, FONT_CELL_Y*3, 0xFFFF00FF);
+                    if(onCursor1) drawDigitBox(Editor::getAddressDigit(), 593, FONT_CELL_Y*3, 0xFFFF00FF);
                 }
             }
             // Hex monitor
@@ -310,6 +313,22 @@ namespace Graphics
                     }
                 }
 
+#if 0
+                static uint16_t address = 0x08C0;
+                for(int j=0; j<32; j++)
+                {
+                    for(int i=0; i<32; i++)
+                    {
+                        uint8_t value = Cpu::getRAM(address + j*256 + i);
+
+                        sprintf(str, "%02X ", value);
+                        bool onCursor = (i == Editor::getCursorX()  &&  j == Editor::getCursorY());
+                        drawText(std::string(str), 0 + i*15, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), 0xFFFFFFFF, false, 0);
+                    }
+                }
+                //address ^= 0x0060;
+#endif
+
                 // 8 * 2 hex display of vCPU program variables
                 for(int j=0; j<2; j++)
                 {
@@ -321,11 +340,11 @@ namespace Graphics
                 }
 
                 // Edit digit select
-                if(Editor::getHexEdit() == true)
+                if(Editor::getHexEdit())
                 {
                     // Draw address digit selection box
-                    if(onCursor0 == true) drawDigitBox(Editor::getAddressDigit(), 521, FONT_CELL_Y*3, 0xFFFF00FF);
-                    if(onCursor1 == true) drawDigitBox(Editor::getAddressDigit(), 593, FONT_CELL_Y*3, 0xFFFF00FF);
+                    if(onCursor0) drawDigitBox(Editor::getAddressDigit(), 521, FONT_CELL_Y*3, 0xFFFF00FF);
+                    if(onCursor1) drawDigitBox(Editor::getAddressDigit(), 593, FONT_CELL_Y*3, 0xFFFF00FF);
 
                     // Draw memory digit selection box                
                     if(Editor::getCursorY() >= 0  &&  Editor::getMemoryMode() == Editor::RAM) drawDigitBox(Editor::getMemoryDigit(), 493 + Editor::getCursorX()*HEX_CHAR_WIDE, FONT_CELL_Y*4 + Editor::getCursorY()*FONT_CELL_Y, 0xFFFF00FF);
@@ -344,7 +363,7 @@ namespace Graphics
         SDL_RenderCopy(_renderer, _texture, NULL, NULL);
         SDL_RenderPresent(_renderer);
 
-        if(synchronise == true) Timing::synchronise();
+        if(synchronise) Timing::synchronise();
     }
 
 

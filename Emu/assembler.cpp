@@ -18,10 +18,10 @@
 
 namespace Assembler
 {
-    enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary, NumNumericTypes};
+    enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
     enum ParseType {FirstPass=0, SecondPass, NumParseTypes};
-    enum ByteSize {BadSize=-1, OneByte, TwoBytes, ThreeBytes, NumByteSizes};
-    enum EvaluateResult {Failed=-1, NotFound, Found, NumEvaluateResults};
+    enum ByteSize {BadSize=-1, OneByte=1, TwoBytes=2, ThreeBytes=3};
+    enum EvaluateResult {Failed=-1, NotFound, Found};
 
     struct Label
     {
@@ -52,16 +52,24 @@ namespace Assembler
         uint16_t _address;
     };
 
+    struct CallTableEntry
+    {
+        uint8_t operand;
+        uint16_t _address;
+    };
+
 
     uint16_t _byteCount = 0;
     uint16_t _callTable = 0x0000;
     uint16_t _startAddress = DEFAULT_START_ADDRESS;
+    uint16_t _currentAddress = _startAddress;
 
     std::vector<Label> _labels;
     std::vector<Equate> _equates;
     std::vector<Mutable> _mutables;
     std::vector<Instruction> _instructions;
     std::vector<ByteCode> _byteCode;
+    std::vector<CallTableEntry> _callTableEntries;
 
     bool _binaryChars[256] = {false};
     bool _octalChars[256] = {false};
@@ -92,12 +100,12 @@ namespace Assembler
         byteCode = _byteCode[_byteCount++];
         static uint16_t address = byteCode._address;
         if(byteCode._address) address = byteCode._address;
-        fprintf(stderr, "%04X  %02X\n", address, byteCode._data);
+        fprintf(stderr, "Assembler::getNextAssembledByte() : %04X  %02X\n", address, byteCode._data);
         address++;
         return false;
     }    
 
-    void strToupper(std::string& s)
+    void strToUpper(std::string& s)
     {
         std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {return toupper(c);} );
     }
@@ -106,13 +114,13 @@ namespace Assembler
     {
         bool success = true;
         std::string token = input;
-        strToupper(token);
+        strToUpper(token);
         
         // Hex
         if(token.size() >= 2  &&  token.c_str()[0] == '$')
         {
             for(int i=1; i<token.size(); i++) success &= _hexaDecimalChars[token.c_str()[i]];
-            if(success == true)
+            if(success)
             {
                 result = strtol(&token.c_str()[1], NULL, 16);
                 return HexaDecimal; 
@@ -122,7 +130,7 @@ namespace Assembler
         else if(token.size() >= 3  &&  token.c_str()[0] == '0'  &&  token.c_str()[1] == 'X')
         {
             for(int i=2; i<token.size(); i++) success &= _hexaDecimalChars[token.c_str()[i]];
-            if(success == true)
+            if(success)
             {
                 result = strtol(&token.c_str()[2], NULL, 16);
                 return HexaDecimal; 
@@ -132,7 +140,7 @@ namespace Assembler
         else if(token.size() >= 3  &&  token.c_str()[0] == '0'  &&  (token.c_str()[1] == 'O' || token.c_str()[1] == 'Q'))
         {
             for(int i=2; i<token.size(); i++) success &= _octalChars[token.c_str()[i]];
-            if(success == true)
+            if(success)
             {
                 result = strtol(&token.c_str()[2], NULL, 8);
                 return Octal; 
@@ -142,7 +150,7 @@ namespace Assembler
         else if(token.size() >= 3  &&  token.c_str()[0] == '0'  &&  token.c_str()[1] == 'B')
         {
             for(int i=2; i<token.size(); i++) success &= _binaryChars[token.c_str()[i]];
-            if(success == true)
+            if(success)
             {
                 result = strtol(&token.c_str()[2], NULL, 2);
                 return Binary; 
@@ -152,7 +160,7 @@ namespace Assembler
         else
         {
             for(int i=0; i<token.size(); i++) success &= _decimalChars[token.c_str()[i]];
-            if(success == true)
+            if(success)
             {
                 result = strtol(&token.c_str()[0], NULL, 10);
                 return Decimal; 
@@ -186,9 +194,12 @@ namespace Assembler
         return true;
     }
 
-    ByteSize getOpcode(const std::string& token, uint8_t& opcode, uint8_t& branch)
+    ByteSize getOpcode(const std::string& input, uint8_t& opcode, uint8_t& branch)
     {
         branch = 0x00;
+
+        std::string token = input;
+        strToUpper(token);
 
         // Gigatron vCPU instructions
         if(token == "ST")    {opcode = 0x5E; return TwoBytes;  }
@@ -313,6 +324,12 @@ namespace Assembler
                 {
                     Editor::setSingleStepWatchAddress(operand);
                 }
+                // Reserved word, (equate), _startAddress_
+                else if(tokens[tokenIndex] == "_startAddress_")
+                {
+                    _startAddress = operand;
+                    _currentAddress = _startAddress;
+                }
                 // Standard equates
                 else
                 {
@@ -327,7 +344,7 @@ namespace Assembler
         return NotFound;
     }
 
-    void EvaluateLabels(const std::vector<std::string>& tokens, int totalByteSize, int tokenIndex)
+    void EvaluateLabels(const std::vector<std::string>& tokens, int tokenIndex)
     {
         // Mutable labels
         if(tokens[0].c_str()[0] == '.')
@@ -337,26 +354,25 @@ namespace Assembler
             {
                 uint8_t offset = uint8_t(tokens[0][comma+1] - '0');
                 if(offset > 9) offset = 1;  
-                Mutable mutable_ = {offset, uint16_t(_startAddress + totalByteSize), tokens[0].substr(0, comma)};
+                Mutable mutable_ = {offset, uint16_t(_currentAddress), tokens[0].substr(0, comma)};
                 _mutables.push_back(mutable_);
             }
         }
-        // Normal labels
         else
         {
             // Check equates for a custom start address
-            uint16_t address = uint16_t(_startAddress + totalByteSize);
             for(int i=0; i<_equates.size(); i++)
             {
                 if(_equates[i]._name == tokens[tokenIndex])
                 {
                     _equates[i]._customAddress = true;
-                    address = _equates[i]._operand;
+                    _currentAddress = _equates[i]._operand;
                     break;
                 }
             }
 
-            Label label = {address, tokens[tokenIndex]}; // offset is filled in during first pass
+            // Normal labels
+            Label label = {_currentAddress, tokens[tokenIndex]};
             _labels.push_back(label);
         }
     }
@@ -372,7 +388,7 @@ namespace Assembler
             {
                 Equate equate;
                 success = searchEquates(tokens[i], equate);
-                if(success == true)
+                if(success)
                 {
                     operand = uint8_t(equate._operand);
                 }
@@ -399,7 +415,7 @@ namespace Assembler
             {
                 Equate equate;
                 success = searchEquates(tokens[i], equate);
-                if(success == true)
+                if(success)
                 {
                     operand = equate._operand;
                 }
@@ -467,6 +483,7 @@ namespace Assembler
         if(infile.is_open()  == false) return false;
 
         _startAddress = startAddress;
+        _currentAddress = _startAddress;
         _callTable = 0x0000;
 
         _byteCode.clear();
@@ -474,28 +491,28 @@ namespace Assembler
         _equates.clear();
         _mutables.clear();
         _instructions.clear();
+        _callTableEntries.clear();
 
         // Parse the file twice, the first pass we evaluate all the equates and labels, the second pass is for the instructions
         for(int parse=FirstPass; parse<NumParseTypes; parse++)
         {
             int line = 0;
-            int totalByteSize = 0;
             bool parseError = false;
 
             infile.clear(); 
             infile.seekg(0, infile.beg);
-            while(infile.good() == true  &&  parseError == false)
+            while(infile.good()  &&  parseError == false)
             {
                 std::string lineToken;
 
                 while(parseError == false)
                 {
                     std::getline(infile, lineToken);
-                    if(infile.eof() == true) break;
-                    if(infile.good() == false)
+                    if(infile.eof()) break;
+                    if(!infile.good())
                     {
                         parseError = true;
-                        fprintf(stderr, "Bad lineToken %s in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
+                        fprintf(stderr, "Assembler::assemble() : Bad lineToken : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
                         break;
                     }
 
@@ -515,8 +532,7 @@ namespace Assembler
                     std::vector<std::string> tokens(it, end);
 
                     // Comments
-                    size_t comment = tokens[0].find_first_of(";*#/");
-                    if(comment != std::string::npos)
+                    if(tokens.size() > 0  &&  tokens[0].find_first_of(";*#/") != std::string::npos)
                     {
                         line++;
                         continue;
@@ -531,7 +547,7 @@ namespace Assembler
                             if(result == Failed)
                             {
                                 parseError = true;
-                                fprintf(stderr, "Bad EQU %s in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
+                                fprintf(stderr, "Assembler::assemble() : Bad EQU : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
                                 break;
                             }
                             // Skip equate lines
@@ -541,21 +557,12 @@ namespace Assembler
                                 continue;
                             }
                             
-                            // Starting address or a label
-                            bool success = stringToU16(tokens[tokenIndex], startAddress);
-                            if(success == true  &&  startAddress >= DEFAULT_START_ADDRESS  &&  startAddress < RAM_SIZE)
-                            {
-                                _startAddress = startAddress;
-                            }
-                            else
-                            {
-                                // Labels
-                                if(parse == FirstPass) EvaluateLabels(tokens, totalByteSize, tokenIndex);
-                            }
+                            // Labels
+                            if(parse == FirstPass) EvaluateLabels(tokens, tokenIndex);
                         }
 
                         // On to the next token even if we failed with this one
-                        tokenIndex++;
+                        if(tokens.size() > 1) tokenIndex++;
                     }
 
                     // Opcode
@@ -564,36 +571,37 @@ namespace Assembler
                     if(byteSize == BadSize)
                     {
                         parseError = true;
-                        fprintf(stderr, "Bad Opcode %s in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
+                        fprintf(stderr, "Assembler::assemble() : Bad Opcode : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
                         break;
-                    }
-
-                    switch(byteSize)
-                    {
-                        case OneByte:    totalByteSize+=1;  break;
-                        case TwoBytes:   totalByteSize+=2;  break;
-                        case ThreeBytes: totalByteSize+=3;  break;
                     }
 
                     if(parse == SecondPass)
                     {
-                        Instruction instruction = {byteSize, opcode, 0x00, 0x00, 0x0000};
+                        Instruction instruction = {byteSize, opcode, 0x00, 0x00, _currentAddress};
 
                         // Missing operand
                         if((byteSize == TwoBytes  ||  byteSize == ThreeBytes)  &&  tokens.size() <= tokenIndex)
                         {
                             parseError = true;
-                            fprintf(stderr, "Missing operand/s: %s in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line+1);
+                            fprintf(stderr, "Assembler::assemble() : Missing operand/s : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line+1);
                             break;
                         }
 
                         // First instruction inherits start address
-                        if(_instructions.size() == 0) instruction._address = _startAddress;
+                        if(_instructions.size() == 0)
+                        {
+                            instruction._address = _startAddress;
+                            _currentAddress = _startAddress;
+                        }
 
                         // Custom address
                         for(int i=0; i<_equates.size(); i++)
                         {
-                            if(_equates[i]._name == tokens[0]  &&  _equates[i]._customAddress == true) instruction._address = _equates[i]._operand;
+                            if(_equates[i]._name == tokens[0]  &&  _equates[i]._customAddress)
+                            {
+                                _currentAddress = _equates[i]._operand;
+                                instruction._address = _currentAddress;
+                            }
                         }
 
                         // Operand
@@ -614,14 +622,14 @@ namespace Assembler
                                 {
                                     // Search for branch label
                                     Label label;
-                                    if(searchLabels(tokens[tokenIndex], label) == true)
+                                    if(searchLabels(tokens[tokenIndex], label))
                                     {
                                         operand = uint8_t(label._address) - BRANCH_ADJUSTMENT;
                                     }
                                     else
                                     {
                                         parseError = true;
-                                        fprintf(stderr, "Label missing: %s in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line+1);
+                                        fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line+1);
                                         break;
                                     }
 
@@ -631,19 +639,36 @@ namespace Assembler
                                 {
                                     // Search for call label
                                     Label label;
-                                    if(searchLabels(tokens[tokenIndex], label) == true)
+                                    if(searchLabels(tokens[tokenIndex], label))
                                     {
-                                        // Found label, put it's address into the call table and point the call instruction to the call table
-                                        operand = uint8_t(_callTable & 0x00FF);
+                                        // Search for address
+                                        bool newLabel = true;
                                         uint16_t address = uint16_t(label._address);
-                                        Cpu::setRAM(_callTable, uint8_t(address & 0x00FF));
-                                        Cpu::setRAM(_callTable+1, uint8_t((address & 0xFF00) >>8));
-                                        _callTable -= 0x0002;
+                                        for(int i=0; i<_callTableEntries.size(); i++)
+                                        {
+                                            if(_callTableEntries[i]._address == address)
+                                            {
+                                                operand = _callTableEntries[i].operand;
+                                                newLabel = false;
+                                                break;
+                                            }
+                                        }
+
+                                        // Found a new call address label, put it's address into the call table and point the call instruction to the call table
+                                        if(newLabel)
+                                        {
+                                            Cpu::setRAM(_callTable, uint8_t(address & 0x00FF));
+                                            Cpu::setRAM(_callTable+1, uint8_t((address & 0xFF00) >>8));
+                                            operand = uint8_t(_callTable & 0x00FF);
+                                            CallTableEntry entry = {operand, address};
+                                            _callTableEntries.push_back(entry);
+                                            _callTable -= 0x0002;
+                                        }
                                     }
                                     else
                                     {
                                         parseError = true;
-                                        fprintf(stderr, "Label missing: %s in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line+1);
+                                        fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line+1);
                                         break;
                                     }
                                 }
@@ -669,7 +694,7 @@ namespace Assembler
                                         if(success == false)
                                         {
                                             parseError = true;
-                                            fprintf(stderr, "Equate or Mutable missing: %s in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line+1);
+                                            fprintf(stderr, "Assembler::assemble() : Equate/Mutable missing : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line+1);
                                             break;
                                         }
                                     }
@@ -687,7 +712,7 @@ namespace Assembler
                                     if(handleDefineByte(tokens, tokenIndex, operand) == false)
                                     {
                                         parseError = true;
-                                        fprintf(stderr, "Bad DB data: %s in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
+                                        fprintf(stderr, "Assembler::assemble() : Bad DB data : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
                                         break;
                                     }
                                 }
@@ -715,7 +740,7 @@ namespace Assembler
                                     else
                                     {
                                         parseError = true;
-                                        fprintf(stderr, "Label missing: %s in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line+1);
+                                        fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line+1);
                                         break;
                                     }
 
@@ -746,7 +771,7 @@ namespace Assembler
                                         if(success == false)
                                         {
                                             parseError = true;
-                                            fprintf(stderr, "Equate or Mutable missing %s in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line+1);
+                                            fprintf(stderr, "Assembler::assemble() : Equate/Mutable missing : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line+1);
                                             break;
                                         }
                                     }
@@ -764,7 +789,7 @@ namespace Assembler
                                         if(handleDefineWord(tokens, tokenIndex, operand) == false)
                                         {
                                             parseError = true;
-                                            fprintf(stderr, "Bad DW data: %s in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
+                                            fprintf(stderr, "Assembler::assemble() : Bad DW data : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
                                             break;
                                         }
                                     }
@@ -781,12 +806,22 @@ namespace Assembler
                         }
                     }
 
+                    uint16_t oldAddress = _currentAddress;
+                    _currentAddress += byteSize;
+                    uint16_t newAddress = _currentAddress;
+                    if(((oldAddress >>8) & 0x0001) != ((newAddress >>8) & 0x0001))
+                    {
+                        parseError = true;
+                        fprintf(stderr, "Assembler::assemble() : Page boundary compromised : %04X : %04X : '%s' : in %s on line %d\n", oldAddress, newAddress, lineToken.c_str(), filename.c_str(), line+1);
+                        break;
+                    }
+
                     line++;
                 }              
 
-                if(infile.eof() == true) break;
+                if(infile.eof()) break;
 
-                if(parseError == true  ||  infile.bad() == true  ||  infile.fail() == true) return false;
+                if(parseError  ||  infile.bad()  ||  infile.fail()) return false;
             }
         }
 

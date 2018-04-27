@@ -1,4 +1,4 @@
-0x0300  LDI  0x00       ' Clear screen colour
+        LDI  0x00       ' Clear screen colour
         ST   0x34       ' t    
         
         LDI  0x08       ' Load screen address 0x0800 high 0x08  

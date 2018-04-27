@@ -189,7 +189,7 @@ namespace Editor
             }
 
             // Edit address
-            if(_cursorY == -1  &&   _hexEdit == true)
+            if(_cursorY == -1  &&   _hexEdit)
             {
                 // Hex address or load address
                 if((_cursorX & 0x01) == 0)
@@ -234,7 +234,7 @@ namespace Editor
                 _addressDigit = (++_addressDigit) & 0x03;
             }
             // Edit memory
-            else if(_memoryMode == RAM  &&  _hexEdit == true)
+            else if(_memoryMode == RAM  &&  _hexEdit)
             {
                 uint16_t address = _hexBaseAddress + _cursorX + _cursorY*HEX_CHARS_X;
                 switch(_memoryDigit)
@@ -330,7 +330,7 @@ namespace Editor
         static uint8_t oldWatch = Cpu::getRAM(_singleStepWatchAddress);
 
         // Single step
-        if(_singleStep == true)
+        if(_singleStep)
         {
             // Watch variable 
             if(Cpu::getRAM(_singleStepWatchAddress) != oldWatch) 
@@ -356,7 +356,7 @@ namespace Editor
         }
 
         // Pause simulation and handle debugging keys
-        while(_singleStepMode == true)
+        while(_singleStepMode)
         {
             SDL_Event event;
             while(SDL_PollEvent(&event))

@@ -126,16 +126,17 @@ namespace Loader
     {
         static bool frameUploading = false;
         static FILE* fileToUpload = NULL;
+        static FILE* fileToSave = NULL;
         static uint8_t payload[10000];
         static uint8_t payloadSize = 0;
 
-        if(_startUploading == true  ||  frameUploading == true)
+        if(_startUploading  ||  frameUploading)
         {
             uint16_t loadBaseAddress = Editor::getLoadBaseAddress();
-            if(_startUploading == true)
+            if(_startUploading)
             {
                 _startUploading = false;
-                frameUploading = true;
+                //frameUploading = true;
 
                 // Upload raw vCPU code
                 std::string filename = *Editor::getFileName(Editor::getCursorY());
@@ -158,7 +159,7 @@ namespace Loader
                 // Upload vCPU assembly code
                 if(filename.find(".vasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
                 {
-                    Assembler::assemble(filepath, DEFAULT_START_ADDRESS);
+                    if(Assembler::assemble(filepath, DEFAULT_START_ADDRESS) == false) return;
                     loadBaseAddress = Assembler::getStartAddress();
                     Editor::setLoadBaseAddress(loadBaseAddress);
                     uint16_t address = loadBaseAddress;
@@ -175,7 +176,6 @@ namespace Loader
                 Cpu::setRAM(0x0017, (loadBaseAddress & 0xFF00) >>8);
                 Cpu::setRAM(0x001a, loadBaseAddress-2 & 0x00FF);
                 Cpu::setRAM(0x001b, (loadBaseAddress & 0xFF00) >>8);
-                frameUploading = false;
                 //Editor::setSingleStep(true);
                 return;
             }

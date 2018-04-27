@@ -22,6 +22,8 @@ xBounds     EQU     0x9F
 yBounds     EQU     0x77
 
 
+_startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
+
 _callTable_         EQU     0x007E      ; this grows downwards as you use more CALL's, it will crash into program variables if you are not careful
                                 ; "_callTable_" is a reserved word, do not use it for anything other than it's intended use
 
@@ -31,8 +33,7 @@ _singleStepWatch_   EQU     0x0054      ; the single step debugger watches this 
 ;plot        EQU     0x0280      ; custom start address, this allows you to store code modules into any page, (0xNN00 <-> 0xNNFF),
 ;                                ; make sure no individual code module straddles a page boundary. cannot be less than 0x0200
 
-; start address is used by the loader, defaults to 0x0200 if absent, can't be lower than 0x0200
-0x0300      LDWI    vram     
+            LDWI    vram     
             STW     base0       ; base address
             STW     pixels0     ; pixel address
             LDWI    0x0101
