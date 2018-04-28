@@ -123,7 +123,7 @@ glider      LDW     gliders
             ST      i
             BGT     glider
                         
-            LDWI    0x354A
+            LDWI    0x354A      ; position in screen to render life
             STW     vbase
             
             LDI     0x00

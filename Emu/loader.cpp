@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string>
+#include <fstream>
+#include <algorithm>
 
 #include "cpu.h"
 #include "editor.h"
@@ -21,6 +23,108 @@ namespace Loader
     bool getStartUploading(void) {return _startUploading;}
     void setStartUploading(bool start) {_startUploading = start;}
 
+
+    bool loadGt1File(const std::string& filename, Gt1File& gt1File)
+    {
+        std::ifstream infile(filename, std::ios::binary | std::ios::in);
+        if(infile.is_open() == false)
+        {
+            fprintf(stderr, "Loader::loadGt1File() : failed to open '%s'\n", filename.c_str());
+            return false;
+        }
+
+        int segmentCount = 1;
+        for(;;)
+        {
+            // Read segment header
+            Segment segment;
+            infile.read((char *)&segment._hiAddress, SEGMENT_HEADER_SIZE);
+            if(infile.eof() || infile.bad() || infile.fail())
+            {
+                fprintf(stderr, "Loader::loadGt1File() : bad header in segment %d of '%s'\n", segmentCount, filename.c_str());
+                return false;
+            }
+
+            // Finished
+            if(segment._hiAddress == 0x00  &&  infile.peek() == EOF)
+            {
+                // Segment header aligns with Gt1File terminator, hiStart and loStart
+                gt1File._hiStart = segment._loAddress;
+                gt1File._loStart = segment._segmentSize;
+                break;
+            }
+
+            // Expecting a valid segment
+            if(segment._segmentSize == 0)
+            {
+                fprintf(stderr, "Loader::loadGt1File() : bad header in segment %d of '%s'\n", segmentCount, filename.c_str());
+                return false;
+            }
+
+            // Read segment
+            segment._dataBytes.resize(segment._segmentSize);
+            infile.read((char *)&segment._dataBytes[0], segment._segmentSize);
+            if(infile.eof() || infile.bad() || infile.fail())
+            {
+                fprintf(stderr, "Loader::loadGt1File() : bad segment %d in '%s'\n", segmentCount, filename.c_str());
+                return false;
+            }
+
+            gt1File._segments.push_back(segment);
+            segmentCount++;
+        }
+
+        return true;
+    }
+
+    bool saveGt1File(const std::string& filepath, const Gt1File& gt1File)
+    {
+        if(gt1File._segments.size() == 0)
+        {
+            fprintf(stderr, "Loader::saveGt1File() : zero segments, not saving!\n");
+            return false;
+        }
+
+        std::string filename;
+        size_t i = filepath.rfind('.');
+        filename = (i != std::string::npos) ? filepath.substr(0, i) + ".gt1" : filepath + ".gt1";
+
+        std::ofstream outfile(filename, std::ios::binary | std::ios::out);
+        if(outfile.is_open() == false)
+        {
+            fprintf(stderr, "Loader::saveGt1File() : failed to open '%s'\n", filename.c_str());
+            return false;
+        }
+
+        for(int i=0; i<gt1File._segments.size(); i++)
+        {
+            // Write header
+            outfile.write((char *)&gt1File._segments[i]._hiAddress, SEGMENT_HEADER_SIZE);
+            if(outfile.bad() || outfile.fail())
+            {
+                fprintf(stderr, "Loader::saveGt1File() : write error in header of segment %d\n", i);
+                return false;
+            }
+
+            // Write segment
+            outfile.write((char *)&gt1File._segments[i]._dataBytes[0], gt1File._segments[i]._segmentSize);
+            if(outfile.bad() || outfile.fail())
+            {
+                fprintf(stderr, "Loader::saveGt1File() : bad segment %d in '%s'\n", i, filename.c_str());
+                return false;
+            }
+        }
+
+        // Write trailer
+        outfile.write((char *)&gt1File._terminator, GT1FILE_TRAILER_SIZE);
+        if(outfile.bad() || outfile.fail())
+        {
+            fprintf(stderr, "Loader::saveGt1File() : write error in trailer of '%s'\n", filename.c_str());
+            return false;
+        }
+
+        return true;
+    }
 
     void sendByte(uint8_t value, uint8_t& checksum)
     {
@@ -132,7 +236,7 @@ namespace Loader
 
         if(_startUploading  ||  frameUploading)
         {
-            uint16_t loadBaseAddress = Editor::getLoadBaseAddress();
+            uint16_t executeAddress = Editor::getLoadBaseAddress();
             if(_startUploading)
             {
                 _startUploading = false;
@@ -143,39 +247,73 @@ namespace Loader
                 std::string filepath = std::string("./vCPU/" + filename);
                 if(filename.find(".vcpu") != filename.npos  ||  filename.find(".gt1") != filename.npos)
                 {
-                    fileToUpload = fopen(filepath.c_str(), "rb");
-                    if(fileToUpload == NULL)
+                    Loader::Gt1File gt1File;
+                    if(Loader::loadGt1File(filepath, gt1File) == false) return;
+                    executeAddress = gt1File._loStart + (gt1File._hiStart <<8);
+                    Editor::setLoadBaseAddress(executeAddress);
+
+                    for(int j=0; j<gt1File._segments.size(); j++)
                     {
-                        frameUploading = false;
-                        return;
+                        uint16_t address = gt1File._segments[j]._loAddress + (gt1File._segments[j]._hiAddress <<8);
+                        for(int i=0; i<gt1File._segments[j]._segmentSize; i++)
+                        {
+                            Cpu::setRAM(address+i, gt1File._segments[j]._dataBytes[i]);
+                        }
                     }
-
-                    payloadSize = uint8_t(fread(payload, 1, PAYLOAD_SIZE, fileToUpload));
-                    fclose(fileToUpload);
-
-                    for(int i=0; i<payloadSize; i++) Cpu::setRAM(loadBaseAddress+i, payload[i]);
                 }
 
                 // Upload vCPU assembly code
                 if(filename.find(".vasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
                 {
                     if(Assembler::assemble(filepath, DEFAULT_START_ADDRESS) == false) return;
-                    loadBaseAddress = Assembler::getStartAddress();
-                    Editor::setLoadBaseAddress(loadBaseAddress);
-                    uint16_t address = loadBaseAddress;
+                    executeAddress = Assembler::getStartAddress();
+                    Editor::setLoadBaseAddress(executeAddress);
+                    uint16_t address = executeAddress;
+
+                    // Save to gt1 format
+                    Loader::Gt1File gt1File;
+                    gt1File._loStart = address & 0x00FF;
+                    gt1File._hiStart = (address & 0xFF00) >>8;
+                    Loader::Segment segment;
+                    segment._loAddress = address & 0x00FF;
+                    segment._hiAddress = (address & 0xFF00) >>8;
+
                     Assembler::ByteCode byteCode;
                     while(Assembler::getNextAssembledByte(byteCode) == false)
                     {
                         // Custom address
-                        if(byteCode._address) address = byteCode._address;
+                        if(byteCode._isCustomAddress)
+                        {
+                            if(segment._dataBytes.size())
+                            {
+                                // Previous segment
+                                segment._segmentSize = uint8_t(segment._dataBytes.size());
+                                gt1File._segments.push_back(segment);
+                                segment._dataBytes.clear();
+                            }
+
+                            address = byteCode._address;
+                            segment._loAddress = address & 0x00FF;
+                            segment._hiAddress = (address & 0xFF00) >>8;
+                        }
+
                         Cpu::setRAM(address++, byteCode._data);
+                        segment._dataBytes.push_back(byteCode._data);
                     }
+
+                    // Last segment
+                    if(segment._dataBytes.size())
+                    {
+                        segment._segmentSize = uint8_t(segment._dataBytes.size());
+                        gt1File._segments.push_back(segment);
+                    }
+                    if(Loader::saveGt1File(filepath, gt1File) == false) return;
                 }
 
-                Cpu::setRAM(0x0016, loadBaseAddress-2 & 0x00FF);
-                Cpu::setRAM(0x0017, (loadBaseAddress & 0xFF00) >>8);
-                Cpu::setRAM(0x001a, loadBaseAddress-2 & 0x00FF);
-                Cpu::setRAM(0x001b, (loadBaseAddress & 0xFF00) >>8);
+                Cpu::setRAM(0x0016, executeAddress-2 & 0x00FF);
+                Cpu::setRAM(0x0017, (executeAddress & 0xFF00) >>8);
+                Cpu::setRAM(0x001a, executeAddress-2 & 0x00FF);
+                Cpu::setRAM(0x001b, (executeAddress & 0xFF00) >>8);
                 //Editor::setSingleStep(true);
                 return;
             }
@@ -187,7 +325,7 @@ namespace Loader
             {
                 case FrameState::Resync:
                 {
-                    if(sendFrame(vgaY, -1, payload, payloadSize, loadBaseAddress, checksum) == false)
+                    if(sendFrame(vgaY, -1, payload, payloadSize, executeAddress, checksum) == false)
                     {
                         checksum = 'g'; // loader resets checksum
                         frameState = FrameState::Frame;
@@ -197,7 +335,7 @@ namespace Loader
 
                 case FrameState::Frame:
                 {
-                    if(sendFrame(vgaY,'L', payload, payloadSize, loadBaseAddress, checksum) == false)
+                    if(sendFrame(vgaY,'L', payload, payloadSize, executeAddress, checksum) == false)
                     {
                         frameState = FrameState::Execute;
                     }
@@ -206,7 +344,7 @@ namespace Loader
 
                 case FrameState::Execute:
                 {
-                    if(sendFrame(vgaY, 'L', payload, 0, loadBaseAddress, checksum) == false)
+                    if(sendFrame(vgaY, 'L', payload, 0, executeAddress, checksum) == false)
                     {
                         checksum = 0;
                         frameState = FrameState::Resync;

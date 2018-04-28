@@ -162,13 +162,23 @@ namespace Editor
             // Testing
             case SDLK_F1:
             {
+#if 0
                 uint8_t x1 = rand() % GIGA_WIDTH;
                 uint8_t x2 = rand() % GIGA_WIDTH;
                 uint8_t y1 = rand() % GIGA_HEIGHT;
                 uint8_t y2 = rand() % GIGA_HEIGHT;
                 uint8_t colour = rand() % 256;
-                //Graphics::drawLine(x1, y1, x2, y2, colour);
-                Graphics::drawLineGiga(x1, y1, x2, y2, colour);
+                Graphics::drawLine(x1, y1, x2, y2, colour);
+                // Graphics::drawLineGiga(x1, y1, x2, y2, colour);
+#else
+                //Graphics::life(true);
+#endif
+            }
+            break;
+
+            case SDLK_F2:
+            {
+                //Graphics::life(false);
             }
             break;
         }

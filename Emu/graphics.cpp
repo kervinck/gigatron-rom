@@ -46,11 +46,11 @@ namespace Graphics
             _colours[i] = p;
         }
 
+        //SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
         SDL_DisplayMode DM;
         SDL_GetCurrentDisplayMode(0, &DM);
-
-        //SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
-        if(SDL_CreateWindowAndRenderer(DM.w, DM.h-1, 0, &_window, &_renderer) < 0) //SDL_WINDOW_FULLSCREEN SDL_WINDOW_FULLSCREEN_DESKTOP
+        if(SDL_CreateWindowAndRenderer(DM.w+1, DM.h, 0, &_window, &_renderer) < 0)
+        //if(SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP, &_window, &_renderer) < 0) //SDL_WINDOW_FULLSCREEN SDL_WINDOW_FULLSCREEN_DESKTOP
         {
             SDL_Quit();
             fprintf(stderr, "Graphics::initialise() : failed to create SDL window\n");
@@ -380,7 +380,6 @@ namespace Graphics
         _pixels[screen + 0 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 1 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 2 + 3*SCREEN_WIDTH] = 0x00;
     }
 
-
     void drawLine(int x, int y, int x2, int y2, uint32_t colour)
     {
    	    bool yLonger = false;
@@ -490,5 +489,129 @@ namespace Graphics
                 y1 += dy2;
             }
         }     
+    }
+
+    void lifePixel(uint8_t x, uint8_t y, uint32_t colour)
+    {
+        uint32_t screen = x + y*SCREEN_WIDTH;
+        _pixels[screen] = colour*0xFFFFFFFF;
+    }
+
+    void life(bool initialise)
+    {
+        static uint8_t buffers[2][256][256];
+        static uint8_t lut[9] = {0, 0, 0, 1, 0, 0, 0, 0, 0};
+        static int index = 0;
+
+        // Glider
+        if(initialise)
+        {
+            for(int j=0; j<255; j++)
+                for(int i=0; i<255; i++)
+                    lifePixel(i, j, 0);
+
+            for(int k=0; k<2; k++)
+                for(int j=1; j<254; j++)
+                    for(int i=1; i<254; i++)
+                        buffers[k][j][i] = 0;
+            
+            buffers[0][1][3] = 1; buffers[0][2][3] = 1; buffers[0][3][3] = 1; buffers[0][3][2] = 1; buffers[0][2][1] = 1;
+            lifePixel(3, 1, 1); lifePixel(3, 2, 1); lifePixel(3, 3, 1); lifePixel(2, 3, 1); lifePixel(1, 2, 1);
+
+            index = 0;
+        }
+        else
+        {        
+            for(int j=1; j<254; j++)
+            {
+                for(int i=1; i<254; i++)
+                {
+                    lut[2] = buffers[index][j][i];
+                    int count = buffers[index][j-1][i-1] + buffers[index][j-1][i] + buffers[index][j-1][i+1] + buffers[index][j][i+1] + buffers[index][j+1][i+1] + buffers[index][j+1][i] + buffers[index][j+1][i-1] + buffers[index][j][i-1];
+                    buffers[index ^ 1][j][i] = lut[count];
+                    lifePixel(i, j, lut[count]);
+                }
+            }
+
+            index ^= 1;
+        }
+    }
+
+    void life1(bool initialise)
+    {
+        struct cell
+        {
+            bool _alive;
+            uint8_t _count;
+        };
+        static cell buffers[2][256][256];
+        static uint8_t lut[9] = {0, 0, 0, 1, 0, 0, 0, 0, 0};
+        static int index = 0;
+
+        // Glider
+        if(initialise)
+        {
+            for(int j=0; j<255; j++)
+                for(int i=0; i<255; i++)
+                    lifePixel(i, j, 0);
+
+            for(int k=0; k<2; k++)
+                for(int j=1; j<254; j++)
+                    for(int i=1; i<254; i++)
+                        {buffers[k][j][i]._count = 0; buffers[k][j][i]._alive = false;}
+            
+            buffers[0][1][3]._alive = 1; buffers[0][2][3]._alive = 1; buffers[0][3][3]._alive = 1; buffers[0][3][2]._alive = 1; buffers[0][2][1]._alive = 1;
+            lifePixel(3, 1, 1); lifePixel(3, 2, 1); lifePixel(3, 3, 1); lifePixel(2, 3, 1); lifePixel(1, 2, 1);
+
+            for(int j=1; j<254; j++)
+                for(int i=1; i<254; i++)
+                     buffers[1][j][i]._count = buffers[index][j-1][i-1]._count + buffers[index][j-1][i]._count + buffers[index][j-1][i+1]._count + buffers[index][j][i+1]._count + 
+                                               buffers[index][j+1][i+1]._count + buffers[index][j+1][i]._count + buffers[index][j+1][i-1]._count + buffers[index][j][i-1]._count;
+            index = 1;
+        }
+        else
+        {        
+            for(int j=1; j<254; j++)
+            {
+                for(int i=1; i<254; i++)
+                {
+                    lut[2] = buffers[index][j][i]._alive;
+                    int count = buffers[index][j][i]._count;
+                    if(lut[count] != lut[2])
+                    {
+                        for(int y=-1; y<=1; y++)
+                        {
+                            for(int x=-1; x<=1; x++)
+                            {
+                                if(y !=0  &&  x!= 0)
+                                {
+                                    if(lut[count] == 0)
+                                    {
+                                        if(buffers[index ^ 1][j+y][i+x]._count) buffers[index ^ 1][j+y][i+x]._count--;
+                                    }
+                                    else
+                                    {
+                                        if(buffers[index ^ 1][j+y][i+x]._count < 9) buffers[index ^ 1][j+y][i+x]._count++;
+                                    }
+                                }
+                            }
+                        }
+
+                        lut[2] = buffers[index ^ 1][j][i]._alive;
+                        buffers[index ^ 1][j][i]._count = buffers[index ^ 1][j-1][i-1]._count + buffers[index ^ 1][j-1][i]._count + buffers[index ^ 1][j-1][i+1]._count + buffers[index ^ 1][j][i+1]._count + 
+                                                          buffers[index ^ 1][j+1][i+1]._count + buffers[index ^ 1][j+1][i]._count + buffers[index ^ 1][j+1][i-1]._count + buffers[index ^ 1][j][i-1]._count;
+                        buffers[index ^ 1][j][i]._alive = lut[buffers[index ^ 1][j][i]._count];
+                    }
+                    else
+                    {
+                        buffers[index ^ 1][j][i]._alive = lut[count];
+                        buffers[index ^ 1][j][i]._count = count;
+                    }
+                    lifePixel(i, j, buffers[index ^ 1][j][i]._alive);
+                }
+            }
+
+            index ^= 1;
+        }
     }
 }

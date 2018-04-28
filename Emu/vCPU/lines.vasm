@@ -31,13 +31,15 @@ x_bounds    EQU     0x009F
 y_bounds    EQU     0x0077
 
 
-_startAddress_      EQU     0x0300      ; entry point for the code, if this is missing defaults to 0x0200
+_startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
 
 _callTable_         EQU     0x007E      ; call addresses are automatically stored here by the assembler, it grows downwards,
                                         ; make sure it doesn't crash into anything important
 _singleStepWatch_   EQU     count       ; the single step debugger watches this variable location to decide when to step,
                                         ; choose a variable that is updated often
 
+line        EQU     0x0300                                        
+                                        
 plot_pixel  EQU     0x0400      ; custom start address, this allows you to store code modules into any page, (0xNN00 <-> 0xNNFF),
                                 ; make sure no individual code module straddles a page boundary. cannot be less than 0x0200
 
@@ -53,6 +55,10 @@ data        EQU     0x0500      ; custom address for constant data space defined
             STW     y1
             STW     x2 
             STW     y2
+            
+            LDWI    0x7FFF
+            STW     ushort_max
+            CALL    line
 
 line        LD      rand_x1     ; x1 position
             ST      x1
@@ -84,10 +90,7 @@ y2_load     LD      rand_y2     ; y2 position
             BLE     start
             ST      y2
       
-start       LDWI    0x7FFF
-            STW     ushort_max
-
-            LDWI    0x0001
+start       LDWI    0x0001
             STW     dx1
             STW     dy1
             
@@ -126,7 +129,7 @@ length      LDW     absh        ; short = absh
             STW     short
             LDW     absw        ; long = absw
             STW     long
-            SUBW    short       ; if(longest >= shortest) goto init
+            SUBW    short       ; if(longest >= shortest) goto init_num
             BGE     init_num
 
             LDW     absh        ; long = absh
@@ -152,7 +155,18 @@ init_num    LDW     long        ; numerator = long
             STW     numerator
             STW     count       ; for(count=long; counti>=0; --i)
             
-loop        CALL    plot_pixel
+loop        LD      x1          ; generate pixel address
+            ST      xypos_low
+            LD      y1
+            ST      xypos_hi
+
+            LDW     base        ; generate vram address
+            ADDW    xypos_low
+            STW     pixels
+            LD      rand_colour
+            POKE    pixels      ; plot new pixel
+
+            ;CALL    plot_pixel
             
             LDW     numerator   ; numerator += short
             ADDW    short

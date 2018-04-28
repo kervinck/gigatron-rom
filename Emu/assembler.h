@@ -11,6 +11,7 @@ namespace Assembler
 {
     struct ByteCode
     {
+        bool _isCustomAddress;
         uint8_t _data;
         uint16_t _address;
     };

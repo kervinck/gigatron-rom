@@ -54,6 +54,8 @@ namespace Graphics
 
     void drawLine(int x, int y, int x2, int y2, uint32_t colour);
     void drawLineGiga(uint16_t x, uint16_t y, uint16_t x2, uint16_t y2, uint8_t colour);
+    void life(bool initialise);
+    void life1(bool initialise);
 }
 
 #endif

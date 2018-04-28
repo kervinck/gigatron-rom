@@ -10,6 +10,9 @@
 #include "editor.h"
 #include "assembler.h"
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 
 #define BRANCH_ADJUSTMENT   2
 #define RESERVED_OPCODE_DB  0x00
@@ -31,7 +34,7 @@ namespace Assembler
 
     struct Equate
     {
-        bool _customAddress;
+        bool _isCustomAddress;
         uint16_t _operand;
         std::string _name;
     };
@@ -45,6 +48,7 @@ namespace Assembler
 
     struct Instruction
     {
+        bool _isCustomAddress;
         ByteSize _byteSize;
         uint8_t _opcode;
         uint8_t _operand0;
@@ -86,6 +90,23 @@ namespace Assembler
         bool* o = _octalChars;       o['0']=1; o['1']=1; o['2']=1; o['3']=1; o['4']=1; o['5']=1; o['6']=1; o['7']=1;
         bool* d = _decimalChars;     d['0']=1; d['1']=1; d['2']=1; d['3']=1; d['4']=1; d['5']=1; d['6']=1; d['7']=1; d['8']=1; d['9']=1;
         bool* h = _hexaDecimalChars; h['0']=1; h['1']=1; h['2']=1; h['3']=1; h['4']=1; h['5']=1; h['6']=1; h['7']=1; h['8']=1; h['9']=1; h['A']=1; h['B']=1; h['C']=1; h['D']=1; h['E']=1; h['F']=1;
+
+#ifdef _WIN32
+        CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+        if(!AllocConsole()) return;
+
+        if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
+        {
+            csbi.dwSize.Y = 1000;
+            SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), csbi.dwSize);
+        }
+
+        if(!freopen("CONIN$", "w", stdin)) return;
+        if(!freopen("CONOUT$", "w", stderr)) return;
+        if (!freopen("CONOUT$", "w", stdout)) return;
+        setbuf(stdout, NULL);
+#endif    
     }
 
     // Returns true when finished
@@ -93,13 +114,18 @@ namespace Assembler
     {
         if(_byteCount >= _byteCode.size())
         {
+            fprintf(stderr, "\n");
             _byteCount = 0;
             return true;
         }
 
         byteCode = _byteCode[_byteCount++];
         static uint16_t address = byteCode._address;
-        if(byteCode._address) address = byteCode._address;
+        if(byteCode._isCustomAddress)
+        {
+            fprintf(stderr, "\n");
+            address = byteCode._address;
+        }
         fprintf(stderr, "Assembler::getNextAssembledByte() : %04X  %02X\n", address, byteCode._data);
         address++;
         return false;
@@ -365,7 +391,7 @@ namespace Assembler
             {
                 if(_equates[i]._name == tokens[tokenIndex])
                 {
-                    _equates[i]._customAddress = true;
+                    _equates[i]._isCustomAddress = true;
                     _currentAddress = _equates[i]._operand;
                     break;
                 }
@@ -397,7 +423,7 @@ namespace Assembler
                     break;
                 }
             }
-            Instruction instruction = {OneByte, operand, 0x00, 0x00, 0x0000};
+            Instruction instruction = {false, OneByte, operand, 0x00, 0x00, 0x0000};
             _instructions.push_back(instruction);
         }
 
@@ -424,7 +450,7 @@ namespace Assembler
                     break;
                 }
             }
-            Instruction instruction = {TwoBytes, uint8_t(operand & 0x00FF), uint8_t((operand & 0xFF00) >>8), 0x00, 0x0000};
+            Instruction instruction = {false, TwoBytes, uint8_t(operand & 0x00FF), uint8_t((operand & 0xFF00) >>8), 0x00, 0x0000};
             _instructions.push_back(instruction);
         }
 
@@ -433,6 +459,7 @@ namespace Assembler
 
     void packByteCodeBuffer(void)
     {
+        // Pack instructions
         ByteCode byteCode;
         for(int i=0; i<_instructions.size(); i++)
         {
@@ -440,6 +467,7 @@ namespace Assembler
             {
                 case OneByte:
                 {
+                    byteCode._isCustomAddress = _instructions[i]._isCustomAddress;
                     byteCode._data = _instructions[i]._opcode;
                     byteCode._address = _instructions[i]._address;
                     _byteCode.push_back(byteCode);
@@ -448,10 +476,12 @@ namespace Assembler
 
                 case TwoBytes:
                 {
+                    byteCode._isCustomAddress = _instructions[i]._isCustomAddress;
                     byteCode._data = _instructions[i]._opcode;
                     byteCode._address = _instructions[i]._address;
                     _byteCode.push_back(byteCode);
 
+                    byteCode._isCustomAddress = false;
                     byteCode._data = _instructions[i]._operand0;
                     byteCode._address = 0x0000;
                     _byteCode.push_back(byteCode);
@@ -460,14 +490,17 @@ namespace Assembler
 
                 case ThreeBytes:
                 {
+                    byteCode._isCustomAddress = _instructions[i]._isCustomAddress;
                     byteCode._data = _instructions[i]._opcode;
                     byteCode._address = _instructions[i]._address;
                     _byteCode.push_back(byteCode);
 
+                    byteCode._isCustomAddress = false;
                     byteCode._data = _instructions[i]._operand0;
                     byteCode._address = 0x0000;
                     _byteCode.push_back(byteCode);
 
+                    byteCode._isCustomAddress = false;
                     byteCode._data = _instructions[i]._operand1;
                     byteCode._address = 0x0000;
                     _byteCode.push_back(byteCode);
@@ -475,12 +508,30 @@ namespace Assembler
                 break;
             }
         }
+
+        // Append call table
+        if(_callTable  &&  _callTableEntries.size())
+        {
+            // _callTable grows downwards, pointer is 2 bytes below the bottom of the table by the time we get here
+            for(int i=int(_callTableEntries.size())-1; i>=0; i--)
+            {
+                byteCode._isCustomAddress = (i == _callTableEntries.size()-1) ?  true : false;
+                byteCode._data = _callTableEntries[i]._address & 0x00FF;
+                byteCode._address = _callTable + i*2 + 2;
+                _byteCode.push_back(byteCode);
+
+                byteCode._isCustomAddress = false;
+                byteCode._data = (_callTableEntries[i]._address & 0xFF00) >>8;
+                byteCode._address = _callTable + i*2 + 3;
+                _byteCode.push_back(byteCode);
+            }
+        }
     }
 
     bool assemble(const std::string& filename, uint16_t startAddress)
     {
         std::ifstream infile(filename);
-        if(infile.is_open()  == false) return false;
+        if(infile.is_open() == false) return false;
 
         _startAddress = startAddress;
         _currentAddress = _startAddress;
@@ -577,7 +628,7 @@ namespace Assembler
 
                     if(parse == SecondPass)
                     {
-                        Instruction instruction = {byteSize, opcode, 0x00, 0x00, _currentAddress};
+                        Instruction instruction = {false, byteSize, opcode, 0x00, 0x00, _currentAddress};
 
                         // Missing operand
                         if((byteSize == TwoBytes  ||  byteSize == ThreeBytes)  &&  tokens.size() <= tokenIndex)
@@ -597,9 +648,10 @@ namespace Assembler
                         // Custom address
                         for(int i=0; i<_equates.size(); i++)
                         {
-                            if(_equates[i]._name == tokens[0]  &&  _equates[i]._customAddress)
+                            if(_equates[i]._name == tokens[0]  &&  _equates[i]._isCustomAddress)
                             {
                                 _currentAddress = _equates[i]._operand;
+                                instruction._isCustomAddress = true;
                                 instruction._address = _currentAddress;
                             }
                         }
@@ -657,8 +709,6 @@ namespace Assembler
                                         // Found a new call address label, put it's address into the call table and point the call instruction to the call table
                                         if(newLabel)
                                         {
-                                            Cpu::setRAM(_callTable, uint8_t(address & 0x00FF));
-                                            Cpu::setRAM(_callTable+1, uint8_t((address & 0xFF00) >>8));
                                             operand = uint8_t(_callTable & 0x00FF);
                                             CallTableEntry entry = {operand, address};
                                             _callTableEntries.push_back(entry);
