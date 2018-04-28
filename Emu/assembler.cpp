@@ -9,6 +9,7 @@
 #include "cpu.h"
 #include "editor.h"
 #include "assembler.h"
+#include "expression.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -21,7 +22,6 @@
 
 namespace Assembler
 {
-    enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
     enum ParseType {FirstPass=0, SecondPass, NumParseTypes};
     enum ByteSize {BadSize=-1, OneByte=1, TwoBytes=2, ThreeBytes=3};
     enum EvaluateResult {Failed=-1, NotFound, Found};
@@ -34,6 +34,7 @@ namespace Assembler
 
     struct Equate
     {
+        bool _isExpression;
         bool _isCustomAddress;
         uint16_t _operand;
         std::string _name;
@@ -75,22 +76,11 @@ namespace Assembler
     std::vector<ByteCode> _byteCode;
     std::vector<CallTableEntry> _callTableEntries;
 
-    bool _binaryChars[256] = {false};
-    bool _octalChars[256] = {false};
-    bool _decimalChars[256] = {false};
-    bool _hexaDecimalChars[256] = {false};
-
-
     uint16_t getStartAddress(void) {return _startAddress;}
 
 
     void initialise(void)
     {
-        bool* b = _binaryChars;      b['0']=1; b['1']=1;
-        bool* o = _octalChars;       o['0']=1; o['1']=1; o['2']=1; o['3']=1; o['4']=1; o['5']=1; o['6']=1; o['7']=1;
-        bool* d = _decimalChars;     d['0']=1; d['1']=1; d['2']=1; d['3']=1; d['4']=1; d['5']=1; d['6']=1; d['7']=1; d['8']=1; d['9']=1;
-        bool* h = _hexaDecimalChars; h['0']=1; h['1']=1; h['2']=1; h['3']=1; h['4']=1; h['5']=1; h['6']=1; h['7']=1; h['8']=1; h['9']=1; h['A']=1; h['B']=1; h['C']=1; h['D']=1; h['E']=1; h['F']=1;
-
 #ifdef _WIN32
         CONSOLE_SCREEN_BUFFER_INFO csbi;
 
@@ -119,8 +109,9 @@ namespace Assembler
             return true;
         }
 
+        static uint16_t address;
+        if(_byteCount == 0) address = _startAddress;
         byteCode = _byteCode[_byteCount++];
-        static uint16_t address = byteCode._address;
         if(byteCode._isCustomAddress)
         {
             fprintf(stderr, "\n");
@@ -131,101 +122,12 @@ namespace Assembler
         return false;
     }    
 
-    void strToUpper(std::string& s)
-    {
-        std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {return toupper(c);} );
-    }
-
-    NumericType getBase(const std::string& input, long& result)
-    {
-        bool success = true;
-        std::string token = input;
-        strToUpper(token);
-        
-        // Hex
-        if(token.size() >= 2  &&  token.c_str()[0] == '$')
-        {
-            for(int i=1; i<token.size(); i++) success &= _hexaDecimalChars[token.c_str()[i]];
-            if(success)
-            {
-                result = strtol(&token.c_str()[1], NULL, 16);
-                return HexaDecimal; 
-            }
-        }
-        // Hex
-        else if(token.size() >= 3  &&  token.c_str()[0] == '0'  &&  token.c_str()[1] == 'X')
-        {
-            for(int i=2; i<token.size(); i++) success &= _hexaDecimalChars[token.c_str()[i]];
-            if(success)
-            {
-                result = strtol(&token.c_str()[2], NULL, 16);
-                return HexaDecimal; 
-            }
-        }
-        // Octal
-        else if(token.size() >= 3  &&  token.c_str()[0] == '0'  &&  (token.c_str()[1] == 'O' || token.c_str()[1] == 'Q'))
-        {
-            for(int i=2; i<token.size(); i++) success &= _octalChars[token.c_str()[i]];
-            if(success)
-            {
-                result = strtol(&token.c_str()[2], NULL, 8);
-                return Octal; 
-            }
-        }
-        // Binary
-        else if(token.size() >= 3  &&  token.c_str()[0] == '0'  &&  token.c_str()[1] == 'B')
-        {
-            for(int i=2; i<token.size(); i++) success &= _binaryChars[token.c_str()[i]];
-            if(success)
-            {
-                result = strtol(&token.c_str()[2], NULL, 2);
-                return Binary; 
-            }
-        }
-        // Decimal
-        else
-        {
-            for(int i=0; i<token.size(); i++) success &= _decimalChars[token.c_str()[i]];
-            if(success)
-            {
-                result = strtol(&token.c_str()[0], NULL, 10);
-                return Decimal; 
-            }
-        }
-
-        return BadBase;
-    }
-
-    bool stringToU8(const std::string& token, uint8_t& result)
-    {
-        if(token.size() < 1  ||  token.size() > 10) return false;
-
-        long lResult;
-        NumericType base = getBase(token, lResult);
-        if(base == BadBase) return false;
-
-        result = uint8_t(lResult);
-        return true;
-    }
-
-    bool stringToU16(const std::string& token, uint16_t& result)
-    {
-        if(token.size() < 1  ||  token.size() > 18) return false;
-
-        long lResult;
-        NumericType base = getBase(token, lResult);
-        if(base == BadBase) return false;
-
-        result = uint16_t(lResult);
-        return true;
-    }
-
     ByteSize getOpcode(const std::string& input, uint8_t& opcode, uint8_t& branch)
     {
         branch = 0x00;
 
         std::string token = input;
-        strToUpper(token);
+        Expression::strToUpper(token);
 
         // Gigatron vCPU instructions
         if(token == "ST")    {opcode = 0x5E; return TwoBytes;  }
@@ -277,12 +179,49 @@ namespace Assembler
         return BadSize;
     }
 
-    bool searchEquates(const std::string& token, Equate& equate)
+    bool searchEquates(const std::vector<std::string>& tokens, int tokenIndex, Equate& equate)
     {
+        if(tokenIndex >= tokens.size()) return false;
+
+        // Expression equates
+        if(tokens[tokenIndex].find_first_of("+-*/()") != std::string::npos)
+        {
+            std::string input;
+
+            // Pre-process
+            for(int j=tokenIndex; j<tokens.size(); j++)
+            {
+                // Strip comments
+                if(tokens[j].find_first_of(";#") != std::string::npos) break;
+
+                // Concatenate
+                input += tokens[j];
+            }
+
+            // Strip white space
+            input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
+
+            // Replace equates
+            for(int i=0; i<_equates.size(); i++)
+            {
+                size_t pos = input.find(_equates[i]._name);
+                while(pos != std::string::npos)
+                {
+                    input.replace(pos, _equates[i]._name.size(), std::to_string(_equates[i]._operand));
+                    pos = input.find(_equates[i]._name, pos + _equates[i]._name.size());
+                }
+            }
+
+            equate._operand = Expression::parse((char*)input.c_str());
+            equate._isExpression = true;
+            return true;
+        }
+
+        // Normal equate
         bool success = false;
         for(int i=0; i<_equates.size(); i++)
         {
-            if(_equates[i]._name == token)
+            if(_equates[i]._name == tokens[tokenIndex])
             {
                 equate = _equates[i];
                 success = true;
@@ -332,11 +271,11 @@ namespace Assembler
             if(parse == FirstPass)
             {
                 uint16_t operand = 0x0000;
-                if(stringToU16(tokens[2], operand) == false)
+                if(Expression::stringToU16(tokens[2], operand) == false)
                 {
                     // Search equates for a previous declaration
                     Equate equate;
-                    if(searchEquates(tokens[2], equate) == false) return Failed;
+                    if(searchEquates(tokens, 2, equate) == false) return Failed;
                     operand = equate._operand;
                 }
 
@@ -359,7 +298,7 @@ namespace Assembler
                 // Standard equates
                 else
                 {
-                    Equate equate = {false, operand, tokens[0]};
+                    Equate equate = {false, false, operand, tokens[0]};
                     _equates.push_back(equate);
                 }
             }
@@ -409,11 +348,11 @@ namespace Assembler
 
         for(int i=tokenIndex+1; i<tokens.size(); i++)
         {
-            success = stringToU8(tokens[i], operand);
+            success = Expression::stringToU8(tokens[i], operand);
             if(success == false)
             {
                 Equate equate;
-                success = searchEquates(tokens[i], equate);
+                success = searchEquates(tokens, i, equate);
                 if(success)
                 {
                     operand = uint8_t(equate._operand);
@@ -436,11 +375,11 @@ namespace Assembler
 
         for(int i=tokenIndex+1; i<tokens.size(); i++)
         {
-            success = stringToU16(tokens[i], operand);
+            success = Expression::stringToU16(tokens[i], operand);
             if(success == false)
             {
                 Equate equate;
-                success = searchEquates(tokens[i], equate);
+                success = searchEquates(tokens, i, equate);
                 if(success)
                 {
                     operand = equate._operand;
@@ -515,14 +454,15 @@ namespace Assembler
             // _callTable grows downwards, pointer is 2 bytes below the bottom of the table by the time we get here
             for(int i=int(_callTableEntries.size())-1; i>=0; i--)
             {
-                byteCode._isCustomAddress = (i == _callTableEntries.size()-1) ?  true : false;
+                int end = int(_callTableEntries.size()) - 1;
+                byteCode._isCustomAddress = (i == end) ?  true : false;
                 byteCode._data = _callTableEntries[i]._address & 0x00FF;
-                byteCode._address = _callTable + i*2 + 2;
+                byteCode._address = _callTable + (end-i)*2 + 2;
                 _byteCode.push_back(byteCode);
 
                 byteCode._isCustomAddress = false;
                 byteCode._data = (_callTableEntries[i]._address & 0xFF00) >>8;
-                byteCode._address = _callTable + i*2 + 3;
+                byteCode._address = _callTable + (end-i)*2 + 3;
                 _byteCode.push_back(byteCode);
             }
         }
@@ -568,7 +508,7 @@ namespace Assembler
                     }
 
                     // Lines containing only white space are skipped
-                    size_t nonWhiteSpace = lineToken.find_first_not_of("  \n\r");
+                    size_t nonWhiteSpace = lineToken.find_first_not_of("  \n\r\f\t\v");
                     if(nonWhiteSpace == std::string::npos)
                     {
                         line++;
@@ -583,7 +523,7 @@ namespace Assembler
                     std::vector<std::string> tokens(it, end);
 
                     // Comments
-                    if(tokens.size() > 0  &&  tokens[0].find_first_of(";*#/") != std::string::npos)
+                    if(tokens.size() > 0  &&  tokens[0].find_first_of(";#") != std::string::npos)
                     {
                         line++;
                         continue;
@@ -725,12 +665,12 @@ namespace Assembler
                                 // All other 2 byte instructions
                                 else
                                 {
-                                    bool success = stringToU8(tokens[tokenIndex], operand);
+                                    bool success = Expression::stringToU8(tokens[tokenIndex], operand);
                                     if(success == false)
                                     {
                                         // Search equates
                                         Equate equate;
-                                        success = searchEquates(tokens[tokenIndex], equate);
+                                        success = searchEquates(tokens, tokenIndex, equate);
                                         operand = uint8_t(equate._operand);
 
                                         // Search mutables
@@ -802,12 +742,12 @@ namespace Assembler
                                 else
                                 {
                                     uint16_t operand;
-                                    bool success = stringToU16(tokens[tokenIndex], operand);
+                                    bool success = Expression::stringToU16(tokens[tokenIndex], operand);
                                     if(success == false)
                                     {
                                         // Search equates
                                         Equate equate;
-                                        success = searchEquates(tokens[tokenIndex], equate);
+                                        success = searchEquates(tokens, tokenIndex, equate);
                                         operand = equate._operand;
 
                                         // Search mutables

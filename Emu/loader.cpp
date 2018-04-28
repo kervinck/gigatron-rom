@@ -37,7 +37,7 @@ namespace Loader
         for(;;)
         {
             // Read segment header
-            Segment segment;
+            Gt1Segment segment;
             infile.read((char *)&segment._hiAddress, SEGMENT_HEADER_SIZE);
             if(infile.eof() || infile.bad() || infile.fail())
             {
@@ -247,8 +247,8 @@ namespace Loader
                 std::string filepath = std::string("./vCPU/" + filename);
                 if(filename.find(".vcpu") != filename.npos  ||  filename.find(".gt1") != filename.npos)
                 {
-                    Loader::Gt1File gt1File;
-                    if(Loader::loadGt1File(filepath, gt1File) == false) return;
+                    Gt1File gt1File;
+                    if(loadGt1File(filepath, gt1File) == false) return;
                     executeAddress = gt1File._loStart + (gt1File._hiStart <<8);
                     Editor::setLoadBaseAddress(executeAddress);
 
@@ -271,10 +271,10 @@ namespace Loader
                     uint16_t address = executeAddress;
 
                     // Save to gt1 format
-                    Loader::Gt1File gt1File;
+                    Gt1File gt1File;
                     gt1File._loStart = address & 0x00FF;
                     gt1File._hiStart = (address & 0xFF00) >>8;
-                    Loader::Segment segment;
+                    Gt1Segment segment;
                     segment._loAddress = address & 0x00FF;
                     segment._hiAddress = (address & 0xFF00) >>8;
 
@@ -307,7 +307,7 @@ namespace Loader
                         segment._segmentSize = uint8_t(segment._dataBytes.size());
                         gt1File._segments.push_back(segment);
                     }
-                    if(Loader::saveGt1File(filepath, gt1File) == false) return;
+                    if(saveGt1File(filepath, gt1File) == false) return;
                 }
 
                 Cpu::setRAM(0x0016, executeAddress-2 & 0x00FF);

@@ -15,7 +15,7 @@
 
 namespace Loader
 {
-    struct Segment
+    struct Gt1Segment
     {
         uint8_t _hiAddress;
         uint8_t _loAddress;
@@ -25,7 +25,7 @@ namespace Loader
 
     struct Gt1File
     {
-        std::vector<Segment> _segments;
+        std::vector<Gt1Segment> _segments;
         uint8_t _terminator=0;
         uint8_t _hiStart=DEFAULT_START_ADDRESS_HI;
         uint8_t _loStart=DEFAULT_START_ADDRESS_LO;

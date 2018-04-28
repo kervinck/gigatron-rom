@@ -1,34 +1,40 @@
 ; game of life by John Conway
 ; 32X32 runs about 1 fps on a 6.25MHz Gigatron TTL
-; non-optimised apart from a look up table to evalute neighbours count
-; this is an overlapping world
+; some optimisation, pointer arithmetic with offsets and a look up table to evalute neighbours count
+; this world has boundaries
 
 
 vram        EQU     0x0800
-buffer0     EQU     0x08A0
-buffer1     EQU     0x08C0
+buff0       EQU     0x09A0
+buff1       EQU     0x09D0
 
 cells0      EQU     0x30
 cells1      EQU     0x32
-x           EQU     0x34
-y           EQU     0x35
-i           EQU     0x36
-j           EQU     0x37
-neighbours  EQU     0x38
-cell        EQU     0x39
-cbase0      EQU     0x3A
-cbase1      EQU     0x3C
-vbase_lo    EQU     0x3E
-vbase_hi    EQU     0x3F
-pixels      EQU     0x40
-pixels_hi   EQU     0x41
-pattern     EQU     0x42
-watch       EQU     0x44
-scratch     EQU     0x46
-mask        EQU     0x48
-gliders     EQU     0x4A
-lut_offset  EQU     0x4C
-j_one       EQU     0x4E
+i           EQU     0x34
+j           EQU     0x35
+neighbours  EQU     0x36
+cell        EQU     0x37
+buffer0     EQU     0x38
+buffer1     EQU     0x3A
+vbase       EQU     0x3C
+vbase_hi    EQU     0x3D
+pixels      EQU     0x3E
+pattern     EQU     0x40
+watch       EQU     0x42
+scratch     EQU     0x44
+mask        EQU     0x46 
+gliders     EQU     0x48
+lut_offset  EQU     0x4A
+j_one       EQU     0x4C
+offset0     EQU     0x4E
+offset1     EQU     0x50
+offset2     EQU     0x52
+offset3     EQU     0x54
+offset4     EQU     0x56
+offset5     EQU     0x58
+offset6     EQU     0x5A
+offset7     EQU     0x5C
+
 
 ij_mask     EQU     0x1F1F  ; determines max size of world, limited by available ram in blank scanlines,
                             ; using bytes per cell and two buffers means 0x20*0x20 is maximum size
@@ -42,18 +48,20 @@ _singleStepWatch_   EQU     watch       ; the single step debugger watches this 
                                         ; choose a variable that is updated often
 
 
-n_lut       EQU     0x0060  
+n_lut       EQU     0x60
+n_lut_cell  EQU     0x62
+
 n-1-1       EQU     0x0300
 
 
             LDWI    vram
-            STW     vbase_lo    ; vram base address
+            STW     vbase       ; vram base address
             STW     pixels      ; pixel address
 
-            LDWI    buffer0
-            STW     cbase0
-            LDWI    buffer1
-            STW     cbase1
+            LDWI    buff0
+            STW     buffer0
+            LDWI    buff1
+            STW     buffer1
             
             LDWI    ij_mask
             STW     mask
@@ -63,18 +71,18 @@ n-1-1       EQU     0x0300
             STW     j_one
             
 clear       LDI     0x00        ; clear screen and buffers
-            POKE    vbase_lo
+            POKE    vbase
             LDWI    0x0001
-            ADDW    vbase_lo
-            STW     vbase_lo
+            ADDW    vbase
+            STW     vbase
             LD      vbase_hi
             SUBI    0x80
             BLT     clear
 
-            LDWI    0x08A2
+            LDWI    0x09A3
             STW     gliders
 
-            LDI     0x07        ; number of gliders
+            LDI     0x06        ; number of gliders
             ST      i
 
 glider      LDW     gliders     
@@ -106,7 +114,7 @@ glider      LDW     gliders
             POKE    pattern
             
             LD      gliders     ; gap between gliders
-            ADDI    0x04
+            ADDI    0x05
             ST      gliders
             
             LD      i
@@ -115,116 +123,108 @@ glider      LDW     gliders
             BGT     glider
                         
             LDWI    0x354A      ; position in screen to render life
-            STW     vbase_lo
+            STW     vbase
             
             LDI     0x00
             ST      i
             ST      j
-            CALL    n-1-1
 
+            LDWI    0x0101      ; -ve
+            STW     offset0
+            LDWI    0x0100      ; -ve
+            STW     offset1
+            LDWI    0x00FF      ; -ve
+            STW     offset2
+            LDWI    0x0001      ; +ve
+            STW     offset3
+            LDWI    0x0101      ; +ve
+            STW     offset4
+            LDWI    0x0100      ; +ve
+            STW     offset5
+            LDWI    0x00FF      ; +ve
+            STW     offset6
+            LDWI    0x0001      ; -ve
+            STW     offset7
+            
+            CALL    n-1-1
+            
           
 n-1-1       LDI     0x00        ; reset neighbour count
             ST      neighbours
             
-            LD      i           ; -1, -1 neighbour
-            SUBI    0x01
-            ST      i
-            LD      j
-            SUBI    0x01
-            ST      j
-            LDW     i
-            ANDW    mask
-            ADDW    cbase0
+            LDW     i           ; buffer0
+            ADDW    buffer0
+            STW     cells0      
+            LDW     i           ; buffer1
+            ADDW    buffer1
+            STW     cells1      
+
+            LDW     cells0      ; -1, -1 neighbour
+            SUBW    offset0
             PEEK
             BEQ     n+0-1
             INC     neighbours
             
-n+0-1       INC     i           ; 0, -1 neighbour
-            LDW     i
-            ANDW    mask
-            ADDW    cbase0
+n+0-1       LDW     cells0      ; 0, -1 neighbour
+            SUBW    offset1
             PEEK
             BEQ     n+1-1
             INC     neighbours
 
-n+1-1       INC     i           ; 1, -1 neighbour
-            LDW     i
-            ANDW    mask
-            ADDW    cbase0
+n+1-1       LDW     cells0      ; 1, -1 neighbour
+            SUBW    offset2
             PEEK
             BEQ     n+1+0
             INC     neighbours
 
-n+1+0       INC     j           ; 1, 0 neighbour
-            LDW     i
-            ANDW    mask
-            ADDW    cbase0
+n+1+0       LDW     cells0      ; 1, 0 neighbour
+            ADDW    offset3
             PEEK
             BEQ     n+1+1
             INC     neighbours
             
-n+1+1       INC     j           ; 1, 1 neighbour
-            LDW     i
-            ANDW    mask
-            ADDW    cbase0
+n+1+1       LDW     cells0      ; 1, 1 neighbour
+            ADDW    offset4
             PEEK
             BEQ     n+0+1
             INC     neighbours
             
-n+0+1       LD      i           ; 0, 1 neighbour
-            SUBI    0x01
-            ST      i
-            LDW     i
-            ANDW    mask
-            ADDW    cbase0
+n+0+1       LDW     cells0      ; 0, 1 neighbour
+            ADDW    offset5
             PEEK
             BEQ     n-1+1
             INC     neighbours
             
-n-1+1       LD      i           ; -1, 1 neighbour
-            SUBI    0x01
-            ST      i
-            LDW     i
-            ANDW    mask
-            ADDW    cbase0
+n-1+1       LDW     cells0      ; -1, 1 neighbour
+            ADDW    offset6
             PEEK
             BEQ     n-1+0
             INC     neighbours            
             
-n-1+0       LD      j           ; -1, 0 neighbour
-            SUBI    0x01
-            ST      j
-            LDW     i
-            ANDW    mask
-            ADDW    cbase0
+n-1+0       LDW     cells0      ; -1, 0 neighbour
+            SUBW    offset7
             PEEK
             BEQ     cell_00
             INC     neighbours                        
             
-cell_00     INC     i           ; 0, 0 cell
-            LDW     i
-            ADDW    cbase0
-            STW     cells0      ; save buffer0 address
+cell_00     LDW     cells0      ; 0, 0 cell
             PEEK                ; get buffer0 cell
-            ST      0x62        ; save cell into neighbours lut
-            LDW     i
-            ADDW    cbase1
-            STW     cells1      ; save buffer1 address
+            ST      n_lut_cell  ; save cell into neighbours lut
 
-            LD      neighbours  ; lut computes neighbours count
-            ADDI    0x60
+            LD      neighbours  ; lut evaluates neighbours count
+            ADDI    n_lut
             POKE    lut_offset
-.lut,1      LD      0x60        ; self modifying code
+.lut,1      LD      n_lut       ; self modifying code
 
             POKE    cells1      ; save new cell
             ST      cell
             
             LDW     i           ; draw cell
-            ADDW    vbase_lo
+            ADDW    vbase
             STW     pixels
             LD      cell
             POKE    pixels
-                                    
+                       
             LD      i           ; inc i
             ADDI    0x01
             ANDI    ij_mask
@@ -237,15 +237,15 @@ cell_00     INC     i           ; 0, 0 cell
             ST      j
             BNE     n-1-1
 
-            LDW     cbase0      ; swap buffers
+            LDW     buffer0     ; swap buffers
             STW     scratch
-            LDW     cbase1
-            STW     cbase0
+            LDW     buffer1
+            STW     buffer0
             LDW     scratch
-            STW     cbase1
+            STW     buffer1
             
             BRA     n-1-1
 
             
 ; slot 2 is replaced by buffer0 cell using self modifying code
-n_lut       DB 0 0 0 0xFF 0 0 0 0 0 0
+n_lut       DB 0 0 0 0xFF 0 0 0 0 0

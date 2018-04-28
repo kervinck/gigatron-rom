@@ -123,6 +123,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "loader.h"
 #include "timing.h"
 #include "graphics.h"
+#include "expression.h"
 #include "assembler.h"
 
 
@@ -133,6 +134,7 @@ int main(int argc, char* argv[])
     Cpu::initialise(S);
     Audio::initialise();
     Graphics::initialise();
+    Expression::initialise();
     Assembler::initialise();
 
     bool debugging = false;
@@ -140,6 +142,21 @@ int main(int argc, char* argv[])
     int vgaX = 0, vgaY = 0;
     int HSync = 0, VSync = 0;
 
+#if 0
+    for(;;)
+    {
+        Graphics::life(false);
+
+        static uint64_t prevFrameCounter = 0;
+        double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
+        if(frameTime > TIMING_HACK)
+        {
+            Editor::handleInput();
+            Graphics::render(false);
+            prevFrameCounter = SDL_GetPerformanceCounter();
+        }
+    }
+#else
     for(long long t=-2; ; t++) 
     {
         if(t < 0) S._PC = 0; // MCP100 Power-On Reset
@@ -188,6 +205,7 @@ int main(int argc, char* argv[])
 
         S=T;
     }
+#endif
 
     return 0;
 }
