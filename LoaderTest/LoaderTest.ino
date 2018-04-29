@@ -15,13 +15,35 @@
 #define buttonStart 16
 #define buttonA     128
 
+#define N           60 // Payload bytes per transmission frame
+
 byte checksum; // Global is simplest
+
+byte blinkyGt1[] = {
+  0x7f, 0x00, 0x0b, // Segment 7f00: 11 bytes
+  0x11, 0x50, 0x44, // 7f00 LDWI $4450  ; Load address of center of screen
+  0x2b, 0x30,       // 7f03 STW  'p'    ; Store in variable 'p' (at $0030)
+  0xf0, 0x30,       // 7f05 POKE 'p'    ; Write low byte of accumulator there
+  0xe3, 0x01,       // 7f07 ADDI 1      ; Increment accumulator
+  0x90, 0x03,       // 7f09 BRA  $7f05  ; Loop forever
+  0x00,             // No more segments
+  0x7f, 0x00        // Start address
+};
 
 void setup() {
   // Enable output pin (pins are set to input by default)
   PORTB |= 1<<PORTB5; // Send 1 when idle
   DDRB = 1<<PORTB5;
 
+  // Open upstream communication
+  Serial.begin(57600);
+  Serial.println("*** Arduino Gigatron Hub");
+}
+
+void loop()
+{
+  Serial.println("Reset Gigatron");
+  
   // In case we power on together with the Gigatron, this is a
   // good pause to wait for the video loop to have started
   delay(350);
@@ -33,6 +55,7 @@ void setup() {
   delay(1500);
 
   // Navigate menu. 'Loader' is at the bottom
+  Serial.println("Start Loader from menu");
   for (int i=0; i<10; i++) {
     sendController(~buttonDown, 4);
     delay(50);
@@ -43,33 +66,93 @@ void setup() {
     sendController(~buttonA, 4);
     delay(100);
   }
+
+  // Wait for Loader to be running
+  delay(500);
+
+  // Send Blinky as pseudo gt1 file
+  Serial.println("Load gt1 file");
+  sendGt1File(blinkyGt1, sizeof blinkyGt1);
+
+  // Wait
+  for (int i=10; i>0; i--) {
+    Serial.println(i);
+    delay(1000);
+  }
 }
 
-byte blinky[] = {
-  0x11, 0x50, 0x44, // 7f00 LDWI $4450  ; Load address of center of screen
-  0x2b, 0x30,       // 7f03 STW  'p'    ; Store in variable 'p' (at $0030)
-  0xf0, 0x30,       // 7f05 POKE 'p'    ; Write low byte of accumulator there
-  0xe3, 0x01,       // 7f07 ADDI 1      ; Increment accumulator
-  0x90, 0x03        // 7f09 BRA  $7f05  ; Loop forever
-};                  // 7f0b
+// Because the Arduino doesn't have enough RAM to buffer
+// a complete GT1 file, it processes these files segment
+// by segment. Each segment is transmitted downstream in
+// concatenated frames to the Gigatron. Between segments
+// it is communicating upstream with the serial port.
 
-void loop() {
-  static byte payload[60];
-  memcpy(payload, blinky, sizeof blinky);
-  noInterrupts();
-  for (;;) {
-    // Send one frame with false checksum to force
-    // a checksum resync at the receiver
-    checksum = 0;
-    sendFrame(-1, sizeof blinky, 0x7f00, payload);
+void sendGt1File(byte *gt1, unsigned gt1Size)
+{
+  #define readNext() (gt1Size>0 ? (gt1Size--, *gt1++) : 0)
 
-    // Setup checksum properly
-    checksum = 'g';
-    sendFrame('L', sizeof blinky, 0x7f00, payload);
+  byte segment[300] = {0};
+  word address = readNext();
 
-    // Force execution
-    sendFrame('L', 0, 0x7f00, payload);
+  // Any number n > 0 of segments
+  do {
+    address = (address << 8) + readNext();
+
+    int len = readNext();
+    if (!len)
+      len = 256;
+
+    for (int i=0; i<len; i++)
+      segment[i] = readNext();
+
+    // Check that segment doesn't cross page boundary
+    if ((address & 255) + len > 256) {
+      Serial.println("Error: invalid stream");
+      return;
+    }
+
+    // Send downstream
+    Serial.print("> Load ");
+    Serial.print(len);
+    Serial.println(" bytes");
+    sendGt1Segment(address, len, segment);
+
+    address = readNext();
+  } while (address != 0);
+
+  // Two bytes for start address
+  address = readNext();
+  address = (address << 8) + readNext();
+  if (address != 0) {
+    Serial.print("> Start $");
+    Serial.println(address, HEX);
+    sendGt1Execute(address, segment+240);
   }
+}
+
+// Send a 1..256 byte code or data segment into the Gigatron by
+// repacking it into Loader frames of max N=60 payload bytes each.
+void sendGt1Segment(word address, int len, byte data[])
+{
+  noInterrupts();
+  byte n = min(N, len);
+  resetChecksum(n, address, data);
+
+  // Send segment data
+  for (int i=0; i<len; i+=n) {
+    n = min(N, len-i);
+    sendFrame('L', n, address+i, data+i);
+  }
+  interrupts();
+}
+
+// Send execute command
+void sendGt1Execute(word address, byte data[])
+{
+  noInterrupts();
+  resetChecksum(0, address, data);  
+  sendFrame('L', 0, address, data);
+  interrupts();
 }
 
 // Pretend to be a game controller
@@ -88,7 +171,18 @@ void sendController(byte value, int n)
   interrupts(); // So delay() can work again
 }
 
-void sendFrame(byte firstByte, byte len, unsigned address, byte message[60])
+void resetChecksum(byte n, word address, byte *data)
+{
+  // Send one frame with false checksum to force
+  // a checksum resync at the receiver
+  checksum = 0;
+  sendFrame(-1, n, address, data);
+
+  // Setup checksum properly
+  checksum = 'g';
+}
+
+void sendFrame(byte firstByte, byte len, word address, byte message[])
 {
   // Send one frame of data
   //
@@ -108,7 +202,7 @@ void sendFrame(byte firstByte, byte len, unsigned address, byte message[60])
   sendBits(len, 6);            // Length 0, 1..60
   sendBits(address&255, 8);    // Low address bits
   sendBits(address>>8, 8);     // High address bits
-  for (byte i=0; i<60; i++)    // Payload bytes
+  for (byte i=0; i<N; i++)     // Payload bytes
     sendBits(message[i], 8);
   byte lastByte = -checksum;   // Checksum must come out as 0
   sendBits(lastByte, 8);
