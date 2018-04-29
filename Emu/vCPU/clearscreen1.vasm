@@ -24,9 +24,6 @@ SYS_ClearRow32_56   EQU     0x2300      ; clear 32 pixels at a time, native code
             LDWI    SYS_ClearRow32_56   ; clears 32 row pixels at a time
             STW     sysFn
 
-            LDWI    SYS_ClearRow32_56   ; clears 32 row pixels at a time
-            STW     sysFn
-
 clear       SYS     0xF2        ; SYS_ClearRow32_56, 270 - 56/2 = 0xF2
             LDWI    0x0020
             ADDW    vbase
