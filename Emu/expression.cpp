@@ -149,7 +149,11 @@ namespace Expression
         uint16_t value = 0;
         if((peek() >= '0'  &&  peek() <= '9')  ||  peek() == '$')
         {
-            number(value);
+            if(!number(value))
+            {
+                fprintf(stderr, "Expression::factor() : Bad numeric data in '%s'\n", _expressionToParse);
+                value = 0;
+            }
             return value;
         }
         else if(peek() == '(')
