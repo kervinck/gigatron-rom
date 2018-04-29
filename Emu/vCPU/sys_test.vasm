@@ -1,0 +1,14 @@
+        LDWI    0xFFFF      ; 4 pixels
+        STW     0x24
+        LDWI    0xFFFF
+        STW     0x26
+        
+        LDWI    0x0800      ; pixel address
+        STW     0x28
+        
+        LDWI    0x04d4      ; SYS_Draw4_30
+        STW     0x22
+        
+        SYS     0xFF        ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+        
+LOOP    BRA     LOOP        

@@ -4,6 +4,7 @@
 ; dec 1234
 ; oct 0o777 or 0q777
 ; bin 0b01011111
+# comments can be started with ; or #
 
 vram        EQU     0x0800
 rand        EQU     0x06

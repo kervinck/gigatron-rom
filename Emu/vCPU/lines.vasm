@@ -1,10 +1,13 @@
-rand_x1     EQU     0x0006
-rand_y1     EQU     0x0007
-rand_x2     EQU     0x0008
-rand_y2     EQU     0x000b
-rand_colour EQU     0x0006
-                          
 vram        EQU     0x0800
+x_bounds    EQU     0x009F
+y_bounds    EQU     0x0077
+
+rand_x1     EQU     0x06
+rand_y1     EQU     0x07
+rand_x2     EQU     0x08
+rand_y2     EQU     0x0b
+rand_colour EQU     0x06
+
 base        EQU     0x30
 pixels      EQU     0x32
 x1          EQU     0x34
@@ -26,9 +29,6 @@ ushort_max  EQU     0x52
 count       EQU     0x54
 xypos_low   EQU     0x56
 xypos_hi    EQU     0x57
-
-x_bounds    EQU     0x009F
-y_bounds    EQU     0x0077
 
 
 _startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200

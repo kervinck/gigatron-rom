@@ -5,7 +5,7 @@
 
 
 #define MAJOR_VERSION "0.2"
-#define MINOR_VERSION "11"
+#define MINOR_VERSION "12"
 #define VERSION_STR "Ver: " MAJOR_VERSION "." MINOR_VERSION
 
 #define ROM_SIZE (1<<16)
@@ -22,12 +22,13 @@ namespace Cpu
 
     uint8_t getIN(void);
     uint8_t getXOUT(void);
-    uint8_t getROM(uint16_t address, int page);
     uint8_t getRAM(uint16_t address);
+    uint8_t getROM(uint16_t address, int page);
 
     void setIN(uint8_t in);
     void setXOUT(uint8_t xout);
     void setRAM(uint16_t address, uint8_t data);
+    void setROM(uint16_t base, uint16_t address, uint8_t data);
 
     void initialise(State& S);
     State cycle(const State& S);

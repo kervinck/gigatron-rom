@@ -225,13 +225,106 @@ namespace Loader
         return sending;
     }
 
+    void uploadDirect(void)
+    {
+        uint16_t executeAddress = Editor::getLoadBaseAddress();
+        std::string filename = *Editor::getFileName(Editor::getCursorY());
+        std::string filepath = std::string("./vCPU/" + filename);
+
+        // Upload raw vCPU code
+        if(filename.find(".vcpu") != filename.npos  ||  filename.find(".gt1") != filename.npos)
+        {
+            Gt1File gt1File;
+            if(loadGt1File(filepath, gt1File) == false) return;
+            executeAddress = gt1File._loStart + (gt1File._hiStart <<8);
+            Editor::setLoadBaseAddress(executeAddress);
+
+            for(int j=0; j<gt1File._segments.size(); j++)
+            {
+                uint16_t address = gt1File._segments[j]._loAddress + (gt1File._segments[j]._hiAddress <<8);
+                for(int i=0; i<gt1File._segments[j]._segmentSize; i++)
+                {
+                    Cpu::setRAM(address+i, gt1File._segments[j]._dataBytes[i]);
+                }
+            }
+        }
+        // Upload vCPU assembly code
+        else if(filename.find(".vasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
+        {
+            if(Assembler::assemble(filepath, DEFAULT_START_ADDRESS) == false) return;
+            executeAddress = Assembler::getStartAddress();
+            Editor::setLoadBaseAddress(executeAddress);
+            uint16_t address = executeAddress;
+            uint16_t customAddress = executeAddress;
+
+            // Save to gt1 format
+            Gt1File gt1File;
+            gt1File._loStart = address & 0x00FF;
+            gt1File._hiStart = (address & 0xFF00) >>8;
+            Gt1Segment gt1Segment;
+            gt1Segment._loAddress = address & 0x00FF;
+            gt1Segment._hiAddress = (address & 0xFF00) >>8;
+
+            bool isRomCode = false;
+            Assembler::ByteCode byteCode;
+            while(Assembler::getNextAssembledByte(byteCode) == false)
+            {
+                if(byteCode._isRomAddress) isRomCode = true;
+
+                // Custom address
+                if(byteCode._isCustomAddress)
+                {
+                    if(gt1Segment._dataBytes.size())
+                    {
+                        // Previous segment
+                        gt1Segment._segmentSize = uint8_t(gt1Segment._dataBytes.size());
+                        gt1File._segments.push_back(gt1Segment);
+                        gt1Segment._dataBytes.clear();
+                    }
+
+                    address = byteCode._address;
+                    customAddress = address;
+                    gt1Segment._loAddress = address & 0x00FF;
+                    gt1Segment._hiAddress = (address & 0xFF00) >>8;
+                }
+
+                (byteCode._isRomAddress) ? Cpu::setROM(customAddress, address++, byteCode._data) : Cpu::setRAM(address++, byteCode._data);
+                gt1Segment._dataBytes.push_back(byteCode._data);
+            }
+
+            // Last segment
+            if(gt1Segment._dataBytes.size())
+            {
+                gt1Segment._segmentSize = uint8_t(gt1Segment._dataBytes.size());
+                gt1File._segments.push_back(gt1Segment);
+            }
+
+            // Don't save gt1 file for any asm files that contain native rom code
+            if(!isRomCode  &&  saveGt1File(filepath, gt1File) == false) return;
+        }
+        // Invalid file
+        else
+        {
+            fprintf(stderr, "Loader::upload() : invalid file '%s'\n", filename.c_str());
+            return;
+        }
+
+        // Execute code
+        Cpu::setRAM(0x0016, executeAddress-2 & 0x00FF);
+        Cpu::setRAM(0x0017, (executeAddress & 0xFF00) >>8);
+        Cpu::setRAM(0x001a, executeAddress-2 & 0x00FF);
+        Cpu::setRAM(0x001b, (executeAddress & 0xFF00) >>8);
+        //Editor::setSingleStep(true);
+        return;
+    }
+
     // TODO: fix the Gigatron version of upload so that it can send more than 60 total bytes, (i.e. break up the payload into multiple packets of 60, 1 packet per frame)
     void upload(int vgaY)
     {
         static bool frameUploading = false;
         static FILE* fileToUpload = NULL;
         static FILE* fileToSave = NULL;
-        static uint8_t payload[10000];
+        static uint8_t payload[RAM_SIZE];
         static uint8_t payloadSize = 0;
 
         if(_startUploading  ||  frameUploading)
@@ -242,79 +335,7 @@ namespace Loader
                 _startUploading = false;
                 //frameUploading = true;
 
-                // Upload raw vCPU code
-                std::string filename = *Editor::getFileName(Editor::getCursorY());
-                std::string filepath = std::string("./vCPU/" + filename);
-                if(filename.find(".vcpu") != filename.npos  ||  filename.find(".gt1") != filename.npos)
-                {
-                    Gt1File gt1File;
-                    if(loadGt1File(filepath, gt1File) == false) return;
-                    executeAddress = gt1File._loStart + (gt1File._hiStart <<8);
-                    Editor::setLoadBaseAddress(executeAddress);
-
-                    for(int j=0; j<gt1File._segments.size(); j++)
-                    {
-                        uint16_t address = gt1File._segments[j]._loAddress + (gt1File._segments[j]._hiAddress <<8);
-                        for(int i=0; i<gt1File._segments[j]._segmentSize; i++)
-                        {
-                            Cpu::setRAM(address+i, gt1File._segments[j]._dataBytes[i]);
-                        }
-                    }
-                }
-
-                // Upload vCPU assembly code
-                if(filename.find(".vasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
-                {
-                    if(Assembler::assemble(filepath, DEFAULT_START_ADDRESS) == false) return;
-                    executeAddress = Assembler::getStartAddress();
-                    Editor::setLoadBaseAddress(executeAddress);
-                    uint16_t address = executeAddress;
-
-                    // Save to gt1 format
-                    Gt1File gt1File;
-                    gt1File._loStart = address & 0x00FF;
-                    gt1File._hiStart = (address & 0xFF00) >>8;
-                    Gt1Segment segment;
-                    segment._loAddress = address & 0x00FF;
-                    segment._hiAddress = (address & 0xFF00) >>8;
-
-                    Assembler::ByteCode byteCode;
-                    while(Assembler::getNextAssembledByte(byteCode) == false)
-                    {
-                        // Custom address
-                        if(byteCode._isCustomAddress)
-                        {
-                            if(segment._dataBytes.size())
-                            {
-                                // Previous segment
-                                segment._segmentSize = uint8_t(segment._dataBytes.size());
-                                gt1File._segments.push_back(segment);
-                                segment._dataBytes.clear();
-                            }
-
-                            address = byteCode._address;
-                            segment._loAddress = address & 0x00FF;
-                            segment._hiAddress = (address & 0xFF00) >>8;
-                        }
-
-                        Cpu::setRAM(address++, byteCode._data);
-                        segment._dataBytes.push_back(byteCode._data);
-                    }
-
-                    // Last segment
-                    if(segment._dataBytes.size())
-                    {
-                        segment._segmentSize = uint8_t(segment._dataBytes.size());
-                        gt1File._segments.push_back(segment);
-                    }
-                    if(saveGt1File(filepath, gt1File) == false) return;
-                }
-
-                Cpu::setRAM(0x0016, executeAddress-2 & 0x00FF);
-                Cpu::setRAM(0x0017, (executeAddress & 0xFF00) >>8);
-                Cpu::setRAM(0x001a, executeAddress-2 & 0x00FF);
-                Cpu::setRAM(0x001b, (executeAddress & 0xFF00) >>8);
-                //Editor::setSingleStep(true);
+                uploadDirect();
                 return;
             }
             

@@ -1,9 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <fstream>
 
 #include <SDL.h>
 #include "cpu.h"
+
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 
 
 namespace Cpu
@@ -21,6 +26,11 @@ namespace Cpu
     void setXOUT(uint8_t xout) {_XOUT = xout;}
     void setRAM(uint16_t address, uint8_t data) {_RAM[address & (RAM_SIZE-1)] = data;}
 
+    void setROM(uint16_t base, uint16_t address, uint8_t data)
+    {
+        uint16_t offset = (address - base) / 2;
+        _ROM[base + offset][address & 0x01] = data;
+    }
 
     void garble(uint8_t* mem, int len)
     {
@@ -29,21 +39,44 @@ namespace Cpu
 
     void initialise(Cpu::State& S)
     {
+#ifdef _WIN32
+        CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+        if(!AllocConsole()) return;
+
+        if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
+        {
+            csbi.dwSize.Y = 1000;
+            SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), csbi.dwSize);
+        }
+
+        if(!freopen("CONIN$", "w", stdin)) return;
+        if(!freopen("CONOUT$", "w", stderr)) return;
+        if (!freopen("CONOUT$", "w", stdout)) return;
+        setbuf(stdout, NULL);
+#endif    
+
         // Memory
         srand(unsigned int(time(NULL))); // Initialize with randomized data
         garble((uint8_t*)_ROM, sizeof _ROM);
         garble(_RAM, sizeof _RAM);
         garble((uint8_t*)&S, sizeof S);
 
-        // ROM file
-        FILE *fp = fopen("theloop.2.rom", "rb");
-        if(!fp)
+        // Open ROM file
+        std::ifstream romfile("theloop.2.rom", std::ios::binary | std::ios::in);
+        if(romfile.is_open() == false)
         {
             fprintf(stderr, "Cpu::initialise() : failed to open ROM file\n");
             exit(EXIT_FAILURE);
         }
-        fread(_ROM, 1, sizeof _ROM, fp);
-        fclose(fp);
+
+        // Read ROM file
+        romfile.read((char *)_ROM, sizeof(_ROM));
+        if(romfile.bad() || romfile.fail())
+        {
+            fprintf(stderr, "Cpu::initialise() : failed to read ROM file\n");
+            exit(EXIT_FAILURE);
+        }
 
         // SDL initialisation
         if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS) < 0)

@@ -11,13 +11,12 @@
 #include "assembler.h"
 #include "expression.h"
 
-#ifdef _WIN32
-#include <Windows.h>
-#endif
 
-#define BRANCH_ADJUSTMENT   2
-#define RESERVED_OPCODE_DB  0x00
-#define RESERVED_OPCODE_DW  0x01
+#define BRANCH_ADJUSTMENT    2
+#define RESERVED_OPCODE_DB   0x00
+#define RESERVED_OPCODE_DW   0x01
+#define RESERVED_OPCODE_DBR  0x02
+#define RESERVED_OPCODE_DWR  0x03
 
 
 namespace Assembler
@@ -34,7 +33,6 @@ namespace Assembler
 
     struct Equate
     {
-        bool _isExpression;
         bool _isCustomAddress;
         uint16_t _operand;
         std::string _name;
@@ -49,6 +47,7 @@ namespace Assembler
 
     struct Instruction
     {
+        bool _isRomAddress;
         bool _isCustomAddress;
         ByteSize _byteSize;
         uint8_t _opcode;
@@ -81,22 +80,6 @@ namespace Assembler
 
     void initialise(void)
     {
-#ifdef _WIN32
-        CONSOLE_SCREEN_BUFFER_INFO csbi;
-
-        if(!AllocConsole()) return;
-
-        if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
-        {
-            csbi.dwSize.Y = 1000;
-            SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), csbi.dwSize);
-        }
-
-        if(!freopen("CONIN$", "w", stdin)) return;
-        if(!freopen("CONOUT$", "w", stderr)) return;
-        if (!freopen("CONOUT$", "w", stdout)) return;
-        setbuf(stdout, NULL);
-#endif    
     }
 
     // Returns true when finished
@@ -117,7 +100,8 @@ namespace Assembler
             fprintf(stderr, "\n");
             address = byteCode._address;
         }
-        fprintf(stderr, "Assembler::getNextAssembledByte() : %04X  %02X\n", address, byteCode._data);
+        std::string ramRom = (byteCode._isRomAddress) ? "ROM" : "RAM";
+        fprintf(stderr, "Assembler::getNextAssembledByte() : %s : %04X  %02X\n", ramRom.c_str(), address, byteCode._data);
         address++;
         return false;
     }    
@@ -173,8 +157,10 @@ namespace Assembler
         if(token == "BGE")   {opcode = 0x35; branch = 0x53; return ThreeBytes;}
 
         // Reserved assembler opcodes
-        if(token == "DB")    {opcode = RESERVED_OPCODE_DB; return TwoBytes;   }
-        if(token == "DW")    {opcode = RESERVED_OPCODE_DW; return ThreeBytes; }
+        if(token == "DB")    {opcode = RESERVED_OPCODE_DB;  return TwoBytes;   }
+        if(token == "DW")    {opcode = RESERVED_OPCODE_DW;  return ThreeBytes; }
+        if(token == "DBR")   {opcode = RESERVED_OPCODE_DBR; return TwoBytes;   }
+        if(token == "DWR")   {opcode = RESERVED_OPCODE_DWR; return ThreeBytes; }
 
         return BadSize;
     }
@@ -212,8 +198,8 @@ namespace Assembler
                 }
             }
 
+            // Parse expression and return with a result
             equate._operand = Expression::parse((char*)input.c_str());
-            equate._isExpression = true;
             return true;
         }
 
@@ -298,7 +284,7 @@ namespace Assembler
                 // Standard equates
                 else
                 {
-                    Equate equate = {false, false, operand, tokens[0]};
+                    Equate equate = {false, operand, tokens[0]};
                     _equates.push_back(equate);
                 }
             }
@@ -342,7 +328,7 @@ namespace Assembler
         }
     }
 
-    bool handleDefineByte(const std::vector<std::string>& tokens, int tokenIndex, uint8_t& operand)
+    bool handleDefineByte(const std::vector<std::string>& tokens, int tokenIndex, uint8_t& operand, bool isRom)
     {
         bool success = false;
 
@@ -362,14 +348,14 @@ namespace Assembler
                     break;
                 }
             }
-            Instruction instruction = {false, OneByte, operand, 0x00, 0x00, 0x0000};
+            Instruction instruction = {isRom, false, OneByte, operand, 0x00, 0x00, 0x0000};
             _instructions.push_back(instruction);
         }
 
         return success;
     }
 
-    bool handleDefineWord(const std::vector<std::string>& tokens, int tokenIndex, uint16_t& operand)
+    bool handleDefineWord(const std::vector<std::string>& tokens, int tokenIndex, uint16_t& operand, bool isRom)
     {
         bool success = false;
 
@@ -389,7 +375,7 @@ namespace Assembler
                     break;
                 }
             }
-            Instruction instruction = {false, TwoBytes, uint8_t(operand & 0x00FF), uint8_t((operand & 0xFF00) >>8), 0x00, 0x0000};
+            Instruction instruction = {isRom, false, TwoBytes, uint8_t(operand & 0x00FF), uint8_t((operand & 0xFF00) >>8), 0x00, 0x0000};
             _instructions.push_back(instruction);
         }
 
@@ -406,6 +392,7 @@ namespace Assembler
             {
                 case OneByte:
                 {
+                    byteCode._isRomAddress = _instructions[i]._isRomAddress;
                     byteCode._isCustomAddress = _instructions[i]._isCustomAddress;
                     byteCode._data = _instructions[i]._opcode;
                     byteCode._address = _instructions[i]._address;
@@ -415,11 +402,13 @@ namespace Assembler
 
                 case TwoBytes:
                 {
+                    byteCode._isRomAddress = _instructions[i]._isRomAddress;
                     byteCode._isCustomAddress = _instructions[i]._isCustomAddress;
                     byteCode._data = _instructions[i]._opcode;
                     byteCode._address = _instructions[i]._address;
                     _byteCode.push_back(byteCode);
 
+                    byteCode._isRomAddress = _instructions[i]._isRomAddress;
                     byteCode._isCustomAddress = false;
                     byteCode._data = _instructions[i]._operand0;
                     byteCode._address = 0x0000;
@@ -429,16 +418,19 @@ namespace Assembler
 
                 case ThreeBytes:
                 {
+                    byteCode._isRomAddress = _instructions[i]._isRomAddress;
                     byteCode._isCustomAddress = _instructions[i]._isCustomAddress;
                     byteCode._data = _instructions[i]._opcode;
                     byteCode._address = _instructions[i]._address;
                     _byteCode.push_back(byteCode);
 
+                    byteCode._isRomAddress = _instructions[i]._isRomAddress;
                     byteCode._isCustomAddress = false;
                     byteCode._data = _instructions[i]._operand0;
                     byteCode._address = 0x0000;
                     _byteCode.push_back(byteCode);
 
+                    byteCode._isRomAddress = _instructions[i]._isRomAddress;
                     byteCode._isCustomAddress = false;
                     byteCode._data = _instructions[i]._operand1;
                     byteCode._address = 0x0000;
@@ -455,11 +447,13 @@ namespace Assembler
             for(int i=int(_callTableEntries.size())-1; i>=0; i--)
             {
                 int end = int(_callTableEntries.size()) - 1;
+                byteCode._isRomAddress = false;
                 byteCode._isCustomAddress = (i == end) ?  true : false;
                 byteCode._data = _callTableEntries[i]._address & 0x00FF;
                 byteCode._address = _callTable + (end-i)*2 + 2;
                 _byteCode.push_back(byteCode);
 
+                byteCode._isRomAddress = false;
                 byteCode._isCustomAddress = false;
                 byteCode._data = (_callTableEntries[i]._address & 0xFF00) >>8;
                 byteCode._address = _callTable + (end-i)*2 + 3;
@@ -568,7 +562,7 @@ namespace Assembler
 
                     if(parse == SecondPass)
                     {
-                        Instruction instruction = {false, byteSize, opcode, 0x00, 0x00, _currentAddress};
+                        Instruction instruction = {false, false, byteSize, opcode, 0x00, 0x00, _currentAddress};
 
                         // Missing operand
                         if((byteSize == TwoBytes  ||  byteSize == ThreeBytes)  &&  tokens.size() <= tokenIndex)
@@ -691,15 +685,16 @@ namespace Assembler
                                 }
 
                                 // Reserved assembler opcode DB, (define byte)
-                                if(opcode == RESERVED_OPCODE_DB)
+                                if(opcode == RESERVED_OPCODE_DB  ||  opcode == RESERVED_OPCODE_DBR)
                                 {
                                     // Push first operand
+                                    instruction._isRomAddress = (opcode == RESERVED_OPCODE_DBR) ? true : false;
                                     instruction._byteSize = OneByte;
                                     instruction._opcode   = uint8_t(operand & 0x00FF);
                                     _instructions.push_back(instruction);
 
                                     // Push any remaining operands using equate searches
-                                    if(handleDefineByte(tokens, tokenIndex, operand) == false)
+                                    if(handleDefineByte(tokens, tokenIndex, operand, instruction._isRomAddress) == false)
                                     {
                                         parseError = true;
                                         fprintf(stderr, "Assembler::assemble() : Bad DB data : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
@@ -767,16 +762,17 @@ namespace Assembler
                                     }
 
                                     // Reserved assembler opcode DW, (define word)
-                                    if(opcode == RESERVED_OPCODE_DW)
+                                    if(opcode == RESERVED_OPCODE_DW  ||  opcode == RESERVED_OPCODE_DWR)
                                     {
                                         // Push first operand
+                                        instruction._isRomAddress = (opcode == RESERVED_OPCODE_DWR) ? true : false;
                                         instruction._byteSize = TwoBytes;
                                         instruction._opcode   = uint8_t(operand & 0x00FF);
                                         instruction._operand0 = uint8_t((operand & 0xFF00) >>8);
                                         _instructions.push_back(instruction);
 
                                         // Push any remaining operands using equate searches
-                                        if(handleDefineWord(tokens, tokenIndex, operand) == false)
+                                        if(handleDefineWord(tokens, tokenIndex, operand, instruction._isRomAddress) == false)
                                         {
                                             parseError = true;
                                             fprintf(stderr, "Assembler::assemble() : Bad DW data : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
@@ -796,10 +792,11 @@ namespace Assembler
                         }
                     }
 
+                    // Check for page boundary crossings
                     uint16_t oldAddress = _currentAddress;
                     _currentAddress += byteSize;
                     uint16_t newAddress = _currentAddress;
-                    if(((oldAddress >>8) & 0x0001) != ((newAddress >>8) & 0x0001))
+                    if((oldAddress >>8) != (newAddress >>8))
                     {
                         parseError = true;
                         fprintf(stderr, "Assembler::assemble() : Page boundary compromised : %04X : %04X : '%s' : in %s on line %d\n", oldAddress, newAddress, lineToken.c_str(), filename.c_str(), line+1);

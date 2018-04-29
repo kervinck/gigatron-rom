@@ -1,0 +1,54 @@
+vram        EQU     0x0800
+x_bounds    EQU     0x9E
+y_bounds    EQU     0x76
+
+x_rand      EQU     0x06
+y_rand      EQU     0x07
+sysFn       EQU     0x22
+
+vbase       EQU     0x40
+pixels      EQU     0x42
+x           EQU     0x43
+y           EQU     0x44
+
+                
+SYS_DrawPixel2x2_32 EQU     0x2300      ; native code that is defined with either DBR or DWR is written to ROM at this address
+
+        
+            LDWI    vram
+            STW     vbase
+
+            LDWI    0x0000      
+            STW     x
+
+            LDWI    SYS_DrawPixel2x2_32
+            STW     sysFn
+            
+loop        LD      x_rand      ; x position
+            ST      x
+            SUBI    x_bounds    ; works as (x_rand % x_bounds), but only because x_bounds is > 0x00FF/2, fails otherwise
+            BLE     y_load
+            ST      x
+
+y_load      LD      y_rand      ; y position
+            ST      y
+            SUBI    y_bounds    ; works as (y_rand % y_bounds), but only because y_bounds is > 0x00FF/3, fails otherwise
+            BLE     draw
+            ST      y
+            SUBI    y_bounds
+            BLE     draw
+            ST      y
+            
+draw        LDW     vbase
+            ADDW    x
+            STW     pixels
+        
+            SYS     0xFE        ; SYS_DrawPixel2x2_32, 270 - 32/2 = 0xFE
+
+            BRA     loop        
+        
+        
+; this is a native code routine that is written into ROM using the DBR command, (Define Byte ROM), at the equate defined
+; by SYS_DrawPixel2x2_32: this native code is specific to this vCPU module with the input registers that it accepts
+SYS_DrawPixel2x2_32     DBR $01 $06 $11 $42 $15 $43 $DE $00 $CE $00 $11 $42 $00 $01 $95 $43 $01 $06 $DE $00 $CE $00 $14 $03 $E0 $CB $00 $F0
+        
