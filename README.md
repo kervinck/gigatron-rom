@@ -7,6 +7,7 @@ Files
 Core/theloop.py                 Video/audio/io/interpreter loops
                                 Built-in vCPU applications and data
                                 Execute theloop.py to build ROM files
+FileFormat.txt                  Description of vCPU object file format
 GCL-language.txt                Gigatron Control Language and vCPU explanation
 gcl1.ebnf                       Formal definition
 EBNF.xhtml                      Railroad diagram

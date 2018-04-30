@@ -3,23 +3,26 @@ many emulators getting born, and Loader.ino will need to adopt
 something as well.  Both users of real Gigatrons and users of
 emulators benefit from a single standard.
 
-Here is my proposal (made while very tired, but please feedback and
-I want to consolidate this in a few days from now. So please shoot):
+Format
+======
 
-Marcel
+The format is is based on the same byte sequence that the ROM-to-RAM
+routine sees in ROM v1 (SYS_Exec_88).  That is essentially the
+in-ROM sequence of operand bytes, but skipping the trampolines in
+the top 5 words of every ROM page.  Those instructions are not part
+of the program but part of the mechanism for accessing the data.
+Two extra bytes are added for a start address.
 
-=== DRAFT ===
-
-My proposal is to use the same byte sequence that the ROM-to-RAM
-routine sees.  That is essentially the in-ROM sequence, but skipping
-the trampolines in the top 5 bytes of every ROM page. Those bytes
-are not part of the program but part of the mechanism for accessing
-the data.
+vCPU programs are fragmented in RAM because the RAM organisation
+is fragmented.  Both Snake and Racer protrude into the unused bytes
+of the video area.  In essence, the file format is a list of n>0
+segments of 1 to 256 bytes each. A segment isn't allowed to cross
+a page boundary.
 
 Gt1File :=
         n * ( <hiAddress>
             + <loAddress>
-            + <segmentSize&255>
+            + <segmentSize & 255>
             + segmentSize * <dataByte> )
         + <0>
         + <hiStart>
@@ -32,36 +35,45 @@ start of the file.
 
 The first two bytes are the RAM address of the first byte to be
 loaded, in big-endian order.  (I'm a little-endian guy, but this
-order is useful in the ROM-to-RAM loader).  The end of the sequence
-is implied by the terminating zero-byte.
+order is useful in the ROM-to-RAM loader). Segments may be in any
+order in the file, with one exception described below.  Segments
+are loaded sequentially.  In case of overlap, the later one overwrites
+the earlier one.  (We can make movies with that!) The end of the
+segment list is implied by the terminating zero-byte as high address.
 
-Additionally, 2 bytes are appended that indicate the start address
-for execution. The ROM format doesn't have these bytes. Zero means
-"no execution". Although the Gigagron ROM is little-endian where
-possible, in this case all 16-bit values are stored in big-endian.
-
-Programs are fragmented into RAM, in n>0 segments of 1 to 256 bytes
-each, because the RAM organisation fragmented. Both Snake and Racer
-extend in the unused bytes of the video area.  A segment isn't
-allowed to cross a page boundary. Segments may be in any order in
-the file.  They are loaded sequentially. So in case of overlap, the
-later one overwrites the earlier one. (We can make movies with
-that!) (There is no encoding for a zero-length program. Use an
-zero-length file for that use case, for all I care... or encode a
-known constant, such as [0]=0)
-
-This implies that there is a translation to do in Loader.ino when
-loading such files into a Gigatron, but I think that is ok: The
-limitations on the Loader packets (60 bytes) are influenced by what
-the video signal looks like. I suggest we keep that kind of
+This format implies that there is a translation to do in Loader.ino
+when loading such files into a Gigatron, but I think that is ok:
+the limitations on the Loader packets (60 bytes) are influenced by
+what the video signal looks like. I suggest we keep that kind of
 entanglement out of the file format.
 
-The ROM sequence ends with a terminating zero. This acts as an EOF
-for the ROM file".  But I dont have a strong argument in favour of
-it or against.  I feel it helps files readers to know when to expect
-the real EOF.  So my idea is to keep it in the file format: hiAddress=0
-indicates the end of the program stream.  And about loading code/data
-into zero page with such a file: do so in the first segment.
+Starting address
+================
+
+Additionally, 2 bytes are always appended that indicate the start
+address for execution. The bytes must be present and zero ($0000)
+means "no execution". Although the Gigagron ROM is little-endian
+where possible, all addresses in this format are stored as big-endian.
+
+The original in-ROM format doesn't have these bytes. This is an
+extension of the layout as used in ROM v1.
+
+Zero-page data
+==============
+
+Segments may be in any order in the file, except when data has to
+go into the zero-page: if you have that, it MUST be the first in
+the sequence. So there can be no more than one of those segments.
+This is an extension of the layout as used in ROM v1, which can't
+load data into the zero-page. But it is useful for initializing
+variables.
+
+Also there is no encoding for a zero-length program.  Use an
+zero-length file for that use case, for all I care...  or encode a
+known constant, such as [0]=0 as follows: 00 00 01 00 00 00
+
+Extension
+=========
 
 File name extension: .gt1 (For Gigatron-1)
 
@@ -69,3 +81,22 @@ I feel that .vcpu is the lesser choice because it is a generic
 abbreviation for virtual CPU.  For example, the MyCPU uses the same
 abbreviation for something similar.  And ... retro-extensions should
 be 3 characters of course...
+
+ROM bindings
+============
+
+Gt1 files contain vCPU instructions and rely on things that are
+defined by the ROM on the target platform. The ROM bindings (ABI)
+for ROM v1 are listed in bindings.h.  If your program depends on
+some extension of this, then it is nice not to crash other people's
+machines. ROMs with different bindings should use a different romType
+value in address $0021. Gt1 programs can then check this value and
+not continue when seeing an unexpected value.
+
+The romType is in RAM, so it is always possible for the user to
+modify its value prior before loading an unwilling Gt1 file.
+
+BUT: If your program requires a custom ROM, then Gt1 is probably not
+the right format. Just publish it as a ROM dump instead.
+
+-- End of document --
