@@ -13,10 +13,6 @@
 
 
 #define BRANCH_ADJUSTMENT    2
-#define RESERVED_OPCODE_DB   0x00
-#define RESERVED_OPCODE_DW   0x01
-#define RESERVED_OPCODE_DBR  0x02
-#define RESERVED_OPCODE_DWR  0x03
 
 
 namespace Assembler
@@ -24,6 +20,8 @@ namespace Assembler
     enum ParseType {FirstPass=0, SecondPass, NumParseTypes};
     enum ByteSize {BadSize=-1, OneByte=1, TwoBytes=2, ThreeBytes=3};
     enum EvaluateResult {Failed=-1, NotFound, Found};
+    enum OpcodeType {ReservedDB=0, ReservedDW, ReservedDBR, ReservedDWR, vCpu, Native};
+
 
     struct Label
     {
@@ -56,9 +54,17 @@ namespace Assembler
         uint16_t _address;
     };
 
+    struct InstructionType
+    {
+        uint8_t _opcode;
+        uint8_t _branch;
+        ByteSize _byteSize;
+        OpcodeType _opcodeType;
+    };
+
     struct CallTableEntry
     {
-        uint8_t operand;
+        uint8_t _operand;
         uint16_t _address;
     };
 
@@ -106,63 +112,79 @@ namespace Assembler
         return false;
     }    
 
-    ByteSize getOpcode(const std::string& input, uint8_t& opcode, uint8_t& branch)
+    InstructionType getOpcode(const std::string& input)
     {
-        branch = 0x00;
+        InstructionType instructionType = {0x00, 0x00, BadSize, vCpu};
 
         std::string token = input;
         Expression::strToUpper(token);
 
         // Gigatron vCPU instructions
-        if(token == "ST")    {opcode = 0x5E; return TwoBytes;  }
-        if(token == "STW")   {opcode = 0x2B; return TwoBytes;  }
-        if(token == "STLW")  {opcode = 0xEC; return TwoBytes;  }
-        if(token == "LD")    {opcode = 0x1A; return TwoBytes;  }
-        if(token == "LDI")   {opcode = 0x59; return TwoBytes;  }
-        if(token == "LDWI")  {opcode = 0x11; return ThreeBytes;}
-        if(token == "LDW")   {opcode = 0x21; return TwoBytes;  }
-        if(token == "LDLW")  {opcode = 0xEE; return TwoBytes;  }
-        if(token == "ADDW")  {opcode = 0x99; return TwoBytes;  }
-        if(token == "SUBW")  {opcode = 0xB8; return TwoBytes;  }
-        if(token == "ADDI")  {opcode = 0xE3; return TwoBytes;  }
-        if(token == "SUBI")  {opcode = 0xE6; return TwoBytes;  }
-        if(token == "LSLW")  {opcode = 0xE9; return OneByte;   }
-        if(token == "INC")   {opcode = 0x93; return TwoBytes;  }
-        if(token == "ANDI")  {opcode = 0x82; return TwoBytes;  }
-        if(token == "ANDW")  {opcode = 0xF8; return TwoBytes;  }
-        if(token == "ORI")   {opcode = 0x88; return TwoBytes;  }
-        if(token == "ORW")   {opcode = 0xFA; return TwoBytes;  }
-        if(token == "XORI")  {opcode = 0x8C; return TwoBytes;  }
-        if(token == "XORW")  {opcode = 0xFC; return TwoBytes;  }
-        if(token == "PEEK")  {opcode = 0xAD; return OneByte;   }
-        if(token == "DEEK")  {opcode = 0xF6; return OneByte;   }
-        if(token == "POKE")  {opcode = 0xF0; return TwoBytes;  }
-        if(token == "DOKE")  {opcode = 0xF3; return TwoBytes;  }
-        if(token == "LUP")   {opcode = 0x7F; return TwoBytes;  }
-        if(token == "BRA")   {opcode = 0x90; return TwoBytes;  }
-        if(token == "CALL")  {opcode = 0xCF; return TwoBytes;  }
-        if(token == "RET")   {opcode = 0xFF; return OneByte;   }
-        if(token == "PUSH")  {opcode = 0x75; return OneByte;   }
-        if(token == "POP")   {opcode = 0x63; return OneByte;   }
-        if(token == "ALLOC") {opcode = 0xDF; return TwoBytes;  }
-        if(token == "SYS")   {opcode = 0xB4; return TwoBytes;  }
-        if(token == "DEF")   {opcode = 0xCD; return TwoBytes;  }
+        if(token == "ST")         {instructionType._opcode = 0x5E; instructionType._byteSize = TwoBytes;  }
+        else if(token == "STW")   {instructionType._opcode = 0x2B; instructionType._byteSize = TwoBytes;  }
+        else if(token == "STLW")  {instructionType._opcode = 0xEC; instructionType._byteSize = TwoBytes;  }
+        else if(token == "LD")    {instructionType._opcode = 0x1A; instructionType._byteSize = TwoBytes;  }
+        else if(token == "LDI")   {instructionType._opcode = 0x59; instructionType._byteSize = TwoBytes;  }
+        else if(token == "LDWI")  {instructionType._opcode = 0x11; instructionType._byteSize = ThreeBytes;}
+        else if(token == "LDW")   {instructionType._opcode = 0x21; instructionType._byteSize = TwoBytes;  }
+        else if(token == "LDLW")  {instructionType._opcode = 0xEE; instructionType._byteSize = TwoBytes;  }
+        else if(token == "ADDW")  {instructionType._opcode = 0x99; instructionType._byteSize = TwoBytes;  }
+        else if(token == "SUBW")  {instructionType._opcode = 0xB8; instructionType._byteSize = TwoBytes;  }
+        else if(token == "ADDI")  {instructionType._opcode = 0xE3; instructionType._byteSize = TwoBytes;  }
+        else if(token == "SUBI")  {instructionType._opcode = 0xE6; instructionType._byteSize = TwoBytes;  }
+        else if(token == "LSLW")  {instructionType._opcode = 0xE9; instructionType._byteSize = OneByte;   }
+        else if(token == "INC")   {instructionType._opcode = 0x93; instructionType._byteSize = TwoBytes;  }
+        else if(token == "ANDI")  {instructionType._opcode = 0x82; instructionType._byteSize = TwoBytes;  }
+        else if(token == "ANDW")  {instructionType._opcode = 0xF8; instructionType._byteSize = TwoBytes;  }
+        else if(token == "ORI")   {instructionType._opcode = 0x88; instructionType._byteSize = TwoBytes;  }
+        else if(token == "ORW")   {instructionType._opcode = 0xFA; instructionType._byteSize = TwoBytes;  }
+        else if(token == "XORI")  {instructionType._opcode = 0x8C; instructionType._byteSize = TwoBytes;  }
+        else if(token == "XORW")  {instructionType._opcode = 0xFC; instructionType._byteSize = TwoBytes;  }
+        else if(token == "PEEK")  {instructionType._opcode = 0xAD; instructionType._byteSize = OneByte;   }
+        else if(token == "DEEK")  {instructionType._opcode = 0xF6; instructionType._byteSize = OneByte;   }
+        else if(token == "POKE")  {instructionType._opcode = 0xF0; instructionType._byteSize = TwoBytes;  }
+        else if(token == "DOKE")  {instructionType._opcode = 0xF3; instructionType._byteSize = TwoBytes;  }
+        else if(token == "LUP")   {instructionType._opcode = 0x7F; instructionType._byteSize = TwoBytes;  }
+        else if(token == "BRA")   {instructionType._opcode = 0x90; instructionType._byteSize = TwoBytes;  }
+        else if(token == "CALL")  {instructionType._opcode = 0xCF; instructionType._byteSize = TwoBytes;  }
+        else if(token == "RET")   {instructionType._opcode = 0xFF; instructionType._byteSize = OneByte;   }
+        else if(token == "PUSH")  {instructionType._opcode = 0x75; instructionType._byteSize = OneByte;   }
+        else if(token == "POP")   {instructionType._opcode = 0x63; instructionType._byteSize = OneByte;   }
+        else if(token == "ALLOC") {instructionType._opcode = 0xDF; instructionType._byteSize = TwoBytes;  }
+        else if(token == "SYS")   {instructionType._opcode = 0xB4; instructionType._byteSize = TwoBytes;  }
+        else if(token == "DEF")   {instructionType._opcode = 0xCD; instructionType._byteSize = TwoBytes;  }
 
         // Gigatron vCPU branch instructions
-        if(token == "BEQ")   {opcode = 0x35; branch = 0x3F; return ThreeBytes;}
-        if(token == "BNE")   {opcode = 0x35; branch = 0x72; return ThreeBytes;}
-        if(token == "BLT")   {opcode = 0x35; branch = 0x50; return ThreeBytes;}
-        if(token == "BGT")   {opcode = 0x35; branch = 0x4D; return ThreeBytes;}
-        if(token == "BLE")   {opcode = 0x35; branch = 0x56; return ThreeBytes;}
-        if(token == "BGE")   {opcode = 0x35; branch = 0x53; return ThreeBytes;}
+        else if(token == "BEQ")   {instructionType._opcode = 0x35; instructionType._branch = 0x3F; instructionType._byteSize = ThreeBytes;}
+        else if(token == "BNE")   {instructionType._opcode = 0x35; instructionType._branch = 0x72; instructionType._byteSize = ThreeBytes;}
+        else if(token == "BLT")   {instructionType._opcode = 0x35; instructionType._branch = 0x50; instructionType._byteSize = ThreeBytes;}
+        else if(token == "BGT")   {instructionType._opcode = 0x35; instructionType._branch = 0x4D; instructionType._byteSize = ThreeBytes;}
+        else if(token == "BLE")   {instructionType._opcode = 0x35; instructionType._branch = 0x56; instructionType._byteSize = ThreeBytes;}
+        else if(token == "BGE")   {instructionType._opcode = 0x35; instructionType._branch = 0x53; instructionType._byteSize = ThreeBytes;}
 
         // Reserved assembler opcodes
-        if(token == "DB")    {opcode = RESERVED_OPCODE_DB;  return TwoBytes;   }
-        if(token == "DW")    {opcode = RESERVED_OPCODE_DW;  return ThreeBytes; }
-        if(token == "DBR")   {opcode = RESERVED_OPCODE_DBR; return TwoBytes;   }
-        if(token == "DWR")   {opcode = RESERVED_OPCODE_DWR; return ThreeBytes; }
+        else if(token == "DB")    {instructionType._byteSize = TwoBytes;   instructionType._opcodeType = ReservedDB; }
+        else if(token == "DW")    {instructionType._byteSize = ThreeBytes; instructionType._opcodeType = ReservedDW; }
+        else if(token == "DBR")   {instructionType._byteSize = TwoBytes;   instructionType._opcodeType = ReservedDBR;}
+        else if(token == "DWR")   {instructionType._byteSize = ThreeBytes; instructionType._opcodeType = ReservedDWR;}
+                                                                           
+        // Gigatron native instructions                                    
+        else if(token == ".LD")   {instructionType._opcode = 0x00; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
+        else if(token == ".ANDA") {instructionType._opcode = 0x20; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
+        else if(token == ".ORA")  {instructionType._opcode = 0x40; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
+        else if(token == ".XORA") {instructionType._opcode = 0x60; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
+        else if(token == ".ADDA") {instructionType._opcode = 0x80; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
+        else if(token == ".SUBA") {instructionType._opcode = 0xA0; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
+        else if(token == ".ST")   {instructionType._opcode = 0xC0; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
+        else if(token == ".JMP")  {instructionType._opcode = 0xE0; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
+        else if(token == ".BGT")  {instructionType._opcode = 0xE0; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
+        else if(token == ".BEQ")  {instructionType._opcode = 0xE0; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
+        else if(token == ".BGE")  {instructionType._opcode = 0xE0; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
+        else if(token == ".BLT")  {instructionType._opcode = 0xE0; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
+        else if(token == ".BNE")  {instructionType._opcode = 0xE0; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
+        else if(token == ".BLE")  {instructionType._opcode = 0xE0; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
 
-        return BadSize;
+        return instructionType;
     }
 
     bool searchEquates(const std::vector<std::string>& tokens, int tokenIndex, Equate& equate)
@@ -398,6 +420,25 @@ namespace Assembler
         return success;
     }
 
+    bool handleNativeInstruction(const std::vector<std::string>& tokens, int tokenIndex, bool operandValid, uint8_t& opcode, uint8_t& operand)
+    {
+        // Addressing modes
+        if(operandValid)
+        {
+            
+        }
+        else
+        {
+            size_t openBracket = tokens[tokenIndex].find_first_of("[");
+            size_t closeBracket = tokens[tokenIndex].find_first_of("]");
+            if(openBracket != std::string::npos  &&  closeBracket != std::string::npos  &&  openBracket < closeBracket)
+            {
+            }
+        }
+
+        return false;
+    }
+
     void packByteCodeBuffer(void)
     {
         // Pack instructions
@@ -497,7 +538,7 @@ namespace Assembler
         // Parse the file twice, the first pass we evaluate all the equates and labels, the second pass is for the instructions
         for(int parse=FirstPass; parse<NumParseTypes; parse++)
         {
-            int line = 0;
+            int line = 1;
             bool parseError = false;
 
             infile.clear(); 
@@ -513,7 +554,7 @@ namespace Assembler
                     if(!infile.good())
                     {
                         parseError = true;
-                        fprintf(stderr, "Assembler::assemble() : Bad lineToken : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
+                        fprintf(stderr, "Assembler::assemble() : Bad lineToken : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line);
                         break;
                     }
 
@@ -548,7 +589,7 @@ namespace Assembler
                             if(result == Failed)
                             {
                                 parseError = true;
-                                fprintf(stderr, "Assembler::assemble() : Bad EQU : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
+                                fprintf(stderr, "Assembler::assemble() : Bad EQU : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line);
                                 break;
                             }
                             // Skip equate lines
@@ -567,12 +608,15 @@ namespace Assembler
                     }
 
                     // Opcode
-                    uint8_t opcode = 0x00, branch = 0x00;
-                    ByteSize byteSize = getOpcode(tokens[tokenIndex++], opcode, branch);
+                    InstructionType instructionType = getOpcode(tokens[tokenIndex++]);
+                    uint8_t opcode = instructionType._opcode;
+                    uint8_t branch = instructionType._branch;
+                    ByteSize byteSize = instructionType._byteSize;
+                    OpcodeType opcodeType = instructionType._opcodeType;
                     if(byteSize == BadSize)
                     {
                         parseError = true;
-                        fprintf(stderr, "Assembler::assemble() : Bad Opcode : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
+                        fprintf(stderr, "Assembler::assemble() : Bad Opcode : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line);
                         break;
                     }
 
@@ -584,7 +628,7 @@ namespace Assembler
                         if((byteSize == TwoBytes  ||  byteSize == ThreeBytes)  &&  tokens.size() <= tokenIndex)
                         {
                             parseError = true;
-                            fprintf(stderr, "Assembler::assemble() : Missing operand/s : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line+1);
+                            fprintf(stderr, "Assembler::assemble() : Missing operand/s : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line);
                             break;
                         }
 
@@ -618,6 +662,7 @@ namespace Assembler
                             case TwoBytes:
                             {
                                 uint8_t operand;
+                                bool operandValid = false;
 
                                 // BRA
                                 if(opcode == 0x90)
@@ -631,7 +676,7 @@ namespace Assembler
                                     else
                                     {
                                         parseError = true;
-                                        fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line+1);
+                                        fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line);
                                         break;
                                     }
 
@@ -650,7 +695,7 @@ namespace Assembler
                                         {
                                             if(_callTableEntries[i]._address == address)
                                             {
-                                                operand = _callTableEntries[i].operand;
+                                                operand = _callTableEntries[i]._operand;
                                                 newLabel = false;
                                                 break;
                                             }
@@ -668,43 +713,54 @@ namespace Assembler
                                     else
                                     {
                                         parseError = true;
-                                        fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line+1);
+                                        fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line);
                                         break;
                                     }
                                 }
-                                // All other 2 byte instructions
+                                // All other 2 byte vCPU instructions
                                 else
                                 {
-                                    bool success = Expression::stringToU8(tokens[tokenIndex], operand);
-                                    if(success == false)
+                                    operandValid = Expression::stringToU8(tokens[tokenIndex], operand);
+                                    if(operandValid == false)
                                     {
                                         // Search equates
                                         Equate equate;
-                                        success = searchEquates(tokens, tokenIndex, equate);
+                                        operandValid = searchEquates(tokens, tokenIndex, equate);
                                         operand = uint8_t(equate._operand);
 
                                         // Search mutables
-                                        if(success == false)
+                                        if(operandValid == false)
                                         {
                                             Mutable mutable_;
-                                            success = searchMutables(tokens[tokenIndex], mutable_);
+                                            operandValid = searchMutables(tokens[tokenIndex], mutable_);
                                             operand = uint8_t(mutable_._address) + mutable_._offset;
                                         }
 
-                                        if(success == false)
+                                        if(opcodeType != Native  &&  operandValid == false)
                                         {
                                             parseError = true;
-                                            fprintf(stderr, "Assembler::assemble() : Equate/Mutable missing : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line+1);
+                                            fprintf(stderr, "Assembler::assemble() : Equate/Mutable missing : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line);
                                             break;
                                         }
                                     }
                                 }
 
+                                // Native instructions
+                                if(opcodeType == Native)
+                                {
+                                    if(!handleNativeInstruction(tokens, tokenIndex, operandValid, opcode, operand))
+                                    {
+                                        parseError = true;
+                                        fprintf(stderr, "Assembler::assemble() : Native instruction is malformed : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line);
+                                        break;
+                                    }
+                                }
+                                
                                 // Reserved assembler opcode DB, (define byte)
-                                if(opcode == RESERVED_OPCODE_DB  ||  opcode == RESERVED_OPCODE_DBR)
+                                if(opcodeType == ReservedDB  ||  opcodeType == ReservedDBR)
                                 {
                                     // Push first operand
-                                    instruction._isRomAddress = (opcode == RESERVED_OPCODE_DBR) ? true : false;
+                                    instruction._isRomAddress = (opcodeType == ReservedDBR) ? true : false;
                                     instruction._byteSize = OneByte;
                                     instruction._opcode   = uint8_t(operand & 0x00FF);
                                     _instructions.push_back(instruction);
@@ -713,7 +769,7 @@ namespace Assembler
                                     if(handleDefineByte(tokens, tokenIndex, operand, instruction._isRomAddress) == false)
                                     {
                                         parseError = true;
-                                        fprintf(stderr, "Assembler::assemble() : Bad DB data : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
+                                        fprintf(stderr, "Assembler::assemble() : Bad DB data : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line);
                                         break;
                                     }
                                 }
@@ -741,7 +797,7 @@ namespace Assembler
                                     else
                                     {
                                         parseError = true;
-                                        fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line+1);
+                                        fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line);
                                         break;
                                     }
 
@@ -753,35 +809,35 @@ namespace Assembler
                                 else
                                 {
                                     uint16_t operand;
-                                    bool success = Expression::stringToU16(tokens[tokenIndex], operand);
-                                    if(success == false)
+                                    bool operandValid = Expression::stringToU16(tokens[tokenIndex], operand);
+                                    if(operandValid == false)
                                     {
                                         // Search equates
                                         Equate equate;
-                                        success = searchEquates(tokens, tokenIndex, equate);
+                                        operandValid = searchEquates(tokens, tokenIndex, equate);
                                         operand = equate._operand;
 
                                         // Search mutables
-                                        if(success == false)
+                                        if(operandValid == false)
                                         {
                                             Mutable mutable_;
-                                            success = searchMutables(tokens[tokenIndex], mutable_);
+                                            operandValid = searchMutables(tokens[tokenIndex], mutable_);
                                             operand = mutable_._address + mutable_._offset;
                                         }
 
-                                        if(success == false)
+                                        if(operandValid == false)
                                         {
                                             parseError = true;
-                                            fprintf(stderr, "Assembler::assemble() : Equate/Mutable missing : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line+1);
+                                            fprintf(stderr, "Assembler::assemble() : Equate/Mutable missing : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line);
                                             break;
                                         }
                                     }
 
                                     // Reserved assembler opcode DW, (define word)
-                                    if(opcode == RESERVED_OPCODE_DW  ||  opcode == RESERVED_OPCODE_DWR)
+                                    if(opcodeType == ReservedDW  ||  opcodeType == ReservedDWR)
                                     {
                                         // Push first operand
-                                        instruction._isRomAddress = (opcode == RESERVED_OPCODE_DWR) ? true : false;
+                                        instruction._isRomAddress = (opcodeType == ReservedDWR) ? true : false;
                                         instruction._byteSize = TwoBytes;
                                         instruction._opcode   = uint8_t(operand & 0x00FF);
                                         instruction._operand0 = uint8_t((operand & 0xFF00) >>8);
@@ -791,7 +847,7 @@ namespace Assembler
                                         if(handleDefineWord(tokens, tokenIndex, operand, instruction._isRomAddress) == false)
                                         {
                                             parseError = true;
-                                            fprintf(stderr, "Assembler::assemble() : Bad DW data : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
+                                            fprintf(stderr, "Assembler::assemble() : Bad DW data : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line);
                                             break;
                                         }
                                     }
@@ -815,7 +871,7 @@ namespace Assembler
                     if((oldAddress >>8) != (newAddress >>8))
                     {
                         parseError = true;
-                        fprintf(stderr, "Assembler::assemble() : Page boundary compromised : %04X : %04X : '%s' : in %s on line %d\n", oldAddress, newAddress, lineToken.c_str(), filename.c_str(), line+1);
+                        fprintf(stderr, "Assembler::assemble() : Page boundary compromised : %04X : %04X : '%s' : in %s on line %d\n", oldAddress, newAddress, lineToken.c_str(), filename.c_str(), line);
                         break;
                     }
 

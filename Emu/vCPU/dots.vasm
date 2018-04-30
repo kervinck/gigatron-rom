@@ -10,14 +10,11 @@ vram        EQU     0x0800
 rand        EQU     0x06
 base0       EQU     0x30
 base1       EQU     0x31
-pixels0     EQU     0x32
-pixels1     EQU     0x33
-xyPos0      EQU     0x34
-xyPos1      EQU     0x35
-xyVel0      EQU     0x36
-xyVel1      EQU     0x37
-xyVelAdd0   EQU     0x38
-xyVelAdd1   EQU     0x40
+pixels      EQU     0x32 
+xyPos       EQU     0x34
+xyVel       EQU     0x36
+xyAdd0      EQU     0x38
+xyAdd1      EQU     0x40
 
 xBounds     EQU     0x9F
 yBounds     EQU     0x77
@@ -26,9 +23,9 @@ yBounds     EQU     0x77
 _startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
 
 _callTable_         EQU     0x007E      ; this grows downwards as you use more CALL's, it will crash into program variables if you are not careful
-                                ; "_callTable_" is a reserved word, do not use it for anything other than it's intended use
+                                        ; "_callTable_" is a reserved word, do not use it for anything other than it's intended use
 
-_singleStepWatch_   EQU     0x0054      ; the single step debugger watches this variable location to decide when to step,
+_singleStepWatch_   EQU     xyPos       ; the single step debugger watches this variable location to decide when to step,
                                         ; choose a variable that is updated often
 
 ;plot        EQU     0x0280      ; custom start address, this allows you to store code modules into any page, (0xNN00 <-> 0xNNFF),
@@ -36,54 +33,54 @@ _singleStepWatch_   EQU     0x0054      ; the single step debugger watches this 
 
             LDWI    vram     
             STW     base0       ; base address
-            STW     pixels0     ; pixel address
+            STW     pixels      ; pixel address
             LDWI    0x0101
-            STW     xyPos0      ; XY position
+            STW     xyPos       ; XY position
             LDWI    0x0101     
-            STW     xyVel0      ; XY velocity
+            STW     xyVel       ; XY velocity
             LDWI    .xvel       ; self modifying code address
-            STW     xyVelAdd0
+            STW     xyAdd0
             LDWI    .yvel       ; self modifying code address
-            STW     xyVelAdd1
+            STW     xyAdd1
 
 ; labels are parsed to generate the correct offsets for branches        
-loop        LD      xyPos0      ; x position bounds checking
+loop        LD      xyPos       ; x position bounds checking
             BEQ     flip0
             SUBI    xBounds
             BLT     skip0
         
-flip0       LD      xyVel0
+flip0       LD      xyVel
             XORI    0xFE        ; flip x velocity
-            ST      xyVel0
+            ST      xyVel
         
-skip0       LD      xyPos1      ; y position bounds checking
+skip0       LD      xyPos+1     ; y position bounds checking
             BEQ     flip1
             SUBI    yBounds
             BLT     skip1
         
-flip1       LD      xyVel1
+flip1       LD      xyVel+1
             XORI    0xFE        ; flip y velocity
-            ST      xyVel1
+            ST      xyVel+1
         
-skip1       LD      xyVel0
-            POKE    xyVelAdd0   ; modify ADDI x literal with x velocity
-            LD      xyPos0
+skip1       LD      xyVel
+            POKE    xyAdd0      ; modify ADDI x literal with x velocity
+            LD      xyPos
 .xvel,1     ADDI    0x01        ; self modifying code, (label starting with '.'), the offset '1' means the next byte, '0x01', is modified, offsets can be 0<->9
-            ST      xyPos0
+            ST      xyPos
     
-            LD      xyVel1
-            POKE    xyVelAdd1   ; modify ADDI y literal with y velocity
-            LD      xyPos1
+            LD      xyVel+1
+            POKE    xyAdd1      ; modify ADDI y literal with y velocity
+            LD      xyPos+1
 .yvel,1     ADDI    0x01        ; self modifying code
-            ST      xyPos1
+            ST      xyPos+1
             
             CALL    plot        ; call addresses, (2 bytes), are stored in a call table starting at 0x007E, (by default), that grows downwards for each new call
             BRA     loop        ; this means that your call table can crash into your program variables if you are not careful
             
 
 plot        LDW     base0       ; generate vram address
-            ADDW    xyPos0
-            STW     pixels0
+            ADDW    xyPos
+            STW     pixels
             LD      rand        ; grab an interesting colour
-            POKE    pixels0     ; plot new pixel
+            POKE    pixels      ; plot new pixel
             RET        

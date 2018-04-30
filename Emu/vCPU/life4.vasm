@@ -68,6 +68,18 @@ n_lut_cell  EQU     0x62
 counts      EQU     0x0300
 
 
+            LDI     0x00        ; look up table that is used to evaluate neighbour counts
+            ST      n_lut
+            ST      n_lut+1
+            ST      n_lut+2     ; self modifying code updates this location with previous generation cell
+            ST      n_lut+4
+            ST      n_lut+5
+            ST      n_lut+6
+            ST      n_lut+7
+            ST      n_lut+8
+            LDI     0xFF
+            ST      n_lut+3
+
             LDWI    vram
             STW     vbase       ; vram base address
             STW     pixels      ; pixel address
@@ -320,12 +332,8 @@ continue    LD      i           ; dec i
             ADDW    j_one
             STW     generation
             
-            BRA     counts
-
+            BRA     counts 
             
-; slot 2 is replaced by buffer0 cell using self modifying code
-n_lut       DB 0 0 0 0xFF 0 0 0 0 0
-
 
 ; these are native code routines that are written into ROM using the DBR command, (Define Byte ROM), at the equate defined
 ; above: this native code is specific to this vCPU asm module with the input registers that it accepts
@@ -334,3 +342,5 @@ SYS_ClearRow32_56       DBR $11 $40 $15 $41 $00 $00 $DE $00 $DE $00 $DE $00 $DE 
                         DBR $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00
                         DBR $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $14 $03 $E0 $CB $00 $E4
 SYS_DrawPixel2x2_32     DBR $01 $37 $11 $42 $15 $43 $DE $00 $CE $00 $11 $42 $00 $01 $95 $43 $01 $37 $DE $00 $CE $00 $14 $03 $E0 $CB $00 $F0
+
+            ;.LD     0x00

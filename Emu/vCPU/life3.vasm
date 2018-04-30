@@ -54,6 +54,18 @@ n_lut_cell  EQU     0x62
 counts      EQU     0x0300
 
 
+            LDI     0x00        ; look up table that is used to evaluate neighbour counts
+            ST      n_lut
+            ST      n_lut+1
+            ST      n_lut+2     ; self modifying code updates this location with previous generation cell
+            ST      n_lut+4
+            ST      n_lut+5
+            ST      n_lut+6
+            ST      n_lut+7
+            ST      n_lut+8
+            LDI     0xFF
+            ST      n_lut+3
+
             LDWI    vram
             STW     vbase       ; vram base address
             STW     pixels      ; pixel address
@@ -294,7 +306,3 @@ continue    LD      i           ; dec i
             STW     generation
             
             BRA     counts
-
-            
-; slot 2 is replaced by buffer0 cell using self modifying code
-n_lut       DB 0 0 0 0xFF 0 0 0 0 0

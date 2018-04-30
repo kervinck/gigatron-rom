@@ -1,8 +1,10 @@
 
-// Concept tester for loading programs into the
+// Concept tester for writing on screen
 // Gigatron TTL microcomputer
 // Marcel van Kervinck
-// Jan 2018
+// Apr 2018
+
+// XXX Read real user input from serial port of Arduino
 
 // Arduino AVR    Gigatron Schematic Controller PCB
 // Uno     Name   OUT bit            CD4021     74HC595 (U39)
@@ -17,6 +19,33 @@
 
 byte checksum; // Global is simplest
 
+byte terminalApp[] = {
+  // 0x0200
+  // Compiled from Terminal/Main.gcl
+  0xcd, 0x4a, 0x2b, 0x30, 0xe6, 0x52, 0x35, 0x53, 0x10, 0xe3, 0x32,
+  0x2b, 0x32, 0x11, 0x00, 0x07, 0x90, 0x15, 0x2b, 0x32, 0x11, 0x00,
+  0x08, 0x2b, 0x34, 0x21, 0x32, 0xe9, 0xe9, 0x99, 0x32, 0x99, 0x34,
+  0x2b, 0x34, 0x59, 0x20, 0x5e, 0x24, 0x59, 0x0f, 0x5e, 0x25, 0x21,
+  0x36, 0x2b, 0x28, 0x11, 0xe1, 0x04, 0x2b, 0x22, 0x59, 0xfb, 0x2b,
+  0x32, 0x21, 0x34, 0x7f, 0x00, 0x93, 0x34, 0x5e, 0x26, 0xb4, 0xcb,
+  0x93, 0x28, 0x93, 0x32, 0x21, 0x32, 0x35, 0x72, 0x36, 0xff, 0x2b,
+  0x38, 0x11, 0x00, 0x78, 0x2b, 0x36, 0xcd, 0x9f, 0x59, 0x00, 0x5e,
+  0x36, 0x11, 0x00, 0x08, 0x99, 0x36, 0x35, 0x53, 0x62, 0x11, 0x00,
+  0x08, 0x2b, 0x36, 0x21, 0x36, 0x2b, 0x28, 0x59, 0x20, 0x5e, 0x24,
+  0x5e, 0x25, 0x11, 0xe1, 0x04, 0x2b, 0x22, 0xb4, 0xcb, 0x93, 0x28,
+  0x1a, 0x28, 0x8c, 0xa0, 0x35, 0x72, 0x73, 0x11, 0xee, 0x01, 0x2b,
+  0x3a, 0x21, 0x3a, 0xad, 0xe6, 0x78, 0x35, 0x53, 0x8f, 0x8c, 0x80,
+  0x90, 0x91, 0x8c, 0x08, 0xf0, 0x3a, 0x21, 0x3a, 0xe6, 0x02, 0x2b,
+  0x3a, 0x8c, 0xfe, 0x35, 0x72, 0x83, 0xff, 0x2b, 0x3c, 0xcf, 0x18,
+  0x59, 0x7f, 0xcf, 0x38, 0x1a, 0x0f, 0x2b, 0x3e, 0x1a, 0x0f, 0x2b,
+  0x30, 0xfc, 0x3e, 0x35, 0x72, 0xb8, 0x21, 0x30, 0x90, 0xa9, 0x21,
+  0x30, 0x8c, 0x0a, 0x35, 0x72, 0xc7, 0x59, 0x20, 0xcf, 0x38, 0xcf,
+  0x3c, 0x90, 0xa3, 0x21, 0x30, 0xe6, 0x20, 0x35, 0x50, 0xa3, 0xe6,
+  0x5f, 0x35, 0x53, 0xa3, 0x21, 0x30, 0xcf, 0x38, 0x21, 0x36, 0xe3,
+  0x06, 0x2b, 0x36, 0x82, 0xff, 0xe6, 0x9b, 0x35, 0x50, 0xe6, 0xcf,
+  0x3c, 0x90, 0xa3,
+};
+
 void setup() {
   // Enable output pin (pins are set to input by default)
   PORTB |= 1<<PORTB5; // Send 1 when idle
@@ -30,12 +59,12 @@ void setup() {
   sendController(~buttonStart, 128+32);
 
   // Wait for main menu to be ready
-  delay(3000);
+  delay(1500);
 
   // Navigate menu. 'Loader' is at the bottom
   for (int i=0; i<10; i++) {
     sendController(~buttonDown, 4);
-    delay(100);
+    delay(50);
   }
 
   // Start 'Loader' application on Gigatron
@@ -43,33 +72,47 @@ void setup() {
     sendController(~buttonA, 4);
     delay(100);
   }
+
+  // Wait for Loader to be running
+  delay(500);
+
+  // Setup checksum properly
+  checksum = 'g';
+
+  byte message[60];
+  memset(message, 0, sizeof message);
+
+  noInterrupts();
+
+  // Upload Terminal application in chunks
+  for (int ix=0; ix<sizeof terminalApp; ix+=sizeof message) {
+    int chunkSize = min(sizeof message, sizeof terminalApp - ix);
+    memcpy(message, terminalApp+ix, chunkSize);
+    sendFrame('L', chunkSize, 0x200+ix, message);
+  }
+
+  // Start execution of Terminal application on Gigatron
+  sendFrame('L', 0, 0x0200, message);
+
+  interrupts(); // So delay() can work again
+
+  delay(100);
 }
 
-byte blinky[] = {
-  0x11, 0x50, 0x44, // 7f00 LDWI $4450  ; Load address of center of screen
-  0x2b, 0x30,       // 7f03 STW  'p'    ; Store in variable 'p' (at $0030)
-  0xf0, 0x30,       // 7f05 POKE 'p'    ; Write low byte of accumulator there
-  0xe3, 0x01,       // 7f07 ADDI 1      ; Increment accumulator
-  0x90, 0x03        // 7f09 BRA  $7f05  ; Loop forever
-};                  // 7f0b
-
 void loop() {
-  static byte payload[60];
-  memcpy(payload, blinky, sizeof blinky);
-  noInterrupts();
-  for (;;) {
-    // Send one frame with false checksum to force
-    // a checksum resync at the receiver
-    checksum = 0;
-    sendFrame(-1, sizeof blinky, 0x7f00, payload);
 
-    // Setup checksum properly
-    checksum = 'g';
-    sendFrame('L', sizeof blinky, 0x7f00, payload);
-
-    // Force execution
-    sendFrame('L', 0, 0x7f00, payload);
+  // Now send key strokes, simulating a user
+  static int n = 1;
+  char text[200];
+  sprintf(text, " *** Test %d ***\n\n"
+                "Hello Gigatron!\n"
+                "This is Arduino Uno pretending to be an ASCII keyboard. Hope you like it!\n"
+                "The quick brown fox jumps over the lazy dog.\n\n", n++);
+  for (int i=0; text[i]; i++) {
+    sendController(text[i], 2);
+    delay(40);
   }
+  delay(500);
 }
 
 // Pretend to be a game controller
@@ -95,7 +138,7 @@ void sendFrame(byte firstByte, byte len, unsigned address, byte message[60])
   // A frame has 65*8-2=518 bits, including protocol byte and checksum.
   // The reasons for the two "missing" bits are:
   // 1. From start of vertical pulse, there are 35 scanlines remaining
-  // in vertical blank. But we also need the payload bytes to align
+  // in vertical blank. But we also need the buffer bytes to align
   // with scanlines where the interpreter runs, so the Gigatron doesn't
   // have to shift everything it receives by 1 bit.
   // 2. There is a 1 bit latency inside the 74HCT595 for the data bit,
@@ -142,7 +185,7 @@ void sendBits(byte value, byte n)
     while (PINB & (1<<PORTB3))  // Ensure hSync is LOW first
       ;
     while (~PINB & (1<<PORTB3)) // Then wait for hSync to rise
-      ;    
+      ;
   }
   checksum += value;
 }

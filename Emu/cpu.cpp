@@ -26,7 +26,8 @@ namespace Cpu
     void setXOUT(uint8_t xout) {_XOUT = xout;}
     void setRAM(uint16_t address, uint8_t data)
     {
-        // Constant "1" is stored here
+        // Constant "0" and "1" are stored here
+        if(address == 0x0000) return;
         if(address == 0x0080) return;
 
         _RAM[address & (RAM_SIZE-1)] = data;
