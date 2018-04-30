@@ -254,8 +254,12 @@ namespace Assembler
     {
         if(tokens[1] == "EQU"  ||  tokens[1] == "equ")
         {
+            static bool sortEquates = false;
+
             if(parse == FirstPass)
             {
+                sortEquates = true;
+
                 uint16_t operand = 0x0000;
                 if(Expression::stringToU16(tokens[2], operand) == false)
                 {
@@ -286,6 +290,18 @@ namespace Assembler
                 {
                     Equate equate = {false, operand, tokens[0]};
                     _equates.push_back(equate);
+                }
+            }
+            else if(parse == SecondPass)
+            {
+                // Sort equates from largest size to smallest size, so that equate replacer in expressions works correctly
+                if(sortEquates == true)
+                {
+                    sortEquates = false;
+                    std::sort(_equates.begin(), _equates.end(), [](const Equate& equateA, const Equate& equateB)
+                    {
+                        return (equateA._name.size() > equateB._name.size());
+                    });
                 }
             }
 

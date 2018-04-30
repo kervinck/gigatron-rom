@@ -17,12 +17,10 @@ neighbours  EQU     0x36
 cell        EQU     0x37
 n_address   EQU     0x38
 buffer0     EQU     0x3A
-buffer1     EQU     0x3C
+buffer1     EQU     0x3C 
 generation  EQU     0x3E
 vbase       EQU     0x40
-vbase_hi    EQU     0x41
 pixels      EQU     0x42
-pixels_hi   EQU     0x43
 pattern     EQU     0x44
 gliders     EQU     0x46
 lut_offset  EQU     0x48
@@ -36,7 +34,6 @@ offset5     EQU     0x56
 offset6     EQU     0x58
 offset7     EQU     0x5A
 scratch     EQU     0x5C
-scratch_hi  EQU     0x5D
 
 screen_w    EQU     160
 screen_h    EQU     120
@@ -76,7 +73,7 @@ clear       LDI     0x00        ; clear screen and buffers
             LDWI    0x0001
             ADDW    vbase
             STW     vbase
-            LD      vbase_hi
+            LD      vbase+1
             SUBI    0x80
             BLT     clear
 
@@ -130,7 +127,7 @@ glider      LDW     gliders
             LDI     (screen_w - bounds*2)/0b10          ; position in screen to render life
             ST      vbase
             LDI     (screen_h - bounds*0q2)/0x0002 + 8  ; expressions can use equates and use the same number handling as equates
-            ST      vbase_hi
+            ST      vbase+1
             
             LDI     bounds
             ST      i
@@ -273,9 +270,9 @@ generate    LDW     i           ; buffer1
             POKE    pixels      ; x,   y
             INC     pixels      
             POKE    pixels      ; x+1, y
-            INC     pixels_hi
+            INC     pixels+1
             POKE    pixels      ; x+1, y+1
-            INC     scratch_hi
+            INC     scratch+1
             POKE    scratch     ; x,   y+1   
                        
 continue    LD      i           ; dec i

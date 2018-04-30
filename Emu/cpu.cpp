@@ -24,7 +24,13 @@ namespace Cpu
 
     void setIN(uint8_t in) {_IN = in;}
     void setXOUT(uint8_t xout) {_XOUT = xout;}
-    void setRAM(uint16_t address, uint8_t data) {_RAM[address & (RAM_SIZE-1)] = data;}
+    void setRAM(uint16_t address, uint8_t data)
+    {
+        // Constant "1" is stored here
+        if(address == 0x0080) return;
+
+        _RAM[address & (RAM_SIZE-1)] = data;
+    }
 
     void setROM(uint16_t base, uint16_t address, uint8_t data)
     {

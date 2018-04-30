@@ -77,7 +77,7 @@ namespace Loader
         return true;
     }
 
-    bool saveGt1File(const std::string& filepath, const Gt1File& gt1File)
+    bool saveGt1File(const std::string& filepath, Gt1File& gt1File)
     {
         if(gt1File._segments.size() == 0)
         {
@@ -95,6 +95,14 @@ namespace Loader
             fprintf(stderr, "Loader::saveGt1File() : failed to open '%s'\n", filename.c_str());
             return false;
         }
+
+        // Sort segments from lowest address to highest address
+        std::sort(gt1File._segments.begin(), gt1File._segments.end(), [](const Gt1Segment& segmentA, const Gt1Segment& segmentB)
+        {
+            uint16_t addressA = segmentA._loAddress + (segmentA._hiAddress <<8);
+            uint16_t addressB = segmentB._loAddress + (segmentB._hiAddress <<8);
+            return (addressA < addressB);
+        });
 
         for(int i=0; i<gt1File._segments.size(); i++)
         {

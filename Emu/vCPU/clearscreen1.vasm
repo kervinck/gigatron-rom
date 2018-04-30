@@ -12,7 +12,6 @@ sysFn       EQU     0x22
 i           EQU     0x30
 j           EQU     0x31
 vbase       EQU     0x40
-vbase_hi    EQU     0x41
 
                                         
 SYS_ClearRow32_56   EQU     0x2300      ; clear 32 pixels at a time, native code that is defined with either DBR or DWR is written to ROM at this address
@@ -28,7 +27,7 @@ clear       SYS     0xF2        ; SYS_ClearRow32_56, 270 - 56/2 = 0xF2
             LDWI    0x0020
             ADDW    vbase
             STW     vbase
-            LD      vbase_hi
+            LD      vbase+1
             SUBI    0x7F
             BLT     clear
             LDI     0x07        ; finish off last row

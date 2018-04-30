@@ -27,8 +27,7 @@ short       EQU     0x4E
 numerator   EQU     0x50
 ushort_max  EQU     0x52
 count       EQU     0x54
-xypos_low   EQU     0x56
-xypos_hi    EQU     0x57
+xypos       EQU     0x56
 
 
 _startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
@@ -156,12 +155,12 @@ init_num    LDW     long        ; numerator = long
             STW     count       ; for(count=long; counti>=0; --i)
             
 loop        LD      x1          ; generate pixel address
-            ST      xypos_low
+            ST      xypos
             LD      y1
-            ST      xypos_hi
+            ST      xypos+1
 
             LDW     base        ; generate vram address
-            ADDW    xypos_low
+            ADDW    xypos
             STW     pixels
             LD      rand_colour
             POKE    pixels      ; plot new pixel
@@ -198,12 +197,12 @@ counter     LDW     count
 
             
 plot_pixel  LD      x1          ; generate pixel address
-            ST      xypos_low
+            ST      xypos
             LD      y1
-            ST      xypos_hi
+            ST      xypos+1
 
             LDW     base        ; generate vram address
-            ADDW    xypos_low
+            ADDW    xypos
             STW     pixels
             LD      rand_colour
             POKE    pixels      ; plot new pixel

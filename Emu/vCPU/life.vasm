@@ -12,12 +12,9 @@ neighbours  EQU     0x38
 cell        EQU     0x39
 cbase0      EQU     0x3A
 cbase1      EQU     0x3C
-vbase_lo    EQU     0x3E
-vbase_hi    EQU     0x3F
+vbase       EQU     0x3E
 pixels      EQU     0x40
-pixels_hi   EQU     0x41
-xy_addr_lo  EQU     0x42
-xy_addr_hi  EQU     0x43
+xy_addr     EQU     0x42
 x_add_addr  EQU     0x44
 y_add_addr  EQU     0x46
 one         EQU     0x48
@@ -45,7 +42,7 @@ get_cell    EQU     0x0400
 
 
             LDWI    vram
-            STW     vbase_lo    ; vram base address
+            STW     vbase       ; vram base address
             STW     pixels      ; pixel address
 
             LDWI    buffer0
@@ -66,11 +63,11 @@ get_cell    EQU     0x0400
             STW     lut_offset
             
 clear       LDI     0x00        ; clear screen and array
-            POKE    vbase_lo
-            LDW     vbase_lo
+            POKE    vbase
+            LDW     vbase
             ADDW    one
-            STW     vbase_lo
-            LD      vbase_hi
+            STW     vbase
+            LD      vbase+1
             SUBI    0x80
             BLT     clear
 
@@ -118,7 +115,7 @@ init        LDW     gliders    ; glider
             BGT     init
                         
             LDWI    0x354A      ; position in screen to render life
-            STW     vbase_lo
+            STW     vbase
             
             LDI     0x00
             ST      i
@@ -255,7 +252,7 @@ draw        POKE    cells1
             ;CALL    draw_1x1
             ;CALL    draw_2x2
             LDW     i
-            ADDW    vbase_lo
+            ADDW    vbase
             STW     pixels
             LD      cell
             POKE    pixels
@@ -285,11 +282,11 @@ draw        POKE    cells1
 get_cell    LDW     i
             ;LD      i
             ;ANDI    0x1F
-            ;ST      xy_addr_lo
+            ;ST      xy_addr
             ;LD      j
             ;ANDI    0x1F
-            ;ST      xy_addr_hi
-            ;LDW     xy_addr_lo
+            ;ST      xy_addr+1
+            ;LDW     xy_addr
             ;ADDW    cbase0
             ;STW     cells0
             ;PEEK
@@ -302,34 +299,34 @@ get_cell    LDW     i
 
 
 get_cell00  LD      i
-            ST      xy_addr_lo
+            ST      xy_addr
             LD      j
-            ST      xy_addr_hi
+            ST      xy_addr+1
 
-            LDW     xy_addr_lo
+            LDW     xy_addr
             ADDW    cbase0
             STW     cells0
             RET     
 
             
 set_cells   LD      i
-            ST      xy_addr_lo
+            ST      xy_addr
             LD      j
-            ST      xy_addr_hi
+            ST      xy_addr+1
 
-            LDW     xy_addr_lo
+            LDW     xy_addr
             ADDW    cbase1
             STW     cells1
             RET     
             
             
 draw_1x1    LD      i
-            ST      xy_addr_lo
+            ST      xy_addr
             LD      j
-            ST      xy_addr_hi
+            ST      xy_addr+1
 
-            LDW     xy_addr_lo
-            ADDW    vbase_lo
+            LDW     xy_addr
+            ADDW    vbase
             STW     pixels
             LD      cell
             POKE    pixels
@@ -338,12 +335,12 @@ draw_1x1    LD      i
 
 draw_2x2    LD      i
             LSLW
-            ST      xy_addr_lo
+            ST      xy_addr
             LD      j
             LSLW
-            ST      xy_addr_hi
-            LDW     xy_addr_lo
-            ADDW    vbase_lo
+            ST      xy_addr+1
+            LDW     xy_addr
+            ADDW    vbase
             STW     pixels
             STW     scratch
             LD      cell
@@ -352,7 +349,7 @@ draw_2x2    LD      i
             POKE    pixels
             LDW     scratch
             STW     pixels
-            INC     pixels_hi
+            INC     pixels+1
             LD      cell
             POKE    pixels
             INC     pixels

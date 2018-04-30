@@ -7,6 +7,7 @@ Files
 Core/theloop.py                 Video/audio/io/interpreter loops
                                 Built-in vCPU applications and data
                                 Execute theloop.py to build ROM files
+FileFormat.txt                  Description of vCPU object file format
 GCL-language.txt                Gigatron Control Language and vCPU explanation
 gcl1.ebnf                       Formal definition
 EBNF.xhtml                      Railroad diagram
@@ -14,7 +15,8 @@ gtemu.c                         Executable instruction set definition
 LICENSE                         2-Clause BSD License
 Makefile                        Marcel's Makefile
 README.md                       This file...
-Loader/Loader.ino               Arduino sketch for "Loader" demonstration
+LoaderTest/LoaderTest.ino       Arduino sketch for "Loader" demonstration
+Terminal/Terminal.ino           Arduino sketch for "Terminal" (under development)
 ```
 
 Files processed by theloop.py

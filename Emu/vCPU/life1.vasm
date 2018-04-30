@@ -18,10 +18,8 @@ neighbours  EQU     0x38
 cell        EQU     0x39
 cbase0      EQU     0x3A
 cbase1      EQU     0x3C
-vbase_lo    EQU     0x3E
-vbase_hi    EQU     0x3F
+vbase       EQU     0x3E
 pixels      EQU     0x40
-pixels_hi   EQU     0x41
 pattern     EQU     0x42
 watch       EQU     0x44
 scratch     EQU     0x46
@@ -47,7 +45,7 @@ n-1-1       EQU     0x0300
 
 
             LDWI    vram
-            STW     vbase_lo    ; vram base address
+            STW     vbase       ; vram base address
             STW     pixels      ; pixel address
 
             LDWI    buffer0
@@ -63,11 +61,11 @@ n-1-1       EQU     0x0300
             STW     j_one
             
 clear       LDI     0x00        ; clear screen and buffers
-            POKE    vbase_lo
+            POKE    vbase
             LDWI    0x0001
-            ADDW    vbase_lo
-            STW     vbase_lo
-            LD      vbase_hi
+            ADDW    vbase
+            STW     vbase
+            LD      vbase+1
             SUBI    0x80
             BLT     clear
 
@@ -115,7 +113,7 @@ glider      LDW     gliders
             BGT     glider
                         
             LDWI    0x354A      ; position in screen to render life
-            STW     vbase_lo
+            STW     vbase
             
             LDI     0x00
             ST      i
@@ -220,7 +218,7 @@ cell_00     INC     i           ; 0, 0 cell
             ST      cell
             
             LDW     i           ; draw cell
-            ADDW    vbase_lo
+            ADDW    vbase
             STW     pixels
             LD      cell
             POKE    pixels
