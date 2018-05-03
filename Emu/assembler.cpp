@@ -230,23 +230,23 @@ namespace Assembler
     {
         if(tokenIndex >= tokens.size()) return false;
 
-        // Expression equates
-        if(tokens[tokenIndex].find_first_of("[]") != std::string::npos) return false;
-        if(tokens[tokenIndex].find("++") != std::string::npos) return false;
-        if(tokens[tokenIndex].find_first_of("+-*/()") != std::string::npos)
+        std::string input;
+
+        // Pre-process
+        for(int j=tokenIndex; j<tokens.size(); j++)
         {
-            std::string input;
+            // Strip comments
+            if(tokens[j].find_first_of(";#") != std::string::npos) break;
 
-            // Pre-process
-            for(int j=tokenIndex; j<tokens.size(); j++)
-            {
-                // Strip comments
-                if(tokens[j].find_first_of(";#") != std::string::npos) break;
+            // Concatenate
+            input += tokens[j];
+        }
 
-                // Concatenate
-                input += tokens[j];
-            }
-
+        // Expression equates
+        if(input.find_first_of("[]") != std::string::npos) return false;
+        if(input.find("++") != std::string::npos) return false;
+        if(input.find_first_of("+-*/()") != std::string::npos)
+        {
             // Parse expression and return with a result
             equate._operand = parseExpression(input);
             return true;
@@ -459,16 +459,30 @@ namespace Assembler
 
     bool handleNativeInstruction(const std::vector<std::string>& tokens, int tokenIndex, uint8_t& opcode, uint8_t& operand)
     {
-        std::string input;
-        size_t openBracket = tokens[tokenIndex].find_first_of("[");
-        size_t closeBracket = tokens[tokenIndex].find_first_of("]");
-        size_t comma1 = tokens[tokenIndex].find_first_of(",");
-        size_t comma2 = tokens[tokenIndex].find_first_of(",", comma1+1);
+        std::string input, token;
+
+        // Pre-process
+        for(int j=tokenIndex; j<tokens.size(); j++)
+        {
+            // Strip comments
+            if(tokens[j].find_first_of(";#") != std::string::npos) break;
+
+            // Concatenate
+            input += tokens[j];
+        }
+
+        // Strip white space
+        input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
+
+        size_t openBracket = input.find_first_of("[");
+        size_t closeBracket = input.find_first_of("]");
+        size_t comma1 = input.find_first_of(",");
+        size_t comma2 = input.find_first_of(",", comma1+1);
 
         operand = 0x00;
 
         // Accumulator
-        if(tokens[tokenIndex] == "AC"  ||  tokens[tokenIndex] == "ac")
+        if(input == "AC"  ||  input == "ac")
         {
             opcode |= 0x02;
             return true;
@@ -480,15 +494,15 @@ namespace Assembler
             // Indirect
             if(openBracket != std::string::npos  &&  closeBracket != std::string::npos  &&  comma1 != std::string::npos  &&  comma2 == std::string::npos)
             {
-                input = tokens[tokenIndex].substr(openBracket+1, closeBracket - (openBracket+1));
-                return handleNativeEquate(input, operand);
+                token = input.substr(openBracket+1, closeBracket - (openBracket+1));
+                return handleNativeEquate(token, operand);
             }
 
             // Immediate
             if(openBracket == std::string::npos  &&  closeBracket == std::string::npos  &&  comma1 != std::string::npos  &&  comma2 == std::string::npos)
             {
-                input = tokens[tokenIndex].substr(comma1+1, tokens[tokenIndex].size() - (comma1+1));
-                return handleNativeEquate(input, operand);
+                token = input.substr(comma1+1, input.size() - (comma1+1));
+                return handleNativeEquate(token, operand);
             }
         
             return false;                    
@@ -498,7 +512,7 @@ namespace Assembler
         if(opcode >= 0xE4)
         {
             Label label;
-            if(searchLabels(tokens[tokenIndex], label))
+            if(searchLabels(input, label))
             {
                 operand = uint8_t((label._address & 0x00FF) >>1);
                 return true;
@@ -522,55 +536,61 @@ namespace Assembler
         {
             if(openBracket == std::string::npos) 
             {
-                input = tokens[tokenIndex].substr(comma1+1, tokens[tokenIndex].size() - (comma1+1));
+                token = input.substr(comma1+1, input.size() - (comma1+1));
             }
             else
             {
-                input = tokens[tokenIndex].substr(comma1+1, closeBracket - (comma1+1));
+                token = input.substr(comma1+1, closeBracket - (comma1+1));
             }
 
-            if(input == "X"  ||  input == "x") opcode |= 0x10;
+            if(token == "X"  ||  token == "x") opcode |= 0x10;
 
-            if(input == "Y"  ||  input == "y") opcode |= 0x14;
+            if(token == "Y"  ||  token == "y") opcode |= 0x14;
 
-            if((opcode & 0xF0) == 0x00  &&  (input == "OUT"  ||  input == "out")) opcode = 0x18;
+            if((opcode & 0xF0) == 0x00  &&  (token == "OUT"  ||  token == "out")) opcode = 0x18;
             
             // Indirect
             if(openBracket != std::string::npos  &&  closeBracket != std::string::npos  &&  openBracket < closeBracket)
             {
-                input = tokens[tokenIndex].substr(openBracket+1, closeBracket - (openBracket+1));
+                token = input.substr(openBracket+1, closeBracket - (openBracket+1));
             }
             // Immediate
             else
             {
-                input = tokens[tokenIndex].substr(0, comma1);
+                token = input.substr(0, comma1);
+                if(token == "AC"  || token == "ac")
+                {
+                    opcode |= 0x02;
+                    return true;
+                }
+
                 opcode &= 0xFE;
             }
 
-            return handleNativeEquate(input, operand);
+            return handleNativeEquate(token, operand);
         }
 
         // [D]
         if(openBracket != std::string::npos  &&  closeBracket != std::string::npos  &&  openBracket < closeBracket  &&  comma1 == std::string::npos  &&  comma2 == std::string::npos)
         {
-            input = tokens[tokenIndex].substr(openBracket+1, closeBracket - (openBracket+1));
-            return handleNativeEquate(input, operand);
+            token = input.substr(openBracket+1, closeBracket - (openBracket+1));
+            return handleNativeEquate(token, operand);
         }
         // [Y,D] or [Y,X] or [Y,X++]
         else if(openBracket != std::string::npos  &&  closeBracket != std::string::npos  &&  openBracket < closeBracket  &&  (comma1 != std::string::npos  ||  comma2 != std::string::npos))
         {
             if(comma2 == std::string::npos)
             {
-                input = tokens[tokenIndex].substr(openBracket+1, comma1 - (openBracket+1));
-                if(input != "Y"  &&  input != "y") return false;
+                token = input.substr(openBracket+1, comma1 - (openBracket+1));
+                if(token != "Y"  &&  token != "y") return false;
             }
             else
             {
-                input = tokens[tokenIndex].substr(0, openBracket-1);
-                if(!handleNativeEquate(input, operand)) return false;
+                token = input.substr(0, openBracket-1);
+                if(!handleNativeEquate(token, operand)) return false;
 
-                input = tokens[tokenIndex].substr(openBracket+1, comma2 - (openBracket+1));
-                if(input != "Y"  &&  input != "y") return false;
+                token = input.substr(openBracket+1, comma2 - (openBracket+1));
+                if(token != "Y"  &&  token != "y") return false;
                 comma1 = comma2;
 
                 opcode &= 0xFC;
@@ -578,13 +598,13 @@ namespace Assembler
 
             opcode |= 0x08;
 
-            input = tokens[tokenIndex].substr(comma1+1, closeBracket - (comma1+1));
-            if(input == "X"  ||  input == "x")
+            token = input.substr(comma1+1, closeBracket - (comma1+1));
+            if(token == "X"  ||  token == "x")
             {
                 opcode |= 0x04;
                 return true;
             }
-            else if(input == "X++"  ||  input == "x++")
+            else if(token == "X++"  ||  token == "x++")
             {
                 opcode |= 0x1C;
                 return true;
@@ -594,12 +614,12 @@ namespace Assembler
                 return false;
             }
                 
-            return handleNativeEquate(input, operand);
+            return handleNativeEquate(token, operand);
         }
         // D
         else
         {
-            return handleNativeEquate(tokens[tokenIndex], operand);
+            return handleNativeEquate(input, operand);
         }
 
         return false;

@@ -130,11 +130,10 @@ vblank      LD      frameCount
 ; native code routines that are written into the emulator's fake ROM using either the DBR/DWR commands or the native instruction set
 ; the native instruction assembler has access to the same functionality as the vasm assembler, (labels, equates, mutables, etc).
 ; it's only caveats are:
-; 1: you cannot use spaces in the operand field, this will produce a malformed instruction
-; 2: each instruction is prefaced with a period to clearly differentiate it from a vasm instruction
-; 3: you cannot mix and match vasm instructions with native instructions within the same segment, (in reality they are executed in 
+; 1: each instruction is prefaced with a period to clearly differentiate it from a vasm instruction
+; 2: you cannot mix and match vasm instructions with native instructions within the same segment, (in reality they are executed in 
 ; completely different parts of the memory map, i.e. native in fake ROM and vasm in RAM)
-; 4: you must follow the SYS calling conventions exactly
+; 3: you must follow the SYS calling conventions exactly
 SYS_SpriteRow_118   .LD     [srcAddr],X         ; src line 0
                     .LD     [srcAddr+1],Y
                     .LD     [Y,X]               
