@@ -8,13 +8,10 @@
 
 vram        EQU     0x0800
 rand        EQU     0x06
-base0       EQU     0x30
-base1       EQU     0x31
+vbase       EQU     0x30
 pixels      EQU     0x32 
 xyPos       EQU     0x34
 xyVel       EQU     0x36
-xyAdd0      EQU     0x38
-xyAdd1      EQU     0x40
 
 xBounds     EQU     0x9F
 yBounds     EQU     0x77
@@ -28,59 +25,46 @@ _callTable_         EQU     0x007E      ; this grows downwards as you use more C
 _singleStepWatch_   EQU     xyPos       ; the single step debugger watches this variable location to decide when to step,
                                         ; choose a variable that is updated often
 
-;plot        EQU     0x0280      ; custom start address, this allows you to store code modules into any page, (0xNN00 <-> 0xNNFF),
-;                                ; make sure no individual code module straddles a page boundary. cannot be less than 0x0200
 
             LDWI    vram     
-            STW     base0       ; base address
+            STW     vbase       ; vram base address
             STW     pixels      ; pixel address
             LDWI    0x0101
             STW     xyPos       ; XY position
             LDWI    0x0101     
             STW     xyVel       ; XY velocity
-            LDWI    .xvel       ; self modifying code address
-            STW     xyAdd0
-            LDWI    .yvel       ; self modifying code address
-            STW     xyAdd1
 
 ; labels are parsed to generate the correct offsets for branches        
-loop        LD      xyPos       ; x position bounds checking
-            BEQ     flip0
+xbounds     LD      xyPos       ; x position bounds checking
+            BEQ     xflip
             SUBI    xBounds
-            BLT     skip0
+            BLT     ybounds
         
-flip0       LD      xyVel
+xflip       LD      xyVel
             XORI    0xFE        ; flip x velocity
             ST      xyVel
         
-skip0       LD      xyPos+1     ; y position bounds checking
-            BEQ     flip1
+ybounds     LD      xyPos+1     ; y position bounds checking
+            BEQ     yflip
             SUBI    yBounds
-            BLT     skip1
+            BLT     velocity
         
-flip1       LD      xyVel+1
+yflip       LD      xyVel+1
             XORI    0xFE        ; flip y velocity
             ST      xyVel+1
         
-skip1       LD      xyVel
-            POKE    xyAdd0      ; modify ADDI x literal with x velocity
-            LD      xyPos
-.xvel,1     ADDI    0x01        ; self modifying code, (label starting with '.'), the offset '1' means the next byte, '0x01', is modified, offsets can be 0<->9
+velocity    LD      xyPos
+            ADDW    xyVel
             ST      xyPos
-    
-            LD      xyVel+1
-            POKE    xyAdd1      ; modify ADDI y literal with y velocity
             LD      xyPos+1
-.yvel,1     ADDI    0x01        ; self modifying code
+            ADDW    xyVel+1
             ST      xyPos+1
             
-            CALL    plot        ; call addresses, (2 bytes), are stored in a call table starting at 0x007E, (by default), that grows downwards for each new call
-            BRA     loop        ; this means that your call table can crash into your program variables if you are not careful
-            
-
-plot        LDW     base0       ; generate vram address
+            LDW     vbase       ; generate vram address
             ADDW    xyPos
             STW     pixels
             LD      rand        ; grab an interesting colour
             POKE    pixels      ; plot new pixel
-            RET        
+            
+            BRA     xbounds
+            

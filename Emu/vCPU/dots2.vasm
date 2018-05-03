@@ -8,33 +8,32 @@ sysFn       EQU     0x22
 
 vbase       EQU     0x40
 pixels      EQU     0x42
-x           EQU     0x43
-y           EQU     0x44
+xy          EQU     0x44
 
                 
             LDWI    vram
             STW     vbase
 
             LDWI    0x0000      
-            STW     x
+            STW     xy
  
 loop        LD      x_rand      ; x position
-            ST      x
+            ST      xy
             SUBI    x_bounds    ; works as (x_rand % x_bounds), but only because x_bounds is > 0x00FF/2, fails otherwise
             BLE     y_load
-            ST      x
+            ST      xy
 
 y_load      LD      y_rand      ; y position
-            ST      y
+            ST      xy+1
             SUBI    y_bounds    ; works as (y_rand % y_bounds), but only because y_bounds is > 0x00FF/3, fails otherwise
             BLE     draw
-            ST      y
+            ST      xy+1
             SUBI    y_bounds
             BLE     draw
-            ST      y
+            ST      xy+1
             
 draw        LDW     vbase
-            ADDW    x
+            ADDW    xy
             STW     pixels
             LD      x_rand
             POKE    pixels

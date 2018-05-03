@@ -1,0 +1,247 @@
+; **************************************************************************************************
+; **************************************************************************************************
+;  THIS WILL NOT RUN ON REAL HARDWARE UNLESS YOU BURN THE NATIVE CODE AT THE BOTTOM
+;  OF THIS FILE INTO THE GIGATRONS ROM AT THE CORRECT ADDRESS, EMULATION ONLY!
+; **************************************************************************************************
+; **************************************************************************************************
+
+; sprite test
+
+
+vram        EQU     0x0800
+buff0       EQU     0x08A0
+buff1       EQU     0x08A4
+
+frameCount  EQU     0x0E
+sysFn       EQU     0x22
+
+srcAddr     EQU     0x30
+dstAddr     EQU     0x32
+backBuffer  EQU     0x34
+spriteData  EQU     0x36
+vbase       EQU     0x38
+pixels      EQU     0x3A
+xyPos       EQU     0x3C
+xyVel       EQU     0x3E
+frame       EQU     0x40
+
+rowBuffer0  EQU     0x50
+rowBuffer1  EQU     0x54
+rowBuffer2  EQU     0x58
+rowBuffer3  EQU     0x5C
+
+xExtent     EQU     0x9C
+yExtent     EQU     0x74
+
+                                        
+_startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
+
+_callTable_         EQU     0x007E      ; call addresses are automatically stored here by the assembler, it grows downwards,
+                                        ; for every NEW call address; make sure it doesn't crash into anything important
+_singleStepWatch_   EQU     xyPos       ; the single step debugger watches this variable location to decide when to step,
+                                        ; choose a variable that is updated often
+
+SYS_SpriteRow_118   EQU     0x2300      ; 16 pixel memory copy
+
+                                        
+            LDWI    vram
+            STW     vbase       ; vram base address
+            STW     pixels      ; pixel address
+
+            LDWI    0x0101      
+            STW     xyPos
+            LDWI    0x0101     
+            STW     xyVel       ; XY velocity
+
+            LDWI    buff0
+            STW     spriteData
+            LDWI    buff1
+            STW     backBuffer
+
+            LDWI    SYS_SpriteRow_118
+            STW     sysFn
+
+            LDW     vbase       ; generate vram address
+            ADDW    xyPos
+            STW     pixels
+            STW     srcAddr
+            LDW     backBuffer
+            STW     dstAddr
+            SYS     0xEF        ; SYS_SpriteRow_118, 270 - 63/2 = 0xEF
+           
+            LD      frameCount
+            STW     frame
+            
+xbounds     LD      xyPos       ; x position bounds checking
+            BEQ     xflip
+            SUBI    xExtent
+            BLT     ybounds
+        
+xflip       LD      xyVel
+            XORI    0xFE        ; flip x velocity
+            ST      xyVel
+        
+ybounds     LD      xyPos+1     ; y position bounds checking 
+            BEQ     yflip
+            SUBI    yExtent
+            BLT     velocity
+        
+yflip       LD      xyVel+1
+            XORI    0xFE        ; flip y velocity
+            ST      xyVel+1
+        
+velocity    LD      xyPos
+            ADDW    xyVel
+            ST      xyPos
+            LD      xyPos+1
+            ADDW    xyVel+1
+            ST      xyPos+1
+
+vblank      LD      frameCount
+            SUBW    frame
+            BEQ     vblank
+            LD      frameCount
+            STW     frame
+            
+            LDW     backBuffer
+            STW     srcAddr
+            LDW     pixels
+            STW     dstAddr
+            SYS     0xD3        ; SYS_SpriteRow_118, 270 - 118/2 = 0xDA
+            
+            LDW     vbase       ; generate vram address
+            ADDW    xyPos
+            STW     pixels
+
+            STW     srcAddr
+            LDW     backBuffer
+            STW     dstAddr
+            SYS     0xD3        ; SYS_SpriteRow_118, 270 - 118/2 = 0xDA
+
+            LDW     srcAddr
+            STW     dstAddr
+            LDW     spriteData
+            STW     srcAddr
+            SYS     0xD3        ; SYS_SpriteRow_118, 270 - 118/2 = 0xDA
+            
+            BRA     xbounds
+            
+
+; native code routines that are written into the emulator's fake ROM using either the DBR/DWR commands or the native instruction set
+; the native instruction assembler has access to the same functionality as the vasm assembler, (labels, equates, mutables, etc).
+; it's only caveats are:
+; 1: you cannot use spaces in the operand field, this will produce a malformed instruction
+; 2: each instruction is prefaced with a period to clearly differentiate it from a vasm instruction
+; 3: you cannot mix and match vasm instructions with native instructions within the same segment, (in reality they are executed in 
+; completely different parts of the memory map, i.e. native in fake ROM and vasm in RAM)
+; 4: you must follow the SYS calling conventions exactly
+SYS_SpriteRow_118   .LD     [srcAddr],X         ; src line 0
+                    .LD     [srcAddr+1],Y
+                    .LD     [Y,X]               
+                    .ST     [rowBuffer0+0]
+                    .ST     [Y,X++]             ; hack increment
+                    .LD     [Y,X]
+                    .ST     [rowBuffer0+1]
+                    .ST     [Y,X++]             ; hack increment
+                    .LD     [Y,X]
+                    .ST     [rowBuffer0+2]
+                    .ST     [Y,X++]             ; hack increment
+                    .LD     [Y,X]
+                    .ST     [rowBuffer0+3]
+                    
+                    .LD     [srcAddr],X         ; src line1
+                    .LD     0x01                
+                    .ADDA   [srcAddr+1],Y
+                    .LD     [Y,X]               
+                    .ST     [rowBuffer1+0]
+                    .ST     [Y,X++]             ; hack increment
+                    .LD     [Y,X]
+                    .ST     [rowBuffer1+1]
+                    .ST     [Y,X++]             ; hack increment
+                    .LD     [Y,X]
+                    .ST     [rowBuffer1+2]
+                    .ST     [Y,X++]             ; hack increment
+                    .LD     [Y,X]
+                    .ST     [rowBuffer1+3]
+
+                    .LD     [srcAddr],X         ; src line2
+                    .LD     0x02                
+                    .ADDA   [srcAddr+1],Y
+                    .LD     [Y,X]               
+                    .ST     [rowBuffer2+0]
+                    .ST     [Y,X++]             ; hack increment
+                    .LD     [Y,X]
+                    .ST     [rowBuffer2+1]
+                    .ST     [Y,X++]             ; hack increment
+                    .LD     [Y,X]
+                    .ST     [rowBuffer2+2]
+                    .ST     [Y,X++]             ; hack increment
+                    .LD     [Y,X]
+                    .ST     [rowBuffer2+3]
+                    
+                    .LD     [srcAddr],X         ; src line3
+                    .LD     0x03                
+                    .ADDA   [srcAddr+1],Y
+                    .LD     [Y,X]               
+                    .ST     [rowBuffer3+0]
+                    .ST     [Y,X++]             ; hack increment
+                    .LD     [Y,X]
+                    .ST     [rowBuffer3+1]
+                    .ST     [Y,X++]             ; hack increment
+                    .LD     [Y,X]
+                    .ST     [rowBuffer3+2]
+                    .ST     [Y,X++]             ; hack increment
+                    .LD     [Y,X]
+                    .ST     [rowBuffer3+3]
+                    
+                    
+                    .LD     [dstAddr],X         ; dst line 0
+                    .LD     [dstAddr+1],Y
+                    .LD     [rowBuffer0+0]       
+                    .ST     [Y,X++]
+                    .LD     [rowBuffer0+1]
+                    .ST     [Y,X++]
+                    .LD     [rowBuffer0+2]
+                    .ST     [Y,X++]
+                    .LD     [rowBuffer0+3]
+                    .ST     [Y,X++]
+                    
+                    .LD     [dstAddr],X         ; dst line 1
+                    .LD     0x01                
+                    .ADDA   [dstAddr+1],Y
+                    .LD     [rowBuffer1+0]       
+                    .ST     [Y,X++]
+                    .LD     [rowBuffer1+1]
+                    .ST     [Y,X++]
+                    .LD     [rowBuffer1+2]
+                    .ST     [Y,X++]
+                    .LD     [rowBuffer1+3]
+                    .ST     [Y,X++]
+
+                    .LD     [dstAddr],X         ; dst line 2
+                    .LD     0x02                
+                    .ADDA   [dstAddr+1],Y
+                    .LD     [rowBuffer2+0]       
+                    .ST     [Y,X++]
+                    .LD     [rowBuffer2+1]
+                    .ST     [Y,X++]
+                    .LD     [rowBuffer2+2]
+                    .ST     [Y,X++]
+                    .LD     [rowBuffer2+3]
+                    .ST     [Y,X++]
+
+                    .LD     [dstAddr],X         ; dst line 3
+                    .LD     0x03                
+                    .ADDA   [dstAddr+1],Y
+                    .LD     [rowBuffer3+0]       
+                    .ST     [Y,X++]
+                    .LD     [rowBuffer3+1]
+                    .ST     [Y,X++]
+                    .LD     [rowBuffer3+2]
+                    .ST     [Y,X++]
+                    .LD     [rowBuffer3+3]
+                    .ST     [Y,X++]
+                    
+                    .LD     0x03,Y
+                    .JMP    Y,0xCB
+                    .LD     0xC5                ; 0 - (14 + number of instructions + (even ? 2 : 3)) / 2

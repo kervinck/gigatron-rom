@@ -71,7 +71,7 @@ namespace Cpu
 
         // Open ROM file
         std::ifstream romfile("theloop.2.rom", std::ios::binary | std::ios::in);
-        if(romfile.is_open() == false)
+        if(!romfile.is_open())
         {
             fprintf(stderr, "Cpu::initialise() : failed to open ROM file\n");
             exit(EXIT_FAILURE);

@@ -529,7 +529,7 @@ namespace Graphics
             index = 0;
         }
 
-        if(initialised == true)
+        if(initialised)
         {      
             for(int j=1; j<LIFE_HEIGHT-1; j++)
             {
@@ -573,7 +573,7 @@ namespace Graphics
             }
         }
 
-        if(initialised == true)
+        if(initialised)
         {        
             for(int j=1; j<LIFE_HEIGHT-1; j++)
             {

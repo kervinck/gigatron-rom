@@ -142,21 +142,6 @@ int main(int argc, char* argv[])
     int vgaX = 0, vgaY = 0;
     int HSync = 0, VSync = 0;
 
-#if 0
-    for(;;)
-    {
-        Graphics::life(false);
-
-        static uint64_t prevFrameCounter = 0;
-        double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
-        if(frameTime > TIMING_HACK)
-        {
-            Editor::handleInput();
-            Graphics::render(false);
-            prevFrameCounter = SDL_GetPerformanceCounter();
-        }
-    }
-#else
     for(long long t=-2; ; t++) 
     {
         if(t < 0) S._PC = 0; // MCP100 Power-On Reset
@@ -170,7 +155,7 @@ int main(int argc, char* argv[])
             vgaY = VSYNC_START;
 
             // Input and graphics
-            if(debugging == false)
+            if(!debugging)
             {
                 Editor::handleInput();
                 Graphics::render();
@@ -183,7 +168,7 @@ int main(int argc, char* argv[])
             else if(~S._OUT & 0x80) { } // Visualize vBlank pulse
             else if(vgaX >=HPIXELS_START  &&  vgaX < HPIXELS_END  &&  vgaY >= 0  &&  vgaY < SCREEN_HEIGHT)
             {
-                if(debugging == false) Graphics::refreshPixel(S, vgaX-HPIXELS_START, vgaY);
+                if(!debugging) Graphics::refreshPixel(S, vgaX-HPIXELS_START, vgaY);
             }
         }
         if(HSync > 0) // Rising hSync edge
@@ -205,7 +190,6 @@ int main(int argc, char* argv[])
 
         S=T;
     }
-#endif
 
     return 0;
 }

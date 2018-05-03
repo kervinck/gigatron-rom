@@ -46,7 +46,47 @@ loop        BRA     loop
 
 ; these are native code routines that are written into ROM using the DBR command, (Define Byte ROM), at the equate defined
 ; above: this native code is specific to this vCPU asm module with the input registers that it accepts
-SYS_ClearRow32_56       DBR $11 $40 $15 $41 $00 $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00
-                        DBR $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00
-                        DBR $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00
-                        DBR $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $14 $03 $E0 $CB $00 $E4
+;SYS_ClearRow32_56       DBR $11 $40 $15 $41 $00 $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00
+;                        DBR $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00
+;                        DBR $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00
+;                        DBR $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $14 $03 $E0 $CB $00 $E4
+
+SYS_ClearRow32_56       .LD     [0x40],X
+                        .LD     [0x41],Y
+                        .LD     0x00
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .LD     0x03,Y
+                        .JMP    Y,0xCB
+                        .LD     0xE4        0 - ((14 + number of instructions + (even ? 2 : 3)) / 2)
+                        

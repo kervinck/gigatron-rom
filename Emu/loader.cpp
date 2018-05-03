@@ -27,7 +27,7 @@ namespace Loader
     bool loadGt1File(const std::string& filename, Gt1File& gt1File)
     {
         std::ifstream infile(filename, std::ios::binary | std::ios::in);
-        if(infile.is_open() == false)
+        if(!infile.is_open())
         {
             fprintf(stderr, "Loader::loadGt1File() : failed to open '%s'\n", filename.c_str());
             return false;
@@ -90,7 +90,7 @@ namespace Loader
         filename = (i != std::string::npos) ? filepath.substr(0, i) + ".gt1" : filepath + ".gt1";
 
         std::ofstream outfile(filename, std::ios::binary | std::ios::out);
-        if(outfile.is_open() == false)
+        if(!outfile.is_open())
         {
             fprintf(stderr, "Loader::saveGt1File() : failed to open '%s'\n", filename.c_str());
             return false;
@@ -243,7 +243,7 @@ namespace Loader
         if(filename.find(".vcpu") != filename.npos  ||  filename.find(".gt1") != filename.npos)
         {
             Gt1File gt1File;
-            if(loadGt1File(filepath, gt1File) == false) return;
+            if(!loadGt1File(filepath, gt1File)) return;
             executeAddress = gt1File._loStart + (gt1File._hiStart <<8);
             Editor::setLoadBaseAddress(executeAddress);
 
@@ -259,7 +259,7 @@ namespace Loader
         // Upload vCPU assembly code
         else if(filename.find(".vasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
         {
-            if(Assembler::assemble(filepath, DEFAULT_START_ADDRESS) == false) return;
+            if(!Assembler::assemble(filepath, DEFAULT_START_ADDRESS)) return;
             executeAddress = Assembler::getStartAddress();
             Editor::setLoadBaseAddress(executeAddress);
             uint16_t address = executeAddress;
@@ -275,7 +275,7 @@ namespace Loader
 
             bool isRomCode = false;
             Assembler::ByteCode byteCode;
-            while(Assembler::getNextAssembledByte(byteCode) == false)
+            while(!Assembler::getNextAssembledByte(byteCode))
             {
                 if(byteCode._isRomAddress) isRomCode = true;
 
@@ -308,7 +308,7 @@ namespace Loader
             }
 
             // Don't save gt1 file for any asm files that contain native rom code
-            if(!isRomCode  &&  saveGt1File(filepath, gt1File) == false) return;
+            if(!isRomCode  &&  !saveGt1File(filepath, gt1File)) return;
         }
         // Invalid file
         else
@@ -354,7 +354,7 @@ namespace Loader
             {
                 case FrameState::Resync:
                 {
-                    if(sendFrame(vgaY, -1, payload, payloadSize, executeAddress, checksum) == false)
+                    if(!sendFrame(vgaY, -1, payload, payloadSize, executeAddress, checksum))
                     {
                         checksum = 'g'; // loader resets checksum
                         frameState = FrameState::Frame;
@@ -364,7 +364,7 @@ namespace Loader
 
                 case FrameState::Frame:
                 {
-                    if(sendFrame(vgaY,'L', payload, payloadSize, executeAddress, checksum) == false)
+                    if(!sendFrame(vgaY,'L', payload, payloadSize, executeAddress, checksum))
                     {
                         frameState = FrameState::Execute;
                     }
@@ -373,7 +373,7 @@ namespace Loader
 
                 case FrameState::Execute:
                 {
-                    if(sendFrame(vgaY, 'L', payload, 0, executeAddress, checksum) == false)
+                    if(!sendFrame(vgaY, 'L', payload, 0, executeAddress, checksum))
                     {
                         checksum = 0;
                         frameState = FrameState::Resync;

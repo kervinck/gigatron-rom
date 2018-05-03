@@ -89,7 +89,7 @@ clear       LDI     0x00        ; clear screen and buffers
             SUBI    0x80
             BLT     clear
 
-            LDWI    0x09A3
+            LDWI    0x09A3      ; start position for gliders
             STW     gliders
 
             LDI     0x06        ; number of gliders
@@ -248,8 +248,8 @@ continue    LD      i           ; dec i
 generate    LDW     i           ; buffer1
             ADDW    buffer1
             STW     cells1
-            PEEK
-            ST      neighbours  ; get neighbours count
+            PEEK                ; get neighbours count
+            ST      neighbours  
             LDI     0x00
             POKE    cells1      ; reset neighbours count
             

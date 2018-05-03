@@ -135,7 +135,7 @@ namespace Expression
         if((uchr >= '0'  &&  uchr <= '9')  ||  uchr == 'X'  ||  uchr == 'B'  ||  uchr == 'O'  ||  uchr == 'Q')
         {
             valueStr.push_back(uchr); get();
-            while(peek() >= '0'  &&  peek() <= '9')
+            while((peek() >= '0'  &&  peek() <= '9')  ||  (peek() >= 'A'  &&  peek() <= 'F'))
             {
                 valueStr.push_back(get());
             }

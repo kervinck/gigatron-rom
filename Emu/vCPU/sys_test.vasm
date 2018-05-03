@@ -11,4 +11,4 @@
         
         SYS     0xFF        ; SYS_Draw4_30, 270 - 30/2 = 0xFF
         
-LOOP    BRA     LOOP        
+loop    BRA     loop        
