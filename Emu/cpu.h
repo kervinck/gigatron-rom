@@ -5,7 +5,7 @@
 
 
 #define MAJOR_VERSION "0.3"
-#define MINOR_VERSION "2"
+#define MINOR_VERSION "4"
 #define VERSION_STR "Ver: " MAJOR_VERSION "." MINOR_VERSION
 
 #define ROM_SIZE (1<<16)

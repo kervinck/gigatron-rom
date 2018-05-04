@@ -18,6 +18,7 @@ namespace Loader
 
 
     bool _startUploading = false;
+    bool _disableUploads = false;
 
 
     bool getStartUploading(void) {return _startUploading;}
@@ -296,7 +297,10 @@ namespace Loader
                     gt1Segment._hiAddress = (address & 0xFF00) >>8;
                 }
 
-                (byteCode._isRomAddress) ? Cpu::setROM(customAddress, address++, byteCode._data) : Cpu::setRAM(address++, byteCode._data);
+                if(!_disableUploads)
+                {
+                    (byteCode._isRomAddress) ? Cpu::setROM(customAddress, address++, byteCode._data) : Cpu::setRAM(address++, byteCode._data);
+                }
                 gt1Segment._dataBytes.push_back(byteCode._data);
             }
 
@@ -318,11 +322,14 @@ namespace Loader
         }
 
         // Execute code
-        Cpu::setRAM(0x0016, executeAddress-2 & 0x00FF);
-        Cpu::setRAM(0x0017, (executeAddress & 0xFF00) >>8);
-        Cpu::setRAM(0x001a, executeAddress-2 & 0x00FF);
-        Cpu::setRAM(0x001b, (executeAddress & 0xFF00) >>8);
-        //Editor::setSingleStep(true);
+        if(!_disableUploads)
+        {
+            Cpu::setRAM(0x0016, executeAddress-2 & 0x00FF);
+            Cpu::setRAM(0x0017, (executeAddress & 0xFF00) >>8);
+            Cpu::setRAM(0x001a, executeAddress-2 & 0x00FF);
+            Cpu::setRAM(0x001b, (executeAddress & 0xFF00) >>8);
+            //Editor::setSingleStep(true);
+        }
         return;
     }
 
@@ -383,5 +390,10 @@ namespace Loader
                 break;
             }
         }
+    }
+
+    void disableUploads(bool disable)
+    {
+        _disableUploads = disable;
     }
 }

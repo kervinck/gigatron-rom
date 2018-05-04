@@ -519,6 +519,7 @@ SYS_SpriteCopy_118  .LD     [srcAddr],X         ; src line 0
                     .ST     [rowBuffer3 + 2]
                     .ST     [Y,X++]             ; hack increment
                     .LD     [Y,X]
+                    ;.LD     [Y,X++] 
                     .ST     [rowBuffer3 + 3]
                     
                     
@@ -572,4 +573,4 @@ SYS_SpriteCopy_118  .LD     [srcAddr],X         ; src line 0
                     .LD     0x03,Y
                     .JMP    Y,0xCB
                     .LD     0xC5                ; 0 - (14 + number of instructions + (even ? 2 : 3)) / 2
-
+                    

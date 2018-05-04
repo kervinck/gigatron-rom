@@ -3,7 +3,7 @@ gtemuSDL is an emulator for the Gigatron TTL microcomputer, written in C++ using
 This project provides support for Microsoft Windows and should be compatible with Linux, MacOS<br/>
 and possibly even Android. As of ver0.3.2 it has only been tested on Microsoft Windows10.<br/>
 
-# Features
+## Features
 - Variable timing from a minimum of 60FPS up to whatever your PC can handle.<br/>
 - Synchronisation of audio with video at any FPS at or above 60FPS.<br/>
 - Gigatron TTL emulator using SDL2, tested on Windows 10 x64, compiled with VS2017.<br/>
@@ -13,7 +13,7 @@ and possibly even Android. As of ver0.3.2 it has only been tested on Microsoft W
 - Supports Gigatron TTL audio channels.<br/>
 - Supports Gigatron TTL loading of external vCPU code with a file browser.<br/>
 - Displays Gigatron TTL IN and XOUT registers.<br/>
-- Displays memory monitor of RAM, [RAM is editable], ROM0 and ROM1 at any start address.<br/>
+- Displays memory monitor of RAM, (**_RAM is editable_**), ROM0 and ROM1 at any start address.<br/>
 - Displays read only contents of vCPU variable space.<br/>
 - Can execute hand crafted code within the Hex Editor.<br/>
 - Three seperate editable start addresses are provided; memory display address,<br/>
@@ -21,19 +21,19 @@ and possibly even Android. As of ver0.3.2 it has only been tested on Microsoft W
 - A built in assembler can now assemble vCPU as well as Native mnemonics.<br/>
 - A debugging mode that lets you pause the simulation or single step through vCPU code.<br/>
 - Upload assembled vCPU code to RAM.<br/>
-- Upload assembled Native code to ROM, [emulation only].<br/>
+- Upload assembled Native code to ROM, (**_emulation only_**).<br/>
 - Supports the Gigatron TTL's GT1 object file format.<br/>
 
 ## YouTube
-- [https://www.youtube.com/edit?o=U&video_id=pH4st5dz7Go]<br/>
-- [https://www.youtube.com/watch?v=u5AQCd47IcI]<br/>
+- https://www.youtube.com/edit?o=U&video_id=pH4st5dz7Go<br/>
+- https://www.youtube.com/watch?v=u5AQCd47IcI<br/>
 
-## Based on
-- gigatron-rom [https://github.com/kervinck/gigatron-rom]<br/>
-- SDL[2] graphics [https://github.com/kervinck/gigatron-rom/pull/1]<br/>
-- [http://talkchess.com/forum/viewtopic.php?t=65944&start=11]<br/>
-- [https://github.com/tronkko/dirent/releases]<br/>
-- [https://stackoverflow.com/questions/9329406/evaluating-arithmetic-expressions-from-string-in-c]<br/>
+## References
+- gigatron-rom https://github.com/kervinck/gigatron-rom<br/>
+- SDL2 graphics https://github.com/kervinck/gigatron-rom/pull/1<br/>
+- http://talkchess.com/forum/viewtopic.php?t=65944&start=11<br/>
+- https://github.com/tronkko/dirent/releases<br/>
+- https://stackoverflow.com/questions/9329406/evaluating-arithmetic-expressions-from-string-in-c<br/>
 
 ## Building
 - CMake 3.7 or higher is required for building, has only been tested on Windows so far.<br/>
@@ -41,9 +41,9 @@ and possibly even Android. As of ver0.3.2 it has only been tested on Microsoft W
 - Requires the latest version of SDL2 and it's appropriate include/library/shared files.<br/>
 
 ## Installation
-- After building, copy the executable, SDL2 shared library/DLL, "theloop2.rom" and<br/>
-  "EmuFont-96x48.bmp" to an appropriate directory; run the executable from there.<br/>
-- Create a vCPU directory within the above directory and add any user generated vCPU<br/>
+- After building, copy the executable, SDL2 shared library/DLL, **_"theloop2.rom"_** and<br/>
+  **_"EmuFont-96x48.bmp"_** to an appropriate directory; run the executable from there.<br/>
+- Create a **_"vCPU"_** directory within the above directory and add any user generated vCPU<br/>
   or GT1 files that you want to upload to the emulator.<br/>
 
 ## Controls
@@ -89,6 +89,5 @@ and possibly even Android. As of ver0.3.2 it has only been tested on Microsoft W
 
 ## TODO
 - Test under Linux, MAC and Android.<br/>
-- Allow for uploading of vCPU payloads larger than 60 bytes in size.<br/>
-- Add a inbuilt vCPU and native code disassembler.<br/>
+- Add an inbuilt vCPU and native code disassembler.<br/>
 - Add a help menu.<br/>

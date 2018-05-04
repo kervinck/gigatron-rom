@@ -39,6 +39,7 @@ namespace Loader
     bool saveGt1File(const std::string& filename, const Gt1File& gt1File);
 
     void upload(int vgaY);
+    void disableUploads(bool disable);
 }
 
 #endif

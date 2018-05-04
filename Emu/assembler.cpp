@@ -8,6 +8,7 @@
 
 #include "cpu.h"
 #include "editor.h"
+#include "loader.h"
 #include "assembler.h"
 #include "expression.h"
 
@@ -21,7 +22,8 @@ namespace Assembler
     enum ByteSize {BadSize=-1, OneByte=1, TwoBytes=2, ThreeBytes=3};
     enum EvaluateResult {Failed=-1, NotFound, Found};
     enum OpcodeType {ReservedDB=0, ReservedDW, ReservedDBR, ReservedDWR, vCpu, Native};
-
+    enum AddressMode {D_AC=0b00000000, X_AC=0b00000100, YD_AC=0b00001000, YX_AC=0b00001100, D_X=0b00010000, D_Y=0b00010100, D_OUT=0b00011000, YXpp_OUT=0b00011100};
+    enum BusMode {D=0b00000000, RAM=0b00000001, AC=0b00000010, IN=0b00000011};
 
     struct Label
     {
@@ -107,7 +109,7 @@ namespace Assembler
             address = byteCode._address;
         }
         std::string ramRom = (byteCode._isRomAddress) ? "ROM" : "RAM";
-        fprintf(stderr, "Assembler::getNextAssembledByte() : %s : %04X  %02X\n", ramRom.c_str(), address, byteCode._data);
+        if(!byteCode._isRomAddress  ||  (byteCode._isRomAddress  &&  address > 0x2000)) fprintf(stderr, "Assembler::getNextAssembledByte() : %s : %04X  %02X\n", ramRom.c_str(), address, byteCode._data);
         address++;
         return false;
     }    
@@ -323,6 +325,11 @@ namespace Assembler
                     _startAddress = operand;
                     _currentAddress = _startAddress;
                 }
+                // Disable upload of the current assembler module
+                else if(tokens[tokenIndex] == "_disableUpload_")
+                {
+                    Loader::disableUploads(operand != 0);
+                }
                 // Standard equates
                 else
                 {
@@ -476,30 +483,40 @@ namespace Assembler
 
         size_t openBracket = input.find_first_of("[");
         size_t closeBracket = input.find_first_of("]");
+        bool noBrackets = (openBracket == std::string::npos  &&  closeBracket == std::string::npos);
+        bool validBrackets = (openBracket != std::string::npos  &&  closeBracket != std::string::npos  &&  closeBracket > openBracket);
+
         size_t comma1 = input.find_first_of(",");
         size_t comma2 = input.find_first_of(",", comma1+1);
+        bool noCommas = (comma1 == std::string::npos  &&  comma2 == std::string::npos);
+        bool oneComma = (comma1 != std::string::npos  &&  comma2 == std::string::npos);
+        bool twoCommas = (comma1 != std::string::npos  &&  comma2 != std::string::npos);
 
         operand = 0x00;
+
+        // NOP
+        if(opcode == 0x02) return true;
 
         // Accumulator
         if(input == "AC"  ||  input == "ac")
         {
-            opcode |= 0x02;
+            opcode |= BusMode::AC;
             return true;
         }
 
         // Jump
         if(opcode == 0xE0)
         {
-            // Indirect
-            if(openBracket != std::string::npos  &&  closeBracket != std::string::npos  &&  comma1 != std::string::npos  &&  comma2 == std::string::npos)
+            // y,[D]
+            if(validBrackets  &&  oneComma  &&  comma1 < openBracket)
             {
+                opcode |= BusMode::RAM;
                 token = input.substr(openBracket+1, closeBracket - (openBracket+1));
                 return handleNativeEquate(token, operand);
             }
 
-            // Immediate
-            if(openBracket == std::string::npos  &&  closeBracket == std::string::npos  &&  comma1 != std::string::npos  &&  comma2 == std::string::npos)
+            // y,D
+            if(noBrackets  &&  oneComma)
             {
                 token = input.substr(comma1+1, input.size() - (comma1+1));
                 return handleNativeEquate(token, operand);
@@ -511,115 +528,116 @@ namespace Assembler
         // Branch
         if(opcode >= 0xE4)
         {
+            token = input;
+            if(validBrackets) {opcode |= BusMode::RAM; token = input.substr(openBracket+1, closeBracket - (openBracket+1));}
+            if(Expression::stringToU8(token, operand)) return true;
+
             Label label;
-            if(searchLabels(input, label))
+            if(searchLabels(token, label))
             {
-                operand = uint8_t((label._address & 0x00FF) >>1);
+                operand = uint8_t((label._address >>1) & 0x00FF);
                 return true;
             }
 
             return false;
         }
 
-        // Instruction
-        switch(opcode & 0xF0)
+        // IN or IN,[D]
+        if(input.find("IN") != std::string::npos  ||  input.find("in") != std::string::npos)
         {
-            // ST
-            case 0xC0: opcode |= 0x02; break;
+            opcode |= BusMode::IN;
 
-            // Everything else
-            default: opcode |= 0x01; break;
-        }
-    
-        // D,X or [D],X or D,Y or [D],Y or D,OUT or [D],OUT
-        if(comma1 != std::string::npos  &&  comma2 == std::string::npos  &&  (openBracket == std::string::npos  ||  (comma1 > openBracket  &&  closeBracket != std::string::npos  &&  comma1 > closeBracket)))
-        {
-            if(openBracket == std::string::npos) 
-            {
-                token = input.substr(comma1+1, input.size() - (comma1+1));
-            }
-            else
-            {
-                token = input.substr(comma1+1, closeBracket - (comma1+1));
-            }
-
-            if(token == "X"  ||  token == "x") opcode |= 0x10;
-
-            if(token == "Y"  ||  token == "y") opcode |= 0x14;
-
-            if((opcode & 0xF0) == 0x00  &&  (token == "OUT"  ||  token == "out")) opcode = 0x18;
-            
-            // Indirect
-            if(openBracket != std::string::npos  &&  closeBracket != std::string::npos  &&  openBracket < closeBracket)
+            // IN,[D]
+            if(validBrackets &&  oneComma  &&  comma1 < openBracket)
             {
                 token = input.substr(openBracket+1, closeBracket - (openBracket+1));
+                return handleNativeEquate(token, operand);
             }
-            // Immediate
-            else
-            {
-                token = input.substr(0, comma1);
-                if(token == "AC"  || token == "ac")
-                {
-                    opcode |= 0x02;
-                    return true;
-                }
-
-                opcode &= 0xFE;
-            }
-
-            return handleNativeEquate(token, operand);
+            
+            // IN
+            return true;
         }
 
-        // [D]
-        if(openBracket != std::string::npos  &&  closeBracket != std::string::npos  &&  openBracket < closeBracket  &&  comma1 == std::string::npos  &&  comma2 == std::string::npos)
+        // Read or write
+        (opcode != 0xC0) ? opcode |= BusMode::RAM : opcode |= BusMode::AC;
+
+        // D
+        if(noBrackets && noCommas) return handleNativeEquate(input, operand);
+
+        // [D] or [X]
+        if(validBrackets  &&  noCommas)
         {
             token = input.substr(openBracket+1, closeBracket - (openBracket+1));
+            if(token == "X"  ||  token == "x") {opcode |= AddressMode::X_AC; return true;}
             return handleNativeEquate(token, operand);
         }
-        // [Y,D] or [Y,X] or [Y,X++]
-        else if(openBracket != std::string::npos  &&  closeBracket != std::string::npos  &&  openBracket < closeBracket  &&  (comma1 != std::string::npos  ||  comma2 != std::string::npos))
+
+        // AC,X or AC,Y or AC,OUT or D,X or D,Y or D,OUT or [D],X or [D],Y or [D],OUT or D,[D] or D,[X] or D,[Y] or [Y,D] or [Y,X] or [Y,X++]
+        if(oneComma)
         {
-            if(comma2 == std::string::npos)
+            token = input.substr(comma1+1, input.size() - (comma1+1));
+            if(token == "X"    ||  token == "x")   opcode |= AddressMode::D_X;
+            if(token == "Y"    ||  token == "y")   opcode |= AddressMode::D_Y;
+            if(token == "OUT"  ||  token == "out") opcode |= AddressMode::D_OUT;
+
+            token = input.substr(0, comma1);
+
+            // AC,X or AC,Y or AC,OUT
+            if(token == "AC"  ||  token == "ac") {opcode &= 0xFC; opcode |= BusMode::AC; return true;}
+
+            // D,X or D,Y or D,OUT
+            if(noBrackets) {opcode &= 0xFC; return handleNativeEquate(token, operand);}
+
+            // [D],X or [D],Y or [D],OUT or D,[D] or D,[X] or D,[Y] or [Y,D] or [Y,X] or [Y,X++]
+            if(validBrackets)
             {
-                token = input.substr(openBracket+1, comma1 - (openBracket+1));
-                if(token != "Y"  &&  token != "y") return false;
+                if(comma1 > closeBracket) token = input.substr(openBracket+1, closeBracket - (openBracket+1));
+                else if(comma1 < openBracket) {opcode &= 0xFC; token = input.substr(0, comma1);}
+                else if(comma1 > openBracket  &&  comma1 < closeBracket)
+                {
+                    token = input.substr(openBracket+1, comma1 - (openBracket+1));
+                    if(token != "Y"  &&  token != "y") return false;
+
+                    token = input.substr(comma1+1, closeBracket - (comma1+1));
+                    if(token == "X"    ||  token == "x")   {opcode |= AddressMode::YX_AC;    return true;}
+                    if(token == "X++"  ||  token == "x++") {opcode |= AddressMode::YXpp_OUT; return true;}
+
+                    opcode |= AddressMode::YD_AC;                
+                }
+                return handleNativeEquate(token, operand);
             }
-            else
-            {
-                token = input.substr(0, openBracket-1);
-                if(!handleNativeEquate(token, operand)) return false;
 
-                token = input.substr(openBracket+1, comma2 - (openBracket+1));
-                if(token != "Y"  &&  token != "y") return false;
-                comma1 = comma2;
+            return false;
+        }
 
-                opcode &= 0xFC;
-            }
+        // D,[Y,X] or D,[Y,X++]
+        if(validBrackets  &&  twoCommas  &&  comma1 < openBracket  &&  comma2 > openBracket  &&  comma2 < closeBracket)
+        {
+            token = input.substr(0, comma1);
+            if(!handleNativeEquate(token, operand)) return false;
 
-            opcode |= 0x08;
+            token = input.substr(openBracket+1, comma2 - (openBracket+1));
+            if(token != "Y"  &&  token != "y") return false;
+            opcode &= 0xFC; // reset bus bits to D
+
+            token = input.substr(comma2+1, closeBracket - (comma2+1));
+            if(token == "X"    ||  token == "x")   {opcode |= YX_AC;    return true;}
+            if(token == "X++"  ||  token == "x++") {opcode |= YXpp_OUT; return true;}
+                
+            return false;
+        }
+
+        // [Y,X++],out
+        if(validBrackets  &&  twoCommas  &&  comma1 > openBracket  &&  comma2 > closeBracket)
+        {
+            token = input.substr(openBracket+1, comma1 - (openBracket+1));
+            if(token != "Y"  &&  token != "y") return false;
 
             token = input.substr(comma1+1, closeBracket - (comma1+1));
-            if(token == "X"  ||  token == "x")
-            {
-                opcode |= 0x04;
-                return true;
-            }
-            else if(token == "X++"  ||  token == "x++")
-            {
-                opcode |= 0x1C;
-                return true;
-            }
-            else if(comma2 != std::string::npos)
-            {
-                return false;
-            }
+            if(token == "X"    ||  token == "x")   {opcode |= YX_AC;    return true;}
+            if(token == "X++"  ||  token == "x++") {opcode |= YXpp_OUT; return true;}
                 
-            return handleNativeEquate(token, operand);
-        }
-        // D
-        else
-        {
-            return handleNativeEquate(input, operand);
+            return false;
         }
 
         return false;
@@ -721,6 +739,8 @@ namespace Assembler
         _instructions.clear();
         _callTableEntries.clear();
 
+        Loader::disableUploads(false);
+
         // Parse the file twice, the first pass we evaluate all the equates and labels, the second pass is for the instructions
         for(int parse=FirstPass; parse<NumParseTypes; parse++)
         {
@@ -769,7 +789,7 @@ namespace Assembler
                     // Starting address, labels and equates
                     if(nonWhiteSpace == 0)
                     {
-                        if(tokens.size() >= 3)
+                        if(tokens.size() >= 2)
                         {
                             EvaluateResult result = evaluateEquates(tokens, (ParseType)parse, tokenIndex);
                             if(result == Failed)
@@ -794,11 +814,13 @@ namespace Assembler
                     }
 
                     // Opcode
+                    bool operandValid = false;
                     InstructionType instructionType = getOpcode(tokens[tokenIndex++]);
                     uint8_t opcode = instructionType._opcode;
                     uint8_t branch = instructionType._branch;
                     ByteSize byteSize = instructionType._byteSize;
                     OpcodeType opcodeType = instructionType._opcodeType;
+
                     if(byteSize == BadSize)
                     {
                         parseError = true;
@@ -810,11 +832,16 @@ namespace Assembler
                     {
                         Instruction instruction = {false, false, byteSize, opcode, 0x00, 0x00, _currentAddress};
 
+                        // Native NOP
+                        if(opcodeType == Native  &&  opcode == 0x02)
+                        {
+                            operandValid = true;
+                        }
                         // Missing operand
-                        if((byteSize == TwoBytes  ||  byteSize == ThreeBytes)  &&  tokens.size() <= tokenIndex)
+                        else if((byteSize == TwoBytes  ||  byteSize == ThreeBytes)  &&  tokens.size() <= tokenIndex)
                         {
                             parseError = true;
-                            fprintf(stderr, "Assembler::assemble() : Missing operand/s : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line);
+                            fprintf(stderr, "Assembler::assemble() : Missing operand/s : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line);
                             break;
                         }
 
@@ -847,11 +874,10 @@ namespace Assembler
 
                             case TwoBytes:
                             {
-                                uint8_t operand;
-                                bool operandValid = false;
+                                uint8_t operand = 0x00;
 
                                 // BRA
-                                if(opcode == 0x90)
+                                if(opcodeType == vCpu  &&  opcode == 0x90)
                                 {
                                     // Search for branch label
                                     Label label;
@@ -868,7 +894,7 @@ namespace Assembler
                                     }
                                 }
                                 // CALL
-                                else if(opcode == 0xCF  &&  _callTable)
+                                else if(opcodeType == vCpu  &&  opcode == 0xCF  &&  _callTable)
                                 {
                                     // Search for call label
                                     Label label;
@@ -951,6 +977,17 @@ namespace Assembler
                                     instruction._opcode = opcode;
                                     instruction._operand0 = uint8_t(operand & 0x00FF);
                                     _instructions.push_back(instruction);
+
+                                    if(instruction._address < 0x2000)
+                                    {   
+                                        uint16_t add = instruction._address>>1;
+                                        uint8_t opc = Cpu::getROM(add, 0);
+                                        uint8_t ope = Cpu::getROM(add, 1);
+                                        if(instruction._opcode != opc  ||  instruction._operand0 != ope)
+                                        {
+                                            fprintf(stderr, "Assembler::assemble() : ROM Native instruction mismatch  : %04X : I=%02X%02X : R=%02X%02X : on line %d\n", add, instruction._opcode, instruction._operand0, opc, ope, line);
+                                        }
+                                    }
                                 }
                                 // Reserved assembler opcode DB, (define byte)
                                 else if(opcodeType == ReservedDB  ||  opcodeType == ReservedDBR)
@@ -985,7 +1022,7 @@ namespace Assembler
                                 {
                                     // Search for branch label
                                     Label label;
-                                    uint8_t operand;
+                                    uint8_t operand = 0x00;
                                     if(searchLabels(tokens[tokenIndex], label))
                                     {
                                         operand = uint8_t(label._address) - BRANCH_ADJUSTMENT;
@@ -1004,8 +1041,8 @@ namespace Assembler
                                 // All other 3 byte instructions
                                 else
                                 {
-                                    uint16_t operand;
-                                    bool operandValid = Expression::stringToU16(tokens[tokenIndex], operand);
+                                    uint16_t operand = 0x0000;
+                                    operandValid = Expression::stringToU16(tokens[tokenIndex], operand);
                                     if(!operandValid)
                                     {
                                         // Search equates
@@ -1066,9 +1103,9 @@ namespace Assembler
                     uint16_t newAddress = _currentAddress;
                     if((oldAddress >>8) != (newAddress >>8))
                     {
-                        parseError = true;
-                        fprintf(stderr, "Assembler::assemble() : Page boundary compromised : %04X : %04X : '%s' : in %s on line %d\n", oldAddress, newAddress, lineToken.c_str(), filename.c_str(), line);
-                        break;
+                        //parseError = true;
+                        //fprintf(stderr, "Assembler::assemble() : Page boundary compromised : %04X : %04X : '%s' : in %s on line %d\n", oldAddress, newAddress, lineToken.c_str(), filename.c_str(), line);
+                        //break;
                     }
 
                     line++;
