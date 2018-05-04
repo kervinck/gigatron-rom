@@ -1,9 +1,19 @@
 #include <vector>
+#include <algorithm>
 
+//#define C_PLUS_PLUS_17
+#if defined(C_PLUS_PLUS_17)
 #if defined(_WIN32)
 #include <experimental/filesystem>
 #else
 #include <filesystem>
+#endif
+#else
+#if defined(_WIN32)
+#include "dirent/dirent.h"
+#else
+#include <dirent.h>
+#endif
 #endif
 
 #include <SDL.h>
@@ -262,19 +272,35 @@ namespace Editor
         std::string path = "./vCPU";
         _fileNames.clear();
 
+#if defined(C_PLUS_PLUS_17)
 #if defined(_WIN32)
         for(std::experimental::filesystem::directory_iterator next(path), end; next!=end; ++next)
         {
             _fileNames.push_back(next->path().filename().string());
         }
-        std::sort(_fileNames.begin(), _fileNames.end());
 #else
         for(std::filesystem::directory_iterator next(path), end; next!=end; ++next)
         {
             _fileNames.push_back(next->path().filename().string());
         }
-        std::sort(_fileNames.begin(), _fileNames.end());
 #endif
+#else
+        DIR *dir;
+        struct dirent *ent;
+        if((dir = opendir(path.c_str())) != NULL)
+        {
+            while((ent = readdir(dir)) != NULL)
+            {
+                if(ent->d_type == DT_REG)
+                {
+                    _fileNames.push_back(std::string(ent->d_name));
+                }
+            }
+            closedir (dir);
+        }
+#endif
+
+        std::sort(_fileNames.begin(), _fileNames.end());
     }
 
     void handleKeyUp(SDL_Keycode keyCode)
