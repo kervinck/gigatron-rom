@@ -1,93 +1,15 @@
+/**********************************/
+/* gtemuSDL ver 0.3.2             */
+/**********************************/
 /*
-Ver 0.2.6
-- YouTube https://youtu.be/fH30TR6jeQM
+gtemuSDL is an emulator for the Gigatron TTL microcomputer, written in C++ using SDL2.
+This project provides Microsoft Windows support and should be compatible with Linux, MacOS
+and possibly even Android. As of ver0.3.2 it has only been tested on Microsoft Windows10.
+*/
 
-Features:
-- Robust variable timing from a minimum of 60FPS up to whatever your PC can handle.
-- Robust synchronisation of audio with video at any FPS at or above 60FPS.
-- Gigatron TTL emulator using SDL2, tested on Windows 10 x64, compiled with VS2017.
-- Supports fullscreen optimised rendering.
-- Supports Gigatron TTL input buttons.
-- Supports Gigatron TTL LED display.
-- Supports Gigatron TTL audio channels.
-- Supports Gigatron TTL loading of external vCPU code with a file browser.
-- Displays Gigatron TTL IN and XOUT registers.
-- Displays memory monitor of RAM, (RAM is editable), ROM0 and ROM1 at any start address.
-- Displays read only contents of vCPU variable space.
-- Can execute hand crafted code within the Hex Editor.
-- Three seperate editable start addresses are provided; memory display address,
-vCPU vars display address and load start address.
-- A built in assembler can now load vCPU mnemonics, it's a toy assembler but has labels
-non arithmetic equates, starting address and mutables, (labels for self modifying code).
-- A debugging mode that lets you pause the simulation or single step through the vCPU
-code, the single step feature is not a true instruction stepper, but rather a variable
-change stepper; by judicious variable selection, the single step feature can advance your
-code on a memory location that changes once per loop or once every few instructions, etc.
-
-Adapted from:
-- gigatron-rom https://github.com/kervinck/gigatron-rom
-- SDL(2) graphics https://github.com/kervinck/gigatron-rom/pull/1
-- http://talkchess.com/forum/viewtopic.php?topic_view=threads&p=742122&t=65944 and
-http://talkchess.com/forum/viewtopic.php?t=65944&start=11
-
-Building:
-- CMake 3.7 or higher is required for building, has only been tested on Windows so far.
-- A C++17 compatible compiler will be needed to build this code, if one is not available,
-then the std::filesystem section of code may be commented out.
-- Requires the latest version of SDL2 and it's appropriate include/library/shared files.
-
-Installation:
-- After building, copy the executable, SDL2 shared library/DLL, "theloop2.rom" and
-"EmuFont-96x48.bmp" to an appropriate directory; run the executable from there.
-- Create a vCPU directory within the above directory and add any user generated vCPU files
-that you want to upload to the emulator.
-
-Controls:
-- <ESC>     Quits the application.
-- <l>       Loads external vCPU files within the vCPU directory, this code is uploaded to
-            an editable load address. Loading user vCPU code to system critical addresses
-            can cause the emulator to hang, 0x0200 is guaranteed to be safe.
-- <r>       Switches Hex Editor between RAM, ROM(0) and ROM(1).
-- <F5>      Executes whatever code is present at the load address.
-- <F6>      Toggles debugging mode, simulation will pause, only 3 keys currently work in this
-            mode, F6, F10 and ESC.
-- <F10>     Only functions in debugging mode, will single step the simulation based on a
-            memory location changing it's value.
-- <CR>      Directly loads external vCPU code if editor is in file browse mode, otherwise
-            switches to edit mode.
-- <-/+>     Decrease/increase the speed of the emulation, from a minimum of 60FPS to a
-            maximum determined by your PC's CPU.
-
-- <Left>    Navigate the Hex editor one byte at a time or the file browser one file at a time.
-- <Right>
-- <Up/Down>
-
-- <PgUp>    Scroll the hex editor and file browser one page at a time.
-- <PgDn>
-
-- <Wheel>   Scroll the hex editor and file browser one line/file at a time.
-
-- <d>       Right.
-- <a>       Left.
-- <w>       Up.
-- <s>       Down.
-- <SPACE>   Start.
-- <z>       Select.
-- </>       B.
-- <.>       A.
-
-Limitations:
-- RAM is modifiable between 32K and 64K, any other value causes the simulation to fail.
-- Controls and VSync are modifiable in the code, VSync currently seems to have little value
-as an option as the main loop is synchronised using the performance counters.
-
-TODO:
-- Test under Linux, MAC and Android.
-- Allow for uploading of vCPU payloads larger than 60 bytes in size.
-- Add a inbuilt vCPU disassembler.
-- Add a help menu.
-/*
-
+/**********************************/
+/* Original copyright and license */
+/**********************************/
 /*
 BSD 2-Clause License
 
