@@ -1344,7 +1344,7 @@ bra(d(lo('NEXT')))              #14
 label('ST')
 ld(busAC,regX)                  #10,15 (overlap with LDI)
 ldzp(d(vAC))                    #11
-st(d(vAC),busAC|ea0XregAC)      #12
+st(d(vAC),busAC|ea0XregAC)      #12 XXX remove d(AC)
 ld(val(-16/2))                  #13
 bra(d(lo('NEXT')))              #14
 #nop()                          #(15)
