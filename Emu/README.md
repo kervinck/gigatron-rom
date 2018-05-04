@@ -1,6 +1,6 @@
 # gtemuSDL
 gtemuSDL is an emulator for the Gigatron TTL microcomputer, written in C++ using SDL2.<br/>
-This project provides Microsoft Windows support and should be compatible with Linux, MacOS<br/>
+This project provides support for Microsoft Windows and should be compatible with Linux, MacOS<br/>
 and possibly even Android. As of ver0.3.2 it has only been tested on Microsoft Windows10.<br/>
 
 # Features
@@ -48,39 +48,39 @@ and possibly even Android. As of ver0.3.2 it has only been tested on Microsoft W
 
 ## Controls
 |Key       | Function                                                                          |
-|----------|-----------------------------------------------------------------------------------|
-|<ESC>     | Quits the application.                                                            |
-|<l>       | Loads external vCPU files within the vCPU directory, this code is uploaded to     |
+|:--------:|-----------------------------------------------------------------------------------|
+|ESC       | Quits the application.                                                            |
+|l         | Loads external vCPU files within the vCPU directory, this code is uploaded to     |
 |          | an editable load address. Loading user vCPU code to system critical addresses     |
 |          | can cause the emulator to hang, 0x0200 is guaranteed to be safe.                  |
-|<r>       | Switches Hex Editor between RAM, ROM(0) and ROM(1).                               |
-|<F5>      | Executes whatever code is present at the load address.                            |
-|<F6>      | Toggles debugging mode, simulation will pause, only 3 keys currently work in this |
+|r         | Switches Hex Editor between RAM, ROM(0) and ROM(1).                               |
+|F5        | Executes whatever code is present at the load address.                            |
+|F6        | Toggles debugging mode, simulation will pause, only 3 keys currently work in this |
 |          | mode, F6, F10 and ESC.                                                            |
-|<F10>     | Only functions in debugging mode, will single step the simulation based on a      |
+|F10       | Only functions in debugging mode, will single step the simulation based on a      |
 |          | memory location changing it's value.                                              |
-|<CR>      | Directly loads external vCPU code if editor is in file browse mode, otherwise     |
+|ENTER/CR  | Directly loads external vCPU code if editor is in file browse mode, otherwise     |
 |          | switches to edit mode.                                                            |
-|<-/+>     | Decrease/increase the speed of the emulation, from a minimum of 60FPS to a        |
+|-/+       | Decrease/increase the speed of the emulation, from a minimum of 60FPS to a        |
 |          | maximum determined by your PC's CPU.                                              |
 |          |                                                                                   |
-|<Left>    | Navigate the Hex editor one byte at a time or the file browser one file at a time.|
-|<Right>   |                                                                                   |
-|<Up/Down> |                                                                                   |
+|Left      | Navigate the Hex editor one byte at a time or the file browser one file at a time.|
+|Right     |                                                                                   |
+|Up/Down   |                                                                                   |
 |          |                                                                                   |
-|<PgUp>    | Scroll the hex editor and file browser one page at a time.                        |
-|<PgDn>    |                                                                                   |
+|PgUp      | Scroll the hex editor and file browser one page at a time.                        |
+|PgDn      |                                                                                   |
 |          |                                                                                   |
-|<Wheel>   | Scroll the hex editor and file browser one line/file at a time.                   |
+|Wheel     | Scroll the hex editor and file browser one line/file at a time.                   |
 |          |                                                                                   |
-|<d>       | Right.                                                                            |
-|<a>       | Left.                                                                             |
-|<w>       | Up.                                                                               |
-|<s>       | Down.                                                                             |
-|<SPACE>   | Start.                                                                            |
-|<z>       | Select.                                                                           |
-|</>       | B.                                                                                |
-|<.>       | A.                                                                                |
+|d         | Right.                                                                            |
+|a         | Left.                                                                             |
+|w         | Up.                                                                               |
+|s         | Down.                                                                             |
+|SPACE>    | Start.                                                                            |
+|z         | Select.                                                                           |
+|/         | B.                                                                                |
+|.         | A.                                                                                |
 
 ## Limitations
 - RAM is modifiable between 32K and 64K, any other value causes the simulation to fail.<br/>
