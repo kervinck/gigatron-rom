@@ -19,7 +19,7 @@
 
 byte checksum; // Global is simplest
 
-byte blinkyGt1[] = {
+const byte blinkyGt1[] PROGMEM = {
   0x7f, 0x00, 0x0b, // Segment 7f00: 11 bytes
   0x11, 0x50, 0x44, // 7f00 LDWI $4450  ; Load address of center of screen
   0x2b, 0x30,       // 7f03 STW  'p'    ; Store in variable 'p' (at $0030)
@@ -43,7 +43,7 @@ void setup() {
 void loop()
 {
   Serial.println("Reset Gigatron");
-  
+
   // In case we power on together with the Gigatron, this is a
   // good pause to wait for the video loop to have started
   delay(350);
@@ -87,23 +87,20 @@ void loop()
 // concatenated frames to the Gigatron. Between segments
 // it is communicating upstream with the serial port.
 
-void sendGt1File(byte *gt1, unsigned gt1Size)
+void sendGt1File(const byte *gt1, unsigned gt1Size)
 {
-  #define readNext() (gt1Size>0 ? (gt1Size--, *gt1++) : 0)
-
-  byte segment[300] = {0};
-  word address = readNext();
+  #define byte_gt1(x) (pgm_read_byte_near(gt1 + (x)))
+  #define adr_gt1(x) (((word)byte_gt1(x) << 8) | byte_gt1((x) + 1))
 
   // Any number n > 0 of segments
+  word address;
+  int seg_start = 0;
+  byte segment[256];
   do {
-    address = (address << 8) + readNext();
-
-    int len = readNext();
+    address = adr_gt1(seg_start);
+    int len = byte_gt1(seg_start + 2);
     if (!len)
       len = 256;
-
-    for (int i=0; i<len; i++)
-      segment[i] = readNext();
 
     // Check that segment doesn't cross page boundary
     if ((address & 255) + len > 256) {
@@ -111,47 +108,57 @@ void sendGt1File(byte *gt1, unsigned gt1Size)
       return;
     }
 
+    // Read data out of PROGMEM
+    for (int i = 0; i < len; ++i) {
+      segment[i] = byte_gt1(seg_start + 3 + i);
+    }
+
     // Send downstream
     Serial.print("> Load ");
     Serial.print(len);
     Serial.println(" bytes");
-    sendGt1Segment(address, len, segment);
+    int page_size = (address | 0xff) - address;
+    sendGt1Segment(address, page_size, len, segment);
 
-    address = readNext();
-  } while (address != 0);
+    // Adjust pointer to the start of the next segment
+    seg_start += len + 3;
+  } while (byte_gt1(seg_start) != 0);
 
-  // Two bytes for start address
-  address = readNext();
-  address = (address << 8) + readNext();
+  seg_start++; // Skip over terminating byte
+
+  // Read start address
+  address = adr_gt1(seg_start);
   if (address != 0) {
     Serial.print("> Start $");
     Serial.println(address, HEX);
-    sendGt1Execute(address, segment+240);
+    sendGt1Execute(address, NULL);
   }
 }
 
 // Send a 1..256 byte code or data segment into the Gigatron by
 // repacking it into Loader frames of max N=60 payload bytes each.
-void sendGt1Segment(word address, int len, byte data[])
+void sendGt1Segment(word address, int page_size, int len, const byte data[])
 {
   noInterrupts();
   byte n = min(N, len);
-  resetChecksum(n, address, data);
+  byte pn = min(N, page_size);
+  resetChecksum(pn, n, address, data);
 
   // Send segment data
-  for (int i=0; i<len; i+=n) {
-    n = min(N, len-i);
-    sendFrame('L', n, address+i, data+i);
+  for (int i=0; i<page_size; i+=pn) {
+    pn = min(N, page_size-i);
+    n = (i >= len) ? 0 : min(N, len-i);
+    sendFrame('L', pn, n, address+i, data+i);
   }
   interrupts();
 }
 
 // Send execute command
-void sendGt1Execute(word address, byte data[])
+void sendGt1Execute(word address, const byte data[])
 {
   noInterrupts();
-  resetChecksum(0, address, data);  
-  sendFrame('L', 0, address, data);
+  resetChecksum(0, 0, address, data);
+  sendFrame('L', 0, 0, address, data);
   interrupts();
 }
 
@@ -171,18 +178,18 @@ void sendController(byte value, int n)
   interrupts(); // So delay() can work again
 }
 
-void resetChecksum(byte n, word address, byte *data)
+void resetChecksum(byte pn, byte n, word address, const byte *data)
 {
   // Send one frame with false checksum to force
   // a checksum resync at the receiver
   checksum = 0;
-  sendFrame(-1, n, address, data);
+  sendFrame(-1, pn, n, address, data);
 
   // Setup checksum properly
   checksum = 'g';
 }
 
-void sendFrame(byte firstByte, byte len, word address, byte message[])
+void sendFrame(byte firstByte, byte page_len, byte data_len, word address, const byte *message)
 {
   // Send one frame of data
   //
@@ -199,11 +206,11 @@ void sendFrame(byte firstByte, byte len, word address, byte message[])
 
   sendFirst(firstByte, 8);     // Protocol byte
   checksum += firstByte << 6;  // Keep Loader.gcl dumb
-  sendBits(len, 6);            // Length 0, 1..60
+  sendBits(page_len, 6);       // Length 0, 1..60
   sendBits(address&255, 8);    // Low address bits
   sendBits(address>>8, 8);     // High address bits
   for (byte i=0; i<N; i++)     // Payload bytes
-    sendBits(message[i], 8);
+    sendBits(i < data_len ? message[i] : 0, 8);
   byte lastByte = -checksum;   // Checksum must come out as 0
   sendBits(lastByte, 8);
   checksum = lastByte;         // Concatenate checksums
