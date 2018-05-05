@@ -25,7 +25,11 @@
 
     <style>
         kbd {
-            background: black;
+            background-color: black;
+        }
+
+        #vga {
+            background-color: black;
         }
 
     </style>
@@ -33,60 +37,78 @@
 
 <body>
     <div class="container">
-        <div class="row">
+        <div class="row mt-3">
             <div class="col">
                 <div class="mx-auto" style="width:640px;">
 
-                    <h1 class="display-4">Gigatron</h1>
+                    <!-- LOGO -->
+                    <a href="https://gigatron.io">
+						<img src="https://gigatron.io/wp-content/uploads/2018/02/cropped-logo2.png" width="350" height="70">
+					</a>
 
+                    <hr>
+
+                    <!-- BLINKENLIGHTS -->
                     <canvas id="blinken-lights" width="0" height="0"></canvas>
 
-                    <canvas id="vga" class="border border-white rounded mx-auto" width="640" height="480"></canvas>
+                    <!-- VGA -->
+                    <canvas id="vga" class="border border-white rounded p-1" width="640" height="480"></canvas>
 
-                    <div class="form-row">
-                        <div class="col-sm-3">
-                            <input id="volume-slider" type="range" class="custom-range"> Volume <label for="volume-slider"></label>
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-6">
+                            <!-- KEYMAP -->
+                            <dl class="row mb-0">
+                                <dt class="col-sm-2"><span class="badge badge-pill badge-secondary">select</span></dt>
+                                <dd class="col-sm-4"><kbd>Q</kbd></dd>
+
+                                <dt class="col-sm-2"><span class="badge badge-pill badge-secondary">start</span></dt>
+                                <dd class="col-sm-4"><kbd>W</kbd></dd>
+                            </dl>
+                            <dl class="row">
+                                <dt class="col-sm-2"><span class="badge badge-pill badge-secondary">A</span></dt>
+                                <dd class="col-sm-4"><kbd>A</kbd></dd>
+
+                                <dt class="col-sm-2"><span class="badge badge-pill badge-secondary">B</span></dt>
+                                <dd class="col-sm-4"><kbd>S</kbd></dd>
+                            </dl>
                         </div>
-                        <div class="col">
-                            <span id="unmute" class="btn btn-sm btn-danger oi oi-volume-off d-none" style="width:30px;" data-toggle="tooltip" title="Unmute"></span>
-                            <span id="mute" class="btn btn-sm btn-success oi oi-volume-high" style="width:30px;" data-toggle="tooltip" title="Mute"></span>
+
+                        <div class="col-6">
+                            <!-- VOLUME -->
+                            <div class="form-row">
+                                <div class="col-sm-10">
+                                    <input id="volume-slider" type="range" class="custom-range"> Volume <label for="volume-slider"></label>
+                                </div>
+                                <div class="col">
+                                    <span id="unmute" class="btn btn-sm btn-danger oi oi-volume-off d-none" style="width:30px;" data-toggle="tooltip" title="Unmute"></span>
+                                    <span id="mute" class="btn btn-sm btn-success oi oi-volume-high" style="width:30px;" data-toggle="tooltip" title="Mute"></span>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
 
-                    <!-- KEYMAP -->
-                    <dl class="row">
-                        <dt class="col-sm-1"><span class="badge badge-pill badge-secondary">select</span></dt>
-                        <dd class="col-sm-5"><kbd>Q</kbd></dd>
-
-                        <dt class="col-sm-1"><span class="badge badge-pill badge-secondary">start</span></dt>
-                        <dd class="col-sm-5"><kbd>W</kbd></dd>
-
-                        <dt class="col-sm-1"><span class="badge badge-pill badge-secondary">A</span></dt>
-                        <dd class="col-sm-5"><kbd>A</kbd></dd>
-
-                        <dt class="col-sm-1"><span class="badge badge-pill badge-secondary">B</span></dt>
-                        <dd class="col-sm-5"><kbd>S</kdb></dd>
-						</dl>
-				</div>
-			</div>
-		</div>
-
-		<!--div class="form-group">
+        <!--div class="form-group">
 			<button id="load" type="button" class="btn btn-warning">Loader</button>
 		</div-->
-	</div>
+    </div>
 
-	<div id="error-modal" class="modal fade" role="alert">
-		<div class="modal-dialog" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h4>Error</h4>
-					<button type="button" class="close" data-dismiss="modal"><span class="oi oi-x"></span></button>
-				</div>
-				<div id="error-modal-body" class="modal-body">
-				</div>
-			</div>
-		</div>
-	</div>
+    <div id="error-modal" class="modal fade" role="alert">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4>Error</h4>
+                    <button type="button" class="close" data-dismiss="modal"><span class="oi oi-x"></span></button>
+                </div>
+                <div id="error-modal-body" class="modal-body">
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
+
 </html>

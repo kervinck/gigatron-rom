@@ -12,6 +12,8 @@ var audio;
 var gamepad;
 
 $(function() {
+    $('[data-toggle="tooltip"]').tooltip();
+
     let muteButton = $('#mute');
     let unmuteButton = $('#unmute');
     let volumeSlider = $('#volume-slider');
