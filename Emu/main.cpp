@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
             // Audio
             Audio::playSample();
 
-            // Upload user code to loader
+            // Loader
             Loader::upload(vgaY);
 
             vgaX = 0;

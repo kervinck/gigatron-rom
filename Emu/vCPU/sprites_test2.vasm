@@ -1,0 +1,482 @@
+; **************************************************************************************************
+; **************************************************************************************************
+;  THIS WILL NOT RUN ON REAL HARDWARE UNLESS YOU BURN THE NATIVE CODE AT THE BOTTOM
+;  OF THIS FILE INTO THE GIGATRONS ROM AT THE CORRECT ADDRESS, EMULATION ONLY!
+; **************************************************************************************************
+; **************************************************************************************************
+
+; sprite test
+
+
+vram        EQU     0x0800
+
+rand        EQU     0x06
+videoY      EQU     0x09
+frameCount  EQU     0x0E
+sysFn       EQU     0x22
+
+dstAddr     EQU     0x30
+vbase       EQU     0x32
+pixels      EQU     0x34
+frame       EQU     0x36
+xyPos       EQU     0x38
+xyPosHi     EQU     0x3A
+xyVel       EQU     0x3C
+xyVelHi     EQU     0x3E
+i           EQU     0x40
+j           EQU     0x42
+k           EQU     0x44
+delay       EQU     0x46
+one         EQU     0x48
+mask1       EQU     0x4A
+mask2       EQU     0x4C
+scratch     EQU     0x4E
+
+pixelsArray EQU     0x50
+xyPosArray  EQU     0x82
+xyVelArray  EQU     0xB2
+
+
+xExtent     EQU     0x96
+yExtent     EQU     0x6e
+
+numSprites  EQU     24
+   
+   
+_startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
+
+_callTable_         EQU     0x00FE      ; call addresses are automatically stored here by the assembler, it grows downwards,
+                                        ; for every NEW call address; make sure it doesn't crash into anything important
+_singleStepWatch_   EQU     k           ; the single step debugger watches this variable location to decide when to step,
+                                        ; choose a variable that is updated often
+
+SYS_SpriteBlast_146 EQU     0x2300      ; 10x10 pixel blast, sprite data is embedded in instructions
+SYS_ClearRow32_54   EQU     0x2500      ; clear 32 pixels at a time, native code that is defined with either DBR or DWR is written to ROM at this address
+     
+
+start       EQU     0x200
+loopinit    EQU     0x300
+vblank0     EQU     0x400
+
+     
+start       LDWI    vram
+            STW     vbase       ; vram base address
+
+            LDWI    xyPosArray
+            STW     xyPos
+            LDWI    xyPosArray + 1
+            STW     xyPosHi
+            
+            LDWI    xyVelArray
+            STW     xyVel
+            LDWI    xyVelArray + 1
+            STW     xyVelHi
+
+            LDWI    pixelsArray
+            STW     pixels 
+
+            ; clear screen
+            LDWI    SYS_ClearRow32_54   ; clears 32 row pixels at a time
+            STW     sysFn
+
+clear       SYS     0xF3        ; SYS_ClearRow32_54, 270 - 54/2 = 0xF3
+            LDWI    0x0020
+            ADDW    vbase
+            STW     vbase
+            LD      vbase+1
+            SUBI    0x7F
+            BLT     clear
+            LDI     0x07        ; finish off last row
+            ST      i
+last_row    SYS     0xF3        ; SYS_ClearRow32_54, 270 - 54/2 = 0xF3
+            LDWI    0x0020
+            ADDW    vbase
+            STW     vbase
+            LD      i
+            SUBI    0x01
+            ST      i
+            BGT     last_row
+
+            LDWI    SYS_SpriteBlast_146
+            STW     sysFn
+
+            LDWI    vram
+            STW     vbase
+
+            ; constants
+constants   LDWI    0x3F7F
+            STW     mask1
+            LDWI    0x0707
+            STW     mask2
+            LDI     0x00
+            ST      i
+            LDWI    0x0001
+            STW     one
+            LDWI    192
+            STW     delay
+            
+            ; vblank counter
+            LD      frameCount
+            STW     frame
+            
+            ; random positions
+init        LD      rand
+            ANDI    0x03
+            BEQ     case0
+            SUBI    0x01
+            BEQ     case1
+            SUBI    0x01
+            BEQ     case2
+            SUBI    0x01
+            BEQ     case3
+            
+case0       LDWI    0x0101
+            DOKE    xyVel
+            BRA     randpos
+
+case1       LDWI    0x01FF
+            DOKE    xyVel
+            BRA     randpos
+
+case2       LDWI    0xFF01
+            DOKE    xyVel
+            BRA     randpos
+
+case3       LDWI    0xFFFF
+            DOKE    xyVel
+            
+randpos     LDW     rand
+            ANDW    mask1
+            ORW     mask2
+            DOKE    xyPos
+            ADDW    vbase       ; generate vram address
+            DOKE    pixels
+
+            INC     xyPos
+            INC     xyPos
+            INC     xyVel
+            INC     xyVel
+            INC     pixels
+            INC     pixels
+            
+            CALL    vblank0
+            
+            INC     i
+            LD      i
+            SUBI    numSprites
+            BLT     init
+            
+            CALL    loopinit
+            
+            
+            ; main loop
+loopinit    LDWI    xyPosArray
+            STW     xyPos
+            LDWI    xyPosArray + 1
+            STW     xyPosHi
+            LDWI    xyVelArray
+            STW     xyVel
+            LDWI    xyVelArray + 1
+            STW     xyVelHi
+            LDWI    pixelsArray
+            STW     pixels
+
+            LDI     0x00
+            ST      i
+
+xbounds     LDW     xyPos       ; x position bounds checking
+            PEEK
+            BEQ     xflip
+            SUBI    xExtent
+            BLT     ybounds
+        
+xflip       LDW     xyVel
+            PEEK
+            XORI    0xFE        ; flip x velocity
+            POKE    xyVel
+        
+ybounds     LDW     xyPosHi     ; y position bounds checking 
+            PEEK
+            BEQ     yflip
+            SUBI    yExtent
+            BLT     velocity
+        
+yflip       LDW     xyVelHi
+            PEEK
+            XORI    0xFE        ; flip y velocity
+            POKE    xyVelHi
+        
+velocity    LDW     xyPos       ; xpos += xvel
+            PEEK
+            ST      scratch
+            LDW     xyVel
+            PEEK
+            ADDW    scratch
+            POKE    xyPos
+            
+            LDW     xyPosHi     ; ypos += yvel
+            PEEK
+            ST      scratch
+            LDW     xyVelHi
+            PEEK
+            ADDW    scratch
+            POKE    xyPosHi
+            
+            LDW     xyPos
+            DEEK
+            ADDW    vbase       ; generate vram address
+            DOKE    pixels
+
+            INC     xyPos       ; increment array pointers
+            INC     xyPos
+            INC     xyPosHi
+            INC     xyPosHi
+            INC     xyVel
+            INC     xyVel
+            INC     xyVelHi
+            INC     xyVelHi
+            INC     pixels
+            INC     pixels
+
+            INC     i
+            LD      i
+            SUBI    numSprites 
+            BLT     xbounds
+
+            LDWI    pixelsArray
+            STW     pixels
+            LDI     0x00
+            ST      k
+
+draw        LDW     pixels
+            DEEK
+            STW     dstAddr
+            SYS     0xC5        ; SYS_SpriteBlast_146, 270 - 146/2 = 0xC5
+
+            INC     pixels
+            INC     pixels
+
+            INC     k
+            LD      k
+            SUBI    numSprites 
+            BLT     draw
+            
+            CALL    vblank0
+            
+            BRA     loopinit
+
+            
+            ; subroutines
+vblank0     LD      frameCount
+            SUBW    frame
+            BEQ     vblank0
+            LD      frameCount
+            STW     frame
+            RET
+
+vblank1     LD      videoY
+            ANDI    0x01
+            BEQ     vblank1
+            RET
+
+vblank2     LD      0x0000
+            STW     i
+loopdelay   LDW     i
+            ADDW    one
+            STW     i
+            SUBW    delay
+            BLT     loopdelay
+            RET
+
+            
+; native code routines that are written into the emulator's fake ROM using either the DBR/DWR commands or the native instruction set
+; the native instruction assembler has access to the same functionality as the vasm assembler, (labels, equates, mutables, etc).
+; it's only caveats are:
+; 1: each instruction is prefaced with a period to clearly differentiate it from a vasm instruction
+; 2: you cannot mix and match vasm instructions with native instructions within the same segment, (in reality they are executed in 
+; completely different parts of the memory map, i.e. native in fake ROM and vasm in RAM)
+; 3: you must follow the SYS calling conventions exactly
+SYS_SpriteBlast_146 .LD     [dstAddr],X         ; dst line 0
+                    .LD     [dstAddr + 1],Y
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    
+                    .LD     [dstAddr],X         ; dst line 1
+                    .LD     0x01                
+                    .ADDA   [dstAddr + 1],Y
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+
+                    .LD     [dstAddr],X         ; dst line 2
+                    .LD     0x02                
+                    .ADDA   [dstAddr + 1],Y
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+
+                    .LD     [dstAddr],X         ; dst line 3
+                    .LD     0x03                
+                    .ADDA   [dstAddr + 1],Y
+                    .ST     $00,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $FF,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $FF,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $00,[Y,X++]
+
+                    .LD     [dstAddr],X         ; dst line 4
+                    .LD     0x04                
+                    .ADDA   [dstAddr + 1],Y
+                    .ST     $00,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $FF,[Y,X++]
+                    .ST     $30,[Y,X++]
+                    .ST     $FF,[Y,X++]
+                    .ST     $FF,[Y,X++]
+                    .ST     $30,[Y,X++]
+                    .ST     $FF,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $00,[Y,X++]
+
+                    .LD     [dstAddr],X         ; dst line 5
+                    .LD     0x05                
+                    .ADDA   [dstAddr + 1],Y
+                    .ST     $00,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $FF,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $FF,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $00,[Y,X++]
+
+                    .LD     [dstAddr],X         ; dst line 6
+                    .LD     0x06                
+                    .ADDA   [dstAddr + 1],Y
+                    .ST     $00,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $00,[Y,X++]
+
+                    .LD     [dstAddr],X         ; dst line 7
+                    .LD     0x07                
+                    .ADDA   [dstAddr + 1],Y
+                    .ST     $00,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $00,[Y,X++]
+
+                    .LD     [dstAddr],X         ; dst line 8
+                    .LD     0x08                
+                    .ADDA   [dstAddr + 1],Y
+                    .ST     $00,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $03,[Y,X++]
+                    .ST     $00,[Y,X++]
+
+                    .LD     [dstAddr],X         ; dst line 9
+                    .LD     0x09                
+                    .ADDA   [dstAddr + 1],Y
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    .ST     $00,[Y,X++]
+                    
+                    .LD     0x03,Y
+                    .JMP    Y,0xCB
+                    .LD     0xB7                ; 0 - (14 + number of instructions + (even ? 2 : 3)) / 2 = 0xBF, number of instructions = 146
+
+     
+SYS_ClearRow32_54   .LD     [vbase],X
+                    .LD     [vbase+1],Y
+
+                    .LD     0x00
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+                    .ST     [Y,X++]
+
+                    .LD     0x03,Y
+                    .JMP    Y,0xCB
+                    .LD     0xE5        ; 0 - ((14 + number of instructions + (even ? 2 : 3)) / 2) = 0xE5, number of instructions = 38

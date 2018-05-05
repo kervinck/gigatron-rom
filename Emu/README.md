@@ -94,7 +94,7 @@ _singleStepWatch_   EQU     xyPos
 - In this example xyPos is a pointer into zero page memory, pointing to a variable that changes<br/>
   its value often.<br/>
 - **_F6_** toggles debugging on and off and may be used as a pause or freeze.<br/>
-- **_F10_** single steps the currently loaded code based on the _singleStepWatch variable.<br/>
+- **_F10_** single steps the currently loaded code based on the _singleStepWatch_ variable.<br/>
 - All other keys function normally as in the main editor mode, except for **_L_**, **_F1_**<br/>
   and **_F5_** which are ignored.<br/>
 
