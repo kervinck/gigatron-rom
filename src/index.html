@@ -1,68 +1,72 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-	<meta charset="UTF-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-	<title>Gigatron</title>
+    <title>Gigatron</title>
 
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
-	<!--script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script-->
-	<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
-	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
 
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.0/slate/bootstrap.min.css" integrity="sha384-A0hm/Pn0Gvk8w7szlEuTOZrIyQCCBNXQF9ccseoCI36nWRfMEAapo5UJ56zLPvPw" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/open-iconic/1.1.1/font/css/open-iconic-bootstrap.min.css" integrity="sha256-BJ/G+e+y7bQdrYkS2RBTyNfBHpA9IuGaPmf9htub5MQ=" crossorigin="anonymous" />
+    <script src="disassembler.js"></script>
+    <script src="gigatron.js"></script>
+    <script src="vga.js"></script>
+    <script src="audio.js"></script>
+    <script src="blinkenlights.js"></script>
+    <script src="gamepad.js"></script>
+    <script src="loader.js"></script>
+    <script src="ram-view.js"></script>
+    <script src="rom-view.js"></script>
+    <script src="scroller.js"></script>
+    <script src="index.js"></script>
 
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.0/slate/bootstrap.min.css" integrity="sha384-A0hm/Pn0Gvk8w7szlEuTOZrIyQCCBNXQF9ccseoCI36nWRfMEAapo5UJ56zLPvPw" crossorigin="anonymous">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/open-iconic/1.1.1/font/css/open-iconic-bootstrap.min.css" integrity="sha256-BJ/G+e+y7bQdrYkS2RBTyNfBHpA9IuGaPmf9htub5MQ=" crossorigin="anonymous" />
-	<script src="disassembler.js"></script>
-	<script src="gigatron.js"></script>
-	<script src="vga.js"></script>
-	<script src="audio.js"></script>
-	<script src="blinkenlights.js"></script>
-	<script src="gamepad.js"></script>
-	<script src="loader.js"></script>
-	<script src="ram-view.js"></script>
-	<script src="rom-view.js"></script>
-	<script src="scroller.js"></script>
-	<script src="index.js"></script>
+    <style>
+        #ram-textarea,
+        #rom-div,
+        #regs-table {
+            font-size: 12pt;
+            font-family: monospace;
+        }
 
-	<style>
-		#ram-textarea, #rom-div, #regs-table {
-			font-size: 12pt;
-			font-family: monospace;
-		}
+        #rom-div {
+            height: 600px;
+            overflow: hidden;
+        }
 
-		#rom-div {
-			height: 600px;
-			overflow: hidden;
-		}
-		#rom-div div {
-			padding-left: 10px;
-		}
-	</style>
+        #rom-div div {
+            padding-left: 10px;
+        }
+
+    </style>
 </head>
+
 <body>
-	<div class="container">
-		<h1 class="display-4">Gigatron <code id="mhz"></code></h1>
-		<canvas id="blinken-lights" width="0" height="0"></canvas>
-		<div class="row">
-			<div class="col-sm-4">
+    <div class="container">
+        <h1 class="display-4">Gigatron <code id="mhz"></code></h1>
+        <canvas id="blinken-lights" width="0" height="0"></canvas>
+        <div class="row">
+            <div class="col-sm-4">
 
-				<!-- KEYMAP -->
-				<dl class="row pt-2">
-					<dt class="col-sm-2"><span class="badge badge-pill badge-secondary">select</span></dt>
-				  <dd class="col-sm-4"><kbd>Q</kbd></dd>
+                <!-- KEYMAP -->
+                <dl class="row pt-2">
+                    <dt class="col-sm-2"><span class="badge badge-pill badge-secondary">select</span></dt>
+                    <dd class="col-sm-4"><kbd>Q</kbd></dd>
 
-					<dt class="col-sm-2"><span class="badge badge-pill badge-secondary">start</span></dt>
-					<dd class="col-sm-4"><kbd>W</kbd></dd>
+                    <dt class="col-sm-2"><span class="badge badge-pill badge-secondary">start</span></dt>
+                    <dd class="col-sm-4"><kbd>W</kbd></dd>
 
-					<dt class="col-sm-2"><span class="badge badge-pill badge-secondary">A</span></dt>
-					<dd class="col-sm-4"><kbd>A</kbd></dd>
+                    <dt class="col-sm-2"><span class="badge badge-pill badge-secondary">A</span></dt>
+                    <dd class="col-sm-4"><kbd>A</kbd></dd>
 
-					<dt class="col-sm-2"><span class="badge badge-pill badge-secondary">B</span></dt>
-					<dd class="col-sm-4"><kbd>S</kdb></dd>
+                    <dt class="col-sm-2"><span class="badge badge-pill badge-secondary">B</span></dt>
+                    <dd class="col-sm-4"><kbd>S</kdb></dd>
 				</dl>
 
 				<!-- REGISTERS -->

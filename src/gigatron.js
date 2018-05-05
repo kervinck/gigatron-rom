@@ -167,9 +167,9 @@ class Gigatron {
         this.ram[addr] = b;
 
         switch (mode) {
-            case 4:
+            case 4: // XXX not clear whether x++ mode takes priority
                 this.x = b;
-                break; // not clear whether x++ mode takes priority
+                break;
             case 5:
                 this.y = b;
                 break;
@@ -188,31 +188,31 @@ class Gigatron {
         let base = this.pc & 0xff00;
 
         switch (mode) {
-            case 0:
+            case 0: // jmp
                 c = true;
                 base = this.y << 8;
-                break; // jmp
-            case 1:
+                break;
+            case 1: // bgt
                 c = ac > ZERO;
-                break; // bgt
-            case 2:
+                break;
+            case 2: // blt
                 c = ac < ZERO;
-                break; // blt
-            case 3:
+                break;
+            case 3: // bne
                 c = ac != ZERO;
-                break; // bne
-            case 4:
+                break;
+            case 4: // beq
                 c = ac == ZERO;
-                break; // beq
-            case 5:
+                break;
+            case 5: // bge
                 c = ac >= ZERO;
-                break; // bge
-            case 6:
+                break;
+            case 6: // ble
                 c = ac <= ZERO;
-                break; // ble
-            case 7:
+                break;
+            case 7: // bra
                 c = true;
-                break; // bra
+                break;
         }
 
         if (c) {
@@ -256,7 +256,8 @@ class Gigatron {
             case 0:
                 return d;
             case 1:
-                return this.ram[d]; // RAM always has at least 1 page
+                // RAM always has at least 1 page, so no need to mask address
+                return this.ram[d];
             case 2:
                 return this.ac;
             case 3:
