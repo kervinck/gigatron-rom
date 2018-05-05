@@ -80,7 +80,7 @@ $(function() {
             /* advance the simulation until the audio queue is full,
              * or 1000ms of simulated time has passed.
              */
-            let cycles = cpu.hz / 1;
+            let cycles = cpu.hz / 100;
             audio.drain();
             while (cycles-- >= 0 && !audio.full) {
                 cpu.tick();

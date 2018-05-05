@@ -34,23 +34,25 @@ class Gamepad {
 
     /** start handling key events */
     start() {
-        document.addEventListener('keydown', (event) => {
-            let bit = this.bits[event.key];
-            if (bit) {
-                this.cpu.inReg &= ~bit;
-                event.preventDefault();
-            }
-        });
+        $(document)
+            .on('keydown', (event) => {
+                let bit = this.bits[event.key];
+                if (bit) {
+                    this.cpu.inReg &= ~bit;
+                    event.preventDefault();
+                }
+            })
+            .on('keyup', (event) => {
+                let bit = this.bits[event.key];
+                if (bit) {
+                    this.cpu.inReg |= bit;
+                    event.preventDefault();
+                }
+            });
     }
 
     /** stop handling key events */
     stop() {
-        document.addEventListener('keyup', (event) => {
-            let bit = this.bits[event.key];
-            if (bit) {
-                this.cpu.inReg |= bit;
-                event.preventDefault();
-            }
-        });
+        $(document).off('keydown keyup');
     }
 }
