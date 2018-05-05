@@ -20,15 +20,13 @@ class Audio {
         this.volume = 1.0;
         this.cycle = 0;
         this.bias = 0;
-        this.alpha = 0.8;
+        this.alpha = 0.99;
         this.scheduled = 0;
-        this.tailTime = 0; // time at which tail buffer will start
-        this.headTime = 0; // time at which head buffer will end
         this.full = false;
 
         let numSamples = Math.floor(SAMPLES_PER_SECOND / 100);
         this.buffers = [];
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 8; i++) {
             let buffer = context.createBuffer(1,
                 numSamples,
                 SAMPLES_PER_SECOND);
@@ -38,6 +36,8 @@ class Audio {
         this.headBufferIndex = 0;
         this.tailBufferIndex = 0;
         this.duration = this.buffers[0].duration;
+        this.tailTime = 0; // time at which tail buffer will start
+        this.headTime = this.duration; // time at which head buffer will end
         this.channelData = this.buffers[0].getChannelData(0);
         this.sampleIndex = 0;
     }
