@@ -236,9 +236,15 @@ namespace Loader
 
     void uploadDirect(void)
     {
+        bool hasRomCode = false;
+        bool hasRamCode = false;
+
         uint16_t executeAddress = Editor::getLoadBaseAddress();
         std::string filename = *Editor::getFileName(Editor::getCursorY());
         std::string filepath = std::string("./vCPU/" + filename);
+
+        // Reset single step watch address to video line counter
+        Editor::setSingleStepWatchAddress(VIDEO_Y_ADDRESS);
 
         // Upload raw vCPU code
         if(filename.find(".vcpu") != filename.npos  ||  filename.find(".gt1") != filename.npos)
@@ -256,6 +262,10 @@ namespace Loader
                     Cpu::setRAM(address+i, gt1File._segments[j]._dataBytes[i]);
                 }
             }
+
+            hasRamCode = true;
+            hasRomCode = false;
+            _disableUploads = false;
         }
         // Upload vCPU assembly code
         else if(filename.find(".vasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
@@ -274,11 +284,10 @@ namespace Loader
             gt1Segment._loAddress = address & 0x00FF;
             gt1Segment._hiAddress = (address & 0xFF00) >>8;
 
-            bool isRomCode = false;
             Assembler::ByteCode byteCode;
             while(!Assembler::getNextAssembledByte(byteCode))
             {
-                if(byteCode._isRomAddress) isRomCode = true;
+                (byteCode._isRomAddress) ? hasRomCode = true : hasRamCode = true;
 
                 // Custom address
                 if(byteCode._isCustomAddress)
@@ -312,7 +321,7 @@ namespace Loader
             }
 
             // Don't save gt1 file for any asm files that contain native rom code
-            if(!isRomCode  &&  !saveGt1File(filepath, gt1File)) return;
+            if(!hasRomCode  &&  !saveGt1File(filepath, gt1File)) return;
         }
         // Invalid file
         else
@@ -322,7 +331,7 @@ namespace Loader
         }
 
         // Execute code
-        if(!_disableUploads)
+        if(!_disableUploads  &&  hasRamCode)
         {
             Cpu::setRAM(0x0016, executeAddress-2 & 0x00FF);
             Cpu::setRAM(0x0017, (executeAddress & 0xFF00) >>8);

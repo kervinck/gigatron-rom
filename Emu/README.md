@@ -50,13 +50,14 @@ and possibly even Android. As of ver0.3.2 it has only been tested on Microsoft W
 |Key        | Function                                                                          |
 |:---------:|-----------------------------------------------------------------------------------|
 |ESC        | Quits the application.                                                            |
-|l          | Loads external vCPU files within the vCPU directory, this code is uploaded to     |
+|L or l     | Loads external vCPU files within the vCPU directory, this code is uploaded to     |
 |           | an editable load address. Loading user vCPU code to system critical addresses     |
 |           | can cause the emulator to hang, 0x0200 is guaranteed to be safe.                  |
-|r          | Switches Hex Editor between RAM, ROM(0) and ROM(1).                               |
+|R or r     | Switches Hex Editor between RAM, ROM(0) and ROM(1).                               |
+|F1         | Fast reset, performs the same action as a long hold of Start.                     |
 |F5         | Executes whatever code is present at the load address.                            |
-|F6         | Toggles debugging mode, simulation will pause, only 3 keys currently work in this |
-|           | mode, F6, F10 and ESC.                                                            |
+|F6         | Toggles debugging mode, simulation will pause and allow you to single step using  |
+|           | F10.                                                                              |
 |F10        | Only functions in debugging mode, will single step the simulation based on a      |
 |           | memory location changing it's value.                                              |
 |ENTER/CR   | Directly loads external vCPU code if editor is in file browse mode, otherwise     |
@@ -73,14 +74,33 @@ and possibly even Android. As of ver0.3.2 it has only been tested on Microsoft W
 |           |                                                                                   |
 |Mouse Wheel| Scroll the hex editor and file browser one line/file at a time.                   |
 |           |                                                                                   |
-|d          | Right.                                                                            |
-|a          | Left.                                                                             |
-|w          | Up.                                                                               |
-|s          | Down.                                                                             |
+|D or d     | Right.                                                                            |
+|A or a     | Left.                                                                             |
+|W or w     | Up.                                                                               |
+|S or s     | Down.                                                                             |
 |SPACE      | Start.                                                                            |
-|z          | Select.                                                                           |
+|Z or z     | Select.                                                                           |
 |/          | B.                                                                                |
 |.          | A.                                                                                |
+
+## Debugger
+- The debugger allows you to single step through your vCPU code based on a variable changing<br/>
+  its value. This variable by default is videoY located at address 0x0009, it counts horizontal<br/>
+  scan lines and thus should give decent resolution for most .vasm and .gt1 files.<br/>
+- The variable can be altered within a .vasm file like this:<br/>
+~~~
+_singleStepWatch_   EQU     xyPos
+~~~
+- In this example xyPos is a pointer into zero page memory, pointing to a variable that changes<br/>
+  its value often.<br/>
+- **_F6_** toggles debugging on and off and may be used as a pause or freeze.<br/>
+- **_F10_** single steps the currently loaded code based on the _singleStepWatch variable.<br/>
+- All other keys function normally as in the main editor mode, except for **_L_**, **_F1_**<br/>
+  and **_F5_** which are ignored.<br/>
+
+## Errors
+- All error reporting is sent to stderr, under Windows a seperate console is opened, (that is<br/>
+  probably hiding under the main display), that will contain any error messages.<br/>
 
 ## Limitations
 - RAM is modifiable between 32K and 64K, any other value causes the simulation to fail.<br/>

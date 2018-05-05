@@ -13,15 +13,18 @@
 
 namespace Cpu
 {
+    int64_t _clock = -2;
     uint8_t _IN = 0xFF, _XOUT = 0x00;
     uint8_t _ROM[ROM_SIZE][2], _RAM[RAM_SIZE];
 
 
+    int64_t getClock(void) {return _clock;}
     uint8_t getIN(void) {return _IN;}
     uint8_t getXOUT(void) {return _XOUT;}
     uint8_t getROM(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01];}
     uint8_t getRAM(uint16_t address) {return _RAM[address & (RAM_SIZE-1)];}
 
+    void setClock(int64_t clock) {_clock = clock;}
     void setIN(uint8_t in) {_IN = in;}
     void setXOUT(uint8_t xout) {_XOUT = xout;}
     void setRAM(uint16_t address, uint8_t data)

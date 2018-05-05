@@ -31,6 +31,9 @@ namespace Editor
     bool _hexEdit = false;
     bool _singleStep = false;
     bool _singleStepMode = false;
+    uint32_t _singleStepTicks = 0;
+    uint8_t _singleStepWatch = 0x00;
+
     MemoryMode _memoryMode = RAM;
     EditorMode _editorMode = Hex, _prevEditorMode = Hex;
     uint8_t _memoryDigit = 0;
@@ -38,7 +41,7 @@ namespace Editor
     uint16_t _hexBaseAddress = HEX_BASE_ADDRESS;
     uint16_t _loadBaseAddress = LOAD_BASE_ADDRESS;
     uint16_t _varsBaseAddress = VARS_BASE_ADDRESS;
-    uint16_t _singleStepWatchAddress = VARS_BASE_ADDRESS;
+    uint16_t _singleStepWatchAddress = VIDEO_Y_ADDRESS;
     int _fileNamesIndex = 0;
     std::vector<std::string> _fileNames;
 
@@ -172,6 +175,12 @@ namespace Editor
             // Testing
             case SDLK_F1:
             {
+                if(!_singleStepMode) Cpu::setClock(CLOCK_RESET);
+            }
+            break;
+
+            case SDLK_F2:
+            {
 #if 0
                 uint8_t x1 = rand() % GIGA_WIDTH;
                 uint8_t x2 = rand() % GIGA_WIDTH;
@@ -186,7 +195,7 @@ namespace Editor
             }
             break;
 
-            case SDLK_F2:
+            case SDLK_F3: 
             {
                 //Graphics::life(false);
             }
@@ -319,19 +328,25 @@ namespace Editor
             // Browse vCPU directory
             case SDLK_l:
             {
-                _cursorX = 0; _cursorY = 0;
-                _editorMode = _editorMode == Load ? Hex : Load;
-                if(_editorMode == Load) browseDirectory();
+                if(!_singleStepMode)
+                {
+                    _cursorX = 0; _cursorY = 0;
+                    _editorMode = _editorMode == Load ? Hex : Load;
+                    if(_editorMode == Load) browseDirectory();
+                }
             }
             break;
 
             // Execute vCPU code
             case SDLK_F5:
             {
-                Cpu::setRAM(0x0016, _hexBaseAddress-2 & 0x00FF);
-                Cpu::setRAM(0x0017, (_hexBaseAddress & 0xFF00) >>8);
-                Cpu::setRAM(0x001a, _hexBaseAddress-2 & 0x00FF);
-                Cpu::setRAM(0x001b, (_hexBaseAddress & 0xFF00) >>8);
+                if(!_singleStepMode)
+                {
+                    Cpu::setRAM(0x0016, _hexBaseAddress-2 & 0x00FF);
+                    Cpu::setRAM(0x0017, (_hexBaseAddress & 0xFF00) >>8);
+                    Cpu::setRAM(0x001a, _hexBaseAddress-2 & 0x00FF);
+                    Cpu::setRAM(0x001b, (_hexBaseAddress & 0xFF00) >>8);
+                }
             }
             break;
 
@@ -363,76 +378,76 @@ namespace Editor
     // Debug mode, handles it's own input and rendering
     bool singleStepDebug(void)
     {
-        static uint8_t oldWatch = Cpu::getRAM(_singleStepWatchAddress);
-
         // Single step
         if(_singleStep)
         {
+            // Timeout on change of variable
+            if(SDL_GetTicks() - _singleStepTicks > SINGLE_STEP_STALL_TIME)
+            {
+                setSingleStep(false); 
+                setSingleStepMode(false);
+                fprintf(stderr, "Editor::singleStepDebug() : Single step stall for %d milliseconds : exiting debugger...\n", SDL_GetTicks() - _singleStepTicks);
+            }
             // Watch variable 
-            if(Cpu::getRAM(_singleStepWatchAddress) != oldWatch) 
+            else if(Cpu::getRAM(_singleStepWatchAddress) != _singleStepWatch) 
             {
                 _singleStep = false;
                 _singleStepMode = true;
-            }
-            // Update graphics but only once every 16.66667ms
-            else
-            {
-                static uint64_t prevFrameCounter = 0;
-                double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
-
-                Timing::setFrameUpdate(false);
-                if(frameTime > TIMING_HACK)
-                {
-                    Timing::setFrameUpdate(true);
-                    Graphics::refreshScreen();
-                    Graphics::render(false);
-                    prevFrameCounter = SDL_GetPerformanceCounter();
-                }
             }
         }
 
         // Pause simulation and handle debugging keys
         while(_singleStepMode)
         {
+            // Update graphics but only once every 16.66667ms
+            static uint64_t prevFrameCounter = 0;
+            double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
+
+            Timing::setFrameUpdate(false);
+            if(frameTime > TIMING_HACK)
+            {
+                Timing::setFrameUpdate(true);
+                Graphics::refreshScreen();
+                Graphics::render(false);
+                prevFrameCounter = SDL_GetPerformanceCounter();
+            }
+
             SDL_Event event;
             while(SDL_PollEvent(&event))
             {
                 switch(event.type)
                 {
+                    case SDL_MOUSEWHEEL: handleMouseWheel(event); break;
+
                     case SDL_KEYUP:
                     {
                         // Leave debug mode
-                        switch(event.key.keysym.sym)
+                        if(event.key.keysym.sym == SDLK_F6)
                         {
-                            case SDLK_F6:
-                            {
-                                _editorMode = _prevEditorMode;
-                                _singleStepMode = false;
-                            }
-                            break; 
+                            _singleStep = false;
+                            _singleStepMode = false;
+                            _editorMode = _prevEditorMode;
+                        }
+                        else
+                        {
+                            handleKeyUp(event.key.keysym.sym);
                         }
                     }
                     break;
 
                     case SDL_KEYDOWN:
                     {
-                        switch(event.key.keysym.sym)
+                        // Single step
+                        if(event.key.keysym.sym == SDLK_F10)
                         {
-                            // Single step
-                            case SDLK_F10:
-                            {
-                                _singleStep = true;
-                                _singleStepMode = false;
-                                oldWatch = Cpu::getRAM(_singleStepWatchAddress);
-                            }
-                            break;
-
-                            // Quit
-                            case SDLK_ESCAPE:
-                            {
-                                SDL_Quit();
-                                exit(0);
-                            }
+                            _singleStep = true;
+                            _singleStepMode = false;
+                            _singleStepTicks = SDL_GetTicks();
+                            _singleStepWatch = Cpu::getRAM(_singleStepWatchAddress);
+                        }
+                        else
+                        {
+                            handleKeyDown(event.key.keysym.sym);
                         }
                     }
                     break;

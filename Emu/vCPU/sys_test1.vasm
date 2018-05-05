@@ -15,8 +15,8 @@ sysFn       EQU     0x22
 
 vbase       EQU     0x40
 pixels      EQU     0x42
-x           EQU     0x43
-y           EQU     0x44
+xx          EQU     0x43
+yy          EQU     0x44
 
                 
 SYS_DrawPixel2x2_32 EQU     0x2300      ; native code that is defined with either DBR or DWR is written to ROM at this address
@@ -26,28 +26,28 @@ SYS_DrawPixel2x2_32 EQU     0x2300      ; native code that is defined with eithe
             STW     vbase
 
             LDWI    0x0000      
-            STW     x
+            STW     xx
 
             LDWI    SYS_DrawPixel2x2_32
             STW     sysFn
             
 loop        LD      x_rand      ; x position
-            ST      x
+            ST      xx
             SUBI    x_bounds    ; works as (x_rand % x_bounds), but only because x_bounds is > 0x00FF/2, fails otherwise
             BLE     y_load
-            ST      x
+            ST      xx
 
 y_load      LD      y_rand      ; y position
-            ST      y
+            ST      yy
             SUBI    y_bounds    ; works as (y_rand % y_bounds), but only because y_bounds is > 0x00FF/3, fails otherwise
             BLE     draw
-            ST      y
+            ST      yy
             SUBI    y_bounds
             BLE     draw
-            ST      y
+            ST      yy
             
 draw        LDW     vbase
-            ADDW    x
+            ADDW    xx
             STW     pixels
         
             SYS     0xFE        ; SYS_DrawPixel2x2_32, 270 - 32/2 = 0xFE

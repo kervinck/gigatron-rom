@@ -31,11 +31,12 @@ xyVelHi     EQU     0x44
 colour      EQU     0x46
 i           EQU     0x48
 j           EQU     0x4A
-delay       EQU     0x4C
-one         EQU     0x4E
-mask1       EQU     0x50
-mask2       EQU     0x52
-scratch     EQU     0x54
+k           EQU     0x4C
+delay       EQU     0x4E
+one         EQU     0x50
+mask1       EQU     0x52
+mask2       EQU     0x54
+scratch     EQU     0x56
 
 rowBuffer0  EQU     0x70
 rowBuffer1  EQU     0x74
@@ -57,7 +58,7 @@ _startAddress_      EQU     0x0200      ; entry point for the code, if this is m
 
 _callTable_         EQU     0x00F8      ; call addresses are automatically stored here by the assembler, it grows downwards,
                                         ; for every NEW call address; make sure it doesn't crash into anything important
-_singleStepWatch_   EQU     xyPos       ; the single step debugger watches this variable location to decide when to step,
+_singleStepWatch_   EQU     k           ; the single step debugger watches this variable location to decide when to step,
                                         ; choose a variable that is updated often
 
 SYS_SpriteCopy_118  EQU     0x2300      ; 16 pixel memory copy
@@ -162,10 +163,7 @@ randpos     LDW     rand
             
             
             ; main loop
-loopinit    LDI     0x00
-            ST      i
-
-            LDWI    xyPosArray
+loopinit    LDWI    xyPosArray
             STW     xyPos
             LDWI    xyPosArray + 1
             STW     xyPosHi
@@ -180,6 +178,9 @@ loopinit    LDI     0x00
             STW     spriteData
             LDWI    buff1
             STW     backBuffer
+
+            LDI     0x00
+            ST      i
 
 xbounds     LDW     xyPos       ; x position bounds checking
             PEEK
@@ -249,12 +250,12 @@ save        STW     srcAddr
             SUBI    numSprites 
             BLT     xbounds
 
-            LDI     0x00
-            ST      i
             
             LDWI    pixelsArray
             STW     pixels
-                        
+            
+            LDI     0x00
+            ST      k
 
 draw        LDW     pixels
             DEEK
@@ -270,8 +271,8 @@ draw        LDW     pixels
             ADDI    0x04
             ST      spriteData + 1
 
-            INC     i
-            LD      i
+            INC     k
+            LD      k
             SUBI    numSprites 
             BLT     draw
             
@@ -279,15 +280,13 @@ draw        LDW     pixels
             ;CALL    vblank1
             CALL    vblank2
             
-            LDI     0x00
-            ST      i
-            
             LDWI    buff1
             STW     backBuffer
-            
             LDWI    pixelsArray
             STW     pixels
-            
+
+            LDI     0x00
+            ST      i
 
 restore     LDW     backBuffer
             STW     srcAddr

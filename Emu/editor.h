@@ -17,6 +17,7 @@
 #define HEX_BASE_ADDRESS   0x0200
 #define LOAD_BASE_ADDRESS  0x0200
 #define VARS_BASE_ADDRESS  0x0030
+#define VIDEO_Y_ADDRESS    0x0009
 
 
 namespace Editor

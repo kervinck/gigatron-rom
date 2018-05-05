@@ -32,15 +32,21 @@ int main(int argc, char* argv[])
     int vgaX = 0, vgaY = 0;
     int HSync = 0, VSync = 0;
 
-    for(long long t=-2; ; t++) 
+    for(;;)
     {
-        if(t < 0) S._PC = 0; // MCP100 Power-On Reset
+        int64_t clock = Cpu::getClock();
 
-        Cpu::State T = Cpu::cycle(S); // Update CPU
+        // MCP100 Power-On Reset
+        if(clock < 0) S._PC = 0; 
 
-        HSync = (T._OUT & 0x40) - (S._OUT & 0x40); // "VGA monitor" (use simple stdout)
+        // Update CPU
+        Cpu::State T = Cpu::cycle(S);
+
+        HSync = (T._OUT & 0x40) - (S._OUT & 0x40);
         VSync = (T._OUT & 0x80) - (S._OUT & 0x80);
-        if(VSync < 0) // Falling vSync edge
+        
+        // Falling vSync edge
+        if(VSync < 0)
         {
             vgaY = VSYNC_START;
 
@@ -51,18 +57,32 @@ int main(int argc, char* argv[])
                 Graphics::render();
             }
         }
+
+        // Pixel
         if(vgaX++ < HLINE_END)
         {
-            if(HSync) { }              // Visual indicator of hSync
-            else if(vgaX == HLINE_END) { }   // Too many pixels
-            else if(~S._OUT & 0x80) { } // Visualize vBlank pulse
-            else if(vgaX >=HPIXELS_START  &&  vgaX < HPIXELS_END  &&  vgaY >= 0  &&  vgaY < SCREEN_HEIGHT)
+            if(vgaY >= 0  &&  vgaY < SCREEN_HEIGHT  &&  vgaX >=HPIXELS_START  &&  vgaX < HPIXELS_END)
             {
                 if(!debugging) Graphics::refreshPixel(S, vgaX-HPIXELS_START, vgaY);
             }
         }
-        if(HSync > 0) // Rising hSync edge
+
+        // Watchdog
+        static int64_t clock_prev = clock;
+        if(!debugging  &&  clock > STARTUP_DELAY_CLOCKS  &&  clock - clock_prev > CPU_STALL_CLOCKS)
         {
+            clock_prev = CLOCK_RESET;
+            Cpu::setClock(CLOCK_RESET);
+            vgaX = 0, vgaY = 0;
+            HSync = 0, VSync = 0;
+            fprintf(stderr, "main(): CPU stall for %lld clocks : rebooting...\n", clock - clock_prev);
+        }
+
+        // Rising hSync edge
+        if(HSync > 0)
+        {
+            clock_prev = clock;
+
             Cpu::setXOUT(T._AC);
             
             // Audio
@@ -73,10 +93,17 @@ int main(int argc, char* argv[])
 
             vgaX = 0;
             vgaY++;
-            T._undef = rand() & 0xff; // Change this once in a while
+
+            // Change this once in a while
+            T._undef = rand() & 0xff;
         }
 
+        // Debugger
         debugging = Editor::singleStepDebug();
+
+        // Master clock
+        clock = Cpu::getClock();
+        Cpu::setClock(++clock);
 
         S=T;
     }

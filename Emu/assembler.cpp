@@ -93,23 +93,26 @@ namespace Assembler
     // Returns true when finished
     bool getNextAssembledByte(ByteCode& byteCode)
     {
+        static bool isUserCode = false;
+
         if(_byteCount >= _byteCode.size())
         {
-            fprintf(stderr, "\n");
             _byteCount = 0;
+            if(isUserCode) fprintf(stderr, "\n");
             return true;
         }
 
-        static uint16_t address;
+        static uint16_t address = 0x0000;
         if(_byteCount == 0) address = _startAddress;
         byteCode = _byteCode[_byteCount++];
+        isUserCode = !byteCode._isRomAddress  ||  (byteCode._isRomAddress  &&  byteCode._address > 0x2000);
         if(byteCode._isCustomAddress)
         {
-            fprintf(stderr, "\n");
             address = byteCode._address;
+            if(isUserCode) fprintf(stderr, "\n");
         }
         std::string ramRom = (byteCode._isRomAddress) ? "ROM" : "RAM";
-        if(!byteCode._isRomAddress  ||  (byteCode._isRomAddress  &&  address > 0x2000)) fprintf(stderr, "Assembler::getNextAssembledByte() : %s : %04X  %02X\n", ramRom.c_str(), address, byteCode._data);
+        if(isUserCode) fprintf(stderr, "Assembler::getNextAssembledByte() : %s : %04X  %02X\n", ramRom.c_str(), address, byteCode._data);
         address++;
         return false;
     }    
@@ -985,7 +988,10 @@ namespace Assembler
                                         uint8_t ope = Cpu::getROM(add, 1);
                                         if(instruction._opcode != opc  ||  instruction._operand0 != ope)
                                         {
-                                            fprintf(stderr, "Assembler::assemble() : ROM Native instruction mismatch  : %04X : I=%02X%02X : R=%02X%02X : on line %d\n", add, instruction._opcode, instruction._operand0, opc, ope, line);
+                                            fprintf(stderr, "Assembler::assemble() : ROM Native instruction mismatch  : 0x%04X : ASM=0x%02X%02X : ROM=0x%02X%02X : on line %d\n", add, instruction._opcode, instruction._operand0, opc, ope, line);
+                                            instruction._opcode = opc;
+                                            instruction._operand0 = ope;
+                                            _instructions.back() = instruction;
                                         }
                                     }
                                 }

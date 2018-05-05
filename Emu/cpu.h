@@ -5,7 +5,7 @@
 
 
 #define MAJOR_VERSION "0.3"
-#define MINOR_VERSION "4"
+#define MINOR_VERSION "6"
 #define VERSION_STR "Ver: " MAJOR_VERSION "." MINOR_VERSION
 
 #define ROM_SIZE (1<<16)
@@ -20,11 +20,13 @@ namespace Cpu
         uint8_t _IR, _D, _AC, _X, _Y, _OUT, _undef;
     };
 
+    int64_t getClock(void);
     uint8_t getIN(void);
     uint8_t getXOUT(void);
     uint8_t getRAM(uint16_t address);
     uint8_t getROM(uint16_t address, int page);
 
+    void setClock(int64_t clock);
     void setIN(uint8_t in);
     void setXOUT(uint8_t xout);
     void setRAM(uint16_t address, uint8_t data);
