@@ -15,112 +15,71 @@
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.0/slate/bootstrap.min.css" integrity="sha384-A0hm/Pn0Gvk8w7szlEuTOZrIyQCCBNXQF9ccseoCI36nWRfMEAapo5UJ56zLPvPw" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/open-iconic/1.1.1/font/css/open-iconic-bootstrap.min.css" integrity="sha256-BJ/G+e+y7bQdrYkS2RBTyNfBHpA9IuGaPmf9htub5MQ=" crossorigin="anonymous" />
-    <script src="disassembler.js"></script>
+    <script src="utils.js"></script>
     <script src="gigatron.js"></script>
     <script src="vga.js"></script>
     <script src="audio.js"></script>
     <script src="blinkenlights.js"></script>
     <script src="gamepad.js"></script>
-    <script src="loader.js"></script>
-    <script src="ram-view.js"></script>
-    <script src="rom-view.js"></script>
-    <script src="scroller.js"></script>
     <script src="index.js"></script>
-
-    <style>
-        #ram-textarea,
-        #rom-div,
-        #regs-table {
-            font-size: 12pt;
-            font-family: monospace;
-        }
-
-        #rom-div {
-            height: 600px;
-            overflow: hidden;
-        }
-
-        #rom-div div {
-            padding-left: 10px;
-        }
-
-    </style>
 </head>
 
 <body>
     <div class="container">
-        <h1 class="display-4">Gigatron <code id="mhz"></code></h1>
-        <canvas id="blinken-lights" width="0" height="0"></canvas>
         <div class="row">
-            <div class="col-sm-4">
+            <div class="col">
+                <div class="mx-auto" style="width:640px;">
 
-                <!-- KEYMAP -->
-                <dl class="row pt-2">
-                    <dt class="col-sm-2"><span class="badge badge-pill badge-secondary">select</span></dt>
-                    <dd class="col-sm-4"><kbd>Q</kbd></dd>
+                    <h1 class="display-4">Gigatron</h1>
 
-                    <dt class="col-sm-2"><span class="badge badge-pill badge-secondary">start</span></dt>
-                    <dd class="col-sm-4"><kbd>W</kbd></dd>
+                    <canvas id="blinken-lights" width="0" height="0"></canvas>
 
-                    <dt class="col-sm-2"><span class="badge badge-pill badge-secondary">A</span></dt>
-                    <dd class="col-sm-4"><kbd>A</kbd></dd>
+                    <canvas id="vga" class="border border-white rounded mx-auto" width="640" height="480"></canvas>
 
-                    <dt class="col-sm-2"><span class="badge badge-pill badge-secondary">B</span></dt>
-                    <dd class="col-sm-4"><kbd>S</kdb></dd>
-				</dl>
+                    <div class="form-row">
+                        <div class="col-sm-3">
+                            <input id="volume-slider" type="range" class="custom-range"> Volume <label for="volume-slider"></label>
+                        </div>
+                        <div class="col">
+                            <span id="unmute" class="btn btn-sm btn-danger oi oi-volume-off d-none" style="width:30px;" data-toggle="tooltip" title="Unmute"></span>
+                            <span id="mute" class="btn btn-sm btn-success oi oi-volume-high" style="width:30px;" data-toggle="tooltip" title="Mute"></span>
+                        </div>
+                    </div>
 
-				<!-- REGISTERS -->
-				<table id="regs-table" class="table table-sm">
-				</table>
+                    <!-- KEYMAP -->
+                    <dl class="row">
+                        <dt class="col-sm-1"><span class="badge badge-pill badge-secondary">select</span></dt>
+                        <dd class="col-sm-5"><kbd>Q</kbd></dd>
 
-				<!-- FILE INPUT -->
-				<div class="input-group mb-3">
-					<div class="input-group-prepend">
-						<span class="input-group-text">ROM</span>
-					</div>
-				  <div class="custom-file">
-				    <input type="file" accept=".rom" class="custom-file-input" id="rom-file">
-				    <label class="custom-file-label" for="rom-file">Choose file</label>
-				  </div>
+                        <dt class="col-sm-1"><span class="badge badge-pill badge-secondary">start</span></dt>
+                        <dd class="col-sm-5"><kbd>W</kbd></dd>
+
+                        <dt class="col-sm-1"><span class="badge badge-pill badge-secondary">A</span></dt>
+                        <dd class="col-sm-5"><kbd>A</kbd></dd>
+
+                        <dt class="col-sm-1"><span class="badge badge-pill badge-secondary">B</span></dt>
+                        <dd class="col-sm-5"><kbd>S</kdb></dd>
+						</dl>
 				</div>
-
-				<!-- PLAY/PAUSE/STEP/RESET -->
-				<div class="input-group">
-					<span id="play" class="form-control btn btn-sm btn-success oi oi-media-play" data-toggle="tooltip" data-placement="top" title="Play"></span>
-					<span id="pause" class="form-control d-none btn btn-sm btn-danger oi oi-media-pause" data-toggle="tooltip" data-placement="top" title="Pause"></span>
-					<span id="step" class="form-control btn btn-sm btn-secondary oi oi-media-step-forward" data-toggle="tooltip" data-placement="top" title="Step"></span>
-					<span id="reset" class="form-control btn btn-sm btn-primary oi oi-loop-square" data-toggle="tooltip" data-placement="top" title="Reset"></span>
-				</div>
-
-				<!-- ROM VIEW -->
-				<div id="rom-div" class="mt-3 border border-white rounded">
-				</div>
-			</div>
-
-			<div class="col-sm-8">
-				<div class="mx-auto" style="width:650px;">
-					<canvas id="vga" class="border border-white rounded mx-auto" width="0" height="0"></canvas>
-
-					<div class="form-row">
-						<div class="col-sm-3">
-							<input id="volume-slider" type="range" class="custom-range">
-							Volume <label for="volume-slider"></label>
-						</div>
-						<div class="col-sm-2">
-							<span id="mute" class="btn btn-sm btn-danger oi oi-volume-off" style="width:30px;" data-toggle="tooltip" title="Mute"></span>
-							<span id="unmute" class="btn btn-sm btn-success oi oi-volume-high d-none" style="width:30px;" data-toggle="tooltip" title="Unmute"></span>
-						</div>
-					</div>
-
-					<textarea id="ram-textarea" readonly="true" spellcheck="false" rows="15" cols="75"></textarea>
-				</div>
-
 			</div>
 		</div>
 
 		<!--div class="form-group">
 			<button id="load" type="button" class="btn btn-warning">Loader</button>
 		</div-->
+	</div>
+
+	<div id="error-modal" class="modal fade" role="alert">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4>Error</h4>
+					<button type="button" class="close" data-dismiss="modal"><span class="oi oi-x"></span></button>
+				</div>
+				<div id="error-modal-body" class="modal-body">
+				</div>
+			</div>
+		</div>
 	</div>
 </body>
 </html>

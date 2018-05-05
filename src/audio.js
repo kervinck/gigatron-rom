@@ -17,13 +17,14 @@ class Audio {
         let context = this.context = new AudioContext();
 
         this.mute = false;
-        this.volume = 0.5;
+        this.volume = 1.0;
         this.cycle = 0;
         this.bias = 0;
         this.alpha = 0.8;
         this.scheduled = 0;
         this.tailTime = 0; // time at which tail buffer will start
         this.headTime = 0; // time at which head buffer will end
+        this.full = false;
 
         let numSamples = Math.floor(SAMPLES_PER_SECOND / 100);
         this.buffers = [];
@@ -47,17 +48,18 @@ class Audio {
         let headTime = this.headTime;
         let headBufferIndex = this.headBufferIndex;
         let scheduled = this.scheduled;
+        let numBuffers = this.buffers.length;
 
         while (scheduled > 0 && headTime < currentTime) {
-            if (++headBufferIndex == this.buffers.length) {
-                headBufferIndex = 0;
-            }
+            headBufferIndex = (headBufferIndex == numBuffers - 1) ? 0 :
+                (headBufferIndex + 1);
             headTime += this.duration;
             scheduled--;
         }
 
         this.headTime = headTime;
         this.scheduled = scheduled;
+        this.full = scheduled == numBuffers;
     }
 
     /** flush current tail buffer */
@@ -66,14 +68,16 @@ class Audio {
         let currentTime = context.currentTime;
         let tailBufferIndex = this.tailBufferIndex;
         let buffer = this.buffers[tailBufferIndex];
+        let scheduled = this.scheduled;
+        let numBuffers = this.buffers.length;
 
         /* if the tail can't keep ahead of realtime, jump it to now */
         if (this.tailTime < currentTime) {
-            console.log('audio skip');
+            // console.log('audio skip');
             this.tailTime = currentTime;
             this.headTime = currentTime + this.duration;
             this.headBufferIndex = tailBufferIndex;
-            this.scheduled = 0;
+            scheduled = 0;
         }
 
         if (!this.mute) {
@@ -83,16 +87,17 @@ class Audio {
             source.start(this.tailTime);
         }
 
-        this.scheduled++;
+        scheduled++;
         this.tailTime += this.duration;
 
-        if (++tailBufferIndex == this.buffers.length) {
-            tailBufferIndex = 0;
-        }
+        tailBufferIndex = (tailBufferIndex == numBuffers - 1) ? 0 :
+            (tailBufferIndex + 1);
 
         this.channelData = this.buffers[tailBufferIndex].getChannelData(0);
         this.sampleIndex = 0;
         this.tailBufferIndex = tailBufferIndex;
+        this.scheduled = scheduled;
+        this.full = scheduled == numBuffers;
     }
 
     /** advance simulation by one tick */

@@ -51,7 +51,7 @@ class Vga {
         if (falling & VSYNC) {
             this.row = 0;
             this.pixel = 0;
-            this.render();
+            this.ctx.putImageData(this.imageData, 0, 0);
         }
 
         if (falling & HSYNC) {
