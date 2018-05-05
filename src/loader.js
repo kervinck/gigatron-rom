@@ -6,7 +6,7 @@
 class Loader {
     /** Create a new Loader
      * @param {Gigatron} cpu
-    */
+     */
     constructor(cpu) {
         this.cpu = cpu;
         this.checksum = 0;
@@ -93,10 +93,10 @@ class Loader {
     /** send bits
      * @param {number} value - byte containing bits to send (msb first)
      * @param {number} n - number of bits to send
-    */
+     */
     sendBits(value, n) {
         // console.log('sending ' + n + '\'h' + value.toString(16));
-        for (let bit = 1 << (n-1); bit; bit >>= 1) {
+        for (let bit = 1 << (n - 1); bit; bit >>= 1) {
             this.shiftBit(value & bit);
             this.waitHsyncLow();
             this.waitHsyncHigh();

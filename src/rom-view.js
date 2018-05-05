@@ -2,35 +2,48 @@
 
 /* exported RomView */
 
+/** A view of ROM */
 class RomView {
-  constructor(view, rom) {
-    this.view = view;
-    this.rom = rom;
-    this.disassembler = new Disassembler();
-    this.scroller = new Scroller(view, {
-      createRow: (index) => this.createRow(index),
-      numRows: rom.length,
-    });
-    this.hilights = {};
-  }
-
-  createRow(index) {
-    if (index < 0 || index >= this.rom.length) {
-      return null;
+    /** Create a new RomView
+     * @param {HTMLDivElement} view
+     * @param {Uint16Array} rom
+     */
+    constructor(view, rom) {
+        this.view = view;
+        this.rom = rom;
+        this.disassembler = new Disassembler();
+        this.scroller = new Scroller(view, {
+            createRow: (index) => this._createRow(index),
+            numRows: rom.length,
+        });
+        this.hilights = {};
     }
 
-    let instruction = this.rom[index];
-    let decode = this.disassembler.disassemble(instruction);
+    /** create a row for the scroller
+     * @param {number} index
+     * @return {HTMLElement}
+     */
+    _createRow(index) {
+        if (index < 0 || index >= this.rom.length) {
+            return null;
+        }
 
-    return $('<div>')
-      .addClass(this.hilights[index] || '')
-      .html(toHex(index, 4) + '&nbsp;' +
-            toHex(instruction, 4) + '&nbsp;&nbsp;' +
-            rpad(decode.mnemonic, 4, '&nbsp;') + '&nbsp;' +
-            decode.operands.join(','));
-  }
+        let instruction = this.rom[index];
+        let decode = this.disassembler.disassemble(instruction);
 
-  render(startAddress) {
-    this.scroller.scrollTop(Math.floor(startAddress-this.scroller.numVisibleRows/2));
-  }
+        return $('<div>')
+            .addClass(this.hilights[index] || '')
+            .html(toHex(index, 4) + '&nbsp;' +
+                toHex(instruction, 4) + '&nbsp;&nbsp;' +
+                rpad(decode.mnemonic, 4, '&nbsp;') + '&nbsp;' +
+                decode.operands.join(','));
+    }
+
+    /** redraw the view at the given start address
+     * @param {number} startAddress
+     */
+    render(startAddress) {
+        let top = Math.floor(startAddress - this.scroller.numVisibleRows / 2);
+        this.scroller.scrollTop(top);
+    }
 }
