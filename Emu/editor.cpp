@@ -175,7 +175,7 @@ namespace Editor
             // Testing
             case SDLK_F1:
             {
-                if(!_singleStepMode) Cpu::setClock(CLOCK_RESET);
+                if(!_singleStepMode) Cpu::reset();
             }
             break;
 

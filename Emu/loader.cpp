@@ -8,6 +8,7 @@
 #include "editor.h"
 #include "loader.h"
 #include "timing.h"
+#include "graphics.h"
 #include "assembler.h"
 
 
@@ -243,7 +244,8 @@ namespace Loader
         std::string filename = *Editor::getFileName(Editor::getCursorY());
         std::string filepath = std::string("./vCPU/" + filename);
 
-        // Reset single step watch address to video line counter
+        // Reset video table and reset single step watch address to video line counter
+        Graphics::resetVTable();
         Editor::setSingleStepWatchAddress(VIDEO_Y_ADDRESS);
 
         // Upload raw vCPU code

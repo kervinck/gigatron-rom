@@ -5,6 +5,10 @@
 
 #include <SDL.h>
 #include "cpu.h"
+#include "editor.h"
+#include "timing.h"
+#include "graphics.h"
+
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -171,5 +175,12 @@ namespace Cpu
         }
 
         return T;
+    }
+
+    void reset(void)
+    {
+        Graphics::resetVTable();
+        Editor::setSingleStepWatchAddress(VIDEO_Y_ADDRESS);
+        setClock(CLOCK_RESET);
     }
 }

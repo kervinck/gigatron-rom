@@ -116,7 +116,7 @@ namespace Assembler
             customAddress = byteCode._address;
         }
 
-        // User code is RAM code or ROM code that lives at above 0x2300
+        // User code is RAM code or (ROM code that lives at or above 0x2300)
         isUserCode = !byteCode._isRomAddress  ||  (byteCode._isRomAddress  &&  customAddress >= 0x2300);
 
         // Seperate sections
@@ -1131,17 +1131,24 @@ namespace Assembler
                     }
 
                     // Check for page boundary crossings
-                    static uint16_t customAddress = 0x0000;
-                    if(instruction._isCustomAddress) customAddress = instruction._address;
-
-                    uint16_t oldAddress = _currentAddress;
-                    _currentAddress += byteSize;
-                    uint16_t newAddress = (instruction._isRomAddress) ? customAddress + ((_currentAddress & 0x00FF)>>1) : _currentAddress;
-                    if((oldAddress >>8) != (newAddress >>8))
+                    if(parse == SecondPass)
                     {
-                        parseError = true;
-                        fprintf(stderr, "Assembler::assemble() : Page boundary compromised : %04X : %04X : '%s' : in %s on line %d\n", oldAddress, newAddress, lineToken.c_str(), filename.c_str(), line);
-                        break;
+                        static uint16_t customAddress = 0x0000;
+                        if(instruction._isCustomAddress) customAddress = instruction._address;
+
+                        uint16_t oldAddress = (instruction._isRomAddress) ? customAddress + ((_currentAddress & 0x00FF)>>1) : _currentAddress;
+                        _currentAddress += byteSize;
+                        uint16_t newAddress = (instruction._isRomAddress) ? customAddress + ((_currentAddress & 0x00FF)>>1) : _currentAddress;
+                        if((oldAddress >>8) != (newAddress >>8))
+                        {
+                            parseError = true;
+                            fprintf(stderr, "Assembler::assemble() : Page boundary compromised : %04X : %04X : '%s' : in %s on line %d\n", oldAddress, newAddress, lineToken.c_str(), filename.c_str(), line);
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        _currentAddress += byteSize;
                     }
 
                     line++;

@@ -94,18 +94,26 @@ namespace Graphics
         }
     }
 
+    void resetVTable(void)
+    {
+        for(int i=0; i<GIGA_HEIGHT; i++)
+        {
+            Cpu::setRAM(GIGA_VTABLE + i*2, (GIGA_VRAM >>8) + i);
+            Cpu::setRAM((GIGA_VTABLE+1) + i*2, 0x00);
+        }
+    }
+
     void refreshTimingPixel(const Cpu::State& S, int vgaX, int pixelY, uint32_t colour, bool debugging)
     {
         _hlineTiming[pixelY % GIGA_HEIGHT] = colour;
 
-        if(!debugging)
-        {
-            uint32_t screen = (vgaX % SCREEN_WIDTH)*3 + (pixelY % GIGA_HEIGHT)*4*SCREEN_WIDTH;
-            _pixels[screen + 0 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 0*SCREEN_WIDTH] = colour;
-            _pixels[screen + 0 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 1*SCREEN_WIDTH] = colour;
-            _pixels[screen + 0 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 2*SCREEN_WIDTH] = colour;
-            _pixels[screen + 0 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 1 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 2 + 3*SCREEN_WIDTH] = 0x00;
-        }
+        if(debugging) return;
+
+        uint32_t screen = (vgaX % SCREEN_WIDTH)*3 + (pixelY % GIGA_HEIGHT)*4*SCREEN_WIDTH;
+        _pixels[screen + 0 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 0*SCREEN_WIDTH] = colour;
+        _pixels[screen + 0 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 1*SCREEN_WIDTH] = colour;
+        _pixels[screen + 0 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 2*SCREEN_WIDTH] = colour;
+        _pixels[screen + 0 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 1 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 2 + 3*SCREEN_WIDTH] = 0x00;
     }
 
     void refreshPixel(const Cpu::State& S, int vgaX, int vgaY, bool debugging)
@@ -121,13 +129,18 @@ namespace Graphics
 
     void refreshScreen(void)
     {
+        uint8_t offsetx = 0;
+
         for(int y=0; y<GIGA_HEIGHT; y++)
         {
+            offsetx += Cpu::getRAM(GIGA_VTABLE + 1 + (y<<1));
+    
             for(int x=0; x<=GIGA_WIDTH; x++)
             {
-                uint16_t address = GIGA_VRAM + x + (y <<8);
-                uint32_t screen = x*3 + y*4*SCREEN_WIDTH;
+                uint16_t address = (Cpu::getRAM(GIGA_VTABLE + (y<<1)) <<8) + ((offsetx + x) & 0xFF);
                 uint32_t colour = (x < GIGA_WIDTH) ? _colours[Cpu::getRAM(address) & (COLOUR_PALETTE-1)] : _hlineTiming[y];
+                uint32_t screen = (y*4 % SCREEN_HEIGHT)*SCREEN_WIDTH  +  (x*3 % SCREEN_WIDTH);
+
                 _pixels[screen + 0 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 0*SCREEN_WIDTH] = colour;
                 _pixels[screen + 0 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 1*SCREEN_WIDTH] = colour;
                 _pixels[screen + 0 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 2*SCREEN_WIDTH] = colour;

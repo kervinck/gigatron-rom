@@ -13,6 +13,7 @@
 #define GIGA_WIDTH       160
 #define GIGA_HEIGHT      120
 #define GIGA_VRAM        0x0800
+#define GIGA_VTABLE      0x0100
 #define FONT_BMP_WIDTH   96
 #define FONT_BMP_HEIGHT  48
 #define FONT_WIDTH       6
@@ -42,6 +43,8 @@ namespace Graphics
 
 
     void initialise(void);
+
+    void resetVTable(void);
 
     void refreshTimingPixel(const Cpu::State& S, int vgaX, int pixelY, uint32_t colour, bool debugging);
     void refreshPixel(const Cpu::State& S, int vgaX, int vgaY, bool debugging);

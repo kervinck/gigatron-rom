@@ -9,6 +9,7 @@
 
 
 vram        EQU     0x0800
+hscroll     EQU     0x0101
 
 rand        EQU     0x06
 videoY      EQU     0x09
@@ -32,15 +33,17 @@ mask1       EQU     0x4A
 mask2       EQU     0x4C
 scratch     EQU     0x4E
 
-pixelsArray EQU     0x50
+pixelsArray EQU     0x60
 xyPosArray  EQU     0x82
-xyVelArray  EQU     0xB2
+xyVelArray  EQU     0xA2
+sysFnArray  EQU     0xC2
 
+hscrollAddr EQU     0xE2
 
 xExtent     EQU     0x96
 yExtent     EQU     0x6e
 
-numSprites  EQU     24
+numSprites  EQU     16
    
    
 _startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
@@ -50,8 +53,8 @@ _callTable_         EQU     0x00FE      ; call addresses are automatically store
 _singleStepWatch_   EQU     k           ; the single step debugger watches this variable location to decide when to step,
                                         ; choose a variable that is updated often
 
-SYS_SpriteBlast_142 EQU     0x2300      ; 10x10 pixel blast, sprite data is embedded in instructions
-SYS_ClearRow32_56   EQU     0x2400      ; clear 32 pixels at a time, native code that is defined with either DBR or DWR is written to ROM at this address
+SYS_BlinkyBlast_142 EQU     0x2300      ; 10x10 pixel blast, sprite data is embedded in instructions
+SYS_ClearRow32_56   EQU     0x2400      ; clear 32 pixels at a time
      
 
 start       EQU     0x200
@@ -59,8 +62,13 @@ loopinit    EQU     0x300
 vblank0     EQU     0x400
 
      
-start       LDWI    vram
-            STW     vbase       ; vram base address
+            ; vram base address
+start       LDWI    vram        
+            STW     vbase
+        
+            ; horizontal scroll address
+            LDWI    hscroll
+            STW     hscrollAddr
 
             LDWI    xyPosArray
             STW     xyPos
@@ -75,7 +83,7 @@ start       LDWI    vram
             LDWI    pixelsArray
             STW     pixels 
 
-            ; clear screen
+            ; clear screen, (including hidden areas), fast
             LDWI    SYS_ClearRow32_56   ; clears 32 row pixels at a time
             STW     sysFn
 
@@ -86,7 +94,7 @@ clear       SYS     0xF2        ; SYS_ClearRow32_56, 270 - 56/2 = 0xF2
             LD      vbase+1
             SUBI    0x7F
             BLT     clear
-            LDI     0x07        ; finish off last row
+            LDI     0x08        ; finish off last row
             ST      i
 last_row    SYS     0xF2        ; SYS_ClearRow32_56, 270 - 56/2 = 0xF2
             LDWI    0x0020
@@ -97,7 +105,7 @@ last_row    SYS     0xF2        ; SYS_ClearRow32_56, 270 - 56/2 = 0xF2
             ST      i
             BGT     last_row
 
-            LDWI    SYS_SpriteBlast_142
+            LDWI    SYS_BlinkyBlast_142
             STW     sysFn
 
             LDWI    vram
@@ -145,11 +153,12 @@ case2       LDWI    0xFF01
 case3       LDWI    0xFFFF
             DOKE    xyVel
             
+            ; generate vram address
 randpos     LDW     rand
             ANDW    mask1
             ORW     mask2
             DOKE    xyPos
-            ADDW    vbase       ; generate vram address
+            ADDW    vbase       
             DOKE    pixels
 
             INC     xyPos
@@ -167,8 +176,7 @@ randpos     LDW     rand
             BLT     init
             
             CALL    loopinit
-            
-            
+               
             ; main loop
 loopinit    LDWI    xyPosArray
             STW     xyPos
@@ -184,29 +192,34 @@ loopinit    LDWI    xyPosArray
             LDI     0x00
             ST      i
 
-xbounds     LDW     xyPos       ; x position bounds checking
+            ; x position bounds checking
+xbounds     LDW     xyPos       
             PEEK
             BEQ     xflip
             SUBI    xExtent
             BLT     ybounds
         
+            ; flip x velocity
 xflip       LDW     xyVel
             PEEK
-            XORI    0xFE        ; flip x velocity
+            XORI    0xFE        
             POKE    xyVel
         
-ybounds     LDW     xyPosHi     ; y position bounds checking 
+            ; y position bounds checking 
+ybounds     LDW     xyPosHi     
             PEEK
             BEQ     yflip
             SUBI    yExtent
             BLT     velocity
         
+            ; flip y velocity
 yflip       LDW     xyVelHi
             PEEK
-            XORI    0xFE        ; flip y velocity
+            XORI    0xFE        
             POKE    xyVelHi
         
-velocity    LDW     xyPos       ; xpos += xvel
+            ; xpos += xvel
+velocity    LDW     xyPos       
             PEEK
             ST      scratch
             LDW     xyVel
@@ -214,7 +227,8 @@ velocity    LDW     xyPos       ; xpos += xvel
             ADDW    scratch
             POKE    xyPos
             
-            LDW     xyPosHi     ; ypos += yvel
+            ; ypos += yvel
+            LDW     xyPosHi     
             PEEK
             ST      scratch
             LDW     xyVelHi
@@ -222,12 +236,14 @@ velocity    LDW     xyPos       ; xpos += xvel
             ADDW    scratch
             POKE    xyPosHi
             
+            ; generate vram address
             LDW     xyPos
             DEEK
-            ADDW    vbase       ; generate vram address
+            ADDW    vbase       
             DOKE    pixels
 
-            INC     xyPos       ; increment array pointers
+            ; increment array pointers
+            INC     xyPos       
             INC     xyPos
             INC     xyPosHi
             INC     xyPosHi
@@ -238,6 +254,7 @@ velocity    LDW     xyPos       ; xpos += xvel
             INC     pixels
             INC     pixels
 
+            ; do it for numSprites
             INC     i
             LD      i
             SUBI    numSprites 
@@ -248,10 +265,15 @@ velocity    LDW     xyPos       ; xpos += xvel
             LDI     0x00
             ST      k
 
+            ; scroll playfield
+            LD      frameCount
+            POKE    hscrollAddr
+
+            ; draw sprite
 draw        LDW     pixels
             DEEK
             STW     dstAddr
-            SYS     0xC7        ; SYS_SpriteBlast_142, 270 - 142/2 = 0xC7
+            SYS     0xC7        ; SYS_BlinkyBlast_142, 270 - 142/2 = 0xC7
 
             INC     pixels
             INC     pixels
@@ -260,9 +282,9 @@ draw        LDW     pixels
             LD      k
             SUBI    numSprites 
             BLT     draw
-            
-            CALL    vblank0
-            
+
+            CALL    vblank1
+
             BRA     loopinit
 
             
@@ -298,7 +320,7 @@ loopdelay   LDW     i
 ; 3: you must follow the SYS calling conventions exactly
 
                     ; accumulator holds [dstAddr + 1] for entire sprite blast
-SYS_SpriteBlast_142 .LD     [dstAddr],X         ; dst line 0
+SYS_BlinkyBlast_142 .LD     [dstAddr],X         ; dst line 0
                     .LD     [dstAddr + 1]
                     .ADDA   $00,Y
                     .ST     $00,[Y,X++]
