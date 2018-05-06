@@ -99,11 +99,11 @@ and possibly even Android. As of ver0.3.8 it has only been tested on Microsoft W
   but the ROM within the emulator is able to be modified and experimented with, which this assembler<br/>
   lets you do very easily.<br/>
 - The Assembler differentiates between the two instruction sets, (**_vCPU_** and **_Native_**), by preceding<br/>
-  Native instructions with a period **_'.'_**.<br/>
+  Native instructions with a period **_'.'_**<br/>
 - The Assembler supports Labels, Equates and Mutables, (a mutable is a label for self modifying code).<br/>
 - The Assembler recognises the following reserved words:<br/>
     - **_\_startAddress\__** : entry point for the code, if this is missing defaults to 0x0200.<br/>
-    - **_\_callTable\__** : grows downwards as you use more CALL's, it can crash into program variables.<br/>
+    - **_\_callTable\__** : grows downwards as you use more CALL's, it must exist in page0 RAM.<br/>
     - **_\_singleStepWatch\__** : the single step debugger watches this variable location to decide when to step.<br/>
     - **_\_disableUpload\__** : disables all writes to RAM/ROM, used for testing and verification.<br/>
 - The Assembler recognises the following reserved opcodes:<br/>
@@ -116,15 +116,15 @@ and possibly even Android. As of ver0.3.8 it has only been tested on Microsoft W
     - **_dec_** : 1234<br/>
     - **_oct_** : 0o777 or 0q777<br/>
     - **_bin_** : 0b01011111<br/>
-- Comments can anywhere on a line and commence with **_';'_** or **_'#'_**<br/>
+- Comments can go anywhere on a line and commence with **_';'_** or **_'#'_**<br/>
 
 ## Debugger
 - The debugger allows you to single step through your vCPU code based on a variable changing<br/>
-  its value. This variable by default is videoY located at address 0x0009, it counts horizontal<br/>
+  its value. This variable by default is **_videoY_** located at address 0x0009, it counts horizontal<br/>
   scan lines and thus should give decent resolution for most **_.vasm_** and **_.gt1_** files.<br/>
-- The variable can be altered within a .vasm_** file like this:<br/>
+- The variable can be altered within a **_.vasm_** file like this:<br/>
 ~~~
-\_singleStepWatch\_   EQU     xyPos
+_singleStepWatch_   EQU     xyPos
 ~~~
 - In this example xyPos is a pointer into zero page memory, pointing to a variable that changes<br/>
   its value often.<br/>
