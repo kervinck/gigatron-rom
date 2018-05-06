@@ -103,16 +103,44 @@ namespace Assembler
         }
 
         static uint16_t address = 0x0000;
+        static uint16_t customAddress = 0x0000;
+
+        // Get next byte
         if(_byteCount == 0) address = _startAddress;
         byteCode = _byteCode[_byteCount++];
-        isUserCode = !byteCode._isRomAddress  ||  (byteCode._isRomAddress  &&  byteCode._address > 0x2000);
+
+        // New section
         if(byteCode._isCustomAddress)
         {
             address = byteCode._address;
-            if(isUserCode) fprintf(stderr, "\n");
+            customAddress = byteCode._address;
         }
-        std::string ramRom = (byteCode._isRomAddress) ? "ROM" : "RAM";
-        if(isUserCode) fprintf(stderr, "Assembler::getNextAssembledByte() : %s : %04X  %02X\n", ramRom.c_str(), address, byteCode._data);
+
+        // User code is RAM code or ROM code that lives at above 0x2300
+        isUserCode = !byteCode._isRomAddress  ||  (byteCode._isRomAddress  &&  customAddress >= 0x2300);
+
+        // Seperate sections
+        if(byteCode._isCustomAddress  &&  isUserCode) fprintf(stderr, "\n");
+
+        // 16bit for ROM, 8bit for RAM
+        if(isUserCode)
+        {
+            if(byteCode._isRomAddress)
+            {
+                if((address & 0x0001) == 0x0000)
+                {
+                    fprintf(stderr, "Assembler::getNextAssembledByte() : ROM : %04X  %02X", customAddress + ((address & 0x00FF)>>1), byteCode._data);
+                }
+                else
+                {
+                    fprintf(stderr, "%02X\n", byteCode._data);
+                }
+            }
+            else
+            {
+                fprintf(stderr, "Assembler::getNextAssembledByte() : RAM : %04X  %02X\n", address, byteCode._data);
+            }
+        }
         address++;
         return false;
     }    
@@ -823,6 +851,7 @@ namespace Assembler
                     uint8_t branch = instructionType._branch;
                     ByteSize byteSize = instructionType._byteSize;
                     OpcodeType opcodeType = instructionType._opcodeType;
+                    Instruction instruction = {false, false, byteSize, opcode, 0x00, 0x00, _currentAddress};
 
                     if(byteSize == BadSize)
                     {
@@ -833,8 +862,6 @@ namespace Assembler
 
                     if(parse == SecondPass)
                     {
-                        Instruction instruction = {false, false, byteSize, opcode, 0x00, 0x00, _currentAddress};
-
                         // Native NOP
                         if(opcodeType == Native  &&  opcode == 0x02)
                         {
@@ -1104,14 +1131,17 @@ namespace Assembler
                     }
 
                     // Check for page boundary crossings
+                    static uint16_t customAddress = 0x0000;
+                    if(instruction._isCustomAddress) customAddress = instruction._address;
+
                     uint16_t oldAddress = _currentAddress;
                     _currentAddress += byteSize;
-                    uint16_t newAddress = _currentAddress;
+                    uint16_t newAddress = (instruction._isRomAddress) ? customAddress + ((_currentAddress & 0x00FF)>>1) : _currentAddress;
                     if((oldAddress >>8) != (newAddress >>8))
                     {
-                        //parseError = true;
-                        //fprintf(stderr, "Assembler::assemble() : Page boundary compromised : %04X : %04X : '%s' : in %s on line %d\n", oldAddress, newAddress, lineToken.c_str(), filename.c_str(), line);
-                        //break;
+                        parseError = true;
+                        fprintf(stderr, "Assembler::assemble() : Page boundary compromised : %04X : %04X : '%s' : in %s on line %d\n", oldAddress, newAddress, lineToken.c_str(), filename.c_str(), line);
+                        break;
                     }
 
                     line++;

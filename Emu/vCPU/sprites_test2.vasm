@@ -50,8 +50,8 @@ _callTable_         EQU     0x00FE      ; call addresses are automatically store
 _singleStepWatch_   EQU     k           ; the single step debugger watches this variable location to decide when to step,
                                         ; choose a variable that is updated often
 
-SYS_SpriteBlast_146 EQU     0x2300      ; 10x10 pixel blast, sprite data is embedded in instructions
-SYS_ClearRow32_54   EQU     0x2500      ; clear 32 pixels at a time, native code that is defined with either DBR or DWR is written to ROM at this address
+SYS_SpriteBlast_142 EQU     0x2300      ; 10x10 pixel blast, sprite data is embedded in instructions
+SYS_ClearRow32_56   EQU     0x2400      ; clear 32 pixels at a time, native code that is defined with either DBR or DWR is written to ROM at this address
      
 
 start       EQU     0x200
@@ -76,10 +76,10 @@ start       LDWI    vram
             STW     pixels 
 
             ; clear screen
-            LDWI    SYS_ClearRow32_54   ; clears 32 row pixels at a time
+            LDWI    SYS_ClearRow32_56   ; clears 32 row pixels at a time
             STW     sysFn
 
-clear       SYS     0xF3        ; SYS_ClearRow32_54, 270 - 54/2 = 0xF3
+clear       SYS     0xF2        ; SYS_ClearRow32_56, 270 - 56/2 = 0xF2
             LDWI    0x0020
             ADDW    vbase
             STW     vbase
@@ -88,7 +88,7 @@ clear       SYS     0xF3        ; SYS_ClearRow32_54, 270 - 54/2 = 0xF3
             BLT     clear
             LDI     0x07        ; finish off last row
             ST      i
-last_row    SYS     0xF3        ; SYS_ClearRow32_54, 270 - 54/2 = 0xF3
+last_row    SYS     0xF2        ; SYS_ClearRow32_56, 270 - 56/2 = 0xF2
             LDWI    0x0020
             ADDW    vbase
             STW     vbase
@@ -97,7 +97,7 @@ last_row    SYS     0xF3        ; SYS_ClearRow32_54, 270 - 54/2 = 0xF3
             ST      i
             BGT     last_row
 
-            LDWI    SYS_SpriteBlast_146
+            LDWI    SYS_SpriteBlast_142
             STW     sysFn
 
             LDWI    vram
@@ -251,7 +251,7 @@ velocity    LDW     xyPos       ; xpos += xvel
 draw        LDW     pixels
             DEEK
             STW     dstAddr
-            SYS     0xC5        ; SYS_SpriteBlast_146, 270 - 146/2 = 0xC5
+            SYS     0xC7        ; SYS_SpriteBlast_142, 270 - 142/2 = 0xC7
 
             INC     pixels
             INC     pixels
@@ -296,8 +296,11 @@ loopdelay   LDW     i
 ; 2: you cannot mix and match vasm instructions with native instructions within the same segment, (in reality they are executed in 
 ; completely different parts of the memory map, i.e. native in fake ROM and vasm in RAM)
 ; 3: you must follow the SYS calling conventions exactly
-SYS_SpriteBlast_146 .LD     [dstAddr],X         ; dst line 0
-                    .LD     [dstAddr + 1],Y
+
+                    ; accumulator holds [dstAddr + 1] for entire sprite blast
+SYS_SpriteBlast_142 .LD     [dstAddr],X         ; dst line 0
+                    .LD     [dstAddr + 1]
+                    .ADDA   $00,Y
                     .ST     $00,[Y,X++]
                     .ST     $00,[Y,X++]
                     .ST     $00,[Y,X++]
@@ -310,8 +313,7 @@ SYS_SpriteBlast_146 .LD     [dstAddr],X         ; dst line 0
                     .ST     $00,[Y,X++]
                     
                     .LD     [dstAddr],X         ; dst line 1
-                    .LD     0x01                
-                    .ADDA   [dstAddr + 1],Y
+                    .ADDA   $01,Y
                     .ST     $00,[Y,X++]
                     .ST     $00,[Y,X++]
                     .ST     $00,[Y,X++]
@@ -324,8 +326,7 @@ SYS_SpriteBlast_146 .LD     [dstAddr],X         ; dst line 0
                     .ST     $00,[Y,X++]
 
                     .LD     [dstAddr],X         ; dst line 2
-                    .LD     0x02                
-                    .ADDA   [dstAddr + 1],Y
+                    .ADDA   $02,Y
                     .ST     $00,[Y,X++]
                     .ST     $00,[Y,X++]
                     .ST     $03,[Y,X++]
@@ -338,8 +339,7 @@ SYS_SpriteBlast_146 .LD     [dstAddr],X         ; dst line 0
                     .ST     $00,[Y,X++]
 
                     .LD     [dstAddr],X         ; dst line 3
-                    .LD     0x03                
-                    .ADDA   [dstAddr + 1],Y
+                    .ADDA   $03,Y
                     .ST     $00,[Y,X++]
                     .ST     $03,[Y,X++]
                     .ST     $03,[Y,X++]
@@ -352,8 +352,7 @@ SYS_SpriteBlast_146 .LD     [dstAddr],X         ; dst line 0
                     .ST     $00,[Y,X++]
 
                     .LD     [dstAddr],X         ; dst line 4
-                    .LD     0x04                
-                    .ADDA   [dstAddr + 1],Y
+                    .ADDA   $04,Y
                     .ST     $00,[Y,X++]
                     .ST     $03,[Y,X++]
                     .ST     $FF,[Y,X++]
@@ -366,8 +365,7 @@ SYS_SpriteBlast_146 .LD     [dstAddr],X         ; dst line 0
                     .ST     $00,[Y,X++]
 
                     .LD     [dstAddr],X         ; dst line 5
-                    .LD     0x05                
-                    .ADDA   [dstAddr + 1],Y
+                    .ADDA   $05,Y
                     .ST     $00,[Y,X++]
                     .ST     $03,[Y,X++]
                     .ST     $03,[Y,X++]
@@ -380,8 +378,7 @@ SYS_SpriteBlast_146 .LD     [dstAddr],X         ; dst line 0
                     .ST     $00,[Y,X++]
 
                     .LD     [dstAddr],X         ; dst line 6
-                    .LD     0x06                
-                    .ADDA   [dstAddr + 1],Y
+                    .ADDA   $06,Y
                     .ST     $00,[Y,X++]
                     .ST     $03,[Y,X++]
                     .ST     $03,[Y,X++]
@@ -394,8 +391,7 @@ SYS_SpriteBlast_146 .LD     [dstAddr],X         ; dst line 0
                     .ST     $00,[Y,X++]
 
                     .LD     [dstAddr],X         ; dst line 7
-                    .LD     0x07                
-                    .ADDA   [dstAddr + 1],Y
+                    .ADDA   $07,Y
                     .ST     $00,[Y,X++]
                     .ST     $03,[Y,X++]
                     .ST     $03,[Y,X++]
@@ -408,8 +404,7 @@ SYS_SpriteBlast_146 .LD     [dstAddr],X         ; dst line 0
                     .ST     $00,[Y,X++]
 
                     .LD     [dstAddr],X         ; dst line 8
-                    .LD     0x08                
-                    .ADDA   [dstAddr + 1],Y
+                    .ADDA   $08,Y
                     .ST     $00,[Y,X++]
                     .ST     $03,[Y,X++]
                     .ST     $00,[Y,X++]
@@ -422,8 +417,7 @@ SYS_SpriteBlast_146 .LD     [dstAddr],X         ; dst line 0
                     .ST     $00,[Y,X++]
 
                     .LD     [dstAddr],X         ; dst line 9
-                    .LD     0x09                
-                    .ADDA   [dstAddr + 1],Y
+                    .ADDA   $09,Y
                     .ST     $00,[Y,X++]
                     .ST     $00,[Y,X++]
                     .ST     $00,[Y,X++]
@@ -434,13 +428,14 @@ SYS_SpriteBlast_146 .LD     [dstAddr],X         ; dst line 0
                     .ST     $00,[Y,X++]
                     .ST     $00,[Y,X++]
                     .ST     $00,[Y,X++]
-                    
+
+                    .NOP                    ; pad instructions so odd(14 + number of instructions) = true
                     .LD     0x03,Y
                     .JMP    Y,0xCB
-                    .LD     0xB7                ; 0 - (14 + number of instructions + (even ? 2 : 3)) / 2 = 0xBF, number of instructions = 146
+                    .LD     0xB9            ; 0 - ((14 + number of instructions + 3) / 2), odd(14 + number of instructions) = true
 
      
-SYS_ClearRow32_54   .LD     [vbase],X
+SYS_ClearRow32_56   .LD     [vbase],X
                     .LD     [vbase+1],Y
 
                     .LD     0x00
@@ -477,6 +472,7 @@ SYS_ClearRow32_54   .LD     [vbase],X
                     .ST     [Y,X++]
                     .ST     [Y,X++]
 
+                    .NOP                    ; pad instructions so odd(14 + number of instructions) = true
                     .LD     0x03,Y
                     .JMP    Y,0xCB
-                    .LD     0xE5        ; 0 - ((14 + number of instructions + (even ? 2 : 3)) / 2) = 0xE5, number of instructions = 38
+                    .LD     0xE4            ; 0 - ((14 + number of instructions + 3) / 2), odd(14 + number of instructions) = true

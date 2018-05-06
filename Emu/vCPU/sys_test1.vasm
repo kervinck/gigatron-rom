@@ -50,12 +50,12 @@ draw        LDW     vbase
             ADDW    xx
             STW     pixels
         
-            SYS     0xFE        ; SYS_DrawPixel2x2_32, 270 - 32/2 = 0xFE
+            SYS     0xF4        ; SYS_DrawPixel2x2_, 270 - 32/2 = 0xF4
 
             BRA     loop        
         
         
 ; this is a native code routine that is written into ROM using the DBR command, (Define Byte ROM), at the equate defined
 ; by SYS_DrawPixel2x2_32: this native code is specific to this vCPU module with the input registers that it accepts
-SYS_DrawPixel2x2_32     DBR $01 $06 $11 $42 $15 $43 $DE $00 $CE $00 $11 $42 $00 $01 $95 $43 $01 $06 $DE $00 $CE $00 $14 $03 $E0 $CB $00 $F0
+SYS_DrawPixel2x2_32     DBR $01 $06 $11 $42 $15 $43 $DE $00 $CE $00 $11 $42 $00 $01 $95 $43 $01 $06 $DE $00 $CE $00 $02 $00 $14 $03 $E0 $CB $00 $F0
         

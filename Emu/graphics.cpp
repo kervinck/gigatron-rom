@@ -9,6 +9,7 @@ namespace Graphics
 {
     uint32_t _pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
     uint32_t _colours[COLOUR_PALETTE];
+    uint32_t _hlineTiming[GIGA_HEIGHT];
 
     SDL_Window* _window = NULL;
     SDL_Renderer* _renderer = NULL;
@@ -29,6 +30,8 @@ namespace Graphics
 
     void initialise(void)
     {
+        for(int i=0; i<GIGA_HEIGHT; i++) _hlineTiming[i] = 0xFF00FF00;
+
         for(int i=0; i<COLOUR_PALETTE; i++)
         {
             int r = (i>>0) & 3;
@@ -91,10 +94,26 @@ namespace Graphics
         }
     }
 
-    void refreshPixel(const Cpu::State& S, int vgaX, int vgaY)
+    void refreshTimingPixel(const Cpu::State& S, int vgaX, int pixelY, uint32_t colour, bool debugging)
     {
+        _hlineTiming[pixelY % GIGA_HEIGHT] = colour;
+
+        if(!debugging)
+        {
+            uint32_t screen = (vgaX % SCREEN_WIDTH)*3 + (pixelY % GIGA_HEIGHT)*4*SCREEN_WIDTH;
+            _pixels[screen + 0 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 0*SCREEN_WIDTH] = colour;
+            _pixels[screen + 0 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 1*SCREEN_WIDTH] = colour;
+            _pixels[screen + 0 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 2*SCREEN_WIDTH] = colour;
+            _pixels[screen + 0 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 1 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 2 + 3*SCREEN_WIDTH] = 0x00;
+        }
+    }
+
+    void refreshPixel(const Cpu::State& S, int vgaX, int vgaY, bool debugging)
+    {
+        if(debugging) return;
+
         uint32_t colour = _colours[S._OUT & (COLOUR_PALETTE-1)];
-        uint32_t address = vgaX*3 + vgaY*SCREEN_WIDTH;
+        uint32_t address = (vgaX % SCREEN_WIDTH)*3 + (vgaY % SCREEN_HEIGHT)*SCREEN_WIDTH;
         _pixels[address + 0] = colour;
         _pixels[address + 1] = colour;
         _pixels[address + 2] = colour;
@@ -104,12 +123,11 @@ namespace Graphics
     {
         for(int y=0; y<GIGA_HEIGHT; y++)
         {
-            for(int x=0; x<GIGA_WIDTH; x++)
+            for(int x=0; x<=GIGA_WIDTH; x++)
             {
                 uint16_t address = GIGA_VRAM + x + (y <<8);
                 uint32_t screen = x*3 + y*4*SCREEN_WIDTH;
-                uint32_t colour = _colours[Cpu::getRAM(address) & (COLOUR_PALETTE-1)];
-
+                uint32_t colour = (x < GIGA_WIDTH) ? _colours[Cpu::getRAM(address) & (COLOUR_PALETTE-1)] : _hlineTiming[y];
                 _pixels[screen + 0 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 0*SCREEN_WIDTH] = colour;
                 _pixels[screen + 0 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 1*SCREEN_WIDTH] = colour;
                 _pixels[screen + 0 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 2*SCREEN_WIDTH] = colour;
@@ -144,6 +162,8 @@ namespace Graphics
     // Simple text routine, font is a non proportional 6*8 font loaded from a 96*48 BMP file
     bool drawText(const std::string& text, int x, int y, uint32_t colour, bool invert, int invertSize)
     {
+        x += MENU_START_X;
+        y += MENU_START_Y;
         if(x<0 || x>=SCREEN_WIDTH || y<0 || y>=SCREEN_HEIGHT) return false;
 
         uint32_t* fontPixels = (uint32_t*)_fontSurface->pixels;
@@ -182,6 +202,10 @@ namespace Graphics
 
     void drawDigitBox(uint8_t digit, int x, int y, uint32_t colour)
     {
+        x += MENU_START_X;
+        y += MENU_START_Y;
+        if(x<0 || x>=SCREEN_WIDTH || y<0 || y>=SCREEN_HEIGHT) return;
+
         uint32_t pixelAddress = x + digit*FONT_WIDTH + y*SCREEN_WIDTH;
 
         pixelAddress += (FONT_HEIGHT-1)*SCREEN_WIDTH;
@@ -212,18 +236,18 @@ namespace Graphics
             char str[32];
             sprintf(str, "%3.2f    ", 1.0f / Timing::getFrameTime());
 
-            drawText(std::string("LEDS:"), 485, 0, 0xFFFFFFFF, false, 0);
-            drawText(std::string("FPS:"), 485, FONT_CELL_Y, 0xFFFFFFFF, false, 0);
-            drawText(std::string(str), 547, FONT_CELL_Y, 0xFFFFFF00, false, 0);
-            drawText(std::string(VERSION_STR), 531, 472, 0xFFFFFF00, false, 0);
+            drawText(std::string("LEDS:"), 0, 0, 0xFFFFFFFF, false, 0);
+            drawText(std::string("FPS:"), 0, FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+            drawText(std::string(str), 62, FONT_CELL_Y, 0xFFFFFF00, false, 0);
+            drawText(std::string(VERSION_STR), 46, 472, 0xFFFFFF00, false, 0);
             sprintf(str, "XOUT: %02X  IN: %02X", Cpu::getXOUT(), Cpu::getIN());
-            drawText(std::string(str), 485, FONT_CELL_Y*2, 0xFFFFFFFF, false, 0);
-            drawText("Mode:       ", 485, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+            drawText(std::string(str), 0, FONT_CELL_Y*2, 0xFFFFFFFF, false, 0);
+            drawText("Mode:       ", 0, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
             sprintf(str, "Hex  ");
             if(Editor::getHexEdit()) sprintf(str, "Edit ");
             else if(Editor::getEditorMode() == Editor::Load) sprintf(str, "Load ");
             else if(Editor::getEditorMode() == Editor::Debug) sprintf(str, "Debug");
-            drawText(std::string(str), 553, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
+            drawText(std::string(str), 68, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
         }
     }
 
@@ -238,24 +262,24 @@ namespace Graphics
             if(Editor::getEditorMode() == Editor::Load)
             {
                 // File list
-                drawText("Load:       Vars:", 485, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0);
+                drawText("Load:       Vars:", 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0);
                 uint16_t loadAddress = Editor::getLoadBaseAddress();
                 uint16_t varsAddress = Editor::getVarsBaseAddress();
                 bool onCursor0 = Editor::getCursorY() == -1  &&  (Editor::getCursorX() & 0x01) == 0;
                 bool onCursor1 = Editor::getCursorY() == -1  &&  (Editor::getCursorX() & 0x01) == 1;
                 sprintf(str, "%04X", loadAddress);
-                drawText(std::string(str), 521, FONT_CELL_Y*3, (Editor::getHexEdit() && onCursor0) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor0, 4);
+                drawText(std::string(str), 36, FONT_CELL_Y*3, (Editor::getHexEdit() && onCursor0) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor0, 4);
                 sprintf(str, "%04X", varsAddress);
-                drawText(std::string(str), 593, FONT_CELL_Y*3, (Editor::getHexEdit() && onCursor1) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor1, 4);
+                drawText(std::string(str), 108, FONT_CELL_Y*3, (Editor::getHexEdit() && onCursor1) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor1, 4);
                 for(int i=0; i<HEX_CHARS_Y; i++)
                 {
-                    drawText("                       ", 493, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+                    drawText("                       ", 8, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
                 }
                 for(int i=0; i<HEX_CHARS_Y; i++)
                 {
                     int index = Editor::getFileNamesIndex() + i;
                     if(index >= int(Editor::getFileNamesSize())) break;
-                    drawText(*Editor::getFileName(Editor::getFileNamesIndex() + i), 493, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, i == Editor::getCursorY(), 18);
+                    drawText(*Editor::getFileName(Editor::getFileNamesIndex() + i), 8, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, i == Editor::getCursorY(), 18);
                 }
 
                 // 8 * 2 hex display of vCPU program variables
@@ -264,7 +288,7 @@ namespace Graphics
                     for(int i=0; i<HEX_CHARS_X; i++)
                     {
                         sprintf(str, "%02X ", Cpu::getRAM(varsAddress++));
-                        drawText(std::string(str), 493 + i*HEX_CHAR_WIDE, int(FONT_CELL_Y*4.25) + FONT_CELL_Y*HEX_CHARS_Y + j*(FONT_HEIGHT+FONT_GAP_Y), 0xFF00FFFF, false, 0);
+                        drawText(std::string(str), 8 + i*HEX_CHAR_WIDE, int(FONT_CELL_Y*4.25) + FONT_CELL_Y*HEX_CHARS_Y + j*(FONT_HEIGHT+FONT_GAP_Y), 0xFF00FFFF, false, 0);
                     }
                 }
 
@@ -272,8 +296,8 @@ namespace Graphics
                 if(Editor::getHexEdit())
                 {
                     // Draw address digit selection box
-                    if(onCursor0) drawDigitBox(Editor::getAddressDigit(), 521, FONT_CELL_Y*3, 0xFFFF00FF);
-                    if(onCursor1) drawDigitBox(Editor::getAddressDigit(), 593, FONT_CELL_Y*3, 0xFFFF00FF);
+                    if(onCursor0) drawDigitBox(Editor::getAddressDigit(), 36, FONT_CELL_Y*3, 0xFFFF00FF);
+                    if(onCursor1) drawDigitBox(Editor::getAddressDigit(), 108, FONT_CELL_Y*3, 0xFFFF00FF);
                 }
             }
             // Hex monitor
@@ -281,9 +305,9 @@ namespace Graphics
             {
                 switch(Editor::getMemoryMode())
                 {
-                    case Editor::RAM:  drawText("RAM:        Vars:", 485, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
-                    case Editor::ROM0: drawText("ROM0:       Vars:", 485, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
-                    case Editor::ROM1: drawText("ROM1:       Vars:", 485, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
+                    case Editor::RAM:  drawText("RAM:        Vars:", 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
+                    case Editor::ROM0: drawText("ROM0:       Vars:", 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
+                    case Editor::ROM1: drawText("ROM1:       Vars:", 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
                 }
 
                 // 8 * 32 hex display of memory
@@ -293,9 +317,9 @@ namespace Graphics
                 bool onCursor0 = Editor::getCursorY() == -1  &&  (Editor::getCursorX() & 0x01) == 0;
                 bool onCursor1 = Editor::getCursorY() == -1  &&  (Editor::getCursorX() & 0x01) == 1;
                 sprintf(str, "%04X", hexddress);
-                drawText(std::string(str), 521, FONT_CELL_Y*3, (Editor::getHexEdit() && onCursor0) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor0, 4);
+                drawText(std::string(str), 36, FONT_CELL_Y*3, (Editor::getHexEdit() && onCursor0) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor0, 4);
                 sprintf(str, "%04X", varsAddress);
-                drawText(std::string(str), 593, FONT_CELL_Y*3, (Editor::getHexEdit() && onCursor1) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor1, 4);
+                drawText(std::string(str), 108, FONT_CELL_Y*3, (Editor::getHexEdit() && onCursor1) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor1, 4);
                 for(int j=0; j<HEX_CHARS_Y; j++)
                 {
                     for(int i=0; i<HEX_CHARS_X; i++)
@@ -309,7 +333,7 @@ namespace Graphics
                         }
                         sprintf(str, "%02X ", value);
                         bool onCursor = (i == Editor::getCursorX()  &&  j == Editor::getCursorY());
-                        drawText(std::string(str), 493 + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), (Editor::getHexEdit() && Editor::getMemoryMode() == Editor::RAM && onCursor) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor, 2);
+                        drawText(std::string(str), 8 + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), (Editor::getHexEdit() && Editor::getMemoryMode() == Editor::RAM && onCursor) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor, 2);
                     }
                 }
 
@@ -335,7 +359,7 @@ namespace Graphics
                     for(int i=0; i<HEX_CHARS_X; i++)
                     {
                         sprintf(str, "%02X ", Cpu::getRAM(varsAddress++));
-                        drawText(std::string(str), 493 + i*HEX_CHAR_WIDE, int(FONT_CELL_Y*4.25) + FONT_CELL_Y*HEX_CHARS_Y + j*(FONT_HEIGHT+FONT_GAP_Y), 0xFF00FFFF, false, 0);
+                        drawText(std::string(str), 8 + i*HEX_CHAR_WIDE, int(FONT_CELL_Y*4.25) + FONT_CELL_Y*HEX_CHARS_Y + j*(FONT_HEIGHT+FONT_GAP_Y), 0xFF00FFFF, false, 0);
                     }
                 }
 
@@ -343,11 +367,11 @@ namespace Graphics
                 if(Editor::getHexEdit())
                 {
                     // Draw address digit selection box
-                    if(onCursor0) drawDigitBox(Editor::getAddressDigit(), 521, FONT_CELL_Y*3, 0xFFFF00FF);
-                    if(onCursor1) drawDigitBox(Editor::getAddressDigit(), 593, FONT_CELL_Y*3, 0xFFFF00FF);
+                    if(onCursor0) drawDigitBox(Editor::getAddressDigit(), 36, FONT_CELL_Y*3, 0xFFFF00FF);
+                    if(onCursor1) drawDigitBox(Editor::getAddressDigit(), 108, FONT_CELL_Y*3, 0xFFFF00FF);
 
                     // Draw memory digit selection box                
-                    if(Editor::getCursorY() >= 0  &&  Editor::getMemoryMode() == Editor::RAM) drawDigitBox(Editor::getMemoryDigit(), 493 + Editor::getCursorX()*HEX_CHAR_WIDE, FONT_CELL_Y*4 + Editor::getCursorY()*FONT_CELL_Y, 0xFFFF00FF);
+                    if(Editor::getCursorY() >= 0  &&  Editor::getMemoryMode() == Editor::RAM) drawDigitBox(Editor::getMemoryDigit(), 8 + Editor::getCursorX()*HEX_CHAR_WIDE, FONT_CELL_Y*4 + Editor::getCursorY()*FONT_CELL_Y, 0xFFFF00FF);
                 }
             }
         }

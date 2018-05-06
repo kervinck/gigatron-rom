@@ -25,6 +25,8 @@
 #define HEX_CHAR_WIDE    18
 #define COLOUR_PALETTE   64
 #define NUM_LEDS         4
+#define MENU_START_X     488
+#define MENU_START_Y     0
 
 
 namespace Graphics
@@ -41,7 +43,8 @@ namespace Graphics
 
     void initialise(void);
 
-    void refreshPixel(const Cpu::State& S, int vgaX, int vgaY);
+    void refreshTimingPixel(const Cpu::State& S, int vgaX, int pixelY, uint32_t colour, bool debugging);
+    void refreshPixel(const Cpu::State& S, int vgaX, int vgaY, bool debugging);
     void refreshScreen(void);
 
     void drawLeds(void);

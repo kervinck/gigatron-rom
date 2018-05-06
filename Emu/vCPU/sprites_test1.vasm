@@ -571,5 +571,5 @@ SYS_SpriteCopy_118  .LD     [srcAddr],X         ; src line 0
                     
                     .LD     0x03,Y
                     .JMP    Y,0xCB
-                    .LD     0xC5                ; 0 - (14 + number of instructions + (even ? 2 : 3)) / 2
+                    .LD     0xC5                ; 0 - ((14 + number of instructions + 3) / 2), odd(14 + number of instructions) = true
                     

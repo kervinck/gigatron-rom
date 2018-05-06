@@ -1,7 +1,7 @@
 # gtemuSDL
 gtemuSDL is an emulator for the Gigatron TTL microcomputer, written in C++ using SDL2.<br/>
 This project provides support for Microsoft Windows and should be compatible with Linux, MacOS<br/>
-and possibly even Android. As of ver0.3.2 it has only been tested on Microsoft Windows10.<br/>
+and possibly even Android. As of ver0.3.8 it has only been tested on Microsoft Windows10.<br/>
 
 ## Features
 - Variable timing from a minimum of 60FPS up to whatever your PC can handle.<br/>
@@ -22,14 +22,15 @@ and possibly even Android. As of ver0.3.2 it has only been tested on Microsoft W
 - A debugging mode that lets you pause the simulation or single step through vCPU code.<br/>
 - Upload assembled vCPU code to RAM.<br/>
 - Upload assembled Native code to ROM, (**_emulation only_**).<br/>
-- Supports the Gigatron TTL's GT1 object file format.<br/>
+- Supports the Gigatron TTL's **_GT1_** object file format.<br/>
 
 ## YouTube
-- https://www.youtube.com/edit?o=U&video_id=pH4st5dz7Go<br/>
+- https://www.youtube.com/watch?v=pH4st5dz7Go<br/>
 - https://www.youtube.com/watch?v=u5AQCd47IcI<br/>
+- https://www.youtube.com/watch?v=sq8uCpBFwp8<br>
 
 ## References
-- gigatron-rom https://github.com/kervinck/gigatron-rom<br/>
+- Gigatron-ROM https://github.com/kervinck/gigatron-rom<br/>
 - SDL2 graphics https://github.com/kervinck/gigatron-rom/pull/1<br/>
 - http://talkchess.com/forum/viewtopic.php?t=65944&start=11<br/>
 - https://github.com/tronkko/dirent/releases<br/>
@@ -44,7 +45,7 @@ and possibly even Android. As of ver0.3.2 it has only been tested on Microsoft W
 - After building, copy the executable, SDL2 shared library/DLL, **_"theloop2.rom"_** and<br/>
   **_"EmuFont-96x48.bmp"_** to an appropriate directory; run the executable from there.<br/>
 - Create a **_"vCPU"_** directory within the above directory and add any user generated vCPU<br/>
-  or GT1 files that you want to upload to the emulator.<br/>
+  or **_GT1_** files that you want to upload to the emulator.<br/>
 
 ## Controls
 |Key        | Function                                                                          |
@@ -83,13 +84,47 @@ and possibly even Android. As of ver0.3.2 it has only been tested on Microsoft W
 |/          | B.                                                                                |
 |.          | A.                                                                                |
 
+## Assembler
+- The assembler is built into the executable, there are no makefiles or command line programs to<br/>
+  run. All you have to do is load the **_.vasm_** file within the file browser, (press **_L_** to enable<br/>
+  the browser), upon loading your file will automatically be assembled and any errors printed to<br/>
+  **_stderr_**. If there are no errors then a **_.gt1_** file will automatically be produced as long as there is<br/>
+  no native code within the **_.vasm_** file; the code is then executed within the Gigatron CPU emulator.<br/>
+- The assembler is able to assemble vCPU as well as native code.<br/>
+- vCPU code is assembly code that is variable length Von Neumann instructions supporting 16bit operations<br/>
+  that are executed by the inbuilt interpreter of the Gigatron TTL firmware and are stored in RAM.<br/>
+- Native code is based on a Harvard Architecture that exists only in ROM on both the Gigatron TTL<br/>
+  hardware and within the emulator.<br/>
+- The ROM code on the Gigatron TTL hardware is currently not modifiable without an EPROM programmer,<br/>
+  but the ROM within the emulator is able to be modified and experimented with, which this assembler<br/>
+  lets you do very easily.<br/>
+- The Assembler differentiates between the two instruction sets, (**_vCPU_** and **_Native_**), by preceding<br/>
+  Native instructions with a period **_'.'_**.<br/>
+- The Assembler supports Labels, Equates and Mutables, (a mutable is a label for self modifying code).<br/>
+- The Assembler recognises the following reserved words:<br/>
+    - **_\_startAddress\__** : entry point for the code, if this is missing defaults to 0x0200.<br/>
+    - **_\_callTable\__** : grows downwards as you use more CALL's, it can crash into program variables.<br/>
+    - **_\_singleStepWatch\__** : the single step debugger watches this variable location to decide when to step.<br/>
+    - **_\_disableUpload\__** : disables all writes to RAM/ROM, used for testing and verification.<br/>
+- The Assembler recognises the following reserved opcodes:<br/>
+    - **_DB_** : Define Byte, a string of 8bit bytes declared within the source code that are written to RAM.<br/>
+    - **_DW_** : Define Word, a string of 16bit words declared within the source code that are written to RAM.<br/>
+    - **_DBR_** : Define Byte, a string of 8bit bytes declared within the source code that are written to ROM.<br/>
+    - **_DWR_** : Define Word, a string of 16bit words declared within the source code that are written to ROM.<br/>
+- Numeric literals can be of any of the following format:<br/>
+    - **_hex_** : 0x0000 or $0000<br/>
+    - **_dec_** : 1234<br/>
+    - **_oct_** : 0o777 or 0q777<br/>
+    - **_bin_** : 0b01011111<br/>
+- Comments can anywhere on a line and commence with **_';'_** or **_'#'_**<br/>
+
 ## Debugger
 - The debugger allows you to single step through your vCPU code based on a variable changing<br/>
   its value. This variable by default is videoY located at address 0x0009, it counts horizontal<br/>
-  scan lines and thus should give decent resolution for most .vasm and .gt1 files.<br/>
-- The variable can be altered within a .vasm file like this:<br/>
+  scan lines and thus should give decent resolution for most **_.vasm_** and **_.gt1_** files.<br/>
+- The variable can be altered within a .vasm_** file like this:<br/>
 ~~~
-_singleStepWatch_   EQU     xyPos
+\_singleStepWatch\_   EQU     xyPos
 ~~~
 - In this example xyPos is a pointer into zero page memory, pointing to a variable that changes<br/>
   its value often.<br/>
@@ -99,7 +134,7 @@ _singleStepWatch_   EQU     xyPos
   and **_F5_** which are ignored.<br/>
 
 ## Errors
-- All error reporting is sent to stderr, under Windows a seperate console is opened, (that is<br/>
+- All error reporting is sent to **_stderr_**, under Windows a separate console is opened, (that is<br/>
   probably hiding under the main display), that will contain any error messages.<br/>
 
 ## Limitations

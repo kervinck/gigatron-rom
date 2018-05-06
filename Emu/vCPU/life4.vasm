@@ -354,9 +354,10 @@ SYS_DrawPixel2x2_32     .LD     [0x37]
                         .LD     [0x37]
                         .ST     [Y,X++]
                         .ST     [Y,X]
+                        .NOP                ; pad instructions so odd(14 + number of instructions) = true
                         .LD     0x03,Y
                         .JMP    Y,0xCB
-                        .LD     0xF0        0 - (14 + number of instructions + (even ? 2 : 3)) / 2
+                        .LD     0xF0        ; 0 - ((14 + number of instructions + 3) / 2), odd(14 + number of instructions) = true
                         
 SYS_ClearRow32_56       .LD     [0x40],X
                         .LD     [0x41],Y
@@ -393,7 +394,8 @@ SYS_ClearRow32_56       .LD     [0x40],X
                         .ST     [Y,X++]
                         .ST     [Y,X++]
                         .ST     [Y,X++]
+                        .NOP                ; pad instructions so odd(14 + number of instructions) = true
                         .LD     0x03,Y
                         .JMP    Y,0xCB
-                        .LD     0xE4        ; 0 - ((14 + number of instructions + (even ? 2 : 3)) / 2)
+                        .LD     0xE4        ; 0 - ((14 + number of instructions + 3) / 2), odd(14 + number of instructions) = true
                         
