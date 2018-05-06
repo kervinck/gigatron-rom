@@ -4,6 +4,17 @@
 // Marcel van Kervinck
 // Jan 2018
 
+// The object file is embedded (in PROGMEM) in GT1 format. It would be
+// GREAT if we can find a way to receive the file over the Arduino's
+// serial interface without adding upstream complexity. But as the
+// Arduino's 2K of RAM can't buffer an entire file at once, some
+// intelligence is needed there and we haven't found a good way yet.
+
+const byte gt1File[] PROGMEM = {
+  //#include "Blinky.h" // Blink pixel in middle of screen
+  #include "Lines.h"    // Draw randomized lines
+};
+
 // Arduino AVR    Gigatron Schematic Controller PCB
 // Uno     Name   OUT bit            CD4021     74HC595 (U39)
 // ------- ------ -------- --------- ---------- ----------------
@@ -19,17 +30,6 @@
 
 byte checksum; // Global is simplest
 
-const byte blinkyGt1[] PROGMEM = {
-  0x7f, 0x00, 0x0b, // Segment 7f00: 11 bytes
-  0x11, 0x50, 0x44, // 7f00 LDWI $4450  ; Load address of center of screen
-  0x2b, 0x30,       // 7f03 STW  'p'    ; Store in variable 'p' (at $0030)
-  0xf0, 0x30,       // 7f05 POKE 'p'    ; Write low byte of accumulator there
-  0xe3, 0x01,       // 7f07 ADDI 1      ; Increment accumulator
-  0x90, 0x03,       // 7f09 BRA  $7f05  ; Loop forever
-  0x00,             // No more segments
-  0x7f, 0x00        // Start address
-};
-
 void setup() {
   // Enable output pin (pins are set to input by default)
   PORTB |= 1<<PORTB5; // Send 1 when idle
@@ -37,48 +37,65 @@ void setup() {
 
   // Open upstream communication
   Serial.begin(57600);
-  Serial.println("*** Arduino Gigatron Hub");
-}
-
-void loop()
-{
-  Serial.println("Reset Gigatron");
+  doVersion();
 
   // In case we power on together with the Gigatron, this is a
   // good pause to wait for the video loop to have started
   delay(350);
+}
 
+void loop()
+{
+  doLoad();
+  countdown(10);
+}
+
+void doVersion()
+{
+  Serial.println("*** Arduino Gigatron Extender");
+}
+
+void doReset()
+{
   // Soft reset: hold start for >128 frames (>2.1 seconds)
+  Serial.println("Reset Gigatron");
   sendController(~buttonStart, 128+32);
 
   // Wait for main menu to be ready
   delay(1500);
+}
+
+void doLoad()
+{
+  doReset();
 
   // Navigate menu. 'Loader' is at the bottom
   Serial.println("Start Loader from menu");
   for (int i=0; i<10; i++) {
-    sendController(~buttonDown, 4);
+    sendController(~buttonDown, 2);
     delay(50);
   }
 
   // Start 'Loader' application on Gigatron
-  for (int i=0; i<3; i++) {
-    sendController(~buttonA, 4);
-    delay(100);
-  }
+  sendController(~buttonA, 2);
 
   // Wait for Loader to be running
-  delay(500);
+  delay(1000);
 
-  // Send Blinky as pseudo gt1 file
-  Serial.println("Load gt1 file");
-  sendGt1File(blinkyGt1, sizeof blinkyGt1);
+  // Send GT1 file
+  Serial.println("Send GT1 file");
+  sendGt1File(gt1File);
+}
 
-  // Wait
-  for (int i=10; i>0; i--) {
-    Serial.println(i);
+// Countdown from n to 1
+void countdown(int n)
+{
+  for (int i=n; i>0; i--) {
+    Serial.print(" ");
+    Serial.print(i);
     delay(1000);
   }
+  Serial.print("\n");
 }
 
 // Because the Arduino doesn't have enough RAM to buffer
@@ -87,47 +104,45 @@ void loop()
 // concatenated frames to the Gigatron. Between segments
 // it is communicating upstream with the serial port.
 
-void sendGt1File(const byte *gt1, unsigned gt1Size)
+void sendGt1File(const byte *gt1)
 {
-  #define byte_gt1(x) (pgm_read_byte_near(gt1 + (x)))
-  #define adr_gt1(x) (((word)byte_gt1(x) << 8) | byte_gt1((x) + 1))
+  #define readNext() pgm_read_byte(gt1++)
 
-  // Any number n > 0 of segments
-  word address;
-  int seg_start = 0;
-  byte segment[256];
+  byte segment[300] = {0};
+  word address = readNext();
+
+  // Any number n of segments (n>0)
   do {
-    address = adr_gt1(seg_start);
-    int len = byte_gt1(seg_start + 2);
+    // Segment start and length
+    address = (address << 8) + readNext();
+    int len = readNext();
     if (!len)
       len = 256;
 
-    // Check that segment doesn't cross page boundary
+    // Copy data into send buffer
+    for (int i=0; i<len; i++)
+      segment[i] = readNext();
+
+    // Check that segment doesn't cross the page boundary
     if ((address & 255) + len > 256) {
-      Serial.println("Error: invalid stream");
+      Serial.println("? Invalid GT1 data");
       return;
     }
 
-    // Read data out of PROGMEM
-    for (int i = 0; i < len; ++i) {
-      segment[i] = byte_gt1(seg_start + 3 + i);
-    }
-
     // Send downstream
-    Serial.print("> Load ");
+    Serial.print("> Load $");
+    Serial.print(address, HEX);
+    Serial.print(" (");
     Serial.print(len);
-    Serial.println(" bytes");
-    int page_size = (address | 0xff) - address;
-    sendGt1Segment(address, page_size, len, segment);
+    Serial.println(" bytes)");
+    sendGt1Segment(address, len, segment);
 
-    // Adjust pointer to the start of the next segment
-    seg_start += len + 3;
-  } while (byte_gt1(seg_start) != 0);
-
-  seg_start++; // Skip over terminating byte
+    address = readNext();
+  } while (address != 0);
 
   // Read start address
-  address = adr_gt1(seg_start);
+  address = readNext();
+  address = (address << 8) + readNext();
   if (address != 0) {
     Serial.print("> Start $");
     Serial.println(address, HEX);
@@ -137,18 +152,16 @@ void sendGt1File(const byte *gt1, unsigned gt1Size)
 
 // Send a 1..256 byte code or data segment into the Gigatron by
 // repacking it into Loader frames of max N=60 payload bytes each.
-void sendGt1Segment(word address, int page_size, int len, const byte data[])
+void sendGt1Segment(word address, int len, const byte data[])
 {
   noInterrupts();
   byte n = min(N, len);
-  byte pn = min(N, page_size);
-  resetChecksum(pn, n, address, data);
+  resetChecksum(n, address, data);
 
   // Send segment data
-  for (int i=0; i<page_size; i+=pn) {
-    pn = min(N, page_size-i);
-    n = (i >= len) ? 0 : min(N, len-i);
-    sendFrame('L', pn, n, address+i, data+i);
+  for (int i=0; i<len; i+=n) {
+    n = min(N, len-i);
+    sendFrame('L', n, address+i, data+i);
   }
   interrupts();
 }
@@ -157,8 +170,8 @@ void sendGt1Segment(word address, int page_size, int len, const byte data[])
 void sendGt1Execute(word address, const byte data[])
 {
   noInterrupts();
-  resetChecksum(0, 0, address, data);
-  sendFrame('L', 0, 0, address, data);
+  resetChecksum(0, address, data);
+  sendFrame('L', 0, address, data);
   interrupts();
 }
 
@@ -178,18 +191,18 @@ void sendController(byte value, int n)
   interrupts(); // So delay() can work again
 }
 
-void resetChecksum(byte pn, byte n, word address, const byte *data)
+void resetChecksum(byte n, word address, const byte *data)
 {
   // Send one frame with false checksum to force
   // a checksum resync at the receiver
   checksum = 0;
-  sendFrame(-1, pn, n, address, data);
+  sendFrame(-1, n, address, data);
 
   // Setup checksum properly
   checksum = 'g';
 }
 
-void sendFrame(byte firstByte, byte page_len, byte data_len, word address, const byte *message)
+void sendFrame(byte firstByte, byte len, word address, const byte *message)
 {
   // Send one frame of data
   //
@@ -206,11 +219,11 @@ void sendFrame(byte firstByte, byte page_len, byte data_len, word address, const
 
   sendFirst(firstByte, 8);     // Protocol byte
   checksum += firstByte << 6;  // Keep Loader.gcl dumb
-  sendBits(page_len, 6);       // Length 0, 1..60
+  sendBits(len, 6);            // Length 0, 1..60
   sendBits(address&255, 8);    // Low address bits
   sendBits(address>>8, 8);     // High address bits
   for (byte i=0; i<N; i++)     // Payload bytes
-    sendBits(i < data_len ? message[i] : 0, 8);
+    sendBits(message[i], 8);
   byte lastByte = -checksum;   // Checksum must come out as 0
   sendBits(lastByte, 8);
   checksum = lastByte;         // Concatenate checksums
