@@ -17,8 +17,9 @@ import sys
 # XXX 'page' macro
 
 class Program:
-  def __init__(self, address, name):
+  def __init__(self, address, name, forRom=True):
     self.name = name
+    self.forRom = forRom
     self.comment = 0
     self.lineNumber, self.filename = 0, None
     self.blocks, self.block = [0], 1
@@ -46,9 +47,9 @@ class Program:
       self.segInfo()
     if address != self.vPC or self.segStart < self.vPC:
       assert(address>>8) # Because a zero would mark the end of stream
-      putInRomTable(address>>8, '| RAM segment address (high byte first)')
-      putInRomTable(address&0xff, '|')
-      putInRomTable(lo('$%s.seg.%d' % (self.name, self.segId)), '| Length (1..256)')
+      self.putInRomTable(address>>8, '| RAM segment address (high byte first)')
+      self.putInRomTable(address&0xff, '|')
+      self.putInRomTable(lo('$%s.seg.%d' % (self.name, self.segId)), '| Length (1..256)')
     self.segStart = address
     page = address & ~255
     self.segEnd = page + (250 if page <= 0x400 else 256)
@@ -113,14 +114,14 @@ class Program:
         self.error('Out of code space')
     if byte < 0 or byte >= 256:
         self.error('Value out of range %d (must be 0..255)' % byte)
-    putInRomTable(byte, comment)
+    self.putInRomTable(byte, comment)
     self.vPC += 1
 
   def opcode(self, ins):
     """Next opcode in RAM"""
     if self.vPC >= self.segEnd:
         self.error('Out of code space')
-    putInRomTable(lo(ins), '%04x %s' % (self.vPC, ins))
+    self.putInRomTable(lo(ins), '%04x %s' % (self.vPC, ins))
     self.vPC += 1
 
   def word(self, word):
@@ -395,7 +396,7 @@ class Program:
     symbols, n = sorted(self.vars.keys()), 8
     for i in range(0, len(symbols), n):
       print ' Symbols ' + ' '.join(symbols[i:i+n])
-    putInRomTable(0) # Zero marks the end of stream
+    self.putInRomTable(0) # Zero marks the end of stream
     C('End of file')
 
   def warning(self, message):
@@ -411,12 +412,12 @@ class Program:
     print prefix, message
     sys.exit()
 
-def putInRomTable(byte, comment=None):
-  ld(val(byte))
-  if comment:
-    C(comment)
-  if pc()&255 == 251:
-    trampoline()
+  def putInRomTable(self, byte, comment=None):
+    ld(val(byte))
+    if comment:
+      C(comment)
+    if self.forRom and pc()&255 == 251:
+      trampoline()
 
 def prev(address, step=2):
   """Take vPC two bytes back, wrap around if needed to stay on page"""
