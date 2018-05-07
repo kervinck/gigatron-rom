@@ -1,18 +1,23 @@
-'use strict';
+import {
+    HSYNC,
+    VSYNC,
+} from './vga.js';
 
 const {
     Observable,
     Subject,
+    concat,
+    defer,
+    empty,
+    range,
 } = rxjs;
 
 const {
     concatMap,
 } = rxjs.operators;
 
-/* exported Loader */
-
 /** Loader */
-class Loader {
+export class Loader {
     /** Create a new Loader
      * @param {Gigatron} cpu
      */
@@ -20,8 +25,6 @@ class Loader {
         this.cpu = cpu;
         this.payload = new Uint8Array(60);
         this.strobes = new Subject();
-        this.checksum = 0;
-        this.data = null;
     }
 
     /** load a gt1 file
@@ -29,25 +32,26 @@ class Loader {
      * @return {Observable}
      */
     load(file) {
-        return rxjs.concat(
+        return concat(
             this.readFile(file).pipe(
-                rxjs.operators.map((result) => {
+                concatMap((result) => {
                     this.data = new DataView(result);
                     this.offset = 0;
 
                     // Send one frame with false checksum to force
                     // a checksum resync at the receiver
                     this.checksum = 0;
+                    return this.sendFrame(0xff, 0, 0);
                 })),
-            rxjs.defer(() => this.sendFrame(0xff, 0, 0)),
-            rxjs.defer(() => {
+            defer(() => {
                 // Setup checksum properly
                 this.checksum = 'g'.charCodeAt(0);
                 return this.sendSections();
             }),
-            rxjs.defer(() => {
+            defer(() => {
+                // Set the input register back to quiesced state
                 this.cpu.inReg = 0xff;
-                return rxjs.empty();
+                return empty();
             }));
     }
 
@@ -74,11 +78,11 @@ class Loader {
      */
     sendSections() {
         if (this.offset < this.data.byteLength) {
-            return rxjs.concat(
+            return concat(
                 this.sendSection(),
-                rxjs.defer(() => this.sendSections()));
+                defer(() => this.sendSections()));
         }
-        return rxjs.empty();
+        return empty();
     }
 
     /** load the next section from the data
@@ -103,7 +107,7 @@ class Loader {
                 return this.sendData(addr, size);
             }
         }
-        return rxjs.empty();
+        return empty();
     }
 
     /** send a start command
@@ -125,11 +129,11 @@ class Loader {
             for (let i = 0; i < n; i++) {
                 this.payload[i] = this.data.getUint8(this.offset++);
             }
-            return rxjs.concat(
+            return concat(
                 this.sendFrame('L'.charCodeAt(0), n, addr),
-                rxjs.defer(() => this.sendData(addr + n, size - n)));
+                defer(() => this.sendData(addr + n, size - n)));
         }
-        return rxjs.empty();
+        return empty();
     }
 
     /** send the payload frame
@@ -139,20 +143,20 @@ class Loader {
      * @return {Observable}
      */
     sendFrame(firstByte, len, addr) {
-        return rxjs.concat(
+        return concat(
             this.negedge(VSYNC),
             // account for 2 cycles delay in 74HCT595 and ?
             this.posedge(HSYNC),
             this.posedge(HSYNC),
             this.sendDataBits(firstByte, 8),
-            rxjs.defer(() => {
+            defer(() => {
                 this.checksum = (this.checksum + (firstByte << 6)) & 0xff;
                 return this.sendDataBits(len, 6);
             }),
             this.sendDataBits(addr & 0xff, 8),
             this.sendDataBits(addr >> 8, 8),
             this.sendDataBytes(this.payload),
-            rxjs.defer(() => {
+            defer(() => {
                 this.checksum = (-this.checksum) & 0xff;
                 return this.sendBits(this.checksum, 8);
             }));
@@ -163,7 +167,7 @@ class Loader {
      * @return {Observable}
      */
     sendDataBytes(payload) {
-        return rxjs.range(0, payload.length).pipe(
+        return range(0, payload.length).pipe(
             concatMap((offset) => {
                 return this.sendDataBits(payload[offset], 8);
             }));
@@ -182,7 +186,7 @@ class Loader {
      * @return {Observable}
      */
     sendDataBits(value, n) {
-        return rxjs.defer(() => {
+        return defer(() => {
             this.checksum = (this.checksum + value) & 0xff;
             return this.sendBits(value, n);
         });
@@ -194,7 +198,7 @@ class Loader {
      * @return {Observable}
      */
     sendBits(value, n) {
-        return rxjs.range(0, n).pipe(
+        return range(0, n).pipe(
             concatMap((i) => {
                 this.shiftBit(value & (1 << (n - i - 1)));
                 return this.posedge(HSYNC);
@@ -239,7 +243,7 @@ class Loader {
 
     /** advance one tick */
     tick() {
-        if ((this.out ^ this.cpu.out) & 0xc0) {
+        if ((this.out ^ this.cpu.out) & (HSYNC | VSYNC)) {
             this.out = this.cpu.out;
             this.strobes.next(this.out);
         }

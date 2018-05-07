@@ -1,9 +1,5 @@
-'use strict';
-
-/* exported Gamepad */
-
 /** Gamepad device */
-class Gamepad {
+export class Gamepad {
     /** Create a Gamepad
      * @param {Gigatron} cpu - The cpu to control
      * @param {Object.<string,string[]>} keys - Keys codes for

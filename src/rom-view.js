@@ -1,9 +1,10 @@
-'use strict';
-
-/* exported RomView */
+import {
+    rpad,
+    toHex,
+} from './utils.js';
 
 /** A view of ROM */
-class RomView {
+export class RomView {
     /** Create a new RomView
      * @param {HTMLDivElement} view
      * @param {Uint16Array} rom

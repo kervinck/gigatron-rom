@@ -1,15 +1,24 @@
-'use strict';
-
-/* exported rpad, lpad, toHex */
+import {
+    Vga,
+} from './vga.js';
+import {
+    BlinkenLights,
+} from './blinkenlights.js';
+import {
+    Gigatron,
+} from './gigatron.js';
+import {
+    Gamepad,
+} from './gamepad.js';
+import {
+    Audio,
+} from './audio.js';
+import {
+    Loader,
+} from './loader.js';
 
 const HZ = 6250000;
 const romUrl = 'theloop.2.rom';
-
-var cpu;
-var vga;
-var blinkenLights;
-var audio;
-var gamepad;
 
 $(function() {
     $('[data-toggle="tooltip"]').tooltip();
@@ -17,8 +26,8 @@ $(function() {
     let muteButton = $('#mute');
     let unmuteButton = $('#unmute');
     let volumeSlider = $('#volume-slider');
-    let vgaCanvas = $('#vga');
-    let blinkenLightsCanvas = $('#blinken-lights');
+    let vgaCanvas = $('#vga-canvas');
+    let blinkenLightsCanvas = $('#blinkenlights-canvas');
     let loadFileInput = $('#load-file-input');
 
     /** display the error modal with the given message
@@ -31,13 +40,13 @@ $(function() {
         $('#error-modal').modal();
     }
 
-    cpu = new Gigatron({
+    let cpu = new Gigatron({
         hz: HZ,
         romAddressWidth: 16,
         ramAddressWidth: 15,
     });
 
-    vga = new Vga(vgaCanvas.get(0), cpu, {
+    let vga = new Vga(vgaCanvas.get(0), cpu, {
         horizontal: {
             frontPorch: 16,
             backPorch: 48,
@@ -50,11 +59,11 @@ $(function() {
         },
     });
 
-    blinkenLights = new BlinkenLights(blinkenLightsCanvas.get(0), cpu);
+    let blinkenLights = new BlinkenLights(blinkenLightsCanvas.get(0), cpu);
 
-    audio = new Audio(cpu);
+    let audio = new Audio(cpu);
 
-    gamepad = new Gamepad(cpu, {
+    let gamepad = new Gamepad(cpu, {
         up: ['ArrowUp'],
         down: ['ArrowDown'],
         left: ['ArrowLeft'],
@@ -64,6 +73,8 @@ $(function() {
         a: ['A', 'a'],
         b: ['S', 's'],
     });
+
+    let loader = new Loader(cpu);
 
     muteButton.click(function() {
         audio.mute = true;
@@ -84,15 +95,15 @@ $(function() {
     volumeSlider.trigger('input');
 
     let timer;
-    let loader;
 
     /** load a GT1 file
      * @param {File} file
      */
     function loadGt1(file) {
-        loader = new Loader(cpu);
-        loader.load(file).subscribe({
-            error: (error) => showError($(`\
+        loader
+            .load(file)
+            .subscribe({
+                error: (error) => showError($(`\
                 <p>\
                     Could not load GT1 from <code>${file.name}</code>\
                 </p>\
@@ -100,8 +111,7 @@ $(function() {
                 <p class="alert alert-danger">\
                     <span class="oi oi-warning"></span> ${error.message}\
                 </p>`)),
-            complete: () => loader = null,
-        });
+            });
     }
 
     loadFileInput
@@ -112,7 +122,6 @@ $(function() {
             let target = event.target;
             if (target.files.length != 0) {
                 let file = target.files[0];
-                // target.labels[0].textContent = file.name;
                 loadGt1(file);
             }
         });
@@ -142,9 +151,9 @@ $(function() {
     function startRunLoop() {
         gamepad.start();
 
-        timer = setInterval(function ticks() {
+        timer = setInterval(() => {
             /* advance the simulation until the audio queue is full,
-             * or 1000ms of simulated time has passed.
+             * or 10ms of simulated time has passed.
              */
             let cycles = cpu.hz / 100;
             audio.drain();
@@ -152,11 +161,7 @@ $(function() {
                 cpu.tick();
                 vga.tick();
                 audio.tick();
-                if (loader) {
-                    if (loader.tick()) {
-                        break;
-                    }
-                }
+                loader.tick();
             }
             blinkenLights.tick(); // don't need realtime update
         }, audio.duration);

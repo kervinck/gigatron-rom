@@ -1,9 +1,5 @@
-'use strict';
-
-/* exported Scroller */
-
 /** A class to manage scrolling a dynamically generated list */
-class Scroller {
+export class Scroller {
     /** Create a new Scroller
      * @param {HTMLElement} container
      * @param {{createRow: function, numRows: number}} options

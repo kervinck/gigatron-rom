@@ -1,9 +1,9 @@
-'use strict';
-
-/* exported Disassembler */
+import {
+    toHex,
+} from './utils.js';
 
 /** Gigatron Disassembler */
-class Disassembler {
+export class Disassembler {
     /**
      * The result of disassembly
      * @typedef {Object} Parts

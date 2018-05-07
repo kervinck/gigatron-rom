@@ -1,7 +1,3 @@
-'use strict';
-
-/* exported Gigatron */
-
 /**
  * @return {Uint8} a random Uint8
  * */
@@ -10,7 +6,7 @@ function randomUint8() {
 }
 
 /** Gigatron processor */
-class Gigatron {
+export class Gigatron {
     /** Create a Gigatron
      * @param {Object} options
      */

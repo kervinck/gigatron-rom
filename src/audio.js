@@ -1,13 +1,9 @@
-'use strict';
-
-/* exported Audio */
-
 const SAMPLES_PER_SECOND = 44100;
 
 var AudioContext = window.AudioContext || window.webkitAudioContext;
 
 /** Audio output */
-class Audio {
+export class Audio {
     /**
      * Create an Audio.
      * @param {Gigatron} cpu - The CPU

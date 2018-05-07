@@ -1,14 +1,10 @@
-'use strict';
-
-/* exported rpad, lpad, toHex */
-
 /** right pad a string
  * @param {string} value - The value to pad
  * @param {number} width - The width to pad to
  * @param {string} [pad=' '] - The pad string
  * @return {string} The padded string
  */
-function rpad(value, width, pad) {
+export function rpad(value, width, pad) {
     pad = pad || ' ';
     if (value.length < width) {
         value = value + pad.repeat(width - value.length);
@@ -22,7 +18,7 @@ function rpad(value, width, pad) {
  * @param {string} [pad=' '] - The pad string
  * @return {string} The padded string
  */
-function lpad(value, width, pad) {
+export function lpad(value, width, pad) {
     pad = pad || ' ';
     if (value.length < width) {
         value = pad.repeat(width - value.length) + value;
@@ -35,6 +31,6 @@ function lpad(value, width, pad) {
  * @param {number} width - The width of the result
  * @return {string} The padded hex string
  */
-function toHex(value, width) {
+export function toHex(value, width) {
     return lpad(value.toString(16), width, '0');
 }

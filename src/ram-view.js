@@ -1,6 +1,6 @@
-'use strict';
-
-/* exported RamView */
+import {
+    toHex,
+} from './utils.js';
 
 /** determine if a character code is printable
  * @param {number} code - Character code to test
@@ -11,7 +11,7 @@ function isprint(code) {
 }
 
 /** A view of RAM */
-class RamView {
+export class RamView {
     /** Create a new RamView
      * @param {HTMLTextAreaElement} textarea
      * @param {Uint8Array} memory

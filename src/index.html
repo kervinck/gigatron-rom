@@ -15,21 +15,14 @@
     <script src="https://unpkg.com/rxjs/bundles/rxjs.umd.min.js"></script>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.0/slate/bootstrap.min.css" integrity="sha384-A0hm/Pn0Gvk8w7szlEuTOZrIyQCCBNXQF9ccseoCI36nWRfMEAapo5UJ56zLPvPw" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/open-iconic/1.1.1/font/css/open-iconic-bootstrap.min.css" integrity="sha256-BJ/G+e+y7bQdrYkS2RBTyNfBHpA9IuGaPmf9htub5MQ=" crossorigin="anonymous" />
-    <script src="utils.js"></script>
-    <script src="gigatron.js"></script>
-    <script src="vga.js"></script>
-    <script src="audio.js"></script>
-    <script src="blinkenlights.js"></script>
-    <script src="gamepad.js"></script>
-    <script src="loader.js"></script>
-    <script src="index.js"></script>
+    <script type="module" src="./main.js"></script>
 
     <style>
         kbd {
             background-color: black;
         }
 
-        #vga {
+        #vga-canvas {
             background-color: black;
         }
 
@@ -50,10 +43,10 @@
                     <hr>
 
                     <!-- BLINKENLIGHTS -->
-                    <canvas id="blinken-lights" width="0" height="0"></canvas>
+                    <canvas id="blinkenlights-canvas" width="0" height="0"></canvas>
 
                     <!-- VGA -->
-                    <canvas id="vga" class="border border-white rounded p-1" width="640" height="480"></canvas>
+                    <canvas id="vga-canvas" class="border border-white rounded p-1" width="640" height="480"></canvas>
 
                     <hr>
 
@@ -91,9 +84,11 @@
                     </div>
                     <div class="row">
                         <form>
-                            <div class="custom-file">
-                                <input id="load-file-input" type="file" class="custom-file-input" accept=".gt1">
-                                <label class="custom-file-label" for="load-file-input">Choose file to load</label>
+                            <div class="form-group">
+                                <div class="custom-file">
+                                    <input id="load-file-input" type="file" class="form-control custom-file-input" accept=".gt1">
+                                    <label class="custom-file-label" for="load-file-input">Run Loader then choose file to load</label>
+                                </div>
                             </div>
                         </form>
                     </div>

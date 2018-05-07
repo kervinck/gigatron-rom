@@ -1,9 +1,5 @@
-'use strict';
-
-/* exported BlinkenLights */
-
 /** Blinkenlights on outx register */
-class BlinkenLights {
+export class BlinkenLights {
     /** Create a new BlinkenLights
      * @param {HTMLCanvasElement} canvas
      * @param {Gigatron} cpu

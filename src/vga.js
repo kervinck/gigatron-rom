@@ -1,12 +1,8 @@
-'use strict';
-
-/* exported Vga */
-
-const VSYNC = 0x80;
-const HSYNC = 0x40;
+export const VSYNC = 0x80;
+export const HSYNC = 0x40;
 
 /** Vga */
-class Vga {
+export class Vga {
     /** Create a new Vga
      * @param {HTMLCanvasElement} canvas
      * @param {Gigatron} cpu
@@ -46,18 +42,21 @@ class Vga {
     tick() {
         let out = this.cpu.out;
         let falling = this.out & ~out;
-        this.out = out;
 
         if (falling & VSYNC) {
             this.row = 0;
             this.pixel = 0;
-            this.ctx.putImageData(this.imageData, 0, 0);
+            this.render();
         }
 
         if (falling & HSYNC) {
             this.col = 0;
             this.row++;
         }
+
+        // Chrome optimizer put this before the falling calculation
+        // if it follows immediately after it, so it got moved down here
+        this.out = out;
 
         if ((out & (VSYNC | HSYNC)) != (VSYNC | HSYNC)) {
             // blanking interval
