@@ -165,6 +165,21 @@ $(function() {
             }
             blinkenLights.tick(); // don't need realtime update
         }, audio.duration);
+
+        // Chrome suspends the AudioContext on reload
+        // and doesn't allow it to be resumed unless there
+        // is user interaction
+        if (audio.context.state === 'suspended') {
+            vga.ctx.fillStyle = 'white';
+            vga.ctx.textAlign = 'center';
+            vga.ctx.textBaseline = 'middle';
+            vga.ctx.font = '50px serif';
+            vga.ctx.fillText('Click to start', 320, 240);
+            vgaCanvas.on('click', (event) => {
+                audio.context.resume();
+                vgaCanvas.off('click');
+            });
+        }
     }
 
     /** stop the simulation loop */
