@@ -19,6 +19,17 @@ $(function() {
     let volumeSlider = $('#volume-slider');
     let vgaCanvas = $('#vga').get(0);
     let blinkenLightsCanvas = $('#blinken-lights').get(0);
+    let loadFileInput = $('#load-file-input');
+
+    /** display the error modal with the given message
+     * @param {JQuery} body
+     */
+    function showError(body) {
+        $('#error-modal-body')
+            .empty()
+            .append(body);
+        $('#error-modal').modal();
+    }
 
     cpu = new Gigatron({
         hz: HZ,
@@ -73,6 +84,25 @@ $(function() {
     volumeSlider.trigger('input');
 
     let timer;
+    let loader;
+
+    loadFileInput.on('input', (event) => {
+        let target = event.target;
+        let file = target.files[0];
+        target.labels[0].textContent = file.name;
+        loader = new Loader(cpu);
+        loader.load(file).subscribe({
+            error: (error) => showError($(`\
+                <p>\
+                    Could not load GT1 from <code>${file.name}</code>\
+                </p>\
+                <hr>\
+                <p class="alert alert-danger">\
+                    <span class="oi oi-warning"></span> ${error.message}\
+                </p>`)),
+            complete: () => loader = null,
+        });
+    });
 
     /** start the simulation loop */
     function startRunLoop() {
@@ -88,6 +118,11 @@ $(function() {
                 cpu.tick();
                 vga.tick();
                 audio.tick();
+                if (loader) {
+                    if (loader.tick()) {
+                        break;
+                    }
+                }
             }
             blinkenLights.tick(); // don't need realtime update
         }, audio.duration);
@@ -108,16 +143,14 @@ $(function() {
         req.responseType = 'arraybuffer';
         req.onload = (event) => {
             if (req.status != 200) {
-                $('#error-modal-body')
-                    .empty()
-                    .append($(`<p>Could not load ROM from \
-                                <code>${url}</code></p>\
-                                <hr>\
-                                <p class="alert alert-danger">\
-                                    <span class="oi oi-warning">\
-                                    </span> ${req.statusText}\
-                                </p>`));
-                $('#error-modal').modal();
+                showError($(`\
+                    <p>\
+                        Could not load ROM from <code>${url}</code>\
+                    </p>\
+                    <hr>\
+                    <p class="alert alert-danger">\
+                        <span class="oi oi-warning"></span> ${req.statusText}\
+                    </p>`));
             } else {
                 let dataView = new DataView(req.response);
                 let wordCount = dataView.byteLength >> 1;
