@@ -1,7 +1,5 @@
-Download `theloop.2.rom`
+Download `theloop.2.rom` and put it in the `src` directory.
 
-Open `src/index.html` in a browser.
+Start an HTTP server in the `src` directory.
 
-Click `Choose file` and select the rom image.
-
-Click the Go button.
+Point your browser at the server root.
