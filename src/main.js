@@ -130,6 +130,8 @@ $(function() {
         .on('dragenter', (event) => {
             event.preventDefault();
             event.stopPropagation();
+            let dataTransfer = event.originalEvent.dataTransfer;
+            dataTransfer.dropEffect = 'link';
         })
         .on('dragover', (event) => {
             event.preventDefault();
@@ -165,6 +167,8 @@ $(function() {
             }
             blinkenLights.tick(); // don't need realtime update
         }, audio.duration);
+
+        audio.context.resume();
 
         // Chrome suspends the AudioContext on reload
         // and doesn't allow it to be resumed unless there

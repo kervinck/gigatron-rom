@@ -90,6 +90,7 @@ export class Loader {
                     if (startAddr != 0) {
                         observer.next(this.sendStartCommand(startAddr));
                     }
+                    break;
                 } else {
                     // data segment
                     let addr = data.getUint16(offset);
