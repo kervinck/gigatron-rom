@@ -17,8 +17,8 @@ $(function() {
     let muteButton = $('#mute');
     let unmuteButton = $('#unmute');
     let volumeSlider = $('#volume-slider');
-    let vgaCanvas = $('#vga').get(0);
-    let blinkenLightsCanvas = $('#blinken-lights').get(0);
+    let vgaCanvas = $('#vga');
+    let blinkenLightsCanvas = $('#blinken-lights');
     let loadFileInput = $('#load-file-input');
 
     /** display the error modal with the given message
@@ -37,7 +37,7 @@ $(function() {
         ramAddressWidth: 15,
     });
 
-    vga = new Vga(vgaCanvas, cpu, {
+    vga = new Vga(vgaCanvas.get(0), cpu, {
         horizontal: {
             frontPorch: 16,
             backPorch: 48,
@@ -50,7 +50,7 @@ $(function() {
         },
     });
 
-    blinkenLights = new BlinkenLights(blinkenLightsCanvas, cpu);
+    blinkenLights = new BlinkenLights(blinkenLightsCanvas.get(0), cpu);
 
     audio = new Audio(cpu);
 
@@ -86,10 +86,10 @@ $(function() {
     let timer;
     let loader;
 
-    loadFileInput.on('input', (event) => {
-        let target = event.target;
-        let file = target.files[0];
-        target.labels[0].textContent = file.name;
+    /** load a GT1 file
+     * @param {File} file
+     */
+    function loadGt1(file) {
         loader = new Loader(cpu);
         loader.load(file).subscribe({
             error: (error) => showError($(`\
@@ -102,7 +102,41 @@ $(function() {
                 </p>`)),
             complete: () => loader = null,
         });
-    });
+    }
+
+    loadFileInput
+        .on('click', (event) => {
+            loadFileInput.closest('form').get(0).reset();
+        })
+        .on('change', (event) => {
+            let target = event.target;
+            if (target.files.length != 0) {
+                let file = target.files[0];
+                // target.labels[0].textContent = file.name;
+                loadGt1(file);
+            }
+        });
+
+    vgaCanvas
+        .on('dragenter', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+        })
+        .on('dragover', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+        })
+        .on('drop', (event) => {
+            let dataTransfer = event.originalEvent.dataTransfer;
+            if (dataTransfer) {
+                let files = dataTransfer.files;
+                if (files.length != 0) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    loadGt1(files[0]);
+                }
+            }
+        });
 
     /** start the simulation loop */
     function startRunLoop() {
