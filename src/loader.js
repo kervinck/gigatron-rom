@@ -8,13 +8,16 @@ const {
     Subject,
     concat,
     defer,
-    empty,
     range,
 } = rxjs;
 
 const {
     concatMap,
+    concatAll,
+    finalize,
 } = rxjs.operators;
+
+const MAX_PAYLOAD_SIZE = 60;
 
 /** Loader */
 export class Loader {
@@ -23,7 +26,6 @@ export class Loader {
      */
     constructor(cpu) {
         this.cpu = cpu;
-        this.payload = new Uint8Array(60);
         this.strobes = new Subject();
     }
 
@@ -32,26 +34,25 @@ export class Loader {
      * @return {Observable}
      */
     load(file) {
-        return concat(
-            this.readFile(file).pipe(
-                concatMap((result) => {
-                    this.data = new DataView(result);
-                    this.offset = 0;
-
-                    // Send one frame with false checksum to force
-                    // a checksum resync at the receiver
-                    this.checksum = 0;
-                    return this.sendFrame(0xff, 0, 0);
-                })),
-            defer(() => {
-                // Setup checksum properly
-                this.checksum = 'g'.charCodeAt(0);
-                return this.sendSections();
+        return this.readFile(file).pipe(
+            concatMap((buffer) => {
+                let data = new DataView(buffer);
+                return concat(
+                    defer(() => {
+                        // Send one frame with false checksum to force
+                        // a checksum resync at the receiver
+                        this.checksum = 0;
+                        return this.sendFrame(0xff, 0);
+                    }),
+                    defer(() => {
+                        // Setup checksum properly
+                        this.checksum = 'g'.charCodeAt(0);
+                        return this.sendSegments(data);
+                    }));
             }),
-            defer(() => {
+            finalize(() => {
                 // Set the input register back to quiesced state
                 this.cpu.inReg = 0xff;
-                return empty();
             }));
     }
 
@@ -74,40 +75,44 @@ export class Loader {
     }
 
     /** load sections from data until busy
-     * @return {Observable}
+     * @param {DataView} data
+     * @return {Observable<Observable<T>>}
      */
-    sendSections() {
-        if (this.offset < this.data.byteLength) {
-            return concat(
-                this.sendSection(),
-                defer(() => this.sendSections()));
-        }
-        return empty();
-    }
+    sendSegments(data) {
+        return Observable.create((observer) => {
+            let offset = 0;
+            while (offset < data.byteLength) {
+                if (data.getUint8(offset) == 0 && offset != 0) {
+                    // start address segment
+                    offset += 1;
+                    let startAddr = data.getUint16(this.offset);
+                    offset += 2;
+                    if (startAddr != 0) {
+                        observer.next(this.sendStartCommand(startAddr));
+                    }
+                } else {
+                    // data segment
+                    let addr = data.getUint16(offset);
+                    offset += 2;
+                    let size = data.getUint8(offset);
+                    offset += 1;
+                    if (size != 0) {
+                        let payload = new DataView(
+                            data.buffer,
+                            data.byteOffset + offset,
+                            size);
+                        observer.next(this.sendDataSegment(addr, payload));
+                    }
+                    offset += size;
+                }
+            }
 
-    /** load the next section from the data
-     * @return {Observable}
-     */
-    sendSection() {
-        if (this.data.getUint8(this.offset) == 0 && this.offset != 0) {
-            // start address section
-            this.offset += 1;
-            let startAddr = this.data.getUint16(this.offset);
-            this.offset += 2;
-            if (startAddr != 0) {
-                return this.sendStartCommand(startAddr);
+            if (offset > data.byteLength) {
+                observer.error(new Error('Segment exceeds file size'));
             }
-        } else {
-            // data section
-            let addr = this.data.getUint16(this.offset);
-            this.offset += 2;
-            let size = this.data.getUint8(this.offset);
-            this.offset += 1;
-            if (size != 0) {
-                return this.sendData(addr, size);
-            }
-        }
-        return empty();
+
+            observer.complete();
+        }).pipe(concatAll());
     }
 
     /** send a start command
@@ -115,47 +120,52 @@ export class Loader {
      * @return {Observable}
      */
     sendStartCommand(addr) {
-        return this.sendFrame('L'.charCodeAt(0), 0, addr);
+        return this.sendFrame('L'.charCodeAt(0), addr);
     }
 
     /** send a data block
      * @param {number} addr
-     * @param {number} size
+     * @param {DataView} data
      * @return {Observable}
      */
-    sendData(addr, size) {
-        if (size != 0) {
-            let n = Math.min(size, this.payload.length);
-            for (let i = 0; i < n; i++) {
-                this.payload[i] = this.data.getUint8(this.offset++);
+    sendDataSegment(addr, data) {
+        return Observable.create((observer) => {
+            let buffer = data.buffer;
+            let size = data.byteLength;
+            let offset = data.byteOffset;
+
+            while (size != 0) {
+                let n = Math.min(size, MAX_PAYLOAD_SIZE);
+                let payload = new DataView(buffer, offset, n);
+                observer.next(this.sendFrame('L'.charCodeAt(0), addr, payload));
+                addr += n;
+                offset += n;
+                size -= n;
             }
-            return concat(
-                this.sendFrame('L'.charCodeAt(0), n, addr),
-                defer(() => this.sendData(addr + n, size - n)));
-        }
-        return empty();
+            observer.complete();
+        }).pipe(concatAll());
     }
 
     /** send the payload frame
      * @param {number} firstByte
-     * @param {number} len
      * @param {number} addr
+     * @param {DataView} payload
      * @return {Observable}
      */
-    sendFrame(firstByte, len, addr) {
+    sendFrame(firstByte, addr, payload) {
         return concat(
-            this.negedge(VSYNC),
+            this.atNegedge(VSYNC),
             // account for 2 cycles delay in 74HCT595 and ?
-            this.posedge(HSYNC),
-            this.posedge(HSYNC),
+            this.atPosedge(HSYNC),
+            this.atPosedge(HSYNC),
             this.sendDataBits(firstByte, 8),
             defer(() => {
                 this.checksum = (this.checksum + (firstByte << 6)) & 0xff;
-                return this.sendDataBits(len, 6);
+                return this.sendDataBits(payload ? payload.byteLength : 0, 6);
             }),
             this.sendDataBits(addr & 0xff, 8),
             this.sendDataBits(addr >> 8, 8),
-            this.sendDataBytes(this.payload),
+            this.sendDataBytes(payload),
             defer(() => {
                 this.checksum = (-this.checksum) & 0xff;
                 return this.sendBits(this.checksum, 8);
@@ -167,17 +177,12 @@ export class Loader {
      * @return {Observable}
      */
     sendDataBytes(payload) {
-        return range(0, payload.length).pipe(
+        return range(0, MAX_PAYLOAD_SIZE).pipe(
             concatMap((offset) => {
-                return this.sendDataBits(payload[offset], 8);
+                let byte = (payload && offset < payload.byteLength) ?
+                    payload.getUint8(offset) : 0;
+                return this.sendDataBits(byte, 8);
             }));
-    }
-
-    /** shift in one bit
-     * @param {number} bit
-     */
-    shiftBit(bit) {
-        this.cpu.inReg = ((this.cpu.inReg << 1) & 0xff) | (bit ? 1 : 0);
     }
 
     /** send bits and add to checksum
@@ -192,6 +197,13 @@ export class Loader {
         });
     }
 
+    /** shift one bit into inReg
+     * @param {number} bit
+     */
+    shiftBit(bit) {
+        this.cpu.inReg = ((this.cpu.inReg << 1) & 0xff) | (bit ? 1 : 0);
+    }
+
     /** send bits
      * @param {number} value - byte containing bits to send (msb first)
      * @param {number} n - number of bits to send
@@ -201,7 +213,7 @@ export class Loader {
         return range(0, n).pipe(
             concatMap((i) => {
                 this.shiftBit(value & (1 << (n - i - 1)));
-                return this.posedge(HSYNC);
+                return this.atPosedge(HSYNC);
             }));
     }
 
@@ -209,7 +221,7 @@ export class Loader {
      * @param {number} mask
      * @return {Observable}
      */
-    negedge(mask) {
+    atNegedge(mask) {
         return Observable.create((observer) => {
             let prev = this.cpu.out;
             let subscription = this.strobes.subscribe((curr) => {
@@ -227,7 +239,7 @@ export class Loader {
      * @param {number} mask
      * @return {Observable}
      */
-    posedge(mask) {
+    atPosedge(mask) {
         return Observable.create((observer) => {
             let prev = this.cpu.out;
             let subscription = this.strobes.subscribe((curr) => {
