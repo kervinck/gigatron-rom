@@ -1,0 +1,24 @@
+gcl0x
+
+[def {ClearScreen -- Clear screen from current position to bottom right}
+  Pos= p=
+  Pos 255| 255^         {Clear low byte}
+  i= $8001 i+ i=        {Offset to move to next stripe}
+  [do
+    {Clear one stripe}
+    p [do BgColor p. $100 p+ p= if>=0loop]
+    {Next stripe}
+    i+ p=
+    255& 160^ if<>0loop]
+  ret
+] ClearScreen=
+
+63 {White} Color=
+0 {Black} BgColor=
+$800 ClearScreen!
+
+$4450 P=
+[do
+  P.
+  1+
+  loop]

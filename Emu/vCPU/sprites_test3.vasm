@@ -9,6 +9,7 @@
 
 
 vram        EQU     0x0800
+hscroll     EQU     0x0101
 REENTER     EQU     0x03CB
 
 rand        EQU     0x06
@@ -33,14 +34,17 @@ mask1       EQU     0x4A
 mask2       EQU     0x4C
 scratch     EQU     0x4E
 
-pixelsArray EQU     0x50
+pixelsArray EQU     0x60
 xyPosArray  EQU     0x82
-xyVelArray  EQU     0xB2
+xyVelArray  EQU     0xA2
+sysFnArray  EQU     0xC2
+
+hscrollAddr EQU     0xE2
 
 xExtent     EQU     0x96
 yExtent     EQU     0x6e
 
-numSprites  EQU     24
+numSprites  EQU     16
    
    
 _startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
@@ -63,6 +67,10 @@ vblank0     EQU     0x400
 start       LDWI    vram        
             STW     vbase
         
+            ; horizontal scroll address
+            LDWI    hscroll
+            STW     hscrollAddr
+
             LDWI    xyPosArray
             STW     xyPos
             LDWI    xyPosArray + 1
@@ -258,6 +266,10 @@ velocity    LDW     xyPos
             LDI     0x00
             ST      k
 
+            ; scroll playfield
+            LD      frameCount
+            POKE    hscrollAddr
+
             ; draw sprite
 draw        LDW     pixels
             DEEK
@@ -272,7 +284,7 @@ draw        LDW     pixels
             SUBI    numSprites 
             BLT     draw
 
-            CALL    vblank0
+            CALL    vblank1
 
             BRA     loopinit
 

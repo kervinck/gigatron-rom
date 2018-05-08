@@ -6,7 +6,7 @@
 ; **************************************************************************************************
 
 vram        EQU     0x0800
-
+REENTER     EQU     0x03CB
 sysFn       EQU     0x22
 
 i           EQU     0x30
@@ -30,7 +30,7 @@ clear       SYS     0xF2        ; SYS_ClearRow32_56, 270 - 56/2 = 0xF2
             LD      vbase+1
             SUBI    0x7F
             BLT     clear
-            LDI     0x07        ; finish off last row
+            LDI     0x08        ; finish off last row
             ST      i
 last_row    SYS     0xF2        ; SYS_ClearRow32_56, 270 - 56/2 = 0xF2
             LDWI    0x0020
@@ -87,7 +87,8 @@ SYS_ClearRow32_56       .LD     [0x40],X
                         .ST     [Y,X++]
                         .ST     [Y,X++]
                         .NOP                ; pad instructions so odd(14 + number of instructions) = true
-                        .LD     0x03,Y
-                        .JMP    Y,0xCB
+
+                        .LD     REENTER/256,y
+                        .JMP    y,REENTER
                         .LD     0xE4        ; 0 - ((14 + number of instructions + 3) / 2), odd(14 + number of instructions) = true
                         

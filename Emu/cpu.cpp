@@ -177,8 +177,15 @@ namespace Cpu
         return T;
     }
 
-    void reset(void)
+    void reset(bool coldBoot)
     {
+        // Cold boot
+        if(coldBoot)
+        {
+            setRAM(BOOT_COUNT, 0x00);
+            setRAM(BOOT_CHECK, 0xA6); // TODO: don't hardcode the checksum, calculate it properly
+        }
+
         Graphics::resetVTable();
         Editor::setSingleStepWatchAddress(VIDEO_Y_ADDRESS);
         setClock(CLOCK_RESET);

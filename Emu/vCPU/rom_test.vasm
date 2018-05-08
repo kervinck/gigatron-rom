@@ -7,7 +7,7 @@
 ; test of the native code assembler
 
 
-_disableUpload_     EQU     1           ; disables all writes to RAM/ROM, used for testing and verification
+_disableUpload_     EQU     0           ; disables all writes to RAM/ROM, used for testing and verification
 
 
 ROM     EQU     0x0000
@@ -23,7 +23,7 @@ countMem0           .st     [$01],y
                     .st     [y,$00]
                     .st     [$00]
                     .xora   [y,$00]
-                    .bne    $000a
+loopMem0            .bne    loopMem0
                     .ld     $ff
                     .xora   [y,$00]
                     .st     [y,$00]
@@ -34,7 +34,7 @@ countMem0           .st     [$01],y
                     .adda   ac
 countMem1           .ld     $ff         
 debounce            .st     [$00]
-                    .bne    $0015
+                    .bne    debounce + 1
                     .suba   $01
                     .ld     [$00]
                     .bne    debounce
@@ -162,8 +162,8 @@ loop1               .ld     [$19],x
                     .ld     $c0,out
                     .st     [$13]
                     .st     [$14]
-                    .ld     $02,y       
-                    .jmp    y,$05
+                    .ld     vBlankStart/256,y       
+                    .jmp    y,vBlankStart
                     .ld     $c0
                     .nop    
                     .nop    
@@ -175,7 +175,7 @@ SYS_Reset_36        .ld     $1c
                     .st     [$2c]
                     .ld     $02
                     .st     [$1b]
-                    .ld     $f3
+                    .ld     videoF
                     .st     [$0d]
                     .ld     $ad
                     .st     [$22]
@@ -183,8 +183,8 @@ SYS_Reset_36        .ld     $1c
                     .st     [$24]
                     .ld     $fe
                     .st     [$25]
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $ee
 SYS_Exec_88         .ld     $00
                     .st     [$17],y
@@ -254,22 +254,22 @@ SYS_Exec_88         .ld     $00
                     .st     $24,[y,x++]
                     .st     $ff,[y,x++]
                     .nop    
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $d4
 SYS_Out_22          .ld     [$24],out
                     .nop    
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $f5
 SYS_In_24           .st     in,[$18]
                     .ld     $00
                     .st     [$19]
                     .nop    
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $f4
-videoA              .ld     $c9
+videoA              .ld     videoB
                     .st     [$0c]
                     .ld     $01,y
                     .ld     [$09],x
@@ -280,7 +280,7 @@ videoA              .ld     $c9
                     .adda   [$0a],x
                     .ld     [$0b],y
                     .ld     $c0
-_pixels             .ora    [y,x++],out 
+pixels              .ora    [y,x++],out 
                     .ora    [y,x++],out
                     .ora    [y,x++],out
                     .ora    [y,x++],out
@@ -469,8 +469,9 @@ sound2b             .adda   [$03]
                     .st     [$03]
                     .ld     [$13]       
                     .bra    [$0c]
-                    .ld     $c0,out     
-videoB              .ld     $d4
+                    .ld     $c0,out
+
+videoB              .ld     videoC
                     .st     [$0c]
                     .ld     $01,y
                     .ld     [$09]
@@ -479,19 +480,46 @@ videoB              .ld     $d4
                     .adda   [y,x]
                     .st     [$0a],x
                     .ld     [$0b],y
-                    .bra    _pixels
+                    .bra    pixels
                     .ld     $c0
+
+;videoB              .ld     $01,y
+;                    .ld     [$09]
+;                    .adda   $01,x
+;                    .ld     [$0a]
+;                    .adda   [y,x]
+;                    .st     [$0a]
+;                    .ld     videoC
+;                    .bra    join + 2
+;                    .st     [$0c]
+;                    .nop    
+;                    .nop
+
+
+;videoC              .ld     [$03]       
+;                    .ora    $0f
+;                    .anda   [$14]
+;                    .st     [$13]
+;                    .st     $03,[$03]   
+;                    .ld     [$0d]       
+;                    .st     [$0c]
+;                    .ld     [$0a],x
+;                    .ld     [$0b],y
+;                    .bra    pixels
+;                    .ld     $c0
+
 videoC              .ld     [$03]       
                     .ora    $0f
                     .anda   [$14]
                     .st     [$13]
-                    .st     $03,[$03]   
-                    .ld     [$0d]       
+                    .st     $03,[$03]
+                    .ld     [$0d]
+                    .bra    join + 2
                     .st     [$0c]
-                    .ld     [$0a],x
-                    .ld     [$0b],y
-                    .bra    _pixels
-                    .ld     $c0
+                    .nop    
+                    .nop    
+                    .nop    
+
 videoD              .ld     [$0a],x
                     .ld     [$09]
                     .suba   $ee
@@ -499,36 +527,36 @@ videoD              .ld     [$0a],x
                     .ld     [$0b],y
                     .adda   $f0
                     .st     [$09]
-                    .ld     $00
+                    .ld     videoA
                     .st     [$0c]
-                    .bra    _pixels
+                    .bra    pixels
                     .ld     $c0
 last                .nop    
                     .nop    
-                    .ld     $f0
+                    .ld     videoE
                     .st     [$0c]
-                    .bra    _pixels
+                    .bra    pixels
                     .ld     $c0
-videoE              .ld     $02,y
-                    .jmp    y,$05
+videoE              .ld     vBlankStart/256,y
+                    .jmp    y,vBlankStart
                     .ld     $c0
 videoF              .ld     [$09]
                     .suba   $ee
                     .bne    notlast
-                    .adda   $f0
+                    .adda   videoE
                     .bra    join
                     .ld     $f0
 notlast             .st     [$09]
-                    .ld     $00
+                    .ld     videoA
 join                .st     [$0c]
                     .nop                
                     .ld     $02
                     .st     [$1e]
-                    .ld     $02,y
-                    .jmp    y,$ff
+                    .ld     ENTER/256,y
+                    .jmp    y,ENTER
                     .ld     $3c
-                    .ld     $01,y
-                    .jmp    y,$ad       
+                    .ld     soundF/256,y
+                    .jmp    y,soundF
                     .ld     [$02]
 vBlankStart         .st     [$0a]       
                     .ld     $80
@@ -593,7 +621,7 @@ leds3               .adda   $01
                     .bra    leds5
                     .ld     [$2f]
 leds4               .ld     $03         
-                    .bne    $0244
+                    .bne    leds4+1
                     .suba   $01
                     .nop    
                     .ld     [$2d]
@@ -606,8 +634,8 @@ leds5               .st     [$2d]
                     .nop                
                     .ld     $54
                     .st     [$1e]
-                    .ld     $02,y
-                    .jmp    y,$ff
+                    .ld     ENTER/256,y
+                    .jmp    y,ENTER
                     .ld     $24
                     .ld     [$2c]       
                     .bne    snd0
@@ -686,15 +714,15 @@ vBlankSample        .ora    $0f
                     .st     $03,[$03]   
                     .ld     $a4         
                     .st     [$1e]
-                    .ld     $02,y
-                    .jmp    y,$ff
+                    .ld     ENTER/256,y
+                    .jmp    y,ENTER
                     .ld     $33
                     .bra    sound1
                     .ld     [$0a],out   
 vBlankNormal        .ld     $ab         
                     .st     [$1e]
-                    .ld     $02,y
-                    .jmp    y,$ff
+                    .ld     ENTER/256,y
+                    .jmp    y,ENTER
                     .ld     $35
                     .bra    sound1
                     .ld     [$0a],out   
@@ -741,8 +769,8 @@ select1             .xora   [$0d]
                     .nop                
                     .ld     $db
                     .st     [$1e]
-                    .ld     $02,y
-                    .jmp    y,$ff
+                    .ld     ENTER/256,y
+                    .jmp    y,ENTER
                     .ld     $2e
                     .st     [$09]
                     .st     [$0a]
@@ -750,8 +778,8 @@ select1             .xora   [$0d]
                     .ld     [$02]
                     .anda   $03         
                     .adda   $01
-                    .ld     $01,y
-                    .jmp    y,$b0
+                    .ld     sound2/256,y
+                    .jmp    y,sound2
                     .ld     $80,out
                     .nop    
                     .nop    
@@ -770,15 +798,15 @@ SYS_NextByteIn_32   .ld     [$09]
                     .ld     [$24]
                     .adda   $01
                     .st     [$24]
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $f0
 sysNbi              .ld     [$16]
                     .suba   $02
                     .st     [$16]
                     .ld     $f2
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .nop    
 ENTER               .bra    next2      
                     .ld     [$17],y
@@ -793,7 +821,7 @@ next2               .st     [$15]
                     .bra    ac          
                     .ld     [y,x]       
 EXIT                .adda   $0e
-                    .bgt    $030c       
+                    .bgt    EXIT + 1       
                     .suba   $01
                     .ld     $02,y
                     .jmp    y,[$1e]     
@@ -954,8 +982,8 @@ addw1               .anda   $80,x
                     .st     [$19]
                     .bra    NEXT
                     .ld     $f2
-PEEK                .ld     $04,y
-                    .jmp    y,$5f
+PEEK                .ld     peek/256,y
+                    .jmp    y,peek
 retry               .ld     [$16]       
                     .suba   $02
                     .st     [$16]
@@ -986,8 +1014,8 @@ subw1               .anda   $80,x
                     .ld     $f2
 REENTER             .bra    NEXT        
                     .ld     [$17],y
-DEF                 .ld     $04,y
-                    .jmp    y,$07
+DEF                 .ld     def/256,y
+                    .jmp    y,def
 CALL                .st     [$1d]
                     .ld     [$16]
                     .adda   $02         
@@ -1008,41 +1036,41 @@ ALLOC               .adda   [$1c]
                     .st     [$1c]
                     .bra    NEXT
                     .ld     $f9
-ADDI                .ld     $04,y
-                    .jmp    y,$12
+ADDI                .ld     addi/256,y
+                    .jmp    y,addi
                     .st     [$1d]
-SUBI                .ld     $04,y
-                    .jmp    y,$21
+SUBI                .ld     subi/256,y
+                    .jmp    y,subi
                     .st     [$1d]
-LSLW                .ld     $04,y
-                    .jmp    y,$31
+LSLW                .ld     lslw/256,y
+                    .jmp    y,lslw
                     .ld     [$18]
-STLW                .ld     $04,y
-                    .jmp    y,$3e
-LDLW                .ld     $04,y
-                    .jmp    y,$49
-POKE                .ld     $04,y
-                    .jmp    y,$54
+STLW                .ld     stlw/256,y
+                    .jmp    y,stlw
+LDLW                .ld     ldlw/256,y
+                    .jmp    y,ldlw
+POKE                .ld     poke/256,y
+                    .jmp    y,poke
                     .st     [$1d]
-DOKE                .ld     $04,y
-                    .jmp    y,$6a
+DOKE                .ld     doke/256,y
+                    .jmp    y,doke
                     .st     [$1d]
-DEEK                .ld     $04,y
-                    .jmp    y,$77
-ANDW                .ld     $04,y
-                    .jmp    y,$84
-ORW                 .ld     $04,y
-                    .jmp    y,$90
-XORW                .ld     $04,y
-                    .jmp    y,$9c
+DEEK                .ld     deek/256,y
+                    .jmp    y,deek
+ANDW                .ld     andw/256,y
+                    .jmp    y,andw
+ORW                 .ld     orw/256,y
+                    .jmp    y,orw
+XORW                .ld     xorw/256,y
+                    .jmp    y,xorw
                     .st     [$1d]
 RET                 .ld     [$1a]
                     .suba   $02
                     .st     [$16]
                     .ld     [$1b]
                     .st     [$17]
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $f6
 def                 .ld     [$16]
                     .adda   $02
@@ -1051,9 +1079,9 @@ def                 .ld     [$16]
                     .st     [$19]
                     .ld     [$1d]
                     .st     [$16]
-                    .ld     $03,y
+                    .ld     REENTER/256,y
                     .ld     $f3
-                    .jmp    y,$cb
+                    .jmp    y,REENTER
                     .nop    
 addi                .adda   [$18]
                     .st     [$18]
@@ -1067,8 +1095,8 @@ addi1               .anda   $80,x
                     .ld     [x]
                     .adda   [$19]
                     .st     [$19]
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $f2
 subi                .ld     [$18]
                     .blt    subi0
@@ -1083,8 +1111,8 @@ subi1               .anda   $80,x
                     .ld     [$19]
                     .suba   [x]
                     .st     [$19]
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $f2
 lslw                .anda   $80,x
                     .adda   [$18]
@@ -1096,8 +1124,8 @@ lslw                .anda   $80,x
                     .ld     [$16]
                     .suba   $01
                     .st     [$16]
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $f2
 stlw                .adda   [$1c]
                     .st     [$1d]
@@ -1107,8 +1135,8 @@ stlw                .adda   [$1c]
                     .ld     [$1d],x
                     .ld     [$18]
                     .st     [x]
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $f3
 ldlw                .adda   [$1c]
                     .st     [$1d]
@@ -1118,8 +1146,8 @@ ldlw                .adda   [$1c]
                     .ld     [$1d],x
                     .ld     [x]
                     .st     [$18]
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $f3
 poke                .adda   $01,x
                     .ld     [x]
@@ -1129,8 +1157,8 @@ poke                .adda   $01,x
                     .ld     ac,x
                     .ld     [$18]
                     .st     [y,x]
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $f3
 peek                .suba   $01
                     .st     [$16]
@@ -1140,8 +1168,8 @@ peek                .suba   $01
                     .st     [$18]
 lupReturn           .ld     $00
                     .st     [$19]
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $f3
 doke                .adda   $01,x
                     .ld     [x]
@@ -1153,8 +1181,8 @@ doke                .adda   $01,x
                     .st     [y,x++]
                     .ld     [$19]
                     .st     [y,x]
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $f2
 deek                .ld     [$16]
                     .suba   $01
@@ -1166,8 +1194,8 @@ deek                .ld     [$16]
                     .st     [$18]
                     .ld     [y,x]
                     .st     [$19]
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $f2
 andw                .st     [$1d]
                     .adda   $01,x
@@ -1179,8 +1207,8 @@ andw                .st     [$1d]
                     .anda   [$18]
                     .st     [$18]
                     .ld     $f2
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
 orw                 .st     [$1d]
                     .adda   $01,x
                     .ld     [x]
@@ -1191,8 +1219,8 @@ orw                 .st     [$1d]
                     .ora    [$18]
                     .st     [$18]
                     .ld     $f2
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
 xorw                .adda   $01,x
                     .ld     [x]
                     .xora   [$19]
@@ -1201,8 +1229,8 @@ xorw                .adda   $01,x
                     .ld     [x]
                     .xora   [$18]
                     .st     [$18]
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $f3
 SYS_Random_34       .ld     [$0e]
                     .xora   [$07]
@@ -1219,8 +1247,8 @@ sysRnd0             .xora   $6c
 sysRnd1             .adda   [$07]
                     .st     [$07]
                     .st     [$19]
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $ef
 SYS_LSRW7_30        .ld     [$18]
                     .anda   $80,x
@@ -1232,22 +1260,22 @@ SYS_LSRW7_30        .ld     [$18]
                     .anda   $80,x
                     .ld     [x]
                     .st     [$19]
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $f1
 SYS_LSRW8_24        .ld     [$19]
                     .st     [$18]
                     .ld     $00
                     .st     [$19]
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $f4
 SYS_LSLW8_24        .ld     [$18]
                     .st     [$19]
                     .ld     $00
                     .st     [$18]
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $f4
 SYS_Draw4_30        .ld     [$28],x
                     .ld     [$29],y
@@ -1259,8 +1287,8 @@ SYS_Draw4_30        .ld     [$28],x
                     .st     [y,x++]
                     .ld     [$27]
                     .st     [y,x++]
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $f1
 SYS_VDrawBits_134   .ld     [$28],x
                     .ld     $00
@@ -1279,8 +1307,8 @@ vdb2                .st     [y,x]
                     .suba   $07
                     .bne    vdb0
                     .adda   $08
-                    .ld     $03,y
-                    .jmp    y,$cb
+                    .ld     REENTER/256,y
+                    .jmp    y,REENTER
                     .ld     $bd
                     .nop
                     .nop

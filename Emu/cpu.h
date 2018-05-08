@@ -5,11 +5,14 @@
 
 
 #define MAJOR_VERSION "0.3"
-#define MINOR_VERSION "9"
+#define MINOR_VERSION "10"
 #define VERSION_STR "Ver: " MAJOR_VERSION "." MINOR_VERSION
 
 #define ROM_SIZE (1<<16)
 #define RAM_SIZE (1<<16) // Can be 32k or 64k
+
+#define BOOT_COUNT 0x0004
+#define BOOT_CHECK 0x0005
 
 
 namespace Cpu
@@ -34,7 +37,7 @@ namespace Cpu
 
     void initialise(State& S);
     State cycle(const State& S);
-    void reset(void);
+    void reset(bool coldBoot=false);
 }
 
 #endif

@@ -25,7 +25,7 @@ watch       EQU     0x44
 scratch     EQU     0x46
 mask        EQU     0x48
 gliders     EQU     0x4A
-lut_offset  EQU     0x4C
+lut_modify  EQU     0x4C
 j_one       EQU     0x4E
 
 ij_mask     EQU     0x1F1F  ; determines max size of world, limited by available ram in blank scanlines,
@@ -67,8 +67,8 @@ n-1-1       EQU     0x0300
             
             LDWI    ij_mask
             STW     mask
-            LDWI    .lut
-            STW     lut_offset
+            LDWI    lut + 1     ; self modifying address
+            STW     lut_modify
             LDWI    0x0100
             STW     j_one
             
@@ -223,8 +223,8 @@ cell_00     INC     i           ; 0, 0 cell
 
             LD      neighbours  ; lut computes neighbours count
             ADDI    0x60
-            POKE    lut_offset
-.lut,1      LD      0x60        ; self modifying code
+            POKE    lut_modify  ; lut_modify points to operand in "LD n_lut"
+lut         LD      0x60        ; self modifying code
 
             POKE    cells1      ; save new cell
             ST      cell

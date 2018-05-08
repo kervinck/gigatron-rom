@@ -11,6 +11,7 @@
 vram        EQU     0x0800
 buff0       EQU     0x08B0
 buff1       EQU     0x08D0
+REENTER     EQU     0x03CB
 
 rand        EQU     0x06
 videoY      EQU     0x09
@@ -51,7 +52,7 @@ xyVelArray  EQU     0xC2
 xExtent     EQU     0x9C
 yExtent     EQU     0x74
 
-numSprites  EQU     8
+numSprites  EQU     16
    
    
 _startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
@@ -569,7 +570,7 @@ SYS_SpriteCopy_118  .LD     [srcAddr],X         ; src line 0
                     .LD     [rowBuffer3 + 3]
                     .ST     [Y,X++]
                     
-                    .LD     0x03,Y
-                    .JMP    Y,0xCB
+                    .LD     REENTER/256,y
+                    .JMP    y,REENTER
                     .LD     0xC5                ; 0 - ((14 + number of instructions + 3) / 2), odd(14 + number of instructions) = true
                     

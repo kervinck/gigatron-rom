@@ -24,7 +24,7 @@ scratch     EQU     0x4E
 mask        EQU     0x50
 ones        EQU     0x52
 gliders     EQU     0x54
-lut_offset  EQU     0x56
+lut_modify  EQU     0x56
 
 
 _startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
@@ -71,8 +71,8 @@ get_cell    EQU     0x0400
             LDWI    0x0100
             STW     ones
 
-            LDWI    .lut
-            STW     lut_offset
+            LDWI    lut + 1     ; self modifying address
+            STW     lut_modify
             
 clear       LDI     0x00        ; clear screen and array
             POKE    vbase
@@ -236,8 +236,8 @@ cell00      INC     i
 
             LD      neighbours
             ADDI    0x60
-            POKE    lut_offset
-.lut,1      LD      0x60
+            POKE    lut_modify  ; lut_modify points to operand in "LD n_lut"
+lut         LD      0x60        ; self modifying code
 
 ;check_3     LD      neighbours
 ;            SUBI    0x03

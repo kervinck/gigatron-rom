@@ -23,7 +23,7 @@ vbase       EQU     0x40
 pixels      EQU     0x42
 pattern     EQU     0x44
 gliders     EQU     0x46
-lut_offset  EQU     0x48
+lut_modify  EQU     0x48
 j_one       EQU     0x4A
 offset0     EQU     0x4C
 offset1     EQU     0x4E
@@ -75,8 +75,8 @@ counts      EQU     0x0300
             LDWI    buff1
             STW     buffer1
             
-            LDWI    .lut
-            STW     lut_offset
+            LDWI    lut + 1     ; self modifying address
+            STW     lut_modify
             LDWI    0x0100
             STW     j_one
             
@@ -261,8 +261,8 @@ generate    LDW     i           ; buffer1
 
             LD      neighbours  ; lut evaluates neighbours count
             ADDI    n_lut
-            POKE    lut_offset  ; lut_offset points to operand in next instruction
-.lut,1      LD      n_lut       ; get new cell using self modifying code
+            POKE    lut_modify  ; lut_modify points to operand in "LD n_lut"
+lut         LD      n_lut       ; get new cell using self modifying code
 
             POKE    cells0      ; save new cell
             ST      cell            
@@ -287,7 +287,7 @@ generate    LDW     i           ; buffer1
             INC     scratch+1
             POKE    scratch     ; x,   y+1   
                        
-continue    LD      i           ; dec i
+            LD      i           ; dec i
             SUBI    0x01
             ST      i
             BGE     generate

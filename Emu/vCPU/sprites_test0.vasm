@@ -11,6 +11,7 @@
 vram        EQU     0x0800
 buff0       EQU     0x08A0
 buff1       EQU     0x08A4
+REENTER     EQU     0x03CB
 
 frameCount  EQU     0x0E
 sysFn       EQU     0x22
@@ -241,6 +242,6 @@ SYS_SpriteRow_118   .LD     [srcAddr],X         ; src line 0
                     .LD     [rowBuffer3+3]
                     .ST     [Y,X++]
                     
-                    .LD     0x03,Y
-                    .JMP    Y,0xCB
+                    .LD     REENTER/256,y
+                    .JMP    y,REENTER
                     .LD     0xC5                ; 0 - ((14 + number of instructions + 3) / 2), odd(14 + number of instructions) = true

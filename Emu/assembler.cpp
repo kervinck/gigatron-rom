@@ -20,7 +20,7 @@ namespace Assembler
 {
     enum ParseType {FirstPass=0, SecondPass, NumParseTypes};
     enum ByteSize {BadSize=-1, OneByte=1, TwoBytes=2, ThreeBytes=3};
-    enum EvaluateResult {Failed=-1, NotFound, Found};
+    enum EvaluateResult {Failed=-1, NotFound, Duplicate, Success};
     enum OpcodeType {ReservedDB=0, ReservedDW, ReservedDBR, ReservedDWR, vCpu, Native};
     enum AddressMode {D_AC=0b00000000, X_AC=0b00000100, YD_AC=0b00001000, YX_AC=0b00001100, D_X=0b00010000, D_Y=0b00010100, D_OUT=0b00011000, YXpp_OUT=0b00011100};
     enum BusMode {D=0b00000000, RAM=0b00000001, AC=0b00000010, IN=0b00000011};
@@ -35,13 +35,6 @@ namespace Assembler
     {
         bool _isCustomAddress;
         uint16_t _operand;
-        std::string _name;
-    };
-
-    struct Mutable
-    {
-        uint8_t _offset;
-        uint16_t _address;
         std::string _name;
     };
 
@@ -78,7 +71,6 @@ namespace Assembler
 
     std::vector<Label> _labels;
     std::vector<Equate> _equates;
-    std::vector<Mutable> _mutables;
     std::vector<Instruction> _instructions;
     std::vector<ByteCode> _byteCode;
     std::vector<CallTableEntry> _callTableEntries;
@@ -222,24 +214,28 @@ namespace Assembler
         return instructionType;
     }
 
-    uint16_t parseExpression(std::string input)
+    bool parseEquateExpression(std::string input, uint16_t& operand)
     {
         // Strip white space
         input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
 
         // Replace equates
+        bool found = false;
         for(int i=0; i<_equates.size(); i++)
         {
             size_t pos = input.find(_equates[i]._name);
             while(pos != std::string::npos)
             {
+                found = true;
                 input.replace(pos, _equates[i]._name.size(), std::to_string(_equates[i]._operand));
                 pos = input.find(_equates[i]._name, pos + _equates[i]._name.size());
             }
         }
 
         // Parse expression and return with a result
-        return Expression::parse((char*)input.c_str());
+        if(found) operand = Expression::parse((char*)input.c_str());
+
+        return found;
     }
 
     bool searchEquate(const std::string& token, Equate& equate)
@@ -281,15 +277,34 @@ namespace Assembler
         if(input.find_first_of("+-*/()") != std::string::npos)
         {
             // Parse expression and return with a result
-            equate._operand = parseExpression(input);
-            return true;
+             return parseEquateExpression(input, equate._operand);
         }
 
         // Normal equate
         return searchEquate(tokens[tokenIndex], equate);
     }
 
-    bool searchLabels(const std::string& token, Label& label)
+    uint16_t parseLabelExpression(std::string input)
+    {
+        // Strip white space
+        input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
+
+        // Replace labels
+        for(int i=0; i<_labels.size(); i++)
+        {
+            size_t pos = input.find(_labels[i]._name);
+            while(pos != std::string::npos)
+            {
+                input.replace(pos, _labels[i]._name.size(), std::to_string(_labels[i]._address));
+                pos = input.find(_labels[i]._name, pos + _labels[i]._name.size());
+            }
+        }
+
+        // Parse expression and return with a result
+        return Expression::parse((char*)input.c_str());
+    }
+
+    bool searchLabel(const std::string& token, Label& label)
     {
         bool success = false;
         for(int i=0; i<_labels.size(); i++)
@@ -305,20 +320,34 @@ namespace Assembler
         return success;
     }
 
-    bool searchMutables(const std::string& token, Mutable& mutable_)
+    bool searchLabels(const std::vector<std::string>& tokens, int tokenIndex, Label& label)
     {
-        bool success = false;
-        for(int i=0; i<_mutables.size(); i++)
+        if(tokenIndex >= tokens.size()) return false;
+
+        std::string input;
+
+        // Pre-process
+        for(int j=tokenIndex; j<tokens.size(); j++)
         {
-            if(token == _mutables[i]._name)
-            {
-                success = true;
-                mutable_ = _mutables[i];
-                break;
-            }
+            // Strip comments
+            if(tokens[j].find_first_of(";#") != std::string::npos) break;
+
+            // Concatenate
+            input += tokens[j];
         }
 
-        return success;
+        // Expression equates
+        if(input.find_first_of("[]") != std::string::npos) return false;
+        if(input.find("++") != std::string::npos) return false;
+        if(input.find_first_of("+-*/()") != std::string::npos)
+        {
+            // Parse expression and return with a result
+            label._address = parseLabelExpression(input);
+            return true;
+        }
+
+        // Normal label
+        return searchLabel(tokens[tokenIndex], label);
     }
 
     EvaluateResult evaluateEquates(const std::vector<std::string>& tokens, ParseType parse, int tokenIndex)
@@ -334,9 +363,9 @@ namespace Assembler
                 uint16_t operand = 0x0000;
                 if(!Expression::stringToU16(tokens[2], operand))
                 {
-                    // Search equates for a previous declaration
+                    // Make sure it exists
                     Equate equate;
-                    if(!searchEquates(tokens, 2, equate)) return Failed;
+                    if(!searchEquate(tokens[2], equate)) return NotFound;
                     operand = equate._operand;
                 }
 
@@ -364,7 +393,10 @@ namespace Assembler
                 // Standard equates
                 else
                 {
-                    Equate equate = {false, operand, tokens[0]};
+                    // Check for duplicate
+                    Equate equate = {false, operand, tokens[0]};                    
+                    if(searchEquate(tokens[2], equate)) return Duplicate;
+
                     _equates.push_back(equate);
                 }
             }
@@ -381,28 +413,23 @@ namespace Assembler
                 }
             }
 
-            return Found;
+            return Success;
         }
 
-        return NotFound;
+        return Failed;
     }
 
-    void EvaluateLabels(const std::vector<std::string>& tokens, int tokenIndex)
+    EvaluateResult EvaluateLabels(const std::vector<std::string>& tokens, ParseType parse, int tokenIndex)
     {
-        // Mutable labels
-        if(tokens[0].c_str()[0] == '.')
+        static bool sortLabels = false;
+
+        if(parse == FirstPass) 
         {
-            size_t comma = tokens[0].find_first_of(",");
-            if(comma != std::string::npos)
-            {
-                uint8_t offset = uint8_t(tokens[0][comma+1] - '0');
-                if(offset > 9) offset = 1;  
-                Mutable mutable_ = {offset, uint16_t(_currentAddress), tokens[0].substr(0, comma)};
-                _mutables.push_back(mutable_);
-            }
-        }
-        else
-        {
+            sortLabels = true;
+
+            Label label;
+            if(searchLabel(tokens[tokenIndex], label)) return Duplicate;
+
             // Check equates for a custom start address
             for(int i=0; i<_equates.size(); i++)
             {
@@ -415,9 +442,23 @@ namespace Assembler
             }
 
             // Normal labels
-            Label label = {_currentAddress, tokens[tokenIndex]};
+            label = {_currentAddress, tokens[tokenIndex]};
             _labels.push_back(label);
         }
+        else if(parse == SecondPass)
+        {
+            // Sort labels from largest size to smallest size, so that label replacer in expressions works correctly
+            if(sortLabels)
+            {
+                sortLabels = false;
+                std::sort(_labels.begin(), _labels.end(), [](const Label& labelA, const Label& labelB)
+                {
+                    return (labelA._name.size() > labelB._name.size());
+                });
+            }
+        }
+
+        return Success;
     }
 
     bool handleDefineByte(const std::vector<std::string>& tokens, int tokenIndex, uint8_t& operand, bool isRom)
@@ -474,14 +515,52 @@ namespace Assembler
         return success;
     }
 
-    bool handleNativeEquate(const std::string& input, uint8_t& operand)
+    uint16_t parseNativeExpression(std::string input)
+    {
+        // Strip white space
+        input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
+
+        // Replace labels
+        for(int i=0; i<_labels.size(); i++)
+        {
+            size_t pos = input.find(_labels[i]._name);
+            while(pos != std::string::npos)
+            {
+                input.replace(pos, _labels[i]._name.size(), std::to_string(_labels[i]._address >>1));
+                pos = input.find(_labels[i]._name, pos + _labels[i]._name.size());
+            }
+        }
+
+        // Replace equates
+        for(int i=0; i<_equates.size(); i++)
+        {
+            size_t pos = input.find(_equates[i]._name);
+            while(pos != std::string::npos)
+            {
+                input.replace(pos, _equates[i]._name.size(), std::to_string(_equates[i]._operand));
+                pos = input.find(_equates[i]._name, pos + _equates[i]._name.size());
+            }
+        }
+
+        // Parse expression and return with a result
+        return Expression::parse((char*)input.c_str());
+    }
+
+    bool handleNativeOperand(const std::string& input, uint8_t& operand)
     {
         if(input.find_first_of("[]") != std::string::npos) return false;
         if(input.find("++") != std::string::npos) return false;
         if(input.find_first_of("+-*/()") != std::string::npos)
         {
             // Parse expression and return with a result
-            operand = uint8_t(parseExpression(input));
+            operand = uint8_t(parseNativeExpression(input));
+            return true;
+        }
+
+        Label label;
+        if(searchLabel(input, label))
+        {
+            operand = uint8_t((label._address >>1) & 0x00FF);
             return true;
         }
 
@@ -543,14 +622,14 @@ namespace Assembler
             {
                 opcode |= BusMode::RAM;
                 token = input.substr(openBracket+1, closeBracket - (openBracket+1));
-                return handleNativeEquate(token, operand);
+                return handleNativeOperand(token, operand);
             }
 
             // y,D
             if(noBrackets  &&  oneComma)
             {
                 token = input.substr(comma1+1, input.size() - (comma1+1));
-                return handleNativeEquate(token, operand);
+                return handleNativeOperand(token, operand);
             }
         
             return false;                    
@@ -562,15 +641,7 @@ namespace Assembler
             token = input;
             if(validBrackets) {opcode |= BusMode::RAM; token = input.substr(openBracket+1, closeBracket - (openBracket+1));}
             if(Expression::stringToU8(token, operand)) return true;
-
-            Label label;
-            if(searchLabels(token, label))
-            {
-                operand = uint8_t((label._address >>1) & 0x00FF);
-                return true;
-            }
-
-            return false;
+            return handleNativeOperand(token, operand);
         }
 
         // IN or IN,[D]
@@ -582,25 +653,25 @@ namespace Assembler
             if(validBrackets &&  oneComma  &&  comma1 < openBracket)
             {
                 token = input.substr(openBracket+1, closeBracket - (openBracket+1));
-                return handleNativeEquate(token, operand);
+                return handleNativeOperand(token, operand);
             }
             
             // IN
             return true;
         }
 
+        // D
+        if(noBrackets && noCommas) return handleNativeOperand(input, operand);
+
         // Read or write
         (opcode != 0xC0) ? opcode |= BusMode::RAM : opcode |= BusMode::AC;
-
-        // D
-        if(noBrackets && noCommas) return handleNativeEquate(input, operand);
 
         // [D] or [X]
         if(validBrackets  &&  noCommas)
         {
             token = input.substr(openBracket+1, closeBracket - (openBracket+1));
             if(token == "X"  ||  token == "x") {opcode |= AddressMode::X_AC; return true;}
-            return handleNativeEquate(token, operand);
+            return handleNativeOperand(token, operand);
         }
 
         // AC,X or AC,Y or AC,OUT or D,X or D,Y or D,OUT or [D],X or [D],Y or [D],OUT or D,[D] or D,[X] or D,[Y] or [Y,D] or [Y,X] or [Y,X++]
@@ -617,7 +688,10 @@ namespace Assembler
             if(token == "AC"  ||  token == "ac") {opcode &= 0xFC; opcode |= BusMode::AC; return true;}
 
             // D,X or D,Y or D,OUT
-            if(noBrackets) {opcode &= 0xFC; return handleNativeEquate(token, operand);}
+            if(noBrackets)
+            {
+                opcode &= 0xFC; return handleNativeOperand(token, operand);
+            }
 
             // [D],X or [D],Y or [D],OUT or D,[D] or D,[X] or D,[Y] or [Y,D] or [Y,X] or [Y,X++]
             if(validBrackets)
@@ -635,7 +709,7 @@ namespace Assembler
 
                     opcode |= AddressMode::YD_AC;                
                 }
-                return handleNativeEquate(token, operand);
+                return handleNativeOperand(token, operand);
             }
 
             return false;
@@ -645,7 +719,7 @@ namespace Assembler
         if(validBrackets  &&  twoCommas  &&  comma1 < openBracket  &&  comma2 > openBracket  &&  comma2 < closeBracket)
         {
             token = input.substr(0, comma1);
-            if(!handleNativeEquate(token, operand)) return false;
+            if(!handleNativeOperand(token, operand)) return false;
 
             token = input.substr(openBracket+1, comma2 - (openBracket+1));
             if(token != "Y"  &&  token != "y") return false;
@@ -766,7 +840,6 @@ namespace Assembler
         _byteCode.clear();
         _labels.clear();
         _equates.clear();
-        _mutables.clear();
         _instructions.clear();
         _callTableEntries.clear();
 
@@ -823,21 +896,33 @@ namespace Assembler
                         if(tokens.size() >= 2)
                         {
                             EvaluateResult result = evaluateEquates(tokens, (ParseType)parse, tokenIndex);
-                            if(result == Failed)
+                            if(result == NotFound)
                             {
+                                fprintf(stderr, "Assembler::assemble() : Missing equate : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line);
                                 parseError = true;
-                                fprintf(stderr, "Assembler::assemble() : Bad EQU : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line);
+                                break;
+                            }
+                            else if(result == Duplicate)
+                            {
+                                fprintf(stderr, "Assembler::assemble() : Duplicate equate : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line);
+                                parseError = true;
                                 break;
                             }
                             // Skip equate lines
-                            else if(result == Found) 
+                            else if(result == Success) 
                             {
                                 line++;
                                 continue;
                             }
                             
                             // Labels
-                            if(parse == FirstPass) EvaluateLabels(tokens, tokenIndex);
+                            result = EvaluateLabels(tokens, (ParseType)parse, tokenIndex);
+                            if(result == Duplicate)
+                            {
+                                parseError = true;
+                                fprintf(stderr, "Assembler::assemble() : Duplicate label : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line);
+                                break;
+                            }
                         }
 
                         // On to the next token even if we failed with this one
@@ -911,7 +996,7 @@ namespace Assembler
                                 {
                                     // Search for branch label
                                     Label label;
-                                    if(searchLabels(tokens[tokenIndex], label))
+                                    if(searchLabels(tokens, tokenIndex, label))
                                     {
                                         operandValid = true;
                                         operand = uint8_t(label._address) - BRANCH_ADJUSTMENT;
@@ -928,7 +1013,7 @@ namespace Assembler
                                 {
                                     // Search for call label
                                     Label label;
-                                    if(searchLabels(tokens[tokenIndex], label))
+                                    if(searchLabels(tokens, tokenIndex, label))
                                     {
                                         // Search for address
                                         bool newLabel = true;
@@ -963,28 +1048,28 @@ namespace Assembler
                                 }
                                 
                                 // All other 2 byte instructions
-                                if(!operandValid)
+                                if(opcodeType == vCpu  &&  !operandValid)
                                 {
                                     operandValid = Expression::stringToU8(tokens[tokenIndex], operand);
                                     if(!operandValid)
                                     {
-                                        // Search equates
+                                        Label label;
                                         Equate equate;
-                                        operandValid = searchEquates(tokens, tokenIndex, equate);
-                                        operand = uint8_t(equate._operand);
 
-                                        // Search mutables
-                                        if(!operandValid)
+                                        // Search labels
+                                        if(operandValid = searchEquates(tokens, tokenIndex, equate))
                                         {
-                                            Mutable mutable_;
-                                            operandValid = searchMutables(tokens[tokenIndex], mutable_);
-                                            operand = uint8_t(mutable_._address) + mutable_._offset;
+                                            operand = uint8_t(equate._operand);
                                         }
-
-                                        if(opcodeType != Native  &&  !operandValid)
+                                        // Search equates
+                                        else if(operandValid = searchLabels(tokens, tokenIndex, label))
+                                        {
+                                            operand = uint8_t(label._address);
+                                        }
+                                        else if(!operandValid)
                                         {
                                             parseError = true;
-                                            fprintf(stderr, "Assembler::assemble() : Equate/Mutable missing : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line);
+                                            fprintf(stderr, "Assembler::assemble() : Label/Equate error : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line);
                                             break;
                                         }
                                     }
@@ -1016,9 +1101,9 @@ namespace Assembler
                                         if(instruction._opcode != opc  ||  instruction._operand0 != ope)
                                         {
                                             fprintf(stderr, "Assembler::assemble() : ROM Native instruction mismatch  : 0x%04X : ASM=0x%02X%02X : ROM=0x%02X%02X : on line %d\n", add, instruction._opcode, instruction._operand0, opc, ope, line);
-                                            instruction._opcode = opc;
-                                            instruction._operand0 = ope;
-                                            _instructions.back() = instruction;
+                                            //instruction._opcode = opc;
+                                            //instruction._operand0 = ope;
+                                            //_instructions.back() = instruction;
                                         }
                                     }
                                 }
@@ -1056,7 +1141,7 @@ namespace Assembler
                                     // Search for branch label
                                     Label label;
                                     uint8_t operand = 0x00;
-                                    if(searchLabels(tokens[tokenIndex], label))
+                                    if(searchLabels(tokens, tokenIndex, label))
                                     {
                                         operand = uint8_t(label._address) - BRANCH_ADJUSTMENT;
                                     }
@@ -1078,23 +1163,23 @@ namespace Assembler
                                     operandValid = Expression::stringToU16(tokens[tokenIndex], operand);
                                     if(!operandValid)
                                     {
-                                        // Search equates
+                                        Label label;
                                         Equate equate;
-                                        operandValid = searchEquates(tokens, tokenIndex, equate);
-                                        operand = equate._operand;
 
-                                        // Search mutables
-                                        if(!operandValid)
+                                        // Search labels
+                                        if(operandValid = searchEquates(tokens, tokenIndex, equate))
                                         {
-                                            Mutable mutable_;
-                                            operandValid = searchMutables(tokens[tokenIndex], mutable_);
-                                            operand = mutable_._address + mutable_._offset;
+                                            operand = equate._operand;
                                         }
-
-                                        if(!operandValid)
+                                        // Search equates
+                                        else if(operandValid = searchLabels(tokens, tokenIndex, label))
+                                        {
+                                            operand = label._address;
+                                        }
+                                        else if(!operandValid)
                                         {
                                             parseError = true;
-                                            fprintf(stderr, "Assembler::assemble() : Equate/Mutable missing : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line);
+                                            fprintf(stderr, "Assembler::assemble() : Label/Equate error : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line);
                                             break;
                                         }
                                     }

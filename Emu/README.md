@@ -100,7 +100,7 @@ and possibly even Android. As of ver0.3.8 it has only been tested on Microsoft W
   lets you do very easily.<br/>
 - The Assembler differentiates between the two instruction sets, (**_vCPU_** and **_Native_**), by preceding<br/>
   Native instructions with a period **_'.'_**<br/>
-- The Assembler supports Labels, Equates and Mutables, (a mutable is a label for self modifying code).<br/>
+- The Assembler supports Labels, Equates, Expressions and self modifying code.<br/>
 - The Assembler recognises the following reserved words:<br/>
     - **_\_startAddress\__** : entry point for the code, if this is missing defaults to 0x0200.<br/>
     - **_\_callTable\__** : grows downwards as you use more CALL's, it must exist in page 0 RAM.<br/>

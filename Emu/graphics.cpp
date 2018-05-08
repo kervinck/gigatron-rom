@@ -99,7 +99,7 @@ namespace Graphics
         for(int i=0; i<GIGA_HEIGHT; i++)
         {
             Cpu::setRAM(GIGA_VTABLE + i*2, (GIGA_VRAM >>8) + i);
-            Cpu::setRAM((GIGA_VTABLE+1) + i*2, 0x00);
+            Cpu::setRAM(GIGA_VTABLE + 1 + i*2, 0x00);
         }
     }
 
@@ -133,11 +133,11 @@ namespace Graphics
 
         for(int y=0; y<GIGA_HEIGHT; y++)
         {
-            offsetx += Cpu::getRAM(GIGA_VTABLE + 1 + (y<<1));
+            offsetx += Cpu::getRAM(GIGA_VTABLE + 1 + y*2);
     
             for(int x=0; x<=GIGA_WIDTH; x++)
             {
-                uint16_t address = (Cpu::getRAM(GIGA_VTABLE + (y<<1)) <<8) + ((offsetx + x) & 0xFF);
+                uint16_t address = (Cpu::getRAM(GIGA_VTABLE + y*2) <<8) + ((offsetx + x) & 0xFF);
                 uint32_t colour = (x < GIGA_WIDTH) ? _colours[Cpu::getRAM(address) & (COLOUR_PALETTE-1)] : _hlineTiming[y];
                 uint32_t screen = (y*4 % SCREEN_HEIGHT)*SCREEN_WIDTH  +  (x*3 % SCREEN_WIDTH);
 

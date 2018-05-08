@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
 
     int vgaX = 0, vgaY = 0;
     int HSync = 0, VSync = 0;
+    int64_t clock_prev = CLOCK_RESET;
 
     for(;;)
     {
@@ -48,6 +49,7 @@ int main(int argc, char* argv[])
         // Falling vSync edge
         if(VSync < 0)
         {
+            clock_prev = clock;
             vgaY = VSYNC_START;
 
             // Input and graphics
@@ -68,11 +70,10 @@ int main(int argc, char* argv[])
         }
 
         // Watchdog
-        static int64_t clock_prev = clock;
         if(!debugging  &&  clock > STARTUP_DELAY_CLOCKS  &&  clock - clock_prev > CPU_STALL_CLOCKS)
         {
             clock_prev = CLOCK_RESET;
-            Cpu::setClock(CLOCK_RESET);
+            Cpu::reset(true);
             vgaX = 0, vgaY = 0;
             HSync = 0, VSync = 0;
             fprintf(stderr, "main(): CPU stall for %lld clocks : rebooting...\n", clock - clock_prev);
@@ -81,8 +82,6 @@ int main(int argc, char* argv[])
         // Rising hSync edge
         if(HSync > 0)
         {
-            clock_prev = clock;
-
             Cpu::setXOUT(T._AC);
             
             // Audio
