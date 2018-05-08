@@ -97,19 +97,20 @@ export class Loader {
                     offset += 2;
                     let size = data.getUint8(offset);
                     offset += 1;
-                    if (size != 0) {
-                        let payload = new DataView(
-                            data.buffer,
-                            data.byteOffset + offset,
-                            size);
-                        observer.next(this.sendDataSegment(addr, payload));
+                    if (size == 0) {
+                        size = 256;
                     }
+                    let payload = new DataView(
+                        data.buffer,
+                        data.byteOffset + offset,
+                        size);
+                    observer.next(this.sendDataSegment(addr, payload));
                     offset += size;
                 }
             }
 
             if (offset > data.byteLength) {
-                observer.error(new Error('Segment exceeds file size'));
+                observer.error(new Error('Last segment exceeds file size'));
             }
 
             observer.complete();
@@ -136,7 +137,8 @@ export class Loader {
             let offset = data.byteOffset;
 
             while (size != 0) {
-                let n = Math.min(size, MAX_PAYLOAD_SIZE);
+                let bytesInPage = 256 - (addr & 255);
+                let n = Math.min(size, bytesInPage, MAX_PAYLOAD_SIZE);
                 let payload = new DataView(buffer, offset, n);
                 observer.next(this.sendFrame('L'.charCodeAt(0), addr, payload));
                 addr += n;
