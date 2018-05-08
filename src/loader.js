@@ -18,6 +18,8 @@ const {
 } = rxjs.operators;
 
 const MAX_PAYLOAD_SIZE = 60;
+const START_OF_FRAME = 'L'.charCodeAt(0);
+const INIT_CHECKSUM = 'g'.charCodeAt(0);
 
 /** Loader */
 export class Loader {
@@ -46,7 +48,7 @@ export class Loader {
                     }),
                     defer(() => {
                         // Setup checksum properly
-                        this.checksum = 'g'.charCodeAt(0);
+                        this.checksum = INIT_CHECKSUM;
                         return this.sendSegments(data);
                     }));
             }),
@@ -122,7 +124,7 @@ export class Loader {
      * @return {Observable}
      */
     sendStartCommand(addr) {
-        return this.sendFrame('L'.charCodeAt(0), addr);
+        return this.sendFrame(START_OF_FRAME, addr);
     }
 
     /** send a data block
@@ -135,17 +137,22 @@ export class Loader {
             let buffer = data.buffer;
             let size = data.byteLength;
             let offset = data.byteOffset;
+            let bytesInPage = 256 - (addr & 255);
 
-            while (size != 0) {
-                let bytesInPage = 256 - (addr & 255);
-                let n = Math.min(size, bytesInPage, MAX_PAYLOAD_SIZE);
-                let payload = new DataView(buffer, offset, n);
-                observer.next(this.sendFrame('L'.charCodeAt(0), addr, payload));
-                addr += n;
-                offset += n;
-                size -= n;
+            if (size > bytesInPage) {
+                observer.error(new Error('Segment crosses page boundary'));
+            } else {
+                while (size != 0) {
+                    let n = Math.min(size, MAX_PAYLOAD_SIZE);
+                    let payload = new DataView(buffer, offset, n);
+                    observer.next(this.sendFrame(
+                        START_OF_FRAME, addr, payload));
+                    addr += n;
+                    offset += n;
+                    size -= n;
+                }
+                observer.complete();
             }
-            observer.complete();
         }).pipe(concatAll());
     }
 
