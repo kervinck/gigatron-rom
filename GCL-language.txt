@@ -112,11 +112,15 @@ Memory
 ------
 X,                      Read unsigned byte from memory pointed by X into vAC
 X.                      Write vAC as byte to memory pointed by variable X
+X;                      Read word from memory pointed by X into vAC
+X:                      Write vAC as word to memory pointed by variable X
 i,                      Read unsigned byte at zero page address i into vAC
 i.                      Store vAC as byte into zero page address i
 i;                      Read word at zero page address i into vAC
+i:                      Write vAC as word into zero page address i
 i?                      Table lookup from ROM address vAC+i
 peek                    Read byte from memory pointed by vAC (Same as "\vAC,")
+deek                    Read word from memory pointed by vAC (Same as "\vAC;")
 
 Structured programming
 ----------------------
