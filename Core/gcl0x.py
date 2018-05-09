@@ -6,7 +6,6 @@ import sys
 # XXX Give warning for redefining a label
 # XXX Make dot-labels local ('.loop:')
 # XXX Make inline vCPU assembly possible
-# XXX Notation for DOKE/DEEK
 # XXX Give a warning when starting new block after calls were made
 # XXX Give warning when def-block contains 'call' put no 'push'
 # XXX Give warning when def-block contains code but no 'ret'
