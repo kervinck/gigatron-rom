@@ -179,6 +179,7 @@ class Program:
           self.opcode('CALL')
           self.emit(symbol('vAC'), '%04x vAC' % prev(self.vPC, 1))
     elif word == 'peek': self.opcode('PEEK')
+    elif word == 'deek': self.opcode('DEEK')
     else:
       var, con, op = self.parseWord(word) # XXX Simplify this
       if op is None:
@@ -196,7 +197,7 @@ class Program:
       elif op == ';' and con is not None:
           self.opcode('LDW')
           self.emit(con)
-      elif op == ':' and con is not None: # XXX Replace with automatic allocation ('page')
+      elif op == ':' and con > 0xff: # XXX Replace with automatic allocation ('page')
           self.org(con)
       elif op == '=' and var:
           self.opcode('STW')
@@ -257,11 +258,20 @@ class Program:
       elif op == '.' and con is not None:
           self.opcode('ST')
           self.emit(con)
+      elif op == ':' and con is not None:
+          self.opcode('STW')
+          self.emit(con)
       elif op == ',' and con is not None:
           self.opcode('LD')
           self.emit(con)
+      elif op == ';' and con is not None:
+          self.opcode('LDW')
+          self.emit(con)
       elif op == '.' and var:
           self.opcode('POKE')
+          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
+      elif op == ':' and var:
+          self.opcode('DOKE')
           self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
       elif op == '<.' and var:
           self.opcode('ST')
@@ -273,6 +283,10 @@ class Program:
           self.opcode('LDW')
           self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
           self.opcode('PEEK')
+      elif op == ';' and var:
+          self.opcode('LDW')
+          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
+          self.opcode('DEEK')
       elif op == '<++' and var:
           self.opcode('INC')
           self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
