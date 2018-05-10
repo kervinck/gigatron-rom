@@ -4,6 +4,8 @@
 
 gcl0x
 
+$0600: {Large page}
+
 { Setup }
 
 { Print a 5x8 character on screen with the built-in font
@@ -76,6 +78,12 @@ call {Clears last line}
     Newline!
     loop]
 
+  {Delete?}
+  Char 127^ [if=0
+    32 PrintChar! {Remove cursor}
+    Pos<, 6- [if<0 0] Pos<. {Step back}
+    loop]
+
   {Printable or garbage?}
   Char 32- if<0loop 95- if>=0loop
 
@@ -83,8 +91,8 @@ call {Clears last line}
   Char PrintChar!
 
   {Advance cursor position}
-  Pos 6+ Pos=
-  255& 155- [if>=0 Newline!]
+  Pos<, 6+ Pos<.
+  155- [if>=0 Newline!]
 
 loop]
 

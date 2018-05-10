@@ -1,7 +1,7 @@
 # gtemuSDL
 gtemuSDL is an emulator for the Gigatron TTL microcomputer, written in C++ using SDL2.<br/>
 This project provides support for Microsoft Windows and should be compatible with Linux, MacOS<br/>
-and possibly even Android. As of ver0.3.8 it has only been tested on Microsoft Windows10.<br/>
+and possibly even Android. As of ver0.4.0 it has only been tested on Microsoft Windows10.<br/>
 
 ## Features
 - Variable timing from a minimum of 60FPS up to whatever your PC can handle.<br/>
@@ -19,10 +19,14 @@ and possibly even Android. As of ver0.3.8 it has only been tested on Microsoft W
 - Three seperate editable start addresses are provided; memory display address,<br/>
   vCPU vars display address and load start address.<br/>
 - A built in assembler can now assemble vCPU as well as Native mnemonics.<br/>
+- A preprocessor that is able to include files and expand parameterised macros.<br/>
 - A debugging mode that lets you pause the simulation or single step through vCPU code.<br/>
 - Upload assembled vCPU code to RAM.<br/>
 - Upload assembled Native code to ROM, (**_emulation only_**).<br/>
 - Supports the Gigatron TTL's **_GT1_** object file format.<br/>
+- An inbuilt file and directory browser for uploading.<br/>
+- A VideoB scanline disable option, run **_"rom_test.vasm"_**, (**_emulation only_**), it will disable a<br/>
+  second scanline offering around 70% more processor time for vCPU code.<br/>
 
 ## YouTube
 - https://www.youtube.com/watch?v=pH4st5dz7Go<br/>
@@ -117,6 +121,9 @@ and possibly even Android. As of ver0.3.8 it has only been tested on Microsoft W
     - **_oct_** : 0o777 or 0q777<br/>
     - **_bin_** : 0b01011111<br/>
 - Comments can go anywhere on a line and commence with **_';'_** or **_'#'_**<br/>
+- You can include files into your projects using the **_%include_** command.<br/>
+- A fully parameterised macro system has been added that can expand in place code using the **_%MACRO_** and<br/>
+  **_%ENDM_** commands.<br/>
 
 ## Debugger
 - The debugger allows you to single step through your vCPU code based on a variable changing<br/>

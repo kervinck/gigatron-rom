@@ -4,8 +4,6 @@
 // Marcel van Kervinck
 // Apr 2018
 
-// XXX Read real user input from serial port of Arduino
-
 // Arduino AVR    Gigatron Schematic Controller PCB
 // Uno     Name   OUT bit            CD4021     74HC595 (U39)
 // ------- ------ -------- --------- ---------- ----------------
@@ -13,6 +11,15 @@
 // Pin 12  PORTB4 7 vSync  SER_LATCH  0 PAR/SER None
 // Pin 11  PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK
 
+#include <PS2Keyboard.h> // Install from the Arduino IDE's Library Manager
+
+// Pins for PS/2 keyboard (Arduino Uno)
+const int keyboardClockPin = 3;  // Pin 2 or 3 for IRQ
+const int keyboardDataPin  = 4;  // Any available free pin
+
+PS2Keyboard keyboard;
+
+// Famicon-style controller for Gigatron
 #define buttonDown  4
 #define buttonStart 16
 #define buttonA     128
@@ -20,7 +27,7 @@
 byte checksum; // Global is simplest
 
 byte terminalApp[] = {
-  // 0x0200
+  // 0x0600
   // Compiled from Terminal/Main.gcl
   0xcd, 0x4a, 0x2b, 0x30, 0xe6, 0x52, 0x35, 0x53, 0x10, 0xe3, 0x32,
   0x2b, 0x32, 0x11, 0x00, 0x07, 0x90, 0x15, 0x2b, 0x32, 0x11, 0x00,
@@ -40,9 +47,11 @@ byte terminalApp[] = {
   0x59, 0x7f, 0xcf, 0x38, 0x1a, 0x0f, 0x2b, 0x3e, 0x1a, 0x0f, 0x2b,
   0x30, 0xfc, 0x3e, 0x35, 0x72, 0xb8, 0x21, 0x30, 0x90, 0xa9, 0x21,
   0x30, 0x8c, 0x0a, 0x35, 0x72, 0xc7, 0x59, 0x20, 0xcf, 0x38, 0xcf,
-  0x3c, 0x90, 0xa3, 0x21, 0x30, 0xe6, 0x20, 0x35, 0x50, 0xa3, 0xe6,
-  0x5f, 0x35, 0x53, 0xa3, 0x21, 0x30, 0xcf, 0x38, 0x21, 0x36, 0xe3,
-  0x06, 0x2b, 0x36, 0x82, 0xff, 0xe6, 0x9b, 0x35, 0x50, 0xe6, 0xcf,
+  0x3c, 0x90, 0xa3, 0x21, 0x30, 0x8c, 0x7f, 0x35, 0x72, 0xdf, 0x59,
+  0x20, 0xcf, 0x38, 0x1a, 0x36, 0xe6, 0x06, 0x35, 0x53, 0xdb, 0x59,
+  0x00, 0x5e, 0x36, 0x90, 0xa3, 0x21, 0x30, 0xe6, 0x20, 0x35, 0x50,
+  0xa3, 0xe6, 0x5f, 0x35, 0x53, 0xa3, 0x21, 0x30, 0xcf, 0x38, 0x1a,
+  0x36, 0xe3, 0x06, 0x5e, 0x36, 0xe6, 0x9b, 0x35, 0x50, 0xfc, 0xcf,
   0x3c, 0x90, 0xa3,
 };
 
@@ -57,6 +66,9 @@ void setup() {
 
   // Soft reset: hold start for >128 frames (>2.1 seconds)
   sendController(~buttonStart, 128+32);
+
+  // PS/2 keyboard should be awake by now
+  keyboard.begin(keyboardDataPin, keyboardClockPin);
 
   // Wait for main menu to be ready
   delay(1500);
@@ -88,31 +100,46 @@ void setup() {
   for (int ix=0; ix<sizeof terminalApp; ix+=sizeof message) {
     int chunkSize = min(sizeof message, sizeof terminalApp - ix);
     memcpy(message, terminalApp+ix, chunkSize);
-    sendFrame('L', chunkSize, 0x200+ix, message);
+    sendFrame('L', chunkSize, 0x0600+ix, message);
   }
 
   // Start execution of Terminal application on Gigatron
-  sendFrame('L', 0, 0x0200, message);
+  sendFrame('L', 0, 0x0600, message);
 
   interrupts(); // So delay() can work again
-
   delay(100);
+
+  // Now send key strokes, simulating a user
+  char *text = " *** Terminal ***\n\nReady\n";
+  for (int i=0; text[i]; i++) {
+    sendController(text[i], 1);
+    delay(50); // Allow Gigatron to process key code
+  }
 }
 
 void loop() {
+  if (keyboard.available()) {
 
-  // Now send key strokes, simulating a user
-  static int n = 1;
-  char text[200];
-  sprintf(text, " *** Test %d ***\n\n"
-                "Hello Gigatron!\n"
-                "This is Arduino Uno pretending to be an ASCII keyboard. Hope you like it!\n"
-                "The quick brown fox jumps over the lazy dog.\n\n", n++);
-  for (int i=0; text[i]; i++) {
-    sendController(text[i], 2);
-    delay(40);
+    char c = keyboard.read();
+
+    switch (c) {
+      case PS2_TAB:
+      case PS2_ESC:
+      case PS2_PAGEDOWN:
+      case PS2_PAGEUP:
+      case PS2_LEFTARROW:
+      case PS2_RIGHTARROW:
+      case PS2_UPARROW:
+      case PS2_DOWNARROW:
+        // Ignore for now
+        break;
+
+      case PS2_ENTER:      sendController('\n', 1); break;
+      case PS2_DELETE:     sendController(127, 1);  break;
+      default:             sendController(c, 1);    break;
+    }
+    delay(50); // Allow Gigatron to process key code
   }
-  delay(500);
 }
 
 // Pretend to be a game controller
