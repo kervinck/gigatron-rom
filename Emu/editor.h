@@ -24,6 +24,7 @@ namespace Editor
 {
     enum MemoryMode {RAM=0, ROM0, ROM1, NumMemoryModes};
     enum EditorMode {Hex=0, Load, GigaLoad, Debug, NumEditorModes};
+    enum FileType {File=0, Dir, Fifo, Link, NumFileTypes};
 
 
     int getCursorX(void);
@@ -38,9 +39,11 @@ namespace Editor
     uint16_t getLoadBaseAddress(void);
     uint16_t getVarsBaseAddress(void);
     uint16_t getSingleStepWatchAddress(void);
-    int getFileNamesIndex(void);
-    int getFileNamesSize(void);
-    std::string* getFileName(int index);
+    int getFileEntriesIndex(void);
+    int getFileEntriesSize(void);
+    std::string getBrowserPath(void);
+    FileType getFileEntryType(int index);
+    std::string* getFileEntryName(int index);
 
     void setCursorX(int x);
     void setCursorY(int y);

@@ -463,7 +463,7 @@ sound2              .st     [$02],y
                     .adda   [y,x]
                     .blt    sound2a
                     .bra    sound2b
-                    .anda   $3f
+                    .ld     $01,y       ;.anda   $3f
 sound2a             .ld     $3f
 sound2b             .adda   [$03]
                     .st     [$03]
@@ -471,54 +471,53 @@ sound2b             .adda   [$03]
                     .bra    [$0c]
                     .ld     $c0,out
 
-videoB              .ld     videoC
-                    .st     [$0c]
-                    .ld     $01,y
-                    .ld     [$09]
-                    .adda   $01,x
-                    .ld     [$0a]
-                    .adda   [y,x]
-                    .st     [$0a],x
-                    .ld     [$0b],y
-                    .bra    pixels
-                    .ld     $c0
-
-;videoB              .ld     $01,y
+;videoB              .ld     videoC
+;                    .st     [$0c]
+;                    .ld     $01,y
 ;                    .ld     [$09]
 ;                    .adda   $01,x
 ;                    .ld     [$0a]
 ;                    .adda   [y,x]
-;                    .st     [$0a]
-;                    .ld     videoC
-;                    .bra    join + 2
-;                    .st     [$0c]
-;                    .nop    
-;                    .nop
-
-
-;videoC              .ld     [$03]       
-;                    .ora    $0f
-;                    .anda   [$14]
-;                    .st     [$13]
-;                    .st     $03,[$03]   
-;                    .ld     [$0d]       
-;                    .st     [$0c]
-;                    .ld     [$0a],x
+;                    .st     [$0a],x
 ;                    .ld     [$0b],y
 ;                    .bra    pixels
 ;                    .ld     $c0
+
+videoB              .ld     [$09]
+                    .adda   $01,x
+                    .ld     [$0a]
+                    .adda   [y,x]
+                    .st     [$0a]
+                    .ld     videoC
+                    .bra    join + 2
+                    .st     [$0c]
+                    .nop    
+                    .nop
+                    .nop
 
 videoC              .ld     [$03]       
                     .ora    $0f
                     .anda   [$14]
                     .st     [$13]
-                    .st     $03,[$03]
-                    .ld     [$0d]
-                    .bra    join + 2
+                    .st     $03,[$03]   
+                    .ld     [$0d]       
                     .st     [$0c]
-                    .nop    
-                    .nop    
-                    .nop    
+                    .ld     [$0a],x
+                    .ld     [$0b],y
+                    .bra    pixels
+                    .ld     $c0
+
+;videoC              .ld     [$03]       
+;                    .ora    $0f
+;                    .anda   [$14]
+;                    .st     [$13]
+;                    .st     $03,[$03]
+;                    .ld     [$0d]
+;                    .bra    join + 2
+;                    .st     [$0c]
+;                    .nop    
+;                    .nop    
+;                    .nop    
 
 videoD              .ld     [$0a],x
                     .ld     [$09]

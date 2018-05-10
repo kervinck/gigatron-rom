@@ -241,8 +241,8 @@ namespace Loader
         bool hasRamCode = false;
 
         uint16_t executeAddress = Editor::getLoadBaseAddress();
-        std::string filename = *Editor::getFileName(Editor::getCursorY());
-        std::string filepath = std::string("./vCPU/" + filename);
+        std::string filename = *Editor::getFileEntryName(Editor::getCursorY());
+        std::string filepath = std::string(Editor::getBrowserPath() + "/" + filename);
 
         // Reset video table and reset single step watch address to video line counter
         Graphics::resetVTable();

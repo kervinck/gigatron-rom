@@ -26,6 +26,13 @@
 
 namespace Editor
 {
+    struct FileEntry
+    {
+        FileType _fileType;
+        std::string _name;
+    };
+
+
     int _cursorX = 0;
     int _cursorY = 0;
     bool _hexEdit = false;
@@ -33,6 +40,8 @@ namespace Editor
     bool _singleStepMode = false;
     uint32_t _singleStepTicks = 0;
     uint8_t _singleStepWatch = 0x00;
+    const std::string _basePath = "./vCPU";
+    std::string _filePath = "";
 
     MemoryMode _memoryMode = RAM;
     EditorMode _editorMode = Hex, _prevEditorMode = Hex;
@@ -42,8 +51,9 @@ namespace Editor
     uint16_t _loadBaseAddress = LOAD_BASE_ADDRESS;
     uint16_t _varsBaseAddress = VARS_BASE_ADDRESS;
     uint16_t _singleStepWatchAddress = VIDEO_Y_ADDRESS;
-    int _fileNamesIndex = 0;
-    std::vector<std::string> _fileNames;
+    
+    int _fileEntriesIndex = 0;
+    std::vector<FileEntry> _fileEntries;
 
 
     int getCursorX(void) {return _cursorX;}
@@ -59,9 +69,11 @@ namespace Editor
     uint16_t getLoadBaseAddress(void) {return _loadBaseAddress;}
     uint16_t getVarsBaseAddress(void) {return _varsBaseAddress;}
     uint16_t getSingleStepWatchAddress(void) {return _singleStepWatchAddress;}
-    int getFileNamesIndex(void) {return _fileNamesIndex;}
-    int getFileNamesSize(void) {return int(_fileNames.size());}
-    std::string* getFileName(int index) {return &_fileNames[index % _fileNames.size()];}
+    int getFileEntriesIndex(void) {return _fileEntriesIndex;}
+    int getFileEntriesSize(void) {return int(_fileEntries.size());}
+    std::string getBrowserPath(void) {return _basePath + _filePath;}
+    FileType getFileEntryType(int index) {return _fileEntries[index % _fileEntries.size()]._fileType;}
+    std::string* getFileEntryName(int index) {return &_fileEntries[index % _fileEntries.size()]._name;}
 
     void setCursorX(int x) {_cursorX = x;}
     void setCursorY(int y) {_cursorY = y;}
@@ -77,8 +89,8 @@ namespace Editor
         {
             if(_editorMode == Load)
             {
-                _fileNamesIndex--;
-                if(_fileNamesIndex < 0) _fileNamesIndex = 0;
+                _fileEntriesIndex--;
+                if(_fileEntriesIndex < 0) _fileEntriesIndex = 0;
             }
             else
             {
@@ -89,10 +101,10 @@ namespace Editor
         {
             if(_editorMode == Load)
             {
-                if(_fileNames.size() > HEX_CHARS_Y)
+                if(_fileEntries.size() > HEX_CHARS_Y)
                 {
-                    _fileNamesIndex++;
-                    if(_fileNames.size() - _fileNamesIndex < HEX_CHARS_Y) _fileNamesIndex--;
+                    _fileEntriesIndex++;
+                    if(_fileEntries.size() - _fileEntriesIndex < HEX_CHARS_Y) _fileEntriesIndex--;
                 }
             }
             else
@@ -104,7 +116,7 @@ namespace Editor
 
     void handleKeyDown(SDL_Keycode keyCode)
     {
-        int limitY = (_editorMode != Load) ? HEX_CHARS_Y : int(_fileNames.size());
+        int limitY = (_editorMode != Load) ? HEX_CHARS_Y : int(_fileEntries.size());
 
         switch(keyCode)
         {
@@ -126,8 +138,8 @@ namespace Editor
             {
                 if(_editorMode == Load)
                 {
-                    _fileNamesIndex--;
-                    if(_fileNamesIndex < 0) _fileNamesIndex = 0;
+                    _fileEntriesIndex--;
+                    if(_fileEntriesIndex < 0) _fileEntriesIndex = 0;
                 }
                 else
                 {
@@ -140,10 +152,10 @@ namespace Editor
             {
                 if(_editorMode == Load)
                 {
-                    if(_fileNames.size() > HEX_CHARS_Y)
+                    if(_fileEntries.size() > HEX_CHARS_Y)
                     {
-                        _fileNamesIndex++;
-                        if(_fileNames.size() - _fileNamesIndex < HEX_CHARS_Y) _fileNamesIndex--;
+                        _fileEntriesIndex++;
+                        if(_fileEntries.size() - _fileEntriesIndex < HEX_CHARS_Y) _fileEntriesIndex--;
                     }
                 }
                 else
@@ -278,38 +290,51 @@ namespace Editor
 
     void browseDirectory(void)
     {
-        std::string path = "./vCPU";
-        _fileNames.clear();
+        std::string path = _basePath + _filePath;
+        _fileEntries.clear();
 
-#if defined(C_PLUS_PLUS_17)
-#if defined(_WIN32)
-        for(std::experimental::filesystem::directory_iterator next(path), end; next!=end; ++next)
-        {
-            _fileNames.push_back(next->path().filename().string());
-        }
-#else
-        for(std::filesystem::directory_iterator next(path), end; next!=end; ++next)
-        {
-            _fileNames.push_back(next->path().filename().string());
-        }
-#endif
-#else
         DIR *dir;
         struct dirent *ent;
+        std::vector<std::string> dirnames;
+        std::vector<std::string> filenames;
         if((dir = opendir(path.c_str())) != NULL)
         {
             while((ent = readdir(dir)) != NULL)
             {
-                if(ent->d_type == DT_REG)
+                std::string name = std::string(ent->d_name);
+                if(ent->d_type == S_IFDIR  &&  name != "."  &&  !(path == _basePath  &&  name == ".."))
                 {
-                    _fileNames.push_back(std::string(ent->d_name));
+                    dirnames.push_back(name);
+                }
+                else if(ent->d_type == DT_REG  &&  (name.find(".vasm") != std::string::npos  ||  name.find(".gt1") != std::string::npos))
+                {
+                    filenames.push_back(name);
                 }
             }
             closedir (dir);
         }
-#endif
 
-        std::sort(_fileNames.begin(), _fileNames.end());
+        std::sort(dirnames.begin(), dirnames.end());
+        for(int i=0; i<dirnames.size(); i++)
+        {
+            FileEntry fileEntry = {Dir, dirnames[i]};
+            _fileEntries.push_back(fileEntry);
+        }
+
+        std::sort(filenames.begin(), filenames.end());
+        for(int i=0; i<filenames.size(); i++)
+        {
+            FileEntry fileEntry = {File, filenames[i]};
+            _fileEntries.push_back(fileEntry);
+        }
+    }
+
+    void changeBrowseDirectory(void)
+    {
+        std::string entry = *getFileEntryName(getCursorY());
+        setCursorY(0);
+        _filePath = (entry == "..") ? "" : "/" + entry;
+        browseDirectory();
     }
 
     void handleKeyUp(SDL_Keycode keyCode)
@@ -369,7 +394,23 @@ namespace Editor
             break;
 
             // Toggle hex edit or start an upload
-            case SDLK_RETURN: (_editorMode != Load  ||  _cursorY == -1) ? _hexEdit = !_hexEdit : Loader::setStartUploading(true); break;
+            case SDLK_RETURN:
+            {
+                if(_editorMode != Load  ||  _cursorY == -1)
+                {
+                    _hexEdit = !_hexEdit;
+                }
+                else
+                {
+                    Editor::FileType fileType = Editor::getFileEntryType(Editor::getCursorY());
+                    switch(fileType)
+                    {
+                        case Editor::File: Loader::setStartUploading(true); break;
+                        case Editor::Dir: changeBrowseDirectory(); break;
+                    }
+                }
+                break;
+            }
         }
 
         updateEditor(keyCode);

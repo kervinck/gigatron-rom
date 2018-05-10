@@ -290,9 +290,9 @@ namespace Graphics
                 }
                 for(int i=0; i<HEX_CHARS_Y; i++)
                 {
-                    int index = Editor::getFileNamesIndex() + i;
-                    if(index >= int(Editor::getFileNamesSize())) break;
-                    drawText(*Editor::getFileName(Editor::getFileNamesIndex() + i), 8, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, i == Editor::getCursorY(), 18);
+                    int index = Editor::getFileEntriesIndex() + i;
+                    if(index >= int(Editor::getFileEntriesSize())) break;
+                    drawText(*Editor::getFileEntryName(index), 8, FONT_CELL_Y*4 + i*FONT_CELL_Y, (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFA0A0A0 : 0xFFFFFFFF, i == Editor::getCursorY(), 18);
                 }
 
                 // 8 * 2 hex display of vCPU program variables

@@ -5,6 +5,7 @@
 
 
 #define DEFAULT_START_ADDRESS  0x0200
+#define DEFAULT_CALL_TABLE     0x007E
 
 
 namespace Assembler
