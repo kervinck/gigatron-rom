@@ -73,9 +73,7 @@ $(function() {
                         touch.clientX, touch.clientY))
                     .filter('.btn-fc30');
                 $touchTargets[touch.identifier] = $currTarget;
-                $currTarget
-                    .addClass('pressed')
-                    .trigger('mousedown');
+                $currTarget.trigger('mousedown');
             }
         })
         .on('touchmove', (event) => {
@@ -85,24 +83,18 @@ $(function() {
                 let $currTarget = $(document.elementFromPoint(
                         touch.clientX, touch.clientY))
                     .filter('.btn-fc30');
-                if ($prevTarget.$target.get(0) !== $currTarget.get(0)) {
-                    $prevTarget.$target
-                        .removeClass('pressed')
-                        .trigger('mouseup');
+                if ($prevTarget.get(0) != $currTarget.get(0)) {
+                    $prevTarget.trigger('mouseup');
+                    $touchTargets[touch.identifier] = $currTarget;
+                    $currTarget.trigger('mousedown');
                 }
-                $touchTargets[touch.identifier] = $currTarget;
-                $currTarget
-                    .addClass('pressed')
-                    .trigger('mousedown');
             }
         })
         .on('touchend touchcancel', (event) => {
             event.preventDefault();
             for (let touch of event.changedTouches) {
                 let $prevTarget = $touchTargets[touch.identifier];
-                $prevTarget.$target
-                    .removeClass('pressed')
-                    .trigger('mouseup');
+                $prevTarget.trigger('mouseup');
                 delete $touchTargets[touch.identifier];
             }
         });
@@ -254,7 +246,7 @@ $(function() {
             vga.ctx.fillStyle = 'white';
             vga.ctx.textAlign = 'center';
             vga.ctx.textBaseline = 'middle';
-            vga.ctx.font = '50px serif';
+            vga.ctx.font = '4em sans-serif';
             vga.ctx.fillText('Click to start', 320, 240);
             vgaCanvas.on('click', (event) => {
                 audio.context.resume();
