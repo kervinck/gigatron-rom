@@ -10,6 +10,12 @@
 // Arduino's 2K of RAM can't buffer an entire file at once, some
 // intelligence is needed there and we haven't found a good way yet.
 
+// This interface program can also receive data over the USB serial interface.
+// Use the sendGt1.py Python program on the computer to send a file.
+// The file must be in GT1 format (.gt1 extension)
+// For example:
+//   python sendGt1.py life3.gt1
+
 const byte gt1File[] PROGMEM = {
   //#include "Blinky.h" // Blink pixel in middle of screen
   #include "Lines.h"    // Draw randomized lines
