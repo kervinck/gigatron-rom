@@ -1,8 +1,8 @@
 
 // Concept tester for loading programs into the
 // Gigatron TTL microcomputer
-// Marcel van Kervinck
-// Jan 2018
+// Marcel van Kervinck / Chris Lord
+// May 2018
 
 // The object file is embedded (in PROGMEM) in GT1 format. It would be
 // GREAT if we can find a way to receive the file over the Arduino's
@@ -30,47 +30,109 @@ const byte gt1File[] PROGMEM = {
 
 byte checksum; // Global is simplest
 
-void setup() {
+void setup()
+{
   // Enable output pin (pins are set to input by default)
   PORTB |= 1<<PORTB5; // Send 1 when idle
   DDRB = 1<<PORTB5;
 
   // Open upstream communication
-  Serial.begin(57600);
+  Serial.begin(9600);
   doVersion();
 
   // In case we power on together with the Gigatron, this is a
   // good pause to wait for the video loop to have started
   delay(350);
+
+  prompt();
 }
 
 void loop()
 {
-  doLoad();
-  countdown(10);
+  static char line[20];
+  static byte lineIndex = 0;
+
+  if (Serial.available()) {
+    byte next = Serial.read();
+    if (lineIndex < sizeof line)
+      line[lineIndex++] = next;
+    if (next == '\n') {
+      line[lineIndex-1] = '\0';
+      doCommand(line);
+      lineIndex = 0;
+    }
+  }
+}
+
+void prompt()
+{
+  Serial.println(detectGigatron() ? ":Gigatron OK" : "!Gigatron offline");
+  Serial.println("\nCmd?");
+}
+
+bool detectGigatron()
+{
+  unsigned long timeout = millis() + 200;
+  int mask = 0xf;
+
+  while (mask != 0 && millis() < timeout) {
+    int state = (PINB >> PORTB3) & 3; // capture PORTB3 and PORTB4
+    mask &= ~(1 << state);
+  }
+
+  return mask ? false : true;
+}
+
+void doCommand(char line[])
+{
+  switch (toupper(line[0])) {
+  case 'V': doVersion();         break;
+  case 'R': doReset();           break;
+  case 'L': doLoader();          break;
+  case 'P': doTransfer(gt1File); break;
+  case 'U': doTransfer(NULL);    break;
+  case 'H': doHelp();            break;
+  case 0:                        break;
+  default:  Serial.println("!Unknown command (type 'H' for help)");
+  }
+  prompt();
 }
 
 void doVersion()
 {
-  Serial.println("*** Arduino Gigatron Extender");
+  Serial.println(":Gigatron Interface Adapter [Arduino]");
+}
+
+void doHelp()
+{
+  Serial.println(":Commands are");
+  Serial.println(":V   Show version");
+//Serial.println(":E0  Echo off");
+//Serial.println(":E1  Echo on");
+  Serial.println(":R   Reset Gigatron");
+  Serial.println(":L   Start Loader");
+  Serial.println(":P   Transfer object file from PROGMEM");
+  Serial.println(":U   Transfer object file from USB");
+  Serial.println(":H   Show this help");
 }
 
 void doReset()
 {
   // Soft reset: hold start for >128 frames (>2.1 seconds)
-  Serial.println("Reset Gigatron");
+  Serial.println(":Resetting Gigatron");
+  Serial.flush();
+
   sendController(~buttonStart, 128+32);
 
   // Wait for main menu to be ready
   delay(1500);
 }
 
-void doLoad()
+void doLoader()
 {
-  doReset();
-
   // Navigate menu. 'Loader' is at the bottom
-  Serial.println("Start Loader from menu");
+  Serial.println(":Starting Loader from menu");
+  Serial.flush();
   for (int i=0; i<10; i++) {
     sendController(~buttonDown, 2);
     delay(50);
@@ -81,21 +143,6 @@ void doLoad()
 
   // Wait for Loader to be running
   delay(1000);
-
-  // Send GT1 file
-  Serial.println("Send GT1 file");
-  sendGt1File(gt1File);
-}
-
-// Countdown from n to 1
-void countdown(int n)
-{
-  for (int i=n; i>0; i--) {
-    Serial.print(" ");
-    Serial.print(i);
-    delay(1000);
-  }
-  Serial.print("\n");
 }
 
 // Because the Arduino doesn't have enough RAM to buffer
@@ -104,55 +151,95 @@ void countdown(int n)
 // concatenated frames to the Gigatron. Between segments
 // it is communicating upstream with the serial port.
 
-void sendGt1File(const byte *gt1)
+void doTransfer(const byte *gt1)
 {
-  #define readNext() pgm_read_byte(gt1++)
+  int nextByte;
 
-  byte segment[300] = {0};
-  word address = readNext();
+  #define readNext() {\
+    nextByte = gt1 ? pgm_read_byte(gt1++) : nextSerial();\
+    if (nextByte < 0) return;\
+  }
+
+  #define ask(n)\
+    if (!gt1) {\
+      Serial.print(n);\
+      Serial.println("?");\
+    }
+
+  byte segment[300] = {0}; // Multiple of N for padding
+
+  ask(3);
+  readNext();
+  word address = nextByte;
 
   // Any number n of segments (n>0)
   do {
     // Segment start and length
-    address = (address << 8) + readNext();
-    int len = readNext();
-    if (!len)
-      len = 256;
+    readNext();
+    address = (address << 8) + nextByte;
+    readNext();
+    int len = nextByte ? nextByte : 256;
+
+    ask(len);
 
     // Copy data into send buffer
-    for (int i=0; i<len; i++)
-      segment[i] = readNext();
+    for (int i=0; i<len; i++) {
+      readNext();
+      segment[i] = nextByte;
+    }
 
     // Check that segment doesn't cross the page boundary
     if ((address & 255) + len > 256) {
-      Serial.println("? Invalid GT1 data");
+      Serial.println("!Data error (page overflow)");
       return;
     }
 
     // Send downstream
-    Serial.print("> Load $");
-    Serial.print(address, HEX);
-    Serial.print(" (");
+    Serial.print(":Loading ");
     Serial.print(len);
-    Serial.println(" bytes)");
+    Serial.print(" bytes at $");
+    Serial.println(address, HEX);
+    Serial.flush();
+
     sendGt1Segment(address, len, segment);
 
-    address = readNext();
+    // Signal that we're ready to receive more
+    ask(3);
+    readNext();
+    address = nextByte;
+
   } while (address != 0);
 
-  // Read start address
-  address = readNext();
-  address = (address << 8) + readNext();
+  // Two bytes for start address
+  readNext();
+  address = nextByte;
+  readNext();
+  address = (address << 8) + nextByte;
   if (address != 0) {
-    Serial.print("> Start $");
+    Serial.print(":Executing from $");
     Serial.println(address, HEX);
-    sendGt1Execute(address, NULL);
+    Serial.flush();
+    sendGt1Execute(address, segment+240);
   }
+}
+
+int nextSerial()
+{
+  unsigned long timeout = millis() + 5000;
+
+  while (!Serial.available() && millis() < timeout)
+    ;
+
+  int nextByte = Serial.read();
+  if (nextByte < 0)
+    Serial.println("!Timeout error (no data)");
+
+  return nextByte;
 }
 
 // Send a 1..256 byte code or data segment into the Gigatron by
 // repacking it into Loader frames of max N=60 payload bytes each.
-void sendGt1Segment(word address, int len, const byte data[])
+void sendGt1Segment(word address, int len, byte data[])
 {
   noInterrupts();
   byte n = min(N, len);
@@ -167,7 +254,7 @@ void sendGt1Segment(word address, int len, const byte data[])
 }
 
 // Send execute command
-void sendGt1Execute(word address, const byte data[])
+void sendGt1Execute(word address, byte data[])
 {
   noInterrupts();
   resetChecksum(0, address, data);
@@ -191,18 +278,18 @@ void sendController(byte value, int n)
   interrupts(); // So delay() can work again
 }
 
-void resetChecksum(byte n, word address, const byte *data)
+void resetChecksum(byte n, word address, byte dummyData[])
 {
   // Send one frame with false checksum to force
   // a checksum resync at the receiver
   checksum = 0;
-  sendFrame(-1, n, address, data);
+  sendFrame(-1, n, address, dummyData);
 
   // Setup checksum properly
   checksum = 'g';
 }
 
-void sendFrame(byte firstByte, byte len, word address, const byte *message)
+void sendFrame(byte firstByte, byte len, word address, byte message[])
 {
   // Send one frame of data
   //
