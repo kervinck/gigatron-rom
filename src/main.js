@@ -30,6 +30,83 @@ $(function() {
     let blinkenLightsCanvas = $('#blinkenlights-canvas');
     let loadFileInput = $('#load-file-input');
 
+    /** Trigger a keydown/keyup event in response to a mousedown/mouseup event
+     * @param {JQuery} $button
+     * @param {string} key
+     */
+    function bindKeyToButton($button, key) {
+        $button
+            .on('mousedown', (event) => {
+                event.preventDefault();
+                document.dispatchEvent(new KeyboardEvent('keydown', {
+                    'key': key,
+                }));
+                $button.addClass('pressed');
+            })
+            .on('mouseup', (event) => {
+                event.preventDefault();
+                document.dispatchEvent(new KeyboardEvent('keyup', {
+                    'key': key,
+                }));
+                $button.removeClass('pressed');
+            });
+    }
+
+    bindKeyToButton($('#fc30-a'), 'A');
+    bindKeyToButton($('#fc30-b'), 'S');
+    bindKeyToButton($('#fc30-start'), 'W');
+    bindKeyToButton($('#fc30-select'), 'Q');
+    bindKeyToButton($('#fc30-up'), 'ArrowUp');
+    bindKeyToButton($('#fc30-down'), 'ArrowDown');
+    bindKeyToButton($('#fc30-left'), 'ArrowLeft');
+    bindKeyToButton($('#fc30-right'), 'ArrowRight');
+
+    // jQuery targets of current touches indexed by touch identifier
+    let $touchTargets = {};
+
+    // track touches within the fc30 and map them to mouse events
+    $('#fc30')
+        .on('touchstart', (event) => {
+            event.preventDefault();
+            for (let touch of event.changedTouches) {
+                let $currTarget = $(document.elementFromPoint(
+                        touch.clientX, touch.clientY))
+                    .filter('.btn-fc30');
+                $touchTargets[touch.identifier] = $currTarget;
+                $currTarget
+                    .addClass('pressed')
+                    .trigger('mousedown');
+            }
+        })
+        .on('touchmove', (event) => {
+            event.preventDefault();
+            for (let touch of event.changedTouches) {
+                let $prevTarget = $touchTargets[touch.identifier];
+                let $currTarget = $(document.elementFromPoint(
+                        touch.clientX, touch.clientY))
+                    .filter('.btn-fc30');
+                if ($prevTarget.$target.get(0) !== $currTarget.get(0)) {
+                    $prevTarget.$target
+                        .removeClass('pressed')
+                        .trigger('mouseup');
+                }
+                $touchTargets[touch.identifier] = $currTarget;
+                $currTarget
+                    .addClass('pressed')
+                    .trigger('mousedown');
+            }
+        })
+        .on('touchend touchcancel', (event) => {
+            event.preventDefault();
+            for (let touch of event.changedTouches) {
+                let $prevTarget = $touchTargets[touch.identifier];
+                $prevTarget.$target
+                    .removeClass('pressed')
+                    .trigger('mouseup');
+                delete $touchTargets[touch.identifier];
+            }
+        });
+
     /** display the error modal with the given message
      * @param {JQuery} body
      */
