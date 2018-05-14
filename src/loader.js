@@ -87,7 +87,7 @@ export class Loader {
                 if (data.getUint8(offset) == 0 && offset != 0) {
                     // start address segment
                     offset += 1;
-                    let startAddr = data.getUint16(this.offset);
+                    let startAddr = data.getUint16(offset);
                     offset += 2;
                     if (startAddr != 0) {
                         observer.next(this.sendStartCommand(startAddr));
