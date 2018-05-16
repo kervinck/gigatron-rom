@@ -13,7 +13,6 @@ gcl0x
   ret
 ] ClearScreen=
 
-63 {White} Color=
 0 {Black} BgColor=
 $800 ClearScreen!
 
