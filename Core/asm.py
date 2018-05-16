@@ -137,21 +137,24 @@ def C(line):
   return None
 
 def define(name, value):
-  global _symbols
   _symbols[name] = value
 
 def symbol(name):
   return _symbols[name] if name in _symbols else None
 
 def lo(name):
-  global _refsL
   _refsL.append((name, _romSize))
   return 0 # placeholder
 
 def hi(name):
-  global _refsH
   _refsH.append((name, _romSize))
   return 0 # placeholder
+
+def H(word):
+  return word >> 8
+
+def L(word):
+   return word & 255
 
 def disassemble(opcode, operand, address=None):
   text = _mnemonics[opcode >> 5] # (74LS155)
@@ -189,7 +192,7 @@ def disassemble(opcode, operand, address=None):
     if address is not None and opcode & _maskCc != jL and opcode & _maskBus == busD:
       # We can calculate the destination address
       # XXX Except when the previous instruction is a far jump (jmp y,...)
-      lo, hi = address&255, address>>8
+      lo, hi = L(address), H(address)
       if lo == 255: # When branching from $xxFF, we still end up in the next page
         hi = (hi + 1) & 255
       destination = (hi << 8) + operand
@@ -220,8 +223,8 @@ def disassemble(opcode, operand, address=None):
   return text
 
 def _emit(ins):
-  global _rom0, _rom1, _romSize, _maxRomSize
-  opcode, operand = ins & 255, ins >> 8
+  global _romSize, _maxRomSize
+  opcode, operand = L(ins), H(ins)
   if _romSize >= _maxRomSize:
       disassembly = disassemble(opcode, operand)
       print '%04x %02x%02x  %s' % (_romSize, opcode, operand, disassembly)
@@ -311,7 +314,7 @@ def zpReset(startFrom=1):
 
 def trampoline():
   """Read 1 byte from ROM page"""
-  while pc()&255 < 256-5:
+  while L(pc()) < 256-5:
     nop()
   bra(busAC);                   #13
   """
@@ -330,16 +333,14 @@ def trampoline():
   st(d(lo('vAC')))              #18
   C('+-----------------------------------+')
 
-def link(symfile):
+def loadBindings(symfile):
   global _symbols
   with open(symfile, 'rb') as file:
     _symbols = pickle.load(file)
 
-def end(stem=None):
+def end():
   errors = 0
 
-  global _rom0, _rom1, _romSize
-  global _refsL
   for name, where in _refsL:
     if name in _symbols:
       _rom1[where] ^= _symbols[name] & 255 # xor allows some label tricks
@@ -347,7 +348,6 @@ def end(stem=None):
       print 'Error: Undefined symbol %s' % repr(name)
       errors += 1
 
-  global _refsH
   for name, where in _refsH:
     if name in _symbols:
       _rom1[where] += _symbols[name] >> 8
@@ -359,10 +359,14 @@ def end(stem=None):
     print '%d error(s)' % errors
     exit()
 
+def getRom1():
+  return ''.join(chr(byte) for byte in _rom1)
+
+def writeRomFiles(sourceFile):
+
   # Determine stem for file names
-  if stem is None:
-    stem, _ = splitext(argv[0])
-    stem = basename(stem)
+  stem, _ = splitext(sourceFile)
+  stem = basename(stem)
   if stem == '': stem = 'out'
 
   # Disassemble for readability
@@ -424,6 +428,7 @@ def end(stem=None):
     assert(len(_rom1) == _romSize)
 
   # Write symbol file
+  # XXX Remove when compiler can work with "bindings.json"
   filename = stem + '.sym'
   print 'Create file', filename
   with open(filename, 'wb') as file:
