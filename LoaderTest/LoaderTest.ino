@@ -18,7 +18,6 @@
 // For example:
 //   python sendGt1.py life3.gt1
 
-// XXX Add commands for sending game controller signals
 // XXX Better check if Gigatron is running OK (judge signals better)
 // XXX Try higher than 9600 transfer rates again
 // XXX Wild idea: let the ROM communicate back by modulating vPulse
