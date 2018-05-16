@@ -9,12 +9,22 @@
 // serial interface without adding upstream complexity. But as the
 // Arduino's 2K of RAM can't buffer an entire file at once, some
 // intelligence is needed there and we haven't found a good way yet.
+// The Arduino doesn't implement any form of flow control on its
+// USB/serial interface (RTS/CTS or XON/XOFF).
 
 // This interface program can also receive data over the USB serial interface.
 // Use the sendGt1.py Python program on the computer to send a file.
 // The file must be in GT1 format (.gt1 extension)
 // For example:
 //   python sendGt1.py life3.gt1
+
+// XXX Add commands for sending game controller signals
+// XXX Better check if Gigatron is running OK (judge signals better)
+// XXX Try higher than 9600 transfer rates again
+// XXX Wild idea: let the ROM communicate back by modulating vPulse
+// XXX Hardware: Put reset line on the DB9 jack
+// XXX Hardware: Put an output line on the DB9 jack
+// XXX Embed a Gigatron Terminal program. Or better: GigaMon
 
 const byte gt1File[] PROGMEM = {
   //#include "Blinky.h" // Blink pixel in middle of screen
@@ -28,11 +38,16 @@ const byte gt1File[] PROGMEM = {
 // Pin 12  PORTB4 7 vSync  SER_LATCH  0 PAR/SER None
 // Pin 11  PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK
 
-#define buttonDown  4
-#define buttonStart 16
-#define buttonA     128
+#define buttonRight  1
+#define buttonLeft   2
+#define buttonDown   4
+#define buttonUp     8
+#define buttonStart  16
+#define buttonSelect 32
+#define buttonB      64
+#define buttonA      128
 
-#define N           60 // Payload bytes per transmission frame
+#define N 60 // Payload bytes per transmission frame
 
 byte checksum; // Global is simplest
 
@@ -92,13 +107,21 @@ bool detectGigatron()
 void doCommand(char line[])
 {
   switch (toupper(line[0])) {
-  case 'V': doVersion();         break;
-  case 'R': doReset();           break;
-  case 'L': doLoader();          break;
-  case 'P': doTransfer(gt1File); break;
-  case 'U': doTransfer(NULL);    break;
-  case 'H': doHelp();            break;
-  case 0:                        break;
+  case 'V': doVersion();                      break;
+  case 'H': doHelp();                         break;
+  case 'R': doReset();                        break;
+  case 'L': doLoader();                       break;
+  case 'P': doTransfer(gt1File);              break;
+  case 'U': doTransfer(NULL);                 break;
+  case 'W': sendController(~buttonUp,     2); break;
+  case 'A': sendController(~buttonLeft,   2); break;
+  case 'S': sendController(~buttonDown,   2); break;
+  case 'D': sendController(~buttonRight,  2); break;
+  case 'Z': sendController(~buttonA,      2); break;
+  case 'X': sendController(~buttonB,      2); break;
+  case 'Q': sendController(~buttonSelect, 2); break;
+  case 'E': sendController(~buttonStart,  2); break;
+  case 0: /* Empty line */                    break;
   default:  Serial.println("!Unknown command (type 'H' for help)");
   }
   prompt();
@@ -106,20 +129,22 @@ void doCommand(char line[])
 
 void doVersion()
 {
-  Serial.println(":Gigatron Interface Adapter [Arduino]");
+  Serial.println(":Gigatron Interface Adapter [Arduino]\n"
+                 ":Type 'H' for help");
 }
 
 void doHelp()
 {
   Serial.println(":Commands are");
-  Serial.println(":V   Show version");
-//Serial.println(":E0  Echo off");
-//Serial.println(":E1  Echo on");
-  Serial.println(":R   Reset Gigatron");
-  Serial.println(":L   Start Loader");
-  Serial.println(":P   Transfer object file from PROGMEM");
-  Serial.println(":U   Transfer object file from USB");
-  Serial.println(":H   Show this help");
+  Serial.println(": V        Show version");
+  Serial.println(": H        Show this help");
+  Serial.println(": R        Reset Gigatron");
+  Serial.println(": L        Start Loader");
+  Serial.println(": P        Transfer object file from PROGMEM");
+  Serial.println(": U        Transfer object file from USB");
+  Serial.println(": W/A/S/D  Up/left/down/right arrow");
+  Serial.println(": Z/X      A/B button ");
+  Serial.println(": Q/E      Select/start button");
 }
 
 void doReset()
