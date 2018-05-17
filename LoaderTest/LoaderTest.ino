@@ -18,11 +18,14 @@
 // For example:
 //   python sendGt1.py life3.gt1
 
-// XXX Better check if Gigatron is running OK (judge signals better)
 // XXX Try higher than 9600 transfer rates again
 // XXX Wild idea: let the ROM communicate back by modulating vPulse
 // XXX Hardware: Put reset line on the DB9 jack
 // XXX Hardware: Put an output line on the DB9 jack
+// XXX Keyboard: Map Ctrl-Alt-Del to Gigatron reset (instead of PageUp)
+// XXX Keyboard: Map Enter to both newline AND buttonA
+// XXX Keyboard: Delete = buttonA (same code 0x7f). Change delete code?
+// XXX Keyboard: Is it possible to mimic key hold-down properly???
 // XXX Embed a Gigatron Terminal program. Or better: GigaMon
 
 const byte gt1File[] PROGMEM = {
