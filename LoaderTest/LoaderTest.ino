@@ -92,15 +92,18 @@ void prompt()
 
 bool detectGigatron()
 {
-  unsigned long timeout = millis() + 200;
-  int mask = 0xf;
+  unsigned long timeout = millis() + 85;
+  long T[] = {0, 0, 0, 0};
 
-  while (mask != 0 && millis() < timeout) {
-    int state = (PINB >> PORTB3) & 3; // capture PORTB3 and PORTB4
-    mask &= ~(1 << state);
-  }
+  // Sample the sync signals coming out of the controller port
+  while (millis() < timeout)
+    T[(PINB >> PORTB3) & 3]++; // capture PORTB3 and PORTB4
 
-  return mask ? false : true;
+  float S = T[0] + T[1] + T[2] + T[3];
+  float vSync = (T[0] + T[1]) / ( 8 * S / 521); // Gigatron VGA
+  float hSync = (T[0] + T[2]) / (96 * S / 800); // Default VGA
+
+  return 0.95 <= vSync && vSync <= 1.20 && 0.95 <= hSync && hSync <= 1.05;
 }
 
 void doCommand(char line[])
