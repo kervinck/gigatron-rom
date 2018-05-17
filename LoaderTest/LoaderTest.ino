@@ -40,6 +40,17 @@ const byte gt1File[] PROGMEM = {
 // Pin 12  PORTB4 7 vSync  SER_LATCH  0 PAR/SER None
 // Pin 11  PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK
 
+// Keyboard
+// Pin  4  PS/2 Data
+// Pin  3  PS/2 Clock
+
+#include <PS2Keyboard.h> // Install from the Arduino IDE's Library Manager
+
+// Pins for PS/2 keyboard (Arduino Uno)
+const int keyboardClockPin = 3;  // Pin 2 or 3 for IRQ
+const int keyboardDataPin  = 4;  // Any available free pin
+
+PS2Keyboard keyboard;
 #define buttonRight  1
 #define buttonLeft   2
 #define buttonDown   4
@@ -67,6 +78,9 @@ void setup()
   // good pause to wait for the video loop to have started
   delay(350);
 
+  // PS/2 keyboard should be awake by now
+  keyboard.begin(keyboardDataPin, keyboardClockPin);
+
   prompt();
 }
 
@@ -84,6 +98,24 @@ void loop()
       doCommand(line);
       lineIndex = 0;
     }
+  }
+
+  if (keyboard.available()) {
+    char c = keyboard.read();
+    switch (c) {
+      case PS2_PAGEDOWN:   sendController(~buttonSelect,2); break;
+      case PS2_PAGEUP:     sendController(~buttonStart, 128+32); break;
+      case PS2_TAB:        sendController(~buttonA,     2); break;
+      case PS2_ESC:        sendController(~buttonB,     2); break;
+      case PS2_LEFTARROW:  sendController(~buttonLeft,  2); break;
+      case PS2_RIGHTARROW: sendController(~buttonRight, 2); break;
+      case PS2_UPARROW:    sendController(~buttonUp,    2); break;
+      case PS2_DOWNARROW:  sendController(~buttonDown,  2); break;
+      case PS2_ENTER:      sendController('\n', 1);         break;
+      case PS2_DELETE:     sendController(127, 1);          break;
+      default:             sendController(c, 1);            break;
+    }
+    delay(50); // Allow Gigatron software to process key code
   }
 }
 
