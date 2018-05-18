@@ -1,5 +1,5 @@
 
-// Concept tester for loading programs into the
+// Concept tester for interfacing with the
 // Gigatron TTL microcomputer
 // Marcel van Kervinck / Chris Lord
 // May 2018
@@ -18,6 +18,7 @@
 // For example:
 //   python sendGt1.py life3.gt1
 
+// Todo/idea list:
 // XXX Try higher than 9600 transfer rates again
 // XXX Wild idea: let the ROM communicate back by modulating vPulse
 // XXX Hardware: Put reset line on the DB9 jack
@@ -33,6 +34,10 @@ const byte gt1File[] PROGMEM = {
   #include "Lines.h"    // Draw randomized lines
 };
 
+/*
+ *  Link to Gigatron using its serial game controller port
+ */
+
 // Arduino AVR    Gigatron Schematic Controller PCB
 // Uno     Name   OUT bit            CD4021     74HC595 (U39)
 // ------- ------ -------- --------- ---------- ----------------
@@ -40,17 +45,7 @@ const byte gt1File[] PROGMEM = {
 // Pin 12  PORTB4 7 vSync  SER_LATCH  0 PAR/SER None
 // Pin 11  PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK
 
-// Keyboard
-// Pin  4  PS/2 Data
-// Pin  3  PS/2 Clock
-
-#include <PS2Keyboard.h> // Install from the Arduino IDE's Library Manager
-
-// Pins for PS/2 keyboard (Arduino Uno)
-const int keyboardClockPin = 3;  // Pin 2 or 3 for IRQ
-const int keyboardDataPin  = 4;  // Any available free pin
-
-PS2Keyboard keyboard;
+// Game controller button mapping. The kit's controller gives inverted signals.
 #define buttonRight  1
 #define buttonLeft   2
 #define buttonDown   4
@@ -60,10 +55,32 @@ PS2Keyboard keyboard;
 #define buttonB      64
 #define buttonA      128
 
-#define N 60 // Payload bytes per transmission frame
+/*
+ *  Loader protocol
+ */
 
+#define N 60 // Payload bytes per transmission frame
 byte checksum; // Global is simplest
 
+/*
+ *  PS/2 keyboard hookup to Arduino
+ */
+
+#include <PS2Keyboard.h> // Install from the Arduino IDE's Library Manager
+
+PS2Keyboard keyboard;
+
+// Pins for PS/2 keyboard (Arduino Uno)
+const int keyboardClockPin = 3;  // Pin 2 or 3 for IRQ
+const int keyboardDataPin  = 4;  // Any available free pin
+
+// Keyboard
+// Pin  4  PS/2 Data
+// Pin  3  PS/2 Clock
+
+/*
+ *  Setup runs once when the Arduino wakes up
+ */
 void setup()
 {
   // Enable output pin (pins are set to input by default)
@@ -84,6 +101,9 @@ void setup()
   prompt();
 }
 
+/*
+ *  Loop runs repeatedly
+ */
 void loop()
 {
   static char line[20];
@@ -134,10 +154,11 @@ bool detectGigatron()
   while (millis() < timeout)
     T[(PINB >> PORTB3) & 3]++; // capture PORTB3 and PORTB4
 
-  float S = T[0] + T[1] + T[2] + T[3];
-  float vSync = (T[0] + T[1]) / ( 8 * S / 521); // Gigatron VGA
-  float hSync = (T[0] + T[2]) / (96 * S / 800); // Default VGA
+  float S = T[0] + T[1] + T[2] + T[3] + .1; // Avoid zero division (pedantic)
+  float vSync = (T[0] + T[1]) / ( 8 * S / 521); // Adjusted vSync signal
+  float hSync = (T[0] + T[2]) / (96 * S / 800); // Standard hSync signal
 
+  // Check that vSync and hSync characteristics look normal
   return 0.95 <= vSync && vSync <= 1.20 && 0.95 <= hSync && hSync <= 1.05;
 }
 
