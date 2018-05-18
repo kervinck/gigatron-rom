@@ -19,7 +19,6 @@
 //   python sendGt1.py life3.gt1
 
 // Todo/idea list:
-// XXX Try higher than 9600 transfer rates again
 // XXX Wild idea: let the ROM communicate back by modulating vPulse
 // XXX Hardware: Put reset line on the DB9 jack
 // XXX Hardware: Put an output line on the DB9 jack
@@ -88,7 +87,8 @@ void setup()
   DDRB = 1<<PORTB5;
 
   // Open upstream communication
-  Serial.begin(9600);
+  Serial.begin(115200);
+
   doVersion();
 
   // In case we power on together with the Gigatron, this is a
@@ -332,7 +332,7 @@ void sendGt1Segment(word address, int len, byte data[])
 {
   noInterrupts();
   byte n = min(N, len);
-  resetChecksum(n, address, data);
+  resetChecksum();
 
   // Send segment data
   for (int i=0; i<len; i+=n) {
@@ -340,13 +340,18 @@ void sendGt1Segment(word address, int len, byte data[])
     sendFrame('L', n, address+i, data+i);
   }
   interrupts();
+
+  // Wait for vBlank to start so we're 100% sure to skip one frame and
+  // the checksum resets on the other side. (This is a bit pedantic)
+  while (PINB & (1<<PORTB4)) // ~160 us
+    ;
 }
 
 // Send execute command
 void sendGt1Execute(word address, byte data[])
 {
   noInterrupts();
-  resetChecksum(0, address, data);
+  resetChecksum();
   sendFrame('L', 0, address, data);
   interrupts();
 }
@@ -367,13 +372,8 @@ void sendController(byte value, int n)
   interrupts(); // So delay() can work again
 }
 
-void resetChecksum(byte n, word address, byte dummyData[])
+void resetChecksum()
 {
-  // Send one frame with false checksum to force
-  // a checksum resync at the receiver
-  checksum = 0;
-  sendFrame(-1, n, address, dummyData);
-
   // Setup checksum properly
   checksum = 'g';
 }

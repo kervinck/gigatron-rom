@@ -73,7 +73,7 @@ if len(serPorts) > 1:
   print 'Failed: More than one USB device detected: %s' % ' '.join(serPorts)
   sys.exit(1)
 print 'Connecting to', serPorts[0]
-ser = serial.Serial(port=serPorts[0], baudrate=9600)
+ser = serial.Serial(port=serPorts[0], baudrate=115200)
 sleep(2)
 
 #-----------------------------------------------------------------------
