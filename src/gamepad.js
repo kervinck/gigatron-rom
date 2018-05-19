@@ -40,22 +40,6 @@ export class Gamepad {
                 this.keyMap[key] = buttonMap[button];
             }
         }
-
-        this.gamepads = {};
-
-        $(window)
-            .on('gamepadconnected', (event) => {
-                let gamepad = event.gamepad;
-                console.log('gamepad connected from index %d: %s',
-                    gamepad.index, gamepad.id);
-                this.gamepads[gamepad.index] = gamepad;
-            })
-            .on('gamepaddisconnected', (event) => {
-                let gamepad = event.gamepad;
-                console.log('gamepad disconnected from index %d: %s',
-                    gamepad.index, gamepad.id);
-                delete this.gamepads[gamepad.index];
-            });
     }
 
     /** start handling key events */
@@ -86,12 +70,16 @@ export class Gamepad {
     tick() {
         let pressed = this.pressed;
 
-        for (let gamepadIndex of Object.keys(this.gamepads)) {
-            let gamepad = this.gamepads[gamepadIndex];
-            for (let buttonIndex of Object.keys(gamepadMap)) {
-                let bit = gamepadMap[buttonIndex];
-                if (gamepad.buttons[buttonIndex].pressed) {
-                    pressed |= bit;
+        if (navigator.getGamepads) {
+            let gamepads = navigator.getGamepads();
+            for (let gamepad of gamepads) {
+                if (gamepad) {
+                    for (let buttonIndex of Object.keys(gamepadMap)) {
+                        let bit = gamepadMap[buttonIndex];
+                        if (gamepad.buttons[buttonIndex].pressed) {
+                            pressed |= bit;
+                        }
+                    }
                 }
             }
         }
