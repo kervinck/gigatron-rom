@@ -10,7 +10,7 @@
 
 vram        EQU     0x0800
 hscroll     EQU     0x0101
-REENTER     EQU     0x03CB
+REENTER     EQU     0x03CB 
 
 rand        EQU     0x06
 videoY      EQU     0x09

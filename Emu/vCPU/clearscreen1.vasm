@@ -7,7 +7,7 @@
 
 vram        EQU     0x0800
 REENTER     EQU     0x03CB
-sysFn       EQU     0x22
+sysFn       EQU     0x22 
 
 i           EQU     0x30
 j           EQU     0x31

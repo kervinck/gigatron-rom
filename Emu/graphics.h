@@ -62,6 +62,7 @@ namespace Graphics
     void drawLineGiga(uint16_t x, uint16_t y, uint16_t x2, uint16_t y2, uint8_t colour);
     void life(bool initialise);
     void life1(bool initialise);
+    void tetris(void);
 }
 
 #endif

@@ -5,6 +5,7 @@
 #include <sstream>
 #include <iterator>
 #include <algorithm>
+#include <cstdarg>
 
 #include "cpu.h"
 #include "editor.h"
@@ -20,11 +21,11 @@ namespace Assembler
 {
     enum ParseType {PreProcessPass=0, MnemonicPass, CodePass, NumParseTypes};
     enum ByteSize {BadSize=-1, OneByte=1, TwoBytes=2, ThreeBytes=3};
-    enum EvaluateResult {Failed=-1, NotFound, Duplicate, Skipped, Success};
+    enum EvaluateResult {Failed=-1, NotFound, Reserved, Duplicate, Skipped, Success};
     enum OpcodeType {ReservedDB=0, ReservedDW, ReservedDBR, ReservedDWR, vCpu, Native};
     enum AddressMode {D_AC=0b00000000, X_AC=0b00000100, YD_AC=0b00001000, YX_AC=0b00001100, D_X=0b00010000, D_Y=0b00010100, D_OUT=0b00011000, YXpp_OUT=0b00011100};
     enum BusMode {D=0b00000000, RAM=0b00000001, AC=0b00000010, IN=0b00000011};
-    enum ReservedWords {CallTable=0, StartAddress, SingleStepWatch, DisableUpload, MACRO, ENDM, NumReservedWords};
+    enum ReservedWords {CallTable=0, StartAddress, SingleStepWatch, DisableUpload, INCLUDE, MACRO, ENDM, GPRINTF, NumReservedWords};
 
 
     struct Label
@@ -75,6 +76,24 @@ namespace Assembler
         std::vector<std::string> _lines;
     };
 
+    struct Gprintf
+    {
+        enum Type {Chr, Int, Bin, Oct, Hex, Str};
+        struct Var
+        {
+            bool _indirect = false;
+            Type _type;
+            int _width;
+            uint16_t _data;
+            std::string _var;
+        };
+
+        uint16_t _address;
+        std::string _format;
+        std::vector<Var> _vars;
+        std::vector<std::string> _subs;
+    };
+
 
     uint16_t _byteCount = 0;
     uint16_t _callTable = DEFAULT_CALL_TABLE;
@@ -87,7 +106,7 @@ namespace Assembler
     std::vector<ByteCode> _byteCode;
     std::vector<CallTableEntry> _callTableEntries;
     std::vector<std::string> _reservedWords;
-
+    std::vector<Gprintf> _gprintfs;
 
     uint16_t getStartAddress(void) {return _startAddress;}
 
@@ -98,8 +117,10 @@ namespace Assembler
         _reservedWords.push_back("_startAddress_");
         _reservedWords.push_back("_singleStepWatch_");
         _reservedWords.push_back("_disableUpload_");
-        _reservedWords.push_back("MACRO");
-        _reservedWords.push_back("ENDM");
+        _reservedWords.push_back("%include");
+        _reservedWords.push_back("%MACRO");
+        _reservedWords.push_back("%ENDM");
+        _reservedWords.push_back("gprintf");
     }
 
     // Returns true when finished
@@ -385,7 +406,7 @@ namespace Assembler
                 {
                     // Make sure it exists
                     Equate equate;
-                    if(!searchEquate(tokens[2], equate)) return NotFound;
+                    if(!searchEquates(tokens, 2, equate)) return NotFound;
                     operand = equate._operand;
                 }
 
@@ -450,7 +471,7 @@ namespace Assembler
             // Check reserved words
             for(int i=0; i<_reservedWords.size(); i++)
             {
-                if(tokens[tokenIndex] == _reservedWords[i]) return Failed;
+                if(tokens[tokenIndex] == _reservedWords[i]) return Reserved;
             }
             
             Label label;
@@ -491,24 +512,57 @@ namespace Assembler
     {
         bool success = false;
 
+        // Handle case where first operand is a string
+        size_t quote1 = tokens[tokenIndex].find_first_of("'\"");
+        size_t quote2 = tokens[tokenIndex].find_first_of("'\"", quote1+1);
+        bool quotes = (quote1 != std::string::npos  &&  quote2 != std::string::npos  &&  (quote2 - quote1 > 1));
+        if(quotes)
+        {
+            std::string token = tokens[tokenIndex].substr(quote1+1, quote2 - (quote1+1));
+            for(int j=1; j<token.size(); j++) // First byte was pushed by callee
+            {
+                Instruction instruction = {isRom, false, OneByte, uint8_t(token[j]), 0x00, 0x00, 0x0000};
+                _instructions.push_back(instruction);
+            }
+            success = true;
+        }
+
         for(int i=tokenIndex+1; i<tokens.size(); i++)
         {
-            success = Expression::stringToU8(tokens[i], operand);
-            if(!success)
+            // Handle all other variations of strings
+            size_t quote1 = tokens[i].find_first_of("'\"");
+            size_t quote2 = tokens[i].find_first_of("'\"", quote1+1);
+            bool quotes = (quote1 != std::string::npos  &&  quote2 != std::string::npos);
+            if(quotes)
             {
-                Equate equate;
-                success = searchEquates(tokens, i, equate);
-                if(success)
+                std::string token = tokens[i].substr(quote1+1, quote2 - (quote1+1));
+                for(int j=0; j<token.size(); j++)
                 {
-                    operand = uint8_t(equate._operand);
+                    Instruction instruction = {isRom, false, OneByte, uint8_t(token[j]), 0x00, 0x00, 0x0000};
+                    _instructions.push_back(instruction);
                 }
-                else
-                {
-                    break;
-                }
+                success = true;
+                continue;
             }
-            Instruction instruction = {isRom, false, OneByte, operand, 0x00, 0x00, 0x0000};
-            _instructions.push_back(instruction);
+            else
+            {
+                success = Expression::stringToU8(tokens[i], operand);
+                if(!success)
+                {
+                    Equate equate;
+                    success = searchEquates(tokens, i, equate);
+                    if(success)
+                    {
+                        operand = uint8_t(equate._operand);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                Instruction instruction = {isRom, false, OneByte, operand, 0x00, 0x00, 0x0000};
+                _instructions.push_back(instruction);
+            }
         }
 
         return success;
@@ -854,8 +908,112 @@ namespace Assembler
         }
     }
 
+    std::vector<std::string> tokenise(const std::string& text, char c)
+    {
+        std::vector<std::string> result;
+        const char* str = text.c_str();
+
+        do
+        {
+            const char *begin = str;
+
+            while(*str  &&  *str != c) str++;
+
+            if(str > begin) result.push_back(std::string(begin, str));
+        }
+        while (*str++ != 0);
+
+        return result;
+    }
+
+    std::vector<std::string> tokeniseLine(std::string& line)
+    {
+        std::string token = "";
+        bool delimiterStart = true;
+        bool stringStart = false;
+        enum DelimiterState {WhiteSpace, Quotes};
+        DelimiterState delimiterState = WhiteSpace;
+        std::vector<std::string> tokens;
+
+        for(int i=0; i<=line.size(); i++)
+        {
+            // End of line is a delimiter for white space
+            if(i == line.size())
+            {
+                if(delimiterState != Quotes)
+                {
+                    delimiterState = WhiteSpace;
+                    delimiterStart = false;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            else
+            {
+                // White space delimiters
+                if(strchr(" \n\r\f\t\v", line[i]))
+                {
+                    if(delimiterState != Quotes)
+                    {
+                        delimiterState = WhiteSpace;
+                        delimiterStart = false;
+                    }
+                }
+                // String delimiters
+                else if(strchr("\'\"", line[i]))
+                {
+                    delimiterState = Quotes;
+                    stringStart = !stringStart;
+                }
+            }
+
+            // Build token
+            switch(delimiterState)
+            {
+                case WhiteSpace:
+                {
+                    // Don't save delimiters
+                    if(delimiterStart)
+                    {
+                        if(!strchr(" \n\r\f\t\v", line[i])) token += line[i];
+                    }
+                    else
+                    {
+                        if(token.size()) tokens.push_back(token);
+                        delimiterStart = true;
+                        token = "";
+                    }
+                }
+                break;
+
+                case Quotes:
+                {
+                    // Save delimiters as well as chars
+                    if(stringStart)
+                    {
+                        token += line[i];
+                    }
+                    else
+                    {
+                        token += line[i];
+                        tokens.push_back(token);
+                        delimiterState = WhiteSpace;
+                        stringStart = false;
+                        token = "";
+                    }
+                }
+                break;
+            }
+        }
+
+        return tokens;
+    }
+
     bool handleInclude(const std::vector<std::string>& tokens, const std::string& lineToken, int lineIndex, std::vector<std::string>& includeLineTokens)
     {
+        // Check include syntax
         if(tokens.size() != 2)
         {
             fprintf(stderr, "Assembler::handleInclude() : Bad %%include statement : '%s' : on line %d\n", lineToken.c_str(), lineIndex);
@@ -894,7 +1052,7 @@ namespace Assembler
         // Incomplete macros
         for(int i=0; i<macros.size(); i++)
         {
-            if(macros[i]._complete == false)
+            if(!macros[i]._complete)
             {
                 fprintf(stderr, "Assembler::handleMacros() : Bad macro : missing 'ENDM' : on line %d\n", macros[i]._startLine);
                 return false;
@@ -902,21 +1060,22 @@ namespace Assembler
         }
 
         // Delete original macros
-        int prevMacroSize = 0;
+        int prevMacrosSize = 0;
         for(int i=0; i<macros.size(); i++)
         {
-            lineTokens.erase(lineTokens.begin() + macros[i]._startLine - 1 - prevMacroSize, lineTokens.begin() + macros[i]._endLine - prevMacroSize);
-            prevMacroSize = macros[i]._endLine - macros[i]._startLine + 1;
+            lineTokens.erase(lineTokens.begin() + macros[i]._startLine - prevMacrosSize, lineTokens.begin() + macros[i]._endLine + 1 - prevMacrosSize);
+            prevMacrosSize += macros[i]._endLine - macros[i]._startLine + 1;
         }
 
         // Find and expand macro
         int macroInstanceId = 0;
         for(int m=0; m<macros.size(); m++)
         {
-            bool macroSuccess = false;
+            bool macroMissing = true;
+            bool macroMissingParams = true;
             Macro macro = macros[m];
 
-            for(auto itLine=lineTokens.begin(); itLine != lineTokens.end();)
+            for(auto itLine=lineTokens.begin(); itLine!=lineTokens.end();)
             {
                 // Lines containing only white space are skipped
                 std::string lineToken = *itLine;
@@ -928,87 +1087,91 @@ namespace Assembler
                 }
 
                 // Tokenise current line
-                std::stringstream strStream(lineToken);
-                std::istream_iterator<std::string> it(strStream);
-                std::istream_iterator<std::string> end;
-                std::vector<std::string> tokens(it, end);
+                std::vector<std::string> tokens = tokeniseLine(lineToken);
 
                 // Find macro
-                bool macroFound = false;
+                bool macroSuccess = false;
                 for(int t=0; t<tokens.size(); t++)
                 {
-                    if(tokens[t] == macro._name  &&  tokens.size() - t > macro._params.size())
+                    if(tokens[t] == macro._name)
                     {
-                        std::vector<std::string> labels;
-                        std::vector<std::string> macroLines;
-
-                        // Create substitute lines
-                        for(int ml=0; ml<macro._lines.size(); ml++)
+                        macroMissing = false;
+                        if(tokens.size() - t > macro._params.size())
                         {
-                            // Tokenise macro line
-                            std::stringstream strStream(macro._lines[ml]);
-                            std::istream_iterator<std::string> it(strStream);
-                            std::istream_iterator<std::string> end;
-                            std::vector<std::string> mtokens(it, end);
+                            macroMissingParams = false;
+                            std::vector<std::string> labels;
+                            std::vector<std::string> macroLines;
 
-                            // Save labels
-                            size_t nonWhiteSpace = macro._lines[ml].find_first_not_of("  \n\r\f\t\v");
-                            if(nonWhiteSpace == 0) labels.push_back(mtokens[0]);
-
-                            // Replace parameters
-                            for(int mt=0; mt<mtokens.size(); mt++)
+                            // Create substitute lines
+                            for(int ml=0; ml<macro._lines.size(); ml++)
                             {
-                                for(int p=0; p<macro._params.size(); p++)
+                                // Tokenise macro line
+                                std::vector<std::string> mtokens =  tokeniseLine(macro._lines[ml]);
+
+                                // Save labels
+                                size_t nonWhiteSpace = macro._lines[ml].find_first_not_of("  \n\r\f\t\v");
+                                if(nonWhiteSpace == 0) labels.push_back(mtokens[0]);
+
+                                // Replace parameters
+                                for(int mt=0; mt<mtokens.size(); mt++)
                                 {
-                                    if(mtokens[mt] == macro._params[p]) mtokens[mt] = tokens[t + 1 + p];
+                                    for(int p=0; p<macro._params.size(); p++)
+                                    {
+                                        if(mtokens[mt] == macro._params[p]) mtokens[mt] = tokens[t + 1 + p];
+                                    }
                                 }
+
+                                // New macro line using any existing label
+                                std::string macroLine = (t > 0  &&  ml == 0) ? tokens[0] : "";
+
+                                // Append to macro line
+                                for(int mt=0; mt<mtokens.size(); mt++)
+                                {
+                                    // Don't prefix macro labels with a space
+                                    if(nonWhiteSpace != 0  ||  mt != 0) macroLine += " ";
+
+                                    macroLine += mtokens[mt];
+                                }
+
+                                macroLines.push_back(macroLine);
                             }
 
-                            // New macro line using any existing label
-                            std::string macroLine = (t > 0  &&  ml == 0) ? tokens[0] : "";
-
-                            // Append to macro line
-                            for(int mt=0; mt<mtokens.size(); mt++)
+                            // Insert substitute lines
+                            for(int ml=0; ml<macro._lines.size(); ml++)
                             {
-                                // Don't prefix macro labels with a space
-                                if(nonWhiteSpace != 0  ||  mt != 0) macroLine += " ";
+                                // Delete macro caller
+                                if(ml == 0) itLine = lineTokens.erase(itLine);
 
-                                macroLine += mtokens[mt];
+                                // Each instance of a macro's labels are made unique
+                                for(int i=0; i<labels.size(); i++)
+                                {
+                                    size_t labelFoundPos = macroLines[ml].find(labels[i]);
+                                    if(labelFoundPos != std::string::npos) macroLines[ml].insert(labelFoundPos + labels[i].size(), std::to_string(macroInstanceId));
+                                }
+
+                                // Insert macro lines
+                                itLine = lineTokens.insert(itLine, macroLines[ml]);
+                                ++itLine;
                             }
 
-                            macroLines.push_back(macroLine);
+                            macroInstanceId++;
+                            macroSuccess = true;
                         }
-
-                        // Insert substitute lines
-                        for(int ml=0; ml<macro._lines.size(); ml++)
-                        {
-                            // Delete macro caller
-                            if(ml == 0) itLine = lineTokens.erase(itLine);
-
-                            // Each instance of a macro's labels are made unique
-                            for(int i=0; i<labels.size(); i++)
-                            {
-                                size_t labelFoundPos = macroLines[ml].find(labels[i]);
-                                if(labelFoundPos != std::string::npos) macroLines[ml].insert(labelFoundPos + labels[i].size(), std::to_string(macroInstanceId));
-                            }
-
-                            // Insert macro lines
-                            itLine = lineTokens.insert(itLine, macroLines[ml]);
-                            ++itLine;
-                        }
-
-                        macroInstanceId++;
-                        macroFound = true;
-                        macroSuccess = true;
                     }
                 }
 
-                if(!macroFound) ++itLine;
+                if(!macroSuccess) ++itLine;
             }
 
-            if(macroSuccess == false)
+            if(macroMissing)
             {
-                fprintf(stderr, "Assembler::handleMacros() : Missing macro or missing macro parameters : %s : on line %d\n", macro._name.c_str(), macro._startLine);
+                fprintf(stderr, "Assembler::handleMacros() : Missing macro call : %s : on line %d\n", macro._name.c_str(), macro._startLine);
+                return false;
+            }
+
+            if(macroMissingParams)
+            {
+                fprintf(stderr, "Assembler::handleMacros() : Missing macro parameters : %s : on line %d\n", macro._name.c_str(), macro._startLine);
                 return false;
             }
         }
@@ -1018,6 +1181,7 @@ namespace Assembler
 
     bool handleMacroStart(const std::vector<std::string>& tokens, Macro& macro, int lineIndex)
     {
+        // Check macro syntax
         if(tokens.size() < 2)
         {
             fprintf(stderr, "Assembler::handleMacroStart() : Bad macro : missing name : on line %d\n", lineIndex);
@@ -1025,8 +1189,9 @@ namespace Assembler
         }                    
 
         macro._name = tokens[1];
-        macro._startLine = lineIndex;
+        macro._startLine = lineIndex - 1;
 
+        // Save params
         for(int i=2; i<tokens.size(); i++) macro._params.push_back(tokens[i]);
 
         return true;
@@ -1034,8 +1199,7 @@ namespace Assembler
 
     bool handleMacroEnd(std::vector<Macro>& macros, Macro& macro, int lineIndex)
     {
-        macro._endLine = lineIndex;
-        macro._complete = true;
+        // Check for duplicates
         for(int i=0; i<macros.size(); i++)
         {
             if(macro._name == macros[i]._name)
@@ -1044,14 +1208,16 @@ namespace Assembler
                 return false;
             }
         }
+        macro._endLine = lineIndex - 1;
+        macro._complete = true;
         macros.push_back(macro);
 
         macro._name = "";
-        macro._complete = false;
         macro._startLine = 0;
         macro._endLine = 0;
         macro._lines.clear();
         macro._params.clear();
+        macro._complete = false;
 
         return true;
     }
@@ -1062,7 +1228,6 @@ namespace Assembler
         std::vector<Macro> macros;
         bool buildingMacro = false;
 
-        //for(int line=0; line<lineTokens.size(); line++)
         for(auto itLine=lineTokens.begin(); itLine != lineTokens.end();)
         {
             // Lines containing only white space are skipped
@@ -1074,22 +1239,17 @@ namespace Assembler
                 continue;
             }
 
-            // Tokenise current line
             int tokenIndex = 0;
+            bool includeFound = false;
             int lineIndex = int(itLine - lineTokens.begin()) + 1;
-            std::stringstream strStream(lineToken);
-            std::istream_iterator<std::string> it(strStream);
-            std::istream_iterator<std::string> end;
-            std::vector<std::string> tokens(it, end);
+
+            // Tokenise current line
+            std::vector<std::string> tokens = tokeniseLine(lineToken);
 
             // Valid pre-processor commands
-            bool includeFound = false;
             if(tokens.size() > 0)
             {
                 Expression::strToUpper(tokens[0]);
-
-                // Strip white space
-                tokens[0].erase(remove_if(tokens[0].begin(), tokens[0].end(), isspace), tokens[0].end());
 
                 // Include
                 if(tokens[0] == "%INCLUDE")
@@ -1110,7 +1270,7 @@ namespace Assembler
                     includeFound = true;
                 }
 
-                // Macro
+                // Build macro
                 if(doMacros)
                 {
                     if(tokens[0] == "%MACRO")
@@ -1134,9 +1294,233 @@ namespace Assembler
             if(!includeFound) ++itLine;
         }
 
+        // Handle complete macros
         if(doMacros  &&  !handleMacros(macros, lineTokens)) return false;
 
         return true;
+    }
+
+    bool parseGprintfFormat(const std::string& format, const std::vector<std::string>& variables, std::vector<Gprintf::Var>& vars, std::vector<std::string>& subs)
+    {
+        const char* fmt = format.c_str();
+        std::string sub;
+        char chr;
+
+        int width = 0, index = 0;
+        bool foundToken = false;
+
+        while(chr = *fmt++)
+        {
+            if(index + 1 > variables.size()) return false;
+
+            if(chr == '%'  ||  foundToken)
+            {
+                foundToken = true;
+                Gprintf::Type type = Gprintf::Int;
+                sub += chr;
+
+                switch(chr)
+                {
+                    case '0':
+                    {
+                        // Maximum field width of 16 digits
+                        width = std::stoi(fmt) % 17;
+                    }
+                    break;
+
+                    case 'c': type = Gprintf::Chr; break;
+                    case 'd': type = Gprintf::Int; break;
+                    case 'b': type = Gprintf::Bin; break;
+                    case 'q':
+                    case 'o': type = Gprintf::Oct; break;
+                    case 'x': type = Gprintf::Hex; break;
+                    case 's': type = Gprintf::Str; break;
+                }
+
+                if(chr == 'c' || chr == 'd' || chr == 'b' || chr == 'q' || chr == 'o' || chr == 'x' || chr == 's')
+                {
+                    foundToken = false;
+                    Gprintf::Var var = {false, type, width, 0x0000, variables[index++]};
+                    vars.push_back(var);
+                    subs.push_back(sub);
+                    sub.erase();
+                    width = 0;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    bool createGprintf(ParseType parse, const std::string& lineToken, int lineNumber)
+    {
+        std::string input = lineToken;
+        Expression::strToUpper(input);
+
+        if(input.find("GPRINTF") != std::string::npos)
+        {
+            size_t openBracket = lineToken.find_first_of("(");
+            size_t closeBracket = lineToken.find_first_of(")", openBracket+1);
+            bool brackets = (openBracket != std::string::npos  &&  closeBracket != std::string::npos  &&  (closeBracket - openBracket > 2));
+
+            if(brackets)
+            {
+                size_t quote1 = lineToken.find_first_of("\"", openBracket+1);
+                size_t quote2 = lineToken.find_first_of("\"", quote1+1);
+                bool quotes = (quote1 != std::string::npos  &&  quote2 != std::string::npos  &&  (quote2 - quote1 > 0));
+
+                if(quotes)
+                {
+                    if(parse == MnemonicPass)
+                    {
+                        std::string formatText = lineToken.substr(quote1+1, quote2 - (quote1+1));
+                        std::string variableText = lineToken.substr(quote2+1, closeBracket - (quote2+1));
+
+                        std::vector<Gprintf::Var> vars;
+                        std::vector<std::string> subs;
+                        std::vector<std::string> variables = tokenise(variableText, ',');
+                        parseGprintfFormat(formatText, variables, vars, subs);
+
+                        Gprintf gprintf = {_currentAddress, formatText, vars, subs};
+                        _gprintfs.push_back(gprintf);
+                    }
+
+                    return true;
+                }
+            }
+
+            fprintf(stderr, "Assembler::createGprintf() : Bad gprintf format : '%s' : on line %d\n", lineToken.c_str(), lineNumber);
+            return false;
+        }
+
+        return false;
+    }
+
+    bool getGprintfString(int index, std::string& gstring)
+    {
+        const Gprintf& gprintf = _gprintfs[index % _gprintfs.size()];
+        gstring = gprintf._format;
+   
+        size_t subIndex = 0;
+        for(int i=0; i<gprintf._vars.size(); i++)
+        {
+            char token[256];
+
+            // Use indirection if required
+            uint16_t data = (gprintf._vars[i]._indirect) ? Cpu::getRAM(gprintf._vars[i]._data) | (Cpu::getRAM(gprintf._vars[i]._data+1) <<8) : gprintf._vars[i]._data;
+            
+            // Maximum field width of 16 digits
+            uint8_t width = gprintf._vars[i]._width % 17;
+            std::string fieldWidth = "%";
+            if(width) fieldWidth = std::string("%0" + std::to_string(width));
+
+            switch(gprintf._vars[i]._type)
+            {
+                case Gprintf::Chr: fieldWidth += "c"; sprintf(token, fieldWidth.c_str(), data); break;
+                case Gprintf::Int: fieldWidth += "d"; sprintf(token, fieldWidth.c_str(), data); break;
+                case Gprintf::Oct: fieldWidth += "o"; sprintf(token, fieldWidth.c_str(), data); break;
+                case Gprintf::Hex: fieldWidth += "x"; sprintf(token, fieldWidth.c_str(), data); break;
+
+                // Strings are always indirect and assume that length is first byte
+                case Gprintf::Str:
+                {
+                    data = gprintf._vars[i]._data;
+                    uint8_t length = Cpu::getRAM(data) & 0xFF; // maximum length of 256
+                    for(int j=0; j<length; j++) token[j] = Cpu::getRAM(data + j + 1);
+                    token[length] = 0;
+                }
+                break;
+
+                case Gprintf::Bin:
+                {
+                    for(int j=width-1; j>=0; j--)
+                    {
+                        token[width-1 - j] = '0' + ((data >> j) & 1);
+                        if(j == 0) token[width-1 + 1] = 0;
+                    }
+                }
+                break;
+            }
+
+            // Replace substrings
+            subIndex = gstring.find(gprintf._subs[i], subIndex);
+            if(subIndex != std::string::npos)
+            {
+                gstring.erase(subIndex, gprintf._subs[i].size());
+                gstring.insert(subIndex, token);
+            }
+        }
+
+        return true;
+    }
+
+    bool parseGprintfs(void)
+    {
+        for(int i = 0; i<_gprintfs.size(); i++)
+        {
+            for(int j = 0; j<_gprintfs[i]._vars.size(); j++)
+            {
+                bool success = false;
+                uint16_t data = 0x0000;
+                std::string token = _gprintfs[i]._vars[j]._var;
+        
+                // Strip white space
+                token.erase(remove_if(token.begin(), token.end(), isspace), token.end());
+                _gprintfs[i]._vars[j]._var = token;
+
+                // Check for indirection
+                size_t asterisk = token.find_first_of("*");
+                if(asterisk != std::string::npos)
+                {
+                    _gprintfs[i]._vars[j]._indirect = true;
+                    token = token.substr(asterisk+1);
+                }
+
+                success = Expression::stringToU16(token, data);
+                if(!success)
+                {
+                    std::vector<std::string> tokens;
+                    tokens.push_back(token);
+
+                    // Search equates
+                    Equate equate;
+                    Label label;
+                    if(success = searchEquates(tokens, 0, equate))
+                    {
+                        data = equate._operand;
+                    }
+                    // Search labels
+                    else if(success = searchLabels(tokens, 0, label))
+                    {
+                        data = label._address;
+                    }
+                }
+
+                if(!success) return false;
+
+                _gprintfs[i]._vars[j]._data = data;
+            }
+        }
+
+        return true;
+    }
+
+    void printGprintfStrings(void)
+    {
+        if(_gprintfs.size())
+        {
+            uint16_t vPC = (Cpu::getRAM(0x0017) <<8) | Cpu::getRAM(0x0016);
+
+            for(int i=0; i<_gprintfs.size(); i++)
+            {
+                if(vPC == _gprintfs[i]._address)
+                {
+                    std::string gstring;
+                    getGprintfString(i, gstring);
+                    fprintf(stderr, "gprintf() : address $%04X : %s\n", _gprintfs[i]._address, gstring.c_str());
+                }
+            }
+        }
     }
 
     bool assemble(const std::string& filename, uint16_t startAddress)
@@ -1157,6 +1541,7 @@ namespace Assembler
         _equates.clear();
         _instructions.clear();
         _callTableEntries.clear();
+        _gprintfs.clear();
 
         Loader::disableUploads(false);
 
@@ -1194,15 +1579,16 @@ namespace Assembler
                 size_t nonWhiteSpace = lineToken.find_first_not_of("  \n\r\f\t\v");
                 if(nonWhiteSpace == std::string::npos) continue;
 
-                // Tokenise current line
                 int tokenIndex = 0;
-                std::stringstream strStream(lineToken);
-                std::istream_iterator<std::string> it(strStream);
-                std::istream_iterator<std::string> end;
-                std::vector<std::string> tokens(it, end);
+
+                // Tokenise current line
+                std::vector<std::string> tokens = tokeniseLine(lineToken);
 
                 // Comments
                 if(tokens.size() > 0  &&  tokens[0].find_first_of(";#") != std::string::npos) continue;
+
+                // Gprintf lines are skipped
+                if(createGprintf(ParseType(parse), lineToken, line+1)) continue;
 
                 // Starting address, labels and equates
                 if(nonWhiteSpace == 0)
@@ -1228,7 +1614,7 @@ namespace Assembler
                             
                         // Labels
                         result = EvaluateLabels(tokens, (ParseType)parse, tokenIndex);
-                        if(result == Failed)
+                        if(result == Reserved)
                         {
                             fprintf(stderr, "Assembler::assemble() : Can't use a reserved word in a label : '%s' : in %s on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), line+1);
                             return false;
@@ -1367,8 +1753,16 @@ namespace Assembler
                                     Label label;
                                     Equate equate;
 
+                                    // String
+                                    size_t quote1 = tokens[tokenIndex].find_first_of("'\"");
+                                    size_t quote2 = tokens[tokenIndex].find_first_of("'\"", quote1+1);
+                                    bool quotes = (quote1 != std::string::npos  &&  quote2 != std::string::npos  &&  (quote2 - quote1 > 1));
+                                    if(quotes)
+                                    {
+                                        operand = uint8_t(tokens[tokenIndex][quote1+1]);
+                                    }
                                     // Search labels
-                                    if(operandValid = searchEquates(tokens, tokenIndex, equate))
+                                    else if(operandValid = searchEquates(tokens, tokenIndex, equate))
                                     {
                                         operand = uint8_t(equate._operand);
                                     }
@@ -1546,6 +1940,9 @@ namespace Assembler
 
         // Pack byte code buffer from instruction buffer
         packByteCodeBuffer();
+
+        // Parse gprintf labels, equates and expressions
+        parseGprintfs();
 
         return true;
     }

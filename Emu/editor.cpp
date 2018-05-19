@@ -1,19 +1,10 @@
 #include <vector>
 #include <algorithm>
 
-//#define C_PLUS_PLUS_17
-#if defined(C_PLUS_PLUS_17)
-#if defined(_WIN32)
-#include <experimental/filesystem>
-#else
-#include <filesystem>
-#endif
-#else
 #if defined(_WIN32)
 #include "dirent/dirent.h"
 #else
 #include <dirent.h>
-#endif
 #endif
 
 #include <SDL.h>
@@ -22,6 +13,7 @@
 #include "loader.h"
 #include "timing.h"
 #include "graphics.h"
+#include "assembler.h"
 
 
 namespace Editor
@@ -165,7 +157,7 @@ namespace Editor
             }
             break;
 
-            case SDLK_EQUALS:
+            case SDLK_EQUALS: 
             {
                 double timingHack = Timing::getTimingHack() - TIMING_HACK*0.05;
                 if(timingHack >= 0.0) Timing::setTimingHack(timingHack);
@@ -419,6 +411,9 @@ namespace Editor
     // Debug mode, handles it's own input and rendering
     bool singleStepDebug(void)
     {
+        // Gprintfs
+        Assembler::printGprintfStrings();
+
         // Single step
         if(_singleStep)
         {

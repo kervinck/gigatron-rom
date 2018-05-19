@@ -3,6 +3,7 @@
 #include "graphics.h"
 #include "timing.h"
 #include "editor.h"
+#include "loader.h"
 
 
 namespace Graphics
@@ -474,6 +475,14 @@ namespace Graphics
 	    }
     }
 
+    uint8_t getPixelGiga(uint8_t x, uint8_t y)
+    {
+        x = x % GIGA_WIDTH;
+        y = y % GIGA_HEIGHT;
+        uint16_t address = GIGA_VRAM + x + (y <<8);
+        return Cpu::getRAM(address);
+    }
+
     void drawPixelGiga(uint8_t x, uint8_t y, uint8_t colour)
     {
         x = x % GIGA_WIDTH;
@@ -636,5 +645,423 @@ namespace Graphics
                 }
             }
         }
+    }
+
+#define TETRIS_XPOS     60
+#define TETRIS_YPOS     20
+#define TETRIS_XEXT     10
+#define TETRIS_YEXT     20
+#define NUM_TETROMINOES 7
+#define NUM_ROTATIONS   4
+#define TETROMINOE_SIZE 4
+#define MAX_LINES       4
+#define MAX_LEVEL       8
+    enum BoardState {Clear=0, Blocked, GameOver};
+    struct Tetromino
+    {
+        uint8_t _colour;
+        uint8_t _pattern[NUM_ROTATIONS][4 + TETROMINOE_SIZE*2];
+    };
+    Tetromino I = 
+    {
+        0x3C,
+        4, 1, 0, 1, 0, 1, 1, 1, 2, 1, 3, 1,
+        1, 4, 2, 0, 2, 0, 2, 1, 2, 2, 2, 3,
+        4, 1, 0, 2, 0, 2, 1, 2, 2, 2, 3, 2,
+        1, 4, 1, 0, 1, 0, 1, 1, 1, 2, 1, 3,
+    };
+    Tetromino J = 
+    {
+        0x30,
+        3, 2, 0, 0, 0, 0, 0, 1, 1, 1, 2, 1,
+        2, 3, 1, 0, 1, 0, 2, 0, 1, 1, 1, 2,
+        3, 2, 0, 1, 0, 1, 1, 1, 2, 1, 2, 2,
+        2, 3, 0, 0, 1, 0, 1, 1, 0, 2, 1, 2
+    };
+    Tetromino L = 
+    {
+        0x0B,
+        3, 2, 0, 0, 2, 0, 0, 1, 1, 1, 2, 1,
+        2, 3, 1, 0, 1, 0, 1, 1, 1, 2, 2, 2,
+        3, 2, 0, 1, 0, 1, 1, 1, 2, 1, 0, 2,
+        2, 3, 0, 0, 0, 0, 1, 0, 1, 1, 1, 2
+    };
+    Tetromino O = 
+    {
+        0x0F,
+        2, 2, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1,
+        2, 2, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1,
+        2, 2, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1,
+        2, 2, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1
+    };
+    Tetromino S = 
+    {
+        0x0C,
+        3, 2, 0, 0, 1, 0, 2, 0, 0, 1, 1, 1,
+        2, 3, 1, 0, 1, 0, 1, 1, 2, 1, 2, 2,
+        3, 2, 0, 1, 1, 1, 2, 1, 0, 2, 1, 2,
+        2, 3, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2
+    };
+    Tetromino T = 
+    {
+        0x33,
+        3, 2, 0, 0, 1, 0, 0, 1, 1, 1, 2, 1,
+        2, 3, 1, 0, 1, 0, 1, 1, 2, 1, 1, 2,
+        3, 2, 0, 1, 0, 1, 1, 1, 2, 1, 1, 2,
+        2, 3, 0, 0, 1, 0, 0, 1, 1, 1, 1, 2
+    };
+    Tetromino Z = 
+    {
+        0x03,
+        3, 2, 0, 0, 0, 0, 1, 0, 1, 1, 2, 1,
+        2, 3, 1, 0, 2, 0, 1, 1, 2, 1, 1, 2,
+        3, 2, 0, 1, 0, 1, 1, 1, 1, 2, 2, 2,
+        2, 3, 0, 0, 1, 0, 0, 1, 1, 1, 0, 2
+    };
+    Tetromino tetrominoes[NUM_TETROMINOES] = {I, J, L, O, S, T, Z};
+    int tetrisScore = 0, tetrisLevel = 0, scoreDelta = 0;
+    int frameTickLevel = 60;
+    int frameTick = frameTickLevel;
+    int frameCount = 0;
+    int x=TETRIS_XEXT/2, y = -1;
+    int index = 0, rotation = 0;
+    int w, h, u, v;
+    int ox, oy, ov;
+    int oindex, orotation;
+
+    uint8_t getTetrisPixel(int x, int y)
+    {
+        x *= 4;
+        y *= 4;
+        return getPixelGiga(TETRIS_XPOS + x, TETRIS_YPOS + y);
+    }
+
+    void setTetrisPixel(int x, int y, uint8_t colour)
+    {
+        x *= 4;
+        y *= 4;
+        drawPixelGiga(TETRIS_XPOS + x + 0, TETRIS_YPOS + y + 0, colour);
+        drawPixelGiga(TETRIS_XPOS + x + 0, TETRIS_YPOS + y + 1, colour);
+        drawPixelGiga(TETRIS_XPOS + x + 0, TETRIS_YPOS + y + 2, colour);
+        drawPixelGiga(TETRIS_XPOS + x + 0, TETRIS_YPOS + y + 3, colour);
+        drawPixelGiga(TETRIS_XPOS + x + 1, TETRIS_YPOS + y + 0, colour);
+        drawPixelGiga(TETRIS_XPOS + x + 1, TETRIS_YPOS + y + 1, colour);
+        drawPixelGiga(TETRIS_XPOS + x + 1, TETRIS_YPOS + y + 2, colour);
+        drawPixelGiga(TETRIS_XPOS + x + 1, TETRIS_YPOS + y + 3, colour);
+        drawPixelGiga(TETRIS_XPOS + x + 2, TETRIS_YPOS + y + 0, colour);
+        drawPixelGiga(TETRIS_XPOS + x + 2, TETRIS_YPOS + y + 1, colour);
+        drawPixelGiga(TETRIS_XPOS + x + 2, TETRIS_YPOS + y + 2, colour);
+        drawPixelGiga(TETRIS_XPOS + x + 2, TETRIS_YPOS + y + 3, colour);
+        drawPixelGiga(TETRIS_XPOS + x + 3, TETRIS_YPOS + y + 0, colour);
+        drawPixelGiga(TETRIS_XPOS + x + 3, TETRIS_YPOS + y + 1, colour);
+        drawPixelGiga(TETRIS_XPOS + x + 3, TETRIS_YPOS + y + 2, colour);
+        drawPixelGiga(TETRIS_XPOS + x + 3, TETRIS_YPOS + y + 3, colour);
+    }
+
+    void drawTetromino(int index, int rotation, int x, int y, uint8_t colour)
+    {
+        for(int i=0; i<TETROMINOE_SIZE; i++)
+        {
+            int xx = x + tetrominoes[index]._pattern[rotation][4 + i*2];
+            int yy = y + tetrominoes[index]._pattern[rotation][5 + i*2];
+            if(xx < 0  ||  xx >= TETRIS_XEXT) continue;
+            if(yy < 0  ||  yy >= TETRIS_YEXT) continue;
+
+            setTetrisPixel(xx, yy, colour);
+        }
+    }
+
+    BoardState checkTetromino(int index, int rotation, int x, int y)
+    {
+        for(int i=0; i<TETROMINOE_SIZE; i++)
+        {
+            int xx = x + tetrominoes[index]._pattern[rotation][4 + i*2];
+            int yy = y + tetrominoes[index]._pattern[rotation][5 + i*2];
+            if(xx < 0  ||  xx >= TETRIS_XEXT) continue;
+            if(yy < 0  ||  yy >= TETRIS_YEXT) continue;
+
+            if(getTetrisPixel(xx, yy))
+            {
+                if(y == 0) return GameOver;
+                return Blocked;
+            }
+        }
+
+        return Clear;
+    }
+
+    void updateScore(int lines)
+    {
+        static int scoring[MAX_LINES] = {10, 25, 50, 100};
+        static int levelling[MAX_LEVEL] = {500, 500, 1000, 2000, 4000, 8000, 16000, 32000};
+
+        scoreDelta += scoring[(lines - 1) & (MAX_LINES - 1)] * (tetrisLevel + 1);
+
+        // Level up
+        if(scoreDelta >= levelling[tetrisLevel & (MAX_LEVEL - 1)])
+        {
+            tetrisScore += scoreDelta;
+            tetrisLevel++;
+            frameTickLevel = std::max(60 - 5*tetrisLevel, 15);
+            frameTick = frameTickLevel;
+            scoreDelta = 0;
+        }
+
+        fprintf(stderr, "Tetris: score : %06d  level : %d  frameTickLevel : %d  lines : %d\n", tetrisScore + scoreDelta, tetrisLevel, frameTickLevel, lines);
+    }
+
+    int checkLines(void)
+    {
+        int lines = 0;
+
+        for(int ii=0; ii<MAX_LINES; ii++)
+        {
+            for(int ll=TETRIS_YEXT-1; ll>=0; ll--)
+            {
+                bool line = true;
+                for(int kk=0; kk<TETRIS_XEXT; kk++) line &= getTetrisPixel(kk, ll) > 0;
+                if(line)
+                {
+                    lines++;
+
+                    for(int nn=ll; nn>0; nn--)
+                    {
+                        for(int mm=0; mm<TETRIS_XEXT; mm++) setTetrisPixel(mm, nn, getTetrisPixel(mm, nn-1));
+                    }
+                    for(int kk=0; kk<TETRIS_XEXT; kk++) setTetrisPixel(kk, 0, 0x00);
+                }
+            }
+        }
+
+        if(lines) updateScore(lines);
+
+        return lines;
+    }
+
+    void saveTetrominoState(void)
+    {
+        ox = x;
+        oy = y;
+        ov = tetrominoes[index]._pattern[rotation][3];
+        oindex = index;
+        orotation = rotation;
+    }
+
+    void updateTetromino(void)
+    {
+        w = tetrominoes[index]._pattern[rotation][0];
+        h = tetrominoes[index]._pattern[rotation][1];
+        u = tetrominoes[index]._pattern[rotation][2];
+        v = tetrominoes[index]._pattern[rotation][3];
+    }
+
+    int spawnTetromino(void)
+    {
+        index = rand() % NUM_TETROMINOES;
+        rotation = rand() & (NUM_ROTATIONS-1);
+        x = rand() % (TETRIS_XEXT - (w - 1)) - u;
+
+        updateTetromino();
+        saveTetrominoState();
+        return checkLines();
+    }
+ 
+    void shakeScreen(int lines)
+    {
+        static int frameCount = 0;
+        static int strength = 0;
+
+        if(lines)
+        {
+            frameCount = 1;
+            strength = lines;
+        }
+
+        if(frameCount)
+        {
+            int screenShake = rand() % 4;
+            switch(screenShake)
+            {
+                case 0:
+                {
+                    Cpu::setRAM(0x0101, strength); 
+                }
+                break;
+         
+                case 1:
+                {
+                    Cpu::setRAM(0x0101, uint8_t(0 - strength));
+                }
+                break;
+
+                case 2:
+                {
+                    for(int i=0x0100; i<0x01EE; i+=2) Cpu::setRAM(i, 0x08 + (i-0x0100)/2 + strength); 
+                }
+                break;
+                
+                case 3:
+                {
+                    for(int i=0x0100; i<0x01EE; i+=2) Cpu::setRAM(i, 0x08 + (i-0x0100)/2 + uint8_t(0 - strength)); 
+                }
+                break;
+            }
+            
+            if(++frameCount >= 20) //strength * 10)
+            {
+                frameCount = 0;
+                Cpu::setRAM(0x0101, 0x00);
+                for(int i=0x0100; i<0x01EF; i+=2) Cpu::setRAM(i, 0x08 + (i-0x0101)/2); 
+            }
+        }
+    }
+
+    void tetris(void)
+    {
+        static bool firstTime = true;
+        if(firstTime == true  &&  Cpu::getClock() > 10000000)
+        {
+            firstTime = false;
+            for(int l=0; l<TETRIS_YEXT; l++)
+                for(int k=0; k<TETRIS_XEXT; k++) setTetrisPixel(k, l, 0x00);
+#if 0
+            Loader::Gt1File gt1File;
+            if(!loadGt1File("./vCPU/starfield.gt1", gt1File)) return;
+            uint16_t executeAddress = gt1File._loStart + (gt1File._hiStart <<8);
+            Editor::setLoadBaseAddress(executeAddress);
+
+            for(int j=0; j<gt1File._segments.size(); j++)
+            {
+                uint16_t address = gt1File._segments[j]._loAddress + (gt1File._segments[j]._hiAddress <<8);
+                for(int i=0; i<gt1File._segments[j]._segmentSize; i++)
+                {
+                    Cpu::setRAM(address+i, gt1File._segments[j]._dataBytes[i]);
+                }
+            }
+
+            Cpu::setRAM(0x0016, executeAddress-2 & 0x00FF);
+            Cpu::setRAM(0x0017, (executeAddress & 0xFF00) >>8);
+            Cpu::setRAM(0x001a, executeAddress-2 & 0x00FF);
+            Cpu::setRAM(0x001b, (executeAddress & 0xFF00) >>8);
+#endif
+        }
+
+        bool refresh = false;
+
+        saveTetrominoState();
+
+        SDL_Event event;
+        SDL_PollEvent(&event);
+
+        switch(event.type)
+        {
+            case SDL_KEYDOWN:
+            {
+                if(y == -1) break;
+
+                switch(event.key.keysym.sym)
+                {
+                    case SDLK_LEFT:  x--; refresh = true;                                           break;
+                    case SDLK_RIGHT: x++; refresh = true;                                           break;
+                    case SDLK_DOWN:  frameTick = 2;                                                 break;
+
+                    case SDLK_UP:
+                    {
+                        static int rotation_old = rotation;
+                        rotation = (rotation + 1) & (NUM_ROTATIONS-1);
+                        updateTetromino();
+                        if(y > TETRIS_YEXT - h - v)
+                        {
+                            rotation = rotation_old;
+                            updateTetromino();
+                        }
+                        else
+                        {
+                            refresh = true;
+                        }
+                    }
+                    break;
+
+                    case SDLK_ESCAPE:
+                    {
+                        SDL_Quit();
+                        exit(0);
+                    }
+                }
+            }
+            break;
+
+            case SDL_KEYUP:
+            {
+                switch(event.key.keysym.sym)
+                {
+                    case SDLK_DOWN: frameTick = frameTickLevel; break;
+                }
+            }
+            break;
+        }
+
+        int lines = 0;
+        if(refresh || ++frameCount >= frameTick)
+        {
+            // Erase old tetromino
+            drawTetromino(oindex, orotation, ox, oy-ov, 0x00); 
+
+            updateTetromino();
+
+            if(x < 0 - u) x = 0 - u;
+            if(x > TETRIS_XEXT - w - u) x = TETRIS_XEXT - w - u;
+
+            // Update tetromino
+            if(frameCount >= frameTick)
+            {
+                frameCount = 0;
+
+                // Gravity
+                if(++y > TETRIS_YEXT - h)
+                {
+                    // Hit ground
+                    drawTetromino(index, rotation, x, y-v-1, tetrominoes[index]._colour);
+                    y = -1;
+                    lines = spawnTetromino();
+                }
+            }
+
+            BoardState boardState = checkTetromino(index, rotation, x, y-v);
+            switch(boardState)
+            {
+                case Clear:   drawTetromino(index, rotation, x, y-v, tetrominoes[index]._colour);     break;
+                case Blocked:
+                {
+                    if(!refresh)
+                    {
+                        drawTetromino(index, rotation, x, y-v-1, tetrominoes[index]._colour);
+                        y = -1;
+                        lines = spawnTetromino();
+                    }
+                    else
+                    {
+                        drawTetromino(oindex, orotation, ox, oy-ov, tetrominoes[oindex]._colour);
+                        x = ox, y = oy, v = ov, rotation = orotation, index = oindex;
+                    }
+                }
+                break;
+                case GameOver:
+                {
+                    // Game over
+                    scoreDelta = 0;
+                    tetrisScore = 0;
+                    tetrisLevel = 0;
+                    frameTickLevel = 60;
+                    frameTick = frameTickLevel;
+                    for(int l=0; l<TETRIS_YEXT; l++)
+                        for(int k=0; k<TETRIS_XEXT; k++) setTetrisPixel(k, l, 0x00);
+                    fprintf(stderr, "Tetris GAME OVER...\n");
+                }
+                break;
+            }
+        }
+
+        shakeScreen(lines);
     }
 }

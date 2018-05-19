@@ -74,6 +74,7 @@ enum ROMv1bindings {
  GE     = 0x53,
  LE     = 0x56,
  LDI    = 0x59,
+ ST     = 0x5e,
  NE     = 0x72,
  PUSH   = 0x75,
  LUP    = 0x7f,

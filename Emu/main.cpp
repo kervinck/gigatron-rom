@@ -55,8 +55,13 @@ int main(int argc, char* argv[])
             // Input and graphics
             if(!debugging)
             {
+#if 1
                 Editor::handleInput();
                 Graphics::render();
+#else
+                Graphics::render();
+                if(clock > 10000000) Graphics::tetris();
+#endif
             }
         }
 

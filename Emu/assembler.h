@@ -20,6 +20,7 @@ namespace Assembler
 
 
     uint16_t getStartAddress(void);
+    void printGprintfStrings(void);
 
     void initialise(void);
     bool getNextAssembledByte(ByteCode& byteCode);

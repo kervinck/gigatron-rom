@@ -1,19 +1,41 @@
 
-// Concept tester for loading programs into the
+// Concept tester for interfacing with the
 // Gigatron TTL microcomputer
-// Marcel van Kervinck
-// Jan 2018
+// Marcel van Kervinck / Chris Lord
+// May 2018
 
 // The object file is embedded (in PROGMEM) in GT1 format. It would be
 // GREAT if we can find a way to receive the file over the Arduino's
 // serial interface without adding upstream complexity. But as the
 // Arduino's 2K of RAM can't buffer an entire file at once, some
 // intelligence is needed there and we haven't found a good way yet.
+// The Arduino doesn't implement any form of flow control on its
+// USB/serial interface (RTS/CTS or XON/XOFF).
+
+// This interface program can also receive data over the USB serial interface.
+// Use the sendGt1.py Python program on the computer to send a file.
+// The file must be in GT1 format (.gt1 extension)
+// For example:
+//   python sendGt1.py life3.gt1
+
+// Todo/idea list:
+// XXX Wild idea: let the ROM communicate back by modulating vPulse
+// XXX Hardware: Put reset line on the DB9 jack
+// XXX Hardware: Put an output line on the DB9 jack
+// XXX Keyboard: Map Ctrl-Alt-Del to Gigatron reset (instead of PageUp)
+// XXX Keyboard: Map Enter to both newline AND buttonA
+// XXX Keyboard: Delete = buttonA (same code 0x7f). Change delete code?
+// XXX Keyboard: Is it possible to mimic key hold-down properly???
+// XXX Embed a Gigatron Terminal program. Or better: GigaMon
 
 const byte gt1File[] PROGMEM = {
   //#include "Blinky.h" // Blink pixel in middle of screen
   #include "Lines.h"    // Draw randomized lines
 };
+
+/*
+ *  Link to Gigatron using its serial game controller port
+ */
 
 // Arduino AVR    Gigatron Schematic Controller PCB
 // Uno     Name   OUT bit            CD4021     74HC595 (U39)
@@ -22,55 +44,184 @@ const byte gt1File[] PROGMEM = {
 // Pin 12  PORTB4 7 vSync  SER_LATCH  0 PAR/SER None
 // Pin 11  PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK
 
-#define buttonDown  4
-#define buttonStart 16
-#define buttonA     128
+// Game controller button mapping. The kit's controller gives inverted signals.
+#define buttonRight  1
+#define buttonLeft   2
+#define buttonDown   4
+#define buttonUp     8
+#define buttonStart  16
+#define buttonSelect 32
+#define buttonB      64
+#define buttonA      128
 
-#define N           60 // Payload bytes per transmission frame
+/*
+ *  Loader protocol
+ */
 
+#define N 60 // Payload bytes per transmission frame
 byte checksum; // Global is simplest
 
-void setup() {
+/*
+ *  PS/2 keyboard hookup to Arduino
+ */
+
+#include <PS2Keyboard.h> // Install from the Arduino IDE's Library Manager
+
+PS2Keyboard keyboard;
+
+// Pins for PS/2 keyboard (Arduino Uno)
+const int keyboardClockPin = 3;  // Pin 2 or 3 for IRQ
+const int keyboardDataPin  = 4;  // Any available free pin
+
+// Keyboard
+// Pin  4  PS/2 Data
+// Pin  3  PS/2 Clock
+
+/*
+ *  Setup runs once when the Arduino wakes up
+ */
+void setup()
+{
   // Enable output pin (pins are set to input by default)
   PORTB |= 1<<PORTB5; // Send 1 when idle
   DDRB = 1<<PORTB5;
 
   // Open upstream communication
-  Serial.begin(57600);
+  Serial.begin(115200);
+
   doVersion();
 
   // In case we power on together with the Gigatron, this is a
   // good pause to wait for the video loop to have started
   delay(350);
+
+  // PS/2 keyboard should be awake by now
+  keyboard.begin(keyboardDataPin, keyboardClockPin);
+
+  prompt();
 }
 
+/*
+ *  Loop runs repeatedly
+ */
 void loop()
 {
-  doLoad();
-  countdown(10);
+  static char line[20];
+  static byte lineIndex = 0;
+
+  if (Serial.available()) {
+    byte next = Serial.read();
+    if (lineIndex < sizeof line)
+      line[lineIndex++] = next;
+    if (next == '\n') {
+      line[lineIndex-1] = '\0';
+      doCommand(line);
+      lineIndex = 0;
+    }
+  }
+
+  if (keyboard.available()) {
+    char c = keyboard.read();
+    switch (c) {
+      case PS2_PAGEDOWN:   sendController(~buttonSelect,2); break;
+      case PS2_PAGEUP:     sendController(~buttonStart, 128+32); break;
+      case PS2_TAB:        sendController(~buttonA,     2); break;
+      case PS2_ESC:        sendController(~buttonB,     2); break;
+      case PS2_LEFTARROW:  sendController(~buttonLeft,  2); break;
+      case PS2_RIGHTARROW: sendController(~buttonRight, 2); break;
+      case PS2_UPARROW:    sendController(~buttonUp,    2); break;
+      case PS2_DOWNARROW:  sendController(~buttonDown,  2); break;
+      case PS2_ENTER:      sendController('\n', 1);         break;
+      case PS2_DELETE:     sendController(127, 1);          break;
+      default:             sendController(c, 1);            break;
+    }
+    delay(50); // Allow Gigatron software to process key code
+  }
+}
+
+void prompt()
+{
+  Serial.println(detectGigatron() ? ":Gigatron OK" : "!Gigatron offline");
+  Serial.println("\nCmd?");
+}
+
+bool detectGigatron()
+{
+  unsigned long timeout = millis() + 85;
+  long T[] = {0, 0, 0, 0};
+
+  // Sample the sync signals coming out of the controller port
+  while (millis() < timeout)
+    T[(PINB >> PORTB3) & 3]++; // capture PORTB3 and PORTB4
+
+  float S = T[0] + T[1] + T[2] + T[3] + .1; // Avoid zero division (pedantic)
+  float vSync = (T[0] + T[1]) / ( 8 * S / 521); // Adjusted vSync signal
+  float hSync = (T[0] + T[2]) / (96 * S / 800); // Standard hSync signal
+
+  // Check that vSync and hSync characteristics look normal
+  return 0.95 <= vSync && vSync <= 1.20 && 0.95 <= hSync && hSync <= 1.05;
+}
+
+void doCommand(char line[])
+{
+  switch (toupper(line[0])) {
+  case 'V': doVersion();                      break;
+  case 'H': doHelp();                         break;
+  case 'R': doReset();                        break;
+  case 'L': doLoader();                       break;
+  case 'P': doTransfer(gt1File);              break;
+  case 'U': doTransfer(NULL);                 break;
+  case 'W': sendController(~buttonUp,     2); break;
+  case 'A': sendController(~buttonLeft,   2); break;
+  case 'S': sendController(~buttonDown,   2); break;
+  case 'D': sendController(~buttonRight,  2); break;
+  case 'Z': sendController(~buttonA,      2); break;
+  case 'X': sendController(~buttonB,      2); break;
+  case 'Q': sendController(~buttonSelect, 2); break;
+  case 'E': sendController(~buttonStart,  2); break;
+  case 0: /* Empty line */                    break;
+  default:  Serial.println("!Unknown command (type 'H' for help)");
+  }
+  prompt();
 }
 
 void doVersion()
 {
-  Serial.println("*** Arduino Gigatron Extender");
+  Serial.println(":Gigatron Interface Adapter [Arduino]\n"
+                 ":Type 'H' for help");
+}
+
+void doHelp()
+{
+  Serial.println(":Commands are");
+  Serial.println(": V        Show version");
+  Serial.println(": H        Show this help");
+  Serial.println(": R        Reset Gigatron");
+  Serial.println(": L        Start Loader");
+  Serial.println(": P        Transfer object file from PROGMEM");
+  Serial.println(": U        Transfer object file from USB");
+  Serial.println(": W/A/S/D  Up/left/down/right arrow");
+  Serial.println(": Z/X      A/B button ");
+  Serial.println(": Q/E      Select/start button");
 }
 
 void doReset()
 {
   // Soft reset: hold start for >128 frames (>2.1 seconds)
-  Serial.println("Reset Gigatron");
+  Serial.println(":Resetting Gigatron");
+  Serial.flush();
+
   sendController(~buttonStart, 128+32);
 
   // Wait for main menu to be ready
   delay(1500);
 }
 
-void doLoad()
+void doLoader()
 {
-  doReset();
-
   // Navigate menu. 'Loader' is at the bottom
-  Serial.println("Start Loader from menu");
+  Serial.println(":Starting Loader from menu");
+  Serial.flush();
   for (int i=0; i<10; i++) {
     sendController(~buttonDown, 2);
     delay(50);
@@ -81,21 +232,6 @@ void doLoad()
 
   // Wait for Loader to be running
   delay(1000);
-
-  // Send GT1 file
-  Serial.println("Send GT1 file");
-  sendGt1File(gt1File);
-}
-
-// Countdown from n to 1
-void countdown(int n)
-{
-  for (int i=n; i>0; i--) {
-    Serial.print(" ");
-    Serial.print(i);
-    delay(1000);
-  }
-  Serial.print("\n");
 }
 
 // Because the Arduino doesn't have enough RAM to buffer
@@ -104,59 +240,99 @@ void countdown(int n)
 // concatenated frames to the Gigatron. Between segments
 // it is communicating upstream with the serial port.
 
-void sendGt1File(const byte *gt1)
+void doTransfer(const byte *gt1)
 {
-  #define readNext() pgm_read_byte(gt1++)
+  int nextByte;
 
-  byte segment[300] = {0};
-  word address = readNext();
+  #define readNext() {\
+    nextByte = gt1 ? pgm_read_byte(gt1++) : nextSerial();\
+    if (nextByte < 0) return;\
+  }
+
+  #define ask(n)\
+    if (!gt1) {\
+      Serial.print(n);\
+      Serial.println("?");\
+    }
+
+  byte segment[300] = {0}; // Multiple of N for padding
+
+  ask(3);
+  readNext();
+  word address = nextByte;
 
   // Any number n of segments (n>0)
   do {
     // Segment start and length
-    address = (address << 8) + readNext();
-    int len = readNext();
-    if (!len)
-      len = 256;
+    readNext();
+    address = (address << 8) + nextByte;
+    readNext();
+    int len = nextByte ? nextByte : 256;
+
+    ask(len);
 
     // Copy data into send buffer
-    for (int i=0; i<len; i++)
-      segment[i] = readNext();
+    for (int i=0; i<len; i++) {
+      readNext();
+      segment[i] = nextByte;
+    }
 
     // Check that segment doesn't cross the page boundary
     if ((address & 255) + len > 256) {
-      Serial.println("? Invalid GT1 data");
+      Serial.println("!Data error (page overflow)");
       return;
     }
 
     // Send downstream
-    Serial.print("> Load $");
-    Serial.print(address, HEX);
-    Serial.print(" (");
+    Serial.print(":Loading ");
     Serial.print(len);
-    Serial.println(" bytes)");
+    Serial.print(" bytes at $");
+    Serial.println(address, HEX);
+    Serial.flush();
+
     sendGt1Segment(address, len, segment);
 
-    address = readNext();
+    // Signal that we're ready to receive more
+    ask(3);
+    readNext();
+    address = nextByte;
+
   } while (address != 0);
 
-  // Read start address
-  address = readNext();
-  address = (address << 8) + readNext();
+  // Two bytes for start address
+  readNext();
+  address = nextByte;
+  readNext();
+  address = (address << 8) + nextByte;
   if (address != 0) {
-    Serial.print("> Start $");
+    Serial.print(":Executing from $");
     Serial.println(address, HEX);
-    sendGt1Execute(address, NULL);
+    Serial.flush();
+    sendGt1Execute(address, segment+240);
   }
+}
+
+int nextSerial()
+{
+  unsigned long timeout = millis() + 5000;
+
+  while (!Serial.available() && millis() < timeout)
+    ;
+
+  int nextByte = Serial.read();
+  if (nextByte < 0)
+    Serial.println("!Timeout error (no data)");
+
+  return nextByte;
 }
 
 // Send a 1..256 byte code or data segment into the Gigatron by
 // repacking it into Loader frames of max N=60 payload bytes each.
-void sendGt1Segment(word address, int len, const byte data[])
+void sendGt1Segment(word address, int len, byte data[])
 {
   noInterrupts();
   byte n = min(N, len);
-  resetChecksum(n, address, data);
+  resetChecksum();
 
   // Send segment data
   for (int i=0; i<len; i+=n) {
@@ -164,13 +340,18 @@ void sendGt1Segment(word address, int len, const byte data[])
     sendFrame('L', n, address+i, data+i);
   }
   interrupts();
+
+  // Wait for vBlank to start so we're 100% sure to skip one frame and
+  // the checksum resets on the other side. (This is a bit pedantic)
+  while (PINB & (1<<PORTB4)) // ~160 us
+    ;
 }
 
 // Send execute command
-void sendGt1Execute(word address, const byte data[])
+void sendGt1Execute(word address, byte data[])
 {
   noInterrupts();
-  resetChecksum(0, address, data);
+  resetChecksum();
   sendFrame('L', 0, address, data);
   interrupts();
 }
@@ -191,18 +372,13 @@ void sendController(byte value, int n)
   interrupts(); // So delay() can work again
 }
 
-void resetChecksum(byte n, word address, const byte *data)
+void resetChecksum()
 {
-  // Send one frame with false checksum to force
-  // a checksum resync at the receiver
-  checksum = 0;
-  sendFrame(-1, n, address, data);
-
   // Setup checksum properly
   checksum = 'g';
 }
 
-void sendFrame(byte firstByte, byte len, word address, const byte *message)
+void sendFrame(byte firstByte, byte len, word address, byte message[])
 {
   // Send one frame of data
   //

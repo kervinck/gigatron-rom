@@ -81,6 +81,18 @@ start       LDWI    vram
             STW     vbase       ; vram base address
             STW     pixels      ; pixel address
 
+clear       LDI     0x00        ; clear screen and buffers
+            POKE    vbase
+            LDWI    0x0001
+            ADDW    vbase
+            STW     vbase
+            LD      vbase+1
+            SUBI    0x80
+            BLT     clear
+
+            LDWI    vram
+            STW     vbase       ; vram base address
+
             LDWI    rand
             STW     random
 

@@ -1,0 +1,398 @@
+%include macros\gigatron.i
+
+xx              EQU     0x30
+yy              EQU     0x31
+ii              EQU     0x32
+jj              EQU     0x33
+index           EQU     0x34
+rotation        EQU     0x36
+tx              EQU     0x38
+ty              EQU     0x3A 
+tw              EQU     0x3C
+th              EQU     0x3E
+tu              EQU     0x40
+tv              EQU     0x42
+ox              EQU     0x44
+oy              EQU     0x46
+ov              EQU     0x48
+oindex          EQU     0x4A
+orotation       EQU     0x4C
+tetrominoLut    EQU     0x4E
+tetrominoBase   EQU     0x50
+colour          EQU     0x52
+result          EQU     0x54
+frameCounter    EQU     0x56
+frameCountPrev  EQU     0x58
+frameTicks      EQU     0x5A
+frameTicksLevel EQU     0x5C
+rand            EQU     0x5E
+scratch         EQU     0x60
+vbase           EQU     0x62
+xScroll         EQU     0x64
+tbase           EQU     0x66
+textStr         EQU     0x68
+textPos         EQU     0x6A
+textChr         EQU     0x6C
+numLines        EQU     0x6E
+scoreDelta      EQU     0x70
+scoreLevel      EQU     0x72
+scoreScratch    EQU     0x74
+tt              EQU     0x76
+kk              EQU     0x77
+ll              EQU     0x78
+mm              EQU     0x79
+nn              EQU     0x7A
+buttonStatePrev EQU     0x7B
+refresh         EQU     0x7C
+blocked         EQU     0x7D
+
+
+
+    
+xTetris         EQU     10
+yTetris         EQU     20
+xPixels         EQU     xTetris*4
+yPixels         EQU     yTetris*4
+xOffset         EQU     (giga_xres - xPixels) / 2
+yOffset         EQU     (giga_yres - yPixels) / 2
+maxLines        EQU     4
+maxLevel        EQU     8
+maxTicks        EQU     50
+
+                                        
+_startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
+
+_callTable_         EQU     0x00EE      ; call addresses are automatically stored here by the assembler, it grows downwards, (leave 16 bytes for vCPU stack)
+                                        ; *NOTE* gt1 spec only allows for one zero page segment, .vasm files use this for the call table
+                                        ; do not define any data/constants in zero page using DB or DW, it will not work! (use code)
+                                        
+_singleStepWatch_   EQU     frameCounter ; the single step debugger watches this variable location to decide when to step,
+                                         ; choose a variable that is updated often
+
+; tetromino data
+tetromino_I     EQU     0x08A1          ; format: colour for 2 pixels, w, h, ox, oy, x0, y0, x1, y1, x2, y2, x3, y3, 0, 0  ; ox and oy are offsets within w and h
+tetromino_J     EQU     0x09A1
+tetromino_L     EQU     0x0AA1
+tetromino_O     EQU     0x0BA1
+tetromino_S     EQU     0x0CA1
+tetromino_T     EQU     0x0DA1
+tetromino_Z     EQU     0x0EA1                                                                                  
+tetromino_I     DB      0x3C 0x3C 4 1 0 1 0 1 1 1 2 1 3 1 0 0  0x3C 0x3C 1 4 2 0 2 0 2 1 2 2 2 3 0 0  0x3C 0x3C 4 1 0 2 0 2 1 2 2 2 3 2 0 0  0x3C 0x3C 1 4 1 0 1 0 1 1 1 2 1 3 0 0
+tetromino_J     DB      0x30 0x30 3 2 0 0 0 0 0 1 1 1 2 1 0 0  0x30 0x30 2 3 1 0 1 0 2 0 1 1 1 2 0 0  0x30 0x30 3 2 0 1 0 1 1 1 2 1 2 2 0 0  0x30 0x30 2 3 0 0 1 0 1 1 0 2 1 2 0 0  
+tetromino_L     DB      0x0B 0x0B 3 2 0 0 2 0 0 1 1 1 2 1 0 0  0x0B 0x0B 2 3 1 0 1 0 1 1 1 2 2 2 0 0  0x0B 0x0B 3 2 0 1 0 1 1 1 2 1 0 2 0 0  0x0B 0x0B 2 3 0 0 0 0 1 0 1 1 1 2 0 0
+tetromino_O     DB      0x0F 0x0F 2 2 0 0 0 0 1 0 0 1 1 1 0 0  0x0F 0x0F 2 2 0 0 0 0 1 0 0 1 1 1 0 0  0x0F 0x0F 2 2 0 0 0 0 1 0 0 1 1 1 0 0  0x0F 0x0F 2 2 0 0 0 0 1 0 0 1 1 1 0 0
+tetromino_S     DB      0x0C 0x0C 3 2 0 0 1 0 2 0 0 1 1 1 0 0  0x0C 0x0C 2 3 1 0 1 0 1 1 2 1 2 2 0 0  0x0C 0x0C 3 2 0 1 1 1 2 1 0 2 1 2 0 0  0x0C 0x0C 2 3 0 0 0 0 0 1 1 1 1 2 0 0
+tetromino_T     DB      0x33 0x33 3 2 0 0 1 0 0 1 1 1 2 1 0 0  0x33 0x33 2 3 1 0 1 0 1 1 2 1 1 2 0 0  0x33 0x33 3 2 0 1 0 1 1 1 2 1 1 2 0 0  0x33 0x33 2 3 0 0 1 0 0 1 1 1 1 2 0 0
+tetromino_Z     DB      0x03 0x03 3 2 0 0 0 0 1 0 1 1 2 1 0 0  0x03 0x03 2 3 1 0 2 0 1 1 2 1 1 2 0 0  0x03 0x03 3 2 0 1 0 1 1 1 1 2 2 2 0 0  0x03 0x03 2 3 0 0 1 0 0 1 1 1 0 2 0 0
+
+scoringLut      EQU     0x0FA1
+levellingLut    EQU     0x0FA6
+scoringLut      DB      10 25 50 100
+levellingLut    DW      250 750 1000 2000 4000 8000 16000 32000 64000
+
+score_string    EQU     0x7FA1
+score_string    DB      6 '000000'
+level_string    EQU     0x7FA9
+level_string    DB      7 'LEVEL 0'
+
+
+; tetromino_I gets an extra slot to make rand easier to implement, this also means tetromino_I will appear statistically more often,
+; replace with which ever tetromino you want to favour
+tetromino_lut   EQU     0x08E0
+tetromino_lut   DW      tetromino_I tetromino_J tetromino_L tetromino_O tetromino_S tetromino_T tetromino_Z tetromino_I
+
+
+entry_point     EQU     0x0200
+handleInput     EQU     0x0300
+incrementScore  EQU     0x0400              ; too big to store in unused area of video memory
+updateScore     EQU     0x0500              ; too big to store in unused area of video memory
+
+; storing subroutines in unused areas of video memory
+clearBoard      EQU     0x15A1      
+clearScreen     EQU     0x16A1
+setTetrisBlock  EQU     0x17A1
+drawTetromino   EQU     0x18A1
+drawTetrisField EQU     0x19A1
+drawTF_hloop    EQU     0x1AA1
+drawTF_vloop    EQU     0x1AC9
+eraseTetromino  EQU     0x1BA1
+getTetrisBlock  EQU     0x1CA1
+checkTetromino  EQU     0x1DA1
+spawnTetromino  EQU     0x1EA1
+updateTetromino EQU     0x1FA1
+checkLines      EQU     0x20A1
+moveLines       EQU     0x21A1
+shakeScreen     EQU     0x22A1
+printText       EQU     0x23A1
+resetLevel      EQU     0x24A1
+loadTetromino   EQU     0x25A1
+
+
+%include tetris\macros.i
+%include tetris\clear_board.i
+%include tetris\draw_tetromino.i
+%include tetris\erase_tetromino.i
+%include tetris\check_tetromino.i
+%include tetris\spawn_tetromino.i
+%include tetris\check_lines.i
+%include tetris\print_text.i
+%include tetris\update_score.i
+
+
+entry_point     LDWI    giga_vram
+                STW     vbase               ; vram base address
+                LDWI    giga_text32
+                STW     tbase               ; text font base address, (ROM)
+                LDWI    0x0101
+                STW     xScroll
+                
+                CALL    clearScreen
+                CALL    drawTetrisField
+
+restart         LDWI    0x0000
+                STW     scoreDelta
+                STW     scoreLevel
+                STW     frameCounter    
+
+                LDWI    maxTicks
+                STW     frameTicksLevel
+                STW     frameTicks
+
+                LDI     0x00
+                ST      blocked
+                
+                LD      giga_frameCount
+                STW     frameCountPrev
+
+                LDWI    tetromino_lut
+                STW     tetrominoLut
+
+                CALL    resetLevel
+                CALL    resetScore
+                CALL    clearBoard      
+                CALL    spawnTetromino
+                
+                ; main update loop
+update          ST      scratch
+                CALL    saveTetromino
+
+                ;gprintf("%c %d $%04x $%04x $%04x b%016b b%08b o%04o $%04x %s", 48, 45000, 0xDEAD, 0xBEEF, resetLevel, frameCountPrev, *frameCounter, maxTicks + 1, vBlank, *level_string)
+
+                ; wait for VBlank
+vBlank          LD      giga_frameCount
+                SUBW    frameCountPrev
+                BEQ     vBlank
+                LD      giga_frameCount
+                STW     frameCountPrev
+                
+                ; input
+                CALL    handleInput
+                ST      refresh
+                XORI    0xFB            ; down
+                BEQ     frame_count1
+                LD      refresh         ; all other input
+                BNE     erase
+
+                ; reset frameTicks
+                LDW     frameTicksLevel
+                STW     frameTicks
+
+                ; frameTicks defines speed of tetrominoes
+frame_count1    LDW     frameCounter
+                ADDI    0x01
+                STW     frameCounter
+                SUBW    frameTicks
+                BLT     vBlank
+
+                ; don't allow input to override timing
+                LDI     0x00
+                ST      refresh
+
+                ; erase old tetromino
+erase           LD      blocked
+                BNE     check_txl
+                CALL    eraseTetromino
+
+                ; if(tx < 0 - tu) tx = 0 - tu;
+check_txl       LDW     tx              
+                ADDW    tu
+                BGE     check_txr
+                LDWI    0x00
+                SUBW    tu
+                STW     tx
+                BRA     frame_count0
+
+                ; if(tx > TETRIS_XEXT - tw - tu) tx = TETRIS_XEXT - tw - tu;
+check_txr       LDW     tx              
+                ADDW    tw
+                ADDW    tu
+                SUBI    xTetris
+                BLE     frame_count0
+                LDWI    xTetris
+                SUBW    tw
+                SUBW    tu
+                STW     tx
+
+                ; if(frameCount >= frameTick)
+frame_count0    LDW     frameCounter    
+                SUBW    frameTicks
+                BLT     check_blocks
+                LDWI    0x0000
+                STW     frameCounter   
+                LDI     0x00            ; reset flicker control                
+                ST      blocked
+
+                ; gravity    
+                INC     ty                  
+
+                ; if(y > TETRIS_YEXT - h)
+                LDW     ty
+                ADDW    th
+                SUBI    yTetris
+                BLE     check_blocks
+
+                ; draw floor tetromino
+                LD      ty
+                SUBI    0x01
+                ST      ty
+                CALL    drawTetromino 
+
+                ; spawn new tetromino
+                CALL    spawnTetromino
+                LDI     0xFF            ; control flicker
+                ST      blocked
+                BRA     update
+
+                ; check new tetromino position
+check_blocks    CALL    checkTetromino      ; checks tetromino for occupied blocks, returns result, 0 = empty, 1 = game over, >1 = blocked
+                LDW     result
+                BEQ     draw_new
+
+                ; check for game over
+                SUBI    0x01
+                BEQ     restart
+ 
+                ; check for fall blocked whilst input active, (but not drop)
+                LD      refresh
+                BEQ     fall_blocked
+
+                ; load old tetromino
+                CALL    loadTetromino
+                BRA     draw_new
+
+                ; draw falling blocked tetromino at previous y position
+fall_blocked    LD      ty
+                SUBI    0x01
+                ST      ty
+                CALL    drawTetromino 
+
+                ; spawn new tetromino
+                CALL    spawnTetromino
+                BRA     update
+
+draw_new        CALL    drawTetromino 
+                BRA     update
+
+                
+                ; load tetromino state
+loadTetromino   LDW     ox          
+                STW     tx
+                LDW     oy          
+                STW     ty
+                LDW     ov              ; vertical offset in tetris block units
+                STW     tv
+                LDW     oindex
+                STW     index
+                LDW     orotation
+                STW     rotation
+                RET
+
+                ; save tetromino state
+saveTetromino   LDW     tx          
+                STW     ox
+                LDW     ty          
+                STW     oy
+                LDW     tv              ; vertical offset in tetris block units
+                STW     ov
+                LDW     index
+                STW     oindex
+                LDW     rotation
+                STW     orotation
+                RET
+
+
+                ; handle input, returns 0x00 if nothing was handled, otherwise returns input
+handleInput     LD      giga_buttonState     ; 0xFF is no input
+                XORI    0xFF
+                BNE     handleI_down
+                ST      buttonStatePrev ; return 0x00     
+                RET
+
+                ; level triggered buttons
+handleI_down    LD      giga_buttonState
+                XORI    0xFB            ; down
+                BNE     handleI_event
+                LDWI    2
+                STW     frameTicks
+                LD      giga_buttonState
+                RET
+
+                ; edge triggering
+handleI_event   LD      buttonStatePrev ; only handle new events
+                BEQ     handleI_left
+                LD      0x00
+                RET
+
+                ; edge triggered buttons
+handleI_left    LD      giga_buttonState
+                ST      buttonStatePrev
+                XORI    0xFD            ; left
+                BNE     handleI_right
+
+                LDW     tx              ; tx--
+                SUBI    0x01
+                STW     tx
+                LD      giga_buttonState
+                RET
+
+handleI_right   LD      giga_buttonState
+                XORI    0xFE            ; right
+                BNE     handleI_up
+
+                LDW     tx              ; tx++
+                ADDI    0x01
+                STW     tx
+                LD      giga_buttonState
+                RET
+
+handleI_up      LD      giga_buttonState
+                XORI    0xF7            ; up
+                BNE     handleI_exit
+
+                LDW     rotation
+                STW     scratch
+                ADDI    0x10            ; rotation table's are separated by 16 bytes
+                ANDI    0x30            ; 4 rotation patterns
+                STW     rotation
+                PUSH
+                CALL    updateTetromino
+                POP
+
+                ; check rotation
+                LDW     ty              ; if(ty > TETRIS_YEXT - th - tv)
+                ADDW    th
+                ADDW    tv
+                SUBI    yTetris
+                BLE     handleI_exit
+
+                ; restore rotation
+                LDW     scratch
+                STW     rotation
+                PUSH
+                CALL    updateTetromino
+                POP
+                LD      0x00
+                RET
+
+handleI_exit    LD      giga_buttonState
+                RET
