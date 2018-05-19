@@ -10,16 +10,26 @@ const buttonMap = {
     right: 0x01,
 };
 
+const axisThreshold = 0.5;
+
 /** map from standard gamepad button index to inReg bit */
-const gamepadMap = {
+const gamepadButtonMap = {
     0: buttonMap.a,
     1: buttonMap.b,
+    6: buttonMap.b,
+    7: buttonMap.a,
     8: buttonMap.select,
     9: buttonMap.start,
     12: buttonMap.up,
     13: buttonMap.down,
     14: buttonMap.left,
     15: buttonMap.right,
+};
+
+/** map from standard gamepad axis index to negative and positive inReg bits */
+const gamepadAxisMap = {
+    0: [buttonMap.left, buttonMap.right],
+    1: [buttonMap.up, buttonMap.down],
 };
 
 /** Gamepad device */
@@ -74,8 +84,20 @@ export class Gamepad {
             let gamepads = navigator.getGamepads();
             for (let gamepad of gamepads) {
                 if (gamepad) {
-                    for (let buttonIndex of Object.keys(gamepadMap)) {
-                        let bit = gamepadMap[buttonIndex];
+                    // check the axes
+                    for (let axisIndex of Object.keys(gamepadAxisMap)) {
+                        let axis = gamepad.axes[axisIndex];
+                        let bits = gamepadAxisMap[axisIndex];
+                        if (axis < -axisThreshold) {
+                            pressed |= bits[0];
+                        } else if (axis > axisThreshold) {
+                            pressed |= bits[1];
+                        }
+                    }
+
+                    // check the buttons
+                    for (let buttonIndex of Object.keys(gamepadButtonMap)) {
+                        let bit = gamepadButtonMap[buttonIndex];
                         if (gamepad.buttons[buttonIndex].pressed) {
                             pressed |= bit;
                         }
