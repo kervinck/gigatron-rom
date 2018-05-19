@@ -235,6 +235,7 @@ $(function() {
                 loader.tick();
             }
             blinkenLights.tick(); // don't need realtime update
+            gamepad.tick();
         }, audio.duration);
 
         audio.context.resume();
