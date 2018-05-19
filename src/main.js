@@ -17,6 +17,15 @@ import {
     Loader,
 } from './loader.js';
 
+const {
+    concat,
+    defer,
+} = rxjs;
+
+const {
+    finalize,
+} = rxjs.operators;
+
 const HZ = 6250000;
 const romUrl = 'theloop.2.rom';
 
@@ -169,8 +178,11 @@ $(function() {
      * @param {File} file
      */
     function loadGt1(file) {
-        loader
-            .load(file)
+        gamepad.stop();
+        loader.load(file)
+            .pipe(finalize(() => {
+                gamepad.start();
+            }))
             .subscribe({
                 error: (error) => showError($(`\
                 <p>\

@@ -41,6 +41,7 @@ export class Gamepad {
      */
     constructor(cpu, keys) {
         this.cpu = cpu;
+        this.enabled = false;
         this.pressed = 0;
         this.keyMap = {};
 
@@ -69,11 +70,13 @@ export class Gamepad {
                     event.preventDefault();
                 }
             });
+        this.enabled = true;
     }
 
     /** stop handling key events */
     stop() {
         $(document).off('keydown keyup');
+        this.enabled = false;
     }
 
     /** check gamepads */
@@ -106,6 +109,8 @@ export class Gamepad {
             }
         }
 
-        this.cpu.inReg = pressed ^ 0xff; // active low
+        if (this.enabled) {
+            this.cpu.inReg = pressed ^ 0xff; // active low
+        }
     }
 }
