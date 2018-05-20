@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=640, initial-scale=1">
 
     <title>Gigatron</title>
 
@@ -26,16 +26,14 @@
             background-color: black;
         }
 
-        .btn-fc30 {
-            opacity: 0;
-            fill: #000;
-            stroke: 1px white;
+        .gamepad-btn.pressed {
+            fill: #00f;
+            fill-opacity: 0.5;
         }
 
-        .btn-fc30.pressed {
-            opacity: 0.5;
-            fill: #00f;
-            stroke: 1px white;
+        .gamepad-btn:hover {
+            stroke: gray;
+            stroke-width: 5;
         }
 
     </style>
@@ -62,24 +60,76 @@
 
                     <hr>
 
-                    <svg id="fc30" width="640" height="256" viewBox="0 0 600 256" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                    <!-- GAMEPAD -->
+                    <svg class="gamepad" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 250" width="640" height="250">
                         <defs>
-                            <clipPath id="clip">
-                                <rect x="0" y="0" width="600" height="256" rx="30" ry="30"/>
-                            </clipPath>
+                            <radialGradient id="button-gradient" fx="0.8" fy="0.8">
+                                <stop offset="5%" stop-color="gray"/>
+                                <stop offset="100%" stop-color="black"/>
+                            </radialGradient>
                         </defs>
-                        <g clip-path="url(#clip)">
-                            <image xlink:href="https://s.pacn.ws/640/q4/8bitdo-fc30-gamepad-470001.4.jpg" width="614" height="614" transform="translate(-10, -180)"/>
-                            <circle id="fc30-x" class="btn-fc30" cx="470" cy="75" r="30" />
-                            <circle id="fc30-y" class="btn-fc30" cx="415" cy="130" r="30" />
-                            <circle id="fc30-a" class="btn-fc30" cx="525" cy="130" r="30" />
-                            <circle id="fc30-b" class="btn-fc30" cx="470" cy="185" r="30" />
-                            <path id="fc30-select" class="btn-fc30" d="m 220,170 h 40 a 10,10 0 0 1 0,20 h -40 a 10,10 0 0 1 0,-20 z" />
-                            <path id="fc30-start" class="btn-fc30" d="m 300,170 h 40 a 10,10 0 0 1 0,20 h -40 a 10,10 0 0 1 0,-20 z" />
-                            <rect id="fc30-up" class="btn-fc30" x="80" y="90" width="40" height="40" />
-                            <rect id="fc30-down" class="btn-fc30" x="80" y="170" width="40" height="40" />
-                            <rect id="fc30-left" class="btn-fc30" x="40" y="130" width="40" height="40" />
-                            <rect id="fc30-right" class="btn-fc30" x="120" y="130" width="40" height="40" />
+                    
+                        <g>
+                            <rect x="0" y="0" width="600" height="250" rx="15" ry="15" fill="#82332f"/>
+                            <path d="m 15,30 a 15,15 0 0 1 15,-15 h 180 a 15,15 0 0 1 15,15 v 60 a 15,15 0 0 0 15,15 h 330 a 15,15 0 0 1 15,15 v 100 a 15,15 0 0 1 -15,15 h -540 a 15,15 0 0 1 -15,-15 z" fill="#f7f1db"/>
+                            <line x1="15" y1="200" x2="585" y2="200" stroke-width="4" stroke="black"/>
+                            <line x1="15" y1="208" x2="585" y2="208" stroke-width="4" stroke="black"/>
+                        </g>
+                    
+                        <g transform="translate(102,150)">
+                            <!-- <rect id="dpad" x="-80" y="-80" width="160" height="160" fill="none"/> -->
+                            <path d="m-24,-68 a4,4 0 0,1 4,-4 h40 a4,4 0 0,1 4,4 v40 a4,4 0 0,0 4,4 h40 a4,4 0 0,1 4,4 v40 a4,4 0 0,1 -4,4 h-40 a4,4 0 0,0 -4,4 v40 a 4,4 0 0,1 -4,4 h-40 a4,4 0 0,1 -4,-4 v-40 a4,4 0 0,0 -4,-4 h-40 a4,4 0 0,1 -4,-4 v-40 a4,4 0 0,1 4,-4 h40 a4,4 0 0,0 4,-4 z" stroke="#82332f" stroke-width="5" fill="black"/>
+                            <circle cx="0" cy="0" r="10" fill="url(#button-gradient)"/>
+                            <g transform="translate(-48,0) rotate(0)">
+                                <path d="m-15,0 l30,-15 v30 z" fill="#444"/>
+                                <rect class="gamepad-btn gamepad-btn-left" x="-24" y="-24" width="48" height="48" rx="4" ry="4" fill-opacity="0"/>
+                            </g>
+                            <g transform="translate(48,0) rotate(180)">
+                                <path d="m-15,0 l30,-15 v30 z" fill="#444"/>
+                                <rect class="gamepad-btn gamepad-btn-right" x="-24" y="-24" width="48" height="48" rx="4" ry="4" fill-opacity="0"/>
+                            </g>
+                            <g transform="translate(0,-48) rotate(90)">
+                                <path d="m-15,0 l30,-15 v30 z" fill="#444"/>
+                                <rect class="gamepad-btn gamepad-btn-up" x="-24" y="-24" width="48" height="48" rx="4" ry="4" fill-opacity="0"/>
+                            </g>
+                            <g transform="translate(0,48) rotate(270)">
+                                <path d="m-15,0 l30,-15 v30 z" fill="#444"/>
+                                <rect class="gamepad-btn gamepad-btn-down" x="-24" y="-24" width="48" height="48" rx="4" ry="4" fill-opacity="0"/>
+                            </g>
+                        </g>
+                    
+                        <g transform="translate(300,190)">
+                            <rect x="-100" y="-30" width="200" height="60" rx="30" ry="30" stroke="#82332f" stroke-width="8" fill="#954540"/>
+                    
+                            <g transform="translate(-45)">
+                                <text x="0" y="-40" font-family="sans-serif" font-size="16" text-anchor="middle" fill="black">SELECT</text>
+                                <rect x="-35" y="-10" width="70" height="20" rx="10" ry="10" fill="black"/>
+                                <rect class="gamepad-btn gamepad-btn-select" x="-35" y="-10" width="70" height="20" rx="10" ry="10" fill-opacity="0"/>
+                            </g>
+                    
+                            <g transform="translate(45)">
+                                <text x="0" y="-40" font-family="sans-serif" font-size="16" text-anchor="middle" fill="black">START</text>
+                                <rect x="-35" y="-10" width="70" height="20" rx="10" ry="10" fill="black"/>
+                                <rect class="gamepad-btn gamepad-btn-start" x="-35" y="-10" width="70" height="20" rx="10" ry="10" fill-opaticy="0"/>
+                            </g>
+                        </g>
+                    
+                        <g transform="translate(450,190)">
+                            <g transform="translate(0,-55)">
+                                <circle cx="0" cy="0" r="15" fill="black"/>
+                                <text x="0" y="6" font-family="sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#f7f1db">A</text>
+                            </g>
+                            <circle cx="0" cy="0" r="30" stroke="#82332f" stroke-width="5" fill="url(#button-gradient)"/>
+                            <circle class="gamepad-btn gamepad-btn-a" cx="0" cy="0" r="30" fill-opacity="0"/>
+                        </g>
+                    
+                        <g transform="translate(530,190)">
+                            <g transform="translate(0,-55)">
+                                <circle cx="0" cy="0" r="15" fill="black"/>
+                                <text x="0" y="6" font-family="sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#f7f1db">B</text>
+                            </g>
+                            <circle cx="0" cy="0" r="30" stroke="#82332f" stroke-width="5" fill="url(#button-gradient)"/>
+                            <circle class="gamepad-btn gamepad-btn-b" cx="0" cy="0" r="30" fill-opacity="0"/>
                         </g>
                     </svg>
 
