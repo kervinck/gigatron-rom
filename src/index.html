@@ -36,6 +36,16 @@
             stroke-width: 5;
         }
 
+        .led.led-on {
+            --lamp-fill: url(#led-lamp-on);
+            --hilight-fill: url(#led-hilight-on);
+        }
+
+        .led.led-off {
+            --lamp-fill: url(#led-lamp-off);
+            --hilight-fill: url(#led-hilight-off);
+        }
+
     </style>
 </head>
 
@@ -53,7 +63,34 @@
                     <hr>
 
                     <!-- BLINKENLIGHTS -->
-                    <canvas id="blinkenlights-canvas" width="0" height="0"></canvas>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="80" height="24">
+                        <defs>
+                            <linearGradient id="led-lamp-on" x1="50%" x2="50%" y1="0%" y2="100%">
+                                <stop offset="0%" stop-color="#e00"/>
+                                <stop offset="100%" stop-color="#e22"/>
+                            </linear-gradient>
+                            <linearGradient id="led-lamp-off" x1="50%" x2="50%" y1="0%" y2="100%">
+                                <stop offset="0%" stop-color="#800"/>
+                                <stop offset="100%" stop-color="#822"/>
+                            </linear-gradient>
+                            <linearGradient id="led-hilight-on" x1="50%" x2="50%" y1="0%" y2="100%">
+                                <stop offset="0%" stop-color="#e88"/>
+                                <stop offset="100%" stop-color="#e00"/>
+                            </linear-gradient>
+                            <linearGradient id="led-hilight-off" x1="50%" x2="50%" y1="0%" y2="100%">
+                                <stop offset="0%" stop-color="#888"/>
+                                <stop offset="100%" stop-color="#800"/>
+                            </linear-gradient>
+                            <g id="led">
+                                <circle cx="0" cy="0" r="8" fill="var(--lamp-fill)"/>
+                                <ellipse cx="0" cy="-3.25" rx="5" ry="4" fill="var(--hilight-fill)"/>
+                            </g>
+                        </defs>
+                        <use class="led led-0" href="#led" x="10" y="12"/>
+                        <use class="led led-1" href="#led" x="30" y="12"/>
+                        <use class="led led-2" href="#led" x="50" y="12"/>
+                        <use class="led led-3" href="#led" x="70" y="12"/>
+                    </svg>
 
                     <!-- VGA -->
                     <canvas id="vga-canvas" class="border border-white rounded p-1" width="640" height="480"></canvas>

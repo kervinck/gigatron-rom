@@ -31,7 +31,6 @@ $(function() {
     let unmuteButton = $('#unmute');
     let volumeSlider = $('#volume-slider');
     let vgaCanvas = $('#vga-canvas');
-    let blinkenLightsCanvas = $('#blinkenlights-canvas');
     let loadFileInput = $('#load-file-input');
 
     /** Trigger a keydown/keyup event in response to a mousedown/mouseup event
@@ -141,7 +140,7 @@ $(function() {
         },
     });
 
-    let blinkenLights = new BlinkenLights(blinkenLightsCanvas.get(0), cpu);
+    let blinkenLights = new BlinkenLights(cpu);
 
     let audio = new Audio(cpu);
 
