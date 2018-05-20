@@ -1,10 +1,10 @@
                 ; spawn new tetromino
-spawnTetromino  LD      giga_rand0           ; index points to 2byte entries so *2
+spawnTetromino  LD      tetrominoNext   ; index points to 2byte entries so *2
                 ANDI    0x07
                 LSLW
                 STW     index
 
-                LD      giga_rand0           ; rotation points to 16byte entries so *16
+                LD      tetrominoNext   ; rotation points to 16byte entries so *16
                 ANDI    0x30
                 STW     rotation
                 PUSH
@@ -38,6 +38,16 @@ spawnT_tx       LDW     rand            ; tx = rand - tu
                 CALL    checkLines
                 POP
 
+                PUSH
+                CALL    eraseTrCorner
+                POP
+                PUSH
+                CALL    nextTetromino
+                POP
+                PUSH
+                CALL    drawNextTet 
+                POP
+
                 LD      numLines
                 BNE     spawnT_score
                 RET
@@ -53,4 +63,15 @@ updateTetromino GetTetrominoBase index rotation
                 GetTetrominoData 0x03 th
                 GetTetrominoData 0x04 tu
                 GetTetrominoData 0x05 tv
+                RET
+
+nextTetromino   LD      giga_rand1      ; setup next tetromino
+                ST      tetrominoNext
+                ANDI    0x07
+                LSLW
+                STW     indexNext
+
+                LD      tetrominoNext   ; rotation points to 16byte entries so *16
+                ANDI    0x30
+                STW     rotationNext
                 RET

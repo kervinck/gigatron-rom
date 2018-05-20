@@ -74,10 +74,67 @@ drawT_skip      LoopCounter ii drawT_loop
                 RET
 
 
-drawTetrisField LDWI    0x1515
+                ; draw next tetromino
+drawNextTet     GetTetrominoBase indexNext rotationNext
+                DEEK                    ; get first 2 bytes, (colour)
                 STW     colour
 
-                ; top horizontal                
+                LDW     tetrominoBase   ; get w, h
+                ADDI    0x02
+                DEEK
+                STW     kk
+
+                LDW     tetrominoBase   ; get ox, oy
+                ADDI    0x04
+                DEEK
+                STW     mm
+
+                LDW     tetrominoBase   ; skip to tetromino offsets
+                ADDI    0x05
+                STW     tetrominoBase
+
+                LDI     0x04            ; 4 pixels per tetromino
+                ST      ii
+                
+drawN_loop      LDWI    giga_vram + xOffset + xPixels-3 + (yOffset-5)*256
+                STW     xx
+
+                PUSH
+                CALL    drawNextAdjust
+                POP
+
+drawN_skip      LD      xx
+                STW     scratch
+                LDW     tetrominoBase   ; x position
+                ADDI    0x01
+                STW     tetrominoBase
+                PEEK
+                ADDW    scratch
+                ST      xx
+
+                LD      yy
+                STW     scratch
+                LDW     tetrominoBase   ; y position
+                ADDI    0x01
+                STW     tetrominoBase
+                PEEK
+                ADDW    scratch
+                ST      yy
+
+                LDW     colour
+                POKE    xx
+
+                LoopCounter ii drawN_loop
+                RET
+
+
+drawTetrisField LDWI    bgColourW
+                STW     colour
+
+                ; top horizontal      
+                PUSH
+                CALL    drawTFtopH
+                POP
                 LDWI    0xFF
                 STW     ty
                 LDWI    0xFF
@@ -85,7 +142,7 @@ drawTetrisField LDWI    0x1515
                 LDI     xTetris + 2
                 ST      ii
                 PUSH
-                CALL    drawTF_hloop
+                CALL    drawTFhoriz
                 POP
 
                 ; bottom horizontal                 
@@ -96,7 +153,11 @@ drawTetrisField LDWI    0x1515
                 LDI     xTetris + 2
                 ST      ii
                 PUSH
-                CALL    drawTF_hloop
+                CALL    drawTFhoriz
+                POP
+
+                PUSH
+                CALL    drawTFbotH
                 POP
 
                 ; left vertical
@@ -107,7 +168,7 @@ drawTetrisField LDWI    0x1515
                 LDI     yTetris + 1
                 ST      ii
                 PUSH
-                CALL    drawTF_vloop
+                CALL    drawTFvert
                 POP
 
                 ; right vertical
@@ -118,11 +179,33 @@ drawTetrisField LDWI    0x1515
                 LDI     yTetris + 1
                 ST      ii
                 PUSH
-                CALL    drawTF_vloop
+                CALL    drawTFvert
                 POP
                 RET
 
-drawTF_hloop    LDW     ty
+
+drawTFtopH      LDWI    giga_vram + xOffset - 4 + (yOffset-7)*256
+                STW     xx
+                LDWI    giga_vram + xOffset - 4 + (yOffset-6)*256
+                STW     kk
+                LDWI    giga_vram + xOffset - 4 + (yOffset-5)*256
+                STW     mm
+
+                LDI     xPixels + 8
+                ST      ii
+
+drawTF_tl       LDI     bgColourB
+                POKE    xx
+                POKE    kk
+                POKE    mm
+                INC     xx
+                INC     kk
+                INC     mm
+                LoopCounter ii drawTF_tl
+                RET
+
+
+drawTFhoriz     LDW     ty
                 ST      yy
                 LDW     tx
                 ST      xx
@@ -130,10 +213,11 @@ drawTF_hloop    LDW     ty
                 CALL    setTetrisBlock
                 POP
                 INC     tx
-                LoopCounter ii drawTF_hloop
+                LoopCounter ii drawTFhoriz
                 RET
 
-drawTF_vloop    LDW     ty
+
+drawTFvert      LDW     ty
                 ST      yy
                 LDW     tx
                 ST      xx
@@ -141,5 +225,43 @@ drawTF_vloop    LDW     ty
                 CALL    setTetrisBlock
                 POP
                 INC     ty
-                LoopCounter ii drawTF_vloop
+                LoopCounter ii drawTFvert
                 RET
+
+
+drawTFbotH      LDWI    giga_vram + xOffset - 4 + (yOffset+yPixels + 4)*256
+                STW     xx
+                LDWI    giga_vram + xOffset - 4 + (yOffset+yPixels + 5)*256
+                STW     kk
+                LDWI    giga_vram + xOffset - 4 + (yOffset+yPixels + 6)*256
+                STW     mm
+
+                LDI     xPixels + 8
+                ST      ii
+
+drawTF_bl       LDI     bgColourB
+                POKE    xx
+                POKE    kk
+                POKE    mm
+                INC     xx
+                INC     kk
+                INC     mm
+                LoopCounter ii drawTF_bl
+                RET
+
+
+drawNextAdjust  LDW     kk              ; widthheight - oxoy
+                SUBW    mm
+                STW     scratch
+
+                LD      scratch         ; if width == 2 xx++
+                XORI    0x02
+                BNE     drawNA_height
+                INC     xx
+
+drawNA_height   LD      scratch + 1     ; if height == 2 yy++
+                XORI    0x02
+                BNE     drawNA_skip
+                INC     yy
+
+drawNA_skip     RET

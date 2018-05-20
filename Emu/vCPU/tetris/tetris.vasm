@@ -1,51 +1,56 @@
 %include macros\gigatron.i
 
 xx              EQU     0x30
-yy              EQU     0x31
-ii              EQU     0x32
-jj              EQU     0x33
-index           EQU     0x34
-rotation        EQU     0x36
-tx              EQU     0x38
-ty              EQU     0x3A 
-tw              EQU     0x3C
-th              EQU     0x3E
-tu              EQU     0x40
-tv              EQU     0x42
-ox              EQU     0x44
-oy              EQU     0x46
-ov              EQU     0x48
-oindex          EQU     0x4A
-orotation       EQU     0x4C
-tetrominoLut    EQU     0x4E
-tetrominoBase   EQU     0x50
-colour          EQU     0x52
-result          EQU     0x54
-frameCounter    EQU     0x56
-frameCountPrev  EQU     0x58
-frameTicks      EQU     0x5A
-frameTicksLevel EQU     0x5C
-rand            EQU     0x5E
-scratch         EQU     0x60
-vbase           EQU     0x62
-xScroll         EQU     0x64
-tbase           EQU     0x66
-textStr         EQU     0x68
-textPos         EQU     0x6A
-textChr         EQU     0x6C
-numLines        EQU     0x6E
-scoreDelta      EQU     0x70
-scoreLevel      EQU     0x72
-scoreScratch    EQU     0x74
-tt              EQU     0x76
-kk              EQU     0x77
-ll              EQU     0x78
-mm              EQU     0x79
-nn              EQU     0x7A
-buttonStatePrev EQU     0x7B
-refresh         EQU     0x7C
-blocked         EQU     0x7D
+yy              EQU     xx + 0x01
+ii              EQU     xx + 0x02
+jj              EQU     xx + 0x03
 
+index           EQU     xx + 0x04
+rotation        EQU     xx + 0x06
+indexNext       EQU     xx + 0x08
+rotationNext    EQU     xx + 0x0A
+tx              EQU     xx + 0x0C
+ty              EQU     xx + 0x0E
+tw              EQU     xx + 0x10
+th              EQU     xx + 0x12
+tu              EQU     xx + 0x14
+tv              EQU     xx + 0x16
+ox              EQU     xx + 0x18
+oy              EQU     xx + 0x1A
+ov              EQU     xx + 0x1C
+oindex          EQU     xx + 0x1E
+orotation       EQU     xx + 0x20
+tetrominoLut    EQU     xx + 0x22
+tetrominoBase   EQU     xx + 0x24
+colour          EQU     xx + 0x26
+result          EQU     xx + 0x28
+frameCounter    EQU     xx + 0x2A
+frameCountPrev  EQU     xx + 0x2C
+frameTicks      EQU     xx + 0x2E
+frameTicksLevel EQU     xx + 0x30
+rand            EQU     xx + 0x32
+scratch         EQU     xx + 0x34
+vbase           EQU     xx + 0x36
+xScroll         EQU     xx + 0x38
+tbase           EQU     xx + 0x3A
+dbase           EQU     xx + 0x3C
+textStr         EQU     xx + 0x3E
+textPos         EQU     xx + 0x40
+textChr         EQU     xx + 0x42
+numLines        EQU     xx + 0x44
+scoreDelta      EQU     xx + 0x46
+scoreLevel      EQU     xx + 0x48
+scoreScratch    EQU     xx + 0x4A
+
+kk              EQU     xx + 0x51       ; 0x80 can't be used
+ll              EQU     xx + 0x52
+mm              EQU     xx + 0x53
+nn              EQU     xx + 0x54
+tt              EQU     xx + 0x55
+buttonStatePrev EQU     xx + 0x56
+refresh         EQU     xx + 0x57
+blocked         EQU     xx + 0x58
+tetrominoNext   EQU     xx + 0x59
 
 
     
@@ -58,8 +63,15 @@ yOffset         EQU     (giga_yres - yPixels) / 2
 maxLines        EQU     4
 maxLevel        EQU     8
 maxTicks        EQU     50
-
-                                        
+deltaTicks      EQU     5
+scorePos        EQU     0x6D44
+levelPos        EQU     0x6D5F
+highPos         EQU     0x1644
+multPos         EQU     0x6D3A
+fgColourB       EQU     0xFF
+bgColourB       EQU     0x15
+bgColourW       EQU     0x1515
+             
 _startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
 
 _callTable_         EQU     0x00EE      ; call addresses are automatically stored here by the assembler, it grows downwards, (leave 16 bytes for vCPU stack)
@@ -71,12 +83,12 @@ _singleStepWatch_   EQU     frameCounter ; the single step debugger watches this
 
 ; tetromino data
 tetromino_I     EQU     0x08A1          ; format: colour for 2 pixels, w, h, ox, oy, x0, y0, x1, y1, x2, y2, x3, y3, 0, 0  ; ox and oy are offsets within w and h
-tetromino_J     EQU     0x09A1
-tetromino_L     EQU     0x0AA1
-tetromino_O     EQU     0x0BA1
-tetromino_S     EQU     0x0CA1
-tetromino_T     EQU     0x0DA1
-tetromino_Z     EQU     0x0EA1                                                                                  
+tetromino_J     EQU     tetromino_I + 0x0100
+tetromino_L     EQU     tetromino_I + 0x0200
+tetromino_O     EQU     tetromino_I + 0x0300
+tetromino_S     EQU     tetromino_I + 0x0400
+tetromino_T     EQU     tetromino_I + 0x0500
+tetromino_Z     EQU     tetromino_I + 0x0600                                                                                  
 tetromino_I     DB      0x3C 0x3C 4 1 0 1 0 1 1 1 2 1 3 1 0 0  0x3C 0x3C 1 4 2 0 2 0 2 1 2 2 2 3 0 0  0x3C 0x3C 4 1 0 2 0 2 1 2 2 2 3 2 0 0  0x3C 0x3C 1 4 1 0 1 0 1 1 1 2 1 3 0 0
 tetromino_J     DB      0x30 0x30 3 2 0 0 0 0 0 1 1 1 2 1 0 0  0x30 0x30 2 3 1 0 1 0 2 0 1 1 1 2 0 0  0x30 0x30 3 2 0 1 0 1 1 1 2 1 2 2 0 0  0x30 0x30 2 3 0 0 1 0 1 1 0 2 1 2 0 0  
 tetromino_L     DB      0x0B 0x0B 3 2 0 0 2 0 0 1 1 1 2 1 0 0  0x0B 0x0B 2 3 1 0 1 0 1 1 1 2 2 2 0 0  0x0B 0x0B 3 2 0 1 0 1 1 1 2 1 0 2 0 0  0x0B 0x0B 2 3 0 0 0 0 1 0 1 1 1 2 0 0
@@ -85,15 +97,32 @@ tetromino_S     DB      0x0C 0x0C 3 2 0 0 1 0 2 0 0 1 1 1 0 0  0x0C 0x0C 2 3 1 0
 tetromino_T     DB      0x33 0x33 3 2 0 0 1 0 0 1 1 1 2 1 0 0  0x33 0x33 2 3 1 0 1 0 1 1 2 1 1 2 0 0  0x33 0x33 3 2 0 1 0 1 1 1 2 1 1 2 0 0  0x33 0x33 2 3 0 0 1 0 0 1 1 1 1 2 0 0
 tetromino_Z     DB      0x03 0x03 3 2 0 0 0 0 1 0 1 1 2 1 0 0  0x03 0x03 2 3 1 0 2 0 1 1 2 1 1 2 0 0  0x03 0x03 3 2 0 1 0 1 1 1 1 2 2 2 0 0  0x03 0x03 2 3 0 0 1 0 0 1 1 1 0 2 0 0
 
-scoringLut      EQU     0x0FA1
-levellingLut    EQU     0x0FA6
+scoringLut      EQU     tetromino_I + 0x0700
+levellingLut    EQU     tetromino_I + 0x0705
 scoringLut      DB      10 25 50 100
 levellingLut    DW      250 750 1000 2000 4000 8000 16000 32000 64000
 
+digit_font0     EQU     0x7AA1
+digit_font1     EQU     0x7BA1
+digit_font2     EQU     0x7CA1
+digit_font3     EQU     0x7DA1
+digit_font4     EQU     0x7EA1
+digit_font0     DB      fgColourB fgColourB fgColourB bgColourB bgColourB fgColourB bgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB bgColourB bgColourB bgColourB bgColourB bgColourB bgColourB bgColourB
+digit_font1     DB      fgColourB bgColourB fgColourB bgColourB bgColourB fgColourB bgColourB bgColourB bgColourB bgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB bgColourB bgColourB bgColourB bgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB fgColourB bgColourB
+digit_font2     DB      fgColourB bgColourB fgColourB bgColourB bgColourB fgColourB bgColourB bgColourB fgColourB fgColourB fgColourB bgColourB bgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB bgColourB bgColourB bgColourB bgColourB fgColourB bgColourB bgColourB
+digit_font3     DB      fgColourB bgColourB fgColourB bgColourB bgColourB fgColourB bgColourB bgColourB fgColourB bgColourB bgColourB bgColourB bgColourB bgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB fgColourB bgColourB bgColourB bgColourB bgColourB fgColourB bgColourB bgColourB
+digit_font4     DB      fgColourB fgColourB fgColourB bgColourB bgColourB fgColourB bgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB
+
 score_string    EQU     0x7FA1
+high_string     EQU     0x7FA8
+level_string    EQU     0x7FAF
+mult_string     EQU     0x7FB2
 score_string    DB      6 '000000'
-level_string    EQU     0x7FA9
-level_string    DB      7 'LEVEL 0'
+high_string     DB      6 '000000'
+;level_string    DB      7 'LEVEL 0'
+; TODO: build a complete font set, right now ':' = 'L' and ';' = 'x'
+level_string    DB      2 ':0'
+mult_string     DB      2 ';1'
 
 
 ; tetromino_I gets an extra slot to make rand easier to implement, this also means tetromino_I will appear statistically more often,
@@ -103,29 +132,35 @@ tetromino_lut   DW      tetromino_I tetromino_J tetromino_L tetromino_O tetromin
 
 
 entry_point     EQU     0x0200
-handleInput     EQU     0x0300
-incrementScore  EQU     0x0400              ; too big to store in unused area of video memory
-updateScore     EQU     0x0500              ; too big to store in unused area of video memory
+handleInput     EQU     entry_point + 0x0100
+updateScore     EQU     entry_point + 0x0200        ; too big to store in unused area of video memory
+incrementScore  EQU     entry_point + 0x0300        ; too big to store in unused area of video memory
+
 
 ; storing subroutines in unused areas of video memory
 clearBoard      EQU     0x15A1      
-clearScreen     EQU     0x16A1
-setTetrisBlock  EQU     0x17A1
-drawTetromino   EQU     0x18A1
-drawTetrisField EQU     0x19A1
-drawTF_hloop    EQU     0x1AA1
-drawTF_vloop    EQU     0x1AC9
-eraseTetromino  EQU     0x1BA1
-getTetrisBlock  EQU     0x1CA1
-checkTetromino  EQU     0x1DA1
-spawnTetromino  EQU     0x1EA1
-updateTetromino EQU     0x1FA1
-checkLines      EQU     0x20A1
-moveLines       EQU     0x21A1
-shakeScreen     EQU     0x22A1
-printText       EQU     0x23A1
-resetLevel      EQU     0x24A1
-loadTetromino   EQU     0x25A1
+clearScreen     EQU     clearBoard + 0x0100
+setTetrisBlock  EQU     clearBoard + 0x0200
+drawTetromino   EQU     clearBoard + 0x0300
+drawNextTet     EQU     clearBoard + 0x0400
+drawTetrisField EQU     clearBoard + 0x0500
+drawTFtopH      EQU     clearBoard + 0x0600
+drawTFbotH      EQU     clearBoard + 0x0700
+eraseTetromino  EQU     clearBoard + 0x0800
+eraseTrCorner   EQU     clearBoard + 0x0900
+getTetrisBlock  EQU     clearBoard + 0x0A00
+checkTetromino  EQU     clearBoard + 0x0B00
+spawnTetromino  EQU     clearBoard + 0x0C00
+updateTetromino EQU     clearBoard + 0x0D00
+checkLines      EQU     clearBoard + 0x0E00
+moveLines       EQU     clearBoard + 0x0F00
+shakeScreen     EQU     clearBoard + 0x1000
+printText       EQU     clearBoard + 0x1100
+printDigits     EQU     clearBoard + 0x1200
+resetLevel      EQU     clearBoard + 0x1300
+resetScore      EQU     clearBoard + 0x1400
+incrementLevel  EQU     clearBoard + 0x1500
+loadTetromino   EQU     clearBoard + 0x1600
 
 
 %include tetris\macros.i
@@ -143,13 +178,27 @@ entry_point     LDWI    giga_vram
                 STW     vbase               ; vram base address
                 LDWI    giga_text32
                 STW     tbase               ; text font base address, (ROM)
+                LDWI    digit_font0         
+                STW     dbase               ; tiny digit font base address, (RAM)
                 LDWI    0x0101
                 STW     xScroll
                 
                 CALL    clearScreen
                 CALL    drawTetrisField
 
-restart         LDWI    0x0000
+                ; shift right by 4 test
+                ;LDWI    SYS_LSRW4_50        ; setup >>4 SYS routine
+                ;STW     giga_sysFn
+                ;LDWI    0xFF00
+                ;SYS     0xF5            ; SYS_Draw4_50, 270 - 50/2 = 0xF5
+                ;STW     scratch
+                ;gprintf("Scratch = %04x", *scratch)
+
+restart         CALL    resetLevel
+                CALL    resetScore
+                CALL    clearBoard 
+
+                LDWI    0x0000
                 STW     scoreDelta
                 STW     scoreLevel
                 STW     frameCounter    
@@ -157,6 +206,9 @@ restart         LDWI    0x0000
                 LDWI    maxTicks
                 STW     frameTicksLevel
                 STW     frameTicks
+
+                LD      giga_rand0
+                ST      tetrominoNext
 
                 LDI     0x00
                 ST      blocked
@@ -166,10 +218,7 @@ restart         LDWI    0x0000
 
                 LDWI    tetromino_lut
                 STW     tetrominoLut
-
-                CALL    resetLevel
-                CALL    resetScore
-                CALL    clearBoard      
+                     
                 CALL    spawnTetromino
                 
                 ; main update loop

@@ -185,6 +185,23 @@ namespace Editor
 
             case SDLK_F2:
             {
+                static bool firstTime = true;
+                if(firstTime == true)
+                {
+                    firstTime = false;
+                    for(int i=0x0000; i<0x0400; i+=0x0100)
+                    {
+                        Cpu::setRAM(0x01FA+i, 0x00);
+                        Cpu::setRAM(0x01FB+i, 0x00);
+                        Cpu::setRAM(0x01FC+i, 0x00);
+                        Cpu::setRAM(0x01FD+i, 0x00);
+                        Cpu::setRAM(0x01FE+i, 0x00);
+                        Cpu::setRAM(0x01FF+i, 0x00);
+                    }
+                }
+
+                Cpu::setRAM(0x002C, 0x20);
+
 #if 0
                 uint8_t x1 = rand() % GIGA_WIDTH;
                 uint8_t x2 = rand() % GIGA_WIDTH;

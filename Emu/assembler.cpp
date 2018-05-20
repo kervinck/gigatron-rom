@@ -88,7 +88,10 @@ namespace Assembler
             std::string _var;
         };
 
+        bool _displayed = false;
         uint16_t _address;
+        int _lineNumber;
+        std::string _lineToken;
         std::string _format;
         std::vector<Var> _vars;
         std::vector<std::string> _subs;
@@ -1381,7 +1384,7 @@ namespace Assembler
                         std::vector<std::string> variables = tokenise(variableText, ',');
                         parseGprintfFormat(formatText, variables, vars, subs);
 
-                        Gprintf gprintf = {_currentAddress, formatText, vars, subs};
+                        Gprintf gprintf = {false, _currentAddress, lineNumber, lineToken, formatText, vars, subs};
                         _gprintfs.push_back(gprintf);
                     }
 
@@ -1496,7 +1499,12 @@ namespace Assembler
                     }
                 }
 
-                if(!success) return false;
+                if(!success)
+                {
+                    fprintf(stderr, "Assembler::parseGprintfs() : Error in gprintf(), missing label or equate : '%s' : in %s on line %d\n", token.c_str(), _gprintfs[i]._lineToken.c_str(), _gprintfs[i]._lineNumber);
+                    _gprintfs.erase(_gprintfs.begin() + i);
+                    return false;
+                }
 
                 _gprintfs[i]._vars[j]._data = data;
             }
@@ -1515,9 +1523,18 @@ namespace Assembler
             {
                 if(vPC == _gprintfs[i]._address)
                 {
-                    std::string gstring;
-                    getGprintfString(i, gstring);
-                    fprintf(stderr, "gprintf() : address $%04X : %s\n", _gprintfs[i]._address, gstring.c_str());
+                    // Emulator can cycle many times for one CPU cycle, so make sure gprintf is displayed only once
+                    if(!_gprintfs[i]._displayed)
+                    {
+                        std::string gstring;
+                        getGprintfString(i, gstring);
+                        fprintf(stderr, "gprintf() : address $%04X : %s\n", _gprintfs[i]._address, gstring.c_str());
+                        _gprintfs[i]._displayed = true;
+                    }
+                }
+                else
+                {
+                    _gprintfs[i]._displayed = false;;
                 }
             }
         }
@@ -1942,7 +1959,7 @@ namespace Assembler
         packByteCodeBuffer();
 
         // Parse gprintf labels, equates and expressions
-        parseGprintfs();
+        if(!parseGprintfs()) return false;
 
         return true;
     }

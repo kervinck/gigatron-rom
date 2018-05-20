@@ -40,23 +40,30 @@ updateS_delta   LDW     scratch
                 BEQ     updateS_score
      
                 LDW     frameTicksLevel     ; speed up the game per level
-                SUBI    0x05
+                SUBI    deltaTicks
                 STW     frameTicksLevel
                 STW     frameTicks
 
                 INC     scoreLevel          ; level up
 
-                ;gprintf("Level %d : %d %d %s", *scoreLevel, *scoreScratch, *scoreDelta, *score_string)
+                gprintf("Level %d : %d %d %s", *scoreLevel, *scoreScratch, *scoreDelta, *score_string)
 
-                PUSH                        ; increment level string
+                PUSH                        ; increment level and multiplier strings
                 CALL    incrementLevel
                 POP
                 LDWI    level_string        ; print level string
                 STW     textStr
-                LDWI    0x713C
+                LDWI    levelPos
                 STW     textPos
                 PUSH
-                CALL    printText
+                CALL    printDigits
+                POP
+                LDWI    mult_string        ; print mult string
+                STW     textStr
+                LDWI    multPos
+                STW     textPos
+                PUSH
+                CALL    printDigits
                 POP
 
                 ; increment score until it reaches (score + scoreDelta)
@@ -65,10 +72,10 @@ updateS_score   PUSH                        ; increment score string
                 POP
                 LDWI    score_string        ; print score string
                 STW     textStr
-                LDWI    0x103F
+                LDWI    scorePos
                 STW     textPos
                 PUSH
-                CALL    printText
+                CALL    printDigits
                 POP
 
                 LDW     scoreScratch        ; increment score scoreScratch/5 times, (score is a multiple of 5)
@@ -76,73 +83,121 @@ updateS_score   PUSH                        ; increment score string
                 STW     scoreScratch
                 BGT     updateS_score
 
-                ;gprintf("%d %d %s", *scoreScratch, *scoreDelta, *score_string)
+                gprintf("%d %d %s", *scoreScratch, *scoreDelta, *score_string)
                 RET
 
 
-                ; increments level string
-incrementLevel  LDWI    level_string + 7
+                ; resets level string
+resetLevel      LDWI    level_string + 2    ;LDWI    level_string + 7
+                STW     scratch
+                LDI     48
+                POKE    scratch
+                LDWI    level_string        ; print level
+                STW     textStr
+                LDWI    levelPos
+                STW     textPos
+                PUSH
+                CALL    printDigits
+                POP
+
+                LDWI    mult_string + 2
+                STW     scratch
+                LDI     49
+                POKE    scratch
+                LDWI    mult_string        ; print mult string
+                STW     textStr
+                LDWI    multPos
+                STW     textPos
+                PUSH
+                CALL    printDigits
+                POP
+                RET
+
+
+updateHighScore LDWI    high_string + 1     ; starting at most significant digit
+                STW     scoreScratch
+                LDWI    score_string + 1
+                STW     scratch
+                LDI     0x06
+                ST      ii
+
+updateHS_loop   LDW     scratch
+                PEEK
+                POKE    scoreScratch
+                INC     scoreScratch
+                INC     scratch
+                LoopCounter ii updateHS_loop
+
+                LDWI    high_string        ; print score string
+                STW     textStr
+                LDWI    highPos
+                STW     textPos
+                PUSH
+                CALL    printDigits
+                POP
+                RET
+
+
+                ; resets 6 digit score string and updates high score
+resetScore      LDWI    high_string + 1     ; starting at most significant digit
+                STW     scoreScratch
+                LDWI    score_string + 1
+                STW     scratch
+                LDI     0x06
+                ST      ii
+
+resetS_loop0    LDW     scratch
+                PEEK
+                STW     scoreDelta          ; reusing variable, (it's about to be reset in main loop)
+                LDW     scoreScratch
+                PEEK
+                SUBW    scoreDelta
+                BGT     resetS_skip         ; if high score digit > score digit skip update high score
+                BLT     resetS_update       ; if high score digit < score digit update high score
+                INC     scoreScratch
+                INC     scratch
+                LoopCounter ii resetS_loop0 ; if scores are equal, check next digit
+
+resetS_update   PUSH
+                CALL    updateHighScore
+                POP
+                
+resetS_skip     LDWI    score_string + 1
+                STW     scratch
+                LDI     0x06
+                ST      ii
+
+resetS_loop1    LDI     48
+                POKE    scratch
+                INC     scratch
+                LoopCounter ii resetS_loop1
+
+                LDWI    score_string        ; print score
+                STW     textStr
+                LDWI    scorePos
+                STW     textPos
+                PUSH
+                CALL    printDigits
+                POP
+                RET
+
+
+                ; increments level string and multiplier string
+incrementLevel  LDWI    level_string + 2    ;LDWI    level_string + 7
                 STW     scratch
                 PEEK
                 ADDI    0x01
                 ST      ii
-                XORI    58              ; 48 = '0', 57 = '9', 58 = ':'
+                XORI    58                  ; 48 = '0', 57 = '9', 58 = ':'
                 BEQ     incL_exit
                 LD      ii
                 POKE    scratch
+                LDWI    mult_string + 2
+                STW     scratch
+                PEEK
+                ADDI    0x01
+                POKE    scratch
 incL_exit       RET
-
-
-                ; resets level string
-resetLevel      LDWI    level_string + 7
-                STW     scratch
-                LDI     48
-                POKE    scratch
-
-                LDWI    level_string        ; print level
-                STW     textStr
-                LDWI    0x713C
-                STW     textPos
-                PUSH
-                CALL    printText
-                POP
-                RET
-
-
-                ; resets 6 digit score string
-resetScore      LDWI    score_string + 1
-                STW     scratch
-                LDI     48
-                POKE    scratch
-
-                INC     scratch
-                LDI     48
-                POKE    scratch
-
-                INC     scratch
-                LDI     48
-                POKE    scratch
-
-                INC     scratch
-                LDI     48
-                POKE    scratch
-
-                INC     scratch
-                LDI     48
-                POKE    scratch
-
-                INC     scratch
-                LDI     48
-                POKE    scratch
-
-                LDWI    score_string    ; print score
-                STW     textStr
-                LDWI    0x103F
-                STW     textPos
-                PUSH
-                CALL    printText
-                POP
-                RET
 
 
                 ; increments 6 digit score string
@@ -151,7 +206,7 @@ incrementScore  LDWI    score_string + 6
                 PEEK
                 ADDI    0x05
                 ST      ii
-                XORI    58              ; 48 = '0', 57 = '9', 58 = ':'
+                XORI    58                  ; 48 = '0', 57 = '9', 58 = ':'
                 BEQ     incS_digit1
                 LD      ii
                 POKE    scratch
@@ -165,7 +220,7 @@ incS_digit1     LDI     48
                 PEEK
                 ADDI    0x01
                 ST      ii
-                XORI    58              ; 48 = '0', 57 = '9', 58 = ':'
+                XORI    58                  ; 48 = '0', 57 = '9', 58 = ':'
                 BEQ     incS_digit2
                 LD      ii
                 POKE    scratch
@@ -179,7 +234,7 @@ incS_digit2     LDI     48
                 PEEK
                 ADDI    0x01
                 ST      ii
-                XORI    58              ; 48 = '0', 57 = '9', 58 = ':'
+                XORI    58                  ; 48 = '0', 57 = '9', 58 = ':'
                 BEQ     incS_digit3
                 LD      ii
                 POKE    scratch
@@ -193,7 +248,7 @@ incS_digit3     LDI     48
                 PEEK
                 ADDI    0x01
                 ST      ii
-                XORI    58              ; 48 = '0', 57 = '9', 58 = ':'
+                XORI    58                  ; 48 = '0', 57 = '9', 58 = ':'
                 BEQ     incS_digit4
                 LD      ii
                 POKE    scratch
@@ -207,7 +262,7 @@ incS_digit4     LDI     48
                 PEEK
                 ADDI    0x01
                 ST      ii
-                XORI    58              ; 48 = '0', 57 = '9', 58 = ':'
+                XORI    58                  ; 48 = '0', 57 = '9', 58 = ':'
                 BEQ     incS_digit5
                 LD      ii
                 POKE    scratch
@@ -221,7 +276,7 @@ incS_digit5     LDI     48
                 PEEK
                 ADDI    0x01
                 ST      ii
-                XORI    58              ; 48 = '0', 57 = '9', 58 = ':'
+                XORI    58                  ; 48 = '0', 57 = '9', 58 = ':'
                 BEQ     incS_exit
                 LD      ii
                 POKE    scratch

@@ -37,3 +37,36 @@ eraseT_loop     LDW     tetrominoBase   ; x position
 
 eraseT_skip     LoopCounter ii eraseT_loop
                 RET
+
+
+                ; erase top right corner
+eraseTrCorner   LDWI    SYS_Draw4_30    ; setup 4 pixel SYS routine
+                STW     giga_sysFn
+                LDWI    bgColourW
+                STW     giga_sysArg0
+                STW     giga_sysArg2
+
+                LDI     6
+                ST      ii
+                LDI     xOffset + xPixels - 2
+                ST      giga_sysArg4    
+                LDI     (yOffset-6) + giga_vram/256
+                ST      giga_sysArg4 + 1
+
+eraseTr_loop    SYS     0xFF            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                LDW     giga_sysArg4
+                SUBI    0x01
+                STW     scratch
+                LDI     bgColourB
+                POKE    scratch
+                LDW     scratch
+                SUBI    0x01
+                STW     scratch
+                LDI     bgColourB
+                POKE    scratch
+                LD      giga_sysArg4 + 1
+                ADDI    0x01
+                ST      giga_sysArg4 + 1
+                LoopCounter ii eraseTr_loop
+
+                RET

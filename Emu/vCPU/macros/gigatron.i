@@ -20,5 +20,24 @@ giga_sysArg5        EQU     0x29
 giga_sysArg6        EQU     0x2A
 giga_sysArg7        EQU     0x2B
 
+SYS_Reset_36        EQU     0x009a
+SYS_Exec_88         EQU     0x00ad
+SYS_Out_22          EQU     0x00f4
+SYS_In_24           EQU     0x00f9
+SYS_NextByteIn      EQU     0x02e9
+SYS_Random_34       EQU     0x04a7
+SYS_LSRW7_30        EQU     0x04b9
+SYS_LSRW8_24        EQU     0x04c6
+SYS_LSLW8_24        EQU     0x04cd
 SYS_Draw4_30        EQU     0x04d4
 SYS_VDrawBits_134   EQU     0x04e1
+SYS_LSRW1_48        EQU     0x0600
+SYS_LSRW2_52        EQU     0x0619
+SYS_LSRW3_52        EQU     0x0636
+SYS_LSRW4_50        EQU     0x0652
+SYS_LSRW5_50        EQU     0x066d
+SYS_LSRW6_48        EQU     0x0687
+SYS_LSLW4_46        EQU     0x06a0
+SYS_Read3_40        EQU     0x06b9
+SYS_Unpack_56       EQU     0x06c0
+SYS_PayloadCopy_34  EQU     0x06e7

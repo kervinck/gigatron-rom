@@ -1,4 +1,4 @@
-                ; clears the viewable screen
+                ; prints text using the inbuilt font and SYS routine
 printText       LDWI    SYS_VDrawBits_134   ; setup 8 vertical pixel SYS routine
                 STW     giga_sysFn
 
@@ -35,10 +35,10 @@ printT_draw     LDI     0x05
 printT_slice    LDW     textPos
                 STW     giga_sysArg4        ; xy
                 LDW     scratch             ; text font slice base address
-                LUP     0x00
-                ST      giga_sysArg2        ; draw slice
-                SYS     0xCB
-                INC     scratch             ; next slice
+                LUP     0x00                ; get ROM slice
+                ST      giga_sysArg2        
+                SYS     0xCB                ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
+                INC     scratch             ; next vertical slice
                 INC     textPos             ; next x
                 LoopCounter ii printT_slice
     
@@ -46,3 +46,52 @@ printT_slice    LDW     textPos
                 INC     textPos             ; 1 pixel space between chars
                 LoopCounter tt printT_chr
                 RET
+
+
+                ; prints digits using a tiny 3x5 font
+printDigits     LDWI    SYS_Draw4_30        ; setup 4 pixel SYS routine
+                STW     giga_sysFn
+
+                LDW     textStr             ; first byte is length
+                PEEK
+                ST      tt
+                INC     textStr
+
+printD_chr      LDW     textStr             
+                PEEK
+                SUBI    48                  ; (char - 48)*4 + digit_font0
+                STW     scratch
+                LSLW    scratch
+                LSLW    scratch
+                ADDW    dbase
+                STW     scratch
+                LDI     0x05
+                ST      ii
+
+printD_slice    LDW     scratch
+                DEEK
+                STW     giga_sysArg0        ; first 2 pixels from digit font LUT
+                LDW     scratch
+                ADDI    0x02
+                PEEK
+                ST      giga_sysArg2        ; third pixel from digit font LUT
+                LDI     bgColourB
+                ST      giga_sysArg3        ; fourth pixel is background colour
+                LDW     textPos
+                STW     giga_sysArg4        ; xy
+                SYS     0xFF                ; draw horizontal slice, SYS_Draw4_30, 270 - 30/2 = 0xFF
+
+                INC     scratch + 1         ; next horizontal slice
+                INC     textPos + 1         ; next y
+                LoopCounter ii printD_slice
+
+                INC     textStr             ; next char
+                LD      textPos
+                ADDI    0x04
+                ST      textPos
+                LD      textPos + 1
+                SUBI    0x05
+                ST      textPos + 1
+                LoopCounter tt printD_chr
+                RET
+
