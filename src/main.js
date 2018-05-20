@@ -42,6 +42,13 @@ $(function() {
         $button
             .on('mousedown mouseenter', (event) => {
                 event.preventDefault();
+                document.dispatchEvent(new KeyboardEvent('keydown', {
+                    'key': key,
+                }));
+                $button.addClass('pressed');
+            })
+            .on('mouseenter', (event) => {
+                event.preventDefault();
                 if (event.originalEvent.buttons & 1) {
                     document.dispatchEvent(new KeyboardEvent('keydown', {
                         'key': key,
@@ -71,13 +78,13 @@ $(function() {
     let $touchTargets = {};
 
     // track touches within the fc30 and map them to mouse events
-    $('#gamepad')
+    $('.gamepad')
         .on('touchstart', (event) => {
             event.preventDefault();
             for (let touch of event.changedTouches) {
                 let $currTarget = $(document.elementFromPoint(
                         touch.clientX, touch.clientY))
-                    .filter('.btn-gamepad');
+                    .filter('.gamepad-btn');
                 $touchTargets[touch.identifier] = $currTarget;
                 $currTarget.trigger('mousedown');
             }
@@ -88,7 +95,7 @@ $(function() {
                 let $prevTarget = $touchTargets[touch.identifier];
                 let $currTarget = $(document.elementFromPoint(
                         touch.clientX, touch.clientY))
-                    .filter('.btn-gamepad');
+                    .filter('.gamepad-btn');
                 if ($prevTarget.get(0) != $currTarget.get(0)) {
                     $prevTarget.trigger('mouseup');
                     $touchTargets[touch.identifier] = $currTarget;
