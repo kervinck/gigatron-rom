@@ -26,7 +26,7 @@ export class Gigatron {
     /** reset registers to power-on state */
     reset() {
         this.pc = 0;
-        this.nextpc = this.pc + 1;
+        this.nextpc = (this.pc + 1) & this.romMask;
         this.ac = 0;
         this.x = 0;
         this.y = 0;

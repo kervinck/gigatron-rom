@@ -12,7 +12,9 @@ export class Vga {
         this.canvas = canvas;
         this.canvas.width = options.horizontal.visible;
         this.canvas.height = options.vertical.visible;
-        this.ctx = canvas.getContext('2d');
+        this.ctx = canvas.getContext('2d', {
+            alpha: false,
+        });
         this.imageData = this.ctx.getImageData(
             0, 0,
             canvas.width, canvas.height);
