@@ -87,7 +87,7 @@ $(function() {
                 $touchTargets[touch.identifier] = $currTarget;
                 $currTarget.trigger('mousedown');
                 if ($currTarget.length > 0 && navigator.vibrate) {
-                    navigator.vibrate(200);
+                    navigator.vibrate(20);
                 }
             }
         })
@@ -102,8 +102,8 @@ $(function() {
                     $prevTarget.trigger('mouseup');
                     $touchTargets[touch.identifier] = $currTarget;
                     $currTarget.trigger('mousedown');
-                    if (navigator.vibrate) {
-                        navigator.vibrate(200);
+                    if ($currTarget.length > 0 && navigator.vibrate) {
+                        navigator.vibrate(20);
                     }
                 }
             }
