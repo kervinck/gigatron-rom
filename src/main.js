@@ -86,6 +86,9 @@ $(function() {
                     .filter('.gamepad-btn');
                 $touchTargets[touch.identifier] = $currTarget;
                 $currTarget.trigger('mousedown');
+                if ($currTarget.length > 0 && navigator.vibrate) {
+                    navigator.vibrate(200);
+                }
             }
         })
         .on('touchmove', (event) => {
@@ -99,6 +102,9 @@ $(function() {
                     $prevTarget.trigger('mouseup');
                     $touchTargets[touch.identifier] = $currTarget;
                     $currTarget.trigger('mousedown');
+                    if (navigator.vibrate) {
+                        navigator.vibrate(200);
+                    }
                 }
             }
         })
