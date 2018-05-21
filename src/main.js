@@ -39,7 +39,7 @@ $(function() {
      */
     function bindKeyToButton($button, key) {
         $button
-            .on('mousedown mouseenter', (event) => {
+            .on('mousedown', (event) => {
                 event.preventDefault();
                 document.dispatchEvent(new KeyboardEvent('keydown', {
                     'key': key,
