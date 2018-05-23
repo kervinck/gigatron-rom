@@ -4,28 +4,35 @@ Software for Gigatron ROM
 Files
 =====
 ```
-Core/theloop.py                 Video/audio/io/interpreter loops
-                                Built-in vCPU applications and data
-                                Execute theloop.py to build ROM files
-Core/compilegcl.py              Tool to compile vCPU applications for use with
-                                the Arduino Loader
-FileFormat.txt                  Description of vCPU object file format
-GCL-language.txt                Gigatron Control Language and vCPU explanation
-gcl1.ebnf                       Formal definition
-EBNF.xhtml                      Railroad diagram
-gtemu.c                         Executable instruction set definition
 LICENSE                         2-Clause BSD License
 Makefile                        Marcel's Makefile
+Core
+ +--- theloop.py                Video/audio/io/interpreter loops
+ |                              Built-in vCPU applications and data
+ |                              Execute theloop.py to build ROM files
+ `--- compilegcl.py             Tool to compile vCPU applications for use with
+                                the Arduino Loader
+Utils
+ `--- LoaderTest                Arduino sketch for "Loader" demonstration
+Docs
+ +--- FileFormat.txt            Description of vCPU object file format
+ +--- GCL-language.txt          Gigatron Control Language and vCPU explanation
+ +--- gcl1.ebnf                 Formal definition
+ +--- EBNF.xhtml                Railroad diagram
+ `--- gtemu.c                   Executable instruction set definition
 README.md                       This file...
-LoaderTest/LoaderTest.ino       Arduino sketch for "Loader" demonstration
 ```
 
 Contributions
 =============
 ```
-Contrib/kervinck/Terminal       Arduino sketch for "Terminal" (under development)
-Contrib/xxx                     Xxx xx xxxx.
-Contrib/yyy                     Yyy yyy yyyy yy yyy yyyyy.
+Contrib
+ +--- kervinck
+ |     `--- Terminal            Arduino sketch for "Terminal" (under development)
+ +--- xxx
+ |     `--- xxxxx               Xxx xx xxxx.
+ `--- yyy
+       `--- yyy                 Yyy yyy yyyy yy yyy yyyyy.
 ```
 
 Files processed by theloop.py
