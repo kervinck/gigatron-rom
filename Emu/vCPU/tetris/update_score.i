@@ -87,6 +87,50 @@ updateS_score   PUSH                        ; increment score string
                 RET
 
 
+                ; resets 6 digit score string and updates high score
+updateHighScore LDWI    high_string + 1     ; starting at most significant digit
+                STW     scoreScratch
+                LDWI    score_string + 1
+                STW     scratch
+                LDI     0x06
+                ST      ii
+
+updateHS_loop0  LDW     scratch
+                PEEK
+                STW     scoreUpdate
+                LDW     scoreScratch
+                PEEK
+                SUBW    scoreUpdate
+                BGT     updateHS_exit       ; if high score digit > score digit skip update high score
+                BLT     updateHS_update     ; if high score digit < score digit update high score
+                INC     scoreScratch
+                INC     scratch
+                LoopCounter ii updateHS_loop0   ; if scores are equal, check next digit
+
+updateHS_update LDWI    high_string + 1     ; starting at most significant digit
+                STW     scoreScratch
+                LDWI    score_string + 1
+                STW     scratch
+                LDI     0x06
+                ST      ii
+
+updateHS_loop1  LDW     scratch
+                PEEK
+                POKE    scoreScratch
+                INC     scoreScratch
+                INC     scratch
+                LoopCounter ii updateHS_loop1
+
+                LDWI    high_string        ; print updated high score string
+                STW     textStr
+                LDWI    highPos
+                STW     textPos
+                PUSH
+                CALL    printDigits
+                POP
+updateHS_exit   RET
+
+
                 ; resets level string
 resetLevel      LDWI    level_string + 2    ;LDWI    level_string + 7
                 STW     scratch
@@ -114,59 +158,11 @@ resetLevel      LDWI    level_string + 2    ;LDWI    level_string + 7
                 RET
 
 
-updateHighScore LDWI    high_string + 1     ; starting at most significant digit
-                STW     scoreScratch
-                LDWI    score_string + 1
+resetScore      LDWI    score_string + 1
                 STW     scratch
                 LDI     0x06
                 ST      ii
-
-updateHS_loop   LDW     scratch
-                PEEK
-                POKE    scoreScratch
-                INC     scoreScratch
-                INC     scratch
-                LoopCounter ii updateHS_loop
-
-                LDWI    high_string        ; print score string
-                STW     textStr
-                LDWI    highPos
-                STW     textPos
-                PUSH
-                CALL    printDigits
-                POP
-                RET
-
-
-                ; resets 6 digit score string and updates high score
-resetScore      LDWI    high_string + 1     ; starting at most significant digit
-                STW     scoreScratch
-                LDWI    score_string + 1
-                STW     scratch
-                LDI     0x06
-                ST      ii
-
-resetS_loop0    LDW     scratch
-                PEEK
-                STW     scoreDelta          ; reusing variable, (it's about to be reset in main loop)
-                LDW     scoreScratch
-                PEEK
-                SUBW    scoreDelta
-                BGT     resetS_skip         ; if high score digit > score digit skip update high score
-                BLT     resetS_update       ; if high score digit < score digit update high score
-                INC     scoreScratch
-                INC     scratch
-                LoopCounter ii resetS_loop0 ; if scores are equal, check next digit
-
-resetS_update   PUSH
-                CALL    updateHighScore
-                POP
                 
-resetS_skip     LDWI    score_string + 1
-                STW     scratch
-                LDI     0x06
-                ST      ii
-
 resetS_loop1    LDI     48
                 POKE    scratch
                 INC     scratch
@@ -179,9 +175,17 @@ resetS_loop1    LDI     48
                 PUSH
                 CALL    printDigits
                 POP
+
+                LDWI    high_string        ; print reset/loaded high score string
+                STW     textStr
+                LDWI    highPos
+                STW     textPos
+                PUSH
+                CALL    printDigits
+                POP
                 RET
 
-
+                
                 ; increments level string and multiplier string
 incrementLevel  LDWI    level_string + 2    ;LDWI    level_string + 7
                 STW     scratch

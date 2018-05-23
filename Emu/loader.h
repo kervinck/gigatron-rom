@@ -15,6 +15,13 @@
 
 namespace Loader
 {
+    struct SaveData
+    {
+        std::string _filename;
+        std::vector<uint16_t> _counts;
+        std::vector<uint16_t> _addresses;
+    };
+
     struct Gt1Segment
     {
         uint8_t _hiAddress;
@@ -35,8 +42,17 @@ namespace Loader
     bool getStartUploading(void);
     void setStartUploading(bool start);
 
+    void initialise(void);
+
+    // Only for emulation
+    bool loadDataFile(SaveData& saveData);
+    bool saveDataFile(const SaveData& saveData);
+
     bool loadGt1File(const std::string& filename, Gt1File& gt1File);
     bool saveGt1File(const std::string& filename, const Gt1File& gt1File);
+
+    void loadHighScore(void);
+    void saveHighScore(void);
 
     void upload(int vgaY);
     void disableUploads(bool disable);

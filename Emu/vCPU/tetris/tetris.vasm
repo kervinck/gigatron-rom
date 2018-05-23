@@ -40,7 +40,8 @@ textChr         EQU     xx + 0x42
 numLines        EQU     xx + 0x44
 scoreDelta      EQU     xx + 0x46
 scoreLevel      EQU     xx + 0x48
-scoreScratch    EQU     xx + 0x4A
+scoreUpdate     EQU     xx + 0x4A
+scoreScratch    EQU     xx + 0x4C
 
 kk              EQU     xx + 0x51       ; 0x80 can't be used
 ll              EQU     xx + 0x52
@@ -52,8 +53,6 @@ refresh         EQU     xx + 0x57
 blocked         EQU     xx + 0x58
 tetrominoNext   EQU     xx + 0x59
 
-
-    
 xTetris         EQU     10
 yTetris         EQU     20
 xPixels         EQU     xTetris*4
@@ -81,37 +80,12 @@ _callTable_         EQU     0x00EE      ; call addresses are automatically store
 _singleStepWatch_   EQU     frameCounter ; the single step debugger watches this variable location to decide when to step,
                                          ; choose a variable that is updated often
 
-; tetromino data
-tetromino_I     EQU     0x08A1          ; format: colour for 2 pixels, w, h, ox, oy, x0, y0, x1, y1, x2, y2, x3, y3, 0, 0  ; ox and oy are offsets within w and h
-tetromino_J     EQU     tetromino_I + 0x0100
-tetromino_L     EQU     tetromino_I + 0x0200
-tetromino_O     EQU     tetromino_I + 0x0300
-tetromino_S     EQU     tetromino_I + 0x0400
-tetromino_T     EQU     tetromino_I + 0x0500
-tetromino_Z     EQU     tetromino_I + 0x0600                                                                                  
-tetromino_I     DB      0x3C 0x3C 4 1 0 1 0 1 1 1 2 1 3 1 0 0  0x3C 0x3C 1 4 2 0 2 0 2 1 2 2 2 3 0 0  0x3C 0x3C 4 1 0 2 0 2 1 2 2 2 3 2 0 0  0x3C 0x3C 1 4 1 0 1 0 1 1 1 2 1 3 0 0
-tetromino_J     DB      0x30 0x30 3 2 0 0 0 0 0 1 1 1 2 1 0 0  0x30 0x30 2 3 1 0 1 0 2 0 1 1 1 2 0 0  0x30 0x30 3 2 0 1 0 1 1 1 2 1 2 2 0 0  0x30 0x30 2 3 0 0 1 0 1 1 0 2 1 2 0 0  
-tetromino_L     DB      0x0B 0x0B 3 2 0 0 2 0 0 1 1 1 2 1 0 0  0x0B 0x0B 2 3 1 0 1 0 1 1 1 2 2 2 0 0  0x0B 0x0B 3 2 0 1 0 1 1 1 2 1 0 2 0 0  0x0B 0x0B 2 3 0 0 0 0 1 0 1 1 1 2 0 0
-tetromino_O     DB      0x0F 0x0F 2 2 0 0 0 0 1 0 0 1 1 1 0 0  0x0F 0x0F 2 2 0 0 0 0 1 0 0 1 1 1 0 0  0x0F 0x0F 2 2 0 0 0 0 1 0 0 1 1 1 0 0  0x0F 0x0F 2 2 0 0 0 0 1 0 0 1 1 1 0 0
-tetromino_S     DB      0x0C 0x0C 3 2 0 0 1 0 2 0 0 1 1 1 0 0  0x0C 0x0C 2 3 1 0 1 0 1 1 2 1 2 2 0 0  0x0C 0x0C 3 2 0 1 1 1 2 1 0 2 1 2 0 0  0x0C 0x0C 2 3 0 0 0 0 0 1 1 1 1 2 0 0
-tetromino_T     DB      0x33 0x33 3 2 0 0 1 0 0 1 1 1 2 1 0 0  0x33 0x33 2 3 1 0 1 0 1 1 2 1 1 2 0 0  0x33 0x33 3 2 0 1 0 1 1 1 2 1 1 2 0 0  0x33 0x33 2 3 0 0 1 0 0 1 1 1 1 2 0 0
-tetromino_Z     DB      0x03 0x03 3 2 0 0 0 0 1 0 1 1 2 1 0 0  0x03 0x03 2 3 1 0 2 0 1 1 2 1 1 2 0 0  0x03 0x03 3 2 0 1 0 1 1 1 1 2 2 2 0 0  0x03 0x03 2 3 0 0 1 0 0 1 1 1 0 2 0 0
+%include tetris\tetromino.i
 
 scoringLut      EQU     tetromino_I + 0x0700
 levellingLut    EQU     tetromino_I + 0x0705
 scoringLut      DB      10 25 50 100
 levellingLut    DW      250 750 1000 2000 4000 8000 16000 32000 64000
-
-digit_font0     EQU     0x7AA1
-digit_font1     EQU     0x7BA1
-digit_font2     EQU     0x7CA1
-digit_font3     EQU     0x7DA1
-digit_font4     EQU     0x7EA1
-digit_font0     DB      fgColourB fgColourB fgColourB bgColourB bgColourB fgColourB bgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB bgColourB bgColourB bgColourB bgColourB bgColourB bgColourB bgColourB
-digit_font1     DB      fgColourB bgColourB fgColourB bgColourB bgColourB fgColourB bgColourB bgColourB bgColourB bgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB bgColourB bgColourB bgColourB bgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB fgColourB bgColourB
-digit_font2     DB      fgColourB bgColourB fgColourB bgColourB bgColourB fgColourB bgColourB bgColourB fgColourB fgColourB fgColourB bgColourB bgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB bgColourB bgColourB bgColourB bgColourB fgColourB bgColourB bgColourB
-digit_font3     DB      fgColourB bgColourB fgColourB bgColourB bgColourB fgColourB bgColourB bgColourB fgColourB bgColourB bgColourB bgColourB bgColourB bgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB fgColourB bgColourB bgColourB bgColourB bgColourB fgColourB bgColourB bgColourB
-digit_font4     DB      fgColourB fgColourB fgColourB bgColourB bgColourB fgColourB bgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB bgColourB bgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB fgColourB fgColourB bgColourB fgColourB bgColourB fgColourB bgColourB
 
 score_string    EQU     0x7FA1
 high_string     EQU     0x7FA8
@@ -138,29 +112,31 @@ incrementScore  EQU     entry_point + 0x0300        ; too big to store in unused
 
 
 ; storing subroutines in unused areas of video memory
-clearBoard      EQU     0x15A1      
+clearBoard      EQU     0x15A1
 clearScreen     EQU     clearBoard + 0x0100
-setTetrisBlock  EQU     clearBoard + 0x0200
-drawTetromino   EQU     clearBoard + 0x0300
-drawNextTet     EQU     clearBoard + 0x0400
-drawTetrisField EQU     clearBoard + 0x0500
-drawTFtopH      EQU     clearBoard + 0x0600
-drawTFbotH      EQU     clearBoard + 0x0700
-eraseTetromino  EQU     clearBoard + 0x0800
-eraseTrCorner   EQU     clearBoard + 0x0900
-getTetrisBlock  EQU     clearBoard + 0x0A00
-checkTetromino  EQU     clearBoard + 0x0B00
-spawnTetromino  EQU     clearBoard + 0x0C00
-updateTetromino EQU     clearBoard + 0x0D00
-checkLines      EQU     clearBoard + 0x0E00
-moveLines       EQU     clearBoard + 0x0F00
-shakeScreen     EQU     clearBoard + 0x1000
-printText       EQU     clearBoard + 0x1100
-printDigits     EQU     clearBoard + 0x1200
-resetLevel      EQU     clearBoard + 0x1300
-resetScore      EQU     clearBoard + 0x1400
-incrementLevel  EQU     clearBoard + 0x1500
-loadTetromino   EQU     clearBoard + 0x1600
+clearScreen_0   EQU     clearBoard + 0x0200
+setTetrisBlock  EQU     clearBoard + 0x0300
+drawTetromino   EQU     clearBoard + 0x0400
+drawNextTet     EQU     clearBoard + 0x0500
+drawTetrisField EQU     clearBoard + 0x0600
+drawTFtopH      EQU     clearBoard + 0x0700
+drawTFbotH      EQU     clearBoard + 0x0800
+eraseTetromino  EQU     clearBoard + 0x0900
+eraseTrCorner   EQU     clearBoard + 0x0A00
+getTetrisBlock  EQU     clearBoard + 0x0B00
+checkTetromino  EQU     clearBoard + 0x0C00
+spawnTetromino  EQU     clearBoard + 0x0D00
+updateTetromino EQU     clearBoard + 0x0E00
+checkLines      EQU     clearBoard + 0x0F00
+moveLines       EQU     clearBoard + 0x1000
+shakeScreen     EQU     clearBoard + 0x1100
+printText       EQU     clearBoard + 0x1200
+printDigits     EQU     clearBoard + 0x1300
+updateHighScore EQU     clearBoard + 0x1400
+resetLevel      EQU     clearBoard + 0x1500
+resetScore      EQU     clearBoard + 0x1600
+incrementLevel  EQU     clearBoard + 0x1700
+loadTetromino   EQU     clearBoard + 0x1800
 
 
 %include tetris\macros.i
@@ -172,6 +148,7 @@ loadTetromino   EQU     clearBoard + 0x1600
 %include tetris\check_lines.i
 %include tetris\print_text.i
 %include tetris\update_score.i
+%include tetris\digit_font.i
 
 
 entry_point     LDWI    giga_vram
@@ -180,7 +157,7 @@ entry_point     LDWI    giga_vram
                 STW     tbase               ; text font base address, (ROM)
                 LDWI    digit_font0         
                 STW     dbase               ; tiny digit font base address, (RAM)
-                LDWI    0x0101
+                LDWI    giga_videoTable
                 STW     xScroll
                 
                 CALL    clearScreen

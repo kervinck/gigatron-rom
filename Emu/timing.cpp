@@ -30,12 +30,11 @@ namespace Timing
             _frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
         }
         while(_frameTime < _timingHack);
+        prevFrameCounter = SDL_GetPerformanceCounter();
 
         _frameCount++;
 
         // Used for updating at a constant 60 times per second no matter what the FPS is
         _frameUpdate = ((_frameCount % int(1.0*TIMING_HACK/std::min(_frameTime, TIMING_HACK))) == 0);
-
-        prevFrameCounter = SDL_GetPerformanceCounter();
     }
 }

@@ -24,6 +24,7 @@ int main(int argc, char* argv[])
     Cpu::initialise(S);
     Audio::initialise();
     Graphics::initialise();
+    Loader::initialise();
     Expression::initialise();
     Assembler::initialise();
 
@@ -117,6 +118,10 @@ int main(int argc, char* argv[])
 
         // Debugger
         debugging = Editor::singleStepDebug();
+
+#if 0
+        Audio::playMusic();
+#endif
 
         // Master clock
         clock = Cpu::getClock();

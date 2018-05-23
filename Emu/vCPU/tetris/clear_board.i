@@ -42,34 +42,24 @@ clearB_loop     LDW     vbase           ; vram address
                 ; clears the viewable screen
 clearScreen     LDWI    SYS_Draw4_30    ; setup 4 pixel SYS routine
                 STW     giga_sysFn
-
                 LDWI    0x0000          ; 4 pixels of colour
                 STW     giga_sysArg0
                 STW     giga_sysArg2
 
-                LDI     giga_yres       ; counters
+                LDI     giga_yres / 2   ; counters
                 ST      jj
                 LDI     giga_xres / 4
                 ST      ii
 
-                LDWI    0x0000
+                LDWI    0x0800          ; top line
                 STW     xx
+                LDWI    0x7F00          ; bottom line
+                STW     kk
+                PUSH                    ; save clearScreen's caller return address
+                CALL    clearScreen_0   ; jump to clearScreen_0
 
-clearS_loop     LDW     vbase           ; vram address
-                ADDW    xx
-                STW     giga_sysArg4
-                SYS     0xFF            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
-
-                LD      xx              ; 4 horizontal pixels
-                ADDI    0x04
-                ST      xx
-
-                LoopCounter ii clearS_loop
-
-                ; clear left and right edge single pixel vertical strips
-                LDW     vbase
-                ADDW    xx
-                STW     scratch
+                ; clear left and right edge single pixel vertical strips, (for screen shake)
+clearStrips     STW     scratch
                 LDI     0x00
                 POKE    scratch
                 LDW     scratch
@@ -77,10 +67,43 @@ clearS_loop     LDW     vbase           ; vram address
                 STW     scratch
                 LDI     0x00
                 POKE    scratch
+                RET
 
-                INC     yy              ; next line
-                LDI     0x00
+clearScreen_0   POP                     ; restore clearScreen's caller return address
+clearS_loop     LDW     xx
+                STW     giga_sysArg4    ; top line
+                SYS     0xFF            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+
+                LDW     kk
+                STW     giga_sysArg4    ; bottom line
+                SYS     0xFF            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+
+                LD      xx              ; 4 horizontal pixels
+                ADDI    0x04
                 ST      xx
+                LD      kk              ; 4 horizontal pixels
+                ADDI    0x04
+                ST      kk
+                LoopCounter ii clearS_loop
+
+                ; clear one extra pixel wide stripes for screen shake
+                PUSH                    ; top
+                LDW     xx
+                CALL    clearStrips
+                POP
+                PUSH                    ; bottom
+                LDW     kk
+                CALL    clearStrips
+                POP
+
+                INC     yy              ; next top line
+                LD      ll              ; next bottom line
+                SUBI    0x01
+                ST      ll
+
+                LDI     0x00            ; reset xx, kk and ii
+                ST      xx
+                ST      kk
                 LDI     giga_xres / 4
                 ST      ii
                 LoopCounter jj clearS_loop

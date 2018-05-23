@@ -10,6 +10,11 @@
 #include "timing.h"
 #include "graphics.h"
 #include "assembler.h"
+#include "expression.h"
+#include "inih/INIReader.h"
+
+
+#define HIGH_SCORES_INI  "high_scores.ini"
 
 
 namespace Loader
@@ -21,10 +26,200 @@ namespace Loader
     bool _startUploading = false;
     bool _disableUploads = false;
 
+    std::string _currentGame = "";
+
+    INIReader _iniReader;
+    std::map<std::string, SaveData> _saveData;
+
 
     bool getStartUploading(void) {return _startUploading;}
     void setStartUploading(bool start) {_startUploading = start;}
 
+
+    void initialise(void)
+    {
+        INIReader iniReader(HIGH_SCORES_INI);
+        _iniReader = iniReader;
+        if(_iniReader.ParseError() < 0)
+        {
+            fprintf(stderr, "Loader::initialise() : couldn't load INI file '%s' : loading and saving of high scores is disabled.\n", HIGH_SCORES_INI);
+            return;
+        }
+
+        // Parse high scores INI file
+        for(auto game : _iniReader.Sections())
+        {
+            std::vector<uint16_t> counts;
+            std::vector<uint16_t> addresses;
+
+            for(int index=0; ; index++)
+            {
+                std::string count = "count" + std::to_string(index);
+                std::string address = "address" + std::to_string(index);
+                if(_iniReader.Get(game, count, "") == "") break;
+                if(_iniReader.Get(game, address, "") == "") break;
+                counts.push_back(uint16_t(_iniReader.GetReal(game, count, -1)));
+                addresses.push_back(uint16_t(_iniReader.GetReal(game, address, -1)));
+            }
+
+            SaveData saveData = {game, counts, addresses};
+            _saveData[game] = saveData;
+        }
+    }
+
+    // Only for emulation
+    bool loadDataFile(SaveData& saveData)
+    {
+        SaveData sdata;
+        sdata._filename = saveData._filename;
+        std::string filename = sdata._filename + ".dat";
+        std::ifstream infile(filename, std::ios::binary | std::ios::in);
+        if(!infile.is_open())
+        {
+            fprintf(stderr, "Loader::loadDataFile() : failed to open '%s'\n", filename.c_str());
+            return false;
+        }
+
+        // TODO: endian
+        // Load counts
+        uint16_t numCounts = 0;
+        infile.read((char *)&numCounts, 2);
+        if(infile.eof() || infile.bad() || infile.fail())
+        {
+            fprintf(stderr, "Loader::loadDataFile() : read error in number of counts in '%s'\n", filename.c_str());
+            return false;
+        }
+        for(int i=0; i<numCounts; i++)
+        {
+            uint16_t count;
+            infile.read((char *)&count, 2);
+            if(infile.bad() || infile.fail())
+            {
+                fprintf(stderr, "Loader::loadDataFile() : read error in counts of '%s'\n", filename.c_str());
+                return false;
+            }
+            sdata._counts.push_back(count);
+        }         
+
+        // TODO: endian
+        // Load addresses
+        uint16_t numAddresses = 0;
+        infile.read((char *)&numAddresses, 2);
+        if(infile.eof() || infile.bad() || infile.fail())
+        {
+            fprintf(stderr, "Loader::loadDataFile() : read error in number of addresses in '%s'\n", filename.c_str());
+            return false;
+        }
+        for(int i=0; i<numAddresses; i++)
+        {
+            uint16_t address;
+            infile.read((char *)&address, 2);
+            if(infile.bad() || infile.fail())
+            {
+                fprintf(stderr, "Loader::loadDataFile() : read error in addresses of '%s'\n", filename.c_str());
+                return false;
+            }
+            sdata._addresses.push_back(address);
+        }         
+
+        if(sdata._counts.size() == 0  ||  sdata._counts.size() != sdata._addresses.size())
+        {
+            fprintf(stderr, "Loader::loadDataFile() : save data is corrupt : saveData._counts.size() = %d : saveData._addresses.size() = %d\n", int(sdata._counts.size()), int(sdata._addresses.size()));
+            return false;
+        }
+
+        // load data
+        for(int j=0; j<sdata._addresses.size(); j++)
+        {
+            for(int i=0; i<sdata._counts[j]; i++)
+            {
+                uint8_t data;
+                infile.read((char *)&data, 1);
+                if(infile.bad() || infile.fail())
+                {
+                    fprintf(stderr, "Loader::loadDataFile() : read error in data of '%s'\n", filename.c_str());
+                    return false;
+                }
+                Cpu::setRAM(sdata._addresses[j] + i, data);
+            }
+        }
+
+        saveData = sdata;
+
+        return true;
+    }
+
+    // Only for emulation
+    bool saveDataFile(const SaveData& saveData)
+    {
+        std::string filename = saveData._filename + ".dat";
+        std::ofstream outfile(filename, std::ios::binary | std::ios::out);
+        if(!outfile.is_open())
+        {
+            fprintf(stderr, "Loader::saveDataFile() : failed to open '%s'\n", filename.c_str());
+            return false;
+        }
+
+        if(saveData._counts.size() == 0  ||  saveData._counts.size() != saveData._addresses.size())
+        {
+            fprintf(stderr, "Loader::saveDataFile() : save data is corrupt : saveData._counts.size() = %d : saveData._addresses.size() = %d\n", int(saveData._counts.size()), int(saveData._addresses.size()));
+            return false;
+        }
+
+        // TODO: endian
+        // Save counts
+        uint16_t numCounts = uint16_t(saveData._counts.size());
+        outfile.write((char *)&numCounts, 2);
+        if(outfile.bad() || outfile.fail())
+        {
+            fprintf(stderr, "Loader::saveDataFile() : write error in number of counts of '%s'\n", filename.c_str());
+            return false;
+        }
+        for(int i=0; i<numCounts; i++)
+        {
+            outfile.write((char *)&saveData._counts[i], 2);
+            if(outfile.bad() || outfile.fail())
+            {
+                fprintf(stderr, "Loader::saveDataFile() : write error in counts of '%s'\n", filename.c_str());
+                return false;
+            }
+        }         
+
+        // Save addresses
+        uint16_t numAddresses = uint16_t(saveData._addresses.size());
+        outfile.write((char *)&numAddresses, 2);
+        if(outfile.bad() || outfile.fail())
+        {
+            fprintf(stderr, "Loader::saveDataFile() : write error in number of addresses of '%s'\n", filename.c_str());
+            return false;
+        }
+        for(int i=0; i<numAddresses; i++)
+        {
+            outfile.write((char *)&saveData._addresses[i], 2);
+            if(outfile.bad() || outfile.fail())
+            {
+                fprintf(stderr, "Loader::saveDataFile() : write error in addresses of '%s'\n", filename.c_str());
+                return false;
+            }
+        }         
+
+        // Save data
+        for(int j=0; j<saveData._addresses.size(); j++)
+        {
+            for(int i=0; i<saveData._counts[j]; i++)
+            {
+                uint8_t data = Cpu::getRAM(saveData._addresses[j] + i);
+                outfile.write((char *)&data, 1);
+                if(outfile.bad() || outfile.fail())
+                {
+                    fprintf(stderr, "Loader::saveDataFile() : write error in data of '%s'\n", filename.c_str());
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
 
     bool loadGt1File(const std::string& filename, Gt1File& gt1File)
     {
@@ -134,6 +329,34 @@ namespace Loader
         }
 
         return true;
+    }
+
+    void loadHighScore(void)
+    {
+        if(_saveData.find(_currentGame) == _saveData.end())
+        {
+            fprintf(stderr, "Loader::loadHighScore() : error, no game entry defined in '%s' for '%s'\n", HIGH_SCORES_INI, _currentGame.c_str());
+            return;
+        }
+
+        if(Loader::loadDataFile(_saveData[_currentGame]))
+        {
+            fprintf(stderr, "Loader::loadHighScore() : loaded high score data successfully for '%s'\n", _currentGame.c_str());
+        }
+    }
+
+    void saveHighScore(void)
+    {
+        if(_saveData.find(_currentGame) == _saveData.end())
+        {
+            fprintf(stderr, "Loader::saveHighScore() : error, no game entry defined in '%s' for '%s'\n", HIGH_SCORES_INI, _currentGame.c_str());
+            return;
+        }
+
+        if(Loader::saveDataFile(_saveData[_currentGame]))
+        {
+            fprintf(stderr, "Loader::saveHighScore() : saved high score data successfully for '%s'\n", _currentGame.c_str());
+        }
     }
 
     void sendByte(uint8_t value, uint8_t& checksum)
@@ -331,6 +554,11 @@ namespace Loader
             fprintf(stderr, "Loader::upload() : invalid file '%s'\n", filename.c_str());
             return;
         }
+
+        // Currently only for emulation
+        size_t i = filename.find('.');
+        _currentGame = (i != std::string::npos) ? filename.substr(0, i) : filename;
+        loadHighScore();
 
         // Execute code
         if(!_disableUploads  &&  hasRamCode)

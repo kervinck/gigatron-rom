@@ -11,7 +11,7 @@
 #define HLINE_END      200
 #define HPIXELS_START  13
 #define HPIXELS_END    173
-#define TIMING_HACK    0.016666
+#define TIMING_HACK    0.0166667
 
 #define CLOCK_FREQ   6250000
 #define CLOCK_RESET -3

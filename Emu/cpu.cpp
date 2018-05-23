@@ -25,8 +25,10 @@ namespace Cpu
     int64_t getClock(void) {return _clock;}
     uint8_t getIN(void) {return _IN;}
     uint8_t getXOUT(void) {return _XOUT;}
-    uint8_t getROM(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01];}
     uint8_t getRAM(uint16_t address) {return _RAM[address & (RAM_SIZE-1)];}
+    uint8_t getROM(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01];}
+    uint16_t getRAM16(uint16_t address) {return _RAM[address & (RAM_SIZE-1)] | (_RAM[(address+1) & (RAM_SIZE-1)]<<8);}
+    uint16_t getROM16(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01] | (_ROM[(address+1) & (ROM_SIZE-1)][page & 0x01]<<8);}
 
     void setClock(int64_t clock) {_clock = clock;}
     void setIN(uint8_t in) {_IN = in;}
@@ -39,11 +41,25 @@ namespace Cpu
 
         _RAM[address & (RAM_SIZE-1)] = data;
     }
-
     void setROM(uint16_t base, uint16_t address, uint8_t data)
     {
         uint16_t offset = (address - base) / 2;
         _ROM[base + offset][address & 0x01] = data;
+    }
+    void setRAM16(uint16_t address, uint16_t data)
+    {
+        // Constant "0" and "1" are stored here
+        if(address == 0x0000) return;
+        if(address == 0x0080) return;
+
+        _RAM[address & (RAM_SIZE-1)] = uint8_t(data & 0x00FF);
+        _RAM[(address+1) & (RAM_SIZE-1)] = uint8_t((data & 0xFF00)>>8);
+    }
+    void setROM16(uint16_t base, uint16_t address, uint16_t data)
+    {
+        uint16_t offset = (address - base) / 2;
+        _ROM[base + offset][address & 0x01] = uint8_t(data & 0x00FF);
+        _ROM[base + offset][(address+1) & 0x01] = uint8_t((data & 0xFF00)>>8);
     }
 
     void garble(uint8_t* mem, int len)

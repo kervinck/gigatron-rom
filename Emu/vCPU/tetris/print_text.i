@@ -86,10 +86,10 @@ printD_slice    LDW     scratch
                 LoopCounter ii printD_slice
 
                 INC     textStr             ; next char
-                LD      textPos
+                LD      textPos             ; x += 4
                 ADDI    0x04
                 ST      textPos
-                LD      textPos + 1
+                LD      textPos + 1         ; y -= 5
                 SUBI    0x05
                 ST      textPos + 1
                 LoopCounter tt printD_chr

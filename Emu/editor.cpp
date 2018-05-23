@@ -9,6 +9,7 @@
 
 #include <SDL.h>
 #include "cpu.h"
+#include "audio.h"
 #include "editor.h"
 #include "loader.h"
 #include "timing.h"
@@ -34,6 +35,7 @@ namespace Editor
     uint8_t _singleStepWatch = 0x00;
     const std::string _basePath = "./vCPU";
     std::string _filePath = "";
+    bool _startMusic = false;
 
     MemoryMode _memoryMode = RAM;
     EditorMode _editorMode = Hex, _prevEditorMode = Hex;
@@ -51,6 +53,7 @@ namespace Editor
     int getCursorX(void) {return _cursorX;}
     int getCursorY(void) {return _cursorY;}
     bool getHexEdit(void) {return _hexEdit;}
+    bool getStartMusic(void) {return _startMusic;}
     bool getSingleStep(void) {return _singleStep;}
     bool getSingleStepMode(void) {return _singleStepMode;}
     MemoryMode getMemoryMode(void) {return _memoryMode;}
@@ -69,6 +72,7 @@ namespace Editor
 
     void setCursorX(int x) {_cursorX = x;}
     void setCursorY(int y) {_cursorY = y;}
+    void setStartMusic(bool startMusic) {_startMusic = startMusic;}
     void setSingleStep(bool singleStep) {_singleStep = singleStep;}
     void setSingleStepMode(bool singleStepMode) {_singleStepMode = singleStepMode;}
     void setLoadBaseAddress(uint16_t address) {_loadBaseAddress = address;}
@@ -183,26 +187,9 @@ namespace Editor
             }
             break;
 
-            case SDLK_F2:
-            {
-                static bool firstTime = true;
-                if(firstTime == true)
-                {
-                    firstTime = false;
-                    for(int i=0x0000; i<0x0400; i+=0x0100)
-                    {
-                        Cpu::setRAM(0x01FA+i, 0x00);
-                        Cpu::setRAM(0x01FB+i, 0x00);
-                        Cpu::setRAM(0x01FC+i, 0x00);
-                        Cpu::setRAM(0x01FD+i, 0x00);
-                        Cpu::setRAM(0x01FE+i, 0x00);
-                        Cpu::setRAM(0x01FF+i, 0x00);
-                    }
-                }
-
-                Cpu::setRAM(0x002C, 0x20);
-
+            //case SDLK_F2: _startMusic = !_startMusic; break;
 #if 0
+            {
                 uint8_t x1 = rand() % GIGA_WIDTH;
                 uint8_t x2 = rand() % GIGA_WIDTH;
                 uint8_t y1 = rand() % GIGA_HEIGHT;
@@ -210,17 +197,20 @@ namespace Editor
                 uint8_t colour = rand() % 256;
                 Graphics::drawLine(x1, y1, x2, y2, colour);
                 // Graphics::drawLineGiga(x1, y1, x2, y2, colour);
-#else
+
                 //Graphics::life(true);
-#endif
             }
             break;
+#endif
 
             case SDLK_F3: 
             {
+                Audio::nextScore(); break;
                 //Graphics::life(false);
             }
             break;
+
+            case SDLK_F4: Loader::saveHighScore(); break;
         }
     }
 

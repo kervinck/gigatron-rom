@@ -30,6 +30,7 @@ namespace Editor
     int getCursorX(void);
     int getCursorY(void);
     bool getHexEdit(void);
+    bool getStartMusic(void);
     bool getSingleStepMode(void);
     MemoryMode getMemoryMode(void);
     EditorMode getEditorMode(void);
@@ -47,6 +48,7 @@ namespace Editor
 
     void setCursorX(int x);
     void setCursorY(int y);
+    void setStartMusic(bool startMusic);
     void setSingleStep(bool singleStep);
     void setSingleStepMode(bool singleStepMode);
     void setLoadBaseAddress(uint16_t address);

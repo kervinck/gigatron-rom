@@ -12,7 +12,7 @@ file(GLOB headers *.h)
 
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-    add_executable(gtemuSDL WIN32 dirent/dirent.h ${headers} ${sources})
+    add_executable(gtemuSDL WIN32 dirent/dirent.h inih/INIReader.h ${headers} ${sources})
 else()
     add_executable(gtemuSDL ${headers} ${sources})
 endif()

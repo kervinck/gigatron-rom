@@ -1,6 +1,12 @@
 giga_vram           EQU     0x0800
 giga_text32         EQU     0x0700
 giga_text82         EQU     0x0800
+giga_videoTable     EQU     0x0101
+giga_soundChan1     EQU     0x01FA
+giga_soundChan2     EQU     0x02FA
+giga_soundChan3     EQU     0x03FA
+giga_soundChan4     EQU     0x04FA
+
 giga_xres           EQU     160
 giga_yres           EQU     120
 

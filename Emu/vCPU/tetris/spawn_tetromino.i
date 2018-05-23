@@ -55,6 +55,9 @@ spawnT_tx       LDW     rand            ; tx = rand - tu
 spawnT_score    PUSH
                 CALL    updateScore
                 POP
+                PUSH
+                CALL    updateHighScore
+                POP
                 RET
 
 
