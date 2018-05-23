@@ -14,12 +14,12 @@ gigatron-rom
  |     |                        XXX Rename this to something less confusing
  |     `--- compilegcl.py       Tool to compile vCPU applications for use with
  |                              the Arduino Loader: .gcl -> .gt1
- +--- Utils
- |     `--- LoaderTest          Arduino sketch for "Loader" demonstration
  +--- Apps                      Built-in applications
  +--- Images                    Built-in images
+ +--- Utils
+ |     `--- LoaderTest          Arduino sketch for "Loader" demonstration
  +--- Docs
- |     +--- FileFormat.txt      Description of vCPU object file format
+ |     +--- FileFormat.txt      Description of vCPU object file format (GT1 files)
  |     +--- GCL-language.txt    Gigatron Control Language and vCPU explanation
  |     +--- gcl1.ebnf           Formal definition
  |     +--- EBNF.xhtml          Railroad diagram
