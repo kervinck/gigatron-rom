@@ -14,7 +14,7 @@ if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
     add_executable(gtemuSDL WIN32 dirent/dirent.h inih/INIReader.h ${headers} ${sources})
 else()
-    add_executable(gtemuSDL ${headers} ${sources})
+    add_executable(gtemuSDL inih/INIReader.h ${headers} ${sources})
 endif()
 
 target_link_libraries(gtemuSDL ${SDL2_LIBRARY} ${SDL2MAIN_LIBRARY})
