@@ -6,8 +6,8 @@ code data that you can include in your projects for MIDI scores.<br/>
 A single source file using any modern C\+\+11 or higher compiler, trivial to build at a command prompt.</br>
 
 ## Usage
-- gigamidi <input filename> <output filename> <format 0, 1, 2, 3> <address> <line length><br/>
-- Input: Miditones binary file produced with miditones, e.g. miditones -t4 -b <filename>.bin<br/>
+- gigamidi \<input filename\> \<output filename\> \<format 0, 1, 2, 3\> \<address\> \<line length\><br/>
+- Input: Miditones binary file produced with miditones, e.g. miditones -t4 -b \<filename\>.bin<br/>
 - Format: 0 = vCPU ASM, 1 = GCL, 2 = C/C++, 3 = Python<br/>
 
 ## Example
@@ -22,9 +22,8 @@ with Miditones.<br/>
 3) The wait or delay command has been changed from 2 bytes and 1ms resolution to 1 byte and 16.66667ms<br/>
 resolution; this has a number of important impacts.
     - You cannot have a delay longer than 2116ms, so any MIDI score that does will have serious timing issues.<br/>
-    - Very short delays will either be rounded down to 0ms or 16.6666667ms, this **_will_** affect timing,<br/>
-how much of a problem it causes is completely dependent on the MIDI score and your playback<br/>
-architecture.<br/>
+    - Very short delays will either be rounded down to 0ms or rounded up to 16.6666667ms, this **_will_** affect<br/>
+timing, how much of a problem it causes is completely dependent on the MIDI score and your playback architecture.<br/>
 
 ## Stream
 The byte stream produced by Miditones is composed of a number of commands, these commands are differentiated<br/>
@@ -35,7 +34,7 @@ by the Gigatron and hence Gigamidi are the following:<br/>
 3) **_Stop playing_**   $F0, stops playing on all channels.<br/>
 4) **_Restart_**        $E0, reset stream to the beginning and restart the MIDI score.<br/>
 5) **_Wait_**           $nn, waits **_nn_** x 16.666666667ms before processing the next command in<br/>
-the stream. So the maximum delay is 0x7F x 16.66666667ms.<br/>
+the stream. So the maximum delay is 0x7F \* 16.66666667ms.<br/>
 
 ## Output
 - vCPU ASM

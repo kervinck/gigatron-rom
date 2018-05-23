@@ -247,14 +247,14 @@ void main(int argc, char* argv[])
                 }
             }
         }
-        // Delay n milliseconds where n = 16bit value, converted to 8bit
+        // Delay n milliseconds where n = 16bit value, converted to 8bit, (0x00 <-> 0x7F)
         else
         {
             uint16_t delay16 = ((command<<8) | *_midiPtr++); midiSize--;
-            uint8_t delay8 = uint8_t(floor(double(delay16) / 16.6666666667) + 0.5);  // maximum delay is 0xFF * 16.6666666667, (4250ms)
-            if(delay16 > 4250) 
+            uint8_t delay8 = uint8_t(floor(double(delay16) / 16.6666666667) + 0.5);  // maximum delay is 0x7F * 16.6666666667, (2116ms)
+            if(delay16 > 2116) 
             {
-                fprintf(stderr, "Warning, 16 bit delay is larger that 4250ms, this conversion will have serious timing issues! : wanted %dms : received %dms\n", delay16, delay8);
+                fprintf(stderr, "Warning, 16 bit delay is larger that 2116ms, this conversion will have serious timing issues! : wanted %dms : received %dms\n", delay16, delay8);
             }
 
             switch(format)
