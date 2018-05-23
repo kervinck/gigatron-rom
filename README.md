@@ -21,6 +21,13 @@ LoaderTest/LoaderTest.ino       Arduino sketch for "Loader" demonstration
 Terminal/Terminal.ino           Arduino sketch for "Terminal" (under development)
 ```
 
+Contributions
+=============
+```
+Contrib/xxx                     Xxx xx xxxx.
+Contrib/yyy                     Yyy yyy yyyy yy yyy yyyyy.
+```
+
 Files processed by theloop.py
 =============================
 ```
