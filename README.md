@@ -18,12 +18,12 @@ LICENSE                         2-Clause BSD License
 Makefile                        Marcel's Makefile
 README.md                       This file...
 LoaderTest/LoaderTest.ino       Arduino sketch for "Loader" demonstration
-Terminal/Terminal.ino           Arduino sketch for "Terminal" (under development)
 ```
 
 Contributions
 =============
 ```
+Contrib/kervinck/Terminal       Arduino sketch for "Terminal" (under development)
 Contrib/xxx                     Xxx xx xxxx.
 Contrib/yyy                     Yyy yyy yyyy yy yyy yyyyy.
 ```
