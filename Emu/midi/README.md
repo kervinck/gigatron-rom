@@ -25,7 +25,7 @@ The line length specifies the maximum size of each line of output source code.<b
 ## Example
 gigamidi game_over.bin game_over.i 0 0x08A0 0x100 96 100<br/>
 This would segment the MIDI stream into the unused areas of video memory, the segments are linked together<br/>
-through the **_0xD0_** stream command, (see below), and are automatically fetched and played in sequence.<br/>
+through the **_0xD0_** Segment command, (see below), and are automatically fetched and played in sequence.<br/>
 
 ## Format
 The output format is very similar to the Miditones output format except for a few crucial differences.<br/>
@@ -160,19 +160,19 @@ the stream. So the maximum delay is 0x7F \* 16.66666667ms.<br/>
 
 The Segment command, **_(0xD0)_** is a powerful **_(Gigatron only)_**, command embedded within the MIDI byte stream,<br/>
 (generated automatically by Gigamidi), that not only allows the MIDI data to be spread over multiple fragmented areas<br/>
-of memory, but also allows you to sequence and chain multiple MIDI stream together without writing any code.<br/>
+of memory, but also allows you to sequence and chain multiple MIDI streams together without writing any code.<br/>
 ~~~
 $08A0:
 [def
   $90# $53# $91# $47# $07# $90# $52# $91# $46# $07# $90# $53# $91# $47# $07# $90# $52# $91# $46#
   $07# $90# $53# $91# $47# $07# $90# $54# $91# $48# $07# $90# $53# $91# $47# $07# $90# $52#
-  $91# $46# $07# $90# $53# $91# $47# $1d# $80# $81# **_$d0# $a0# $09#_**
+  $91# $46# $07# $90# $53# $91# $47# $1d# $80# $81# $d0# $a0# $09#
 ] game_overMidi=
 ~~~
-The last command within the game over MID byte stream is a Segment address that points to the next segment of MIDI<br/>
-data to process; in this example it would probably point back to the title MIDI byte stream. If the game_overMIDI<br/>
-byte stream did not fit in that section of memory, then 0xD0 commands would be used to chain multiple segments<br/>
-of the byte stream together.<br/>
+The last command **_($d0# $a0# $09#)_** within the game over MID byte stream is a Segment address that points to the<br/>
+next segment of MIDI data to process; in this example it would probably point back to the title MIDI byte stream.<br/>
+If the game_overMIDI byte stream did not fit in that section of memory, then 0xD0 commands would be used to chain<br/>
+multiple segments of the byte stream together.<br/>
 
 ## Output
 - vCPU ASM
