@@ -1840,10 +1840,13 @@ namespace Assembler
                                 _instructions.push_back(instruction);
 
                                 // Push any remaining operands using equate searches
-                                if(!handleDefineByte(tokens, tokenIndex, operand, instruction._isRomAddress))
+                                if(tokenIndex + 1 < tokens.size())
                                 {
-                                    fprintf(stderr, "Assembler::assemble() : Bad DB data : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
-                                    return false;
+                                    if(!handleDefineByte(tokens, tokenIndex, operand, instruction._isRomAddress))
+                                    {
+                                        fprintf(stderr, "Assembler::assemble() : Bad DB data : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
+                                        return false;
+                                    }
                                 }
                             }
                             // Normal instructions
@@ -1915,10 +1918,13 @@ namespace Assembler
                                     _instructions.push_back(instruction);
 
                                     // Push any remaining operands using equate searches
-                                    if(!handleDefineWord(tokens, tokenIndex, operand, instruction._isRomAddress))
+                                    if(tokenIndex + 1 < tokens.size())
                                     {
-                                        fprintf(stderr, "Assembler::assemble() : Bad DW data : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
-                                        return false;
+                                        if(!handleDefineWord(tokens, tokenIndex, operand, instruction._isRomAddress))
+                                        {
+                                            fprintf(stderr, "Assembler::assemble() : Bad DW data : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), line+1);
+                                            return false;
+                                        }
                                     }
                                 }
                                 // Normal instructions

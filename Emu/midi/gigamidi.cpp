@@ -18,6 +18,7 @@
 enum Format {vCPU=0, GCL, CPP, PY, NumFormats};
 
 
+int segmentIndex = 0;
 std::string paddedName;
 uint8_t midiBuffer[MAX_MIDI_BUFFER_SIZE];
 
@@ -34,7 +35,10 @@ void addString(std::string &str, size_t num, char add=' ')
 // vCPU output
 void outputvCPUheader(std::ofstream& outfile, const std::string& name, uint16_t address, int& charCount)
 {
-    paddedName = (name.size() > 15) ? name.substr(0, 15) + "Midi" : name + "Midi";
+    std::stringstream ss;
+    paddedName = (name.size() > 13) ? name.substr(0, 13) + "Midi" : name + "Midi";
+    ss << paddedName << std::setfill('0') << std::setw(2) << std::to_string(segmentIndex);
+    paddedName = ss.str();
     addString(paddedName, 20 - paddedName.size());
     std::replace(paddedName.begin(), paddedName.end(), '-', '_');
     outfile << paddedName.c_str() << "EQU     0x" << std::hex << std::setw(4) << std::setfill('0') << address << std::endl;
@@ -150,10 +154,10 @@ void outputPYfooter(std::ofstream& outfile)
 
 void main(int argc, char* argv[])
 {
-    if(argc != 6)
+    if(argc != 8)
     {
-        fprintf(stderr, "Usage:   gigamidi <input filename> <output filename> <format 0, 1, 2 or 3> <address> <line length>\n");
-        fprintf(stderr, "Example: gigamidi game_over.bin game_over.i 0 0x8000 100\n");
+        fprintf(stderr, "Usage:   gigamidi <input filename> <output filename> <format 0, 1, 2 or 3> <address in hex> <offset in hex> <count> <line length>\n");
+        fprintf(stderr, "Example: gigamidi game_over.bin game_over.i 0 0x8000 0 0 100\n");
         fprintf(stderr, "Input:   miditones binary file produced with miditones, e.g. miditones -t4 -b <filename>.bin\n");
         fprintf(stderr, "Format:  0 = vCPU ASM, 1 = GCL, 2 = C/C++, 3 = Python\n");
         exit(0);
@@ -170,12 +174,17 @@ void main(int argc, char* argv[])
     }
 
     // Handles hex numbers
-    uint16_t address;   
-    std::stringstream ss;
-    ss << std::hex << argv[4];
-    ss >> address;
+    uint16_t address, offset;
+    std::stringstream ss0, ss1;
+    ss0 << std::hex << argv[4];
+    ss0 >> address;
+    ss1 << std::hex << argv[5];
+    ss1 >> offset;
 
-    int lineLength = std::stoi(std::string(argv[5]));
+    uint16_t count;
+    count = std::stoi(argv[6]);
+
+    int lineLength = std::stoi(std::string(argv[7]));
 
     std::ifstream infile(inFileName, std::ios::binary | std::ios::in);
     if(!infile.is_open())
@@ -207,6 +216,7 @@ void main(int argc, char* argv[])
 
     size_t midiSize = infile.gcount();
     uint8_t* _midiPtr = midiBuffer;
+    int gigaSize = 0;
 
     double totalTime16 = 0;
     double totalTime8 = 0;
@@ -231,6 +241,7 @@ void main(int argc, char* argv[])
             if((command & 0xF0) == 0x90)
             {
                 uint8_t note = *_midiPtr++; midiSize--;
+                gigaSize += 2;
                 switch(format)
                 {
                     case Format::vCPU: outputvCPUstartNote(outfile, command, note, charCount);  break;
@@ -242,6 +253,7 @@ void main(int argc, char* argv[])
             // Stop note
             else if((command & 0xF0) == 0x80)
             {
+                gigaSize += 1;
                 switch(format)
                 {
                     case Format::vCPU: outputvCPUcommand(outfile, command, charCount); break;
@@ -250,32 +262,19 @@ void main(int argc, char* argv[])
                     case Format::PY:   outputPYcommand(outfile, command, charCount);   break;
                 }
             }
-            // Stop midi
+            // Stop midi events are ignored
             else if((command & 0xF0) == 0xF0)
             {
-                switch(format)
-                {
-                    case Format::vCPU: outputvCPUcommand(outfile, command, charCount); break;
-                    case Format::GCL:  outputGCLcommand(outfile, command, charCount);  break;
-                    case Format::CPP:  outputCPPcommand(outfile, command, charCount);  break;
-                    case Format::PY:   outputPYcommand(outfile, command, charCount);   break;
-                }
             }
-            // Restart midi
+            // Restart midi events are ignored
             else if((command & 0xF0) == 0xE0)
             {
-                switch(format)
-                {
-                    case Format::vCPU: outputvCPUcommand(outfile, command, charCount); break;
-                    case Format::GCL:  outputGCLcommand(outfile, command, charCount);  break;
-                    case Format::CPP:  outputCPPcommand(outfile, command, charCount);  break;
-                    case Format::PY:   outputPYcommand(outfile, command, charCount);   break;
-                }
             }
         }
         // Delay n milliseconds where n = 16bit value, converted to 8bit, (0x00 <-> 0x7F)
         else
         {
+            gigaSize += 1;
             uint16_t delay16 = ((command<<8) | *_midiPtr++); midiSize--;
             uint8_t delay8 = uint8_t(floor(double(delay16) / 16.6666666667 + 0.5));  // maximum delay is 0x7F * 16.6666666667, (2116ms)
             if(delay16 > 2116) 
@@ -296,6 +295,29 @@ void main(int argc, char* argv[])
             }
         }
         
+        // Check count and offset for a segmented stream
+        if(midiSize  &&  count  &&  offset)
+        {
+            if(gigaSize / (count-4) > segmentIndex)
+            {
+                gigaSize += 3; 
+                segmentIndex++;
+
+                static uint16_t segment = address;
+                segment += offset;
+
+                switch(format)
+                {
+                    case Format::vCPU: outputvCPUcommand(outfile, 0xD0, charCount); outputvCPUcommand(outfile, segment & 0x00FF, charCount); outputvCPUcommand(outfile, (segment & 0xFF00) >>8, charCount); break;
+                    case Format::GCL:  outputGCLcommand(outfile, 0xD0, charCount);  outputGCLcommand(outfile, segment & 0x00FF, charCount);  outputGCLcommand(outfile, (segment & 0xFF00) >>8, charCount);  break;
+                    case Format::CPP:  outputCPPcommand(outfile, 0xD0, charCount);  outputCPPcommand(outfile, segment & 0x00FF, charCount);  outputCPPcommand(outfile, (segment & 0xFF00) >>8, charCount);  break;
+                    case Format::PY:   outputPYcommand(outfile, 0xD0, charCount);   outputPYcommand(outfile, segment & 0x00FF, charCount);   outputPYcommand(outfile, (segment & 0xFF00) >>8, charCount);   break;                
+                }
+                outfile << std::endl << std::endl;
+                outputvCPUheader(outfile, midiName, segment, charCount);
+            }
+        }
+
         // Newline
         if(charCount >= lineLength - 10  &&  midiSize)
         {
@@ -317,5 +339,5 @@ void main(int argc, char* argv[])
         case Format::PY:  outputPYfooter(outfile);            break;
     }
 
-    fprintf(stderr, "Total time of MIDI score : wanted %.1lfms : received %.1lfms : MIDI playback will be off by %.1lfms\n", totalTime16, totalTime8, totalTime8 - totalTime16);
+    fprintf(stderr, "Original size: %d  New size: %d  Original time: %.1lfms  New time: %.1lfms  Error: %.1lfms\n", int(infile.gcount()), gigaSize, totalTime16, totalTime8, totalTime8 - totalTime16);
 }

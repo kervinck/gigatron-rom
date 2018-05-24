@@ -107,4 +107,3 @@ shake_right     LDI     0x01
 shake_left      LDI     0xFF
                 POKE    xScroll
                 RET
-

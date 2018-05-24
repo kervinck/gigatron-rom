@@ -1,11 +1,12 @@
 resetAudio      LDWI    0x0000
-                STW     midiStreamPtr
                 STW     midiCommand
                 STW     midiDelay
                 STW     midiNote
                 LDWI    giga_soundChan1 + 2 ; keyL, keyH
                 STW     midiChannel
                 STW     scratch
+                LDWI    title_screenMidi00  ; midi score
+                STW     midiStreamPtr
 
                 LDI     0x04
                 ST      ii
@@ -48,8 +49,7 @@ playMidi        LDI     0x02                ; keep pumping soundTimer, so that g
                 STW     midiDelay
                 RET
 
-playM_process   LDWI    0x8000
-                ADDW    midiStreamPtr
+playM_process   LDW     midiStreamPtr
                 PEEK                        ; get midi stream byte
                 STW     midiCommand
                 LDW     midiStreamPtr
@@ -68,19 +68,21 @@ playM_process   LDWI    0x8000
                 
 playM_endnote   LDW     scratch 
                 XORI    0x80                ; check for end note
-                BNE     playM_stop
+                BNE     playM_segment
 
                 PUSH
                 CALL    midiEndNote         ; end note
                 POP
                 BRA     playMidi
 
-playM_stop      LDW     scratch
-                XORI    0xF0                ; check for stop
+
+playM_segment   LDW     scratch
+                XORI    0xD0                ; check for new segment
                 BNE     playM_delay
 
-                LDWI    0x0000
-                STW     midiStreamPtr       ; stop
+                PUSH
+                CALL    midiSegment         ; new midi segment
+                POP
                 BRA     playMidi
 
 playM_delay     LDW     midiCommand         ; all that is left is delay
@@ -90,8 +92,7 @@ playM_delay     LDW     midiCommand         ; all that is left is delay
 
 midiStartNote   LDWI    giga_notesTable     ; note table in ROM
                 STW     scratch
-                LDWI    music_a_2_Midi      ; midi score
-                ADDW    midiStreamPtr
+                LDW     midiStreamPtr       ; midi score
                 PEEK
                 SUBI    10
                 LSLW
@@ -131,3 +132,8 @@ midiEndNote     LDW     midiCommand
                 DOKE    scratch             ; end note
                 RET
 
+
+midiSegment     LDW     midiStreamPtr       ; midi score
+                DEEK
+                STW     midiStreamPtr       ; 0xD0 new midi segment address
+                RET

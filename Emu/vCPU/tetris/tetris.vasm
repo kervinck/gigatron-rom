@@ -147,6 +147,7 @@ loadTetromino   EQU     clearBoard + 0x1800
 resetAudio      EQU     clearBoard + 0x1900
 playMidi        EQU     clearBoard + 0x1A00
 midiStartNote   EQU     clearBoard + 0x1B00
+midiSegment     EQU     clearBoard + 0x1C00
 
 
 %include tetris\macros.i
@@ -309,10 +310,14 @@ check_blocks    CALL    checkTetromino      ; checks tetromino for occupied bloc
 
                 ; check for game over
                 SUBI    0x01
-                BEQ     restart
- 
+                BNE     check_blocked
+                CALL    resetAudio
+                LDWI    game_overMidi00     ; game over music
+                STW     midiStreamPtr 
+                BRA     restart
+
                 ; check for fall blocked whilst input active, (but not drop)
-                LD      refresh
+check_blocked   LD      refresh
                 BEQ     fall_blocked
 
                 ; load old tetromino
