@@ -46,7 +46,7 @@ Other languages are yet to be implemented as of the date of this document, but i
 
 Once a player has been written, it expects to be called at least once every 16.66666667ms, the simplest way to achieve this,<br/>
 is to wait for **_VBlank_** and then call the player; this will work perfectly unless other parts of your code spend more than<br/>
-one VBlank processing. If this is the case, these hot spots will need to have a **_Check VBlank Call Player_** function within.<br/>
+one VBlank processing. If this is the case, these hot spots will need to have a **_Check VBlank Call Player_** function within<br/>
 their loops or code.<br/>
 ~~~
 playMidi        LDI     0x02                ; keep pumping soundTimer, so that global sound stays alive
@@ -150,8 +150,8 @@ midiSegment     LDW     midiStreamPtr       ; midi score
 
 ## Stream
 The byte stream produced by Miditones is composed of a number of commands, these commands are differentiated<br/>
-from delays by the most significant bit of the command byte. The only commands that are supported<br/>
-by the Gigatron and hence Gigamidi are the following:<br/>
+from delays by the most significant bit of the command byte. The only commands that are supported by the Gigatron<br/>
+and hence Gigamidi are the following:<br/>
 1) **_Note On_**        $9t $nn play note **_nn_** on tone generator **_t_**.<br/>
 2) **_Note Off_**       $8t stop playing on tone generator **_t_**.<br/>
 3) **_Segment_**        $D0 $nnnn contains the absolute 16bit address of the next segment.<br/>
@@ -159,19 +159,20 @@ by the Gigatron and hence Gigamidi are the following:<br/>
 the stream. So the maximum delay is 0x7F \* 16.66666667ms.<br/>
 
 The Segment command, **_(0xD0)_** is a powerful **_(Gigatron only)_**, command embedded within the MIDI byte stream,<br/>
-(generated automatically by Gigamidi), that not only allows the MIDI data to be spread over multiple fragmented areas of memory,<br/> but also allows you to sequence and chain multiple MIDI stream together without writing any code.<br/>
-
-e.g.
+(generated automatically by Gigamidi), that not only allows the MIDI data to be spread over multiple fragmented areas<br/>
+of memory, but also allows you to sequence and chain multiple MIDI stream together without writing any code.<br/>
+~~~
 $08A0:
 [def
   $90# $53# $91# $47# $07# $90# $52# $91# $46# $07# $90# $53# $91# $47# $07# $90# $52# $91# $46#
   $07# $90# $53# $91# $47# $07# $90# $54# $91# $48# $07# $90# $53# $91# $47# $07# $90# $52#
   $91# $46# $07# $90# $53# $91# $47# $1d# $80# $81# **_$d0# $a0# $09#_**
 ] game_overMidi=
-
-The last command within the game over MID byte stream is a Segment address that points to the next segment of MIDI data to<br/>
-process; in this example it would probably point back to the title MIDI byte stream. If the game_overMIDI byte stream did not<br/>
-in that section of memory, then 0xD0 commands would be used to chain multiple segments together.<br/>
+~~~
+The last command within the game over MID byte stream is a Segment address that points to the next segment of MIDI<br/>
+data to process; in this example it would probably point back to the title MIDI byte stream. If the game_overMIDI<br/>
+byte stream did not fit in that section of memory, then 0xD0 commands would be used to chain multiple segments<br/>
+of the byte stream together.<br/>
 
 ## Output
 - vCPU ASM
