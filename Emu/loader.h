@@ -20,6 +20,7 @@ namespace Loader
         std::string _filename;
         std::vector<uint16_t> _counts;
         std::vector<uint16_t> _addresses;
+        std::vector<std::vector<uint8_t>> _data;
     };
 
     struct Gt1Segment
@@ -53,6 +54,7 @@ namespace Loader
 
     void loadHighScore(void);
     void saveHighScore(void);
+    void updateHighScore(void);
 
     void upload(int vgaY);
     void disableUploads(bool disable);

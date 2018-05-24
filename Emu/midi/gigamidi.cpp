@@ -298,6 +298,7 @@ void main(int argc, char* argv[])
         // Check count and offset for a segmented stream
         if(midiSize  &&  count  &&  offset)
         {
+            // If output byte stream size is approaching count, (leave room for Segment command 0xD0 and 1 extra byte Note On command 0x90)
             if(gigaSize / (count-4) > segmentIndex)
             {
                 gigaSize += 3; 
@@ -315,6 +316,18 @@ void main(int argc, char* argv[])
                 }
                 outfile << std::endl << std::endl;
                 outputvCPUheader(outfile, midiName, segment, charCount);
+            }
+        }
+
+        // Last segment points back to address, (can be user edited in output source file to point to a different MIDI stream)                
+        if(midiSize == 0  &&  count  &&  offset)
+        {
+            switch(format)
+            {
+                case Format::vCPU: outputvCPUcommand(outfile, 0xD0, charCount); outputvCPUcommand(outfile, address & 0x00FF, charCount); outputvCPUcommand(outfile, (address & 0xFF00) >>8, charCount); break;
+                case Format::GCL:  outputGCLcommand(outfile, 0xD0, charCount);  outputGCLcommand(outfile, address & 0x00FF, charCount);  outputGCLcommand(outfile, (address & 0xFF00) >>8, charCount);  break;
+                case Format::CPP:  outputCPPcommand(outfile, 0xD0, charCount);  outputCPPcommand(outfile, address & 0x00FF, charCount);  outputCPPcommand(outfile, (address & 0xFF00) >>8, charCount);  break;
+                case Format::PY:   outputPYcommand(outfile, 0xD0, charCount);   outputPYcommand(outfile, address & 0x00FF, charCount);   outputPYcommand(outfile, (address & 0xFF00) >>8, charCount);   break;                
             }
         }
 

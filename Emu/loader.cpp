@@ -131,6 +131,7 @@ namespace Loader
         // load data
         for(int j=0; j<sdata._addresses.size(); j++)
         {
+            sdata._data.push_back(std::vector<uint8_t>(sdata._counts[j], 0x00));
             for(int i=0; i<sdata._counts[j]; i++)
             {
                 uint8_t data;
@@ -140,6 +141,7 @@ namespace Loader
                     fprintf(stderr, "Loader::loadDataFile() : read error in data of '%s'\n", filename.c_str());
                     return false;
                 }
+                sdata._data[j][i] = data;
                 Cpu::setRAM(sdata._addresses[j] + i, data);
             }
         }
@@ -203,12 +205,30 @@ namespace Loader
             }
         }         
 
+        // Check data has been initialised
+        for(int j=0; j<saveData._addresses.size(); j++)
+        {
+            if(saveData._data.size() != saveData._addresses.size())
+            {
+                fprintf(stderr, "Loader::saveDataFile() : data has not been initialised or loaded, nothing to save for '%s'\n", filename.c_str());
+                return false;
+            }
+            for(int i=0; i<saveData._counts[j]; i++)
+            {
+                if(saveData._data[j].size() != saveData._counts[j]) 
+                {
+                    fprintf(stderr, "Loader::saveDataFile() : data has not been initialised or loaded, nothing to save for '%s'\n", filename.c_str());
+                    return false;
+                }
+            }
+        }
+
         // Save data
         for(int j=0; j<saveData._addresses.size(); j++)
         {
             for(int i=0; i<saveData._counts[j]; i++)
             {
-                uint8_t data = Cpu::getRAM(saveData._addresses[j] + i);
+                uint8_t data = saveData._data[j][i];
                 outfile.write((char *)&data, 1);
                 if(outfile.bad() || outfile.fail())
                 {
@@ -331,6 +351,7 @@ namespace Loader
         return true;
     }
 
+    // Loads high score for current game from a simple <game>.dat file
     void loadHighScore(void)
     {
         if(_saveData.find(_currentGame) == _saveData.end())
@@ -345,6 +366,7 @@ namespace Loader
         }
     }
 
+    // Saves high score for current game to a simple <game>.dat file
     void saveHighScore(void)
     {
         if(_saveData.find(_currentGame) == _saveData.end())
@@ -357,6 +379,38 @@ namespace Loader
         {
             fprintf(stderr, "Loader::saveHighScore() : saved high score data successfully for '%s'\n", _currentGame.c_str());
         }
+    }
+
+    // Updates a game's high score, (call this in the vertical blank)
+    void updateHighScore(void)
+    {
+        static int frameCount = 0;
+
+        // Update once per second
+        if(frameCount++ < VSYNC_RATE) return;
+        frameCount = 0;
+
+        // No entry in high score file defined for this game, so silently exit
+        if(_saveData.find(_currentGame) == _saveData.end()) return;
+
+        // Update data, (checks byte by byte and saves if larger)
+        bool save = false;
+        for(int j=0; j<_saveData[_currentGame]._addresses.size(); j++)
+        {
+            for(int i=0; i<_saveData[_currentGame]._counts[j]; i++)
+            {
+                uint8_t data = Cpu::getRAM(_saveData[_currentGame]._addresses[j] + i);
+                
+                // TODO: create a list of INI rules to make this more flexible
+                if(data > _saveData[_currentGame]._data[j][i])
+                {
+                    save = true;
+                    _saveData[_currentGame]._data[j][i] = data;
+                }
+            }
+        }
+
+        if(save) saveHighScore();
     }
 
     void sendByte(uint8_t value, uint8_t& checksum)

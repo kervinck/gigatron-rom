@@ -209,8 +209,6 @@ namespace Editor
                 //Graphics::life(false);
             }
             break;
-
-            case SDLK_F4: Loader::saveHighScore(); break;
         }
     }
 
@@ -518,5 +516,8 @@ namespace Editor
                 }
             }
         }
+
+        // Updates current game's high score once per second, (assuming handleInput is called in vertical blank)
+        Loader::updateHighScore();
     }
 }
