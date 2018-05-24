@@ -1,13 +1,22 @@
+export const BUTTON_A = 0x80;
+export const BUTTON_B = 0x40;
+export const BUTTON_SELECT = 0x20;
+export const BUTTON_START = 0x10;
+export const BUTTON_UP = 0x08;
+export const BUTTON_DOWN = 0x04;
+export const BUTTON_LEFT = 0x02;
+export const BUTTON_RIGHT = 0x01;
+
 /** map from controller button name to inReg bit */
 const buttonMap = {
-    a: 0x80,
-    b: 0x40,
-    select: 0x20,
-    start: 0x10,
-    up: 0x08,
-    down: 0x04,
-    left: 0x02,
-    right: 0x01,
+    a: BUTTON_A,
+    b: BUTTON_B,
+    select: BUTTON_SELECT,
+    start: BUTTON_START,
+    up: BUTTON_UP,
+    down: BUTTON_DOWN,
+    left: BUTTON_LEFT,
+    right: BUTTON_RIGHT,
 };
 
 const axisThreshold = 0.5;

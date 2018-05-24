@@ -3,6 +3,11 @@ import {
     VSYNC,
 } from './vga.js';
 
+import {
+    BUTTON_DOWN,
+    BUTTON_A,
+} from './gamepad.js';
+
 const {
     Observable,
     Subject,
@@ -20,6 +25,28 @@ const {
 const MAX_PAYLOAD_SIZE = 60;
 const START_OF_FRAME = 'L'.charCodeAt(0);
 const INIT_CHECKSUM = 'g'.charCodeAt(0);
+
+/** Repeat an Observable count times
+ * @param {number} count
+ * @param {Observable} observable
+ * @return {Observable}
+ */
+function replicate(count, observable) {
+    // return concat(...new Array(count).fill(observable));
+    let go = (observer) => {
+        if (count-- > 0) {
+            observable.subscribe({
+                next: (value) => observer.next(value),
+                error: (err) => observer.error(err),
+                complete: () => go(observer),
+            });
+        } else {
+            observer.complete();
+        }
+    };
+
+    return Observable.create(go);
+}
 
 /** Loader */
 export class Loader {
@@ -40,6 +67,7 @@ export class Loader {
             concatMap((buffer) => {
                 let data = new DataView(buffer);
                 return concat(
+                    this.startLoader(),
                     defer(() => {
                         // Send one frame with false checksum to force
                         // a checksum resync at the receiver
@@ -60,7 +88,7 @@ export class Loader {
 
     /** read a file returning a Promise
      * @param {File} file
-     * @return {Promise}
+     * @return {Observable}
      */
     readFile(file) {
         return Observable.create((observer) => {
@@ -74,6 +102,39 @@ export class Loader {
             };
             reader.readAsArrayBuffer(file);
         });
+    }
+
+    /** start the loader on the gigatron
+     * @return {Observable}
+     */
+    startLoader() {
+        return concat(
+            defer(() => {
+                this.cpu.reset();
+                return replicate(100, this.atPosedge(VSYNC));
+            }),
+            replicate(5, this.pressButton(BUTTON_DOWN, 1, 1)),
+            this.pressButton(BUTTON_A, 1, 60)
+        );
+    }
+
+    /** simulate a button press
+     * @param {number} bit
+     * @param {number} downTime
+     * @param {number} upTime
+     * @return {Observable}
+     */
+    pressButton(bit, downTime, upTime) {
+        return concat(
+            defer(() => {
+                this.cpu.inReg = bit ^ 0xff;
+                return replicate(downTime, this.atPosedge(VSYNC));
+            }),
+            defer(() => {
+                this.cpu.inReg = 0xff;
+                return replicate(upTime, this.atPosedge(VSYNC));
+            })
+        );
     }
 
     /** load sections from data until busy

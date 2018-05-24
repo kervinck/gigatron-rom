@@ -216,7 +216,7 @@ $(function() {
             }
         });
 
-    vgaCanvas
+    $(document)
         .on('dragenter', (event) => {
             event.preventDefault();
             event.stopPropagation();
