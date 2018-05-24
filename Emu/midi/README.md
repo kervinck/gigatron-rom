@@ -24,8 +24,8 @@ The line length specifies the maximum size of each line of output source code.<b
 
 ## Example
 gigamidi game_over.bin game_over.i 0 0x08A0 0x100 96 100<br/>
-This would segment the MIDI stream into the unused areas of video memory, the segments are linked together<br\>
-through the **_0xD0_** stream command, (see below), and are automatically fetched and played in sequence.<br\>
+This would segment the MIDI stream into the unused areas of video memory, the segments are linked together<br/>
+through the **_0xD0_** stream command, (see below), and are automatically fetched and played in sequence.<br/>
 
 ## Format
 The output format is very similar to the Miditones output format except for a few crucial differences.<br/>
