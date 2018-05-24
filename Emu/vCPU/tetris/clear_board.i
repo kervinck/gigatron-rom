@@ -33,6 +33,10 @@ clearB_loop     LDW     vbase           ; vram address
                 LDI     xOffset
                 ST      xx
 
+                PUSH
+                CALL    playMidiVBlank
+                POP
+
                 LDI     xTetris
                 ST      ii
                 LoopCounter jj clearB_loop

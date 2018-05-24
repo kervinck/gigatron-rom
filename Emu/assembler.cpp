@@ -50,6 +50,7 @@ namespace Assembler
         uint8_t _operand0;
         uint8_t _operand1;
         uint16_t _address;
+        OpcodeType _opcodeType;
     };
 
     struct InstructionType
@@ -524,7 +525,7 @@ namespace Assembler
             std::string token = tokens[tokenIndex].substr(quote1+1, quote2 - (quote1+1));
             for(int j=1; j<token.size(); j++) // First byte was pushed by callee
             {
-                Instruction instruction = {isRom, false, OneByte, uint8_t(token[j]), 0x00, 0x00, 0x0000};
+                Instruction instruction = {isRom, false, OneByte, uint8_t(token[j]), 0x00, 0x00, 0x0000, ReservedDB};
                 _instructions.push_back(instruction);
             }
             success = true;
@@ -541,7 +542,7 @@ namespace Assembler
                 std::string token = tokens[i].substr(quote1+1, quote2 - (quote1+1));
                 for(int j=0; j<token.size(); j++)
                 {
-                    Instruction instruction = {isRom, false, OneByte, uint8_t(token[j]), 0x00, 0x00, 0x0000};
+                    Instruction instruction = {isRom, false, OneByte, uint8_t(token[j]), 0x00, 0x00, 0x0000, ReservedDB};
                     _instructions.push_back(instruction);
                 }
                 success = true;
@@ -563,7 +564,7 @@ namespace Assembler
                         break;
                     }
                 }
-                Instruction instruction = {isRom, false, OneByte, operand, 0x00, 0x00, 0x0000};
+                Instruction instruction = {isRom, false, OneByte, operand, 0x00, 0x00, 0x0000, ReservedDB};
                 _instructions.push_back(instruction);
             }
         }
@@ -591,7 +592,7 @@ namespace Assembler
                     break;
                 }
             }
-            Instruction instruction = {isRom, false, TwoBytes, uint8_t(operand & 0x00FF), uint8_t((operand & 0xFF00) >>8), 0x00, 0x0000};
+            Instruction instruction = {isRom, false, TwoBytes, uint8_t(operand & 0x00FF), uint8_t((operand & 0xFF00) >>8), 0x00, 0x0000,  ReservedDW};
             _instructions.push_back(instruction);
         }
 
@@ -1654,7 +1655,7 @@ namespace Assembler
                 uint8_t branch = instructionType._branch;
                 ByteSize byteSize = instructionType._byteSize;
                 OpcodeType opcodeType = instructionType._opcodeType;
-                Instruction instruction = {false, false, byteSize, opcode, 0x00, 0x00, _currentAddress};
+                Instruction instruction = {false, false, byteSize, opcode, 0x00, 0x00, _currentAddress, opcodeType};
 
                 if(byteSize == BadSize)
                 {
@@ -1934,7 +1935,7 @@ namespace Assembler
                 }
 
                 // Check for page boundary crossings
-                if(parse == CodePass)
+                if(parse == CodePass  &&  (instruction._opcodeType == vCpu || instruction._opcodeType == Native))
                 {
                     static uint16_t customAddress = 0x0000;
                     if(instruction._isCustomAddress) customAddress = instruction._address;

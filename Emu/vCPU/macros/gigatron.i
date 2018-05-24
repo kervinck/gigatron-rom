@@ -1,15 +1,21 @@
-giga_vram           EQU     0x0800
+; ROM
 giga_text32         EQU     0x0700
 giga_text82         EQU     0x0800
+giga_notesTable     EQU     0x0900
+
+; RAM
+giga_vram           EQU     0x0800
 giga_videoTable     EQU     0x0101
 giga_soundChan1     EQU     0x01FA
 giga_soundChan2     EQU     0x02FA
 giga_soundChan3     EQU     0x03FA
 giga_soundChan4     EQU     0x04FA
 
+; defines
 giga_xres           EQU     160
 giga_yres           EQU     120
 
+; page 0
 giga_rand0          EQU     0x06
 giga_rand1          EQU     0x07
 giga_rand2          EQU     0x08
@@ -25,7 +31,9 @@ giga_sysArg4        EQU     0x28
 giga_sysArg5        EQU     0x29
 giga_sysArg6        EQU     0x2A
 giga_sysArg7        EQU     0x2B
+giga_soundTimer     EQU     0x2C
 
+; SYS calls
 SYS_Reset_36        EQU     0x009a
 SYS_Exec_88         EQU     0x00ad
 SYS_Out_22          EQU     0x00f4

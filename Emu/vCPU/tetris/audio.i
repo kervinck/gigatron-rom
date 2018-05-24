@@ -1,24 +1,133 @@
-resetChannels   LDWI    giga_soundChan1
+resetAudio      LDWI    0x0000
+                STW     midiStreamPtr
+                STW     midiCommand
+                STW     midiDelay
+                STW     midiNote
+                LDWI    giga_soundChan1 + 2 ; keyL, keyH
+                STW     midiChannel
                 STW     scratch
+
                 LDI     0x04
                 ST      ii
 
-resetC_loop     LDI     giga_soundChan1     ; reset low byte
+resetA_loop     LDI     giga_soundChan1     ; reset low byte
                 ST      scratch
-                LDW     scratch
-                POKE    0x00                ; wavA
+                LDWI    0x0300              
+                DOKE    scratch             ; wavA and wavX
                 INC     scratch
-                POKE    0x03                ; wavX
+                INC     scratch    
+                LDWI    0x0000
+                DOKE    scratch             ; keyL and keyH
                 INC     scratch
-                POKE    0x00                ; keyL
                 INC     scratch
-                POKE    0x00                ; keyH
-                INC     scratch
-                POKE    0x00                ; oscL
-                INC     scratch
-                POKE    0x00                ; oscH
+                DOKE    scratch             ; oscL and oscH
                 LDWI    0x0100              ; increment high byte
                 ADDW    scratch
                 STW     scratch
-                LoopCounter ii resetC_loop
+                LoopCounter ii resetA_loop
                 RET
+
+
+playMidiVBlank  LD      giga_frameCount
+                SUBW    frameCountPrev
+                BEQ     playMV_exit
+                LD      giga_frameCount
+                STW     frameCountPrev
+                PUSH
+                CALL    playMidi
+                POP
+playMV_exit     RET
+
+
+playMidi        LDI     0x02                ; keep pumping soundTimer, so that global sound stays alive
+                ST      giga_soundTimer
+                LDW     midiDelay
+                BEQ     playM_process
+
+                SUBI    0x01
+                STW     midiDelay
+                RET
+
+playM_process   LDWI    0x8000
+                ADDW    midiStreamPtr
+                PEEK                        ; get midi stream byte
+                STW     midiCommand
+                LDW     midiStreamPtr
+                ADDI    0x01
+                STW     midiStreamPtr
+                LDW     midiCommand
+                ANDI    0xF0
+                STW     scratch
+                XORI    0x90                ; check for start note
+                BNE     playM_endnote
+
+                PUSH                    
+                CALL    midiStartNote       ; start note
+                POP
+                BRA     playMidi
+                
+playM_endnote   LDW     scratch 
+                XORI    0x80                ; check for end note
+                BNE     playM_stop
+
+                PUSH
+                CALL    midiEndNote         ; end note
+                POP
+                BRA     playMidi
+
+playM_stop      LDW     scratch
+                XORI    0xF0                ; check for stop
+                BNE     playM_delay
+
+                LDWI    0x0000
+                STW     midiStreamPtr       ; stop
+                BRA     playMidi
+
+playM_delay     LDW     midiCommand         ; all that is left is delay
+                STW     midiDelay
+                RET
+
+
+midiStartNote   LDWI    giga_notesTable     ; note table in ROM
+                STW     scratch
+                LDWI    music_a_2_Midi      ; midi score
+                ADDW    midiStreamPtr
+                PEEK
+                SUBI    10
+                LSLW
+                SUBI    2
+                ADDW    scratch
+                STW     scratch
+                LUP     0x00                ; get ROM midi note low byte
+                ST      midiNote
+                LDW     scratch
+                LUP     0x01                ; get ROM midi note high byte
+                ST      midiNote + 1
+                LDW     midiCommand
+                ANDI    0x03                ; get channel
+                ST      scratch + 1
+                LDI     0x00
+                ST      scratch
+                LDW     scratch
+                ADDW    midiChannel         ; channel address
+                STW     scratch
+                LDW     midiNote
+                DOKE    scratch             ; set note
+                LDW     midiStreamPtr
+                ADDI    0x01                ; midiStreamPtr++
+                STW     midiStreamPtr
+                RET
+
+
+midiEndNote     LDW     midiCommand
+                ANDI    0x03                ; get channel
+                ST      scratch + 1
+                LDI     0x00
+                ST      scratch
+                LDW     scratch
+                ADDW    midiChannel         ; channel address
+                STW     scratch
+                LDWI    0x0000
+                DOKE    scratch             ; end note
+                RET
+

@@ -53,6 +53,12 @@ refresh         EQU     xx + 0x57
 blocked         EQU     xx + 0x58
 tetrominoNext   EQU     xx + 0x59
 
+midiStreamPtr   EQU     xx + 0x60
+midiCommand     EQU     xx + 0x62
+midiChannel     EQU     xx + 0x64
+midiDelay       EQU     xx + 0x66
+midiNote        EQU     xx + 0x68
+
 xTetris         EQU     10
 yTetris         EQU     20
 xPixels         EQU     xTetris*4
@@ -80,6 +86,7 @@ _callTable_         EQU     0x00EE      ; call addresses are automatically store
 _singleStepWatch_   EQU     frameCounter ; the single step debugger watches this variable location to decide when to step,
                                          ; choose a variable that is updated often
 
+%include tetris\midi_scores.i
 %include tetris\tetromino.i
 
 scoringLut      EQU     tetromino_I + 0x0700
@@ -137,6 +144,9 @@ resetLevel      EQU     clearBoard + 0x1500
 resetScore      EQU     clearBoard + 0x1600
 incrementLevel  EQU     clearBoard + 0x1700
 loadTetromino   EQU     clearBoard + 0x1800
+resetAudio      EQU     clearBoard + 0x1900
+playMidi        EQU     clearBoard + 0x1A00
+midiStartNote   EQU     clearBoard + 0x1B00
 
 
 %include tetris\macros.i
@@ -149,6 +159,7 @@ loadTetromino   EQU     clearBoard + 0x1800
 %include tetris\print_text.i
 %include tetris\update_score.i
 %include tetris\digit_font.i
+%include tetris\audio.i
 
 
 entry_point     LDWI    giga_vram
@@ -159,7 +170,8 @@ entry_point     LDWI    giga_vram
                 STW     dbase               ; tiny digit font base address, (RAM)
                 LDWI    giga_videoTable
                 STW     xScroll
-                
+
+                CALL    resetAudio
                 CALL    clearScreen
                 CALL    drawTetrisField
 
@@ -210,7 +222,8 @@ vBlank          LD      giga_frameCount
                 BEQ     vBlank
                 LD      giga_frameCount
                 STW     frameCountPrev
-                
+                CALL    playMidi
+
                 ; input
                 CALL    handleInput
                 ST      refresh

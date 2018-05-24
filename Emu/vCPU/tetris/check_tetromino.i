@@ -15,6 +15,11 @@ getTetrisBlock  LD      xx              ; xx * 4
                 ADDW    xx
                 PEEK
                 STW     result          ; return pixel
+
+                PUSH
+                CALL    playMidiVBlank
+                POP
+
                 RET
 
 

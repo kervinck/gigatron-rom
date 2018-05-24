@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <fstream>
 #include <string>
+#include <algorithm>
 
 
 // 64K is maximum size, (good luck getting it into a Gigatron)
@@ -16,15 +17,29 @@
 
 enum Format {vCPU=0, GCL, CPP, PY, NumFormats};
 
+
+std::string paddedName;
 uint8_t midiBuffer[MAX_MIDI_BUFFER_SIZE];
 
+
+void padString(std::string &str, size_t num, char pad=' ')
+{
+    if(num > str.size()) str.insert(0, num - str.size(), pad);
+}
+void addString(std::string &str, size_t num, char add=' ')
+{
+    str.append(num, add);
+}
 
 // vCPU output
 void outputvCPUheader(std::ofstream& outfile, const std::string& name, uint16_t address, int& charCount)
 {
-    outfile << name.c_str() << "Midi       EQU     0x" << std::hex << std::setw(4) << std::setfill('0') << address << std::endl;
-    outfile << name.c_str() << "Midi       DB     ";
-    charCount = 28;
+    paddedName = (name.size() > 15) ? name.substr(0, 15) + "Midi" : name + "Midi";
+    addString(paddedName, 20 - paddedName.size());
+    std::replace(paddedName.begin(), paddedName.end(), '-', '_');
+    outfile << paddedName.c_str() << "EQU     0x" << std::hex << std::setw(4) << std::setfill('0') << address << std::endl;
+    outfile << paddedName.c_str() << "DB     ";
+    charCount = 30;
 };
 void outputvCPUstartNote(std::ofstream& outfile, uint8_t command, uint8_t note, int& charCount)
 {
@@ -38,8 +53,10 @@ void outputvCPUcommand(std::ofstream& outfile, uint8_t command, int& charCount)
 }
 void outputvCPUnewLine(std::ofstream& outfile, int& charCount)
 {
-    outfile << std::endl << "                    DB     ";
-    charCount = 28;
+    std::string str;
+    addString(str, paddedName.size());
+    outfile << std::endl << str << "DB     ";
+    charCount = 30;
 }
 
 // GCL output
@@ -66,13 +83,17 @@ void outputGCLnewLine(std::ofstream& outfile, int& charCount)
 }
 void outputGCLfooter(std::ofstream& outfile, const std::string& name)
 {
-    outfile << std::endl << "] " << name.c_str() << "Midi" << "=" << std::endl;
+    paddedName = name;
+    std::replace(paddedName.begin(), paddedName.end(), '-', '_');
+    outfile << std::endl << "] " << paddedName.c_str() << "Midi" << "=" << std::endl;
 }
 
 // CPP output
 void outputCPPheader(std::ofstream& outfile, const std::string& name, int& charCount)
 {
-    outfile << "uint8_t " << name.c_str() << "Midi[] =" << std::endl;
+    paddedName = name;
+    std::replace(paddedName.begin(), paddedName.end(), '-', '_');
+    outfile << "uint8_t " << paddedName.c_str() << "Midi[] =" << std::endl;
     outfile << "{" << std::endl;
     outfile << "    ";
     charCount = 4;
@@ -100,7 +121,9 @@ void outputCPPfooter(std::ofstream& outfile)
 // PY output
 void outputPYheader(std::ofstream& outfile, const std::string& name, int& charCount)
 {
-    outfile << name.c_str() << "Midi = bytearray([" << std::endl;
+    paddedName = name;
+    std::replace(paddedName.begin(), paddedName.end(), '-', '_');
+    outfile << paddedName.c_str() << "Midi = bytearray([" << std::endl;
     outfile << "    ";
     charCount = 4;
 };
@@ -185,6 +208,9 @@ void main(int argc, char* argv[])
     size_t midiSize = infile.gcount();
     uint8_t* _midiPtr = midiBuffer;
 
+    double totalTime16 = 0;
+    double totalTime8 = 0;
+
     // Header
     int charCount = 0;
     switch(format)
@@ -251,11 +277,15 @@ void main(int argc, char* argv[])
         else
         {
             uint16_t delay16 = ((command<<8) | *_midiPtr++); midiSize--;
-            uint8_t delay8 = uint8_t(floor(double(delay16) / 16.6666666667) + 0.5);  // maximum delay is 0x7F * 16.6666666667, (2116ms)
+            uint8_t delay8 = uint8_t(floor(double(delay16) / 16.6666666667 + 0.5));  // maximum delay is 0x7F * 16.6666666667, (2116ms)
             if(delay16 > 2116) 
             {
-                fprintf(stderr, "Warning, 16 bit delay is larger that 2116ms, this conversion will have serious timing issues! : wanted %dms : received %dms\n", delay16, delay8);
+                delay8 = 0x7F;
+                fprintf(stderr, "Warning, 16 bit delay is larger that 2116ms, this conversion could have serious timing issues! : wanted %dms : received %dms\n", delay16, int(delay8*16.6666666667));
             }
+
+            totalTime16 += double(delay16);
+            totalTime8 += double(delay8) * 16.6666666667;
 
             switch(format)
             {
@@ -267,7 +297,7 @@ void main(int argc, char* argv[])
         }
         
         // Newline
-        if(charCount >= lineLength - 10)
+        if(charCount >= lineLength - 10  &&  midiSize)
         {
             switch(format)
             {
@@ -286,4 +316,6 @@ void main(int argc, char* argv[])
         case Format::CPP: outputCPPfooter(outfile);           break;
         case Format::PY:  outputPYfooter(outfile);            break;
     }
+
+    fprintf(stderr, "Total time of MIDI score : wanted %.1lfms : received %.1lfms : MIDI playback will be off by %.1lfms\n", totalTime16, totalTime8, totalTime8 - totalTime16);
 }

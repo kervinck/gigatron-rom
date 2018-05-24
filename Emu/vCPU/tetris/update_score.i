@@ -78,6 +78,10 @@ updateS_score   PUSH                        ; increment score string
                 CALL    printDigits
                 POP
 
+                PUSH
+                CALL    playMidiVBlank
+                POP
+
                 LDW     scoreScratch        ; increment score scoreScratch/5 times, (score is a multiple of 5)
                 SUBI    0x05
                 STW     scoreScratch

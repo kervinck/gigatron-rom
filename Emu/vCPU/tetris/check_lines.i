@@ -1,5 +1,5 @@
                 ; checks the tetris playfield for lines
-checkLines      LDI     maxLines
+checkLines      LDI     maxLines - 1
                 ST      ii
                 LDWI    0x00
                 STW     numLines
@@ -16,7 +16,7 @@ kk_loop0        LDW     kk
                 PUSH                    ; save return address, (this is needed if you nest CALL's)
                 CALL    getTetrisBlock  ; check for occupied block
                 POP                     ; restore return address
-                
+               
                 LDW     result
                 BEQ     skip_kk
                 LoopCounter1 kk kk_loop0
@@ -68,7 +68,7 @@ mm_loop         LD      nn              ; get block colour
                 LD      nn
                 SUBI    0x01
                 ST      nn
-                XORI    0x01
+                ;XORI    0x01
                 BNE     nn_loop
 
                 ; erase top line
@@ -107,3 +107,4 @@ shake_right     LDI     0x01
 shake_left      LDI     0xFF
                 POKE    xScroll
                 RET
+
