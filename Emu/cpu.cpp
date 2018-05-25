@@ -87,7 +87,7 @@ namespace Cpu
 #endif    
 
         // Memory
-        srand(unsigned int(time(NULL))); // Initialize with randomized data
+        srand((unsigned int)time(NULL)); // Initialize with randomized data
         garble((uint8_t*)_ROM, sizeof _ROM);
         garble(_RAM, sizeof _RAM);
         garble((uint8_t*)&S, sizeof S);
