@@ -1,7 +1,7 @@
 # gtemuSDL
 gtemuSDL is an emulator for the Gigatron TTL microcomputer, written in C++ using SDL2.<br/>
 This project provides support for Microsoft Windows and should be compatible with Linux, MacOS<br/>
-and possibly even Android. As of ver0.4.0 it has only been tested on Microsoft Windows10.<br/>
+and possibly even Android. As of v0.4.8 it has only been tested on Microsoft Windows10.<br/>
 
 ## Features
 - Variable timing from a minimum of 60FPS up to whatever your PC can handle.<br/>
@@ -26,7 +26,7 @@ and possibly even Android. As of ver0.4.0 it has only been tested on Microsoft W
 - Supports the Gigatron TTL's **_GT1_** object file format.<br/>
 - An inbuilt file and directory browser for uploading.<br/>
 - A VideoB scanline disable option, run **_"rom_test.vasm"_**, (**_emulation only_**), it will disable a<br/>
-  second scanline offering around 70% more processor time for vCPU code.<br/>
+  second scanline offering around **_100%_** more processor time for vCPU code.<br/>
 
 ## YouTube
 - https://www.youtube.com/watch?v=pH4st5dz7Go<br/>
@@ -139,6 +139,23 @@ _singleStepWatch_   EQU     xyPos
 - **_F10_** single steps the currently loaded code based on the _singleStepWatch_ variable.<br/>
 - All other keys function normally as in the main editor mode, except for **_L_**, **_F1_**<br/>
   and **_F5_** which are ignored.<br/>
+- Real time logging with the gprintf command, (similar syntax to the standard printf); this feature<br/>
+  allows you to print any variable, label or expression to stderr whilst the emulator is running vCPU<br/>
+  code. The vPC address of the current instruction that the gprintf aligns with is used to decide when to<br/>
+  send the logging information to the console as the vCPU code is interpreted in real time.<br/>
+~~~
+  gprintf("%d %d %s", *scoreScratch, *scoreDelta, *score_string)
+~~~  
+- Logs the two integers contained in scoreScratch and scoreDelta using indirection, score_string is printed<br/>
+  as a string of bytes with a preceding length, once again using indirection.
+
+## MIDI
+- See **_Gigamidi_** and **_README.md_** in the emu/midi directory.<br/>
+
+## Memory/State saving
+- Real time saving of Gigatron and applications/games memory and state without any involvement of software<br/>
+  on the Gigatron, (it's firmware or it's applications). This generic interface is controlled with **_INI_**<br/>
+  files, (see **_high_scores.ini_** for an example.
 
 ## Errors
 - All error reporting is sent to **_stderr_**, under Windows a separate console is opened, (that is<br/>

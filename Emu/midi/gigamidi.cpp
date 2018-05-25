@@ -298,7 +298,7 @@ void main(int argc, char* argv[])
         // Check count and offset for a segmented stream
         if(midiSize  &&  count  &&  offset)
         {
-            // If output byte stream size is approaching count, (leave room for Segment command 0xD0 and 1 extra byte Note On command 0x90)
+            // If output byte stream size is approaching count, (leave room for Segment command 0xD0 and 1 extra byte for Note On command 0x90)
             if(gigaSize / (count-4) > segmentIndex)
             {
                 gigaSize += 3; 

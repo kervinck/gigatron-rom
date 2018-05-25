@@ -51,18 +51,24 @@ namespace Loader
         {
             std::vector<uint16_t> counts;
             std::vector<uint16_t> addresses;
+            std::vector<Endianness> endianness;
+            std::vector<std::vector<uint8_t>> data;
 
             for(int index=0; ; index++)
             {
                 std::string count = "count" + std::to_string(index);
                 std::string address = "address" + std::to_string(index);
+                std::string endian = "endian" + std::to_string(index);
                 if(_iniReader.Get(game, count, "") == "") break;
                 if(_iniReader.Get(game, address, "") == "") break;
+                endian = _iniReader.Get(game, endian, "little");
                 counts.push_back(uint16_t(_iniReader.GetReal(game, count, -1)));
                 addresses.push_back(uint16_t(_iniReader.GetReal(game, address, -1)));
+                endianness.push_back((endian == "little") ? Little : Big);
+                data.push_back(std::vector<uint8_t>(counts.back(), 0x00));
             }
 
-            SaveData saveData = {game, counts, addresses};
+            SaveData saveData = {true, game, counts, addresses, endianness, data};
             _saveData[game] = saveData;
         }
     }
@@ -70,8 +76,7 @@ namespace Loader
     // Only for emulation
     bool loadDataFile(SaveData& saveData)
     {
-        SaveData sdata;
-        sdata._filename = saveData._filename;
+        SaveData sdata = saveData;
         std::string filename = sdata._filename + ".dat";
         std::ifstream infile(filename, std::ios::binary | std::ios::in);
         if(!infile.is_open())
@@ -145,6 +150,7 @@ namespace Loader
                 Cpu::setRAM(sdata._addresses[j] + i, data);
             }
         }
+        sdata._initialised = true;
 
         saveData = sdata;
 
@@ -392,25 +398,42 @@ namespace Loader
 
         // No entry in high score file defined for this game, so silently exit
         if(_saveData.find(_currentGame) == _saveData.end()) return;
+        if(!_saveData[_currentGame]._initialised) return;
 
-        // Update data, (checks byte by byte and saves if larger)
+        // Update data, (checks byte by byte and saves if larger, most significant to least significant)
         bool save = false;
         for(int j=0; j<_saveData[_currentGame]._addresses.size(); j++)
         {
-            for(int i=0; i<_saveData[_currentGame]._counts[j]; i++)
+            // Defaults to little endian
+            int start = _saveData[_currentGame]._counts[j] - 1, end = -1, step = -1;
+            if(_saveData[_currentGame]._endianness[j] == Big)
             {
+                start = 0;
+                end = _saveData[_currentGame]._counts[j];
+                step = 1;
+            }
+
+            // Loop MSB to LSB or vice versa depending on endianness            
+            while(start != end)
+            {
+                int i = start;
                 uint8_t data = Cpu::getRAM(_saveData[_currentGame]._addresses[j] + i);
-                
-                // TODO: create a list of INI rules to make this more flexible
-                if(data > _saveData[_currentGame]._data[j][i])
+
+                // TODO: create a list of INI rules to make this test more flexible
+                if(data < _saveData[_currentGame]._data[j][i]) return;
+                if(_saveData[_currentGame]._data[j][i] == 0  ||  data > _saveData[_currentGame]._data[j][i])
                 {
-                    save = true;
-                    _saveData[_currentGame]._data[j][i] = data;
+                    for(int k=i; k!=end; k+=step)
+                    {
+                        _saveData[_currentGame]._data[j][k] = Cpu::getRAM(_saveData[_currentGame]._addresses[j] + k);
+                    }
+                    saveHighScore();
+                    return;
                 }
+
+                start += step;
             }
         }
-
-        if(save) saveHighScore();
     }
 
     void sendByte(uint8_t value, uint8_t& checksum)

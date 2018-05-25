@@ -15,11 +15,15 @@
 
 namespace Loader
 {
+    enum Endianness {Little, Big};
+
     struct SaveData
     {
+        bool _initialised = false;
         std::string _filename;
         std::vector<uint16_t> _counts;
         std::vector<uint16_t> _addresses;
+        std::vector<Endianness> _endianness;
         std::vector<std::vector<uint8_t>> _data;
     };
 
