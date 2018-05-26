@@ -14,6 +14,10 @@
 #define BOOT_COUNT 0x0004
 #define BOOT_CHECK 0x0005
 
+// At least on Windows, _X is a constant defined somewhere before here
+#ifdef _X
+#  undef _X
+#endif
 
 namespace Cpu
 {

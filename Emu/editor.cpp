@@ -1,5 +1,6 @@
 #include <vector>
 #include <algorithm>
+#include <sys/stat.h>
 
 #if defined(_WIN32)
 #include "dirent/dirent.h"
