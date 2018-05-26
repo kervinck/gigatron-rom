@@ -362,7 +362,7 @@ namespace Loader
     {
         if(_saveData.find(_currentGame) == _saveData.end())
         {
-            fprintf(stderr, "Loader::loadHighScore() : error, no game entry defined in '%s' for '%s'\n", HIGH_SCORES_INI, _currentGame.c_str());
+            fprintf(stderr, "Loader::loadHighScore() : warning, no game entry defined in '%s' for '%s'\n", HIGH_SCORES_INI, _currentGame.c_str());
             return;
         }
 

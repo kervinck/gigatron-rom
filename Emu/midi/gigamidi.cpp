@@ -87,17 +87,29 @@ void outputGCLnewLine(std::ofstream& outfile, int& charCount)
 }
 void outputGCLfooter(std::ofstream& outfile, const std::string& name)
 {
-    paddedName = name;
+    
+#if 0
+    // Waste of page 0 variable space if you activate this
+    std::stringstream ss;
+    paddedName = name + "Midi";
+    ss << paddedName << std::setfill('0') << std::setw(2) << std::to_string(segmentIndex-1);
+    paddedName = ss.str();
     std::replace(paddedName.begin(), paddedName.end(), '-', '_');
-    outfile << std::endl << "] " << paddedName.c_str() << "Midi" << "=" << std::endl;
+    outfile << std::endl << "] " << paddedName.c_str() << "=" << std::endl;
+#else
+    outfile << std::endl << "]" << std::endl;
+#endif
 }
 
 // CPP output
 void outputCPPheader(std::ofstream& outfile, const std::string& name, int& charCount)
 {
-    paddedName = name;
+    std::stringstream ss;
+    paddedName = name + "Midi";
+    ss << paddedName << std::setfill('0') << std::setw(2) << std::to_string(segmentIndex);
+    paddedName = ss.str() + "[] = ";
     std::replace(paddedName.begin(), paddedName.end(), '-', '_');
-    outfile << "uint8_t " << paddedName.c_str() << "Midi[] =" << std::endl;
+    outfile << "uint8_t " << paddedName.c_str() << std::endl;
     outfile << "{" << std::endl;
     outfile << "    ";
     charCount = 4;
@@ -125,9 +137,12 @@ void outputCPPfooter(std::ofstream& outfile)
 // PY output
 void outputPYheader(std::ofstream& outfile, const std::string& name, int& charCount)
 {
-    paddedName = name;
+    std::stringstream ss;
+    paddedName = name + "Midi";
+    ss << paddedName << std::setfill('0') << std::setw(2) << std::to_string(segmentIndex);
+    paddedName = ss.str() + " = bytearray([";
     std::replace(paddedName.begin(), paddedName.end(), '-', '_');
-    outfile << paddedName.c_str() << "Midi = bytearray([" << std::endl;
+    outfile << paddedName.c_str() << std::endl;
     outfile << "    ";
     charCount = 4;
 };
@@ -207,12 +222,12 @@ void main(int argc, char* argv[])
         exit(0);
     }
 
-    size_t i = inFileName.rfind("/");
-    if(i == std::string::npos) i = inFileName.rfind("\\");
+    size_t i = outFileName.rfind("/") + 1;
+    if(i == std::string::npos) i = outFileName.rfind("\\") + 1;
     if(i == std::string::npos) i = 0;
-    size_t j = inFileName.rfind(".");
-    if(j == std::string::npos) j = inFileName.length();
-    std::string midiName = inFileName.substr(i+1, j - (i+1));
+    size_t j = outFileName.rfind(".");
+    if(j == std::string::npos) j = outFileName.length();
+    std::string midiName = outFileName.substr(i, j - i);
 
     size_t midiSize = infile.gcount();
     uint8_t* _midiPtr = midiBuffer;
@@ -280,7 +295,7 @@ void main(int argc, char* argv[])
             if(delay16 > 2116) 
             {
                 delay8 = 0x7F;
-                fprintf(stderr, "Warning, 16 bit delay is larger that 2116ms, this conversion could have serious timing issues! : wanted %dms : received %dms\n", delay16, int(delay8*16.6666666667));
+                fprintf(stderr, "Warning, 16 bit delay is larger that 2116ms, this conversion could have serious timing issues! : wanted %dms : received %dms : at byte position %d\n\n", delay16, int(delay8*16.6666666667), int(_midiPtr - midiBuffer));
             }
 
             totalTime16 += double(delay16);
@@ -307,6 +322,7 @@ void main(int argc, char* argv[])
                 static uint16_t segment = address;
                 segment += offset;
 
+                // Commands
                 switch(format)
                 {
                     case Format::vCPU: outputvCPUcommand(outfile, 0xD0, charCount); outputvCPUcommand(outfile, segment & 0x00FF, charCount); outputvCPUcommand(outfile, (segment & 0xFF00) >>8, charCount); break;
@@ -314,8 +330,22 @@ void main(int argc, char* argv[])
                     case Format::CPP:  outputCPPcommand(outfile, 0xD0, charCount);  outputCPPcommand(outfile, segment & 0x00FF, charCount);  outputCPPcommand(outfile, (segment & 0xFF00) >>8, charCount);  break;
                     case Format::PY:   outputPYcommand(outfile, 0xD0, charCount);   outputPYcommand(outfile, segment & 0x00FF, charCount);   outputPYcommand(outfile, (segment & 0xFF00) >>8, charCount);   break;                
                 }
+                // Footer
+                switch(format)
+                {
+                    case Format::GCL: outputGCLfooter(outfile, midiName); break;
+                    case Format::CPP: outputCPPfooter(outfile);           break;
+                    case Format::PY:  outputPYfooter(outfile);            break;
+                }
                 outfile << std::endl << std::endl;
-                outputvCPUheader(outfile, midiName, segment, charCount);
+                // Header
+                switch(format)
+                {
+                    case Format::vCPU: outputvCPUheader(outfile, midiName, segment, charCount); break;
+                    case Format::GCL:  outputGCLheader(outfile, segment, charCount);            break;
+                    case Format::CPP:  outputCPPheader(outfile, midiName, charCount);           break;
+                    case Format::PY:   outputPYheader(outfile, midiName, charCount);            break;
+                }
             }
         }
 
