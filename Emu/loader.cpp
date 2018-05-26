@@ -54,6 +54,8 @@ namespace Loader
             std::vector<Endianness> endianness;
             std::vector<std::vector<uint8_t>> data;
 
+            int updateRate = uint16_t(_iniReader.GetReal(game, "updateRate", VSYNC_RATE));
+
             for(int index=0; ; index++)
             {
                 std::string count = "count" + std::to_string(index);
@@ -68,7 +70,7 @@ namespace Loader
                 data.push_back(std::vector<uint8_t>(counts.back(), 0x00));
             }
 
-            SaveData saveData = {true, game, counts, addresses, endianness, data};
+            SaveData saveData = {true, updateRate, game, counts, addresses, endianness, data};
             _saveData[game] = saveData;
         }
     }
@@ -103,7 +105,7 @@ namespace Loader
                 fprintf(stderr, "Loader::loadDataFile() : read error in counts of '%s'\n", filename.c_str());
                 return false;
             }
-            sdata._counts.push_back(count);
+            sdata._counts[i] = count;
         }         
 
         // TODO: endian
@@ -124,7 +126,7 @@ namespace Loader
                 fprintf(stderr, "Loader::loadDataFile() : read error in addresses of '%s'\n", filename.c_str());
                 return false;
             }
-            sdata._addresses.push_back(address);
+            sdata._addresses[i] = address;
         }         
 
         if(sdata._counts.size() == 0  ||  sdata._counts.size() != sdata._addresses.size())
@@ -392,13 +394,13 @@ namespace Loader
     {
         static int frameCount = 0;
 
-        // Update once per second
-        if(frameCount++ < VSYNC_RATE) return;
-        frameCount = 0;
-
         // No entry in high score file defined for this game, so silently exit
         if(_saveData.find(_currentGame) == _saveData.end()) return;
         if(!_saveData[_currentGame]._initialised) return;
+
+        // Update once every updateRate VBlank ticks, (defaults to VSYNC_RATE, hence once every second)
+        if(frameCount++ < _saveData[_currentGame]._updaterate) return;
+        frameCount = 0;
 
         // Update data, (checks byte by byte and saves if larger, most significant to least significant)
         bool save = false;

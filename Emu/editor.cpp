@@ -181,7 +181,7 @@ namespace Editor
                 exit(0);
             }
 
-            // Testing
+            // Fast reset
             case SDLK_F1:
             {
                 if(!_singleStepMode) Cpu::reset();

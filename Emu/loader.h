@@ -4,6 +4,8 @@
 
 #include <vector>
 
+#include "timing.h"
+
 
 #define PAYLOAD_SIZE              60
 #define SEGMENT_SIZE              255
@@ -20,7 +22,9 @@ namespace Loader
     struct SaveData
     {
         bool _initialised = false;
+        int _updaterate = VSYNC_RATE;
         std::string _filename;
+
         std::vector<uint16_t> _counts;
         std::vector<uint16_t> _addresses;
         std::vector<Endianness> _endianness;
