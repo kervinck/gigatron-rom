@@ -1,0 +1,39 @@
+; unrolled loop to speed up .vasm clear
+; clears offscreen vram as well as pixels
+; shows use of includes and macros
+
+vram        EQU     0x0800
+vbase       EQU     0x0030
+i           EQU     0x0032
+
+clear0      EQU     0x0200
+clear1      EQU     0x0300
+
+
+%include macros/clearmacro.i
+
+
+_callTable_         EQU     0x007E 
+
+
+            ; entry point
+clear0      LDWI    vram
+            STW     vbase
+
+clear       fill32  0x00
+            LD      vbase+1
+            SUBI    0x7F
+            BLT     clear
+            CALL    clear1
+
+            ; finish off last row
+clear1      LDI     0x08        
+            ST      i
+last_row    fill32  0x00
+            LD      i
+            SUBI    0x01
+            ST      i
+            BGT     last_row
+
+done        BRA     done
+            

@@ -1,0 +1,29 @@
+        LDI  0x00       ' Clear screen colour
+        ST   0x34       ' t    
+        
+        LDI  0x08       ' Load screen address 0x0800 high 0x08  
+        ST   0x31       ' q
+        LDI  0x78       ' Load screen Y dimension, (120)       
+yloop   ST   0x33       ' s    
+            
+        LDI  0x00       ' Load screen address 0x0800 low 0x00
+        ST   0x30       ' p
+        LDI  0x9f       ' Load screen X dimension, (160)       
+xloop   ST   0x32       ' r
+            
+        LD   0x34   
+        XORI 0xff       ; Toggle colour
+        ST   0x34   
+        POKE 0x30       ; Write low byte of accumulator there
+            
+        INC  0x30       ; X loop
+        LD   0x32   
+        SUBI 0x01  
+        BNE  xloop      ; Branch (address & 0x00FF) - 2
+            
+        INC  0x31       ; Y loop
+        LD   0x33    
+        SUBI 0x01  
+        BNE  yloop      ; Branch (address & 0x00FF) - 2
+        
+forever BRA  forever    ; Branch (address & 0x00FF) - 2

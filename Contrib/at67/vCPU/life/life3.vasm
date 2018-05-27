@@ -1,0 +1,308 @@
+; game of life by John Conway
+; 32X32 runs about 2 fps on a 6.25MHz Gigatron TTL
+; more optimisation: neighbour count buffer is generated from alive cells in cell buffer, pointer arithmetic with offsets
+; and a look up table to evalute neighbours count
+; this world has boundaries
+
+
+vram        EQU     0x0800
+buff0       EQU     0x09A0
+buff1       EQU     0x09D0
+
+cells0      EQU     0x30
+cells1      EQU     0x32
+i           EQU     0x34
+j           EQU     0x35
+neighbours  EQU     0x36
+cell        EQU     0x37
+n_address   EQU     0x38
+buffer0     EQU     0x3A
+buffer1     EQU     0x3C 
+generation  EQU     0x3E
+vbase       EQU     0x40
+pixels      EQU     0x42
+pattern     EQU     0x44
+gliders     EQU     0x46
+lut_modify  EQU     0x48
+j_one       EQU     0x4A
+offset0     EQU     0x4C
+offset1     EQU     0x4E
+offset2     EQU     0x50
+offset3     EQU     0x52
+offset4     EQU     0x54
+offset5     EQU     0x56
+offset6     EQU     0x58
+offset7     EQU     0x5A
+scratch     EQU     0x5C
+
+screen_w    EQU     160
+screen_h    EQU     120
+bounds      EQU     32      ; determines max size of world, limited by available ram in blank scanlines,
+                            ; using bytes per cell, 1 pixel world boundary and two buffers means 46*46 is maximum size
+
+                                        
+_startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
+
+_callTable_         EQU     0x007E      ; call addresses are automatically stored here by the assembler, it grows downwards,
+                                        ; for every NEW call address; make sure it doesn't crash into anything important
+_singleStepWatch_   EQU     neighbours  ; the single step debugger watches this variable location to decide when to step,
+                                        ; choose a variable that is updated often
+
+n_lut       EQU     0x60
+n_lut_cell  EQU     0x62
+
+counts      EQU     0x0300
+
+
+            LDI     0x00        ; look up table that is used to evaluate neighbour counts
+            ST      n_lut
+            ST      n_lut+1
+            ST      n_lut+2     ; self modifying code updates this location with previous generation cell
+            ST      n_lut+4
+            ST      n_lut+5
+            ST      n_lut+6
+            ST      n_lut+7
+            ST      n_lut+8
+            LDI     0xFF
+            ST      n_lut+3
+
+            LDWI    vram
+            STW     vbase       ; vram base address
+            STW     pixels      ; pixel address
+
+            LDWI    buff0
+            STW     buffer0
+            LDWI    buff1
+            STW     buffer1
+            
+            LDWI    lut + 1     ; self modifying address
+            STW     lut_modify
+            LDWI    0x0100
+            STW     j_one
+            
+clear       LDI     0x00        ; clear screen and buffers
+            POKE    vbase
+            LDWI    0x0001
+            ADDW    vbase
+            STW     vbase
+            LD      vbase+1
+            SUBI    0x80
+            BLT     clear
+
+            LDWI    0x09A3      ; start position for gliders
+            STW     gliders
+
+            LDI     0x06        ; number of gliders
+            ST      i
+
+glider      LDW     gliders     
+            STW     pattern
+            LDI     0xFF        
+            POKE    pattern
+            LDW     j_one
+            ADDW    pattern
+            STW     pattern
+            LDI     0xFF
+            POKE    pattern
+            LDW     j_one
+            ADDW    pattern
+            STW     pattern
+            LDI     0xFF
+            POKE    pattern
+            LD      pattern
+            SUBI    0x01
+            ST      pattern
+            LDI     0xFF
+            POKE    pattern
+            LDW     pattern
+            SUBW    j_one
+            STW     pattern
+            LD      pattern
+            SUBI    0x01
+            ST      pattern
+            LDI     0xFF
+            POKE    pattern
+            
+            LD      gliders     ; gap between gliders
+            ADDI    0x05
+            ST      gliders
+            
+            LD      i
+            SUBI    0x01
+            ST      i
+            BGT     glider
+                        
+            LDWI    0x0001
+            STW     j_one
+            STW     generation
+            
+            LDI     (screen_w - bounds*2)/0b10          ; position in screen to render life
+            ST      vbase
+            LDI     (screen_h - bounds*0q2)/0x0002 + 8  ; expressions can use equates and use the same number handling as equates
+            ST      vbase+1
+            
+            LDI     bounds
+            ST      i
+            ST      j
+
+            LDWI    0x0101      ; -ve
+            STW     offset0
+            LDWI    0x0100      ; -ve
+            STW     offset1
+            LDWI    0x00FF      ; -ve
+            STW     offset2
+            LDWI    0x0001      ; +ve
+            STW     offset3
+            LDWI    0x0101      ; +ve
+            STW     offset4
+            LDWI    0x0100      ; +ve
+            STW     offset5
+            LDWI    0x00FF      ; +ve
+            STW     offset6
+            LDWI    0x0001      ; -ve
+            STW     offset7
+            
+            CALL    counts      ; jump across a page boundary
+            
+
+; counts buffer            
+counts      LDW     i           ; buffer0
+            ADDW    buffer0
+            PEEK                ; get buffer0 cell
+            BEQ     continue
+
+            LDW     i           ; buffer1
+            ADDW    buffer1
+            STW     cells1
+            
+            SUBW    offset0     ; -1, -1 neighbour
+            STW     n_address
+            PEEK
+            ADDI    0x01
+            POKE    n_address
+            
+            LDW     cells1      
+            SUBW    offset1     ; 0, -1 neighbour
+            STW     n_address
+            PEEK
+            ADDI    0x01
+            POKE    n_address
+
+            LDW     cells1      
+            SUBW    offset2     ; 1, -1 neighbour
+            STW     n_address
+            PEEK
+            ADDI    0x01
+            POKE    n_address
+
+            LDW     cells1      
+            ADDW    offset3     ; 1, 0 neighbour
+            STW     n_address
+            PEEK
+            ADDI    0x01
+            POKE    n_address
+            
+            LDW     cells1      
+            ADDW    offset4     ; 1, 1 neighbour
+            STW     n_address
+            PEEK
+            ADDI    0x01
+            POKE    n_address
+            
+            LDW     cells1      
+            ADDW    offset5     ; 0, 1 neighbour
+            STW     n_address
+            PEEK
+            ADDI    0x01
+            POKE    n_address
+            
+            LDW     cells1      
+            ADDW    offset6     ; -1, 1 neighbour
+            STW     n_address
+            PEEK
+            ADDI    0x01
+            POKE    n_address
+            
+            LDW     cells1      
+            SUBW    offset7     ; -1, 0 neighbour
+            STW     n_address
+            PEEK
+            ADDI    0x01
+            POKE    n_address
+
+continue    LD      i           ; dec i
+            SUBI    0x01
+            ST      i
+            BGE     counts
+            LDI     bounds
+            ST      i
+
+            LD      j           ; dec j
+            SUBI    0x01
+            ST      j
+            BGE     counts
+            LDI     bounds
+            ST      j
+       
+
+generate    LDW     i           ; buffer1
+            ADDW    buffer1
+            STW     cells1
+            PEEK                ; get neighbours count
+            ST      neighbours  
+            LDI     0x00
+            POKE    cells1      ; reset neighbours count
+            
+            LDW     i           ; buffer0
+            ADDW    buffer0
+            STW     cells0
+            PEEK                ; get cell
+            ST      n_lut_cell  ; save cell into neighbours lut
+
+            LD      neighbours  ; lut evaluates neighbours count
+            ADDI    n_lut
+            POKE    lut_modify  ; lut_modify points to operand in "LD n_lut"
+lut         LD      n_lut       ; get new cell using self modifying code
+
+            POKE    cells0      ; save new cell
+            ST      cell            
+            
+            ;LDW     i           ; draw cell 1x1
+            ;ADDW    vbase
+            ;STW     pixels
+            ;LD      cell
+            ;POKE    pixels
+            
+            LDW     i           ; draw cell 2x2
+            LSLW
+            ADDW    vbase
+            STW     pixels
+            STW     scratch
+            LD      cell
+            POKE    pixels      ; x,   y
+            INC     pixels      
+            POKE    pixels      ; x+1, y
+            INC     pixels+1
+            POKE    pixels      ; x+1, y+1
+            INC     scratch+1
+            POKE    scratch     ; x,   y+1   
+                       
+            LD      i           ; dec i
+            SUBI    0x01
+            ST      i
+            BGE     generate
+            LDI     bounds
+            ST      i
+
+            LD      j           ; dec j
+            SUBI    0x01
+            ST      j
+            BGE     generate
+            LDI     bounds
+            ST      j
+            
+            LDW     generation
+            ADDW    j_one
+            STW     generation
+            
+            BRA     counts
