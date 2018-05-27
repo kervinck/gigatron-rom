@@ -39,6 +39,23 @@ gcl1 {GCL version}
   Plot!                                 {130 GOSUB 20}
   loop]                                 {140 GOTO 80}
 
+----------
+Deployment
+----------
+Translation from GCL to vCPU is still done offline. So the Gigatron
+runs vCPU applications. There are other ways to generate vCPU
+programs, for example through at67's assembler. There are two ways
+to get a vCPU program into the Gigatron. One is by sending it into
+RAM through the input port using the Loader application.  The other
+is to store the object code in the ROM disk portion of the EPROM.
+The file format for exchange of vCPU programs is GT1. This format
+is described in a different document: FileFormat.txt
+
+It should not be really hard to make a built-in GCL translator,
+especially when restricting variable names to 1 character. It is
+also conceivable to hide a GCL translator in the microcontroller
+used for hooking up a PS/2 keyboard.
+
 -----------------
 Programming model
 -----------------
@@ -64,6 +81,48 @@ vSP  is the stack pointer. The stack lives in the zero page top and grows down.
 Program variables are 16-bit words and typically hold a number or a pointer.
 Named variables reside in the zero page. Arbitrary memory can be addressed
 as bytes using 16-bit pointers.
+
+GCL translation is single-pass and doesn't have a linking stage.
+Therefore a typical GCL program has a setup phase followed by a
+main loop.  In the setup phase, variables are initialized with
+values and references to functions or data. When running, function
+calling is done through those variables. vCPU is optimized for
+function calling in that way.  Long functions that don't fit in a
+page should be split into multiple functions.  When a program gets
+bigger than a single segment or page, the setup phase will have to
+hop over to the next page. The clearest way to do that is as follows:
+
+{Start compilation at $200}
+  [def ... ret] Function1=
+  [def ... ret] Function2=
+  $300 call
+{Continue compilation at $300}
+$300:
+  [def ... ret] Function3=
+  [def ... ret] Function4=
+  $400 call
+{Continue compilation at $400}
+$400:
+  [def ... ret] Function5=
+  [do ... loop] {Main loop}
+
+This can be done in a slightly more space-efficient way by using
+"ret" and vLR. This saves 1 byte per page, but is cryptic. Also you
+can't do any function calls in the setup phase as that uses vLR.
+
+{Start compilation at $200. (vLR=$200)}
+  [def ... ret] Function1=
+  [def ... ret] Function2=
+  \vLR>++ ret {Increment high byte of vLR and go there}
+{Continue compilation at $300}
+$300:
+  [def ... ret] Function3=
+  [def ... ret] Function4=
+  \vLR>++ ret
+{Continue compilation at $400}
+$400:
+  [def ... ret] Function5=
+  [do ... loop] {Main loop}
 
 -----------------
 Notes on notation
@@ -151,6 +210,10 @@ i#                      Raw byte-value i
 Versioning
 ----------
 gcl0x gcl1              GCL version. "x" denotes experimental/extended versions
+
+There are two versions of GCL: gcl0x and gcl1. gcl0x is what we
+used to make the built-in applications of ROM v1. gcl1 is the planned
+cosmetic upgrade in notation.
 
 Future extensions
 -----------------
