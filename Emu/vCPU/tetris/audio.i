@@ -22,9 +22,7 @@ resetA_loop     LDI     giga_soundChan1     ; reset low byte
                 INC     scratch
                 INC     scratch
                 DOKE    scratch             ; oscL and oscH
-                LDWI    0x0100              ; increment high byte
-                ADDW    scratch
-                STW     scratch
+                INC     scratch + 1         ; increment high byte
                 LoopCounter ii resetA_loop
                 RET
 

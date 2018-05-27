@@ -19,6 +19,8 @@
 #define VARS_BASE_ADDRESS  0x0030
 #define VIDEO_Y_ADDRESS    0x0009
 
+#define INPUT_KEYS_INI  "input_keys.ini"
+
 
 namespace Editor
 {
@@ -54,6 +56,7 @@ namespace Editor
     void setLoadBaseAddress(uint16_t address);
     void setSingleStepWatchAddress(uint16_t address);
 
+    void initialise(void);
     bool singleStepDebug(void);
     void handleInput(void);
 }

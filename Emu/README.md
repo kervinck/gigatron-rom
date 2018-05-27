@@ -169,4 +169,3 @@ _singleStepWatch_   EQU     xyPos
 ## TODO
 - Test under Linux, MAC and Android.<br/>
 - Add an inbuilt vCPU and native code disassembler.<br/>
-- Add a help menu.<br/>

@@ -44,7 +44,7 @@ _singleStepWatch_   EQU     i           ; the single step debugger watches this 
  
 start       EQU     0x200
 loopInit    EQU     0x300
-vBlank0     EQU     0x400
+vBlank      EQU     0x400
 
 ; look up table that retrieves skip values based on max velocity component
 skipLut     EQU     0x500
@@ -239,22 +239,17 @@ draw        LDW     xPos
             ST      i
             BGT     loop
 
-            CALL    vBlank0
+            CALL    vBlank
 
             BRA     loopInit
             
 
             ; subroutines
-vBlank0     LD      frameCount
+vBlank      LD      frameCount
             SUBW    frame
-            BEQ     vBlank0
+            BEQ     vBlank
             LD      frameCount
             STW     frame
-            RET
-
-vBlank1     LD      videoY
-            ANDI    0x01
-            BEQ     vBlank1
             RET
 
 

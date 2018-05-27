@@ -25,9 +25,10 @@ namespace Expression
         bool* h = _hexaDecimalChars; h['0']=1; h['1']=1; h['2']=1; h['3']=1; h['4']=1; h['5']=1; h['6']=1; h['7']=1; h['8']=1; h['9']=1; h['A']=1; h['B']=1; h['C']=1; h['D']=1; h['E']=1; h['F']=1;
     }
 
-    void strToUpper(std::string& s)
+    std::string& strToUpper(std::string& s)
     {
         std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {return toupper(c);} );
+        return s;
     }
 
     NumericType getBase(const std::string& input, long& result)

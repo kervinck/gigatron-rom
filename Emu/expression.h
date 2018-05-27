@@ -8,7 +8,7 @@ namespace Expression
 
 
     void initialise(void);
-    void strToUpper(std::string& s);
+    std::string& strToUpper(std::string& s);
 
     NumericType getBase(const std::string& input, long& result);
     bool stringToU8(const std::string& token, uint8_t& result);

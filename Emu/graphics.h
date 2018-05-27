@@ -37,10 +37,13 @@ namespace Graphics
 
     SDL_Window* getWindow(void);
     SDL_Renderer* getRenderer(void);
-    SDL_Texture* getTexture(void);
-    SDL_Surface* getSurface(void);
+    SDL_Texture* getScreenTexture(void);
+    SDL_Surface* getScreenSurface(void);
+    SDL_Texture* getHelpTexture(void);
+    SDL_Surface* getHelpSurface(void);
     SDL_Surface* getFontSurface(void);
 
+    void setDisplayHelpScreen(bool display);
 
     void initialise(void);
 
@@ -51,7 +54,7 @@ namespace Graphics
     void refreshScreen(void);
 
     void drawLeds(void);
-    bool drawText(const std::string& text, int x, int y, uint32_t colour, bool invert, int invertSize);
+    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t colour, bool invert, int invertSize, bool fullscreen=false, uint32_t commentColour=0x00000000, uint32_t sectionColour=0x00000000);
     void drawDigitBox(uint8_t digit, int x, int y, uint32_t colour);
 
     void renderText(void);

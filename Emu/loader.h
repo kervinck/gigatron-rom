@@ -14,6 +14,8 @@
 #define DEFAULT_START_ADDRESS_HI  0x02
 #define DEFAULT_START_ADDRESS_LO  0x00
 
+#define HIGH_SCORES_INI  "high_scores.ini"
+
 
 namespace Loader
 {

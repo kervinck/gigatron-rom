@@ -24,6 +24,7 @@ int main(int argc, char* argv[])
     Cpu::initialise(S);
     Audio::initialise();
     Graphics::initialise();
+    Editor::initialise();
     Loader::initialise();
     Expression::initialise();
     Assembler::initialise();

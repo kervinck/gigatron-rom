@@ -1573,9 +1573,9 @@ namespace Assembler
             std::getline(infile, lineToken);
             lineTokens.push_back(lineToken);
 
-            if(!infile.good() &&  !infile.eof())
+            if(!infile.good()  &&  !infile.eof())
             {
-                fprintf(stderr, "Assembler::assemble() : Bad lineToken : '%s' : in %s on line %d\n", lineToken.c_str(), filename.c_str(), numLines+1);
+                fprintf(stderr, "Assembler::assemble() : Bad lineToken : '%s' : in %s : on line %d\n", lineToken.c_str(), filename.c_str(), numLines+1);
                 return false;
             }
 

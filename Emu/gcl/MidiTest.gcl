@@ -133,7 +133,7 @@ $0300:
 ] PlayMidiSync=
 
 
-[def { MidiEndNote -- starts a MIDI note }
+[def { MidiEndNote -- ends a MIDI note }
   push
   midiCommand $03& scratch>.              { scratch high = channel }
   $0 scratch<.                            { scratch low = $00 }

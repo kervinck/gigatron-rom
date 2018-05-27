@@ -14,9 +14,6 @@
 #include "inih/INIReader.h"
 
 
-#define HIGH_SCORES_INI  "high_scores.ini"
-
-
 namespace Loader
 {
     enum LoaderState {FirstByte=0, MsgLength, LowAddress, HighAddress, Message, LastByte, ResetIN, NumLoaderStates};
