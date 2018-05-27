@@ -1,0 +1,70 @@
+; equates are non arithmetic string substitutions
+; numeric literals can be of the following formats:
+; hex 0x0000 or $0000
+; dec 1234
+; oct 0o777 or 0q777
+; bin 0b01011111
+# comments can be started with ; or #
+
+vram        EQU     0x0800
+rand        EQU     0x06
+vbase       EQU     0x30
+pixels      EQU     0x32 
+xyPos       EQU     0x34
+xyVel       EQU     0x36
+
+xBounds     EQU     0x9F
+yBounds     EQU     0x77
+
+
+_startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
+
+_callTable_         EQU     0x007E      ; this grows downwards as you use more CALL's, it will crash into program variables if you are not careful
+                                        ; "_callTable_" is a reserved word, do not use it for anything other than it's intended use
+
+_singleStepWatch_   EQU     xyPos       ; the single step debugger watches this variable location to decide when to step,
+                                        ; choose a variable that is updated often
+
+
+            LDWI    vram     
+            STW     vbase       ; vram base address
+            STW     pixels      ; pixel address
+            LDWI    0x0101
+            STW     xyPos       ; XY position
+            LDWI    0x0101     
+            STW     xyVel       ; XY velocity
+
+; labels are parsed to generate the correct offsets for branches        
+xbounds     LD      xyPos       ; x position bounds checking
+            BEQ     xflip
+            SUBI    xBounds
+            BLT     ybounds
+        
+xflip       LD      xyVel
+            XORI    0xFE        ; flip x velocity
+            ST      xyVel
+        
+ybounds     LD      xyPos+1     ; y position bounds checking
+            BEQ     yflip
+            SUBI    yBounds
+            BLT     velocity
+        
+yflip       LD      xyVel+1
+            XORI    0xFE        ; flip y velocity
+            ST      xyVel+1
+        
+velocity    LD      xyPos
+            ADDW    xyVel
+            ST      xyPos
+            LD      xyPos+1
+            ADDW    xyVel+1
+            ST      xyPos+1
+            
+            LDW     vbase       ; generate vram address
+            ADDW    xyPos
+            STW     pixels
+            LD      rand        ; grab an interesting colour
+            POKE    pixels      ; plot new pixel
+            
+            BRA     xbounds
+            

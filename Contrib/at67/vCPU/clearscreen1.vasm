@@ -1,0 +1,94 @@
+; **************************************************************************************************
+; **************************************************************************************************
+;  THIS WILL NOT RUN ON REAL HARDWARE UNLESS YOU BURN THE NATIVE CODE AT THE BOTTOM
+;  OF THIS FILE INTO THE GIGATRONS ROM AT THE CORRECT ADDRESS, EMULATION ONLY!
+; **************************************************************************************************
+; **************************************************************************************************
+
+vram        EQU     0x0800
+REENTER     EQU     0x03CB
+sysFn       EQU     0x22 
+
+i           EQU     0x30
+j           EQU     0x31
+vbase       EQU     0x40
+
+                                        
+SYS_ClearRow32_56   EQU     0x2300      ; clear 32 pixels at a time, native code that is defined with either DBR or DWR is written to ROM at this address
+
+                                        
+            LDWI    vram
+            STW     vbase       ; vram base address
+            
+            LDWI    SYS_ClearRow32_56   ; clears 32 row pixels at a time
+            STW     sysFn
+
+clear       SYS     0xF2        ; SYS_ClearRow32_56, 270 - 56/2 = 0xF2
+            LDWI    0x0020
+            ADDW    vbase
+            STW     vbase
+            LD      vbase+1
+            SUBI    0x7F
+            BLT     clear
+            LDI     0x08        ; finish off last row
+            ST      i
+last_row    SYS     0xF2        ; SYS_ClearRow32_56, 270 - 56/2 = 0xF2
+            LDWI    0x0020
+            ADDW    vbase
+            STW     vbase
+            LD      i
+            SUBI    0x01
+            ST      i
+            BGT     last_row
+            
+loop        BRA     loop
+
+
+; these are native code routines that are written into ROM using the DBR command, (Define Byte ROM), at the equate defined
+; above: this native code is specific to this vCPU asm module with the input registers that it accepts
+;SYS_ClearRow32_56       DBR $11 $40 $15 $41 $00 $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00
+;                        DBR $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00
+;                        DBR $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00
+;                        DBR $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $DE $00 $14 $03 $E0 $CB $00 $E4
+
+SYS_ClearRow32_56       .LD     [0x40],X
+                        .LD     [0x41],Y
+                        .LD     0x00
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .ST     [Y,X++]
+                        .NOP                ; pad instructions so odd(14 + number of instructions) = true
+
+                        .LD     REENTER/256,y
+                        .JMP    y,REENTER
+                        .LD     0xE4        ; 0 - ((14 + number of instructions + 3) / 2), odd(14 + number of instructions) = true
+                        
