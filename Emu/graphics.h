@@ -20,6 +20,8 @@
 #define FONT_HEIGHT      8
 #define FONT_GAP_Y       4
 #define FONT_CELL_Y      (FONT_HEIGHT+FONT_GAP_Y)
+#define MAX_CHARS_SCREEN (SCREEN_WIDTH/FONT_WIDTH)
+#define MAX_CHARS_HELP   80
 #define CHARS_PER_ROW    16
 #define HEX_CHARS_X      8
 #define HEX_CHARS_Y      32

@@ -117,8 +117,8 @@ namespace Graphics
         for(int i=0; i<numLines; i++)
         {
             size_t nonWhiteSpace = lineTokens[i].find_first_not_of("  \n\r\f\t\v");
-            if(nonWhiteSpace == std::string::npos) lineTokens[i] = std::string(80, ' ');
-            if(lineTokens[i].size() < 80) lineTokens[i] += std::string(80 - lineTokens[i].size(), ' ');
+            if(nonWhiteSpace == std::string::npos) lineTokens[i] = std::string(MAX_CHARS_HELP, ' ');
+            if(lineTokens[i].size() < MAX_CHARS_HELP) lineTokens[i] += std::string(MAX_CHARS_HELP - lineTokens[i].size(), ' ');
             drawText(lineTokens[i], (uint32_t*)_helpSurface->pixels, 0, i*FONT_HEIGHT + (maxLines - numLines)/2 * FONT_HEIGHT, 0xFF00FF00, false, 0, true, 0xFFFFFFFF, 0xFF00FFFF);
         }
 

@@ -1,7 +1,7 @@
 # gtemuSDL
 gtemuSDL is an emulator for the Gigatron TTL microcomputer, written in C++ using SDL2.<br/>
 This project provides support for Microsoft Windows and should be compatible with Linux, MacOS<br/>
-and possibly even Android. As of v0.4.8 it has only been tested on Microsoft Windows10.<br/>
+and possibly even Android. As of v0.4.9 it has only been tested on Microsoft Windows10.<br/>
 
 ## Features
 - Variable timing from a minimum of 60FPS up to whatever your PC can handle.<br/>
@@ -27,6 +27,8 @@ and possibly even Android. As of v0.4.8 it has only been tested on Microsoft Win
 - An inbuilt file and directory browser for uploading.<br/>
 - A VideoB scanline disable option, run **_"rom_test.vasm"_**, (**_emulation only_**), it will disable a<br/>
   second scanline offering around **_100%_** more processor time for vCPU code.<br/>
+- Input keys easily configurable through an INI file.<br/>
+- On screen help menu, (accessible with 'H/h' by default), that fully explains each key and it's function.<br/>
 
 ## YouTube
 - https://www.youtube.com/watch?v=pH4st5dz7Go<br/>
@@ -41,7 +43,8 @@ and possibly even Android. As of v0.4.8 it has only been tested on Microsoft Win
 - https://stackoverflow.com/questions/9329406/evaluating-arithmetic-expressions-from-string-in-c<br/>
 
 ## Building
-- CMake 3.7 or higher is required for building, has only been tested on Windows so far.<br/>
+- CMake 3.7 or higher is required for building, has been tested on Windows with Visual Studio and<br/>
+  gcc/mingw32, (thanks to Cwiiis https://github.com/Cwiiis)<br/>
 - A C++ compiler that supports modern STL.<br/>
 - Requires the latest version of SDL2 and it's appropriate include/library/shared files.<br/>
 
@@ -50,6 +53,16 @@ and possibly even Android. As of v0.4.8 it has only been tested on Microsoft Win
   **_"EmuFont-96x48.bmp"_** to an appropriate directory; run the executable from there.<br/>
 - Create a **_"vCPU"_** directory within the above directory and add any user generated vCPU<br/>
   or **_GT1_** files that you want to upload to the emulator.<br/>
+- The emulator will search for and use a file named **_"high_scores.ini"_** in it's current<br/>
+  working directory. This file allows the emulator to load and save segments of memory and have them<br/>
+  regularly updated, (can be used for debugging, replays, high scores, etc), see the file for help.<br/>
+  Files ending in **_".dat"_** will be created in the current working directory of the emulator for<br/>
+  every entry that is made and successfully parsed within **_"high_scores.ini"_**. These **_".dat"_**<br/>
+  files contain the individual memory segments loaded and saved to disk for each game/application.<br/>
+- The emulator will search for and use a file named **_"input_keys.ini"_** in it's current<br/>
+  working directory. This file allows the emulator's keys to be completely user configured. The on<br/>
+  screen help menu also uses this file to display help instructions. See the file for help on input<br/>
+  configuration.<br/>
 
 ## Controls
 |Key        | Function                                                                          |
