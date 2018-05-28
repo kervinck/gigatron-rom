@@ -29,6 +29,9 @@ and possibly even Android. As of v0.4.9 it has only been tested on Microsoft Win
   second scanline offering around **_100%_** more processor time for vCPU code.<br/>
 - Input keys easily configurable through an INI file.<br/>
 - On screen help menu, (accessible with 'H/h' by default), that fully explains each key and it's function.<br/>
+- Optional configuration files, **_graphics_config.ini_**, **_input_config.ini_** and **_high_scores.ini_**.<br/>
+- You may now start the executable anywhere, the default ROM file and default font are now built into the<br/>
+  executable.<br/>
 
 ## YouTube
 - https://www.youtube.com/watch?v=pH4st5dz7Go<br/>
@@ -49,24 +52,37 @@ and possibly even Android. As of v0.4.9 it has only been tested on Microsoft Win
 - Requires the latest version of SDL2 and it's appropriate include/library/shared files.<br/>
 
 ## Installation
-- After building, copy the executable, SDL2 shared library/DLL, **_"theloop2.rom"_** and<br/>
-  **_"EmuFont-96x48.bmp"_** to an appropriate directory; run the executable from there.<br/>
-- Create a **_"vCPU"_** directory within the above directory and add any user generated vCPU<br/>
-  or **_GT1_** files that you want to upload to the emulator.<br/>
-- The emulator will search for and use a file named **_"high_scores.ini"_** in it's current<br/>
-  working directory. This file allows the emulator to load and save segments of memory and have them<br/>
-  regularly updated, (can be used for debugging, replays, high scores, etc), see the file for help.<br/>
-  Files ending in **_".dat"_** will be created in the current working directory of the emulator for<br/>
-  every entry that is made and successfully parsed within **_"high_scores.ini"_**. These **_".dat"_**<br/>
-  files contain the individual memory segments loaded and saved to disk for each game/application.<br/>
+- After building, copy the executable and SDL2 shared library\/DLL to an appropriate directory;<br/>
+  run the executable from there.<br/>
+- The default ROM file and default font are now built into the executable., (thanks to  Cwiiis for<br/>
+  the idea). The only dependency is the shared library\/DLL from SDL2 that either must be in the current<br/>
+  working directory path or in the appropriate system directory.<br/>
+- Custom ROM's can be used by placing them in the current working directory with the executable and naming<br/>
+  them **_"theloop.2.rom"_**.<br/>
+
+## Configuration
+- The emulator may be placed anywhere in any directory as long as it has access to the SDL2 shared library.<br/>
+- The emulator will search for and use a file named **_graphics_config.ini_** in it's current<br/>
+  working directory. This file allows the emulator's graphics and video options to be completely user<br/>
+  configured. The example **_graphics_config.ini_** file contains instructions on it's use.<br/>
+  e.g.  Fullscreen = 1, will create a full sized screen that minimises when it loses focuse.<br/>
+        Fullscreen = 0, will create a window that does not minimise when it loses focus.<br/>
 - The emulator will search for and use a file named **_"input_keys.ini"_** in it's current<br/>
   working directory. This file allows the emulator's keys to be completely user configured. The on<br/>
   screen help menu also uses this file to display help instructions. See the file for help on input<br/>
   configuration.<br/>
 
+- The emulator will search for and use an optional file named **_"high_scores.ini"_** in it's current<br/>
+  working directory. This file allows the emulator to load and save segments of memory and have them<br/>
+  regularly updated, (can be used for debugging, replays, high scores, etc), see the file for help.<br/>
+  Files ending in **_".dat"_** will be created in the current working directory of the emulator for<br/>
+  every entry that is made and successfully parsed within **_"high_scores.ini"_**. These **_".dat"_**<br/>
+  files contain the individual memory segments loaded and saved to disk for each game/application.<br/>
+
 ## Controls
 |Key        | Function                                                                          |
 |:---------:|-----------------------------------------------------------------------------------|
+|H          | Displays a help screen showing the currently configured keys.                     |
 |ESC        | Quits the application.                                                            |
 |L or l     | Loads external vCPU files within the vCPU directory, this code is uploaded to     |
 |           | an editable load address. Loading user vCPU code to system critical addresses     |

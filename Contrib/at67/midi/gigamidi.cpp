@@ -169,10 +169,10 @@ void outputPYfooter(std::ofstream& outfile)
 
 void main(int argc, char* argv[])
 {
-    if(argc != 8)
+    if(argc != 9)
     {
-        fprintf(stderr, "Usage:   gigamidi <input filename> <output filename> <format 0, 1, 2 or 3> <address in hex> <offset in hex> <count> <line length>\n");
-        fprintf(stderr, "Example: gigamidi game_over.bin game_over.i 0 0x8000 0 0 100\n");
+        fprintf(stderr, "Usage:   gigamidi <input filename> <output filename> <int format 0, 1, 2 or 3> <uint16_t address in hex> <uint16_t offset in hex> <int count> <int line_length> <float timing_adjust>\n");
+        fprintf(stderr, "Example: gigamidi game_over.bin game_over.i 0 0x8000 0 0 100 0.5\n");
         fprintf(stderr, "Input:   miditones binary file produced with miditones, e.g. miditones -t4 -b <filename>.bin\n");
         fprintf(stderr, "Format:  0 = vCPU ASM, 1 = GCL, 2 = C/C++, 3 = Python\n");
         exit(0);
@@ -182,7 +182,7 @@ void main(int argc, char* argv[])
     std::string outFileName = std::string(argv[2]);
 
     int format = std::stoi(std::string(argv[3]));
-    if(format < Format::vCPU  || format >= Format::NumFormats)
+    if(format < Format::vCPU  ||  format >= Format::NumFormats)
     {
         fprintf(stderr, "Format must be 0, 1, 2 or 3\n");
         exit(0);
@@ -198,8 +198,8 @@ void main(int argc, char* argv[])
 
     uint16_t count;
     count = std::stoi(argv[6]);
-
     int lineLength = std::stoi(std::string(argv[7]));
+    double timingAdjust = std::stod(std::string(argv[8]));
 
     std::ifstream infile(inFileName, std::ios::binary | std::ios::in);
     if(!infile.is_open())
@@ -291,7 +291,7 @@ void main(int argc, char* argv[])
         {
             gigaSize += 1;
             uint16_t delay16 = ((command<<8) | *_midiPtr++); midiSize--;
-            uint8_t delay8 = uint8_t(floor(double(delay16) / 16.6666666667 + 0.5));  // maximum delay is 0x7F * 16.6666666667, (2116ms)
+            uint8_t delay8 = uint8_t(double(delay16) / 16.6666666667 + 0.5);  // maximum delay is 0x7F * 16.6666666667, (2116ms)
             if(delay16 > 2116) 
             {
                 delay8 = 0x7F;
@@ -299,6 +299,14 @@ void main(int argc, char* argv[])
             }
 
             totalTime16 += double(delay16);
+
+            // Adjust delay8 to try and keep overall timing as accurate as possible
+            if(timingAdjust)
+            {
+                if(totalTime16 > totalTime8 + double(delay8)*16.6666666667 + 16.6666666667*timingAdjust  &&  delay8 < 0x7F)  delay8++;
+                if(totalTime16 < totalTime8 + double(delay8)*16.6666666667 - 16.6666666667*timingAdjust  &&  delay8 > 0x00)  delay8--;
+            }
+
             totalTime8 += double(delay8) * 16.6666666667;
 
             switch(format)
@@ -350,7 +358,7 @@ void main(int argc, char* argv[])
         }
 
         // Last segment points back to address, (can be user edited in output source file to point to a different MIDI stream)                
-        if(midiSize == 0  &&  count  &&  offset)
+        if(midiSize == 0)
         {
             switch(format)
             {

@@ -4,9 +4,9 @@
 #include <stdint.h>
 
 
-#define MAJOR_VERSION "0.4"
-#define MINOR_VERSION "9"
-#define VERSION_STR "Ver: " MAJOR_VERSION "." MINOR_VERSION
+#define MAJOR_VERSION "0.5"
+#define MINOR_VERSION "0"
+#define VERSION_STR "gtemuSDL v" MAJOR_VERSION "." MINOR_VERSION
 
 #define ROM_SIZE (1<<16)
 #define RAM_SIZE (1<<16) // Can be 32k or 64k
@@ -14,10 +14,21 @@
 #define BOOT_COUNT 0x0004
 #define BOOT_CHECK 0x0005
 
+#if defined(_WIN32)
+#define _EXIT_(f)   \
+    system("pause");\
+    exit(f);
+#else
+#define _EXIT_(f)   \
+    system("read"); \
+    exit(f);
+#endif
+
 // At least on Windows, _X is a constant defined somewhere before here
 #ifdef _X
 #  undef _X
 #endif
+
 
 namespace Cpu
 {

@@ -1182,7 +1182,7 @@ namespace Audio
         {
             SDL_Quit();
             fprintf(stderr, "Audio::initialise() : failed to initialise SDL audio\n");
-            exit(EXIT_FAILURE);
+            _EXIT_(EXIT_FAILURE);
         }
         SDL_PauseAudio(0);
     }

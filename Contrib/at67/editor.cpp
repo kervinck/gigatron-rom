@@ -44,7 +44,7 @@ namespace Editor
     bool _singleStepMode = false;
     uint32_t _singleStepTicks = 0;
     uint8_t _singleStepWatch = 0x00;
-    const std::string _basePath = "/vCPU";
+    const std::string _srcPath = "/";
     std::string _cwdPath = "";
     std::string _filePath = "";
     bool _startMusic = false;
@@ -100,7 +100,7 @@ namespace Editor
         std::string key = Expression::strToUpper(_iniReader.Get(sectionString, iniKey, defaultKey));
         if(_sdlKeys.find(key) == _sdlKeys.end())
         {
-            fprintf(stderr, "Editor::initialise() : key %s not recognised in INI file '%s' : reverting to default key %s.\n", key.c_str(), INPUT_KEYS_INI, defaultKey.c_str());
+            fprintf(stderr, "Editor::initialise() : key %s not recognised in INI file '%s' : reverting to default key %s.\n", key.c_str(), INPUT_CONFIG_INI, defaultKey.c_str());
             scanCode = _sdlKeys[defaultKey];
             return false;
         }
@@ -115,7 +115,7 @@ namespace Editor
         char cwdPath[FILENAME_MAX];
         getcwd(cwdPath, FILENAME_MAX);
         _cwdPath = std::string(cwdPath);
-        _filePath = _cwdPath + _basePath;
+        _filePath = _cwdPath + _srcPath;
 
         // Keyboard to SDL key mapping
         _sdlKeys["ENTER"]            = SDLK_RETURN;
@@ -271,11 +271,11 @@ namespace Editor
         _inputKeys["Step"]        = SDLK_F10;
 
         // Input configuration
-        INIReader iniReader(INPUT_KEYS_INI);
+        INIReader iniReader(INPUT_CONFIG_INI);
         _iniReader = iniReader;
         if(_iniReader.ParseError() < 0)
         {
-            fprintf(stderr, "Editor::initialise() : couldn't load INI file '%s' : reverting to default keys.\n", INPUT_KEYS_INI);
+            fprintf(stderr, "Editor::initialise() : couldn't load INI file '%s' : reverting to default keys.\n", INPUT_CONFIG_INI);
             return;
         }
 
@@ -291,7 +291,7 @@ namespace Editor
         {
             if(section.find(sectionString) == section.end())
             {
-                fprintf(stderr, "Editor::initialise() : INI file '%s' has bad Sections : reverting to default keys.\n", INPUT_KEYS_INI);
+                fprintf(stderr, "Editor::initialise() : INI file '%s' has bad Sections : reverting to default keys.\n", INPUT_CONFIG_INI);
                 break;
             }
 
@@ -683,7 +683,7 @@ namespace Editor
             {
                 setSingleStep(false); 
                 setSingleStepMode(false);
-                fprintf(stderr, "Editor::singleStepDebug() : Single step stall for %d milliseconds : exiting debugger...\n", SDL_GetTicks() - _singleStepTicks);
+                fprintf(stderr, "Editor::singleStepDebug() : Single step stall for %d milliseconds : exiting debugger.\n", SDL_GetTicks() - _singleStepTicks);
             }
             // Watch variable 
             else if(Cpu::getRAM(_singleStepWatchAddress) != _singleStepWatch) 

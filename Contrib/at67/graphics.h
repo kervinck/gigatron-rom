@@ -31,6 +31,8 @@
 #define MENU_START_X     488
 #define MENU_START_Y     0
 
+#define GRAPHICS_CONFIG_INI  "graphics_config.ini"
+
 
 namespace Graphics
 {

@@ -6,26 +6,12 @@ code data that you can include in your projects for MIDI scores.<br/>
 A single source file using any modern C\+\+11 or higher compiler, trivial to build at a command prompt.</br>
 
 ## Usage
-- gigamidi \<input filename\> \<output filename\> \<format 0, 1, 2, 3\> \<address in hex\> \<offset in hex\> \<count\> \<line length\><br/>
-- Input: Miditones binary file produced with miditones, e.g. miditones -t4 -b \<filename\>.bin<br/>
+- gigamidi \<input filename\> \<output filename\> \<format 0, 1, 2, 3\> \<address in hex\> \<offset in hex\></br>
+\<int count> \<int line_length> \<float timing_adjust><br/></br>
+- Input: Miditones binary file produced with miditones:
+  e.g.  miditones -t4 -b \<filename\>.bin, 4 channels, binary.<br/>
+        miditones -t4 -b -s2 -pi \<filename\>.bin, 4 channels, binary, use method2 for prioritising notes, disable drums.<br/>
 - Format: 0 = vCPU ASM, 1 = GCL, 2 = C/C++, 3 = Python<br/>
-
-## Address
-The address, **_(specified in hex)_**, is the start address in RAM of where the MIDI byte sequence will be loaded to.<br/>
-
-## Offset
-The offset, **_(specified in hex)_**, is the offset used to determine the starting location of each new segment.<br/>
-
-## Count
-The count is the maximum number of bytes contained within each segment.
-
-## Line length
-The line length specifies the maximum size of each line of output source code.<br/>
-
-## Example
-gigamidi game_over.bin game_over.i 0 0x08A0 0x100 96 100<br/>
-This would segment the MIDI stream into the unused areas of video memory, the segments are linked together<br/>
-through the **_0xD0_** Segment command, (see below), and are automatically fetched and played in sequence.<br/>
 
 ## Format
 The output format is very similar to the Miditones output format except for a few crucial differences.<br/>
@@ -39,15 +25,152 @@ resolution; this has a number of important impacts.
     - Very short delays will either be rounded down to 0ms or rounded up to 16.6666667ms, this **_will_** affect<br/>
 timing, how much of a problem it causes is completely dependent on the MIDI score and your playback architecture.<br/>
 
+## Address
+The address, **_(specified in hex)_**, is the start address in RAM of where the MIDI byte sequence will be loaded to.<br/>
+
+## Offset
+The offset, **_(specified in hex)_**, is the offset used to determine the starting location of each new segment.<br/>
+
+## Count
+The count is the maximum number of bytes contained within each segment.
+
+## Line length
+The line length specifies the maximum size of each line of output source code.<br/>
+
+## Timing Adjust
+The timing adjust specifies a delta that attempts to adjust the overall timing to more closely match the original timing.<br/>
+Normal values are {0.0...1.5}, results will vary depending on many factors, experimentation is key.
+
+## Example
+gigamidi game_over.bin game_over.i 0 0x08A0 0x100 96 100<br/>
+This would segment the MIDI stream into the unused areas of video memory, the segments are linked together<br/>
+through the **_0xD0_** Segment command, (see below), and are automatically fetched and played in sequence.<br/>
+
+
 ## Player
 
-There is currently a MIDI player written in vCPU ASM that implements all the functionality within this specification.<br/>
-Other languages are yet to be implemented as of the date of this document, but it is not a difficult task to accomplish.<br/>
+There is currently a MIDI player written in vCPU ASM and GCL that implements all the functionality within this<br/> specification.<br/>
 
 Once a player has been written, it expects to be called at least once every 16.66666667ms, the simplest way to achieve this,<br/>
 is to wait for **_VBlank_** and then call the player; this will work perfectly unless other parts of your code spend more than<br/>
 one VBlank processing. If this is the case, these hot spots will need to have a **_Check VBlank Call Player_** function within<br/>
 their loops or code.<br/>
+
+**_GCL Player_**
+~~~
+gcl0x
+
+[def { ResetAudio -- reset audio hardware }
+  0 midiCommand=
+  0 midiDelay=
+  0 midiNote=
+  0 frameCountPrev=
+  $01FC midiChannel=
+  $8000 midiStreamPtr=
+  $01FA scratch= 
+
+  3 ii=
+  [do
+    $FA scratch<.   { reset low byte }
+    $0300 scratch:  { Doke $0300 wavA, wavX}  
+    scratch<++      { scratch + 0x0002 }
+    scratch<++
+    $0000 scratch:  { Doke $0000 keyL, keyH }
+    scratch<++      { scratch + 0x0002 }
+    scratch<++
+    scratch:        { Doke vAC oscL, oscH }
+    scratch>++      { scratch + 0x0100 }
+
+  ii 1- ii=
+  if>=0 loop]  
+
+  ret
+] ResetAudio=
+
+
+[def { PlayMidiAsync -- play MIDI stream asynchronous to VBlank; use this one in processing loops that take longer than a VSync period }
+  push
+  \frameCount, frameCountPrev- frameCountPrev=
+  [if<>0 PlayMidiSync!]
+  \frameCount, frameCountPrev=
+  pop ret
+] PlayMidiAsync=
+
+
+[def { PlayMidiSync -- plays MIDI stream, use this after your main VBlank loop }
+  push
+  [do
+    $02 \soundTimer=                      { keep pumping soundTimer, so that global sound stays alive }
+    [midiDelay
+      if>0 midiDelay 1- midiDelay=        { if midiDelay>0 midiDelay-- return }
+     pop ret]
+    
+    midiStreamPtr, midiCommand=           { Peek(midiStreamPtr) }
+    midiStreamPtr 1+ midiStreamPtr=       { midiStreamPtr++ }
+    midiCommand $F0& scratch=
+    [scratch $90^ if=0 MidiStartNote!]
+    [scratch $80^ if=0 MidiEndNote!]
+    [scratch $D0^ if=0 MidiSegment!]
+    [scratch $80& 
+      if=0 midiCommand midiDelay=         { delay = 0XXXXXXX return }
+     pop ret]
+  loop]
+] PlayMidiSync=
+
+
+[def { MidiEndNote -- ends a MIDI note }
+  push
+  midiCommand $03& scratch>.              { scratch high = channel }
+  $0 scratch<.                            { scratch low = $00 }
+  scratch midiChannel+ scratch=           { scratch += midiChannel }
+  $0000 scratch:                          { Doke(scratch) = $0000 }
+  pop ret
+] MidiEndNote=
+
+
+[def { MidiSegment -- jumps to a new MIDI segment }
+  push
+  midiStreamPtr; midiStreamPtr=
+  pop ret
+] MidiSegment=
+
+
+\vLR>++ ret
+$0300:
+[def { MidiStartNote -- starts a MIDI note }
+  push
+  \notesTable scratch=                    { scratch = \notesTable }
+  midiStreamPtr, 10- 1<< 2-               { vAC = (Peek(midiStreamPtr) - 10)*2 - 2 }
+  scratch+ scratch=                       { scratch = scratch + vAC }
+  0? midiNote<.                           { midiNote low = LUP(scratch + 0) }
+  scratch 1? midiNote>.                   { midiNote high = LUP(scratch + 1) }
+  midiCommand $03& scratch>.              { scratch high = channel }
+  $0 scratch<.                            { scratch low = $00 }
+  scratch midiChannel+ scratch=           { scratch += midiChannel }
+  midiNote scratch:                       { Doke(scratch) = midiNote }
+  midiStreamPtr 1+ midiStreamPtr=         { midiStreamPtr++ }
+  pop ret
+] MidiStartNote=
+
+
+{ Main }
+\vLR>++ ret
+$0400:
+{ Reset audio hardware }
+ResetAudio!
+
+{ Loop forever }
+[do
+  { Wait for VBlank }
+  [do \frameCount, frameCountPrev- if=0 loop]
+  \frameCount, frameCountPrev=
+
+  {play MIDI stream synchronous to VBlank; use this every VBlank }
+  PlayMidiSync!
+loop]
+~~~
+
+**_VASM Player_**
 ~~~
 playMidi        LDI     0x02                ; keep pumping soundTimer, so that global sound stays alive
                 ST      giga_soundTimer

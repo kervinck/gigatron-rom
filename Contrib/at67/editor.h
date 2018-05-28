@@ -19,7 +19,7 @@
 #define VARS_BASE_ADDRESS  0x0030
 #define VIDEO_Y_ADDRESS    0x0009
 
-#define INPUT_KEYS_INI  "input_keys.ini"
+#define INPUT_CONFIG_INI  "input_config.ini"
 
 
 namespace Editor

@@ -1,15 +1,29 @@
 #include <fstream>
+#include <iomanip>
+#include <iostream>
 #include <algorithm>
 
 #include "graphics.h"
 #include "timing.h"
 #include "editor.h"
 #include "loader.h"
+#include "expression.h"
+#include "inih/INIReader.h"
+#include "defaultKeys.h"
+
+// Use this if you ever want to change the default font, but it better be 6x8 per char or otherwise you will be in a world of hurt
+#ifndef CREATE_FONT_HEADER
+#include "emuFont96x48.h"
+#endif
 
 
 namespace Graphics
 {
     int _width, _height;
+    bool _fullScreen = false;
+    bool _resizable = false;
+    bool _borderless = true;
+    bool _vSync = false;
 
     bool _displayHelpScreen = false;
     uint8_t _displayHelpScreenAlpha = 0;
@@ -38,12 +52,15 @@ namespace Graphics
     SDL_Surface* getHelpSurface(void) {return _helpSurface;}
     SDL_Surface* getFontSurface(void) {return _fontSurface;}
 
+    INIReader _iniReader;
+
+
     void setDisplayHelpScreen(bool display)
     {
         _displayHelpScreen = display;
     }
 
-    void createHelpSurface(int width, int height)
+    SDL_Surface* createSurface(int width, int height)
     {
         uint32_t rmask, gmask, bmask, amask;
 
@@ -59,61 +76,97 @@ namespace Graphics
         amask = 0xff000000;
 #endif
 
-        _helpSurface = SDL_CreateRGBSurface(0,width, height, 32, rmask, gmask, bmask, amask);
-        if(_helpSurface == NULL)
+        SDL_Surface* surface = SDL_CreateRGBSurface(0, width, height, 32, rmask, gmask, bmask, amask);
+        if(surface == NULL)
         {
             SDL_Quit();
-            fprintf(stderr, "Graphics::createHelpSurface() :  failed to create SDL surface\n");
-            exit(EXIT_FAILURE);
+            fprintf(stderr, "Graphics::createSurface() :  failed to create SDL surface.\n");
+            _EXIT_(EXIT_FAILURE);
+        }
+
+        return surface;
+    }
+
+    void writeToSurface(const SDL_Surface* surface, const uint32_t* data, int width, int height)
+    {
+        uint32_t* srcPixels = (uint32_t*)data;
+        uint32_t* dstPixels = (uint32_t*)surface->pixels;
+        for(int j=0; j<height; j++)
+        {
+            for(int i=0; i<width; i++)
+            {
+                *dstPixels++ = *srcPixels++;
+            }
         }
     }
 
-    void createHelptexture(void)
+    void createFontHeader(const SDL_Surface* fontSurface, const std::string& filename, const std::string& name, int width, int height)
     {
-        std::ifstream infile(INPUT_KEYS_INI);
-        if(!infile.is_open())
+        std::ofstream outfile(filename);
+        if(!outfile.is_open())
         {
-            fprintf(stderr, "Graphics::createHelptexture() : failed to open '%s' : no help screen will be available\n", INPUT_KEYS_INI);
-
-            // Create an empty help screen texture
-            _helpTexture = SDL_CreateTextureFromSurface(_renderer, _helpSurface);
-            if(_helpTexture == NULL)
-            {
-                SDL_Quit();
-                fprintf(stderr, "Graphics::createHelpTexture() : failed to create help screen texture\n");
-                exit(EXIT_FAILURE);
-            }
+            fprintf(stderr, "Graphics::createFontHeader() : failed to create '%s'.\n", filename.c_str());
             return;
         }
+
+        outfile << "uint32_t " << name + "[] = \n";
+        outfile << "{\n";
+        outfile << "    ";
+
+        int colCount = 0;
+        uint32_t* pixels = (uint32_t*)fontSurface->pixels;
+        for(int j=0; j<height; j++)
+        {
+            for(int i=0; i<width; i++)
+            {
+                outfile << "0x" << std::hex << std::setw(8) << std::setfill('0') << pixels[j*width + i] << ", ";
+                if(++colCount == 8)
+                {
+                    colCount = 0;
+                    if(j < height-1  ||  i < width-1) outfile << "\n    ";
+                }
+            }
+        }
+        
+        outfile << "\n};" << std::endl;
+    }
+
+    void createHelpTexture(void)
+    {
+        bool useDefault = false;
+        std::ifstream infile(INPUT_CONFIG_INI);
+        if(!infile.is_open()) useDefault = true;
 
         int lines = 1;
         std::string lineToken;
         std::vector<std::string> lineTokens;
-        while(!infile.eof())
-        {
-            std::getline(infile, lineToken);
-            lineTokens.push_back(lineToken);
-            if(!infile.good()  &&  !infile.eof())
-            {
-                SDL_Quit();
-                fprintf(stderr, "Graphics::createHelptexture() : Bad line : '%s' : in %s : on line %d\n", lineToken.c_str(), INPUT_KEYS_INI, lines);
-                exit(EXIT_FAILURE);
-            }
 
-            lines++;
+        if(useDefault)
+        {
+            lineTokens = _defaultKeys;
+            lines = int(_defaultKeys.size());
         }
-
-        // Read ini file into lines buffer
-        int maxLines = SCREEN_HEIGHT / FONT_HEIGHT;
-        int numLines = std::min(lines-1, maxLines);
-        if(lineTokens.size() < numLines)
+        else
         {
-            SDL_Quit();
-            fprintf(stderr, "Graphics::createHelptexture() : Bad number of lineTokens : in %s\n", INPUT_KEYS_INI);
-            exit(EXIT_FAILURE);
+            // Read ini file into lines buffer
+            while(!infile.eof())
+            {
+                std::getline(infile, lineToken);
+                lineTokens.push_back(lineToken);
+                if(!infile.good()  &&  !infile.eof())
+                {
+                    SDL_Quit();
+                    fprintf(stderr, "Graphics::createHelpTexture() : Bad line : '%s' : in %s : on line %d.\n", lineToken.c_str(), INPUT_CONFIG_INI, lines);
+                    _EXIT_(EXIT_FAILURE);
+                }
+
+                lines++;
+            }
         }
 
         // Print text in lines with spaces as padding to the help screen surface
+        int maxLines = SCREEN_HEIGHT / FONT_HEIGHT;
+        int numLines = std::min(lines-1, maxLines);
         for(int i=0; i<numLines; i++)
         {
             size_t nonWhiteSpace = lineTokens[i].find_first_not_of("  \n\r\f\t\v");
@@ -127,13 +180,19 @@ namespace Graphics
         if(_helpTexture == NULL)
         {
             SDL_Quit();
-            fprintf(stderr, "Graphics::createHelpTexture() :  failed to create SDL texture\n");
-            exit(EXIT_FAILURE);
+            fprintf(stderr, "Graphics::createHelpTexture() :  failed to create SDL texture.\n");
+            _EXIT_(EXIT_FAILURE);
         }
 
         // Enable blending on help screen texture
         SDL_SetTextureBlendMode(_helpTexture, SDL_BLENDMODE_BLEND);
         SDL_SetTextureAlphaMod(_helpTexture, 0);
+    }
+
+    bool getKeyAsString(const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, std::string& result)
+    {
+        result = Expression::strToUpper(_iniReader.Get(sectionString, iniKey, defaultKey));
+        return true;
     }
 
     void initialise(void)
@@ -157,55 +216,145 @@ namespace Graphics
             _colours[i] = p;
         }
 
-        //SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
+        // Desktop resolution by default
         SDL_DisplayMode DM;
         SDL_GetCurrentDisplayMode(0, &DM);
-        _width = DM.w+1;
+        _width = DM.w;
         _height = DM.h;
-        if(SDL_CreateWindowAndRenderer(_width, _height, 0, &_window, &_renderer) < 0)
-        //if(SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP, &_window, &_renderer) < 0) //SDL_WINDOW_FULLSCREEN SDL_WINDOW_FULLSCREEN_DESKTOP
+        _fullScreen = false;
+        _resizable = false;
+        _borderless = true;
+        _vSync = false;
+
+        // Parse graphics config file
+        INIReader iniReader(GRAPHICS_CONFIG_INI);
+        _iniReader = iniReader;
+        if(_iniReader.ParseError() < 0)
         {
-            SDL_Quit();
-            fprintf(stderr, "Graphics::initialise() : failed to create SDL window\n");
-            exit(EXIT_FAILURE);
+            fprintf(stderr, "Graphics::initialise() : couldn't load INI file '%s' : reverting to default graphics options.\n", GRAPHICS_CONFIG_INI);
+        }
+        else
+        {
+            // Parse input keys INI file
+            enum Section {Monitor};
+            std::map<std::string, Section> section;
+            section["Monitor"] = Monitor;
+            for(auto sectionString : _iniReader.Sections())
+            {
+                if(section.find(sectionString) == section.end())
+                {
+                    fprintf(stderr, "Graphics::initialise() : INI file '%s' has bad Sections : reverting to default values.\n", GRAPHICS_CONFIG_INI);
+                    break;
+                }
+
+                std::string result;
+                switch(section[sectionString])
+                {
+                    case Monitor:
+                    {
+                        size_t idx = 0;
+                        getKeyAsString(sectionString, "Fullscreen", "0", result);   
+                        _fullScreen = std::stoi(result, &idx);
+                        if(idx != result.size()) _fullScreen = false;
+
+                        getKeyAsString(sectionString, "Resizable", "0", result);   
+                        _resizable = std::stoi(result, &idx);
+                        if(idx != result.size()) _resizable = false;
+
+                        getKeyAsString(sectionString, "Borderless", "1", result);   
+                        _borderless = std::stoi(result, &idx);
+                        if(idx != result.size()) _borderless = true;
+
+                        getKeyAsString(sectionString, "VSync", "0", result);        
+                        _vSync = stoi(result, &idx);
+                        if(idx != result.size()) _vSync = false;
+
+                        getKeyAsString(sectionString, "Width", "DESKTOP", result);
+                         _width = (result == "DESKTOP") ? _width : _width = stoi(result, &idx);
+                        if(idx != result.size()) _width = DM.w;
+
+                        getKeyAsString(sectionString, "Height", "DESKTOP", result);
+                        _height = (result == "DESKTOP") ? _height : _height = stoi(result, &idx);
+                        if(idx != result.size()) _height = DM.h;
+                    }
+                    break;
+                }
+            }
         }
 
+        // Fullscreen
+        if(_fullScreen)
+        {
+            if(SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP, &_window, &_renderer) < 0)
+            {
+                SDL_Quit();
+                fprintf(stderr, "Graphics::initialise() : failed to create SDL window.\n");
+                _EXIT_(EXIT_FAILURE);
+            }
+        }
+        // Windowed
+        else
+        {
+            if(SDL_CreateWindowAndRenderer(_width, _height, 0, &_window, &_renderer) < 0)
+            {
+                SDL_Quit();
+                fprintf(stderr, "Graphics::initialise() : failed to create SDL window.\n");
+                _EXIT_(EXIT_FAILURE);
+            }
+
+            SDL_SetWindowResizable(_window, (SDL_bool)_resizable);
+            SDL_SetWindowBordered(_window, (SDL_bool)!_borderless);
+        }
+
+        // VSync
+        char vsChar = char(_vSync + '0');
+        SDL_SetHint(SDL_HINT_RENDER_VSYNC, &vsChar);
+
+        // Screen texture
         _screenTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, SCREEN_WIDTH, SCREEN_HEIGHT);
         if(_screenTexture == NULL)
         {
             SDL_Quit();
-            fprintf(stderr, "Graphics::initialise() :  failed to create SDL texture\n");
-            exit(EXIT_FAILURE);
+            fprintf(stderr, "Graphics::initialise() :  failed to create SDL texture.\n");
+            _EXIT_(EXIT_FAILURE);
         }
 
+        // Screen surface
         _screenSurface = SDL_GetWindowSurface(_window);
         if(_screenSurface == NULL)
         {
             SDL_Quit();
-            fprintf(stderr, "Graphics::initialise() :  failed to create SDL surface\n");
-            exit(EXIT_FAILURE);
+            fprintf(stderr, "Graphics::initialise() :  failed to create SDL surface.\n");
+            _EXIT_(EXIT_FAILURE);
         }
 
-        // Text
-        SDL_Surface* fontSurface = SDL_LoadBMP("EmuFont-96x48.bmp"); 
+#ifdef CREATE_FONT_HEADER
+        // Load font file
+        SDL_Surface* fontSurface = SDL_LoadBMP("EmuFont-96x48.bmp");
         if(fontSurface == NULL)
         {
             SDL_Quit();
-            fprintf(stderr, "Graphics::initialise() : failed to create SDL font surface, you're probably missing 'EmuFont-96x48.bmp' in the current directory/path\n");
-            exit(EXIT_FAILURE);
+            fprintf(stderr, "Graphics::initialise() : failed to create SDL font surface, you're probably missing 'EmuFont-96x48.bmp' in the current directory/path.\n");
+            _EXIT_(EXIT_FAILURE);
         }
         _fontSurface = SDL_ConvertSurfaceFormat(fontSurface, _screenSurface->format->format, NULL);
         SDL_FreeSurface(fontSurface);
         if(_fontSurface == NULL)
         {
             SDL_Quit();
-            fprintf(stderr, "Graphics::initialise() : failed to create SDL converted font surface\n");
-            exit(EXIT_FAILURE);
+            fprintf(stderr, "Graphics::initialise() : failed to convert SDL font surface format to screen surface format.\n");
+            _EXIT_(EXIT_FAILURE);
         }
+        // Use this if you want to change the default font
+        createFontHeader(_fontSurface, "emuFont96x48.h", "_emuFont96x48", FONT_BMP_WIDTH, FONT_BMP_HEIGHT);
+#else
+        _fontSurface = createSurface(FONT_BMP_WIDTH, FONT_BMP_HEIGHT);
+        writeToSurface(_fontSurface, _emuFont96x48, FONT_BMP_WIDTH, FONT_BMP_HEIGHT);
+#endif
 
         // Help screen
-        createHelpSurface(SCREEN_WIDTH, SCREEN_HEIGHT);
-        createHelptexture();
+        _helpSurface = createSurface(SCREEN_WIDTH, SCREEN_HEIGHT);
+        createHelpTexture();
     }
 
     void resetVTable(void)
@@ -385,7 +534,7 @@ namespace Graphics
             drawText(std::string("LEDS:"), _pixels, 0, 0, 0xFFFFFFFF, false, 0);
             drawText(std::string("FPS:"), _pixels, 0, FONT_CELL_Y, 0xFFFFFFFF, false, 0);
             drawText(std::string(str), _pixels, 62, FONT_CELL_Y, 0xFFFFFF00, false, 0);
-            drawText(std::string(VERSION_STR), _pixels, 46, 472, 0xFFFFFF00, false, 0);
+            drawText(std::string(VERSION_STR), _pixels, 32, 472, 0xFFFFFFFF, false, 0);
             sprintf(str, "XOUT: %02X  IN: %02X", Cpu::getXOUT(), Cpu::getIN());
             drawText(std::string(str), _pixels, 0, FONT_CELL_Y*2, 0xFFFFFFFF, false, 0);
             drawText("Mode:       ", _pixels, 0, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
@@ -961,7 +1110,7 @@ namespace Graphics
             scoreDelta = 0;
         }
 
-        fprintf(stderr, "Tetris: score : %06d  level : %d  frameTickLevel : %d  lines : %d\n", tetrisScore + scoreDelta, tetrisLevel, frameTickLevel, lines);
+        fprintf(stderr, "Tetris: score : %06d  level : %d  frameTickLevel : %d  lines : %d.\n", tetrisScore + scoreDelta, tetrisLevel, frameTickLevel, lines);
     }
 
     int checkLines(void)

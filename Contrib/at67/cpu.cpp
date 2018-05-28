@@ -2,12 +2,14 @@
 #include <stdio.h>
 #include <time.h>
 #include <fstream>
+#include <iomanip>
 
 #include <SDL.h>
 #include "cpu.h"
 #include "editor.h"
 #include "timing.h"
 #include "graphics.h"
+#include "gigatron_0x1c.h"
 
 
 #ifdef _WIN32
@@ -33,6 +35,7 @@ namespace Cpu
     void setClock(int64_t clock) {_clock = clock;}
     void setIN(uint8_t in) {_IN = in;}
     void setXOUT(uint8_t xout) {_XOUT = xout;}
+
     void setRAM(uint16_t address, uint8_t data)
     {
         // Constant "0" and "1" are stored here
@@ -41,11 +44,13 @@ namespace Cpu
 
         _RAM[address & (RAM_SIZE-1)] = data;
     }
+
     void setROM(uint16_t base, uint16_t address, uint8_t data)
     {
         uint16_t offset = (address - base) / 2;
         _ROM[base + offset][address & 0x01] = data;
     }
+
     void setRAM16(uint16_t address, uint16_t data)
     {
         // Constant "0" and "1" are stored here
@@ -55,6 +60,7 @@ namespace Cpu
         _RAM[address & (RAM_SIZE-1)] = uint8_t(data & 0x00FF);
         _RAM[(address+1) & (RAM_SIZE-1)] = uint8_t((data & 0xFF00)>>8);
     }
+
     void setROM16(uint16_t base, uint16_t address, uint16_t data)
     {
         uint16_t offset = (address - base) / 2;
@@ -65,6 +71,44 @@ namespace Cpu
     void garble(uint8_t* mem, int len)
     {
         for(int i=0; i<len; i++) mem[i] = rand();
+    }
+
+    void createRomHeader(const uint8_t* rom, const std::string& filename, const std::string& name, int length)
+    {
+        std::ofstream outfile(filename);
+        if(!outfile.is_open())
+        {
+            fprintf(stderr, "Graphics::createRomHeader() : failed to create '%s'.\n", filename.c_str());
+            return;
+        }
+
+        outfile << "uint8_t " << name + "[] = \n";
+        outfile << "{\n";
+        outfile << "    ";
+
+        int colCount = 0;
+        uint8_t* data = (uint8_t*)rom;
+        for(int i=0; i<length; i++)
+        {
+            outfile << "0x" << std::hex << std::setw(2) << std::setfill('0') << int(data[i]) << ", ";
+            if(++colCount == 12)
+            {
+                colCount = 0;
+                if(i < length-1) outfile << "\n    ";
+            }
+        }
+        
+        outfile << "\n};" << std::endl;
+    }
+
+    void loadDefaultRom(uint8_t* rom)
+    {
+        uint8_t* srcRom = (uint8_t *)rom;
+        uint8_t* dstRom = (uint8_t *)_ROM;
+        for(int i=0; i<sizeof(_ROM); i++)
+        {
+            *dstRom++ = *srcRom++;
+        } 
     }
 
     void initialise(Cpu::State& S)
@@ -92,27 +136,33 @@ namespace Cpu
         garble(_RAM, sizeof _RAM);
         garble((uint8_t*)&S, sizeof S);
 
-        // Open ROM file
-        std::ifstream romfile("theloop.2.rom", std::ios::binary | std::ios::in);
+        // Check for ROM file
+        std::string filenameRom = "theloop.2.rom";
+        std::ifstream romfile(filenameRom, std::ios::binary | std::ios::in);
         if(!romfile.is_open())
         {
-            fprintf(stderr, "Cpu::initialise() : failed to open ROM file\n");
-            exit(EXIT_FAILURE);
+            loadDefaultRom(_gigatron_0x1c_rom);
         }
-
-        // Read ROM file
-        romfile.read((char *)_ROM, sizeof(_ROM));
-        if(romfile.bad() || romfile.fail())
+        else
         {
-            fprintf(stderr, "Cpu::initialise() : failed to read ROM file\n");
-            exit(EXIT_FAILURE);
+            // Load ROM file
+            romfile.read((char *)_ROM, sizeof(_ROM));
+            if(romfile.bad() || romfile.fail())
+            {
+                fprintf(stderr, "Cpu::initialise() : failed to read %s ROM file, using default ROM.\n", filenameRom.c_str());
+                loadDefaultRom(_gigatron_0x1c_rom);
+            }
+#ifdef CREATE_ROM_HEADER
+            // Use this if you ever want to change the default ROM
+            createRomHeader((uint8_t *)_ROM, "gigatron_0x1c.h", "_gigatron_0x1c_rom", sizeof(_ROM));
+#endif
         }
 
         // SDL initialisation
         if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS) < 0)
         {
-            fprintf(stderr, "Cpu::initialise() : failed to initialise SDL\n");
-            exit(EXIT_FAILURE);
+            fprintf(stderr, "Cpu::initialise() : failed to initialise SDL.\n");
+            _EXIT_(EXIT_FAILURE);
         }
     }
 
