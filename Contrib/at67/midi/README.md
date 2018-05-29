@@ -16,14 +16,18 @@ A single source file using any modern C\+\+11 or higher compiler, trivial to bui
 ## Format
 The output format is very similar to the Miditones output format except for a few crucial differences.<br/>
 1) The Gigatron's Maximum channels, (tone generators), is limited to 4, so you **_must_** use the -t4 option<br/>
-with Miditones.<br/>
+   with Miditones.<br/>
 2) The Gigatron does not support volume or instrument changes, so you **_cannot_** use the -i or -v options<br/>
-with Miditones.<br/>
-3) The wait or delay command has been changed from 2 bytes and 1ms resolution to 1 byte and 16.66667ms<br/>
-resolution; this has a number of important impacts.
-    - You cannot have a delay longer than 2116ms, so any MIDI score that does will have serious timing issues.<br/>
-    - Very short delays will either be rounded down to 0ms or rounded up to 16.6666667ms, this **_will_** affect<br/>
-timing, how much of a problem it causes is completely dependent on the MIDI score and your playback architecture.<br/>
+   with Miditones.<br/>
+3) The wait or delay command has been changed from 2 bytes and 1ms resolution to a variable length 1 byte stream<br/>
+   and 16.66667ms resolution; this has an important impact.<br/>
+   - Very short delays will either be rounded down to 0ms or rounded up to 16.6666667ms, this **_will_** affect<br/>
+     timing, how much of a problem it causes is completely dependent on the MIDI score and your playback architecture.<br/>
+   - The limit of 2116ms maximum delay has been lifted, gigamidi and the GCL and vASM players both support a variable<br/>
+     length byte stream of delays.
+   - Sequences of delays produced by miditones are coalesced into a single delay and then saved as a variable length<br/>
+     byte stream.
+   - Zero size delays produced by miditones are ignored.
 
 ## Address
 The address, **_(specified in hex)_**, is the start address in RAM of where the MIDI byte sequence will be loaded to.<br/>
@@ -72,13 +76,13 @@ gcl0x
   3 ii=
   [do
     $FA scratch<.   { reset low byte }
-    $0300 scratch:  { Doke $0300 wavA, wavX}  
+    $0300 scratch:  { Doke $0300 into wavA, wavX}  
     scratch<++      { scratch + 0x0002 }
     scratch<++
-    $0000 scratch:  { Doke $0000 keyL, keyH }
+    $0000 scratch:  { Doke $0000 into keyL, keyH }
     scratch<++      { scratch + 0x0002 }
     scratch<++
-    scratch:        { Doke vAC oscL, oscH }
+    scratch:        { Doke vAC into oscL, oscH }
     scratch>++      { scratch + 0x0100 }
 
   ii 1- ii=
@@ -90,30 +94,28 @@ gcl0x
 
 [def { PlayMidiAsync -- play MIDI stream asynchronous to VBlank; use this one in processing loops that take longer than a VSync period }
   push
-  \frameCount, frameCountPrev- frameCountPrev=
-  [if<>0 PlayMidiSync!]
-  \frameCount, frameCountPrev=
-  pop ret
+  [\frameCount, frameCountPrev- 
+    if<>0 PlayMidiSync!
+    \frameCount, frameCountPrev=]         { if frameCount has changed call PlayMidiSync }
+    pop ret
 ] PlayMidiAsync=
 
 
 [def { PlayMidiSync -- plays MIDI stream, use this after your main VBlank loop }
   push
+  $01 \soundTimer=                        { keep pumping soundTimer, so that global sound stays alive }
+  [midiDelay 
+    if>0 midiDelay 1- midiDelay=          { if midiDelay>0 midiDelay-- if(midiDelay>0 return }
+    if>0 pop ret]
+
   [do
-    $02 \soundTimer=                      { keep pumping soundTimer, so that global sound stays alive }
-    [midiDelay
-      if>0 midiDelay 1- midiDelay=        { if midiDelay>0 midiDelay-- return }
-     pop ret]
-    
-    midiStreamPtr, midiCommand=           { Peek(midiStreamPtr) }
-    midiStreamPtr 1+ midiStreamPtr=       { midiStreamPtr++ }
-    midiCommand $F0& scratch=
-    [scratch $90^ if=0 MidiStartNote!]
-    [scratch $80^ if=0 MidiEndNote!]
-    [scratch $D0^ if=0 MidiSegment!]
-    [scratch $80& 
-      if=0 midiCommand midiDelay=         { delay = 0XXXXXXX return }
-     pop ret]
+    midiStreamPtr, midiCommand=           { midiCommand = Peek(midiStreamPtr) }
+    midiStreamPtr 1+ midiStreamPtr=       { midiStreamPtr++                   }
+    midiCommand $F0& command=
+    [command $80& if=0 midiCommand midiDelay= pop ret]
+    [command $90^ if=0 MidiStartNote! else
+    [command $80^ if=0 MidiEndNote!   else
+    [command $D0^ if=0 MidiSegment!]]]
   loop]
 ] PlayMidiSync=
 
@@ -121,9 +123,9 @@ gcl0x
 [def { MidiEndNote -- ends a MIDI note }
   push
   midiCommand $03& scratch>.              { scratch high = channel }
-  $0 scratch<.                            { scratch low = $00 }
+  $0 scratch<.                            { scratch low = $00      }
   scratch midiChannel+ scratch=           { scratch += midiChannel }
-  $0000 scratch:                          { Doke(scratch) = $0000 }
+  $0000 scratch:                          { Doke(scratch, $0000)   }
   pop ret
 ] MidiEndNote=
 
@@ -139,16 +141,16 @@ gcl0x
 $0300:
 [def { MidiStartNote -- starts a MIDI note }
   push
-  \notesTable scratch=                    { scratch = \notesTable }
+  \notesTable scratch=                    { scratch = \notesTable                  }
   midiStreamPtr, 10- 1<< 2-               { vAC = (Peek(midiStreamPtr) - 10)*2 - 2 }
-  scratch+ scratch=                       { scratch = scratch + vAC }
-  0? midiNote<.                           { midiNote low = LUP(scratch + 0) }
-  scratch 1? midiNote>.                   { midiNote high = LUP(scratch + 1) }
-  midiCommand $03& scratch>.              { scratch high = channel }
-  $0 scratch<.                            { scratch low = $00 }
-  scratch midiChannel+ scratch=           { scratch += midiChannel }
-  midiNote scratch:                       { Doke(scratch) = midiNote }
-  midiStreamPtr 1+ midiStreamPtr=         { midiStreamPtr++ }
+  scratch+ scratch=                       { scratch = scratch + vAC                }
+  0? midiNote<.                           { midiNote low = LUP(scratch + 0)        }
+  scratch 1? midiNote>.                   { midiNote high = LUP(scratch + 1)       }
+  midiCommand $03& scratch>.              { scratch high = channel                 }
+  $0 scratch<.                            { scratch low = $00                      }
+  scratch midiChannel+ scratch=           { scratch += midiChannel                 }
+  midiNote scratch:                       { Doke(scratch, midiNote)                }
+  midiStreamPtr 1+ midiStreamPtr=         { midiStreamPtr++                        }
   pop ret
 ] MidiStartNote=
 
@@ -164,21 +166,62 @@ ResetAudio!
   { Wait for VBlank }
   [do \frameCount, frameCountPrev- if=0 loop]
   \frameCount, frameCountPrev=
+  PlayMidiSync!                           { play MIDI stream synchronous to VBlank }
+                                          { use this every VBlank                  }
 
-  {play MIDI stream synchronous to VBlank; use this every VBlank }
-  PlayMidiSync!
-loop]
+  {PlayMidiAsync!}                        { play MIDI stream asynchronous to VBlank }
+loop]                                     { use this in long processing loops       }
 ~~~
 
 **_VASM Player_**
 ~~~
-playMidi        LDI     0x02                ; keep pumping soundTimer, so that global sound stays alive
+resetAudio      LDWI    0x0000
+                STW     midiCommand
+                STW     midiDelay
+                STW     midiNote
+                LDWI    giga_soundChan1 + 2 ; keyL, keyH
+                STW     midiChannel
+                STW     scratch
+                LDWI    title_screenMidi00  ; midi score
+                STW     midiStreamPtr
+
+                LDI     0x04
+                ST      ii
+
+resetA_loop     LDI     giga_soundChan1     ; reset low byte
+                ST      scratch
+                LDWI    0x0300              
+                DOKE    scratch             ; wavA and wavX
+                INC     scratch
+                INC     scratch    
+                LDWI    0x0000
+                DOKE    scratch             ; keyL and keyH
+                INC     scratch
+                INC     scratch
+                DOKE    scratch             ; oscL and oscH
+                INC     scratch + 1         ; increment high byte
+                LoopCounter ii resetA_loop
+                RET
+
+
+playMidiAsync   LD      giga_frameCount
+                SUBW    frameCountPrev
+                BEQ     playMV_exit
+                LD      giga_frameCount
+                STW     frameCountPrev
+                PUSH
+                CALL    playMidi
+                POP
+playMV_exit     RET
+
+
+playMidi        LDI     0x01                ; keep pumping soundTimer, so that global sound stays alive
                 ST      giga_soundTimer
                 LDW     midiDelay
                 BEQ     playM_process
-
                 SUBI    0x01
                 STW     midiDelay
+                BEQ     playM_process    
                 RET
 
 playM_process   LDW     midiStreamPtr
@@ -196,7 +239,7 @@ playM_process   LDW     midiStreamPtr
                 PUSH                    
                 CALL    midiStartNote       ; start note
                 POP
-                BRA     playMidi
+                BRA     playM_process
                 
 playM_endnote   LDW     scratch 
                 XORI    0x80                ; check for end note
@@ -205,7 +248,7 @@ playM_endnote   LDW     scratch
                 PUSH
                 CALL    midiEndNote         ; end note
                 POP
-                BRA     playMidi
+                BRA     playM_process
 
 
 playM_segment   LDW     scratch
@@ -215,7 +258,7 @@ playM_segment   LDW     scratch
                 PUSH
                 CALL    midiSegment         ; new midi segment
                 POP
-                BRA     playMidi
+                BRA     playM_process
 
 playM_delay     LDW     midiCommand         ; all that is left is delay
                 STW     midiDelay

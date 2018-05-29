@@ -666,6 +666,16 @@ namespace Editor
             Graphics::setDisplayHelpScreen(helpScreen);
         }
 
+        else if(keyCode == SDLK_F2)
+        {
+            //_startMusic = !_startMusic;
+        }
+
+        else if(keyCode == SDLK_F3)
+        {
+            //Audio::nextScore();
+        }
+
         updateEditor(keyCode);
     }
 

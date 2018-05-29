@@ -79,7 +79,7 @@ updateS_score   PUSH                        ; increment score string
                 POP
 
                 PUSH
-                CALL    playMidiVBlank
+                CALL    playMidiAsync
                 POP
 
                 LDW     scoreScratch        ; increment score scoreScratch/5 times, (score is a multiple of 5)
