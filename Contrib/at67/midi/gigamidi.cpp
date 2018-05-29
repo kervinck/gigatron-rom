@@ -275,6 +275,8 @@ void main(int argc, char* argv[])
             if((command & 0xF0) == 0x90)
             {
                 uint8_t note = *midiPtr++; midiSize--;
+                if(note < 12)  note = 12;
+                if(note > 106) note = 106;
                 gigaSize += 2;
                 switch(format)
                 {
