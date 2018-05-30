@@ -26,7 +26,7 @@ namespace Assembler
     enum OpcodeType {ReservedDB=0, ReservedDW, ReservedDBR, ReservedDWR, vCpu, Native};
     enum AddressMode {D_AC=0b00000000, X_AC=0b00000100, YD_AC=0b00001000, YX_AC=0b00001100, D_X=0b00010000, D_Y=0b00010100, D_OUT=0b00011000, YXpp_OUT=0b00011100};
     enum BusMode {D=0b00000000, RAM=0b00000001, AC=0b00000010, IN=0b00000011};
-    enum ReservedWords {CallTable=0, StartAddress, SingleStepWatch, DisableUpload, INCLUDE, MACRO, ENDM, GPRINTF, NumReservedWords};
+    enum ReservedWords {CallTable=0, StartAddress, SingleStepWatch, DisableUpload, CpuUsageAddressA, CpuUsageAddressB, INCLUDE, MACRO, ENDM, GPRINTF, NumReservedWords};
 
 
     struct Label
@@ -122,6 +122,8 @@ namespace Assembler
         _reservedWords.push_back("_startAddress_");
         _reservedWords.push_back("_singleStepWatch_");
         _reservedWords.push_back("_disableUpload_");
+        _reservedWords.push_back("_cpuUsageAddressA_");
+        _reservedWords.push_back("_cpuUsageAddressB_");
         _reservedWords.push_back("%include");
         _reservedWords.push_back("%MACRO");
         _reservedWords.push_back("%ENDM");
@@ -435,6 +437,16 @@ namespace Assembler
                 else if(tokens[tokenIndex] == "_disableUpload_")
                 {
                     Loader::disableUploads(operand != 0);
+                }
+                // Start address of vCPU exclusion zone
+                else if(tokens[tokenIndex] == "_cpuUsageAddressA_")
+                {
+                    Editor::setCpuBaseAddressA(operand);
+                }
+                // End address of vCPU exclusion zone
+                else if(tokens[tokenIndex] == "_cpuUsageAddressB_")
+                {
+                    Editor::setCpuBaseAddressB(operand);
                 }
                 // Standard equates
                 else

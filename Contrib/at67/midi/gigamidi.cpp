@@ -13,6 +13,8 @@
 #define MAX_MIDI_BUFFER_SIZE  0x10000
 #define MAX_SOUND_CHANNELS    4
 #define MASK_SOUND_CHANNELS   0x03
+#define MIN_GIGA_NOTE         12
+#define MAX_GIGA_NOTE         106
 
 
 enum Format {vCPU=0, GCL, CPP, PY, NumFormats};
@@ -275,8 +277,8 @@ void main(int argc, char* argv[])
             if((command & 0xF0) == 0x90)
             {
                 uint8_t note = *midiPtr++; midiSize--;
-                if(note < 12)  note = 12;
-                if(note > 106) note = 106;
+                if(note < MIN_GIGA_NOTE) note = MIN_GIGA_NOTE;
+                if(note > MAX_GIGA_NOTE) note = MAX_GIGA_NOTE;
                 gigaSize += 2;
                 switch(format)
                 {

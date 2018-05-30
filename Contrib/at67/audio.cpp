@@ -45,7 +45,7 @@ namespace Audio
     void playSample(void)
     {
         double ratio = 1.0;
-        if(Timing::getFrameTime()) ratio = std::max(1.0, TIMING_HACK / std::min(Timing::getFrameTime(), TIMING_HACK));
+        if(Timing::getFrameTime()) ratio = std::max(1.0, VSYNC_TIMING_60 / std::min(Timing::getFrameTime(), VSYNC_TIMING_60));
 
         static double skip = 0.0;
         uint64_t count = uint64_t(skip);
@@ -95,24 +95,23 @@ namespace Audio
             //}
         }
 
-        static int16_t scoreDelay = 0;
+        static int16_t midiDelay = 0;
         static uint64_t prevFrameCounter = 0;
-        static double frameTime = 0.0;
-
-        uint64_t frameCounter = SDL_GetPerformanceCounter();
-        frameTime += double(frameCounter - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
-        prevFrameCounter = frameCounter;
-        
-        if(scoreDelay  &&  frameTime * 1000.0 > 16.666666667)
+        double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
+        if(frameTime > VSYNC_TIMING_60)
         {
-            scoreDelay--; 
-            frameTime = 0.0;
+            prevFrameCounter = SDL_GetPerformanceCounter();        
+            if(midiDelay)
+            {
+                midiDelay--; 
+                frameTime = 0.0;
 
-            // Start audio
-            Cpu::setRAM(0x002C, 0x01);
+                // Start audio
+                Cpu::setRAM(0x002C, 0x01);
+            }
         }
-        
-        while(scoreDelay == 0)
+
+        while(midiDelay == 0)
         {
             uint8_t command = *_scorePtr++;
             if(command & 0x80)
@@ -145,7 +144,7 @@ namespace Audio
             // Delay n milliseconds where n = 8bit value
             else
             {
-                scoreDelay = command;
+                midiDelay = command;
             }
         }
     }

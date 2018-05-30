@@ -120,6 +120,9 @@ int main(int argc, char* argv[])
         // Debugger
         debugging = Editor::singleStepDebug();
 
+        // vCPU instruction slot utilisation
+        Cpu::vCpuUsage(S);
+        
 #if 0
         Audio::playMusic();
 #endif

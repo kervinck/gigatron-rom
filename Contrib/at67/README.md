@@ -1,7 +1,7 @@
 # gtemuSDL
 gtemuSDL is an emulator for the Gigatron TTL microcomputer, written in C++ using SDL2.<br/>
 This project provides support for Microsoft Windows and should be compatible with Linux, MacOS<br/>
-and possibly even Android. As of v0.4.9 it has only been tested on Microsoft Windows10.<br/>
+and possibly even Android. As of v0.5.3 it has only been tested on Microsoft Windows10.<br/>
 
 ## Features
 - Variable timing from a minimum of 60FPS up to whatever your PC can handle.<br/>
@@ -16,7 +16,7 @@ and possibly even Android. As of v0.4.9 it has only been tested on Microsoft Win
 - Displays memory monitor of RAM, (**_RAM is editable_**), ROM0 and ROM1 at any start address.<br/>
 - Displays read only contents of vCPU variable space.<br/>
 - Can execute hand crafted code within the Hex Editor.<br/>
-- Three seperate editable start addresses are provided; memory display address,<br/>
+- Three separate editable start addresses are provided; memory display address,<br/>
   vCPU vars display address and load start address.<br/>
 - A built in assembler can now assemble vCPU as well as Native mnemonics.<br/>
 - A preprocessor that is able to include files and expand parameterised macros.<br/>
@@ -65,7 +65,7 @@ and possibly even Android. As of v0.4.9 it has only been tested on Microsoft Win
 - The emulator will search for and use a file named **_graphics_config.ini_** in it's current<br/>
   working directory. This file allows the emulator's graphics and video options to be completely user<br/>
   configured. The example **_graphics_config.ini_** file contains instructions on it's use.<br/>
-  e.g.  Fullscreen = 1, will create a full sized screen that minimises when it loses focuse.<br/>
+  e.g.  Fullscreen = 1, will create a full sized screen that minimises when it loses focus.<br/>
         Fullscreen = 0, will create a window that does not minimise when it loses focus.<br/>
 - The emulator will search for and use a file named **_"input_keys.ini"_** in it's current<br/>
   working directory. This file allows the emulator's keys to be completely user configured. The on<br/>
@@ -89,6 +89,7 @@ and possibly even Android. As of v0.4.9 it has only been tested on Microsoft Win
 |           | can cause the emulator to hang, 0x0200 is guaranteed to be safe.                  |
 |R or r     | Switches Hex Editor between RAM, ROM(0) and ROM(1).                               |
 |F1         | Fast reset, performs the same action as a long hold of Start.                     |
+|F3         | Toggles scanline modes between, Normal, VideoB and VideoBC.                       |
 |F5         | Executes whatever code is present at the load address.                            |
 |F6         | Toggles debugging mode, simulation will pause and allow you to single step using  |
 |           | F10.                                                                              |
@@ -173,10 +174,19 @@ _singleStepWatch_   EQU     xyPos
   code. The vPC address of the current instruction that the gprintf aligns with is used to decide when to<br/>
   send the logging information to the console as the vCPU code is interpreted in real time.<br/>
 ~~~
-  gprintf("%d %d %s", *scoreScratch, *scoreDelta, *score_string)
+  gprintf("%c %d $%04x $%04x $%04x b%016b b%08b o%04o $%04x %s", 48, 45000, 0xDEAD, 0xBEEF,
+                                                                 resetLevel, frameCountPrev, 
+                                                                 *frameCounter, maxTicks + 1,
+                                                                 vBlank, *level_string)
 ~~~  
-- Logs the two integers contained in scoreScratch and scoreDelta using indirection, score_string is printed<br/>
-  as a string of bytes with a preceding length, once again using indirection.
+- Indirection is specified using **_'\*'_** to access and print the variable's data.<br/>
+- You can specify field width, fill chars and use the same numeric literals as the rest of the Assembler. e.g:<br/>
+    - %c will print a char.<br/>
+    - %d will print an int.<br/>
+    - %04x will prints a zero padded four digit hex number.<br/>
+    - %016b will print a zero padded 16 digit binary number.<br/>
+    - %04o will print a zero padded 4 digit octal number.<br/>
+    - %s will print a maximum 255 sequence of chars, with the first byte of the string expected to be the length.<br/>
 
 ## MIDI
 - See **_Gigamidi_** and **_README.md_** in the emu/midi directory.<br/>
