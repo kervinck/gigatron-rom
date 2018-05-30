@@ -7,37 +7,33 @@
 #
 # 2018-04-29 (marcelk) Initial version
 # 2018-05-13 (marcelk) Use application level flow control
+# 2018-05-29 (rockybulwinkle) Add option to override detected port,
+#		search on /dev/ttyACM* as well, swith to argparse.
 #
 #-----------------------------------------------------------------------
 
 import glob
 import serial
 import sys
+import argparse
 from time import sleep
 
 #-----------------------------------------------------------------------
 #       Command line arguments
 #-----------------------------------------------------------------------
 
-verbose = False
-filename = None
+parser = argparse.ArgumentParser(description='Load a GT1 into a Gigatron')
+parser.add_argument('-v', '--verbose', dest='verbose', help='be verbose',
+        action='store_true', default=False)
+parser.add_argument('-p', '--port', dest='port',
+        help='override automatic port detection', default=None)
+parser.add_argument('filename', help='GT1 file to load into Gigatron')
 
-argi = 1
-if len(sys.argv) > argi and sys.argv[argi] == '-v':
-  verbose = True
-  argi += 1
+args = parser.parse_args()
 
-if len(sys.argv) - argi == 1:
-  filename = sys.argv[argi]
-  argi += 1
-
-if argi < len(sys.argv):
-  print 'Error: Bad arguments'
-  print 'Usage: python sendGt1.py [-v] [filename]'
-  sys.exit(1)
 
 def log(prefix, line):
-  if verbose:
+  if args.verbose:
     print prefix, line
 
 #-----------------------------------------------------------------------
@@ -64,24 +60,38 @@ def sendCommand(cmd=None):
 #-----------------------------------------------------------------------
 #       Connect to Arduino
 #-----------------------------------------------------------------------
+port = None
+if not args.port:
+  #Sometimes the Arduino shows up on /dev/tty.usbmodem* or /dev/ttyACM*
+  serPorts = glob.glob('/dev/tty.usbmodem*') + glob.glob('/dev/ttyACM*')
+  if len(serPorts) == 0:
+    print 'Failed: No USB device detected'
+    sys.exit(1)
+  if len(serPorts) > 1:
+    print 'Failed: More than one USB device detected: %s' % ' '.join(serPorts)
+    sys.exit(1)
+  port = serPorts[0]
+else:
+  port = args.port
 
-serPorts = glob.glob('/dev/tty.usbmodem*')
-if len(serPorts) == 0:
-  print 'Failed: No USB device detected'
-  sys.exit(1)
-if len(serPorts) > 1:
-  print 'Failed: More than one USB device detected: %s' % ' '.join(serPorts)
-  sys.exit(1)
-print 'Connecting to', serPorts[0]
-ser = serial.Serial(port=serPorts[0], baudrate=115200)
+print 'Connecting to', port
+try:
+  ser = serial.Serial(port=port, baudrate=115200)
+except serial.serialutil.SerialException, e:
+    print 'Failed: Serial port %s doesn\'t exist or you don\'t have permission'%port
+    exit(-1)
 sleep(2)
 
 #-----------------------------------------------------------------------
 #       Send program
 #-----------------------------------------------------------------------
 
-if filename:
-  fp = open(filename, 'rb')
+if args.filename:
+  try:
+    fp = open(args.filename, 'rb')
+  except IOError, e:
+    print 'Failed: could not open %s'%args.filename
+    exit(-1)
 else:
   fp = sys.stdin
 
@@ -93,7 +103,7 @@ sendCommand('R')
 print 'Starting Loader'
 sendCommand('L')
 
-print 'Sending program %s' % (repr(filename) if filename else 'from stdin')
+print 'Sending program %s' % (repr(args.filename) if args.filename else 'from stdin')
 ask = sendCommand('U')
 
 while ask[0].isdigit():
@@ -111,7 +121,7 @@ print
 
 print 'Finished'
 
-if filename:
+if args.filename:
   fp.close()
 
 #-----------------------------------------------------------------------
