@@ -399,7 +399,7 @@ namespace Loader
         if(frameCount++ < _saveData[_currentGame]._updaterate) return;
         frameCount = 0;
 
-        // Update data, (checks byte by byte and saves if larger, most significant to least significant)
+        // Update data, (checks byte by byte and saves if larger, endian order is configurable)
         bool save = false;
         for(int j=0; j<_saveData[_currentGame]._addresses.size(); j++)
         {
@@ -547,8 +547,8 @@ namespace Loader
         Graphics::resetVTable();
         Editor::setSingleStepWatchAddress(VIDEO_Y_ADDRESS);
 
-        // Upload raw vCPU code
-        if(filename.find(".vcpu") != filename.npos  ||  filename.find(".gt1") != filename.npos)
+        // Upload gt1
+        if(filename.find(".gt1") != filename.npos)
         {
             Assembler::clearAssembler();
 

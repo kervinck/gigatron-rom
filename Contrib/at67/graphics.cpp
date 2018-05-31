@@ -523,6 +523,20 @@ namespace Graphics
         //for(int i=0; i<FONT_HEIGHT; i++) _pixels[pixelAddress-i*SCREEN_WIDTH] = colour;
     }
 
+    float powStepRising(float x, float a, float b, float p)
+    {
+        float f = std::min(std::max(x, a), b);
+        f = (f - a) / (b - a);
+        return powf(f, p);
+    }
+
+    float powStepFalling(float x, float a, float b, float p)
+    {
+        float f = std::max(std::min(x, a), b);
+        f = (f - a) / (b - a);
+        return powf(f, p);
+    }
+
     void drawUsageBar(float usage, int x, int y, int w, int h)
     {
         int ww = int(float(w)*usage);
@@ -534,8 +548,9 @@ namespace Graphics
         {
             for(int i=x; i<(x + ww); i++)
             {
-                uint8_t red = uint8_t(powf(float(i - x) / float(w), 0.25) * 255.0f);
-                uint8_t grn = uint8_t(float(x + w - i) / float(w) * 255.0f);
+                float normalised = float(i - x) / float(w);
+                uint8_t red = uint8_t(powStepRising(normalised, 0.0f, 0.5f, 1.0f) * 255.0f);
+                uint8_t grn = uint8_t(powStepFalling(normalised, 1.0f, 0.5f, 1.0f) * 255.0f);
                 int pixelAddress = i + j*SCREEN_WIDTH;
                 _pixels[pixelAddress] = (red <<16) + (grn <<8);
             }
@@ -563,7 +578,7 @@ namespace Graphics
                 drawText(std::string(str), _pixels, 0, FONT_CELL_Y*2, 0xFFFFFFFF, false, 0, false);
                 sprintf(str, "%05.1f%%", Cpu::getvCpuUtilisation() * 100.0);
                 drawUsageBar(Cpu::getvCpuUtilisation(), FONT_WIDTH*4 - 3, FONT_CELL_Y*2 - 3, FONT_WIDTH*6 + 5, FONT_HEIGHT + 5);
-                drawText(std::string(str), _pixels, FONT_WIDTH*4, FONT_CELL_Y*2, 0xFFFFFFFF, false, 0, true);
+                drawText(std::string(str), _pixels, FONT_WIDTH*4, FONT_CELL_Y*2, 0x80808080, false, 0, true);
             }
 
             drawText(std::string("LEDS:"), _pixels, 0, 0, 0xFFFFFFFF, false, 0);

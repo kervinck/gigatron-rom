@@ -1,5 +1,5 @@
 /**********************************************************************************************/
-/* gtemuSDL ver 0.3.2                                                                         */
+/* gtemuSDL                                                                                   */
 /*                                                                                            */ 
 /* gtemuSDL is an emulator for the Gigatron TTL microcomputer, written in C++ using SDL2.     */
 /* This project provides Microsoft Windows support and should be compatible with Linux, MacOS */

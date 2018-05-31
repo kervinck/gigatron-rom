@@ -205,7 +205,7 @@ namespace Cpu
         } 
     }
 
-    void initialise(Cpu::State& S)
+    void initialise(State& S)
     {
 #ifdef _WIN32
         CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -357,7 +357,7 @@ namespace Cpu
     {
         if(S._PC == ROM_VCPU_DISPATCH)
         {
-            uint16_t vPC = (Cpu::getRAM(0x0017) <<8) | Cpu::getRAM(0x0016);
+            uint16_t vPC = (getRAM(0x0017) <<8) |getRAM(0x0016);
             if(vPC < Editor::getCpuBaseAddressA()  ||  vPC > Editor::getCpuBaseAddressB()) _vCpuInstPerFrame++;
             _vCpuInstPerFrameMax++;
 
@@ -365,6 +365,18 @@ namespace Cpu
             double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
             if(frameTime > VSYNC_TIMING_60)
             {
+                // TODO: this is a bit of a hack, but it's emulation only so...
+                // Check for magic cookie that defines a CpuBaseAddressA and CpuBaseAddressB sequence
+                uint16_t magicWord0 = (getRAM(0x7F99) <<8) | getRAM(0x7F98);
+                uint16_t magicWord1 = (getRAM(0x7F9B) <<8) | getRAM(0x7F9A);
+                uint16_t cpuBaseAddressA = (getRAM(0x7F9D) <<8) | getRAM(0x7F9C);
+                uint16_t cpuBaseAddressB = (getRAM(0x7F9F) <<8) | getRAM(0x7F9E);
+                if(magicWord0 == 0xDEAD  &&  magicWord1 == 0xBEEF)
+                {
+                    Editor::setCpuBaseAddressA(cpuBaseAddressA);
+                    Editor::setCpuBaseAddressB(cpuBaseAddressB);
+                }
+
                 prevFrameCounter = SDL_GetPerformanceCounter();
                 _vCpuUtilisation = (_vCpuInstPerFrameMax) ? float(_vCpuInstPerFrame) / float(_vCpuInstPerFrameMax) : 0.0f;
                 _vCpuInstPerFrame = 0;
