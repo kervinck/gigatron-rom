@@ -19,7 +19,7 @@
 #define VARS_BASE_ADDRESS  0x0030
 #define VIDEO_Y_ADDRESS    0x0009
 
-#define INPUT_KEYS_INI  "input_keys.ini"
+#define INPUT_CONFIG_INI  "input_config.ini"
 
 
 namespace Editor
@@ -42,6 +42,8 @@ namespace Editor
     uint16_t getLoadBaseAddress(void);
     uint16_t getVarsBaseAddress(void);
     uint16_t getSingleStepWatchAddress(void);
+    uint16_t getCpuBaseAddressA(void);
+    uint16_t getCpuBaseAddressB(void);
     int getFileEntriesIndex(void);
     int getFileEntriesSize(void);
     std::string getBrowserPath(void);
@@ -55,6 +57,8 @@ namespace Editor
     void setSingleStepMode(bool singleStepMode);
     void setLoadBaseAddress(uint16_t address);
     void setSingleStepWatchAddress(uint16_t address);
+    void setCpuBaseAddressA(uint16_t address);
+    void setCpuBaseAddressB(uint16_t address);
 
     void initialise(void);
     bool singleStepDebug(void);

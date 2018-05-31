@@ -34,7 +34,7 @@ clearB_loop     LDW     vbase           ; vram address
                 ST      xx
 
                 PUSH
-                CALL    playMidiVBlank
+                CALL    playMidiAsync
                 POP
 
                 LDI     xTetris

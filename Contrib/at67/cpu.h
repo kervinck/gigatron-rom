@@ -4,9 +4,9 @@
 #include <stdint.h>
 
 
-#define MAJOR_VERSION "0.4"
-#define MINOR_VERSION "9"
-#define VERSION_STR "Ver: " MAJOR_VERSION "." MINOR_VERSION
+#define MAJOR_VERSION "0.5"
+#define MINOR_VERSION "3"
+#define VERSION_STR "gtemuSDL v" MAJOR_VERSION "." MINOR_VERSION
 
 #define ROM_SIZE (1<<16)
 #define RAM_SIZE (1<<16) // Can be 32k or 64k
@@ -14,13 +14,28 @@
 #define BOOT_COUNT 0x0004
 #define BOOT_CHECK 0x0005
 
+#define ROM_VCPU_DISPATCH 0x0309
+
+#if defined(_WIN32)
+#define _EXIT_(f)   \
+    system("pause");\
+    exit(f);
+#else
+#define _EXIT_(f)   \
+    system("read"); \
+    exit(f);
+#endif
+
 // At least on Windows, _X is a constant defined somewhere before here
 #ifdef _X
 #  undef _X
 #endif
 
+
 namespace Cpu
 {
+    enum ScanlineMode {Normal=0, VideoB, VideoC, VideoBC, NumScanlineModes};
+
     struct State
     {
         uint16_t _PC;
@@ -34,6 +49,7 @@ namespace Cpu
     uint8_t getROM(uint16_t address, int page);
     uint16_t getRAM16(uint16_t address);
     uint16_t getROM16(uint16_t address, int page);
+    float getvCpuUtilisation(void);
 
     void setClock(int64_t clock);
     void setIN(uint8_t in);
@@ -42,10 +58,12 @@ namespace Cpu
     void setROM(uint16_t base, uint16_t address, uint8_t data);
     void setRAM16(uint16_t address, uint16_t data);
     void setROM16(uint16_t base, uint16_t address, uint16_t data);
+    void setScanlineMode(ScanlineMode scanlineMode);
 
     void initialise(State& S);
     State cycle(const State& S);
     void reset(bool coldBoot=false);
+    void vCpuUsage(State& S);
 }
 
 #endif

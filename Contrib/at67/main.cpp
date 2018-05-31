@@ -1,5 +1,5 @@
 /**********************************************************************************************/
-/* gtemuSDL ver 0.3.2                                                                         */
+/* gtemuSDL                                                                                   */
 /*                                                                                            */ 
 /* gtemuSDL is an emulator for the Gigatron TTL microcomputer, written in C++ using SDL2.     */
 /* This project provides Microsoft Windows support and should be compatible with Linux, MacOS */
@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
             Cpu::reset(true);
             vgaX = 0, vgaY = 0;
             HSync = 0, VSync = 0;
-            fprintf(stderr, "main(): CPU stall for %lld clocks : rebooting...\n", clock - clock_prev);
+            fprintf(stderr, "main(): CPU stall for %lld clocks : rebooting.\n", clock - clock_prev);
         }
 
         // Rising hSync edge
@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
                 if(vgaX != 200)
                 {
                     colour = 0xFFFF0000;
-                    //fprintf(stderr, "main(): Horizontal timing error : vgaX %03d : vgaY %03d : xout %02x : time %0.3f\n", vgaX, vgaY, T._AC, float(clock)/6.250e+06f);
+                    //fprintf(stderr, "main(): Horizontal timing error : vgaX %03d : vgaY %03d : xout %02x : time %0.3f.\n", vgaX, vgaY, T._AC, float(clock)/6.250e+06f);
                 }
                 if((vgaY % 4) == 3) Graphics::refreshTimingPixel(S, 160, (vgaY/4) % GIGA_HEIGHT, colour, debugging);
             }
@@ -120,6 +120,9 @@ int main(int argc, char* argv[])
         // Debugger
         debugging = Editor::singleStepDebug();
 
+        // vCPU instruction slot utilisation
+        Cpu::vCpuUsage(S);
+        
 #if 0
         Audio::playMusic();
 #endif

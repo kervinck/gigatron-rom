@@ -2,12 +2,15 @@
 #include <stdio.h>
 #include <time.h>
 #include <fstream>
+#include <iomanip>
+#include <vector>
 
 #include <SDL.h>
 #include "cpu.h"
 #include "editor.h"
 #include "timing.h"
 #include "graphics.h"
+#include "gigatron_0x1c.h"
 
 
 #ifdef _WIN32
@@ -17,10 +20,16 @@
 
 namespace Cpu
 {
+    int _vCpuInstPerFrame = 0;
+    int _vCpuInstPerFrameMax = 0;
+    float _vCpuUtilisation = 0.0;
+
     int64_t _clock = -2;
     uint8_t _IN = 0xFF, _XOUT = 0x00;
     uint8_t _ROM[ROM_SIZE][2], _RAM[RAM_SIZE];
 
+    std::vector<uint8_t> scanlinesRom0;
+    std::vector<uint8_t> scanlinesRom1;
 
     int64_t getClock(void) {return _clock;}
     uint8_t getIN(void) {return _IN;}
@@ -29,10 +38,12 @@ namespace Cpu
     uint8_t getROM(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01];}
     uint16_t getRAM16(uint16_t address) {return _RAM[address & (RAM_SIZE-1)] | (_RAM[(address+1) & (RAM_SIZE-1)]<<8);}
     uint16_t getROM16(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01] | (_ROM[(address+1) & (ROM_SIZE-1)][page & 0x01]<<8);}
+    float getvCpuUtilisation(void) {return _vCpuUtilisation;}
 
     void setClock(int64_t clock) {_clock = clock;}
     void setIN(uint8_t in) {_IN = in;}
     void setXOUT(uint8_t xout) {_XOUT = xout;}
+
     void setRAM(uint16_t address, uint8_t data)
     {
         // Constant "0" and "1" are stored here
@@ -41,11 +52,13 @@ namespace Cpu
 
         _RAM[address & (RAM_SIZE-1)] = data;
     }
+
     void setROM(uint16_t base, uint16_t address, uint8_t data)
     {
         uint16_t offset = (address - base) / 2;
         _ROM[base + offset][address & 0x01] = data;
     }
+
     void setRAM16(uint16_t address, uint16_t data)
     {
         // Constant "0" and "1" are stored here
@@ -55,6 +68,7 @@ namespace Cpu
         _RAM[address & (RAM_SIZE-1)] = uint8_t(data & 0x00FF);
         _RAM[(address+1) & (RAM_SIZE-1)] = uint8_t((data & 0xFF00)>>8);
     }
+
     void setROM16(uint16_t base, uint16_t address, uint16_t data)
     {
         uint16_t offset = (address - base) / 2;
@@ -62,12 +76,136 @@ namespace Cpu
         _ROM[base + offset][(address+1) & 0x01] = uint8_t((data & 0xFF00)>>8);
     }
 
+    void saveScanlineModes(void)
+    {
+        for(int i=0x01C2; i<=0x01DE; i++)
+        {
+            scanlinesRom0.push_back(_ROM[i][0]);
+            scanlinesRom1.push_back(_ROM[i][1]);
+        }
+    }
+
+    void restoreScanlineModes(void)
+    {
+        for(int i=0x01C2; i<=0x01DE; i++)
+        {
+            _ROM[i][0] = scanlinesRom0[i - 0x01C2];
+            _ROM[i][1] = scanlinesRom1[i - 0x01C2];
+        }
+    }
+
+    void setScanlineModeVideoB(void)
+    {
+        _ROM[0x01C2][0] = 0x14;
+        _ROM[0x01C2][1] = 0x01;
+
+        _ROM[0x01C9][0] = 0x01;
+        _ROM[0x01C9][1] = 0x09;
+
+        _ROM[0x01CA][0] = 0x90;
+        _ROM[0x01CA][1] = 0x01;
+
+        _ROM[0x01CB][0] = 0x01;
+        _ROM[0x01CB][1] = 0x0A;
+
+        _ROM[0x01CC][0] = 0x8D;
+        _ROM[0x01CC][1] = 0x00;
+
+        _ROM[0x01CD][0] = 0xC2;
+        _ROM[0x01CD][1] = 0x0A;
+
+        _ROM[0x01CE][0] = 0x00;
+        _ROM[0x01CE][1] = 0xD4;
+
+        _ROM[0x01CF][0] = 0xFC;
+        _ROM[0x01CF][1] = 0xFD;
+
+        _ROM[0x01D0][0] = 0xC2;
+        _ROM[0x01D0][1] = 0x0C;
+
+        _ROM[0x01D1][0] = 0x02;
+        _ROM[0x01D1][1] = 0x00;
+
+        _ROM[0x01D2][0] = 0x02;
+        _ROM[0x01D2][1] = 0x00;
+
+        _ROM[0x01D3][0] = 0x02;
+        _ROM[0x01D3][1] = 0x00;
+    }
+
+    void setScanlineModeVideoC(void)
+    {
+        _ROM[0x01DA][0] = 0xFC;
+        _ROM[0x01DA][1] = 0xFD;
+
+        _ROM[0x01DB][0] = 0xC2;
+        _ROM[0x01DB][1] = 0x0C;
+
+        _ROM[0x01DC][0] = 0x02;
+        _ROM[0x01DC][1] = 0x00;
+
+        _ROM[0x01DD][0] = 0x02;
+        _ROM[0x01DD][1] = 0x00;
+
+        _ROM[0x01DE][0] = 0x02;
+        _ROM[0x01DE][1] = 0x00;
+    }
+
+    void setScanlineMode(ScanlineMode scanlineMode)
+    {
+        switch(scanlineMode)
+        {
+            case Normal:  restoreScanlineModes();                           break;
+            case VideoB:  setScanlineModeVideoB();                          break;
+            case VideoC:  setScanlineModeVideoC();                          break;
+            case VideoBC: setScanlineModeVideoB(); setScanlineModeVideoC(); break;
+        }
+    }
+
     void garble(uint8_t* mem, int len)
     {
         for(int i=0; i<len; i++) mem[i] = rand();
     }
 
-    void initialise(Cpu::State& S)
+    void createRomHeader(const uint8_t* rom, const std::string& filename, const std::string& name, int length)
+    {
+        std::ofstream outfile(filename);
+        if(!outfile.is_open())
+        {
+            fprintf(stderr, "Graphics::createRomHeader() : failed to create '%s'.\n", filename.c_str());
+            return;
+        }
+
+        outfile << "uint8_t " << name + "[] = \n";
+        outfile << "{\n";
+        outfile << "    ";
+
+        int colCount = 0;
+        uint8_t* data = (uint8_t*)rom;
+        for(int i=0; i<length; i++)
+        {
+            outfile << "0x" << std::hex << std::setw(2) << std::setfill('0') << int(data[i]) << ", ";
+            if(++colCount == 12)
+            {
+                colCount = 0;
+                if(i < length-1) outfile << "\n    ";
+            }
+        }
+        
+        outfile << "\n};" << std::endl;
+    }
+
+    void loadDefaultRom(const uint8_t* rom)
+    {
+        uint8_t* srcRom = (uint8_t *)rom;
+        uint8_t* dstRom = (uint8_t *)_ROM;
+        for(int i=0; i<sizeof(_ROM); i++)
+        {
+            *dstRom++ = *srcRom++;
+        } 
+    }
+
+    void initialise(State& S)
     {
 #ifdef _WIN32
         CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -92,27 +230,34 @@ namespace Cpu
         garble(_RAM, sizeof _RAM);
         garble((uint8_t*)&S, sizeof S);
 
-        // Open ROM file
-        std::ifstream romfile("theloop.2.rom", std::ios::binary | std::ios::in);
+        // Check for ROM file
+        std::string filenameRom = "theloop.2.rom";
+        std::ifstream romfile(filenameRom, std::ios::binary | std::ios::in);
         if(!romfile.is_open())
         {
-            fprintf(stderr, "Cpu::initialise() : failed to open ROM file\n");
-            exit(EXIT_FAILURE);
+            loadDefaultRom(_gigatron_0x1c_rom);
         }
-
-        // Read ROM file
-        romfile.read((char *)_ROM, sizeof(_ROM));
-        if(romfile.bad() || romfile.fail())
+        else
         {
-            fprintf(stderr, "Cpu::initialise() : failed to read ROM file\n");
-            exit(EXIT_FAILURE);
+            // Load ROM file
+            romfile.read((char *)_ROM, sizeof(_ROM));
+            if(romfile.bad() || romfile.fail())
+            {
+                fprintf(stderr, "Cpu::initialise() : failed to read %s ROM file, using default ROM.\n", filenameRom.c_str());
+                loadDefaultRom(_gigatron_0x1c_rom);
+            }
+#ifdef CREATE_ROM_HEADER
+            // Use this if you ever want to change the default ROM
+            createRomHeader((uint8_t *)_ROM, "gigatron_0x1c.h", "_gigatron_0x1c_rom", sizeof(_ROM));
+#endif
         }
+        saveScanlineModes();
 
         // SDL initialisation
         if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS) < 0)
         {
-            fprintf(stderr, "Cpu::initialise() : failed to initialise SDL\n");
-            exit(EXIT_FAILURE);
+            fprintf(stderr, "Cpu::initialise() : failed to initialise SDL.\n");
+            _EXIT_(EXIT_FAILURE);
         }
     }
 
@@ -205,5 +350,38 @@ namespace Cpu
         Graphics::resetVTable();
         Editor::setSingleStepWatchAddress(VIDEO_Y_ADDRESS);
         setClock(CLOCK_RESET);
+    }
+
+    // Counts maximum and used vCPU instruction slots available per frame
+    void vCpuUsage(State& S)
+    {
+        if(S._PC == ROM_VCPU_DISPATCH)
+        {
+            uint16_t vPC = (getRAM(0x0017) <<8) |getRAM(0x0016);
+            if(vPC < Editor::getCpuBaseAddressA()  ||  vPC > Editor::getCpuBaseAddressB()) _vCpuInstPerFrame++;
+            _vCpuInstPerFrameMax++;
+
+            static uint64_t prevFrameCounter = 0;
+            double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
+            if(frameTime > VSYNC_TIMING_60)
+            {
+                // TODO: this is a bit of a hack, but it's emulation only so...
+                // Check for magic cookie that defines a CpuBaseAddressA and CpuBaseAddressB sequence
+                uint16_t magicWord0 = (getRAM(0x7F99) <<8) | getRAM(0x7F98);
+                uint16_t magicWord1 = (getRAM(0x7F9B) <<8) | getRAM(0x7F9A);
+                uint16_t cpuBaseAddressA = (getRAM(0x7F9D) <<8) | getRAM(0x7F9C);
+                uint16_t cpuBaseAddressB = (getRAM(0x7F9F) <<8) | getRAM(0x7F9E);
+                if(magicWord0 == 0xDEAD  &&  magicWord1 == 0xBEEF)
+                {
+                    Editor::setCpuBaseAddressA(cpuBaseAddressA);
+                    Editor::setCpuBaseAddressB(cpuBaseAddressB);
+                }
+
+                prevFrameCounter = SDL_GetPerformanceCounter();
+                _vCpuUtilisation = (_vCpuInstPerFrameMax) ? float(_vCpuInstPerFrame) / float(_vCpuInstPerFrameMax) : 0.0f;
+                _vCpuInstPerFrame = 0;
+                _vCpuInstPerFrameMax = 0;
+            }
+        }
     }
 }

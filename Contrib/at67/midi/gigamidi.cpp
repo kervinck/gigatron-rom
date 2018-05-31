@@ -13,6 +13,8 @@
 #define MAX_MIDI_BUFFER_SIZE  0x10000
 #define MAX_SOUND_CHANNELS    4
 #define MASK_SOUND_CHANNELS   0x03
+#define MIN_GIGA_NOTE         12
+#define MAX_GIGA_NOTE         106
 
 
 enum Format {vCPU=0, GCL, CPP, PY, NumFormats};
@@ -166,13 +168,32 @@ void outputPYfooter(std::ofstream& outfile)
     outfile << std::endl << "])" << std::endl;
 }
 
+void outputDelay(std::ofstream& outfile, Format format, uint8_t delay8, double timingAdjust, double totalTime16, double& totalTime8, int& charCount)
+{
+    // Adjust delay8 to try and keep overall timing as accurate as possible
+    if(timingAdjust)
+    {
+        if(totalTime16 > totalTime8 + double(delay8)*16.6666666667 + 16.6666666667*timingAdjust  &&  delay8 < 0x7F)  delay8++;
+        if(totalTime16 < totalTime8 + double(delay8)*16.6666666667 - 16.6666666667*timingAdjust  &&  delay8 > 0x01)  delay8--;
+    }
+
+    totalTime8 += double(delay8) * 16.6666666667;
+
+    switch(format)
+    {
+        case Format::vCPU: outputvCPUcommand(outfile, delay8, charCount); break;
+        case Format::GCL:  outputGCLcommand(outfile, delay8, charCount);  break;
+        case Format::CPP:  outputCPPcommand(outfile, delay8, charCount);  break;
+        case Format::PY:   outputPYcommand(outfile, delay8, charCount);   break;
+    }
+}
 
 void main(int argc, char* argv[])
 {
-    if(argc != 8)
+    if(argc != 9)
     {
-        fprintf(stderr, "Usage:   gigamidi <input filename> <output filename> <format 0, 1, 2 or 3> <address in hex> <offset in hex> <count> <line length>\n");
-        fprintf(stderr, "Example: gigamidi game_over.bin game_over.i 0 0x8000 0 0 100\n");
+        fprintf(stderr, "Usage:   gigamidi <input filename> <output filename> <int format 0, 1, 2 or 3> <uint16_t address in hex> <uint16_t offset in hex> <int count> <int line_length> <float timing_adjust>\n");
+        fprintf(stderr, "Example: gigamidi game_over.bin game_over.i 0 0x8000 0 0 100 0.5\n");
         fprintf(stderr, "Input:   miditones binary file produced with miditones, e.g. miditones -t4 -b <filename>.bin\n");
         fprintf(stderr, "Format:  0 = vCPU ASM, 1 = GCL, 2 = C/C++, 3 = Python\n");
         exit(0);
@@ -181,8 +202,8 @@ void main(int argc, char* argv[])
     std::string inFileName = std::string(argv[1]);
     std::string outFileName = std::string(argv[2]);
 
-    int format = std::stoi(std::string(argv[3]));
-    if(format < Format::vCPU  || format >= Format::NumFormats)
+    Format format = (Format)std::stoi(std::string(argv[3]));
+    if(format < Format::vCPU  ||  format >= Format::NumFormats)
     {
         fprintf(stderr, "Format must be 0, 1, 2 or 3\n");
         exit(0);
@@ -198,8 +219,8 @@ void main(int argc, char* argv[])
 
     uint16_t count;
     count = std::stoi(argv[6]);
-
     int lineLength = std::stoi(std::string(argv[7]));
+    double timingAdjust = std::stod(std::string(argv[8]));
 
     std::ifstream infile(inFileName, std::ios::binary | std::ios::in);
     if(!infile.is_open())
@@ -230,7 +251,7 @@ void main(int argc, char* argv[])
     std::string midiName = outFileName.substr(i, j - i);
 
     size_t midiSize = infile.gcount();
-    uint8_t* _midiPtr = midiBuffer;
+    uint8_t* midiPtr = midiBuffer;
     int gigaSize = 0;
 
     double totalTime16 = 0;
@@ -249,13 +270,15 @@ void main(int argc, char* argv[])
     // Commands
     while(midiSize)
     {
-        uint8_t command = *_midiPtr++; midiSize--;
+        uint8_t command = *midiPtr++; midiSize--;
         if(command & 0x80)
         {
             // Start note
             if((command & 0xF0) == 0x90)
             {
-                uint8_t note = *_midiPtr++; midiSize--;
+                uint8_t note = *midiPtr++; midiSize--;
+                if(note < MIN_GIGA_NOTE) note = MIN_GIGA_NOTE;
+                if(note > MAX_GIGA_NOTE) note = MAX_GIGA_NOTE;
                 gigaSize += 2;
                 switch(format)
                 {
@@ -289,24 +312,37 @@ void main(int argc, char* argv[])
         // Delay n milliseconds where n = 16bit value, converted to 8bit, (0x00 <-> 0x7F)
         else
         {
-            gigaSize += 1;
-            uint16_t delay16 = ((command<<8) | *_midiPtr++); midiSize--;
-            uint8_t delay8 = uint8_t(floor(double(delay16) / 16.6666666667 + 0.5));  // maximum delay is 0x7F * 16.6666666667, (2116ms)
-            if(delay16 > 2116) 
+            // Coalesc sequence of delays together
+            int i = 0;
+            int coalescedDelay = ((command<<8) | *midiPtr++); midiSize--;
+            while(midiSize)
             {
-                delay8 = 0x7F;
-                fprintf(stderr, "Warning, 16 bit delay is larger that 2116ms, this conversion could have serious timing issues! : wanted %dms : received %dms : at byte position %d\n\n", delay16, int(delay8*16.6666666667), int(_midiPtr - midiBuffer));
+                if(midiPtr[i] & 0x80) break;
+                coalescedDelay += (midiPtr[i]<<8) + midiPtr[i+1];
+                i += 2;
+                midiSize -= 2;
             }
+            midiPtr += i;
 
-            totalTime16 += double(delay16);
-            totalTime8 += double(delay8) * 16.6666666667;
-
-            switch(format)
+            // Break up coalesced delay into bytes
+            if(coalescedDelay)
             {
-                case Format::vCPU: outputvCPUcommand(outfile, delay8, charCount); break;
-                case Format::GCL:  outputGCLcommand(outfile, delay8, charCount);  break;
-                case Format::CPP:  outputCPPcommand(outfile, delay8, charCount);  break;
-                case Format::PY:   outputPYcommand(outfile, delay8, charCount);   break;
+                totalTime16 += double(coalescedDelay);
+                coalescedDelay = int(double(coalescedDelay)/16.6666666667 + 0.5);
+
+                // Ignore zero delays
+                if(coalescedDelay)
+                {
+                    int div = coalescedDelay / 0x7F;
+                    int rem = coalescedDelay % 0x7F;
+                    gigaSize += div + 1;
+
+                    for(int i=0; i<div; i++)
+                    {
+                        outputDelay(outfile, format, 0x7f, timingAdjust, totalTime16, totalTime8, charCount);
+                    }
+                    outputDelay(outfile, format, rem, timingAdjust, totalTime16, totalTime8, charCount);
+                }
             }
         }
         
@@ -350,7 +386,7 @@ void main(int argc, char* argv[])
         }
 
         // Last segment points back to address, (can be user edited in output source file to point to a different MIDI stream)                
-        if(midiSize == 0  &&  count  &&  offset)
+        if(midiSize == 0)
         {
             switch(format)
             {

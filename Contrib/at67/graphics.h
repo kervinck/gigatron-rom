@@ -30,6 +30,12 @@
 #define NUM_LEDS         4
 #define MENU_START_X     488
 #define MENU_START_Y     0
+#define HEX_START        30
+#define VAR_START        96
+#define CPUA_START       78
+#define CPUB_START       120
+
+#define GRAPHICS_CONFIG_INI  "graphics_config.ini"
 
 
 namespace Graphics
@@ -56,7 +62,7 @@ namespace Graphics
     void refreshScreen(void);
 
     void drawLeds(void);
-    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t colour, bool invert, int invertSize, bool fullscreen=false, uint32_t commentColour=0x00000000, uint32_t sectionColour=0x00000000);
+    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t colour, bool invert, int invertSize, bool colourKey=false, bool fullscreen=false, uint32_t commentColour=0x00000000, uint32_t sectionColour=0x00000000);
     void drawDigitBox(uint8_t digit, int x, int y, uint32_t colour);
 
     void renderText(void);

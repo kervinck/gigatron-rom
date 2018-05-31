@@ -23,6 +23,7 @@ namespace Assembler
     void printGprintfStrings(void);
 
     void initialise(void);
+    void clearAssembler(void);
     bool getNextAssembledByte(ByteCode& byteCode);
     bool assemble(const std::string& filename, uint16_t startAddress=DEFAULT_START_ADDRESS);
 }

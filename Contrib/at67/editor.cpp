@@ -44,7 +44,7 @@ namespace Editor
     bool _singleStepMode = false;
     uint32_t _singleStepTicks = 0;
     uint8_t _singleStepWatch = 0x00;
-    const std::string _basePath = "/vCPU";
+    const std::string _srcPath = "/";
     std::string _cwdPath = "";
     std::string _filePath = "";
     bool _startMusic = false;
@@ -57,6 +57,8 @@ namespace Editor
     uint16_t _loadBaseAddress = LOAD_BASE_ADDRESS;
     uint16_t _varsBaseAddress = VARS_BASE_ADDRESS;
     uint16_t _singleStepWatchAddress = VIDEO_Y_ADDRESS;
+    uint16_t _cpuBaseAddressA = HEX_BASE_ADDRESS;
+    uint16_t _cpuBaseAddressB = HEX_BASE_ADDRESS + 0x0020;
     
     int _fileEntriesIndex = 0;
     std::vector<FileEntry> _fileEntries;
@@ -80,6 +82,8 @@ namespace Editor
     uint16_t getLoadBaseAddress(void) {return _loadBaseAddress;}
     uint16_t getVarsBaseAddress(void) {return _varsBaseAddress;}
     uint16_t getSingleStepWatchAddress(void) {return _singleStepWatchAddress;}
+    uint16_t getCpuBaseAddressA(void) {return _cpuBaseAddressA;}
+    uint16_t getCpuBaseAddressB(void) {return _cpuBaseAddressB;}
     int getFileEntriesIndex(void) {return _fileEntriesIndex;}
     int getFileEntriesSize(void) {return int(_fileEntries.size());}
     std::string getBrowserPath(void) {return _filePath;}
@@ -93,14 +97,15 @@ namespace Editor
     void setSingleStepMode(bool singleStepMode) {_singleStepMode = singleStepMode;}
     void setLoadBaseAddress(uint16_t address) {_loadBaseAddress = address;}
     void setSingleStepWatchAddress(uint16_t address) {_singleStepWatchAddress = address;}
-
+    void setCpuBaseAddressA(uint16_t address) {_cpuBaseAddressA = address;}
+    void setCpuBaseAddressB(uint16_t address) {_cpuBaseAddressB = address;}
 
     bool scanCodeFromIniKey(const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, int& scanCode)
     {
         std::string key = Expression::strToUpper(_iniReader.Get(sectionString, iniKey, defaultKey));
         if(_sdlKeys.find(key) == _sdlKeys.end())
         {
-            fprintf(stderr, "Editor::initialise() : key %s not recognised in INI file '%s' : reverting to default key %s.\n", key.c_str(), INPUT_KEYS_INI, defaultKey.c_str());
+            fprintf(stderr, "Editor::initialise() : key %s not recognised in INI file '%s' : reverting to default key %s.\n", key.c_str(), INPUT_CONFIG_INI, defaultKey.c_str());
             scanCode = _sdlKeys[defaultKey];
             return false;
         }
@@ -115,7 +120,7 @@ namespace Editor
         char cwdPath[FILENAME_MAX];
         getcwd(cwdPath, FILENAME_MAX);
         _cwdPath = std::string(cwdPath);
-        _filePath = _cwdPath + _basePath;
+        _filePath = _cwdPath + _srcPath;
 
         // Keyboard to SDL key mapping
         _sdlKeys["ENTER"]            = SDLK_RETURN;
@@ -244,38 +249,39 @@ namespace Editor
         _sdlKeys["RGUI"]             = SDLK_RGUI;
 
         // Default INI key to SDL key mapping
-        _inputKeys["Edit"]        = SDLK_RETURN;
-        _inputKeys["RAM_Mode"]    = SDLK_r;
-        _inputKeys["Execute"]     = SDLK_F5;
-        _inputKeys["Left"]        = SDLK_LEFT;
-        _inputKeys["Right"]       = SDLK_RIGHT;
-        _inputKeys["Up"]          = SDLK_UP;
-        _inputKeys["Down"]        = SDLK_DOWN;
-        _inputKeys["PageUp"]      = SDLK_PAGEUP;
-        _inputKeys["PageDown"]    = SDLK_PAGEDOWN;
-        _inputKeys["Load"]        = SDLK_l;
-        _inputKeys["Quit"]        = SDLK_ESCAPE;
-        _inputKeys["Reset"]       = SDLK_F1;
-        _inputKeys["Speed+"]      = SDLK_EQUALS;
-        _inputKeys["Speed-"]      = SDLK_MINUS;
-        _inputKeys["Help"]        = SDLK_h;
-        _inputKeys["Giga_Left"]   = SDLK_a;
-        _inputKeys["Giga_Right"]  = SDLK_d;
-        _inputKeys["Giga_Up"]     = SDLK_w;
-        _inputKeys["Giga_Down"]   = SDLK_s;
-        _inputKeys["Giga_Start"]  = SDLK_SPACE;
-        _inputKeys["Giga_Select"] = SDLK_z;
-        _inputKeys["Giga_A"]      = SDLK_GREATER;
-        _inputKeys["Giga_B"]      = SDLK_SLASH;
-        _inputKeys["Debug"]       = SDLK_F6;
-        _inputKeys["Step"]        = SDLK_F10;
+        _inputKeys["Edit"]         = SDLK_RETURN;
+        _inputKeys["RAM_Mode"]     = SDLK_r;
+        _inputKeys["Execute"]      = SDLK_F5;
+        _inputKeys["Left"]         = SDLK_LEFT;
+        _inputKeys["Right"]        = SDLK_RIGHT;
+        _inputKeys["Up"]           = SDLK_UP;
+        _inputKeys["Down"]         = SDLK_DOWN;
+        _inputKeys["PageUp"]       = SDLK_PAGEUP;
+        _inputKeys["PageDown"]     = SDLK_PAGEDOWN;
+        _inputKeys["Load"]         = SDLK_l;
+        _inputKeys["Help"]         = SDLK_h;
+        _inputKeys["Quit"]         = SDLK_ESCAPE;
+        _inputKeys["Reset"]        = SDLK_F1;
+        _inputKeys["ScanlineMode"] = SDLK_F3;
+        _inputKeys["Speed+"]       = SDLK_EQUALS;
+        _inputKeys["Speed-"]       = SDLK_MINUS;
+        _inputKeys["Giga_Left"]    = SDLK_a;
+        _inputKeys["Giga_Right"]   = SDLK_d;
+        _inputKeys["Giga_Up"]      = SDLK_w;
+        _inputKeys["Giga_Down"]    = SDLK_s;
+        _inputKeys["Giga_Start"]   = SDLK_SPACE;
+        _inputKeys["Giga_Select"]  = SDLK_z;
+        _inputKeys["Giga_A"]       = SDLK_GREATER;
+        _inputKeys["Giga_B"]       = SDLK_SLASH;
+        _inputKeys["Debug"]        = SDLK_F6;
+        _inputKeys["Step"]         = SDLK_F10;
 
         // Input configuration
-        INIReader iniReader(INPUT_KEYS_INI);
+        INIReader iniReader(INPUT_CONFIG_INI);
         _iniReader = iniReader;
         if(_iniReader.ParseError() < 0)
         {
-            fprintf(stderr, "Editor::initialise() : couldn't load INI file '%s' : reverting to default keys.\n", INPUT_KEYS_INI);
+            fprintf(stderr, "Editor::initialise() : couldn't load INI file '%s' : reverting to default keys.\n", INPUT_CONFIG_INI);
             return;
         }
 
@@ -291,7 +297,7 @@ namespace Editor
         {
             if(section.find(sectionString) == section.end())
             {
-                fprintf(stderr, "Editor::initialise() : INI file '%s' has bad Sections : reverting to default keys.\n", INPUT_KEYS_INI);
+                fprintf(stderr, "Editor::initialise() : INI file '%s' has bad Sections : reverting to default keys.\n", INPUT_CONFIG_INI);
                 break;
             }
 
@@ -319,11 +325,12 @@ namespace Editor
 
                 case Emulator:
                 {
-                    scanCodeFromIniKey(sectionString, "Quit",   "ESCAPE", _inputKeys["Quit"]);
-                    scanCodeFromIniKey(sectionString, "Reset",  "F1",     _inputKeys["Reset"]);
-                    scanCodeFromIniKey(sectionString, "Speed+", "+",      _inputKeys["Speed+"]);
-                    scanCodeFromIniKey(sectionString, "Speed-", "-",      _inputKeys["Speed-"]);
-                    scanCodeFromIniKey(sectionString, "Help",   "H",      _inputKeys["Help"]);
+                    scanCodeFromIniKey(sectionString, "Quit",         "ESCAPE", _inputKeys["Quit"]);
+                    scanCodeFromIniKey(sectionString, "Reset",        "F1",     _inputKeys["Reset"]);
+                    scanCodeFromIniKey(sectionString, "ScanlineMode", "F3",     _inputKeys["ScanlineMode"]);
+                    scanCodeFromIniKey(sectionString, "Speed+",       "+",      _inputKeys["Speed+"]);
+                    scanCodeFromIniKey(sectionString, "Speed-",       "-",      _inputKeys["Speed-"]);
+                    scanCodeFromIniKey(sectionString, "Help",         "H",      _inputKeys["Help"]);
                 }
                 break;
 
@@ -396,7 +403,7 @@ namespace Editor
 
         else if(keyCode == _inputKeys["Left"])  {_cursorX = (--_cursorX < 0) ? HEX_CHARS_X-1 : _cursorX;  _memoryDigit = 0; _addressDigit = 0;}
         else if(keyCode == _inputKeys["Right"]) {_cursorX = (++_cursorX >= HEX_CHARS_X) ? 0  : _cursorX;  _memoryDigit = 0; _addressDigit = 0;}
-        else if(keyCode == _inputKeys["Up"])    {_cursorY = (--_cursorY < -1) ? limitY-1     : _cursorY;  _memoryDigit = 0; _addressDigit = 0;}
+        else if(keyCode == _inputKeys["Up"])    {_cursorY = (--_cursorY < -2) ? limitY-1     : _cursorY;  _memoryDigit = 0; _addressDigit = 0;}
         else if(keyCode == _inputKeys["Down"])  {_cursorY = (++_cursorY >= limitY) ? 0       : _cursorY;  _memoryDigit = 0; _addressDigit = 0;}
 
         else if(keyCode == _inputKeys["PageUp"])
@@ -430,14 +437,14 @@ namespace Editor
 
         else if(keyCode == _inputKeys["Speed+"])
         {
-            double timingHack = Timing::getTimingHack() - TIMING_HACK*0.05;
+            double timingHack = Timing::getTimingHack() - VSYNC_TIMING_60*0.05;
             if(timingHack >= 0.0) Timing::setTimingHack(timingHack);
         }
 
         else if(keyCode == _inputKeys["Speed-"])
         {
-            double timingHack = Timing::getTimingHack() + TIMING_HACK*0.05;
-            if(timingHack <= TIMING_HACK) Timing::setTimingHack(timingHack);
+            double timingHack = Timing::getTimingHack() + VSYNC_TIMING_60*0.05;
+            if(timingHack <= VSYNC_TIMING_60) Timing::setTimingHack(timingHack);
         }
 
         else if(keyCode == _inputKeys["Quit"])
@@ -467,8 +474,37 @@ namespace Editor
                 case 2: value = keyCode - SDLK_a + 10; break;
             }
 
-            // Edit address
-            if(_cursorY == -1  &&   _hexEdit)
+            // Edit cpu usage addresses
+            if(_cursorY == -2  &&   _hexEdit)
+            {
+                // A address or B address
+                if((_cursorX & 0x01) == 0)
+                {
+                    // A address
+                    switch(_addressDigit)
+                    {
+                        case 0: value = (value << 12) & 0xF000; _cpuBaseAddressA = _cpuBaseAddressA & 0x0FFF | value; break;
+                        case 1: value = (value << 8)  & 0x0F00; _cpuBaseAddressA = _cpuBaseAddressA & 0xF0FF | value; break;
+                        case 2: value = (value << 4)  & 0x00F0; _cpuBaseAddressA = _cpuBaseAddressA & 0xFF0F | value; break;
+                        case 3: value = (value << 0)  & 0x000F; _cpuBaseAddressA = _cpuBaseAddressA & 0xFFF0 | value; break;
+                    }
+                }
+                else
+                {
+                    // B address
+                    switch(_addressDigit)
+                    {
+                        case 0: value = (value << 12) & 0xF000; _cpuBaseAddressB = _cpuBaseAddressB & 0x0FFF | value; break;
+                        case 1: value = (value << 8)  & 0x0F00; _cpuBaseAddressB = _cpuBaseAddressB & 0xF0FF | value; break;
+                        case 2: value = (value << 4)  & 0x00F0; _cpuBaseAddressB = _cpuBaseAddressB & 0xFF0F | value; break;
+                        case 3: value = (value << 0)  & 0x000F; _cpuBaseAddressB = _cpuBaseAddressB & 0xFFF0 | value; break;
+                    }
+                }
+
+                _addressDigit = (++_addressDigit) & 0x03;
+            }
+            // Edit load/vars addresses
+            else if(_cursorY == -1  &&   _hexEdit)
             {
                 // Hex address or load address
                 if((_cursorX & 0x01) == 0)
@@ -643,7 +679,7 @@ namespace Editor
         // Toggle hex edit or start an upload
         else if(keyCode == _inputKeys["Edit"])
         {
-            if(_editorMode != Load  ||  _cursorY == -1)
+            if(_editorMode != Load  ||  _cursorY < 0)
             {
                 _hexEdit = !_hexEdit;
             }
@@ -666,6 +702,23 @@ namespace Editor
             Graphics::setDisplayHelpScreen(helpScreen);
         }
 
+        else if(keyCode == _inputKeys["ScanlineMode"])
+        {
+            static int scanlineMode = Cpu::ScanlineMode::Normal;
+            if(++scanlineMode == Cpu::ScanlineMode::NumScanlineModes-1) scanlineMode = Cpu::ScanlineMode::Normal;
+            Cpu::setScanlineMode((Cpu::ScanlineMode)scanlineMode);
+        }
+
+        else if(keyCode == SDLK_F2)
+        {
+            //_startMusic = !_startMusic;
+        }
+
+        else if(keyCode == SDLK_F4)
+        {
+            //Audio::nextScore();
+        }
+
         updateEditor(keyCode);
     }
 
@@ -683,7 +736,7 @@ namespace Editor
             {
                 setSingleStep(false); 
                 setSingleStepMode(false);
-                fprintf(stderr, "Editor::singleStepDebug() : Single step stall for %d milliseconds : exiting debugger...\n", SDL_GetTicks() - _singleStepTicks);
+                fprintf(stderr, "Editor::singleStepDebug() : Single step stall for %d milliseconds : exiting debugger.\n", SDL_GetTicks() - _singleStepTicks);
             }
             // Watch variable 
             else if(Cpu::getRAM(_singleStepWatchAddress) != _singleStepWatch) 
@@ -701,12 +754,12 @@ namespace Editor
             double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
 
             Timing::setFrameUpdate(false);
-            if(frameTime > TIMING_HACK)
+            if(frameTime > VSYNC_TIMING_60)
             {
+                prevFrameCounter = SDL_GetPerformanceCounter();
                 Timing::setFrameUpdate(true);
                 Graphics::refreshScreen();
                 Graphics::render(false);
-                prevFrameCounter = SDL_GetPerformanceCounter();
             }
 
             SDL_Event event;

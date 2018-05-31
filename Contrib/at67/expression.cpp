@@ -152,7 +152,7 @@ namespace Expression
         {
             if(!number(value))
             {
-                fprintf(stderr, "Expression::factor() : Bad numeric data in '%s'\n", _expressionToParse);
+                fprintf(stderr, "Expression::factor() : Bad numeric data in '%s'.\n", _expressionToParse);
                 value = 0;
             }
             return value;

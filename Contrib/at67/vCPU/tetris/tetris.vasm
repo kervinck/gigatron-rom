@@ -77,14 +77,17 @@ fgColourB       EQU     0xFF
 bgColourB       EQU     0x15
 bgColourW       EQU     0x1515
              
-_startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
+_startAddress_      EQU     0x0200       ; entry point for the code, if this is missing defaults to 0x0200
 
-_callTable_         EQU     0x00EE      ; call addresses are automatically stored here by the assembler, it grows downwards, (leave 16 bytes for vCPU stack)
-                                        ; *NOTE* gt1 spec only allows for one zero page segment, .vasm files use this for the call table
-                                        ; do not define any data/constants in zero page using DB or DW, it will not work! (use code)
+_callTable_         EQU     0x00EE       ; call addresses are automatically stored here by the assembler, it grows downwards, (leave 16 bytes for vCPU stack)
+                                         ; *NOTE* gt1 spec only allows for one zero page segment, .vasm files use this for the call table
+                                         ; do not define any data/constants in zero page using DB or DW, it will not work! (use code)
                                         
 _singleStepWatch_   EQU     frameCounter ; the single step debugger watches this variable location to decide when to step,
                                          ; choose a variable that is updated often
+_cpuUsageAddressA_  EQU     0x0600       ; these two addresses are used to build an exclusion zone around vCPU code that will not be counted
+_cpuUsageAddressB_  EQU     0x0620       ; in the vCPU usage meter, (almost always used to exclude your VBlank polling loop)
+
 
 %include tetris\midi_scores.i
 %include tetris\tetromino.i
@@ -116,6 +119,7 @@ entry_point     EQU     0x0200
 handleInput     EQU     entry_point + 0x0100
 updateScore     EQU     entry_point + 0x0200        ; too big to store in unused area of video memory
 incrementScore  EQU     entry_point + 0x0300        ; too big to store in unused area of video memory
+waitVBlank      EQU     entry_point + 0x0400
 
 
 ; storing subroutines in unused areas of video memory
@@ -215,14 +219,8 @@ restart         CALL    resetLevel
 update          ST      scratch
                 CALL    saveTetromino
 
-                ;gprintf("%c %d $%04x $%04x $%04x b%016b b%08b o%04o $%04x %s", 48, 45000, 0xDEAD, 0xBEEF, resetLevel, frameCountPrev, *frameCounter, maxTicks + 1, vBlank, *level_string)
-
                 ; wait for VBlank
-vBlank          LD      giga_frameCount
-                SUBW    frameCountPrev
-                BEQ     vBlank
-                LD      giga_frameCount
-                STW     frameCountPrev
+vBlank          CALL    waitVBlank
                 CALL    playMidi
 
                 ; input
@@ -439,4 +437,12 @@ handleI_up      LD      giga_buttonState
                 RET
 
 handleI_exit    LD      giga_buttonState
+                RET
+
+
+waitVBlank      LD      giga_frameCount
+                SUBW    frameCountPrev
+                BEQ     waitVBlank
+                LD      giga_frameCount
+                STW     frameCountPrev
                 RET

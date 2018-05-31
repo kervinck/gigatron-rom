@@ -27,7 +27,7 @@ resetA_loop     LDI     giga_soundChan1     ; reset low byte
                 RET
 
 
-playMidiVBlank  LD      giga_frameCount
+playMidiAsync   LD      giga_frameCount
                 SUBW    frameCountPrev
                 BEQ     playMV_exit
                 LD      giga_frameCount
@@ -38,13 +38,13 @@ playMidiVBlank  LD      giga_frameCount
 playMV_exit     RET
 
 
-playMidi        LDI     0x02                ; keep pumping soundTimer, so that global sound stays alive
+playMidi        LDI     0x01                ; keep pumping soundTimer, so that global sound stays alive
                 ST      giga_soundTimer
                 LDW     midiDelay
                 BEQ     playM_process
-
                 SUBI    0x01
                 STW     midiDelay
+                BEQ     playM_process    
                 RET
 
 playM_process   LDW     midiStreamPtr
@@ -62,7 +62,7 @@ playM_process   LDW     midiStreamPtr
                 PUSH                    
                 CALL    midiStartNote       ; start note
                 POP
-                BRA     playMidi
+                BRA     playM_process
                 
 playM_endnote   LDW     scratch 
                 XORI    0x80                ; check for end note
@@ -71,7 +71,7 @@ playM_endnote   LDW     scratch
                 PUSH
                 CALL    midiEndNote         ; end note
                 POP
-                BRA     playMidi
+                BRA     playM_process
 
 
 playM_segment   LDW     scratch
@@ -81,7 +81,7 @@ playM_segment   LDW     scratch
                 PUSH
                 CALL    midiSegment         ; new midi segment
                 POP
-                BRA     playMidi
+                BRA     playM_process
 
 playM_delay     LDW     midiCommand         ; all that is left is delay
                 STW     midiDelay
