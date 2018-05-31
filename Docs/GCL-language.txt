@@ -42,45 +42,50 @@ gcl1 {GCL version}
 ----------
 Deployment
 ----------
-Translation from GCL to vCPU is still done offline. So the Gigatron
-runs vCPU applications. There are other ways to generate vCPU
-programs, for example through at67's assembler. There are two ways
-to get a vCPU program into the Gigatron. One is by sending it into
-RAM through the input port using the Loader application.  The other
-is to store the object code in the ROM disk portion of the EPROM.
-The file format for exchange of vCPU programs is GT1. This format
-is described in a different document: FileFormat.txt
-
-It should not be really hard to make a built-in GCL translator,
-especially when restricting variable names to 1 character. It is
-also conceivable to hide a GCL translator in the microcontroller
-used for hooking up a PS/2 keyboard.
+Translation from GCL to vCPU is done offline. So the Gigatron runs
+vCPU applications. There are other ways to generate vCPU programs,
+for example through at67's assembler. There are two ways to get a
+vCPU program into the Gigatron. One is by sending it into RAM through
+the input port using the Loader application.  The other is to store
+the object code in the ROM disk portion of the EPROM.  The file
+format for exchange of vCPU programs is GT1. This format is described
+in a different document: GT1-FileFormat.txt
 
 -----------------
 Programming model
 -----------------
-GCL draws most of its inspiration from two notable mini-languages: SWEET16
-(Apple II) and FALSE (Amiga). There is also a little bit of a FORTH influence.
-The GCL programming model is "accumulator oriented": there is no implicit
-expression stack. vCPU does have a call stack however. Programs are typically
-made of many small function definitions followed by a main loop. The functions
-usually operate on global variables, although it is also possible to put
+
+GCL draws most of its inspiration from two notable mini-languages:
+SWEET16 (Apple II) and FALSE (Amiga). There is also a little bit
+of a FORTH influence.  The GCL programming model is "accumulator
+oriented": there is no implicit expression stack. vCPU does have a
+call stack however. Programs are typically made of many small
+function definitions followed by a main loop. The functions usually
+operate on global variables, although it is also possible to put
 variables on the stack.
 
-The virtual regisers are 16-bits (except vSP) and reside in the zero page.
+The virtual regisers are 16-bits (except vSP) and reside in the
+zero page.
 
-vAC  is the virtual accumulator, used by instructions as operand and/or result
-vPC  is the virtual program counter. Programs run from RAM. When executing, vPC
-     auto-increments just its low byte, so it wraps around on the same RAM page.
-     (Code normally doesn't "use" this.) Function calls can go across pages.
-vLR  is the link register. It points to the instruction after the most recent
-     CALL instruction. This is used to return after making a subroutine
-     call. When nesting subroutines, vLR should be pushed on the stack.
-vSP  is the stack pointer. The stack lives in the zero page top and grows down.
+vAC  is the virtual accumulator, used by instructions as operand
+     and/or result
 
-Program variables are 16-bit words and typically hold a number or a pointer.
-Named variables reside in the zero page. Arbitrary memory can be addressed
-as bytes using 16-bit pointers.
+vPC  is the virtual program counter. Programs run from RAM. When
+     executing, vPC auto-increments just its low byte, so it wraps
+     around on the same RAM page. (Code normally doesn't "use" this.)
+     Function calls can go across pages.
+
+vLR  is the link register. It points to the instruction after the
+     most recent CALL instruction. This is used to return after
+     making a subroutine call. When nesting subroutines, vLR should
+     be pushed on the stack.
+
+vSP  is the stack pointer. The stack lives in the zero page top and
+     grows down.
+
+Program variables are 16-bit words and typically hold a number or
+a pointer.  Named variables reside in the zero page. Arbitrary
+memory can be addressed as bytes using 16-bit pointers.
 
 GCL translation is single-pass and doesn't have a linking stage.
 Therefore a typical GCL program has a setup phase followed by a
@@ -127,23 +132,26 @@ $400:
 -----------------
 Notes on notation
 -----------------
-GCL programs are written as a long sequence of "words" without much structure
-enforced by the compiler. Most words map directly to a single virtual
-instruction and therefore also encode an embedded operand (e.g. 1+). Many words
-operate on both vAC and some variable or constant. Sequences can be grouped
-with () {} or [], each of which has its own meaning. Spaces and newlines simply
-separate words. Use indentation for clarity. There is no need for spaces around
-the grouping characters []{}().
+GCL programs are written as a long sequence of "words" without much
+structure enforced by the compiler. Most words map directly to a
+single virtual instruction and therefore also encode an embedded
+operand (e.g. 1+). Many words operate on both vAC and some variable
+or constant. Sequences can be grouped with () {} or [], each of
+which has its own meaning. Spaces and newlines simply separate
+words. Use indentation for clarity. There is no need for spaces
+around the grouping characters []{}().
+
 Constants are decimal, or hexadecimal when preceded with '$'.
 Constants can be preceded by '-' or '+' (note: -$1000, not $-0000).
-For convenience, symbols defined by the host system can be referenced by
-prefixing a backslash, e.g. '\fontData'. This can be used anywhere where an
-integer is expected.
-Variable names start with an alphanumeric character and are case sensitive.
-The overview below uses the following conventions:
-'i' indicates an 8-bit integer constant.
-'ii' indicates a 16-bit integer constant.
-'X' indicates a named variable, allocated globally on the zero page.
+For convenience, symbols defined by the host system can be referenced
+by prefixing a backslash, e.g. '\fontData'. This can be used anywhere
+where an integer is expected.
+
+Variable names start with an alphanumeric character and are case
+sensitive.  The overview below uses the following conventions:
+ 'i'  indicates an 8-bit integer constant.
+ 'ii' indicates a 16-bit integer constant.
+ 'X'  indicates a named variable, allocated globally on the zero page.
 
 --------------------
 Meaning of GCL words
@@ -151,65 +159,65 @@ Meaning of GCL words
 
 Basics
 ------
-{...}                   Comments ignored by machine. Comments can be nested
-i ii                    Load integer constant into vAC, e.g. 1, +1972, -$be05
-X=                      Store vAC into variable X
-X                       Load variable X into vAC
-X+ X-                   Add/subtract variable X to/from vAC
-i+ i-                   Add/subtract small constant to/from vAC
-i<<                     Shift vAC i bits left
-i& i| i^                Logical AND/OR/XOR vAC with small constant
-X& X| X^                Logical AND/OR/XOR vAC with variable X
-X<. X>.                 Store vAC as byte into the low/high byte of variable X
-X<, X>,                 Read low/high byte of variable X
-X<++ X>++               Increment low/high byte of variable X
-i-- i++                 Subtract/add constant value from/to stack pointer
-i%                      Load stack variable at relative byte offset i into vAC
-i%=                     Store vAC on stack at relative byte offset i
+{...}           Comments ignored by machine. Comments can be nested
+i ii            Load integer constant into vAC, e.g. 1, +1972, -$be05
+X=              Store vAC into variable X
+X               Load variable X into vAC
+X+ X-           Add/subtract variable X to/from vAC
+i+ i-           Add/subtract small constant to/from vAC
+i<<             Shift vAC i bits left
+i& i| i^        Logical AND/OR/XOR vAC with small constant
+X& X| X^        Logical AND/OR/XOR vAC with variable X
+X<. X>.         Store vAC as byte into the low/high byte of variable X
+X<, X>,         Read low/high byte of variable X
+X<++ X>++       Increment low/high byte of variable X
+i-- i++         Subtract/add constant value from/to stack pointer
+i%              Load stack variable at relative byte offset i into vAC
+i%=             Store vAC on stack at relative byte offset i
 
 Memory
 ------
-X,                      Read unsigned byte from memory pointed by X into vAC
-X.                      Write vAC as byte to memory pointed by variable X
-X;                      Read word from memory pointed by X into vAC
-X:                      Write vAC as word to memory pointed by variable X
-i,                      Read unsigned byte at zero page address i into vAC
-i.                      Store vAC as byte into zero page address i
-i;                      Read word at zero page address i into vAC
-i:                      Write vAC as word into zero page address i
-i?                      Table lookup from ROM address vAC+i
-peek                    Read byte from memory pointed by vAC (Same as "\vAC,")
-deek                    Read word from memory pointed by vAC (Same as "\vAC;")
+X,              Read unsigned byte from memory pointed by X into vAC
+X.              Write vAC as byte to memory pointed by variable X
+X;              Read word from memory pointed by X into vAC
+X:              Write vAC as word to memory pointed by variable X
+i,              Read unsigned byte at zero page address i into vAC
+i.              Store vAC as byte into zero page address i
+i;              Read word at zero page address i into vAC
+i:              Write vAC as word into zero page address i
+i?              Table lookup from ROM address vAC+i
+peek            Read byte from memory pointed by vAC (Same as "\vAC,")
+deek            Read word from memory pointed by vAC (Same as "\vAC;")
 
 Structured programming
 ----------------------
-[...]                   Code block, used with "if", "else", "do", "loop"
-if>0                    Continue executing code if vAC>0, otherwise jump to
-                        end of the block (or past an optional matching "else")
-                        Conditions are "=0" ">0" "<0" "<=0" ">=0" "<>0"
-else                    When encountered, skip rest of code until end of block
-do                      Mark the start of a loop
-loop                    Jump back to matching "do" (May be in an outer block)
-if>0loop                Optimization for "if>0 loop" (works with all conditions)
-def                     Load next vPC in vAC and jump to end of current block
+[...]           Code block, used with "if", "else", "do", "loop"
+if>0            Continue executing code if vAC>0, otherwise jump to
+                end of the block (or past an optional matching "else")
+                Conditions are "=0" ">0" "<0" "<=0" ">=0" "<>0"
+else            When encountered, skip rest of code until end of block
+do              Mark the start of a loop
+loop            Jump back to matching "do" (May be in an outer block)
+if>0loop        Optimization for "if>0 loop" (works with all conditions)
+def             Load next vPC in vAC and jump to end of current block
 
 Subroutines
 -----------
-X!                      Jump to function pointed by X, store old vPC in vLR
-ret                     Jump to vLR, to return from a leaf subroutine. Non-leaf
-                        subroutines should use "pop ret" as return sequence
-push                    Push vLR onto stack, for entering a non-leaf subroutine
-pop                     Remove top of stack and put value in vLR
-i!                      Call native code pointed by sysFn, not exceeding i cycles
-call                    Jump to function pointed by vAC (Same as "\vAC!")
+X!              Jump to function pointed by X, store old vPC in vLR
+ret             Jump to vLR, to return from a leaf subroutine. Non-leaf
+                subroutines should use "pop ret" as return sequence
+push            Push vLR onto stack, for entering a non-leaf subroutine
+pop             Remove top of stack and put value in vLR
+i!              Call native code pointed by sysFn, not exceeding i cycles
+call            Jump to function pointed by vAC (Same as "\vAC!")
 
 Data
 ----
-i#                      Raw byte-value i
+i#              Raw byte-value i
 
 Versioning
 ----------
-gcl0x gcl1              GCL version. "x" denotes experimental/extended versions
+gcl0x gcl1      GCL version. "x" denotes experimental/extended versions
 
 There are two versions of GCL: gcl0x and gcl1. gcl0x is what we
 used to make the built-in applications of ROM v1. gcl1 is the planned
@@ -217,20 +225,21 @@ cosmetic upgrade in notation.
 
 Future extensions
 -----------------
-deek                    Read word from memory pointed by vAC
-<p++ >p++               Notation for p<++ p>++
-'A                      Character code?
-"Text"                  Text string?
-()                      Macros?
-$X                      For localized variables
-\12                     For raw byte values (better readable than 12#)
+deek            Read word from memory pointed by vAC
+<p++ >p++       Notation for p<++ p>++
+'A              Character code?
+"Text"          Text string?
+()              Macros?
+$X              For localized variables
+\12             For raw byte values (better readable than 12#)
 
 ----------------------
 vCPU instruction table
 ----------------------
-The vCPU interpreter has 34 core instructions. Each opcode is just a jump offset
-into the interpreter code page to the code that implements its behavior. Most
-instructions take a single byte operand, but some have two and others none.
+The vCPU interpreter has 34 core instructions. Each opcode is just
+a jump offset into the interpreter code page to the code that
+implements its behavior. Most instructions take a single byte
+operand, but some have two and others none.
 
 Mnem. Operands Description
 ----- -------- -----------
