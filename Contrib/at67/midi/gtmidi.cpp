@@ -15,6 +15,11 @@
 #define MASK_SOUND_CHANNELS   0x03
 #define MIN_GIGA_NOTE         12
 #define MAX_GIGA_NOTE         106
+#define PERCUSSION_NOTES      128
+
+#define MAJOR_VERSION "0.3"
+#define MINOR_VERSION "3"
+#define VERSION_STR "gtmidi v" MAJOR_VERSION "." MINOR_VERSION
 
 
 enum Format {vCPU=0, GCL, CPP, PY, NumFormats};
@@ -192,15 +197,16 @@ void main(int argc, char* argv[])
 {
     if(argc != 9)
     {
-        fprintf(stderr, "Usage:   gigamidi <input filename> <output filename> <int format 0, 1, 2 or 3> <uint16_t address in hex> <uint16_t offset in hex> <int count> <int line_length> <float timing_adjust>\n");
-        fprintf(stderr, "Example: gigamidi game_over.bin game_over.i 0 0x8000 0 0 100 0.5\n");
+        fprintf(stderr, "%s\n", VERSION_STR);
+        fprintf(stderr, "Usage:   gtmidi <input filename> <output filename> <int format 0, 1, 2 or 3> <uint16_t address in hex> <uint16_t offset in hex> <int count> <int line_length> <float timing_adjust>\n");
+        fprintf(stderr, "Example: gtmidi game_over.bin game_over.i 0 0x8000 0 0 100 0.5\n");
         fprintf(stderr, "Input:   miditones binary file produced with miditones, e.g. miditones -t4 -b <filename>.bin\n");
         fprintf(stderr, "Format:  0 = vCPU ASM, 1 = GCL, 2 = C/C++, 3 = Python\n");
         exit(0);
     }
 
-    std::string inFileName = std::string(argv[1]);
-    std::string outFileName = std::string(argv[2]);
+    std::string inFilename = std::string(argv[1]);
+    std::string outFilename = std::string(argv[2]);
 
     Format format = (Format)std::stoi(std::string(argv[3]));
     if(format < Format::vCPU  ||  format >= Format::NumFormats)
@@ -222,33 +228,33 @@ void main(int argc, char* argv[])
     int lineLength = std::stoi(std::string(argv[7]));
     double timingAdjust = std::stod(std::string(argv[8]));
 
-    std::ifstream infile(inFileName, std::ios::binary | std::ios::in);
+    std::ifstream infile(inFilename, std::ios::binary | std::ios::in);
     if(!infile.is_open())
     {
-        fprintf(stderr, "Failed to open input file '%s'\n", inFileName.c_str());
+        fprintf(stderr, "Failed to open input file '%s'\n", inFilename.c_str());
         exit(0);
     }
 
-    std::ofstream outfile(outFileName, std::ios::binary | std::ios::out);
+    std::ofstream outfile(outFilename, std::ios::binary | std::ios::out);
     if(!outfile.is_open())
     {
-        fprintf(stderr, "Failed to open output file '%s'\n", outFileName.c_str());
+        fprintf(stderr, "Failed to open output file '%s'\n", outFilename.c_str());
         exit(0);
     }
 
     infile.read((char *)&midiBuffer, MAX_MIDI_BUFFER_SIZE);
     if(infile.bad())
     {
-        fprintf(stderr, "Failed to read input file '%s'\n", inFileName.c_str());
+        fprintf(stderr, "Failed to read input file '%s'\n", inFilename.c_str());
         exit(0);
     }
 
-    size_t i = outFileName.rfind("/") + 1;
-    if(i == std::string::npos) i = outFileName.rfind("\\") + 1;
+    size_t i = outFilename.rfind("/") + 1;
+    if(i == std::string::npos) i = outFilename.rfind("\\") + 1;
     if(i == std::string::npos) i = 0;
-    size_t j = outFileName.rfind(".");
-    if(j == std::string::npos) j = outFileName.length();
-    std::string midiName = outFileName.substr(i, j - i);
+    size_t j = outFilename.rfind(".");
+    if(j == std::string::npos) j = outFilename.length();
+    std::string midiName = outFilename.substr(i, j - i);
 
     size_t midiSize = infile.gcount();
     uint8_t* midiPtr = midiBuffer;
@@ -277,6 +283,7 @@ void main(int argc, char* argv[])
             if((command & 0xF0) == 0x90)
             {
                 uint8_t note = *midiPtr++; midiSize--;
+                if(note >= PERCUSSION_NOTES) note -= PERCUSSION_NOTES;
                 if(note < MIN_GIGA_NOTE) note = MIN_GIGA_NOTE;
                 if(note > MAX_GIGA_NOTE) note = MAX_GIGA_NOTE;
                 gigaSize += 2;
@@ -312,7 +319,7 @@ void main(int argc, char* argv[])
         // Delay n milliseconds where n = 16bit value, converted to 8bit, (0x00 <-> 0x7F)
         else
         {
-            // Coalesc sequence of delays together
+            // Coalesce sequence of delays together
             int i = 0;
             int coalescedDelay = ((command<<8) | *midiPtr++); midiSize--;
             while(midiSize)

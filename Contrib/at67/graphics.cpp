@@ -602,8 +602,8 @@ namespace Graphics
             char str[32] = "";
 
             // Addresses
-            uint16_t cpuBaseAddressA = Editor::getCpuBaseAddressA();
-            uint16_t cpuBaseAddressB = Editor::getCpuBaseAddressB();
+            uint16_t cpuUsageAddressA = Editor::getCpuUsageAddressA();
+            uint16_t cpuUsageAddressB = Editor::getCpuUsageAddressB();
             uint16_t hexLoadAddress = (Editor::getEditorMode() == Editor::Load) ? Editor::getLoadBaseAddress() : Editor::getHexBaseAddress();
             uint16_t varsAddress = Editor::getVarsBaseAddress();
             bool onCursor00 = Editor::getCursorY() == -2  &&  (Editor::getCursorX() & 0x01) == 0;
@@ -665,9 +665,9 @@ namespace Graphics
             }
 
             // Draw addresses
-            sprintf(str, "%04X", cpuBaseAddressA);
+            sprintf(str, "%04X", cpuUsageAddressA);
             drawText(std::string(str), _pixels, CPUA_START, FONT_CELL_Y*2, (Editor::getHexEdit() && onCursor00) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor00, 4);
-            sprintf(str, "%04X", cpuBaseAddressB);
+            sprintf(str, "%04X", cpuUsageAddressB);
             drawText(std::string(str), _pixels, CPUB_START, FONT_CELL_Y*2, (Editor::getHexEdit() && onCursor10) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor10, 4);
             sprintf(str, "%04X", hexLoadAddress);
             drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, (Editor::getHexEdit() && onCursor01) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor01, 4);

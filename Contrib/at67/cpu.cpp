@@ -358,7 +358,7 @@ namespace Cpu
         if(S._PC == ROM_VCPU_DISPATCH)
         {
             uint16_t vPC = (getRAM(0x0017) <<8) |getRAM(0x0016);
-            if(vPC < Editor::getCpuBaseAddressA()  ||  vPC > Editor::getCpuBaseAddressB()) _vCpuInstPerFrame++;
+            if(vPC < Editor::getCpuUsageAddressA()  ||  vPC > Editor::getCpuUsageAddressB()) _vCpuInstPerFrame++;
             _vCpuInstPerFrameMax++;
 
             static uint64_t prevFrameCounter = 0;
@@ -366,15 +366,15 @@ namespace Cpu
             if(frameTime > VSYNC_TIMING_60)
             {
                 // TODO: this is a bit of a hack, but it's emulation only so...
-                // Check for magic cookie that defines a CpuBaseAddressA and CpuBaseAddressB sequence
+                // Check for magic cookie that defines a CpuUsageAddressA and CpuUsageAddressB sequence
                 uint16_t magicWord0 = (getRAM(0x7F99) <<8) | getRAM(0x7F98);
                 uint16_t magicWord1 = (getRAM(0x7F9B) <<8) | getRAM(0x7F9A);
-                uint16_t cpuBaseAddressA = (getRAM(0x7F9D) <<8) | getRAM(0x7F9C);
-                uint16_t cpuBaseAddressB = (getRAM(0x7F9F) <<8) | getRAM(0x7F9E);
+                uint16_t cpuUsageAddressA = (getRAM(0x7F9D) <<8) | getRAM(0x7F9C);
+                uint16_t cpuUsageAddressB = (getRAM(0x7F9F) <<8) | getRAM(0x7F9E);
                 if(magicWord0 == 0xDEAD  &&  magicWord1 == 0xBEEF)
                 {
-                    Editor::setCpuBaseAddressA(cpuBaseAddressA);
-                    Editor::setCpuBaseAddressB(cpuBaseAddressB);
+                    Editor::setCpuUsageAddressA(cpuUsageAddressA);
+                    Editor::setCpuUsageAddressB(cpuUsageAddressB);
                 }
 
                 prevFrameCounter = SDL_GetPerformanceCounter();

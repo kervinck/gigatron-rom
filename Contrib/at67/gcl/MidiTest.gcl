@@ -168,7 +168,7 @@ $0400:
 
 { Initialise vCPU usage addresses, do this if you want the vCPU usage meter to display }
 { meaningful results. There is a magic cookie sequence followed by the two addresses   }
-{ $7F98 = $DEAD, $7F9A = $BEEF, $7F9C = cpuBaseAddressA, $7F9E = cpuBaseAddressB       }
+{ $7F98 = $DEAD, $7F9A = $BEEF, $7F9C = cpuUsageAddressA, $7F9E = cpuUsageAddressB     }
 { This writes 8 bytes to the bottom right hand corner of memory that are used by the   }
 { emulator, disable this code for real hardware                                        }
 [def 

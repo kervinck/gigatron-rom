@@ -8,8 +8,11 @@
 #include <algorithm>
 #include <cstdarg>
 
+#ifndef STAND_ALONE
 #include "cpu.h"
 #include "editor.h"
+#endif
+
 #include "loader.h"
 #include "assembler.h"
 #include "expression.h"
@@ -73,7 +76,9 @@ namespace Assembler
         bool _complete = false;
         int _startLine = 0;
         int _endLine = 0;
+        int _fileStartLine;
         std::string _name;
+        std::string _filename;
         std::vector<std::string> _params;
         std::vector<std::string> _lines;
     };
@@ -105,6 +110,8 @@ namespace Assembler
     uint16_t _startAddress = DEFAULT_START_ADDRESS;
     uint16_t _currentAddress = _startAddress;
 
+    std::string _includePath = "";
+
     std::vector<Label> _labels;
     std::vector<Equate> _equates;
     std::vector<Instruction> _instructions;
@@ -114,6 +121,7 @@ namespace Assembler
     std::vector<Gprintf> _gprintfs;
 
     uint16_t getStartAddress(void) {return _startAddress;}
+    void setIncludePath(const std::string& includePath) {_includePath = includePath;}
 
 
     void initialise(void)
@@ -131,14 +139,14 @@ namespace Assembler
     }
 
     // Returns true when finished
-    bool getNextAssembledByte(ByteCode& byteCode)
+    bool getNextAssembledByte(ByteCode& byteCode, bool debug)
     {
         static bool isUserCode = false;
 
         if(_byteCount >= _byteCode.size())
         {
             _byteCount = 0;
-            if(isUserCode) fprintf(stderr, "\n");
+            if(debug  &&  isUserCode) fprintf(stderr, "\n");
             return true;
         }
 
@@ -160,10 +168,10 @@ namespace Assembler
         isUserCode = !byteCode._isRomAddress  ||  (byteCode._isRomAddress  &&  customAddress >= 0x2300);
 
         // Seperate sections
-        if(byteCode._isCustomAddress  &&  isUserCode) fprintf(stderr, "\n");
+        if(debug  &&  byteCode._isCustomAddress  &&  isUserCode) fprintf(stderr, "\n");
 
         // 16bit for ROM, 8bit for RAM
-        if(isUserCode)
+        if(debug  &&  isUserCode)
         {
             if(byteCode._isRomAddress)
             {
@@ -422,32 +430,34 @@ namespace Assembler
                 {
                     _callTable = operand;
                 }
-                // Reserved word, (equate), _singleStepWatch_
-                else if(tokens[tokenIndex] == "_singleStepWatch_")
-                {
-                    Editor::setSingleStepWatchAddress(operand);
-                }
                 // Reserved word, (equate), _startAddress_
                 else if(tokens[tokenIndex] == "_startAddress_")
                 {
                     _startAddress = operand;
                     _currentAddress = _startAddress;
                 }
+#ifndef STAND_ALONE
                 // Disable upload of the current assembler module
                 else if(tokens[tokenIndex] == "_disableUpload_")
                 {
                     Loader::disableUploads(operand != 0);
                 }
+                // Reserved word, (equate), _singleStepWatch_
+                else if(tokens[tokenIndex] == "_singleStepWatch_")
+                {
+                    Editor::setSingleStepWatchAddress(operand);
+                }
                 // Start address of vCPU exclusion zone
                 else if(tokens[tokenIndex] == "_cpuUsageAddressA_")
                 {
-                    Editor::setCpuBaseAddressA(operand);
+                    Editor::setCpuUsageAddressA(operand);
                 }
                 // End address of vCPU exclusion zone
                 else if(tokens[tokenIndex] == "_cpuUsageAddressB_")
                 {
-                    Editor::setCpuBaseAddressB(operand);
+                    Editor::setCpuUsageAddressB(operand);
                 }
+#endif
                 // Standard equates
                 else
                 {
@@ -1037,10 +1047,11 @@ namespace Assembler
             return false;
         }
 
-        std::ifstream infile(std::string("./vCPU/" +  tokens[1]));            
+        std::string filepath = _includePath + tokens[1];
+        std::ifstream infile(filepath);            
         if(!infile.is_open())
         {
-            fprintf(stderr, "Assembler::handleInclude() : Failed to open file : '%s'.\n", tokens[1].c_str());
+            fprintf(stderr, "Assembler::handleInclude() : Failed to open file : '%s'.\n", filepath.c_str());
             return false;
         }
 
@@ -1054,7 +1065,7 @@ namespace Assembler
 
             if(!infile.good() &&  !infile.eof())
             {
-                fprintf(stderr, "Assembler::handleInclude() : Bad lineToken : '%s' : in %s on line %d.\n", includeLineToken.c_str(), tokens[1].c_str(), numLines+1);
+                fprintf(stderr, "Assembler::handleInclude() : Bad lineToken : '%s' : in %s on line %d.\n", includeLineToken.c_str(), filepath.c_str(), numLines+1);
                 return false;
             }
 
@@ -1182,8 +1193,8 @@ namespace Assembler
 
             if(macroMissing)
             {
-                fprintf(stderr, "Assembler::handleMacros() : Missing macro call : %s : on line %d.\n", macro._name.c_str(), macro._startLine);
-                return false;
+                fprintf(stderr, "Assembler::handleMacros() : Warning, macro is never called : %s : on line %d.\n", macro._name.c_str(), macro._startLine);
+                continue;
             }
 
             if(macroMissingParams)
@@ -1413,6 +1424,63 @@ namespace Assembler
         return false;
     }
 
+    bool parseGprintfs(void)
+    {
+        for(int i = 0; i<_gprintfs.size(); i++)
+        {
+            for(int j = 0; j<_gprintfs[i]._vars.size(); j++)
+            {
+                bool success = false;
+                uint16_t data = 0x0000;
+                std::string token = _gprintfs[i]._vars[j]._var;
+        
+                // Strip white space
+                token.erase(remove_if(token.begin(), token.end(), isspace), token.end());
+                _gprintfs[i]._vars[j]._var = token;
+
+                // Check for indirection
+                size_t asterisk = token.find_first_of("*");
+                if(asterisk != std::string::npos)
+                {
+                    _gprintfs[i]._vars[j]._indirect = true;
+                    token = token.substr(asterisk+1);
+                }
+
+                success = Expression::stringToU16(token, data);
+                if(!success)
+                {
+                    std::vector<std::string> tokens;
+                    tokens.push_back(token);
+
+                    // Search equates
+                    Equate equate;
+                    Label label;
+                    if(success = searchEquates(tokens, 0, equate))
+                    {
+                        data = equate._operand;
+                    }
+                    // Search labels
+                    else if(success = searchLabels(tokens, 0, label))
+                    {
+                        data = label._address;
+                    }
+                }
+
+                if(!success)
+                {
+                    fprintf(stderr, "Assembler::parseGprintfs() : Error in gprintf(), missing label or equate : '%s' : in %s on line %d.\n", token.c_str(), _gprintfs[i]._lineToken.c_str(), _gprintfs[i]._lineNumber);
+                    _gprintfs.erase(_gprintfs.begin() + i);
+                    return false;
+                }
+
+                _gprintfs[i]._vars[j]._data = data;
+            }
+        }
+
+        return true;
+    }
+
+#ifndef STAND_ALONE
     bool getGprintfString(int index, std::string& gstring)
     {
         const Gprintf& gprintf = _gprintfs[index % _gprintfs.size()];
@@ -1471,62 +1539,6 @@ namespace Assembler
         return true;
     }
 
-    bool parseGprintfs(void)
-    {
-        for(int i = 0; i<_gprintfs.size(); i++)
-        {
-            for(int j = 0; j<_gprintfs[i]._vars.size(); j++)
-            {
-                bool success = false;
-                uint16_t data = 0x0000;
-                std::string token = _gprintfs[i]._vars[j]._var;
-        
-                // Strip white space
-                token.erase(remove_if(token.begin(), token.end(), isspace), token.end());
-                _gprintfs[i]._vars[j]._var = token;
-
-                // Check for indirection
-                size_t asterisk = token.find_first_of("*");
-                if(asterisk != std::string::npos)
-                {
-                    _gprintfs[i]._vars[j]._indirect = true;
-                    token = token.substr(asterisk+1);
-                }
-
-                success = Expression::stringToU16(token, data);
-                if(!success)
-                {
-                    std::vector<std::string> tokens;
-                    tokens.push_back(token);
-
-                    // Search equates
-                    Equate equate;
-                    Label label;
-                    if(success = searchEquates(tokens, 0, equate))
-                    {
-                        data = equate._operand;
-                    }
-                    // Search labels
-                    else if(success = searchLabels(tokens, 0, label))
-                    {
-                        data = label._address;
-                    }
-                }
-
-                if(!success)
-                {
-                    fprintf(stderr, "Assembler::parseGprintfs() : Error in gprintf(), missing label or equate : '%s' : in %s on line %d.\n", token.c_str(), _gprintfs[i]._lineToken.c_str(), _gprintfs[i]._lineNumber);
-                    _gprintfs.erase(_gprintfs.begin() + i);
-                    return false;
-                }
-
-                _gprintfs[i]._vars[j]._data = data;
-            }
-        }
-
-        return true;
-    }
-
     void printGprintfStrings(void)
     {
         if(_gprintfs.size())
@@ -1553,6 +1565,7 @@ namespace Assembler
             }
         }
     }
+#endif
 
     void clearAssembler(void)
     {
@@ -1576,8 +1589,11 @@ namespace Assembler
         _callTable = 0x0000;
         _startAddress = startAddress;
         _currentAddress = _startAddress;
-        Loader::disableUploads(false);
         clearAssembler();
+
+#ifndef STAND_ALONE
+        Loader::disableUploads(false);
+#endif
 
         // Get file
         int numLines = 0;
@@ -1830,6 +1846,7 @@ namespace Assembler
                                 instruction._operand0 = uint8_t(operand & 0x00FF);
                                 _instructions.push_back(instruction);
 
+#ifndef STAND_ALONE
                                 if(instruction._address < 0x2000)
                                 {   
                                     uint16_t add = instruction._address>>1;
@@ -1845,6 +1862,7 @@ namespace Assembler
                                         //_instructions.back() = instruction;
                                     }
                                 }
+#endif
                             }
                             // Reserved assembler opcode DB, (define byte)
                             else if(opcodeType == ReservedDB  ||  opcodeType == ReservedDBR)

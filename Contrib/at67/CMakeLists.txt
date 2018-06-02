@@ -4,6 +4,9 @@ project(gtemuSDL)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
+add_subdirectory(midi)
+add_subdirectory(tools)
+
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIR})
 

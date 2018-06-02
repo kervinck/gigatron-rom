@@ -4,18 +4,22 @@
 #include <fstream>
 #include <algorithm>
 
+#ifndef STAND_ALONE
 #include "cpu.h"
 #include "editor.h"
-#include "loader.h"
 #include "timing.h"
 #include "graphics.h"
+#include "inih/INIReader.h"
+#endif
+
+#include "loader.h"
 #include "assembler.h"
 #include "expression.h"
-#include "inih/INIReader.h"
 
 
 namespace Loader
 {
+#ifndef STAND_ALONE
     enum LoaderState {FirstByte=0, MsgLength, LowAddress, HighAddress, Message, LastByte, ResetIN, NumLoaderStates};
     enum FrameState {Resync=0, Frame, Execute, NumFrameStates};
 
@@ -71,8 +75,142 @@ namespace Loader
             _saveData[game] = saveData;
         }
     }
+#endif
 
-    // Only for emulation
+    bool loadGt1File(const std::string& filename, Gt1File& gt1File)
+    {
+        std::ifstream infile(filename, std::ios::binary | std::ios::in);
+        if(!infile.is_open())
+        {
+            fprintf(stderr, "Loader::loadGt1File() : failed to open '%s'.\n", filename.c_str());
+            return false;
+        }
+
+        int segmentCount = 1;
+        for(;;)
+        {
+            // Read segment header
+            Gt1Segment segment;
+            infile.read((char *)&segment._hiAddress, SEGMENT_HEADER_SIZE);
+            if(infile.eof() || infile.bad() || infile.fail())
+            {
+                fprintf(stderr, "Loader::loadGt1File() : bad header in segment %d of '%s'.\n", segmentCount, filename.c_str());
+                return false;
+            }
+
+            // Finished
+            if(segment._hiAddress == 0x00  &&  infile.peek() == EOF)
+            {
+                // Segment header aligns with Gt1File terminator, hiStart and loStart
+                gt1File._hiStart = segment._loAddress;
+                gt1File._loStart = segment._segmentSize;
+                break;
+            }
+
+            // Expecting a valid segment
+            if(segment._segmentSize == 0)
+            {
+                fprintf(stderr, "Loader::loadGt1File() : bad header in segment %d of '%s'.\n", segmentCount, filename.c_str());
+                return false;
+            }
+
+            // Read segment
+            segment._dataBytes.resize(segment._segmentSize);
+            infile.read((char *)&segment._dataBytes[0], segment._segmentSize);
+            if(infile.eof() || infile.bad() || infile.fail())
+            {
+                fprintf(stderr, "Loader::loadGt1File() : bad segment %d in '%s'.\n", segmentCount, filename.c_str());
+                return false;
+            }
+
+            gt1File._segments.push_back(segment);
+            segmentCount++;
+        }
+
+        return true;
+    }
+
+    bool saveGt1File(const std::string& filepath, Gt1File& gt1File)
+    {
+        if(gt1File._segments.size() == 0)
+        {
+            fprintf(stderr, "Loader::saveGt1File() : zero segments, not saving.\n");
+            return false;
+        }
+
+        std::string filename;
+        size_t i = filepath.rfind('.');
+        filename = (i != std::string::npos) ? filepath.substr(0, i) + ".gt1" : filepath + ".gt1";
+
+        std::ofstream outfile(filename, std::ios::binary | std::ios::out);
+        if(!outfile.is_open())
+        {
+            fprintf(stderr, "Loader::saveGt1File() : failed to open '%s'.\n", filename.c_str());
+            return false;
+        }
+
+        // Sort segments from lowest address to highest address
+        std::sort(gt1File._segments.begin(), gt1File._segments.end(), [](const Gt1Segment& segmentA, const Gt1Segment& segmentB)
+        {
+            uint16_t addressA = segmentA._loAddress + (segmentA._hiAddress <<8);
+            uint16_t addressB = segmentB._loAddress + (segmentB._hiAddress <<8);
+            return (addressA < addressB);
+        });
+
+        for(int i=0; i<gt1File._segments.size(); i++)
+        {
+            // Write header
+            outfile.write((char *)&gt1File._segments[i]._hiAddress, SEGMENT_HEADER_SIZE);
+            if(outfile.bad() || outfile.fail())
+            {
+                fprintf(stderr, "Loader::saveGt1File() : write error in header of segment %d.\n", i);
+                return false;
+            }
+
+            // Write segment
+            outfile.write((char *)&gt1File._segments[i]._dataBytes[0], gt1File._segments[i]._segmentSize);
+            if(outfile.bad() || outfile.fail())
+            {
+                fprintf(stderr, "Loader::saveGt1File() : bad segment %d in '%s'.\n", i, filename.c_str());
+                return false;
+            }
+        }
+
+        // Write trailer
+        outfile.write((char *)&gt1File._terminator, GT1FILE_TRAILER_SIZE);
+        if(outfile.bad() || outfile.fail())
+        {
+            fprintf(stderr, "Loader::saveGt1File() : write error in trailer of '%s'.\n", filename.c_str());
+            return false;
+        }
+
+        return true;
+    }
+
+    void printGt1Stats(const std::string& filename, const Gt1File& gt1File)
+    {
+        // Header
+        uint16_t totalSize = 0;
+        for(int i=0; i<gt1File._segments.size(); i++) totalSize += int(gt1File._segments[i]._dataBytes.size());
+        uint16_t startAddress = gt1File._loStart + (gt1File._hiStart <<8);
+        fprintf(stderr, "\n********************************************************************************\n");
+        fprintf(stderr, "%s : 0x%04x : %5d bytes : %3d segments\n", filename.c_str(), startAddress, totalSize, int(gt1File._segments.size()));
+        fprintf(stderr, "********************************************************************************\n");
+
+        // Segments
+        for(int i=0; i<gt1File._segments.size(); i++)
+        {
+            uint16_t address = gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8);
+            fprintf(stderr, "Segment%03d : 0x%04x : %5d bytes\n", i, address, int(gt1File._segments[i]._dataBytes.size()));
+        }
+    }
+
+#ifndef STAND_ALONE
+    void disableUploads(bool disable)
+    {
+        _disableUploads = disable;
+    }
+
     bool loadDataFile(SaveData& saveData)
     {
         SaveData sdata = saveData;
@@ -246,116 +384,6 @@ namespace Loader
         return true;
     }
 
-    bool loadGt1File(const std::string& filename, Gt1File& gt1File)
-    {
-        std::ifstream infile(filename, std::ios::binary | std::ios::in);
-        if(!infile.is_open())
-        {
-            fprintf(stderr, "Loader::loadGt1File() : failed to open '%s'.\n", filename.c_str());
-            return false;
-        }
-
-        int segmentCount = 1;
-        for(;;)
-        {
-            // Read segment header
-            Gt1Segment segment;
-            infile.read((char *)&segment._hiAddress, SEGMENT_HEADER_SIZE);
-            if(infile.eof() || infile.bad() || infile.fail())
-            {
-                fprintf(stderr, "Loader::loadGt1File() : bad header in segment %d of '%s'.\n", segmentCount, filename.c_str());
-                return false;
-            }
-
-            // Finished
-            if(segment._hiAddress == 0x00  &&  infile.peek() == EOF)
-            {
-                // Segment header aligns with Gt1File terminator, hiStart and loStart
-                gt1File._hiStart = segment._loAddress;
-                gt1File._loStart = segment._segmentSize;
-                break;
-            }
-
-            // Expecting a valid segment
-            if(segment._segmentSize == 0)
-            {
-                fprintf(stderr, "Loader::loadGt1File() : bad header in segment %d of '%s'.\n", segmentCount, filename.c_str());
-                return false;
-            }
-
-            // Read segment
-            segment._dataBytes.resize(segment._segmentSize);
-            infile.read((char *)&segment._dataBytes[0], segment._segmentSize);
-            if(infile.eof() || infile.bad() || infile.fail())
-            {
-                fprintf(stderr, "Loader::loadGt1File() : bad segment %d in '%s'.\n", segmentCount, filename.c_str());
-                return false;
-            }
-
-            gt1File._segments.push_back(segment);
-            segmentCount++;
-        }
-
-        return true;
-    }
-
-    bool saveGt1File(const std::string& filepath, Gt1File& gt1File)
-    {
-        if(gt1File._segments.size() == 0)
-        {
-            fprintf(stderr, "Loader::saveGt1File() : zero segments, not saving.\n");
-            return false;
-        }
-
-        std::string filename;
-        size_t i = filepath.rfind('.');
-        filename = (i != std::string::npos) ? filepath.substr(0, i) + ".gt1" : filepath + ".gt1";
-
-        std::ofstream outfile(filename, std::ios::binary | std::ios::out);
-        if(!outfile.is_open())
-        {
-            fprintf(stderr, "Loader::saveGt1File() : failed to open '%s'.\n", filename.c_str());
-            return false;
-        }
-
-        // Sort segments from lowest address to highest address
-        std::sort(gt1File._segments.begin(), gt1File._segments.end(), [](const Gt1Segment& segmentA, const Gt1Segment& segmentB)
-        {
-            uint16_t addressA = segmentA._loAddress + (segmentA._hiAddress <<8);
-            uint16_t addressB = segmentB._loAddress + (segmentB._hiAddress <<8);
-            return (addressA < addressB);
-        });
-
-        for(int i=0; i<gt1File._segments.size(); i++)
-        {
-            // Write header
-            outfile.write((char *)&gt1File._segments[i]._hiAddress, SEGMENT_HEADER_SIZE);
-            if(outfile.bad() || outfile.fail())
-            {
-                fprintf(stderr, "Loader::saveGt1File() : write error in header of segment %d.\n", i);
-                return false;
-            }
-
-            // Write segment
-            outfile.write((char *)&gt1File._segments[i]._dataBytes[0], gt1File._segments[i]._segmentSize);
-            if(outfile.bad() || outfile.fail())
-            {
-                fprintf(stderr, "Loader::saveGt1File() : bad segment %d in '%s'.\n", i, filename.c_str());
-                return false;
-            }
-        }
-
-        // Write trailer
-        outfile.write((char *)&gt1File._terminator, GT1FILE_TRAILER_SIZE);
-        if(outfile.bad() || outfile.fail())
-        {
-            fprintf(stderr, "Loader::saveGt1File() : write error in trailer of '%s'.\n", filename.c_str());
-            return false;
-        }
-
-        return true;
-    }
-
     // Loads high score for current game from a simple <game>.dat file
     void loadHighScore(void)
     {
@@ -433,6 +461,123 @@ namespace Loader
                 start += step;
             }
         }
+    }
+
+    void uploadDirect(void)
+    {
+        bool hasRomCode = false;
+        bool hasRamCode = false;
+
+        uint16_t executeAddress = Editor::getLoadBaseAddress();
+        std::string filename = *Editor::getFileEntryName(Editor::getCursorY());
+        std::string filepath = std::string(Editor::getBrowserPath() + "/" + filename);
+
+        // Reset video table and reset single step watch address to video line counter
+        Graphics::resetVTable();
+        Editor::setSingleStepWatchAddress(VIDEO_Y_ADDRESS);
+
+        // Upload gt1
+        Gt1File gt1File;
+        if(filename.find(".gt1") != filename.npos)
+        {
+            Assembler::clearAssembler();
+
+            if(!loadGt1File(filepath, gt1File)) return;
+            executeAddress = gt1File._loStart + (gt1File._hiStart <<8);
+            Editor::setLoadBaseAddress(executeAddress);
+
+            for(int j=0; j<gt1File._segments.size(); j++)
+            {
+                uint16_t address = gt1File._segments[j]._loAddress + (gt1File._segments[j]._hiAddress <<8);
+                for(int i=0; i<gt1File._segments[j]._segmentSize; i++)
+                {
+                    Cpu::setRAM(address+i, gt1File._segments[j]._dataBytes[i]);
+                }
+            }
+
+            hasRamCode = true;
+            hasRomCode = false;
+            _disableUploads = false;
+        }
+        // Upload vCPU assembly code
+        else if(filename.find(".vasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
+        {
+            if(!Assembler::assemble(filepath, DEFAULT_START_ADDRESS)) return;
+            executeAddress = Assembler::getStartAddress();
+            Editor::setLoadBaseAddress(executeAddress);
+            uint16_t address = executeAddress;
+            uint16_t customAddress = executeAddress;
+
+            // Save to gt1 format
+            gt1File._loStart = address & 0x00FF;
+            gt1File._hiStart = (address & 0xFF00) >>8;
+            Gt1Segment gt1Segment;
+            gt1Segment._loAddress = address & 0x00FF;
+            gt1Segment._hiAddress = (address & 0xFF00) >>8;
+
+            Assembler::ByteCode byteCode;
+            while(!Assembler::getNextAssembledByte(byteCode))
+            {
+                (byteCode._isRomAddress) ? hasRomCode = true : hasRamCode = true;
+
+                // Custom address
+                if(byteCode._isCustomAddress)
+                {
+                    if(gt1Segment._dataBytes.size())
+                    {
+                        // Previous segment
+                        gt1Segment._segmentSize = uint8_t(gt1Segment._dataBytes.size());
+                        gt1File._segments.push_back(gt1Segment);
+                        gt1Segment._dataBytes.clear();
+                    }
+
+                    address = byteCode._address;
+                    customAddress = address;
+                    gt1Segment._loAddress = address & 0x00FF;
+                    gt1Segment._hiAddress = (address & 0xFF00) >>8;
+                }
+
+                if(!_disableUploads)
+                {
+                    (byteCode._isRomAddress) ? Cpu::setROM(customAddress, address++, byteCode._data) : Cpu::setRAM(address++, byteCode._data);
+                }
+                gt1Segment._dataBytes.push_back(byteCode._data);
+            }
+
+            // Last segment
+            if(gt1Segment._dataBytes.size())
+            {
+                gt1Segment._segmentSize = uint8_t(gt1Segment._dataBytes.size());
+                gt1File._segments.push_back(gt1Segment);
+            }
+
+            // Don't save gt1 file for any asm files that contain native rom code
+            if(!hasRomCode  &&  !saveGt1File(filepath, gt1File)) return;
+        }
+        // Invalid file
+        else
+        {
+            fprintf(stderr, "Loader::upload() : invalid file '%s'.\n", filename.c_str());
+            return;
+        }
+
+        printGt1Stats(filename, gt1File);
+
+        // Currently only for emulation
+        size_t i = filename.find('.');
+        _currentGame = (i != std::string::npos) ? filename.substr(0, i) : filename;
+        loadHighScore();
+
+        // Execute code
+        if(!_disableUploads  &&  hasRamCode)
+        {
+            Cpu::setRAM(0x0016, executeAddress-2 & 0x00FF);
+            Cpu::setRAM(0x0017, (executeAddress & 0xFF00) >>8);
+            Cpu::setRAM(0x001a, executeAddress-2 & 0x00FF);
+            Cpu::setRAM(0x001b, (executeAddress & 0xFF00) >>8);
+            //Editor::setSingleStep(true);
+        }
+        return;
     }
 
     void sendByte(uint8_t value, uint8_t& checksum)
@@ -534,122 +679,6 @@ namespace Loader
         return sending;
     }
 
-    void uploadDirect(void)
-    {
-        bool hasRomCode = false;
-        bool hasRamCode = false;
-
-        uint16_t executeAddress = Editor::getLoadBaseAddress();
-        std::string filename = *Editor::getFileEntryName(Editor::getCursorY());
-        std::string filepath = std::string(Editor::getBrowserPath() + "/" + filename);
-
-        // Reset video table and reset single step watch address to video line counter
-        Graphics::resetVTable();
-        Editor::setSingleStepWatchAddress(VIDEO_Y_ADDRESS);
-
-        // Upload gt1
-        if(filename.find(".gt1") != filename.npos)
-        {
-            Assembler::clearAssembler();
-
-            Gt1File gt1File;
-            if(!loadGt1File(filepath, gt1File)) return;
-            executeAddress = gt1File._loStart + (gt1File._hiStart <<8);
-            Editor::setLoadBaseAddress(executeAddress);
-
-            for(int j=0; j<gt1File._segments.size(); j++)
-            {
-                uint16_t address = gt1File._segments[j]._loAddress + (gt1File._segments[j]._hiAddress <<8);
-                for(int i=0; i<gt1File._segments[j]._segmentSize; i++)
-                {
-                    Cpu::setRAM(address+i, gt1File._segments[j]._dataBytes[i]);
-                }
-            }
-
-            hasRamCode = true;
-            hasRomCode = false;
-            _disableUploads = false;
-        }
-        // Upload vCPU assembly code
-        else if(filename.find(".vasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
-        {
-            if(!Assembler::assemble(filepath, DEFAULT_START_ADDRESS)) return;
-            executeAddress = Assembler::getStartAddress();
-            Editor::setLoadBaseAddress(executeAddress);
-            uint16_t address = executeAddress;
-            uint16_t customAddress = executeAddress;
-
-            // Save to gt1 format
-            Gt1File gt1File;
-            gt1File._loStart = address & 0x00FF;
-            gt1File._hiStart = (address & 0xFF00) >>8;
-            Gt1Segment gt1Segment;
-            gt1Segment._loAddress = address & 0x00FF;
-            gt1Segment._hiAddress = (address & 0xFF00) >>8;
-
-            Assembler::ByteCode byteCode;
-            while(!Assembler::getNextAssembledByte(byteCode))
-            {
-                (byteCode._isRomAddress) ? hasRomCode = true : hasRamCode = true;
-
-                // Custom address
-                if(byteCode._isCustomAddress)
-                {
-                    if(gt1Segment._dataBytes.size())
-                    {
-                        // Previous segment
-                        gt1Segment._segmentSize = uint8_t(gt1Segment._dataBytes.size());
-                        gt1File._segments.push_back(gt1Segment);
-                        gt1Segment._dataBytes.clear();
-                    }
-
-                    address = byteCode._address;
-                    customAddress = address;
-                    gt1Segment._loAddress = address & 0x00FF;
-                    gt1Segment._hiAddress = (address & 0xFF00) >>8;
-                }
-
-                if(!_disableUploads)
-                {
-                    (byteCode._isRomAddress) ? Cpu::setROM(customAddress, address++, byteCode._data) : Cpu::setRAM(address++, byteCode._data);
-                }
-                gt1Segment._dataBytes.push_back(byteCode._data);
-            }
-
-            // Last segment
-            if(gt1Segment._dataBytes.size())
-            {
-                gt1Segment._segmentSize = uint8_t(gt1Segment._dataBytes.size());
-                gt1File._segments.push_back(gt1Segment);
-            }
-
-            // Don't save gt1 file for any asm files that contain native rom code
-            if(!hasRomCode  &&  !saveGt1File(filepath, gt1File)) return;
-        }
-        // Invalid file
-        else
-        {
-            fprintf(stderr, "Loader::upload() : invalid file '%s'.\n", filename.c_str());
-            return;
-        }
-
-        // Currently only for emulation
-        size_t i = filename.find('.');
-        _currentGame = (i != std::string::npos) ? filename.substr(0, i) : filename;
-        loadHighScore();
-
-        // Execute code
-        if(!_disableUploads  &&  hasRamCode)
-        {
-            Cpu::setRAM(0x0016, executeAddress-2 & 0x00FF);
-            Cpu::setRAM(0x0017, (executeAddress & 0xFF00) >>8);
-            Cpu::setRAM(0x001a, executeAddress-2 & 0x00FF);
-            Cpu::setRAM(0x001b, (executeAddress & 0xFF00) >>8);
-            //Editor::setSingleStep(true);
-        }
-        return;
-    }
-
     // TODO: fix the Gigatron version of upload so that it can send more than 60 total bytes, (i.e. break up the payload into multiple packets of 60, 1 packet per frame)
     void upload(int vgaY)
     {
@@ -708,9 +737,5 @@ namespace Loader
             }
         }
     }
-
-    void disableUploads(bool disable)
-    {
-        _disableUploads = disable;
-    }
+#endif
 }
