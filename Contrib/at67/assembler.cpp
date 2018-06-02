@@ -74,6 +74,7 @@ namespace Assembler
     struct Macro
     {
         bool _complete = false;
+        bool _fromInclude = false;
         int _startLine = 0;
         int _endLine = 0;
         int _fileStartLine;
@@ -81,6 +82,14 @@ namespace Assembler
         std::string _filename;
         std::vector<std::string> _params;
         std::vector<std::string> _lines;
+    };
+
+    struct LineToken
+    {
+        bool _fromInclude = false;
+        int _includeLineNumber;
+        std::string _text;
+        std::string _includeName;
     };
 
     struct Gprintf
@@ -1038,7 +1047,7 @@ namespace Assembler
         return tokens;
     }
 
-    bool handleInclude(const std::vector<std::string>& tokens, const std::string& lineToken, int lineIndex, std::vector<std::string>& includeLineTokens)
+    bool handleInclude(const std::vector<std::string>& tokens, const std::string& lineToken, int lineIndex, std::vector<LineToken>& includeLineTokens)
     {
         // Check include syntax
         if(tokens.size() != 2)
@@ -1056,33 +1065,31 @@ namespace Assembler
         }
 
         // Collect lines from include file
-        int numLines = 0;
-        std::string includeLineToken;
+        int lineNumber = lineIndex;
         while(!infile.eof())
         {
-            std::getline(infile, includeLineToken);
+            LineToken includeLineToken = {true, lineNumber++ - lineIndex, "", filepath};
+            std::getline(infile, includeLineToken._text);
             includeLineTokens.push_back(includeLineToken);
 
             if(!infile.good() &&  !infile.eof())
             {
-                fprintf(stderr, "Assembler::handleInclude() : Bad lineToken : '%s' : in %s on line %d.\n", includeLineToken.c_str(), filepath.c_str(), numLines+1);
+                fprintf(stderr, "Assembler::handleInclude() : Bad lineToken : '%s' : in %s on line %d.\n", includeLineToken._text.c_str(), filepath.c_str(), lineNumber - lineIndex);
                 return false;
             }
-
-            numLines++;
         }
 
         return true;
     }
 
-    bool handleMacros(const std::vector<Macro>& macros, std::vector<std::string>& lineTokens)
+    bool handleMacros(const std::vector<Macro>& macros, std::vector<LineToken>& lineTokens)
     {
         // Incomplete macros
         for(int i=0; i<macros.size(); i++)
         {
             if(!macros[i]._complete)
             {
-                fprintf(stderr, "Assembler::handleMacros() : Bad macro : missing 'ENDM' : on line %d.\n", macros[i]._startLine);
+                fprintf(stderr, "Assembler::handleMacros() : Bad macro : missing 'ENDM' : in %s : on line %d.\n", macros[i]._filename.c_str(), macros[i]._fileStartLine);
                 return false;
             }
         }
@@ -1106,8 +1113,8 @@ namespace Assembler
             for(auto itLine=lineTokens.begin(); itLine!=lineTokens.end();)
             {
                 // Lines containing only white space are skipped
-                std::string lineToken = *itLine;
-                size_t nonWhiteSpace = lineToken.find_first_not_of("  \n\r\f\t\v");
+                LineToken lineToken = *itLine;
+                size_t nonWhiteSpace = lineToken._text.find_first_not_of("  \n\r\f\t\v");
                 if(nonWhiteSpace == std::string::npos)
                 {
                     ++itLine;
@@ -1115,7 +1122,7 @@ namespace Assembler
                 }
 
                 // Tokenise current line
-                std::vector<std::string> tokens = tokeniseLine(lineToken);
+                std::vector<std::string> tokens = tokeniseLine(lineToken._text);
 
                 // Find macro
                 bool macroSuccess = false;
@@ -1128,7 +1135,7 @@ namespace Assembler
                         {
                             macroMissingParams = false;
                             std::vector<std::string> labels;
-                            std::vector<std::string> macroLines;
+                            std::vector<LineToken> macroLines;
 
                             // Create substitute lines
                             for(int ml=0; ml<macro._lines.size(); ml++)
@@ -1150,15 +1157,16 @@ namespace Assembler
                                 }
 
                                 // New macro line using any existing label
-                                std::string macroLine = (t > 0  &&  ml == 0) ? tokens[0] : "";
+                                LineToken macroLine = {false, 0, "", ""};
+                                macroLine._text = (t > 0  &&  ml == 0) ? tokens[0] : "";
 
                                 // Append to macro line
                                 for(int mt=0; mt<mtokens.size(); mt++)
                                 {
                                     // Don't prefix macro labels with a space
-                                    if(nonWhiteSpace != 0  ||  mt != 0) macroLine += " ";
+                                    if(nonWhiteSpace != 0  ||  mt != 0) macroLine._text += " ";
 
-                                    macroLine += mtokens[mt];
+                                    macroLine._text += mtokens[mt];
                                 }
 
                                 macroLines.push_back(macroLine);
@@ -1173,8 +1181,8 @@ namespace Assembler
                                 // Each instance of a macro's labels are made unique
                                 for(int i=0; i<labels.size(); i++)
                                 {
-                                    size_t labelFoundPos = macroLines[ml].find(labels[i]);
-                                    if(labelFoundPos != std::string::npos) macroLines[ml].insert(labelFoundPos + labels[i].size(), std::to_string(macroInstanceId));
+                                    size_t labelFoundPos = macroLines[ml]._text.find(labels[i]);
+                                    if(labelFoundPos != std::string::npos) macroLines[ml]._text.insert(labelFoundPos + labels[i].size(), std::to_string(macroInstanceId));
                                 }
 
                                 // Insert macro lines
@@ -1193,13 +1201,13 @@ namespace Assembler
 
             if(macroMissing)
             {
-                fprintf(stderr, "Assembler::handleMacros() : Warning, macro is never called : %s : on line %d.\n", macro._name.c_str(), macro._startLine);
+                fprintf(stderr, "Assembler::handleMacros() : Warning, macro is never called : %s : in %s : on line %d.\n", macro._name.c_str(), macro._filename.c_str(), macro._fileStartLine);
                 continue;
             }
 
             if(macroMissingParams)
             {
-                fprintf(stderr, "Assembler::handleMacros() : Missing macro parameters : %s : on line %d.\n", macro._name.c_str(), macro._startLine);
+                fprintf(stderr, "Assembler::handleMacros() : Missing macro parameters : %s : in %s : on line %d.\n", macro._name.c_str(), macro._filename.c_str(), macro._fileStartLine);
                 return false;
             }
         }
@@ -1207,17 +1215,23 @@ namespace Assembler
         return true;
     }
 
-    bool handleMacroStart(const std::vector<std::string>& tokens, Macro& macro, int lineIndex)
+    bool handleMacroStart(const std::string& filename, const LineToken& lineToken, const std::vector<std::string>& tokens, Macro& macro, int lineIndex, int adjustedLineIndex)
     {
+        int lineNumber = (lineToken._fromInclude) ? lineToken._includeLineNumber + 1 : adjustedLineIndex + 1;
+        std::string macroFileName = (lineToken._fromInclude) ? lineToken._includeName : filename;
+
         // Check macro syntax
         if(tokens.size() < 2)
         {
-            fprintf(stderr, "Assembler::handleMacroStart() : Bad macro : missing name : on line %d.\n", lineIndex);
+            fprintf(stderr, "Assembler::handleMacroStart() : Bad macro : missing name : in %s : on line %d.\n", macroFileName.c_str(), lineNumber);
             return false;
         }                    
 
         macro._name = tokens[1];
         macro._startLine = lineIndex - 1;
+        macro._fromInclude = lineToken._fromInclude;
+        macro._fileStartLine = lineNumber;
+        macro._filename = macroFileName;
 
         // Save params
         for(int i=2; i<tokens.size(); i++) macro._params.push_back(tokens[i]);
@@ -1232,7 +1246,7 @@ namespace Assembler
         {
             if(macro._name == macros[i]._name)
             {
-                fprintf(stderr, "Assembler::handleMacroEnd() : Bad macro : duplicate name : %s : on line %d.\n", macro._name.c_str(), lineIndex);
+                fprintf(stderr, "Assembler::handleMacroEnd() : Bad macro : duplicate name : %s : in %s : on line %d.\n", macro._name.c_str(), macro._filename.c_str(), macro._fileStartLine);
                 return false;
             }
         }
@@ -1250,20 +1264,22 @@ namespace Assembler
         return true;
     }
 
-    bool preProcess(std::vector<std::string>& lineTokens, bool doMacros)
+    bool preProcess(const std::string& filename, std::vector<LineToken>& lineTokens, bool doMacros)
     {
         Macro macro;
         std::vector<Macro> macros;
         bool buildingMacro = false;
 
+        int adjustedLineIndex = 0;
         for(auto itLine=lineTokens.begin(); itLine != lineTokens.end();)
         {
             // Lines containing only white space are skipped
-            std::string lineToken = *itLine;
-            size_t nonWhiteSpace = lineToken.find_first_not_of("  \n\r\f\t\v");
+            LineToken lineToken = *itLine;
+            size_t nonWhiteSpace = lineToken._text.find_first_not_of("  \n\r\f\t\v");
             if(nonWhiteSpace == std::string::npos)
             {
                 ++itLine;
+                ++adjustedLineIndex;
                 continue;
             }
 
@@ -1272,7 +1288,7 @@ namespace Assembler
             int lineIndex = int(itLine - lineTokens.begin()) + 1;
 
             // Tokenise current line
-            std::vector<std::string> tokens = tokeniseLine(lineToken);
+            std::vector<std::string> tokens = tokeniseLine(lineToken._text);
 
             // Valid pre-processor commands
             if(tokens.size() > 0)
@@ -1282,11 +1298,11 @@ namespace Assembler
                 // Include
                 if(tokens[0] == "%INCLUDE")
                 {  
-                    std::vector<std::string> includeLineTokens;
-                    if(!handleInclude(tokens, lineToken, lineIndex, includeLineTokens)) return false;
+                    std::vector<LineToken> includeLineTokens;
+                    if(!handleInclude(tokens, lineToken._text, lineIndex, includeLineTokens)) return false;
 
                     // Recursively include everything in order
-                    if(!preProcess(includeLineTokens, false))
+                    if(!preProcess(filename, includeLineTokens, false))
                     {
                         fprintf(stderr, "Assembler::preProcess() : Bad include file : '%s'.\n", tokens[1].c_str());
                         return false;
@@ -1295,15 +1311,15 @@ namespace Assembler
                     // Remove original include line and replace with include text
                     itLine = lineTokens.erase(itLine);
                     itLine = lineTokens.insert(itLine, includeLineTokens.begin(), includeLineTokens.end());
+                    ++adjustedLineIndex -= int(includeLineTokens.end() - includeLineTokens.begin());
                     includeFound = true;
                 }
-
                 // Build macro
-                if(doMacros)
+                else if(doMacros)
                 {
                     if(tokens[0] == "%MACRO")
                     {
-                        if(!handleMacroStart(tokens, macro, lineIndex)) return false;
+                        if(!handleMacroStart(filename, lineToken, tokens, macro, lineIndex, adjustedLineIndex)) return false;
 
                         buildingMacro = true;
                     }
@@ -1314,12 +1330,16 @@ namespace Assembler
                     }
                     if(buildingMacro  &&  tokens[0] != "%MACRO")
                     {
-                        macro._lines.push_back(lineToken);
+                        macro._lines.push_back(lineToken._text);
                     }
                 }
             }
 
-            if(!includeFound) ++itLine;
+            if(!includeFound)
+            {
+                ++itLine;
+                ++adjustedLineIndex;
+            }
         }
 
         // Handle complete macros
@@ -1597,16 +1617,18 @@ namespace Assembler
 
         // Get file
         int numLines = 0;
-        std::string lineToken;
-        std::vector<std::string> lineTokens;
+        //std::string lineToken;
+        //std::vector<std::string> lineTokens;
+        LineToken lineToken;
+        std::vector<LineToken> lineTokens;
         while(!infile.eof())
         {
-            std::getline(infile, lineToken);
+            std::getline(infile, lineToken._text);
             lineTokens.push_back(lineToken);
 
             if(!infile.good()  &&  !infile.eof())
             {
-                fprintf(stderr, "Assembler::assemble() : Bad lineToken : '%s' : in %s : on line %d.\n", lineToken.c_str(), filename.c_str(), numLines+1);
+                fprintf(stderr, "Assembler::assemble() : Bad lineToken : '%s' : in %s : on line %d.\n", lineToken._text.c_str(), filename.c_str(), numLines+1);
                 return false;
             }
 
@@ -1614,7 +1636,7 @@ namespace Assembler
         }
 
         // Pre-processor
-        if(!preProcess(lineTokens, true)) return false;
+        if(!preProcess(filename, lineTokens, true)) return false;
 
         numLines = int(lineTokens.size());
 
@@ -1626,19 +1648,19 @@ namespace Assembler
                 lineToken = lineTokens[line];
 
                 // Lines containing only white space are skipped
-                size_t nonWhiteSpace = lineToken.find_first_not_of("  \n\r\f\t\v");
+                size_t nonWhiteSpace = lineToken._text.find_first_not_of("  \n\r\f\t\v");
                 if(nonWhiteSpace == std::string::npos) continue;
 
                 int tokenIndex = 0;
 
                 // Tokenise current line
-                std::vector<std::string> tokens = tokeniseLine(lineToken);
+                std::vector<std::string> tokens = tokeniseLine(lineToken._text);
 
                 // Comments
                 if(tokens.size() > 0  &&  tokens[0].find_first_of(";#") != std::string::npos) continue;
 
                 // Gprintf lines are skipped
-                if(createGprintf(ParseType(parse), lineToken, line+1)) continue;
+                if(createGprintf(ParseType(parse), lineToken._text, line+1)) continue;
 
                 // Starting address, labels and equates
                 if(nonWhiteSpace == 0)
@@ -1648,12 +1670,12 @@ namespace Assembler
                         EvaluateResult result = evaluateEquates(tokens, (ParseType)parse, tokenIndex);
                         if(result == NotFound)
                         {
-                            fprintf(stderr, "Assembler::assemble() : Missing equate : '%s' : in %s on line %d.\n", lineToken.c_str(), filename.c_str(), line+1);
+                            fprintf(stderr, "Assembler::assemble() : Missing equate : '%s' : in %s on line %d.\n", lineToken._text.c_str(), filename.c_str(), line+1);
                             return false;
                         }
                         else if(result == Duplicate)
                         {
-                            fprintf(stderr, "Assembler::assemble() : Duplicate equate : '%s' : in %s on line %d.\n", lineToken.c_str(), filename.c_str(), line+1);
+                            fprintf(stderr, "Assembler::assemble() : Duplicate equate : '%s' : in %s on line %d.\n", lineToken._text.c_str(), filename.c_str(), line+1);
                             return false;
                         }
                         // Skip equate lines
@@ -1671,7 +1693,7 @@ namespace Assembler
                         }
                         else if(result == Duplicate)
                         {
-                            fprintf(stderr, "Assembler::assemble() : Duplicate label : '%s' : in %s on line %d.\n", lineToken.c_str(), filename.c_str(), line+1);
+                            fprintf(stderr, "Assembler::assemble() : Duplicate label : '%s' : in %s on line %d.\n", lineToken._text.c_str(), filename.c_str(), line+1);
                             return false;
                         }
                     }
@@ -1691,7 +1713,7 @@ namespace Assembler
 
                 if(byteSize == BadSize)
                 {
-                    fprintf(stderr, "Assembler::assemble() : Bad Opcode : '%s' : in %s on line %d.\n", lineToken.c_str(), filename.c_str(), line+1);
+                    fprintf(stderr, "Assembler::assemble() : Bad Opcode : '%s' : in %s on line %d.\n", lineToken._text.c_str(), filename.c_str(), line+1);
                     return false;
                 }
 
@@ -1705,7 +1727,7 @@ namespace Assembler
                     // Missing operand
                     else if((byteSize == TwoBytes  ||  byteSize == ThreeBytes)  &&  tokens.size() <= tokenIndex)
                     {
-                        fprintf(stderr, "Assembler::assemble() : Missing operand/s : '%s' : in %s on line %d.\n", lineToken.c_str(), filename.c_str(), line+1);
+                        fprintf(stderr, "Assembler::assemble() : Missing operand/s : '%s' : in %s on line %d.\n", lineToken._text.c_str(), filename.c_str(), line+1);
                         return false;
                     }
 
@@ -1836,7 +1858,7 @@ namespace Assembler
                                 {
                                     if(!handleNativeInstruction(tokens, tokenIndex, opcode, operand))
                                     {
-                                        fprintf(stderr, "Assembler::assemble() : Native instruction is malformed : '%s' : in %s on line %d.\n", lineToken.c_str(), filename.c_str(), line+1);
+                                        fprintf(stderr, "Assembler::assemble() : Native instruction is malformed : '%s' : in %s on line %d.\n", lineToken._text.c_str(), filename.c_str(), line+1);
                                         return false;
                                     }
                                 }
@@ -1878,7 +1900,7 @@ namespace Assembler
                                 {
                                     if(!handleDefineByte(tokens, tokenIndex, operand, instruction._isRomAddress))
                                     {
-                                        fprintf(stderr, "Assembler::assemble() : Bad DB data : '%s' : in %s on line %d.\n", lineToken.c_str(), filename.c_str(), line+1);
+                                        fprintf(stderr, "Assembler::assemble() : Bad DB data : '%s' : in %s on line %d.\n", lineToken._text.c_str(), filename.c_str(), line+1);
                                         return false;
                                     }
                                 }
@@ -1956,7 +1978,7 @@ namespace Assembler
                                     {
                                         if(!handleDefineWord(tokens, tokenIndex, operand, instruction._isRomAddress))
                                         {
-                                            fprintf(stderr, "Assembler::assemble() : Bad DW data : '%s' : in %s on line %d.\n", lineToken.c_str(), filename.c_str(), line+1);
+                                            fprintf(stderr, "Assembler::assemble() : Bad DW data : '%s' : in %s on line %d.\n", lineToken._text.c_str(), filename.c_str(), line+1);
                                             return false;
                                         }
                                     }
@@ -1985,7 +2007,7 @@ namespace Assembler
                     uint16_t newAddress = (instruction._isRomAddress) ? customAddress + ((_currentAddress & 0x00FF)>>1) : _currentAddress;
                     if((oldAddress >>8) != (newAddress >>8))
                     {
-                        fprintf(stderr, "Assembler::assemble() : Page boundary compromised : %04X : %04X : '%s' : in %s on line %d.\n", oldAddress, newAddress, lineToken.c_str(), filename.c_str(), line+1);
+                        fprintf(stderr, "Assembler::assemble() : Page boundary compromised : %04X : %04X : '%s' : in %s on line %d.\n", oldAddress, newAddress, lineToken._text.c_str(), filename.c_str(), line+1);
                         return false;
                     }
                 }

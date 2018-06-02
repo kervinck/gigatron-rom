@@ -201,7 +201,8 @@ namespace Loader
         for(int i=0; i<gt1File._segments.size(); i++)
         {
             uint16_t address = gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8);
-            fprintf(stderr, "Segment%03d : 0x%04x : %5d bytes\n", i, address, int(gt1File._segments[i]._dataBytes.size()));
+            std::string memory = (gt1File._segments[i]._isRomAddress) ? "ROM" : "RAM";
+            fprintf(stderr, "Segment%03d : %s 0x%04x : %5d bytes\n", i, memory.c_str(),address, int(gt1File._segments[i]._dataBytes.size()));
         }
     }
 
@@ -533,6 +534,7 @@ namespace Loader
 
                     address = byteCode._address;
                     customAddress = address;
+                    gt1Segment._isRomAddress = byteCode._isRomAddress;
                     gt1Segment._loAddress = address & 0x00FF;
                     gt1Segment._hiAddress = (address & 0xFF00) >>8;
                 }

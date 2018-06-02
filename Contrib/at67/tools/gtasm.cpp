@@ -8,7 +8,7 @@
 
 
 #define MAJOR_VERSION "0.1"
-#define MINOR_VERSION "1"
+#define MINOR_VERSION "2"
 #define VERSION_STR "gtasm v" MAJOR_VERSION "." MINOR_VERSION
 
 
@@ -22,29 +22,23 @@ void main(int argc, char* argv[])
     }
 
     std::string filename = std::string(argv[1]);
-
-    uint16_t address, customAddress, executeAddress = DEFAULT_START_ADDRESS;
-
-    // Handles hex numbers
-    std::stringstream ss;
-    ss << std::hex << argv[2];
-    ss >> address;
-    if(address < DEFAULT_START_ADDRESS) address = DEFAULT_START_ADDRESS;
-
-    executeAddress = address;
-    customAddress = executeAddress;
-
-    // Upload vCPU assembly code
     if(filename.find(".vasm") == filename.npos  &&  filename.find(".s") == filename.npos  &&  filename.find(".asm") == filename.npos)
     {
         fprintf(stderr, "Wrong file extension in %s : must be one of : '.vasm' or '.s' or '.asm'\n", filename.c_str());
         exit(0);
     }
 
+    // Handles hex numbers
+    uint16_t address = DEFAULT_START_ADDRESS;
+    std::stringstream ss;
+    ss << std::hex << argv[2];
+    ss >> address;
+    if(address < DEFAULT_START_ADDRESS) address = DEFAULT_START_ADDRESS;
+
     Assembler::initialise();
     Expression::initialise();
 
-    if(!Assembler::assemble(filename, executeAddress)) exit(0);
+    if(!Assembler::assemble(filename, address)) exit(0);
 
     // Save to gt1 format
     Loader::Gt1File gt1File;
@@ -72,7 +66,7 @@ void main(int argc, char* argv[])
             }
 
             address = byteCode._address;
-            customAddress = address;
+            gt1Segment._isRomAddress = byteCode._isRomAddress;
             gt1Segment._loAddress = address & 0x00FF;
             gt1Segment._hiAddress = (address & 0xFF00) >>8;
         }
