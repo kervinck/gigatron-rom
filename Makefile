@@ -1,4 +1,5 @@
-CFLAGS:=-std=c11 -O3 -Wall
+CFLAGS:=-std=c11 -Ofast -Wall -ggdb3
+LDFLAGS=-lSDL2 -ggdb3
 
 romType=0x1c # ROMv1 gets 0x1c. Further numbers to be decided.
 
