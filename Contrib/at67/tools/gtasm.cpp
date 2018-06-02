@@ -40,7 +40,7 @@ void main(int argc, char* argv[])
 
     if(!Assembler::assemble(filename, address)) exit(0);
 
-    // Save to gt1 format
+    // Create gt1 format
     Loader::Gt1File gt1File;
     gt1File._loStart = address & 0x00FF;
     gt1File._hiStart = (address & 0xFF00) >>8;
@@ -82,7 +82,8 @@ void main(int argc, char* argv[])
     }
 
     // Don't save gt1 file for any asm files that contain native rom code
-    if(!hasRomCode  &&  !saveGt1File(filename, gt1File)) exit(0);
+    std::string gt1FileName;
+    if(!hasRomCode  &&  !saveGt1File(filename, gt1File, gt1FileName)) exit(0);
 
-    Loader::printGt1Stats(filename, gt1File);
+    Loader::printGt1Stats(gt1FileName, gt1File);
 }

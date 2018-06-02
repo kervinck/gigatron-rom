@@ -130,7 +130,7 @@ namespace Loader
         return true;
     }
 
-    bool saveGt1File(const std::string& filepath, Gt1File& gt1File)
+    bool saveGt1File(const std::string& filepath, Gt1File& gt1File, std::string& filename)
     {
         if(gt1File._segments.size() == 0)
         {
@@ -138,7 +138,6 @@ namespace Loader
             return false;
         }
 
-        std::string filename;
         size_t i = filepath.rfind('.');
         filename = (i != std::string::npos) ? filepath.substr(0, i) + ".gt1" : filepath + ".gt1";
 
@@ -554,7 +553,8 @@ namespace Loader
             }
 
             // Don't save gt1 file for any asm files that contain native rom code
-            if(!hasRomCode  &&  !saveGt1File(filepath, gt1File)) return;
+            std::string gt1FileName;
+            if(!hasRomCode  &&  !saveGt1File(filepath, gt1File, gt1FileName)) return;
         }
         // Invalid file
         else
