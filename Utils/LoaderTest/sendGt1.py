@@ -3,19 +3,22 @@
 #
 # sendGt1.py -- Send GT1 file to Gigatron through Arduino as interface
 #
-#   *** So far tested for MacOSX only ***
+#  XXX So far tested for macOS only
+#  XXX Still uses Python 2.7 (default on macOS). Should be reworked to
+#      be independent of Python 2 or 3.
 #
 # 2018-04-29 (marcelk) Initial version
 # 2018-05-13 (marcelk) Use application level flow control
 # 2018-05-29 (rockybulwinkle) Add option to override detected port,
 #		search on /dev/ttyACM* as well, swith to argparse.
 # 2018-05-30 (marcelk) Enable stdin again. A bit more consistency.
+# 2018-06-04 (marcelk) Allow timeout while waiting for first prompt
 #
 #-----------------------------------------------------------------------
 
 import argparse
 import glob
-import serial
+import serial # pySerial: http://pyserial.readthedocs.io/en/latest/index.html
 import sys
 from time import sleep
 
@@ -42,21 +45,35 @@ def log(prefix, line):
   if args.verbose:
     print prefix, line
 
-def sendCommand(cmd=None):
+def sendCommand(cmd=None, timeout=False):
   """Send command to Gigatron Adapter Interface and wait for ready prompt"""
   if cmd:
     log('>', cmd)
     ser.write(cmd + '\n')
 
-  # Wait for prompt (line ending with a question mark)
-  line = ser.readline().rstrip()
-  log('<', line)
-  while len(line) == 0 or line[-1] != '?':
-    if line.startswith('!'):
-      print 'Failed:', line[1:]
-      exit(1)
-    line = ser.readline().rstrip()
+  # Wait for prompt
+  line = readLine()
+  while not (line is None and timeout):
+    if line:
+      if line[-1] == '?': # Got prompt
+        break
+      if line.startswith('!'): # Got error
+        print 'Failed:', line[1:]
+        exit(1)
+    line = readLine()
+  return line
+
+def readLine():
+  """Read line from serial port with optional verbosity"""
+  line = ser.readline()
+  if line:
+    line = line.rstrip() # Remove any trailing newline and spaces
     log('<', line)
+  else:
+    line = None # Signal that there is a timeout
+    if args.verbose:
+      sys.stdout.write('.')
+      sys.stdout.flush()
   return line
 
 #-----------------------------------------------------------------------
@@ -79,12 +96,10 @@ else:
 
 print 'Connecting to', port
 try:
-  ser = serial.Serial(port=port, baudrate=115200)
+  ser = serial.Serial(port=port, baudrate=115200, timeout=2)
 except Exception, e:
   print 'Failed: ' + str(e)
   exit(1)
-
-sleep(2)
 
 #-----------------------------------------------------------------------
 #       Send program
@@ -99,9 +114,9 @@ if args.filename:
 else:
   fp = sys.stdin
 
-sendCommand() # Wait for prompt
+sendCommand(timeout=True) # Wait for prompt, but not for too long
 
-print 'Reseting Gigatron'
+print 'Resetting Gigatron'
 sendCommand('R')
 
 print 'Starting Loader'
