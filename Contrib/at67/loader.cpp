@@ -5,13 +5,13 @@
 #include <algorithm>
 
 #ifndef STAND_ALONE
-#include "cpu.h"
 #include "editor.h"
 #include "timing.h"
 #include "graphics.h"
 #include "inih/INIReader.h"
 #endif
 
+#include "cpu.h"
 #include "loader.h"
 #include "assembler.h"
 #include "expression.h"
@@ -187,9 +187,11 @@ namespace Loader
         uint16_t totalSize = 0;
         for(int i=0; i<gt1File._segments.size(); i++) totalSize += int(gt1File._segments[i]._dataBytes.size());
         uint16_t startAddress = gt1File._loStart + (gt1File._hiStart <<8);
-        fprintf(stderr, "\n********************************************************************************\n");
-        fprintf(stderr, "%s : 0x%04x : %5d bytes : %3d segments\n", filename.c_str(), startAddress, totalSize, int(gt1File._segments.size()));
-        fprintf(stderr, "********************************************************************************\n");
+        fprintf(stderr, "\n************************************************************\n");
+        fprintf(stderr, "* %s : 0x%04x : %5d bytes : %3d segments\n", filename.c_str(), startAddress, totalSize, int(gt1File._segments.size()));
+        fprintf(stderr, "************************************************************\n");
+        fprintf(stderr, "* Segment :  Type  : Address : Memory Used                  \n");
+        fprintf(stderr, "************************************************************\n");
 
         // Segments
         int contiguousSegments = 0;
@@ -202,10 +204,11 @@ namespace Loader
             int segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
             if(segmentSize != int(gt1File._segments[i]._dataBytes.size()))
             {
-                fprintf(stderr, "Segment%03d : %s 0x%04x : segmentSize %3d != dataBytes.size() %3d\n", i, memory.c_str(), address, segmentSize, int(gt1File._segments[i]._dataBytes.size()));
+                fprintf(stderr, "Segment %4d : %s 0x%04x : segmentSize %3d != dataBytes.size() %3d\n", i, memory.c_str(), address, segmentSize, int(gt1File._segments[i]._dataBytes.size()));
                 return 0;
             }
 
+            // New contiguous segment
             if(segmentSize == 256)
             {
                 if(contiguousSegments == 0)
@@ -215,17 +218,25 @@ namespace Loader
                 }
                 contiguousSegments++;
             }
-            if(segmentSize < 256  &&  contiguousSegments == 0)
+            else
             {
-                fprintf(stderr, "Segment%03d : %s 0x%04x : %5d bytes\n", i, memory.c_str(), address, segmentSize);
-            }
-            if(segmentSize < 256  &&  contiguousSegments > 0)
-            {
-                fprintf(stderr, "Segment%03d : %s 0x%04x : %5d bytes (%dx256)\n", startContiguousSegment, memory.c_str(), startContiguousAddress, contiguousSegments*256, contiguousSegments);
-                fprintf(stderr, "Segment%03d : %s 0x%04x : %5d bytes\n", i, memory.c_str(), address, segmentSize);
-                contiguousSegments = 0;
+                // Normal segment < 256 bytes
+                if(contiguousSegments == 0)
+                {
+                    fprintf(stderr, "*  %4d   :  %s   : 0x%04x  : %5d bytes\n", i, memory.c_str(), address, segmentSize);
+                }
+                // Contiguous segment < 256 bytes
+                else
+                {
+                    fprintf(stderr, "*  %4d   :  %s   : 0x%04x  : %5d bytes (%dx256)\n", startContiguousSegment, memory.c_str(), startContiguousAddress, contiguousSegments*256, contiguousSegments);
+                    fprintf(stderr, "*  %4d   :  %s   : 0x%04x  : %5d bytes\n", i, memory.c_str(), address, segmentSize);
+                    contiguousSegments = 0;
+                }
             }
         }
+        fprintf(stderr, "************************************************************\n");
+        fprintf(stderr, "* Free RAM after loading: %d\n", Cpu::getBaseFreeRAM() - totalSize);
+        fprintf(stderr, "************************************************************\n");
 
         return totalSize;
     }
@@ -589,7 +600,6 @@ namespace Loader
         }
 
         uint16_t totalSize = printGt1Stats(filename, gt1File);
-        fprintf(stderr, "\nRAM free after loading: %d\n", Cpu::getBaseFreeRAM() - totalSize);
         Cpu::setFreeRAM(Cpu::getBaseFreeRAM() - totalSize); 
 
         // Currently only for emulation

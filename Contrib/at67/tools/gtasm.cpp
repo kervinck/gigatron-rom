@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <sstream>
 
-#include "..\cpu.h"
 #include "..\loader.h"
 #include "..\assembler.h"
 #include "..\expression.h"
@@ -86,6 +85,5 @@ void main(int argc, char* argv[])
     std::string gt1FileName;
     if(!hasRomCode  &&  !saveGt1File(filename, gt1File, gt1FileName)) exit(0);
 
-    uint16_t totalSize = Loader::printGt1Stats(gt1FileName, gt1File);
-    fprintf(stderr, "\nRAM free after loading: %d\n", Cpu::getBaseFreeRAM() - totalSize);
+    Loader::printGt1Stats(gt1FileName, gt1File);
 }
