@@ -17,9 +17,9 @@
 #define MAX_GIGA_NOTE         106
 #define PERCUSSION_NOTES      128
 
-#define MAJOR_VERSION "0.3"
-#define MINOR_VERSION "3"
-#define VERSION_STR "gtmidi v" MAJOR_VERSION "." MINOR_VERSION
+#define GTMIDI_MAJOR_VERSION "0.3"
+#define GTMIDI_MINOR_VERSION "4"
+#define GTMIDI_VERSION_STR "gtmidi v" GTMIDI_MAJOR_VERSION "." GTMIDI_MINOR_VERSION
 
 
 enum Format {vCPU=0, GCL, CPP, PY, NumFormats};
@@ -190,7 +190,7 @@ void main(int argc, char* argv[])
 {
     if(argc != 10)
     {
-        fprintf(stderr, "%s\n", VERSION_STR);
+        fprintf(stderr, "%s\n", GTMIDI_VERSION_STR);
         fprintf(stderr, "Usage:   gtmidi <input filename> <output filename> <midiname> <int format 0, 1, 2 or 3> <uint16_t start_address in hex>\n         <uint16_t segment_offset in hex> <int segment_size> <int line_length> <float timing_adjust>\n");
         fprintf(stderr, "Example: gtmidi game_over.bin game_over.i gameOver 0 0x8000 0 0 100 0.5\n");
         fprintf(stderr, "Input:   miditones binary file produced with miditones, e.g. miditones -t4 -b -s1 -pi <filename>.bin\n");

@@ -5,13 +5,15 @@
 #include <iomanip>
 #include <vector>
 
-#include <SDL.h>
 #include "cpu.h"
+
+#ifndef STAND_ALONE
+#include <SDL.h>
 #include "editor.h"
 #include "timing.h"
 #include "graphics.h"
 #include "gigatron_0x1c.h"
-
+#endif
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -28,9 +30,18 @@ namespace Cpu
     uint8_t _IN = 0xFF, _XOUT = 0x00;
     uint8_t _ROM[ROM_SIZE][2], _RAM[RAM_SIZE];
 
+    uint16_t _baseFreeRAM = RAM_SIZE - RAM_USED_DEFAULT;
+    uint16_t _freeRAM = _baseFreeRAM;
+
     std::vector<uint8_t> scanlinesRom0;
     std::vector<uint8_t> scanlinesRom1;
 
+
+    uint16_t getBaseFreeRAM(void) {return _baseFreeRAM;}
+    uint16_t getFreeRAM(void) {return _freeRAM;}
+    void setFreeRAM(uint16_t freeRAM) {_freeRAM = freeRAM;}
+
+#ifndef STAND_ALONE
     int64_t getClock(void) {return _clock;}
     uint8_t getIN(void) {return _IN;}
     uint8_t getXOUT(void) {return _XOUT;}
@@ -39,6 +50,7 @@ namespace Cpu
     uint16_t getRAM16(uint16_t address) {return _RAM[address & (RAM_SIZE-1)] | (_RAM[(address+1) & (RAM_SIZE-1)]<<8);}
     uint16_t getROM16(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01] | (_ROM[(address+1) & (ROM_SIZE-1)][page & 0x01]<<8);}
     float getvCpuUtilisation(void) {return _vCpuUtilisation;}
+
 
     void setClock(int64_t clock) {_clock = clock;}
     void setIN(uint8_t in) {_IN = in;}
@@ -384,4 +396,5 @@ namespace Cpu
             }
         }
     }
+#endif
 }

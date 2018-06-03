@@ -864,62 +864,85 @@ namespace Assembler
         return false;
     }
 
+    void packByteCode(Instruction& instruction, ByteCode& byteCode)
+    {
+        switch(instruction._byteSize)
+        {
+            case OneByte:
+            {
+                byteCode._isRomAddress = instruction._isRomAddress;
+                byteCode._isCustomAddress = instruction._isCustomAddress;
+                byteCode._data = instruction._opcode;
+                byteCode._address = instruction._address;
+                _byteCode.push_back(byteCode);
+            }
+            break;
+
+            case TwoBytes:
+            {
+                byteCode._isRomAddress = instruction._isRomAddress;
+                byteCode._isCustomAddress = instruction._isCustomAddress;
+                byteCode._data = instruction._opcode;
+                byteCode._address = instruction._address;
+                _byteCode.push_back(byteCode);
+
+                byteCode._isRomAddress = instruction._isRomAddress;
+                byteCode._isCustomAddress = false;
+                byteCode._data = instruction._operand0;
+                byteCode._address = 0x0000;
+                _byteCode.push_back(byteCode);
+            }
+            break;
+
+            case ThreeBytes:
+            {
+                byteCode._isRomAddress = instruction._isRomAddress;
+                byteCode._isCustomAddress = instruction._isCustomAddress;
+                byteCode._data = instruction._opcode;
+                byteCode._address = instruction._address;
+                _byteCode.push_back(byteCode);
+
+                byteCode._isRomAddress = instruction._isRomAddress;
+                byteCode._isCustomAddress = false;
+                byteCode._data = instruction._operand0;
+                byteCode._address = 0x0000;
+                _byteCode.push_back(byteCode);
+
+                byteCode._isRomAddress = instruction._isRomAddress;
+                byteCode._isCustomAddress = false;
+                byteCode._data = instruction._operand1;
+                byteCode._address = 0x0000;
+                _byteCode.push_back(byteCode);
+            }
+            break;
+        }
+    }
+
     void packByteCodeBuffer(void)
     {
         // Pack instructions
         ByteCode byteCode;
+        uint16_t segmentOffset = 0x0000;
+        uint16_t segmentAddress = 0x0000;
         for(int i=0; i<_instructions.size(); i++)
         {
-            switch(_instructions[i]._byteSize)
+            // Save start of segment
+            if(_instructions[i]._isCustomAddress)
             {
-                case OneByte:
-                {
-                    byteCode._isRomAddress = _instructions[i]._isRomAddress;
-                    byteCode._isCustomAddress = _instructions[i]._isCustomAddress;
-                    byteCode._data = _instructions[i]._opcode;
-                    byteCode._address = _instructions[i]._address;
-                    _byteCode.push_back(byteCode);
-                }
-                break;
-
-                case TwoBytes:
-                {
-                    byteCode._isRomAddress = _instructions[i]._isRomAddress;
-                    byteCode._isCustomAddress = _instructions[i]._isCustomAddress;
-                    byteCode._data = _instructions[i]._opcode;
-                    byteCode._address = _instructions[i]._address;
-                    _byteCode.push_back(byteCode);
-
-                    byteCode._isRomAddress = _instructions[i]._isRomAddress;
-                    byteCode._isCustomAddress = false;
-                    byteCode._data = _instructions[i]._operand0;
-                    byteCode._address = 0x0000;
-                    _byteCode.push_back(byteCode);
-                }
-                break;
-
-                case ThreeBytes:
-                {
-                    byteCode._isRomAddress = _instructions[i]._isRomAddress;
-                    byteCode._isCustomAddress = _instructions[i]._isCustomAddress;
-                    byteCode._data = _instructions[i]._opcode;
-                    byteCode._address = _instructions[i]._address;
-                    _byteCode.push_back(byteCode);
-
-                    byteCode._isRomAddress = _instructions[i]._isRomAddress;
-                    byteCode._isCustomAddress = false;
-                    byteCode._data = _instructions[i]._operand0;
-                    byteCode._address = 0x0000;
-                    _byteCode.push_back(byteCode);
-
-                    byteCode._isRomAddress = _instructions[i]._isRomAddress;
-                    byteCode._isCustomAddress = false;
-                    byteCode._data = _instructions[i]._operand1;
-                    byteCode._address = 0x0000;
-                    _byteCode.push_back(byteCode);
-                }
-                break;
+                segmentOffset = 0x0000;
+                segmentAddress = _instructions[i]._address;
             }
+
+            // Force a new segment, (this could fail if an instruction straddles a page boundary, but
+            // the page boundary crossing detection logic will stop the assembler before we get here)
+            if(!_instructions[i]._isCustomAddress  &&  segmentOffset % 256 == 0)
+            {
+                _instructions[i]._isCustomAddress = true;
+                _instructions[i]._address = segmentAddress + segmentOffset;
+            }
+
+            packByteCode(_instructions[i], byteCode);
+            segmentOffset += _instructions[i]._byteSize;
         }
 
         // Append call table

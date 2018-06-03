@@ -2,21 +2,22 @@
 #include <stdlib.h>
 #include <sstream>
 
+#include "..\cpu.h"
 #include "..\loader.h"
 #include "..\assembler.h"
 #include "..\expression.h"
 
 
-#define MAJOR_VERSION "0.1"
-#define MINOR_VERSION "2"
-#define VERSION_STR "gtasm v" MAJOR_VERSION "." MINOR_VERSION
+#define GTASM_MAJOR_VERSION "0.1"
+#define GTASM_MINOR_VERSION "2"
+#define GTASM_VERSION_STR "gtasm v" GTASM_MAJOR_VERSION "." GTASM_MINOR_VERSION
 
 
 void main(int argc, char* argv[])
 {
     if(argc != 3)
     {
-        fprintf(stderr, "%s\n", VERSION_STR);
+        fprintf(stderr, "%s\n", GTASM_VERSION_STR);
         fprintf(stderr, "Usage:   gtasm <input filename> <uint16_t start address in hex>\n");
         exit(0);
     }
@@ -85,5 +86,6 @@ void main(int argc, char* argv[])
     std::string gt1FileName;
     if(!hasRomCode  &&  !saveGt1File(filename, gt1File, gt1FileName)) exit(0);
 
-    Loader::printGt1Stats(gt1FileName, gt1File);
+    uint16_t totalSize = Loader::printGt1Stats(gt1FileName, gt1File);
+    fprintf(stderr, "\nRAM free after loading: %d\n", Cpu::getBaseFreeRAM() - totalSize);
 }

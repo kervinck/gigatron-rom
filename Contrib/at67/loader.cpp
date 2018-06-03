@@ -107,16 +107,10 @@ namespace Loader
                 break;
             }
 
-            // Expecting a valid segment
-            if(segment._segmentSize == 0)
-            {
-                fprintf(stderr, "Loader::loadGt1File() : bad header in segment %d of '%s'.\n", segmentCount, filename.c_str());
-                return false;
-            }
-
             // Read segment
-            segment._dataBytes.resize(segment._segmentSize);
-            infile.read((char *)&segment._dataBytes[0], segment._segmentSize);
+            int segmentSize = (segment._segmentSize == 0) ? 256 : segment._segmentSize;
+            segment._dataBytes.resize(segmentSize);
+            infile.read((char *)&segment._dataBytes[0], segmentSize);
             if(infile.eof() || infile.bad() || infile.fail())
             {
                 fprintf(stderr, "Loader::loadGt1File() : bad segment %d in '%s'.\n", segmentCount, filename.c_str());
@@ -167,7 +161,8 @@ namespace Loader
             }
 
             // Write segment
-            outfile.write((char *)&gt1File._segments[i]._dataBytes[0], gt1File._segments[i]._segmentSize);
+            int segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
+            outfile.write((char *)&gt1File._segments[i]._dataBytes[0], segmentSize);
             if(outfile.bad() || outfile.fail())
             {
                 fprintf(stderr, "Loader::saveGt1File() : bad segment %d in '%s'.\n", i, filename.c_str());
@@ -186,7 +181,7 @@ namespace Loader
         return true;
     }
 
-    void printGt1Stats(const std::string& filename, const Gt1File& gt1File)
+    uint16_t printGt1Stats(const std::string& filename, const Gt1File& gt1File)
     {
         // Header
         uint16_t totalSize = 0;
@@ -197,12 +192,42 @@ namespace Loader
         fprintf(stderr, "********************************************************************************\n");
 
         // Segments
+        int contiguousSegments = 0;
+        int startContiguousSegment = 0;
+        uint16_t startContiguousAddress = 0x0000;
         for(int i=0; i<gt1File._segments.size(); i++)
         {
             uint16_t address = gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8);
             std::string memory = (gt1File._segments[i]._isRomAddress) ? "ROM" : "RAM";
-            fprintf(stderr, "Segment%03d : %s 0x%04x : %5d bytes\n", i, memory.c_str(),address, int(gt1File._segments[i]._dataBytes.size()));
+            int segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
+            if(segmentSize != int(gt1File._segments[i]._dataBytes.size()))
+            {
+                fprintf(stderr, "Segment%03d : %s 0x%04x : segmentSize %3d != dataBytes.size() %3d\n", i, memory.c_str(), address, segmentSize, int(gt1File._segments[i]._dataBytes.size()));
+                return 0;
+            }
+
+            if(segmentSize == 256)
+            {
+                if(contiguousSegments == 0)
+                {
+                    startContiguousSegment = i;
+                    startContiguousAddress = address;
+                }
+                contiguousSegments++;
+            }
+            if(segmentSize < 256  &&  contiguousSegments == 0)
+            {
+                fprintf(stderr, "Segment%03d : %s 0x%04x : %5d bytes\n", i, memory.c_str(), address, segmentSize);
+            }
+            if(segmentSize < 256  &&  contiguousSegments > 0)
+            {
+                fprintf(stderr, "Segment%03d : %s 0x%04x : %5d bytes (%dx256)\n", startContiguousSegment, memory.c_str(), startContiguousAddress, contiguousSegments*256, contiguousSegments);
+                fprintf(stderr, "Segment%03d : %s 0x%04x : %5d bytes\n", i, memory.c_str(), address, segmentSize);
+                contiguousSegments = 0;
+            }
         }
+
+        return totalSize;
     }
 
 #ifndef STAND_ALONE
@@ -489,7 +514,7 @@ namespace Loader
             for(int j=0; j<gt1File._segments.size(); j++)
             {
                 uint16_t address = gt1File._segments[j]._loAddress + (gt1File._segments[j]._hiAddress <<8);
-                for(int i=0; i<gt1File._segments[j]._segmentSize; i++)
+                for(int i=0; i<gt1File._segments[j]._dataBytes.size(); i++)
                 {
                     Cpu::setRAM(address+i, gt1File._segments[j]._dataBytes[i]);
                 }
@@ -563,7 +588,9 @@ namespace Loader
             return;
         }
 
-        printGt1Stats(filename, gt1File);
+        uint16_t totalSize = printGt1Stats(filename, gt1File);
+        fprintf(stderr, "\nRAM free after loading: %d\n", Cpu::getBaseFreeRAM() - totalSize);
+        Cpu::setFreeRAM(Cpu::getBaseFreeRAM() - totalSize); 
 
         // Currently only for emulation
         size_t i = filename.find('.');
