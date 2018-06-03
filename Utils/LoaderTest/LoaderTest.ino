@@ -1,8 +1,17 @@
 
 // Concept tester for interfacing with the
 // Gigatron TTL microcomputer
-// Marcel van Kervinck / Chris Lord
-// May 2018
+
+// Select 1 of the platforms
+#define ArduinoUno   1
+#define ArduinoMicro 0
+#define ATtiny85     0
+
+// Select a built-in GT1 image
+const byte gt1File[] PROGMEM = {
+  //#include "Blinky.h" // Blink pixel in middle of screen
+  #include "Lines.h"    // Draw randomized lines (at67)
+};
 
 // The object file is embedded (in PROGMEM) in GT1 format. It would be
 // GREAT if we can find a way to receive the file over the Arduino's
@@ -28,31 +37,103 @@
 // XXX Keyboard: Is it possible to mimic key hold-down properly???
 // XXX Embed a Gigatron Terminal program. Or better: GigaMon
 
-const byte gt1File[] PROGMEM = {
-  //#include "Blinky.h" // Blink pixel in middle of screen
-  #include "Lines.h"    // Draw randomized lines
-};
+/*----------------------------------------------------------------------+
+ |      Arduino Uno config                                              |
+ +----------------------------------------------------------------------*/
 
-/*
- *  Link to Gigatron using its serial game controller port
- */
+// Arduino AVR    Gigatron Schematic Controller PCB              Gigatron
+// Uno     Name   OUT bit            CD4021     74HC595 (U39)    DB9 (J4)
+// ------- ------ -------- --------- ---------- ---------------- --------
+// Pin 13  PORTB5 None     SER_DATA  11 SER INP 14 SER           2
+// Pin 12  PORTB4 7 vSync  SER_LATCH  0 PAR/SER None             3
+// Pin 11  PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK 4
 
-// Arduino AVR    Gigatron Schematic Controller PCB
-// Uno     Name   OUT bit            CD4021     74HC595 (U39)
-// ------- ------ -------- --------- ---------- ----------------
-// Pin 13  PORTB5 None     SER_DATA  11 SER INP 14 SER
-// Pin 12  PORTB4 7 vSync  SER_LATCH  0 PAR/SER None
-// Pin 11  PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK
+#if ArduinoUno
+ // Pins for Gigatron
+ #define SER_DATA  PB5
+ #define SER_LATCH PB4
+ #define SER_PULSE PB3
 
-// Game controller button mapping. The kit's controller gives inverted signals.
-#define buttonRight  1
-#define buttonLeft   2
-#define buttonDown   4
-#define buttonUp     8
-#define buttonStart  16
-#define buttonSelect 32
-#define buttonB      64
-#define buttonA      128
+ // Pins for PS/2 keyboard (Arduino Uno)
+ #define keyboardClockPin 3 // Pin 2 or 3 for IRQ
+ #define keyboardDataPin  4 // Any available free pin
+
+ // Link to PC/laptop
+ #define hasSerial 1
+#endif
+
+/*----------------------------------------------------------------------+
+ |      Arduino Micro config                                            |
+ +----------------------------------------------------------------------*/
+
+// See also: https://forum.gigatron.io/viewtopic.php?f=4&t=33
+
+// Arduino AVR    Gigatron Schematic Controller PCB              Gigatron
+// Micro   Name   OUT bit            CD4021     74HC595 (U39)    DB9 (J4)
+// ------- ------ -------- --------- ---------- ---------------- --------
+// SCLK    PORTB1 None     SER_DATA  11 SER INP 14 SER           2
+// MISO    PORTB3 7 vSync  SER_LATCH  0 PAR/SER None             3
+// MOSI    PORTB2 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK 4
+
+// --------------------+
+//               Reset |
+// Arduino       +---+ |
+//  Micro        | O | |
+//               +---+ |
+//                     |
+//               2 4 6 |
+//        ICSP-> o o o |
+//        Port  .o o o |
+//               1 3 5 |
+// --------------------+
+
+#if ArduinoMicro
+
+ // Pins for Gigatron
+ #define SER_DATA  PB1
+ #define SER_LATCH PB3
+ #define SER_PULSE PB2
+
+ // Pins for PS/2 keyboard (XXX These are still for Arduino Uno)
+ #define keyboardClockPin 3 // Pin 2 or 3 for IRQ
+ #define keyboardDataPin  4 // Any available free pin
+
+ // Link to PC/laptop
+ #define hasSerial 1
+#endif
+
+/*----------------------------------------------------------------------+
+ |      ATtiny85 config                                                 |
+ +----------------------------------------------------------------------*/
+
+//                   +------+
+//          ~RESET --|1.   8|-- Vcc
+// PS/2 data   PB3 --|2    7|-- PB2  Serial data out
+// PS/2 clock  PB4 --|3    6|-- PB1  Serial latch in
+//             GND --|4    5|-- PB0  Serial pulse in
+//                   +------+
+//                   ATtiny85
+
+#if ATtiny85
+
+ // Pins for Gigatron
+ #define SER_DATA  PB2
+ #define SER_LATCH PB1
+ #define SER_PULSE PB0
+
+ // Pins for PS/2 keyboard
+ // XXX PS2KeyBoard.h doesn't work for ATtiny yet
+ //     because interrupts work in a different way
+ #define keyboardClockPin PB4
+ #define keyboardDataPin  PB3
+
+ // Link to PC/laptop
+ #define hasSerial 0
+#endif
+
+/*----------------------------------------------------------------------+
+ |      End config section                                              |
+ +----------------------------------------------------------------------*/
 
 /*
  *  Loader protocol
@@ -69,13 +150,19 @@ byte checksum; // Global is simplest
 
 PS2Keyboard keyboard;
 
-// Pins for PS/2 keyboard (Arduino Uno)
-const int keyboardClockPin = 3;  // Pin 2 or 3 for IRQ
-const int keyboardDataPin  = 4;  // Any available free pin
+/*
+ *  Game controller button mapping
+ */
 
-// Keyboard
-// Pin  4  PS/2 Data
-// Pin  3  PS/2 Clock
+#define buttonRight  1
+#define buttonLeft   2
+#define buttonDown   4
+#define buttonUp     8
+#define buttonStart  16
+#define buttonSelect 32
+#define buttonB      64
+#define buttonA      128
+// Note: The kit's controller gives inverted signals.
 
 /*
  *  Setup runs once when the Arduino wakes up
@@ -83,8 +170,8 @@ const int keyboardDataPin  = 4;  // Any available free pin
 void setup()
 {
   // Enable output pin (pins are set to input by default)
-  PORTB |= 1<<PORTB5; // Send 1 when idle
-  DDRB = 1<<PORTB5;
+  PORTB |= 1<<SER_DATA; // Send 1 when idle
+  DDRB = 1<<SER_DATA;
 
   // Open upstream communication
   Serial.begin(115200);
@@ -148,15 +235,17 @@ void prompt()
 bool detectGigatron()
 {
   unsigned long timeout = millis() + 85;
-  long T[] = {0, 0, 0, 0};
+  long T[2][2] = {{0, 0}, {0, 0}};
 
   // Sample the sync signals coming out of the controller port
-  while (millis() < timeout)
-    T[(PINB >> PORTB3) & 3]++; // capture PORTB3 and PORTB4
+  while (millis() < timeout) {
+    byte pinb = PINB; // capture SER_PULSE and SER_LATCH at the same time
+    T[ (pinb>>SER_LATCH)&1 ][ (pinb>>SER_PULSE)&1 ]++;
+  }
 
-  float S = T[0] + T[1] + T[2] + T[3] + .1; // Avoid zero division (pedantic)
-  float vSync = (T[0] + T[1]) / ( 8 * S / 521); // Adjusted vSync signal
-  float hSync = (T[0] + T[2]) / (96 * S / 800); // Standard hSync signal
+  float S = T[0][0] + T[0][1] + T[1][0] + T[1][1] + .1; // Avoid zero division (pedantic)
+  float vSync = (T[0][0] + T[0][1]) / ( 8 * S / 521); // Adjusted vSync signal
+  float hSync = (T[0][0] + T[1][0]) / (96 * S / 800); // Standard hSync signal
 
   // Check that vSync and hSync characteristics look normal
   return 0.95 <= vSync && vSync <= 1.20 && 0.95 <= hSync && hSync <= 1.05;
@@ -343,7 +432,7 @@ void sendGt1Segment(word address, int len, byte data[])
 
   // Wait for vBlank to start so we're 100% sure to skip one frame and
   // the checksum resets on the other side. (This is a bit pedantic)
-  while (PINB & (1<<PORTB4)) // ~160 us
+  while (PINB & (1<<SER_LATCH)) // ~160 us
     ;
 }
 
@@ -366,7 +455,7 @@ void sendController(byte value, int n)
   // E.g. 4 frames = 3/60s = ~50 ms
   for (int i=0; i<n; i++) {
     sendFirst(value, 8);
-    PORTB |= 1<<PORTB5; // Send 1 when idle
+    PORTB |= 1<<SER_DATA; // Send 1 when idle
   }
 
   interrupts(); // So delay() can work again
@@ -403,15 +492,15 @@ void sendFrame(byte firstByte, byte len, word address, byte message[])
   byte lastByte = -checksum;   // Checksum must come out as 0
   sendBits(lastByte, 8);
   checksum = lastByte;         // Concatenate checksums
-  PORTB |= 1<<PORTB5;          // Send 1 when idle
+  PORTB |= 1<<SER_DATA;          // Send 1 when idle
 }
 
 void sendFirst(byte value, byte n)
 {
   // Wait vertical sync NEGATIVE edge to sync with loader
-  while (~PINB & (1<<PORTB4)) // Ensure vSync is HIGH first
+  while (~PINB & (1<<SER_LATCH)) // Ensure vSync is HIGH first
     ;
-  while (PINB & (1<<PORTB4)) // Then wait for vSync to drop
+  while (PINB & (1<<SER_LATCH)) // Then wait for vSync to drop
     ;
   sendBits(value, n);
 }
@@ -422,16 +511,16 @@ void sendBits(byte value, byte n)
   for (byte bit=1<<(n-1); bit; bit>>=1) {
     // Send next bit
     if (value & bit)
-      PORTB |= 1<<PORTB5;
+      PORTB |= 1<<SER_DATA;
     else
-      PORTB &= ~(1<<PORTB5);
+      PORTB &= ~(1<<SER_DATA);
 
     // Wait for bit transfer at horizontal sync POSITIVE edge.
     // This timing is tight for the first bit of the first byte and
     // the reason that interrupts must be disabled on the Arduino.
-    while (PINB & (1<<PORTB3))  // Ensure hSync is LOW first
+    while (PINB & (1<<SER_PULSE))  // Ensure hSync is LOW first
       ;
-    while (~PINB & (1<<PORTB3)) // Then wait for hSync to rise
+    while (~PINB & (1<<SER_PULSE)) // Then wait for hSync to rise
       ;
   }
   checksum += value;
