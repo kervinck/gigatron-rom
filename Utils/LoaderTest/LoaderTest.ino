@@ -1,16 +1,30 @@
 
 // Concept tester for interfacing with the
-// Gigatron TTL microcomputer
+// Gigatron TTL microcomputer using a microcontroller
+// hooked to the input port (J4).
 
-// Select 1 of the platforms
+// This sketch serves several purpuses:
+// 1. Transfer a GT1 file into the Gigatron for execution.
+//    This can be done with two methods: over USB or from PROGMEM
+//    Each has their advantages and disadvantages:
+//    a. USB can accept a regular GT1 file but needs a (Python)
+//       program on the PC/laptop as sender (sendGt1.py).
+//    b. PROGMEM only requires the Arduino IDE on the PC/laptop,
+//       but needs the GT1 file as a hexdump (C notation).
+// 2. Hookup a PS/2 keyboard for typing on the Gigatron
+// 3. Controlling the Gigatron over USB from a PC/laptop
+// Not every microcontroller supports all functions.
+
+// Select 1 of the platforms:
 #define ArduinoUno   1
 #define ArduinoMicro 0
 #define ATtiny85     0
 
-// Select a built-in GT1 image
+// Select a built-in GT1 image:
 const byte gt1File[] PROGMEM = {
   //#include "Blinky.h" // Blink pixel in middle of screen
-  #include "Lines.h"    // Draw randomized lines (at67)
+  //#include "Lines.h"  // Draw randomized lines (at67)
+  #include "Terminal.h" // TV Typewriter
 };
 
 // The object file is embedded (in PROGMEM) in GT1 format. It would be
@@ -58,8 +72,8 @@ const byte gt1File[] PROGMEM = {
  #define SER_PULSE PB3
 
  // Pins for PS/2 keyboard (Arduino Uno)
- #define keyboardClockPin 3 // Pin 2 or 3 for IRQ
- #define keyboardDataPin  4 // Any available free pin
+ #define keyboardClockPin PB3 // Pin 2 or 3 for IRQ
+ #define keyboardDataPin  PB4 // Any available free pin
 
  // Link to PC/laptop
  #define hasSerial 1
@@ -99,8 +113,8 @@ const byte gt1File[] PROGMEM = {
  #define SER_PULSE PB2
 
  // Pins for PS/2 keyboard (XXX These are still for Arduino Uno)
- #define keyboardClockPin 3 // Pin 2 or 3 for IRQ
- #define keyboardDataPin  4 // Any available free pin
+ #define keyboardClockPin PB3 // Pin 2 or 3 for IRQ
+ #define keyboardDataPin  PB4 // Any available free pin
 
  // Link to PC/laptop
  #define hasSerial 1
@@ -110,13 +124,21 @@ const byte gt1File[] PROGMEM = {
  |      ATtiny85 config                                                 |
  +----------------------------------------------------------------------*/
 
-//                   +------+
-//          ~RESET --|1.   8|-- Vcc
-// PS/2 data   PB3 --|2    7|-- PB2  Serial data out
-// PS/2 clock  PB4 --|3    6|-- PB1  Serial latch in
-//             GND --|4    5|-- PB0  Serial pulse in
-//                   +------+
-//                   ATtiny85
+// Used settings in Arduino IDE 1.8.1:
+//   Board:       ATtiny
+//   Processor:   ATtiny85
+//   Clock:       8 MHz (internal) --> Use "Burn Bootloader" to configure this
+//   Programmer:  Arduino as ISP
+// See also:
+//   https://create.arduino.cc/projecthub/arjun/programming-attiny85-with-arduino-uno-afb829
+
+//                       +------+
+//              ~RESET --|1.   8|-- Vcc
+// PS/2 data       PB3 --|2    7|-- PB2  Serial data out
+// PS/2 clock      PB4 --|3    6|-- PB1  Serial latch in
+//                 GND --|4    5|-- PB0  Serial pulse in
+//                       +------+
+//                       ATtiny85
 
 #if ATtiny85
  #define version "ATtiny85"
@@ -127,13 +149,27 @@ const byte gt1File[] PROGMEM = {
  #define SER_PULSE PB0
 
  // Pins for PS/2 keyboard
- // XXX PS2KeyBoard.h doesn't work for ATtiny yet
- //     because interrupts work in a different way
  #define keyboardClockPin PB4
  #define keyboardDataPin  PB3
 
  // Link to PC/laptop
  #define hasSerial 0
+
+ // PS2Keyboard.h uses attachInterrupt() which doesn't work on the ATtiny85.
+ // Workaround as follows:
+ void ps2interrupt(void); // As provided by PS2Keyboard
+ ISR(PCINT0_vect) {
+   if (~PINB & (1<<keyboardClockPin)) { // FALLING edge of PS/2 clock
+     PORTB &= ~(1<<SER_DATA); // XXX Brief pulses (for debugging)
+     PORTB |=   1<<SER_DATA;
+     PORTB &= ~(1<<SER_DATA);
+     PORTB |=   1<<SER_DATA;
+     ps2interrupt();
+     PORTB &= ~(1<<SER_DATA);
+     PORTB |=   1<<SER_DATA;
+   }
+ }
+
 #endif
 
 /*----------------------------------------------------------------------+
@@ -189,7 +225,13 @@ void setup()
   delay(350);
 
   // PS/2 keyboard should be awake by now
-  keyboard.begin(keyboardDataPin, keyboardClockPin);
+  #if !ATtiny85
+    keyboard.begin(keyboardDataPin, keyboardClockPin);
+  #else
+    keyboard.begin(keyboardDataPin, 255);
+    GIMSK |= 1<<PCIE;             // Pin change interrupt enable
+    PCMSK |= 1<<keyboardClockPin; // Pin change mask
+  #endif
 
   prompt();
 }
@@ -218,10 +260,15 @@ void loop()
   if (keyboard.available()) {
     char c = keyboard.read();
     switch (c) {
+      // XXX These mappings are for testing purposes only
       case PS2_PAGEDOWN:   sendController(~buttonSelect,2); break;
-      case PS2_PAGEUP:     sendController(~buttonStart, 128+32); break;
+      case PS2_PAGEUP:     sendController(~buttonStart, 128+32); break; // XXX Change to Ctrl-Alt-Del
       case PS2_TAB:        sendController(~buttonA,     2); break;
-      case PS2_ESC:        sendController(~buttonB,     2); break;
+      #if !ATtiny85
+        case PS2_ESC:      sendController(~buttonB,     2); break;
+      #else
+        case PS2_ESC:      doTransfer(gt1File);             break; // XXX HACK Find some proper short-cut. Ctrl-T?
+      #endif
       case PS2_LEFTARROW:  sendController(~buttonLeft,  2); break;
       case PS2_RIGHTARROW: sendController(~buttonRight, 2); break;
       case PS2_UPARROW:    sendController(~buttonUp,    2); break;
