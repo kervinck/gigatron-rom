@@ -35,6 +35,7 @@ const byte gt1File[] PROGMEM = {
 // XXX Keyboard: Map Enter to both newline AND buttonA
 // XXX Keyboard: Delete = buttonA (same code 0x7f). Change delete code?
 // XXX Keyboard: Is it possible to mimic key hold-down properly???
+// XXX Timeouts/reset in case of hanging (dead man switch function?)
 // XXX Embed a Gigatron Terminal program. Or better: GigaMon
 
 /*----------------------------------------------------------------------+
@@ -49,6 +50,8 @@ const byte gt1File[] PROGMEM = {
 // Pin 11  PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK 4
 
 #if ArduinoUno
+ #define version "ArduinoUno"
+
  // Pins for Gigatron
  #define SER_DATA  PB5
  #define SER_LATCH PB4
@@ -88,6 +91,7 @@ const byte gt1File[] PROGMEM = {
 // --------------------+
 
 #if ArduinoMicro
+ #define version "ArduinoMicro"
 
  // Pins for Gigatron
  #define SER_DATA  PB1
@@ -115,6 +119,7 @@ const byte gt1File[] PROGMEM = {
 //                   ATtiny85
 
 #if ATtiny85
+ #define version "ATtiny85"
 
  // Pins for Gigatron
  #define SER_DATA  PB2
@@ -174,8 +179,9 @@ void setup()
   DDRB = 1<<SER_DATA;
 
   // Open upstream communication
-  Serial.begin(115200);
-
+  #if hasSerial
+    Serial.begin(115200);
+  #endif
   doVersion();
 
   // In case we power on together with the Gigatron, this is a
@@ -193,19 +199,21 @@ void setup()
  */
 void loop()
 {
-  static char line[20];
-  static byte lineIndex = 0;
+  #if hasSerial
+    static char line[20];
+    static byte lineIndex = 0;
 
-  if (Serial.available()) {
-    byte next = Serial.read();
-    if (lineIndex < sizeof line)
-      line[lineIndex++] = next;
-    if (next == '\n') {
-      line[lineIndex-1] = '\0';
-      doCommand(line);
-      lineIndex = 0;
+    if (Serial.available()) {
+      byte next = Serial.read();
+      if (lineIndex < sizeof line)
+        line[lineIndex++] = next;
+      if (next == '\n') {
+        line[lineIndex-1] = '\0';
+        doCommand(line);
+        lineIndex = 0;
+      }
     }
-  }
+  #endif
 
   if (keyboard.available()) {
     char c = keyboard.read();
@@ -228,8 +236,10 @@ void loop()
 
 void prompt()
 {
-  Serial.println(detectGigatron() ? ":Gigatron OK" : "!Gigatron offline");
-  Serial.println("\nCmd?");
+  #if hasSerial
+    Serial.println(detectGigatron() ? ":Gigatron OK" : "!Gigatron offline");
+    Serial.println("\nCmd?");
+  #endif
 }
 
 bool detectGigatron()
@@ -269,37 +279,45 @@ void doCommand(char line[])
   case 'Q': sendController(~buttonSelect, 2); break;
   case 'E': sendController(~buttonStart,  2); break;
   case 0: /* Empty line */                    break;
-  default:  Serial.println("!Unknown command (type 'H' for help)");
+  #if hasSerial
+    default:
+      Serial.println("!Unknown command (type 'H' for help)");
+  #endif
   }
   prompt();
 }
 
 void doVersion()
 {
-  Serial.println(":Gigatron Interface Adapter [Arduino]\n"
-                 ":Type 'H' for help");
+  #if hasSerial
+    Serial.println(":Gigatron Interface Adapter [" version "]\n"
+                   ":Type 'H' for help");
+  #endif
 }
 
 void doHelp()
 {
-  Serial.println(":Commands are");
-  Serial.println(": V        Show version");
-  Serial.println(": H        Show this help");
-  Serial.println(": R        Reset Gigatron");
-  Serial.println(": L        Start Loader");
-  Serial.println(": P        Transfer object file from PROGMEM");
-  Serial.println(": U        Transfer object file from USB");
-  Serial.println(": W/A/S/D  Up/left/down/right arrow");
-  Serial.println(": Z/X      A/B button ");
-  Serial.println(": Q/E      Select/start button");
+  #if hasSerial
+    Serial.println(":Commands are");
+    Serial.println(": V        Show version");
+    Serial.println(": H        Show this help");
+    Serial.println(": R        Reset Gigatron");
+    Serial.println(": L        Start Loader");
+    Serial.println(": P        Transfer object file from PROGMEM");
+    Serial.println(": U        Transfer object file from USB");
+    Serial.println(": W/A/S/D  Up/left/down/right arrow");
+    Serial.println(": Z/X      A/B button ");
+    Serial.println(": Q/E      Select/start button");
+  #endif
 }
 
 void doReset()
 {
   // Soft reset: hold start for >128 frames (>2.1 seconds)
-  Serial.println(":Resetting Gigatron");
-  Serial.flush();
-
+  #if hasSerial
+    Serial.println(":Resetting Gigatron");
+    Serial.flush();
+  #endif
   sendController(~buttonStart, 128+32);
 
   // Wait for main menu to be ready
@@ -309,8 +327,11 @@ void doReset()
 void doLoader()
 {
   // Navigate menu. 'Loader' is at the bottom
-  Serial.println(":Starting Loader from menu");
-  Serial.flush();
+  #if hasSerial
+    Serial.println(":Starting Loader from menu");
+    Serial.flush();
+  #endif
+
   for (int i=0; i<10; i++) {
     sendController(~buttonDown, 2);
     delay(50);
@@ -333,16 +354,23 @@ void doTransfer(const byte *gt1)
 {
   int nextByte;
 
-  #define readNext() {\
-    nextByte = gt1 ? pgm_read_byte(gt1++) : nextSerial();\
-    if (nextByte < 0) return;\
-  }
-
-  #define ask(n)\
-    if (!gt1) {\
-      Serial.print(n);\
-      Serial.println("?");\
+  #if hasSerial
+    #define readNext() {\
+      nextByte = gt1 ? pgm_read_byte(gt1++) : nextSerial();\
+      if (nextByte < 0) return;\
     }
+    #define ask(n)\
+      if (!gt1) {\
+        Serial.print(n);\
+        Serial.println("?");\
+      }
+  #else
+    #define readNext() {\
+      nextByte = pgm_read_byte(gt1++);\
+      if (nextByte < 0) return;\
+    }
+    #define ask(n)
+  #endif
 
   byte segment[300] = {0}; // Multiple of N for padding
 
@@ -368,17 +396,20 @@ void doTransfer(const byte *gt1)
 
     // Check that segment doesn't cross the page boundary
     if ((address & 255) + len > 256) {
-      Serial.println("!Data error (page overflow)");
+      #if hasSerial
+        Serial.println("!Data error (page overflow)");
+      #endif
       return;
     }
 
     // Send downstream
-    Serial.print(":Loading ");
-    Serial.print(len);
-    Serial.print(" bytes at $");
-    Serial.println(address, HEX);
-    Serial.flush();
-
+    #if hasSerial
+      Serial.print(":Loading ");
+      Serial.print(len);
+      Serial.print(" bytes at $");
+      Serial.println(address, HEX);
+      Serial.flush();
+    #endif
     sendGt1Segment(address, len, segment);
 
     // Signal that we're ready to receive more
@@ -394,25 +425,29 @@ void doTransfer(const byte *gt1)
   readNext();
   address = (address << 8) + nextByte;
   if (address != 0) {
-    Serial.print(":Executing from $");
-    Serial.println(address, HEX);
-    Serial.flush();
+    #if hasSerial
+      Serial.print(":Executing from $");
+      Serial.println(address, HEX);
+      Serial.flush();
+    #endif
     sendGt1Execute(address, segment+240);
   }
 }
 
 int nextSerial()
 {
-  unsigned long timeout = millis() + 5000;
+  #if hasSerial
+    unsigned long timeout = millis() + 5000;
 
-  while (!Serial.available() && millis() < timeout)
-    ;
+    while (!Serial.available() && millis() < timeout)
+      ;
 
-  int nextByte = Serial.read();
-  if (nextByte < 0)
-    Serial.println("!Timeout error (no data)");
+    int nextByte = Serial.read();
+    if (nextByte < 0)
+      Serial.println("!Timeout error (no data)");
 
-  return nextByte;
+    return nextByte;
+  #endif
 }
 
 // Send a 1..256 byte code or data segment into the Gigatron by
@@ -492,7 +527,7 @@ void sendFrame(byte firstByte, byte len, word address, byte message[])
   byte lastByte = -checksum;   // Checksum must come out as 0
   sendBits(lastByte, 8);
   checksum = lastByte;         // Concatenate checksums
-  PORTB |= 1<<SER_DATA;          // Send 1 when idle
+  PORTB |= 1<<SER_DATA;        // Send 1 when idle
 }
 
 void sendFirst(byte value, byte n)
