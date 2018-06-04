@@ -102,7 +102,8 @@ namespace Editor
 
     bool scanCodeFromIniKey(const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, int& scanCode)
     {
-        std::string key = Expression::strToUpper(_iniReader.Get(sectionString, iniKey, defaultKey));
+        std::string key = _iniReader.Get(sectionString, iniKey, defaultKey);
+        key = Expression::strToUpper(key);
         if(_sdlKeys.find(key) == _sdlKeys.end())
         {
             fprintf(stderr, "Editor::initialise() : key %s not recognised in INI file '%s' : reverting to default key %s.\n", key.c_str(), INPUT_CONFIG_INI, defaultKey.c_str());
@@ -589,7 +590,7 @@ namespace Editor
             {
                 std::string name = std::string(ent->d_name);
                 size_t nonWhiteSpace = name.find_first_not_of("  \n\r\f\t\v");
-                if(ent->d_type == S_IFDIR  &&  name[0] != '.'  &&  name.find("$RECYCLE") == std::string::npos  &&  nonWhiteSpace != std::string::npos)
+                if(ent->d_type == DT_DIR  &&  name[0] != '.'  &&  name.find("$RECYCLE") == std::string::npos  &&  nonWhiteSpace != std::string::npos)
                 {
                     dirnames.push_back(name);
                 }
@@ -623,7 +624,10 @@ namespace Editor
         std::string entry = *getFileEntryName(getCursorY() + _fileEntriesIndex);
         setCursorY(0);
 
-        (entry != "..") ? _filePath += entry + "/" : backOneDirectory();
+        if (entry != "..")
+            _filePath += entry + "/";
+        else
+            backOneDirectory();
 
         browseDirectory();
     }

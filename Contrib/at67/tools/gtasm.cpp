@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <sstream>
 
-#include "..\loader.h"
-#include "..\assembler.h"
-#include "..\expression.h"
+#include "../loader.h"
+#include "../assembler.h"
+#include "../expression.h"
 
 
 #define GTASM_MAJOR_VERSION "0.1"
@@ -12,7 +12,7 @@
 #define GTASM_VERSION_STR "gtasm v" GTASM_MAJOR_VERSION "." GTASM_MINOR_VERSION
 
 
-void main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
     if(argc != 3)
     {
@@ -86,4 +86,6 @@ void main(int argc, char* argv[])
     if(!hasRomCode  &&  !saveGt1File(filename, gt1File, gt1FileName)) exit(0);
 
     Loader::printGt1Stats(gt1FileName, gt1File);
+
+    return 0;
 }
