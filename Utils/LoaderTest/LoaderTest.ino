@@ -16,15 +16,14 @@
 // Not every microcontroller supports all functions.
 
 // Select 1 of the platforms:
-#define ArduinoUno   1
+#define ArduinoUno   1 // Default
 #define ArduinoMicro 0
 #define ATtiny85     0
 
 // Select a built-in GT1 image:
 const byte gt1File[] PROGMEM = {
   //#include "Blinky.h" // Blink pixel in middle of screen
-  //#include "Lines.h"  // Draw randomized lines (at67)
-  #include "Terminal.h" // TV Typewriter
+  #include "Lines.h"  // Draw randomized lines (at67)
 };
 
 // The object file is embedded (in PROGMEM) in GT1 format. It would be
@@ -159,17 +158,10 @@ const byte gt1File[] PROGMEM = {
  // Workaround as follows:
  void ps2interrupt(void); // As provided by PS2Keyboard
  ISR(PCINT0_vect) {
-   if (~PINB & (1<<keyboardClockPin)) { // FALLING edge of PS/2 clock
-     PORTB &= ~(1<<SER_DATA); // XXX Brief pulses (for debugging)
-     PORTB |=   1<<SER_DATA;
-     PORTB &= ~(1<<SER_DATA);
-     PORTB |=   1<<SER_DATA;
+   if (~PINB & (1<<keyboardClockPin)) // FALLING edge of PS/2 clock
      ps2interrupt();
-     PORTB &= ~(1<<SER_DATA);
-     PORTB |=   1<<SER_DATA;
-   }
- }
 
+ }
 #endif
 
 /*----------------------------------------------------------------------+
@@ -190,6 +182,10 @@ byte checksum; // Global is simplest
 #include <PS2Keyboard.h> // Install from the Arduino IDE's Library Manager
 
 PS2Keyboard keyboard;
+
+const byte terminalGt1[] PROGMEM = {
+  #include "Terminal.h" // TV Typewriter
+};
 
 /*
  *  Game controller button mapping
@@ -261,18 +257,18 @@ void loop()
     char c = keyboard.read();
     switch (c) {
       // XXX These mappings are for testing purposes only
-      case PS2_PAGEDOWN:   sendController(~buttonSelect,2); break;
+      case PS2_PAGEDOWN:   sendController(~buttonSelect,1); break;
       case PS2_PAGEUP:     sendController(~buttonStart, 128+32); break; // XXX Change to Ctrl-Alt-Del
-      case PS2_TAB:        sendController(~buttonA,     2); break;
+      case PS2_TAB:        sendController(~buttonA,     1); break;
       #if !ATtiny85
-        case PS2_ESC:      sendController(~buttonB,     2); break;
+        case PS2_ESC:      sendController(~buttonB,     1); break;
       #else
-        case PS2_ESC:      doTransfer(gt1File);             break; // XXX HACK Find some proper short-cut. Ctrl-T?
+        case PS2_ESC:      doTransfer(terminalGt1);         break; // XXX HACK Find some proper short-cut. Ctrl-T?
       #endif
-      case PS2_LEFTARROW:  sendController(~buttonLeft,  2); break;
-      case PS2_RIGHTARROW: sendController(~buttonRight, 2); break;
-      case PS2_UPARROW:    sendController(~buttonUp,    2); break;
-      case PS2_DOWNARROW:  sendController(~buttonDown,  2); break;
+      case PS2_LEFTARROW:  sendController(~buttonLeft,  1); break;
+      case PS2_RIGHTARROW: sendController(~buttonRight, 1); break;
+      case PS2_UPARROW:    sendController(~buttonUp,    1); break;
+      case PS2_DOWNARROW:  sendController(~buttonDown,  1); break;
       case PS2_ENTER:      sendController('\n', 1);         break;
       case PS2_DELETE:     sendController(127, 1);          break;
       default:             sendController(c, 1);            break;
@@ -536,7 +532,7 @@ void sendController(byte value, int n)
   // Send controller code for n frames
   // E.g. 4 frames = 3/60s = ~50 ms
   for (int i=0; i<n; i++) {
-    sendFirst(value, 8);
+    sendFirstByte(value);
     PORTB |= 1<<SER_DATA; // Send 1 when idle
   }
 
@@ -564,7 +560,7 @@ void sendFrame(byte firstByte, byte len, word address, byte message[])
   // All together, we drop 2 bits from the 2nd byte in a frame. This achieves
   // byte alignment for the Gigatron at visible scanline 3, 11, 19, ... etc.
 
-  sendFirst(firstByte, 8);     // Protocol byte
+  sendFirstByte(firstByte);    // Protocol byte
   checksum += firstByte << 6;  // Keep Loader.gcl dumb
   sendBits(len, 6);            // Length 0, 1..60
   sendBits(address&255, 8);    // Low address bits
@@ -577,14 +573,30 @@ void sendFrame(byte firstByte, byte len, word address, byte message[])
   PORTB |= 1<<SER_DATA;        // Send 1 when idle
 }
 
-void sendFirst(byte value, byte n)
+void sendFirstByte(byte value)
 {
   // Wait vertical sync NEGATIVE edge to sync with loader
   while (~PINB & (1<<SER_LATCH)) // Ensure vSync is HIGH first
     ;
   while (PINB & (1<<SER_LATCH)) // Then wait for vSync to drop
     ;
-  sendBits(value, n);
+
+  // Send first bit
+  if (value & 128)
+    PORTB |= 1<<SER_DATA;
+  else
+    PORTB &= ~(1<<SER_DATA);
+
+  // Wait for bit transfer at horizontal sync POSITIVE edge.
+  // This timing is tight for the first bit of the first byte and
+  // the reason that interrupts must be disabled on the microcontroller.
+  while (PINB & (1<<SER_PULSE))  // Ensure hSync is LOW first
+    ;
+  while (~PINB & (1<<SER_PULSE)) // Then wait for hSync to rise
+    ;
+
+  // Send remaining bits
+  sendBits(value, 7);
 }
 
 // Send n bits, highest first
@@ -598,8 +610,6 @@ void sendBits(byte value, byte n)
       PORTB &= ~(1<<SER_DATA);
 
     // Wait for bit transfer at horizontal sync POSITIVE edge.
-    // This timing is tight for the first bit of the first byte and
-    // the reason that interrupts must be disabled on the Arduino.
     while (PINB & (1<<SER_PULSE))  // Ensure hSync is LOW first
       ;
     while (~PINB & (1<<SER_PULSE)) // Then wait for hSync to rise
