@@ -1758,6 +1758,7 @@ namespace Assembler
                     if(_instructions.size() == 0)
                     {
                         instruction._address = _startAddress;
+                        instruction._isCustomAddress = true;
                         _currentAddress = _startAddress;
                     }
 
