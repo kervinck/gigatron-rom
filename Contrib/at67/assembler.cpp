@@ -442,12 +442,8 @@ namespace Assembler
     {
         if(tokens[1] == "EQU"  ||  tokens[1] == "equ")
         {
-            static bool sortEquates = false;
-
             if(parse == MnemonicPass)
             {
-                sortEquates = true;
-
                 uint16_t operand = 0x0000;
                 if(!Expression::stringToU16(tokens[2], operand))
                 {
@@ -502,15 +498,6 @@ namespace Assembler
             }
             else if(parse == CodePass)
             {
-                // Sort equates from largest size to smallest size, so that equate replacer in expressions works correctly
-                if(sortEquates)
-                {
-                    sortEquates = false;
-                    std::sort(_equates.begin(), _equates.end(), [](const Equate& equateA, const Equate& equateB)
-                    {
-                        return (equateA._name.size() > equateB._name.size());
-                    });
-                }
             }
 
             return Success;
@@ -521,12 +508,8 @@ namespace Assembler
 
     EvaluateResult EvaluateLabels(const std::vector<std::string>& tokens, ParseType parse, int tokenIndex)
     {
-        static bool sortLabels = false;
-
         if(parse == MnemonicPass) 
         {
-            sortLabels = true;
-
             // Check reserved words
             for(int i=0; i<_reservedWords.size(); i++)
             {
@@ -553,15 +536,6 @@ namespace Assembler
         }
         else if(parse == CodePass)
         {
-            // Sort labels from largest size to smallest size, so that label replacer in expressions works correctly
-            if(sortLabels)
-            {
-                sortLabels = false;
-                std::sort(_labels.begin(), _labels.end(), [](const Label& labelA, const Label& labelB)
-                {
-                    return (labelA._name.size() > labelB._name.size());
-                });
-            }
         }
 
         return Success;
