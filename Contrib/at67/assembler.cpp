@@ -1080,7 +1080,8 @@ namespace Assembler
         }
 
         std::string filepath = _includePath + tokens[1];
-        std::ifstream infile(filepath);            
+        std::replace( filepath.begin(), filepath.end(), '\\', '/');
+        std::ifstream infile(filepath);
         if(!infile.is_open())
         {
             fprintf(stderr, "Assembler::handleInclude() : Failed to open file : '%s'.\n", filepath.c_str());
