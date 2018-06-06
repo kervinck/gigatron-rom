@@ -297,23 +297,28 @@ namespace Assembler
         }
         return std::string::npos;   // unreachable
     }
-    bool parseEquateExpression(std::string input, uint16_t& operand)
+    static bool applyEquatesToExpression(std::string& expression, const std::vector<Equate>& _equates)
     {
-        // Strip white space
-        input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
-
-        // Replace equates
-        bool found = false;
-        for(int i=0; i<_equates.size(); i++)
-        {
-            size_t pos = findSymbol(input, _equates[i]._name);
-            while(pos != std::string::npos)
-            {
-                found = true;
-                input.replace(pos, _equates[i]._name.size(), std::to_string(_equates[i]._operand));
-                pos = findSymbol(input, _equates[i]._name, pos + _equates[i]._name.size());
+        bool modified = false;
+        for(int i=0; i<_equates.size(); i++) {
+            for (;;) {
+                size_t pos = findSymbol(expression, _equates[i]._name);
+                if (pos == std::string::npos)
+                    break;  // not found
+                modified = true;
+                expression.replace(pos, _equates[i]._name.size(), std::to_string(_equates[i]._operand));
             }
         }
+        return modified;
+    }
+
+    bool parseEquateExpression(std::string input, uint16_t& operand)
+    {
+        // Replace equates
+        bool found = applyEquatesToExpression(input, _equates);
+
+        // Strip white space
+        input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
 
         // Parse expression and return with a result
         if(found) operand = Expression::parse((char*)input.c_str());
@@ -651,30 +656,22 @@ namespace Assembler
 
     uint16_t parseNativeExpression(std::string input)
     {
-        // Strip white space
-        input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
-
         // Replace labels
         for(int i=0; i<_labels.size(); i++)
         {
-            size_t pos = input.find(_labels[i]._name);
-            while(pos != std::string::npos)
-            {
+            for (;;) {
+                size_t pos = findSymbol(input, _labels[i]._name);
+                if (pos == std::string::npos)
+                    break;  // not found
                 input.replace(pos, _labels[i]._name.size(), std::to_string(_labels[i]._address >>1));
-                pos = input.find(_labels[i]._name, pos + _labels[i]._name.size());
-            }
+           }
         }
 
         // Replace equates
-        for(int i=0; i<_equates.size(); i++)
-        {
-            size_t pos = input.find(_equates[i]._name);
-            while(pos != std::string::npos)
-            {
-                input.replace(pos, _equates[i]._name.size(), std::to_string(_equates[i]._operand));
-                pos = input.find(_equates[i]._name, pos + _equates[i]._name.size());
-            }
-        }
+        applyEquatesToExpression(input, _equates);
+
+        // Strip white space
+        input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
 
         // Parse expression and return with a result
         return Expression::parse((char*)input.c_str());
