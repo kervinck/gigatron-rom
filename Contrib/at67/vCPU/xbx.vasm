@@ -1,0 +1,215 @@
+%include macros/gigatron.i
+
+vars            EQU     0x30
+scratch			EQU		vars + 0x00
+x0				EQU		vars + 0x02
+y0				EQU		vars + 0x03
+xy0				EQU		x0
+x1				EQU		vars + 0x04
+y1				EQU		vars + 0x05
+xy1				EQU		x1
+cLines			EQU		vars + 0x06
+Color			EQU		vars + 0x07
+
+
+printT_tt		EQU		vars + 0x10
+printT_ii		EQU		vars + 0x11
+printT_Chr      EQU     vars + 0x12
+textStr         EQU     vars + 0x14
+textPos         EQU     vars + 0x16
+
+vblank_frameCountPrev  EQU     vars + 0x20
+
+pattern0		EQU		0x1005	' 2 pix ligne 1
+pattern1		EQU		0x0510  ' 2 pix ligne 2
+buttonRight		EQU		1
+buttonLeft		EQU		2
+buttonDown		EQU		4
+buttonUp		EQU		8
+buttonStart		EQU		16
+buttonSelect	EQU		32
+buttonB			EQU		64
+buttonA			EQU		128
+
+entry_point     EQU     0x0200
+subroutines     EQU     0x0300
+data			EQU		0x0400
+
+test_string		EQU		data + 0x00
+test_string    DB      6 'coucou'
+
+
+
+entry_point CALL    waitVBlank
+		LDI		0x08		; giga_vram hi
+        ST		y0			; 
+		ADDI	1
+        ST		y1			;
+
+        LDI  giga_yres       ' Load screen Y dimension, (120)       
+yloop   ST		cLines
+        
+		LDI  giga_xres-2	
+		ST   x0       ' on commence par le bout
+		ST   x1 
+xloop	LDWI pattern0
+        DOKE xy0
+		LDWI pattern1
+		DOKE xy1
+		LD   x0
+        SUBI 2   	    ; X loop
+		ST   x0
+		ST   x1
+        BNE  xloop      ; (le signe passe pas sur un octet 160 > 128)
+
+		; derniere colonne
+		LDWI pattern0
+		DOKE xy0
+		LDWI pattern1
+		DOKE xy1
+            
+       ; Y loop
+		LD	 y0
+        ADDI 2
+		ST	 y0
+		ADDI 1
+		ST 	 y1
+        LD   cLines    
+        SUBI 2  
+        BNE  yloop
+
+        LDWI	giga_vram + 0x0A00 + 0x40
+		STW		textPos
+		LDWI	test_string
+		STW		textStr
+		CALL	printText
+
+
+drawing	LDI		giga_xres/2
+        ST		x0
+		LDI		giga_yres/2
+		ST		y0
+		LDI		0x3F
+		ST		Color
+
+forever CALL    waitVBlank
+        LD		giga_buttonState
+		ANDI	buttonRight
+		BNE		noright
+		LD		x0
+		ADDI	1
+		ST		x0
+noright	LD		giga_buttonState
+        ANDI	buttonLeft
+		BNE		noleft
+		LD		x0
+		ADDI	-1
+		ST		x0
+noleft	LD		giga_buttonState
+        ANDI	buttonUp
+		BNE		noup
+		LD		y0
+		ADDI	-1
+		ST		y0
+noup	LD		giga_buttonState
+        ANDI	buttonDown
+		BNE		nodown
+		LD		y0
+		ADDI	1
+		ST		y0
+nodown	LD		giga_buttonState
+        ANDI	buttonA
+		BNE		noA
+		LD		Color
+		ADDI	1
+		ST		Color
+noA		LD		giga_buttonState
+        ANDI	buttonB
+		BNE		noB
+		LD		Color
+		ADDI	-1
+		ST		Color
+noB		bra		drawpix
+
+drawpix	LDW		giga_vram
+        ADDW	xy0
+		STW		scratch
+		LD		Color
+		POKE	scratch
+
+        BRA  forever
+
+
+subroutines		RET
+
+waitVBlank      LD      giga_frameCount
+                SUBW    vblank_frameCountPrev
+                BEQ     waitVBlank
+                LD      giga_frameCount
+				STW     vblank_frameCountPrev
+                RET
+
+%MACRO  LoopCounter _counter _label
+    LD      _counter
+	SUBI    0x01
+	ST      _counter
+	BNE     _label
+%ENDM
+
+; prints text using the inbuilt font and SYS routine
+printText	LDWI    SYS_VDrawBits_134   ; setup 8 vertical pixel SYS routine
+        STW     giga_sysFn
+
+        LDI     0x00                ; background colour
+		ST      giga_sysArg0
+		LDI     0x3F                ; foreground colour
+		ST      giga_sysArg1
+
+        LDW     textStr             ; first byte is length
+		PEEK
+		ST      printT_tt
+		INC     textStr
+
+printT_chr	LDW     textStr
+        PEEK
+		SUBI    32                  ; (char - 32)*5 + 0x0700
+		STW     printT_Chr
+		LSLW
+		LSLW
+		ADDW    printT_Chr
+		STW     scratch
+		LDWI    giga_text32
+		ADDW    scratch
+		STW     scratch             ; text font slice base address for chars 32-81
+
+        LDW     printT_Chr
+		SUBI    50
+		BLT     printT_draw
+		LDW     scratch
+		ADDI    0x06
+		STW     scratch             ; text font slice base address for chars 82+
+
+printT_draw	LDI     0x05
+        ST      printT_ii
+printT_slice LDW     textPos
+        STW     giga_sysArg4        ; xy
+		LDW     scratch             ; text font slice base address
+		LUP     0x00                ; get ROM slice
+		ST      giga_sysArg2
+		SYS     0xCB                ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
+		INC     scratch             ; next vertical slice
+		INC     textPos             ; next x
+		LoopCounter printT_ii printT_slice
+
+        INC     textStr             ; next char
+		INC     textPos             ; 1 pixel space between chars
+		LoopCounter printT_tt printT_chr
+		RET
+
+
+
+_startAddress_      EQU     entry_point
+_callTable_         EQU     0x00EE
+_singleStepWatch_   EQU     giga_frameCount
+_cpuUsageAddressA_  EQU     subroutines
+_cpuUsageAddressB_  EQU     subroutines+0x10	; waitVBlank
