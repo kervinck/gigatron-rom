@@ -279,6 +279,24 @@ namespace Assembler
         return instructionType;
     }
 
+    static size_t findSymbol(const std::string& input, const std::string& symbol, size_t pos = 0)
+    {
+        const char* separators = "+-*/().,!?;#'\"[] \t\n\r";
+        const size_t len = input.length();
+        if (pos >= len)
+            return std::string::npos;
+        for(;;) {
+            size_t sep = input.find_first_of(separators, pos);
+            bool eos = (sep == std::string::npos);
+            size_t end = eos ? len : sep;
+            if (input.substr(pos, end-pos) == symbol)
+                return pos;
+            else if (eos)
+                return std::string::npos;
+            pos = sep+1;
+        }
+        return std::string::npos;   // unreachable
+    }
     bool parseEquateExpression(std::string input, uint16_t& operand)
     {
         // Strip white space
@@ -288,12 +306,12 @@ namespace Assembler
         bool found = false;
         for(int i=0; i<_equates.size(); i++)
         {
-            size_t pos = input.find(_equates[i]._name);
+            size_t pos = findSymbol(input, _equates[i]._name);
             while(pos != std::string::npos)
             {
                 found = true;
                 input.replace(pos, _equates[i]._name.size(), std::to_string(_equates[i]._operand));
-                pos = input.find(_equates[i]._name, pos + _equates[i]._name.size());
+                pos = findSymbol(input, _equates[i]._name, pos + _equates[i]._name.size());
             }
         }
 
