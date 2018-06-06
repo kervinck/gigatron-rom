@@ -38,6 +38,10 @@ void main(int argc, char* argv[])
     Assembler::initialise();
     Expression::initialise();
 
+    size_t last_dir_sep = filename.find_last_of("/\\");
+    if (last_dir_sep != std::string::npos)
+        Assembler::setIncludePath(filename.substr(0, last_dir_sep+1));
+
     if(!Assembler::assemble(filename, address)) exit(0);
 
     // Create gt1 format
