@@ -186,7 +186,7 @@ void outputDelay(std::ofstream& outfile, Format format, uint8_t delay8, double t
     }
 }
 
-void main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
     if(argc != 10)
     {
@@ -416,4 +416,5 @@ void main(int argc, char* argv[])
 
     fprintf(stderr, "Original size:%d  New size:%d  Original time:%.1lfms  New time:%.1lfms  Error:%.1lfms  Start Address:0x%04x  End Address:0x%04x\n",
                     int(infile.gcount()), gigaSize, totalTime16, totalTime8, totalTime8 - totalTime16, startAddress, startAddress+gigaSize);
+    return 0;
 }
