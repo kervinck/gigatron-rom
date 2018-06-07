@@ -21,7 +21,7 @@ namespace Loader
 {
     struct Gt1Segment
     {
-        bool _isRomAddress;
+        bool _isRomAddress = false;
         uint8_t _hiAddress;
         uint8_t _loAddress;
         uint8_t _segmentSize;

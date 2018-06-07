@@ -915,23 +915,28 @@ namespace Assembler
         uint16_t segmentAddress = 0x0000;
         for(int i=0; i<_instructions.size(); i++)
         {
-            // Save start of segment
-            if(_instructions[i]._isCustomAddress)
+            // Segment RAM instructions into 256 byte pages for .gt1 file format
+            if(!_instructions[i]._isRomAddress)
             {
-                segmentOffset = 0x0000;
-                segmentAddress = _instructions[i]._address;
-            }
+                // Save start of segment
+                if(_instructions[i]._isCustomAddress)
+                {
+                    segmentOffset = 0x0000;
+                    segmentAddress = _instructions[i]._address;
+                }
 
-            // Force a new segment, (this could fail if an instruction straddles a page boundary, but
-            // the page boundary crossing detection logic will stop the assembler before we get here)
-            if(!_instructions[i]._isCustomAddress  &&  segmentOffset % 256 == 0)
-            {
-                _instructions[i]._isCustomAddress = true;
-                _instructions[i]._address = segmentAddress + segmentOffset;
+                // Force a new segment, (this could fail if an instruction straddles a page boundary, but
+                // the page boundary crossing detection logic will stop the assembler before we get here)
+                if(!_instructions[i]._isCustomAddress  &&  segmentOffset % 256 == 0)
+                {
+                    _instructions[i]._isCustomAddress = true;
+                    _instructions[i]._address = segmentAddress + segmentOffset;
+                }
+
+                segmentOffset += _instructions[i]._byteSize;
             }
 
             packByteCode(_instructions[i], byteCode);
-            segmentOffset += _instructions[i]._byteSize;
         }
 
         // Append call table

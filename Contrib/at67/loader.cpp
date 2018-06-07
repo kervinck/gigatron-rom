@@ -185,7 +185,10 @@ namespace Loader
     {
         // Header
         uint16_t totalSize = 0;
-        for(int i=0; i<gt1File._segments.size(); i++) totalSize += int(gt1File._segments[i]._dataBytes.size());
+        for(int i=0; i<gt1File._segments.size(); i++)
+        {
+            totalSize += int(gt1File._segments[i]._dataBytes.size());
+        }
         uint16_t startAddress = gt1File._loStart + (gt1File._hiStart <<8);
         fprintf(stderr, "\n************************************************************\n");
         fprintf(stderr, "* %s : 0x%04x : %5d bytes : %3d segments\n", filename.c_str(), startAddress, totalSize, int(gt1File._segments.size()));
@@ -200,9 +203,20 @@ namespace Loader
         for(int i=0; i<gt1File._segments.size(); i++)
         {
             uint16_t address = gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8);
-            std::string memory = (gt1File._segments[i]._isRomAddress) ? "ROM" : "RAM";
             int segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
-            if(segmentSize != int(gt1File._segments[i]._dataBytes.size()))
+            std::string memory = "RAM";
+            if(gt1File._segments[i]._isRomAddress)
+            {
+                memory = "ROM";
+                if(gt1File._segments.size() == 1)
+                {
+                    fprintf(stderr, "*  %4d   :  %s   : 0x%04x  : %5d bytes\n", i, memory.c_str(), address, totalSize);
+                    fprintf(stderr, "************************************************************\n");
+                    return totalSize;
+                }
+                totalSize -= segmentSize;
+            }
+            else if(segmentSize != int(gt1File._segments[i]._dataBytes.size()))
             {
                 fprintf(stderr, "Segment %4d : %s 0x%04x : segmentSize %3d != dataBytes.size() %3d\n", i, memory.c_str(), address, segmentSize, int(gt1File._segments[i]._dataBytes.size()));
                 return 0;
