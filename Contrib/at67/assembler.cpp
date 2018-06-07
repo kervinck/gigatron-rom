@@ -279,23 +279,46 @@ namespace Assembler
         return instructionType;
     }
 
-    bool parseEquateExpression(std::string input, uint16_t& operand)
+    static size_t findSymbol(const std::string& input, const std::string& symbol, size_t pos = 0)
     {
-        // Strip white space
-        input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
-
-        // Replace equates
-        bool found = false;
-        for(int i=0; i<_equates.size(); i++)
-        {
-            size_t pos = input.find(_equates[i]._name);
-            while(pos != std::string::npos)
-            {
-                found = true;
-                input.replace(pos, _equates[i]._name.size(), std::to_string(_equates[i]._operand));
-                pos = input.find(_equates[i]._name, pos + _equates[i]._name.size());
+        const char* separators = "+-*/().,!?;#'\"[] \t\n\r";
+        const size_t len = input.length();
+        if (pos >= len)
+            return std::string::npos;
+        for(;;) {
+            size_t sep = input.find_first_of(separators, pos);
+            bool eos = (sep == std::string::npos);
+            size_t end = eos ? len : sep;
+            if (input.substr(pos, end-pos) == symbol)
+                return pos;
+            else if (eos)
+                return std::string::npos;
+            pos = sep+1;
+        }
+        return std::string::npos;   // unreachable
+    }
+    static bool applyEquatesToExpression(std::string& expression, const std::vector<Equate>& _equates)
+    {
+        bool modified = false;
+        for(int i=0; i<_equates.size(); i++) {
+            for (;;) {
+                size_t pos = findSymbol(expression, _equates[i]._name);
+                if (pos == std::string::npos)
+                    break;  // not found
+                modified = true;
+                expression.replace(pos, _equates[i]._name.size(), std::to_string(_equates[i]._operand));
             }
         }
+        return modified;
+    }
+
+    bool parseEquateExpression(std::string input, uint16_t& operand)
+    {
+        // Replace equates
+        bool found = applyEquatesToExpression(input, _equates);
+
+        // Strip white space
+        input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
 
         // Parse expression and return with a result
         if(found) operand = Expression::parse((char*)input.c_str());
@@ -419,12 +442,8 @@ namespace Assembler
     {
         if(tokens[1] == "EQU"  ||  tokens[1] == "equ")
         {
-            static bool sortEquates = false;
-
             if(parse == MnemonicPass)
             {
-                sortEquates = true;
-
                 uint16_t operand = 0x0000;
                 if(!Expression::stringToU16(tokens[2], operand))
                 {
@@ -479,15 +498,6 @@ namespace Assembler
             }
             else if(parse == CodePass)
             {
-                // Sort equates from largest size to smallest size, so that equate replacer in expressions works correctly
-                if(sortEquates)
-                {
-                    sortEquates = false;
-                    std::sort(_equates.begin(), _equates.end(), [](const Equate& equateA, const Equate& equateB)
-                    {
-                        return (equateA._name.size() > equateB._name.size());
-                    });
-                }
             }
 
             return Success;
@@ -498,12 +508,8 @@ namespace Assembler
 
     EvaluateResult EvaluateLabels(const std::vector<std::string>& tokens, ParseType parse, int tokenIndex)
     {
-        static bool sortLabels = false;
-
         if(parse == MnemonicPass) 
         {
-            sortLabels = true;
-
             // Check reserved words
             for(int i=0; i<_reservedWords.size(); i++)
             {
@@ -530,15 +536,6 @@ namespace Assembler
         }
         else if(parse == CodePass)
         {
-            // Sort labels from largest size to smallest size, so that label replacer in expressions works correctly
-            if(sortLabels)
-            {
-                sortLabels = false;
-                std::sort(_labels.begin(), _labels.end(), [](const Label& labelA, const Label& labelB)
-                {
-                    return (labelA._name.size() > labelB._name.size());
-                });
-            }
         }
 
         return Success;
@@ -633,30 +630,22 @@ namespace Assembler
 
     uint16_t parseNativeExpression(std::string input)
     {
-        // Strip white space
-        input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
-
         // Replace labels
         for(int i=0; i<_labels.size(); i++)
         {
-            size_t pos = input.find(_labels[i]._name);
-            while(pos != std::string::npos)
-            {
+            for (;;) {
+                size_t pos = findSymbol(input, _labels[i]._name);
+                if (pos == std::string::npos)
+                    break;  // not found
                 input.replace(pos, _labels[i]._name.size(), std::to_string(_labels[i]._address >>1));
-                pos = input.find(_labels[i]._name, pos + _labels[i]._name.size());
-            }
+           }
         }
 
         // Replace equates
-        for(int i=0; i<_equates.size(); i++)
-        {
-            size_t pos = input.find(_equates[i]._name);
-            while(pos != std::string::npos)
-            {
-                input.replace(pos, _equates[i]._name.size(), std::to_string(_equates[i]._operand));
-                pos = input.find(_equates[i]._name, pos + _equates[i]._name.size());
-            }
-        }
+        applyEquatesToExpression(input, _equates);
+
+        // Strip white space
+        input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
 
         // Parse expression and return with a result
         return Expression::parse((char*)input.c_str());
@@ -1759,6 +1748,7 @@ namespace Assembler
                     if(_instructions.size() == 0)
                     {
                         instruction._address = _startAddress;
+                        instruction._isCustomAddress = true;
                         _currentAddress = _startAddress;
                     }
 
