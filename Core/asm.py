@@ -45,29 +45,17 @@ ea0DregY     = 5 << 2
 ea0DregOUT   = 6 << 2
 eaYXregOUTIX = 7 << 2 # post-increment of X
 
-# Store instructions
-def ea0D(v): return ea0DregAC | d(v)
-ea0X    = ea0XregAC
-def eaYD(v): return eaYDregAC | d(v)
-eaYX    = eaYXregAC
-eaYXinc = eaYXregOUTIX
-
-# Load/exec instructions (without memory)
-regAC  = ea0DregAC
-regX   = ea0DregX
-regY   = ea0DregY
-regOUT = ea0DregOUT
-
-# Immediate value
-#
-# Immediate means that the value used is encoded within the program stream,
-# instead of, for example, coming from a register or memory location.
-#
-def val(v): return busD | d(v)
-
-def d(v): return ((v & 255) << 8)
-
-def ram(ea): return busRAM | ea
+# Simplified notation
+X       = ea0DregX
+Y       = ea0DregY
+OUT     = ea0DregOUT
+YX      = eaYXregAC
+YX_incX = eaYXregOUTIX
+def zp(d):    return ((busRAM | ea0DregAC) << 8) | (d & 255)
+def ramX():   return  (busRAM | ea0XregAC) << 8
+def ramY(d):  return ((busRAM | eaYDregAC) << 8) | (d & 255)
+def ram():    return  (busRAM | eaYXregAC) << 8
+AC      = busAC << 8 # Use only as input, only as first argument to instruction
 
 # General instruction layout
 _maskOp   = 0b11100000
@@ -84,13 +72,6 @@ _opADD = 4 << 5
 _opSUB = 5 << 5
 _opST  = 6 << 5
 _opJ   = 7 << 5
-
-# No operation
-_nops = [_opLD  | regAC | busAC,
-         _opAND | regAC | busAC,
-         _opOR  | regAC | busAC ]
-_clrs = [_opXOR | regAC | busAC,
-         _opSUB | regAC | busAC ]
 
 # Jump conditions
 #
@@ -158,7 +139,7 @@ def L(word):
 
 def disassemble(opcode, operand, address=None):
   text = _mnemonics[opcode >> 5] # (74LS155)
-  isStore = (opcode & 0xe0) == _opST
+  isStore = (opcode & _maskOp) == _opST
 
   # Decode addressing and register mode (74LS138)
   if text != 'j':
@@ -216,15 +197,24 @@ def disassemble(opcode, operand, address=None):
       else:
         text = '%-4s %s,%s' % (text, bus, reg)
       # Specials
-      if opcode in _nops: text = 'nop'
-      if opcode in _clrs: text = 'clr'
+      if opcode == _opLD | busAC: text = 'nop'
 
   # Emit as text
   return text
 
-def _emit(ins):
+def _emit(a, b):
+  opcode, operand = a & 255, b & 255
+
+  if b >= 256:
+    opcode &= ~_maskBus
+    opcode |= b >> 8
+
+  # The addressing mode helpers all set busRAM, but these also useful for 'st'.
+  # So catch that usage and change their bus mode to busAC
+  if opcode & _maskOp == _opST and opcode & _maskBus == busRAM:
+    opcode = (opcode & ~_maskBus) | busAC
+
   global _romSize, _maxRomSize
-  opcode, operand = L(ins), H(ins)
   if _romSize >= _maxRomSize:
       disassembly = disassemble(opcode, operand)
       print '%04x %02x%02x  %s' % (_romSize, opcode, operand, disassembly)
@@ -249,31 +239,26 @@ def _emit(ins):
     print '%04x %02x%02x  %s' % (_romSize, opcode, operand, disassembly)
     print 'Warning: large propagation delay (conditional branch with RAM on bus)'
 
-def ld  (base, reg=regAC, flags=0): _emit(_opLD  | base | reg | flags)
-def anda(base, reg=regAC, flags=0): _emit(_opAND | base | reg | flags)
-def ora (base, reg=regAC, flags=0): _emit(_opOR  | base | reg | flags)
-def xora(base, reg=regAC, flags=0): _emit(_opXOR | base | reg | flags)
-def adda(base, reg=regAC, flags=0): _emit(_opADD | base | reg | flags)
-def suba(base, reg=regAC, flags=0): _emit(_opSUB | base | reg | flags)
-def jmpy(base): _emit(_opJ | jL | base)
-def bra (base): _emit(_opJ | jS | base)
-def beq (base): _emit(_opJ | jEQ | base)
-def bne (base): _emit(_opJ | jNE | base)
-def bgt (base): _emit(_opJ | jGT | base)
-def blt (base): _emit(_opJ | jLT | base)
-def bge (base): _emit(_opJ | jGE | base)
-def ble (base): _emit(_opJ | jLE | base)
+# Mnemonics for native instruction set
+def nop ():                       _emit(_opLD  | 0    | busAC, 0)
+def ld  (d=0, mode=0, bus=busD):  _emit(_opLD  | mode | bus, d)
+def anda(d=0, mode=0, bus=busD):  _emit(_opAND | mode | bus, d)
+def ora (d=0, mode=0, bus=busD):  _emit(_opOR  | mode | bus, d)
+def xora(d=0, mode=0, bus=busD):  _emit(_opXOR | mode | bus, d)
+def adda(d=0, mode=0, bus=busD):  _emit(_opADD | mode | bus, d)
+def suba(d=0, mode=0, bus=busD):  _emit(_opSUB | mode | bus, d)
+def st  (d=0, mode=0, bus=busAC): _emit(_opST  | mode | bus, d)
+def bra (d=0, bus=busD):          _emit(_opJ   | jS   | bus, d)
+def beq (d=0, bus=busD):          _emit(_opJ   | jEQ  | bus, d)
+def bne (d=0, bus=busD):          _emit(_opJ   | jNE  | bus, d)
+def bgt (d=0, bus=busD):          _emit(_opJ   | jGT  | bus, d)
+def blt (d=0, bus=busD):          _emit(_opJ   | jLT  | bus, d)
+def bge (d=0, bus=busD):          _emit(_opJ   | jGE  | bus, d)
+def ble (d=0, bus=busD):          _emit(_opJ   | jLE  | bus, d)
+def jmpy(d=0, bus=busD):          _emit(_opJ   | jL   | bus, d)
+
 bpl = bge # Alias
 bmi = blt # Alias
-def nop ():     _emit(_nops[0])
-def clr ():     _emit(_clrs[0])
-def st  (base1, base2=busAC): _emit(_opST | base1 | base2)
-def out (base=busAC): _emit(_opLD | base | regOUT)
-
-
-def ldzp (base): _emit(_opLD | busRAM | ea0DregAC | base)
-def ldzpx(base): _emit(_opLD | busRAM | ea0DregX  | base)
-def ldzpy(base): _emit(_opLD | busRAM | ea0DregY  | base)
 
 def align(n, chunkSize=0x10000):
   global _romSize, _maxRomSize
@@ -287,10 +272,10 @@ def wait(n):
   assert n >= 0
   if n > 4:
     n -= 1
-    ld(val(n/2 - 1))
+    ld(n/2 - 1)
     comment = C(comment)
-    bne(d(_romSize & 255))
-    suba(val(1))
+    bne(_romSize & 255)
+    suba(1)
     n = n % 2 
   while n > 0:
     nop()
@@ -316,7 +301,7 @@ def trampoline():
   """Read 1 byte from ROM page"""
   while L(pc()) < 256-5:
     nop()
-  bra(busAC);                   #13
+  bra(AC)                       #13
   """
      It is possible to make this section 2 bytes shorter
      and 1 cycle faster by entering directly wih "jmp y,ac"
@@ -324,13 +309,13 @@ def trampoline():
      words at 'LUP' in vCPU and space is expensive there.
   """
   C('+-----------------------------------+')
-  bra(val(253))                 #14
+  bra(253)                      #14
   C('|                                   |')
-  ld(d(hi('lupReturn')),regY)   #15
+  ld(hi('lupReturn'), Y)        #15
   C('| Trampoline for page $%04x lookups |' % (pc()&~255))
-  jmpy(d(lo('lupReturn')))      #17
+  jmpy(lo('lupReturn'))         #17
   C('|                                   |')
-  st(d(lo('vAC')))              #18
+  st(lo('vAC'))                 #18
   C('+-----------------------------------+')
 
 def loadBindings(symfile):

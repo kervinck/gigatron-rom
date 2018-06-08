@@ -16,9 +16,10 @@ import sys
 # XXX 'page' macro
 
 class Program:
-  def __init__(self, address, name, forRom=True):
+  def __init__(self, address, name, forRom=True, forGt1=False):
     self.name = name
     self.forRom = forRom
+    self.forGt1 = forGt1
     self.comment = 0
     self.lineNumber, self.filename = 0, None
     self.blocks, self.block = [0], 1
@@ -44,7 +45,7 @@ class Program:
     # Configure start address for emit
     if self.vPC is not None and self.segStart < self.vPC:
       self.segInfo()
-    if address != self.vPC or self.segStart < self.vPC:
+    if not self.forGt1 and (address != self.vPC or self.segStart < self.vPC):
       assert(address>>8) # Because a zero would mark the end of stream
       self.putInRomTable(address>>8, '| RAM segment address (high byte first)')
       self.putInRomTable(address&0xff, '|')
@@ -426,7 +427,7 @@ class Program:
     sys.exit()
 
   def putInRomTable(self, byte, comment=None):
-    ld(val(byte))
+    ld(byte)
     if comment:
       C(comment)
     if self.forRom and pc()&255 == 251:

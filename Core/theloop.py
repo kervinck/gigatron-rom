@@ -291,19 +291,19 @@ def runVcpu(n, ref=None):
 
   n /= 2
   returnPc = pc() + (5 if fastRunVcpu else 7)
-  ld(val(returnPc&255))         #0
+  ld(L(returnPc))               #0
   comment = C(comment)
-  st(d(vReturn))                #1
+  st(vReturn)                   #1
   if fastRunVcpu:
     # In this mode [vReturn+1] will not be used
-    assert returnPc>>8 == 2
+    assert H(returnPc) == 2
   else:
     # Allow interpreter to be called from anywhere
-    ld(val(returnPc>>8))        #2
-    st(d(vReturn+1))            #3
-  ld(val(hi('ENTER')),regY)     #4
-  jmpy(d(lo('ENTER')))          #5
-  ld(val(n))                    #6
+    ld(H(returnPc))             #2
+    st(vReturn+1)               #3
+  ld(hi('ENTER'), Y)            #4
+  jmpy(lo('ENTER'))             #5
+  ld(n)                         #6
 
 #-----------------------------------------------------------------------
 #
@@ -314,28 +314,28 @@ def runVcpu(n, ref=None):
 align(0x100, 0x100)
 
 # Give a first sign of life that can be checked with a voltmeter
-ld(val(0b0000));                C('LEDs |OOOO|')
-ld(val(syncBits^hSync), regOUT) # Prepare XOUT update, hSync goes down, RGB to black
-ld(val(syncBits), regOUT)       # hSync goes up, updating XOUT
+ld(0b0000);                     C('LEDs |OOOO|')
+ld(syncBits^hSync, OUT)         # Prepare XOUT update, hSync goes down, RGB to black
+ld(syncBits, OUT)               # hSync goes up, updating XOUT
 
 # Simple RAM test and size check by writing to [1<<n] and see if [0] changes.
-ld(val(1));                     C('RAM test and count')
+ld(1);                          C('RAM test and count')
 label('.countMem0')
-st(d(memSize), busAC|ea0DregY)
-ld(val(255))
-xora(d(0), busRAM|eaYDregAC)
-st(d(0), busAC|eaYDregAC)       # Test if we can change and read back ok
-st(d(0))                        # Preserve (inverted) memory value in [0]
-xora(d(0), busRAM|eaYDregAC)
-bne(d(pc()))                    # Just hang here on apparent RAM failure
-ld(val(255))
-xora(d(0), busRAM|eaYDregAC)
-st(d(0), busAC|eaYDregAC)
-xora(d(0), busRAM)
-beq(d(lo('.countMem1')))        # Wrapped and [0] changed as well
-ldzp(d(memSize))
-bra(d(lo('.countMem0')))
-adda(busAC)
+st(memSize, Y)
+ld(255)
+xora(ramY(0))
+st(ramY(0))                     # Test if we can change and read back ok
+st(0)                           # Preserve (inverted) memory value in [0]
+xora(ramY(0))
+bne(pc())                       # Just hang here on apparent RAM failure
+ld(255)
+xora(ramY(0))
+st(ramY(0))
+xora(zp(0))
+beq(lo('.countMem1'))           # Wrapped and [0] changed as well
+ld(zp(memSize))
+bra(lo('.countMem0'))
+adda(AC)
 label('.countMem1')
 
 # Momentarily wait to allow for debouncing of the reset switch by spinning
@@ -345,176 +345,176 @@ label('.countMem1')
 #  as I said, a max of 6200 usec" (From: http://www.ganssle.com/debouncing.htm)
 # Relevant for the breadboard version, as the kit doesn't have a reset switch.
 
-ld(val(255));                   C('Debounce reset button')
+ld(255);                        C('Debounce reset button')
 label('.debounce')
-st(d(0))
-bne(d(pc()))
-suba(val(1))
-ldzp(d(0))
-bne(d(lo('.debounce')))
-suba(val(1))
+st(0)
+bne(pc())
+suba(1)
+ld(zp(0))
+bne(lo('.debounce'))
+suba(1)
 
 # Update LEDs (memory is present and counted, reset is stable)
-ld(val(0b0001));                C('LEDs |*OOO|')
-ld(val(syncBits^hSync),regOUT)
-ld(val(syncBits),regOUT)
+ld(0b0001);                     C('LEDs |*OOO|')
+ld(syncBits^hSync, OUT)
+ld(syncBits, OUT)
 
 # Scan the entire RAM space to collect entropy for a random number generator.
 # The 16-bit address space is scanned, even if less RAM was detected.
-ld(val(0));                     C('Collect entropy from RAM')
-st(d(vAC+0),busAC|ea0DregX)
-st(d(vAC+1),busAC|ea0DregY)
+ld(0);                          C('Collect entropy from RAM')
+st(vAC+0, X)
+st(vAC+1, Y)
 label('.initEnt0')
-ldzp(d(entropy+0))
-bpl(d(lo('.initEnt1')))
-adda(busRAM|eaYXregAC)
-xora(val(191))
+ld(zp(entropy+0))
+bpl(lo('.initEnt1'))
+adda(mode=busRAM|YX)
+xora(191)
 label('.initEnt1')
-st(d(entropy+0))
-ldzp(d(entropy+1))
-bpl(d(lo('.initEnt2')))
-adda(d(entropy+0),busRAM)
-xora(val(193))
+st(entropy+0)
+ld(zp(entropy+1))
+bpl(lo('.initEnt2'))
+adda(zp(entropy+0))
+xora(193)
 label('.initEnt2')
-st(d(entropy+1))
-adda(d(entropy+2),busRAM)
-st(d(entropy+2))
-ldzp(d(vAC+0))
-adda(val(1))
-bne(d(lo('.initEnt0')))
-st(d(vAC+0),busAC|ea0DregX)
-ldzp(d(vAC+1))
-adda(val(1))
-bne(d(lo('.initEnt0')))
-st(d(vAC+1),busAC|ea0DregY)
+st(entropy+1)
+adda(zp(entropy+2))
+st(entropy+2)
+ld(zp(vAC+0))
+adda(1)
+bne(lo('.initEnt0'))
+st(vAC+0, X)
+ld(zp(vAC+1))
+adda(1)
+bne(lo('.initEnt0'))
+st(vAC+1, Y)
 
 # Update LEDs
-ld(val(0b0011));                 C('LEDs |**OO|')
-ld(val(syncBits^hSync),regOUT)
-ld(val(syncBits),regOUT)
+ld(0b0011);                     C('LEDs |**OO|')
+ld(syncBits^hSync, OUT)
+ld(syncBits, OUT)
 
 # Determine if this is a cold or a warm start. We do this by checking the
 # boot counter and comparing it to a simplistic checksum. The assumption
 # is that after a cold start the checksum is invalid.
 
-ldzp(d(bootCount));             C('Cold or warm boot?')
-adda(d(bootCheck),busRAM)
-adda(d(0x5a))
-bne(d(lo('cold')))
-ld(val(0))
+ld(zp(bootCount));              C('Cold or warm boot?')
+adda(zp(bootCheck))
+adda(0x5a)
+bne(lo('cold'))
+ld(0)
 label('warm')
-ldzp(d(bootCount))              # if warm start: bootCount += 1
-adda(val(1))
+ld(zp(bootCount))               # if warm start: bootCount += 1
+adda(1)
 label('cold')
-st(d(bootCount))                # if cold start: bootCount = 0
-xora(val(255))
-suba(val(0x5a-1))
-st(d(bootCheck))
+st(bootCount)                   # if cold start: bootCount = 0
+xora(255)
+suba(0x5a-1)
+st(bootCheck)
 
 # vCPU reset handler
 vReset = videoTable + 240 # we have 10 unused bytes behind the video table
-ld(val((vReset&255)-2));     C('Setup vCPU reset handler')
-st(d(vPC))
-adda(val(2),regX)
-ld(val(vReset>>8))
-st(d(vPC+1),busAC|regY)
-st(d(lo('LDI')),         eaYXregOUTIX)
-st(d(lo('SYS_Reset_36')),eaYXregOUTIX)
-st(d(lo('STW')),         eaYXregOUTIX)
-st(d(sysFn),             eaYXregOUTIX)
-st(d(lo('SYS')),         eaYXregOUTIX)
-st(d(256-36/2+maxTicks), eaYXregOUTIX)
-st(d(lo('SYS')),         eaYXregOUTIX) # SYS_Exec_88
-st(d(256-88/2+maxTicks), eaYXregOUTIX)
+ld(L(vReset)-2);                C('Setup vCPU reset handler')
+st(vPC)
+adda(2, X)
+ld(H(vReset))
+st(vPC+1, Y)
+st(lo('LDI'),         YX_incX, busD)
+st(lo('SYS_Reset_36'),YX_incX, busD)
+st(lo('STW'),         YX_incX, busD)
+st(sysFn,             YX_incX, busD)
+st(lo('SYS'),         YX_incX, busD)
+st(256-36/2+maxTicks, YX_incX, busD)
+st(lo('SYS'),         YX_incX, busD)  # SYS_Exec_88
+st(256-88/2+maxTicks, YX_incX, busD)
 
-ld(val(255));                   C('Setup serial input')
-st(d(frameCount))
-st(d(serialRaw))
-st(d(serialLast))
-st(d(buttonState))
-st(d(resetTimer))
+ld(255);                        C('Setup serial input')
+st(frameCount)
+st(serialRaw)
+st(serialLast)
+st(buttonState)
+st(resetTimer)
 
-ld(val(0b0111));                C('LEDs |***O|')
-ld(val(syncBits^hSync),regOUT)
-ld(val(syncBits),regOUT)
+ld(0b0111);                     C('LEDs |***O|')
+ld(syncBits^hSync, OUT)
+ld(syncBits, OUT)
 
 # XXX Everything below should at one point migrate to Reset.gcl
 
 # Init sound tables
-ld(val(soundTable>>8),regY);    C('Setup sound tables')
-ld(val(0))
-st(d(channel))
-ld(val(0),regX)
+ld(H(soundTable), Y);           C('Setup sound tables')
+ld(0)
+st(channel)
+ld(0, X)
 label('.loop0')
-st(d(vTmp));                    C('Noise: T[4x+0] = x (permutate below)')
-st(eaYXregOUTIX)
-anda(d(0x20));                  C('Triangle: T[4x+1] = 2x if x<32 else 127-2x')
-bne(d(lo('.initTri0')))
-ldzp(d(vTmp))
-bra(d(lo('.initTri1')))
+st(vTmp);                       C('Noise: T[4x+0] = x (permutate below)')
+st(AC, YX_incX)
+anda(0x20);                     C('Triangle: T[4x+1] = 2x if x<32 else 127-2x')
+bne(lo('.initTri0'))
+ld(zp(vTmp))
+bra(lo('.initTri1'))
 label('.initTri0')
-adda(d(vTmp),busRAM)
-xora(d(127))
+adda(zp(vTmp))
+xora(127)
 label('.initTri1')
-st(eaYXregOUTIX)
-ldzp(d(vTmp));                  C('Pulse: T[4x+2] = 0 if x<32 else 63')
-anda(d(0x20))
-beq(d(lo('.initPul')))
-ld(d(0))
-ld(d(63))
+st(AC, YX_incX)
+ld(zp(vTmp));                   C('Pulse: T[4x+2] = 0 if x<32 else 63')
+anda(0x20)
+beq(lo('.initPul'))
+ld(0)
+ld(63)
 label('.initPul')
-st(eaYXregOUTIX)
-ldzp(d(vTmp));                  C('Sawtooth: T[4x+3] = x')
-st(eaYXregOUTIX)
-adda(val(1))
-xora(val(0x40))
-bne(d(lo('.loop0')))
-xora(val(0x40))
+st(AC, YX_incX)
+ld(zp(vTmp));                   C('Sawtooth: T[4x+3] = x')
+st(AC, YX_incX)
+adda(1)
+xora(0x40)
+bne(lo('.loop0'))
+xora(0x40)
 
-ld(d(0));                       C('Permutate noise table T[4i]')
-st(d(vAC+0));                   C('x')
-st(d(vAC+1));                   C('4y')
+ld(0);                          C('Permutate noise table T[4i]')
+st(vAC+0);                      C('x')
+st(vAC+1);                      C('4y')
 label('.loop1')
-ld(d(vAC+1),busRAM|regX);       C('tmp = T[4y]')
-ld(eaYXregAC,busRAM)
-st(d(vTmp))
-ld(d(vAC+0),busRAM);            C('T[4y] = T[4x]')
-adda(busAC)
-adda(busAC,regX)
-ld(eaYXregAC,busRAM)
-ld(d(vAC+1),busRAM|regX)
-st(eaYXregAC)
-adda(busAC);                    C('y += T[4x]')
-adda(busAC)
-adda(d(vAC+1),busRAM)
-st(d(vAC+1))
-ld(d(vAC+0),busRAM);            C('T[x] = tmp')
-adda(busAC)
-adda(busAC,regX)
-ldzp(d(vTmp))
-st(eaYXregAC)
-ldzp(d(vAC+0));                 C('while(++x)')
-adda(d(1))
-bne(d(lo('.loop1')))
-st(d(vAC+0))
+ld(zp(vAC+1), X);               C('tmp = T[4y]')
+ld(ram())
+st(vTmp)
+ld(zp(vAC+0));                  C('T[4y] = T[4x]')
+adda(AC)
+adda(AC, X)
+ld(ram())
+ld(zp(vAC+1), X)
+st(ram())
+adda(AC);                       C('y += T[4x]')
+adda(AC)
+adda(zp(vAC+1))
+st(vAC+1)
+ld(zp(vAC+0));                  C('T[x] = tmp')
+adda(AC)
+adda(AC, X)
+ld(zp(vTmp))
+st(ram())
+ld(zp(vAC+0));                  C('while(++x)')
+adda(1)
+bne(lo('.loop1'))
+st(vAC+0)
 
 # Init LED sequencer
-ld(val(120));                   C('Setup LED sequencer')
-st(d(ledTimer))
-ld(val(60/6))
-st(d(ledTempo))
-ld(val(0))
-st(d(ledState))
+ld(120);                        C('Setup LED sequencer')
+st(ledTimer)
+ld(60/6)
+st(ledTempo)
+ld(0)
+st(ledState)
 
-ld(val(0b1111));                C('LEDs |****|')
-ld(val(syncBits^hSync),regOUT)
-ld(val(syncBits),regOUT)
-st(d(xout)) # Setup for control by video loop
-st(d(xoutMask))
+ld(0b1111);                     C('LEDs |****|')
+ld(syncBits^hSync, OUT)
+ld(syncBits, OUT)
+st(xout)                        # Setup for control by video loop
+st(xoutMask)
 
-ld(d(hi('vBlankStart')),busD|ea0DregY);C('Enter video loop')
-jmpy(d(lo('vBlankStart')))
-ld(val(syncBits))
+ld(hi('vBlankStart'), Y);       C('Enter video loop')
+jmpy(lo('vBlankStart'))
+ld(syncBits)
 
 nop()
 nop()
@@ -530,31 +530,30 @@ nop()
 # SYS_Reset_36 provides the SYS instruction to execute that.
 
 label('SYS_Reset_36')
-assert(pc()>>8==0)
+assert(H(pc())==0)
 value = getenv('romType')
 value = int(value, 0) if value else 0
-ld(d(value));                           C('Set ROM type/version')#15
-st(d(romType))                          #16
-ld(val(0))                              #17
-st(d(vSP))                              #18 Reset stack pointer
-assert(vCpuStart&255==0)
-st(d(vLR))                              #19
-st(d(soundTimer))                       #20
-ld(val(vCpuStart>>8))                   #21
-st(d(vLR+1))                            #22
-ld(d(lo('videoF')))                     #23 Do this before first visible pixels
-st(d(videoDorF))                        #24
-ld(d(lo('SYS_Exec_88')))                #25
-st(d(sysFn))                            #26 High byte (remains) 0
-ld(d(lo('Reset')))                      #27
-st(d(sysArgs+0))                        #28
-ld(d(hi('Reset')))                      #29
-st(d(sysArgs+1))                        #30
+ld(value);                              C('Set ROM type/version')#15
+st(romType)                             #16
+ld(0)                                   #17
+st(vSP)                                 #18 Reset stack pointer
+assert(L(vCpuStart)==0)
+st(vLR)                                 #19
+st(soundTimer)                          #20
+ld(H(vCpuStart))                        #21
+st(vLR+1)                               #22
+ld(lo('videoF'))                        #23 Do this before first visible pixels
+st(videoDorF)                           #24
+ld(lo('SYS_Exec_88'))                   #25
+st(sysFn)                               #26 High byte (remains) 0
+ld(lo('Reset'))                         #27
+st(sysArgs+0)                           #28
+ld(hi('Reset'))                         #29
+st(sysArgs+1)                           #30
 # Return to interpreter
-ld(val(hi('REENTER')),regY)             #31
-jmpy(d(lo('REENTER')))                  #32
-ld(val(-36/2))                          #33
-
+ld(hi('REENTER'), Y)                    #31
+jmpy(lo('REENTER'))                     #32
+ld(-36/2)                               #33
 
 #-----------------------------------------------------------------------
 # Extension SYS_Exec_88: Load code from ROM into memory and execute it
@@ -574,108 +573,109 @@ ld(val(-36/2))                          #33
 #       vLR             vCPU continues here (input set by caller)
 
 label('SYS_Exec_88')
-assert(pc()>>8==0)
-ld(val(0))                              #15 Address of loader on zero page
-st(d(vPC+1),busAC|regY)                 #16
-ldzp(d(vSP))                            #17 Below the current stack pointer
-suba(d(53+2))                           #18 (AC -> *+0)
-st(d(vTmp),busAC|regX)                  #19
-adda(val(-2))                           #20 (AC -> *-2)
-st(d(vPC))                              #21
+assert(H(pc())==0)
+ld(0)                                   #15 Address of loader on zero page
+st(vPC+1, Y)                            #16
+ld(zp(vSP))                             #17 Below the current stack pointer
+#ld((0x81))
+suba(53+2)                              #18 (AC -> *+0)
+st(vTmp, X)                             #19
+adda(-2)                                #20 (AC -> *-2)
+st(vPC)                                 #21
 # Start of manually compiled vCPU section
-st(d(lo('PUSH')    ),eaYXregOUTIX)      #22 *+0
-st(d(lo('BRA')     ),eaYXregOUTIX)      #23 *+1
-adda(val(26))                           #24 (AC -> *+24)
-st(                  eaYXregOUTIX)      #25 *+2
-st(d(lo('ST')      ),eaYXregOUTIX)      #26 *+3 Chunk copy loop
-st(d(sysArgs+3     ),eaYXregOUTIX)      #27 *+4 High-address came first
-st(d(lo('CALL')    ),eaYXregOUTIX)      #28 *+5
-adda(val(33-24))                        #29 (AC -> *+33)
-st(                  eaYXregOUTIX)      #30 *+6
-st(d(lo('ST')      ),eaYXregOUTIX)      #31 *+7
-st(d(sysArgs+2     ),eaYXregOUTIX)      #32 *+8 Then the low address
-st(d(lo('CALL')    ),eaYXregOUTIX)      #33 *+9
-st(                  eaYXregOUTIX)      #34 *+10
-st(d(lo('ST')      ),eaYXregOUTIX)      #35 *+11 Byte copy loop
-st(d(sysArgs+4     ),eaYXregOUTIX)      #36 *+12 Byte count (0 means 256)
-st(d(lo('CALL')    ),eaYXregOUTIX)      #37 *+13
-st(                  eaYXregOUTIX)      #38 *+14
-st(d(lo('POKE')    ),eaYXregOUTIX)      #39 *+15
-st(d(sysArgs+2     ),eaYXregOUTIX)      #40 *+16
-st(d(lo('INC')     ),eaYXregOUTIX)      #41 *+17
-st(d(sysArgs+2     ),eaYXregOUTIX)      #42 *+18
-st(d(lo('LD')      ),eaYXregOUTIX)      #43 *+19
-st(d(sysArgs+4     ),eaYXregOUTIX)      #44 *+20
-st(d(lo('SUBI')    ),eaYXregOUTIX)      #45 *+21
-st(d(1             ),eaYXregOUTIX)      #46 *+22
-st(d(lo('BCC')     ),eaYXregOUTIX)      #47 *+23
-st(d(lo('NE')      ),eaYXregOUTIX)      #48 *+24
-adda(val(11-2-33))                      #49 (AC -> *+9)
-st(                  eaYXregOUTIX)      #50 *+25
-st(d(lo('CALL')    ),eaYXregOUTIX)      #51 *+26 Go to next block
-adda(val(33-9))                         #52 (AC -> *+33)
-st(                  eaYXregOUTIX)      #53 *+27
-st(d(lo('BCC')     ),eaYXregOUTIX)      #54 *+28
-st(d(lo('NE')      ),eaYXregOUTIX)      #55 *+29
-adda(val(3-2-33))                       #56 (AC -> *+1)
-st(                  eaYXregOUTIX)      #57 *+30
-st(d(lo('POP')     ),eaYXregOUTIX)      #58 *+31 End
-st(d(lo('RET')     ),eaYXregOUTIX)      #59 *+32
+st(lo('PUSH'), YX_incX, busD)           #22 *+0
+st(lo('BRA'),  YX_incX, busD)           #23 *+1
+adda(26)                                #24 (AC -> *+24)
+st(mode=YX_incX)                        #25 *+2
+st(lo('ST'),   YX_incX, busD)           #26 *+3 Chunk copy loop
+st(sysArgs+3,  YX_incX, busD)           #27 *+4 High-address came first
+st(lo('CALL'), YX_incX, busD)           #28 *+5
+adda(33-24)                             #29 (AC -> *+33)
+st(       mode=YX_incX)                 #30 *+6
+st(lo('ST'),   YX_incX, busD)           #31 *+7
+st(sysArgs+2,  YX_incX, busD)           #32 *+8 Then the low address
+st(lo('CALL'), YX_incX, busD)           #33 *+9
+st(       mode=YX_incX)                 #34 *+10
+st(lo('ST'),   YX_incX, busD)           #35 *+11 Byte copy loop
+st(sysArgs+4,  YX_incX, busD)           #36 *+12 Byte count (0 means 256)
+st(lo('CALL'), YX_incX, busD)           #37 *+13
+st(       mode=YX_incX)                 #38 *+14
+st(lo('POKE'), YX_incX, busD)           #39 *+15
+st(sysArgs+2,  YX_incX, busD)           #40 *+16
+st(lo('INC'),  YX_incX, busD)           #41 *+17
+st(sysArgs+2,  YX_incX, busD)           #42 *+18
+st(lo('LD'),   YX_incX, busD)           #43 *+19
+st(sysArgs+4,  YX_incX, busD)           #44 *+20
+st(lo('SUBI'), YX_incX, busD)           #45 *+21
+st(1,          YX_incX, busD)           #46 *+22
+st(lo('BCC'),  YX_incX, busD)           #47 *+23
+st(lo('NE'),   YX_incX, busD)           #48 *+24
+adda(11-2-33)                           #49 (AC -> *+9)
+st(       mode=YX_incX)                 #50 *+25
+st(lo('CALL'), YX_incX, busD)           #51 *+26 Go to next block
+adda(33-9)                              #52 (AC -> *+33)
+st(       mode=YX_incX)                 #53 *+27
+st(lo('BCC'),  YX_incX, busD)           #54 *+28
+st(lo('NE'),   YX_incX, busD)           #55 *+29
+adda(3-2-33)                            #56 (AC -> *+1)
+st(       mode=YX_incX)                 #57 *+30
+st(lo('POP'),  YX_incX, busD)           #58 *+31 End
+st(lo('RET'),  YX_incX, busD)           #59 *+32
 # Pointer constant pointing to the routine below (for use by CALL)
-adda(val(35-1))                         #60 (AC -> *+35)
-st(                  eaYXregOUTIX)      #61 *+33
-st(d(0             ),eaYXregOUTIX)      #62 *+34
+adda(35-1)                              #60 (AC -> *+35)
+st(       mode=YX_incX)                 #61 *+33
+st(0,          YX_incX, busD)           #62 *+34
 # Routine to read next byte from ROM and advance read pointer
-st(d(lo('LD')      ),eaYXregOUTIX)      #63 *+35 Test for end of ROM table
-st(d(sysArgs+0     ),eaYXregOUTIX)      #64 *+36
-st(d(lo('XORI')    ),eaYXregOUTIX)      #65 *+37
-st(d(251           ),eaYXregOUTIX)      #66 *+38
-st(d(lo('BCC')     ),eaYXregOUTIX)      #67 *+39
-st(d(lo('NE')      ),eaYXregOUTIX)      #68 *+40
-adda(val(46-2-35))                      #69 (AC -> *+44)
-st(                  eaYXregOUTIX)      #70 *+41
-st(d(lo('ST')      ),eaYXregOUTIX)      #71 *+42 Wrap to next ROM page
-st(d(sysArgs+0     ),eaYXregOUTIX)      #72 *+43
-st(d(lo('INC')     ),eaYXregOUTIX)      #73 *+44
-st(d(sysArgs+1     ),eaYXregOUTIX)      #74 *+45
-st(d(lo('LDW')     ),eaYXregOUTIX)      #75 *+46 Read next byte from ROM table
-st(d(sysArgs+0     ),eaYXregOUTIX)      #76 *+47
-st(d(lo('LUP')     ),eaYXregOUTIX)      #77 *+48
-st(d(0             ),eaYXregOUTIX)      #78 *+49
-st(d(lo('INC')     ),eaYXregOUTIX)      #79 *+50 Increment read pointer
-st(d(sysArgs+0     ),eaYXregOUTIX)      #80 *+51
-st(d(lo('RET')     ),eaYXregOUTIX)      #81 *+52 Return
+st(lo('LD'),   YX_incX, busD)           #63 *+35 Test for end of ROM table
+st(sysArgs+0,  YX_incX, busD)           #64 *+36
+st(lo('XORI'), YX_incX, busD)           #65 *+37
+st(251,        YX_incX, busD)           #66 *+38
+st(lo('BCC'),  YX_incX, busD)           #67 *+39
+st(lo('NE'),   YX_incX, busD)           #68 *+40
+adda(46-2-35)                           #69 (AC -> *+44)
+st(       mode=YX_incX)                 #70 *+41
+st(lo('ST'),   YX_incX, busD)           #71 *+42 Wrap to next ROM page
+st(sysArgs+0,  YX_incX, busD)           #72 *+43
+st(lo('INC'),  YX_incX, busD)           #73 *+44
+st(sysArgs+1,  YX_incX, busD)           #74 *+45
+st(lo('LDW'),  YX_incX, busD)           #75 *+46 Read next byte from ROM table
+st(sysArgs+0,  YX_incX, busD)           #76 *+47
+st(lo('LUP'),  YX_incX, busD)           #77 *+48
+st(0,          YX_incX, busD)           #78 *+49
+st(lo('INC'),  YX_incX, busD)           #79 *+50 Increment read pointer
+st(sysArgs+0,  YX_incX, busD)           #80 *+51
+st(lo('RET'),  YX_incX, busD)           #81 *+52 Return
 # Return to interpreter
 nop()                                   #82
-ld(val(hi('REENTER')),regY)             #83
-jmpy(d(lo('REENTER')))                  #84
-ld(val(-88/2))                          #85
+ld(hi('REENTER'), Y)                    #83
+jmpy(lo('REENTER'))                     #84
+ld(-88/2)                               #85
 
 #-----------------------------------------------------------------------
 # Extension SYS_Out_22: Send byte to output port
 #-----------------------------------------------------------------------
 
 label('SYS_Out_22')
-ld(d(sysArgs+0),busRAM|regOUT)  #15
+ld(zp(sysArgs+0), OUT)          #15
 nop()                           #16
-ld(val(hi('REENTER')),regY)     #17
-jmpy(d(lo('REENTER')))          #18
-ld(val(-22/2))                  #19
+ld(hi('REENTER'), Y)            #17
+jmpy(lo('REENTER'))             #18
+ld(-22/2)                       #19
 
 #-----------------------------------------------------------------------
 # Extension SYS_In_24: Read a byte from the input port
 #-----------------------------------------------------------------------
 
 label('SYS_In_24')
-st(d(vAC),busIN)                #15
-ld(val(0))                      #16
-st(d(vAC+1))                    #17
+st(vAC, busIN)                  #15
+ld(0)                           #16
+st(vAC+1)                       #17
 nop()                           #18
-ld(val(hi('REENTER')),regY)     #19
-jmpy(d(lo('REENTER')))          #20
-ld(val(-24/2))                  #21
+ld(hi('REENTER'), Y)            #19
+jmpy(lo('REENTER'))             #20
+ld(-24/2)                       #21
 
-assert pc()&255==0
+assert L(pc())==0
 
 #-----------------------------------------------------------------------
 #
@@ -689,233 +689,233 @@ align(0x100, 0x200)
 # - Calculate Xi from dXi, but there is no cycle time left to store it as well
 label('videoA')
 assert(lo('videoA') == 0)       # videoA starts at the page boundary
-ld(d(lo('videoB')))             #29
-st(d(nextVideo))                #30
-ld(d(videoTable>>8), regY)      #31
-ld(d(videoY), busRAM|regX)      #32
-ld(eaYXregAC, busRAM)           #33
-st(eaYXregOUTIX)                #34 Just to increment X
-st(d(frameY))                   #35
-ld(eaYXregAC, busRAM)           #36
-adda(d(frameX), busRAM|regX)    #37
-ld(d(frameY), busRAM|regY)      #38
-ld(val(syncBits))               #39
+ld(lo('videoB'))                #29
+st(nextVideo)                   #30
+ld(H(videoTable), Y)            #31
+ld(zp(videoY), X)               #32
+ld(ram())                       #33
+st(mode=YX_incX)                #34 Just to increment X
+st(frameY)                      #35
+ld(ram())                       #36
+adda(zp(frameX), X)             #37
+ld(zp(frameY), Y)               #38
+ld(syncBits)                    #39
 
 # Stream 160 pixels from memory location <Yi,Xi> onwards
 # Superimpose the sync signal bits to be robust against misprogramming
 label('pixels')
 for i in range(160):
-  ora(eaYXregOUTIX, busRAM)     #40-199
+  ora(mode=YX_incX, bus=busRAM) #40-199
   if i==0: C('Pixel burst')
-ld(val(syncBits), regOUT);      C('<New scan line start>')#0 Back to black
+ld(syncBits, OUT);              C('<New scan line start>')#0 Back to black
 
 # Front porch
-ldzp(d(channel));C('Advance to next sound channel')#1
+ld(zp(channel));                C('Advance to next sound channel')#1
 label('soundF')
-anda(val(3))                    #2
-adda(val(1))                    #3
-ld(val(syncBits^hSync), regOUT);C('Start horizontal pulse')#4
+anda(3)                         #2
+adda(1)                         #3
+ld(syncBits^hSync, OUT);        C('Start horizontal pulse')#4
 
 # Horizontal sync
 label('sound2')
-st(d(channel),busAC|ea0DregY)   #5 Sound
-ld(val(0x7f))                   #6
-anda(d(oscL),busRAM|eaYDregAC)  #7
-adda(d(keyL),busRAM|eaYDregAC)  #8
-st(d(oscL),busAC|eaYDregAC)     #9
-anda(val(0x80),regX)            #10
-ld(busRAM|ea0XregAC)            #11
-adda(d(oscH),busRAM|eaYDregAC)  #12
-adda(d(keyH),busRAM|eaYDregAC)  #13
-st(d(oscH), busAC|eaYDregAC)    #14
-anda(val(0xfc))                 #15
-xora(d(wavX),busRAM|eaYDregAC)  #16
-ld(busAC,regX)                  #17
-ld(d(wavA),busRAM|eaYDregAC)    #18
-ld(d(soundTable>>8),regY)       #19
-adda(busRAM|eaYXregAC)          #20
-bmi(d(lo('.sound2a')))          #21
-bra(d(lo('.sound2b')))          #22
-anda(d(63))                     #23
+st(channel, Y)                  #5
+ld(0x7f)                        #6
+anda(ramY(oscL))                #7
+adda(ramY(keyL))                #8
+st(ramY(oscL))                  #9
+anda(0x80, X)                   #10
+ld(mode=busRAM|ea0XregAC)       #11
+adda(ramY(oscH))                #12
+adda(ramY(keyH))                #13
+st(ramY(oscH))                  #14
+anda(0xfc)                      #15
+xora(ramY(wavX))                #16
+ld(AC, X)                       #17
+ld(ramY(wavA))                  #18
+ld(H(soundTable), Y)            #19
+adda(ram())                     #20
+bmi(lo('.sound2a'))             #21
+bra(lo('.sound2b'))             #22
+anda(63)                        #23
 label('.sound2a')
-ld(d(63))                       #23
+ld(63)                          #23
 label('.sound2b')
-adda(d(sample), busRAM|ea0DregAC)#24
-st(d(sample))                   #25
+adda(zp(sample))                #24
+st(sample)                      #25
 
-ldzp(d(xout));                  C('Gets copied to XOUT')#26
-bra(d(nextVideo)|busRAM)        #27
-ld(val(syncBits), regOUT);      C('End horizontal pulse')#28
+ld(zp(xout));                   C('Gets copied to XOUT')#26
+bra(zp(nextVideo))              #27
+ld(syncBits, OUT);              C('End horizontal pulse')#28
 
 # Back porch B: second of 4 repeated scan lines
 # - Recompute Xi from dXi and store for retrieval in the next scan lines
 label('videoB')
-ld(d(lo('videoC')))             #29
-st(d(nextVideo))                #30
-ld(d(videoTable>>8), regY)      #31
-ldzp(d(videoY))                 #32
-adda(d(1), regX)                #33
-ldzp(d(frameX))                 #34
-adda(eaYXregAC, busRAM)         #35
-st(d(frameX), busAC|ea0DregX)   #36 Undocumented opcode "store in RAM and X"!
-ld(d(frameY), busRAM|regY)      #37
-bra(d(lo('pixels')))            #38
-ld(val(syncBits))               #39
+ld(lo('videoC'))                #29
+st(nextVideo)                   #30
+ld(H(videoTable), Y)            #31
+ld(zp(videoY))                  #32
+adda(1, X)                      #33
+ld(zp(frameX))                  #34
+adda(ram())                     #35
+st(frameX, X)                   #36 Undocumented opcode "store in RAM and X"!
+ld(zp(frameY), Y)               #37
+bra(lo('pixels'))               #38
+ld(syncBits)                    #39
 
 # Back porch C: third of 4 repeated scan lines
 # - Nothing new to do, Yi and Xi are known
 label('videoC')
-ldzp(d(sample));                C('New sound sample is ready')#29 First something that didn't fit in the audio loop
-ora(d(0x0f))                    #30
-anda(d(xoutMask),busRAM|ea0DregAC)#31
-st(d(xout))                     #32 Update [xout] with new sample (4 channels just updated)
-st(val(sample),ea0DregAC|busD); C('Reset for next sample')#33 Reset for next sample
-ldzp(d(videoDorF));             C('Mode for scan line 4')#34 Now back to video business
-st(d(nextVideo))                #35
-ld(d(frameX),busRAM|regX)       #36
-ld(d(frameY),busRAM|regY)       #37
-bra(d(lo('pixels')))            #38
-ld(val(syncBits))               #39
+ld(zp(sample));                 C('New sound sample is ready')#29 First something that didn't fit in the audio loop
+ora(0x0f)                       #30
+anda(zp(xoutMask))              #31
+st(xout)                        #32 Update [xout] with new sample (4 channels just updated)
+st(sample, bus=busD);           C('Reset for next sample')#33 Reset for next sample
+ld(zp(videoDorF));              C('Mode for scan line 4')#34 Now back to video business
+st(nextVideo)                   #35
+ld(zp(frameX), X)               #36
+ld(zp(frameY), Y)               #37
+bra(lo('pixels'))               #38
+ld(syncBits)                    #39
 
 # Back porch D: last of 4 repeated scan lines
 # - Calculate the next frame index
 # - Decide if this is the last line or not
 label('videoD')                 # Default video mode
-ld(d(frameX), busRAM|regX)      #29
-ldzp(d(videoY))                 #30
-suba(d((120-1)*2))              #31
-beq(d(lo('.last')))             #32
-ld(d(frameY), busRAM|regY)      #33
-adda(d(120*2))                  #34 More pixel lines to go
-st(d(videoY))                   #35
-ld(d(lo('videoA')))             #36
-st(d(nextVideo))                #37
-bra(d(lo('pixels')))            #38
-ld(val(syncBits))               #39
+ld(zp(frameX), X)               #29
+ld(zp(videoY))                  #30
+suba((120-1)*2)                 #31
+beq(lo('.last'))                #32
+ld(zp(frameY), Y)               #33
+adda(120*2)                     #34 More pixel lines to go
+st(videoY)                      #35
+ld(lo('videoA'))                #36
+st(nextVideo)                   #37
+bra(lo('pixels'))               #38
+ld(syncBits)                    #39
 label('.last')
 wait(36-34)                     #34 No more pixel lines
-ld(d(lo('videoE')))             #36
-st(d(nextVideo))                #37
-bra(d(lo('pixels')))            #38
-ld(val(syncBits))               #39
+ld(lo('videoE'))                #36
+st(nextVideo)                   #37
+bra(lo('pixels'))               #38
+ld(syncBits)                    #39
 
 # Back porch "E": after the last line
 # - Go back to program page 0 and enter vertical blank
 label('videoE') # Exit visible area
-ld(d(hi('vBlankStart')),ea0DregY)#29
-jmpy(d(lo('vBlankStart'))   )   #30
-ld(val(syncBits))               #31
+ld(hi('vBlankStart'), Y)        #29
+jmpy(lo('vBlankStart'))         #30
+ld(syncBits)                    #31
 
 # Back porch "F": scan lines and fast mode
 label('videoF')                 # Fast video mode
-ldzp(d(videoY))                 #29
-suba(d((120-1)*2))              #30
-bne(d(lo('.notlast')))          #31
-adda(d(120*2))                  #32
-bra(d(lo('.join')))             #33
-ld(d(lo('videoE')))             #34 No more visible lines
+ld(zp(videoY))                  #29
+suba((120-1)*2)                 #30
+bne(lo('.notlast'))             #31
+adda(120*2)                     #32
+bra(lo('.join'))                #33
+ld(lo('videoE'))                #34 No more visible lines
 label('.notlast')
-st(d(videoY))                   #33 More visible lines
-ld(d(lo('videoA')))             #34
+st(videoY)                      #33 More visible lines
+ld(lo('videoA'))                #34
 label('.join')
-st(d(nextVideo))                #35
+st(nextVideo)                   #35
 runVcpu(199-36, 'line41-521 typeF')#36 Application (every 4th of scan lines 41-521)
-ld(d(hi('soundF')), busD|ea0DregY)#199 XXX This is on the current page
-jmpy(d(lo('soundF')));          C('<New scan line start>')#0
-ldzp(d(channel))                #1 Advance to next sound channel
+ld(hi('soundF'), Y)             #199 XXX This is on the current page
+jmpy(lo('soundF'));             C('<New scan line start>')#0
+ld(zp(channel))                 #1 Advance to next sound channel
 
 # Vertical blank part of video loop
 label('vBlankStart')            # Start of vertical blank interval
-assert(pc()&255<16)             # Assure that we are in the beginning of the next page
+assert(L(pc())<16)              # Assure that we are in the beginning of the next page
 
-st(d(videoSync0));              C('Start of vertical blank interval')#32
-ld(val(syncBits^hSync))         #33
-st(d(videoSync1))               #34
+st(videoSync0);                 C('Start of vertical blank interval')#32
+ld(syncBits^hSync)              #33
+st(videoSync1)                  #34
 
 # (Re)initialize carry table for robustness
-st(d(0x00), ea0DregAC|busD);    C('Carry table')#35
-ld(val(0x01))                   #36
-st(d(0x80))                     #37
+st(0, bus=busD);                C('Carry table')#35
+ld(1)                           #36
+st(0x80)                        #37
 
 # It is nice to set counter before vCPU starts
-ld(val(1-2*(vFront+vPulse+vBack-2)))#38 -2 because first and last are different
-st(d(videoY))                   #39
+ld(1-2*(vFront+vPulse+vBack-2)) #38 -2 because first and last are different
+st(videoY)                      #39
 
 # Uptime frame count (3 cycles)
-ldzp(d(frameCount));            C('Frame counter')#40
-adda(val(1))                    #41
-st(d(frameCount))               #42
+ld(zp(frameCount));             C('Frame counter')#40
+adda(1)                         #41
+st(frameCount)                  #42
 
 # Mix entropy (11 cycles)
-xora(d(entropy+1),busRAM);      C('Mix entropy')#43
-xora(d(serialRaw),busRAM)       #44 Mix in serial input
-adda(d(entropy+0),busRAM)       #45
-st(d(entropy+0))                #46
-adda(d(entropy+2),busRAM)       #47 Some hidden state
-st(d(entropy+2))                #48
-bmi(d(lo('.rnd0')))             #49
-bra(d(lo('.rnd1')))             #50
-xora(val(64+16+2+1))            #51
+xora(zp(entropy+1));            C('Mix entropy')#43
+xora(zp(serialRaw))             #44 Mix in serial input
+adda(zp(entropy+0))             #45
+st(entropy+0)                   #46
+adda(zp(entropy+2))             #47 Some hidden state
+st(entropy+2)                   #48
+bmi(lo('.rnd0'))                #49
+bra(lo('.rnd1'))                #50
+xora(64+16+2+1)                 #51
 label('.rnd0')
-xora(val(64+32+8+4))            #51
+xora(64+32+8+4)                 #51
 label('.rnd1')
-adda(d(entropy+1),busRAM)       #52
-st(d(entropy+1))                #53
+adda(zp(entropy+1))             #52
+st(entropy+1)                   #53
 
 # LED sequencer (19 cycles)
-ldzp(d(ledTimer));              C('Blinkenlight sequencer')#54
-bne(d(lo('.leds4')))            #55
-ld(d(lo('.leds0')))             #56
-adda(d(ledState)|busRAM)        #57
-bra(busAC)                      #58
-bra(d(lo('.leds1')))            #59
+ld(zp(ledTimer));               C('Blinkenlight sequencer')#54
+bne(lo('.leds4'))               #55
+ld(lo('.leds0'))                #56
+adda(zp(ledState))              #57
+bra(AC)                         #58
+bra(lo('.leds1'))               #59
 label('.leds0')
-ld(d(0b1111));C('LEDs |****|')  #60
-ld(d(0b0111));C('LEDs |***O|')  #60
-ld(d(0b0011));C('LEDs |**OO|')  #60
-ld(d(0b0001));C('LEDs |*OOO|')  #60
-ld(d(0b0010));C('LEDs |O*OO|')  #60
-ld(d(0b0100));C('LEDs |OO*O|')  #60
-ld(d(0b1000));C('LEDs |OOO*|')  #60
-ld(d(0b0100));C('LEDs |OO*O|')  #60
-ld(d(0b0010));C('LEDs |O*OO|')  #60
-ld(d(0b0001));C('LEDs |*OOO|')  #60
-ld(d(0b0011));C('LEDs |**OO|')  #60
-ld(d(0b0111));C('LEDs |***O|')  #60
-ld(d(0b1111));C('LEDs |****|')  #60
-ld(d(0b1110));C('LEDs |O***|')  #60
-ld(d(0b1100));C('LEDs |OO**|')  #60
-ld(d(0b1000));C('LEDs |OOO*|')  #60
-ld(d(0b0100));C('LEDs |OO*O|')  #60
-ld(d(0b0010));C('LEDs |O*OO|')  #60
-ld(d(0b0001));C('LEDs |*OOO|')  #60
-ld(d(0b0010));C('LEDs |O*OO|')  #60
-ld(d(0b0100));C('LEDs |OO*O|')  #60
-ld(d(0b1000));C('LEDs |OOO*|')  #60
-ld(d(0b1100));C('LEDs |OO**|')  #60
-ld(d(0b1110+128))               #60
+ld(0b1111);C('LEDs |****|')     #60
+ld(0b0111);C('LEDs |***O|')     #60
+ld(0b0011);C('LEDs |**OO|')     #60
+ld(0b0001);C('LEDs |*OOO|')     #60
+ld(0b0010);C('LEDs |O*OO|')     #60
+ld(0b0100);C('LEDs |OO*O|')     #60
+ld(0b1000);C('LEDs |OOO*|')     #60
+ld(0b0100);C('LEDs |OO*O|')     #60
+ld(0b0010);C('LEDs |O*OO|')     #60
+ld(0b0001);C('LEDs |*OOO|')     #60
+ld(0b0011);C('LEDs |**OO|')     #60
+ld(0b0111);C('LEDs |***O|')     #60
+ld(0b1111);C('LEDs |****|')     #60
+ld(0b1110);C('LEDs |O***|')     #60
+ld(0b1100);C('LEDs |OO**|')     #60
+ld(0b1000);C('LEDs |OOO*|')     #60
+ld(0b0100);C('LEDs |OO*O|')     #60
+ld(0b0010);C('LEDs |O*OO|')     #60
+ld(0b0001);C('LEDs |*OOO|')     #60
+ld(0b0010);C('LEDs |O*OO|')     #60
+ld(0b0100);C('LEDs |OO*O|')     #60
+ld(0b1000);C('LEDs |OOO*|')     #60
+ld(0b1100);C('LEDs |OO**|')     #60
+ld(0b1110+128)                  #60
 C('LEDs |O***|')
 label('.leds1')
-st(d(xoutMask))                 #61 Temporarily park new state here
-bmi(d(lo('.leds2')))            #62
-bra(d(lo('.leds3')))            #63
-ldzp(d(ledState))               #64
+st(xoutMask)                    #61 Temporarily park new state here
+bmi(lo('.leds2'))               #62
+bra(lo('.leds3'))               #63
+ld(zp(ledState))                #64
 label('.leds2')
-ld(val(-1))                     #64
+ld(-1)                          #64
 label('.leds3')
-adda(val(1))                    #65
-st(d(ledState))                 #66
-bra(d(lo('.leds5')))            #67
-ldzp(d(ledTempo))               #68 Setup the LED timer for the next period
+adda(1)                         #65
+st(ledState)                    #66
+bra(lo('.leds5'))               #67
+ld(zp(ledTempo))                #68 Setup the LED timer for the next period
 label('.leds4')
 wait(67-57)                     #57
-ldzp(d(ledTimer))               #67
-suba(d(1))                      #68
+ld(zp(ledTimer))                #67
+suba(1)                         #68
 label('.leds5')
-st(d(ledTimer))                 #69
-ldzp(d(xoutMask))               #70 Low 4 bits are the LED output
-anda(val(0b00001111))           #71 High bits will be restored below
-st(d(xoutMask))                 #72
+st(ledTimer)                    #69
+ld(zp(xoutMask))                #70 Low 4 bits are the LED output
+anda(0b00001111)                #71 High bits will be restored below
+st(xoutMask)                    #72
 
 # When the total number of scan lines per frame is not an exact multiple of the
 # (4) channels, there will be an audible discontinuity if no measure is taken.
@@ -926,7 +926,7 @@ st(d(xoutMask))                 #72
 soundDiscontinuity = (vFront+vPulse+vBack) % 4
 extra = 0
 if soundDiscontinuity == 1:
-  st(val(sample), ea0DregAC|busD) # XXX We're swallowing _2_ samples here!
+  st(sample, bus=busD)          # XXX We're swallowing _2_ samples here!
   C('Sound continuity')
   extra += 1
 if soundDiscontinuity > 1:
@@ -935,118 +935,118 @@ if soundDiscontinuity > 1:
 runVcpu(189-73-extra, 'line0')  #73 Application cycles (scan line 0)
 
 # Sound on/off (6 cycles)
-ldzp(d(soundTimer));            C('Sound on/off')#189
-bne(d(lo('.snd0')))             #190
-bra(d(lo('.snd1')))             #191
-ld(val(0))                      #192 Sound off
+ld(zp(soundTimer));             C('Sound on/off')#189
+bne(lo('.snd0'))                #190
+bra(lo('.snd1'))                #191
+ld(0)                           #192 Sound off
 label('.snd0')
-ld(val(0xf0))                   #192 Sound on
+ld(0xf0)                        #192 Sound on
 label('.snd1')
-ora(d(xoutMask),busRAM)         #193
-st(d(xoutMask))                 #194
+ora(zp(xoutMask))               #193
+st(xoutMask)                    #194
 
 # Sound timer count down (5 cycles)
-ldzp(d(soundTimer));            C('Sound timer')#195
-beq(d(lo('.snd2')))             #196
-bra(d(lo('.snd3')))             #197
-suba(val(1))                    #198
+ld(zp(soundTimer));             C('Sound timer')#195
+beq(lo('.snd2'))                #196
+bra(lo('.snd3'))                #197
+suba(1)                         #198
 label('.snd2')
-ld(val(0))                      #198
+ld(0)                           #198
 label('.snd3')
-st(d(soundTimer))               #199
+st(soundTimer)                  #199
 
-ld(d(videoSync0), busRAM|regOUT);C('<New scan line start>')#0
+ld(zp(videoSync0), OUT);        C('<New scan line start>')#0
 
 label('sound1')
-ldzp(d(channel));               C('Advance to next sound channel')#1
-anda(val(3))                    #2
-adda(val(1))                    #3
-ld(d(videoSync1),busRAM|regOUT) ;C('Start horizontal pulse')#4
-st(d(channel),busAC|ea0DregY)   #5
-ld(val(0x7f))                   ;C('Update sound channel')#6
-anda(d(oscL),busRAM|eaYDregAC)  #7
-adda(d(keyL),busRAM|eaYDregAC)  #8
-st(d(oscL), busAC|eaYDregAC)    #9
-anda(val(0x80), regX)           #10
-ld(busRAM|ea0XregAC)            #11
-adda(d(oscH),busRAM|eaYDregAC)  #12
-adda(d(keyH),busRAM|eaYDregAC)  #13
-st(d(oscH),busAC|eaYDregAC)     #14
-anda(d(0xfc))                   #15
-xora(d(wavX),busRAM|eaYDregAC)  #16
-ld(busAC,regX)                  #17
-ld(d(wavA),busRAM|eaYDregAC)    #18
-ld(d(soundTable>>8),regY)       #19
-adda(busRAM|eaYXregAC)          #20
-bmi(d(lo('.sound1a')))          #21
-bra(d(lo('.sound1b')))          #22
-anda(d(63))                     #23
+ld(zp(channel));                C('Advance to next sound channel')#1
+anda(3)                         #2
+adda(1)                         #3
+ld(zp(videoSync1), OUT);        C('Start horizontal pulse')#4
+st(channel, Y)                  #5
+ld(0x7f);                       C('Update sound channel')#6
+anda(ramY(oscL))                #7
+adda(ramY(keyL))                #8
+st(ramY(oscL))                  #9
+anda(0x80, X)                   #10
+ld(ramX())                      #11
+adda(ramY(oscH))                #12
+adda(ramY(keyH))                #13
+st(ramY(oscH))                  #14
+anda(0xfc)                      #15
+xora(ramY(wavX))                #16
+ld(AC, X)                       #17
+ld(ramY(wavA))                  #18
+ld(H(soundTable), Y)            #19
+adda(ram())                     #20
+bmi(lo('.sound1a'))             #21
+bra(lo('.sound1b'))             #22
+anda(63)                        #23
 label('.sound1a')
-ld(d(63))                       #23
+ld(63)                          #23
 label('.sound1b')
-adda(d(sample),busRAM|ea0DregAC)#24
-st(d(sample))                   #25
+adda(zp(sample))                #24
+st(sample)                      #25
 
-ldzp(d(xout));                  C('Gets copied to XOUT')#26
+ld(zp(xout));                   C('Gets copied to XOUT')#26
 nop()                           #27
-ld(d(videoSync0),busRAM|regOUT) ;C('End horizontal pulse')#28
+ld(zp(videoSync0), OUT);        C('End horizontal pulse')#28
 
 # Count through the vertical blank interval until its last scan line
-ldzp(d(videoY))                 #29
-bpl(d(lo('vBlankLast')))        #30
-adda(d(2))                      #31
-st(d(videoY))                   #32
+ld(zp(videoY))                  #29
+bpl(lo('vBlankLast'))           #30
+adda(2)                         #31
+st(videoY)                      #32
 
 # Determine if we're in the vertical sync pulse
-suba(d(1-2*(vBack-1)))          #33
-bne(d(lo('vSync0')))            #34 Tests for end of vPulse
-adda(d(2*vPulse))               #35
-ld(val(syncBits))               #36 Entering vertical back porch
-bra(d(lo('vSync2')))            #37
-st(d(videoSync0))               #38
+suba(1-2*(vBack-1))             #33
+bne(lo('vSync0'))               #34 Tests for end of vPulse
+adda(2*vPulse)                  #35
+ld(syncBits)                    #36 Entering vertical back porch
+bra(lo('vSync2'))               #37
+st(videoSync0)                  #38
 label('vSync0')
-bne(d(lo('vSync1')))            #36 Tests for start of vPulse
-ld(val(syncBits^vSync))         #37
-bra(d(lo('vSync3')))            #38 Entering vertical sync pulse
-st(d(videoSync0))               #39
+bne(lo('vSync1'))               #36 Tests for start of vPulse
+ld(syncBits^vSync)              #37
+bra(lo('vSync3'))               #38 Entering vertical sync pulse
+st(videoSync0)                  #39
 label('vSync1')
-ldzp(d(videoSync0))             #38 Load current value
+ld(zp(videoSync0))              #38 Load current value
 label('vSync2')
 nop()                           #39
 label('vSync3')
-xora(d(hSync))                  #40 Precompute, as during the pulse there is no time
-st(d(videoSync1))               #41
+xora(hSync)                     #40 Precompute, as during the pulse there is no time
+st(videoSync1)                  #41
 
 # Capture the serial input before the '595 shifts it out
-ldzp(d(videoY));                C('Capture serial input')#42
-xora(val(1-2*(vBack-1-1)))      #43 Exactly when the 74HC595 has captured all 8 controller bits
-bne(d(lo('.ser0')))             #44
-bra(d(lo('.ser1')))             #45
-st(d(serialRaw),busIN)          #46
+ld(zp(videoY));                 C('Capture serial input')#42
+xora(1-2*(vBack-1-1))           #43 Exactly when the 74HC595 has captured all 8 controller bits
+bne(lo('.ser0'))                #44
+bra(lo('.ser1'))                #45
+st(serialRaw, bus=busIN)        #46
 label('.ser0')
 nop()                           #46
 label('.ser1')
 
 # Update [xout] with the next sound sample every 4 scan lines.
 # Keep doing this on 'videoC equivalent' scan lines in vertical blank.
-ldzp(d(videoY))                 #47
-anda(d(6))                      #48
-bne(d(lo('vBlankNormal')))      #49
-ldzp(d(sample))                 #50
+ld(zp(videoY))                  #47
+anda(6)                         #48
+bne(lo('vBlankNormal'))         #49
+ld(zp(sample))                  #50
 label('vBlankSample')
-ora(d(0x0f));                   C('New sound sample is ready')#51
-anda(d(xoutMask),busRAM|ea0DregAC)#52
-st(d(xout))                     #53
-st(val(sample), ea0DregAC|busD); C('Reset for next sample')#54
+ora(0x0f);                      C('New sound sample is ready')#51
+anda(zp(xoutMask))              #52
+st(xout)                        #53
+st(sample, bus=busD);           C('Reset for next sample')#54
 
 runVcpu(199-55, 'line1-39 typeC')#55 Appplication cycles (scan line 1-43 with sample update)
-bra(d(lo('sound1')))            #199
-ld(d(videoSync0), busRAM|regOUT);C('<New scan line start>')#0 Ends the vertical blank pulse at the right cycle
+bra(lo('sound1'))               #199
+ld(zp(videoSync0), OUT);        C('<New scan line start>')#0 Ends the vertical blank pulse at the right cycle
 
 label('vBlankNormal')
 runVcpu(199-51, 'line1-39 typeABD')#51 Application cycles (scan line 1-43 without sample update)
-bra(d(lo('sound1')))            #199
-ld(d(videoSync0), busRAM|regOUT);C('<New scan line start>')#0 Ends the vertical blank pulse at the right cycle
+bra(lo('sound1'))               #199
+ld(zp(videoSync0), OUT);        C('<New scan line start>')#0 Ends the vertical blank pulse at the right cycle
 
 # Last blank line before transfering to visible area
 label('vBlankLast')
@@ -1055,66 +1055,67 @@ label('vBlankLast')
 # nChange = nNew | ~nOld {DeMorgan}
 
 # Filter raw serial input captured in last vblank (8 cycles)
-ld(val(255));                   C('Filter controller input')#32
-xora(d(serialLast),busRAM)      #33
-ora(d(serialRaw),busRAM)        #34 Catch button-press events
-anda(d(buttonState),busRAM)     #35 Keep active button presses
-ora(d(serialRaw),busRAM)        #36 Auto-reset already-released buttons
-st(d(buttonState))              #37
-ldzp(d(serialRaw))              #38
-st(d(serialLast))               #39
+ld(255);                        C('Filter controller input')#32
+xora(zp(serialLast))            #33
+ora(zp(serialRaw))              #34 Catch button-press events
+anda(zp(buttonState))           #35 Keep active button presses
+ora(zp(serialRaw))              #36 Auto-reset already-released buttons
+st(buttonState)                 #37
+ld(zp(serialRaw))               #38
+st(serialLast)                  #39
 
 # Respond to reset button (11 cycles)
-xora(val(~buttonStart));        C('Check for soft reset')#40
-bne(d(lo('.restart0')))         #41
-ldzp(d(resetTimer))             #42 As long as button pressed
-suba(val(1))                    #43 ... count down the timer
-st(d(resetTimer))               #44
-anda(d(127))                    #45
-beq(d(lo('.restart2')))         #46
-ld(val((vReset&255)-2))         #47 Start force reset when hitting 0
-bra(d(lo('.restart1')))         #48 ... otherwise do nothing yet
-bra(d(lo('.restart3')))         #49
+xora(~buttonStart);             C('Check for soft reset')#40
+bne(lo('.restart0'))            #41
+ld(zp(resetTimer))              #42 As long as button pressed
+suba(1)                         #43 ... count down the timer
+st(resetTimer)                  #44
+anda(127)                       #45
+beq(lo('.restart2'))            #46
+ld(L(vReset)-2)                 #47 Start force reset when hitting 0
+bra(lo('.restart1'))            #48 ... otherwise do nothing yet
+bra(lo('.restart3'))            #49
 label('.restart0')
-ld(val(127))                    #43 Restore to ~2 seconds when not pressed
-st(d(resetTimer))               #44
+ld(127)                         #43 Restore to ~2 seconds when not pressed
+st(resetTimer)                  #44
 wait(49-45)                     #45
-bra(d(lo('.restart3')))         #49
+bra(lo('.restart3'))            #49
 label('.restart1')
 nop()                           #50
 label('.restart2')
-st(d(vPC))                      #48 Continue force reset
-ld(val(vReset>>8))              #49
-st(d(vPC+1))                    #50
+st(vPC)                         #48 Continue force reset
+ld(H(vReset))                   #49
+st(vPC+1)                       #50
 label('.restart3')
 
 # --- Switch video mode when (only) select is pressed
-ldzp(d(buttonState))            #51
-xora(val(~buttonSelect))        #52
-beq(d(lo('.select0')))          #53
-bra(d(lo('.select1')))          #54
-ld(val(0))                      #55
+ld(zp(buttonState))             #51
+xora(~buttonSelect)             #52
+beq(lo('.select0'))             #53
+bra(lo('.select1'))             #54
+ld(0)                           #55
 label('.select0')
-ld(val(lo('videoD')^lo('videoF')))#55
+ld(lo('videoD')^lo('videoF'))   #55
 label('.select1')
-xora(d(videoDorF),busRAM)       #56
-st(d(videoDorF))                #57
-ldzp(d(buttonState))            #58
-ora(val(buttonSelect))          #59
-st(d(buttonState))              #60
+xora(zp(videoDorF))             #56
+st(videoDorF)                   #57
+ld(zp(buttonState))             #58
+ora(buttonSelect)               #59
+st(buttonState)                 #60
 
 runVcpu(196-61, 'line40')       #61 Application cycles (scan line 40)
 # vAC==0 now
-st(d(videoY))                   #196
-st(d(frameX))                   #197
-st(d(nextVideo))                #198 videoA=0
-ldzp(d(channel))                #199 Advance to next sound channel
-anda(val(3));                   C('<New scan line start>')#0
-adda(val(1))                    #1
-ld(d(hi('sound2')), busD|ea0DregY)#2
-jmpy(d(lo('sound2')))           #3
-ld(val(syncBits^hSync), regOUT) #4 Start horizontal pulse
+st(videoY)                      #196
+st(frameX)                      #197
+st(nextVideo)                   #198 videoA=0
+ld(zp(channel))                 #199 Advance to next sound channel
+anda(3);                        C('<New scan line start>')#0
+adda(1)                         #1
+ld(hi('sound2'), Y)             #2
+jmpy(lo('sound2'))              #3
+ld(syncBits^hSync, OUT)         #4 Start horizontal pulse
 
+# Fillers
 nop()
 nop()
 nop()
@@ -1130,31 +1131,31 @@ nop()
 # sysArgs[3]   Wait value (videoY)
 
 label('SYS_NextByteIn_32')
-ldzp(d(videoY))                 #15
-xora(d(sysArgs+3),busRAM)       #16
-bne(d(lo('.sysNbi')))           #17
-ld(d(sysArgs+0),busRAM|regX)    #18
-ld(d(sysArgs+1),busRAM|regY)    #19
-ld(busIN)                       #20
-st(eaYXregAC)                   #21
-adda(d(sysArgs+2),busRAM)       #22
-st(d(sysArgs+2))                #23
-ldzp(d(sysArgs+0))              #24
-adda(d(1))                      #25
-st(d(sysArgs+0))                #26
-ld(val(hi('REENTER')),regY)     #27
-jmpy(d(lo('REENTER')))          #28
-ld(val(-32/2))                  #29
+ld(zp(videoY))                  #15
+xora(zp(sysArgs+3))             #16
+bne(lo('.sysNbi'))              #17
+ld(zp(sysArgs+0), X)            #18
+ld(zp(sysArgs+1), Y)            #19
+ld(bus=busIN)                   #20
+st(ram())                       #21
+adda(zp(sysArgs+2))             #22
+st(sysArgs+2)                   #23
+ld(zp(sysArgs+0))               #24
+adda(1)                         #25
+st(sysArgs+0)                   #26
+ld(hi('REENTER'), Y)            #27
+jmpy(lo('REENTER'))             #28
+ld(-32/2)                       #29
 # Restart instruction
 label('.sysNbi')
-ldzp(d(vPC))                    #19
-suba(d(2))                      #20
-st(d(vPC))                      #21
-ld(val(-28/2))                  #22
-ld(val(hi('REENTER')),regY)     #23
-jmpy(d(lo('REENTER')))          #24
+ld(zp(vPC))                     #19
+suba(2)                         #20
+st(vPC)                         #21
+ld(-28/2)                       #22
+ld(hi('REENTER'), Y)            #23
+jmpy(lo('REENTER'))             #24
 nop()                           #25
-assert(pc()&255 == 255)
+assert(L(pc()) == 255)
 
 #-----------------------------------------------------------------------
 #
@@ -1176,116 +1177,116 @@ assert(pc()&255 == 255)
 # first instruction is bra() which normally doesn't cross page boundaries,
 # in this case it will still jump into the right space, because branches
 # from $xxFF land in the next page anyway.
-while pc()&255 < 255:
+while L(pc()) < 255:
   nop()
 label('ENTER')
-bra(d(lo('.next2')))            #0 Enter at '.next2' (so no startup overhead)
+bra(lo('.next2'))               #0 Enter at '.next2' (so no startup overhead)
 C('vCPU interpreter')
 
 # --- Page boundary ---
 
 align(0x100,0x100)
-ld(d(vPC+1),busRAM|regY)        #1
+ld(zp(vPC+1), Y)                #1
 
 # Fetch next instruction and execute it, but only if there are sufficient
 # ticks left for the slowest instruction.
 label('NEXT')
-adda(d(vTicks),busRAM);         C('Track elapsed ticks')#0 Actually counting down (AC<0)
-blt(d(lo('EXIT')));             C('Escape near time out')#1
+adda(zp(vTicks));               C('Track elapsed ticks')#0 Actually counting down (AC<0)
+blt(lo('EXIT'));                C('Escape near time out')#1
 label('.next2')
-st(d(vTicks))                   #2
-ldzp(d(vPC));                   C('Advance vPC')#3
-adda(val(2))                    #4
-st(d(vPC),busAC|ea0DregX)       #5
-ld(busRAM|eaYXregAC);           C('Fetch opcode')#6 Fetch opcode (actually a branch target)
-st(eaYXregOUTIX);               #7 Just X++
-bra(busAC);                     C('Dispatch')#8
-ld(busRAM|eaYXregAC);           C('Prefetch operand')#9
+st(vTicks)                      #2
+ld(zp(vPC));                    C('Advance vPC')#3
+adda(2)                         #4
+st(vPC, X)                      #5
+ld(ram());                      C('Fetch opcode')#6 Fetch opcode (actually a branch target)
+st(mode=YX_incX);               #7 Just X++
+bra(AC);                        C('Dispatch')#8
+ld(ram());                      C('Prefetch operand')#9
 
 # Resync with caller and return
 label('EXIT')
-adda(val(maxTicks))             #3
-bgt(d(pc()));                   C('Resync')#4
-suba(val(1))                    #5
+adda(maxTicks)                  #3
+bgt(L(pc()));                   C('Resync')#4
+suba(1)                         #5
 if fastRunVcpu:
-  ld(val(2),regY)               #6
+  ld(2, Y)                      #6
 else:
-  ld(d(vReturn+1),busRAM|regY)  #6
-jmpy(d(vReturn+0)|busRAM);      C('Return to caller')#7
-ld(val(0))                      #8 AC should be 0 already. Still..
+  ld(zp(vReturn+1), Y)          #6
+jmpy(zp(vReturn+0));            C('Return to caller')#7
+ld(0)                           #8 AC should be 0 already. Still..
 assert vOverheadInt ==          9
 
 # Instruction LDWI: Load immediate constant (AC=$DDDD), 20 cycles
 label('LDWI')
-st(d(vAC))                      #10
-st(eaYXregOUTIX)                #11 Just to increment X
-ld(busRAM|eaYXregAC)            #12 Fetch second operand
-st(d(vAC+1))                    #13
-ldzp(d(vPC))                    #14 Advance vPC one more
-adda(val(1))                    #15
-st(d(vPC))                      #16
-ld(val(-20/2))                  #17
-bra(d(lo('NEXT')))              #18
+st(vAC)                         #10
+st(mode=YX_incX)                #11 Just to increment X
+ld(ram())                       #12 Fetch second operand
+st(vAC+1)                       #13
+ld(zp(vPC))                     #14 Advance vPC one more
+adda(1)                         #15
+st(vPC)                         #16
+ld(-20/2)                       #17
+bra(lo('NEXT'))                 #18
 #nop()                          #(19)
 #
 # Instruction LD: Load from zero page (AC=[D]), 18 cycles
 label('LD')
-ld(busAC,regX)                  #10,19 (overlap with LDWI)
-ldzp(busRAM|ea0XregAC)          #11
-st(d(vAC))                      #12
-ld(val(0))                      #13
-st(d(vAC+1))                    #14
-ld(val(-18/2))                  #15
-bra(d(lo('NEXT')))              #16
+ld(AC, X)                       #10,19 (overlap with LDWI)
+ld(ramX())                      #11
+st(vAC)                         #12
+ld(0)                           #13
+st(vAC+1)                       #14
+ld(-18/2)                       #15
+bra(lo('NEXT'))                 #16
 #nop()                          #(17)
 #
 # Instruction LDW: Word load from zero page (AC=[D],[D+1]), 20 cycles
 label('LDW')
-ld(busAC,regX)                  #10,17 (overlap with LD)
-adda(val(1))                    #11
-st(d(vTmp))                     #12 Address of high byte
-ld(busRAM|ea0XregAC)            #13
-st(d(vAC))                      #14
-ld(d(vTmp),busRAM|regX)         #15
-ld(busRAM|ea0XregAC)            #16
-st(d(vAC+1))                    #17
-bra(d(lo('NEXT')))              #18
-ld(val(-20/2))                  #19
+ld(AC, X)                       #10,17 (overlap with LD)
+adda(1)                         #11
+st(vTmp)                        #12 Address of high byte
+ld(ramX())                      #13
+st(vAC)                         #14
+ld(zp(vTmp), X)                 #15
+ld(ramX())                      #16
+st(vAC+1)                       #17
+bra(lo('NEXT'))                 #18
+ld(-20/2)                       #19
 #nop()                          #(20)
 #
 # Instruction STW: Word load from zero page (AC=[D],[D+1]), 20 cycles
 label('STW')
-ld(busAC,regX)                  #10,20 (overlap with LDW)
-adda(val(1))                    #11
-st(d(vTmp))                     #12 Address of high byte
-ldzp(d(vAC))                    #13
-st(ea0XregAC)                   #14
-ld(d(vTmp),busRAM|regX)         #15
-ldzp(d(vAC+1))                  #16
-st(ea0XregAC)                   #17
-bra(d(lo('NEXT')))              #18
-ld(val(-20/2))                  #19
+ld(AC, X)                       #10,20 (overlap with LDW)
+adda(1)                         #11
+st(vTmp)                        #12 Address of high byte
+ld(zp(vAC))                     #13
+st(ramX())                      #14
+ld(zp(vTmp), X)                 #15
+ld(zp(vAC+1))                   #16
+st(ramX())                      #17
+bra(lo('NEXT'))                 #18
+ld(-20/2)                       #19
 
 # Instruction BCC: Test AC sign and branch conditionally, 28 cycles
 label('BCC')
-ldzp(d(vAC+1))                  #10 First inspect high byte ACH
-bne(d(lo('.cond2')))            #11
-st(d(vTmp))                     #12
-ldzp(d(vAC))                    #13 Additionally inspect low byte ACL
-beq(d(lo('.cond3')))            #14
-ld(val(1))                      #15
-st(d(vTmp))                     #16
-ld(busRAM|eaYXregAC)            #17 Operand is the conditional
+ld(zp(vAC+1))                   #10 First inspect high byte ACH
+bne(lo('.cond2'))               #11
+st(vTmp)                        #12
+ld(zp(vAC))                     #13 Additionally inspect low byte ACL
+beq(lo('.cond3'))               #14
+ld(1)                           #15
+st(vTmp)                        #16
+ld(ram())                       #17 Operand is the conditional
 label('.cond1')
-bra(busAC)                      #18
-ldzp(d(vTmp))                   #19
+bra(AC)                         #18
+ld(zp(vTmp))                    #19
 
 # Conditional EQ: Branch if zero (if(ALC==0)PCL=D)
 label('EQ')
-bne(d(lo('.cond4')))            #20
+bne(lo('.cond4'))               #20
 label('.cond2')
-beq(d(lo('.cond5')));           C('AC=0 in EQ, AC!=0 from BCC...')#21,13 (overlap with BCC)
-ld(busRAM|eaYXregAC)            #22,14 (overlap with BCC)
+beq(lo('.cond5'));              C('AC=0 in EQ, AC!=0 from BCC...')#21,13 (overlap with BCC)
+ld(ram())                       #22,14 (overlap with BCC)
 #
 # (continue BCC)
 #label('.cond2')
@@ -1293,179 +1294,179 @@ ld(busRAM|eaYXregAC)            #22,14 (overlap with BCC)
 #nop()                          #14
 nop()                           #15
 label('.cond3')
-bra(d(lo('.cond1')))            #16
-ld(busRAM|eaYXregAC)            #17 Operand is the conditional
+bra(lo('.cond1'))               #16
+ld(ram())                       #17 Operand is the conditional
 label('.cond4')
-ldzp(d(vPC));                   C('False condition')#22
-bra(d(lo('.cond6')))            #23
-adda(val(1))                    #24
+ld(zp(vPC));                    C('False condition')#22
+bra(lo('.cond6'))               #23
+adda(1)                         #24
 label('.cond5')
-st(eaYXregOUTIX);               C('True condition')#23 Just X++
-ld(busRAM|eaYXregAC)            #24
+st(mode=YX_incX);               C('True condition')#23 Just X++
+ld(ram())                       #24
 label('.cond6')
-st(d(vPC))                      #25
-bra(d(lo('NEXT')))              #26
-ld(val(-28/2))                  #27
+st(vPC)                         #25
+bra(lo('NEXT'))                 #26
+ld(-28/2)                       #27
 
 # Conditional GT: Branch if positive (if(ALC>0)PCL=D)
 label('GT')
-ble(d(lo('.cond4')))            #20
-bgt(d(lo('.cond5')))            #21
-ld(busRAM|eaYXregAC)            #22
+ble(lo('.cond4'))               #20
+bgt(lo('.cond5'))               #21
+ld(ram())                       #22
 
 # Conditional LT: Branch if negative (if(ALC<0)PCL=D), 16 cycles
 label('LT')
-bge(d(lo('.cond4')))            #20
-blt(d(lo('.cond5')))            #21
-ld(busRAM|eaYXregAC)            #22
+bge(lo('.cond4'))               #20
+blt(lo('.cond5'))               #21
+ld(ram())                       #22
 
 # Conditional GE: Branch if positive or zero (if(ALC>=0)PCL=D)
 label('GE')
-blt(d(lo('.cond4')))            #20
-bge(d(lo('.cond5')))            #21
-ld(busRAM|eaYXregAC)            #22
+blt(lo('.cond4'))               #20
+bge(lo('.cond5'))               #21
+ld(ram())                       #22
 
 # Conditional LE: Branch if negative or zero (if(ALC<=0)PCL=D)
 label('LE')
-bgt(d(lo('.cond4')))            #20
-ble(d(lo('.cond5')))            #21
-ld(busRAM|eaYXregAC)            #22
+bgt(lo('.cond4'))               #20
+ble(lo('.cond5'))               #21
+ld(ram())                       #22
 
 # Instruction LDI: Load immediate constant (AC=$DD), 16 cycles
 label('LDI')
-st(d(vAC))                      #10
-ld(val(0))                      #11
-st(d(vAC+1))                    #12
-ld(val(-16/2))                  #13
-bra(d(lo('NEXT')))              #14
+st(vAC)                         #10
+ld(0)                           #11
+st(vAC+1)                       #12
+ld(-16/2)                       #13
+bra(lo('NEXT'))                 #14
 #nop()                          #(15)
 #
 # Instruction ST: Store in zero page ([D]=ACL), 16 cycles
 label('ST')
-ld(busAC,regX)                  #10,15 (overlap with LDI)
-ldzp(d(vAC))                    #11
-st(d(vAC),busAC|ea0XregAC)      #12 XXX remove d(AC)
-ld(val(-16/2))                  #13
-bra(d(lo('NEXT')))              #14
+ld(AC, X)                       #10,15 (overlap with LDI)
+ld(zp(vAC))                     #11
+st(vAC, mode=ea0XregAC, bus=busAC)#12 XXX remove vAC
+ld(-16/2)                       #13
+bra(lo('NEXT'))                 #14
 #nop()                          #(15)
 #
 # Instruction POP: (LR=[SP++]), 26 cycles
 label('POP')
-ld(d(vSP),busRAM|regX)          #10,15 (overlap with ST)
-ld(busRAM,ea0XregAC)            #11
-st(d(vLR))                      #12
-ldzp(d(vSP))                    #13
-adda(val(1),regX)               #14
-ld(busRAM,ea0XregAC)            #15
-st(d(vLR+1))                    #16
-ldzp(d(vSP))                    #17
-adda(val(2))                    #18
-st(d(vSP))                      #19
+ld(zp(vSP), X)                  #10,15 (overlap with ST)
+ld(ramX())                      #11
+st(vLR)                         #12
+ld(zp(vSP))                     #13
+adda(1, X)                      #14
+ld(ramX())                      #15
+st(vLR+1)                       #16
+ld(zp(vSP))                     #17
+adda(2)                         #18
+st(vSP)                         #19
 label('next1')
-ldzp(d(vPC))                    #20
-suba(val(1))                    #21
-st(d(vPC))                      #22
-ld(val(-26/2))                  #23
-bra(d(lo('NEXT')))              #24
+ld(zp(vPC))                     #20
+suba(1)                         #21
+st(vPC)                         #22
+ld(-26/2)                       #23
+bra(lo('NEXT'))                 #24
 #nop()                          #(25)
 #
 # Conditional NE: Branch if not zero (if(ALC!=0)PCL=D)
 label('NE')
-beq(d(lo('.cond4')))            #20,25 (overlap with POP)
-bne(d(lo('.cond5')))            #21
-ld(busRAM|eaYXregAC)            #22
+beq(lo('.cond4'))               #20,25 (overlap with POP)
+bne(lo('.cond5'))               #21
+ld(ram())                       #22
 
 # Instruction PUSH: ([--SP]=LR), 26 cycles
 label('PUSH')
-ldzp(d(vSP))                    #10
-suba(d(1),regX)                 #11
-ldzp(d(vLR+1))                  #12
-st(ea0XregAC)                   #13
-ldzp(d(vSP))                    #14
-suba(val(2))                    #15
-st(d(vSP),busAC|regX)           #16
-ldzp(d(vLR))                    #17
-bra(d(lo('next1')))             #18
-st(ea0XregAC)                   #19
+ld(zp(vSP))                     #10
+suba(1, X)                      #11
+ld(zp(vLR+1))                   #12
+st(ramX())                      #13
+ld(zp(vSP))                     #14
+suba(2)                         #15
+st(vSP, X)                      #16
+ld(zp(vLR))                     #17
+bra(lo('next1'))                #18
+st(ramX())                      #19
 
 # Instruction LUP: ROM lookup (AC=ROM[AC+256*D]), 26 cycles
 label('LUP')
-ld(d(vAC+1),busRAM|regY)        #10
-jmpy(d(251));                   C('Trampoline offset')#11
-adda(d(vAC),busRAM)             #12
+ld(zp(vAC+1), Y)                #10
+jmpy(251);                      C('Trampoline offset')#11
+adda(zp(vAC))                   #12
 
 # Instruction ANDI: Logical-AND with constant (AC&=D), 16 cycles
 label('ANDI')
-anda(d(vAC),busRAM)             #10
-st(d(vAC))                      #11
-ld(val(0))                      #12 Clear high byte
-st(d(vAC+1))                    #13
-bra(d(lo('NEXT')))              #14
-ld(val(-16/2))                  #15
+anda(zp(vAC))                   #10
+st(vAC)                         #11
+ld(0)                           #12 Clear high byte
+st(vAC+1)                       #13
+bra(lo('NEXT'))                 #14
+ld(-16/2)                       #15
 
 # Instruction ORI: Logical-OR with constant (AC|=D), 14 cycles
 label('ORI')
-ora(d(vAC),busRAM)              #10
-st(d(vAC))                      #11
-bra(d(lo('NEXT')))              #12
-ld(val(-14/2))                  #13
+ora(zp(vAC))                    #10
+st(vAC)                         #11
+bra(lo('NEXT'))                 #12
+ld(-14/2)                       #13
 
 # Instruction XORI: Logical-XOR with constant (AC^=D), 14 cycles
 label('XORI')
-xora(d(vAC),busRAM)             #10
-st(d(vAC))                      #11
-bra(d(lo('NEXT')))              #12
-ld(val(-14/2))                  #13
+xora(zp(vAC))                   #10
+st(vAC)                         #11
+bra(lo('NEXT'))                 #12
+ld(-14/2)                       #13
 
 # Instruction BRA: Branch unconditionally (PCL=D), 14 cycles
 label('BRA')
-st(d(vPC))                      #10
-ld(val(-14/2))                  #11
-bra(d(lo('NEXT')))              #12
+st(vPC)                         #10
+ld(-14/2)                       #11
+bra(lo('NEXT'))                 #12
 #nop()                          #(13)
 #
 # Instruction INC: Increment zero page byte ([D]++), 16 cycles
 label('INC')
-ld(busAC,regX)                  #10,13 (overlap with BRA)
-ld(busRAM,ea0XregAC)            #11
-adda(val(1))                    #12
-st(ea0XregAC)                   #13
-bra(d(lo('NEXT')))              #14
-ld(val(-16/2))                  #15
+ld(AC, X)                       #10,13 (overlap with BRA)
+ld(ramX())                      #11
+adda(1)                         #12
+st(ramX())                      #13
+bra(lo('NEXT'))                 #14
+ld(-16/2)                       #15
 
 # Instruction ADDW: Word addition with zero page (AC+=[D]+256*[D+1]), 28 cycles
 label('ADDW')
 # The non-carry paths could be 26 cycles at the expense of (much) more code.
 # But a smaller size is better so more instructions fit in this code page.
 # 28 cycles is still 4.5 usec. The 6502 equivalent takes 20 cycles or 20 usec.
-ld(busAC,regX)                  #10 Address of low byte to be added
-adda(val(1))                    #11
-st(d(vTmp))                     #12 Address of high byte to be added
-ldzp(d(vAC))                    #13 Add the low bytes
-adda(busRAM|ea0XregAC)          #14
-st(d(vAC))                      #15 Store low result
-bmi(d(lo('.addw0')))            #16 Now figure out if there was a carry
-suba(busRAM|ea0XregAC)          #17 Gets back the initial value of vAC
-bra(d(lo('.addw1')))            #18
-ora(busRAM|ea0XregAC)           #19 Bit 7 is our lost carry
+ld(AC, X)                       #10 Address of low byte to be added
+adda(1)                         #11
+st(vTmp)                        #12 Address of high byte to be added
+ld(zp(vAC))                     #13 Add the low bytes
+adda(ramX())                    #14
+st(vAC)                         #15 Store low result
+bmi(lo('.addw0'))               #16 Now figure out if there was a carry
+suba(ramX())                    #17 Gets back the initial value of vAC
+bra(lo('.addw1'))               #18
+ora(ramX())                     #19 Bit 7 is our lost carry
 label('.addw0')
-anda(busRAM|ea0XregAC)          #18 Bit 7 is our lost carry
+anda(ramX())                    #18 Bit 7 is our lost carry
 nop()                           #19
 label('.addw1')
-anda(val(0x80),regX)            #20 Move the carry to bit 0 (0 or +1)
-ld(busRAM,ea0XregAC)            #21
-adda(d(vAC+1),busRAM)           #22 Add the high bytes with carry
-ld(d(vTmp),busRAM|regX)         #23
-adda(busRAM|ea0XregAC)          #24
-st(d(vAC+1))                    #25 Store high result
-bra(d(lo('NEXT')))              #26
-ld(val(-28/2))                  #27
+anda(0x80, X)                   #20 Move the carry to bit 0 (0 or +1)
+ld(ramX())                      #21
+adda(zp(vAC+1))                 #22 Add the high bytes with carry
+ld(zp(vTmp), X)                 #23
+adda(ramX())                    #24
+st(vAC+1)                       #25 Store high result
+bra(lo('NEXT'))                 #26
+ld(-28/2)                       #27
 
 # Instruction PEEK: (AC=[AC]), 26 cycles
 label('PEEK')
-ld(val(hi('peek')),regY)        #10
-jmpy(d(lo('peek')))             #11
-#ldzp(d(vPC))                   #12
+ld(hi('peek'), Y)               #10
+jmpy(lo('peek'))                #11
+#ld(zp(vPC))                    #12
 #
 # Instruction SYS: Native call, <=256 cycles (<=128 ticks, in reality less)
 #
@@ -1484,78 +1485,78 @@ jmpy(d(lo('peek')))             #11
 # SYS functions can modify vPC to implement repetition. For example to split
 # up work into multiple chucks.
 label('retry')
-ldzp(d(vPC));                   C('Retry until sufficient time')#13,12 (overlap with PEEK)
-suba(val(2))                    #14
-st(d(vPC))                      #15
-bra(d(lo('REENTER')))           #16
-ld(val(-20/2))                  #17
+ld(zp(vPC));                    C('Retry until sufficient time')#13,12 (overlap with PEEK)
+suba(2)                         #14
+st(vPC)                         #15
+bra(lo('REENTER'))              #16
+ld(-20/2)                       #17
 label('SYS')
-adda(d(vTicks),busRAM)          #10
-blt(d(lo('retry')))             #11
-ld(d(sysFn+1),busRAM|regY)      #12
-jmpy(d(sysFn)|busRAM)           #13
+adda(zp(vTicks))                #10
+blt(lo('retry'))                #11
+ld(zp(sysFn+1), Y)              #12
+jmpy(zp(sysFn))                 #13
 #nop()                          #(14)
 #
 # Instruction SUBW: Word subtract with zero page (AC-=[D]+256*[D+1]), 28 cycles
 # All cases can be done in 26 cycles, but the code will become much larger
 label('SUBW')
-ld(busAC,regX)                  #10,14 (overlap with SYS) Address of low byte to be subtracted
-adda(val(1))                    #11
-st(d(vTmp))                     #12 Address of high byte to be subtracted
-ldzp(d(vAC))                    #13
-bmi(d(lo('.subw0')))            #14
-suba(busRAM|ea0XregAC)          #15
-st(d(vAC))                      #16 Store low result
-bra(d(lo('.subw1')))            #17
-ora(busRAM|ea0XregAC)           #18 Bit 7 is our lost carry
+ld(AC, X)                       #10,14 (overlap with SYS) Address of low byte to be subtracted
+adda(1)                         #11
+st(vTmp)                        #12 Address of high byte to be subtracted
+ld(zp(vAC))                     #13
+bmi(lo('.subw0'))               #14
+suba(ramX())                    #15
+st(vAC)                         #16 Store low result
+bra(lo('.subw1'))               #17
+ora(ramX())                     #18 Bit 7 is our lost carry
 label('.subw0')
-st(d(vAC))                      #16 Store low result
-anda(busRAM|ea0XregAC)          #17 Bit 7 is our lost carry
+st(vAC)                         #16 Store low result
+anda(ramX())                    #17 Bit 7 is our lost carry
 nop()                           #18
 label('.subw1')
-anda(val(0x80),regX)            #19 Move the carry to bit 0
-ldzp(d(vAC+1))                  #20
-suba(busRAM,ea0XregAC)          #21
-ld(d(vTmp),busRAM|regX)         #22
-suba(busRAM|ea0XregAC)          #23
-st(d(vAC+1))                    #24
-ld(val(-28/2))                  #25
+anda(0x80, X)                   #19 Move the carry to bit 0
+ld(zp(vAC+1))                   #20
+suba(ramX())                    #21
+ld(zp(vTmp), X)                 #22
+suba(ramX())                    #23
+st(vAC+1)                       #24
+ld(-28/2)                       #25
 label('REENTER')
-bra(d(lo('NEXT')));             C('Return from SYS calls')#26
-ld(d(vPC+1),busRAM|regY)        #27
+bra(lo('NEXT'));                C('Return from SYS calls')#26
+ld(zp(vPC+1), Y)                #27
 
 # Instruction DEF: Define data or code (AC,PCL=PC+2,D), 18 cycles
 label('DEF')
-ld(val(hi('def')),regY)         #10
-jmpy(d(lo('def')))              #11
-#st(d(vTmp))                    #12
+ld(hi('def'), Y)                #10
+jmpy(lo('def'))                 #11
+#st(vTmp)                       #12
 #
 # Instruction CALL: (LR=PC+2,PC=[D]-2), 26 cycles
 label('CALL')
-st(d(vTmp))                     #10,12 (overlap with DEF)
-ldzp(d(vPC))                    #11
-adda(val(2));                   C('Point to instruction after CALL')#12
-st(d(vLR))                      #13
-ldzp(d(vPC+1))                  #14
-st(d(vLR+1))                    #15
-ld(d(vTmp),busRAM|regX)         #16
-ld(busRAM|ea0XregAC)            #17
-suba(val(2));                   C('Because NEXT will add 2')#18
-st(d(vPC))                      #19
-ldzp(d(vTmp))                   #20
-adda(val(1),regX)               #21
-ld(busRAM|ea0XregAC)            #22
-st(d(vPC+1),busAC|regY)         #23
-bra(d(lo('NEXT')))              #24
-ld(val(-26/2))                  #25
+st(vTmp)                        #10,12 (overlap with DEF)
+ld(zp(vPC))                     #11
+adda(2);                        C('Point to instruction after CALL')#12
+st(vLR)                         #13
+ld(zp(vPC+1))                   #14
+st(vLR+1)                       #15
+ld(zp(vTmp), X)                 #16
+ld(ramX())                      #17
+suba(2);                        C('Because NEXT will add 2')#18
+st(vPC)                         #19
+ld(zp(vTmp))                    #20
+adda(1, X)                      #21
+ld(ramX())                      #22
+st(vPC+1, Y)                    #23
+bra(lo('NEXT'))                 #24
+ld(-26/2)                       #25
 
 # ALLOCA implementation
 # Instruction ALLOCA: (SP+=D), 14 cycles
 label('ALLOC')
-adda(d(vSP),busRAM)             #10
-st(d(vSP))                      #11
-bra(d(lo('NEXT')))              #12
-ld(val(-14/2))                  #13
+adda(zp(vSP))                   #10
+st(vSP)                         #11
+bra(lo('NEXT'))                 #12
+ld(-14/2)                       #13
 
 # The instructions below are all implemented in the second code page. Jumping
 # back and forth makes each 6 cycles slower, but it also saves space in the
@@ -1566,78 +1567,78 @@ ld(val(-14/2))                  #13
 
 # Instruction ADDI: Add small positive constant (AC+=D), 28 cycles
 label('ADDI')
-ld(val(hi('addi')),regY)        #10
-jmpy(d(lo('addi')))             #11
-st(d(vTmp))                     #12
+ld(hi('addi'), Y)               #10
+jmpy(lo('addi'))                #11
+st(vTmp)                        #12
 
 # Instruction SUBI: Subtract small positive constant (AC+=D), 28 cycles
 label('SUBI')
-ld(val(hi('subi')),regY)        #10
-jmpy(d(lo('subi')))             #11
-st(d(vTmp))                     #12
+ld(hi('subi'), Y)               #10
+jmpy(lo('subi'))                #11
+st(vTmp)                        #12
 
 # Instruction LSLW: Logical shift left (AC<<=1), 28 cycles
 # Useful, because ADDW can't add vAC to itself. Also more compact.
 label('LSLW')
-ld(val(hi('lslw')),regY)        #10
-jmpy(d(lo('lslw')))             #11
-ldzp(d(vAC))                    #12
+ld(hi('lslw'), Y)               #10
+jmpy(lo('lslw'))                #11
+ld(zp(vAC))                     #12
 
 # Instruction STLW: Store on stack (), 26 cycles
 label('STLW')
-ld(val(hi('stlw')),regY)        #10
-jmpy(d(lo('stlw')))             #11
+ld(hi('stlw'), Y)               #10
+jmpy(lo('stlw'))                #11
 #nop()                          #12
 #
 # Instruction LDLW: Load from stack (), 26 cycles
 label('LDLW')
-ld(val(hi('ldlw')),regY)        #10,12 (overlap with STLW)
-jmpy(d(lo('ldlw')))             #11
+ld(hi('ldlw'), Y)               #10,12 (overlap with STLW)
+jmpy(lo('ldlw'))                #11
 #nop()                          #12
 #
 # Instruction POKE: ([[D+1],[D]]=ACL), 28 cycles
 label('POKE')
-ld(val(hi('poke')),regY)        #10,12 (overlap with LDLW)
-jmpy(d(lo('poke')))             #11
-st(d(vTmp))                     #12
+ld(hi('poke'), Y)               #10,12 (overlap with LDLW)
+jmpy(lo('poke'))                #11
+st(vTmp)                        #12
 
 # Instruction DOKE: (), 28 cycles
 label('DOKE')
-ld(val(hi('doke')),regY)        #10
-jmpy(d(lo('doke')))             #11
-st(d(vTmp))                     #12
+ld(hi('doke'), Y)               #10
+jmpy(lo('doke'))                #11
+st(vTmp)                        #12
 
 # Instruction DEEK: (), 28 cycles
 label('DEEK')
-ld(val(hi('deek')),regY)        #10
-jmpy(d(lo('deek')))             #11
+ld(hi('deek'), Y)               #10
+jmpy(lo('deek'))                #11
 #nop()                          #12
 #
 # Instruction ANDW: (AC&=[D]+256*[D+1]), 28 cycles
 label('ANDW')
-ld(val(hi('andw')),regY)        #10,12 (overlap with DEEK)
-jmpy(d(lo('andw')))             #11
+ld(hi('andw'), Y)               #10,12 (overlap with DEEK)
+jmpy(lo('andw'))                #11
 #nop()                          #12
 #
 # Instruction ORW: (AC|=[D]+256*[D+1]), 28 cycles
 label('ORW')
-ld(val(hi('orw')),regY)         #10,12 (overlap with ANDW)
-jmpy(d(lo('orw')))              #11
+ld(hi('orw'), Y)                #10,12 (overlap with ANDW)
+jmpy(lo('orw'))                 #11
 #nop()                          #12
 #
 # Instruction XORW: (AC^=[D]+256*[D+1]), 26 cycles
 label('XORW')
-ld(val(hi('xorw')),regY)        #10,12 (overlap with ORW)
-jmpy(d(lo('xorw')))             #11
-st(d(vTmp))                     #12
+ld(hi('xorw'), Y)               #10,12 (overlap with ORW)
+jmpy(lo('xorw'))                #11
+st(vTmp)                        #12
 # We keep XORW 2 cycles faster than ANDW/ORW, because that
 # can be useful for comparing numbers for equality a tiny
 # bit faster than with SUBW
 
 # Instruction RET: Function return (PC=LR-2), 16 cycles
 label('RET')
-ldzp(d(vLR))                    #10
-assert(pc()&255 == 0)
+ld(zp(vLR))                     #10
+assert(L(pc()) == 0)
 
 #-----------------------------------------------------------------------
 #
@@ -1647,219 +1648,219 @@ assert(pc()&255 == 0)
 align(0x100, 0x100)
 
 # (Continue RET)
-suba(val(2))                    #11
-st(d(vPC))                      #12
-ldzp(d(vLR+1))                  #13
-st(d(vPC+1))                    #14
-ld(val(hi('REENTER')),regY)     #15
-jmpy(d(lo('REENTER')))          #16
-ld(val(-20/2))                  #17
+suba(2)                         #11
+st(vPC)                         #12
+ld(zp(vLR+1))                   #13
+st(vPC+1)                       #14
+ld(hi('REENTER'), Y)            #15
+jmpy(lo('REENTER'))             #16
+ld(-20/2)                       #17
 
 # DEF implementation
 label('def')
-ldzp(d(vPC))                    #13
-adda(val(2))                    #14
-st(d(vAC))                      #15
-ldzp(d(vPC+1))                  #16
-st(d(vAC+1))                    #17
-ldzp(d(vTmp))                   #18
-st(d(vPC))                      #19
-ld(val(hi('REENTER')),regY)     #20
-ld(val(-26/2))                  #21
-jmpy(d(lo('REENTER')))          #22
+ld(zp(vPC))                     #13
+adda(2)                         #14
+st(vAC)                         #15
+ld(zp(vPC+1))                   #16
+st(vAC+1)                       #17
+ld(zp(vTmp))                    #18
+st(vPC)                         #19
+ld(hi('REENTER'), Y)            #20
+ld(-26/2)                       #21
+jmpy(lo('REENTER'))             #22
 nop()                           #23
 
 # ADDI implementation
 label('addi')
-adda(d(vAC),busRAM)             #13
-st(d(vAC))                      #14 Store low result
-bmi(d(lo('.addi0')))            #15 Now figure out if there was a carry
-suba(d(vTmp),busRAM)            #16 Gets back the initial value of vAC
-bra(d(lo('.addi1')))            #17
-ora(d(vTmp),busRAM)             #18 Bit 7 is our lost carry
+adda(zp(vAC))                   #13
+st(vAC)                         #14 Store low result
+bmi(lo('.addi0'))               #15 Now figure out if there was a carry
+suba(zp(vTmp))                  #16 Gets back the initial value of vAC
+bra(lo('.addi1'))               #17
+ora(zp(vTmp))                   #18 Bit 7 is our lost carry
 label('.addi0')
-anda(d(vTmp),busRAM)            #17 Bit 7 is our lost carry
+anda(zp(vTmp))                  #17 Bit 7 is our lost carry
 nop()                           #18
 label('.addi1')
-anda(val(0x80),regX)            #19 Move the carry to bit 0 (0 or +1)
-ld(busRAM,ea0XregAC)            #20
-adda(d(vAC+1),busRAM)           #21 Add the high bytes with carry
-st(d(vAC+1))                    #22 Store high result
-ld(val(hi('REENTER')),regY)     #23
-jmpy(d(lo('REENTER')))          #24
-ld(val(-28/2))                  #25
+anda(0x80, X)                   #19 Move the carry to bit 0 (0 or +1)
+ld(ramX())                      #20
+adda(zp(vAC+1))                 #21 Add the high bytes with carry
+st(vAC+1)                       #22 Store high result
+ld(hi('REENTER'), Y)            #23
+jmpy(lo('REENTER'))             #24
+ld(-28/2)                       #25
 
 # SUBI implementation
 label('subi')
-ldzp(d(vAC))                    #13
-bmi(d(lo('.subi0')))            #14
-suba(d(vTmp),busRAM)            #15
-st(d(vAC))                      #16 Store low result
-bra(d(lo('.subi1')))            #17
-ora(d(vTmp),busRAM)             #18 Bit 7 is our lost carry
+ld(zp(vAC))                     #13
+bmi(lo('.subi0'))               #14
+suba(zp(vTmp))                  #15
+st(vAC)                         #16 Store low result
+bra(lo('.subi1'))               #17
+ora(zp(vTmp))                   #18 Bit 7 is our lost carry
 label('.subi0')
-st(d(vAC))                      #16 Store low result
-anda(d(vTmp),busRAM)            #17 Bit 7 is our lost carry
+st(vAC)                         #16 Store low result
+anda(zp(vTmp))                  #17 Bit 7 is our lost carry
 nop()                           #18
 label('.subi1')
-anda(val(0x80),regX)            #19 Move the carry to bit 0
-ldzp(d(vAC+1))                  #20
-suba(busRAM,ea0XregAC)          #21
-st(d(vAC+1))                    #22
-ld(val(hi('REENTER')),regY)     #23
-jmpy(d(lo('REENTER')))          #24
-ld(val(-28/2))                  #25
+anda(0x80, X)                   #19 Move the carry to bit 0
+ld(zp(vAC+1))                   #20
+suba(ramX())                    #21
+st(vAC+1)                       #22
+ld(hi('REENTER'), Y)            #23
+jmpy(lo('REENTER'))             #24
+ld(-28/2)                       #25
 
 # LSLW implementation
 label('lslw')
-anda(d(128),regX)               #13
-adda(d(vAC),busRAM)             #14
-st(d(vAC))                      #15
-ld(ea0XregAC,busRAM)            #16
-adda(d(vAC+1),busRAM)           #17
-adda(d(vAC+1),busRAM)           #18
-st(d(vAC+1))                    #19
-ldzp(d(vPC))                    #20
-suba(d(1))                      #21
-st(d(vPC))                      #22
-ld(val(hi('REENTER')),regY)     #23
-jmpy(d(lo('REENTER')))          #24
-ld(val(-28/2))                  #25
+anda(128, X)                    #13
+adda(zp(vAC))                   #14
+st(vAC)                         #15
+ld(ramX())                      #16
+adda(zp(vAC+1))                 #17
+adda(zp(vAC+1))                 #18
+st(vAC+1)                       #19
+ld(zp(vPC))                     #20
+suba(1)                         #21
+st(vPC)                         #22
+ld(hi('REENTER'), Y)            #23
+jmpy(lo('REENTER'))             #24
+ld(-28/2)                       #25
 
 # STLW implementation
 label('stlw')
-adda(d(vSP),busRAM)             #13
-st(d(vTmp))                     #14
-adda(d(1),regX)                 #15
-ldzp(d(vAC+1))                  #16
-st(ea0XregAC)                   #17
-ld(d(vTmp),busRAM|regX)         #18
-ldzp(d(vAC))                    #19
-st(ea0XregAC)                   #20
-ld(val(hi('REENTER')),regY)     #21
-jmpy(d(lo('REENTER')))          #22
-ld(val(-26/2))                  #23
+adda(zp(vSP))                   #13
+st(vTmp)                        #14
+adda(1, X)                      #15
+ld(zp(vAC+1))                   #16
+st(ramX())                      #17
+ld(zp(vTmp), X)                 #18
+ld(zp(vAC))                     #19
+st(ramX())                      #20
+ld(hi('REENTER'), Y)            #21
+jmpy(lo('REENTER'))             #22
+ld(-26/2)                       #23
 
 # LDLW implementation
 label('ldlw')
-adda(d(vSP),busRAM)             #13
-st(d(vTmp))                     #14
-adda(d(1),regX)                 #15
-ld(ea0XregAC,busRAM)            #16
-st(d(vAC+1))                    #17
-ld(d(vTmp),busRAM|regX)         #18
-ld(ea0XregAC,busRAM)            #19
-st(d(vAC))                      #20
-ld(val(hi('REENTER')),regY)     #21
-jmpy(d(lo('REENTER')))          #22
-ld(val(-26/2))                  #23
+adda(zp(vSP))                   #13
+st(vTmp)                        #14
+adda(1, X)                      #15
+ld(ramX())                      #16
+st(vAC+1)                       #17
+ld(zp(vTmp), X)                 #18
+ld(ramX())                      #19
+st(vAC)                         #20
+ld(hi('REENTER'), Y)            #21
+jmpy(lo('REENTER'))             #22
+ld(-26/2)                       #23
 
 # POKE implementation
 label('poke')
-adda(d(1),regX)                 #13
-ld(busRAM,ea0XregAC)            #14
-ld(busAC,regY)                  #15
-ld(d(vTmp),busRAM|regX)         #16
-ld(busRAM,ea0XregAC)            #17
-ld(busAC,regX)                  #18
-ldzp(d(vAC))                    #19
-st(eaYXregAC)                   #20
-ld(val(hi('REENTER')),regY)     #21
-jmpy(d(lo('REENTER')))          #22
-ld(val(-26/2))                  #23
+adda(1, X)                      #13
+ld(ramX())                      #14
+ld(AC, Y)                       #15
+ld(zp(vTmp), X)                 #16
+ld(ramX())                      #17
+ld(AC, X)                       #18
+ld(zp(vAC))                     #19
+st(ram())                       #20
+ld(hi('REENTER'), Y)            #21
+jmpy(lo('REENTER'))             #22
+ld(-26/2)                       #23
 
 # PEEK implementation
 label('peek')
-suba(val(1))                    #13
-st(d(vPC))                      #14
-ld(d(vAC),busRAM|regX)          #15
-ld(d(vAC+1),busRAM|regY)        #16
-ld(busRAM|eaYXregAC)            #17
-st(d(vAC))                      #18
+suba(1)                         #13
+st(vPC)                         #14
+ld(zp(vAC), X)                  #15
+ld(zp(vAC+1), Y)                #16
+ld(ram())                       #17
+st(vAC)                         #18
 label('lupReturn')              #Nice coincidence that lupReturn can be here
-ld(val(0))                      #19
-st(d(vAC+1))                    #20
-ld(val(hi('REENTER')),regY)     #21
-jmpy(d(lo('REENTER')))          #22
-ld(val(-26/2))                  #23
+ld(0)                           #19
+st(vAC+1)                       #20
+ld(hi('REENTER'), Y)            #21
+jmpy(lo('REENTER'))             #22
+ld(-26/2)                       #23
 #
 # DOKE implementation
 label('doke')
-adda(d(1),regX)                 #13,25 (overlap with peek)
-ld(busRAM,ea0XregAC)            #14
-ld(busAC,regY)                  #15
-ld(d(vTmp),busRAM|regX)         #16
-ld(busRAM,ea0XregAC)            #17
-ld(busAC,regX)                  #18
-ldzp(d(vAC))                    #19
-st(eaYXregOUTIX)                #20
-ldzp(d(vAC+1))                  #21
-st(eaYXregAC)                   #22
-ld(val(hi('REENTER')),regY)     #23
-jmpy(d(lo('REENTER')))          #24
-ld(val(-28/2))                  #25
+adda(1, X)                      #13,25 (overlap with peek)
+ld(ramX())                      #14
+ld(AC, Y)                       #15
+ld(zp(vTmp), X)                 #16
+ld(ramX())                      #17
+ld(AC, X)                       #18
+ld(zp(vAC))                     #19
+st(mode=YX_incX)                #20
+ld(zp(vAC+1))                   #21
+st(ram())                       #22
+ld(hi('REENTER'), Y)            #23
+jmpy(lo('REENTER'))             #24
+ld(-28/2)                       #25
 
 # DEEK implementation
 label('deek')
-ldzp(d(vPC))                    #13
-suba(val(1))                    #14
-st(d(vPC))                      #15
-ld(d(vAC),busRAM|regX)          #16
-ld(d(vAC+1),busRAM|regY)        #17
-ld(busRAM|eaYXregAC)            #18
-st(eaYXregOUTIX)                #19
-st(d(vAC))                      #20
-ld(busRAM|eaYXregAC)            #21
-st(d(vAC+1))                    #22
-ld(val(hi('REENTER')),regY)     #23
-jmpy(d(lo('REENTER')))          #24
-ld(val(-28/2))                  #25
+ld(zp(vPC))                     #13
+suba(1)                         #14
+st(vPC)                         #15
+ld(zp(vAC), X)                  #16
+ld(zp(vAC+1), Y)                #17
+ld(ram())                       #18
+st(mode=YX_incX)                #19
+st(vAC)                         #20
+ld(ram())                       #21
+st(vAC+1)                       #22
+ld(hi('REENTER'), Y)            #23
+jmpy(lo('REENTER'))             #24
+ld(-28/2)                       #25
 
 # ANDW implementation
 label('andw')
-st(d(vTmp))                     #13
-adda(d(1),regX)                 #14
-ld(busRAM|ea0XregAC)            #15
-anda(d(vAC+1),busRAM)           #16
-st(d(vAC+1))                    #17
-ld(d(vTmp),busRAM|regX)         #18
-ld(busRAM|ea0XregAC)            #19
-anda(d(vAC),busRAM)             #20
-st(d(vAC))                      #21
-ld(val(-28/2))                  #22
-ld(val(hi('REENTER')),regY)     #23
-jmpy(d(lo('REENTER')))          #24
+st(vTmp)                        #13
+adda(1,X)                       #14
+ld(ramX())                      #15
+anda(zp(vAC+1))                 #16
+st(vAC+1)                       #17
+ld(zp(vTmp), X)                 #18
+ld(ramX())                      #19
+anda(zp(vAC))                   #20
+st(vAC)                         #21
+ld(-28/2)                       #22
+ld(hi('REENTER'), Y)            #23
+jmpy(lo('REENTER'))             #24
 #nop()                          #(25)
 
 # ORW implementation
 label('orw')
-st(d(vTmp))                     #13,25 (overlap with andw)
-adda(d(1),regX)                 #14
-ld(busRAM|ea0XregAC)            #15
-ora(d(vAC+1),busRAM)            #16
-st(d(vAC+1))                    #17
-ld(d(vTmp),busRAM|regX)         #18
-ld(busRAM|ea0XregAC)            #19
-ora(d(vAC),busRAM)              #20
-st(d(vAC))                      #21
-ld(val(-28/2))                  #22
-ld(val(hi('REENTER')),regY)     #23
-jmpy(d(lo('REENTER')))          #24
+st(vTmp)                        #13,25 (overlap with andw)
+adda(1, X)                      #14
+ld(ramX())                      #15
+ora(zp(vAC+1))                  #16
+st(vAC+1)                       #17
+ld(zp(vTmp), X)                 #18
+ld(ramX())                      #19
+ora(zp(vAC))                    #20
+st(vAC)                         #21
+ld(-28/2)                       #22
+ld(hi('REENTER'), Y)            #23
+jmpy(lo('REENTER'))             #24
 #nop()                          #(25)
 
 # XORW implementation
 label('xorw')
-adda(d(1),regX)                 #13,25 (overlap with orw)
-ld(busRAM|ea0XregAC)            #14
-xora(d(vAC+1),busRAM)           #15
-st(d(vAC+1))                    #16
-ld(d(vTmp),busRAM|regX)         #17
-ld(busRAM|ea0XregAC)            #18
-xora(d(vAC),busRAM)             #19
-st(d(vAC))                      #20
-ld(val(hi('REENTER')),regY)     #21
-jmpy(d(lo('REENTER')))          #22
-ld(val(-26/2))                  #23
+adda(1, X)                      #13,25 (overlap with orw)
+ld(ramX())                      #14
+xora(zp(vAC+1))                 #15
+st(vAC+1)                       #16
+ld(zp(vTmp), X)                 #17
+ld(ramX())                      #18
+xora(zp(vAC))                   #19
+st(vAC)                         #20
+ld(hi('REENTER'), Y)            #21
+jmpy(lo('REENTER'))             #22
+ld(-26/2)                       #23
 
 #-----------------------------------------------------------------------
 #
@@ -1881,59 +1882,59 @@ ld(val(-26/2))                  #23
 # This same algorithm runs automatically once per vertical blank.
 # Use this function to get numbers at a higher rate.
 label('SYS_Random_34')
-ldzp(d(frameCount))             #15
-xora(d(entropy+1),busRAM)       #16
-xora(d(serialRaw),busRAM)       #17
-adda(d(entropy+0),busRAM)       #18
-st(d(entropy+0))                #19
-st(d(vAC+0))                    #20
-adda(d(entropy+2),busRAM)       #21
-st(d(entropy+2))                #22
-bmi(d(lo('.sysRnd0')))          #23
-bra(d(lo('.sysRnd1')))          #24
-xora(val(64+16+2+1))            #25
+ld(zp(frameCount))              #15
+xora(zp(entropy+1))             #16
+xora(zp(serialRaw))             #17
+adda(zp(entropy+0))             #18
+st(entropy+0)                   #19
+st(vAC+0)                       #20
+adda(zp(entropy+2))             #21
+st(entropy+2)                   #22
+bmi(lo('.sysRnd0'))             #23
+bra(lo('.sysRnd1'))             #24
+xora(64+16+2+1)                 #25
 label('.sysRnd0')
-xora(val(64+32+8+4))            #25
+xora(64+32+8+4)                 #25
 label('.sysRnd1')
-adda(d(entropy+1),busRAM)       #26
-st(d(entropy+1))                #27
-st(d(vAC+1))                    #28
-ld(val(hi('REENTER')),regY)     #29
-jmpy(d(lo('REENTER')))          #30
-ld(val(-34/2))                  #31
+adda(zp(entropy+1))             #26
+st(entropy+1)                   #27
+st(vAC+1)                       #28
+ld(hi('REENTER'), Y)            #29
+jmpy(lo('REENTER'))             #30
+ld(-34/2)                       #31
 
 label('SYS_LSRW7_30')
-ldzp(d(vAC))                    #15
-anda(d(128),regX)               #16
-ldzp(d(vAC+1))                  #17
-adda(busAC)                     #18
-ora(ea0XregAC,busRAM)           #19
-st(d(vAC))                      #20
-ldzp(d(vAC+1))                  #21
-anda(d(128),regX)               #22
-ld(ea0XregAC,busRAM)            #23
-st(d(vAC+1))                    #24
-ld(d(hi('REENTER')),regY)       #25
-jmpy(d(lo('REENTER')))          #26
-ld(d(-30/2))                    #27
+ld(zp(vAC))                     #15
+anda(128, X)                    #16
+ld(zp(vAC+1))                   #17
+adda(AC)                        #18
+ora(ramX())                     #19
+st(vAC)                         #20
+ld(zp(vAC+1))                   #21
+anda(128, X)                    #22
+ld(ramX())                      #23
+st(vAC+1)                       #24
+ld(hi('REENTER'), Y)            #25
+jmpy(lo('REENTER'))             #26
+ld(-30/2)                       #27
 
 label('SYS_LSRW8_24')
-ldzp(d(vAC+1))                  #15
-st(d(vAC))                      #16
-ld(d(0))                        #17
-st(d(vAC+1))                    #18
-ld(d(hi('REENTER')),regY)       #19
-jmpy(d(lo('REENTER')))          #20
-ld(d(-24/2))                    #21
+ld(zp(vAC+1))                   #15
+st(vAC)                         #16
+ld(0)                           #17
+st(vAC+1)                       #18
+ld(hi('REENTER'), Y)            #19
+jmpy(lo('REENTER'))             #20
+ld(-24/2)                       #21
 
 label('SYS_LSLW8_24')
-ldzp(d(vAC))                    #15
-st(d(vAC+1))                    #16
-ld(d(0))                        #17
-st(d(vAC))                      #18
-ld(d(hi('REENTER')),regY)       #19
-jmpy(d(lo('REENTER')))          #20
-ld(d(-24/2))                    #21
+ld(zp(vAC))                     #15
+st(vAC+1)                       #16
+ld(0)                           #17
+st(vAC)                         #18
+ld(hi('REENTER'), Y)            #19
+jmpy(lo('REENTER'))             #20
+ld(-24/2)                       #21
 
 #-----------------------------------------------------------------------
 # Extension SYS_Draw4_30:
@@ -1943,19 +1944,19 @@ ld(d(-24/2))                    #21
 # sysArgs[4:5]  Position on screen
 
 label('SYS_Draw4_30')
-ld(d(sysArgs+4),busRAM|regX)    #15
-ld(d(sysArgs+5),busRAM|regY)    #16
-ldzp(d(sysArgs+0))              #17
-st(eaYXregOUTIX)                #18
-ldzp(d(sysArgs+1))              #19
-st(eaYXregOUTIX)                #20
-ldzp(d(sysArgs+2))              #21
-st(eaYXregOUTIX)                #22
-ldzp(d(sysArgs+3))              #23
-st(eaYXregOUTIX)                #24
-ld(val(hi('REENTER')),regY)     #25
-jmpy(d(lo('REENTER')))          #26
-ld(val(-30/2))                  #27
+ld(zp(sysArgs+4), X)            #15
+ld(zp(sysArgs+5), Y)            #16
+ld(zp(sysArgs+0))               #17
+st(mode=YX_incX)                #18
+ld(zp(sysArgs+1))               #19
+st(mode=YX_incX)                #20
+ld(zp(sysArgs+2))               #21
+st(mode=YX_incX)                #22
+ld(zp(sysArgs+3))               #23
+st(mode=YX_incX)                #24
+ld(hi('REENTER'), Y)            #25
+jmpy(lo('REENTER'))             #26
+ld(-30/2)                       #27
 
 #-----------------------------------------------------------------------
 # Extension SYS_VDrawBits_134:
@@ -1968,29 +1969,29 @@ ld(val(-30/2))                  #27
 # sysArgs[4:5]  Position on screen
 
 label('SYS_VDrawBits_134')
-ld(d(sysArgs+4),busRAM|regX)    #15
-ld(val(0))                      #16
+ld(zp(sysArgs+4), X)            #15
+ld(0)                           #16
 label('.vdb0')
-st(d(vTmp))                     #17+i*14
-adda(d(sysArgs+5),busRAM|regY)  #18+i*14 Y=[sysPos+1]+vTmp
-ldzp(d(sysArgs+2))              #19+i*14 Select color
-bmi(d(lo('.vdb1')))             #20+i*14
-bra(d(lo('.vdb2')))             #21+i*14
-ldzp(d(sysArgs+0))              #22+i*14
+st(vTmp)                        #17+i*14
+adda(zp(sysArgs+5), Y)          #18+i*14 Y=[sysPos+1]+vTmp
+ld(zp(sysArgs+2))               #19+i*14 Select color
+bmi(lo('.vdb1'))                #20+i*14
+bra(lo('.vdb2'))                #21+i*14
+ld(zp(sysArgs+0))               #22+i*14
 label('.vdb1')
-ldzp(d(sysArgs+1))              #22+i*14
+ld(zp(sysArgs+1))               #22+i*14
 label('.vdb2')
-st(eaYXregAC)                   #23+i*14 Draw pixel
-ldzp(d(sysArgs+2))              #24+i*14 Shift byte left
-adda(busAC)                     #25+i*14
-st(d(sysArgs+2))                #26+i*14
-ldzp(d(vTmp))                   #27+i*14 Loop counter
-suba(val(7))                    #28+i*14
-bne(d(lo('.vdb0')))             #29+i*14
-adda(val(8))                    #30+i*14
-ld(val(hi('REENTER')),regY)     #129
-jmpy(d(lo('REENTER')))          #130
-ld(val(-134/2))                 #131
+st(ram())                       #23+i*14 Draw pixel
+ld(zp(sysArgs+2))               #24+i*14 Shift byte left
+adda(AC)                        #25+i*14
+st(sysArgs+2)                   #26+i*14
+ld(zp(vTmp))                    #27+i*14 Loop counter
+suba(7)                         #28+i*14
+bne(lo('.vdb0'))                #29+i*14
+adda(8)                         #30+i*14
+ld(hi('REENTER'), Y)            #129
+jmpy(lo('REENTER'))             #130
+ld(-134/2)                      #131
 
 #-----------------------------------------------------------------------
 #  ROM page 5-6: Shift table and code
@@ -2022,225 +2023,225 @@ for ix in range(255):
     if ~ix & (1 << (n-1)):
       break
   pattern = ['x' if i<n else '1' if ix&(1<<i) else '0' for i in range(8)]
-  ld(val(ix>>n)); C('0b%s >> %d' % (''.join(reversed(pattern)), n))
+  ld(ix>>n); C('0b%s >> %d' % (''.join(reversed(pattern)), n))
 
-assert(pc()&255 == 255)
-bra(d(vTmp)|busRAM); C('Jumps back into next page')
+assert(L(pc()) == 255)
+bra(vTmp, busRAM); C('Jumps back into next page')
 
 label('SYS_LSRW1_48')
-assert(pc()&255 == 0)#First instruction on this page must be a nop
+assert(L(pc()) == 0)#First instruction on this page must be a nop
 nop()                           #15
-ld(d(hi('shiftTable')),regY);   C('Logical shift right 1 bit (X >> 1)')#16
-ld(d(lo('.sysLsrw1a')));        C('Shift low byte')#17
-st(d(vTmp))                     #18
-ldzp(d(vAC))                    #19
-anda(d(0b11111110))             #20
-jmpy(busAC)                     #21
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
+ld(hi('shiftTable'), Y);        C('Logical shift right 1 bit (X >> 1)')#16
+ld(lo('.sysLsrw1a'));           C('Shift low byte')#17
+st(vTmp)                        #18
+ld(zp(vAC))                     #19
+anda(0b11111110)                #20
+jmpy(AC)                        #21
+bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw1a')
-st(d(vAC))                      #26
-ldzp(d(vAC+1));                 C('Transfer bit 8')#27
-anda(d(1))                      #28
-adda(d(127))                    #29
-anda(d(128))                    #30
-ora(d(vAC)|busRAM)              #31
-st(d(vAC))                      #32
-ld(d(lo('.sysLsrw1b')));        C('Shift high byte')#33
-st(d(vTmp))                     #34
-ldzp(d(vAC+1))                  #35
-anda(d(0b11111110))             #36
-jmpy(busAC)                     #37
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#38
+st(vAC)                         #26
+ld(zp(vAC+1));                  C('Transfer bit 8')#27
+anda(1)                         #28
+adda(127)                       #29
+anda(128)                       #30
+ora(zp(vAC))                    #31
+st(vAC)                         #32
+ld(lo('.sysLsrw1b'));           C('Shift high byte')#33
+st(vTmp)                        #34
+ld(zp(vAC+1))                   #35
+anda(0b11111110)                #36
+jmpy(AC)                        #37
+bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#38
 label('.sysLsrw1b')
-st(d(vAC+1))                    #42
-ld(d(hi('REENTER')),regY)       #43
-jmpy(d(lo('REENTER')))          #44
-ld(d(-48/2))                    #45
+st(vAC+1)                       #42
+ld(hi('REENTER'), Y)            #43
+jmpy(lo('REENTER'))             #44
+ld(-48/2)                       #45
 
 label('SYS_LSRW2_52')
-ld(d(hi('shiftTable')),regY);   C('Logical shift right 2 bit (X >> 2)')#15
-ld(d(lo('.sysLsrw2a')));        C('Shift low byte')#16
-st(d(vTmp))                     #17
-ldzp(d(vAC))                    #18
-anda(d(0b11111100))             #19
-ora( d(0b00000001))             #20
-jmpy(busAC)                     #21
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
+ld(hi('shiftTable'), Y);        C('Logical shift right 2 bit (X >> 2)')#15
+ld(lo('.sysLsrw2a'));           C('Shift low byte')#16
+st(vTmp)                        #17
+ld(zp(vAC))                     #18
+anda(0b11111100)                #19
+ora( 0b00000001)                #20
+jmpy(AC)                        #21
+bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw2a')
-st(d(vAC))                      #26
-ldzp(d(vAC+1));                 C('Transfer bit 8:9')#27
-adda(busAC)                     #28
-adda(busAC)                     #29
-adda(busAC)                     #30
-adda(busAC)                     #31
-adda(busAC)                     #32
-adda(busAC)                     #33
-ora(d(vAC)|busRAM)              #34
-st(d(vAC))                      #35
-ld(d(lo('.sysLsrw2b')));        C('Shift high byte')#36
-st(d(vTmp))                     #37
-ldzp(d(vAC+1))                  #38
-anda(d(0b11111100))             #39
-ora( d(0b00000001))             #40
-jmpy(busAC)                     #41
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#42
+st(vAC)                         #26
+ld(zp(vAC+1));                  C('Transfer bit 8:9')#27
+adda(AC)                        #28
+adda(AC)                        #29
+adda(AC)                        #30
+adda(AC)                        #31
+adda(AC)                        #32
+adda(AC)                        #33
+ora(zp(vAC))                    #34
+st(vAC)                         #35
+ld(lo('.sysLsrw2b'));           C('Shift high byte')#36
+st(vTmp)                        #37
+ld(zp(vAC+1))                   #38
+anda(0b11111100)                #39
+ora( 0b00000001)                #40
+jmpy(AC)                        #41
+bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#42
 label('.sysLsrw2b')
-st(d(vAC+1))                    #46
-ld(d(hi('REENTER')),regY)       #47
-jmpy(d(lo('REENTER')))          #48
-ld(d(-52/2))                    #49
+st(vAC+1)                       #46
+ld(hi('REENTER'), Y)            #47
+jmpy(lo('REENTER'))             #48
+ld(-52/2)                       #49
 
 label('SYS_LSRW3_52')
-ld(d(hi('shiftTable')),regY);   C('Logical shift right 3 bit (X >> 3)')#15
-ld(d(lo('.sysLsrw3a')));        C('Shift low byte')#16
-st(d(vTmp))                     #17
-ldzp(d(vAC))                    #18
-anda(d(0b11111000))             #19
-ora( d(0b00000011))             #20
-jmpy(busAC)                     #21
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
+ld(hi('shiftTable'), Y);        C('Logical shift right 3 bit (X >> 3)')#15
+ld(lo('.sysLsrw3a'));           C('Shift low byte')#16
+st(vTmp)                        #17
+ld(zp(vAC))                     #18
+anda(0b11111000)                #19
+ora( 0b00000011)                #20
+jmpy(AC)                        #21
+bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw3a')
-st(d(vAC))                      #26
-ldzp(d(vAC+1));                 C('Transfer bit 8:10')#27
-adda(busAC)                     #28
-adda(busAC)                     #29
-adda(busAC)                     #30
-adda(busAC)                     #31
-adda(busAC)                     #32
-ora(d(vAC)|busRAM)              #33
-st(d(vAC))                      #34
-ld(d(lo('.sysLsrw3b')));        C('Shift high byte')#35
-st(d(vTmp))                     #36
-ldzp(d(vAC+1))                  #37
-anda(d(0b11111000))             #38
-ora( d(0b00000011))             #39
-jmpy(busAC)                     #40
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#41
+st(vAC)                         #26
+ld(zp(vAC+1));                  C('Transfer bit 8:10')#27
+adda(AC)                        #28
+adda(AC)                        #29
+adda(AC)                        #30
+adda(AC)                        #31
+adda(AC)                        #32
+ora(zp(vAC))                    #33
+st(vAC)                         #34
+ld(lo('.sysLsrw3b'));           C('Shift high byte')#35
+st(vTmp)                        #36
+ld(zp(vAC+1))                   #37
+anda(0b11111000)                #38
+ora( 0b00000011)                #39
+jmpy(AC)                        #40
+bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#41
 label('.sysLsrw3b')
-st(d(vAC+1))                    #45
-ld(d(-52/2))                    #46
-ld(d(hi('REENTER')),regY)       #47
-jmpy(d(lo('REENTER')))          #48
+st(vAC+1)                       #45
+ld(-52/2)                       #46
+ld(hi('REENTER'), Y)            #47
+jmpy(lo('REENTER'))             #48
 #nop()                          #49
 
 label('SYS_LSRW4_50')
-ld(d(hi('shiftTable')),regY);   C('Logical shift right 4 bit (X >> 4)')#15,49
-ld(d(lo('.sysLsrw4a')));        C('Shift low byte')#16
-st(d(vTmp))                     #17
-ldzp(d(vAC))                    #18
-anda(d(0b11110000))             #19
-ora( d(0b00000111))             #20
-jmpy(busAC)                     #21
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
+ld(hi('shiftTable'), Y);        C('Logical shift right 4 bit (X >> 4)')#15,49
+ld(lo('.sysLsrw4a'));           C('Shift low byte')#16
+st(vTmp)                        #17
+ld(zp(vAC))                     #18
+anda(0b11110000)                #19
+ora( 0b00000111)                #20
+jmpy(AC)                        #21
+bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw4a')
-st(d(vAC))                      #26
-ldzp(d(vAC+1));                 C('Transfer bit 8:11')#27
-adda(busAC)                     #28
-adda(busAC)                     #29
-adda(busAC)                     #30
-adda(busAC)                     #31
-ora(d(vAC)|busRAM)              #32
-st(d(vAC))                      #33
-ld(d(lo('.sysLsrw4b')));        C('Shift high byte')#34
-st(d(vTmp))                     #35
-ldzp(d(vAC+1))                  #36
-anda(d(0b11110000))             #37
-ora( d(0b00000111))             #38
-jmpy(busAC)                     #39
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#40
+st(vAC)                         #26
+ld(zp(vAC+1));                  C('Transfer bit 8:11')#27
+adda(AC)                        #28
+adda(AC)                        #29
+adda(AC)                        #30
+adda(AC)                        #31
+ora(zp(vAC))                    #32
+st(vAC)                         #33
+ld(lo('.sysLsrw4b'));           C('Shift high byte')#34
+st(vTmp)                        #35
+ld(zp(vAC+1))                   #36
+anda(0b11110000)                #37
+ora( 0b00000111)                #38
+jmpy(AC)                        #39
+bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#40
 label('.sysLsrw4b')
-st(d(vAC+1))                    #44
-ld(d(hi('REENTER')),regY)       #45
-jmpy(d(lo('REENTER')))          #46
-ld(d(-50/2))                    #47
+st(vAC+1)                       #44
+ld(hi('REENTER'), Y)            #45
+jmpy(lo('REENTER'))             #46
+ld(-50/2)                       #47
 
 label('SYS_LSRW5_50')
-ld(d(hi('shiftTable')),regY);   C('Logical shift right 5 bit (X >> 5)')#15
-ld(d(lo('.sysLsrw5a')));        C('Shift low byte')#16
-st(d(vTmp))                     #17
-ldzp(d(vAC))                    #18
-anda(d(0b11100000))             #19
-ora( d(0b00001111))             #20
-jmpy(busAC)                     #21
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
+ld(hi('shiftTable'), Y);        C('Logical shift right 5 bit (X >> 5)')#15
+ld(lo('.sysLsrw5a'));           C('Shift low byte')#16
+st(vTmp)                        #17
+ld(zp(vAC))                     #18
+anda(0b11100000)                #19
+ora( 0b00001111)                #20
+jmpy(AC)                        #21
+bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw5a')
-st(d(vAC))                      #26
-ldzp(d(vAC+1));             C('Transfer bit 8:13')#27
-adda(busAC)                     #28
-adda(busAC)                     #29
-adda(busAC)                     #30
-ora(d(vAC)|busRAM)              #31
-st(d(vAC))                      #32
-ld(d(lo('.sysLsrw5b')));        C('Shift high byte')#33
-st(d(vTmp))                     #34
-ldzp(d(vAC+1))                  #35
-anda(d(0b11100000))             #36
-ora( d(0b00001111))             #37
-jmpy(busAC)                     #38
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#39
+st(vAC)                         #26
+ld(zp(vAC+1));                  C('Transfer bit 8:13')#27
+adda(AC)                        #28
+adda(AC)                        #29
+adda(AC)                        #30
+ora(zp(vAC))                    #31
+st(vAC)                         #32
+ld(lo('.sysLsrw5b'));           C('Shift high byte')#33
+st(vTmp)                        #34
+ld(zp(vAC+1))                   #35
+anda(0b11100000)                #36
+ora( 0b00001111)                #37
+jmpy(AC)                        #38
+bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#39
 label('.sysLsrw5b')
-st(d(vAC+1))                    #44
-ld(d(-50/2))                    #45
-ld(d(hi('REENTER')),regY)       #46
-jmpy(d(lo('REENTER')))          #47
+st(vAC+1)                       #44
+ld(-50/2)                       #45
+ld(hi('REENTER'), Y)            #46
+jmpy(lo('REENTER'))             #47
 #nop()                          #48
 
 label('SYS_LSRW6_48')
-ld(d(hi('shiftTable')),regY);   C('Logical shift right 6 bit (X >> 6)')#15,44
-ld(d(lo('.sysLsrw6a')));        C('Shift low byte')#16
-st(d(vTmp))                     #17
-ldzp(d(vAC))                    #18
-anda(d(0b11000000))             #19
-ora( d(0b00011111))             #20
-jmpy(busAC)                     #21
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#22
+ld(hi('shiftTable'), Y);        C('Logical shift right 6 bit (X >> 6)')#15,44
+ld(lo('.sysLsrw6a'));           C('Shift low byte')#16
+st(vTmp)                        #17
+ld(zp(vAC))                     #18
+anda(0b11000000)                #19
+ora( 0b00011111)                #20
+jmpy(AC)                        #21
+bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw6a')
-st(d(vAC))                      #26
-ldzp(d(vAC+1));                 C('Transfer bit 8:13')#27
-adda(busAC)                     #28
-adda(busAC)                     #29
-ora(d(vAC)|busRAM)              #30
-st(d(vAC))                      #31
-ld(d(lo('.sysLsrw6b')));        C('Shift high byte')#32
-st(d(vTmp))                     #33
-ldzp(d(vAC+1))                  #34
-anda(d(0b11000000))             #35
-ora( d(0b00011111))             #36
-jmpy(busAC)                     #37
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#38
+st(vAC)                         #26
+ld(zp(vAC+1));                  C('Transfer bit 8:13')#27
+adda(AC)                        #28
+adda(AC)                        #29
+ora(zp(vAC))                    #30
+st(vAC)                         #31
+ld(lo('.sysLsrw6b'));           C('Shift high byte')#32
+st(vTmp)                        #33
+ld(zp(vAC+1))                   #34
+anda(0b11000000)                #35
+ora( 0b00011111)                #36
+jmpy(AC)                        #37
+bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#38
 label('.sysLsrw6b')
-st(d(vAC+1))                    #42
-ld(d(hi('REENTER')),regY)       #43
-jmpy(d(lo('REENTER')))          #44
-ld(d(-48/2))                    #45
+st(vAC+1)                       #42
+ld(hi('REENTER'), Y)            #43
+jmpy(lo('REENTER'))             #44
+ld(-48/2)                       #45
 
 label('SYS_LSLW4_46')
-ld(d(hi('shiftTable')),regY);   C('Logical shift left 4 bit (X << 4)')#15
-ld(d(lo('.sysLsrl4')))          #16
-st(d(vTmp))                     #17
-ldzp(d(vAC+1))                  #18
-adda(busAC)                     #19
-adda(busAC)                     #20
-adda(busAC)                     #21
-adda(busAC)                     #22
-st(d(vAC+1))                    #23
-ldzp(d(vAC))                    #24
-anda(d(0b11110000))             #25
-ora( d(0b00000111))             #26
-jmpy(busAC)                     #27
-bra(d(255));                    C('Actually: bra $%04x' % (shiftTable+255))#28
+ld(hi('shiftTable'), Y);        C('Logical shift left 4 bit (X << 4)')#15
+ld(lo('.sysLsrl4'))             #16
+st(vTmp)                        #17
+ld(zp(vAC+1))                   #18
+adda(AC)                        #19
+adda(AC)                        #20
+adda(AC)                        #21
+adda(AC)                        #22
+st(vAC+1)                       #23
+ld(zp(vAC))                     #24
+anda(0b11110000)                #25
+ora( 0b00000111)                #26
+jmpy(AC)                        #27
+bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#28
 label('.sysLsrl4')
-ora(d(vAC+1),busRAM)            #32
-st(d(vAC+1))                    #33
-ldzp(d(vAC))                    #34
-adda(busAC)                     #35
-adda(busAC)                     #36
-adda(busAC)                     #37
-adda(busAC)                     #38
-st(d(vAC))                      #39
-ld(d(-46/2))                    #40
-ld(d(hi('REENTER')),regY)       #41
-jmpy(d(lo('REENTER')))          #42
+ora(zp(vAC+1))                  #32
+st(vAC+1)                       #33
+ld(zp(vAC))                     #34
+adda(AC)                        #35
+adda(AC)                        #36
+adda(AC)                        #37
+adda(AC)                        #38
+st(vAC)                         #39
+ld(-46/2)                       #40
+ld(hi('REENTER'), Y)            #41
+jmpy(lo('REENTER'))             #42
 #nop()                          #43
 
 #-----------------------------------------------------------------------
@@ -2251,39 +2252,39 @@ jmpy(d(lo('REENTER')))          #42
 # sysArgs[6:7]  ROM pointer (input)
 
 label('SYS_Read3_40')
-ld(d(sysArgs+7),busRAM|regY)    #15,32
-jmpy(d(128-7))                  #16 trampoline3a
-ldzp(d(sysArgs+6))              #17
+ld(zp(sysArgs+7), Y)            #15,32
+jmpy(128-7)                     #16 trampoline3a
+ld(zp(sysArgs+6))               #17
 label('txReturn')
-st(d(sysArgs+2))                #34
-ld(val(hi('REENTER')),regY)     #35
-jmpy(d(lo('REENTER')))          #36
-ld(val(-40/2))                  #37
+st(sysArgs+2)                   #34
+ld(hi('REENTER'), Y)            #35
+jmpy(lo('REENTER'))             #36
+ld(-40/2)                       #37
 
 def trampoline3a():
   """Read 3 bytes from ROM page"""
-  while pc()&255 < 128-7:
+  while L(pc()) < 128-7:
     nop()
-  bra(busAC)                    #18
-  C('Trampoline for page $%02x00 reading (entry)' % (pc()>>8))
-  bra(d(123))                   #19
-  st(d(sysArgs+0))              #21
-  ldzp(d(sysArgs+6))            #22
-  adda(val(1))                  #23
-  bra(busAC)                    #24
-  bra(d(250))                   #25 trampoline3b
+  bra(AC)                       #18
+  C('Trampoline for page $%02x00 reading (entry)' % H(pc()))
+  bra(123)                      #19
+  st(sysArgs+0)                 #21
+  ld(zp(sysArgs+6))             #22
+  adda(1)                       #23
+  bra(AC)                       #24
+  bra(250)                      #25 trampoline3b
 
 def trampoline3b():
   """Read 3 bytes from ROM page (continue)"""
-  while pc()&255 < 256-6:
+  while L(pc()) < 256-6:
     nop()
-  st(d(sysArgs+1))              #27
-  C('Trampoline for page $%02x00 reading (continue)' % (pc()>>8))
-  ldzp(d(sysArgs+6))            #28
-  adda(val(2))                  #29
-  ld(d(hi('txReturn')),regY)    #30
-  bra(busAC)                    #31
-  jmpy(d(lo('txReturn')))       #32
+  st(sysArgs+1)                 #27
+  C('Trampoline for page $%02x00 reading (continue)' % H(pc()))
+  ld(zp(sysArgs+6))             #28
+  adda(2)                       #29
+  ld(hi('txReturn'), Y)         #30
+  bra(AC)                       #31
+  jmpy(lo('txReturn'))          #32
 
 #-----------------------------------------------------------------------
 # Extension SYS_Unpack_56: Unpack 3 bytes into 4 pixels
@@ -2293,51 +2294,50 @@ def trampoline3b():
 # sysArgs[0:3]  Pixels (output)
 
 label('SYS_Unpack_56')
-ld(val(soundTable>>8),regY)     #15
-ldzp(d(sysArgs+2))              #16 a[2]>>2
-ora(val(0x03),regX)             #17
-ld(eaYXregAC|busRAM)            #18
-st(d(sysArgs+3));               C('-> Pixel 3')#19
+ld(H(soundTable), Y)            #15
+ld(zp(sysArgs+2))               #16 a[2]>>2
+ora(0x03, X)                    #17
+ld(ram())                       #18
+st(sysArgs+3);                  C('-> Pixel 3')#19
 
-ldzp(d(sysArgs+2))              #20 (a[2]&3)<<4
-anda(val(0x03))                 #21
-adda(busAC)                     #22
-adda(busAC)                     #23
-adda(busAC)                     #24
-adda(busAC)                     #25
-st(d(sysArgs+2));               #26
+ld(zp(sysArgs+2))               #20 (a[2]&3)<<4
+anda(0x03)                      #21
+adda(AC)                        #22
+adda(AC)                        #23
+adda(AC)                        #24
+adda(AC)                        #25
+st(sysArgs+2)                   #26
+ld(zp(sysArgs+1))               #27 | a[1]>>4
+ora(0x03, X)                    #28
+ld(ram())                       #29
+ora(0x03, X)                    #30
+ld(ram())                       #31
+ora(zp(sysArgs+2))              #32
+st(sysArgs+2);                  C('-> Pixel 2')#33
 
-ldzp(d(sysArgs+1))              #27 | a[1]>>4
-ora(val(0x03),regX)             #28
-ld(eaYXregAC|busRAM)            #29
-ora(val(0x03),regX)             #30
-ld(eaYXregAC|busRAM)            #31
-ora(d(sysArgs+2),busRAM)        #32
-st(d(sysArgs+2));               C('-> Pixel 2')#33
+ld(zp(sysArgs+1))               #34 (a[1]&15)<<2
+anda(0x0f)                      #35
+adda(AC)                        #36
+adda(AC)                        #37
+st(sysArgs+1)                   #38
 
-ldzp(d(sysArgs+1))              #34 (a[1]&15)<<2
-anda(val(0x0f))                 #35
-adda(busAC)                     #36
-adda(busAC)                     #37
-st(d(sysArgs+1))                #38
+ld(zp(sysArgs+0))               #39 | a[0]>>6
+ora(0x03, X)                    #40
+ld(ram())                       #41
+ora(0x03, X)                    #42
+ld(ram())                       #43
+ora(0x03, X)                    #44
+ld(ram())                       #45
+ora(zp(sysArgs+1))              #46
+st(sysArgs+1);                  C('-> Pixel 1')#47
 
-ldzp(d(sysArgs+0))              #39 | a[0]>>6
-ora(val(0x03),regX)             #40
-ld(eaYXregAC|busRAM)            #41
-ora(val(0x03),regX)             #42
-ld(eaYXregAC|busRAM)            #43
-ora(val(0x03),regX)             #44
-ld(eaYXregAC|busRAM)            #45
-ora(d(sysArgs+1),busRAM)        #46
-st(d(sysArgs+1));               C('-> Pixel 1')#47
+ld(zp(sysArgs+0))               #48 a[1]&63
+anda(0x3f)                      #49
+st(sysArgs+0);                  C('-> Pixel 0')#50
 
-ldzp(d(sysArgs+0))              #48 a[1]&63
-anda(val(0x3f))                 #49
-st(d(sysArgs+0));               C('-> Pixel 0')#50
-
-ld(val(hi('REENTER')),regY)     #51
-jmpy(d(lo('REENTER')))          #52
-ld(val(-56/2))                  #53
+ld(hi('REENTER'), Y)            #51
+jmpy(lo('REENTER'))             #52
+ld(-56/2)                       #53
 
 #-----------------------------------------------------------------------
 # Extension SYS_PayloadCopy_34
@@ -2348,26 +2348,26 @@ ld(val(-56/2))                  #53
 # sysArgs[5:6] Destination address
 
 label('SYS_PayloadCopy_34')
-ldzp(d(sysArgs+4))              #15 Copy count
-beq(d(lo('.sysCc0')))           #16
-suba(d(1))                      #17
-st(d(sysArgs+4))                #18
-ld(d(sysArgs+0),busRAM|regX)    #19 Current pointer
-ld(d(sysArgs+1),busRAM|regY)    #20
-ld(eaYXregAC,busRAM)            #21
-ld(d(sysArgs+5),busRAM|regX)    #22 Target pointer
-ld(d(sysArgs+6),busRAM|regY)    #23
-st(eaYXregAC)                   #24
-ldzp(d(sysArgs+5))              #25 Increment target
-adda(d(1))                      #26
-st(d(sysArgs+5))                #27
-bra(d(lo('.sysCc1')))           #28
+ld(zp(sysArgs+4))               #15 Copy count
+beq(lo('.sysCc0'))              #16
+suba(1)                         #17
+st(sysArgs+4)                   #18
+ld(zp(sysArgs+0), X)            #19 Current pointer
+ld(zp(sysArgs+1), Y)            #20
+ld(ram())                       #21
+ld(zp(sysArgs+5), X)            #22 Target pointer
+ld(zp(sysArgs+6), Y)            #23
+st(ram())                       #24
+ld(zp(sysArgs+5))               #25 Increment target
+adda(1)                         #26
+st(sysArgs+5)                   #27
+bra(lo('.sysCc1'))              #28
 label('.sysCc0')
-ld(val(hi('REENTER')),regY)     #18,29
+ld(hi('REENTER'), Y)            #18,29
 wait(30-19)                     #19
 label('.sysCc1')
-jmpy(d(lo('REENTER')))          #30
-ld(d(-34/2))                    #31
+jmpy(lo('REENTER'))             #30
+ld(-34/2)                       #31
 
 #-----------------------------------------------------------------------
 #
@@ -2381,7 +2381,7 @@ label('font32up')
 for ch in range(32, 32+50):
   comment = 'Char %s' % repr(chr(ch))
   for byte in font.font[ch-32]:
-    ld(val(byte))
+    ld(byte)
     comment = C(comment)
 
 trampoline()
@@ -2394,7 +2394,7 @@ label('font82up')
 for ch in range(32+50, 128):
   comment = 'Char %s' % repr(chr(ch))
   for byte in font.font[ch-32]:
-    ld(val(byte))
+    ld(byte)
     comment = C(comment)
 
 trampoline()
@@ -2419,8 +2419,8 @@ for i in range(0, 250, 2):
     comment = '%s%s%s (%0.1f Hz)' % (note, sharp, octave, freq)
   else:
     key, comment = 0, None
-  ld(val(key&127)); C(comment)
-  ld(val(key>>7))
+  ld(key&127); C(comment)
+  ld(key>>7)
 trampoline()
 
 #-----------------------------------------------------------------------
@@ -2434,7 +2434,7 @@ label('invTable')
 
 # Unit 64, table offset 16 (=1/4), value offset 1: (x+16)*(y+1) == 64*64 - e
 for i in range(251):
-  ld(val(4096/(i+16)-1))
+  ld(4096/(i+16)-1)
 
 trampoline()
 
@@ -2448,9 +2448,9 @@ f.close()
 align(0x100)
 label('gigatronRaw')
 for i in xrange(len(raw)):
-  if i&255 < 251:
-    ld(val(ord(raw[i])))
-  elif i&255 == 251:
+  if L(i) < 251:
+    ld(ord(raw[i]))
+  elif L(i) == 251:
     trampoline()
 
 def importImage(rgbName, width, height, ref):
@@ -2472,9 +2472,9 @@ def importImage(rgbName, width, height, ref):
           bytes.append( (R/85) + 4*(G/85) + 16*(B/85) )
 
         # Pack 4 pixels in 3 bytes
-        ld(val( ((bytes[0]&0b111111)>>0) + ((bytes[1]&0b000011)<<6) )); comment = C(comment)
-        ld(val( ((bytes[1]&0b111100)>>2) + ((bytes[2]&0b001111)<<4) ))
-        ld(val( ((bytes[2]&0b110000)>>4) + ((bytes[3]&0b111111)<<2) ))
+        ld( ((bytes[0]&0b111111)>>0) + ((bytes[1]&0b000011)<<6) ); comment = C(comment)
+        ld( ((bytes[1]&0b111100)>>2) + ((bytes[2]&0b001111)<<4) )
+        ld( ((bytes[2]&0b110000)>>4) + ((bytes[3]&0b111111)<<2) )
       if j==0:
         trampoline3a()
       else:
@@ -2489,61 +2489,61 @@ importImage('Images/Jupiter-160x120.rgb', 160, 120, 'packedJupiter')
 #-----------------------------------------------------------------------
 
 label('SYS_RacerUpdateVideoX_40')
-ld(d(sysArgs+2),busRAM|regX)    #15 q,
-ld(d(sysArgs+3),busRAM|regY)    #16
-ld(eaYXregAC,busRAM)            #17
-st(d(vTmp))                     #18
-suba(d(sysArgs+4),busRAM)       #19 X-
-ld(d(sysArgs+0),busRAM|regX)    #20 p.
-ld(d(sysArgs+1),busRAM|regY)    #21
-st(eaYXregAC,busAC)             #22
-ld(d(sysArgs+0),busRAM)         #23 p 4- p=
-suba(d(4))                      #24
-st(d(sysArgs+0))                #25
-ldzp(d(vTmp))                   #26 q,
-st(d(sysArgs+4))                #27 X=
-ld(d(sysArgs+2),busRAM)         #28 q<++
-adda(d(1))                      #29
-st(d(sysArgs+2))                #30
-bne(d(lo('.sysRacer0')))        #31 Self-repeat by adjusting vPC
-ldzp(d(vPC))                    #32
-bra(d(lo('.sysRacer1')))        #33
+ld(zp(sysArgs+2), X)            #15 q,
+ld(zp(sysArgs+3), Y)            #16
+ld(ram())                       #17
+st(vTmp)                        #18
+suba(zp(sysArgs+4))             #19 X-
+ld(zp(sysArgs+0), X)            #20 p.
+ld(zp(sysArgs+1), Y)            #21
+st(ram())                       #22
+ld(zp(sysArgs+0))               #23 p 4- p=
+suba(4)                         #24
+st(sysArgs+0)                   #25
+ld(zp(vTmp))                    #26 q,
+st(sysArgs+4)                   #27 X=
+ld(zp(sysArgs+2))               #28 q<++
+adda(1)                         #29
+st(sysArgs+2)                   #30
+bne(lo('.sysRacer0'))           #31 Self-repeat by adjusting vPC
+ld(zp(vPC))                     #32
+bra(lo('.sysRacer1'))           #33
 nop()                           #34
 label('.sysRacer0')
-suba(d(2))                      #33
-st(d(vPC))                      #34
+suba(2)                         #33
+st(vPC)                         #34
 label('.sysRacer1')
-ld(val(hi('REENTER')),regY)     #35
-jmpy(d(lo('REENTER')))          #36
-ld(val(-40/2))                  #37
+ld(hi('REENTER'), Y)            #35
+jmpy(lo('REENTER'))             #36
+ld(-40/2)                       #37
 
 label('SYS_RacerUpdateVideoY_40')
-ldzp(d(sysArgs+3))              #15 8&
-anda(d(8))                      #16
-bne(d(lo('.sysRacer2')))        #17 [if<>0 1]
-bra(d(lo('.sysRacer3')))        #18
-ld(d(0))                        #19
+ld(zp(sysArgs+3))               #15 8&
+anda(8)                         #16
+bne(lo('.sysRacer2'))           #17 [if<>0 1]
+bra(lo('.sysRacer3'))           #18
+ld(0)                           #19
 label('.sysRacer2')
-ld(d(1))                        #19
+ld(1)                           #19
 label('.sysRacer3')
-st(d(vTmp))                     #20 tmp=
-ld(d(sysArgs+1),busRAM|regY)    #21
-ld(d(sysArgs+0),busRAM)         #22 p<++ p<++
-adda(d(2))                      #23
-st(d(sysArgs+0),busAC|regX)     #24
-xora(d(238))                    #25 238^
-st(d(vAC))                      #26
-st(d(vAC+1))                    #27
-ldzp(d(sysArgs+2))              #28 SegmentY
-anda(d(254))                    #29 254&
-adda(d(vTmp),busRAM)            #30 tmp+
-st(eaYXregAC,busAC)             #31
-ldzp(d(sysArgs+2))              #32 SegmentY<++
-adda(d(1))                      #33
-st(d(sysArgs+2))                #34
-ld(val(hi('REENTER')),regY)     #35
-jmpy(d(lo('REENTER')))          #36
-ld(val(-40/2))                  #37
+st(vTmp)                        #20 tmp=
+ld(zp(sysArgs+1), Y)            #21
+ld(zp(sysArgs+0))               #22 p<++ p<++
+adda(2)                         #23
+st(zp(sysArgs+0), X)            #24
+xora(238)                       #25 238^
+st(vAC)                         #26
+st(vAC+1)                       #27
+ld(zp(sysArgs+2))               #28 SegmentY
+anda(254)                       #29 254&
+adda(zp(vTmp))                  #30 tmp+
+st(ram())                       #31
+ld(zp(sysArgs+2))               #32 SegmentY<++
+adda(1)                         #33
+st(sysArgs+2)                   #34
+ld(hi('REENTER'), Y)            #35
+jmpy(lo('REENTER'))             #36
+ld(-40/2)                       #37
 
 #-----------------------------------------------------------------------
 # Extension SYS_LoaderProcessInput_48
@@ -2555,57 +2555,57 @@ ld(val(-40/2))                  #37
 # sysArgs[5:6] Destination address
 
 label('SYS_LoaderProcessInput_48')
-ld(d(sysArgs+1),busRAM|regY)    #15
-ldzp(d(sysArgs+2))              #16
-bne(d(lo('.sysPi0')))           #17
-ld(d(sysArgs+0),busRAM)         #18
-suba(d(65),regX)                #19 Point at first byte of buffer
-ld(eaYXregAC,busRAM)            #20 Command byte
-st(eaYXregOUTIX)                #21 X++
-xora(d(ord('L')))               #22 This loader lumps everything under 'L'
-bne(d(lo('.sysPi1')))           #23
-ld(eaYXregAC,busRAM);           C('Valid command')#24 Length byte
-st(eaYXregOUTIX)                #25 X++
-anda(d(63))                     #26 Bit 6:7 are garbage
-st(d(sysArgs+4))                #27 Copy count
-ld(eaYXregAC,busRAM)            #28 Low copy address
-st(eaYXregOUTIX)                #29 X++
-st(d(sysArgs+5))                #30
-ld(eaYXregAC,busRAM)            #31 High copy address
-st(eaYXregOUTIX)                #32 X++
-st(d(sysArgs+6))                #33
-ldzp(d(sysArgs+4))              #34
-bne(d(lo('.sysPi2')))           #35
+ld(zp(sysArgs+1), Y)            #15
+ld(zp(sysArgs+2))               #16
+bne(lo('.sysPi0'))              #17
+ld(zp(sysArgs+0))               #18
+suba(65, X)                     #19 Point at first byte of buffer
+ld(ram())                       #20 Command byte
+st(mode=YX_incX)                #21 X++
+xora(ord('L'))                  #22 This loader lumps everything under 'L'
+bne(lo('.sysPi1'))              #23
+ld(ram());                      C('Valid command')#24 Length byte
+st(mode=YX_incX)                #25 X++
+anda(63)                        #26 Bit 6:7 are garbage
+st(sysArgs+4)                   #27 Copy count
+ld(ram())                       #28 Low copy address
+st(mode=YX_incX)                #29 X++
+st(sysArgs+5)                   #30
+ld(ram())                       #31 High copy address
+st(mode=YX_incX)                #32 X++
+st(sysArgs+6)                   #33
+ld(zp(sysArgs+4))               #34
+bne(lo('.sysPi2'))              #35
 # Execute code (don't care about checksum anymore)
-ldzp(d(sysArgs+5));             C('Execute')#36 Low run address
-suba(d(2))                      #37
-st(d(vPC))                      #38
-st(d(vLR))                      #39
-ldzp(d(sysArgs+6))              #40 High run address
-st(d(vPC+1))                    #41
-st(d(vLR+1))                    #42
-ld(val(hi('REENTER')),regY)     #43
-jmpy(d(lo('REENTER')))          #44
-ld(d(-48/2))                    #45
+ld(zp(sysArgs+5));              C('Execute')#36 Low run address
+suba(2)                         #37
+st(vPC)                         #38
+st(vLR)                         #39
+ld(zp(sysArgs+6))               #40 High run address
+st(vPC+1)                       #41
+st(vLR+1)                       #42
+ld(hi('REENTER'), Y)            #43
+jmpy(lo('REENTER'))             #44
+ld(-48/2)                       #45
 # Invalid checksum
 label('.sysPi0')
 wait(25-19);                    C('Invalid checksum')#19 Reset checksum
 # Unknown command
 label('.sysPi1')
-ld(d(ord('g')));                C('Unknown command')#25 Reset checksum
-st(d(sysArgs+2))                #26
-ld(val(hi('REENTER')),regY)     #27
-jmpy(d(lo('REENTER')))          #28
-ld(d(-32/2))                    #29
+ld(ord('g'));                   C('Unknown command')#25 Reset checksum
+st(sysArgs+2)                   #26
+ld(hi('REENTER'), Y)            #27
+jmpy(lo('REENTER'))             #28
+ld(-32/2)                       #29
 # Loading data
 label('.sysPi2')
-ld(d(sysArgs+0),busRAM);        C('Loading data')#37 Continue checksum
-suba(d(1),regX)                 #38 Point at last byte
-ld(eaYXregAC,busRAM)            #39
-st(d(sysArgs+2))                #40
-ld(val(hi('REENTER')),regY)     #41
-jmpy(d(lo('REENTER')))          #42
-ld(d(-46/2))                    #43
+ld(zp(sysArgs+0));              C('Loading data')#37 Continue checksum
+suba(1, X)                      #38 Point at last byte
+ld(ram())                       #39
+st(sysArgs+2)                   #40
+ld(hi('REENTER'), Y)            #41
+jmpy(lo('REENTER'))             #42
+ld(-46/2)                       #43
 
 #-----------------------------------------------------------------------
 #
@@ -2630,8 +2630,8 @@ for i in xrange(0, len(raw), 3):
 
 label('zippedRacerHorizon')
 for i in xrange(len(packed)):
-  ld(val(packed[i]))
-  if pc()&255 == 251:
+  ld(packed[i])
+  if L(pc()) == 251:
     trampoline()
 
 #-----------------------------------------------------------------------
@@ -2662,7 +2662,6 @@ define('videoY',     videoY)
 define('vPC+1',      vPC+1)
 
 # Compile test GCL program
-
 for gclSource in argv[1:]:
   name = gclSource.rsplit('.', 1)[0]
   name = name.rsplit('/', 1)[-1]
@@ -2676,7 +2675,7 @@ for gclSource in argv[1:]:
   program.end()
 print
 
-if pc()&255:
+if L(pc()):
   trampoline()
 
 #-----------------------------------------------------------------------
