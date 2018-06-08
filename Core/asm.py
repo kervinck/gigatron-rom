@@ -51,7 +51,6 @@ Y       = ea0DregY
 OUT     = ea0DregOUT
 YX      = eaYXregAC
 YX_incX = eaYXregOUTIX
-def zp(d):    return ((busRAM | ea0DregAC) << 8) | (d & 255)
 def ramX():   return  (busRAM | ea0XregAC) << 8
 def ramY(d):  return ((busRAM | eaYDregAC) << 8) | (d & 255)
 def ram():    return  (busRAM | eaYXregAC) << 8
@@ -207,7 +206,8 @@ def _emit(c, d):
     d = lo(d) # Provide some convenience for branch instructions
 
   if isinstance(d, list) and len(d) == 1:
-    pass
+    # Zero-page addressing: [D]
+    d = ((busRAM | ea0DregAC) << 8) | (d[0] & 255)
 
   if isinstance(d, list) and len(d) == 2:
     pass
@@ -215,6 +215,7 @@ def _emit(c, d):
   opcode, operand = c & 255, d & 255
 
   if d >= 256: # Allow to piggy-back some mode and bus bits
+    # XXX can be solved in a more elegant way
     opcode &= ~_maskBus
     opcode |= d >> 8
 
@@ -285,7 +286,7 @@ def wait(n):
     comment = C(comment)
     bne(_romSize & 255)
     suba(1)
-    n = n % 2 
+    n = n % 2
   while n > 0:
     nop()
     n -= 1
