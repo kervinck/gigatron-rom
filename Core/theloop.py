@@ -562,7 +562,6 @@ assert(H(pc())==0)
 ld(0)                                   #15 Address of loader on zero page
 st(vPC+1, Y)                            #16
 ld(zp(vSP))                             #17 Below the current stack pointer
-#ld((0x81))
 suba(53+2)                              #18 (AC -> *+0)
 st(vTmp, X)                             #19
 adda(-2)                                #20 (AC -> *-2)
@@ -2646,7 +2645,28 @@ define('videoY',     videoY)
 # XXX This is a hack (trampoline() is probably in the wrong module):
 define('vPC+1',      vPC+1)
 
-# Compile test GCL program
+# Load pre-compiled GT1 file
+#
+# !!! This is a particularly bad example, because this program loads on top of the
+# !!! ROM loader and SYS_Exec_88 must be modified. Checked-in as a reminder only!
+#
+#gt1File = 'tetris.gt1'
+#name = 'Tetris'
+#f = open(gt1File, 'rb')
+#raw = f.read()
+#f.close()
+#print
+#print 'Include file %s label %s ROM %04x' % (gt1File, name, pc())
+#label(name)
+#raw = chr(ord(raw[0]) + 0x80) + raw[1:] # Patch zero page loading (only for 32KB system)
+#raw = raw[:-2] # Drop start address
+#program = gcl.Program(vCpuStart, name, forGt1=True)
+#zpReset(zpFree)
+#for byte in raw:
+  #program.putInRomTable(ord(byte))
+#program.end()
+
+# Compile built-in GCL programs
 for gclSource in argv[1:]:
   name = gclSource.rsplit('.', 1)[0]
   name = name.rsplit('/', 1)[-1]
