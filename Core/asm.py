@@ -202,12 +202,21 @@ def disassemble(opcode, operand, address=None):
   # Emit as text
   return text
 
-def _emit(a, b):
-  opcode, operand = a & 255, b & 255
+def _emit(c, d):
+  if isinstance(d, str):
+    d = lo(d) # Provide some convenience for branch instructions
 
-  if b >= 256:
+  if isinstance(d, list) and len(d) == 1:
+    pass
+
+  if isinstance(d, list) and len(d) == 2:
+    pass
+
+  opcode, operand = c & 255, d & 255
+
+  if d >= 256: # Allow to piggy-back some mode and bus bits
     opcode &= ~_maskBus
-    opcode |= b >> 8
+    opcode |= d >> 8
 
   # The addressing mode helpers all set busRAM, but these also useful for 'st'.
   # So catch that usage and change their bus mode to busAC
