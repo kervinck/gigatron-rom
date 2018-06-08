@@ -195,7 +195,7 @@ int main(int argc, char* argv[])
         fprintf(stderr, "Example: gtmidi game_over.bin game_over.i gameOver 0 0x8000 0 0 100 0.5\n");
         fprintf(stderr, "Input:   miditones binary file produced with miditones, e.g. miditones -t4 -b -s1 -pi <filename>.bin\n");
         fprintf(stderr, "Format:  0 = vCPU ASM, 1 = GCL, 2 = C/C++, 3 = Python\n");
-        exit(0);
+        return 1;
     }
 
     std::string inFilename = std::string(argv[1]);
@@ -206,7 +206,7 @@ int main(int argc, char* argv[])
     if(format < Format::vCPU  ||  format >= Format::NumFormats)
     {
         fprintf(stderr, "Format must be 0, 1, 2 or 3\n");
-        exit(0);
+        return 1;
     }
 
     // Handles hex numbers
@@ -225,21 +225,21 @@ int main(int argc, char* argv[])
     if(!infile.is_open())
     {
         fprintf(stderr, "Failed to open input file '%s'\n", inFilename.c_str());
-        exit(0);
+        return 1;
     }
 
     std::ofstream outfile(outFilename, std::ios::binary | std::ios::out);
     if(!outfile.is_open())
     {
         fprintf(stderr, "Failed to open output file '%s'\n", outFilename.c_str());
-        exit(0);
+        return 1;
     }
 
     infile.read((char *)&midiBuffer, MAX_MIDI_BUFFER_SIZE);
     if(infile.bad())
     {
         fprintf(stderr, "Failed to read input file '%s'\n", inFilename.c_str());
-        exit(0);
+        return 1;
     }
 
     size_t midiSize = infile.gcount();

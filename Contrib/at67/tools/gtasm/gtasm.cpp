@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <sstream>
 
-#include "../loader.h"
-#include "../assembler.h"
-#include "../expression.h"
+#include "../../loader.h"
+#include "../../assembler.h"
+#include "../../expression.h"
 
 
 #define GTASM_MAJOR_VERSION "0.1"
@@ -18,14 +18,14 @@ int main(int argc, char* argv[])
     {
         fprintf(stderr, "%s\n", GTASM_VERSION_STR);
         fprintf(stderr, "Usage:   gtasm <input filename> <uint16_t start address in hex>\n");
-        exit(0);
+        return 1;
     }
 
     std::string filename = std::string(argv[1]);
     if(filename.find(".vasm") == filename.npos  &&  filename.find(".s") == filename.npos  &&  filename.find(".asm") == filename.npos)
     {
         fprintf(stderr, "Wrong file extension in %s : must be one of : '.vasm' or '.s' or '.asm'\n", filename.c_str());
-        exit(0);
+        return 1;
     }
 
     // Handles hex numbers
@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
     if (last_dir_sep != std::string::npos)
         Assembler::setIncludePath(filename.substr(0, last_dir_sep+1));
 
-    if(!Assembler::assemble(filename, address)) exit(0);
+    if(!Assembler::assemble(filename, address)) return 1;
 
     // Create gt1 format
     Loader::Gt1File gt1File;
@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
 
     // Don't save gt1 file for any asm files that contain native rom code
     std::string gt1FileName;
-    if(!hasRomCode  &&  !saveGt1File(filename, gt1File, gt1FileName)) exit(0);
+    if(!hasRomCode  &&  !saveGt1File(filename, gt1File, gt1FileName)) return 1;
 
     Loader::printGt1Stats(gt1FileName, gt1File);
 
