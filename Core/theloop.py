@@ -567,68 +567,68 @@ st(vTmp, X)                             #19
 adda(-2)                                #20 (AC -> *-2)
 st(vPC)                                 #21
 # Start of manually compiled vCPU section
-st('PUSH', YX_incX, busD)               #22 *+0
-st('BRA',  YX_incX, busD)               #23 *+1
+st('PUSH',     YX_incX, busD)           #22 *+0
+st('BRA',      YX_incX, busD)           #23 *+1
 adda(26)                                #24 (AC -> *+24)
 st(mode=YX_incX)                        #25 *+2
-st('ST',   YX_incX, busD)               #26 *+3 Chunk copy loop
+st('ST',       YX_incX, busD)           #26 *+3 Chunk copy loop
 st(sysArgs+3,  YX_incX, busD)           #27 *+4 High-address came first
-st('CALL', YX_incX, busD)               #28 *+5
+st('CALL',     YX_incX, busD)           #28 *+5
 adda(33-24)                             #29 (AC -> *+33)
 st(       mode=YX_incX)                 #30 *+6
-st('ST',   YX_incX, busD)               #31 *+7
+st('ST',       YX_incX, busD)           #31 *+7
 st(sysArgs+2,  YX_incX, busD)           #32 *+8 Then the low address
-st('CALL', YX_incX, busD)               #33 *+9
+st('CALL',     YX_incX, busD)           #33 *+9
 st(       mode=YX_incX)                 #34 *+10
-st('ST',   YX_incX, busD)               #35 *+11 Byte copy loop
+st('ST',       YX_incX, busD)           #35 *+11 Byte copy loop
 st(sysArgs+4,  YX_incX, busD)           #36 *+12 Byte count (0 means 256)
-st('CALL', YX_incX, busD)               #37 *+13
+st('CALL',     YX_incX, busD)           #37 *+13
 st(       mode=YX_incX)                 #38 *+14
-st('POKE', YX_incX, busD)               #39 *+15
+st('POKE',     YX_incX, busD)           #39 *+15
 st(sysArgs+2,  YX_incX, busD)           #40 *+16
-st('INC',  YX_incX, busD)               #41 *+17
+st('INC',      YX_incX, busD)           #41 *+17
 st(sysArgs+2,  YX_incX, busD)           #42 *+18
-st('LD',   YX_incX, busD)               #43 *+19
+st('LD',       YX_incX, busD)           #43 *+19
 st(sysArgs+4,  YX_incX, busD)           #44 *+20
-st('SUBI', YX_incX, busD)               #45 *+21
+st('SUBI',     YX_incX, busD)           #45 *+21
 st(1,          YX_incX, busD)           #46 *+22
-st('BCC',  YX_incX, busD)               #47 *+23
-st('NE',   YX_incX, busD)               #48 *+24
+st('BCC',      YX_incX, busD)           #47 *+23
+st('NE',       YX_incX, busD)           #48 *+24
 adda(11-2-33)                           #49 (AC -> *+9)
 st(       mode=YX_incX)                 #50 *+25
-st('CALL', YX_incX, busD)               #51 *+26 Go to next block
+st('CALL',     YX_incX, busD)           #51 *+26 Go to next block
 adda(33-9)                              #52 (AC -> *+33)
 st(       mode=YX_incX)                 #53 *+27
-st('BCC',  YX_incX, busD)               #54 *+28
-st('NE',   YX_incX, busD)               #55 *+29
+st('BCC',      YX_incX, busD)           #54 *+28
+st('NE',       YX_incX, busD)           #55 *+29
 adda(3-2-33)                            #56 (AC -> *+1)
 st(       mode=YX_incX)                 #57 *+30
-st('POP',  YX_incX, busD)               #58 *+31 End
-st('RET',  YX_incX, busD)               #59 *+32
+st('POP',      YX_incX, busD)           #58 *+31 End
+st('RET',      YX_incX, busD)           #59 *+32
 # Pointer constant pointing to the routine below (for use by CALL)
 adda(35-1)                              #60 (AC -> *+35)
 st(       mode=YX_incX)                 #61 *+33
 st(0,          YX_incX, busD)           #62 *+34
 # Routine to read next byte from ROM and advance read pointer
-st('LD',   YX_incX, busD)               #63 *+35 Test for end of ROM table
+st('LD',       YX_incX, busD)           #63 *+35 Test for end of ROM table
 st(sysArgs+0,  YX_incX, busD)           #64 *+36
-st('XORI', YX_incX, busD)               #65 *+37
+st('XORI',     YX_incX, busD)           #65 *+37
 st(251,        YX_incX, busD)           #66 *+38
-st('BCC',  YX_incX, busD)               #67 *+39
-st('NE',   YX_incX, busD)               #68 *+40
+st('BCC',      YX_incX, busD)           #67 *+39
+st('NE',       YX_incX, busD)           #68 *+40
 adda(46-2-35)                           #69 (AC -> *+44)
 st(       mode=YX_incX)                 #70 *+41
-st('ST',   YX_incX, busD)               #71 *+42 Wrap to next ROM page
+st('ST',       YX_incX, busD)           #71 *+42 Wrap to next ROM page
 st(sysArgs+0,  YX_incX, busD)           #72 *+43
-st('INC',  YX_incX, busD)               #73 *+44
+st('INC',      YX_incX, busD)           #73 *+44
 st(sysArgs+1,  YX_incX, busD)           #74 *+45
-st('LDW',  YX_incX, busD)               #75 *+46 Read next byte from ROM table
+st('LDW',      YX_incX, busD)           #75 *+46 Read next byte from ROM table
 st(sysArgs+0,  YX_incX, busD)           #76 *+47
-st('LUP',  YX_incX, busD)               #77 *+48
+st('LUP',      YX_incX, busD)           #77 *+48
 st(0,          YX_incX, busD)           #78 *+49
-st('INC',  YX_incX, busD)               #79 *+50 Increment read pointer
+st('INC',      YX_incX, busD)           #79 *+50 Increment read pointer
 st(sysArgs+0,  YX_incX, busD)           #80 *+51
-st('RET',  YX_incX, busD)               #81 *+52 Return
+st('RET',      YX_incX, busD)           #81 *+52 Return
 # Return to interpreter
 nop()                                   #82
 ld(hi('REENTER'), Y)                    #83
