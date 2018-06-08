@@ -160,7 +160,6 @@ const byte gt1File[] PROGMEM = {
  ISR(PCINT0_vect) {
    if (~PINB & (1<<keyboardClockPin)) // FALLING edge of PS/2 clock
      ps2interrupt();
-
  }
 #endif
 
@@ -265,10 +264,10 @@ void loop()
       #else
         case PS2_ESC:      doTransfer(terminalGt1);         break; // XXX HACK Find some proper short-cut. Ctrl-T?
       #endif
-      case PS2_LEFTARROW:  sendController(~buttonLeft,  1); break;
-      case PS2_RIGHTARROW: sendController(~buttonRight, 1); break;
-      case PS2_UPARROW:    sendController(~buttonUp,    1); break;
-      case PS2_DOWNARROW:  sendController(~buttonDown,  1); break;
+      case PS2_LEFTARROW:  sendController(~buttonLeft,  2); break;
+      case PS2_RIGHTARROW: sendController(~buttonRight, 2); break;
+      case PS2_UPARROW:    sendController(~buttonUp,    2); break;
+      case PS2_DOWNARROW:  sendController(~buttonDown,  2); break;
       case PS2_ENTER:      sendController('\n', 1);         break;
       case PS2_DELETE:     sendController(127, 1);          break;
       default:             sendController(c, 1);            break;
