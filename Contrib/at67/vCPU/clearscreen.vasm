@@ -1,39 +1,57 @@
-; unrolled loop to speed up .vasm clear
-; clears offscreen vram as well as pixels
-; shows use of includes and macros
-
-vram        EQU     0x0800
-vbase       EQU     0x0030
-i           EQU     0x0032
-
-clear0      EQU     0x0200
-clear1      EQU     0x0300
+%include macros\gigatron.i
+%include macros\macros.i
 
 
-%include macros/clearmacro.i
+ii              EQU     0x30
+jj              EQU     0x31
+kk              EQU     0x32
+ll              EQU     0x33
+xx              EQU     0x34
+yy              EQU     0x35
 
 
-_callTable_         EQU     0x007E 
+                ; clears the viewable screen
+clearScreen     LDWI    SYS_Draw4_30        ; setup 4 pixel SYS routine
+                STW     giga_sysFn  
+                LDWI    0x0000              ; 4 pixels of colour
+                STW     giga_sysArg0    
+                STW     giga_sysArg2    
+    
+                LDI     giga_yres / 2       ; counters
+                ST      jj  
+                LDI     giga_xres / 4   
+                ST      ii  
+    
+                LDWI    0x0800              ; top line
+                STW     xx  
+                LDWI    0x7F00              ; bottom line
+                STW     kk  
 
-
-            ; entry point
-clear0      LDWI    vram
-            STW     vbase
-
-clear       fill32  0x00
-            LD      vbase+1
-            SUBI    0x7F
-            BLT     clear
-            CALL    clear1
-
-            ; finish off last row
-clear1      LDI     0x08        
-            ST      i
-last_row    fill32  0x00
-            LD      i
-            SUBI    0x01
-            ST      i
-            BGT     last_row
-
-done        BRA     done
-            
+clearS_loop     LDW     xx  
+                STW     giga_sysArg4        ; top line
+                SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                LDW     kk  
+                STW     giga_sysArg4        ; bottom line
+                SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                LD      xx                  ; 4 horizontal pixels
+                ADDI    0x04    
+                ST      xx  
+                LD      kk                  ; 4 horizontal pixels
+                ADDI    0x04
+                ST      kk
+                LoopCounterTo1 ii clearS_loop
+    
+                INC     yy                  ; next top line
+                LD      ll                  ; next bottom line
+                SUBI    0x01    
+                ST      ll  
+    
+                LDI     0x00                ; reset xx, kk and ii
+                ST      xx
+                ST      kk
+                LDI     giga_xres / 4
+                ST      ii
+                LoopCounterTo1 jj clearS_loop
+loop            BRA     loop

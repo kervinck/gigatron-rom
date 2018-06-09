@@ -15,13 +15,16 @@
 #define MASK_SOUND_CHANNELS   0x03
 #define MIN_GIGA_NOTE         12
 #define MAX_GIGA_NOTE         106
+#define PERCUSSION_NOTES      128
+
+#define GTMIDI_MAJOR_VERSION "0.3"
+#define GTMIDI_MINOR_VERSION "4"
+#define GTMIDI_VERSION_STR "gtmidi v" GTMIDI_MAJOR_VERSION "." GTMIDI_MINOR_VERSION
 
 
 enum Format {vCPU=0, GCL, CPP, PY, NumFormats};
 
 
-int segmentIndex = 0;
-std::string paddedName;
 uint8_t midiBuffer[MAX_MIDI_BUFFER_SIZE];
 
 
@@ -35,17 +38,19 @@ void addString(std::string &str, size_t num, char add=' ')
 }
 
 // vCPU output
-void outputvCPUheader(std::ofstream& outfile, const std::string& name, uint16_t address, int& charCount)
+void outputvCPUheader(std::ofstream& outfile, const std::string& name, uint16_t address, uint16_t segmentSize, uint16_t segmentIndex, std::string& segmentName, int& charCount)
 {
-    std::stringstream ss;
-    paddedName = (name.size() > 13) ? name.substr(0, 13) + "Midi" : name + "Midi";
-    ss << paddedName << std::setfill('0') << std::setw(2) << std::to_string(segmentIndex);
-    paddedName = ss.str();
-    addString(paddedName, 20 - paddedName.size());
-    std::replace(paddedName.begin(), paddedName.end(), '-', '_');
-    outfile << paddedName.c_str() << "EQU     0x" << std::hex << std::setw(4) << std::setfill('0') << address << std::endl;
-    outfile << paddedName.c_str() << "DB     ";
-    charCount = 30;
+    segmentName = name;
+    if(segmentSize)
+    {
+        std::stringstream ss;
+        ss << segmentName << std::setfill('0') << std::setw(2) << std::to_string(segmentIndex);
+        segmentName = ss.str();
+    }
+    addString(segmentName, 16 - segmentName.size());
+    outfile << segmentName.c_str() << "EQU     0x" << std::hex << std::setw(4) << std::setfill('0') << address << std::endl;
+    outfile << segmentName.c_str() << "DB     ";
+    charCount = 26;
 };
 void outputvCPUstartNote(std::ofstream& outfile, uint8_t command, uint8_t note, int& charCount)
 {
@@ -57,12 +62,12 @@ void outputvCPUcommand(std::ofstream& outfile, uint8_t command, int& charCount)
     outfile << " 0x" << std::hex << std::setw(2) << std::setfill('0') << uint16_t(command);
     charCount += 5;
 }
-void outputvCPUnewLine(std::ofstream& outfile, int& charCount)
+void outputvCPUnewLine(std::ofstream& outfile, const std::string& segmentName, int& charCount)
 {
     std::string str;
-    addString(str, paddedName.size());
+    addString(str, segmentName.size());
     outfile << std::endl << str << "DB     ";
-    charCount = 30;
+    charCount = 26;
 }
 
 // GCL output
@@ -89,29 +94,20 @@ void outputGCLnewLine(std::ofstream& outfile, int& charCount)
 }
 void outputGCLfooter(std::ofstream& outfile, const std::string& name)
 {
-    
-#if 0
-    // Waste of page 0 variable space if you activate this
-    std::stringstream ss;
-    paddedName = name + "Midi";
-    ss << paddedName << std::setfill('0') << std::setw(2) << std::to_string(segmentIndex-1);
-    paddedName = ss.str();
-    std::replace(paddedName.begin(), paddedName.end(), '-', '_');
-    outfile << std::endl << "] " << paddedName.c_str() << "=" << std::endl;
-#else
     outfile << std::endl << "]" << std::endl;
-#endif
 }
 
 // CPP output
-void outputCPPheader(std::ofstream& outfile, const std::string& name, int& charCount)
+void outputCPPheader(std::ofstream& outfile, const std::string& name, uint16_t segmentSize, uint16_t segmentIndex, std::string& segmentName, int& charCount)
 {
-    std::stringstream ss;
-    paddedName = name + "Midi";
-    ss << paddedName << std::setfill('0') << std::setw(2) << std::to_string(segmentIndex);
-    paddedName = ss.str() + "[] = ";
-    std::replace(paddedName.begin(), paddedName.end(), '-', '_');
-    outfile << "uint8_t " << paddedName.c_str() << std::endl;
+    segmentName = name;
+    if(segmentSize)
+    {
+        std::stringstream ss;
+        ss << segmentName << std::setfill('0') << std::setw(2) << std::to_string(segmentIndex);
+        segmentName = ss.str() + "[] = ";
+    }
+    outfile << "uint8_t " << segmentName.c_str() << std::endl;
     outfile << "{" << std::endl;
     outfile << "    ";
     charCount = 4;
@@ -137,14 +133,16 @@ void outputCPPfooter(std::ofstream& outfile)
 }
 
 // PY output
-void outputPYheader(std::ofstream& outfile, const std::string& name, int& charCount)
+void outputPYheader(std::ofstream& outfile, const std::string& name, uint16_t segmentSize, uint16_t segmentIndex, std::string& segmentName, int& charCount)
 {
-    std::stringstream ss;
-    paddedName = name + "Midi";
-    ss << paddedName << std::setfill('0') << std::setw(2) << std::to_string(segmentIndex);
-    paddedName = ss.str() + " = bytearray([";
-    std::replace(paddedName.begin(), paddedName.end(), '-', '_');
-    outfile << paddedName.c_str() << std::endl;
+    segmentName = name;
+    if(segmentSize)
+    {
+        std::stringstream ss;
+        ss << segmentName << std::setfill('0') << std::setw(2) << std::to_string(segmentIndex);
+        segmentName = ss.str() + " = bytearray([";
+    }
+    outfile << segmentName.c_str() << std::endl;
     outfile << "    ";
     charCount = 4;
 };
@@ -188,83 +186,80 @@ void outputDelay(std::ofstream& outfile, Format format, uint8_t delay8, double t
     }
 }
 
-void main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    if(argc != 9)
+    if(argc != 10)
     {
-        fprintf(stderr, "Usage:   gigamidi <input filename> <output filename> <int format 0, 1, 2 or 3> <uint16_t address in hex> <uint16_t offset in hex> <int count> <int line_length> <float timing_adjust>\n");
-        fprintf(stderr, "Example: gigamidi game_over.bin game_over.i 0 0x8000 0 0 100 0.5\n");
-        fprintf(stderr, "Input:   miditones binary file produced with miditones, e.g. miditones -t4 -b <filename>.bin\n");
+        fprintf(stderr, "%s\n", GTMIDI_VERSION_STR);
+        fprintf(stderr, "Usage:   gtmidi <input filename> <output filename> <midiname> <int format 0, 1, 2 or 3> <uint16_t start_address in hex>\n         <uint16_t segment_offset in hex> <int segment_size> <int line_length> <float timing_adjust>\n");
+        fprintf(stderr, "Example: gtmidi game_over.bin game_over.i gameOver 0 0x8000 0 0 100 0.5\n");
+        fprintf(stderr, "Input:   miditones binary file produced with miditones, e.g. miditones -t4 -b -s1 -pi <filename>.bin\n");
         fprintf(stderr, "Format:  0 = vCPU ASM, 1 = GCL, 2 = C/C++, 3 = Python\n");
-        exit(0);
+        return 1;
     }
 
-    std::string inFileName = std::string(argv[1]);
-    std::string outFileName = std::string(argv[2]);
+    std::string inFilename = std::string(argv[1]);
+    std::string outFilename = std::string(argv[2]);
+    std::string midiName = std::string(argv[3]);
 
-    Format format = (Format)std::stoi(std::string(argv[3]));
+    Format format = (Format)std::stoi(std::string(argv[4]));
     if(format < Format::vCPU  ||  format >= Format::NumFormats)
     {
         fprintf(stderr, "Format must be 0, 1, 2 or 3\n");
-        exit(0);
+        return 1;
     }
 
     // Handles hex numbers
-    uint16_t address, offset;
+    uint16_t startAddress, segmentOffset;
     std::stringstream ss0, ss1;
-    ss0 << std::hex << argv[4];
-    ss0 >> address;
-    ss1 << std::hex << argv[5];
-    ss1 >> offset;
+    ss0 << std::hex << argv[5];
+    ss0 >> startAddress;
+    ss1 << std::hex << argv[6];
+    ss1 >> segmentOffset;
 
-    uint16_t count;
-    count = std::stoi(argv[6]);
-    int lineLength = std::stoi(std::string(argv[7]));
-    double timingAdjust = std::stod(std::string(argv[8]));
+    uint16_t segmentSize = std::stoi(argv[7]);
+    int lineLength = std::stoi(std::string(argv[8]));
+    double timingAdjust = std::stod(std::string(argv[9]));
 
-    std::ifstream infile(inFileName, std::ios::binary | std::ios::in);
+    std::ifstream infile(inFilename, std::ios::binary | std::ios::in);
     if(!infile.is_open())
     {
-        fprintf(stderr, "Failed to open input file '%s'\n", inFileName.c_str());
-        exit(0);
+        fprintf(stderr, "Failed to open input file '%s'\n", inFilename.c_str());
+        return 1;
     }
 
-    std::ofstream outfile(outFileName, std::ios::binary | std::ios::out);
+    std::ofstream outfile(outFilename, std::ios::binary | std::ios::out);
     if(!outfile.is_open())
     {
-        fprintf(stderr, "Failed to open output file '%s'\n", outFileName.c_str());
-        exit(0);
+        fprintf(stderr, "Failed to open output file '%s'\n", outFilename.c_str());
+        return 1;
     }
 
     infile.read((char *)&midiBuffer, MAX_MIDI_BUFFER_SIZE);
     if(infile.bad())
     {
-        fprintf(stderr, "Failed to read input file '%s'\n", inFileName.c_str());
-        exit(0);
+        fprintf(stderr, "Failed to read input file '%s'\n", inFilename.c_str());
+        return 1;
     }
-
-    size_t i = outFileName.rfind("/") + 1;
-    if(i == std::string::npos) i = outFileName.rfind("\\") + 1;
-    if(i == std::string::npos) i = 0;
-    size_t j = outFileName.rfind(".");
-    if(j == std::string::npos) j = outFileName.length();
-    std::string midiName = outFileName.substr(i, j - i);
 
     size_t midiSize = infile.gcount();
     uint8_t* midiPtr = midiBuffer;
-    int gigaSize = 0;
+    uint16_t gigaSize = 0;
 
     double totalTime16 = 0;
     double totalTime8 = 0;
 
-    // Header
     int charCount = 0;
+    uint16_t segmentIndex = 0;
+    std::string segmentName;
+
+    // Header
     switch(format)
     {
-        case Format::vCPU: outputvCPUheader(outfile, midiName, address, charCount); break;
-        case Format::GCL:  outputGCLheader(outfile, address, charCount);            break;
-        case Format::CPP:  outputCPPheader(outfile, midiName, charCount);           break;
-        case Format::PY:   outputPYheader(outfile, midiName, charCount);            break;
+        case Format::vCPU: outputvCPUheader(outfile, midiName, startAddress, segmentSize, segmentIndex, segmentName, charCount); break;
+        case Format::GCL:  outputGCLheader(outfile, startAddress, charCount);                                                    break;
+        case Format::CPP:  outputCPPheader(outfile, midiName, segmentSize, segmentIndex, segmentName, charCount);                break;
+        case Format::PY:   outputPYheader(outfile, midiName, segmentSize, segmentIndex, segmentName, charCount);                 break;
     }
     
     // Commands
@@ -277,6 +272,7 @@ void main(int argc, char* argv[])
             if((command & 0xF0) == 0x90)
             {
                 uint8_t note = *midiPtr++; midiSize--;
+                if(note >= PERCUSSION_NOTES) note -= PERCUSSION_NOTES;
                 if(note < MIN_GIGA_NOTE) note = MIN_GIGA_NOTE;
                 if(note > MAX_GIGA_NOTE) note = MAX_GIGA_NOTE;
                 gigaSize += 2;
@@ -312,7 +308,7 @@ void main(int argc, char* argv[])
         // Delay n milliseconds where n = 16bit value, converted to 8bit, (0x00 <-> 0x7F)
         else
         {
-            // Coalesc sequence of delays together
+            // Coalesce sequence of delays together
             int i = 0;
             int coalescedDelay = ((command<<8) | *midiPtr++); midiSize--;
             while(midiSize)
@@ -346,17 +342,17 @@ void main(int argc, char* argv[])
             }
         }
         
-        // Check count and offset for a segmented stream
-        if(midiSize  &&  count  &&  offset)
+        // Segmented stream
+        if(midiSize  &&  segmentSize  &&  segmentOffset)
         {
-            // If output byte stream size is approaching count, (leave room for Segment command 0xD0 and 1 extra byte for Note On command 0x90)
-            if(gigaSize / (count-4) > segmentIndex)
+            // If segment size is approaching count, (leave room for segment command 0xD0 and 1 extra byte for Note On command)
+            if(gigaSize / (segmentSize-4) > segmentIndex)
             {
                 gigaSize += 3; 
                 segmentIndex++;
 
-                static uint16_t segment = address;
-                segment += offset;
+                static uint16_t segment = startAddress;
+                segment += segmentOffset;
 
                 // Commands
                 switch(format)
@@ -366,7 +362,7 @@ void main(int argc, char* argv[])
                     case Format::CPP:  outputCPPcommand(outfile, 0xD0, charCount);  outputCPPcommand(outfile, segment & 0x00FF, charCount);  outputCPPcommand(outfile, (segment & 0xFF00) >>8, charCount);  break;
                     case Format::PY:   outputPYcommand(outfile, 0xD0, charCount);   outputPYcommand(outfile, segment & 0x00FF, charCount);   outputPYcommand(outfile, (segment & 0xFF00) >>8, charCount);   break;                
                 }
-                // Footer
+                // Old segment footer
                 switch(format)
                 {
                     case Format::GCL: outputGCLfooter(outfile, midiName); break;
@@ -374,13 +370,13 @@ void main(int argc, char* argv[])
                     case Format::PY:  outputPYfooter(outfile);            break;
                 }
                 outfile << std::endl << std::endl;
-                // Header
+                // New segment header
                 switch(format)
                 {
-                    case Format::vCPU: outputvCPUheader(outfile, midiName, segment, charCount); break;
-                    case Format::GCL:  outputGCLheader(outfile, segment, charCount);            break;
-                    case Format::CPP:  outputCPPheader(outfile, midiName, charCount);           break;
-                    case Format::PY:   outputPYheader(outfile, midiName, charCount);            break;
+                    case Format::vCPU: outputvCPUheader(outfile, midiName, segment, segmentSize, segmentIndex, segmentName, charCount); break;
+                    case Format::GCL:  outputGCLheader(outfile, segment, charCount);                                                    break;
+                    case Format::CPP:  outputCPPheader(outfile, midiName, segmentSize, segmentIndex, segmentName, charCount);           break;
+                    case Format::PY:   outputPYheader(outfile, midiName, segmentSize, segmentIndex, segmentName, charCount);            break;
                 }
             }
         }
@@ -390,10 +386,10 @@ void main(int argc, char* argv[])
         {
             switch(format)
             {
-                case Format::vCPU: outputvCPUcommand(outfile, 0xD0, charCount); outputvCPUcommand(outfile, address & 0x00FF, charCount); outputvCPUcommand(outfile, (address & 0xFF00) >>8, charCount); break;
-                case Format::GCL:  outputGCLcommand(outfile, 0xD0, charCount);  outputGCLcommand(outfile, address & 0x00FF, charCount);  outputGCLcommand(outfile, (address & 0xFF00) >>8, charCount);  break;
-                case Format::CPP:  outputCPPcommand(outfile, 0xD0, charCount);  outputCPPcommand(outfile, address & 0x00FF, charCount);  outputCPPcommand(outfile, (address & 0xFF00) >>8, charCount);  break;
-                case Format::PY:   outputPYcommand(outfile, 0xD0, charCount);   outputPYcommand(outfile, address & 0x00FF, charCount);   outputPYcommand(outfile, (address & 0xFF00) >>8, charCount);   break;                
+                case Format::vCPU: outputvCPUcommand(outfile, 0xD0, charCount); outputvCPUcommand(outfile, startAddress & 0x00FF, charCount); outputvCPUcommand(outfile, (startAddress & 0xFF00) >>8, charCount); break;
+                case Format::GCL:  outputGCLcommand(outfile, 0xD0, charCount);  outputGCLcommand(outfile, startAddress & 0x00FF, charCount);  outputGCLcommand(outfile, (startAddress & 0xFF00) >>8, charCount);  break;
+                case Format::CPP:  outputCPPcommand(outfile, 0xD0, charCount);  outputCPPcommand(outfile, startAddress & 0x00FF, charCount);  outputCPPcommand(outfile, (startAddress & 0xFF00) >>8, charCount);  break;
+                case Format::PY:   outputPYcommand(outfile, 0xD0, charCount);   outputPYcommand(outfile, startAddress & 0x00FF, charCount);   outputPYcommand(outfile, (startAddress & 0xFF00) >>8, charCount);   break;                
             }
         }
 
@@ -402,10 +398,10 @@ void main(int argc, char* argv[])
         {
             switch(format)
             {
-                case Format::vCPU: outputvCPUnewLine(outfile, charCount); break;
-                case Format::GCL:  outputGCLnewLine(outfile, charCount);  break;
-                case Format::CPP:  outputCPPnewLine(outfile, charCount);  break;
-                case Format::PY:   outputPYnewLine(outfile, charCount);   break;
+                case Format::vCPU: outputvCPUnewLine(outfile, segmentName, charCount); break;
+                case Format::GCL:  outputGCLnewLine(outfile, charCount);               break;
+                case Format::CPP:  outputCPPnewLine(outfile, charCount);               break;
+                case Format::PY:   outputPYnewLine(outfile, charCount);                break;
             }
         }
     }
@@ -418,5 +414,7 @@ void main(int argc, char* argv[])
         case Format::PY:  outputPYfooter(outfile);            break;
     }
 
-    fprintf(stderr, "Original size: %d  New size: %d  Original time: %.1lfms  New time: %.1lfms  Error: %.1lfms\n", int(infile.gcount()), gigaSize, totalTime16, totalTime8, totalTime8 - totalTime16);
+    fprintf(stderr, "Original size:%d  New size:%d  Original time:%.1lfms  New time:%.1lfms  Error:%.1lfms  Start Address:0x%04x  End Address:0x%04x\n",
+                    int(infile.gcount()), gigaSize, totalTime16, totalTime8, totalTime8 - totalTime16, startAddress, startAddress+gigaSize);
+    return 0;
 }

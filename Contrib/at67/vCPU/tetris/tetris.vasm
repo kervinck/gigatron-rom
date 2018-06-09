@@ -1,4 +1,4 @@
-%include macros\gigatron.i
+%include ../macros/gigatron.i
 
 xx              EQU     0x30
 yy              EQU     xx + 0x01
@@ -89,8 +89,8 @@ _cpuUsageAddressA_  EQU     0x0600       ; these two addresses are used to build
 _cpuUsageAddressB_  EQU     0x0620       ; in the vCPU usage meter, (almost always used to exclude your VBlank polling loop)
 
 
-%include tetris\midi_scores.i
-%include tetris\tetromino.i
+%include midi_scores.i
+%include tetromino.i
 
 scoringLut      EQU     tetromino_I + 0x0700
 levellingLut    EQU     tetromino_I + 0x0705
@@ -154,17 +154,17 @@ midiStartNote   EQU     clearBoard + 0x1B00
 midiSegment     EQU     clearBoard + 0x1C00
 
 
-%include tetris\macros.i
-%include tetris\clear_board.i
-%include tetris\draw_tetromino.i
-%include tetris\erase_tetromino.i
-%include tetris\check_tetromino.i
-%include tetris\spawn_tetromino.i
-%include tetris\check_lines.i
-%include tetris\print_text.i
-%include tetris\update_score.i
-%include tetris\digit_font.i
-%include tetris\audio.i
+%include macros.i
+%include clear_board.i
+%include draw_tetromino.i
+%include erase_tetromino.i
+%include check_tetromino.i
+%include spawn_tetromino.i
+%include check_lines.i
+%include print_text.i
+%include update_score.i
+%include digit_font.i
+%include audio.i
 
 
 entry_point     LDWI    giga_vram

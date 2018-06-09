@@ -20,12 +20,16 @@ namespace Assembler
 
 
     uint16_t getStartAddress(void);
-    void printGprintfStrings(void);
+    void setIncludePath(const std::string& includePath);
 
     void initialise(void);
     void clearAssembler(void);
-    bool getNextAssembledByte(ByteCode& byteCode);
+    bool getNextAssembledByte(ByteCode& byteCode, bool debug=false);
     bool assemble(const std::string& filename, uint16_t startAddress=DEFAULT_START_ADDRESS);
+
+#ifndef STAND_ALONE
+    void printGprintfStrings(void);
+#endif
 }
 
 #endif

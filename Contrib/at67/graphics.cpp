@@ -191,7 +191,8 @@ namespace Graphics
 
     bool getKeyAsString(const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, std::string& result)
     {
-        result = Expression::strToUpper(_iniReader.Get(sectionString, iniKey, defaultKey));
+        result = _iniReader.Get(sectionString, iniKey, defaultKey);
+        result = Expression::strToUpper(result);
         return true;
     }
 
@@ -584,13 +585,15 @@ namespace Graphics
             drawText(std::string("LEDS:"), _pixels, 0, 0, 0xFFFFFFFF, false, 0);
             sprintf(str, "FPS %5.1f  XOUT %02X IN %02X", 1.0f / Timing::getFrameTime(), Cpu::getXOUT(), Cpu::getIN());
             drawText(std::string(str), _pixels, 0, FONT_CELL_Y, 0xFFFFFFFF, false, 0);
-            drawText("Mode:       ", _pixels, 0, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+            drawText("Mode:      Free:", _pixels, 0, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
             sprintf(str, "Hex  ");
             if(Editor::getHexEdit()) sprintf(str, "Edit ");
             else if(Editor::getEditorMode() == Editor::Load) sprintf(str, "Load ");
             else if(Editor::getEditorMode() == Editor::Debug) sprintf(str, "Debug");
-            drawText(std::string(str), _pixels, 68, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
-            drawText(std::string(VERSION_STR), _pixels, 32, 472, 0xFFFFFFFF, false, 0);
+            drawText(std::string(str), _pixels, 30, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
+            sprintf(str, "%d", Cpu::getFreeRAM());
+            drawText(std::string(str), _pixels, 96, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+            drawText(std::string(VERSION_STR), _pixels, 30, 472, 0xFFFFFFFF, false, 0);
         }
     }
 
@@ -602,8 +605,8 @@ namespace Graphics
             char str[32] = "";
 
             // Addresses
-            uint16_t cpuBaseAddressA = Editor::getCpuBaseAddressA();
-            uint16_t cpuBaseAddressB = Editor::getCpuBaseAddressB();
+            uint16_t cpuUsageAddressA = Editor::getCpuUsageAddressA();
+            uint16_t cpuUsageAddressB = Editor::getCpuUsageAddressB();
             uint16_t hexLoadAddress = (Editor::getEditorMode() == Editor::Load) ? Editor::getLoadBaseAddress() : Editor::getHexBaseAddress();
             uint16_t varsAddress = Editor::getVarsBaseAddress();
             bool onCursor00 = Editor::getCursorY() == -2  &&  (Editor::getCursorX() & 0x01) == 0;
@@ -618,7 +621,7 @@ namespace Graphics
                 drawText("Load:      Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0);
                 for(int i=0; i<HEX_CHARS_Y; i++)
                 {
-                    drawText("                       ", _pixels, 8, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+                    drawText("                       ", _pixels, 6, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
                 }
                 for(int i=0; i<HEX_CHARS_Y; i++)
                 {
@@ -652,7 +655,7 @@ namespace Graphics
                         }
                         sprintf(str, "%02X ", value);
                         bool onCursor = (i == Editor::getCursorX()  &&  j == Editor::getCursorY());
-                        drawText(std::string(str), _pixels, 8 + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), (Editor::getHexEdit() && Editor::getMemoryMode() == Editor::RAM && onCursor) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor, 2);
+                        drawText(std::string(str), _pixels, 6 + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), (Editor::getHexEdit() && Editor::getMemoryMode() == Editor::RAM && onCursor) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor, 2);
                     }
                 }
 
@@ -665,9 +668,9 @@ namespace Graphics
             }
 
             // Draw addresses
-            sprintf(str, "%04X", cpuBaseAddressA);
+            sprintf(str, "%04X", cpuUsageAddressA);
             drawText(std::string(str), _pixels, CPUA_START, FONT_CELL_Y*2, (Editor::getHexEdit() && onCursor00) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor00, 4);
-            sprintf(str, "%04X", cpuBaseAddressB);
+            sprintf(str, "%04X", cpuUsageAddressB);
             drawText(std::string(str), _pixels, CPUB_START, FONT_CELL_Y*2, (Editor::getHexEdit() && onCursor10) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor10, 4);
             sprintf(str, "%04X", hexLoadAddress);
             drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, (Editor::getHexEdit() && onCursor01) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor01, 4);
@@ -690,7 +693,7 @@ namespace Graphics
                 for(int i=0; i<HEX_CHARS_X; i++)
                 {
                     sprintf(str, "%02X ", Cpu::getRAM(varsAddress++));
-                    drawText(std::string(str), _pixels, 8 + i*HEX_CHAR_WIDE, int(FONT_CELL_Y*4.25) + FONT_CELL_Y*HEX_CHARS_Y + j*(FONT_HEIGHT+FONT_GAP_Y), 0xFF00FFFF, false, 0);
+                    drawText(std::string(str), _pixels, 6 + i*HEX_CHAR_WIDE, int(FONT_CELL_Y*4.25) + FONT_CELL_Y*HEX_CHARS_Y + j*(FONT_HEIGHT+FONT_GAP_Y), 0xFF00FFFF, false, 0);
                 }
             }
         }

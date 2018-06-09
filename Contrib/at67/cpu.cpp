@@ -5,13 +5,15 @@
 #include <iomanip>
 #include <vector>
 
-#include <SDL.h>
 #include "cpu.h"
+
+#ifndef STAND_ALONE
+#include <SDL.h>
 #include "editor.h"
 #include "timing.h"
 #include "graphics.h"
 #include "gigatron_0x1c.h"
-
+#endif
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -28,9 +30,18 @@ namespace Cpu
     uint8_t _IN = 0xFF, _XOUT = 0x00;
     uint8_t _ROM[ROM_SIZE][2], _RAM[RAM_SIZE];
 
+    uint16_t _baseFreeRAM = RAM_SIZE - RAM_USED_DEFAULT;
+    uint16_t _freeRAM = _baseFreeRAM;
+
     std::vector<uint8_t> scanlinesRom0;
     std::vector<uint8_t> scanlinesRom1;
 
+
+    uint16_t getBaseFreeRAM(void) {return _baseFreeRAM;}
+    uint16_t getFreeRAM(void) {return _freeRAM;}
+    void setFreeRAM(uint16_t freeRAM) {_freeRAM = freeRAM;}
+
+#ifndef STAND_ALONE
     int64_t getClock(void) {return _clock;}
     uint8_t getIN(void) {return _IN;}
     uint8_t getXOUT(void) {return _XOUT;}
@@ -39,6 +50,7 @@ namespace Cpu
     uint16_t getRAM16(uint16_t address) {return _RAM[address & (RAM_SIZE-1)] | (_RAM[(address+1) & (RAM_SIZE-1)]<<8);}
     uint16_t getROM16(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01] | (_ROM[(address+1) & (ROM_SIZE-1)][page & 0x01]<<8);}
     float getvCpuUtilisation(void) {return _vCpuUtilisation;}
+
 
     void setClock(int64_t clock) {_clock = clock;}
     void setIN(uint8_t in) {_IN = in;}
@@ -358,7 +370,7 @@ namespace Cpu
         if(S._PC == ROM_VCPU_DISPATCH)
         {
             uint16_t vPC = (getRAM(0x0017) <<8) |getRAM(0x0016);
-            if(vPC < Editor::getCpuBaseAddressA()  ||  vPC > Editor::getCpuBaseAddressB()) _vCpuInstPerFrame++;
+            if(vPC < Editor::getCpuUsageAddressA()  ||  vPC > Editor::getCpuUsageAddressB()) _vCpuInstPerFrame++;
             _vCpuInstPerFrameMax++;
 
             static uint64_t prevFrameCounter = 0;
@@ -366,15 +378,15 @@ namespace Cpu
             if(frameTime > VSYNC_TIMING_60)
             {
                 // TODO: this is a bit of a hack, but it's emulation only so...
-                // Check for magic cookie that defines a CpuBaseAddressA and CpuBaseAddressB sequence
+                // Check for magic cookie that defines a CpuUsageAddressA and CpuUsageAddressB sequence
                 uint16_t magicWord0 = (getRAM(0x7F99) <<8) | getRAM(0x7F98);
                 uint16_t magicWord1 = (getRAM(0x7F9B) <<8) | getRAM(0x7F9A);
-                uint16_t cpuBaseAddressA = (getRAM(0x7F9D) <<8) | getRAM(0x7F9C);
-                uint16_t cpuBaseAddressB = (getRAM(0x7F9F) <<8) | getRAM(0x7F9E);
+                uint16_t cpuUsageAddressA = (getRAM(0x7F9D) <<8) | getRAM(0x7F9C);
+                uint16_t cpuUsageAddressB = (getRAM(0x7F9F) <<8) | getRAM(0x7F9E);
                 if(magicWord0 == 0xDEAD  &&  magicWord1 == 0xBEEF)
                 {
-                    Editor::setCpuBaseAddressA(cpuBaseAddressA);
-                    Editor::setCpuBaseAddressB(cpuBaseAddressB);
+                    Editor::setCpuUsageAddressA(cpuUsageAddressA);
+                    Editor::setCpuUsageAddressB(cpuUsageAddressB);
                 }
 
                 prevFrameCounter = SDL_GetPerformanceCounter();
@@ -384,4 +396,5 @@ namespace Cpu
             }
         }
     }
+#endif
 }

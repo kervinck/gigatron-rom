@@ -1,50 +1,54 @@
-; equates are non arithmetic string substitutions
-; numeric literals can be of the following formats:
-; hex 0x0000 or $0000
-; dec 1234
-; oct 0o777 or 0q777
-; bin 0b01011111
-# comments can be started with ; or #
+%include macros\gigatron.i
 
-vram        EQU     0x0800
-
-rand        EQU     0x06
-videoY      EQU     0x09
-frameCount  EQU     0x0E
-
-vbase       EQU     0xD2
-pixels      EQU     0xD4 
-xPos        EQU     0xD6
-yPos        EQU     0xD8
-xVel        EQU     0xDA
-yVel        EQU     0xDC
-i           EQU     0xDE
-frame       EQU     0xE0
-scratch     EQU     0xE2
-pixel       EQU     0xE4
-random      EQU     0xE6
-skip        EQU     0xE8
-xyAbs       EQU     0xF0
-colour      EQU     0xF2
-
-xyPosArray  EQU     0x30
-xyVelArray  EQU     0x82
-
+vram            EQU     0x0800
     
-numStars    EQU     40       ; max 40
+rand            EQU     0x06
+videoY          EQU     0x09
+frameCount      EQU     0x0E
+    
+vbase           EQU     0x30
+pixels          EQU     0x32 
+xPos            EQU     0x34
+yPos            EQU     0x36
+xVel            EQU     0x38
+yVel            EQU     0x3A
+i               EQU     0x3C
+frame           EQU     0x3E
+scratch         EQU     0x40
+pixel           EQU     0x42
+random          EQU     0x44
+skip            EQU     0x46
+xyAbs           EQU     0x48
+colour          EQU     0x4A
+ii              EQU     0x50
+jj              EQU     0x51
+kk              EQU     0x52
+ll              EQU     0x53
+xx              EQU     0x54
+yy              EQU     0x55
+
+xyPosArray      EQU     0x600
+xyVelArray      EQU     0x680
+    
+        
+numStars        EQU     64          ; max 64
 
 
-_startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
+_startAddress_  EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
+                
+_callTable_     EQU     0x00EE      ; this grows downwards as you use more CALL's, it will crash into program variables if you are not careful
+                                    ; "_callTable_" is a reserved word, do not use it for anything other than it's intended use
+                                    ; leave some space for stack, (nested calls)
 
-_callTable_         EQU     0x00FE      ; this grows downwards as you use more CALL's, it will crash into program variables if you are not careful
-                                        ; "_callTable_" is a reserved word, do not use it for anything other than it's intended use
-
-_singleStepWatch_   EQU     i           ; the single step debugger watches this variable location to decide when to step,
-                                        ; choose a variable that is updated often
+_singleStepWatch_   EQU     i       ; the single step debugger watches this variable location to decide when to step,
+                                    ; choose a variable that is updated often
  
-start       EQU     0x200
-loopInit    EQU     0x300
-vBlank      EQU     0x400
+start           EQU     0x200
+loopInit        EQU     0x300
+vBlank          EQU     0x400
+clearScreen     EQU     0x08A1
+clearScreen_0   EQU     0x09A1
+
 
 ; look up table that retrieves skip values based on max velocity component
 skipLut     EQU     0x500
@@ -63,290 +67,358 @@ xyAbsLut    EQU     0x590
 xyAbsLut    DB      0x80 0x70 0x60 0x50 0x40 0x30 0x20 0x10 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80
 
 ; look up table that retrieves colours
-colourLut   EQU     0x600
+colourLut   EQU     0x5A0
 colourLut   DB      0x15 0x15 0x15 0x15 0x15 0x15 0x15 0x15 0x15 0x15 0x15 0x15 0x15 0x15 0x15 0x15
             DB      0x2A 0x2A 0x2A 0x2A 0x2A 0x2A 0x2A 0x2A 0x2A 0x2A 0x2A 0x2A 0x2A 0x2A 0x2A 0x2A 
             DB      0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 
 
 
-%MACRO lutVal lut index
-       LDWI    lut
-       DEEK
-       ADDW    index
-       PEEK
+%MACRO  lutVal lut index
+        LDWI    lut
+        DEEK
+        ADDW    index
+        PEEK
+%ENDM
+
+%MACRO  LoopCounter _counter _label
+        LD      _counter
+        SUBI    0x01
+        ST      _counter
+        BNE     _label
 %ENDM
 
 
-start       LDWI    vram
-            STW     vbase       ; vram base address
-            STW     pixels      ; pixel address
-
-clear       LDI     0x00        ; clear screen and buffers
-            POKE    vbase
-            LDWI    0x0001
-            ADDW    vbase
-            STW     vbase
-            LD      vbase+1
-            SUBI    0x80
-            BLT     clear
-
-            LDWI    vram
-            STW     vbase       ; vram base address
-
-            LDWI    rand
-            STW     random
-
-            LDWI    skipLut
-            STW     skip
-            LDWI    xyAbsLut
-            STW     xyAbs
-            LDWI    colourLut
-            STW     colour
-
-            LDWI    xyPosArray
-            STW     xPos
-            LDWI    xyPosArray + 1
-            STW     yPos
+start           CALL    clearScreen
+                
+                LDWI    vram
+                STW     vbase               ; vram base address
+                STW     pixels              ; pixel address
+    
+                LDWI    rand
+                STW     random
+    
+                LDWI    skipLut
+                STW     skip
+                LDWI    xyAbsLut
+                STW     xyAbs
+                LDWI    colourLut
+                STW     colour
+    
+                LDWI    xyPosArray
+                STW     xPos
+                LDWI    xyPosArray + 1
+                STW     yPos
+                
+                LDWI    xyVelArray
+                STW     xVel
+                LDWI    xyVelArray + 1
+                STW     yVel
+    
+                LD      frameCount
+                STW     frame
+                
+init            LDI     numStars
+                ST      i
+    
+                ; center position
+rand_vel        CALL    randPos
+                CALL    randVel
+    
+                INC     xPos
+                INC     xPos
+                INC     yPos
+                INC     yPos
+    
+                INC     xVel
+                INC     xVel
+                INC     yVel
+                INC     yVel
+                
+                LD      i
+                SUBI    0x01
+                ST      i
+                BGT     rand_vel
+                
+                CALL    loopInit
+    
+    
+loopInit        LDI     numStars
+                ST      i
+    
+                LDWI    xyPosArray
+                STW     xPos
+                LDWI    xyPosArray + 1
+                STW     yPos
+                
+                LDWI    xyVelArray
+                STW     xVel
+                LDWI    xyVelArray + 1
+                STW     yVel
+    
+                ; main loop
+loop            LDW     yVel                ; high nibble of yVel is max(abs(xVel), abs(yVel)), (0x10...0x80}
+                PEEK    
+                ANDI    0xF0    
+                STW     scratch 
+                lutVal  skip scratch    
+                STW     scratch 
+                LD      frameCount  
+                ANDW    scratch 
+                BNE     pickcolour  
+                    
+counter         LDW     xVel                ; increment counter per star, (embedded in high nibble of xVel)        
+                PEEK    
+                ADDI    0x10    
+                POKE    xVel    
+        
+pickcolour      LDW     xVel                ; high nibble of xVel is counter
+                PEEK    
+                ANDI    0xF0    
+                SUBI    0x30    
+                BGE     maxcolour   
+        
+                LDW     xVel                ; counter indexes into colourLut
+                PEEK
+                ANDI    0xF0
+                STW     scratch
+                lutVal  colour scratch
+                BRA     pixelcolour
+    
+maxcolour       LDI     0x3F
+pixelcolour     ST      pixel
+    
+erase           LDW     xPos
+                DEEK
+                ADDW    vbase
+                STW     pixels
+                LDI     0x00
+                POKE    pixels
+    
+                CALL    velocity
+    
+                ; x position bounds checking 
+xbounds         LDW     xPos       
+                PEEK
+                BLE     xyreset
+                SUBI    0xA0
+                BGE     xyreset
+    
+                ; y position bounds checking 
+ybounds         LDW     yPos     
+                PEEK
+                BLE     xyreset
+                SUBI    0x78
+                BLT     draw
+    
+                ; reset
+xyreset         CALL    randPos
+                CALL    randVel
+                CALL    velocity            ; origin
+                LDI     0b00010101
+                ST      pixel
+    
+                ; generate vram address
+draw            LDW     xPos
+                DEEK
+                ADDW    vbase
+                STW     pixels
+                LD      pixel
+                POKE    pixels              ; plot new pixel
+    
+                INC     xPos
+                INC     xPos
+                INC     yPos
+                INC     yPos
+    
+                INC     xVel
+                INC     xVel
+                INC     yVel
+                INC     yVel
+    
+                LD      i
+                SUBI    0x01
+                ST      i
+                BGT     loop
+    
+                CALL    vBlank
+    
+                BRA     loopInit
+                
+    
+                ; subroutines
+vBlank          LD      frameCount
+                SUBW    frame
+                BEQ     vBlank
+                LD      frameCount
+                STW     frame
+                RET
+    
+    
+                ; random position
+randPos         LD      i
+                ANDI    0x03
+                ADDW    random
+                PEEK
+                ANDI    0x03
+                ADDI    0x4E
+                POKE    xPos
+    
+                LD      i
+                ADDI    0x01
+                ANDI    0x03
+                ADDW    random
+                PEEK
+                ANDI    0x03
+                ADDI    0x3A
+                POKE    yPos
+                RET
+    
+                ; random velocity
+randVel         LD      i
+                ADDI    0x02
+                ANDI    0x03
+                ADDW    random
+                PEEK                        ; x velocity
+                ANDI    0x0F
+                POKE    xVel
+                STW     scratch
+                lutVal  xyAbs scratch
+                ORW     scratch
+                POKE    xVel                ; high nibble = abs(xvel)
+    
+                LD      i
+                ADDI    0x03
+                ANDI    0x03
+                ADDW    random
+                PEEK                        ; y velocity
+                ANDI    0x0F
+                POKE    yVel
+                STW     scratch
+                lutVal  xyAbs scratch
+                ORW     scratch
+                POKE    yVel                ; high nibble = abs(yvel)
             
-            LDWI    xyVelArray
-            STW     xVel
-            LDWI    xyVelArray + 1
-            STW     yVel
-
-            LD      frameCount
-            STW     frame
+                ANDI    0xF0                ; max(xVel&0xF0, yVel&0xF0)
+                STW     scratch     
+                LD      xVel        
+                PEEK        
+                ANDI    0xF0        
+                SUBW    scratch     
+                BGT     randVel0        
+                LD      xVel        
+                PEEK        
+                ANDI    0x0F        
+                POKE    xVel                ; xvel high nibble = 0
+                RET                         ; yvel high nibble = yVel&0xF0
             
-init        LDI     numStars
-            ST      i
-
-            ; center position
-rand_vel    CALL    randPos
-            CALL    randVel
-
-            INC     xPos
-            INC     xPos
-            INC     yPos
-            INC     yPos
-
-            INC     xVel
-            INC     xVel
-            INC     yVel
-            INC     yVel
-            
-            LD      i
-            SUBI    0x01
-            ST      i
-            BGT     rand_vel
-            
-            CALL    loopInit
-
-
-loopInit    LDI     numStars
-            ST      i
-
-            LDWI    xyPosArray
-            STW     xPos
-            LDWI    xyPosArray + 1
-            STW     yPos
-            
-            LDWI    xyVelArray
-            STW     xVel
-            LDWI    xyVelArray + 1
-            STW     yVel
-
-            ; main loop
-loop        LDW     yVel            ; high nibble of yVel is max(abs(xVel), abs(yVel)), (0x10...0x80}
-            PEEK
-            ANDI    0xF0
-            STW     scratch
-            lutVal  skip scratch
-            STW     scratch
-            LD      frameCount
-            ANDW    scratch
-            BNE     pickcolour
-            
-counter     LDW     xVel            ; increment counter per star, (embedded in high nibble of xVel)        
-            PEEK
-            ADDI    0x10
-            POKE    xVel
-
-pickcolour  LDW     xVel            ; high nibble of xVel is counter
-            PEEK
-            ANDI    0xF0
-            SUBI    0x30
-            BGE     maxcolour
-
-            LDW     xVel            ; counter indexes into colourLut
-            PEEK
-            ANDI    0xF0
-            STW     scratch
-            lutVal  colour scratch
-            BRA     pixelcolour
-
-maxcolour   LDI     0x3F
-pixelcolour ST      pixel
-
-erase       LDW     xPos
-            DEEK
-            ADDW    vbase
-            STW     pixels
-            LDI     0x00
-            POKE    pixels
-
-            CALL    velocity
-
-            ; x position bounds checking 
-xbounds     LDW     xPos       
-            PEEK
-            BLE     xyreset
-            SUBI    0xA0
-            BGE     xyreset
-
-            ; y position bounds checking 
-ybounds     LDW     yPos     
-            PEEK
-            BLE     xyreset
-            SUBI    0x78
-            BLT     draw
-  
-            ; reset
-xyreset     CALL    randPos
-            CALL    randVel
-            CALL    velocity    ; origin
-            LDI     0b00010101
-            ST      pixel
-
-            ; generate vram address
-draw        LDW     xPos
-            DEEK
-            ADDW    vbase
-            STW     pixels
-            LD      pixel
-            POKE    pixels      ; plot new pixel
-  
-            INC     xPos
-            INC     xPos
-            INC     yPos
-            INC     yPos
-
-            INC     xVel
-            INC     xVel
-            INC     yVel
-            INC     yVel
-
-            LD      i
-            SUBI    0x01
-            ST      i
-            BGT     loop
-
-            CALL    vBlank
-
-            BRA     loopInit
-            
-
-            ; subroutines
-vBlank      LD      frameCount
-            SUBW    frame
-            BEQ     vBlank
-            LD      frameCount
-            STW     frame
-            RET
+randVel0        LD      xVel        
+                PEEK        
+                ANDI    0xF0        
+                STW     scratch     
+                LD      yVel        
+                PEEK        
+                ANDI    0x0F        
+                ORW     scratch     
+                POKE    yVel        
+                LD      xVel        
+                PEEK        
+                ANDI    0x0F        
+                POKE    xVel                ; xvel high nibble = 0
+                RET                         ; yvel high nibble = xVel&0xF0
+    
+                ; position += velocity
+velocity        LDW     xPos       
+                PEEK
+                STW     scratch
+                LDW     xVel
+                PEEK
+                ANDI    0x0F
+                SUBI    0x08                ; {0x0...0xF} -> {-8...+8} - {0}
+                BLT     x_vel0      
+                ADDI    0x01        
+x_vel0          ADDW    scratch     
+                POKE    xPos        
+                        
+                LDW     yPos            
+                PEEK        
+                STW     scratch     
+                LDW     yVel        
+                PEEK        
+                ANDI    0x0F        
+                SUBI    0x08                ; {0x0...0xF} -> {-8...+8} - {0}
+                BLT     y_vel0
+                ADDI    0x01
+y_vel0          ADDW    scratch
+                POKE    yPos
+                RET
 
 
-            ; random position
-randPos     LD      i
-            ANDI    0x03
-            ADDW    random
-            PEEK
-            ANDI    0x03
-            ADDI    0x4E
-            POKE    xPos
+                ; clears the viewable screen
+clearScreen     LDWI    SYS_Draw4_30        ; setup 4 pixel SYS routine
+                STW     giga_sysFn  
+                LDWI    0x0000              ; 4 pixels of colour
+                STW     giga_sysArg0    
+                STW     giga_sysArg2    
+    
+                LDI     giga_yres / 2       ; counters
+                ST      jj  
+                LDI     giga_xres / 4   
+                ST      ii  
+    
+                LDWI    0x0800              ; top line
+                STW     xx  
+                LDWI    0x7F00              ; bottom line
+                STW     kk  
+                PUSH                        ; save clearScreen's caller return address
+                CALL    clearScreen_0       ; jump to clearScreen_0
 
-            LD      i
-            ADDI    0x01
-            ANDI    0x03
-            ADDW    random
-            PEEK
-            ANDI    0x03
-            ADDI    0x3A
-            POKE    yPos
-            RET
+                ; clear left and right edge single pixel vertical strips, (for screen shake)
+clearStrips     STW     scratch
+                LDI     0x00
+                POKE    scratch
+                LDW     scratch
+                ADDI    0x5F    
+                STW     scratch
+                LDI     0x00
+                POKE    scratch
+                RET
 
-            ; random velocity
-randVel     LD      i
-            ADDI    0x02
-            ANDI    0x03
-            ADDW    random
-            PEEK                ; x velocity
-            ANDI    0x0F
-            POKE    xVel
-            STW     scratch
-            lutVal  xyAbs scratch
-            ORW     scratch
-            POKE    xVel        ; high nibble = abs(xvel)
+clearScreen_0   POP                         ; restore clearScreen's caller return address
+clearS_loop     LDW     xx  
+                STW     giga_sysArg4        ; top line
+                SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                LDW     kk  
+                STW     giga_sysArg4        ; bottom line
+                SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                LD      xx                  ; 4 horizontal pixels
+                ADDI    0x04    
+                ST      xx  
+                LD      kk                  ; 4 horizontal pixels
+                ADDI    0x04
+                ST      kk
+                LoopCounter ii clearS_loop
 
-            LD      i
-            ADDI    0x03
-            ANDI    0x03
-            ADDW    random
-            PEEK                ; y velocity
-            ANDI    0x0F
-            POKE    yVel
-            STW     scratch
-            lutVal  xyAbs scratch
-            ORW     scratch
-            POKE    yVel        ; high nibble = abs(yvel)
-
-            ANDI    0xF0        ; max(xVel&0xF0, yVel&0xF0)
-            STW     scratch
-            LD      xVel
-            PEEK
-            ANDI    0xF0
-            SUBW    scratch
-            BGT     randVel0
-            LD      xVel
-            PEEK
-            ANDI    0x0F
-            POKE    xVel        ; xvel high nibble = 0
-            RET                 ; yvel high nibble = yVel&0xF0
-
-randVel0    LD      xVel
-            PEEK
-            ANDI    0xF0
-            STW     scratch
-            LD      yVel
-            PEEK
-            ANDI    0x0F
-            ORW     scratch
-            POKE    yVel
-            LD      xVel
-            PEEK
-            ANDI    0x0F
-            POKE    xVel        ; xvel high nibble = 0
-            RET                 ; yvel high nibble = xVel&0xF0
-
-            ; position += velocity
-velocity    LDW     xPos       
-            PEEK
-            STW     scratch
-            LDW     xVel
-            PEEK
-            ANDI    0x0F
-            SUBI    0x08        ; {0x0...0xF} -> {-8...+8} - {0}
-            BLT     x_vel0
-            ADDI    0x01
-x_vel0      ADDW    scratch
-            POKE    xPos
-            
-            LDW     yPos     
-            PEEK
-            STW     scratch
-            LDW     yVel
-            PEEK
-            ANDI    0x0F
-            SUBI    0x08        ; {0x0...0xF} -> {-8...+8} - {0}
-            BLT     y_vel0
-            ADDI    0x01
-y_vel0      ADDW    scratch
-            POKE    yPos
-            RET
+                ; clear one extra pixel wide stripes for screen shake
+                PUSH                        ; top
+                LDW     xx  
+                CALL    clearStrips 
+                POP 
+                PUSH                        ; bottom
+                LDW     kk  
+                CALL    clearStrips 
+                POP 
+    
+                INC     yy                  ; next top line
+                LD      ll                  ; next bottom line
+                SUBI    0x01    
+                ST      ll  
+    
+                LDI     0x00                ; reset xx, kk and ii
+                ST      xx
+                ST      kk
+                LDI     giga_xres / 4
+                ST      ii
+                LoopCounter jj clearS_loop
+                RET

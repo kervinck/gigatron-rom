@@ -1,7 +1,7 @@
 # gtemuSDL
 gtemuSDL is an emulator for the Gigatron TTL microcomputer, written in C++ using SDL2.<br/>
 This project provides support for Microsoft Windows and should be compatible with Linux, MacOS<br/>
-and possibly even Android. As of v0.5.3 it has only been tested on Microsoft Windows10.<br/>
+and possibly even Android. As of v0.5.6 it has only been tested on Microsoft Windows10 and Linux.<br/>
 
 ## Features
 - Variable timing from a minimum of 60FPS up to whatever your PC can handle.<br/>
@@ -47,7 +47,8 @@ and possibly even Android. As of v0.5.3 it has only been tested on Microsoft Win
 
 ## Building
 - CMake 3.7 or higher is required for building, has been tested on Windows with Visual Studio and<br/>
-  gcc/mingw32, (thanks to Cwiiis https://github.com/Cwiiis)<br/>
+  gcc/mingw32, (thanks to Cwiiis https://github.com/Cwiiis) and also built and tested under Linux,<br/>
+  (thanks to xxxbxxx https://github.com/xxxbxxx)<br/>
 - A C++ compiler that supports modern STL.<br/>
 - Requires the latest version of SDL2 and it's appropriate include/library/shared files.<br/>
 

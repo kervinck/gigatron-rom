@@ -42,8 +42,8 @@ namespace Editor
     uint16_t getLoadBaseAddress(void);
     uint16_t getVarsBaseAddress(void);
     uint16_t getSingleStepWatchAddress(void);
-    uint16_t getCpuBaseAddressA(void);
-    uint16_t getCpuBaseAddressB(void);
+    uint16_t getCpuUsageAddressA(void);
+    uint16_t getCpuUsageAddressB(void);
     int getFileEntriesIndex(void);
     int getFileEntriesSize(void);
     std::string getBrowserPath(void);
@@ -57,8 +57,8 @@ namespace Editor
     void setSingleStepMode(bool singleStepMode);
     void setLoadBaseAddress(uint16_t address);
     void setSingleStepWatchAddress(uint16_t address);
-    void setCpuBaseAddressA(uint16_t address);
-    void setCpuBaseAddressB(uint16_t address);
+    void setCpuUsageAddressA(uint16_t address);
+    void setCpuUsageAddressB(uint16_t address);
 
     void initialise(void);
     bool singleStepDebug(void);

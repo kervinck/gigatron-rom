@@ -57,8 +57,8 @@ namespace Editor
     uint16_t _loadBaseAddress = LOAD_BASE_ADDRESS;
     uint16_t _varsBaseAddress = VARS_BASE_ADDRESS;
     uint16_t _singleStepWatchAddress = VIDEO_Y_ADDRESS;
-    uint16_t _cpuBaseAddressA = HEX_BASE_ADDRESS;
-    uint16_t _cpuBaseAddressB = HEX_BASE_ADDRESS + 0x0020;
+    uint16_t _cpuUsageAddressA = HEX_BASE_ADDRESS;
+    uint16_t _cpuUsageAddressB = HEX_BASE_ADDRESS + 0x0020;
     
     int _fileEntriesIndex = 0;
     std::vector<FileEntry> _fileEntries;
@@ -82,8 +82,8 @@ namespace Editor
     uint16_t getLoadBaseAddress(void) {return _loadBaseAddress;}
     uint16_t getVarsBaseAddress(void) {return _varsBaseAddress;}
     uint16_t getSingleStepWatchAddress(void) {return _singleStepWatchAddress;}
-    uint16_t getCpuBaseAddressA(void) {return _cpuBaseAddressA;}
-    uint16_t getCpuBaseAddressB(void) {return _cpuBaseAddressB;}
+    uint16_t getCpuUsageAddressA(void) {return _cpuUsageAddressA;}
+    uint16_t getCpuUsageAddressB(void) {return _cpuUsageAddressB;}
     int getFileEntriesIndex(void) {return _fileEntriesIndex;}
     int getFileEntriesSize(void) {return int(_fileEntries.size());}
     std::string getBrowserPath(void) {return _filePath;}
@@ -97,12 +97,13 @@ namespace Editor
     void setSingleStepMode(bool singleStepMode) {_singleStepMode = singleStepMode;}
     void setLoadBaseAddress(uint16_t address) {_loadBaseAddress = address;}
     void setSingleStepWatchAddress(uint16_t address) {_singleStepWatchAddress = address;}
-    void setCpuBaseAddressA(uint16_t address) {_cpuBaseAddressA = address;}
-    void setCpuBaseAddressB(uint16_t address) {_cpuBaseAddressB = address;}
+    void setCpuUsageAddressA(uint16_t address) {_cpuUsageAddressA = address;}
+    void setCpuUsageAddressB(uint16_t address) {_cpuUsageAddressB = address;}
 
     bool scanCodeFromIniKey(const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, int& scanCode)
     {
-        std::string key = Expression::strToUpper(_iniReader.Get(sectionString, iniKey, defaultKey));
+        std::string key = _iniReader.Get(sectionString, iniKey, defaultKey);
+        key = Expression::strToUpper(key);
         if(_sdlKeys.find(key) == _sdlKeys.end())
         {
             fprintf(stderr, "Editor::initialise() : key %s not recognised in INI file '%s' : reverting to default key %s.\n", key.c_str(), INPUT_CONFIG_INI, defaultKey.c_str());
@@ -325,12 +326,12 @@ namespace Editor
 
                 case Emulator:
                 {
+                    scanCodeFromIniKey(sectionString, "Help",         "H",      _inputKeys["Help"]);
                     scanCodeFromIniKey(sectionString, "Quit",         "ESCAPE", _inputKeys["Quit"]);
                     scanCodeFromIniKey(sectionString, "Reset",        "F1",     _inputKeys["Reset"]);
                     scanCodeFromIniKey(sectionString, "ScanlineMode", "F3",     _inputKeys["ScanlineMode"]);
                     scanCodeFromIniKey(sectionString, "Speed+",       "+",      _inputKeys["Speed+"]);
                     scanCodeFromIniKey(sectionString, "Speed-",       "-",      _inputKeys["Speed-"]);
-                    scanCodeFromIniKey(sectionString, "Help",         "H",      _inputKeys["Help"]);
                 }
                 break;
 
@@ -483,10 +484,10 @@ namespace Editor
                     // A address
                     switch(_addressDigit)
                     {
-                        case 0: value = (value << 12) & 0xF000; _cpuBaseAddressA = _cpuBaseAddressA & 0x0FFF | value; break;
-                        case 1: value = (value << 8)  & 0x0F00; _cpuBaseAddressA = _cpuBaseAddressA & 0xF0FF | value; break;
-                        case 2: value = (value << 4)  & 0x00F0; _cpuBaseAddressA = _cpuBaseAddressA & 0xFF0F | value; break;
-                        case 3: value = (value << 0)  & 0x000F; _cpuBaseAddressA = _cpuBaseAddressA & 0xFFF0 | value; break;
+                        case 0: value = (value << 12) & 0xF000; _cpuUsageAddressA = _cpuUsageAddressA & 0x0FFF | value; break;
+                        case 1: value = (value << 8)  & 0x0F00; _cpuUsageAddressA = _cpuUsageAddressA & 0xF0FF | value; break;
+                        case 2: value = (value << 4)  & 0x00F0; _cpuUsageAddressA = _cpuUsageAddressA & 0xFF0F | value; break;
+                        case 3: value = (value << 0)  & 0x000F; _cpuUsageAddressA = _cpuUsageAddressA & 0xFFF0 | value; break;
                     }
                 }
                 else
@@ -494,10 +495,10 @@ namespace Editor
                     // B address
                     switch(_addressDigit)
                     {
-                        case 0: value = (value << 12) & 0xF000; _cpuBaseAddressB = _cpuBaseAddressB & 0x0FFF | value; break;
-                        case 1: value = (value << 8)  & 0x0F00; _cpuBaseAddressB = _cpuBaseAddressB & 0xF0FF | value; break;
-                        case 2: value = (value << 4)  & 0x00F0; _cpuBaseAddressB = _cpuBaseAddressB & 0xFF0F | value; break;
-                        case 3: value = (value << 0)  & 0x000F; _cpuBaseAddressB = _cpuBaseAddressB & 0xFFF0 | value; break;
+                        case 0: value = (value << 12) & 0xF000; _cpuUsageAddressB = _cpuUsageAddressB & 0x0FFF | value; break;
+                        case 1: value = (value << 8)  & 0x0F00; _cpuUsageAddressB = _cpuUsageAddressB & 0xF0FF | value; break;
+                        case 2: value = (value << 4)  & 0x00F0; _cpuUsageAddressB = _cpuUsageAddressB & 0xFF0F | value; break;
+                        case 3: value = (value << 0)  & 0x000F; _cpuUsageAddressB = _cpuUsageAddressB & 0xFFF0 | value; break;
                     }
                 }
 
@@ -574,6 +575,8 @@ namespace Editor
     void browseDirectory(void)
     {
         std::string path = _filePath  + ".";
+        Assembler::setIncludePath(_filePath);
+
         _fileEntries.clear();
 
         DIR *dir;
@@ -587,7 +590,7 @@ namespace Editor
             {
                 std::string name = std::string(ent->d_name);
                 size_t nonWhiteSpace = name.find_first_not_of("  \n\r\f\t\v");
-                if(ent->d_type == S_IFDIR  &&  name[0] != '.'  &&  name.find("$RECYCLE") == std::string::npos  &&  nonWhiteSpace != std::string::npos)
+                if(ent->d_type == DT_DIR  &&  name[0] != '.'  &&  name.find("$RECYCLE") == std::string::npos  &&  nonWhiteSpace != std::string::npos)
                 {
                     dirnames.push_back(name);
                 }
@@ -621,7 +624,10 @@ namespace Editor
         std::string entry = *getFileEntryName(getCursorY() + _fileEntriesIndex);
         setCursorY(0);
 
-        (entry != "..") ? _filePath += entry + "/" : backOneDirectory();
+        if (entry != "..")
+            _filePath += entry + "/";
+        else
+            backOneDirectory();
 
         browseDirectory();
     }

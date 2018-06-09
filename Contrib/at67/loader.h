@@ -19,22 +19,9 @@
 
 namespace Loader
 {
-    enum Endianness {Little, Big};
-
-    struct SaveData
-    {
-        bool _initialised = false;
-        int _updaterate = VSYNC_RATE;
-        std::string _filename;
-
-        std::vector<uint16_t> _counts;
-        std::vector<uint16_t> _addresses;
-        std::vector<Endianness> _endianness;
-        std::vector<std::vector<uint8_t>> _data;
-    };
-
     struct Gt1Segment
     {
+        bool _isRomAddress = false;
         uint8_t _hiAddress;
         uint8_t _loAddress;
         uint8_t _segmentSize;
@@ -50,24 +37,41 @@ namespace Loader
     };
 
 
-    bool getStartUploading(void);
-    void setStartUploading(bool start);
+    bool loadGt1File(const std::string& filename, Gt1File& gt1File);
+    bool saveGt1File(const std::string& filepath, Gt1File& gt1File, std::string& filename);
+    uint16_t printGt1Stats(const std::string& filename, const Gt1File& gt1File);
+
+
+#ifndef STAND_ALONE
+    enum Endianness {Little, Big};
+
+    struct SaveData
+    {
+        bool _initialised = false;
+        int _updaterate = VSYNC_RATE;
+        std::string _filename;
+
+        std::vector<uint16_t> _counts;
+        std::vector<uint16_t> _addresses;
+        std::vector<Endianness> _endianness;
+        std::vector<std::vector<uint8_t>> _data;
+    };
+
 
     void initialise(void);
 
-    // Only for emulation
+    bool getStartUploading(void);
+    void setStartUploading(bool start);
+    void disableUploads(bool disable);
+
     bool loadDataFile(SaveData& saveData);
     bool saveDataFile(const SaveData& saveData);
-
-    bool loadGt1File(const std::string& filename, Gt1File& gt1File);
-    bool saveGt1File(const std::string& filename, const Gt1File& gt1File);
-
     void loadHighScore(void);
     void saveHighScore(void);
     void updateHighScore(void);
 
     void upload(int vgaY);
-    void disableUploads(bool disable);
+#endif
 }
 
 #endif

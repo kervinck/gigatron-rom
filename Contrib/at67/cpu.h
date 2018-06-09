@@ -5,7 +5,7 @@
 
 
 #define MAJOR_VERSION "0.5"
-#define MINOR_VERSION "3"
+#define MINOR_VERSION "6"
 #define VERSION_STR "gtemuSDL v" MAJOR_VERSION "." MINOR_VERSION
 
 #define ROM_SIZE (1<<16)
@@ -14,6 +14,7 @@
 #define BOOT_COUNT 0x0004
 #define BOOT_CHECK 0x0005
 
+#define RAM_USED_DEFAULT  19986 // ignores page 0, would be 19779 otherwise
 #define ROM_VCPU_DISPATCH 0x0309
 
 #if defined(_WIN32)
@@ -34,6 +35,7 @@
 
 namespace Cpu
 {
+#ifndef STAND_ALONE
     enum ScanlineMode {Normal=0, VideoB, VideoC, VideoBC, NumScanlineModes};
 
     struct State
@@ -41,7 +43,13 @@ namespace Cpu
         uint16_t _PC;
         uint8_t _IR, _D, _AC, _X, _Y, _OUT, _undef;
     };
+#endif
 
+    uint16_t getBaseFreeRAM(void);
+    uint16_t getFreeRAM(void);
+    void setFreeRAM(uint16_t freeRAM);
+
+#ifndef STAND_ALONE
     int64_t getClock(void);
     uint8_t getIN(void);
     uint8_t getXOUT(void);
@@ -64,6 +72,7 @@ namespace Cpu
     State cycle(const State& S);
     void reset(bool coldBoot=false);
     void vCpuUsage(State& S);
+#endif
 }
 
 #endif
