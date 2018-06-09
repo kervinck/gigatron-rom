@@ -3,9 +3,9 @@
 #include <fstream>
 
 
-#define GSPLITROM_MAJOR_VERSION "0.1"
-#define GSPLITROM_MINOR_VERSION "2"
-#define GSPLITROM_VERSION_STR "gtsplitrom v" GSPLITROM_MAJOR_VERSION "." GSPLITROM_MINOR_VERSION
+#define GTSPLITROM_MAJOR_VERSION "0.1"
+#define GTSPLITROM_MINOR_VERSION "2"
+#define GTSPLITROM_VERSION_STR "gtsplitrom v" GTSPLITROM_MAJOR_VERSION "." GTSPLITROM_MINOR_VERSION
 
 #define ROM_SIZE (1<<16)
 
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 {
     if(argc != 3)
     {
-        fprintf(stderr, "%s\n", GSPLITROM_VERSION_STR);
+        fprintf(stderr, "%s\n", GTSPLITROM_VERSION_STR);
         fprintf(stderr, "Usage:   gtsplitrom <input filename> <output filename>\n");
         return 1;
     }
@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    fprintf(stderr, "%s success.\n", GSPLITROM_VERSION_STR);
+    fprintf(stderr, "%s success.\n", GTSPLITROM_VERSION_STR);
 
     return 0;
 }

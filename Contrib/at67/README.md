@@ -25,8 +25,8 @@ and possibly even Android. As of v0.5.6 it has only been tested on Microsoft Win
 - Upload assembled Native code to ROM, (**_emulation only_**).<br/>
 - Supports the Gigatron TTL's **_GT1_** object file format.<br/>
 - An inbuilt file and directory browser for uploading.<br/>
-- A VideoB scanline disable option, run **_"rom_test.vasm"_**, (**_emulation only_**), it will disable a<br/>
-  second scanline offering around **_100%_** more processor time for vCPU code.<br/>
+- Multiple scanline disable options, (default key **_F3_**, **_emulation only_**), will disable scanlines<br/>
+  offering large amounts of extra processor time for vCPU code.<br/>
 - Input keys easily configurable through an INI file.<br/>
 - On screen help menu, (accessible with 'H/h' by default), that fully explains each key and it's function.<br/>
 - Optional configuration files, **_graphics_config.ini_**, **_input_config.ini_** and **_high_scores.ini_**.<br/>
@@ -39,16 +39,20 @@ and possibly even Android. As of v0.5.6 it has only been tested on Microsoft Win
 - https://www.youtube.com/watch?v=sq8uCpBFwp8<br>
 
 ## References
-- Gigatron-ROM https://github.com/kervinck/gigatron-rom<br/>
-- SDL2 graphics https://github.com/kervinck/gigatron-rom/pull/1<br/>
-- http://talkchess.com/forum/viewtopic.php?t=65944&start=11<br/>
-- https://github.com/tronkko/dirent/releases<br/>
-- https://stackoverflow.com/questions/9329406/evaluating-arithmetic-expressions-from-string-in-c<br/>
+- Gigatron-ROM:  https://github.com/kervinck/gigatron-rom<br/>
+- SDL2 graphics:  https://github.com/kervinck/gigatron-rom/pull/1<br/>
+- Early Gigatron emulation:  http://talkchess.com/forum/viewtopic.php?t=65944&start=11<br/>
+- Dirent for Windows:  https://github.com/tronkko/dirent<br/>
+- Recursive Descent Parser:  https://stackoverflow.com/questions/9329406/evaluating-arithmetic-expressions-from-string-in-c<br/>
+- INI Not Invented Here:  https://github.com/jtilly/inih<br/>
+
+## Contributors
+- Cwiiis https://github.com/Cwiiis
+- xxxbxxx https://github.com/xxxbxxx
 
 ## Building
-- CMake 3.7 or higher is required for building, has been tested on Windows with Visual Studio and<br/>
-  gcc/mingw32, (thanks to Cwiiis https://github.com/Cwiiis) and also built and tested under Linux,<br/>
-  (thanks to xxxbxxx https://github.com/xxxbxxx)<br/>
+- CMake 3.7 or higher is required for building, has been tested on Windows with Visual Studio and gcc/mingw32<br/>
+  and also built and tested under Linux.<br/>
 - A C++ compiler that supports modern STL.<br/>
 - Requires the latest version of SDL2 and it's appropriate include/library/shared files.<br/>
 
@@ -141,6 +145,8 @@ and possibly even Android. As of v0.5.6 it has only been tested on Microsoft Win
     - **_\_callTable\__** : grows downwards as you use more CALL's, it must exist in page 0 RAM.<br/>
     - **_\_singleStepWatch\__** : the single step debugger watches this variable location to decide when to step.<br/>
     - **_\_disableUpload\__** : disables all writes to RAM/ROM, used for testing and verification.<br/>
+    - **_\_cpuUsageAddressA\__** : the start of a vCPU exclusion zone for measuring vCPU load, (emulation only).<br/>
+    - **_\_cpuUsageAddressB\__** : the end of a vCPU exclusion zone for measuring vCPU load, (emulation only).<br/>
 - The Assembler recognises the following reserved opcodes:<br/>
     - **_DB_** : Define Byte, a string of 8bit bytes declared within the source code that are written to RAM.<br/>
     - **_DW_** : Define Word, a string of 16bit words declared within the source code that are written to RAM.<br/>
@@ -190,7 +196,7 @@ _singleStepWatch_   EQU     xyPos
     - %s will print a maximum 255 sequence of chars, with the first byte of the string expected to be the length.<br/>
 
 ## MIDI
-- See **_Gigamidi_** and **_README.md_** in the emu/midi directory.<br/>
+- See **_gtmidi_** and **_README.md_** in the emu/midi directory.<br/>
 
 ## Memory/State saving
 - Real time saving of Gigatron and applications/games memory and state without any involvement of software<br/>
@@ -207,5 +213,5 @@ _singleStepWatch_   EQU     xyPos
   as an option as the main loop is synchronised using the performance counters.<br/>
 
 ## TODO
-- Test under Linux, MAC and Android.<br/>
+- Test under MAC and Android.<br/>
 - Add an inbuilt vCPU and native code disassembler.<br/>

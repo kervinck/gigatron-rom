@@ -1,19 +1,19 @@
 # gtsplitrom
-Takes gigatron **_.rom_** file and splits it into two individual rom files, one for</br>
-instructions and one for data. Input file has to be 128KBytes in length, if greater</br>
-then only the first 128KBytes will be read and split.
+Takes a gigatron **_.rom_** file and splits it into two individual rom files, one for instructions and one</br>
+for data. Input file has to be 128KBytes in length, if greater then only the first 128KBytes will be</br>
+read and split.</br>
 
 ## Building
-- CMake 3.7 or higher is required for building, has been tested on Windows with Visual Studio and<br/>
-  gcc/mingw32, (thanks to Cwiiis https://github.com/Cwiiis)<br/>
+- CMake 3.7 or higher is required for building, has been tested on Windows with Visual Studio and gcc/mingw32<br/>
+  and also built and tested under Linux.<br/>
 - A C++ compiler that supports modern STL.<br/>
 
 ## Usage
 gtsplitrom \<input filename\> \<output filename\></br>
 
 ## Example
-gtasm theloop.2.rom test.rom<br/>
+gtsplitrom theloop.2.rom test.rom<br/>
 
 ## Output
-Output is always two files each 64KBytes in length.
-test.rom0 and test.rom1
+Output is always two files each 64KBytes in length, i.e. from above example, output would be **_test.rom0_**<br/>
+and **_test.rom1_**.<br/>

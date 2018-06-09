@@ -3,8 +3,8 @@ Takes the bin output from Miditones https://github.com/LenShustek/miditones and 
 code data that you can include in your projects for MIDI scores.<br/>
 
 ## Building
-- CMake 3.7 or higher is required for building, has been tested on Windows with Visual Studio and<br/>
-  gcc/mingw32, (thanks to Cwiiis https://github.com/Cwiiis)<br/>
+- CMake 3.7 or higher is required for building, has been tested on Windows with Visual Studio and gcc/mingw32<br/>
+  and also built and tested under Linux.<br/>
 - A C++ compiler that supports modern STL.<br/>
 
 ## Usage

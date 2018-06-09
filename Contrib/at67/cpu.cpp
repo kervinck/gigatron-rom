@@ -217,6 +217,31 @@ namespace Cpu
         } 
     }
 
+    void TestSYS_Exec_88(void)
+    {
+        //_ROM[0x00AD][0] = 0x00;
+        //_ROM[0x00AD][1] = 0x7F;
+
+        //_ROM[0x00AF][0] = 0x00;
+        //_ROM[0x00AF][1] = 0x9F;
+
+        _ROM[0x00AD][0] = 0x00;
+        _ROM[0x00AD][1] = 0x00;
+
+        _ROM[0x00AF][0] = 0x00;
+        _ROM[0x00AF][1] = 0x81;
+
+        _ROM[0x00B5][0] = 0xDC;
+        _ROM[0x00B5][1] = 0xCF;
+
+        _ROM[0x00B6][0] = 0x80;
+        _ROM[0x00B6][1] = 0x23;
+
+        _ROM[0x00BB][0] = 0x80;
+        _ROM[0x00BB][1] = 0x00;
+    }
+
+
     void initialise(State& S)
     {
 #ifdef _WIN32
@@ -264,6 +289,8 @@ namespace Cpu
 #endif
         }
         saveScanlineModes();
+
+        TestSYS_Exec_88();
 
         // SDL initialisation
         if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS) < 0)
