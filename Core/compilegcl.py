@@ -47,11 +47,11 @@ patchArea = 0x5b86 # Somewhere after the ROMv1 Loader's buffer
 
 data = data[:-1]
 data += ''.join(chr(byte) for byte in [
-  H(patchArea), L(patchArea), 6,    # Patch segment, 6 bytes at $5b80
-  0x11, L(vCpuStart), H(vCpuStart), # LDWI vCpuStart
+  patchArea>>8, patchArea&255, 6,   # Patch segment, 6 bytes at $5b80
+  0x11, vCpuStart&255, vCpuStart>>8,# LDWI vCpuStart
   0x2b, 0x1a,                       # STW  vLR
   0xff,                             # RET
-  0x00, H(patchArea), L(patchArea)  # Execute: run patch first
+  0x00, patchArea>>8, patchArea&255 # Execute: run patch first
 ])
 
 #-----------------------------------------------------------------------
