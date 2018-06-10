@@ -105,7 +105,7 @@ def L(word):
    return word & 255
 
 def align(n, chunkSize=0x10000):
-  """Insert nops to align with chuck"""
+  """Insert nops to align with chunk boundary"""
   global _romSize, _maxRomSize
   _maxRomSize = 0x10000
   while _romSize % n > 0:
@@ -128,10 +128,11 @@ def wait(n):
     n -= 1
 
 def pc():
+  """Current ROM address"""
   return _romSize
 
 def zpByte(len=1):
-  """Allocate one or more bytes from the zero page"""
+  """Allocate one or more bytes from the zero-page"""
   global _zpSize
   s = _zpSize
   if s <= 0x80 and 0x80 < s + len:
@@ -141,6 +142,7 @@ def zpByte(len=1):
   return s
 
 def zpReset(startFrom=1):
+  """Reset zero-page allocation"""
   global _zpSize
   _zpSize = startFrom
 
@@ -166,6 +168,7 @@ def trampoline():
   C('+-----------------------------------+')
 
 def end():
+  """Resolve symbols and write output"""
   errors = 0
 
   for name, where in _refsL:
