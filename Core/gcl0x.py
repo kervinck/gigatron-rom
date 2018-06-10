@@ -10,7 +10,6 @@ import sys
 # XXX Give warning when def-block contains 'call' put no 'push'
 # XXX Give warning when def-block contains code but no 'ret'
 # XXX Primitive or macro to clear just lower byte of vAC
-# XXX Give warning when not all comments are closed
 # XXX Give warning when a variable is not both written and read 
 # XXX Macros
 # XXX 'page' macro
@@ -19,9 +18,9 @@ class Program:
   def __init__(self, address, name, forRom=True):
     self.name = name
     self.forRom = forRom # Inject trampolines
-    self.comment = 0
+    self.comment = 0     # Nesting level
     self.lineNumber, self.filename = 0, None
-    self.blocks, self.block = [0], 1
+    self.blocks, self.blockId = [0], 1
     self.loops = {} # block -> address of last do
     self.conds = {} # block -> address of continuation
     self.defs  = {} # block -> address of last def
@@ -34,8 +33,7 @@ class Program:
 
   def org(self, address):
     """Set a new address"""
-    if self.vPC != self.segStart:
-      self.closeSegment()
+    self.closeSegment()
     self.segStart = address
     self.vPC = address
     page = address & ~255
@@ -52,15 +50,18 @@ class Program:
 
   def closeSegment(self):
     """Register length of segment"""
-    print ' Segment at %04x size %3d used %3d unused %3d' % (
-      self.segStart,
-      self.segEnd - self.segStart,
-      self.vPC - self.segStart,
-      self.segEnd - self.vPC)
-    length = self.vPC - self.segStart
-    assert 1 <= length <= 256
-    define('$%s.seg.%d' % (self.name, self.segId), length)
-    self.segId += 1
+    if len(self.blocks) > 1:
+      self.error('Unterminated block')
+    if self.vPC != self.segStart:
+      print ' Segment at %04x size %3d used %3d unused %3d' % (
+        self.segStart,
+        self.segEnd - self.segStart,
+        self.vPC - self.segStart,
+        self.segEnd - self.vPC)
+      length = self.vPC - self.segStart
+      assert 1 <= length <= 256
+      define('$%s.seg.%d' % (self.name, self.segId), length)
+      self.segId += 1
 
   def thisBlock(self):
     return self.blocks[-1]
@@ -87,7 +88,7 @@ class Program:
         nextWord = ''
         if nextChar == '{': self.comment += 1
         elif nextChar == '}': self.error('Spurious %s' % repr(nextChar))
-        elif nextChar == '[': self.blocks.append(self.block); self.block +=  1
+        elif nextChar == '[': self.blocks.append(self.blockId); self.blockId +=  1
         elif nextChar == ']':
           if len(self.blocks) <= 1:
             self.error('Unexpected %s' % repr(nextChar))
@@ -413,10 +414,9 @@ class Program:
     return (name, number, op if len(op)>0 else None)
 
   def end(self):
-    if self.vPC != self.segStart:
-      self.closeSegment()
-    if len(self.conds) > 0:
-      self.error('Dangling if statements')
+    if self.comment > 0:
+      self.error('Unterminated comment')
+    self.closeSegment()
     print ' Variables count %d bytes %d end %04x' % (len(self.vars), 2*len(self.vars), zpByte(0))
     symbols, n = sorted(self.vars.keys()), 8
     for i in range(0, len(symbols), n):
