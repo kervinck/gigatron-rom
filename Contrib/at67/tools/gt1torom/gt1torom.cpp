@@ -8,10 +8,10 @@
 #define GT1TOROM_MINOR_VERSION "1"
 #define GT1TOROM_VERSION_STR "gt1torom v" GT1TOROM_MAJOR_VERSION "." GT1TOROM_MINOR_VERSION
 
-#define GT1_SIZE (1<<16)
+#define GT1_MAX_SIZE (1<<16)
 
 
-uint8_t _gt1[GT1_SIZE];
+uint8_t _gt1[GT1_MAX_SIZE];
 
 
 int main(int argc, char* argv[])
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     }
 
     // Load .gt1 file
-    gt1file.read((char *)_gt1, sizeof(_gt1));
+    gt1file.read((char *)_gt1, GT1_MAX_SIZE);
     if(gt1file.bad())
     {
         fprintf(stderr, "gt1torom : failed to read %s .gt1 file.\n", inputFilename.c_str());
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     }
     int gt1Size = int(gt1file.gcount());
 
-    std::string outputFilename0 = std::string(argv[2]) + "0";
+    std::string outputFilename0 = std::string(argv[2]) + "_t0";
     std::ofstream outfile0(outputFilename0, std::ios::binary | std::ios::out);
     if(!outfile0.is_open())
     {
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    std::string outputFilename1 = std::string(argv[2]) + "1";
+    std::string outputFilename1 = std::string(argv[2]) + "_t1";
     std::ofstream outfile1(outputFilename1, std::ios::binary | std::ios::out);
     if(!outfile1.is_open())
     {

@@ -23,13 +23,13 @@ and possibly even Android. As of v0.5.6 it has only been tested on Microsoft Win
 - A debugging mode that lets you pause the simulation or single step through vCPU code.<br/>
 - Upload assembled vCPU code to RAM.<br/>
 - Upload assembled Native code to ROM, (**_emulation only_**).<br/>
-- Supports the Gigatron TTL's **_GT1_** object file format.<br/>
+- Supports the Gigatron TTL's .**_gt1_** object file format.<br/>
 - An inbuilt file and directory browser for uploading.<br/>
 - Multiple scanline disable options, (default key **_F3_**, **_emulation only_**), will disable scanlines<br/>
   offering large amounts of extra processor time for vCPU code.<br/>
 - Input keys easily configurable through an INI file.<br/>
 - On screen help menu, (accessible with 'H/h' by default), that fully explains each key and it's function.<br/>
-- Optional configuration files, **_graphics_config.ini_**, **_input_config.ini_** and **_high_scores.ini_**.<br/>
+- Optional configuration files, "**_graphics_config.ini_**", "**_input_config.ini_**" and "**_high_scores.ini_**".<br/>
 - You may now start the executable anywhere, the default ROM file and default font are now built into the<br/>
   executable.<br/>
 
@@ -63,25 +63,25 @@ and possibly even Android. As of v0.5.6 it has only been tested on Microsoft Win
   the idea). The only dependency is the shared library\/DLL from SDL2 that either must be in the current<br/>
   working directory path or in the appropriate system directory.<br/>
 - Custom ROM's can be used by placing them in the current working directory with the executable and naming<br/>
-  them **_"theloop.2.rom"_**.<br/>
+  them "**_theloop.2.rom_**".<br/>
 
 ## Configuration
 - The emulator may be placed anywhere in any directory as long as it has access to the SDL2 shared library.<br/>
-- The emulator will search for and use a file named **_graphics_config.ini_** in it's current<br/>
+- The emulator will search for and use a file named "**_graphics_config.ini_**" in it's current<br/>
   working directory. This file allows the emulator's graphics and video options to be completely user<br/>
-  configured. The example **_graphics_config.ini_** file contains instructions on it's use.<br/>
+  configured. The example "**_graphics_config.ini_**" file contains instructions on it's use.<br/>
   e.g.  Fullscreen = 1, will create a full sized screen that minimises when it loses focus.<br/>
         Fullscreen = 0, will create a window that does not minimise when it loses focus.<br/>
-- The emulator will search for and use a file named **_"input_keys.ini"_** in it's current<br/>
+- The emulator will search for and use a file named "**_input_keys.ini_**" in it's current<br/>
   working directory. This file allows the emulator's keys to be completely user configured. The on<br/>
   screen help menu also uses this file to display help instructions. See the file for help on input<br/>
   configuration.<br/>
 
-- The emulator will search for and use an optional file named **_"high_scores.ini"_** in it's current<br/>
+- The emulator will search for and use an optional file named "**_high_scores.ini_**" in it's current<br/>
   working directory. This file allows the emulator to load and save segments of memory and have them<br/>
   regularly updated, (can be used for debugging, replays, high scores, etc), see the file for help.<br/>
-  Files ending in **_".dat"_** will be created in the current working directory of the emulator for<br/>
-  every entry that is made and successfully parsed within **_"high_scores.ini"_**. These **_".dat"_**<br/>
+  Files ending in .**_dat_** will be created in the current working directory of the emulator for<br/>
+  every entry that is made and successfully parsed within "**_high_scores.ini_**". These .**_dat_**<br/>
   files contain the individual memory segments loaded and saved to disk for each game/application.<br/>
 
 ## Controls
@@ -125,10 +125,10 @@ and possibly even Android. As of v0.5.6 it has only been tested on Microsoft Win
 
 ## Assembler
 - The assembler is built into the executable, there are no makefiles or command line programs to<br/>
-  run. All you have to do is load the **_.vasm_** file within the file browser, (press **_L_** to enable<br/>
+  run. All you have to do is load the .**_vasm_** file within the file browser, (press **_L_** to enable<br/>
   the browser), upon loading your file will automatically be assembled and any errors printed to<br/>
-  **_stderr_**. If there are no errors then a **_.gt1_** file will automatically be produced as long as there is<br/>
-  no native code within the **_.vasm_** file; the code is then executed within the Gigatron CPU emulator.<br/>
+  **_stderr_**. If there are no errors then a .**_gt1_** file will automatically be produced as long as there is<br/>
+  no native code within the .**_vasm_** file; the code is then executed within the Gigatron CPU emulator.<br/>
 - The assembler is able to assemble vCPU as well as native code.<br/>
 - vCPU code is assembly code that is variable length Von Neumann instructions supporting 16bit operations<br/>
   that are executed by the inbuilt interpreter of the Gigatron TTL firmware and are stored in RAM.<br/>
@@ -138,7 +138,7 @@ and possibly even Android. As of v0.5.6 it has only been tested on Microsoft Win
   but the ROM within the emulator is able to be modified and experimented with, which this assembler<br/>
   lets you do very easily.<br/>
 - The Assembler differentiates between the two instruction sets, (**_vCPU_** and **_Native_**), by preceding<br/>
-  Native instructions with a period **_'.'_**<br/>
+  Native instructions with a period '**_\._**'<br/>
 - The Assembler supports Labels, Equates, Expressions and self modifying code.<br/>
 - The Assembler recognises the following reserved words:<br/>
     - **_\_startAddress\__** : entry point for the code, if this is missing defaults to 0x0200.<br/>
@@ -157,16 +157,16 @@ and possibly even Android. As of v0.5.6 it has only been tested on Microsoft Win
     - **_dec_** : 1234<br/>
     - **_oct_** : 0o777 or 0q777<br/>
     - **_bin_** : 0b01011111<br/>
-- Comments can go anywhere on a line and commence with **_';'_** or **_'#'_**<br/>
-- You can include files into your projects using the **_%include_** command.<br/>
-- A fully parameterised macro system has been added that can expand in place code using the **_%MACRO_** and<br/>
-  **_%ENDM_** commands.<br/>
+- Comments can go anywhere on a line and commence with '**_\;_**' or '**_\#_**'<br/>
+- You can include files into your projects using the %**_include_** command.<br/>
+- A fully parameterised macro system has been added that can expand in place code using the %**_MACRO_** and<br/>
+  %**_ENDM_** commands.<br/>
 
 ## Debugger
 - The debugger allows you to single step through your vCPU code based on a variable changing<br/>
   its value. This variable by default is **_videoY_** located at address 0x0009, it counts horizontal<br/>
-  scan lines and thus should give decent resolution for most **_.vasm_** and **_.gt1_** files.<br/>
-- The variable can be altered within a **_.vasm_** file like this:<br/>
+  scan lines and thus should give decent resolution for most .**_vasm_** and .**_gt1_** files.<br/>
+- The variable can be altered within a .**_vasm_** file like this:<br/>
 ~~~
 _singleStepWatch_   EQU     xyPos
 ~~~
@@ -186,7 +186,7 @@ _singleStepWatch_   EQU     xyPos
                                                                  *frameCounter, maxTicks + 1,
                                                                  vBlank, *level_string)
 ~~~  
-- Indirection is specified using **_'\*'_** to access and print the variable's data.<br/>
+- Indirection is specified using '**_\*_**' to access and print the variable's data.<br/>
 - You can specify field width, fill chars and use the same numeric literals as the rest of the Assembler. e.g:<br/>
     - %c will print a char.<br/>
     - %d will print an int.<br/>
@@ -201,7 +201,7 @@ _singleStepWatch_   EQU     xyPos
 ## Memory/State saving
 - Real time saving of Gigatron and applications/games memory and state without any involvement of software<br/>
   on the Gigatron, (it's firmware or it's applications). This generic interface is controlled with **_INI_**<br/>
-  files, (see **_high_scores.ini_** for an example.
+  files, (see "**_high_scores.ini_**" for an example.
 
 ## Errors
 - All error reporting is sent to **_stderr_**, under Windows a separate console is opened, (that is<br/>

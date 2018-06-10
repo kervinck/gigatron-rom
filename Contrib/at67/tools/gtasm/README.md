@@ -1,5 +1,5 @@
 # gtasm
-Takes a **_.vasm_** or **_.asm_** or **_.s_** vCPU assembly file and builds into a **_.gt1_** output file.</br>
+Takes a .**_vasm_** or .**_asm_** or .**_s_** assembly file, (**_vCPU_**), and assembles it into a .**_gt1_** output file.</br>
 
 ## Building
 - CMake 3.7 or higher is required for building, has been tested on Windows with Visual Studio and gcc/mingw32<br/>
@@ -10,10 +10,10 @@ Takes a **_.vasm_** or **_.asm_** or **_.s_** vCPU assembly file and builds into
 gtasm \<input filename\> \<start address in hex\></br>
 
 ## Address
-The address, **_(specified in hex)_**, is the start address of the vCPU assembly code.<br/>
+The address, (**_specified in hex_**), is the start address of the vCPU assembly code.<br/>
 
 ## Output
-gtasm outputs a standard **_.gt1_** file, containing the start address and segments of the assembled code.<br/>
+gtasm outputs a standard .**_gt1_** file, containing the start address and segments of the assembled code.<br/>
 
 ## Logging
 Warnings and errors are output to **_stderr_**, (console under main window in Windows).

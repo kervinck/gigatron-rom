@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
     // Modifies ROM to disable scanline VideoB
     setScanlineModeVideoB();
 
-    std::string outputFilename0 = std::string(argv[2]) + "0";
+    std::string outputFilename0 = std::string(argv[2]) + "_0";
     std::ofstream outfile0(outputFilename0, std::ios::binary | std::ios::out);
     if(!outfile0.is_open())
     {
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    std::string outputFilename1 = std::string(argv[2]) + "1";
+    std::string outputFilename1 = std::string(argv[2]) + "_1";
     std::ofstream outfile1(outputFilename1, std::ios::binary | std::ios::out);
     if(!outfile1.is_open())
     {

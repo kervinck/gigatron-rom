@@ -1,6 +1,6 @@
 # gtsplitrom
-Takes a gigatron **_.rom_** file and splits it into two individual rom files, one for instructions and one</br>
-for data. Input file has to be 128KBytes in length, if greater then only the first 128KBytes will be</br>
+Takes a gigatron .**_rom_** file and splits it into two individual .**_rom_** files, one for instructions and one</br>
+for data. Input file has to be 128KBytes in length, if greater, then only the first 128KBytes will be</br>
 read and split.</br>
 
 ## Building
@@ -15,5 +15,5 @@ gtsplitrom \<input filename\> \<output filename\></br>
 gtsplitrom theloop.2.rom test.rom<br/>
 
 ## Output
-Output is always two files each 64KBytes in length, i.e. from above example, output would be **_test.rom0_**<br/>
-and **_test.rom1_**.<br/>
+Output is always two files each 64KBytes in length, i.e. from the above example, output would be **_test.rom\_0_**<br/>
+and **_test.rom\_1_**.<br/>

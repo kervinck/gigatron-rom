@@ -1,6 +1,6 @@
 # gt1torom
-Takes a gigatron **_.gt1_** file and splits it into two individual ROM files, one for instructions and one</br>
-for data. Output ROM files will contain .gt1 file in correct loading format with correct ROM trampolines.</br>
+Takes a gigatron .**_gt1_** file and splits it into two individual .**_rom_** files, one for instructions and one</br>
+for data. Output ROM files will contain the .**_gt1_** file in correct loading format with correct ROM trampolines.</br>
 
 ## Building
 - CMake 3.7 or higher is required for building, has been tested on Windows with Visual Studio and gcc/mingw32<br/>
@@ -8,11 +8,14 @@ for data. Output ROM files will contain .gt1 file in correct loading format with
 - A C++ compiler that supports modern STL.<br/>
 
 ## Usage
-gt1torom \<input filename\> \<output filename\></br>
+gt1torom \<input filename\> \<output filename\> \<start address in hex\></br>
+
+## Address
+The address, (**_specified in hex_**), is the start address of the ROM trampoline code.<br/>
 
 ## Example
-gt1torom test.gt1 test.rom<br/>
+gt1torom test.gt1 test.rom 0x8000<br/>
 
 ## Output
-Output is always two files, one for the instruction ROM and one for the data ROM, i.e. from above example, output<br/>
-would be **_test.rom0_** and **_test.rom1_**.<br/>
+Output is always two files, one for the instruction ROM and one for the data ROM, i.e. from the above example, output<br/>
+would be **_test.rom\_t0_** and **_test.rom\_t1_**.<br/>
