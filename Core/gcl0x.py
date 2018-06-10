@@ -16,10 +16,9 @@ import sys
 # XXX 'page' macro
 
 class Program:
-  def __init__(self, address, name, forRom=True, forGt1=False):
+  def __init__(self, address, name, forRom=True):
     self.name = name
-    self.forRom = forRom
-    self.forGt1 = forGt1
+    self.forRom = forRom # Inject trampolines
     self.comment = 0
     self.lineNumber, self.filename = 0, None
     self.blocks, self.block = [0], 1
@@ -27,33 +26,41 @@ class Program:
     self.conds = {} # block -> address of continuation
     self.defs  = {} # block -> address of last def
     self.vars  = {} # name -> address
+    self.segStart = None
     self.vPC = None
     self.segId = 0
     self.org(address)
     self.version = None # Must be first word 'gcl<N>'
 
-  def segInfo(self):
+  def org(self, address):
+    """Set a new address"""
+    if self.vPC != self.segStart:
+      self.closeSegment()
+    self.segStart = address
+    self.vPC = address
+    page = address & ~255
+    self.segEnd = page + (250 if 0x100 <= page <= 0x400 else 256)
+
+  def openSegment(self):
+    """Write header for segment"""
+    address = self.segStart
+    assert self.segId == 0 or address>>8 != 0 # Zero-page segment can only be first
+    self.putInRomTable(address>>8, '| RAM segment address (high byte first)')
+    self.putInRomTable(address&0xff, '|')
+    # Fill in the length through the symbol table
+    self.putInRomTable(lo('$%s.seg.%d' % (self.name, self.segId)), '| Length (1..256)')
+
+  def closeSegment(self):
+    """Register length of segment"""
     print ' Segment at %04x size %3d used %3d unused %3d' % (
       self.segStart,
       self.segEnd - self.segStart,
       self.vPC - self.segStart,
       self.segEnd - self.vPC)
-    define('$%s.seg.%d' % (self.name, self.segId), self.vPC - self.segStart)
+    length = self.vPC - self.segStart
+    assert 1 <= length <= 256
+    define('$%s.seg.%d' % (self.name, self.segId), length)
     self.segId += 1
-
-  def org(self, address):
-    # Configure start address for emit
-    if self.vPC is not None and self.segStart < self.vPC:
-      self.segInfo()
-    if not self.forGt1 and (address != self.vPC or self.segStart < self.vPC):
-      assert address>>8 # Because a zero would mark the end of stream
-      self.putInRomTable(address>>8, '| RAM segment address (high byte first)')
-      self.putInRomTable(address&0xff, '|')
-      self.putInRomTable(lo('$%s.seg.%d' % (self.name, self.segId)), '| Length (1..256)')
-    self.segStart = address
-    page = address & ~255
-    self.segEnd = page + (250 if page <= 0x400 else 256)
-    self.vPC = self.segStart
 
   def thisBlock(self):
     return self.blocks[-1]
@@ -111,16 +118,20 @@ class Program:
   def emit(self, byte, comment=None):
     """Next program byte in RAM"""
     if self.vPC >= self.segEnd:
-        self.error('Out of code space')
+      self.error('Out of code space')
     if byte < 0 or byte >= 256:
-        self.error('Value out of range %d (must be 0..255)' % byte)
+      self.error('Value out of range %d (must be 0..255)' % byte)
+    if self.segStart == self.vPC:
+      self.openSegment()
     self.putInRomTable(byte, comment)
     self.vPC += 1
 
   def opcode(self, ins):
     """Next opcode in RAM"""
     if self.vPC >= self.segEnd:
-        self.error('Out of code space')
+      self.error('Out of code space')
+    if self.segStart == self.vPC:
+      self.openSegment()
     self.putInRomTable(lo(ins), '%04x %s' % (self.vPC, ins))
     self.vPC += 1
 
@@ -402,8 +413,8 @@ class Program:
     return (name, number, op if len(op)>0 else None)
 
   def end(self):
-    self.segInfo()
-    # XXX Check all blocks are closed
+    if self.vPC != self.segStart:
+      self.closeSegment()
     if len(self.conds) > 0:
       self.error('Dangling if statements')
     print ' Variables count %d bytes %d end %04x' % (len(self.vars), 2*len(self.vars), zpByte(0))

@@ -8,11 +8,10 @@ from asm import *
 import gcl0x as gcl
 
 # TODO: Save out zpFree in theloop.py
-# TODO: Custom start address
 # TODO: Replace SYMTABLE with a more formally defined ABI (e.g. "bindings.json")
 # TODO: Reverse the concept: first compile to GT1, then include it into ROM file
 
-vCpuStart = 0x200
+vCpuStart = 0x200 # default
 
 if len(argv) is not 3:
   print 'Usage: compilegcl.py SOURCE SYMTABLE'
@@ -23,7 +22,7 @@ def addProgram(gclSource, name, zpFree=0x0030):
   pcStart = pc()
   label(name)
   print 'Compiling file %s label %s' % (gclSource, name)
-  program = gcl.Program(vCpuStart, name, False)
+  program = gcl.Program(vCpuStart, name, forRom=False)
   zpReset(zpFree)
   for line in open(gclSource).readlines():
     program.line(line)
