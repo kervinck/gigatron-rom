@@ -46,7 +46,7 @@ class Program:
     if self.vPC is not None and self.segStart < self.vPC:
       self.segInfo()
     if not self.forGt1 and (address != self.vPC or self.segStart < self.vPC):
-      assert(address>>8) # Because a zero would mark the end of stream
+      assert address>>8 # Because a zero would mark the end of stream
       self.putInRomTable(address>>8, '| RAM segment address (high byte first)')
       self.putInRomTable(address&0xff, '|')
       self.putInRomTable(lo('$%s.seg.%d' % (self.name, self.segId)), '| Length (1..256)')

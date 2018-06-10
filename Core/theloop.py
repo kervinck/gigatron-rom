@@ -63,7 +63,7 @@ syncBits = hSync+vSync # Both pulses negative
 
 # When the XOUT register is in the circuit, the rising edge triggers its update.
 # The loop can therefore not be agnostic to the horizontal pulse polarity.
-assert(syncBits & hSync != 0)
+assert syncBits & hSync != 0
 
 # VGA 640x480 defaults (to be adjusted below!)
 vFront = 10     # Vertical front porch
@@ -277,15 +277,15 @@ def runVcpu(n, ref=None):
 
   n /= 2
   returnPc = pc() + (5 if fastRunVcpu else 7)
-  ld(L(returnPc))               #0
+  ld(returnPc&255)              #0
   comment = C(comment)
   st([vReturn])                 #1
   if fastRunVcpu:
     # In this mode [vReturn+1] will not be used
-    assert H(returnPc) == 2
+    assert returnPc>>8 == 2
   else:
     # Allow interpreter to be called from anywhere
-    ld(H(returnPc))             #2
+    ld(returnPc>>8)             #2
     st([vReturn+1])             #3
   ld(hi('ENTER'), Y)            #4
   jmpy('ENTER')                 #5
@@ -399,10 +399,10 @@ st([bootCheck])
 
 # vCPU reset handler
 vReset = videoTable + 240 # we have 10 unused bytes behind the video table
-ld(L(vReset)-2);                C('Setup vCPU reset handler')
+ld((vReset&255)-2);             C('Setup vCPU reset handler')
 st([vPC])
 adda(2, X)
-ld(H(vReset))
+ld(vReset>>8)
 st([vPC+1], Y)
 st('LDI',             [Y,Xpp])
 st('SYS_Reset_36',    [Y,Xpp])
@@ -427,7 +427,7 @@ ld(syncBits, OUT)
 # XXX Everything below should at one point migrate to Reset.gcl
 
 # Init sound tables
-ld(H(soundTable), Y);           C('Setup sound tables')
+ld(soundTable>>8, Y);           C('Setup sound tables')
 ld(0)
 st([channel])
 ld(0, X)
@@ -516,17 +516,17 @@ nop()
 # SYS_Reset_36 provides the SYS instruction to execute that.
 
 label('SYS_Reset_36')
-assert(H(pc())==0)
+assert pc()>>8 == 0
 value = getenv('romType')
 value = int(value, 0) if value else 0
 ld(value);                      C('Set ROM type/version')#15
 st([romType])                   #16
 ld(0)                           #17
 st([vSP])                       #18 Reset stack pointer
-assert(L(vCpuStart)==0)
+assert vCpuStart&255 == 0
 st([vLR])                       #19
 st([soundTimer])                #20
-ld(H(vCpuStart))                #21
+ld(vCpuStart>>8)                #21
 st([vLR+1])                     #22
 ld('videoF')                    #23 Do this before first visible pixels
 st([videoDorF])                 #24
@@ -559,7 +559,7 @@ ld(-36/2)                       #33
 #       vLR             vCPU continues here (input set by caller)
 
 label('SYS_Exec_88')
-assert(H(pc())==0)
+assert pc()>>8 == 0
 ld(0)                           #15 Address of loader on zero page
 st([vPC+1], Y)                  #16
 ld([vSP])                       #17 Below the current stack pointer
@@ -660,7 +660,7 @@ ld(hi('REENTER'), Y)            #19
 jmpy('REENTER')                 #20
 ld(-24/2)                       #21
 
-assert L(pc())==0
+assert pc()&255 == 0
 
 #-----------------------------------------------------------------------
 #
@@ -673,10 +673,10 @@ align(0x100, 0x200)
 # - Fetch next Yi and store it for retrieval in the next scan lines
 # - Calculate Xi from dXi, but there is no cycle time left to store it as well
 label('videoA')
-assert(lo('videoA') == 0)       # videoA starts at the page boundary
+assert lo('videoA') == 0        # videoA starts at the page boundary
 ld('videoB')                    #29
 st([nextVideo])                 #30
-ld(H(videoTable), Y)            #31
+ld(videoTable>>8, Y)            #31
 ld([videoY], X)                 #32
 ld([Y,X])                       #33
 st([Y,Xpp])                     #34 Just to increment X
@@ -717,7 +717,7 @@ anda(0xfc)                      #15
 xora([Y,wavX])                  #16
 ld(AC, X)                       #17
 ld([Y,wavA])                    #18
-ld(H(soundTable), Y)            #19
+ld(soundTable>>8, Y)            #19
 adda([Y,X])                     #20
 bmi('.sound2a')                 #21
 bra('.sound2b')                 #22
@@ -737,7 +737,7 @@ ld(syncBits, OUT);              C('End horizontal pulse')#28
 label('videoB')
 ld('videoC')                    #29
 st([nextVideo])                 #30
-ld(H(videoTable), Y)            #31
+ld(videoTable>>8, Y)            #31
 ld([videoY])                    #32
 adda(1, X)                      #33
 ld([frameX])                    #34
@@ -811,7 +811,7 @@ ld([channel])                   #1 Advance to next sound channel
 
 # Vertical blank part of video loop
 label('vBlankStart')            # Start of vertical blank interval
-assert(L(pc())<16)              # Assure that we are in the beginning of the next page
+assert pc()&255 < 16            # Assure that we are in the beginning of the next page
 
 st([videoSync0]);               C('Start of vertical blank interval')#32
 ld(syncBits^hSync)              #33
@@ -961,7 +961,7 @@ anda(0xfc)                      #15
 xora([Y,wavX])                  #16
 ld(AC, X)                       #17
 ld([Y,wavA])                    #18
-ld(H(soundTable), Y)            #19
+ld(soundTable>>8, Y)            #19
 adda([Y,X])                     #20
 bmi('.sound1a')                 #21
 bra('.sound1b')                 #22
@@ -1057,7 +1057,7 @@ suba(1)                         #43 ... count down the timer
 st([resetTimer])                #44
 anda(127)                       #45
 beq('.restart2')                #46
-ld(L(vReset)-2)                 #47 Start force reset when hitting 0
+ld((vReset&255)-2)              #47 Start force reset when hitting 0
 bra('.restart1')                #48 ... otherwise do nothing yet
 bra('.restart3')                #49
 label('.restart0')
@@ -1069,7 +1069,7 @@ label('.restart1')
 nop()                           #50
 label('.restart2')
 st([vPC])                       #48 Continue force reset
-ld(H(vReset))                   #49
+ld(vReset>>8)                   #49
 st([vPC+1])                     #50
 label('.restart3')
 
@@ -1140,7 +1140,7 @@ ld(-28/2)                       #22
 ld(hi('REENTER'), Y)            #23
 jmpy('REENTER')                 #24
 nop()                           #25
-assert(L(pc()) == 255)
+assert pc()&255 == 255
 
 #-----------------------------------------------------------------------
 #
@@ -1162,7 +1162,7 @@ assert(L(pc()) == 255)
 # first instruction is bra() which normally doesn't cross page boundaries,
 # in this case it will still jump into the right space, because branches
 # from $xxFF land in the next page anyway.
-while L(pc()) < 255:
+while pc()&255 < 255:
   nop()
 label('ENTER')
 bra('.next2')                   #0 Enter at '.next2' (so no startup overhead)
@@ -1191,7 +1191,7 @@ ld([Y,X]);                      C('Prefetch operand')#9
 # Resync with caller and return
 label('EXIT')
 adda(maxTicks)                  #3
-bgt(L(pc()));                   C('Resync')#4
+bgt(pc()&255);                  C('Resync')#4
 suba(1)                         #5
 if fastRunVcpu:
   ld(2, Y)                      #6
@@ -1624,7 +1624,7 @@ st([vTmp])                      #12
 # Instruction RET: Function return (PC=LR-2), 16 cycles
 label('RET')
 ld([vLR])                       #10
-assert(L(pc()) == 0)
+assert pc()&255 == 0
 
 #-----------------------------------------------------------------------
 #
@@ -2011,11 +2011,11 @@ for ix in range(255):
   pattern = ['x' if i<n else '1' if ix&(1<<i) else '0' for i in range(8)]
   ld(ix>>n); C('0b%s >> %d' % (''.join(reversed(pattern)), n))
 
-assert(L(pc()) == 255)
+assert pc()&255 == 255
 bra([vTmp]);                    C('Jumps back into next page')
 
 label('SYS_LSRW1_48')
-assert(L(pc()) == 0)#First instruction on this page must be a nop
+assert pc()&255 == 0            #First instruction on this page must be a nop
 nop()                           #15
 ld(hi('shiftTable'), Y);        C('Logical shift right 1 bit (X >> 1)')#16
 ld('.sysLsrw1a');               C('Shift low byte')#17
@@ -2249,10 +2249,10 @@ ld(-40/2)                       #37
 
 def trampoline3a():
   """Read 3 bytes from ROM page"""
-  while L(pc()) < 128-7:
+  while pc()&255 < 128-7:
     nop()
   bra(AC)                       #18
-  C('Trampoline for page $%02x00 reading (entry)' % H(pc()))
+  C('Trampoline for page $%02x00 reading (entry)' % (pc()>>8))
   bra(123)                      #19
   st([sysArgs+0])               #21
   ld([sysArgs+6])               #22
@@ -2262,10 +2262,10 @@ def trampoline3a():
 
 def trampoline3b():
   """Read 3 bytes from ROM page (continue)"""
-  while L(pc()) < 256-6:
+  while pc()&255 < 256-6:
     nop()
   st([sysArgs+1])               #27
-  C('Trampoline for page $%02x00 reading (continue)' % H(pc()))
+  C('Trampoline for page $%02x00 reading (continue)' % (pc()>>8))
   ld([sysArgs+6])               #28
   adda(2)                       #29
   ld(hi('txReturn'), Y)         #30
@@ -2280,7 +2280,7 @@ def trampoline3b():
 # sysArgs[0:3]  Pixels (output)
 
 label('SYS_Unpack_56')
-ld(H(soundTable), Y)            #15
+ld(soundTable>>8, Y)            #15
 ld([sysArgs+2])                 #16 a[2]>>2
 ora(0x03, X)                    #17
 ld([Y,X])                       #18
@@ -2434,9 +2434,9 @@ f.close()
 align(0x100)
 label('gigatronRaw')
 for i in xrange(len(raw)):
-  if L(i) < 251:
+  if i&255 < 251:
     ld(ord(raw[i]))
-  elif L(i) == 251:
+  elif i&255 == 251:
     trampoline()
 
 def importImage(rgbName, width, height, ref):
@@ -2617,7 +2617,7 @@ for i in xrange(0, len(raw), 3):
 label('zippedRacerHorizon')
 for i in xrange(len(packed)):
   ld(packed[i])
-  if L(pc()) == 251:
+  if pc()&255 == 251:
     trampoline()
 
 #-----------------------------------------------------------------------
@@ -2682,7 +2682,7 @@ for gclSource in argv[1:]:
   program.end()
 print
 
-if L(pc()):
+if pc()&255:
   trampoline()
 
 #-----------------------------------------------------------------------

@@ -98,12 +98,6 @@ def hi(name):
   _refsH.append((name, _romSize))
   return 0 # placeholder
 
-def H(word):
-  return word >> 8
-
-def L(word):
-   return word & 255
-
 def align(n, chunkSize=0x10000):
   """Insert nops to align with chunk boundary"""
   global _romSize, _maxRomSize
@@ -148,7 +142,7 @@ def zpReset(startFrom=1):
 
 def trampoline():
   """Read 1 byte from ROM page"""
-  while L(pc()) < 256-5:
+  while pc()&255 < 256-5:
     nop()
   bra(AC)                       #13
   """
@@ -348,7 +342,7 @@ def disassemble(opcode, operand, address=None):
     if address is not None and opcode & _maskCc != _jL and opcode & _maskBus == _busD:
       # We can calculate the destination address
       # XXX Except when the previous instruction is a far jump (jmp y,...)
-      lo, hi = L(address), H(address)
+      lo, hi = address & 255, address >> 8
       if lo == 255: # When branching from $xxFF, we still end up in the next page
         hi = (hi + 1) & 255
       destination = (hi << 8) + operand
@@ -473,8 +467,8 @@ def writeRomFiles(sourceFile):
     if postponed:
       file.write(postponed)
     file.write(14*' '+'%04x\n' % address)
-    assert(len(_rom0) == _romSize)
-    assert(len(_rom1) == _romSize)
+    assert len(_rom0) == _romSize
+    assert len(_rom1) == _romSize
 
   # Write symbol file
   # XXX Remove when compiler can work with "bindings.json"
