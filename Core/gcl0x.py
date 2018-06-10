@@ -30,6 +30,8 @@ class Program:
     self.segId = 0
     self.org(address)
     self.version = None # Must be first word 'gcl<N>'
+    self.execute = None
+    self.needPatch = False
 
   def org(self, address):
     """Set a new address"""
@@ -42,6 +44,8 @@ class Program:
   def openSegment(self):
     """Write header for segment"""
     address = self.segStart
+    if self.execute is None:
+      self.execute = address
     assert self.segId == 0 or address>>8 != 0 # Zero-page segment can only be first
     self.putInRomTable(address>>8, '| RAM segment address (high byte first)')
     self.putInRomTable(address&0xff, '|')
@@ -186,10 +190,13 @@ class Program:
 
     elif word == 'push': self.opcode('PUSH')
     elif word == 'pop':  self.opcode('POP')
-    elif word == 'ret':  self.opcode('RET')
+    elif word == 'ret':
+      self.opcode('RET')
+      if len(self.blocks) == 1:
+        self.needPatch = True # Top-level use of 'ret' --> apply patch
     elif word == 'call':
-          self.opcode('CALL')
-          self.emit(symbol('vAC'), '%04x vAC' % prev(self.vPC, 1))
+      self.opcode('CALL')
+      self.emit(symbol('vAC'), '%04x vAC' % prev(self.vPC, 1))
     elif word == 'peek': self.opcode('PEEK')
     elif word == 'deek': self.opcode('DEEK')
     else:

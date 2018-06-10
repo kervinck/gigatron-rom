@@ -19,7 +19,6 @@ if len(argv) is not 3:
   sys.exit(1)
 
 def addProgram(gclSource, name, zpFree=0x0030):
-  pcStart = pc()
   label(name)
   print 'Compiling file %s label %s' % (gclSource, name)
   program = gcl.Program(vCpuStart, name, forRom=False)
@@ -28,30 +27,35 @@ def addProgram(gclSource, name, zpFree=0x0030):
     program.line(line)
   program.end()
   end() # End assembly
-  print 'Success ROM %04x-%04x' % (pcStart, pc())
-  print
   data = getRom1()
-  return data[pcStart:pc()]
+
+  address = program.execute
+
+  # Inject patch for reliable start using ROM v1 Loader application
+  # See: https://forum.gigatron.io/viewtopic.php?p=27#p27
+  if program.needPatch:
+    patchArea = 0x5b86 # Somewhere after the ROMv1 Loader's buffer
+    print 'Apply patch %04x' % patchArea
+    data = data[:-1] # Remove terminating zero
+    data += ''.join(chr(byte) for byte in [
+      patchArea>>8, patchArea&255, 6,   # Patch segment, 6 bytes at $5b80
+      0x11, address&255, address>>8,    # LDWI address
+      0x2b, 0x1a,                       # STW  vLR
+      0xff,                             # RET
+      0x00
+    ])
+    address = patchArea
+
+  # Final two bytes are execution address
+  print 'Execute at %04x' % address
+  data += chr(address>>8)
+  data += chr(address&255)
+
+  return data
 
 align(0x100)
 loadBindings(argv[2])
 data = addProgram(argv[1], 'Main')
-
-#-----------------------------------------------------------------------
-# Inject patch for reliable start using ROM v1 Loader application
-# See: https://forum.gigatron.io/viewtopic.php?p=27#p27
-#-----------------------------------------------------------------------
-
-patchArea = 0x5b86 # Somewhere after the ROMv1 Loader's buffer
-
-data = data[:-1]
-data += ''.join(chr(byte) for byte in [
-  patchArea>>8, patchArea&255, 6,   # Patch segment, 6 bytes at $5b80
-  0x11, vCpuStart&255, vCpuStart>>8,# LDWI vCpuStart
-  0x2b, 0x1a,                       # STW  vLR
-  0xff,                             # RET
-  0x00, patchArea>>8, patchArea&255 # Execute: run patch first
-])
 
 #-----------------------------------------------------------------------
 #  Write out GT1 file
@@ -64,3 +68,5 @@ print 'Create file', gt1File
 
 with open(gt1File, 'wb') as output:
   output.write(data)
+
+print 'OK size', len(data)
