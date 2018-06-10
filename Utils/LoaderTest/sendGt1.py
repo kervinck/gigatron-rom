@@ -16,11 +16,15 @@
 #
 #-----------------------------------------------------------------------
 
+from __future__ import print_function
 import argparse
 import glob
 import serial # pySerial: http://pyserial.readthedocs.io/en/latest/index.html
 import sys
 from time import sleep
+
+# One-for-all error handler (don't throw scary stack traces at the user)
+sys.excepthook = lambda exType, exception, traceback: print('Failed: ' + str(exception))
 
 #-----------------------------------------------------------------------
 #       Command line arguments
@@ -43,7 +47,7 @@ args = parser.parse_args()
 
 def log(prefix, line):
   if args.verbose:
-    print prefix, line
+    print(prefix, line)
 
 def sendCommand(cmd=None, timeout=False):
   """Send command to Gigatron Adapter Interface and wait for ready prompt"""
@@ -58,8 +62,7 @@ def sendCommand(cmd=None, timeout=False):
       if line[-1] == '?': # Got prompt
         break
       if line.startswith('!'): # Got error
-        print 'Failed:', line[1:]
-        exit(1)
+        raise Exception(line[1:])
     line = readLine()
   return line
 
@@ -85,44 +88,34 @@ if not args.port:
   # Sometimes the Arduino shows up on /dev/tty.usbmodem* or /dev/ttyACM*
   serPorts = glob.glob('/dev/tty.usbmodem*') + glob.glob('/dev/ttyACM*')
   if len(serPorts) == 0:
-    print 'Failed: No USB device detected'
-    exit(1)
+    raise Exception('No USB device detected')
   if len(serPorts) > 1:
-    print 'Failed: More than one USB device detected: %s' % ' '.join(serPorts)
-    exit(1)
+    raise Exception('More than one USB device detected: %s' % ' '.join(serPorts))
   port = serPorts[0]
 else:
   port = args.port
 
-print 'Connecting to', port
-try:
-  ser = serial.Serial(port=port, baudrate=115200, timeout=2)
-except Exception, e:
-  print 'Failed: ' + str(e)
-  exit(1)
+print('Connecting to', port)
+ser = serial.Serial(port=port, baudrate=115200, timeout=2)
 
 #-----------------------------------------------------------------------
 #       Send program
 #-----------------------------------------------------------------------
 
 if args.filename:
-  try:
-    fp = open(args.filename, 'rb')
-  except Exception, e:
-    print 'Failed: ' + str(e)
-    exit(1)
+  fp = open(args.filename, 'rb')
 else:
   fp = sys.stdin
 
 sendCommand(timeout=True) # Wait for prompt, but not for too long
 
-print 'Resetting Gigatron'
+print('Resetting Gigatron')
 sendCommand('R')
 
-print 'Starting Loader'
+print('Starting Loader')
 sendCommand('L')
 
-print 'Sending program %s' % (repr(args.filename) if args.filename else 'from stdin')
+print('Sending program %s' % (repr(args.filename) if args.filename else 'from stdin'))
 ask = sendCommand('U')
 
 while ask[0].isdigit():
@@ -130,15 +123,14 @@ while ask[0].isdigit():
   n = int(ask[:-1])
   data = fp.read(n)
   if len(data) < n:
-    print 'Failed: File too short'
-    exit(1)
+    raise Exception('File too short')
   sys.stdout.write('.')
   sys.stdout.flush()
   ser.write(data)
   ask = sendCommand(None)
-print
+print()
 
-print 'Finished'
+print('Finished')
 
 if args.filename:
   fp.close()
