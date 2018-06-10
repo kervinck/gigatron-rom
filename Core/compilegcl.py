@@ -7,22 +7,23 @@ from os  import getenv
 from asm import *
 import gcl0x as gcl
 
-# TODO: Save out zpFree in theloop.py
+# TODO: Get vCpuSart and zpFree from bindings.json
 # TODO: Replace SYMTABLE with a more formally defined ABI (e.g. "bindings.json")
 # TODO: Reverse the concept: first compile to GT1, then include it into ROM file
 
-vCpuStart = 0x200 # default
+vCpuStart = 0x0200 # default
+zpFree    = 0x30   # default
 
 if len(argv) is not 3:
   print 'Usage: compilegcl.py SOURCE SYMTABLE'
   print 'Compile SOURCE.gcl file, linking against SYMTABLE'
   sys.exit(1)
 
-def addProgram(gclSource, name, zpFree=0x0030):
-  label(name)
-  print 'Compiling file %s label %s' % (gclSource, name)
-  program = gcl.Program(vCpuStart, name, forRom=False)
-  zpReset(zpFree)
+def addProgram(gclSource):
+  print 'Compiling file %s' % gclSource
+  program = gcl.Program(vCpuStart, 'Main', forRom=False)
+  align(1)        # Forces default maximum ROM size
+  zpReset(zpFree) # User variables can start here
   for line in open(gclSource).readlines():
     program.line(line)
   program.end()
@@ -53,9 +54,8 @@ def addProgram(gclSource, name, zpFree=0x0030):
 
   return data
 
-align(0x100)
 loadBindings(argv[2])
-data = addProgram(argv[1], 'Main')
+data = addProgram(argv[1])
 
 #-----------------------------------------------------------------------
 #  Write out GT1 file
