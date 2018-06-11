@@ -91,7 +91,7 @@
  "SYS_Exec_88"          : "0x00ad",
  "SYS_Out_22"           : "0x00f4",
  "SYS_In_24"            : "0x00f9",
- "SYS_NextByteIn"       : "0x02e9",
+ "SYS_NextByteIn_32"    : "0x02e9",
  "SYS_Random_34"        : "0x04a7",
  "SYS_LSRW7_30"         : "0x04b9",
  "SYS_LSRW8_24"         : "0x04c6",

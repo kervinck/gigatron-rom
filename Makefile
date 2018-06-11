@@ -1,6 +1,6 @@
 CFLAGS:=-std=c11 -O3 -Wall
 
-theloop.2.rom: Core/* Apps/* Images/* Makefile
+theloop.2.rom: Core/* Apps/* Images/* Makefile interface.json
 	# ROMv1 gets 0x1c. Further numbers to be decided.
 	env romType="0x1c"\
 	    PYTHONPATH="Core:$(PYTHONPATH)"\
