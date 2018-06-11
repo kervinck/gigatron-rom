@@ -22,6 +22,6 @@ $4450 p=
     [do         Mark the beginning of a loop
     p.          Write vAC's low byte to the memory pointed by p
     1+          Increment vAC by 1
-    loop]       Loop forver
+    loop]       Loop forever
 }
 [do p. 1+ loop]

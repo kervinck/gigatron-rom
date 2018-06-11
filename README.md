@@ -15,7 +15,7 @@ gigatron-rom
  |     `--- compilegcl.py       Tool to compile vCPU applications for use with
  |                              the Arduino Loader: GCL -> GT1
  +--- interface.json            Formal bindings interface for ROMv1
- +--- Apps                      Built-in applications
+ +--- Apps                      Built-in and example applications
  +--- Images                    Built-in images
  +--- Utils
  |     `--- LoaderTest          Arduino sketch for "Loader" demonstration.
