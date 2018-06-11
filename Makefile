@@ -1,9 +1,8 @@
 CFLAGS:=-std=c11 -O3 -Wall
 
-romType=0x1c # ROMv1 gets 0x1c. Further numbers to be decided.
-
 theloop.2.rom: Core/* Apps/* Images/* Makefile
-	env romType="$(romType)"\
+	# ROMv1 gets 0x1c. Further numbers to be decided.
+	env romType="0x1c"\
 	    PYTHONPATH="Core:$(PYTHONPATH)"\
 	    python Core/theloop.py\
 		Apps/Snake.gcl\
@@ -22,6 +21,13 @@ run: gtemu theloop.2.rom
 test: gtemu theloop.2.rom
 	# Check for hSync errors in first ~30 seconds of emulation
 	./gtemu | head -999999 | grep \~
+
+compiletest:
+	# Test compilation
+	Core/compilegcl.py Apps/HelloWorld.gcl
+	Core/compilegcl.py Apps/Snake.gcl
+	Core/compilegcl.py Apps/Mandelbrot.gcl
+	Core/compilegcl.py Apps/Credits.gcl
 
 time: gtemu theloop.2.rom
 	# Run emulation until first sound

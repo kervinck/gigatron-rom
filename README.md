@@ -14,6 +14,7 @@ gigatron-rom
  |     |                        XXX Rename this to something less confusing
  |     `--- compilegcl.py       Tool to compile vCPU applications for use with
  |                              the Arduino Loader: GCL -> GT1
+ +--- interface.json            Formal bindings interface for ROMv1
  +--- Apps                      Built-in applications
  +--- Images                    Built-in images
  +--- Utils
@@ -24,7 +25,6 @@ gigatron-rom
  |     +--- GCL-language.txt    Gigatron Control Language and vCPU explanation
  |     +--- gcl1.ebnf           Formal definition of GCL1 syntax (work in progress)
  |     +--- EBNF.xhtml          Railroad diagram of GCL1 syntax (work in progress)
- |     +--- bindings.h          Application Binding Interface for ROM v1
  |     `--- gtemu.c             An executable instruction set definition
  |
  `--- Contrib                   Contributions outside the kit's ROM and tooling
@@ -113,9 +113,9 @@ Address   Name          Description
 002d      ledTimer      Number of ticks until next LED change
 002e      ledState      Current LED state
 002f      ledTempo      Next value for ledTimer after LED state change
-0030-007f -             Program variables
+0030-007f userVars      Program variables
 0080      1             Constant
-0081-.... -             Program variables
+0081-.... -             More space for program variables
 ....-00ff <stack>
 0100-01ef videoTable
 01f0-01f9 vReset
@@ -125,7 +125,7 @@ Address   Name          Description
 01fd      keyH[1]
 01fe      oscL[1]
 01ff      oscH[1]
-0200-02f9 -             vCPU code/data (standard start address)
+0200-02f9 userCode      vCPU code/data (default start of user code)
 02fa      wavA[2]       Sound channel 2
 02fb      wavX[2]
 02fc      keyL[2]
@@ -146,9 +146,10 @@ Address   Name          Description
 04fd      keyH[4]
 04fe      oscL[4]
 04ff      oscH[4]
-0500-05ff -             vCPU code/data
+0500-05ff -             vCPU code/dat
 0600-06ff -             vCPU code/data
 0700-07ff soundTable
+0800-7fff screenMemory
 0800-089f pixel line 0
 08a0-08ff -             vCPU code/data
 ...

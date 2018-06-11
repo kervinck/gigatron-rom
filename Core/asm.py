@@ -2,8 +2,7 @@
 # SYNOPSIS: from asm import *
 
 from os.path import basename, splitext
-from sys import argv
-import pickle # XXX this must go
+import json
 
 #------------------------------------------------------------------------
 #       Public interface
@@ -84,11 +83,15 @@ def C(line):
     _comments[address].append(line)
   return None
 
-def define(name, value):
-  _symbols[name] = value
+def define(name, newValue):
+  if name in _symbols:
+    oldValue =  _symbols[name]
+    if newValue != oldValue:
+      print 'Warning: redefining %s (old %s new %s)' % (name, oldValue, newValue)
+  _symbols[name] = newValue
 
 def symbol(name):
-  return _symbols[name] if name in _symbols else None
+  return _symbols[name]
 
 def lo(name):
   _refsL.append((name, _romSize))
@@ -399,8 +402,11 @@ def _emit(opcode, operand):
 
 def loadBindings(symfile):
   global _symbols
-  with open(symfile, 'rb') as file:
-    _symbols = pickle.load(file)
+  with open(symfile) as file:
+    for (name, value) in json.load(file).items():
+      if not isinstance(value, int):
+        value = int(value, base=0)
+      _symbols[str(name)] = value
 
 def getRom1():
   return ''.join(chr(byte) for byte in _rom1)
@@ -469,13 +475,6 @@ def writeRomFiles(sourceFile):
     file.write(14*' '+'%04x\n' % address)
     assert len(_rom0) == _romSize
     assert len(_rom1) == _romSize
-
-  # Write symbol file
-  # XXX Remove when compiler can work with "bindings.json"
-  filename = stem + '.sym'
-  print 'Create file', filename
-  with open(filename, 'wb') as file:
-    pickle.dump(_symbols, file)
 
   # Write ROM files
   filename = stem + '.0.rom'

@@ -54,6 +54,10 @@ from asm import *
 import gcl0x as gcl
 import font
 
+# Pre-loading the formal interface as a way to get warnings when
+# accidently redefined with a different value
+loadBindings('interface.json')
+
 # Gigatron clock
 cpuClock = 6.250e+06
 
@@ -209,8 +213,7 @@ ledState        = zpByte() # Current LED state
 ledTempo        = zpByte() # Next value for ledTimer after LED state change
 
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
-zpFree          = zpByte(0)
-print 'zpFree %04x' % zpFree
+userVars        = zpByte(0)
 
 #-----------------------------------------------------------------------
 #
@@ -235,7 +238,7 @@ oscH = 255
 #  Memory layout
 #-----------------------------------------------------------------------
 
-vCpuStart = 0x0200      # Application vCPU code
+userCode = 0x0200       # Application vCPU code
 soundTable = 0x0700     # Wave form tables (doubles as right-shift-2 table)
 screenMemory = 0x0800   # Default start of screen memory: 0x0800 to 0x7fff
 
@@ -244,7 +247,6 @@ screenMemory = 0x0800   # Default start of screen memory: 0x0800 to 0x7fff
 #-----------------------------------------------------------------------
 
 maxTicks = 28/2 # Duration of vCPU's slowest virtual opcode
-define('$maxTicks', maxTicks)
 
 vOverheadInt = 9 # Overhead of jumping in and out. Cycles, not ticks
 vOverheadExt = 5 if fastRunVcpu else 7
@@ -271,9 +273,6 @@ def runVcpu(n, ref=None):
   global maxSYS, minSYS
   maxSYS = max(maxSYS, n + 2*maxTicks)
   minSYS = min(minSYS, n + 2*maxTicks)
-  # Tell GCL compiler this range, so it can check SYS call operands
-  define('$maxSYS', maxSYS)
-  define('$minSYS', minSYS)
 
   n /= 2
   returnPc = pc() + (5 if fastRunVcpu else 7)
@@ -517,16 +516,16 @@ nop()
 
 label('SYS_Reset_36')
 assert pc()>>8 == 0
-value = getenv('romType')
-value = int(value, 0) if value else 0
-ld(value);                      C('Set ROM type/version')#15
+romTypeValue = getenv('romType')
+romTypeValue = int(romTypeValue, base=0) if romTypeValue else 0
+ld(romTypeValue);               C('Set ROM type/version')#15
 st([romType])                   #16
 ld(0)                           #17
 st([vSP])                       #18 Reset stack pointer
-assert vCpuStart&255 == 0
+assert userCode&255 == 0
 st([vLR])                       #19
 st([soundTimer])                #20
-ld(vCpuStart>>8)                #21
+ld(userCode>>8)                #21
 st([vLR+1])                     #22
 ld('videoF')                    #23 Do this before first visible pixels
 st([videoDorF])                 #24
@@ -2631,19 +2630,40 @@ print 'SYS limits low %s high %s' % (repr(minSYS), repr(maxSYS))
 
 # Export some zero page variables to GCL
 # XXX Solve in another way (not through symbol table!)
+define('romTypeValue', romTypeValue)
 define('memSize',    memSize)
-define('entropy',    entropy)
+define('bootCount',  bootCount)
+for i in range(3):
+  define('entropy%d' % i, entropy+i)
+define('videoY',     videoY)
 define('frameCount', frameCount)
 define('serialRaw',  serialRaw)
 define('buttonState', buttonState)
+define('xoutMask',   xoutMask)
+define('vPC',        vPC)
+define('vAC',        vAC)
+define('vACH',       vAC+1)
+define('vLR',        vLR)
+define('vSP',        vSP)
+define('romType',    romType)
 define('sysFn',      sysFn)
 for i in range(8):
   define('sysArgs%d' % i, sysArgs+i)
 define('soundTimer', soundTimer)
-define('vAC',        vAC)
-define('vACH',       vAC+1)
-define('vLR',        vLR)
-define('videoY',     videoY)
+define('ledTimer',   ledTimer)
+define('ledTempo',   ledTempo)
+define('userVars',   userVars)
+define('videoTable', videoTable)
+define('userCode',   userCode)
+define('soundTable', soundTable)
+define('screenMemory',screenMemory)
+define('wavA',       wavA)
+define('wavX',       wavX)
+define('keyL',       keyL)
+define('keyH',       keyH)
+define('oscL',       oscL)
+define('oscH',       oscH)
+define('maxTicks',   maxTicks)
 # XXX This is a hack (trampoline() is probably in the wrong module):
 define('vPC+1',      vPC+1)
 
@@ -2662,8 +2682,8 @@ define('vPC+1',      vPC+1)
 #label(name)
 #raw = chr(ord(raw[0]) + 0x80) + raw[1:] # Patch zero page loading (only for 32KB system)
 #raw = raw[:-2] # Drop start address
-#program = gcl.Program(vCpuStart, name, forGt1=True)
-#zpReset(zpFree)
+#program = gcl.Program(userCode, name, forGt1=True)
+#zpReset(userVars)
 #for byte in raw:
   #program.putInRomTable(ord(byte))
 #program.end()
@@ -2675,8 +2695,8 @@ for gclSource in argv[1:]:
   print
   print 'Compile file %s label %s ROM %04x' % (gclSource, name, pc())
   label(name)
-  program = gcl.Program(vCpuStart, name)
-  zpReset(zpFree)
+  program = gcl.Program(userCode, name)
+  zpReset(userVars)
   for line in open(gclSource).readlines():
     program.line(line)
   program.end()

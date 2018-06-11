@@ -329,12 +329,9 @@ class Program:
           self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
       elif op == '!' and con is not None:
           if con&1:
-            self.error('Invalid value %s (must be even)' % repr(con))
-          minSYS, maxSYS = symbol('$minSYS'), symbol('$maxSYS')
-          if con > maxSYS:
-            self.warning('Large cycle count %s > %s (will never run)' % (repr(con), repr(maxSYS)))
+            self.error('Invalid value %s (must be even)' % con)
           self.opcode('SYS')
-          extraTicks = con/2 - symbol('$maxTicks')
+          extraTicks = con/2 - symbol('maxTicks')
           self.emit(256 - extraTicks if extraTicks > 0 else 0)
       else:
         self.error('Invalid word %s' % repr(word))

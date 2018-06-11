@@ -24,7 +24,7 @@ import sys
 from time import sleep
 
 # One-for-all error handler (don't throw scary stack traces at the user)
-sys.excepthook = lambda exType, exception, traceback: print('Failed: ' + str(exception))
+sys.excepthook = lambda exType, exValue, exTrace: print('%s: %s' % (exType.__name__,  exValue))
 
 #-----------------------------------------------------------------------
 #       Command line arguments

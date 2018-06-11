@@ -1,0 +1,27 @@
+{ Declare which GCL version we are using }
+gcl0x
+
+{
+  Set $7f00 as code destination (default is $0200)
+  This loads Blinky at the bottom of screen memory so we
+  can see the program after it has loaded
+}
+$7f00:
+
+{
+  Setup a pointer to a pixel in the middle of the screen:
+    $4450       Loads a 16-bit value in the accumulator (vAC)
+    p=          Writes vAC to variable p
+  Note: The pointer p is a 16-bit integer variable
+  The GCL compiler allocates an address for it in zero-page
+}
+$4450 p=
+
+{
+  Execute the main loop:
+    [do         Mark the beginning of a loop
+    p.          Write vAC's low byte to the memory pointed by p
+    1+          Increment vAC by 1
+    loop]       Loop forver
+}
+[do p. 1+ loop]
