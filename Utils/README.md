@@ -6,8 +6,8 @@ Files
 ```
 gcl.vim                         VIM syntax highlighting file
 raw24toraw6.py                  Raw 24bpp to GCL-format packed 6bpp converter
-sendGt1.py                      Send a GT1 file from laptop/PC to Gigatron through
-LoaderTest/LoaderTest.ino       Sketch to install on Arduino for Gigatron interfacing
+sendGt1.py                      Send a GT1 file from laptop/PC to Gigatron
+LoaderTest/LoaderTest.ino       Sketch to install on Arduino for Gigatron hookup
 ```
 
 Installing VIM syntax highlighting
