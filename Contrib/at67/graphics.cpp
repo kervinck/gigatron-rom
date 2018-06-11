@@ -629,6 +629,9 @@ namespace Graphics
                     if(index >= int(Editor::getFileEntriesSize())) break;
                     drawText(*Editor::getFileEntryName(index), _pixels, 8, FONT_CELL_Y*4 + i*FONT_CELL_Y, (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFA0A0A0 : 0xFFFFFFFF, i == Editor::getCursorY(), 18);
                 }
+
+                sprintf(str, "%04X", hexLoadAddress);
+                drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, (Editor::getHexEdit() && onCursor01) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor01, 4);
             }
             // Hex monitor
             else
@@ -642,6 +645,7 @@ namespace Graphics
 
                 // 8 * 32 hex display of memory
                 uint16_t hexAddress = Editor::getHexBaseAddress();
+                uint16_t cursorAddress = Editor::getHexBaseAddress();
                 for(int j=0; j<HEX_CHARS_Y; j++)
                 {
                     for(int i=0; i<HEX_CHARS_X; i++)
@@ -649,15 +653,20 @@ namespace Graphics
                         uint8_t value = 0;
                         switch(Editor::getMemoryMode())
                         {
-                            case Editor::RAM:  value = Cpu::getRAM(hexAddress++);    break;
-                            case Editor::ROM0: value = Cpu::getROM(hexAddress++, 0); break;
-                            case Editor::ROM1: value = Cpu::getROM(hexAddress++, 1); break;
+                            case Editor::RAM:  value = Cpu::getRAM(hexAddress);    break;
+                            case Editor::ROM0: value = Cpu::getROM(hexAddress, 0); break;
+                            case Editor::ROM1: value = Cpu::getROM(hexAddress, 1); break;
                         }
                         sprintf(str, "%02X ", value);
                         bool onCursor = (i == Editor::getCursorX()  &&  j == Editor::getCursorY());
                         drawText(std::string(str), _pixels, 6 + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), (Editor::getHexEdit() && Editor::getMemoryMode() == Editor::RAM && onCursor) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor, 2);
+                        if(onCursor) cursorAddress = hexAddress;
+                        hexAddress++;
                     }
                 }
+
+                sprintf(str, "%04X", cursorAddress);
+                drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, (Editor::getHexEdit() && onCursor01) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor01, 4);
 
                 // Edit digit select for monitor
                 if(Editor::getHexEdit())
@@ -672,8 +681,6 @@ namespace Graphics
             drawText(std::string(str), _pixels, CPUA_START, FONT_CELL_Y*2, (Editor::getHexEdit() && onCursor00) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor00, 4);
             sprintf(str, "%04X", cpuUsageAddressB);
             drawText(std::string(str), _pixels, CPUB_START, FONT_CELL_Y*2, (Editor::getHexEdit() && onCursor10) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor10, 4);
-            sprintf(str, "%04X", hexLoadAddress);
-            drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, (Editor::getHexEdit() && onCursor01) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor01, 4);
             sprintf(str, "%04X", varsAddress);
             drawText(std::string(str), _pixels, VAR_START, FONT_CELL_Y*3, (Editor::getHexEdit() && onCursor11) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor11, 4);
 

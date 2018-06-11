@@ -141,15 +141,15 @@ erase           LDW     xPos
                 ; x position bounds checking 
 xbounds         LDW     xPos       
                 PEEK
-                BLE     xyreset
-                SUBI    0x90
+                BLT     xyreset
+                SUBI    0xA0
                 BGE     xyreset
     
                 ; y position bounds checking 
 ybounds         LDW     yPos     
                 PEEK
-                BLE     xyreset
-                SUBI    0x68
+                BLT     xyreset
+                SUBI    0x78
                 BLT     draw
     
                 ; reset

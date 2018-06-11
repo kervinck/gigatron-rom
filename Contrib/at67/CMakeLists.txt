@@ -7,6 +7,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 add_subdirectory(midi)
 add_subdirectory(tools/gtasm)
 add_subdirectory(tools/gt1torom)
+add_subdirectory(tools/gtmakerom)
 add_subdirectory(tools/gtsplitrom)
 
 find_package(SDL2 REQUIRED)

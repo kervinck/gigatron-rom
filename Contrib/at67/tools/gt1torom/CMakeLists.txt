@@ -4,6 +4,8 @@ project(gt1torom)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
 
+add_definitions(-DSTAND_ALONE)
+
 set(sources gt1torom.cpp)
 
 add_executable(gt1torom ${sources})

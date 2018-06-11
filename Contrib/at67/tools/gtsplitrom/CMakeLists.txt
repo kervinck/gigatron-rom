@@ -4,8 +4,11 @@ project(gtsplitrom)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
 
-set(sources gtsplitrom.cpp)
+add_definitions(-DSTAND_ALONE)
 
-add_executable(gtsplitrom ${sources})
+set(headers ../../cpu.h)
+set(sources ../../cpu.cpp gtsplitrom.cpp)
+
+add_executable(gtsplitrom ${headers} ${sources})
 
 target_link_libraries(gtsplitrom)

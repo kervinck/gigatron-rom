@@ -15,5 +15,5 @@ gtsplitrom \<input filename\> \<output filename\></br>
 gtsplitrom theloop.2.rom test.rom<br/>
 
 ## Output
-Output is always two files each 64KBytes in length, i.e. from the above example, output would be **_test.rom\_0_**<br/>
-and **_test.rom\_1_**.<br/>
+Output is always two files each 64KBytes in length, i.e. from the above example, output would be **_test.rom\_i_**<br/>
+and **_test.rom\_d_**.<br/>

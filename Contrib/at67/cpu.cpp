@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iomanip>
 #include <vector>
+#include <algorithm>
 
 #include "cpu.h"
 
@@ -17,6 +18,12 @@
 
 #ifdef _WIN32
 #include <Windows.h>
+#ifdef max
+#undef max
+#endif
+#ifdef min
+#undef min
+#endif
 #endif
 
 
@@ -33,13 +40,150 @@ namespace Cpu
     uint16_t _baseFreeRAM = RAM_SIZE - RAM_USED_DEFAULT;
     uint16_t _freeRAM = _baseFreeRAM;
 
-    std::vector<uint8_t> scanlinesRom0;
-    std::vector<uint8_t> scanlinesRom1;
+    std::vector<uint8_t> _scanlinesRom0;
+    std::vector<uint8_t> _scanlinesRom1;
+
+    std::vector<InternalGt1> _internalGt1s;
 
 
     uint16_t getBaseFreeRAM(void) {return _baseFreeRAM;}
     uint16_t getFreeRAM(void) {return _freeRAM;}
+    uint8_t* getPtrToROM(int& romSize) {romSize = sizeof(_ROM); return (uint8_t*)_ROM;}
+
     void setFreeRAM(uint16_t freeRAM) {_freeRAM = freeRAM;}
+
+    void setScanlineModeVideoB(void)
+    {
+        _ROM[0x01C2][ROM_INST] = 0x14;
+        _ROM[0x01C2][ROM_DATA] = 0x01;
+
+        _ROM[0x01C9][ROM_INST] = 0x01;
+        _ROM[0x01C9][ROM_DATA] = 0x09;
+
+        _ROM[0x01CA][ROM_INST] = 0x90;
+        _ROM[0x01CA][ROM_DATA] = 0x01;
+
+        _ROM[0x01CB][ROM_INST] = 0x01;
+        _ROM[0x01CB][ROM_DATA] = 0x0A;
+
+        _ROM[0x01CC][ROM_INST] = 0x8D;
+        _ROM[0x01CC][ROM_DATA] = 0x00;
+
+        _ROM[0x01CD][ROM_INST] = 0xC2;
+        _ROM[0x01CD][ROM_DATA] = 0x0A;
+
+        _ROM[0x01CE][ROM_INST] = 0x00;
+        _ROM[0x01CE][ROM_DATA] = 0xD4;
+
+        _ROM[0x01CF][ROM_INST] = 0xFC;
+        _ROM[0x01CF][ROM_DATA] = 0xFD;
+
+        _ROM[0x01D0][ROM_INST] = 0xC2;
+        _ROM[0x01D0][ROM_DATA] = 0x0C;
+
+        _ROM[0x01D1][ROM_INST] = 0x02;
+        _ROM[0x01D1][ROM_DATA] = 0x00;
+
+        _ROM[0x01D2][ROM_INST] = 0x02;
+        _ROM[0x01D2][ROM_DATA] = 0x00;
+
+        _ROM[0x01D3][ROM_INST] = 0x02;
+        _ROM[0x01D3][ROM_DATA] = 0x00;
+    }
+
+    void setScanlineModeVideoC(void)
+    {
+        _ROM[0x01DA][ROM_INST] = 0xFC;
+        _ROM[0x01DA][ROM_DATA] = 0xFD;
+
+        _ROM[0x01DB][ROM_INST] = 0xC2;
+        _ROM[0x01DB][ROM_DATA] = 0x0C;
+
+        _ROM[0x01DC][ROM_INST] = 0x02;
+        _ROM[0x01DC][ROM_DATA] = 0x00;
+
+        _ROM[0x01DD][ROM_INST] = 0x02;
+        _ROM[0x01DD][ROM_DATA] = 0x00;
+
+        _ROM[0x01DE][ROM_INST] = 0x02;
+        _ROM[0x01DE][ROM_DATA] = 0x00;
+    }
+
+    void patchSYS_Exec_88(void)
+    {
+        _ROM[0x00AD][ROM_INST] = 0x00;
+        _ROM[0x00AD][ROM_DATA] = 0x00;
+
+        _ROM[0x00AF][ROM_INST] = 0x00;
+        _ROM[0x00AF][ROM_DATA] = 0x67;
+
+        _ROM[0x00B5][ROM_INST] = 0xDC;
+        _ROM[0x00B5][ROM_DATA] = 0xCF;
+
+        _ROM[0x00B6][ROM_INST] = 0x80;
+        _ROM[0x00B6][ROM_DATA] = 0x23;
+
+        _ROM[0x00BB][ROM_INST] = 0x80;
+        _ROM[0x00BB][ROM_DATA] = 0x00;
+    }
+
+    void initialiseInternalGt1s(void)
+    {
+        InternalGt1 internalGt1Snake = {0xE39C, 0xFDB1, 0xFC89, 5};
+        _internalGt1s.push_back(internalGt1Snake);
+
+        InternalGt1 internalGt1Racer = {0xEA2C, 0xFDBB, 0xFC90, 5};
+        _internalGt1s.push_back(internalGt1Racer);
+
+        InternalGt1 internalGt1Mandelbrot = {0xF16E, 0xFDC5, 0xFC97, 10};
+        _internalGt1s.push_back(internalGt1Mandelbrot);
+
+        InternalGt1 internalGt1Pictures = {0xF655, 0xFDCF, 0xFCA3, 8};
+        _internalGt1s.push_back(internalGt1Pictures);
+
+        InternalGt1 internalGt1Credits = {0xF731, 0xFDD9, 0xFCAD, 7};
+        _internalGt1s.push_back(internalGt1Credits);
+
+        InternalGt1 internalGt1Loader = {0xF997, 0xFDE3, 0xFCB6, 6};
+        _internalGt1s.push_back(internalGt1Loader);
+    }
+
+    void patchTitleIntoRom(const std::string& title)
+    {
+        int minLength = std::min(int(title.size()), MAX_TITLE_CHARS);
+        for(int i=0; i<minLength; i++) _ROM[ROM_TITLE_ADDRESS + i][ROM_DATA] = title[i];
+        for(int i=minLength; i<MAX_TITLE_CHARS; i++) _ROM[ROM_TITLE_ADDRESS + i][ROM_DATA] = ' ';
+    }
+
+    void patchSplitGt1IntoRom(const std::string& splitGt1path, const std::string& splitGt1name, uint16_t startAddress, InternalGt1Id gt1Id)
+    {
+        size_t filelength = 0;
+        char filebuffer[RAM_SIZE];
+
+        std::ifstream romfile_ti(splitGt1path + "_ti", std::ios::binary | std::ios::in);
+        if(!romfile_ti.is_open()) fprintf(stderr, "Cpu::patchTetrisIntoRomTest() : failed to open %s ROM file.\n", std::string(splitGt1path + "_ti").c_str());
+        romfile_ti.seekg (0, romfile_ti.end); filelength = romfile_ti.tellg(); romfile_ti.seekg (0, romfile_ti.beg);
+        romfile_ti.read(filebuffer, filelength);
+        if(romfile_ti.eof() || romfile_ti.bad() || romfile_ti.fail()) fprintf(stderr, "Cpu::patchTetrisIntoRomTest() : failed to read %s ROM file.\n", std::string(splitGt1path + "_ti").c_str());
+        for(int i=0; i<filelength; i++) _ROM[startAddress + i][ROM_INST] = filebuffer[i];
+
+        std::ifstream romfile_td(splitGt1path + "_td", std::ios::binary | std::ios::in);
+        if(!romfile_td.is_open()) fprintf(stderr, "Cpu::patchTetrisIntoRomTest() : failed to open %s ROM file.\n", std::string(splitGt1path + "_td").c_str());
+        romfile_td.seekg (0, romfile_td.end); filelength = romfile_td.tellg(); romfile_td.seekg (0, romfile_td.beg);
+        romfile_td.read(filebuffer, filelength);
+        if(romfile_td.eof() || romfile_td.bad() || romfile_td.fail()) fprintf(stderr, "Cpu::patchTetrisIntoRomTest() : failed to read %s ROM file.\n", std::string(splitGt1path + "_td").c_str());
+        for(int i=0; i<filelength; i++) _ROM[startAddress + i][ROM_DATA] = filebuffer[i];
+
+        // Replace internal gt1 menu option with split gt1
+        _ROM[_internalGt1s[gt1Id]._patch + 0][ROM_DATA] = startAddress & 0x00FF;
+        _ROM[_internalGt1s[gt1Id]._patch + 1][ROM_DATA] = (startAddress & 0xFF00) >>8;
+
+        // Replace internal gt1 menu option name with split gt1 name
+        int minLength = std::min(uint8_t(splitGt1name.size()), _internalGt1s[gt1Id]._length);
+        for(int i=0; i<minLength; i++) _ROM[_internalGt1s[gt1Id]._string + i][ROM_DATA] = splitGt1name[i];
+        for(int i=minLength; i<_internalGt1s[gt1Id]._length; i++) _ROM[_internalGt1s[gt1Id]._string + i][ROM_DATA] = ' ';
+    }
+
 
 #ifndef STAND_ALONE
     int64_t getClock(void) {return _clock;}
@@ -92,8 +236,8 @@ namespace Cpu
     {
         for(int i=0x01C2; i<=0x01DE; i++)
         {
-            scanlinesRom0.push_back(_ROM[i][0]);
-            scanlinesRom1.push_back(_ROM[i][1]);
+            _scanlinesRom0.push_back(_ROM[i][ROM_INST]);
+            _scanlinesRom1.push_back(_ROM[i][ROM_DATA]);
         }
     }
 
@@ -101,66 +245,9 @@ namespace Cpu
     {
         for(int i=0x01C2; i<=0x01DE; i++)
         {
-            _ROM[i][0] = scanlinesRom0[i - 0x01C2];
-            _ROM[i][1] = scanlinesRom1[i - 0x01C2];
+            _ROM[i][ROM_INST] = _scanlinesRom0[i - 0x01C2];
+            _ROM[i][ROM_DATA] = _scanlinesRom1[i - 0x01C2];
         }
-    }
-
-    void setScanlineModeVideoB(void)
-    {
-        _ROM[0x01C2][0] = 0x14;
-        _ROM[0x01C2][1] = 0x01;
-
-        _ROM[0x01C9][0] = 0x01;
-        _ROM[0x01C9][1] = 0x09;
-
-        _ROM[0x01CA][0] = 0x90;
-        _ROM[0x01CA][1] = 0x01;
-
-        _ROM[0x01CB][0] = 0x01;
-        _ROM[0x01CB][1] = 0x0A;
-
-        _ROM[0x01CC][0] = 0x8D;
-        _ROM[0x01CC][1] = 0x00;
-
-        _ROM[0x01CD][0] = 0xC2;
-        _ROM[0x01CD][1] = 0x0A;
-
-        _ROM[0x01CE][0] = 0x00;
-        _ROM[0x01CE][1] = 0xD4;
-
-        _ROM[0x01CF][0] = 0xFC;
-        _ROM[0x01CF][1] = 0xFD;
-
-        _ROM[0x01D0][0] = 0xC2;
-        _ROM[0x01D0][1] = 0x0C;
-
-        _ROM[0x01D1][0] = 0x02;
-        _ROM[0x01D1][1] = 0x00;
-
-        _ROM[0x01D2][0] = 0x02;
-        _ROM[0x01D2][1] = 0x00;
-
-        _ROM[0x01D3][0] = 0x02;
-        _ROM[0x01D3][1] = 0x00;
-    }
-
-    void setScanlineModeVideoC(void)
-    {
-        _ROM[0x01DA][0] = 0xFC;
-        _ROM[0x01DA][1] = 0xFD;
-
-        _ROM[0x01DB][0] = 0xC2;
-        _ROM[0x01DB][1] = 0x0C;
-
-        _ROM[0x01DC][0] = 0x02;
-        _ROM[0x01DC][1] = 0x00;
-
-        _ROM[0x01DD][0] = 0x02;
-        _ROM[0x01DD][1] = 0x00;
-
-        _ROM[0x01DE][0] = 0x02;
-        _ROM[0x01DE][1] = 0x00;
     }
 
     void setScanlineMode(ScanlineMode scanlineMode)
@@ -217,31 +304,6 @@ namespace Cpu
         } 
     }
 
-    void TestSYS_Exec_88(void)
-    {
-        //_ROM[0x00AD][0] = 0x00;
-        //_ROM[0x00AD][1] = 0x7F;
-
-        //_ROM[0x00AF][0] = 0x00;
-        //_ROM[0x00AF][1] = 0x9F;
-
-        _ROM[0x00AD][0] = 0x00;
-        _ROM[0x00AD][1] = 0x00;
-
-        _ROM[0x00AF][0] = 0x00;
-        _ROM[0x00AF][1] = 0x81;
-
-        _ROM[0x00B5][0] = 0xDC;
-        _ROM[0x00B5][1] = 0xCF;
-
-        _ROM[0x00B6][0] = 0x80;
-        _ROM[0x00B6][1] = 0x23;
-
-        _ROM[0x00BB][0] = 0x80;
-        _ROM[0x00BB][1] = 0x00;
-    }
-
-
     void initialise(State& S)
     {
 #ifdef _WIN32
@@ -290,7 +352,25 @@ namespace Cpu
         }
         saveScanlineModes();
 
-        TestSYS_Exec_88();
+#define CUSTOM_ROM
+#ifdef CUSTOM_ROM
+        initialiseInternalGt1s();
+        patchSYS_Exec_88();
+
+#define CUSTOM_ROMV0
+#ifdef CUSTOM_ROMV0
+        patchTitleIntoRom(" TTL micrcomputer AT67 v0");
+        patchSplitGt1IntoRom("./roms/starfield.rom", "Starfield", 0x0b00, MandelbrotGt1);
+        patchSplitGt1IntoRom("./roms/life.rom", "Life", 0x0f00, LoaderGt1);
+        patchSplitGt1IntoRom("./roms/lines.rom", "Lines", 0x1100, SnakeGt1);
+        patchSplitGt1IntoRom("./roms/gigatris.rom", "Gigatris", 0x1300, PicturesGt1);
+        patchSplitGt1IntoRom("./roms/tetris.rom", "Tetris", 0x3000, CreditsGt1);
+        patchSplitGt1IntoRom("./roms/miditest.rom", "Midi", 0x5800, RacerGt1);
+#else
+        patchTitleIntoRom(" TTL micrcomputer AT67 v0");
+        patchSplitGt1IntoRom("./roms/midi64.rom", "Midi64", 0x0b00, PicturesGt1);
+#endif
+#endif
 
         // SDL initialisation
         if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS) < 0)
@@ -304,8 +384,8 @@ namespace Cpu
     {
         State T = S; // New state is old state unless something changes
     
-        T._IR = _ROM[S._PC][0]; // Instruction Fetch
-        T._D  = _ROM[S._PC][1];
+        T._IR = _ROM[S._PC][ROM_INST]; // Instruction Fetch
+        T._D  = _ROM[S._PC][ROM_DATA];
     
         int ins = S._IR >> 5;       // Instruction
         int mod = (S._IR >> 2) & 7; // Addressing mode (or condition)

@@ -18,4 +18,4 @@ gt1torom test.gt1 test.rom 0x8000<br/>
 
 ## Output
 Output is always two files, one for the instruction ROM and one for the data ROM, i.e. from the above example, output<br/>
-would be **_test.rom\_t0_** and **_test.rom\_t1_**.<br/>
+would be **_test.rom\_ti_** and **_test.rom\_td_**.<br/>
