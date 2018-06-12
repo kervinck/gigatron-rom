@@ -183,7 +183,7 @@ byte checksum; // Global is simplest
 PS2Keyboard keyboard;
 
 const byte terminalGt1[] PROGMEM = {
-  #include "Terminal.h" // TV Typewriter
+  #include "WozMon.h" // Monitor program ported from Apple-1
 };
 
 /*

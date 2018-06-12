@@ -36,6 +36,12 @@ time: gtemu theloop.2.rom
 burn: theloop.2.rom
 	minipro -p 'AT27C1024 @DIP40' -w theloop.2.rom -y -s
 
+%.h: %.gt1
+	# Convert GT1 file into header for including as PROGMEM data
+	od -t x1 < "$<" |\
+	awk 'BEGIN {print "// Converted from $< by Makefile"}\
+	     {for (i=2; i<=NF; i++) printf "0x%s,\n", $$i}' > "$@"
+
 %.rgb: %.png
 	# Uses ImageMagick
 	convert "$<" "$@"

@@ -18,14 +18,15 @@
     - Too long input is flushed
     - Shows backslash prompt at error ('\')
 
-  Gigatron-specific differences
-    - Welcome message is "WozMon!" instead of error prompt ('\')
+  Gigatron-specific differences:
+    - Welcome message is "*** WozMon" instead of error prompt ('\')
     - Can use lowercase as well as uppercase for hex letters
     - Delete shows effect on screen, no need for '_' (RUBOUT)
     - Always print address at start of line in block examine mode
     - Input buffer has the same size as screen width
-    - Executed code can go back to monitor with RET instruction
-    - Screen update is much faster
+    - Executed code can go back to monitor with RET instruction ($ff)
+    - Faster screen update, and cursor symbol instead of '@'
+    - A bit more careful with empty lines
 
   References:
 

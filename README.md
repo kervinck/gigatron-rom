@@ -18,8 +18,9 @@ gigatron-rom
  +--- Images/                   Built-in images
  +--- Utils/
  |     +--- sendGt1.py          Send a GT1 file from laptop/PC to Gigatron
- |     `--- LoaderTest/         Arduino sketch for "Loader" demonstration.
- |                              Used for transferring GT1 files into Gigatron.
+ |     `--- BabelFish/          Generic Arduino sketch for interfacing with
+ |                              Gigatron. Used for transferring GT1 files into
+ |                              the computer and/or hooking up an keyboard.
  +--- Docs/
  |     +--- GT1-FileFormat.txt  Description of vCPU object file format (GT1 files)
  |     +--- GCL-language.txt    Gigatron Control Language and vCPU explanation
