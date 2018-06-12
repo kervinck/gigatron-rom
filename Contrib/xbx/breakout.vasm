@@ -53,6 +53,7 @@ vblank_frameCountPrev  EQU     vars + 0x2A
 maxspeedpad		EQU		vars + 0x30
 maxpadx			EQU		vars + 0x32	;127
 minpadx			EQU		vars + 0x34 ;34
+cst_FFFF		EQU		vars + 0x36	; $FFFF
 
 pattern0		EQU		0x1005	' 2 pix ligne 1
 pattern1		EQU		0x0510  ' 2 pix ligne 2
@@ -70,11 +71,14 @@ col_white		EQU		0x3F
 
 
 entry_point     EQU     0x0200
-data			EQU		0x0300
-subroutines0    EQU     0x0400
-subroutines1    EQU     0x0500
-subroutines2    EQU     0x0600
-subroutines3    EQU     0x0700
+subroutines0    EQU     0x0300
+subroutines1    EQU     0x0400
+subroutines2    EQU     0x0500
+subroutines3    EQU     0x0600
+; 0x700 --> reserved (sound)
+; 5 last bytes of 0x200 x300 x400 --> reserved (sound)
+
+data			EQU		0x10c0		// next to vram
 
 string_lives	EQU		data + 0x00
 string_score	EQU		data + 0x0B
@@ -84,13 +88,12 @@ string_score	DB      3  '000'
 string_gameover	DB		10 'Game Over!'
 
 ; 14x8
-bricksx			EQU		data + 0x20
-bricksy			EQU		data + 0x30
-brickscol		EQU		data + 0x40
+bricksx			EQU		data + 0x0100
+bricksy			EQU		data + 0x0110
+brickscol		EQU		data + 0x0120
 bricksx			DB		32 39 46 53 60 67 74 81 88 95 102 109 116 123
 bricksy			DW		0x2000 0x2300 0x2600 0x2900 0x2C00 0x2F00 0x3200 0x3500
 brickscol		DB		0x03 0x03 0x0B 0x0B 0x0C 0x0C 0x0F 0x0F
-
 
 entry_point CALL	Init
 
@@ -98,11 +101,12 @@ restart		CALL	ClearBottom
             CALL    ResetScore
 			CALL	DrawBricks
 			CALL	DrawScore
-			CALL	InitBall
 			LDWI	80*256
 			STW		padx
 			LDI		0
 			STW		speedpad
+			CALL	InitBall
+			CALL	DrawBall
 
 ; -- move pad --
 mainloop	CALL    WaitVBlank
@@ -142,12 +146,10 @@ rightdone	LD		giga_buttonState
 			BRA		inputdone
 noinput		LDI		0
             STW		speedpad
-inputdone	CALL	DrawPad
+inputdone	CALL	DrawBall	; Erase cur ball
+            CALL	DrawPad
 
 ; -- update ball --
-            LDI		col_black
-			CALL	DrawBall		; Erase cur ball
-
             LDW		ballx
 			ADDW	speedx
 			STW		nextballx
@@ -192,7 +194,6 @@ ybounceskip LDW		nextballx
             STW		ballx
 			LDW		nextbally
 			STW		bally
-			LDI		col_white
 			CALL	DrawBall
 
             LD		bally+1
@@ -207,6 +208,7 @@ ybounceskip LDW		nextballx
 			CALL	DecrementLives
 			BLE		gameover
 			CALL	InitBall
+			CALL	DrawBall
 			CALL	ClearBottom
 			CALL	DrawPad
 			CALL    WaitVBlank
@@ -245,7 +247,9 @@ DrawOneBrick		LD		DrawBrick_col
 					INC		DrawBrick_xy
 					POKE	DrawBrick_xy
 					INC		DrawBrick_xy
-					LDWI	0x0100-6	; next line
+;					ANDI	$15				; darken color
+;					POKE	DrawBrick_xy	; fill in borders so that the ball doesn't squeeze in between bricks
+                    LDWI	0x0100-6	; next line
 					ADDW	DrawBrick_xy
 					STW		DrawBrick_xy
 					LD		DrawBrick_col
@@ -260,6 +264,9 @@ DrawOneBrick		LD		DrawBrick_col
 					POKE	DrawBrick_xy
 					INC		DrawBrick_xy
 					POKE	DrawBrick_xy
+					INC		DrawBrick_xy
+;					ANDI	$15				; darken color
+;					POKE	DrawBrick_xy	; fill in borders so that the ball doesn't squeeze in between bricks
                     RET
 
 DrawBricks			PUSH
@@ -354,20 +361,11 @@ DrawPad				LDI		0x08+110
 					POKE	xy1
 					RET
 
+
 ############################################################################################################
 ################################## PAGE BREAK ##############################################################
 ############################################################################################################
 subroutines1		RET
-
-
-DrawBall			ST		DrawBrick_col
-                    LD		ballx+1
-					ST		scratch
-					LD		bally+1
-					ST		scratch+1
-					LD		DrawBrick_col
-					POKE	scratch
-					RET
 
 
 ; trouve la brique qui contient la position BreakBrick_xy  et l'effface et score++
@@ -472,6 +470,8 @@ Init				PUSH
 					STW		maxpadx
 					LDWI	34*256
 					STW		minpadx
+					LDWI	$FFFF
+					STW		cst_FFFF
 					POP
 					RET
 
@@ -479,33 +479,40 @@ InitBall			LDWI	80*256
                     STW		ballx
 					LDWI	(0x08+50)*256
 					STW		bally
-					LDWI	100
-					STW		speedx
-					LDWI	150
+					LDI		150
 					STW		speedy
+					LDWI    SYS_Random_34    ; Get random number and update entropy
+					STW     giga_sysFn
+					SYS     0xFD             ; 270 - 34/2 = 0xFD
+					ST		speedx
+					ANDI	$80
+					BGT		InitBall_positive
+					LDI		$FF
+					ST		speedx+1
 					RET
-
-; ===== BouncePad =============================================================================
-BouncePad			LDW		nextballx
-                    SUBW	padx
-					STW		scratch
-					LD		scratch+1
-					SUBI	2
-					BGE		BouncePad_Right
-					LD		scratch+1
-					SUBI	-2
-					BLE		BouncePad_Left
-BouncePad_Center	LDW		speedy
-                    SUBI	8		# speed ball up slightly
-					STW		speedy
-BouncePad_Right		RET
-BouncePad_Left		RET
+InitBall_positive	LDI		0
+                    ST		speedx+1
+					RET
 
 ############################################################################################################
 ################################## PAGE BREAK ##############################################################
 ############################################################################################################
 subroutines2		RET
 
+DrawBall			LD		ballx+1
+                    ST		scratch
+					LD		bally+1
+					ST		scratch+1
+					LDW		scratch
+					DEEK
+					XORW	cst_FFFF
+					DOKE	scratch
+					INC		scratch+1
+					LDW		scratch
+					DEEK
+					XORW	cst_FFFF
+					DOKE	scratch
+					RET
 
 ; ===== DrawBoard =============================================================================
 DrawBoard			LDI		0x07
@@ -570,10 +577,44 @@ DrawBoard_border	LDI		160
 					BRA		DrawBoard_nextline
 DrawBoard_done		RET
 
+
+; ===== BouncePad =============================================================================
+BouncePad			LDW		nextballx
+                    SUBW	padx
+					STW		scratch
+					LD		scratch+1
+					SUBI	2
+					BGE		BouncePad_Right
+					LD		scratch+1
+					SUBI	-2
+					BLE		BouncePad_Left
+BouncePad_Center	LDW		speedy
+                    ADDI	128		# speed ball up slightly
+					STW		speedy
+BouncePad_Left		LDW		speedy
+BouncePad_Right		LDW		speedy
+                    ADDI	16		# speed ball up slightly
+					STW		speedy
+RET
+
+############################################################################################################
+################################## PAGE BREAK ##############################################################
+############################################################################################################
+subroutines3		RET
+
+; ===== WaitVBlank =============================================================================
+WaitVBlank      LD      giga_frameCount
+                SUBW    vblank_frameCountPrev
+				BEQ     WaitVBlank
+				LD      giga_frameCount
+				STW     vblank_frameCountPrev
+				RET
+
+
 ; ===== DrawScore =============================================================================
 DrawScore		PUSH
                 LDWI	string_lives
-                STW		textStr
+				STW		textStr
 				LDWI	0x0800+0x0300+ 34
 				STW		textPos
 				CALL	PrintText
@@ -641,19 +682,6 @@ DecrementLives	PUSH
 				PEEK
 				SUBI	48+'0'
 				POP
-				RET
-
-############################################################################################################
-################################## PAGE BREAK ##############################################################
-############################################################################################################
-subroutines3		RET
-
-; ===== WaitVBlank =============================================================================
-WaitVBlank      LD      giga_frameCount
-                SUBW    vblank_frameCountPrev
-				BEQ     WaitVBlank
-				LD      giga_frameCount
-				STW     vblank_frameCountPrev
 				RET
 
 ; ===== PrintText =============================================================================
