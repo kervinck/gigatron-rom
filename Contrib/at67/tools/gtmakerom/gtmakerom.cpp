@@ -59,11 +59,11 @@ int main(int argc, char* argv[])
     // Initialises internal GT1 vector
     Cpu::initialiseInternalGt1s();
 
-    // Modifies ROM to disable scanline VideoB
-    Cpu::setScanlineModeVideoB();
-
     // Patches SYS_Exec_88 loader to accept page0 segments as the first segment and works with 64KB SRAM hardware
     Cpu::patchSYS_Exec_88();
+
+    // Modifies ROM to disable scanline VideoB
+    Cpu::patchScanlineModeVideoB();
 
     std::string gt1Filename = std::string(argv[2]);
     std::string outputFilename = std::string(argv[3]);

@@ -52,7 +52,47 @@ namespace Cpu
 
     void setFreeRAM(uint16_t freeRAM) {_freeRAM = freeRAM;}
 
-    void setScanlineModeVideoB(void)
+
+    void initialiseInternalGt1s(void)
+    {
+        InternalGt1 internalGt1Snake = {0xE39C, 0xFDB1, 0xFC89, 5};
+        _internalGt1s.push_back(internalGt1Snake);
+
+        InternalGt1 internalGt1Racer = {0xEA2C, 0xFDBB, 0xFC90, 5};
+        _internalGt1s.push_back(internalGt1Racer);
+
+        InternalGt1 internalGt1Mandelbrot = {0xF16E, 0xFDC5, 0xFC97, 10};
+        _internalGt1s.push_back(internalGt1Mandelbrot);
+
+        InternalGt1 internalGt1Pictures = {0xF655, 0xFDCF, 0xFCA3, 8};
+        _internalGt1s.push_back(internalGt1Pictures);
+
+        InternalGt1 internalGt1Credits = {0xF731, 0xFDD9, 0xFCAD, 7};
+        _internalGt1s.push_back(internalGt1Credits);
+
+        InternalGt1 internalGt1Loader = {0xF997, 0xFDE3, 0xFCB6, 6};
+        _internalGt1s.push_back(internalGt1Loader);
+    }
+
+    void patchSYS_Exec_88(void)
+    {
+        _ROM[0x00AD][ROM_INST] = 0x00;
+        _ROM[0x00AD][ROM_DATA] = 0x00;
+
+        _ROM[0x00AF][ROM_INST] = 0x00;
+        _ROM[0x00AF][ROM_DATA] = 0x67;
+
+        _ROM[0x00B5][ROM_INST] = 0xDC;
+        _ROM[0x00B5][ROM_DATA] = 0xCF;
+
+        _ROM[0x00B6][ROM_INST] = 0x80;
+        _ROM[0x00B6][ROM_DATA] = 0x23;
+
+        _ROM[0x00BB][ROM_INST] = 0x80;
+        _ROM[0x00BB][ROM_DATA] = 0x00;
+    }
+
+    void patchScanlineModeVideoB(void)
     {
         _ROM[0x01C2][ROM_INST] = 0x14;
         _ROM[0x01C2][ROM_DATA] = 0x01;
@@ -91,7 +131,7 @@ namespace Cpu
         _ROM[0x01D3][ROM_DATA] = 0x00;
     }
 
-    void setScanlineModeVideoC(void)
+    void patchScanlineModeVideoC(void)
     {
         _ROM[0x01DA][ROM_INST] = 0xFC;
         _ROM[0x01DA][ROM_DATA] = 0xFD;
@@ -107,45 +147,6 @@ namespace Cpu
 
         _ROM[0x01DE][ROM_INST] = 0x02;
         _ROM[0x01DE][ROM_DATA] = 0x00;
-    }
-
-    void patchSYS_Exec_88(void)
-    {
-        _ROM[0x00AD][ROM_INST] = 0x00;
-        _ROM[0x00AD][ROM_DATA] = 0x00;
-
-        _ROM[0x00AF][ROM_INST] = 0x00;
-        _ROM[0x00AF][ROM_DATA] = 0x67;
-
-        _ROM[0x00B5][ROM_INST] = 0xDC;
-        _ROM[0x00B5][ROM_DATA] = 0xCF;
-
-        _ROM[0x00B6][ROM_INST] = 0x80;
-        _ROM[0x00B6][ROM_DATA] = 0x23;
-
-        _ROM[0x00BB][ROM_INST] = 0x80;
-        _ROM[0x00BB][ROM_DATA] = 0x00;
-    }
-
-    void initialiseInternalGt1s(void)
-    {
-        InternalGt1 internalGt1Snake = {0xE39C, 0xFDB1, 0xFC89, 5};
-        _internalGt1s.push_back(internalGt1Snake);
-
-        InternalGt1 internalGt1Racer = {0xEA2C, 0xFDBB, 0xFC90, 5};
-        _internalGt1s.push_back(internalGt1Racer);
-
-        InternalGt1 internalGt1Mandelbrot = {0xF16E, 0xFDC5, 0xFC97, 10};
-        _internalGt1s.push_back(internalGt1Mandelbrot);
-
-        InternalGt1 internalGt1Pictures = {0xF655, 0xFDCF, 0xFCA3, 8};
-        _internalGt1s.push_back(internalGt1Pictures);
-
-        InternalGt1 internalGt1Credits = {0xF731, 0xFDD9, 0xFCAD, 7};
-        _internalGt1s.push_back(internalGt1Credits);
-
-        InternalGt1 internalGt1Loader = {0xF997, 0xFDE3, 0xFCB6, 6};
-        _internalGt1s.push_back(internalGt1Loader);
     }
 
     void patchTitleIntoRom(const std::string& title)
@@ -254,10 +255,10 @@ namespace Cpu
     {
         switch(scanlineMode)
         {
-            case Normal:  restoreScanlineModes();                           break;
-            case VideoB:  setScanlineModeVideoB();                          break;
-            case VideoC:  setScanlineModeVideoC();                          break;
-            case VideoBC: setScanlineModeVideoB(); setScanlineModeVideoC(); break;
+            case Normal:  restoreScanlineModes();                               break;
+            case VideoB:  patchScanlineModeVideoB();                            break;
+            case VideoC:  patchScanlineModeVideoC();                            break;
+            case VideoBC: patchScanlineModeVideoB(); patchScanlineModeVideoC(); break;
         }
     }
 
@@ -352,7 +353,7 @@ namespace Cpu
         }
         saveScanlineModes();
 
-#define CUSTOM_ROM
+//#define CUSTOM_ROM
 #ifdef CUSTOM_ROM
         initialiseInternalGt1s();
         patchSYS_Exec_88();

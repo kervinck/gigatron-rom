@@ -65,11 +65,12 @@ namespace Cpu
     uint8_t* getPtrToROM(int& romSize);
 
     void setFreeRAM(uint16_t freeRAM);
-    void setScanlineModeVideoB(void);
-    void setScanlineModeVideoC(void);
+
+    void initialiseInternalGt1s(void);
 
     void patchSYS_Exec_88(void);
-    void initialiseInternalGt1s(void);
+    void patchScanlineModeVideoB(void);
+    void patchScanlineModeVideoC(void);
     void patchTitleIntoRom(const std::string& title);
     void patchSplitGt1IntoRom(const std::string& splitGt1path, const std::string& splitGt1name, uint16_t startAddress, InternalGt1Id gt1Id);
 
