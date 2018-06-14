@@ -324,7 +324,8 @@ namespace Loader
             Graphics::drawUploadBar(upload);
             fprintf(stderr, "Loader::uploadToGiga() : Uploading...%3d%%\r", int(upload * 100.0f));
         }
-        
+
+        fprintf(stderr, "\n");
         closeComPort();
     }
 #endif

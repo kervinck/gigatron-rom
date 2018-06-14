@@ -59,15 +59,33 @@ namespace Audio
 
     void resetChannels(void)
     {
-        for(int i=0x0000; i<0x0400; i+=0x0100)
-        {
-            Cpu::setRAM(0x01FA + i, 0x00);
-            Cpu::setRAM(0x01FB + i, 0x03);
-            Cpu::setRAM(0x01FC + i, 0x00);
-            Cpu::setRAM(0x01FD + i, 0x00);
-            Cpu::setRAM(0x01FE + i, 0x00);
-            Cpu::setRAM(0x01FF + i, 0x00);
-        }
+        Cpu::setRAM(GIGA_CH0_WAV_A, 0x00);
+        Cpu::setRAM(GIGA_CH0_WAV_X, 0x03);
+        Cpu::setRAM(GIGA_CH0_KEY_L, 0x00);
+        Cpu::setRAM(GIGA_CH0_KEY_H, 0x00);
+        Cpu::setRAM(GIGA_CH0_OSC_L, 0x00);
+        Cpu::setRAM(GIGA_CH0_OSC_H, 0x00);
+
+        Cpu::setRAM(GIGA_CH1_WAV_A, 0x00);
+        Cpu::setRAM(GIGA_CH1_WAV_X, 0x03);
+        Cpu::setRAM(GIGA_CH1_KEY_L, 0x00);
+        Cpu::setRAM(GIGA_CH1_KEY_H, 0x00);
+        Cpu::setRAM(GIGA_CH1_OSC_L, 0x00);
+        Cpu::setRAM(GIGA_CH1_OSC_H, 0x00);
+
+        Cpu::setRAM(GIGA_CH2_WAV_A, 0x00);
+        Cpu::setRAM(GIGA_CH2_WAV_X, 0x03);
+        Cpu::setRAM(GIGA_CH2_KEY_L, 0x00);
+        Cpu::setRAM(GIGA_CH2_KEY_H, 0x00);
+        Cpu::setRAM(GIGA_CH2_OSC_L, 0x00);
+        Cpu::setRAM(GIGA_CH2_OSC_H, 0x00);
+
+        Cpu::setRAM(GIGA_CH3_WAV_A, 0x00);
+        Cpu::setRAM(GIGA_CH3_WAV_X, 0x03);
+        Cpu::setRAM(GIGA_CH3_KEY_L, 0x00);
+        Cpu::setRAM(GIGA_CH3_KEY_H, 0x00);
+        Cpu::setRAM(GIGA_CH3_OSC_L, 0x00);
+        Cpu::setRAM(GIGA_CH3_OSC_H, 0x00);
     }
 
     void nextScore(void)
@@ -107,7 +125,7 @@ namespace Audio
                 frameTime = 0.0;
 
                 // Start audio
-                Cpu::setRAM(0x002C, 0x01);
+                Cpu::setRAM(GIGA_SOUND_TIMER, 0x01);
             }
         }
 
@@ -123,15 +141,15 @@ namespace Audio
                     uint16_t note = *_scorePtr++;
                     note = (note - 10) * 2 - 2;
                     note = Cpu::getROM16(note + 0x0900, 1);
-                    Cpu::setRAM(0x01FC + channel*0x0100, uint8_t(note & 0x00FF));
-                    Cpu::setRAM(0x01FD + channel*0x0100, uint8_t((note & 0xFF00)>>8));
+                    Cpu::setRAM(GIGA_CH0_KEY_L + channel*0x0100, uint8_t(note & 0x00FF));
+                    Cpu::setRAM(GIGA_CH0_KEY_H + channel*0x0100, uint8_t((note & 0xFF00)>>8));
                 }
                 // Stop note
                 else if((command & 0xF0) == 0x80)
                 {
                     uint8_t channel = command & 0x03;  // spec supports up to 16 channels, we support 4
-                    Cpu::setRAM(0x01FC + channel*0x0100, 0x00);
-                    Cpu::setRAM(0x01FD + channel*0x0100, 0x00);
+                    Cpu::setRAM(GIGA_CH0_KEY_L + channel*0x0100, 0x00);
+                    Cpu::setRAM(GIGA_CH0_KEY_H + channel*0x0100, 0x00);
                 }
                 // Stop score
                 else if((command & 0xF0) == 0xD0)
