@@ -12,7 +12,7 @@ read and split.</br>
 gtsplitrom \<input filename\> \<output filename\></br>
 
 ## Example
-gtsplitrom theloop.2.rom test.rom<br/>
+gtsplitrom ROMv1.rom test.rom<br/>
 
 ## Output
 Output is always two files each 64KBytes in length, i.e. from the above example, output would be **_test.rom\_i_**<br/>

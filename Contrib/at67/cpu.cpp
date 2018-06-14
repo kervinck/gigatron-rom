@@ -331,7 +331,7 @@ namespace Cpu
         garble((uint8_t*)&S, sizeof S);
 
         // Check for ROM file
-        std::string filenameRom = "theloop.2.rom";
+        std::string filenameRom = "test.rom";
         std::ifstream romfile(filenameRom, std::ios::binary | std::ios::in);
         if(!romfile.is_open())
         {

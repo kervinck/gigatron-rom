@@ -15,6 +15,7 @@ ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Main.gcl\
 		Core/Reset.gcl
 
+dev: ROMv1x.rom
 ROMv1x.rom: Core/* Apps/* Images/* Makefile interface.json
 	# ROMv1x is development towards ROMv2 (minor changes only)
 	env romType="0x1c"\

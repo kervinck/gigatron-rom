@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
         fprintf(stderr, "Usage:   gtmakerom <input ROM filename> <input GT1 ROM filename> <output ROM filename> <title> <menu_name>\n         <int menu 0 to 5> <uint16_t start_address>\n");
         fprintf(stderr, "         <input GT1 ROM filename> must be created with gt1torom.\n");
         fprintf(stderr, "         <menu> Snake = 0, Racer = 1, Mandelbrot = 2, Pictures = 3, Credits = 4, Loader = 5\n");
-        fprintf(stderr, "Example: gtmakerom theloop.2.rom tetris.rom test.rom \"TTL micromputer test v0\" Tetris 5 0x0B00\n");
+        fprintf(stderr, "Example: gtmakerom ROMv1.rom tetris.rom test.rom \"TTL micromputer test v0\" Tetris 5 0x0B00\n");
         return 1;
     }
 

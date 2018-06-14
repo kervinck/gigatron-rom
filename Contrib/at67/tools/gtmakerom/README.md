@@ -12,7 +12,7 @@ gtmakerom \<input ROM filename\> \<input GT1 ROM filename\> \<output ROM filenam
           \<int menu 0 to 5\> \<uint16_t start address\><br/>
 
 ## Example
-gtmakerom theloop.2.rom tetris.rom test.rom \"TTL micromputer test v0\" Tetris 5 0x0B00<br/>
+gtmakerom ROMv1.rom tetris.rom test.rom \"TTL micromputer test v0\" Tetris 5 0x0B00<br/>
 
 ## GT1 ROM Filename
 The GT1 ROM filename must be created with gt1torom.<br/>
@@ -38,7 +38,7 @@ allows you to merge multiple GT1 ROM files into a base ROM file by repeatedly ca
 successive output.<br/>
 e.g.<br/>
 ~~~
-gtmakerom theloop.2.rom starfield.rom test.rom "TTL microcomputer at67 v0" Starfield 2 0x0B00
+gtmakerom ROMv1.rom starfield.rom test.rom "TTL microcomputer at67 v0" Starfield 2 0x0B00
 gtmakerom test.rom Life.rom test.rom "TTL microcomputer at67 v0" Life 5 0x0f00
 gtmakerom test.rom Lines.rom test.rom "TTL microcomputer at67 v0" Lines 0 0x1100
 gtmakerom test.rom Gigatris.rom test.rom "TTL microcomputer at67 v0" Gigatris 3 0x1300

@@ -67,7 +67,7 @@ and possibly even Android. As of v0.5.6 it has only been tested on Microsoft Win
   the idea). The only dependency is the shared library\/DLL from SDL2 that either must be in the current<br/>
   working directory path or in the appropriate system directory.<br/>
 - Custom ROM's can be used by placing them in the current working directory with the executable and naming<br/>
-  them "**_theloop.2.rom_**".<br/>
+  them "**_test.rom_**".<br/>
 
 ## Configuration
 - The emulator may be placed anywhere in any directory as long as it has access to the SDL2 shared library.<br/>
