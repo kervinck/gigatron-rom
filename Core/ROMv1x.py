@@ -531,9 +531,9 @@ ld('videoF')                    #23 Do this before first visible pixels
 st([videoDorF])                 #24
 ld('SYS_Exec_88')               #25
 st([sysFn])                     #26 High byte (remains) 0
-ld('Reset')                     #27
+ld('Reset-v1x')                 #27
 st([sysArgs+0])                 #28
-ld(hi('Reset'))                 #29
+ld(hi('Reset-v1x'))             #29
 st([sysArgs+1])                 #30
 # Return to interpreter
 ld(hi('REENTER'), Y)            #31

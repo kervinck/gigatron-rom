@@ -29,7 +29,7 @@ ROMv1x.rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Loader.gcl\
 		Apps/Screen.gcl\
 		Apps/Main.gcl\
-		Core/Reset.gcl
+		Core/Reset-v1x.gcl
 
 run: gtemu ROMv1.rom
 	./gtemu
