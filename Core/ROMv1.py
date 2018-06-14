@@ -12,39 +12,6 @@
 #  - Serial input handler
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
-#  Cleanup after ROM v1 release
-#  XXX GCL: Prefix notation for high/low byte >X++ instead of X>++
-#  XXX GCL: Rethink i, i. i; i= x, x. x= x: consistency, also DOKE, STLW etc
-#  XXX How it works memo: brief description of every software function
-#
-#  Ideas for ROM vX
-#  XXX Music sequencer (combined with LED sequencer, but retire soundTimer???)
-#  XXX Adjustable return for LUP trampolines (in case SYS functions need it)
-#  XXX Loader: make noise when data comes in
-#  XXX vCPU: Multiplication (mulShift8?)
-#  XXX vCPU: Interrupts / Task switching (e.g for clock, LED sequencer)
-#  XXX Scroll out the top line of text, or generic vertical scroll SYS call
-#  XXX Multitasking/threading/sleeping (start with date/time clock in GCL)
-#  XXX Scoping for variables or some form of local variables? $i ("localized")
-#  XXX Simple GCL programs might be compiled by the host instead of offline?
-#  XXX vCPU: Clear just vAC[0:7] (Workaround is not bad: |255 ^255)
-#  XXX Random dots screensaver
-#  XXX Star field
-#
-#  Application ideas:
-#  XXX Pacman ghosts. Sprites by scan line 4 reset method? ("videoG"=graphics)
-#  XXX Audio: Decay, using Karplus-Strong
-#  XXX ROM data compression (starting with Jupiter and Racer image)
-#  XXX Font screen 16x8 chars
-#  XXX Info screen (zero page)
-#  XXX Gigatron layout balls/bricks game
-#  XXX Embedded schematics
-#  XXX Maze game. Berzerk/Robotron? Pac Mac
-#  XXX Horizontal scroller. Flappy Bird
-#  XXX Primes, Fibonacci (bignum), Queens
-#  XXX Game of Life (edit <-> stop <-> slow <-> fast)
-#  XXX Game #5 Shooter. Space Invaders, Demon Attack, Galaga style
-#  XXX Exhibition mode: flip between applications in auto-play mode
 #-----------------------------------------------------------------------
 
 from sys import argv
@@ -1329,7 +1296,7 @@ bra('NEXT')                     #14
 label('ST')
 ld(AC, X)                       #10,15 (overlap with LDI)
 ld([vAC])                       #11
-lo('vAC')                       # XXX Replicate ROMv1 artifact
+lo('vAC')                       # XXX Preserve original artifact (remove in next version)
 st([X])                         #12
 ld(-16/2)                       #13
 bra('NEXT')                     #14
