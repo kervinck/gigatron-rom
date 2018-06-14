@@ -7,6 +7,9 @@
 
 {
   2018-06-12 (marcelk) Initial version
+  2018-06-15 (marcelk) Mimic behaviour of original much better, while
+                       avoiding spurious newlines to save vertical space.
+                       Gracefully allow self-invocation ("200R").
 
   What works the same as the original:
     - Type hex address to examine memory contents
@@ -47,9 +50,10 @@ gcl0x
 |                       RAM page 2                                      |
 +-----------------------------------------------------------------------}
 
-[def $2a# $2a# $2a# $20# $57# $6f# $7a# $4d# $6f# $6e# 0#] tmp= {*** WozMon}
+[def $2a# $2a# $20# $57# $6f# $7a# $4d# $6f# $6e# 0#] tmp= {** WozMon}
 
-$7800 Pos=                      {Bottom character row in screen memory}
+$01df deek Pos=                 {Bottom character row in screen memory}
+                                {Slightly cheating with endianness}
 
 {
   Function to draw a 5x8 character on screen with the built-in font
@@ -85,26 +89,30 @@ $7800 Pos=                      {Bottom character row in screen memory}
   pop ret
 ] PrintChar=
 
-{ Print a newline }
+{ Print a newline conditionally }
 [def
-  $800 Pos<.                    {Go back to start}
-  Pos+ [if<0 $0800] Pos=        {Go down 8 lines and wrap around if needed}
+  Pos<, [if<>0                  {If not at start already}
+    $800 Pos<.                  {Go back to start}
+    Pos+ [if<0 $0800] Pos=      {Go down 8 lines and wrap around if needed}
 
-  \sysArgs4=                    {Clear line by printing slices in 1 color}
-  32 \sysArgs0. \sysArgs1.      {All blue}
-  \SYS_VDrawBits_134 \sysFn=
-  [do
-    134!
-    \sysArgs4<++
-    \sysArgs4, 160^ if<>0loop]
+    \sysArgs4=                  {Clear line by printing slices in 1 color}
+    32 \sysArgs0. \sysArgs1.    {All blue}
+    \SYS_VDrawBits_134 \sysFn=
+    [do
+      134!
+      \sysArgs4<++
+      \sysArgs4, 160^ if<>0loop]
                                 {Scroll up by modifying videoTable}
-  $01ee i=                      {Last entry in video table}
-  [do
-    i, 120- [if<0 128^ else 8^] i. {Rotate by 8 in 8..127 range}
-    i 2- i=                     {Previous entry in video table}
-    $fe^ if<>0loop]             {Until all done}
+    $01ee i=                    {Last entry in video table}
+    [do
+      i, 120- [if<0 128^
+               else 8^]
+               i.               {Rotate by 8 in 8..127 range}
+      i 2- i=                   {Previous entry in video table}
+      $fe^ if<>0loop]           {Until all done}
+  ]
   ret
-] Newline=
+] CNewline=
 
 { Print byte as hexadecimal value }
 [def
@@ -120,8 +128,9 @@ $7800 Pos=                      {Bottom character row in screen memory}
   pop ret
 ] PrintByte=
 
+$300 call
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 3                                      |
+|                       RAM page 3                                      |
 +-----------------------------------------------------------------------}
 $0300:
 
@@ -129,6 +138,7 @@ $0300:
 [def
   push
   $80 Buffer=                   {One before begin of buffer}
+  CNewline!
   [do {NEXTITEM}
     Buffer<++                   {Advance text pointer}
     Buffer, if<>0               {While not at end of buffer}
@@ -136,7 +146,7 @@ $0300:
     $2e- if<0loop               {Ignore everything below '.'}
          [if=0  1 Mode= loop]   {'.' Set Block Examine mode and continue}
     $0c- [if=0 1- Mode= loop]   {':' Set Store mode and continue}
-    $18- [if=0 Examine! loop]   {'R' "Run program" and continue}
+    $18- [if=0 Examine! loop]   {'R' "Run" and continue in case of return}
 
     0 tmp=                      {Stays zero if we don't see any hex digit}
     [do {NEXTHEX}               {Parsing hexadecimal number}
@@ -168,12 +178,14 @@ $0300:
         loop]                   {To NEXTITEM}
 
       [if=0                     {"Examine"}
-        Newline! Value Store=   {Also triggers printing of address below}
-      else                      {"Block Examine"}
-        Examine 1+]             {Current byte was already printed}
-      Examine=
+        CNewline!               {Forces printing of new address}
+        Value Store=            {Also set store pointer}
+        1- Examine=]            {Will print one value}
 
-      [do                       {Print range of bytes from memory}
+      [do                       {"Block Examine"}
+        Examine Value- if<0     {Walk with Examine until past Value}
+        Examine 1+ Examine=     {Advance examine pointer}
+        7& [if=0 CNewline!]     {If address mod 8 == 0 continue on next line}
         Pos<, [if=0             {If at start of line print address}
           2 Pos<.               {Tiny 2 pixel indent to be nice}
           Examine>, PrintByte!  {Print high-byte of address}
@@ -181,9 +193,6 @@ $0300:
           $3a PrintChar!]       {Print colon}
         Pos 4+ Pos=             {Small 4 pixel space to fit on Gigatron screen}
         Examine, PrintByte!     {Print data byte at address}
-        Examine Value- if<0     {Walk with Examine until past Value}
-        Examine 1+ Examine=     {Advance examine pointer}
-        7& [if=0 Newline!]      {If address mod 8 == 0 continue one next line}
         loop]
       0 Mode=                   {Back to Examine mode}
       loop]                     {To NEXTITEM}
@@ -193,20 +202,23 @@ $0300:
   pop ret
 ] ProcessBuffer=
 
+$0400 call
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 4                                      |
+|                       RAM page 4                                      |
 +-----------------------------------------------------------------------}
 $0400:
 
-{ Clear last line and display welcome message }
-Newline!
-[do tmp, if<>0 PrintChar! tmp<++ loop]
+Pos<++                          {Force a non-zero low byte}
+CNewline!                       {Now forced to scroll and clear last line}
+
+{ Display '*' and welcome message }
+$2a [do PrintChar! tmp, tmp<++ if<>0loop]
 
 { Input loop, assume some kind of ASCII keyboard is hooked up }
 
 [do {GETLINE}
   $81 Buffer=                   {Prepare for next input line}
-  Newline!
+  CNewline!
 
   [do {NEXTCHAR}
     127 DrawChar!               {Draw cursor}
@@ -231,12 +243,12 @@ Newline!
 
     Pos<, 150^ [if=0            {Arrived at position 25 (25*6 == 150)}
       $81 Buffer=               {Discard of too long input}
-      $5c PrintChar! Newline!]  {Error indicator '\'}
+      $5c PrintChar! CNewline!] {Error indicator '\'}
 
     loop]                       {To NEXTCHAR}
 
   Buffer.                       {Terminate input with zero}
   Mode=                         {Start in examine mode}
-  $20 DrawChar!                 {Remove cursor}
+  $20 PrintChar!                {Remove and advance cursor}
   ProcessBuffer!
   loop]                         {To GETLINE}
