@@ -1329,7 +1329,6 @@ bra('NEXT')                     #14
 label('ST')
 ld(AC, X)                       #10,15 (overlap with LDI)
 ld([vAC])                       #11
-lo('vAC')                       # XXX Replicate ROMv1 artifact
 st([X])                         #12
 ld(-16/2)                       #13
 bra('NEXT')                     #14
