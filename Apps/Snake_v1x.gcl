@@ -220,7 +220,7 @@ $0400:
     else
       {Tail is following the head}
       Tail, tmp=
-      Drops [if>0 1- Drops= 11 {Orange} else 4] Color=
+      Drops [if>0 1- Drops= 63 {White} else 4] Color=
       Tail Pos= DrawBlock!
 
       tmp 64&  [if=0 $0100 else $0001] x=
