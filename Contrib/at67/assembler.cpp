@@ -13,6 +13,7 @@
 #include "editor.h"
 #endif
 
+#include "audio.h"
 #include "loader.h"
 #include "assembler.h"
 #include "expression.h"
@@ -2014,6 +2015,27 @@ namespace Assembler
                         break;
                     }
                 }
+
+                // Check for audio channel stomping
+                if(parse == CodePass  &&  instruction._opcodeType == vCpu)
+                {
+                    if(_currentAddress >= GIGA_CH0_WAV_A  &&  _currentAddress <= GIGA_CH0_OSC_H)
+                    {
+                        fprintf(stderr, "Assembler::assemble() : Warning, audio channel 0 boundary compromised : %04X : '%s' : in %s on line %d.\n", _currentAddress, lineToken._text.c_str(), filename.c_str(), line+1);
+                    }
+                    else if(_currentAddress >= GIGA_CH1_WAV_A  &&  _currentAddress <= GIGA_CH1_OSC_H)
+                    {
+                        fprintf(stderr, "Assembler::assemble() : Warning, audio channel 1 boundary compromised : %04X : '%s' : in %s on line %d.\n", _currentAddress, lineToken._text.c_str(), filename.c_str(), line+1);
+                    }
+                    else if(_currentAddress >= GIGA_CH2_WAV_A  &&  _currentAddress <= GIGA_CH2_OSC_H)
+                    {
+                        fprintf(stderr, "Assembler::assemble() : Warning, audio channel 2 boundary compromised : %04X : '%s' : in %s on line %d.\n", _currentAddress, lineToken._text.c_str(), filename.c_str(), line+1);
+                    }
+                    else if(_currentAddress >= GIGA_CH3_WAV_A  &&  _currentAddress <= GIGA_CH3_OSC_H)
+                    {
+                        fprintf(stderr, "Assembler::assemble() : Warning, audio channel 3 boundary compromised : %04X : '%s' : in %s on line %d.\n", _currentAddress, lineToken._text.c_str(), filename.c_str(), line+1);
+                    }
+                 }
 
                 // Check for page boundary crossings
                 if(parse == CodePass  &&  (instruction._opcodeType == vCpu || instruction._opcodeType == Native))

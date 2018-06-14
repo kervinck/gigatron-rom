@@ -10,7 +10,6 @@ import sys
 # XXX Give warning when def-block contains 'call' put no 'push'
 # XXX Give warning when def-block contains code but no 'ret'
 # XXX Primitive or macro to clear just lower byte of vAC
-# XXX Give warning when not all comments are closed
 # XXX Give warning when a variable is not both written and read 
 # XXX Macros
 # XXX 'page' macro
@@ -18,41 +17,55 @@ import sys
 class Program:
   def __init__(self, address, name, forRom=True):
     self.name = name
-    self.forRom = forRom
-    self.comment = 0
+    self.forRom = forRom # Inject trampolines
+    self.comment = 0     # Nesting level
     self.lineNumber, self.filename = 0, None
-    self.blocks, self.block = [0], 1
+    self.blocks, self.blockId = [0], 1
     self.loops = {} # block -> address of last do
     self.conds = {} # block -> address of continuation
     self.defs  = {} # block -> address of last def
     self.vars  = {} # name -> address
+    self.segStart = None
     self.vPC = None
     self.segId = 0
     self.org(address)
     self.version = None # Must be first word 'gcl<N>'
-
-  def segInfo(self):
-    print ' Segment at %04x size %3d used %3d unused %3d' % (
-      self.segStart,
-      self.segEnd - self.segStart,
-      self.vPC - self.segStart,
-      self.segEnd - self.vPC)
-    define('$%s.seg.%d' % (self.name, self.segId), self.vPC - self.segStart)
-    self.segId += 1
+    self.execute = None
+    self.needPatch = False
 
   def org(self, address):
-    # Configure start address for emit
-    if self.vPC is not None and self.segStart < self.vPC:
-      self.segInfo()
-    if address != self.vPC or self.segStart < self.vPC:
-      assert(address>>8) # Because a zero would mark the end of stream
-      self.putInRomTable(address>>8, '| RAM segment address (high byte first)')
-      self.putInRomTable(address&0xff, '|')
-      self.putInRomTable(lo('$%s.seg.%d' % (self.name, self.segId)), '| Length (1..256)')
+    """Set a new address"""
+    self.closeSegment()
     self.segStart = address
+    self.vPC = address
     page = address & ~255
-    self.segEnd = page + (250 if page <= 0x400 else 256)
-    self.vPC = self.segStart
+    self.segEnd = page + (250 if 0x100 <= page <= 0x400 else 256)
+
+  def openSegment(self):
+    """Write header for segment"""
+    address = self.segStart
+    if self.execute is None:
+      self.execute = address
+    assert self.segId == 0 or address>>8 != 0 # Zero-page segment can only be first
+    self.putInRomTable(address>>8, '| RAM segment address (high byte first)')
+    self.putInRomTable(address&0xff, '|')
+    # Fill in the length through the symbol table
+    self.putInRomTable(lo('$%s.seg.%d' % (self.name, self.segId)), '| Length (1..256)')
+
+  def closeSegment(self):
+    """Register length of segment"""
+    if len(self.blocks) > 1:
+      self.error('Unterminated block')
+    if self.vPC != self.segStart:
+      print ' Segment at %04x size %3d used %3d unused %3d' % (
+        self.segStart,
+        self.segEnd - self.segStart,
+        self.vPC - self.segStart,
+        self.segEnd - self.vPC)
+      length = self.vPC - self.segStart
+      assert 1 <= length <= 256
+      define('$%s.seg.%d' % (self.name, self.segId), length)
+      self.segId += 1
 
   def thisBlock(self):
     return self.blocks[-1]
@@ -79,7 +92,7 @@ class Program:
         nextWord = ''
         if nextChar == '{': self.comment += 1
         elif nextChar == '}': self.error('Spurious %s' % repr(nextChar))
-        elif nextChar == '[': self.blocks.append(self.block); self.block +=  1
+        elif nextChar == '[': self.blocks.append(self.blockId); self.blockId +=  1
         elif nextChar == ']':
           if len(self.blocks) <= 1:
             self.error('Unexpected %s' % repr(nextChar))
@@ -110,16 +123,20 @@ class Program:
   def emit(self, byte, comment=None):
     """Next program byte in RAM"""
     if self.vPC >= self.segEnd:
-        self.error('Out of code space')
+      self.error('Out of code space')
     if byte < 0 or byte >= 256:
-        self.error('Value out of range %d (must be 0..255)' % byte)
+      self.error('Value out of range %d (must be 0..255)' % byte)
+    if self.segStart == self.vPC:
+      self.openSegment()
     self.putInRomTable(byte, comment)
     self.vPC += 1
 
   def opcode(self, ins):
     """Next opcode in RAM"""
     if self.vPC >= self.segEnd:
-        self.error('Out of code space')
+      self.error('Out of code space')
+    if self.segStart == self.vPC:
+      self.openSegment()
     self.putInRomTable(lo(ins), '%04x %s' % (self.vPC, ins))
     self.vPC += 1
 
@@ -173,10 +190,13 @@ class Program:
 
     elif word == 'push': self.opcode('PUSH')
     elif word == 'pop':  self.opcode('POP')
-    elif word == 'ret':  self.opcode('RET')
+    elif word == 'ret':
+      self.opcode('RET')
+      if len(self.blocks) == 1:
+        self.needPatch = True # Top-level use of 'ret' --> apply patch
     elif word == 'call':
-          self.opcode('CALL')
-          self.emit(symbol('vAC'), '%04x vAC' % prev(self.vPC, 1))
+      self.opcode('CALL')
+      self.emit(symbol('vAC'), '%04x vAC' % prev(self.vPC, 1))
     elif word == 'peek': self.opcode('PEEK')
     elif word == 'deek': self.opcode('DEEK')
     else:
@@ -309,12 +329,9 @@ class Program:
           self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
       elif op == '!' and con is not None:
           if con&1:
-            self.error('Invalid value %s (must be even)' % repr(con))
-          minSYS, maxSYS = symbol('$minSYS'), symbol('$maxSYS')
-          if con > maxSYS:
-            self.warning('Large cycle count %s > %s (will never run)' % (repr(con), repr(maxSYS)))
+            self.error('Invalid value %s (must be even)' % con)
           self.opcode('SYS')
-          extraTicks = con/2 - symbol('$maxTicks')
+          extraTicks = con/2 - symbol('maxTicks')
           self.emit(256 - extraTicks if extraTicks > 0 else 0)
       else:
         self.error('Invalid word %s' % repr(word))
@@ -401,10 +418,9 @@ class Program:
     return (name, number, op if len(op)>0 else None)
 
   def end(self):
-    self.segInfo()
-    # XXX Check all blocks are closed
-    if len(self.conds) > 0:
-      self.error('Dangling if statements')
+    if self.comment > 0:
+      self.error('Unterminated comment')
+    self.closeSegment()
     print ' Variables count %d bytes %d end %04x' % (len(self.vars), 2*len(self.vars), zpByte(0))
     symbols, n = sorted(self.vars.keys()), 8
     for i in range(0, len(symbols), n):
@@ -426,7 +442,7 @@ class Program:
     sys.exit()
 
   def putInRomTable(self, byte, comment=None):
-    ld(val(byte))
+    ld(byte)
     if comment:
       C(comment)
     if self.forRom and pc()&255 == 251:
