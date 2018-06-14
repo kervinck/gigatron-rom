@@ -8,7 +8,7 @@
 
 
 #define GTASM_MAJOR_VERSION "0.1"
-#define GTASM_MINOR_VERSION "2"
+#define GTASM_MINOR_VERSION "3"
 #define GTASM_VERSION_STR "gtasm v" GTASM_MAJOR_VERSION "." GTASM_MINOR_VERSION
 
 
@@ -22,9 +22,9 @@ int main(int argc, char* argv[])
     }
 
     std::string filename = std::string(argv[1]);
-    if(filename.find(".vasm") == filename.npos  &&  filename.find(".s") == filename.npos  &&  filename.find(".asm") == filename.npos)
+    if(filename.find(".vasm") == filename.npos  &&  filename.find(".gasm") == filename.npos   &&  filename.find(".asm") == filename.npos  &&  filename.find(".s") == filename.npos)
     {
-        fprintf(stderr, "Wrong file extension in %s : must be one of : '.vasm' or '.s' or '.asm'\n", filename.c_str());
+        fprintf(stderr, "Wrong file extension in %s : must be one of : '.vasm' or '.gasm' or '.asm' or '.s'\n", filename.c_str());
         return 1;
     }
 

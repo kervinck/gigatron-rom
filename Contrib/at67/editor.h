@@ -25,7 +25,7 @@
 namespace Editor
 {
     enum MemoryMode {RAM=0, ROM0, ROM1, NumMemoryModes};
-    enum EditorMode {Hex=0, Load, GigaLoad, Debug, NumEditorModes};
+    enum EditorMode {Hex=0, Load, Giga, PS2KB, Debug, NumEditorModes};
     enum FileType {File=0, Dir, Fifo, Link, NumFileTypes};
 
 
