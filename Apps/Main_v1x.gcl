@@ -158,7 +158,7 @@ PrintMenu!
   42 {Gray} Color= PrintArrow!
 
   { Map menu item to program }
-  Item [if=0 \Snake      else
+  Item [if=0 \Snake_v1x  else
   1-   [if=0 \Racer      else
   1-   [if=0 \Mandelbrot else
   1-   [if=0 \Pictures   else
