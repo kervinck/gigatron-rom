@@ -405,8 +405,21 @@ namespace Editor
         // PS2 Keyboard emulation mode
         if(_ps2KeyboardMode)
         {
-            if(keyCode >= 32  &&  keyCode <= 127)
+            if(keyCode >= 0  &&  keyCode <= 127)
             {
+                switch(keyCode)
+                {
+                    case SDLK_PAGEDOWN: keyCode = ~32;  break;
+                    case SDLK_TAB:      keyCode = ~128; break;
+                    case SDLK_ESCAPE:   keyCode = ~64;  break;
+                    case SDLK_LEFT:     keyCode = ~2;   break;
+                    case SDLK_RIGHT:    keyCode = ~1;   break;
+                    case SDLK_UP:       keyCode = ~8;   break;
+                    case SDLK_DOWN:     keyCode = ~4;   break;
+                    case SDLK_RETURN:   keyCode = '\n'; break;
+                    case SDLK_DELETE:   keyCode = 127;  break;
+                }
+
                 Cpu::setIN(keyCode);
                 return;
             }
@@ -660,7 +673,7 @@ namespace Editor
         // PS2 Keyboard emulation mode
         if(_ps2KeyboardMode)
         {
-            if(keyCode >= 32  &&  keyCode <= 127)
+            if(keyCode >= 0  &&  keyCode <= 127)
             {
                 Cpu::setIN(0xFF);
                 return;
