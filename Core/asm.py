@@ -477,18 +477,18 @@ def writeRomFiles(sourceFile):
     assert len(_rom1) == _romSize
 
 # # Write ROM files
-# filename = stem + '.0.rom'
+# filename = stem + '.lo.rom'
 # print 'Create file', filename
 # with open(filename, 'wb') as file:
 #   file.write(''.join([chr(byte) for byte in _rom0]))
 
-# filename = stem + '.1.rom'
+# filename = stem + '.hi.rom'
 # print 'Create file', filename
 # with open(filename, 'wb') as file:
 #   file.write(''.join([chr(byte) for byte in _rom1]))
 
   # 16-bit version for 27C1024, little endian
-  filename = stem + '.2.rom'
+  filename = stem + '.rom'
   print 'Create file', filename
   _rom2 = []
   for x, y in zip(_rom0, _rom1):

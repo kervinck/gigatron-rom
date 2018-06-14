@@ -95,7 +95,7 @@ int main(void)
   garble(RAM, sizeof RAM);
   garble((uint8_t*)&S, sizeof S);
 
-  FILE *fp = fopen("theloop.2.rom", "rb");
+  FILE *fp = fopen("ROMv1.rom", "rb");
   if (!fp) {
     fprintf(stderr, "Error: failed to open ROM file\n");
     exit(EXIT_FAILURE);
