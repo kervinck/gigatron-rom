@@ -21,15 +21,15 @@ ROMv1x.rom: Core/* Apps/* Images/* Makefile interface.json
 	env romType="0x1c"\
 	    PYTHONPATH="Core:$(PYTHONPATH)"\
 	    python Core/ROMv1x.py\
-		Apps/Snake.gcl\
+		Apps/Snake_v1x.gcl\
 		Apps/Racer.gcl\
 		Apps/Mandelbrot.gcl\
 		Apps/Pictures.gcl\
 		Apps/Credits.gcl\
 		Apps/Loader.gcl\
 		Apps/Screen.gcl\
-		Apps/Main.gcl\
-		Core/Reset-v1x.gcl
+		Apps/Main_v1x.gcl\
+		Core/Reset_v1x.gcl
 
 run: gtemu ROMv1.rom
 	./gtemu

@@ -121,7 +121,7 @@ SetupVideo!
 $812 Pos= PrintStartupMessage!
 
 { Load and start main program }
-\Main \sysArgs0= $200 \vLR= \SYS_Exec_88 \sysFn= 88!
+\Main_v1x \sysArgs0= $200 \vLR= \SYS_Exec_88 \sysFn= 88!
 
 {-----------------------------------------------------------------------+
 |                                                                       |
