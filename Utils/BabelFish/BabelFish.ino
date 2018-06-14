@@ -17,6 +17,7 @@
 
 // Select 1 of the platforms:
 #define ArduinoUno   1 // Default
+#define ArduinoNano  0
 #define ArduinoMicro 0
 #define ATtiny85     0
 
@@ -64,6 +65,33 @@ const byte gt1File[] PROGMEM = {
 
 #if ArduinoUno
  #define version "ArduinoUno"
+
+ // Pins for Gigatron
+ #define SER_DATA  PB5
+ #define SER_LATCH PB4
+ #define SER_PULSE PB3
+
+ // Pins for PS/2 keyboard (Arduino Uno)
+ #define keyboardClockPin PB3 // Pin 2 or 3 for IRQ
+ #define keyboardDataPin  PB4 // Any available free pin
+
+ // Link to PC/laptop
+ #define hasSerial 1
+#endif
+
+/*----------------------------------------------------------------------+
+ |      Arduino Nano config                                             |
+ +----------------------------------------------------------------------*/
+
+// Arduino   AVR    Gigatron Schematic Controller PCB              Gigatron
+// Nano      Name   OUT bit            CD4021     74HC595 (U39)    DB9 (J4)
+// --------- ------ -------- --------- ---------- ---------------- --------
+// Pin J2-15 PORTB5 None     SER_DATA  11 SER INP 14 SER           2
+// Pin J1-15 PORTB4 7 vSync  SER_LATCH  0 PAR/SER None             3
+// Pin J1-14 PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK 4
+
+#if ArduinoNano
+ #define version "ArduinoNano"
 
  // Pins for Gigatron
  #define SER_DATA  PB5

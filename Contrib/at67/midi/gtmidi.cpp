@@ -202,7 +202,7 @@ int main(int argc, char* argv[])
     std::string outFilename = std::string(argv[2]);
     std::string midiName = std::string(argv[3]);
 
-    Format format = (Format)std::stoi(std::string(argv[4]));
+    Format format = (Format)strtol(argv[4], nullptr, 10);
     if(format < Format::vCPU  ||  format >= Format::NumFormats)
     {
         fprintf(stderr, "Format must be 0, 1, 2 or 3\n");
@@ -217,9 +217,9 @@ int main(int argc, char* argv[])
     ss1 << std::hex << argv[6];
     ss1 >> segmentOffset;
 
-    uint16_t segmentSize = std::stoi(argv[7]);
-    int lineLength = std::stoi(std::string(argv[8]));
-    double timingAdjust = std::stod(std::string(argv[9]));
+    uint16_t segmentSize = uint16_t(strtol(argv[7], nullptr, 10));
+    int lineLength = strtol(argv[8], nullptr, 10);
+    double timingAdjust = strtod(argv[9], nullptr);
 
     std::ifstream infile(inFilename, std::ios::binary | std::ios::in);
     if(!infile.is_open())

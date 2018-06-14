@@ -9,12 +9,26 @@
 #include "timing.h"
 #include "graphics.h"
 #include "inih/INIReader.h"
+#include "rs232/rs232.h"
+
+#if defined(_WIN32)
+#include "dirent/dirent.h"
+#else
+#include <dirent.h>
+#endif
+
 #endif
 
 #include "cpu.h"
 #include "loader.h"
 #include "assembler.h"
 #include "expression.h"
+
+
+#define DEFAULT_COM_BAUD_RATE 115200
+#define DEFAULT_COM_PORT      0
+#define DEFAULT_GIGA_TIMEOUT  5.0
+#define MAX_GT1_SIZE          (1 <<16)
 
 
 namespace Loader
@@ -24,56 +38,294 @@ namespace Loader
     enum FrameState {Resync=0, Frame, Execute, NumFrameStates};
 
 
-    bool _startUploading = false;
+    UploadTarget _uploadTarget = None;
     bool _disableUploads = false;
+
+    int _numComPorts = 0;
+    int _currentComPort = -1;
+    char _gt1Buffer[MAX_GT1_SIZE];
+
+    int _configBaudRate = DEFAULT_COM_BAUD_RATE;
+    int _configComPort = DEFAULT_COM_PORT;
+    double _configTimeout = DEFAULT_GIGA_TIMEOUT;
 
     std::string _currentGame = "";
 
-    INIReader _iniReader;
+    INIReader _loaderConfigIniReader;
+    INIReader _highScoresIniReader;
     std::map<std::string, SaveData> _saveData;
 
 
-    bool getStartUploading(void) {return _startUploading;}
-    void setStartUploading(bool start) {_startUploading = start;}
+    UploadTarget getUploadTarget(void) {return _uploadTarget;}
+    void setUploadTarget(UploadTarget target) {_uploadTarget = target;}
 
+
+    bool getKeyAsString(INIReader& iniReader, const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, std::string& result)
+    {
+        result = iniReader.Get(sectionString, iniKey, defaultKey);
+        result = Expression::strToUpper(result);
+        return true;
+    }
 
     void initialise(void)
     {
-        INIReader iniReader(HIGH_SCORES_INI);
-        _iniReader = iniReader;
-        if(_iniReader.ParseError() < 0)
+        _numComPorts = comEnumerate();
+        if(_numComPorts == 0) fprintf(stderr, "Loader::initialise() : no COM ports found.\n");
+
+        // Loader config
+        INIReader loaderConfigIniReader(LOADER_CONFIG_INI);
+        _loaderConfigIniReader = loaderConfigIniReader;
+        if(_loaderConfigIniReader.ParseError() == 0)
         {
-            fprintf(stderr, "Loader::initialise() : couldn't load INI file '%s' : loading and saving of high scores is disabled.\n", HIGH_SCORES_INI);
+            // Parse Loader Keys
+            enum Section {Comms};
+            std::map<std::string, Section> section;
+            section["Comms"] = Comms;
+            for(auto sectionString : _loaderConfigIniReader.Sections())
+            {
+                if(section.find(sectionString) == section.end())
+                {
+                    fprintf(stderr, "Loader::initialise() : INI file '%s' has bad Sections : reverting to default values.\n", LOADER_CONFIG_INI);
+                    break;
+                }
+
+                std::string result;
+                switch(section[sectionString])
+                {
+                    case Comms:
+                    {
+                         getKeyAsString(_loaderConfigIniReader, sectionString, "BaudRate", "115200", result);   
+                        _configBaudRate = strtol(result.c_str(), nullptr, 10);
+ 
+                        char *endPtr;
+                        getKeyAsString(_loaderConfigIniReader, sectionString, "ComPort", "0", result);   
+                        _configComPort = strtol(result.c_str(), &endPtr, 10);
+                        if((endPtr - &result[0]) != result.size())
+                        {
+                            _configComPort = comFindPort(result.c_str());
+                            if(_configComPort < 0) _configComPort = DEFAULT_COM_PORT;
+                        }
+
+                        getKeyAsString(_loaderConfigIniReader, sectionString, "Timeout", "5.0", result);   
+                        _configTimeout = strtod(result.c_str(), nullptr);
+                    }
+                    break;
+                }
+            }
+        }
+        else
+        {
+            fprintf(stderr, "Loader::initialise() : couldn't find loader configuration INI file '%s' : reverting to default values.\n", LOADER_CONFIG_INI);
+        }
+
+
+        // High score config
+        INIReader highScoresIniReader(HIGH_SCORES_INI);
+        _highScoresIniReader = highScoresIniReader;
+        if(_highScoresIniReader.ParseError() == 0)
+        {
+            // Parse high scores INI file
+            for(auto game : _highScoresIniReader.Sections())
+            {
+                std::vector<uint16_t> counts;
+                std::vector<uint16_t> addresses;
+                std::vector<Endianness> endianness;
+                std::vector<std::vector<uint8_t>> data;
+
+                int updateRate = uint16_t(_highScoresIniReader.GetReal(game, "updateRate", VSYNC_RATE));
+
+                for(int index=0; ; index++)
+                {
+                    std::string count = "count" + std::to_string(index);
+                    std::string address = "address" + std::to_string(index);
+                    std::string endian = "endian" + std::to_string(index);
+                    if(_highScoresIniReader.Get(game, count, "") == "") break;
+                    if(_highScoresIniReader.Get(game, address, "") == "") break;
+                    endian = _highScoresIniReader.Get(game, endian, "little");
+                    counts.push_back(uint16_t(_highScoresIniReader.GetReal(game, count, -1)));
+                    addresses.push_back(uint16_t(_highScoresIniReader.GetReal(game, address, -1)));
+                    endianness.push_back((endian == "little") ? Little : Big);
+                    data.push_back(std::vector<uint8_t>(counts.back(), 0x00));
+                }
+
+                SaveData saveData = {true, updateRate, game, counts, addresses, endianness, data};
+                _saveData[game] = saveData;
+            }
+        }
+        else
+        {
+            fprintf(stderr, "Loader::initialise() : couldn't load high scores INI file '%s' : loading and saving of high scores is disabled.\n", HIGH_SCORES_INI);
+        }
+    }
+
+    int matchFileSystemName(const std::string& path, const std::string& match, std::vector<std::string>& names)
+    {
+        DIR *dir;
+        struct dirent *ent;
+
+        names.clear();
+
+        if((dir = opendir(path.c_str())) != NULL)
+        {
+            while((ent = readdir(dir)) != NULL)
+            {
+                std::string name = std::string(ent->d_name);
+                if(name.find(match) != std::string::npos) names.push_back(path + name);   
+            }
+            closedir (dir);
+        }
+
+        return int(names.size());
+    }
+
+    bool openComPort(int comPort)
+    {
+        if(_numComPorts == 0)
+        {
+            _numComPorts = comEnumerate();
+            if(_numComPorts == 0)
+            {
+                fprintf(stderr, "Loader::openComPort() : no COM ports found.\n");
+                return false;
+            }
+        }
+
+        _currentComPort = comPort;
+
+#ifdef _WIN32
+        if(_currentComPort == -1) _currentComPort = 0;
+#else
+        if(_currentComPort == -1)
+        {
+            _currentComPort = 0
+            std::vector<std::string> names;
+            matchFileSystemName("/dev/", "tty.usbmodem", names);
+            if(names.size() == 0) matchFileSystemName("/dev/", "ttyACM", names);
+            if(names.size()) _currentComPort = comFindPort(names[0].c_str());
+        }
+#endif        
+
+        if(_currentComPort < 0)
+        {
+            _numComPorts = 0;
+            fprintf(stderr, "Loader::openComPort() : couldn't open any COM port.\n");
+            return false;
+        } 
+        else if(comOpen(_currentComPort, _configBaudRate) == 0)
+        {
+            _numComPorts = 0;
+            fprintf(stderr, "Loader::openComPort() : couldn't open COM port '%s'.\n", comGetPortName(_currentComPort));
+            return false;
+        } 
+
+        return true;
+    }
+
+    void closeComPort(void)
+    {
+        comClose(_currentComPort);
+    }
+
+    bool readLineGiga(std::string& line)
+    {
+        line.clear();
+        char buffer = 0;
+        uint64_t prevFrameCounter = SDL_GetPerformanceCounter();
+
+        while(buffer != '\n')
+        {
+            if(comRead(_currentComPort, &buffer, 1)) line.push_back(buffer);
+            double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
+            if(frameTime > _configTimeout) return false;
+        }
+
+        line.push_back(0);
+        return true;
+    }
+
+    bool waitForPromptGiga(std::string& line)
+    {
+        do
+        {
+            if(!readLineGiga(line))
+            {
+                fprintf(stderr, "Loader::waitForPromptGiga() : timed out on serial port : '%s'.\n", comGetPortName(_currentComPort));
+                return false;
+            }
+
+            if(size_t e = line.find('!') != std::string::npos)
+            {
+                fprintf(stderr, "Loader::waitForPromptGiga() : Arduino Error : '%s'.\n", &line[e]);
+                return false;
+            }
+        }
+        while(line.find('?') == std::string::npos);
+
+        return true;
+    }
+    
+
+    void sendCommandGiga(char cmd, std::string& line, bool wait)
+    {
+        char command[2] = {cmd, '\n'};
+        comWrite(_currentComPort, command, 2);
+
+        // Wait for ready prompt
+        if(wait) waitForPromptGiga(line);
+    }
+
+    void sendCommandToGiga(char cmd, bool wait)
+    {
+        if(!openComPort(_configComPort)) return;
+
+        std::string line;
+        sendCommandGiga(cmd, line, false);
+
+        closeComPort();
+    }
+
+    void uploadToGiga(const std::string& filename)
+    {
+        if(!openComPort(_configComPort)) return;
+
+        std::ifstream gt1file(filename, std::ios::binary | std::ios::in);
+        if(!gt1file.is_open())
+        {
+            fprintf(stderr, "Loader::uploadToGiga() : failed to open '%s'.\n", filename.c_str());
             return;
         }
 
-        // Parse high scores INI file
-        for(auto game : _iniReader.Sections())
+        gt1file.read(_gt1Buffer, MAX_GT1_SIZE);
+        if(gt1file.bad())
         {
-            std::vector<uint16_t> counts;
-            std::vector<uint16_t> addresses;
-            std::vector<Endianness> endianness;
-            std::vector<std::vector<uint8_t>> data;
+            fprintf(stderr, "Loader::uploadToGiga() : failed to read %s GT1 file.\n", filename.c_str());
+            return;
+        }
 
-            int updateRate = uint16_t(_iniReader.GetReal(game, "updateRate", VSYNC_RATE));
+        std::string line;
+        sendCommandGiga('R', line, true);
+        sendCommandGiga('L', line, true);
+        sendCommandGiga('U', line, true);
 
-            for(int index=0; ; index++)
+        int index = 0;
+        while(std::isdigit(line[0]))
+        {
+            int n = strtol(line.c_str(), nullptr, 10);
+            comWrite(_currentComPort, &_gt1Buffer[index], n);
+            index += n;
+
+            if(!waitForPromptGiga(line))
             {
-                std::string count = "count" + std::to_string(index);
-                std::string address = "address" + std::to_string(index);
-                std::string endian = "endian" + std::to_string(index);
-                if(_iniReader.Get(game, count, "") == "") break;
-                if(_iniReader.Get(game, address, "") == "") break;
-                endian = _iniReader.Get(game, endian, "little");
-                counts.push_back(uint16_t(_iniReader.GetReal(game, count, -1)));
-                addresses.push_back(uint16_t(_iniReader.GetReal(game, address, -1)));
-                endianness.push_back((endian == "little") ? Little : Big);
-                data.push_back(std::vector<uint8_t>(counts.back(), 0x00));
+                closeComPort();
+                return;
             }
 
-            SaveData saveData = {true, updateRate, game, counts, addresses, endianness, data};
-            _saveData[game] = saveData;
+            float upload = float(index) / float(gt1file.gcount());
+            Graphics::drawUploadBar(upload);
+            fprintf(stderr, "Loader::uploadToGiga() : Uploading...%3d%%\r", int(upload * 100.0f));
         }
+        
+        closeComPort();
     }
 #endif
 
@@ -513,8 +765,9 @@ namespace Loader
         }
     }
 
-    void uploadDirect(void)
+    void uploadDirect(UploadTarget uploadTarget)
     {
+        bool isGt1File = false;
         bool hasRomCode = false;
         bool hasRamCode = false;
 
@@ -536,15 +789,19 @@ namespace Loader
             executeAddress = gt1File._loStart + (gt1File._hiStart <<8);
             Editor::setLoadBaseAddress(executeAddress);
 
-            for(int j=0; j<gt1File._segments.size(); j++)
+            if(uploadTarget == Emulator)
             {
-                uint16_t address = gt1File._segments[j]._loAddress + (gt1File._segments[j]._hiAddress <<8);
-                for(int i=0; i<gt1File._segments[j]._dataBytes.size(); i++)
+                for(int j=0; j<gt1File._segments.size(); j++)
                 {
-                    Cpu::setRAM(address+i, gt1File._segments[j]._dataBytes[i]);
+                    uint16_t address = gt1File._segments[j]._loAddress + (gt1File._segments[j]._hiAddress <<8);
+                    for(int i=0; i<gt1File._segments[j]._dataBytes.size(); i++)
+                    {
+                        Cpu::setRAM(address+i, gt1File._segments[j]._dataBytes[i]);
+                    }
                 }
             }
 
+            isGt1File = true;
             hasRamCode = true;
             hasRomCode = false;
             _disableUploads = false;
@@ -588,7 +845,7 @@ namespace Loader
                     gt1Segment._hiAddress = (address & 0xFF00) >>8;
                 }
 
-                if(!_disableUploads)
+                if(uploadTarget == Emulator  &&  !_disableUploads)
                 {
                     (byteCode._isRomAddress) ? Cpu::setROM(customAddress, address++, byteCode._data) : Cpu::setRAM(address++, byteCode._data);
                 }
@@ -616,20 +873,35 @@ namespace Loader
         uint16_t totalSize = printGt1Stats(filename, gt1File);
         Cpu::setFreeRAM(Cpu::getBaseFreeRAM() - totalSize); 
 
-        // Currently only for emulation
-        size_t i = filename.find('.');
-        _currentGame = (i != std::string::npos) ? filename.substr(0, i) : filename;
-        loadHighScore();
-
-        // Execute code
-        if(!_disableUploads  &&  hasRamCode)
+        if(uploadTarget == Emulator)
         {
-            Cpu::setRAM(0x0016, executeAddress-2 & 0x00FF);
-            Cpu::setRAM(0x0017, (executeAddress & 0xFF00) >>8);
-            Cpu::setRAM(0x001a, executeAddress-2 & 0x00FF);
-            Cpu::setRAM(0x001b, (executeAddress & 0xFF00) >>8);
-            //Editor::setSingleStep(true);
+            size_t i = filename.find('.');
+            _currentGame = (i != std::string::npos) ? filename.substr(0, i) : filename;
+            loadHighScore();
+
+            // Execute code
+            if(!_disableUploads  &&  hasRamCode)
+            {
+                Cpu::setRAM(0x0016, executeAddress-2 & 0x00FF);
+                Cpu::setRAM(0x0017, (executeAddress & 0xFF00) >>8);
+                Cpu::setRAM(0x001a, executeAddress-2 & 0x00FF);
+                Cpu::setRAM(0x001b, (executeAddress & 0xFF00) >>8);
+            }
         }
+        else if(uploadTarget == Hardware)
+        {
+            if(!isGt1File)
+            {
+                size_t i = filepath.rfind('.');
+                filename = (i != std::string::npos) ? filepath.substr(0, i) + ".gt1" : filepath + ".gt1";
+                uploadToGiga(filename);
+            }
+            else
+            {
+                uploadToGiga(filepath);
+            }
+        }
+
         return;
     }
 
@@ -741,15 +1013,15 @@ namespace Loader
         static uint8_t payload[RAM_SIZE];
         static uint8_t payloadSize = 0;
 
-        if(_startUploading  ||  frameUploading)
+        if(_uploadTarget != None  ||  frameUploading)
         {
             uint16_t executeAddress = Editor::getLoadBaseAddress();
-            if(_startUploading)
+            if(_uploadTarget != None)
             {
-                _startUploading = false;
+                uploadDirect(_uploadTarget);
+                _uploadTarget = None;
                 //frameUploading = true;
 
-                uploadDirect();
                 return;
             }
             

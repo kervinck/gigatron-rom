@@ -39,15 +39,21 @@ namespace Editor
 
     int _cursorX = 0;
     int _cursorY = 0;
+
     bool _hexEdit = false;
+    bool _startMusic = false;
+    bool _gigatronMode = false;
+    bool _ps2KeyboardMode = false;
+
     bool _singleStep = false;
     bool _singleStepMode = false;
     uint32_t _singleStepTicks = 0;
     uint8_t _singleStepWatch = 0x00;
+
     const std::string _srcPath = "/";
     std::string _cwdPath = "";
     std::string _filePath = "";
-    bool _startMusic = false;
+
 
     MemoryMode _memoryMode = RAM;
     EditorMode _editorMode = Hex, _prevEditorMode = Hex;
@@ -64,6 +70,7 @@ namespace Editor
     std::vector<FileEntry> _fileEntries;
 
     INIReader _iniReader;
+    uint16_t _sdlKeyModifier = 0;
     std::map<std::string, int> _sdlKeys;
     std::map<std::string, int> _inputKeys;
 
@@ -276,6 +283,8 @@ namespace Editor
         _inputKeys["Giga_B"]       = SDLK_SLASH;
         _inputKeys["Debug"]        = SDLK_F6;
         _inputKeys["Step"]         = SDLK_F10;
+        _inputKeys["Giga"]         = SDLK_F12;
+        _inputKeys["PS2_KB"]       = SDLK_F4;
 
         // Input configuration
         INIReader iniReader(INPUT_CONFIG_INI);
@@ -332,6 +341,7 @@ namespace Editor
                     scanCodeFromIniKey(sectionString, "ScanlineMode", "F3",     _inputKeys["ScanlineMode"]);
                     scanCodeFromIniKey(sectionString, "Speed+",       "+",      _inputKeys["Speed+"]);
                     scanCodeFromIniKey(sectionString, "Speed-",       "-",      _inputKeys["Speed-"]);
+                    scanCodeFromIniKey(sectionString, "PS2_KB",       "F4",     _inputKeys["PS2_KB"]);
                 }
                 break;
 
@@ -345,6 +355,7 @@ namespace Editor
                     scanCodeFromIniKey(sectionString, "Giga_Select", "Z",     _inputKeys["Giga_Select"]);
                     scanCodeFromIniKey(sectionString, "Giga_A",      ".",     _inputKeys["Giga_A"]);
                     scanCodeFromIniKey(sectionString, "Giga_B",      "/",     _inputKeys["Giga_B"]);
+                    scanCodeFromIniKey(sectionString, "Giga",        "F12",   _inputKeys["Giga"]);
                 }
                 break;
 
@@ -391,16 +402,38 @@ namespace Editor
 
     void handleKeyDown(SDL_Keycode keyCode)
     {
-        int limitY = (_editorMode != Load) ? HEX_CHARS_Y : std::min(int(_fileEntries.size()), HEX_CHARS_Y);
+        // PS2 Keyboard emulation mode
+        if(_ps2KeyboardMode)
+        {
+            if(keyCode >= 0  &&  keyCode <= 127)
+            {
+                switch(keyCode)
+                {
+                    case SDLK_PAGEDOWN: keyCode = ~32;  break;
+                    case SDLK_TAB:      keyCode = ~128; break;
+                    case SDLK_ESCAPE:   keyCode = ~64;  break;
+                    case SDLK_LEFT:     keyCode = ~2;   break;
+                    case SDLK_RIGHT:    keyCode = ~1;   break;
+                    case SDLK_UP:       keyCode = ~8;   break;
+                    case SDLK_DOWN:     keyCode = ~4;   break;
+                    case SDLK_RETURN:   keyCode = '\n'; break;
+                    case SDLK_DELETE:   keyCode = 127;  break;
+                }
 
-        if(keyCode == _inputKeys["Giga_Left"])        Cpu::setIN(Cpu::getIN() & ~INPUT_LEFT);
-        else if(keyCode == _inputKeys["Giga_Right"])  Cpu::setIN(Cpu::getIN() & ~INPUT_RIGHT); 
-        else if(keyCode == _inputKeys["Giga_Up"])     Cpu::setIN(Cpu::getIN() & ~INPUT_UP);    
-        else if(keyCode == _inputKeys["Giga_Down"])   Cpu::setIN(Cpu::getIN() & ~INPUT_DOWN);  
-        else if(keyCode == _inputKeys["Giga_Start"])  Cpu::setIN(Cpu::getIN() & ~INPUT_START); 
-        else if(keyCode == _inputKeys["Giga_Select"]) Cpu::setIN(Cpu::getIN() & ~INPUT_SELECT);
-        else if(keyCode == _inputKeys["Giga_A"])      Cpu::setIN(Cpu::getIN() & ~INPUT_A);     
-        else if(keyCode == _inputKeys["Giga_B"])      Cpu::setIN(Cpu::getIN() & ~INPUT_B);     
+                Cpu::setIN(keyCode);
+                return;
+            }
+        }
+
+        int limitY = (_editorMode != Load) ? HEX_CHARS_Y : std::min(int(_fileEntries.size()), HEX_CHARS_Y);
+        if(keyCode == _inputKeys["Giga_Left"])        (_gigatronMode) ? Loader::sendCommandToGiga('A', true) : Cpu::setIN(Cpu::getIN() & ~INPUT_LEFT);
+        else if(keyCode == _inputKeys["Giga_Right"])  (_gigatronMode) ? Loader::sendCommandToGiga('D', true) : Cpu::setIN(Cpu::getIN() & ~INPUT_RIGHT); 
+        else if(keyCode == _inputKeys["Giga_Up"])     (_gigatronMode) ? Loader::sendCommandToGiga('W', true) : Cpu::setIN(Cpu::getIN() & ~INPUT_UP);    
+        else if(keyCode == _inputKeys["Giga_Down"])   (_gigatronMode) ? Loader::sendCommandToGiga('S', true) : Cpu::setIN(Cpu::getIN() & ~INPUT_DOWN);  
+        else if(keyCode == _inputKeys["Giga_Start"])  (_gigatronMode) ? Loader::sendCommandToGiga('E', true) : Cpu::setIN(Cpu::getIN() & ~INPUT_START); 
+        else if(keyCode == _inputKeys["Giga_Select"]) (_gigatronMode) ? Loader::sendCommandToGiga('Q', true) : Cpu::setIN(Cpu::getIN() & ~INPUT_SELECT);
+        else if(keyCode == _inputKeys["Giga_A"])      (_gigatronMode) ? Loader::sendCommandToGiga('Z', true) : Cpu::setIN(Cpu::getIN() & ~INPUT_A);     
+        else if(keyCode == _inputKeys["Giga_B"])      (_gigatronMode) ? Loader::sendCommandToGiga('X', true) : Cpu::setIN(Cpu::getIN() & ~INPUT_B);     
 
         else if(keyCode == _inputKeys["Left"])  {_cursorX = (--_cursorX < 0) ? HEX_CHARS_X-1 : _cursorX;  _memoryDigit = 0; _addressDigit = 0;}
         else if(keyCode == _inputKeys["Right"]) {_cursorX = (++_cursorX >= HEX_CHARS_X) ? 0  : _cursorX;  _memoryDigit = 0; _addressDigit = 0;}
@@ -457,7 +490,10 @@ namespace Editor
         // Fast reset
         else if(keyCode == _inputKeys["Reset"])
         {
-            if(!_singleStepMode) Cpu::reset();
+            if(!_singleStepMode)
+            {
+                (_sdlKeyModifier & KMOD_CTRL) ? Loader::sendCommandToGiga('R', false) : Cpu::reset();
+            }
         }
     }
 
@@ -634,14 +670,24 @@ namespace Editor
 
     void handleKeyUp(SDL_Keycode keyCode)
     {
-        if(keyCode == _inputKeys["Giga_Left"])        Cpu::setIN(Cpu::getIN() | INPUT_LEFT);  
-        else if(keyCode == _inputKeys["Giga_Right"])  Cpu::setIN(Cpu::getIN() | INPUT_RIGHT); 
-        else if(keyCode == _inputKeys["Giga_Up"])     Cpu::setIN(Cpu::getIN() | INPUT_UP);    
-        else if(keyCode == _inputKeys["Giga_Down"])   Cpu::setIN(Cpu::getIN() | INPUT_DOWN);  
-        else if(keyCode == _inputKeys["Giga_Start"])  Cpu::setIN(Cpu::getIN() | INPUT_START); 
-        else if(keyCode == _inputKeys["Giga_Select"]) Cpu::setIN(Cpu::getIN() | INPUT_SELECT);
-        else if(keyCode == _inputKeys["Giga_A"])      Cpu::setIN(Cpu::getIN() | INPUT_A);     
-        else if(keyCode == _inputKeys["Giga_B"])      Cpu::setIN(Cpu::getIN() | INPUT_B);     
+        // PS2 Keyboard emulation mode
+        if(_ps2KeyboardMode)
+        {
+            if(keyCode >= 0  &&  keyCode <= 127)
+            {
+                Cpu::setIN(0xFF);
+                return;
+            }
+        }
+
+        if(keyCode == _inputKeys["Giga_Left"])        {if(!_gigatronMode) Cpu::setIN(Cpu::getIN() | INPUT_LEFT);  }
+        else if(keyCode == _inputKeys["Giga_Right"])  {if(!_gigatronMode) Cpu::setIN(Cpu::getIN() | INPUT_RIGHT); }
+        else if(keyCode == _inputKeys["Giga_Up"])     {if(!_gigatronMode) Cpu::setIN(Cpu::getIN() | INPUT_UP);    }
+        else if(keyCode == _inputKeys["Giga_Down"])   {if(!_gigatronMode) Cpu::setIN(Cpu::getIN() | INPUT_DOWN);  }
+        else if(keyCode == _inputKeys["Giga_Start"])  {if(!_gigatronMode) Cpu::setIN(Cpu::getIN() | INPUT_START); }
+        else if(keyCode == _inputKeys["Giga_Select"]) {if(!_gigatronMode) Cpu::setIN(Cpu::getIN() | INPUT_SELECT);}
+        else if(keyCode == _inputKeys["Giga_A"])      {if(!_gigatronMode) Cpu::setIN(Cpu::getIN() | INPUT_A);     }
+        else if(keyCode == _inputKeys["Giga_B"])      {if(!_gigatronMode) Cpu::setIN(Cpu::getIN() | INPUT_B);     }
                    
         // Browse vCPU directory
         else if(keyCode == _inputKeys["Load"])
@@ -674,6 +720,42 @@ namespace Editor
             _singleStepMode = true;
         }
 
+        // Enter Gigatron mode
+        else if(keyCode == _inputKeys["Giga"])
+        {
+            if(_editorMode != Giga)
+            {
+                _prevEditorMode = _editorMode;
+                _editorMode = Giga;
+                _gigatronMode = true;
+                _ps2KeyboardMode = false;
+            }
+            else
+            {
+                _editorMode = (_prevEditorMode != Giga) ? _prevEditorMode : Hex;
+                _gigatronMode = false;
+                if(_prevEditorMode == PS2KB) _ps2KeyboardMode = true;
+            }
+        }
+
+        // Enter PS2 Keyboard mode
+        else if(keyCode == _inputKeys["PS2_KB"])
+        {
+            if(_editorMode != PS2KB)
+            {
+                _prevEditorMode = _editorMode;
+                _editorMode = PS2KB;
+                _ps2KeyboardMode = true;
+                _gigatronMode = false;
+            }
+            else
+            {
+                _editorMode = (_prevEditorMode != PS2KB) ? _prevEditorMode : Hex;
+                _ps2KeyboardMode = false;
+                if(_prevEditorMode == Giga) _gigatronMode = true;
+            }
+        }
+
         // RAM/ROM mode
         else if(keyCode ==  _inputKeys["RAM_Mode"])
         {
@@ -694,7 +776,7 @@ namespace Editor
                 FileType fileType = getFileEntryType(getCursorY() + _fileEntriesIndex);
                 switch(fileType)
                 {
-                    case File: Loader::setStartUploading(true); break;
+                    case File: (_sdlKeyModifier & KMOD_CTRL) ? Loader::setUploadTarget(Loader::Hardware) : Loader::setUploadTarget(Loader::Emulator); break;
                     case Dir: changeBrowseDirectory(); break;
                 }
             }
@@ -782,7 +864,7 @@ namespace Editor
                         {
                             _singleStep = false;
                             _singleStepMode = false;
-                            _editorMode = _prevEditorMode;
+                            _editorMode = (_prevEditorMode != Debug) ? _prevEditorMode : Hex;
                         }
                         else
                         {
@@ -819,6 +901,7 @@ namespace Editor
         SDL_Event event;
         while(SDL_PollEvent(&event))
         {
+            _sdlKeyModifier = event.key.keysym.mod;
             switch(event.type)
             {
                 case SDL_MOUSEWHEEL: handleMouseWheel(event); break;

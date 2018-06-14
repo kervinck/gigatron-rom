@@ -1390,7 +1390,7 @@ namespace Assembler
                     case '0':
                     {
                         // Maximum field width of 16 digits
-                        width = std::stoi(fmt) % 17;
+                        width = strtol(fmt, nullptr, 10) % 17;
                     }
                     break;
 
@@ -1409,7 +1409,7 @@ namespace Assembler
                     Gprintf::Var var = {false, type, width, 0x0000, variables[index++]};
                     vars.push_back(var);
                     subs.push_back(sub);
-                    sub.erase();
+                    sub.clear();
                     width = 0;
                 }
             }
@@ -1888,7 +1888,7 @@ namespace Assembler
                                 _instructions.push_back(instruction);
 
 #ifndef STAND_ALONE
-                                if(instruction._address < 0x2000)
+                                //if(instruction._address < 0x2000)
                                 {   
                                     uint16_t add = instruction._address>>1;
                                     uint8_t opc = Cpu::getROM(add, 0);

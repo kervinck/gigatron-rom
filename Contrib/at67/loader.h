@@ -14,7 +14,8 @@
 #define DEFAULT_START_ADDRESS_HI  0x02
 #define DEFAULT_START_ADDRESS_LO  0x00
 
-#define HIGH_SCORES_INI  "high_scores.ini"
+#define LOADER_CONFIG_INI  "loader_config.ini"
+#define HIGH_SCORES_INI    "high_scores.ini"
 
 
 namespace Loader
@@ -44,6 +45,7 @@ namespace Loader
 
 #ifndef STAND_ALONE
     enum Endianness {Little, Big};
+    enum UploadTarget {None, Emulator, Hardware};
 
     struct SaveData
     {
@@ -60,9 +62,10 @@ namespace Loader
 
     void initialise(void);
 
-    bool getStartUploading(void);
-    void setStartUploading(bool start);
+    UploadTarget getUploadTarget(void);
+    void setUploadTarget(UploadTarget target);
     void disableUploads(bool disable);
+    void sendCommandToGiga(char cmd, bool wait);
 
     bool loadDataFile(SaveData& saveData);
     bool saveDataFile(const SaveData& saveData);
