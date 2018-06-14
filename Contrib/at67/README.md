@@ -4,6 +4,9 @@ This project provides support for Microsoft Windows and should be compatible wit
 and possibly even Android. As of v0.5.6 it has only been tested on Microsoft Windows10 and Linux.<br/>
 
 ## Features
+- Can control real Gigatron hardware through an Arduino interface.<br/>
+- Can upload vCPU and GT1 files to real Gigatron hardware through an Arduino interface.<br/>
+- Emulates a PS2 Keyboard for vCPU, GCL code that can use PS2 hardware, such as WozMon.gt1<br/>
 - Variable timing from a minimum of 60FPS up to whatever your PC can handle.<br/>
 - Synchronisation of audio with video at any FPS at or above 60FPS.<br/>
 - Gigatron TTL emulator using SDL2, tested on Windows 10 x64, compiled with VS2017.<br/>
@@ -25,11 +28,11 @@ and possibly even Android. As of v0.5.6 it has only been tested on Microsoft Win
 - Upload assembled Native code to ROM, (**_emulation only_**).<br/>
 - Supports the Gigatron TTL's .**_gt1_** object file format.<br/>
 - An inbuilt file and directory browser for uploading.<br/>
-- Multiple scanline disable options, (default key **_F3_**, **_emulation only_**), will disable scanlines<br/>
+- Multiple scanline disable options, (default key **_F3_**, **_emulation only_**), will disable  scanlines<br/>
   offering large amounts of extra processor time for vCPU code.<br/>
 - Input keys easily configurable through an INI file.<br/>
 - On screen help menu, (accessible with 'H/h' by default), that fully explains each key and it's function.<br/>
-- Optional configuration files, "**_graphics_config.ini_**", "**_input_config.ini_**" and "**_high_scores.ini_**".<br/>
+- Optional configuration files, "**_graphics_config.ini_**", "**_input_config.ini_**",<br/> "**_loader_config.ini_**" and "**_high_scores.ini_**".<br/>
 - You may now start the executable anywhere, the default ROM file and default font are now built into the<br/>
   executable.<br/>
 
@@ -45,6 +48,7 @@ and possibly even Android. As of v0.5.6 it has only been tested on Microsoft Win
 - Dirent for Windows:  https://github.com/tronkko/dirent<br/>
 - Recursive Descent Parser:  https://stackoverflow.com/questions/9329406/evaluating-arithmetic-expressions-from-string-in-c<br/>
 - INI Not Invented Here:  https://github.com/jtilly/inih<br/>
+- rs232: https://github.com/Marzac/rs232<br/>
 
 ## Contributors
 - Cwiiis https://github.com/Cwiiis
@@ -72,10 +76,14 @@ and possibly even Android. As of v0.5.6 it has only been tested on Microsoft Win
   configured. The example "**_graphics_config.ini_**" file contains instructions on it's use.<br/>
   e.g.  Fullscreen = 1, will create a full sized screen that minimises when it loses focus.<br/>
         Fullscreen = 0, will create a window that does not minimise when it loses focus.<br/>
-- The emulator will search for and use a file named "**_input_keys.ini_**" in it's current<br/>
+- The emulator will search for and use a file named "**_input_config.ini_**" in it's current<br/>
   working directory. This file allows the emulator's keys to be completely user configured. The on<br/>
   screen help menu also uses this file to display help instructions. See the file for help on input<br/>
   configuration.<br/>
+
+- The emulator will search for and use a file named "**_loader_config.ini_**" in it's current<br/>
+  working directory. This file allows the emulator's com port to be user configured for communicating<br/>
+  with real Gigatron hardware through an Arduino adapter. See the file for help on loader configuration.<br/>
 
 - The emulator will search for and use an optional file named "**_high_scores.ini_**" in it's current<br/>
   working directory. This file allows the emulator to load and save segments of memory and have them<br/>
@@ -94,14 +102,17 @@ and possibly even Android. As of v0.5.6 it has only been tested on Microsoft Win
 |           | can cause the emulator to hang, 0x0200 is guaranteed to be safe.                  |
 |R or r     | Switches Hex Editor between RAM, ROM(0) and ROM(1).                               |
 |F1         | Fast reset, performs the same action as a long hold of Start.                     |
+|CTRL + F1  | Fast reset of real Gigatron hardware, if connected to an Arduino interface.       |
 |F3         | Toggles scanline modes between, Normal, VideoB and VideoBC.                       |
+|F4         | Toggles PS2 Keyboard emulation on and off.                                        |
 |F5         | Executes whatever code is present at the load address.                            |
 |F6         | Toggles debugging mode, simulation will pause and allow you to single step using  |
 |           | F10.                                                                              |
 |F10        | Only functions in debugging mode, will single step the simulation based on a      |
 |           | memory location changing it's value.                                              |
-|ENTER/CR   | Directly loads external vCPU code if editor is in file browse mode, otherwise     |
-|           | switches to edit mode.                                                            |
+|F12        | Toggles Gigatron input between emulator and hardware.                             |
+|ENTER/CR   | Loads vCPU code if editor is in file browse mode, otherwise switches to edit mode.|
+|CTRL + CR  | Uploads vCPU code to real Gigatron hardware, if connected to an Arduino interface.|
 |-/+        | Decrease/increase the speed of the emulation, from a minimum of 60FPS to a        |
 |           | maximum determined by your PC's CPU.                                              |
 |           |                                                                                   |

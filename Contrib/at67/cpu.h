@@ -5,8 +5,8 @@
 #include <string>
 
 
-#define MAJOR_VERSION "0.5"
-#define MINOR_VERSION "8"
+#define MAJOR_VERSION "0.6"
+#define MINOR_VERSION "0"
 #define VERSION_STR "gtemuSDL v" MAJOR_VERSION "." MINOR_VERSION
 
 #define ROM_SIZE (1<<16)

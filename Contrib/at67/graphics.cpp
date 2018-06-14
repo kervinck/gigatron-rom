@@ -236,7 +236,7 @@ namespace Graphics
         }
         else
         {
-            // Parse input keys INI file
+            // Parse Monitor Keys
             enum Section {Monitor};
             std::map<std::string, Section> section;
             section["Monitor"] = Monitor;
@@ -253,30 +253,19 @@ namespace Graphics
                 {
                     case Monitor:
                     {
-                        size_t idx = 0;
                         getKeyAsString(sectionString, "Fullscreen", "0", result);   
-                        _fullScreen = std::stoi(result, &idx);
-                        if(idx != result.size()) _fullScreen = false;
-
+                        _fullScreen = strtol(result.c_str(), nullptr, 10);
                         getKeyAsString(sectionString, "Resizable", "0", result);   
-                        _resizable = std::stoi(result, &idx);
-                        if(idx != result.size()) _resizable = false;
-
+                        _resizable = strtol(result.c_str(), nullptr, 10);
                         getKeyAsString(sectionString, "Borderless", "1", result);   
-                        _borderless = std::stoi(result, &idx);
-                        if(idx != result.size()) _borderless = true;
-
+                        _borderless = strtol(result.c_str(), nullptr, 10);
                         getKeyAsString(sectionString, "VSync", "0", result);        
-                        _vSync = stoi(result, &idx);
-                        if(idx != result.size()) _vSync = false;
+                        _vSync = strtol(result.c_str(), nullptr, 10);
 
                         getKeyAsString(sectionString, "Width", "DESKTOP", result);
-                         _width = (result == "DESKTOP") ? _width : _width = stoi(result, &idx);
-                        if(idx != result.size()) _width = DM.w;
-
+                         _width = (result == "DESKTOP") ? _width : _width = strtol(result.c_str(), nullptr, 10);
                         getKeyAsString(sectionString, "Height", "DESKTOP", result);
-                        _height = (result == "DESKTOP") ? _height : _height = stoi(result, &idx);
-                        if(idx != result.size()) _height = DM.h;
+                        _height = (result == "DESKTOP") ? _height : _height = strtol(result.c_str(), nullptr, 10);
                     }
                     break;
                 }
@@ -530,14 +519,12 @@ namespace Graphics
         f = (f - a) / (b - a);
         return powf(f, p);
     }
-
     float powStepFalling(float x, float a, float b, float p)
     {
         float f = std::max(std::min(x, a), b);
         f = (f - a) / (b - a);
         return powf(f, p);
     }
-
     void drawUsageBar(float usage, int x, int y, int w, int h)
     {
         int ww = int(float(w)*usage);
@@ -563,6 +550,23 @@ namespace Graphics
         }
     }
 
+    void drawUploadBar(float upload)
+    {
+        int i = Editor::getCursorY();
+        int index = Editor::getFileEntriesIndex() + i;
+        std::string uploadFilename = *Editor::getFileEntryName(index);
+        uploadFilename.append(HIGHLIGHT_SIZE - uploadFilename.size(), ' ');
+        if(upload < 1.0f)
+        {
+            char* uploadPercentage = &uploadFilename[HIGHLIGHT_SIZE - 5];
+            sprintf(uploadPercentage, " %3d%%\r", int(upload * 100.0f));
+        }
+        drawText(uploadFilename, _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFA0A0A0 : 0xFFFFFFFF, true, HIGHLIGHT_SIZE);
+        SDL_UpdateTexture(_screenTexture, NULL, _pixels, SCREEN_WIDTH * sizeof(uint32_t));
+        SDL_RenderCopy(_renderer, _screenTexture, NULL, NULL);
+        SDL_RenderPresent(_renderer);
+    }
+
     void renderText(void)
     {
         // Update 60 times per second no matter what the FPS is
@@ -582,13 +586,15 @@ namespace Graphics
                 drawText(std::string(str), _pixels, FONT_WIDTH*4, FONT_CELL_Y*2, 0x80808080, false, 0, true);
             }
 
-            drawText(std::string("LEDS:"), _pixels, 0, 0, 0xFFFFFFFF, false, 0);
+            //drawText(std::string("LEDS:"), _pixels, 0, 0, 0xFFFFFFFF, false, 0);
             sprintf(str, "FPS %5.1f  XOUT %02X IN %02X", 1.0f / Timing::getFrameTime(), Cpu::getXOUT(), Cpu::getIN());
             drawText(std::string(str), _pixels, 0, FONT_CELL_Y, 0xFFFFFFFF, false, 0);
             drawText("Mode:      Free:", _pixels, 0, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
             sprintf(str, "Hex  ");
             if(Editor::getHexEdit()) sprintf(str, "Edit ");
-            else if(Editor::getEditorMode() == Editor::Load) sprintf(str, "Load ");
+            else if(Editor::getEditorMode() == Editor::Load)  sprintf(str, "Load ");
+            else if(Editor::getEditorMode() == Editor::Giga)  sprintf(str, "Giga ");
+            else if(Editor::getEditorMode() == Editor::PS2KB) sprintf(str, "PS2KB");
             else if(Editor::getEditorMode() == Editor::Debug) sprintf(str, "Debug");
             drawText(std::string(str), _pixels, 30, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
             sprintf(str, "%d", Cpu::getFreeRAM());
@@ -621,13 +627,13 @@ namespace Graphics
                 drawText("Load:      Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0);
                 for(int i=0; i<HEX_CHARS_Y; i++)
                 {
-                    drawText("                       ", _pixels, 6, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+                    drawText("                       ", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
                 }
                 for(int i=0; i<HEX_CHARS_Y; i++)
                 {
                     int index = Editor::getFileEntriesIndex() + i;
                     if(index >= int(Editor::getFileEntriesSize())) break;
-                    drawText(*Editor::getFileEntryName(index), _pixels, 8, FONT_CELL_Y*4 + i*FONT_CELL_Y, (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFA0A0A0 : 0xFFFFFFFF, i == Editor::getCursorY(), 18);
+                    drawText(*Editor::getFileEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFA0A0A0 : 0xFFFFFFFF, i == Editor::getCursorY(), HIGHLIGHT_SIZE);
                 }
 
                 sprintf(str, "%04X", hexLoadAddress);
@@ -659,7 +665,7 @@ namespace Graphics
                         }
                         sprintf(str, "%02X ", value);
                         bool onCursor = (i == Editor::getCursorX()  &&  j == Editor::getCursorY());
-                        drawText(std::string(str), _pixels, 6 + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), (Editor::getHexEdit() && Editor::getMemoryMode() == Editor::RAM && onCursor) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor, 2);
+                        drawText(std::string(str), _pixels, HEX_START_X + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), (Editor::getHexEdit() && Editor::getMemoryMode() == Editor::RAM && onCursor) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor, 2);
                         if(onCursor) cursorAddress = hexAddress;
                         hexAddress++;
                     }
@@ -672,7 +678,7 @@ namespace Graphics
                 if(Editor::getHexEdit())
                 {
                     // Draw memory digit selection box                
-                    if(Editor::getCursorY() >= 0  &&  Editor::getMemoryMode() == Editor::RAM) drawDigitBox(Editor::getMemoryDigit(), 6 + Editor::getCursorX()*HEX_CHAR_WIDE, FONT_CELL_Y*4 + Editor::getCursorY()*FONT_CELL_Y, 0xFFFF00FF);
+                    if(Editor::getCursorY() >= 0  &&  Editor::getMemoryMode() == Editor::RAM) drawDigitBox(Editor::getMemoryDigit(), HEX_START_X + Editor::getCursorX()*HEX_CHAR_WIDE, FONT_CELL_Y*4 + Editor::getCursorY()*FONT_CELL_Y, 0xFFFF00FF);
                 }
             }
 

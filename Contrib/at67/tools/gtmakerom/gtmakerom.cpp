@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
     std::string outputFilename = std::string(argv[3]);
     std::string title = std::string(argv[4]);
     std::string menuName = std::string(argv[5]);
-    Cpu::InternalGt1Id gt1Id = (Cpu::InternalGt1Id)std::stoi(std::string(argv[6]));
+    Cpu::InternalGt1Id gt1Id = (Cpu::InternalGt1Id)strtol(argv[6], nullptr, 10);
 
     // Handles hex numbers
     uint16_t startAddress = 0x0000;
