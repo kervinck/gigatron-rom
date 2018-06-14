@@ -32,7 +32,7 @@ and possibly even Android. As of v0.5.6 it has only been tested on Microsoft Win
   offering large amounts of extra processor time for vCPU code.<br/>
 - Input keys easily configurable through an INI file.<br/>
 - On screen help menu, (accessible with 'H/h' by default), that fully explains each key and it's function.<br/>
-- Optional configuration files, "**_graphics_config.ini_**", "**_input_config.ini_**",<br/> "**_loader_config.ini_**" and "**_high_scores.ini_**".<br/>
+- Optional configuration files, "**_graphics_config.ini_**", "**_input_config.ini_**", "**_loader_config.ini_**" and<br/> "**_high_scores.ini_**".<br/>
 - You may now start the executable anywhere, the default ROM file and default font are now built into the<br/>
   executable.<br/>
 
