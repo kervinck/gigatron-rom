@@ -239,7 +239,9 @@ namespace Loader
             if(frameTime > _configTimeout) return false;
         }
 
-        line.push_back(0);
+        // Replace '\n'
+        line.back() = 0;
+
         return true;
     }
 

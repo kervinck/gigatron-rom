@@ -426,6 +426,7 @@ namespace Editor
         }
 
         int limitY = (_editorMode != Load) ? HEX_CHARS_Y : std::min(int(_fileEntries.size()), HEX_CHARS_Y);
+
         if(keyCode == _inputKeys["Giga_Left"])        (_gigatronMode) ? Loader::sendCommandToGiga('A', true) : Cpu::setIN(Cpu::getIN() & ~INPUT_LEFT);
         else if(keyCode == _inputKeys["Giga_Right"])  (_gigatronMode) ? Loader::sendCommandToGiga('D', true) : Cpu::setIN(Cpu::getIN() & ~INPUT_RIGHT); 
         else if(keyCode == _inputKeys["Giga_Up"])     (_gigatronMode) ? Loader::sendCommandToGiga('W', true) : Cpu::setIN(Cpu::getIN() & ~INPUT_UP);    
