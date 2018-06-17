@@ -40,6 +40,8 @@ namespace Graphics
     SDL_Surface* _helpSurface = NULL;
     SDL_Surface* _fontSurface = NULL;
 
+    INIReader _iniReader;
+
 
     uint32_t* getPixels(void) {return _pixels;}
     uint32_t* getColours(void) {return _colours;}
@@ -52,13 +54,8 @@ namespace Graphics
     SDL_Surface* getHelpSurface(void) {return _helpSurface;}
     SDL_Surface* getFontSurface(void) {return _fontSurface;}
 
-    INIReader _iniReader;
+    void setDisplayHelpScreen(bool display) {_displayHelpScreen = display;}
 
-
-    void setDisplayHelpScreen(bool display)
-    {
-        _displayHelpScreen = display;
-    }
 
     SDL_Surface* createSurface(int width, int height)
     {
@@ -565,6 +562,8 @@ namespace Graphics
         SDL_UpdateTexture(_screenTexture, NULL, _pixels, SCREEN_WIDTH * sizeof(uint32_t));
         SDL_RenderCopy(_renderer, _screenTexture, NULL, NULL);
         SDL_RenderPresent(_renderer);
+        SDL_Event event;
+        while(SDL_PollEvent(&event));
     }
 
     void renderText(void)

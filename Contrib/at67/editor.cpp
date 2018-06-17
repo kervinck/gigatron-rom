@@ -409,15 +409,15 @@ namespace Editor
             {
                 switch(keyCode)
                 {
-                    case SDLK_PAGEDOWN: keyCode = ~32;  break;
-                    case SDLK_TAB:      keyCode = ~128; break;
-                    case SDLK_ESCAPE:   keyCode = ~64;  break;
-                    case SDLK_LEFT:     keyCode = ~2;   break;
-                    case SDLK_RIGHT:    keyCode = ~1;   break;
-                    case SDLK_UP:       keyCode = ~8;   break;
-                    case SDLK_DOWN:     keyCode = ~4;   break;
-                    case SDLK_RETURN:   keyCode = '\n'; break;
-                    case SDLK_DELETE:   keyCode = 127;  break;
+                    case SDLK_LEFT:     keyCode = ~INPUT_LEFT;   break;
+                    case SDLK_RIGHT:    keyCode = ~INPUT_RIGHT;  break;
+                    case SDLK_UP:       keyCode = ~INPUT_UP;     break;
+                    case SDLK_DOWN:     keyCode = ~INPUT_DOWN;   break;
+                    case SDLK_PAGEDOWN: keyCode = ~INPUT_SELECT; break;
+                    case SDLK_TAB:      keyCode = ~INPUT_A;      break;
+                    case SDLK_ESCAPE:   keyCode = ~INPUT_B;      break;
+                    case SDLK_RETURN:   keyCode = '\n';          break;
+                    case SDLK_DELETE:   keyCode = 127;           break;
                 }
 
                 Cpu::setIN(keyCode);
@@ -426,6 +426,7 @@ namespace Editor
         }
 
         int limitY = (_editorMode != Load) ? HEX_CHARS_Y : std::min(int(_fileEntries.size()), HEX_CHARS_Y);
+
         if(keyCode == _inputKeys["Giga_Left"])        (_gigatronMode) ? Loader::sendCommandToGiga('A', true) : Cpu::setIN(Cpu::getIN() & ~INPUT_LEFT);
         else if(keyCode == _inputKeys["Giga_Right"])  (_gigatronMode) ? Loader::sendCommandToGiga('D', true) : Cpu::setIN(Cpu::getIN() & ~INPUT_RIGHT); 
         else if(keyCode == _inputKeys["Giga_Up"])     (_gigatronMode) ? Loader::sendCommandToGiga('W', true) : Cpu::setIN(Cpu::getIN() & ~INPUT_UP);    
@@ -797,12 +798,12 @@ namespace Editor
             Cpu::setScanlineMode((Cpu::ScanlineMode)scanlineMode);
         }
 
-        else if(keyCode == SDLK_F2)
+        else if(keyCode == SDLK_F8)
         {
             //_startMusic = !_startMusic;
         }
 
-        else if(keyCode == SDLK_F4)
+        else if(keyCode == SDLK_F9)
         {
             //Audio::nextScore();
         }
