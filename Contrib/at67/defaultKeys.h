@@ -9,7 +9,7 @@ std::vector<std::string> _defaultKeys =
     "; CTRL + F1 resets real Gigatron hardware.                                     ",
     "                                                                               ",
     "[Monitor]               ; case sensitive                                       ",
-    "Edit         = ENTER    ; toggles edit mode or uploads vCPU/gt1 files          ",
+    "Edit         = ENTER    ; toggles edit mode or uploads vasm/gt1 files          ",
     "RAM_Mode     = R        ; toggles between RAM and ROM modes                    ",
     "Execute      = F5       ; executes whatever code is present at the load address",
     "Left         = LEFT     ; moves cursor left with wrap around                   ",
@@ -44,8 +44,8 @@ std::vector<std::string> _defaultKeys =
     "Giga         = F12      ; toggles Gigatron input between emulator and hardware ",
     "                                                                               ",
     "[Debugger]              ; case sensitive                                       ",
-    "Debug        = F6       ; Toggles debugging mode, can be used to pause         ",
-    "Step         = F10      ; Single steps debugger depending on a watched var,    ",
+    "Debug        = F6       ; toggles debugging mode, can be used to pause         ",
+    "Step         = F10      ; single steps debugger based on a watched variable    ",
     "                        ; by default is videoY which changes once per scanline ",
     "                                                                               "
 };
