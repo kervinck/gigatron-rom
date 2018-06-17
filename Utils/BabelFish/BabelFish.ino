@@ -365,7 +365,7 @@ void doCommand(char line[])
   case 'A': sendController(~buttonLeft,   2); break;
   case 'S': sendController(~buttonDown,   2); break;
   case 'D': sendController(~buttonRight,  2); break;
-  case 'Z': sendController((byte)~buttonA, 2); break;
+  case 'Z': sendController((byte)~buttonA,2); break;
   case 'X': sendController(~buttonB,      2); break;
   case 'Q': sendController(~buttonSelect, 2); break;
   case 'E': sendController(~buttonStart,  2); break;
