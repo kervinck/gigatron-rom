@@ -197,7 +197,7 @@ namespace Loader
 #else
         if(_currentComPort == -1)
         {
-            _currentComPort = 0
+            _currentComPort = 0;
             std::vector<std::string> names;
             matchFileSystemName("/dev/", "tty.usbmodem", names);
             if(names.size() == 0) matchFileSystemName("/dev/", "ttyACM", names);
