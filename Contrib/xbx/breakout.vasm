@@ -1,0 +1,912 @@
+%include macros/gigatron.i
+
+; ===========================================
+; BREAKOUT
+; ===========================================
+
+; --- mem layout ---
+vars            EQU     0x0030
+consts          EQU     0x0082                  ; skip 0x80 - reserved!!
+data            EQU     0x10c0                  ; (unused vram)
+
+entry_point     EQU     0x0200
+subroutines0    EQU     0x0300
+subroutines1    EQU     0x0400
+subroutines2    EQU     0x0500
+subroutines3    EQU     0x0600
+subroutines4    EQU     0x20c0                  ; (unused vram)
+
+; 0x700 --> reserved (sound)
+; 5 last bytes of 0x200 x300 x400 --> reserved (sound)
+
+; --- vars ---
+scratch         EQU     vars + 0x00
+x0              EQU     vars + 0x02
+y0              EQU     vars + 0x03
+xy0             EQU     x0
+x1              EQU     vars + 0x04
+y1              EQU     vars + 0x05
+xy1             EQU     x1
+
+padx            EQU     vars + 0x06
+speedpad        EQU     vars + 0x08
+
+ballx           EQU     vars + 0x0A
+bally           EQU     vars + 0x0C
+speedx          EQU     vars + 0x0E
+speedy          EQU     vars + 0x10
+nextballx       EQU     vars + 0x12
+nextbally       EQU     vars + 0x14
+brokencount     EQU     vars + 0x16
+brokenseq       EQU     vars + 0x18
+
+vb_PrevFrame    EQU     vars + 0x1E
+
+; --- subroutines args & locals ---
+PrintText_Str   EQU     vars + 0x20
+PrintText_Pos   EQU     vars + 0x22
+_pt_tt          EQU     vars + 0x24
+_pt_ii          EQU     vars + 0x25
+_pt_Char        EQU     vars + 0x26
+
+DrawBrick_xy    EQU     vars + 0x20
+DrawBrick_col   EQU     vars + 0x22
+_db_i           EQU     vars + 0x24
+_db_j           EQU     vars + 0x26
+
+BreakBrick_xy   EQU     vars + 0x28     ; also used as local var in mainloop.
+_bb_i           EQU     vars + 0x22
+_bb_j           EQU     vars + 0x24
+
+_pt_key         EQU     vars + 0x22
+
+; --- constants ---
+giga_vram_y     EQU     0x08
+speedupy        EQU     10      ; 0.04
+initspeedy      EQU     154     ; 0.6
+
+buttonRight     EQU     1
+buttonLeft      EQU     2
+buttonDown      EQU     4
+buttonUp        EQU     8
+buttonStart     EQU     16
+buttonSelect    EQU     32
+buttonB         EQU     64
+buttonA         EQU     128
+
+; 16-bit constants in RAM  (no wordimmediate opcodes)
+cst_FF00        EQU     consts
+cst_FF00        DW      $FF00   ; for byte to word sign extension
+cst_00FF        DW      $00FF
+
+maxspeedpad     DW      $0200   ; 2.0
+maxpadx         DW      $7F00   ; 127.0
+minpadx         DW      $2300   ; 35.0
+
+speedxmin       DW      $FE80   ; -1.5  (ball speed)
+speedxrange     DW      $0100   ; (-0.5+1.5)    speed in [-1.5;-.5] [.5;1.5]
+speedxmax       DW      $0180   ; 1.5
+speedymax       DW      $0200   ; 2.0
+
+twopix_white    DW      $3F3F   ; board lines
+twopix_black    DW      $0000   ; board background
+twopix_blue     DW      $3030   ; pad color
+twopix_darkblue DW      $2020   ; pad color dark
+ball_line1      DW      $2A3F   ; white corner on grey ball (lighting effect , and highlight the active pixel)
+ball_line2      DW      $2A2A
+
+_soundChan1val  EQU     giga_soundChan1+2       ; (DW do not support expressions)
+_soundChan2val  EQU     giga_soundChan2+2
+_soundChan3val  EQU     giga_soundChan3+2
+_soundChan4val  EQU     giga_soundChan4+2
+soundChan1      DW      _soundChan1val
+soundChan2      DW      _soundChan2val
+soundChan3      DW      _soundChan3val
+soundChan4      DW      _soundChan4val
+
+; --- data ------------
+string_lives    EQU     data + 0x00
+string_lives    DB      10 '3         '
+string_score    DB      3  '000'
+string_gameover DB      10 'Game Over!'
+string_victory  DB      10 'Break Out!'
+
+; 14x8 bricks grid
+bricksx         EQU     data + 0x0100
+bricksx         DB      32 39 46 53 60 67 74 81 88 95 102 109 116 123
+bricksy         DW      0x2000 0x2300 0x2600 0x2900 0x2C00 0x2F00 0x3200 0x3500
+brickscol       DB      0x03 0x03 0x0B 0x0B 0x0C 0x0C 0x0F 0x0F
+
+BounceTable0    EQU     data + 0x0200
+BounceTable     EQU     BounceTable0 + 0x0E     ; offset 0 is the center of the the table.
+BounceTable0    DW      0xFF80 0xFFB0 0xFFB0 0 0 0 0 0 0 0 0X0050 0X0050 0x0080
+;BounceTable0   DW      0xFF60 0xFF80 0xFF80 0XFFC0 0 0 0 0 0 0X0040 0X0080 0X0080 0x00A0
+
+############################################################################################################
+################################## PAGE BREAK ##############################################################
+############################################################################################################
+entry_point     CALL    DrawBoard
+                CALL    InitAudio
+
+restart         LDWI    80*256                  ; init pad
+                STW     padx
+                LDI     0
+                STW     speedpad
+                STW     brokencount
+
+                CALL    ResetScore
+                CALL    DrawBricks
+                CALL    InitRound
+
+mainloop        LDI     1
+                CALL    WaitVBlanks
+
+; -- move pad --
+                LD      giga_buttonState
+                XORI    $FF                     ; NOT
+                ANDI    buttonRight + buttonLeft
+                BEQ     noinput
+                LDW     speedpad
+                BNE     skipinit
+                LDI     240                     ; initial speed as soon a button pressed
+skipinit        ADDI    16                      ; 256/16==16 frames to reach fullspeed
+                STW     speedpad
+                SUBW    maxspeedpad
+                BLE     dobuttons
+                LDW     maxspeedpad
+                STW     speedpad
+dobuttons       LD      giga_buttonState
+                ANDI    buttonRight
+                BNE     rightdone
+                LDW     padx
+                ADDW    speedpad
+                STW     padx
+                SUBW    maxpadx
+                BLE     rightdone
+                LDW     maxpadx
+                STW     padx
+rightdone       LD      giga_buttonState
+                ANDI    buttonLeft
+                BNE     inputdone
+                LDW     padx
+                SUBW    speedpad
+                STW     padx
+                SUBW    minpadx
+                BGE     inputdone
+                LDW     minpadx
+                STW     padx
+                BRA     inputdone
+noinput         LDI     0
+                STW     speedpad
+
+inputdone       CALL    DrawBall                ; Erase cur ball
+                CALL    DrawPad
+
+; -- update ball --
+                LDW     ballx
+                ADDW    speedx
+                STW     nextballx
+                LD      nextballx+1
+                ST      BreakBrick_xy
+                LD      bally+1
+                ST      BreakBrick_xy+1
+                LDW     BreakBrick_xy
+                PEEK
+                BEQ     xbounceskip
+                ANDI    0x30                    ; bricks are not blue..
+                BNE     notbrickx
+                CALL    BreakBrick
+notbrickx       LDI     0
+                SUBW    speedx
+                STW     speedx
+                LDW     ballx
+                STW     nextballx
+xbounceskip     LDW     bally
+                ADDW    speedy
+                STW     nextbally
+                LD      nextballx+1
+                ST      BreakBrick_xy
+                LD      nextbally+1
+                ST      BreakBrick_xy+1
+                LDW     BreakBrick_xy
+                PEEK
+                BEQ     ybounceskip
+                ANDI    0x30                    ; bricks are not blue..
+                BNE     notbricky
+                CALL    BreakBrick
+notbricky       LD      nextbally+1
+                SUBI    giga_vram_y+100
+                BLT     notpadbounce
+                LDI     30
+                CALL    PlayTone
+                CALL    BouncePad
+notpadbounce    LDI     0
+                SUBW    speedy
+                STW     speedy
+                LDW     bally
+                STW     nextbally
+ybounceskip     LDW     nextballx
+                STW     ballx
+                LDW     nextbally
+                STW     bally
+                CALL    DrawBall
+
+                LD      bally+1
+                SUBI    giga_vram_y+114
+                BLT     mainloop
+
+; ball dropped..
+balllost        LDW     brokenseq
+                BEQ     balllost2
+                SUBI    1
+                STW     brokenseq
+                ADDI    35
+                CALL    PlayTone
+                CALL    WaitVBlanks
+                BRA     balllost
+                ; add a screen shake?
+balllost2       CALL    DecrementLives
+                BLE     gameover
+                CALL    InitRound
+                LDI     42
+                CALL    WaitVBlanks
+                BRA     mainloop
+
+gameover        CALL    GameOver
+                BRA     restart
+
+############################################################################################################
+################################## PAGE BREAK ##############################################################
+############################################################################################################
+subroutines0    RET
+
+; ===== DrawBricks ============================================================================
+DrawOneBrick    LDW     DrawBrick_col
+                DOKE    DrawBrick_xy
+                INC     DrawBrick_xy
+                INC     DrawBrick_xy
+                DOKE    DrawBrick_xy
+                INC     DrawBrick_xy
+                INC     DrawBrick_xy
+                DOKE    DrawBrick_xy
+                INC     DrawBrick_xy
+                INC     DrawBrick_xy
+                ANDI    $15                     ; darken color  2A: little darker   15: very dark,
+                POKE    DrawBrick_xy            ; fill in borders so that the ball doesn't squeeze in between bricks
+                LDWI    0x0100-6                ; next line
+                ADDW    DrawBrick_xy
+                STW     DrawBrick_xy
+                LDW     DrawBrick_col
+                DOKE    DrawBrick_xy
+                INC     DrawBrick_xy
+                INC     DrawBrick_xy
+                DOKE    DrawBrick_xy
+                INC     DrawBrick_xy
+                INC     DrawBrick_xy
+                DOKE    DrawBrick_xy
+                INC     DrawBrick_xy
+                INC     DrawBrick_xy
+                ANDI    $2A                     ; darken color
+                POKE    DrawBrick_xy            ; fill in borders so that the ball doesn't squeeze in between bricks
+                RET
+
+DrawBricks      PUSH
+                LDI     7
+                STW     _db_j
+_db_loopj       LDI     13
+                STW     _db_i
+_db_loopi       LDWI    bricksy
+                ADDW    _db_j
+                ADDW    _db_j
+                DEEK
+                STW     DrawBrick_xy
+                LDWI    bricksx
+                ADDW    _db_i
+                PEEK
+                ADDW    DrawBrick_xy
+                STW     DrawBrick_xy
+                LDWI    brickscol
+                ADDW    _db_j
+                PEEK
+                ST      DrawBrick_col
+                ST      DrawBrick_col+1
+                CALL    DrawOneBrick
+                LD      _db_i
+                SUBI    1
+                ST      _db_i
+                BGE     _db_loopi
+                LD      _db_j
+                SUBI    1
+                ST      _db_j
+                BGE     _db_loopj
+                POP
+                RET
+
+
+; ===== DrawPad =============================================================================
+DrawPad         LDI     giga_vram_y+110
+                ST      y0
+                ADDI    1
+                ST      y1
+                LD      padx+1
+                SUBI    2+6
+                ST      x0
+                ST      x1
+                LDW     twopix_black
+                DOKE    xy0
+                DOKE    xy1
+                INC     x0
+                INC     x0
+                INC     x1
+                INC     x1
+                LDW     twopix_darkblue
+                DOKE    xy0
+                DOKE    xy1
+                INC     x0
+                INC     x0
+                INC     x1
+                INC     x1
+                LDW     twopix_blue
+                DOKE    xy0
+                DOKE    xy1
+                INC     x0
+                INC     x0
+                INC     x1
+                INC     x1
+                DOKE    xy0
+                DOKE    xy1
+                INC     x0
+                INC     x0
+                INC     x1
+                INC     x1
+                DOKE    xy0
+                DOKE    xy1
+                INC     x0
+                INC     x0
+                INC     x1
+                INC     x1
+                DOKE    xy0
+                DOKE    xy1
+                INC     x0
+                INC     x0
+                INC     x1
+                INC     x1
+                LDW     twopix_darkblue
+                DOKE    xy0
+                DOKE    xy1
+                INC     x0
+                INC     x0
+                INC     x1
+                INC     x1
+                LDW     twopix_black
+                DOKE    xy0
+                DOKE    xy1
+                RET
+
+
+############################################################################################################
+################################## PAGE BREAK ##############################################################
+############################################################################################################
+subroutines1    RET
+
+; Find the brick containing the position BreakBrick_xy, clears it, and increment score
+BreakBrick      PUSH
+                LD      BreakBrick_xy
+                STW     scratch
+                LDI     13
+                STW     _bb_i
+_bb_loopi       LDWI    bricksx
+                ADDW    _bb_i
+                PEEK
+                SUBW    scratch
+                BGT     _bb_nexti
+                ADDI    7
+                BLE     _bb_nexti
+
+                LDI     7
+                STW     _bb_j
+_bb_loopj       LDWI    bricksy
+                ADDW    _bb_j
+                ADDW    _bb_j
+                DEEK
+                STW     DrawBrick_xy
+                SUBW    BreakBrick_xy
+                BGT     _bb_nextj
+                ADDI    $FF	; +0x200
+                ADDI    $FF
+                ADDI    2
+                BLE     _bb_nextj
+
+                ; found the brick!
+                LDWI    bricksx
+                ADDW    _bb_i
+                PEEK
+                ADDW    DrawBrick_xy
+                STW     DrawBrick_xy
+                LDW     twopix_black
+                STW     DrawBrick_col
+                CALL    DrawOneBrick
+                CALL    IncrementScore
+
+                INC     brokencount
+
+                INC     brokenseq
+                LDW     brokenseq
+                SUBI    5+28
+                BLT     _bb_playtone
+                LDI     5+28
+                STW     brokenseq
+_bb_playtone    LDI     35
+                ADDW    brokenseq
+                CALL    PlayTone
+                POP
+                RET
+
+_bb_nextj       LD      _bb_j
+                SUBI    1
+                ST      _bb_j
+                BGE     _bb_loopj
+                POP
+                RET
+
+_bb_nexti       LD      _bb_i
+                SUBI    1
+                ST      _bb_i
+                BGE     _bb_loopi
+                POP
+                RET
+
+
+; ===== ClearBottom =============================================================================
+ClearBottom     LDI     20
+                ST      x0
+_cb_loopx       LDI     giga_vram_y+110
+                ST      y0
+                LDW     twopix_black
+                DOKE    xy0
+                INC     y0
+                DOKE    xy0
+                INC     y0
+                DOKE    xy0
+                INC     y0
+                DOKE    xy0
+                INC     y0
+                DOKE    xy0
+                INC     y0
+                DOKE    xy0
+                INC     y0
+                DOKE    xy0
+                INC     y0
+                DOKE    xy0
+                INC     y0
+                DOKE    xy0
+                INC     y0
+                DOKE    xy0
+                LD      x0
+                ADDI    2
+                ST      x0
+                SUBI    172
+                BNE     _cb_loopx
+                RET
+
+; ===== Init =============================================================================
+InitRound       PUSH
+                CALL    ClearBottom
+                CALL    DrawPad
+
+                LDWI    80*256+127                      ; 80.5
+                STW     ballx
+                LDWI    giga_vram + (50*256+127)        ; 50.5
+                STW     bally
+
+                LDI     initspeedy
+                STW     speedy
+
+                LDWI    SYS_Random_34           ; Get random number and update entropy
+                STW     giga_sysFn
+                SYS     0xFD                    ; 270 - 34/2 = 0xFD
+                BGT     _ib_positive            ; get the random number in the range -2.0 .. 2.0
+                ORW     cst_FF00
+                BRA     _ib_clamp
+_ib_positive    ANDW    cst_00FF
+_ib_clamp       STW     speedx
+                CALL    ClampBallSpeed
+                CALL    DrawBall
+                LDI     5
+                STW     brokenseq
+                POP
+                RET
+
+############################################################################################################
+################################## PAGE BREAK ##############################################################
+############################################################################################################
+subroutines2    RET
+
+; ===== DrawBall =============================================================================
+DrawBall        LD      ballx+1
+                ST      scratch
+                LD      bally+1
+                ST      scratch+1
+                LDW     scratch
+                DEEK
+                XORW    ball_line1
+                DOKE    scratch
+                INC     scratch+1
+                LDW     scratch
+                DEEK
+                XORW    ball_line2
+                DOKE    scratch
+                RET
+
+; ===== DrawBoard =============================================================================
+DrawBoard       LDI     giga_vram_y-1
+                ST      y0
+_db_nextline    INC     y0
+                LD      y0
+                ST      y1
+                SUBI    giga_vram_y+120
+                BEQ     _db_done
+                LDI     80                      ; screen center
+                ST      x0
+
+; compute center section color
+                LD      y0
+                SUBI    giga_vram_y+0
+                ANDI    0xFE                    ; lines 0 + 1
+                BEQ     _db_whitemid
+                LD      y0
+                SUBI    giga_vram_y+16
+                ANDI    0xFE                    ; lines 16+17
+                BEQ     _db_whitemid
+_db_blackmid    LDW     twopix_black
+                STW     scratch
+                BRA     _db_center
+_db_whitemid    LDW     twopix_white
+                STW     scratch
+                BRA     _db_center
+
+_db_center      LDI     160
+                SUBW    x0
+                ST      x1                      ; (=> xy1 xy0 symetric from center line.)
+                LDW     scratch                 ; center color (white on separator lines and black otherwise)
+                DOKE    xy0
+                DOKE    xy1
+                INC     x0
+                INC     x0
+                LD      x0
+                SUBI    80+50
+                BNE     _db_center
+_db_edge        LDI     160
+                SUBW    x0
+                ST      x1
+                LDW     twopix_white
+                DOKE    xy0
+                DOKE    xy1
+                INC     x0
+                INC     x0
+_db_border      LDI     160
+                SUBW    x0
+                ST      x1
+                LDW     twopix_black
+                DOKE    xy0
+                DOKE    xy1
+                INC     x0
+                INC     x0
+                LD      x0
+                SUBI    162
+                BNE     _db_border
+                BRA     _db_nextline
+
+_db_done        RET
+
+
+; ===== BouncePad =============================================================================
+ClampBallSpeed  LDW    speedx
+                ; gprintf("clamp x,y before = %04x,%04x", *speedx, *speedy)
+                BGE     _cbs_speedx_pos
+_cbs_speedx_neg SUBW    speedxmin
+                BGT     _cbs_xn1
+                LDW     speedxmin
+                STW     speedx
+                BRA     _cbs_speedy
+_cbs_xn1        SUBW    speedxrange
+                BLE     _cbs_speedy
+                LDW     speedxmin
+                ADDW    speedxrange
+                STW     speedx
+                BRA     _cbs_speedy
+_cbs_speedx_pos SUBW    speedxmax
+                BLT     _cbs_xn2
+                LDW     speedxmax
+                STW     speedx
+                BRA     _cbs_speedy
+_cbs_xn2        ADDW    speedxrange
+                BGE     _cbs_speedy
+                LDW     speedxmax
+                SUBW    speedxrange
+                STW     speedx
+
+_cbs_speedy     LDW     speedy                  ; assert speedy>0
+                SUBW    speedymax
+                BLE     _cbs_ret
+                LDW     speedymax
+                STW     speedy
+                ; gprintf("clamp x,y after = %04x,%04x", *speedx, *speedy)
+_cbs_ret        RET
+
+
+BouncePad       LDWI    giga_vram+$6B00
+                STW     bally                   ; force ball above the pad => little impulsion effect.
+                                                ; (and workaround a bug when you move the pad on the ball after the collision detextion)
+
+                LDW     nextballx               ; x direction control
+                SUBW    padx
+                STW     scratch
+                BLT     _bp_div256neg
+                LD      scratch+1
+                BRA     _bp_div256done
+_bp_div256neg   LD      scratch+1
+                ORW     cst_FF00                ; sign extend
+_bp_div256done  LSLW                            ; x2
+                STW     scratch                 ; tointeger(nextballx-padx) * 2 --> offset in BounceTable
+                LDWI    BounceTable
+                ADDW    scratch
+                DEEK
+                ADDW    speedx
+                STW     speedx
+
+                ; speed ball up slightly
+                LDW     speedy
+                ADDI    speedupy
+                STW     speedy
+
+                BRA     ClampBallSpeed
+                ;RET                            ; tail call
+
+############################################################################################################
+################################## PAGE BREAK ##############################################################
+############################################################################################################
+subroutines3    RET
+
+; ===== WaitVBlanks =============================================================================
+WaitVBlanks     ST      scratch
+_wvb_wait       LD      giga_frameCount
+                SUBW    vb_PrevFrame
+                BEQ     _wvb_wait
+                LD      giga_frameCount
+                STW     vb_PrevFrame
+                LD      scratch
+                SUBI    1
+                BNE     WaitVBlanks
+                RET
+
+
+; ===== DrawScore =============================================================================
+DrawScore       PUSH
+                LDWI    string_lives
+                STW     PrintText_Str
+                LDWI    giga_vram + (0x0300 + 34)
+                STW     PrintText_Pos
+                CALL    PrintText
+
+                LDWI    string_score
+                STW     PrintText_Str
+                LDWI    giga_vram + (0x0800 + 100)
+                STW     PrintText_Pos
+                CALL    PrintText
+                POP
+                RET
+
+; ===== ResetScore =============================================================================
+ResetScore      LDWI    string_lives+1
+                STW     scratch
+                LDI     48+3	; 48 = '0'
+                POKE    scratch
+                LDWI    string_score+1
+                STW     scratch
+                LDI     48+0	; 48 = '0'
+                POKE    scratch
+                INC     scratch
+                POKE    scratch
+                INC     scratch
+                POKE    scratch
+                INC     scratch
+                BRA     DrawScore
+
+; ===== IncrementScore and draw ================================================================
+IncrementScore	LDWI    string_score+3
+                STW     scratch
+                PEEK
+                ADDI    1
+                POKE    scratch
+                SUBI    48+9                    ; '9'
+                BLE     DrawScore
+                LDI     48+0                    ; '0'
+                POKE    scratch
+                LDWI    string_score+2
+                STW     scratch
+                PEEK
+                ADDI    1
+                POKE    scratch
+                SUBI    48+9                    ; '9'
+                BLE     DrawScore
+                LDI     48+0                    ; '0'
+                POKE    scratch
+                LDWI    string_score+1
+                STW     scratch
+                PEEK
+                ADDI    1
+                POKE    scratch
+                BRA     DrawScore
+
+; ===== Decrement lives and draw and return gameover ================================================================
+DecrementLives  PUSH
+                LDWI    string_lives+1
+                STW     scratch
+                PEEK
+                SUBI    1
+                POKE    scratch
+                CALL    DrawScore
+                LDWI    string_lives+1
+                STW     scratch
+                PEEK
+                SUBI    48+0                    ; '0'
+                POP
+                RET
+
+; ===== PrintText =============================================================================
+%MACRO  LoopCounter _counter _label
+        LD      _counter
+        SUBI    0x01
+        ST      _counter
+        BNE     _label
+%ENDM
+
+; prints text using the inbuilt font and SYS routine
+PrintText       LDWI    SYS_VDrawBits_134       ; setup 8 vertical pixel SYS routine
+                STW     giga_sysFn
+
+                LDI     0x00                    ; background colour
+                ST      giga_sysArg0
+                LDI     0x3F                    ; foreground colour
+                ST      giga_sysArg1
+
+                LDW     PrintText_Str           ; first byte is length
+                PEEK
+                ST      _pt_tt
+                INC     PrintText_Str
+
+_pt_chr         LDW     PrintText_Str
+                PEEK
+                SUBI    32                      ; (char - 32)*5 + 0x0700
+                STW     _pt_Char
+                LSLW
+                LSLW
+                ADDW    _pt_Char
+                STW     scratch
+                LDWI    giga_text32
+                ADDW    scratch
+                STW     scratch                 ; text font slice base address for chars 32-81
+
+                LDW     _pt_Char
+                SUBI    50
+                BLT     _pt_draw
+                LDW     scratch
+                ADDI    0x06
+                STW     scratch                 ; text font slice base address for chars 82+
+
+_pt_draw        LDI     0x05
+                ST      _pt_ii
+_pt_slice       LDW     PrintText_Pos
+                STW     giga_sysArg4            ; xy
+                LDW     scratch                 ; text font slice base address
+                LUP     0x00                    ; get ROM slice
+                ST      giga_sysArg2
+                SYS     0xCB                    ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
+                INC     scratch                 ; next vertical slice
+                INC     PrintText_Pos           ; next x
+                LoopCounter _pt_ii _pt_slice
+
+                INC     PrintText_Str           ; next char
+                INC     PrintText_Pos           ; 1 pixel space between chars
+                LoopCounter _pt_tt _pt_chr
+                RET
+
+
+############################################################################################################
+################################## PAGE BREAK ##############################################################
+############################################################################################################
+
+InitAudio       EQU     subroutines4+0x0000
+InitAudio2      EQU     subroutines4+0x0100
+PlayTone        EQU     subroutines4+0x0200
+GameOver        EQU     subroutines4+0x0300
+
+; ===== InitAudio =============================================================================
+InitAudio       PUSH
+                LDWI    giga_soundChan1+4
+                STW     scratch
+                LDI     0
+                DOKE    scratch
+                LDWI    giga_soundChan2+4
+                STW     scratch
+                LDI     0
+                DOKE    scratch
+                LDWI    giga_soundChan3+4
+                STW     scratch
+                LDI     0
+                DOKE    scratch
+                LDWI    giga_soundChan4+4
+                STW     scratch
+                LDI     0
+                DOKE    scratch
+                CALL    InitAudio2
+                POP
+                RET
+
+InitAudio2      LDWI    giga_soundChan1
+                STW     scratch
+                LDWI    0x0100                  ;       0 "Noise", 1 Triangle, 2 Pulse, 3 Sawtooth
+                DOKE    scratch
+                LDWI    giga_soundChan2
+                STW     scratch
+                LDWI    0x0200                  ;       0 "Noise", 1 Triangle, 2 Pulse, 3 Sawtooth
+                DOKE    scratch
+                LDWI    giga_soundChan3
+                STW     scratch
+                LDWI    0x0000                  ;       0 "Noise", 1 Triangle, 2 Pulse, 3 Sawtooth
+                DOKE    scratch
+                LDWI    giga_soundChan4
+                STW     scratch
+                LDWI    0x0000                  ;       0 "Noise", 1 Triangle, 2 Pulse, 3 Sawtooth
+                DOKE    scratch
+                RET
+
+; ===== PlayTone =============================================================================
+PlayTone        LSLW
+                STW     scratch
+                LDWI    giga_notesTable
+                ADDW    scratch
+                STW     scratch
+                LUP     0x00                ; get ROM midi note low byte
+                ST      _pt_key
+                LDW     scratch
+                LUP     0x01                ; get ROM midi note high byte
+                ST      _pt_key + 1
+                LDW     _pt_key
+                DOKE    soundChan1
+                DOKE    soundChan2
+                LDI     0
+                DOKE    soundChan3
+                DOKE    soundChan4
+                LDI     3
+                ST      giga_soundTimer
+                RET
+
+; ===== GameOver =============================================================================
+GameOver        PUSH
+                LD      brokencount
+                SUBI    14*8
+                BGE     _go_victory
+_go_defeat      LDWI    string_gameover
+                BRA     _go_printtext
+_go_victory     LDWI    string_victory
+_go_printtext   STW     PrintText_Str
+                LDWI    giga_vram + (0x0300+34)
+                STW     PrintText_Pos
+                CALL    PrintText
+
+_go_wait        LDI     1
+                CALL    WaitVBlanks
+                LD      giga_buttonState
+                ANDI    buttonA
+                BNE     _go_wait
+                POP
+                RET
+
+_startAddress_          EQU entry_point
+_callTable_             EQU 0x00EE
+_singleStepWatch_       EQU giga_frameCount
+_cpuUsageAddressA_      EQU subroutines3
+_cpuUsageAddressB_      EQU subroutines3+0x10   ; WaitVBlank
+
