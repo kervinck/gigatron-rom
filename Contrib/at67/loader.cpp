@@ -197,7 +197,7 @@ namespace Loader
 #else
         if(_currentComPort == -1)
         {
-            _currentComPort = 0
+            _currentComPort = 0;
             std::vector<std::string> names;
             matchFileSystemName("/dev/", "tty.usbmodem", names);
             if(names.size() == 0) matchFileSystemName("/dev/", "ttyACM", names);
@@ -404,6 +404,23 @@ namespace Loader
             uint16_t addressB = segmentB._loAddress + (segmentB._hiAddress <<8);
             return (addressA < addressB);
         });
+
+        // Special case: There can only be one segment in page 0 - merge all the occurences with padding if necessary.
+        while (gt1File._segments.size() >= 2 && gt1File._segments[0]._hiAddress == 0 && gt1File._segments[1]._hiAddress == 0)
+        {
+            Gt1Segment& A = gt1File._segments[0];
+            Gt1Segment& B = gt1File._segments[1];
+            uint8_t addr = A._loAddress + A._segmentSize;
+            while (addr < B._loAddress) {
+                A._dataBytes.push_back(addr == 0x80 ? 1:0);
+                A._segmentSize++;
+                addr++;
+            }
+            A._dataBytes.insert(A._dataBytes.end(), B._dataBytes.begin(), B._dataBytes.end());
+            A._segmentSize += B._segmentSize;
+
+            gt1File._segments.erase(gt1File._segments.begin() + 1);
+        }
 
         for(int i=0; i<gt1File._segments.size(); i++)
         {

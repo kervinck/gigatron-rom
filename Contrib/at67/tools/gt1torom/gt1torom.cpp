@@ -16,7 +16,7 @@
 uint8_t _gt1[GT1_MAX_SIZE];
 
 
-bool writeRomDataWithTrampoline(const std::string& outputFilename0, const std::string& outputFilename1, std::ofstream& outfile0, std::ofstream& outfile1, uint16_t& startAddress, uint16_t size, bool default)
+bool writeRomDataWithTrampoline(const std::string& outputFilename0, const std::string& outputFilename1, std::ofstream& outfile0, std::ofstream& outfile1, uint16_t& startAddress, uint16_t size, bool _default)
 {
     uint16_t trampolineOffset = 0x0000;
     for(int i=0; i<size; i++)
@@ -50,7 +50,7 @@ bool writeRomDataWithTrampoline(const std::string& outputFilename0, const std::s
         }
         
         // Don't write default data after last trampoline
-        if((address & 0x00FF) != TRAMPOLINE_START  ||  !default)
+        if((address & 0x00FF) != TRAMPOLINE_START  ||  !_default)
         {
             static char nativeLoad[2] = {0x00, 0x00};
             outfile0.write(&nativeLoad[0], 1);
@@ -60,7 +60,10 @@ bool writeRomDataWithTrampoline(const std::string& outputFilename0, const std::s
                 return false;
             }
 
-            (default) ? outfile1.write(&nativeLoad[1], 1) : outfile1.write((char *)&_gt1[i], 1);
+            if (_default)
+                outfile1.write(&nativeLoad[1], 1);
+            else
+                outfile1.write((char *)&_gt1[i], 1);
             if(outfile1.bad() || outfile1.fail())
             {
                 fprintf(stderr, "gt1torom : write error at address %04x in file %s.\n", startAddress + i, outputFilename1.c_str());

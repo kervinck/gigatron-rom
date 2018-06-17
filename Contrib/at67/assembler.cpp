@@ -253,7 +253,7 @@ namespace Assembler
         else if(token == "BLE")   {instructionType._opcode = 0x35; instructionType._branch = 0x56; instructionType._byteSize = ThreeBytes;}
         else if(token == "BGE")   {instructionType._opcode = 0x35; instructionType._branch = 0x53; instructionType._byteSize = ThreeBytes;}
 
-        // Reserved assembler opcodes
+        // Reserved assembler opcodes . WARNING: _byteSize is used for parsing operands, and is fixed later to actual size.
         else if(token == "DB")    {instructionType._byteSize = TwoBytes;   instructionType._opcodeType = ReservedDB; }
         else if(token == "DW")    {instructionType._byteSize = ThreeBytes; instructionType._opcodeType = ReservedDW; }
         else if(token == "DBR")   {instructionType._byteSize = TwoBytes;   instructionType._opcodeType = ReservedDBR;}
@@ -542,7 +542,7 @@ namespace Assembler
         return Success;
     }
 
-    bool handleDefineByte(const std::vector<std::string>& tokens, int tokenIndex, uint8_t& operand, bool isRom)
+    bool handleDefineByte(ParseType parse, const std::vector<std::string>& tokens, int tokenIndex, uint8_t& operand, bool isRom, uint16_t& additionalSize)
     {
         bool success = false;
 
@@ -555,8 +555,11 @@ namespace Assembler
             std::string token = tokens[tokenIndex].substr(quote1+1, quote2 - (quote1+1));
             for(int j=1; j<token.size(); j++) // First byte was pushed by callee
             {
-                Instruction instruction = {isRom, false, OneByte, uint8_t(token[j]), 0x00, 0x00, 0x0000, ReservedDB};
-                _instructions.push_back(instruction);
+                if (parse == CodePass) {
+                    Instruction instruction = {isRom, false, OneByte, uint8_t(token[j]), 0x00, 0x00, 0x0000, ReservedDB};
+                    _instructions.push_back(instruction);
+                }
+                additionalSize += 1;
             }
             success = true;
         }
@@ -572,14 +575,23 @@ namespace Assembler
                 std::string token = tokens[i].substr(quote1+1, quote2 - (quote1+1));
                 for(int j=0; j<token.size(); j++)
                 {
-                    Instruction instruction = {isRom, false, OneByte, uint8_t(token[j]), 0x00, 0x00, 0x0000, ReservedDB};
-                    _instructions.push_back(instruction);
+                    if (parse == CodePass) {
+                        Instruction instruction = {isRom, false, OneByte, uint8_t(token[j]), 0x00, 0x00, 0x0000, ReservedDB};
+                        _instructions.push_back(instruction);
+                    }
+                    additionalSize += 1;
                 }
                 success = true;
                 continue;
             }
             else
             {
+                // Strip comments
+                if(tokens[i].find_first_of(";#") != std::string::npos) {
+                    success = true;
+                    break;
+                }
+
                 success = Expression::stringToU8(tokens[i], operand);
                 if(!success)
                 {
@@ -594,20 +606,29 @@ namespace Assembler
                         break;
                     }
                 }
-                Instruction instruction = {isRom, false, OneByte, operand, 0x00, 0x00, 0x0000, ReservedDB};
-                _instructions.push_back(instruction);
+                if (parse == CodePass) {
+                    Instruction instruction = {isRom, false, OneByte, operand, 0x00, 0x00, 0x0000, ReservedDB};
+                    _instructions.push_back(instruction);
+                }
+                additionalSize += 1;
             }
         }
 
         return success;
     }
 
-    bool handleDefineWord(const std::vector<std::string>& tokens, int tokenIndex, uint16_t& operand, bool isRom)
+    bool handleDefineWord(ParseType parse, const std::vector<std::string>& tokens, int tokenIndex, uint16_t& operand, bool isRom, uint16_t& additionalSize)
     {
         bool success = false;
 
         for(int i=tokenIndex+1; i<tokens.size(); i++)
         {
+            // Strip comments
+            if(tokens[i].find_first_of(";#") != std::string::npos) {
+                success = true;
+                break;
+            }
+
             success = Expression::stringToU16(tokens[i], operand);
             if(!success)
             {
@@ -622,8 +643,12 @@ namespace Assembler
                     break;
                 }
             }
-            Instruction instruction = {isRom, false, TwoBytes, uint8_t(operand & 0x00FF), uint8_t((operand & 0xFF00) >>8), 0x00, 0x0000,  ReservedDW};
-            _instructions.push_back(instruction);
+
+            if (parse == CodePass) {
+                Instruction instruction = {isRom, false, TwoBytes, uint8_t(operand & 0x00FF), uint8_t((operand & 0xFF00) >>8), 0x00, 0x0000,  ReservedDW};
+                _instructions.push_back(instruction);
+            }
+            additionalSize += 2;
         }
 
         return success;
@@ -1727,6 +1752,7 @@ namespace Assembler
                 uint8_t opcode = instructionType._opcode;
                 uint8_t branch = instructionType._branch;
                 ByteSize byteSize = instructionType._byteSize;
+                uint16_t additionalSize = 0;
                 OpcodeType opcodeType = instructionType._opcodeType;
                 Instruction instruction = {false, false, byteSize, opcode, 0x00, 0x00, _currentAddress, opcodeType};
 
@@ -1736,7 +1762,24 @@ namespace Assembler
                     return false;
                 }
 
-                if(parse == CodePass)
+                if (parse == MnemonicPass) {
+                    // Here, we fixup bytesize for DW / DB
+                    if(opcodeType == ReservedDB  ||  opcodeType == ReservedDBR)
+                    {
+                        byteSize = OneByte;
+                        uint8_t dummyOperand = 0x00;
+                        bool valid = handleDefineByte(MnemonicPass, tokens, tokenIndex, dummyOperand, instruction._isRomAddress, additionalSize);
+                        (void)valid; // error handling in CodePass
+                    }
+                    else if(opcodeType == ReservedDW  ||  opcodeType == ReservedDWR)
+                    {
+                        byteSize = TwoBytes;
+                        uint16_t dummyOperand = 0x00;
+                        bool valid = handleDefineWord(MnemonicPass, tokens, tokenIndex, dummyOperand, instruction._isRomAddress, additionalSize);
+                        (void)valid; // error handling in CodePass
+                    }
+                }
+                else if(parse == CodePass)
                 {
                     // Native NOP
                     if(opcodeType == Native  &&  opcode == 0x02)
@@ -1909,16 +1952,18 @@ namespace Assembler
                             // Reserved assembler opcode DB, (define byte)
                             else if(opcodeType == ReservedDB  ||  opcodeType == ReservedDBR)
                             {
+                                byteSize = OneByte;
+                                instruction._byteSize = OneByte;
+
                                 // Push first operand
                                 instruction._isRomAddress = (opcodeType == ReservedDBR) ? true : false;
-                                instruction._byteSize = OneByte;
                                 instruction._opcode = uint8_t(operand & 0x00FF);
                                 _instructions.push_back(instruction);
 
                                 // Push any remaining operands using equate searches
                                 if(tokenIndex + 1 < tokens.size())
                                 {
-                                    if(!handleDefineByte(tokens, tokenIndex, operand, instruction._isRomAddress))
+                                    if(!handleDefineByte(CodePass, tokens, tokenIndex, operand, instruction._isRomAddress, additionalSize))
                                     {
                                         fprintf(stderr, "Assembler::assemble() : Bad DB data : '%s' : in %s on line %d.\n", lineToken._text.c_str(), filename.c_str(), line+1);
                                         return false;
@@ -1986,9 +2031,11 @@ namespace Assembler
                                 // Reserved assembler opcode DW, (define word)
                                 if(opcodeType == ReservedDW  ||  opcodeType == ReservedDWR)
                                 {
+                                    byteSize = TwoBytes;
+                                    instruction._byteSize = TwoBytes;
+
                                     // Push first operand
                                     instruction._isRomAddress = (opcodeType == ReservedDWR) ? true : false;
-                                    instruction._byteSize = TwoBytes;
                                     instruction._opcode   = uint8_t(operand & 0x00FF);
                                     instruction._operand0 = uint8_t((operand & 0xFF00) >>8);
                                     _instructions.push_back(instruction);
@@ -1996,7 +2043,7 @@ namespace Assembler
                                     // Push any remaining operands using equate searches
                                     if(tokenIndex + 1 < tokens.size())
                                     {
-                                        if(!handleDefineWord(tokens, tokenIndex, operand, instruction._isRomAddress))
+                                        if(!handleDefineWord(CodePass, tokens, tokenIndex, operand, instruction._isRomAddress, additionalSize))
                                         {
                                             fprintf(stderr, "Assembler::assemble() : Bad DW data : '%s' : in %s on line %d.\n", lineToken._text.c_str(), filename.c_str(), line+1);
                                             return false;
@@ -2044,7 +2091,7 @@ namespace Assembler
                     if(instruction._isCustomAddress) customAddress = instruction._address;
 
                     uint16_t oldAddress = (instruction._isRomAddress) ? customAddress + ((_currentAddress & 0x00FF)>>1) : _currentAddress;
-                    _currentAddress += byteSize;
+                    _currentAddress += byteSize + additionalSize;
                     uint16_t newAddress = (instruction._isRomAddress) ? customAddress + ((_currentAddress & 0x00FF)>>1) : _currentAddress;
                     if((oldAddress >>8) != (newAddress >>8))
                     {
@@ -2054,7 +2101,7 @@ namespace Assembler
                 }
                 else
                 {
-                    _currentAddress += byteSize;
+                    _currentAddress += byteSize + additionalSize;
                 }
             }              
         }
