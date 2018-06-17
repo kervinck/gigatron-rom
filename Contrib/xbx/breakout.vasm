@@ -56,6 +56,8 @@ _bb_j           EQU     vars + 0x26
 
 ; --- constants ---
 giga_vram_y     EQU     0x08
+speedupy        EQU     10      ; 0.04
+initspeedy      EQU     154     ; 0.6
 
 buttonRight     EQU     1
 buttonLeft      EQU     2
@@ -67,16 +69,25 @@ buttonB         EQU     64
 buttonA         EQU     128
 
 ; 16-bit constants in RAM  (no wordimmediate opcodes)
-maxspeedpad     EQU     consts
+cst_FF00        EQU     consts
+cst_FF00        DW      $FF00   ; for byte to word sign extension
+cst_00FF        DW      $00FF
+
 maxspeedpad     DW      $0200   ; 2.0
-maxpadx         DW      $7E00   ; 126.0
+maxpadx         DW      $7F00   ; 127.0
 minpadx         DW      $2300   ; 35.0
+
+speedxmin       DW      $FE80   ; -1.5  (ball speed)
+speedxrange     DW      $0100   ; (-0.5+1.5)    speed in [-1.5;-.5] [.5;1.5]
+speedxmax       DW      $0180   ; 1.5
+speedymax       DW      $0200   ; 2.0
+
 twopix_white    DW      $3F3F   ; board lines
 twopix_black    DW      $0000   ; board background
 twopix_blue     DW      $3030   ; pad color
+twopix_darkblue DW      $2020   ; pad color dark
 ball_line1      DW      $2A3F   ; white corner on grey ball (lighting effect , and highlight the active pixel)
 ball_line2      DW      $2A2A
-cst_FF00        DW      $FF00   ; for byte to word sign extension
 
 ; --- data ------------
 string_lives    EQU     data + 0x00
@@ -89,6 +100,11 @@ bricksx         EQU     data + 0x0100
 bricksx         DB      32 39 46 53 60 67 74 81 88 95 102 109 116 123
 bricksy         DW      0x2000 0x2300 0x2600 0x2900 0x2C00 0x2F00 0x3200 0x3500
 brickscol       DB      0x03 0x03 0x0B 0x0B 0x0C 0x0C 0x0F 0x0F
+
+BounceTable0    EQU     data + 0x0200
+BounceTable     EQU     BounceTable0 + 0x0E     ; offset 0 is the center of the the table.
+BounceTable0    DW      0xFF80 0xFFB0 0xFFB0 0 0 0 0 0 0 0 0X0050 0X0050 0x0080
+;BounceTable0   DW      0xFF60 0xFF80 0xFF80 0XFFC0 0 0 0 0 0 0X0040 0X0080 0X0080 0x00A0
 
 ############################################################################################################
 ################################## PAGE BREAK ##############################################################
@@ -303,10 +319,17 @@ DrawPad         LDI     giga_vram_y+110
                 ADDI    1
                 ST      y1
                 LD      padx+1
-                SUBI    2+4
+                SUBI    2+6
                 ST      x0
                 ST      x1
                 LDW     twopix_black
+                DOKE    xy0
+                DOKE    xy1
+                INC     x0
+                INC     x0
+                INC     x1
+                INC     x1
+                LDW     twopix_darkblue
                 DOKE    xy0
                 DOKE    xy1
                 INC     x0
@@ -332,6 +355,13 @@ DrawPad         LDI     giga_vram_y+110
                 INC     x0
                 INC     x1
                 INC     x1
+                DOKE    xy0
+                DOKE    xy1
+                INC     x0
+                INC     x0
+                INC     x1
+                INC     x1
+                LDW     twopix_darkblue
                 DOKE    xy0
                 DOKE    xy1
                 INC     x0
@@ -438,22 +468,25 @@ _cb_loopx       LDI     giga_vram_y+110
                 RET
 
 ; ===== Init =============================================================================
-InitBall        LDWI    80*256+127                      ; 80.5
+InitBall        PUSH
+                LDWI    80*256+127                      ; 80.5
                 STW     ballx
                 LDWI    giga_vram + (50*256+127)        ; 50.5
                 STW     bally
-                LDI     150
+
+                LDI     initspeedy
                 STW     speedy
+
                 LDWI    SYS_Random_34           ; Get random number and update entropy
                 STW     giga_sysFn
                 SYS     0xFD                    ; 270 - 34/2 = 0xFD
-                ST      speedx
-                BGT     _ib_positive
-                LDI     $FF
-                ST      speedx+1
-                RET
-_ib_positive    LDI     0
-                ST      speedx+1
+                BGT     _ib_positive            ; get the random number in the range -1.0 .. 1.0
+                ORW     cst_FF00
+                BRA     _ib_clamp
+_ib_positive    ANDW    cst_00FF
+_ib_clamp       STW     speedx
+                CALL    ClampBallSpeed
+                POP
                 RET
 
 ############################################################################################################
@@ -539,10 +572,67 @@ _db_done        RET
 
 
 ; ===== BouncePad =============================================================================
-BouncePad       LDW     speedy
-                ADDI    16                      ; speed ball up slightly
+ClampBallSpeed  LDW    speedx
+                ; gprintf("clamp x,y before = %04x,%04x", *speedx, *speedy)
+                BGE     _cbs_speedx_pos
+_cbs_speedx_neg SUBW    speedxmin
+                BGT     _cbs_xn1
+                LDW     speedxmin
+                STW     speedx
+                BRA     _cbs_speedy
+_cbs_xn1        SUBW    speedxrange
+                BLE     _cbs_speedy
+                LDW     speedxmin
+                ADDW    speedxrange
+                STW     speedx
+                BRA     _cbs_speedy
+_cbs_speedx_pos SUBW    speedxmax
+                BLT     _cbs_xn2
+                LDW     speedxmax
+                STW     speedx
+                BRA     _cbs_speedy
+_cbs_xn2        ADDW    speedxrange
+                BGE     _cbs_speedy
+                LDW     speedxmax
+                SUBW    speedxrange
+                STW     speedx
+
+_cbs_speedy     LDW     speedy                  ; assert speedy>0
+                SUBW    speedymax
+                BLE     _cbs_ret
+                LDW     speedymax
                 STW     speedy
-                RET
+                ; gprintf("clamp x,y after = %04x,%04x", *speedx, *speedy)
+_cbs_ret        RET
+
+
+BouncePad       LDWI    giga_vram+$6B00
+                STW     bally                   ; force ball above the pad => little impulsion effect.
+                                                ; (and workaround a bug when you move the pad on the ball after the collision detextion)
+
+                LDW     nextballx               ; x direction control
+                SUBW    padx
+                STW     scratch
+                BLT     _bp_div256neg
+                LD      scratch+1
+                BRA     _bp_div256done
+_bp_div256neg   LD      scratch+1
+                ORW     cst_FF00                ; sign extend
+_bp_div256done  LSLW                            ; x2
+                STW     scratch                 ; tointeger(nextballx-padx) * 2 --> offset in BounceTable
+                LDWI    BounceTable
+                ADDW    scratch
+                DEEK
+                ADDW    speedx
+                STW     speedx
+
+                ; speed ball up slightly
+                LDW     speedy
+                ADDI    speedupy
+                STW     speedy
+
+                BRA     ClampBallSpeed
+                ;RET                            ; tail call
 
 ############################################################################################################
 ################################## PAGE BREAK ##############################################################
