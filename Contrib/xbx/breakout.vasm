@@ -14,6 +14,8 @@ subroutines0    EQU     0x0300
 subroutines1    EQU     0x0400
 subroutines2    EQU     0x0500
 subroutines3    EQU     0x0600
+subroutines4    EQU     0x20c0                  ; (unused vram)
+
 ; 0x700 --> reserved (sound)
 ; 5 last bytes of 0x200 x300 x400 --> reserved (sound)
 
@@ -35,6 +37,8 @@ speedx          EQU     vars + 0x0E
 speedy          EQU     vars + 0x10
 nextballx       EQU     vars + 0x12
 nextbally       EQU     vars + 0x14
+brokencount     EQU     vars + 0x16
+brokenseq       EQU     vars + 0x18
 
 vb_PrevFrame    EQU     vars + 0x1E
 
@@ -50,9 +54,11 @@ DrawBrick_col   EQU     vars + 0x22
 _db_i           EQU     vars + 0x24
 _db_j           EQU     vars + 0x26
 
-BreakBrick_xy   EQU     vars + 0x28
-_bb_i           EQU     vars + 0x24
-_bb_j           EQU     vars + 0x26
+BreakBrick_xy   EQU     vars + 0x28     ; also used as local var in mainloop.
+_bb_i           EQU     vars + 0x22
+_bb_j           EQU     vars + 0x24
+
+_pt_key         EQU     vars + 0x22
 
 ; --- constants ---
 giga_vram_y     EQU     0x08
@@ -89,11 +95,21 @@ twopix_darkblue DW      $2020   ; pad color dark
 ball_line1      DW      $2A3F   ; white corner on grey ball (lighting effect , and highlight the active pixel)
 ball_line2      DW      $2A2A
 
+_soundChan1val  EQU     giga_soundChan1+2       ; (DW do not support expressions)
+_soundChan2val  EQU     giga_soundChan2+2
+_soundChan3val  EQU     giga_soundChan3+2
+_soundChan4val  EQU     giga_soundChan4+2
+soundChan1      DW      _soundChan1val
+soundChan2      DW      _soundChan2val
+soundChan3      DW      _soundChan3val
+soundChan4      DW      _soundChan4val
+
 ; --- data ------------
 string_lives    EQU     data + 0x00
 string_lives    DB      10 '3         '
 string_score    DB      3  '000'
 string_gameover DB      10 'Game Over!'
+string_victory  DB      10 'Break Out!'
 
 ; 14x8 bricks grid
 bricksx         EQU     data + 0x0100
@@ -110,20 +126,20 @@ BounceTable0    DW      0xFF80 0xFFB0 0xFFB0 0 0 0 0 0 0 0 0X0050 0X0050 0x0080
 ################################## PAGE BREAK ##############################################################
 ############################################################################################################
 entry_point     CALL    DrawBoard
+                CALL    InitAudio
 
-restart         CALL    ClearBottom
-                CALL    ResetScore
-                CALL    DrawBricks
-                CALL    DrawScore
-                LDWI    80*256
+restart         LDWI    80*256                  ; init pad
                 STW     padx
                 LDI     0
                 STW     speedpad
-                CALL    InitBall
-                CALL    DrawBall
+                STW     brokencount
 
+                CALL    ResetScore
+                CALL    DrawBricks
+                CALL    InitRound
 
-mainloop        CALL    WaitVBlank
+mainloop        LDI     1
+                CALL    WaitVBlanks
 
 ; -- move pad --
                 LD      giga_buttonState
@@ -201,6 +217,8 @@ xbounceskip     LDW     bally
 notbricky       LD      nextbally+1
                 SUBI    giga_vram_y+100
                 BLT     notpadbounce
+                LDI     30
+                CALL    PlayTone
                 CALL    BouncePad
 notpadbounce    LDI     0
                 SUBW    speedy
@@ -218,31 +236,23 @@ ybounceskip     LDW     nextballx
                 BLT     mainloop
 
 ; ball dropped..
-                CALL    WaitVBlank
-;               CALL    WaitVBlank
-;               CALL    WaitVBlank
-                CALL    WaitVBlank
-                CALL    DecrementLives
+balllost        LDW     brokenseq
+                BEQ     balllost2
+                SUBI    1
+                STW     brokenseq
+                ADDI    35
+                CALL    PlayTone
+                CALL    WaitVBlanks
+                BRA     balllost
+                ; add a screen shake?
+balllost2       CALL    DecrementLives
                 BLE     gameover
-                CALL    InitBall
-                CALL    DrawBall
-                CALL    ClearBottom
-                CALL    DrawPad
-                CALL    WaitVBlank
-                CALL    WaitVBlank
+                CALL    InitRound
+                LDI     42
+                CALL    WaitVBlanks
                 BRA     mainloop
 
-gameover        LDWI    string_gameover
-                STW     PrintText_Str
-                LDWI    giga_vram + (0x0300+34)
-                STW     PrintText_Pos
-                CALL    PrintText
-
-wait            CALL    WaitVBlank
-                LD      giga_buttonState
-                ANDI    buttonA
-                BNE     wait
-
+gameover        CALL    GameOver
                 BRA     restart
 
 ############################################################################################################
@@ -417,6 +427,18 @@ _bb_loopj       LDWI    bricksy
                 STW     DrawBrick_col
                 CALL    DrawOneBrick
                 CALL    IncrementScore
+
+                INC     brokencount
+
+                INC     brokenseq
+                LDW     brokenseq
+                SUBI    5+28
+                BLT     _bb_playtone
+                LDI     5+28
+                STW     brokenseq
+_bb_playtone    LDI     35
+                ADDW    brokenseq
+                CALL    PlayTone
                 POP
                 RET
 
@@ -468,7 +490,10 @@ _cb_loopx       LDI     giga_vram_y+110
                 RET
 
 ; ===== Init =============================================================================
-InitBall        PUSH
+InitRound       PUSH
+                CALL    ClearBottom
+                CALL    DrawPad
+
                 LDWI    80*256+127                      ; 80.5
                 STW     ballx
                 LDWI    giga_vram + (50*256+127)        ; 50.5
@@ -480,12 +505,15 @@ InitBall        PUSH
                 LDWI    SYS_Random_34           ; Get random number and update entropy
                 STW     giga_sysFn
                 SYS     0xFD                    ; 270 - 34/2 = 0xFD
-                BGT     _ib_positive            ; get the random number in the range -1.0 .. 1.0
+                BGT     _ib_positive            ; get the random number in the range -2.0 .. 2.0
                 ORW     cst_FF00
                 BRA     _ib_clamp
 _ib_positive    ANDW    cst_00FF
 _ib_clamp       STW     speedx
                 CALL    ClampBallSpeed
+                CALL    DrawBall
+                LDI     5
+                STW     brokenseq
                 POP
                 RET
 
@@ -568,6 +596,7 @@ _db_border      LDI     160
                 SUBI    162
                 BNE     _db_border
                 BRA     _db_nextline
+
 _db_done        RET
 
 
@@ -639,12 +668,16 @@ _bp_div256done  LSLW                            ; x2
 ############################################################################################################
 subroutines3    RET
 
-; ===== WaitVBlank =============================================================================
-WaitVBlank      LD      giga_frameCount
+; ===== WaitVBlanks =============================================================================
+WaitVBlanks     ST      scratch
+_wvb_wait       LD      giga_frameCount
                 SUBW    vb_PrevFrame
-                BEQ     WaitVBlank
+                BEQ     _wvb_wait
                 LD      giga_frameCount
                 STW     vb_PrevFrame
+                LD      scratch
+                SUBI    1
+                BNE     WaitVBlanks
                 RET
 
 
@@ -678,7 +711,7 @@ ResetScore      LDWI    string_lives+1
                 INC     scratch
                 POKE    scratch
                 INC     scratch
-                RET
+                BRA     DrawScore
 
 ; ===== IncrementScore and draw ================================================================
 IncrementScore	LDWI    string_score+3
@@ -780,6 +813,96 @@ _pt_slice       LDW     PrintText_Pos
                 RET
 
 
+############################################################################################################
+################################## PAGE BREAK ##############################################################
+############################################################################################################
+
+InitAudio       EQU     subroutines4+0x0000
+InitAudio2      EQU     subroutines4+0x0100
+PlayTone        EQU     subroutines4+0x0200
+GameOver        EQU     subroutines4+0x0300
+
+; ===== InitAudio =============================================================================
+InitAudio       PUSH
+                LDWI    giga_soundChan1+4
+                STW     scratch
+                LDI     0
+                DOKE    scratch
+                LDWI    giga_soundChan2+4
+                STW     scratch
+                LDI     0
+                DOKE    scratch
+                LDWI    giga_soundChan3+4
+                STW     scratch
+                LDI     0
+                DOKE    scratch
+                LDWI    giga_soundChan4+4
+                STW     scratch
+                LDI     0
+                DOKE    scratch
+                CALL    InitAudio2
+                POP
+                RET
+
+InitAudio2      LDWI    giga_soundChan1
+                STW     scratch
+                LDWI    0x0100                  ;       0 "Noise", 1 Triangle, 2 Pulse, 3 Sawtooth
+                DOKE    scratch
+                LDWI    giga_soundChan2
+                STW     scratch
+                LDWI    0x0200                  ;       0 "Noise", 1 Triangle, 2 Pulse, 3 Sawtooth
+                DOKE    scratch
+                LDWI    giga_soundChan3
+                STW     scratch
+                LDWI    0x0000                  ;       0 "Noise", 1 Triangle, 2 Pulse, 3 Sawtooth
+                DOKE    scratch
+                LDWI    giga_soundChan4
+                STW     scratch
+                LDWI    0x0000                  ;       0 "Noise", 1 Triangle, 2 Pulse, 3 Sawtooth
+                DOKE    scratch
+                RET
+
+; ===== PlayTone =============================================================================
+PlayTone        LSLW
+                STW     scratch
+                LDWI    giga_notesTable
+                ADDW    scratch
+                STW     scratch
+                LUP     0x00                ; get ROM midi note low byte
+                ST      _pt_key
+                LDW     scratch
+                LUP     0x01                ; get ROM midi note high byte
+                ST      _pt_key + 1
+                LDW     _pt_key
+                DOKE    soundChan1
+                DOKE    soundChan2
+                LDI     0
+                DOKE    soundChan3
+                DOKE    soundChan4
+                LDI     3
+                ST      giga_soundTimer
+                RET
+
+; ===== GameOver =============================================================================
+GameOver        PUSH
+                LD      brokencount
+                SUBI    14*8
+                BGE     _go_victory
+_go_defeat      LDWI    string_gameover
+                BRA     _go_printtext
+_go_victory     LDWI    string_victory
+_go_printtext   STW     PrintText_Str
+                LDWI    giga_vram + (0x0300+34)
+                STW     PrintText_Pos
+                CALL    PrintText
+
+_go_wait        LDI     1
+                CALL    WaitVBlanks
+                LD      giga_buttonState
+                ANDI    buttonA
+                BNE     _go_wait
+                POP
+                RET
 
 _startAddress_          EQU entry_point
 _callTable_             EQU 0x00EE
