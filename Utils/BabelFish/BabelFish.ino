@@ -77,18 +77,22 @@ const byte gt1File[] PROGMEM = {
 
  // Link to PC/laptop
  #define hasSerial 1
+
+  // Controller pass through
+ #define hasController 0
 #endif
 
 /*----------------------------------------------------------------------+
  |      Arduino Nano config                                             |
  +----------------------------------------------------------------------*/
 
-// Arduino   AVR    Gigatron Schematic Controller PCB              Gigatron
-// Nano      Name   OUT bit            CD4021     74HC595 (U39)    DB9 (J4)
-// --------- ------ -------- --------- ---------- ---------------- --------
-// Pin J2-15 PORTB5 None     SER_DATA  11 SER INP 14 SER           2
-// Pin J1-15 PORTB4 7 vSync  SER_LATCH  0 PAR/SER None             3
-// Pin J1-14 PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK 4
+// Arduino   AVR    Gigatron Schematic Controller PCB              Gigatron Controller
+// Nano      Name   OUT bit            CD4021     74HC595 (U39)    DB9 (J4) DB9
+// -------   ------ -------- --------- ---------- ---------------- -------- -------
+// Pin J2-15 PORTB5 None     SER_DATA  11 SER INP 14 SER           2        None
+// Pin J1-15 PORTB4 7 vSync  SER_LATCH  0 PAR/SER None             3        3
+// Pin J1-14 PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK 4        4
+// Pin J1-13 PORTB2 None     None      None       None             None     2
 
 #if ArduinoNano
  #define version "ArduinoNano"
@@ -98,12 +102,18 @@ const byte gt1File[] PROGMEM = {
  #define SER_LATCH PB4
  #define SER_PULSE PB3
 
+ // Pins for Controller
+ #define JOY_DATA PB2
+
  // Pins for PS/2 keyboard (Arduino Uno)
  #define keyboardClockPin PB3 // Pin 2 or 3 for IRQ
  #define keyboardDataPin  PB4 // Any available free pin
 
  // Link to PC/laptop
  #define hasSerial 1
+
+ // Controller pass through
+ #define hasController 1
 #endif
 
 /*----------------------------------------------------------------------+
@@ -145,6 +155,9 @@ const byte gt1File[] PROGMEM = {
 
  // Link to PC/laptop
  #define hasSerial 1
+
+  // Controller pass through
+ #define hasController 0
 #endif
 
 /*----------------------------------------------------------------------+
@@ -181,6 +194,9 @@ const byte gt1File[] PROGMEM = {
 
  // Link to PC/laptop
  #define hasSerial 0
+
+  // Controller pass through
+ #define hasController 0
 
  // PS2Keyboard.h uses attachInterrupt() which doesn't work on the ATtiny85.
  // Workaround as follows:
@@ -264,6 +280,11 @@ void setup()
  */
 void loop()
 {
+  // Controller pass through
+  #if hasController
+    ((PINB>>JOY_DATA)&1) ? PORTB |= 1<<SER_DATA : PORTB &= ~(1<<SER_DATA);
+  #endif
+
   #if hasSerial
     static char line[20];
     static byte lineIndex = 0;
@@ -284,21 +305,21 @@ void loop()
     char c = keyboard.read();
     switch (c) {
       // XXX These mappings are for testing purposes only
-      case PS2_PAGEDOWN:   sendController(~buttonSelect,1); break;
-      case PS2_PAGEUP:     sendController(~buttonStart, 128+32); break; // XXX Change to Ctrl-Alt-Del
-      case PS2_TAB:        sendController(~buttonA,     1); break;
+      case PS2_PAGEDOWN:   sendController(~buttonSelect, 1); break;
+      case PS2_PAGEUP:     sendController(~buttonStart,  128+32); break; // XXX Change to Ctrl-Alt-Del
+      case PS2_TAB:        sendController((byte)~buttonA,1); break;
       #if !ATtiny85
-        case PS2_ESC:      sendController(~buttonB,     1); break;
+        case PS2_ESC:      sendController(~buttonB,      1); break;
       #else
-        case PS2_ESC:      doTransfer(terminalGt1);         break; // XXX HACK Find some proper short-cut. Ctrl-T?
+        case PS2_ESC:      doTransfer(terminalGt1);          break; // XXX HACK Find some proper short-cut. Ctrl-T?
       #endif
-      case PS2_LEFTARROW:  sendController(~buttonLeft,  2); break;
-      case PS2_RIGHTARROW: sendController(~buttonRight, 2); break;
-      case PS2_UPARROW:    sendController(~buttonUp,    2); break;
-      case PS2_DOWNARROW:  sendController(~buttonDown,  2); break;
-      case PS2_ENTER:      sendController('\n', 1);         break;
-      case PS2_DELETE:     sendController(127, 1);          break;
-      default:             sendController(c, 1);            break;
+      case PS2_LEFTARROW:  sendController(~buttonLeft,   2); break;
+      case PS2_RIGHTARROW: sendController(~buttonRight,  2); break;
+      case PS2_UPARROW:    sendController(~buttonUp,     2); break;
+      case PS2_DOWNARROW:  sendController(~buttonDown,   2); break;
+      case PS2_ENTER:      sendController('\n',          1); break;
+      case PS2_DELETE:     sendController(127,           1); break;
+      default:             sendController(c,             1); break;
     }
     delay(50); // Allow Gigatron software to process key code
   }
@@ -344,7 +365,7 @@ void doCommand(char line[])
   case 'A': sendController(~buttonLeft,   2); break;
   case 'S': sendController(~buttonDown,   2); break;
   case 'D': sendController(~buttonRight,  2); break;
-  case 'Z': sendController(~buttonA,      2); break;
+  case 'Z': sendController((byte)~buttonA,2); break;
   case 'X': sendController(~buttonB,      2); break;
   case 'Q': sendController(~buttonSelect, 2); break;
   case 'E': sendController(~buttonStart,  2); break;
@@ -408,7 +429,7 @@ void doLoader()
   }
 
   // Start 'Loader' application on Gigatron
-  sendController(~buttonA, 2);
+  sendController((byte)~buttonA, 2);
 
   // Wait for Loader to be running
   delay(1000);

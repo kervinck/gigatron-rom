@@ -52,40 +52,22 @@ namespace Audio
         skip += 1.0 / ratio;
         if(uint64_t(skip) > count)
         {
-            uint8_t sample = Cpu::getXOUT() & 0xF0;
+            uint8_t sample = (Cpu::getXOUT() & 0xF0) >>2;
             SDL_QueueAudio(_audioDevice, &sample, 1);
         }
     }
 
     void resetChannels(void)
     {
-        Cpu::setRAM(GIGA_CH0_WAV_A, 0x00);
-        Cpu::setRAM(GIGA_CH0_WAV_X, 0x03);
-        Cpu::setRAM(GIGA_CH0_KEY_L, 0x00);
-        Cpu::setRAM(GIGA_CH0_KEY_H, 0x00);
-        Cpu::setRAM(GIGA_CH0_OSC_L, 0x00);
-        Cpu::setRAM(GIGA_CH0_OSC_H, 0x00);
-
-        Cpu::setRAM(GIGA_CH1_WAV_A, 0x00);
-        Cpu::setRAM(GIGA_CH1_WAV_X, 0x03);
-        Cpu::setRAM(GIGA_CH1_KEY_L, 0x00);
-        Cpu::setRAM(GIGA_CH1_KEY_H, 0x00);
-        Cpu::setRAM(GIGA_CH1_OSC_L, 0x00);
-        Cpu::setRAM(GIGA_CH1_OSC_H, 0x00);
-
-        Cpu::setRAM(GIGA_CH2_WAV_A, 0x00);
-        Cpu::setRAM(GIGA_CH2_WAV_X, 0x03);
-        Cpu::setRAM(GIGA_CH2_KEY_L, 0x00);
-        Cpu::setRAM(GIGA_CH2_KEY_H, 0x00);
-        Cpu::setRAM(GIGA_CH2_OSC_L, 0x00);
-        Cpu::setRAM(GIGA_CH2_OSC_H, 0x00);
-
-        Cpu::setRAM(GIGA_CH3_WAV_A, 0x00);
-        Cpu::setRAM(GIGA_CH3_WAV_X, 0x03);
-        Cpu::setRAM(GIGA_CH3_KEY_L, 0x00);
-        Cpu::setRAM(GIGA_CH3_KEY_H, 0x00);
-        Cpu::setRAM(GIGA_CH3_OSC_L, 0x00);
-        Cpu::setRAM(GIGA_CH3_OSC_H, 0x00);
+        for(int i=0; i<GIGA_SOUND_CHANNELS; i++)
+        {
+            Cpu::setRAM(GIGA_CH0_WAV_A + i*GIGA_CHANNEL_OFFSET, 0x00); // sample index modification for advanced noise generation
+            Cpu::setRAM(GIGA_CH0_WAV_X + i*GIGA_CHANNEL_OFFSET, 0x03); // waveform index
+            Cpu::setRAM(GIGA_CH0_KEY_L + i*GIGA_CHANNEL_OFFSET, 0x00); // low frequency look up from ROM
+            Cpu::setRAM(GIGA_CH0_KEY_H + i*GIGA_CHANNEL_OFFSET, 0x00); // high frequency look up from ROM
+            Cpu::setRAM(GIGA_CH0_OSC_L + i*GIGA_CHANNEL_OFFSET, 0x00); // low internal oscillator
+            Cpu::setRAM(GIGA_CH0_OSC_H + i*GIGA_CHANNEL_OFFSET, 0x00); // high internal oscillator
+        }
     }
 
     void nextScore(void)
@@ -137,26 +119,26 @@ namespace Audio
                 // Start note
                 if((command & 0xF0) == 0x90)
                 {
-                    uint8_t channel = command & 0x03;  // spec supports up to 16 channels, we support 4
+                    uint8_t channel = command & (GIGA_SOUND_CHANNELS - 1);  // spec supports up to 16 channels, Gigatron supports 4
                     uint16_t note = *_scorePtr++;
                     note = (note - 10) * 2 - 2;
                     note = Cpu::getROM16(note + 0x0900, 1);
-                    Cpu::setRAM(GIGA_CH0_KEY_L + channel*0x0100, uint8_t(note & 0x00FF));
-                    Cpu::setRAM(GIGA_CH0_KEY_H + channel*0x0100, uint8_t((note & 0xFF00)>>8));
+                    Cpu::setRAM(GIGA_CH0_KEY_L + channel*GIGA_CHANNEL_OFFSET, uint8_t(note & 0x00FF));
+                    Cpu::setRAM(GIGA_CH0_KEY_H + channel*GIGA_CHANNEL_OFFSET, uint8_t((note & 0xFF00)>>8));
                 }
                 // Stop note
                 else if((command & 0xF0) == 0x80)
                 {
-                    uint8_t channel = command & 0x03;  // spec supports up to 16 channels, we support 4
-                    Cpu::setRAM(GIGA_CH0_KEY_L + channel*0x0100, 0x00);
-                    Cpu::setRAM(GIGA_CH0_KEY_H + channel*0x0100, 0x00);
+                    uint8_t channel = command & (GIGA_SOUND_CHANNELS - 1);  // spec supports up to 16 channels, Gigatron supports 4
+                    Cpu::setRAM(GIGA_CH0_KEY_L + channel*GIGA_CHANNEL_OFFSET, 0x00);
+                    Cpu::setRAM(GIGA_CH0_KEY_H + channel*GIGA_CHANNEL_OFFSET, 0x00);
                 }
-                // Stop score
+                // Segment command
                 else if((command & 0xF0) == 0xD0)
                 {
-                    //uint16_t segment = *_scorePtr++;
-                    //segment = segment | (((*_scorePtr++) <<8) & 0xFF00);
-                    _scorePtr = (uint8_t*)musicMidi00;
+                    uint16_t segment = *_scorePtr++;
+                    segment |= (((*_scorePtr++) <<8) & 0xFF00);
+                    _scorePtr = (uint8_t*)segment;
                 }
             }
             // Delay n milliseconds where n = 8bit value

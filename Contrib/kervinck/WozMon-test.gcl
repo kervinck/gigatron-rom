@@ -214,6 +214,27 @@ CNewline!                       {Now forced to scroll and clear last line}
 { Display '*' and welcome message }
 $2a [do PrintChar! tmp, tmp<++ if<>0loop]
 
+[def
+  push
+  tmp=
+  CNewline!
+  $81 Buffer=
+  [do
+    tmp, Buffer.
+    if<>0
+    PrintChar!
+    tmp<++ Buffer<++
+    loop]
+  Mode=
+  ProcessBuffer!
+  pop ret
+] Test=
+
+[def $35# $30# $30# 0# ] Test!
+[def $3a# $31# $31# $20# $30# $20# $38# 0# ] Test!
+[def $3a# $32# $62# $20# $35# $30# $20# $66# $30# $20# $35# $30#
+     $20# $65# $33# $20# $31# $20# $39# $30# $20# $33# $52# 0# ] Test!
+
 { Input loop, assume some kind of ASCII keyboard is hooked up }
 
 [do {GETLINE}
