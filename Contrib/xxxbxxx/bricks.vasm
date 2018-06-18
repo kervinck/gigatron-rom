@@ -1,7 +1,7 @@
 %include macros/gigatron.i
 
 ; ===========================================
-; BREAKOUT
+; BRICKS (BREAKOUT CLONE)
 ; ===========================================
 
 ; --- mem layout ---
