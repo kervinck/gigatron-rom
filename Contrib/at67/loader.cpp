@@ -827,7 +827,7 @@ namespace Loader
             _disableUploads = false;
         }
         // Upload vCPU assembly code
-        else if(filename.find(".vasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
+        else if(filename.find(".vasm") != filename.npos  ||  filename.find(".gasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
         {
             if(!Assembler::assemble(filepath, DEFAULT_START_ADDRESS)) return;
             executeAddress = Assembler::getStartAddress();
