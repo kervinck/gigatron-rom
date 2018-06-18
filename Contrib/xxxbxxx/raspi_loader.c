@@ -274,7 +274,7 @@ bool SendFrame(byte ProtocolByte, int len, unsigned address, const byte* message
 	// in vertical blank. But we also need the payload bytes to align
 	// with scanlines where the interpreter runs, so the Gigatron doesn't
 	// have to shift everything it receives by 1 bit.
-	// 2. There is a 1 bit latency inside the 74HCT595 for the data bit,
+	// 2. There is a 1 bit latency inside the 74HC595 for the data bit,
 	// but (obviously) not for the sync signals.
 	// All together, we drop 2 bits from the 2nd byte in a frame. This achieves
 	// byte alignment for the Gigatron at visible scanline 3, 11, 19, ... etc.

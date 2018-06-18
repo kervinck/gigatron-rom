@@ -4,10 +4,10 @@ Utilities for Gigatron development
 Files
 =====
 ```
+BabelFish/BabelFish.ino         Sketch to install on Arduino for Gigatron hookup
 gcl.vim                         VIM syntax highlighting file
 raw24toraw6.py                  Raw 24bpp to GCL-format packed 6bpp converter
 sendGt1.py                      Send a GT1 file from laptop/PC to Gigatron
-BabelFish/BabelFish.ino         Sketch to install on Arduino for Gigatron hookup
 ```
 
 Installing VIM syntax highlighting
