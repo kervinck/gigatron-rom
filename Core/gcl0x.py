@@ -152,6 +152,8 @@ class Program:
         self.error('Invalid GCL version %s' % repr(word))
     elif word == 'loop':
       to = [block for block in self.blocks if block in self.loops]
+      if len(to) == 0:
+        self.error('Loop without do')
       to = self.loops[to[-1]]
       to = prev(to)
       if self.vPC>>8 != to>>8:
