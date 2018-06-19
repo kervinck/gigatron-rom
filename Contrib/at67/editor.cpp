@@ -66,6 +66,7 @@ namespace Editor
     uint16_t _cpuUsageAddressA = HEX_BASE_ADDRESS;
     uint16_t _cpuUsageAddressB = HEX_BASE_ADDRESS + 0x0020;
     
+    int _fileEntriesSize = 0;
     int _fileEntriesIndex = 0;
     std::vector<FileEntry> _fileEntries;
 
@@ -513,7 +514,7 @@ namespace Editor
             }
 
             // Edit cpu usage addresses
-            if(_cursorY == -2  &&   _hexEdit)
+            if(_cursorY == -2  &&  _hexEdit)
             {
                 // A address or B address
                 if((_cursorX & 0x01) == 0)
@@ -542,7 +543,7 @@ namespace Editor
                 _addressDigit = (++_addressDigit) & 0x03;
             }
             // Edit load/vars addresses
-            else if(_cursorY == -1  &&   _hexEdit)
+            else if(_cursorY == -1  &&  _hexEdit)
             {
                 // Hex address or load address
                 if((_cursorX & 0x01) == 0)
@@ -653,13 +654,19 @@ namespace Editor
             _fileEntries.push_back(fileEntry);
         }
 
-        _fileEntriesIndex = 0;
+        // Only reset cursor and file index if file list size has changed
+        if(int(_fileEntriesSize != _fileEntries.size()))
+        {
+            _cursorX = 0;
+            _cursorY = 0;
+            _fileEntriesIndex = 0;
+            _fileEntriesSize = int(_fileEntries.size());
+        }
     }
 
     void changeBrowseDirectory(void)
     {
-        std::string entry = *getFileEntryName(getCursorY() + _fileEntriesIndex);
-        setCursorY(0);
+        std::string entry = *getFileEntryName(_cursorY + _fileEntriesIndex);
 
         if (entry != "..")
             _filePath += entry + "/";
@@ -695,7 +702,6 @@ namespace Editor
         {
             if(!_singleStepMode)
             {
-                _cursorX = 0; _cursorY = 0;
                 _editorMode = _editorMode == Load ? Hex : Load;
                 if(_editorMode == Load) browseDirectory();
             }
@@ -774,7 +780,7 @@ namespace Editor
             }
             else
             {
-                FileType fileType = getFileEntryType(getCursorY() + _fileEntriesIndex);
+                FileType fileType = getFileEntryType(_cursorY + _fileEntriesIndex);
                 switch(fileType)
                 {
                     case File: (_sdlKeyModifier & KMOD_CTRL) ? Loader::setUploadTarget(Loader::Hardware) : Loader::setUploadTarget(Loader::Emulator); break;

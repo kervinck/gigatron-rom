@@ -332,7 +332,7 @@ namespace Assembler
         return modified;
     }
 
-    bool applyLabelsToExpression(std::string& expression, const std::vector<Label>& labels)
+    bool applyLabelsToExpression(std::string& expression, const std::vector<Label>& labels, bool nativeCode)
     {
         bool modified = false;
         for(int i=0; i<labels.size(); i++) {
@@ -341,27 +341,26 @@ namespace Assembler
                 if (pos == std::string::npos)
                     break;  // not found
                 modified = true;
-                expression.replace(pos, labels[i]._name.size(), std::to_string(labels[i]._address));
+                uint16_t address = (nativeCode) ? labels[i]._address >>1 : labels[i]._address;
+                expression.replace(pos, labels[i]._name.size(), std::to_string(address));
             }
         }
         return modified;
     }
 
-    bool parseExpressionEquatesAndLabels(std::string input, uint16_t& operand)
-    {
+    uint16_t evaluateExpression(std::string input, bool nativeCode)
+    { 
         // Replace equates
         applyEquatesToExpression(input, _equates);
 
         // Replace labels
-        applyLabelsToExpression(input, _labels);
+        applyLabelsToExpression(input, _labels, nativeCode);
 
         // Strip white space
         input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
 
         // Parse expression and return with a result
-        operand = Expression::parse((char*)input.c_str());
-
-        return true;
+        return Expression::parse((char*)input.c_str());
     }
 
     bool searchEquate(const std::string& token, Equate& equate)
@@ -385,7 +384,11 @@ namespace Assembler
         // Expression equates
         Expression::ExpressionType expressionType = Expression::isExpression(token);
         if(expressionType == Expression::Invalid) return false;
-        if(expressionType == Expression::Valid) return parseExpressionEquatesAndLabels(token, equate._operand);
+        if(expressionType == Expression::Valid)
+        {
+            equate._operand = evaluateExpression(token, false);
+            return true;
+        }
 
         // Check for existing equate
         return searchEquate(token, equate);
@@ -495,7 +498,11 @@ namespace Assembler
         // Expression labels
         Expression::ExpressionType expressionType = Expression::isExpression(token);
         if(expressionType == Expression::Invalid) return false;
-        if(expressionType == Expression::Valid) return parseExpressionEquatesAndLabels(token, label._address);
+        if(expressionType == Expression::Valid)
+        {
+            label._address = evaluateExpression(token, false);
+            return true;
+        }
 
         // Check for existing label
         return searchLabel(token, label);
@@ -621,16 +628,7 @@ namespace Assembler
                     }
                     else
                     {
-                        // Normal expression
-                        if(Expression::isExpression(tokens[i]) == Expression::Valid)
-                        {
-                            operand = uint8_t(Expression::parse((char*)tokens[i].c_str()));
-                            success = true;
-                        }
-                        else
-                        {
-                            break;
-                        }
+                        break;
                     }
                 }
 
@@ -678,16 +676,7 @@ namespace Assembler
                 }
                 else
                 {
-                    // Normal expression
-                    if(Expression::isExpression(tokens[i]) == Expression::Valid)
-                    {
-                        operand = Expression::parse((char*)tokens[i].c_str());
-                        success = true;
-                    }
-                    else
-                    {
-                        break;
-                    }
+                    break;
                 }
             }
 
@@ -702,55 +691,32 @@ namespace Assembler
         return success;
     }
 
-    uint16_t parseNativeExpression(std::string input)
+    bool handleNativeOperand(const std::string& token, uint8_t& operand)
     {
-        // Replace labels
-        for(int i=0; i<_labels.size(); i++)
-        {
-            for (;;) {
-                size_t pos = findSymbol(input, _labels[i]._name);
-                if (pos == std::string::npos)
-                    break;  // not found
-                input.replace(pos, _labels[i]._name.size(), std::to_string(_labels[i]._address >>1));
-           }
-        }
-
-        // Replace equates
-        applyEquatesToExpression(input, _equates);
-
-        // Strip white space
-        input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
-
-        // Parse expression and return with a result
-        return Expression::parse((char*)input.c_str());
-    }
-
-    bool handleNativeOperand(const std::string& input, uint8_t& operand)
-    {
-        Expression::ExpressionType expressionType = Expression::isExpression(input);
+        Expression::ExpressionType expressionType = Expression::isExpression(token);
         if(expressionType == Expression::Invalid) return false;
         if(expressionType == Expression::Valid)
         {
             // Parse expression and return with a result
-            operand = uint8_t(parseNativeExpression(input));
+            operand = uint8_t(evaluateExpression(token, true));
             return true;
         }
 
         Label label;
-        if(searchLabel(input, label))
+        if(searchLabel(token, label))
         {
             operand = uint8_t((label._address >>1) & 0x00FF);
             return true;
         }
 
         Equate equate;
-        if(searchEquate(input, equate))
+        if(searchEquate(token, equate))
         {
             operand = uint8_t(equate._operand);
             return true;
         }
 
-        return Expression::stringToU8(input, operand);
+        return Expression::stringToU8(token, operand);
     }
 
     bool handleNativeInstruction(const std::vector<std::string>& tokens, int tokenIndex, uint8_t& opcode, uint8_t& operand)
