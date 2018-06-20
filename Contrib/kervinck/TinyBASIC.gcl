@@ -11,14 +11,21 @@
   Differences:
     Short lines
     No bound check on stack
-    We might drop THEN to save bytes
+    We might drop explicit THEN to save bytes
+    We might drop explicit LET to save bytes
+    We might abbreviate RETURN to RET to save bytes
+    Don't accept spaces within a number
+
+  Tiny BASIC quirks:
+    print 1+3*-8 --> Syntax error
+    print 6/-2 --> Syntax error
 
   Memory allocation in Gigatron
 
   Zero-page:
   30 -          Tiny BASIC interpreter variables
   81 - 99       Input buffer
-  9A - CD       BASIC variables A..Z
+  9A - CD       BASIC variables A..Z (XXX Might move to $08a0)
   CE - FF       Stack (25 words)
 
   Programs to be stored in the invisible part of screen memory
@@ -34,6 +41,9 @@ gcl0x
 |                       RAM page 2                                      |
 +-----------------------------------------------------------------------}
 
+$01df deek Pos=                 {Bottom character row in screen memory}
+                                {Slightly cheating with endianness}
+
 { Draw a 5x8 pixel character (32..127) on screen }
 [def
   Char=
@@ -48,7 +58,9 @@ gcl0x
   32 \sysArgs0.                 {Background color blue}
   15 \sysArgs1.                 {Character color yellow}
   Pos \sysArgs4=                {Position for character}
+{ sysFn is set by Newline and not changed by Tiny BASIC
   \SYS_VDrawBits_134 \sysFn=
+}
 
   $fb i= [do                    {Draw 5 vertical slices}
     fontData 0? fontData<++ \sysArgs2. 134!
@@ -92,9 +104,10 @@ gcl0x
   32 \sysArgs0. \sysArgs1.      {All blue}
   \SYS_VDrawBits_134 \sysFn=
   [do
-    134!
-    \sysArgs4<++
-    \sysArgs4, 160^ if<>0loop]
+    134!                        {Clear vertical slice if 8 pixels}
+    \sysArgs4<++                {Advance 1 pixel right}
+    \sysArgs4, 160^ if<>0loop]  {Until reaching horizontal position 160}
+
                                 {Scroll up by modifying videoTable}
   $01ee i=                      {Last entry in video table}
   [do
@@ -109,52 +122,62 @@ gcl0x
 { Conditionally print leading decimal digit }
 [def
   push
-  i=
 
-  Value
+  i=                            {Radix as argument, keep in i}
+  Value                         {Calculate Value/Radix}
   [do
-    i-
-    if>=0
+    i-                          {Subtract i}
+    if>=0                       {As long as possible}
       Value=
-      Char<++
+      Char<++                   {Increment 0..9 times}
       loop]
 
-  Char [if<>0
-    $30| PrintChar!
-    $30 Char=]                  {Force printing of further digits}
+  Char [if<>0                   {If non-zero digit or non-leading zero}
+    $30| PrintChar!             {Map to $30..$39 range and print digit}
+    $30 Char=]                  {All further zeroes are non-leading}
 
   pop ret
 ] PrintDigit=
 
+{ Test there is nothing else on line }
 [def
-  push
-  pop ret
-] Multiply=
-
-[def
-  push
-  pop ret
-] Divide=
+  SkipSpaces!
+  BP, [if<>0 SyntaxError!]
+  pop ret                       {Popping the callee's saved vLR!}
+] EndOfLine=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
 $0300:
 
-{ Destructively print the Value as signed integer in decimal notation }
+[def
+  BP,                           {Next character from line}
+  $5f&                          {Ignore case}
+  $41- {'A'} [if>=0             {Bail out if out of range}
+   26- {'Z'} if<0               {Letter A..Z or a..z}
+    BP<++                       {Accept character}
+    26+                         {Map in 0..25 range}
+    1<< $9a+                    {Address is $9a+2*n}
+    ret                         {Return address on success}
+  ]
+  SyntaxError!
+] TestVar=
+
+{ Destructively print Value as signed decimal number }
 [def
   push
 
-  [if<0
-    0 Value- Value=
-    $2d PrintChar!]
+  [if<0                         {If value is negative}
+    0 Value- Value=             {Negate value}
+    $2d PrintChar!]             {Print minus sign}
 
-  0 Char=
-  10000 PrintDigit!
-   1000 PrintDigit!
-    100 PrintDigit!
-     10 PrintDigit!
-    $30 Value+ PrintChar!
+  0 Char=                       {Suppress leading zeroes}
+  10000 PrintDigit!             {Print ten thousands, largest for 16 bits}
+   1000 PrintDigit!             {Print thousands}
+    100 PrintDigit!             {Print hundreds}
+     10 PrintDigit!             {Print tens}
+    $30 Value+ PrintChar!       {Print ones}
 
   pop ret
 ] PrintValue=
@@ -201,32 +224,6 @@ $0300:
   pop ret
 ] GetLine=
 
-{
-{ Swap SavedBP/BP if argument is not in InLine }
-[def
-  \vACH, [if<>0                 {If pointing in main memory}
-    SavedBP tmp=
-    BP SavedBP=
-    tmp BP=
-  else                          {If pointing in zero-page}
-    BP SavedBP=]
-  ret
-] LineSwap=
-
-{ SaveBP -- Save BASIC Pointer }
-[def
-  push
-  BP LineSwap!
-  pop ret
-] SaveBP=
-{ RestoreBP -- Restore BASIC Pointer }
-[def
-  push
-  SavedBP LineSwap!
-  pop ret
-] RestoreBP=
-}
-
 [def
   [do BP, $20^ if=0 BP<++ loop]
   ret
@@ -240,12 +237,8 @@ $0300:
     Value=                      {Update partial result}
     2<< Value+ 1<< i=           {Multiply by 10 before adding decimal}
 
-    [do
-      BP,                       {Grab next character}
-      $20- if=0
-        BP<++ loop]             {Accept spaces, also inside a number}
-
-    $10- {'0'} if>=0            {Bail out if out of range}
+    BP,                         {Grab next character}
+    $30- {'0'} if>=0            {Bail out if out of range}
     10-  {'9'} if<0             {Decimal digit}
       tmp=                      {Non-zero to mark digits found}
       10+                       {Map in 0..9 range}
@@ -322,10 +315,10 @@ $0400:
         BP<++
         [do
           $20 PrintChar!
-          Pos<, 7& if<>0loop]   {Tab stops every 4 chars}
+          Pos<, 27& if<>0loop]  {Tab stops every 6 characters}
         loop]
     ]
-    Newline!
+    Newline!                    {XXX Skip this}
     EndOfLine!
   ]
 
@@ -396,37 +389,9 @@ $0500:
       BP<++ loop                {Accept if character matches}
     else
       [do tmp, tmp<++ if<>0loop]{Eat remaining characters}
-      1]]                       {Non-zero as error indicator}
+      1]]                       {XXX Non-zero as error indicator}
   tmp!                          {Effectively returns}
 ] TestWord=
-
-[def
-  BP,                           {Next character from line}
-  $5f&                          {Ignore case}
-  $41- {'A'} [if>=0             {Bail out if out of range}
-   26- {'Z'} if<0               {Letter A..Z or a..z}
-    BP<++                       {Accept character}
-    26+                         {Map in 0..25 range}
-    1<< $9a+                    {Address is $9a+2*n}
-    ret                         {Return address on success}
-  ]
-  SyntaxError!
-] TestVar=
-
-{ Test there is nothing else on line }
-[def
-  SkipSpaces!
-  BP, [if<>0 SyntaxError!]
-  pop ret                       {Popping the callee's saved vLR!}
-] EndOfLine=
-
-[def
-  push
-  PrintS! $7e# 0#
-  PrintValue!
-  Newline!
-  pop ret
-] InsertLine=
 
 { Process a full expression, result in Value and vAC }
 [def
@@ -469,21 +434,57 @@ $0500:
     TestWord! $2a# 0#           {'*'}
     [if=0
        Factor!
-       Multiply!
+       0% Multiply! 0%=
        loop]
     TestWord! $2f# 0#           {'/'}
     [if=0
        Factor!
-       Divide!
+       0% Divide! 0%=
        loop]]
   0% Value= 2++                 {Make stack value the result}
   pop ret
 ] Term=
 
+{ Calculate vAC * Value }
+[def
+  tmp=
+  [if<0                         {Make left-hand side positive}
+    0 Value- Value=
+    0 tmp- tmp=]
+
+  0 j=                          {Result variable}
+  1                             {First bit}
+  [do                           {Loop over all bits}
+    i= tmp&                     {Test next bit}
+    [if<>0 j Value+ j=]         {Add partial term}
+    Value Value+ Value=         {Double right-hand side}
+    i i+ if>0loop]              {Shift left until all done}
+  j
+  ret
+] Multiply=
+
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
 $0600:
+
+{ Calculate vAC / Value }
+[def
+  tmp=
+  [if<0 ValueError!]            {XXX !!! Only for positive values now !!!}
+  Value [if<=0 ValueError!]     {Avoid dividing by zero}
+
+  0                             {Result}
+  [do                           {XXX !!! Stupid slow placeholder algorithm !!!}
+    j=
+    tmp Value-
+    if>=0
+      tmp=
+      j 1+
+      loop]
+  j
+  ret
+] Divide=
 
 { Process an expression factor, result in Value }
 [def
@@ -507,8 +508,14 @@ $0600:
   pop ret
 ] Factor=
 
-$01df deek Pos=                 {Bottom character row in screen memory}
-                                {Slightly cheating with endianness}
+[def
+  push
+  PrintS! $7e# 0#
+  PrintValue!
+  Newline!
+  pop ret
+] InsertLine=
+
 Newline!                        {Scroll and clear last line}
 
 {
@@ -518,11 +525,24 @@ Newline!                        {Scroll and clear last line}
 
 { Welcome message }
 PrintS!                         {'*** Tiny BASIC'}
-  $2a# $2a# $2a# $20# $54# $69# $6e# $79# $20# $42# $41# $53# $49# $43# 0#
+  $2a# $2a# $2a# $20# $54# $69#
+  $6e# $79# $20# $42# $41# $53#
+  $49# $43# 0#
 
 [def
-  Error! $53# $79# $6e# $74# $61# $78# 0#
+  Error! $53# $79# $6e# $74#    {'Syntax'}
+    $61# $78# 0#
 ] SyntaxError=
+
+[def
+  Error! $56# $61# $6c# $75#    {'Value'}
+    $65# 0#
+] ValueError=
+
+[def
+  Error! $4d# $65# $6d# $6f#    {'Memory'}
+    $72# $79# 0#
+] MemoryError=
 
 [def
   \vLR; tmp=                    {vLR points to inline argument}
@@ -532,7 +552,8 @@ PrintS!                         {'*** Tiny BASIC'}
     tmp, tmp<++
     if<>0loop]
   PrintS!                       {' error'}
-    $20# $65# $72# $72# $6f# $72# 0#
+    $20# $65# $72# $72# $6f#
+    $72# 0#
   LineNumber [if<>0
     PrintS!                     {' in '}
       $20# $69# $6e# $20# 0#
@@ -542,7 +563,7 @@ PrintS!                         {'*** Tiny BASIC'}
   Error                         {Fall through, back into main loop}
 ] Error=
 
-Newline!                        {Terminate welcome or error message}
+Newline!                        {Terminate welcome message or error}
 
 { Main interactive loop }
 [do
@@ -551,16 +572,38 @@ Newline!                        {Terminate welcome or error message}
   Newline!
   [do
     GetLine!                    {Get line from console}
-{
-    [def $20# $50# $52# $49# $4e# $54# $20# $39# $2b# $31# 0# ] BP=
-}
-
     SkipSpaces!
     BP, if=0loop                {Do nothing for empty lines}
-    TestNumber! if<>0           {Test if line starts with number}
-      InsertLine!               {If so, insert BASIC line}
+    TestNumber! if<>0           {Test for a line number}
+      InsertLine!               {If so, insert into program}
       loop]                     {Continue without prompt}
-    Statement!                  {Execute direct statement}
+  Statement!                    {Execute direct statement}
+  loop]                         {Continue with prompt}
 
-    loop]
+{
+{ Swap SavedBP/BP if argument is not in InLine }
+[def
+  \vACH, [if<>0                 {If pointing in main memory}
+    SavedBP tmp=
+    BP SavedBP=
+    tmp BP=
+  else                          {If pointing in zero-page}
+    BP SavedBP=]
+  ret
+] LineSwap=
+
+{ SaveBP -- Save BASIC Pointer }
+[def
+  push
+  BP LineSwap!
+  pop ret
+] SaveBP=
+{ RestoreBP -- Restore BASIC Pointer }
+[def
+  push
+  SavedBP LineSwap!
+  pop ret
+] RestoreBP=
+}
+
 
