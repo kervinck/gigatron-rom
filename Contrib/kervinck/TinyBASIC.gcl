@@ -31,6 +31,25 @@
   Programs to be stored in the invisible part of screen memory
         xxA0-xxFF
 
+  Wish list:
+    PEEK()
+    POKE
+    *BREAK*
+    Correct relops
+    SET x,y     // Check with Had badge Move cursor
+    PUTC        // Check with HaD badge Print character
+    CLS         // Clear screen, move to top
+    FOR TO NEXT
+    ELSE
+    ABS()
+    FRE()       // For fun, can be implicit with LIST
+    RND()
+    AND OR
+    NOT
+    DEF FN
+    ? (alias for PRINT)
+    Multiple statements in line
+
   References:
         http://www.ittybittycomputers.com/IttyBitty/TinyBasic/
 }
@@ -315,10 +334,10 @@ $0400:
         BP<++
         [do
           $20 PrintChar!
-          Pos<, 27& if<>0loop]  {Tab stops every 6 characters}
+          Pos<, 7& if<>0loop]  {Tab stops every 4 characters}
         loop]
     ]
-    Newline!                    {XXX Skip this}
+    Newline!                    {XXX Skip this right after ; or , }
     EndOfLine!
   ]
 
@@ -397,6 +416,7 @@ $0500:
 [def
   push
                                 {First term}
+  SkipSpaces!
   TestWord! $2d# 0#             {'-'}
   [if=0                         {Accept unary minus}
     Term!
@@ -468,22 +488,26 @@ $0500:
 +-----------------------------------------------------------------------}
 $0600:
 
-{ Calculate vAC / Value }
+{ Calculate vAC / Value, result in vAC, remainder in i }
 [def
-  tmp=
-  [if<0 ValueError!]            {XXX !!! Only for positive values now !!!}
-  Value [if<=0 ValueError!]     {Avoid dividing by zero}
+  j=                            {i:j is the Remainder:Quotient pair}
+  Value^ Char=                  {Borrow Char to park sign information}
+  j     [if<0 0 j-     j=    ]  {Non-negative}
+  Value [if<0 0 Value- Value=]  {Non-negative}
+  [if=0 ValueError!]            {Avoid division by zero}
 
-  0                             {Result}
-  [do                           {XXX !!! Stupid slow placeholder algorithm !!!}
-    j=
-    tmp Value-
-    if>=0
-      tmp=
-      j 1+
-      loop]
-  j
-  ret
+  0 i=
+  [do
+    tmp=                        {Loop counter}
+    i i+ i=                     {Shift left}
+    j [if<0 i<++]               {Carry bit over to i}
+    j j+ j=                     {Shift left}
+    i Value- [if>=0 i= j<++]    {Result bit}
+    tmp 1+ 15&                  {Iterate 16 times}
+    if<>0loop]
+
+  Char [if<0 0 j- ret]          {Return with corrected sign}
+  j ret
 ] Divide=
 
 { Process an expression factor, result in Value }
@@ -516,19 +540,6 @@ $0600:
   pop ret
 ] InsertLine=
 
-Newline!                        {Scroll and clear last line}
-
-{
- WarmStart
-}
-0 LineNumber=                   {Not in any line}
-
-{ Welcome message }
-PrintS!                         {'*** Tiny BASIC'}
-  $2a# $2a# $2a# $20# $54# $69#
-  $6e# $79# $20# $42# $41# $53#
-  $49# $43# 0#
-
 [def
   Error! $53# $79# $6e# $74#    {'Syntax'}
     $61# $78# 0#
@@ -543,6 +554,31 @@ PrintS!                         {'*** Tiny BASIC'}
   Error! $4d# $65# $6d# $6f#    {'Memory'}
     $72# $79# 0#
 ] MemoryError=
+
+Newline!                        {Scroll and clear last line}
+
+{ Welcome message }
+PrintS!                         {'*** Tiny BASIC'}
+  $2a# $2a# $2a# $20# $54# $69#
+  $6e# $79# $20# $42# $41# $53#
+  $49# $43# 0#
+
+{-----------------------------------------------------------------------+
+|}$08a0 \vLR= ret{      RAM page 8                                      |
++-----------------------------------------------------------------------}
+$08a0:
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 9                                      |
++-----------------------------------------------------------------------}
+$09a0:
+
+{
+ WarmStart
+}
+0 LineNumber=                   {Not in any line}
+
+
 
 [def
   \vLR; tmp=                    {vLR points to inline argument}
