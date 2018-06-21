@@ -10,6 +10,7 @@
   2018-06-15 (marcelk) Mimic behaviour of original much better, while
                        avoiding spurious newlines to save vertical space.
                        Gracefully allow self-invocation ("200R").
+  2018-06-21 (marcelk) Simplifications ported back from Tiny BASIC
 
   What works the same as the original:
     - Type hex address to examine memory contents
@@ -55,38 +56,30 @@ gcl0x
 $01df deek Pos=                 {Bottom character row in screen memory}
                                 {Slightly cheating with endianness}
 
-{
-  Function to draw a 5x8 character on screen with the built-in font
-  Char must be in the 32-127 range (this is not checked)
-}
+{ Print ASCII character (32..127) on screen in 5x8 pixels }
+{ Also advance cursor position }
 [def
-  Char=
-  {Map ASCII code to offset in font table}
-  82- [if<0 50+ i= \font32up
-       else     i= \font82up]
-       fontData=                {Select low or high font page}
+  82-                           {Map ASCII code to offset in font table}
+  [if<0 50+ i= \font32up        {ASCII 32..81}
+   else     i= \font82up] k=    {ASCII 82..127}
   i 2<< i+                      {Multiply by 5}
-  fontData+ fontData=           {Add to page address to reach bitmap data}
+  k+ k=                         {Add to page address to reach bitmap data}
 
-                                {Prepare SYS calls}
+  \SYS_VDrawBits_134 \sysFn=    {Prepare SYS calls}
   32 \sysArgs0.                 {Background color blue}
   15 \sysArgs1.                 {Character color yellow}
   Pos \sysArgs4=                {Position for character}
-  \SYS_VDrawBits_134 \sysFn=
+  $fe%=                         {Temporarily park return value on the stack}
+  6+ Pos=                       {Advance position by 6 pixels}
 
-  $fb i= [do                    {Draw 5 vertical slices}
-    fontData 0? fontData<++ \sysArgs2. 134!
-    \sysArgs4<++                {Advance to next slice}
-    i<++ i if<>0loop]
+  5 [do i=                      {Draw 5 vertical slices}
+    k 0? \sysArgs2.             {Get slice from ROM}
+    134!                        {Invoke SYS function to draw pixels}
+    k<++ \sysArgs4<++           {Advance to next slice}
+    i 1- if>0loop]              {Looping}
+
+  $fe%                          {Return effective position}
   ret
-] DrawChar=
-
-{ Print one character and advance cursor position }
-[def
-  push
-  DrawChar!
-  Pos 6+ Pos=
-  pop ret
 ] PrintChar=
 
 { Print a newline conditionally }
@@ -221,7 +214,7 @@ $2a [do PrintChar! tmp, tmp<++ if<>0loop]
   CNewline!
 
   [do {NEXTCHAR}
-    127 DrawChar!               {Draw cursor}
+    127 PrintChar! Pos=         {Draw cursor}
 
     \serialRaw, [do             {Wait for key change}
       tmp= \serialRaw, Buffer.
@@ -230,7 +223,7 @@ $2a [do PrintChar! tmp, tmp<++ if<>0loop]
     Buffer, 10^ if<>0           {Enter/return breaks NEXTCHAR loop}
 
     117^ [if=0                  {Delete pressed (10^127 == 117)}
-      $20 DrawChar!             {Remove cursor}
+      $20 PrintChar! Pos=       {Remove cursor}
       Pos<, 6- [if>=0           {If not on first position}
         Pos<.                   {Step back}
         Buffer 1- Buffer=]      {Also remove character from buffer}
