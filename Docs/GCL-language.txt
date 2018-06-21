@@ -77,7 +77,7 @@ vPC  is the virtual program counter. Programs run from RAM. When
 
 vLR  is the link register. It points to the instruction after the
      most recent CALL instruction. This is used to return after
-     making a subroutine call. When nesting subroutines, vLR should
+     making a function call. When nesting functions, vLR should
      be pushed on the stack.
 
 vSP  is the stack pointer. The stack lives in the zero page top and
@@ -204,16 +204,16 @@ def             Load next vPC in vAC and jump to end of current block
 Subroutines
 -----------
 X!              Jump to function pointed by X, store old vPC in vLR
-ret             Jump to vLR, to return from a leaf subroutine. Non-leaf
-                subroutines should use "pop ret" as return sequence
-push            Push vLR onto stack, for entering a non-leaf subroutine
+ret             Jump to vLR, to return from a leaf function. Non-leaf
+                functions should use "pop ret" as return sequence
+push            Push vLR onto stack, for entering a non-leaf function
 pop             Remove top of stack and put value in vLR
 i!              Call native code pointed by sysFn, not exceeding i cycles
 call            Jump to function pointed by vAC (Same as "\vAC!")
 
 Data
 ----
-i#              Raw byte-value i
+i#              Raw byte-value i, value will be truncated to lowest 8 bits
 
 Versioning
 ----------
@@ -222,6 +222,13 @@ gcl0x gcl1      GCL version. "x" denotes experimental/extended versions
 There are two versions of GCL: gcl0x and gcl1. gcl0x is what we
 used to make the built-in applications of ROM v1. gcl1 is the planned
 cosmetic upgrade in notation.
+
+Common pitfalls for GCL programming
+-----------------------------------
+- Forgetting "ret" at the end of a function block.
+- Calling functions from a leaf function (forgetting "push" and "pop").
+- Calling a function before the last page when also using vLR hopping in setup.
+- Renaming a function, but not where it is called.
 
 Future extensions
 -----------------
