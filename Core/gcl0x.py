@@ -152,6 +152,8 @@ class Program:
         self.error('Invalid GCL version %s' % repr(word))
     elif word == 'loop':
       to = [block for block in self.blocks if block in self.loops]
+      if len(to) == 0:
+        self.error('Loop without do')
       to = self.loops[to[-1]]
       to = prev(to)
       if self.vPC>>8 != to>>8:
@@ -344,15 +346,17 @@ class Program:
       self.conds[block] = 0
 
   def _emitIfLoop(self, cond):
-      self.opcode('BCC')
-      self.opcode(cond)
       block = self.thisBlock()
       to = [block for block in self.blocks if block in self.loops]
+      if len(to) == 0:
+        self.error('Loop without do')
       to = self.loops[to[-1]]
       to = prev(to)
-      self.emit(to&0xff)
       if self.vPC>>8 != to>>8:
         self.error('Loop outside page')
+      self.opcode('BCC')
+      self.opcode(cond)
+      self.emit(to&0xff)
 
   def parseWord(self, word):
     """Break word into pieces"""

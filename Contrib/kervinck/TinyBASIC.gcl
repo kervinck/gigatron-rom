@@ -1,0 +1,758 @@
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Recreation of Tiny BASIC for Gigatron TTL microcomputer         |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+{
+  2018-06-19 (marcelk) Scaffolding. Can evaluate direct print statements.
+
+  Differences:
+    Short lines
+    No bound check on stack
+    Maybe move variables to another page, stack space is more important?
+    Don't accept spaces within a number
+
+  Tiny BASIC quirks:
+    print 1+3*-8 --> Syntax error
+    print 6/-2 --> Syntax error
+
+  Memory allocation in Gigatron
+
+  Zero-page:
+  30 -          Tiny BASIC interpreter variables
+  83 - 9b       Input buffer
+  9c - cf       BASIC variables A..Z (XXX Might move to $08a0)
+  d0 - ff       Stack (24 words)
+
+  Programs to be stored in the invisible part of screen memory
+        xxA0-xxFF
+
+  Wish list:
+    Relops      With correct behaviour -30000 < 30000
+    *BREAK*     Use [Del] key
+    PEEK() POKE
+    $xx         Hexadecimal numbers
+    Unary minus Original Tiny BASIC does it wrong: 8/-2
+    SET x,y     Check with Had badge Move cursor
+    CHR$        Check with HaD badge Print character
+    CLS         Clear screen, move to top
+    FRE()       For fun, can be implicit with LIST
+    RND()
+    %           Modulo operator
+    AND OR NOT  Logical
+    ABS()
+    :           Multiple statements in one line
+    ? PR        Alias for PRINT
+    '           Alias for REM
+    "xxx"       String variables
+    @           Array
+    A()         Arrays (1-dimensional)
+    ELSE        Will slow down IF, because it has to scan for this
+    FOR TO NEXT And STEP. No idea how to implement
+    DEF FNx
+
+    line ::= number statement CR | statement CR
+
+    statement ::= PRINT expr-list
+                  IF expression relop expression THEN statement
+                  GOTO expression
+                  INPUT var-list
+                  LET var = expression
+                  GOSUB expression
+                  RETURN
+                  CLEAR
+                  LIST
+                  RUN
+                  END
+
+    expr-list ::= (string|expression) (, (string|expression) )*
+    var-list ::= var (, var)*
+    expression ::= (+|-|empty) term ((+|-) term)*
+    term ::= factor ((*|/) factor)*
+    factor ::= var | number | (expression)
+    var ::= A | B | C ... | Y | Z
+    number ::= digit digit*
+    digit ::= 0 | 1 | 2 | 3 | ... | 8 | 9
+    relop ::= < (>|=|empty) | > (<|=|empty) | =
+    string ::= " (a|b|c ... |x|y|z|A|B|C ... |X|Y|Z|digit)* "
+
+  References:
+        https://en.wikipedia.org/wiki/Tiny_BASIC
+        Wikipedia article
+
+        http://www.ittybittycomputers.com/IttyBitty/TinyBasic/
+        Tom Pittman's implementation
+}
+
+gcl0x
+
+{-----------------------------------------------------------------------+
+|                       RAM page 2                                      |
++-----------------------------------------------------------------------}
+
+$01df deek Pos=                 {Bottom character row in screen memory}
+                                {Slightly cheating with endianness}
+
+{ Print ASCII character (32..127) on screen in 5x8 pixels }
+[def
+  Char=                         {Temporarily save character}
+  Pos<, 155- [if>0              {Automatic newline BEFORE printing}
+    push Newline! pop]
+
+  Char                          {Map ASCII code to offset in font table}
+  82- [if<0 50+ i= \font32up    {ASCII 32..81}
+       else     i= \font82up]   {ASCII 82..127}
+  fontData=
+  i 2<< i+                      {Multiply by 5}
+  fontData+ fontData=           {Add to page address to reach bitmap data}
+
+  { sysFn already set by Newline and not changed by Tiny BASIC
+  \SYS_VDrawBits_134 \sysFn=    {Prepare SYS calls} }
+  32 \sysArgs0.                 {Background color blue}
+  15 \sysArgs1.                 {Character color yellow}
+  Pos \sysArgs4=                {Position for character}
+  6+ Pos=                       {Advance position by 6 pixels}
+
+  5 [do i=                      {Draw 5 vertical slices}
+    fontData 0? \sysArgs2.      {Get slice from ROM}
+    134!                        {Invoke SYS function to draw pixels}
+    fontData<++ \sysArgs4<++    {Advance to next slice}
+    i 1- if>0loop]              {Looping}
+
+  ret
+] PrintChar=
+
+{ Print inline string }
+[def
+  \vLR; tmp=                    {vLR points to inline argument}
+  [do
+    tmp, tmp<++                 {Grab next character}
+    if<>0 PrintChar!            {Print as long as non-zero}
+    loop]
+  tmp!                          {Returns to caller}
+] PrintS=
+
+{
+  Newline
+  Output a carriage-return-linefeed sequence to the console.
+}
+[def
+  $800 Pos<.                    {Go back to start}
+  Pos+ [if<0 $0800] Pos=        {Go down 8 lines and wrap around if needed}
+
+  \sysArgs4=                    {Clear line by printing slices in 1 color}
+  32 \sysArgs0. \sysArgs1.      {All blue}
+  \SYS_VDrawBits_134 \sysFn=
+  [do
+    134!                        {Clear vertical slice if 8 pixels}
+    \sysArgs4<++                {Advance 1 pixel right}
+    \sysArgs4, 160^ if<>0loop]  {Until reaching horizontal position 160}
+
+                                {Scroll up by modifying videoTable}
+  $01ee i=                      {Last entry in video table}
+  [do
+    i, 120- [if<0 128^
+             else 8^]
+             i.                 {Rotate by 8 in 8..127 range}
+    i 2- i=                     {Previous entry in video table}
+    $fe^ if<>0loop]             {Until all done}
+  ret
+] Newline=
+
+{ Conditionally print leading decimal digit }
+[def
+  push
+
+  i=                            {Radix as argument, keep in i}
+  Value                         {Calculate Value/Radix}
+  [do
+    i-                          {Subtract i}
+    if>=0                       {As long as possible}
+      Value=
+      Char<++                   {Increment 0..9 times}
+      loop]
+
+  Char [if<>0                   {If non-zero digit or non-leading zero}
+    $30| PrintChar!             {Map to $30..$39 range and print digit}
+    $30 Char=]                  {All further zeroes are non-leading}
+
+  pop ret
+] PrintDigit=
+
+{ Verify that there is nothing else on the line }
+[def
+  SkipSpaces!
+  TextPointer,
+  [if<>0 SyntaxError!]
+  pop ret                       {Popping the callee's saved vLR!}
+] EndOfLine=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 3                                      |
++-----------------------------------------------------------------------}
+$0300:
+
+[def
+  TextPointer,                  {Next character from line}
+  $5f&                          {Ignore case}
+  $41- {'A'} [if>=0             {Bail out if out of range}
+   26- {'Z'} if<0               {Letter A..Z or a..z}
+    TextPointer<++              {Accept character}
+    26+                         {Map in 0..25 range}
+    1<< $9c+                    {Address is $9c+2*n}
+    ret                         {Return address on success}
+  ]
+  SyntaxError!
+] TestVar=
+
+{ Destructively print Value as signed decimal number }
+[def
+  push
+
+  [if<0                         {If value is negative}
+    0 Value- Value=             {Negate value}
+    $2d PrintChar!]             {Print minus sign}
+
+  0 Char=                       {Suppress leading zeroes}
+  10000 PrintDigit!             {Print ten thousands, largest for 16 bits}
+   1000 PrintDigit!             {Print thousands}
+    100 PrintDigit!             {Print hundreds}
+     10 PrintDigit!             {Print tens}
+    $30 Value+ PrintChar!       {Print ones}
+
+  pop ret
+] PrintValue=
+
+{ GetLine -- Get Input Line }
+{ ASCII characters are accepted from console input }
+[def
+  push
+  $83 TextPointer=              {Prepare for next input line}
+
+  [do {NEXTCHAR}
+    127 PrintChar!              {Print cursor symbol}
+    Pos 6- Pos=                 {Go back one position}
+
+    \serialRaw, [do             {Wait for key change}
+      serialLast= \serialRaw, TextPointer.
+      serialLast^ if=0 TextPointer, loop]
+
+    TextPointer, 10^ if<>0      {Enter/return breaks NEXTCHAR loop}
+
+    117^ [if=0                  {Delete pressed (10^127 == 117)}
+      $20 PrintChar!            {Remove cursor}
+      Pos<, 12- [if>=0          {If not on first position}
+        Pos<.                   {Step back}
+        TextPointer 1- TextPointer=] {Also remove character from buffer}
+      loop]                     {To NEXTCHAR}
+
+    96- if>=0loop               {Ignore apparent unprintable garbage}
+
+    TextPointer, PrintChar!     {Print accepted characters}
+    TextPointer<++              {Advance pointer, keeping the character}
+
+    Pos<, 150^ [if=0            {Arrived at position 25 (25*6 == 150)}
+      $83 TextPointer=          {Discard of too long input}
+      $5c PrintChar! Newline!]  {Overflow indicator '\'}
+
+    loop]                       {To NEXTCHAR}
+
+  TextPointer.                  {Terminate input with zero}
+  $20 PrintChar!                {Remove cursor}
+  Newline!
+  pop ret
+] GetLine=
+
+[def
+  [do TextPointer, $20^ if=0 TextPointer<++ loop]
+  ret
+] SkipSpaces=
+
+{ Parse an unsigned decimal number and put in Value }
+[def
+  0 tmp=                        {Stays zero if we don't see any digits}
+  [do
+    Value=                      {Update partial result}
+    2<< Value+ 1<< i=           {Multiply by 10 before adding decimal}
+
+    TextPointer,                {Grab next character}
+    $30- {'0'} if>=0            {Bail out if out of range}
+    10-  {'9'} if<0             {Decimal digit}
+      tmp=                      {Non-zero to mark digits found}
+      10+                       {Map in 0..9 range}
+      i+                        {Add it to value}
+      TextPointer<++
+      loop]
+  tmp                           {Signal success/failure to caller}
+  ret
+] {TestNumber=}
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+$0400:
+
+TestNumber=
+
+{ Statement executor }
+[def
+  push
+
+  SkipSpaces!
+
+  TestWord! $6c# $65# $74# 0#   {'let'}
+  [if=0
+    SkipSpaces!
+    TestVar!                    {Must be a variable name}
+    LValue=                     {Park here}
+    SkipSpaces!
+    TestWord! $3d# 0#           {'='}
+    [if<>0 SyntaxError!]
+    Expression!                 {Evaluate expression}
+    LValue:                     {Store value in variable}
+    EndOfLine!
+  ]
+
+  TestWord! $67# $6f# 0#        {'go'}
+  [if=0
+    TestWord! $74# $6f# 0#      {'to'}
+    [if=0
+
+    ]
+
+    TestWord! $73# $75# $62# 0# {'sub'}
+    [if=0
+
+    ]
+  ]
+
+  TestWord!
+    $70# $72# $69# $6e# $74# 0# {'print'}
+  [if=0
+    [do
+      SkipSpaces!
+      TextPointer, if<>0
+      $22^                      {'"'}
+      [if=0
+        [do                     {String constant}
+          TextPointer<++
+          TextPointer,
+          [if=0 SyntaxError!]   {Unterminated string}
+          $22^ if<>0            {'"'}
+          TextPointer, PrintChar!
+          loop]
+        TextPointer<++          {Skip past closing '"'}
+      else
+        Expression!
+        PrintValue!
+      ]
+
+      TextPointer, $3b^         {';'}
+      [if=0
+        TextPointer<++
+        loop]
+      TextPointer, $2c^         {','}
+      [if=0
+        TextPointer<++
+        [do
+          $20 PrintChar!
+          Pos<, 7& if<>0loop]   {Tab stops every 4 characters}
+        loop]
+    ]
+    Newline!                    {XXX Skip this right after ; or , }
+    EndOfLine!
+  ]
+
+  TestWord!
+    $69# $66# 0#                {'if'}
+  [if=0
+    Expression!
+    RelOp!
+    Expression!
+    TestWord!
+      $74# $68# $65# $6e# 0#    {'then'}
+    Statement!
+    EndOfLine!
+  ]
+
+  TestWord!                     {'return'}
+    $72# $65# $74# $75# $72# $6e# 0#
+  [if=0
+    EndOfLine!
+  ]
+
+  TestWord!                     {'rem'}
+    $72# $65# $6d# 0#
+  [if=0 pop ret]                {Ignore rest of line}
+
+  TestWord!                     {'input'}
+    $69# $6e# $70# $75# $74# 0#
+  [if=0
+    TestVar!
+    EndOfLine!
+  ]
+
+  StatementCont!                {Continue in another page}
+] Statement=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 5                                      |
++-----------------------------------------------------------------------}
+$0500:
+
+{ Less critical commands }
+[def
+
+  TestWord! $65# $6e# $64# 0#   {'end'}
+  [if=0
+    {XXX implement}
+    EndOfLine!
+  ]
+
+  TestWord! $72# $75# $6e# 0#   {'run'}
+  [if=0
+    SyntaxError!
+    {XXX implement}
+    EndOfLine!
+  ]
+
+  TestWord!                     {'list'}
+    $6c# $69# $73# $74# 0#
+  [if=0 List!]
+
+  TestWord! $6e# $65# $77# 0#   {'new'}
+  [if=0
+    New!
+    {XXX test what happens while doing this while running}
+    EndOfLine!
+  ]
+  SyntaxError!
+
+] StatementCont=
+
+{ Parse an inline keyword, 0 is success }
+[def
+  \vLR; tmp=                    {vLR points to inline argument}
+  TextPointer j=                {Save TextPointer in case word match fails}
+  [do
+    tmp, tmp<++                 {Next expected character from argument}
+    if<>0                       {Compare until non-zero}
+    i=
+    TextPointer,                {Grab next character from line}
+    $20|                        {Ignore case}
+    i^ [if=0
+      TextPointer<++ loop       {Accept if character matches}
+    else
+      [do tmp, tmp<++ if<>0loop] {Eat remaining characters}
+      j TextPointer=]]          {Restore BASIC pointer for next word}
+  tmp!                          {Effectively returns}
+] TestWord=
+
+{ Process a full expression, result in Value and vAC }
+[def
+  push
+                                {First term}
+  SkipSpaces!
+  TestWord! $2d# 0#             {'-'}
+  [if=0                         {Accept unary minus}
+    Term!
+    0 Value-                    {Negate}
+  else
+    TestWord! $2b# 0#           {'+' Ignore unary plus}
+    Term!]
+
+  2-- 0%=                       {Put partial result on stack}
+
+  [do                           {Optional additional terms}
+    SkipSpaces!
+    TestWord! $2b# 0#           {'+'}
+    [if=0
+       Term!
+       0% Value+ 0%=            {Perform addition}
+       loop]
+    TestWord! $2d# 0#           {'-'}
+    [if=0
+       Term!
+       0% Value- 0%=            {Perform subtraction}
+       loop]]
+
+  0% Value= 2++                 {Make stack value the result}
+  pop ret
+] Expression=
+
+{ Process an expression term, result in Value and vAC }
+[def
+  push
+  Factor!                       {First factor}
+  2-- Value 0%=                 {Put partial result on stack}
+  [do
+    SkipSpaces!
+    TestWord! $2a# 0#           {'*'}
+    [if=0
+       Factor!
+       0% Multiply! 0%=
+       loop]
+    TestWord! $2f# 0#           {'/'}
+    [if=0
+       Factor!
+       0% Divide! 0%=
+       loop]]
+  0% Value= 2++                 {Make stack value the result}
+  pop ret
+] Term=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 6                                      |
++-----------------------------------------------------------------------}
+$0600:
+
+{ Calculate vAC * Value, result in vAC }
+[def
+  tmp=
+  [if<0                         {Make left-hand side positive}
+    0 Value- Value=
+    0 tmp- tmp=]
+
+  0 j=                          {Result variable}
+  1                             {First bit}
+  [do                           {Loop over all bits}
+    i= tmp&                     {Test next bit}
+    [if<>0 j Value+ j=]         {Add partial term}
+    Value Value+ Value=         {Double right-hand side}
+    i i+ if>0loop]              {Shift left until all done}
+  j
+  ret
+] Multiply=
+
+{ Calculate vAC / Value, result in vAC, remainder in i }
+[def
+  j=                            {i:j is the Remainder:Quotient pair}
+  Value^ Char=                  {XXX Borrow Char to park sign information}
+  j     [if<0 0 j-     j=    ]  {Non-negative}
+  Value [if<0 0 Value- Value=]  {Non-negative}
+  [if=0 ValueError!]            {Avoid division by zero}
+
+  0 i=
+  [do
+    tmp=                        {Loop counter}
+    i i+ i=                     {Shift left}
+    j [if<0 i<++]               {Carry bit over to i}
+    j j+ j=                     {Shift left}
+    i Value- [if>=0 i= j<++]    {Result bit}
+    tmp 1+ 15&                  {Iterate 16 times}
+    if<>0loop]
+
+  Char [if<0 0 j- ret]          {Return with corrected sign}
+  j ret
+] Divide=
+
+{ Process an expression factor, result in Value }
+[def
+  push
+
+  SkipSpaces!
+  TestWord! $28# 0#             {'('}
+  [if=0 {Success}
+    Expression!
+    TestWord! $29# 0#           {')'}
+    [if<>0 SyntaxError!]
+    pop ret]
+
+  TestNumber!                   {Test for numeric constant}
+  [if<>0                        {Success}
+    pop ret]                    {Result already in Value}
+
+  TestVar!                      {Otherwise it must be a variable}
+  deek                          {Fetch value}
+  Value=
+  pop ret
+] Factor=
+
+{ Note: It is save to call functions here before hopping over to page 8 }
+
+Newline!                        {Scroll and clear last line}
+
+{ Welcome message }
+PrintS!                         {'*** Tiny BASIC'}
+  $2a# $2a# $2a# $20# $54# $69#
+  $6e# $79# $20# $42# $41# $53#
+  $49# $43# 0#
+
+{-----------------------------------------------------------------------+
+|}$08a0 \vLR= ret{      RAM page 8                                      |
++-----------------------------------------------------------------------}
+$08a0:
+
+[def
+  Error! $53# $79# $6e# $74#    {'Syntax'}
+    $61# $78# 0#
+] SyntaxError=
+
+[def
+  Error! $56# $61# $6c# $75#    {'Value'}
+    $65# 0#
+] ValueError=
+
+[def
+  Error! $4d# $65# $6d# $6f#    {'Memory'}
+    $72# $79# 0#
+] MemoryError=
+
+{ Calculate address of next 32-byte segment for storing BASIC lines }
+[def
+  31| 1+ tmp=                   {Advance to next 32 byte memory segment}
+  [if>=0                        {In the first 32K...}
+    $e0& if=0                   {...wrap past visible screen memory}
+      tmp 160+
+      ret]
+  tmp
+  ret
+] NextLine=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 9                                      |
++-----------------------------------------------------------------------}
+$09a0:
+
+{ Clear program and variables }
+{ XXX Also link segments here }
+[def
+  $0ca0 End=                    {Empty program}
+
+  $9c i=                        {Clear variables A-Z}
+  [do
+    0 i.                        {Clear byte}
+    i<++                        {Advance pointer}
+    i $d0^ if<>0loop]           {$9c+26*2 = $d0}
+
+  Current=                      {Not active in any line}
+  ret
+] New=
+
+{ List program }
+[def
+  $0ca0                         {Start of program memory}
+  [do
+    j=
+    End^ if<>0                  {Repeat until the last address}
+
+    \serialRaw, $7f^            {Test for [Del] as break request}
+    [if=0
+      Error!                    {'Break'}
+        $42# $72# $65# $61#
+        $6b# 0#]
+
+    j; Value= PrintValue!       {Print line number}
+
+    j<++                        {Print line text}
+    [do
+      j<++ j,
+      if<>0 PrintChar!
+      loop]
+    Newline!
+
+    j NextLine!                 {Advance to next line in memory}
+  loop]
+
+  EndOfLine!
+] List=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 10                                     |
++-----------------------------------------------------------------------}
+$0aa0:
+
+{
+ XXX Mockup for insert: just append at end of program
+ Four scenarios to be tested:
+ 1. Insert or append of new line
+ 2. Overwrite of existing line
+ 3. Delete if existing line
+ 4. Delete of non-existing line
+}
+[def
+  push
+
+{
+  { Find line in program, or first line number following it }
+  $0ca0 [do i=                  {Loop over program from beginning}
+    End^ if<>0                  {Bail out if not found}
+    i; Value- if<0              {Stop if found or past it}
+    i NextLine!]                {Advance to next line}
+}
+
+  TextPointer,                  {Bare line number means delete line}
+  [if=0
+    SyntaxError!]               {XXX Implement delete}
+
+  End j=                        {XXX Where we'll insert the new line}
+
+  NextLine!                     {Increase program}
+  [if<0 MemoryError!]           {XXX Not good for 64K yet}
+  End=                          {New end of program (mark it below)}
+
+  Value j:                      {Copy line number}
+
+  j<++                          {Copy line text}
+  [do
+    j<++
+    TextPointer, TextPointer<++ {From input buffer}
+    j.                          {Into program memory}
+    if<>0loop]                  {Until terminating zero}
+
+  pop ret
+] InsertLine=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 11                                     |
++-----------------------------------------------------------------------}
+$0ba0:
+
+New!                            {Empty program and clear variables}
+
+{
+XXX Try to inline 'New' here as follows:
+$0ca0 End=
+0 \vLR= \vSP. Current=
+26 [do push 1- if>0loop]        {Put variables above stack}
+}
+
+[def
+  \vLR; tmp=                    {vLR points to inline argument}
+  $3f                           {'?'}
+  [do
+    PrintChar!
+    tmp, tmp<++
+    if<>0loop]
+  PrintS!                       {' error'}
+    $20# $65# $72# $72# $6f#
+    $72# 0#
+  Current [if<>0
+    deek Value=                 {Prepare line number for printing}
+    PrintS!                     {' in '}
+      $20# $69# $6e# $20# 0#
+    PrintValue!]                {Print line number}
+  0 \vSP.                       {Reset stack}
+  \LDWI#                        {Fall through, back into main loop}
+] Error=
+
+Newline!                        {Terminate welcome message or error}
+
+{ Main interactive loop }
+[do
+  PrintS!                       {'Ready' prompt}
+    $52# $65# $61# $64# $79# 0#
+  Newline!
+  [do
+    GetLine!                    {Get line from console}
+    $83 TextPointer=            {Back to start of buffer}
+    SkipSpaces!
+    TextPointer, if=0loop       {Do nothing for empty lines}
+    TestNumber! if<>0           {Test for a line number}
+      InsertLine!               {If so, insert into program}
+      loop]                     {Continue without prompt}
+  Statement!                    {Execute direct statement}
+  loop]                         {Continue with prompt}
+
