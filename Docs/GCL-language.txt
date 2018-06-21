@@ -228,6 +228,7 @@ Common pitfalls in GCL programming
 ----------------------------------
 - Forgetting "ret" at the end of a function block
 - Calling functions from a leaf function (forgetting "push" and "pop")
+- Forgetting that all named variables are global
 - Calling a function before the last page when also using vLR hopping in setup
 - Misspelling a variable (Tip: inspect the symbol table output)
 - Renaming a function, but not where it is called
