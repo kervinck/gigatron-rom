@@ -223,22 +223,26 @@ There are two versions of GCL: gcl0x and gcl1. gcl0x is what we
 used to make the built-in applications of ROM v1. gcl1 is the planned
 cosmetic upgrade in notation.
 
-Common pitfalls for GCL programming
------------------------------------
-- Forgetting "ret" at the end of a function block.
-- Calling functions from a leaf function (forgetting "push" and "pop").
-- Calling a function before the last page when also using vLR hopping in setup.
-- Renaming a function, but not where it is called.
+----------------------------------
+Common pitfalls in GCL programming
+----------------------------------
+- Forgetting "ret" at the end of a function block
+- Calling functions from a leaf function (forgetting "push" and "pop")
+- Calling a function before the last page when also using vLR hopping in setup
+- Misspelling a variable (Tip: inspect the symbol table output)
+- Renaming a function, but not where it is called
 
+-----------------
 Future extensions
 -----------------
-deek            Read word from memory pointed by vAC
-<p++ >p++       Notation for p<++ p>++
+GCL "v1" will have differences we're pondering about:
+
 'A              Character code?
+\12             For raw byte values (better readable than 12#)
+<p++ >p++       Notation for p<++ p>++ (Consider < and > as part of the name)
 "Text"          Text string?
 ()              Macros?
-$X              For localized variables
-\12             For raw byte values (better readable than 12#)
+Consistency of , . : ; in combination with \
 
 ----------------------
 vCPU instruction table
