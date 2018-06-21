@@ -7,32 +7,39 @@
 
 {
   2018-06-19 (marcelk) Scaffolding. Can evaluate direct print statements.
+  2018-06-21 (marcelk) Can edit programs, delete lines, but no run yet
 
-  Differences:
-    Short lines
-    No bound check on stack
-    Maybe move variables to another page, stack space is more important?
-    Don't accept spaces within a number
 
-  Tiny BASIC quirks:
-    print 1+3*-8 --> Syntax error
-    print 6/-2 --> Syntax error
+  Original Tiny BASIC quirks:
+    print 1+3*-8        --> Syntax error
+    print 6/-2          --> Syntax error
+    print -32768/2      --> 16383
 
   Memory allocation in Gigatron
 
   Zero-page:
   30 -          Tiny BASIC interpreter variables
-  90 - c3       BASIC variables A..Z (XXX Might move to $0ca0?)
+  90 - c3       BASIC variables A..Z (XXX Might move to $0da0?)
   c4 - ff       Stack (30 words)
 
-  0c00 - 07ff   Programs are stored in the invisible part of screen memory
-  0ca2 - 0cbf   Input buffer (also "line 0") (XXX Might move to 0cd2)
+  0da0 - 07ff   Programs are stored in the invisible part of screen memory
+  0da2 - 0dbf   Input buffer (also "line 0") (XXX Might move to 0dd2)
   8000 - ffff   Optional memory for BASIC programs (64K extension)
 
-  Wish list:
+  Todo/must have:
+    RUN
+    GOTO
+    IF THEN
     Relops      With correct behaviour -30000 < 30000
+    GOSUB       And RETURN
+    PRINT       Suppress newline after ; and ,
+    INPUT
     *BREAK*     Use [Del] key
+  Wish list:
+    64K         Should work, but not tested. Also test out of memory errors.
     PEEK() POKE
+    Stack:      Bound check on stack
+    Zero page:  Move variables to another page, stack space is more important
     $xx         Hexadecimal numbers
     Unary minus Original Tiny BASIC does it wrong: 8/-2
     SET x,y     Check with Had badge Move cursor
@@ -100,16 +107,15 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 { Print ASCII character (32..127) on screen in 5x8 pixels }
 { Returns the actual position }
 [def
-  Char=                         {Temporarily save character}
+  k=                            {Temporarily save character}
   Pos<, 155- [if>0              {Automatic newline BEFORE printing}
     push Newline! pop]
 
-  Char                          {Map ASCII code to offset in font table}
-  82- [if<0 50+ i= \font32up    {ASCII 32..81}
-       else     i= \font82up]   {ASCII 82..127}
-  fontData=
+  k 82-                         {Map ASCII code to offset in font table}
+  [if<0 50+ i= \font32up        {ASCII 32..81}
+   else     i= \font82up] k=    {ASCII 82..127}
   i 2<< i+                      {Multiply by 5}
-  fontData+ fontData=           {Add to page address to reach bitmap data}
+  k+ k=                         {Add to page address to reach bitmap data}
 
   { sysFn already set by Newline and not changed by Tiny BASIC
   \SYS_VDrawBits_134 \sysFn=    {Prepare SYS calls} }
@@ -120,9 +126,9 @@ $01df deek Pos=                 {Bottom character row in screen memory}
   6+ Pos=                       {Advance position by 6 pixels}
 
   5 [do i=                      {Draw 5 vertical slices}
-    fontData 0? \sysArgs2.      {Get slice from ROM}
+    k 0? \sysArgs2.             {Get slice from ROM}
     134!                        {Invoke SYS function to draw pixels}
-    fontData<++ \sysArgs4<++    {Advance to next slice}
+    k<++ \sysArgs4<++           {Advance to next slice}
     i 1- if>0loop]              {Looping}
 
   $fe%                          {Return effective position}
@@ -176,12 +182,12 @@ $01df deek Pos=                 {Bottom character row in screen memory}
     i-                          {Subtract i}
     if>=0                       {As long as possible}
       Value=
-      Char<++                   {Increment 0..9 times}
+      k<++                      {Increment 0..9 times}
       loop]
 
-  Char [if<>0                   {If non-zero digit or non-leading zero}
+  k [if<>0                      {If non-zero digit or non-leading zero}
     $30| PrintChar!             {Map to $30..$39 range and print digit}
-    $30 Char=]                  {All further zeroes are non-leading}
+    $30 k=]                     {All further zeroes are non-leading}
 
   pop ret
 ] PrintDigit=
@@ -189,7 +195,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 { Verify that there is nothing else on the line }
 [def
   SkipSpaces!
-  TextPointer,
+  Active,
   [if<>0 SyntaxError!]
   pop ret                       {Popping the callee's saved vLR!}
 ] {EndOfLine=}
@@ -198,15 +204,14 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 |}\vLR>++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
 $0300:
-
 EndOfLine=
 
 [def
-  TextPointer,                  {Next character from line}
+  Active,                       {Next character from line}
   $5f&                          {Ignore case}
   $41- {'A'} [if>=0             {Bail out if out of range}
    26- {'Z'} if<0               {Letter A..Z or a..z}
-    TextPointer<++              {Accept character}
+    Active<++                   {Accept character}
     26+                         {Map in 0..25 range}
     1<< $90+                    {Address is $90+2*n}
     ret                         {Return address on success}
@@ -222,7 +227,7 @@ EndOfLine=
     0 Value- Value=             {Negate value}
     $2d PrintChar!]             {Print minus sign}
 
-  0 Char=                       {Suppress leading zeroes}
+  0 k=                          {Suppress leading zeroes}
   10000 PrintDigit!             {Print ten thousands, largest for 16 bits}
    1000 PrintDigit!             {Print thousands}
     100 PrintDigit!             {Print hundreds}
@@ -240,8 +245,7 @@ EndOfLine=
   $a2 Buffer<.                  {Prepare for next input line}
 
   [do {NEXTCHAR}
-    127 PrintChar!              {Print cursor symbol}
-    Pos=                        {Go back to where character was printed}
+    127 PrintChar! Pos=         {Draw cursor symbol}
 
     \serialRaw, [do             {Wait for key change}
       tmp=                      {Remember previous value}
@@ -252,8 +256,7 @@ EndOfLine=
     Buffer, 10^ if<>0           {Enter/return breaks NEXTCHAR loop}
 
     117^ [if=0                  {Delete pressed (10^127 == 117)}
-      $20 PrintChar!            {Remove cursor}
-      Pos=                      {Go back to where character was printed}
+      $20 PrintChar! Pos=       {Remove cursor}
       Pos<, 6- [if>=0           {If not on first position}
         Pos<.                   {Step back}
         Buffer 1- Buffer=]      {Remove character from buffer}
@@ -277,7 +280,7 @@ EndOfLine=
 ] GetLine=
 
 [def
-  [do TextPointer, $20^ if=0 TextPointer<++ loop]
+  [do Active, $20^ if=0 Active<++ loop]
   ret
 ] SkipSpaces=
 
@@ -288,12 +291,12 @@ EndOfLine=
     Value=                      {Update partial result}
     2<< Value+ 1<< i=           {Multiply by 10 before adding decimal}
 
-    TextPointer,                {Grab next character}
+    Active,                     {Grab next character}
     $30- {'0'} if>=0            {Bail out if out of range}
     10-  {'9'} if<0             {Decimal digit}
       10+                       {Map in 0..9 range}
       i+                        {Add it to value}
-      TextPointer<++
+      Active<++
       loop]
   Value                         {Result, negative value indicates error}
   ret
@@ -341,29 +344,29 @@ $0400:
   [if=0
     [do
       SkipSpaces!
-      TextPointer, if<>0
+      Active, if<>0
       $22^                      {'"'}
       [if=0
         [do                     {String constant}
-          TextPointer<++
-          TextPointer,
+          Active<++
+          Active,
           [if=0 SyntaxError!]   {Unterminated string}
           $22^ if<>0            {'"'}
-          TextPointer, PrintChar!
+          Active, PrintChar!
           loop]
-        TextPointer<++          {Skip past closing '"'}
+        Active<++               {Skip past closing '"'}
       else
         Expression!
         PrintValue!
       ]
 
-      TextPointer, $3b^         {';'}
+      Active, $3b^              {';'}
       [if=0
-        TextPointer<++
+        Active<++
         loop]
-      TextPointer, $2c^         {','}
+      Active, $2c^              {','}
       [if=0
-        TextPointer<++
+        Active<++
         [do
           $20 PrintChar!
           Pos<, 7& if<>0loop]   {Tab stops every 4 characters}
@@ -443,18 +446,19 @@ $0500:
 { Parse an inline keyword, 0 is success }
 [def
   \vLR; tmp=                    {vLR points to inline argument}
-  TextPointer j=                {Save TextPointer in case word match fails}
+  Active j=                     {Save Active in case word match fails}
   [do
     tmp, tmp<++                 {Next expected character from argument}
     if<>0                       {Compare until non-zero}
     i=
-    TextPointer,                {Grab next character from line}
+    Active,                     {Grab next character from line}
     $20|                        {Ignore case}
     i^ [if=0
-      TextPointer<++ loop       {Accept if character matches}
+      Active<++ loop            {Accept if character matches}
     else
       [do tmp, tmp<++ if<>0loop] {Eat remaining characters}
-      j TextPointer=]]          {Restore BASIC pointer for next word}
+      j Active=]                {Restore BASIC pointer for next word}
+  ]
   tmp!                          {Effectively returns}
 ] TestWord=
 
@@ -472,7 +476,6 @@ $0500:
     Term!]
 
   2-- 0%=                       {Put partial result on stack}
-
   [do                           {Optional additional terms}
     SkipSpaces!
     TestWord! $2b# 0#           {'+'}
@@ -484,8 +487,8 @@ $0500:
     [if=0
        Term!
        0% Value- 0%=            {Perform subtraction}
-       loop]]
-
+       loop]
+  ]
   0% Value= 2++                 {Make stack value the result}
   pop ret
 ] Expression=
@@ -495,7 +498,7 @@ $0500:
   push
   Factor!                       {First factor}
   2-- Value 0%=                 {Put partial result on stack}
-  [do
+  [do                           {Optional additional factors}
     SkipSpaces!
     TestWord! $2a# 0#           {'*'}
     [if=0
@@ -506,7 +509,8 @@ $0500:
     [if=0
        Factor!
        0% Divide! 0%=
-       loop]]
+       loop]
+  ]
   0% Value= 2++                 {Make stack value the result}
   pop ret
 ] Term=
@@ -516,67 +520,98 @@ $0500:
 +-----------------------------------------------------------------------}
 $0600:
 
-{ Calculate vAC * Value, result in vAC }
-[def
-  tmp=
-  [if<0                         {Make left-hand side positive}
-    0 Value- Value=
-    0 tmp- tmp=]
-
-  0 j=                          {Result variable}
-  1                             {First bit}
-  [do                           {Loop over all bits}
-    i= tmp&                     {Test next bit}
-    [if<>0 j Value+ j=]         {Add partial term}
-    Value Value+ Value=         {Double right-hand side}
-    i i+ if>0loop]              {Shift left until all done}
-  j
-  ret
-] Multiply=
-
-{ Calculate vAC / Value, result in vAC, remainder in i }
-[def
-  j=                            {i:j is the Remainder:Quotient pair}
-  Value^ Char=                  {XXX Borrow Char to park sign information}
-  j     [if<0 0 j-     j=    ]  {Non-negative}
-  Value [if<0 0 Value- Value=]  {Non-negative}
-  [if=0 ValueError!]            {Avoid division by zero}
-
-  0 i=
-  [do
-    tmp=                        {Loop counter}
-    i i+ i=                     {Shift left}
-    j [if<0 i<++]               {Carry bit over to i}
-    j j+ j=                     {Shift left}
-    i Value- [if>=0 i= j<++]    {Result bit}
-    tmp 1+ 15&                  {Iterate 16 times}
-    if<>0loop]
-
-  Char [if<0 0 j- ret]          {Return with corrected sign}
-  j ret
-] Divide=
-
 { Process an expression factor, result in Value }
 [def
   push
 
   SkipSpaces!
   TestWord! $28# 0#             {'('}
-  [if=0 {Success}
+  [if=0
     Expression!
+    SkipSpaces!
     TestWord! $29# 0#           {')'}
     [if<>0 SyntaxError!]
     pop ret]
 
   TestNumber!                   {Test for numeric constant}
-  [if<>0                        {Success}
-    pop ret]                    {Result already in Value}
+  [if>=0 pop ret]               {Result already in Value}
 
-  TestVar!                      {Otherwise it must be a variable}
-  deek                          {Fetch value}
-  Value=
+  TestVar!                      {Otherwise it MUST be a variable}
+  deek Value=                   {Fetch value}
+
   pop ret
 ] Factor=
+
+{
+ Six scenarios for InsertLine          Check   Search  Shift   Copy    Shift
+                                       memory  line    down    buffer  up
+ 1. Append a new line > last            X       -       -       X       -
+ 2. True insert of a new line < last    X       X       X       X       -
+ 3. Overwrite of existing line <= last  -       X       -       X       -
+ 4. Delete of existing line <= last     -       X       -       -       X
+ 5. Delete of non-existing line < last  X(!)    X       X(!)    -       X(!)
+ 6. Delete of non-existing line > last  -       -       -       -       -
+}
+{ Handle commands that start with a line number }
+[def
+  push
+
+  { Lookup line number in program }
+  End i= j=                     {Setup i and j for below}
+  PrevBlock! deek Value-        {Retrieve last line number, 0 when no program}
+  [if>=0                        {If insert/modify instead of append}
+    $0dc0 [do i=                {Loop over program from beginning}
+      i; Value- if<0            {Stop if found or past it}
+      i NextBlock! loop]        {Advance to next line}
+
+    if>0                        {Insert scenario}
+      0; End^                   {Compare against top of memory}
+      [if<>0                    {Do the copy only when safe (give error later)}
+        [do                     {Copy rest of program one one slot up}
+          j k= PrevBlock!       {Go up one block}
+          j= tmp=
+          [do                   {Copy tmp[0:31] to k[0:31]}
+            tmp, k.             {Copy as bytes, don't bother with word copy}
+            tmp<++ k<++         {Advance both pointers}
+            tmp 31& if<>0loop]  {Simply copy all 32 bytes}
+
+          j i^ if<>0loop]
+      ]
+      1                         {Non-zero to trigger advancing of End below}
+  ]
+
+  { Expand program space if needed }
+  [if<>0
+    0; End^                     {Compare End against top of memory}
+    [if=0 MemoryError!]         {Out of memory error if equal}
+    End NextBlock! End=]        {Otherwise grab space for new line}
+
+  Active,                       {Inspect if line has any content}
+  [if<>0
+    { Copy line from buffer into program }
+    Value i:                    {Copy line number}
+    i<++                        {Copy line text}
+    [do
+      i<++
+      Active, Active<++         {From input buffer}
+      i.                        {Into program memory}
+      if<>0loop]                {Until terminating zero}
+  else
+    { Bare line number means delete that line }
+    i j=                        {i still points at line to be deleted}
+    [do
+        End^ if<>0              {Until end of program}
+        j NextBlock! j= tmp=    {Go down one block}
+        [do                     {Copy tmp[0:31] to i[0:31]}
+          tmp, i.               {Copy as bytes, don't bother with word copy}
+          tmp<++ i<++           {Advance both pointers}
+          tmp 31& if<>0loop]    {Simply copy all 32 bytes}
+        j i=
+        loop]
+    End PrevBlock! End=         {Remove last line from program}
+  ]
+  pop ret
+] InsertLine=
 
 { Note: It is save to call functions here before hopping over to page 8 }
 
@@ -619,7 +654,7 @@ $08a0:
   ret
 ] NextBlock=
 
-{ Go to previous block. Assume already aligned to 32-byte }
+{ Go to previous block. Assume already aligned to 32-byte block }
 [def
   32- tmp=                      {Move back to previous 32 byte memory block}
   [if>=0                        {In the first 32K...}
@@ -636,7 +671,7 @@ $09a0:
 
 { Clear program and variables }
 [def
-  $0ca0 Buffer=                 {First block in memory is input buffer}
+  $0da0 Buffer=                 {First block in memory is input buffer}
   32+ End=                      {Programs begin 32 bytes later}
 
   $90 i=                        {Clear variables A-Z}
@@ -645,22 +680,15 @@ $09a0:
     i<++                        {Advance pointer}
     i $c4^ if<>0loop]           {$90+26*2 = $c4}
 
-  TextPointer=                  {Not active in any line}
+  Active=                       {Not active in any line}
   Buffer:                       {Place a dummy largest line number 0 here}
 
   ret
 ] New=
 
-{
-XXX Try 'New' as follows:
-  0 \vLR= \vSP. TextPointer=
-  26 [do push 1- if>0loop]      {Put variables above stack}
-  \LDWI#                        {To fall back into main loop}
-}
-
 { List program }
 [def
-  $0ca0                         {Start of program memory XXX includes Buffer}
+  $0dc0                         {Start of program memory}
   [do
     j=
     End^ if<>0                  {Repeat until the last address}
@@ -690,72 +718,58 @@ XXX Try 'New' as follows:
 |}\vLR>++ ret{          RAM page 10                                     |
 +-----------------------------------------------------------------------}
 $0aa0:
-
 List=
 
-{
- XXX Mockup for insert: just append at end of program
- Five scenarios:                        Memtest Search  Insert  Copy    Shrink
- 1. Append a new line                   X       -       -       X       -
- 2. True insert of a new line           X       X       X       X       -
- 3. Overwrite of existing line          -       X       -       X       -
- 4. Delete of existing line             -       X       -       -       X
- 5. Delete of non-existing line         -       X       -       -       -
-}
-
+{ Calculate vAC * Value, result in vAC }
 [def
-  push
+  tmp=
+  [if<0                         {Make left-hand side positive}
+    0 Value- Value=
+    0 tmp- tmp=]
 
-  TextPointer,                  {Bare line number means delete line}
-  [if=0 SyntaxError!]           {XXX Line delete not yet implemented}
-
-  {
-   First test for line append, for two reasons:
-   1. To speed up the common case by avoiding a line search
-   2. To simplify the case analysis for the remaining scenarios
-  }
-  End j=
-  PrevBlock! deek Value-
-  [if>=0
-
-    $0cc0 [do i=                {Loop over program from beginning}
-      End^ if<>0                {Bail out if not found}
-      i; Value- if<0            {Stop if found or past it}
-      i NextBlock!]             {Advance to next line}
-
-    {                At line    Above line
-                       i=0        i>0
-        Absent        Delete   Skip/Error
-        Present      Overwrite  Insert      Append
-    }
-
-    [if>0
-      0; End^ if=0
-        MemoryError!]           {Check for space, also not in optional 64K}
-
-    SyntaxError!                {XXX True insertion not yet implemented}
-  ]
-  { j points at the new slot }
-
-  { Copy line from buffer into program }
-
-  Value j:                      {Copy line number}
-
-  j<++                          {Copy line text}
-  [do
-    j<++
-    TextPointer, TextPointer<++ {From input buffer}
-    j.                          {Into program memory}
-    if<>0loop]                  {Until terminating zero}
-  End NextBlock! End=           {Get space for new slot}
-
-  pop ret
-] InsertLine=
+  0 j=                          {Result variable}
+  1                             {First bit}
+  [do                           {Loop over all bits}
+    i= tmp&                     {Test next bit}
+    [if<>0 j Value+ j=]         {Add partial term}
+    Value Value+ Value=         {Double right-hand side}
+    i i+ if>0loop]              {Shift left until all done}
+  j
+  ret
+] Multiply=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 11                                     |
 +-----------------------------------------------------------------------}
 $0ba0:
+
+{ Calculate vAC / Value, result in vAC, remainder in i }
+[def
+  j=                            {i:j is the Remainder:Quotient pair}
+  Value^ k=                     {Park sign information}
+  j     [if<0 0 j-     j=    ]  {Non-negative}
+  Value [if<0 0 Value- Value=]  {Non-negative}
+  [if=0 ValueError!]            {Avoid division by zero}
+
+  0 i=
+  [do
+    tmp=                        {Loop counter}
+    i i+ i=                     {Shift left}
+    j [if<0 i<++]               {Carry bit over to i}
+    j j+ j=                     {Shift left}
+    i Value- [if>=0 i= j<++]    {Result bit}
+    tmp 1+ 15&                  {Iterate 16 times}
+    if<>0loop]
+
+  k [if<0 0 j- ret]             {Return with corrected sign}
+  j ret
+] {Divide=}
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 12                                     |
++-----------------------------------------------------------------------}
+$0ca0:
+Divide=
 
 New!                            {Empty program and clear variables}
 
@@ -771,7 +785,7 @@ New!                            {Empty program and clear variables}
     $72# 0#
   \vSP.                         {Reset stack}
   32-                           {$ffe0}
-  TextPointer&                  {Align to begin of block}
+  Active&                       {Align to begin of block}
   deek                          {Fetch active line number}
   [if<>0                        {Input buffer has line number 0, don't print}
     Value=                      {Prepare line number for printing}
@@ -790,9 +804,9 @@ Newline!                        {Terminate welcome message or error}
   Newline!
   [do
     GetLine!                    {Get line from console}
-    $0ca2 TextPointer=          {Parse from start of buffer}
+    $0da2 Active=               {Parse from start of buffer}
     SkipSpaces!
-    TextPointer, if=0loop       {Do nothing for empty lines}
+    Active, if=0loop            {Do nothing for empty lines}
     TestNumber! if>0            {Test for a line number}
       InsertLine!               {If positive, insert into program}
       loop]                     {Continue without prompt}
