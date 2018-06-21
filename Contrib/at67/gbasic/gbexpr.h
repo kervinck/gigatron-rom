@@ -1,9 +1,8 @@
-#ifndef EXPRESSION_H
-#define EXPRESSION_H
+#ifndef GBEXPR_H
+#define GBEXPR_H
 
 
-namespace Expression
-{
+namespace GBexpr
     enum ExpressionType {Invalid=-1, None, Valid};
     enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
 
@@ -18,7 +17,7 @@ namespace Expression
     bool stringToU8(const std::string& token, uint8_t& result);
     bool stringToU16(const std::string& token, uint16_t& result);
 
-    uint16_t parse(char* expressionToParse, int lineNumber);
+    bool parse(const std::string& input, std::string& output);
 }
 
 #endif

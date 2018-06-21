@@ -6,18 +6,15 @@
 #include "expression.h"
 
 
-namespace Expression
+namespace GBexpr
 {
-    char* _expressionToParse;
-    char* _expression;
+    char* _input;
+    std::string& _output;
 
-    bool _binaryChars[256]      = {false};
-    bool _octalChars[256]       = {false};
-    bool _decimalChars[256]     = {false};
+    bool _binaryChars[256] = {false};
+    bool _octalChars[256] = {false};
+    bool _decimalChars[256] = {false};
     bool _hexaDecimalChars[256] = {false};
-
-
-    int _lineNumber = 0;
 
 
     uint16_t expression(void);
@@ -35,7 +32,6 @@ namespace Expression
     {
         if(input.find_first_of("[]") != std::string::npos) return Invalid;
         if(input.find("++") != std::string::npos) return Invalid;
-        if(input.find("--") != std::string::npos) return Invalid;
         if(input.find_first_of("+-*/()") != std::string::npos) return Valid;
         return None;
     }
@@ -132,12 +128,12 @@ namespace Expression
 
     char peek(void)
     {
-        return *_expression;
+        return *_input;
     }
 
     char get(void)
     {
-        return *_expression++;
+        return *_input++;
     }
 
     bool number(uint16_t& value)
@@ -167,21 +163,21 @@ namespace Expression
         {
             if(!number(value))
             {
-                fprintf(stderr, "Expression::factor() : Bad numeric data in '%s' on line %d.\n", _expressionToParse, _lineNumber + 1);
+                fprintf(stderr, "Expression::factor() : Bad numeric data in '%s'.\n", _input);
                 value = 0;
             }
             return value;
         }
         else if(peek() == '(')
         {
-            get();
+            get(); // '('
             uint16_t result = expression();
             if(peek() != ')')
             {
-                fprintf(stderr, "Expression::factor() : Expecting ')' : found '%c' in '%s' on line %d.\n", peek(), _expressionToParse, _lineNumber + 1);
+                fprintf(stderr, "Expression::factor() : Expecting ')' : found '%c' in '%s'.\n", peek(), _input);
                 result = 0;
             }
-            get();
+            get(); // ')'
             return result;
         }
         else if(peek() == '-')
@@ -189,9 +185,7 @@ namespace Expression
             get();
             return -factor();
         }
-
-        fprintf(stderr, "Expression::factor() : Unknown character '%c' in '%s' on line %d.\n", peek(), _expressionToParse, _lineNumber + 1);
-        return 0;
+        return 0; // error
     }
 
     uint16_t term(void)
@@ -216,12 +210,9 @@ namespace Expression
         return result;
     }
 
-    uint16_t parse(char* expressionToParse, int lineNumber)
+    bool parse(const std::string& input, std::string& output)
     {
-        _expressionToParse = expressionToParse;
-        _expression = expressionToParse;
-        _lineNumber = lineNumber;
-
-        return expression();
+        _input = input.c_str();
+        _output = output;
     }
 }
