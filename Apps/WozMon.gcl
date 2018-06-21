@@ -224,8 +224,8 @@ $2a [do PrintChar! tmp, tmp<++ if<>0loop]
     127 DrawChar!               {Draw cursor}
 
     \serialRaw, [do             {Wait for key change}
-      serialLast= \serialRaw, Buffer.
-      serialLast^ if=0 Buffer, loop]
+      tmp= \serialRaw, Buffer.
+      tmp^ if=0 Buffer, loop]
 
     Buffer, 10^ if<>0           {Enter/return breaks NEXTCHAR loop}
 
