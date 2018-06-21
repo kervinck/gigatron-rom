@@ -1,0 +1,505 @@
+%include macros/gigatron.i
+
+
+; ===========================================
+; FROG STROLL
+; ===========================================
+
+; --- mem layout ---
+vars            EQU     0x0030
+consts          EQU     0x0082                  ; skip 0x80 - reserved!!
+data            EQU     0x0300
+tiles           EQU     0x5C00                  ; after loader app mem.
+entry_point     EQU     0x0200
+subroutines0    EQU     0x0400
+subroutines1    EQU     0x0500
+subroutines2    EQU     0x0600
+
+scratch         EQU     vars + 0x00
+scratch2        EQU     vars + 0x02
+x0              EQU     vars + 0x04
+y0              EQU     vars + 0x05
+xy0             EQU     x0
+
+tile0           EQU     vars + 0x06
+tile1           EQU     vars + 0x08
+tile2           EQU     vars + 0x0A
+tileslice0      EQU     vars + 0x0C
+tileslice1      EQU     vars + 0x0D
+tileslice2      EQU     vars + 0x0E
+
+wave_line       EQU     vars + 0x10
+wave_anim       EQU     vars + 0x12
+
+frog_x          EQU     vars + 0x14
+frog_y          EQU     vars + 0x16
+frog_xy         EQU     vars + 0x18
+frog_speedx     EQU     vars + 0x1A
+frog_speedy     EQU     vars + 0x1C
+
+new_x0          EQU     vars + 0x1E
+
+vb_PrevFrame    EQU     vars + 0x20
+
+_dw_a           EQU     vars + 0x28
+_dw_b           EQU     vars + 0x2A
+
+_dt_data        EQU     vars + 0x28
+
+pattern0        EQU     0x1005	' 2 pix ligne 1
+pattern1        EQU     0x0510  ' 2 pix ligne 2
+buttonRight     EQU     1
+buttonLeft      EQU     2
+buttonDown      EQU     4
+buttonUp        EQU     8
+buttonStart     EQU     16
+buttonSelect    EQU     32
+buttonB         EQU     64
+buttonA         EQU     128
+
+cst_videoTable  EQU     consts
+cst_videoTable  DW      $100                    ; giga_videoTable-1
+cst_xscroll     DW      $101+10*2
+cst_0404        DW      $0404
+cst_0410        DW      $0410
+cst_1004        DW      $1004
+cst_0504        DW      $0504
+cst_0405        DW      $0405
+cst_0505        DW      $0505
+
+pattern         EQU     data
+pattern         DB      1 2 3
+persp_table     DB      1 3 5 8 10 12 14 15 17 19 21 23 24 26 28 29 31 33 34 36 37      ; = 60-(120*(40-x)/(80+x))  (with 80 = 120*40/60)
+                DB      38 40 41 43 44 45 46 48 49 50 51 52 54 55 56 57 58 59 60
+wave_table      DB      1 1 0 0 255 255 0 0
+;wave_table     DB      1 1 0 0 255 255 0 0     ; 1. without skew
+;wave_table     DB      2 2 1 255 254 254 255 1 ; 3. without skew
+
+
+entry_point     LDI     0
+
+;               BRA     mirror_done
+
+                STW     y0
+mirror_loop     LD      y0
+                SUBI    40
+                BEQ     mirror_done
+                LDWI    0x0100+75*2
+                ADDW    y0
+                ADDW    y0
+                STW     scratch
+                LDWI    persp_table
+                ADDW    y0
+                PEEK
+                STW     scratch2
+                LDI     0x08+75
+                SUBW    scratch2
+                POKE    scratch
+                INC     y0
+                BRA     mirror_loop
+
+mirror_done     LDWI    tile_clearsky
+                STW     tile0
+                STW     tile1
+                LDWI    tile_ground
+                STW     tile2
+                LDI     -1
+                ST      tileslice2
+                ST      tileslice1
+                LDI     6               ; unalign the clouds
+                ST      tileslice0
+
+                LDI     0
+                STW     wave_line
+                STW     wave_anim
+
+                LDWI    20*256
+                STW     frog_x
+                LDI     0
+                STW     frog_y
+                STW     xy0
+                STW     frog_speedx
+                STW     frog_speedy
+                LDWI    giga_vram+180
+                STW     frog_xy
+
+                LDI     160
+                ST      new_x0
+
+mainloop        CALL    waitVBlank
+
+                CALL    wavesanim
+
+; ==== 0 - 10  scores =====
+
+; draw next 2-pixels vertical slice
+next_slice      LDI     0
+                ST      y0
+                LD      new_x0
+                SUBW    x0
+                BEQ     slice_done
+                INC     x0
+                LD      x0
+                ANDI    1
+                BNE     next_slice
+
+; ==== 10 - 15  sky =====
+                LDI     0x08+10
+                ST      y0
+                CALL    drawsky
+
+; ==== 15-75 2 tiles =====
+                LDI     0x08+15
+                ST      y0
+                CALL    draw3tiles
+
+; ==== 75-115 water reflection ====
+
+; ==== 115-120 grass ====
+                LDI     0x08+115
+                ST      y0
+                CALL    drawgrass
+
+                BRA     next_slice
+
+; draw the frog and scroll
+slice_done      LDW     frog_speedy
+                BNE     jumping_restore
+                LDW     frog_xy
+                CALL    frogdown_restore
+                BRA     doinputs
+jumping_restore LDW     frog_xy
+                CALL    frogup_restore
+
+doinputs        CALL    applyinputs
+
+                LDW     frog_speedy
+                BNE     jumping_draw
+standing_draw   LDW     frog_xy
+                CALL    frogdown_draw
+                BRA     xscroll
+jumping_draw    LDW     frog_xy
+                CALL    frogup_draw
+                CALL    frogup_draw0
+
+xscroll         LD      frog_x+1
+                SUBI    20
+                POKE    cst_xscroll
+                ADDI    160
+                ST      new_x0
+
+                BRA     mainloop
+
+subroutines0	RET
+
+waitVBlank      LD      giga_frameCount
+                SUBW    vb_PrevFrame
+                BEQ     waitVBlank
+                LD      giga_frameCount
+                STW     vb_PrevFrame
+                RET
+
+wavesanim       PUSH
+                LDI     0x08+75
+                ST      y0
+                INC     wave_line
+                LD      wave_line
+                SUBI    10
+                BLT     wave_ok
+                LDI     0
+                STW     wave_line
+                INC     wave_anim
+wave_ok         LDI     0
+                CALL    drawwaves
+                CALL    drawwaves
+                CALL    drawwaves
+                CALL    drawwaves
+                POP
+                RET
+
+NextRandomTile  STW     scratch
+                ADDW    giga_rand1
+                ANDi    7
+                LSLW
+                ADDW    scratch
+                DEEK
+                RET
+
+drawgrass       LDWI    $1A1A    ; grass
+                DOKE    xy0
+                INC     y0
+                DOKE    xy0
+                INC     y0
+                DOKE    xy0
+                INC     y0
+                DOKE    xy0
+                INC     y0
+                DOKE    xy0
+                INC     y0
+                RET
+
+drawtileslice   STW     _dt_data
+                DEEK
+                DOKE    xy0
+                INC     y0
+                INC     _dt_data
+                INC     _dt_data
+                LDW     _dt_data
+                DEEK
+                DOKE    xy0
+                INC     y0
+                INC     _dt_data
+                INC     _dt_data
+                LDW     _dt_data
+                DEEK
+                DOKE    xy0
+                INC     y0
+                INC     _dt_data
+                INC     _dt_data
+                LDW     _dt_data
+                DEEK
+                DOKE    xy0
+                INC     y0
+                INC     _dt_data
+                INC     _dt_data
+                LDW     _dt_data
+                DEEK
+                DOKE    xy0
+                INC     y0
+                INC     _dt_data
+                INC     _dt_data
+                LDW     _dt_data
+                DEEK
+                DOKE    xy0
+                INC     y0
+                INC     _dt_data
+                INC     _dt_data
+                LDW     _dt_data
+                DEEK
+                DOKE    xy0
+                INC     y0
+                INC     _dt_data
+                INC     _dt_data
+                LDW     _dt_data
+                DEEK
+                DOKE    xy0
+                INC     y0
+                INC     _dt_data
+                INC     _dt_data
+                LDW     _dt_data
+                DEEK
+                DOKE    xy0
+                INC     y0
+                INC     _dt_data
+                INC     _dt_data
+                LDW     _dt_data
+                DEEK
+                DOKE    xy0
+                INC     y0
+                INC     _dt_data
+                INC     _dt_data
+                LDW     _dt_data
+                RET
+
+drawsky         LDWI    $3939    ; skycolor
+                DOKE    xy0
+                INC     y0
+                DOKE    xy0
+                INC     y0
+                DOKE    xy0
+                INC     y0
+                DOKE    xy0
+                INC     y0
+                DOKE    xy0
+                INC     y0
+                RET
+
+subroutines1    RET
+
+draw3tiles      PUSH
+; tile0
+; DrawTile tileslice0 tile0 _tile0a _tile0b tile_cloud
+                LD      tileslice0
+                SUBI    5
+                BLT     _tile0b
+                BEQ     _tile0a
+                SUBI    4
+                BLT     _tile0b
+                LDWI    randomtile0
+                CALL    NextRandomTile
+                STW     tile0
+                LDI     $FF
+                ST      tileslice0
+                BRA     _tile0b
+_tile0a         LD      tile0
+                ADDI    16 ;256-(20*12)
+                ST      tile0
+                INC     tile0+1
+_tile0b         INC     tileslice0
+                LDW     tile0
+                CALL    drawtileslice
+                CALL    drawtileslice
+                STW     tile0
+
+
+; tile1
+; DrawTile tileslice1 tile1 _tile1a _tile1b tile_cloud
+                LD      tileslice1
+                SUBI    5
+                BLT     _tile1b
+                BEQ     _tile1a
+                SUBI    4
+                BLT     _tile1b
+                LDWI    randomtile1
+                CALL    NextRandomTile
+                STW     tile1
+                LDI     $FF
+                ST      tileslice1
+                BRA     _tile1b
+_tile1a         LD      tile1
+                ADDI    16 ;256-(20*12)
+                ST      tile1
+                INC     tile1+1
+_tile1b         INC     tileslice1
+                LDW     tile1
+                CALL    drawtileslice
+                CALL    drawtileslice
+                STW     tile1
+
+
+; tile2
+; DrawTile tileslice2 tile2 _tile2a _tile2b tile_cloud
+                LD      tileslice2
+                SUBI    5
+                BLT     _tile2b
+                BEQ     _tile2a
+                SUBI    4
+                BLT     _tile2b
+                LDWI    tile_ground
+                STW     tile2
+                LDI     $FF
+                ST      tileslice2
+                BRA     _tile2b
+_tile2a         LD      tile2
+                ADDI    16 ;256-(20*12)
+                ST      tile2
+                INC     tile2+1
+_tile2b         INC     tileslice2
+                LDW     tile2
+                CALL    drawtileslice
+                CALL    drawtileslice
+                STW     tile2
+
+                POP
+                RET
+
+drawwaves       LD      y0
+                SUBI    0x08
+                ADDW    wave_line
+                STW     scratch
+                ADDW    wave_anim
+                ANDI    7
+                STW     scratch2
+                LDWI    0x0100+1
+                ADDW    scratch
+                ADDW    scratch
+                STW     scratch
+                LDWI    wave_table
+                ADDW    scratch2
+                PEEK
+                STW     _dw_a
+                LDW     scratch
+                PEEK
+                SUBW    _dw_a
+                STW     _dw_b
+                LDW     _dw_a
+                POKE    scratch
+                INC     scratch
+                INC     scratch
+                LDW     scratch
+                PEEK
+                AddW    _dw_b
+                POKE    scratch
+                LD      y0
+                ADDI    10
+                ST      y0
+                RET
+
+subroutines2    RET
+applyinputs     LDW     frog_speedy
+                BNE     _ai_wasmoving
+
+_ai_wasstill    LD      giga_buttonState
+                ANDI    buttonA
+                BEQ     _ai_jump
+                LDWI    -50
+                ADDW    frog_speedx
+                BGT     _ai_0
+                LDI     0
+_ai_0           STW     frog_speedx
+                BRA     _ai_move
+_ai_jump        LDWI    -512
+                STW     frog_speedy
+                LDWI    200
+                ADDW    frog_speedx
+
+                STW     frog_speedx
+                LDWI    512
+                SUBW    frog_speedx
+                BGT     _ai_move
+                LDWI    512
+                STW     frog_speedx
+                BRA     _ai_move
+
+_ai_wasmoving   LD      giga_buttonState
+                ANDI    buttonA
+                BNE     _ai_released
+_ai_pressed     LDWI    20
+                BRA     _ai_accely
+_ai_released    LDWI    100
+_ai_accely      ADDW    frog_speedy
+                STW     frog_speedy
+
+_ai_move        LDW     frog_x
+                ADDW    frog_speedx
+                STW     frog_x
+
+                LDW     frog_y
+                ADDW    frog_speedy
+                STW     frog_y
+                BLT     _ai_xy
+                LDI     0
+                STW     frog_y
+                STW     frog_speedy
+
+_ai_xy          LD      frog_y+1
+                ADDI    0x08+48
+                ST      frog_xy+1
+                LD      frog_x+1
+                ST      frog_xy
+                RET
+
+
+_startAddress_      EQU     entry_point
+_callTable_         EQU     0x00EE
+_singleStepWatch_   EQU     giga_frameCount
+_cpuUsageAddressA_  EQU     subroutines0
+_cpuUsageAddressB_  EQU     subroutines0+0x10	; waitVBlank
+
+tile_box        EQU     tiles
+%include tileset.i
+randomtile0     DW      tile_cloud  tile_clearsky tile_cloud tile_clearsky  tile_clearsky  tile_clearsky tile_clearsky  tile_clearsky
+randomtile1     DW      tile_box  tile_barrier tile_mushrom tile_cactus tile_grass tile_bush tile_clearsky tile_clearsky
+
+frogup_bak        EQU   tiles+0x1500
+frogdown_bak      EQU   frogup_bak+50
+frogup_draw       EQU   tiles+0x1600
+frogup_draw0      EQU   tiles+0x1700
+frogup_restore    EQU   tiles+0x1800
+frogdown_draw     EQU   tiles+0x1900
+frogdown_restore  EQU   tiles+0x1A00
+
+%include frog_8.i
+
+header_image      EQU   giga_vram
+%include headerimg.i
