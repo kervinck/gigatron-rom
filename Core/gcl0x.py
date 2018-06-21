@@ -285,9 +285,6 @@ class Program:
       elif op == ',' and con is not None:
           self.opcode('LD')
           self.emit(con)
-      elif op == ';' and con is not None:
-          self.opcode('LDW')
-          self.emit(con)
       elif op == '.' and var:
           self.opcode('POKE')
           self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
