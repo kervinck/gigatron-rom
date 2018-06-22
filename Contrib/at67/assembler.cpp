@@ -630,7 +630,16 @@ namespace Assembler
                     }
                     else
                     {
-                        break;
+                        // Normal expression
+                        if(Expression::isExpression(tokens[i]) == Expression::Valid)
+                        {
+                            operand = uint8_t(Expression::parse((char*)tokens[i].c_str(), _lineNumber));
+                            success = true;
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
                 }
 
@@ -678,7 +687,16 @@ namespace Assembler
                 }
                 else
                 {
-                    break;
+                    // Normal expression
+                    if(Expression::isExpression(tokens[i]) == Expression::Valid)
+                    {
+                        operand = Expression::parse((char*)tokens[i].c_str(), _lineNumber);
+                        success = true;
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
             }
 
@@ -2073,7 +2091,6 @@ namespace Assembler
                                 instruction._operand1 = operand & 0x00FF;
                                 _instructions.push_back(instruction);
                                 if(!checkInvalidAddress(ParseType(parse), _currentAddress, outputSize, instruction, lineToken, filename, _lineNumber)) return false;
-
                             }
                             // All other 3 byte instructions
                             else

@@ -16,7 +16,6 @@ namespace Expression
     bool _decimalChars[256]     = {false};
     bool _hexaDecimalChars[256] = {false};
 
-
     int _lineNumber = 0;
 
 
