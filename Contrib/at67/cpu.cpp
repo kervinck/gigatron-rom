@@ -272,7 +272,7 @@ namespace Cpu
         std::ofstream outfile(filename);
         if(!outfile.is_open())
         {
-            fprintf(stderr, "Graphics::createRomHeader() : failed to create '%s'.\n", filename.c_str());
+            fprintf(stderr, "Graphics::createRomHeader() : failed to create '%s'\n", filename.c_str());
             return;
         }
 

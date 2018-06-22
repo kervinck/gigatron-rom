@@ -61,6 +61,7 @@ namespace Editor
     void setCpuUsageAddressB(uint16_t address);
 
     void initialise(void);
+    void browseDirectory(void);
     bool singleStepDebug(void);
     void handleInput(void);
 }

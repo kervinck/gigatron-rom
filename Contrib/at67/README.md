@@ -1,7 +1,8 @@
 # gtemuSDL
-gtemuSDL is an emulator for the Gigatron TTL microcomputer, written in C++ using SDL2.<br/>
+gtemuSDL is an emulator, a cross assembler for both vCPU and Native asm code, a debugger, a monitor<br/>
+and a real time controller for the Gigatron TTL microcomputer; written in C++ using SDL2.<br/>
 This project provides support for Microsoft Windows and should be compatible with Linux, MacOS<br/>
-and possibly even Android. As of v0.5.6 it has only been tested on Microsoft Windows10 and Linux.<br/>
+and possibly even Android. As of v0.6.6 it has only been tested on Microsoft Windows10 and Linux.<br/>
 
 ## Features
 - Can control real Gigatron hardware through an Arduino interface.<br/>
@@ -28,7 +29,7 @@ and possibly even Android. As of v0.5.6 it has only been tested on Microsoft Win
 - Upload assembled Native code to ROM, (**_emulation only_**).<br/>
 - Supports the Gigatron TTL's .**_gt1_** object file format.<br/>
 - An inbuilt file and directory browser for uploading.<br/>
-- Multiple scanline disable options, (default key **_F3_**, **_emulation only_**), will disable  scanlines<br/>
+- Multiple scanline disable options, (default key **_F3_**, **_emulation only_**), will disable scanlines<br/>
   offering large amounts of extra processor time for vCPU code.<br/>
 - Input keys easily configurable through an INI file.<br/>
 - On screen help menu, (accessible with 'H/h' by default), that fully explains each key and it's function.<br/>
@@ -42,7 +43,7 @@ and possibly even Android. As of v0.5.6 it has only been tested on Microsoft Win
 - https://www.youtube.com/watch?v=sq8uCpBFwp8<br>
 
 ## References
-- Gigatron-ROM:  https://github.com/kervinck/gigatron-rom<br/>
+- Gigatron TTL:  https://github.com/kervinck/gigatron-rom<br/>
 - SDL2 graphics:  https://github.com/kervinck/gigatron-rom/pull/1<br/>
 - Early Gigatron emulation:  http://talkchess.com/forum/viewtopic.php?t=65944&start=11<br/>
 - Dirent for Windows:  https://github.com/tronkko/dirent<br/>
@@ -209,7 +210,7 @@ _singleStepWatch_   EQU     xyPos
 ## MIDI
 - See **_gtmidi_** and **_README.md_** in the emu/midi directory.<br/>
 
-## Memory/State saving
+## Memory and State saving
 - Real time saving of Gigatron and applications/games memory and state without any involvement of software<br/>
   on the Gigatron, (it's firmware or it's applications). This generic interface is controlled with **_INI_**<br/>
   files, (see "**_high_scores.ini_**" for an example.

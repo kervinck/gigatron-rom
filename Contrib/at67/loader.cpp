@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string>
 #include <fstream>
 #include <algorithm>
@@ -12,7 +13,9 @@
 #include "rs232/rs232.h"
 
 #if defined(_WIN32)
+#include <direct.h>
 #include "dirent/dirent.h"
+#define chdir _chdir
 #else
 #include <dirent.h>
 #endif
@@ -48,6 +51,8 @@ namespace Loader
     int _configBaudRate = DEFAULT_COM_BAUD_RATE;
     int _configComPort = DEFAULT_COM_PORT;
     double _configTimeout = DEFAULT_GIGA_TIMEOUT;
+    std::string _configGclBuild = ".";
+    bool _configGclBuildFound = false;
 
     std::string _currentGame = "";
 
@@ -60,10 +65,11 @@ namespace Loader
     void setUploadTarget(UploadTarget target) {_uploadTarget = target;}
 
 
-    bool getKeyAsString(INIReader& iniReader, const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, std::string& result)
+    bool getKeyAsString(INIReader& iniReader, const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, std::string& result, bool upperCase=true)
     {
         result = iniReader.Get(sectionString, iniKey, defaultKey);
-        result = Expression::strToUpper(result);
+        if(result == defaultKey) return false;
+        if(upperCase) result = Expression::strToUpper(result);
         return true;
     }
 
@@ -108,6 +114,9 @@ namespace Loader
 
                         getKeyAsString(_loaderConfigIniReader, sectionString, "Timeout", "5.0", result);   
                         _configTimeout = strtod(result.c_str(), nullptr);
+
+                        _configGclBuildFound = getKeyAsString(_loaderConfigIniReader, sectionString, "GclBuild", ".", result, false);   
+                        _configGclBuild = result;
                     }
                     break;
                 }
@@ -214,7 +223,7 @@ namespace Loader
         else if(comOpen(_currentComPort, _configBaudRate) == 0)
         {
             _numComPorts = 0;
-            fprintf(stderr, "Loader::openComPort() : couldn't open COM port '%s'.\n", comGetPortName(_currentComPort));
+            fprintf(stderr, "Loader::openComPort() : couldn't open COM port '%s'\n", comGetPortName(_currentComPort));
             return false;
         } 
 
@@ -251,13 +260,13 @@ namespace Loader
         {
             if(!readLineGiga(line))
             {
-                fprintf(stderr, "Loader::waitForPromptGiga() : timed out on serial port : '%s'.\n", comGetPortName(_currentComPort));
+                fprintf(stderr, "Loader::waitForPromptGiga() : timed out on serial port : '%s'\n", comGetPortName(_currentComPort));
                 return false;
             }
 
             if(size_t e = line.find('!') != std::string::npos)
             {
-                fprintf(stderr, "Loader::waitForPromptGiga() : Arduino Error : '%s'.\n", &line[e]);
+                fprintf(stderr, "Loader::waitForPromptGiga() : Arduino Error : '%s'\n", &line[e]);
                 return false;
             }
         }
@@ -293,14 +302,14 @@ namespace Loader
         std::ifstream gt1file(filename, std::ios::binary | std::ios::in);
         if(!gt1file.is_open())
         {
-            fprintf(stderr, "Loader::uploadToGiga() : failed to open '%s'.\n", filename.c_str());
+            fprintf(stderr, "Loader::uploadToGiga() : failed to open '%s'\n", filename.c_str());
             return;
         }
 
         gt1file.read(_gt1Buffer, MAX_GT1_SIZE);
         if(gt1file.bad())
         {
-            fprintf(stderr, "Loader::uploadToGiga() : failed to read %s GT1 file.\n", filename.c_str());
+            fprintf(stderr, "Loader::uploadToGiga() : failed to read GT1 file '%s'\n", filename.c_str());
             return;
         }
 
@@ -337,7 +346,7 @@ namespace Loader
         std::ifstream infile(filename, std::ios::binary | std::ios::in);
         if(!infile.is_open())
         {
-            fprintf(stderr, "Loader::loadGt1File() : failed to open '%s'.\n", filename.c_str());
+            fprintf(stderr, "Loader::loadGt1File() : failed to open '%s'\n", filename.c_str());
             return false;
         }
 
@@ -349,7 +358,7 @@ namespace Loader
             infile.read((char *)&segment._hiAddress, SEGMENT_HEADER_SIZE);
             if(infile.eof() || infile.bad() || infile.fail())
             {
-                fprintf(stderr, "Loader::loadGt1File() : bad header in segment %d of '%s'.\n", segmentCount, filename.c_str());
+                fprintf(stderr, "Loader::loadGt1File() : bad header in segment %d of '%s'\n", segmentCount, filename.c_str());
                 return false;
             }
 
@@ -368,7 +377,7 @@ namespace Loader
             infile.read((char *)&segment._dataBytes[0], segmentSize);
             if(infile.eof() || infile.bad() || infile.fail())
             {
-                fprintf(stderr, "Loader::loadGt1File() : bad segment %d in '%s'.\n", segmentCount, filename.c_str());
+                fprintf(stderr, "Loader::loadGt1File() : bad segment %d in '%s'\n", segmentCount, filename.c_str());
                 return false;
             }
 
@@ -393,7 +402,7 @@ namespace Loader
         std::ofstream outfile(filename, std::ios::binary | std::ios::out);
         if(!outfile.is_open())
         {
-            fprintf(stderr, "Loader::saveGt1File() : failed to open '%s'.\n", filename.c_str());
+            fprintf(stderr, "Loader::saveGt1File() : failed to open '%s'\n", filename.c_str());
             return false;
         }
 
@@ -428,7 +437,7 @@ namespace Loader
             outfile.write((char *)&gt1File._segments[i]._hiAddress, SEGMENT_HEADER_SIZE);
             if(outfile.bad() || outfile.fail())
             {
-                fprintf(stderr, "Loader::saveGt1File() : write error in header of segment %d.\n", i);
+                fprintf(stderr, "Loader::saveGt1File() : write error in header of segment %d\n", i);
                 return false;
             }
 
@@ -437,7 +446,7 @@ namespace Loader
             outfile.write((char *)&gt1File._segments[i]._dataBytes[0], segmentSize);
             if(outfile.bad() || outfile.fail())
             {
-                fprintf(stderr, "Loader::saveGt1File() : bad segment %d in '%s'.\n", i, filename.c_str());
+                fprintf(stderr, "Loader::saveGt1File() : bad segment %d in '%s'\n", i, filename.c_str());
                 return false;
             }
         }
@@ -446,7 +455,7 @@ namespace Loader
         outfile.write((char *)&gt1File._terminator, GT1FILE_TRAILER_SIZE);
         if(outfile.bad() || outfile.fail())
         {
-            fprintf(stderr, "Loader::saveGt1File() : write error in trailer of '%s'.\n", filename.c_str());
+            fprintf(stderr, "Loader::saveGt1File() : write error in trailer of '%s'\n", filename.c_str());
             return false;
         }
 
@@ -540,7 +549,7 @@ namespace Loader
         std::ifstream infile(filename, std::ios::binary | std::ios::in);
         if(!infile.is_open())
         {
-            fprintf(stderr, "Loader::loadDataFile() : failed to open '%s'.\n", filename.c_str());
+            fprintf(stderr, "Loader::loadDataFile() : failed to open '%s'\n", filename.c_str());
             return false;
         }
 
@@ -550,7 +559,7 @@ namespace Loader
         infile.read((char *)&numCounts, 2);
         if(infile.eof() || infile.bad() || infile.fail())
         {
-            fprintf(stderr, "Loader::loadDataFile() : read error in number of counts in '%s'.\n", filename.c_str());
+            fprintf(stderr, "Loader::loadDataFile() : read error in number of counts in '%s'\n", filename.c_str());
             return false;
         }
         for(int i=0; i<numCounts; i++)
@@ -559,7 +568,7 @@ namespace Loader
             infile.read((char *)&count, 2);
             if(infile.bad() || infile.fail())
             {
-                fprintf(stderr, "Loader::loadDataFile() : read error in counts of '%s'.\n", filename.c_str());
+                fprintf(stderr, "Loader::loadDataFile() : read error in counts of '%s'\n", filename.c_str());
                 return false;
             }
             sdata._counts[i] = count;
@@ -571,7 +580,7 @@ namespace Loader
         infile.read((char *)&numAddresses, 2);
         if(infile.eof() || infile.bad() || infile.fail())
         {
-            fprintf(stderr, "Loader::loadDataFile() : read error in number of addresses in '%s'.\n", filename.c_str());
+            fprintf(stderr, "Loader::loadDataFile() : read error in number of addresses in '%s'\n", filename.c_str());
             return false;
         }
         for(int i=0; i<numAddresses; i++)
@@ -580,7 +589,7 @@ namespace Loader
             infile.read((char *)&address, 2);
             if(infile.bad() || infile.fail())
             {
-                fprintf(stderr, "Loader::loadDataFile() : read error in addresses of '%s'.\n", filename.c_str());
+                fprintf(stderr, "Loader::loadDataFile() : read error in addresses of '%s'\n", filename.c_str());
                 return false;
             }
             sdata._addresses[i] = address;
@@ -588,7 +597,7 @@ namespace Loader
 
         if(sdata._counts.size() == 0  ||  sdata._counts.size() != sdata._addresses.size())
         {
-            fprintf(stderr, "Loader::loadDataFile() : save data is corrupt : saveData._counts.size() = %d : saveData._addresses.size() = %d.\n", int(sdata._counts.size()), int(sdata._addresses.size()));
+            fprintf(stderr, "Loader::loadDataFile() : save data is corrupt : saveData._counts.size() = %d : saveData._addresses.size() = %d\n", int(sdata._counts.size()), int(sdata._addresses.size()));
             return false;
         }
 
@@ -602,7 +611,7 @@ namespace Loader
                 infile.read((char *)&data, 1);
                 if(infile.bad() || infile.fail())
                 {
-                    fprintf(stderr, "Loader::loadDataFile() : read error in data of '%s'.\n", filename.c_str());
+                    fprintf(stderr, "Loader::loadDataFile() : read error in data of '%s'\n", filename.c_str());
                     return false;
                 }
                 sdata._data[j][i] = data;
@@ -623,13 +632,13 @@ namespace Loader
         std::ofstream outfile(filename, std::ios::binary | std::ios::out);
         if(!outfile.is_open())
         {
-            fprintf(stderr, "Loader::saveDataFile() : failed to open '%s'.\n", filename.c_str());
+            fprintf(stderr, "Loader::saveDataFile() : failed to open '%s'\n", filename.c_str());
             return false;
         }
 
         if(saveData._counts.size() == 0  ||  saveData._counts.size() != saveData._addresses.size())
         {
-            fprintf(stderr, "Loader::saveDataFile() : save data is corrupt : saveData._counts.size() = %d : saveData._addresses.size() = %d.\n", int(saveData._counts.size()), int(saveData._addresses.size()));
+            fprintf(stderr, "Loader::saveDataFile() : save data is corrupt : saveData._counts.size() = %d : saveData._addresses.size() = %d\n", int(saveData._counts.size()), int(saveData._addresses.size()));
             return false;
         }
 
@@ -639,7 +648,7 @@ namespace Loader
         outfile.write((char *)&numCounts, 2);
         if(outfile.bad() || outfile.fail())
         {
-            fprintf(stderr, "Loader::saveDataFile() : write error in number of counts of '%s'.\n", filename.c_str());
+            fprintf(stderr, "Loader::saveDataFile() : write error in number of counts of '%s'\n", filename.c_str());
             return false;
         }
         for(int i=0; i<numCounts; i++)
@@ -647,7 +656,7 @@ namespace Loader
             outfile.write((char *)&saveData._counts[i], 2);
             if(outfile.bad() || outfile.fail())
             {
-                fprintf(stderr, "Loader::saveDataFile() : write error in counts of '%s'.\n", filename.c_str());
+                fprintf(stderr, "Loader::saveDataFile() : write error in counts of '%s'\n", filename.c_str());
                 return false;
             }
         }         
@@ -657,7 +666,7 @@ namespace Loader
         outfile.write((char *)&numAddresses, 2);
         if(outfile.bad() || outfile.fail())
         {
-            fprintf(stderr, "Loader::saveDataFile() : write error in number of addresses of '%s'.\n", filename.c_str());
+            fprintf(stderr, "Loader::saveDataFile() : write error in number of addresses of '%s'\n", filename.c_str());
             return false;
         }
         for(int i=0; i<numAddresses; i++)
@@ -665,7 +674,7 @@ namespace Loader
             outfile.write((char *)&saveData._addresses[i], 2);
             if(outfile.bad() || outfile.fail())
             {
-                fprintf(stderr, "Loader::saveDataFile() : write error in addresses of '%s'.\n", filename.c_str());
+                fprintf(stderr, "Loader::saveDataFile() : write error in addresses of '%s'\n", filename.c_str());
                 return false;
             }
         }         
@@ -675,14 +684,14 @@ namespace Loader
         {
             if(saveData._data.size() != saveData._addresses.size())
             {
-                fprintf(stderr, "Loader::saveDataFile() : data has not been initialised or loaded, nothing to save for '%s'.\n", filename.c_str());
+                fprintf(stderr, "Loader::saveDataFile() : data has not been initialised or loaded, nothing to save for '%s'\n", filename.c_str());
                 return false;
             }
             for(int i=0; i<saveData._counts[j]; i++)
             {
                 if(saveData._data[j].size() != saveData._counts[j]) 
                 {
-                    fprintf(stderr, "Loader::saveDataFile() : data has not been initialised or loaded, nothing to save for '%s'.\n", filename.c_str());
+                    fprintf(stderr, "Loader::saveDataFile() : data has not been initialised or loaded, nothing to save for '%s'\n", filename.c_str());
                     return false;
                 }
             }
@@ -697,7 +706,7 @@ namespace Loader
                 outfile.write((char *)&data, 1);
                 if(outfile.bad() || outfile.fail())
                 {
-                    fprintf(stderr, "Loader::saveDataFile() : write error in data of '%s'.\n", filename.c_str());
+                    fprintf(stderr, "Loader::saveDataFile() : write error in data of '%s'\n", filename.c_str());
                     return false;
                 }
             }
@@ -711,13 +720,13 @@ namespace Loader
     {
         if(_saveData.find(_currentGame) == _saveData.end())
         {
-            //fprintf(stderr, "Loader::loadHighScore() : warning, no game entry defined in '%s' for '%s'.\n", HIGH_SCORES_INI, _currentGame.c_str());
+            //fprintf(stderr, "Loader::loadHighScore() : warning, no game entry defined in '%s' for '%s'\n", HIGH_SCORES_INI, _currentGame.c_str());
             return;
         }
 
         if(Loader::loadDataFile(_saveData[_currentGame]))
         {
-            fprintf(stderr, "Loader::loadHighScore() : loaded high score data successfully for '%s'.\n", _currentGame.c_str());
+            fprintf(stderr, "Loader::loadHighScore() : loaded high score data successfully for '%s'\n", _currentGame.c_str());
         }
     }
 
@@ -726,13 +735,13 @@ namespace Loader
     {
         if(_saveData.find(_currentGame) == _saveData.end())
         {
-            fprintf(stderr, "Loader::saveHighScore() : error, no game entry defined in '%s' for '%s'.\n", HIGH_SCORES_INI, _currentGame.c_str());
+            fprintf(stderr, "Loader::saveHighScore() : error, no game entry defined in '%s' for '%s'\n", HIGH_SCORES_INI, _currentGame.c_str());
             return;
         }
 
         if(Loader::saveDataFile(_saveData[_currentGame]))
         {
-            fprintf(stderr, "Loader::saveHighScore() : saved high score data successfully for '%s'.\n", _currentGame.c_str());
+            fprintf(stderr, "Loader::saveHighScore() : saved high score data successfully for '%s'\n", _currentGame.c_str());
         }
     }
 
@@ -799,8 +808,44 @@ namespace Loader
         Graphics::resetVTable();
         Editor::setSingleStepWatchAddress(VIDEO_Y_ADDRESS);
 
-        // Upload gt1
+        // Compile gcl to gt1
         Gt1File gt1File;
+        bool gt1FileBuilt = false;
+        if(_configGclBuildFound  &&  filename.find(".gcl") != filename.npos)
+        {
+            // Create compile gcl string
+            chdir(Editor::getBrowserPath().c_str());
+            std::string command = "py \"" + _configGclBuild + "\"" + "/compilegcl.py " + "\"" + filepath + "\"" + " -s " + "\"" + _configGclBuild + "\"" + "/interface.json";
+
+            // Create gt1 name and path
+            size_t dot = filename.find_last_of(".");
+            if(dot != std::string::npos)
+            {
+                filename = filename.substr(0, dot) + ".gt1";
+                dot = filepath.find_last_of(".");
+                filepath = filepath.substr(0, dot) + ".gt1";
+            }
+
+            // Build gcl
+            int gt1FileDeleted = remove(filepath.c_str());
+            fprintf(stderr, "\n");
+            system(command.c_str());
+
+            // Check for gt1
+            std::ifstream infile(filepath, std::ios::binary | std::ios::in);
+            if(!infile.is_open())
+            {
+                fprintf(stderr, "\nLoader::uploadDirect() : failed to compile '%s'\n", filename.c_str());
+                filename = "";
+                if(gt1FileDeleted == 0) Editor::browseDirectory();
+            }
+            else
+            {
+                gt1FileBuilt = true;
+            }
+        }
+        
+        // Upload gt1
         if(filename.find(".gt1") != filename.npos)
         {
             Assembler::clearAssembler();
@@ -827,7 +872,7 @@ namespace Loader
             _disableUploads = false;
         }
         // Upload vCPU assembly code
-        else if(filename.find(".vasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
+        else if(filename.find(".vasm") != filename.npos  ||  filename.find(".gasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
         {
             if(!Assembler::assemble(filepath, DEFAULT_START_ADDRESS)) return;
             executeAddress = Assembler::getStartAddress();
@@ -882,11 +927,13 @@ namespace Loader
             // Don't save gt1 file for any asm files that contain native rom code
             std::string gt1FileName;
             if(!hasRomCode  &&  !saveGt1File(filepath, gt1File, gt1FileName)) return;
+
+            gt1FileBuilt = true;
         }
         // Invalid file
         else
         {
-            fprintf(stderr, "Loader::upload() : invalid file '%s'.\n", filename.c_str());
+            fprintf(stderr, "Loader::upload() : invalid file or file does not exist '%s'\n", filename.c_str());
             return;
         }
 
@@ -921,6 +968,9 @@ namespace Loader
                 uploadToGiga(filepath);
             }
         }
+
+        // Updates browser in case a new gt1 file was created from a gcl file or a vasm file
+        if(gt1FileBuilt) Editor::browseDirectory();
 
         return;
     }

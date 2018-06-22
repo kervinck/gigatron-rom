@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
     // ROM file is not big enough
     if(romfile.gcount() < romSize)
     {
-        fprintf(stderr, "gtsplitrom : ROM file %s is not large enough : size is %d : required size is %d.\n", inputFilename.c_str(), int(romfile.gcount()), romSize);
+        fprintf(stderr, "gtsplitrom : ROM file %s is not large enough : size is %d : required size is %d\n", inputFilename.c_str(), int(romfile.gcount()), romSize);
         return 1;
     }
 
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     std::ofstream outfile0(outputFilename0, std::ios::binary | std::ios::out);
     if(!outfile0.is_open())
     {
-        fprintf(stderr, "gtsplitrom : failed to open '%s'.\n", outputFilename0.c_str());
+        fprintf(stderr, "gtsplitrom : failed to open '%s'\n", outputFilename0.c_str());
         return 1;
     }
 
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
     std::ofstream outfile1(outputFilename1, std::ios::binary | std::ios::out);
     if(!outfile1.is_open())
     {
-        fprintf(stderr, "gtsplitrom : failed to open '%s'.\n", outputFilename1.c_str());
+        fprintf(stderr, "gtsplitrom : failed to open '%s'\n", outputFilename1.c_str());
         return 1;
     }
 
@@ -82,14 +82,14 @@ int main(int argc, char* argv[])
         outfile0.write((char *)&_ROM[i + 0], 1);
         if(outfile0.bad() || outfile0.fail())
         {
-            fprintf(stderr, "gtsplitrom : write error at address %04x in file %s.\n", i, outputFilename0.c_str());
+            fprintf(stderr, "gtsplitrom : write error at address %04x in file '%s'\n", i, outputFilename0.c_str());
             return 1;
         }
 
         outfile1.write((char *)&_ROM[i + 1], 1);
         if(outfile1.bad() || outfile1.fail())
         {
-            fprintf(stderr, "gtsplitrom : write error at address %04x in file %s.\n", i, outputFilename1.c_str());
+            fprintf(stderr, "gtsplitrom : write error at address %04x in file '%s'\n", i, outputFilename1.c_str());
             return 1;
         }
     }

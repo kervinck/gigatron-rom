@@ -102,7 +102,7 @@ namespace Graphics
         std::ofstream outfile(filename);
         if(!outfile.is_open())
         {
-            fprintf(stderr, "Graphics::createFontHeader() : failed to create '%s'.\n", filename.c_str());
+            fprintf(stderr, "Graphics::createFontHeader() : failed to create '%s'\n", filename.c_str());
             return;
         }
 
@@ -153,7 +153,7 @@ namespace Graphics
                 if(!infile.good()  &&  !infile.eof())
                 {
                     SDL_Quit();
-                    fprintf(stderr, "Graphics::createHelpTexture() : Bad line : '%s' : in %s : on line %d.\n", lineToken.c_str(), INPUT_CONFIG_INI, lines);
+                    fprintf(stderr, "Graphics::createHelpTexture() : Bad line : '%s' : in %s : on line %d\n", lineToken.c_str(), INPUT_CONFIG_INI, lines);
                     _EXIT_(EXIT_FAILURE);
                 }
 
@@ -189,6 +189,7 @@ namespace Graphics
     bool getKeyAsString(const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, std::string& result)
     {
         result = _iniReader.Get(sectionString, iniKey, defaultKey);
+        if(result == defaultKey) return false;
         result = Expression::strToUpper(result);
         return true;
     }
@@ -1149,7 +1150,7 @@ namespace Graphics
             scoreDelta = 0;
         }
 
-        fprintf(stderr, "Tetris: score : %06d  level : %d  frameTickLevel : %d  lines : %d.\n", tetrisScore + scoreDelta, tetrisLevel, frameTickLevel, lines);
+        fprintf(stderr, "Tetris: score : %06d  level : %d  frameTickLevel : %d  lines : %d\n", tetrisScore + scoreDelta, tetrisLevel, frameTickLevel, lines);
     }
 
     int checkLines(void)
