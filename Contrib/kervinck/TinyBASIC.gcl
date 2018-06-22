@@ -390,7 +390,10 @@ $0400:
 
   TestWord!                     {'rem'}
     $72# $65# $6d# 0#
-  [if=0 pop ret]                {Ignore rest of line}
+  [if=0
+    Active NextBlock!           {Ignore rest of line}
+    pop ret
+    EndOfLine!]
 
   TestWord!                     {'input'}
     $69# $6e# $70# $75# $74# 0#
@@ -411,10 +414,7 @@ $0500:
 [def
 
   TestWord! $65# $6e# $64# 0#   {'end'}
-  [if=0
-    {XXX implement}
-    EndOfLine!
-  ]
+  [if=0 pop ret]                {Return 0 to stop execution}
 
   TestWord! $72# $75# $6e# 0#   {'run'}
   [if=0
