@@ -32,6 +32,7 @@ class Program:
     self.version = None # Must be first word 'gcl<N>'
     self.execute = None
     self.needPatch = False
+    self.lengths = {} # block -> length, or var -> length
 
   def org(self, address):
     """Set a new address"""
@@ -105,6 +106,7 @@ class Program:
             del self.conds[block]
           if block in self.defs:
             define('$%s.def.%d' % (self.name, self.defs[block]), prev(self.vPC))
+            self.lengths[self.thisBlock()] = self.vPC - self.defs[block]
             del self.defs[block]
         elif nextChar == '(': pass
         elif nextChar == ')': pass
@@ -223,6 +225,10 @@ class Program:
       elif op == '=' and var:
           self.opcode('STW')
           self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
+          if var not in self.lengths and self.thisBlock() in self.lengths:
+            self.lengths[var] = self.lengths[self.thisBlock()]
+          else:
+            self.lengths[var] = None # No def lengths can be associated
       elif op == '=' and con is not None:
           self.opcode('STW')
           self.emit(con)
@@ -423,9 +429,16 @@ class Program:
       self.error('Unterminated comment')
     self.closeSegment()
     print ' Variables count %d bytes %d end %04x' % (len(self.vars), 2*len(self.vars), zpByte(0))
-    symbols, n = sorted(self.vars.keys()), 8
-    for i in range(0, len(symbols), n):
-      print ' Symbols ' + ' '.join(symbols[i:i+n])
+    print ' :Symbols [bytes]'
+    line = ' :'
+    for var in sorted(self.vars.keys()):
+      if var in self.lengths and self.lengths[var]:
+        var += ' [%s]' % self.lengths[var]
+      if len(line + var) + 1 > 72:
+        print line
+        line = ' :'
+      line += ' ' + var
+    print line
     self.putInRomTable(0) # Zero marks the end of stream
     C('End of file')
 

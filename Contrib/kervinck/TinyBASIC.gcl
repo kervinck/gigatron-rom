@@ -103,6 +103,8 @@ gcl0x
 
 $01df deek Pos=                 {Bottom character row in screen memory}
                                 {Slightly cheating with endianness}
+$0f20 \sysArgs6:                {Pen color yellow, background color blue}
+\sysArgs0.                      {First Newline call will look here}
 
 { Print ASCII character (32..127) on screen in 5x8 pixels }
 { Returns the actual position }
@@ -119,8 +121,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 
   { sysFn already set by Newline and not changed by Tiny BASIC
   \SYS_VDrawBits_134 \sysFn=    {Prepare SYS calls} }
-  32 \sysArgs0.                 {Background color blue}
-  15 \sysArgs1.                 {Character color yellow}
+  \sysArgs6; \sysArgs0:         {Apply caller-defined colors}
   Pos \sysArgs4=                {Position for character}
   $fe%=                         {Temporarily park return value on the stack}
   6+ Pos=                       {Advance position by 6 pixels}
@@ -150,17 +151,16 @@ $01df deek Pos=                 {Bottom character row in screen memory}
   Output a carriage-return-linefeed sequence to the console.
 }
 [def
+  \SYS_VDrawBits_134 \sysFn=    {Prepare SYS call}
   $800 Pos<.                    {Go back to start}
   Pos+ [if<0 $0800] Pos=        {Go down 8 lines and wrap around if needed}
-
-  \sysArgs4=                    {Clear line by printing slices in 1 color}
-  32 \sysArgs0. \sysArgs1.      {All blue}
-  \SYS_VDrawBits_134 \sysFn=
+  \sysArgs4=                    {sysArgs[4:5] is position on screen}
+  \sysArgs2.                    {All-zero output pattern}
   [do
-    134!                        {Clear vertical slice if 8 pixels}
-    \sysArgs4<++                {Advance 1 pixel right}
-    \sysArgs4, 160^ if<>0loop]  {Until reaching horizontal position 160}
-
+    134!                        {SYS call}
+    \sysArgs4<++                {Advance to next slice}
+    \sysArgs4, 160^             {Test for end of screen}
+    if<>0loop]
                                 {Scroll up by modifying videoTable}
   $01ee i=                      {Last entry in video table}
   [do
@@ -239,13 +239,13 @@ EndOfLine=
 
 { GetLine -- Get Input Line }
 { ASCII characters are accepted from console input }
-{ XXX Do input in a different color? }
 [def
   push
   $a2 Buffer<.                  {Prepare for next input line}
 
   [do {NEXTCHAR}
-    127 PrintChar! Pos=         {Draw cursor symbol}
+    127 \sysArgs7.              {Pen color white for user input}
+    PrintChar! Pos=             {Draw cursor symbol}
 
     \serialRaw, [do             {Wait for key change}
       tmp=                      {Remember previous value}
@@ -300,12 +300,13 @@ EndOfLine=
       loop]
   Value                         {Result, negative value indicates error}
   ret
-] TestNumber=
+] {TestNumber=}
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
 $0400:
+TestNumber=
 
 { Statement executor }
 [def
@@ -520,28 +521,6 @@ $0500:
 +-----------------------------------------------------------------------}
 $0600:
 
-{ Process an expression factor, result in Value }
-[def
-  push
-
-  SkipSpaces!
-  TestWord! $28# 0#             {'('}
-  [if=0
-    Expression!
-    SkipSpaces!
-    TestWord! $29# 0#           {')'}
-    [if<>0 SyntaxError!]
-    pop ret]
-
-  TestNumber!                   {Test for numeric constant}
-  [if>=0 pop ret]               {Result already in Value}
-
-  TestVar!                      {Otherwise it MUST be a variable}
-  deek Value=                   {Fetch value}
-
-  pop ret
-] Factor=
-
 {
  Six scenarios for InsertLine          Check   Search  Shift   Copy    Shift
                                        memory  line    down    buffer  up
@@ -613,7 +592,33 @@ $0600:
   pop ret
 ] InsertLine=
 
+[def
+  \serialRaw, $7f^              {Test for [Del] as break request}
+  [if=0
+    Error!                      {'Break'}
+      $42# $72# $65# $61#
+      $6b# 0#]
+  ret
+] TestBreak=
+
 { Note: It is save to call functions here before hopping over to page 8 }
+
+{ Clear program and variables }
+[def
+  $0da0 Buffer=                 {First block in memory is input buffer}
+  32+ End=                      {Programs begin 32 bytes later}
+
+  $90 i=                        {Clear variables A-Z}
+  [do
+    0 i.                        {Clear byte}
+    i<++                        {Advance pointer}
+    i $c4^ if<>0loop]           {$90+26*2 = $c4}
+
+  Active=                       {Not active in any line}
+  Buffer:                       {Place a dummy largest line number 0 here}
+
+  ret
+] New=
 
 Newline!                        {Scroll and clear last line}
 
@@ -622,6 +627,8 @@ PrintS!                         {'*** Tiny BASIC'}
   $2a# $2a# $2a# $20# $54# $69#
   $6e# $79# $20# $42# $41# $53#
   $49# $43# 0#
+
+New!                            {Empty program and clear variables}
 
 {-----------------------------------------------------------------------+
 |}$08a0 \vLR= ret{      RAM page 8                                      |
@@ -669,22 +676,27 @@ $08a0:
 +-----------------------------------------------------------------------}
 $09a0:
 
-{ Clear program and variables }
+{ Process an expression factor, result in Value }
 [def
-  $0da0 Buffer=                 {First block in memory is input buffer}
-  32+ End=                      {Programs begin 32 bytes later}
+  push
 
-  $90 i=                        {Clear variables A-Z}
-  [do
-    0 i.                        {Clear byte}
-    i<++                        {Advance pointer}
-    i $c4^ if<>0loop]           {$90+26*2 = $c4}
+  SkipSpaces!
+  TestWord! $28# 0#             {'('}
+  [if=0
+    Expression!
+    SkipSpaces!
+    TestWord! $29# 0#           {')'}
+    [if<>0 SyntaxError!]
+    pop ret]
 
-  Active=                       {Not active in any line}
-  Buffer:                       {Place a dummy largest line number 0 here}
+  TestNumber!                   {Test for numeric constant}
+  [if>=0 pop ret]               {Result already in Value}
 
-  ret
-] New=
+  TestVar!                      {Otherwise it MUST be a variable}
+  deek Value=                   {Fetch value}
+
+  pop ret
+] Factor=
 
 { List program }
 [def
@@ -693,11 +705,7 @@ $09a0:
     j=
     End^ if<>0                  {Repeat until the last address}
 
-    \serialRaw, $7f^            {Test for [Del] as break request}
-    [if=0
-      Error!                    {'Break'}
-        $42# $72# $65# $61#
-        $6b# 0#]
+    TestBreak!                  {Test for [Del] as break request}
 
     j; Value= PrintValue!       {Print line number}
 
@@ -712,36 +720,12 @@ $09a0:
   loop]
 
   EndOfLine!
-] {List=}
+] List=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 10                                     |
 +-----------------------------------------------------------------------}
 $0aa0:
-List=
-
-{ Calculate vAC * Value, result in vAC }
-[def
-  tmp=
-  [if<0                         {Make left-hand side positive}
-    0 Value- Value=
-    0 tmp- tmp=]
-
-  0 j=                          {Result variable}
-  1                             {First bit}
-  [do                           {Loop over all bits}
-    i= tmp&                     {Test next bit}
-    [if<>0 j Value+ j=]         {Add partial term}
-    Value Value+ Value=         {Double right-hand side}
-    i i+ if>0loop]              {Shift left until all done}
-  j
-  ret
-] Multiply=
-
-{-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 11                                     |
-+-----------------------------------------------------------------------}
-$0ba0:
 
 { Calculate vAC / Value, result in vAC, remainder in i }
 [def
@@ -766,12 +750,33 @@ $0ba0:
 ] {Divide=}
 
 {-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 11                                     |
++-----------------------------------------------------------------------}
+$0ba0:
+Divide=
+
+{ Calculate vAC * Value, result in vAC }
+[def
+  tmp=
+  [if<0                         {Make left-hand side positive}
+    0 Value- Value=
+    0 tmp- tmp=]
+
+  0 j=                          {Result variable}
+  1                             {First bit}
+  [do                           {Loop over all bits}
+    i= tmp&                     {Test next bit}
+    [if<>0 j Value+ j=]         {Add partial term}
+    Value Value+ Value=         {Double right-hand side}
+    i i+ if>0loop]              {Shift left until all done}
+  j
+  ret
+] Multiply=
+
+{-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 12                                     |
 +-----------------------------------------------------------------------}
 $0ca0:
-Divide=
-
-New!                            {Empty program and clear variables}
 
 [def
   \vLR; tmp=                    {vLR points to inline argument}
@@ -804,6 +809,7 @@ Newline!                        {Terminate welcome message or error}
   Newline!
   [do
     GetLine!                    {Get line from console}
+    $0f \sysArgs7.              {Pen color yellow for output}
     $0da2 Active=               {Parse from start of buffer}
     SkipSpaces!
     Active, if=0loop            {Do nothing for empty lines}
