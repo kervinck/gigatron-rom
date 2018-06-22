@@ -220,8 +220,21 @@ class Program:
       elif op == ';' and con is not None:
           self.opcode('LDW')
           self.emit(con)
+
       elif op == ':' and con > 0xff: # XXX Replace with automatic allocation ('page')
           self.org(con)
+      elif op == ':' and con is not None: # XXX Why do we have this ...
+          self.opcode('STW')
+          self.emit(con)
+      elif op == '=' and con is not None: # XXX ... as well as this?
+          self.opcode('STW')
+          self.emit(con)
+      elif op == '.' and con is not None:
+          self.opcode('ST')
+          self.emit(con)
+      elif op == ',' and con is not None:
+          self.opcode('LD')
+          self.emit(con)
       elif op == '=' and var:
           self.opcode('STW')
           self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
@@ -229,9 +242,6 @@ class Program:
             self.lengths[var] = self.lengths[self.thisBlock()]
           else:
             self.lengths[var] = None # No def lengths can be associated
-      elif op == '=' and con is not None:
-          self.opcode('STW')
-          self.emit(con)
       elif op == '+' and var:
           self.opcode('ADDW')
           self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
@@ -281,15 +291,6 @@ class Program:
           self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
       elif op == '^' and con is not None:
           self.opcode('XORI')
-          self.emit(con)
-      elif op == '.' and con is not None:
-          self.opcode('ST')
-          self.emit(con)
-      elif op == ':' and con is not None:
-          self.opcode('STW')
-          self.emit(con)
-      elif op == ',' and con is not None:
-          self.opcode('LD')
           self.emit(con)
       elif op == '.' and var:
           self.opcode('POKE')
