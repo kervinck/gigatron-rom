@@ -189,6 +189,7 @@ namespace Graphics
     bool getKeyAsString(const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, std::string& result)
     {
         result = _iniReader.Get(sectionString, iniKey, defaultKey);
+        if(result == defaultKey) return false;
         result = Expression::strToUpper(result);
         return true;
     }

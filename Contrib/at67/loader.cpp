@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string>
 #include <fstream>
 #include <algorithm>
@@ -12,7 +13,9 @@
 #include "rs232/rs232.h"
 
 #if defined(_WIN32)
+#include <direct.h>
 #include "dirent/dirent.h"
+#define chdir _chdir
 #else
 #include <dirent.h>
 #endif
@@ -48,6 +51,8 @@ namespace Loader
     int _configBaudRate = DEFAULT_COM_BAUD_RATE;
     int _configComPort = DEFAULT_COM_PORT;
     double _configTimeout = DEFAULT_GIGA_TIMEOUT;
+    std::string _configGclBuild = ".";
+    bool _configGclBuildFound = false;
 
     std::string _currentGame = "";
 
@@ -60,10 +65,11 @@ namespace Loader
     void setUploadTarget(UploadTarget target) {_uploadTarget = target;}
 
 
-    bool getKeyAsString(INIReader& iniReader, const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, std::string& result)
+    bool getKeyAsString(INIReader& iniReader, const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, std::string& result, bool upperCase=true)
     {
         result = iniReader.Get(sectionString, iniKey, defaultKey);
-        result = Expression::strToUpper(result);
+        if(result == defaultKey) return false;
+        if(upperCase) result = Expression::strToUpper(result);
         return true;
     }
 
@@ -108,6 +114,9 @@ namespace Loader
 
                         getKeyAsString(_loaderConfigIniReader, sectionString, "Timeout", "5.0", result);   
                         _configTimeout = strtod(result.c_str(), nullptr);
+
+                        _configGclBuildFound = getKeyAsString(_loaderConfigIniReader, sectionString, "GclBuild", ".", result, false);   
+                        _configGclBuild = result;
                     }
                     break;
                 }
@@ -799,8 +808,44 @@ namespace Loader
         Graphics::resetVTable();
         Editor::setSingleStepWatchAddress(VIDEO_Y_ADDRESS);
 
-        // Upload gt1
+        // Compile gcl to gt1
         Gt1File gt1File;
+        bool gt1FileBuilt = false;
+        if(_configGclBuildFound  &&  filename.find(".gcl") != filename.npos)
+        {
+            // Create compile gcl string
+            chdir(Editor::getBrowserPath().c_str());
+            std::string command = "py \"" + _configGclBuild + "\"" + "/compilegcl.py " + "\"" + filepath + "\"" + " -s " + "\"" + _configGclBuild + "\"" + "/interface.json";
+
+            // Create gt1 name and path
+            size_t dot = filename.find_last_of(".");
+            if(dot != std::string::npos)
+            {
+                filename = filename.substr(0, dot) + ".gt1";
+                dot = filepath.find_last_of(".");
+                filepath = filepath.substr(0, dot) + ".gt1";
+            }
+
+            // Build gcl
+            int gt1FileDeleted = remove(filepath.c_str());
+            fprintf(stderr, "\n");
+            system(command.c_str());
+
+            // Check for gt1
+            std::ifstream infile(filepath, std::ios::binary | std::ios::in);
+            if(!infile.is_open())
+            {
+                fprintf(stderr, "\nLoader::uploadDirect() : failed to compile '%s'.\n", filename.c_str());
+                filename = "";
+                if(gt1FileDeleted == 0) Editor::browseDirectory();
+            }
+            else
+            {
+                gt1FileBuilt = true;
+            }
+        }
+        
+        // Upload gt1
         if(filename.find(".gt1") != filename.npos)
         {
             Assembler::clearAssembler();
@@ -882,11 +927,13 @@ namespace Loader
             // Don't save gt1 file for any asm files that contain native rom code
             std::string gt1FileName;
             if(!hasRomCode  &&  !saveGt1File(filepath, gt1File, gt1FileName)) return;
+
+            gt1FileBuilt = true;
         }
         // Invalid file
         else
         {
-            fprintf(stderr, "Loader::upload() : invalid file '%s'.\n", filename.c_str());
+            fprintf(stderr, "Loader::upload() : invalid file or file does not exist, '%s'.\n", filename.c_str());
             return;
         }
 
@@ -921,6 +968,9 @@ namespace Loader
                 uploadToGiga(filepath);
             }
         }
+
+        // Updates browser in case a new gt1 file was created from a gcl file or a vasm file
+        if(gt1FileBuilt) Editor::browseDirectory();
 
         return;
     }

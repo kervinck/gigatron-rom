@@ -7,6 +7,8 @@
 #define DEFAULT_START_ADDRESS  0x0200
 #define DEFAULT_CALL_TABLE     0x007E
 
+#define USER_ROM_ADDRESS  0x0B00 // pictures in ROM v1
+
 
 namespace Assembler
 {

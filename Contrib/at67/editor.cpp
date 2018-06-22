@@ -540,7 +540,7 @@ namespace Editor
                 {
                     dirnames.push_back(name);
                 }
-                else if(ent->d_type == DT_REG  &&  (name.find(".vasm") != std::string::npos  ||  name.find(".gasm") != std::string::npos  ||  name.find(".gt1") != std::string::npos))
+                else if(ent->d_type == DT_REG  &&  (name.find(".vasm") != std::string::npos  ||  name.find(".gasm") != std::string::npos  ||  name.find(".gt1") != std::string::npos  ||  name.find(".gcl") != std::string::npos))
                 {
                     filenames.push_back(name);
                 }

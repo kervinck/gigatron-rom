@@ -176,8 +176,8 @@ namespace Assembler
             customAddress = byteCode._address;
         }
 
-        // User code is RAM code or (ROM code that lives at or above 0x0900)
-        isUserCode = !byteCode._isRomAddress  ||  (byteCode._isRomAddress  &&  customAddress >= 0x0900);
+        // User code is RAM code or ROM code in user ROM space
+        isUserCode = !byteCode._isRomAddress  ||  (byteCode._isRomAddress  &&  customAddress >= USER_ROM_ADDRESS);
 
         // Seperate sections
         if(debug  &&  byteCode._isCustomAddress  &&  isUserCode) fprintf(stderr, "\n");
@@ -991,7 +991,7 @@ namespace Assembler
         }
     }
 
-    bool checkInvalidAddress(ParseType parse, uint16_t currentAddress, uint16_t instructionSize, const Instruction& instruction, const LineToken& lineToken, const std::string& filename, int line)
+    bool checkInvalidAddress(ParseType parse, uint16_t currentAddress, uint16_t instructionSize, const Instruction& instruction, const LineToken& lineToken, const std::string& filename, int lineNumber)
     {
         // Check for audio channel stomping
         if(parse == CodePass  &&  !instruction._isRomAddress)
@@ -1003,7 +1003,7 @@ namespace Assembler
                (start >= GIGA_CH2_WAV_A  &&  start <= GIGA_CH2_OSC_H)  ||  (end >= GIGA_CH2_WAV_A  &&  end <= GIGA_CH2_OSC_H)  ||
                (start >= GIGA_CH3_WAV_A  &&  start <= GIGA_CH3_OSC_H)  ||  (end >= GIGA_CH3_WAV_A  &&  end <= GIGA_CH3_OSC_H))
             {
-                fprintf(stderr, "Assembler::assemble() : Warning, audio channel 0 boundary compromised : 0x%04X <-> 0x%04X\nAssembler::assemble() : '%s'\nAssembler::assemble() : in %s on line %d.\n", start, end, lineToken._text.c_str(), filename.c_str(), line+1);
+                fprintf(stderr, "Assembler::assemble() : Warning, audio channel boundary compromised : 0x%04X <-> 0x%04X\nAssembler::assemble() : '%s'\nAssembler::assemble() : in %s on line %d.\n", start, end, lineToken._text.c_str(), filename.c_str(), lineNumber+1);
             }
         }
 
@@ -1018,7 +1018,7 @@ namespace Assembler
             uint16_t newAddress = (instruction._isRomAddress) ? customAddress + ((currentAddress & 0x00FF)>>1) : currentAddress;
             if((oldAddress >>8) != (newAddress >>8))
             {
-                fprintf(stderr, "Assembler::assemble() : Page boundary compromised : %04X : %04X : '%s' : in %s on line %d.\n", oldAddress, newAddress, lineToken._text.c_str(), filename.c_str(), line+1);
+                fprintf(stderr, "Assembler::assemble() : Page boundary compromised : %04X : %04X : '%s' : in %s on line %d.\n", oldAddress, newAddress, lineToken._text.c_str(), filename.c_str(), lineNumber+1);
                 return false;
             }
         }
