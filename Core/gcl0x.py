@@ -106,7 +106,7 @@ class Program:
             del self.conds[block]
           if block in self.defs:
             define('$%s.def.%d' % (self.name, self.defs[block]), prev(self.vPC))
-            self.lengths[self.thisBlock()] = self.vPC - self.defs[block]
+            self.lengths[self.thisBlock()] = self.vPC - self.defs[block] + 2
             del self.defs[block]
         elif nextChar == '(': pass
         elif nextChar == ')': pass
