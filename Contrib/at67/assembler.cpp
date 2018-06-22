@@ -1003,7 +1003,7 @@ namespace Assembler
                (start >= GIGA_CH2_WAV_A  &&  start <= GIGA_CH2_OSC_H)  ||  (end >= GIGA_CH2_WAV_A  &&  end <= GIGA_CH2_OSC_H)  ||
                (start >= GIGA_CH3_WAV_A  &&  start <= GIGA_CH3_OSC_H)  ||  (end >= GIGA_CH3_WAV_A  &&  end <= GIGA_CH3_OSC_H))
             {
-                fprintf(stderr, "Assembler::assemble() : Warning, audio channel boundary compromised : 0x%04X <-> 0x%04X\nAssembler::assemble() : '%s'\nAssembler::assemble() : in %s on line %d.\n", start, end, lineToken._text.c_str(), filename.c_str(), lineNumber+1);
+                fprintf(stderr, "Assembler::assemble() : Warning, audio channel boundary compromised : 0x%04X <-> 0x%04X\nAssembler::assemble() : '%s'\nAssembler::assemble() : in '%s' on line %d\n", start, end, lineToken._text.c_str(), filename.c_str(), lineNumber+1);
             }
         }
 
@@ -1018,7 +1018,7 @@ namespace Assembler
             uint16_t newAddress = (instruction._isRomAddress) ? customAddress + ((currentAddress & 0x00FF)>>1) : currentAddress;
             if((oldAddress >>8) != (newAddress >>8))
             {
-                fprintf(stderr, "Assembler::assemble() : Page boundary compromised : %04X : %04X : '%s' : in %s on line %d.\n", oldAddress, newAddress, lineToken._text.c_str(), filename.c_str(), lineNumber+1);
+                fprintf(stderr, "Assembler::assemble() : Page boundary compromised : %04X : %04X : '%s' : in '%s' on line %d\n", oldAddress, newAddress, lineToken._text.c_str(), filename.c_str(), lineNumber+1);
                 return false;
             }
         }
@@ -1134,7 +1134,7 @@ namespace Assembler
         // Check include syntax
         if(tokens.size() != 2)
         {
-            fprintf(stderr, "Assembler::handleInclude() : Bad %%include statement : '%s' : on line %d.\n", lineToken.c_str(), lineIndex);
+            fprintf(stderr, "Assembler::handleInclude() : Bad %%include statement : '%s' : on line %d\n", lineToken.c_str(), lineIndex);
             return false;
         }
 
@@ -1143,7 +1143,7 @@ namespace Assembler
         std::ifstream infile(filepath);
         if(!infile.is_open())
         {
-            fprintf(stderr, "Assembler::handleInclude() : Failed to open file : '%s'.\n", filepath.c_str());
+            fprintf(stderr, "Assembler::handleInclude() : Failed to open file : '%s'\n", filepath.c_str());
             return false;
         }
 
@@ -1157,7 +1157,7 @@ namespace Assembler
 
             if(!infile.good() &&  !infile.eof())
             {
-                fprintf(stderr, "Assembler::handleInclude() : Bad lineToken : '%s' : in %s on line %d.\n", includeLineToken._text.c_str(), filepath.c_str(), lineNumber - lineIndex);
+                fprintf(stderr, "Assembler::handleInclude() : Bad lineToken : '%s' : in '%s' on line %d\n", includeLineToken._text.c_str(), filepath.c_str(), lineNumber - lineIndex);
                 return false;
             }
         }
@@ -1172,7 +1172,7 @@ namespace Assembler
         {
             if(!macros[i]._complete)
             {
-                fprintf(stderr, "Assembler::handleMacros() : Bad macro : missing 'ENDM' : in %s : on line %d.\n", macros[i]._filename.c_str(), macros[i]._fileStartLine);
+                fprintf(stderr, "Assembler::handleMacros() : Bad macro : missing 'ENDM' : in '%s' : on line %d\n", macros[i]._filename.c_str(), macros[i]._fileStartLine);
                 return false;
             }
         }
@@ -1284,13 +1284,13 @@ namespace Assembler
 
             if(macroMissing)
             {
-                fprintf(stderr, "Assembler::handleMacros() : Warning, macro is never called : %s : in %s : on line %d.\n", macro._name.c_str(), macro._filename.c_str(), macro._fileStartLine);
+                fprintf(stderr, "Assembler::handleMacros() : Warning, macro is never called : '%s' : in '%s' : on line %d\n", macro._name.c_str(), macro._filename.c_str(), macro._fileStartLine);
                 continue;
             }
 
             if(macroMissingParams)
             {
-                fprintf(stderr, "Assembler::handleMacros() : Missing macro parameters : %s : in %s : on line %d.\n", macro._name.c_str(), macro._filename.c_str(), macro._fileStartLine);
+                fprintf(stderr, "Assembler::handleMacros() : Missing macro parameters : '%s' : in '%s' : on line %d\n", macro._name.c_str(), macro._filename.c_str(), macro._fileStartLine);
                 return false;
             }
         }
@@ -1306,7 +1306,7 @@ namespace Assembler
         // Check macro syntax
         if(tokens.size() < 2)
         {
-            fprintf(stderr, "Assembler::handleMacroStart() : Bad macro : missing name : in %s : on line %d.\n", macroFileName.c_str(), lineNumber);
+            fprintf(stderr, "Assembler::handleMacroStart() : Bad macro : missing name : in '%s' : on line %d\n", macroFileName.c_str(), lineNumber);
             return false;
         }                    
 
@@ -1329,7 +1329,7 @@ namespace Assembler
         {
             if(macro._name == macros[i]._name)
             {
-                fprintf(stderr, "Assembler::handleMacroEnd() : Bad macro : duplicate name : %s : in %s : on line %d.\n", macro._name.c_str(), macro._filename.c_str(), macro._fileStartLine);
+                fprintf(stderr, "Assembler::handleMacroEnd() : Bad macro : duplicate name : '%s' : in '%s' : on line %d\n", macro._name.c_str(), macro._filename.c_str(), macro._fileStartLine);
                 return false;
             }
         }
@@ -1387,7 +1387,7 @@ namespace Assembler
                     // Recursively include everything in order
                     if(!preProcess(filename, includeLineTokens, false))
                     {
-                        fprintf(stderr, "Assembler::preProcess() : Bad include file : '%s'.\n", tokens[1].c_str());
+                        fprintf(stderr, "Assembler::preProcess() : Bad include file : '%s'\n", tokens[1].c_str());
                         return false;
                     }
 
@@ -1520,7 +1520,7 @@ namespace Assembler
                 }
             }
 
-            fprintf(stderr, "Assembler::createGprintf() : Bad gprintf format : '%s' : on line %d.\n", lineToken.c_str(), lineNumber);
+            fprintf(stderr, "Assembler::createGprintf() : Bad gprintf format : '%s' : on line %d\n", lineToken.c_str(), lineNumber);
             return false;
         }
 
@@ -1580,7 +1580,7 @@ namespace Assembler
 
                 if(!success)
                 {
-                    fprintf(stderr, "Assembler::parseGprintfs() : Error in gprintf(), missing label or equate : '%s' : in %s on line %d.\n", token.c_str(), _gprintfs[i]._lineToken.c_str(), _gprintfs[i]._lineNumber);
+                    fprintf(stderr, "Assembler::parseGprintfs() : Error in gprintf(), missing label or equate : '%s' : in '%s' on line %d\n", token.c_str(), _gprintfs[i]._lineToken.c_str(), _gprintfs[i]._lineNumber);
                     _gprintfs.erase(_gprintfs.begin() + i);
                     return false;
                 }
@@ -1666,7 +1666,7 @@ namespace Assembler
                     {
                         std::string gstring;
                         getGprintfString(i, gstring);
-                        fprintf(stderr, "gprintf() : address $%04X : %s.\n", _gprintfs[i]._address, gstring.c_str());
+                        fprintf(stderr, "gprintf() : address $%04X : '%s'\n", _gprintfs[i]._address, gstring.c_str());
                         _gprintfs[i]._displayed = true;
                     }
                 }
@@ -1694,7 +1694,7 @@ namespace Assembler
         std::ifstream infile(filename);
         if(!infile.is_open())
         {
-            fprintf(stderr, "Assembler::assemble() : Failed to open file : '%s'.\n", filename.c_str());
+            fprintf(stderr, "Assembler::assemble() : Failed to open file : '%s'\n", filename.c_str());
             return false;
         }
 
@@ -1718,7 +1718,7 @@ namespace Assembler
 
             if(!infile.good()  &&  !infile.eof())
             {
-                fprintf(stderr, "Assembler::assemble() : Bad lineToken : '%s' : in %s : on line %d.\n", lineToken._text.c_str(), filename.c_str(), numLines+1);
+                fprintf(stderr, "Assembler::assemble() : Bad lineToken : '%s' : in '%s' : on line %d\n", lineToken._text.c_str(), filename.c_str(), numLines+1);
                 return false;
             }
 
@@ -1760,12 +1760,12 @@ namespace Assembler
                         EvaluateResult result = evaluateEquates(tokens, (ParseType)parse);
                         if(result == NotFound)
                         {
-                            fprintf(stderr, "Assembler::assemble() : Missing equate : '%s' : in %s on line %d.\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
+                            fprintf(stderr, "Assembler::assemble() : Missing equate : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
                             return false;
                         }
                         else if(result == Duplicate)
                         {
-                            fprintf(stderr, "Assembler::assemble() : Duplicate equate : '%s' : in %s on line %d.\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
+                            fprintf(stderr, "Assembler::assemble() : Duplicate equate : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
                             return false;
                         }
                         // Skip equate lines
@@ -1778,12 +1778,12 @@ namespace Assembler
                         result = EvaluateLabels(tokens, (ParseType)parse, tokenIndex);
                         if(result == Reserved)
                         {
-                            fprintf(stderr, "Assembler::assemble() : Can't use a reserved word in a label : '%s' : in %s on line %d.\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
+                            fprintf(stderr, "Assembler::assemble() : Can't use a reserved word in a label : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
                             return false;
                         }
                         else if(result == Duplicate)
                         {
-                            fprintf(stderr, "Assembler::assemble() : Duplicate label : '%s' : in %s on line %d.\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
+                            fprintf(stderr, "Assembler::assemble() : Duplicate label : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
                             return false;
                         }
                     }
@@ -1804,7 +1804,7 @@ namespace Assembler
 
                 if(outputSize == BadSize)
                 {
-                    fprintf(stderr, "Assembler::assemble() : Bad Opcode : '%s' : in %s on line %d.\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
+                    fprintf(stderr, "Assembler::assemble() : Bad Opcode : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
                     return false;
                 }
 
@@ -1820,7 +1820,7 @@ namespace Assembler
                         {
                             if(!handleDefineByte(tokens, tokenIndex, instruction, false, outputSize))
                             {
-                                fprintf(stderr, "Assembler::assemble() : Bad DB data : '%s' : in %s on line %d.\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
+                                fprintf(stderr, "Assembler::assemble() : Bad DB data : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
                                 return false;
                             }
                         }
@@ -1836,7 +1836,7 @@ namespace Assembler
                         {
                             if(!handleDefineWord(tokens, tokenIndex, instruction, false, outputSize))
                             {
-                                fprintf(stderr, "Assembler::assemble() : Bad DW data : '%s' : in %s on line %d.\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
+                                fprintf(stderr, "Assembler::assemble() : Bad DW data : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
                                 return false;
                             }
                         }
@@ -1853,7 +1853,7 @@ namespace Assembler
                     // Missing operand
                     else if((outputSize == TwoBytes  ||  outputSize == ThreeBytes)  &&  tokens.size() <= tokenIndex)
                     {
-                        fprintf(stderr, "Assembler::assemble() : Missing operand/s : '%s' : in %s on line %d.\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
+                        fprintf(stderr, "Assembler::assemble() : Missing operand/s : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
                         return false;
                     }
 
@@ -1902,7 +1902,7 @@ namespace Assembler
                                 }
                                 else
                                 {
-                                    fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in %s on line %d.\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
+                                    fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
                                     return false;
                                 }
                             }
@@ -1939,7 +1939,7 @@ namespace Assembler
                                 }
                                 else
                                 {
-                                    fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in %s on line %d.\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
+                                    fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
                                     return false;
                                 }
                             }
@@ -1980,7 +1980,7 @@ namespace Assembler
                                     }
                                     else if(!operandValid)
                                     {
-                                        fprintf(stderr, "Assembler::assemble() : Label/Equate error : '%s' : in %s on line %d.\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
+                                        fprintf(stderr, "Assembler::assemble() : Label/Equate error : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
                                         return false;
                                     }
                                 }
@@ -1993,7 +1993,7 @@ namespace Assembler
                                 {
                                     if(!handleNativeInstruction(tokens, tokenIndex, opcode, operand))
                                     {
-                                        fprintf(stderr, "Assembler::assemble() : Native instruction is malformed : '%s' : in %s on line %d.\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
+                                        fprintf(stderr, "Assembler::assemble() : Native instruction is malformed : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
                                         return false;
                                     }
                                 }
@@ -2010,7 +2010,7 @@ namespace Assembler
                                 uint8_t ope = Cpu::getROM(add, 1);
                                 if(instruction._opcode != opc  ||  instruction._operand0 != ope)
                                 {
-                                    fprintf(stderr, "Assembler::assemble() : ROM Native instruction mismatch  : 0x%04X : ASM=0x%02X%02X : ROM=0x%02X%02X : on line %d.\n", add, instruction._opcode, instruction._operand0, opc, ope, _lineNumber+1);
+                                    fprintf(stderr, "Assembler::assemble() : ROM Native instruction mismatch  : 0x%04X : ASM=0x%02X%02X : ROM=0x%02X%02X : on line %d\n", add, instruction._opcode, instruction._operand0, opc, ope, _lineNumber+1);
 
                                     // Fix mismatched instruction?
                                     //instruction._opcode = opc;
@@ -2034,7 +2034,7 @@ namespace Assembler
                                 {
                                     if(!handleDefineByte(tokens, tokenIndex, instruction, true, outputSize))
                                     {
-                                        fprintf(stderr, "Assembler::assemble() : Bad DB data : '%s' : in %s on line %d.\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
+                                        fprintf(stderr, "Assembler::assemble() : Bad DB data : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
                                         return false;
                                     }
                                 }
@@ -2065,7 +2065,7 @@ namespace Assembler
                                 }
                                 else
                                 {
-                                    fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in %s on line %d.\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
+                                    fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
                                     return false;
                                 }
 
@@ -2104,7 +2104,7 @@ namespace Assembler
                                     }
                                     else if(!operandValid)
                                     {
-                                        fprintf(stderr, "Assembler::assemble() : Label/Equate error : '%s' : in %s on line %d.\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
+                                        fprintf(stderr, "Assembler::assemble() : Label/Equate error : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
                                         return false;
                                     }
                                 }

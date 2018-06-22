@@ -118,7 +118,7 @@ namespace Editor
         key = Expression::strToUpper(key);
         if(_sdlKeys.find(key) == _sdlKeys.end())
         {
-            fprintf(stderr, "Editor::initialise() : key %s not recognised in INI file '%s' : reverting to default key %s.\n", key.c_str(), INPUT_CONFIG_INI, defaultKey.c_str());
+            fprintf(stderr, "Editor::initialise() : key %s not recognised in INI file '%s' : reverting to default key '%s'\n", key.c_str(), INPUT_CONFIG_INI, defaultKey.c_str());
             scanCode = _sdlKeys[defaultKey];
             return false;
         }

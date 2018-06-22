@@ -167,7 +167,7 @@ namespace Expression
         {
             if(!number(value))
             {
-                fprintf(stderr, "Expression::factor() : Bad numeric data in '%s' on line %d.\n", _expressionToParse, _lineNumber + 1);
+                fprintf(stderr, "Expression::factor() : Bad numeric data in '%s' on line %d\n", _expressionToParse, _lineNumber + 1);
                 value = 0;
             }
             return value;
@@ -178,7 +178,7 @@ namespace Expression
             uint16_t result = expression();
             if(peek() != ')')
             {
-                fprintf(stderr, "Expression::factor() : Expecting ')' : found '%c' in '%s' on line %d.\n", peek(), _expressionToParse, _lineNumber + 1);
+                fprintf(stderr, "Expression::factor() : Expecting ')' : found '%c' in '%s' on line %d\n", peek(), _expressionToParse, _lineNumber + 1);
                 result = 0;
             }
             get();
@@ -190,7 +190,7 @@ namespace Expression
             return -factor();
         }
 
-        fprintf(stderr, "Expression::factor() : Unknown character '%c' in '%s' on line %d.\n", peek(), _expressionToParse, _lineNumber + 1);
+        fprintf(stderr, "Expression::factor() : Unknown character '%c' in '%s' on line %d\n", peek(), _expressionToParse, _lineNumber + 1);
         return 0;
     }
 

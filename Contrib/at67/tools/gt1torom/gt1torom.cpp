@@ -34,14 +34,14 @@ bool writeRomDataWithTrampoline(const std::string& outputFilename0, const std::s
                 outfile0.write((char *)&trampolineOpcode[j], 1);
                 if(outfile0.bad() || outfile0.fail())
                 {
-                    fprintf(stderr, "gt1torom : write error at address %04x in file %s.\n", address + j, outputFilename0.c_str());
+                    fprintf(stderr, "gt1torom : write error at address %04x in file '%s'\n", address + j, outputFilename0.c_str());
                     return false;
                 }
 
                 outfile1.write((char *)&trampolineOperand[j], 1);
                 if(outfile1.bad() || outfile1.fail())
                 {
-                    fprintf(stderr, "gt1torom : write error at address %04x in file %s.\n", address + j, outputFilename1.c_str());
+                    fprintf(stderr, "gt1torom : write error at address %04x in file '%s'\n", address + j, outputFilename1.c_str());
                     return false;
                 }
             }
@@ -56,7 +56,7 @@ bool writeRomDataWithTrampoline(const std::string& outputFilename0, const std::s
             outfile0.write(&nativeLoad[0], 1);
             if(outfile0.bad() || outfile0.fail())
             {
-                fprintf(stderr, "gt1torom : write error at address %04x in file %s.\n", startAddress + i, outputFilename0.c_str());
+                fprintf(stderr, "gt1torom : write error at address %04x in file '%s'\n", startAddress + i, outputFilename0.c_str());
                 return false;
             }
 
@@ -66,7 +66,7 @@ bool writeRomDataWithTrampoline(const std::string& outputFilename0, const std::s
                 outfile1.write((char *)&_gt1[i], 1);
             if(outfile1.bad() || outfile1.fail())
             {
-                fprintf(stderr, "gt1torom : write error at address %04x in file %s.\n", startAddress + i, outputFilename1.c_str());
+                fprintf(stderr, "gt1torom : write error at address %04x in file '%s'\n", startAddress + i, outputFilename1.c_str());
                 return false;
             }
         }
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
     std::ofstream outfile0(outputFilename0, std::ios::binary | std::ios::out);
     if(!outfile0.is_open())
     {
-        fprintf(stderr, "gt1torom : failed to open '%s'.\n", outputFilename0.c_str());
+        fprintf(stderr, "gt1torom : failed to open '%s'\n", outputFilename0.c_str());
         return 1;
     }
 
@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
     std::ofstream outfile1(outputFilename1, std::ios::binary | std::ios::out);
     if(!outfile1.is_open())
     {
-        fprintf(stderr, "gt1torom : failed to open '%s'.\n", outputFilename1.c_str());
+        fprintf(stderr, "gt1torom : failed to open '%s'\n", outputFilename1.c_str());
         return 1;
     }
 
