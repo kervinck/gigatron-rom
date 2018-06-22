@@ -19,11 +19,11 @@
 
   Zero-page:
   30 -          Tiny BASIC interpreter variables
-  90 - c3       BASIC variables A..Z (XXX Might move to $0da0?)
+  90 - c3       BASIC variables A..Z (XXX Might move to $0ea0?)
   c4 - ff       Stack (30 words)
 
-  0da0 - 07ff   Programs are stored in the invisible part of screen memory
-  0da2 - 0dbf   Input buffer (also "line 0") (XXX Might move to 0dd2)
+  0ea0 - 07ff   Programs are stored in the invisible part of screen memory
+  0ea2 - 0ebf   Input buffer (also "line 0")
   8000 - ffff   Optional memory for BASIC programs (64K extension)
 
   Todo/must have:
@@ -33,10 +33,12 @@
     Relops      With correct behaviour -30000 < 30000
     GOSUB       And RETURN
     PRINT       Suppress newline after ; and ,
+                Allow multiple ,
     INPUT
     *BREAK*     Use [Del] key
   Wish list:
     64K         Should work, but not tested. Also test out of memory errors.
+    LET         Make LET keyword optional
     PEEK() POKE
     Stack:      Bound check on stack
     Zero page:  Move variables to another page, stack space is more important
@@ -192,19 +194,16 @@ $0f20 \sysArgs6:                {Pen color yellow, background color blue}
   pop ret
 ] PrintDigit=
 
-{ Verify that there is nothing else on the line }
 [def
-  SkipSpaces!
-  Active,
-  [if<>0 SyntaxError!]
-  pop ret                       {Popping the callee's saved vLR!}
-] {EndOfLine=}
+  [do Active, $20^ if=0 Active<++ loop]
+  ret
+] {SkipSpaces=}
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
 $0300:
-EndOfLine=
+SkipSpaces=
 
 [def
   Active,                       {Next character from line}
@@ -279,11 +278,6 @@ EndOfLine=
   pop ret
 ] GetLine=
 
-[def
-  [do Active, $20^ if=0 Active<++ loop]
-  ret
-] SkipSpaces=
-
 { Parse an unsigned decimal number and put in Value }
 [def
   $8000                         {Stays negative if we don't see any digits}
@@ -300,15 +294,14 @@ EndOfLine=
       loop]
   Value                         {Result, negative value indicates error}
   ret
-] {TestNumber=}
+] TestNumber=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
 $0400:
-TestNumber=
 
-{ Statement executor }
+{ Statement executor. Returns next line to be executed }
 [def
   push
 
@@ -425,9 +418,16 @@ $0500:
 
   TestWord! $72# $75# $6e# 0#   {'run'}
   [if=0
-    SyntaxError!
-    {XXX implement}
-    EndOfLine!
+    {Run continuous, ignore rest of line}
+
+    $0ec0                       {First program line, if any}
+    [do
+      Active=                   {Hop to next line}
+      End^ if<>0                {Repeat until the last line}
+      Active 2+ Active=         {Skip line number}
+      TestBreak!                {Test for [Del] as break request}
+      Statement! if<>0loop]
+    pop ret                     {Return without errors}
   ]
 
   TestWord!                     {'list'}
@@ -494,28 +494,6 @@ $0500:
   pop ret
 ] Expression=
 
-{ Process an expression term, result in Value and vAC }
-[def
-  push
-  Factor!                       {First factor}
-  2-- Value 0%=                 {Put partial result on stack}
-  [do                           {Optional additional factors}
-    SkipSpaces!
-    TestWord! $2a# 0#           {'*'}
-    [if=0
-       Factor!
-       0% Multiply! 0%=
-       loop]
-    TestWord! $2f# 0#           {'/'}
-    [if=0
-       Factor!
-       0% Divide! 0%=
-       loop]
-  ]
-  0% Value= 2++                 {Make stack value the result}
-  pop ret
-] Term=
-
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
@@ -539,7 +517,7 @@ $0600:
   End i= j=                     {Setup i and j for below}
   PrevBlock! deek Value-        {Retrieve last line number, 0 when no program}
   [if>=0                        {If insert/modify instead of append}
-    $0dc0 [do i=                {Loop over program from beginning}
+    $0ec0 [do i=                {Loop over program from beginning}
       i; Value- if<0            {Stop if found or past it}
       i NextBlock! loop]        {Advance to next line}
 
@@ -605,7 +583,7 @@ $0600:
 
 { Clear program and variables }
 [def
-  $0da0 Buffer=                 {First block in memory is input buffer}
+  $0ea0 Buffer=                 {First block in memory is input buffer}
   32+ End=                      {Programs begin 32 bytes later}
 
   $90 i=                        {Clear variables A-Z}
@@ -676,6 +654,42 @@ $08a0:
 +-----------------------------------------------------------------------}
 $09a0:
 
+{ Process an expression term, result in Value and vAC }
+[def
+  push
+  Factor!                       {First factor}
+  2-- Value 0%=                 {Put partial result on stack}
+  [do                           {Optional additional factors}
+    SkipSpaces!
+    TestWord! $2a# 0#           {'*'}
+    [if=0
+       Factor!
+       0% Multiply! 0%=
+       loop]
+    TestWord! $2f# 0#           {'/'}
+    [if=0
+       Factor!
+       0% Divide! 0%=
+       loop]
+  ]
+  0% Value= 2++                 {Make stack value the result}
+  pop ret
+] Term=
+
+{ Verify that there is nothing else on the line }
+[def
+  SkipSpaces!
+  Active,
+  [if<>0 SyntaxError!]
+  Active NextBlock!
+  pop ret                       {Popping the callee's saved vLR!}
+] EndOfLine=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 10                                     |
++-----------------------------------------------------------------------}
+$0aa0:
+
 { Process an expression factor, result in Value }
 [def
   push
@@ -700,10 +714,10 @@ $09a0:
 
 { List program }
 [def
-  $0dc0                         {Start of program memory}
+  $0ec0                         {Start of program memory}
   [do
     j=
-    End^ if<>0                  {Repeat until the last address}
+    End^ if<>0                  {Repeat until the last line}
 
     TestBreak!                  {Test for [Del] as break request}
 
@@ -723,9 +737,9 @@ $09a0:
 ] List=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 10                                     |
+|}\vLR>++ ret{          RAM page 11                                     |
 +-----------------------------------------------------------------------}
-$0aa0:
+$0ba0:
 
 { Calculate vAC / Value, result in vAC, remainder in i }
 [def
@@ -750,9 +764,9 @@ $0aa0:
 ] {Divide=}
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 11                                     |
+|}\vLR>++ ret{          RAM page 12                                     |
 +-----------------------------------------------------------------------}
-$0ba0:
+$0ca0:
 Divide=
 
 { Calculate vAC * Value, result in vAC }
@@ -774,9 +788,9 @@ Divide=
 ] Multiply=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 12                                     |
+|}\vLR>++ ret{          RAM page 13                                     |
 +-----------------------------------------------------------------------}
-$0ca0:
+$0da0:
 
 [def
   \vLR; tmp=                    {vLR points to inline argument}
@@ -810,7 +824,7 @@ Newline!                        {Terminate welcome message or error}
   [do
     GetLine!                    {Get line from console}
     $0f \sysArgs7.              {Pen color yellow for output}
-    $0da2 Active=               {Parse from start of buffer}
+    $0ea2 Active=               {Parse from start of buffer}
     SkipSpaces!
     Active, if=0loop            {Do nothing for empty lines}
     TestNumber! if>0            {Test for a line number}
