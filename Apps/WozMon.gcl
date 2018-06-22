@@ -11,6 +11,7 @@
                        avoiding spurious newlines to save vertical space.
                        Gracefully allow self-invocation ("200R").
   2018-06-21 (marcelk) Simplifications ported back from Tiny BASIC
+  2018-06-22 (marcelk) Use the won space to echo user input in white
 
   What works the same as the original:
     - Type hex address to examine memory contents
@@ -66,8 +67,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
   k+ k=                         {Add to page address to reach bitmap data}
 
   \SYS_VDrawBits_134 \sysFn=    {Prepare SYS calls}
-  32 \sysArgs0.                 {Background color blue}
-  15 \sysArgs1.                 {Character color yellow}
+  \sysArgs6; \sysArgs0:         {Apply caller-defined colors}
   Pos \sysArgs4=                {Position for character}
   $fe%=                         {Temporarily park return value on the stack}
   6+ Pos=                       {Advance position by 6 pixels}
@@ -85,16 +85,16 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 { Print a newline conditionally }
 [def
   Pos<, [if<>0                  {If not at start already}
+    \SYS_VDrawBits_134 \sysFn=  {Prepare SYS call}
     $800 Pos<.                  {Go back to start}
     Pos+ [if<0 $0800] Pos=      {Go down 8 lines and wrap around if needed}
-
-    \sysArgs4=                  {Clear line by printing slices in 1 color}
-    32 \sysArgs0. \sysArgs1.    {All blue}
-    \SYS_VDrawBits_134 \sysFn=
+    \sysArgs4=                  {sysArgs[4:5] is position on screen}
+    \sysArgs2.                  {All-zero output pattern}
     [do
-      134!
-      \sysArgs4<++
-      \sysArgs4, 160^ if<>0loop]
+      134!                      {SYS call}
+      \sysArgs4<++              {Advance to next slice}
+      \sysArgs4, 160^           {Test for end of screen}
+      if<>0loop]
                                 {Scroll up by modifying videoTable}
     $01ee i=                    {Last entry in video table}
     [do
@@ -195,17 +195,18 @@ $0300:
   pop ret
 ] ProcessBuffer=
 
+Pos<++                          {Force a non-zero low byte}
+$0f20 \sysArgs6:                {Pen color yellow, background color blue}
+\sysArgs0. CNewline!            {Now forced to scroll and clear last line}
+
+{ Display '*' and welcome message }
+$2a [do PrintChar! tmp, tmp<++ if<>0loop]
+
 $0400 call
 {-----------------------------------------------------------------------+
 |                       RAM page 4                                      |
 +-----------------------------------------------------------------------}
 $0400:
-
-Pos<++                          {Force a non-zero low byte}
-CNewline!                       {Now forced to scroll and clear last line}
-
-{ Display '*' and welcome message }
-$2a [do PrintChar! tmp, tmp<++ if<>0loop]
 
 { Input loop, assume some kind of ASCII keyboard is hooked up }
 
@@ -214,7 +215,8 @@ $2a [do PrintChar! tmp, tmp<++ if<>0loop]
   CNewline!
 
   [do {NEXTCHAR}
-    127 PrintChar! Pos=         {Draw cursor}
+    127 \sysArgs7.              {Pen color white for user input}
+    PrintChar! Pos=             {Draw cursor}
 
     \serialRaw, [do             {Wait for key change}
       tmp= \serialRaw, Buffer.
@@ -243,5 +245,6 @@ $2a [do PrintChar! tmp, tmp<++ if<>0loop]
   Buffer.                       {Terminate input with zero}
   Mode=                         {Start in examine mode}
   $20 PrintChar!                {Remove and advance cursor}
+  $0f \sysArgs7.                {Pen color yellow for output}
   ProcessBuffer!
   loop]                         {To GETLINE}
