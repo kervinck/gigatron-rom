@@ -8,6 +8,7 @@
 {
   2018-06-19 (marcelk) Scaffolding. Can evaluate direct print statements.
   2018-06-21 (marcelk) Can edit programs, delete lines, but no run yet
+  2018-06-23 (marcelk) Can RUN, GOTO, GOSUB, RETURN and break program
 
 
   Original Tiny BASIC quirks:
@@ -26,44 +27,60 @@
   0ea2 - 0ebf   Input buffer (also "line 0")
   8000 - ffff   Optional memory for BASIC programs (64K extension)
 
+  Errors:
+  Break error   Program (or list command) stopped by [Del] key
+  Syntax error  Parsing error. Too large program
+  Value error   Calculation error (division by 0). Target line not found.
+                Not raised for overflows.
+  Stack error   GOSUB nesting too deep. RETURN without GOSUB.
+                (XXX also too complex expressions? Or do syntax error there?)
+
   Todo/must have:
-    RUN
-    GOTO
     IF THEN
-    Relops      With correct behaviour -30000 < 30000
-    GOSUB       And RETURN
+    Relops      With correct behavior, eg -30000 < 30000
+    INPUT
     PRINT       Suppress newline after ; and ,
                 Allow multiple ,
-    INPUT
-    *BREAK*     Use [Del] key
+    NextBlock   struct block { word nextBlock; word lineno; char[30] text;}
   Wish list:
-    64K         Should work, but not tested. Also test out of memory errors.
-    LET         Make LET keyword optional
+    USR()
     PEEK() POKE
-    Stack:      Bound check on stack
+    LET         Make LET keyword optional
+    Indent      Indent BASIC output 2 pixels (as in WozMon)
+    Speed       Binary search for GotoValue
+    LIST <n>    List one line
     Zero page:  Move variables to another page, stack space is more important
-    $xx         Hexadecimal numbers
-    Unary minus Original Tiny BASIC does it wrong: 8/-2
     SET x,y     Check with Had badge Move cursor
-    CHR$        Check with HaD badge Print character
-    CLS         Clear screen, move to top
+    $xx         Hexadecimal numbers
+    "CHR$"      At least the ability to print an ASCII char.
     FRE()       For fun, can be implicit with LIST
-    RND()
+    64K         Should work, but not tested. Also test out of memory errors.
     %           Modulo operator
-    AND OR NOT  Logical
+    RND()
     ABS()
+    Overflow    Errors on overflow for +, -  and *
+  Maybe:
+    READ, DATA  Possibly put in unused lines?
+    Unary minus Original Tiny BASIC does it wrong: 8/-2
+    CLS         Clear screen, move to top
+    ? PR        Alias for PRINT
+    AND OR NOT  At list for in IF statements
     a-z A-Z     As different variables
     @           As variable name
-    :           Multiple statements in one line
-    ? PR        Alias for PRINT
     '           Alias for REM
-    "xxx"       String variables
+    "xxx"       String *variables*
     A()         Arrays (1-dimensional)
     @           Array as in Palo Alto Tiny BASIC (store vertically?)
+  Probably not:
+    :           Multiple statements in one line
     ELSE        Will slow down IF, because it has to scan for this
     FOR TO NEXT And STEP. No idea how to implement
     DEF FNx
 
+  List of games that should be tested for compatibility:
+    TicTac.bas  -> TicTac.gtb
+
+    --------
     line ::= number statement CR | statement CR
 
     statement ::= PRINT expr-list
@@ -88,13 +105,24 @@
     digit ::= 0 | 1 | 2 | 3 | ... | 8 | 9
     relop ::= < (>|=|empty) | > (<|=|empty) | =
     string ::= " (a|b|c ... |x|y|z|A|B|C ... |X|Y|Z|digit)* "
+    --------
 
   References:
         https://en.wikipedia.org/wiki/Tiny_BASIC
         Wikipedia article
 
+        http://www.ittybittycomputers.com/IttyBitty/TinyBasic/DDJ1/Design.html
+        DESIGN NOTES FOR TINY BASIC (Dennis Allison et al.)
+
         http://www.ittybittycomputers.com/IttyBitty/TinyBasic/
         Tom Pittman's implementation
+
+        http://p112.sourceforge.net/tbp112.html
+        P112 Tiny Basic User's Guide (V1.0, 18 FEB 1999)
+
+        http://www.bitsavers.org/pdf/interfaceAge/197612/092-108.pdf
+        Dr. Wang's Palo Alto Tiny Basic (Roger Rauskolb)
+
 }
 
 gcl0x
@@ -148,10 +176,7 @@ $0f20 \sysArgs6:                {Pen color yellow, background color blue}
   tmp!                          {Returns to caller}
 ] PrintS=
 
-{
-  Newline
-  Output a carriage-return-linefeed sequence to the console.
-}
+{ Continue printing on new line. Returns 0 }
 [def
   \SYS_VDrawBits_134 \sysFn=    {Prepare SYS call}
   $800 Pos<.                    {Go back to start}
@@ -177,33 +202,29 @@ $0f20 \sysArgs6:                {Pen color yellow, background color blue}
 { Conditionally print leading decimal digit }
 [def
   push
-
   i=                            {Radix as argument, keep in i}
-  Value                         {Calculate Value/Radix}
-  [do
+  Value [do                     {Calculate Value/Radix}
     i-                          {Subtract i}
-    if>=0                       {As long as possible}
-      Value=
-      k<++                      {Increment 0..9 times}
-      loop]
-
+    if>=0                       {As many times as fits}
+    Value=
+    k<++                        {Increment 0..9 times}
+    loop]
   k [if<>0                      {If non-zero digit or non-leading zero}
-    $30| PrintChar!             {Map to $30..$39 range and print digit}
-    $30 k=]                     {All further zeroes are non-leading}
-
+     $30| PrintChar!            {Map to $30..$39 range and print digit}
+     $30 k=]                    {And mark all further zeroes as non-leading}
   pop ret
 ] PrintDigit=
 
 [def
   [do Active, $20^ if=0 Active<++ loop]
   ret
-] {SkipSpaces=}
+] {Spaces=}
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
 $0300:
-SkipSpaces=
+Spaces=
 
 [def
   Active,                       {Next character from line}
@@ -236,8 +257,7 @@ SkipSpaces=
   pop ret
 ] PrintValue=
 
-{ GetLine -- Get Input Line }
-{ ASCII characters are accepted from console input }
+{ Accept ASCII characters from console input with line editting }
 [def
   push
   $a2 Buffer<.                  {Prepare for next input line}
@@ -275,6 +295,8 @@ SkipSpaces=
   Buffer.                       {Terminate input with zero}
   $20 PrintChar!                {Remove cursor}
   Newline!
+  $0f \sysArgs7.                {Pen color yellow for output}
+  $0ea2                         {Return buffer start}
   pop ret
 ] GetLine=
 
@@ -301,106 +323,105 @@ SkipSpaces=
 +-----------------------------------------------------------------------}
 $0400:
 
-{ Statement executor. Returns next line to be executed }
+{ Statement executor. Doesn't return through vLR }
+{ Active must point to text or terminating zero, NOT to the line number }
 [def
-  push
-
-  SkipSpaces!
+  Spaces!
 
   TestWord! $6c# $65# $74# 0#   {'let'}
   [if=0
-    SkipSpaces!
+    Spaces!
     TestVar!                    {Must be a variable name}
     LValue=                     {Park here}
-    SkipSpaces!
+    Spaces!
     TestWord! $3d# 0#           {'='}
     [if<>0 SyntaxError!]
     Expression!                 {Evaluate expression}
     LValue:                     {Store value in variable}
-    EndOfLine!
-  ]
+    EndOfLine!]
 
-  TestWord! $67# $6f# 0#        {'go'}
+  TestWord! $67# $6f# $74# $6f# {'goto'}
+    0#
   [if=0
-    TestWord! $74# $6f# 0#      {'to'}
-    [if=0
+    Expression!                 {Computed goto}
+    GotoValue!]                 {Find that line and continue there}
 
-    ]
-
-    TestWord! $73# $75# $62# 0# {'sub'}
-    [if=0
-
-    ]
-  ]
-
-  TestWord!
-    $70# $72# $69# $6e# $74# 0# {'print'}
+  TestWord! $67# $6f# $73# $75# {'gosub'}
+     $62# 0#
   [if=0
-    [do
-      SkipSpaces!
-      Active, if<>0
+    \vSP, [if<>0                {Check stack space}
+      $e0- if<=0                {XXX 16 levels is ok?}
+      StackError!]              {Fail with error when too deep}
+    Expression!                 {Computed gosub}
+    2-- Active 0%=              {Push current line to stack}
+    GotoValue!]                 {Find that line and continue there}
+
+  TestWord! $72# $65# $74# $75# {'return'}
+    $72# $6e# 0#
+  [if=0
+    \vSP, [if=0 StackError!]    {Top of stack}
+    deek Active= 2++            {Pop line from stack}
+    EndOfLine!]
+
+  TestWord! $70# $72# $69# $6e# {'print'}
+    $74# 0#
+  [if=0
+    [do {PRINTLIST}
+      Spaces!
+      Active, if<>0             {Until end of line}
       $22^                      {'"'}
       [if=0
-        [do                     {String constant}
+        [do {PRINTSTRING}       {String constant}
           Active<++
           Active,
           [if=0 SyntaxError!]   {Unterminated string}
           $22^ if<>0            {'"'}
           Active, PrintChar!
-          loop]
+          loop]                 {To PRINTSTRING}
         Active<++               {Skip past closing '"'}
       else
         Expression!
-        PrintValue!
-      ]
+        PrintValue!]
 
       Active, $3b^              {';'}
-      [if=0
-        Active<++
-        loop]
+      [if=0 Active<++ loop]     {To PRINTLIST}
       Active, $2c^              {','}
       [if=0
         Active<++
         [do
           $20 PrintChar!
           Pos<, 7& if<>0loop]   {Tab stops every 4 characters}
-        loop]
+        loop]                   {To PRINTLIST}
     ]
     Newline!                    {XXX Skip this right after ; or , }
-    EndOfLine!
-  ]
+    EndOfLine!]
 
-  TestWord!
-    $69# $66# 0#                {'if'}
-  [if=0
+{
+  TestWord! $69# $66# 0#        {'if'}
+  [if=0                         {XXX to do}
     Expression!
     RelOp!
     Expression!
-    TestWord!
-      $74# $68# $65# $6e# 0#    {'then'}
+    TestWord!                   {'then'}
+      $74# $68# $65# $6e# 0#
     Statement!
-    EndOfLine!
-  ]
+    EndOfLine!]
+}
 
-  TestWord!                     {'return'}
-    $72# $65# $74# $75# $72# $6e# 0#
+  TestWord! $72# $65# $6d# 0#   {'rem'}
   [if=0
-    EndOfLine!
-  ]
-
-  TestWord!                     {'rem'}
-    $72# $65# $6d# 0#
-  [if=0
-    Active NextBlock!           {Ignore rest of line}
-    pop ret
+    [do
+      Active, if<>0             {Search for end of line}
+      Active<++ loop]
     EndOfLine!]
 
-  TestWord!                     {'input'}
-    $69# $6e# $70# $75# $74# 0#
-  [if=0
+{
+  TestWord! $69# $6e# $70# $75# {'input'}
+    $74# 0#
+  [if=0                         {XXX to do}
     TestVar!
-    EndOfLine!
-  ]
+    EndOfLine!]
+}
 
   StatementCont!                {Continue in another page}
 ] Statement=
@@ -412,37 +433,38 @@ $0500:
 
 { Less critical commands }
 [def
-
   TestWord! $65# $6e# $64# 0#   {'end'}
-  [if=0 pop ret]                {Return 0 to stop execution}
+  [if=0 Error 0#]               {XXX stop in a different way}
 
   TestWord! $72# $75# $6e# 0#   {'run'}
   [if=0
-    {Run continuous, ignore rest of line}
-
     $0ec0                       {First program line, if any}
-    [do
-      Active=                   {Hop to next line}
-      End^ if<>0                {Repeat until the last line}
-      Active 2+ Active=         {Skip line number}
-      TestBreak!                {Test for [Del] as break request}
-      Statement! if<>0loop]
-    pop ret                     {Return without errors}
-  ]
+    End^ [if=0 EndOfLine!]      {Don't run empty program}
+    $0ec2 Active=               {Skip line number}
+    Statement!]                 {And start execution}
 
   TestWord!                     {'list'}
     $6c# $69# $73# $74# 0#
-  [if=0 List!]
+  [if=0 List! EndOfLine!]
 
   TestWord! $6e# $65# $77# 0#   {'new'}
-  [if=0
-    New!
-    {XXX test what happens while doing this while running}
-    EndOfLine!
-  ]
-  SyntaxError!
+  [if=0 New! Prompt! 0#]        {Returns to prompt}
 
+  SyntaxError!
 ] StatementCont=
+
+{ Verify that there is nothing else on the line, then continue with next }
+{ XXX Top heavy: speed this up by linking blocks }
+[def
+  Spaces!
+  Active, [if<>0 SyntaxError!]  {There must be nothing left on the line}
+  Active NextBlock! Active=     {Advance to next line}
+  End^ [if<>0                   {Stop at end of program}
+    $0ec0 Active^ if<>0         {Also stop if we came from the input buffer}
+    Active 2+ Active=           {Skip past line number}
+    Statement!]                 {And continue from there}
+  Prompt! 0#                    {Program finished ok}
+] EndOfLine=
 
 { Parse an inline keyword, 0 is success }
 [def
@@ -467,7 +489,7 @@ $0500:
 [def
   push
                                 {First term}
-  SkipSpaces!
+  Spaces!
   TestWord! $2d# 0#             {'-'}
   [if=0                         {Accept unary minus}
     Term!
@@ -478,7 +500,7 @@ $0500:
 
   2-- 0%=                       {Put partial result on stack}
   [do                           {Optional additional terms}
-    SkipSpaces!
+    Spaces!
     TestWord! $2b# 0#           {'+'}
     [if=0
        Term!
@@ -512,76 +534,69 @@ $0600:
 { Handle commands that start with a line number }
 [def
   push
+  TestNumber!
+  [if>0
+    { Lookup line number in program }
+    End i= j=                   {Setup i and j for below}
+    PrevBlock! deek Value-      {Retrieve last line number, 0 when no program}
+    [if>=0                      {If insert/modify instead of append}
+      $0ec0 [do i=              {Loop over program from beginning}
+        i; Value- if<0          {Stop if found or past it}
+        i NextBlock! loop]      {Advance to next line}
+      if>0                      {Insert scenario}
+        0; End^                 {Compare against top of memory}
+        [if<>0                  {Do the copy only when safe (give error later)}
+          [do                   {Copy rest of program one one slot up}
+            j k= PrevBlock!     {Go up one block}
+            j= tmp=
+            [do                 {Copy tmp[0:31] to k[0:31]}
+              tmp, k.           {Copy as bytes, don't bother with word copy}
+              tmp<++ k<++       {Advance both pointers}
+              tmp 31&
+              if<>0loop]        {Copy all 32 bytes}
 
-  { Lookup line number in program }
-  End i= j=                     {Setup i and j for below}
-  PrevBlock! deek Value-        {Retrieve last line number, 0 when no program}
-  [if>=0                        {If insert/modify instead of append}
-    $0ec0 [do i=                {Loop over program from beginning}
-      i; Value- if<0            {Stop if found or past it}
-      i NextBlock! loop]        {Advance to next line}
+            j i^ if<>0loop]
+        ]
+        1                       {Non-zero to trigger advancing of End below}
+    ]
+    { Expand program space if needed }
+    [if<>0
+      0; End^                   {Compare End against top of memory}
+      [if=0 SyntaxError!]       {Out of memory error if equal}
+      End NextBlock! End=]      {Otherwise grab space for new line}
 
-    if>0                        {Insert scenario}
-      0; End^                   {Compare against top of memory}
-      [if<>0                    {Do the copy only when safe (give error later)}
-        [do                     {Copy rest of program one one slot up}
-          j k= PrevBlock!       {Go up one block}
-          j= tmp=
-          [do                   {Copy tmp[0:31] to k[0:31]}
-            tmp, k.             {Copy as bytes, don't bother with word copy}
-            tmp<++ k<++         {Advance both pointers}
-            tmp 31& if<>0loop]  {Simply copy all 32 bytes}
-
-          j i^ if<>0loop]
-      ]
-      1                         {Non-zero to trigger advancing of End below}
-  ]
-
-  { Expand program space if needed }
-  [if<>0
-    0; End^                     {Compare End against top of memory}
-    [if=0 MemoryError!]         {Out of memory error if equal}
-    End NextBlock! End=]        {Otherwise grab space for new line}
-
-  Active,                       {Inspect if line has any content}
-  [if<>0
-    { Copy line from buffer into program }
-    Value i:                    {Copy line number}
-    i<++                        {Copy line text}
-    [do
-      i<++
-      Active, Active<++         {From input buffer}
-      i.                        {Into program memory}
-      if<>0loop]                {Until terminating zero}
-  else
-    { Bare line number means delete that line }
-    i j=                        {i still points at line to be deleted}
-    [do
-        End^ if<>0              {Until end of program}
-        j NextBlock! j= tmp=    {Go down one block}
-        [do                     {Copy tmp[0:31] to i[0:31]}
-          tmp, i.               {Copy as bytes, don't bother with word copy}
-          tmp<++ i<++           {Advance both pointers}
-          tmp 31& if<>0loop]    {Simply copy all 32 bytes}
-        j i=
-        loop]
-    End PrevBlock! End=         {Remove last line from program}
+    Active,                     {Inspect if line has any content}
+    [if<>0
+      { Copy line from buffer into program }
+      Value i:                  {Copy line number}
+      i<++                      {Copy line text}
+      [do
+        i<++
+        Active, Active<++       {From input buffer}
+        i.                      {Into program memory}
+        if<>0loop]              {Until terminating zero}
+    else
+      { Bare line number means delete that line }
+      i j=                      {i still points at line to be deleted}
+      [do
+          End^ if<>0            {Until end of program}
+          j NextBlock! j= tmp=  {Go down one block}
+          [do                   {Copy tmp[0:31] to i[0:31]}
+            tmp, i.             {Copy as bytes, don't bother with word copy}
+            tmp<++ i<++         {Advance both pointers}
+            tmp 31& if<>0loop]  {Copy all 32 bytes}
+          j i=
+          loop]
+      End PrevBlock! End=       {Remove last line from program}
+    ]
+    Value                       {Report line number to caller}
   ]
   pop ret
-] InsertLine=
-
-[def
-  \serialRaw, $7f^              {Test for [Del] as break request}
-  [if=0
-    Error!                      {'Break'}
-      $42# $72# $65# $61#
-      $6b# 0#]
-  ret
-] TestBreak=
+] TryInsertLine=
 
 { Note: It is save to call functions here before hopping over to page 8 }
 
-{ Clear program and variables }
+{ Clear program and variables, returns 0 }
 [def
   $0ea0 Buffer=                 {First block in memory is input buffer}
   32+ End=                      {Programs begin 32 bytes later}
@@ -594,9 +609,10 @@ $0600:
 
   Active=                       {Not active in any line}
   Buffer:                       {Place a dummy largest line number 0 here}
-
   ret
 ] New=
+
+{ Note: It is save to call functions here before hopping over to page 8 }
 
 Newline!                        {Scroll and clear last line}
 
@@ -613,21 +629,6 @@ New!                            {Empty program and clear variables}
 +-----------------------------------------------------------------------}
 $08a0:
 
-[def
-  Error! $53# $79# $6e# $74#    {'Syntax'}
-    $61# $78# 0#
-] SyntaxError=
-
-[def
-  Error! $56# $61# $6c# $75#    {'Value'}
-    $65# 0#
-] ValueError=
-
-[def
-  Error! $4d# $65# $6d# $6f#    {'Memory'}
-    $72# $79# 0#
-] MemoryError=
-
 { Calculate address of next 32-byte block for storing BASIC lines }
 { Realign if needed }
 [def
@@ -639,15 +640,27 @@ $08a0:
   ret
 ] NextBlock=
 
-{ Go to previous block. Assume already aligned to 32-byte block }
+{ Go to previous block. Assume vAC already aligned to valid 32-byte block }
 [def
   32- tmp=                      {Move back to previous 32 byte memory block}
   [if>=0                        {In the first 32K...}
-    $e0& 160- if<0              {...wrap around visible screen memory}
+    $60& if=0                   {...wrap around visible screen memory}
       tmp 160- ret]
   tmp
   ret
 ] PrevBlock=
+
+{ Find line with line number equal to Value and go there }
+[def
+  TestBreak!                    {Test for [Del] as break request}
+  $0ec0 [do i=                  {Loop over program from beginning}
+    End^ if<>0                  {Until end of program}
+    i; Value^ [if=0             {Or if matching value found}
+      i 2+ Active=              {Skip past line number}
+      Statement!]               {And continue from there}
+    i NextBlock! loop]          {Otherwise try next line}
+  ValueError!                   {Fail with error message when line not found}
+] GotoValue=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 9                                      |
@@ -660,7 +673,7 @@ $09a0:
   Factor!                       {First factor}
   2-- Value 0%=                 {Put partial result on stack}
   [do                           {Optional additional factors}
-    SkipSpaces!
+    Spaces!
     TestWord! $2a# 0#           {'*'}
     [if=0
        Factor!
@@ -676,14 +689,14 @@ $09a0:
   pop ret
 ] Term=
 
-{ Verify that there is nothing else on the line }
 [def
-  SkipSpaces!
-  Active,
-  [if<>0 SyntaxError!]
-  Active NextBlock!
-  pop ret                       {Popping the callee's saved vLR!}
-] EndOfLine=
+  \serialRaw, $7f^              {Test for [Del] as break request}
+  [if=0
+    Prompt!                     {'Break'}
+      $42# $72# $65# $61# $6b#
+      0#]
+  ret
+] TestBreak=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 10                                     |
@@ -694,11 +707,11 @@ $0aa0:
 [def
   push
 
-  SkipSpaces!
+  Spaces!
   TestWord! $28# 0#             {'('}
   [if=0
     Expression!
-    SkipSpaces!
+    Spaces!
     TestWord! $29# 0#           {')'}
     [if<>0 SyntaxError!]
     pop ret]
@@ -718,21 +731,16 @@ $0aa0:
   [do
     j=
     End^ if<>0                  {Repeat until the last line}
-
     TestBreak!                  {Test for [Del] as break request}
-
     j; Value= PrintValue!       {Print line number}
-
     j<++                        {Print line text}
     [do
       j<++ j,
       if<>0 PrintChar!
       loop]
     Newline!
-
     j NextBlock!                {Advance to next line in memory}
   loop]
-
   EndOfLine!
 ] List=
 
@@ -787,49 +795,64 @@ Divide=
   ret
 ] Multiply=
 
+[def
+  Prompt! $53# $74# $61# $63#   {'Stack'}
+    $6b# 0#
+] StackError=
+
+[def
+  Prompt! $53# $79# $6e# $74#   {'Syntax'}
+    $61# $78# 0#
+] SyntaxError=
+
+[def
+  Prompt! $56# $61# $6c# $75#   {'Value'}
+    $65# 0#
+] {ValueError=}
+
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 13                                     |
 +-----------------------------------------------------------------------}
 $0da0:
+ValueError=
 
+{ Error reporting function and re-entry point for main loop }
+{ Call with inline partial error message, or with 0# for silent re-entry }
 [def
-  \vLR; tmp=                    {vLR points to inline argument}
-  $3f                           {'?'}
-  [do                           {Print inline string as prelude}
-    PrintChar!
-    tmp, tmp<++
-    if<>0loop]
-  PrintS!                       {' error'}
-    $20# $65# $72# $72# $6f#
-    $72# 0#
-  \vSP.                         {Reset stack}
-  32-                           {$ffe0}
-  Active&                       {Align to begin of block}
-  deek                          {Fetch active line number}
-  [if<>0                        {Input buffer has line number 0, don't print}
-    Value=                      {Prepare line number for printing}
-    PrintS!                     {' in '}
-      $20# $69# $6e# $20# 0#
-    PrintValue!]                {Print line number}
+  \vLR; tmp=                    {vLR points to inline string argument}
+  [Pos<, if<>0 Newline!]        {Conditional newline}
+  tmp, [if=0                    {Test for error in first byte of message}
+    PrintS! $4f# $6b# 0#        {'Ok'}
+  else
+    $3f                         {Begin error messages with '?'}
+    [do                         {Print inline string as prelude}
+      PrintChar!
+      tmp, tmp<++
+      if<>0loop]
+    PrintS!                     {' error'}
+      $20# $65# $72# $72# $6f#
+      $72# 0#
+    \vSP.                       {Reset stack}
+    32-                         {$ffe0}
+    Active&                     {Align to begin of block}
+    {2+} deek                   {Fetch active line number}
+    [if<>0                      {Input buffer has line number 0, don't print}
+      Value=                    {Prepare line number for printing}
+      PrintS!                   {' in '}
+        $20# $69# $6e# $20# 0#
+      PrintValue!]]             {Print line number}
   \LDWI#                        {1-byte hack to fall through and skip 'Error='}
-] Error=
+] Prompt=
 
-Newline!                        {Terminate welcome message or error}
+Newline!                        {Newline after prompt, error or welcome}
 
-{ Main interactive loop }
+{ Main loop }
 [do
-  PrintS!                       {'Ready' prompt}
-    $52# $65# $61# $64# $79# 0#
-  Newline!
-  [do
-    GetLine!                    {Get line from console}
-    $0f \sysArgs7.              {Pen color yellow for output}
-    $0ea2 Active=               {Parse from start of buffer}
-    SkipSpaces!
-    Active, if=0loop            {Do nothing for empty lines}
-    TestNumber! if>0            {Test for a line number}
-      InsertLine!               {If positive, insert into program}
-      loop]                     {Continue without prompt}
-  Statement!                    {Execute direct statement}
-  loop]                         {Continue with prompt}
+  GetLine!                      {Get line from console}
+  Active=                       {Parse from start of buffer}
+  Spaces!
+  Active, if=0loop              {Do nothing for empty lines}
+  TryInsertLine!                {Test for line number to insert (or delete)}
+  if>0loop]                     {If found, continue without prompt}
+Statement!                      {Execute statement}
 
