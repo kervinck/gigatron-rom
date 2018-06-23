@@ -7,109 +7,51 @@
 
 {
   2018-06-19 (marcelk) Scaffolding. Can evaluate direct print statements.
-  2018-06-21 (marcelk) Can edit programs, delete lines, but no run yet
+  2018-06-21 (marcelk) Can edit programs, delete lines, but no RUN yet
   2018-06-23 (marcelk) Can RUN, GOTO, GOSUB, RETURN and break program
-  2018-06-xx (marcelk) Can IF/THEN and END
+  2018-06-24 (marcelk) Can do IF/THEN, INPUT and END: feature complete
+
+  Formal grammar:
+        Line        ::= Number Statement | Statement
+        Statement   ::= 'PRINT' (String|Expression) (',' (String|Expression))* |
+                        'IF' Expression RelOp Expression 'THEN'? Statement |
+                        'GOTO' Expression |
+                        'INPUT' Var (',' Var)* |
+                        'LET'? Var '=' Expression |
+                        'GOSUB' Expression |
+                        'RETURN' |
+                        'NEW' |
+                        'LIST' |
+                        'RUN' |
+                        'END'
+        Expression  ::= [+-]? Term ([+-] Term)*
+        Term        ::= Factor ([*/] Factor)*
+        Factor      ::= Variable | Number | '(' Expression ')'
+        RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
+        Number      ::= Digit+
+        Digit       ::= [0-9]
+        Variable    ::= [A-Z]
+        String      ::= '"' (#x20 #x21 [#x23-#x7E])* '"'
+
+  Error messages:
+        Break error   Program (or list command) stopped by [Del] key
+        Syntax error  Parsing error. Program too large. Expression to complex.
+        Value error   Calculation error (division by 0). Not yet for overflow.
+        Stack error   GOSUB nesting too deep. RETURN without GOSUB.
+        Line error    Line number not found (or attempt to run empty program)
 
   Original Tiny BASIC quirks replicated:
-    print 1+3*-8        --> Syntax error
-    print 6/-2          --> Syntax error
-    print -32768/2      --> 16383
+        print 1+3*-8    --> Syntax error
+        print 6/-2      --> Syntax error
 
-  Memory allocation in Gigatron
-
-  Zero-page
-  ---------
-  30 -          Tiny BASIC interpreter variables
-  90 - c3       BASIC variables A..Z (XXX Might move to $10a0?)
-  c4 - ff       Stack (30 words)
-
-  10a0 - 07ff   Programs are stored in the invisible part of screen memory
-  10a2 - 10bf   Input buffer (also "line 0")
-  8000 - ffff   Optional memory for BASIC programs (64K extension)
-
-  Error messages
-  --------------
-  Break error   Program (or list command) stopped by [Del] key
-  Syntax error  Parsing error. Too large program
-  Value error   Calculation error (division by 0). Not raised for overflows.
-  Stack error   GOSUB nesting too deep. RETURN without GOSUB.
-                (XXX also too complex expressions? Or do syntax error there?)
-  Line error    Line number not found (or attempt to run empty program)
-
-  Todo/must have:
-    INPUT
-    PRINT       Suppress newline after ; and ,
-    PRINT       Allow multiple ,
-  Wish list:
-    LET         Make LET keyword optional
-    PEEK() POKE
-    FRE()       For fun
-    Buffer      At least 1 character more input
-    Overflow    Errors on overflow for +, -  and *
-    Zero page   Move variables to another page, stack space is more important
-    Indent      Indent BASIC output 2 pixels (as in WozMon)
-    SET x,y     Check with Had badge Move cursor
-    "CHR$"      At least the ability to print an ASCII char.
-    64K         Should work, but not tested. Also test out of memory errors.
-    %           Modulo operator
-  Maybe:
-    ABS()       Built-in function
-    RND()       Built-in function
-    USR()       Built-in function (Call what?)
-    TIM()       Built-in funcion for time? (is there a standard?)
-    $xx         Hexadecimal numbers
-    LIST <n>    List one line
-    Speed       Binary search for GotoValue
-    Unary minus Original Tiny BASIC does it wrong: 8/-2
-    CLS         Clear screen, move to top
-    ? PR        Alias for PRINT
-    @           As variable name
-    '           Alias for REM
-    @           Array as in Palo Alto Tiny BASIC (store vertically?)
-    A()         Arrays (1-dimensional)
-    NextBlock   struct block { word nextBlock; word lineno; char[30] text;}
-  Probably not:
-    a-z A-Z     As different variables
-    ><          For unequal
-    CLEAR       For NEW
-    READ, DATA  Possibly put in unused lines?
-    AND OR NOT  At list for in IF statements
-    "xxx"       String *variables*
-    :           Multiple statements in one line
-    ELSE        Will slow down IF, because it has to scan for this
-    FOR TO NEXT And STEP. No idea how to implement
-    DEF FNx
-
-  List of games that should be tested for compatibility:
-    TicTac.bas  -> TicTac.gtb
-
-    --------
-    line ::= number statement CR | statement CR
-
-    statement ::= PRINT expr-list
-                  IF expression relop expression THEN statement
-                  GOTO expression
-                  INPUT var-list                XXX Why a list?
-                  LET var = expression
-                  GOSUB expression
-                  RETURN
-                  CLEAR                         XXX NEW
-                  LIST
-                  RUN
-                  END
-
-    expr-list ::= (string|expression) (, (string|expression) )* XXX ; vs ,
-    var-list ::= var (, var)*
-    expression ::= (+|-|empty) term ((+|-) term)*
-    term ::= factor ((*|/) factor)*
-    factor ::= var | number | (expression)
-    var ::= A | B | C ... | Y | Z
-    number ::= digit digit*
-    digit ::= 0 | 1 | 2 | 3 | ... | 8 | 9
-    relop ::= < (>|=|empty) | > (<|=|empty) | =         XXX We don't do "><"
-    string ::= " (a|b|c ... |x|y|z|A|B|C ... |X|Y|Z|digit)* "
-    --------
+  Memory allocation:
+          30 -   7f   Tiny BASIC interpreter variables
+          90 -   c3   BASIC variables A..Z (XXX Should move to $10a0)
+          c4 -   ff   Stack (30 words)
+         200 -  fff   Tiny BASIC interpreter
+        10a0 - 07ff   Programs stored in the invisible part of screen memory
+        10a2 - 10bf   Input buffer (also "line 0")
+        8000 - ffff   Optional memory for BASIC programs (64K extension)
 
   References:
         https://en.wikipedia.org/wiki/Tiny_BASIC
@@ -127,6 +69,48 @@
         http://www.bitsavers.org/pdf/interfaceAge/197612/092-108.pdf
         Dr. Wang's Palo Alto Tiny Basic (Roger Rauskolb)
 
+  Wish list:
+    PRINT       Suppress newline after ; and ,
+    LET         Make LET keyword optional
+    Testing     TicTac.bas -> TicTac.gtb
+    PEEK() POKE
+    FRE()       For fun. Or report at end of LIST
+    Zero page   Move variables to another page, stack space is more important
+    Buffer      At least 1 character more input
+    Overflow    Errors on overflow for +, -  and *
+    Indent      Indent BASIC output 2 pixels (as in WozMon)
+    CLS         Clear screen, move to top
+    SET x,y     Check with Had badge Move cursor
+    "CHR$"      At least the ability to print an ASCII char.
+    64K         Should work, but not tested. Also test out of memory errors.
+    %           Modulo operator
+    Color       Easily change colors
+  Maybe list:
+    ABS()       Built-in function
+    RND()       Built-in function
+    USR()       Built-in function (Call what?)
+    TIM()       Built-in funcion for time? (is there a standard?)
+    ? PR        Alias for PRINT
+    $xx         Hexadecimal numbers
+    Speed       Binary search for GotoValue
+    Unary minus Original Tiny BASIC does it wrong: 8/-2
+    @           As variable name
+    @()         Array as in Palo Alto Tiny BASIC (store vertically?)
+    '           Alias for REM
+    NextBlock   struct block { word nextBlock; word lineno; char[30] text;}
+  Probably not list:
+    A()         Arrays (1-dimensional)
+    LIST <n>    List one line
+    a-z A-Z     As different variables
+    ><          For unequal
+    CLEAR       For NEW
+    READ, DATA  Possibly put in unused lines?
+    AND OR NOT  At list for in IF statements
+    "xxx"       String *variables*
+    :           Multiple statements in one line
+    ELSE        Will slow down IF, because it has to scan for this
+    FOR TO NEXT And STEP. No idea how to implement
+    DEF FNx
 }
 
 gcl0x
@@ -335,8 +319,8 @@ $0400:
 
   Keyword! $6c# $65# $74# 0#    {'let'}
   [if<>0
-    Variable!                   {Must be a variable name}
-    LValue=                     {Park here}
+    Variable!
+    LValue=                     {Park address here}
     Spaces!
     Keyword! $3d# 0#            {'='}
     [if=0 SyntaxError!]
@@ -372,7 +356,7 @@ $0400:
     Expression!
     4-- 2%=                     {Push first value on stack}
     RelOp!
-  { [if=0 SyntaxError!]         XXX No space }
+    [if=0 SyntaxError!]
     0%=                         {Park RelOp bits on stack}
     Expression!
     Keyword! $74# $68# $65#     {'then' (optional)}
@@ -398,10 +382,6 @@ $0400:
       Active<++ loop]
     EndOfLine!]
 
-  Keyword!                      {'list'}
-    $6c# $69# $73# $74# 0#
-  [if<>0 List! EndOfLine!]
-
   Keyword! $72# $75# $6e# 0#    {'run'}
   [if<>0
     $10c0 deek Value=           {First program line, if any}
@@ -417,6 +397,10 @@ $0500:
 
 { Continuation of Statement }
 [def
+
+  Keyword!                      {'list'}
+    $6c# $69# $73# $74# 0#
+  [if<>0 List! EndOfLine!]
 
   Keyword! $6e# $65# $77# 0#    {'new'}
   [if<>0 New! Prompt! 0#]       {Returns to prompt}
@@ -456,13 +440,26 @@ $0500:
     ]
     Newline!                    {XXX Skip this right after ; or , }
     EndOfLine!]
-{
+
   Keyword! $69# $6e# $70# $75#  {'input'}
     $74# 0#
   [if<>0
-    Variable!
+    [do
+      Active,                   {Be nice and show variable name in prompt}
+      $40| PrintChar!           {Take care not to crash at errant line end}
+      $3f PrintChar!            {'?'}
+      Newline!                  {Avoid dealing with partially printed lines}
+      Variable!                 {Parse variable name}
+      LValue=                   {Park address here}
+      2-- Active 0%=            {Save program pointer on stack}
+      GetLine!                  {Let user type something}
+      Active=                   {Pretend input buffer is part of program}
+      Expression!               {Accept arbitrary expression as input \o/}
+      LValue:                   {Store received value in variable}
+      0% Active= 2++            {Restore program pointer from stack}
+      Active, $2c^              {','}
+      if=0 Active<++ loop]      {Next variable}
     EndOfLine!]
-}
 
   SyntaxError!
 ] StatementCont=
@@ -478,48 +475,18 @@ $0500:
     Active,                     {Grab next character from line}
     $20|                        {Ignore case}
     i^ [if=0 Active<++ loop]    {Accept if character matches}
-                                {Mismatch}
-    j Active=                   {Restore BASIC pointer for next word}
+    j Active=                   {Restore program pointer on mismatch}
     [do tmp, tmp<++ if<>0loop]  {Eat remaining characters}
     tmp!]
-                                {Match}
-  Spaces!                       {Remove whitespace here for convenience}
+  Spaces!                       {Remove trailing whitespace on match}
   tmp!                          {Effectively returns past the keyword}
-] Keyword=
-
-{ Process a full expression, result in Value and vAC }
-[def
-  push
-                                {First term}
-  Keyword! $2d# 0#              {'-'}
-  [if<>0                        {Accept unary minus}
-    Term!
-    0 Value-                    {Negate}
-  else
-    Keyword! $2b# 0#            {'+' Ignore unary plus}
-    Term!]
-
-  2-- 0%=                       {Put partial result on stack}
-  [do                           {Optional additional terms}
-    Keyword! $2b# 0#            {'+'}
-    [if<>0
-       Term!
-       0% Value+ 0%=            {Perform addition}
-       loop]
-    Keyword! $2d# 0#            {'-'}
-    [if<>0
-       Term!
-       0% Value- 0%=            {Perform subtraction}
-       loop]
-  ]
-  0% Value= 2++                 {Make stack value the result}
-  pop ret
-] Expression=
+] {Keyword=}
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
 $0600:
+Keyword=
 
 {
  Six scenarios for InsertLine          Check   Search  Shift   Copy    Shift
@@ -786,6 +753,35 @@ $0ba0:
 |}\vLR>++ ret{          RAM page 12                                     |
 +-----------------------------------------------------------------------}
 $0ca0:
+
+{ Process a full expression, result in Value and vAC }
+[def
+  push
+                                {First term}
+  Keyword! $2d# 0#              {'-'}
+  [if<>0                        {Accept unary minus}
+    Term!
+    0 Value-                    {Negate}
+  else
+    Keyword! $2b# 0#            {'+' Ignore unary plus}
+    Term!]
+
+  2-- 0%=                       {Put partial result on stack}
+  [do                           {Optional additional terms}
+    Keyword! $2b# 0#            {'+'}
+    [if<>0
+       Term!
+       0% Value+ 0%=            {Perform addition}
+       loop]
+    Keyword! $2d# 0#            {'-'}
+    [if<>0
+       Term!
+       0% Value- 0%=            {Perform subtraction}
+       loop]
+  ]
+  0% Value= 2++                 {Make stack value the result}
+  pop ret
+] Expression=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 13                                     |
