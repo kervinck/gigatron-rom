@@ -17,7 +17,7 @@
                         'IF' Expression RelOp Expression 'THEN'? Statement |
                         'GOTO' Expression |
                         'INPUT' Var (',' Var)* |
-                        'LET'? Var '=' Expression |
+                        'LET' Var '=' Expression |
                         'GOSUB' Expression |
                         'RETURN' |
                         'NEW' |
@@ -28,14 +28,13 @@
         Term        ::= Factor ([*/] Factor)*
         Factor      ::= Variable | Number | '(' Expression ')'
         RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
-        Number      ::= Digit+
-        Digit       ::= [0-9]
+        Number      ::= [0-9]+
         Variable    ::= [A-Z]
         String      ::= '"' (#x20 #x21 [#x23-#x7E])* '"'
 
   Error messages:
-        Break error   Program (or list command) stopped by [Del] key
-        Syntax error  Parsing error. Program too large. Expression to complex.
+        Break error   Program (or list command) stopped by [Delete] key
+        Syntax error  Parsing error. Program too large. Expression too complex.
         Value error   Calculation error (division by 0). Not yet for overflow.
         Stack error   GOSUB nesting too deep. RETURN without GOSUB.
         Line error    Line number not found (or attempt to run empty program)
@@ -71,7 +70,7 @@
 
   Wish list:
     PRINT       Suppress newline after ; and ,
-    LET         Make LET keyword optional
+    LET         Make LET keyword optional (also update grammar)
     Testing     TicTac.bas -> TicTac.gtb
     PEEK() POKE
     FRE()       For fun. Or report at end of LIST

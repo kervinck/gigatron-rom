@@ -1,0 +1,24 @@
+/*
+ *  Gigatron's Tiny BASIC definition
+ *  EBNF in W3C notation
+ *  Recommended railroad diagram generator: http://www.bottlecaps.de/rr/ui
+ */
+Line        ::= Number Statement | Statement
+Statement   ::= 'PRINT' (String|Expression) (',' (String|Expression))* |
+                'IF' Expression RelOp Expression 'THEN'? Statement |
+                'GOTO' Expression |
+                'INPUT' Var (',' Var)* |
+                'LET' Var '=' Expression |
+                'GOSUB' Expression |
+                'RETURN' |
+                'NEW' |
+                'LIST' |
+                'RUN' |
+                'END'
+Expression  ::= [+-]? Term ([+-] Term)*
+Term        ::= Factor ([*/] Factor)*
+Factor      ::= Variable | Number | '(' Expression ')'
+RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
+Number      ::= [0-9]+
+Variable    ::= [A-Z]
+String      ::= '"' (#x20 #x21 [#x23-#x7E])* '"'
