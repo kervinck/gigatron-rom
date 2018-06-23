@@ -21,11 +21,11 @@
   Zero-page
   ---------
   30 -          Tiny BASIC interpreter variables
-  90 - c3       BASIC variables A..Z (XXX Might move to $0fa0?)
+  90 - c3       BASIC variables A..Z (XXX Might move to $10a0?)
   c4 - ff       Stack (30 words)
 
-  0fa0 - 07ff   Programs are stored in the invisible part of screen memory
-  0fa2 - 0fbf   Input buffer (also "line 0")
+  10a0 - 07ff   Programs are stored in the invisible part of screen memory
+  10a2 - 10bf   Input buffer (also "line 0")
   8000 - ffff   Optional memory for BASIC programs (64K extension)
 
   Error messages
@@ -301,7 +301,7 @@ Spaces=
   $20 PrintChar!                {Remove cursor}
   Newline!
   $0f \sysArgs7.                {Pen color yellow for output}
-  $0fa2                         {Return buffer start}
+  $10a2                         {Return buffer start}
   pop ret
 ] GetLine=
 
@@ -404,7 +404,7 @@ $0400:
 
   Keyword! $72# $75# $6e# 0#    {'run'}
   [if<>0
-    $0fc0 deek Value=           {First program line, if any}
+    $10c0 deek Value=           {First program line, if any}
     GotoValue!]                 {Also tests for break}
 
   StatementCont!                {Continue in another page}
@@ -540,7 +540,7 @@ $0600:
     End i= j=                   {Setup i and j for below}
     PrevBlock! deek Value-      {Retrieve last line number, 0 when no program}
     [if>=0                      {If insert/modify instead of append}
-      $0fc0 [do i=              {Loop over program from beginning}
+      $10c0 [do i=              {Loop over program from beginning}
         i; Value- if<0          {Stop if found or past it}
         i NextBlock! loop]      {Advance to next line}
       if>0                      {Insert scenario}
@@ -598,7 +598,7 @@ $0600:
 
 { Clear program and variables, returns 0 }
 [def
-  $0fa0 Buffer=                 {First block in memory is input buffer}
+  $10a0 Buffer=                 {First block in memory is input buffer}
   32+ End=                      {Programs begin 32 bytes later}
 
   $90 i=                        {Clear variables A-Z}
@@ -652,11 +652,11 @@ $08a0:
 
 { Find line with line number equal to Value and go there }
 [def
-  TestBreak!                    {Test for [Del] as break request}
-  $0fc0 [do i=                  {Loop over program from beginning}
+  $10c0 [do i=                  {Loop over program from beginning}
     End^ if<>0                  {Until end of program}
     i; Value^ [if=0             {Or if matching value found}
       i 2+ Active=              {Skip past line number}
+      TestBreak!                {Test for [Del] as break request}
       Statement!]               {And continue from there}
     i NextBlock! loop]          {Otherwise try next line}
   Prompt! $4c# $69# $6e# $65#   {'Line' error}
@@ -729,7 +729,7 @@ $0aa0:
 
 { List program }
 [def
-  $0fc0                         {Start of program memory}
+  $10c0                         {Start of program memory}
   [do
     j=
     End^ if<>0                  {Repeat until the last line}
@@ -756,7 +756,7 @@ $0ba0:
   Active, [if<>0 SyntaxError!]  {There must be nothing left on the line}
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
-    $0fc0 Active^ if<>0         {Also stop if we came from the input buffer}
+    $10c0 Active^ if<>0         {Also stop if we came from the input buffer}
     Active 2+ Active=           {Skip past line number}
     Statement!]                 {And continue from there}
   Prompt! 0#                    {Program finished ok}
@@ -787,6 +787,11 @@ $0ba0:
 +-----------------------------------------------------------------------}
 $0ca0:
 
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 13                                     |
++-----------------------------------------------------------------------}
+$0da0:
+
 { Calculate vAC / Value, result in vAC, remainder in i }
 [def
   j=                            {i:j is the Remainder:Quotient pair}
@@ -810,10 +815,9 @@ $0ca0:
 ] {Divide=}
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 13                                     |
+|}\vLR>++ ret{          RAM page 14                                     |
 +-----------------------------------------------------------------------}
-$0da0:
-
+$0ea0:
 Divide=
 
 { Calculate vAC * Value, result in vAC }
@@ -850,9 +854,9 @@ Divide=
 ] {ValueError=}
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 14                                     |
+|}\vLR>++ ret{          RAM page 15                                     |
 +-----------------------------------------------------------------------}
-$0ea0:
+$0fa0:
 ValueError=
 
 { Error reporting function and re-entry point for main loop }
