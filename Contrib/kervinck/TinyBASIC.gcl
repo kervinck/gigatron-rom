@@ -9,25 +9,27 @@
   2018-06-19 (marcelk) Scaffolding. Can evaluate direct print statements.
   2018-06-21 (marcelk) Can edit programs, delete lines, but no run yet
   2018-06-23 (marcelk) Can RUN, GOTO, GOSUB, RETURN and break program
+  2018-06-xx (marcelk) Can IF/THEN and END
 
-
-  Original Tiny BASIC quirks:
+  Original Tiny BASIC quirks replicated:
     print 1+3*-8        --> Syntax error
     print 6/-2          --> Syntax error
     print -32768/2      --> 16383
 
   Memory allocation in Gigatron
 
-  Zero-page:
+  Zero-page
+  ---------
   30 -          Tiny BASIC interpreter variables
-  90 - c3       BASIC variables A..Z (XXX Might move to $0ea0?)
+  90 - c3       BASIC variables A..Z (XXX Might move to $0fa0?)
   c4 - ff       Stack (30 words)
 
-  0ea0 - 07ff   Programs are stored in the invisible part of screen memory
-  0ea2 - 0ebf   Input buffer (also "line 0")
+  0fa0 - 07ff   Programs are stored in the invisible part of screen memory
+  0fa2 - 0fbf   Input buffer (also "line 0")
   8000 - ffff   Optional memory for BASIC programs (64K extension)
 
-  Errors:
+  Error messages
+  --------------
   Break error   Program (or list command) stopped by [Del] key
   Syntax error  Parsing error. Too large program
   Value error   Calculation error (division by 0). Not raised for overflows.
@@ -36,42 +38,43 @@
   Line error    Line number not found (or attempt to run empty program)
 
   Todo/must have:
-    IF THEN
-    Relops      With correct behavior, eg -30000 < 30000
     INPUT
     PRINT       Suppress newline after ; and ,
-                Allow multiple ,
-    NextBlock   struct block { word nextBlock; word lineno; char[30] text;}
+    PRINT       Allow multiple ,
   Wish list:
-    USR()
-    PEEK() POKE
     LET         Make LET keyword optional
+    PEEK() POKE
+    FRE()       For fun
+    Buffer      At least 1 character more input
+    Overflow    Errors on overflow for +, -  and *
+    Zero page   Move variables to another page, stack space is more important
     Indent      Indent BASIC output 2 pixels (as in WozMon)
-    Speed       Binary search for GotoValue
-    LIST <n>    List one line
-    Zero page:  Move variables to another page, stack space is more important
     SET x,y     Check with Had badge Move cursor
-    $xx         Hexadecimal numbers
     "CHR$"      At least the ability to print an ASCII char.
-    FRE()       For fun, can be implicit with LIST
     64K         Should work, but not tested. Also test out of memory errors.
     %           Modulo operator
-    RND()
-    ABS()
-    Overflow    Errors on overflow for +, -  and *
   Maybe:
-    READ, DATA  Possibly put in unused lines?
+    ABS()       Built-in function
+    RND()       Built-in function
+    USR()       Built-in function (Call what?)
+    $xx         Hexadecimal numbers
+    LIST <n>    List one line
+    Speed       Binary search for GotoValue
     Unary minus Original Tiny BASIC does it wrong: 8/-2
     CLS         Clear screen, move to top
     ? PR        Alias for PRINT
-    AND OR NOT  At list for in IF statements
-    a-z A-Z     As different variables
     @           As variable name
     '           Alias for REM
-    "xxx"       String *variables*
-    A()         Arrays (1-dimensional)
     @           Array as in Palo Alto Tiny BASIC (store vertically?)
+    A()         Arrays (1-dimensional)
+    NextBlock   struct block { word nextBlock; word lineno; char[30] text;}
   Probably not:
+    a-z A-Z     As different variables
+    ><          For unequal
+    CLEAR       For NEW
+    READ, DATA  Possibly put in unused lines?
+    AND OR NOT  At list for in IF statements
+    "xxx"       String *variables*
     :           Multiple statements in one line
     ELSE        Will slow down IF, because it has to scan for this
     FOR TO NEXT And STEP. No idea how to implement
@@ -86,16 +89,16 @@
     statement ::= PRINT expr-list
                   IF expression relop expression THEN statement
                   GOTO expression
-                  INPUT var-list
+                  INPUT var-list                XXX Why a list?
                   LET var = expression
                   GOSUB expression
                   RETURN
-                  CLEAR
+                  CLEAR                         XXX NEW
                   LIST
                   RUN
                   END
 
-    expr-list ::= (string|expression) (, (string|expression) )*
+    expr-list ::= (string|expression) (, (string|expression) )* XXX ; vs ,
     var-list ::= var (, var)*
     expression ::= (+|-|empty) term ((+|-) term)*
     term ::= factor ((*|/) factor)*
@@ -103,7 +106,7 @@
     var ::= A | B | C ... | Y | Z
     number ::= digit digit*
     digit ::= 0 | 1 | 2 | 3 | ... | 8 | 9
-    relop ::= < (>|=|empty) | > (<|=|empty) | =
+    relop ::= < (>|=|empty) | > (<|=|empty) | =         XXX We don't do "><"
     string ::= " (a|b|c ... |x|y|z|A|B|C ... |X|Y|Z|digit)* "
     --------
 
@@ -215,6 +218,7 @@ $0f20 \sysArgs6:                {Pen color yellow, background color blue}
   pop ret
 ] PrintDigit=
 
+{ Eat whitespace. Returns non-zero }
 [def
   [do Active, $20^ if=0 Active<++ loop]
   ret
@@ -237,7 +241,7 @@ Spaces=
     ret                         {Return address on success}
   ]
   SyntaxError!
-] TestVar=
+] Variable=
 
 { Destructively print Value as signed decimal number }
 [def
@@ -296,7 +300,7 @@ Spaces=
   $20 PrintChar!                {Remove cursor}
   Newline!
   $0f \sysArgs7.                {Pen color yellow for output}
-  $0ea2                         {Return buffer start}
+  $0fa2                         {Return buffer start}
   pop ret
 ] GetLine=
 
@@ -316,7 +320,7 @@ Spaces=
       loop]
   Value                         {Result, negative value indicates error}
   ret
-] TestNumber=
+] Number=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 4                                      |
@@ -328,27 +332,26 @@ $0400:
 [def
   Spaces!
 
-  TestWord! $6c# $65# $74# 0#   {'let'}
-  [if=0
-    Spaces!
-    TestVar!                    {Must be a variable name}
+  Keyword! $6c# $65# $74# 0#    {'let'}
+  [if<>0
+    Variable!                   {Must be a variable name}
     LValue=                     {Park here}
     Spaces!
-    TestWord! $3d# 0#           {'='}
-    [if<>0 SyntaxError!]
+    Keyword! $3d# 0#            {'='}
+    [if=0 SyntaxError!]
     Expression!                 {Evaluate expression}
     LValue:                     {Store value in variable}
     EndOfLine!]
 
-  TestWord! $67# $6f# $74# $6f# {'goto'}
+  Keyword! $67# $6f# $74# $6f#  {'goto'}
     0#
-  [if=0
+  [if<>0
     Expression!                 {Computed goto}
     GotoValue!]                 {Find that line and continue there}
 
-  TestWord! $67# $6f# $73# $75# {'gosub'}
+  Keyword! $67# $6f# $73# $75#  {'gosub'}
      $62# 0#
-  [if=0
+  [if<>0
     \vSP, [if<>0                {Check stack space}
       $e0- if<=0                {XXX 16 levels is ok?}
       StackError!]              {Fail with error when too deep}
@@ -356,16 +359,73 @@ $0400:
     2-- Active 0%=              {Push current line to stack}
     GotoValue!]                 {Find that line and continue there}
 
-  TestWord! $72# $65# $74# $75# {'return'}
+  Keyword! $72# $65# $74# $75#  {'return'}
     $72# $6e# 0#
-  [if=0
+  [if<>0
     \vSP, [if=0 StackError!]    {Top of stack}
     deek Active= 2++            {Pop line from stack}
     EndOfLine!]
 
-  TestWord! $70# $72# $69# $6e# {'print'}
+  Keyword! $69# $66# 0#         {'if'}
+  [if<>0
+    Expression!
+    4-- 2%=                     {Push first value on stack}
+    RelOp!
+  { [if<>0 SyntaxError!]        XXX No space }
+    0%=                         {Park RelOp bits on stack}
+    Expression!
+    Keyword! $74# $68# $65#     {'then' (optional)}
+      $6e# 0#
+    2% Value^                   {Do the comparison, beware of overflows}
+    [if<0 2%                    {Opposite signs}
+     else 2% Value-]            {Same signs}
+    [if>0 4]                    {First is greater}
+    [if<0 1]                    {Second is greater}
+    [if=0 2]                    {Values are equal}
+    i= 0% i&                    {Compare to RelOp bits}
+    4++                         {Restore stack}
+    [if<>0 Statement!]          {Conditional execution}
+    [do
+      Active, if<>0             {Find end of line}
+      Active<++ loop]
+    EndOfLine!]                 {Continue with next line}
+
+  Keyword! $72# $65# $6d# 0#    {'rem'}
+  [if<>0
+    [do
+      Active, if<>0             {Find end of line}
+      Active<++ loop]
+    EndOfLine!]
+
+  Keyword!                      {'list'}
+    $6c# $69# $73# $74# 0#
+  [if<>0 List! EndOfLine!]
+
+  Keyword! $72# $75# $6e# 0#    {'run'}
+  [if<>0
+    $0fc0 deek Value=           {First program line, if any}
+    GotoValue!]                 {Also tests for break}
+
+  StatementCont!                {Continue in another page}
+] Statement=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 5                                      |
++-----------------------------------------------------------------------}
+$0500:
+
+{ Continuation of Statement }
+[def
+
+  Keyword! $6e# $65# $77# 0#    {'new'}
+  [if<>0 New! Prompt! 0#]       {Returns to prompt}
+
+  Keyword! $65# $6e# $64# 0#    {'end'}
+  [if<>0 Prompt! 0#]
+
+  Keyword! $70# $72# $69# $6e#  {'print'}
     $74# 0#
-  [if=0
+  [if<>0
     [do {PRINTLIST}
       Spaces!
       Active, if<>0             {Until end of line}
@@ -395,76 +455,18 @@ $0400:
     ]
     Newline!                    {XXX Skip this right after ; or , }
     EndOfLine!]
-
 {
-  TestWord! $69# $66# 0#        {'if'}
-  [if=0                         {XXX to do}
-    Expression!
-    RelOp!
-    Expression!
-    TestWord!                   {'then'}
-      $74# $68# $65# $6e# 0#
-    Statement!
-    EndOfLine!]
-}
-
-  TestWord! $72# $65# $6d# 0#   {'rem'}
-  [if=0
-    [do
-      Active, if<>0             {Search for end of line}
-      Active<++ loop]
-    EndOfLine!]
-
-{
-  TestWord! $69# $6e# $70# $75# {'input'}
+  Keyword! $69# $6e# $70# $75#  {'input'}
     $74# 0#
-  [if=0                         {XXX to do}
-    TestVar!
+  [if<>0
+    Variable!
     EndOfLine!]
 }
-
-  StatementCont!                {Continue in another page}
-] Statement=
-
-{-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 5                                      |
-+-----------------------------------------------------------------------}
-$0500:
-
-{ Less critical commands }
-[def
-  TestWord! $65# $6e# $64# 0#   {'end'}
-  [if=0 Error 0#]               {XXX stop in a different way}
-
-  TestWord! $72# $75# $6e# 0#   {'run'}
-  [if=0
-    $0ec0 deek Value=           {First program line, if any}
-    GotoValue!]                 {Goes to first line including testing for break}
-
-  TestWord!                     {'list'}
-    $6c# $69# $73# $74# 0#
-  [if=0 List! EndOfLine!]
-
-  TestWord! $6e# $65# $77# 0#   {'new'}
-  [if=0 New! Prompt! 0#]        {Returns to prompt}
 
   SyntaxError!
 ] StatementCont=
 
-{ Verify that there is nothing else on the line, then continue with next }
-{ XXX Top heavy: speed this up by linking blocks }
-[def
-  Spaces!
-  Active, [if<>0 SyntaxError!]  {There must be nothing left on the line}
-  Active NextBlock! Active=     {Advance to next line}
-  End^ [if<>0                   {Stop at end of program}
-    $0ec0 Active^ if<>0         {Also stop if we came from the input buffer}
-    Active 2+ Active=           {Skip past line number}
-    Statement!]                 {And continue from there}
-  Prompt! 0#                    {Program finished ok}
-] EndOfLine=
-
-{ Parse an inline keyword, 0 is success }
+{ Parse an inline keyword, return 0 for failure }
 [def
   \vLR; tmp=                    {vLR points to inline argument}
   Active j=                     {Save Active in case word match fails}
@@ -474,38 +476,37 @@ $0500:
     i=
     Active,                     {Grab next character from line}
     $20|                        {Ignore case}
-    i^ [if=0
-      Active<++ loop            {Accept if character matches}
-    else
-      [do tmp, tmp<++ if<>0loop] {Eat remaining characters}
-      j Active=]                {Restore BASIC pointer for next word}
-  ]
-  tmp!                          {Effectively returns}
-] TestWord=
+    i^ [if=0 Active<++ loop]    {Accept if character matches}
+                                {Mismatch}
+    j Active=                   {Restore BASIC pointer for next word}
+    [do tmp, tmp<++ if<>0loop]  {Eat remaining characters}
+    tmp!]
+                                {Match}
+  Spaces!                       {Remove whitespace here for convenience}
+  tmp!                          {Effectively returns past the keyword}
+] Keyword=
 
 { Process a full expression, result in Value and vAC }
 [def
   push
                                 {First term}
-  Spaces!
-  TestWord! $2d# 0#             {'-'}
-  [if=0                         {Accept unary minus}
+  Keyword! $2d# 0#              {'-'}
+  [if<>0                        {Accept unary minus}
     Term!
     0 Value-                    {Negate}
   else
-    TestWord! $2b# 0#           {'+' Ignore unary plus}
+    Keyword! $2b# 0#            {'+' Ignore unary plus}
     Term!]
 
   2-- 0%=                       {Put partial result on stack}
   [do                           {Optional additional terms}
-    Spaces!
-    TestWord! $2b# 0#           {'+'}
-    [if=0
+    Keyword! $2b# 0#            {'+'}
+    [if<>0
        Term!
        0% Value+ 0%=            {Perform addition}
        loop]
-    TestWord! $2d# 0#           {'-'}
-    [if=0
+    Keyword! $2d# 0#            {'-'}
+    [if<>0
        Term!
        0% Value- 0%=            {Perform subtraction}
        loop]
@@ -532,13 +533,13 @@ $0600:
 { Handle commands that start with a line number }
 [def
   push
-  TestNumber!
+  Number!
   [if>0
     { Lookup line number in program }
     End i= j=                   {Setup i and j for below}
     PrevBlock! deek Value-      {Retrieve last line number, 0 when no program}
     [if>=0                      {If insert/modify instead of append}
-      $0ec0 [do i=              {Loop over program from beginning}
+      $0fc0 [do i=              {Loop over program from beginning}
         i; Value- if<0          {Stop if found or past it}
         i NextBlock! loop]      {Advance to next line}
       if>0                      {Insert scenario}
@@ -590,13 +591,13 @@ $0600:
     Value                       {Report line number to caller}
   ]
   pop ret
-] TryInsertLine=
+] TryInsert=
 
 { Note: It is save to call functions here before hopping over to page 8 }
 
 { Clear program and variables, returns 0 }
 [def
-  $0ea0 Buffer=                 {First block in memory is input buffer}
+  $0fa0 Buffer=                 {First block in memory is input buffer}
   32+ End=                      {Programs begin 32 bytes later}
 
   $90 i=                        {Clear variables A-Z}
@@ -651,7 +652,7 @@ $08a0:
 { Find line with line number equal to Value and go there }
 [def
   TestBreak!                    {Test for [Del] as break request}
-  $0ec0 [do i=                  {Loop over program from beginning}
+  $0fc0 [do i=                  {Loop over program from beginning}
     End^ if<>0                  {Until end of program}
     i; Value^ [if=0             {Or if matching value found}
       i 2+ Active=              {Skip past line number}
@@ -673,14 +674,13 @@ GotoValue=
   Factor!                       {First factor}
   2-- Value 0%=                 {Put partial result on stack}
   [do                           {Optional additional factors}
-    Spaces!
-    TestWord! $2a# 0#           {'*'}
-    [if=0
+    Keyword! $2a# 0#            {'*'}
+    [if<>0
        Factor!
        0% Multiply! 0%=
        loop]
-    TestWord! $2f# 0#           {'/'}
-    [if=0
+    Keyword! $2f# 0#            {'/'}
+    [if<>0
        Factor!
        0% Divide! 0%=
        loop]
@@ -707,27 +707,28 @@ $0aa0:
 [def
   push
 
-  Spaces!
-  TestWord! $28# 0#             {'('}
-  [if=0
+  Keyword! $28# 0#              {'('}
+  [if<>0
     Expression!
-    Spaces!
-    TestWord! $29# 0#           {')'}
-    [if<>0 SyntaxError!]
+    Keyword! $29# 0#            {')'}
+    [if=0 SyntaxError!]
     pop ret]
 
-  TestNumber!                   {Test for numeric constant}
-  [if>=0 pop ret]               {Result already in Value}
+  Number!                       {Test for numeric constant}
+  [if>=0
+    Spaces!
+    pop ret]                    {Result already in Value}
 
-  TestVar!                      {Otherwise it MUST be a variable}
+  Variable!                     {Otherwise it MUST be a variable}
   deek Value=                   {Fetch value}
+  Spaces!
 
   pop ret
 ] Factor=
 
 { List program }
 [def
-  $0ec0                         {Start of program memory}
+  $0fc0                         {Start of program memory}
   [do
     j=
     End^ if<>0                  {Repeat until the last line}
@@ -748,6 +749,42 @@ $0aa0:
 |}\vLR>++ ret{          RAM page 11                                     |
 +-----------------------------------------------------------------------}
 $0ba0:
+
+{ Verify that there is nothing else on the line, then continue with next }
+[def
+  Active, [if<>0 SyntaxError!]  {There must be nothing left on the line}
+  Active NextBlock! Active=     {Advance to next line}
+  End^ [if<>0                   {Stop at end of program}
+    $0fc0 Active^ if<>0         {Also stop if we came from the input buffer}
+    Active 2+ Active=           {Skip past line number}
+    Statement!]                 {And continue from there}
+  Prompt! 0#                    {Program finished ok}
+] EndOfLine=
+
+{ Parse relational operator }
+{ Use same encoding as original Tiny BASIC }
+{ Doesn't accept >< (just use <>) }
+[def
+  push
+  0 k=
+
+  Keyword! $3c# 0#              {'<' in bit 0}
+  [if<>0 k<++]
+
+  Keyword! $3e# 0#              {'>' in bit 2}
+  [if<>0 k 4+ k=]
+
+  Keyword! $3d# 0#              {'=' in bit 1}
+  [if<>0 k 2+ k=]
+
+  k
+  pop ret
+] RelOp=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 12                                     |
++-----------------------------------------------------------------------}
+$0ca0:
 
 { Calculate vAC / Value, result in vAC, remainder in i }
 [def
@@ -772,9 +809,10 @@ $0ba0:
 ] {Divide=}
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 12                                     |
+|}\vLR>++ ret{          RAM page 13                                     |
 +-----------------------------------------------------------------------}
-$0ca0:
+$0da0:
+
 Divide=
 
 { Calculate vAC * Value, result in vAC }
@@ -811,9 +849,9 @@ Divide=
 ] {ValueError=}
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 13                                     |
+|}\vLR>++ ret{          RAM page 14                                     |
 +-----------------------------------------------------------------------}
-$0da0:
+$0ea0:
 ValueError=
 
 { Error reporting function and re-entry point for main loop }
@@ -852,7 +890,7 @@ Newline!                        {Newline after prompt, error or welcome}
   Active=                       {Parse from start of buffer}
   Spaces!
   Active, if=0loop              {Do nothing for empty lines}
-  TryInsertLine!                {Test for line number to insert (or delete)}
+  TryInsert!                    {Test for line number to insert (or delete)}
   if>0loop]                     {If found, continue without prompt}
 Statement!                      {Execute statement}
 
