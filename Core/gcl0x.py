@@ -430,7 +430,6 @@ class Program:
       self.error('Unterminated comment')
     self.closeSegment()
     print ' Variables count %d bytes %d end %04x' % (len(self.vars), 2*len(self.vars), zpByte(0))
-    print ' :Symbols [bytes]'
     line = ' :'
     for var in sorted(self.vars.keys()):
       if var in self.lengths and self.lengths[var]:

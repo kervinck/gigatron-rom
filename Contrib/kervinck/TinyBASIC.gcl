@@ -438,10 +438,8 @@ $0500:
 
   TestWord! $72# $75# $6e# 0#   {'run'}
   [if=0
-    $0ec0                       {First program line, if any}
-    End^ [if=0 EndOfLine!]      {Don't run empty program}
-    $0ec2 Active=               {Skip line number}
-    Statement!]                 {And start execution}
+    $0ec0 deek Value=           {First program line, if any}
+    GotoValue!]                 {Goes to first line including testing for break}
 
   TestWord!                     {'list'}
     $6c# $69# $73# $74# 0#
@@ -835,7 +833,7 @@ ValueError=
     \vSP.                       {Reset stack}
     32-                         {$ffe0}
     Active&                     {Align to begin of block}
-    {2+} deek                   {Fetch active line number}
+    0+ {dummy offset} deek      {Fetch active line number from offset 0}
     [if<>0                      {Input buffer has line number 0, don't print}
       Value=                    {Prepare line number for printing}
       PrintS!                   {' in '}
