@@ -30,7 +30,7 @@
         RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
         Number      ::= [0-9]+
         Variable    ::= [A-Z]
-        String      ::= '"' (#x20 #x21 [#x23-#x7E])* '"'
+        String      ::= '"' (#x20 | #x21 | [#x23-#x7E])* '"'
 
   Error messages:
         Break error   Program (or list command) stopped by [Delete] key
