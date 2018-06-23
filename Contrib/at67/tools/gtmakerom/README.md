@@ -1,5 +1,5 @@
 # gtmakerom
-Takes a merged gigatron .**_rom_** file, a split .**_gt1_** file and merges them into a set of output ROM files.<br/>
+Takes a normal 16bit gigatron .**_rom_** file, a set of split .**_gt1_** files and merges them into an output ROM file.<br/>
 Input file has to be 128KBytes in length, if greater, then only the first 128KBytes will be read and used.</br>
 
 ## Building
@@ -15,7 +15,9 @@ gtmakerom \<input ROM filename\> \<input GT1 ROM filename\> \<output ROM filenam
 gtmakerom ROMv1.rom tetris.rom test.rom \"TTL micromputer test v0\" Tetris 5 0x0B00<br/>
 
 ## GT1 ROM Filename
-The GT1 ROM filename must be created with gt1torom.<br/>
+The GT1 ROM filename must have be created with **_gt1torom_**, which will create two files, **_\<name\>.rom\_ti_** and<br/>
+**_\<name\>.rom\_td_**. These two files contain the separate instructions and data with correct trampolines of the<br/>
+original .**_gt1 file_**. Both these files must exist for **_gtmakerom_** to function correctly.<br/>
 
 ## Title
 The title string is a text field that is used to label this ROM in the Gigatron main menu.<br/>
@@ -38,10 +40,10 @@ allows you to merge multiple GT1 ROM files into a base ROM file by repeatedly ca
 successive output.<br/>
 e.g.<br/>
 ~~~
-gtmakerom ROMv1.rom starfield.rom test.rom "TTL microcomputer at67 v0" Starfield 2 0x0B00
-gtmakerom test.rom Life.rom test.rom "TTL microcomputer at67 v0" Life 5 0x0f00
-gtmakerom test.rom Lines.rom test.rom "TTL microcomputer at67 v0" Lines 0 0x1100
-gtmakerom test.rom Gigatris.rom test.rom "TTL microcomputer at67 v0" Gigatris 3 0x1300
-gtmakerom test.rom tetris.rom test.rom "TTL microcomputer at67 v0" Tetris 4 0x3000
-gtmakerom test.rom miditest.rom test.rom "TTL microcomputer at67 v0" Midi 1 0x5800
+gtmakerom ROMv1.rom starfield.rom test.rom "TTL microcomputer ROM at67" Starfield 2 0x0B00
+gtmakerom test.rom Life.rom test.rom "TTL microcomputer ROM at67" Life 5 0x0f00
+gtmakerom test.rom Lines.rom test.rom "TTL microcomputer ROM at67" Lines 0 0x1100
+gtmakerom test.rom Gigatris.rom test.rom "TTL microcomputer ROM at67" Gigatris 3 0x1300
+gtmakerom test.rom tetris.rom test.rom "TTL microcomputer ROM at67" Tetris 4 0x3000
+gtmakerom test.rom miditest.rom test.rom "TTL microcomputer ROM at67" Midi 1 0x5800
 ~~~
