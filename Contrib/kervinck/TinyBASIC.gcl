@@ -57,6 +57,7 @@
     ABS()       Built-in function
     RND()       Built-in function
     USR()       Built-in function (Call what?)
+    TIM()       Built-in funcion for time? (is there a standard?)
     $xx         Hexadecimal numbers
     LIST <n>    List one line
     Speed       Binary search for GotoValue
@@ -371,7 +372,7 @@ $0400:
     Expression!
     4-- 2%=                     {Push first value on stack}
     RelOp!
-  { [if<>0 SyntaxError!]        XXX No space }
+  { [if=0 SyntaxError!]         XXX No space }
     0%=                         {Park RelOp bits on stack}
     Expression!
     Keyword! $74# $68# $65#     {'then' (optional)}
