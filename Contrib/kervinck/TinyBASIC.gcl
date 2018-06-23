@@ -30,10 +30,10 @@
   Errors:
   Break error   Program (or list command) stopped by [Del] key
   Syntax error  Parsing error. Too large program
-  Value error   Calculation error (division by 0). Target line not found.
-                Not raised for overflows.
+  Value error   Calculation error (division by 0). Not raised for overflows.
   Stack error   GOSUB nesting too deep. RETURN without GOSUB.
                 (XXX also too complex expressions? Or do syntax error there?)
+  Line error    Line number not found (or attempt to run empty program)
 
   Todo/must have:
     IF THEN
@@ -657,13 +657,15 @@ $08a0:
       i 2+ Active=              {Skip past line number}
       Statement!]               {And continue from there}
     i NextBlock! loop]          {Otherwise try next line}
-  ValueError!                   {Fail with error message when line not found}
-] GotoValue=
+  Prompt! $4c# $69# $6e# $65#   {'Line' error}
+    0#
+] {GotoValue=}
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 9                                      |
 +-----------------------------------------------------------------------}
 $09a0:
+GotoValue=
 
 { Process an expression term, result in Value and vAC }
 [def
