@@ -3,15 +3,15 @@
 #
 #  compilegcl.py -- Compile GCL source to GT1 object file
 #
-# 2018-05-04 (Cwiiis) Initial version
+# 2018-05-04 (Cwiiis)  Initial version
 # 2018-06-11 (marcelk) Use JSON interface file instead of symbol table dump
+# 2018-06-24 (at67)    Optional output directory
 #
 #-----------------------------------------------------------------------
 
 from __future__ import print_function
 import argparse
 import sys
-import os
 from sys import argv
 from os  import getenv
 from os.path import basename, splitext
@@ -31,7 +31,7 @@ parser.add_argument('-s', '--sym', dest='sym',
                     help='Symbol file for interface bindings (default interface.json)',
                     default='interface.json')
 parser.add_argument('gclSource', help='GCL file')
-parser.add_argument('outputDir', nargs='?', default=os.getcwd() + '/', help='Optional output directory')
+parser.add_argument('outputDir', nargs='?', default='', help='Optional output directory')
 args = parser.parse_args()
 
 #-----------------------------------------------------------------------
