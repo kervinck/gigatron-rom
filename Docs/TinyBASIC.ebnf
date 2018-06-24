@@ -11,6 +11,7 @@ Statement   ::= 'PRINT' (String|Expression) (',' (String|Expression))* |
                 'LET' Variable '=' Expression |
                 'GOSUB' Expression |
                 'RETURN' |
+                'REM' Character* |
                 'NEW' |
                 'LIST' |
                 'RUN' |
@@ -22,3 +23,4 @@ RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
 Number      ::= [0-9]+
 Variable    ::= [A-Z]
 String      ::= '"' ([#x20-#x21] | [#x23-#x7E])* '"'
+Character   ::= [#x20-#x7E]

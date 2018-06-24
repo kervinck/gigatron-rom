@@ -26,6 +26,7 @@
                         'LET' Variable '=' Expression |
                         'GOSUB' Expression |
                         'RETURN' |
+                        'REM' Character* |
                         'NEW' |
                         'LIST' |
                         'RUN' |
@@ -37,6 +38,7 @@
         Number      ::= [0-9]+
         Variable    ::= [A-Z]
         String      ::= '"' ([#x20-#x21] | [#x23-#x7E])* '"'
+        Character   ::= [#x20-#x7E]
 
   Recommended filename extension:
         .gtb            GigaTron BASIC / Gigatron Tiny BASIC
