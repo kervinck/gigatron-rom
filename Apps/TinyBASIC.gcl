@@ -22,8 +22,8 @@
         Statement   ::= 'PRINT' (String|Expression) (',' (String|Expression))* |
                         'IF' Expression RelOp Expression 'THEN'? Statement |
                         'GOTO' Expression |
-                        'INPUT' Var (',' Var)* |
-                        'LET' Var '=' Expression |
+                        'INPUT' Variable (',' Variable)* |
+                        'LET' Variable '=' Expression |
                         'GOSUB' Expression |
                         'RETURN' |
                         'NEW' |
@@ -36,7 +36,7 @@
         RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
         Number      ::= [0-9]+
         Variable    ::= [A-Z]
-        String      ::= '"' (#x20 | #x21 | [#x23-#x7E])* '"'
+        String      ::= '"' ([#x20-#x21] | [#x23-#x7E])* '"'
 
   Recommended filename extension:
         .gtb            GigaTron BASIC / Gigatron Tiny BASIC
@@ -65,6 +65,10 @@
         ><              For "unequal" is not implemented. Use only "<>"
         <>=             Also works as (useless) operator in condition of IF
         No "GO TO"      Must be "GOTO". Also "GOSUB", not "GO SUB"
+        INPUT           Accepts full expressions as input, including variables!
+        INPUT           Can give syntax error in direct mode (buffer conflict)
+        RUN             Will not reset variables (only NEW does that)
+        Break error     Gives the line it was about to start: resume with GOTO
 
   References:
         https://en.wikipedia.org/wiki/Tiny_BASIC
