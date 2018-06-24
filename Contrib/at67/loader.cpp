@@ -814,8 +814,10 @@ namespace Loader
         if(_configGclBuildFound  &&  filename.find(".gcl") != filename.npos)
         {
             // Create compile gcl string
-            chdir(Editor::getBrowserPath().c_str());
-            std::string command = "py -B \"" + _configGclBuild + "/Core/compilegcl.py\" \"" + filepath + "\" \"" + Editor::getBrowserPath() + "\" -s \"" + _configGclBuild + "/interface.json\"";
+            std::string browserPath = Editor::getBrowserPath();
+            browserPath.pop_back(); // remove trailing '/'
+            chdir(browserPath.c_str());
+            std::string command = "py -B \"" + _configGclBuild + "/Core/compilegcl.py\" \"" + filepath + "\" \"" + browserPath + "\" -s \"" + _configGclBuild + "/interface.json\"";
             fprintf(stderr, command.c_str());
 
             // Create gt1 name and path
