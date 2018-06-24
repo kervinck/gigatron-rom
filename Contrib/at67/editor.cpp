@@ -55,7 +55,6 @@ namespace Editor
     uint32_t _singleStepTicks = 0;
     uint8_t _singleStepWatch = 0x00;
 
-    const std::string _srcPath = "/";
     std::string _cwdPath = "";
     std::string _filePath = "";
 
@@ -135,7 +134,7 @@ namespace Editor
         char cwdPath[FILENAME_MAX];
         getcwd(cwdPath, FILENAME_MAX);
         _cwdPath = std::string(cwdPath);
-        _filePath = _cwdPath + _srcPath;
+        _filePath = _cwdPath + "/";
 
         // Keyboard to SDL key mapping
         _sdlKeys["ENTER"]            = SDLK_RETURN;
