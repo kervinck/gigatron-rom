@@ -22,10 +22,11 @@
         Statement   ::= 'PRINT' (String|Expression) (',' (String|Expression))* |
                         'IF' Expression RelOp Expression 'THEN'? Statement |
                         'GOTO' Expression |
-                        'INPUT' Var (',' Var)* |
-                        'LET' Var '=' Expression |
+                        'INPUT' Variable (',' Variable)* |
+                        'LET' Variable '=' Expression |
                         'GOSUB' Expression |
                         'RETURN' |
+                        'REM' Character* |
                         'NEW' |
                         'LIST' |
                         'RUN' |
@@ -36,7 +37,8 @@
         RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
         Number      ::= [0-9]+
         Variable    ::= [A-Z]
-        String      ::= '"' (#x20 | #x21 | [#x23-#x7E])* '"'
+        String      ::= '"' ([#x20-#x21] | [#x23-#x7E])* '"'
+        Character   ::= [#x20-#x7E]
 
   Recommended filename extension:
         .gtb            GigaTron BASIC / Gigatron Tiny BASIC
@@ -54,17 +56,23 @@
           c4 -   ff     Stack for BASIC and vCPU (30 words)
          200 -  fff     BASIC interpreter
         10a0 - 07ff     Programs stored in the invisible part of screen memory
-        10a2 - 10bf     Input buffer (also "line 0")
+        10a2 - 10bf     Input buffer ('line 0')
         8000 - ffff     Optional extra memory for BASIC programs (64K extension)
 
   Undocumented features and/or bugs:
-        print 1+3*-8    Syntax error (original Tiny BASIC quirk)
-        print 6/-2      Syntax error (original Tiny BASIC quirk)
-        PRINT ;         Concatenates output without tab stop in between
+        PRINT vs. print Keywords and variable names are case-insensitive
+        PRINT 6/-2      Syntax error (original Tiny BASIC quirk)
+        PRINT a;b       Concatenates output without tab stop in between
         IF statement    There is no syntax check for trailing garbage
-        ><              For "unequal" is not implemented. Use only "<>"
+        ><              For 'not equal' is not implemented. Use only <>
         <>=             Also works as (useless) operator in condition of IF
-        No "GO TO"      Must be "GOTO". Also "GOSUB", not "GO SUB"
+        No 'GO TO'      Must be typed as 'GOTO'. Also 'GOSUB', not 'GO SUB'
+        INPUT           Accepts full expressions as input, including variables!
+        INPUT           A bare ENTER gives a syntax error and ends the program
+        INPUT           It doesn't accept leading spaces (yet)
+        INPUT           Can give syntax error in direct mode (buffer conflict)
+        RUN             Will not reset variables (only NEW does that)
+        Break error     Gives the line it was about to start: resume with GOTO
 
   References:
         https://en.wikipedia.org/wiki/Tiny_BASIC
@@ -83,23 +91,24 @@
         Dr. Wang's Palo Alto Tiny Basic (Roger Rauskolb)
 
   Wish list:
-    bytes free  Show number of free bytes after list. Also call List from New.
-                Must not show negative value on 64K systems
+    Free space  Show number of free bytes after LIST. Also call LIST from NEW.
+                Note: Must not show a negative number on 64K systems. How?
     PRINT       Suppress newline after trailing ; and , (also update grammar)
-    PEEK() POKE Or USR()
+    PEEK/POKE   Or USR() to simulate both? Nah, keywords are better...
     LET         Make LET keyword optional (also update grammar)
     Buffer      At least 1 character more input (24->25)
     Zero page   Move variables to another page, stack space is more important
-    TicTac.gtb  To test longer programs. Might need to shorten lines. TicTac.gtb
+    TicTac.gtb  Test longer programs. Might need to shorten/preprocess lines
     Test 64K    Should work, but not tested. Also test out of memory errors.
     NextBlock   Cache result of NextBlock at offset 0 of block
     ?           Alias for PRINT
     % or MOD    Modulo operator
     Indent      Indent BASIC output 2 pixels (as in WozMon)
-    Overflow    Errors on overflow for + , -  and *
+    Overflow    Errors on overflow for + - and *
     @()         Array as in Palo Alto Tiny BASIC (store vertically)
+    Break       Doesn't work in a tight input loop
 
-  "Maybe" list:
+  'Maybe' list:
     CHR expr    Print an ASCII char from its value
     SETXY       Check with Had badge Move cursor
     CLRSCR      Clear screen, move to top
@@ -118,7 +127,7 @@
     TUNE        Play a note
     LOAD        Load from EPROM?
 
-  "Probably not" list:
+  'Probably not' list:
     WAIT
     $xx         Hexadecimal numbers
     LIST <n>    List one line
@@ -877,7 +886,7 @@ $0fa0:
 ValueError=
 
 { Error reporting function and re-entry point for main loop }
-{ Call with inline partial error message, or with 0# for silent re-entry }
+{ Call with inline partial error message, or with 0# for 'Ok' prompt }
 [def
   \vLR; tmp=                    {vLR points to inline string argument}
   [Pos<, if<>0 Newline!]        {Conditional newline}
