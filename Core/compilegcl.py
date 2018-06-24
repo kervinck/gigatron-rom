@@ -11,6 +11,7 @@
 from __future__ import print_function
 import argparse
 import sys
+import os
 from sys import argv
 from os  import getenv
 from os.path import basename, splitext
@@ -30,6 +31,7 @@ parser.add_argument('-s', '--sym', dest='sym',
                     help='Symbol file for interface bindings (default interface.json)',
                     default='interface.json')
 parser.add_argument('gclSource', help='GCL file')
+parser.add_argument('outputDir', nargs='?', default=os.getcwd() + '/', help='Optional output directory')
 args = parser.parse_args()
 
 #-----------------------------------------------------------------------
@@ -83,7 +85,7 @@ data += chr(address&255)
 #-----------------------------------------------------------------------
 
 stem = basename(splitext(args.gclSource)[0])
-gt1File = stem + '.gt1'    # Resulting object file
+gt1File = args.outputDir + stem + '.gt1'    # Resulting object file
 
 print('Create file', gt1File)
 
