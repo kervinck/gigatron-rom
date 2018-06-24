@@ -107,7 +107,7 @@ const byte gt1File[] PROGMEM = {
  // Pins for Controller
  #define JOY_DATA PB2
 
- // Pins for PS/2 keyboard (Arduino Uno)
+ // Pins for PS/2 keyboard (Arduino Nano)
  #define keyboardClockPin PB3 // Pin 2 or 3 for IRQ
  #define keyboardDataPin  PB4 // Any available free pin
 
@@ -243,6 +243,26 @@ PS2Keyboard keyboard;
 // Note: The kit's controller gives inverted signals.
 
 /*
+ * Emulator control
+ */
+
+#define EMU_PS2_LEFT    1
+#define EMU_PS2_RIGHT   2
+#define EMU_PS2_UP      3
+#define EMU_PS2_DOWN    4
+#define EMU_PS2_START   7
+#define EMU_PS2_SELECT  8
+#define EMU_PS2_INPUT_A 9
+#define EMU_PS2_INPUT_B 27
+#define EMU_PS2_CR      13
+#define EMU_PS2_DEL     127
+
+#define EMU_PS2_ENABLE  5
+#define EMU_PS2_DISABLE 6
+
+bool emulatorControl = false;
+
+/*
  *  Setup runs once when the Arduino wakes up
  */
 void setup()
@@ -293,7 +313,7 @@ void loop()
         line[lineIndex++] = next;
       if (next == '\n') {
         line[lineIndex-1] = '\0';
-        doCommand(line);
+        (emulatorControl) ? doEmulator(line) : doCommand(line);
         lineIndex = 0;
       }
     }
@@ -349,25 +369,49 @@ bool detectGigatron()
 void doCommand(char line[])
 {
   switch (toupper(line[0])) {
-  case 'V': doVersion();                      break;
-  case 'H': doHelp();                         break;
-  case 'R': doReset();                        break;
-  case 'L': doLoader();                       break;
-  case 'P': doTransfer(gt1File);              break;
-  case 'U': doTransfer(NULL);                 break;
-  case 'W': sendController(~buttonUp,     2); break;
-  case 'A': sendController(~buttonLeft,   2); break;
-  case 'S': sendController(~buttonDown,   2); break;
-  case 'D': sendController(~buttonRight,  2); break;
-  case 'Z': sendController((byte)~buttonA,2); break;
-  case 'X': sendController(~buttonB,      2); break;
-  case 'Q': sendController(~buttonSelect, 2); break;
-  case 'E': sendController(~buttonStart,  2); break;
-  case 0: /* Empty line */                    break;
+    case 'V': doVersion();                       break;
+    case 'H': doHelp();                          break;
+    case 'R': doReset();                         break;
+    case 'L': doLoader();                        break;
+    case 'P': doTransfer(gt1File);               break;
+    case 'U': doTransfer(NULL);                  break;
+    case 'W': sendController(~buttonUp,      2); break;
+    case 'A': sendController(~buttonLeft,    2); break;
+    case 'S': sendController(~buttonDown,    2); break;
+    case 'D': sendController(~buttonRight,   2); break;
+    case 'Z': sendController((byte)~buttonA, 2); break;
+    case 'X': sendController(~buttonB,       2); break;
+    case 'Q': sendController(~buttonSelect,  2); break;
+    case 'E': sendController(~buttonStart,   2); break;
+    case 0: /* Empty line */                     break;
+    
+    case EMU_PS2_ENABLE: emulatorControl = true; break;
+
   #if hasSerial
     default:
       Serial.println("!Unknown command (type 'H' for help)");
   #endif
+  }
+  prompt();
+}
+
+void doEmulator(char line[])
+{
+  switch (line[0]) {
+    case EMU_PS2_LEFT:    sendController(~buttonLeft,   2);      break;
+    case EMU_PS2_RIGHT:   sendController(~buttonRight,  2);      break;
+    case EMU_PS2_UP:      sendController(~buttonUp,     2);      break;
+    case EMU_PS2_DOWN:    sendController(~buttonDown,   2);      break;
+    case EMU_PS2_START:   sendController(~buttonStart,  128+32); break;
+    case EMU_PS2_SELECT:  sendController(~buttonSelect, 2);      break;
+    case EMU_PS2_INPUT_A: sendController((byte)~buttonA,2);      break;
+    case EMU_PS2_INPUT_B: sendController(~buttonB,      2);      break;
+    case EMU_PS2_CR:      sendController('\n',          2);      break;
+    case EMU_PS2_DEL:     sendController(127,           2);      break;
+
+    case EMU_PS2_DISABLE: emulatorControl = false;               break;
+
+    default:              sendController(line[0],       2);      break;
   }
   prompt();
 }

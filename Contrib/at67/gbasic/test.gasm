@@ -1,0 +1,75 @@
+_startAddress_  EQU		0x0200
+
+; Labels
+_init           EQU		0x0200
+_32453245324543 EQU		0x020a
+_10             EQU		0x020f
+_20             EQU		0x0212
+_25             EQU		0x022b
+_26             EQU		0x024c
+_27             EQU		0x0251
+_28             EQU		0x0257
+_30             EQU		0x025d
+
+; Variables
+_a              EQU		0x0040
+_b              EQU		0x0042
+_cat            EQU		0x0044
+_d              EQU		0x0046
+_e              EQU		0x0048
+_f              EQU		0x004a
+
+; Code
+_init           LDWI	0
+                STW		_a  ; a=1
+                LDWI	0
+                STW		_b  ; b=2
+
+_32453245324543 LDWI	65533
+                STW		_cat  ; cat=-3
+
+_10             LDWI	0x0000  ; printdog;cat
+
+_20             LDW		_d
+                ADDI	5
+                STW		0x30
+                LDWI	20
+                ADDW	0x30
+                STW		0x30
+                LDW		_cat
+                SUBW	_a
+                STW		0x32
+                LDW		0x30
+                ADDW	0x32
+                STW		_d  ; d=20+(d+5)+(cat-a)
+
+_25             LDW		_b
+                SUBI	3
+                STW		0x30
+                LDWI	25
+                SUBW	_a
+                ADDW	0x30
+                ADDW	_d
+                SUBW	_b
+                STW		0x30
+                LDW		_a
+                SUBW	_cat
+                SUBW	_d
+                STW		0x32
+                LDW		0x30
+                SUBW	0x32
+                STW		_e  ; e=b-3+(25-a)+d-b-(a-cat-d)
+
+_26             LDWI	64
+                STW		_f  ; f=54-23+(27*2)-32+(56/3)-7
+
+_27             LDW		_a
+                ADDI	1
+                STW		_a  ; a=a+1
+
+_28             LDW		_b
+                SUBI	1
+                STW		_b  ; b=b-1
+
+_30             BRA		_10  ; goto10
+
