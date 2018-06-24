@@ -90,7 +90,7 @@
     bytes free  Show number of free bytes after list. Also call List from New.
                 Must not show negative value on 64K systems
     PRINT       Suppress newline after trailing ; and , (also update grammar)
-    PEEK() POKE Or USR()
+    PEEK/POKE   Or USR() to simulate both
     LET         Make LET keyword optional (also update grammar)
     Buffer      At least 1 character more input (24->25)
     Zero page   Move variables to another page, stack space is more important
@@ -104,6 +104,7 @@
     @()         Array as in Palo Alto Tiny BASIC (store vertically)
 
   "Maybe" list:
+    Break       Doesn't work in a tight input loop
     CHR expr    Print an ASCII char from its value
     SETXY       Check with Had badge Move cursor
     CLRSCR      Clear screen, move to top
