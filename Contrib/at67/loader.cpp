@@ -802,7 +802,7 @@ namespace Loader
 
         uint16_t executeAddress = Editor::getLoadBaseAddress();
         std::string filename = *Editor::getFileEntryName(Editor::getCursorY() + Editor::getFileEntriesIndex());
-        std::string filepath = std::string(Editor::getBrowserPath() + "/" + filename);
+        std::string filepath = std::string(Editor::getBrowserPath() + filename);
 
         // Reset video table and reset single step watch address to video line counter
         Graphics::resetVTable();
@@ -815,7 +815,8 @@ namespace Loader
         {
             // Create compile gcl string
             chdir(Editor::getBrowserPath().c_str());
-            std::string command = "py \"" + _configGclBuild + "\"" + "/compilegcl.py " + "\"" + filepath + "\"" + " -s " + "\"" + _configGclBuild + "\"" + "/interface.json";
+            std::string command = "py -B \"" + _configGclBuild + "/Core/compilegcl.py\" \"" + filepath + "\" \"" + Editor::getBrowserPath() + "\" -s \"" + _configGclBuild + "/interface.json\"";
+            fprintf(stderr, command.c_str());
 
             // Create gt1 name and path
             size_t dot = filename.find_last_of(".");

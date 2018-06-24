@@ -584,41 +584,46 @@ namespace Editor
         browseDirectory();
     }
 
+    // PS2 Keyboard emulation mode
+    bool handlePs2KeyDown(void)
+    {
+        if(_ps2KeyboardMode)
+        {
+            switch(_sdlKeyCode)
+            {
+                case SDLK_LEFT:     Cpu::setIN(~INPUT_LEFT  ); return true;
+                case SDLK_RIGHT:    Cpu::setIN(~INPUT_RIGHT ); return true;
+                case SDLK_UP:       Cpu::setIN(~INPUT_UP    ); return true;
+                case SDLK_DOWN:     Cpu::setIN(~INPUT_DOWN  ); return true;
+                case SDLK_PAGEDOWN: Cpu::setIN(~INPUT_SELECT); return true;
+            }
+
+            if((_sdlKeyCode >= 0  &&  _sdlKeyCode <= 31) ||  _sdlKeyCode == 127)
+            {
+                switch(_sdlKeyCode)
+                {
+                    case SDLK_TAB:       Cpu::setIN(~INPUT_A); return true;
+                    case SDLK_ESCAPE:    Cpu::setIN(~INPUT_B); return true;
+                    case SDLK_RETURN:    Cpu::setIN('\n'    ); return true;
+                    case SDLK_DELETE:    Cpu::setIN(127     ); return true;
+                    case SDLK_BACKSPACE: Cpu::setIN(127     ); return true;
+                }
+            }
+
+            if(_sdlKeyCode >= 32  &&  _sdlKeyCode <= 126)
+            {
+                _ps2KeyboardDown = true;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     void handleKeyDown(void)
     {
         // PS2 Keyboard emulation mode
-        if(_ps2KeyboardMode)
-        {
-            if(_sdlKeyCode >= 0  &&  _sdlKeyCode <= 127)
-            {
-                if(_sdlKeyCode >= 32  &&  _sdlKeyCode <= 126)
-                {
-                    _ps2KeyboardDown = true;
-                }
-                else
-                {
-                    SDL_Keycode keyCode = _sdlKeyCode;
-                    switch(_sdlKeyCode)
-                    {
-                        case SDLK_LEFT:     keyCode = ~INPUT_LEFT;   break;
-                        case SDLK_RIGHT:    keyCode = ~INPUT_RIGHT;  break;
-                        case SDLK_UP:       keyCode = ~INPUT_UP;     break;
-                        case SDLK_DOWN:     keyCode = ~INPUT_DOWN;   break;
-                        case SDLK_PAGEDOWN: keyCode = ~INPUT_SELECT; break;
-                        case SDLK_TAB:      keyCode = ~INPUT_A;      break;
-                        case SDLK_ESCAPE:   keyCode = ~INPUT_B;      break;
-                        case SDLK_RETURN:   keyCode = '\n';          break;
-
-                        case SDLK_BACKSPACE:
-                        case SDLK_DELETE:   keyCode = 127;           break;
-                    }
-
-                    Cpu::setIN(keyCode);
-                }
-
-                return;
-            }
-        }
+        if(handlePs2KeyDown()) return;
 
         int limitY = (_editorMode != Load) ? HEX_CHARS_Y : std::min(int(_fileEntries.size()), HEX_CHARS_Y);
 
@@ -693,18 +698,47 @@ namespace Editor
         }
     }
 
-    void handleKeyUp(void)
+    // PS2 Keyboard emulation mode
+    bool handlePs2KeyUp(void)
     {
-        // PS2 Keyboard emulation mode
         if(_ps2KeyboardMode)
         {
-            if(_sdlKeyCode >= 0  &&  _sdlKeyCode <= 127)
+            switch(_sdlKeyCode)
+            {
+                case SDLK_LEFT:     Cpu::setIN(0xFF); return true;
+                case SDLK_RIGHT:    Cpu::setIN(0xFF); return true;
+                case SDLK_UP:       Cpu::setIN(0xFF); return true;
+                case SDLK_DOWN:     Cpu::setIN(0xFF); return true;
+                case SDLK_PAGEDOWN: Cpu::setIN(0xFF); return true;
+            }
+
+            if((_sdlKeyCode >= 0  &&  _sdlKeyCode <= 31) ||  _sdlKeyCode == 127)
+            {
+                switch(_sdlKeyCode)
+                {
+                    case SDLK_TAB:       Cpu::setIN(0xFF); return true;
+                    case SDLK_ESCAPE:    Cpu::setIN(0xFF); return true;
+                    case SDLK_RETURN:    Cpu::setIN(0xFF); return true;
+                    case SDLK_DELETE:    Cpu::setIN(0xFF); return true;
+                    case SDLK_BACKSPACE: Cpu::setIN(0xFF); return true;
+                }
+            }
+
+            if(_sdlKeyCode >= 32  &&  _sdlKeyCode <= 126)
             {
                 _ps2KeyboardDown = false;
                 Cpu::setIN(0xFF);
-                return;
+                return true;
             }
         }
+
+        return false;
+    }
+
+    void handleKeyUp(void)
+    {
+        // PS2 Keyboard emulation mode
+        if(handlePs2KeyUp()) return;
 
         if(_sdlKeyCode == _inputKeys["Giga_Left"])        {if(!_gigatronMode) Cpu::setIN(Cpu::getIN() | INPUT_LEFT);  }
         else if(_sdlKeyCode == _inputKeys["Giga_Right"])  {if(!_gigatronMode) Cpu::setIN(Cpu::getIN() | INPUT_RIGHT); }

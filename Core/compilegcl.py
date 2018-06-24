@@ -3,8 +3,9 @@
 #
 #  compilegcl.py -- Compile GCL source to GT1 object file
 #
-# 2018-05-04 (Cwiiis) Initial version
+# 2018-05-04 (Cwiiis)  Initial version
 # 2018-06-11 (marcelk) Use JSON interface file instead of symbol table dump
+# 2018-06-24 (at67)    Optional output directory
 #
 #-----------------------------------------------------------------------
 
@@ -30,6 +31,7 @@ parser.add_argument('-s', '--sym', dest='sym',
                     help='Symbol file for interface bindings (default interface.json)',
                     default='interface.json')
 parser.add_argument('gclSource', help='GCL file')
+parser.add_argument('outputDir', nargs='?', default='', help='Optional output directory')
 args = parser.parse_args()
 
 #-----------------------------------------------------------------------
@@ -83,7 +85,7 @@ data += chr(address&255)
 #-----------------------------------------------------------------------
 
 stem = basename(splitext(args.gclSource)[0])
-gt1File = stem + '.gt1'    # Resulting object file
+gt1File = args.outputDir + stem + '.gt1'    # Resulting object file
 
 print('Create file', gt1File)
 

@@ -6,7 +6,7 @@ and possibly even Android. As of v0.6.6 it has only been tested on Microsoft Win
 
 ## Features
 - Can control real Gigatron hardware through an Arduino interface.<br/>
-- Can upload vCPU and GT1 files to real Gigatron hardware through an Arduino interface.<br/>
+- Can upload vCPU, GCL and GT1 files to real Gigatron hardware through an Arduino interface.<br/>
 - Emulates a PS2 Keyboard for vCPU, GCL code that can use PS2 hardware, such as WozMon.gt1<br/>
 - Variable timing from a minimum of 60FPS up to whatever your PC can handle.<br/>
 - Synchronisation of audio with video at any FPS at or above 60FPS.<br/>
@@ -142,6 +142,8 @@ and possibly even Android. As of v0.6.6 it has only been tested on Microsoft Win
   **_stderr_**. If there are no errors then a .**_gt1_** file will automatically be produced as long as there is<br/>
   no native code within the .**_vasm_** file; the code is then executed within the Gigatron CPU emulator.<br/>
 - The assembler is able to assemble vCPU as well as native code.<br/>
+- GCL code is now able to be compiled and uploaded to the emulator or real hardware as long as you have Python 2.7<br/>
+  installed, see **_README.md_** in Contrib/at67/gcl for details.<br/>
 - vCPU code is assembly code that is variable length Von Neumann instructions supporting 16bit operations<br/>
   that are executed by the inbuilt interpreter of the Gigatron TTL firmware and are stored in RAM.<br/>
 - Native code is based on a Harvard Architecture that exists only in ROM on both the Gigatron TTL<br/>
@@ -202,13 +204,21 @@ _singleStepWatch_   EQU     xyPos
 - You can specify field width, fill chars and use the same numeric literals as the rest of the Assembler. e.g:<br/>
     - %c will print a char.<br/>
     - %d will print an int.<br/>
-    - %04x will prints a zero padded four digit hex number.<br/>
+    - %04x will print a zero padded four digit hex number.<br/>
     - %016b will print a zero padded 16 digit binary number.<br/>
     - %04o will print a zero padded 4 digit octal number.<br/>
     - %s will print a maximum 255 sequence of chars, with the first byte of the string expected to be the length.<br/>
 
 ## MIDI
-- See **_gtmidi_** and **_README.md_** in the emu/midi directory.<br/>
+- See **_gtmidi_** and **_README.md_** in the Contrib/at67/midi directory.<br/>
+
+## Tools
+- The following command line tools that break out some of the functionality of the emulator are contained within<br/>
+  the following folder, **_Contrib/at67/tools_**, see their respective **_README.md_** files for detailed documentation:<br/>
+    - **_gtasm_**:      can assemble .**_vasm_** assembly code into a .**_gt1_** file.<br/>
+    - **_gt1torom_**:   splits a .**_gt1_** file into two separate .**_rom_** files, one for data and one for instructions.<br/>
+    - **_gtmakerom_**:  takes a normal 16bit Gigatron ROM and merges split .**_gt1_** roms into it.<br/>
+    - **_gtsplitrom_**: takes a normal 16bit Gigatron ROM and splits it into data and instruction .**_rom_** files.<br/>
 
 ## Memory and State saving
 - Real time saving of Gigatron and applications/games memory and state without any involvement of software<br/>
