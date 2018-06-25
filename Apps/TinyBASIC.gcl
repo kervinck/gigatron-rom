@@ -56,11 +56,11 @@
 
   Memory allocation:
           30 -   7f     BASIC interpreter variables
-          90 -   c3     BASIC variables A..Z (XXX move this out of zero page)
-          c4 -   ff     Stack for BASIC and vCPU (30 words)
-         200 -  fff     BASIC interpreter
-        12a0 - 07ff     Programs stored in the invisible part of screen memory
-        12a2 - 11bf     Input buffer ('line 0')
+          81 -   ff     Stack for BASIC and vCPU (30 words)
+         200 - 11ff     BASIC interpreter, partly next to screen memory
+        12a0 - 12bf     Input buffer ('line 0')
+        12c0 - 12f3     BASIC variables A..Z
+        13a0 - 7fff     Programs stored in the invisible part of screen memory
         8000 - ffff     Optional extra memory for BASIC programs (64K extension)
 
   Undocumented features and/or bugs:
@@ -97,7 +97,6 @@
         Dr. Wang's Palo Alto Tiny Basic (Roger Rauskolb)
 
   Wish list:
-    Stack       Move variables to another page: stack space is more important
     RUN         Should reset variables
     ?           Alias for PRINT
     Buffer      At least 1 character more input (24->25)
@@ -249,13 +248,14 @@ Spaces=
 
 { Get variable and calculate its address }
 [def
+  $12c0 i=                      {Base for variables}
   Active,                       {Next character from line}
   $5f&                          {Ignore case}
   $41- {'A'} [if>=0             {Bail out if out of range}
    26- {'Z'} if<0               {Letter A..Z or a..z}
     Active<++                   {Accept character}
     26+                         {Map in 0..25 range}
-    1<< $90+                    {Address is $90+2*n}
+    1<< i+                      {Address is $12c0+2*n}
     ret                         {Return address on success}
   ]
   SyntaxError!
@@ -348,11 +348,8 @@ $0400:
   Keyword! $67# $6f# $73# $75#  {'gosub'}
      $62# 0#
   [if<>0
-    \vSP, [if<>0                {Check stack space}
-      $e0- if<=0                {XXX 16 levels is ok?}
-      StackError!]              {Fail with error when too deep}
-    Expression!                 {Computed gosub}
     2-- Active 0%=              {Push current line to stack}
+    Expression!                 {Also does the stack check}
     GotoValue!]                 {Find that line and continue there}
 
   Keyword! $72# $65# $74# $75#  {'return'}
@@ -526,7 +523,9 @@ $0600:
   [if>0
     { Lookup line number in program }
     End i= j=                   {Setup i and j for below}
-    PrevBlock! deek Value-      {Retrieve last line number, 0 when no program}
+    Begin^ [if<>0               {Last line number is zero when no program}
+      End PrevBlock! deek]      {Or read it from the last block}
+    Value-                      {Compare to given number}
     [if>=0                      {If insert/modify instead of append}
       Begin [do i=              {Loop over program from beginning}
         i; Value- if<0          {Stop if found or past it}
@@ -584,13 +583,13 @@ $0600:
 
 { Clear program and variables. Returns 0 }
 [def
-  $12c0 Begin= End=             {Program end is program start}
+  $13a0 Begin= End=             {Program end is program start}
 
-  $90 i=                        {Clear variables A-Z}
+  $e0- i=                       {Clear variables A-Z and a few bytes more}
   [do
     0 i.                        {Clear byte}
     i<++                        {Advance pointer}
-    i $c4^ if<>0loop]           {$90+26*2 = $c4}
+    i<, if<>0loop]              {Until end of page}
 
   ret
 ] New=
@@ -675,7 +674,7 @@ GotoValue=
     Expression!
     peek Value=
     Keyword! $29# 0#            {')'}
-    [if=0 SyntaxError]
+    [if=0 SyntaxError!]
     pop ret]
 
   Variable!                     {Otherwise it MUST be a variable}
@@ -746,7 +745,7 @@ Number=
   Active, [if<>0 SyntaxError!]  {There must be nothing left on the line}
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
-    Begin Active^ if<>0         {Also stop if we came from the input buffer}
+    $12c0 Active^ if<>0         {Also stop if we came from the input buffer}
     Active 2+ Active=           {Skip past line number}
     Statement!]                 {And continue from there}
   Prompt! 0#                    {Program finished ok}
@@ -780,6 +779,11 @@ $0ca0:
 { Process a full expression, result in Value and vAC }
 [def
   push
+
+  \vSP, $8b-                    {Check stack for at least 10 bytes above $81}
+                                {Expression: 4, Term: 4, Factor: 2}
+  [if<0 StackError!]            {Too complex expression AND too deep}
+
                                 {First term}
   Keyword! $2d# 0#              {'-'}
   [if<>0                        {Accept unary minus}
