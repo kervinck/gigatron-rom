@@ -44,7 +44,7 @@
         .gtb            GigaTron BASIC / Gigatron Tiny BASIC
 
   Error messages:
-        Break error     Program (or list command) stopped by [Delete] key
+        Break error     Program (or list command) stopped by [Del] key
         Syntax error    Parse error / Program too large
         Value error     Calculation error (division by 0)
         Stack error     GOSUB nesting too deep / RETURN without GOSUB
@@ -55,8 +55,8 @@
           90 -   c3     BASIC variables A..Z (XXX move this out of zero page)
           c4 -   ff     Stack for BASIC and vCPU (30 words)
          200 -  fff     BASIC interpreter
-        10a0 - 07ff     Programs stored in the invisible part of screen memory
-        10a2 - 10bf     Input buffer ('line 0')
+        11a0 - 07ff     Programs stored in the invisible part of screen memory
+        11a2 - 11bf     Input buffer ('line 0')
         8000 - ffff     Optional extra memory for BASIC programs (64K extension)
 
   Undocumented features and/or bugs:
@@ -184,7 +184,7 @@ $0f20 \sysArgs6:                {Pen color yellow, background color blue}
   ret
 ] PrintChar=
 
-{ Print inline string, returns 0 }
+{ Print inline string. Returns 0 }
 [def
   \vLR; tmp=                    {vLR points to inline argument}
   [do
@@ -259,6 +259,7 @@ Spaces=
 ] Variable=
 
 { Destructively print Value as signed decimal number }
+{ Does the sign test on vAC, so it can print both signed and unsigned }
 [def
   push
 
@@ -315,7 +316,7 @@ Spaces=
   $20 PrintChar!                {Remove cursor}
   Newline!
   $0f \sysArgs7.                {Pen color yellow for output}
-  $10a2                         {Return buffer start}
+  $11a2                         {Return buffer start}
   pop ret
 ] GetLine=
 
@@ -414,7 +415,7 @@ $0400:
 
   Keyword! $72# $75# $6e# 0#    {'run'}
   [if<>0
-    $10c0 deek Value=           {First program line, if any}
+    $11c0 deek Value=           {First program line, if any}
     GotoValue!]                 {Also tests for break}
 
   StatementCont!                {Continue in another page}
@@ -433,7 +434,10 @@ $0500:
   [if<>0 List! EndOfLine!]
 
   Keyword! $6e# $65# $77# 0#    {'new'}
-  [if<>0 New! Prompt! 0#]       {Returns to prompt}
+  [if<>0
+    New!
+    List!                       {To print free bytes}
+    Prompt! 0#]                 {Return to prompt}
 
   Keyword! $65# $6e# $64# 0#    {'end'}
   [if<>0 Prompt! 0#]
@@ -494,29 +498,33 @@ $0500:
   SyntaxError!
 ] StatementCont=
 
-{ Parse an inline keyword, return 0 for failure }
+{ Process an expression factor, result in Value }
 [def
-  \vLR; tmp=                    {vLR points to inline argument}
-  Active j=                     {Save Active in case word match fails}
-  [do
-    tmp, tmp<++                 {Next expected character from argument}
-    if<>0                       {Compare until non-zero}
-    i=
-    Active,                     {Grab next character from line}
-    $20|                        {Ignore case}
-    i^ [if=0 Active<++ loop]    {Accept if character matches}
-    j Active=                   {Restore program pointer on mismatch}
-    [do tmp, tmp<++ if<>0loop]  {Eat remaining characters}
-    tmp!]
-  Spaces!                       {Remove trailing whitespace on match}
-  tmp!                          {Effectively returns past the keyword}
-] {Keyword=}
+  push
+
+  Keyword! $28# 0#              {'('}
+  [if<>0
+    Expression!
+    Keyword! $29# 0#            {')'}
+    [if=0 SyntaxError!]
+    pop ret]
+
+  Number!                       {Test for numeric constant}
+  [if>=0
+    Spaces!
+    pop ret]                    {Result already in Value}
+
+  Variable!                     {Otherwise it MUST be a variable}
+  deek Value=                   {Fetch value}
+  Spaces!
+
+  pop ret
+] Factor=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
 $0600:
-Keyword=
 
 {
  Six scenarios for InsertLine          Check   Search  Shift   Copy    Shift
@@ -537,7 +545,7 @@ Keyword=
     End i= j=                   {Setup i and j for below}
     PrevBlock! deek Value-      {Retrieve last line number, 0 when no program}
     [if>=0                      {If insert/modify instead of append}
-      $10c0 [do i=              {Loop over program from beginning}
+      $11c0 [do i=              {Loop over program from beginning}
         i; Value- if<0          {Stop if found or past it}
         i NextBlock! loop]      {Advance to next line}
       if>0                      {Insert scenario}
@@ -591,12 +599,10 @@ Keyword=
   pop ret
 ] TryInsert=
 
-{ Note: It is save to call functions here before hopping over to page 8 }
-
-{ Clear program and variables, returns 0 }
+{ Clear program and variables. Returns 0 }
 [def
-  $10a0 Buffer=                 {First block in memory is input buffer}
-  32+ End=                      {Programs begin 32 bytes later}
+  $11a0 Buffer=                 {First block in memory is input buffer}
+  32+ End=                      {Program begins 32 bytes after}
 
   $90 i=                        {Clear variables A-Z}
   [do
@@ -604,8 +610,8 @@ Keyword=
     i<++                        {Advance pointer}
     i $c4^ if<>0loop]           {$90+26*2 = $c4}
 
-  Active=                       {Not active in any line}
   Buffer:                       {Place a dummy largest line number 0 here}
+
   ret
 ] New=
 
@@ -618,6 +624,7 @@ PrintS!                         {'*** Tiny BASIC'}
   $2a# $2a# $2a# $20# $54# $69#
   $6e# $79# $20# $42# $41# $53#
   $49# $43# 0#
+Newline!
 
 New!                            {Empty program and clear variables}
 
@@ -629,7 +636,7 @@ $08a0:
 { Calculate address of next 32-byte block for storing BASIC lines }
 { Realign if needed }
 [def
-  31| 1+ tmp=                   {Advance to next 32 byte memory block}
+  31| 1+ tmp=                   {Advance to next 32-byte memory block}
   [if>=0                        {In the first 32K...}
     $e0& if=0                   {...wrap around visible screen memory}
       tmp 160+ ret]
@@ -649,7 +656,7 @@ $08a0:
 
 { Find line with line number equal to Value and go there }
 [def
-  $10c0 [do i=                  {Loop over program from beginning}
+  $11c0 [do i=                  {Loop over program from beginning}
     End^ if<>0                  {Until end of program}
     i; Value^ [if=0             {Or if matching value found}
       i 2+ Active=              {Skip past line number}
@@ -701,59 +708,36 @@ GotoValue=
 +-----------------------------------------------------------------------}
 $0aa0:
 
-{ Process an expression factor, result in Value }
+{ Parse an inline keyword. Returns 0 for failure }
 [def
-  push
-
-  Keyword! $28# 0#              {'('}
-  [if<>0
-    Expression!
-    Keyword! $29# 0#            {')'}
-    [if=0 SyntaxError!]
-    pop ret]
-
-  Number!                       {Test for numeric constant}
-  [if>=0
-    Spaces!
-    pop ret]                    {Result already in Value}
-
-  Variable!                     {Otherwise it MUST be a variable}
-  deek Value=                   {Fetch value}
-  Spaces!
-
-  pop ret
-] Factor=
-
-{ List program }
-[def
-  $10c0                         {Start of program memory}
+  \vLR; tmp=                    {vLR points to inline argument}
+  Active j=                     {Save Active in case word match fails}
   [do
-    j=
-    End^ if<>0                  {Repeat until the last line}
-    TestBreak!                  {Test for [Del] as break request}
-    j; Value= PrintValue!       {Print line number}
-    j<++                        {Print line text}
-    [do
-      j<++ j,
-      if<>0 PrintChar!
-      loop]
-    Newline!
-    j NextBlock!                {Advance to next line in memory}
-  loop]
-  EndOfLine!
-] List=
+    tmp, tmp<++                 {Next expected character from argument}
+    if<>0                       {Compare until non-zero}
+    i=
+    Active,                     {Grab next character from line}
+    $20|                        {Ignore case}
+    i^ [if=0 Active<++ loop]    {Accept if character matches}
+    j Active=                   {Restore program pointer on mismatch}
+    [do tmp, tmp<++ if<>0loop]  {Eat remaining characters}
+    tmp!]
+  Spaces!                       {Remove trailing whitespace on match}
+  tmp!                          {Effectively returns past the keyword}
+] {Keyword=}
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 11                                     |
 +-----------------------------------------------------------------------}
 $0ba0:
+Keyword=
 
 { Verify that there is nothing else on the line, then continue with next }
 [def
   Active, [if<>0 SyntaxError!]  {There must be nothing left on the line}
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
-    $10c0 Active^ if<>0         {Also stop if we came from the input buffer}
+    $11c0 Active^ if<>0         {Also stop if we came from the input buffer}
     Active 2+ Active=           {Skip past line number}
     Statement!]                 {And continue from there}
   Prompt! 0#                    {Program finished ok}
@@ -849,17 +833,13 @@ Divide=
 { Calculate vAC * Value, result in vAC }
 [def
   tmp=
-  [if<0                         {Make left-hand side positive}
-    0 Value- Value=
-    0 tmp- tmp=]
-
   0 j=                          {Result variable}
   1                             {First bit}
-  [do                           {Loop over all bits}
-    i= tmp&                     {Test next bit}
+  [do                           {Loop over all 16 bits}
+    i= tmp&                     {Test next bit left}
     [if<>0 j Value+ j=]         {Add partial term}
-    Value Value+ Value=         {Double right-hand side}
-    i i+ if>0loop]              {Shift left until all done}
+    Value Value+ Value=         {Shift left}
+    i i+ if<>0loop]             {Until all done}
   j
   ret
 ] Multiply=
@@ -877,13 +857,55 @@ Divide=
 [def
   Prompt! $56# $61# $6c# $75#   {'Value'}
     $65# 0#
-] {ValueError=}
+] ValueError=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 15                                     |
 +-----------------------------------------------------------------------}
 $0fa0:
-ValueError=
+
+{ List program, count and print free bytes. Returns 0 }
+[def
+  push
+
+  $11c0                         {List program from start of program memory}
+  [do                           {Loop over all program lines}
+    j=
+    End^ if<>0                  {Repeat until the last line}
+    TestBreak!                  {Test for [Del] as break request}
+    j; Value= PrintValue!       {Print line number}
+    j<++                        {Print line text}
+    [do                         {Loop over all characters in program line}
+      j<++ j,
+      if<>0 PrintChar!
+      loop]
+    Newline!
+    j NextBlock!                {Advance to next block}
+  loop]
+
+  [do                           {Continue looping, now over free memory}
+    Value=                      {Subtotal}
+    0;                          {Retrieve top of memory from RAM[0:1]}
+    j^ if<>0                    {If not equal to j}
+    j NextBlock! j=             {Advance to next block}
+    Value 32+                   {Count another 32-byte block}
+    loop]
+
+  PrintValue!                   {vAC>=0 triggers conversion without sign}
+  PrintS!                       {' bytes free'}
+    $20# $62# $79# $74# $65#
+    $73# $20# $66# $72# $65#
+    $65# 0#                     {Caller supplies newline, except when running}
+
+  pop ret
+] List=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 16                                     |
++-----------------------------------------------------------------------}
+$10a0:
+
+List!                           {To print free bytes}
 
 { Error reporting function and re-entry point for main loop }
 { Call with inline partial error message, or with 0# for 'Ok' prompt }
