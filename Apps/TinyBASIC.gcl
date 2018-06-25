@@ -12,11 +12,11 @@
 
 {
   History:
-  2018-06-19 (marcelk) Scaffolding. Can evaluate direct print statements.
+  2018-06-19 (marcelk) Scaffolding: can evaluate direct print statements
   2018-06-21 (marcelk) Can edit programs, delete lines, but no RUN yet
   2018-06-23 (marcelk) Can RUN, GOTO, GOSUB, RETURN and break program
   2018-06-24 (marcelk) Can do IF/THEN, INPUT and END: feature complete
-  2018-xx-xx (marcelk) Report free bytes. Trailing (semi-)colon in PRINT.
+  2018-06-25 (marcelk) Free bytes; Trailing (semi-)colon in PRINT; Optional LET
 
   Formal grammar:
 
@@ -25,7 +25,7 @@
                   'IF' Expression RelOp Expression 'THEN'? Statement |
                   'GOTO' Expression |
                   'INPUT' Variable (',' Variable)* |
-                  'LET' Variable '=' Expression |
+                  'LET'? Variable '=' Expression |
                   'GOSUB' Expression |
                   'RETURN' |
                   'REM' Character* |
@@ -94,7 +94,6 @@
 
   Wish list:
     PEEK/POKE   Or USR() to simulate both? Nah, keywords are better...
-    LET         Make LET keyword optional (also update grammar)
     INPUT       Shouldn't bail out on a simple ENTER. Loop in GetLine?
     Stack       Move variables to another page: stack space is more important
     Buffer      At least 1 character more input (24->25)
@@ -347,17 +346,6 @@ $0400:
 [def
   Spaces!
 
-  Keyword! $6c# $65# $74# 0#    {'let'}
-  [if<>0
-    Variable!
-    LValue=                     {Park address here}
-    Spaces!
-    Keyword! $3d# 0#            {'='}
-    [if=0 SyntaxError!]
-    Expression!                 {Evaluate expression}
-    LValue:                     {Store value in variable}
-    EndOfLine!]
-
   Keyword! $67# $6f# $74# $6f#  {'goto'}
     0#
   [if<>0
@@ -417,6 +405,16 @@ $0400:
     $11c0 deek Value=           {First program line, if any}
     GotoValue!]                 {Also tests for break}
 
+  Keyword!                      {'list'}
+    $6c# $69# $73# $74# 0#
+  [if<>0 List! EndOfLine!]
+
+  Keyword! $6e# $65# $77# 0#    {'new'}
+  [if<>0
+    New!
+    List!                       {To print free bytes}
+    Prompt! 0#]                 {Return to prompt}
+
   StatementCont!                {Continue in another page}
 ] Statement=
 
@@ -427,16 +425,6 @@ $0500:
 
 { Continuation of Statement }
 [def
-
-  Keyword!                      {'list'}
-    $6c# $69# $73# $74# 0#
-  [if<>0 List! EndOfLine!]
-
-  Keyword! $6e# $65# $77# 0#    {'new'}
-  [if<>0
-    New!
-    List!                       {To print free bytes}
-    Prompt! 0#]                 {Return to prompt}
 
   Keyword! $65# $6e# $64# 0#    {'end'}
   [if<>0 Prompt! 0#]
@@ -496,7 +484,15 @@ $0500:
       if=0 Active<++ loop]      {Next variable}
     EndOfLine!]
 
-  SyntaxError!
+  Keyword! $6c# $65# $74# 0#    {'let' (optional)}
+  Variable!
+  LValue=                       {Park address here}
+  Spaces!
+  Keyword! $3d# 0#              {'='}
+  [if=0 SyntaxError!]
+  Expression!                   {Evaluate expression}
+  LValue:                       {Store value in variable}
+  EndOfLine!
 ] StatementCont=
 
 { Process an expression factor, result in Value }

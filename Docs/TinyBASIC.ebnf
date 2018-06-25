@@ -8,7 +8,7 @@ Statement   ::= 'PRINT' ((String|Expression) [,;])* (String|Expression)? |
                 'IF' Expression RelOp Expression 'THEN'? Statement |
                 'GOTO' Expression |
                 'INPUT' Variable (',' Variable)* |
-                'LET' Variable '=' Expression |
+                'LET'? Variable '=' Expression |
                 'GOSUB' Expression |
                 'RETURN' |
                 'REM' Character* |
