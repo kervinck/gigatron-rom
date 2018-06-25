@@ -43,7 +43,9 @@ and possibly even Android. As of v0.6.6 it has only been tested on Microsoft Win
 - https://www.youtube.com/watch?v=sq8uCpBFwp8<br>
 
 ## References
-- Gigatron TTL:  https://github.com/kervinck/gigatron-rom<br/>
+- Gigatron TTL Home: https://gigatron.io/<br/>
+- Gigatron TTL Forums: https://forum.gigatron.io/index.php<br/>
+- Gigatron TTL Repo: https://github.com/kervinck/gigatron-rom<br/>
 - SDL2 graphics:  https://github.com/kervinck/gigatron-rom/pull/1<br/>
 - Early Gigatron emulation:  http://talkchess.com/forum/viewtopic.php?t=65944&start=11<br/>
 - Dirent for Windows:  https://github.com/tronkko/dirent<br/>
@@ -52,8 +54,10 @@ and possibly even Android. As of v0.6.6 it has only been tested on Microsoft Win
 - rs232: https://github.com/Marzac/rs232<br/>
 
 ## Contributors
-- Cwiiis https://github.com/Cwiiis
-- xxxbxxx https://github.com/xxxbxxx
+- at67 https://github.com/at67<br/>
+- kervinck https://github.com/kervinck<br/>
+- Cwiiis https://github.com/Cwiiis<br/>
+- xxxbxxx https://github.com/xxxbxxx<br/>
 
 ## Building
 - CMake 3.7 or higher is required for building, has been tested on Windows with Visual Studio and gcc/mingw32<br/>
