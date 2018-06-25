@@ -801,7 +801,7 @@ namespace Loader
         bool hasRamCode = false;
 
         uint16_t executeAddress = Editor::getLoadBaseAddress();
-        std::string filename = *Editor::getFileEntryName(Editor::getCursorY() + Editor::getFileEntriesIndex());
+        std::string filename = *Editor::getCurrentFileEntryName();
         std::string filepath = std::string(Editor::getBrowserPath() + filename);
 
         // Reset video table and reset single step watch address to video line counter
