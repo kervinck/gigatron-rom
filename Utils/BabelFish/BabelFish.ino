@@ -383,14 +383,35 @@ void doCommand(char line[])
     case 'X': sendController(~buttonB,       2); break;
     case 'Q': sendController(~buttonSelect,  2); break;
     case 'E': sendController(~buttonStart,   2); break;
-    case 0: /* Empty line */                     break;
-    
+    case 0:   /* Empty line */                   break;
+
     case EMU_PS2_ENABLE: emulatorControl = true; break;
 
-  #if hasSerial
-    default:
-      Serial.println("!Unknown command (type 'H' for help)");
-  #endif
+    #if hasSerial
+      default:
+        Serial.println("!Unknown command (type 'H' for help)");
+    #endif
+  }
+  prompt();
+}
+
+void doEmulator(char line[])
+{
+  switch (line[0]) {
+    case EMU_PS2_LEFT:    sendController(~buttonLeft,   2);      break;
+    case EMU_PS2_RIGHT:   sendController(~buttonRight,  2);      break;
+    case EMU_PS2_UP:      sendController(~buttonUp,     2);      break;
+    case EMU_PS2_DOWN:    sendController(~buttonDown,   2);      break;
+    case EMU_PS2_START:   sendController(~buttonStart,  128+32); break;
+    case EMU_PS2_SELECT:  sendController(~buttonSelect, 2);      break;
+    case EMU_PS2_INPUT_A: sendController((byte)~buttonA,2);      break;
+    case EMU_PS2_INPUT_B: sendController(~buttonB,      2);      break;
+    case EMU_PS2_CR:      sendController('\n',          2);      break;
+    case EMU_PS2_DEL:     sendController(127,           2);      break;
+
+    case EMU_PS2_DISABLE: emulatorControl = false;               break;
+
+    default:              sendController(line[0],       2);      break;
   }
   prompt();
 }
@@ -706,4 +727,3 @@ void sendBits(byte value, byte n)
   }
   checksum += value;
 }
-

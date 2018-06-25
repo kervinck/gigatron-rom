@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <sstream>
+#include <iomanip>
 #include <algorithm>
 
 #include "expression.h"
@@ -11,15 +13,66 @@ namespace Expression
     char* _expressionToParse;
     char* _expression;
 
+    int _lineNumber = 0;
+
+
     bool _binaryChars[256]      = {false};
     bool _octalChars[256]       = {false};
     bool _decimalChars[256]     = {false};
     bool _hexaDecimalChars[256] = {false};
 
-    int _lineNumber = 0;
+    unaryOpFuncPtr  _negFunc;
+    binaryOpFuncPtr _addFunc;
+    binaryOpFuncPtr _subFunc;
+    binaryOpFuncPtr _mulFunc;
+    binaryOpFuncPtr _divFunc;
+
+    // Default operators
+    Numeric neg(const Numeric& numeric)
+    {
+        Numeric result;
+        result._value = -numeric._value;
+        return result;
+    }
+    Numeric add(Numeric& result, const Numeric& numeric)
+    {
+        result._value += numeric._value;
+        return result;
+    }
+    Numeric sub(Numeric& result, const Numeric& numeric)
+    {
+        result._value -= numeric._value;
+        return result;
+    }
+    Numeric mul(Numeric& result, const Numeric& numeric)
+    {
+        result._value *= numeric._value;
+        return result;
+    }
+    Numeric div(Numeric& result, const Numeric& numeric)
+    {
+        result._value = (numeric._value == 0) ? 0 : result._value / numeric._value;
+        return result;
+    }
+
+    // Set operators
+    void setNegFunc(unaryOpFuncPtr  negFunc) {_negFunc = negFunc;}
+    void setAddFunc(binaryOpFuncPtr addFunc) {_addFunc = addFunc;}
+    void setSubFunc(binaryOpFuncPtr subFunc) {_subFunc = subFunc;}
+    void setMulFunc(binaryOpFuncPtr mulFunc) {_mulFunc = mulFunc;}
+    void setDivFunc(binaryOpFuncPtr divFunc) {_divFunc = divFunc;}
+
+    void setDefaultOperatorFuncs(void)
+    {
+        setNegFunc(neg);
+        setAddFunc(add);
+        setSubFunc(sub);
+        setMulFunc(mul);
+        setDivFunc(div);
+    }
 
 
-    uint16_t expression(void);
+    Numeric expression(void); // forward declaration
 
 
     void initialise(void)
@@ -28,15 +81,47 @@ namespace Expression
         bool* o = _octalChars;       o['0']=1; o['1']=1; o['2']=1; o['3']=1; o['4']=1; o['5']=1; o['6']=1; o['7']=1;
         bool* d = _decimalChars;     d['0']=1; d['1']=1; d['2']=1; d['3']=1; d['4']=1; d['5']=1; d['6']=1; d['7']=1; d['8']=1; d['9']=1;
         bool* h = _hexaDecimalChars; h['0']=1; h['1']=1; h['2']=1; h['3']=1; h['4']=1; h['5']=1; h['6']=1; h['7']=1; h['8']=1; h['9']=1; h['A']=1; h['B']=1; h['C']=1; h['D']=1; h['E']=1; h['F']=1;
+
+        setDefaultOperatorFuncs();
     }
 
     ExpressionType isExpression(const std::string& input)
     {
+        if(find_if(input.begin(), input.end(), isalpha) != input.end()) return HasAlpha;
         if(input.find_first_of("[]") != std::string::npos) return Invalid;
         if(input.find("++") != std::string::npos) return Invalid;
         if(input.find("--") != std::string::npos) return Invalid;
         if(input.find_first_of("+-*/()") != std::string::npos) return Valid;
         return None;
+    }
+
+    void padString(std::string &str, int num, char pad)
+    {
+        if(num > str.size()) str.insert(0, num - str.size(), pad);
+    }
+
+    void addString(std::string &str, int num, char add)
+    {
+        if(num > 0) str.append(num, add);
+    }
+
+    void stripWhitespace(std::string& input)
+    {
+        input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
+    }
+
+    std::string byteToHexString(uint8_t n)
+    {
+        std::stringstream ss;
+        ss << std::hex << std::setfill('0') << std::setw(2) << (int)n;
+        return "0x" + ss.str();
+    }
+
+    std::string wordToHexString(uint16_t n)
+    {
+        std::stringstream ss;
+        ss << std::hex << std::setfill('0') << std::setw(4) << n;
+        return "0x" + ss.str();
     }
 
     std::string& strToUpper(std::string& s)
@@ -159,7 +244,7 @@ namespace Expression
         return stringToU16(valueStr, value);
     }
 
-    uint16_t factor(void)
+    Numeric factor(uint16_t defaultValue)
     {
         uint16_t value = 0;
         if((peek() >= '0'  &&  peek() <= '9')  ||  peek() == '$')
@@ -169,47 +254,71 @@ namespace Expression
                 fprintf(stderr, "Expression::factor() : Bad numeric data in '%s' on line %d\n", _expressionToParse, _lineNumber + 1);
                 value = 0;
             }
-            return value;
+            return Numeric(value, false, nullptr);
         }
         else if(peek() == '(')
         {
             get();
-            uint16_t result = expression();
-            if(peek() != ')')
-            {
-                fprintf(stderr, "Expression::factor() : Expecting ')' : found '%c' in '%s' on line %d\n", peek(), _expressionToParse, _lineNumber + 1);
-                result = 0;
-            }
+            Numeric numeric = expression();
+            //if(peek() != ')')
+            //{
+            //    fprintf(stderr, "Expression::factor() : Expecting ')' : found '%c' in '%s' on line %d\n", peek(), _expressionToParse, _lineNumber + 1);
+            //    value = 0;
+            //}
             get();
-            return result;
+            return numeric;
         }
         else if(peek() == '-')
         {
             get();
-            return -factor();
+            return _negFunc(factor(0));
         }
 
-        fprintf(stderr, "Expression::factor() : Unknown character '%c' in '%s' on line %d\n", peek(), _expressionToParse, _lineNumber + 1);
-        return 0;
+        //fprintf(stderr, "Expression::factor() : Unknown character '%c' in '%s' on line %d : returning default %d\n", peek(), _expressionToParse, _lineNumber + 1, defaultValue);
+        Numeric numeric = Numeric(defaultValue, true, _expression);
+        while(isalpha(peek())) get();
+        return numeric;
     }
 
-    uint16_t term(void)
+    Numeric term(void)
     {
-        uint16_t result = factor();
+        Numeric result = factor(0);
         while(peek() == '*'  ||  peek() == '/')
         {
-            (get() == '*') ? result *= factor() : result /= factor();
+            if(get() == '*')
+            {
+                result = _mulFunc(result, factor(0));
+            }
+            else
+            {
+                Numeric f = factor(0);
+                if(f._value == 0)
+                {
+                    result = _mulFunc(result, f);
+                }
+                else
+                {
+                    result = _divFunc(result, f);
+                }
+            }
         }
 
         return result;
     }
 
-    uint16_t expression(void)
+    Numeric expression(void)
     {
-        uint16_t result = term();
+        Numeric result = term();
         while(peek() == '+' || peek() == '-')
         {
-            (get() == '+') ? result += term() : result -= term();
+            if(get() == '+')
+            {
+                result = _addFunc(result, term());
+            }
+            else
+            {
+                result = _subFunc(result, term());
+            }
         }
 
         return result;
@@ -221,6 +330,6 @@ namespace Expression
         _expression = expressionToParse;
         _lineNumber = lineNumber;
 
-        return expression();
+        return expression()._value;
     }
 }

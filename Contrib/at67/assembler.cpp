@@ -1746,8 +1746,6 @@ namespace Assembler
         // Pre-processor
         if(!preProcess(filename, lineTokens, true)) return false;
 
-        numLines = int(lineTokens.size());
-
         // The mnemonic pass we evaluate all the equates and labels, the code pass is for the opcodes and operands
         for(int parse=MnemonicPass; parse<NumParseTypes; parse++)
         {
