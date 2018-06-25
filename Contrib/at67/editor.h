@@ -14,6 +14,19 @@
 #define INPUT_B       0x40
 #define INPUT_A       0x80
 
+#define GIGA_PS2_LEFT    1
+#define GIGA_PS2_RIGHT   2
+#define GIGA_PS2_UP      3
+#define GIGA_PS2_DOWN    4
+#define GIGA_PS2_START   7
+#define GIGA_PS2_SELECT  8
+#define GIGA_PS2_INPUT_A 9
+#define GIGA_PS2_INPUT_B 27
+#define GIGA_PS2_CR      13
+#define GIGA_PS2_DEL     127
+#define GIGA_PS2_ENABLE  5
+#define GIGA_PS2_DISABLE 6
+
 #define HEX_BASE_ADDRESS   0x0200
 #define LOAD_BASE_ADDRESS  0x0200
 #define VARS_BASE_ADDRESS  0x0030
@@ -25,7 +38,7 @@
 namespace Editor
 {
     enum MemoryMode {RAM=0, ROM0, ROM1, NumMemoryModes};
-    enum EditorMode {Hex=0, Load, Giga, PS2KB, Debug, NumEditorModes};
+    enum EditorMode {Hex=0, Load, Giga, PS2KB, GigaPS2, Debug, NumEditorModes};
     enum FileType {File=0, Dir, Fifo, Link, NumFileTypes};
 
 
@@ -46,9 +59,11 @@ namespace Editor
     uint16_t getCpuUsageAddressB(void);
     int getFileEntriesIndex(void);
     int getFileEntriesSize(void);
-    std::string getBrowserPath(void);
     FileType getFileEntryType(int index);
+    FileType getCurrentFileEntryType(void);
     std::string* getFileEntryName(int index);
+    std::string* getCurrentFileEntryName(void);
+    std::string getBrowserPath(bool removeSlash=false);
 
     void setCursorX(int x);
     void setCursorY(int y);
