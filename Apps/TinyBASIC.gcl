@@ -4,7 +4,7 @@
 |       Recreation of Tiny BASIC for Gigatron TTL microcomputer         |
 |                                                                       |
 |       - Integer BASIC, with PRINT supporting string constants         |
-|       - One statement per line, up to 24 characters per line          |
+|       - One statement per line, up to 25 characters per line          |
 |       - Supports roughly 300 line programs in the 32K system          |
 |       - Based on Dennis Allison's original 1976 Tiny BASIC            |
 |                                                                       |
@@ -16,7 +16,7 @@
   2018-06-21 (marcelk) Can edit programs, delete lines, but no RUN yet
   2018-06-23 (marcelk) Can RUN, GOTO, GOSUB, RETURN and break program
   2018-06-24 (marcelk) Can do IF/THEN, INPUT and END: feature complete
-  2018-06-25 (marcelk) LIST shows free bytesk; Trailing (semi-)colon in PRINT;
+  2018-06-25 (marcelk) LIST shows free bytes; Trailing (semi-)colon in PRINT;
                        LET is now optional; PEEK/POKE; Better INPUT;
                        NEW clears variables; Aliases for PRINT and REM
 
@@ -96,13 +96,11 @@
         Dr. Wang's Palo Alto Tiny Basic (Roger Rauskolb)
 
   Wish list:
-    Buffer      At least 1 character more input (24->25)
     TicTac.gtb  Test longer programs. Might need to shorten/preprocess lines.
     % or MOD    Modulo operator
     Test 64K    Test. Fix printing of bytes free. Test out-of-memory detection.
     NextBlock   Cache result of NextBlock at offset 0 of block
     @()         Array as in Palo Alto Tiny BASIC (store vertically)
-    Indent      Indent BASIC output 2 pixels (as in WozMon)
 
   'Maybe' list:
     CHR expr    Print an ASCII char from its value
@@ -121,6 +119,7 @@
     IF          Reintroduce syntax error check
     TUNE        Play a note
     LOAD        Load from EPROM?
+    Indent      Indent BASIC output 2 pixels (as in WozMon)
 
   'Probably not' list:
     "" or """   For printing the quote character itself
@@ -306,13 +305,13 @@ Spaces=
 
     96- if>=0loop               {Ignore apparent unprintable garbage}
 
+    Pos<, 150- [if>=0           {Fewer than 2 chars or 11 pixels will fit}
+      $a2 Active<.              {Discard of too long input}
+      $5c PrintChar!            {Overflow indicator '\'}
+      loop]                     {To NEXTCHAR, cursor will print on new line}
+
     Active, PrintChar!          {Print accepted characters}
     Active<++                   {Advance pointer, keeping the character}
-
-    Pos<, 150^ [if=0            {Arrived at position 25 (25*6 == 150)}
-      $a2 Active<.              {Discard of too long input}
-      $5c PrintChar! Newline!]  {Overflow indicator '\'}
-
     loop]                       {To NEXTCHAR}
 
   Active.                       {Terminate input with zero}
