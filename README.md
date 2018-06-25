@@ -14,6 +14,10 @@ gigatron-rom
  |     `--- compilegcl.py       Stand-alone GCL to vCPU compiler (GT1 files)
  +--- interface.json            Formal bindings interface for ROMv1
  +--- Apps/                     Built-in and example applications (GCL and GT1)
+ |     +--- Blinky.gcl          Very simple GCL program
+ |     +--- HelloWorld.gcl      Program that draws "Hello world" on screen
+ |     +--- WozMon.gt1          Port of Apple-1 monitor program
+ |     `--- TinyBASIC.gt1       Integer BASIC interpreter
  +--- Images/                   Built-in images
  +--- Utils/
  |     +--- sendGt1.py          Send a GT1 file from laptop/PC to Gigatron
@@ -23,7 +27,9 @@ gigatron-rom
  +--- Docs/
  |     +--- GT1-format.txt      vCPU object file format (GT1 files)
  |     +--- GCL-language.txt    Gigatron Control Language and vCPU explanation
- |     `--- gtemu.c             An executable instruction set definition
+ |     +--- gtemu.c             An executable instruction set definition
+ |     +--- TinyBASIC.ebnf      Formal definition of Gigatron TinyBASIC syntax
+ |     `--- TinyBASIC.xhtml     Railroad diagram of Gigatron TinyBASIC syntax
  |
  `--- Contrib/                  Contributions outside the kit's ROM and tooling
        +--- at67/               Emulator/visualizer (SDL2), 8-bit/16-bit
@@ -108,14 +114,14 @@ Address   Name          Description
 0024-002b sysArgs       Arguments for SYS functions
 002c      soundTimer    Countdown timer for playing sound
 002d      ledTimer      Number of frames until next LED change
-002e      ledState      Current LED state machine value
+002e      ledState      Current LED state machine value (branch offset)
 002f      ledTempo      Next value for ledTimer after LED state change
 0030-007f userVars      Program variables
 0080      1             Constant
 0081-.... -             More space for program variables
 ....-00ff <stack>
 0100-01ef videoTable
-01f0-01f9 vReset
+01f0-01f9 vReset        vCPU routine to load and start Reset sequence
 01fa      wavA[1]       Sound channel 1
 01fb      wavX[1]
 01fc      keyL[1]
@@ -171,7 +177,7 @@ page 4       | vCPU extended instructions and SYS functions             |
              +----------------------------------------------------------+
 page 5       | Shift tables                                             |
              |                                                          |
-page 6       | SYS functions (LSRW and ohers)                           |
+page 6       | SYS functions (LSRW and others)                          |
              +----------------------------------------------------------+
 page 7-8     | Font table (ASCII 32..81 and 82..127)                    |
              +----------------------------------------------------------+
