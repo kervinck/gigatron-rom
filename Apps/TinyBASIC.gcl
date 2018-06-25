@@ -59,8 +59,8 @@
           90 -   c3     BASIC variables A..Z (XXX move this out of zero page)
           c4 -   ff     Stack for BASIC and vCPU (30 words)
          200 -  fff     BASIC interpreter
-        11a0 - 07ff     Programs stored in the invisible part of screen memory
-        11a2 - 11bf     Input buffer ('line 0')
+        12a0 - 07ff     Programs stored in the invisible part of screen memory
+        12a2 - 11bf     Input buffer ('line 0')
         8000 - ffff     Optional extra memory for BASIC programs (64K extension)
 
   Undocumented features and/or bugs:
@@ -99,12 +99,13 @@
   Wish list:
     INPUT       Shouldn't bail out on a simple ENTER. Loop in GetLine?
     Stack       Move variables to another page: stack space is more important
+    RUN         Should reset variables
+    ?           Alias for PRINT
     Buffer      At least 1 character more input (24->25)
     TicTac.gtb  Test longer programs. Might need to shorten/preprocess lines.
     % or MOD    Modulo operator
     Test 64K    Test. Fix printing of bytes free. Test out-of-memory detection.
     NextBlock   Cache result of NextBlock at offset 0 of block
-    ?           Alias for PRINT
     @()         Array as in Palo Alto Tiny BASIC (store vertically)
     Indent      Indent BASIC output 2 pixels (as in WozMon)
 
@@ -283,7 +284,11 @@ Spaces=
 { Accept ASCII characters from console input with line editting }
 [def
   push
-  $a2 Buffer<.                  {Prepare for next input line}
+
+  tmp=                          {Line number}
+  $12a0 Active=                 {Input buffer}
+  tmp Active:                   {For error messages}
+  $a2 Active<.                  {Text area}
 
   [do {NEXTCHAR}
     127 \sysArgs7.              {Pen color white for user input}
@@ -291,55 +296,39 @@ Spaces=
 
     \serialRaw, [do             {Wait for key change}
       tmp=                      {Remember previous value}
-      \serialRaw, Buffer.       {Read new input value}
+      \serialRaw, Active.       {Read new input value}
       tmp^ if=0                 {If no change}
-        Buffer, loop]           {Keep waiting}
+        Active, loop]           {Keep waiting}
 
-    Buffer, 10^ if<>0           {Enter/return breaks NEXTCHAR loop}
+    Active, 10^ if<>0           {Enter/return breaks NEXTCHAR loop}
 
     117^ [if=0                  {Delete pressed (10^127 == 117)}
       $20 PrintChar! Pos=       {Remove cursor}
       Pos<, 6- [if>=0           {If not on first position}
         Pos<.                   {Step back}
-        Buffer 1- Buffer=]      {Remove character from buffer}
+        Active 1- Active=]      {Remove character from buffer}
       loop]                     {To NEXTCHAR}
 
     96- if>=0loop               {Ignore apparent unprintable garbage}
 
-    Buffer, PrintChar!          {Print accepted characters}
-    Buffer<++                   {Advance pointer, keeping the character}
+    Active, PrintChar!          {Print accepted characters}
+    Active<++                   {Advance pointer, keeping the character}
 
     Pos<, 150^ [if=0            {Arrived at position 25 (25*6 == 150)}
-      $a2 Buffer<.              {Discard of too long input}
+      $a2 Active<.              {Discard of too long input}
       $5c PrintChar! Newline!]  {Overflow indicator '\'}
 
     loop]                       {To NEXTCHAR}
 
-  Buffer.                       {Terminate input with zero}
+  Active.                       {Terminate input with zero}
   $20 PrintChar!                {Remove cursor}
   Newline!
   $0f \sysArgs7.                {Pen color yellow for output}
-  $11a2                         {Return buffer start}
+  $a2 Active<.                  {Back to start of buffer}
+  Spaces!                       {Process leading spaces}
+  Active,                       {Tell caller if there is input}
   pop ret
 ] GetLine=
-
-{ Parse an unsigned decimal number and put in Value }
-[def
-  $8000                         {Stays negative if we don't see any digits}
-  [do
-    Value=                      {Update partial result}
-    2<< Value+ 1<< i=           {Multiply by 10 before adding decimal}
-
-    Active,                     {Grab next character}
-    $30- {'0'} if>=0            {Bail out if out of range}
-    10-  {'9'} if<0             {Decimal digit}
-      10+                       {Map in 0..9 range}
-      i+                        {Add it to value}
-      Active<++
-      loop]
-  Value                         {Result, negative value indicates error}
-  ret
-] Number=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 4                                      |
@@ -418,7 +407,7 @@ $0400:
 
   Keyword! $72# $75# $6e# 0#    {'run'}
   [if<>0
-    $11c0 deek Value=           {First program line, if any}
+    Begin deek Value=           {First program line, if any}
     GotoValue!]                 {Also tests for break}
 
   Keyword! $65# $6e# $64# 0#    {'end'}
@@ -485,18 +474,21 @@ $0500:
     $74# 0#
   [if<>0
     [do
-      Active,                   {Be nice and show variable name in prompt}
-      $40| PrintChar!           {Take care not to crash at errant line end}
-      $3f PrintChar!            {'?'}
-      Newline!                  {Avoid dealing with partially printed lines}
+      Active,
+      [if<>0 PrintChar!]        {Be nice and show variable name in prompt}
       Variable!                 {Parse variable name}
       Address=                  {Park here}
-      2-- Active 0%=            {Save program pointer on stack}
-      GetLine!                  {Let user type something}
-      Active=                   {Pretend input buffer is part of program}
+      4-- Active 2%=            {Save program pointer on stack}
+      31| 31- deek 0%=          {Current line number in program}
+      [do
+        $3f PrintChar!          {'?'}
+        Newline!                {Avoid dealing with partially printed lines}
+        0%                      {Line number for errors}
+        GetLine!                {Let user type something}
+        if=0loop]               {Repeat with prompt when nothing is typed}
       Expression!               {Accept arbitrary expression as input \o/}
       Address:                  {Store received value in variable}
-      0% Active= pop            {Restore program pointer from stack}
+      2% Active= 4++            {Restore program pointer from stack}
       Keyword! $2c# 0#          {','}
       if<>0loop]                {Next variable}
     EndOfLine!]
@@ -511,32 +503,10 @@ $0500:
   EndOfLine!
 ] StatementCont=
 
-{ Process an expression term, result in Value and vAC }
-[def
-  push
-  Factor!                       {First factor}
-  2-- Value 0%=                 {Put partial result on stack}
-  [do                           {Optional additional factors}
-    Keyword! $2a# 0#            {'*'}
-    [if<>0
-       Factor!
-       0% Multiply! 0%=
-       loop]
-    Keyword! $2f# 0#            {'/'}
-    [if<>0
-       Factor!
-       0% Divide! 0%=
-       loop]
-  ]
-  0% Value= pop                 {Make stack value the result}
-  pop ret
-] {Term=}
-
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
 $0600:
-Term=
 
 {
  Six scenarios for InsertLine          Check   Search  Shift   Copy    Shift
@@ -557,7 +527,7 @@ Term=
     End i= j=                   {Setup i and j for below}
     PrevBlock! deek Value-      {Retrieve last line number, 0 when no program}
     [if>=0                      {If insert/modify instead of append}
-      $11c0 [do i=              {Loop over program from beginning}
+      Begin [do i=              {Loop over program from beginning}
         i; Value- if<0          {Stop if found or past it}
         i NextBlock! loop]      {Advance to next line}
       if>0                      {Insert scenario}
@@ -613,16 +583,13 @@ Term=
 
 { Clear program and variables. Returns 0 }
 [def
-  $11a0 Buffer=                 {First block in memory is input buffer}
-  32+ End=                      {Program begins 32 bytes after}
+  $12c0 Begin= End=             {Program end is program start}
 
   $90 i=                        {Clear variables A-Z}
   [do
     0 i.                        {Clear byte}
     i<++                        {Advance pointer}
     i $c4^ if<>0loop]           {$90+26*2 = $c4}
-
-  Buffer:                       {Place a dummy largest line number 0 here}
 
   ret
 ] New=
@@ -668,7 +635,7 @@ $08a0:
 
 { Find line with line number equal to Value and go there }
 [def
-  $11c0 [do i=                  {Loop over program from beginning}
+  Begin [do i=                  {Loop over program from beginning}
     End^ if<>0                  {Until end of program}
     i; Value^ [if=0             {Or if matching value found}
       i 2+ Active=              {Skip past line number}
@@ -748,17 +715,36 @@ $0aa0:
   tmp!                          {Effectively returns past the keyword}
 ] Keyword=
 
+{ Parse an unsigned decimal number and put in Value }
+[def
+  $8000                         {Stays negative if we don't see any digits}
+  [do
+    Value=                      {Update partial result}
+    2<< Value+ 1<< i=           {Multiply by 10 before adding decimal}
+
+    Active,                     {Grab next character}
+    $30- {'0'} if>=0            {Bail out if out of range}
+    10-  {'9'} if<0             {Decimal digit}
+      10+                       {Map in 0..9 range}
+      i+                        {Add it to value}
+      Active<++
+      loop]
+  Value                         {Result, negative value indicates error}
+  ret
+] {Number=}
+
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 11                                     |
 +-----------------------------------------------------------------------}
 $0ba0:
+Number=
 
 { Verify that there is nothing else on the line, then continue with next }
 [def
   Active, [if<>0 SyntaxError!]  {There must be nothing left on the line}
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
-    $11c0 Active^ if<>0         {Also stop if we came from the input buffer}
+    Begin Active^ if<>0         {Also stop if we came from the input buffer}
     Active 2+ Active=           {Skip past line number}
     Statement!]                 {And continue from there}
   Prompt! 0#                    {Program finished ok}
@@ -823,6 +809,32 @@ $0ca0:
 +-----------------------------------------------------------------------}
 $0da0:
 
+{ Process an expression term, result in Value and vAC }
+[def
+  push
+  Factor!                       {First factor}
+  2-- Value 0%=                 {Put partial result on stack}
+  [do                           {Optional additional factors}
+    Keyword! $2a# 0#            {'*'}
+    [if<>0
+       Factor!
+       0% Multiply! 0%=
+       loop]
+    Keyword! $2f# 0#            {'/'}
+    [if<>0
+       Factor!
+       0% Divide! 0%=
+       loop]
+  ]
+  0% Value= pop                 {Make stack value the result}
+  pop ret
+] Term=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 14                                     |
++-----------------------------------------------------------------------}
+$0ea0:
+
 { Calculate vAC / Value, result in vAC, remainder in i }
 [def
   j=                            {i:j is the Remainder:Quotient pair}
@@ -846,9 +858,9 @@ $0da0:
 ] {Divide=}
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 14                                     |
+|}\vLR>++ ret{          RAM page 15                                     |
 +-----------------------------------------------------------------------}
-$0ea0:
+$0fa0:
 Divide=
 
 { Calculate vAC * Value, result in vAC }
@@ -881,15 +893,15 @@ Divide=
 ] ValueError=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 15                                     |
+|}\vLR>++ ret{          RAM page 16                                     |
 +-----------------------------------------------------------------------}
-$0fa0:
+$10a0:
 
 { List program, count and print free bytes. Returns 0 }
 [def
   push
 
-  $11c0                         {List program from start of program memory}
+  Begin                         {List program from start of program memory}
   [do                           {Loop over all program lines}
     j=
     End^ if<>0                  {Repeat until the last line}
@@ -917,15 +929,15 @@ $0fa0:
     $20# $62# $79# $74# $65#
     $73# $20# $66# $72# $65#
     $65# 0#
-  {Newline!                     XXX Caller also does this, except when running}
+  Newline!
 
   pop ret
 ] List=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 16                                     |
+|}\vLR>++ ret{          RAM page 17                                     |
 +-----------------------------------------------------------------------}
-$10a0:
+$11a0:
 
 List!                           {To print number of free bytes}
 
@@ -961,10 +973,9 @@ Newline!                        {Newline after prompt, error or welcome}
 
 { Main loop }
 [do
+  0                             {Interactive mode is 'line 0'}
   GetLine!                      {Get line from console}
-  Active=                       {Parse from start of buffer}
-  Spaces!
-  Active, if=0loop              {Do nothing for empty lines}
+  if=0loop                      {Do nothing for empty lines}
   TryInsert!                    {Test for line number to insert (or delete)}
   if>0loop]                     {If found, continue without prompt}
 Statement!                      {Execute statement}
