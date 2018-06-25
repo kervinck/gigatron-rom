@@ -17,7 +17,7 @@
   2018-06-23 (marcelk) Can RUN, GOTO, GOSUB, RETURN and break program
   2018-06-24 (marcelk) Can do IF/THEN, INPUT and END: feature complete
   2018-06-25 (marcelk) Free bytes; Trailing (semi-)colon in PRINT;
-                       Make LET optional; PEEK/POKE
+                       Make LET optional; PEEK/POKE; More robus INPUT
 
   Formal grammar:
 
@@ -97,7 +97,6 @@
         Dr. Wang's Palo Alto Tiny Basic (Roger Rauskolb)
 
   Wish list:
-    INPUT       Shouldn't bail out on a simple ENTER. Loop in GetLine?
     Stack       Move variables to another page: stack space is more important
     RUN         Should reset variables
     ?           Alias for PRINT
@@ -478,6 +477,7 @@ $0500:
       [if<>0 PrintChar!]        {Be nice and show variable name in prompt}
       Variable!                 {Parse variable name}
       Address=                  {Park here}
+      Spaces!
       4-- Active 2%=            {Save program pointer on stack}
       31| 31- deek 0%=          {Current line number in program}
       [do
@@ -496,6 +496,7 @@ $0500:
   Keyword! $6c# $65# $74# 0#    {'let' (optional)}
   Variable!
   Address=                      {Park here}
+  Spaces!
   Keyword! $3d# 0#              {'='}
   [if=0 SyntaxError!]
   Expression!                   {Evaluate expression}
@@ -679,6 +680,7 @@ GotoValue=
 
   Variable!                     {Otherwise it MUST be a variable}
   deek Value=                   {Fetch value}
+  Spaces!
 
   pop ret
 ] Factor=
