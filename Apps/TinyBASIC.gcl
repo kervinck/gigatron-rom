@@ -72,10 +72,7 @@
         <>=             Also works as (useless) operator in condition of IF
         No 'GO TO'      Must be typed as 'GOTO'. Also 'GOSUB', not 'GO SUB'
         INPUT           Accepts full expressions as input, including variables!
-        INPUT           A bare ENTER gives a syntax error and ends the program
-        INPUT           It doesn't accept leading spaces (yet)
         INPUT           Can give syntax error in direct mode (buffer conflict)
-        RUN             Will not reset variables (only NEW does that)
         Break error     Gives the line it was about to start: resume with GOTO
         PRINT "xxx      An unterminated string is silently accepted
         60000 vs. 90000 Many (too) large constants give an error (but not all!)
@@ -97,7 +94,6 @@
         Dr. Wang's Palo Alto Tiny Basic (Roger Rauskolb)
 
   Wish list:
-    RUN         Should reset variables
     ?           Alias for PRINT
     Buffer      At least 1 character more input (24->25)
     TicTac.gtb  Test longer programs. Might need to shorten/preprocess lines.
@@ -403,6 +399,7 @@ $0400:
 
   Keyword! $72# $75# $6e# 0#    {'run'}
   [if<>0
+    Clear!                      {Clear variables}
     Begin deek Value=           {First program line, if any}
     GotoValue!]                 {Also tests for break}
 
@@ -426,7 +423,8 @@ $0500:
 
   Keyword! $6e# $65# $77# 0#    {'new'}
   [if<>0
-    New!
+    Clear!                      {Clear variables}
+    End=                        {Clear program}
     List!                       {To print number of free bytes}
     Prompt! 0#]                 {Return to prompt}
 
@@ -581,18 +579,16 @@ $0600:
   pop ret
 ] TryInsert=
 
-{ Clear program and variables. Returns 0 }
+{ Clear variables. Returns begin address for programs }
 [def
-  $13a0 Begin= End=             {Program end is program start}
-
-  $e0- i=                       {Clear variables A-Z and a few bytes more}
+  $12c0 i=                      {Clear variables A-Z and a few bytes more}
   [do
     0 i.                        {Clear byte}
     i<++                        {Advance pointer}
     i<, if<>0loop]              {Until end of page}
-
+  $a0+                          {Computes $13a0}
   ret
-] New=
+] Clear=
 
 { Note: It is save to call functions here before hopping over to page 8 }
 
@@ -605,7 +601,8 @@ PrintS!                         {'*** Tiny BASIC'}
   $49# $43# 0#
 Newline!
 
-New!                            {Empty program and clear variables}
+Clear!                          {Clear variables}
+Begin= End=                     {Clear program}
 
 {-----------------------------------------------------------------------+
 |}$08a0 \vLR= ret{      RAM page 8                                      |
