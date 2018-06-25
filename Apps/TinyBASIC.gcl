@@ -16,7 +16,8 @@
   2018-06-21 (marcelk) Can edit programs, delete lines, but no RUN yet
   2018-06-23 (marcelk) Can RUN, GOTO, GOSUB, RETURN and break program
   2018-06-24 (marcelk) Can do IF/THEN, INPUT and END: feature complete
-  2018-06-25 (marcelk) Free bytes; Trailing (semi-)colon in PRINT; Optional LET
+  2018-06-25 (marcelk) Free bytes; Trailing (semi-)colon in PRINT;
+                       Make LET optional; PEEK/POKE
 
   Formal grammar:
 
@@ -26,6 +27,7 @@
                   'GOTO' Expression |
                   'INPUT' Variable (',' Variable)* |
                   'LET'? Variable '=' Expression |
+                  'POKE' Expression ',' Expression |
                   'GOSUB' Expression |
                   'RETURN' |
                   'REM' Character* |
@@ -35,7 +37,7 @@
                   'END'
   Expression  ::= [+-]? Term ([+-] Term)*
   Term        ::= Factor ([*/] Factor)*
-  Factor      ::= Variable | Number | '(' Expression ')'
+  Factor      ::= Variable | Number | 'PEEK'? '(' Expression ')'
   RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
   Number      ::= [0-9]+
   Variable    ::= [A-Z]
@@ -75,6 +77,8 @@
         INPUT           Can give syntax error in direct mode (buffer conflict)
         RUN             Will not reset variables (only NEW does that)
         Break error     Gives the line it was about to start: resume with GOTO
+        PRINT "xxx      An unterminated string is silently accepted
+        60000 vs. 90000 Many (too) large constants give an error (but not all!)
 
   References:
         https://en.wikipedia.org/wiki/Tiny_BASIC
@@ -93,7 +97,6 @@
         Dr. Wang's Palo Alto Tiny Basic (Roger Rauskolb)
 
   Wish list:
-    PEEK/POKE   Or USR() to simulate both? Nah, keywords are better...
     INPUT       Shouldn't bail out on a simple ENTER. Loop in GetLine?
     Stack       Move variables to another page: stack space is more important
     Buffer      At least 1 character more input (24->25)
@@ -104,7 +107,6 @@
     ?           Alias for PRINT
     @()         Array as in Palo Alto Tiny BASIC (store vertically)
     Indent      Indent BASIC output 2 pixels (as in WozMon)
-    Overflow    Errors on overflow for + - and *
 
   'Maybe' list:
     CHR expr    Print an ASCII char from its value
@@ -126,6 +128,8 @@
     LOAD        Load from EPROM?
 
   'Probably not' list:
+    "" or """   For printing the quote character itself
+    Overflow    Errors on overflow for + - and *
     WAIT
     $xx         Hexadecimal numbers
     LIST <n>    List one line
@@ -243,6 +247,7 @@ $0f20 \sysArgs6:                {Pen color yellow, background color blue}
 $0300:
 Spaces=
 
+{ Get variable and calculate its address }
 [def
   Active,                       {Next character from line}
   $5f&                          {Ignore case}
@@ -366,7 +371,7 @@ $0400:
     $72# $6e# 0#
   [if<>0
     \vSP, [if=0 StackError!]    {Top of stack}
-    deek Active= 2++            {Pop line from stack}
+    deek Active= pop            {Pop line from stack}
     EndOfLine!]
 
   Keyword! $69# $66# 0#         {'if'}
@@ -393,6 +398,17 @@ $0400:
       Active<++ loop]
     EndOfLine!]                 {Continue with next line}
 
+  Keyword! $70# $6f# $6b# $65#  {'poke'}
+    0#
+  [if<>0
+    Expression!
+    Address=
+    Keyword! $2c# 0#            {','}
+    [if=0 SyntaxError!]
+    Expression!
+    Address.                    {Write byte to memory}
+    EndOfLine!]
+
   Keyword! $72# $65# $6d# 0#    {'rem'}
   [if<>0
     [do
@@ -405,15 +421,8 @@ $0400:
     $11c0 deek Value=           {First program line, if any}
     GotoValue!]                 {Also tests for break}
 
-  Keyword!                      {'list'}
-    $6c# $69# $73# $74# 0#
-  [if<>0 List! EndOfLine!]
-
-  Keyword! $6e# $65# $77# 0#    {'new'}
-  [if<>0
-    New!
-    List!                       {To print free bytes}
-    Prompt! 0#]                 {Return to prompt}
+  Keyword! $65# $6e# $64# 0#    {'end'}
+  [if<>0 Prompt! 0#]
 
   StatementCont!                {Continue in another page}
 ] Statement=
@@ -426,8 +435,15 @@ $0500:
 { Continuation of Statement }
 [def
 
-  Keyword! $65# $6e# $64# 0#    {'end'}
-  [if<>0 Prompt! 0#]
+  Keyword!                      {'list'}
+    $6c# $69# $73# $74# 0#
+  [if<>0 List! EndOfLine!]
+
+  Keyword! $6e# $65# $77# 0#    {'new'}
+  [if<>0
+    New!
+    List!                       {To print number of free bytes}
+    Prompt! 0#]                 {Return to prompt}
 
   Keyword! $70# $72# $69# $6e#  {'print'}
     $74# 0#
@@ -441,12 +457,13 @@ $0500:
       $22^                      {'"'}
       [if=0
         [do {PRINTSTRING}       {String constant}
-          Active<++ Active,     {Get next string character}
-          [if=0 SyntaxError!]   {Unterminated string}
-          $22^ if<>0            {'"'}
-          Active, PrintChar!
+          Active<++             {Skip past opening quote or string character}
+          Keyword! $22# 0#      {'"'}
+          if=0
+          Active,               {Next character}
+          if<>0                 {Silently accept unterminated string}
+          PrintChar!
           loop]                 {To PRINTSTRING}
-        Active<++               {Skip past closing '"'}
       else
         Expression!
         PrintValue!]
@@ -473,55 +490,53 @@ $0500:
       $3f PrintChar!            {'?'}
       Newline!                  {Avoid dealing with partially printed lines}
       Variable!                 {Parse variable name}
-      LValue=                   {Park address here}
+      Address=                  {Park here}
       2-- Active 0%=            {Save program pointer on stack}
       GetLine!                  {Let user type something}
       Active=                   {Pretend input buffer is part of program}
       Expression!               {Accept arbitrary expression as input \o/}
-      LValue:                   {Store received value in variable}
-      0% Active= 2++            {Restore program pointer from stack}
-      Active, $2c^              {','}
-      if=0 Active<++ loop]      {Next variable}
+      Address:                  {Store received value in variable}
+      0% Active= pop            {Restore program pointer from stack}
+      Keyword! $2c# 0#          {','}
+      if<>0loop]                {Next variable}
     EndOfLine!]
 
   Keyword! $6c# $65# $74# 0#    {'let' (optional)}
   Variable!
-  LValue=                       {Park address here}
-  Spaces!
+  Address=                      {Park here}
   Keyword! $3d# 0#              {'='}
   [if=0 SyntaxError!]
   Expression!                   {Evaluate expression}
-  LValue:                       {Store value in variable}
+  Address:                      {Store value in variable}
   EndOfLine!
 ] StatementCont=
 
-{ Process an expression factor, result in Value }
+{ Process an expression term, result in Value and vAC }
 [def
   push
-
-  Keyword! $28# 0#              {'('}
-  [if<>0
-    Expression!
-    Keyword! $29# 0#            {')'}
-    [if=0 SyntaxError!]
-    pop ret]
-
-  Number!                       {Test for numeric constant}
-  [if>=0
-    Spaces!
-    pop ret]                    {Result already in Value}
-
-  Variable!                     {Otherwise it MUST be a variable}
-  deek Value=                   {Fetch value}
-  Spaces!
-
+  Factor!                       {First factor}
+  2-- Value 0%=                 {Put partial result on stack}
+  [do                           {Optional additional factors}
+    Keyword! $2a# 0#            {'*'}
+    [if<>0
+       Factor!
+       0% Multiply! 0%=
+       loop]
+    Keyword! $2f# 0#            {'/'}
+    [if<>0
+       Factor!
+       0% Divide! 0%=
+       loop]
+  ]
+  0% Value= pop                 {Make stack value the result}
   pop ret
-] Factor=
+] {Term=}
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
 $0600:
+Term=
 
 {
  Six scenarios for InsertLine          Check   Search  Shift   Copy    Shift
@@ -670,26 +685,36 @@ $08a0:
 $09a0:
 GotoValue=
 
-{ Process an expression term, result in Value and vAC }
+{ Process an expression factor, result in Value }
 [def
   push
-  Factor!                       {First factor}
-  2-- Value 0%=                 {Put partial result on stack}
-  [do                           {Optional additional factors}
-    Keyword! $2a# 0#            {'*'}
-    [if<>0
-       Factor!
-       0% Multiply! 0%=
-       loop]
-    Keyword! $2f# 0#            {'/'}
-    [if<>0
-       Factor!
-       0% Divide! 0%=
-       loop]
-  ]
-  0% Value= 2++                 {Make stack value the result}
+
+  Keyword! $28# 0#              {'('}
+  [if<>0
+    Expression!
+    Keyword! $29# 0#            {')'}
+    [if=0 SyntaxError!]
+    pop ret]
+
+  Number!                       {Test for numeric constant}
+  [if>=0
+    Spaces!
+    pop ret]                    {Result already in Value}
+
+  Keyword! $70# $65# $65# $6b#  {'peek('}
+    $28# 0#
+  [if<>0
+    Expression!
+    peek Value=
+    Keyword! $29# 0#            {')'}
+    [if=0 SyntaxError]
+    pop ret]
+
+  Variable!                     {Otherwise it MUST be a variable}
+  deek Value=                   {Fetch value}
+
   pop ret
-] Term=
+] Factor=
 
 [def
   \serialRaw, $7f^              {Test for [Del] as break request}
@@ -721,13 +746,12 @@ $0aa0:
     tmp!]
   Spaces!                       {Remove trailing whitespace on match}
   tmp!                          {Effectively returns past the keyword}
-] {Keyword=}
+] Keyword=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 11                                     |
 +-----------------------------------------------------------------------}
 $0ba0:
-Keyword=
 
 { Verify that there is nothing else on the line, then continue with next }
 [def
@@ -790,7 +814,7 @@ $0ca0:
        0% Value- 0%=            {Perform subtraction}
        loop]
   ]
-  0% Value= 2++                 {Make stack value the result}
+  0% Value= pop                 {Make stack value the result}
   pop ret
 ] Expression=
 
@@ -903,7 +927,7 @@ $0fa0:
 +-----------------------------------------------------------------------}
 $10a0:
 
-List!                           {To print free bytes}
+List!                           {To print number of free bytes}
 
 { Error reporting function and re-entry point for main loop }
 { Call with inline partial error message, or with 0# for 'Ok' prompt }

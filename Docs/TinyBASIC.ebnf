@@ -9,6 +9,7 @@ Statement   ::= 'PRINT' ((String|Expression) [,;])* (String|Expression)? |
                 'GOTO' Expression |
                 'INPUT' Variable (',' Variable)* |
                 'LET'? Variable '=' Expression |
+                'POKE' Expression ',' Expression |
                 'GOSUB' Expression |
                 'RETURN' |
                 'REM' Character* |
@@ -18,7 +19,7 @@ Statement   ::= 'PRINT' ((String|Expression) [,;])* (String|Expression)? |
                 'END'
 Expression  ::= [+-]? Term ([+-] Term)*
 Term        ::= Factor ([*/] Factor)*
-Factor      ::= Variable | Number | '(' Expression ')'
+Factor      ::= Variable | Number | 'PEEK'? '(' Expression ')'
 RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
 Number      ::= [0-9]+
 Variable    ::= [A-Z]
