@@ -400,7 +400,7 @@ $0400:
   Keyword! $72# $75# $6e# 0#    {'run'}
   [if<>0
     Clear!                      {Clear variables}
-    Begin deek Value=           {First program line, if any}
+    deek Value=                 {First program line, if any}
     GotoValue!]                 {Also tests for break}
 
   Keyword! $65# $6e# $64# 0#    {'end'}
@@ -587,7 +587,7 @@ $0600:
     0 i.                        {Clear byte}
     i<++                        {Advance pointer}
     i<, if<>0loop]              {Until end of page}
-  $a0+                          {Computes $13a0}
+  $13a0
   ret
 ] Clear=
 
