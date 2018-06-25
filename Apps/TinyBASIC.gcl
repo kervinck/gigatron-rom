@@ -895,7 +895,8 @@ $0fa0:
   PrintS!                       {' bytes free'}
     $20# $62# $79# $74# $65#
     $73# $20# $66# $72# $65#
-    $65# 0#                     {Caller supplies newline, except when running}
+    $65# 0#
+  {Newline!                     XXX Caller also does this, except when running}
 
   pop ret
 ] List=
