@@ -16,24 +16,26 @@
   2018-06-21 (marcelk) Can edit programs, delete lines, but no RUN yet
   2018-06-23 (marcelk) Can RUN, GOTO, GOSUB, RETURN and break program
   2018-06-24 (marcelk) Can do IF/THEN, INPUT and END: feature complete
-  2018-06-25 (marcelk) Free bytes; Trailing (semi-)colon in PRINT;
-                       Make LET optional; PEEK/POKE; More robus INPUT
+  2018-06-25 (marcelk) LIST shows free bytesk; Trailing (semi-)colon in PRINT;
+                       LET is now optional; PEEK/POKE; Better INPUT;
+                       NEW clears variables; Aliases for PRINT and REM
 
   Formal grammar:
 
   Line        ::= Number Statement | Statement
-  Statement   ::= 'PRINT' ((String|Expression) [,;])* (String|Expression)? |
-                  'IF' Expression RelOp Expression 'THEN'? Statement |
-                  'GOTO' Expression |
-                  'INPUT' Variable (',' Variable)* |
-                  'LET'? Variable '=' Expression |
-                  'POKE' Expression ',' Expression |
-                  'GOSUB' Expression |
-                  'RETURN' |
-                  'REM' Character* |
-                  'NEW' |
-                  'LIST' |
-                  'RUN' |
+  Statement   ::= ('PRINT'|'?') ((String|Expression) [,;])*
+                                 (String|Expression)?                   |
+                  'IF' Expression RelOp Expression 'THEN'? Statement    |
+                  'GOTO' Expression                                     |
+                  'INPUT' Variable (',' Variable)*                      |
+                  'LET'? Variable '=' Expression                        |
+                  'POKE' Expression ',' Expression                      |
+                  'GOSUB' Expression                                    |
+                  'RETURN'                                              |
+                  ('REM'|'?') Character*                                |
+                  'NEW'                                                 |
+                  'LIST'                                                |
+                  'RUN'                                                 |
                   'END'
   Expression  ::= [+-]? Term ([+-] Term)*
   Term        ::= Factor ([*/] Factor)*
@@ -94,7 +96,6 @@
         Dr. Wang's Palo Alto Tiny Basic (Roger Rauskolb)
 
   Wish list:
-    ?           Alias for PRINT
     Buffer      At least 1 character more input (24->25)
     TicTac.gtb  Test longer programs. Might need to shorten/preprocess lines.
     % or MOD    Modulo operator
@@ -115,7 +116,6 @@
     RND()       Built-in function
     USR()       Built-in function (Call what?)
     TIM()       Built-in funcion for time? (is there a standard?)
-    '           Alias for REM
     A()         Generic arrays (1-dimensional)
     @           As variable name
     IF          Reintroduce syntax error check
@@ -391,6 +391,7 @@ $0400:
     EndOfLine!]
 
   Keyword! $72# $65# $6d# 0#    {'rem'}
+  [if=0 Keyword! $27# 0#]       {'\''}
   [if<>0
     [do
       Active, if<>0             {Find end of line}
@@ -430,6 +431,7 @@ $0500:
 
   Keyword! $70# $72# $69# $6e#  {'print'}
     $74# 0#
+  [if=0 Keyword! $3f# 0#]       {'?'}
   [if<>0
     Active,
     [if=0 Newline!]             {Special case for newlines}

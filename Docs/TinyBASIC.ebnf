@@ -4,18 +4,19 @@
  *  Recommended railroad diagram generator: http://www.bottlecaps.de/rr/ui
  */
 Line        ::= Number Statement | Statement
-Statement   ::= 'PRINT' ((String|Expression) [,;])* (String|Expression)? |
-                'IF' Expression RelOp Expression 'THEN'? Statement |
-                'GOTO' Expression |
-                'INPUT' Variable (',' Variable)* |
-                'LET'? Variable '=' Expression |
-                'POKE' Expression ',' Expression |
-                'GOSUB' Expression |
-                'RETURN' |
-                'REM' Character* |
-                'NEW' |
-                'LIST' |
-                'RUN' |
+Statement   ::= ('PRINT'|'?') ((String|Expression) [,;])*
+                               (String|Expression)?                     |
+                'IF' Expression RelOp Expression 'THEN'? Statement      |
+                'GOTO' Expression                                       |
+                'INPUT' Variable (',' Variable)*                        |
+                'LET'? Variable '=' Expression                          |
+                'POKE' Expression ',' Expression                        |
+                'GOSUB' Expression                                      |
+                'RETURN'                                                |
+                ('REM'|#x27) Character*                                 |
+                'NEW'                                                   |
+                'LIST'                                                  |
+                'RUN'                                                   |
                 'END'
 Expression  ::= [+-]? Term ([+-] Term)*
 Term        ::= Factor ([*/] Factor)*
