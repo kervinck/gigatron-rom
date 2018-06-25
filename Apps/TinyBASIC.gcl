@@ -16,29 +16,31 @@
   2018-06-21 (marcelk) Can edit programs, delete lines, but no RUN yet
   2018-06-23 (marcelk) Can RUN, GOTO, GOSUB, RETURN and break program
   2018-06-24 (marcelk) Can do IF/THEN, INPUT and END: feature complete
+  2018-xx-xx (marcelk) Report free bytes. Trailing (semi-)colon in PRINT.
 
   Formal grammar:
-        Line        ::= Number Statement | Statement
-        Statement   ::= 'PRINT' (String|Expression) (',' (String|Expression))* |
-                        'IF' Expression RelOp Expression 'THEN'? Statement |
-                        'GOTO' Expression |
-                        'INPUT' Variable (',' Variable)* |
-                        'LET' Variable '=' Expression |
-                        'GOSUB' Expression |
-                        'RETURN' |
-                        'REM' Character* |
-                        'NEW' |
-                        'LIST' |
-                        'RUN' |
-                        'END'
-        Expression  ::= [+-]? Term ([+-] Term)*
-        Term        ::= Factor ([*/] Factor)*
-        Factor      ::= Variable | Number | '(' Expression ')'
-        RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
-        Number      ::= [0-9]+
-        Variable    ::= [A-Z]
-        String      ::= '"' ([#x20-#x21] | [#x23-#x7E])* '"'
-        Character   ::= [#x20-#x7E]
+
+  Line        ::= Number Statement | Statement
+  Statement   ::= 'PRINT' ((String|Expression) [,;])* (String|Expression)? |
+                  'IF' Expression RelOp Expression 'THEN'? Statement |
+                  'GOTO' Expression |
+                  'INPUT' Variable (',' Variable)* |
+                  'LET' Variable '=' Expression |
+                  'GOSUB' Expression |
+                  'RETURN' |
+                  'REM' Character* |
+                  'NEW' |
+                  'LIST' |
+                  'RUN' |
+                  'END'
+  Expression  ::= [+-]? Term ([+-] Term)*
+  Term        ::= Factor ([*/] Factor)*
+  Factor      ::= Variable | Number | '(' Expression ')'
+  RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
+  Number      ::= [0-9]+
+  Variable    ::= [A-Z]
+  String      ::= '"' ([#x20-#x21] | [#x23-#x7E])* '"'
+  Character   ::= [#x20-#x7E]
 
   Recommended filename extension:
         .gtb            GigaTron BASIC / Gigatron Tiny BASIC
@@ -61,10 +63,10 @@
 
   Undocumented features and/or bugs:
         PRINT vs. print Keywords and variable names are case-insensitive
-        PRINT 6/-2      Syntax error (original Tiny BASIC quirk)
-        PRINT a;b       Concatenates output without tab stop in between
+        PRINT 6/-2      Syntax error (original Tiny BASIC quirk, to be solved)
+        PRINT a;b       Concatenates output without separation
         IF statement    There is no syntax check for trailing garbage
-        ><              For 'not equal' is not implemented. Use only <>
+        ><              For 'not equal' is not implemented. Use just <>
         <>=             Also works as (useless) operator in condition of IF
         No 'GO TO'      Must be typed as 'GOTO'. Also 'GOSUB', not 'GO SUB'
         INPUT           Accepts full expressions as input, including variables!
@@ -91,22 +93,19 @@
         Dr. Wang's Palo Alto Tiny Basic (Roger Rauskolb)
 
   Wish list:
-    Free space  Show number of free bytes after LIST. Also call LIST from NEW.
-                Note: Must not show a negative number on 64K systems. How?
-    PRINT       Suppress newline after trailing ; and , (also update grammar)
     PEEK/POKE   Or USR() to simulate both? Nah, keywords are better...
     LET         Make LET keyword optional (also update grammar)
+    INPUT       Shouldn't bail out on a simple ENTER. Loop in GetLine?
+    Stack       Move variables to another page: stack space is more important
     Buffer      At least 1 character more input (24->25)
-    Zero page   Move variables to another page, stack space is more important
-    TicTac.gtb  Test longer programs. Might need to shorten/preprocess lines
-    Test 64K    Should work, but not tested. Also test out of memory errors.
+    TicTac.gtb  Test longer programs. Might need to shorten/preprocess lines.
+    % or MOD    Modulo operator
+    Test 64K    Test. Fix printing of bytes free. Test out-of-memory detection.
     NextBlock   Cache result of NextBlock at offset 0 of block
     ?           Alias for PRINT
-    % or MOD    Modulo operator
+    @()         Array as in Palo Alto Tiny BASIC (store vertically)
     Indent      Indent BASIC output 2 pixels (as in WozMon)
     Overflow    Errors on overflow for + - and *
-    @()         Array as in Palo Alto Tiny BASIC (store vertically)
-    Break       Doesn't work in a tight input loop
 
   'Maybe' list:
     CHR expr    Print an ASCII char from its value
@@ -259,7 +258,7 @@ Spaces=
 ] Variable=
 
 { Destructively print Value as signed decimal number }
-{ Does the sign test on vAC, so it can print both signed and unsigned }
+{ XXX Unsigned only works upto 32767+10000. BASIC on 64K has slightly more }
 [def
   push
 
@@ -445,14 +444,16 @@ $0500:
   Keyword! $70# $72# $69# $6e#  {'print'}
     $74# 0#
   [if<>0
+    Active,
+    [if=0 Newline!]             {Special case for newlines}
+
     [do {PRINTLIST}
-      Spaces!
       Active, if<>0             {Until end of line}
+
       $22^                      {'"'}
       [if=0
         [do {PRINTSTRING}       {String constant}
-          Active<++
-          Active,
+          Active<++ Active,     {Get next string character}
           [if=0 SyntaxError!]   {Unterminated string}
           $22^ if<>0            {'"'}
           Active, PrintChar!
@@ -462,18 +463,18 @@ $0500:
         Expression!
         PrintValue!]
 
-      Active, $3b^              {';'}
-      [if=0 Active<++ loop]     {To PRINTLIST}
-      Active, $2c^              {','}
-      [if=0
-        Active<++
+      Keyword! $2c# 0#          {','}
+      [if<>0
         [do
           $20 PrintChar!
           Pos<, 7& if<>0loop]   {Tab stops every 4 characters}
         loop]                   {To PRINTLIST}
-    ]
-    Newline!                    {XXX Skip this right after ; or , }
-    EndOfLine!]
+      Keyword! $3b# 0#          {';'}
+      if<>0loop                 {To PRINTLIST}
+
+      Newline!]                 {When no trailing ',' or ';'}
+    EndOfLine!
+  ]
 
   Keyword! $69# $6e# $70# $75#  {'input'}
     $74# 0#

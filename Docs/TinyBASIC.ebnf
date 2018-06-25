@@ -4,7 +4,7 @@
  *  Recommended railroad diagram generator: http://www.bottlecaps.de/rr/ui
  */
 Line        ::= Number Statement | Statement
-Statement   ::= 'PRINT' (String|Expression) (',' (String|Expression))* |
+Statement   ::= 'PRINT' ((String|Expression) [,;])* (String|Expression)? |
                 'IF' Expression RelOp Expression 'THEN'? Statement |
                 'GOTO' Expression |
                 'INPUT' Variable (',' Variable)* |
