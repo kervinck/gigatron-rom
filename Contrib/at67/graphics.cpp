@@ -589,16 +589,17 @@ namespace Graphics
             //drawText(std::string("LEDS:"), _pixels, 0, 0, 0xFFFFFFFF, false, 0);
             sprintf(str, "FPS %5.1f  XOUT %02X IN %02X", 1.0f / Timing::getFrameTime(), Cpu::getXOUT(), Cpu::getIN());
             drawText(std::string(str), _pixels, 0, FONT_CELL_Y, 0xFFFFFFFF, false, 0);
-            drawText("Mode:      Free:", _pixels, 0, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+            drawText("Mode:        Free:", _pixels, 0, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
             sprintf(str, "Hex  ");
             if(Editor::getHexEdit()) sprintf(str, "Edit ");
-            else if(Editor::getEditorMode() == Editor::Load)  sprintf(str, "Load ");
-            else if(Editor::getEditorMode() == Editor::Giga)  sprintf(str, "Giga ");
-            else if(Editor::getEditorMode() == Editor::PS2KB) sprintf(str, "PS2KB");
-            else if(Editor::getEditorMode() == Editor::Debug) sprintf(str, "Debug");
+            if(Editor::getEditorMode() == Editor::Load)         sprintf(str, "Load   ");
+            else if(Editor::getEditorMode() == Editor::Giga)    sprintf(str, "Giga   ");
+            else if(Editor::getEditorMode() == Editor::PS2KB)   sprintf(str, "PS2KB  ");
+            else if(Editor::getEditorMode() == Editor::Debug)   sprintf(str, "Debug  ");
+            else if(Editor::getEditorMode() == Editor::GigaPS2) sprintf(str, "PS2Giga");
             drawText(std::string(str), _pixels, 30, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
             sprintf(str, "%d", Cpu::getFreeRAM());
-            drawText(std::string(str), _pixels, 96, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+            drawText(std::string(str), _pixels, 108, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
             drawText(std::string(VERSION_STR), _pixels, 30, 472, 0xFFFFFFFF, false, 0);
         }
     }
