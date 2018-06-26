@@ -58,13 +58,27 @@
 
   Memory allocation:
           30 -   7f     BASIC interpreter variables
-          81 -   ff     Stack for BASIC and vCPU (30 words)
+          81 -   ff     Stack for BASIC and vCPU (>50 GOSUB levels)
          200 - 11ff     BASIC interpreter, partly next to screen memory
         12a0 - 12bf     Input buffer ('line 0')
         12c0 - 12f3     BASIC variables A..Z
         13a0 - 7fff     Programs stored in the invisible part of screen memory
         8000 - ffff     Optional extra memory for BASIC programs (64K extension)
 
+        Plan for array:
+         a0      a8      b0      b8      c0      c8      d0      d8      e0      e8      f0      f8     ff
+        +-------------------------------+-------------------------------+-------------------------------+
+        |  [Input buffer              ] |Variables Z Y X W V U T S R Q P|O N M L K J I H G F E D C B A @|
+        +-------------------------------+-------------------------------+-------------------------------+
+Begin ->|  [Program line 10           ] |  [Program line 20           ] |  [Program line 30           ]@(1)
+        +-------------------------------+-------------------------------+-------------------------------+
+        |  [Program line 40           ] |  [Program line 45           ] |  [Program line 50           ]@(2)
+        +-------------------------------+-------------------------------+-------------------------------+
+        |  [Program line 60           ] |  [                          ] |  [                          ]@(3)
+        +-------------------------------+-------------------------------+-------------------------------+
+                                         ^
+                                         |
+                                         End
   Undocumented features and/or bugs:
         PRINT vs. print Keywords and variable names are case-insensitive
         PRINT 6/-2      Syntax error (original Tiny BASIC quirk, to be solved)
@@ -96,10 +110,10 @@
         Dr. Wang's Palo Alto Tiny Basic (Roger Rauskolb)
 
   Wish list:
-    Test 64K    Test. Fix printing of bytes free. Test out-of-memory detection.
-    TicTac.gtb  Test longer programs. Might need to shorten/preprocess lines.
-    NextBlock   Cache result of NextBlock at offset 0 of block
     @()         Array as in Palo Alto Tiny BASIC (store vertically)
+    @ A()       @ as variable name, and generic arrays (1-dimensional)
+    NextBlock   Cache result of NextBlock at offset 0 of block
+    TicTac.gtb  Test longer programs. Might need to shorten/preprocess lines.
 
   'Maybe' list:
     Speedup     LET detection is now last, but should be first
@@ -113,8 +127,6 @@
     ABS()       Built-in function
     USR()       Built-in function (Call what? Number?)
     TIM()       Built-in funcion for time? (is there a standard?)
-    A()         Generic arrays (1-dimensional)
-    @           As variable name
     IF          Reintroduce syntax error check
     TUNE        Play a note
     LOAD        Load from EPROM?
