@@ -431,7 +431,7 @@
             <xhtml:li><xhtml:a href="#Line" title="Line">Line</xhtml:a></xhtml:li>
          </xhtml:ul>
       </xhtml:p><xhtml:br xmlns:xhtml="http://www.w3.org/1999/xhtml" /><xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml" style="font-size: 14px; font-weight:bold"><xhtml:a name="Term">Term:</xhtml:a></xhtml:p>
-      <svg xmlns="http://www.w3.org/2000/svg" width="156" height="124">
+      <svg xmlns="http://www.w3.org/2000/svg" width="156" height="168">
          <defs>
             <style type="text/css">
                @namespace "http://www.w3.org/2000/svg";
@@ -461,25 +461,28 @@
                
             </style>
          </defs>
-         <polygon points="9 105 1 101 1 109"/>
-         <polygon points="17 105 9 101 9 109"/>
+         <polygon points="9 149 1 145 1 153"/>
+         <polygon points="17 149 9 145 9 153"/>
          <a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#Factor" xlink:title="Factor">
-            <rect x="51" y="91" width="58" height="32"/>
-            <rect x="49" y="89" width="58" height="32" class="nonterminal"/>
-            <text class="nonterminal" x="59" y="109">Factor</text>
+            <rect x="51" y="135" width="58" height="32"/>
+            <rect x="49" y="133" width="58" height="32" class="nonterminal"/>
+            <text class="nonterminal" x="59" y="153">Factor</text>
          </a>
+         <rect x="51" y="91" width="28" height="32" rx="10"/>
+         <rect x="49" y="89" width="28" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="59" y="109">*</text>
          <rect x="51" y="47" width="28" height="32" rx="10"/>
          <rect x="49" y="45" width="28" height="32" class="terminal" rx="10"/>
-         <text class="terminal" x="59" y="65">*</text>
-         <rect x="51" y="3" width="28" height="32" rx="10"/>
-         <rect x="49" y="1" width="28" height="32" class="terminal" rx="10"/>
-         <text class="terminal" x="59" y="21">/</text>
-         <svg:path xmlns:svg="http://www.w3.org/2000/svg" class="line" d="m17 105 h2 m20 0 h10 m58 0 h10 m-98 0 l20 0 m-1 0 q-9 0 -9 -10 l0 -24 q0 -10 10 -10 m78 44 l20 0 m-20 0 q10 0 10 -10 l0 -24 q0 -10 -10 -10 m-78 0 h10 m28 0 h10 m0 0 h30 m-88 10 l0 -44 q0 -10 10 -10 m88 54 l0 -44 q0 -10 -10 -10 m-78 0 h10 m28 0 h10 m0 0 h30 m23 88 h-3"/>
-         <polygon points="147 105 155 101 155 109"/>
-         <polygon points="147 105 139 101 139 109"/>
+         <text class="terminal" x="59" y="65">/</text>
+         <rect x="51" y="3" width="34" height="32" rx="10"/>
+         <rect x="49" y="1" width="34" height="32" class="terminal" rx="10"/>
+         <text class="terminal" x="59" y="21">%</text>
+         <svg:path xmlns:svg="http://www.w3.org/2000/svg" class="line" d="m17 149 h2 m20 0 h10 m58 0 h10 m-98 0 l20 0 m-1 0 q-9 0 -9 -10 l0 -24 q0 -10 10 -10 m78 44 l20 0 m-20 0 q10 0 10 -10 l0 -24 q0 -10 -10 -10 m-78 0 h10 m28 0 h10 m0 0 h30 m-88 10 l0 -44 q0 -10 10 -10 m88 54 l0 -44 q0 -10 -10 -10 m-78 0 h10 m28 0 h10 m0 0 h30 m-88 10 l0 -44 q0 -10 10 -10 m88 54 l0 -44 q0 -10 -10 -10 m-78 0 h10 m34 0 h10 m0 0 h24 m23 132 h-3"/>
+         <polygon points="147 149 155 145 155 153"/>
+         <polygon points="147 149 139 145 139 153"/>
       </svg>
       <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">
-         <xhtml:div class="ebnf"><xhtml:pre><a href="#Term" title="Term">Term</a>     ::= <a href="#Factor" title="Factor">Factor</a> ( [*/] <a href="#Factor" title="Factor">Factor</a> )*</xhtml:pre></xhtml:div>
+         <xhtml:div class="ebnf"><xhtml:pre><a href="#Term" title="Term">Term</a>     ::= <a href="#Factor" title="Factor">Factor</a> ( [*/%] <a href="#Factor" title="Factor">Factor</a> )*</xhtml:pre></xhtml:div>
       </xhtml:p>
       <xhtml:p xmlns:xhtml="http://www.w3.org/1999/xhtml">referenced by:
          <xhtml:ul>

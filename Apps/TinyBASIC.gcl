@@ -38,7 +38,7 @@
                   'RUN'                                                 |
                   'END'
   Expression  ::= [+-]? Term ([+-] Term)*
-  Term        ::= Factor ([*/] Factor)*
+  Term        ::= Factor ([*/%] Factor)*
   Factor      ::= Variable | Number | 'PEEK'? '(' Expression ')'
   RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
   Number      ::= [0-9]+
@@ -270,15 +270,19 @@ Spaces=
 ] Variable=
 
 { Destructively print Value as signed decimal number }
-{ XXX Unsigned only works upto 32767+10000. BASIC on 64K has slightly more }
 [def
   push
 
-  [if<0                         {If value is negative}
+  [if<0                         {If vAC is negative (vAC, NOT value!)}
     0 Value- Value=             {Negate value}
     $2d PrintChar!]             {Print minus sign}
 
   0 k=                          {Suppress leading zeroes}
+
+  Value [if<0                   {Bring large unsigned values in range}
+    -30000 Value+ Value=        {Now Value<=35535, we need Value<=42767: OK}
+    3 k=]
+
   10000 PrintDigit!             {Print ten thousands, largest for 16 bits}
    1000 PrintDigit!             {Print thousands}
     100 PrintDigit!             {Print hundreds}
@@ -627,7 +631,7 @@ $08a0:
 { Realign if needed }
 [def
   31| 1+ tmp=                   {Advance to next 32-byte memory block}
-  [if>=0                        {In the first 32K...}
+  [if>0                         {In the first 32K...}
     $e0& if=0                   {...wrap around visible screen memory}
       tmp 160+ ret]
   tmp
