@@ -96,35 +96,37 @@
         Dr. Wang's Palo Alto Tiny Basic (Roger Rauskolb)
 
   Wish list:
-    TicTac.gtb  Test longer programs. Might need to shorten/preprocess lines.
-    % or MOD    Modulo operator
     Test 64K    Test. Fix printing of bytes free. Test out-of-memory detection.
+    TicTac.gtb  Test longer programs. Might need to shorten/preprocess lines.
     NextBlock   Cache result of NextBlock at offset 0 of block
     @()         Array as in Palo Alto Tiny BASIC (store vertically)
 
   'Maybe' list:
+    Speedup     LET detection is now last, but should be first
+    Speedup     Cache the result of the statement detection?
+    Speedup     Stop parsing over first space on every line
     CHR expr    Print an ASCII char from its value
     SETXY       Check with Had badge Move cursor
     CLRSCR      Clear screen, move to top
-    Speed       Binary search for GotoValue
     Unary minus Original Tiny BASIC does it wrong: 8/-2
-    TOO COMPLEX Give stack error when nesting too deep
     Color       Easily change colors
     ABS()       Built-in function
-    RND()       Built-in function
-    USR()       Built-in function (Call what?)
+    USR()       Built-in function (Call what? Number?)
     TIM()       Built-in funcion for time? (is there a standard?)
     A()         Generic arrays (1-dimensional)
     @           As variable name
     IF          Reintroduce syntax error check
     TUNE        Play a note
     LOAD        Load from EPROM?
-    Indent      Indent BASIC output 2 pixels (as in WozMon)
 
   'Probably not' list:
+    Indent      Indent BASIC output 2 pixels (as in WozMon) -> Complex
+    Speed       Binary search for GotoValue -> Only speeds up large programs
+    Speed       Cache goto/gosub target -> Tiny BASIC has computed targets...
+    RND()       Built-in function -> Use peek(6), peek(7), peek(8)
     "" or """   For printing the quote character itself
     Overflow    Errors on overflow for + - and *
-    WAIT
+    WAIT        -> Make a loop subroutine
     $xx         Hexadecimal numbers
     LIST <n>    List one line
     a-z A-Z     As different variables
@@ -137,6 +139,17 @@
     ELSE        Will slow down IF, because it has to scan for this
     FOR TO NEXT And STEP. No idea how to implement
     DEF FNx
+
+  Ideas for demo programs:
+   Blinky       Everyones favorite
+   Text/color   Color of characters and background
+   LEDs         Control the blinkenlights
+   Lines
+   Circles
+   Music        Play tones, vary with waveforms
+
+
+
 }
 
 gcl0x
@@ -828,6 +841,11 @@ $0da0:
     [if<>0
        Factor!
        0% Divide! 0%=
+       loop]
+    Keyword! $25# 0#            {'%'}
+    [if<>0
+       Factor!
+       0% Divide! i 0%=
        loop]
   ]
   0% Value= pop                 {Make stack value the result}
