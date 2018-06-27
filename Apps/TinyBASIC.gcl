@@ -57,28 +57,14 @@
         Line error      Line number not found / RUN empty program
 
   Memory allocation:
-          30 -   7f     BASIC interpreter variables
-          81 -   ff     Stack for BASIC and vCPU (>50 GOSUB levels)
-         200 - 11ff     BASIC interpreter, partly next to screen memory
-        12a0 - 12bf     Input buffer ('line 0')
-        12c0 - 12f3     BASIC variables A..Z
-        13a0 - 7fff     Programs stored in the invisible part of screen memory
-        8000 - ffff     Optional extra memory for BASIC programs (64K extension)
+          $30 -   $7f   BASIC interpreter variables
+          $81 -   $ff   Stack for BASIC and vCPU (>50 GOSUB levels)
+         $200 - $11ff   BASIC interpreter, partly next to screen memory
+        $12a0 - $12bf   Input buffer ('line 0')
+        $12c0 - $12f3   BASIC variables A..Z
+        $13a0 - $7fff   Programs stored in the invisible part of screen memory
+        $8000 - $ffff   Optional extra memory for BASIC programs (64K extension)
 
-        Plan for array:
-         a0      a8      b0      b8      c0      c8      d0      d8      e0      e8      f0      f8     ff
-        +-------------------------------+-------------------------------+-------------------------------+
-        |  [Input buffer              ] |Variables Z Y X W V U T S R Q P|O N M L K J I H G F E D C B A @|
-        +-------------------------------+-------------------------------+-------------------------------+
-Begin ->|  [Program line 10           ] |  [Program line 20           ] |  [Program line 30           ]@(1)
-        +-------------------------------+-------------------------------+-------------------------------+
-        |  [Program line 40           ] |  [Program line 45           ] |  [Program line 50           ]@(2)
-        +-------------------------------+-------------------------------+-------------------------------+
-        |  [Program line 60           ] |  [                          ] |  [                          ]@(3)
-        +-------------------------------+-------------------------------+-------------------------------+
-                                         ^
-                                         |
-                                         End
   Undocumented features and/or bugs:
         PRINT vs. print Keywords and variable names are case-insensitive
         PRINT 6/-2      Syntax error (original Tiny BASIC quirk, to be solved)
@@ -109,33 +95,45 @@ Begin ->|  [Program line 10           ] |  [Program line 20           ] |  [Prog
         http://www.bitsavers.org/pdf/interfaceAge/197612/092-108.pdf
         Dr. Wang's Palo Alto Tiny Basic (Roger Rauskolb)
 
+        https://www.applefritter.com/node/2859
+        Apple 1 BASIC
+
   Wish list:
     @()         Array as in Palo Alto Tiny BASIC (store vertically)
     @ A()       @ as variable name, and generic arrays (1-dimensional)
-    NextBlock   Cache result of NextBlock at offset 0 of block
-    TicTac.gtb  Test longer programs. Might need to shorten/preprocess lines.
+    IF          Reintroduce the missing syntax error check
+    Speed       Cache result of the statement detection (checkpointing)
+    Speed       Alternative: LET detection is now last, but should be first
 
   'Maybe' list:
-    Speedup     LET detection is now last, but should be first
-    Speedup     Cache the result of the statement detection?
-    Speedup     Stop parsing over first space on every line
-    CHR expr    Print an ASCII char from its value
-    SETXY       Check with Had badge Move cursor
-    CLRSCR      Clear screen, move to top
+    FOR TO NEXT (And STEP) Can be done with 1 reserved word per control variable
+    Speed       Move stack check from Expression to Factor (and GOSUB)
+    A$ .. Z$    String variables (only in LET, PRINT, INPUT?)
+    Speed       Cache GOTO/GOSUB target (only for constant targets...)
+    Speed       Cache result of NextBlock (at offset 30 of block?)
     Unary minus Original Tiny BASIC does it wrong: 8/-2
-    Color       Easily change colors
-    ABS()       Built-in function
+    COLOR       Easily change colors
+    SETXY       Map (X and) Y to memory (through videoTable)
+    CLS         Clear screen, move cursor to top, reset video table...
+    ABS(/SGN(   Built-in function
+    RND(        Built-in function (with simple MOD). 1..X or 0..X-1?
+    A$()        Indexing in string variable, gives integer (handle in Factor)
+    A$(i,j)     Substrings (only in PRINT)
+    LEN()/A$()=
+    TUNE/PLAY   Play a note/score
+    A0 .. Z9    Much more variable space (as in Apple-1 basic)
     USR()       Built-in function (Call what? Number?)
-    TIM()       Built-in funcion for time? (is there a standard?)
-    IF          Reintroduce syntax error check
-    TUNE        Play a note
-    LOAD        Load from EPROM?
 
   'Probably not' list:
+    LOAD        From where? EPROM? "Cassette interface".
+    SAVE        To where? (Babelfish, using /vSync length modulation?)
+    DIM A()     And bound checks...
+    TI/TI$      Built-in variable for time? (only in MS BASICs). Setting also?
+    CHR expr    Print an ASCII char from its value (not needed with strings)
+    TAB()       As in Apple-1 BASIC (Weird: TAB(N) advances to N-1...)
+    SPC()       Spaces
     Indent      Indent BASIC output 2 pixels (as in WozMon) -> Complex
     Speed       Binary search for GotoValue -> Only speeds up large programs
-    Speed       Cache goto/gosub target -> Tiny BASIC has computed targets...
-    RND()       Built-in function -> Use peek(6), peek(7), peek(8)
     "" or """   For printing the quote character itself
     Overflow    Errors on overflow for + - and *
     WAIT        -> Make a loop subroutine
@@ -144,24 +142,57 @@ Begin ->|  [Program line 10           ] |  [Program line 20           ] |  [Prog
     a-z A-Z     As different variables
     ><          For unequal
     CLEAR       For NEW
-    READ, DATA  Possibly put in unused lines?
+    READ, DATA  Possibly put in unused lines? (RESTORE)
     AND OR NOT  At list for in IF statements
-    "xxx"       String *variables*
     :           Multiple statements in one line
     ELSE        Will slow down IF, because it has to scan for this
-    FOR TO NEXT And STEP. No idea how to implement
     DEF FNx
 
+  Braindumps:
+        a0          b0          c0          d0          e0          f0       ff
+       +-----------------------+-----------------------+-----------------------+
+$13a0  | Input buffer          | Variables Z Y X ... P | O ... G F E D C B A @ |
+       +-----------------------+-----------------------+-----------------------+
+Begin->| Program line 10       | Program line 20   P(1)| Program line 30   @(1)|
+       +-----------------------+-----------------------+-----------------------+
+       | Program line 40       | Program line 45   P(2)| Program line 50   @(2)|
+       +-----------------------+-----------------------+-----------------------+
+       | Program line 60       |                   P(3)|                   @(3)|
+       +-----------------------+-----------------------+-----------------------+
+       :                       :                       :                       :
+$7fa0  |                       |                 P(108)|                 @(108)|
+       +-----------------------+-----------------------+-----------------------+
+       :                       :                       :                       :
+$ffa0  |                       |                 P(236)|                 @(236)|
+       +-----------------------+-----------------------+-----------------------+
+                                ^End
+
+        Better idea: Put variables in top of memory, and grow arrays DOWN
+        1. This opens the road to string variables without garbage collection
+        2. And FOR-TO-NEXT this might work:
+        FOR Var = Expr TO Expr [STEP Expr]
+                       ^
+                       NEXT will go back here, remember only this address
+                       NEXT Var will then continue parsing TO (and STEP)
+
+        Alternative byte allocation in block:
+        0       Checkpoint offset (set by Insert to 5)
+        1-2     Checkpoint address (set by Insert to Statement)
+        3-4     Line number
+        5-29    Text (without line number) and terminating zero
+        30-31   Next block address? Goto address?
+
   Ideas for demo programs:
-   Blinky       Everyones favorite
-   Text/color   Color of characters and background
-   LEDs         Control the blinkenlights
-   Lines
-   Circles
-   Music        Play tones, vary with waveforms
-
-
-
+    Blinky      Everyone's favorite
+    Clock
+    Maze        The famous one-liner with / and \
+    Text        Color of characters and background at arbitrary positions
+    LEDs        Control the blinkenlights
+    Lines
+    Circles     Lots of math
+    Music       Play tones, vary with waveforms
+    Sprites     Fake sprites with printing chars at arbitrary positions
+    TicTac.gtb  Test longer programs. Might need to shorten/preprocess lines.
 }
 
 gcl0x
@@ -607,7 +638,7 @@ $0600:
     Value                       {Report line number to caller}
   ]
   pop ret
-] TryInsert=
+] Insert=
 
 { Clear variables. Returns begin address for programs }
 [def
@@ -620,7 +651,7 @@ $0600:
   ret
 ] Clear=
 
-{ Note: It is save to call functions here before hopping over to page 8 }
+{ Note: It is safe to call functions here before hopping over to page 8 }
 
 Newline!                        {Scroll and clear last line}
 
@@ -665,6 +696,7 @@ $08a0:
   Begin [do i=                  {Loop over program from beginning}
     End^ if<>0                  {Until end of program}
     i; Value^ [if=0             {Or if matching value found}
+                                {XXX Insert checkpointing here?}
       i 2+ Active=              {Skip past line number}
       TestBreak!                {Test for [Del] as break request}
       Statement!]               {And continue from there}
@@ -773,6 +805,7 @@ Number=
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
     $12c0 Active^ if<>0         {Also stop if we came from the input buffer}
+                                {XXX Insert checkpointing here?}
     Active 2+ Active=           {Skip past line number}
     Statement!]                 {And continue from there}
   Prompt! 0#                    {Program finished ok}
@@ -980,13 +1013,11 @@ $11a0:
 List!                           {To print number of free bytes}
 
 { Error reporting function and re-entry point for main loop }
-{ Call with inline partial error message, or with 0# for 'Ok' prompt }
+{ Call with inline partial error message, or with 0# for no error }
 [def
   \vLR; tmp=                    {vLR points to inline string argument}
   [Pos<, if<>0 Newline!]        {Conditional newline}
-  tmp, [if=0                    {Test for error in first byte of message}
-    PrintS! $4f# $6b# 0#        {'Ok'}
-  else
+  tmp, [if<>0                   {Test for error in first byte of message}
     $3f                         {Begin error messages with '?'}
     [do                         {Print inline string as prelude}
       PrintChar!
@@ -1003,18 +1034,20 @@ List!                           {To print number of free bytes}
       Value=                    {Prepare line number for printing}
       PrintS!                   {' in '}
         $20# $69# $6e# $20# 0#
-      PrintValue!]]             {Print line number}
-  \LDWI#                        {1-byte hack to fall through and skip 'Error='}
+      PrintValue!]              {Print line number}
+    Newline!]
+  \LDWI#                        {1-byte hack to fall through and skip 'Prompt='}
 ] Prompt=
 
-Newline!                        {Newline after prompt, error or welcome}
+PrintS! $4f# $6b# 0#            {'Ok'}
+Newline!
 
 { Main loop }
 [do
   0                             {Interactive mode is 'line 0'}
   GetLine!                      {Get line from console}
   if=0loop                      {Do nothing for empty lines}
-  TryInsert!                    {Test for line number to insert (or delete)}
-  if>0loop]                     {If found, continue without prompt}
+  Insert!                       {Test for line number and insert or delete}
+  if>0loop]                     {If success, continue without prompt}
 Statement!                      {Execute statement}
 
