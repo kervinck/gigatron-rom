@@ -13,6 +13,7 @@
 #		search on /dev/ttyACM* as well, swith to argparse.
 # 2018-05-30 (marcelk) Enable stdin again. A bit more consistency.
 # 2018-06-04 (marcelk) Allow timeout while waiting for first prompt
+# 2018-06-29 (marcelk) Send escaped control bytes to newer Babelfishes
 #
 #-----------------------------------------------------------------------
 
@@ -118,14 +119,23 @@ sendCommand('L')
 print('Sending program %s' % (repr(args.filename) if args.filename else 'from stdin'))
 ask = sendCommand('U')
 
+def escape(x):
+  return '\x7d' + chr(ord(x) ^ 0x20)
+special = '' # Backwards compatibility with older Babelfishes
+
 while ask[0].isdigit():
   # Arduino will ask for <n> bytes by sending '<n>?'
+  if ask[0] == '0': # Trigger to enable escaping of XON/OFF
+    special = '\x11\x13\x7d'
   n = int(ask[:-1])
   data = fp.read(n)
   if len(data) < n:
     raise Exception('File too short')
   sys.stdout.write('.')
   sys.stdout.flush()
+  data = ''.join([escape(x) if x in special else x for x in data])
+  if '\x13' in data: # Just a warning, and just for XOFF
+    print('\nWarning: sending unescaped XOFF')
   ser.write(data)
   ask = sendCommand(None)
 print()

@@ -448,6 +448,8 @@ void doTransfer(const byte *gt1)
   #if hasSerial
     #define readNext() {\
       nextByte = gt1 ? pgm_read_byte(gt1++) : nextSerial();\
+      if (!gt1 && nextByte == 0x7d)\
+        nextByte = nextSerial() ^ 0x20;\
       if (nextByte < 0) return;\
     }
     #define ask(n)\
@@ -465,6 +467,7 @@ void doTransfer(const byte *gt1)
 
   byte segment[300] = {0}; // Multiple of N for padding
 
+  Serial.print('0'); // Signal uptream that we handle escape bytes
   ask(3);
   readNext();
   word address = nextByte;
