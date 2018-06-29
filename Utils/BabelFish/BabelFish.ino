@@ -461,7 +461,7 @@ void doTransfer(const byte *gt1)
 
   byte segment[300] = {0}; // Multiple of N for padding
 
-  Serial.print('0'); // Signal uptream that we handle escape bytes
+  if (!gt1) Serial.print('0'); // Signal uptream that we handle escape bytes
   ask(3);
   readNext();
   word address = nextByte;
