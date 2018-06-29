@@ -375,7 +375,7 @@ void doCommand(char line[])
 void doVersion()
 {
   #if hasSerial
-    Serial.println(":Babelfish [" version "]\n"
+    Serial.println(":BabelFish [" version "]\n"
                    ":Type 'H' for help");
   #endif
 }
