@@ -157,7 +157,7 @@ else:
   vReturn       = zpByte(2) # Return into video loop
 
 # For future ROM extensions
-reserved32       = zpByte()
+reserved32      = zpByte()
 
 # ROM type/version, numbering scheme to be determined, could be as follows:
 # bit 4:7       Version
@@ -492,7 +492,7 @@ st([vSP])                       #18 Reset stack pointer
 assert userCode&255 == 0
 st([vLR])                       #19
 st([soundTimer])                #20
-ld(userCode>>8)                #21
+ld(userCode>>8)                 #21
 st([vLR+1])                     #22
 ld('videoF')                    #23 Do this before first visible pixels
 st([videoDorF])                 #24
@@ -751,7 +751,7 @@ bra('pixels')                   #38
 ld(syncBits)                    #39
 
 # Back porch "E": after the last line
-# - Go back to program page 0 and enter vertical blank
+# - Go back and and enter vertical blank (program page 2)
 label('videoE') # Exit visible area
 ld(hi('vBlankStart'), Y)        #29
 jmpy('vBlankStart')             #30
@@ -844,8 +844,7 @@ ld(0b0010);C('LEDs |O*OO|')     #60
 ld(0b0100);C('LEDs |OO*O|')     #60
 ld(0b1000);C('LEDs |OOO*|')     #60
 ld(0b1100);C('LEDs |OO**|')     #60
-ld(0b1110+128)                  #60
-C('LEDs |O***|')
+ld(0b1110+128);C('LEDs |O***|') #60
 label('.leds1')
 st([xoutMask])                  #61 Temporarily park new state here
 bmi('.leds2')                   #62
@@ -1232,7 +1231,7 @@ label('.cond1')
 bra(AC)                         #18
 ld([vTmp])                      #19
 
-# Conditional EQ: Branch if zero (if(ALC==0)PCL=D)
+# Conditional EQ: Branch if zero (if(vACL==0)vPCL=D)
 label('EQ')
 bne('.cond4')                   #20
 label('.cond2')
@@ -1259,25 +1258,25 @@ st([vPC])                       #25
 bra('NEXT')                     #26
 ld(-28/2)                       #27
 
-# Conditional GT: Branch if positive (if(ALC>0)PCL=D)
+# Conditional GT: Branch if positive (if(vACL>0)vPCL=D)
 label('GT')
 ble('.cond4')                   #20
 bgt('.cond5')                   #21
 ld([Y,X])                       #22
 
-# Conditional LT: Branch if negative (if(ALC<0)PCL=D), 16 cycles
+# Conditional LT: Branch if negative (if(vACL<0)vPCL=D), 16 cycles
 label('LT')
 bge('.cond4')                   #20
 blt('.cond5')                   #21
 ld([Y,X])                       #22
 
-# Conditional GE: Branch if positive or zero (if(ALC>=0)PCL=D)
+# Conditional GE: Branch if positive or zero (if(vACL>=0)vPCL=D)
 label('GE')
 blt('.cond4')                   #20
 bge('.cond5')                   #21
 ld([Y,X])                       #22
 
-# Conditional LE: Branch if negative or zero (if(ALC<=0)PCL=D)
+# Conditional LE: Branch if negative or zero (if(vACL<=0)vPCL=D)
 label('LE')
 bgt('.cond4')                   #20
 ble('.cond5')                   #21
@@ -1322,7 +1321,7 @@ ld(-26/2)                       #23
 bra('NEXT')                     #24
 #nop()                          #(25)
 #
-# Conditional NE: Branch if not zero (if(ALC!=0)PCL=D)
+# Conditional NE: Branch if not zero (if(vACL!=0)vPCL=D)
 label('NE')
 beq('.cond4')                   #20,25 (overlap with POP)
 bne('.cond5')                   #21
