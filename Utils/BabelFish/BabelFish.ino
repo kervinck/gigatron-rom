@@ -24,7 +24,9 @@
 // Select a built-in GT1 image:
 const byte gt1File[] PROGMEM = {
   //#include "Blinky.h" // Blink pixel in middle of screen
-  #include "Lines.h"  // Draw randomized lines (at67)
+  //#include "Lines.h"  // Draw randomized lines (at67)
+  //#include "WozMon.h" // Monitor program ported from Apple-1
+  #include "TinyBASIC.h"
 };
 
 // The object file is embedded (in PROGMEM) in GT1 format. It would be
@@ -226,10 +228,6 @@ byte checksum; // Global is simplest
 
 PS2Keyboard keyboard;
 
-const byte terminalGt1[] PROGMEM = {
-  #include "WozMon.h" // Monitor program ported from Apple-1
-};
-
 /*
  *  Game controller button mapping
  */
@@ -307,18 +305,14 @@ void loop()
       // XXX These mappings are for testing purposes only
       case PS2_PAGEDOWN:   sendController(~buttonSelect, 1); break;
       case PS2_PAGEUP:     sendController(~buttonStart,  128+32); break; // XXX Change to Ctrl-Alt-Del
-      case PS2_TAB:        sendController((byte)~buttonA,1); break;
-      #if !ATtiny85
-        case PS2_ESC:      sendController(~buttonB,      1); break;
-      #else
-        case PS2_ESC:      doTransfer(terminalGt1);          break; // XXX HACK Find some proper short-cut. Ctrl-T?
-      #endif
+      case PS2_TAB:        sendController((byte)~buttonB,1); break; // XXX Change to ESC?
+      case PS2_ESC:        doTransfer(gt1File );             break; // XXX HACK Find proper short-cut. Function keys?
       case PS2_LEFTARROW:  sendController(~buttonLeft,   2); break;
       case PS2_RIGHTARROW: sendController(~buttonRight,  2); break;
       case PS2_UPARROW:    sendController(~buttonUp,     2); break;
       case PS2_DOWNARROW:  sendController(~buttonDown,   2); break;
       case PS2_ENTER:      sendController('\n',          1); break;
-      case PS2_DELETE:     sendController(127,           1); break;
+      case PS2_DELETE:     sendController(127,           1); break; // Is also ~buttonA
       default:             sendController(c,             1); break;
     }
     delay(50); // Allow Gigatron software to process key code
@@ -381,7 +375,7 @@ void doCommand(char line[])
 void doVersion()
 {
   #if hasSerial
-    Serial.println(":Gigatron Interface Adapter [" version "]\n"
+    Serial.println(":Babelfish [" version "]\n"
                    ":Type 'H' for help");
   #endif
 }
