@@ -120,6 +120,9 @@ SetupAudio!
 SetupVideo!
 $812 Pos= PrintStartupMessage!
 
+{ Switch from fast 'A---' scanline mode to default 'ABC-'}
+\_pixels \_videoModes:
+
 { Load and start main program }
 \Main_v1x \sysArgs0= $200 \vLR= \SYS_Exec_88 \sysFn= 88!
 
