@@ -8,7 +8,7 @@
 #define MAJOR_VERSION "0.7"
 #define MINOR_VERSION "0"
 #define VERSION_STR "gtemuSDL v" MAJOR_VERSION "." MINOR_VERSION
-
+ 
 #define ROM_SIZE (1<<16)
 #define RAM_SIZE (1<<16) // Can be 32k or 64k
 
