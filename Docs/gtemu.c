@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
   garble((void*)RAM, sizeof RAM);
   garble((void*)&S, sizeof S);
 
-  FILE *fp = fopen(argc ? argv[1] : "ROMv1.rom", "rb");
+  FILE *fp = fopen(argc>1 ? argv[1] : "ROMv1.rom", "rb");
   if (!fp) {
     fprintf(stderr, "Error: failed to open ROM file\n");
     exit(EXIT_FAILURE);

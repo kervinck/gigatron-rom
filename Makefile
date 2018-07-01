@@ -31,12 +31,12 @@ ROMv1x.rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Main_v1x.gcl\
 		Core/Reset_v1x.gcl
 
-run: gtemu ROMv1.rom
-	./gtemu
+run: Docs/gtemu ROMv1x.rom
+	Docs/gtemu ROMv1x.rom
 
-test: gtemu ROMv1x.rom
+test: Docs/gtemu ROMv1x.rom
 	# Check for hSync errors in first ~30 seconds of emulation
-	./gtemu | head -999999 | grep \~
+	Docs/gtemu ROMv1x.rom | head -999999 | grep \~
 
 compiletest:
 	# Test compilation
@@ -45,12 +45,12 @@ compiletest:
 	Core/compilegcl.py Apps/Mandelbrot.gcl
 	Core/compilegcl.py Apps/Credits.gcl
 
-time: gtemu ROMv1x.rom
+time: Docs/gtemu ROMv1x.rom
 	# Run emulation until first sound
-	./gtemu | grep -m 1 'xout [^0]'
+	Docs/gtemu ROMv1x.rom | grep -m 1 'xout [^0]'
 
 burn: ROMv1x.rom
-	minipro -p 'AT27C1024 @DIP40' -w ROMv1.rom -y -s
+	minipro -p 'AT27C1024 @DIP40' -w ROMv1x.rom -y -s
 
 %.h: %.gt1
 	# Convert GT1 file into header for including as PROGMEM data
