@@ -81,7 +81,7 @@ void garble(uint8_t mem[], int len)
   for (int i=0; i<len; i++) mem[i] = rand();
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
   CpuState S;
   srand(time(NULL)); // Initialize with randomized data
@@ -89,7 +89,7 @@ int main(void)
   garble((void*)RAM, sizeof RAM);
   garble((void*)&S, sizeof S);
 
-  FILE *fp = fopen("ROMv1.rom", "rb");
+  FILE *fp = fopen(argc ? argv[1] : "ROMv1.rom", "rb");
   if (!fp) {
     fprintf(stderr, "Error: failed to open ROM file\n");
     exit(EXIT_FAILURE);
