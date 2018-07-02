@@ -13,7 +13,7 @@ Statement   ::= ('PRINT'|'?') ((String|Expression) [,;])*
                 'POKE' Expression ',' Expression                        |
                 'GOSUB' Expression                                      |
                 'RETURN'                                                |
-                ('REM'|#x27) Character*                                 |
+                ('REM'|"'") Character*                                  |
                 'NEW'                                                   |
                 'LIST'                                                  |
                 'RUN'                                                   |

@@ -32,7 +32,7 @@
                   'POKE' Expression ',' Expression                      |
                   'GOSUB' Expression                                    |
                   'RETURN'                                              |
-                  ('REM'|'?') Character*                                |
+                  ('REM'|"'") Character*                                |
                   'NEW'                                                 |
                   'LIST'                                                |
                   'RUN'                                                 |
@@ -77,7 +77,7 @@
         INPUT           Can give syntax error in direct mode (buffer conflict)
         Break error     Gives the line it was about to start: resume with GOTO
         PRINT "xxx      An unterminated string is silently accepted
-        60000 vs. 90000 Many (too) large constants give an error (but not all!)
+        60000 vs. 90000 Many (too) large constants give an error, but not all!
 
   References:
         https://en.wikipedia.org/wiki/Tiny_BASIC
