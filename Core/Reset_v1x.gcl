@@ -118,7 +118,12 @@ $0300:
 { Now it is safe to call functions }
 SetupAudio!
 SetupVideo!
-$812 Pos= PrintStartupMessage!
+$812 Pos= PrintStartupMessage! {Returns 0}
+
+{ Start blinkenlights }
+\ledState.                      {Start sequencer, vAC=0}
+9 \ledTempo.                    {6.0 Hz ( = 60/(9+1)), was 5.5 Hz}
+\ledTimer.                      {Set timer last}
 
 { Switch from fast 'A---' scanline mode to default 'ABC-'}
 \_pixels \_videoModes:

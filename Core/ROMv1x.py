@@ -484,19 +484,13 @@ adda(1)
 bne('.loop1')
 st([vAC+0])
 
-# Init LED sequencer
-ld(120);                        C('Setup LED sequencer')
-st([ledTimer])
-ld(60/6)
-st([ledTempo])
-ld(0)
-st([ledState])
 
 ld(0b1111);                     C('LEDs |****|')
 ld(syncBits^hSync, OUT)
 ld(syncBits, OUT)
 st([xout])                      # Setup for control by video loop
 st([xoutMask])
+st([ledState])                  # >0 means "Paused"
 
 ld(hi('vBlankStart'), Y);       C('Enter video loop')
 jmpy('vBlankStart')
@@ -637,6 +631,11 @@ ld(-86/2)                       #83 One tick faster than needed
 
 nop()
 nop()
+nop()
+nop()
+nop()
+nop()
+nop()
 
 #-----------------------------------------------------------------------
 # Extension SYS_Out_22: Send byte to output port
@@ -709,59 +708,67 @@ label('.rnd1')
 adda([entropy+1])               #52
 st([entropy+1])                 #53
 
-# LED sequencer (19 cycles)
+# LED sequencer (18 cycles)
 ld([ledTimer]);                 C('Blinkenlight sequencer')#54
-bne('.leds4')                   #55
-ld('.leds0')                    #56
-adda([ledState])                #57
-bra(AC)                         #58
-bra('.leds1')                   #59
+beq('.leds0')                   #55
+bra('.leds1')                   #56
+suba(1)                         #57
 label('.leds0')
-ld(0b1111);C('LEDs |****|')     #60
-ld(0b0111);C('LEDs |***O|')     #60
-ld(0b0011);C('LEDs |**OO|')     #60
-ld(0b0001);C('LEDs |*OOO|')     #60
-ld(0b0010);C('LEDs |O*OO|')     #60
-ld(0b0100);C('LEDs |OO*O|')     #60
-ld(0b1000);C('LEDs |OOO*|')     #60
-ld(0b0100);C('LEDs |OO*O|')     #60
-ld(0b0010);C('LEDs |O*OO|')     #60
-ld(0b0001);C('LEDs |*OOO|')     #60
-ld(0b0011);C('LEDs |**OO|')     #60
-ld(0b0111);C('LEDs |***O|')     #60
-ld(0b1111);C('LEDs |****|')     #60
-ld(0b1110);C('LEDs |O***|')     #60
-ld(0b1100);C('LEDs |OO**|')     #60
-ld(0b1000);C('LEDs |OOO*|')     #60
-ld(0b0100);C('LEDs |OO*O|')     #60
-ld(0b0010);C('LEDs |O*OO|')     #60
-ld(0b0001);C('LEDs |*OOO|')     #60
-ld(0b0010);C('LEDs |O*OO|')     #60
-ld(0b0100);C('LEDs |OO*O|')     #60
-ld(0b1000);C('LEDs |OOO*|')     #60
-ld(0b1100);C('LEDs |OO**|')     #60
-ld(0b1110+128);C('LEDs |O***|') #60
+ld([ledTempo])                  #57
 label('.leds1')
-st([xoutMask])                  #61 Temporarily park new state here
-bmi('.leds2')                   #62
-bra('.leds3')                   #63
-ld([ledState])                  #64
+st([ledTimer])                  #58
+
+beq('.leds2')                   #59
+bra('.leds3')                   #60
+ld(0)                           #61 Don't advance state
 label('.leds2')
-ld(-1)                          #64
+ld(1)                           #61 Advance state when timer passes through 0
 label('.leds3')
-adda(1)                         #65
-st([ledState])                  #66
-bra('.leds5')                   #67
-ld([ledTempo])                  #68 Setup the LED timer for the next period
+adda([ledState])                #62
+
+bne('.leds4')                   #63
+bra('.leds5')                   #64
+ld(-24)                         #65 State 0 becomes -24, start of sequence
 label('.leds4')
-wait(67-57)                     #57
-ld([ledTimer])                  #67
-suba(1)                         #68
+bgt('.leds6')                   #65 Catch the paused state (>0)
 label('.leds5')
-st([ledTimer])                  #69
-ld([xoutMask])                  #70 Low 4 bits are the LED output
-anda(0b00001111)                #71 High bits will be restored below
-st([xoutMask])                  #72
+st([ledState])                  #66
+adda('.leds7')                  #67
+bra(AC)                         #68 Jump to lookup table
+bra('.leds7')                   #69 Single-instruction subroutine
+
+label('.leds6')
+ld(1)                           #67 Maintain paused state (don't use incremented AC value)
+st([ledState])                  #68
+bra('.leds7')                   #69
+ld([xoutMask])                  #70
+
+ld(0b1111);C('LEDs |****|')     #70 offset -24 Low 4 bits are the LED output
+ld(0b0111);C('LEDs |***O|')     #70
+ld(0b0011);C('LEDs |**OO|')     #70
+ld(0b0001);C('LEDs |*OOO|')     #70
+ld(0b0010);C('LEDs |O*OO|')     #70
+ld(0b0100);C('LEDs |OO*O|')     #70
+ld(0b1000);C('LEDs |OOO*|')     #70
+ld(0b0100);C('LEDs |OO*O|')     #70
+ld(0b0010);C('LEDs |O*OO|')     #70
+ld(0b0001);C('LEDs |*OOO|')     #70
+ld(0b0011);C('LEDs |**OO|')     #70
+ld(0b0111);C('LEDs |***O|')     #70
+ld(0b1111);C('LEDs |****|')     #70
+ld(0b1110);C('LEDs |O***|')     #70
+ld(0b1100);C('LEDs |OO**|')     #70
+ld(0b1000);C('LEDs |OOO*|')     #70
+ld(0b0100);C('LEDs |OO*O|')     #70
+ld(0b0010);C('LEDs |O*OO|')     #70
+ld(0b0001);C('LEDs |*OOO|')     #70
+ld(0b0010);C('LEDs |O*OO|')     #70
+ld(0b0100);C('LEDs |OO*O|')     #70
+ld(0b1000);C('LEDs |OOO*|')     #70
+ld(0b1100);C('LEDs |OO**|')     #70
+ld(0b1110);C('LEDs |O***|')     #70 offset -1
+label('.leds7')
+st([xoutMask])                  #71 High bits will be restored below
 
 # When the total number of scan lines per frame is not an exact multiple of the
 # (4) channels, there will be an audible discontinuity if no measure is taken.
@@ -777,7 +784,7 @@ if soundDiscontinuity == 2:
 if soundDiscontinuity > 2:
   print "Warning: sound discontinuity not supressed"
 
-runVcpu(189-73-extra, 'line0')  #73 Application cycles (scan line 0)
+runVcpu(189-72-extra, 'line0')  #72 Application cycles (scan line 0)
 
 # Sound on/off (6 cycles)
 ld([soundTimer]);               C('Sound on/off')#189
@@ -1023,7 +1030,7 @@ jmpy('REENTER')                 #24
 nop()                           #25
 
 assert pc() == 0x1ff
-bra('sound3');                  C('<New scan line start>')#200/0
+bra('sound3');                  C('<New scan line start>')#200,0
 ld([channel])                   #1 Advance to next sound channel
 
 # Back porch A: first of 4 repeated scan lines
