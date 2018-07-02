@@ -1716,6 +1716,8 @@ namespace Assembler
             return false;
         }
 
+        fprintf(stderr, "\nAssembling file '%s'\n", filename.c_str());
+
         _callTable = 0x0000;
         _startAddress = startAddress;
         _currentAddress = _startAddress;
@@ -1745,6 +1747,8 @@ namespace Assembler
 
         // Pre-processor
         if(!preProcess(filename, lineTokens, true)) return false;
+
+        numLines = int(lineTokens.size());
 
         // The mnemonic pass we evaluate all the equates and labels, the code pass is for the opcodes and operands
         for(int parse=MnemonicPass; parse<NumParseTypes; parse++)

@@ -9,9 +9,8 @@
 #include <map>
 #include <algorithm>
 
-#include "../expression.h"
-#include "gbexpression.h"
-#include "gbcompiler.h"
+#include "expression.h"
+#include "compiler.h"
 
 
 // The smaller you make this, the more your BASIC label names will be truncated in the resultant .vasm code
@@ -24,7 +23,7 @@
 
 
 
-namespace GBcompiler
+namespace Compiler
 {
     enum VarType {VarInt8=0, VarInt16, VarInt32, VarFloat16, VarFloat32};
     enum VarResult {VarError=-1, VarNotFound, VarInitialised, VarUpdated};
@@ -56,7 +55,8 @@ namespace GBcompiler
 
     struct IntegerVar
     {
-        uint32_t _data;
+        int16_t _init;
+        int16_t _data;
         uint16_t _address;
         std::string _name;
         std::string _output;
@@ -66,7 +66,8 @@ namespace GBcompiler
 
     struct FloatVar
     {
-        uint32_t _data;
+        int16_t _init;
+        int16_t _data;
         uint16_t _address;
         std::string _name;
         std::string _output;
@@ -183,7 +184,7 @@ namespace GBcompiler
 
         if(!infile.is_open())
         {
-            fprintf(stderr, "GBcompiler::readInputFile() : Failed to open file : '%s'\n", filename.c_str());
+            fprintf(stderr, "Compiler::readInputFile() : Failed to open file : '%s'\n", filename.c_str());
             return false;
         }
 
@@ -195,7 +196,7 @@ namespace GBcompiler
 
             if(!infile.good()  &&  !infile.eof())
             {
-                fprintf(stderr, "GBcompiler::readInputFile() : Bad line : '%s' : in '%s' : on line %d\n", line.c_str(), filename.c_str(), numLines+1);
+                fprintf(stderr, "Compiler::readInputFile() : Bad line : '%s' : in '%s' : on line %d\n", line.c_str(), filename.c_str(), numLines+1);
                 return false;
             }
 
@@ -209,7 +210,7 @@ namespace GBcompiler
     {
         if(!outfile.is_open())
         {
-            fprintf(stderr, "GBcompiler::writeOutputFile() : failed to open '%s'\n", filename.c_str());
+            fprintf(stderr, "Compiler::writeOutputFile() : failed to open '%s'\n", filename.c_str());
             return false;
         }
 
@@ -219,7 +220,7 @@ namespace GBcompiler
             outfile.write((char *)_output[i].c_str(), _output[i].size());
             if(outfile.bad() || outfile.fail())
             {
-                fprintf(stderr, "GBcompiler::writeOutputFile() : write error in '%s'\n", filename.c_str());
+                fprintf(stderr, "Compiler::writeOutputFile() : write error in '%s'\n", filename.c_str());
                 return false;
             }
         }
@@ -285,6 +286,8 @@ namespace GBcompiler
         codeLine = {address, vasmSize, lineText.substr(codeLineOffset, lineText.size() - (codeLineOffset)), vasmCode, expression, labelIndex, varIndex, varType, assign, vars};
         Expression::stripWhitespace(codeLine._code);
         Expression::stripWhitespace(codeLine._expression);
+        Expression::operatorReduction(codeLine._code);
+        Expression::operatorReduction(codeLine._expression);
         _codeLines.push_back(codeLine);
     }
 
@@ -299,21 +302,21 @@ namespace GBcompiler
             size_t space = lineText.find_first_of(" \n\r\f\t\v");
             if(space == std::string::npos)
             {
-                fprintf(stderr, "GBcompiler::checkForLabel() : white space expected after line mumber in : '%s' : on line %d\n", lineText.c_str(), lineNumber + 1);
+                fprintf(stderr, "Compiler::checkForLabel() : white space expected after line mumber in : '%s' : on line %d\n", lineText.c_str(), lineNumber + 1);
                 return LabelError;
             }
             for(int i=1; i<space; i++)
             {
                 if(!isdigit(lineText[i]))
                 {
-                    fprintf(stderr, "GBcompiler::checkForLabel() : non digits found in line number in : '%s' : on line %d\n", lineText.c_str(), lineNumber + 1);
+                    fprintf(stderr, "Compiler::checkForLabel() : non digits found in line number in : '%s' : on line %d\n", lineText.c_str(), lineNumber + 1);
                     return LabelError;
                 }
             }
 
             if(lineText.size() - (space + 1) <= 2)
             {
-                fprintf(stderr, "GBcompiler::checkForLabel() : line number cannot exist on its own : '%s' : on line %d\n", lineText.c_str(), lineNumber + 1);
+                fprintf(stderr, "Compiler::checkForLabel() : line number cannot exist on its own : '%s' : on line %d\n", lineText.c_str(), lineNumber + 1);
                 return LabelError;
             }
 
@@ -333,13 +336,13 @@ namespace GBcompiler
         }
         if(colon2 != std::string::npos)
         {
-            fprintf(stderr, "GBcompiler::checkForLabel() : only one label per line is allowed in : '%s' : on line %d\n", lineText.c_str(), lineNumber + 1);
+            fprintf(stderr, "Compiler::checkForLabel() : only one label per line is allowed in : '%s' : on line %d\n", lineText.c_str(), lineNumber + 1);
             return LabelError;
         }
 
         if(lineText.size() - (colon1 + 1) <= 2)
         {
-            fprintf(stderr, "GBcompiler::checkForLabel() : label cannot exist on its own : '%s' : on line %d\n", lineText.c_str(), lineNumber + 1);
+            fprintf(stderr, "Compiler::checkForLabel() : label cannot exist on its own : '%s' : on line %d\n", lineText.c_str(), lineNumber + 1);
             return LabelError;
         }
 
@@ -393,40 +396,64 @@ namespace GBcompiler
     }
 
 
+    Expression::ExpressionType isExpression(const std::string& input)
+    {
+        if(find_if(input.begin(), input.end(), isalpha) != input.end()) return Expression::HasAlpha;
+        return Expression::isExpression(input);
+    }
+
     VarResult checkForVars(const std::string& lineText, int& varIndex, int lineNumber)
     {
+#if 0
         // Search for vars
         size_t equals1 = lineText.find_first_of("=");
         size_t equals2 = lineText.find_first_of("=", equals1+1);
         if(equals2 != std::string::npos)
         {
-            fprintf(stderr, "GBcompiler::checkForVars() : too many '=' in '%s'\n", lineText.c_str());
+            fprintf(stderr, "Compiler::checkForVars() : too many '=' in '%s'\n", lineText.c_str());
             return VarError;
         }
         if(equals1 != std::string::npos)
         {
             std::string varName = lineText.substr(0, equals1);
             Expression::stripWhitespace(varName);
+#else
+
+        size_t equals1 = Expression::findNonStringEquals(lineText) - lineText.begin();
+        if(lineText.size() > 2  &&  equals1 < lineText.size())
+        {
+            std::string equalsText = lineText.substr(equals1+1);
+            auto equals2 = Expression::findNonStringEquals(equalsText);
+            if(equals2 != equalsText.end())
+            {
+                fprintf(stderr, "Compiler::checkForVars() : too many '=' in '%s'\n", lineText.c_str());
+                return VarError;
+            }
+
+            std::string varName = lineText.substr(0, equals1);
+            Expression::stripWhitespace(varName);
+#endif
             
             // Has var been initialised
             varIndex = findVar(varName);
 
             // Evaluate var
-            uint16_t result = 0;
+            int16_t result = 0;
             bool containsVars = false;
             std::string data = lineText.substr(equals1 + 1, lineText.size() - (equals1 + 1));
             Expression::stripWhitespace(data);
+            Expression::operatorReduction(data);
             Expression::setDefaultOperatorFuncs();
-            Expression::ExpressionType expressiontype =Expression::isExpression(data);
+            Expression::ExpressionType expressiontype = isExpression(data);
             switch(expressiontype)
             {
                 case Expression::HasAlpha: result = 0; containsVars = true;                             break;
-                case Expression::None:     Expression::stringToU16(data, result);                       break;
+                case Expression::None:     Expression::stringToI16(data, result);                       break;
                 case Expression::Valid:    result = Expression::parse((char*)data.c_str(), lineNumber); break;
 
                 case Expression::Invalid:
                 {
-                    fprintf(stderr, "GBcompiler::checkForVars() : invalid expression '%s' on line %d\n", data.c_str(), lineNumber + 1);
+                    fprintf(stderr, "Compiler::checkForVars() : invalid expression '%s' on line %d\n", data.c_str(), lineNumber + 1);
                     return VarError;
                 }
                 break;
@@ -451,7 +478,7 @@ namespace GBcompiler
                 _codeLines[lineNumber]._containsVars = containsVars;
                 _codeLines[lineNumber]._varType = VarInt16;
                 _codeLines[lineNumber]._varIndex = varIndex;
-                IntegerVar integerVar = {result, _integerVarsStart, varName, varName, lineNumber, Int16};
+                IntegerVar integerVar = {result, result, _integerVarsStart, varName, varName, lineNumber, Int16};
                 _integerVars.push_back(integerVar);
                 _integerVarsStart += Int16; 
                 return VarInitialised;
@@ -492,11 +519,11 @@ namespace GBcompiler
     }
 
 
-    void getNextTempVar(bool reset)
+    void getNextTempVar(void)
     {
         // Increment temporary variable address
-        static int prevCodeLine = _currentCodeLine;
-        if(_currentCodeLine != prevCodeLine  ||  reset)
+        static int prevCodeLine = -1;
+        if(_currentCodeLine != prevCodeLine)
         {
             prevCodeLine = _currentCodeLine;
             _tempVarStart = TEMP_VAR_START;
@@ -510,139 +537,207 @@ namespace GBcompiler
         _tempVarStartStr = Expression::wordToHexString(_tempVarStart);
     }
 
-    bool pickOpcodeAndOperand(const std::string& opcode, const Expression::Numeric& result, const Expression::Numeric& numeric, std::string& resultStr, std::string& numericStr)
+    bool pickOpcodeAndOperand(std::string& opcode, Expression::Numeric& left, Expression::Numeric& right, std::string& leftStr, std::string& rightStr)
     {
-        bool optimise = (result._isAddress  &&  isdigit(*result._varNamePtr)  &&  result._value == _tempVarStart);
+        // Swap left and right to take advantage of LDWI for 16bit numbers
+        if(!right._isAddress  &&  abs(right._value) > 255)
+        {
+            std::swap(left, right);
+            if(opcode == "SUB")
+            {
+                opcode = "ADD";
+                if(left._value > 0) left._value = -left._value;
+            }
+        }
 
-        static int nextTempVar = 0;
+        // Optimisation, (removes uneeded LDW's)
+        bool optimise = (left._isAddress  &&  isdigit(*left._varNamePtr)  &&  left._value == _tempVarStart);
+        bool constant16bit = false;
+
         static int prevCodeLine = -1;
         if(_currentCodeLine != prevCodeLine)
         {
-            nextTempVar = 0;
             prevCodeLine = _currentCodeLine;
         }
         else
         {
             if(!optimise)
             {
-                _codeLines[_currentCodeLine]._vasm += "STW\t\t" + Expression::byteToHexString(uint8_t(_tempVarStart));
-                _codeLines[_currentCodeLine]._vasm += "\n" + std::string(LABEL_TRUNC_SIZE, ' ');
+                _codeLines[_currentCodeLine]._vasm += "STW\t\t" + Expression::byteToHexString(uint8_t(_tempVarStart)) + "\n" + std::string(LABEL_TRUNC_SIZE, ' ');
                 _codeLines[_currentCodeLine]._vasmSize += 2;
             }
         }
 
-        // Result instructions
-        if(result._isAddress)
+        // Left instructions
+        if(left._isAddress)
         {
             if(!optimise)
             {
                 // Temporary variable address
-                if(isdigit(*result._varNamePtr))
+                if(isdigit(*left._varNamePtr))
                 {
-                    resultStr = "LDW\t\t" + Expression::byteToHexString(uint8_t(result._value));
+                    leftStr = "LDW\t\t" + Expression::byteToHexString(uint8_t(left._value));
                     _codeLines[_currentCodeLine]._vasmSize += 2;
                 }
                 // User variable address
                 else
                 {
-                    std::string varName = std::string(result._varNamePtr);
+                    std::string varName = std::string(left._varNamePtr);
                     int varIndex = findVar(varName);
                     if(varIndex == -1)
                     {
-                        fprintf(stderr, "GBcompiler::pickOpcodeAndOperand() : couldn't find variable name '%s'\n", varName.c_str());
+                        fprintf(stderr, "Compiler::pickOpcodeAndOperand() : couldn't find variable name '%s'\n", varName.c_str());
                         return false;
                     }
                     else
                     {
-                        resultStr = "LDW\t\t_" + _integerVars[varIndex]._name;
+                        leftStr = "LDW\t\t_" + _integerVars[varIndex]._name;
                         _codeLines[_currentCodeLine]._vasmSize += 2;
-                        (nextTempVar++ == 0) ? getNextTempVar(true) : getNextTempVar(false);
+                        getNextTempVar(); // next temporary variable for each new user variable loaded
                     }
                 }
             }
         }
         else
         {
-            resultStr = "LDWI\t" + std::to_string(result._value);
-            _codeLines[_currentCodeLine]._vasmSize += 3;
+            // 8bit positive constants
+            if(left._value >=0  &&  left._value <= 255)
+            {
+                leftStr = "LDI\t\t" + std::to_string(left._value);
+                _codeLines[_currentCodeLine]._vasmSize += 2;
+            }
+            // 16bit constants
+            else
+            {
+                constant16bit = true;
+                leftStr = "LDWI\t" + std::to_string(left._value);
+                _codeLines[_currentCodeLine]._vasmSize += 3;
+            }
         }
 
-        // Numeric instructions
-        if(numeric._isAddress)
+        // Right instructions
+        if(right._isAddress)
         {
             // Temporary variable address
-            if(isdigit(*numeric._varNamePtr))
+            if(isdigit(*right._varNamePtr))
             {
-                numericStr = opcode + "W\t" + Expression::byteToHexString(uint8_t(numeric._value));
+                rightStr = opcode + "W\t" + Expression::byteToHexString(uint8_t(right._value));
                 _codeLines[_currentCodeLine]._vasmSize += 2;
             }
             // User variable address
             else
             {
-                std::string varName = std::string(numeric._varNamePtr);
+                std::string varName = std::string(right._varNamePtr);
                 int varIndex = findVar(varName);
                 if(varIndex == -1)
                 {
-                    fprintf(stderr, "GBcompiler::pickOpcodeAndOperand() : couldn't find variable name '%s'\n", varName.c_str());
+                    fprintf(stderr, "Compiler::pickOpcodeAndOperand() : couldn't find variable name '%s'\n", varName.c_str());
                     return false;
                 }
                 else
                 {
-                    numericStr = opcode + "W\t_" + _integerVars[varIndex]._name;
+                    rightStr = opcode + "W\t_" + _integerVars[varIndex]._name;
                     _codeLines[_currentCodeLine]._vasmSize += 2;
+                    if(constant16bit) getNextTempVar();  // next temporary variable for each new user variable add/sub to/from 16bit number
                 }
             }
         }
         else
         {
-            numericStr = opcode + "I\t" + std::to_string(numeric._value); 
+            rightStr = opcode + "I\t" + std::to_string(right._value); 
             _codeLines[_currentCodeLine]._vasmSize += 2;
         }
 
         if(!optimise)
         {
-            _codeLines[_currentCodeLine]._vasm += resultStr;
+            _codeLines[_currentCodeLine]._vasm += leftStr;
             _codeLines[_currentCodeLine]._vasm += "\n" + std::string(LABEL_TRUNC_SIZE, ' ');
         }
 
-        _codeLines[_currentCodeLine]._vasm += numericStr;
+        _codeLines[_currentCodeLine]._vasm += rightStr;
         _codeLines[_currentCodeLine]._vasm += "\n" + std::string(LABEL_TRUNC_SIZE, ' ');
+
+        left._value = uint8_t(_tempVarStart);
+        left._isAddress = true;
+        left._varNamePtr = (char *)_tempVarStartStr.c_str();
 
         return true;
     }
 
-    // VASM code operators
-    Expression::Numeric neg(const Expression::Numeric& numeric)
+    // Expression operators
+    Expression::Numeric neg(Expression::Numeric& numeric)
     {
-        Expression::Numeric result;
-        result._value = -numeric._value;
-        return result;
+        numeric._value = -numeric._value;
+        return numeric;
     }
-    Expression::Numeric add(Expression::Numeric& result, const Expression::Numeric& numeric)
+    Expression::Numeric add(Expression::Numeric& left, Expression::Numeric& right)
     {
-        std::string resultStr, numericStr;
-        pickOpcodeAndOperand("ADD", result, numeric, resultStr, numericStr);
-        result._value = uint8_t(_tempVarStart);
-        result._isAddress = true;
-        result._varNamePtr = (char *)_tempVarStartStr.c_str();
-        return result;
+        if(!left._isAddress  &&  !right._isAddress)
+        {
+            left._value += right._value;
+            return left;
+        }
+
+        std::string leftStr, rightStr, opcode = "ADD";
+        pickOpcodeAndOperand(opcode, left, right, leftStr, rightStr);
+        return left;
     }
-    Expression::Numeric sub(Expression::Numeric& result, const Expression::Numeric& numeric)
+    Expression::Numeric sub(Expression::Numeric& left, Expression::Numeric& right)
     {
-        std::string resultStr, numericStr;
-        pickOpcodeAndOperand("SUB", result, numeric, resultStr, numericStr);
-        result._value = uint8_t(_tempVarStart);
-        result._isAddress = true;
-        result._varNamePtr = (char *)_tempVarStartStr.c_str();
-        return result;
+        if(!left._isAddress  &&  !right._isAddress)
+        {
+            left._value -= right._value;
+            return left;
+        }
+
+        std::string leftStr, rightStr, opcode = "SUB";;
+        pickOpcodeAndOperand(opcode, left, right, leftStr, rightStr);
+        return left;
     }
-    Expression::Numeric mul(Expression::Numeric& result, const Expression::Numeric& numeric)
+    Expression::Numeric mul(Expression::Numeric& left, Expression::Numeric& right)
     {
-        return result;
+        if(!left._isAddress  &&  !right._isAddress)
+        {
+            left._value *= right._value;
+            return left;
+        }
+
+        return left;
     }
-    Expression::Numeric div(Expression::Numeric& result, const Expression::Numeric& numeric)
+    Expression::Numeric div(Expression::Numeric& left, Expression::Numeric& right)
     {
-        return result;
+        if(!left._isAddress  &&  !right._isAddress)
+        {
+            left._value /= right._value;
+            return left;
+        }
+
+        return left;
+    }
+    Expression::Numeric fac(int16_t defaultValue)
+    {
+        int16_t value = 0;
+        if((Expression::peek() >= '0'  &&  Expression::peek() <= '9')  ||  Expression::peek() == '$')
+        {
+            if(!Expression::number(value)) value = 0;
+            return Expression::Numeric(value, false, nullptr);
+        }
+        else if(Expression::peek() == '(')
+        {
+            Expression::get();
+            Expression::Numeric numeric = Expression::expression();
+            Expression::get();
+            return numeric;
+        }
+        else if(Expression::peek() == '-')
+        {
+            Expression::get();
+            return neg(fac(0));
+        }
+
+        Expression::Numeric numeric = Expression::Numeric(defaultValue, true, Expression::getExpression());
+        while(isalpha(Expression::peek())) Expression::get();
+        return numeric;
     }
     void varExpressionParse(CodeLine& codeLine, int lineNumber)
     {
@@ -651,26 +746,56 @@ namespace GBcompiler
         Expression::setSubFunc(sub);
         Expression::setMulFunc(mul);
         Expression::setDivFunc(div);
+        Expression::setFacFunc(fac);
         Expression::parse((char*)codeLine._expression.c_str(), lineNumber);
+    }
+    int varAssignmentParse(CodeLine& codeLine, int lineNumber)
+    {
+        if(codeLine._expression.find_first_of("-+/*()") != std::string::npos) return -1;
+        int varIndex = findVar(codeLine._expression);
+        return varIndex;
     }
     bool createVasmCode(CodeLine& codeLine, int lineNumber)
     {
         // TODO: only works with Int16, fix for all var types
         if(codeLine._assignOperator)
         {
+            // Optimisation, (removes uneeded LDW's)
+            static int prevVarIndex = -1;
+
             // Assignment with a var expression
             if(codeLine._containsVars)
             {
                 varExpressionParse(codeLine, lineNumber);
+                int varIndex = varAssignmentParse(codeLine, lineNumber);
+                if(varIndex >= 0  &&  varIndex != prevVarIndex)
+                {
+                    codeLine._vasm += "LDW\t\t_" + _integerVars[varIndex]._name + "\n" + std::string(LABEL_TRUNC_SIZE, ' ');
+                    codeLine._vasmSize += 2;
+                }
                 codeLine._vasm += "STW\t\t_" + _integerVars[codeLine._varIndex]._name;
                 codeLine._vasmSize += 2;
+                prevVarIndex = codeLine._varIndex;
             }
             // Standard assignment
             else
             {
-                codeLine._vasm = "LDWI\t" + std::to_string(_integerVars[codeLine._varIndex]._data) + "\n" + std::string(LABEL_TRUNC_SIZE, ' ');
+                // 8bit constants
+                if(_integerVars[codeLine._varIndex]._init >=0  &&  _integerVars[codeLine._varIndex]._init <= 255)
+                {
+                    codeLine._vasm = "LDI\t\t" + std::to_string(_integerVars[codeLine._varIndex]._init) + "\n" + std::string(LABEL_TRUNC_SIZE, ' ');
+                    codeLine._vasmSize += 2;
+                }
+                // 16bit constants
+                else
+                {
+                    codeLine._vasm = "LDWI\t" + std::to_string(_integerVars[codeLine._varIndex]._init) + "\n" + std::string(LABEL_TRUNC_SIZE, ' ');
+                    codeLine._vasmSize += 3;
+                }
+
                 codeLine._vasm += "STW\t\t_" + _integerVars[codeLine._varIndex]._name;
-                codeLine._vasmSize = 5;
+                codeLine._vasmSize += 2;
+                prevVarIndex = codeLine._varIndex;
             }
         }
         else
@@ -689,16 +814,16 @@ namespace GBcompiler
                 std::string gotoLabel = codeLine._code.substr(4);
                 if(findLabel(gotoLabel) == -1)
                 {
-                    fprintf(stderr, "GBcompiler::createVasmCode() : invalid label in '%s' on line %d\n", codeLine._code.c_str(), lineNumber + 1);
+                    fprintf(stderr, "Compiler::createVasmCode() : invalid label in '%s' on line %d\n", codeLine._code.c_str(), lineNumber + 1);
                     return false;
                 }
                 codeLine._vasm = "BRA\t\t_" + gotoLabel;
-                codeLine._vasmSize = 2;
+                codeLine._vasmSize += 2;
             }
             else
             {
                 codeLine._vasm = "LDWI\t0x0000";
-                codeLine._vasmSize = 3;
+                codeLine._vasmSize += 3;
             }
         }
 
@@ -784,12 +909,12 @@ namespace GBcompiler
                 // Code with a label
                 if(labelIndex >= 0) 
                 {
-                    _output.push_back(_labels[labelIndex]._output + _codeLines[i]._vasm + "  ; " + _codeLines[i]._code + "\n");
+                    _output.push_back(_labels[labelIndex]._output + _codeLines[i]._vasm + "\t\t; " + _codeLines[i]._code + "\n");
                 }
                 // Code
                 else
                 {
-                    std::string line = _codeLines[i]._vasm + "  ; " + _codeLines[i]._code;
+                    std::string line = _codeLines[i]._vasm + "\t\t; " + _codeLines[i]._code;
                     Expression::padString(line, LABEL_TRUNC_SIZE + int(line.size()));
                     _output.push_back(line + "\n");
                 }
@@ -809,6 +934,15 @@ namespace GBcompiler
         _integerVars.clear();
         _stringVars.clear();
         _arrayVars.clear();
+
+        _tempVarStart     = TEMP_VAR_START;
+        _integerVarsStart = USER_VAR_START;
+        _expressionsStart = USER_EXPR_START;
+        _vasmPC           = USER_CODE_START;
+
+        _currentCodeLine = 0;
+
+        _tempVarStartStr = "";
     }
 
     bool compile(const std::string& inputFilename, const std::string& outputFilename)
@@ -819,6 +953,8 @@ namespace GBcompiler
         int numLines = 0;
         std::ifstream infile(inputFilename);
         if(!readInputFile(infile, inputFilename, numLines)) return false;
+
+        fprintf(stderr, "\nCompiling file '%s'\n", inputFilename.c_str());
 
         // Labels
         if(!parseLabels(numLines)) return false;

@@ -15,7 +15,7 @@
 #include "graphics.h"
 #include "expression.h"
 #include "assembler.h"
-#include "gbasic/gbcompiler.h"
+#include "compiler.h"
 
 
 int main(int argc, char* argv[])
@@ -29,10 +29,10 @@ int main(int argc, char* argv[])
     Loader::initialise();
     Expression::initialise();
     Assembler::initialise();
-    GBcompiler::initialise();
+    Compiler::initialise();
 
 
-    GBcompiler::compile("test.gbas", "test.gasm");
+    //Compiler::compile("gbas/test.gbas", "gbas/test.gasm");
 
 
     bool debugging = false;

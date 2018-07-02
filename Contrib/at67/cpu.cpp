@@ -162,17 +162,17 @@ namespace Cpu
         char filebuffer[RAM_SIZE];
 
         std::ifstream romfile_ti(splitGt1path + "_ti", std::ios::binary | std::ios::in);
-        if(!romfile_ti.is_open()) fprintf(stderr, "Cpu::patchTetrisIntoRomTest() : failed to open %s ROM file.\n", std::string(splitGt1path + "_ti").c_str());
+        if(!romfile_ti.is_open()) fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to open %s ROM file.\n", std::string(splitGt1path + "_ti").c_str());
         romfile_ti.seekg (0, romfile_ti.end); filelength = romfile_ti.tellg(); romfile_ti.seekg (0, romfile_ti.beg);
         romfile_ti.read(filebuffer, filelength);
-        if(romfile_ti.eof() || romfile_ti.bad() || romfile_ti.fail()) fprintf(stderr, "Cpu::patchTetrisIntoRomTest() : failed to read %s ROM file.\n", std::string(splitGt1path + "_ti").c_str());
+        if(romfile_ti.eof() || romfile_ti.bad() || romfile_ti.fail()) fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to read %s ROM file.\n", std::string(splitGt1path + "_ti").c_str());
         for(int i=0; i<filelength; i++) _ROM[startAddress + i][ROM_INST] = filebuffer[i];
 
         std::ifstream romfile_td(splitGt1path + "_td", std::ios::binary | std::ios::in);
-        if(!romfile_td.is_open()) fprintf(stderr, "Cpu::patchTetrisIntoRomTest() : failed to open %s ROM file.\n", std::string(splitGt1path + "_td").c_str());
+        if(!romfile_td.is_open()) fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to open %s ROM file.\n", std::string(splitGt1path + "_td").c_str());
         romfile_td.seekg (0, romfile_td.end); filelength = romfile_td.tellg(); romfile_td.seekg (0, romfile_td.beg);
         romfile_td.read(filebuffer, filelength);
-        if(romfile_td.eof() || romfile_td.bad() || romfile_td.fail()) fprintf(stderr, "Cpu::patchTetrisIntoRomTest() : failed to read %s ROM file.\n", std::string(splitGt1path + "_td").c_str());
+        if(romfile_td.eof() || romfile_td.bad() || romfile_td.fail()) fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to read %s ROM file.\n", std::string(splitGt1path + "_td").c_str());
         for(int i=0; i<filelength; i++) _ROM[startAddress + i][ROM_DATA] = filebuffer[i];
 
         // Replace internal gt1 menu option with split gt1

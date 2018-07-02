@@ -1268,26 +1268,6 @@ namespace Graphics
             firstTime = false;
             for(int l=0; l<TETRIS_YEXT; l++)
                 for(int k=0; k<TETRIS_XEXT; k++) setTetrisPixel(k, l, 0x00);
-#if 0
-            Loader::Gt1File gt1File;
-            if(!loadGt1File("./vCPU/starfield.gt1", gt1File)) return;
-            uint16_t executeAddress = gt1File._loStart + (gt1File._hiStart <<8);
-            Editor::setLoadBaseAddress(executeAddress);
-
-            for(int j=0; j<gt1File._segments.size(); j++)
-            {
-                uint16_t address = gt1File._segments[j]._loAddress + (gt1File._segments[j]._hiAddress <<8);
-                for(int i=0; i<gt1File._segments[j]._segmentSize; i++)
-                {
-                    Cpu::setRAM(address+i, gt1File._segments[j]._dataBytes[i]);
-                }
-            }
-
-            Cpu::setRAM(0x0016, executeAddress-2 & 0x00FF);
-            Cpu::setRAM(0x0017, (executeAddress & 0xFF00) >>8);
-            Cpu::setRAM(0x001a, executeAddress-2 & 0x00FF);
-            Cpu::setRAM(0x001b, (executeAddress & 0xFF00) >>8);
-#endif
         }
 
         bool refresh = false;

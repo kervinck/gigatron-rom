@@ -24,6 +24,7 @@
 
 #include "cpu.h"
 #include "loader.h"
+#include "compiler.h"
 #include "assembler.h"
 #include "expression.h"
 
@@ -464,6 +465,10 @@ namespace Loader
 
     uint16_t printGt1Stats(const std::string& filename, const Gt1File& gt1File)
     {
+        size_t nameSuffix = filename.find_last_of(".");
+        std::string output = filename.substr(0, nameSuffix) + ".gt1";
+        fprintf(stderr, "\nUploading file '%s'\n", output.c_str());
+
         // Header
         uint16_t totalSize = 0;
         for(int i=0; i<gt1File._segments.size(); i++)
@@ -472,7 +477,7 @@ namespace Loader
         }
         uint16_t startAddress = gt1File._loStart + (gt1File._hiStart <<8);
         fprintf(stderr, "\n************************************************************\n");
-        fprintf(stderr, "* %s : 0x%04x : %5d bytes : %3d segments\n", filename.c_str(), startAddress, totalSize, int(gt1File._segments.size()));
+        fprintf(stderr, "* %s : 0x%04x : %5d bytes : %3d segments\n", output.c_str(), startAddress, totalSize, int(gt1File._segments.size()));
         fprintf(stderr, "************************************************************\n");
         fprintf(stderr, "* Segment :  Type  : Address : Memory Used                  \n");
         fprintf(stderr, "************************************************************\n");
@@ -796,6 +801,9 @@ namespace Loader
 
     void uploadDirect(UploadTarget uploadTarget)
     {
+        Gt1File gt1File;
+
+        bool gt1FileBuilt = false;
         bool isGt1File = false;
         bool hasRomCode = false;
         bool hasRamCode = false;
@@ -808,26 +816,37 @@ namespace Loader
         Graphics::resetVTable();
         Editor::setSingleStepWatchAddress(VIDEO_Y_ADDRESS);
 
+        size_t nameSuffix = filename.find_last_of(".");
+        size_t pathSuffix = filepath.find_last_of(".");
+        if(nameSuffix == std::string::npos  ||  pathSuffix == std::string::npos)
+        {
+            fprintf(stderr, "\nLoader::uploadDirect() : invalid filepath '%s' or filename '%s'\n", filepath.c_str(), filename.c_str());
+            return;
+        }
+
+        // Compile gbas to gasm
+        if(filename.find(".gbas") != filename.npos)
+        {
+            std::string output = filepath.substr(0, pathSuffix) + ".gasm";
+            if(!Compiler::compile(filepath, output)) return;
+
+            // Create gasm name and path
+            filename = filename.substr(0, nameSuffix) + ".gasm";
+            filepath = filepath.substr(0, pathSuffix) + ".gasm";
+        }
         // Compile gcl to gt1
-        Gt1File gt1File;
-        bool gt1FileBuilt = false;
-        if(_configGclBuildFound  &&  filename.find(".gcl") != filename.npos)
+        else if(_configGclBuildFound  &&  filename.find(".gcl") != filename.npos)
         {
             // Create compile gcl string
             std::string browserPath = Editor::getBrowserPath();
             browserPath.pop_back(); // remove trailing '/'
             chdir(browserPath.c_str());
             std::string command = "py -B \"" + _configGclBuild + "/Core/compilegcl.py\" \"" + filepath + "\" \"" + browserPath + "\" -s \"" + _configGclBuild + "/interface.json\"";
-            fprintf(stderr, command.c_str());
+            //fprintf(stderr, command.c_str());
 
             // Create gt1 name and path
-            size_t dot = filename.find_last_of(".");
-            if(dot != std::string::npos)
-            {
-                filename = filename.substr(0, dot) + ".gt1";
-                dot = filepath.find_last_of(".");
-                filepath = filepath.substr(0, dot) + ".gt1";
-            }
+            filename = filename.substr(0, nameSuffix) + ".gt1";
+            filepath = filepath.substr(0, pathSuffix) + ".gt1";
 
             // Build gcl
             int gt1FileDeleted = remove(filepath.c_str());
@@ -875,7 +894,7 @@ namespace Loader
             _disableUploads = false;
         }
         // Upload vCPU assembly code
-        else if(filename.find(".vasm") != filename.npos  ||  filename.find(".gasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
+        else if(filename.find(".gasm") != filename.npos  ||  filename.find(".vasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
         {
             if(!Assembler::assemble(filepath, DEFAULT_START_ADDRESS)) return;
             executeAddress = Assembler::getStartAddress();
@@ -972,7 +991,7 @@ namespace Loader
             }
         }
 
-        // Updates browser in case a new gt1 file was created from a gcl file or a vasm file
+        // Updates browser in case a new gt1 file was created from a gcl file or a gasm file
         if(gt1FileBuilt) Editor::browseDirectory();
 
         return;
