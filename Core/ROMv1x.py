@@ -17,9 +17,9 @@
 #  DONE Sound continuity fix
 #  DONE A-C- mode
 #  DONE Zero-page handling of ROM loader (SYS_Exec_88)
+#  DONE Replace Screen test
 #  XXX Stopped LED mode?
 #  XXX Sprite SYS function? (Then also romTypeValue)
-#  XXX Replace Screen test (incl. WozMon? How to locate it?)
 #  XXX SYS/USR? WozMon as well?
 #  XXX Update font (69:;@c)
 #  XXX Need keymaps?
@@ -533,9 +533,9 @@ st([videoModeC])                #25
 st([videoModeD])                #26
 ld('SYS_Exec_88')               #27
 st([sysFn])                     #28 High byte (remains) 0
-ld('Reset_v1x')                 #29
+ld('Reset')                     #29
 st([sysArgs+0])                 #30
-ld(hi('Reset_v1x'))             #31
+ld(hi('Reset'))                 #31
 st([sysArgs+1])                 #32
 # Return to interpreter
 ld(hi('REENTER'), Y)            #33
@@ -916,12 +916,12 @@ ld([resetTimer])                #42 As long as button pressed
 suba(1)                         #43 ... count down the timer
 st([resetTimer])                #44
 anda(127)                       #45
-beq('.restart2')                #46
+beq('.restart2')                #46 Reset at 0 (normal 2s) or 128 (extended 4s)
 ld((vReset&255)-2)              #47 Start force reset when hitting 0
 bra('.restart1')                #48 ... otherwise do nothing yet
 bra('.restart3')                #49
 label('.restart0')
-ld(127)                         #43 Restore to ~2 seconds when not pressed
+ld(255)                         #43 Restore to ~2 seconds when not pressed
 st([resetTimer])                #44
 wait(49-45)                     #45
 bra('.restart3')                #49
@@ -2420,17 +2420,6 @@ trampoline()
 #  ROM page 11: Built-in full resolution images
 #-----------------------------------------------------------------------
 
-f = open('Images/gigatron.rgb', 'rb')
-raw = f.read()
-f.close()
-align(0x100)
-label('gigatronRaw')
-for i in xrange(len(raw)):
-  if i&255 < 251:
-    ld(ord(raw[i]))
-  elif i&255 == 251:
-    trampoline()
-
 def importImage(rgbName, width, height, ref):
   f = open(rgbName)
   raw = f.read()
@@ -2683,8 +2672,9 @@ define('_videoModes', videoModeB)
 
 # Compile built-in GCL programs
 for gclSource in argv[1:]:
-  name = gclSource.rsplit('.', 1)[0]
-  name = name.rsplit('/', 1)[-1]
+  name = gclSource.rsplit('.', 1)[0] # Remove extension
+  name = name.rsplit('_v', 1)[0]     # Remove version
+  name = name.rsplit('/', 1)[-1]     # Remove path
   print
   print 'Compile file %s label %s ROM %04x' % (gclSource, name, pc())
   label(name)

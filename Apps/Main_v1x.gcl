@@ -12,9 +12,14 @@ gcl0x
   XXX Rising planet with bombastic tune (like Space Odyssey)
 }
 
+{ Fall into TinyBASIC if [Start] is pressed for >4 seconds }
+\buttonState;                   {Fetch buttonState and resetTimer}
+[if>0                           {If resetTimer positive}
+  16& [if=0                     {And [Start] pressed}
+  \TinyBASIC \sysArgs0= 88!]]   {Start BASIC. SYS_Exec_88 still in sysFn}
+
 { Print a 5x8 character on screen with the built-in font
   Char must be in the 32-127 range (this is not checked) }
-  \Screen \sysArgs0= $11; [if>0 16& [if=0 88!]]
 [def {PrintChar}
   {Map ASCII code to offset in font table}
   Char 82- [if<0 50+ i= \font32up
@@ -158,7 +163,7 @@ PrintMenu!
   42 {Gray} Color= PrintArrow!
 
   { Map menu item to program }
-  Item [if=0 \Snake_v1x  else
+  Item [if=0 \Snake      else
   1-   [if=0 \Racer      else
   1-   [if=0 \Mandelbrot else
   1-   [if=0 \Pictures   else

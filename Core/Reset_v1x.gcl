@@ -124,7 +124,7 @@ $812 Pos= PrintStartupMessage!
 \_pixels \_videoModes:
 
 { Load and start main program }
-\Main_v1x \sysArgs0= $200 \vLR= \SYS_Exec_88 \sysFn= 88!
+\Main \sysArgs0= $200 \vLR= \SYS_Exec_88 \sysFn= 88!
 
 {-----------------------------------------------------------------------+
 |                                                                       |

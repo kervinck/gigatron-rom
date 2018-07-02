@@ -1,5 +1,7 @@
 CFLAGS:=-std=c11 -O3 -Wall
+DEV:=ROMv1x
 
+# Latest released version as default target
 ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 	# ROMv1 gets 0x1c. Further numbers to be decided.
 	env romType="0x1c"\
@@ -15,8 +17,9 @@ ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Main.gcl\
 		Core/Reset.gcl
 
-dev: ROMv1x.rom
-ROMv1x.rom: Core/* Apps/* Images/* Makefile interface.json
+# Work in progress
+dev: $(DEV).rom
+$(DEV).rom: Core/* Apps/* Images/* Makefile interface.json
 	# ROMv1x is development towards ROMv2 (minor changes only)
 	env romType="0x1c"\
 	    PYTHONPATH="Core:$(PYTHONPATH)"\
@@ -27,14 +30,15 @@ ROMv1x.rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Pictures.gcl\
 		Apps/Credits.gcl\
 		Apps/Loader.gcl\
-		Apps/Screen.gcl\
+		Apps/TinyBASIC.gcl\
+		Apps/WozMon.gcl\
 		Apps/Main_v1x.gcl\
 		Core/Reset_v1x.gcl
 
-run: Docs/gtemu ROMv1x.rom
+run: Docs/gtemu $(DEV).rom
 	Docs/gtemu ROMv1x.rom
 
-test: Docs/gtemu ROMv1x.rom
+test: Docs/gtemu $(DEV).rom
 	# Check for hSync errors in first ~30 seconds of emulation
 	Docs/gtemu ROMv1x.rom | head -999999 | grep \~
 
@@ -45,12 +49,12 @@ compiletest:
 	Core/compilegcl.py Apps/Mandelbrot.gcl
 	Core/compilegcl.py Apps/Credits.gcl
 
-time: Docs/gtemu ROMv1x.rom
+time: Docs/gtemu $(DEV).rom
 	# Run emulation until first sound
 	Docs/gtemu ROMv1x.rom | grep -m 1 'xout [^0]'
 
-burn: ROMv1x.rom
-	minipro -p 'AT27C1024 @DIP40' -w ROMv1x.rom -y -s
+burn: $(DEV).rom
+	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
 %.h: %.gt1
 	# Convert GT1 file into header for including as PROGMEM data
