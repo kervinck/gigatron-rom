@@ -12,23 +12,23 @@
 #  - Serial input handler
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
-#  Cleanup after ROM v1 release
-#  XXX How it works memo: brief description of every software function
-#
 #  ROM v2: Mimimal changes
-#  XXX Snake color upgrade (just white is still a bit boring) DONE
-#  XXX Sound continuity fix DONE
-#  XXX A-C- mode DONE
-#  XXX Stopped LED mode
+#  DONE Snake color upgrade (just white, still a bit boring)
+#  DONE Sound continuity fix
+#  DONE A-C- mode
+#  DONE Zero-page handling of ROM loader (SYS_Exec_88)
+#  XXX Stopped LED mode?
 #  XXX Sprite SYS function? (Then also romTypeValue)
 #  XXX Replace Screen test (incl. WozMon? How to locate it?)
-#  XXX SYS/USR?
+#  XXX SYS/USR? WozMon as well?
 #  XXX Update font (69:;@c)
 #  XXX Need keymaps?
 #  XXX Credits update. Smaller font? Scroll text?
-#  XXX Zero-page handling of ROM loader (SYS_Exec_88)
+#  XXX DIR of ROM files (BASIC)
+#  XXX vPulse width modulation?
 #
 #  Ideas for ROM vX
+#  XXX How it works memo: brief description of every software function
 #  XXX Music sequencer (combined with LED sequencer, but retire soundTimer???)
 #  XXX Adjustable return for LUP trampolines (in case SYS functions need it)
 #  XXX Loader: make noise when data comes in
@@ -563,79 +563,80 @@ label('SYS_Exec_88')
 assert pc()>>8 == 0
 ld(0)                           #15 Address of loader on zero page
 st([vPC+1], Y)                  #16
-ld([vSP])                       #17 Below the current stack pointer
-suba(53+2)                      #18 (AC -> *+0)
+ld([vSP])                       #17 Place ROM loader below current stack pointer
+suba(53+2)                      #18 (AC -> *+0) One extra word for PUSH
 st([vTmp], X)                   #19
 adda(-2)                        #20 (AC -> *-2)
 st([vPC])                       #21
 # Start of manually compiled vCPU section
-st('PUSH',    [Y,Xpp])          #22 *+0
-st('BRA',     [Y,Xpp])          #23 *+1
-adda(26)                        #24 (AC -> *+24)
-st(           [Y,Xpp])          #25 *+2
-st('ST',      [Y,Xpp])          #26 *+3 Chunk copy loop
-st(sysArgs+3, [Y,Xpp])          #27 *+4 High-address came first
-st('CALL',    [Y,Xpp])          #28 *+5
-adda(33-24)                     #29 (AC -> *+33)
-st(           [Y,Xpp])          #30 *+6
-st('ST',      [Y,Xpp])          #31 *+7
-st(sysArgs+2, [Y,Xpp])          #32 *+8 Then the low address
-st('CALL',    [Y,Xpp])          #33 *+9
-st(           [Y,Xpp])          #34 *+10
-st('ST',      [Y,Xpp])          #35 *+11 Byte copy loop
-st(sysArgs+4, [Y,Xpp])          #36 *+12 Byte count (0 means 256)
-st('CALL',    [Y,Xpp])          #37 *+13
-st(           [Y,Xpp])          #38 *+14
-st('POKE',    [Y,Xpp])          #39 *+15
-st(sysArgs+2, [Y,Xpp])          #40 *+16
-st('INC',     [Y,Xpp])          #41 *+17
-st(sysArgs+2, [Y,Xpp])          #42 *+18
-st('LD',      [Y,Xpp])          #43 *+19
-st(sysArgs+4, [Y,Xpp])          #44 *+20
-st('SUBI',    [Y,Xpp])          #45 *+21
-st(1,         [Y,Xpp])          #46 *+22
-st('BCC',     [Y,Xpp])          #47 *+23
-st('NE',      [Y,Xpp])          #48 *+24
-adda(11-2-33)                   #49 (AC -> *+9)
-st(           [Y,Xpp])          #50 *+25
-st('CALL',    [Y,Xpp])          #51 *+26 Go to next block
-adda(33-9)                      #52 (AC -> *+33)
-st(           [Y,Xpp])          #53 *+27
-st('BCC',     [Y,Xpp])          #54 *+28
-st('NE',      [Y,Xpp])          #55 *+29
-adda(3-2-33)                    #56 (AC -> *+1)
-st(           [Y,Xpp])          #57 *+30
-st('POP',     [Y,Xpp])          #58 *+31 End
-st('RET',     [Y,Xpp])          #59 *+32
+st('PUSH',    [Y,Xpp]);C('PUSH')#22 *+0
+st('CALL',    [Y,Xpp]);C('CALL')#23 *+26 Fetch first byte
+adda(33--2)                     #24 (AC -> *+33)
+st(           [Y,Xpp])          #25 *+27
+st('ST',      [Y,Xpp]);C('ST')  #26 *+3 Chunk copy loop
+st(sysArgs+3, [Y,Xpp])          #27 *+4 High-address comes first
+st('CALL',    [Y,Xpp]);C('CALL')#28 *+5
+st(           [Y,Xpp])          #29 *+6
+st('ST',      [Y,Xpp]);C('ST')  #30 *+7
+st(sysArgs+2, [Y,Xpp])          #31 *+8 Then the low address
+st('CALL',    [Y,Xpp]);C('CALL')#32 *+9
+st(           [Y,Xpp])          #33 *+10
+st('ST',      [Y,Xpp]);C('ST')  #34 *+11 Byte copy loop
+st(sysArgs+4, [Y,Xpp])          #35 *+12 Byte count (0 means 256)
+st('CALL',    [Y,Xpp]);C('CALL')#36 *+13
+st(           [Y,Xpp])          #37 *+14
+st('POKE',    [Y,Xpp]);C('POKE')#38 *+15
+st(sysArgs+2, [Y,Xpp])          #39 *+16
+st('INC',     [Y,Xpp]);C('INC') #40 *+17
+st(sysArgs+2, [Y,Xpp])          #41 *+18
+st('LD',      [Y,Xpp]);C('LD')  #42 *+19
+st(sysArgs+4, [Y,Xpp])          #43 *+20
+st('SUBI',    [Y,Xpp]);C('SUBI')#44 *+21
+st(1,         [Y,Xpp])          #45 *+22
+st('BCC',     [Y,Xpp]);C('BCC') #46 *+23
+st('NE',      [Y,Xpp]);C('NE')  #47 *+24
+adda(11-2-33)                   #48 (AC -> *+9)
+st(           [Y,Xpp])          #49 *+25
+st('CALL',    [Y,Xpp]);C('CALL')#50 *+26 Go to next block
+adda(33-9)                      #51 (AC -> *+33)
+st(           [Y,Xpp])          #52 *+27
+st('BCC',     [Y,Xpp]);C('BCC') #53 *+28
+st('NE',      [Y,Xpp]);C('NE')  #54 *+29
+adda(3-2-33)                    #55 (AC -> *+1)
+st(           [Y,Xpp])          #56 *+30
+st('POP',     [Y,Xpp]);C('POP') #57 *+31 End
+st('RET',     [Y,Xpp]);C('RET') #58 *+32
 # Pointer constant pointing to the routine below (for use by CALL)
-adda(35-1)                      #60 (AC -> *+35)
-st(           [Y,Xpp])          #61 *+33
-st(0,         [Y,Xpp])          #62 *+34
+adda(35-1)                      #59 (AC -> *+35)
+st(           [Y,Xpp])          #60 *+33
+st(0,         [Y,Xpp])          #61 *+34
 # Routine to read next byte from ROM and advance read pointer
-st('LD',      [Y,Xpp])          #63 *+35 Test for end of ROM table
-st(sysArgs+0, [Y,Xpp])          #64 *+36
-st('XORI',    [Y,Xpp])          #65 *+37
-st(251,       [Y,Xpp])          #66 *+38
-st('BCC',     [Y,Xpp])          #67 *+39
-st('NE',      [Y,Xpp])          #68 *+40
-adda(46-2-35)                   #69 (AC -> *+44)
-st(           [Y,Xpp])          #70 *+41
-st('ST',      [Y,Xpp])          #71 *+42 Wrap to next ROM page
-st(sysArgs+0, [Y,Xpp])          #72 *+43
-st('INC',     [Y,Xpp])          #73 *+44
-st(sysArgs+1, [Y,Xpp])          #74 *+45
-st('LDW',     [Y,Xpp])          #75 *+46 Read next byte from ROM table
-st(sysArgs+0, [Y,Xpp])          #76 *+47
-st('LUP',     [Y,Xpp])          #77 *+48
-st(0,         [Y,Xpp])          #78 *+49
-st('INC',     [Y,Xpp])          #79 *+50 Increment read pointer
-st(sysArgs+0, [Y,Xpp])          #80 *+51
-st('RET',     [Y,Xpp])          #81 *+52 Return
+st('LD',      [Y,Xpp]);C('LD')  #62 *+35 Test for end of ROM table
+st(sysArgs+0, [Y,Xpp])          #63 *+36
+st('XORI',    [Y,Xpp]);C('XORI')#64 *+37
+st(251,       [Y,Xpp])          #65 *+38
+st('BCC',     [Y,Xpp]);C('BCC') #66 *+39
+st('NE',      [Y,Xpp]);C('NE')  #67 *+40
+adda(46-2-35)                   #68 (AC -> *+44)
+st(           [Y,Xpp])          #69 *+41
+st('ST',      [Y,Xpp]);C('ST')  #70 *+42 Wrap to next ROM page
+st(sysArgs+0, [Y,Xpp])          #71 *+43
+st('INC',     [Y,Xpp]);C('INC') #72 *+44
+st(sysArgs+1, [Y,Xpp])          #73 *+45
+st('LDW',     [Y,Xpp]);C('LDW') #74 *+46 Read next byte from ROM table
+st(sysArgs+0, [Y,Xpp])          #75 *+47
+st('LUP',     [Y,Xpp]);C('LUP') #76 *+48
+st(0,         [Y,Xpp])          #77 *+49
+st('INC',     [Y,Xpp]);C('INC') #78 *+50 Increment read pointer
+st(sysArgs+0, [Y,Xpp])          #79 *+51
+st('RET',     [Y,Xpp]);C('RET') #80 *+52 Return
 # Return to interpreter
-nop()                           #82
-ld(hi('REENTER'), Y)            #83
-jmpy('REENTER')                 #84
-ld(-88/2)                       #85
+ld(hi('REENTER'), Y)            #81
+jmpy('REENTER')                 #82
+ld(-86/2)                       #83 One tick faster than needed
+
+nop()
+nop()
 
 #-----------------------------------------------------------------------
 # Extension SYS_Out_22: Send byte to output port
@@ -2664,11 +2665,8 @@ define('_videoModes', videoModeB)
 
 # Load pre-compiled GT1 file
 #
-# !!! This is a particularly bad example, because this program loads on top of the
-# !!! ROM loader and SYS_Exec_88 must be modified. Checked-in as a reminder only!
-#
-#gt1File = 'tetris.gt1'
-#name = 'Tetris'
+#gt1File = 'Contrib/at67/vCPU/graphics/lines.gt1'
+#name = 'Lines'
 #f = open(gt1File, 'rb')
 #raw = f.read()
 #f.close()
@@ -2677,7 +2675,7 @@ define('_videoModes', videoModeB)
 #label(name)
 #raw = chr(ord(raw[0]) + 0x80) + raw[1:] # Patch zero page loading (only for 32KB system)
 #raw = raw[:-2] # Drop start address
-#program = gcl.Program(userCode, name, forGt1=True)
+#program = gcl.Program(userCode, name)
 #zpReset(userVars)
 #for byte in raw:
   #program.putInRomTable(ord(byte))
