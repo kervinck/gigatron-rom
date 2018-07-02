@@ -67,7 +67,7 @@ import font
 
 # Pre-loading the formal interface as a way to get warnings when
 # accidently redefined with a different value
-loadBindings('interface.json')
+loadBindings('interface-0x2c.json')
 
 # Gigatron clock
 cpuClock = 6.250e+06

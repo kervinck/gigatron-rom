@@ -19,9 +19,9 @@ ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 
 # Work in progress
 dev: $(DEV).rom
-$(DEV).rom: Core/* Apps/* Images/* Makefile interface.json
+$(DEV).rom: Core/* Apps/* Images/* Makefile interface-0x2c.json
 	# ROMv1x is development towards ROMv2 (minor changes only)
-	env romType="0x1c"\
+	env romType="0x2c"\
 	    PYTHONPATH="Core:$(PYTHONPATH)"\
 	    python Core/ROMv1x.py\
 		Apps/Snake_v1x.gcl\

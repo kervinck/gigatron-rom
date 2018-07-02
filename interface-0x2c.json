@@ -1,5 +1,5 @@
 {
- "romTypeValue"         : "0x001c",
+ "romTypeValue"         : "0x002c",
 
  "memSize"              : "0x0001",
  "bootCount"            : "0x0004",
@@ -26,6 +26,7 @@
  "sysArgs7"             : "0x002b",
  "soundTimer"           : "0x002c",
  "ledTimer"             : "0x002d",
+ "ledState"             : "0x002e",
  "ledTempo"             : "0x002f",
  "userVars"             : "0x0030",
 
