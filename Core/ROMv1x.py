@@ -15,17 +15,20 @@
 #  ROM v2: Mimimal changes
 #  DONE Snake color upgrade (just white, still a bit boring)
 #  DONE Sound continuity fix
-#  DONE A-C- mode
+#  DONE A-C- mode (Also A--- added)
 #  DONE Zero-page handling of ROM loader (SYS_Exec_88)
 #  DONE Replace Screen test
-#  XXX Stopped LED mode?
-#  XXX Sprite SYS function? (Then also romTypeValue)
-#  XXX SYS/USR? WozMon as well?
-#  XXX Update font (69:;@c)
-#  XXX Need keymaps?
+#  DONE Stopped LED mode?
+#  DONE Update font (69;=@Sc)
 #  XXX Credits update. Smaller font? Scroll text?
-#  XXX DIR of ROM files (BASIC)
+#  XXX BASIC SYS/USR? Access to WozMon as well?
+#  XXX MODE command (or other interface) to set speed from BASIC
+#  XXX Add location of vReset to interface*.json
+#  Maybe:
+#  XXX Sprite SYS function?
 #  XXX vPulse width modulation?
+#  XXX Need keymaps in ROM? (perhaps undocumented if not tested)
+#  XXX DIR of ROM files (BASIC)
 #
 #  Ideas for ROM vX
 #  XXX How it works memo: brief description of every software function
