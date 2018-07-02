@@ -418,7 +418,7 @@ st([frameCount])
 st([serialRaw])
 st([serialLast])
 st([buttonState])
-st([resetTimer])
+st([resetTimer])                # resetTimer<0 when entering Main.gcl
 
 ld(0b0111);                     C('LEDs |***O|')
 ld(syncBits^hSync, OUT)
@@ -910,6 +910,18 @@ ld([serialRaw])                 #38
 st([serialLast])                #39
 
 # Respond to reset button (11 cycles)
+# - ResetTimer decrements as long as just [Start] is pressed down
+# - Reaching 0 (normal) or 128 (extended) triggers the soft reset sequence
+# - Initial value is 128 (or 255 at boot), first decrement, then check
+# - This starts vReset -> SYS_Reset_38 -> SYS_Exec_88 -> Reset.gcl -> Main.gcl
+# - Main.gcl then recognizes extended presses if resetTimer is 0..127 ("paasei")
+# - This requires a full cycle (4s) in the warm boot scenario
+# - Or a half cycle (2s) when pressing [Select] down during hard reset
+# - This furthermore requires >=1 frame (and <=128) to have passed between
+#   reaching 128 and getting through Reset and the start of Main, while [Start]
+#   was still pressed so the count reaches <128. Two reasonable expectations.
+# - The unintended power-up scenarios of ROMv1 (pulling SER_DATA low, or
+#   pressing [Select] together with another button) now don't trigger anymore.
 xora(~buttonStart);             C('Check for soft reset')#40
 bne('.restart0')                #41
 ld([resetTimer])                #42 As long as button pressed
@@ -921,7 +933,7 @@ ld((vReset&255)-2)              #47 Start force reset when hitting 0
 bra('.restart1')                #48 ... otherwise do nothing yet
 bra('.restart3')                #49
 label('.restart0')
-ld(255)                         #43 Restore to ~2 seconds when not pressed
+ld(128)                         #43 Restore to ~2 seconds when not pressed
 st([resetTimer])                #44
 wait(49-45)                     #45
 bra('.restart3')                #49
