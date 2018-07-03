@@ -16,10 +16,10 @@
 // Not every microcontroller supports all functions.
 
 // Select 1 of the platforms:
-#define ArduinoUno   0 // Default
+#define ArduinoUno   1 // Default
 #define ArduinoNano  0
 #define ArduinoMicro 0
-#define ATtiny85     1
+#define ATtiny85     0
 
 // Select a built-in GT1 image:
 const byte gt1File[] PROGMEM = {
