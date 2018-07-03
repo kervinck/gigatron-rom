@@ -16,10 +16,10 @@
 // Not every microcontroller supports all functions.
 
 // Select 1 of the platforms:
-#define ArduinoUno   1 // Default
+#define ArduinoUno   0 // Default
 #define ArduinoNano  0
 #define ArduinoMicro 0
-#define ATtiny85     0
+#define ATtiny85     1
 
 // Select a built-in GT1 image:
 const byte gt1File[] PROGMEM = {
@@ -461,7 +461,10 @@ void doTransfer(const byte *gt1)
 
   byte segment[300] = {0}; // Multiple of N for padding
 
-  if (!gt1) Serial.print('0'); // Signal uptream that we handle escape bytes
+  #if hasSerial
+    if (!gt1)
+      Serial.print('0'); // Signal uptream that we handle escape bytes
+  #endif
   ask(3);
   readNext();
   word address = nextByte;

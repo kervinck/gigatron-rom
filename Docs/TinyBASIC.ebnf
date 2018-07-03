@@ -20,7 +20,7 @@ Statement   ::= ('PRINT'|'?') ((String|Expression) [,;])*
                 'END'
 Expression  ::= [+-]? Term ([+-] Term)*
 Term        ::= Factor ([*/%] Factor)*
-Factor      ::= Variable | Number | 'PEEK'? '(' Expression ')'
+Factor      ::= Variable | Number | ('PEEK'|'RND')? '(' Expression ')'
 RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
 Number      ::= [0-9]+
 Variable    ::= [A-Z]

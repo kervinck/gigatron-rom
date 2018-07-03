@@ -19,6 +19,7 @@
   2018-06-25 (marcelk) LIST shows free bytes; Trailing (semi-)colon in PRINT;
                        LET is now optional; PEEK/POKE; Better INPUT;
                        NEW clears variables; Aliases for PRINT and REM
+  2018-07-03 (marcelk) Add RND(n), with 0 <= RND(n) < |n|
 
   Formal grammar:
 
@@ -39,7 +40,7 @@
                   'END'
   Expression  ::= [+-]? Term ([+-] Term)*
   Term        ::= Factor ([*/%] Factor)*
-  Factor      ::= Variable | Number | 'PEEK'? '(' Expression ')'
+  Factor      ::= Variable | Number | ('PEEK'|'RND')? '(' Expression ')'
   RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
   Number      ::= [0-9]+
   Variable    ::= [A-Z]
@@ -116,7 +117,6 @@
     SETXY       Map (X and) Y to memory (through videoTable)
     CLS         Clear screen, move cursor to top, reset video table...
     ABS(/SGN(   Built-in function
-    RND(        Built-in function (with simple MOD). 1..X or 0..X-1?
     A$()        Indexing in string variable, gives integer (handle in Factor)
     A$(i,j)     Substrings (only in PRINT)
     LEN()/A$()=
@@ -203,38 +203,51 @@ gcl0x
 
 $01df deek Pos=                 {Bottom character row in screen memory}
                                 {Slightly cheating with endianness}
-$0f20 \sysArgs6:                {Pen color yellow, background color blue}
-\sysArgs0.                      {First Newline call will look here}
 
-{ Print ASCII character (32..127) on screen in 5x8 pixels }
-{ Returns the actual position }
+{ Process an expression factor, result in Value }
 [def
-  k=                            {Temporarily save character}
-  Pos<, 155- [if>0              {Automatic newline BEFORE printing}
-    push Newline! pop]
+  push
 
-  k 82-                         {Map ASCII code to offset in font table}
-  [if<0 50+ i= \font32up        {ASCII 32..81}
-   else     i= \font82up] k=    {ASCII 82..127}
-  i 2<< i+                      {Multiply by 5}
-  k+ k=                         {Add to page address to reach bitmap data}
+  Keyword! $28# 0#              {'('}
+  [if<>0
+    Expression!
+    Keyword! $29# 0#            {')'}
+    [if=0 SyntaxError!]
+    pop ret]
 
-  { sysFn already set by Newline and not changed by Tiny BASIC
-  \SYS_VDrawBits_134 \sysFn=    {Prepare SYS calls} }
-  \sysArgs6; \sysArgs0:         {Apply caller-defined colors}
-  Pos \sysArgs4=                {Position for character}
-  $fe%=                         {Temporarily park return value on the stack}
-  6+ Pos=                       {Advance position by 6 pixels}
+  Number!                       {Test for numeric constant}
+  [if>=0
+    Spaces!
+    pop ret]                    {Result already in Value}
 
-  5 [do i=                      {Draw 5 vertical slices}
-    k 0? \sysArgs2.             {Get slice from ROM}
-    134!                        {Invoke SYS function to draw pixels}
-    k<++ \sysArgs4<++           {Advance to next slice}
-    i 1- if>0loop]              {Looping}
+  Keyword! $70# $65# $65# $6b#  {'peek('}
+    $28# 0#
+  [if<>0
+    Expression!
+    peek Value=
+    Keyword! $29# 0#            {')'}
+    [if=0 SyntaxError!]
+    pop ret]
 
-  $fe%                          {Return effective position}
-  ret
-] PrintChar=
+  Keyword! $72# $6e# $64# $28#  {'rnd('}
+    0#
+  [if<>0
+    Expression!
+    Keyword! $29# 0#            {')'}
+    [if=0 SyntaxError!]
+    \entropy;                   {Two random bytes}
+    \SYS_Random_34 \sysFn=      {Prepare SYS call}
+    [do 34! if<0loop]           {Get positive random number}
+    Divide!                     {Modulo expression}
+    i Value=
+    pop ret]
+
+  Variable!                     {Otherwise it MUST be a variable}
+  deek Value=                   {Fetch value}
+  Spaces!
+
+  pop ret
+] Factor=
 
 { Print inline string. Returns 0 }
 [def
@@ -285,55 +298,39 @@ $0f20 \sysArgs6:                {Pen color yellow, background color blue}
   pop ret
 ] PrintDigit=
 
-{ Eat whitespace. Returns non-zero }
-[def
-  [do Active, $20^ if=0 Active<++ loop]
-  ret
-] {Spaces=}
-
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
 $0300:
-Spaces=
 
-{ Get variable and calculate its address }
+{ Print ASCII character (32..127) on screen in 5x8 pixels }
+{ Returns the actual position }
 [def
-  $12c0 i=                      {Base for variables}
-  Active,                       {Next character from line}
-  $5f&                          {Ignore case}
-  $41- {'A'} [if>=0             {Bail out if out of range}
-   26- {'Z'} if<0               {Letter A..Z or a..z}
-    Active<++                   {Accept character}
-    26+                         {Map in 0..25 range}
-    1<< i+                      {Address is $12c0+2*n}
-    ret                         {Return address on success}
-  ]
-  SyntaxError!
-] Variable=
+  k=                            {Temporarily save character}
+  Pos<, 155- [if>0              {Automatic newline BEFORE printing}
+    push Newline! pop]
 
-{ Destructively print Value as signed decimal number }
-[def
-  push
+  k 82-                         {Map ASCII code to offset in font table}
+  [if<0 50+ i= \font32up        {ASCII 32..81}
+   else     i= \font82up] k=    {ASCII 82..127}
+  i 2<< i+                      {Multiply by 5}
+  k+ k=                         {Add to page address to reach bitmap data}
 
-  [if<0                         {If vAC is negative (vAC, NOT value!)}
-    0 Value- Value=             {Negate value}
-    $2d PrintChar!]             {Print minus sign}
+  \SYS_VDrawBits_134 \sysFn=    {Prepare SYS calls}
+  \sysArgs6; \sysArgs0:         {Apply caller-defined colors}
+  Pos \sysArgs4=                {Position for character}
+  $fe%=                         {Temporarily park return value on the stack}
+  6+ Pos=                       {Advance position by 6 pixels}
 
-  0 k=                          {Suppress leading zeroes}
+  5 [do i=                      {Draw 5 vertical slices}
+    k 0? \sysArgs2.             {Get slice from ROM}
+    134!                        {Invoke SYS function to draw pixels}
+    k<++ \sysArgs4<++           {Advance to next slice}
+    i 1- if>0loop]              {Looping}
 
-  Value [if<0                   {Bring large unsigned values in range}
-    -30000 Value+ Value=        {Now Value<=35535, we need Value<=42767: OK}
-    3 k=]
-
-  10000 PrintDigit!             {Print ten thousands, largest for 16 bits}
-   1000 PrintDigit!             {Print thousands}
-    100 PrintDigit!             {Print hundreds}
-     10 PrintDigit!             {Print tens}
-    $30 Value+ PrintChar!       {Print ones}
-
-  pop ret
-] PrintValue=
+  $fe%                          {Return effective position}
+  ret
+] PrintChar=
 
 { Accept ASCII characters from console input with line editting }
 [def
@@ -384,10 +381,17 @@ Spaces=
   pop ret
 ] GetLine=
 
+{ Eat whitespace. Returns non-zero }
+[def
+  [do Active, $20^ if=0 Active<++ loop]
+  ret
+] {Spaces=}
+
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
 $0400:
+Spaces=
 
 { Statement executor. Doesn't return through vLR }
 { Active must point to text or terminating zero, NOT to the line number }
@@ -651,6 +655,9 @@ $0600:
   ret
 ] Clear=
 
+$0f20 \sysArgs6:                {Pen color yellow, background color blue}
+\sysArgs0.                      {First Newline call will look here}
+
 { Note: It is safe to call functions here before hopping over to page 8 }
 
 Newline!                        {Scroll and clear last line}
@@ -711,46 +718,38 @@ $08a0:
 $09a0:
 GotoValue=
 
-{ Process an expression factor, result in Value }
+{ Destructively print Value as signed decimal number }
 [def
   push
 
-  Keyword! $28# 0#              {'('}
-  [if<>0
-    Expression!
-    Keyword! $29# 0#            {')'}
-    [if=0 SyntaxError!]
-    pop ret]
+  [if<0                         {If vAC is negative (vAC, NOT value!)}
+    0 Value- Value=             {Negate value}
+    $2d PrintChar!]             {Print minus sign}
 
-  Number!                       {Test for numeric constant}
-  [if>=0
-    Spaces!
-    pop ret]                    {Result already in Value}
+  0 k=                          {Suppress leading zeroes}
 
-  Keyword! $70# $65# $65# $6b#  {'peek('}
-    $28# 0#
-  [if<>0
-    Expression!
-    peek Value=
-    Keyword! $29# 0#            {')'}
-    [if=0 SyntaxError!]
-    pop ret]
+  Value [if<0                   {Bring large unsigned values in range}
+    -30000 Value+ Value=        {Now Value<=35535, we need Value<=42767: OK}
+    3 k=]
 
-  Variable!                     {Otherwise it MUST be a variable}
-  deek Value=                   {Fetch value}
-  Spaces!
+  10000 PrintDigit!             {Print ten thousands, largest for 16 bits}
+   1000 PrintDigit!             {Print thousands}
+    100 PrintDigit!             {Print hundreds}
+     10 PrintDigit!             {Print tens}
+    $30 Value+ PrintChar!       {Print ones}
 
   pop ret
-] Factor=
+] PrintValue=
 
 [def
-  \serialRaw, $7f^              {Test for [Del] as break request}
-  [if=0
-    Prompt!                     {'Break'}
-      $42# $72# $65# $61# $6b#
-      0#]
-  ret
-] TestBreak=
+  Prompt! $53# $74# $61# $63#   {'Stack'}
+    $6b# 0#
+] StackError=
+
+[def
+  Prompt! $53# $79# $6e# $74#   {'Syntax'}
+    $61# $78# 0#
+] SyntaxError=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 10                                     |
@@ -870,6 +869,11 @@ $0ca0:
   pop ret
 ] Expression=
 
+[def
+  Prompt! $56# $61# $6c# $75#   {'Value'}
+    $65# 0#
+] ValueError=
+
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 13                                     |
 +-----------------------------------------------------------------------}
@@ -900,6 +904,15 @@ $0da0:
   0% Value= pop                 {Make stack value the result}
   pop ret
 ] Term=
+
+[def
+  \serialRaw, $7f^              {Test for [Del] as break request}
+  [if=0
+    Prompt!                     {'Break'}
+      $42# $72# $65# $61# $6b#
+      0#]
+  ret
+] TestBreak=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 14                                     |
@@ -948,20 +961,20 @@ Divide=
   ret
 ] Multiply=
 
+{ Get variable and calculate its address }
 [def
-  Prompt! $53# $74# $61# $63#   {'Stack'}
-    $6b# 0#
-] StackError=
-
-[def
-  Prompt! $53# $79# $6e# $74#   {'Syntax'}
-    $61# $78# 0#
-] SyntaxError=
-
-[def
-  Prompt! $56# $61# $6c# $75#   {'Value'}
-    $65# 0#
-] ValueError=
+  $12c0 i=                      {Base for variables}
+  Active,                       {Next character from line}
+  $5f&                          {Ignore case}
+  $41- {'A'} [if>=0             {Bail out if out of range}
+   26- {'Z'} if<0               {Letter A..Z or a..z}
+    Active<++                   {Accept character}
+    26+                         {Map in 0..25 range}
+    1<< i+                      {Address is $12c0+2*n}
+    ret                         {Return address on success}
+  ]
+  SyntaxError!
+] Variable=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 16                                     |
