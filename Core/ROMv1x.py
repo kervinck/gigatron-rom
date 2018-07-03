@@ -22,13 +22,14 @@
 #  DONE Update font (69;=@Sc)
 #  DONE Retire SYS_Reset_36 from all interfaces (replace with vReset)
 #  DONE Added SYS_SetMemory_54 SYS_SetVideoMode_80
-#  XXX Put in an example BASIC program? Self list, self start
-#  XXX Preset USR() functions in BASIC?
-#  XXX Need keymaps in ROM? (perhaps undocumented if not tested)
+#  DONE Put in an example BASIC program? Self list, self start
 #  XXX Update version number to v2a
 #  XXX Repurpose unused ROM data for "feature set"
+#  XXX Test existing GT1 files, in all scan line modes
 #  Maybe:
 #  XXX vPulse width modulation? (for future SAVE)
+#  XXX Need keymaps in ROM? (perhaps undocumented if not tested)
+#  XXX Preset USR() functions in BASIC?
 #
 #  Ideas for ROM vX
 #  XXX SYS spites/memcpy acceleration functions? Candidates:
@@ -2894,6 +2895,28 @@ define('maxTicks',   maxTicks)
 # XXX This is a hack (trampoline() is probably in the wrong module):
 define('vPC+1',      vPC+1)
 
+# For ROMv2
+def patchTinyBASIC(program):
+  def basicLine(line=None, text=None): # Helper to inject a program in TinyBASIC
+    head = '' if line is None else chr(line&255) + chr(line>>8)
+    body = '' if text is None else text + '\0'
+    return ''.join([' $%02x#' % ord(c) for c in head + body])
+
+  # Program end
+  program.line('$13a0:' + basicLine(0x16a0))
+  # Embedded program
+  program.line('$14a0:' + basicLine(10, ' IF RND(2)=0 GOTO 40'))
+  program.line('$14c0:' + basicLine(20, ' PRINT "|";'))
+  program.line('$14e0:' + basicLine(30, ' GOTO 10'))
+  program.line('$15a0:' + basicLine(40, ' PRINT "-";'))
+  program.line('$15c0:' + basicLine(50, ' GOTO 10'))
+  program.line('$15e0:' + basicLine(60, ' REM *** Gigatron!'))
+  # Startup commands
+  program.line('$16a2:' + basicLine(None, '?"LIST')) # For show
+  program.line('$16c0:' + basicLine(0,    'LIST'))   # Line 0 in case of user break
+  program.line('$16e2:' + basicLine(None, '?"RUN'))  # For show
+  program.line('$17a2:' + basicLine(None, 'RUN'))
+
 # Load pre-compiled GT1 file
 #
 #gt1File = 'Contrib/at67/vCPU/graphics/lines.gt1'
@@ -2924,6 +2947,8 @@ for gclSource in argv[1:]:
   zpReset(userVars)
   for line in open(gclSource).readlines():
     program.line(line)
+  if name == 'TinyBASIC':
+    patchTinyBASIC(program)
   program.end()
 print
 
