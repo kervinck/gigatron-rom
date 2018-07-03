@@ -108,6 +108,8 @@
  "SYS_Read3_40"         : "0x06b9",
  "SYS_Unpack_56"        : "0x06c0",
  "SYS_PayloadCopy_34"   : "0x06e7",
+ "SYS_SetVideoMode_80"  : "0x0b00",
+ "SYS_SetMemory_54"     : "0x0b03",
 
  "font32up"             : "0x0700",
  "font82up"             : "0x0800",

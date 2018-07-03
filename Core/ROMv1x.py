@@ -21,15 +21,27 @@
 #  DONE LED pause mode
 #  DONE Update font (69;=@Sc)
 #  DONE Retire SYS_Reset_36 from all interfaces (replace with vReset)
-#  XXX Credits update. Smaller font? Scroll text?
 #  XXX MODE command (or other interface) to set speed from BASIC
 #  XXX BASIC SYS/USR? Access to WozMon as well?
 #  XXX BASIC: RND()
-#  Maybe:
-#  XXX Sprite SYS function?
-#  XXX DIR of ROM files (BASIC) -> How to get to WozMon?
 #  XXX Need keymaps in ROM? (perhaps undocumented if not tested)
+#  Maybe:
 #  XXX vPulse width modulation? (for future SAVE)
+#  XXX SYS spites/memcpy acceleration functions? Candidates:
+#                               WxH     Depth   Input
+#       SYS_VDrawBits_134       1x8     1       1       sysArgs
+#       SYS_Draw4_32            4x1     8       4       sysArgs
+#       SYS_DrawPixel2x2_32     2x2     1       1       Single color
+#       SYS_BlinkyBlast_142     10x10   8       0       Hard-coded image
+#       SYS_ClearRow32_56       32x1    0       0       Hard-coded value (black/zero)
+#       SYS_SpriteCopy_118      4x4     8       4x4     Buffers 16 bytes in zero-page?
+#       DrawTile/DrawStrip      4x4     6       12      Unpacks, uses SYS_Draw4
+#       SYS_Blit4               1       1       1       Self-repeats? X Y X Y W H dX dY
+#       SYS_Copy4x4_118
+#       ClearRect
+#       CopyMemory              Nx1     8       s,t,n
+#       CopyString              Nx1     8       s,t
+#       SetMemory               Nx1     8       s,n
 #
 #  Ideas for ROM vX
 #  XXX How it works memo: brief description of every software function
@@ -744,10 +756,10 @@ bra(AC)                         #68 Jump to lookup table
 bra('.leds7')                   #69 Single-instruction subroutine
 
 label('.leds6')
-ld(1)                           #67 Maintain paused state (don't use incremented AC value)
+ld(0x0f)                        #67 Maintain paused state
 st([ledState])                  #68
 bra('.leds7')                   #69
-ld([xoutMask])                  #70
+anda([xoutMask])                #70 Always clear sound bits (this is why AC=0x0f)
 
 ld(0b1111);C('LEDs |****|')     #70 offset -24 Low 4 bits are the LED output
 ld(0b0111);C('LEDs |***O|')     #70
@@ -774,14 +786,15 @@ ld(0b1000);C('LEDs |OOO*|')     #70
 ld(0b1100);C('LEDs |OO**|')     #70
 ld(0b1110);C('LEDs |O***|')     #70 offset -1
 label('.leds7')
-st([xoutMask])                  #71 High bits will be restored below
+st([xoutMask])                  #71 Sound bits will be re-enabled below
 
 # When the total number of scan lines per frame is not an exact multiple of the
 # (4) channels, there will be an audible discontinuity if no measure is taken.
 # This static noise can be suppressed by swallowing the first `lines mod 4'
 # partial samples after transitioning into vertical blank. This is easiest if
-# the modulo is 0 (do nothing) or 1 (reset sample while in the first blank scan
-# line). For the two other cases there is no solution yet: give a warning.
+# the modulo is 0 (do nothing), 1 (reset sample when entering the last visible
+# scan line), or 2 (reset sample while in the first blank scan line). For the
+# last case there is no solution yet: give a warning.
 extra = 0
 if soundDiscontinuity == 2:
   st(sample, [sample])
@@ -796,9 +809,9 @@ runVcpu(189-72-extra, 'line0')  #72 Application cycles (scan line 0)
 ld([soundTimer]);               C('Sound on/off')#189
 bne('.snd0')                    #190
 bra('.snd1')                    #191
-ld(0)                           #192 Sound off
+ld(0)                           #192 Keeps sound unchanged (should be off here)
 label('.snd0')
-ld(0xf0)                        #192 Sound on
+ld(0xf0)                        #192 Turns sound back on
 label('.snd1')
 ora([xoutMask])                 #193
 st([xoutMask])                  #194
@@ -1158,7 +1171,7 @@ ld(syncBits)                    #31
 
 # Alternative for pixel burst: faster application mode
 label('videoF')
-runVcpu(200-38, 'line41-520 typeG',
+runVcpu(200-38, 'line41-520 typeBCD',
   returnTo=0x1ff)               #38 Application (every 4th of scan lines 41-520)
 
 # XXX videoG: Graphics acceleration per scanline?
@@ -2441,40 +2454,209 @@ for i in range(251):
 
 trampoline()
 
+align(1)
+
 #-----------------------------------------------------------------------
-#  ROM page 11: Built-in full resolution images
+# Extension SYS_SetVideoMode_80
 #-----------------------------------------------------------------------
 
-def importImage(rgbName, width, height, ref):
-  f = open(rgbName)
-  raw = f.read()
-  f.close()
-  align(0x100)
-  label(ref)
-  for y in range(0, height, 2):
-    for j in range(2):
-      align(0x80)
-      comment = 'Pixels for %s line %s' % (ref, y+j)
-      for x in range(0, width, 4):
-        bytes = []
-        for i in range(4):
-          R = ord(raw[3 * ((y + j) * width + x + i) + 0])
-          G = ord(raw[3 * ((y + j) * width + x + i) + 1])
-          B = ord(raw[3 * ((y + j) * width + x + i) + 2])
-          bytes.append( (R/85) + 4*(G/85) + 16*(B/85) )
+# vAC bit 0:1                   Mode:
+#                               0       "ABCD" -> Full mode (slowest)
+#                               1       "ABC-" -> Default mode after reset
+#                               2       "A-C-" -> at67's mode
+#                               3       "A---" -> HGM's mode
+# vAC bit 2:15                  Ignored bits and should be 0
 
-        # Pack 4 pixels in 3 bytes
-        ld( ((bytes[0]&0b111111)>>0) + ((bytes[1]&0b000011)<<6) ); comment = C(comment)
-        ld( ((bytes[1]&0b111100)>>2) + ((bytes[2]&0b001111)<<4) )
-        ld( ((bytes[2]&0b110000)>>4) + ((bytes[3]&0b111111)<<2) )
-      if j==0:
-        trampoline3a()
-      else:
-        trampoline3b()
+# Actual duration is <80 cycles, but keep some room for future extensions
+label('SYS_SetVideoMode_80')
+ld(hi('sys_SetVideoMode'), Y)   #15
+jmpy('sys_SetVideoMode')        #16
+ld([vAC])                       #17
 
-importImage('Images/Parrot-160x120.rgb',  160, 120, 'packedParrot')
-importImage('Images/Baboon-160x120.rgb',  160, 120, 'packedBaboon')
-importImage('Images/Jupiter-160x120.rgb', 160, 120, 'packedJupiter')
+#-----------------------------------------------------------------------
+# Extension SYS_SetMemory_54
+#-----------------------------------------------------------------------
+
+# SYS function for setting 1..255 bytes
+#
+# sysArgs[0]   Copy count (destructive)
+# sysArgs[1]   Copy value
+# sysArgs[2:3] Destination address (destructive)
+#
+# Sets up to 4 bytes per invocation before restarting itself through vCPU.
+# Doesn't wrap around page boundary.
+
+label('SYS_SetMemory_54')
+bra('sys_SetMemory')            #15
+ld([sysArgs+0])                 #16
+nop()                           #filler
+
+#-----------------------------------------------------------------------
+# Some placeholders for future SYS functions. They work as a kind of jump
+# table. This allows implementations to be moved around between ROM
+# versions, at the expense of 2 (or 1) clock cycles. When the function is
+# not present it just acts as a NOP. Of course, when a SYS function must
+# be patched or extended it needs to have room for that in its declared
+# maximum cycle count. The same goal can be achieved by prepending 2 NOPs
+# before a function, or by overdeclaring them in the first place. This
+# last method doesn't even cost space (initially).
+#-----------------------------------------------------------------------
+
+ld(hi('REENTER'), Y)            #15 slot 0xb06
+jmpy('REENTER')                 #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xb09
+jmpy('REENTER')                 #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xb0c
+jmpy('REENTER')                 #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xb0f
+jmpy('REENTER')                 #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xb12
+jmpy('REENTER')                 #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xb15
+jmpy('REENTER')                 #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xb18
+jmpy('REENTER')                 #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xb1b
+jmpy('REENTER')                 #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xb1e
+jmpy('REENTER')                 #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xb21
+jmpy('REENTER')                 #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xb24
+jmpy('REENTER')                 #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xb27
+jmpy('REENTER')                 #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xb2a
+jmpy('REENTER')                 #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xb2d
+jmpy('REENTER')                 #16
+ld(-20/2)                       #17
+
+#-----------------------------------------------------------------------
+#  Implementations
+#-----------------------------------------------------------------------
+
+# SYS_SetMemory_54 implementation
+label('sys_SetMemory')
+suba(1)                         #17
+st([sysArgs+0])                 #18
+ld([sysArgs+2], X)              #19
+ld([sysArgs+3], Y)              #20
+ld([sysArgs+1])                 #21
+st([Y,Xpp])                     #22 Copy byte 1
+ld([sysArgs+0])                 #23
+beq('.sysSb1')                  #24
+suba(1)                         #25
+st([sysArgs+0])                 #26
+ld([sysArgs+1])                 #27
+st([Y,Xpp])                     #28 Copy byte 2
+ld([sysArgs+0])                 #29
+beq('.sysSb2')                  #30
+suba(1)                         #31
+st([sysArgs+0])                 #32
+ld([sysArgs+1])                 #33
+st([Y,Xpp])                     #34 Copy byte 3
+ld([sysArgs+0])                 #35
+beq('.sysSb3')                  #36
+suba(1)                         #37
+st([sysArgs+0])                 #38
+ld([sysArgs+1])                 #39
+st([Y,Xpp])                     #40 Copy byte 4
+ld([sysArgs+0])                 #41
+beq('.sysSb4')                  #42
+ld([vPC])                       #43 Self-restarting SYS call
+suba(2)                         #44
+st([vPC])                       #45
+ld([sysArgs+2])                 #46
+adda(4)                         #47
+st([sysArgs+2])                 #48
+ld(hi('REENTER'), Y)            #49 Return fragments
+jmpy('REENTER')                 #50
+label('.sysSb1')
+ld(-54/2)                       #51,26
+ld(hi('REENTER'), Y)            #27
+jmpy('REENTER')                 #28
+label('.sysSb2')
+ld(-32/2)                       #29,32
+ld(hi('REENTER'), Y)            #33
+jmpy('REENTER')                 #34
+label('.sysSb3')
+ld(-38/2)                       #35,38
+ld(hi('REENTER'), Y)            #39
+jmpy('REENTER')                 #40
+label('.sysSb4')
+ld(-44/2)                       #41,44
+ld(hi('REENTER'), Y)            #45
+jmpy('REENTER')                 #46
+ld(-50/2)                       #47
+
+# SYS_SetVideoMode_80  implementation
+label('sys_SetVideoMode')
+anda(3)                         #18
+adda('.sysSvm1')                #19
+bra(AC)                         #20
+bra('.sysSvm2')                 #21
+label('.sysSvm1')
+ld('pixels')                    #22
+ld('pixels')                    #22
+ld('videoF')                    #22
+ld('videoF')                    #22
+label('.sysSvm2')
+st([videoModeB])                #23
+ld([vAC])                       #24
+anda(3)                         #25
+adda('.sysSvm3')                #26
+bra(AC)                         #27
+bra('.sysSvm4')                 #28
+label('.sysSvm3')
+ld('pixels')                    #29
+ld('pixels')                    #29
+ld('pixels')                    #29
+ld('videoF')                    #29
+label('.sysSvm4')
+st([videoModeC])                #30
+ld([vAC])                       #31
+anda(3)                         #32
+adda('.sysSvm5')                #33
+bra(AC)                         #34
+bra('.sysSvm6')                 #35
+label('.sysSvm5')
+ld('pixels')                    #36
+ld('videoF')                    #36
+ld('videoF')                    #36
+ld('videoF')                    #36
+label('.sysSvm6')
+st([videoModeD])                #37
+ld(-44/2)                       #39
+ld(hi('REENTER'), Y)            #38
+jmpy('REENTER')                 #40
+nop()                           #41
 
 #-----------------------------------------------------------------------
 #  Application specific SYS extensions
@@ -2627,6 +2809,41 @@ for i in xrange(len(packed)):
     trampoline()
 
 #-----------------------------------------------------------------------
+#  Built-in full resolution images
+#-----------------------------------------------------------------------
+
+def importImage(rgbName, width, height, ref):
+  f = open(rgbName)
+  raw = f.read()
+  f.close()
+  align(0x100)
+  label(ref)
+  for y in range(0, height, 2):
+    for j in range(2):
+      align(0x80)
+      comment = 'Pixels for %s line %s' % (ref, y+j)
+      for x in range(0, width, 4):
+        bytes = []
+        for i in range(4):
+          R = ord(raw[3 * ((y + j) * width + x + i) + 0])
+          G = ord(raw[3 * ((y + j) * width + x + i) + 1])
+          B = ord(raw[3 * ((y + j) * width + x + i) + 2])
+          bytes.append( (R/85) + 4*(G/85) + 16*(B/85) )
+
+        # Pack 4 pixels in 3 bytes
+        ld( ((bytes[0]&0b111111)>>0) + ((bytes[1]&0b000011)<<6) ); comment = C(comment)
+        ld( ((bytes[1]&0b111100)>>2) + ((bytes[2]&0b001111)<<4) )
+        ld( ((bytes[2]&0b110000)>>4) + ((bytes[3]&0b111111)<<2) )
+      if j==0:
+        trampoline3a()
+      else:
+        trampoline3b()
+
+importImage('Images/Parrot-160x120.rgb',  160, 120, 'packedParrot')
+importImage('Images/Baboon-160x120.rgb',  160, 120, 'packedBaboon')
+importImage('Images/Jupiter-160x120.rgb', 160, 120, 'packedJupiter')
+
+#-----------------------------------------------------------------------
 #
 #  ROM page XX: Bootstrap vCPU
 #
@@ -2673,9 +2890,6 @@ define('oscH',       oscH)
 define('maxTicks',   maxTicks)
 # XXX This is a hack (trampoline() is probably in the wrong module):
 define('vPC+1',      vPC+1)
-# For Reset*.gcl
-define('_pixels',    257*(symbol('pixels')&255))
-define('_videoModes', videoModeB)
 
 # Load pre-compiled GT1 file
 #
