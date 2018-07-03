@@ -136,7 +136,6 @@ $0300:
   0 BgColor=
   $800 ClearScreen!
   $838 Pos= Title PrintText!
-  60 Wait!
 
   pop ret
 ] Intro=
