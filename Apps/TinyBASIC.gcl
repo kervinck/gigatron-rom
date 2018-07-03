@@ -203,6 +203,8 @@ gcl0x
 
 $01df deek Pos=                 {Bottom character row in screen memory}
                                 {Slightly cheating with endianness}
+$0f20 \sysArgs6:                {Pen color yellow, background color blue}
+\sysArgs0.                      {First Newline call will look here}
 
 { Process an expression factor, result in Value }
 [def
@@ -648,9 +650,6 @@ $0600:
   ret
 ] Clear=
 
-$0f20 \sysArgs6:                {Pen color yellow, background color blue}
-\sysArgs0.                      {First Newline call will look here}
-
 { Note: It is safe to call functions here before hopping over to page 8 }
 
 Newline!                        {Scroll and clear last line}
@@ -663,7 +662,9 @@ PrintS!                         {'*** Tiny BASIC'}
 Newline!
 
 Clear!                          {Clear variables}
-Begin= End=                     {Clear program}
+Begin=                          {Clear program}
+$13a0 deek End=                 {At startup 'End' comes from loaded segment}
+2+ Active=                      {BASIC command(s) to run at startup}
 
 {-----------------------------------------------------------------------+
 |}$08a0 \vLR= ret{      RAM page 8                                      |
@@ -1037,8 +1038,6 @@ $11a0:
 +-----------------------------------------------------------------------}
 $12a0:
 
-List!                           {To print number of free bytes}
-
 { Error reporting function and re-entry point for main loop }
 { Call with inline partial error message, or with 0# for no error }
 [def
@@ -1063,18 +1062,32 @@ List!                           {To print number of free bytes}
         $20# $69# $6e# $20# 0#
       PrintValue!]              {Print line number}
     Newline!]
+
+  PrintS! $4f# $6b# 0#          {'Ok'}
+  Newline!
+
+  { Main loop }
+  [do
+    0                           {Interactive mode is 'line 0'}
+    GetLine!                    {Get line from console}
+    if=0loop                    {Do nothing for empty lines}
+    Insert!                     {Test for line number and insert or delete}
+    if>0loop]                   {If success, continue without prompt}
+
   \LDWI#                        {1-byte hack to fall through and skip 'Prompt='}
 ] Prompt=
 
-PrintS! $4f# $6b# 0#            {'Ok'}
-Newline!
-
-{ Main loop }
-[do
-  0                             {Interactive mode is 'line 0'}
-  GetLine!                      {Get line from console}
-  if=0loop                      {Do nothing for empty lines}
-  Insert!                       {Test for line number and insert or delete}
-  if>0loop]                     {If success, continue without prompt}
 Statement!                      {Execute statement}
+
+{-----------------------------------------------------------------------+
+|                       BASIC data                                      |
++-----------------------------------------------------------------------}
+
+{ BASIC data begins here. In this setup the interpreter can be patched
+  to include a BASIC program and a first command for execution }
+
+$13a0: $a0# $14#                {End of (empty) program}
+                                {Startup commands}
+$14a2: $4c# $49# $53# $54# 0#   {'LIST' to print number of free bytes}
+$14c2: $45# $4e# $44# 0#        {'END' to go to prompt}
 
