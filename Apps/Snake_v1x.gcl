@@ -109,12 +109,13 @@ $0300:
     $47# $41# $4d# $45# $20# $4f# $56# $45# $52# 0# {GAME OVER}
   ] PrintText!
 
-  PlayGameOverSound!
-
   Score HighScore- [if>0
     Score HighScore=
     30 Color= DrawHighScore!
   ]
+
+  PlayGameOverSound!
+
   pop ret
 ] GameOver=
 
@@ -144,9 +145,13 @@ $0300:
   Pos= p=
   Pos 255| 255^         {Clear low byte}
   i= $8001 i+ i=        {Offset to move to next stripe}
+  BgColor \sysArgs0. \sysArgs1.
+  \SYS_VDrawBits_134 \sysFn=
   [do
     {Clear one stripe}
-    p [do BgColor p. $100 p+ p= if>=0loop]
+    p [do
+      \sysArgs4= 134! {Clears 8 pixels vertically}
+      $800 p+ p= if>0loop]
     {Next stripe}
     i+ p=
     255& 160^ if<>0loop]
@@ -514,7 +519,7 @@ $49 SetTone!
   120 \soundTimer.
   3 {Bright Red} Color= Head Pos= DrawBlock!
   GameOver!
-  240 Wait!
+  60 Wait!
 
   loop
 ]
