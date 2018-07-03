@@ -21,12 +21,16 @@
 #  DONE LED pause mode
 #  DONE Update font (69;=@Sc)
 #  DONE Retire SYS_Reset_36 from all interfaces (replace with vReset)
-#  XXX MODE command (or other interface) to set speed from BASIC
-#  XXX BASIC SYS/USR? Access to WozMon as well?
-#  XXX BASIC: RND()
+#  DONE Added SYS_SetMemory_54 SYS_SetVideoMode_80
+#  XXX Put in an example BASIC program? Self list, self start
+#  XXX Preset USR() functions in BASIC?
 #  XXX Need keymaps in ROM? (perhaps undocumented if not tested)
+#  XXX Update version number to v2a
+#  XXX Repurpose unused ROM data for "feature set"
 #  Maybe:
 #  XXX vPulse width modulation? (for future SAVE)
+#
+#  Ideas for ROM vX
 #  XXX SYS spites/memcpy acceleration functions? Candidates:
 #                               WxH     Depth   Input
 #       SYS_VDrawBits_134       1x8     1       1       sysArgs
@@ -42,8 +46,7 @@
 #       CopyMemory              Nx1     8       s,t,n
 #       CopyString              Nx1     8       s,t
 #       SetMemory               Nx1     8       s,n
-#
-#  Ideas for ROM vX
+#  XXX MODE command (or other interface) to set speed from BASIC
 #  XXX How it works memo: brief description of every software function
 #  XXX Music sequencer (combined with LED sequencer, but retire soundTimer???)
 #  XXX Adjustable return for LUP trampolines (in case SYS functions need it)

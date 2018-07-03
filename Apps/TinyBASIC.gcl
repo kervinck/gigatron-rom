@@ -19,7 +19,7 @@
   2018-06-25 (marcelk) LIST shows free bytes; Trailing (semi-)colon in PRINT;
                        LET is now optional; PEEK/POKE; Better INPUT;
                        NEW clears variables; Aliases for PRINT and REM
-  2018-07-03 (marcelk) Add RND(n), with 0 <= RND(n) < |n|
+  2018-07-03 (marcelk) Add RND(), with 0 <= RND(n) < |n|; USR()
 
   Formal grammar:
 
@@ -40,7 +40,7 @@
                   'END'
   Expression  ::= [+-]? Term ([+-] Term)*
   Term        ::= Factor ([*/%] Factor)*
-  Factor      ::= Variable | Number | ('PEEK'|'RND')? '(' Expression ')'
+  Factor      ::= Variable | Number | ('PEEK'|'RND'|'USR')? '(' Expression ')'
   RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
   Number      ::= [0-9]+
   Variable    ::= [A-Z]
@@ -61,9 +61,9 @@
           $30 -   $7f   BASIC interpreter variables
           $81 -   $ff   Stack for BASIC and vCPU (>50 GOSUB levels)
          $200 - $11ff   BASIC interpreter, partly next to screen memory
-        $12a0 - $12bf   Input buffer ('line 0')
-        $12c0 - $12f3   BASIC variables A..Z
-        $13a0 - $7fff   Programs stored in the invisible part of screen memory
+        $13a0 - $13bf   Input buffer ('line 0')
+        $13c0 - $13f3   BASIC variables A..Z
+        $14a0 - $7fff   Programs stored in the invisible part of screen memory
         $8000 - $ffff   Optional extra memory for BASIC programs (64K extension)
 
   Undocumented features and/or bugs:
@@ -107,6 +107,7 @@
     Speed       Alternative: LET detection is now last, but should be first
 
   'Maybe' list:
+    ROM peek    rpeek()? Some predefined USR functions?
     FOR TO NEXT (And STEP) Can be done with 1 reserved word per control variable
     Speed       Move stack check from Expression to Factor (and GOSUB)
     A$ .. Z$    String variables (only in LET, PRINT, INPUT?)
@@ -122,7 +123,6 @@
     LEN()/A$()=
     TUNE/PLAY   Play a note/score
     A0 .. Z9    Much more variable space (as in Apple-1 basic)
-    USR()       Built-in function (Call what? Number?)
 
   'Probably not' list:
     LOAD        From where? EPROM? "Cassette interface".
@@ -242,6 +242,15 @@ $01df deek Pos=                 {Bottom character row in screen memory}
     i Value=
     pop ret]
 
+  Keyword! $75# $73# $72# $28#  {'usr('}
+    0#
+  [if<>0
+    Expression!
+    Keyword! $29# 0#            {')'}
+    [if=0 SyntaxError!]
+    Value! Value=               {vCPU call and result}
+    pop ret]
+
   Variable!                     {Otherwise it MUST be a variable}
   deek Value=                   {Fetch value}
   Spaces!
@@ -282,22 +291,6 @@ $01df deek Pos=                 {Bottom character row in screen memory}
   ret
 ] Newline=
 
-{ Conditionally print leading decimal digit }
-[def
-  push
-  i=                            {Radix as argument, keep in i}
-  Value [do                     {Calculate Value/Radix}
-    i-                          {Subtract i}
-    if>=0                       {As many times as fits}
-    Value=
-    k<++                        {Increment 0..9 times}
-    loop]
-  k [if<>0                      {If non-zero digit or non-leading zero}
-     $30| PrintChar!            {Map to $30..$39 range and print digit}
-     $30 k=]                    {And mark all further zeroes as non-leading}
-  pop ret
-] PrintDigit=
-
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
@@ -337,7 +330,7 @@ $0300:
   push
 
   tmp=                          {Line number}
-  $12a0 Active=                 {Input buffer}
+  $13a0 Active=                 {Input buffer}
   tmp Active:                   {For error messages}
   $a2 Active<.                  {Text area}
 
@@ -646,12 +639,12 @@ $0600:
 
 { Clear variables. Returns begin address for programs }
 [def
-  $12c0 i=                      {Clear variables A-Z and a few bytes more}
+  $13c0 i=                      {Clear variables A-Z and a few bytes more}
   [do
     0 i.                        {Clear byte}
     i<++                        {Advance pointer}
     i<, if<>0loop]              {Until end of page}
-  $13a0
+  $14a0
   ret
 ] Clear=
 
@@ -803,7 +796,7 @@ Number=
   Active, [if<>0 SyntaxError!]  {There must be nothing left on the line}
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
-    $12c0 Active^ if<>0         {Also stop if we came from the input buffer}
+    $13c0 Active^ if<>0         {Also stop if we came from the input buffer}
                                 {XXX Insert checkpointing here?}
     Active 2+ Active=           {Skip past line number}
     Statement!]                 {And continue from there}
@@ -963,14 +956,14 @@ Divide=
 
 { Get variable and calculate its address }
 [def
-  $12c0 i=                      {Base for variables}
+  $13c0 i=                      {Base for variables}
   Active,                       {Next character from line}
   $5f&                          {Ignore case}
   $41- {'A'} [if>=0             {Bail out if out of range}
    26- {'Z'} if<0               {Letter A..Z or a..z}
     Active<++                   {Accept character}
     26+                         {Map in 0..25 range}
-    1<< i+                      {Address is $12c0+2*n}
+    1<< i+                      {Address is $13c0+2*n}
     ret                         {Return address on success}
   ]
   SyntaxError!
@@ -1022,6 +1015,27 @@ $10a0:
 |}\vLR>++ ret{          RAM page 17                                     |
 +-----------------------------------------------------------------------}
 $11a0:
+
+{ Conditionally print leading decimal digit }
+[def
+  push
+  i=                            {Radix as argument, keep in i}
+  Value [do                     {Calculate Value/Radix}
+    i-                          {Subtract i}
+    if>=0                       {As many times as fits}
+    Value=
+    k<++                        {Increment 0..9 times}
+    loop]
+  k [if<>0                      {If non-zero digit or non-leading zero}
+     $30| PrintChar!            {Map to $30..$39 range and print digit}
+     $30 k=]                    {And mark all further zeroes as non-leading}
+  pop ret
+] PrintDigit=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 18                                     |
++-----------------------------------------------------------------------}
+$12a0:
 
 List!                           {To print number of free bytes}
 
