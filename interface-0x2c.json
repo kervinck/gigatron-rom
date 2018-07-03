@@ -31,6 +31,7 @@
  "userVars"             : "0x0030",
 
  "videoTable"           : "0x0100",
+ "vReset"               : "0x01f0",
  "userCode"             : "0x0200",
  "soundTable"           : "0x0700",
  "screenMemory"         : "0x0800",

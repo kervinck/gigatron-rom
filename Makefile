@@ -36,11 +36,11 @@ $(DEV).rom: Core/* Apps/* Images/* Makefile interface-0x2c.json
 		Core/Reset_v1x.gcl
 
 run: Docs/gtemu $(DEV).rom
-	Docs/gtemu ROMv1x.rom
+	Docs/gtemu $(DEV).rom
 
 test: Docs/gtemu $(DEV).rom
 	# Check for hSync errors in first ~30 seconds of emulation
-	Docs/gtemu ROMv1x.rom | head -999999 | grep \~
+	Docs/gtemu $(DEV).rom | head -999999 | grep \~
 
 compiletest:
 	# Test compilation
@@ -51,7 +51,7 @@ compiletest:
 
 time: Docs/gtemu $(DEV).rom
 	# Run emulation until first sound
-	Docs/gtemu ROMv1x.rom | grep -m 1 'xout [^0]'
+	Docs/gtemu $(DEV).rom | grep -m 1 'xout [^0]'
 
 burn: $(DEV).rom
 	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s

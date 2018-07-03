@@ -18,17 +18,18 @@
 #  DONE A-C- mode (Also A--- added)
 #  DONE Zero-page handling of ROM loader (SYS_Exec_88)
 #  DONE Replace Screen test
-#  DONE Stopped LED mode?
+#  DONE LED pause mode
 #  DONE Update font (69;=@Sc)
+#  DONE Retire SYS_Reset_36 from all interfaces (replace with vReset)
 #  XXX Credits update. Smaller font? Scroll text?
-#  XXX BASIC SYS/USR? Access to WozMon as well?
 #  XXX MODE command (or other interface) to set speed from BASIC
-#  XXX Add location of vReset to interface*.json
+#  XXX BASIC SYS/USR? Access to WozMon as well?
+#  XXX BASIC: RND()
 #  Maybe:
 #  XXX Sprite SYS function?
-#  XXX vPulse width modulation?
+#  XXX DIR of ROM files (BASIC) -> How to get to WozMon?
 #  XXX Need keymaps in ROM? (perhaps undocumented if not tested)
-#  XXX DIR of ROM files (BASIC)
+#  XXX vPulse width modulation? (for future SAVE)
 #
 #  Ideas for ROM vX
 #  XXX How it works memo: brief description of every software function
@@ -499,6 +500,13 @@ ld(hi('vBlankStart'), Y);       C('Enter video loop')
 jmpy('vBlankStart')
 ld(syncBits)
 
+# Fillers
+nop()
+nop()
+nop()
+nop()
+nop()
+
 #-----------------------------------------------------------------------
 # Extension SYS_Reset_38: Soft reset
 #-----------------------------------------------------------------------
@@ -632,11 +640,6 @@ ld(hi('REENTER'), Y)            #81
 jmpy('REENTER')                 #82
 ld(-86/2)                       #83 One tick faster than needed
 
-nop()
-nop()
-nop()
-nop()
-nop()
 nop()
 nop()
 
