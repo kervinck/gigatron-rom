@@ -2782,33 +2782,6 @@ jmpy('REENTER')                 #42
 ld(-46/2)                       #43
 
 #-----------------------------------------------------------------------
-#
-#  ROM page XX: Skyline for Racer
-#
-#-----------------------------------------------------------------------
-
-f = open('Images/RacerHorizon-256x16.rgb', 'rb')
-raw = f.read()
-f.close()
-
-packed, quartet = [], []
-for i in xrange(0, len(raw), 3):
-  R, G, B = ord(raw[i+0]), ord(raw[i+1]), ord(raw[i+2])
-  quartet.append((R/85) + 4*(G/85) + 16*(B/85))
-  if len(quartet) == 4:
-    # Pack 4 pixels in 3 bytes
-    packed.append( ((quartet[0]&0b111111)>>0) + ((quartet[1]&0b000011)<<6) )
-    packed.append( ((quartet[1]&0b111100)>>2) + ((quartet[2]&0b001111)<<4) )
-    packed.append( ((quartet[2]&0b110000)>>4) + ((quartet[3]&0b111111)<<2) )
-    quartet = []
-
-label('zippedRacerHorizon')
-for i in xrange(len(packed)):
-  ld(packed[i])
-  if pc()&255 == 251:
-    trampoline()
-
-#-----------------------------------------------------------------------
 #  Built-in full resolution images
 #-----------------------------------------------------------------------
 
@@ -2842,6 +2815,35 @@ def importImage(rgbName, width, height, ref):
 importImage('Images/Parrot-160x120.rgb',  160, 120, 'packedParrot')
 importImage('Images/Baboon-160x120.rgb',  160, 120, 'packedBaboon')
 importImage('Images/Jupiter-160x120.rgb', 160, 120, 'packedJupiter')
+
+#-----------------------------------------------------------------------
+#
+#  ROM page XX: Skyline for Racer
+#
+#-----------------------------------------------------------------------
+
+f = open('Images/RacerHorizon-256x16.rgb', 'rb')
+raw = f.read()
+f.close()
+
+packed, quartet = [], []
+for i in xrange(0, len(raw), 3):
+  R, G, B = ord(raw[i+0]), ord(raw[i+1]), ord(raw[i+2])
+  quartet.append((R/85) + 4*(G/85) + 16*(B/85))
+  if len(quartet) == 4:
+    # Pack 4 pixels in 3 bytes
+    packed.append( ((quartet[0]&0b111111)>>0) + ((quartet[1]&0b000011)<<6) )
+    packed.append( ((quartet[1]&0b111100)>>2) + ((quartet[2]&0b001111)<<4) )
+    packed.append( ((quartet[2]&0b110000)>>4) + ((quartet[3]&0b111111)<<2) )
+    quartet = []
+
+label('zippedRacerHorizon')
+for i in xrange(len(packed)):
+  ld(packed[i])
+  if pc()&255 == 251:
+    trampoline()
+
+# !!! Expects trampoline() for last page to be provided below !!!
 
 #-----------------------------------------------------------------------
 #
