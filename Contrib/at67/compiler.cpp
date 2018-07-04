@@ -44,13 +44,14 @@ namespace Compiler
         uint16_t _address;
         uint16_t _vasmSize;
         std::string _code;
-        std::string _vasm;
+        std::vector<std::string> _vasm;
         std::string _expression;
         int _labelIndex = -1;
         int  _varIndex = -1;
         VarType _varType = VarInt16;
         bool _assignOperator = false;
         bool _containsVars = false;
+        bool _ownsLabel = false;
     };
 
     struct IntegerVar
@@ -113,7 +114,10 @@ namespace Compiler
     uint16_t _expressionsStart = USER_EXPR_START;
     uint16_t _vasmPC           = USER_CODE_START;
 
+    bool _nextTempVar = true;
+
     int _currentCodeLine = 0;
+    int _currentLabelIndex = 0;
 
     std::string _tempVarStartStr;
 
@@ -262,10 +266,11 @@ namespace Compiler
     {
         label = {address, name, output, codeLineIndex};
         Expression::stripWhitespace(label._name);
+        _currentLabelIndex = int(_labels.size());
         _labels.push_back(label);
     }
 
-    void createCodeLine(uint16_t address, uint16_t vasmSize, const std::string& lineText, const std::string& vasmCode, int codeLineOffset, int labelIndex, int varIndex, VarType varType, bool assign, bool vars, CodeLine& codeLine)
+    void createCodeLine(uint16_t address, uint16_t vasmSize, const std::string& lineText, const std::string& vasmCode, int codeLineOffset, int labelIndex, int varIndex, VarType varType, bool assign, bool vars, bool ownsLabel, CodeLine& codeLine)
     {
         std::string expression = "";
         size_t equal = lineText.find_first_of("=");
@@ -283,7 +288,9 @@ namespace Compiler
             }
         }
 
-        codeLine = {address, vasmSize, lineText.substr(codeLineOffset, lineText.size() - (codeLineOffset)), vasmCode, expression, labelIndex, varIndex, varType, assign, vars};
+        std::vector<std::string> vasm;
+        if(vasmCode.size()) vasm.push_back(vasmCode);
+        codeLine = {address, vasmSize, lineText.substr(codeLineOffset, lineText.size() - (codeLineOffset)), vasm, expression, labelIndex, varIndex, varType, assign, vars, ownsLabel};
         Expression::stripWhitespace(codeLine._code);
         Expression::stripWhitespace(codeLine._expression);
         Expression::operatorReduction(codeLine._code);
@@ -321,7 +328,7 @@ namespace Compiler
             }
 
             createlabel(_vasmPC, lineText.substr(0, space), lineText.substr(0, space), int(_codeLines.size()), label);
-            createCodeLine(_vasmPC, 0, lineText, "", int(space + 1), int(_labels.size() - 1), -1, VarInt16, false, false, codeLine);
+            createCodeLine(_vasmPC, 0, lineText, "", int(space + 1), _currentLabelIndex, -1, VarInt16, false, false, true, codeLine);
 
             return LabelFound;
         }
@@ -331,7 +338,7 @@ namespace Compiler
         size_t colon2 = lineText.find_first_of(":", colon1+1);
         if(colon1 == std::string::npos)
         {
-            createCodeLine(_vasmPC, 0, lineText, "", 0, (_labels.size() == 0) ? 0 : -1, -1, VarInt16, false, false, codeLine);
+            createCodeLine(_vasmPC, 0, lineText, "", 0, _currentLabelIndex, -1, VarInt16, false, false, false, codeLine);
             return LabelNotFound;
         }
         if(colon2 != std::string::npos)
@@ -347,7 +354,7 @@ namespace Compiler
         }
 
         createlabel(_vasmPC, lineText.substr(0, colon1), lineText.substr(0, colon1), int(_codeLines.size()), label);
-        createCodeLine(_vasmPC, 0, lineText, "", int(colon1 + 1), int(_labels.size() - 1), -1, VarInt16, false, false, codeLine);
+        createCodeLine(_vasmPC, 0, lineText, "", int(colon1 + 1), _currentLabelIndex, -1, VarInt16, false, false, true, codeLine);
 
         return LabelFound;
     }
@@ -443,7 +450,7 @@ namespace Compiler
             std::string data = lineText.substr(equals1 + 1, lineText.size() - (equals1 + 1));
             Expression::stripWhitespace(data);
             Expression::operatorReduction(data);
-            Expression::setDefaultOperatorFuncs();
+            Expression::setExprFunc(Expression::expression);
             Expression::ExpressionType expressiontype = isExpression(data);
             switch(expressiontype)
             {
@@ -519,9 +526,9 @@ namespace Compiler
     }
 
 
+    // Increment temporary variable address
     void getNextTempVar(void)
     {
-        // Increment temporary variable address
         static int prevCodeLine = -1;
         if(_currentCodeLine != prevCodeLine)
         {
@@ -537,129 +544,98 @@ namespace Compiler
         _tempVarStartStr = Expression::wordToHexString(_tempVarStart);
     }
 
-    bool pickOpcodeAndOperand(std::string& opcode, Expression::Numeric& left, Expression::Numeric& right, std::string& leftStr, std::string& rightStr)
+    void emitVcpuAsm(std::string& opcode, std::string& operand, bool nextTempVar, int index=_currentCodeLine)
+    {
+        std::string tabs = (opcode.size() > 3) ? "\t" : "\t\t";
+        std::string line = opcode + tabs + operand;
+         _codeLines[index]._vasm.push_back(line);
+         _codeLines[index]._vasmSize += (opcode == "LDWI") ? 3 : 2;
+        if(nextTempVar) getNextTempVar();
+    }
+
+    bool emitVcpuAsmUserVar(std::string& opcode, const char* varNamePtr, bool nextTempVar)
+    {
+        std::string varName = std::string(varNamePtr);
+        int varIndex = findVar(varName);
+        if(varIndex == -1)
+        {
+            fprintf(stderr, "Compiler::handleAddSub() : couldn't find variable name '%s'\n", varName.c_str());
+            return false;
+        }
+
+        emitVcpuAsm(opcode, "_" + _integerVars[varIndex]._name, nextTempVar);
+        return true;
+    }
+
+    bool handleAddSub(std::string& opcode, Expression::Numeric& lhs, Expression::Numeric& rhs)
     {
         // Swap left and right to take advantage of LDWI for 16bit numbers
-        if(!right._isAddress  &&  abs(right._value) > 255)
+        if(!rhs._isAddress  &&  abs(rhs._value) > 255)
         {
-            std::swap(left, right);
+            std::swap(lhs, rhs);
             if(opcode == "SUB")
             {
                 opcode = "ADD";
-                if(left._value > 0) left._value = -left._value;
+                if(lhs._value > 0) lhs._value = -lhs._value;
             }
         }
 
-        // Optimisation, (removes uneeded LDW's)
-        bool optimise = (left._isAddress  &&  isdigit(*left._varNamePtr)  &&  left._value == _tempVarStart);
-        bool constant16bit = false;
-
-        static int prevCodeLine = -1;
-        if(_currentCodeLine != prevCodeLine)
+        // LHS
+        if(lhs._isAddress)
         {
-            prevCodeLine = _currentCodeLine;
-        }
-        else
-        {
-            if(!optimise)
+            // Temporary variable address
+            if(isdigit(*lhs._varNamePtr))
             {
-                _codeLines[_currentCodeLine]._vasm += "STW\t\t" + Expression::byteToHexString(uint8_t(_tempVarStart)) + "\n" + std::string(LABEL_TRUNC_SIZE, ' ');
-                _codeLines[_currentCodeLine]._vasmSize += 2;
+                emitVcpuAsm(std::string("LDW"), Expression::byteToHexString(uint8_t(lhs._value)), false);
             }
-        }
-
-        // Left instructions
-        if(left._isAddress)
-        {
-            if(!optimise)
+            // User variable address
+            else
             {
-                // Temporary variable address
-                if(isdigit(*left._varNamePtr))
-                {
-                    leftStr = "LDW\t\t" + Expression::byteToHexString(uint8_t(left._value));
-                    _codeLines[_currentCodeLine]._vasmSize += 2;
-                }
-                // User variable address
-                else
-                {
-                    std::string varName = std::string(left._varNamePtr);
-                    int varIndex = findVar(varName);
-                    if(varIndex == -1)
-                    {
-                        fprintf(stderr, "Compiler::pickOpcodeAndOperand() : couldn't find variable name '%s'\n", varName.c_str());
-                        return false;
-                    }
-                    else
-                    {
-                        leftStr = "LDW\t\t_" + _integerVars[varIndex]._name;
-                        _codeLines[_currentCodeLine]._vasmSize += 2;
-                        getNextTempVar(); // next temporary variable for each new user variable loaded
-                    }
-                }
+                if(!emitVcpuAsmUserVar(std::string("LDW"), lhs._varNamePtr, true)) return false;
+                _nextTempVar = false;
             }
         }
         else
         {
             // 8bit positive constants
-            if(left._value >=0  &&  left._value <= 255)
+            if(lhs._value >=0  &&  lhs._value <= 255)
             {
-                leftStr = "LDI\t\t" + std::to_string(left._value);
-                _codeLines[_currentCodeLine]._vasmSize += 2;
+                emitVcpuAsm(std::string("LDI"), std::to_string(lhs._value), false);
             }
             // 16bit constants
             else
             {
-                constant16bit = true;
-                leftStr = "LDWI\t" + std::to_string(left._value);
-                _codeLines[_currentCodeLine]._vasmSize += 3;
+                emitVcpuAsm(std::string("LDWI"), std::to_string(lhs._value), false);
             }
+
+            _nextTempVar = true;
         }
 
-        // Right instructions
-        if(right._isAddress)
+        // RHS
+        if(rhs._isAddress)
         {
             // Temporary variable address
-            if(isdigit(*right._varNamePtr))
+            if(isdigit(*rhs._varNamePtr))
             {
-                rightStr = opcode + "W\t" + Expression::byteToHexString(uint8_t(right._value));
-                _codeLines[_currentCodeLine]._vasmSize += 2;
+                emitVcpuAsm(opcode + "W", Expression::byteToHexString(uint8_t(rhs._value)), false);
             }
             // User variable address
             else
             {
-                std::string varName = std::string(right._varNamePtr);
-                int varIndex = findVar(varName);
-                if(varIndex == -1)
-                {
-                    fprintf(stderr, "Compiler::pickOpcodeAndOperand() : couldn't find variable name '%s'\n", varName.c_str());
-                    return false;
-                }
-                else
-                {
-                    rightStr = opcode + "W\t_" + _integerVars[varIndex]._name;
-                    _codeLines[_currentCodeLine]._vasmSize += 2;
-                    if(constant16bit) getNextTempVar();  // next temporary variable for each new user variable add/sub to/from 16bit number
-                }
+                if(!emitVcpuAsmUserVar(opcode + "W", rhs._varNamePtr, _nextTempVar)) return false;
+                _nextTempVar = false;
             }
         }
         else
         {
-            rightStr = opcode + "I\t" + std::to_string(right._value); 
-            _codeLines[_currentCodeLine]._vasmSize += 2;
+            emitVcpuAsm(opcode + "I", std::to_string(rhs._value), false);
         }
 
-        if(!optimise)
-        {
-            _codeLines[_currentCodeLine]._vasm += leftStr;
-            _codeLines[_currentCodeLine]._vasm += "\n" + std::string(LABEL_TRUNC_SIZE, ' ');
-        }
+        lhs._value = uint8_t(_tempVarStart);
+        lhs._isAddress = true;
+        lhs._varNamePtr = (char *)_tempVarStartStr.c_str();
 
-        _codeLines[_currentCodeLine]._vasm += rightStr;
-        _codeLines[_currentCodeLine]._vasm += "\n" + std::string(LABEL_TRUNC_SIZE, ' ');
-
-        left._value = uint8_t(_tempVarStart);
-        left._isAddress = true;
-        left._varNamePtr = (char *)_tempVarStartStr.c_str();
+        emitVcpuAsm(std::string("STW"), Expression::byteToHexString(uint8_t(_tempVarStart)), false);
 
         return true;
     }
@@ -667,7 +643,31 @@ namespace Compiler
     // Expression operators
     Expression::Numeric neg(Expression::Numeric& numeric)
     {
-        numeric._value = -numeric._value;
+        if(!numeric._isAddress)
+        {
+            numeric._value = -numeric._value;
+            return numeric;
+        }
+
+        std::string varName = std::string(numeric._varNamePtr);
+        int varIndex = findVar(varName);
+        if(varIndex == -1)
+        {
+            fprintf(stderr, "Compiler::neg() : couldn't find variable name '%s'\n", varName.c_str());
+            return numeric;
+        }
+        else
+        {
+            getNextTempVar();
+            emitVcpuAsm(std::string("LDI"), std::to_string(0), false);
+            emitVcpuAsm(std::string("SUBW"), "_" + varName, false);
+            emitVcpuAsm(std::string("STW"), Expression::byteToHexString(uint8_t(_tempVarStart)), false);
+        }
+
+        numeric._value = uint8_t(_tempVarStart);
+        numeric._isAddress = true;
+        numeric._varNamePtr = (char *)_tempVarStartStr.c_str();
+
         return numeric;
     }
     Expression::Numeric add(Expression::Numeric& left, Expression::Numeric& right)
@@ -678,8 +678,7 @@ namespace Compiler
             return left;
         }
 
-        std::string leftStr, rightStr, opcode = "ADD";
-        pickOpcodeAndOperand(opcode, left, right, leftStr, rightStr);
+        handleAddSub(std::string("ADD"), left, right);
         return left;
     }
     Expression::Numeric sub(Expression::Numeric& left, Expression::Numeric& right)
@@ -690,8 +689,7 @@ namespace Compiler
             return left;
         }
 
-        std::string leftStr, rightStr, opcode = "SUB";;
-        pickOpcodeAndOperand(opcode, left, right, leftStr, rightStr);
+        handleAddSub(std::string("SUB"), left, right);
         return left;
     }
     Expression::Numeric mul(Expression::Numeric& left, Expression::Numeric& right)
@@ -714,18 +712,14 @@ namespace Compiler
 
         return left;
     }
+    Expression::Numeric expression(void);
     Expression::Numeric fac(int16_t defaultValue)
     {
         int16_t value = 0;
-        if((Expression::peek() >= '0'  &&  Expression::peek() <= '9')  ||  Expression::peek() == '$')
-        {
-            if(!Expression::number(value)) value = 0;
-            return Expression::Numeric(value, false, nullptr);
-        }
-        else if(Expression::peek() == '(')
+        if(Expression::peek() == '(')
         {
             Expression::get();
-            Expression::Numeric numeric = Expression::expression();
+            Expression::Numeric numeric = expression();
             Expression::get();
             return numeric;
         }
@@ -734,19 +728,62 @@ namespace Compiler
             Expression::get();
             return neg(fac(0));
         }
+        else if((Expression::peek() >= '0'  &&  Expression::peek() <= '9')  ||  Expression::peek() == '$')
+        {
+            if(!Expression::number(value)) value = 0;
+            return Expression::Numeric(value, false, nullptr);
+        }
 
         Expression::Numeric numeric = Expression::Numeric(defaultValue, true, Expression::getExpression());
         while(isalpha(Expression::peek())) Expression::get();
         return numeric;
     }
+    Expression::Numeric term(void)
+    {
+        Expression::Numeric result = fac(0);
+        while(Expression::peek() == '*'  ||  Expression::peek() == '/')
+        {
+            if(Expression::get() == '*')
+            {
+                result = mul(result, fac(0));
+            }
+            else
+            {
+                Expression::Numeric f = fac(0);
+                if(f._value == 0)
+                {
+                    result = mul(result, f);
+                }
+                else
+                {
+                    result = div(result, f);
+                }
+            }
+        }
+
+        return result;
+    }
+    Expression::Numeric expression(void)
+    {
+        Expression::Numeric result = term();
+
+        while(Expression::peek() == '+' || Expression::peek() == '-')
+        {
+            if(Expression::get() == '+')
+            {
+                result = add(result, term());
+            }
+            else
+            {
+                result = sub(result, term());
+            }
+        }
+
+        return result;
+    }
     void varExpressionParse(CodeLine& codeLine, int lineNumber)
     {
-        Expression::setNegFunc(neg);
-        Expression::setAddFunc(add);
-        Expression::setSubFunc(sub);
-        Expression::setMulFunc(mul);
-        Expression::setDivFunc(div);
-        Expression::setFacFunc(fac);
+        Expression::setExprFunc(expression);
         Expression::parse((char*)codeLine._expression.c_str(), lineNumber);
     }
     int varAssignmentParse(CodeLine& codeLine, int lineNumber)
@@ -770,11 +807,9 @@ namespace Compiler
                 int varIndex = varAssignmentParse(codeLine, lineNumber);
                 if(varIndex >= 0  &&  varIndex != prevVarIndex)
                 {
-                    codeLine._vasm += "LDW\t\t_" + _integerVars[varIndex]._name + "\n" + std::string(LABEL_TRUNC_SIZE, ' ');
-                    codeLine._vasmSize += 2;
+                    emitVcpuAsm(std::string("LDW"), "_" + _integerVars[varIndex]._name, false, lineNumber);
                 }
-                codeLine._vasm += "STW\t\t_" + _integerVars[codeLine._varIndex]._name;
-                codeLine._vasmSize += 2;
+                emitVcpuAsm(std::string("STW"), "_" + _integerVars[codeLine._varIndex]._name, false, lineNumber);
                 prevVarIndex = codeLine._varIndex;
             }
             // Standard assignment
@@ -783,18 +818,15 @@ namespace Compiler
                 // 8bit constants
                 if(_integerVars[codeLine._varIndex]._init >=0  &&  _integerVars[codeLine._varIndex]._init <= 255)
                 {
-                    codeLine._vasm = "LDI\t\t" + std::to_string(_integerVars[codeLine._varIndex]._init) + "\n" + std::string(LABEL_TRUNC_SIZE, ' ');
-                    codeLine._vasmSize += 2;
+                    emitVcpuAsm(std::string("LDI"), std::to_string(_integerVars[codeLine._varIndex]._init), false, lineNumber);
                 }
                 // 16bit constants
                 else
                 {
-                    codeLine._vasm = "LDWI\t" + std::to_string(_integerVars[codeLine._varIndex]._init) + "\n" + std::string(LABEL_TRUNC_SIZE, ' ');
-                    codeLine._vasmSize += 3;
+                    emitVcpuAsm(std::string("LDWI"), std::to_string(_integerVars[codeLine._varIndex]._init), false, lineNumber);
                 }
 
-                codeLine._vasm += "STW\t\t_" + _integerVars[codeLine._varIndex]._name;
-                codeLine._vasmSize += 2;
+                emitVcpuAsm(std::string("STW"), "_" + _integerVars[codeLine._varIndex]._name, false, lineNumber);
                 prevVarIndex = codeLine._varIndex;
             }
         }
@@ -804,8 +836,7 @@ namespace Compiler
             if(codeLine._containsVars)
             {
                 varExpressionParse(codeLine, lineNumber);
-                codeLine._vasm += "STW\t\t" + Expression::wordToHexString(TEMP_VAR_START) + "\n" + std::string(LABEL_TRUNC_SIZE, ' ');
-                codeLine._vasmSize += 2;
+                emitVcpuAsm(std::string("STW"), Expression::wordToHexString(TEMP_VAR_START), false, lineNumber);
             }
 
             // GOTO
@@ -817,13 +848,11 @@ namespace Compiler
                     fprintf(stderr, "Compiler::createVasmCode() : invalid label in '%s' on line %d\n", codeLine._code.c_str(), lineNumber + 1);
                     return false;
                 }
-                codeLine._vasm = "BRA\t\t_" + gotoLabel;
-                codeLine._vasmSize += 2;
+                emitVcpuAsm(std::string("BRA"), "_" + gotoLabel, false, lineNumber);
             }
             else
             {
-                codeLine._vasm = "LDWI\t0x0000";
-                codeLine._vasmSize += 3;
+                emitVcpuAsm(std::string("LDWI"), Expression::wordToHexString(0), false, lineNumber);
             }
         }
 
@@ -847,6 +876,92 @@ namespace Compiler
                 int labelIdx = _codeLines[i]._labelIndex;
                 if(labelIdx > 0) _labels[labelIdx]._address = _vasmPC;
                 _vasmPC += _codeLines[i]._vasmSize;
+            }
+        }
+
+        return true;
+    }
+
+    enum OptimiseTypes {StwLdwPair=0, ExtraStw, NumOptimiseTypes};
+    bool optimiseCode(void)
+    {
+        const std::string firstMatch[NumOptimiseTypes] = {"STW\t\t0x", "STW\t\t0x"};
+        const std::string secondMatch[NumOptimiseTypes] = {"LDW\t\t0x", "STW\t\t_"};
+
+        for(int k=StwLdwPair; k<NumOptimiseTypes; k++)
+        {
+            for(int i=0; i<_codeLines.size(); i++)
+            {
+                int firstLine = 0;
+                std::string firstVar;
+                bool firstFound = false;
+
+                for(auto itLine=_codeLines[i]._vasm.begin(); itLine!=_codeLines[i]._vasm.end();)
+                {
+                    bool linesDeleted = false;
+
+                    // First match
+                    if(!firstFound)
+                    {
+                        size_t first = itLine->find(firstMatch[k]);
+                        if(first != std::string::npos)
+                        {
+                            firstFound = true;
+                            firstLine = int(itLine - _codeLines[i]._vasm.begin());
+                            firstVar = itLine->substr(first + firstMatch[k].size(), 2);
+                        }
+                    }
+                    else
+                    {
+                        // Second match must be on next line
+                        if(int(itLine - _codeLines[i]._vasm.begin())  ==  firstLine + 1)
+                        {
+                            size_t second = itLine->find(secondMatch[k]);
+                            if(second != std::string::npos)
+                            {
+                                switch(k)
+                                {
+                                    // Remove superfluous STW/LDW pairs
+                                    case StwLdwPair:
+                                    {
+                                        if(firstVar == itLine->substr(second + secondMatch[k].size(), 2))
+                                        {
+                                            linesDeleted = true;
+                                            itLine = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
+                                            itLine = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
+
+                                            // Adjust label addresses
+                                            for(int j=_codeLines[i]._labelIndex + 1; j<_labels.size(); j++)
+                                            {
+                                                _labels[j]._address -= 4;
+                                            }
+                                        }
+                                    }
+                                    break;
+
+                                    // Remove superfluous STW
+                                    case ExtraStw:
+                                    {
+                                        itLine = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
+
+                                        // Adjust label addresses
+                                        for(int j=_codeLines[i]._labelIndex + 1; j<_labels.size(); j++)
+                                        {
+                                            _labels[j]._address -= 2;
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+
+                        firstLine = 0;
+                        firstVar = "";
+                        firstFound = false;
+                    }
+
+                    if(!linesDeleted) itLine++;
+                }
             }
         }
 
@@ -898,26 +1013,21 @@ namespace Compiler
 
         for(int i=0; i<_codeLines.size(); i++)
         {
-            int labelIndex = _codeLines[i]._labelIndex;
-
-            // New line before label, except first
-            if(labelIndex > 0) _output.push_back("\n");
-
             // Valid code
             if(_codeLines[i]._code.size() > 2)
             {
-                // Code with a label
-                if(labelIndex >= 0) 
-                {
-                    _output.push_back(_labels[labelIndex]._output + _codeLines[i]._vasm + "\t\t; " + _codeLines[i]._code + "\n");
-                }
+                // New line before label, except first
+                if(_codeLines[i]._labelIndex > 0) _output.push_back("\n");
+
+                // Label
+                std::string line;
+                line += (_codeLines[i]._ownsLabel) ? _labels[_codeLines[i]._labelIndex]._output + _codeLines[i]._vasm[0] :  std::string(LABEL_TRUNC_SIZE, ' ') + _codeLines[i]._vasm[0];
+
                 // Code
-                else
-                {
-                    std::string line = _codeLines[i]._vasm + "\t\t; " + _codeLines[i]._code;
-                    Expression::padString(line, LABEL_TRUNC_SIZE + int(line.size()));
-                    _output.push_back(line + "\n");
-                }
+                for(int j=1; j<_codeLines[i]._vasm.size(); j++) line += "\n" + std::string(LABEL_TRUNC_SIZE, ' ') + _codeLines[i]._vasm[j];
+                line +=  "\t\t; " + _codeLines[i]._code + "\n";
+
+                _output.push_back(line);
             }
         }
         
@@ -962,8 +1072,11 @@ namespace Compiler
         // Vars
         if(!parseVars()) return false;
 
-        // Code
+        // Parse code
         if(!parseCode()) return false;
+
+        // Optimise code
+        if(!optimiseCode()) return false;
 
         // Output
         outputStartAddress();

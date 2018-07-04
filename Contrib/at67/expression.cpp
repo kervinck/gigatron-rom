@@ -22,16 +22,10 @@ namespace Expression
 
     bool _containsQuotes = false;
 
-    unaryOpFuncPtr  _negFunc;
-    binaryOpFuncPtr _addFunc;
-    binaryOpFuncPtr _subFunc;
-    binaryOpFuncPtr _mulFunc;
-    binaryOpFuncPtr _divFunc;
-    factorFuncPtr   _facFunc;
+    exprFuncPtr _exprFunc;
 
 
     // Forward declarations
-    Numeric fac(int16_t defaultValue);
     Numeric expression(void);
 
 
@@ -62,23 +56,8 @@ namespace Expression
         return left;
     }
 
-    // Set operators
-    void setNegFunc(unaryOpFuncPtr  negFunc) {_negFunc = negFunc;}
-    void setAddFunc(binaryOpFuncPtr addFunc) {_addFunc = addFunc;}
-    void setSubFunc(binaryOpFuncPtr subFunc) {_subFunc = subFunc;}
-    void setMulFunc(binaryOpFuncPtr mulFunc) {_mulFunc = mulFunc;}
-    void setDivFunc(binaryOpFuncPtr divFunc) {_divFunc = divFunc;}
-    void setFacFunc(factorFuncPtr   facFunc) {_facFunc = facFunc;}
+    void setExprFunc(exprFuncPtr exprFunc) {_exprFunc = exprFunc;}
 
-    void setDefaultOperatorFuncs(void)
-    {
-        setNegFunc(neg);
-        setAddFunc(add);
-        setSubFunc(sub);
-        setMulFunc(mul);
-        setDivFunc(div);
-        setFacFunc(fac);
-    }
 
     void initialise(void)
     {
@@ -87,7 +66,7 @@ namespace Expression
         bool* d = _decimalChars;     d['0']=1; d['1']=1; d['2']=1; d['3']=1; d['4']=1; d['5']=1; d['6']=1; d['7']=1; d['8']=1; d['9']=1;
         bool* h = _hexaDecimalChars; h['0']=1; h['1']=1; h['2']=1; h['3']=1; h['4']=1; h['5']=1; h['6']=1; h['7']=1; h['8']=1; h['9']=1; h['A']=1; h['B']=1; h['C']=1; h['D']=1; h['E']=1; h['F']=1;
 
-        setDefaultOperatorFuncs();
+        setExprFunc(expression);
     }
 
     ExpressionType isExpression(const std::string& input)
@@ -338,16 +317,7 @@ namespace Expression
     Numeric fac(int16_t defaultValue)
     {
         int16_t value = 0;
-        if((peek() >= '0'  &&  peek() <= '9')  ||  peek() == '$')
-        {
-            if(!number(value))
-            {
-                fprintf(stderr, "Expression::factor() : Bad numeric data in '%s' on line %d\n", _expressionToParse, _lineNumber + 1);
-                value = 0;
-            }
-            return Numeric(value, false, nullptr);
-        }
-        else if(peek() == '(')
+        if(peek() == '(')
         {
             get();
             Numeric numeric = expression();
@@ -357,7 +327,16 @@ namespace Expression
         else if(peek() == '-')
         {
             get();
-            return _negFunc(fac(0));
+            return neg(fac(0));
+        }
+        else if((peek() >= '0'  &&  peek() <= '9')  ||  peek() == '$')
+        {
+            if(!number(value))
+            {
+                fprintf(stderr, "Expression::factor() : Bad numeric data in '%s' on line %d\n", _expressionToParse, _lineNumber + 1);
+                value = 0;
+            }
+            return Numeric(value, false, nullptr);
         }
 
         Numeric numeric = Numeric(defaultValue, true, _expression);
@@ -366,23 +345,23 @@ namespace Expression
 
     Numeric term(void)
     {
-        Numeric result = _facFunc(0);
+        Numeric result = fac(0);
         while(peek() == '*'  ||  peek() == '/')
         {
             if(get() == '*')
             {
-                result = _mulFunc(result, _facFunc(0));
+                result = mul(result, fac(0));
             }
             else
             {
-                Numeric f = _facFunc(0);
+                Numeric f = fac(0);
                 if(f._value == 0)
                 {
-                    result = _mulFunc(result, f);
+                    result = mul(result, f);
                 }
                 else
                 {
-                    result = _divFunc(result, f);
+                    result = div(result, f);
                 }
             }
         }
@@ -397,11 +376,11 @@ namespace Expression
         {
             if(get() == '+')
             {
-                result = _addFunc(result, term());
+                result = add(result, term());
             }
             else
             {
-                result = _subFunc(result, term());
+                result = sub(result, term());
             }
         }
 
@@ -414,6 +393,6 @@ namespace Expression
         _expression = expressionToParse;
         _lineNumber = lineNumber;
 
-        return expression()._value;
+        return _exprFunc()._value;
     }
 }

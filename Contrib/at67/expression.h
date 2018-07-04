@@ -19,18 +19,9 @@ namespace Expression
         char* _varNamePtr = nullptr;
     };
 
-    using unaryOpFuncPtr = std::function<Numeric (Numeric& value)>;
-    using binaryOpFuncPtr = std::function<Numeric (Numeric& left, Numeric& right)>;
-    using factorFuncPtr = std::function<Numeric (int16_t defaultValue)>;
+    using exprFuncPtr = std::function<Numeric (void)>;
 
-
-    void setNegFunc(unaryOpFuncPtr negFunc);
-    void setAddFunc(binaryOpFuncPtr addFunc);
-    void setSubFunc(binaryOpFuncPtr subFunc);
-    void setMulFunc(binaryOpFuncPtr mulFunc);
-    void setDivFunc(binaryOpFuncPtr divFunc);
-    void setFacFunc(factorFuncPtr factorFunc);
-    void setDefaultOperatorFuncs(void);
+    void setExprFunc(exprFuncPtr exprFunc);
 
     void initialise(void);
 
