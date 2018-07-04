@@ -24,13 +24,13 @@
 #  DONE Added SYS_SetMemory_54 SYS_SetVideoMode_80
 #  DONE Put in an example BASIC program? Self list, self start
 #  DONE Move SYS_NextByteIn_32 out page 1 and rename SYS_LoaderNextByteIn_32
-#  XXX Update version number to v2a
+#  DONE Update version number to v2a
 #  XXX Test existing GT1 files, in all scan line modes
+#  XXX Update version number to v2
 #  Maybe:
 #  XXX vPulse width modulation? (for future SAVE)
 #
 #  Ideas for ROM vX
-#  XXX Preset USR() functions in BASIC?
 #  XXX Need keymaps in ROM? (perhaps undocumented if not tested)
 #  XXX SYS spites/memcpy acceleration functions? Candidates:
 #                               WxH     Depth   Input
@@ -87,7 +87,7 @@ import font_v2 as font
 
 # Pre-loading the formal interface as a way to get warnings when
 # accidently redefined with a different value
-loadBindings('interface-0x20.json')
+loadBindings('interface.json')
 
 # Gigatron clock
 cpuClock = 6.250e+06
