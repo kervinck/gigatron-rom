@@ -18,20 +18,20 @@
 #  DONE A-C- mode (Also A--- added)
 #  DONE Zero-page handling of ROM loader (SYS_Exec_88)
 #  DONE Replace Screen test
-#  DONE LED pause mode
+#  DONE LED stopped mode
 #  DONE Update font (69;=@Sc)
 #  DONE Retire SYS_Reset_36 from all interfaces (replace with vReset)
 #  DONE Added SYS_SetMemory_54 SYS_SetVideoMode_80
 #  DONE Put in an example BASIC program? Self list, self start
+#  DONE Move SYS_NextByteIn_32 out page 1 and rename SYS_LoaderNextByteIn_32
 #  XXX Update version number to v2a
-#  XXX Repurpose unused ROM data for "feature set"
 #  XXX Test existing GT1 files, in all scan line modes
 #  Maybe:
 #  XXX vPulse width modulation? (for future SAVE)
-#  XXX Need keymaps in ROM? (perhaps undocumented if not tested)
-#  XXX Preset USR() functions in BASIC?
 #
 #  Ideas for ROM vX
+#  XXX Preset USR() functions in BASIC?
+#  XXX Need keymaps in ROM? (perhaps undocumented if not tested)
 #  XXX SYS spites/memcpy acceleration functions? Candidates:
 #                               WxH     Depth   Input
 #       SYS_VDrawBits_134       1x8     1       1       sysArgs
@@ -87,7 +87,7 @@ import font_v2 as font
 
 # Pre-loading the formal interface as a way to get warnings when
 # accidently redefined with a different value
-loadBindings('interface-0x2c.json')
+loadBindings('interface-0x20.json')
 
 # Gigatron clock
 cpuClock = 6.250e+06
@@ -212,18 +212,13 @@ vAC             = zpByte(2) # Interpreter accumulator, 16-bits
 vLR             = zpByte(2) # Return address, for returning after CALL
 vSP             = zpByte(1) # Stack pointer
 vTmp            = zpByte()
-vReturn         = zpByte()  # Return into video loop (page is same as vBlankStart)
+vReturn         = zpByte()  # Return into video loop (in page of vBlankStart)
 
-# ROM v2:
 videoModeB      = zpByte(1) # Pixel burst or vCPU
 videoModeC      = zpByte(1) # Pixel burst or vCPU
 
-# ROM type/version, numbering scheme to be determined, could be as follows:
-# bit 4:7       Version
-# bit 0:3       >=8 Formal revisions 8=alpa, 9=beta, 10=beta2...c=release, d=patch
-#                <8 experimental/informal revisions
-# Perhaps it should just identify the application bindings,
-# so don't call it romVersion already
+# Versioning for GT1 compatibility
+# Please refer to Docs/GT1-files.txt for interpreting this variable
 romType         = zpByte(1)
 
 # SYS function arguments and results/scratch
@@ -235,7 +230,7 @@ soundTimer      = zpByte()
 
 # Fow now the LED state machine itself is hard-coded in the program ROM
 ledTimer        = zpByte() # Number of ticks until next LED change
-ledState        = zpByte() # Current LED state
+ledState_v2     = zpByte() # Current LED state
 ledTempo        = zpByte() # Next value for ledTimer after LED state change
 
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
@@ -510,7 +505,7 @@ ld(syncBits^hSync, OUT)
 ld(syncBits, OUT)
 st([xout])                      # Setup for control by video loop
 st([xoutMask])
-st([ledState])                  # >0 means "Paused"
+st([ledState_v2])               # Setting 1..126 means "stopped"
 
 ld(hi('vBlankStart'), Y);       C('Enter video loop')
 jmpy('vBlankStart')
@@ -746,22 +741,22 @@ ld(0)                           #61 Don't advance state
 label('.leds2')
 ld(1)                           #61 Advance state when timer passes through 0
 label('.leds3')
-adda([ledState])                #62
+adda([ledState_v2])             #62
 
 bne('.leds4')                   #63
 bra('.leds5')                   #64
 ld(-24)                         #65 State 0 becomes -24, start of sequence
 label('.leds4')
-bgt('.leds6')                   #65 Catch the paused state (>0)
+bgt('.leds6')                   #65 Catch the stopped state (>0)
 label('.leds5')
-st([ledState])                  #66
+st([ledState_v2])               #66
 adda('.leds7')                  #67
 bra(AC)                         #68 Jump to lookup table
 bra('.leds7')                   #69 Single-instruction subroutine
 
 label('.leds6')
-ld(0x0f)                        #67 Maintain paused state
-st([ledState])                  #68
+ld(0x0f)                        #67 Maintain stopped state
+st([ledState_v2])               #68
 bra('.leds7')                   #69
 anda([xoutMask])                #70 Always clear sound bits (this is why AC=0x0f)
 
@@ -1016,41 +1011,8 @@ jmpy('sound2')                  #3
 ld(syncBits^hSync, OUT)         #4 Start horizontal pulse
 
 # Filler
-nop()
-
-#-----------------------------------------------------------------------
-# Extension SYS_NextByteIn_32
-#-----------------------------------------------------------------------
-
-# sysArgs[0:1] Current address
-# sysArgs[2]   Checksum
-# sysArgs[3]   Wait value (videoY)
-
-label('SYS_NextByteIn_32')
-ld([videoY])                    #15
-xora([sysArgs+3])               #16
-bne('.sysNbi')                  #17
-ld([sysArgs+0], X)              #18
-ld([sysArgs+1], Y)              #19
-ld(IN)                          #20
-st([Y,X])                       #21
-adda([sysArgs+2])               #22
-st([sysArgs+2])                 #23
-ld([sysArgs+0])                 #24
-adda(1)                         #25
-st([sysArgs+0])                 #26
-ld(hi('REENTER'), Y)            #27
-jmpy('REENTER')                 #28
-ld(-32/2)                       #29
-# Restart instruction
-label('.sysNbi')
-ld([vPC])                       #19
-suba(2)                         #20
-st([vPC])                       #21
-ld(-28/2)                       #22
-ld(hi('REENTER'), Y)            #23
-jmpy('REENTER')                 #24
-nop()                           #25
+while pc()&255 < 255:
+  nop()
 
 assert pc() == 0x1ff
 bra('sound3');                  C('<New scan line start>')#200,0
@@ -2472,7 +2434,7 @@ align(1)
 # vAC bit 2:15                  Ignored bits and should be 0
 
 # Actual duration is <80 cycles, but keep some room for future extensions
-label('SYS_SetVideoMode_80')
+label('SYS_SetVideoMode_v2_80')
 ld(hi('sys_SetVideoMode'), Y)   #15
 jmpy('sys_SetVideoMode')        #16
 ld([vAC])                       #17
@@ -2490,7 +2452,7 @@ ld([vAC])                       #17
 # Sets up to 4 bytes per invocation before restarting itself through vCPU.
 # Doesn't wrap around page boundary.
 
-label('SYS_SetMemory_54')
+label('SYS_SetMemory_v2_54')
 bra('sys_SetMemory')            #15
 ld([sysArgs+0])                 #16
 nop()                           #filler
@@ -2724,6 +2686,40 @@ jmpy('REENTER')                 #36
 ld(-40/2)                       #37
 
 #-----------------------------------------------------------------------
+# Extension SYS_LoaderNextByteIn_32
+#-----------------------------------------------------------------------
+
+# sysArgs[0:1] Current address
+# sysArgs[2]   Checksum
+# sysArgs[3]   Wait value (videoY)
+
+label('SYS_LoaderNextByteIn_32')
+ld([videoY])                    #15
+xora([sysArgs+3])               #16
+bne('.sysNbi')                  #17
+ld([sysArgs+0], X)              #18
+ld([sysArgs+1], Y)              #19
+ld(IN)                          #20
+st([Y,X])                       #21
+adda([sysArgs+2])               #22
+st([sysArgs+2])                 #23
+ld([sysArgs+0])                 #24
+adda(1)                         #25
+st([sysArgs+0])                 #26
+ld(hi('REENTER'), Y)            #27
+jmpy('REENTER')                 #28
+ld(-32/2)                       #29
+# Restart instruction
+label('.sysNbi')
+ld([vPC])                       #19
+suba(2)                         #20
+st([vPC])                       #21
+ld(-28/2)                       #22
+ld(hi('REENTER'), Y)            #23
+jmpy('REENTER')                 #24
+#nop()                          #(25)
+
+#-----------------------------------------------------------------------
 # Extension SYS_LoaderProcessInput_48
 #-----------------------------------------------------------------------
 
@@ -2733,7 +2729,7 @@ ld(-40/2)                       #37
 # sysArgs[5:6] Destination address
 
 label('SYS_LoaderProcessInput_48')
-ld([sysArgs+1], Y)              #15
+ld([sysArgs+1], Y)              #15,25 (overlap with SYS_LoaderNextByteIn_32)
 ld([sysArgs+2])                 #16
 bne('.sysPi0')                  #17
 ld([sysArgs+0])                 #18
@@ -2879,6 +2875,7 @@ for i in range(8):
   define('sysArgs%d' % i, sysArgs+i)
 define('soundTimer', soundTimer)
 define('ledTimer',   ledTimer)
+define('ledState_v2',ledState_v2)
 define('ledTempo',   ledTempo)
 define('userVars',   userVars)
 define('videoTable', videoTable)

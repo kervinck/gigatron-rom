@@ -25,7 +25,7 @@ gigatron-rom
  |                              Gigatron. Used for transferring GT1 files into
  |                              the computer and/or hooking up an keyboard.
  +--- Docs/
- |     +--- GT1-format.txt      vCPU object file format (GT1 files)
+ |     +--- GT1-files.txt       vCPU object file format and ROM versioning
  |     +--- GCL-language.txt    Gigatron Control Language and vCPU explanation
  |     +--- gtemu.c             An executable instruction set definition
  |     +--- TinyBASIC.ebnf      Formal definition of Gigatron TinyBASIC syntax

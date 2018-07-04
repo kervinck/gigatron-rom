@@ -592,7 +592,7 @@ vBlankLast:   02ad 00ff  ld   $ff         ;Filter controller input
               02e5 0200  nop
               02e6 0200  nop
               * 5 times
-SYS_NextByteIn_32:
+SYS_LoaderNextByteIn_32:
               02e9 0109  ld   [$09]
               02ea 6127  xora [$27]
               02eb ecf8  bne  .sysNbi

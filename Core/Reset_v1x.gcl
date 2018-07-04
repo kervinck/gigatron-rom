@@ -18,7 +18,7 @@ gcl0x
     q>++ q  if>0loop]
 
   { Clear screen }
-  \SYS_SetMemory_54 \sysFn=     {!!! Not in ROM v1 !!!}
+  \SYS_SetMemory_v2_54 \sysFn=  {!!! Not in ROM v1 !!!}
   32 \sysArgs1.                 {Color blue}
   $800 [do
     p= \sysArgs2=               {Destination}
@@ -120,11 +120,11 @@ SetupVideo!
 $812 Pos= PrintStartupMessage! {Returns 0}
 
 { Start blinkenlights }
-\ledState, 128&                 {Check if sequencer still running}
-[if=0 \ledState. \ledTimer.]    {For continuity only restart when paused}
+\ledState_v2, 128&              {Check if sequencer still running}
+[if=0 \ledState_v2. \ledTimer.] {For continuity only restart when paused}
 9 \ledTempo.                    {6.0 Hz ( = 60/(9+1)), was 5.5 Hz}
 
-\SYS_SetVideoMode_80 \sysFn=    {!!! Not in ROM v1 !!!}
+\SYS_SetVideoMode_v2_80 \sysFn= {!!! Not in ROM v1 !!!}
 1 80!                           {Mode 1 -> "ABC-"}
 
 { Load and start main program }

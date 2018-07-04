@@ -1073,14 +1073,14 @@ nop()
 nop()
 
 #-----------------------------------------------------------------------
-# Extension SYS_NextByteIn_32
+# Extension SYS_LoaderNextByteIn_32
 #-----------------------------------------------------------------------
 
 # sysArgs[0:1] Current address
 # sysArgs[2]   Checksum
 # sysArgs[3]   Wait value (videoY)
 
-label('SYS_NextByteIn_32')
+label('SYS_LoaderNextByteIn_32')
 ld([videoY])                    #15
 xora([sysArgs+3])               #16
 bne('.sysNbi')                  #17

@@ -1,5 +1,6 @@
 {
- "romTypeValue"         : "0x002c",
+ "romTypeValue_ROMv1"   : "0x001c",
+ "romTypeValue_ROMv2"   : "0x0020",
 
  "memSize"              : "0x0001",
  "bootCount"            : "0x0004",
@@ -26,7 +27,7 @@
  "sysArgs7"             : "0x002b",
  "soundTimer"           : "0x002c",
  "ledTimer"             : "0x002d",
- "ledState"             : "0x002e",
+ "ledState_v2"          : "0x002e",
  "ledTempo"             : "0x002f",
  "userVars"             : "0x0030",
 
@@ -108,8 +109,8 @@
  "SYS_Read3_40"         : "0x06b9",
  "SYS_Unpack_56"        : "0x06c0",
  "SYS_PayloadCopy_34"   : "0x06e7",
- "SYS_SetVideoMode_80"  : "0x0b00",
- "SYS_SetMemory_54"     : "0x0b03",
+ "SYS_SetMode_v2_80"    : "0x0b00",
+ "SYS_SetMemory_v2_54"  : "0x0b03",
 
  "font32up"             : "0x0700",
  "font82up"             : "0x0800",
