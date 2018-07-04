@@ -108,7 +108,6 @@
  "SYS_LSLW4_46"         : "0x06a0",
  "SYS_Read3_40"         : "0x06b9",
  "SYS_Unpack_56"        : "0x06c0",
- "SYS_PayloadCopy_34"   : "0x06e7",
  "SYS_SetMode_v2_80"    : "0x0b00",
  "SYS_SetMemory_v2_54"  : "0x0b03",
 

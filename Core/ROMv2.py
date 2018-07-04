@@ -2322,14 +2322,14 @@ jmpy('REENTER')                 #52
 ld(-56/2)                       #53
 
 #-----------------------------------------------------------------------
-# Extension SYS_PayloadCopy_34
+# Extension SYS_LoaderPayloadCopy_34
 #-----------------------------------------------------------------------
 
 # sysArgs[0:1] Source address
 # sysArgs[4]   Copy count
 # sysArgs[5:6] Destination address
 
-label('SYS_PayloadCopy_34')
+label('SYS_LoaderPayloadCopy_34')
 ld([sysArgs+4])                 #15 Copy count
 beq('.sysCc0')                  #16
 suba(1)                         #17
