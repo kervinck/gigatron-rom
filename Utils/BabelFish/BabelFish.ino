@@ -346,6 +346,7 @@ bool detectGigatron()
   return 0.95 <= vSync && vSync <= 1.20 && 0.95 <= hSync && hSync <= 1.05;
 }
 
+#if hasSerial
 void doCommand(char line[])
 {
   switch (toupper(line[0])) {
@@ -355,6 +356,8 @@ void doCommand(char line[])
   case 'L': doLoader();                       break;
   case 'P': doTransfer(gt1File);              break;
   case 'U': doTransfer(NULL);                 break;
+  case '.': doLine(&line[1]);                 break;
+  case 'T': doTerminal();                     break;
   case 'W': sendController(~buttonUp,     2); break;
   case 'A': sendController(~buttonLeft,   2); break;
   case 'S': sendController(~buttonDown,   2); break;
@@ -364,13 +367,12 @@ void doCommand(char line[])
   case 'Q': sendController(~buttonSelect, 2); break;
   case 'E': sendController(~buttonStart,  2); break;
   case 0: /* Empty line */                    break;
-  #if hasSerial
-    default:
-      Serial.println("!Unknown command (type 'H' for help)");
-  #endif
+  default:
+    Serial.println("!Unknown command (type 'H' for help)");
   }
   prompt();
 }
+#endif
 
 void doVersion()
 {
@@ -390,6 +392,8 @@ void doHelp()
     Serial.println(": L        Start Loader");
     Serial.println(": P        Transfer object file from PROGMEM");
     Serial.println(": U        Transfer object file from USB");
+    Serial.println(": .<text>  Send text line as ASCII key strokes");
+    Serial.println(": T        Enter terminal mode");
     Serial.println(": W/A/S/D  Up/left/down/right arrow");
     Serial.println(": Z/X      A/B button ");
     Serial.println(": Q/E      Select/start button");
@@ -428,6 +432,52 @@ void doLoader()
   // Wait for Loader to be running
   delay(1000);
 }
+
+void doLine(char *line)
+{
+  // Pass through the line of text
+  for (int i=0; line[i]; i++) {
+    sendController(line[i], 2);
+    delay(50); // Allow Gigatron software to process key code
+  }
+  // And terminal with a CR
+  sendController('\n', 2);
+  delay(50);
+}
+
+#if hasSerial
+void doTerminal()
+{
+  Serial.println(":Entering terminal mode");
+  Serial.println(":Exit with Ctrl-D");
+  byte next = 0, last, out;
+  bool ansi = false;
+  for (;;) {
+    if (Serial.available()) {
+      last = next;
+      next = Serial.read();
+
+      // Mappings for newline and arrow sequences
+      switch (next) {
+        case 4:                                  return; // Ctrl-D (EOT)
+        case 9: out = ~buttonB;                  break; // Same as PS/2 above
+        case '\r': out = '\n';                   break;
+        case '\n': if (last == '\r')             continue;
+        case '\e':                               continue;
+        case '[': if (last == '\e') ansi = true; continue;
+        case 'A': if (ansi) out = ~buttonUp;     break;
+        case 'B': if (ansi) out = ~buttonDown;   break;
+        case 'C': if (ansi) out = ~buttonRight;  break;
+        case 'D': if (ansi) out = ~buttonLeft;   break;
+        default: out = next;                     break;
+      }
+
+      sendController(out, 2);
+      ansi = false;
+    }
+  }
+}
+#endif
 
 // Because the Arduino doesn't have enough RAM to buffer
 // a complete GT1 file, it processes these files segment
