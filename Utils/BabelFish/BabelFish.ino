@@ -21,6 +21,8 @@
 #define ArduinoMicro 0
 #define ATtiny85     0
 
+static bool echo = false; // Useful in terminal mode
+
 // Select a built-in GT1 image:
 const byte gt1File[] PROGMEM = {
   //#include "Blinky.h" // Blink pixel in middle of screen
@@ -284,11 +286,12 @@ void loop()
   #endif
 
   #if hasSerial
-    static char line[20];
+    static char line[20], next = 0, last;
     static byte lineIndex = 0;
-
     if (Serial.available()) {
-      byte next = Serial.read();
+      last = next;
+      char next = Serial.read();
+      sendEcho(next, last);
       if (lineIndex < sizeof line)
         line[lineIndex++] = next;
       if (next == '\r' || next == '\n') {
@@ -323,7 +326,7 @@ void prompt()
 {
   #if hasSerial
     Serial.println(detectGigatron() ? ":Gigatron OK" : "!Gigatron offline");
-    Serial.println("\nCmd?");
+    Serial.println("Cmd?");
   #endif
 }
 
@@ -347,6 +350,19 @@ bool detectGigatron()
 }
 
 #if hasSerial
+void sendEcho(char next, char last)
+{
+  if (echo)
+    switch (next) {
+      case 127:  Serial.print("\b \b"); return;
+      case '\n': if (last == '\r')      return; // else FALL THROUGH
+      case '\r': Serial.println();      return;
+      default: Serial.print(next);
+    }
+}
+#endif
+
+#if hasSerial
 void doCommand(char line[])
 {
   switch (toupper(line[0])) {
@@ -357,6 +373,7 @@ void doCommand(char line[])
   case 'P': doTransfer(gt1File);              break;
   case 'U': doTransfer(NULL);                 break;
   case '.': doLine(&line[1]);                 break;
+  case 'C': doEcho(!echo);                    break;
   case 'T': doTerminal();                     break;
   case 'W': sendController(~buttonUp,     2); break;
   case 'A': sendController(~buttonLeft,   2); break;
@@ -377,9 +394,17 @@ void doCommand(char line[])
 void doVersion()
 {
   #if hasSerial
-    Serial.println(":BabelFish [" version "]\n"
-                   ":Type 'H' for help");
+    Serial.println(":BabelFish [" version "]");
+    doEcho(echo);
+    Serial.println(":Type 'H' for help");
   #endif
+}
+
+void doEcho(byte value)
+{
+  echo = value;
+  Serial.print(":echo ");
+  Serial.println(value ? "on" : "off");
 }
 
 void doHelp()
@@ -393,6 +418,7 @@ void doHelp()
     Serial.println(": P        Transfer object file from PROGMEM");
     Serial.println(": U        Transfer object file from USB");
     Serial.println(": .<text>  Send text line as ASCII key strokes");
+    Serial.println(": C        Toggle echo mode (default off)");
     Serial.println(": T        Enter terminal mode");
     Serial.println(": W/A/S/D  Up/left/down/right arrow");
     Serial.println(": Z/X      A/B button ");
@@ -445,31 +471,40 @@ void doLine(char *line)
   delay(50);
 }
 
+// In terminal mode we transfer every incoming character to
+// the Gigatron, with some substitutions for convenience.
+// This lets you type directly into BASIC and WozMon from
+// a terminal window on your PC or laptop.
+//      picomon -b 115200 /dev/tty.usbmodem1411
+//      screen /dev/tty.usbmodem1411 115200
+
 #if hasSerial
 void doTerminal()
 {
   Serial.println(":Entering terminal mode");
   Serial.println(":Exit with Ctrl-D");
-  byte next = 0, last, out;
+  char next = 0, last;
+  byte out;
   bool ansi = false;
   for (;;) {
     if (Serial.available()) {
       last = next;
       next = Serial.read();
+      sendEcho(next, last);
 
       // Mappings for newline and arrow sequences
+      out = next;
       switch (next) {
         case 4:                                  return; // Ctrl-D (EOT)
         case 9: out = ~buttonB;                  break; // Same as PS/2 above
         case '\r': out = '\n';                   break;
-        case '\n': if (last == '\r')             continue;
-        case '\e':                               continue;
+        case '\n': if (last == '\r')             continue; // Swallow
+        case '\e':                               continue; // ANSI escape sequence
         case '[': if (last == '\e') ansi = true; continue;
-        case 'A': if (ansi) out = ~buttonUp;     break;
+        case 'A': if (ansi) out = ~buttonUp;     break; // Map cursor to game controller
         case 'B': if (ansi) out = ~buttonDown;   break;
         case 'C': if (ansi) out = ~buttonRight;  break;
         case 'D': if (ansi) out = ~buttonLeft;   break;
-        default: out = next;                     break;
       }
 
       sendController(out, 2);
