@@ -646,7 +646,7 @@ $0600:
     0 i.                        {Clear byte}
     i<++                        {Advance pointer}
     i<, if<>0loop]              {Until end of page}
-  $14a0
+  $14a0 Begin=
   ret
 ] Clear=
 
@@ -1086,8 +1086,6 @@ Statement!                      {Execute statement}
 { BASIC data begins here. In this setup the interpreter can be patched
   to include a BASIC program and a first command for execution }
 
-$13a0: $a0# $14#                {End of (empty) program}
-                                {Startup commands}
-$14a2: $4c# $49# $53# $54# 0#   {'LIST' to print number of free bytes}
-$14c2: $45# $4e# $44# 0#        {'END' to go to prompt}
+$13a0: $a0# $13#                {Point to self}
+       $4e# $45# $57# 0#        {'NEW' to start interactive session}
 
