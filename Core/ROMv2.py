@@ -24,11 +24,11 @@
 #  DONE Added SYS_SetMemory_54 SYS_SetVideoMode_80
 #  DONE Put in an example BASIC program? Self list, self start
 #  DONE Move SYS_NextByteIn_32 out page 1 and rename SYS_LoaderNextByteIn_32
+#       Same for SYS_PayloadCopy_34 -> SYS_LoaderPayloadCopy_34
 #  DONE Update version number to v2a
-#  XXX Test existing GT1 files, in all scan line modes
+#  DONE Test existing GT1 files, in all scan line modes
+#  DONE Sanity test op HW
 #  XXX Update version number to v2
-#  Maybe:
-#  XXX vPulse width modulation? (for future SAVE)
 #
 #  Ideas for ROM vX
 #  XXX Need keymaps in ROM? (perhaps undocumented if not tested)
@@ -47,7 +47,9 @@
 #       CopyMemory              Nx1     8       s,t,n
 #       CopyString              Nx1     8       s,t
 #       SetMemory               Nx1     8       s,n
+#       Sprites by scan line 4 reset method? ("videoG"=graphics)
 #  XXX MODE command (or other interface) to set speed from BASIC
+#  XXX vPulse width modulation? (for future SAVE) --> Needs some video loop refactoring
 #  XXX How it works memo: brief description of every software function
 #  XXX Music sequencer (combined with LED sequencer, but retire soundTimer???)
 #  XXX Adjustable return for LUP trampolines (in case SYS functions need it)
@@ -59,16 +61,13 @@
 #  XXX Scoping for variables or some form of local variables? $i ("localized")
 #  XXX Simple GCL programs might be compiled by the host instead of offline?
 #  XXX vCPU: Clear just vAC[0:7] (Workaround is not bad: |255 ^255)
-#  XXX Random dots screensaver
-#  XXX Star field
 #
 #  Application ideas:
-#  XXX Pacman ghosts. Sprites by scan line 4 reset method? ("videoG"=graphics)
+#  XXX Random dots screensaver
+#  XXX Star field
 #  XXX Audio: Decay, using Karplus-Strong
 #  XXX ROM data compression (starting with Jupiter and Racer image)
 #  XXX Font screen 16x8 chars
-#  XXX Info screen (zero page)
-#  XXX Gigatron layout balls/bricks game
 #  XXX Embedded schematics
 #  XXX Maze game. Berzerk/Robotron? Pac Mac
 #  XXX Horizontal scroller. Flappy Bird
