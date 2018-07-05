@@ -1608,7 +1608,7 @@ SYS_Unpack_56:
               06e4 1403  ld   $03,y
               06e5 e0cb  jmp  y,$cb
               06e6 00e4  ld   $e4
-SYS_PayloadCopy_34:
+SYS_LoaderPayloadCopy_34:
               06e7 0128  ld   [$28]
               06e8 f0f5  beq  .sysCc0
               06e9 a001  suba $01
