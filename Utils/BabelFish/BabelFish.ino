@@ -291,7 +291,7 @@ void loop()
       byte next = Serial.read();
       if (lineIndex < sizeof line)
         line[lineIndex++] = next;
-      if (next == '\n') {
+      if (next == '\r' || next == '\n') {
         line[lineIndex-1] = '\0';
         doCommand(line);
         lineIndex = 0;
