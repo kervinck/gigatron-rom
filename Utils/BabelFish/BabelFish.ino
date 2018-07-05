@@ -352,7 +352,7 @@ void doCommand(char line[])
   switch (toupper(line[0])) {
   case 'V': doVersion();                      break;
   case 'H': doHelp();                         break;
-  case 'R': doReset();                        break;
+  case 'R': doReset(atoi(&line[1]));          break;
   case 'L': doLoader();                       break;
   case 'P': doTransfer(gt1File);              break;
   case 'U': doTransfer(NULL);                 break;
@@ -400,14 +400,14 @@ void doHelp()
   #endif
 }
 
-void doReset()
+void doReset(int n)
 {
   // Soft reset: hold start for >128 frames (>2.1 seconds)
   #if hasSerial
     Serial.println(":Resetting Gigatron");
     Serial.flush();
   #endif
-  sendController(~buttonStart, 128+32);
+  sendController(~buttonStart, n ? n : 128+32);
 
   // Wait for main menu to be ready
   delay(1500);

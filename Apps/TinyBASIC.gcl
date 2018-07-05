@@ -662,7 +662,6 @@ PrintS!                         {'*** Tiny BASIC'}
 Newline!
 
 Clear!                          {Clear variables}
-Begin=                          {Clear program}
 $13a0 deek End=                 {At startup 'End' comes from loaded segment}
 2+ Active=                      {BASIC command(s) to run at startup}
 
