@@ -354,9 +354,9 @@ void sendEcho(char next, char last)
 {
   if (echo)
     switch (next) {
-      case 127:  Serial.print("\b \b"); return;
-      case '\n': if (last == '\r')      return; // else FALL THROUGH
-      case '\r': Serial.println();      return;
+      case 127:  Serial.print("\b \b"); break;
+      case '\n': if (last == '\r')      break; // else FALL THROUGH
+      case '\r': Serial.println();      break;
       default: Serial.print(next);
     }
 }
