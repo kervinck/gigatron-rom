@@ -6,7 +6,7 @@
 
 
 #define MAJOR_VERSION "0.7"
-#define MINOR_VERSION "2"
+#define MINOR_VERSION "4"
 #define VERSION_STR "gtemuSDL v" MAJOR_VERSION "." MINOR_VERSION
  
 #define ROM_SIZE (1<<16)

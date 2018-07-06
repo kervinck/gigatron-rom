@@ -297,7 +297,7 @@ namespace Assembler
         }
 
         // Strip white space
-        if(stripWhiteSpace) input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
+        if(stripWhiteSpace) Expression::stripWhitespace(input);
     }
 
     size_t findSymbol(const std::string& input, const std::string& symbol, size_t pos = 0)
@@ -1044,108 +1044,6 @@ namespace Assembler
         return true;
     }
 
-    std::vector<std::string> tokenise(const std::string& text, char c)
-    {
-        std::vector<std::string> result;
-        const char* str = text.c_str();
-
-        do
-        {
-            const char *begin = str;
-
-            while(*str  &&  *str != c) str++;
-
-            if(str > begin) result.push_back(std::string(begin, str));
-        }
-        while (*str++ != 0);
-
-        return result;
-    }
-
-    std::vector<std::string> tokeniseLine(std::string& line)
-    {
-        std::string token = "";
-        bool delimiterStart = true;
-        bool stringStart = false;
-        enum DelimiterState {WhiteSpace, Quotes};
-        DelimiterState delimiterState = WhiteSpace;
-        std::vector<std::string> tokens;
-
-        for(int i=0; i<=line.size(); i++)
-        {
-            // End of line is a delimiter for white space
-            if(i == line.size())
-            {
-                if(delimiterState != Quotes)
-                {
-                    delimiterState = WhiteSpace;
-                    delimiterStart = false;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            else
-            {
-                // White space delimiters
-                if(strchr(" \n\r\f\t\v", line[i]))
-                {
-                    if(delimiterState != Quotes)
-                    {
-                        delimiterState = WhiteSpace;
-                        delimiterStart = false;
-                    }
-                }
-                // String delimiters
-                else if(strchr("\'\"", line[i]))
-                {
-                    delimiterState = Quotes;
-                    stringStart = !stringStart;
-                }
-            }
-
-            // Build token
-            switch(delimiterState)
-            {
-                case WhiteSpace:
-                {
-                    // Don't save delimiters
-                    if(delimiterStart)
-                    {
-                        if(!strchr(" \n\r\f\t\v", line[i])) token += line[i];
-                    }
-                    else
-                    {
-                        if(token.size()) tokens.push_back(token);
-                        delimiterStart = true;
-                        token = "";
-                    }
-                }
-                break;
-
-                case Quotes:
-                {
-                    // Save delimiters as well as chars
-                    if(stringStart)
-                    {
-                        token += line[i];
-                    }
-                    else
-                    {
-                        token += line[i];
-                        tokens.push_back(token);
-                        delimiterState = WhiteSpace;
-                        stringStart = false;
-                        token = "";
-                    }
-                }
-                break;
-            }
-        }
-
-        return tokens;
-    }
 
     bool handleInclude(const std::vector<std::string>& tokens, const std::string& lineToken, int lineIndex, std::vector<LineToken>& includeLineTokens)
     {
@@ -1223,7 +1121,7 @@ namespace Assembler
                 }
 
                 // Tokenise current line
-                std::vector<std::string> tokens = tokeniseLine(lineToken._text);
+                std::vector<std::string> tokens = Expression::tokeniseLine(lineToken._text);
 
                 // Find macro
                 bool macroSuccess = false;
@@ -1242,7 +1140,7 @@ namespace Assembler
                             for(int ml=0; ml<macro._lines.size(); ml++)
                             {
                                 // Tokenise macro line
-                                std::vector<std::string> mtokens =  tokeniseLine(macro._lines[ml]);
+                                std::vector<std::string> mtokens =  Expression::tokeniseLine(macro._lines[ml]);
 
                                 // Save labels
                                 size_t nonWhiteSpace = macro._lines[ml].find_first_not_of("  \n\r\f\t\v");
@@ -1302,7 +1200,7 @@ namespace Assembler
 
             if(macroMissing)
             {
-                fprintf(stderr, "Assembler::handleMacros() : Warning, macro is never called : '%s' : in '%s' : on line %d\n", macro._name.c_str(), macro._filename.c_str(), macro._fileStartLine);
+                //fprintf(stderr, "Assembler::handleMacros() : Warning, macro is never called : '%s' : in '%s' : on line %d\n", macro._name.c_str(), macro._filename.c_str(), macro._fileStartLine);
                 continue;
             }
 
@@ -1389,7 +1287,7 @@ namespace Assembler
             int lineIndex = int(itLine - lineTokens.begin()) + 1;
 
             // Tokenise current line
-            std::vector<std::string> tokens = tokeniseLine(lineToken._text);
+            std::vector<std::string> tokens = Expression::tokeniseLine(lineToken._text);
 
             // Valid pre-processor commands
             if(tokens.size() > 0)
@@ -1527,7 +1425,7 @@ namespace Assembler
 
                         std::vector<Gprintf::Var> vars;
                         std::vector<std::string> subs;
-                        std::vector<std::string> variables = tokenise(variableText, ',');
+                        std::vector<std::string> variables = Expression::tokenise(variableText, ',');
                         parseGprintfFormat(formatText, variables, vars, subs);
 
                         Gprintf gprintf = {false, _currentAddress, lineNumber, lineToken, formatText, vars, subs};
@@ -1764,7 +1662,7 @@ namespace Assembler
                 int tokenIndex = 0;
 
                 // Tokenise current line
-                std::vector<std::string> tokens = tokeniseLine(lineToken._text);
+                std::vector<std::string> tokens = Expression::tokeniseLine(lineToken._text);
 
                 // Comments
                 if(tokens.size() > 0  &&  tokens[0].find_first_of(";#") != std::string::npos) continue;

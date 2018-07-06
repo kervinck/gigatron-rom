@@ -56,6 +56,15 @@ namespace Expression
         return left;
     }
 
+    ExpressionType isExpression(const std::string& input)
+    {
+        if(input.find_first_of("[]") != std::string::npos) return Invalid;
+        if(input.find("++") != std::string::npos) return Invalid;
+        if(input.find("--") != std::string::npos) return Invalid;
+        if(input.find_first_of("+-*/()") != std::string::npos) return Valid;
+        return None;
+    }
+
     void setExprFunc(exprFuncPtr exprFunc) {_exprFunc = exprFunc;}
 
 
@@ -69,15 +78,10 @@ namespace Expression
         setExprFunc(expression);
     }
 
-    ExpressionType isExpression(const std::string& input)
-    {
-        if(input.find_first_of("[]") != std::string::npos) return Invalid;
-        if(input.find("++") != std::string::npos) return Invalid;
-        if(input.find("--") != std::string::npos) return Invalid;
-        if(input.find_first_of("+-*/()") != std::string::npos) return Valid;
-        return None;
-    }
 
+    // ****************************************************************************************************************
+    // Strings
+    // ****************************************************************************************************************
     bool hasNonStringWhiteSpace(int chr)
     {
         if(chr == '"') _containsQuotes = !_containsQuotes;
@@ -98,10 +102,15 @@ namespace Expression
         return std::find_if(input.begin(), input.end(), hasNonStringEquals);
     }
 
-    void stripWhitespace(std::string& input)
+    void stripNonStringWhitespace(std::string& input)
     {
         _containsQuotes = false;
         input.erase(remove_if(input.begin(), input.end(), hasNonStringWhiteSpace), input.end());
+    }
+
+    void stripWhitespace(std::string& input)
+    {
+        input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
     }
 
     void padString(std::string &str, int num, char pad)
@@ -151,6 +160,10 @@ namespace Expression
         while(ss != std::string::npos  ||  aa != std::string::npos  ||  sa != std::string::npos  ||  as != std::string::npos);
     }
 
+
+    // ****************************************************************************************************************
+    // String/number conversions
+    // ****************************************************************************************************************
     std::string byteToHexString(uint8_t n)
     {
         std::stringstream ss;
@@ -279,6 +292,121 @@ namespace Expression
         return true;
     }
 
+
+    // ****************************************************************************************************************
+    // Tokenising
+    // ****************************************************************************************************************
+    std::vector<std::string> tokenise(const std::string& text, char c)
+    {
+        std::vector<std::string> result;
+        const char* str = text.c_str();
+
+        do
+        {
+            const char *begin = str;
+
+            while(*str  &&  *str != c) str++;
+
+            std::string s = std::string(begin, str);
+            if(str > begin  &&  !std::all_of(s.begin(), s.end(), isspace))
+            {
+                result.push_back(s);
+            }
+        }
+        while (*str++ != 0);
+
+        return result;
+    }
+
+    std::vector<std::string> tokeniseLine(std::string& line)
+    {
+        std::string token = "";
+        bool delimiterStart = true;
+        bool stringStart = false;
+        enum DelimiterState {WhiteSpace, Quotes};
+        DelimiterState delimiterState = WhiteSpace;
+        std::vector<std::string> tokens;
+
+        for(int i=0; i<=line.size(); i++)
+        {
+            // End of line is a delimiter for white space
+            if(i == line.size())
+            {
+                if(delimiterState != Quotes)
+                {
+                    delimiterState = WhiteSpace;
+                    delimiterStart = false;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            else
+            {
+                // White space delimiters
+                if(strchr(" \n\r\f\t\v", line[i]))
+                {
+                    if(delimiterState != Quotes)
+                    {
+                        delimiterState = WhiteSpace;
+                        delimiterStart = false;
+                    }
+                }
+                // String delimiters
+                else if(strchr("\'\"", line[i]))
+                {
+                    delimiterState = Quotes;
+                    stringStart = !stringStart;
+                }
+            }
+
+            // Build token
+            switch(delimiterState)
+            {
+                case WhiteSpace:
+                {
+                    // Don't save delimiters
+                    if(delimiterStart)
+                    {
+                        if(!strchr(" \n\r\f\t\v", line[i])) token += line[i];
+                    }
+                    else
+                    {
+                        if(token.size()) tokens.push_back(token);
+                        delimiterStart = true;
+                        token = "";
+                    }
+                }
+                break;
+
+                case Quotes:
+                {
+                    // Save delimiters as well as chars
+                    if(stringStart)
+                    {
+                        token += line[i];
+                    }
+                    else
+                    {
+                        token += line[i];
+                        tokens.push_back(token);
+                        delimiterState = WhiteSpace;
+                        stringStart = false;
+                        token = "";
+                    }
+                }
+                break;
+            }
+        }
+
+        return tokens;
+    }
+
+
+    // ****************************************************************************************************************
+    // Recursive decent parser
+    // ****************************************************************************************************************
     char peek(void)
     {
         return *_expression;

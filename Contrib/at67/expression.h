@@ -1,12 +1,13 @@
 #ifndef EXPRESSION_H
 #define EXPRESSION_H
 
+#include <vector>
 #include <functional>
 
 
 namespace Expression
 {
-    enum ExpressionType {Invalid=-1, None, HasAlpha, Valid};
+    enum ExpressionType {Invalid=-1, None, HasAlpha, IsString, Valid};
     enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
 
     struct Numeric
@@ -31,6 +32,7 @@ namespace Expression
     bool hasNonStringEquals(int chr);
 
     std::string::const_iterator findNonStringEquals(const std::string& input);
+    void stripNonStringWhitespace(std::string& input);
     void stripWhitespace(std::string& input);
     void operatorReduction(std::string& input);
 
@@ -46,6 +48,9 @@ namespace Expression
     bool stringToU8(const std::string& token, uint8_t& result);
     bool stringToI16(const std::string& token, int16_t& result);
     bool stringToU16(const std::string& token, uint16_t& result);
+
+    std::vector<std::string> tokenise(const std::string& text, char c);
+    std::vector<std::string> tokeniseLine(std::string& line);
 
     char peek(void);
     char get(void);
