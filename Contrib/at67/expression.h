@@ -49,7 +49,7 @@ namespace Expression
     bool stringToI16(const std::string& token, int16_t& result);
     bool stringToU16(const std::string& token, uint16_t& result);
 
-    std::vector<std::string> tokenise(const std::string& text, char c);
+    std::vector<std::string> tokenise(const std::string& text, char c, bool skipSpaces=true, bool toUpper=false);
     std::vector<std::string> tokeniseLine(std::string& line);
 
     char peek(void);

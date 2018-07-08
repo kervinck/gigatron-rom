@@ -1,0 +1,14 @@
+10 a =1
+for k = 0 to 1
+for j = 0 to 1
+for i = 0 to 1
+for char = 32 to 127
+    chr$(char)
+next char
+next i
+next j
+next k
+for i = 0 to 5
+    print " "
+next i
+20 goto 10

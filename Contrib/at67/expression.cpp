@@ -296,7 +296,7 @@ namespace Expression
     // ****************************************************************************************************************
     // Tokenising
     // ****************************************************************************************************************
-    std::vector<std::string> tokenise(const std::string& text, char c)
+    std::vector<std::string> tokenise(const std::string& text, char c, bool skipSpaces, bool toUpper)
     {
         std::vector<std::string> result;
         const char* str = text.c_str();
@@ -308,8 +308,9 @@ namespace Expression
             while(*str  &&  *str != c) str++;
 
             std::string s = std::string(begin, str);
-            if(str > begin  &&  !std::all_of(s.begin(), s.end(), isspace))
+            if(str > begin  &&  (!skipSpaces  ||  !std::all_of(s.begin(), s.end(), isspace)))
             {
+                if(toUpper) strToUpper(s);
                 result.push_back(s);
             }
         }

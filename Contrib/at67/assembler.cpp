@@ -76,8 +76,6 @@ namespace Assembler
     {
         bool _complete = false;
         bool _fromInclude = false;
-        int _startLine = 0;
-        int _endLine = 0;
         int _fileStartLine;
         std::string _name;
         std::string _filename;
@@ -1094,12 +1092,23 @@ namespace Assembler
         }
 
         // Delete original macros
-        int prevMacrosSize = 0;
-        for(int i=0; i<macros.size(); i++)
+        auto filter = [](LineToken& lineToken)
         {
-            lineTokens.erase(lineTokens.begin() + macros[i]._startLine - prevMacrosSize, lineTokens.begin() + macros[i]._endLine + 1 - prevMacrosSize);
-            prevMacrosSize += macros[i]._endLine - macros[i]._startLine + 1;
-        }
+            static bool foundMacro = false;
+            if(lineToken._text.find("%MACRO") != std::string::npos)
+            {
+                foundMacro = true;
+                return true;
+            }
+            if(foundMacro)
+            {
+                if(lineToken._text.find("%ENDM") != std::string::npos) foundMacro = false;
+                return true;
+            }
+
+            return false;
+        };
+        lineTokens.erase(std::remove_if(lineTokens.begin(), lineTokens.end(), filter), lineTokens.end());
 
         // Find and expand macro
         int macroInstanceId = 0;
@@ -1214,7 +1223,7 @@ namespace Assembler
         return true;
     }
 
-    bool handleMacroStart(const std::string& filename, const LineToken& lineToken, const std::vector<std::string>& tokens, Macro& macro, int lineIndex, int adjustedLineIndex)
+    bool handleMacroStart(const std::string& filename, const LineToken& lineToken, const std::vector<std::string>& tokens, Macro& macro, int adjustedLineIndex)
     {
         int lineNumber = (lineToken._fromInclude) ? lineToken._includeLineNumber + 1 : adjustedLineIndex + 1;
         std::string macroFileName = (lineToken._fromInclude) ? lineToken._includeName : filename;
@@ -1227,7 +1236,6 @@ namespace Assembler
         }                    
 
         macro._name = tokens[1];
-        macro._startLine = lineIndex - 1;
         macro._fromInclude = lineToken._fromInclude;
         macro._fileStartLine = lineNumber;
         macro._filename = macroFileName;
@@ -1238,7 +1246,7 @@ namespace Assembler
         return true;
     }
 
-    bool handleMacroEnd(std::vector<Macro>& macros, Macro& macro, int lineIndex)
+    bool handleMacroEnd(std::vector<Macro>& macros, Macro& macro)
     {
         // Check for duplicates
         for(int i=0; i<macros.size(); i++)
@@ -1249,13 +1257,10 @@ namespace Assembler
                 return false;
             }
         }
-        macro._endLine = lineIndex - 1;
         macro._complete = true;
         macros.push_back(macro);
 
         macro._name = "";
-        macro._startLine = 0;
-        macro._endLine = 0;
         macro._lines.clear();
         macro._params.clear();
         macro._complete = false;
@@ -1318,13 +1323,13 @@ namespace Assembler
                 {
                     if(tokens[0] == "%MACRO")
                     {
-                        if(!handleMacroStart(filename, lineToken, tokens, macro, lineIndex, adjustedLineIndex)) return false;
+                        if(!handleMacroStart(filename, lineToken, tokens, macro, adjustedLineIndex)) return false;
 
                         buildingMacro = true;
                     }
                     else if(buildingMacro  &&  tokens[0] == "%ENDM")
                     {
-                        if(!handleMacroEnd(macros, macro, lineIndex)) return false;
+                        if(!handleMacroEnd(macros, macro)) return false;
                         buildingMacro = false;
                     }
                     if(buildingMacro  &&  tokens[0] != "%MACRO")

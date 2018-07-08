@@ -1,0 +1,88 @@
+_startAddress_  EQU		0x0200
+_callTable_     EQU		0x00ee
+
+clearScreen     EQU     0x7fa0
+printText       EQU     clearScreen - 0x0100
+printDigit      EQU     clearScreen - 0x0200
+printChar       EQU     clearScreen - 0x0300
+newLineScroll   EQU     clearScreen - 0x0400
+resetAudio      EQU     clearScreen - 0x0500
+playMidi        EQU     clearScreen - 0x0600
+midiStartNote   EQU     clearScreen - 0x0700
+
+; Internal variables
+register0       EQU     0x00a2
+register1       EQU     register0 + 0x02
+register2       EQU     register0 + 0x04
+register3       EQU     register0 + 0x06
+register4       EQU     register0 + 0x08
+register5       EQU     register0 + 0x0A
+register6       EQU     register0 + 0x0C
+register7       EQU     register0 + 0x0E
+textColour      EQU     register0 + 0x10
+cursorXY        EQU     register0 + 0x12
+midiStreamPtr   EQU     register0 + 0x14
+midiDelay       EQU     register0 + 0x16
+frameCountPrev  EQU     register0 + 0x18
+
+; Includes
+%include include/gigatron.i
+%include include/audio.i
+%include include/clear_screen.i
+%include include/print_text.i
+%include include/macros.i
+
+; Labels
+_entryPoint_	EQU		0x0200
+_10             EQU		0x020f
+_20             EQU		0x02a4
+forNext_0x0002	EQU		0x0222
+forNext_0x0003	EQU		0x0231
+forNext_0x0004	EQU		0x0240
+forNext_0x0005	EQU		0x024f
+forNext_0x000b	EQU		0x0290
+
+; Variables
+_a              EQU		0x0030
+_k              EQU		0x0032
+_j              EQU		0x0034
+_i              EQU		0x0036
+_char           EQU		0x0038
+
+; Strings
+usrStr_0x6fa0		EQU		0x6fa0
+usrStr_0x6fa0		DB		1 ' '
+
+; Code
+_entryPoint_	Initialise			; INIT
+
+_10             LDI		1
+                STW		_a		; a=1
+
+                ForNextInit	_k 0 1 1 0x0092 0x0094		; fork=0to1
+
+forNext_0x0002	ForNextInit	_j 0 1 1 0x0096 0x0098		; forj=0to1
+
+forNext_0x0003	ForNextInit	_i 0 1 1 0x009a 0x009c		; fori=0to1
+
+forNext_0x0004	ForNextInit	_char 32 127 1 0x009e 0x00a0		; forchar=32to127
+
+forNext_0x0005	PrintVarChar	_char		; chr$(char)
+
+                ForNextStepP	_char forNext_0x0005 0x009e 0x00a0		; nextchar
+
+                ForNextStepP	_i forNext_0x0004 0x009a 0x009c		; nexti
+
+                ForNextStepP	_j forNext_0x0003 0x0096 0x0098		; nextj
+
+                ForNextStepP	_k forNext_0x0002 0x0092 0x0094		; nextk
+
+                ForNextInit	_i 0 5 1 0x0092 0x0094		; fori=0to5
+
+forNext_0x000b	PrintString	usrStr_0x6fa0
+                CALL	newLineScroll		; print" "
+
+                ForNextStepP	_i forNext_0x000b 0x0092 0x0094		; nexti
+
+_20             CALL	_10		; goto10
+

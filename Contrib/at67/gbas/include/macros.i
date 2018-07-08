@@ -43,35 +43,53 @@
         DEEK
 %ENDM
 
-%MACRO  ForNextInit _counter _start _end _step
+%MACRO  ForNextInit _var _start _end _step _varEnd _varStep
         LDWI    _start
-        STW     _counter
+        STW     _var
         LDWI    _end
-        STW     kk
+        STW     _varEnd
         LDWI    _step
-        STW     xx
+        STW     _varStep
 %ENDM
 
-%MACRO  ForNextStepP _counter _label
-        LDW     _counter
-        ADDW    xx
-        STW     _counter
-        SUBW    kk
-        BLT     _label
+%MACRO  ForNextStepP _var _label _varEnd _varStep
+        LDW     _var
+        ADDW    _varStep
+        STW     _var
+        SUBW    _varEnd
+        BLE     _label
 %ENDM
 
-%MACRO  ForNextStepN _counter _label
-        LDW     _counter
-        ADDW    xx
-        STW     _counter
-        SUBW    kk
-        BGT     _label
+%MACRO  ForNextStepN _var _label _varEnd _varStep
+        LDW     _var
+        ADDW    _varStep
+        STW     _var
+        SUBW    _varEnd
+        BGE     _label
 %ENDM
 
-%MACRO  PrintString _textStr
-        LDWI    _textStr
+%MACRO  PrintChar _chr
+        LDI     _chr
+        CALL    validChar
+        CALL    printChar
+%ENDM
+
+%MACRO  PrintVarChar _var
+        LD      _var
+        CALL    validChar
+        CALL    printChar
+%ENDM
+
+%MACRO  PrintString _str
+        LDWI    _str
         STW     textStr
         CALL    printText
+%ENDM
+
+%MACRO  PrintInt16 _int
+        LDWI    _int
+        STW     textDigits    
+        CALL    printVarInt16
 %ENDM
 
 %MACRO  PrintVarInt16 _var
@@ -80,8 +98,11 @@
         CALL    printVarInt16
 %ENDM
 
-%MACRO  PrintInt16 _int
-        LDWI    _int
-        STW     textDigits    
-        CALL    printVarInt16
+%MACRO  Initialise
+        LDWI    0x2020          ; blue background
+        CALL    clearScreen
+        LDWI    0x0F20          ; yellow on blue
+        STW     textColour
+        LDWI    0x0802          ; starting cursor position
+        STW     cursorXY
 %ENDM
