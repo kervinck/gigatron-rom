@@ -1,51 +1,42 @@
-xcount          EQU     register0
-ycount          EQU     register1
-topline         EQU     register2
-botline         EQU     register3
+xreset          EQU     register0
+xcount          EQU     register1
+ycount          EQU     register2
+treset          EQU     register3
+breset          EQU     register4
+top             EQU     register5
+bot             EQU     register6
 
 
-                ; clears the viewable screen
-clearScreen     STW     giga_sysArg0    ; 4 pixels of colour
-                STW     giga_sysArg2
-
-                LDWI    SYS_Draw4_30    ; setup 4 pixel SYS routine
+                ; clears a region within the viewable screen
+clearRegion     LDWI    SYS_Draw4_30    ; setup 4 pixel SYS routine
                 STW     giga_sysFn
 
-                LDI     giga_yres / 2   ; counters
-                ST      ycount
-                LDI     giga_xres / 4
-                ST      xcount
-
-                LDWI    0x0800          ; top line
-                STW     topline
-                LDWI    0x7F00          ; bottom line
-                STW     botline
-
-clearS_loop     LDW     topline
+clearS_loop     LDW     top
                 STW     giga_sysArg4    ; top line
                 SYS     0xFF            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
 
-                LDW     botline
+                LDW     bot
                 STW     giga_sysArg4    ; bottom line
                 SYS     0xFF            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
 
-                LD      topline         ; 4 horizontal pixels
+                LD      top             ; 4 horizontal pixels
                 ADDI    0x04
-                ST      topline
-                LD      botline         ; 4 horizontal pixels
+                ST      top
+                LD      bot             ; 4 horizontal pixels
                 ADDI    0x04
-                ST      botline
+                ST      bot
                 LoopCounter xcount clearS_loop
 
-                INC     topline + 1     ; next top line
-                LD      botline + 1     ; next bottom line
+                INC     top + 1         ; next top line
+                LD      bot + 1         ; next bottom line
                 SUBI    0x01
-                ST      botline + 1
+                ST      bot + 1
 
-                LDI     0x00            ; reset topline, botline and xcount
-                ST      topline
-                ST      botline
-                LDI     giga_xres / 4
+                LD      treset         ; reset low bytes of treset, breset and xcount
+                ST      top
+                LD      breset
+                ST      bot
+                LD      xreset
                 ST      xcount
                 LoopCounter ycount clearS_loop
                 RET

@@ -1160,7 +1160,13 @@ namespace Assembler
                                 {
                                     for(int p=0; p<macro._params.size(); p++)
                                     {
-                                        if(mtokens[mt] == macro._params[p]) mtokens[mt] = tokens[t + 1 + p];
+                                        //if(mtokens[mt] == macro._params[p]) mtokens[mt] = tokens[t + 1 + p];
+                                        size_t param = mtokens[mt].find(macro._params[p]);
+                                        if(param != std::string::npos)
+                                        {
+                                            mtokens[mt].erase(param, macro._params[p].size());
+                                            mtokens[mt].insert(param, tokens[t + 1 + p]);
+                                        }
                                     }
                                 }
 
@@ -1870,38 +1876,38 @@ namespace Assembler
                             // All other non native 2 byte instructions
                             if(opcodeType != Native  &&  !operandValid)
                             {
-                                operandValid = Expression::stringToU8(tokens[tokenIndex], operand);
-                                if(!operandValid)
-                                {
-                                    Label label;
-                                    Equate equate;
+                                Label label;
+                                Equate equate;
 
-                                    // String
-                                    size_t quote1 = tokens[tokenIndex].find_first_of("'\"");
-                                    size_t quote2 = tokens[tokenIndex].find_first_of("'\"", quote1+1);
-                                    bool quotes = (quote1 != std::string::npos  &&  quote2 != std::string::npos  &&  (quote2 - quote1 > 1));
-                                    if(quotes)
-                                    {
-                                        operand = uint8_t(tokens[tokenIndex][quote1+1]);
-                                    }
-                                    // Search equates
-                                    else if(operandValid = evaluateEquateOperand(tokens, tokenIndex, equate, compoundInstruction))
-                                    {
-                                        operand = uint8_t(equate._operand);
-                                    }
-                                    // Search labels
-                                    else if(operandValid = evaluateLabelOperand(tokens, tokenIndex, label, compoundInstruction))
-                                    {
-                                        operand = uint8_t(label._address);
-                                    }
-                                    else if(Expression::isExpression(tokens[tokenIndex]) == Expression::Valid)
-                                    {
-                                        std::string input;
-                                        preProcessExpression(tokens, tokenIndex, input, true);
-                                        operand = uint8_t(Expression::parse((char*)input.c_str(), _lineNumber));
-                                        operandValid = true;
-                                    }
-                                    else if(!operandValid)
+                                // String
+                                size_t quote1 = tokens[tokenIndex].find_first_of("'\"");
+                                size_t quote2 = tokens[tokenIndex].find_first_of("'\"", quote1+1);
+                                bool quotes = (quote1 != std::string::npos  &&  quote2 != std::string::npos  &&  (quote2 - quote1 > 1));
+                                if(quotes)
+                                {
+                                    operand = uint8_t(tokens[tokenIndex][quote1+1]);
+                                }
+                                // Search equates
+                                else if(operandValid = evaluateEquateOperand(tokens, tokenIndex, equate, compoundInstruction))
+                                {
+                                    operand = uint8_t(equate._operand);
+                                }
+                                // Search labels
+                                else if(operandValid = evaluateLabelOperand(tokens, tokenIndex, label, compoundInstruction))
+                                {
+                                    operand = uint8_t(label._address);
+                                }
+                                else if(Expression::isExpression(tokens[tokenIndex]) == Expression::Valid)
+                                {
+                                    std::string input;
+                                    preProcessExpression(tokens, tokenIndex, input, true);
+                                    operand = uint8_t(Expression::parse((char*)input.c_str(), _lineNumber));
+                                    operandValid = true;
+                                }
+                                else
+                                {
+                                    operandValid = Expression::stringToU8(tokens[tokenIndex], operand);
+                                    if(!operandValid)
                                     {
                                         fprintf(stderr, "Assembler::assemble() : Label/Equate error : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
                                         return false;
@@ -2001,36 +2007,36 @@ namespace Assembler
                             else
                             {
                                 uint16_t operand;
-                                operandValid = Expression::stringToU16(tokens[tokenIndex], operand);
-                                if(!operandValid)
-                                {
-                                    Label label;
-                                    Equate equate;
+                                Label label;
+                                Equate equate;
 
-                                    // Search equates
-                                    if(operandValid = evaluateEquateOperand(tokens, tokenIndex, equate, compoundInstruction))
-                                    {
-                                        operand = equate._operand;
-                                    }
-                                    // Search labels
-                                    else if(operandValid = evaluateLabelOperand(tokens, tokenIndex, label, compoundInstruction))
-                                    {
-                                        operand = label._address;
-                                    }
-                                    else if(Expression::isExpression(tokens[tokenIndex]) == Expression::Valid)
-                                    {
-                                        std::string input;
-                                        preProcessExpression(tokens, tokenIndex, input, true);
-                                        operand = Expression::parse((char*)input.c_str(), _lineNumber);
-                                        operandValid = true;
-                                    }
-                                    else if(!operandValid)
+                                // Search equates
+                                if(operandValid = evaluateEquateOperand(tokens, tokenIndex, equate, compoundInstruction))
+                                {
+                                    operand = equate._operand;
+                                }
+                                // Search labels
+                                else if(operandValid = evaluateLabelOperand(tokens, tokenIndex, label, compoundInstruction))
+                                {
+                                    operand = label._address;
+                                }
+                                else if(Expression::isExpression(tokens[tokenIndex]) == Expression::Valid)
+                                {
+                                    std::string input;
+                                    preProcessExpression(tokens, tokenIndex, input, true);
+                                    operand = Expression::parse((char*)input.c_str(), _lineNumber);
+                                    operandValid = true;
+                                }
+                                else
+                                {
+                                    operandValid = Expression::stringToU16(tokens[tokenIndex], operand);
+                                    if(!operandValid)
                                     {
                                         fprintf(stderr, "Assembler::assemble() : Label/Equate error : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
                                         return false;
                                     }
                                 }
-
+                                
                                 // Reserved assembler opcode DW, (define word)
                                 if(opcodeType == ReservedDW  ||  opcodeType == ReservedDWR)
                                 {

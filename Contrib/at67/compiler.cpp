@@ -119,6 +119,8 @@ namespace Compiler
         int _varIndex;
         int _labelIndex;
         int _codeLineIndex;
+        int16_t _loopEnd;
+        int16_t _loopStep;
         uint16_t _varEnd;
         uint16_t _varStep;
     };
@@ -474,8 +476,15 @@ namespace Compiler
         _tempVarStartStr = Expression::wordToHexString(_tempVarStart);
     }
 
+    int getMacroSize(const std::string& macroStr);
     int getOpcodeSize(const std::string& opcodeStr)
     {
+        // Recursively check macros
+        if(opcodeStr.size() > 4)
+        {
+            return getMacroSize(opcodeStr);
+        }
+
         std::string opcode = std::string(opcodeStr);
         if(opcode == ";"  ||  opcode == "gprintf") return 0;
         if(opcode == "LSLW"  ||  opcode == "PEEK"  ||  opcode == "DEEK"  ||  opcode == "RET"  ||  opcode == "PUSH"  ||  opcode == "POP") return 1;
@@ -510,7 +519,7 @@ namespace Compiler
         std::string macro = std::string(macroStr);
         for(int i=0; i<lineTokens.size(); i++)
         {
-            if(lineTokens[i].find(macro) != std::string::npos)
+            if(lineTokens[i].find("%MACRO  " + macro) != std::string::npos)
             {
                 int opcodesSize = 0;
                 for(int j=i+1; j<lineTokens.size(); j++)
@@ -695,7 +704,8 @@ namespace Compiler
         for(int j=_codeLines[labelStart]._labelIndex + 1; j<_labels.size(); j++)
         {
             // Don't adjust for any code that starts on a page boundary
-            if((_labels[j]._address & 0x00FF) != 0x00) _labels[j]._address += offset;
+            //if((_labels[j]._address & 0x00FF) != 0x00) _labels[j]._address += offset;
+            _labels[j]._address += offset;
         }
     }
 
@@ -1180,9 +1190,9 @@ namespace Compiler
             return false;
         }
 
-        // Var counter
+        // Var counter, (create or update if being reused)
         int varIndex = findVar(codeLine._tokens[1]);
-        if(varIndex < 0) createVar(codeLine._tokens[1], loopStart, lineNumber, false, varIndex);
+        (varIndex < 0) ? createVar(codeLine._tokens[1], loopStart, lineNumber, false, varIndex) : updateVar(loopStart, lineNumber, varIndex, false);
 
         // Loop end
         int16_t loopEnd;
@@ -1192,6 +1202,7 @@ namespace Compiler
             return false;
         }
 
+#if 0
         // Maximum of 4 nested loops
         if(_forNextDataStack.size() == 4)
         {
@@ -1203,7 +1214,10 @@ namespace Compiler
         uint16_t varEnd = LOOP_VAR_START + offset;
         uint16_t varStep = LOOP_VAR_START + offset + 2;
 
-        emitVcpuAsm("%ForNextInit", "_" + _integerVars[varIndex]._name + " " + std::to_string(loopStart) + " " + std::to_string(loopEnd) + " 1" + " " + Expression::wordToHexString(varEnd) + " " + Expression::wordToHexString(varStep), false, lineNumber);
+        emitVcpuAsm("%ForNextInitVsVe", "_" + _integerVars[varIndex]._name + " " + std::to_string(loopStart) + " " + std::to_string(loopEnd) + " 1" + " " + Expression::wordToHexString(varEnd) + " " + Expression::wordToHexString(varStep), false, lineNumber);
+#endif
+
+        emitVcpuAsm("%ForNextInit", "_" + _integerVars[varIndex]._name + " " + std::to_string(loopStart), false, lineNumber);
 
         Label label;
         std::string name = "forNext_" + Expression::wordToHexString(_currentCodeLineIndex);
@@ -1211,7 +1225,7 @@ namespace Compiler
         _codeLines[_currentCodeLineIndex + 1]._labelIndex = int(_labels.size());
         createLabel(_vasmPC, name, name + "\t", _currentCodeLineIndex + 1, label);
 
-        _forNextDataStack.push({varIndex, _codeLines[_currentCodeLineIndex + 1]._labelIndex, _currentCodeLineIndex + 1, varEnd, varStep});
+        _forNextDataStack.push({varIndex, _codeLines[_currentCodeLineIndex + 1]._labelIndex, _currentCodeLineIndex + 1, loopEnd, 1, 0x00, 0x00});
 
 #if 0
 
@@ -1267,7 +1281,11 @@ namespace Compiler
             return false;
         }
 
-        emitVcpuAsm("%ForNextStepP", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + Expression::wordToHexString(forNextData._varEnd) + " " + Expression::wordToHexString(forNextData._varStep), false, lineNumber);
+        emitVcpuAsm("%ForNextLoopP", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + std::to_string(forNextData._loopEnd), false, lineNumber);
+
+#if 0
+        emitVcpuAsm("%ForNextLoopVsVeP", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + Expression::wordToHexString(forNextData._varEnd) + " " + Expression::wordToHexString(forNextData._varStep), false, lineNumber);
+#endif
 
         return true;
     }
@@ -1793,14 +1811,14 @@ namespace Compiler
 
     void outputInternalSubs(void)
     {
-        _output.push_back("clearScreen     EQU     " + Expression::wordToHexString(INT_FUNC_START) + "\n");
-        _output.push_back("printText       EQU     clearScreen - 0x0100\n");
-        _output.push_back("printDigit      EQU     clearScreen - 0x0200\n");
-        _output.push_back("printChar       EQU     clearScreen - 0x0300\n");
-        _output.push_back("newLineScroll   EQU     clearScreen - 0x0400\n");
-        _output.push_back("resetAudio      EQU     clearScreen - 0x0500\n");
-        _output.push_back("playMidi        EQU     clearScreen - 0x0600\n");
-        _output.push_back("midiStartNote   EQU     clearScreen - 0x0700\n");
+        _output.push_back("clearRegion     EQU     " + Expression::wordToHexString(INT_FUNC_START) + "\n");
+        _output.push_back("printText       EQU     clearRegion - 0x0100\n");
+        _output.push_back("printDigit      EQU     clearRegion - 0x0200\n");
+        _output.push_back("printChar       EQU     clearRegion - 0x0300\n");
+        _output.push_back("newLineScroll   EQU     clearRegion - 0x0400\n");
+        _output.push_back("resetAudio      EQU     clearRegion - 0x0500\n");
+        _output.push_back("playMidi        EQU     clearRegion - 0x0600\n");
+        _output.push_back("midiStartNote   EQU     clearRegion - 0x0700\n");
         _output.push_back("\n");
     }
 

@@ -1,14 +1,14 @@
 _startAddress_  EQU		0x0200
 _callTable_     EQU		0x00ee
 
-clearScreen     EQU     0x7fa0
-printText       EQU     clearScreen - 0x0100
-printDigit      EQU     clearScreen - 0x0200
-printChar       EQU     clearScreen - 0x0300
-newLineScroll   EQU     clearScreen - 0x0400
-resetAudio      EQU     clearScreen - 0x0500
-playMidi        EQU     clearScreen - 0x0600
-midiStartNote   EQU     clearScreen - 0x0700
+clearRegion     EQU     0x7fa0
+printText       EQU     clearRegion - 0x0100
+printDigit      EQU     clearRegion - 0x0200
+printChar       EQU     clearRegion - 0x0300
+newLineScroll   EQU     clearRegion - 0x0400
+resetAudio      EQU     clearRegion - 0x0500
+playMidi        EQU     clearRegion - 0x0600
+midiStartNote   EQU     clearRegion - 0x0700
 
 ; Internal variables
 register0       EQU     0x00a2
@@ -34,10 +34,10 @@ frameCountPrev  EQU     register0 + 0x18
 
 ; Labels
 _entryPoint_	EQU		0x0200
-_10             EQU		0x0217
-_15             EQU		0x023f
-_16             EQU		0x0245
-_20             EQU		0x024b
+_10             EQU		0x0233
+_15             EQU		0x025b
+_16             EQU		0x0261
+_20             EQU		0x0267
 
 ; Variables
 _a              EQU		0x0030

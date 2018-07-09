@@ -43,7 +43,26 @@
         DEEK
 %ENDM
 
-%MACRO  ForNextInit _var _start _end _step _varEnd _varStep
+%MACRO  ForNextInit _var _start
+        LDWI    _start
+        STW     _var
+%ENDM
+
+%MACRO  ForNextInitVe _var _start _end _varEnd
+        LDWI    _start
+        STW     _var
+        LDWI    _end
+        STW     _varEnd
+%ENDM
+
+%MACRO  ForNextInitVs _var _start _step _varStep
+        LDWI    _start
+        STW     _var
+        LDWI    _step
+        STW     _varStep
+%ENDM
+
+%MACRO  ForNextInitVsVe _var _start _end _step _varEnd _varStep
         LDWI    _start
         STW     _var
         LDWI    _end
@@ -52,7 +71,14 @@
         STW     _varStep
 %ENDM
 
-%MACRO  ForNextStepP _var _label _varEnd _varStep
+%MACRO  ForNextLoopP _var _label _end
+        INC     _var
+        LD      _var
+        SUBI    _end
+        BLE     _label
+%ENDM
+
+%MACRO  ForNextLoopVsVeP _var _label _varEnd _varStep
         LDW     _var
         ADDW    _varStep
         STW     _var
@@ -60,7 +86,7 @@
         BLE     _label
 %ENDM
 
-%MACRO  ForNextStepN _var _label _varEnd _varStep
+%MACRO  ForNextLoopVsVeN _var _label _varEnd _varStep
         LDW     _var
         ADDW    _varStep
         STW     _var
@@ -99,10 +125,29 @@
 %ENDM
 
 %MACRO  Initialise
-        LDWI    0x2020          ; blue background
-        CALL    clearScreen
+        ClearRegion 0x2020 0 0 giga_xres giga_yres
         LDWI    0x0F20          ; yellow on blue
         STW     textColour
         LDWI    0x0802          ; starting cursor position
         STW     cursorXY
+%ENDM
+
+%MACRO  ClearRegion  _colour _x _y _w _h
+        LDWI    _colour
+        STW     giga_sysArg0                            ; 4 pixels of colour
+        STW     giga_sysArg2
+
+        LDI     _h / 2
+        ST      ycount
+        LDI     _w / 4
+        ST      xcount
+        ST      xreset
+
+        LDWI    _y*256 + _x + giga_vram                 ; top line
+        STW     treset
+        STW     top
+        LDWI    ((_h - 1) + _y)*256 + _x + giga_vram    ; bottom line
+        STW     breset
+        STW     bot
+        CALL    clearRegion
 %ENDM

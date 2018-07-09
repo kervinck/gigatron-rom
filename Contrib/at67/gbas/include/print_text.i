@@ -23,15 +23,38 @@ printT_loop     LoopCounter textLen printT_char
                 POP
                 RET
 
+
+clearCursorRow  LDWI    0x2020
+                STW     giga_sysArg0        ; 4 pixels of colour
+                STW     giga_sysArg2
+                LDWI    SYS_Draw4_30        ; setup 4 pixel SYS routine
+                STW     giga_sysFn
+
+                LDI     8
+                ST      ycount
+
+                LDWI    giga_videoTable     ; current cursor location
+                PEEK
+                ST      giga_sysArg4 + 1
+
+clearS_loopy    LDI     giga_xres
                 
-                ; arg in accumulator, result in accumulator and textChr
-validChar       ANDI    0x7F                ; char = <32...127>
-                ST      textChr
-                SUBI    32
-                BGE     validC_chr
-                LDI     32
-                ST      textChr
-validC_chr      LD      textChr
+clearS_loopx    SUBI    4                   ; loop is unrolled 4 times
+                ST      giga_sysArg4
+                SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                SUBI    4
+                ST      giga_sysArg4
+                SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                SUBI    4
+                ST      giga_sysArg4
+                SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                SUBI    4
+                ST      giga_sysArg4
+                SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                BGT     clearS_loopx
+
+                INC     giga_sysArg4 + 1    ; next line                
+                LoopCounter ycount clearS_loopy
                 RET
 
 
@@ -144,7 +167,11 @@ newLineScroll   LDI     0x02                ; x offset slightly
                 SUBI    128
                 BLT     newLS_exit
                 
-newLS_cont      LDWI    giga_videoTable
+newLS_cont      PUSH
+                CALL    clearCursorRow
+                POP
+
+                LDWI    giga_videoTable
                 STW     scanLine
 
                 ; scroll all scan lines by 8 through 0x08 to 0x7F
@@ -170,3 +197,14 @@ newLS_adjust    ADDI    8
                 ST      cursorXY+1
 
 newLS_exit      RET
+
+
+                ; arg in accumulator, result in accumulator and textChr
+validChar       ANDI    0x7F                ; char = <32...127>
+                ST      textChr
+                SUBI    32
+                BGE     validC_chr
+                LDI     32
+                ST      textChr
+validC_chr      LD      textChr
+                RET
