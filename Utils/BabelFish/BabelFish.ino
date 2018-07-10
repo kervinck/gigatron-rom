@@ -71,6 +71,7 @@
 
 #if ArduinoUno
  #define platform "ArduinoUno"
+ #define maxStorage 32768
 
  // Pinout reference:
  // https://i2.wp.com/marcusjenkins.com/wp-content/uploads/2014/06/ARDUINO_V2.png
@@ -107,6 +108,7 @@
 #if ArduinoNano
  // at67's setup
  #define platform "ArduinoNano"
+ #define maxStorage 32768
 
  // Pinout reference:
  // http://lab.dejaworks.com/wp-content/uploads/2016/08/Arduino-Nano-1024x500.png
@@ -157,6 +159,7 @@
 #if ArduinoMicro
  // WattSekunde's setup
  #define platform "ArduinoMicro"
+ #define maxStorage 32768
 
  // Pinout reference:
  // http://1.bp.blogspot.com/-xqhL0OrJcxo/VJhVxUabhCI/AAAAAAABEVk/loDafkdqLxM/s1600/micro_pinout.png
@@ -201,6 +204,7 @@
 
 #if ATtiny85
  #define platform "ATtiny85"
+ #define maxStorage 8192
 
  // Pins for Gigatron (must be on PORTB)
  #define gigatronDataPin  PB2
@@ -241,6 +245,8 @@ const byte Blinky_gt1[] PROGMEM = {
 const byte bricks_gt1[] PROGMEM = {
   #include "bricks.h"
 };
+
+#if maxStorage >= 32768
 const byte lines_gt1[] PROGMEM = {
   #include "lines.h"
 };
@@ -251,8 +257,9 @@ const byte starfield_gt1[] PROGMEM = {
   #include "starfield.h"
 };
 const byte tetris_gt1[] PROGMEM = {
-  #include "tetris.h" /
+  #include "tetris.h"
 };
+#endif
 
 struct { byte *gt1; char *name; } gt1Files[12] = {
 /* 1  */ TinyBASIC_gt1, "Tiny BASIC",
@@ -260,10 +267,16 @@ struct { byte *gt1; char *name; } gt1Files[12] = {
 /* 3  */ Terminal_gt1,  "Terminal",
 /* 4  */ Blinky_gt1,    "Blinky",
 /* 5  */ bricks_gt1,    "Bricks game [xbx]",
+#if maxStorage >= 32768
 /* 6  */ lines_gt1,     "Lines demo [at67]",
 /* 7  */ life3_gt1,     "Game of Life demo [at67]",
 /* 8  */ starfield_gt1, "Starfield demo [at67]",
 /* 9  */ tetris_gt1,    "Tetris game [at67]",
+#else
+/* 7  */ 0,             "(Empty)",
+/* 8  */ 0,             "(Empty)",
+/* 9  */ 0,             "(Empty)",
+#endif
 /* 10 */ 0,             "(Empty)",
 /* 11 */ 0,             "(Empty)",
 /* 12 */ 0,             "(Empty)",
