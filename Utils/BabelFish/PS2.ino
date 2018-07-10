@@ -52,18 +52,18 @@
 #define PS2_DELETE     127
 
 #define PS2_ESC        27
-#define PS2_F1         (255^'1')
-#define PS2_F2         (255^'2')
-#define PS2_F3         (255^'3')
-#define PS2_F4         (255^'4')
-#define PS2_F5         (255^'5')
-#define PS2_F6         (255^'6')
-#define PS2_F7         (255^'7')
-#define PS2_F8         (255^'8')
-#define PS2_F9         (255^'9')
-#define PS2_F10        (255^':')
-#define PS2_F11        (255^';')
-#define PS2_F12        (255^'<')
+#define PS2_F1         (0xc0 + 1)
+#define PS2_F2         (0xc0 + 2)
+#define PS2_F3         (0xc0 + 3)
+#define PS2_F4         (0xc0 + 4)
+#define PS2_F5         (0xc0 + 5)
+#define PS2_F6         (0xc0 + 6)
+#define PS2_F7         (0xc0 + 7)
+#define PS2_F8         (0xc0 + 8)
+#define PS2_F9         (0xc0 + 9)
+#define PS2_F10        (0xc0 + 10)
+#define PS2_F11        (0xc0 + 11)
+#define PS2_F12        (0xc0 + 12)
 #define PS2_SCROLL     0
 
 #define ps2keymapSize  136
@@ -147,8 +147,9 @@ void keyboard_setup()
   allowPs2();
 
   #if ATtiny85
-    GIMSK |= 1<<PCIE;             // Pin change interrupt enable
-    PCMSK |= 1<<keyboardClockPin; // ... for keyboard clock
+    keyboardClockBit = digitalPinToBitMask(keyboardClockPin);
+    GIMSK |= 1<<PCIE;          // Pin change interrupt enable
+    PCMSK |= keyboardClockBit; // ... for keyboard clock
   #else
     attachInterrupt(
       digitalPinToInterrupt(keyboardClockPin),
@@ -160,7 +161,7 @@ void keyboard_setup()
   // attachInterrupt() doesn't work on the ATtiny85
   ISR(PCINT0_vect)
   {
-    if (~PINB & (1<<keyboardClockPin)) // FALLING edge of PS/2 clock
+    if (~PINB & keyboardClockBit) // FALLING edge of PS/2 clock
       ps2interrupt();
   }
 #endif
@@ -173,30 +174,30 @@ void keyboard_setup()
 void ps2interrupt()
 {
 
-	int nextBit = digitalRead(keyboardDataPin);
+  int nextBit = digitalRead(keyboardDataPin);
 
   long now = (long) millis();   // millis() stops when interrupts are disabled,
                                 // but that is ok, because we will reset n
                                 // after every vPulse (through allowPs2())
 
   // At least 10 kHz required for PS/2, self-reset after time out
-	if (now - lastClock > 5 || _n >= 11) {
-		bitBuffer = 1;              // Clear bits and setup for odd parity
+  if (now - lastClock > 5 || _n >= 11) {
+    bitBuffer = 1;              // Clear bits and setup for odd parity
     _n = 0;
-	}
-	lastClock = now;
+  }
+  lastClock = now;
 
   bitBuffer |= nextBit << _n;
   bitBuffer ^= nextBit;         // Track parity in bit 0
 
-	if (_n == 10) {
+  if (_n == 10) {
     ps2Buffer[head] = (bitBuffer >> 1) & 255;
 
     byte nextHead = (head + 1) % sizeof ps2Buffer;
     if (nextHead != tail        // Buffer not (almost) full
      /*&& (bitBuffer & 1)*/)        // XXX Parity check, with bonus check of start/stop bits
       head = nextHead;
-	}
+  }
   _n++;
 }
 
@@ -223,19 +224,19 @@ void forbidPs2()
 // Read next byte from incoming PS/2 buffer, or 0 when empty
 static byte readPs2Buffer()
 {
-	byte value = 0;
-	if (head != tail) {
-	  value = ps2Buffer[tail];
+  byte value = 0;
+  if (head != tail) {
+    value = ps2Buffer[tail];
     tail = (tail + 1) % sizeof ps2Buffer;
   }
-	return value;
+  return value;
 }
 
 byte keyboard_getState()
 {
   long now = (long) millis();           // Not: millis() stops counting without interrupts
   for (;;) {
-		word value = readPs2Buffer();
+    word value = readPs2Buffer();
     if (value == 0) {                   // Buffer is empty
       long hold = 35;                   // Hold ASCII keys for 3 frames (less than repetition rate)
       if (ascii == (255^buttonStart))   // [Ctrl-Alt-Del] maps to [Start] for 2 seconds
@@ -312,6 +313,8 @@ byte keyboard_getState()
           newAscii = lookup(_keymap->shift, value);
         else
           newAscii = lookup(_keymap->noshift, value);
+        if (fnKey(newAscii) && (flags & ctrlFlags)) // Ctrl+Fxx is BabelFish command
+          newAscii ^= 64;
     }
 
     if (button) {               // Case 2: Simulated game controller buttons
@@ -321,7 +324,7 @@ byte keyboard_getState()
         flags |= button;        // Button pressed
       ascii = 0;
     } else {                    // Case 3: ASCII keys
-  	  if (~flags & breakFlag)    
+      if (~flags & breakFlag)
         ascii = newAscii;       // ASCII pressed
       else
         ;                       // ASCII release (ignored)
@@ -338,8 +341,7 @@ byte keyboard_getState()
 // Return 0 if not a function key, or its ordinal otherwise
 byte fnKey(byte key)
 {
-  byte f = (255^key) - '0';
-  return (1 <= f && f <= 12) ? f : 0;
+  return (PS2_F1 <= key && key <= PS2_F12) ? (key & 15) : 0;
 }
 
 // XXX Remove all of this and get from elsewhere
