@@ -1,50 +1,69 @@
 
 // PS/2 keyboard handling for Babelfish talking to Gigatron
+// (Almost) Complete rewrite of PS2Keyboard
 
-// Complete rewrite of PS2keyboard, to adapt for Gigatron Babelfish on ATtiny85
+// References:
+//
+// https://www.avrfreaks.net/sites/default/files/PS2%20Keyboard.pdf
+//  The PS/2 Mouse/Keyboard Protocol
+//
+// http://www.quadibloc.com/comp/scan.htm
+//  Scan Codes Demytified
+//
+// https://retired.beyondlogic.org/keyboard/keybrd.htm
+//  Interfacing the AT keyboard
+//
+// https://web.archive.org/web/20180101224739/http://www.computer-engineering.org/ps2keyboard/scancodes2.html
+//  Keyboard Scan Codes: Set 2
+///
+// https://github.com/PaulStoffregen/PS2Keyboard
+//    PS/2 Keyboard Library for Arduino
+//
+// https://github.com/techpaul/PS2KeyAdvanced
+//  Arduino PS2 Keyboard FULL keyboard protocol support and full keys to integer coding
+//
+// https://github.com/techpaul/PS2KeyMap/
+//  Arduino PS2 keyboard International Keyboard mapping from PS2KeyAdvanced and return as UTF-8
 
-// XXX Switching between keymaps (and testing them)
+// TODO
+// [Basic features]
+// XXX Switching between keymaps
 // XXX Simplify keymap tables (and check licensing)
-// XXX F1 to send WozMon
-// XXX F2 to send TinyBASIC
-// XXX F3 to send lines...
-// XXX Sometimes keyboard sends breakcodes when pressing two arrow keys??
-// XXX Left-Alt for buttonB
-// XXX Pause/Break as alias buttonA?
+// XXX Test keymap for DE
+// XXX Test keymap for FR
+// XXX Test keymap for UK
+// XXX Issue: Sometimes keyboard starts injecting break codes
+//     when pressing [buttonA] + arrow keys, making it impossible
+//     to set the time in Mandelbrot??
+// XXX (Left)Alt for buttonB?
+// XXX Pause/Break as alias buttonA? (To break BASIC programs)
 // XXX How about keyboards without PageUp/PageDown?
-// Advanced:
-// XXX Accepting BAT sequence?
-// XXX Caps-Lock and setting LEDs (Hard)
-// XXX Num-Lock
-// XXX Key press to reset keyboard
+//
+// [Advanced features, for consideration]
+// XXX Caps-Lock and setting LEDs
+// XXX Do something with NumLock?
+// XXX Key combination to reset keyboard?
+// XXX Allow Gigatron to control the keyboard lights
+// XXX Let keyboard lights run in a pattern (bad idea :-)
 
 #define PS2_ENTER      '\n'
 #define PS2_TAB        9
 #define PS2_BACKSPACE  127
+#define PS2_DELETE     127
 
 #define PS2_ESC        27
-#define PS2_INSERT     0
-#define PS2_DELETE     127
-#define PS2_HOME       0
-#define PS2_END        0
-#define PS2_PAGEUP     25
-#define PS2_PAGEDOWN   26
-#define PS2_UPARROW    11
-#define PS2_LEFTARROW  8
-#define PS2_DOWNARROW  10
-#define PS2_RIGHTARROW 21
-#define PS2_F1         0
-#define PS2_F2         0
-#define PS2_F3         0
-#define PS2_F4         0
-#define PS2_F5         0
-#define PS2_F6         0
-#define PS2_F7         0
-#define PS2_F8         0
-#define PS2_F9         0
-#define PS2_F10        0
-#define PS2_F11        0
-#define PS2_F12        0
+#define PS2_F1         (255^'1')
+#define PS2_F2         (255^'2')
+#define PS2_F3         (255^'3')
+#define PS2_F4         (255^'4')
+#define PS2_F5         (255^'5')
+#define PS2_F6         (255^'6')
+#define PS2_F7         (255^'7')
+#define PS2_F8         (255^'8')
+#define PS2_F9         (255^'9')
+#define PS2_F10        (255^':')
+#define PS2_F11        (255^';')
+#define PS2_F12        (255^'<')
 #define PS2_SCROLL     0
 
 #define ps2keymapSize  136
@@ -74,7 +93,7 @@ enum {
   rightShiftFlag = 1<<9,
   leftCtrlFlag   = 1<<10,
   rightCtrlFlag  = 1<<11,
-  altFlag        = buttonB,
+  altFlag        = 1<<12,
   altGrFlag      = 1<<13,
   shiftFlags     = leftShiftFlag | rightShiftFlag,
   ctrlFlags      = leftCtrlFlag | rightCtrlFlag,
@@ -119,17 +138,32 @@ void keyboard_setup()
   _keymap = &PS2Keymap_US;
 
   // Initialize the pins
-#ifdef INPUT_PULLUP
-  pinMode(keyboardDataPin, INPUT_PULLUP);
-#else
-  pinMode(keyboardDataPin, INPUT);
-  digitalWrite(keyboardDataPin, HIGH);
-#endif
+  #ifdef INPUT_PULLUP
+    pinMode(keyboardDataPin, INPUT_PULLUP);
+  #else
+    pinMode(keyboardDataPin, INPUT);
+    digitalWrite(keyboardDataPin, HIGH);
+  #endif
   allowPs2();
 
-  GIMSK |= 1<<PCIE;             // Pin change interrupt enable
-  PCMSK |= 1<<keyboardClockPin; // ... for keyboard clock
+  #if ATtiny85
+    GIMSK |= 1<<PCIE;             // Pin change interrupt enable
+    PCMSK |= 1<<keyboardClockPin; // ... for keyboard clock
+  #else
+    attachInterrupt(
+      digitalPinToInterrupt(keyboardClockPin),
+      ps2interrupt, FALLING);
+  #endif
 }
+
+#if ATtiny85
+  // attachInterrupt() doesn't work on the ATtiny85
+  ISR(PCINT0_vect)
+  {
+    if (~PINB & (1<<keyboardClockPin)) // FALLING edge of PS/2 clock
+      ps2interrupt();
+  }
+#endif
 
 // Handle one bit from PS/2 keyboard for the next byte
 //  bit 0    : start bit (0)
@@ -138,6 +172,7 @@ void keyboard_setup()
 //  bit 10   : stop bit (1)
 void ps2interrupt()
 {
+
 	int nextBit = digitalRead(keyboardDataPin);
 
   long now = (long) millis();   // millis() stops when interrupts are disabled,
@@ -168,12 +203,12 @@ void ps2interrupt()
 // Ready to receive
 void allowPs2()
 {
-#ifdef INPUT_PULLUP
-  pinMode(keyboardClockPin, INPUT_PULLUP);
-#else
-  pinMode(keyboardClockPin, INPUT);
-  digitalWrite(keyboardClockPin, HIGH);
-#endif
+  #ifdef INPUT_PULLUP
+    pinMode(keyboardClockPin, INPUT_PULLUP);
+  #else
+    pinMode(keyboardClockPin, INPUT);
+    digitalWrite(keyboardClockPin, HIGH);
+  #endif
 
   _n = 11;                       // Consider previous bits lost
 }
@@ -263,6 +298,8 @@ byte keyboard_getState()
                      ascii = 255^buttonStart;    // [Ctrl-Alt-Del] for special reset
                    else
                      button = buttonA;    break; // ASCII DEL is 127 is ~buttonA
+      case 0xe069: button = buttonA;      break; // [End]
+      case 0xe070:                               // [Insert]
       case 0xe06c: button = buttonB;      break; // [Home]
       case 0xe07a: button = buttonSelect; break; // [PageDown]
       case 0xe07d: button = buttonStart;  break; // [PageUp]
@@ -298,6 +335,14 @@ byte keyboard_getState()
   return ascii ? ascii : (255 & ~flags);
 }
 
+// Return 0 if not a function key, or its ordinal otherwise
+byte fnKey(byte key)
+{
+  byte f = (255^key) - '0';
+  return (1 <= f && f <= 12) ? f : 0;
+}
+
+// XXX Remove all of this and get from elsewhere
 #define PS2_INVERTED_EXCLAMATION        161 // ¡
 #define PS2_CENT_SIGN                   162 // ¢
 #define PS2_POUND_SIGN                  163 // £
@@ -393,9 +438,6 @@ byte keyboard_getState()
 #define PS2_y_ACUTE                     253 // ý
 #define PS2_thorn                       254 // þ
 #define PS2_y_DIAERESIS                 255 // ÿ
-
-// http://www.quadibloc.com/comp/scan.htm
-// https://web.archive.org/web/20180101224739/http://www.computer-engineering.org/ps2keyboard/scancodes2.html
 
 const PROGMEM PS2Keymap_t PS2Keymap_US = {
   // without shift

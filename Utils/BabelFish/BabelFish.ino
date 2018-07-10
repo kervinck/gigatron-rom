@@ -16,17 +16,41 @@
 // Not every microcontroller supports all functions.
 
 // Select 1 of the platforms:
-#define ArduinoUno   0 // Default
+#define ArduinoUno   1 // Default
 #define ArduinoNano  0
 #define ArduinoMicro 0
-#define ATtiny85     1
+#define ATtiny85     0
 
 // Select a built-in GT1 image:
-const byte gt1File[] PROGMEM = {
-  //#include "Blinky.h" // Blink pixel in middle of screen
-  //#include "Lines.h"  // Draw randomized lines (at67)
-  //#include "WozMon.h" // Monitor program ported from Apple-1
+const byte TinyBASIC_gt1[] PROGMEM = {
   #include "TinyBASIC.h"
+};
+
+const byte WozMon_gt1[] PROGMEM = {
+  #include "WozMon.h" // Monitor program ported from Apple-1
+};
+
+const byte Lines_gt1[] PROGMEM = {
+  #include "Lines.h"  // Draw randomized lines (at67)
+};
+
+const byte Blinky_gt1[] PROGMEM = {
+  #include "Blinky.h" // Blink pixel in middle of screen
+};
+
+const byte *gt1Files[12] = {
+/* [1] = */ TinyBASIC_gt1,
+/* [2] = */ WozMon_gt1,
+/* [3] = */ Lines_gt1,
+/* [4] = */ Blinky_gt1,
+/* [5] = */ 0,
+/* [6] = */ 0,
+/* [7] = */ 0,
+/* [8] = */ 0,
+/* [9] = */ 0,
+/* [10]= */ 0,
+/* [11]= */ 0,
+/* [12]= */ 0,
 };
 
 // The object file is embedded (in PROGMEM) in GT1 format. It would be
@@ -198,14 +222,6 @@ const byte gt1File[] PROGMEM = {
  // Controller pass through
  #define hasController 0 // XXX Maybe use ~RESET for this
 
- // attachInterrupt() doesn't work on the ATtiny85.
- // Workaround as follows:
- ISR(PCINT0_vect)
- {
-   if (~PINB & (1<<keyboardClockPin)) // FALLING edge of PS/2 clock
-     ps2interrupt();
- }
-
 #endif
 
 /*----------------------------------------------------------------------+
@@ -257,12 +273,8 @@ void setup()
   // good pause to wait for the video loop to have started
   delay(350);
 
-  // PS/2 keyboard should be awake by now
-  #if !ATtiny85
-    keyboard.begin(keyboardDataPin, keyboardClockPin);
-  #else
-    keyboard_setup();
-  #endif
+  // Note that it takes 500~750 ms for PS/2 keyboards to boot
+  keyboard_setup();
 
   prompt();
 }
@@ -299,16 +311,23 @@ void loop()
   #endif
 
   // PS/2 keyboard events
-  byte activeCode = keyboard_getState();
-  if (activeCode != 255) {      // Enter busy loop
+  byte key = keyboard_getState();
+  if (key != 255) {
+    byte f = fnKey(key);
+    if (f)                           // Function key
+      if (gt1Files[f-1])
+        doTransfer(gt1Files[f-1]);   // Send built-in GT1 file to Gigatron
+
     while (1) {
-      critical();
-      sendFirstByte(activeCode);// Synchronize with vPulse and send code
-      nonCritical();
-      if (activeCode == 255)    // Until state is idle again
+      if (!fnKey(key)) {             // Normal case (regular key or button)
+        critical();
+        sendFirstByte(key);          // Synchronize with vPulse and send code
+        nonCritical();
+      }
+      if (key == 255)                // Until state is idle again
         break;
-      delay(15);                // Allow PS/2 interrupts for a reasonable window
-      activeCode = keyboard_getState();
+      delay(15);                     // Allow PS/2 interrupts for a reasonable window
+      key = keyboard_getState();
     }
   }
 }
@@ -362,7 +381,7 @@ void doCommand(char line[])
   case 'H': doHelp();                         break;
   case 'R': doReset(atoi(&line[1]));          break;
   case 'L': doLoader();                       break;
-  case 'P': doTransfer(gt1File);              break; // XXX Replace with function keys
+  case 'P': doTransfer(TinyBASIC_gt1);        break;
   case 'U': doTransfer(NULL);                 break;
   case '.': doLine(&line[1]);                 break;
   case 'C': doEcho(!echo);                    break;
