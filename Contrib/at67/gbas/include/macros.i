@@ -43,11 +43,6 @@
         DEEK
 %ENDM
 
-%MACRO  ForNextInit _var _start
-        LDWI    _start
-        STW     _var
-%ENDM
-
 %MACRO  ForNextInitVe _var _start _end _varEnd
         LDWI    _start
         STW     _var
@@ -100,6 +95,11 @@
         CALL    printChar
 %ENDM
 
+%MACRO  PrintAcChar
+        CALL    validChar
+        CALL    printChar
+%ENDM
+
 %MACRO  PrintVarChar _var
         LD      _var
         CALL    validChar
@@ -114,6 +114,11 @@
 
 %MACRO  PrintInt16 _int
         LDWI    _int
+        STW     textDigits    
+        CALL    printVarInt16
+%ENDM
+
+%MACRO  PrintAcInt16
         STW     textDigits    
         CALL    printVarInt16
 %ENDM

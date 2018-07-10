@@ -35,7 +35,6 @@ namespace Compiler
     enum FloatSize {Float16=2, Float32=4};
     enum LabelResult {LabelError=-1, LabelNotFound, LabelFound};
     enum KeywordResult {KeywordNotFound, KeywordError, KeywordFound};
-    enum OptimiseTypes {StwLdwPair=0, ExtraStw, NumOptimiseTypes};
 
     struct Label
     {
@@ -107,7 +106,13 @@ namespace Compiler
         int _codeLineIndex = -1;
     };
 
-    using KeywordFuncPtr = std::function<bool (CodeLine& codeLine, int lineNumber, size_t foundPos)>;
+    struct KeywordFuncResult
+    {
+        int16_t _data = 0;
+        std::string _name;
+    };
+
+    using KeywordFuncPtr = std::function<bool (CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)>;
     struct Keyword
     {
         std::string _name;
@@ -133,7 +138,7 @@ namespace Compiler
 
     bool _nextTempVar = true;
 
-    int _currentLabelIndex = 0;
+    int _currentLabelIndex = -1;
     int _currentCodeLineIndex = 0;
 
     std::string _tempVarStartStr;
@@ -159,60 +164,60 @@ namespace Compiler
     std::stack<ForNextData> _forNextDataStack;
 
 
-    bool handleREM(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleLET(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleGOTO(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handlePRINT(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleFOR(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleNEXT(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleIF(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleTHEN(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleELSE(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleELSEIF(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleENDIF(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleDIM(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleDEF(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleINPUT(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleREAD(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleDATA(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handlePEEK(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handlePOKE(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleDEEK(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleDOKE(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleON(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleGOSUB(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleRETURN(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleDO(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleLOOP(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleWHILE(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleUNTIL(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleEXIT(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleAND(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleOR(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleXOR(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleNOT(CodeLine& codeLine, int lineNumber, size_t foundPos);
+    bool handleREM(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleLET(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleGOTO(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handlePRINT(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleFOR(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleNEXT(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleIF(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleTHEN(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleELSE(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleELSEIF(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleENDIF(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleDIM(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleDEF(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleINPUT(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleREAD(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleDATA(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handlePEEK(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handlePOKE(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleDEEK(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleDOKE(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleON(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleGOSUB(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleRETURN(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleDO(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleLOOP(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleWHILE(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleUNTIL(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleEXIT(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleAND(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleOR(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleXOR(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleNOT(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
 
-    bool handleABS(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleACS(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleASC(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleASN(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleATN(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleCOS(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleEXP(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleINT(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleLOG(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleRND(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleSIN(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleSQR(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleTAN(CodeLine& codeLine, int lineNumber, size_t foundPos);
+    bool handleABS(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleACS(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleASC(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleASN(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleATN(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleCOS(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleEXP(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleINT(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleLOG(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleRND(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleSIN(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleSQR(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleTAN(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
 
-    bool handleCHR$(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleMID$(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleLEFT$(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleRIGHT$(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleSPC$(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleSTR$(CodeLine& codeLine, int lineNumber, size_t foundPos);
-    bool handleTIME$(CodeLine& codeLine, int lineNumber, size_t foundPos);
+    bool handleCHR$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleMID$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleLEFT$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleRIGHT$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleSPC$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleSTR$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleTIME$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
 
     
     void initialise(void)
@@ -387,12 +392,23 @@ namespace Compiler
     }
 
 
-    void createLabel(uint16_t address, const std::string& name, const std::string& output, int codeLineIndex, Label& label)
+    void createLabel(uint16_t address, const std::string& name, const std::string& output, int codeLineIndex, Label& label, bool addUnderscore=true)
     {
-        label = {address, name, output, codeLineIndex};
+        std::string n = name;
+        Expression::stripWhitespace(n);
+        std::string o = (addUnderscore) ? "_" + n : n;
+        Expression::addString(o, LABEL_TRUNC_SIZE - int(o.size()));
+        size_t space = o.find_first_of(" ");
+        if(space == std::string::npos  ||  space >= LABEL_TRUNC_SIZE - 1)
+        {
+            o = o.substr(0, LABEL_TRUNC_SIZE);
+            o[LABEL_TRUNC_SIZE - 1] = ' ';
+        }
+
+        label = {address, n, o, codeLineIndex};
         Expression::stripWhitespace(label._name);
-        _currentLabelIndex = int(_labels.size());
         _labels.push_back(label);
+        _currentLabelIndex = int(_labels.size() - 1);
     }
 
     void createVar(const std::string& varName, int16_t data, int lineNumber, bool containsVars, int& varIndex)
@@ -661,37 +677,17 @@ namespace Compiler
         // Entry point initialisation
         Label label;
         CodeLine codeLine;
-        createLabel(_vasmPC, "_entryPoint_", "_entryPoint_\t", 0, label);
+        createLabel(_vasmPC, "_entryPoint_", "_entryPoint_\t", 0, label, false);
         createCodeLine(_vasmPC, "INIT", "", 0, 0, -1, VarInt16, false, false, true, codeLine);
         emitVcpuAsm("%Initialise", "", false, 0);
 
-        std::string line;
         for(int i=0; i<numLines; i++)
         {
-            line = "";
             switch(checkForLabel(_input[i], i))
             {
-                case LabelFound:
-                {
-                    line = "_" + _labels.back()._name;
-                    Expression::addString(line, LABEL_TRUNC_SIZE - int(line.size()));
-                    size_t space = line.find_first_of(" ");
-                    if(space == std::string::npos  ||  space >= LABEL_TRUNC_SIZE - 1)
-                    {
-                        line = line.substr(0, LABEL_TRUNC_SIZE);
-                        line[LABEL_TRUNC_SIZE - 1] = ' ';
-                    }
-
-                    _labels.back()._output = line;
-                }
-                break;
-
-                case LabelNotFound:
-                {
-                }
-                break;
-
-                case LabelError: return false;
+                case LabelFound:    break;
+                case LabelNotFound: break;
+                case LabelError:    return false;
             }
         }
 
@@ -700,6 +696,7 @@ namespace Compiler
 
     void adjustLabelAddresses(int labelStart, int offset)
     {
+#if 0
         // Adjust label addresses
         for(int j=_codeLines[labelStart]._labelIndex + 1; j<_labels.size(); j++)
         {
@@ -707,6 +704,16 @@ namespace Compiler
             //if((_labels[j]._address & 0x00FF) != 0x00) _labels[j]._address += offset;
             _labels[j]._address += offset;
         }
+#else
+        // Adjust label addresses for any labels with addresses higher than start label
+        for(int j=0; j<_labels.size(); j++)
+        {
+            if(_labels[j]._address > _labels[labelStart]._address)
+            {
+                _labels[j]._address += offset;
+            }
+        }
+#endif
     }
 
 
@@ -756,7 +763,7 @@ namespace Compiler
             switch(expressiontype)
             {
                 case Expression::HasAlpha: result = 0; containsVars = true;                             break;
-                case Expression::None:     Expression::stringToI16(data, result);                       break;
+                case Expression::None:
                 case Expression::Valid:    result = Expression::parse((char*)data.c_str(), lineNumber); break;
 
                 case Expression::Invalid:
@@ -926,6 +933,14 @@ namespace Compiler
             return left;
         }
 
+        // Optimise var - var
+        if(left._isAddress  &&  right._isAddress  &&  left._varNamePtr  &&  right._varNamePtr)
+        {
+            std::string var = std::string(right._varNamePtr);
+            std::string expr = std::string(left._varNamePtr);
+            if(expr.find(var) != std::string::npos) return Expression::Numeric(0, false, "");
+        }
+
         handleAddSub("SUB", left, right);
         return left;
     }
@@ -938,6 +953,9 @@ namespace Compiler
             return left;
         }
 
+        // Optimise multiply with 0
+        if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, false, "");
+
         return left;
     }
 
@@ -948,6 +966,9 @@ namespace Compiler
             left._value /= right._value;
             return left;
         }
+
+        // Optimise divide with 0, term() never lets denominator = 0
+        if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, false, "");
 
         return left;
     }
@@ -1038,18 +1059,69 @@ namespace Compiler
     }
 
 
-    bool handleREM(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    KeywordResult handleKeywords(CodeLine& codeLine, size_t offset, int lineNumber, KeywordFuncResult& result)
+    {
+        size_t foundPos;
+
+        // Search keywords
+        for(int i=0; i<_keywords.size(); i++)
+        {
+            if(findKeyword(codeLine._code.substr(offset), _keywords[i]._name, foundPos))
+            {
+                bool error = _keywords[i]._func(codeLine, lineNumber, foundPos, result);
+                return (!error) ? KeywordError : KeywordFound;
+            }
+        }
+        
+        return KeywordNotFound;
+    }
+
+    KeywordResult handleMathwords(CodeLine& codeLine, size_t offset, int lineNumber, KeywordFuncResult& result)
+    {
+        size_t foundPos;
+
+        // Search mathwords
+        for(int i=0; i<_mathwords.size(); i++)
+        {
+            if(findKeyword(codeLine._code.substr(offset), _mathwords[i]._name, foundPos))
+            {
+                bool error = _mathwords[i]._func(codeLine, lineNumber, foundPos, result);
+                return (!error) ? KeywordError : KeywordFound;
+            }
+        }
+
+        return KeywordNotFound;
+    }
+
+    KeywordResult handleStringwords(CodeLine& codeLine, size_t offset, int lineNumber, KeywordFuncResult& result)
+    {
+        size_t foundPos;
+
+        // Search stringwords
+        for(int i=0; i<_stringwords.size(); i++)
+        {
+            if(findKeyword(codeLine._code.substr(offset), _stringwords[i]._name, foundPos))
+            {
+                bool error = _stringwords[i]._func(codeLine, lineNumber, foundPos, result);
+                return (!error) ? KeywordError : KeywordFound;
+            }
+        }
+
+        return KeywordNotFound;
+    }
+
+    bool handleREM(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         codeLine._code.clear();
         return true;
     }
 
-    bool handleLET(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleLET(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleGOTO(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleGOTO(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         std::string gotoLabel = codeLine._code.substr(4);
         if(findLabel(gotoLabel) == -1)
@@ -1063,7 +1135,7 @@ namespace Compiler
         return true;
     }
 
-    bool handlePRINT(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handlePRINT(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         // Parse print tokens
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ';', false);
@@ -1074,6 +1146,16 @@ namespace Compiler
             {
                 case Expression::IsString:
                 {
+                    KeywordResult keywordResult = keywordResult = handleStringwords(codeLine, foundPos, lineNumber, result);
+                    if(keywordResult == KeywordFound)
+                    {
+                        if(result._name == "CHR$")
+                        {
+                            emitVcpuAsm("%PrintAcChar", "", false, lineNumber);
+                            continue;
+                        }
+                    }
+
                     size_t lquote = tokens[i].find_first_of("\"");
                     size_t rquote = tokens[i].find_first_of("\"", lquote + 1);
                     if(lquote != std::string::npos  &&  rquote != std::string::npos)
@@ -1119,6 +1201,7 @@ namespace Compiler
                 }
                 break;
 
+                case Expression::None:
                 case Expression::Valid:
                 {
                     Expression::setExprFunc(Expression::expression);
@@ -1129,17 +1212,23 @@ namespace Compiler
 
                 case Expression::HasAlpha:
                 {
-                    CodeLine cl = codeLine;
-                    cl._code = cl._expression = tokens[i];
-                    varExpressionParse(cl, lineNumber);
-                    int varIndex = varAssignmentParse(cl, lineNumber);
-                    if(varIndex >= 0)
+                    // Search math words and string words
+                    KeywordResult keywordResult = handleMathwords(codeLine, foundPos, lineNumber, result);
+                    if(keywordResult == KeywordNotFound) keywordResult = handleStringwords(codeLine, foundPos, lineNumber, result);
+                    if(keywordResult == KeywordNotFound)
                     {
-                        emitVcpuAsm("%PrintVarInt16", "_" + _integerVars[varIndex]._name, false, lineNumber);
-                    }
-                    else
-                    {
-                        emitVcpuAsm("%PrintVarInt16", Expression::byteToHexString(uint8_t(_tempVarStart)), false, lineNumber);
+                        CodeLine cl = codeLine;
+                        cl._code = cl._expression = tokens[i];
+                        varExpressionParse(cl, lineNumber);
+                        int varIndex = varAssignmentParse(cl, lineNumber);
+                        if(varIndex >= 0)
+                        {
+                            emitVcpuAsm("%PrintVarInt16", "_" + _integerVars[varIndex]._name, false, lineNumber);
+                        }
+                        else
+                        {
+                            emitVcpuAsm("%PrintVarInt16", Expression::byteToHexString(uint8_t(_tempVarStart)), false, lineNumber);
+                        }
                     }
                 }
                 break;
@@ -1159,7 +1248,7 @@ namespace Compiler
         return true;
     }
 
-    bool handleFOR(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleFOR(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         if(codeLine._tokens.size() < 6  ||  codeLine._tokens.size() > 8)
         {
@@ -1217,15 +1306,24 @@ namespace Compiler
         emitVcpuAsm("%ForNextInitVsVe", "_" + _integerVars[varIndex]._name + " " + std::to_string(loopStart) + " " + std::to_string(loopEnd) + " 1" + " " + Expression::wordToHexString(varEnd) + " " + Expression::wordToHexString(varStep), false, lineNumber);
 #endif
 
-        emitVcpuAsm("%ForNextInit", "_" + _integerVars[varIndex]._name + " " + std::to_string(loopStart), false, lineNumber);
+        emitVcpuAsm("LDWI", std::to_string(loopStart), false, lineNumber);
 
+        // Create FOR loop label, (label is attached to line after for loop initialisation)
         Label label;
-        std::string name = "forNext_" + Expression::wordToHexString(_currentCodeLineIndex);
-        _codeLines[_currentCodeLineIndex + 1]._ownsLabel = true;
-        _codeLines[_currentCodeLineIndex + 1]._labelIndex = int(_labels.size());
-        createLabel(_vasmPC, name, name + "\t", _currentCodeLineIndex + 1, label);
+        int lineAfterLoopInit = _currentCodeLineIndex + 1;
+        std::string name = "next" + std::to_string(_currentCodeLineIndex); // + "_" + _integerVars[varIndex]._name;
+        createLabel(_vasmPC, name, name + "\t", lineAfterLoopInit, label, false);
+        _codeLines[lineAfterLoopInit]._ownsLabel = true;
+        _codeLines[lineAfterLoopInit]._labelIndex = _currentLabelIndex;
 
-        _forNextDataStack.push({varIndex, _codeLines[_currentCodeLineIndex + 1]._labelIndex, _currentCodeLineIndex + 1, loopEnd, 1, 0x00, 0x00});
+        // Update all lines belonging to this label
+        for(int i=_currentCodeLineIndex + 2; i<_codeLines.size(); i++)
+        {
+            if(!_codeLines[i]._ownsLabel) _codeLines[i]._labelIndex = _currentLabelIndex;
+        }
+
+        // FOR loops that have inputs as variables use a stack
+        _forNextDataStack.push({varIndex, _codeLines[lineAfterLoopInit]._labelIndex, lineAfterLoopInit, loopEnd, 1, 0x00, 0x00});
 
 #if 0
 
@@ -1235,7 +1333,7 @@ namespace Compiler
             switch(expressiontype)
             {
                 case Expression::HasAlpha: result = 0; containsVars = true;                             break;
-                case Expression::None:     Expression::stringToI16(data, result);                       break;
+                case Expression::None:
                 case Expression::Valid:    result = Expression::parse((char*)data.c_str(), lineNumber); break;
 
                 case Expression::Invalid:
@@ -1257,7 +1355,7 @@ namespace Compiler
         return true;
     }
 
-    bool handleNEXT(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleNEXT(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         if(codeLine._tokens.size() != 2)
         {
@@ -1290,201 +1388,201 @@ namespace Compiler
         return true;
     }
 
-    bool handleIF(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleIF(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleTHEN(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleTHEN(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleELSE(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleELSE(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleELSEIF(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleELSEIF(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleENDIF(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleENDIF(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleDIM(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleDIM(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleDEF(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleDEF(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleINPUT(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleINPUT(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleREAD(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleREAD(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleDATA(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleDATA(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handlePEEK(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handlePEEK(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handlePOKE(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handlePOKE(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleDEEK(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleDEEK(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleDOKE(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleDOKE(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleON(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleON(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleGOSUB(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleGOSUB(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
-    bool handleRETURN(CodeLine& codeLine, int lineNumber, size_t foundPos)
-    {
-        return true;
-    }
-
-    bool handleDO(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleRETURN(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleLOOP(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleDO(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleWHILE(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleLOOP(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleUNTIL(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleWHILE(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleEXIT(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleUNTIL(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleAND(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleEXIT(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleOR(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleAND(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleXOR(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleOR(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleNOT(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleXOR(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleABS(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleNOT(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleACS(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleABS(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleASC(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleACS(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleASN(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleASC(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleATN(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleASN(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleCOS(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleATN(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleEXP(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleCOS(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleINT(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleEXP(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleLOG(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleINT(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleRND(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleLOG(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleSIN(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleRND(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleSQR(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleSIN(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleTAN(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleSQR(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleCHR$(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleTAN(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
+    {
+        return true;
+    }
+
+    bool handleCHR$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         // Parse chr$
         size_t lbra = codeLine._code.find_first_of("(", foundPos);
@@ -1495,11 +1593,12 @@ namespace Compiler
             Expression::ExpressionType expressionType = isExpression(expr);
             switch(expressionType)
             {
+                case Expression::None:
                 case Expression::Valid:
                 {
                     Expression::setExprFunc(Expression::expression);
-                    uint16_t result = Expression::parse((char*)expr.c_str(), lineNumber);
-                    emitVcpuAsm("%PrintChar", Expression::wordToHexString(result), false, lineNumber);
+                    result._data = Expression::parse((char*)expr.c_str(), lineNumber);
+                    emitVcpuAsm("LDI", std::to_string(result._data), false, lineNumber);
                 }
                 break;
 
@@ -1509,14 +1608,7 @@ namespace Compiler
                     cl._code = cl._expression = expr;
                     varExpressionParse(cl, lineNumber);
                     int varIndex = varAssignmentParse(cl, lineNumber);
-                    if(varIndex >= 0)
-                    {
-                        emitVcpuAsm("%PrintVarChar", "_" + _integerVars[varIndex]._name, false, lineNumber);
-                    }
-                    else
-                    {
-                        emitVcpuAsm("%PrintVarChar", Expression::byteToHexString(uint8_t(_tempVarStart)), false, lineNumber);
-                    }
+                    (varIndex >= 0) ? emitVcpuAsm("LD", "_" + _integerVars[varIndex]._name, false, lineNumber) : emitVcpuAsm("LD", Expression::byteToHexString(uint8_t(_tempVarStart)), false, lineNumber);
                 }
                 break;
 
@@ -1534,74 +1626,39 @@ namespace Compiler
             return false;
         }
 
+        result._name = "CHR$";
+
         return true;
     }
 
-    bool handleMID$(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleMID$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleLEFT$(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleLEFT$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleRIGHT$(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleRIGHT$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleSPC$(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleSPC$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleSTR$(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleSTR$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
 
-    bool handleTIME$(CodeLine& codeLine, int lineNumber, size_t foundPos)
+    bool handleTIME$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
-    }
-
-    KeywordResult handleKeywords(CodeLine& codeLine, int lineNumber)
-    {
-        size_t foundPos;
-
-        // Search keywords
-        for(int i=0; i<_keywords.size(); i++)
-        {
-            if(findKeyword(codeLine._code, _keywords[i]._name, foundPos))
-            {
-                bool result = _keywords[i]._func(codeLine, lineNumber, foundPos);
-                return (!result) ? KeywordError : KeywordFound;
-            }
-        }
-        
-        // Search mathwords
-        for(int i=0; i<_mathwords.size(); i++)
-        {
-            if(findKeyword(codeLine._code, _mathwords[i]._name, foundPos))
-            {
-                bool result = _mathwords[i]._func(codeLine, lineNumber, foundPos);
-                return (!result) ? KeywordError : KeywordFound;
-            }
-        }
-
-        // Search stringwords
-        for(int i=0; i<_stringwords.size(); i++)
-        {
-            if(findKeyword(codeLine._code, _stringwords[i]._name, foundPos))
-            {
-                bool result = _stringwords[i]._func(codeLine, lineNumber, foundPos);
-                return (!result) ? KeywordError : KeywordFound;
-            }
-        }
-
-        return KeywordNotFound;
     }
 
     bool createVasmCode(CodeLine& codeLine, int lineNumber)
@@ -1615,32 +1672,37 @@ namespace Compiler
         }
 #endif
 
-        KeywordResult keywordResult = handleKeywords(codeLine, lineNumber);
-        if(keywordResult == KeywordNotFound)
+        KeywordFuncResult result;
+        KeywordResult keywordResult = handleKeywords(codeLine, 0, lineNumber, result);
+        if(keywordResult == KeywordNotFound) keywordResult = handleMathwords(codeLine, 0, lineNumber, result);
+        if(keywordResult == KeywordNotFound) keywordResult = handleStringwords(codeLine, 0, lineNumber, result);
+        else if(keywordResult == KeywordError) return false;
+
+        // TODO: only works with Int16, fix for all var types
+        // Variable assignment
+        if(codeLine._assignOperator)
         {
-            // TODO: only works with Int16, fix for all var types
-            // Variable assignment
-            if(codeLine._assignOperator)
+            // Optimisation, (removes uneeded LDW's)
+            static int prevVarIndex = -1;
+
+            // Assignment with a var expression
+            if(codeLine._containsVars)
             {
-                // Optimisation, (removes uneeded LDW's)
-                static int prevVarIndex = -1;
+                varExpressionParse(codeLine, lineNumber);
+                int varIndex = varAssignmentParse(codeLine, lineNumber);
 
-                // Assignment with a var expression
-                if(codeLine._containsVars)
+                // Optimise LDW away if possible
+                if(varIndex >= 0  &&  varIndex != prevVarIndex  &&  keywordResult != KeywordFound)
                 {
-                    varExpressionParse(codeLine, lineNumber);
-                    int varIndex = varAssignmentParse(codeLine, lineNumber);
-
-                    // Optimise LDW away if possible
-                    if(varIndex >= 0  &&  varIndex != prevVarIndex)
-                    {
-                        emitVcpuAsm("LDW", "_" + _integerVars[varIndex]._name, false, lineNumber);
-                    }
-                    emitVcpuAsm("STW", "_" + _integerVars[codeLine._varIndex]._name, false, lineNumber);
-                    prevVarIndex = codeLine._varIndex;
+                    emitVcpuAsm("LDW", "_" + _integerVars[varIndex]._name, false, lineNumber);
                 }
-                // Standard assignment
-                else
+                emitVcpuAsm("STW", "_" + _integerVars[codeLine._varIndex]._name, false, lineNumber);
+                prevVarIndex = codeLine._varIndex;
+            }
+            // Standard assignment
+            else
+            {
+                if(keywordResult != KeywordFound)
                 {
                     // 8bit constants
                     if(_integerVars[codeLine._varIndex]._init >=0  &&  _integerVars[codeLine._varIndex]._init <= 255)
@@ -1652,15 +1714,10 @@ namespace Compiler
                     {
                         emitVcpuAsm("LDWI", std::to_string(_integerVars[codeLine._varIndex]._init), false, lineNumber);
                     }
-
-                    emitVcpuAsm("STW", "_" + _integerVars[codeLine._varIndex]._name, false, lineNumber);
-                    prevVarIndex = codeLine._varIndex;
                 }
+                emitVcpuAsm("STW", "_" + _integerVars[codeLine._varIndex]._name, false, lineNumber);
+                prevVarIndex = codeLine._varIndex;
             }
-        }
-        else if(keywordResult == KeywordError) 
-        {
-            return false;
         }
 
         return true;
@@ -1702,74 +1759,109 @@ namespace Compiler
         return true;
     }
 
+    enum OptimiseTypes {StwLdwPair=0, StwLdPair, StwPair, ExtraStw, AddiZero, SubiZero, NumOptimiseTypes};
     bool optimiseCode(void)
     {
-        const std::string firstMatch[NumOptimiseTypes] = {"STW\t\t0x", "STW\t\t0x"};
-        const std::string secondMatch[NumOptimiseTypes] = {"LDW\t\t0x", "STW\t\t_"};
+        const std::string firstMatch[NumOptimiseTypes]  = {"STW\t\t0x", "STW\t\t0x", "STW\t\t0x", "STW\t\t0x", "ADDI\t", "SUBI\t"};
+        const std::string secondMatch[NumOptimiseTypes] = {"LDW\t\t0x", "LD\t\t0x",  "STW\t\t0x", "STW\t\t_",  "",       ""      };
 
-        for(int k=StwLdwPair; k<NumOptimiseTypes; k++)
+        for(int i=0; i<_codeLines.size(); i++)
         {
-            for(int i=0; i<_codeLines.size(); i++)
-            {
-                int firstLine = 0;
-                std::string firstVar;
-                bool firstFound = false;
+            int firstLine = 0;
+            std::string firstVar;
+            bool firstFound = false;
 
+            for(int j=StwLdwPair; j<NumOptimiseTypes; j++)
+            {
                 for(auto itLine=_codeLines[i]._vasm.begin(); itLine!=_codeLines[i]._vasm.end();)
                 {
                     bool linesDeleted = false;
 
-                    // First match
-                    if(!firstFound)
+                    switch(j)
                     {
-                        size_t first = itLine->_code.find(firstMatch[k]);
-                        if(first != std::string::npos)
+                        // Matched pairs
+                        case StwLdwPair:
+                        case StwLdPair:
+                        case StwPair:
+                        case ExtraStw:
                         {
-                            firstFound = true;
-                            firstLine = int(itLine - _codeLines[i]._vasm.begin());
-                            firstVar = itLine->_code.substr(first + firstMatch[k].size(), 2);
-                        }
-                    }
-                    else
-                    {
-                        // Second match must be on next line
-                        if(int(itLine - _codeLines[i]._vasm.begin())  ==  firstLine + 1)
-                        {
-                            size_t second = itLine->_code.find(secondMatch[k]);
-                            if(second != std::string::npos)
+                            // First match
+                            if(!firstFound)
                             {
-                                switch(k)
+                                size_t first = itLine->_code.find(firstMatch[j]);
+                                if(first != std::string::npos)
                                 {
-                                    // Remove superfluous STW/LDW pairs
-                                    case StwLdwPair:
+                                    firstFound = true;
+                                    firstLine = int(itLine - _codeLines[i]._vasm.begin());
+                                    firstVar = itLine->_code.substr(first + firstMatch[j].size(), 2);
+                                }
+                            }
+                            else
+                            {
+                                // Second match must be on next line
+                                if(int(itLine - _codeLines[i]._vasm.begin())  ==  firstLine + 1)
+                                {
+                                    size_t second = itLine->_code.find(secondMatch[j]);
+                                    if(second != std::string::npos)
                                     {
-                                        // If operand of STW/LDW pair matches
-                                        if(firstVar == itLine->_code.substr(second + secondMatch[k].size(), 2))
+                                        switch(j)
                                         {
-                                            linesDeleted = true;
-                                            itLine = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
-                                            itLine = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
-                                            adjustLabelAddresses(i, -4);
+                                            // Remove superfluous STW/LDW pairs
+                                            case StwLdwPair:
+                                            case StwLdPair:
+                                            {
+                                                // If operand of STW/LDW pair matches
+                                                if(firstVar == itLine->_code.substr(second + secondMatch[j].size(), 2))
+                                                {
+                                                    linesDeleted = true;
+                                                    itLine = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
+                                                    itLine = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
+                                                    adjustLabelAddresses(_codeLines[i]._labelIndex, -4);
+                                                }
+                                            }
+                                            break;
+
+                                            // Remove superfluous STW
+                                            case StwPair:
+                                            case ExtraStw:
+                                            {
+                                                linesDeleted = true;
+                                                itLine = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
+                                                adjustLabelAddresses(_codeLines[i]._labelIndex, -2);
+                                            }
+                                            break;
                                         }
                                     }
-                                    break;
+                                }
 
-                                    // Remove superfluous STW
-                                    case ExtraStw:
-                                    {
-                                        linesDeleted = true;
-                                        itLine = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
-                                        adjustLabelAddresses(i, -2);
-                                    }
-                                    break;
+                                firstLine = 0;
+                                firstVar = "";
+                                firstFound = false;
+                            }
+                        }
+                        break;
+
+                        // Matched singles
+                        case AddiZero:
+                        case SubiZero:
+                        {
+                            // Arithmetic with zero
+                            std::string operand;
+                            size_t pos = itLine->_code.find(firstMatch[j]);
+                            if(pos != std::string::npos)
+                            {
+                                operand = itLine->_code.substr(pos + firstMatch[j].size());
+                                if(operand == "0" || operand == "0x00")
+                                {
+                                    linesDeleted = true;
+                                    itLine = _codeLines[i]._vasm.erase(itLine);
+                                    adjustLabelAddresses(_codeLines[i]._labelIndex, -2);
                                 }
                             }
                         }
-
-                        firstLine = 0;
-                        firstVar = "";
-                        firstFound = false;
+                        break;
                     }
+
 
                     if(!linesDeleted) itLine++;
                 }

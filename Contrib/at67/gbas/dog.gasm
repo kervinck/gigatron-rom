@@ -33,7 +33,7 @@ frameCountPrev  EQU     register0 + 0x18
 %include include/macros.i
 
 ; Labels
-_entryPoint_	EQU		0x0200
+_entryPoint_    EQU		0x0200
 _10             EQU		0x0233
 _15             EQU		0x025b
 _16             EQU		0x0261
@@ -50,7 +50,7 @@ usrStr_0x6fa2		EQU		0x6fa2
 usrStr_0x6fa2		DB		5 ' dog '
 
 ; Code
-_entryPoint_	Initialise			; INIT
+_entryPoint_    Initialise			; INIT
                 LDI		0
                 STW		_a		; a=0
                 LDI		1

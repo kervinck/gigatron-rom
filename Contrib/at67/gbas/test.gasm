@@ -33,12 +33,12 @@ frameCountPrev  EQU     register0 + 0x18
 %include include/macros.i
 
 ; Labels
-_entryPoint_	EQU		0x0200
+_entryPoint_    EQU		0x0200
 _init           EQU		0x022b
 _32453245324543 EQU		0x0231
 _10             EQU		0x0236
-_31             EQU		0x02d3
-_40             EQU		0x02ee
+_31             EQU		0x02b7
+_40             EQU		0x02d0
 
 ; Variables
 _a              EQU		0x0030
@@ -57,7 +57,7 @@ usrStr_0x6fa2		EQU		0x6fa2
 usrStr_0x6fa2		DB		7 ' 123   '
 
 ; Code
-_entryPoint_	Initialise			; INIT
+_entryPoint_    Initialise			; INIT
 
 _init           LDI		1
                 STW		_a		; a=1
@@ -77,14 +77,8 @@ _10             PrintVarInt16	_a
 
                 LDW		_d
                 ADDI	5
-                STW		0x82
-                LDI		20
-                ADDW	0x82
-                STW		0x82
-                LDW		_cat
-                SUBW	_a
                 STW		0x84
-                LDW		0x82
+                LDI		20
                 ADDW	0x84
                 STW		_d		; d=20+(d+5)+(cat-a)
 
@@ -99,12 +93,8 @@ _10             PrintVarInt16	_a
                 ADDW	_d
                 SUBW	_b
                 STW		0x84
-                LDW		_a
-                SUBW	_cat
+                LDI		0
                 SUBW	_d
-                STW		0x86
-                LDW		0x84
-                SUBW	0x86
                 STW		_e		; e=b-3+(25-a)+d-b-(a-cat-d)
 
                 LDI		64
@@ -131,11 +121,7 @@ _10             PrintVarInt16	_a
                 LDWI	-900
                 ADDW	_f
                 STW		0x86
-                LDW		0x84
-                SUBW	0x86
-                STW		0x86
                 LDW		0x82
-                SUBW	0x86
                 STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
 
 _31             LDI		0
@@ -147,8 +133,7 @@ _31             LDI		0
                 LDI		24
                 SUBW	_g
                 STW		0x84
-                LDW		0x82
-                SUBW	0x84
+                LDI		0
                 ADDW	_f
                 STW		_f		; f=-g+1000-(24-g)+f
 

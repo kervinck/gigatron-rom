@@ -33,14 +33,14 @@ frameCountPrev  EQU     register0 + 0x18
 %include include/macros.i
 
 ; Labels
-_entryPoint_	EQU		0x0200
+_entryPoint_    EQU		0x0200
 _10             EQU		0x022b
-_20             EQU		0x0293
-forNext_0x0002	EQU		0x0234
-forNext_0x0003	EQU		0x0239
-forNext_0x0004	EQU		0x023e
-forNext_0x0005	EQU		0x0243
-forNext_0x000c	EQU		0x0274
+_20             EQU		0x02ce
+next2           EQU		0x0234
+next3           EQU		0x0239
+next4           EQU		0x023e
+next8           EQU		0x0266
+next16          EQU		0x02af
 
 ; Variables
 _a              EQU		0x0030
@@ -51,44 +51,75 @@ _char           EQU		0x0038
 
 ; Strings
 usrStr_0x6fa0		EQU		0x6fa0
-usrStr_0x6fa0		DB		3 'dog'
-usrStr_0x6fa4		EQU		0x6fa4
-usrStr_0x6fa4		DB		1 ' '
+usrStr_0x6fa0		DB		28 'yahooowalllallllalalalwallla'
+usrStr_0x6fbd		EQU		0x6fbd
+usrStr_0x6fbd		DB		3 'yes'
+usrStr_0x6fc1		EQU		0x6fc1
+usrStr_0x6fc1		DB		1 ' '
+usrStr_0x6fc3		EQU		0x6fc3
+usrStr_0x6fc3		DB		3 'dog'
 
 ; Code
-_entryPoint_	Initialise			; INIT
+_entryPoint_    Initialise			; INIT
 
 _10             LDI		1
                 STW		_a		; a=1
 
-                ForNextInit	_k 0		; fork=0to1
+                LDWI	0
+                STW		_k		; fork=0to1
 
-forNext_0x0002	ForNextInit	_j 0		; forj=0to1
+next2           LDWI	0
+                STW		_j		; forj=0to1
 
-forNext_0x0003	ForNextInit	_i 0		; fori=0to1
+next3           LDWI	0
+                STW		_i		; fori=0to1
 
-forNext_0x0004	ForNextInit	_char 32		; forchar=32to127
+next4           PrintString	usrStr_0x6fa0		; print"yahooowalllallllalalalwallla";
 
-forNext_0x0005	PrintVarChar	_char		; chr$(char)
+                PrintString	usrStr_0x6fbd
+                PrintString	usrStr_0x6fc1		; print"yes";" ";
 
-                ForNextLoopP	_char forNext_0x0005 127		; nextchar
+                PrintInt16	0x003d
+                PrintString	usrStr_0x6fc1		; print20*3+1;" ";
 
-                ForNextLoopP	_i forNext_0x0004 1		; nexti
+                LDWI	32
+                STW		_char		; forchar=32to127
 
-                ForNextLoopP	_j forNext_0x0003 1		; nextj
+next8           LDW		_a
+                ADDI	1
+                STW		_a		; a=a+1
 
-                ForNextLoopP	_k forNext_0x0002 1		; nextk
+                LDW		_char
+                ADDI	1
+                ADDW	_a
+                ADDW	_a
+                ADDW	_a
+                ADDI	3
+                SUBW	_a
+                SUBW	_a
+                SUBW	_a
+                SUBI	4
+                PrintAcChar			; printchr$(char+1+a+a+a-32*0+50/0+a/0+3-a-a-a-4+j*0+(k-k));
+
+                ForNextLoopP	_char next8 127		; nextchar
+
+                ForNextLoopP	_i next4 1		; nexti
+
+                ForNextLoopP	_j next3 1		; nextj
+
+                ForNextLoopP	_k next2 1		; nextk
 
                 CALL	newLineScroll		; print
 
-                ForNextInit	_i 0		; fori=0to231
+                LDWI	0
+                STW		_i		; fori=0to25
 
-forNext_0x000c	PrintString	usrStr_0x6fa0
-                PrintString	usrStr_0x6fa4
+next16          PrintString	usrStr_0x6fc3
+                PrintString	usrStr_0x6fc1
                 PrintVarInt16	_i
                 CALL	newLineScroll		; print"dog";" ";i
 
-                ForNextLoopP	_i forNext_0x000c 231		; nexti
+                ForNextLoopP	_i next16 25		; nexti
 
 _20             CALL	_20		; goto20
 

@@ -33,13 +33,13 @@ clearCursorRow  LDWI    0x2020
                 LDI     8
                 ST      ycount
 
-                LDWI    giga_videoTable     ; current cursor location
+                LDWI    giga_videoTable     ; current cursor position
                 PEEK
                 ST      giga_sysArg4 + 1
 
-clearS_loopy    LDI     giga_xres
+clearCR_loopy   LDI     giga_xres
                 
-clearS_loopx    SUBI    4                   ; loop is unrolled 4 times
+clearCR_loopx   SUBI    4                   ; loop is unrolled 4 times
                 ST      giga_sysArg4
                 SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
                 SUBI    4
@@ -51,10 +51,10 @@ clearS_loopx    SUBI    4                   ; loop is unrolled 4 times
                 SUBI    4
                 ST      giga_sysArg4
                 SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
-                BGT     clearS_loopx
+                BGT     clearCR_loopx
 
                 INC     giga_sysArg4 + 1    ; next line                
-                LoopCounter ycount clearS_loopy
+                LoopCounter ycount clearCR_loopy
                 RET
 
 
