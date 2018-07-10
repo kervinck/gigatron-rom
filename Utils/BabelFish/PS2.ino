@@ -133,6 +133,16 @@ extern const PROGMEM PS2Keymap_t PS2Keymap_US;
 extern const PROGMEM PS2Keymap_t PS2Keymap_German;
 extern const PROGMEM PS2Keymap_t PS2Keymap_French;
 
+#if ATtiny85
+  // attachInterrupt() doesn't work on the ATtiny85
+  static byte keyboardClockBit;
+  ISR(PCINT0_vect)
+  {
+    if (~PINB & keyboardClockBit) // FALLING edge of PS/2 clock
+      ps2interrupt();
+  }
+#endif
+
 void keyboard_setup()
 {
   _keymap = &PS2Keymap_US;
@@ -156,15 +166,6 @@ void keyboard_setup()
       ps2interrupt, FALLING);
   #endif
 }
-
-#if ATtiny85
-  // attachInterrupt() doesn't work on the ATtiny85
-  ISR(PCINT0_vect)
-  {
-    if (~PINB & keyboardClockBit) // FALLING edge of PS/2 clock
-      ps2interrupt();
-  }
-#endif
 
 // Handle one bit from PS/2 keyboard for the next byte
 //  bit 0    : start bit (0)
@@ -195,7 +196,7 @@ void ps2interrupt()
 
     byte nextHead = (head + 1) % sizeof ps2Buffer;
     if (nextHead != tail        // Buffer not (almost) full
-     /*&& (bitBuffer & 1)*/)        // XXX Parity check, with bonus check of start/stop bits
+     && (bitBuffer & 1))        // Parity check, with bonus check of start/stop bits
       head = nextHead;
   }
   _n++;
