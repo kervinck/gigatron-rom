@@ -58,7 +58,7 @@ burn: $(DEV).rom
 
 %.h: %.gt1
 	# Convert GT1 file into header for including as PROGMEM data
-	od -t x1 < "$<" |\
+	od -t x1 -v < "$<" |\
 	awk 'BEGIN {print "// Converted from $< by Makefile"}\
 	     {for (i=2; i<=NF; i++) printf "0x%s,\n", $$i}' > "$@"
 
