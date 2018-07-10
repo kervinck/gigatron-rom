@@ -108,21 +108,21 @@ ROM v2  0x20    ledState_v2 (write-only, settable to 0 for run and 1 for stop)
 
 Purpose of romType variable
 ---------------------------
-The intent is that GT1 applications can detect the presense of ROM
-features by inspecting only this memory location.  There are two
+The intent is that GT1 applications can detect the presence of ROM
+features by inspecting only this memory location. There are two
 types of ROM features: those listed in interface.json, and those
 not listed there. Features might still be described elsewhere, but
-just by being documented doesn't make a feature part of the intended
-interface.  The goal of interface.json is to provide a STABLE
+just by being documented doesn't make a feature part of the intended,
+stable, interface. The goal of interface.json is to provide a STABLE
 interface between GT1 files and ROM versions that can load such
 files. We only add new things to interface.json, never(*) remove,
-rename or change bindings once they are defined.  This should help
+rename or change bindings once they are defined. This should help
 with future compatibility of GT1 files. Things that are not in
-interface.json can and will disappear or change at any time and
-should not be relied on. (For example: some zero-page variables
-used by the video loop, SYS functions, entry points in code pages,
-location of application ROM images, built-in pictures, the shape
-of the font, etc...).
+interface.json can, and will, disappear or change at any time and
+should not be relied upon. (For example: some zero-page variables
+used by the video loop, certain SYS functions, specific entry points
+in code pages, location of application ROM images, built-in pictures,
+the shape of the font, values in ROM addresses etc...).
 
 Value increases with ROM releases
 ---------------------------------
@@ -133,9 +133,7 @@ of this value to that of the first ROM that introduced it. For
 historic reasons, the first romType value was 0x1c for ROMv1. Don't
 rely on the meaning of individual bits. Also, the value can go up
 by an arbitrary number with each release, so there no way to
-"calculate" the displayed version name as will be know by the user.
-(We could do such a thing in case we decide in the future to give
-special meaning to bits anyway.)
+"calculate" the displayed version name as will be known by the user.
 
 With this it is not possible that two "official" ROM releases have
 the same romType value. However, third-party ROMs with compatible
@@ -157,15 +155,15 @@ in earlier ROMs should degrade in performance or functionality, or
 fail gracefully, but definitely NOT crash. By publishng a file as
 GT1 you're signaling that you expect the file can be loaded with
 any past, present or future ROM version. To help remind the programmer
-which features were intruduced later, and therefore required a
-romType check before use, we add a ROM version number to new
-functions.
+which features were introduced after ROM v1, and therefore require
+a romType check before use, we'll add a ROM version number to their
+names.
 
 32K vs. 64K
 -----------
 It is understood that a program that really requires an extended
 64K memory crashes while loading on a 32K system. In that case
-please end the filename with "_64K.gt1".  The main idea is still
+please end the filename with "_64K.gt1". The main idea is still
 that a user doesn't get unexpected surprises.
 
 Hack files
@@ -174,9 +172,9 @@ Of course the Gigatron is an open system, so there will be plenty
 of methods to detect what kind of ROM you're running on. If you
 make a GT1 file that you know depends on undocumented features (or
 better phrased: features not listed in interface.json), it is adviced
-to give it a different extension.  For example 'Demo3_ROMv1only.gt1x'
-I always append a 'x' to such experimental files with no expectation
-of compatibility.
+to give it a different extension. For example 'Demo3_ROMv1only.gt1x'
+(I always append a 'x' to such experimental files with no expectation
+of compatibility.)
 
 Evolution and process
 ---------------------
@@ -194,20 +192,22 @@ we fixate it and document it?".
 Incompatible ROM upgrades
 -------------------------
 If we ever decide to make a truly incompatible step in ROM versions,
-one that that would break many GT1 files out there, we should start
-using a different extension for object files for the new platform
-(GT2 comes to mind). This is possible if we change something big
-about the architecture, such as the memory map or vCPU instruction
-set
+one that breaks many GT1 files out there, we should start using a
+different extension for object files for what then has effectively
+become a new platform (GT2 comes to mind). This is conceivable if
+we ever change something really big about the architecture, such
+as the memory map or the vCPU instruction set. Of course we hope
+we can get very far without ever doing something like this...
 
-(*) Have said that, we retro-actively removed 'SYS_Reset_36' and
-'SYS_NextByteIn_32' from the interface files. Their inclusion turned
-out to be a bit premature and they had to change after ROM v1.
-There is no alternative for SYS_ReadNextInput_32 in interface.json
-yet: it is part of Loader, but that is logically not a GT1 file.
+(*) Have said that, we retro-actively removed 'SYS_Reset_36',
+'SYS_NextByteIn_32' and 'SYS_LoaderPayloadCopy_34' from the interface
+files. Their inclusion turned out to be a bit premature and they
+had to change after ROM v1. There will be no alternative for
+SYS_ReadNextInput_32 and SYS_LoaderPayloadCopy_34 in interface.json
+soon: it is part of Loader, but that is logically not a GT1 file.
 'SYS_Reset_36' was just an intermediate in the soft reset sequence.
-The proper way to initiate that is by redirectng the vCPU vReset
-(0x1f0). So we have retro-actively added vReset to the JSON files
-instead.
+The proper way to initiate that is by redirecting the vCPU to vReset
+(0x1f0). So we have retro-actively added vReset to the interface.json
+files instead.
 
 -- End of document --
