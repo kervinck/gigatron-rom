@@ -27,8 +27,9 @@
 #       Same for SYS_PayloadCopy_34 -> SYS_LoaderPayloadCopy_34
 #  DONE Update version number to v2a
 #  DONE Test existing GT1 files, in all scan line modes
-#  DONE Sanity test op HW
-#  XXX Update version number to v2
+#  DONE Sanity test on HW
+#  DONE Sanity test on several monitors
+#  DONE Update version number to v2
 #
 #  Ideas for ROM vX
 #  XXX Need keymaps in ROM? (perhaps undocumented if not tested)

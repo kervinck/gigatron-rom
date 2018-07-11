@@ -35,7 +35,7 @@ gcl0x
   { Startup message:
     +--------------------------+
     |   *** Gigatron ??K ***   |
-    | TTL microcomputer ROM v2e| }
+    | TTL microcomputer ROM v2 | }
   [def
     {Line 1}
     $2a# $2a# $2a# $20# $47# $69# $67# $61#
@@ -45,7 +45,7 @@ gcl0x
     $20# $54# $54# $4c# $20# $6d# $69# $63#
     $72# $6f# $63# $6f# $6d# $70# $75# $74#
     $65# $72# $20# $52# $4f# $4d# $20# $76#
-    $32# $65# 0#
+    $32# 0#
   ] Text=
 
   { Convert memory size into decimal text }

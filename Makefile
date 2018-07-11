@@ -2,6 +2,23 @@ CFLAGS:=-std=c11 -O3 -Wall
 DEV:=ROMv2
 
 # Latest released version as default target
+ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
+	# Development towards ROMv2 (minor changes only)
+	env romType="0x20"\
+	    PYTHONPATH="Core:$(PYTHONPATH)"\
+	    python Core/ROMv2.py\
+		Apps/Snake_v2.gcl\
+		Apps/Racer.gcl\
+		Apps/Mandelbrot.gcl\
+		Apps/Pictures.gcl\
+		Apps/Credits.gcl\
+		Apps/Loader.gcl\
+		Apps/TinyBASIC.gcl\
+		Apps/WozMon.gcl\
+		Apps/Main_v2.gcl\
+		Core/Reset_v2.gcl
+
+# ROM v1 shipped with first batches of kits
 ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 	# ROMv1 gets 0x1c. Further numbers to be decided.
 	env romType="0x1c"\
