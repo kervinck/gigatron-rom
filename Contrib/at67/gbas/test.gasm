@@ -37,8 +37,18 @@ _entryPoint_    EQU		0x0200
 _init           EQU		0x022b
 _32453245324543 EQU		0x0231
 _10             EQU		0x0236
-_31             EQU		0x02b7
-_40             EQU		0x02d0
+_31             EQU		0x02d3
+_32             EQU		0x02ee
+_33             EQU		0x031b
+_34             EQU		0x0336
+_35             EQU		0x0351
+_36             EQU		0x036c
+_37             EQU		0x0387
+_40             EQU		0x06e7
+0x0300          EQU		0x0300
+0x0400          EQU		0x0400
+0x0500          EQU		0x0500
+0x0600          EQU		0x0600
 
 ; Variables
 _a              EQU		0x0030
@@ -77,8 +87,14 @@ _10             PrintVarInt16	_a
 
                 LDW		_d
                 ADDI	5
-                STW		0x84
+                STW		0x82
                 LDI		20
+                ADDW	0x82
+                STW		0x82
+                LDW		_cat
+                SUBW	_a
+                STW		0x84
+                LDW		0x82
                 ADDW	0x84
                 STW		_d		; d=20+(d+5)+(cat-a)
 
@@ -93,8 +109,12 @@ _10             PrintVarInt16	_a
                 ADDW	_d
                 SUBW	_b
                 STW		0x84
-                LDI		0
+                LDW		_a
+                SUBW	_cat
                 SUBW	_d
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
                 STW		_e		; e=b-3+(25-a)+d-b-(a-cat-d)
 
                 LDI		64
@@ -121,7 +141,11 @@ _10             PrintVarInt16	_a
                 LDWI	-900
                 ADDW	_f
                 STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
                 LDW		0x82
+                SUBW	0x86
                 STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
 
 _31             LDI		0
@@ -133,9 +157,480 @@ _31             LDI		0
                 LDI		24
                 SUBW	_g
                 STW		0x84
-                LDI		0
+                LDW		0x82
+                SUBW	0x84
                 ADDW	_f
                 STW		_f		; f=-g+1000-(24-g)+f
 
-_40             CALL	_10		; goto10
+_32             LDWI	0x0300
+                STW		register0
+                CALL	register0		; f=-g+1000-(24-g)+f
+
+0x0300          LDI		0
+                SUBW	_g
+                STW		0x82
+                LDWI	1000
+                ADDW	0x82
+                STW		0x82
+                LDI		24
+                SUBW	_g
+                STW		0x84
+                LDW		0x82
+                SUBW	0x84
+                ADDW	_f
+                STW		_f		; f=-g+1000-(24-g)+f
+
+_33             LDI		0
+                SUBW	_g
+                STW		0x82
+                LDWI	1000
+                ADDW	0x82
+                STW		0x82
+                LDI		24
+                SUBW	_g
+                STW		0x84
+                LDW		0x82
+                SUBW	0x84
+                ADDW	_f
+                STW		_f		; f=-g+1000-(24-g)+f
+
+_34             LDI		0
+                SUBW	_g
+                STW		0x82
+                LDWI	1000
+                ADDW	0x82
+                STW		0x82
+                LDI		24
+                SUBW	_g
+                STW		0x84
+                LDW		0x82
+                SUBW	0x84
+                ADDW	_f
+                STW		_f		; f=-g+1000-(24-g)+f
+
+_35             LDI		0
+                SUBW	_g
+                STW		0x82
+                LDWI	1000
+                ADDW	0x82
+                STW		0x82
+                LDI		24
+                SUBW	_g
+                STW		0x84
+                LDW		0x82
+                SUBW	0x84
+                ADDW	_f
+                STW		_f		; f=-g+1000-(24-g)+f
+
+_36             LDI		0
+                SUBW	_g
+                STW		0x82
+                LDWI	1000
+                ADDW	0x82
+                STW		0x82
+                LDI		24
+                SUBW	_g
+                STW		0x84
+                LDW		0x82
+                SUBW	0x84
+                ADDW	_f
+                STW		_f		; f=-g+1000-(24-g)+f
+
+_37             LDI		0
+                SUBW	_g
+                STW		0x82
+                LDWI	1000
+                ADDW	0x82
+                STW		0x82
+                LDI		24
+                SUBW	_g
+                STW		0x84
+                LDW		0x82
+                SUBW	0x84
+                ADDW	_f
+                STW		_f		; f=-g+1000-(24-g)+f
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	0x0400
+                STW		register0
+                CALL	register0		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+0x0400          LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	0x0500
+                STW		register0
+                CALL	register0		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+0x0500          LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	0x0600
+                STW		register0
+                CALL	register0		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+0x0600          LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+                LDWI	-2949
+                ADDW	_b
+                STW		0x82
+                LDWI	300
+                ADDW	_e
+                STW		0x84
+                LDWI	-900
+                ADDW	_f
+                STW		0x86
+                LDW		0x84
+                SUBW	0x86
+                STW		0x86
+                LDW		0x82
+                SUBW	0x86
+                STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+
+_40             LDWI	_10
+                STW		register0
+                CALL	register0		; goto10
 

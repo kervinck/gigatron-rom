@@ -35,12 +35,12 @@ frameCountPrev  EQU     register0 + 0x18
 ; Labels
 _entryPoint_    EQU		0x0200
 _10             EQU		0x022b
-_20             EQU		0x02ce
+_20             EQU		0x02da
 next2           EQU		0x0234
 next3           EQU		0x0239
 next4           EQU		0x023e
 next8           EQU		0x0266
-next16          EQU		0x02af
+next16          EQU		0x02bb
 
 ; Variables
 _a              EQU		0x0030
@@ -99,6 +99,12 @@ next8           LDW		_a
                 SUBW	_a
                 SUBW	_a
                 SUBI	4
+                STW		0x82
+                LDW		_k
+                SUBW	_k
+                STW		0x84
+                LDW		0x82
+                ADDW	0x84
                 PrintAcChar			; printchr$(char+1+a+a+a-32*0+50/0+a/0+3-a-a-a-4+j*0+(k-k));
 
                 ForNextLoopP	_char next8 127		; nextchar
@@ -112,14 +118,14 @@ next8           LDW		_a
                 CALL	newLineScroll		; print
 
                 LDWI	0
-                STW		_i		; fori=0to25
+                STW		_i		; fori=0to6
 
 next16          PrintString	usrStr_0x6fc3
                 PrintString	usrStr_0x6fc1
                 PrintVarInt16	_i
                 CALL	newLineScroll		; print"dog";" ";i
 
-                ForNextLoopP	_i next16 25		; nexti
+                ForNextLoopP	_i next16 6		; nexti
 
-_20             CALL	_20		; goto20
+_20             BRA		_20		; goto20
 

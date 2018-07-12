@@ -1866,10 +1866,19 @@ namespace Assembler
                                         _callTable -= 0x0002;
                                     }
                                 }
+                                // CALL that doesn't use the call table, (usually to save zero page memory at the expense of code size and code speed).
                                 else
                                 {
-                                    fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
-                                    return false;
+                                    Equate equate;
+                                    if(operandValid = evaluateEquateOperand(tokens, tokenIndex, equate, false))
+                                    {
+                                        operand = uint8_t(equate._operand);
+                                    }
+                                    else 
+                                    {
+                                        fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
+                                        return false;
+                                    }
                                 }
                             }
                                 

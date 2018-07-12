@@ -46,17 +46,20 @@ namespace Compiler
 
     struct VasmLine
     {
+        uint16_t _address;
+        std::string _opcode;
         std::string _code;
         std::string _label;
+        int gotoLabelIndex = -1;
     };
 
     struct CodeLine
     {
-        uint16_t _address;
         std::string _code;
         std::vector<std::string> _tokens;
         std::vector<VasmLine> _vasm;
         std::string _expression;
+        int _vasmSize = 0;
         int _labelIndex = -1;
         int  _varIndex = -1;
         VarType _varType = VarInt16;
@@ -463,10 +466,10 @@ namespace Compiler
         }
 
         std::vector<VasmLine> vasm;
-        if(vasmCode.size()) vasm.push_back({vasmCode, ""});
+        if(vasmCode.size()) vasm.push_back({address, "", vasmCode, "", -1});
         std::string codeSub = code.substr(codeLineOffset, code.size() - (codeLineOffset));
         std::vector<std::string> tokens = Expression::tokenise(codeSub, ' ', true);
-        codeLine = {address, codeSub, tokens, vasm, expression, labelIndex, varIndex, varType, assign, vars, ownsLabel};
+        codeLine = {codeSub, tokens, vasm, expression, 0, labelIndex, varIndex, varType, assign, vars, ownsLabel};
         Expression::stripNonStringWhitespace(codeLine._code);
         Expression::stripWhitespace(codeLine._expression);
         Expression::operatorReduction(codeLine._expression);
@@ -575,22 +578,24 @@ namespace Compiler
         return vasmSize;
     }
 
-    int insertVcpuAsm(const std::string& opcodeStr, const std::string& operandStr, int codeLineIdx, int vasmLineIdx)
+    int insertVcpuAsm(const std::string& opcodeStr, const std::string& operandStr, int codeLineIdx, int vasmLineIdx, int gotoLabelIndex=-1)
     {
         std::string line;
 
         int vasmSize = createVcpuAsm(opcodeStr, operandStr, codeLineIdx, line);
-        _codeLines[codeLineIdx]._vasm.insert(_codeLines[codeLineIdx]._vasm.begin() + vasmLineIdx, {line, ""});
+        _codeLines[codeLineIdx]._vasm.insert(_codeLines[codeLineIdx]._vasm.begin() + vasmLineIdx, {uint16_t(_vasmPC - vasmSize), opcodeStr, line, "", gotoLabelIndex});
+        _codeLines[codeLineIdx]._vasmSize += vasmSize;
 
         return vasmSize;
     }
 
-    void emitVcpuAsm(const std::string& opcodeStr, const std::string& operandStr, bool nextTempVar, int codeLineIdx=_currentCodeLineIndex, const std::string& label="")
+    void emitVcpuAsm(const std::string& opcodeStr, const std::string& operandStr, bool nextTempVar, int codeLineIdx=_currentCodeLineIndex, const std::string& label="", int gotoLabelIndex=-1)
     {
         std::string line;
 
         int vasmSize = createVcpuAsm(opcodeStr, operandStr, codeLineIdx, line);
-        _codeLines[codeLineIdx]._vasm.push_back({line, label});
+        _codeLines[codeLineIdx]._vasm.push_back({uint16_t(_vasmPC - vasmSize), opcodeStr, line, label, gotoLabelIndex});
+        _codeLines[codeLineIdx]._vasmSize += vasmSize;
 
         if(nextTempVar) getNextTempVar();
     }
@@ -694,28 +699,30 @@ namespace Compiler
         return true;
     }
 
-    void adjustLabelAddresses(int labelStart, int offset)
+    void adjustLabelAddresses(int labelIndex, int offset)
     {
-#if 0
-        // Adjust label addresses
-        for(int j=_codeLines[labelStart]._labelIndex + 1; j<_labels.size(); j++)
+        // Adjust label addresses for any labels with addresses higher than start label, (labels can be stored out of order)
+        for(int i=0; i<_labels.size(); i++)
         {
-            // Don't adjust for any code that starts on a page boundary
-            //if((_labels[j]._address & 0x00FF) != 0x00) _labels[j]._address += offset;
-            _labels[j]._address += offset;
-        }
-#else
-        // Adjust label addresses for any labels with addresses higher than start label
-        for(int j=0; j<_labels.size(); j++)
-        {
-            if(_labels[j]._address > _labels[labelStart]._address)
+            if(_labels[i]._address > _labels[labelIndex]._address)
             {
-                _labels[j]._address += offset;
+                _labels[i]._address += offset;
             }
         }
-#endif
     }
 
+    // Adjust vasm code addresses
+    void adjustVasmAddresses(int codeLineIndex, int vasmLineIndex, int offset)
+    {
+        for(int i=codeLineIndex; i<_codeLines.size(); i++)
+        {
+            int start = (i == codeLineIndex) ? vasmLineIndex : 0;
+            for(int j=start; j<_codeLines[i]._vasm.size(); j++)
+            {
+                _codeLines[i]._vasm[j]._address += offset;
+            }
+        }
+    }
 
     Expression::ExpressionType isExpression(const std::string& input)
     {
@@ -933,14 +940,6 @@ namespace Compiler
             return left;
         }
 
-        // Optimise var - var
-        if(left._isAddress  &&  right._isAddress  &&  left._varNamePtr  &&  right._varNamePtr)
-        {
-            std::string var = std::string(right._varNamePtr);
-            std::string expr = std::string(left._varNamePtr);
-            if(expr.find(var) != std::string::npos) return Expression::Numeric(0, false, "");
-        }
-
         handleAddSub("SUB", left, right);
         return left;
     }
@@ -1124,13 +1123,30 @@ namespace Compiler
     bool handleGOTO(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         std::string gotoLabel = codeLine._code.substr(4);
-        if(findLabel(gotoLabel) == -1)
+        int labelIndex = findLabel(gotoLabel);
+        if(labelIndex == -1)
         {
             fprintf(stderr, "Compiler::createVasmCode() : invalid label in '%s' on line %d\n", codeLine._code.c_str(), lineNumber);
             return false;
         }
 
-        emitVcpuAsm("CALL", "_" + gotoLabel, false, lineNumber);
+        // Within same page
+        if((_vasmPC & 0xFF00) == (_labels[labelIndex]._address & 0xFF00))
+        {
+            emitVcpuAsm("BRA", "_" + gotoLabel, false, lineNumber, "", labelIndex);
+        }
+        // Long jump
+        else
+        {
+#if 1
+            emitVcpuAsm("LDWI", "_" + gotoLabel, false, lineNumber);
+            emitVcpuAsm("STW", "register0", false, lineNumber);
+            emitVcpuAsm("CALL", "register0", false, lineNumber);
+#else            
+            // This uses the call table and wastes precious zero page memory
+            emitVcpuAsm("CALL", "_" + gotoLabel, false, lineNumber);
+#endif
+        }
 
         return true;
     }
@@ -1243,7 +1259,10 @@ namespace Compiler
         }
 
         // New line
-        if(codeLine._code[codeLine._code.size() - 1] != ';') emitVcpuAsm("CALL", "newLineScroll", false, lineNumber);
+        if(codeLine._code[codeLine._code.size() - 1] != ';')
+        {
+            emitVcpuAsm("CALL", "newLineScroll", false, lineNumber);
+        }
 
         return true;
     }
@@ -1379,10 +1398,10 @@ namespace Compiler
             return false;
         }
 
-        emitVcpuAsm("%ForNextLoopP", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + std::to_string(forNextData._loopEnd), false, lineNumber);
+        emitVcpuAsm("%ForNextLoopP", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + std::to_string(forNextData._loopEnd), false, lineNumber, "", forNextData._labelIndex);
 
 #if 0
-        emitVcpuAsm("%ForNextLoopVsVeP", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + Expression::wordToHexString(forNextData._varEnd) + " " + Expression::wordToHexString(forNextData._varStep), false, lineNumber);
+        emitVcpuAsm("%ForNextLoopVsVeP", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + Expression::wordToHexString(forNextData._varEnd) + " " + Expression::wordToHexString(forNextData._varStep), false, lineNumber, "", forNextData._labelIndex);
 #endif
 
         return true;
@@ -1738,21 +1757,7 @@ namespace Compiler
                 if(_codeLines[i]._ownsLabel) _labels[_codeLines[i]._labelIndex]._address = _vasmPC;
 
                 // Create .vasm code
-                uint16_t oldVasmPC = _vasmPC;
                 if(!createVasmCode(_codeLines[i], i)) return false;
-
-#if 0
-                // TODO: move this to where it will work!
-                // Exclusion zones and page boundary crossings
-                if((_vasmPC & 0x00FF) >= 0xF1  ||  (oldVasmPC & 0xFF00) != (_vasmPC & 0xFF00))
-                {
-                    _codeLines[i]._vasm.clear();
-                    _vasmPC = (oldVasmPC & 0xFF00) + 0x0100;
-                    if(_codeLines[i]._ownsLabel) _labels[_codeLines[i]._labelIndex]._address = _vasmPC;
-                    emitVcpuAsm("CALL",  _labels[_codeLines[i]._labelIndex]._output, false, i-1);
-                    if(!createVasmCode(_codeLines[i], i)) return false;
-                }
-#endif
             }
         }
 
@@ -1773,7 +1778,7 @@ namespace Compiler
 
             for(int j=StwLdwPair; j<NumOptimiseTypes; j++)
             {
-                for(auto itLine=_codeLines[i]._vasm.begin(); itLine!=_codeLines[i]._vasm.end();)
+                for(auto itVasm=_codeLines[i]._vasm.begin(); itVasm!=_codeLines[i]._vasm.end();)
                 {
                     bool linesDeleted = false;
 
@@ -1788,20 +1793,20 @@ namespace Compiler
                             // First match
                             if(!firstFound)
                             {
-                                size_t first = itLine->_code.find(firstMatch[j]);
+                                size_t first = itVasm->_code.find(firstMatch[j]);
                                 if(first != std::string::npos)
                                 {
                                     firstFound = true;
-                                    firstLine = int(itLine - _codeLines[i]._vasm.begin());
-                                    firstVar = itLine->_code.substr(first + firstMatch[j].size(), 2);
+                                    firstLine = int(itVasm - _codeLines[i]._vasm.begin());
+                                    firstVar = itVasm->_code.substr(first + firstMatch[j].size(), 2);
                                 }
                             }
                             else
                             {
                                 // Second match must be on next line
-                                if(int(itLine - _codeLines[i]._vasm.begin())  ==  firstLine + 1)
+                                if(int(itVasm - _codeLines[i]._vasm.begin())  ==  firstLine + 1)
                                 {
-                                    size_t second = itLine->_code.find(secondMatch[j]);
+                                    size_t second = itVasm->_code.find(secondMatch[j]);
                                     if(second != std::string::npos)
                                     {
                                         switch(j)
@@ -1811,12 +1816,13 @@ namespace Compiler
                                             case StwLdPair:
                                             {
                                                 // If operand of STW/LDW pair matches
-                                                if(firstVar == itLine->_code.substr(second + secondMatch[j].size(), 2))
+                                                if(firstVar == itVasm->_code.substr(second + secondMatch[j].size(), 2))
                                                 {
                                                     linesDeleted = true;
-                                                    itLine = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
-                                                    itLine = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
+                                                    itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
+                                                    itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
                                                     adjustLabelAddresses(_codeLines[i]._labelIndex, -4);
+                                                    adjustVasmAddresses(i, firstLine, -4);
                                                 }
                                             }
                                             break;
@@ -1826,8 +1832,9 @@ namespace Compiler
                                             case ExtraStw:
                                             {
                                                 linesDeleted = true;
-                                                itLine = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
+                                                itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
                                                 adjustLabelAddresses(_codeLines[i]._labelIndex, -2);
+                                                adjustVasmAddresses(i, firstLine, -2);
                                             }
                                             break;
                                         }
@@ -1847,23 +1854,117 @@ namespace Compiler
                         {
                             // Arithmetic with zero
                             std::string operand;
-                            size_t pos = itLine->_code.find(firstMatch[j]);
+                            size_t pos = itVasm->_code.find(firstMatch[j]);
                             if(pos != std::string::npos)
                             {
-                                operand = itLine->_code.substr(pos + firstMatch[j].size());
+                                operand = itVasm->_code.substr(pos + firstMatch[j].size());
                                 if(operand == "0" || operand == "0x00")
                                 {
                                     linesDeleted = true;
-                                    itLine = _codeLines[i]._vasm.erase(itLine);
+                                    itVasm = _codeLines[i]._vasm.erase(itVasm);
                                     adjustLabelAddresses(_codeLines[i]._labelIndex, -2);
+                                    adjustVasmAddresses(i, int(itVasm - _codeLines[i]._vasm.begin()), -2);
                                 }
                             }
                         }
                         break;
                     }
 
+                    if(!linesDeleted) itVasm++;
+                }
+            }
+        }
 
-                    if(!linesDeleted) itLine++;
+        return true;
+    }
+
+    void adjustExclusionLabelAddresses(uint16_t address, int offset)
+    {
+        // Adjust label addresses for any labels with addresses higher than start label, (labels can be stored out of order)
+        for(int i=0; i<_labels.size(); i++)
+        {
+            if(_labels[i]._address > address)
+            {
+                _labels[i]._address += offset;
+            }
+        }
+    }
+
+    void adjustExclusionVasmAddresses(int codeLineIndex, int offset)
+    {
+        for(int i=codeLineIndex; i<_codeLines.size(); i++)
+        {
+            for(int j=0; j<_codeLines[i]._vasm.size(); j++)
+            {
+                _codeLines[i]._vasm[j]._address += offset;
+            }
+        }
+    }
+
+    bool checkExclusionZones(void)
+    {
+        std::string line;
+
+        for(auto itCode=_codeLines.begin(); itCode!=_codeLines.end();)
+        {
+            for(auto itVasm=itCode->_vasm.begin(); itVasm!=itCode->_vasm.end();)
+            {
+                uint8_t lPC = itVasm->_address & 0x00FF;
+                uint8_t hPC = (itVasm->_address & 0xFF00) >>8;
+                uint16_t vasmPC = (hPC + 1) <<8;
+
+                if((lPC >= 0xF3  &&  (hPC == 0x02 || hPC == 0x03 || hPC == 0x04))  ||  lPC >= 0xF9)
+                {
+                    // Copy old vasm code
+                    std::vector<VasmLine> vasm = itCode->_vasm;
+
+                    // Insert long jump
+                    _vasmPC = itCode->_vasm[0]._address;
+                    itCode->_vasm.clear(); // itVasm invalidated
+                    int i = int(itCode - _codeLines.begin());
+                    insertVcpuAsm("LDWI", Expression::wordToHexString((hPC + 1) <<8), i, 0);
+                    insertVcpuAsm("STW", "register0", i, 1);
+                    insertVcpuAsm("CALL", "register0", i, 2);
+
+                    // Create long jump label and new code
+                    Label label;
+                    std::string name = Expression::wordToHexString(vasmPC);
+                    createLabel(vasmPC, name, name + "\t", i + 1, label, false);
+                    CodeLine codeLine = {itCode->_code, itCode->_tokens, vasm, "", 0, _currentLabelIndex, -1, VarInt16, false, false, true};
+                    itCode = _codeLines.insert(itCode + 1, codeLine); 
+
+                    // Fix labels and addresses
+                    int offset = vasmPC - itCode->_vasm[0]._address;
+                    adjustExclusionLabelAddresses(vasmPC, offset);
+                    adjustExclusionVasmAddresses(i + 1, offset);
+                    break;
+                }
+
+                itVasm++;
+            }
+
+            itCode++;
+        }
+
+        return true;
+    }
+
+    bool checkBranchLabels(void)
+    {
+        for(int i=0; i<_codeLines.size(); i++)
+        {
+            for(int j=0; j<_codeLines[i]._vasm.size(); j++)
+            {
+                int gotoLabelIndex = _codeLines[i]._vasm[j].gotoLabelIndex;
+                if(gotoLabelIndex >= 0)
+                {
+                    if((_codeLines[i]._vasm[j]._address & 0xFF00) != (_labels[gotoLabelIndex]._address & 0xFF00))
+                    {
+                        fprintf(stderr, "Compiler::checkBranchLabels() : trying to branch to : %04x : from %04x in '%s' on line %d\n", _labels[gotoLabelIndex]._address,
+                                                                                                                                       _codeLines[i]._vasm[j]._address, 
+                                                                                                                                       _codeLines[i]._code.c_str(), i);
+                        return false;
+                    }
                 }
             }
         }
@@ -2054,11 +2155,17 @@ namespace Compiler
         // Vars
         if(!parseVars()) return false;
 
-        // Parse code
+        // Code
         if(!parseCode()) return false;
 
-        // Optimise code
+        // Optimise
         if(!optimiseCode()) return false;
+
+        // Check code exclusion zones
+        if(!checkExclusionZones()) return false;
+
+        // Check branch labels
+        if(!checkBranchLabels()) return false;
 
         // Output
         outputReservedWords();

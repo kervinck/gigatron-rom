@@ -76,5 +76,5 @@ _16             LDW		_b
                 ADDI	1
                 STW		_b		; b=b+1
 
-_20             CALL	_10		; goto10
+_20             BRA		_10		; goto10
 
