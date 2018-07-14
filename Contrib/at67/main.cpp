@@ -8,6 +8,7 @@
 
 
 #include "cpu.h"
+#include "memory.h"
 #include "audio.h"
 #include "editor.h"
 #include "loader.h"
@@ -23,6 +24,7 @@ int main(int argc, char* argv[])
     Cpu::State S;
 
     Cpu::initialise(S);
+    Memory::intitialise();
     Audio::initialise();
     Graphics::initialise();
     Editor::initialise();

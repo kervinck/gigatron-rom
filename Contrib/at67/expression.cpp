@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <string>
 #include <sstream>
 #include <iomanip>
@@ -446,17 +447,19 @@ namespace Expression
     Numeric fac(int16_t defaultValue)
     {
         int16_t value = 0;
+        Numeric numeric;
+
         if(peek() == '(')
         {
             get();
-            Numeric numeric = expression();
+            numeric = expression();
             get();
-            return numeric;
         }
         else if(peek() == '-')
         {
             get();
-            return neg(fac(0));
+            numeric = fac(0);
+            numeric = neg(numeric);
         }
         else if((peek() >= '0'  &&  peek() <= '9')  ||  peek() == '$')
         {
@@ -465,25 +468,30 @@ namespace Expression
                 fprintf(stderr, "Expression::factor() : Bad numeric data in '%s' on line %d\n", _expressionToParse, _lineNumber + 1);
                 value = 0;
             }
-            return Numeric(value, false, nullptr);
+            numeric = Numeric(value, false, nullptr);
+        }
+        else
+        {
+            numeric = numeric = Numeric(defaultValue, true, _expression);
         }
 
-        Numeric numeric = Numeric(defaultValue, true, _expression);
         return numeric;
     }
 
     Numeric term(void)
     {
-        Numeric result = fac(0);
+        Numeric f, result = fac(0);
+
         while(peek() == '*'  ||  peek() == '/')
         {
             if(get() == '*')
             {
-                result = mul(result, fac(0));
+                f = fac(0);
+                result = mul(result, f);
             }
             else
             {
-                Numeric f = fac(0);
+                f = fac(0);
                 if(f._value == 0)
                 {
                     result = mul(result, f);
@@ -500,16 +508,19 @@ namespace Expression
 
     Numeric expression(void)
     {
-        Numeric result = term();
+        Numeric t, result = term();
+    
         while(peek() == '+' || peek() == '-')
         {
             if(get() == '+')
             {
-                result = add(result, term());
+                t = term();
+                result = add(result, t);
             }
             else
             {
-                result = sub(result, term());
+                t = term();
+                result = sub(result, t);
             }
         }
 

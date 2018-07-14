@@ -7,7 +7,7 @@
 #include "audio.h"
 #include "timing.h"
 #include "editor.h"
-#include "../../../midi/scores/music.h"
+#include "midi/music.h"
 
 #include <SDL.h>
 

@@ -9,6 +9,7 @@
 #include <stack>
 #include <algorithm>
 
+#include "memory.h"
 #include "expression.h"
 #include "compiler.h"
 
@@ -42,6 +43,7 @@ namespace Compiler
         std::string _name;
         std::string _output;
         int _codeLineIndex = -1;
+        bool _longJump = false;
     };
 
     struct VasmLine
@@ -395,7 +397,7 @@ namespace Compiler
     }
 
 
-    void createLabel(uint16_t address, const std::string& name, const std::string& output, int codeLineIndex, Label& label, bool addUnderscore=true)
+    void createLabel(uint16_t address, const std::string& name, const std::string& output, int codeLineIndex, Label& label, bool addUnderscore=true, bool longJump=false)
     {
         std::string n = name;
         Expression::stripWhitespace(n);
@@ -408,7 +410,7 @@ namespace Compiler
             o[LABEL_TRUNC_SIZE - 1] = ' ';
         }
 
-        label = {address, n, o, codeLineIndex};
+        label = {address, n, o, codeLineIndex, longJump};
         Expression::stripWhitespace(label._name);
         _labels.push_back(label);
         _currentLabelIndex = int(_labels.size() - 1);
@@ -953,7 +955,7 @@ namespace Compiler
         }
 
         // Optimise multiply with 0
-        if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, false, "");
+        if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, false, (char*)"");
 
         return left;
     }
@@ -967,7 +969,7 @@ namespace Compiler
         }
 
         // Optimise divide with 0, term() never lets denominator = 0
-        if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, false, "");
+        if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, false, (char*)"");
 
         return left;
     }
@@ -976,41 +978,47 @@ namespace Compiler
     Expression::Numeric fac(int16_t defaultValue)
     {
         int16_t value = 0;
+        Expression::Numeric numeric;
+
         if(Expression::peek() == '(')
         {
             Expression::get();
-            Expression::Numeric numeric = expression();
+            numeric = expression();
             Expression::get();
-            return numeric;
         }
         else if(Expression::peek() == '-')
         {
             Expression::get();
-            return neg(fac(0));
+            numeric = fac(0);
+            numeric = neg(numeric);
         }
         else if((Expression::peek() >= '0'  &&  Expression::peek() <= '9')  ||  Expression::peek() == '$')
         {
             if(!Expression::number(value)) value = 0;
-            return Expression::Numeric(value, false, nullptr);
+            numeric = Expression::Numeric(value, false, nullptr);
+        }
+        else
+        {
+            numeric = Expression::Numeric(defaultValue, true, Expression::getExpression());
+            while(isalpha(Expression::peek())) Expression::get();
         }
 
-        Expression::Numeric numeric = Expression::Numeric(defaultValue, true, Expression::getExpression());
-        while(isalpha(Expression::peek())) Expression::get();
         return numeric;
     }
 
     Expression::Numeric term(void)
     {
-        Expression::Numeric result = fac(0);
+        Expression::Numeric f, result = fac(0);
         while(Expression::peek() == '*'  ||  Expression::peek() == '/')
         {
             if(Expression::get() == '*')
             {
-                result = mul(result, fac(0));
+                f = fac(0);
+                result = mul(result, f);
             }
             else
             {
-                Expression::Numeric f = fac(0);
+                f = fac(0);
                 if(f._value == 0)
                 {
                     result = mul(result, f);
@@ -1027,17 +1035,19 @@ namespace Compiler
 
     Expression::Numeric expression(void)
     {
-        Expression::Numeric result = term();
+        Expression::Numeric t, result = term();
 
         while(Expression::peek() == '+' || Expression::peek() == '-')
         {
             if(Expression::get() == '+')
             {
-                result = add(result, term());
+                t = term();
+                result = add(result, t);
             }
             else
             {
-                result = sub(result, term());
+                t = term();
+                result = sub(result, t);
             }
         }
 
@@ -1880,10 +1890,10 @@ namespace Compiler
 
     void adjustExclusionLabelAddresses(uint16_t address, int offset)
     {
-        // Adjust label addresses for any labels with addresses higher than start label, (labels can be stored out of order)
+        // Adjust addresses for any non long jump labels with addresses higher than start label, (labels can be stored out of order)
         for(int i=0; i<_labels.size(); i++)
         {
-            if(_labels[i]._address > address)
+            if(!_labels[i]._longJump  &&  _labels[i]._address > address)
             {
                 _labels[i]._address += offset;
             }
@@ -1905,45 +1915,90 @@ namespace Compiler
     {
         std::string line;
 
-        for(auto itCode=_codeLines.begin(); itCode!=_codeLines.end();)
+        bool resetCheck = true;
+
+        // Each time any excluded area code is fixed, restart check
+        while(resetCheck)
         {
-            for(auto itVasm=itCode->_vasm.begin(); itVasm!=itCode->_vasm.end();)
+            for(auto itCode=_codeLines.begin(); itCode!=_codeLines.end();)
             {
-                uint8_t lPC = itVasm->_address & 0x00FF;
-                uint8_t hPC = (itVasm->_address & 0xFF00) >>8;
-                uint16_t vasmPC = (hPC + 1) <<8;
+                if(itCode->_vasm.size() == 0) continue;
 
-                if((lPC >= 0xF3  &&  (hPC == 0x02 || hPC == 0x03 || hPC == 0x04))  ||  lPC >= 0xF9)
+                int codeLineIndex = int(itCode - _codeLines.begin());
+                uint16_t vasmStartPC = itCode->_vasm[0]._address;
+
+                // Each line of basic code must be smaller than 243 bytes for memory map 0x0200 to 0x04FF
+                if(vasmStartPC < 0x0500)
                 {
-                    // Copy old vasm code
-                    std::vector<VasmLine> vasm = itCode->_vasm;
-
-                    // Insert long jump
-                    _vasmPC = itCode->_vasm[0]._address;
-                    itCode->_vasm.clear(); // itVasm invalidated
-                    int i = int(itCode - _codeLines.begin());
-                    insertVcpuAsm("LDWI", Expression::wordToHexString((hPC + 1) <<8), i, 0);
-                    insertVcpuAsm("STW", "register0", i, 1);
-                    insertVcpuAsm("CALL", "register0", i, 2);
-
-                    // Create long jump label and new code
-                    Label label;
-                    std::string name = Expression::wordToHexString(vasmPC);
-                    createLabel(vasmPC, name, name + "\t", i + 1, label, false);
-                    CodeLine codeLine = {itCode->_code, itCode->_tokens, vasm, "", 0, _currentLabelIndex, -1, VarInt16, false, false, true};
-                    itCode = _codeLines.insert(itCode + 1, codeLine); 
-
-                    // Fix labels and addresses
-                    int offset = vasmPC - itCode->_vasm[0]._address;
-                    adjustExclusionLabelAddresses(vasmPC, offset);
-                    adjustExclusionVasmAddresses(i + 1, offset);
-                    break;
+                    if(itCode->_vasmSize >= 243)
+                    {
+                        fprintf(stderr, "Compiler::checkExclusionZones() : BASIC line at %04x is bigger than 243 bytes, (%d bytes) in '%s' on line %d\n", vasmStartPC, itCode->_vasmSize, itCode->_code.c_str(), codeLineIndex);
+                        return false;
+                    }
+                }
+                // Each line of basic code must be smaller than 249 bytes for memory map 0x0500 to 0x05FF, (user stack 0x0600 to 0x06FF)
+                else if(itCode->_vasmSize < 0x0600)
+                {
+                    if(itCode->_vasmSize >= 249)
+                    {
+                        fprintf(stderr, "Compiler::checkExclusionZones() : BASIC line at %04x is bigger than 249 bytes, (%d bytes) in '%s' on line %d\n", vasmStartPC, itCode->_vasmSize, itCode->_code.c_str(), codeLineIndex);
+                        return false;
+                    }
+                }
+                // Each line of basic code must be smaller than 90 bytes for memory map 0x8A00 to 0x8AFF <--> 6FA0 to 6FFF, (internal routines occupy 0x70A0 to 0x7FFF)
+                else
+                {
+                    if(itCode->_vasmSize >= 90)
+                    {
+                        fprintf(stderr, "Compiler::checkExclusionZones() : BASIC line at %04x is bigger than 90 bytes, (%d bytes) in '%s' on line %d\n", vasmStartPC, itCode->_vasmSize, itCode->_code.c_str(), codeLineIndex);
+                        return false;
+                    }
                 }
 
-                itVasm++;
-            }
+                uint8_t hPC = (itCode->_vasm[0]._address & 0xFF00) >>8;
+                uint16_t vasmPC = (hPC + 1) <<8;
+                for(auto itVasm=itCode->_vasm.begin(); itVasm!=itCode->_vasm.end();)
+                {
+                    resetCheck = false;
 
-            itCode++;
+                    uint8_t lPC = itVasm->_address & 0x00FF;
+                    if((lPC >= 0xF3  &&  (hPC == 0x02 || hPC == 0x03 || hPC == 0x04))  ||  lPC >= 0xF9)
+                    {
+                        // Copy old vasm code
+                        int vasmSize = itCode->_vasmSize;
+                        std::vector<VasmLine> vasm = itCode->_vasm;
+
+                        // Insert long jump
+                        _vasmPC = itCode->_vasm[0]._address;
+                        itCode->_vasm.clear(); // itVasm invalidated
+                        insertVcpuAsm("LDWI", Expression::wordToHexString(vasmPC), codeLineIndex, 0);
+                        insertVcpuAsm("STW", "register0", codeLineIndex, 1);
+                        insertVcpuAsm("CALL", "register0", codeLineIndex, 2);
+                        itCode->_vasmSize = 7;
+
+                        // Create long jump label and new code
+                        Label label;
+                        std::string name = Expression::wordToHexString(vasmPC);
+                        createLabel(vasmPC, name, name + "\t", codeLineIndex + 1, label, false, true);
+                        CodeLine codeLine = {itCode->_code, itCode->_tokens, vasm, "", vasmSize, _currentLabelIndex, -1, VarInt16, false, false, true};
+                        itCode = _codeLines.insert(itCode + 1, codeLine);
+
+                        // Fix labels and addresses
+                        int offset = vasmPC - itCode->_vasm[0]._address;
+                        adjustExclusionLabelAddresses(itCode->_vasm[0]._address, offset);
+                        adjustExclusionVasmAddresses(codeLineIndex + 1, offset);
+
+                        resetCheck = true;
+                        break;
+                    }
+
+                    itVasm++;
+                }
+            
+                if(resetCheck) break;
+
+                itCode++;
+            }
         }
 
         return true;
@@ -2136,11 +2191,16 @@ namespace Compiler
         _arrayVars.clear();
 
         while(!_forNextDataStack.empty()) _forNextDataStack.pop();
+
+        Memory::intitialise();
     }
 
     bool compile(const std::string& inputFilename, const std::string& outputFilename)
     {
         clearCompiler();
+
+        uint16_t address;
+        Memory::getRam(Memory::FitLargest, Memory::RamVasm, 96, address);
 
         // Read .gbas file
         int numLines = 0;
