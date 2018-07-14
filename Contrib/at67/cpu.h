@@ -2,6 +2,7 @@
 #define CPU_H
 
 #include <stdint.h>
+#include <inttypes.h>
 #include <string>
 
 

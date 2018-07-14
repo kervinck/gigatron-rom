@@ -17,6 +17,7 @@
 #include "dirent/dirent.h"
 #define chdir _chdir
 #else
+#include <unistd.h>
 #include <dirent.h>
 #endif
 

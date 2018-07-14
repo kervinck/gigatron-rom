@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
             Cpu::reset(true);
             vgaX = 0, vgaY = 0;
             HSync = 0, VSync = 0;
-            fprintf(stderr, "main(): CPU stall for %lld clocks : rebooting.\n", clock - clock_prev);
+            fprintf(stderr, "main(): CPU stall for %" PRId64 " clocks : rebooting.\n", clock - clock_prev);
         }
 
         // Rising hSync edge
