@@ -64,10 +64,10 @@ $(function() {
             });
     }
 
-    bindKeyToButton($('.gamepad-btn-a'), 'A');
-    bindKeyToButton($('.gamepad-btn-b'), 'S');
-    bindKeyToButton($('.gamepad-btn-start'), 'W');
-    bindKeyToButton($('.gamepad-btn-select'), 'Q');
+    bindKeyToButton($('.gamepad-btn-a'), 'Delete');
+    bindKeyToButton($('.gamepad-btn-b'), 'Insert');
+    bindKeyToButton($('.gamepad-btn-start'), 'PageUp');
+    bindKeyToButton($('.gamepad-btn-select'), 'PageDown');
     bindKeyToButton($('.gamepad-btn-up'), 'ArrowUp');
     bindKeyToButton($('.gamepad-btn-down'), 'ArrowDown');
     bindKeyToButton($('.gamepad-btn-left'), 'ArrowLeft');
@@ -155,10 +155,10 @@ $(function() {
         down: ['ArrowDown'],
         left: ['ArrowLeft'],
         right: ['ArrowRight'],
-        select: ['Q', 'q'],
-        start: ['W', 'w'],
-        a: ['A', 'a'],
-        b: ['S', 's'],
+        select: ['PageDown'],
+        start: ['PageUp'],
+        a: ['Delete', 'Backspace', 'End'],
+        b: ['Insert', 'Home'],
     });
 
     let loader = new Loader(cpu);

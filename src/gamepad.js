@@ -60,6 +60,22 @@ export class Gamepad {
                 this.keyMap[key] = buttonMap[button];
             }
         }
+
+        /* build map of ASCII codes that the Gigatron understands as well */
+        this.asciiMap = {
+            'Tab': 9,
+            'Enter': 10,
+            'Escape': 27,
+            'Esc': 27,
+            'Delete': 127,
+            'Backspace': 127,
+        };
+        for (let ascii=32; ascii<127; ascii++) {
+            this.asciiMap[String.fromCharCode(ascii)] = ascii;
+        }
+        for (let fnKey=1; fnKey<=12; fnKey++) {
+          this.asciiMap['F' + fnKey] = 0xc0 + fnKey;
+        }
     }
 
     /** start handling key events */
@@ -70,14 +86,22 @@ export class Gamepad {
                 if (bit) {
                     this.pressed |= bit;
                     event.preventDefault();
+                } else {
+                    let ascii = this.asciiMap[event.key];
+                    if (ascii) {
+                        this.pressed = ascii ^ 0xff; /// will be inverted again in tick()
+                        event.preventDefault();
+                    }
                 }
             })
             .on('keyup', (event) => {
                 let bit = this.keyMap[event.key];
                 if (bit) {
                     this.pressed &= ~bit;
-                    event.preventDefault();
+                } else {
+                    this.pressed = 0;
                 }
+                event.preventDefault();
             });
         this.enabled = true;
     }
