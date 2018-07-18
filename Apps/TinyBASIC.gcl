@@ -239,7 +239,6 @@ $0f20 \sysArgs6:                {Pen color yellow, background color blue}
     Expression!
     Keyword! $29# 0#            {')'}
     [if=0 SyntaxError!]
-    \entropy;                   {Two random bytes}
     \SYS_Random_34 \sysFn=      {Prepare SYS call}
     [do 34! if<0loop]           {Get positive random number}
     Divide!                     {Modulo expression}
