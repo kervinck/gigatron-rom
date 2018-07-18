@@ -22,7 +22,7 @@ const {
 } = rxjs.operators;
 
 const HZ = 6250000;
-const romUrl = 'theloop.2.rom';
+const romUrl = 'gigatron.rom';
 
 $(function() {
     $('[data-toggle="tooltip"]').tooltip();
