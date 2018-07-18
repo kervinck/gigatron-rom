@@ -23,4 +23,4 @@ Use the cursor keys for the D-pad.
 
 ## GT1 Files
 
-GT1 files can be loaded by starting the `Loader` and dropping a `.gt1` file onto the VGA display from File Explorer or Finder.
+GT1 files can be loaded by dropping a `.gt1` file onto the VGA display from File Explorer or Finder.
