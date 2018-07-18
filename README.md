@@ -10,9 +10,8 @@ The `package.json` can install an HTTP server, just do:
 Pick and download a [`*.rom`](https://github.com/kervinck/gigatron-rom/) file into the `src/` directory and rename it as `gigatron.rom`
 
 Direct links:
-
-    [`ROM v1`](https://github.com/kervinck/gigatron-rom/raw/master/ROMv1.rom)
-    [`ROM v2`](https://github.com/kervinck/gigatron-rom/raw/master/ROMv2.rom)
+[`ROM v1`](https://github.com/kervinck/gigatron-rom/raw/master/ROMv1.rom)
+[`ROM v2`](https://github.com/kervinck/gigatron-rom/raw/master/ROMv2.rom)
 
 Start the HTTP server
 
