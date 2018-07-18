@@ -1,5 +1,5 @@
 CFLAGS:=-std=c11 -O3 -Wall
-DEV:=ROMv2
+DEV:=ROMv2x
 
 # Latest released version as default target
 ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
@@ -13,7 +13,7 @@ ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Pictures.gcl\
 		Apps/Credits.gcl\
 		Apps/Loader.gcl\
-		Apps/TinyBASIC.gcl\
+		Apps/TinyBASIC_v2.gcl\
 		Apps/WozMon.gcl\
 		Apps/Main_v2.gcl\
 		Core/Reset_v2.gcl

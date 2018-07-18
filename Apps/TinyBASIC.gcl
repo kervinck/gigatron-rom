@@ -20,6 +20,7 @@
                        LET is now optional; PEEK/POKE; Better INPUT;
                        NEW clears variables; Aliases for PRINT and REM
   2018-07-03 (marcelk) Add RND(), with 0 <= RND(n) < |n|; USR()
+  2018-07-18 (marcelk) Fix GOSUB/RETURN parsing bug causing syntax error
 
   Formal grammar:
 
@@ -71,6 +72,7 @@
         PRINT 6/-2      Syntax error (original Tiny BASIC quirk, to be solved)
         PRINT a;b       Concatenates output without separation
         IF statement    There is no syntax check for trailing garbage
+        RETURN          There is no syntax check for trailing garbage
         ><              For 'not equal' is not implemented. Use just <>
         <>=             Also works as (useless) operator in condition of IF
         No 'GO TO'      Must be typed as 'GOTO'. Also 'GOSUB', not 'GO SUB'
@@ -402,8 +404,8 @@ Spaces=
   Keyword! $67# $6f# $73# $75#  {'gosub'}
      $62# 0#
   [if<>0
-    2-- Active 0%=              {Push current line to stack}
     Expression!                 {Also does the stack check}
+    2-- Active 0%=              {Push current line to stack}
     GotoValue!]                 {Find that line and continue there}
 
   Keyword! $72# $65# $74# $75#  {'return'}
@@ -1042,6 +1044,7 @@ $12a0:
 [def
   \vLR; tmp=                    {vLR points to inline string argument}
   [Pos<, if<>0 Newline!]        {Conditional newline}
+  \vSP.                         {Reset stack}
   tmp, [if<>0                   {Test for error in first byte of message}
     $3f                         {Begin error messages with '?'}
     [do                         {Print inline string as prelude}
@@ -1051,7 +1054,6 @@ $12a0:
     PrintS!                     {' error'}
       $20# $65# $72# $72# $6f#
       $72# 0#
-    \vSP.                       {Reset stack}
     32-                         {$ffe0}
     Active&                     {Align to begin of block}
     0+ {dummy offset} deek      {Fetch active line number from offset 0}
