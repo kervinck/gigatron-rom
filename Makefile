@@ -59,6 +59,9 @@ test: Docs/gtemu $(DEV).rom
 	# Check for hSync errors in first ~30 seconds of emulation
 	Docs/gtemu $(DEV).rom | head -999999 | grep \~
 
+basic: Apps/TinyBASIC.gt1 Apps/TinyBASIC.h
+	mv Apps/TinyBASIC.h Utils/BabelFish
+
 compiletest:
 	# Test compilation
 	Core/compilegcl.py Apps/HelloWorld.gcl
@@ -72,6 +75,9 @@ time: Docs/gtemu $(DEV).rom
 
 burn: $(DEV).rom
 	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
+
+%.gt1: %.gcl
+	Core/compilegcl.py "$<" `dirname ./"$@"`
 
 %.h: %.gt1
 	# Convert GT1 file into header for including as PROGMEM data

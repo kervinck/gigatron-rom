@@ -21,7 +21,7 @@
                        NEW clears variables; Aliases for PRINT and REM
   2018-07-03 (marcelk) Add RND(), with 0 <= RND(n) < |n|; USR()
   2018-07-18 (marcelk) Fix GOSUB/RETURN parsing bug causing syntax error
-  2018-07-xx (marcelk) Add PUT
+  2018-07-xx (marcelk) Add PUT, FOR/TO/NEXT
 
   Formal grammar:
 
@@ -33,6 +33,8 @@
                   'GOTO' Expression                                     |
                   'INPUT' Variable (',' Variable)*                      |
                   'LET'? Variable '=' Expression                        |
+                  'FOR' Variable '=' Expression 'TO' Expression         |
+                  'NEXT' Variable                                       |
                   'POKE' Expression ',' Expression                      |
                   'GOSUB' Expression                                    |
                   'RETURN'                                              |
@@ -63,10 +65,10 @@
   Memory allocation:
           $30 -   $7f   BASIC interpreter variables
           $81 -   $ff   Stack for BASIC and vCPU (>50 GOSUB levels)
-         $200 - $11ff   BASIC interpreter, partly next to screen memory
-        $14a0 - $14bf   Input buffer ('line 0')
-        $14c0 - $14f3   BASIC variables A..Z
-        $15a0 - $7fff   Programs stored in the invisible part of screen memory
+         $200 - $14ff   BASIC interpreter, partly next to screen memory
+        $15a0 - $15bf   Input buffer ('line 0')
+        $15c0 - $15f3   BASIC variables A..Z
+        $16a0 - $7fff   Programs stored in the invisible part of screen memory
         $8000 - $ffff   Optional extra memory for BASIC programs (64K extension)
 
   Undocumented features and/or bugs:
@@ -105,17 +107,18 @@
 
   Wish list:
     CLS         Clear screen, move cursor to top. Newline update?
-    SET/PLOT    Map (X and) Y to memory (through videoTable)
+    AT X[,Y]    Map (X and) Y to memory (through videoTable)
     DRAW dX,dY  Draw a line (or point)
     @()         Array as in Palo Alto Tiny BASIC (store vertically)
     @ A()       @ as variable name, and generic arrays (1-dimensional)
-    FOR TO NEXT (And STEP) Can be done with 1 reserved word per control variable
+    FOR-TO-NEXT (And STEP) Can be done with 1 reserved word per control variable
 
   'Maybe' list:
+    :           Multiple statements in one line
+    SAVE        To Babelfish, using /vSync length modulation
     Speed       Cache result of the statement detection (checkpointing)
     Speed       Alternative: LET detection is now last, but should be first
     IF          Reintroduce the missing syntax error check
-    COLOR       Easily change colors (POKE 43,c)
     ROM peek    rpeek()? Some predefined USR functions?
     Speed       Move stack check from Expression to Factor (and GOSUB)
     A$ .. Z$    String variables (only in LET, PRINT, INPUT?)
@@ -124,23 +127,23 @@
     Unary minus Original Tiny BASIC does it wrong: 8/-2
     ABS(/SGN(   Built-in function
     A$()        Indexing in string variable, gives integer (handle in Factor)
-    A$(i,j)     Substrings (only in PRINT)
     LEN()/A$()=
     TUNE/PLAY   Play a note/score
     A0 .. Z9    Much more variable space (as in Apple-1 basic)
 
   'Probably not' list:
+    A$(i,j)     Substrings (only in PRINT)
+    COLOR       Easily change colors (use: POKE 43,c)
     LOAD        From where? EPROM? "Cassette interface".
-    SAVE        To where? (Babelfish, using /vSync length modulation?)
     DIM A()     And bound checks...
     TI/TI$      Built-in variable for time? (only in MS BASICs). Setting also?
     TAB()       As in Apple-1 BASIC (Weird: TAB(N) advances to N-1...)
     SPC()       Spaces
     Indent      Indent BASIC output 2 pixels (as in WozMon) -> Complex
     Speed       Binary search for GotoValue -> Only speeds up large programs
-    "" or """   For printing the quote character itself
+    "" or """   For printing the quote character itself (use: PUT 34)
     Overflow    Errors on overflow for + - and *
-    WAIT        -> Make a loop subroutine
+    WAIT/PAUSE  -> Make a loop subroutine
     $xx         Hexadecimal numbers
     LIST <n>    List one line
     a-z A-Z     As different variables
@@ -148,14 +151,13 @@
     CLEAR       For NEW
     READ, DATA  Possibly put in unused lines? (RESTORE)
     AND OR NOT  At list for in IF statements
-    :           Multiple statements in one line
     ELSE        Will slow down IF, because it has to scan for this
     DEF FNx
 
   Braindumps:
         a0          b0          c0          d0          e0          f0       ff
        +-----------------------+-----------------------+-----------------------+
-$14a0  | Input buffer          | Variables Z Y X ... P | O ... G F E D C B A @ |
+$15a0  | Input buffer          | Variables Z Y X ... P | O ... G F E D C B A @ |
        +-----------------------+-----------------------+-----------------------+
 Begin->| Program line 10       | Program line 20   P(1)| Program line 30   @(1)|
        +-----------------------+-----------------------+-----------------------+
@@ -335,7 +337,7 @@ $0300:
   push
 
   tmp=                          {Line number}
-  $14a0 Active=                 {Input buffer}
+  $15a0 Active=                 {Input buffer}
   tmp Active:                   {For error messages}
   $a2 Active<.                  {Text area}
 
@@ -468,20 +470,15 @@ Spaces=
   Keyword! $65# $6e# $64# 0#    {'end'}
   [if<>0 Prompt! 0#]
 
-  StatementCont!                {Continue in another page}
+  $500 call                     {Continue in another page}
 ] Statement=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 5                                      |
+|}\vLR>++ \vLR>++ ret{  RAM page 5                                      |
 +-----------------------------------------------------------------------}
 $0500:
 
 { Continuation of Statement }
-[def
-
-  Keyword!                      {'list'}
-    $6c# $69# $73# $74# 0#
-  [if<>0 List! EndOfLine!]
 
   Keyword! $6e# $65# $77# 0#    {'new'}
   [if<>0
@@ -499,66 +496,67 @@ $0500:
      EndOfLine!]
     ValueError!]
 
+  Keyword! $66# $6f# $72# 0#    {'for'}
+  [if<>0
+    Variable! Address=          {Loop counter}
+    Spaces!
+    Keyword! $3d# 0#            {'='}
+    [if=0 SyntaxError!]
+    Expression!                 {Evaluate expression}
+    Address:                    {Store value in variable}
+    Keyword! $74# $6f# 0#       {'to'}
+    [if=0 SyntaxError!]
+    Active ForLoop=             {Return point for NEXT}
+    Expression!                 {Evaluate but ignore result}
+    EndOfLine!]
+
+  Keyword! $6e# $65# $78#       {'next'}
+     $74# 0#
+  [if<>0
+    Variable! Address=          {Pointer to counter}
+    2-- Active 0%=              {Park program index on stack}
+    ForLoop Active=             {Switch back to tail of FOR statement}
+                                {XXX We should handle unused loop variables}
+    Expression!                 {Evaluate end value}
+    Address; 1+ Address:        {Increment counter}
+    Value-                      {XXX We should handle overflow}
+    [if>0                       {Counter > End}
+      0% Active=                {Break the loop}
+      Spaces!]
+    2++
+    TestBreak!                  {Test for [Del] as break request}
+    EndOfLine!]
+
+  Keyword! $61# $74# 0#         {'at'}
+  [if<>0
+    SyntaxError!]
+
+  Keyword! $64# $72# $61# $77#  {'draw'}
+     0#
+  [if<>0
+    SyntaxError!]
+
+{
+  Keyword! $6d# $6f# $64# $65#  {'mode'}
+     0#
+  [if<>0
+    SyntaxError!]
+}
+
   Keyword! $70# $72# $69# $6e#  {'print'}
     $74# 0#
   [if=0 Keyword! $3f# 0#]       {'?'}
   [if<>0
-    Active,
-    [if=0 Newline!]             {Special case for newlines}
+    $14a0 call]                 {PRINT}
 
-    [do {PRINTLIST}
-      Active, if<>0             {Until end of line}
-
-      $22^                      {'"'}
-      [if=0
-        [do {PRINTSTRING}       {String constant}
-          Active<++             {Skip past opening quote or string character}
-          Keyword! $22# 0#      {'"'}
-          if=0
-          Active,               {Next character}
-          if<>0                 {Silently accept unterminated string}
-          PrintChar!
-          loop]                 {To PRINTSTRING}
-      else
-        Expression!
-        PrintValue!]
-
-      Keyword! $2c# 0#          {','}
-      [if<>0
-        [do
-          $20 PrintChar!
-          Pos<, 7& if<>0loop]   {Tab stops every 4 characters}
-        loop]                   {To PRINTLIST}
-      Keyword! $3b# 0#          {';'}
-      if<>0loop                 {To PRINTLIST}
-
-      Newline!]                 {When no trailing ',' or ';'}
-    EndOfLine!
-  ]
+  Keyword!                      {'list'}
+    $6c# $69# $73# $74# 0#
+  [if<>0 List! EndOfLine!]
 
   Keyword! $69# $6e# $70# $75#  {'input'}
     $74# 0#
   [if<>0
-    [do
-      Active,
-      [if<>0 PrintChar!]        {Be nice and show variable name in prompt}
-      Variable!                 {Parse variable name}
-      Address=                  {Park here}
-      Spaces!
-      4-- Active 2%=            {Save program pointer on stack}
-      31| 31- deek 0%=          {Current line number in program}
-      [do
-        $3f PrintChar!          {'?'}
-        Newline!                {Avoid dealing with partially printed lines}
-        0%                      {Line number for errors}
-        GetLine!                {Let user type something}
-        if=0loop]               {Repeat with prompt when nothing is typed}
-      Expression!               {Accept arbitrary expression as input \o/}
-      Address:                  {Store received value in variable}
-      2% Active= 4++            {Restore program pointer from stack}
-      Keyword! $2c# 0#          {','}
-      if<>0loop]                {Next variable}
-    EndOfLine!]
+    $13a0 call]                 {INPUT}
 
   Keyword! $6c# $65# $74# 0#    {'let' (optional)}
   Variable!
@@ -569,13 +567,11 @@ $0500:
   Expression!                   {Evaluate expression}
   Address:                      {Store value in variable}
   EndOfLine!
-] {StatementCont=}
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 6                                      |
+|                       RAM page 6                                      |
 +-----------------------------------------------------------------------}
 $0600:
-StatementCont=
 
 {
  Six scenarios for InsertLine          Check   Search  Shift   Copy    Shift
@@ -654,12 +650,12 @@ StatementCont=
 
 { Clear variables. Returns begin address for programs }
 [def
-  $14c0 i=                      {Clear variables A-Z and a few bytes more}
+  $15c0 i=                      {Clear variables A-Z and a few bytes more}
   [do
     0 i.                        {Clear byte}
     i<++                        {Advance pointer}
     i<, if<>0loop]              {Until end of page}
-  $15a0 Begin=
+  $16a0 Begin=
   ret
 ] Clear=
 
@@ -675,7 +671,7 @@ PrintS!                         {'*** Tiny BASIC'}
 Newline!
 
 Clear!                          {Clear variables}
-$14a0 deek End=                 {At startup 'End' comes from loaded segment}
+$15a0 deek End=                 {At startup 'End' comes from loaded segment}
 2+ Active=                      {BASIC command(s) to run at startup}
 
 {-----------------------------------------------------------------------+
@@ -809,7 +805,7 @@ Number=
   Active, [if<>0 SyntaxError!]  {There must be nothing left on the line}
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
-    $14c0 Active^ if<>0         {Also stop if we came from the input buffer}
+    $15c0 Active^ if<>0         {Also stop if we came from the input buffer}
                                 {XXX Insert checkpointing here?}
     Active 2+ Active=           {Skip past line number}
     Statement!]                 {And continue from there}
@@ -969,14 +965,14 @@ Divide=
 
 { Get variable and calculate its address }
 [def
-  $14c0 i=                      {Base for variables}
+  $15c0 i=                      {Base for variables}
   Active,                       {Next character from line}
   $5f&                          {Ignore case}
   $41- {'A'} [if>=0             {Bail out if out of range}
    26- {'Z'} if<0               {Letter A..Z or a..z}
     Active<++                   {Accept character}
     26+                         {Map in 0..25 range}
-    1<< i+                      {Address is $14c0+2*n}
+    1<< i+                      {Address is $15c0+2*n}
     ret                         {Return address on success}
   ]
   SyntaxError!
@@ -1050,11 +1046,6 @@ $11a0:
 +-----------------------------------------------------------------------}
 $12a0:
 
-{-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 19                                     |
-+-----------------------------------------------------------------------}
-$13a0:
-
 { Error reporting function and re-entry point for main loop }
 { Call with inline partial error message, or with 0# for no error }
 [def
@@ -1097,12 +1088,73 @@ $13a0:
 Statement!                      {Execute statement}
 
 {-----------------------------------------------------------------------+
+|                       RAM page 19                                     |
++-----------------------------------------------------------------------}
+$13a0:
+
+  {INPUT}
+    [do
+      Active,
+      [if<>0 PrintChar!]        {Be nice and show variable name in prompt}
+      Variable!                 {Parse variable name}
+      Address=                  {Park here}
+      Spaces!
+      4-- Active 2%=            {Save program pointer on stack}
+      31| 31- deek 0%=          {Current line number in program}
+      [do
+        $3f PrintChar!          {'?'}
+        Newline!                {Avoid dealing with partially printed lines}
+        0%                      {Line number for errors}
+        GetLine!                {Let user type something}
+        if=0loop]               {Repeat with prompt when nothing is typed}
+      Expression!               {Accept arbitrary expression as input \o/}
+      Address:                  {Store received value in variable}
+      2% Active= 4++            {Restore program pointer from stack}
+      Keyword! $2c# 0#          {','}
+      if<>0loop]                {Next variable}
+    EndOfLine!
+
+{-----------------------------------------------------------------------+
+|                       RAM page 20                                     |
++-----------------------------------------------------------------------}
+$14a0:
+
+  {PRINT}
+    Active,
+    [if=0 Newline!]             {Special case for newlines}
+    [do {PRINTLIST}
+      Active, if<>0             {Until end of line}
+      $22^                      {'"'}
+      [if=0
+        [do {PRINTSTRING}       {String constant}
+          Active<++             {Skip past opening quote or string character}
+          Keyword! $22# 0#      {'"'}
+          if=0
+          Active,               {Next character}
+          if<>0                 {Silently accept unterminated string}
+          PrintChar!
+          loop]                 {To PRINTSTRING}
+      else
+        Expression!
+        PrintValue!]
+      Keyword! $2c# 0#          {','}
+      [if<>0
+        [do
+          $20 PrintChar!
+          Pos<, 7& if<>0loop]   {Tab stops every 4 characters}
+        loop]                   {To PRINTLIST}
+      Keyword! $3b# 0#          {';'}
+      if<>0loop                 {To PRINTLIST}
+      Newline!]                 {When no trailing ',' or ';'}
+    EndOfLine!
+
+{-----------------------------------------------------------------------+
 |                       BASIC data                                      |
 +-----------------------------------------------------------------------}
 
 { BASIC data begins here. In this setup the interpreter can be patched
   to include a BASIC program and a first command for execution }
 
-$14a0: $a0# $14#                {Point to self}
+$15a0: $a0# $15#                {Point to self}
        $4e# $45# $57# 0#        {'NEW' to start interactive session}
 
