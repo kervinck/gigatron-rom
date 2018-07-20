@@ -64,9 +64,9 @@
           $30 -   $7f   BASIC interpreter variables
           $81 -   $ff   Stack for BASIC and vCPU (>50 GOSUB levels)
          $200 - $11ff   BASIC interpreter, partly next to screen memory
-        $13a0 - $13bf   Input buffer ('line 0')
-        $13c0 - $13f3   BASIC variables A..Z
-        $14a0 - $7fff   Programs stored in the invisible part of screen memory
+        $14a0 - $14bf   Input buffer ('line 0')
+        $14c0 - $14f3   BASIC variables A..Z
+        $15a0 - $7fff   Programs stored in the invisible part of screen memory
         $8000 - $ffff   Optional extra memory for BASIC programs (64K extension)
 
   Undocumented features and/or bugs:
@@ -155,7 +155,7 @@
   Braindumps:
         a0          b0          c0          d0          e0          f0       ff
        +-----------------------+-----------------------+-----------------------+
-$13a0  | Input buffer          | Variables Z Y X ... P | O ... G F E D C B A @ |
+$14a0  | Input buffer          | Variables Z Y X ... P | O ... G F E D C B A @ |
        +-----------------------+-----------------------+-----------------------+
 Begin->| Program line 10       | Program line 20   P(1)| Program line 30   @(1)|
        +-----------------------+-----------------------+-----------------------+
@@ -335,7 +335,7 @@ $0300:
   push
 
   tmp=                          {Line number}
-  $13a0 Active=                 {Input buffer}
+  $14a0 Active=                 {Input buffer}
   tmp Active:                   {For error messages}
   $a2 Active<.                  {Text area}
 
@@ -654,12 +654,12 @@ StatementCont=
 
 { Clear variables. Returns begin address for programs }
 [def
-  $13c0 i=                      {Clear variables A-Z and a few bytes more}
+  $14c0 i=                      {Clear variables A-Z and a few bytes more}
   [do
     0 i.                        {Clear byte}
     i<++                        {Advance pointer}
     i<, if<>0loop]              {Until end of page}
-  $14a0 Begin=
+  $15a0 Begin=
   ret
 ] Clear=
 
@@ -675,7 +675,7 @@ PrintS!                         {'*** Tiny BASIC'}
 Newline!
 
 Clear!                          {Clear variables}
-$13a0 deek End=                 {At startup 'End' comes from loaded segment}
+$14a0 deek End=                 {At startup 'End' comes from loaded segment}
 2+ Active=                      {BASIC command(s) to run at startup}
 
 {-----------------------------------------------------------------------+
@@ -809,7 +809,7 @@ Number=
   Active, [if<>0 SyntaxError!]  {There must be nothing left on the line}
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
-    $13c0 Active^ if<>0         {Also stop if we came from the input buffer}
+    $14c0 Active^ if<>0         {Also stop if we came from the input buffer}
                                 {XXX Insert checkpointing here?}
     Active 2+ Active=           {Skip past line number}
     Statement!]                 {And continue from there}
@@ -969,14 +969,14 @@ Divide=
 
 { Get variable and calculate its address }
 [def
-  $13c0 i=                      {Base for variables}
+  $14c0 i=                      {Base for variables}
   Active,                       {Next character from line}
   $5f&                          {Ignore case}
   $41- {'A'} [if>=0             {Bail out if out of range}
    26- {'Z'} if<0               {Letter A..Z or a..z}
     Active<++                   {Accept character}
     26+                         {Map in 0..25 range}
-    1<< i+                      {Address is $13c0+2*n}
+    1<< i+                      {Address is $14c0+2*n}
     ret                         {Return address on success}
   ]
   SyntaxError!
@@ -1050,6 +1050,11 @@ $11a0:
 +-----------------------------------------------------------------------}
 $12a0:
 
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 19                                     |
++-----------------------------------------------------------------------}
+$13a0:
+
 { Error reporting function and re-entry point for main loop }
 { Call with inline partial error message, or with 0# for no error }
 [def
@@ -1098,6 +1103,6 @@ Statement!                      {Execute statement}
 { BASIC data begins here. In this setup the interpreter can be patched
   to include a BASIC program and a first command for execution }
 
-$13a0: $a0# $13#                {Point to self}
+$14a0: $a0# $14#                {Point to self}
        $4e# $45# $57# 0#        {'NEW' to start interactive session}
 
