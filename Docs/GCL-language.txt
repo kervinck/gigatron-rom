@@ -317,7 +317,7 @@ Addresses of SYS functions that are part of the ABI:
 
 Added in ROM v2 (ADVICE NOT TO USE IN GT1 FILES INTENDED FOR SHARING):
 
-0b00    SYS_SetVideoMode_80     Set video mode 0..3
+0b00    SYS_SetMode_80          Set video mode 0..3
 0b03    SYS_SetMemory_54        Set 1..256 bytes of memory to value
 
 Application specific SYS calls in ROM v1 that are -not- part of the ABI:

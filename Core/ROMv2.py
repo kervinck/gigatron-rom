@@ -2423,7 +2423,7 @@ trampoline()
 align(1)
 
 #-----------------------------------------------------------------------
-# Extension SYS_SetVideoMode_80
+# Extension SYS_SetMode_80
 #-----------------------------------------------------------------------
 
 # vAC bit 0:1                   Mode:
@@ -2434,9 +2434,9 @@ align(1)
 # vAC bit 2:15                  Ignored bits and should be 0
 
 # Actual duration is <80 cycles, but keep some room for future extensions
-label('SYS_SetVideoMode_v2_80')
-ld(hi('sys_SetVideoMode'), Y)   #15
-jmpy('sys_SetVideoMode')        #16
+label('SYS_SetMode_v2_80')
+ld(hi('sys_SetMode'), Y)        #15
+jmpy('sys_SetMode')             #16
 ld([vAC])                       #17
 
 #-----------------------------------------------------------------------
@@ -2582,8 +2582,8 @@ ld(hi('REENTER'), Y)            #45
 jmpy('REENTER')                 #46
 ld(-50/2)                       #47
 
-# SYS_SetVideoMode_80  implementation
-label('sys_SetVideoMode')
+# SYS_SetMode_80  implementation
+label('sys_SetMode')
 anda(3)                         #18
 adda('.sysSvm1')                #19
 bra(AC)                         #20

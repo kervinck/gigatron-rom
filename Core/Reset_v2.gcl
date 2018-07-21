@@ -124,7 +124,7 @@ $812 Pos= PrintStartupMessage! {Returns 0}
 [if=0 \ledState_v2. \ledTimer.] {For continuity only restart when paused}
 9 \ledTempo.                    {6.0 Hz ( = 60/(9+1)), was 5.5 Hz}
 
-\SYS_SetVideoMode_v2_80 \sysFn= {!!! Not in ROM v1 !!!}
+\SYS_SetMode_v2_80 \sysFn=      {!!! Not in ROM v1 !!!}
 1 80!                           {Mode 1 -> "ABC-"}
 
 { Load and start main program }

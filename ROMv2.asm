@@ -2481,7 +2481,7 @@ invTable:     0a00 00ff  ld   $ff
               0afd 1404  ld   $04,y       ;| Trampoline for page $0a00 lookups |
               0afe e065  jmp  y,$65       ;|                                   |
               0aff c218  st   [$18]       ;+-----------------------------------+
-SYS_SetVideoMode_v2_80:
+SYS_SetMode_v2_80:
               0b00 140b  ld   $0b,y
               0b01 e05f  jmp  y,$5f
               0b02 0118  ld   [$18]
@@ -2579,8 +2579,7 @@ sys_SetMemory:
               0b5c 1403  ld   $03,y
               0b5d e0cb  jmp  y,$cb
               0b5e 00e7  ld   $e7
-sys_SetVideoMode:
-              0b5f 2003  anda $03
+sys_SetMode:  0b5f 2003  anda $03
               0b60 8063  adda $63
               0b61 fe00  bra  ac
               0b62 fc67  bra  .sysSvm2

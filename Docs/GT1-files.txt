@@ -104,7 +104,7 @@ On using romType
 ROM v1  0x1c    Initial Gigatron kit release
 ROM v2  0x20    ledState_v2 (write-only, settable to 0 for run and 1 for stop)
                 SYS_SetMemory_v2_54
-                SYS_SetVideoMode_v2_80
+                SYS_SetMode_v2_80
 
 Purpose of romType variable
 ---------------------------
