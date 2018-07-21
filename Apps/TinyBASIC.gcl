@@ -115,7 +115,6 @@
     FOR-TO-NEXT (And STEP) Can be done with 1 reserved word per control variable
 
   'Maybe' list:
-    :           Multiple statements in one line
     SAVE        To Babelfish, using /vSync length modulation
     Speed       Cache result of the statement detection (checkpointing)
     Speed       Alternative: LET detection is now last, but should be first
@@ -478,13 +477,6 @@ $0500:
 
 { Continuation of Statement }
 
-  Keyword! $6e# $65# $77# 0#    {'new'}
-  [if<>0
-    Clear!                      {Clear variables}
-    End=                        {Clear program}
-    List!                       {To print number of free bytes}
-    Prompt! 0#]                 {Return to prompt}
-
   Keyword! $70# $75# $74# 0#    {'put'}
   [if<>0
     Expression!
@@ -530,36 +522,24 @@ $0500:
      0#
   [if<>0
     SyntaxError!]
-{
+
   Keyword! $6d# $6f# $64# $65#  {'mode'}
      0#
   [if<>0
     SyntaxError!]
-}
+
   Keyword! $70# $72# $69# $6e#  {'print'}
     $74# 0#
   [if=0 Keyword! $3f# 0#]       {'?'}
   [if<>0
     $14a0 call]                 {PRINT}
 
-  Keyword!                      {'list'}
-    $6c# $69# $73# $74# 0#
-  [if<>0 List! EndOfLine!]
-
   Keyword! $69# $6e# $70# $75#  {'input'}
     $74# 0#
   [if<>0
     $13a0 call]                 {INPUT}
 
-  Keyword! $6c# $65# $74# 0#    {'let' (optional)}
-  Variable!
-  Address=                      {Park here}
-  Spaces!
-  Keyword! $3d# 0#              {'='}
-  [if=0 SyntaxError!]
-  Expression!                   {Evaluate expression}
-  Address:                      {Store value in variable}
-  EndOfLine!
+  $15a0 call                    {NEW, LIST, LET}
 
 {-----------------------------------------------------------------------+
 |                       RAM page 6                                      |
@@ -796,7 +776,7 @@ Number=
 { Verify that there is nothing else on the line, then continue with next }
 [def
   Active, [if<>0
-    $3a- [if=0                  {Accept statements separated by colon (':')}
+    $3a^ [if=0                  {Accept statements separated by colon (':')}
       Active<++ Statements!]
     SyntaxError!]               {There must be nothing left on the line}
   Active NextBlock! Active=     {Advance to next line}
@@ -1123,8 +1103,9 @@ $13a0:
 $14a0:
 
   {PRINT}
-    Active,
-    [if=0 Newline!]             {Special case for newlines}
+  Active, [if<>0                {Special case for newlines}
+  $3a^ if<>0                    {Same for colon}
+
     [do {PRINTLIST}
       Active, if<>0             {Until end of line}
       $22^                      {'"'}
@@ -1149,12 +1130,36 @@ $14a0:
       Keyword! $3b# 0#          {';'}
       if<>0loop                 {To PRINTLIST}
       Newline!]                 {When no trailing ',' or ';'}
-    EndOfLine!
+  else
+    Newline!]                   {Special case for newlines and colon}
+
+  EndOfLine!
 
 {-----------------------------------------------------------------------+
 |                       RAM page 21                                     |
 +-----------------------------------------------------------------------}
 $15a0:
+
+  Keyword! $6e# $65# $77# 0#    {'new'}
+  [if<>0
+    Clear!                      {Clear variables}
+    End=                        {Clear program}
+    List!                       {To print number of free bytes}
+    Prompt! 0#]                 {Return to prompt}
+
+  Keyword!                      {'list'}
+    $6c# $69# $73# $74# 0#
+  [if<>0 List! EndOfLine!]
+
+  Keyword! $6c# $65# $74# 0#    {'let' (optional)}
+  Variable!
+  Address=                      {Park here}
+  Spaces!
+  Keyword! $3d# 0#              {'='}
+  [if=0 SyntaxError!]
+  Expression!                   {Evaluate expression}
+  Address:                      {Store value in variable}
+  EndOfLine!
 
 {-----------------------------------------------------------------------+
 |                       BASIC data                                      |

@@ -3,24 +3,25 @@
  *  EBNF in W3C notation
  *  Recommended railroad diagram generator: http://www.bottlecaps.de/rr/ui
  */
-Line        ::= Number Statement | Statement
-Statement   ::= ('PRINT'|'?') ((String|Expression) [,;])*
-                                 (String|Expression)?                   |
-                  'PUT' Expression                                      |
-                  'IF' Expression RelOp Expression 'THEN'? Statement    |
-                  'GOTO' Expression                                     |
-                  'INPUT' Variable (',' Variable)*                      |
-                  'LET'? Variable '=' Expression                        |
-                  'FOR' Variable '=' Expression 'TO' Expression         |
-                  'NEXT' Variable                                       |
-                  'POKE' Expression ',' Expression                      |
-                  'GOSUB' Expression                                    |
-                  'RETURN'                                              |
-                  ('REM'|"'") Character*                                |
-                  'NEW'                                                 |
-                  'LIST'                                                |
-                  'RUN'                                                 |
-                  'END'
+Line        ::= Number Statements | Statements
+Statements  ::= Statement (':' Statement)*                            |
+Statement   ::= ('PRINT'|'?') ((String|Expression) [,;])*             |
+                               (String|Expression)?                   |
+                'PUT' Expression                                      |
+                'IF' Expression RelOp Expression 'THEN'? Statements   |
+                'GOTO' Expression                                     |
+                'INPUT' Variable (',' Variable)*                      |
+                'LET'? Variable '=' Expression                        |
+                'FOR' Variable '=' Expression 'TO' Expression         |
+                'NEXT' Variable                                       |
+                'POKE' Expression ',' Expression                      |
+                'GOSUB' Expression                                    |
+                'RETURN'                                              |
+                ('REM'|"'") Character*                                |
+                'NEW'                                                 |
+                'LIST'                                                |
+                'RUN'                                                 |
+                'END'
 Expression  ::= [+-]? Term ([+-] Term)*
 Term        ::= Factor ([*/%] Factor)*
 Factor      ::= Variable | Number | ('PEEK'|'RND'|'USR')? '(' Expression ')'
