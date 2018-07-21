@@ -65,10 +65,10 @@
   Memory allocation:
           $30 -   $7f   BASIC interpreter variables
           $81 -   $ff   Stack for BASIC and vCPU (>50 GOSUB levels)
-         $200 - $14ff   BASIC interpreter, partly next to screen memory
-        $15a0 - $15bf   Input buffer ('line 0')
-        $15c0 - $15f3   BASIC variables A..Z
-        $16a0 - $7fff   Programs stored in the invisible part of screen memory
+         $200 - $15ff   BASIC interpreter, partly next to screen memory
+        $16a0 - $16bf   Input buffer ('line 0')
+        $16c0 - $16f3   BASIC variables A..Z
+        $17a0 - $7fff   Programs stored in the invisible part of screen memory
         $8000 - $ffff   Optional extra memory for BASIC programs (64K extension)
 
   Undocumented features and/or bugs:
@@ -157,7 +157,7 @@
   Braindumps:
         a0          b0          c0          d0          e0          f0       ff
        +-----------------------+-----------------------+-----------------------+
-$15a0  | Input buffer          | Variables Z Y X ... P | O ... G F E D C B A @ |
+$16a0  | Input buffer          | Variables Z Y X ... P | O ... G F E D C B A @ |
        +-----------------------+-----------------------+-----------------------+
 Begin->| Program line 10       | Program line 20   P(1)| Program line 30   @(1)|
        +-----------------------+-----------------------+-----------------------+
@@ -337,7 +337,7 @@ $0300:
   push
 
   tmp=                          {Line number}
-  $15a0 Active=                 {Input buffer}
+  $16a0 Active=                 {Input buffer}
   tmp Active:                   {For error messages}
   $a2 Active<.                  {Text area}
 
@@ -513,13 +513,13 @@ $0500:
   Keyword! $6e# $65# $78#       {'next'}
      $74# 0#
   [if<>0
-    Variable! Address=          {Pointer to counter}
+    Variable! Address=          {Pointer to loop counter}
     2-- Active 0%=              {Park program index on stack}
     ForLoop Active=             {Switch back to tail of FOR statement}
                                 {XXX We should handle unused loop variables}
     Expression!                 {Evaluate end value}
     Address; 1+ Address:        {Increment counter}
-    Value-                      {XXX We should handle overflow}
+    Value-                      {Compare XXX We should handle overflow}
     [if>0                       {Counter > End}
       0% Active=                {Break the loop}
       Spaces!]
@@ -535,14 +535,12 @@ $0500:
      0#
   [if<>0
     SyntaxError!]
-
 {
   Keyword! $6d# $6f# $64# $65#  {'mode'}
      0#
   [if<>0
     SyntaxError!]
 }
-
   Keyword! $70# $72# $69# $6e#  {'print'}
     $74# 0#
   [if=0 Keyword! $3f# 0#]       {'?'}
@@ -650,12 +648,12 @@ $0600:
 
 { Clear variables. Returns begin address for programs }
 [def
-  $15c0 i=                      {Clear variables A-Z and a few bytes more}
+  $16c0 i=                      {Clear variables A-Z and a few bytes more}
   [do
     0 i.                        {Clear byte}
     i<++                        {Advance pointer}
     i<, if<>0loop]              {Until end of page}
-  $16a0 Begin=
+  $17a0 Begin=
   ret
 ] Clear=
 
@@ -671,7 +669,7 @@ PrintS!                         {'*** Tiny BASIC'}
 Newline!
 
 Clear!                          {Clear variables}
-$15a0 deek End=                 {At startup 'End' comes from loaded segment}
+$16a0 deek End=                 {At startup 'End' comes from loaded segment}
 2+ Active=                      {BASIC command(s) to run at startup}
 
 {-----------------------------------------------------------------------+
@@ -805,7 +803,7 @@ Number=
   Active, [if<>0 SyntaxError!]  {There must be nothing left on the line}
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
-    $15c0 Active^ if<>0         {Also stop if we came from the input buffer}
+    $16c0 Active^ if<>0         {Also stop if we came from the input buffer}
                                 {XXX Insert checkpointing here?}
     Active 2+ Active=           {Skip past line number}
     Statement!]                 {And continue from there}
@@ -965,14 +963,14 @@ Divide=
 
 { Get variable and calculate its address }
 [def
-  $15c0 i=                      {Base for variables}
+  $16c0 i=                      {Base for variables}
   Active,                       {Next character from line}
   $5f&                          {Ignore case}
   $41- {'A'} [if>=0             {Bail out if out of range}
    26- {'Z'} if<0               {Letter A..Z or a..z}
     Active<++                   {Accept character}
     26+                         {Map in 0..25 range}
-    1<< i+                      {Address is $15c0+2*n}
+    1<< i+                      {Address is $16c0+2*n}
     ret                         {Return address on success}
   ]
   SyntaxError!
@@ -1149,12 +1147,17 @@ $14a0:
     EndOfLine!
 
 {-----------------------------------------------------------------------+
+|                       RAM page 21                                     |
++-----------------------------------------------------------------------}
+$15a0:
+
+{-----------------------------------------------------------------------+
 |                       BASIC data                                      |
 +-----------------------------------------------------------------------}
 
 { BASIC data begins here. In this setup the interpreter can be patched
   to include a BASIC program and a first command for execution }
 
-$15a0: $a0# $15#                {Point to self}
+$16a0: $a0# $16#                {Point to self}
        $4e# $45# $57# 0#        {'NEW' to start interactive session}
 
