@@ -291,6 +291,21 @@ SYS   $DD      Native function call using at most 2*T cycles, D=270-max(14,T)
 DEF   $DD      Define data or code (vAC,vPC=vPC+2,D+256*(vPC>>8))
 
 -------------
+Coding tricks
+-------------
+
+$ff&                    Clear vAC high byte
+$ff| $ff^               Clear vAC low byte, because there is no $ff00&
+\vACH,                  Move vAC high byte to low
+
+a b-
+[if>=0 ...]             if a >= b ...
+                        But doesn't work in case of overflow
+
+a b^ [if<0 b else a b-]
+[if>=0 ...]             16-bits range version
+
+-------------
 SYS extension
 -------------
 Addresses of SYS functions that are part of the ABI:
