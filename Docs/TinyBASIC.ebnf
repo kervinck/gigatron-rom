@@ -31,6 +31,6 @@ Factor      ::= Variable | Number
              |  (Variable|'PEEK'|'RND'|'USR')? '(' Expression ')'
 RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
 Number      ::= [0-9]+
-Variable    ::= [A-Z]
+Variable    ::= [A-Z] | '@'
 String      ::= '"' ([#x20-#x21] | [#x23-#x7E])* '"'
 Character   ::= [#x20-#x7E]

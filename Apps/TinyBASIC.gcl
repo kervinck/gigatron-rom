@@ -55,7 +55,7 @@
                |  (Variable|'PEEK'|'RND'|'USR')? '(' Expression ')'
   RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
   Number      ::= [0-9]+
-  Variable    ::= [A-Z]
+  Variable    ::= [A-Z] | '@
   String      ::= '"' ([#x20-#x21] | [#x23-#x7E])* '"'
   Character   ::= [#x20-#x7E]
 
@@ -169,12 +169,12 @@ Begin->| Program line 10       | Program line 20       | Program line 30       |
        +-----------------------+-----------------------+-----------------------+
        | Program line 40       | Program line 45       | Program line 50       |
        +-----------------------+-----------------------+-----------------------+
-       | Program line 60       |<-End            J(100)|K(100)           Z(100)|
+       | Program line 60       |<-End             J(99)|K(99)             Z(99)|
        +-----------------------+-----------------------+-----------------------+
        :                       :                       :                       :
-       |                       |                   J(2)|K(2)               Z(2)|
-       +-----------------------+-----------------------+-----------------------+
        |                       |                   J(1)|K(1)               Z(1)|
+       +-----------------------+-----------------------+-----------------------+
+       |                       |                   J(0)|K(0)               Z(0)|
        +-----------------------+-----------------------+-----------------------+
 $7fa0  |                       | Variables A B C ... J | K ... S T U V W X Y Z |
        +-----------------------+-----------------------+-----------------------+
@@ -269,9 +269,9 @@ $01df deek Pos=                 {Bottom character row in screen memory}
     [if<>0                      {Optional array index}
       push k 0%=                {Save address on stack}
       Expression!
-      [if<=0 ValueError!]       {Index must be positive}
+      [if<0 ValueError!]        {Index must be non-negative}
       0% k= pop                 {Pop address from stack}
-      k>, Value- k>.
+      k>, Value- 1- k>.
       End k^                    {64K safe bound check}
       [if<0 End                 {Opposite signs}
        else k End-]             {Equal signs}
@@ -794,7 +794,7 @@ Number=
       i<++ i<++                 {Advance pointer}
       i<, if<>0loop]            {Until end of page}
     0; i^ if<>0                 {Reached top of memory?}
-    $1cc i+ loop]               {512-2*26}
+    $1ca i+ loop]               {512-2*27}
   $19a0 Begin=
   ret
 ] {Clear=}
@@ -936,8 +936,8 @@ Divide=
   0; i=                         {Top of memory as base for variables}
   Active,                       {Next character from line}
   $5f&                          {Ignore case}
-  $41- {'A'} [if>=0             {Bail out if out of range}
-   26- {'Z'} if<0               {Letter A..Z or a..z}
+  $40- {'@'} [if>=0             {Bail out if out of range}
+   27- {'Z'} if<0               {Letter A..Z or a..z}
     Active<++                   {Accept character}
     1<< i+                      {Address is base-52+2*n}
     ret]                        {Return address on success}
@@ -1206,8 +1206,8 @@ $16a0:
   Keyword! $28# 0#              {'('}
   [if<>0                        {Optional array index}
     Expression!
-    [if<=0 ValueError!]         {Index must be positive}
-    Address>, Value- Address>.
+    [if<0 ValueError!]          {Index must be non-negative}
+    Address>, Value- 1- Address>.
     End Address^                {64K safe bound check}
     [if<0 End                   {Opposite signs}
      else Address End-]         {Equal signs}
