@@ -64,7 +64,8 @@
   Error messages:
         Break error     Program (or list command) stopped by [Del] key
         Syntax error    Parse error / Program too large
-        Value error     Value or index out of range / Calculation error (division by 0)
+        Value error     Value or index out of range / Calculation error
+                        (division by 0) / NEXT without FOR
         Stack error     GOSUB nesting too deep / RETURN without GOSUB
         Line error      Line number not found / RUN empty program
 
@@ -123,6 +124,7 @@
   'Maybe' list:
     A="...      As poor-men's substitute for DATA/READ
     COLOR       Easily change colors (use: POKE 43,c)
+    Unary minus Original Tiny BASIC does it wrong: 8/-2
     Speed       Cache result of the statement detection (checkpointing)
     Speed       Alternative: LET detection is now last, but should be first
     IF          Reintroduce the missing syntax error check
@@ -130,7 +132,6 @@
     A$ .. Z$    String variables (only in LET, PRINT, INPUT?)
     Speed       Cache GOTO/GOSUB target (only for constant targets...)
     Speed       Cache result of NextBlock (at offset 30 of block?)
-    Unary minus Original Tiny BASIC does it wrong: 8/-2
     ABS(/SGN(   Built-in function
     A$()        Indexing in string variable, gives integer (handle in Factor)
     LEN()/A$()=
@@ -156,7 +157,7 @@
     ><          For unequal
     CLEAR       For NEW
     READ, DATA  Possibly put in unused lines? (RESTORE)
-    AND OR NOT  At list for in IF statements
+    AND OR NOT  At least in IF statements
     ELSE        Will slow down IF, because it has to scan for this
     DEF FNx
 
@@ -182,13 +183,7 @@ $7ea0  |                       | For loops @ A B ... J | K ... S T U V W X Y Z |
 $7fa0  |                       | Variables @ A B ... J | K ... S T U V W X Y Z |
        +-----------------------+-----------------------+-----------------------+
 
-        Better idea: Put variables in top of memory, and grow arrays DOWN
-        1. This opens the road to string variables without garbage collection
-        2. And FOR-TO-NEXT this might work:
-        FOR Var = Expr TO Expr [STEP Expr]
-                       ^
-                       NEXT will go back here, remember only this address
-                       NEXT Var will then continue parsing TO (and STEP)
+        Totally random ideas:
 
         Alternative byte allocation in block:
         0       Checkpoint offset (set by Insert to 5)
@@ -206,17 +201,19 @@ $7fa0  |                       | Variables @ A B ... J | K ... S T U V W X Y Z |
 
         But how about INPUT A$?
 
-  Ideas for demo programs:
-    Blinky      Everyone's favorite
-    Clock
-    Maze        The famous one-liner with / and \
-    Text        Color of characters and background at arbitrary positions
-    LEDs        Control the blinkenlights
-    Lines
-    Circles     Lots of math
-    Music       Play tones, vary with waveforms
-    Sprites     Fake sprites with printing chars at arbitrary positions
-    TicTac.gtb  Test longer programs. Might need to shorten/preprocess lines.
+        Ideas for demo programs:
+            Blinky      Everyone's favorite
+            Scroller    5 bands
+            Rainbow     Show palette in a nice way
+            Clock
+            Maze        The famous one-liner with / and \ --> Easter egg in ROMv2
+            Text        Color of characters and background at arbitrary positions
+            LEDs        Control the blinkenlights
+            Lines
+            Circles     Lots of math
+            Music       Play tones, vary with waveforms
+            Sprites     Fake sprites with printing chars at arbitrary positions
+            TicTac.gtb  Test longer programs. Might need to shorten/preprocess lines.
 }
 
 gcl0x
@@ -340,6 +337,8 @@ $0300:
         134!                    {Invoke SYS function to draw pixels}
         k<++ \sysArgs4<++       {Advance to next slice}
         i 1- if>0loop]          {Looping}
+
+      \sysArgs2. 134!           {Render 6th slice}
 
       $fe%]                     {Return effective position}
   ret
