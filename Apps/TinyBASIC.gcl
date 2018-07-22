@@ -110,14 +110,13 @@
 
   Wish list:
     CLS         Clear screen, move cursor to top. Newline update?
-    AT X[,Y]    Map (X and) Y to memory (through videoTable)
-    DRAW dX,dY  Draw a line (or point)
     @()         Array as in Palo Alto Tiny BASIC (store vertically)
     @ A()       @ as variable name, and generic arrays (1-dimensional)
+    DRAW dX,dY  Draw a line (or point)
     FOR-TO-NEXT (And STEP) Can be done with 1 reserved word per control variable
+    SAVE        To Babelfish, using /vSync length modulation
 
   'Maybe' list:
-    SAVE        To Babelfish, using /vSync length modulation
     Speed       Cache result of the statement detection (checkpointing)
     Speed       Alternative: LET detection is now last, but should be first
     IF          Reintroduce the missing syntax error check
