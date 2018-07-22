@@ -7,6 +7,7 @@
 |       - One statement per line, up to 25 characters per line          |
 |       - Supports roughly 300 line programs in the 32K system          |
 |       - Based on Dennis Allison's original 1976 Tiny BASIC            |
+|       - Extended with POKE/PEEK/RND/FOR/NEXT/CLS/AT/PUT/MODE          |
 |                                                                       |
 +-----------------------------------------------------------------------}
 
@@ -357,8 +358,7 @@ Newline=
   $a2 Active<.                  {Text area}
 
   [do {NEXTCHAR}
-    127 \sysArgs7.              {Pen color white for user input}
-    PrintChar! Pos=             {Draw cursor symbol}
+    127 PrintChar! Pos=         {Draw cursor symbol}
 
     \serialRaw, [do             {Wait for key change}
       tmp=                      {Remember previous value}
@@ -389,7 +389,6 @@ Newline=
   Active.                       {Terminate input with zero}
   $20 PrintChar!                {Remove cursor}
   Newline!
-  $0f \sysArgs7.                {Pen color yellow for output}
   $a2 Active<.                  {Back to start of buffer}
   Spaces!                       {Process leading spaces}
   Active,                       {Tell caller if there is input}
@@ -1133,14 +1132,14 @@ $13a0:
 +-----------------------------------------------------------------------}
 $14a0:
 
-  {XXX "print i;:rem" doesn't work yet}
   {PRINT}
   Active, [if<>0                {Special case for newlines}
   $3a^ if<>0                    {Same for colon}
 
     [do {PRINTLIST}
       Active, if<>0             {Until end of line}
-      $22^                      {'"'}
+      $3a^ if<>0                {or ':'}
+      $18^                      {'"' = $22 = $3a^$18}
       [if=0
         [do {PRINTSTRING}       {String constant}
           Active<++             {Skip past opening quote or string character}
