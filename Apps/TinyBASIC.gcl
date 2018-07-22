@@ -7,7 +7,7 @@
 |       - One statement per line, up to 25 characters per line          |
 |       - Supports roughly 300 line programs in the 32K system          |
 |       - Based on Dennis Allison's original 1976 Tiny BASIC            |
-|       - Extended with POKE/PEEK/RND/FOR/NEXT/CLS/AT/PUT/MODE          |
+|       - Extended with POKE/PEEK/RND/FOR/NEXT/CLS/AT/PUT/MODE/Arrays   |
 |                                                                       |
 +-----------------------------------------------------------------------}
 
@@ -93,6 +93,7 @@
         Break error     Gives the line it was about to start: resume with GOTO
         PRINT "xxx      An unterminated string is silently accepted
         60000 vs. 90000 Many (too) large constants give an error, but not all!
+        A(256)          Many (too) large idexes give an error, but not all!
 
   References:
         https://en.wikipedia.org/wiki/Tiny_BASIC
@@ -114,10 +115,11 @@
         Apple 1 BASIC
 
   Wish list:
+    FOR-TO-NEXT Clear for variable before starting
     DRAW dX,dY  Draw a line (or point)
-    FOR-TO-NEXT (And STEP) Can be done with 1 reserved word per control variable
     NEXT        Without variable (for convenience)
     SAVE        To Babelfish, using /vSync length modulation
+    A="...      As poor-men's substitute for DATA/READ
 
   'Maybe' list:
     COLOR       Easily change colors (use: POKE 43,c)
@@ -191,6 +193,15 @@ $7fa0  |                       | Variables A B C ... J | K ... S T U V W X Y Z |
         3-4     Line number
         5-29    Text (without line number) and terminating zero
         30-31   Next block address? Goto address?
+
+        Some concepts to fake strings
+                Variable = String
+                PRINT Variable '$'
+
+                Variable '$' '=' (Variable '$' | String)
+                PRINT Variable '$'
+
+        But how about INPUT A$?
 
   Ideas for demo programs:
     Blinky      Everyone's favorite
@@ -452,15 +463,6 @@ GetLine=
       Active<++ loop]
     EndOfLine!]
 
-  Keyword! $72# $75# $6e# 0#    {'run'}
-  [if<>0
-    Clear!                      {Clear variables}
-    deek Value=                 {First program line, if any}
-    GotoValue!]                 {Also tests for break}
-
-  Keyword! $65# $6e# $64# 0#    {'end'}
-  [if<>0 Prompt! 0#]
-
   $500 call                     {Continue in another page}
 ] Statements=
 
@@ -544,7 +546,7 @@ $0500:
   [if<>0
     $13a0 call]                 {PRINT}
 
-  $14a0 call                    {INPUT, NEW, LIST, LET}
+  $14a0 call                    {INPUT, NEW, CLS, LIST, LIST, RUN, END, LET}
 
 {-----------------------------------------------------------------------+
 |                       RAM page 6                                      |
@@ -768,9 +770,6 @@ $0aa0:
 $0ba0:
 Number=
 
-$18a0 deek End=                 {At startup 'End' comes from loaded segment}
-2+ Active=                      {BASIC command(s) to run at startup}
-
 { Verify that there is nothing else on the line, then continue with next }
 [def
   Active, [if<>0
@@ -786,21 +785,25 @@ $18a0 deek End=                 {At startup 'End' comes from loaded segment}
   Prompt! 0#                    {Program finished ok}
 ] EndOfLine=
 
-{ Clear variables. Returns begin address for programs }
+{ Clear variables and arrays. Returns begin address for programs }
 [def
-  0; 52- i=                     {Clear variables A-Z}
-  [do
-    0 i.                        {Clear byte}
-    i<++                        {Advance pointer}
-    i<, if<>0loop]              {Until end of page}
+  End                           {Begin of variable space}
+  [do i=
+    [do
+      0 i:                      {Clear word}
+      i<++ i<++                 {Advance pointer}
+      i<, if<>0loop]            {Until end of page}
+    0; i^ if<>0                 {Reached top of memory?}
+    $1cc i+ loop]               {512-2*26}
   $19a0 Begin=
   ret
-] Clear=
+] {Clear=}
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 12                                     |
 +-----------------------------------------------------------------------}
 $0ca0:
+Clear=
 
 { Process a full expression, result in Value and vAC }
 [def
@@ -990,6 +993,7 @@ Spaces=
   pop ret
 ] List=
 
+
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 17                                     |
 +-----------------------------------------------------------------------}
@@ -1031,12 +1035,13 @@ $11a0:
   pop ret
 ] RelOp=
 
+$18a0 deek End=                 {At startup 'End' comes from loaded segment}
+2+ Active=                      {BASIC command(s) to run at startup}
+
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 18                                     |
 +-----------------------------------------------------------------------}
 $12a0:
-
-Clear!                          {Clear variables}
 
 { Error reporting function and re-entry point for main loop }
 { Call with inline partial error message, or with 0# for no error }
@@ -1177,6 +1182,15 @@ $15a0:
   Keyword!                      {'list'}
     $6c# $69# $73# $74# 0#
   [if<>0 List! EndOfLine!]
+
+  Keyword! $72# $75# $6e# 0#    {'run'}
+  [if<>0
+    Clear!                      {Clear variables}
+    deek Value=                 {First program line, if any}
+    GotoValue!]                 {Also tests for break}
+
+  Keyword! $65# $6e# $64# 0#    {'end'}
+  [if<>0 Prompt! 0#]
 
   $16a0 call
 
