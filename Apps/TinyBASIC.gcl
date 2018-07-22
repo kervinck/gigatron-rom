@@ -21,7 +21,7 @@
                        NEW clears variables; Aliases for PRINT and REM
   2018-07-03 (marcelk) Add RND(), with 0 <= RND(n) < |n|; USR()
   2018-07-18 (marcelk) Fix GOSUB/RETURN parsing bug causing syntax error
-  2018-07-xx (marcelk) Add PUT, FOR/TO/NEXT, colon, MODE (ROMv2)
+  2018-07-xx (marcelk) Add PUT, FOR/TO/NEXT, colon, MODE (ROMv2), AT
 
   Formal grammar:
 
@@ -29,6 +29,7 @@
   Statements  ::= Statement (':' Statement)*                            |
   Statement   ::= ('PRINT'|'?') ((String|Expression) [,;])*             |
                                  (String|Expression)?                   |
+                  'AT' Expression [',' Expression]                      |
                   'PUT' Expression                                      |
                   'IF' Expression RelOp Expression 'THEN'? Statements   |
                   'GOTO' Expression                                     |
@@ -210,59 +211,53 @@ gcl0x
 
 $01df deek Pos=                 {Bottom character row in screen memory}
                                 {Slightly cheating with endianness}
-$0f20 \sysArgs6:                {Pen color yellow, background color blue}
-\sysArgs0.                      {First Newline call will look here}
 
 { Process an expression factor, result in Value }
 [def
   push
-
-  Keyword! $28# 0#              {'('}
-  [if<>0
-    Expression!
-    Keyword! $29# 0#            {')'}
-    [if=0 SyntaxError!]
-    pop ret]
 
   Number!                       {Test for numeric constant}
   [if>=0
     Spaces!
     pop ret]                    {Result already in Value}
 
+  Keyword! $28# 0#              {'('}
+  [if<>0
+    Expression!
+  else
+
   Keyword! $70# $65# $65# $6b#  {'peek('}
     $28# 0#
   [if<>0
     Expression!
     peek Value=
-    Keyword! $29# 0#            {')'}
-    [if=0 SyntaxError!]
-    pop ret]
+  else
 
   Keyword! $72# $6e# $64# $28#  {'rnd('}
     0#
   [if<>0
     Expression!
-    Keyword! $29# 0#            {')'}
-    [if=0 SyntaxError!]
     \SYS_Random_34 \sysFn=      {Prepare SYS call}
     [do 34! if<0loop]           {Get positive random number}
     Divide!                     {Modulo expression}
     i Value=
-    pop ret]
+  else
 
   Keyword! $75# $73# $72# $28#  {'usr('}
     0#
   [if<>0
     Expression!
-    Keyword! $29# 0#            {')'}
-    [if=0 SyntaxError!]
     Value! Value=               {vCPU call and result}
-    pop ret]
+  else
 
-  Variable!                     {Otherwise it MUST be a variable}
-  deek Value=                   {Fetch value}
-  Spaces!
+    Variable!                   {Otherwise it MUST be a variable}
+    deek Value=                 {Fetch value}
+    Spaces!
+    pop ret
+  ]]]]
 
+  Keyword! $29# 0#              {')'}
+  [if=0 SyntaxError!]
   pop ret
 ] Factor=
 
@@ -276,65 +271,81 @@ $0f20 \sysArgs6:                {Pen color yellow, background color blue}
   tmp!                          {Returns to caller}
 ] PrintS=
 
-{ Continue printing on new line. Returns 0 }
+{ Continue printing on new line }
 [def
   \SYS_VDrawBits_134 \sysFn=    {Prepare SYS call}
-  $800 Pos<.                    {Go back to start}
-  Pos+ [if<0 $0800] Pos=        {Go down 8 lines and wrap around if needed}
-  \sysArgs4=                    {sysArgs[4:5] is position on screen}
+
+  0 Pos<.                       {Go back to start of line}
   \sysArgs2.                    {All-zero output pattern}
+
+  Pos>, 8+                      {Go down 8 lines}
+  120& [if=0 8]                 {Wrap around and re-align to 8-fold if needed}
+  Pos>.
+
+  Pos \sysArgs4=                {sysArgs[4:5] is position on screen}
   [do
     134!                        {SYS call}
     \sysArgs4<++                {Advance to next slice}
     \sysArgs4, 160^             {Test for end of screen}
     if<>0loop]
-                                {Scroll up by modifying videoTable}
-  $01ee i=                      {Last entry in video table}
-  [do
-    i, 120- [if<0 128^
-             else 8^]
-             i.                 {Rotate by 8 in 8..127 range}
-    i 2- i=                     {Previous entry in video table}
-    $fe^ if<>0loop]             {Until all done}
+
+  $01ee i=                      {Pointer to last entry in video table}
+
+  255| deek                     {Gets [$100] aka Y[0] in vAC high byte}
+  Pos- \vACH,                   {Compare with Y position}
+  [if=0
+    do                          {Scroll 8 lines up by modifying videoTable}
+      i, 120- [if<0 128^
+               else 8^]
+               i.               {Rotate by 8 in 8..127 range}
+      i 2- i=                   {Previous entry in video table}
+      $fe^ if<>0loop]           {Until all done}
   ret
-] Newline=
+] {Newline=}
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
 $0300:
+Newline=
 
 { Print ASCII character (32..127) on screen in 5x8 pixels }
 { Returns the actual position }
 [def
   k=                            {Temporarily save character}
-  [32- if>=0                    {Printable range is 32..127}
-   95- if<=0
+  [127- if<=0                   {Suppress characters >127}
+   Pos>, 120- if<=0             {Suppress when vertically protruding
+                                 screen memory (note this can be in the
+                                 middle of the screen after scrolling
+                                 and using AT with non-multiples of 8,
+                                 leading to unexpected missing of text}
 
-    Pos<, 155- [if>0            {Automatic newline BEFORE printing}
-      push Newline! pop]
+      Pos<, 155- [if>0          {Automatic newline BEFORE printing}
+        push Newline! pop]
 
-    k 82-                       {Map ASCII code to offset in font table}
-    [if<0 50+ i= \font32up      {ASCII 32..81}
-     else     i= \font82up] k=  {ASCII 82..127}
-    i 2<< i+                    {Multiply by 5}
-    k+ k=                       {Add to page address to reach bitmap data}
+      k 82-                     {Map ASCII code to offset in font table}
+      [if<0 50+ i= \font32up    {ASCII 32..81}
+       else     i= \font82up]   {ASCII 82..127}
+      k=
+      i if>=0                   {Suppress characters <32}
+      2<< i+                    {Multiply by 5}
+      k+ k=                     {Add to page address to reach bitmap data}
 
-    \SYS_VDrawBits_134 \sysFn=  {Prepare SYS calls}
-    \sysArgs6; \sysArgs0:       {Apply caller-defined colors}
-    Pos \sysArgs4=              {Position for character}
-    $fe%=                       {Temporarily park return value on the stack}
-    6+ Pos=                     {Advance position by 6 pixels}
+      \SYS_VDrawBits_134        {Prepare SYS calls}
+      \sysFn=
+      \sysArgs6; \sysArgs0:     {Apply caller-defined colors}
+      Pos \sysArgs4=            {Position for character}
+      $fe%=                     {Temporarily park return value on the stack}
+      6+ Pos=                   {Advance position by 6 pixels}
 
-    5 [do i=                    {Draw 5 vertical slices}
-      k 0? \sysArgs2.           {Get slice from ROM}
-      134!                      {Invoke SYS function to draw pixels}
-      k<++ \sysArgs4<++         {Advance to next slice}
-      i 1- if>0loop]            {Looping}
+      5 [do i=                  {Draw 5 vertical slices}
+        k 0? \sysArgs2.         {Get slice from ROM}
+        134!                    {Invoke SYS function to draw pixels}
+        k<++ \sysArgs4<++       {Advance to next slice}
+        i 1- if>0loop]          {Looping}
 
-    $fe%                        {Return effective position}
-    ret]
-  ValueError!
+      $fe%]                     {Return effective position}
+  ret
 ] PrintChar=
 
 { Accept ASCII characters from console input with line editting }
@@ -384,12 +395,13 @@ $0300:
   Spaces!                       {Process leading spaces}
   Active,                       {Tell caller if there is input}
   pop ret
-] GetLine=
+] {GetLine=}
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
 $0400:
+GetLine=
 
 { Statement executor. Doesn't return through vLR }
 { Active must point to text or terminating zero, NOT to the line number }
@@ -517,7 +529,16 @@ $0500:
 
   Keyword! $61# $74# 0#         {'at'}
   [if<>0
-    SyntaxError!]
+    Expression!                 {X position}
+    Pos<.
+    Keyword! $2c# 0#            {','}
+    [if<>0
+      Expression!               {Optional Y position}
+      127& 120-
+      [if>=0 ValueError!]       {Point into videoTable}
+      248+ 1<<                  {\videoTable+2*y}
+      peek Pos>.]
+    EndOfLine!]
 
   Keyword! $64# $72# $61# $77#  {'draw'}
      0#
@@ -527,10 +548,12 @@ $0500:
   Keyword! $6d# $6f# $64# $65#  {'mode'}
      0#
   [if<>0
-    Expression!                 {Still parse in ROM v1}
-    \romType, $20- [if>=0       {ROM v2 and higher}
-      \SYS_SetMode_v2_80 \sysFn=
-      Value 80!]
+    Expression!                 {Degrade gracefully in ROM v1}
+    \romType,
+    \romTypeValue_ROMv2-
+    [if>=0
+      \SYS_SetMode_v2_80        {Available from ROM v2}
+      \sysFn= Value 80!]
     EndOfLine!]
 
   Keyword! $70# $72# $69# $6e#  {'print'}
@@ -637,6 +660,9 @@ $0600:
   ret
 ] Clear=
 
+$0f20 \sysArgs6:                {Pen color yellow, background color blue}
+\sysArgs0.                      {First Newline call will look here}
+
 { Note: It is safe to call functions here before hopping over to page 8 }
 
 Newline!                        {Scroll and clear last line}
@@ -649,8 +675,6 @@ PrintS!                         {'*** Tiny BASIC'}
 Newline!
 
 Clear!                          {Clear variables}
-$16a0 deek End=                 {At startup 'End' comes from loaded segment}
-2+ Active=                      {BASIC command(s) to run at startup}
 
 {-----------------------------------------------------------------------+
 |}$08a0 \vLR= ret{      RAM page 8                                      |
@@ -777,6 +801,9 @@ $0aa0:
 +-----------------------------------------------------------------------}
 $0ba0:
 Number=
+
+$16a0 deek End=                 {At startup 'End' comes from loaded segment}
+2+ Active=                      {BASIC command(s) to run at startup}
 
 { Verify that there is nothing else on the line, then continue with next }
 [def
@@ -951,7 +978,7 @@ Divide=
 $10a0:
 Spaces=
 
-{ List program, count and print free bytes. Returns 0 }
+{ List program, count and print free bytes }
 [def
   push
 
@@ -1039,7 +1066,7 @@ $12a0:
 [def
   \vLR; tmp=                    {vLR points to inline string argument}
   [Pos<, if<>0 Newline!]        {Conditional newline}
-  \vSP.                         {Reset stack}
+  0 \vSP.                       {Reset stack}
   tmp, [if<>0                   {Test for error in first byte of message}
     $3f                         {Begin error messages with '?'}
     [do                         {Print inline string as prelude}
@@ -1107,6 +1134,7 @@ $13a0:
 +-----------------------------------------------------------------------}
 $14a0:
 
+  {XXX "print i;:rem" doesn't work yet}
   {PRINT}
   Active, [if<>0                {Special case for newlines}
   $3a^ if<>0                    {Same for colon}
