@@ -22,35 +22,37 @@
                        NEW clears variables; Aliases for PRINT and REM
   2018-07-03 (marcelk) Add RND(), with 0 <= RND(n) < |n|; USR()
   2018-07-18 (marcelk) Fix GOSUB/RETURN parsing bug causing syntax error
-  2018-07-xx (marcelk) Add PUT, FOR/TO/NEXT, colon, MODE (ROMv2), AT, CLS
+  2018-07-xx (marcelk) Add PUT, FOR/TO/NEXT, colon, MODE (ROMv2), AT, CLS,
+                       arrays
 
   Formal grammar:
 
   Line        ::= Number Statements | Statements
-  Statements  ::= Statement (':' Statement)*                            |
-  Statement   ::= ('PRINT'|'?') ((String|Expression) [,;])*             |
-                                 (String|Expression)?                   |
-                  'AT' Expression [',' Expression]                      |
-                  'PUT' Expression                                      |
-                  'IF' Expression RelOp Expression 'THEN'? Statements   |
-                  'GOTO' Expression                                     |
-                  'INPUT' Variable (',' Variable)*                      |
-                  'LET'? Variable '=' Expression                        |
-                  'FOR' Variable '=' Expression 'TO' Expression         |
-                  'NEXT' Variable                                       |
-                  'POKE' Expression ',' Expression                      |
-                  'GOSUB' Expression                                    |
-                  'RETURN'                                              |
-                  ('REM'|"'") Character*                                |
-                  'MODE' Expression                                     |
-                  'CLS'                                                 |
-                  'NEW'                                                 |
-                  'LIST'                                                |
-                  'RUN'                                                 |
-                  'END'
+  Statements  ::= Statement (':' Statement)*
+  Statement   ::= ('PRINT'|'?') ((String|Expression) [,;])*
+                                 (String|Expression)?
+               |  'AT' Expression (',' Expression)?
+               |  'PUT' Expression
+               |  'IF' Expression RelOp Expression 'THEN'? Statements
+               |  'GOTO' Expression
+               |  'INPUT' Variable (',' Variable)*
+               |  'LET'? Variable ('(' Expression ')')? '=' Expression
+               |  'FOR' Variable '=' Expression 'TO' Expression
+               |  'NEXT' Variable
+               |  'POKE' Expression ',' Expression
+               |  'GOSUB' Expression
+               |  'RETURN'
+               |  ('REM'|"'") Character*
+               |  'MODE' Expression
+               |  'CLS'
+               |  'NEW'
+               |  'LIST'
+               |  'RUN'
+               |  'END'
   Expression  ::= [+-]? Term ([+-] Term)*
   Term        ::= Factor ([*/%] Factor)*
-  Factor      ::= Variable | Number | ('PEEK'|'RND'|'USR')? '(' Expression ')'
+  Factor      ::= Variable | Number
+               |  (Variable|'PEEK'|'RND'|'USR')? '(' Expression ')'
   RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
   Number      ::= [0-9]+
   Variable    ::= [A-Z]
@@ -63,17 +65,18 @@
   Error messages:
         Break error     Program (or list command) stopped by [Del] key
         Syntax error    Parse error / Program too large
-        Value error     Calculation error (division by 0)
+        Value error     Value or index out of range / Calculation error (division by 0)
         Stack error     GOSUB nesting too deep / RETURN without GOSUB
         Line error      Line number not found / RUN empty program
 
   Memory allocation:
           $30 -   $7f   BASIC interpreter variables
           $81 -   $ff   Stack for BASIC and vCPU (>50 GOSUB levels)
-         $200 - $15ff   BASIC interpreter, partly next to screen memory
-        $16a0 - $16bf   Input buffer ('line 0')
-        $16c0 - $16f3   BASIC variables A..Z
-        $17a0 - $7fff   Programs stored in the invisible part of screen memory
+         $200 - $17ff   BASIC interpreter, partly next to screen memory
+        $18a0 - $18bf   Input buffer ('line 0')
+        $18c0 - $18ff   To be determined (FOR variables?)
+        $19a0 - $7fbf   Programs stored in the invisible part of screen memory
+        $7fc0 - $7fff   BASIC variables A..Z
         $8000 - $ffff   Optional extra memory for BASIC programs (64K extension)
 
   Undocumented features and/or bugs:
@@ -111,14 +114,14 @@
         Apple 1 BASIC
 
   Wish list:
-    @()         Array as in Palo Alto Tiny BASIC (store vertically)
-    @ A()       @ as variable name, and generic arrays (1-dimensional)
     DRAW dX,dY  Draw a line (or point)
     FOR-TO-NEXT (And STEP) Can be done with 1 reserved word per control variable
+    NEXT        Without variable (for convenience)
     SAVE        To Babelfish, using /vSync length modulation
 
   'Maybe' list:
     COLOR       Easily change colors (use: POKE 43,c)
+    Indent      Indent BASIC output 2 pixels (as in WozMon) (-> Complex?)
     Speed       Cache result of the statement detection (checkpointing)
     Speed       Alternative: LET detection is now last, but should be first
     IF          Reintroduce the missing syntax error check
@@ -141,7 +144,6 @@
     TI/TI$      Built-in variable for time? (only in MS BASICs). Setting also?
     TAB()       As in Apple-1 BASIC (Weird: TAB(N) advances to N-1...)
     SPC()       Spaces
-    Indent      Indent BASIC output 2 pixels (as in WozMon) -> Complex
     Speed       Binary search for GotoValue -> Only speeds up large programs
     "" or """   For printing the quote character itself (use: PUT 34)
     Overflow    Errors on overflow for + - and *
@@ -156,24 +158,24 @@
     ELSE        Will slow down IF, because it has to scan for this
     DEF FNx
 
-  Braindumps:
+  Memory layout:
         a0          b0          c0          d0          e0          f0       ff
        +-----------------------+-----------------------+-----------------------+
-$16a0  | Input buffer          | Variables Z Y X ... P | O ... G F E D C B A @ |
+$18a0  | Input buffer          | XXXXXXXX TBD XXXXXXXX | XXXXXXXX TBD XXXXXXXX |
        +-----------------------+-----------------------+-----------------------+
-Begin->| Program line 10       | Program line 20   P(1)| Program line 30   @(1)|
+Begin->| Program line 10       | Program line 20       | Program line 30       |
        +-----------------------+-----------------------+-----------------------+
-       | Program line 40       | Program line 45   P(2)| Program line 50   @(2)|
+       | Program line 40       | Program line 45       | Program line 50       |
        +-----------------------+-----------------------+-----------------------+
-       | Program line 60       |                   P(3)|                   @(3)|
-       +-----------------------+-----------------------+-----------------------+
-       :                       :                       :                       :
-$7fa0  |                       |                 P(108)|                 @(108)|
+       | Program line 60       |<-End            J(100)|K(100)           Z(100)|
        +-----------------------+-----------------------+-----------------------+
        :                       :                       :                       :
-$ffa0  |                       |                 P(236)|                 @(236)|
+       |                       |                   J(2)|K(2)               Z(2)|
        +-----------------------+-----------------------+-----------------------+
-                                ^End
+       |                       |                   J(1)|K(1)               Z(1)|
+       +-----------------------+-----------------------+-----------------------+
+$7fa0  |                       | Variables A B C ... J | K ... S T U V W X Y Z |
+       +-----------------------+-----------------------+-----------------------+
 
         Better idea: Put variables in top of memory, and grow arrays DOWN
         1. This opens the road to string variables without garbage collection
@@ -250,9 +252,23 @@ $01df deek Pos=                 {Bottom character row in screen memory}
     Value! Value=               {vCPU call and result}
   else
 
-    Variable!                   {Otherwise it MUST be a variable}
-    deek Value=                 {Fetch value}
+    Variable! k=                {Otherwise it MUST be a variable}
     Spaces!
+    Keyword! $28# 0#            {'('}
+    [if<>0                      {Optional array index}
+      push k 0%=                {Save address on stack}
+      Expression!
+      [if<=0 ValueError!]       {Index must be positive}
+      0% k= pop                 {Pop address from stack}
+      k>, Value- k>.
+      End k^                    {64K safe bound check}
+      [if<0 End                 {Opposite signs}
+       else k End-]             {Equal signs}
+      [if<0 ValueError!]
+      Keyword! $29# 0#          {')'}
+      if=0 SyntaxError!]
+
+    k; Value=                   {Fetch value}
     pop ret
   ]]]]
 
@@ -270,38 +286,6 @@ $01df deek Pos=                 {Bottom character row in screen memory}
     loop]
   tmp!                          {Returns to caller}
 ] PrintS=
-
-{ Continue printing on new line }
-[def
-  \SYS_VDrawBits_134 \sysFn=    {Prepare SYS call}
-
-  0 Pos<.                       {Go back to start of line}
-  \sysArgs2.                    {All-zero output pattern}
-
-  Pos>, 8+                      {Go down 8 lines}
-  120& [if=0 8]                 {Wrap around and re-align to 8-fold if needed}
-  Pos>.
-
-  Pos \sysArgs4=                {sysArgs[4:5] is position on screen}
-  [do
-    134!                        {SYS call}
-    \sysArgs4<++                {Advance to next slice}
-    \sysArgs4, 160^             {Test for end of screen}
-    if<>0loop]
-
-  $01ee i=                      {Pointer to last entry in video table}
-
-  255| deek                     {Gets [$100] aka Y[0] in vAC high byte}
-  Pos- \vACH,                   {Compare with Y position}
-  [if=0
-    do                          {Scroll 8 lines up by modifying videoTable}
-      i, 120- [if<0 128^
-               else 8^]
-               i.               {Rotate by 8 in 8..127 range}
-      i 2- i=                   {Previous entry in video table}
-      $fe^ if<>0loop]           {Until all done}
-  ret
-] Newline=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 3                                      |
@@ -352,7 +336,7 @@ $0300:
   push
 
   tmp=                          {Line number}
-  $16a0 Active=                 {Input buffer}
+  $18a0 Active=                 {Input buffer}
   tmp Active:                   {For error messages}
   $a2 Active<.                  {Text area}
 
@@ -415,7 +399,7 @@ GetLine=
      $62# 0#
   [if<>0
     Expression!                 {Also does the stack check}
-    2-- Active 0%=              {Push current line to stack}
+    push Active 0%=             {Push current line to stack}
     GotoValue!]                 {Find that line and continue there}
 
   Keyword! $72# $65# $74# $75#  {'return'}
@@ -511,7 +495,7 @@ $0500:
      $74# 0#
   [if<>0
     Variable! Address=          {Pointer to loop counter}
-    2-- Active 0%=              {Park program index on stack}
+    push Active 0%=             {Park program index on stack}
     ForLoop Active=             {Switch back to tail of FOR statement}
                                 {XXX We should handle unused loop variables}
     Expression!                 {Evaluate end value}
@@ -520,7 +504,7 @@ $0500:
     [if>0                       {Counter > End}
       0% Active=                {Break the loop}
       Spaces!]
-    2++
+    pop                         {Shorter than 2++}
     TestBreak!                  {Test for [Del] as break request}
     EndOfLine!]
 
@@ -531,7 +515,8 @@ $0500:
     Keyword! $2c# 0#            {','}
     [if<>0
       Expression!               {Optional Y position}
-      127& 120-
+      [if<0 ValueError!]
+      120-
       [if>=0 ValueError!]       {Point into videoTable}
       248+ 1<<                  {\videoTable+2*y}
       peek Pos>.]
@@ -641,23 +626,14 @@ $0600:
   pop ret
 ] Insert=
 
-{ Clear variables. Returns begin address for programs }
-[def
-  $16c0 i=                      {Clear variables A-Z and a few bytes more}
-  [do
-    0 i.                        {Clear byte}
-    i<++                        {Advance pointer}
-    i<, if<>0loop]              {Until end of page}
-  $17a0 Begin=
-  ret
-] Clear=
-
 $0f20 \sysArgs6:                {Pen color yellow, background color blue}
+{$323f \sysArgs6:}              {Pen color purple, background color white}
+
 \sysArgs0.                      {First Newline call will look here}
 
 { Note: It is safe to call functions here before hopping over to page 8 }
 
-Newline!                        {Scroll and clear last line}
+$17a0 Newline= call             {Scroll and clear last line}
 
 { Welcome message }
 PrintS!                         {'*** Tiny BASIC'}
@@ -665,8 +641,6 @@ PrintS!                         {'*** Tiny BASIC'}
   $6e# $79# $20# $42# $41# $53#
   $49# $43# 0#
 Newline!
-
-Clear!                          {Clear variables}
 
 {-----------------------------------------------------------------------+
 |}$08a0 \vLR= ret{      RAM page 8                                      |
@@ -794,7 +768,7 @@ $0aa0:
 $0ba0:
 Number=
 
-$16a0 deek End=                 {At startup 'End' comes from loaded segment}
+$18a0 deek End=                 {At startup 'End' comes from loaded segment}
 2+ Active=                      {BASIC command(s) to run at startup}
 
 { Verify that there is nothing else on the line, then continue with next }
@@ -805,12 +779,23 @@ $16a0 deek End=                 {At startup 'End' comes from loaded segment}
     SyntaxError!]               {There must be nothing left on the line}
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
-    $16c0 Active^ if<>0         {Also stop if we came from the input buffer}
+    $18c0 Active^ if<>0         {Also stop if we came from the input buffer}
                                 {XXX Insert checkpointing here?}
     Active 2+ Active=           {Skip past line number}
     Statements!]                {And continue from there}
   Prompt! 0#                    {Program finished ok}
 ] EndOfLine=
+
+{ Clear variables. Returns begin address for programs }
+[def
+  0; 52- i=                     {Clear variables A-Z}
+  [do
+    0 i.                        {Clear byte}
+    i<++                        {Advance pointer}
+    i<, if<>0loop]              {Until end of page}
+  $19a0 Begin=
+  ret
+] Clear=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 12                                     |
@@ -821,8 +806,8 @@ $0ca0:
 [def
   push
 
-  \vSP, $8b-                    {Check stack for at least 10 bytes above $81}
-                                {Expression: 4, Term: 4, Factor: 2}
+  \vSP, 141-                    {Check stack for at least 12 bytes above $81}
+                                {Expression: 4, Term: 4, Factor: 4}
   [if<0 StackError!]            {Too complex expression AND too deep}
 
                                 {First term}
@@ -834,7 +819,7 @@ $0ca0:
     Keyword! $2b# 0#            {'+' Ignore unary plus}
     Term!]
 
-  2-- 0%=                       {Put partial result on stack}
+  push 0%=                      {Put partial result on stack}
   [do                           {Optional additional terms}
     Keyword! $2b# 0#            {'+'}
     [if<>0
@@ -865,7 +850,7 @@ $0da0:
 [def
   push
   Factor!                       {First factor}
-  2-- Value 0%=                 {Put partial result on stack}
+  push Value 0%=                {Put partial result on stack}
   [do                           {Optional additional factors}
     Keyword! $2a# 0#            {'*'}
     [if<>0
@@ -945,16 +930,14 @@ Divide=
 
 { Get variable and calculate its address }
 [def
-  $16c0 i=                      {Base for variables}
+  0; i=                         {Top of memory as base for variables}
   Active,                       {Next character from line}
   $5f&                          {Ignore case}
   $41- {'A'} [if>=0             {Bail out if out of range}
    26- {'Z'} if<0               {Letter A..Z or a..z}
     Active<++                   {Accept character}
-    26+                         {Map in 0..25 range}
-    1<< i+                      {Address is $16c0+2*n}
-    ret                         {Return address on success}
-  ]
+    1<< i+                      {Address is base-52+2*n}
+    ret]                        {Return address on success}
   SyntaxError!
 ] Variable=
 
@@ -1052,6 +1035,8 @@ $11a0:
 |}\vLR>++ ret{          RAM page 18                                     |
 +-----------------------------------------------------------------------}
 $12a0:
+
+Clear!                          {Clear variables}
 
 { Error reporting function and re-entry point for main loop }
 { Call with inline partial error message, or with 0# for no error }
@@ -1193,15 +1178,70 @@ $15a0:
     $6c# $69# $73# $74# 0#
   [if<>0 List! EndOfLine!]
 
+  $16a0 call
+
+{-----------------------------------------------------------------------+
+|                       RAM page 22                                     |
++-----------------------------------------------------------------------}
+$16a0:
+
   Keyword! $6c# $65# $74# 0#    {'let' (optional)}
   Variable!
   Address=                      {Park here}
   Spaces!
+  Keyword! $28# 0#              {'('}
+  [if<>0                        {Optional array index}
+    Expression!
+    [if<=0 ValueError!]         {Index must be positive}
+    Address>, Value- Address>.
+    End Address^                {64K safe bound check}
+    [if<0 End                   {Opposite signs}
+     else Address End-]         {Equal signs}
+    [if<0 ValueError!]
+    Keyword! $29# 0#            {')'}
+    if=0 SyntaxError!]
   Keyword! $3d# 0#              {'='}
   [if=0 SyntaxError!]
   Expression!                   {Evaluate expression}
   Address:                      {Store value in variable}
   EndOfLine!
+
+{-----------------------------------------------------------------------+
+|                       RAM page 23                                     |
++-----------------------------------------------------------------------}
+$17a0:
+
+{Newline}
+
+  { Prepare for printing on new line }
+  \SYS_VDrawBits_134 \sysFn=    {Prepare SYS call}
+
+  0 Pos<.                       {Go back to start of line}
+  \sysArgs2.                    {All-zero output pattern}
+
+  Pos>, 8+                      {Go down 8 lines}
+  120& [if=0 8]                 {Wrap around and re-align to 8-fold if needed}
+  Pos>.
+
+  Pos \sysArgs4=                {sysArgs[4:5] is position on screen}
+  [do
+    134!                        {SYS call}
+    \sysArgs4<++                {Advance to next slice}
+    \sysArgs4, 160^             {Test for end of screen}
+    if<>0loop]
+
+  $01ee i=                      {Pointer to last entry in video table}
+
+  255| deek                     {Gets [$100] aka Y[0] in vAC high byte}
+  Pos- \vACH,                   {Compare with Y position}
+  [if=0
+    do                          {Scroll 8 lines up by modifying videoTable}
+      i, 120- [if<0 128^
+               else 8^]
+               i.               {Rotate by 8 in 8..127 range}
+      i 2- i=                   {Previous entry in video table}
+      $fe^ if<>0loop]           {Until all done}
+  ret
 
 {-----------------------------------------------------------------------+
 |                       BASIC data                                      |
@@ -1210,6 +1250,6 @@ $15a0:
 { BASIC data begins here. In this setup the interpreter can be patched
   to include a BASIC program and a first command for execution }
 
-$16a0: $a0# $16#                {Point to self}
+$18a0: $a0# $18#                {Point to self}
        $4e# $45# $57# 0#        {'NEW' to start interactive session}
 
