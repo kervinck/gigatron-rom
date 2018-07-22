@@ -74,8 +74,9 @@
           $81 -   $ff   Stack for BASIC and vCPU (>50 GOSUB levels)
          $200 - $17ff   BASIC interpreter, partly next to screen memory
         $18a0 - $18bf   Input buffer ('line 0')
-        $18c0 - $18ff   To be determined (FOR variables?)
-        $19a0 - $7fbf   Programs stored in the invisible part of screen memory
+        $18c0 -         Programs stored in the invisible part of screen memory
+              - $7ebf   Arrays at the end, growing down
+        $7ec0 - $7eff   FOR-NEXT loop pointers
         $7fc0 - $7fff   BASIC variables A..Z
         $8000 - $ffff   Optional extra memory for BASIC programs (64K extension)
 
@@ -94,6 +95,8 @@
         PRINT "xxx      An unterminated string is silently accepted
         60000 vs. 90000 Many (too) large constants give an error, but not all!
         A(256)          Many (too) large idexes give an error, but not all!
+        Lowercase @     The backqute ('`') is recognized as alias for '@'
+        FOR-NEXT        Doesn't work over 16-bit ranges (FOR i=-30000 TO 30000)
 
   References:
         https://en.wikipedia.org/wiki/Tiny_BASIC
@@ -115,9 +118,7 @@
         Apple 1 BASIC
 
   Wish list:
-    FOR-TO-NEXT Clear for variable before starting
     DRAW dX,dY  Draw a line (or point)
-    NEXT        Without variable (for convenience)
     SAVE        To Babelfish, using /vSync length modulation
     A="...      As poor-men's substitute for DATA/READ
 
@@ -138,6 +139,7 @@
     TUNE/PLAY   Play a note/score
 
   'Probably not' list:
+    NEXT        Without variable (complicates 'Variable' subroutine)
     A0 .. Z9    Much more variable space (as in Apple-1 basic)
     ROM peek    rpeek()? Some predefined USR functions?
     A$(i,j)     Substrings (only in PRINT)
@@ -161,22 +163,25 @@
     DEF FNx
 
   Memory layout:
-        a0          b0          c0          d0          e0          f0       ff
+        a0          b0         vc0          d0          e0          f0       ff
        +-----------------------+-----------------------+-----------------------+
-$18a0  | Input buffer          | XXXXXXXX TBD XXXXXXXX | XXXXXXXX TBD XXXXXXXX |
+$18a0  | Input buffer   Begin->| Program line 10       | Program line 20       |
        +-----------------------+-----------------------+-----------------------+
-Begin->| Program line 10       | Program line 20       | Program line 30       |
+$19a0  | Program line 30       | Program line 40       | Program line 45       |
        +-----------------------+-----------------------+-----------------------+
-       | Program line 40       | Program line 45       | Program line 50       |
+$1aa0  | Program line 50       | Program line 60  End->|K(99)             Z(99)|
        +-----------------------+-----------------------+-----------------------+
-       | Program line 60       |<-End             J(99)|K(99)             Z(99)|
-       +-----------------------+-----------------------+-----------------------+
+       |                       |         @(98)    J(98)|K(98)             Z(98)|
        :                       :                       :                       :
-       |                       |                   J(1)|K(1)               Z(1)|
+       :                       :                       :                       :
+       :                       :                       :                       :
+       |                       |         @(1)      J(1)|K(1)               Z(1)|
        +-----------------------+-----------------------+-----------------------+
-       |                       |                   J(0)|K(0)               Z(0)|
+$7da0  |                       |         @(0)      J(0)|K(0)               Z(0)|
        +-----------------------+-----------------------+-----------------------+
-$7fa0  |                       | Variables A B C ... J | K ... S T U V W X Y Z |
+$7ea0  |                       | For loops @ A B ... J | K ... S T U V W X Y Z |
+       +-----------------------+-----------------------+-----------------------+
+$7fa0  |                       | Variables @ A B ... J | K ... S T U V W X Y Z |
        +-----------------------+-----------------------+-----------------------+
 
         Better idea: Put variables in top of memory, and grow arrays DOWN
@@ -271,7 +276,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
       Expression!
       [if<0 ValueError!]        {Index must be non-negative}
       0% k= pop                 {Pop address from stack}
-      k>, Value- 1- k>.
+      k>, Value- 2- k>.
       End k^                    {64K safe bound check}
       [if<0 End                 {Opposite signs}
        else k End-]             {Equal signs}
@@ -473,15 +478,30 @@ $0500:
 
 { Continuation of Statement }
 
-  Keyword! $70# $75# $74# 0#    {'put'}
+  Keyword! $6e# $65# $78#       {'next'}
+     $74# 0#
   [if<>0
-    Expression!
-    PrintChar!
+    Variable! Address=          {Pointer to loop variable}
+    push Active 0%=             {Park program index on stack}
+    -$100 Address+ deek         {Retrieve loop pointer}
+    [if=0 ValueError!]          {NEXT without FOR error}
+    Active=                     {Switch back to tail of FOR statement}
+    Expression!                 {Evaluate end value}
+    Address; 1+ Address:        {Increment loop variable}
+    Value-                      {Compare with end value}
+{   Value^                      {XXX 16-bit safe comparison}
+    [if<0 Value^                {Opposite signs}
+     else Value^ Value-] }      {Same signs}
+    [if>0                       {Loop variable > End value}
+      0% Active=                {Break the loop}
+      Spaces!]
+    pop                         {Shorter than 2++}
+    TestBreak!                  {Test for [Del] as break request}
     EndOfLine!]
 
   Keyword! $66# $6f# $72# 0#    {'for'}
   [if<>0
-    Variable! Address=          {Loop counter}
+    Variable! Address=          {Pointer to loop variable}
     Spaces!
     Keyword! $3d# 0#            {'='}
     [if=0 SyntaxError!]
@@ -489,25 +509,9 @@ $0500:
     Address:                    {Store value in variable}
     Keyword! $74# $6f# 0#       {'to'}
     [if=0 SyntaxError!]
-    Active ForLoop=             {Return point for NEXT}
+    -$100 Address+ j=           {Retrieve loop pointer}
+    Active j:                   {Remember return point for NEXT}
     Expression!                 {Evaluate but ignore result}
-    EndOfLine!]
-
-  Keyword! $6e# $65# $78#       {'next'}
-     $74# 0#
-  [if<>0
-    Variable! Address=          {Pointer to loop counter}
-    push Active 0%=             {Park program index on stack}
-    ForLoop Active=             {Switch back to tail of FOR statement}
-                                {XXX We should handle unused loop variables}
-    Expression!                 {Evaluate end value}
-    Address; 1+ Address:        {Increment counter}
-    Value-                      {Compare XXX We should handle overflow}
-    [if>0                       {Counter > End}
-      0% Active=                {Break the loop}
-      Spaces!]
-    pop                         {Shorter than 2++}
-    TestBreak!                  {Test for [Del] as break request}
     EndOfLine!]
 
   Keyword! $61# $74# 0#         {'at'}
@@ -524,10 +528,22 @@ $0500:
       peek Pos>.]
     EndOfLine!]
 
+  Keyword! $70# $75# $74# 0#    {'put'}
+  [if<>0
+    Expression!
+    PrintChar!
+    EndOfLine!]
+
   Keyword! $64# $72# $61# $77#  {'draw'}
      0#
   [if<>0
     SyntaxError!]
+
+  Keyword! $70# $72# $69# $6e#  {'print'}
+    $74# 0#
+  [if=0 Keyword! $3f# 0#]       {'?'}
+  [if<>0
+    $13a0 call]                 {PRINT}
 
   Keyword! $6d# $6f# $64# $65#  {'mode'}
      0#
@@ -539,12 +555,6 @@ $0500:
       \SYS_SetMode_v2_80        {Available from ROM v2}
       \sysFn= Value 80!]
     EndOfLine!]
-
-  Keyword! $70# $72# $69# $6e#  {'print'}
-    $74# 0#
-  [if=0 Keyword! $3f# 0#]       {'?'}
-  [if<>0
-    $13a0 call]                 {PRINT}
 
   $14a0 call                    {INPUT, NEW, CLS, LIST, LIST, RUN, END, LET}
 
@@ -795,7 +805,7 @@ Number=
       i<, if<>0loop]            {Until end of page}
     0; i^ if<>0                 {Reached top of memory?}
     $1ca i+ loop]               {512-2*27}
-  $19a0 Begin=
+  $18c0 Begin=
   ret
 ] {Clear=}
 
@@ -937,7 +947,7 @@ Divide=
   Active,                       {Next character from line}
   $5f&                          {Ignore case}
   $40- {'@'} [if>=0             {Bail out if out of range}
-   27- {'Z'} if<0               {Letter A..Z or a..z}
+   27- {'Z'} if<0               {Letter A..Z, @ or a..z}
     Active<++                   {Accept character}
     1<< i+                      {Address is base-52+2*n}
     ret]                        {Return address on success}
@@ -1207,7 +1217,7 @@ $16a0:
   [if<>0                        {Optional array index}
     Expression!
     [if<0 ValueError!]          {Index must be non-negative}
-    Address>, Value- 1- Address>.
+    Address>, Value- 2- Address>.
     End Address^                {64K safe bound check}
     [if<0 End                   {Opposite signs}
      else Address End-]         {Equal signs}
