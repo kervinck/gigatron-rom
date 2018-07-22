@@ -263,9 +263,15 @@ const byte tetris_gt1[] PROGMEM = {
 
 struct { byte *gt1; char *name; } gt1Files[12] = {
 /* 1  */ TinyBASIC_gt1, "Tiny BASIC",
+#if maxStorage >= 32768
 /* 2  */ WozMon_gt1,    "WozMon",
 /* 3  */ Terminal_gt1,  "Terminal",
 /* 4  */ Blinky_gt1,    "Blinky",
+#else
+         0,              "(Empty)",
+         0,              "(Empty)",
+         0,              "(Empty)",
+#endif
 /* 5  */ bricks_gt1,    "Bricks game [xbx]",
 #if maxStorage >= 32768
 /* 6  */ lines_gt1,     "Lines demo [at67]",
