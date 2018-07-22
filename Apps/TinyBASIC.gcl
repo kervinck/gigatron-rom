@@ -22,7 +22,7 @@
                        NEW clears variables; Aliases for PRINT and REM
   2018-07-03 (marcelk) Add RND(), with 0 <= RND(n) < |n|; USR()
   2018-07-18 (marcelk) Fix GOSUB/RETURN parsing bug causing syntax error
-  2018-07-xx (marcelk) Add PUT, FOR/TO/NEXT, colon, MODE (ROMv2), AT
+  2018-07-xx (marcelk) Add PUT, FOR/TO/NEXT, colon, MODE (ROMv2), AT, CLS
 
   Formal grammar:
 
@@ -43,6 +43,7 @@
                   'RETURN'                                              |
                   ('REM'|"'") Character*                                |
                   'MODE' Expression                                     |
+                  'CLS'                                                 |
                   'NEW'                                                 |
                   'LIST'                                                |
                   'RUN'                                                 |
@@ -110,7 +111,6 @@
         Apple 1 BASIC
 
   Wish list:
-    CLS         Clear screen, move cursor to top. Newline update?
     @()         Array as in Palo Alto Tiny BASIC (store vertically)
     @ A()       @ as variable name, and generic arrays (1-dimensional)
     DRAW dX,dY  Draw a line (or point)
@@ -118,6 +118,7 @@
     SAVE        To Babelfish, using /vSync length modulation
 
   'Maybe' list:
+    COLOR       Easily change colors (use: POKE 43,c)
     Speed       Cache result of the statement detection (checkpointing)
     Speed       Alternative: LET detection is now last, but should be first
     IF          Reintroduce the missing syntax error check
@@ -135,7 +136,6 @@
     A0 .. Z9    Much more variable space (as in Apple-1 basic)
     ROM peek    rpeek()? Some predefined USR functions?
     A$(i,j)     Substrings (only in PRINT)
-    COLOR       Easily change colors (use: POKE 43,c)
     LOAD        From where? EPROM? "Cassette interface".
     DIM A()     And bound checks...
     TI/TI$      Built-in variable for time? (only in MS BASICs). Setting also?
@@ -301,13 +301,12 @@ $01df deek Pos=                 {Bottom character row in screen memory}
       i 2- i=                   {Previous entry in video table}
       $fe^ if<>0loop]           {Until all done}
   ret
-] {Newline=}
+] Newline=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
 $0300:
-Newline=
 
 { Print ASCII character (32..127) on screen in 5x8 pixels }
 { Returns the actual position }
@@ -558,14 +557,9 @@ $0500:
     $74# 0#
   [if=0 Keyword! $3f# 0#]       {'?'}
   [if<>0
-    $14a0 call]                 {PRINT}
+    $13a0 call]                 {PRINT}
 
-  Keyword! $69# $6e# $70# $75#  {'input'}
-    $74# 0#
-  [if<>0
-    $13a0 call]                 {INPUT}
-
-  $15a0 call                    {NEW, LIST, LET}
+  $14a0 call                    {INPUT, NEW, LIST, LET}
 
 {-----------------------------------------------------------------------+
 |                       RAM page 6                                      |
@@ -1105,33 +1099,6 @@ Statements!                     {Execute statements}
 +-----------------------------------------------------------------------}
 $13a0:
 
-  {INPUT}
-    [do
-      Active,
-      [if<>0 PrintChar!]        {Be nice and show variable name in prompt}
-      Variable!                 {Parse variable name}
-      Address=                  {Park here}
-      Spaces!
-      4-- Active 2%=            {Save program pointer on stack}
-      31| 31- deek 0%=          {Current line number in program}
-      [do
-        $3f PrintChar!          {'?'}
-        Newline!                {Avoid dealing with partially printed lines}
-        0%                      {Line number for errors}
-        GetLine!                {Let user type something}
-        if=0loop]               {Repeat with prompt when nothing is typed}
-      Expression!               {Accept arbitrary expression as input \o/}
-      Address:                  {Store received value in variable}
-      2% Active= 4++            {Restore program pointer from stack}
-      Keyword! $2c# 0#          {','}
-      if<>0loop]                {Next variable}
-    EndOfLine!
-
-{-----------------------------------------------------------------------+
-|                       RAM page 20                                     |
-+-----------------------------------------------------------------------}
-$14a0:
-
   {PRINT}
   Active, [if<>0                {Special case for newlines}
   $3a^ if<>0                    {Same for colon}
@@ -1167,9 +1134,50 @@ $14a0:
   EndOfLine!
 
 {-----------------------------------------------------------------------+
+|                       RAM page 20                                     |
++-----------------------------------------------------------------------}
+$14a0:
+
+  Keyword! $69# $6e# $70# $75#  {'input'}
+    $74# 0#
+  [if<>0
+    [do
+      Active,
+      [if<>0 PrintChar!]        {Be nice and show variable name in prompt}
+      Variable!                 {Parse variable name}
+      Address=                  {Park here}
+      Spaces!
+      4-- Active 2%=            {Save program pointer on stack}
+      31| 31- deek 0%=          {Current line number in program}
+      [do
+        $3f PrintChar!          {'?'}
+        Newline!                {Avoid dealing with partially printed lines}
+        0%                      {Line number for errors}
+        GetLine!                {Let user type something}
+        if=0loop]               {Repeat with prompt when nothing is typed}
+      Expression!               {Accept arbitrary expression as input \o/}
+      Address:                  {Store received value in variable}
+      2% Active= 4++            {Restore program pointer from stack}
+      Keyword! $2c# 0#          {','}
+      if<>0loop]                {Next variable}
+    EndOfLine!]
+
+  $15a0 call
+
+{-----------------------------------------------------------------------+
 |                       RAM page 21                                     |
 +-----------------------------------------------------------------------}
 $15a0:
+
+  Keyword! $63# $6c# $73# 0#    {'cls'}
+  [if<>0
+    $100 peek Pos>.             {Go to top of page}
+    15 [do                      {15 newlines}
+      j=
+      Newline!
+      j 1- if>0loop]
+    $100 peek Pos>.             {Go to top of page}
+    EndOfLine!]
 
   Keyword! $6e# $65# $77# 0#    {'new'}
   [if<>0
