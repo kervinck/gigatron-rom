@@ -18,6 +18,7 @@ gigatron-rom
  |     +--- HelloWorld.gcl      Program that draws "Hello world" on screen
  |     +--- WozMon.gt1          Port of Apple-1 monitor program
  |     `--- TinyBASIC.gt1       Integer BASIC interpreter
+ +--- BASIC/                    Example BASIC programs
  +--- Images/                   Built-in images
  +--- Utils/
  |     +--- sendFile.py         Send a GT1 or BASIC file from laptop/PC to Gigatron
