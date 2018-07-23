@@ -366,7 +366,7 @@ void loop()
 
   // Commands from upstream USB (PC/laptop)
   #if hasSerial
-    static char line[20], next = 0, last;
+    static char line[32], next = 0, last;
     static byte lineIndex = 0;
     if (Serial.available()) {
       last = next;
@@ -564,12 +564,12 @@ void doLine(char *line)
 {
   // Pass through the line of text
   for (int i=0; line[i]; i++) {
-    sendController(line[i], 2);
-    delay(50); // Allow Gigatron software to process key code
+    sendController(line[i], 1);
+    delay(20); // Allow Gigatron software to process key code
   }
   // And terminal with a CR
-  sendController('\n', 2);
-  delay(50);
+  sendController('\n', 1);
+  delay(50); // Allow Gigatron software to process line
 }
 
 // In terminal mode we transfer every incoming character to

@@ -20,7 +20,7 @@ gigatron-rom
  |     `--- TinyBASIC.gt1       Integer BASIC interpreter
  +--- Images/                   Built-in images
  +--- Utils/
- |     +--- sendGt1.py          Send a GT1 file from laptop/PC to Gigatron
+ |     +--- sendFile.py         Send a GT1 or BASIC file from laptop/PC to Gigatron
  |     `--- BabelFish/          Generic Arduino sketch for interfacing with
  |                              Gigatron. Used for transferring GT1 files into
  |                              the computer and/or hooking up an keyboard.
