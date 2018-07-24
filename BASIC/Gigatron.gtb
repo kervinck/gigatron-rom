@@ -1,0 +1,11 @@
+1' Prints "Gigatron!"
+2' in random colors
+3' across the screen
+10 x=160-6*9+1:y=120-8+1
+19 rem Background:
+20 poke 42,rnd(64)
+29 rem Pen Color:
+30 poke 43,rnd(64)
+40 at rnd(x),rnd(y)
+50 print "Gigatron!";
+60 goto 20

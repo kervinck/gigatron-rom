@@ -210,6 +210,8 @@ class Program:
           self.opcode('LDW')
           self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
         else:
+          if con is None:
+            self.error('Invalid word %s' % repr(word))
           if 0 <= con < 256:
             self.opcode('LDI')
             self.emit(con)

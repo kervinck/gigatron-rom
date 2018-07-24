@@ -1,8 +1,20 @@
 
-// Concept tester for interfacing with the
-// Gigatron TTL microcomputer using a microcontroller
-// hooked to the input port (J4).
-
+// Interfacing with the Gigatron TTL microcomputer using a microcontroller
+//
+//               4. Game Controller
+//                  (optional)
+//                       |
+//                       v
+//                 +-----------+
+//   Gigatron      |           |     PC/laptop over USB (optional)
+//  controller <---| BabelFish |<--- 1. Send GT1 files
+//   port J4       |           |     2. Serial console
+//                 +-----------+
+//                       ^
+//                       |
+//               3. PS/2 keyboard
+//                  (optional)
+//
 // This sketch serves several purpuses:
 // 1. Transfer a GT1 file into the Gigatron for execution.
 //    This can be done with two methods: over USB or from PROGMEM
@@ -13,21 +25,15 @@
 //       but needs the GT1 file as a hexdump (C notation).
 // 2. Hookup a PS/2 keyboard for typing on the Gigatron
 // 3. Controlling the Gigatron over USB from a PC/laptop
-// Not every microcontroller supports all functions.
-
-// Select 1 of the platforms:
+// 4. Pass through of game controller signals
+//
+// Select 1 of the preconfigured platforms:
+// (not every microcontroller platform supports all functions)
+//
 #define ArduinoUno   1 // Default
 #define ArduinoNano  0
 #define ArduinoMicro 0
 #define ATtiny85     0
-
-// Select a built-in GT1 image:
-const byte gt1File[] PROGMEM = {
-  //#include "Blinky.h" // Blink pixel in middle of screen
-  //#include "Lines.h"  // Draw randomized lines (at67)
-  //#include "WozMon.h" // Monitor program ported from Apple-1
-  #include "TinyBASIC.h"
-};
 
 // The object file is embedded (in PROGMEM) in GT1 format. It would be
 // GREAT if we can find a way to receive the file over the Arduino's
@@ -45,14 +51,12 @@ const byte gt1File[] PROGMEM = {
 
 // Todo/idea list:
 // XXX Wild idea: let the ROM communicate back by modulating vPulse
-// XXX Hardware: Put reset line on the DB9 jack
-// XXX Hardware: Put an output line on the DB9 jack
-// XXX Keyboard: Map Ctrl-Alt-Del to Gigatron reset (instead of PageUp)
-// XXX Keyboard: Map Enter to both newline AND buttonA
-// XXX Keyboard: Delete = buttonA (same code 0x7f). Change delete code?
-// XXX Keyboard: Is it possible to mimic key hold-down properly???
-// XXX Timeouts/reset in case of hanging (dead man switch function?)
-// XXX Embed a Gigatron Terminal program. Or better: GigaMon
+
+/*----------------------------------------------------------------------+
+ |                                                                      |
+ |      Preset configuarations                                          |
+ |                                                                      |
+ +----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------+
  |      Arduino Uno config                                              |
@@ -66,22 +70,27 @@ const byte gt1File[] PROGMEM = {
 // Pin 11  PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK 4
 
 #if ArduinoUno
- #define version "ArduinoUno"
+ #define platform "ArduinoUno"
+ #define maxStorage 32768
 
- // Pins for Gigatron
- #define SER_DATA  PB5
- #define SER_LATCH PB4
- #define SER_PULSE PB3
+ // Pinout reference:
+ // https://i2.wp.com/marcusjenkins.com/wp-content/uploads/2014/06/ARDUINO_V2.png
+
+ // Pins for Gigatron (must be on PORTB)
+ #define gigatronDataPin  13
+ #define gigatronLatchPin 12
+ #define gigatronPulsePin 11
+ #define gigatronPinToBitMask digitalPinToBitMask
+
+ // Pins for Controller
+ #define gameControllerDataPin -1
 
  // Pins for PS/2 keyboard (Arduino Uno)
- #define keyboardClockPin PB3 // Pin 2 or 3 for IRQ
- #define keyboardDataPin  PB4 // Any available free pin
+ #define keyboardClockPin 3 // Pin 2 or 3 for IRQ
+ #define keyboardDataPin  4 // Any available free pin
 
  // Link to PC/laptop
  #define hasSerial 1
-
-  // Controller pass through
- #define hasController 0
 #endif
 
 /*----------------------------------------------------------------------+
@@ -97,25 +106,29 @@ const byte gt1File[] PROGMEM = {
 // Pin J1-13 PORTB2 None     None      None       None             None     2
 
 #if ArduinoNano
- #define version "ArduinoNano"
+ // at67's setup
+ #define platform "ArduinoNano"
+ #define maxStorage 32768
 
- // Pins for Gigatron
- #define SER_DATA  PB5
- #define SER_LATCH PB4
- #define SER_PULSE PB3
+ // Pinout reference:
+ // http://lab.dejaworks.com/wp-content/uploads/2016/08/Arduino-Nano-1024x500.png
+ // Note that pin 11 and 12 are wrong on some versions of these diagrams
+
+ // Pins for Gigatron (must be on PORTB)
+ #define gigatronDataPin  13 // PB5
+ #define gigatronLatchPin 12 // PB4
+ #define gigatronPulsePin 11 // PB3
+ #define gigatronPinToBitMask digitalPinToBitMask // Regular Arduino pin numbers
 
  // Pins for Controller
- #define JOY_DATA PB2
+ #define gameControllerDataPin 10 // PB2
 
- // Pins for PS/2 keyboard (Arduino Nano)
- #define keyboardClockPin PB3 // Pin 2 or 3 for IRQ
- #define keyboardDataPin  PB4 // Any available free pin
+ // Pins for PS/2 keyboard
+ #define keyboardClockPin 3 // Pin 2 or 3 for IRQ
+ #define keyboardDataPin  4 // Any available free pin
 
  // Link to PC/laptop
  #define hasSerial 1
-
- // Controller pass through
- #define hasController 1
 #endif
 
 /*----------------------------------------------------------------------+
@@ -144,22 +157,29 @@ const byte gt1File[] PROGMEM = {
 // --------------------+
 
 #if ArduinoMicro
- #define version "ArduinoMicro"
+ // WattSekunde's setup
+ #define platform "ArduinoMicro"
+ #define maxStorage 32768
 
- // Pins for Gigatron
- #define SER_DATA  PB1
- #define SER_LATCH PB3
- #define SER_PULSE PB2
+ // Pinout reference:
+ // http://1.bp.blogspot.com/-xqhL0OrJcxo/VJhVxUabhCI/AAAAAAABEVk/loDafkdqLxM/s1600/micro_pinout.png
 
- // Pins for PS/2 keyboard (XXX These are still for Arduino Uno)
- #define keyboardClockPin PB3 // Pin 2 or 3 for IRQ
- #define keyboardDataPin  PB4 // Any available free pin
+ // Pins for Gigatron (must be on PORTB)
+ #define gigatronDataPin  PB1
+ #define gigatronLatchPin PB3
+ #define gigatronPulsePin PB2
+ // These are not regular Arduino pin numbers
+ #define gigatronPinToBitMask(pin) (1 << (pin))
+
+ // Pins for Controller
+ #define gameControllerDataPin -1
+
+ // Pins for PS/2 keyboard
+ #define keyboardClockPin 3 // Pin 2 or 3 for IRQ
+ #define keyboardDataPin  4 // Any available free pin
 
  // Link to PC/laptop
  #define hasSerial 1
-
-  // Controller pass through
- #define hasController 0
 #endif
 
 /*----------------------------------------------------------------------+
@@ -183,12 +203,18 @@ const byte gt1File[] PROGMEM = {
 //                       ATtiny85
 
 #if ATtiny85
- #define version "ATtiny85"
+ #define platform "ATtiny85"
+ #define maxStorage 8192
 
- // Pins for Gigatron
- #define SER_DATA  PB2
- #define SER_LATCH PB1
- #define SER_PULSE PB0
+ // Pins for Gigatron (must be on PORTB)
+ #define gigatronDataPin  PB2
+ #define gigatronLatchPin PB1
+ #define gigatronPulsePin PB0
+ // These are not regular Arduino pin numbers
+ #define gigatronPinToBitMask(pin) (1 << (pin))
+
+ // Pins for Controller
+ #define gameControllerDataPin -1 // XXX Maybe use ~RESET for this some day
 
  // Pins for PS/2 keyboard
  #define keyboardClockPin PB4
@@ -196,42 +222,94 @@ const byte gt1File[] PROGMEM = {
 
  // Link to PC/laptop
  #define hasSerial 0
-
-  // Controller pass through
- #define hasController 0
-
- // PS2Keyboard.h uses attachInterrupt() which doesn't work on the ATtiny85.
- // Workaround as follows:
- void ps2interrupt(void); // As provided by PS2Keyboard
- ISR(PCINT0_vect) {
-   if (~PINB & (1<<keyboardClockPin)) // FALLING edge of PS/2 clock
-     ps2interrupt();
- }
 #endif
 
 /*----------------------------------------------------------------------+
- |      End config section                                              |
+ |                                                                      |
+ |      Built-in GT1 images                                             |
+ |                                                                      |
  +----------------------------------------------------------------------*/
+
+const byte TinyBASIC_gt1[] PROGMEM = {
+  #include "TinyBASIC.h"
+};
+const byte WozMon_gt1[] PROGMEM = {
+  #include "WozMon.h"
+};
+const byte Terminal_gt1[] PROGMEM = {
+  #include "Terminal.h"
+};
+const byte Blinky_gt1[] PROGMEM = {
+  #include "Blinky.h"
+};
+const byte bricks_gt1[] PROGMEM = {
+  #include "bricks.h"
+};
+
+#if maxStorage >= 32768
+const byte lines_gt1[] PROGMEM = {
+  #include "lines.h"
+};
+const byte life3_gt1[] PROGMEM = {
+  #include "life3.h"
+};
+const byte starfield_gt1[] PROGMEM = {
+  #include "starfield.h"
+};
+const byte tetris_gt1[] PROGMEM = {
+  #include "tetris.h"
+};
+#endif
+
+struct { byte *gt1; char *name; } gt1Files[12] = {
+/* 1  */ TinyBASIC_gt1, "Tiny BASIC",
+#if maxStorage >= 32768
+/* 2  */ WozMon_gt1,    "WozMon",
+/* 3  */ Terminal_gt1,  "Terminal",
+/* 4  */ Blinky_gt1,    "Blinky",
+#else
+         0,              "(Empty)",
+         0,              "(Empty)",
+         0,              "(Empty)",
+#endif
+/* 5  */ bricks_gt1,    "Bricks game [xbx]",
+#if maxStorage >= 32768
+/* 6  */ lines_gt1,     "Lines demo [at67]",
+/* 7  */ life3_gt1,     "Game of Life demo [at67]",
+/* 8  */ starfield_gt1, "Starfield demo [at67]",
+/* 9  */ tetris_gt1,    "Tetris game [at67]",
+#else
+/* 7  */ 0,             "(Empty)",
+/* 8  */ 0,             "(Empty)",
+/* 9  */ 0,             "(Empty)",
+#endif
+/* 10 */ 0,             "(Empty)",
+/* 11 */ 0,             "(Empty)",
+/* 12 */ 0,             "(Empty)",
+};
+
+/*----------------------------------------------------------------------+
+ |                                                                      |
+ |      End config section                                              |
+ |                                                                      |
+ +----------------------------------------------------------------------*/
+
+/*
+ *  Bit masks for pins
+ */
+byte gigatronDataBit;
+byte gigatronLatchBit;
+byte gigatronPulseBit;
 
 /*
  *  Loader protocol
  */
-
 #define N 60 // Payload bytes per transmission frame
 byte checksum; // Global is simplest
 
 /*
- *  PS/2 keyboard hookup to Arduino
- */
-
-#include <PS2Keyboard.h> // Install from the Arduino IDE's Library Manager
-
-PS2Keyboard keyboard;
-
-/*
  *  Game controller button mapping
  */
-
 #define buttonRight  1
 #define buttonLeft   2
 #define buttonDown   4
@@ -263,13 +341,22 @@ PS2Keyboard keyboard;
 bool emulatorControl = false;
 
 /*
+ *  Terminal mode for upstream host
+ */
+static bool echo = false;
+
+/*
  *  Setup runs once when the Arduino wakes up
  */
 void setup()
 {
+  gigatronDataBit  = gigatronPinToBitMask(gigatronDataPin);
+  gigatronLatchBit = gigatronPinToBitMask(gigatronLatchPin);
+  gigatronPulseBit = gigatronPinToBitMask(gigatronPulsePin);
+
   // Enable output pin (pins are set to input by default)
-  PORTB |= 1<<SER_DATA; // Send 1 when idle
-  DDRB = 1<<SER_DATA;
+  PORTB |= gigatronDataBit; // Send 1 when idle
+  DDRB = gigatronDataBit;
 
   // Open upstream communication
   #if hasSerial
@@ -281,14 +368,8 @@ void setup()
   // good pause to wait for the video loop to have started
   delay(350);
 
-  // PS/2 keyboard should be awake by now
-  #if !ATtiny85
-    keyboard.begin(keyboardDataPin, keyboardClockPin);
-  #else
-    keyboard.begin(keyboardDataPin, 255);
-    GIMSK |= 1<<PCIE;             // Pin change interrupt enable
-    PCMSK |= 1<<keyboardClockPin; // Pin change mask
-  #endif
+  // Note that it takes 500~750 ms for PS/2 keyboards to boot
+  keyboard_setup();
 
   prompt();
 }
@@ -299,19 +380,21 @@ void setup()
 void loop()
 {
   // Controller pass through
-  #if hasController
-    ((PINB>>JOY_DATA)&1) ? PORTB |= 1<<SER_DATA : PORTB &= ~(1<<SER_DATA);
+  #if gameControllerDataPin >= 0
+    digitalWrite(gigatronDataPin, digitalRead(gameControllerDataPin));
   #endif
 
+  // Commands from upstream USB (PC/laptop)
   #if hasSerial
-    static char line[20];
+    static char line[32], next = 0, last;
     static byte lineIndex = 0;
-
     if (Serial.available()) {
-      byte next = Serial.read();
+      last = next;
+      char next = Serial.read();
+      sendEcho(next, last);
       if (lineIndex < sizeof line)
         line[lineIndex++] = next;
-      if (next == '\n') {
+      if (next == '\r' || next == '\n') {
         line[lineIndex-1] = '\0';
         (emulatorControl) ? doEmulator(line) : doCommand(line);
         lineIndex = 0;
@@ -319,23 +402,25 @@ void loop()
     }
   #endif
 
-  if (keyboard.available()) {
-    char c = keyboard.read();
-    switch (c) {
-      // XXX These mappings are for testing purposes only
-      case PS2_PAGEDOWN:   sendController(~buttonSelect, 1); break;
-      case PS2_PAGEUP:     sendController(~buttonStart,  128+32); break; // XXX Change to Ctrl-Alt-Del
-      case PS2_TAB:        sendController((byte)~buttonB,1); break; // XXX Change to ESC?
-      case PS2_ESC:        doTransfer(gt1File );             break; // XXX HACK Find proper short-cut. Function keys?
-      case PS2_LEFTARROW:  sendController(~buttonLeft,   2); break;
-      case PS2_RIGHTARROW: sendController(~buttonRight,  2); break;
-      case PS2_UPARROW:    sendController(~buttonUp,     2); break;
-      case PS2_DOWNARROW:  sendController(~buttonDown,   2); break;
-      case PS2_ENTER:      sendController('\n',          1); break;
-      case PS2_DELETE:     sendController(127,           1); break; // Is also ~buttonA
-      default:             sendController(c,             1); break;
+  // PS/2 keyboard events
+  byte key = keyboard_getState();
+  if (key != 255) {
+    byte f = fnKey(key^64);
+    if (f)                           // Ctrl + Function key
+      if (gt1Files[f-1].gt1)
+        doTransfer(gt1Files[f-1].gt1);// Send built-in GT1 file to Gigatron
+
+    while (1) {
+      if (!fnKey(key^64)) {          // Normal case (but skip Ctrl+Fxx)
+        critical();
+        sendFirstByte(key);          // Synchronize with vPulse and send code
+        nonCritical();
+      }
+      if (key == 255)                // Until state is idle again
+        break;
+      delay(15);                     // Allow PS/2 interrupts for a reasonable window
+      key = keyboard_getState();
     }
-    delay(50); // Allow Gigatron software to process key code
   }
 }
 
@@ -343,75 +428,71 @@ void prompt()
 {
   #if hasSerial
     Serial.println(detectGigatron() ? ":Gigatron OK" : "!Gigatron offline");
-    Serial.println("\nCmd?");
+    Serial.println("Cmd?");
   #endif
 }
 
 bool detectGigatron()
 {
   unsigned long timeout = millis() + 85;
-  long T[2][2] = {{0, 0}, {0, 0}};
+  long T[4] = {0, 0, 0, 0};
 
   // Sample the sync signals coming out of the controller port
   while (millis() < timeout) {
     byte pinb = PINB; // capture SER_PULSE and SER_LATCH at the same time
-    T[ (pinb>>SER_LATCH)&1 ][ (pinb>>SER_PULSE)&1 ]++;
+    T[(pinb & gigatronLatchBit ? 2 : 0) + (pinb & gigatronPulseBit ? 1 : 0)]++;
   }
 
-  float S = T[0][0] + T[0][1] + T[1][0] + T[1][1] + .1; // Avoid zero division (pedantic)
-  float vSync = (T[0][0] + T[0][1]) / ( 8 * S / 521); // Adjusted vSync signal
-  float hSync = (T[0][0] + T[1][0]) / (96 * S / 800); // Standard hSync signal
+  float S = T[0] + T[1] + T[2] + T[3] + .1;     // Avoid zero division (pedantic)
+  float vSync = (T[0] + T[1]) / ( 8 * S / 521); // Adjusted vSync signal
+  float hSync = (T[0] + T[2]) / (96 * S / 800); // Standard hSync signal
 
   // Check that vSync and hSync characteristics look normal
   return 0.95 <= vSync && vSync <= 1.20 && 0.95 <= hSync && hSync <= 1.05;
 }
 
+void sendEcho(char next, char last)
+{
+  #if hasSerial
+    if (echo)
+      switch (next) {
+        case 127:  Serial.print("\b \b"); break;
+        case '\n': if (last == '\r')      break; // else FALL THROUGH
+        case '\r': Serial.println();      break;
+        default: Serial.print(next);
+      }
+  #endif
+}
+
 void doCommand(char line[])
 {
+  int arg = line[0] ? atoi(&line[1]) : 0;
   switch (toupper(line[0])) {
     case 'V': doVersion();                       break;
     case 'H': doHelp();                          break;
-    case 'R': doReset();                         break;
+    case 'R': doReset(arg);                      break;
     case 'L': doLoader();                        break;
-    case 'P': doTransfer(gt1File);               break;
+    case 'P': arg = constrain(arg, 1, 12);       
+              if (gt1Files[arg-1].gt1)           
+                doTransfer(gt1Files[arg-1].gt1); break;
     case 'U': doTransfer(NULL);                  break;
-    case 'W': sendController(~buttonUp,      2); break;
-    case 'A': sendController(~buttonLeft,    2); break;
-    case 'S': sendController(~buttonDown,    2); break;
-    case 'D': sendController(~buttonRight,   2); break;
-    case 'Z': sendController((byte)~buttonA, 2); break;
-    case 'X': sendController(~buttonB,       2); break;
-    case 'Q': sendController(~buttonSelect,  2); break;
-    case 'E': sendController(~buttonStart,   2); break;
-    case 0:   /* Empty line */                   break;
-
+    case '.': doLine(&line[1]);                  break;
+    case 'C': doEcho(!echo);                     break;
+    case 'T': doTerminal();                      break;
+    case 'W': sendController(~buttonUp,     2);  break;
+    case 'A': sendController(~buttonLeft,   2);  break;
+    case 'S': sendController(~buttonDown,   2);  break;
+    case 'D': sendController(~buttonRight,  2);  break;
+    case 'Z': sendController((byte)~buttonA,2);  break;
+    case 'X': sendController(~buttonB,      2);  break;
+    case 'Q': sendController(~buttonSelect, 2);  break;
+    case 'E': sendController(~buttonStart,  2);  break;
+    case 0: /* Empty line */                     break;
     case EMU_PS2_ENABLE: emulatorControl = true; break;
-
+    default:
     #if hasSerial
-      default:
-        Serial.println("!Unknown command (type 'H' for help)");
+      Serial.println("!Unknown command (type 'H' for help)");
     #endif
-  }
-  prompt();
-}
-
-void doEmulator(char line[])
-{
-  switch (line[0]) {
-    case EMU_PS2_LEFT:    sendController(~buttonLeft,   2);      break;
-    case EMU_PS2_RIGHT:   sendController(~buttonRight,  2);      break;
-    case EMU_PS2_UP:      sendController(~buttonUp,     2);      break;
-    case EMU_PS2_DOWN:    sendController(~buttonDown,   2);      break;
-    case EMU_PS2_START:   sendController(~buttonStart,  128+32); break;
-    case EMU_PS2_SELECT:  sendController(~buttonSelect, 2);      break;
-    case EMU_PS2_INPUT_A: sendController((byte)~buttonA,2);      break;
-    case EMU_PS2_INPUT_B: sendController(~buttonB,      2);      break;
-    case EMU_PS2_CR:      sendController('\n',          2);      break;
-    case EMU_PS2_DEL:     sendController(127,           2);      break;
-
-    case EMU_PS2_DISABLE: emulatorControl = false;               break;
-
-    default:              sendController(line[0],       2);      break;
   }
   prompt();
 }
@@ -440,8 +521,31 @@ void doEmulator(char line[])
 void doVersion()
 {
   #if hasSerial
-    Serial.println(":BabelFish [" version "]\n"
-                   ":Type 'H' for help");
+    Serial.println(":BabelFish platform=" platform);
+    Serial.println(":Pins:");
+    #define V(s) #s
+    #define Q(s) V(s)
+    Serial.println(": Gigatron data=" Q(gigatronDataPin) " latch=" Q(gigatronLatchPin) " pulse=" Q(gigatronPulsePin));
+    Serial.println(": Keyboard clock=" Q(keyboardClockPin) " data=" Q(keyboardDataPin));
+    Serial.println(": Controller data=" Q(gameControllerDataPin));
+    Serial.println(":PROGMEM slots:");
+    for (int i=1; i<=12; i++) {
+      Serial.print(": ");
+      Serial.print(i);
+      Serial.print(") ");
+      Serial.println(gt1Files[i-1].name);
+    }
+    doEcho(echo);
+    Serial.println(":Type 'H' for help");
+  #endif
+}
+
+void doEcho(byte value)
+{
+  #if hasSerial
+    echo = value;
+    Serial.print(":Echo ");
+    Serial.println(value ? "on" : "off");
   #endif
 }
 
@@ -449,26 +553,29 @@ void doHelp()
 {
   #if hasSerial
     Serial.println(":Commands are");
-    Serial.println(": V        Show version");
+    Serial.println(": V        Show configuration");
     Serial.println(": H        Show this help");
     Serial.println(": R        Reset Gigatron");
     Serial.println(": L        Start Loader");
-    Serial.println(": P        Transfer object file from PROGMEM");
+    Serial.println(": P[<n>]   Transfer object file from PROGMEM slot <n> [1..12]");
     Serial.println(": U        Transfer object file from USB");
+    Serial.println(": .<text>  Send text line as ASCII key strokes");
+    Serial.println(": C        Toggle echo mode (default off)");
+    Serial.println(": T        Enter terminal mode");
     Serial.println(": W/A/S/D  Up/left/down/right arrow");
     Serial.println(": Z/X      A/B button ");
     Serial.println(": Q/E      Select/start button");
   #endif
 }
 
-void doReset()
+void doReset(int n)
 {
   // Soft reset: hold start for >128 frames (>2.1 seconds)
   #if hasSerial
     Serial.println(":Resetting Gigatron");
     Serial.flush();
   #endif
-  sendController(~buttonStart, 128+32);
+  sendController(~buttonStart, n ? n : 128+32);
 
   // Wait for main menu to be ready
   delay(1500);
@@ -492,6 +599,62 @@ void doLoader()
 
   // Wait for Loader to be running
   delay(1000);
+}
+
+void doLine(char *line)
+{
+  // Pass through the line of text
+  for (int i=0; line[i]; i++) {
+    sendController(line[i], 1);
+    delay(20); // Allow Gigatron software to process key code
+  }
+  // And terminal with a CR
+  sendController('\n', 1);
+  delay(50); // Allow Gigatron software to process line
+}
+
+// In terminal mode we transfer every incoming character to
+// the Gigatron, with some substitutions for convenience.
+// This lets you type directly into BASIC and WozMon from
+// a terminal window on your PC or laptop.
+//
+//      picomon -b 115200 /dev/tty.usbmodem1411
+//      screen /dev/tty.usbmodem1411 115200
+
+void doTerminal()
+{
+  #if hasSerial
+    Serial.println(":Entering terminal mode");
+    Serial.println(":Exit with Ctrl-D");
+    char next = 0, last;
+    byte out;
+    bool ansi = false;
+    for (;;) {
+      if (Serial.available()) {
+        last = next;
+        next = Serial.read();
+        sendEcho(next, last);
+
+        // Mappings for newline and arrow sequences
+        out = next;
+        switch (next) {
+          case 4:                                  return;   // Ctrl-D (EOT)
+          case 9: out = ~buttonB;                  break;    // Same as PS/2 above
+          case '\r': out = '\n';                   break;
+          case '\n': if (last == '\r')             continue; // Swallow
+          case '\e':                               continue; // ANSI escape sequence
+          case '[': if (last == '\e') ansi = true; continue;
+          case 'A': if (ansi) out = ~buttonUp;     break;    // Map cursor keys to buttons
+          case 'B': if (ansi) out = ~buttonDown;   break;
+          case 'C': if (ansi) out = ~buttonRight;  break;
+          case 'D': if (ansi) out = ~buttonLeft;   break;
+        }
+
+        sendController(out, 2);
+        ansi = false;
+      }
+    }
+  #endif
 }
 
 // Because the Arduino doesn't have enough RAM to buffer
@@ -526,7 +689,10 @@ void doTransfer(const byte *gt1)
 
   byte segment[300] = {0}; // Multiple of N for padding
 
-  if (!gt1) Serial.print('0'); // Signal uptream that we handle escape bytes
+  #if hasSerial
+    if (!gt1)
+      Serial.print('0'); // Signal uptream that we handle escape bytes
+  #endif
   ask(3);
   readNext();
   word address = nextByte;
@@ -603,50 +769,60 @@ int nextSerial()
   #endif
 }
 
+static inline void critical()
+{
+  forbidPs2();
+  noInterrupts();
+}
+
+static inline void nonCritical()
+{
+  interrupts();
+  allowPs2();
+}
+
 // Send a 1..256 byte code or data segment into the Gigatron by
 // repacking it into Loader frames of max N=60 payload bytes each.
 void sendGt1Segment(word address, int len, byte data[])
 {
-  noInterrupts();
   byte n = min(N, len);
   resetChecksum();
 
   // Send segment data
+  critical();
   for (int i=0; i<len; i+=n) {
     n = min(N, len-i);
     sendFrame('L', n, address+i, data+i);
   }
-  interrupts();
+  nonCritical();
 
-  // Wait for vBlank to start so we're 100% sure to skip one frame and
+  // Wait for vPulse to start so we're 100% sure to skip one frame and
   // the checksum resets on the other side. (This is a bit pedantic)
-  while (PINB & (1<<SER_LATCH)) // ~160 us
+  while (PINB & gigatronLatchBit) // ~160 us
     ;
 }
 
 // Send execute command
 void sendGt1Execute(word address, byte data[])
 {
-  noInterrupts();
+  critical();
   resetChecksum();
   sendFrame('L', 0, address, data);
-  interrupts();
+  nonCritical();
 }
 
 // Pretend to be a game controller
 // Send the same byte a few frames like a human user
 void sendController(byte value, int n)
 {
-  noInterrupts();
-
   // Send controller code for n frames
   // E.g. 4 frames = 3/60s = ~50 ms
-  for (int i=0; i<n; i++) {
+  critical();
+  for (int i=0; i<n; i++)
     sendFirstByte(value);
-    PORTB |= 1<<SER_DATA; // Send 1 when idle
-  }
+  nonCritical();
 
-  interrupts(); // So delay() can work again
+  PORTB |= gigatronDataBit; // Send 1 when idle
 }
 
 void resetChecksum()
@@ -680,29 +856,31 @@ void sendFrame(byte firstByte, byte len, word address, byte message[])
   byte lastByte = -checksum;   // Checksum must come out as 0
   sendBits(lastByte, 8);
   checksum = lastByte;         // Concatenate checksums
-  PORTB |= 1<<SER_DATA;        // Send 1 when idle
+  PORTB |= gigatronDataBit;        // Send 1 when idle
 }
 
 void sendFirstByte(byte value)
 {
   // Wait vertical sync NEGATIVE edge to sync with loader
-  while (~PINB & (1<<SER_LATCH)) // Ensure vSync is HIGH first
-    ;
-  while (PINB & (1<<SER_LATCH)) // Then wait for vSync to drop
+  while (~PINB & gigatronLatchBit) // Ensure vSync is HIGH first
     ;
 
-  // Send first bit
+  // Send first bit in advance
   if (value & 128)
-    PORTB |= 1<<SER_DATA;
+    PORTB |= gigatronDataBit;
   else
-    PORTB &= ~(1<<SER_DATA);
+    PORTB &= ~gigatronDataBit;
 
-  // Wait for bit transfer at horizontal sync POSITIVE edge.
-  // This timing is tight for the first bit of the first byte and
-  // the reason that interrupts must be disabled on the microcontroller.
-  while (PINB & (1<<SER_PULSE))  // Ensure hSync is LOW first
+  while (PINB & gigatronLatchBit) // Then wait for vSync to drop
     ;
-  while (~PINB & (1<<SER_PULSE)) // Then wait for hSync to rise
+
+  // Wait for bit transfer at horizontal sync RISING edge. As this is at
+  // the end of a short (3.8 us) pulse following VERY shortly (0.64us) after
+  // vSync drop, this timing is tight. That is the reason that interrupts
+  // must be disabled on the microcontroller and that 1 MHz is not enough.
+  while (PINB & gigatronPulseBit) // Ensure hSync is LOW first
+    ;
+  while (~PINB & gigatronPulseBit) // Then wait for hSync to rise
     ;
 
   // Send remaining bits
@@ -715,14 +893,14 @@ void sendBits(byte value, byte n)
   for (byte bit=1<<(n-1); bit; bit>>=1) {
     // Send next bit
     if (value & bit)
-      PORTB |= 1<<SER_DATA;
+      PORTB |= gigatronDataBit;
     else
-      PORTB &= ~(1<<SER_DATA);
+      PORTB &= ~gigatronDataBit;
 
     // Wait for bit transfer at horizontal sync POSITIVE edge.
-    while (PINB & (1<<SER_PULSE))  // Ensure hSync is LOW first
+    while (PINB & gigatronPulseBit)  // Ensure hSync is LOW first
       ;
-    while (~PINB & (1<<SER_PULSE)) // Then wait for hSync to rise
+    while (~PINB & gigatronPulseBit) // Then wait for hSync to rise
       ;
   }
   checksum += value;

@@ -3,26 +3,34 @@
  *  EBNF in W3C notation
  *  Recommended railroad diagram generator: http://www.bottlecaps.de/rr/ui
  */
-Line        ::= Number Statement | Statement
+Line        ::= Number Statements | Statements
+Statements  ::= Statement (':' Statement)*
 Statement   ::= ('PRINT'|'?') ((String|Expression) [,;])*
-                               (String|Expression)?                     |
-                'IF' Expression RelOp Expression 'THEN'? Statement      |
-                'GOTO' Expression                                       |
-                'INPUT' Variable (',' Variable)*                        |
-                'LET'? Variable '=' Expression                          |
-                'POKE' Expression ',' Expression                        |
-                'GOSUB' Expression                                      |
-                'RETURN'                                                |
-                ('REM'|#x27) Character*                                 |
-                'NEW'                                                   |
-                'LIST'                                                  |
-                'RUN'                                                   |
-                'END'
+                               (String|Expression)?
+             |  'AT' Expression (',' Expression)?
+             |  'PUT' Expression
+             |  'IF' Expression RelOp Expression 'THEN'? Statements
+             |  'GOTO' Expression
+             |  'INPUT' Variable (',' Variable)*
+             |  'LET'? Variable ('(' Expression ')')? '=' Expression
+             |  'FOR' Variable '=' Expression 'TO' Expression
+             |  'NEXT' Variable
+             |  'POKE' Expression ',' Expression
+             |  'GOSUB' Expression
+             |  'RETURN'
+             |  ('REM'|"'") Character*
+             |  'MODE' Expression
+             |  'CLS'
+             |  'NEW'
+             |  'LIST'
+             |  'RUN'
+             |  'END'
 Expression  ::= [+-]? Term ([+-] Term)*
 Term        ::= Factor ([*/%] Factor)*
-Factor      ::= Variable | Number | 'PEEK'? '(' Expression ')'
+Factor      ::= Variable | Number
+             |  (Variable|'PEEK'|'RND'|'USR')? '(' Expression ')'
 RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
 Number      ::= [0-9]+
-Variable    ::= [A-Z]
+Variable    ::= [A-Z] | '@'
 String      ::= '"' ([#x20-#x21] | [#x23-#x7E])* '"'
 Character   ::= [#x20-#x7E]

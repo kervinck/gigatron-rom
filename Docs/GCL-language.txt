@@ -262,7 +262,7 @@ LD    $DD      Load byte from zero page (vAC=[D])
 LDI   $DD      Load immediate small positive constant (vAC=D)
 LDWI  $DDDD    Load immediate arbitrary constant (vAC=D)
 LDW   $DD      Word load from zero page (vAC=[D]+256*[D+1])
-LDLW  $DD      Load word from stack frame (vAC=vSP[D]+256*vSP[D+1]
+LDLW  $DD      Load word from stack frame (vAC=vSP[D]+256*vSP[D+1])
 ADDW  $DD      Word addition with zero page (vAC+=[D]+256*[D+1])
 SUBW  $DD      Word subtraction with zero page (vAC-=[D]+256*[D+1])
 ADDI  $DD      Add small positive constant (vAC+=D)
@@ -291,11 +291,25 @@ SYS   $DD      Native function call using at most 2*T cycles, D=270-max(14,T)
 DEF   $DD      Define data or code (vAC,vPC=vPC+2,D+256*(vPC>>8))
 
 -------------
+Coding tricks
+-------------
+
+$ff&                    Clear vAC high byte
+$ff| $ff^               Clear vAC low byte, because there is no $ff00&
+\vACH,                  Move vAC high byte to low
+
+a b-
+[if>=0 ...]             if a >= b ...
+                        But doesn't work in case of overflow
+
+a b^ [if<0 b else a b-]
+[if>=0 ...]             16-bits range version
+
+-------------
 SYS extension
 -------------
 Addresses of SYS functions that are part of the ABI:
 
-009a    SYS_Reset_36            Soft reset
 00ad    SYS_Exec_88             Load serialized vCPU code from ROM and execute
 04a7    SYS_Random_34           Get random number and update entropy
 0600    SYS_LSRW1_48            Shift right 1 bit
@@ -316,10 +330,18 @@ Addresses of SYS functions that are part of the ABI:
 02e9    SYS_NextByteIn_32       Receive next byte and put in load buffer
 06e7    SYS_PayloadCopy_34      Copy byte from load buffer to RAM destination
 
+Added in ROM v2 (ADVICE NOT TO USE IN GT1 FILES INTENDED FOR SHARING):
+
+0b00    SYS_SetMode_80          Set video mode 0..3
+0b03    SYS_SetMemory_54        Set 1..256 bytes of memory to value
+
 Application specific SYS calls in ROM v1 that are -not- part of the ABI:
+
 SYS_Read3_40               (Pictures)
 SYS_LoaderProcessInput_48  (Loader)
 SYS_RacerUpdateVideoX_40   (Racer)
 SYS_RacerUpdateVideoY_40   (Racer)
 
+Retro-actively retired from ABI:
+SYS_Reset_36                    Soft reset (use vReset instead)
 -- End of document --

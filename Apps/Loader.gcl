@@ -38,8 +38,8 @@ $500c Pos=
 [do Text, if<>0 Text<++ PrintChar! loop]
 
 { Put these in variable to save some code space below }
-\SYS_NextByteIn_32  NextByteIn_32=
-\SYS_PayloadCopy_34 PayloadCopy_34=
+\SYS_LoaderNextByteIn_32  NextByteIn_32=
+\SYS_LoaderPayloadCopy_34 PayloadCopy_34=
 
 0 \sysArgs4.            {Clears the copy counter}
 $590c A=                {Activity indicator}

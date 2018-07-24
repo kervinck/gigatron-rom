@@ -19,7 +19,7 @@ from os  import getenv
 
 from asm import *
 import gcl0x as gcl
-import font
+import font_v1 as font
 
 # Pre-loading the formal interface as a way to get warnings when
 # accidently redefined with a different value
@@ -1073,14 +1073,14 @@ nop()
 nop()
 
 #-----------------------------------------------------------------------
-# Extension SYS_NextByteIn_32
+# Extension SYS_LoaderNextByteIn_32
 #-----------------------------------------------------------------------
 
 # sysArgs[0:1] Current address
 # sysArgs[2]   Checksum
 # sysArgs[3]   Wait value (videoY)
 
-label('SYS_NextByteIn_32')
+label('SYS_LoaderNextByteIn_32')
 ld([videoY])                    #15
 xora([sysArgs+3])               #16
 bne('.sysNbi')                  #17
@@ -2291,14 +2291,14 @@ jmpy('REENTER')                 #52
 ld(-56/2)                       #53
 
 #-----------------------------------------------------------------------
-# Extension SYS_PayloadCopy_34
+# Extension SYS_LoaderPayloadCopy_34
 #-----------------------------------------------------------------------
 
 # sysArgs[0:1] Source address
 # sysArgs[4]   Copy count
 # sysArgs[5:6] Destination address
 
-label('SYS_PayloadCopy_34')
+label('SYS_LoaderPayloadCopy_34')
 ld([sysArgs+4])                 #15 Copy count
 beq('.sysCc0')                  #16
 suba(1)                         #17

@@ -36,7 +36,7 @@
 namespace Memory
 {
     enum FitType {FitSmallest, FitLargest, FitAscending, NumFitTypes};
-    enum RamType {RamVasm=0, RamVar, RamStr, RamArr, RamStack, NumRamTypes};
+    enum RamType {RamVasm=0, RamVar, RamStr, RamArray, RamStack, NumRamTypes};
 
     struct RamEntry
     {

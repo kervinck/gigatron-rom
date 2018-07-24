@@ -18,14 +18,13 @@ gcl0x
     q>++ q  if>0loop]
 
   { Clear screen }
-  $800 p= $8801 i=
-  \SYS_VDrawBits_134 \sysFn= 32 \sysArgs0. \sysArgs1. {Blue}
-  [do
-    p [do
-      \sysArgs4= 134! {Clears 8 pixels vertically}
-      $800 p+ p= if>0loop]
-    i+ p=
-    255& 160^ if<>0loop]
+  \SYS_SetMemory_v2_54 \sysFn=  {!!! Not in ROM v1 !!!}
+  32 \sysArgs1.                 {Color blue}
+  $800 [do
+    p= \sysArgs2=               {Destination}
+    160 \sysArgs0.              {Count}
+    54!                         {SYS call}
+    $100 p+ if>0loop]
 
   ret
 ] SetupVideo=
@@ -36,7 +35,7 @@ gcl0x
   { Startup message:
     +--------------------------+
     |   *** Gigatron ??K ***   |
-    | TTL microcomputer ROM v1x| }
+    | TTL microcomputer ROM v2 | }
   [def
     {Line 1}
     $2a# $2a# $2a# $20# $47# $69# $67# $61#
@@ -46,7 +45,7 @@ gcl0x
     $20# $54# $54# $4c# $20# $6d# $69# $63#
     $72# $6f# $63# $6f# $6d# $70# $75# $74#
     $65# $72# $20# $52# $4f# $4d# $20# $76#
-    $31# $78# 0#
+    $32# 0#
   ] Text=
 
   { Convert memory size into decimal text }
@@ -79,7 +78,7 @@ $0300:
   fontData+ fontData=  {Add to page address to reach bitmap data for Char}
 
   {Draw 5 vertical slices: 5 using font data}
-  63      \sysArgs1. {White}
+  $3f20   \sysArgs0= {Blue/White}
   Pos     \sysArgs4=
   6+      Pos=
   \SYS_VDrawBits_134 \sysFn=
@@ -118,10 +117,18 @@ $0300:
 { Now it is safe to call functions }
 SetupAudio!
 SetupVideo!
-$812 Pos= PrintStartupMessage!
+$812 Pos= PrintStartupMessage! {Returns 0}
+
+{ Start blinkenlights }
+\ledState_v2, 128&              {Check if sequencer still running}
+[if=0 \ledState_v2. \ledTimer.] {For continuity only restart when paused}
+9 \ledTempo.                    {6.0 Hz ( = 60/(9+1)), was 5.5 Hz}
+
+\SYS_SetMode_v2_80 \sysFn=      {!!! Not in ROM v1 !!!}
+1 80!                           {Mode 1 -> "ABC-"}
 
 { Load and start main program }
-\Main_v1x \sysArgs0= $200 \vLR= \SYS_Exec_88 \sysFn= 88!
+\Main \sysArgs0= $200 \vLR= \SYS_Exec_88 \sysFn= 88!
 
 {-----------------------------------------------------------------------+
 |                                                                       |

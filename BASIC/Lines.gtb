@@ -1,0 +1,12 @@
+1 cls:rem Lines demo
+2 a=rnd(160):b=8+rnd(120)
+3 c=rnd(160):d=8+rnd(120)
+4 x=c-a:y=d-b:q=rnd(64)
+5 u=1  :ifx<0x=-x:u=-u
+6 v=256:ify<0y=-y:v=-v
+7 p=a+256*b:ify<xgoto9
+8 t=x:x=y:y=t:t=u:u=v:v=t
+9 d=-x:x=x+x:y=y+y
+10 fort=dto0:pokep,q
+11 d=d+y:ifd>0d=d-x:p=p+v
+12 p=p+u:nextt:goto2

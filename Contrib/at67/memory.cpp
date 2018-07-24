@@ -15,7 +15,7 @@ namespace Memory
     std::vector<RamEntry> _vasmRam;
     std::vector<RamEntry> _varRam;
     std::vector<RamEntry> _strRam;
-    std::vector<RamEntry> _arrRam;
+    std::vector<RamEntry> _arrayRam;
 
 
     void intitialise(void)
@@ -25,7 +25,7 @@ namespace Memory
         _vasmRam.clear();
         _varRam.clear();
         _strRam.clear();
-        _arrRam.clear();
+        _arrayRam.clear();
 
         _freeRam.push_back({RAM_PAGE_START_0, RAM_PAGE_SIZE_0});
         _freeRam.push_back({RAM_PAGE_START_1, RAM_PAGE_SIZE_1});
@@ -54,7 +54,7 @@ namespace Memory
                 case RamVasm:  _vasmRam.push_back({address, size});  break;
                 case RamVar:   _varRam.push_back({address, size});   break;
                 case RamStr:   _strRam.push_back({address, size});   break;
-                case RamArr:   _arrRam.push_back({address, size});   break;
+                case RamArray: _arrayRam.push_back({address, size}); break;
                 case RamStack: _stackRam.push_back({address, size}); break;
             }
 

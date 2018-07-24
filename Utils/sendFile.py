@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #-----------------------------------------------------------------------
 #
-# sendGt1.py -- Send GT1 file to Gigatron through Arduino as interface
+# sendFile.py -- Send file to Gigatron through Arduino as interface
 #
 #  XXX So far tested for macOS only
 #  XXX Still uses Python 2.7 (default on macOS). Should be reworked to
@@ -14,6 +14,7 @@
 # 2018-05-30 (marcelk) Enable stdin again. A bit more consistency.
 # 2018-06-04 (marcelk) Allow timeout while waiting for first prompt
 # 2018-06-29 (marcelk) Send escaped control bytes to newer Babelfishes
+# 2018-07-23 (marcelk) Send GTB files into BASIC. Renamed to sendFile.py
 #
 #-----------------------------------------------------------------------
 
@@ -31,14 +32,14 @@ sys.excepthook = lambda exType, exValue, exTrace: print('%s: %s' % (exType.__nam
 #       Command line arguments
 #-----------------------------------------------------------------------
 
-parser = argparse.ArgumentParser(description='Send a GT1 into the Gigatron')
+parser = argparse.ArgumentParser(description='Send a file into the Gigatron')
 parser.add_argument('-v', '--verbose', dest='verbose',
                     help='be verbose',
                     action='store_true', default=False)
 parser.add_argument('-p', '--port', dest='port',
                     help='USB port to Arduino (default is auto-detect)',
                     default=None)
-parser.add_argument('filename', help='GT1 file', nargs='?')
+parser.add_argument('filename', help='GT1 or GTB file', nargs='?')
 
 args = parser.parse_args()
 
@@ -80,6 +81,31 @@ def readLine():
       sys.stdout.flush()
   return line
 
+def sendGt1(fp):
+  """Send Gigatron object file"""
+  ask = sendCommand('U')
+
+  def escape(x):
+    return '\x7d' + chr(ord(x) ^ 0x20)
+  special = '' # Backwards compatibility with older Babelfishes
+
+  while ask[0].isdigit():
+    # Arduino will ask for <n> bytes by sending '<n>?'
+    if ask[0] == '0': # Trigger to enable escaping of XON/OFF
+      special = '\x11\x13\x7d'
+    n = int(ask[:-1])
+    data = fp.read(n)
+    if len(data) < n:
+      raise Exception('File too short')
+    sys.stdout.write('.')
+    sys.stdout.flush()
+    data = ''.join([escape(x) if x in special else x for x in data])
+    if '\x13' in data: # Just a warning, and just for XOFF
+      print('\nWarning: sending unescaped XOFF')
+    ser.write(data)
+    ask = sendCommand(None)
+  print()
+
 #-----------------------------------------------------------------------
 #       Connect to Arduino
 #-----------------------------------------------------------------------
@@ -116,29 +142,20 @@ sendCommand('R')
 print('Starting Loader')
 sendCommand('L')
 
-print('Sending program %s' % (repr(args.filename) if args.filename else 'from stdin'))
-ask = sendCommand('U')
-
-def escape(x):
-  return '\x7d' + chr(ord(x) ^ 0x20)
-special = '' # Backwards compatibility with older Babelfishes
-
-while ask[0].isdigit():
-  # Arduino will ask for <n> bytes by sending '<n>?'
-  if ask[0] == '0': # Trigger to enable escaping of XON/OFF
-    special = '\x11\x13\x7d'
-  n = int(ask[:-1])
-  data = fp.read(n)
-  if len(data) < n:
-    raise Exception('File too short')
-  sys.stdout.write('.')
-  sys.stdout.flush()
-  data = ''.join([escape(x) if x in special else x for x in data])
-  if '\x13' in data: # Just a warning, and just for XOFF
-    print('\nWarning: sending unescaped XOFF')
-  ser.write(data)
-  ask = sendCommand(None)
-print()
+if args.filename and args.filename.lower().endswith(('.gt1', '.gt1x')):
+  print('Sending program %s' % repr(args.filename))
+  sendGt1(fp)
+else:
+  isBasic = args.filename and args.filename.lower().endswith(('.gtb', 'gtbx', '.bas'))
+  if isBasic:
+    print('Starting BASIC')
+    sendCommand('P1')
+    sleep(2) # BASIC takes a while on 64K
+  print('Sending text %s' % (repr(args.filename) if args.filename else 'from stdin'))
+  for line in fp:
+    sendCommand('.' + line.strip())
+  if isBasic:
+    sendCommand('.RUN')
 
 print('Finished')
 
