@@ -8,7 +8,9 @@
 
 namespace Memory
 {
-    bool has64KRam = false;
+    bool _has64KRAM = (RAM_SIZE == 1<<16);
+    uint16_t _baseFreeRAM = RAM_SIZE - RAM_USED_DEFAULT;
+    uint16_t _freeRAM = _baseFreeRAM;
 
     std::vector<RamEntry> _freeRam;
     std::vector<RamEntry> _stackRam;
@@ -17,6 +19,18 @@ namespace Memory
     std::vector<RamEntry> _strRam;
     std::vector<RamEntry> _arrayRam;
 
+
+    bool has64KRAM(void) {return _has64KRAM;}
+    uint16_t getBaseFreeRAM(void) {return _baseFreeRAM;}
+    uint16_t getFreeRAM(void) {return _freeRAM;}
+    uint16_t getFreeGtbRAM(uint16_t numLines)
+    {
+        uint16_t free = ((0x80 - ((GTB_LINE0_ADDRESS & 0xFF00) >>8))*NUM_GTB_LINES_PER_ROW - numLines)*MAX_GTB_LINE_SIZE - MAX_GTB_LINE_SIZE;
+        if(_has64KRAM) free += (1<<15);
+        return free;
+    }
+
+    void setFreeRAM(uint16_t freeRAM) {_freeRAM = freeRAM;}
 
     void intitialise(void)
     {
@@ -36,7 +50,7 @@ namespace Memory
 
         for(uint16_t i=RAM_SEGMENTS_START; i<=RAM_SEGMENTS_END; i+=RAM_SEGMENTS_OFS) _freeRam.push_back({i, RAM_SEGMENTS_SIZE});
 
-        if(has64KRam) _freeRam.push_back({RAM_EXPANSION_START, RAM_EXPANSION_SIZE});
+        if(_has64KRAM) _freeRam.push_back({RAM_EXPANSION_START, RAM_EXPANSION_SIZE});
     }
 
     bool updateRamLists(RamType ramType, int index, uint16_t address, uint16_t size, uint16_t newSize)

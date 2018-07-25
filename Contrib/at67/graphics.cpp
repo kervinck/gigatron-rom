@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include "graphics.h"
+#include "memory.h"
 #include "timing.h"
 #include "editor.h"
 #include "loader.h"
@@ -598,7 +599,7 @@ namespace Graphics
             else if(Editor::getEditorMode() == Editor::Debug)   sprintf(str, "Debug  ");
             else if(Editor::getEditorMode() == Editor::GigaPS2) sprintf(str, "PS2Giga");
             drawText(std::string(str), _pixels, 30, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
-            sprintf(str, "%d", Cpu::getFreeRAM());
+            sprintf(str, "%d", Memory::getFreeRAM());
             drawText(std::string(str), _pixels, 108, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
             drawText(std::string(VERSION_STR), _pixels, 30, 472, 0xFFFFFFFF, false, 0);
         }

@@ -17,6 +17,7 @@
 
 
 #include <SDL.h>
+#include "memory.h"
 #include "cpu.h"
 #include "audio.h"
 #include "editor.h"
@@ -548,7 +549,7 @@ namespace Editor
                 {
                     dirnames.push_back(name);
                 }
-                else if(ent->d_type == DT_REG  &&  (name.find(".gbas") != std::string::npos  ||  name.find(".gcl") != std::string::npos  ||
+                else if(ent->d_type == DT_REG  &&  (name.find(".gbas") != std::string::npos  ||  name.find(".gtb") != std::string::npos  ||  name.find(".gcl") != std::string::npos  ||
                                                     name.find(".gasm") != std::string::npos  ||  name.find(".vasm") != std::string::npos  ||  name.find(".gt1") != std::string::npos))
                 {
                     filenames.push_back(name);

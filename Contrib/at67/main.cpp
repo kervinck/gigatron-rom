@@ -7,8 +7,8 @@
 /**********************************************************************************************/
 
 
-#include "cpu.h"
 #include "memory.h"
+#include "cpu.h"
 #include "audio.h"
 #include "editor.h"
 #include "loader.h"

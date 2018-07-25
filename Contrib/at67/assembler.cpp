@@ -1069,7 +1069,7 @@ namespace Assembler
             std::getline(infile, includeLineToken._text);
             includeLineTokens.push_back(includeLineToken);
 
-            if(!infile.good() &&  !infile.eof())
+            if(!infile.good() && !infile.eof())
             {
                 fprintf(stderr, "Assembler::handleInclude() : Bad lineToken : '%s' : in '%s' on line %d\n", includeLineToken._text.c_str(), filepath.c_str(), lineNumber - lineIndex);
                 return false;
@@ -1645,7 +1645,7 @@ namespace Assembler
             std::getline(infile, lineToken._text);
             lineTokens.push_back(lineToken);
 
-            if(!infile.good()  &&  !infile.eof())
+            if(!infile.good() && !infile.eof())
             {
                 fprintf(stderr, "Assembler::assemble() : Bad lineToken : '%s' : in '%s' : on line %d\n", lineToken._text.c_str(), filename.c_str(), numLines+1);
                 return false;

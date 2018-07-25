@@ -5,6 +5,9 @@
 #include <vector>
 
 
+#define ROM_SIZE (1<<16)
+#define RAM_SIZE (1<<16) // Can be 32k or 64k
+
 #define RAM_USED_DEFAULT  19986 // ignores page 0, would be 19779 otherwise
 
 #define RAM_PAGE_START_0  0x0200
@@ -28,9 +31,12 @@
 #define RAM_SEGMENTS_OFS    0x0100
 #define RAM_SEGMENTS_SIZE   96
 
-
 #define RAM_EXPANSION_START  0x8000
 #define RAM_EXPANSION_SIZE   0x8000
+
+#define GTB_LINE0_ADDRESS     0x18A0
+#define MAX_GTB_LINE_SIZE     32
+#define NUM_GTB_LINES_PER_ROW 3
 
 
 namespace Memory
@@ -44,6 +50,13 @@ namespace Memory
         uint16_t _size;
     };
 
+
+    bool has64KRAM(void);
+    uint16_t getBaseFreeRAM(void);
+    uint16_t getFreeRAM(void);
+    uint16_t getFreeGtbRAM(uint16_t numLines);
+
+    void setFreeRAM(uint16_t freeRAM);
 
     void intitialise(void);
 

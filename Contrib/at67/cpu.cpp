@@ -6,6 +6,7 @@
 #include <vector>
 #include <algorithm>
 
+#include "memory.h"
 #include "cpu.h"
 
 #ifndef STAND_ALONE
@@ -37,21 +38,13 @@ namespace Cpu
     uint8_t _IN = 0xFF, _XOUT = 0x00;
     uint8_t _ROM[ROM_SIZE][2], _RAM[RAM_SIZE];
 
-    uint16_t _baseFreeRAM = RAM_SIZE - RAM_USED_DEFAULT;
-    uint16_t _freeRAM = _baseFreeRAM;
-
     std::vector<uint8_t> _scanlinesRom0;
     std::vector<uint8_t> _scanlinesRom1;
 
     std::vector<InternalGt1> _internalGt1s;
 
 
-    uint16_t getBaseFreeRAM(void) {return _baseFreeRAM;}
-    uint16_t getFreeRAM(void) {return _freeRAM;}
     uint8_t* getPtrToROM(int& romSize) {romSize = sizeof(_ROM); return (uint8_t*)_ROM;}
-
-    void setFreeRAM(uint16_t freeRAM) {_freeRAM = freeRAM;}
-
 
     void initialiseInternalGt1s(void)
     {

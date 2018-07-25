@@ -328,7 +328,7 @@ namespace Compiler
             std::getline(infile, line);
             _input.push_back(line);
 
-            if(!infile.good()  &&  !infile.eof())
+            if(!infile.good() && !infile.eof())
             {
                 fprintf(stderr, "Compiler::readInputFile() : Bad line : '%s' : in '%s' : on line %d\n", line.c_str(), filename.c_str(), numLines+1);
                 return false;

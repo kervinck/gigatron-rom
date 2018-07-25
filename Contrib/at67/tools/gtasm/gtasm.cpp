@@ -2,13 +2,14 @@
 #include <stdlib.h>
 #include <sstream>
 
+#include "../../memory.h"
 #include "../../loader.h"
 #include "../../assembler.h"
 #include "../../expression.h"
 
 
 #define GTASM_MAJOR_VERSION "0.1"
-#define GTASM_MINOR_VERSION "3"
+#define GTASM_MINOR_VERSION "4"
 #define GTASM_VERSION_STR "gtasm v" GTASM_MAJOR_VERSION "." GTASM_MINOR_VERSION
 
 
