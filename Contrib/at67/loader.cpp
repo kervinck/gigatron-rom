@@ -16,11 +16,16 @@
 #include <direct.h>
 #include "dirent/dirent.h"
 #define chdir _chdir
+#ifdef max
+#undef max
+#endif
+#ifdef min
+#undef min
+#endif
 #else
 #include <unistd.h>
 #include <dirent.h>
 #endif
-
 #endif
 
 #include "memory.h"
@@ -830,7 +835,7 @@ namespace Loader
         for(int i=0; i<lines.size(); i++)
         {
             long lineNumber = strtol(lines[i].c_str(), &endPtr, 10);
-            if(lineNumber < 1  ||  lineNumber > 32767  ||  uint8_t(&lines[i][lines[i].size()] - endPtr) > MAX_GTB_LINE_SIZE - 2)  // first 2 bytes are uint16_t line number
+            if(lineNumber < 1  ||  lineNumber > 32767)//  ||  uint8_t(&lines[i][lines[i].size()] - endPtr) > MAX_GTB_LINE_SIZE - 2)  // first 2 bytes are uint16_t line number
             {
                 fprintf(stderr, "Loader::loadGtbFile() : Bad line Number : %d : in '%s' on line %d\n", lineNumber, filepath.c_str(), i+1);
                 return false;
@@ -848,8 +853,7 @@ namespace Loader
             uint8_t lineStart = uint8_t(endPtr - &lines[i][0]);
             for(uint8_t j=lineStart; j<(MAX_GTB_LINE_SIZE - 2 + lineStart); j++)
             {
-                uint8_t data = (lines[i][j] >= ' ') ? lines[i][j] : 0;
-                if(j >= lines[i].size()) data = 0;
+                uint8_t data = (j < lines[i].size()  &&  lines[i][j] >= ' ') ? lines[i][j] : 0;
                 Cpu::setRAM(endAddress + 2 + (j - lineStart), data);
             }
             endAddress += 0x0020;
