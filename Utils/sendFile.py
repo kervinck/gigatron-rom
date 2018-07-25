@@ -148,12 +148,16 @@ if args.filename and args.filename.lower().endswith(('.gt1', '.gt1x')):
 else:
   isBasic = args.filename and args.filename.lower().endswith(('.gtb', 'gtbx', '.bas'))
   if isBasic:
-    print('Starting BASIC')
+    print('Loading BASIC')
     sendCommand('P1')
     sleep(2) # BASIC takes a while on 64K
   print('Sending text %s' % (repr(args.filename) if args.filename else 'from stdin'))
   for line in fp:
-    sendCommand('.' + line.strip())
+    line = line.strip()
+    if len(line) > 25:
+      print("Truncated %s" % repr(line))
+      line = line[0:25]
+    sendCommand('.' + line)
   if isBasic:
     sendCommand('.RUN')
 

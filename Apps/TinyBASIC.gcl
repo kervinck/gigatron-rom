@@ -118,26 +118,32 @@
         Apple 1 BASIC
 
   Wish list:
-    DRAW dX,dY  Draw a line (or point)
-    SAVE        To Babelfish, using /vSync length modulation
+    DRAW dX,dY  Draw a line (or DRAW X, Y)
+    bytes free  Is not correct anymore after moving variables to top of memory
+    SAVE        To Babelfish, using /vSync pulse width modulation
 
-  'Maybe' list:
+  'Maybe in v1' list:
     A="...      As poor-men's substitute for DATA/READ
+    A$ .. Z$    String variables (only in LET, PRINT, INPUT?)
+    Boot        Some kind of autorun of a saved program
     COLOR       Easily change colors (use: POKE 43,c)
-    Unary minus Original Tiny BASIC does it wrong: 8/-2
     Speed       Cache result of the statement detection (checkpointing)
     Speed       Alternative: LET detection is now last, but should be first
     IF          Reintroduce the missing syntax error check
-    Speed       Move stack check from Expression to Factor (and GOSUB)
-    A$ .. Z$    String variables (only in LET, PRINT, INPUT?)
-    Speed       Cache GOTO/GOSUB target (only for constant targets...)
     Speed       Cache result of NextBlock (at offset 30 of block?)
+    @           Give it an implicit meaning such as "max index allowed in arrays"
+
+  'Maybe in v2' list:
+    Unary minus Original Tiny BASIC does it wrong: 8/-2
+    Speed       Cache GOTO/GOSUB target (only for constant targets...)
+    Speed       SYS functions for NextBlock, EndOfLine, Number
+    TUNE/PLAY   Play a note/score
     ABS(/SGN(   Built-in function
     A$()        Indexing in string variable, gives integer (handle in Factor)
-    LEN()/A$()=
-    TUNE/PLAY   Play a note/score
+    Speed       Move stack check from Expression to Factor (and GOSUB)
+    LEN()/A$()= More string stuff
 
-  'Probably not' list:
+  'Probably not soon' list:
     NEXT        Without variable (complicates 'Variable' subroutine)
     A0 .. Z9    Much more variable space (as in Apple-1 basic)
     ROM peek    rpeek()? Some predefined USR functions?
