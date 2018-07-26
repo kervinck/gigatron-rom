@@ -1,0 +1,10 @@
+1 'Fibonacci with bignums
+2 b(0)=1
+3 n=n+1:printn;": ";
+4 fori=0toj:put48+b(j-i)
+5 nexti:print:fori=0toj
+6 c=a(i)+b(i)+c:a(i)=b(i)
+7 b(i)=c:ifc<10 c=0:goto9
+8 b(i)=c-10:c=1
+9 nexti:ifc>0j=j+1:b(j)=c
+10 print:goto 3
