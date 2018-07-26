@@ -7,4 +7,4 @@
 7 b(i)=c:ifc<10 c=0:goto9
 8 b(i)=c-10:c=1
 9 nexti:ifc>0j=j+1:b(j)=c
-10 goto 3
+10 print:goto 3
