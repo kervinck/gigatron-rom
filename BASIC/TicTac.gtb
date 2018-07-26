@@ -1,14 +1,22 @@
-1'http://www.ittybittycomputers.com/IttyBitty/TinyBasic/TicTac.htm
-2'Changes for Gigatron:
-3'- Split/rewrite of too
-4'  long functional lines
-5'- Board in array: A(i)
-6'- USR(G,i) -> A(i)
-7'- USR(P,i,j) -> A(i)=j
-8'- Minor output tweaks
-9'All original lines kept
-10'in program as comments
-11'
+1'Tom Pittman's TicTacToe
+2'
+3'Changes for Gigatron:
+4'- Split/rewrite of too
+5'  long functional lines
+6'- Board in array: A(i)
+7'- USR(G,i) -> A(i)
+8'- USR(P,i,j) -> A(i)=j
+9'- Minor output tweaks
+10'Original lines kept in
+11'program as comments
+12'
+13'Originally printed in
+14'the Homebrew Computer
+15'Club Newsletter/Vol.2,
+16'Issue 13/ Jan 19, 1977
+17'
+18'http://www.ittybittycomputers.com/IttyBitty/TinyBasic/TicTac.htm
+19'
 100 REM TIC-TAC-TOE. YOU (X) VS. THE COMPUTER (O)
 110 GOTO 200
 120 BOARD IS IN MEMORY LOCATIONS 0007-000F
@@ -37,7 +45,7 @@
 260 C=0
 270 D=0
 280 E=0
-290 F=O
+290 F=0
 300'PRINT
 310'PRINT "FIRST, ";
 320'PRINT "PLEASE TELL ME WHERE THE COLD START IS."
@@ -180,9 +188,9 @@
 4560 F=1
 4570 Z=1
 4580 GOTO 2010
-6000 REM SUBROUTINR TO LOOK AT ONE ROW, COL, OR DIAG
+6000 REM SUBROUTINE TO LOOK AT ONE ROW, COL, OR DIAG
 6010 REM I IS THE POSITION OF REFERENCE
-6020 REM L,M,N ARE RETURNED WITH CONTENTS OF THE THREE SOUARES
+6020 REM L,M,N ARE RETURNED WITH CONTENTS OF THE THREE SQUARES
 6030 REM ENTER AT 6100,6200,6300, OR 6400...
 6040 REM TO EXAMINE ROW,COLUMN,DOWN DIAGONAL OR UP DIAGONAL
 6090 REM W=HORIZONTAL
