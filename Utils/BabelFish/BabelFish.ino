@@ -30,9 +30,9 @@
 // Select 1 of the preconfigured platforms:
 // (not every microcontroller platform supports all functions)
 //
-#define ArduinoUno   0 // Default
+#define ArduinoUno   1 // Default
 #define ArduinoNano  0
-#define ArduinoMicro 1
+#define ArduinoMicro 0
 #define ATtiny85     0
 
 // The object file is embedded (in PROGMEM) in GT1 format. It would be
