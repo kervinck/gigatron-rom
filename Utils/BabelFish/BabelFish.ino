@@ -719,28 +719,32 @@ int nextSerial()
       Serial.println("!Timeout error (no data)");
 
     // Workaround suspected bug in USB support for ATmega32U4 (Arduino Micro,
-    // Leonardo, etc) in Arduino's USBCore.cpp.
-    // From Atmel-7766J-USB-ATmega16U4/32U4-Datasheet_04/2016
-    // 22.13 OUT endpoint management:
+    // Leonardo, etcetera) in Arduino's USBCore.cpp. These boards don't have a
+    // support processor for USB handling but use an on-chip USB controller
+    // and a different software stack for that.
+    // From Atmel-7766J-USB-ATmega16U4/32U4-Datasheet_04/2016:
     //
     //   "RXOUTI shall always be cleared before clearing FIFOCON."
     //
-    // (An identical remark in datasheet for ATmega32U6/AT90USB64/128)
+    // (An identical remark is in the datasheets for ATmega32U6/AT90USB64/128)
     //
     // However:
     //   Serial.read() ->
     //   CDC.cpp/Serial_::read ->
     //   USBCore.cpp/USB_Recv() ->
-    //   SBCore.cpp/ReleaseRX() ->
+    //   USBCore.cpp/ReleaseRX() ->
     //   UEINTX = 0x6B;  // FIFOCON=0 NAKINI=1 RWAL=1 NAKOUTI=0 RXSTPI=1 RXOUTI=0 STALLEDI=1 TXINI=1
     //
     // This last statement attempts to clear both bits AT ONCE. This fails to
-    // clear FIFOCON when host data arrives in exact multiples of 64,128,192
-    // etcetara bytes and when using double buffering with two banks of
-    // 64 bytes, as USBCore.cpp does. A hangup situation is the result after
-    // reading the first 64 bytes transmitted. This can only be solved by
-    // resetting the board because no further host data reaches the sketch.
-    // (A better fix would be to repair the Arduino's USB_Recv and ReleaseRX)
+    // clear FIFOCON when host data arrives in exact multiples of 64,128,192,...
+    // bytes and when using double buffering with two banks of bytes, as
+    // USBCore.cpp does. A hangup situation occurs after reading the first
+    // tansmitted 64 bytes. This can then only be solved by resetting the board
+    // because no further host data reaches the sketch.
+    //
+    // A better fix would be to repair Arduino's USB_Recv and ReleaseRX.
+    // See for follow-up https://github.com/arduino/Arduino/issues/7838
+    // and https://github.com/kervinck/gigatron-rom/issues/36
     #if defined(USBCON) && defined(UEINTX) && defined(UEBCLX)
       if (!UEBCLX)                 // If bank empty
         UEINTX &= ~(1 << FIFOCON); // Clear FIFOCON bit
