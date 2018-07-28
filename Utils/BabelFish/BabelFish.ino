@@ -30,9 +30,9 @@
 // Select 1 of the preconfigured platforms:
 // (not every microcontroller platform supports all functions)
 //
-#define ArduinoUno   1 // Default
+#define ArduinoUno   0 // Default
 #define ArduinoNano  0
-#define ArduinoMicro 0
+#define ArduinoMicro 1
 #define ATtiny85     0
 
 // The object file is embedded (in PROGMEM) in GT1 format. It would be
@@ -646,10 +646,6 @@ void doTransfer(const byte *gt1)
 
   byte segment[300] = {0}; // Multiple of N for padding
 
-  #if hasSerial
-    if (!gt1)
-      Serial.print('0'); // Signal uptream that we handle escape bytes
-  #endif
   ask(3);
   readNext();
   word address = nextByte;
