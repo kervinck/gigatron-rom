@@ -853,8 +853,10 @@ namespace Loader
             uint8_t lineStart = uint8_t(endPtr - &lines[i][0]);
             for(uint8_t j=lineStart; j<(MAX_GTB_LINE_SIZE - 2 + lineStart); j++)
             {
-                uint8_t data = (j < lines[i].size()  &&  lines[i][j] >= ' ') ? lines[i][j] : 0;
-                Cpu::setRAM(endAddress + 2 + (j - lineStart), data);
+                uint8_t offset = 2 + j - lineStart;
+                bool validData = offset < MAX_GTB_LINE_SIZE-1  &&  j < lines[i].size()  &&  lines[i][j] >= ' ';
+                uint8_t data = validData ? lines[i][j] : 0;
+                Cpu::setRAM(endAddress + offset, data);
             }
             endAddress += 0x0020;
             if((endAddress & 0x00FF) < 0x00A0) endAddress = (endAddress & 0xFF00) | 0x00A0;
