@@ -2656,8 +2656,9 @@ define('vPC+1',      vPC+1)
 
 # Compile built-in GCL programs
 for gclSource in argv[1:]:
-  name = gclSource.rsplit('.', 1)[0]
-  name = name.rsplit('/', 1)[-1]
+  name = gclSource.rsplit('.', 1)[0] # Remove extension
+  name = name.rsplit('_v', 1)[0]     # Remove version
+  name = name.rsplit('/', 1)[-1]     # Remove path
   print
   print 'Compile file %s label %s ROM %04x' % (gclSource, name, pc())
   label(name)
