@@ -295,15 +295,22 @@ Coding tricks
 -------------
 
 $ff&                    Clear vAC high byte
-$ff| $ff^               Clear vAC low byte, because there is no $ff00&
-\vACH,                  Move vAC high byte to low
 
-a b-
-[if>=0 ...]             if a >= b ...
-                        But doesn't work in case of overflow
+$ff| $ff^               Clear vAC low byte (there is no 'ANDWI' instruction)
 
-a b^ [if<0 b else a b-]
-[if>=0 ...]             16-bits range version
+\vACH,                  Move vAC high byte to low (vAC>>=8)
+
+\vACH. $ff| $ff^        Move vAC low byte to high (vAC<<=8)
+
+\vAC>++                 Increment vAC high byte
+
+128- 128-               Decrement vAC high byte
+
+a b- [if>=0 ...]        if a >= b ... But this breaks in case of overflow!
+                        (For example consider a = 30000 and b = -5000)
+
+a b^ [if<0 b else a b-] Checking if the operands are of opposite sign first
+[if>=0 ...]             makes the comparison safe from overflow.
 
 -------------
 SYS extension
