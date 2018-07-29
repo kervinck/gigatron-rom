@@ -12,6 +12,7 @@
                        Gracefully allow self-invocation ("200R").
   2018-06-21 (marcelk) Simplifications ported back from Tiny BASIC
   2018-06-22 (marcelk) Use the won space to echo user input in white
+  2018-07-29 (marcelk) Accept up to 25 characters from input (was 24)
 
   What works the same as the original:
     - Type hex address to examine memory contents
@@ -28,10 +29,10 @@
     - Can use lowercase as well as uppercase for hex letters
     - Delete shows effect on screen, no need for '_' (RUBOUT)
     - Always print address at start of line in block examine mode
-    - Input buffer has the same size as screen width
+    - Input buffer is bounded by the screen width
     - Executed code can go back to monitor with RET instruction ($ff)
     - Faster screen update, and cursor symbol instead of '@'
-    - A bit more careful with empty lines
+    - A bit more careful with emitting empty lines
 
   References:
 
@@ -233,12 +234,12 @@ $0400:
 
     96- if>=0loop               {Ignore apparent unprintable garbage}
 
+    Pos<, 150^ [if=0            {Arrived at position 25 (25*6 == 150)}
+      $5c PrintChar!            {Error indicator '\'}
+      $400 call]                {To GETLINE and discard too long input}
+
     Buffer, PrintChar!          {Print accepted characters}
     Buffer<++                   {Advance pointer, keeping the character}
-
-    Pos<, 150^ [if=0            {Arrived at position 25 (25*6 == 150)}
-      $81 Buffer=               {Discard of too long input}
-      $5c PrintChar! CNewline!] {Error indicator '\'}
 
     loop]                       {To NEXTCHAR}
 

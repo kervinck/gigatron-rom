@@ -14,7 +14,7 @@ ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Credits.gcl\
 		Apps/Loader.gcl\
 		Apps/TinyBASIC_v1.gcl\
-		Apps/WozMon.gcl\
+		Apps/WozMon_v1.gcl\
 		Apps/Main_v2.gcl\
 		Core/Reset_v2.gcl
 

@@ -28,10 +28,10 @@
     - Can use lowercase as well as uppercase for hex letters
     - Delete shows effect on screen, no need for '_' (RUBOUT)
     - Always print address at start of line in block examine mode
-    - Input buffer has the same size as screen width
+    - Input buffer is bounded by the screen width
     - Executed code can go back to monitor with RET instruction ($ff)
     - Faster screen update, and cursor symbol instead of '@'
-    - A bit more careful with empty lines
+    - A bit more careful with emitting empty lines
 
   References:
 
