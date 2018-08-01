@@ -27,30 +27,15 @@
 // 3. Controlling the Gigatron over USB from a PC/laptop
 // 4. Pass through of game controller signals
 //
-// Select 1 of the preconfigured platforms:
-// (not every microcontroller platform supports all functions)
+// Select one of the supported platforms in the Tools->Board menu.
 //
-#define ArduinoUno   1 // Default
-#define ArduinoNano  0
-#define ArduinoMicro 0
-#define ATtiny85     0
-
-// The object file is embedded (in PROGMEM) in GT1 format. It would be
-// GREAT if we can find a way to receive the file over the Arduino's
-// serial interface without adding upstream complexity. But as the
-// Arduino's 2K of RAM can't buffer an entire file at once, some
-// intelligence is needed there and we haven't found a good way yet.
-// The Arduino doesn't implement any form of flow control on its
-// USB/serial interface (RTS/CTS or XON/XOFF).
-
-// This interface program can also receive data over the USB serial interface.
-// Use the sendGt1.py Python program on the computer to send a file.
-// The file must be in GT1 format (.gt1 extension)
-// For example:
-//   python sendGt1.py life3.gt1
-
-// Todo/idea list:
-// XXX Wild idea: let the ROM communicate back by modulating vPulse
+// Supported:
+//      - Arduino/Genuino Uno
+//      - Arduino Nano
+//      - Arduino/Genuino Micro
+//      - ATtiny85 (8 MHz)
+//
+// (not every microcontroller platform supports all functions)
 
 /*----------------------------------------------------------------------+
  |                                                                      |
@@ -69,9 +54,9 @@
 // Pin 12  PORTB4 7 vSync  SER_LATCH  0 PAR/SER None             3
 // Pin 11  PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK 4
 
-#if ArduinoUno
+#if defined(ARDUINO_AVR_UNO)
  #define platform "ArduinoUno"
- #define maxStorage 32768
+ #define maxStorage 32256
 
  // Pinout reference:
  // https://i2.wp.com/marcusjenkins.com/wp-content/uploads/2014/06/ARDUINO_V2.png
@@ -105,10 +90,10 @@
 // Pin J1-14 PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK 4        4
 // Pin J1-13 PORTB2 None     None      None       None             None     2
 
-#if ArduinoNano
+#if defined(ARDUINO_AVR_NANO)
  // at67's setup
  #define platform "ArduinoNano"
- #define maxStorage 32768
+ #define maxStorage 30720
 
  // Pinout reference:
  // http://lab.dejaworks.com/wp-content/uploads/2016/08/Arduino-Nano-1024x500.png
@@ -156,10 +141,10 @@
 //               1 3 5 |
 // --------------------+
 
-#if ArduinoMicro
+#if defined(ARDUINO_AVR_MICRO)
  // WattSekunde's setup
  #define platform "ArduinoMicro"
- #define maxStorage 32768
+ #define maxStorage 28672
 
  // Pinout reference:
  // http://1.bp.blogspot.com/-xqhL0OrJcxo/VJhVxUabhCI/AAAAAAABEVk/loDafkdqLxM/s1600/micro_pinout.png
@@ -202,7 +187,7 @@
 //                       +------+
 //                       ATtiny85
 
-#if ATtiny85
+#if defined(ARDUINO_attiny)
  #define platform "ATtiny85"
  #define maxStorage 8192
 
@@ -233,53 +218,47 @@
 const byte TinyBASIC_gt1[] PROGMEM = {
   #include "TinyBASIC.h"
 };
-const byte WozMon_gt1[] PROGMEM = {
+const byte WozMon_gt1[]    PROGMEM = {
   #include "WozMon.h"
 };
-const byte Terminal_gt1[] PROGMEM = {
+const byte Terminal_gt1[]  PROGMEM = {
   #include "Terminal.h"
 };
-const byte Blinky_gt1[] PROGMEM = {
+const byte Blinky_gt1[]    PROGMEM = {
   #include "Blinky.h"
 };
-const byte bricks_gt1[] PROGMEM = {
+const byte bricks_gt1[]    PROGMEM = {
   #include "bricks.h"
 };
-
-#if maxStorage >= 32768
-const byte lines_gt1[] PROGMEM = {
+const byte lines_gt1[]     PROGMEM = {
   #include "lines.h"
 };
-const byte life3_gt1[] PROGMEM = {
+const byte life3_gt1[]     PROGMEM = {
   #include "life3.h"
 };
 const byte starfield_gt1[] PROGMEM = {
   #include "starfield.h"
 };
-const byte tetris_gt1[] PROGMEM = {
+const byte tetris_gt1[]    PROGMEM = {
   #include "tetris.h"
 };
-#endif
 
 struct { byte *gt1; char *name; } gt1Files[12] = {
-/* 1  */ TinyBASIC_gt1, "Tiny BASIC",
-#if maxStorage >= 32768
-/* 2  */ WozMon_gt1,    "WozMon",
-/* 3  */ Terminal_gt1,  "Terminal",
-/* 4  */ Blinky_gt1,    "Blinky",
-#else
-         0,              NULL,
-         0,              NULL,
-         0,              NULL,
+  { TinyBASIC_gt1, "Tiny BASIC"               }, // 2702 bytes
+#if maxStorage >= 10000
+  { bricks_gt1,    "Bricks game [xbx]"        }, // 1607 bytes
 #endif
-/* 5  */ bricks_gt1,    "Bricks game [xbx]",
-#if maxStorage >= 32768
-/* 6  */ lines_gt1,     "Lines demo [at67]",
-/* 7  */ life3_gt1,     "Game of Life demo [at67]",
-/* 8  */ starfield_gt1, "Starfield demo [at67]",
-/* 9  */ tetris_gt1,    "Tetris game [at67]",
+#if maxStorage >= 20000
+  { tetris_gt1,    "Tetris game [at67]"       }, // 9868 bytes
 #endif
-
+#if maxStorage >= 30000
+  { WozMon_gt1,    "WozMon"                   }, // 595 bytes
+  { Terminal_gt1,  "Terminal"                 }, // 256 bytes
+  { Blinky_gt1,    "Blinky"                   }, // 17 bytes
+  { lines_gt1,     "Lines demo [at67]"        }, // 304 bytes
+  { life3_gt1,     "Game of Life demo [at67]" }, // 441 bytes
+  { starfield_gt1, "Starfield demo [at67]"    }, // 817 bytes
+#endif
 };
 
 /*----------------------------------------------------------------------+
@@ -509,7 +488,8 @@ void doMapping()
   word pos = 0x800;
   for (int i=1; i<=12; i++)
     if (gt1Files[i-1].gt1) {
-      char text[] = "Ctrl-F? : ";
+      char text[] = "Ctrl-F?  ";
+      // To save space avoid itoa() or sprintf()
       text[6]      = '0' + i / 10;
       text[6+i/10] = '0' + i % 10;
       pos = renderString(pos, text);

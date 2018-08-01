@@ -132,7 +132,7 @@ extern const PROGMEM PS2Keymap_t PS2Keymap_US;
 extern const PROGMEM PS2Keymap_t PS2Keymap_German;
 extern const PROGMEM PS2Keymap_t PS2Keymap_French;
 
-#if ATtiny85
+#if defined(ARDUINO_attiny)
   // attachInterrupt() doesn't work on the ATtiny85
   static byte keyboardClockBit;
   ISR(PCINT0_vect)
@@ -155,7 +155,7 @@ void keyboard_setup()
   #endif
   allowPs2();
 
-  #if ATtiny85
+  #if defined(ARDUINO_attiny)
     keyboardClockBit = digitalPinToBitMask(keyboardClockPin);
     GIMSK |= 1<<PCIE;          // Pin change interrupt enable
     PCMSK |= keyboardClockBit; // ... for keyboard clock
