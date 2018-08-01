@@ -62,6 +62,9 @@ test: Docs/gtemu $(DEV).rom
 basic: Apps/TinyBASIC.gt1 Apps/TinyBASIC.h
 	mv Apps/TinyBASIC.h Utils/BabelFish
 
+Utils/BabelFish/tinyfont.h: Utils/BabelFish/tinyfont.py
+	python "$<" > "$@"
+
 compiletest: Apps/*.gt1
 	# Test compilation
 	# (Use 'git diff' afterwards to detect unwanted changes)

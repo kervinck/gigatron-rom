@@ -268,9 +268,9 @@ struct { byte *gt1; char *name; } gt1Files[12] = {
 /* 3  */ Terminal_gt1,  "Terminal",
 /* 4  */ Blinky_gt1,    "Blinky",
 #else
-         0,              "(Empty)",
-         0,              "(Empty)",
-         0,              "(Empty)",
+         0,              NULL,
+         0,              NULL,
+         0,              NULL,
 #endif
 /* 5  */ bricks_gt1,    "Bricks game [xbx]",
 #if maxStorage >= 32768
@@ -278,14 +278,8 @@ struct { byte *gt1; char *name; } gt1Files[12] = {
 /* 7  */ life3_gt1,     "Game of Life demo [at67]",
 /* 8  */ starfield_gt1, "Starfield demo [at67]",
 /* 9  */ tetris_gt1,    "Tetris game [at67]",
-#else
-/* 7  */ 0,             "(Empty)",
-/* 8  */ 0,             "(Empty)",
-/* 9  */ 0,             "(Empty)",
 #endif
-/* 10 */ 0,             "(Empty)",
-/* 11 */ 0,             "(Empty)",
-/* 12 */ 0,             "(Empty)",
+
 };
 
 /*----------------------------------------------------------------------+
@@ -319,6 +313,13 @@ byte checksum; // Global is simplest
 #define buttonB      64
 #define buttonA      128
 // Note: The kit's controller gives inverted signals.
+
+/*
+ *  Font data
+ */
+const int tinyfont[96] PROGMEM = {
+  #include "tinyfont.h"
+};
 
 /*
  *  Terminal mode for upstream host
@@ -386,16 +387,18 @@ void loop()
   byte key = keyboard_getState();
   if (key != 255) {
     byte f = fnKey(key^64);
-    if (f)                           // Ctrl + Function key
+    if (f)                           // Ctrl + function key
       if (gt1Files[f-1].gt1)
         doTransfer(gt1Files[f-1].gt1);// Send built-in GT1 file to Gigatron
 
-    while (1) {
-      if (!fnKey(key^64)) {          // Normal case (but skip Ctrl+Fxx)
-        critical();
-        sendFirstByte(key);          // Synchronize with vPulse and send code
-        nonCritical();
-      }
+    if ((key^64) == 0xc0)            // Ctrl + Escape
+      doMapping();
+
+    while (1) {                      // Send to Gigatron until keyboard driver idle
+      critical();
+      sendFirstByte(key);            // Synchronize with vPulse and send code
+      nonCritical();
+
       if (key == 255)                // Until state is idle again
         break;
       delay(15);                     // Allow PS/2 interrupts for a reasonable window
@@ -452,6 +455,7 @@ void doCommand(char line[])
   case 'H': doHelp();                         break;
   case 'R': doReset(arg);                     break;
   case 'L': doLoader();                       break;
+  case 'M': doMapping();                      break;
   case 'P': arg = constrain(arg, 1, 12);
             if (gt1Files[arg-1].gt1)
               doTransfer(gt1Files[arg-1].gt1);break;
@@ -492,11 +496,25 @@ void doVersion()
       Serial.print(": ");
       Serial.print(i);
       Serial.print(") ");
-      Serial.println(gt1Files[i-1].name);
+      Serial.println(gt1Files[i-1].gt1 ? gt1Files[i-1].name : "(Empty)");
     }
     doEcho(echo);
     Serial.println(":Type 'H' for help");
   #endif
+}
+
+// Show keymapping in Loader screen (Loader must be running)
+void doMapping()
+{
+  word pos = 0x800;
+  for (int i=1; i<=12; i++)
+    if (gt1Files[i-1].gt1) {
+      char text[] = "Ctrl-F? : ";
+      text[6]      = '0' + i / 10;
+      text[6+i/10] = '0' + i % 10;
+      pos = renderString(pos, text);
+      pos = renderLine(pos, gt1Files[i-1].name);
+    }
 }
 
 void doEcho(byte value)
@@ -516,6 +534,7 @@ void doHelp()
     Serial.println(": H        Show this help");
     Serial.println(": R        Reset Gigatron");
     Serial.println(": L        Start Loader");
+    Serial.println(": M        Show key mapping in Loader screen");
     Serial.println(": P[<n>]   Transfer object file from PROGMEM slot <n> [1..12]");
     Serial.println(": U        Transfer object file from USB");
     Serial.println(": .<text>  Send text line as ASCII key strokes");
@@ -614,6 +633,54 @@ void doTerminal()
       }
     }
   #endif
+}
+
+// Render line in Loader screen
+word renderLine(word pos, char *text)
+{
+  pos = renderString(pos, text);
+  return (pos & 0xff00) + 0x600;
+}
+
+// Render string in Loader screen
+word renderString(word pos, char *text)
+{
+  byte bitmap[160], pixelLine[160], x=0;
+
+  // Render line of text in bitmap
+  for (; *text; text++) {
+
+    // Get pixel data for character
+    int pixels = pgm_read_word(&tinyfont[*text-32]);
+
+    // Render character in bitmap
+    if (pixels >= 0) {
+      bitmap[x++] = 0;                   // Regular position
+      bitmap[x++] = (pixels >> 9)  & 62;
+      bitmap[x++] = (pixels >> 4)  & 62;
+      bitmap[x++] = (pixels << 1)  & 62;
+    } else {
+      bitmap[x++] = 0;                   // Shift down for g, j, p, q, y
+      bitmap[x++] = (pixels >> 10) & 31;
+      bitmap[x++] = (pixels >> 5)  & 31;
+      bitmap[x++] =  pixels        & 31;
+      if (*text == 'j')                  // Special case to dot the j
+        bitmap[x-1] = '.';
+    }
+  }
+
+  // Send pixel lines to Gigatron
+  byte *p = pos;
+  for (int b=32; b; b>>=1) {
+    const byte bgColor = 32; // Blue
+    const byte fgColor = 63; // White
+    for (int i=0; i<x; i++)
+      pixelLine[i] = bitmap[i] & b ? fgColor : bgColor;
+    sendGt1Segment(p, x, pixelLine);
+    p += 256;
+  }
+
+  return pos + x;
 }
 
 // Because the Arduino doesn't have enough RAM to buffer

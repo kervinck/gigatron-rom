@@ -49,7 +49,6 @@
 #define PS2_ENTER      '\n'
 #define PS2_TAB        9
 #define PS2_BACKSPACE  127
-#define PS2_DELETE     127
 
 #define PS2_ESC        27
 #define PS2_F1         (0xc0 + 1)
@@ -235,7 +234,7 @@ static byte readPs2Buffer()
 
 byte keyboard_getState()
 {
-  long now = (long) millis();           // Not: millis() stops counting without interrupts
+  long now = (long) millis();           // Note: without interrupts millis() stops counting
   for (;;) {
     word value = readPs2Buffer();
     if (value == 0) {                   // Buffer is empty
@@ -297,7 +296,7 @@ byte keyboard_getState()
       case 0x66:                                 // [BackSpace]
       case 0xe071: if ((flags & ctrlFlags)       // [Delete]
                     && (flags & altFlags))
-                     ascii = 255^buttonStart;    // [Ctrl-Alt-Del] for special reset
+                     newAscii = 255^buttonStart; // [Ctrl-Alt-Del] for special reset
                    else
                      button = buttonA;    break; // ASCII DEL is 127 is ~buttonA
       case 0xe069: button = buttonA;      break; // [End]
@@ -307,15 +306,27 @@ byte keyboard_getState()
       case 0xe07d: button = buttonStart;  break; // [PageUp]
       case 0xe04a: newAscii = '/';        break; // [/] on numeric island
       case 0xe05a: newAscii = '\n';       break; // [Enter] on numeric island
-      default:        
+      default:
+        // Apply keyboard mapping to ASCII
         if ((flags & altGrFlag) && _keymap->hasAltGr)
           newAscii = lookup(_keymap->altgr, value);
         else if (flags & shiftFlags)
           newAscii = lookup(_keymap->shift, value);
         else
           newAscii = lookup(_keymap->noshift, value);
-        if (fnKey(newAscii) && (flags & ctrlFlags)) // Ctrl+Fxx is BabelFish command
-          newAscii ^= 64;
+
+        // Handle control key combinations
+        if (flags & ctrlFlags)
+          switch (newAscii) {
+            case PS2_ESC: newAscii = 0xc0^64; break; // Ctrl-Escape is a BabelFish command
+            case '?':     newAscii = 127;     break; // Traditional mapping of Ctrl-? to DEL
+            case ' ':     button   = 255;     break; // Make it send a 0 byte
+            default:
+              if (fnKey(newAscii)) // Ctrl+Fxx are BabelFish commands
+                newAscii ^= 64;
+              else
+                newAscii &= 31;    // Make control codes (what the key is for...)
+          }
     }
 
     if (button) {               // Case 2: Simulated game controller buttons
