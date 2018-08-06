@@ -24,8 +24,10 @@
 //    b. PROGMEM only requires the Arduino IDE on the PC/laptop,
 //       but needs the GT1 file as a hexdump (C notation).
 // 2. Hookup a PS/2 keyboard for typing on the Gigatron
-// 3. Controlling the Gigatron over USB from a PC/laptop
-// 4. Pass through of game controller signals
+// 3. Forward text from USB to Gigatron as keystrokes
+//    For example to get a long BASIC program loaded into BASIC
+// 4. Controlling the Gigatron over USB from a PC/laptop
+// 5. Pass through of game controller signals
 //
 // Select one of the supported platforms in the Tools->Board menu.
 //
@@ -306,6 +308,16 @@ const int tinyfont[96] PROGMEM = {
 static bool echo = false;
 
 /*
+ *  Non-volatile memory
+ */
+#include <EEPROM.h>
+
+struct EEPROMlayout {
+  byte keymapIndex;
+  byte savedFile[];
+};
+
+/*
  *  Setup runs once when the Arduino wakes up
  */
 void setup()
@@ -470,6 +482,13 @@ void doVersion()
     Serial.println(": Gigatron data=" Q(gigatronDataPin) " latch=" Q(gigatronLatchPin) " pulse=" Q(gigatronPulsePin));
     Serial.println(": Keyboard clock=" Q(keyboardClockPin) " data=" Q(keyboardDataPin));
     Serial.println(": Controller data=" Q(gameControllerDataPin));
+    Serial.println(":EEPROM:");
+    Serial.print(": size=");
+    Serial.print(EEPROM.length());
+    Serial.print(" mapping=");
+    Serial.print(getKeymapName());
+    Serial.print(" savedFile=");
+    Serial.println(savedFileLength());
     Serial.println(":PROGMEM slots:");
     for (int i=1; i<=12; i++) {
       Serial.print(": ");
@@ -495,6 +514,8 @@ void doMapping()
       pos = renderString(pos, text);
       pos = renderLine(pos, gt1Files[i-1].name);
     }
+  pos = renderString(pos, "Keyboard: ");
+  renderLine(pos, getKeymapName());
 }
 
 void doEcho(byte value)
@@ -801,6 +822,12 @@ int nextSerial()
   #endif
 }
 
+/*----------------------------------------------------------------------+
+ |                                                                      |
+ |      Gigatron communication                                          |
+ |                                                                      |
+ +----------------------------------------------------------------------*/
+
 static inline void critical()
 {
   forbidPs2();
@@ -936,5 +963,25 @@ void sendBits(byte value, byte n)
       ;
   }
   checksum += value;
+}
+
+/*----------------------------------------------------------------------+
+ |                                                                      |
+ |      EEPROM functions                                                |
+ |                                                                      |
+ +----------------------------------------------------------------------*/
+
+// Length of a Tiny BASIC file saved in EEPROM.
+// File contents are zero-terminated ASCII byte values (1..126)
+// or until end of EEPROM area.
+size_t savedFileLength()
+{
+    size_t fileStart = offsetof(struct EEPROMlayout, savedFile);
+    size_t maxLen = EEPROM.length() - fileStart;
+    size_t len;
+    for (len=0; len!=maxLen; len++)
+      if ((EEPROM.read(fileStart + len) ^ 127) >= 127) // 1..126 is ok
+        break;
+    return len;
 }
 

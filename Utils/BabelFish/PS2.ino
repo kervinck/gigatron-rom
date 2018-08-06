@@ -1,37 +1,48 @@
 
-// PS/2 keyboard handling for Babelfish talking to Gigatron
-// (Almost) Complete rewrite of PS2Keyboard
-
-// References:
-//
-// https://www.avrfreaks.net/sites/default/files/PS2%20Keyboard.pdf
-//  The PS/2 Mouse/Keyboard Protocol
-//
-// http://www.quadibloc.com/comp/scan.htm
-//  Scan Codes Demytified
-//
-// https://retired.beyondlogic.org/keyboard/keybrd.htm
-//  Interfacing the AT keyboard
-//
-// https://web.archive.org/web/20180101224739/http://www.computer-engineering.org/ps2keyboard/scancodes2.html
-//  Keyboard Scan Codes: Set 2
-///
-// https://github.com/PaulStoffregen/PS2Keyboard
-//    PS/2 Keyboard Library for Arduino
-//
-// https://github.com/techpaul/PS2KeyAdvanced
-//  Arduino PS2 Keyboard FULL keyboard protocol support and full keys to integer coding
-//
-// https://github.com/techpaul/PS2KeyMap/
-//  Arduino PS2 keyboard International Keyboard mapping from PS2KeyAdvanced and return as UTF-8
+/*
+ *  PS/2 keyboard handling for Babelfish talking to Gigatron
+ *  Complete rewrite of PS2Keyboard for game controller mapping
+ *  and keymap compression to reduce footprint
+ *
+ *  References:
+ *
+ *      https://www.avrfreaks.net/sites/default/files/PS2%20Keyboard.pdf
+ *       The PS/2 Mouse/Keyboard Protocol
+ *
+ *      http://www.quadibloc.com/comp/scan.htm
+ *       Scan Codes Demytified
+ *
+ *      https://retired.beyondlogic.org/keyboard/keybrd.htm
+ *       Interfacing the AT keyboard
+ *
+ *      https://web.archive.org/web/20180101224739/http://www.computer-engineering.org/ps2keyboard/scancodes2.html
+ *       Keyboard Scan Codes: Set 2
+ *
+ *      https://github.com/PaulStoffregen/PS2Keyboard
+ *       PS/2 Keyboard Library for Arduino
+ *
+ *      https://github.com/techpaul/PS2KeyAdvanced
+ *       Arduino PS2 Keyboard FULL keyboard protocol support and full keys to integer coding
+ *
+ *      https://github.com/techpaul/PS2KeyMap/
+ *       Arduino PS2 keyboard International Keyboard mapping from PS2KeyAdvanced and return as UTF-8
+ *
+ *      https://www.terena.org/activities/multiling/ml-mua/test/kbd-all.html
+ *       This page provides information about layouts of different national
+ *       keyboard their mapping to used Character Sets and UCS
+ *
+ *      https://github.com/ilpianista/itlinux-win-keyboard
+ *       An Italian keyboard layout for Windows, customized with shortcuts from Linux systems
+ */
 
 // TODO
 // [Basic features]
 // XXX Switching between keymaps
-// XXX Simplify keymap tables (and check licensing)
 // XXX Test keymap for DE
 // XXX Test keymap for FR
-// XXX Test keymap for UK
+// XXX Test keymap for GB
+// XXX Test keymap for IT
+// XXX Test keymap for ES
 // XXX Issue: Sometimes keyboard starts injecting break codes
 //     when pressing [buttonA] + arrow keys, making it impossible
 //     to set the time in Mandelbrot??
@@ -63,22 +74,326 @@
 #define PS2_F10        (0xc0 + 10)
 #define PS2_F11        (0xc0 + 11)
 #define PS2_F12        (0xc0 + 12)
-#define PS2_SCROLL     0
 
-#define ps2keymapSize  136
+/*
+ *  Keyboard layout mapping
+ */
 
-typedef struct keymap {
-  byte noshift[ps2keymapSize];
-  byte shift[ps2keymapSize];
-  byte hasAltGr;
-  byte altgr[ps2keymapSize];
-} PS2Keymap_t;
+#define nrKeymaps 6
+const char keymapNames[nrKeymaps][3] = {
+  "US", "GB", "DE", "FR", "IT", "ES",
+};
 
-static inline byte lookup(byte submap[], word value)
+int getKeymapIndex()
 {
-  return (value < ps2keymapSize)
-    ? pgm_read_byte(submap + value)
-    : 0;
+  #define arrayLen(a) ((int) (sizeof(a) / sizeof((a)[0])))
+  int index = EEPROM.read(offsetof(struct EEPROMlayout, keymapIndex));
+  return (index > arrayLen(keymapNames)) ? 0 : index;
+}
+
+char *getKeymapName()
+{
+  return keymapNames[getKeymapIndex()];
+}
+
+enum {
+  US = 1 << 0,
+  GB = 1 << 1,
+  DE = 1 << 2,
+  FR = 1 << 3,
+  IT = 1 << 4,
+  ES = 1 << 5,
+  NOMOD = 0 << nrKeymaps,
+  SHIFT = 1 << nrKeymaps,
+  ALTGR = 2 << nrKeymaps,
+  EVERY = 3 << nrKeymaps,
+};
+
+typedef struct {
+  byte flags; // Change from byte to word if we add more keymaps
+  byte code;
+  byte ascii; // XXX Remove this if we add flags. Value can be inferred by lookup()
+} keyTuple_t;
+
+// Keymaps courtesy of
+//    Arduino PS2Keyboard library (US,DE,FR)
+//    https://playground.arduino.cc/Main/PS2Keyboard
+// and
+//    Teensy PS2Keyboard library (GB,IT,ES)
+//    http://www.pjrc.com/teensy/td_libs_PS2Keyboard.html
+//
+// 238 * 3 bytes = 714 bytes for holding 6 keyboard layouts
+// To save space this table excludes codes that aren't in US-ASCII
+// because these aren't in the Gigatron font either (yet).
+// So accented letters and such are all absent. This is needed
+// to make it all fit in the ATtiny85 configuration.
+
+const PROGMEM keyTuple_t keymaps[] = {
+  { +US+GB+DE+FR+IT+ES +EVERY,  13,   9 },
+  { +US+GB+DE+FR+IT+ES +EVERY,  90,  10 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 118,  27 },
+  { +US+GB+DE+FR+IT+ES +EVERY,  41,  32 },
+  { +US+GB+DE   +IT+ES +SHIFT,  22,  33 }, // !
+  {          +FR       +NOMOD,  74,  33 },
+  {    +GB+DE   +IT+ES +SHIFT,  30,  34 }, // "
+  {          +FR       +NOMOD,  38,  34 },
+  { +US                +SHIFT,  82,  34 },
+  { +US                +SHIFT,  38,  35 }, // #
+  {          +FR   +ES +ALTGR,  38,  35 },
+  {             +IT    +ALTGR,  82,  35 },
+  {    +GB+DE          +NOMOD,  93,  35 },
+  {       +DE+FR       +ALTGR,  93,  35 },
+  { +US+GB+DE   +IT+ES +SHIFT,  37,  36 }, // $
+  {          +FR       +NOMOD,  91,  36 },
+  { +US+GB+DE   +IT+ES +SHIFT,  46,  37 }, // %
+  {          +FR       +SHIFT,  82,  37 },
+  {          +FR       +NOMOD,  22,  38 }, // &
+  {       +DE   +IT+ES +SHIFT,  54,  38 },
+  { +US+GB             +SHIFT,  61,  38 },
+  {          +FR       +NOMOD,  37,  39 }, // '
+  {             +IT+ES +NOMOD,  78,  39 },
+  {                +ES +ALTGR,  78,  39 },
+  { +US+GB             +NOMOD,  82,  39 },
+  {       +DE          +NOMOD,  85,  39 },
+  {       +DE          +SHIFT,  93,  39 },
+  {          +FR       +NOMOD,  46,  40 }, // (
+  {       +DE   +IT+ES +SHIFT,  62,  40 },
+  { +US+GB             +SHIFT,  70,  40 },
+  { +US+GB             +SHIFT,  69,  41 }, // )
+  {       +DE   +IT+ES +SHIFT,  70,  41 },
+  {          +FR       +NOMOD,  78,  41 },
+  { +US+GB             +SHIFT,  62,  42 }, // *
+  {       +DE   +IT+ES +SHIFT,  91,  42 },
+  {          +FR       +NOMOD,  93,  42 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 124,  42 },
+  { +US+GB   +FR       +SHIFT,  85,  43 }, // +
+  {       +DE   +IT+ES +NOMOD,  91,  43 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 121,  43 },
+  {          +FR       +NOMOD,  58,  44 }, // ,
+  { +US+GB+DE   +IT+ES +NOMOD,  65,  44 },
+  {             +IT+ES +ALTGR,  65,  44 },
+  {          +FR       +NOMOD,  54,  45 }, // -
+  {       +DE   +IT+ES +NOMOD,  74,  45 },
+  {             +IT+ES +ALTGR,  74,  45 },
+  { +US+GB             +NOMOD,  78,  45 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 123,  45 },
+  {          +FR       +SHIFT,  65,  46 }, // .
+  { +US+GB+DE   +IT+ES +NOMOD,  73,  46 },
+  {             +IT+ES +ALTGR,  73,  46 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 113,  46 },
+  {       +DE   +IT+ES +SHIFT,  61,  47 }, // /
+  {          +FR       +SHIFT,  73,  47 },
+  { +US+GB             +NOMOD,  74,  47 },
+  { +US+GB+DE   +IT+ES +NOMOD,  69,  48 }, // 0
+  {          +FR       +SHIFT,  69,  48 },
+  {                +ES +ALTGR,  69,  48 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 112,  48 },
+  { +US+GB+DE   +IT+ES +NOMOD,  22,  49 }, // 1
+  {          +FR       +SHIFT,  22,  49 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 105,  49 },
+  { +US+GB+DE   +IT+ES +NOMOD,  30,  50 }, // 2
+  {          +FR       +SHIFT,  30,  50 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 114,  50 },
+  { +US+GB+DE   +IT+ES +NOMOD,  38,  51 }, // 3
+  {          +FR       +SHIFT,  38,  51 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 122,  51 },
+  { +US+GB+DE   +IT+ES +NOMOD,  37,  52 }, // 4
+  {          +FR       +SHIFT,  37,  52 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 107,  52 },
+  { +US+GB+DE   +IT+ES +NOMOD,  46,  53 }, // 5
+  {          +FR       +SHIFT,  46,  53 },
+  {                +ES +ALTGR,  46,  53 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 115,  53 },
+  { +US+GB+DE   +IT+ES +NOMOD,  54,  54 }, // 6
+  {          +FR       +SHIFT,  54,  54 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 116,  54 },
+  { +US+GB+DE   +IT+ES +NOMOD,  61,  55 }, // 7
+  {          +FR       +SHIFT,  61,  55 },
+  {                +ES +ALTGR,  61,  55 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 108,  55 },
+  { +US+GB+DE   +IT+ES +NOMOD,  62,  56 }, // 8
+  {          +FR       +SHIFT,  62,  56 },
+  {                +ES +ALTGR,  62,  56 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 117,  56 },
+  { +US+GB+DE   +IT+ES +NOMOD,  70,  57 }, // 9
+  {          +FR       +SHIFT,  70,  57 },
+  {                +ES +ALTGR,  70,  57 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 125,  57 },
+  {          +FR       +NOMOD,  73,  58 }, // :
+  {       +DE   +IT+ES +SHIFT,  73,  58 },
+  { +US+GB             +SHIFT,  76,  58 },
+  {          +FR       +NOMOD,  65,  59 }, // ;
+  {       +DE   +IT+ES +SHIFT,  65,  59 },
+  { +US+GB             +NOMOD,  76,  59 },
+  { +US+GB             +SHIFT,  65,  60 }, // <
+  {       +DE+FR+IT+ES +NOMOD,  97,  60 },
+  {       +DE   +IT+ES +SHIFT,  69,  61 }, // =
+  { +US+GB   +FR       +NOMOD,  85,  61 },
+  { +US+GB             +SHIFT,  73,  62 }, // >
+  {       +DE+FR+IT+ES +SHIFT,  97,  62 },
+  {          +FR       +SHIFT,  58,  63 }, // ?
+  { +US+GB             +SHIFT,  74,  63 },
+  {       +DE   +IT+ES +SHIFT,  78,  63 },
+  {       +DE+FR       +ALTGR,  21,  64 }, // @
+  { +US                +SHIFT,  30,  64 },
+  {                +ES +ALTGR,  30,  64 },
+  {          +FR       +ALTGR,  69,  64 },
+  {             +IT    +ALTGR,  76,  64 },
+  {    +GB             +SHIFT,  82,  64 },
+  {          +FR       +SHIFT,  21,  65 }, // A
+  { +US+GB+DE   +IT+ES +SHIFT,  28,  65 },
+  { +US+GB+DE+FR+IT+ES +SHIFT,  50,  66 }, // B
+  { +US+GB+DE+FR+IT+ES +SHIFT,  33,  67 }, // C
+  { +US+GB+DE+FR+IT+ES +SHIFT,  35,  68 }, // D
+  { +US+GB+DE+FR+IT+ES +SHIFT,  36,  69 }, // E
+  { +US+GB+DE+FR+IT+ES +SHIFT,  43,  70 }, // F
+  { +US+GB+DE+FR+IT+ES +SHIFT,  52,  71 }, // G
+  { +US+GB+DE+FR+IT+ES +SHIFT,  51,  72 }, // H
+  { +US+GB+DE+FR+IT+ES +SHIFT,  67,  73 }, // I
+  { +US+GB+DE+FR+IT+ES +SHIFT,  59,  74 }, // J
+  { +US+GB+DE+FR+IT+ES +SHIFT,  66,  75 }, // K
+  { +US+GB+DE+FR+IT+ES +SHIFT,  75,  76 }, // L
+  { +US+GB+DE   +IT+ES +SHIFT,  58,  77 }, // M
+  {          +FR       +SHIFT,  76,  77 },
+  { +US+GB+DE+FR+IT+ES +SHIFT,  49,  78 }, // N
+  { +US+GB+DE+FR+IT+ES +SHIFT,  68,  79 }, // O
+  { +US+GB+DE+FR+IT+ES +SHIFT,  77,  80 }, // P
+  { +US+GB+DE   +IT+ES +SHIFT,  21,  81 }, // Q
+  {          +FR       +SHIFT,  28,  81 },
+  { +US+GB+DE+FR+IT+ES +SHIFT,  45,  82 }, // R
+  { +US+GB+DE+FR+IT+ES +SHIFT,  27,  83 }, // S
+  { +US+GB+DE+FR+IT+ES +SHIFT,  44,  84 }, // T
+  { +US+GB+DE+FR+IT+ES +SHIFT,  60,  85 }, // U
+  { +US+GB+DE+FR+IT+ES +SHIFT,  42,  86 }, // V
+  {          +FR       +SHIFT,  26,  87 }, // W
+  { +US+GB+DE   +IT+ES +SHIFT,  29,  87 },
+  { +US+GB+DE+FR+IT+ES +SHIFT,  34,  88 }, // X
+  {       +DE          +SHIFT,  26,  89 }, // Y
+  { +US+GB   +FR+IT+ES +SHIFT,  53,  89 },
+  { +US+GB      +IT+ES +SHIFT,  26,  90 }, // Z
+  {          +FR       +SHIFT,  29,  90 },
+  {       +DE          +SHIFT,  53,  90 },
+  {          +FR       +ALTGR,  46,  91 }, // [
+  {       +DE   +IT    +ALTGR,  62,  91 },
+  { +US+GB             +NOMOD,  84,  91 },
+  {             +IT+ES +ALTGR,  84,  91 },
+  {             +IT    +NOMOD,  14,  92 }, // \
+  {                +ES +ALTGR,  14,  92 },
+  {          +FR       +ALTGR,  62,  92 },
+  {       +DE          +ALTGR,  78,  92 },
+  { +US                +NOMOD,  93,  92 },
+  {    +GB             +NOMOD,  97,  92 },
+  {       +DE   +IT    +ALTGR,  70,  93 }, // ]
+  {          +FR       +ALTGR,  78,  93 },
+  { +US+GB             +NOMOD,  91,  93 },
+  {             +IT+ES +ALTGR,  91,  93 },
+  {       +DE          +NOMOD,  14,  94 }, // ^
+  { +US+GB             +SHIFT,  54,  94 },
+  {          +FR       +ALTGR,  70,  94 },
+  {          +FR       +NOMOD,  84,  94 },
+  {                +ES +SHIFT,  84,  94 },
+  {             +IT    +SHIFT,  85,  94 },
+  {          +FR       +NOMOD,  62,  95 }, // _
+  {       +DE   +IT+ES +SHIFT,  74,  95 },
+  { +US+GB             +SHIFT,  78,  95 },
+  { +US+GB             +NOMOD,  14,  96 }, // `
+  {          +FR       +ALTGR,  61,  96 },
+  {             +IT    +ALTGR,  78,  96 },
+  {                +ES +NOMOD,  84,  96 },
+  {       +DE          +SHIFT,  85,  96 },
+  {          +FR       +NOMOD,  21,  97 }, // a
+  { +US+GB+DE   +IT+ES +NOMOD,  28,  97 },
+  { +US+GB+DE+FR+IT+ES +NOMOD,  50,  98 }, // b
+  { +US+GB+DE+FR+IT+ES +NOMOD,  33,  99 }, // c
+  { +US+GB+DE+FR+IT+ES +NOMOD,  35, 100 }, // d
+  { +US+GB+DE+FR+IT+ES +NOMOD,  36, 101 }, // e
+  { +US+GB+DE+FR+IT+ES +NOMOD,  43, 102 }, // f
+  { +US+GB+DE+FR+IT+ES +NOMOD,  52, 103 }, // g
+  { +US+GB+DE+FR+IT+ES +NOMOD,  51, 104 }, // h
+  { +US+GB+DE+FR+IT+ES +NOMOD,  67, 105 }, // i
+  { +US+GB+DE+FR+IT+ES +NOMOD,  59, 106 }, // j
+  { +US+GB+DE+FR+IT+ES +NOMOD,  66, 107 }, // k
+  { +US+GB+DE+FR+IT+ES +NOMOD,  75, 108 }, // l
+  { +US+GB+DE   +IT+ES +NOMOD,  58, 109 }, // m
+  {          +FR       +NOMOD,  76, 109 },
+  { +US+GB+DE+FR+IT+ES +NOMOD,  49, 110 }, // n
+  { +US+GB+DE+FR+IT+ES +NOMOD,  68, 111 }, // o
+  { +US+GB+DE+FR+IT+ES +NOMOD,  77, 112 }, // p
+  { +US+GB+DE   +IT+ES +NOMOD,  21, 113 }, // q
+  {          +FR       +NOMOD,  28, 113 },
+  { +US+GB+DE+FR+IT+ES +NOMOD,  45, 114 }, // r
+  { +US+GB+DE+FR+IT+ES +NOMOD,  27, 115 }, // s
+  { +US+GB+DE+FR+IT+ES +NOMOD,  44, 116 }, // t
+  { +US+GB+DE+FR+IT+ES +NOMOD,  60, 117 }, // u
+  { +US+GB+DE+FR+IT+ES +NOMOD,  42, 118 }, // v
+  {          +FR       +NOMOD,  26, 119 }, // w
+  { +US+GB+DE   +IT+ES +NOMOD,  29, 119 },
+  { +US+GB+DE+FR+IT+ES +NOMOD,  34, 120 }, // x
+  {       +DE          +NOMOD,  26, 121 }, // y
+  { +US+GB   +FR+IT+ES +NOMOD,  53, 121 },
+  { +US+GB      +IT+ES +NOMOD,  26, 122 }, // z
+  {          +FR       +NOMOD,  29, 122 },
+  {       +DE          +NOMOD,  53, 122 },
+  {          +FR       +ALTGR,  37, 123 }, // {
+  {       +DE   +IT    +ALTGR,  61, 123 },
+  {                +ES +ALTGR,  82, 123 },
+  { +US+GB             +SHIFT,  84, 123 },
+  {             +IT    +SHIFT,  14, 124 }, // |
+  {                +ES +ALTGR,  22, 124 },
+  {          +FR       +ALTGR,  54, 124 },
+  { +US                +SHIFT,  93, 124 },
+  {    +GB             +SHIFT,  97, 124 },
+  {       +DE+FR   +ES +ALTGR,  97, 124 },
+  {       +DE   +IT    +ALTGR,  69, 125 }, // }
+  {          +FR       +ALTGR,  86, 125 },
+  { +US+GB             +SHIFT,  91, 125 },
+  {                +ES +ALTGR,  93, 125 },
+  { +US                +SHIFT,  14, 126 }, // ~
+  {          +FR       +ALTGR,  30, 126 },
+  {                +ES +ALTGR,  37, 126 },
+  {             +IT    +ALTGR,  85, 126 },
+  {       +DE          +ALTGR,  91, 126 },
+  {    +GB             +SHIFT,  93, 126 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 102, 127 },
+  { +US+GB+DE+FR+IT+ES +EVERY,   5, 193 },
+  { +US+GB+DE+FR+IT+ES +EVERY,   6, 194 },
+  { +US+GB+DE+FR+IT+ES +EVERY,   4, 195 },
+  { +US+GB+DE+FR+IT+ES +EVERY,  12, 196 },
+  { +US+GB+DE+FR+IT+ES +EVERY,   3, 197 },
+  { +US+GB+DE+FR+IT+ES +EVERY,  11, 198 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 131, 199 },
+  { +US+GB+DE+FR+IT+ES +EVERY,  10, 200 },
+  { +US+GB+DE+FR+IT+ES +EVERY,   1, 201 },
+  { +US+GB+DE+FR+IT+ES +EVERY,   9, 202 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 120, 203 },
+  { +US+GB+DE+FR+IT+ES +EVERY,   7, 204 },
+};
+
+/*
+ *  Find ASCII code corresponding to key code and active modifiers
+ *  for the current keymap
+ */
+static inline byte lookup(byte mods, word code)
+{
+  byte keymapFlag = 1 << getKeymapIndex();
+
+  for (int i=0; i<arrayLen(keymaps); i++) {
+    keyTuple_t *t = &keymaps[i];
+
+    byte f = pgm_read_byte(&t->flags);
+    if (~f & keymapFlag)
+      continue; // Different keymap
+
+    if ((f & EVERY) != EVERY && (f & EVERY) != mods)
+      continue; // Different modifiers
+
+    byte c = pgm_read_byte(&t->code);
+    if (c != code)
+      continue; // Different scan code
+
+    return pgm_read_byte(&t->ascii);
+  }
+  return 0;
 }
 
 /*
@@ -123,14 +438,6 @@ static long lastClock;
  */
 static volatile byte ps2Buffer[15+1];
 static volatile byte head = 0, tail = 0;
-static const PS2Keymap_t *_keymap;
-
-/*
- * Mapping
- */
-extern const PROGMEM PS2Keymap_t PS2Keymap_US;
-extern const PROGMEM PS2Keymap_t PS2Keymap_German;
-extern const PROGMEM PS2Keymap_t PS2Keymap_French;
 
 #if defined(ARDUINO_attiny)
   // attachInterrupt() doesn't work on the ATtiny85
@@ -144,8 +451,6 @@ extern const PROGMEM PS2Keymap_t PS2Keymap_French;
 
 void keyboard_setup()
 {
-  _keymap = &PS2Keymap_US;
-
   // Initialize the pins
   #ifdef INPUT_PULLUP
     pinMode(keyboardDataPin, INPUT_PULLUP);
@@ -308,12 +613,13 @@ byte keyboard_getState()
       case 0xe05a: newAscii = '\n';       break; // [Enter] on numeric island
       default:
         // Apply keyboard mapping to ASCII
-        if ((flags & altGrFlag) && _keymap->hasAltGr)
-          newAscii = lookup(_keymap->altgr, value);
+        if ((flags & altGrFlag) ||
+           ((flags & ctrlFlags) && (flags & altFlag))) // Ctrl+Alt is AltGr
+          newAscii = lookup(ALTGR, value);
         else if (flags & shiftFlags)
-          newAscii = lookup(_keymap->shift, value);
+          newAscii = lookup(SHIFT, value);
         else
-          newAscii = lookup(_keymap->noshift, value);
+          newAscii = lookup(NOMOD, value);
 
         // Handle control key combinations
         if (flags & ctrlFlags)
@@ -355,257 +661,4 @@ byte fnKey(byte key)
 {
   return (PS2_F1 <= key && key <= PS2_F12) ? (key & 15) : 0;
 }
-
-// XXX Remove all of this and get from elsewhere
-#define PS2_INVERTED_EXCLAMATION        161 // ¡
-#define PS2_CENT_SIGN                   162 // ¢
-#define PS2_POUND_SIGN                  163 // £
-#define PS2_CURRENCY_SIGN               164 // ¤
-#define PS2_YEN_SIGN                    165 // ¥
-#define PS2_BROKEN_BAR                  166 // ¦
-#define PS2_SECTION_SIGN                167 // §
-#define PS2_DIAERESIS                   168 // ¨
-#define PS2_COPYRIGHT_SIGN              169 // ©
-#define PS2_FEMININE_ORDINAL            170 // ª
-#define PS2_LEFT_DOUBLE_ANGLE_QUOTE     171 // «
-#define PS2_NOT_SIGN                    172 // ¬
-#define PS2_HYPHEN                      173
-#define PS2_REGISTERED_SIGN             174 // ®
-#define PS2_MACRON                      175 // ¯
-#define PS2_DEGREE_SIGN                 176 // °
-#define PS2_PLUS_MINUS_SIGN             177 // ±
-#define PS2_SUPERSCRIPT_TWO             178 // ²
-#define PS2_SUPERSCRIPT_THREE           179 // ³
-#define PS2_ACUTE_ACCENT                180 // ´
-#define PS2_MICRO_SIGN                  181 // µ
-#define PS2_PILCROW_SIGN                182 // ¶
-#define PS2_MIDDLE_DOT                  183 // ·
-#define PS2_CEDILLA                     184 // ¸
-#define PS2_SUPERSCRIPT_ONE             185 // ¹
-#define PS2_MASCULINE_ORDINAL           186 // º
-#define PS2_RIGHT_DOUBLE_ANGLE_QUOTE    187 // »
-#define PS2_FRACTION_ONE_QUARTER        188 // ¼
-#define PS2_FRACTION_ONE_HALF           189 // ½
-#define PS2_FRACTION_THREE_QUARTERS     190 // ¾
-#define PS2_INVERTED_QUESTION MARK      191 // ¿
-#define PS2_A_GRAVE                     192 // À
-#define PS2_A_ACUTE                     193 // Á
-#define PS2_A_CIRCUMFLEX                194 // Â
-#define PS2_A_TILDE                     195 // Ã
-#define PS2_A_DIAERESIS                 196 // Ä
-#define PS2_A_RING_ABOVE                197 // Å
-#define PS2_AE                          198 // Æ
-#define PS2_C_CEDILLA                   199 // Ç
-#define PS2_E_GRAVE                     200 // È
-#define PS2_E_ACUTE                     201 // É
-#define PS2_E_CIRCUMFLEX                202 // Ê
-#define PS2_E_DIAERESIS                 203 // Ë
-#define PS2_I_GRAVE                     204 // Ì
-#define PS2_I_ACUTE                     205 // Í
-#define PS2_I_CIRCUMFLEX                206 // Î
-#define PS2_I_DIAERESIS                 207 // Ï
-#define PS2_ETH                         208 // Ð
-#define PS2_N_TILDE                     209 // Ñ
-#define PS2_O_GRAVE                     210 // Ò
-#define PS2_O_ACUTE                     211 // Ó
-#define PS2_O_CIRCUMFLEX                212 // Ô
-#define PS2_O_TILDE                     213 // Õ
-#define PS2_O_DIAERESIS                 214 // Ö
-#define PS2_MULTIPLICATION              215 // ×
-#define PS2_O_STROKE                    216 // Ø
-#define PS2_U_GRAVE                     217 // Ù
-#define PS2_U_ACUTE                     218 // Ú
-#define PS2_U_CIRCUMFLEX                219 // Û
-#define PS2_U_DIAERESIS                 220 // Ü
-#define PS2_Y_ACUTE                     221 // Ý
-#define PS2_THORN                       222 // Þ
-#define PS2_SHARP_S                     223 // ß
-#define PS2_a_GRAVE                     224 // à
-#define PS2_a_ACUTE                     225 // á
-#define PS2_a_CIRCUMFLEX                226 // â
-#define PS2_a_TILDE                     227 // ã
-#define PS2_a_DIAERESIS                 228 // ä
-#define PS2_a_RING_ABOVE                229 // å
-#define PS2_ae                          230 // æ
-#define PS2_c_CEDILLA                   231 // ç
-#define PS2_e_GRAVE                     232 // è
-#define PS2_e_ACUTE                     233 // é
-#define PS2_e_CIRCUMFLEX                234 // ê
-#define PS2_e_DIAERESIS                 235 // ë
-#define PS2_i_GRAVE                     236 // ì
-#define PS2_i_ACUTE                     237 // í
-#define PS2_i_CIRCUMFLEX                238 // î
-#define PS2_i_DIAERESIS                 239 // ï
-#define PS2_eth                         240 // ð
-#define PS2_n_TILDE                     241 // ñ
-#define PS2_o_GRAVE                     242 // ò
-#define PS2_o_ACUTE                     243 // ó
-#define PS2_o_CIRCUMFLEX                244 // ô
-#define PS2_o_TILDE                     245 // õ
-#define PS2_o_DIAERESIS                 246 // ö
-#define PS2_DIVISION                    247 // ÷
-#define PS2_o_STROKE                    248 // ø
-#define PS2_u_GRAVE                     249 // ù
-#define PS2_u_ACUTE                     250 // ú
-#define PS2_u_CIRCUMFLEX                251 // û
-#define PS2_u_DIAERESIS                 252 // ü
-#define PS2_y_ACUTE                     253 // ý
-#define PS2_thorn                       254 // þ
-#define PS2_y_DIAERESIS                 255 // ÿ
-
-const PROGMEM PS2Keymap_t PS2Keymap_US = {
-  // without shift
-  {0, PS2_F9, 0, PS2_F5, PS2_F3, PS2_F1, PS2_F2, PS2_F12,
-  0, PS2_F10, PS2_F8, PS2_F6, PS2_F4, PS2_TAB, '`', 0,
-  0, 0 /*Lalt*/, 0 /*Lshift*/, 0, 0 /*Lctrl*/, 'q', '1', 0,
-  0, 0, 'z', 's', 'a', 'w', '2', 0,
-  0, 'c', 'x', 'd', 'e', '4', '3', 0,
-  0, ' ', 'v', 'f', 't', 'r', '5', 0,
-  0, 'n', 'b', 'h', 'g', 'y', '6', 0,
-  0, 0, 'm', 'j', 'u', '7', '8', 0,
-  0, ',', 'k', 'i', 'o', '0', '9', 0,
-  0, '.', '/', 'l', ';', 'p', '-', 0,
-  0, 0, '\'', 0, '[', '=', 0, 0,
-  0 /*CapsLock*/, 0 /*Rshift*/, PS2_ENTER /*Enter*/, ']', 0, '\\', 0, 0,
-  0, 0, 0, 0, 0, 0, PS2_BACKSPACE, 0,
-  0, '1', 0, '4', '7', 0, 0, 0,
-  '0', '.', '2', '5', '6', '8', PS2_ESC, 0 /*NumLock*/,
-  PS2_F11, '+', '3', '-', '*', '9', PS2_SCROLL, 0,
-  0, 0, 0, PS2_F7 },
-  // with shift
-  {0, PS2_F9, 0, PS2_F5, PS2_F3, PS2_F1, PS2_F2, PS2_F12,
-  0, PS2_F10, PS2_F8, PS2_F6, PS2_F4, PS2_TAB, '~', 0,
-  0, 0 /*Lalt*/, 0 /*Lshift*/, 0, 0 /*Lctrl*/, 'Q', '!', 0,
-  0, 0, 'Z', 'S', 'A', 'W', '@', 0,
-  0, 'C', 'X', 'D', 'E', '$', '#', 0,
-  0, ' ', 'V', 'F', 'T', 'R', '%', 0,
-  0, 'N', 'B', 'H', 'G', 'Y', '^', 0,
-  0, 0, 'M', 'J', 'U', '&', '*', 0,
-  0, '<', 'K', 'I', 'O', ')', '(', 0,
-  0, '>', '?', 'L', ':', 'P', '_', 0,
-  0, 0, '"', 0, '{', '+', 0, 0,
-  0 /*CapsLock*/, 0 /*Rshift*/, PS2_ENTER /*Enter*/, '}', 0, '|', 0, 0,
-  0, 0, 0, 0, 0, 0, PS2_BACKSPACE, 0,
-  0, '1', 0, '4', '7', 0, 0, 0,
-  '0', '.', '2', '5', '6', '8', PS2_ESC, 0 /*NumLock*/,
-  PS2_F11, '+', '3', '-', '*', '9', PS2_SCROLL, 0,
-  0, 0, 0, PS2_F7 },
-  0
-};
-
-const PROGMEM PS2Keymap_t PS2Keymap_German = {
-  // without shift
-  {0, PS2_F9, 0, PS2_F5, PS2_F3, PS2_F1, PS2_F2, PS2_F12,
-  0, PS2_F10, PS2_F8, PS2_F6, PS2_F4, PS2_TAB, '^', 0,
-  0, 0 /*Lalt*/, 0 /*Lshift*/, 0, 0 /*Lctrl*/, 'q', '1', 0,
-  0, 0, 'y', 's', 'a', 'w', '2', 0,
-  0, 'c', 'x', 'd', 'e', '4', '3', 0,
-  0, ' ', 'v', 'f', 't', 'r', '5', 0,
-  0, 'n', 'b', 'h', 'g', 'z', '6', 0,
-  0, 0, 'm', 'j', 'u', '7', '8', 0,
-  0, ',', 'k', 'i', 'o', '0', '9', 0,
-  0, '.', '-', 'l', PS2_o_DIAERESIS, 'p', PS2_SHARP_S, 0,
-  0, 0, PS2_a_DIAERESIS, 0, PS2_u_DIAERESIS, '\'', 0, 0,
-  0 /*CapsLock*/, 0 /*Rshift*/, PS2_ENTER /*Enter*/, '+', 0, '#', 0, 0,
-  0, '<', 0, 0, 0, 0, PS2_BACKSPACE, 0,
-  0, '1', 0, '4', '7', 0, 0, 0,
-  '0', '.', '2', '5', '6', '8', PS2_ESC, 0 /*NumLock*/,
-  PS2_F11, '+', '3', '-', '*', '9', PS2_SCROLL, 0,
-  0, 0, 0, PS2_F7 },
-  // with shift
-  {0, PS2_F9, 0, PS2_F5, PS2_F3, PS2_F1, PS2_F2, PS2_F12,
-  0, PS2_F10, PS2_F8, PS2_F6, PS2_F4, PS2_TAB, PS2_DEGREE_SIGN, 0,
-  0, 0 /*Lalt*/, 0 /*Lshift*/, 0, 0 /*Lctrl*/, 'Q', '!', 0,
-  0, 0, 'Y', 'S', 'A', 'W', '"', 0,
-  0, 'C', 'X', 'D', 'E', '$', PS2_SECTION_SIGN, 0,
-  0, ' ', 'V', 'F', 'T', 'R', '%', 0,
-  0, 'N', 'B', 'H', 'G', 'Z', '&', 0,
-  0, 0, 'M', 'J', 'U', '/', '(', 0,
-  0, ';', 'K', 'I', 'O', '=', ')', 0,
-  0, ':', '_', 'L', PS2_O_DIAERESIS, 'P', '?', 0,
-  0, 0, PS2_A_DIAERESIS, 0, PS2_U_DIAERESIS, '`', 0, 0,
-  0 /*CapsLock*/, 0 /*Rshift*/, PS2_ENTER /*Enter*/, '*', 0, '\'', 0, 0,
-  0, '>', 0, 0, 0, 0, PS2_BACKSPACE, 0,
-  0, '1', 0, '4', '7', 0, 0, 0,
-  '0', '.', '2', '5', '6', '8', PS2_ESC, 0 /*NumLock*/,
-  PS2_F11, '+', '3', '-', '*', '9', PS2_SCROLL, 0,
-  0, 0, 0, PS2_F7 },
-  1,
-  // with altgr
-  {0, PS2_F9, 0, PS2_F5, PS2_F3, PS2_F1, PS2_F2, PS2_F12,
-  0, PS2_F10, PS2_F8, PS2_F6, PS2_F4, PS2_TAB, 0, 0,
-  0, 0 /*Lalt*/, 0 /*Lshift*/, 0, 0 /*Lctrl*/, '@', 0, 0,
-  0, 0, 0, 0, 0, 0, PS2_SUPERSCRIPT_TWO, 0,
-  0, 0, 0, 0, PS2_CURRENCY_SIGN, 0, PS2_SUPERSCRIPT_THREE, 0,
-  0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, PS2_MICRO_SIGN, 0, 0, '{', '[', 0,
-  0, 0, 0, 0, 0, '}', ']', 0,
-  0, 0, 0, 0, 0, 0, '\\', 0,
-  0, 0, 0, 0, 0, 0, 0, 0,
-  0 /*CapsLock*/, 0 /*Rshift*/, PS2_ENTER /*Enter*/, '~', 0, '#', 0, 0,
-  0, '|', 0, 0, 0, 0, PS2_BACKSPACE, 0,
-  0, '1', 0, '4', '7', 0, 0, 0,
-  '0', '.', '2', '5', '6', '8', PS2_ESC, 0 /*NumLock*/,
-  PS2_F11, '+', '3', '-', '*', '9', PS2_SCROLL, 0,
-  0, 0, 0, PS2_F7 }
-};
-
-const PROGMEM PS2Keymap_t PS2Keymap_French = {
-  // without shift
-  {0, PS2_F9, 0, PS2_F5, PS2_F3, PS2_F1, PS2_F2, PS2_F12,
-  0, PS2_F10, PS2_F8, PS2_F6, PS2_F4, PS2_TAB, PS2_SUPERSCRIPT_TWO, 0,
-  0, 0 /*Lalt*/, 0 /*Lshift*/, 0, 0 /*Lctrl*/, 'a', '&', 0,
-  0, 0, 'w', 's', 'q', 'z', PS2_e_ACUTE, 0,
-  0, 'c', 'x', 'd', 'e', '\'', '"', 0,
-  0, ' ', 'v', 'f', 't', 'r', '(', 0,
-  0, 'n', 'b', 'h', 'g', 'y', '-', 0,
-  0, 0, ',', 'j', 'u', PS2_e_GRAVE, '_', 0,
-  0, ';', 'k', 'i', 'o', PS2_a_GRAVE, PS2_c_CEDILLA, 0,
-  0, ':', '!', 'l', 'm', 'p', ')', 0,
-  0, 0, PS2_u_GRAVE, 0, '^', '=', 0, 0,
-  0 /*CapsLock*/, 0 /*Rshift*/, PS2_ENTER /*Enter*/, '$', 0, '*', 0, 0,
-  0, '<', 0, 0, 0, 0, PS2_BACKSPACE, 0,
-  0, '1', 0, '4', '7', 0, 0, 0,
-  '0', '.', '2', '5', '6', '8', PS2_ESC, 0 /*NumLock*/,
-  PS2_F11, '+', '3', '-', '*', '9', PS2_SCROLL, 0,
-  0, 0, 0, PS2_F7 },
-  // with shift
-  {0, PS2_F9, 0, PS2_F5, PS2_F3, PS2_F1, PS2_F2, PS2_F12,
-  0, PS2_F10, PS2_F8, PS2_F6, PS2_F4, PS2_TAB, 0, 0,
-  0, 0 /*Lalt*/, 0 /*Lshift*/, 0, 0 /*Lctrl*/, 'A', '1', 0,
-  0, 0, 'W', 'S', 'Q', 'Z', '2', 0,
-  0, 'C', 'X', 'D', 'E', '4', '3', 0,
-  0, ' ', 'V', 'F', 'T', 'R', '5', 0,
-  0, 'N', 'B', 'H', 'G', 'Y', '6', 0,
-  0, 0, '?', 'J', 'U', '7', '8', 0,
-  0, '.', 'K', 'I', 'O', '0', '9', 0,
-  0, '/', PS2_SECTION_SIGN, 'L', 'M', 'P', PS2_DEGREE_SIGN, 0,
-  0, 0, '%', 0, PS2_DIAERESIS, '+', 0, 0,
-  0 /*CapsLock*/, 0 /*Rshift*/, PS2_ENTER /*Enter*/, PS2_POUND_SIGN, 0, PS2_MICRO_SIGN, 0, 0,
-  0, '>', 0, 0, 0, 0, PS2_BACKSPACE, 0,
-  0, '1', 0, '4', '7', 0, 0, 0,
-  '0', '.', '2', '5', '6', '8', PS2_ESC, 0 /*NumLock*/,
-  PS2_F11, '+', '3', '-', '*', '9', PS2_SCROLL, 0,
-  0, 0, 0, PS2_F7 },
-  1,
-  // with altgr
-  {0, PS2_F9, 0, PS2_F5, PS2_F3, PS2_F1, PS2_F2, PS2_F12,
-  0, PS2_F10, PS2_F8, PS2_F6, PS2_F4, PS2_TAB, 0, 0,
-  0, 0 /*Lalt*/, 0 /*Lshift*/, 0, 0 /*Lctrl*/, '@', 0, 0,
-  0, 0, 0, 0, 0, 0, '~', 0,
-  0, 0, 0, 0, 0 /*PS2_EURO_SIGN*/, '{', '#', 0,
-  0, 0, 0, 0, 0, 0, '[', 0,
-  0, 0, 0, 0, 0, 0, '|', 0,
-  0, 0, 0, 0, 0, '`', '\\', 0,
-  0, 0, 0, 0, 0, '@', '^', 0,
-  0, 0, 0, 0, 0, 0, ']', 0,
-  0, 0, 0, 0, 0, 0, '}', 0,
-  0 /*CapsLock*/, 0 /*Rshift*/, PS2_ENTER /*Enter*/, '¤', 0, '#', 0, 0,
-  0, '|', 0, 0, 0, 0, PS2_BACKSPACE, 0,
-  0, '1', 0, '4', '7', 0, 0, 0,
-  '0', '.', '2', '5', '6', '8', PS2_ESC, 0 /*NumLock*/,
-  PS2_F11, '+', '3', '-', '*', '9', PS2_SCROLL, 0,
-  0, 0, 0, PS2_F7 }
-};
 
