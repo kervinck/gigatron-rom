@@ -58,9 +58,9 @@ awk '{
   if ($2 == 1) mod = "SHIFT"
   if ($2 == 2) mod = "ALTGR"
   if ($2 == 3) mod = "EVERY"
-  printf "  { %-18s +%s, %3d, %3d },", map, mod, $3, $4
+  printf "  { %-18s +%s, 0x%02x, %3d },", map, mod, $3, $4
   if (32 < $4 && $4 <= 126 && $4 != last)
-    printf " // '%c'", $4
+    printf " // '"'"'%c'"'"'", $4
   last = $4
   printf "\n"
 }' > keys.txt
