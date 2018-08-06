@@ -245,8 +245,9 @@ const byte tetris_gt1[]    PROGMEM = {
   #include "tetris.h"
 };
 
-struct { byte *gt1; char *name; } gt1Files[12] = {
+struct { byte *gt1; char *name; } gt1Files[] = {
   { TinyBASIC_gt1, "Tiny BASIC"               }, // 2702 bytes
+  { WozMon_gt1,    "WozMon"                   }, // 595 bytes
 #if maxStorage >= 10000
   { bricks_gt1,    "Bricks game [xbx]"        }, // 1607 bytes
 #endif
@@ -254,7 +255,6 @@ struct { byte *gt1; char *name; } gt1Files[12] = {
   { tetris_gt1,    "Tetris game [at67]"       }, // 9868 bytes
 #endif
 #if maxStorage >= 30000
-  { WozMon_gt1,    "WozMon"                   }, // 595 bytes
   { Terminal_gt1,  "Terminal"                 }, // 256 bytes
   { Blinky_gt1,    "Blinky"                   }, // 17 bytes
   { lines_gt1,     "Lines demo [at67]"        }, // 304 bytes
@@ -317,6 +317,9 @@ struct EEPROMlayout {
   byte savedFile[];
 };
 
+#define arrayLen(a) ((int) (sizeof(a) / sizeof((a)[0])))
+extern const byte nrKeymaps;
+
 /*
  *  Setup runs once when the Arduino wakes up
  */
@@ -377,13 +380,13 @@ void loop()
   // PS/2 keyboard events
   byte key = keyboard_getState();
   if (key != 255) {
-    byte f = fnKey(key^64);
-    if (f)                           // Ctrl + function key
-      if (gt1Files[f-1].gt1)
-        doTransfer(gt1Files[f-1].gt1);// Send built-in GT1 file to Gigatron
-
-    if ((key^64) == 0xc0)            // Ctrl + Escape
-      doMapping();
+    byte f = fnKey(key^64);          // Ctrl + function key?
+    if (f) {
+      if (f == 1)                    // Ctrl-F1 is help
+        doMapping();
+      else if (f-2 < arrayLen(gt1Files))
+        doTransfer(gt1Files[f-2].gt1);// Send built-in GT1 file to Gigatron
+    }
 
     while (1) {                      // Send to Gigatron until keyboard driver idle
       critical();
@@ -446,10 +449,9 @@ void doCommand(char line[])
   case 'H': doHelp();                         break;
   case 'R': doReset(arg);                     break;
   case 'L': doLoader();                       break;
-  case 'M': doMapping();                      break;
-  case 'P': arg = constrain(arg, 1, 12);
-            if (gt1Files[arg-1].gt1)
-              doTransfer(gt1Files[arg-1].gt1);break;
+  case 'M': doMapping();                   break;
+  case 'P': if (0 <= arg && arg < arrayLen(gt1Files))
+              doTransfer(gt1Files[arg].gt1);  break;
   case 'U': doTransfer(NULL);                 break;
   case '.': doLine(&line[1]);                 break;
   case 'C': doEcho(!echo);                    break;
@@ -490,11 +492,11 @@ void doVersion()
     Serial.print(" savedFile=");
     Serial.println(savedFileLength());
     Serial.println(":PROGMEM slots:");
-    for (int i=1; i<=12; i++) {
-      Serial.print(": ");
+    for (int i=0; i<arrayLen(gt1Files); i++) {
+      Serial.print(": P");
       Serial.print(i);
       Serial.print(") ");
-      Serial.println(gt1Files[i-1].gt1 ? gt1Files[i-1].name : "(Empty)");
+      Serial.println(gt1Files[i].name);
     }
     doEcho(echo);
     Serial.println(":Type 'H' for help");
@@ -505,17 +507,26 @@ void doVersion()
 void doMapping()
 {
   word pos = 0x800;
-  for (int i=1; i<=12; i++)
-    if (gt1Files[i-1].gt1) {
-      char text[] = "Ctrl-F?  ";
-      // To save space avoid itoa() or sprintf()
-      text[6]      = '0' + i / 10;
-      text[6+i/10] = '0' + i % 10;
-      pos = renderString(pos, text);
-      pos = renderLine(pos, gt1Files[i-1].name);
-    }
-  pos = renderString(pos, "Keyboard: ");
-  renderLine(pos, getKeymapName());
+  char text[] = "Ctrl-F1  This help";
+  pos = renderLine(pos, text);
+  text[9] = 0;
+  for (int i=0; i<arrayLen(gt1Files); i++) {
+    byte f = i + 2;
+    // To save space avoid itoa() or sprintf()
+    text[6]      = '0' + f / 10;
+    text[7]      = ' ';
+    text[6+f/10] = '0' + f % 10;
+    pos = renderString(pos, text);
+    pos = renderLine(pos, gt1Files[i].name);
+  }
+  pos = renderString(pos, "Keymap: ");
+  pos = renderString(pos, getKeymapName());
+  pos = renderLine(pos, " (Change with Ctrl-Alt-Fxx)");
+  pos = renderString(pos, "Available:");
+  for (int i=0; i<nrKeymaps; i++) {
+    pos = renderString(pos, " ");
+    pos = renderString(pos, getKeymapName(i));
+  }
 }
 
 void doEcho(byte value)
@@ -535,7 +546,7 @@ void doHelp()
     Serial.println(": H        Show this help");
     Serial.println(": R        Reset Gigatron");
     Serial.println(": L        Start Loader");
-    Serial.println(": M        Show key mapping in Loader screen");
+    Serial.println(": M        Show key mapping or menu in Loader screen");
     Serial.println(": P[<n>]   Transfer object file from PROGMEM slot <n> [1..12]");
     Serial.println(": U        Transfer object file from USB");
     Serial.println(": .<text>  Send text line as ASCII key strokes");

@@ -37,7 +37,6 @@
 
 // TODO
 // [Basic features]
-// XXX Switching between keymaps
 // XXX Test keymap for DE
 // XXX Test keymap for FR
 // XXX Test keymap for GB
@@ -47,8 +46,6 @@
 //     when pressing [buttonA] + arrow keys, making it impossible
 //     to set the time in Mandelbrot??
 // XXX (Left)Alt for buttonB?
-// XXX Pause/Break as alias buttonA? (To break BASIC programs)
-// XXX How about keyboards without PageUp/PageDown?
 //
 // [Advanced features, for consideration]
 // XXX Caps-Lock and setting LEDs
@@ -79,22 +76,27 @@
  *  Keyboard layout mapping
  */
 
-#define nrKeymaps 6
+const byte nrKeymaps = 6;
 const char keymapNames[nrKeymaps][3] = {
   "US", "GB", "DE", "FR", "IT", "ES",
 };
 
-int getKeymapIndex()
+int getKeymapIndex(void)
 {
-  #define arrayLen(a) ((int) (sizeof(a) / sizeof((a)[0])))
   int index = EEPROM.read(offsetof(struct EEPROMlayout, keymapIndex));
-  return (index > arrayLen(keymapNames)) ? 0 : index;
+  return (index >= arrayLen(keymapNames)) ? 0 : index; // Also handle invalid values
 }
 
 char *getKeymapName()
 {
-  return keymapNames[getKeymapIndex()];
+  return getKeymapName(getKeymapIndex());
 }
+
+char *getKeymapName(byte index)
+{
+  return (index > arrayLen(keymapNames)) ? 0 : keymapNames[index];
+}
+
 
 enum {
   US = 1 << 0,
@@ -615,14 +617,20 @@ byte keyboard_getState()
         // Handle control key combinations
         if (flags & ctrlFlags)
           switch (newAscii) {
-            case PS2_ESC: newAscii = 0xc0^64; break; // Ctrl-Escape is a BabelFish command
-            case '?':     newAscii = 127;     break; // Traditional mapping of Ctrl-? to DEL
-            case ' ':     button   = 255;     break; // Make it send a 0 byte
+            case '?':     newAscii = 127; break; // Traditional mapping of Ctrl-? to DEL
+            case ' ':     button   = 255; break; // Make it send a 0 byte
             default:
-              if (fnKey(newAscii)) // Ctrl+Fxx are BabelFish commands
-                newAscii ^= 64;
-              else
-                newAscii &= 31;    // Make control codes (what the key is for...)
+              byte f = fnKey(newAscii);
+              if (f) {
+                if (flags & altFlags)
+                  // Ctrl-Alt-Fxx changes the keymap
+                  EEPROM.write(offsetof(struct EEPROMlayout, keymapIndex), f-1);
+                else
+                  // Ctrl+Fxx are BabelFish commands
+                  newAscii ^= 64;
+              } else
+                // Make control codes (what the key is for...)
+                newAscii &= 31;
           }
     }
 
