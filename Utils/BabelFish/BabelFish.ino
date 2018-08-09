@@ -718,12 +718,14 @@ void doTransfer(const byte *gt1)
 {
   int nextByte;
 
+#if 0 // XXX Disabled because of code size explosion
   if (!detectGigatron()) {
     #if hasSerial
       Serial.print("!Failed");
     #endif
     return;
   }
+#endif
 
   #if hasSerial
     #define readNext() {\
