@@ -406,8 +406,10 @@ void loop()
   byte newValue = receiveBits();
   nonCritical();
   if (newValue != oldValue) {
-    Serial.print(": Got ");
-    Serial.println(newValue);
+    #if hasSerial
+      Serial.print(": Got ");
+      Serial.println(newValue);
+    #endif
     oldValue = newValue;
   }
 }
