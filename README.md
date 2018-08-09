@@ -12,7 +12,7 @@ gigatron-rom
  |     |                        applications and data ("kernel + ROM disk")
  |     |                        Execute this to build ROM files
  |     `--- compilegcl.py       Stand-alone GCL to vCPU compiler (GT1 files)
- +--- interface.json            Formal bindings interface for ROMv1
+ +--- interface.json            Formal bindings interface to ROM for programs
  +--- Apps/                     Built-in and example applications (GCL and GT1)
  |     +--- Blinky.gcl          Very simple GCL program
  |     +--- HelloWorld.gcl      Program that draws "Hello world" on screen

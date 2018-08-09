@@ -24,33 +24,20 @@
 //    b. PROGMEM only requires the Arduino IDE on the PC/laptop,
 //       but needs the GT1 file as a hexdump (C notation).
 // 2. Hookup a PS/2 keyboard for typing on the Gigatron
-// 3. Controlling the Gigatron over USB from a PC/laptop
-// 4. Pass through of game controller signals
+// 3. Forward text from USB to Gigatron as keystrokes
+//    For example to get a long BASIC program loaded into BASIC
+// 4. Controlling the Gigatron over USB from a PC/laptop
+// 5. Pass through of game controller signals
 //
-// Select 1 of the preconfigured platforms:
+// Select one of the supported platforms in the Tools->Board menu.
+//
+// Supported:
+//      - Arduino/Genuino Uno
+//      - Arduino Nano
+//      - Arduino/Genuino Micro
+//      - ATtiny85 (8 MHz)
+//
 // (not every microcontroller platform supports all functions)
-//
-#define ArduinoUno   1 // Default
-#define ArduinoNano  0
-#define ArduinoMicro 0
-#define ATtiny85     0
-
-// The object file is embedded (in PROGMEM) in GT1 format. It would be
-// GREAT if we can find a way to receive the file over the Arduino's
-// serial interface without adding upstream complexity. But as the
-// Arduino's 2K of RAM can't buffer an entire file at once, some
-// intelligence is needed there and we haven't found a good way yet.
-// The Arduino doesn't implement any form of flow control on its
-// USB/serial interface (RTS/CTS or XON/XOFF).
-
-// This interface program can also receive data over the USB serial interface.
-// Use the sendGt1.py Python program on the computer to send a file.
-// The file must be in GT1 format (.gt1 extension)
-// For example:
-//   python sendGt1.py life3.gt1
-
-// Todo/idea list:
-// XXX Wild idea: let the ROM communicate back by modulating vPulse
 
 /*----------------------------------------------------------------------+
  |                                                                      |
@@ -69,9 +56,9 @@
 // Pin 12  PORTB4 7 vSync  SER_LATCH  0 PAR/SER None             3
 // Pin 11  PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK 4
 
-#if ArduinoUno
+#if defined(ARDUINO_AVR_UNO)
  #define platform "ArduinoUno"
- #define maxStorage 32768
+ #define maxStorage 32256
 
  // Pinout reference:
  // https://i2.wp.com/marcusjenkins.com/wp-content/uploads/2014/06/ARDUINO_V2.png
@@ -105,10 +92,10 @@
 // Pin J1-14 PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK 4        4
 // Pin J1-13 PORTB2 None     None      None       None             None     2
 
-#if ArduinoNano
+#if defined(ARDUINO_AVR_NANO)
  // at67's setup
  #define platform "ArduinoNano"
- #define maxStorage 32768
+ #define maxStorage 30720
 
  // Pinout reference:
  // http://lab.dejaworks.com/wp-content/uploads/2016/08/Arduino-Nano-1024x500.png
@@ -156,10 +143,10 @@
 //               1 3 5 |
 // --------------------+
 
-#if ArduinoMicro
+#if defined(ARDUINO_AVR_MICRO)
  // WattSekunde's setup
  #define platform "ArduinoMicro"
- #define maxStorage 32768
+ #define maxStorage 28672
 
  // Pinout reference:
  // http://1.bp.blogspot.com/-xqhL0OrJcxo/VJhVxUabhCI/AAAAAAABEVk/loDafkdqLxM/s1600/micro_pinout.png
@@ -202,7 +189,7 @@
 //                       +------+
 //                       ATtiny85
 
-#if ATtiny85
+#if defined(ARDUINO_attiny)
  #define platform "ATtiny85"
  #define maxStorage 8192
 
@@ -233,59 +220,47 @@
 const byte TinyBASIC_gt1[] PROGMEM = {
   #include "TinyBASIC.h"
 };
-const byte WozMon_gt1[] PROGMEM = {
+const byte WozMon_gt1[]    PROGMEM = {
   #include "WozMon.h"
 };
-const byte Terminal_gt1[] PROGMEM = {
+const byte Terminal_gt1[]  PROGMEM = {
   #include "Terminal.h"
 };
-const byte Blinky_gt1[] PROGMEM = {
+const byte Blinky_gt1[]    PROGMEM = {
   #include "Blinky.h"
 };
-const byte bricks_gt1[] PROGMEM = {
+const byte bricks_gt1[]    PROGMEM = {
   #include "bricks.h"
 };
-
-#if maxStorage >= 32768
-const byte lines_gt1[] PROGMEM = {
+const byte lines_gt1[]     PROGMEM = {
   #include "lines.h"
 };
-const byte life3_gt1[] PROGMEM = {
+const byte life3_gt1[]     PROGMEM = {
   #include "life3.h"
 };
 const byte starfield_gt1[] PROGMEM = {
   #include "starfield.h"
 };
-const byte tetris_gt1[] PROGMEM = {
+const byte tetris_gt1[]    PROGMEM = {
   #include "tetris.h"
 };
-#endif
 
-struct { byte *gt1; char *name; } gt1Files[12] = {
-/* 1  */ TinyBASIC_gt1, "Tiny BASIC",
-#if maxStorage >= 32768
-/* 2  */ WozMon_gt1,    "WozMon",
-/* 3  */ Terminal_gt1,  "Terminal",
-/* 4  */ Blinky_gt1,    "Blinky",
-#else
-         0,              "(Empty)",
-         0,              "(Empty)",
-         0,              "(Empty)",
+struct { byte *gt1; char *name; } gt1Files[] = {
+  { TinyBASIC_gt1, "Tiny BASIC"               }, // 2702 bytes
+  { WozMon_gt1,    "WozMon"                   }, // 595 bytes
+#if maxStorage >= 10000
+  { bricks_gt1,    "Bricks game [xbx]"        }, // 1607 bytes
 #endif
-/* 5  */ bricks_gt1,    "Bricks game [xbx]",
-#if maxStorage >= 32768
-/* 6  */ lines_gt1,     "Lines demo [at67]",
-/* 7  */ life3_gt1,     "Game of Life demo [at67]",
-/* 8  */ starfield_gt1, "Starfield demo [at67]",
-/* 9  */ tetris_gt1,    "Tetris game [at67]",
-#else
-/* 7  */ 0,             "(Empty)",
-/* 8  */ 0,             "(Empty)",
-/* 9  */ 0,             "(Empty)",
+#if maxStorage >= 20000
+  { tetris_gt1,    "Tetris game [at67]"       }, // 9868 bytes
 #endif
-/* 10 */ 0,             "(Empty)",
-/* 11 */ 0,             "(Empty)",
-/* 12 */ 0,             "(Empty)",
+#if maxStorage >= 30000
+  { Terminal_gt1,  "Terminal"                 }, // 256 bytes
+  { Blinky_gt1,    "Blinky"                   }, // 17 bytes
+  { lines_gt1,     "Lines demo [at67]"        }, // 304 bytes
+  { life3_gt1,     "Game of Life demo [at67]" }, // 441 bytes
+  { starfield_gt1, "Starfield demo [at67]"    }, // 817 bytes
+#endif
 };
 
 /*----------------------------------------------------------------------+
@@ -321,9 +296,29 @@ byte checksum; // Global is simplest
 // Note: The kit's controller gives inverted signals.
 
 /*
+ *  Font data
+ */
+const int tinyfont[96] PROGMEM = {
+  #include "tinyfont.h"
+};
+
+/*
  *  Terminal mode for upstream host
  */
 static bool echo = false;
+
+/*
+ *  Non-volatile memory
+ */
+#include <EEPROM.h>
+
+struct EEPROMlayout {
+  byte keymapIndex;
+  byte savedFile[];
+};
+
+#define arrayLen(a) ((int) (sizeof(a) / sizeof((a)[0])))
+extern const byte nrKeymaps;
 
 /*
  *  Setup runs once when the Arduino wakes up
@@ -385,17 +380,19 @@ void loop()
   // PS/2 keyboard events
   byte key = keyboard_getState();
   if (key != 255) {
-    byte f = fnKey(key^64);
-    if (f)                           // Ctrl + Function key
-      if (gt1Files[f-1].gt1)
-        doTransfer(gt1Files[f-1].gt1);// Send built-in GT1 file to Gigatron
+    byte f = fnKey(key^64);          // Ctrl + function key?
+    if (f) {
+      if (f == 1)                    // Ctrl-F1 is help
+        doMapping();
+      else if (f-2 < arrayLen(gt1Files))
+        doTransfer(gt1Files[f-2].gt1);// Send built-in GT1 file to Gigatron
+    }
 
-    while (1) {
-      if (!fnKey(key^64)) {          // Normal case (but skip Ctrl+Fxx)
-        critical();
-        sendFirstByte(key);          // Synchronize with vPulse and send code
-        nonCritical();
-      }
+    while (1) {                      // Send to Gigatron until keyboard driver idle
+      critical();
+      sendFirstByte(key);            // Synchronize with vPulse and send code
+      nonCritical();
+
       if (key == 255)                // Until state is idle again
         break;
       delay(15);                     // Allow PS/2 interrupts for a reasonable window
@@ -452,9 +449,9 @@ void doCommand(char line[])
   case 'H': doHelp();                         break;
   case 'R': doReset(arg);                     break;
   case 'L': doLoader();                       break;
-  case 'P': arg = constrain(arg, 1, 12);
-            if (gt1Files[arg-1].gt1)
-              doTransfer(gt1Files[arg-1].gt1);break;
+  case 'M': doMapping();                   break;
+  case 'P': if (0 <= arg && arg < arrayLen(gt1Files))
+              doTransfer(gt1Files[arg].gt1);  break;
   case 'U': doTransfer(NULL);                 break;
   case '.': doLine(&line[1]);                 break;
   case 'C': doEcho(!echo);                    break;
@@ -487,16 +484,49 @@ void doVersion()
     Serial.println(": Gigatron data=" Q(gigatronDataPin) " latch=" Q(gigatronLatchPin) " pulse=" Q(gigatronPulsePin));
     Serial.println(": Keyboard clock=" Q(keyboardClockPin) " data=" Q(keyboardDataPin));
     Serial.println(": Controller data=" Q(gameControllerDataPin));
+    Serial.println(":EEPROM:");
+    Serial.print(": size=");
+    Serial.print(EEPROM.length());
+    Serial.print(" mapping=");
+    Serial.print(getKeymapName());
+    Serial.print(" savedFile=");
+    Serial.println(savedFileLength());
     Serial.println(":PROGMEM slots:");
-    for (int i=1; i<=12; i++) {
-      Serial.print(": ");
+    for (int i=0; i<arrayLen(gt1Files); i++) {
+      Serial.print(": P");
       Serial.print(i);
       Serial.print(") ");
-      Serial.println(gt1Files[i-1].name);
+      Serial.println(gt1Files[i].name);
     }
     doEcho(echo);
     Serial.println(":Type 'H' for help");
   #endif
+}
+
+// Show keymapping in Loader screen (Loader must be running)
+void doMapping()
+{
+  word pos = 0x800;
+  char text[] = "Ctrl-F1  This help";
+  pos = renderLine(pos, text);
+  text[9] = 0;
+  for (int i=0; i<arrayLen(gt1Files); i++) {
+    byte f = i + 2;
+    // To save space avoid itoa() or sprintf()
+    text[6]      = '0' + f / 10;
+    text[7]      = ' ';
+    text[6+f/10] = '0' + f % 10;
+    pos = renderString(pos, text);
+    pos = renderLine(pos, gt1Files[i].name);
+  }
+  pos = renderString(pos, "Keymap: ");
+  pos = renderString(pos, getKeymapName());
+  pos = renderLine(pos, " (Change with Ctrl-Alt-Fxx)");
+  pos = renderString(pos, "Available:");
+  for (int i=0; i<nrKeymaps; i++) {
+    pos = renderString(pos, " ");
+    pos = renderString(pos, getKeymapName(i));
+  }
 }
 
 void doEcho(byte value)
@@ -516,6 +546,7 @@ void doHelp()
     Serial.println(": H        Show this help");
     Serial.println(": R        Reset Gigatron");
     Serial.println(": L        Start Loader");
+    Serial.println(": M        Show key mapping or menu in Loader screen");
     Serial.println(": P[<n>]   Transfer object file from PROGMEM slot <n> [1..12]");
     Serial.println(": U        Transfer object file from USB");
     Serial.println(": .<text>  Send text line as ASCII key strokes");
@@ -614,6 +645,54 @@ void doTerminal()
       }
     }
   #endif
+}
+
+// Render line in Loader screen
+word renderLine(word pos, char *text)
+{
+  pos = renderString(pos, text);
+  return (pos & 0xff00) + 0x600;
+}
+
+// Render string in Loader screen
+word renderString(word pos, char *text)
+{
+  byte bitmap[160], pixelLine[160], x=0;
+
+  // Render line of text in bitmap
+  for (; *text; text++) {
+
+    // Get pixel data for character
+    int pixels = pgm_read_word(&tinyfont[*text-32]);
+
+    // Render character in bitmap
+    if (pixels >= 0) {
+      bitmap[x++] = 0;                   // Regular position
+      bitmap[x++] = (pixels >> 9)  & 62;
+      bitmap[x++] = (pixels >> 4)  & 62;
+      bitmap[x++] = (pixels << 1)  & 62;
+    } else {
+      bitmap[x++] = 0;                   // Shift down for g, j, p, q, y
+      bitmap[x++] = (pixels >> 10) & 31;
+      bitmap[x++] = (pixels >> 5)  & 31;
+      bitmap[x++] =  pixels        & 31;
+      if (*text == 'j')                  // Special case to dot the j
+        bitmap[x-1] = '.';
+    }
+  }
+
+  // Send pixel lines to Gigatron
+  byte *p = pos;
+  for (int b=32; b; b>>=1) {
+    const byte bgColor = 32; // Blue
+    const byte fgColor = 63; // White
+    for (int i=0; i<x; i++)
+      pixelLine[i] = bitmap[i] & b ? fgColor : bgColor;
+    sendGt1Segment(p, x, pixelLine);
+    p += 256;
+  }
+
+  return pos + x;
 }
 
 // Because the Arduino doesn't have enough RAM to buffer
@@ -754,6 +833,12 @@ int nextSerial()
   #endif
 }
 
+/*----------------------------------------------------------------------+
+ |                                                                      |
+ |      Gigatron communication                                          |
+ |                                                                      |
+ +----------------------------------------------------------------------*/
+
 static inline void critical()
 {
   forbidPs2();
@@ -889,5 +974,25 @@ void sendBits(byte value, byte n)
       ;
   }
   checksum += value;
+}
+
+/*----------------------------------------------------------------------+
+ |                                                                      |
+ |      EEPROM functions                                                |
+ |                                                                      |
+ +----------------------------------------------------------------------*/
+
+// Length of a Tiny BASIC file saved in EEPROM.
+// File contents are zero-terminated ASCII byte values (1..126)
+// or until end of EEPROM area.
+size_t savedFileLength()
+{
+    size_t fileStart = offsetof(struct EEPROMlayout, savedFile);
+    size_t maxLen = EEPROM.length() - fileStart;
+    size_t len;
+    for (len=0; len!=maxLen; len++)
+      if ((EEPROM.read(fileStart + len) ^ 127) >= 127) // 1..126 is ok
+        break;
+    return len;
 }
 

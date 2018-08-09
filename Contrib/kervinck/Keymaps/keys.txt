@@ -1,0 +1,229 @@
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x0d,   9 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x5a,  10 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x76,  27 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x29,  32 },
+  { +US+GB+DE   +IT+ES +SHIFT, 0x16,  33 }, // '!'
+  {          +FR       +NOMOD, 0x4a,  33 },
+  {    +GB+DE   +IT+ES +SHIFT, 0x1e,  34 }, // '"'
+  {          +FR       +NOMOD, 0x26,  34 },
+  { +US                +SHIFT, 0x52,  34 },
+  { +US                +SHIFT, 0x26,  35 }, // '#'
+  {          +FR   +ES +ALTGR, 0x26,  35 },
+  {             +IT    +ALTGR, 0x52,  35 },
+  {    +GB+DE          +NOMOD, 0x5d,  35 },
+  {       +DE+FR       +ALTGR, 0x5d,  35 },
+  { +US+GB+DE   +IT+ES +SHIFT, 0x25,  36 }, // '$'
+  {          +FR       +NOMOD, 0x5b,  36 },
+  { +US+GB+DE   +IT+ES +SHIFT, 0x2e,  37 }, // '%'
+  {          +FR       +SHIFT, 0x52,  37 },
+  {          +FR       +NOMOD, 0x16,  38 }, // '&'
+  {       +DE   +IT+ES +SHIFT, 0x36,  38 },
+  { +US+GB             +SHIFT, 0x3d,  38 },
+  {          +FR       +NOMOD, 0x25,  39 }, // '''
+  {             +IT+ES +NOMOD, 0x4e,  39 },
+  { +US+GB             +NOMOD, 0x52,  39 },
+  {       +DE          +NOMOD, 0x55,  39 },
+  {       +DE          +SHIFT, 0x5d,  39 },
+  {          +FR       +NOMOD, 0x2e,  40 }, // '('
+  {       +DE   +IT+ES +SHIFT, 0x3e,  40 },
+  { +US+GB             +SHIFT, 0x46,  40 },
+  { +US+GB             +SHIFT, 0x45,  41 }, // ')'
+  {       +DE   +IT+ES +SHIFT, 0x46,  41 },
+  {          +FR       +NOMOD, 0x4e,  41 },
+  { +US+GB             +SHIFT, 0x3e,  42 }, // '*'
+  {       +DE   +IT+ES +SHIFT, 0x5b,  42 },
+  {          +FR       +NOMOD, 0x5d,  42 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x7c,  42 },
+  { +US+GB   +FR       +SHIFT, 0x55,  43 }, // '+'
+  {       +DE   +IT+ES +NOMOD, 0x5b,  43 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x79,  43 },
+  {          +FR       +NOMOD, 0x3a,  44 }, // ','
+  { +US+GB+DE   +IT+ES +NOMOD, 0x41,  44 },
+  {          +FR       +NOMOD, 0x36,  45 }, // '-'
+  {       +DE   +IT+ES +NOMOD, 0x4a,  45 },
+  { +US+GB             +NOMOD, 0x4e,  45 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x7b,  45 },
+  {          +FR       +SHIFT, 0x41,  46 }, // '.'
+  { +US+GB+DE   +IT+ES +NOMOD, 0x49,  46 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x71,  46 },
+  {       +DE   +IT+ES +SHIFT, 0x3d,  47 }, // '/'
+  {          +FR       +SHIFT, 0x49,  47 },
+  { +US+GB             +NOMOD, 0x4a,  47 },
+  { +US+GB+DE   +IT+ES +NOMOD, 0x45,  48 }, // '0'
+  {          +FR       +SHIFT, 0x45,  48 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x70,  48 },
+  { +US+GB+DE   +IT+ES +NOMOD, 0x16,  49 }, // '1'
+  {          +FR       +SHIFT, 0x16,  49 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x69,  49 },
+  { +US+GB+DE   +IT+ES +NOMOD, 0x1e,  50 }, // '2'
+  {          +FR       +SHIFT, 0x1e,  50 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x72,  50 },
+  { +US+GB+DE   +IT+ES +NOMOD, 0x26,  51 }, // '3'
+  {          +FR       +SHIFT, 0x26,  51 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x7a,  51 },
+  { +US+GB+DE   +IT+ES +NOMOD, 0x25,  52 }, // '4'
+  {          +FR       +SHIFT, 0x25,  52 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x6b,  52 },
+  { +US+GB+DE   +IT+ES +NOMOD, 0x2e,  53 }, // '5'
+  {          +FR       +SHIFT, 0x2e,  53 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x73,  53 },
+  { +US+GB+DE   +IT+ES +NOMOD, 0x36,  54 }, // '6'
+  {          +FR       +SHIFT, 0x36,  54 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x74,  54 },
+  { +US+GB+DE   +IT+ES +NOMOD, 0x3d,  55 }, // '7'
+  {          +FR       +SHIFT, 0x3d,  55 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x6c,  55 },
+  { +US+GB+DE   +IT+ES +NOMOD, 0x3e,  56 }, // '8'
+  {          +FR       +SHIFT, 0x3e,  56 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x75,  56 },
+  { +US+GB+DE   +IT+ES +NOMOD, 0x46,  57 }, // '9'
+  {          +FR       +SHIFT, 0x46,  57 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x7d,  57 },
+  {          +FR       +NOMOD, 0x49,  58 }, // ':'
+  {       +DE   +IT+ES +SHIFT, 0x49,  58 },
+  { +US+GB             +SHIFT, 0x4c,  58 },
+  {          +FR       +NOMOD, 0x41,  59 }, // ';'
+  {       +DE   +IT+ES +SHIFT, 0x41,  59 },
+  { +US+GB             +NOMOD, 0x4c,  59 },
+  { +US+GB             +SHIFT, 0x41,  60 }, // '<'
+  {       +DE+FR+IT+ES +NOMOD, 0x61,  60 },
+  {       +DE   +IT+ES +SHIFT, 0x45,  61 }, // '='
+  { +US+GB   +FR       +NOMOD, 0x55,  61 },
+  { +US+GB             +SHIFT, 0x49,  62 }, // '>'
+  {       +DE+FR+IT+ES +SHIFT, 0x61,  62 },
+  {          +FR       +SHIFT, 0x3a,  63 }, // '?'
+  { +US+GB             +SHIFT, 0x4a,  63 },
+  {       +DE   +IT+ES +SHIFT, 0x4e,  63 },
+  {       +DE+FR       +ALTGR, 0x15,  64 }, // '@'
+  { +US                +SHIFT, 0x1e,  64 },
+  {                +ES +ALTGR, 0x1e,  64 },
+  {          +FR       +ALTGR, 0x45,  64 },
+  {             +IT    +ALTGR, 0x4c,  64 },
+  {    +GB             +SHIFT, 0x52,  64 },
+  {          +FR       +SHIFT, 0x15,  65 }, // 'A'
+  { +US+GB+DE   +IT+ES +SHIFT, 0x1c,  65 },
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x32,  66 }, // 'B'
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x21,  67 }, // 'C'
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x23,  68 }, // 'D'
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x24,  69 }, // 'E'
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x2b,  70 }, // 'F'
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x34,  71 }, // 'G'
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x33,  72 }, // 'H'
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x43,  73 }, // 'I'
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x3b,  74 }, // 'J'
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x42,  75 }, // 'K'
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x4b,  76 }, // 'L'
+  { +US+GB+DE   +IT+ES +SHIFT, 0x3a,  77 }, // 'M'
+  {          +FR       +SHIFT, 0x4c,  77 },
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x31,  78 }, // 'N'
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x44,  79 }, // 'O'
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x4d,  80 }, // 'P'
+  { +US+GB+DE   +IT+ES +SHIFT, 0x15,  81 }, // 'Q'
+  {          +FR       +SHIFT, 0x1c,  81 },
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x2d,  82 }, // 'R'
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x1b,  83 }, // 'S'
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x2c,  84 }, // 'T'
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x3c,  85 }, // 'U'
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x2a,  86 }, // 'V'
+  {          +FR       +SHIFT, 0x1a,  87 }, // 'W'
+  { +US+GB+DE   +IT+ES +SHIFT, 0x1d,  87 },
+  { +US+GB+DE+FR+IT+ES +SHIFT, 0x22,  88 }, // 'X'
+  {       +DE          +SHIFT, 0x1a,  89 }, // 'Y'
+  { +US+GB   +FR+IT+ES +SHIFT, 0x35,  89 },
+  { +US+GB      +IT+ES +SHIFT, 0x1a,  90 }, // 'Z'
+  {          +FR       +SHIFT, 0x1d,  90 },
+  {       +DE          +SHIFT, 0x35,  90 },
+  {          +FR       +ALTGR, 0x2e,  91 }, // '['
+  {       +DE   +IT    +ALTGR, 0x3e,  91 },
+  { +US+GB             +NOMOD, 0x54,  91 },
+  {             +IT+ES +ALTGR, 0x54,  91 },
+  {             +IT    +NOMOD, 0x0e,  92 }, // '\'
+  {                +ES +ALTGR, 0x0e,  92 },
+  {          +FR       +ALTGR, 0x3e,  92 },
+  {       +DE          +ALTGR, 0x4e,  92 },
+  { +US                +NOMOD, 0x5d,  92 },
+  {    +GB             +NOMOD, 0x61,  92 },
+  {       +DE   +IT    +ALTGR, 0x46,  93 }, // ']'
+  {          +FR       +ALTGR, 0x4e,  93 },
+  { +US+GB             +NOMOD, 0x5b,  93 },
+  {             +IT+ES +ALTGR, 0x5b,  93 },
+  {       +DE          +NOMOD, 0x0e,  94 }, // '^'
+  { +US+GB             +SHIFT, 0x36,  94 },
+  {          +FR       +ALTGR, 0x46,  94 },
+  {          +FR       +NOMOD, 0x54,  94 },
+  {                +ES +SHIFT, 0x54,  94 },
+  {             +IT    +SHIFT, 0x55,  94 },
+  {          +FR       +NOMOD, 0x3e,  95 }, // '_'
+  {       +DE   +IT+ES +SHIFT, 0x4a,  95 },
+  { +US+GB             +SHIFT, 0x4e,  95 },
+  { +US+GB             +NOMOD, 0x0e,  96 }, // '`'
+  {          +FR       +ALTGR, 0x3d,  96 },
+  {             +IT    +ALTGR, 0x4e,  96 },
+  {                +ES +NOMOD, 0x54,  96 },
+  {       +DE          +SHIFT, 0x55,  96 },
+  {          +FR       +NOMOD, 0x15,  97 }, // 'a'
+  { +US+GB+DE   +IT+ES +NOMOD, 0x1c,  97 },
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x32,  98 }, // 'b'
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x21,  99 }, // 'c'
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x23, 100 }, // 'd'
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x24, 101 }, // 'e'
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x2b, 102 }, // 'f'
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x34, 103 }, // 'g'
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x33, 104 }, // 'h'
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x43, 105 }, // 'i'
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x3b, 106 }, // 'j'
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x42, 107 }, // 'k'
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x4b, 108 }, // 'l'
+  { +US+GB+DE   +IT+ES +NOMOD, 0x3a, 109 }, // 'm'
+  {          +FR       +NOMOD, 0x4c, 109 },
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x31, 110 }, // 'n'
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x44, 111 }, // 'o'
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x4d, 112 }, // 'p'
+  { +US+GB+DE   +IT+ES +NOMOD, 0x15, 113 }, // 'q'
+  {          +FR       +NOMOD, 0x1c, 113 },
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x2d, 114 }, // 'r'
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x1b, 115 }, // 's'
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x2c, 116 }, // 't'
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x3c, 117 }, // 'u'
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x2a, 118 }, // 'v'
+  {          +FR       +NOMOD, 0x1a, 119 }, // 'w'
+  { +US+GB+DE   +IT+ES +NOMOD, 0x1d, 119 },
+  { +US+GB+DE+FR+IT+ES +NOMOD, 0x22, 120 }, // 'x'
+  {       +DE          +NOMOD, 0x1a, 121 }, // 'y'
+  { +US+GB   +FR+IT+ES +NOMOD, 0x35, 121 },
+  { +US+GB      +IT+ES +NOMOD, 0x1a, 122 }, // 'z'
+  {          +FR       +NOMOD, 0x1d, 122 },
+  {       +DE          +NOMOD, 0x35, 122 },
+  {          +FR       +ALTGR, 0x25, 123 }, // '{'
+  {       +DE   +IT    +ALTGR, 0x3d, 123 },
+  {                +ES +ALTGR, 0x52, 123 },
+  { +US+GB             +SHIFT, 0x54, 123 },
+  {             +IT    +SHIFT, 0x0e, 124 }, // '|'
+  {                +ES +ALTGR, 0x16, 124 },
+  {          +FR       +ALTGR, 0x36, 124 },
+  { +US                +SHIFT, 0x5d, 124 },
+  {    +GB             +SHIFT, 0x61, 124 },
+  {       +DE+FR   +ES +ALTGR, 0x61, 124 },
+  {       +DE   +IT    +ALTGR, 0x45, 125 }, // '}'
+  {          +FR       +ALTGR, 0x56, 125 },
+  { +US+GB             +SHIFT, 0x5b, 125 },
+  {                +ES +ALTGR, 0x5d, 125 },
+  { +US                +SHIFT, 0x0e, 126 }, // '~'
+  {          +FR       +ALTGR, 0x1e, 126 },
+  {                +ES +ALTGR, 0x25, 126 },
+  {             +IT    +ALTGR, 0x55, 126 },
+  {       +DE          +ALTGR, 0x5b, 126 },
+  {    +GB             +SHIFT, 0x5d, 126 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x66, 127 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x05, 193 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x06, 194 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x04, 195 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x0c, 196 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x03, 197 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x0b, 198 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x83, 199 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x0a, 200 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x01, 201 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x09, 202 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x78, 203 },
+  { +US+GB+DE+FR+IT+ES +EVERY, 0x07, 204 },

@@ -8,13 +8,13 @@ ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
 	    PYTHONPATH="Core:$(PYTHONPATH)"\
 	    python Core/ROMv2.py\
 		Apps/Snake_v2.gcl\
-		Apps/Racer.gcl\
-		Apps/Mandelbrot.gcl\
-		Apps/Pictures.gcl\
-		Apps/Credits.gcl\
-		Apps/Loader.gcl\
+		Apps/Racer_v1.gcl\
+		Apps/Mandelbrot_v1.gcl\
+		Apps/Pictures_v1.gcl\
+		Apps/Credits_v1.gcl\
+		Apps/Loader_v1.gcl\
 		Apps/TinyBASIC_v1.gcl\
-		Apps/WozMon.gcl\
+		Apps/WozMon_v1.gcl\
 		Apps/Main_v2.gcl\
 		Core/Reset_v2.gcl
 
@@ -24,15 +24,15 @@ ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 	env romType="0x1c"\
 	    PYTHONPATH="Core:$(PYTHONPATH)"\
 	    python Core/ROMv1.py\
-		Apps/Snake.gcl\
-		Apps/Racer.gcl\
-		Apps/Mandelbrot.gcl\
-		Apps/Pictures.gcl\
-		Apps/Credits.gcl\
-		Apps/Loader.gcl\
-		Apps/Screen.gcl\
-		Apps/Main.gcl\
-		Core/Reset.gcl
+		Apps/Snake_v1.gcl\
+		Apps/Racer_v1.gcl\
+		Apps/Mandelbrot_v1.gcl\
+		Apps/Pictures_v1.gcl\
+		Apps/Credits_v1.gcl\
+		Apps/Loader_v1.gcl\
+		Apps/Screen_v1.gcl\
+		Apps/Main_v1.gcl\
+		Core/Reset_v1.gcl
 
 # Work in progress
 dev: $(DEV).rom
@@ -40,13 +40,13 @@ $(DEV).rom: Core/* Apps/* Images/* Makefile interface.json
 	# Development towards ROMv2 (minor changes only)
 	env romType="0x20"\
 	    PYTHONPATH="Core:$(PYTHONPATH)"\
-	    python Core/ROMv2.py\
+	    python Core/ROMv2x.py\
 		Apps/Snake_v2.gcl\
-		Apps/Racer.gcl\
-		Apps/Mandelbrot.gcl\
-		Apps/Pictures.gcl\
-		Apps/Credits.gcl\
-		Apps/Loader.gcl\
+		Apps/Racer_v1.gcl\
+		Apps/Mandelbrot_v1.gcl\
+		Apps/Pictures_v1.gcl\
+		Apps/Credits_v1.gcl\
+		Apps/Loader_v1.gcl\
 		Apps/TinyBASIC.gcl\
 		Apps/WozMon.gcl\
 		Apps/Main_v2.gcl\
@@ -62,12 +62,13 @@ test: Docs/gtemu $(DEV).rom
 basic: Apps/TinyBASIC.gt1 Apps/TinyBASIC.h
 	mv Apps/TinyBASIC.h Utils/BabelFish
 
-compiletest:
+Utils/BabelFish/tinyfont.h: Utils/BabelFish/tinyfont.py
+	python "$<" > "$@"
+
+compiletest: Apps/*.gt1
 	# Test compilation
-	Core/compilegcl.py Apps/HelloWorld.gcl
-	Core/compilegcl.py Apps/Snake.gcl
-	Core/compilegcl.py Apps/Mandelbrot.gcl
-	Core/compilegcl.py Apps/Credits.gcl
+	# (Use 'git diff' afterwards to detect unwanted changes)
+	for GT1 in Apps/*.gt1; do rm "$${GT1}"; make "$${GT1}"; done
 
 time: Docs/gtemu $(DEV).rom
 	# Run emulation until first sound

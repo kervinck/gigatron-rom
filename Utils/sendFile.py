@@ -143,7 +143,7 @@ else:
   isBasic = args.filename and args.filename.lower().endswith(('.gtb', 'gtbx', '.bas'))
   if isBasic:
     print('Loading BASIC')
-    sendCommand('P1')
+    sendCommand('P')
     sleep(2) # BASIC takes a while on 64K
   print('Sending text %s' % (repr(args.filename) if args.filename else 'from stdin'))
   for line in fp:
