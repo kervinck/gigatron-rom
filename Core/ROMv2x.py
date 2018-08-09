@@ -121,6 +121,9 @@ vPulse += vPulseExtension
 #    unaffected
 vBack -= vPulseExtension
 
+# Start value of vertical blank counter
+videoYline0 = 1-2*(vFront+vPulse+vBack-2)
+
 # Mismatch between video lines and sound channels
 soundDiscontinuity = (vFront+vPulse+vBack) % 4
 
@@ -187,6 +190,7 @@ videoModeD      = zpByte() # Handler for every 4th line (pixel burst or vCPU)
 # Vertical blank (reuse some variables used in the visible part)
 videoSync0      = frameX   # Vertical sync type on current line (0xc0 or 0x40)
 videoSync1      = frameY   # Same during horizontal pulse
+videoPulse      = nextVideo # Used for pulse width modulation
 
 # Frame counter is good enough as system clock
 frameCount      = zpByte(1)
@@ -701,7 +705,7 @@ ld(1)                           #36
 st([0x80])                      #37
 
 # It is nice to set counter before vCPU starts
-ld(1-2*(vFront+vPulse+vBack-2)) #38 -2 because first and last are different
+ld(videoYline0)                 #38
 st([videoY])                    #39
 
 # Uptime frame count (3 cycles)
@@ -787,6 +791,9 @@ ld(0b1110);C('LEDs |O***|')     #70 offset -1
 label('.leds7')
 st([xoutMask])                  #71 Sound bits will be re-enabled below
 
+ld(vPulse*2)                    #72 vPulse default length when not modulated
+st([videoPulse])                #73
+
 # When the total number of scan lines per frame is not an exact multiple of the
 # (4) channels, there will be an audible discontinuity if no measure is taken.
 # This static noise can be suppressed by swallowing the first `lines mod 4'
@@ -802,7 +809,7 @@ if soundDiscontinuity == 2:
 if soundDiscontinuity > 2:
   print "Warning: sound discontinuity not supressed"
 
-runVcpu(189-72-extra, 'line0')  #72 Application cycles (scan line 0)
+runVcpu(189-74-extra, 'line0')  #74 Application cycles (scan line 0)
 
 # Sound on/off (6 cycles)
 ld([soundTimer]);               C('Sound on/off')#189
@@ -868,16 +875,16 @@ adda(2)                         #31
 st([videoY])                    #32
 
 # Determine if we're in the vertical sync pulse
-suba(1-2*(vBack-1))             #33
-bne('vSync0')                   #34 Tests for end of vPulse
-adda(2*vPulse)                  #35
-ld(syncBits)                    #36 Entering vertical back porch
+suba(1-2*(vBack+vPulse-1))      #33
+bne('vSync0')                   #34 Tests for start of vPulse
+suba([videoPulse])              #35
+ld(syncBits^vSync)              #36 Entering vertical sync pulse
 bra('vSync2')                   #37
 st([videoSync0])                #38
 label('vSync0')
-bne('vSync1')                   #36 Tests for start of vPulse
-ld(syncBits^vSync)              #37
-bra('vSync3')                   #38 Entering vertical sync pulse
+bne('vSync1')                   #36 Tests for end of vPulse
+ld(syncBits)                    #37
+bra('vSync3')                   #38 Entering vertical back porch
 st([videoSync0])                #39
 label('vSync1')
 ld([videoSync0])                #38 Load current value
@@ -1016,6 +1023,7 @@ while pc()&255 < 255:
 
 assert pc() == 0x1ff
 bra('sound3');                  C('<New scan line start>')#200,0
+# --- Page boundary ---
 ld([channel])                   #1 Advance to next sound channel
 
 # Back porch A: first of 4 repeated scan lines
@@ -1167,9 +1175,7 @@ while pc()&255 < 255:
 label('ENTER')
 bra('.next2')                   #0 Enter at '.next2' (so no startup overhead)
 C('vCPU interpreter')
-
 # --- Page boundary ---
-
 align(0x100,0x100)
 ld([vPC+1], Y)                  #1
 
@@ -2440,7 +2446,7 @@ jmpy('sys_SetMode')             #16
 ld([vAC])                       #17
 
 #-----------------------------------------------------------------------
-# Extension SYS_SetMemory_54
+# Extension SYS_SetMemory_v2_54
 #-----------------------------------------------------------------------
 
 # SYS function for setting 1..255 bytes
@@ -2458,6 +2464,27 @@ ld([sysArgs+0])                 #16
 nop()                           #filler
 
 #-----------------------------------------------------------------------
+# Extension SYS_SendSerial_vX_80
+#-----------------------------------------------------------------------
+
+# SYS function for sending data over serial controller using vertical
+# pulse width modulation
+#
+# sysArgs[0:1] Source address (destructive)
+# sysArgs[2]   Copy count of low nibbles 1..256 (destructive)
+# sysArgs[3]   Copy count of high nibbles 1..256 (destructive)
+#
+# This modulates the next upcoming X vertical pulses with the
+# supplied data. After that, the vPulse width falls back to 8 lines (idle).
+#
+# XXX Test with several monitors
+
+label('SYS_SendSerial_vX_80')
+ld([videoY])                    #15
+bra('sys_SendSerial')           #16
+xora(videoYline0)               #17
+
+#-----------------------------------------------------------------------
 # Some placeholders for future SYS functions. They work as a kind of jump
 # table. This allows implementations to be moved around between ROM
 # versions, at the expense of 2 (or 1) clock cycles. When the function is
@@ -2467,10 +2494,6 @@ nop()                           #filler
 # before a function, or by overdeclaring them in the first place. This
 # last method doesn't even cost space (initially).
 #-----------------------------------------------------------------------
-
-ld(hi('REENTER'), Y)            #15 slot 0xb06
-jmpy('REENTER')                 #16
-ld(-20/2)                       #17
 
 ld(hi('REENTER'), Y)            #15 slot 0xb09
 jmpy('REENTER')                 #16
@@ -2582,7 +2605,7 @@ ld(hi('REENTER'), Y)            #45
 jmpy('REENTER')                 #46
 ld(-50/2)                       #47
 
-# SYS_SetMode_80  implementation
+# SYS_SetMode_80 implementation
 label('sys_SetMode')
 anda(3)                         #18
 adda('.sysSvm1')                #19
@@ -2623,6 +2646,70 @@ ld(-44/2)                       #39
 ld(hi('REENTER'), Y)            #38
 jmpy('REENTER')                 #40
 nop()                           #41
+
+# SYS_SendSerial_vX_80 implementation
+label('sys_SendSerial')
+beq('.sysSs0')                  #18
+ld([sysArgs+0], X)              #19
+ld([vPC])                       #20 Wait for start of vBlank
+suba(2)                         #21
+st([vPC])                       #22
+ld(hi('REENTER'), Y)            #23
+jmpy('REENTER')                 #24
+ld(-28/2)                       #25
+label('.sysSs0')                #   Synchronized with start of vBlank now
+ld([sysArgs+1], Y)              #20
+ld([sysArgs+2])                 #21 Process high or low nibble?
+suba([sysArgs+3])               #22
+bne('.sysSs1')                  #23
+ld([Y,X])                       #24
+                                #   Send high nibble
+anda(128, X)                    #25 Rotate left 4 times
+adda(AC)                        #26
+ora([X])                        #27
+anda(128, X)                    #28
+adda(AC)                        #29
+ora([X])                        #30
+anda(128, X)                    #31
+adda(AC)                        #32
+ora([X])                        #33
+anda(128, X)                    #34
+adda(AC)                        #35
+ora([X])                        #36
+adda(AC)                        #37 Position and isolate 4 bits
+anda(0b0011110)                 #38
+adda([videoPulse])              #39 Add to pulse width
+st([videoPulse])                #40
+ld([sysArgs+3])                 #41 Decrement high nibble counter
+suba(1)                         #42
+st([sysArgs+3])                 #43
+ld([vPC])                       #44 Always self-repeat after high byte
+suba(2)                         #45
+st([vPC])                       #46
+ld(hi('REENTER'), Y)            #47
+jmpy('REENTER')                 #48
+ld(-52/2)                       #49
+label('.sysSs1')                #   Send low nibble
+adda(AC)                        #25 Position and isolate 4 bits
+anda(0b0011110)                 #26
+adda([videoPulse])              #27 Add to pulse width
+st([videoPulse])                #28
+ld([sysArgs+0])                 #29 Advance data pointer
+adda(1)                         #30
+st([sysArgs+0])                 #31
+ld([sysArgs+2])                 #32 Decrement low nibble counter
+suba(1)                         #33
+bne('.sysSs2')                  #34
+ld(hi('REENTER'), Y)            #35 All data sent
+jmpy('REENTER')                 #36
+ld(-40/2)                       #37
+label('.sysSs2')
+st([sysArgs+2])                 #36 More data to send
+ld([vPC])                       #37 Self-repeat
+suba(2)                         #38
+st([vPC])                       #39
+jmpy('REENTER')                 #40
+ld(-44/2)                       #41
 
 #-----------------------------------------------------------------------
 #  Application specific SYS extensions
@@ -2901,20 +2988,16 @@ def patchTinyBASIC(program):
     body = '' if text is None else text + '\0'
     return ''.join([' $%02x#' % ord(c) for c in head + body])
 
-  # Program end
-  program.line('$13a0:' + basicLine(0x16a0))
-  # Embedded program
-  program.line('$14a0:' + basicLine(10, ' IF RND(2)=0 GOTO 40'))
-  program.line('$14c0:' + basicLine(20, ' PRINT "|";'))
-  program.line('$14e0:' + basicLine(30, ' GOTO 10'))
-  program.line('$15a0:' + basicLine(40, ' PRINT "-";'))
-  program.line('$15c0:' + basicLine(50, ' GOTO 10'))
-  program.line('$15e0:' + basicLine(60, ' REM *** Gigatron!'))
   # Startup commands
-  program.line('$16a2:' + basicLine(None, '?"LIST')) # For show
-  program.line('$16c0:' + basicLine(0,    'LIST'))   # Line 0 in case of user break
-  program.line('$16e2:' + basicLine(None, '?"RUN'))  # For show
-  program.line('$17a2:' + basicLine(None, 'RUN'))
+  program.line('$18a0:' + basicLine(0x18a2, '?"LIST":LIST:?"RUN":RUN'))
+  # Embedded program
+  program.line('$18c0:' + basicLine(10, ' IF RND(2)=0 GOTO 40'))
+  program.line('$18e0:' + basicLine(20, ' PRINT "|";'))
+  program.line('$19a0:' + basicLine(30, ' GOTO 10'))
+  program.line('$19c0:' + basicLine(40, ' PRINT "-";'))
+  program.line('$19e0:' + basicLine(50, ' GOTO 10'))
+  program.line('$20a0:' + basicLine(60, ' REM *** Gigatron!'))
+  # Program end
 
 # Load pre-compiled GT1 file
 #

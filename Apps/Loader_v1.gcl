@@ -85,7 +85,7 @@ loop]
 {
 vgaY nextVideo videoY vCPU Comment
 ---- --------- ------ ---- -------
-   0  videoE      238  Yes First vBlank
+   0  videoE      179  Yes First vBlank
    1  videoE      181  Yes
    2  videoE      183  Yes
    3  videoE      185  Yes Byte 65 Checksum

@@ -1,0 +1,28 @@
+
+{ Test pulse width modulation of /VS signal }
+
+{ With this it might become possible to send }
+{ data out over the game controller port }
+
+gcl0x
+
+$800 p= {Heartbeat}
+  1+ q=
+\SYS_SendSerial_vX_80 \sysFn=
+
+[do
+ {Delay loop}
+  0 [do p. 1+ if<>0loop]
+
+  [def 1#  0#  2#  1# 2# ] \sysArgs0=
+  5 \sysArgs2.
+  5 \sysArgs3.
+
+  63 q. {Indicate sending}
+
+  80!
+
+  32 q.
+
+loop]
+

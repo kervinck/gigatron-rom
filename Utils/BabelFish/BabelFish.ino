@@ -399,6 +399,17 @@ void loop()
       key = keyboard_getState();
     }
   }
+
+  static byte oldValue = 0;
+  delay(15);                         // Allow PS/2 interrupts for a reasonable window
+  critical();
+  byte newValue = receiveBits();
+  nonCritical();
+  if (newValue != oldValue) {
+    Serial.print(": Got ");
+    Serial.println(newValue);
+    oldValue = newValue;
+  }
 }
 
 void prompt()
@@ -705,6 +716,13 @@ void doTransfer(const byte *gt1)
 {
   int nextByte;
 
+  if (!detectGigatron()) {
+    #if hasSerial
+      Serial.print("!Failed");
+    #endif
+    return;
+  }
+
   #if hasSerial
     #define readNext() {\
       nextByte = gt1 ? pgm_read_byte(gt1++) : nextSerial();\
@@ -926,7 +944,7 @@ void sendFrame(byte firstByte, byte len, word address, byte message[])
   byte lastByte = -checksum;   // Checksum must come out as 0
   sendBits(lastByte, 8);
   checksum = lastByte;         // Concatenate checksums
-  PORTB |= gigatronDataBit;        // Send 1 when idle
+  PORTB |= gigatronDataBit;    // Send 1 when idle
 }
 
 void sendFirstByte(byte value)
@@ -974,6 +992,33 @@ void sendBits(byte value, byte n)
       ;
   }
   checksum += value;
+}
+
+// Count number of hSync pulses during vPulse
+// This is a way for the Gigatron to send information out
+byte receiveBits()
+{
+  byte count = 0;
+
+  // Wait vertical sync NEGATIVE edge to sync with loader
+  // XXX Put timeouts on these loops
+  while (~PINB & gigatronLatchBit) // Ensure vSync is HIGH first
+    ;
+  while (PINB & gigatronLatchBit) // Then wait for vSync to drop
+    ;
+
+  // Now count horizontal sync POSITIVE edges
+  for (;;) {
+    while (PINB & gigatronPulseBit)  // Ensure hSync is LOW first
+      ;
+    if (PINB & gigatronLatchBit)     // Not in vPulse anymore
+      break;
+    while (~PINB & gigatronPulseBit) // Then wait for hSync to rise
+      ;
+    count += 1;
+  }
+
+  return count;
 }
 
 /*----------------------------------------------------------------------+
