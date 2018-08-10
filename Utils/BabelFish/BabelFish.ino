@@ -280,9 +280,11 @@ byte gigatronPulseBit;
 /*
  *  Loader protocol
  */
-#define N 60 // Payload bytes per transmission frame
-byte checksum; // Global is simplest
-
+#define N 60         // Payload bytes per transmission frame
+byte checksum;       // Global is simplest
+byte outBuffer[256]; // sendFrame() will read up to index 299 but that's ok.
+                     // outBuffer[] is global, because having it on the stack
+                     // can cause trouble on the ATtiny85 (not fully clear why)
 /*
  *  Game controller button mapping
  */
@@ -318,8 +320,9 @@ struct EEPROMlayout {
   byte savedFile[];
 };
 
+
 #define arrayLen(a) ((int) (sizeof(a) / sizeof((a)[0])))
-extern const byte nrKeymaps;
+extern const byte nrKeymaps; // From in PS2.ino
 
 /*
  *  Setup runs once when the Arduino wakes up
@@ -355,7 +358,7 @@ void setup()
  */
 void loop()
 {
-  // Gigatron vPulse
+  // Check Gigatron's vPulse for incoming data
   static byte oldValue = 0;
   critical();
   byte newValue = receiveBits();
@@ -368,7 +371,7 @@ void loop()
     oldValue = newValue;
   }
 
-  // Controller pass through
+  // Game controller pass through
   #if gameControllerDataPin >= 0
     digitalWrite(gigatronDataPin, digitalRead(gameControllerDataPin));
   #endif
@@ -377,7 +380,7 @@ void loop()
   delay(15);                           // Allow PS/2 interrupts for a reasonable window
   byte key = keyboard_getState();
   if (key != 255) {
-    byte f = fnKey(key ^ 64);          // Ctrl + function key?
+    byte f = fnKey(key ^ 64);          // Ctrl+Fn key?
     if (f) {
       if (f == 1)
         doMapping();                   // Ctrl-F1 is help
@@ -385,14 +388,14 @@ void loop()
         doTransfer(gt1Files[f-2].gt1); // Send built-in GT1 file to Gigatron
     }
     for (;;) {                         // Focus all attention on PS/2 until state is idle again
-      if (!fnKey(key ^ 64)) {
+      if (!fnKey(key ^ 64)) {          // Filter away the Ctrl+Fn combinations here
         critical();
-        sendFirstByte(key);            // Synchronize with vPulse and send code
+        sendFirstByte(key);            // Synchronize with vPulse and send ASCII code
         nonCritical();
       }
-      if (key == 255)                  // Break after emitting idle state
+      if (key == 255)                  // Break after returning to the idle state
         break;
-      delay(15);                       // Allow PS/2 interrupts for a reasonable window
+      delay(15);                       // Allow PS/2 interrupts, so we can receive break codes
       key = keyboard_getState();       // This typically returns the same key for a couple of frames
     }
   }
@@ -523,6 +526,7 @@ void doMapping()
 {
   word pos = 0x800;
   char text[] = "Ctrl-F1  This help";
+  //             0123456789
   pos = renderLine(pos, text);
   text[9] = 0;
   for (byte i=0; i<arrayLen(gt1Files); i++) {
@@ -670,14 +674,13 @@ word renderLine(word pos, char *text)
 }
 
 // Render string in Loader screen
-word renderString(word pos, char *text)
+word renderString(word pos, char text[])
 {
   // Send 6 pixel lines to Gigatron
   // The ATtiny85 doesn't have sufficient RAM for separate bitmap[] and
   // pixelLine[] arrays. Therefore the rendering must be redone with each
   // iteration, followed by an in-place conversion to pixel colors
 
-  byte buf[160];
   byte *p = pos;
   byte x;
   for (byte b=32; b; b>>=1) {
@@ -691,17 +694,17 @@ word renderString(word pos, char *text)
 
       // Render character in bitmap
       if (pixels >= 0) {
-        buf[x++] = 0;                   // Regular position
-        buf[x++] = (pixels >> 9)  & 62;
-        buf[x++] = (pixels >> 4)  & 62;
-        buf[x++] = (pixels << 1)  & 62;
+        outBuffer[x++] = 0;                   // Regular position
+        outBuffer[x++] = (pixels >> 9)  & 62;
+        outBuffer[x++] = (pixels >> 4)  & 62;
+        outBuffer[x++] = (pixels << 1)  & 62;
       } else {
-        buf[x++] = 0;                   // Shift down for g, j, p, q, y
-        buf[x++] = (pixels >> 10) & 31;
-        buf[x++] = (pixels >> 5)  & 31;
-        buf[x++] =  pixels        & 31;
-        if (text[i] == 'j')             // Special case to dot the j
-          buf[x-1] = '.';
+        outBuffer[x++] = 0;                   // Shift down for g, j, p, q, y
+        outBuffer[x++] = (pixels >> 10) & 31;
+        outBuffer[x++] = (pixels >> 5)  & 31;
+        outBuffer[x++] =  pixels        & 31;
+        if (text[i] == 'j')                   // Special case to dot the j
+          outBuffer[x-1] = '.';
       }
     }
 
@@ -709,10 +712,10 @@ word renderString(word pos, char *text)
     const byte bgColor = 32; // Blue
     const byte fgColor = 63; // White
     for (byte i=0; i<x; i++)
-      buf[i] = buf[i] & b ? fgColor : bgColor;
+      outBuffer[i] = (outBuffer[i] & b) ? fgColor : bgColor;
 
     // Send line of pixels to Gigatron
-    sendGt1Segment(p, x, buf);
+    sendGt1Segment(p, x);
 
     // To next scanline
     p += 256;
@@ -758,8 +761,6 @@ void doTransfer(const byte *gt1)
     #define ask(n)
   #endif
 
-  byte segment[256] = {0}; // sendFrame() will read up to index 299 but that's ok
-
   ask(3);
   readNext();
   word address = nextByte;
@@ -777,7 +778,7 @@ void doTransfer(const byte *gt1)
     // Copy data into send buffer
     for (int i=0; i<len; i++) {
       readNext();
-      segment[i] = nextByte;
+      outBuffer[i] = nextByte;
     }
 
     // Check that segment doesn't cross the page boundary
@@ -796,7 +797,7 @@ void doTransfer(const byte *gt1)
       Serial.println(address, HEX);
       Serial.flush();
     #endif
-    sendGt1Segment(address, len, segment);
+    sendGt1Segment(address, len);
 
     // Signal that we're ready to receive more
     ask(3);
@@ -817,7 +818,7 @@ void doTransfer(const byte *gt1)
       Serial.println(address, HEX);
       Serial.flush();
     #endif
-    sendGt1Execute(address, segment+240);
+    sendGt1Execute(address, outBuffer+240);
   }
 }
 
@@ -888,7 +889,7 @@ static inline void nonCritical()
 
 // Send a 1..256 byte code or data segment into the Gigatron by
 // repacking it into Loader frames of max N=60 payload bytes each.
-void sendGt1Segment(word address, int len, byte data[])
+void sendGt1Segment(word address, int len)
 {
   byte n = min(N, len);
   resetChecksum();
@@ -897,7 +898,7 @@ void sendGt1Segment(word address, int len, byte data[])
   critical();
   for (int i=0; i<len; i+=n) {
     n = min(N, len-i);
-    sendFrame('L', n, address+i, data+i);
+    sendFrame('L', n, address+i, outBuffer+i);
   }
   nonCritical();
 

@@ -76,15 +76,15 @@
  *  Keyboard layout mapping
  */
 
-const byte nrKeymaps = 6;
-const char keymapNames[nrKeymaps][3] = {
+const char keymapNames[][3] = {
   "US", "GB", "DE", "FR", "IT", "ES",
 };
+const byte nrKeymaps = arrayLen(keymapNames);
 
 int getKeymapIndex(void)
 {
   int index = EEPROM.read(offsetof(struct EEPROMlayout, keymapIndex));
-  return (index >= arrayLen(keymapNames)) ? 0 : index; // Also handle invalid values
+  return (index >= nrKeymaps) ? 0 : index; // Also handle invalid values
 }
 
 char *getKeymapName()
