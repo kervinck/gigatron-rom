@@ -32,7 +32,6 @@
 #  DONE Update version number to v2
 #
 #  Ideas for ROM vX
-#  XXX Need keymaps in ROM? (perhaps undocumented if not tested)
 #  XXX SYS spites/memcpy acceleration functions? Candidates:
 #                               WxH     Depth   Input
 #       SYS_VDrawBits_134       1x8     1       1       sysArgs
@@ -49,8 +48,10 @@
 #       CopyString              Nx1     8       s,t
 #       SetMemory               Nx1     8       s,n
 #       Sprites by scan line 4 reset method? ("videoG"=graphics)
-#  XXX MODE command (or other interface) to set speed from BASIC
+#  DONE MODE command (or other interface) to set speed from BASIC
 #  XXX vPulse width modulation? (for future SAVE) --> Needs some video loop refactoring
+#  XXX Need keymaps in ROM? (perhaps undocumented if not tested)
+#  XXX Tetris, Gigatris, Bricks, FrogStroll,
 #  XXX How it works memo: brief description of every software function
 #  XXX Music sequencer (combined with LED sequencer, but retire soundTimer???)
 #  XXX Adjustable return for LUP trampolines (in case SYS functions need it)
@@ -123,6 +124,7 @@ vBack -= vPulseExtension
 
 # Start value of vertical blank counter
 videoYline0 = 1-2*(vFront+vPulse+vBack-2)
+videoYline1 = videoYline0+2
 
 # Mismatch between video lines and sound channels
 soundDiscontinuity = (vFront+vPulse+vBack) % 4
@@ -871,7 +873,7 @@ ld([videoSync0], OUT);          C('End horizontal pulse')#28
 # Count through the vertical blank interval until its last scan line
 ld([videoY])                    #29
 bpl('vBlankLast')               #30
-adda(2)                         #31
+adda(videoYline1-videoYline0)   #31
 st([videoY])                    #32
 
 # Determine if we're in the vertical sync pulse
@@ -2464,14 +2466,15 @@ ld([sysArgs+0])                 #16
 nop()                           #filler
 
 #-----------------------------------------------------------------------
-# Extension SYS_SendSerial_vX_80
+# Extension SYS_SendSerial_vX_110
 #-----------------------------------------------------------------------
 
 # SYS function for sending data over serial controller using vertical
 # pulse width modulation
 #
 # sysArgs[0:1] Source address (destructive)
-# sysArgs[2]   Copy count of low nibbles 1..256 (destructive)
+# sysArgs[2]   TODO low address of last byte + 1
+# sysArgs[2]   TODO Number of bits (multiple of 3) to send AND 255
 # sysArgs[3]   Copy count of high nibbles 1..256 (destructive)
 #
 # This modulates the next upcoming X vertical pulses with the
@@ -2479,10 +2482,10 @@ nop()                           #filler
 #
 # XXX Test with several monitors
 
-label('SYS_SendSerial_vX_80')
+label('SYS_SendSerial_vX_110')
 ld([videoY])                    #15
 bra('sys_SendSerial')           #16
-xora(videoYline0)               #17
+xora(videoYline1)               #17 line0 doesn't have many guranteed cycles
 
 #-----------------------------------------------------------------------
 # Some placeholders for future SYS functions. They work as a kind of jump
@@ -2647,69 +2650,64 @@ ld(hi('REENTER'), Y)            #38
 jmpy('REENTER')                 #40
 nop()                           #41
 
-# SYS_SendSerial_vX_80 implementation
+# SYS_SendSerial_vX_110 implementation
+#
+# XXX !!! There still is a timing error somewhere below !!!
+#
 label('sys_SendSerial')
 beq('.sysSs0')                  #18
-ld([sysArgs+0], X)              #19
-ld([vPC])                       #20 Wait for start of vBlank
+ld([sysArgs+0],X)               #19
+ld([vPC])                       #20      Wait for vBlank
 suba(2)                         #21
 st([vPC])                       #22
-ld(hi('REENTER'), Y)            #23
+ld(hi('REENTER'),Y)             #23
 jmpy('REENTER')                 #24
 ld(-28/2)                       #25
-label('.sysSs0')                #   Synchronized with start of vBlank now
-ld([sysArgs+1], Y)              #20
-ld([sysArgs+2])                 #21 Process high or low nibble?
-suba([sysArgs+3])               #22
-bne('.sysSs1')                  #23
-ld([Y,X])                       #24
-                                #   Send high nibble
-anda(128, X)                    #25 Rotate left 4 times
-adda(AC)                        #26
-ora([X])                        #27
-anda(128, X)                    #28
-adda(AC)                        #29
-ora([X])                        #30
-anda(128, X)                    #31
-adda(AC)                        #32
-ora([X])                        #33
-anda(128, X)                    #34
-adda(AC)                        #35
-ora([X])                        #36
-adda(AC)                        #37 Position and isolate 4 bits
-anda(0b0011110)                 #38
-adda([videoPulse])              #39 Add to pulse width
-st([videoPulse])                #40
-ld([sysArgs+3])                 #41 Decrement high nibble counter
-suba(1)                         #42
-st([sysArgs+3])                 #43
-ld([vPC])                       #44 Always self-repeat after high byte
-suba(2)                         #45
-st([vPC])                       #46
-ld(hi('REENTER'), Y)            #47
-jmpy('REENTER')                 #48
-ld(-52/2)                       #49
-label('.sysSs1')                #   Send low nibble
-adda(AC)                        #25 Position and isolate 4 bits
-anda(0b0011110)                 #26
-adda([videoPulse])              #27 Add to pulse width
-st([videoPulse])                #28
-ld([sysArgs+0])                 #29 Advance data pointer
-adda(1)                         #30
-st([sysArgs+0])                 #31
-ld([sysArgs+2])                 #32 Decrement low nibble counter
-suba(1)                         #33
-bne('.sysSs2')                  #34
-ld(hi('REENTER'), Y)            #35 All data sent
-jmpy('REENTER')                 #36
-ld(-40/2)                       #37
+label('.sysSs0')
+ld([sysArgs+1],Y)               #20      Synchronized with vBlank
+ld(2*2)                         #21      Shortest videoPulse will be 2 lines
+st([videoPulse])                #22
+ld(1*2)                         #23      Out bit = 2, 4, 8
+label('.sysSs1')
+st([vTmp])                      #24+i*22
+ld([Y,X])                       #25+i*22 Copy next bit
+anda([sysArgs+3])               #26+i*22
+bne('.sysSs2')                  #27+i*22
+bra('.sysSs3')                  #28+i*22
+ld(0)                           #29+i*22
 label('.sysSs2')
-st([sysArgs+2])                 #36 More data to send
-ld([vPC])                       #37 Self-repeat
-suba(2)                         #38
-st([vPC])                       #39
-jmpy('REENTER')                 #40
-ld(-44/2)                       #41
+ld([vTmp])                      #29+i*22
+label('.sysSs3')
+adda([videoPulse])              #30+i*22
+st([videoPulse])                #31+i*22
+ld([sysArgs+3])                 #32+i*22 Rotate input bit
+adda(AC)                        #33+i*22
+bne('.sysSs4')                  #34+i*22
+bra('.sysSs4')                  #35+i*22
+ld(1)                           #36+i*22
+label('.sysSs4')
+st([sysArgs+3])                 #36,37+i*22 (must be idempotent)
+anda(1)                         #38+i*22 Optionally increment pointer
+adda([sysArgs+0])               #39+i*22
+st([sysArgs+0],X)               #40+i*22
+ld([vTmp])                      #41+i*22 Shift output bit
+adda(AC)                        #42+i*22
+xora(8*2)                       #43+i*22
+bne('.sysSs1')                  #44+i*22
+xora(8*2)                       #45+i*22
+ld([sysArgs+2])                 #90      Bit counter
+suba(1)                         #91
+beq('.sysSs5')                  #92
+ld(hi('REENTER'),Y)             #93
+st([sysArgs+2])                 #94
+ld([vPC])                       #95      Continue sending bits
+suba(2)                         #96
+st([vPC])                       #97
+jmpy('REENTER')                 #98
+ld(-102/2)                      #99
+label('.sysSs5')
+jmpy('REENTER')                 #94      Stop sending bits
+ld(-98/2)                       #95
 
 #-----------------------------------------------------------------------
 #  Application specific SYS extensions
