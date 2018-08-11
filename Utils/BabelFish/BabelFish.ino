@@ -27,7 +27,8 @@
 // 3. Forward text from USB to Gigatron as keystrokes
 //    For example to get a long BASIC program loaded into BASIC
 // 4. Controlling the Gigatron over USB from a PC/laptop
-// 5. Pass through of game controller signals
+// 5. Passing through of game controller signals
+// 6. TODO: Receive data from Gigatron and store it
 //
 // Select one of the supported platforms in the Tools->Board menu.
 //
@@ -245,7 +246,7 @@ const byte tetris_gt1[]    PROGMEM = {
   #include "tetris.h"
 };
 
-struct { byte *gt1; char *name; } gt1Files[] = {
+const struct { byte *gt1; char *name; } gt1Files[] = {
   { TinyBASIC_gt1, "Tiny BASIC"               }, // 2702 bytes
   { WozMon_gt1,    "WozMon"                   }, // 595 bytes
 #if maxStorage >= 10000
@@ -279,9 +280,11 @@ byte gigatronPulseBit;
 /*
  *  Loader protocol
  */
-#define N 60 // Payload bytes per transmission frame
-byte checksum; // Global is simplest
-
+#define N 60         // Payload bytes per transmission frame
+byte checksum;       // Global is simplest
+byte outBuffer[256]; // sendFrame() will read up to index 299 but that's ok.
+                     // outBuffer[] is global, because having it on the stack
+                     // can cause trouble on the ATtiny85 (not fully clear why)
 /*
  *  Game controller button mapping
  */
@@ -317,8 +320,9 @@ struct EEPROMlayout {
   byte savedFile[];
 };
 
+
 #define arrayLen(a) ((int) (sizeof(a) / sizeof((a)[0])))
-extern const byte nrKeymaps;
+extern const byte nrKeymaps; // From in PS2.ino
 
 /*
  *  Setup runs once when the Arduino wakes up
@@ -336,8 +340,8 @@ void setup()
   // Open upstream communication
   #if hasSerial
     Serial.begin(115200);
+    doVersion();
   #endif
-  doVersion();
 
   // In case we power on together with the Gigatron, this is a
   // good pause to wait for the video loop to have started
@@ -354,10 +358,47 @@ void setup()
  */
 void loop()
 {
-  // Controller pass through
+  // Check Gigatron's vPulse for incoming data
+  static byte oldValue = 0;
+  critical();
+  byte newValue = receiveBits();
+  nonCritical();
+  if (newValue != oldValue) {
+    #if hasSerial
+      Serial.print(": Got ");
+      Serial.println(newValue);
+    #endif
+    oldValue = newValue;
+  }
+
+  // Game controller pass through
   #if gameControllerDataPin >= 0
     digitalWrite(gigatronDataPin, digitalRead(gameControllerDataPin));
   #endif
+
+  // PS/2 keyboard events
+  delay(15);                           // Allow PS/2 interrupts for a reasonable window
+  byte key = keyboard_getState();
+  if (key != 255) {
+    byte f = fnKey(key ^ 64);          // Ctrl+Fn key?
+    if (f) {
+      if (f == 1)
+        doMapping();                   // Ctrl-F1 is help
+      else if (f-2 < arrayLen(gt1Files))
+        doTransfer(gt1Files[f-2].gt1); // Send built-in GT1 file to Gigatron
+    }
+    for (;;) {                         // Focus all attention on PS/2 until state is idle again
+      if (!fnKey(key ^ 64)) {          // Filter away the Ctrl+Fn combinations here
+        critical();
+        sendFirstByte(key);            // Synchronize with vPulse and send ASCII code
+        nonCritical();
+      }
+      if (key == 255)                  // Break after returning to the idle state
+        break;
+      delay(15);                       // Allow PS/2 interrupts, so we can receive break codes
+      key = keyboard_getState();       // This typically returns the same key for a couple of frames
+    }
+  }
 
   // Commands from upstream USB (PC/laptop)
   #if hasSerial
@@ -376,42 +417,6 @@ void loop()
       }
     }
   #endif
-
-  // PS/2 keyboard events
-  byte key = keyboard_getState();
-  if (key != 255) {
-    byte f = fnKey(key^64);          // Ctrl + function key?
-    if (f) {
-      if (f == 1)                    // Ctrl-F1 is help
-        doMapping();
-      else if (f-2 < arrayLen(gt1Files))
-        doTransfer(gt1Files[f-2].gt1);// Send built-in GT1 file to Gigatron
-    }
-
-    while (1) {                      // Send to Gigatron until keyboard driver idle
-      critical();
-      sendFirstByte(key);            // Synchronize with vPulse and send code
-      nonCritical();
-
-      if (key == 255)                // Until state is idle again
-        break;
-      delay(15);                     // Allow PS/2 interrupts for a reasonable window
-      key = keyboard_getState();
-    }
-  }
-
-  static byte oldValue = 0;
-  delay(15);                         // Allow PS/2 interrupts for a reasonable window
-  critical();
-  byte newValue = receiveBits();
-  nonCritical();
-  if (newValue != oldValue) {
-    #if hasSerial
-      Serial.print(": Got ");
-      Serial.println(newValue);
-    #endif
-    oldValue = newValue;
-  }
 }
 
 void prompt()
@@ -505,7 +510,7 @@ void doVersion()
     Serial.print(" savedFile=");
     Serial.println(savedFileLength());
     Serial.println(":PROGMEM slots:");
-    for (int i=0; i<arrayLen(gt1Files); i++) {
+    for (byte i=0; i<arrayLen(gt1Files); i++) {
       Serial.print(": P");
       Serial.print(i);
       Serial.print(") ");
@@ -521,9 +526,10 @@ void doMapping()
 {
   word pos = 0x800;
   char text[] = "Ctrl-F1  This help";
+  //             0123456789
   pos = renderLine(pos, text);
   text[9] = 0;
-  for (int i=0; i<arrayLen(gt1Files); i++) {
+  for (byte i=0; i<arrayLen(gt1Files); i++) {
     byte f = i + 2;
     // To save space avoid itoa() or sprintf()
     text[6]      = '0' + f / 10;
@@ -536,7 +542,7 @@ void doMapping()
   pos = renderString(pos, getKeymapName());
   pos = renderLine(pos, " (Change with Ctrl-Alt-Fxx)");
   pos = renderString(pos, "Available:");
-  for (int i=0; i<nrKeymaps; i++) {
+  for (byte i=0; i<nrKeymaps; i++) {
     pos = renderString(pos, " ");
     pos = renderString(pos, getKeymapName(i));
   }
@@ -592,7 +598,7 @@ void doLoader()
     Serial.flush();
   #endif
 
-  for (int i=0; i<10; i++) {
+  for (byte i=0; i<10; i++) {
     sendController(~buttonDown, 2);
     delay(50);
   }
@@ -607,7 +613,7 @@ void doLoader()
 void doLine(char *line)
 {
   // Pass through the line of text
-  for (int i=0; line[i]; i++) {
+  for (byte i=0; line[i]; i++) {
     sendController(line[i], 1);
     delay(20); // Allow Gigatron software to process key code
   }
@@ -664,44 +670,54 @@ void doTerminal()
 word renderLine(word pos, char *text)
 {
   pos = renderString(pos, text);
-  return (pos & 0xff00) + 0x600;
+  return (pos & 0xff00) + 0x600; // Goes to new line
 }
 
 // Render string in Loader screen
-word renderString(word pos, char *text)
+word renderString(word pos, char text[])
 {
-  byte bitmap[160], pixelLine[160], x=0;
+  // Send 6 pixel lines to Gigatron
+  // The ATtiny85 doesn't have sufficient RAM for separate bitmap[] and
+  // pixelLine[] arrays. Therefore the rendering must be redone with each
+  // iteration, followed by an in-place conversion to pixel colors
 
-  // Render line of text in bitmap
-  for (; *text; text++) {
-
-    // Get pixel data for character
-    int pixels = pgm_read_word(&tinyfont[*text-32]);
-
-    // Render character in bitmap
-    if (pixels >= 0) {
-      bitmap[x++] = 0;                   // Regular position
-      bitmap[x++] = (pixels >> 9)  & 62;
-      bitmap[x++] = (pixels >> 4)  & 62;
-      bitmap[x++] = (pixels << 1)  & 62;
-    } else {
-      bitmap[x++] = 0;                   // Shift down for g, j, p, q, y
-      bitmap[x++] = (pixels >> 10) & 31;
-      bitmap[x++] = (pixels >> 5)  & 31;
-      bitmap[x++] =  pixels        & 31;
-      if (*text == 'j')                  // Special case to dot the j
-        bitmap[x-1] = '.';
-    }
-  }
-
-  // Send pixel lines to Gigatron
   byte *p = pos;
-  for (int b=32; b; b>>=1) {
+  byte x;
+  for (byte b=32; b; b>>=1) {
+
+    // (Re-)render line of text in bitmap
+    x = 0;
+    for (byte i=0; text[i]!=0; i++) {
+
+      // Get pixel data for character
+      int pixels = pgm_read_word(&tinyfont[text[i]-32]);
+
+      // Render character in bitmap
+      if (pixels >= 0) {
+        outBuffer[x++] = 0;                   // Regular position
+        outBuffer[x++] = (pixels >> 9)  & 62;
+        outBuffer[x++] = (pixels >> 4)  & 62;
+        outBuffer[x++] = (pixels << 1)  & 62;
+      } else {
+        outBuffer[x++] = 0;                   // Shift down for g, j, p, q, y
+        outBuffer[x++] = (pixels >> 10) & 31;
+        outBuffer[x++] = (pixels >> 5)  & 31;
+        outBuffer[x++] =  pixels        & 31;
+        if (text[i] == 'j')                   // Special case to dot the j
+          outBuffer[x-1] = '.';
+      }
+    }
+
+    // Convert bitmap to pixels
     const byte bgColor = 32; // Blue
     const byte fgColor = 63; // White
-    for (int i=0; i<x; i++)
-      pixelLine[i] = bitmap[i] & b ? fgColor : bgColor;
-    sendGt1Segment(p, x, pixelLine);
+    for (byte i=0; i<x; i++)
+      outBuffer[i] = (outBuffer[i] & b) ? fgColor : bgColor;
+
+    // Send line of pixels to Gigatron
+    sendGt1Segment(p, x);
+
+    // To next scanline
     p += 256;
   }
 
@@ -728,24 +744,22 @@ void doTransfer(const byte *gt1)
 #endif
 
   #if hasSerial
-    #define readNext() {\
-      nextByte = gt1 ? pgm_read_byte(gt1++) : nextSerial();\
-      if (nextByte < 0) return;\
-    }
+    #define readNext()\
+      if (gt1)\
+        nextByte = pgm_read_byte(gt1++);\
+      else {\
+        nextByte = nextSerial();\
+        if (nextByte < 0) return;\
+      }
     #define ask(n)\
       if (!gt1) {\
         Serial.print(n);\
         Serial.println("?");\
       }
   #else
-    #define readNext() {\
-      nextByte = pgm_read_byte(gt1++);\
-      if (nextByte < 0) return;\
-    }
+    #define readNext() (nextByte = pgm_read_byte(gt1++))
     #define ask(n)
   #endif
-
-  byte segment[300] = {0}; // Multiple of N for padding
 
   ask(3);
   readNext();
@@ -764,7 +778,7 @@ void doTransfer(const byte *gt1)
     // Copy data into send buffer
     for (int i=0; i<len; i++) {
       readNext();
-      segment[i] = nextByte;
+      outBuffer[i] = nextByte;
     }
 
     // Check that segment doesn't cross the page boundary
@@ -783,7 +797,7 @@ void doTransfer(const byte *gt1)
       Serial.println(address, HEX);
       Serial.flush();
     #endif
-    sendGt1Segment(address, len, segment);
+    sendGt1Segment(address, len);
 
     // Signal that we're ready to receive more
     ask(3);
@@ -804,7 +818,7 @@ void doTransfer(const byte *gt1)
       Serial.println(address, HEX);
       Serial.flush();
     #endif
-    sendGt1Execute(address, segment+240);
+    sendGt1Execute(address, outBuffer+240);
   }
 }
 
@@ -875,7 +889,7 @@ static inline void nonCritical()
 
 // Send a 1..256 byte code or data segment into the Gigatron by
 // repacking it into Loader frames of max N=60 payload bytes each.
-void sendGt1Segment(word address, int len, byte data[])
+void sendGt1Segment(word address, int len)
 {
   byte n = min(N, len);
   resetChecksum();
@@ -884,7 +898,7 @@ void sendGt1Segment(word address, int len, byte data[])
   critical();
   for (int i=0; i<len; i+=n) {
     n = min(N, len-i);
-    sendFrame('L', n, address+i, data+i);
+    sendFrame('L', n, address+i, outBuffer+i);
   }
   nonCritical();
 
