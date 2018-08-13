@@ -3042,15 +3042,16 @@ def patchTinyBASIC(program):
     return ''.join([' $%02x#' % ord(c) for c in head + body])
 
   # Startup commands
-  program.line('$18a0:' + basicLine(0x18a2, '?"LIST":LIST:?"RUN":RUN'))
+  program.line('$19a0:' + basicLine(0x1bc0))
   # Embedded program
-  program.line('$18c0:' + basicLine(10, ' IF RND(2)=0 GOTO 40'))
-  program.line('$18e0:' + basicLine(20, ' PRINT "|";'))
-  program.line('$19a0:' + basicLine(30, ' GOTO 10'))
-  program.line('$19c0:' + basicLine(40, ' PRINT "-";'))
-  program.line('$19e0:' + basicLine(50, ' GOTO 10'))
-  program.line('$20a0:' + basicLine(60, ' REM *** Gigatron!'))
+  program.line('$19c0:' + basicLine(10, ' IF RND(2)=0 GOTO 40'))
+  program.line('$19e0:' + basicLine(20, ' PRINT "|";'))
+  program.line('$1aa0:' + basicLine(30, ' GOTO 10'))
+  program.line('$1ac0:' + basicLine(40, ' PRINT "-";'))
+  program.line('$1ae0:' + basicLine(50, ' GOTO 10'))
+  program.line('$1ba0:' + basicLine(60, ' REM *** Gigatron!'))
   # Program end
+  program.line('$1bc2:' + basicLine(None, '?"RUN":RUN'))
 
 # Load pre-compiled GT1 file
 #
@@ -3062,7 +3063,6 @@ def patchTinyBASIC(program):
 #print
 #print 'Include file %s label %s ROM %04x' % (gt1File, name, pc())
 #label(name)
-#raw = chr(ord(raw[0]) + 0x80) + raw[1:] # Patch zero page loading (only for 32KB system)
 #raw = raw[:-2] # Drop start address
 #program = gcl.Program(userCode, name)
 #zpReset(userVars)

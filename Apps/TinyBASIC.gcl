@@ -73,8 +73,8 @@
           $30 -   $7f   BASIC interpreter variables
           $81 -   $ff   Stack for BASIC and vCPU (>50 GOSUB levels)
          $200 - $17ff   BASIC interpreter, partly next to screen memory
-        $18a0 - $18bf   Input buffer ('line 0')
-        $18c0 -         Programs stored in the invisible part of screen memory
+        $19a0 - $19bf   Input buffer ('line 0')
+        $19c0 -         Programs stored in the invisible part of screen memory
               - $7ebf   Arrays at the end, growing down
         $7ec0 - $7eff   FOR-NEXT loop pointers
         $7fc0 - $7fff   BASIC variables A..Z
@@ -119,20 +119,19 @@
 
   Wish list:
     LINE dX,dY  Draw a line (or LINE X, Y)
-    bytes free  Is not correct anymore after moving variables to top of memory
     SAVE        To Babelfish, using /vSync pulse width modulation
                 Demo: https://youtu.be/tAAXzB0iqBw
 
   'Maybe in v1' list:
-    A="...      As poor-men's substitute for DATA/READ
     A(0)=x,y,z  Array assignment with list expression
     A$ .. Z$    String variables (only in LET, PRINT, INPUT?)
     Boot        Some kind of autorun of a saved program
     Speed       Cache result of the statement detection (checkpointing)
     Speed       Alternative: LET detection is now last, but should be first
     IF          Reintroduce the missing syntax error check
-    Speed       Cache result of NextBlock (at offset 30 of block?)
+    A="...      As poor-men's substitute for DATA/READ
     @           Give it an implicit meaning such as "max index allowed in arrays"
+    Speed       Cache result of NextBlock (at offset 30 of block?)
 
   'Maybe in v2' list:
     Unary minus Original Tiny BASIC does it wrong: 8/-2
@@ -169,15 +168,15 @@
     DEF FNx
 
   Memory layout:
-        a0          b0         vc0          d0          e0          f0       ff
+        a0          b0          c0          d0          e0          f0       ff
        +-----------------------+-----------------------+-----------------------+
-$18a0  | Input buffer   Begin->| Program line 10       | Program line 20       |
+$19a0  | Input buffer   Begin->| Program line 10       | Program line 20       |
        +-----------------------+-----------------------+-----------------------+
-$19a0  | Program line 30       | Program line 40       | Program line 45       |
+$1aa0  | Program line 30       | Program line 40       | Program line 45       |
        +-----------------------+-----------------------+-----------------------+
-$1aa0  | Program line 50       | Program line 60  End->|K(99)             Z(99)|
+$1ba0  | Program line 50       | Program line 60  End->|K(98)             Z(98)|
        +-----------------------+-----------------------+-----------------------+
-       |                       |         @(98)    J(98)|K(98)             Z(98)|
+       |                       |         @(98)    J(97)|K(97)             Z(97)|
        :                       :                       :                       :
        :                       :                       :                       :
        :                       :                       :                       :
@@ -356,7 +355,7 @@ $0300:
   push
 
   tmp=                          {Line number}
-  $18a0 Active=                 {Input buffer}
+  $19a0 Active=                 {Input buffer}
   tmp Active:                   {For error messages}
   $a2 Active<.                  {Text area}
 
@@ -610,7 +609,8 @@ $0600:
     ]
     { Expand program space if needed }
     [if<>0
-      0; End^                   {Compare End against top of memory}
+      0; $80- $c0-              {Correct for variables}
+      End^                      {Compare End against top of memory}
       [if=0 SyntaxError!]       {Out of memory error if equal}
       End NextBlock! End=]      {Otherwise grab space for new line}
 
@@ -792,7 +792,7 @@ Number=
     SyntaxError!]               {There must be nothing left on the line}
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
-    $18c0 Active^ if<>0         {Also stop if we came from the input buffer}
+    $19c0 Active^ if<>0         {Also stop if we came from the input buffer}
                                 {XXX Insert checkpointing here?}
     Active 2+ Active=           {Skip past line number}
     Statements!]                {And continue from there}
@@ -809,7 +809,7 @@ Number=
       i<, if<>0loop]            {Until end of page}
     0; i^ if<>0                 {Reached top of memory?}
     $1ca i+ loop]               {512-2*27}
-  $18c0 Begin=
+  $19c0 Begin=
   ret
 ] {Clear=}
 
@@ -992,6 +992,7 @@ Spaces=
   [do                           {Continue looping, now over free memory}
     Value=                      {Subtotal}
     0;                          {Retrieve top of memory from RAM[0:1]}
+    $80- $c0-                   {Correct for space used by variables}
     j^ if<>0                    {If not equal to j}
     j NextBlock! j=             {Advance to next block}
     Value 32+                   {Count another 32-byte block}
@@ -1049,7 +1050,7 @@ $11a0:
   pop ret
 ] RelOp=
 
-$18a0 deek End=                 {At startup 'End' comes from loaded segment}
+$19a0 deek End=                 {At startup 'End' comes from loaded segment}
 2+ Active=                      {BASIC command(s) to run at startup}
 
 {-----------------------------------------------------------------------+
@@ -1280,6 +1281,6 @@ $17a0:
 { BASIC data begins here. In this setup the interpreter can be patched
   to include a BASIC program and a first command for execution }
 
-$18a0: $a0# $18#                {Point to self}
+$19a0: $a0# $19#                {Point to self}
        $4e# $45# $57# 0#        {'NEW' to start interactive session}
 
