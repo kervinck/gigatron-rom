@@ -97,7 +97,6 @@ char *getKeymapName(byte index)
   return (index > arrayLen(keymapNames)) ? 0 : keymapNames[index];
 }
 
-
 enum {
   US = 1 << 0,
   GB = 1 << 1,

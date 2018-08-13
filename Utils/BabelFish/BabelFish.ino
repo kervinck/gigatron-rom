@@ -359,16 +359,27 @@ void setup()
 void loop()
 {
   // Check Gigatron's vPulse for incoming data
-  static byte oldValue = 0;
+  static byte inByte, inBit;
   critical();
-  byte newValue = receiveBits();
+  byte newValue = receiveBits(20000);
   nonCritical();
-  if (newValue != oldValue) {
-    #if hasSerial
+  switch (newValue) {
+    case 0:
+      break;
+    case 9:
+      inByte |= inBit;
+      // FALL THROUGH
+    case 7:
+      inBit += inBit;
+      if (inBit != 0)
+        break;
       Serial.print(": Got ");
-      Serial.println(newValue);
-    #endif
-    oldValue = newValue;
+      Serial.println((char)inByte);
+      // FALL THROUGH
+  case 8:
+      inByte = 0;
+      inBit = 1;
+      break;
   }
 
   // Game controller pass through
@@ -1014,18 +1025,20 @@ void sendBits(byte value, byte n)
 
 // Count number of hSync pulses during vPulse
 // This is a way for the Gigatron to send information out
-byte receiveBits()
+byte receiveBits(int timeout)
 {
-  byte count = 0;
-
   // Wait vertical sync NEGATIVE edge to sync with loader
-  // XXX Put timeouts on these loops
+
   while (~PINB & gigatronLatchBit) // Ensure vSync is HIGH first
-    ;
+    if (!timeout--)
+      return 0;
+
   while (PINB & gigatronLatchBit) // Then wait for vSync to drop
-    ;
+    if (!timeout--)
+      return 0;
 
   // Now count horizontal sync POSITIVE edges
+  byte count = 0;
   for (;;) {
     while (PINB & gigatronPulseBit)  // Ensure hSync is LOW first
       ;
@@ -1035,7 +1048,6 @@ byte receiveBits()
       ;
     count += 1;
   }
-
   return count;
 }
 
