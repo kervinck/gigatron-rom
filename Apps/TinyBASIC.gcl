@@ -118,15 +118,16 @@
         Apple 1 BASIC
 
   Wish list:
-    DRAW dX,dY  Draw a line (or DRAW X, Y)
+    LINE dX,dY  Draw a line (or LINE X, Y)
     bytes free  Is not correct anymore after moving variables to top of memory
     SAVE        To Babelfish, using /vSync pulse width modulation
+                Demo: https://youtu.be/tAAXzB0iqBw
 
   'Maybe in v1' list:
     A="...      As poor-men's substitute for DATA/READ
+    A(0)=x,y,z  Array assignment with list expression
     A$ .. Z$    String variables (only in LET, PRINT, INPUT?)
     Boot        Some kind of autorun of a saved program
-    COLOR       Easily change colors (use: POKE 43,c)
     Speed       Cache result of the statement detection (checkpointing)
     Speed       Alternative: LET detection is now last, but should be first
     IF          Reintroduce the missing syntax error check
