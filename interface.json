@@ -110,7 +110,7 @@
  "SYS_Unpack_56"        : "0x06c0",
  "SYS_SetMode_v2_80"    : "0x0b00",
  "SYS_SetMemory_v2_54"  : "0x0b03",
-
+ "SYS_SendSerial1_vX_80": "0x0b06",
  "font32up"             : "0x0700",
  "font82up"             : "0x0800",
  "notesTable"           : "0x0900"

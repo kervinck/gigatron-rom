@@ -10,6 +10,7 @@
 #  - 16-bits vCPU interpreter
 #  - Builtin vCPU programs (Snake, Racer, etc)
 #  - Serial input handler
+#  - Serial output handler
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #  ROM v2: Mimimal changes
@@ -2466,26 +2467,39 @@ ld([sysArgs+0])                 #16
 nop()                           #filler
 
 #-----------------------------------------------------------------------
-# Extension SYS_SendSerial_vX_110
+# Extension SYS_SendSerial1_vX_80
+# Extension SYS_SendSerial2_vX_110
 #-----------------------------------------------------------------------
 
-# SYS function for sending data over serial controller using vertical
-# pulse width modulation
+# SYS functions for sending data over serial controller port using
+# pulse width modulation of the vertical sync signal.
 #
-# sysArgs[0:1] Source address (destructive)
-# sysArgs[2]   TODO low address of last byte + 1
-# sysArgs[2]   TODO Number of bits (multiple of 3) to send AND 255
-# sysArgs[3]   Copy count of high nibbles 1..256 (destructive)
+# SYS_SendSerial1_vX_80 sends 1 bit per frame
+# SYS_SendSerial2_vX_110 sends 3 bits per frame
+# SYS_SendSerial2_vX_130 sends 4 bits per frame
 #
-# This modulates the next upcoming X vertical pulses with the
-# supplied data. After that, the vPulse width falls back to 8 lines (idle).
+# sysArgs[0:1] Source address               (destructive)
+# sysArgs[2]   Number of send frames X      (destructive)
+# sysArgs[3]   Start bit mask (typically 1) (destructive)
+# sysArgs[4]   Scanline offset (SYS_SendSerial2_vX_110 only)
+#
+# This modulates the next upcoming X vertical pulses with the supplied
+# data. After that, the vPulse width falls back to 8 lines (idle).
 #
 # XXX Test with several monitors
 
-label('SYS_SendSerial_vX_110')
+label('SYS_SendSerial1_vX_80')
 ld([videoY])                    #15
-bra('sys_SendSerial')           #16
-xora(videoYline1)               #17 line0 doesn't have many guranteed cycles
+bra('sys_SendSerial1')          #16
+xora(videoYline0)               #17 First line of vertical blank
+
+#label('SYS_SendSerial2_vX_110')
+#ld([videoY])                    #15
+#bra('sys_SendSerial2')          #16
+#xora(videoYline1)               #17 line0 doesn't have enough guranteed cycles
+ld(hi('REENTER'), Y)            #15 slot 0xb09
+jmpy('REENTER')                 #16
+ld(-20/2)                       #17
 
 #-----------------------------------------------------------------------
 # Some placeholders for future SYS functions. They work as a kind of jump
@@ -2497,10 +2511,6 @@ xora(videoYline1)               #17 line0 doesn't have many guranteed cycles
 # before a function, or by overdeclaring them in the first place. This
 # last method doesn't even cost space (initially).
 #-----------------------------------------------------------------------
-
-ld(hi('REENTER'), Y)            #15 slot 0xb09
-jmpy('REENTER')                 #16
-ld(-20/2)                       #17
 
 ld(hi('REENTER'), Y)            #15 slot 0xb0c
 jmpy('REENTER')                 #16
@@ -2650,64 +2660,109 @@ ld(hi('REENTER'), Y)            #38
 jmpy('REENTER')                 #40
 nop()                           #41
 
-# SYS_SendSerial_vX_110 implementation
-#
-# XXX !!! There still is a timing error somewhere below !!!
-#
-label('sys_SendSerial')
+# SYS_SendSerial1_vX_80 implementation
+label('sys_SendSerial1')
 beq('.sysSs0')                  #18
 ld([sysArgs+0],X)               #19
-ld([vPC])                       #20      Wait for vBlank
+ld([vPC])                       #20 Wait for vBlank
 suba(2)                         #21
 st([vPC])                       #22
 ld(hi('REENTER'),Y)             #23
 jmpy('REENTER')                 #24
 ld(-28/2)                       #25
 label('.sysSs0')
-ld([sysArgs+1],Y)               #20      Synchronized with vBlank
-ld(2*2)                         #21      Shortest videoPulse will be 2 lines
-st([videoPulse])                #22
-ld(1*2)                         #23      Out bit = 2, 4, 8
+ld([sysArgs+1],Y)               #20 Synchronized with vBlank
+ld([Y,X])                       #21 Copy next bit
+anda([sysArgs+3])               #22
+bne('.sysSs1')                  #23
+bra('.sysSs2')                  #24
+ld(7*2)                         #25
 label('.sysSs1')
-st([vTmp])                      #24+i*22
-ld([Y,X])                       #25+i*22 Copy next bit
-anda([sysArgs+3])               #26+i*22
-bne('.sysSs2')                  #27+i*22
-bra('.sysSs3')                  #28+i*22
-ld(0)                           #29+i*22
+ld(9*2)                         #25
 label('.sysSs2')
-ld([vTmp])                      #29+i*22
+st([videoPulse])                #26
+ld([sysArgs+3])                 #27 Rotate input bit
+adda(AC)                        #28
+bne('.sysSs3')                  #29
+bra('.sysSs3')                  #30
+ld(1)                           #31
 label('.sysSs3')
-adda([videoPulse])              #30+i*22
-st([videoPulse])                #31+i*22
-ld([sysArgs+3])                 #32+i*22 Rotate input bit
-adda(AC)                        #33+i*22
-bne('.sysSs4')                  #34+i*22
-bra('.sysSs4')                  #35+i*22
-ld(1)                           #36+i*22
+st([sysArgs+3])                 #31,32 (must be idempotent)
+anda(1)                         #33 Optionally increment pointer
+adda([sysArgs+0])               #34
+st([sysArgs+0],X)               #35
+ld([sysArgs+2])                 #36 Frame counter
+suba(1)                         #37
+beq('.sysSs4')                  #38
+ld(hi('REENTER'),Y)             #39
+st([sysArgs+2])                 #40
+ld([vPC])                       #41 Continue sending bits
+suba(2)                         #42
+st([vPC])                       #43
+jmpy('REENTER')                 #44
+ld(-48/2)                       #45
 label('.sysSs4')
-st([sysArgs+3])                 #36,37+i*22 (must be idempotent)
-anda(1)                         #38+i*22 Optionally increment pointer
-adda([sysArgs+0])               #39+i*22
-st([sysArgs+0],X)               #40+i*22
-ld([vTmp])                      #41+i*22 Shift output bit
-adda(AC)                        #42+i*22
-xora(8*2)                       #43+i*22
-bne('.sysSs1')                  #44+i*22
-xora(8*2)                       #45+i*22
-ld([sysArgs+2])                 #90      Bit counter
-suba(1)                         #91
-beq('.sysSs5')                  #92
-ld(hi('REENTER'),Y)             #93
-st([sysArgs+2])                 #94
-ld([vPC])                       #95      Continue sending bits
-suba(2)                         #96
-st([vPC])                       #97
-jmpy('REENTER')                 #98
-ld(-102/2)                      #99
-label('.sysSs5')
-jmpy('REENTER')                 #94      Stop sending bits
-ld(-98/2)                       #95
+jmpy('REENTER')                 #40 Stop sending bits
+ld(-44/2)                       #41
+
+# SYS_SendSerial2_vX_110 implementation
+#
+# !!! Some monitors are not happy with jumps of 3 or more scanlines
+#
+#label('sys_SendSerial2')
+#beq('.sysSs5')                  #18
+#ld([sysArgs+0],X)               #19
+#ld([vPC])                       #20      Wait for vBlank
+#suba(2)                         #21
+#st([vPC])                       #22
+#ld(hi('REENTER'),Y)             #23
+#jmpy('REENTER')                 #24
+#ld(-28/2)                       #25
+#label('.sysSs5')
+#ld([sysArgs+1],Y)               #20      Synchronized with vBlank
+#ld([sysArgs+4])                 #21      Shortest videoPulse
+#st([videoPulse])                #22
+#ld(1*2)                         #23      Out bit = 2, 4, 8
+##label('.sysSs6')
+#st([vTmp])                      #24+i*22
+#ld([Y,X])                       #25+i*22 Copy next bit
+##anda([sysArgs+3])               #26+i*22
+#bne('.sysSs7')                  #27+i*22
+#bra('.sysSs8')                  #28+i*22
+#ld(0)                           #29+i*22
+#label('.sysSs7')
+#ld([vTmp])                      #29+i*22
+#label('.sysSs8')
+#adda([videoPulse])              #30+i*22
+#st([videoPulse])                #31+i*22
+#ld([sysArgs+3])                 #32+i*22 Rotate input bit
+#adda(AC)                        #33+i*22
+#bne('.sysSs9')                  #34+i*22
+#bra('.sysSs9')                  #35+i*22
+#ld(1)                           #36+i*22
+#label('.sysSs9')
+#st([sysArgs+3])                 #36,37+i*22 (must be idempotent)
+#anda(1)                         #38+i*22 Optionally increment pointer
+#adda([sysArgs+0])               #39+i*22
+#st([sysArgs+0],X)               #40+i*22
+#ld([vTmp])                      #41+i*22 Shift output bit
+#adda(AC)                        #42+i*22
+#xora(16*2)                      #43+i*22
+#bne('.sysSs6')                  #44+i*22
+#xora(16*2)                      #45+i*22
+#ld([sysArgs+2])                 #90      Bit counter
+#suba(1)                         #91
+#beq('.sysSs10')                 #92
+#ld(hi('REENTER'),Y)             #93
+#st([sysArgs+2])                 #94
+#ld([vPC])                       #95      Continue sending bits
+#suba(2)                         #96
+#st([vPC])                       #97
+#jmpy('REENTER')                 #98
+#ld(-102/2)                      #99
+#label('.sysSs10')
+#jmpy('REENTER')                 #94      Stop sending bits
+#ld(-98/2)                       #95
 
 #-----------------------------------------------------------------------
 #  Application specific SYS extensions

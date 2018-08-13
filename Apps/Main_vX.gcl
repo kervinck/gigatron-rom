@@ -1,0 +1,27 @@
+
+{ Test pulse width modulation of /VS signal }
+
+{ With this it might become possible to send }
+{ data out over the game controller port }
+
+gcl0x
+
+$800 p=                         {Pixel}
+\SYS_SendSerial1_vX_80 \sysFn=  {Prepare SYS call}
+
+[do
+  [do \frameCount, 63&
+    if<>0loop]                  {Delay loop}
+
+  [def $47# $69# $67# $61# $74# {Gigat}
+       $72# $6f# $6e# $21# $0a# {ron!\n}
+  ]  \sysArgs0=
+  80 \sysArgs2.                 {Number of frames to send}
+  1  \sysArgs3.                 {First bit to send}
+
+  63 p.                         {Indicate sending start}
+  {SYS_SendSerial1_vX_80} 80!   {Send bits over serial port}
+  32 p.                         {Indicate sending stop}
+
+  loop]
+
