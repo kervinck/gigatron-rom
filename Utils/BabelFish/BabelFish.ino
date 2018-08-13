@@ -373,8 +373,9 @@ void loop()
       inBit += inBit;
       if (inBit != 0)
         break;
-      Serial.print(": Got ");
-      Serial.println((char)inByte);
+      #if hasSerial
+        Serial.print((char)inByte);
+      #endif
       // FALL THROUGH
   case 8:
       inByte = 0;
