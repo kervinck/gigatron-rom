@@ -2429,7 +2429,13 @@ for i in range(251):
 
 trampoline()
 
-align(1)
+#-----------------------------------------------------------------------
+#
+#  ROM page 11: More SYS functions
+#
+#-----------------------------------------------------------------------
+
+align(0x100, 0x100)
 
 #-----------------------------------------------------------------------
 # Extension SYS_SetMode_80
@@ -2479,8 +2485,8 @@ nop()                           #filler
 # SYS_SendSerial2_vX_130 sends 4 bits per frame
 #
 # sysArgs[0:1] Source address               (destructive)
-# sysArgs[2]   Number of send frames X      (destructive)
-# sysArgs[3]   Start bit mask (typically 1) (destructive)
+# sysArgs[2]   Start bit mask (typically 1) (destructive)
+# sysArgs[3]   Number of send frames X      (destructive)
 # sysArgs[4]   Scanline offset (SYS_SendSerial2_vX_110 only)
 #
 # This modulates the next upcoming X vertical pulses with the supplied
@@ -2673,7 +2679,7 @@ ld(-28/2)                       #25
 label('.sysSs0')
 ld([sysArgs+1],Y)               #20 Synchronized with vBlank
 ld([Y,X])                       #21 Copy next bit
-anda([sysArgs+3])               #22
+anda([sysArgs+2])               #22
 bne('.sysSs1')                  #23
 bra('.sysSs2')                  #24
 ld(7*2)                         #25
@@ -2681,21 +2687,21 @@ label('.sysSs1')
 ld(9*2)                         #25
 label('.sysSs2')
 st([videoPulse])                #26
-ld([sysArgs+3])                 #27 Rotate input bit
+ld([sysArgs+2])                 #27 Rotate input bit
 adda(AC)                        #28
 bne('.sysSs3')                  #29
 bra('.sysSs3')                  #30
 ld(1)                           #31
 label('.sysSs3')
-st([sysArgs+3])                 #31,32 (must be idempotent)
+st([sysArgs+2])                 #31,32 (must be idempotent)
 anda(1)                         #33 Optionally increment pointer
 adda([sysArgs+0])               #34
 st([sysArgs+0],X)               #35
-ld([sysArgs+2])                 #36 Frame counter
+ld([sysArgs+3])                 #36 Frame counter
 suba(1)                         #37
 beq('.sysSs4')                  #38
 ld(hi('REENTER'),Y)             #39
-st([sysArgs+2])                 #40
+st([sysArgs+3])                 #40
 ld([vPC])                       #41 Continue sending bits
 suba(2)                         #42
 st([vPC])                       #43
@@ -2726,7 +2732,7 @@ ld(-44/2)                       #41
 ##label('.sysSs6')
 #st([vTmp])                      #24+i*22
 #ld([Y,X])                       #25+i*22 Copy next bit
-##anda([sysArgs+3])               #26+i*22
+#anda([sysArgs+2])               #26+i*22
 #bne('.sysSs7')                  #27+i*22
 #bra('.sysSs8')                  #28+i*22
 #ld(0)                           #29+i*22
@@ -2735,13 +2741,13 @@ ld(-44/2)                       #41
 #label('.sysSs8')
 #adda([videoPulse])              #30+i*22
 #st([videoPulse])                #31+i*22
-#ld([sysArgs+3])                 #32+i*22 Rotate input bit
+#ld([sysArgs+2])                 #32+i*22 Rotate input bit
 #adda(AC)                        #33+i*22
 #bne('.sysSs9')                  #34+i*22
 #bra('.sysSs9')                  #35+i*22
 #ld(1)                           #36+i*22
 #label('.sysSs9')
-#st([sysArgs+3])                 #36,37+i*22 (must be idempotent)
+#st([sysArgs+2])                 #36,37+i*22 (must be idempotent)
 #anda(1)                         #38+i*22 Optionally increment pointer
 #adda([sysArgs+0])               #39+i*22
 #st([sysArgs+0],X)               #40+i*22
@@ -2750,11 +2756,11 @@ ld(-44/2)                       #41
 #xora(16*2)                      #43+i*22
 #bne('.sysSs6')                  #44+i*22
 #xora(16*2)                      #45+i*22
-#ld([sysArgs+2])                 #90      Bit counter
+#ld([sysArgs+3])                 #90      Bit counter
 #suba(1)                         #91
 #beq('.sysSs10')                 #92
 #ld(hi('REENTER'),Y)             #93
-#st([sysArgs+2])                 #94
+#st([sysArgs+3])                 #94
 #ld([vPC])                       #95      Continue sending bits
 #suba(2)                         #96
 #st([vPC])                       #97
@@ -2859,6 +2865,8 @@ ld(hi('REENTER'), Y)            #23
 jmpy('REENTER')                 #24
 #nop()                          #(25)
 
+align(0x100, 0x100)
+
 #-----------------------------------------------------------------------
 # Extension SYS_LoaderProcessInput_48
 #-----------------------------------------------------------------------
@@ -2921,9 +2929,12 @@ ld(hi('REENTER'), Y)            #41
 jmpy('REENTER')                 #42
 ld(-46/2)                       #43
 
+
 #-----------------------------------------------------------------------
 #  Built-in full resolution images
 #-----------------------------------------------------------------------
+
+align(1)
 
 def importImage(rgbName, width, height, ref):
   f = open(rgbName)

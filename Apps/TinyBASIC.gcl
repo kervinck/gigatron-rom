@@ -23,6 +23,7 @@
   2018-07-03 (marcelk) Add RND(), with 0 <= RND(n) < |n|; USR()
   2018-07-18 (marcelk) Fix GOSUB/RETURN parsing bug causing syntax error
   2018-07-22 (marcelk) Add PUT, FOR/NEXT, ':', MODE (ROMv2), AT, CLS, arrays
+  2018-08-14 (marcelk) SAVE (draft)
 
   Formal grammar:
 
@@ -48,6 +49,7 @@
                |  'LIST'
                |  'RUN'
                |  'END'
+               |  'SAVE'
   Expression  ::= [+-]? Term ([+-] Term)*
   Term        ::= Factor ([*/%] Factor)*
   Factor      ::= Variable | Number
@@ -121,6 +123,9 @@
     LINE dX,dY  Draw a line (or LINE X, Y)
     SAVE        To Babelfish, using /vSync pulse width modulation
                 Demo: https://youtu.be/tAAXzB0iqBw
+                XXX Signal back success/failure from BabelFish
+                    E.g. by breaking (or typing something)
+                    Can we have a "Shift-Enter" code for typing?
 
   'Maybe in v1' list:
     A(0)=x,y,z  Array assignment with list expression
@@ -186,7 +191,7 @@ $7da0  |                       |         @(0)      J(0)|K(0)               Z(0)|
        +-----------------------+-----------------------+-----------------------+
 $7ea0  |                       | For loops @ A B ... J | K ... S T U V W X Y Z |
        +-----------------------+-----------------------+-----------------------+
-$7fa0  |                       | Variables @ A B ... J | K ... S T U V W X Y Z |
+$7fa0  | SAVE buffer           | Variables @ A B ... J | K ... S T U V W X Y Z |
        +-----------------------+-----------------------+-----------------------+
 
         Totally random ideas:
@@ -349,6 +354,7 @@ $0300:
       $fe%]                     {Return effective position}
   ret
 ] PrintChar=
+  PrintCharDirect=
 
 { Accept ASCII characters from console input with line editting }
 [def
@@ -643,13 +649,23 @@ $0600:
   pop ret
 ] Insert=
 
+[def
+  \serialRaw, $7f^              {Test for [Del] as break request}
+  [if=0
+    PrintCharDirect PrintChar=  {In case we break a SAVE command}
+    Prompt!                     {'Break'}
+      $42# $72# $65# $61# $6b#
+      0#]
+  ret
+] TestBreak=
+
 $353f \sysArgs6:                {Pen color blue/purple, background color white}
 
 \sysArgs0.                      {First Newline call will look here}
 
 { Note: It is safe to call functions here before hopping over to page 8 }
 
-$17a0 Newline= call             {Scroll and clear last line}
+$18a0 Newline= call             {Scroll and clear last line}
 
 { Welcome message }
 PrintS!                         {'*** Tiny BASIC'}
@@ -889,15 +905,6 @@ $0da0:
   pop ret
 ] Term=
 
-[def
-  \serialRaw, $7f^              {Test for [Del] as break request}
-  [if=0
-    Prompt!                     {'Break'}
-      $42# $72# $65# $61# $6b#
-      0#]
-  ret
-] TestBreak=
-
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 14                                     |
 +-----------------------------------------------------------------------}
@@ -1007,7 +1014,6 @@ Spaces=
 
   pop ret
 ] List=
-
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 17                                     |
@@ -1214,6 +1220,10 @@ $15a0:
 +-----------------------------------------------------------------------}
 $16a0:
 
+  Keyword! $73# $61# $76# $65#  {'save'}
+    0#
+  [if<>0 $17a0 call]
+
   Keyword! $6c# $65# $74# 0#    {'let' (optional)}
   Variable!
   Address=                      {Park here}
@@ -1239,6 +1249,46 @@ $16a0:
 |                       RAM page 23                                     |
 +-----------------------------------------------------------------------}
 $17a0:
+
+  {SAVE}
+
+  \romType, \romTypeValue_ROMvX-
+  [if>=0                        {Only available from ROM vX}
+
+    {Saving works by redirecting PrintChar and then calling List}
+    {First line out will be a bare newline to signal a new program}
+
+    0; 96- Address=             {SAVE line buffer}
+    8 \sysArgs3.                {'\n' is 8 bits}
+
+    [def                        {Redefine PrintChar}
+      push
+      k=
+      Pos<, 2-                  {Assumes indentation is 2 pixels}
+      [if<=0                    {A newline has started}
+        10 Address.             {Terminate the save line}
+        Address 31| 31^ Address={Back to start of buffer}
+        \sysArgs0=              {Prepare SYS call}
+        1 \sysArgs2.            {First bit}
+        \SYS_SendSerial1_vX_80
+        \sysFn= 80!             {SYS call to send bits to serial port}
+        8 \sysArgs3.]
+      \sysArgs3, 8+ \sysArgs3.  {Count 8 more bits}
+      k Address. Address<++     {Put in buffer}
+      PrintCharDirect!          {Print to screen as well}
+      pop ret
+    ] PrintChar=
+
+    List!                       {List whole program, redirected}
+    PrintCharDirect PrintChar=  {Restore PrintChar}
+                                {XXX Handle break more elegantly}
+  ]
+  EndOfLine!
+
+{-----------------------------------------------------------------------+
+|                       RAM page 24                                     |
++-----------------------------------------------------------------------}
+$18a0:
 
 {Newline}
 

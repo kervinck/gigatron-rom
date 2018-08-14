@@ -368,15 +368,18 @@ void loop()
       break;
     case 9:
       inByte |= inBit;
-      // FALL THROUGH
+      // !!! FALL THROUGH !!!
     case 7:
-      inBit += inBit;
+      inBit <<= 1;
       if (inBit != 0)
         break;
       #if hasSerial
+        if (inByte == 10)
+          Serial.print('\r');
         Serial.print((char)inByte);
+
       #endif
-      // FALL THROUGH
+      // !!! FALL THROUGH !!!
   case 8:
       inByte = 0;
       inBit = 1;

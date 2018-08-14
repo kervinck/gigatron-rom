@@ -1,6 +1,7 @@
 {
  "romTypeValue_ROMv1"   : "0x001c",
  "romTypeValue_ROMv2"   : "0x0020",
+ "romTypeValue_ROMvX"   : "0x0020",
 
  "memSize"              : "0x0001",
  "bootCount"            : "0x0004",

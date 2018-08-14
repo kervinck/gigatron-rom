@@ -49,7 +49,7 @@ $(DEV).rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Loader_v1.gcl\
 		Apps/TinyBASIC.gcl\
 		Apps/WozMon.gcl\
-		Apps/Main_vX.gcl\
+		Apps/Main_v2.gcl\
 		Core/Reset_v2.gcl
 
 run: Docs/gtemu $(DEV).rom
