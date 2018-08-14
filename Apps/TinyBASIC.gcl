@@ -74,13 +74,15 @@
   Memory allocation:
           $30 -   $7f   BASIC interpreter variables
           $81 -   $ff   Stack for BASIC and vCPU (>50 GOSUB levels)
-         $200 - $17ff   BASIC interpreter, partly next to screen memory
-        $19a0 - $19bf   Input buffer ('line 0')
-        $19c0 -         Programs stored in the invisible part of screen memory
+         $200 - $19ff   BASIC interpreter, partly next to screen memory
+        $1aa0 - $1abf   Input buffer ('line 0')
+        $1ac0 -         Programs stored in the invisible part of screen memory
               - $7ebf   Arrays at the end, growing down
         $7ec0 - $7eff   FOR-NEXT loop pointers
+        $7fa0 - $7fbf   SAVE buffer
         $7fc0 - $7fff   BASIC variables A..Z
         $8000 - $ffff   Optional extra memory for BASIC programs (64K extension)
+                        (Variables etcetera move to the last two pages)
 
   Undocumented features and/or bugs:
         PRINT vs. print Keywords and variable names are case-insensitive
@@ -135,7 +137,7 @@
     Speed       Alternative: LET detection is now last, but should be first
     IF          Reintroduce the missing syntax error check
     A="...      As poor-men's substitute for DATA/READ
-    @           Give it an implicit meaning such as "max index allowed in arrays"
+    @           Give it an implicit meaning such as "max index in arrays"
     Speed       Cache result of NextBlock (at offset 30 of block?)
 
   'Maybe in v2' list:
@@ -175,13 +177,13 @@
   Memory layout:
         a0          b0          c0          d0          e0          f0       ff
        +-----------------------+-----------------------+-----------------------+
-$19a0  | Input buffer   Begin->| Program line 10       | Program line 20       |
+$1aa0  | Input buffer   Begin->| Program line 10       | Program line 20       |
        +-----------------------+-----------------------+-----------------------+
-$1aa0  | Program line 30       | Program line 40       | Program line 45       |
+$1ba0  | Program line 30       | Program line 40       | Program line 45       |
        +-----------------------+-----------------------+-----------------------+
-$1ba0  | Program line 50       | Program line 60  End->|K(98)             Z(98)|
+$1ca0  | Program line 50       | Program line 60  End->|K(97)             Z(97)|
        +-----------------------+-----------------------+-----------------------+
-       |                       |         @(98)    J(97)|K(97)             Z(97)|
+       |                       |         @(96)    J(96)|K(96)             Z(96)|
        :                       :                       :                       :
        :                       :                       :                       :
        :                       :                       :                       :
@@ -217,14 +219,12 @@ $7fa0  | SAVE buffer           | Variables @ A B ... J | K ... S T U V W X Y Z |
             Scroller    5 bands
             Rainbow     Show palette in a nice way
             Clock
-            Maze        The famous one-liner with / and \ --> Easter egg in ROMv2
-            Text        Color of characters and background at arbitrary positions
+            Maze        The famous one-liner with / and \ -> Easter egg in ROMv2
             LEDs        Control the blinkenlights
             Lines
             Circles     Lots of math
             Music       Play tones, vary with waveforms
             Sprites     Fake sprites with printing chars at arbitrary positions
-            TicTac.gtb  Test longer programs. Might need to shorten/preprocess lines.
 }
 
 gcl0x
@@ -361,7 +361,7 @@ $0300:
   push
 
   tmp=                          {Line number}
-  $19a0 Active=                 {Input buffer}
+  $1aa0 Active=                 {Input buffer}
   tmp Active:                   {For error messages}
   $a2 Active<.                  {Text area}
 
@@ -476,6 +476,10 @@ GetLine=
       Active, if<>0             {Find end of line}
       Active<++ loop]
     EndOfLine!]
+
+  Keyword! $6c# $69# $6e# $65#  {'line'}
+    0#
+  [if<>0 $19a0 call]
 
   $500 call                     {Continue in another page}
 ] Statements=
@@ -808,7 +812,7 @@ Number=
     SyntaxError!]               {There must be nothing left on the line}
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
-    $19c0 Active^ if<>0         {Also stop if we came from the input buffer}
+    $1ac0 Active^ if<>0         {Also stop if we came from the input buffer}
                                 {XXX Insert checkpointing here?}
     Active 2+ Active=           {Skip past line number}
     Statements!]                {And continue from there}
@@ -825,7 +829,7 @@ Number=
       i<, if<>0loop]            {Until end of page}
     0; i^ if<>0                 {Reached top of memory?}
     $1ca i+ loop]               {512-2*27}
-  $19c0 Begin=
+  $1ac0 Begin=
   ret
 ] {Clear=}
 
@@ -1056,7 +1060,7 @@ $11a0:
   pop ret
 ] RelOp=
 
-$19a0 deek End=                 {At startup 'End' comes from loaded segment}
+$1aa0 deek End=                 {At startup 'End' comes from loaded segment}
 2+ Active=                      {BASIC command(s) to run at startup}
 
 {-----------------------------------------------------------------------+
@@ -1250,7 +1254,7 @@ $16a0:
 +-----------------------------------------------------------------------}
 $17a0:
 
-  {SAVE}
+{SAVE}
 
   \romType, \romTypeValue_ROMvX-
   [if>=0                        {Only available from ROM vX}
@@ -1325,12 +1329,20 @@ $18a0:
   ret
 
 {-----------------------------------------------------------------------+
+|                       RAM page 25                                     |
++-----------------------------------------------------------------------}
+$19a0:
+
+{LINE}
+  ValueError!
+
+{-----------------------------------------------------------------------+
 |                       BASIC data                                      |
 +-----------------------------------------------------------------------}
 
 { BASIC data begins here. In this setup the interpreter can be patched
   to include a BASIC program and a first command for execution }
 
-$19a0: $a0# $19#                {Point to self}
+$1aa0: $a0# $1a#                {Point to self}
        $4e# $45# $57# 0#        {'NEW' to start interactive session}
 
