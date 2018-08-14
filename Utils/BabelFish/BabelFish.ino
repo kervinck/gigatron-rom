@@ -247,9 +247,9 @@ const byte tetris_gt1[]    PROGMEM = {
 };
 
 const struct { byte *gt1; char *name; } gt1Files[] = {
-  { TinyBASIC_gt1, "Tiny BASIC"               }, // 2702 bytes
-  { WozMon_gt1,    "WozMon"                   }, // 595 bytes
+  { TinyBASIC_gt1, "Tiny BASIC"               }, // 2996 bytes
 #if maxStorage >= 10000
+  { WozMon_gt1,    "WozMon"                   }, // 595 bytes
   { bricks_gt1,    "Bricks game [xbx]"        }, // 1607 bytes
 #endif
 #if maxStorage >= 20000
@@ -377,7 +377,6 @@ void loop()
         if (inByte == 10)
           Serial.print('\r');
         Serial.print((char)inByte);
-
       #endif
       // !!! FALL THROUGH !!!
   case 8:

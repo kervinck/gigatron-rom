@@ -3053,16 +3053,20 @@ def patchTinyBASIC(program):
     return ''.join([' $%02x#' % ord(c) for c in head + body])
 
   # Startup commands
-  program.line('$1aa0:' + basicLine(0x1cc0))
+  program.line('$1ba0:' + basicLine(0x1dc0))
   # Embedded program
-  program.line('$1ac0:' + basicLine(10, ' IF RND(2)=0 GOTO 40'))
-  program.line('$1ae0:' + basicLine(20, ' PRINT "|";'))
-  program.line('$1ba0:' + basicLine(30, ' GOTO 10'))
-  program.line('$1bc0:' + basicLine(40, ' PRINT "-";'))
-  program.line('$1be0:' + basicLine(50, ' GOTO 10'))
-  program.line('$1ca0:' + basicLine(60, ' REM *** Gigatron!'))
+  program.line('$1bc0:' + basicLine(10, ' IF RND(2)=0 GOTO 40'))
+  program.line('$1be0:' + basicLine(20, ' PRINT "|";'))
+  program.line('$1ca0:' + basicLine(30, ' GOTO 10'))
+  program.line('$1cc0:' + basicLine(40, ' PRINT "-";'))
+  program.line('$1ce0:' + basicLine(50, ' GOTO 10'))
+  program.line('$1da0:' + basicLine(60, ' REM *** Gigatron!'))
   # Program end
-  program.line('$1cc2:' + basicLine(None, '?"RUN":RUN'))
+  #program.line('$1dc2:' + basicLine(None, '?"RUN":RUN'))
+  program.line('$1dc2:' + basicLine(None, 'CLS:AT0:LINE80,60'))
+  program.line('$1de2:' + basicLine(None, 'LINE20,-15'))
+  program.line('$1ea2:' + basicLine(None, 'LINE-30,40'))
+  program.line('$1ec2:' + basicLine(None, 'LINE-5,-5:?:?:NEW'))
 
 # Load pre-compiled GT1 file
 #

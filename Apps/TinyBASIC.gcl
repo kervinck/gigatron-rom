@@ -23,7 +23,7 @@
   2018-07-03 (marcelk) Add RND(), with 0 <= RND(n) < |n|; USR()
   2018-07-18 (marcelk) Fix GOSUB/RETURN parsing bug causing syntax error
   2018-07-22 (marcelk) Add PUT, FOR/NEXT, ':', MODE (ROMv2), AT, CLS, arrays
-  2018-08-14 (marcelk) SAVE (draft)
+  2018-08-14 (marcelk) SAVE, LINE (both draft)
 
   Formal grammar:
 
@@ -33,6 +33,8 @@
                                  (String|Expression)?
                |  'AT' Expression (',' Expression)?
                |  'PUT' Expression
+               |  'CLS'
+               |  'LINE' Expression ',' Expression
                |  'IF' Expression RelOp Expression 'THEN'? Statements
                |  'GOTO' Expression
                |  'INPUT' Variable (',' Variable)*
@@ -44,7 +46,6 @@
                |  'RETURN'
                |  ('REM'|"'") Character*
                |  'MODE' Expression
-               |  'CLS'
                |  'NEW'
                |  'LIST'
                |  'RUN'
@@ -75,8 +76,8 @@
           $30 -   $7f   BASIC interpreter variables
           $81 -   $ff   Stack for BASIC and vCPU (>50 GOSUB levels)
          $200 - $19ff   BASIC interpreter, partly next to screen memory
-        $1aa0 - $1abf   Input buffer ('line 0')
-        $1ac0 -         Programs stored in the invisible part of screen memory
+        $1ba0 - $1bbf   Input buffer ('line 0')
+        $1bc0 -         Programs stored in the invisible part of screen memory
               - $7ebf   Arrays at the end, growing down
         $7ec0 - $7eff   FOR-NEXT loop pointers
         $7fa0 - $7fbf   SAVE buffer
@@ -123,6 +124,7 @@
 
   Wish list:
     LINE dX,dY  Draw a line (or LINE X, Y)
+                XXX Update Docs/TinyBASIC.ebnf etc
     SAVE        To Babelfish, using /vSync pulse width modulation
                 Demo: https://youtu.be/tAAXzB0iqBw
                 XXX Signal back success/failure from BabelFish
@@ -177,13 +179,13 @@
   Memory layout:
         a0          b0          c0          d0          e0          f0       ff
        +-----------------------+-----------------------+-----------------------+
-$1aa0  | Input buffer   Begin->| Program line 10       | Program line 20       |
+$1ba0  | Input buffer   Begin->| Program line 10       | Program line 20       |
        +-----------------------+-----------------------+-----------------------+
-$1ba0  | Program line 30       | Program line 40       | Program line 45       |
+$1ca0  | Program line 30       | Program line 40       | Program line 45       |
        +-----------------------+-----------------------+-----------------------+
-$1ca0  | Program line 50       | Program line 60  End->|K(97)             Z(97)|
+$1da0  | Program line 50       | Program line 60  End->|K(96)             Z(96)|
        +-----------------------+-----------------------+-----------------------+
-       |                       |         @(96)    J(96)|K(96)             Z(96)|
+       |                       |         @(95)    J(95)|K(95)             Z(95)|
        :                       :                       :                       :
        :                       :                       :                       :
        :                       :                       :                       :
@@ -361,7 +363,7 @@ $0300:
   push
 
   tmp=                          {Line number}
-  $1aa0 Active=                 {Input buffer}
+  $1ba0 Active=                 {Input buffer}
   tmp Active:                   {For error messages}
   $a2 Active<.                  {Text area}
 
@@ -812,7 +814,7 @@ Number=
     SyntaxError!]               {There must be nothing left on the line}
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
-    $1ac0 Active^ if<>0         {Also stop if we came from the input buffer}
+    $1bc0 Active^ if<>0         {Also stop if we came from the input buffer}
                                 {XXX Insert checkpointing here?}
     Active 2+ Active=           {Skip past line number}
     Statements!]                {And continue from there}
@@ -829,7 +831,7 @@ Number=
       i<, if<>0loop]            {Until end of page}
     0; i^ if<>0                 {Reached top of memory?}
     $1ca i+ loop]               {512-2*27}
-  $1ac0 Begin=
+  $1bc0 Begin=
   ret
 ] {Clear=}
 
@@ -1060,7 +1062,7 @@ $11a0:
   pop ret
 ] RelOp=
 
-$1aa0 deek End=                 {At startup 'End' comes from loaded segment}
+$1ba0 deek End=                 {At startup 'End' comes from loaded segment}
 2+ Active=                      {BASIC command(s) to run at startup}
 
 {-----------------------------------------------------------------------+
@@ -1334,7 +1336,57 @@ $18a0:
 $19a0:
 
 {LINE}
-  ValueError!
+
+  {XXX Eliminate variables U V }
+  {XXX Robustness X>=160}
+  {XXX Robustness page crossing}
+
+  1 U= $100 V=                  {Vector pair U, V}
+
+  Expression! 2-- 0%=           {Park dX argument on stack}
+  Keyword! $2c# 0#              {','}
+  [if=0 SyntaxError!]
+  Expression! j=                {dY argument as j}
+
+  [if<0                         {Make dY >= 0}
+    0 V- V=
+    0 j- j=]
+
+  0% i=                         {dX argument as i}
+  [if<0                         {Make dX >= 0}
+    0 U- U=
+    0 i- i=]
+
+  j- [if<0                      {Make dX >= Y}
+    i tmp= j i= tmp j=
+    U tmp= V U= tmp V=]
+
+  $1aa0 call
+
+{-----------------------------------------------------------------------+
+|                       RAM page 25                                     |
++-----------------------------------------------------------------------}
+$1aa0:
+
+{Continuation of LINE}
+
+  pop                           {Shorter than 2++}
+
+  0 i- k=                       {Setup line drawing inner loop}
+  tmp=
+  i i+ i=
+  j j+ j=
+
+  [do                           {Inner loop}
+    \sysArgs7, Pos.
+    k j+ k=
+    [if>0
+      i- k=
+      Pos V+ Pos=]
+    Pos U+ Pos=
+    tmp 1+ tmp= if<=0loop]
+
+  EndOfLine!                    { :-) }
 
 {-----------------------------------------------------------------------+
 |                       BASIC data                                      |
@@ -1343,6 +1395,6 @@ $19a0:
 { BASIC data begins here. In this setup the interpreter can be patched
   to include a BASIC program and a first command for execution }
 
-$1aa0: $a0# $1a#                {Point to self}
+$1ba0: $a0# $1b#                {Point to self}
        $4e# $45# $57# 0#        {'NEW' to start interactive session}
 
