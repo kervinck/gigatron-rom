@@ -24,6 +24,7 @@
   2018-07-18 (marcelk) Fix GOSUB/RETURN parsing bug causing syntax error
   2018-07-22 (marcelk) Add PUT, FOR/NEXT, ':', MODE (ROMv2), AT, CLS, arrays
   2018-08-14 (marcelk) SAVE, LINE (both draft)
+  2018-08-22 (marcelk) LINE now wraps around edges to stay on screen
 
   Formal grammar:
 
@@ -57,7 +58,7 @@
                |  (Variable|'PEEK'|'RND'|'USR')? '(' Expression ')'
   RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
   Number      ::= [0-9]+
-  Variable    ::= [A-Z] | '@
+  Variable    ::= [A-Z] | '@'
   String      ::= '"' ([#x20-#x21] | [#x23-#x7E])* '"'
   Character   ::= [#x20-#x7E]
 
@@ -123,13 +124,7 @@
         Apple 1 BASIC
 
   Wish list:
-    LINE dX,dY  Draw a line (or LINE X, Y)
-                XXX Update Docs/TinyBASIC.ebnf etc
-    SAVE        To Babelfish, using /vSync pulse width modulation
-                Demo: https://youtu.be/tAAXzB0iqBw
-                XXX Signal back success/failure from BabelFish
-                    E.g. by breaking (or typing something)
-                    Can we have a "Shift-Enter" code for typing?
+    Ctrl-C      For break, instead of DEL
 
   'Maybe in v1' list:
     A(0)=x,y,z  Array assignment with list expression
@@ -1308,6 +1303,8 @@ $18a0:
   120& [if=0 8]                 {Wrap around and re-align to 8-fold if needed}
   Pos>.
 
+  \sysArgs6; \sysArgs0:         {Apply caller-defined colors}
+
   Pos \sysArgs4=                {sysArgs[4:5] is position on screen}
   [do
     134! \sysArgs4<++           {SYS call and advance to next slice}
@@ -1316,7 +1313,6 @@ $18a0:
     if<>0loop]
 
   $01ee i=                      {Pointer to last entry in video table}
-
   255| deek                     {Gets [$100] aka Y[0] in vAC high byte}
   Pos- \vACH,                   {Compare with Y position}
   [if=0
@@ -1337,11 +1333,7 @@ $19a0:
 
 {LINE}
 
-  {XXX Eliminate variables U V }
-  {XXX Robustness X>=160}
-  {XXX Robustness page crossing}
-
-  1 U= $100 V=                  {Vector pair U, V}
+  1 \sysArgs0: $100 \sysArgs2:  {Vector pair U, V}
 
   Expression! 2-- 0%=           {Park dX argument on stack}
   Keyword! $2c# 0#              {','}
@@ -1349,17 +1341,20 @@ $19a0:
   Expression! j=                {dY argument as j}
 
   [if<0                         {Make dY >= 0}
-    0 V- V=
+    0 \SUBW# \sysArgs2#         {Inline assembly}
+    \sysArgs2:                  {V = -V}
     0 j- j=]
 
   0% i=                         {dX argument as i}
   [if<0                         {Make dX >= 0}
-    0 U- U=
+    0 \SUBW# \sysArgs0#         {Inline assembly}
+    \sysArgs0:                  {U = -U}
     0 i- i=]
 
-  j- [if<0                      {Make dX >= Y}
-    i tmp= j i= tmp j=
-    U tmp= V U= tmp V=]
+  j- [if<0                      {Make dX >= dY}
+    i tmp= j i= tmp j=          {Swap i, j}
+    \sysArgs0; tmp= \sysArgs2;  {Swap U, V}
+    \sysArgs0: tmp  \sysArgs2:]
 
   $1aa0 call
 
@@ -1372,19 +1367,28 @@ $1aa0:
 
   pop                           {Shorter than 2++}
 
-  0 i- k=                       {Setup line drawing inner loop}
-  tmp=
-  i i+ i=
-  j j+ j=
+  Value                         {dY argument}
+  [if<0 $7800 else $8800]       {Vertical gap}
+  \sysArgs4:
+
+  i tmp=                        {Setup line drawing inner loop}
+  k=                            {Bresenham's error}
 
   [do                           {Inner loop}
-    \sysArgs7, Pos.
-    k j+ k=
-    [if>0
-      i- k=
-      Pos V+ Pos=]
-    Pos U+ Pos=
-    tmp 1+ tmp= if<=0loop]
+    \sysArgs7, Pos.             {Plot pixel in pen color}
+    k j- j- k=                  {Update Bresenham's error}
+    [if<0                       {If threshold exceeded}
+      i+ i+ k=
+      \sysArgs2; Pos+ Pos=]     {Pos += V {Step along short side}}
+    \sysArgs0; Pos+ Pos=        {Pos += U {Step along long side}}
+
+    Pos>, $78& [if=0            {This occurs midscreen if text has scrolled}
+      \sysArgs4; Pos+ Pos=]     {Map Y back into 8..127 range}
+
+    Pos<, 160- [if>=0           {Wrapping around left/right border}
+      [if>0 64+] Pos<.]         {Map X back into 0..159 range}
+
+    tmp 1- tmp= if>=0loop]      {Loop counter}
 
   EndOfLine!                    { :-) }
 
