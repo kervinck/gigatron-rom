@@ -1299,7 +1299,7 @@ $18a0:
   0 Pos<.                       {Go back to start of line}
   \sysArgs2.                    {All-zero output pattern}
 
-  Pos>, 8+                      {Go down 8 lines}
+  Pos>, 15+                     {Go down upto 8 upto 15 lines}
   120& [if=0 8]                 {Wrap around and re-align to 8-fold if needed}
   Pos>.
 
