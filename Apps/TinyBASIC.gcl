@@ -1335,7 +1335,7 @@ $19a0:
 
   1 \sysArgs0: $100 \sysArgs2:  {Vector pair U, V}
 
-  Expression! 2-- 0%=           {Park dX argument on stack}
+  Expression! push 0%=          {Park dX argument on stack}
   Keyword! $2c# 0#              {','}
   [if=0 SyntaxError!]
   Expression! j=                {dY argument as j}
@@ -1356,6 +1356,8 @@ $19a0:
     \sysArgs0; tmp= \sysArgs2;  {Swap U, V}
     \sysArgs0: tmp  \sysArgs2:]
 
+  pop                           {Shorter than 2++}
+
   $1aa0 call
 
 {-----------------------------------------------------------------------+
@@ -1364,8 +1366,6 @@ $19a0:
 $1aa0:
 
 {Continuation of LINE}
-
-  pop                           {Shorter than 2++}
 
   Value                         {dY argument}
   [if<0 $7800 else $8800]       {Vertical gap}
@@ -1376,19 +1376,22 @@ $1aa0:
 
   [do                           {Inner loop}
     \sysArgs7, Pos.             {Plot pixel in pen color}
+
+    tmp 1- tmp= if>=0           {Loop counter}
+
     k j- j- k=                  {Update Bresenham's error}
     [if<0                       {If threshold exceeded}
       i+ i+ k=
       \sysArgs2; Pos+ Pos=]     {Pos += V {Step along short side}}
     \sysArgs0; Pos+ Pos=        {Pos += U {Step along long side}}
 
+    Pos<, 160- [if>=0           {Wrapping around left/right border}
+      [if>0 Pos>++ 64+] Pos<.]  {Map X back into 0..159 range}
+
     Pos>, $78& [if=0            {This occurs midscreen if text has scrolled}
       \sysArgs4; Pos+ Pos=]     {Map Y back into 8..127 range}
 
-    Pos<, 160- [if>=0           {Wrapping around left/right border}
-      [if>0 64+] Pos<.]         {Map X back into 0..159 range}
-
-    tmp 1- tmp= if>=0loop]      {Loop counter}
+    loop]
 
   EndOfLine!                    { :-) }
 
