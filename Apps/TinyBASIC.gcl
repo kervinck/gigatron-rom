@@ -7,7 +7,8 @@
 |       - One statement per line, up to 25 characters per line          |
 |       - Supports roughly 300 line programs in the 32K system          |
 |       - Based on Dennis Allison's original 1976 Tiny BASIC            |
-|       - Extended with POKE/PEEK/RND/FOR/NEXT/CLS/AT/PUT/MODE/Arrays   |
+|       - Extended with POKE/PEEK/RND/FOR/NEXT/CLS/AT/PUT/MODE/Arrays/  |
+|         LINE/SAVE                                                     |
 |                                                                       |
 +-----------------------------------------------------------------------}
 
@@ -322,7 +323,7 @@ $0300:
                                  and using AT with non-multiples of 8,
                                  leading to unexpected missing of text}
 
-      Pos<, 155- [if>0          {Automatic newline BEFORE printing}
+      Pos<, 154- [if>0          {Automatic newline BEFORE printing}
         push Newline! pop]
 
       k 82-                     {Map ASCII code to offset in font table}
@@ -1197,7 +1198,7 @@ $15a0:
       j 1- if>0loop]
     [do                         {Continue until video table is normal}
       Newline!
-      $100 peek 8^ if>0loop]
+      $100 peek 8^ if<>0loop]
     8 Pos>.                     {Return cursor to top of page}
     EndOfLine!]
 
