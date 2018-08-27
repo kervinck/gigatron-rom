@@ -652,7 +652,7 @@ $0600:
 ] Insert=
 
 [def
-  \serialRaw, $7f^              {Test for [Del] as break request}
+  \serialRaw, 3^                {Test for Ctrl-C (ASCII ETX) as break request}
   [if=0
     PrintCharDirect PrintChar=  {In case we break a SAVE command}
     Prompt!                     {'Break'}
@@ -1282,6 +1282,8 @@ $17a0:
     ] PrintChar=
 
     List!                       {List whole program, redirected}
+    TestBreak!                  {BabelFish can signal BREAK when EEPROM full}
+
     PrintCharDirect PrintChar=  {Restore PrintChar}
                                 {XXX Handle break more elegantly}
   ]
