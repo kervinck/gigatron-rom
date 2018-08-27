@@ -21,10 +21,10 @@ export class Vga {
         this.pixels = this.imageData.data;
         this.cpu = cpu;
         this.row = 0;
-        this.minRow = options.vertical.backPorch;
+        this.minRow = options.vertical.backPorch + options.vertical.pulse;
         this.maxRow = this.minRow + options.vertical.visible;
         this.col = 0;
-        this.minCol = options.horizontal.backPorch;
+        this.minCol = options.horizontal.backPorch + options.horizontal.pulse;
         this.maxCol = this.minCol + options.horizontal.visible;
         this.pixel = 0;
         this.out = 0;
@@ -46,7 +46,7 @@ export class Vga {
         let falling = this.out & ~out;
 
         if (falling & VSYNC) {
-            this.row = 0;
+            this.row = -1; // After 4 more CPU cycles HSYNC increments row to 0
             this.pixel = 0;
             this.render();
         }
@@ -59,11 +59,6 @@ export class Vga {
         // Chrome optimizer put this before the falling calculation
         // if it follows immediately after it, so it got moved down here
         this.out = out;
-
-        if ((out & (VSYNC | HSYNC)) != (VSYNC | HSYNC)) {
-            // blanking interval
-            return;
-        }
 
         if ((this.row >= this.minRow && this.row < this.maxRow) &&
             (this.col >= this.minCol && this.col < this.maxCol)) {

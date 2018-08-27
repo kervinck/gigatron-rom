@@ -136,12 +136,14 @@ $(function() {
     let vga = new Vga(vgaCanvas.get(0), cpu, {
         horizontal: {
             frontPorch: 16,
+            pulse: 96,
             backPorch: 48,
             visible: 640,
         },
         vertical: {
-            frontPorch: 10,
-            backPorch: 34,
+            frontPorch: 6,
+            pulse: 8,
+            backPorch: 27,
             visible: 480,
         },
     });
