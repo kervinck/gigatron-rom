@@ -89,6 +89,12 @@ export class Gamepad {
                 } else {
                     let ascii = this.asciiMap[event.key];
                     if (ascii) {
+                        if (event.ctrlKey) {
+                            // Control codes (e.g. Ctrl-C for ETX or BREAK)
+                            if      (ascii == 63 /*'?'*/) ascii = 127;
+                            else if (ascii == 32 /*' '*/) ascii = 0;
+                            else                          ascii &= 31;
+                        }
                         this.pressed = ascii ^ 0xff; /// will be inverted again in tick()
                         event.preventDefault();
                     }
