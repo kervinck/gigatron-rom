@@ -83,7 +83,7 @@ const byte nrKeymaps = arrayLen(keymapNames);
 
 int getKeymapIndex(void)
 {
-  int index = EEPROM.read(offsetof(struct EEPROMlayout, keymapIndex));
+  byte index = EEPROM.read(offsetof(struct EEPROMlayout, keymapIndex));
   return (index >= nrKeymaps) ? 0 : index; // Also handle invalid values
 }
 
@@ -413,8 +413,8 @@ enum {
  flags &= ~(breakFlag | extendedFlag)
 
 static word flags = 0;
-static word ascii = 0;
-static long lastChange;
+static byte ascii = 0;
+static word lastChange;
 
 // XXX Put variables in a class for better scoping
 
@@ -423,7 +423,7 @@ static long lastChange;
  */
 static int bitBuffer;
 static byte _n;
-static long lastClock;
+static word lastClock;
 
 /*
  * Input buffering
@@ -470,10 +470,9 @@ void keyboard_setup()
 //  bit 10   : stop bit (1)
 void ps2interrupt()
 {
+  byte nextBit = digitalRead(keyboardDataPin);
 
-  int nextBit = digitalRead(keyboardDataPin);
-
-  long now = (long) millis();   // millis() stops when interrupts are disabled,
+  word now = (word) millis();   // millis() stops when interrupts are disabled,
                                 // but that is ok, because we will reset n
                                 // after every vPulse (through allowPs2())
 
@@ -531,11 +530,11 @@ static byte readPs2Buffer()
 
 byte keyboard_getState()
 {
-  long now = (long) millis();           // Note: without interrupts millis() stops counting
+  word now = (word) millis();           // Note: without interrupts millis() stops counting
   for (;;) {
     word value = readPs2Buffer();
     if (value == 0) {                   // Buffer is empty
-      long hold = 35;                   // Hold ASCII keys for 3 frames (less than repetition rate)
+      word hold = 35;                   // Hold ASCII keys for 3 frames (less than repetition rate)
       if (ascii == (255^buttonStart))   // [Ctrl-Alt-Del] maps to [Start] for 2 seconds
         hold = 2500;
       if (now - lastChange > hold) 
