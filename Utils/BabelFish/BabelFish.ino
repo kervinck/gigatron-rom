@@ -248,8 +248,8 @@ const byte tetris_gt1[]    PROGMEM = {
 
 const struct { byte *gt1; char *name; } gt1Files[] = {
   { TinyBASIC_gt1, "BASIC"                    }, // 3037 bytes
-  { WozMon_gt1,    "WozMon"                   }, // 595 bytes
 #if maxStorage >= 10000
+  { WozMon_gt1,    "WozMon"                   }, // 595 bytes
   { bricks_gt1,    "Bricks game [xbx]"        }, // 1607 bytes
 #endif
 #if maxStorage >= 20000
@@ -262,6 +262,7 @@ const struct { byte *gt1; char *name; } gt1Files[] = {
   { life3_gt1,     "Game of Life demo [at67]" }, // 441 bytes
   { starfield_gt1, "Starfield demo [at67]"    }, // 817 bytes
 #endif
+  { NULL,          "-SAVED-"                  },
 };
 
 /*----------------------------------------------------------------------+
@@ -320,6 +321,9 @@ struct EEPROMlayout {
   byte savedFile[];
 };
 
+#define fileStart offsetof(struct EEPROMlayout, savedFile)
+static word saveIndex = fileStart; // Write pointer into EEPROM for file (BASIC)
+static word EEPROM_length;
 
 #define arrayLen(a) ((int) (sizeof(a) / sizeof((a)[0])))
 extern const byte nrKeymaps; // From in PS2.ino
@@ -343,6 +347,9 @@ void setup()
     doVersion();
   #endif
 
+  // Cache for speed
+  EEPROM_length = EEPROM.length();
+
   // In case we power on together with the Gigatron, this is a
   // good pause to wait for the video loop to have started
   delay(350);
@@ -359,9 +366,9 @@ void setup()
 void loop()
 {
   // Check Gigatron's vPulse for incoming data
-  static byte inByte, inBit;
+  static byte inByte, inBit, inLen;
   critical();
-  byte newValue = receiveBits(20000);
+  byte newValue = waitVSync();
   nonCritical();
   switch (newValue) {
     case 0:
@@ -373,11 +380,23 @@ void loop()
       inBit <<= 1;
       if (inBit != 0)
         break;
+      if (saveIndex < EEPROM_length)
+        EEPROM.write(saveIndex++, inByte);
       #if hasSerial
         if (inByte == 10)
           Serial.print('\r');
         Serial.print((char)inByte);
       #endif
+      if (inByte == 10) {
+        if (saveIndex < EEPROM_length)
+          EEPROM.write(saveIndex, 0);
+        else
+          sendController(3, 3); // Ctrl-C to break SAVE
+        if (inLen == 0)
+          saveIndex = fileStart;
+        inLen = 0;
+      } else
+        inLen++;
       // !!! FALL THROUGH !!!
   case 8:
       inByte = 0;
@@ -398,8 +417,12 @@ void loop()
     if (f) {
       if (f == 1)
         doMapping();                   // Ctrl-F1 is help
-      else if (f-2 < arrayLen(gt1Files))
-        doTransfer(gt1Files[f-2].gt1); // Send built-in GT1 file to Gigatron
+      else if (f-2 < arrayLen(gt1Files)) {
+        if (gt1Files[f-2].gt1)
+          doTransfer(gt1Files[f-2].gt1); // Send built-in GT1 file to Gigatron
+        else
+          sendSavedFile();
+      }
     }
     for (;;) {                         // Focus all attention on PS/2 until state is idle again
       if (!fnKey(key ^ 64)) {          // Filter away the Ctrl+Fn combinations here
@@ -748,14 +771,12 @@ void doTransfer(const byte *gt1)
 {
   int nextByte;
 
-#if 0 // XXX Disabled because of code size explosion
-  if (!detectGigatron()) {
-    #if hasSerial
+  #if hasSerial
+    if (!waitVSync()) {
       Serial.print("!Failed");
-    #endif
-    return;
-  }
-#endif
+      return;
+    }
+  #endif
 
   #if hasSerial
     #define readNext()\
@@ -1028,16 +1049,18 @@ void sendBits(byte value, byte n)
 
 // Count number of hSync pulses during vPulse
 // This is a way for the Gigatron to send information out
-byte receiveBits(int timeout)
+byte waitVSync()
 {
-  // Wait vertical sync NEGATIVE edge to sync with loader
+  word timeout = 0; // 2^16 cycles must give at least 17 ms
+
+  // Wait vertical sync NEGATIVE edge
 
   while (~PINB & gigatronLatchBit) // Ensure vSync is HIGH first
-    if (!timeout--)
+    if (!--timeout)
       return 0;
 
   while (PINB & gigatronLatchBit) // Then wait for vSync to drop
-    if (!timeout--)
+    if (!--timeout)
       return 0;
 
   // Now count horizontal sync POSITIVE edges
@@ -1063,14 +1086,26 @@ byte receiveBits(int timeout)
 // Length of a Tiny BASIC file saved in EEPROM.
 // File contents are zero-terminated ASCII byte values (1..126)
 // or until end of EEPROM area.
-size_t savedFileLength()
+word savedFileLength()
 {
-    size_t fileStart = offsetof(struct EEPROMlayout, savedFile);
-    size_t maxLen = EEPROM.length() - fileStart;
-    size_t len;
+    word maxLen = EEPROM.length() - fileStart;
+    word len;
     for (len=0; len!=maxLen; len++)
       if ((EEPROM.read(fileStart + len) ^ 127) >= 127) // 1..126 is ok
         break;
     return len;
+}
+
+// Send a saved file as keystrokes to the Gigatron
+void sendSavedFile()
+{
+    word i = fileStart;
+    do {
+      byte nextByte = EEPROM.read(i);
+      if (nextByte == 0)
+        break;
+      sendController(nextByte, 1);
+      delay(70);  // Allow Gigatron software to process line
+    } while (++i < EEPROM.length());
 }
 

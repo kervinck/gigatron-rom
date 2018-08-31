@@ -26,6 +26,7 @@
   2018-07-22 (marcelk) Add PUT, FOR/NEXT, ':', MODE (ROMv2), AT, CLS, arrays
   2018-08-14 (marcelk) SAVE, LINE (both draft)
   2018-08-22 (marcelk) LINE now wraps around edges to stay on screen
+  2018-08-31 (marcelk) SAVE into BabelFish EEPROM
 
   Formal grammar:
 
@@ -67,8 +68,9 @@
         .gtb            GigaTron BASIC / Gigatron Tiny BASIC
 
   Error messages:
-        Break error     Program (or list command) stopped by [Del] key
-        Syntax error    Parse error / Program too large
+        Break error     Program (or LIST command) interrupted /
+                        Out of space for SAVE (511 bytes for ATTiny85!)
+        Syntax error    Parse error / Program too large for memory (~300 lines)
         Value error     Value or index out of range / Calculation error
                         (division by 0) / NEXT without FOR
         Stack error     GOSUB nesting too deep / RETURN without GOSUB
@@ -125,9 +127,11 @@
         Apple 1 BASIC
 
   Wish list:
-    Ctrl-C      For break, instead of DEL
+    Newline     Less clearing when not scrolling
+    Speed       RUN has a biggish delay esp at 64K. Speedup array clearning.
+    romType     Check that save only does something on ROM v3 up
 
-  'Maybe in v1' list:
+  'Maybe in v2' list:
     A(0)=x,y,z  Array assignment with list expression
     A$ .. Z$    String variables (only in LET, PRINT, INPUT?)
     Boot        Some kind of autorun of a saved program
@@ -138,7 +142,7 @@
     @           Give it an implicit meaning such as "max index in arrays"
     Speed       Cache result of NextBlock (at offset 30 of block?)
 
-  'Maybe in v2' list:
+  'Maybe in v3' list:
     Unary minus Original Tiny BASIC does it wrong: 8/-2
     Speed       Cache GOTO/GOSUB target (only for constant targets...)
     Speed       SYS functions for NextBlock, EndOfLine, Number
@@ -545,11 +549,6 @@ $0500:
     Expression!
     PrintChar!
     EndOfLine!]
-
-  Keyword! $64# $72# $61# $77#  {'draw'}
-     0#
-  [if<>0
-    SyntaxError!]
 
   Keyword! $70# $72# $69# $6e#  {'print'}
     $74# 0#
@@ -1280,6 +1279,10 @@ $17a0:
       PrintCharDirect!          {Print to screen as well}
       pop ret
     ] PrintChar=
+
+    [do
+       \serialRaw, 255^         {Wait for BabelFish to appear ready to receive}
+       if<>0loop]
 
     List!                       {List whole program, redirected}
     TestBreak!                  {BabelFish can signal BREAK when EEPROM full}
