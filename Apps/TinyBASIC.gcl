@@ -1253,8 +1253,8 @@ $17a0:
 
 {SAVE}
 
-  \romType, \romTypeValue_ROMvX-
-  [if>=0                        {Only available from ROM vX}
+  \romType, \romTypeValue_ROMv3-
+  [if>=0                        {Only available from ROM v3}
 
     {Saving works by redirecting PrintChar and then calling List}
     {First line out will be a bare newline to signal a new program}

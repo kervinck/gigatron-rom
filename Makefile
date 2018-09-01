@@ -1,5 +1,5 @@
 CFLAGS:=-std=c11 -O3 -Wall
-DEV:=ROMv2x
+DEV:=ROMv3x
 
 # Latest released version as default target
 ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
@@ -38,9 +38,9 @@ ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 dev: $(DEV).rom
 $(DEV).rom: Core/* Apps/* Images/* Makefile interface.json
 	# Development towards ROMv2 (minor changes only)
-	env romType="0x20"\
+	env romType="0x28"\
 	    PYTHONPATH="Core:$(PYTHONPATH)"\
-	    python Core/ROMv2x.py\
+	    python Core/$(DEV).py\
 		Apps/Snake_v2.gcl\
 		Apps/Racer_v1.gcl\
 		Apps/Mandelbrot_v1.gcl\
@@ -49,8 +49,8 @@ $(DEV).rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Loader_v1.gcl\
 		Apps/TinyBASIC.gcl\
 		Apps/WozMon.gcl\
-		Apps/Main_v2.gcl\
-		Core/Reset_v2.gcl
+		Apps/Main_v3.gcl\
+		Core/Reset_v3.gcl
 
 run: Docs/gtemu $(DEV).rom
 	Docs/gtemu $(DEV).rom
