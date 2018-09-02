@@ -45,7 +45,7 @@ gcl0x
   Text=
   [do
     Text, if<>0 Char= Text<++           {while((Char=*Text++)!=0)...}
-    9^ [if=0 Pos 30+ Pos= loop]         {Horizontal tab}
+    9^ [if=0 Pos 18+ Pos= loop]         {Horizontal tab}
     3^ [if=0 Newline! loop]             {Newline 9^10=3}
     PrintChar!                          {Regular character}
     loop]
@@ -54,7 +54,7 @@ gcl0x
 
 [def {Newline}
   Pos>, 8+ Pos>.
-  0 Pos<.
+  2 Pos<.
   ret
 ] Newline=
 
@@ -69,7 +69,7 @@ gcl0x
 
 [def
   push
-  $200c Pos=
+  $2002 Pos=
   Item [do j= $800 Pos+ Pos= j 1- if>=0loop]
   $2d {'-'} Char= PrintChar!
   $3e {'>'} Char= PrintChar!
@@ -82,20 +82,24 @@ gcl0x
 $0300:
 
 [def
-  9# $53# $6e# $61# $6b# $65# 10#                          {Snake}
-  9# $52# $61# $63# $65# $72# 10#                          {Racer}
-  9# $4d# $61# $6e# $64# $65# $6c# $62# $72# $6f# $74# 10# {Mandelbrot}
-  9# $50# $69# $63# $74# $75# $72# $65# $73# 10#           {Pictures}
-  9# $43# $72# $65# $64# $69# $74# $73# 10#                {Credits}
-  9# $4c# $6f# $61# $64# $65# $72# 10#                     {Loader}
+  9# $53# $6e# $61# $6b# $65#   9#       32#  32#       {Snake}
+  9# $54# $65# $74# $72# $6f# $6e# $69# $73# 10#                {Tetronis}
+  9# $52# $61# $63# $65# $72#   9#       32#  32#       {Racer}
+  9# $42# $72# $69# $63# $6b# $73# 10#                          {Bricks}
+  9# $4d# $61# $6e# $64# $65# $6c# $62# $72# $6f# $74#  {Mandelbrot}
+  9# $42# $41# $53# $49# $43# 10#                               {BASIC}
+  9# $50# $69# $63# $74# $75# $72# $65# $73#   32# 32#  {Pictures}
+  9# $57# $6f# $7a# $4d# $6f# $6e# 10#                          {WozMon}
+  9# $43# $72# $65# $64# $69# $74# $73# 10#             {Credits}
+  9# $4c# $6f# $61# $64# $65# $72# 10#                  {Loader}
   0#
 ] MainMenu=
 
 [def
-  { Use [Up/Down] to select}
-  $20# $55# $73# $65# $20# $5b# $55# $70#
-  $2f# $44# $6f# $77# $6e# $5d# $20# $74#
-  $6f# $20# $73# $65# $6c# $65# $63# $74#
+  { Use [Arrows] to select}
+  $20# $55# $73# $65# $20# $5b# $41# $72#
+  $72# $6f# $77# $73# $5d# $20# $74# $6f#
+  $20# $73# $65# $6c# $65# $63# $74#
   {Press [A] to start program}
   10#
   $50# $72# $65# $73# $73# $20# $5b# $41#
@@ -135,7 +139,7 @@ $0400:
 120 \soundTimer.
 
 { Print menu }
-$2000 Pos=
+$2002 Pos=
 PrintMenu!
 
 { Operate menu }
@@ -168,7 +172,11 @@ PrintMenu!
   1-   [if=0 \Mandelbrot else
   1-   [if=0 \Pictures   else
   1-   [if=0 \Credits    else
-  1-   [if=0 \Loader     else loop]]]]]]
+  1-   [if=0 \Loader     else
+  1-   [if=0 \Tetronis   else
+  1-   [if=0 \Bricks     else
+  1-   [if=0 \TinyBASIC  else
+  1-   [if=0 \WozMon     else loop]]]]]]]]]]
   Program=
 ]
 

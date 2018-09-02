@@ -35,7 +35,7 @@ gcl0x
   { Startup message:
     +--------------------------+
     |   *** Gigatron ??K ***   |
-    | TTL microcomputer ROM v2 | }
+    | TTL microcomputer ROM v3x| }
   [def
     {Line 1}
     $2a# $2a# $2a# $20# $47# $69# $67# $61#
@@ -58,7 +58,7 @@ gcl0x
 
   [do
     Text, if<>0 Char= Text<++ {while((Char=*Text++)!=0)...}
-    10^ [if=0 Pos<. Pos>, 8+ Pos>. else PrintChar!]
+    10^ [if=0 2 Pos<. Pos>, 8+ Pos>. else PrintChar!]
     loop]
   pop ret
 ] PrintStartupMessage=
@@ -117,7 +117,7 @@ $0300:
 { Now it is safe to call functions }
 SetupAudio!
 SetupVideo!
-$812 Pos= PrintStartupMessage! {Returns 0}
+$814 Pos= PrintStartupMessage! {Returns 0}
 
 { Start blinkenlights }
 \ledState_v2, 128&              {Check if sequencer still running}
