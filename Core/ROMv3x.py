@@ -2964,7 +2964,7 @@ def importImage(rgbName, width, height, ref):
         trampoline3b()
 
 importImage('Images/Parrot-160x120.rgb',  160, 120, 'packedParrot')
-importImage('Images/Baboon-160x120.rgb',  160, 120, 'packedBaboon')
+#importImage('Images/Baboon-160x120.rgb',  160, 120, 'packedBaboon')
 importImage('Images/Jupiter-160x120.rgb', 160, 120, 'packedJupiter')
 
 #-----------------------------------------------------------------------
@@ -3068,38 +3068,45 @@ def patchTinyBASIC(program):
   program.line('$1ea2:' + basicLine(None, 'LINE-30,40'))
   program.line('$1ec2:' + basicLine(None, 'LINE-5,-5:?:?:NEW'))
 
-# Load pre-compiled GT1 file
-#
-#gt1File = 'Contrib/at67/vCPU/graphics/lines.gt1'
-#name = 'Lines'
-#f = open(gt1File, 'rb')
-#raw = f.read()
-#f.close()
-#print
-#print 'Include file %s label %s ROM %04x' % (gt1File, name, pc())
-#label(name)
-#raw = raw[:-2] # Drop start address
-#program = gcl.Program(userCode, name)
-#zpReset(userVars)
-#for byte in raw:
-  #program.putInRomTable(ord(byte))
-#program.end()
+# Embedded programs:
+# Compile built-in GCL programs or load pre-compiled GT1 files
+for application in argv[1:]:
 
-# Compile built-in GCL programs
-for gclSource in argv[1:]:
-  name = gclSource.rsplit('.', 1)[0] # Remove extension
-  name = name.rsplit('_v', 1)[0]     # Remove version
-  name = name.rsplit('/', 1)[-1]     # Remove path
-  print
-  print 'Compile file %s label %s ROM %04x' % (gclSource, name, pc())
-  label(name)
-  program = gcl.Program(userCode, name)
-  zpReset(userVars)
-  for line in open(gclSource).readlines():
-    program.line(line)
-  if name == 'TinyBASIC':
-    patchTinyBASIC(program)
-  program.end()
+  if application.endswith('.gt1'):
+    gt1File = application
+    name = gt1File.rsplit('.', 1)[0]    # Remove extension
+    name = name.rsplit('_v', 1)[0]      # Remove version
+    name = name.rsplit('/', 1)[-1]      # Remove path
+    print
+    print 'Include file %s label %s ROM %04x' % (gt1File, name, pc())
+    with open(gt1File, 'rb') as f:
+      raw = f.read()
+    label(name)
+    raw = raw[:-2] # Drop start address
+    program = gcl.Program(userCode, name)
+    zpReset(userVars)
+    for byte in raw:
+      program.putInRomTable(ord(byte))
+    program.end()
+
+  elif application.endswith('.gcl'):
+    gclSource = application
+    name = gclSource.rsplit('.', 1)[0]  # Remove extension
+    name = name.rsplit('_v', 1)[0]      # Remove version
+    name = name.rsplit('/', 1)[-1]      # Remove path
+    print
+    print 'Compile file %s label %s ROM %04x' % (gclSource, name, pc())
+    label(name)
+    program = gcl.Program(userCode, name)
+    zpReset(userVars)
+    for line in open(gclSource).readlines():
+      program.line(line)
+    if name == 'TinyBASIC':
+      patchTinyBASIC(program)
+    program.end()
+
+  else:
+    assert False
 print
 
 if pc()&255:

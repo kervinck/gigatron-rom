@@ -7,11 +7,6 @@ gcl0x
 |                                                                       |
 +-----------------------------------------------------------------------}
 
-{
-  XXX Gigatron logo drawing
-  XXX Rising planet with bombastic tune (like Space Odyssey)
-}
-
 { Fall into TinyBASIC if [Start] is pressed for >4 seconds }
 \buttonState;                   {Fetch buttonState and resetTimer}
 [if>0                           {If resetTimer positive}
@@ -69,7 +64,7 @@ gcl0x
 
 [def
   push
-  $2002 Pos=
+  Item 6- [if<0 $2008 else $f056] Pos=
   Item [do j= $800 Pos+ Pos= j 1- if>=0loop]
   $2d {'-'} Char= PrintChar!
   $3e {'>'} Char= PrintChar!
@@ -131,54 +126,75 @@ $0300:
   pop ret
 ] PrintMenu=
 
+120 \soundTimer.
+$2002 Pos=
+
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
 $0400:
 
-120 \soundTimer.
-
-{ Print menu }
-$2002 Pos=
-PrintMenu!
-
 { Operate menu }
-0 Item=
-[do
-  \frameCount, Color= PrintArrow!
+[def
+  push
+  0 Item=
+  [do
+    \frameCount, Color= PrintArrow!
 
-  { Handle each stroke of Up/Down and A controller buttons }
+    { Handle each stroke of Up/Down and A controller buttons }
 
-  {buttonUp}
-  \buttonState, 247^ [if=0
-     WipeOutArrow!
-     Item    [if>0 1- else 0] Item=
-     \buttonState, 8| \buttonState.]
+    {buttonRight}
+    \buttonState, 254^ [if=0
+       WipeOutArrow!
+       Item 3- [if<=0 9+ Item=]
+       \buttonState, 1| \buttonState.]
 
-  {buttonDown}
-  \buttonState, 251^ [if=0
-     WipeOutArrow!
-     Item 5- [if<0 6+ else 5] Item=
-     \buttonState, 4| \buttonState.]
+    {buttonLeft}
+    \buttonState, 253^ [if=0
+       WipeOutArrow!
+       Item 6- [if>=0 Item=]
+       \buttonState, 2| \buttonState.]
 
-  {buttonA}
-  \buttonState, 127^ if<>0loop
+    {buttonDown}
+    \buttonState, 251^ [if=0
+       WipeOutArrow!
+       Item 5- [if<>0 4- if<>0 Item<++]
+       \buttonState, 4| \buttonState.]
 
-  42 {Gray} Color= PrintArrow!
+    {buttonUp}
+    \buttonState, 247^ [if=0
+       WipeOutArrow!
+       Item [if<>0 6- if<>0 Item 1- Item=]
+       \buttonState, 8| \buttonState.]
 
-  { Map menu item to program }
-  Item [if=0 \Snake      else
-  1-   [if=0 \Racer      else
-  1-   [if=0 \Mandelbrot else
-  1-   [if=0 \Pictures   else
-  1-   [if=0 \Credits    else
-  1-   [if=0 \Loader     else
-  1-   [if=0 \Tetronis   else
-  1-   [if=0 \Bricks     else
-  1-   [if=0 \TinyBASIC  else
-  1-   [if=0 \WozMon     else loop]]]]]]]]]]
-  Program=
-]
+    {buttonA}
+    \buttonState, 127^ if<>0loop
+
+    42 {Gray} Color= PrintArrow!
+
+    { Map menu item to program }
+    Item [if=0 \Snake      else
+    1-   [if=0 \Racer      else
+    1-   [if=0 \Mandelbrot else
+    1-   [if=0 \Pictures   else
+    1-   [if=0 \Credits    else
+    1-   [if=0 \Loader     else
+    1-   [if=0 \Tetronis   else
+    1-   [if=0 \Bricks     else
+    1-   [if=0 \TinyBASIC  else
+    1-   [if=0 \WozMon     else loop]]]]]]]]]]
+    Program=
+  ]
+  pop ret
+] SelectMenu=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 5                                      |
++-----------------------------------------------------------------------}
+$0500:
+
+PrintMenu!
+SelectMenu!
 
 { Wipe out everything but the selected and bottom line }
 $800 p= $8801 i=

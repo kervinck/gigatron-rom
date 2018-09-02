@@ -27,12 +27,14 @@ gcl0x
     fontData 0? fontData<++ \sysArgs2. 134!
     \sysArgs4<++
     i<++ i if<>0loop]
+  \sysArgs2. 134!           {Render 6th slice}
   ret
 ] PrintChar=
 
 { Display ready to load text }
-$500c Pos=
-[def {Ready to load}
+$5006 Pos=
+[def { Ready to load}
+  $20#
   $52# $65# $61# $64# $79# $20# $74# $6f#
   $20# $6c# $6f# $61# $64# 0# ] Text=
 [do Text, if<>0 Text<++ PrintChar! loop]
