@@ -32,27 +32,16 @@
 #  DONE Sanity test on several monitors
 #  DONE Update version number to v2
 #
-#  Ideas for ROM vX
-#  XXX SYS spites/memcpy acceleration functions? Candidates:
-#                               WxH     Depth   Input
-#       SYS_VDrawBits_134       1x8     1       1       sysArgs
-#       SYS_Draw4_32            4x1     8       4       sysArgs
-#       SYS_DrawPixel2x2_32     2x2     1       1       Single color
-#       SYS_BlinkyBlast_142     10x10   8       0       Hard-coded image
-#       SYS_ClearRow32_56       32x1    0       0       Hard-coded value (black/zero)
-#       SYS_SpriteCopy_118      4x4     8       4x4     Buffers 16 bytes in zero-page?
-#       DrawTile/DrawStrip      4x4     6       12      Unpacks, uses SYS_Draw4
-#       SYS_Blit4               1       1       1       Self-repeats? X Y X Y W H dX dY
-#       SYS_Copy4x4_118
-#       ClearRect
-#       CopyMemory              Nx1     8       s,t,n
-#       CopyString              Nx1     8       s,t
-#       SetMemory               Nx1     8       s,n
-#       Sprites by scan line 4 reset method? ("videoG"=graphics)
-#  DONE MODE command (or other interface) to set speed from BASIC
-#  XXX vPulse width modulation? (for future SAVE) --> Needs some video loop refactoring
+#  ROM v3:
+#  DONE vPulse width modulation? (for SAVE in BASIC)
+#  DONE Bricks (seems ok)
+#  ---- SYS spites/memcpy acceleration functions?
+#  ---- Tetronis (still need a method to load it correctly)
+#
+#  Ideas for ROM v4+
+#  XXX Sprites by scan line 4 reset method? ("videoG"=graphics)
 #  XXX Need keymaps in ROM? (perhaps undocumented if not tested)
-#  XXX Tetris, Gigatris, Bricks, FrogStroll,
+#  XXX Gigatris, FrogStroll (not in Contrib/)
 #  XXX How it works memo: brief description of every software function
 #  XXX Music sequencer (combined with LED sequencer, but retire soundTimer???)
 #  XXX Adjustable return for LUP trampolines (in case SYS functions need it)
@@ -2868,6 +2857,96 @@ jmpy('REENTER')                 #24
 align(0x100, 0x100)
 
 #-----------------------------------------------------------------------
+# Extension SYS_Sprite4_v3_54
+#-----------------------------------------------------------------------
+
+# sysArgs[0:1] Source address of 4xN pixels (values 0..63) terminated by
+#              byte value -Y
+# sysArgs[2:3] Destination address
+# sysArgs[4:7] Scratch (user as copy buffer)
+
+# This SYS function draws a sprite of 4 pixels wide and Y pixels high.
+# The pixel data is read sequentually, from RAM, in horizontal chunks
+# of 4 pixels at a time, and written to the screen through the
+# destination pointer (each chunk below the previous), drawing a 4xY
+# stripe with one invocation. Pixel values should be non-negative.
+# The first negative byte N after a chunk signals the end of the
+# sprite data. So the sprite's height Y is determined by the source
+# data and is therefore flexible. This negative byte value, typically
+# N == -Y, is then used to adjust the destination pointer's high byte,
+# to make it easier to draw sprites wider than 4 pixels: just repeat
+# the SYS call for as many 4-pixel wide stripes you need. All arguments
+# are already left in place to facilitate this. After one call, the
+# source pointer will point past that source data, effectively
+#       src += Y * 4 + 1
+# The destination pointer will have been adjusted as
+#       dst += (Y + N) * 256 + 4
+# (With arithmetic wrapping around on the same memory page)
+#
+# Y is only limited by source memory, not by CPU cycles. The
+# implementation is such that the SYS function self-repeats, each
+# time drawing the next 4-pixel chunk. It can typically draw 2x4
+# pixels per scanline this way. So the user program only sees one SYS
+# call (per stripe), but under the hood the work is split in chunks.
+
+label('SYS_Sprite4_v3_54')
+
+ld([sysArgs+0], X);             C('Pixel data source address')#15
+ld([sysArgs+1], Y)              #16
+ld([Y,X]);                      C('Next pixel or stop')#17
+bpl('.sysDpx0')                 #18
+st([Y,Xpp])                     #19
+
+adda([sysArgs+3]);              C('Adjust dst for convenience')#20
+st([sysArgs+3])                 #21
+ld([sysArgs+2])                 #22
+adda(4)                         #23
+st([sysArgs+2])                 #24
+ld([sysArgs+0]);                C('Adjust src for convenience')#25
+adda(1)                         #26
+st([sysArgs+0])                 #27
+ld(hi('REENTER'), Y);           C('Normal exit (no self-repeat)')#28
+jmpy('REENTER')                 #29
+ld(-28/2)                       #30
+
+label('.sysDpx0')
+st([sysArgs+4]);                C('Gobble 4 pixels into buffer')#20
+ld([Y,X])                       #21
+st([Y,Xpp])                     #22
+st([sysArgs+5])                 #23
+ld([Y,X])                       #24
+st([Y,Xpp])                     #25
+st([sysArgs+6])                 #26
+ld([Y,X])                       #27
+st([Y,Xpp])                     #28
+st([sysArgs+7])                 #29
+
+ld([sysArgs+2], X);             C('Screen memory destination address')#30
+ld([sysArgs+3], Y)              #31
+ld([sysArgs+4]);                C('Write 4 pixls')#32
+st([Y,Xpp])                     #33
+ld([sysArgs+5])                 #34
+st([Y,Xpp])                     #35
+ld([sysArgs+6])                 #36
+st([Y,Xpp])                     #37
+ld([sysArgs+7])                 #38
+st([Y,Xpp])                     #39
+
+ld([sysArgs+0]);                C('src += 4')#40
+adda(4)                         #41
+st([sysArgs+0])                 #42
+ld([sysArgs+3]);                C('dst += 256')#43
+adda(1)                         #44
+st([sysArgs+3])                 #45
+
+ld([vPC]);                      C('Self-repeating SYS call')#46
+suba(2)                         #47
+st([vPC])                       #48
+ld(hi('REENTER'), Y)            #49
+jmpy('REENTER')                 #50
+ld(-54/2)                       #51
+
+#-----------------------------------------------------------------------
 # Extension SYS_LoaderProcessInput_48
 #-----------------------------------------------------------------------
 
@@ -2928,7 +3007,6 @@ st([sysArgs+2])                 #40
 ld(hi('REENTER'), Y)            #41
 jmpy('REENTER')                 #42
 ld(-46/2)                       #43
-
 
 #-----------------------------------------------------------------------
 #  Built-in full resolution images
