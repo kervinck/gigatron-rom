@@ -3083,6 +3083,8 @@ for application in argv[1:]:
       raw = f.read()
     label(name)
     raw = raw[:-2] # Drop start address
+    if ord(raw[0]) == 0 and ord(raw[1]) + ord(raw[2]) > 0xc0:
+      print 'Warning: zero-page conflict with ROM loader (SYS_Exec_88)'
     program = gcl.Program(userCode, name)
     zpReset(userVars)
     for byte in raw:
@@ -3101,8 +3103,8 @@ for application in argv[1:]:
     zpReset(userVars)
     for line in open(gclSource).readlines():
       program.line(line)
-    if name == 'TinyBASIC':
-      patchTinyBASIC(program)
+    #if name == 'TinyBASIC':
+      #patchTinyBASIC(program)
     program.end()
 
   else:

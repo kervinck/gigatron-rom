@@ -64,7 +64,7 @@ gcl0x
 
 [def
   push
-  Item 6- [if<0 $2008 else $f056] Pos=
+  Item 6- [if<0 $2006 else $f054] Pos=
   Item [do j= $800 Pos+ Pos= j 1- if>=0loop]
   $2d {'-'} Char= PrintChar!
   $3e {'>'} Char= PrintChar!
@@ -208,6 +208,9 @@ Pos>, q= {Y position of current cursor}
   $800 p+ p= if>0loop
   i+ p=
   255& 160^ if<>0loop]
+
+Item 6^ [if=0 $80 \vSP.] {Workaround zero-page conflict for Tetronis}
+Item 7^ [if=0 $80 \vSP.] {Workaround zero-page conflict for Bricks}
 
 { Load and start the selected program }
 Program \sysArgs0= $200 \vLR= \SYS_Exec_88 \sysFn= 88!
