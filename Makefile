@@ -45,7 +45,7 @@ $(DEV).rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Racer_v1.gcl\
 		Apps/Mandelbrot_v1.gcl\
 		Apps/Pictures_v2.gcl\
-		Apps/Credits_v1.gcl\
+		Apps/Credits_v2.gcl\
 		Apps/Loader_v2.gcl\
 		Apps/Tetronis.gt1\
 		Apps/Bricks.gt1\
