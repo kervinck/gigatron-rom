@@ -382,7 +382,8 @@ void loop()
       inBit <<= 1;
 
       if (saveIndex >= EEPROM_length)  // EEPROM overflow
-        sendController(3, 10);         // Send long Ctrl-C back
+        if (inLen > 0)                 // Only break if this can't be a new program
+          sendController(3, 10);       // Send long Ctrl-C back
 
       if (inBit != 0)
         break;
