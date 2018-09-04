@@ -91,8 +91,8 @@ $0300:
 ] MainMenu=
 
 [def
-  { Use [Arrows] to select}
-  $20# $55# $73# $65# $20# $5b# $41# $72#
+  {Use [Arrows] to select}
+  $55# $73# $65# $20# $5b# $41# $72#
   $72# $6f# $77# $73# $5d# $20# $74# $6f#
   $20# $73# $65# $6c# $65# $63# $74#
   {Press [A] to start program}
@@ -197,23 +197,39 @@ PrintMenu!
 SelectMenu!
 
 { Wipe out everything but the selected and bottom line }
-$800 p= $8801 i=
-Pos>, q= {Y position of current cursor}
-\SYS_VDrawBits_134 \sysFn= 32 \sysArgs0. \sysArgs1.
+ $800 p=                        {Pointer in screen memory}
+$8801 i=                        {Offset to next stripe}
+$ff80 j=                        {Mask for keeping the selected item}
+Pos 48+ j& q=                   {Box of current cursor}
+\SYS_VDrawBits_134 \sysFn=      {SYS function}
+32 \sysArgs0. \sysArgs1.        {Colors}
 [do
-  p>, q- [if<>0
-    p>, $78^ if<>0
-    p \sysArgs4= 134! {Clears 8 pixels vertically}
+  p \sysArgs4=
+  48+ j& q^ [if<>0              {Don't clear selected item}
+    p>, $78^ if<>0              {Also don't clear the bottom row}
+    134!                        {Clears 8 pixels vertically}
   ]
-  $800 p+ p= if>0loop
+  $800 p+ p= if>0loop           {Step down}
   i+ p=
-  255& 160^ if<>0loop]
-
-Item 6^ [if=0 $80 \vSP.] {Workaround zero-page conflict for Tetronis}
-Item 7^ [if=0 $80 \vSP.] {Workaround zero-page conflict for Bricks}
+  255& 160^ if<>0loop]          {Next stripe}
 
 { Load and start the selected program }
-Program \sysArgs0= $200 \vLR= \SYS_Exec_88 \sysFn= 88!
+Program \sysArgs0=              {ROM image}
+$200 \vLR=                      {Start of execution address}
+Item 6^ [if=0                   {Tetronis workaround}
+  $80 \vSP.                     { 1. Zero-page conflict: move stack}
+  $6f9 \vLR=]                   { 2. Stack must be restored with patch}
+Item 7^ [if=0                   {Bricks workaround}
+  $80 \vSP.]                    { 1. Zero-page conflict: move stack}
+\SYS_Exec_88 \sysFn= 88!        {Load from ROM and execute}
+
+{-----------------------------------------------------------------------+
+|       Tetronis patch                                                  |
++-----------------------------------------------------------------------}
+
+$6f9:
+
+$200 \vSP. call                 {Restore stack pointer and go to entry_point}
 
 {-----------------------------------------------------------------------+
 |                                                                       |
