@@ -70,10 +70,10 @@
 
   Error messages:
         Break error     Program (or LIST command) interrupted /
-                        Out of space for SAVE (511 bytes for ATTiny85!)
+                        Out of space for SAVE (510 bytes for ATTiny85!)
         Syntax error    Parse error / Program too large for memory (~300 lines)
         Value error     Value or index out of range / Calculation error
-                        (division by 0) / NEXT without FOR
+                        (division by 0) / NEXT without FOR / Wrong ROM version
         Stack error     GOSUB nesting too deep / RETURN without GOSUB
         Line error      Line number not found / RUN empty program
 
@@ -172,7 +172,8 @@
     ELSE        Will slow down IF, because it has to scan for this
     DEF FNx
 
-  Memory layout:
+        Memory layout:
+
         a0          b0          c0          d0          e0          f0       ff
        +-----------------------+-----------------------+-----------------------+
 $1ba0  | Input buffer   Begin->| Program line 10       | Program line 20       |
@@ -666,7 +667,7 @@ $0600:
 
 $353f \sysArgs6:                {Pen color blue/purple, background color white}
 
-{ Note: It is safe to call functions here before hopping over to page 8 }
+{ Note: It is safe here to call functions before hopping over to page 8 }
 
 $18a0 Newline= call             {Scroll and clear last line}
 
@@ -1062,14 +1063,13 @@ List=
 ] RelOp=
 
 $1ba0 deek End=                 {At startup 'End' comes from loaded segment}
-2+
+2+ {Active=}                    {BASIC command(s) to run at startup}
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 18                                     |
 +-----------------------------------------------------------------------}
 $12a0:
-
- Active=                      {BASIC command(s) to run at startup}
+Active=
 
 { Error reporting function and re-entry point for main loop }
 { Call with inline partial error message, or with 0# for no error }
@@ -1088,7 +1088,7 @@ $12a0:
       $72# 0#
     32-                         {$ffe0}
     Active&                     {Align to begin of block}
-    0+ {dummy offset} deek      {Fetch active line number from offset 0}
+{   0+}{dummy offset} deek      {Fetch active line number from offset 0}
     [if<>0                      {Input buffer has line number 0, don't print}
       Value=                    {Prepare line number for printing}
       PrintS!                   {' in '}
@@ -1256,15 +1256,18 @@ $17a0:
 
 {SAVE}
 
-  {Saving works by redirecting PrintChar and then calling List}
-  {First line out will be a bare newline to signal a new program}
+  { Saving works by redirecting PrintChar and then calling List.
+    The first line out will be an implicit bare newline. This signals
+    to BabelFish that a new program starts and the old can be deleted. }
 
-  0; 96- Address=               {SAVE line buffer}
-  8 \sysArgs3.                  {'\n' is 8 bits}
+  0;
+  \sysArgs3.                    {Number of bits to send (zero)}
+  96- Address=                  {SAVE line buffer}
 
-  [def                          {Redefine PrintChar}
+  [def
     push
     k=
+    \sysArgs3, 8+ \sysArgs3.    {Always count 8 more bits}
     Pos<, 6-                    {At or near left margin}
     [if<0                       {A newline has started}
       10 Address.               {Terminate the save line}
@@ -1273,20 +1276,21 @@ $17a0:
       1 \sysArgs2.              {First bit}
       \SYS_SendSerial1_v3_80
       \sysFn= 80!               {SYS call to send bits to serial port}
+      [if<>0                    {'BreakError' would be better}
+        3 \serialRaw.           {Not a great hack...}
+        TestBreak!]             {...to initiate a break error}
       8 \sysArgs3.]
-    \sysArgs3, 8+ \sysArgs3.    {Count 8 more bits}
     k Address. Address<++       {Put in buffer}
     PrintCharScreen!            {Print to screen as well}
     pop ret
-  ] PrintChar=
+  ] PrintChar=                  {Globally redefines original PrintChar}
 
   [do
-     \serialRaw, 255^           {Wait for BabelFish to appear ready to receive}
+     \serialRaw, 255^           {Wait for BabelFish to appear idle}
      if<>0loop]
 
   List!                         {List whole program, redirected}
-  32 PrintChar!                 {Flush last line out}
-  TestBreak!                    {BabelFish sends break when EEPROM overflows}
+  32 PrintChar!                 {Flushes the last line}
 
   PrintCharScreen PrintChar=    {Restore PrintChar}
   EndOfLine!
@@ -1366,7 +1370,7 @@ $19a0:
   $1aa0 call
 
 {-----------------------------------------------------------------------+
-|                       RAM page 25                                     |
+|                       RAM page 26                                     |
 +-----------------------------------------------------------------------}
 $1aa0:
 

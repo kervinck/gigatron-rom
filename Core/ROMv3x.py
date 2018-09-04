@@ -2462,7 +2462,7 @@ ld([sysArgs+0])                 #16
 nop()                           #filler
 
 #-----------------------------------------------------------------------
-# Extension SYS_SendSerial1_vX_80
+# Extension SYS_SendSerial1_v3_80
 # Extension SYS_SendSerial2_vX_110
 #-----------------------------------------------------------------------
 
@@ -2478,12 +2478,15 @@ nop()                           #filler
 # sysArgs[3]   Number of send frames X      (destructive)
 # sysArgs[4]   Scanline offset (SYS_SendSerial2_vX_110 only)
 #
+# The sending will abort if input data is detected on the serial port.
+# Returns 0 in case of all bits sent, or <>0 in case of abort
+#
 # This modulates the next upcoming X vertical pulses with the supplied
 # data. After that, the vPulse width falls back to 8 lines (idle).
 #
 # XXX Test with several monitors
 
-label('SYS_SendSerial1_vX_80')
+label('SYS_SendSerial1_v3_80')
 ld([videoY])                    #15
 bra('sys_SendSerial1')          #16
 xora(videoYline0)               #17 First line of vertical blank
@@ -2655,7 +2658,7 @@ ld(hi('REENTER'), Y)            #38
 jmpy('REENTER')                 #40
 nop()                           #41
 
-# SYS_SendSerial1_vX_80 implementation
+# SYS_SendSerial1_v3_80 implementation
 label('sys_SendSerial1')
 beq('.sysSs0')                  #18
 ld([sysArgs+0],X)               #19
@@ -2688,17 +2691,27 @@ adda([sysArgs+0])               #34
 st([sysArgs+0],X)               #35
 ld([sysArgs+3])                 #36 Frame counter
 suba(1)                         #37
-beq('.sysSs4')                  #38
+beq('.sysSs5')                  #38
 ld(hi('REENTER'),Y)             #39
 st([sysArgs+3])                 #40
-ld([vPC])                       #41 Continue sending bits
-suba(2)                         #42
-st([vPC])                       #43
-jmpy('REENTER')                 #44
-ld(-48/2)                       #45
+ld([serialRaw])                 #41 Test for anything being sent back
+xora(255)                       #42
+beq('.sysSs4')                  #43
+st([vAC])                       #44 Abort after key press with non-zero error
+st([vAC+1])                     #45
+jmpy('REENTER')                 #46
+ld(-50/2)                       #47
 label('.sysSs4')
-jmpy('REENTER')                 #40 Stop sending bits
-ld(-44/2)                       #41
+ld([vPC])                       #45 Continue sending bits
+suba(2)                         #46
+st([vPC])                       #47
+jmpy('REENTER')                 #48
+ld(-52/2)                       #49
+label('.sysSs5')
+st([vAC])                       #40 Stop sending bits, no error
+st([vAC+1])                     #41
+jmpy('REENTER')                 #42
+ld(-46/2)                       #43
 
 # SYS_SendSerial2_vX_110 implementation
 #
@@ -2762,6 +2775,9 @@ ld(-44/2)                       #41
 #-----------------------------------------------------------------------
 #  Application specific SYS extensions
 #-----------------------------------------------------------------------
+
+# !!! These aren't defined in interface.json and therefore
+# !!! availability and presence will vary
 
 label('SYS_RacerUpdateVideoX_40')
 ld([sysArgs+2], X)              #15 q,
@@ -2854,42 +2870,47 @@ ld(hi('REENTER'), Y)            #23
 jmpy('REENTER')                 #24
 #nop()                          #(25)
 
+#-----------------------------------------------------------------------
+#
+#  ROM page 12: More SYS functions (sprites)
+#
+#-----------------------------------------------------------------------
+
 align(0x100, 0x100)
 
 #-----------------------------------------------------------------------
-# Extension SYS_Sprite4_v3_54
+# Extension SYS_Sprite6_v3_64
 #-----------------------------------------------------------------------
 
-# sysArgs[0:1] Source address of 4xN pixels (values 0..63) terminated by
-#              byte value -Y
-# sysArgs[2:3] Destination address
-# sysArgs[4:7] Scratch (user as copy buffer)
+# vAC          Destination address in screen
+# sysArgs[0:1] Source address of 6xY pixels (colors 0..63) terminated by
+#              negative byte value N (typically N = -Y)
+# sysArgs[2:7] Scratch (user as copy buffer)
 
-# This SYS function draws a sprite of 4 pixels wide and Y pixels high.
-# The pixel data is read sequentually, from RAM, in horizontal chunks
-# of 4 pixels at a time, and written to the screen through the
-# destination pointer (each chunk below the previous), drawing a 4xY
-# stripe with one invocation. Pixel values should be non-negative.
-# The first negative byte N after a chunk signals the end of the
-# sprite data. So the sprite's height Y is determined by the source
-# data and is therefore flexible. This negative byte value, typically
-# N == -Y, is then used to adjust the destination pointer's high byte,
-# to make it easier to draw sprites wider than 4 pixels: just repeat
-# the SYS call for as many 4-pixel wide stripes you need. All arguments
-# are already left in place to facilitate this. After one call, the
-# source pointer will point past that source data, effectively
-#       src += Y * 4 + 1
-# The destination pointer will have been adjusted as
-#       dst += (Y + N) * 256 + 4
+# This SYS function draws a sprite of 6 pixels wide and Y pixels high.
+# The pixel data is read sequentually from RAM, in horizontal chunks
+# of 6 pixels at a time, and then written to the screen through the
+# destination pointer (each chunk underneath the previous), thus
+# drawing a 6xY stripe. Pixel values should be non-negative. The first
+# negative byte N after a chunk signals the end of the sprite data.
+# So the sprite's height Y is determined by the source data and is
+# therefore flexible. This negative byte value, typically N == -Y,
+# is then used to adjust the destination pointer's high byte, to make
+# it easier to draw sprites wider than 6 pixels: just repeat the SYS
+# call for as many 6-pixel wide stripes you need. All arguments are
+# already left in place to facilitate this. After one call, the source
+# pointer will point past that source data, effectively:
+#       src += Y * 6 + 1
+# The destination pointer will have been adjusted as:
+#       dst += (Y + N) * 256 + 6
 # (With arithmetic wrapping around on the same memory page)
 #
 # Y is only limited by source memory, not by CPU cycles. The
 # implementation is such that the SYS function self-repeats, each
-# time drawing the next 4-pixel chunk. It can typically draw 2x4
-# pixels per scanline this way. So the user program only sees one SYS
-# call (per stripe), but under the hood the work is split in chunks.
+# time drawing the next 6-pixel chunk. It can typically draw 12
+# pixels per scanline this way.
 
-label('SYS_Sprite4_v3_54')
+label('SYS_Sprite6_v3_64')
 
 ld([sysArgs+0], X);             C('Pixel data source address')#15
 ld([sysArgs+1], Y)              #16
@@ -2897,11 +2918,11 @@ ld([Y,X]);                      C('Next pixel or stop')#17
 bpl('.sysDpx0')                 #18
 st([Y,Xpp])                     #19
 
-adda([sysArgs+3]);              C('Adjust dst for convenience')#20
-st([sysArgs+3])                 #21
-ld([sysArgs+2])                 #22
-adda(4)                         #23
-st([sysArgs+2])                 #24
+adda([vAC+1]);                  C('Adjust dst for convenience')#20
+st([vAC+1])                     #21
+ld([vAC])                       #22
+adda(6)                         #23
+st([vAC])                       #24
 ld([sysArgs+0]);                C('Adjust src for convenience')#25
 adda(1)                         #26
 st([sysArgs+0])                 #27
@@ -2910,41 +2931,58 @@ jmpy('REENTER')                 #29
 ld(-28/2)                       #30
 
 label('.sysDpx0')
-st([sysArgs+4]);                C('Gobble 4 pixels into buffer')#20
+st([sysArgs+2]);                C('Gobble 6 pixels into buffer')#20
 ld([Y,X])                       #21
 st([Y,Xpp])                     #22
-st([sysArgs+5])                 #23
+st([sysArgs+3])                 #23
 ld([Y,X])                       #24
 st([Y,Xpp])                     #25
-st([sysArgs+6])                 #26
+st([sysArgs+4])                 #26
 ld([Y,X])                       #27
 st([Y,Xpp])                     #28
-st([sysArgs+7])                 #29
+st([sysArgs+5])                 #29
+ld([Y,X])                       #30
+st([Y,Xpp])                     #31
+st([sysArgs+6])                 #32
+ld([Y,X])                       #33
+st([Y,Xpp])                     #34
+st([sysArgs+7])                 #35
 
-ld([sysArgs+2], X);             C('Screen memory destination address')#30
-ld([sysArgs+3], Y)              #31
-ld([sysArgs+4]);                C('Write 4 pixls')#32
-st([Y,Xpp])                     #33
-ld([sysArgs+5])                 #34
-st([Y,Xpp])                     #35
-ld([sysArgs+6])                 #36
-st([Y,Xpp])                     #37
-ld([sysArgs+7])                 #38
+ld([vAC], X);                   C('Screen memory destination address')#36
+ld([vAC+1], Y)                  #37
+ld([sysArgs+2]);                C('Write 6 pixels')#38
 st([Y,Xpp])                     #39
+ld([sysArgs+3])                 #40
+st([Y,Xpp])                     #41
+ld([sysArgs+4])                 #42
+st([Y,Xpp])                     #43
+ld([sysArgs+5])                 #44
+st([Y,Xpp])                     #45
+ld([sysArgs+6])                 #46
+st([Y,Xpp])                     #47
+ld([sysArgs+7])                 #48
+st([Y,Xpp])                     #49
 
-ld([sysArgs+0]);                C('src += 4')#40
-adda(4)                         #41
-st([sysArgs+0])                 #42
-ld([sysArgs+3]);                C('dst += 256')#43
-adda(1)                         #44
-st([sysArgs+3])                 #45
+ld([sysArgs+0]);                C('src += 6')#50
+adda(6)                         #51
+st([sysArgs+0])                 #52
+ld([vAC+1]);                    C('dst += 256')#53
+adda(1)                         #54
+st([vAC+1])                     #55
 
-ld([vPC]);                      C('Self-repeating SYS call')#46
-suba(2)                         #47
-st([vPC])                       #48
-ld(hi('REENTER'), Y)            #49
-jmpy('REENTER')                 #50
-ld(-54/2)                       #51
+ld([vPC]);                      C('Self-repeating SYS call')#56
+suba(2)                         #57
+st([vPC])                       #58
+ld(hi('REENTER'), Y)            #59
+jmpy('REENTER')                 #60
+ld(-64/2)                       #61
+
+#-----------------------------------------------------------------------
+#  More application specific SYS extensions
+#-----------------------------------------------------------------------
+
+# !!! These aren't defined in interface.json and therefore
+# !!! availability and presence will vary
 
 #-----------------------------------------------------------------------
 # Extension SYS_LoaderProcessInput_48
@@ -3012,7 +3050,7 @@ ld(-46/2)                       #43
 #  Built-in full resolution images
 #-----------------------------------------------------------------------
 
-align(1)
+align(1)                        # Resets size limit
 
 def importImage(rgbName, width, height, ref):
   f = open(rgbName)

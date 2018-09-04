@@ -367,40 +367,51 @@ void loop()
 {
   // Check Gigatron's vPulse for incoming data
   static byte inByte, inBit, inLen;
+
   critical();
   byte newValue = waitVSync();
   nonCritical();
+
   switch (newValue) {
-    case 0:
-      break;
-    case 9:
+
+    case 9:                            // Received one bit
       inByte |= inBit;
       // !!! FALL THROUGH !!!
-    case 7:
+
+    case 7:                            // Received zero bit
       inBit <<= 1;
+
+      if (saveIndex >= EEPROM_length)  // EEPROM overflow
+        sendController(3, 10);         // Send long Ctrl-C back
+
       if (inBit != 0)
         break;
-      if (saveIndex < EEPROM_length)
-        EEPROM.write(saveIndex++, inByte);
+
+      EEPROM.write(saveIndex++, inByte);// Store every full byte
+
       #if hasSerial
         if (inByte == 10)
           Serial.print('\r');
-        Serial.print((char)inByte);
+        Serial.print((char)inByte);    // Forward to host
+        noInterrupts();
       #endif
-      if (inByte == 10) {
-        if (saveIndex < EEPROM_length)
-          EEPROM.write(saveIndex, 0);
-        else
-          sendController(3, 3); // Ctrl-C to break SAVE
-        if (inLen == 0)
+
+      if (inByte == 10) {              // End of line?
+        EEPROM.write(saveIndex, 255);  // Terminate, in case this was the last line
+        if (inLen == 0)                // An empty line clears the old program
           saveIndex = fileStart;
         inLen = 0;
       } else
         inLen++;
-      // !!! FALL THROUGH !!!
-  case 8:
-      inByte = 0;
+
+      inByte = 0;                      // Prepare for next byte
       inBit = 1;
+      break;
+
+    default:
+      inByte = 0;                      // Reset incoming data state
+      inBit = 1;
+      inLen = 0;
       break;
   }
 
@@ -544,8 +555,6 @@ void doVersion()
     Serial.print(EEPROM.length());
     Serial.print(" mapping=");
     Serial.print(getKeymapName());
-    Serial.print(" savedFile=");
-    Serial.println(savedFileLength());
     Serial.println(":PROGMEM slots:");
     for (byte i=0; i<arrayLen(gt1Files); i++) {
       Serial.print(": P");
@@ -1083,29 +1092,16 @@ byte waitVSync()
  |                                                                      |
  +----------------------------------------------------------------------*/
 
-// Length of a Tiny BASIC file saved in EEPROM.
-// File contents are zero-terminated ASCII byte values (1..126)
-// or until end of EEPROM area.
-word savedFileLength()
-{
-    word maxLen = EEPROM.length() - fileStart;
-    word len;
-    for (len=0; len!=maxLen; len++)
-      if ((EEPROM.read(fileStart + len) ^ 127) >= 127) // 1..126 is ok
-        break;
-    return len;
-}
-
 // Send a saved file as keystrokes to the Gigatron
 void sendSavedFile()
 {
     word i = fileStart;
     do {
       byte nextByte = EEPROM.read(i);
-      if (nextByte == 0)
+      if (nextByte == 255)
         break;
       sendController(nextByte, 1);
-      delay(70);  // Allow Gigatron software to process line
+      delay(nextByte == 10 ? 70 : 20);  // Allow Gigatron software to process byte
     } while (++i < EEPROM.length());
 }
 
