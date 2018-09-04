@@ -27,6 +27,7 @@
   2018-08-14 (marcelk) SAVE, LINE (both draft)
   2018-08-22 (marcelk) LINE now wraps around edges to stay on screen
   2018-08-31 (marcelk) SAVE into BabelFish EEPROM
+  2019-09-04 (marcelk) Faster start; Error when SAVE not there; Tiny BASIC v2
 
   Formal grammar:
 
@@ -126,12 +127,7 @@
         https://www.applefritter.com/node/2859
         Apple 1 BASIC
 
-  Wish list:
-    Newline     Less clearing when not scrolling
-    Speed       RUN has a biggish delay esp at 64K. Speedup array clearning.
-    romType     Check that save only does something on ROM v3 up
-
-  'Maybe in v2' list:
+  'Maybe in v3' list:
     A(0)=x,y,z  Array assignment with list expression
     A$ .. Z$    String variables (only in LET, PRINT, INPUT?)
     Boot        Some kind of autorun of a saved program
@@ -142,7 +138,7 @@
     @           Give it an implicit meaning such as "max index in arrays"
     Speed       Cache result of NextBlock (at offset 30 of block?)
 
-  'Maybe in v3' list:
+  'Maybe in v4' list:
     Unary minus Original Tiny BASIC does it wrong: 8/-2
     Speed       Cache GOTO/GOSUB target (only for constant targets...)
     Speed       SYS functions for NextBlock, EndOfLine, Number
@@ -311,6 +307,16 @@ $01df deek Pos=                 {Bottom character row in screen memory}
   tmp!                          {Returns to caller}
 ] PrintS=
 
+[def
+  \serialRaw, 3^                {Test for Ctrl-C (ASCII ETX) as break request}
+  [if=0
+    PrintCharScreen PrintChar=  {In case we break a SAVE command}
+    Prompt!                     {'Break'}
+      $42# $72# $65# $61# $6b#
+      0#]
+  ret
+] TestBreak=
+
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
@@ -356,7 +362,7 @@ $0300:
       $fe%]                     {Return effective position}
   ret
 ] PrintChar=
-  PrintCharDirect=
+  PrintCharScreen=
 
 { Accept ASCII characters from console input with line editting }
 [def
@@ -511,7 +517,7 @@ $0500:
       0% Active=                {Break the loop}
       Spaces!]
     pop                         {Shorter than 2++}
-    TestBreak!                  {Test for [Del] as break request}
+    TestBreak!                  {Test for break request}
     EndOfLine!]
 
   Keyword! $66# $6f# $72# 0#    {'for'}
@@ -567,7 +573,15 @@ $0500:
       \sysFn= Value 80!]
     EndOfLine!]
 
-  $14a0 call                    {INPUT, NEW, CLS, LIST, LIST, RUN, END, LET}
+  Keyword! $73# $61# $76# $65#  {'save'}
+    0#
+  [if<>0
+    \romType, \romTypeValue_ROMv3-
+    [if<0 ValueError!]          {Error on ROM before v3}
+    $17a0 call
+  ]
+
+  $14a0 call                    {INPUT, NEW, CLS, LIST, RUN, END, LET}
 
 {-----------------------------------------------------------------------+
 |                       RAM page 6                                      |
@@ -650,29 +664,17 @@ $0600:
   pop ret
 ] Insert=
 
-[def
-  \serialRaw, 3^                {Test for Ctrl-C (ASCII ETX) as break request}
-  [if=0
-    PrintCharDirect PrintChar=  {In case we break a SAVE command}
-    Prompt!                     {'Break'}
-      $42# $72# $65# $61# $6b#
-      0#]
-  ret
-] TestBreak=
-
 $353f \sysArgs6:                {Pen color blue/purple, background color white}
-
-\sysArgs0.                      {First Newline call will look here}
 
 { Note: It is safe to call functions here before hopping over to page 8 }
 
 $18a0 Newline= call             {Scroll and clear last line}
 
 { Welcome message }
-PrintS!                         {'*** Tiny BASIC'}
+PrintS!                         {'*** Tiny BASIC v2a'}
   $2a# $2a# $2a# $20# $54# $69#
   $6e# $79# $20# $42# $41# $53#
-  $49# $43# 0#
+  $49# $43# $20# $76# $32# $61# 0#
 Newline!
 
 {-----------------------------------------------------------------------+
@@ -706,9 +708,8 @@ $08a0:
   Begin [do i=                  {Loop over program from beginning}
     End^ if<>0                  {Until end of program}
     i; Value^ [if=0             {Or if matching value found}
-                                {XXX Insert checkpointing here?}
       i 2+ Active=              {Skip past line number}
-      TestBreak!                {Test for [Del] as break request}
+      TestBreak!                {Test for break request}
       Statements!]              {And continue from there}
     i NextBlock! loop]          {Otherwise try next line}
   Prompt! $4c# $69# $6e# $65#   {'Line' error}
@@ -810,22 +811,23 @@ Number=
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
     $1bc0 Active^ if<>0         {Also stop if we came from the input buffer}
-                                {XXX Insert checkpointing here?}
     Active 2+ Active=           {Skip past line number}
     Statements!]                {And continue from there}
   Prompt! 0#                    {Program finished ok}
 ] EndOfLine=
 
-{ Clear variables and arrays. Returns begin address for programs }
+{ Clear variables but not arrays. Returns begin address for programs }
 [def
-  End                           {Begin of variable space}
-  [do i=
+  0; i=                         {Top of memory}
+  2                             {Clear variables and FOR state}
+  [do
+    j=
+    i 54- i=                    {i -= 2*27}
     [do
-      0 i:                      {Clear word}
-      i<++ i<++                 {Advance pointer}
+      0 i.                      {Clear byte}
+      i<++                      {Advance pointer}
       i<, if<>0loop]            {Until end of page}
-    0; i^ if<>0                 {Reached top of memory?}
-    $1ca i+ loop]               {512-2*27}
+    j 1- if<>0loop]
   $1bc0 Begin=
   ret
 ] {Clear=}
@@ -970,13 +972,12 @@ Divide=
 [def
   [do Active, $20^ if=0 Active<++ loop]
   ret
-] {Spaces=}
+] Spaces=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 16                                     |
 +-----------------------------------------------------------------------}
 $10a0:
-Spaces=
 
 { List program, count and print free bytes }
 [def
@@ -986,7 +987,7 @@ Spaces=
   [do                           {Loop over all program lines}
     j=
     End^ if<>0                  {Repeat until the last line}
-    TestBreak!                  {Test for [Del] as break request}
+    TestBreak!                  {Test for break request}
     j; Value= PrintValue!       {Print line number}
     j<++                        {Print line text}
     [do                         {Loop over all characters in program line}
@@ -1006,20 +1007,23 @@ Spaces=
     Value 32+                   {Count another 32-byte block}
     loop]
 
-  PrintValue!                   {vAC>=0 triggers conversion without sign}
-  PrintS!                       {' bytes free'}
-    $20# $62# $79# $74# $65#
-    $73# $20# $66# $72# $65#
-    $65# 0#
-  Newline!
+  PrintChar PrintCharScreen^
+  [if=0                         {When not in SAVE mode}
+    PrintValue!                 {vAC>=0 triggers conversion without sign}
+    PrintS!                     {' bytes free'}
+      $20# $62# $79# $74# $65#
+      $73# $20# $66# $72# $65#
+      $65# 0#
+  ]
 
   pop ret
-] List=
+] {List=}
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 17                                     |
 +-----------------------------------------------------------------------}
 $11a0:
+List=
 
 { Conditionally print leading decimal digit }
 [def
@@ -1058,12 +1062,14 @@ $11a0:
 ] RelOp=
 
 $1ba0 deek End=                 {At startup 'End' comes from loaded segment}
-2+ Active=                      {BASIC command(s) to run at startup}
+2+
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 18                                     |
 +-----------------------------------------------------------------------}
 $12a0:
+
+ Active=                      {BASIC command(s) to run at startup}
 
 { Error reporting function and re-entry point for main loop }
 { Call with inline partial error message, or with 0# for no error }
@@ -1111,7 +1117,8 @@ Statements!                     {Execute statements}
 +-----------------------------------------------------------------------}
 $13a0:
 
-  {PRINT}
+{PRINT}
+
   Active, [if<>0                {Special case for newlines}
   $3a^ if<>0                    {Same for colon}
 
@@ -1221,10 +1228,6 @@ $15a0:
 +-----------------------------------------------------------------------}
 $16a0:
 
-  Keyword! $73# $61# $76# $65#  {'save'}
-    0#
-  [if<>0 $17a0 call]
-
   Keyword! $6c# $65# $74# 0#    {'let' (optional)}
   Variable!
   Address=                      {Park here}
@@ -1253,43 +1256,39 @@ $17a0:
 
 {SAVE}
 
-  \romType, \romTypeValue_ROMv3-
-  [if>=0                        {Only available from ROM v3}
+  {Saving works by redirecting PrintChar and then calling List}
+  {First line out will be a bare newline to signal a new program}
 
-    {Saving works by redirecting PrintChar and then calling List}
-    {First line out will be a bare newline to signal a new program}
+  0; 96- Address=               {SAVE line buffer}
+  8 \sysArgs3.                  {'\n' is 8 bits}
 
-    0; 96- Address=             {SAVE line buffer}
-    8 \sysArgs3.                {'\n' is 8 bits}
+  [def                          {Redefine PrintChar}
+    push
+    k=
+    Pos<, 6-                    {At or near left margin}
+    [if<0                       {A newline has started}
+      10 Address.               {Terminate the save line}
+      Address 31| 31^ Address=  {Back to start of buffer}
+      \sysArgs0=                {Prepare SYS call}
+      1 \sysArgs2.              {First bit}
+      \SYS_SendSerial1_v3_80
+      \sysFn= 80!               {SYS call to send bits to serial port}
+      8 \sysArgs3.]
+    \sysArgs3, 8+ \sysArgs3.    {Count 8 more bits}
+    k Address. Address<++       {Put in buffer}
+    PrintCharScreen!            {Print to screen as well}
+    pop ret
+  ] PrintChar=
 
-    [def                        {Redefine PrintChar}
-      push
-      k=
-      Pos<, 2-                  {Assumes indentation is 2 pixels}
-      [if<=0                    {A newline has started}
-        10 Address.             {Terminate the save line}
-        Address 31| 31^ Address={Back to start of buffer}
-        \sysArgs0=              {Prepare SYS call}
-        1 \sysArgs2.            {First bit}
-        \SYS_SendSerial1_vX_80
-        \sysFn= 80!             {SYS call to send bits to serial port}
-        8 \sysArgs3.]
-      \sysArgs3, 8+ \sysArgs3.  {Count 8 more bits}
-      k Address. Address<++     {Put in buffer}
-      PrintCharDirect!          {Print to screen as well}
-      pop ret
-    ] PrintChar=
+  [do
+     \serialRaw, 255^           {Wait for BabelFish to appear ready to receive}
+     if<>0loop]
 
-    [do
-       \serialRaw, 255^         {Wait for BabelFish to appear ready to receive}
-       if<>0loop]
+  List!                         {List whole program, redirected}
+  32 PrintChar!                 {Flush last line out}
+  TestBreak!                    {BabelFish sends break when EEPROM overflows}
 
-    List!                       {List whole program, redirected}
-    TestBreak!                  {BabelFish can signal BREAK when EEPROM full}
-
-    PrintCharDirect PrintChar=  {Restore PrintChar}
-                                {XXX Handle break more elegantly}
-  ]
+  PrintCharScreen PrintChar=    {Restore PrintChar}
   EndOfLine!
 
 {-----------------------------------------------------------------------+
