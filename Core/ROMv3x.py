@@ -35,8 +35,10 @@
 #  ROM v3:
 #  DONE vPulse width modulation? (for SAVE in BASIC)
 #  DONE Bricks (seems ok)
-#  ---- SYS spites/memcpy acceleration functions?
-#  ---- Tetronis (still need a method to load it correctly)
+#  DONE Tetronis (still need a method to load it correctly)
+#  DONE TicTacToe
+#  ---- SYS spites/memcpy acceleration functions (reflections)
+#  ---- Update version number to v3
 #
 #  Ideas for ROM v4+
 #  XXX Sprites by scan line 4 reset method? ("videoG"=graphics)
@@ -3161,31 +3163,59 @@ define('maxTicks',   maxTicks)
 # XXX This is a hack (trampoline() is probably in the wrong module):
 define('vPC+1',      vPC+1)
 
-# For ROMv2
-def patchTinyBASIC(program):
-  def basicLine(line=None, text=None): # Helper to inject a program in TinyBASIC
-    head = '' if line is None else chr(line&255) + chr(line>>8)
-    body = '' if text is None else text + '\0'
-    return ''.join([' $%02x#' % ord(c) for c in head + body])
+#-----------------------------------------------------------------------
+#
+#       Embedded programs
+#
+#-----------------------------------------------------------------------
 
-  # Startup commands
-  program.line('$1ba0:' + basicLine(0x1dc0))
-  # Embedded program
-  program.line('$1bc0:' + basicLine(10, ' IF RND(2)=0 GOTO 40'))
-  program.line('$1be0:' + basicLine(20, ' PRINT "|";'))
-  program.line('$1ca0:' + basicLine(30, ' GOTO 10'))
-  program.line('$1cc0:' + basicLine(40, ' PRINT "-";'))
-  program.line('$1ce0:' + basicLine(50, ' GOTO 10'))
-  program.line('$1da0:' + basicLine(60, ' REM *** Gigatron!'))
-  # Program end
-  #program.line('$1dc2:' + basicLine(None, '?"RUN":RUN'))
-  program.line('$1dc2:' + basicLine(None, 'CLS:AT0:LINE80,60'))
-  program.line('$1de2:' + basicLine(None, 'LINE20,-15'))
-  program.line('$1ea2:' + basicLine(None, 'LINE-30,40'))
-  program.line('$1ec2:' + basicLine(None, 'LINE-5,-5:?:?:NEW'))
+#-----------------------------------------------------------------------
+#       Tic-Tac-Toe BASIC program as Easter egg
+#-----------------------------------------------------------------------
 
-# Embedded programs:
-# Compile built-in GCL programs or load pre-compiled GT1 files
+# For ROMv3
+def basicLine(address, number, text):
+  """Helper to encode lines for TinyBASIC"""
+  head = [] if number is None else [number&255, number>>8]
+  body = [] if text is None else [ord(c) for c in text + '\0']
+  s = head + body
+  assert len(s) > 0
+  s = [address>>8, address&255, len(s)] + s
+  for byte in s:
+    program.putInRomTable(byte)
+
+gtbName = 'BASIC/TicTac.gtb'
+name = 'TicTacToe'
+print
+print 'Including file %s label %s ROM %04x' % (gtbName, name, pc())
+label(name)
+address = 0x1bc0
+program = gcl.Program(address, name)
+zpReset(userVars)
+i = 0
+for line in open(gtbName):
+  i += 1
+  line = line.rstrip()[0:25]
+  number, text = '', ''
+  for c in line:
+    if c.isdigit() and len(text) == 0:
+      number += c
+    else:
+      text += c
+  basicLine(address, int(number), text)
+  address += 32
+  if address & 255 == 0:
+    address += 160
+basicLine(address+2, None, 'RUN')       # Startup command
+basicLine(0x1ba0, address, None)        # End of program
+print ' Lines', i
+program.putInRomTable(0)
+program.end()
+
+#-----------------------------------------------------------------------
+#       Compile built-in GCL programs or load pre-compiled GT1 files
+#-----------------------------------------------------------------------
+
 for application in argv[1:]:
 
   if application.endswith('.gt1'):
@@ -3219,13 +3249,15 @@ for application in argv[1:]:
     zpReset(userVars)
     for line in open(gclSource).readlines():
       program.line(line)
-    #if name == 'TinyBASIC':
-      #patchTinyBASIC(program)
     program.end()
 
   else:
     assert False
 print
+
+#-----------------------------------------------------------------------
+# End of embedded applications
+#-----------------------------------------------------------------------
 
 if pc()&255:
   trampoline()

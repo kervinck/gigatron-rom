@@ -11,7 +11,8 @@ gcl0x
 \buttonState;                   {Fetch buttonState and resetTimer}
 [if>0                           {If resetTimer positive}
   16& [if=0                     {And [Start] pressed}
-  \TinyBASIC \sysArgs0= 88!]]   {Start BASIC. SYS_Exec_88 still in sysFn}
+  push                          {Still at $200, save it}
+  $7fa0 call]]                  {Continue in a safe place}
 
 { Print a 5x8 character on screen with the built-in font
   Char must be in the 32-127 range (this is not checked) }
@@ -47,12 +48,6 @@ gcl0x
   pop ret
 ] PrintText=
 
-[def {Newline}
-  Pos>, 8+ Pos>.
-  2 Pos<.
-  ret
-] Newline=
-
 { Print 26 dashes }
 [def
  push
@@ -75,64 +70,6 @@ gcl0x
 |}\vLR>++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
 $0300:
-
-[def
-  9# $53# $6e# $61# $6b# $65#   9#       32#  32#       {Snake}
-  9# $54# $65# $74# $72# $6f# $6e# $69# $73# 10#                {Tetronis}
-  9# $52# $61# $63# $65# $72#   9#       32#  32#       {Racer}
-  9# $42# $72# $69# $63# $6b# $73# 10#                          {Bricks}
-  9# $4d# $61# $6e# $64# $65# $6c# $62# $72# $6f# $74#  {Mandelbrot}
-  9# $42# $41# $53# $49# $43# 10#                               {BASIC}
-  9# $50# $69# $63# $74# $75# $72# $65# $73#   32# 32#  {Pictures}
-  9# $57# $6f# $7a# $4d# $6f# $6e# 10#                          {WozMon}
-  9# $43# $72# $65# $64# $69# $74# $73# 10#             {Credits}
-  9# $4c# $6f# $61# $64# $65# $72# 10#                  {Loader}
-  0#
-] MainMenu=
-
-[def
-  {Use [Arrows] to select}
-  $55# $73# $65# $20# $5b# $41# $72#
-  $72# $6f# $77# $73# $5d# $20# $74# $6f#
-  $20# $73# $65# $6c# $65# $63# $74#
-  {Press [A] to start program}
-  10#
-  $50# $72# $65# $73# $73# $20# $5b# $41#
-  $5d# $20# $74# $6f# $20# $73# $74# $61#
-  $72# $74# $20# $70# $72# $6f# $67# $72#
-  $61# $6d#
-  {Hold [Start] for reset}
-  10#
-  10#
-  $48# $6f# $6c# $64# $20# $5b# $53# $74#
-  $61# $72# $74# $5d# $20# $66# $6f# $72#
-  $20# $72# $65# $73# $65# $74#
-  0#
-] HelpText=
-
-[def
-  push
-  Pos 12- Pos=
-  $20 {space} Char= PrintChar! PrintChar!
-  pop ret
-] WipeOutArrow=
-
-[def {PrintMenu}
-  push
-  42 {Gray}   Color= PrintDivider!
-  15 {Yellow} Color= MainMenu PrintText!
-  42 {Gray}   Color= PrintDivider!
-                     HelpText PrintText!
-  pop ret
-] PrintMenu=
-
-120 \soundTimer.
-$2002 Pos=
-
-{-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 4                                      |
-+-----------------------------------------------------------------------}
-$0400:
 
 { Operate menu }
 [def
@@ -189,9 +126,73 @@ $0400:
 ] SelectMenu=
 
 {-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+$0400:
+
+[def {Newline}
+  Pos>, 8+ Pos>.
+  2 Pos<.
+  ret
+] Newline=
+
+[def
+  9# $53# $6e# $61# $6b# $65#   9#       32#  32#       {Snake}
+  9# $54# $65# $74# $72# $6f# $6e# $69# $73# 10#                {Tetronis}
+  9# $52# $61# $63# $65# $72#   9#       32#  32#       {Racer}
+  9# $42# $72# $69# $63# $6b# $73# 10#                          {Bricks}
+  9# $4d# $61# $6e# $64# $65# $6c# $62# $72# $6f# $74#  {Mandelbrot}
+  9# $42# $41# $53# $49# $43# 10#                               {BASIC}
+  9# $50# $69# $63# $74# $75# $72# $65# $73#   32# 32#  {Pictures}
+  9# $57# $6f# $7a# $4d# $6f# $6e# 10#                          {WozMon}
+  9# $43# $72# $65# $64# $69# $74# $73# 10#             {Credits}
+  9# $4c# $6f# $61# $64# $65# $72# 10#                  {Loader}
+  0#
+] MainMenu=
+
+[def
+  {Use [Arrows] to select}
+  $55# $73# $65# $20# $5b# $41# $72#
+  $72# $6f# $77# $73# $5d# $20# $74# $6f#
+  $20# $73# $65# $6c# $65# $63# $74#
+  {Press [A] to start program}
+  10#
+  $50# $72# $65# $73# $73# $20# $5b# $41#
+  $5d# $20# $74# $6f# $20# $73# $74# $61#
+  $72# $74# $20# $70# $72# $6f# $67# $72#
+  $61# $6d#
+  {Hold [Start] for reset}
+  10#
+  10#
+  $48# $6f# $6c# $64# $20# $5b# $53# $74#
+  $61# $72# $74# $5d# $20# $66# $6f# $72#
+  $20# $72# $65# $73# $65# $74#
+  0#
+] HelpText=
+
+[def
+  push
+  Pos 12- Pos=
+  $20 {space} Char= PrintChar! PrintChar!
+  pop ret
+] WipeOutArrow=
+
+[def {PrintMenu}
+  push
+  42 {Gray}   Color= PrintDivider!
+  15 {Yellow} Color= MainMenu PrintText!
+  42 {Gray}   Color= PrintDivider!
+                     HelpText PrintText!
+  pop ret
+] PrintMenu=
+
+{-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 5                                      |
 +-----------------------------------------------------------------------}
 $0500:
+
+120 \soundTimer.
+$2002 Pos=
 
 PrintMenu!
 SelectMenu!
@@ -230,6 +231,18 @@ Item 7^ [if=0                   {Bricks workaround}
 $6f9:
 
 $200 \vSP. call                 {Restore stack pointer and go to entry_point}
+
+{-----------------------------------------------------------------------+
+|       Tic Tac Toe launcher                                            |
++-----------------------------------------------------------------------}
+
+$7fa0:
+
+  11+ \vLR=                     {Return to this program after SYS}
+  \TinyBASIC \sysArgs0= 88!     {Load only, SYS_Exec_88 still in sysFn}
+                                {Return here}
+  pop                           {Gives back $200}
+  \TicTacToe \sysArgs0= 88!     {Load Tic-Tac-Toe and execute BASIC}
 
 {-----------------------------------------------------------------------+
 |                                                                       |

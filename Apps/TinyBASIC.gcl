@@ -672,10 +672,10 @@ $353f \sysArgs6:                {Pen color blue/purple, background color white}
 $18a0 Newline= call             {Scroll and clear last line}
 
 { Welcome message }
-PrintS!                         {'*** Tiny BASIC v2a'}
+PrintS!                         {'*** Tiny BASIC v2'}
   $2a# $2a# $2a# $20# $54# $69#
   $6e# $79# $20# $42# $41# $53#
-  $49# $43# $20# $76# $32# $61# 0#
+  $49# $43# $20# $76# $32# 0#
 Newline!
 
 {-----------------------------------------------------------------------+

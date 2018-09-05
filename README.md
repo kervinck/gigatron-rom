@@ -55,7 +55,7 @@ Memory map (RAM)
 ```
               0 1          47 48     127 128 129         (vSP)       255
              +-+-------------+-----------+-+-------------+--------------+
-page 0       |0| System vars | User vars |1| User vars <-|-> vCPU stack |
+page 0       |0| System vars | User vars |1| User vars <-| Stack/Loader |
              +-+-------------+-----------+-+------+------+--+-----------+
 page 1       | Video table                     239| vReset  | Channel 1 |
              +------------------------------------+---------+-----------+
