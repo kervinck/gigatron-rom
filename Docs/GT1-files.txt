@@ -159,6 +159,11 @@ which features were introduced after ROM v1, and therefore require
 a romType check before use, we'll add a ROM version number to their
 names.
 
+Example:
+        $800 p=                         {Top of screen}
+        \romType, \romTypeValue_ROMv3-  {Test for ROM v3}
+        [if<0 [do p. 1+ loop]]          {Halt and blink pixel on older ROM}
+
 32K vs. 64K
 -----------
 It is understood that a program that really requires an extended

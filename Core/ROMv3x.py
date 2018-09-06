@@ -2882,6 +2882,7 @@ align(0x100, 0x100)
 
 #-----------------------------------------------------------------------
 # Extension SYS_Sprite6_v3_64
+# Extension SYS_Sprite6x_v3_64
 #-----------------------------------------------------------------------
 
 # vAC          Destination address in screen
@@ -2928,9 +2929,10 @@ st([vAC])                       #24
 ld([sysArgs+0]);                C('Adjust src for convenience')#25
 adda(1)                         #26
 st([sysArgs+0])                 #27
-ld(hi('REENTER'), Y);           C('Normal exit (no self-repeat)')#28
-jmpy('REENTER')                 #29
-ld(-28/2)                       #30
+nop()                           #28
+ld(hi('REENTER'), Y);           C('Normal exit (no self-repeat)')#29
+jmpy('REENTER')                 #30
+ld(-34/2)                       #31
 
 label('.sysDpx0')
 st([sysArgs+2]);                C('Gobble 6 pixels into buffer')#20
@@ -2978,6 +2980,73 @@ st([vPC])                       #58
 ld(hi('REENTER'), Y)            #59
 jmpy('REENTER')                 #60
 ld(-64/2)                       #61
+
+align(64)
+label('SYS_Sprite6x_v3_64')
+
+ld([sysArgs+0], X);             C('Pixel data source address')#15
+ld([sysArgs+1], Y)              #16
+ld([Y,X]);                      C('Next pixel or stop')#17
+bpl('.sysDpx1')                 #18
+st([Y,Xpp])                     #19
+
+adda([vAC+1]);                  C('Adjust dst for convenience')#20
+st([vAC+1])                     #21
+ld([vAC])                       #22
+suba(6)                         #23
+st([vAC])                       #24
+ld([sysArgs+0]);                C('Adjust src for convenience')#25
+adda(1)                         #26
+st([sysArgs+0])                 #27
+nop()                           #28
+ld(hi('REENTER'), Y);           C('Normal exit (no self-repeat)')#29
+jmpy('REENTER')                 #30
+ld(-34/2)                       #31
+
+label('.sysDpx1')
+st([sysArgs+7]);                C('Gobble 6 pixels into buffer (backwards)')#20
+ld([Y,X])                       #21
+st([Y,Xpp])                     #22
+st([sysArgs+6])                 #23
+ld([Y,X])                       #24
+st([Y,Xpp])                     #25
+st([sysArgs+5])                 #26
+ld([Y,X])                       #27
+st([Y,Xpp])                     #28
+st([sysArgs+4])                 #29
+ld([Y,X])                       #30
+st([Y,Xpp])                     #31
+st([sysArgs+3])                 #32
+ld([Y,X])                       #33
+st([Y,Xpp])                     #34
+
+ld([vAC], X);                   C('Screen memory destination address')#35
+ld([vAC+1], Y)                  #36
+st([Y,Xpp]);                    C('Write 6 pixels')#37
+ld([sysArgs+3])                 #38
+st([Y,Xpp])                     #39
+ld([sysArgs+4])                 #40
+st([Y,Xpp])                     #41
+ld([sysArgs+5])                 #42
+st([Y,Xpp])                     #43
+ld([sysArgs+6])                 #44
+st([Y,Xpp])                     #45
+ld([sysArgs+7])                 #46
+st([Y,Xpp])                     #47
+
+ld([sysArgs+0]);                C('src += 6')#48
+adda(6)                         #49
+st([sysArgs+0])                 #50
+ld([vAC+1]);                    C('dst += 256')#51
+adda(1)                         #52
+st([vAC+1])                     #53
+
+ld([vPC]);                      C('Self-repeating SYS call')#54
+suba(2)                         #55
+st([vPC])                       #56
+ld(hi('REENTER'), Y)            #57
+jmpy('REENTER')                 #58
+ld(-62/2)                       #59
 
 #-----------------------------------------------------------------------
 #  More application specific SYS extensions

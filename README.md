@@ -186,7 +186,9 @@ page 9       | Notes table (C-0..A#7)                                   |
              +----------------------------------------------------------+
 page 10      | Inversion table                                          |
              +----------------------------------------------------------+
-page 11-214  | ROM tables: Embedded high-resolution images (packed)     |
+page 11-214  | SYS functions                                            |
+             |                                                          |
+             | ROM tables: Embedded high-resolution images (packed)     |
              |                                                          |
 page 215-255 | ROM files: Embedded vCPU applications (serial)           |
              +----------------------------------------------------------+
