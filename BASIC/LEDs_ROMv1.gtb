@@ -1,0 +1,18 @@
+1'ROM v1 can't stop the
+2'built-in LED sequencer.
+3'But we can slow it down
+4'and interact before it
+5'wants to change state.
+10'Slow LED sequencer
+20 POKE 47,255:'Slowest
+30 FOR N=0 TO 15
+35 POKE 45,255:'Max delay
+39'Set LED state
+40 POKE 20,N
+49'Reset frame counter
+50 POKE 14,0
+59'Wait half second
+60 IF PEEK(14)<30 GOTO 60
+70 NEXT N
+80'Restore to defaults
+90 POKE 47,9:POKE 45,0

@@ -217,7 +217,6 @@ $7fa0  | SAVE buffer           | Variables @ A B ... J | K ... S T U V W X Y Z |
             Rainbow     Show palette in a nice way
             Clock
             Maze        The famous one-liner with / and \ -> Easter egg in ROMv2
-            LEDs        Control the blinkenlights
             Circles     Lots of math
             Music       Play tones, vary with waveforms
             Sprites     Fake sprites with printing chars at arbitrary positions
