@@ -1,0 +1,6 @@
+10'Blink center pixel
+20 X=160/2:Y=120/2
+30'Videotable lookup
+40 P=PEEK(256+2*Y)*256+X
+50'Main loop
+60 POKE P,I:I=I+1:GOTO 60

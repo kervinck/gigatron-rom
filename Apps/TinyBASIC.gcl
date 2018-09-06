@@ -105,7 +105,7 @@
         PRINT "xxx      An unterminated string is silently accepted
         60000 vs. 90000 Many (too) large constants give an error, but not all!
         A(256)          Many (too) large idexes give an error, but not all!
-        Lowercase @     The backqute ('`') is recognized as alias for '@'
+        Lowercase @     The backquote ('`') is recognized as alias for '@'
         FOR-NEXT        Doesn't work over 16-bit ranges (FOR i=-30000 TO 30000)
 
   References:
@@ -134,12 +134,12 @@
     Speed       Cache result of the statement detection (checkpointing)
     Speed       Alternative: LET detection is now last, but should be first
     IF          Reintroduce the missing syntax error check
-    A="...      As poor-men's substitute for DATA/READ
-    @           Give it an implicit meaning such as "max index in arrays"
+    A="...      As poor-men's substitute for DATA/READ?
+    @           Give it an implicit meaning such as "max index in arrays"?
     Speed       Cache result of NextBlock (at offset 30 of block?)
 
   'Maybe in v4' list:
-    Unary minus Original Tiny BASIC does it wrong: 8/-2
+    Unary minus Original Tiny BASIC does it wrong in some edge cases: 8/-2
     Speed       Cache GOTO/GOSUB target (only for constant targets...)
     Speed       SYS functions for NextBlock, EndOfLine, Number
     TUNE/PLAY   Play a note/score
@@ -166,7 +166,7 @@
     LIST <n>    List one line
     a-z A-Z     As different variables
     ><          For unequal
-    CLEAR       For NEW
+    CLEAR       For NEW ('CLEAR' is original TinyBASIC syntax, but who cares..)
     READ, DATA  Possibly put in unused lines? (RESTORE)
     AND OR NOT  At least in IF statements
     ELSE        Will slow down IF, because it has to scan for this
@@ -214,13 +214,10 @@ $7fa0  | SAVE buffer           | Variables @ A B ... J | K ... S T U V W X Y Z |
         But how about INPUT A$?
 
         Ideas for demo programs:
-            Blinky      Everyone's favorite
-            Scroller    5 bands
             Rainbow     Show palette in a nice way
             Clock
             Maze        The famous one-liner with / and \ -> Easter egg in ROMv2
             LEDs        Control the blinkenlights
-            Lines
             Circles     Lots of math
             Music       Play tones, vary with waveforms
             Sprites     Fake sprites with printing chars at arbitrary positions
