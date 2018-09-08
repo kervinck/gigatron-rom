@@ -60,14 +60,14 @@ $800 p=                         {Top of screen}
 
 [def
   \SYS_Sprite6_v3_64 \sysFn=    {Normal sprite drawing}
-  0 c=                          {Center correction}
+  0 o=                          {Origin correction}
   1 u=                          {Direction}
   ret
 ] FaceRight=
 
 [def
   \SYS_Sprite6x_v3_64 \sysFn=   {X-flipped sprite drawing}
-  6 c=                          {Center correction}
+  6 o=                          {Origin correction}
   -1 u=                         {Direction}
   ret
 ] FaceLeft=
@@ -78,12 +78,12 @@ $800 p=                         {Top of screen}
 $0300:
 
 FaceRight!                      {Moving right}
-256 v=                          {And down}
+256 v=                          {And moving down}
 
 [do
   [do \videoY, 179^ if<>0loop]  {Wait for start of vertical blank}
 
-  Image \sysArgs0: p c+         {Setup SYS call}
+  Image \sysArgs0: p o+         {Setup SYS call}
   64!                           {Draw first half}
   64!                           {Draw second half}
 
