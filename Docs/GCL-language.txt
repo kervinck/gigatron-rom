@@ -337,10 +337,17 @@ Addresses of SYS functions that are part of the ABI:
 02e9    SYS_NextByteIn_32       Receive next byte and put in load buffer
 06e7    SYS_PayloadCopy_34      Copy byte from load buffer to RAM destination
 
-Added in ROM v2 (ADVICE NOT TO USE IN GT1 FILES INTENDED FOR SHARING):
+Added in ROM v2:
 
 0b00    SYS_SetMode_80          Set video mode 0..3
 0b03    SYS_SetMemory_54        Set 1..256 bytes of memory to value
+
+Added in ROM v3:
+
+0c00    SYS_Sprite6_v3_64       Draw sprite of 6 pixels wide and N pixels high
+0c40    SYS_Sprite6x_v3_64      Draw sprite mirrored in X direction
+0c80    SYS_Sprite6y_v3_64      Draw sprite upside down
+0cc0    SYS_Sprite6xy_v3_64     Draw sprite mirrored and upside down
 
 Application specific SYS calls in ROM v1 that are -not- part of the ABI:
 

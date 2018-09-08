@@ -152,17 +152,18 @@ Don't crash
 -----------
 GT1 files that need a certain interface feature that is not present
 in earlier ROMs should degrade in performance or functionality, or
-fail gracefully, but definitely NOT crash. By publishng a file as
-GT1 you're signaling that you expect the file can be loaded with
-any past, present or future ROM version. To help remind the programmer
-which features were introduced after ROM v1, and therefore require
-a romType check before use, we'll add a ROM version number to their
-names.
+fail gracefully, but definitely NOT crash.
 
 Example:
         $800 p=                         {Top of screen}
         \romType, \romTypeValue_ROMv3-  {Test for ROM v3}
         [if<0 [do p. 1+ loop]]          {Halt and blink pixel on older ROM}
+
+By publishing a file as GT1 you're signaling that you expect the
+file can be loaded with any past, present or future ROM version.
+To help remind the programmer which features were introduced after
+ROM v1, and therefore require a romType check before use, we'll add
+a ROM version number to their names.
 
 32K vs. 64K
 -----------

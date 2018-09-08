@@ -2883,6 +2883,8 @@ align(0x100, 0x100)
 #-----------------------------------------------------------------------
 # Extension SYS_Sprite6_v3_64
 # Extension SYS_Sprite6x_v3_64
+# Extension SYS_Sprite6y_v3_64
+# Extension SYS_Sprite6xy_v3_64
 #-----------------------------------------------------------------------
 
 # vAC          Destination address in screen
@@ -3048,8 +3050,206 @@ ld(hi('REENTER'), Y)            #57
 jmpy('REENTER')                 #58
 ld(-62/2)                       #59
 
+align(64)
+label('SYS_Sprite6y_v3_64')
+
+ld([sysArgs+0], X);             C('Pixel data source address')#15
+ld([sysArgs+1], Y)              #16
+ld([Y,X]);                      C('Next pixel or stop')#17
+bpl('.sysDpx2')                 #18
+st([Y,Xpp])                     #19
+
+xora(255);                      C('Adjust dst for convenience')#20
+adda(1)                         #21
+adda([vAC+1])                   #22
+st([vAC+1])                     #23
+ld([vAC])                       #24
+adda(6)                         #25
+st([vAC])                       #26
+ld([sysArgs+0]);                C('Adjust src for convenience')#27
+adda(1)                         #28
+st([sysArgs+0])                 #29
+nop()                           #30
+ld(hi('REENTER'), Y);           C('Normal exit (no self-repeat)')#31
+jmpy('REENTER')                 #32
+ld(-36/2)                       #33
+
+label('.sysDpx2')
+st([sysArgs+2]);                C('Gobble 6 pixels into buffer')#20
+ld([Y,X])                       #21
+st([Y,Xpp])                     #22
+st([sysArgs+3])                 #23
+ld([Y,X])                       #24
+st([Y,Xpp])                     #25
+st([sysArgs+4])                 #26
+ld([Y,X])                       #27
+st([Y,Xpp])                     #28
+st([sysArgs+5])                 #29
+ld([Y,X])                       #30
+st([Y,Xpp])                     #31
+st([sysArgs+6])                 #32
+ld([Y,X])                       #33
+st([Y,Xpp])                     #34
+st([sysArgs+7])                 #35
+
+ld([vAC], X);                   C('Screen memory destination address')#36
+ld([vAC+1], Y)                  #37
+ld([sysArgs+2]);                C('Write 6 pixels')#38
+st([Y,Xpp])                     #39
+ld([sysArgs+3])                 #40
+st([Y,Xpp])                     #41
+ld([sysArgs+4])                 #42
+st([Y,Xpp])                     #43
+ld([sysArgs+5])                 #44
+st([Y,Xpp])                     #45
+ld([sysArgs+6])                 #46
+st([Y,Xpp])                     #47
+ld([sysArgs+7])                 #48
+st([Y,Xpp])                     #49
+
+ld([sysArgs+0]);                C('src += 6')#50
+adda(6)                         #51
+st([sysArgs+0])                 #52
+ld([vAC+1]);                    C('dst -= 256')#53
+suba(1)                         #54
+st([vAC+1])                     #55
+
+ld([vPC]);                      C('Self-repeating SYS call')#56
+suba(2)                         #57
+st([vPC])                       #58
+ld(hi('REENTER'), Y)            #59
+jmpy('REENTER')                 #60
+ld(-64/2)                       #61
+
+align(64)
+label('SYS_Sprite6xy_v3_64')
+
+ld([sysArgs+0], X);             C('Pixel data source address')#15
+ld([sysArgs+1], Y)              #16
+ld([Y,X]);                      C('Next pixel or stop')#17
+bpl('.sysDpx3')                 #18
+st([Y,Xpp])                     #19
+
+xora(255);                      C('Adjust dst for convenience')#20
+adda(1)                         #21
+adda([vAC+1])                   #22
+st([vAC+1])                     #23
+ld([vAC])                       #24
+suba(6)                         #25
+st([vAC])                       #26
+ld([sysArgs+0]);                C('Adjust src for convenience')#27
+adda(1)                         #28
+st([sysArgs+0])                 #29
+nop()                           #30
+ld(hi('REENTER'), Y);           C('Normal exit (no self-repeat)')#31
+jmpy('REENTER')                 #32
+ld(-36/2)                       #33
+
+label('.sysDpx3')
+st([sysArgs+7]);                C('Gobble 6 pixels into buffer (backwards)')#20
+ld([Y,X])                       #21
+st([Y,Xpp])                     #22
+st([sysArgs+6])                 #23
+ld([Y,X])                       #24
+st([Y,Xpp])                     #25
+st([sysArgs+5])                 #26
+ld([Y,X])                       #27
+st([Y,Xpp])                     #28
+st([sysArgs+4])                 #29
+ld([Y,X])                       #30
+st([Y,Xpp])                     #31
+st([sysArgs+3])                 #32
+ld([Y,X])                       #33
+st([Y,Xpp])                     #34
+
+ld([vAC], X);                   C('Screen memory destination address')#35
+ld([vAC+1], Y)                  #36
+st([Y,Xpp]);                    C('Write 6 pixels')#37
+ld([sysArgs+3])                 #38
+st([Y,Xpp])                     #39
+ld([sysArgs+4])                 #40
+st([Y,Xpp])                     #41
+ld([sysArgs+5])                 #42
+st([Y,Xpp])                     #43
+ld([sysArgs+6])                 #44
+st([Y,Xpp])                     #45
+ld([sysArgs+7])                 #46
+st([Y,Xpp])                     #47
+
+ld([sysArgs+0]);                C('src += 6')#48
+adda(6)                         #49
+st([sysArgs+0])                 #50
+ld([vAC+1]);                    C('dst -= 256')#51
+suba(1)                         #52
+st([vAC+1])                     #53
+
+ld([vPC]);                      C('Self-repeating SYS call')#54
+suba(2)                         #55
+st([vPC])                       #56
+ld(hi('REENTER'), Y)            #57
+jmpy('REENTER')                 #58
+ld(-62/2)                       #59
+
+align(1)                        # Resets size limit
+
 #-----------------------------------------------------------------------
-#  More application specific SYS extensions
+#  Built-in full resolution images
+#-----------------------------------------------------------------------
+
+def importImage(rgbName, width, height, ref):
+  f = open(rgbName)
+  raw = f.read()
+  f.close()
+  align(0x100)
+  label(ref)
+  for y in range(0, height, 2):
+    for j in range(2):
+      align(0x80)
+      comment = 'Pixels for %s line %s' % (ref, y+j)
+      for x in range(0, width, 4):
+        bytes = []
+        for i in range(4):
+          R = ord(raw[3 * ((y + j) * width + x + i) + 0])
+          G = ord(raw[3 * ((y + j) * width + x + i) + 1])
+          B = ord(raw[3 * ((y + j) * width + x + i) + 2])
+          bytes.append( (R/85) + 4*(G/85) + 16*(B/85) )
+
+        # Pack 4 pixels in 3 bytes
+        ld( ((bytes[0]&0b111111)>>0) + ((bytes[1]&0b000011)<<6) ); comment = C(comment)
+        ld( ((bytes[1]&0b111100)>>2) + ((bytes[2]&0b001111)<<4) )
+        ld( ((bytes[2]&0b110000)>>4) + ((bytes[3]&0b111111)<<2) )
+      if j==0:
+        trampoline3a()
+      else:
+        trampoline3b()
+
+importImage('Images/Parrot-160x120.rgb',  160, 120, 'packedParrot')
+#importImage('Images/Baboon-160x120.rgb',  160, 120, 'packedBaboon')
+importImage('Images/Jupiter-160x120.rgb', 160, 120, 'packedJupiter')
+
+#-----------------------------------------------------------------------
+#
+#  ROM page XX: Skyline for Racer
+#
+#-----------------------------------------------------------------------
+
+f = open('Images/RacerHorizon-256x16.rgb', 'rb')
+raw = f.read()
+f.close()
+
+packed, quartet = [], []
+for i in xrange(0, len(raw), 3):
+  R, G, B = ord(raw[i+0]), ord(raw[i+1]), ord(raw[i+2])
+  quartet.append((R/85) + 4*(G/85) + 16*(B/85))
+  if len(quartet) == 4:
+    # Pack 4 pixels in 3 bytes
+    packed.append( ((quartet[0]&0b111111)>>0) + ((quartet[1]&0b000011)<<6) )
+    packed.append( ((quartet[1]&0b111100)>>2) + ((quartet[2]&0b001111)<<4) )
+    packed.append( ((quartet[2]&0b110000)>>4) + ((quartet[3]&0b111111)<<2) )
+    quartet = []
+
+#-----------------------------------------------------------------------
+#  Some more application specific SYS extensions
 #-----------------------------------------------------------------------
 
 # !!! These aren't defined in interface.json and therefore
@@ -3118,62 +3318,6 @@ jmpy('REENTER')                 #42
 ld(-46/2)                       #43
 
 #-----------------------------------------------------------------------
-#  Built-in full resolution images
-#-----------------------------------------------------------------------
-
-align(1)                        # Resets size limit
-
-def importImage(rgbName, width, height, ref):
-  f = open(rgbName)
-  raw = f.read()
-  f.close()
-  align(0x100)
-  label(ref)
-  for y in range(0, height, 2):
-    for j in range(2):
-      align(0x80)
-      comment = 'Pixels for %s line %s' % (ref, y+j)
-      for x in range(0, width, 4):
-        bytes = []
-        for i in range(4):
-          R = ord(raw[3 * ((y + j) * width + x + i) + 0])
-          G = ord(raw[3 * ((y + j) * width + x + i) + 1])
-          B = ord(raw[3 * ((y + j) * width + x + i) + 2])
-          bytes.append( (R/85) + 4*(G/85) + 16*(B/85) )
-
-        # Pack 4 pixels in 3 bytes
-        ld( ((bytes[0]&0b111111)>>0) + ((bytes[1]&0b000011)<<6) ); comment = C(comment)
-        ld( ((bytes[1]&0b111100)>>2) + ((bytes[2]&0b001111)<<4) )
-        ld( ((bytes[2]&0b110000)>>4) + ((bytes[3]&0b111111)<<2) )
-      if j==0:
-        trampoline3a()
-      else:
-        trampoline3b()
-
-importImage('Images/Parrot-160x120.rgb',  160, 120, 'packedParrot')
-#importImage('Images/Baboon-160x120.rgb',  160, 120, 'packedBaboon')
-importImage('Images/Jupiter-160x120.rgb', 160, 120, 'packedJupiter')
-
-#-----------------------------------------------------------------------
-#
-#  ROM page XX: Skyline for Racer
-#
-#-----------------------------------------------------------------------
-
-f = open('Images/RacerHorizon-256x16.rgb', 'rb')
-raw = f.read()
-f.close()
-
-packed, quartet = [], []
-for i in xrange(0, len(raw), 3):
-  R, G, B = ord(raw[i+0]), ord(raw[i+1]), ord(raw[i+2])
-  quartet.append((R/85) + 4*(G/85) + 16*(B/85))
-  if len(quartet) == 4:
-    # Pack 4 pixels in 3 bytes
-    packed.append( ((quartet[0]&0b111111)>>0) + ((quartet[1]&0b000011)<<6) )
-    packed.append( ((quartet[1]&0b111100)>>2) + ((quartet[2]&0b001111)<<4) )
-    packed.append( ((quartet[2]&0b110000)>>4) + ((quartet[3]&0b111111)<<2) )
-    quartet = []
 
 label('zippedRacerHorizon')
 for i in xrange(len(packed)):
