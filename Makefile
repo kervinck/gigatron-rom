@@ -80,6 +80,12 @@ time: Docs/gtemu $(DEV).rom
 burn: $(DEV).rom
 	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
+burn85:
+	# Set to 8 MHz
+	minipro -p attiny85 -w Utils/BabelFish/BabelFish.ATtiny85_fuses.txt -c config
+	# ROM image
+	minipro -p attiny85 -w Utils/BabelFish/BabelFish.ATtiny85.bin -s
+
 %.gt1: %.gcl
 	Core/compilegcl.py "$<" `dirname ./"$@"`
 
