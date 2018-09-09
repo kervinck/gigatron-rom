@@ -37,7 +37,7 @@
 #  DONE Bricks (seems ok)
 #  DONE Tetronis (still need a method to load it correctly)
 #  DONE TicTacToe
-#  ---- SYS spites/memcpy acceleration functions (reflections)
+#  DONE SYS spites/memcpy acceleration functions (reflections)
 #  ---- Update version number to v3
 #
 #  Ideas for ROM v4+
@@ -3397,7 +3397,7 @@ def basicLine(address, number, text):
   for byte in s:
     program.putInRomTable(byte)
 
-gtbName = 'BASIC/TicTac.gtb'
+gtbName = 'Apps/TicTac_v1.gtb'
 name = 'TicTacToe'
 print
 print 'Including file %s label %s ROM %04x' % (gtbName, name, pc())

@@ -11,8 +11,7 @@ gcl0x
 \buttonState;                   {Fetch buttonState and resetTimer}
 [if>0                           {If resetTimer positive}
   16& [if=0                     {And [Start] pressed}
-  push                          {Still at $200, save it}
-  $7fa0 call]]                  {Continue in a safe place}
+  \Sprites \sysArgs0= 88!]]     {Start demo. SYS_Exec_88 still in sysFn}
 
 { Print a 5x8 character on screen with the built-in font
   Char must be in the 32-127 range (this is not checked) }
@@ -83,7 +82,7 @@ $0300:
     {buttonRight}
     \buttonState, 254^ [if=0
        WipeOutArrow!
-       Item 3- [if<=0 9+ Item=]
+       Item 4- [if<=0 10+ Item=]
        \buttonState, 1| \buttonState.]
 
     {buttonLeft}
@@ -95,7 +94,7 @@ $0300:
     {buttonDown}
     \buttonState, 251^ [if=0
        WipeOutArrow!
-       Item 5- [if<>0 4- if<>0 Item<++]
+       Item 5- [if<>0 5- if<>0 Item<++]
        \buttonState, 4| \buttonState.]
 
     {buttonUp}
@@ -118,7 +117,7 @@ $0300:
     1-   [if=0 \Loader     else
     1-   [if=0 \Tetronis   else
     1-   [if=0 \Bricks     else
-    1-   [if=0 \TinyBASIC  else
+    2-   [if<=0 \TinyBASIC else {TicTacToe and stand-alone BASIC}
     1-   [if=0 \WozMon     else loop]]]]]]]]]]
     Program=
   ]
@@ -142,10 +141,11 @@ $0400:
   9# $52# $61# $63# $65# $72#   9#       32#  32#       {Racer}
   9# $42# $72# $69# $63# $6b# $73# 10#                          {Bricks}
   9# $4d# $61# $6e# $64# $65# $6c# $62# $72# $6f# $74#  {Mandelbrot}
-  9# $42# $41# $53# $49# $43# 10#                               {BASIC}
+  9# $54# $69# $63# $54# $61# $63# $54# $6f# $65# 10#           {TicTacToe}
   9# $50# $69# $63# $74# $75# $72# $65# $73#   32# 32#  {Pictures}
+  9# $42# $41# $53# $49# $43# 10#                               {BASIC}
+  9# $43# $72# $65# $64# $69# $74# $73# 9#              {Credits}
   9# $57# $6f# $7a# $4d# $6f# $6e# 10#                          {WozMon}
-  9# $43# $72# $65# $64# $69# $74# $73# 10#             {Credits}
   9# $4c# $6f# $61# $64# $65# $72# 10#                  {Loader}
   0#
 ] MainMenu=
@@ -177,6 +177,11 @@ $0400:
   pop ret
 ] WipeOutArrow=
 
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 5                                      |
++-----------------------------------------------------------------------}
+$0500:
+
 [def {PrintMenu}
   push
   42 {Gray}   Color= PrintDivider!
@@ -185,11 +190,6 @@ $0400:
                      HelpText PrintText!
   pop ret
 ] PrintMenu=
-
-{-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 5                                      |
-+-----------------------------------------------------------------------}
-$0500:
 
 120 \soundTimer.
 $2002 Pos=
@@ -218,6 +218,7 @@ Pos 48+ j& q=                   {Box of current cursor}
   255& 160^ if<>0loop]          {Next stripe}
 
 { Load and start the selected program }
+\SYS_Exec_88 \sysFn=            {ROM loader}
 Program \sysArgs0=              {ROM image}
 $200 \vLR=                      {Start of execution address}
 Item 6^ [if=0                   {Tetronis workaround}
@@ -225,7 +226,9 @@ Item 6^ [if=0                   {Tetronis workaround}
   $6f9 \vLR=]                   { 2. Stack must be restored with patch}
 Item 7^ [if=0                   {Bricks workaround}
   $80 \vSP.]                    { 1. Zero-page conflict: move stack}
-\SYS_Exec_88 \sysFn= 88!        {Load from ROM and execute}
+Item 8^ [if=0                   {TicTacToe needs special launcher}
+  $7fa0 call]
+88!                             {Load from ROM and execute}
 
 {-----------------------------------------------------------------------+
 |       Tetronis patch                                                  |
@@ -244,7 +247,7 @@ $7fa0:
   11+ \vLR=                     {Return to this program after SYS}
   \TinyBASIC \sysArgs0= 88!     {Load only, SYS_Exec_88 still in sysFn}
                                 {Return here}
-  pop                           {Gives back $200}
+  $200 \vLR=
   \TicTacToe \sysArgs0= 88!     {Load Tic-Tac-Toe and execute BASIC}
 
 {-----------------------------------------------------------------------+

@@ -28,7 +28,7 @@
 //    For example to get a long BASIC program loaded into BASIC
 // 4. Controlling the Gigatron over USB from a PC/laptop
 // 5. Passing through of game controller signals
-// 6. TODO: Receive data from Gigatron and store it
+// 6. Receive data from Gigatron and store it in the EEPROM area
 //
 // Select one of the supported platforms in the Tools->Board menu.
 //

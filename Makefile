@@ -37,7 +37,10 @@ ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 # Work in progress
 dev: $(DEV).rom
 $(DEV).rom: Core/* Apps/* Images/* Makefile interface.json
-	# Development towards ROMv2 (minor changes only)
+	# Development towards ROMv3
+	# Integrate BASIC, WozMon, Tetronis, Bricks
+	# vPulse modulation
+	# Sprite acceleration
 	env romType="0x28"\
 	    PYTHONPATH="Core:$(PYTHONPATH)"\
 	    python Core/$(DEV).py\
@@ -47,10 +50,11 @@ $(DEV).rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Pictures_v2.gcl\
 		Apps/Credits_v2.gcl\
 		Apps/Loader_v2.gcl\
-		Apps/Tetronis.gt1\
-		Apps/Bricks.gt1\
-		Apps/TinyBASIC.gcl\
-		Apps/WozMon.gcl\
+		Apps/Tetronis_v1.gt1\
+		Apps/Bricks_v1.gt1\
+		Apps/TinyBASIC_v2.gt1\
+		Apps/WozMon_v2.gt1\
+		Apps/Sprites_v1.gt1\
 		Apps/Main_v3.gcl\
 		Core/Reset_v3.gcl
 
