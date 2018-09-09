@@ -38,8 +38,8 @@ ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 dev: $(DEV).rom
 $(DEV).rom: Core/* Apps/* Images/* Makefile interface.json
 	# Development towards ROMv3
-	# Integrate BASIC, WozMon, Tetronis, Bricks
-	# vPulse modulation
+	# Integrate BASIC, WozMon, Tetronis, Bricks, TicTacToe
+	# vPulse modulation (for SAVE in BASIC)
 	# Sprite acceleration
 	env romType="0x28"\
 	    PYTHONPATH="Core:$(PYTHONPATH)"\
@@ -52,7 +52,7 @@ $(DEV).rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Loader_v2.gcl\
 		Apps/Tetronis_v1.gt1\
 		Apps/Bricks_v1.gt1\
-		Apps/TinyBASIC_v2.gt1\
+		Apps/TinyBASIC_v2.gcl\
 		Apps/WozMon_v2.gt1\
 		Apps/Sprites_v1.gt1\
 		Apps/Main_v3.gcl\
@@ -64,9 +64,6 @@ run: Docs/gtemu $(DEV).rom
 test: Docs/gtemu $(DEV).rom
 	# Check for hSync errors in first ~30 seconds of emulation
 	Docs/gtemu $(DEV).rom | head -999999 | grep \~
-
-basic: Apps/TinyBASIC.gt1 Apps/TinyBASIC.h
-	mv Apps/TinyBASIC.h Utils/BabelFish
 
 Utils/BabelFish/tinyfont.h: Utils/BabelFish/tinyfont.py
 	python "$<" > "$@"
