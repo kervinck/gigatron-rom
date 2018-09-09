@@ -1,0 +1,7 @@
+10'Multiplication table
+20 PRINT "Enter number"
+30 INPUT N
+40 FOR M=1 to 10
+50 PRINT M;"*";N;"=";M*N
+60 NEXT M
+70 END
