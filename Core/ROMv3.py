@@ -33,14 +33,17 @@
 #  DONE Update version number to v2
 #
 #  ROM v3:
-#  DONE vPulse width modulation? (for SAVE in BASIC)
-#  DONE Bricks (seems ok)
-#  DONE Tetronis (still need a method to load it correctly)
+#  DONE vPulse width modulation (for SAVE in BASIC)
+#  DONE Bricks
+#  DONE Tetronis
+#  DONE TinyBASIC v2
 #  DONE TicTacToe
-#  DONE SYS spites/memcpy acceleration functions (reflections)
-#  ---- Update version number to v3
+#  DONE SYS spites/memcpy acceleration functions (reflections etc.)
+#  DONE Replace Easter egg
+#  DONE Update version number to v3
 #
 #  Ideas for ROM v4+
+#  XXX SYS function for plotting a full character
 #  XXX Sprites by scan line 4 reset method? ("videoG"=graphics)
 #  XXX Need keymaps in ROM? (perhaps undocumented if not tested)
 #  XXX Gigatris, FrogStroll (not in Contrib/)

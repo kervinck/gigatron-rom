@@ -2,6 +2,27 @@ CFLAGS:=-std=c11 -O3 -Wall
 DEV:=ROMv3x
 
 # Latest released version as default target
+ROMv3.rom: Core/* Apps/* Images/* Makefile interface.json
+	# Integrate BASIC, WozMon, Tetronis, Bricks, TicTacToe
+	# vPulse modulation (for SAVE in BASIC)
+	# Sprite acceleration
+	env romType="0x28"\
+	    PYTHONPATH="Core:$(PYTHONPATH)"\
+	    python Core/ROMv3.py\
+		Apps/Snake_v2.gcl\
+		Apps/Racer_v1.gcl\
+		Apps/Mandelbrot_v1.gcl\
+		Apps/Pictures_v2.gcl\
+		Apps/Credits_v2.gcl\
+		Apps/Loader_v2.gcl\
+		Apps/Tetronis_v1.gt1\
+		Apps/Bricks_v1.gt1\
+		Apps/TinyBASIC_v2.gcl\
+		Apps/WozMon_v2.gt1\
+		Apps/Sprites_v1.gt1\
+		Apps/Main_v3.gcl\
+		Core/Reset_v3.gcl
+
 ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
 	# Development towards ROMv2 (minor changes only)
 	env romType="0x20"\
