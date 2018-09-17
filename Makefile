@@ -98,6 +98,9 @@ time: Docs/gtemu $(DEV).rom
 	# Run emulation until first sound
 	Docs/gtemu $(DEV).rom | grep -m 1 'xout [^0]'
 
+burnv3: ROMv3.rom
+	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
+
 burn: $(DEV).rom
 	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 

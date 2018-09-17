@@ -73,8 +73,7 @@ gcl0x
 
 {Draw images in a continuous loop}
 [do
-{ XXX Wait for poll: https://forum.gigatron.io/viewtopic.php?f=4&t=52
-  \packedBaboon  DrawImage! 15 WaitSeconds! WaitController! }
+{ \packedBaboon  DrawImage! 15 WaitSeconds! WaitController! }
   \packedParrot  DrawImage! 15 WaitSeconds! WaitController!
   \packedJupiter DrawImage! 15 WaitSeconds! WaitController!
 loop]
