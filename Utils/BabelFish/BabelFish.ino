@@ -250,17 +250,15 @@ const struct { byte *gt1; char *name; } gt1Files[] = {
   { TinyBASIC_gt1, "BASIC"                    }, // 3048 bytes
 #if maxStorage >= 10000
   { WozMon_gt1,    "WozMon"                   }, // 595 bytes
-  { bricks_gt1,    "Bricks game [xbx]"        }, // 1607 bytes
-#endif
-#if maxStorage >= 20000
-  { tetris_gt1,    "Tetris game [at67]"       }, // 9868 bytes
-#endif
-#if maxStorage >= 30000
   { Terminal_gt1,  "Terminal"                 }, // 256 bytes
   { Blinky_gt1,    "Blinky"                   }, // 17 bytes
   { lines_gt1,     "Lines demo [at67]"        }, // 304 bytes
   { life3_gt1,     "Game of Life demo [at67]" }, // 441 bytes
   { starfield_gt1, "Starfield demo [at67]"    }, // 817 bytes
+#endif
+#if maxStorage >= 30000
+  { bricks_gt1,    "Bricks game [xbx]"        }, // 1607 bytes
+  { tetris_gt1,    "Tetris game [at67]"       }, // 9868 bytes
 #endif
   { NULL,          "-SAVED-"                  },
 };

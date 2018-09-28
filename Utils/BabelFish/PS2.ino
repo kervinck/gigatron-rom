@@ -444,12 +444,7 @@ static volatile byte head = 0, tail = 0;
 void keyboard_setup()
 {
   // Initialize the pins
-  #ifdef INPUT_PULLUP
-    pinMode(keyboardDataPin, INPUT_PULLUP);
-  #else
-    pinMode(keyboardDataPin, INPUT);
-    digitalWrite(keyboardDataPin, HIGH);
-  #endif
+  pinMode(keyboardDataPin, INPUT_PULLUP);
   allowPs2();
 
   #if defined(ARDUINO_attiny)
@@ -500,13 +495,7 @@ void ps2interrupt()
 // Ready to receive
 void allowPs2()
 {
-  #ifdef INPUT_PULLUP
-    pinMode(keyboardClockPin, INPUT_PULLUP);
-  #else
-    pinMode(keyboardClockPin, INPUT);
-    digitalWrite(keyboardClockPin, HIGH);
-  #endif
-
+  pinMode(keyboardClockPin, INPUT_PULLUP);
   _n = 11;                       // Consider previous bits lost
 }
 
@@ -549,6 +538,11 @@ byte keyboard_getState()
       // Here we don't mind the order they appear in
       case 0xe0: flags |= extendedFlag; continue;
       case 0xf0: flags |= breakFlag;    continue;
+      case 0xaa: // BAT ok
+        #define oddParity(x) ((1 ^ x ^ (x>>1) ^ (x>>2) ^ (x>>3) ^ (x>>4) ^ (x>>5) ^ (x>>6) ^ (x>>7)) & 1)
+        #define code(x) ((1 << 10) | (oddParity(x) << 9) | ((x) << 1))
+        keyboard_send(code(0xf4)); // Enable (fixes Walter's PERIBOARD-409)
+        continue;
     }
 
     if (flags & extendedFlag)
@@ -657,5 +651,58 @@ byte keyboard_getState()
 byte fnKey(byte key)
 {
   return (PS2_F1 <= key && key <= PS2_F12) ? (key & 15) : 0;
+}
+
+// 'code' must include start, data, parity and stop bits
+void keyboard_send(word code)
+{
+  // 1. Bring the Clock line low for at least 100 microseconds
+  forbidPs2();
+  delayMicroseconds(100);
+
+  // 2. Bring the data line low
+  digitalWrite(keyboardDataPin, 0);
+  pinMode(keyboardDataPin, OUTPUT);
+
+  // 3. Release the Clock line
+  allowPs2();
+  // Pull-up resistor will bring clock line up first
+
+  do {
+    // 6. Wait for the device to bring Clock high
+    while (digitalRead(keyboardClockPin) == 0)
+      ;
+
+    // 4. 7. Wait for the device to bring the Clock line low
+    // MvK: Falling edge transfers the data
+    while (digitalRead(keyboardClockPin) != 0)
+      ;
+
+    // 5. Set/reset the Data line to send the next data bit
+    code >>= 1;
+    if (code & 1)
+      pinMode(keyboardDataPin, INPUT_PULLUP); // To send 1
+    else {
+      digitalWrite(keyboardDataPin, 0);
+      pinMode(keyboardDataPin, OUTPUT); // To send 0
+    }
+
+    // 8. Repeat steps 5-7 for the other seven data bits and the parity bit
+    // 9. Release the Data line
+  } while (code > 1);
+
+  pinMode(keyboardDataPin, INPUT_PULLUP);
+
+  // 10. Wait for the device to bring Data low
+  while (digitalRead(keyboardDataPin) != 0)
+    ;
+
+  // 11. Wait for the device to bring Clock low
+  while (digitalRead(keyboardClockPin) != 0)
+    ;
+
+  // 12. Wait for the device to release Data and Clock
+  while (digitalRead(keyboardClockPin) == 0 || digitalRead(keyboardDataPin) == 0)
+    ;
 }
 
