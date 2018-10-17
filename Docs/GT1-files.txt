@@ -1,5 +1,5 @@
 I want to set a standard for precompiled vCPU programs.  There are
-many emulators getting born, and Loader.ino will need to adopt
+many emulators getting born, and BabelFish.ino will need to adopt
 something as well.  Both users of real Gigatrons and users of
 emulators benefit from a single standard.
 
@@ -41,7 +41,7 @@ are loaded sequentially.  In case of overlap, the later one overwrites
 the earlier one.  (We can make movies with that!) The end of the
 segment list is implied by the terminating zero-byte as high address.
 
-This format implies that there is a translation to do in Loader.ino
+This format implies that there's a translation to do in BabelFish.ino
 when loading such files into a Gigatron, but I think that is ok:
 the limitations on the Loader packets (60 bytes) are influenced by
 what the video signal looks like. I suggest we keep that kind of
@@ -65,19 +65,19 @@ Segments may be in any order in the file, except when data has to
 go into the zero-page: if you have that, it MUST be the first in
 the sequence. So there can be no more than one of those segments.
 This is an extension of the layout as used in ROM v1, which can't
-load data into the zero-page. But it is useful for initializing
+load data into the zero-page. But it's useful for initializing
 variables.
 
-Also there is no encoding for a zero-length program.  Use an
-zero-length file for that use case, for all I care...  or encode a
-known constant, such as [0]=0 as follows: 00 00 01 00 00 00
+Also there's no encoding for a zero-length program.  Use an zero-length
+file for that use case, for all I care...  or encode a known constant,
+such as [0]=0 as follows: 00 00 01 00 00 00
 
 Extension
 =========
 
 File name extension: .gt1 (For Gigatron-1)
 
-I feel that .vcpu is the lesser choice because it is a generic
+I feel that .vcpu is the lesser choice because it's a generic
 abbreviation for virtual CPU.  For example, the MyCPU uses the same
 abbreviation for something similar.  And ... retro-extensions should
 be 3 characters of course...
@@ -87,13 +87,13 @@ ROM bindings
 
 GT1 files contain vCPU instructions and rely on things that are
 defined by the ROM on the target platform. The ROM bindings (ABI)
-for ROM v1 are listed in interface.json.  If your program depends on
-some extension of this, then it is nice not to crash other people's
+for ROM v1 are listed in interface.json.  If your program depends
+on some extension of this, then it's nice not to crash other people's
 machines. ROMs with different bindings should use a different romType
 value in address $0021. GT1 programs can then check this value and
 not continue when seeing an unexpected value.
 
-The romType is in RAM, so it is always possible for the user to
+The romType is in RAM, so it's always possible for the user to
 modify its value prior before loading an unwilling GT1 file.
 
 BUT: If your program requires a custom ROM, then GT1 is probably not
@@ -135,7 +135,7 @@ rely on the meaning of individual bits. Also, the value can go up
 by an arbitrary number with each release, so there no way to
 "calculate" the displayed version name as will be known by the user.
 
-With this it is not possible that two "official" ROM releases have
+With this it's not possible that two "official" ROM releases have
 the same romType value. However, third-party ROMs with compatible
 GT1 loading capability are adviced to use the same romType value
 as the ROM version they were derived from.
@@ -177,7 +177,7 @@ Hack files
 Of course the Gigatron is an open system, so there will be plenty
 of methods to detect what kind of ROM you're running on. If you
 make a GT1 file that you know depends on undocumented features (or
-better phrased: features not listed in interface.json), it is adviced
+better phrased: features not listed in interface.json), it's adviced
 to give it a different extension. For example 'Demo3_ROMv1only.gt1x'
 (I always append a 'x' to such experimental files with no expectation
 of compatibility.)
@@ -210,7 +210,7 @@ we can get very far without ever doing something like this...
 files. Their inclusion turned out to be a bit premature and they
 had to change after ROM v1. There will be no alternative for
 SYS_ReadNextInput_32 and SYS_LoaderPayloadCopy_34 in interface.json
-soon: it is part of Loader, but that is logically not a GT1 file.
+soon: it's part of Loader, but that is logically not a GT1 file.
 'SYS_Reset_36' was just an intermediate in the soft reset sequence.
 The proper way to initiate that is by redirecting the vCPU to vReset
 (0x1f0). So we have retro-actively added vReset to the interface.json
