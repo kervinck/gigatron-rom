@@ -226,11 +226,12 @@ SYS functions (ROM)
 
 Added in ROM v2:
 
-0b00    SYS_SetMode_80          Set video mode 0..3
-0b03    SYS_SetMemory_54        Set 1..256 bytes of memory to value
+0b00    SYS_SetMode_v2_80       Set video mode 0..3
+0b03    SYS_SetMemory_v2_54     Set 1..256 bytes of memory to value
 
 Added in ROM v3:
 
+0b06    SYS_SendSerial1_v3_80   Send data out over game controller port
 0c00    SYS_Sprite6_v3_64       Draw sprite of 6 pixels wide and N pixels high
 0c40    SYS_Sprite6x_v3_64      Draw sprite mirrored in X direction
 0c80    SYS_Sprite6y_v3_64      Draw sprite upside down
