@@ -4,7 +4,6 @@
  "romTypeValue_ROMv3"   : "0x0028",
 
  "memSize"              : "0x0001",
- "bootCount"            : "0x0004",
  "entropy"              : "0x0006",
  "videoY"               : "0x0009",
  "frameCount"           : "0x000e",
