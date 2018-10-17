@@ -81,9 +81,9 @@ page 128-255 | Not used in the 32K system: mirror of page 0-127         |
              +----------------------------------------------------------+
               0                                                      255
 
-[Note: In the next section, names that in parentheses refer to
-*internal* variables that are subject to change between versions.
-See for a detailed explanation the file Docs/GT1-files.txt]
+[Note: In the next section, names in parentheses refer to *internal*
+variables that are subject to change between versions.  See for a
+detailed explanation the file Docs/GT1-files.txt]
 
 Address   Name          Description
 --------  ------------- -----------
@@ -198,4 +198,41 @@ page 11-214  | SYS functions                                            |
 page 215-255 | ROM files: Embedded vCPU applications (serial)           |
              +----------------------------------------------------------+
               0                                                      255
+```
+
+SYS functions (ROM)
+===================
+
+```
+00ad    SYS_Exec_88             Load serialized vCPU code from ROM and execute
+04a7    SYS_Random_34           Get random number and update entropy
+0600    SYS_LSRW1_48            Shift right 1 bit
+0619    SYS_LSRW2_52            Shift right 2 bits
+0636    SYS_LSRW3_52            Shift right 3 bits
+0652    SYS_LSRW4_50            Shift right 4 bits
+066d    SYS_LSRW5_50            Shift right 5 bits
+0687    SYS_LSRW6_48            Shift right 6 bits
+04b9    SYS_LSRW7_30            Shift right 7 bits
+04c6    SYS_LSRW8_24            Shift right 8 bits
+06a0    SYS_LSLW4_46            Shift left 4 bits
+04cd    SYS_LSLW8_24            Shift left 8 bits
+04e1    SYS_VDrawBits_134       Draw 8 vertical pixels
+06c0    SYS_Unpack_56           Unpack 3 bytes into 4 pixels
+04d4    SYS_Draw4_30            Copy 4 pixels to screen memory
+00f4    SYS_Out_22              Write byte to hardware OUT register
+00f9    SYS_In_24               Read byte from hardwar IN register
+02e9    SYS_NextByteIn_32       Receive next byte and put in load buffer
+06e7    SYS_PayloadCopy_34      Copy byte from load buffer to RAM destination
+
+Added in ROM v2:
+
+0b00    SYS_SetMode_80          Set video mode 0..3
+0b03    SYS_SetMemory_54        Set 1..256 bytes of memory to value
+
+Added in ROM v3:
+
+0c00    SYS_Sprite6_v3_64       Draw sprite of 6 pixels wide and N pixels high
+0c40    SYS_Sprite6x_v3_64      Draw sprite mirrored in X direction
+0c80    SYS_Sprite6y_v3_64      Draw sprite upside down
+0cc0    SYS_Sprite6xy_v3_64     Draw sprite mirrored and upside down
 ```
