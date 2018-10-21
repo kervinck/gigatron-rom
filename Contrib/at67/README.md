@@ -43,7 +43,9 @@ and possibly even Android. As of v0.6.6 it has only been tested on Microsoft Win
 - https://www.youtube.com/watch?v=sq8uCpBFwp8<br>
 
 ## References
-- Gigatron TTL:  https://github.com/kervinck/gigatron-rom<br/>
+- Gigatron TTL Home: https://gigatron.io/<br/>
+- Gigatron TTL Forums: https://forum.gigatron.io/index.php<br/>
+- Gigatron TTL Repo: https://github.com/kervinck/gigatron-rom<br/>
 - SDL2 graphics:  https://github.com/kervinck/gigatron-rom/pull/1<br/>
 - Early Gigatron emulation:  http://talkchess.com/forum/viewtopic.php?t=65944&start=11<br/>
 - Dirent for Windows:  https://github.com/tronkko/dirent<br/>
@@ -52,8 +54,10 @@ and possibly even Android. As of v0.6.6 it has only been tested on Microsoft Win
 - rs232: https://github.com/Marzac/rs232<br/>
 
 ## Contributors
-- Cwiiis https://github.com/Cwiiis
-- xxxbxxx https://github.com/xxxbxxx
+- at67 https://github.com/at67<br/>
+- kervinck https://github.com/kervinck<br/>
+- Cwiiis https://github.com/Cwiiis<br/>
+- xxxbxxx https://github.com/xxxbxxx<br/>
 
 ## Building
 - CMake 3.7 or higher is required for building, has been tested on Windows with Visual Studio and gcc/mingw32<br/>
@@ -105,13 +109,14 @@ and possibly even Android. As of v0.6.6 it has only been tested on Microsoft Win
 |F1         | Fast reset, performs the same action as a long hold of Start.                     |
 |CTRL + F1  | Fast reset of real Gigatron hardware, if connected to an Arduino interface.       |
 |F3         | Toggles scanline modes between, Normal, VideoB and VideoBC.                       |
-|F4         | Toggles PS2 Keyboard emulation on and off.                                        |
 |F5         | Executes whatever code is present at the load address.                            |
-|F6         | Toggles debugging mode, simulation will pause and allow you to single step using  |
-|           | F10.                                                                              |
-|F10        | Only functions in debugging mode, will single step the simulation based on a      |
-|           | memory location changing it's value.                                              |
-|F12        | Toggles Gigatron input between emulator and hardware.                             |
+|F6         | Toggles debug mode, simulation will pause and allow you to single step using F7.  |
+|F7         | Only functions in debug mode, will single step the simulation based on a memory   |
+|           | location changing it's value.                                                     |
+|F9         | switches to Hex mode from any other mode                                          |
+|F10        | Toggles PS2 keyboard emulation on and off.                                        |
+|F11        | Toggles Gigatron input between emulator and hardware.                             |
+|F12        | Toggles PS2 keyboard emulation between emulator and hardware                      |
 |ENTER/CR   | Loads vCPU code if editor is in file browse mode, otherwise switches to edit mode.|
 |CTRL + CR  | Uploads vCPU code to real Gigatron hardware, if connected to an Arduino interface.|
 |-/+        | Decrease/increase the speed of the emulation, from a minimum of 60FPS to a        |

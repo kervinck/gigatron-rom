@@ -16,14 +16,22 @@
 #include <direct.h>
 #include "dirent/dirent.h"
 #define chdir _chdir
+#ifdef max
+#undef max
+#endif
+#ifdef min
+#undef min
+#endif
 #else
+#include <unistd.h>
 #include <dirent.h>
 #endif
-
 #endif
 
+#include "memory.h"
 #include "cpu.h"
 #include "loader.h"
+#include "compiler.h"
 #include "assembler.h"
 #include "expression.h"
 
@@ -31,11 +39,211 @@
 #define DEFAULT_COM_BAUD_RATE 115200
 #define DEFAULT_COM_PORT      0
 #define DEFAULT_GIGA_TIMEOUT  5.0
-#define MAX_GT1_SIZE          (1 <<16)
+#define MAX_GT1_SIZE          (1<<16)
 
 
 namespace Loader
 {
+    bool loadGt1File(const std::string& filename, Gt1File& gt1File)
+    {
+        std::ifstream infile(filename, std::ios::binary | std::ios::in);
+        if(!infile.is_open())
+        {
+            fprintf(stderr, "Loader::loadGt1File() : failed to open '%s'\n", filename.c_str());
+            return false;
+        }
+
+        int segmentCount = 1;
+        for(;;)
+        {
+            // Read segment header
+            Gt1Segment segment;
+            infile.read((char *)&segment._hiAddress, SEGMENT_HEADER_SIZE);
+            if(infile.eof() || infile.bad() || infile.fail())
+            {
+                fprintf(stderr, "Loader::loadGt1File() : bad header in segment %d of '%s'\n", segmentCount, filename.c_str());
+                return false;
+            }
+
+            // Finished
+            if(segment._hiAddress == 0x00  &&  infile.peek() == EOF)
+            {
+                // Segment header aligns with Gt1File terminator, hiStart and loStart
+                gt1File._hiStart = segment._loAddress;
+                gt1File._loStart = segment._segmentSize;
+                break;
+            }
+
+            // Read segment
+            int segmentSize = (segment._segmentSize == 0) ? 256 : segment._segmentSize;
+            segment._dataBytes.resize(segmentSize);
+            infile.read((char *)&segment._dataBytes[0], segmentSize);
+            if(infile.eof() || infile.bad() || infile.fail())
+            {
+                fprintf(stderr, "Loader::loadGt1File() : bad segment %d in '%s'\n", segmentCount, filename.c_str());
+                return false;
+            }
+
+            gt1File._segments.push_back(segment);
+            segmentCount++;
+        }
+
+        return true;
+    }
+
+    bool saveGt1File(const std::string& filepath, Gt1File& gt1File, std::string& filename)
+    {
+        if(gt1File._segments.size() == 0)
+        {
+            fprintf(stderr, "Loader::saveGt1File() : zero segments, not saving.\n");
+            return false;
+        }
+
+        size_t i = filepath.rfind('.');
+        filename = (i != std::string::npos) ? filepath.substr(0, i) + ".gt1" : filepath + ".gt1";
+
+        std::ofstream outfile(filename, std::ios::binary | std::ios::out);
+        if(!outfile.is_open())
+        {
+            fprintf(stderr, "Loader::saveGt1File() : failed to open '%s'\n", filename.c_str());
+            return false;
+        }
+
+        // Sort segments from lowest address to highest address
+        std::sort(gt1File._segments.begin(), gt1File._segments.end(), [](const Gt1Segment& segmentA, const Gt1Segment& segmentB)
+        {
+            uint16_t addressA = segmentA._loAddress + (segmentA._hiAddress <<8);
+            uint16_t addressB = segmentB._loAddress + (segmentB._hiAddress <<8);
+            return (addressA < addressB);
+        });
+
+        // Special case: There can only be one segment in page 0 - merge all the occurences with padding if necessary.
+        while (gt1File._segments.size() >= 2 && gt1File._segments[0]._hiAddress == 0 && gt1File._segments[1]._hiAddress == 0)
+        {
+            Gt1Segment& A = gt1File._segments[0];
+            Gt1Segment& B = gt1File._segments[1];
+            uint8_t addr = A._loAddress + A._segmentSize;
+            while (addr < B._loAddress) {
+                A._dataBytes.push_back(addr == 0x80 ? 1:0);
+                A._segmentSize++;
+                addr++;
+            }
+            A._dataBytes.insert(A._dataBytes.end(), B._dataBytes.begin(), B._dataBytes.end());
+            A._segmentSize += B._segmentSize;
+
+            gt1File._segments.erase(gt1File._segments.begin() + 1);
+        }
+
+        for(int i=0; i<gt1File._segments.size(); i++)
+        {
+            // Write header
+            outfile.write((char *)&gt1File._segments[i]._hiAddress, SEGMENT_HEADER_SIZE);
+            if(outfile.bad() || outfile.fail())
+            {
+                fprintf(stderr, "Loader::saveGt1File() : write error in header of segment %d\n", i);
+                return false;
+            }
+
+            // Write segment
+            int segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
+            outfile.write((char *)&gt1File._segments[i]._dataBytes[0], segmentSize);
+            if(outfile.bad() || outfile.fail())
+            {
+                fprintf(stderr, "Loader::saveGt1File() : bad segment %d in '%s'\n", i, filename.c_str());
+                return false;
+            }
+        }
+
+        // Write trailer
+        outfile.write((char *)&gt1File._terminator, GT1FILE_TRAILER_SIZE);
+        if(outfile.bad() || outfile.fail())
+        {
+            fprintf(stderr, "Loader::saveGt1File() : write error in trailer of '%s'\n", filename.c_str());
+            return false;
+        }
+
+        return true;
+    }
+
+    uint16_t printGt1Stats(const std::string& filename, const Gt1File& gt1File)
+    {
+        size_t nameSuffix = filename.find_last_of(".");
+        std::string output = filename.substr(0, nameSuffix) + ".gt1";
+        fprintf(stderr, "\nUploading file '%s'\n", output.c_str());
+
+        // Header
+        uint16_t totalSize = 0;
+        for(int i=0; i<gt1File._segments.size(); i++)
+        {
+            totalSize += int(gt1File._segments[i]._dataBytes.size());
+        }
+        uint16_t startAddress = gt1File._loStart + (gt1File._hiStart <<8);
+        fprintf(stderr, "\n************************************************************\n");
+        fprintf(stderr, "* %s : 0x%04x : %5d bytes : %3d segments\n", output.c_str(), startAddress, totalSize, int(gt1File._segments.size()));
+        fprintf(stderr, "************************************************************\n");
+        fprintf(stderr, "* Segment :  Type  : Address : Memory Used                  \n");
+        fprintf(stderr, "************************************************************\n");
+
+        // Segments
+        int contiguousSegments = 0;
+        int startContiguousSegment = 0;
+        uint16_t startContiguousAddress = 0x0000;
+        for(int i=0; i<gt1File._segments.size(); i++)
+        {
+            uint16_t address = gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8);
+            int segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
+            std::string memory = "RAM";
+            if(gt1File._segments[i]._isRomAddress)
+            {
+                memory = "ROM";
+                if(gt1File._segments.size() == 1)
+                {
+                    fprintf(stderr, "*  %4d   :  %s   : 0x%04x  : %5d bytes\n", i, memory.c_str(), address, totalSize);
+                    fprintf(stderr, "************************************************************\n");
+                    return totalSize;
+                }
+                totalSize -= segmentSize;
+            }
+            else if(segmentSize != int(gt1File._segments[i]._dataBytes.size()))
+            {
+                fprintf(stderr, "Segment %4d : %s 0x%04x : segmentSize %3d != dataBytes.size() %3d\n", i, memory.c_str(), address, segmentSize, int(gt1File._segments[i]._dataBytes.size()));
+                return 0;
+            }
+
+            // New contiguous segment
+            if(segmentSize == 256)
+            {
+                if(contiguousSegments == 0)
+                {
+                    startContiguousSegment = i;
+                    startContiguousAddress = address;
+                }
+                contiguousSegments++;
+            }
+            else
+            {
+                // Normal segment < 256 bytes
+                if(contiguousSegments == 0)
+                {
+                    fprintf(stderr, "*  %4d   :  %s   : 0x%04x  : %5d bytes\n", i, memory.c_str(), address, segmentSize);
+                }
+                // Contiguous segment < 256 bytes
+                else
+                {
+                    fprintf(stderr, "*  %4d   :  %s   : 0x%04x  : %5d bytes (%dx256)\n", startContiguousSegment, memory.c_str(), startContiguousAddress, contiguousSegments*256, contiguousSegments);
+                    fprintf(stderr, "*  %4d   :  %s   : 0x%04x  : %5d bytes\n", i, memory.c_str(), address, segmentSize);
+                    contiguousSegments = 0;
+                }
+            }
+        }
+        fprintf(stderr, "************************************************************\n");
+        fprintf(stderr, "* Free RAM after loading: %d\n", Memory::getBaseFreeRAM() - totalSize);
+        fprintf(stderr, "************************************************************\n");
+
+        return totalSize;
+    }
+
+
 #ifndef STAND_ALONE
     enum LoaderState {FirstByte=0, MsgLength, LowAddress, HighAddress, Message, LastByte, ResetIN, NumLoaderStates};
     enum FrameState {Resync=0, Frame, Execute, NumFrameStates};
@@ -339,204 +547,7 @@ namespace Loader
         fprintf(stderr, "\n");
         closeComPort();
     }
-#endif
 
-    bool loadGt1File(const std::string& filename, Gt1File& gt1File)
-    {
-        std::ifstream infile(filename, std::ios::binary | std::ios::in);
-        if(!infile.is_open())
-        {
-            fprintf(stderr, "Loader::loadGt1File() : failed to open '%s'\n", filename.c_str());
-            return false;
-        }
-
-        int segmentCount = 1;
-        for(;;)
-        {
-            // Read segment header
-            Gt1Segment segment;
-            infile.read((char *)&segment._hiAddress, SEGMENT_HEADER_SIZE);
-            if(infile.eof() || infile.bad() || infile.fail())
-            {
-                fprintf(stderr, "Loader::loadGt1File() : bad header in segment %d of '%s'\n", segmentCount, filename.c_str());
-                return false;
-            }
-
-            // Finished
-            if(segment._hiAddress == 0x00  &&  infile.peek() == EOF)
-            {
-                // Segment header aligns with Gt1File terminator, hiStart and loStart
-                gt1File._hiStart = segment._loAddress;
-                gt1File._loStart = segment._segmentSize;
-                break;
-            }
-
-            // Read segment
-            int segmentSize = (segment._segmentSize == 0) ? 256 : segment._segmentSize;
-            segment._dataBytes.resize(segmentSize);
-            infile.read((char *)&segment._dataBytes[0], segmentSize);
-            if(infile.eof() || infile.bad() || infile.fail())
-            {
-                fprintf(stderr, "Loader::loadGt1File() : bad segment %d in '%s'\n", segmentCount, filename.c_str());
-                return false;
-            }
-
-            gt1File._segments.push_back(segment);
-            segmentCount++;
-        }
-
-        return true;
-    }
-
-    bool saveGt1File(const std::string& filepath, Gt1File& gt1File, std::string& filename)
-    {
-        if(gt1File._segments.size() == 0)
-        {
-            fprintf(stderr, "Loader::saveGt1File() : zero segments, not saving.\n");
-            return false;
-        }
-
-        size_t i = filepath.rfind('.');
-        filename = (i != std::string::npos) ? filepath.substr(0, i) + ".gt1" : filepath + ".gt1";
-
-        std::ofstream outfile(filename, std::ios::binary | std::ios::out);
-        if(!outfile.is_open())
-        {
-            fprintf(stderr, "Loader::saveGt1File() : failed to open '%s'\n", filename.c_str());
-            return false;
-        }
-
-        // Sort segments from lowest address to highest address
-        std::sort(gt1File._segments.begin(), gt1File._segments.end(), [](const Gt1Segment& segmentA, const Gt1Segment& segmentB)
-        {
-            uint16_t addressA = segmentA._loAddress + (segmentA._hiAddress <<8);
-            uint16_t addressB = segmentB._loAddress + (segmentB._hiAddress <<8);
-            return (addressA < addressB);
-        });
-
-        // Special case: There can only be one segment in page 0 - merge all the occurences with padding if necessary.
-        while (gt1File._segments.size() >= 2 && gt1File._segments[0]._hiAddress == 0 && gt1File._segments[1]._hiAddress == 0)
-        {
-            Gt1Segment& A = gt1File._segments[0];
-            Gt1Segment& B = gt1File._segments[1];
-            uint8_t addr = A._loAddress + A._segmentSize;
-            while (addr < B._loAddress) {
-                A._dataBytes.push_back(addr == 0x80 ? 1:0);
-                A._segmentSize++;
-                addr++;
-            }
-            A._dataBytes.insert(A._dataBytes.end(), B._dataBytes.begin(), B._dataBytes.end());
-            A._segmentSize += B._segmentSize;
-
-            gt1File._segments.erase(gt1File._segments.begin() + 1);
-        }
-
-        for(int i=0; i<gt1File._segments.size(); i++)
-        {
-            // Write header
-            outfile.write((char *)&gt1File._segments[i]._hiAddress, SEGMENT_HEADER_SIZE);
-            if(outfile.bad() || outfile.fail())
-            {
-                fprintf(stderr, "Loader::saveGt1File() : write error in header of segment %d\n", i);
-                return false;
-            }
-
-            // Write segment
-            int segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
-            outfile.write((char *)&gt1File._segments[i]._dataBytes[0], segmentSize);
-            if(outfile.bad() || outfile.fail())
-            {
-                fprintf(stderr, "Loader::saveGt1File() : bad segment %d in '%s'\n", i, filename.c_str());
-                return false;
-            }
-        }
-
-        // Write trailer
-        outfile.write((char *)&gt1File._terminator, GT1FILE_TRAILER_SIZE);
-        if(outfile.bad() || outfile.fail())
-        {
-            fprintf(stderr, "Loader::saveGt1File() : write error in trailer of '%s'\n", filename.c_str());
-            return false;
-        }
-
-        return true;
-    }
-
-    uint16_t printGt1Stats(const std::string& filename, const Gt1File& gt1File)
-    {
-        // Header
-        uint16_t totalSize = 0;
-        for(int i=0; i<gt1File._segments.size(); i++)
-        {
-            totalSize += int(gt1File._segments[i]._dataBytes.size());
-        }
-        uint16_t startAddress = gt1File._loStart + (gt1File._hiStart <<8);
-        fprintf(stderr, "\n************************************************************\n");
-        fprintf(stderr, "* %s : 0x%04x : %5d bytes : %3d segments\n", filename.c_str(), startAddress, totalSize, int(gt1File._segments.size()));
-        fprintf(stderr, "************************************************************\n");
-        fprintf(stderr, "* Segment :  Type  : Address : Memory Used                  \n");
-        fprintf(stderr, "************************************************************\n");
-
-        // Segments
-        int contiguousSegments = 0;
-        int startContiguousSegment = 0;
-        uint16_t startContiguousAddress = 0x0000;
-        for(int i=0; i<gt1File._segments.size(); i++)
-        {
-            uint16_t address = gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8);
-            int segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
-            std::string memory = "RAM";
-            if(gt1File._segments[i]._isRomAddress)
-            {
-                memory = "ROM";
-                if(gt1File._segments.size() == 1)
-                {
-                    fprintf(stderr, "*  %4d   :  %s   : 0x%04x  : %5d bytes\n", i, memory.c_str(), address, totalSize);
-                    fprintf(stderr, "************************************************************\n");
-                    return totalSize;
-                }
-                totalSize -= segmentSize;
-            }
-            else if(segmentSize != int(gt1File._segments[i]._dataBytes.size()))
-            {
-                fprintf(stderr, "Segment %4d : %s 0x%04x : segmentSize %3d != dataBytes.size() %3d\n", i, memory.c_str(), address, segmentSize, int(gt1File._segments[i]._dataBytes.size()));
-                return 0;
-            }
-
-            // New contiguous segment
-            if(segmentSize == 256)
-            {
-                if(contiguousSegments == 0)
-                {
-                    startContiguousSegment = i;
-                    startContiguousAddress = address;
-                }
-                contiguousSegments++;
-            }
-            else
-            {
-                // Normal segment < 256 bytes
-                if(contiguousSegments == 0)
-                {
-                    fprintf(stderr, "*  %4d   :  %s   : 0x%04x  : %5d bytes\n", i, memory.c_str(), address, segmentSize);
-                }
-                // Contiguous segment < 256 bytes
-                else
-                {
-                    fprintf(stderr, "*  %4d   :  %s   : 0x%04x  : %5d bytes (%dx256)\n", startContiguousSegment, memory.c_str(), startContiguousAddress, contiguousSegments*256, contiguousSegments);
-                    fprintf(stderr, "*  %4d   :  %s   : 0x%04x  : %5d bytes\n", i, memory.c_str(), address, segmentSize);
-                    contiguousSegments = 0;
-                }
-            }
-        }
-        fprintf(stderr, "************************************************************\n");
-        fprintf(stderr, "* Free RAM after loading: %d\n", Cpu::getBaseFreeRAM() - totalSize);
-        fprintf(stderr, "************************************************************\n");
-
-        return totalSize;
-    }
-
-#ifndef STAND_ALONE
     void disableUploads(bool disable)
     {
         _disableUploads = disable;
@@ -794,38 +805,133 @@ namespace Loader
         }
     }
 
+    bool loadGtbFile(const std::string& filepath)
+    {
+        // open .gtb file
+        std::ifstream infile(filepath, std::ios::binary | std::ios::in);
+        if(!infile.is_open())
+        {
+            fprintf(stderr, "Loader::loadGtbFile() : failed to open '%s'\n", filepath.c_str());
+            return false;
+        }
+
+        // Read .gtb file
+        std::string line;
+        std::vector<std::string> lines;
+        while(!infile.eof())
+        {
+            std::getline(infile, line);
+            if(!infile.good() && !infile.eof())
+            {
+                fprintf(stderr, "Loader::loadGtbFile() : Bad line : '%s' : in '%s' on line %d\n", line.c_str(), filepath.c_str(), int(lines.size()+1));
+                return false;
+            }
+
+            if(line.size()) lines.push_back(line);
+        }
+        
+        // Validate lines
+        char *endPtr;
+        for(int i=0; i<lines.size(); i++)
+        {
+            long lineNumber = strtol(lines[i].c_str(), &endPtr, 10);
+            if(lineNumber < 1  ||  lineNumber > 32767)//  ||  uint8_t(&lines[i][lines[i].size()] - endPtr) > MAX_GTB_LINE_SIZE - 2)  // first 2 bytes are uint16_t line number
+            {
+                fprintf(stderr, "Loader::loadGtbFile() : Bad line Number : %d : in '%s' on line %d\n", lineNumber, filepath.c_str(), i+1);
+                return false;
+            }
+        }
+
+        // Load .gtb file into memory
+        uint16_t startAddress = GTB_LINE0_ADDRESS + MAX_GTB_LINE_SIZE;
+        uint16_t endAddress = startAddress;
+        for(int i=0; i<lines.size(); i++)
+        {
+            uint16_t lineNumber = (uint16_t)strtol(lines[i].c_str(), &endPtr, 10);
+            Cpu::setRAM(endAddress + 0, lineNumber & 0x00FF);
+            Cpu::setRAM(endAddress + 1, (lineNumber & 0xFF00) >>8);
+            uint8_t lineStart = uint8_t(endPtr - &lines[i][0]);
+            for(uint8_t j=lineStart; j<(MAX_GTB_LINE_SIZE - 2 + lineStart); j++)
+            {
+                uint8_t offset = 2 + j - lineStart;
+                bool validData = offset < MAX_GTB_LINE_SIZE-1  &&  j < lines[i].size()  &&  lines[i][j] >= ' ';
+                uint8_t data = validData ? lines[i][j] : 0;
+                Cpu::setRAM(endAddress + offset, data);
+            }
+            endAddress += 0x0020;
+            if((endAddress & 0x00FF) < 0x00A0) endAddress = (endAddress & 0xFF00) | 0x00A0;
+        }
+
+        uint16_t freeMemory = Memory::getFreeGtbRAM(uint16_t(lines.size()));
+        fprintf(stderr, "Loader::loadGtbFile() : start %04x : end %04x : free %d : '%s'\n", startAddress, endAddress, freeMemory, filepath.c_str());
+
+        Cpu::setRAM(GTB_LINE0_ADDRESS + 0, endAddress & 0x00FF);
+        Cpu::setRAM(GTB_LINE0_ADDRESS + 1, (endAddress & 0xFF00) >>8);
+        std::string list = "RUN";
+        for(int i=0; i<list.size(); i++) Cpu::setRAM(endAddress + 2 + i, list[i]);
+        Cpu::setRAM(endAddress + 2 + uint16_t(list.size()), 0);
+
+        return true;
+    }
+
     void uploadDirect(UploadTarget uploadTarget)
     {
+        Gt1File gt1File;
+
+        bool gt1FileBuilt = false;
+        bool isGtbFile = false;
         bool isGt1File = false;
         bool hasRomCode = false;
         bool hasRamCode = false;
 
         uint16_t executeAddress = Editor::getLoadBaseAddress();
-        std::string filename = *Editor::getFileEntryName(Editor::getCursorY() + Editor::getFileEntriesIndex());
+        std::string filename = *Editor::getCurrentFileEntryName();
         std::string filepath = std::string(Editor::getBrowserPath() + filename);
+        std::string gtbFilepath;
 
         // Reset video table and reset single step watch address to video line counter
         Graphics::resetVTable();
         Editor::setSingleStepWatchAddress(VIDEO_Y_ADDRESS);
 
+        size_t nameSuffix = filename.find_last_of(".");
+        size_t pathSuffix = filepath.find_last_of(".");
+        if(nameSuffix == std::string::npos  ||  pathSuffix == std::string::npos)
+        {
+            fprintf(stderr, "\nLoader::uploadDirect() : invalid filepath '%s' or filename '%s'\n", filepath.c_str(), filename.c_str());
+            return;
+        }
+
+        // Compile gbas to gasm
+        if(filename.find(".gbas") != filename.npos)
+        {
+            std::string output = filepath.substr(0, pathSuffix) + ".gasm";
+            if(!Compiler::compile(filepath, output)) return;
+
+            // Create gasm name and path
+            filename = filename.substr(0, nameSuffix) + ".gasm";
+            filepath = filepath.substr(0, pathSuffix) + ".gasm";
+        }
+        // Load to gtb and launch TinyBasic
+        else if(_configGclBuildFound  &&  filename.find(".gtb") != filename.npos)
+        {
+            gtbFilepath = filepath;
+            filename = "TinyBASIC.gt1";
+            filepath = _configGclBuild + "/Apps/" + filename;
+            isGtbFile = true;
+        }
         // Compile gcl to gt1
-        Gt1File gt1File;
-        bool gt1FileBuilt = false;
-        if(_configGclBuildFound  &&  filename.find(".gcl") != filename.npos)
+        else if(_configGclBuildFound  &&  filename.find(".gcl") != filename.npos)
         {
             // Create compile gcl string
-            chdir(Editor::getBrowserPath().c_str());
-            std::string command = "py -B \"" + _configGclBuild + "/Core/compilegcl.py\" \"" + filepath + "\" \"" + Editor::getBrowserPath() + "\" -s \"" + _configGclBuild + "/interface.json\"";
-            fprintf(stderr, command.c_str());
+            std::string browserPath = Editor::getBrowserPath();
+            browserPath.pop_back(); // remove trailing '/'
+            chdir(browserPath.c_str());
+            std::string command = "py -B \"" + _configGclBuild + "/Core/compilegcl.py\" \"" + filepath + "\" \"" + browserPath + "\" -s \"" + _configGclBuild + "/interface.json\"";
+            //fprintf(stderr, command.c_str());
 
             // Create gt1 name and path
-            size_t dot = filename.find_last_of(".");
-            if(dot != std::string::npos)
-            {
-                filename = filename.substr(0, dot) + ".gt1";
-                dot = filepath.find_last_of(".");
-                filepath = filepath.substr(0, dot) + ".gt1";
-            }
+            filename = filename.substr(0, nameSuffix) + ".gt1";
+            filepath = filepath.substr(0, pathSuffix) + ".gt1";
 
             // Build gcl
             int gt1FileDeleted = remove(filepath.c_str());
@@ -873,7 +979,7 @@ namespace Loader
             _disableUploads = false;
         }
         // Upload vCPU assembly code
-        else if(filename.find(".vasm") != filename.npos  ||  filename.find(".gasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
+        else if(filename.find(".gasm") != filename.npos  ||  filename.find(".vasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
         {
             if(!Assembler::assemble(filepath, DEFAULT_START_ADDRESS)) return;
             executeAddress = Assembler::getStartAddress();
@@ -939,13 +1045,19 @@ namespace Loader
         }
 
         uint16_t totalSize = printGt1Stats(filename, gt1File);
-        Cpu::setFreeRAM(Cpu::getBaseFreeRAM() - totalSize); 
+        Memory::setFreeRAM(Memory::getBaseFreeRAM() - totalSize); 
 
         if(uploadTarget == Emulator)
         {
             size_t i = filename.find('.');
             _currentGame = (i != std::string::npos) ? filename.substr(0, i) : filename;
             loadHighScore();
+
+            // Load .gtb file into memory and launch TinyBasic, (TinyBasic has already been loaded)
+            if(isGtbFile  &&  gtbFilepath.size())
+            {
+                loadGtbFile(gtbFilepath);
+            }
 
             // Execute code
             if(!_disableUploads  &&  hasRamCode)
@@ -970,7 +1082,7 @@ namespace Loader
             }
         }
 
-        // Updates browser in case a new gt1 file was created from a gcl file or a vasm file
+        // Updates browser in case a new gt1 file was created from a gcl file or a gasm file
         if(gt1FileBuilt) Editor::browseDirectory();
 
         return;

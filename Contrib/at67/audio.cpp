@@ -7,7 +7,7 @@
 #include "audio.h"
 #include "timing.h"
 #include "editor.h"
-#include "../../../midi/scores/music.h"
+#include "midi/music.h"
 
 #include <SDL.h>
 
@@ -138,7 +138,7 @@ namespace Audio
                 {
                     uint16_t segment = *_scorePtr++;
                     segment |= (((*_scorePtr++) <<8) & 0xFF00);
-                    _scorePtr = (uint8_t*)segment;
+                    _scorePtr = (uint8_t*)(uintptr_t)segment;
                 }
             }
             // Delay n milliseconds where n = 8bit value

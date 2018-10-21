@@ -6,6 +6,7 @@
 #include <vector>
 #include <algorithm>
 
+#include "memory.h"
 #include "cpu.h"
 
 #ifndef STAND_ALONE
@@ -37,21 +38,13 @@ namespace Cpu
     uint8_t _IN = 0xFF, _XOUT = 0x00;
     uint8_t _ROM[ROM_SIZE][2], _RAM[RAM_SIZE];
 
-    uint16_t _baseFreeRAM = RAM_SIZE - RAM_USED_DEFAULT;
-    uint16_t _freeRAM = _baseFreeRAM;
-
     std::vector<uint8_t> _scanlinesRom0;
     std::vector<uint8_t> _scanlinesRom1;
 
     std::vector<InternalGt1> _internalGt1s;
 
 
-    uint16_t getBaseFreeRAM(void) {return _baseFreeRAM;}
-    uint16_t getFreeRAM(void) {return _freeRAM;}
     uint8_t* getPtrToROM(int& romSize) {romSize = sizeof(_ROM); return (uint8_t*)_ROM;}
-
-    void setFreeRAM(uint16_t freeRAM) {_freeRAM = freeRAM;}
-
 
     void initialiseInternalGt1s(void)
     {
@@ -162,17 +155,17 @@ namespace Cpu
         char filebuffer[RAM_SIZE];
 
         std::ifstream romfile_ti(splitGt1path + "_ti", std::ios::binary | std::ios::in);
-        if(!romfile_ti.is_open()) fprintf(stderr, "Cpu::patchTetrisIntoRomTest() : failed to open %s ROM file.\n", std::string(splitGt1path + "_ti").c_str());
+        if(!romfile_ti.is_open()) fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to open %s ROM file.\n", std::string(splitGt1path + "_ti").c_str());
         romfile_ti.seekg (0, romfile_ti.end); filelength = romfile_ti.tellg(); romfile_ti.seekg (0, romfile_ti.beg);
         romfile_ti.read(filebuffer, filelength);
-        if(romfile_ti.eof() || romfile_ti.bad() || romfile_ti.fail()) fprintf(stderr, "Cpu::patchTetrisIntoRomTest() : failed to read %s ROM file.\n", std::string(splitGt1path + "_ti").c_str());
+        if(romfile_ti.eof() || romfile_ti.bad() || romfile_ti.fail()) fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to read %s ROM file.\n", std::string(splitGt1path + "_ti").c_str());
         for(int i=0; i<filelength; i++) _ROM[startAddress + i][ROM_INST] = filebuffer[i];
 
         std::ifstream romfile_td(splitGt1path + "_td", std::ios::binary | std::ios::in);
-        if(!romfile_td.is_open()) fprintf(stderr, "Cpu::patchTetrisIntoRomTest() : failed to open %s ROM file.\n", std::string(splitGt1path + "_td").c_str());
+        if(!romfile_td.is_open()) fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to open %s ROM file.\n", std::string(splitGt1path + "_td").c_str());
         romfile_td.seekg (0, romfile_td.end); filelength = romfile_td.tellg(); romfile_td.seekg (0, romfile_td.beg);
         romfile_td.read(filebuffer, filelength);
-        if(romfile_td.eof() || romfile_td.bad() || romfile_td.fail()) fprintf(stderr, "Cpu::patchTetrisIntoRomTest() : failed to read %s ROM file.\n", std::string(splitGt1path + "_td").c_str());
+        if(romfile_td.eof() || romfile_td.bad() || romfile_td.fail()) fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to read %s ROM file.\n", std::string(splitGt1path + "_td").c_str());
         for(int i=0; i<filelength; i++) _ROM[startAddress + i][ROM_DATA] = filebuffer[i];
 
         // Replace internal gt1 menu option with split gt1

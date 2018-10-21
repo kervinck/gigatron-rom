@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include "graphics.h"
+#include "memory.h"
 #include "timing.h"
 #include "editor.h"
 #include "loader.h"
@@ -589,16 +590,17 @@ namespace Graphics
             //drawText(std::string("LEDS:"), _pixels, 0, 0, 0xFFFFFFFF, false, 0);
             sprintf(str, "FPS %5.1f  XOUT %02X IN %02X", 1.0f / Timing::getFrameTime(), Cpu::getXOUT(), Cpu::getIN());
             drawText(std::string(str), _pixels, 0, FONT_CELL_Y, 0xFFFFFFFF, false, 0);
-            drawText("Mode:      Free:", _pixels, 0, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+            drawText("Mode:        Free:", _pixels, 0, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
             sprintf(str, "Hex  ");
             if(Editor::getHexEdit()) sprintf(str, "Edit ");
-            else if(Editor::getEditorMode() == Editor::Load)  sprintf(str, "Load ");
-            else if(Editor::getEditorMode() == Editor::Giga)  sprintf(str, "Giga ");
-            else if(Editor::getEditorMode() == Editor::PS2KB) sprintf(str, "PS2KB");
-            else if(Editor::getEditorMode() == Editor::Debug) sprintf(str, "Debug");
+            if(Editor::getEditorMode() == Editor::Load)         sprintf(str, "Load   ");
+            else if(Editor::getEditorMode() == Editor::Giga)    sprintf(str, "Giga   ");
+            else if(Editor::getEditorMode() == Editor::PS2KB)   sprintf(str, "PS2KB  ");
+            else if(Editor::getEditorMode() == Editor::Debug)   sprintf(str, "Debug  ");
+            else if(Editor::getEditorMode() == Editor::GigaPS2) sprintf(str, "PS2Giga");
             drawText(std::string(str), _pixels, 30, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
-            sprintf(str, "%d", Cpu::getFreeRAM());
-            drawText(std::string(str), _pixels, 96, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+            sprintf(str, "%d", Memory::getFreeRAM());
+            drawText(std::string(str), _pixels, 108, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
             drawText(std::string(VERSION_STR), _pixels, 30, 472, 0xFFFFFFFF, false, 0);
         }
     }
@@ -1267,26 +1269,6 @@ namespace Graphics
             firstTime = false;
             for(int l=0; l<TETRIS_YEXT; l++)
                 for(int k=0; k<TETRIS_XEXT; k++) setTetrisPixel(k, l, 0x00);
-#if 0
-            Loader::Gt1File gt1File;
-            if(!loadGt1File("./vCPU/starfield.gt1", gt1File)) return;
-            uint16_t executeAddress = gt1File._loStart + (gt1File._hiStart <<8);
-            Editor::setLoadBaseAddress(executeAddress);
-
-            for(int j=0; j<gt1File._segments.size(); j++)
-            {
-                uint16_t address = gt1File._segments[j]._loAddress + (gt1File._segments[j]._hiAddress <<8);
-                for(int i=0; i<gt1File._segments[j]._segmentSize; i++)
-                {
-                    Cpu::setRAM(address+i, gt1File._segments[j]._dataBytes[i]);
-                }
-            }
-
-            Cpu::setRAM(0x0016, executeAddress-2 & 0x00FF);
-            Cpu::setRAM(0x0017, (executeAddress & 0xFF00) >>8);
-            Cpu::setRAM(0x001a, executeAddress-2 & 0x00FF);
-            Cpu::setRAM(0x001b, (executeAddress & 0xFF00) >>8);
-#endif
         }
 
         bool refresh = false;

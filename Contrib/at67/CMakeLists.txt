@@ -13,8 +13,10 @@ add_subdirectory(tools/gtsplitrom)
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIR})
 
-file(GLOB sources *.cpp)
 file(GLOB headers *.h)
+file(GLOB sources *.cpp)
+set(headers ${headers})
+set(sources ${sources})
 
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)

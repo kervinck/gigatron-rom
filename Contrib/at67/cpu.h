@@ -2,16 +2,14 @@
 #define CPU_H
 
 #include <stdint.h>
+#include <inttypes.h>
 #include <string>
 
 
-#define MAJOR_VERSION "0.6"
-#define MINOR_VERSION "6"
+#define MAJOR_VERSION "0.7"
+#define MINOR_VERSION "10"
 #define VERSION_STR "gtemuSDL v" MAJOR_VERSION "." MINOR_VERSION
-
-#define ROM_SIZE (1<<16)
-#define RAM_SIZE (1<<16) // Can be 32k or 64k
-
+ 
 #define ROM_INST 0
 #define ROM_DATA 1
 
@@ -21,7 +19,6 @@
 #define BOOT_COUNT 0x0004
 #define BOOT_CHECK 0x0005
 
-#define RAM_USED_DEFAULT  19986 // ignores page 0, would be 19779 otherwise
 #define ROM_VCPU_DISPATCH 0x0309
 
 #if defined(_WIN32)
@@ -60,8 +57,6 @@ namespace Cpu
     };
 
 
-    uint16_t getBaseFreeRAM(void);
-    uint16_t getFreeRAM(void);
     uint8_t* getPtrToROM(int& romSize);
 
     void setFreeRAM(uint16_t freeRAM);

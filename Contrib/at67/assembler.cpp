@@ -76,8 +76,6 @@ namespace Assembler
     {
         bool _complete = false;
         bool _fromInclude = false;
-        int _startLine = 0;
-        int _endLine = 0;
         int _fileStartLine;
         std::string _name;
         std::string _filename;
@@ -297,7 +295,7 @@ namespace Assembler
         }
 
         // Strip white space
-        if(stripWhiteSpace) input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
+        if(stripWhiteSpace) Expression::stripWhitespace(input);
     }
 
     size_t findSymbol(const std::string& input, const std::string& symbol, size_t pos = 0)
@@ -1044,108 +1042,6 @@ namespace Assembler
         return true;
     }
 
-    std::vector<std::string> tokenise(const std::string& text, char c)
-    {
-        std::vector<std::string> result;
-        const char* str = text.c_str();
-
-        do
-        {
-            const char *begin = str;
-
-            while(*str  &&  *str != c) str++;
-
-            if(str > begin) result.push_back(std::string(begin, str));
-        }
-        while (*str++ != 0);
-
-        return result;
-    }
-
-    std::vector<std::string> tokeniseLine(std::string& line)
-    {
-        std::string token = "";
-        bool delimiterStart = true;
-        bool stringStart = false;
-        enum DelimiterState {WhiteSpace, Quotes};
-        DelimiterState delimiterState = WhiteSpace;
-        std::vector<std::string> tokens;
-
-        for(int i=0; i<=line.size(); i++)
-        {
-            // End of line is a delimiter for white space
-            if(i == line.size())
-            {
-                if(delimiterState != Quotes)
-                {
-                    delimiterState = WhiteSpace;
-                    delimiterStart = false;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            else
-            {
-                // White space delimiters
-                if(strchr(" \n\r\f\t\v", line[i]))
-                {
-                    if(delimiterState != Quotes)
-                    {
-                        delimiterState = WhiteSpace;
-                        delimiterStart = false;
-                    }
-                }
-                // String delimiters
-                else if(strchr("\'\"", line[i]))
-                {
-                    delimiterState = Quotes;
-                    stringStart = !stringStart;
-                }
-            }
-
-            // Build token
-            switch(delimiterState)
-            {
-                case WhiteSpace:
-                {
-                    // Don't save delimiters
-                    if(delimiterStart)
-                    {
-                        if(!strchr(" \n\r\f\t\v", line[i])) token += line[i];
-                    }
-                    else
-                    {
-                        if(token.size()) tokens.push_back(token);
-                        delimiterStart = true;
-                        token = "";
-                    }
-                }
-                break;
-
-                case Quotes:
-                {
-                    // Save delimiters as well as chars
-                    if(stringStart)
-                    {
-                        token += line[i];
-                    }
-                    else
-                    {
-                        token += line[i];
-                        tokens.push_back(token);
-                        delimiterState = WhiteSpace;
-                        stringStart = false;
-                        token = "";
-                    }
-                }
-                break;
-            }
-        }
-
-        return tokens;
-    }
 
     bool handleInclude(const std::vector<std::string>& tokens, const std::string& lineToken, int lineIndex, std::vector<LineToken>& includeLineTokens)
     {
@@ -1173,7 +1069,7 @@ namespace Assembler
             std::getline(infile, includeLineToken._text);
             includeLineTokens.push_back(includeLineToken);
 
-            if(!infile.good() &&  !infile.eof())
+            if(!infile.good() && !infile.eof())
             {
                 fprintf(stderr, "Assembler::handleInclude() : Bad lineToken : '%s' : in '%s' on line %d\n", includeLineToken._text.c_str(), filepath.c_str(), lineNumber - lineIndex);
                 return false;
@@ -1196,12 +1092,23 @@ namespace Assembler
         }
 
         // Delete original macros
-        int prevMacrosSize = 0;
-        for(int i=0; i<macros.size(); i++)
+        auto filter = [](LineToken& lineToken)
         {
-            lineTokens.erase(lineTokens.begin() + macros[i]._startLine - prevMacrosSize, lineTokens.begin() + macros[i]._endLine + 1 - prevMacrosSize);
-            prevMacrosSize += macros[i]._endLine - macros[i]._startLine + 1;
-        }
+            static bool foundMacro = false;
+            if(lineToken._text.find("%MACRO") != std::string::npos)
+            {
+                foundMacro = true;
+                return true;
+            }
+            if(foundMacro)
+            {
+                if(lineToken._text.find("%ENDM") != std::string::npos) foundMacro = false;
+                return true;
+            }
+
+            return false;
+        };
+        lineTokens.erase(std::remove_if(lineTokens.begin(), lineTokens.end(), filter), lineTokens.end());
 
         // Find and expand macro
         int macroInstanceId = 0;
@@ -1223,7 +1130,7 @@ namespace Assembler
                 }
 
                 // Tokenise current line
-                std::vector<std::string> tokens = tokeniseLine(lineToken._text);
+                std::vector<std::string> tokens = Expression::tokeniseLine(lineToken._text);
 
                 // Find macro
                 bool macroSuccess = false;
@@ -1242,7 +1149,7 @@ namespace Assembler
                             for(int ml=0; ml<macro._lines.size(); ml++)
                             {
                                 // Tokenise macro line
-                                std::vector<std::string> mtokens =  tokeniseLine(macro._lines[ml]);
+                                std::vector<std::string> mtokens =  Expression::tokeniseLine(macro._lines[ml]);
 
                                 // Save labels
                                 size_t nonWhiteSpace = macro._lines[ml].find_first_not_of("  \n\r\f\t\v");
@@ -1253,7 +1160,13 @@ namespace Assembler
                                 {
                                     for(int p=0; p<macro._params.size(); p++)
                                     {
-                                        if(mtokens[mt] == macro._params[p]) mtokens[mt] = tokens[t + 1 + p];
+                                        //if(mtokens[mt] == macro._params[p]) mtokens[mt] = tokens[t + 1 + p];
+                                        size_t param = mtokens[mt].find(macro._params[p]);
+                                        if(param != std::string::npos)
+                                        {
+                                            mtokens[mt].erase(param, macro._params[p].size());
+                                            mtokens[mt].insert(param, tokens[t + 1 + p]);
+                                        }
                                     }
                                 }
 
@@ -1302,7 +1215,7 @@ namespace Assembler
 
             if(macroMissing)
             {
-                fprintf(stderr, "Assembler::handleMacros() : Warning, macro is never called : '%s' : in '%s' : on line %d\n", macro._name.c_str(), macro._filename.c_str(), macro._fileStartLine);
+                //fprintf(stderr, "Assembler::handleMacros() : Warning, macro is never called : '%s' : in '%s' : on line %d\n", macro._name.c_str(), macro._filename.c_str(), macro._fileStartLine);
                 continue;
             }
 
@@ -1316,7 +1229,7 @@ namespace Assembler
         return true;
     }
 
-    bool handleMacroStart(const std::string& filename, const LineToken& lineToken, const std::vector<std::string>& tokens, Macro& macro, int lineIndex, int adjustedLineIndex)
+    bool handleMacroStart(const std::string& filename, const LineToken& lineToken, const std::vector<std::string>& tokens, Macro& macro, int adjustedLineIndex)
     {
         int lineNumber = (lineToken._fromInclude) ? lineToken._includeLineNumber + 1 : adjustedLineIndex + 1;
         std::string macroFileName = (lineToken._fromInclude) ? lineToken._includeName : filename;
@@ -1329,7 +1242,6 @@ namespace Assembler
         }                    
 
         macro._name = tokens[1];
-        macro._startLine = lineIndex - 1;
         macro._fromInclude = lineToken._fromInclude;
         macro._fileStartLine = lineNumber;
         macro._filename = macroFileName;
@@ -1340,7 +1252,7 @@ namespace Assembler
         return true;
     }
 
-    bool handleMacroEnd(std::vector<Macro>& macros, Macro& macro, int lineIndex)
+    bool handleMacroEnd(std::vector<Macro>& macros, Macro& macro)
     {
         // Check for duplicates
         for(int i=0; i<macros.size(); i++)
@@ -1351,13 +1263,10 @@ namespace Assembler
                 return false;
             }
         }
-        macro._endLine = lineIndex - 1;
         macro._complete = true;
         macros.push_back(macro);
 
         macro._name = "";
-        macro._startLine = 0;
-        macro._endLine = 0;
         macro._lines.clear();
         macro._params.clear();
         macro._complete = false;
@@ -1389,7 +1298,7 @@ namespace Assembler
             int lineIndex = int(itLine - lineTokens.begin()) + 1;
 
             // Tokenise current line
-            std::vector<std::string> tokens = tokeniseLine(lineToken._text);
+            std::vector<std::string> tokens = Expression::tokeniseLine(lineToken._text);
 
             // Valid pre-processor commands
             if(tokens.size() > 0)
@@ -1420,13 +1329,13 @@ namespace Assembler
                 {
                     if(tokens[0] == "%MACRO")
                     {
-                        if(!handleMacroStart(filename, lineToken, tokens, macro, lineIndex, adjustedLineIndex)) return false;
+                        if(!handleMacroStart(filename, lineToken, tokens, macro, adjustedLineIndex)) return false;
 
                         buildingMacro = true;
                     }
                     else if(buildingMacro  &&  tokens[0] == "%ENDM")
                     {
-                        if(!handleMacroEnd(macros, macro, lineIndex)) return false;
+                        if(!handleMacroEnd(macros, macro)) return false;
                         buildingMacro = false;
                     }
                     if(buildingMacro  &&  tokens[0] != "%MACRO")
@@ -1527,7 +1436,7 @@ namespace Assembler
 
                         std::vector<Gprintf::Var> vars;
                         std::vector<std::string> subs;
-                        std::vector<std::string> variables = tokenise(variableText, ',');
+                        std::vector<std::string> variables = Expression::tokenise(variableText, ',');
                         parseGprintfFormat(formatText, variables, vars, subs);
 
                         Gprintf gprintf = {false, _currentAddress, lineNumber, lineToken, formatText, vars, subs};
@@ -1716,6 +1625,8 @@ namespace Assembler
             return false;
         }
 
+        fprintf(stderr, "\nAssembling file '%s'\n", filename.c_str());
+
         _callTable = 0x0000;
         _startAddress = startAddress;
         _currentAddress = _startAddress;
@@ -1734,7 +1645,7 @@ namespace Assembler
             std::getline(infile, lineToken._text);
             lineTokens.push_back(lineToken);
 
-            if(!infile.good()  &&  !infile.eof())
+            if(!infile.good() && !infile.eof())
             {
                 fprintf(stderr, "Assembler::assemble() : Bad lineToken : '%s' : in '%s' : on line %d\n", lineToken._text.c_str(), filename.c_str(), numLines+1);
                 return false;
@@ -1762,7 +1673,7 @@ namespace Assembler
                 int tokenIndex = 0;
 
                 // Tokenise current line
-                std::vector<std::string> tokens = tokeniseLine(lineToken._text);
+                std::vector<std::string> tokens = Expression::tokeniseLine(lineToken._text);
 
                 // Comments
                 if(tokens.size() > 0  &&  tokens[0].find_first_of(";#") != std::string::npos) continue;
@@ -1955,48 +1866,57 @@ namespace Assembler
                                         _callTable -= 0x0002;
                                     }
                                 }
+                                // CALL that doesn't use the call table, (usually to save zero page memory at the expense of code size and code speed).
                                 else
                                 {
-                                    fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
-                                    return false;
+                                    Equate equate;
+                                    if(operandValid = evaluateEquateOperand(tokens, tokenIndex, equate, false))
+                                    {
+                                        operand = uint8_t(equate._operand);
+                                    }
+                                    else 
+                                    {
+                                        fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
+                                        return false;
+                                    }
                                 }
                             }
                                 
                             // All other non native 2 byte instructions
                             if(opcodeType != Native  &&  !operandValid)
                             {
-                                operandValid = Expression::stringToU8(tokens[tokenIndex], operand);
-                                if(!operandValid)
-                                {
-                                    Label label;
-                                    Equate equate;
+                                Label label;
+                                Equate equate;
 
-                                    // String
-                                    size_t quote1 = tokens[tokenIndex].find_first_of("'\"");
-                                    size_t quote2 = tokens[tokenIndex].find_first_of("'\"", quote1+1);
-                                    bool quotes = (quote1 != std::string::npos  &&  quote2 != std::string::npos  &&  (quote2 - quote1 > 1));
-                                    if(quotes)
-                                    {
-                                        operand = uint8_t(tokens[tokenIndex][quote1+1]);
-                                    }
-                                    // Search equates
-                                    else if(operandValid = evaluateEquateOperand(tokens, tokenIndex, equate, compoundInstruction))
-                                    {
-                                        operand = uint8_t(equate._operand);
-                                    }
-                                    // Search labels
-                                    else if(operandValid = evaluateLabelOperand(tokens, tokenIndex, label, compoundInstruction))
-                                    {
-                                        operand = uint8_t(label._address);
-                                    }
-                                    else if(Expression::isExpression(tokens[tokenIndex]) == Expression::Valid)
-                                    {
-                                        std::string input;
-                                        preProcessExpression(tokens, tokenIndex, input, true);
-                                        operand = uint8_t(Expression::parse((char*)input.c_str(), _lineNumber));
-                                        operandValid = true;
-                                    }
-                                    else if(!operandValid)
+                                // String
+                                size_t quote1 = tokens[tokenIndex].find_first_of("'\"");
+                                size_t quote2 = tokens[tokenIndex].find_first_of("'\"", quote1+1);
+                                bool quotes = (quote1 != std::string::npos  &&  quote2 != std::string::npos  &&  (quote2 - quote1 > 1));
+                                if(quotes)
+                                {
+                                    operand = uint8_t(tokens[tokenIndex][quote1+1]);
+                                }
+                                // Search equates
+                                else if(operandValid = evaluateEquateOperand(tokens, tokenIndex, equate, compoundInstruction))
+                                {
+                                    operand = uint8_t(equate._operand);
+                                }
+                                // Search labels
+                                else if(operandValid = evaluateLabelOperand(tokens, tokenIndex, label, compoundInstruction))
+                                {
+                                    operand = uint8_t(label._address);
+                                }
+                                else if(Expression::isExpression(tokens[tokenIndex]) == Expression::Valid)
+                                {
+                                    std::string input;
+                                    preProcessExpression(tokens, tokenIndex, input, true);
+                                    operand = uint8_t(Expression::parse((char*)input.c_str(), _lineNumber));
+                                    operandValid = true;
+                                }
+                                else
+                                {
+                                    operandValid = Expression::stringToU8(tokens[tokenIndex], operand);
+                                    if(!operandValid)
                                     {
                                         fprintf(stderr, "Assembler::assemble() : Label/Equate error : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
                                         return false;
@@ -2096,36 +2016,36 @@ namespace Assembler
                             else
                             {
                                 uint16_t operand;
-                                operandValid = Expression::stringToU16(tokens[tokenIndex], operand);
-                                if(!operandValid)
-                                {
-                                    Label label;
-                                    Equate equate;
+                                Label label;
+                                Equate equate;
 
-                                    // Search equates
-                                    if(operandValid = evaluateEquateOperand(tokens, tokenIndex, equate, compoundInstruction))
-                                    {
-                                        operand = equate._operand;
-                                    }
-                                    // Search labels
-                                    else if(operandValid = evaluateLabelOperand(tokens, tokenIndex, label, compoundInstruction))
-                                    {
-                                        operand = label._address;
-                                    }
-                                    else if(Expression::isExpression(tokens[tokenIndex]) == Expression::Valid)
-                                    {
-                                        std::string input;
-                                        preProcessExpression(tokens, tokenIndex, input, true);
-                                        operand = Expression::parse((char*)input.c_str(), _lineNumber);
-                                        operandValid = true;
-                                    }
-                                    else if(!operandValid)
+                                // Search equates
+                                if(operandValid = evaluateEquateOperand(tokens, tokenIndex, equate, compoundInstruction))
+                                {
+                                    operand = equate._operand;
+                                }
+                                // Search labels
+                                else if(operandValid = evaluateLabelOperand(tokens, tokenIndex, label, compoundInstruction))
+                                {
+                                    operand = label._address;
+                                }
+                                else if(Expression::isExpression(tokens[tokenIndex]) == Expression::Valid)
+                                {
+                                    std::string input;
+                                    preProcessExpression(tokens, tokenIndex, input, true);
+                                    operand = Expression::parse((char*)input.c_str(), _lineNumber);
+                                    operandValid = true;
+                                }
+                                else
+                                {
+                                    operandValid = Expression::stringToU16(tokens[tokenIndex], operand);
+                                    if(!operandValid)
                                     {
                                         fprintf(stderr, "Assembler::assemble() : Label/Equate error : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
                                         return false;
                                     }
                                 }
-
+                                
                                 // Reserved assembler opcode DW, (define word)
                                 if(opcodeType == ReservedDW  ||  opcodeType == ReservedDWR)
                                 {

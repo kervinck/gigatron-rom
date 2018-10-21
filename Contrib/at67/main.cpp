@@ -7,6 +7,7 @@
 /**********************************************************************************************/
 
 
+#include "memory.h"
 #include "cpu.h"
 #include "audio.h"
 #include "editor.h"
@@ -15,6 +16,7 @@
 #include "graphics.h"
 #include "expression.h"
 #include "assembler.h"
+#include "compiler.h"
 
 
 int main(int argc, char* argv[])
@@ -22,12 +24,18 @@ int main(int argc, char* argv[])
     Cpu::State S;
 
     Cpu::initialise(S);
+    Memory::intitialise();
     Audio::initialise();
     Graphics::initialise();
     Editor::initialise();
     Loader::initialise();
     Expression::initialise();
     Assembler::initialise();
+    Compiler::initialise();
+
+
+    //Compiler::compile("gbas/test.gbas", "gbas/test.gasm");
+
 
     bool debugging = false;
 
@@ -83,7 +91,7 @@ int main(int argc, char* argv[])
             Cpu::reset(true);
             vgaX = 0, vgaY = 0;
             HSync = 0, VSync = 0;
-            fprintf(stderr, "main(): CPU stall for %lld clocks : rebooting.\n", clock - clock_prev);
+            fprintf(stderr, "main(): CPU stall for %" PRId64 " clocks : rebooting.\n", clock - clock_prev);
         }
 
         // Rising hSync edge
