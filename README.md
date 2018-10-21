@@ -83,7 +83,7 @@ page 128-255 | Not used in the 32K system: mirror of page 0-127         |
 
 [Note: In the next section, names in parentheses refer to *internal*
 variables that are subject to change between versions.  See for a
-detailed explanation the file Docs/GT1-files.txt]
+more detailed explanation on compatibility the file Docs/GT1-files.txt]
 
 Address   Name          Description
 --------  ------------- -----------
@@ -204,6 +204,8 @@ SYS functions (ROM)
 ===================
 
 ```
+Available since ROM v1:
+
 00ad    SYS_Exec_88             Load serialized vCPU code from ROM and execute
 04a7    SYS_Random_34           Get random number and update entropy
 0600    SYS_LSRW1_48            Shift right 1 bit
@@ -220,7 +222,7 @@ SYS functions (ROM)
 06c0    SYS_Unpack_56           Unpack 3 bytes into 4 pixels
 04d4    SYS_Draw4_30            Copy 4 pixels to screen memory
 00f4    SYS_Out_22              Write byte to hardware OUT register
-00f9    SYS_In_24               Read byte from hardwar IN register
+00f9    SYS_In_24               Read byte from hardware IN register
 02e9    SYS_NextByteIn_32       Receive next byte and put in load buffer
 06e7    SYS_PayloadCopy_34      Copy byte from load buffer to RAM destination
 

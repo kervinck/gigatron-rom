@@ -6,7 +6,7 @@ emulators benefit from a single standard.
 Format
 ======
 
-The format is is based on the same byte sequence that the ROM-to-RAM
+The format is based on the same byte sequence that the ROM-to-RAM
 routine sees in ROM v1 (SYS_Exec_88).  That is essentially the
 in-ROM sequence of operand bytes, but skipping the trampolines in
 the top 5 words of every ROM page.  Those instructions are not part
