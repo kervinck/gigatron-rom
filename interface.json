@@ -3,6 +3,7 @@
  "romTypeValue_ROMv2"   : "0x0020",
  "romTypeValue_ROMv3"   : "0x0028",
 
+ "zeroConst"            : "0x0000",
  "memSize"              : "0x0001",
  "entropy"              : "0x0006",
  "videoY"               : "0x0009",
@@ -30,6 +31,8 @@
  "ledState_v2"          : "0x002e",
  "ledTempo"             : "0x002f",
  "userVars"             : "0x0030",
+ "oneConst"             : "0x0080",
+ "userVars2"            : "0x0081",
 
  "videoTable"           : "0x0100",
  "vReset"               : "0x01f0",
