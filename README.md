@@ -28,7 +28,7 @@ gigatron-rom
  +--- Docs/
  |     +--- GT1-files.txt       vCPU object file format and ROM versioning
  |     +--- GCL-language.txt    Gigatron Control Language and vCPU explanation
- |     +--- gtemu.c             An executable instruction set definition
+ |     +--- gtemu.c             Instruction set definition (as executable code)
  |     +--- TinyBASIC.ebnf      Formal definition of Gigatron TinyBASIC syntax
  |     `--- TinyBASIC.xhtml     Railroad diagram of Gigatron TinyBASIC syntax
  |
@@ -40,6 +40,7 @@ gigatron-rom
        +--- kervinck/           Ramblings (all work in progress)
        |     +--- gcl1.ebnf     Formal definition of GCL1 syntax
        |     `--- EBNF.xhtml    Railroad diagram of GCL1 syntax
+       +--- tbraun-de/          Pytron: Python port of gtemu.c
        `--- xxxbxxx/            Bricks game; RPi port of BabelFish.ino
 ```
 
