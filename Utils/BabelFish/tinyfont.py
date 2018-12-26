@@ -48,7 +48,11 @@ def convert(font):
           if y == 5 and shift == 0:
             shift, word = 1, word << 1
           word |= 1 << (5*(3-x) - y - 1 + shift)
-    print ' 0x%04x, // %s' % (((shift<<15) + word), repr(chr(32+c)))
+    if shift == 0:
+      print ' 0x%04x,' % word,
+    else:
+      print '-0x%04x,' % (0x8000 - word),
+    print '// %s' % repr(chr(32+c))
 
 tinyfont =\
     '......@..@.@.@.@..@@.@....@...@....@.@..........................'\

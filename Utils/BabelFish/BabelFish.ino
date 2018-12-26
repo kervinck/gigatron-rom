@@ -20,7 +20,7 @@
 //    This can be done with two methods: over USB or from PROGMEM
 //    Each has their advantages and disadvantages:
 //    a. USB can accept a regular GT1 file but needs a (Python)
-//       program on the PC/laptop as sender (sendGt1.py).
+//       program on the PC/laptop as sender (sendFile.py).
 //    b. PROGMEM only requires the Arduino IDE on the PC/laptop,
 //       but needs the GT1 file as a hexdump (C notation).
 // 2. Hookup a PS/2 keyboard for typing on the Gigatron
@@ -246,7 +246,7 @@ const byte tetris_gt1[]    PROGMEM = {
   #include "tetris.h"
 };
 
-const struct { byte *gt1; char *name; } gt1Files[] = {
+const struct { const byte *gt1; const char *name; } gt1Files[] = {
   { TinyBASIC_gt1, "BASIC"                    }, // 3048 bytes
 #if maxStorage >= 10000
   { WozMon_gt1,    "WozMon"                   }, // 595 bytes
@@ -617,7 +617,7 @@ void doHelp()
     Serial.println(": C        Toggle echo mode (default off)");
     Serial.println(": T        Enter terminal mode");
     Serial.println(": W/A/S/D  Up/left/down/right arrow");
-    Serial.println(": Z/X      A/B button ");
+    Serial.println(": Z/X      A/B button");
     Serial.println(": Q/E      Select/start button");
   #endif
 }
@@ -712,21 +712,21 @@ void doTerminal()
 }
 
 // Render line in Loader screen
-word renderLine(word pos, char *text)
+word renderLine(word pos, const char *text)
 {
   pos = renderString(pos, text);
   return (pos & 0xff00) + 0x600; // Goes to new line
 }
 
 // Render string in Loader screen
-word renderString(word pos, char text[])
+word renderString(word pos, const char text[])
 {
   // Send 6 pixel lines to Gigatron
   // The ATtiny85 doesn't have sufficient RAM for separate bitmap[] and
   // pixelLine[] arrays. Therefore the rendering must be redone with each
   // iteration, followed by an in-place conversion to pixel colors
 
-  byte *p = pos;
+  word p = pos;
   byte x;
   for (byte b=32; b; b>>=1) {
 
@@ -897,7 +897,7 @@ int nextSerial()
     // clear FIFOCON when host data arrives in exact multiples of 64,128,192,...
     // bytes and when using double buffering with two banks of bytes, as
     // USBCore.cpp does. A hangup situation occurs after reading the first
-    // tansmitted 64 bytes. This can then only be solved by resetting the board
+    // transmitted 64 bytes. This can then only be solved by resetting the board,
     // because no further host data reaches the sketch.
     //
     // A better fix would be to repair Arduino's USB_Recv and ReleaseRX.
@@ -1026,7 +1026,7 @@ void sendFirstByte(byte value)
   // Wait for bit transfer at horizontal sync RISING edge. As this is at
   // the end of a short (3.8 us) pulse following VERY shortly (0.64us) after
   // vSync drop, this timing is tight. That is the reason that interrupts
-  // must be disabled on the microcontroller and that 1 MHz is not enough.
+  // must be disabled on the microcontroller (and why 1 MHz isn't enough).
   while (PINB & gigatronPulseBit) // Ensure hSync is LOW first
     ;
   while (~PINB & gigatronPulseBit) // Then wait for hSync to rise

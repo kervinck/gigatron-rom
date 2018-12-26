@@ -87,12 +87,12 @@ int getKeymapIndex(void)
   return (index >= nrKeymaps) ? 0 : index; // Also handle invalid values
 }
 
-char *getKeymapName()
+const char *getKeymapName()
 {
   return getKeymapName(getKeymapIndex());
 }
 
-char *getKeymapName(byte index)
+const char *getKeymapName(byte index)
 {
   return (index > arrayLen(keymapNames)) ? 0 : keymapNames[index];
 }
@@ -370,7 +370,7 @@ static inline byte lookup(byte mods, word code)
   byte keymapFlag = 1 << getKeymapIndex();
 
   for (int i=0; i<arrayLen(keymaps); i++) {
-    keyTuple_t *t = &keymaps[i];
+    const keyTuple_t *t = &keymaps[i];
 
     byte f = pgm_read_byte(&t->flags);
     if (~f & keymapFlag)
@@ -636,7 +636,7 @@ byte keyboard_getState()
       if (~flags & breakFlag)
         ascii = newAscii;       // ASCII pressed
       else
-        ;                       // ASCII release (ignored)
+        {}                      // ASCII release (ignored)
       flags &= ~255;
     }
     nextPs2();                  // Reset PS/2 sequence
