@@ -295,7 +295,7 @@ byte outBuffer[256]; // sendFrame() will read up to index 299 but that's ok.
 #define buttonSelect 32
 #define buttonB      64
 #define buttonA      128
-// Note: The kit's controller gives inverted signals.
+// Note: The kit's game controller gives inverted signals.
 
 /*
  *  Font data
@@ -514,7 +514,7 @@ void doCommand(char line[])
   case 'H': doHelp();                         break;
   case 'R': doReset(arg);                     break;
   case 'L': doLoader();                       break;
-  case 'M': doMapping();                   break;
+  case 'M': doMapping();                      break;
   case 'P': if (0 <= arg && arg < arrayLen(gt1Files))
               doTransfer(gt1Files[arg].gt1);  break;
   case 'U': doTransfer(NULL);                 break;
@@ -525,7 +525,7 @@ void doCommand(char line[])
   case 'A': sendController(~buttonLeft,   2); break;
   case 'S': sendController(~buttonDown,   2); break;
   case 'D': sendController(~buttonRight,  2); break;
-  case 'Z': sendController((byte)~buttonA,2); break;
+  case 'Z': sendController(~buttonA & 255,2); break;
   case 'X': sendController(~buttonB,      2); break;
   case 'Q': sendController(~buttonSelect, 2); break;
   case 'E': sendController(~buttonStart,  2); break;
@@ -649,7 +649,7 @@ void doLoader()
   }
 
   // Start 'Loader' application on Gigatron
-  sendController((byte)~buttonA, 2);
+  sendController(~buttonA & 255, 2);
 
   // Wait for Loader to be running
   delay(1000);
@@ -961,7 +961,7 @@ void sendGt1Execute(word address, byte data[])
 }
 
 // Pretend to be a game controller
-// Send the same byte a few frames like a human user
+// Send the same byte a few frames, just like a human user
 void sendController(byte value, int n)
 {
   // Send controller code for n frames
