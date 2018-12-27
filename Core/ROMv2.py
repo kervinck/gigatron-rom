@@ -85,6 +85,9 @@ from asm import *
 import gcl0x as gcl
 import font_v2 as font
 
+# ROM type (see also Docs/GT1-files.txt)
+romTypeValue = 0x20
+
 # Pre-loading the formal interface as a way to get warnings when
 # accidently redefined with a different value
 loadBindings('interface.json')
@@ -532,8 +535,6 @@ nop()
 
 label('SYS_Reset_38')
 assert pc()>>8 == 0
-romTypeValue = getenv('romType')
-romTypeValue = int(romTypeValue, base=0) if romTypeValue else 0
 ld(romTypeValue);               C('Set ROM type/version')#15
 st([romType])                   #16
 ld(0)                           #17

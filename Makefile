@@ -4,11 +4,9 @@ DEV:=ROMv3x
 # Latest released version as default target
 ROMv3.rom: Core/* Apps/* Images/* Makefile interface.json
 	# Integrate BASIC, WozMon, Tetronis, Bricks, TicTacToe
-	# vPulse modulation (for SAVE in BASIC)
-	# Sprite acceleration
-	env romType="0x28"\
-	    PYTHONPATH="Core:$(PYTHONPATH)"\
-	    python Core/ROMv3.py\
+	# vPulse modulation (for SAVE in BASIC), sprite acceleration
+	PYTHONPATH="Core:$(PYTHONPATH)"\
+	python Core/ROMv3.py\
 		Apps/Snake_v2.gcl\
 		Apps/Racer_v1.gcl\
 		Apps/Mandelbrot_v1.gcl\
@@ -25,9 +23,8 @@ ROMv3.rom: Core/* Apps/* Images/* Makefile interface.json
 
 ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
 	# Development towards ROMv2 (minor changes only)
-	env romType="0x20"\
-	    PYTHONPATH="Core:$(PYTHONPATH)"\
-	    python Core/ROMv2.py\
+	PYTHONPATH="Core:$(PYTHONPATH)"\
+	python Core/ROMv2.py\
 		Apps/Snake_v2.gcl\
 		Apps/Racer_v1.gcl\
 		Apps/Mandelbrot_v1.gcl\
@@ -42,9 +39,8 @@ ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
 # ROM v1 shipped with first batches of kits
 ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 	# ROMv1 gets 0x1c. Further numbers to be decided.
-	env romType="0x1c"\
-	    PYTHONPATH="Core:$(PYTHONPATH)"\
-	    python Core/ROMv1.py\
+	PYTHONPATH="Core:$(PYTHONPATH)"\
+	python Core/ROMv1.py\
 		Apps/Snake_v1.gcl\
 		Apps/Racer_v1.gcl\
 		Apps/Mandelbrot_v1.gcl\

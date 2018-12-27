@@ -58,20 +58,6 @@
 #  XXX Scoping for variables or some form of local variables? $i ("localized")
 #  XXX Simple GCL programs might be compiled by the host instead of offline?
 #  XXX vCPU: Clear just vAC[0:7] (Workaround is not bad: |255 ^255)
-#
-#  Application ideas:
-#  XXX Random dots screensaver
-#  XXX Star field
-#  XXX Audio: Decay, using Karplus-Strong
-#  XXX ROM data compression (starting with Jupiter and Racer image)
-#  XXX Font screen 16x8 chars
-#  XXX Embedded schematics
-#  XXX Maze game. Berzerk/Robotron? Pac Mac
-#  XXX Horizontal scroller. Flappy Bird
-#  XXX Primes, Fibonacci (bignum), Queens
-#  XXX Game of Life (edit <-> stop <-> slow <-> fast)
-#  XXX Game #5 Shooter. Space Invaders, Demon Attack, Galaga style
-#  XXX Exhibition mode: flip between applications in auto-play mode
 #-----------------------------------------------------------------------
 
 from sys import argv
@@ -80,6 +66,9 @@ from os  import getenv
 from asm import *
 import gcl0x as gcl
 import font_v2 as font
+
+# ROM type (see also Docs/GT1-files.txt)
+romTypeValue = 0x28
 
 # Pre-loading the formal interface as a way to get warnings when
 # accidently redefined with a different value
@@ -533,8 +522,6 @@ nop()
 
 label('SYS_Reset_38')
 assert pc()>>8 == 0
-romTypeValue = getenv('romType')
-romTypeValue = int(romTypeValue, base=0) if romTypeValue else 0
 ld(romTypeValue);               C('Set ROM type/version')#15
 st([romType])                   #16
 ld(0)                           #17
@@ -3434,6 +3421,14 @@ program.end()
 
 for application in argv[1:]:
 
+  # Explicit relabeling
+  if '=' in application:
+    name, application = application.split('=', 1)
+    label(name)
+    print
+    print 'Labeling file %s label %s ROM %04x' % (application, name, pc())
+
+  # Pre-compiled GT1 files
   if application.endswith('.gt1'):
     gt1File = application
     name = gt1File.rsplit('.', 1)[0]    # Remove extension
@@ -3453,6 +3448,7 @@ for application in argv[1:]:
       program.putInRomTable(ord(byte))
     program.end()
 
+  # GCL files
   elif application.endswith('.gcl'):
     gclSource = application
     name = gclSource.rsplit('.', 1)[0]  # Remove extension
