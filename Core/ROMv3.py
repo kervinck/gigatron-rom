@@ -67,12 +67,12 @@ from asm import *
 import gcl0x as gcl
 import font_v2 as font
 
-# ROM type (see also Docs/GT1-files.txt)
-romTypeValue = 0x28
-
 # Pre-loading the formal interface as a way to get warnings when
 # accidently redefined with a different value
 loadBindings('interface.json')
+
+# ROM type (see also Docs/GT1-files.txt)
+romTypeValue = symbol('romTypeValue_ROMv3')
 
 # Gigatron clock
 cpuClock = 6.250e+06
@@ -3327,10 +3327,9 @@ for i in xrange(len(packed)):
 print 'SYS limits low %s high %s' % (repr(minSYS), repr(maxSYS))
 
 # Export some zero page variables to GCL
-# XXX Solve in another way (not through symbol table!)
-define('romTypeValue', romTypeValue)
+# These constants were already loaded from interface.json.
+# We're redefining them here to get a consistency check.
 define('memSize',    memSize)
-define('bootCount',  bootCount)
 for i in range(3):
   define('entropy%d' % i, entropy+i)
 define('videoY',     videoY)
