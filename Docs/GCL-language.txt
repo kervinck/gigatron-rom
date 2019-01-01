@@ -1,13 +1,35 @@
--------------------------------
-Gigatron Control Language (GCL)
--------------------------------
-GCL is an interpreted low-level language for writing simple games for
-the Gigatron TTL microcomputer, without bothering with the harsh timing
-requirements of the hardware platform.
+========================================
+Gigatron Control Language (GCL) and vCPU
+========================================
 
-Technically, "GCL" is the source language or notation, while "vCPU" is the
-virtual CPU, or interpreter, that is executing compiled GCL instructions.
-The two are closely tied together.
+GCL is a compiled low-level language for writing simple games and
+applications for the Gigatron TTL microcomputer, without bothering
+the programmer with the harsh timing requirements of the hardware
+platform.
+
+vCPU is the interpreted 16-bit machine language running in the dead
+time of the video/sound loop.
+
+The two are closely tied together, and we sometimes we mix them up.
+Technically still, "GCL" is the source language or notation, while
+"vCPU" is the virtual CPU, or interpreter, that is executing compiled
+GCL instructions.
+
+vCPU's advantages over native 8-bit Gigatron code are:
+ 1. you don't need to think about video timing with everything you do
+ 2. operations are 16-bits, and
+ 3. programs can run from RAM.
+Its disadvantage is that vCPU is slower than native code.
+
+The main menu, `Snake', `Mandelbrot', `Tiny BASIC v2' and `WozMon'
+are pure GCL programs.  These programs still use generic support
+ROM functions implemented as native code: the so-called SYS functions.
+
+`Racer', `Pictures' and `Loader' are hybrid programs, meaning that
+they have application-specific SYS functions and/or data in ROM.
+
+`Bricks' and `Tetronis' are vCPU programs written in a vCPU assembler,
+not using GCL at all.
 
 ---------------
 Example program
@@ -42,6 +64,7 @@ gcl1 {GCL version}
 ----------
 Deployment
 ----------
+
 Translation from GCL to vCPU is done offline. So the Gigatron runs
 vCPU applications. There are other ways to generate vCPU programs,
 for example through at67's assembler. There are two ways to get a
@@ -86,48 +109,6 @@ vSP  is the stack pointer. The stack lives in the zero page top and
 Program variables are 16-bit words and typically hold a number or
 a pointer.  Named variables reside in the zero page. Arbitrary
 memory can be addressed as bytes using 16-bit pointers.
-
-GCL translation is single-pass and doesn't have a linking stage.
-Therefore a typical GCL program has a setup phase followed by a
-main loop.  In the setup phase, variables are initialized with
-values and references to functions or data. When running, function
-calling is done through those variables. vCPU is optimized for
-function calling in that way.  Long functions that don't fit in a
-page should be split into multiple functions.  When a program gets
-bigger than a single segment or page, the setup phase will have to
-hop over to the next page. The clearest way to do that is as follows:
-
-{Start compilation at $200}
-  [def ... ret] Function1=
-  [def ... ret] Function2=
-  $300 call
-{Continue compilation at $300}
-$300:
-  [def ... ret] Function3=
-  [def ... ret] Function4=
-  $400 call
-{Continue compilation at $400}
-$400:
-  [def ... ret] Function5=
-  [do ... loop] {Main loop}
-
-This can be done in a slightly more space-efficient way by using
-"ret" and vLR. This saves 1 byte per page, but is cryptic. Also you
-can't do any function calls in the setup phase as that uses vLR.
-
-{Start compilation at $200. (vLR=$200)}
-  [def ... ret] Function1=
-  [def ... ret] Function2=
-  \vLR>++ ret {Increment high byte of vLR and go there}
-{Continue compilation at $300}
-$300:
-  [def ... ret] Function3=
-  [def ... ret] Function4=
-  \vLR>++ ret
-{Continue compilation at $400}
-$400:
-  [def ... ret] Function5=
-  [do ... loop] {Main loop}
 
 -----------------
 Notes on notation
@@ -222,6 +203,51 @@ gcl0x gcl1      GCL version. "x" denotes experimental/extended versions
 There are two versions of GCL: gcl0x and gcl1. gcl0x is what we
 used to make the built-in applications of ROM v1. gcl1 is the planned
 cosmetic upgrade in notation.
+
+-----------------
+Program structure
+-----------------
+GCL translation is single-pass and doesn't have a linking stage.
+Therefore a typical GCL program has a setup phase followed by a
+main loop.  In the setup phase, variables are initialized with
+values and references to functions or data. When running, function
+calling is done through those variables. vCPU is optimized for
+function calling in that way.  Long functions that don't fit in a
+page should be split into multiple functions.  When a program gets
+bigger than a single segment or page, the setup phase will have to
+hop over to the next page. The clearest way to do that is as follows:
+
+{Start compilation at $200}
+  [def ... ret] Function1=
+  [def ... ret] Function2=
+  $300 call
+{Continue compilation at $300}
+$300:
+  [def ... ret] Function3=
+  [def ... ret] Function4=
+  $400 call
+{Continue compilation at $400}
+$400:
+  [def ... ret] Function5=
+  [do ... loop] {Main loop}
+
+This can be done in a slightly more space-efficient way by using
+"ret" and vLR. This saves 1 byte per page, but is cryptic. Also you
+can't do any function calls in the setup phase as that uses vLR.
+
+{Start compilation at $200. (vLR=$200)}
+  [def ... ret] Function1=
+  [def ... ret] Function2=
+  \vLR>++ ret {Increment high byte of vLR and go there}
+{Continue compilation at $300}
+$300:
+  [def ... ret] Function3=
+  [def ... ret] Function4=
+  \vLR>++ ret
+{Continue compilation at $400}
+$400:
+  [def ... ret] Function5=
+  [do ... loop] {Main loop}
 
 ----------------------------------
 Common pitfalls in GCL programming
@@ -359,4 +385,5 @@ SYS_RacerUpdateVideoY_40   (Racer)
 
 Retro-actively retired from ABI:
 SYS_Reset_36                    Soft reset (use vReset instead)
+
 -- End of document --
