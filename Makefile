@@ -5,7 +5,6 @@ DEV:=ROMv3x
 ROMv3.rom: Core/* Apps/* Images/* Makefile interface.json
 	# Integrate BASIC, WozMon, Tetronis, Bricks, TicTacToe
 	# vPulse modulation (for SAVE in BASIC), sprite acceleration
-	PYTHONPATH="Core:$(PYTHONPATH)"\
 	python Core/ROMv3.py\
 		Apps/Snake_v2.gcl\
 		Apps/Racer_v1.gcl\
@@ -23,7 +22,6 @@ ROMv3.rom: Core/* Apps/* Images/* Makefile interface.json
 
 ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
 	# Development towards ROMv2 (minor changes only)
-	PYTHONPATH="Core:$(PYTHONPATH)"\
 	python Core/ROMv2.py\
 		Apps/Snake_v2.gcl\
 		Apps/Racer_v1.gcl\
@@ -39,7 +37,6 @@ ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
 # ROM v1 shipped with first batches of kits
 ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 	# ROMv1 gets 0x1c. Further numbers to be decided.
-	PYTHONPATH="Core:$(PYTHONPATH)"\
 	python Core/ROMv1.py\
 		Apps/Snake_v1.gcl\
 		Apps/Racer_v1.gcl\
