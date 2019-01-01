@@ -72,6 +72,14 @@ Also there's no encoding for a zero-length program.  Use an zero-length
 file for that use case, for all I care...  or encode a known constant,
 such as [0]=0 as follows: 00 00 01 00 00 00
 
+Avoid loading data in the system variables area and in the top of
+the zero page, where the stack lives. Although it might seem to
+work with Loader and in emulators, the ROM loader (SYS_Exec_88)
+uses the stack to setup its inner loop.  As a rule of thumb,
+[$30..$bf] are free to load data into, with the note that [$80]
+must always be 1. After loading, the top area is free to use in any
+way, as long as the program's own stack usage permits.
+
 Extension
 =========
 
