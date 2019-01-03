@@ -138,7 +138,7 @@ serialLast      = zpByte() # Previous serial read
 buttonState     = zpByte() # Clearable button state
 resetTimer      = zpByte() # After 2 seconds of holding 'Start', do a soft reset
 
-# Extended output (blinkenlights in bit 0:3 and audio in but 4:7). This
+# Extended output (blinkenlights in bit 0:3 and audio in bit 4:7). This
 # value must be present in AC during a rising hSync edge. It then gets
 # copied to the XOUT register by the hardware. The XOUT register is only
 # accessible in this indirect manner because it isn't part of the core
@@ -479,8 +479,8 @@ nop()
 #-----------------------------------------------------------------------
 
 # SYS_Reset_36 initiates an immediate Gigatron reset from within the vCPU.
-# The reset sequence itself is mostly implemented in GCL by Reset.gcl .
-# This must first be loaded into RAM. But as that takes more than 1 scanline,
+# The reset sequence itself is mostly implemented in GCL by Reset.gcl,
+# which must first be loaded into RAM. But as that takes more than 1 scanline,
 # some vCPU bootstrapping code gets loaded with SYS_Exec_88. The caller of
 # SYS_Reset_36 provides the SYS instruction to execute that.
 
@@ -513,8 +513,8 @@ ld(-36/2)                       #33
 #-----------------------------------------------------------------------
 #
 # This loads the vCPU code with consideration of the current vSP
-# Used during reset, but also for switching between applications
-# or for loading data from ROM during an application.
+# Used during reset, but also for switching between applications or for
+# loading data from ROM from within an application (overlays).
 #
 # ROM stream format is [<addrH> <addrL> <n&255> n*<byte>]* 0
 # on top of lookup tables.
@@ -658,7 +658,7 @@ ld(syncBits)                    #39
 label('pixels')
 for i in range(160):
   ora([Y,Xpp], OUT)             #40-199
-  if i==0: C('Pixel burst')
+  if i==0:                      C('Pixel burst')
 ld(syncBits, OUT);              C('<New scan line start>')#0 Back to black
 
 # Front porch

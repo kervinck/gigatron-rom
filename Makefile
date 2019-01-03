@@ -20,8 +20,8 @@ ROMv3.rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Main_v3.gcl\
 		Core/Reset_v3.gcl
 
+# ROMv2 minor changes only
 ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
-	# Development towards ROMv2 (minor changes only)
 	python Core/ROMv2.py\
 		Apps/Snake_v2.gcl\
 		Apps/Racer_v1.gcl\
@@ -48,16 +48,10 @@ ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Main_v1.gcl\
 		Core/Reset_v1.gcl
 
-# Work in progress
+# Development towards ROMv4
 dev: $(DEV).rom
 $(DEV).rom: Core/* Apps/* Images/* Makefile interface.json
-	# Development towards ROMv3
-	# Integrate BASIC, WozMon, Tetronis, Bricks, TicTacToe
-	# vPulse modulation (for SAVE in BASIC)
-	# Sprite acceleration
-	env romType="0x28"\
-	    PYTHONPATH="Core:$(PYTHONPATH)"\
-	    python Core/$(DEV).py\
+	python Core/$(DEV).py\
 		Apps/Snake_v2.gcl\
 		Apps/Racer_v1.gcl\
 		Apps/Mandelbrot_v1.gcl\
