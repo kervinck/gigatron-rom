@@ -89,7 +89,7 @@ more detailed explanation on compatibility the file Docs/GT1-files.txt]
 
 Address   Name          Description
 --------  ------------- -----------
-0000      zeroConst     Constant value 0 (for arithmatic carry)
+0000      zeroConst     Constant value 0 (for arithmetic carry)
 0001      memSize       Number of RAM pages detected at hard reset (64kB=0)
 0002      (channel)     Sound channel update on current scanline
 0003      (sample)      Accumulator for synthesizing next sound sample
@@ -125,7 +125,7 @@ Address   Name          Description
 002e      ledState      Current LED state machine value (branch offset)
 002f      ledTempo      Next value for ledTimer after LED state change
 0030-007f userVars      Program variables
-0080      oneConst      Constant value 1 (for arithmatic carry)
+0080      oneConst      Constant value 1 (for arithmetic carry)
 0081-.... userVars2     More space for program variables
 ....-00ff <stack>       Call and value stack for vCPU (also used by ROM loader)
 0100-01ef videoTable    Video indirection table (Y0,dX0,Y1,dX1,Y2,...,dX119)
