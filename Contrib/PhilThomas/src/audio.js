@@ -13,7 +13,7 @@ export class Audio {
         let context = this.context = new AudioContext();
 
         this.mute = false;
-        this.volume = 1.0;
+        this.volume = 0.33;
         this.cycle = 0;
         this.bias = 0;
         this.alpha = 0.99;
