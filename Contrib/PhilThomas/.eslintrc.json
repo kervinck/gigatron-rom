@@ -1,0 +1,14 @@
+{
+    "extends": "google",
+    "parserOptions": {
+        "ecmaVersion": 6,
+        "sourceType": "module"
+    },
+    "rules": {
+        "no-tabs": "off",
+        "no-var": "off"
+    },
+    "env": {
+        "browser": true
+    }
+}
