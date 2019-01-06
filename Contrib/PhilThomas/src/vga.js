@@ -64,14 +64,14 @@ export class Vga {
             (this.col >= this.minCol && this.col < this.maxCol)) {
             let pixels = this.pixels;
             let pixel = this.pixel;
-            let r = (out << 6) & 0xc0;
-            let g = (out << 4) & 0xc0;
-            let b = (out << 2) & 0xc0;
+            let r = (out     ) & 3;
+            let g = (out >> 2) & 3;
+            let b = (out >> 4) & 3;
 
             for (let i = 0; i < 4; i++) {
-                pixels[pixel++] = r;
-                pixels[pixel++] = g;
-                pixels[pixel++] = b;
+                pixels[pixel++] = 85 * r;
+                pixels[pixel++] = 85 * g;
+                pixels[pixel++] = 85 * b;
                 pixel++;
             }
 
