@@ -12,6 +12,7 @@ Pick and download a [`*.rom`](https://github.com/kervinck/gigatron-rom/) file in
 Direct links:
 [`ROM v1`](https://github.com/kervinck/gigatron-rom/raw/master/ROMv1.rom)
 [`ROM v2`](https://github.com/kervinck/gigatron-rom/raw/master/ROMv2.rom)
+[`ROM v3`](https://github.com/kervinck/gigatron-rom/raw/master/ROMv3.rom)
 
 Start the HTTP server
 
