@@ -1,35 +1,6 @@
-### pytron
+All files in this folder and below are:
 
-First working, but slow attempt of a python port of the `C` Gigatron emulator in `../../Docs/gtemu.c`.
-
-### Gigatron Mac
-
-Fully featured Gigatron emulator for Mac OS X, written in Objective-C and
-using XCode. 
-
-Features:
-- simulated 50Hz VGA output
-- 44.1kHz audio output
-- keyboard and simulated controller input
-- load .gt1 files directly into RAM
-- watch .gt1 files for changes and re-load automatically
-- switch between 32kB / 64kB RAM
-- rudimentary debugging with disassembly of native CPU and vCPU code, instruction stepping and vCPU stepping
-- watch CPU and vCPU state
-- RAM gadget (256x256 pixel screen to display RAM content, one pixel for every byte)
-
-Known issues:
-- Simulated keypresses sometimes hang
-- vCPU stepping interrupts on every change of vPC, but vPC sometimes changes during execution of a vCPU call (e.g. jumps)
-- Window position and configuration data is not properly saved and restored on restart of the application
-- Due to the author not having written code for some years, the code could certainly be better in a lot of places ... :-)
-
-
-### Licence
-
-Copyright 2018-2019 Tobias Braun
-Mail: tobias@braun-online.org
-Web: https://home.640k.de
+Copyright 2018-2019 Tobias Braun - tobias@braun-online.org
 
 Redistribution and use in source and binary forms, with or without 
 modification, are permitted provided that the following conditions are met:

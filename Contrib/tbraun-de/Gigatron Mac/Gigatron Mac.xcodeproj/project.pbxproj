@@ -1,0 +1,463 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		F6388DE421EDCB780098149B /* RAMGadgetWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = F6388DE221EDCB780098149B /* RAMGadgetWindow.m */; };
+		F6388DE521EDCB780098149B /* RAMGadgetWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = F6388DE321EDCB780098149B /* RAMGadgetWindow.xib */; };
+		F6388DE821EDCF020098149B /* RAMGadgetImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = F6388DE721EDCF020098149B /* RAMGadgetImageView.m */; };
+		F6424C4A21B68FCE000D7E25 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6424C4921B68FCE000D7E25 /* AudioToolbox.framework */; };
+		F6424C6721B6B344000D7E25 /* AQPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = F6424C6621B6B344000D7E25 /* AQPlayer.m */; };
+		F657894B21EA775500812ECC /* CPUWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = F657894921EA775500812ECC /* CPUWindow.m */; };
+		F657894C21EA775500812ECC /* CPUWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = F657894A21EA775500812ECC /* CPUWindow.xib */; };
+		F663610721A81488007AC860 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = F663610621A81488007AC860 /* AppDelegate.m */; };
+		F663610921A8148A007AC860 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F663610821A8148A007AC860 /* Assets.xcassets */; };
+		F663610C21A8148A007AC860 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = F663610A21A8148A007AC860 /* MainMenu.xib */; };
+		F663610F21A8148A007AC860 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = F663610E21A8148A007AC860 /* main.m */; };
+		F67BCC3921EE30FC00365AA2 /* LICENCE in Resources */ = {isa = PBXBuildFile; fileRef = F67BCC3821EE30FC00365AA2 /* LICENCE */; };
+		F6B24A2D21DD4FA600D09808 /* Gigatron.m in Sources */ = {isa = PBXBuildFile; fileRef = F6B24A2C21DD4FA600D09808 /* Gigatron.m */; };
+		F6B24A5321DD658D00D09808 /* Gigatron_16pt@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = F6B24A4921DD658C00D09808 /* Gigatron_16pt@1x.png */; };
+		F6B24A5421DD658D00D09808 /* Gigatron_128pt@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = F6B24A4A21DD658C00D09808 /* Gigatron_128pt@1x.png */; };
+		F6B24A5521DD658D00D09808 /* Gigatron_16pt@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = F6B24A4B21DD658D00D09808 /* Gigatron_16pt@2x.png */; };
+		F6B24A5621DD658D00D09808 /* Gigatron_32pt@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = F6B24A4C21DD658D00D09808 /* Gigatron_32pt@1x.png */; };
+		F6B24A5721DD658D00D09808 /* Gigatron_512pt@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = F6B24A4D21DD658D00D09808 /* Gigatron_512pt@1x.png */; };
+		F6B24A5821DD658D00D09808 /* Gigatron_512pt@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = F6B24A4E21DD658D00D09808 /* Gigatron_512pt@2x.png */; };
+		F6B24A5921DD658D00D09808 /* Gigatron_256pt@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = F6B24A4F21DD658D00D09808 /* Gigatron_256pt@1x.png */; };
+		F6B24A5A21DD658D00D09808 /* Gigatron_128pt@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = F6B24A5021DD658D00D09808 /* Gigatron_128pt@2x.png */; };
+		F6B24A5B21DD658D00D09808 /* Gigatron_32pt@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = F6B24A5121DD658D00D09808 /* Gigatron_32pt@2x.png */; };
+		F6B24A5C21DD658D00D09808 /* Gigatron_256pt@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = F6B24A5221DD658D00D09808 /* Gigatron_256pt@2x.png */; };
+		F6F4C20221E53DA500E913EB /* RAMWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = F6F4C20121E53DA500E913EB /* RAMWindow.m */; };
+		F6F8101121A8907500E907DC /* GigatronImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = F6F8101021A8907500E907DC /* GigatronImageView.m */; };
+		F6F8101321A8A14F00E907DC /* ROMv3.rom in Resources */ = {isa = PBXBuildFile; fileRef = F6F8101221A8A14F00E907DC /* ROMv3.rom */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		F6388DE121EDCB780098149B /* RAMGadgetWindow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RAMGadgetWindow.h; sourceTree = "<group>"; };
+		F6388DE221EDCB780098149B /* RAMGadgetWindow.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RAMGadgetWindow.m; sourceTree = "<group>"; };
+		F6388DE321EDCB780098149B /* RAMGadgetWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = RAMGadgetWindow.xib; sourceTree = "<group>"; };
+		F6388DE621EDCF020098149B /* RAMGadgetImageView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RAMGadgetImageView.h; sourceTree = "<group>"; };
+		F6388DE721EDCF020098149B /* RAMGadgetImageView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RAMGadgetImageView.m; sourceTree = "<group>"; };
+		F6424C4921B68FCE000D7E25 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		F6424C6521B6B344000D7E25 /* AQPlayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AQPlayer.h; sourceTree = "<group>"; };
+		F6424C6621B6B344000D7E25 /* AQPlayer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AQPlayer.m; sourceTree = "<group>"; };
+		F657894821EA775500812ECC /* CPUWindow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CPUWindow.h; sourceTree = "<group>"; };
+		F657894921EA775500812ECC /* CPUWindow.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CPUWindow.m; sourceTree = "<group>"; };
+		F657894A21EA775500812ECC /* CPUWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = CPUWindow.xib; sourceTree = "<group>"; };
+		F663610221A81488007AC860 /* Gigatron Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Gigatron Mac.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F663610521A81488007AC860 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		F663610621A81488007AC860 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		F663610821A8148A007AC860 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F663610B21A8148A007AC860 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		F663610D21A8148A007AC860 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F663610E21A8148A007AC860 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		F67BCC3821EE30FC00365AA2 /* LICENCE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENCE; sourceTree = "<group>"; };
+		F6B24A2C21DD4FA600D09808 /* Gigatron.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Gigatron.m; sourceTree = "<group>"; };
+		F6B24A2E21DD4FBA00D09808 /* Gigatron.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Gigatron.h; sourceTree = "<group>"; };
+		F6B24A4921DD658C00D09808 /* Gigatron_16pt@1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Gigatron_16pt@1x.png"; sourceTree = "<group>"; };
+		F6B24A4A21DD658C00D09808 /* Gigatron_128pt@1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Gigatron_128pt@1x.png"; sourceTree = "<group>"; };
+		F6B24A4B21DD658D00D09808 /* Gigatron_16pt@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Gigatron_16pt@2x.png"; sourceTree = "<group>"; };
+		F6B24A4C21DD658D00D09808 /* Gigatron_32pt@1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Gigatron_32pt@1x.png"; sourceTree = "<group>"; };
+		F6B24A4D21DD658D00D09808 /* Gigatron_512pt@1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Gigatron_512pt@1x.png"; sourceTree = "<group>"; };
+		F6B24A4E21DD658D00D09808 /* Gigatron_512pt@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Gigatron_512pt@2x.png"; sourceTree = "<group>"; };
+		F6B24A4F21DD658D00D09808 /* Gigatron_256pt@1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Gigatron_256pt@1x.png"; sourceTree = "<group>"; };
+		F6B24A5021DD658D00D09808 /* Gigatron_128pt@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Gigatron_128pt@2x.png"; sourceTree = "<group>"; };
+		F6B24A5121DD658D00D09808 /* Gigatron_32pt@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Gigatron_32pt@2x.png"; sourceTree = "<group>"; };
+		F6B24A5221DD658D00D09808 /* Gigatron_256pt@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Gigatron_256pt@2x.png"; sourceTree = "<group>"; };
+		F6B24A5F21DD68EC00D09808 /* Gigatron Mac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Gigatron Mac.entitlements"; sourceTree = "<group>"; };
+		F6F4C20021E53D7F00E913EB /* RAMWindow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RAMWindow.h; sourceTree = "<group>"; };
+		F6F4C20121E53DA500E913EB /* RAMWindow.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RAMWindow.m; sourceTree = "<group>"; };
+		F6F8100F21A8907500E907DC /* GigatronImageView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GigatronImageView.h; sourceTree = "<group>"; };
+		F6F8101021A8907500E907DC /* GigatronImageView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GigatronImageView.m; sourceTree = "<group>"; };
+		F6F8101221A8A14F00E907DC /* ROMv3.rom */ = {isa = PBXFileReference; lastKnownFileType = file; path = ROMv3.rom; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F66360FF21A81488007AC860 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F6424C4A21B68FCE000D7E25 /* AudioToolbox.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		F6424C4821B68FCE000D7E25 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F6424C4921B68FCE000D7E25 /* AudioToolbox.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		F66360F921A81487007AC860 = {
+			isa = PBXGroup;
+			children = (
+				F67BCC3821EE30FC00365AA2 /* LICENCE */,
+				F663610421A81488007AC860 /* Gigatron Mac */,
+				F663610321A81488007AC860 /* Products */,
+				F6424C4821B68FCE000D7E25 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		F663610321A81488007AC860 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F663610221A81488007AC860 /* Gigatron Mac.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F663610421A81488007AC860 /* Gigatron Mac */ = {
+			isa = PBXGroup;
+			children = (
+				F6B24A2F21DD509E00D09808 /* Assets */,
+				F663610E21A8148A007AC860 /* main.m */,
+				F663610521A81488007AC860 /* AppDelegate.h */,
+				F663610621A81488007AC860 /* AppDelegate.m */,
+				F6424C6521B6B344000D7E25 /* AQPlayer.h */,
+				F6424C6621B6B344000D7E25 /* AQPlayer.m */,
+				F657894821EA775500812ECC /* CPUWindow.h */,
+				F657894921EA775500812ECC /* CPUWindow.m */,
+				F6B24A2E21DD4FBA00D09808 /* Gigatron.h */,
+				F6B24A2C21DD4FA600D09808 /* Gigatron.m */,
+				F6F8100F21A8907500E907DC /* GigatronImageView.h */,
+				F6F8101021A8907500E907DC /* GigatronImageView.m */,
+				F6388DE121EDCB780098149B /* RAMGadgetWindow.h */,
+				F6388DE221EDCB780098149B /* RAMGadgetWindow.m */,
+				F6388DE621EDCF020098149B /* RAMGadgetImageView.h */,
+				F6388DE721EDCF020098149B /* RAMGadgetImageView.m */,
+				F6F4C20021E53D7F00E913EB /* RAMWindow.h */,
+				F6F4C20121E53DA500E913EB /* RAMWindow.m */,
+				F663610D21A8148A007AC860 /* Info.plist */,
+				F663610A21A8148A007AC860 /* MainMenu.xib */,
+				F657894A21EA775500812ECC /* CPUWindow.xib */,
+				F6388DE321EDCB780098149B /* RAMGadgetWindow.xib */,
+				F663610821A8148A007AC860 /* Assets.xcassets */,
+				F6B24A5F21DD68EC00D09808 /* Gigatron Mac.entitlements */,
+			);
+			path = "Gigatron Mac";
+			sourceTree = "<group>";
+		};
+		F6B24A2F21DD509E00D09808 /* Assets */ = {
+			isa = PBXGroup;
+			children = (
+				F6B24A5E21DD663D00D09808 /* Gigatron.icns */,
+				F6F8101221A8A14F00E907DC /* ROMv3.rom */,
+			);
+			path = Assets;
+			sourceTree = "<group>";
+		};
+		F6B24A5E21DD663D00D09808 /* Gigatron.icns */ = {
+			isa = PBXGroup;
+			children = (
+				F6B24A4921DD658C00D09808 /* Gigatron_16pt@1x.png */,
+				F6B24A4B21DD658D00D09808 /* Gigatron_16pt@2x.png */,
+				F6B24A4C21DD658D00D09808 /* Gigatron_32pt@1x.png */,
+				F6B24A5121DD658D00D09808 /* Gigatron_32pt@2x.png */,
+				F6B24A4A21DD658C00D09808 /* Gigatron_128pt@1x.png */,
+				F6B24A5021DD658D00D09808 /* Gigatron_128pt@2x.png */,
+				F6B24A4F21DD658D00D09808 /* Gigatron_256pt@1x.png */,
+				F6B24A5221DD658D00D09808 /* Gigatron_256pt@2x.png */,
+				F6B24A4D21DD658D00D09808 /* Gigatron_512pt@1x.png */,
+				F6B24A4E21DD658D00D09808 /* Gigatron_512pt@2x.png */,
+			);
+			path = Gigatron.icns;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F663610121A81488007AC860 /* Gigatron Mac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F663611321A8148A007AC860 /* Build configuration list for PBXNativeTarget "Gigatron Mac" */;
+			buildPhases = (
+				F66360FE21A81488007AC860 /* Sources */,
+				F66360FF21A81488007AC860 /* Frameworks */,
+				F663610021A81488007AC860 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Gigatron Mac";
+			productName = "Gigatron Simulator";
+			productReference = F663610221A81488007AC860 /* Gigatron Mac.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F66360FA21A81487007AC860 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1010;
+				ORGANIZATIONNAME = 640k.de;
+				TargetAttributes = {
+					F663610121A81488007AC860 = {
+						CreatedOnToolsVersion = 10.1;
+						SystemCapabilities = {
+							com.apple.HardenedRuntime = {
+								enabled = 1;
+							};
+							com.apple.Sandbox = {
+								enabled = 1;
+							};
+						};
+					};
+				};
+			};
+			buildConfigurationList = F66360FD21A81488007AC860 /* Build configuration list for PBXProject "Gigatron Mac" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = F66360F921A81487007AC860;
+			productRefGroup = F663610321A81488007AC860 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F663610121A81488007AC860 /* Gigatron Mac */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F663610021A81488007AC860 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F6B24A5821DD658D00D09808 /* Gigatron_512pt@2x.png in Resources */,
+				F6B24A5C21DD658D00D09808 /* Gigatron_256pt@2x.png in Resources */,
+				F657894C21EA775500812ECC /* CPUWindow.xib in Resources */,
+				F663610921A8148A007AC860 /* Assets.xcassets in Resources */,
+				F6B24A5521DD658D00D09808 /* Gigatron_16pt@2x.png in Resources */,
+				F6B24A5621DD658D00D09808 /* Gigatron_32pt@1x.png in Resources */,
+				F663610C21A8148A007AC860 /* MainMenu.xib in Resources */,
+				F6388DE521EDCB780098149B /* RAMGadgetWindow.xib in Resources */,
+				F6B24A5921DD658D00D09808 /* Gigatron_256pt@1x.png in Resources */,
+				F6B24A5B21DD658D00D09808 /* Gigatron_32pt@2x.png in Resources */,
+				F67BCC3921EE30FC00365AA2 /* LICENCE in Resources */,
+				F6B24A5A21DD658D00D09808 /* Gigatron_128pt@2x.png in Resources */,
+				F6F8101321A8A14F00E907DC /* ROMv3.rom in Resources */,
+				F6B24A5421DD658D00D09808 /* Gigatron_128pt@1x.png in Resources */,
+				F6B24A5721DD658D00D09808 /* Gigatron_512pt@1x.png in Resources */,
+				F6B24A5321DD658D00D09808 /* Gigatron_16pt@1x.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F66360FE21A81488007AC860 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F6388DE821EDCF020098149B /* RAMGadgetImageView.m in Sources */,
+				F6F4C20221E53DA500E913EB /* RAMWindow.m in Sources */,
+				F657894B21EA775500812ECC /* CPUWindow.m in Sources */,
+				F6388DE421EDCB780098149B /* RAMGadgetWindow.m in Sources */,
+				F6B24A2D21DD4FA600D09808 /* Gigatron.m in Sources */,
+				F6424C6721B6B344000D7E25 /* AQPlayer.m in Sources */,
+				F663610F21A8148A007AC860 /* main.m in Sources */,
+				F6F8101121A8907500E907DC /* GigatronImageView.m in Sources */,
+				F663610721A81488007AC860 /* AppDelegate.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		F663610A21A8148A007AC860 /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				F663610B21A8148A007AC860 /* Base */,
+			);
+			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		F663611121A8148A007AC860 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		F663611221A8148A007AC860 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		F663611421A8148A007AC860 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "Gigatron Mac/Gigatron Mac.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 9229Z54XG2;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "Gigatron Mac/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "de.640k.Gigatron-Mac";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		F663611521A8148A007AC860 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "Gigatron Mac/Gigatron Mac.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 9229Z54XG2;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "Gigatron Mac/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "de.640k.Gigatron-Mac";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F66360FD21A81488007AC860 /* Build configuration list for PBXProject "Gigatron Mac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F663611121A8148A007AC860 /* Debug */,
+				F663611221A8148A007AC860 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F663611321A8148A007AC860 /* Build configuration list for PBXNativeTarget "Gigatron Mac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F663611421A8148A007AC860 /* Debug */,
+				F663611521A8148A007AC860 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F66360FA21A81487007AC860 /* Project object */;
+}
