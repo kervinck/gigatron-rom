@@ -41,7 +41,7 @@ gigatron-rom
        |     +--- gcl1.ebnf     Formal definition of GCL1 syntax
        |     `--- EBNF.xhtml    Railroad diagram of GCL1 syntax
        +--- PhilThomas/         Javascript-based Gigatron emulator
-       +--- tbraun-de/          Pytron: Python port of gtemu.c
+       +--- tbraun-de/          Gigatron Mac and Python port of gtemu.c
        `--- xxxbxxx/            Bricks game; RPi port of BabelFish.ino
 ```
 
