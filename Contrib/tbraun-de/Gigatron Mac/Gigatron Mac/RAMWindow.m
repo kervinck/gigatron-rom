@@ -8,6 +8,7 @@
 #import <Foundation/Foundation.h>
 #import "RAMWindow.h"
 #import "Gigatron.h"
+#import "AppDelegate.h"
 
 @implementation RAMWindow
 
@@ -15,6 +16,7 @@
     NSRect windowRect = NSMakeRect( 200.0, 200.0, 580.0, 213.0 );
     self = [super initWithContentRect:windowRect styleMask:( NSWindowStyleMaskClosable | NSWindowStyleMaskTitled ) backing:NSBackingStoreBuffered defer:NO];
     [self setReleasedWhenClosed:true];
+    self.delegate = self;
     
     self.gigatron = myGigatron;
 
@@ -127,4 +129,10 @@
         [label setStringValue:[NSString stringWithFormat:@"0x%04X", self.page + (i<<5)]];
     }
 }
+
+- (void) windowWillClose:(NSNotification *)notification {
+    AppDelegate *delegate = [[NSApplication sharedApplication] delegate];
+    [delegate removeRamWindow:self];
+}
+
 @end

@@ -30,7 +30,7 @@
 #include <AudioToolbox/AudioQueue.h>
 
 #define NUM_BUFFERS     2
-#define BUFSIZE         12000
+#define BUFSIZE         16000
 #define SAMPLE_RATE     44100
 
 typedef struct AQCallbackStruct {

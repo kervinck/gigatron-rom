@@ -11,7 +11,7 @@
 #ifndef RAMWindow_h
 #define RAMWindow_h
 
-@interface RAMWindow : NSWindow
+@interface RAMWindow : NSWindow <NSWindowDelegate>
 
 @property (retain) Gigatron* gigatron;
 @property NSTextField *pageLabel;

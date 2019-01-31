@@ -15,11 +15,15 @@
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
 @property NSMutableArray *ramWindows;
+@property NSMutableArray *removedRamWindows;
 @property CPUWindow *cpuWindow;
 @property RAMGadgetWindow *ramGadgetWindow;
 @property NSDate *lastRefresh;
+@property float refreshInterval;
 
 - (void) updateLeds:(uint8_t) ledState;
 - (void) refreshWindows;
+- (void) removeRamWindow:(RAMWindow *)ramWindow;
+
 @end
 
