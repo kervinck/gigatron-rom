@@ -20,6 +20,7 @@
                 <outlet property="led2View" destination="Duj-kW-4ZO" id="hsb-CO-1nV"/>
                 <outlet property="led3View" destination="sgG-ci-6wi" id="zM9-n4-sUe"/>
                 <outlet property="led4View" destination="Ms0-2P-4YV" id="n4u-Kv-y1g"/>
+                <outlet property="refreshPopupButton" destination="rTS-40-6Wy" id="LTU-wD-mxr"/>
                 <outlet property="totalCycles" destination="mrc-4G-Ir0" id="Et6-oI-nLe"/>
             </connections>
         </customObject>
@@ -185,6 +186,15 @@
                                         <action selector="writeStateButtonPressed:" target="Voe-Tx-rLC" id="QrG-RO-AUe"/>
                                     </connections>
                                 </button>
+                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6Vj-mb-X1k">
+                                    <rect key="frame" x="235" y="21" width="51" height="17"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <textFieldCell key="cell" lineBreakMode="clipping" alignment="justified" title="Refresh" id="EKa-e1-kUy">
+                                        <font key="font" metaFont="system"/>
+                                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                </textField>
                             </subviews>
                         </view>
                     </box>
@@ -207,7 +217,7 @@
                                     </connections>
                                 </button>
                                 <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="XBk-AL-k9U">
-                                    <rect key="frame" x="133" y="13" width="103" height="19"/>
+                                    <rect key="frame" x="118" y="13" width="103" height="19"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <buttonCell key="cell" type="roundRect" title="CPU step (F5)" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="u9L-HU-DTI">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -218,7 +228,7 @@
                                     </connections>
                                 </button>
                                 <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="61f-KD-FwF">
-                                    <rect key="frame" x="244" y="13" width="101" height="19"/>
+                                    <rect key="frame" x="229" y="13" width="101" height="19"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <buttonCell key="cell" type="roundRect" title="vCPU step (F6)" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="UV6-3w-wig">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -229,7 +239,7 @@
                                     </connections>
                                 </button>
                                 <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5OW-uU-8Ph">
-                                    <rect key="frame" x="517" y="13" width="103" height="19"/>
+                                    <rect key="frame" x="526" y="13" width="103" height="19"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <buttonCell key="cell" type="roundRect" title="Add RAM watch" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="bJb-ii-Amn">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -240,7 +250,7 @@
                                     </connections>
                                 </button>
                                 <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="rxZ-Nb-TPn">
-                                    <rect key="frame" x="367" y="13" width="103" height="19"/>
+                                    <rect key="frame" x="335" y="13" width="103" height="19"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <buttonCell key="cell" type="roundRect" title="Continue" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="6Hh-Xf-f24">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -260,9 +270,36 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="anP-qQ-U6V">
-                                    <rect key="frame" x="131" y="35" width="80" height="13"/>
+                                    <rect key="frame" x="116" y="35" width="80" height="13"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <textFieldCell key="cell" lineBreakMode="clipping" title="∆ cycles 99999" id="C2B-7w-ZXa">
+                                        <font key="font" metaFont="system" size="10"/>
+                                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                </textField>
+                                <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="rTS-40-6Wy">
+                                    <rect key="frame" x="444" y="10" width="77" height="25"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <popUpButtonCell key="cell" type="push" title="0.1 s" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="jTk-m0-2oV" id="Hzv-6J-XKL">
+                                        <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                        <font key="font" metaFont="menu"/>
+                                        <menu key="menu" id="vmj-2s-DR5">
+                                            <items>
+                                                <menuItem title="0.1 s" id="jTk-m0-2oV"/>
+                                                <menuItem title="0.5 s" state="on" id="0BU-xT-oye"/>
+                                                <menuItem title="2 s" id="zhO-va-uyI"/>
+                                            </items>
+                                        </menu>
+                                    </popUpButtonCell>
+                                    <connections>
+                                        <action selector="refreshRateChanged:" target="Voe-Tx-rLC" id="Y06-eh-XFg"/>
+                                    </connections>
+                                </popUpButton>
+                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="izU-Go-34g">
+                                    <rect key="frame" x="444" y="35" width="80" height="13"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                    <textFieldCell key="cell" lineBreakMode="clipping" title="Window refresh" id="sb1-zt-5PM">
                                         <font key="font" metaFont="system" size="10"/>
                                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>

@@ -16,6 +16,8 @@
 @property (assign) IBOutlet NSImageView *led3View;
 @property (assign) IBOutlet NSImageView *led4View;
 
+@property (assign) IBOutlet NSPopUpButton *refreshPopupButton;
+
 @property (assign) IBOutlet NSTextField *totalCycles;
 @property (assign) IBOutlet NSTextField *deltaCycles;
 
@@ -28,6 +30,7 @@
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     // Insert code here to initialize your application
     self.ramWindows = [[NSMutableArray alloc] init];
+    self.removedRamWindows = [[NSMutableArray alloc] init];
     [NSTimer scheduledTimerWithTimeInterval:1.0f / 59.96f
              target:self.gigatronImageView selector:@selector(calculateFrame) userInfo:nil repeats:YES];
     [self.gigatronImageView.gigatron setVolume:75];
@@ -40,6 +43,8 @@
     self.ramGadgetWindow.gigatron = self.gigatronImageView.gigatron;
     [self.ramGadgetWindow showWindow:self];
 
+    [self.refreshPopupButton selectItem:[self.refreshPopupButton itemAtIndex:1]];
+    self.refreshInterval = 0.5;
     self.lastRefresh = [NSDate date];
     self.lastCycles = [self.gigatronImageView.gigatron cpuCyclesSinceReset];
 }
@@ -137,6 +142,22 @@
     }
 }
 
+- (IBAction) refreshRateChanged:(NSPopUpButton *)sender {
+    switch([sender indexOfSelectedItem]) {
+        case 0:
+            self.refreshInterval = 0.1;
+            break;
+        case 1:
+            self.refreshInterval = 0.5;
+            break;
+        case 2:
+            self.refreshInterval = 2;
+            break;
+        default:
+            break;
+    }
+}
+
 - (IBAction) ramWatchButtonPressed:(NSButton *)sender {
     RAMWindow *window = [ [ RAMWindow alloc ] initWithGigatron:[self.gigatronImageView gigatron]];
 
@@ -146,26 +167,47 @@
     [self.ramWindows addObject:window];
 }
 
+- (void) removeRamWindow:(RAMWindow *)ramWindow {
+    [self.removedRamWindows addObject:ramWindow];
+}
+
+
 - (IBAction) breakButtonPressed:(NSButton *)sender {
+    self.refreshInterval = 0;
     [self.gigatronImageView.gigatron pause];
 }
 
 - (IBAction) continueButtonPressed:(NSButton *)sender {
     [self.gigatronImageView.gigatron resume];
+    switch([self.refreshPopupButton indexOfSelectedItem]) {
+        case 0:
+            self.refreshInterval = 0.1;
+            break;
+        case 1:
+            self.refreshInterval = 0.5;
+            break;
+        case 2:
+            self.refreshInterval = 2;
+            break;
+        default:
+            break;
+    }
 }
 
 - (IBAction) stepCPUButtonPressed:(NSButton *)sender {
+    self.refreshInterval = 0;
     [self.gigatronImageView.gigatron singleStepCPU];
 }
 
 - (IBAction) stepvCPUButtonPressed:(NSButton *)sender {
+    self.refreshInterval = 0;
     [self.gigatronImageView.gigatron singleStepvCPU];
 }
 
 - (void) refreshWindows {
-    if([self.lastRefresh timeIntervalSinceNow] < -0.1) {
+    if([self.lastRefresh timeIntervalSinceNow] < 0 - self.refreshInterval) {
         for(RAMWindow *ramWindow in self.ramWindows) {
-            if([ramWindow isKindOfClass:[RAMWindow class]]) {
+            if(![self.removedRamWindows containsObject:ramWindow]) {
                 [ramWindow refresh];
             }
         }

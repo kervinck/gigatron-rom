@@ -357,9 +357,9 @@ BOOL singleStepCompleted = false;
                 int outputX = vgaX - 13;
                 if(outputX >= 0 && outputX < SCREEN_WIDTH && vgaY >= 0 && vgaY < SCREEN_HEIGHT) {
                     int pixelAddress = vgaY*SCREEN_WIDTH*4 + outputX*4;
-                    framebuffer[pixelAddress] = (S.OUT & 0x03) << 6;
-                    framebuffer[pixelAddress + 1] = (S.OUT & 0x0C) << 4;
-                    framebuffer[pixelAddress + 2] = (S.OUT & 0x30) << 2;
+                    framebuffer[pixelAddress] = (S.OUT & 0x03) * 85;
+                    framebuffer[pixelAddress + 1] = ((S.OUT & 0x0C) >> 2) * 85;
+                    framebuffer[pixelAddress + 2] = ((S.OUT & 0x30) >> 4) * 85;
                 }
             }
         }

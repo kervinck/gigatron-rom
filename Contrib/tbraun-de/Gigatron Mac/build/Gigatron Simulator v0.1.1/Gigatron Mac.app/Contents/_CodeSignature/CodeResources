@@ -10,15 +10,19 @@
 		</data>
 		<key>Resources/Assets.car</key>
 		<data>
-		58odcwc9/rN/MxSlLoOGAKa3rQk=
+		2NJOnzbUh+eh0hBgvq3MoJaQ/UI=
 		</data>
 		<key>Resources/Base.lproj/MainMenu.nib</key>
 		<data>
-		OraSRYjN5tmBMusFHGrnd2tlIeo=
+		JCk1J7iPPMD/mBkcdM8gE0ArihM=
+		</data>
+		<key>Resources/CHANGELOG</key>
+		<data>
+		EyQQy5lcFKRX9Znr62AWz6Sd44s=
 		</data>
 		<key>Resources/CPUWindow.nib</key>
 		<data>
-		Yo5laBnrg+b3GK/MWcdl/UkFlaI=
+		uUb1SzYmJDV9XAz9JKO/DYJLD6Q=
 		</data>
 		<key>Resources/Gigatron_128pt.tiff</key>
 		<data>
@@ -66,21 +70,28 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			+oFouIpU8AGXRYILLceGFOlE0P0hfAqY0yi6mAbtUXo=
+			ZOCVe179fJ/r93kCw9vG45bO7cIcw4JZNVduGPa25d8=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/MainMenu.nib</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			whWNve4U5uiwPBkT4b/lyoPFVWEe0QGQpkhDX4wLPHA=
+			qsR4E0CQT3jij061r8Mhj40iApBgHZj+ZdTG21tcR1A=
+			</data>
+		</dict>
+		<key>Resources/CHANGELOG</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			JZeaJU5mUWxsOtzqC0uCp2W4NGuYW6T3UKLFgNZTxGc=
 			</data>
 		</dict>
 		<key>Resources/CPUWindow.nib</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			fcosJzW2YeDVc2y1S4dMJxzeFToG5w8Sg73ohzy2MJo=
+			ztWKztckROLgBUl3rS42h/3jvtkKEGGTBmP0ep8/zew=
 			</data>
 		</dict>
 		<key>Resources/Gigatron_128pt.tiff</key>

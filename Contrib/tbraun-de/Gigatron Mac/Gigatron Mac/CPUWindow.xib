@@ -152,7 +152,7 @@
                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1uR-bf-ikj">
                                     <rect key="frame" x="18" y="117" width="41" height="17"/>
                                     <autoresizingMask key="autoresizingMask"/>
-                                    <textFieldCell key="cell" lineBreakMode="clipping" title="OUTX" id="kWq-yg-j2s">
+                                    <textFieldCell key="cell" lineBreakMode="clipping" title="XOUT" id="kWq-yg-j2s">
                                         <font key="font" metaFont="system"/>
                                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>

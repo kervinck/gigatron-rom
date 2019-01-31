@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F6312C0D2203894500D876EF /* CHANGELOG in Resources */ = {isa = PBXBuildFile; fileRef = F6312C0C2203894500D876EF /* CHANGELOG */; };
 		F6388DE421EDCB780098149B /* RAMGadgetWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = F6388DE221EDCB780098149B /* RAMGadgetWindow.m */; };
 		F6388DE521EDCB780098149B /* RAMGadgetWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = F6388DE321EDCB780098149B /* RAMGadgetWindow.xib */; };
 		F6388DE821EDCF020098149B /* RAMGadgetImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = F6388DE721EDCF020098149B /* RAMGadgetImageView.m */; };
@@ -36,6 +37,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		F6312C0C2203894500D876EF /* CHANGELOG */ = {isa = PBXFileReference; lastKnownFileType = text; path = CHANGELOG; sourceTree = "<group>"; };
 		F6388DE121EDCB780098149B /* RAMGadgetWindow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RAMGadgetWindow.h; sourceTree = "<group>"; };
 		F6388DE221EDCB780098149B /* RAMGadgetWindow.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RAMGadgetWindow.m; sourceTree = "<group>"; };
 		F6388DE321EDCB780098149B /* RAMGadgetWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = RAMGadgetWindow.xib; sourceTree = "<group>"; };
@@ -98,6 +100,7 @@
 		F66360F921A81487007AC860 = {
 			isa = PBXGroup;
 			children = (
+				F6312C0C2203894500D876EF /* CHANGELOG */,
 				F67BCC3821EE30FC00365AA2 /* LICENCE */,
 				F663610421A81488007AC860 /* Gigatron Mac */,
 				F663610321A81488007AC860 /* Products */,
@@ -244,6 +247,7 @@
 				F663610C21A8148A007AC860 /* MainMenu.xib in Resources */,
 				F6388DE521EDCB780098149B /* RAMGadgetWindow.xib in Resources */,
 				F6B24A5921DD658D00D09808 /* Gigatron_256pt@1x.png in Resources */,
+				F6312C0D2203894500D876EF /* CHANGELOG in Resources */,
 				F6B24A5B21DD658D00D09808 /* Gigatron_32pt@2x.png in Resources */,
 				F67BCC3921EE30FC00365AA2 /* LICENCE in Resources */,
 				F6B24A5A21DD658D00D09808 /* Gigatron_128pt@2x.png in Resources */,
