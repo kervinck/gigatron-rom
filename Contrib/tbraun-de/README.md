@@ -25,6 +25,17 @@ Known issues:
 - Due to the author not having written code for some years, the code could certainly be better in a lot of places ... :-)
 
 
+### gasm
+
+Gigatron assembly code. You need to first build at67's assembler (by using
+cmake in Contrib/at67) and then running e.g.
+```
+../../at67/tools/gtasm/gtasm ./maze.gasm 0x0200
+```
+ - maze.gasm : Every platform needs a maze builder, this is an iterative
+   implementation instead of a recursive one (our call stack is not that big...)
+
+
 ### Licence
 
 Copyright 2018-2019 Tobias Braun
