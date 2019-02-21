@@ -37,11 +37,12 @@ gigatron-rom
        |                        assembler, debugger, MIDI music, demos (sprites,
        |                        lines, game of life, tetris game...)
        +--- flok99/             Simple (and slow) visualizer using SDL2
+       +--- gigawalt/           Walter's script
        +--- kervinck/           Ramblings (all work in progress)
        |     +--- gcl1.ebnf     Formal definition of GCL1 syntax
        |     `--- EBNF.xhtml    Railroad diagram of GCL1 syntax
        +--- PhilThomas/         Javascript-based Gigatron emulator
-       +--- tbraun-de/          Gigatron Mac and Python port of gtemu.c
+       +--- tbraun-de/          Gigatron Mac; Python port of gtemu.c; maze.gt1
        `--- xxxbxxx/            Bricks game; RPi port of BabelFish.ino
 ```
 
