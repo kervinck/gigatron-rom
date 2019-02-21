@@ -1,0 +1,16 @@
+#!/bin/sh
+
+BABELSRC=/Users/walter/Desktop/gigatron/git/gigatron-rom/Utils/BabelFish
+
+# set fuse to 8MHz
+minipro -p attiny85 -w fuses.txt -c config
+
+# convert arduino sketch output to bin format
+if [ ! -f BabelFish.ino.tiny8.bin ]
+then
+  hex2bin $BABELSRC/BabelFish.ino.tiny8.hex
+  mv $BABELSRC/BabelFish.ino.tiny8.bin .
+fi
+
+# burn in attiny
+minipro -p attiny85 -w BabelFish.ino.tiny8.bin -s
