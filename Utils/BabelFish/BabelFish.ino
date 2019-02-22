@@ -553,7 +553,7 @@ void doVersion()
     Serial.print(": size=");
     Serial.print(EEPROM.length());
     Serial.print(" mapping=");
-    Serial.print(getKeymapName());
+    Serial.println(getKeymapName());
     Serial.println(":PROGMEM slots:");
     for (byte i=0; i<arrayLen(gt1Files); i++) {
       Serial.print(": P");
