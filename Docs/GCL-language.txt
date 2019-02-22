@@ -360,8 +360,6 @@ Addresses of SYS functions that are part of the ABI:
 04d4    SYS_Draw4_30            Copy 4 pixels to screen memory
 00f4    SYS_Out_22              Write byte to hardware OUT register
 00f9    SYS_In_24               Read byte from hardwar IN register
-02e9    SYS_NextByteIn_32       Receive next byte and put in load buffer
-06e7    SYS_PayloadCopy_34      Copy byte from load buffer to RAM destination
 
 Added in ROM v2:
 
@@ -378,10 +376,12 @@ Added in ROM v3:
 
 Application specific SYS calls in ROM v1 that are -not- part of the ABI:
 
-SYS_Read3_40               (Pictures)
-SYS_LoaderProcessInput_48  (Loader)
-SYS_RacerUpdateVideoX_40   (Racer)
-SYS_RacerUpdateVideoY_40   (Racer)
+SYS_Read3_40                    (Pictures)
+SYS_LoaderProcessInput_48       (Loader)
+SYS_LoaderNextByteIn_32         (Loader)
+SYS_LoaderPayloadCopy_34        (Loader)
+SYS_RacerUpdateVideoX_40        (Racer)
+SYS_RacerUpdateVideoY_40        (Racer)
 
 Retro-actively retired from ABI:
 SYS_Reset_36                    Soft reset (use vReset instead)

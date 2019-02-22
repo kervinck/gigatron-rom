@@ -226,8 +226,6 @@ Available since ROM v1:
 04d4    SYS_Draw4_30            Copy 4 pixels to screen memory
 00f4    SYS_Out_22              Write byte to hardware OUT register
 00f9    SYS_In_24               Read byte from hardware IN register
-02e9    SYS_NextByteIn_32       Receive next byte and put in load buffer
-06e7    SYS_PayloadCopy_34      Copy byte from load buffer to RAM destination
 
 Added in ROM v2:
 
