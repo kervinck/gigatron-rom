@@ -32,8 +32,17 @@ cmake in Contrib/at67) and then running e.g.
 ```
 ../../at67/tools/gtasm/gtasm ./maze.gasm 0x0200
 ```
- - maze.gasm : Every platform needs a maze builder, this is an iterative
-   implementation instead of a recursive one (our call stack is not that big...)
+- maze.gasm : Every platform needs a maze builder, this is an iterative
+  implementation instead of a recursive one (our call stack is not that big...)
+
+### tools
+
+- img2gasm.py : Reads an image (should be roughly in 4:3 format)
+  converts it to the gigatron color space and outputs a gigatron assembly program. The
+  resulting program can then be compiled and will be loaded directly into
+  video RAM. In order not to interfere with the loader itself, three lines
+  will be left out during loading and reconstructed from another memory area
+  after loading.   
 
 
 ### Licence
