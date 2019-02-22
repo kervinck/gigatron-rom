@@ -202,7 +202,7 @@ init_startpixel LDWI    vram                ; mark the start pixel as visited
 # maze calculation functions
 rand_dir        LDWI    SYS_Random_34              ; randomize a new direction
                 STW     0x22
-                SYS     34
+                SYS     253
                 LD      rand            
                 ANDI    0x03
                 ST      direction
