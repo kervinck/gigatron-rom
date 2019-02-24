@@ -87,18 +87,27 @@ Gigatron *gigatron;
     uint8_t mappedKey = 0x00;
     BOOL gamepadButton = true;
     
-    /*if(type == NSEventTypeKeyDown) {
+    if(type == NSEventTypeKeyDown) {
         NSLog(@"Pressed key %d", keyCode);
-    } else if(type == NSEventTypeKeyUp) {
+    } else if(type == NSEventTypeKeyUp) {
         NSLog(@"Released key %d", keyCode);
-    }*/
+    }
     
     switch(keyCode) {
         case 96: // F5
-            [gigatron singleStepCPU];
+            if(type == NSEventTypeKeyDown) {
+                [gigatron singleStepCPU];
+            }
             break;
         case 97: // F6
-            [gigatron singleStepvCPU];
+            if(type == NSEventTypeKeyDown) {
+                [gigatron singleStepvCPU];
+            }
+            break;
+        case 98: // F7
+            if(type == NSEventTypeKeyDown) {
+                [gigatron resume];
+            }
             break;
         case 126:  // Cursor UP
             mappedKey = BUTTON_UP; break;

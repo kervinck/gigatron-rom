@@ -186,15 +186,6 @@
                                         <action selector="writeStateButtonPressed:" target="Voe-Tx-rLC" id="QrG-RO-AUe"/>
                                     </connections>
                                 </button>
-                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6Vj-mb-X1k">
-                                    <rect key="frame" x="235" y="21" width="51" height="17"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <textFieldCell key="cell" lineBreakMode="clipping" alignment="justified" title="Refresh" id="EKa-e1-kUy">
-                                        <font key="font" metaFont="system"/>
-                                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
-                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                    </textFieldCell>
-                                </textField>
                             </subviews>
                         </view>
                     </box>
@@ -252,7 +243,7 @@
                                 <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="rxZ-Nb-TPn">
                                     <rect key="frame" x="335" y="13" width="103" height="19"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <buttonCell key="cell" type="roundRect" title="Continue" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="6Hh-Xf-f24">
+                                    <buttonCell key="cell" type="roundRect" title="Continue (F7)" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="6Hh-Xf-f24">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                         <font key="font" metaFont="cellTitle"/>
                                     </buttonCell>
@@ -281,13 +272,13 @@
                                 <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="rTS-40-6Wy">
                                     <rect key="frame" x="444" y="10" width="77" height="25"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <popUpButtonCell key="cell" type="push" title="0.1 s" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="jTk-m0-2oV" id="Hzv-6J-XKL">
+                                    <popUpButtonCell key="cell" type="push" title="0.1 s" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="jTk-m0-2oV" id="Hzv-6J-XKL">
                                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                         <font key="font" metaFont="menu"/>
                                         <menu key="menu" id="vmj-2s-DR5">
                                             <items>
-                                                <menuItem title="0.1 s" id="jTk-m0-2oV"/>
-                                                <menuItem title="0.5 s" state="on" id="0BU-xT-oye"/>
+                                                <menuItem title="0.1 s" state="on" id="jTk-m0-2oV"/>
+                                                <menuItem title="0.5 s" id="0BU-xT-oye"/>
                                                 <menuItem title="2 s" id="zhO-va-uyI"/>
                                             </items>
                                         </menu>

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
+        <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14460.31"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -8,6 +9,15 @@
         <customObject id="-2" userLabel="File's Owner" customClass="CPUWindow">
             <connections>
                 <outlet property="acLabel" destination="baY-sQ-1Wp" id="QjH-0O-0J2"/>
+                <outlet property="breakAtLabel" destination="ygK-gB-YTo" id="Sbc-e5-mdC"/>
+                <outlet property="breakAtTextField" destination="56k-fJ-EGX" id="0tP-Qu-BeX"/>
+                <outlet property="breakAtTextField1" destination="56k-fJ-EGX" id="En8-mS-qW1"/>
+                <outlet property="breakAtTextField2" destination="2CV-Tk-Idb" id="dp3-5M-9n9"/>
+                <outlet property="breakAtTextField3" destination="w8C-WQ-ThB" id="vY6-B8-wVE"/>
+                <outlet property="breakpointRadioButton1" destination="HCE-Ey-1E1" id="veu-Nl-03c"/>
+                <outlet property="breakpointRadioButton2" destination="Z7T-aQ-Paz" id="Z58-an-EV7"/>
+                <outlet property="breakpointRadioButton3" destination="tq2-qG-Vb5" id="yYa-Zj-xdK"/>
+                <outlet property="breakpointRadioButtonDisabled" destination="sxn-0b-pOo" id="Vfu-H3-3gB"/>
                 <outlet property="dLabel" destination="Ltv-9d-SvY" id="m9M-Xz-Yu2"/>
                 <outlet property="inLabel" destination="abe-7h-ktb" id="RH1-tV-jPf"/>
                 <outlet property="irLabel" destination="sbw-5n-xsh" id="xRn-0A-J6X"/>
@@ -407,6 +417,131 @@
                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                     </textFieldCell>
                                 </textField>
+                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ygK-gB-YTo">
+                                    <rect key="frame" x="18" y="132" width="112" height="17"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                    <textFieldCell key="cell" lineBreakMode="clipping" title="Break at:" id="NA4-Bh-eVz">
+                                        <font key="font" metaFont="system"/>
+                                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                </textField>
+                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="56k-fJ-EGX">
+                                    <rect key="frame" x="35" y="102" width="43" height="22"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" title="0200" placeholderString="0200" drawsBackground="YES" id="eLY-9q-3zB">
+                                        <font key="font" metaFont="system"/>
+                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                    <connections>
+                                        <action selector="textFieldValueChanged:" target="-2" id="wp6-rO-tIf"/>
+                                    </connections>
+                                </textField>
+                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="S2g-lS-t4u">
+                                    <rect key="frame" x="18" y="104" width="19" height="17"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                    <textFieldCell key="cell" lineBreakMode="clipping" title="0x" id="sbG-O0-1aF">
+                                        <font key="font" metaFont="system"/>
+                                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                </textField>
+                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2CV-Tk-Idb">
+                                    <rect key="frame" x="35" y="74" width="43" height="22"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" title="0300" placeholderString="0300" drawsBackground="YES" id="jPp-Ow-rSX">
+                                        <font key="font" metaFont="system"/>
+                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                    <connections>
+                                        <action selector="textFieldValueChanged:" target="-2" id="eT7-Kw-cey"/>
+                                    </connections>
+                                </textField>
+                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mZg-61-bmO">
+                                    <rect key="frame" x="18" y="76" width="19" height="17"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                    <textFieldCell key="cell" lineBreakMode="clipping" title="0x" id="aHH-mE-CF1">
+                                        <font key="font" metaFont="system"/>
+                                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                </textField>
+                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="w8C-WQ-ThB">
+                                    <rect key="frame" x="35" y="46" width="43" height="22"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" title="0400" placeholderString="0400" drawsBackground="YES" id="Qdn-aM-NY0">
+                                        <font key="font" metaFont="system"/>
+                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                    <connections>
+                                        <action selector="textFieldValueChanged:" target="-2" id="aLF-55-AWF"/>
+                                    </connections>
+                                </textField>
+                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="N8s-mQ-41P">
+                                    <rect key="frame" x="18" y="48" width="19" height="17"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                    <textFieldCell key="cell" lineBreakMode="clipping" title="0x" id="cpJ-5P-wRp">
+                                        <font key="font" metaFont="system"/>
+                                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                </textField>
+                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="crs-Jo-c71">
+                                    <rect key="frame" x="18" y="23" width="56" height="17"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                    <textFieldCell key="cell" lineBreakMode="clipping" title="disabled" id="hKn-Ol-hUG">
+                                        <font key="font" metaFont="system"/>
+                                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                </textField>
+                                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="HCE-Ey-1E1">
+                                    <rect key="frame" x="83" y="101" width="52" height="23"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <buttonCell key="cell" type="radio" bezelStyle="regularSquare" imagePosition="left" inset="2" id="ovs-uj-W3u">
+                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                        <font key="font" metaFont="system"/>
+                                    </buttonCell>
+                                    <connections>
+                                        <action selector="breakAtRadioButtonClicked:" target="-2" id="Nud-VN-VXh"/>
+                                    </connections>
+                                </button>
+                                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Z7T-aQ-Paz">
+                                    <rect key="frame" x="83" y="74" width="52" height="23"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <buttonCell key="cell" type="radio" bezelStyle="regularSquare" imagePosition="left" inset="2" id="pZ5-4p-1Nr">
+                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                        <font key="font" metaFont="system"/>
+                                    </buttonCell>
+                                    <connections>
+                                        <action selector="breakAtRadioButtonClicked:" target="-2" id="cjx-oR-hSD"/>
+                                    </connections>
+                                </button>
+                                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="tq2-qG-Vb5">
+                                    <rect key="frame" x="83" y="46" width="52" height="23"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <buttonCell key="cell" type="radio" bezelStyle="regularSquare" imagePosition="left" inset="2" id="cZ4-Ht-1h5">
+                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                        <font key="font" metaFont="system"/>
+                                    </buttonCell>
+                                    <connections>
+                                        <action selector="breakAtRadioButtonClicked:" target="-2" id="dF0-ea-wEL"/>
+                                    </connections>
+                                </button>
+                                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sxn-0b-pOo">
+                                    <rect key="frame" x="83" y="20" width="52" height="23"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <buttonCell key="cell" type="radio" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="v0U-Ur-vuf">
+                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                        <font key="font" metaFont="system"/>
+                                    </buttonCell>
+                                    <connections>
+                                        <action selector="breakAtRadioButtonClicked:" target="-2" id="Mrb-z1-l7n"/>
+                                    </connections>
+                                </button>
                             </subviews>
                         </view>
                     </box>

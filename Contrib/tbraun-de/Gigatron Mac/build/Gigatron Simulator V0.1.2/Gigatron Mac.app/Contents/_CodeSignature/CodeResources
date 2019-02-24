@@ -6,23 +6,23 @@
 	<dict>
 		<key>Resources/AppIcon.icns</key>
 		<data>
-		6w6O9s/RPUkQxrOi2lwEKbQN2uM=
+		dD1u0oXX7j0BS/42I7Se6DzEDMU=
 		</data>
 		<key>Resources/Assets.car</key>
 		<data>
-		2NJOnzbUh+eh0hBgvq3MoJaQ/UI=
+		Z5JKwkZKNQi8dxp6H30UWy21560=
 		</data>
 		<key>Resources/Base.lproj/MainMenu.nib</key>
 		<data>
-		JCk1J7iPPMD/mBkcdM8gE0ArihM=
+		KZRIURPfqM/Om5Wn4i5N2q5PD+w=
 		</data>
 		<key>Resources/CHANGELOG</key>
 		<data>
-		EyQQy5lcFKRX9Znr62AWz6Sd44s=
+		4gSNDjQ8uPM0spuzmrPGvSLP3Po=
 		</data>
 		<key>Resources/CPUWindow.nib</key>
 		<data>
-		uUb1SzYmJDV9XAz9JKO/DYJLD6Q=
+		3J8tdLHv6aaMEGPhydREHoz3etk=
 		</data>
 		<key>Resources/Gigatron_128pt.tiff</key>
 		<data>
@@ -50,7 +50,7 @@
 		</data>
 		<key>Resources/RAMGadgetWindow.nib</key>
 		<data>
-		KT6fU22ymLyLBbKmAYXeRx8z1qA=
+		inIwXJugH2f0lri+sferXY5ygpU=
 		</data>
 		<key>Resources/ROMv3.rom</key>
 		<data>
@@ -61,41 +61,65 @@
 	<dict>
 		<key>Resources/AppIcon.icns</key>
 		<dict>
+			<key>hash</key>
+			<data>
+			dD1u0oXX7j0BS/42I7Se6DzEDMU=
+			</data>
 			<key>hash2</key>
 			<data>
-			hPFRu81eCR4BFaRw8qB5jSrPvZ91FQWLIT/J9QRoyDU=
+			fzZiehT7x2Zu2g571edSE6ElfDCRFtJwFag/R+CkKjE=
 			</data>
 		</dict>
 		<key>Resources/Assets.car</key>
 		<dict>
+			<key>hash</key>
+			<data>
+			Z5JKwkZKNQi8dxp6H30UWy21560=
+			</data>
 			<key>hash2</key>
 			<data>
-			ZOCVe179fJ/r93kCw9vG45bO7cIcw4JZNVduGPa25d8=
+			hlyw7sL15qeYVK7FLMflF1h2inyC0WZ7qjR+HD9yjUk=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/MainMenu.nib</key>
 		<dict>
+			<key>hash</key>
+			<data>
+			KZRIURPfqM/Om5Wn4i5N2q5PD+w=
+			</data>
 			<key>hash2</key>
 			<data>
-			qsR4E0CQT3jij061r8Mhj40iApBgHZj+ZdTG21tcR1A=
+			eTm4FODx/ffGu29Clhp+FVOt536vesXyPkttzXpnVSk=
 			</data>
 		</dict>
 		<key>Resources/CHANGELOG</key>
 		<dict>
+			<key>hash</key>
+			<data>
+			4gSNDjQ8uPM0spuzmrPGvSLP3Po=
+			</data>
 			<key>hash2</key>
 			<data>
-			JZeaJU5mUWxsOtzqC0uCp2W4NGuYW6T3UKLFgNZTxGc=
+			MAUe/nvol4SdMiLtm9HkOyB0bqsQxiSuzwhNUMmKgiE=
 			</data>
 		</dict>
 		<key>Resources/CPUWindow.nib</key>
 		<dict>
+			<key>hash</key>
+			<data>
+			3J8tdLHv6aaMEGPhydREHoz3etk=
+			</data>
 			<key>hash2</key>
 			<data>
-			ztWKztckROLgBUl3rS42h/3jvtkKEGGTBmP0ep8/zew=
+			fuAG4BrGSlpXYDRICkbyJnUQO8qQw17i+8q1LWl+8yU=
 			</data>
 		</dict>
 		<key>Resources/Gigatron_128pt.tiff</key>
 		<dict>
+			<key>hash</key>
+			<data>
+			YFCjdwz6PnvT1VgSvox3Tx8SPG4=
+			</data>
 			<key>hash2</key>
 			<data>
 			PpIDTm3UjU3zKkSX/WdOI4KggnANLjTOThEJ3RZxg3Q=
@@ -103,6 +127,10 @@
 		</dict>
 		<key>Resources/Gigatron_16pt.tiff</key>
 		<dict>
+			<key>hash</key>
+			<data>
+			wQfZqwI/fp9iumUUl6dfiOO3q8k=
+			</data>
 			<key>hash2</key>
 			<data>
 			EyDSuyvAqeEGkEb8rgjjxsimnJ6RcAUNbotOXV+HLuY=
@@ -110,6 +138,10 @@
 		</dict>
 		<key>Resources/Gigatron_256pt.tiff</key>
 		<dict>
+			<key>hash</key>
+			<data>
+			zHy/S2BAn8jAuxZvglz8Yz8ru7o=
+			</data>
 			<key>hash2</key>
 			<data>
 			f9Bv73NrmVD91sWCU8htpNxIt0onD4liCBD8b7ce0PM=
@@ -117,6 +149,10 @@
 		</dict>
 		<key>Resources/Gigatron_32pt.tiff</key>
 		<dict>
+			<key>hash</key>
+			<data>
+			wvCoDiq1P1nQv4r92sNnYYqMB4o=
+			</data>
 			<key>hash2</key>
 			<data>
 			wOH9/eG5S0yvjU8RuHfMKcNVm5XfZ+FcmPb4Dx7QOfY=
@@ -124,6 +160,10 @@
 		</dict>
 		<key>Resources/Gigatron_512pt.tiff</key>
 		<dict>
+			<key>hash</key>
+			<data>
+			Hex5ma8HvaacVFLfp0JSfp2vPoo=
+			</data>
 			<key>hash2</key>
 			<data>
 			taOyB7EKobdQLcOh9BY2P9tSRXtC5/ryFMb2Ifs4TJ0=
@@ -131,6 +171,10 @@
 		</dict>
 		<key>Resources/LICENCE</key>
 		<dict>
+			<key>hash</key>
+			<data>
+			00dKqqNnyKrKJqZxizsfXhATnAc=
+			</data>
 			<key>hash2</key>
 			<data>
 			FlqVcf3KqqcLenGVGYDPCl9AKjb2mDebTwCR6t6S0zE=
@@ -138,13 +182,21 @@
 		</dict>
 		<key>Resources/RAMGadgetWindow.nib</key>
 		<dict>
+			<key>hash</key>
+			<data>
+			inIwXJugH2f0lri+sferXY5ygpU=
+			</data>
 			<key>hash2</key>
 			<data>
-			i+6J503LZH6F73RmhZzgneoIeDFIi1sY7Bo9qM+NpWY=
+			rNyIo1a0TNZIPzbY/heYpbPW0i1ZeJ0RV0F2vyVitKw=
 			</data>
 		</dict>
 		<key>Resources/ROMv3.rom</key>
 		<dict>
+			<key>hash</key>
+			<data>
+			lZJoBp52GgHWIDlu7bmrwe5jxCE=
+			</data>
 			<key>hash2</key>
 			<data>
 			m2O8HS7vwiUgk2mOA04Y8JzQE9T8xCewjubLmsJNifI=
