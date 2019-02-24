@@ -286,6 +286,8 @@ BOOL singleStepCompleted = false;
     singleSteppingvCPU = false;
     singleSteppingCPU = false;
     singleStepCompleted = false;
+    AppDelegate *delegate = [[NSApplication sharedApplication] delegate];
+    [delegate updateGigatronRefreshFromNSPopupButton];
     [player startPlaying];
 }
 
@@ -324,10 +326,19 @@ BOOL singleStepCompleted = false;
                    S.PC, ROM[S.PC].instruction, ROM[S.PC].operand, S.IR, S.D, S.AC, S.X, S.Y, S.OUT, S.undef);
         }
         
-        if((RAM[0x17] << 8 | RAM[0x16]) != oldVirtualProgramCounter) {
+        int newVirtualProgramCounter = RAM[0x17] << 8 | RAM[0x16];
+        if(newVirtualProgramCounter != oldVirtualProgramCounter) {
             // program counter in our virtual CPU changed
             if(debugVCPU) {
                 [self logVpcState];
+            }
+            if(self.breakAddress == newVirtualProgramCounter) {
+                singleSteppingCPU = NO;
+                singleSteppingvCPU = YES;
+                singleStepCompleted = YES;
+                AppDelegate *delegate = [[NSApplication sharedApplication] delegate];
+                delegate.wasRunning = NO;
+                delegate.refreshInterval = 0;
             }
             if(singleSteppingvCPU) {
                 singleStepCompleted = YES;

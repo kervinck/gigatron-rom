@@ -24,6 +24,7 @@ typedef struct {
 @property (readonly) const int screenHeight;
 @property (readonly) Byte* framebuffer;
 @property (assign) uint8_t InRegister;
+@property (assign) int breakAddress;
 
 - (id) initWithROMFile:(NSString *)romFile;
 - (void) calculateFrame;

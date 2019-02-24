@@ -9,7 +9,6 @@
 
 @interface AppDelegate ()
 
-@property (assign) IBOutlet GigatronImageView *gigatronImageView;
 
 @property (assign) IBOutlet NSImageView *led1View;
 @property (assign) IBOutlet NSImageView *led2View;
@@ -34,6 +33,7 @@
     [NSTimer scheduledTimerWithTimeInterval:1.0f / 59.96f
              target:self.gigatronImageView selector:@selector(calculateFrame) userInfo:nil repeats:YES];
     [self.gigatronImageView.gigatron setVolume:75];
+    self.wasRunning = YES;
     
     self.cpuWindow = [[CPUWindow alloc] initWithWindowNibName:@"CPUWindow"];
     self.cpuWindow.gigatron = self.gigatronImageView.gigatron;
@@ -54,11 +54,16 @@
 }
 
 - (void) applicationDidResignActive:(NSNotification *)notification {
-    [self.gigatronImageView.gigatron pause];
+    if(self.wasRunning) {
+        [self.gigatronImageView.gigatron pause];
+    }
 }
 
 - (void) applicationDidBecomeActive:(NSNotification *)notification {
-    [self.gigatronImageView.gigatron resume];
+    if(self.wasRunning) {
+        [self.gigatronImageView.gigatron resume];
+        [self updateGigatronRefreshFromNSPopupButton];
+    }
     [[self.gigatronImageView window] makeFirstResponder:self.gigatronImageView];
 }
 
@@ -143,19 +148,7 @@
 }
 
 - (IBAction) refreshRateChanged:(NSPopUpButton *)sender {
-    switch([sender indexOfSelectedItem]) {
-        case 0:
-            self.refreshInterval = 0.1;
-            break;
-        case 1:
-            self.refreshInterval = 0.5;
-            break;
-        case 2:
-            self.refreshInterval = 2;
-            break;
-        default:
-            break;
-    }
+    [self updateGigatronRefreshFromNSPopupButton];
 }
 
 - (IBAction) ramWatchButtonPressed:(NSButton *)sender {
@@ -174,11 +167,17 @@
 
 - (IBAction) breakButtonPressed:(NSButton *)sender {
     self.refreshInterval = 0;
+    self.wasRunning = NO;
     [self.gigatronImageView.gigatron pause];
 }
 
 - (IBAction) continueButtonPressed:(NSButton *)sender {
+    [self updateGigatronRefreshFromNSPopupButton];
+    self.wasRunning = NO;
     [self.gigatronImageView.gigatron resume];
+}
+
+- (void) updateGigatronRefreshFromNSPopupButton {
     switch([self.refreshPopupButton indexOfSelectedItem]) {
         case 0:
             self.refreshInterval = 0.1;
@@ -196,11 +195,13 @@
 
 - (IBAction) stepCPUButtonPressed:(NSButton *)sender {
     self.refreshInterval = 0;
+    self.wasRunning = NO;
     [self.gigatronImageView.gigatron singleStepCPU];
 }
 
 - (IBAction) stepvCPUButtonPressed:(NSButton *)sender {
     self.refreshInterval = 0;
+    self.wasRunning = NO;
     [self.gigatronImageView.gigatron singleStepvCPU];
 }
 
