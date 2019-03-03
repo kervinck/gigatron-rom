@@ -32,10 +32,11 @@ gigatron-rom
  |     +--- TinyBASIC.ebnf      Formal definition of Gigatron TinyBASIC syntax
  |     `--- TinyBASIC.xhtml     Railroad diagram of Gigatron TinyBASIC syntax
  |
- `--- Contrib/                  Contributions outside the kit's ROM and tooling
+ `--- Contrib/                  Contributions outside the kit's ROM and tooling:
        +--- at67/               Emulator/visualizer (SDL2), 8-bit/16-bit
        |                        assembler, debugger, MIDI music, demos (sprites,
-       |                        lines, game of life, tetris game...)
+       |                        lines, game of life, Tetronis game...)
+       +--- Cwiiis              Gigatris game
        +--- flok99/             Simple (and slow) visualizer using SDL2
        +--- gigawalt/           Walter's script
        +--- kervinck/           Ramblings (all work in progress)
