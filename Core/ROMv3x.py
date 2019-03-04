@@ -42,11 +42,26 @@
 #  DONE Replace Easter egg
 #  DONE Update version number to v3
 #
-#  Ideas for ROM v4+
+#  ROM v4:
+#  XXX Support SPI and RAM expander
+#  XXX - asm.py: 'ctrl' instruction
+#  XXX - Setup SPI at power-on
+#  XXX - Detect banking, 64K and 128K
+#  XXX - SYS Exchange bytes
+#  XXX - SYS Exchange bits
+#  XXX - SYS Enable/disable slave
+#  XXX - SYS setBank
+#  XXX - Think about SPI modes
+#  XXX #38 Press [A] to start program" message is stupid
+#  XXX #41 Fix zero page usage in Bricks and Tetronis
+#  XXX #52 Head-only Snake shouldn't be allowed to turn around
+#  XXX Better noise by changing wavX every frame (for at least 1 sound channel)
+#
+#  Ideas for ROM v5+
 #  XXX SYS function for plotting a full character
 #  XXX Sprites by scan line 4 reset method? ("videoG"=graphics)
 #  XXX Need keymaps in ROM? (perhaps undocumented if not tested)
-#  XXX Gigatris, FrogStroll (not in Contrib/)
+#  XXX FrogStroll (not in Contrib/)
 #  XXX How it works memo: brief description of every software function
 #  XXX Music sequencer (combined with LED sequencer, but retire soundTimer???)
 #  XXX Adjustable return for LUP trampolines (in case SYS functions need it)
@@ -58,6 +73,7 @@
 #  XXX Scoping for variables or some form of local variables? $i ("localized")
 #  XXX Simple GCL programs might be compiled by the host instead of offline?
 #  XXX vCPU: Clear just vAC[0:7] (Workaround is not bad: |255 ^255)
+
 #-----------------------------------------------------------------------
 
 from sys import argv
