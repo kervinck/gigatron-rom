@@ -56,6 +56,7 @@
 #  XXX #41 Fix zero page usage in Bricks and Tetronis
 #  XXX #52 Head-only Snake shouldn't be allowed to turn around
 #  XXX Better noise by changing wavX every frame (for at least 1 sound channel)
+#  XXX GCL: Direct ASCII support
 #
 #  Ideas for ROM v5+
 #  XXX SYS function for plotting a full character

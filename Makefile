@@ -64,7 +64,7 @@ $(DEV).rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/WozMon_v2.gt1\
 		Apps/Sprites_v1.gt1\
 		Apps/Main_v3.gcl\
-		Core/Reset_v3.gcl
+		Core/Reset_v4.gcl
 
 run: Docs/gtemu $(DEV).rom
 	Docs/gtemu $(DEV).rom
