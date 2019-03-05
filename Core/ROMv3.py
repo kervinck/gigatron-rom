@@ -2859,7 +2859,7 @@ st([vPC])                       #21
 ld(-28/2)                       #22
 ld(hi('REENTER'), Y)            #23
 jmpy('REENTER')                 #24
-#nop()                          #(25)
+nop()                           #25
 
 #-----------------------------------------------------------------------
 #
@@ -3254,7 +3254,7 @@ for i in xrange(0, len(raw), 3):
 # sysArgs[5:6] Destination address
 
 label('SYS_LoaderProcessInput_48')
-ld([sysArgs+1], Y)              #15,25 (overlap with SYS_LoaderNextByteIn_32)
+ld([sysArgs+1], Y)              #15
 ld([sysArgs+2])                 #16
 bne('.sysPi0')                  #17
 ld([sysArgs+0])                 #18
