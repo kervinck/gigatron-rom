@@ -1,0 +1,10 @@
+'Draw filled circle with
+'LINE statements
+10 x=80:y=60:u=45:'Radius
+20 cls:v=0:w=0
+30 at x-u,y-v:line u+u,0
+40 at x-u,y+v:line u+u,0
+50 w=w+v+v+1:v=v+1
+60 if w<0 goto 30
+70 w=w-u-u+1:u=u-1
+80 if u>0 goto 60
