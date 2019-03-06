@@ -35,6 +35,13 @@ import json
 #       label('loop')           loop:
 #       bne('loop')                     bne  loop
 #       bra([AC])                       bra  [ac]
+#       ctrl(0x30)                      ctrl $30
+#       ctrl(X)                         ctrl x
+#       ctrl(Y, 0x30)                   ctrl y,$30
+#       ctrl(Y, X)                      ctrl y,x
+#       ctrl(Y, Xpp)                    ctrl y,x++
+#       ctrl($30, X)                    ctrl $30,x      ; Also copies AC into X
+#       ctrl($30, Y)                    ctrl $30,y      ; Also copies AC into Y
 
 X   = '__x__'
 Y   = '__y__'
@@ -62,6 +69,9 @@ def bra (a):              _assemble(_opJ|_jS,  a)
 def st  (a, b=None, c=None):
   if isinstance(a, list): _assemble(_opST, AC, b, a)
   else:                   _assemble(_opST, a,  c, b)
+def ctrl(a, b=None):
+  if a in [X, Y] and b:   _assemble(_opST|_busRAM, [a, b], None)
+  else:                   _assemble(_opST|_busRAM, [a], b)
 
 bpl = bge # Alias
 bmi = blt # Alias
@@ -328,7 +338,7 @@ def disassemble(opcode, operand, address=None):
 
   # Decode bus mode (74LS139)
   if opcode & _maskBus == _busD:   bus = _hexString(operand)
-  if opcode & _maskBus == _busRAM: bus = '$??' if isStore else _ea
+  if opcode & _maskBus == _busRAM: bus = None if isStore else _ea
   if opcode & _maskBus == _busAC:  bus = 'ac'
   if opcode & _maskBus == _busIN:  bus = 'in'
 
@@ -361,6 +371,8 @@ def disassemble(opcode, operand, address=None):
         text = '%-4s %s' % (text, _ea)
       else:
         text = '%-4s %s,%s' % (text, bus, _ea)
+      if bus is None:                  # Write/read combination means I/O control
+         text = 'ctrl %s' % _ea[1:-1]  # Strip the brackets
       if reg != 'ac' and reg != 'out': # X and Y are not muted
         text += ',' + reg
     else:
