@@ -44,13 +44,8 @@
 #
 #  ROM v4:
 #  XXX Support SPI and RAM expander
-#  XXX - asm.py: 'ctrl' instruction
-#  XXX - Setup SPI at power-on
-#  XXX - Detect banking, 64K and 128K
-#  XXX - SYS Exchange bytes
-#  XXX - SYS Exchange bits
-#  XXX - SYS Enable/disable slave
-#  XXX - SYS setBank
+#  XXX - Auto-detect banking, 64K and 128K
+#  XXX - SYS Transfer (bit or bits)
 #  XXX - Think about SPI modes
 #  XXX #38 Press [A] to start program" message is stupid
 #  XXX #41 Fix zero page usage in Bricks and Tetronis
@@ -90,6 +85,7 @@ loadBindings('interface.json')
 
 # ROM type (see also Docs/GT1-files.txt)
 romTypeValue = symbol('romTypeValue_ROMv3')
+romTypeValue += 1 # TODO: Change to ROMv4
 
 # Gigatron clock
 cpuClock = 6.250e+06
@@ -243,6 +239,10 @@ ledTempo        = zpByte() # Next value for ledTimer after LED state change
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 userVars        = zpByte(0)
 
+# TODO: Give this an address < 0x30
+zpReset(0x81)
+ctrlBits        = zpByte()
+
 #-----------------------------------------------------------------------
 #
 #  RAM page 1: video line table
@@ -325,6 +325,11 @@ align(0x100, 0x100)
 ld(0b0000);                     C('LEDs |OOOO|')
 ld(syncBits^hSync, OUT)         # Prepare XOUT update, hSync goes down, RGB to black
 ld(syncBits, OUT)               # hSync goes up, updating XOUT
+
+# Setup I/O and RAM expander
+ld(0b01111100);                 C('Disable SPI slaves; Enable RAM; Select bank 1')
+st([ctrlBits], X);
+ctrl(X)
 
 # Simple RAM test and size check by writing to [1<<n] and see if [0] changes.
 ld(1);                          C('RAM test and count')
@@ -518,9 +523,6 @@ jmpy('vBlankStart')
 ld(syncBits)
 
 # Fillers
-nop()
-nop()
-nop()
 nop()
 nop()
 
@@ -2499,11 +2501,16 @@ ld([videoY])                    #15
 bra('sys_SendSerial1')          #16
 xora(videoYline0)               #17 First line of vertical blank
 
+label('SYS_Control_v3x_40')
+ld(hi('sys_Control_v3x_40'),Y)  #15
+jmpy('sys_Control_v3x_40')      #16
+ld([vAC])                       #17
+
 #label('SYS_SendSerial2_vX_110')
 #ld([videoY])                    #15
 #bra('sys_SendSerial2')          #16
 #xora(videoYline1)               #17 line0 doesn't have enough guranteed cycles
-ld(hi('REENTER'), Y)            #15 slot 0xb09
+ld(hi('REENTER'), Y)            #15 slot 0xb0c
 jmpy('REENTER')                 #16
 ld(-20/2)                       #17
 
@@ -2517,10 +2524,6 @@ ld(-20/2)                       #17
 # before a function, or by overdeclaring them in the first place. This
 # last method doesn't even cost space (initially).
 #-----------------------------------------------------------------------
-
-ld(hi('REENTER'), Y)            #15 slot 0xb0c
-jmpy('REENTER')                 #16
-ld(-20/2)                       #17
 
 ld(hi('REENTER'), Y)            #15 slot 0xb0f
 jmpy('REENTER')                 #16
@@ -2876,7 +2879,7 @@ st([vPC])                       #21
 ld(-28/2)                       #22
 ld(hi('REENTER'), Y)            #23
 jmpy('REENTER')                 #24
-#nop()                          #(25)
+nop()                           #25
 
 #-----------------------------------------------------------------------
 #
@@ -3199,6 +3202,88 @@ ld(-62/2)                       #59
 align(1)                        # Resets size limit
 
 #-----------------------------------------------------------------------
+# Extension SYS_Control
+# Extension SYS_SpiTransferBytes
+#-----------------------------------------------------------------------
+
+# Variables:
+#       sysArgs[0]      Page index start, for both send/receive (input, modified)
+#       sysArgs[1]      Memory page for send data (input)
+#       sysArgs[2]      Page index stop (input)
+#       sysArgs[3]      Memory page for receive data (input)
+
+align(0x100)
+
+label('SYS_SpiTransferBytes_v3x_130')
+
+ld([sysArgs+0], X);             C('Fetch byte to send')#15
+ld([sysArgs+1], Y)              #16
+ld([Y,X])                       #17
+
+st([vTmp], Y);                  C('Bit 7')#18
+for i in range(8):
+  a, b =                        '.sysST%da' % i, '.sysST%db' % i
+  ld([ctrlBits], X);            #19+i*12
+  ctrl(Y, Xpp);                 C('Set MOSI')#20+i*12
+  ctrl(Y, Xpp);                 C('Raise SCLK')#21+i*12
+  ld([0]);                      C('Get MISO')#22+i*12
+  anda(0b00001111);             #23+i*12
+  beq(a)                        #24+i*12
+  label(a)
+  bra(b)                        #25+i*12,26+i*12
+  ld(1)                         #26+i*12
+  label(b)
+  ctrl(Y, X);                   C('Lower SCLK')#27+i*12
+  adda([vTmp]);                 C('Shift')#28+i*12
+  adda([vTmp])                  #29+i*12
+  if i < 7:
+    st([vTmp], Y);              C('Bit %d' % (6-i))#30+i*12
+
+ld([sysArgs+0], X);             C('Store received byte')#114
+ld([sysArgs+3], Y)              #115
+st([Y,X])                       #116
+
+ld([sysArgs+0]);                C('Advance pointer')#117
+adda(1)                         #118
+st([sysArgs+0])                 #119
+
+xora([sysArgs+2]);              C('Reached end?')#120
+beq('.sysST8')                  #121
+
+ld([vPC]);                      C('Self-repeating SYS call')#122
+suba(2)                         #123
+st([vPC])                       #124
+ld(hi('REENTER'), Y)            #125
+jmpy('REENTER')                 #126
+ld(-130/2)                      #127
+
+label('.sysST8')
+ld(hi('REENTER'), Y);           C('Continue program')#123
+ld(-128/2)                      #124
+jmpy('REENTER')                 #125
+
+#-----------------------------------------------------------------------
+
+label('sys_Control_v3x_40')
+
+anda(0b11111100);               C('Safety (SCLK=0)')#18
+st([ctrlBits], X);              C('Set control register')#19
+ld([vAC+1], Y)                  #20 For MOSI (A15)
+ctrl(Y, X);                     #21
+
+ld([sysArgs+3]);                C('Prepare SYS_SpiTransferBytes')#22
+bne('.sysCtrl0')                #23
+label('.sysCtrl0')
+bra('.sysCtrl1')                #24,25
+adda([sysArgs+1])               #25
+label('.sysCtrl1')
+st([sysArgs+3])                 #26
+
+ld(hi('REENTER'), Y)            #27
+jmpy('REENTER')                 #28
+ld(-32/2)                       #29
+
+#-----------------------------------------------------------------------
 #  Built-in full resolution images
 #-----------------------------------------------------------------------
 
@@ -3271,7 +3356,7 @@ for i in xrange(0, len(raw), 3):
 # sysArgs[5:6] Destination address
 
 label('SYS_LoaderProcessInput_48')
-ld([sysArgs+1], Y)              #15,25 (overlap with SYS_LoaderNextByteIn_32)
+ld([sysArgs+1], Y)              #15
 ld([sysArgs+2])                 #16
 bne('.sysPi0')                  #17
 ld([sysArgs+0])                 #18
