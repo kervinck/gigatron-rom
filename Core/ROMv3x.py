@@ -328,7 +328,7 @@ ld(syncBits, OUT)               # hSync goes up, updating XOUT
 
 # Setup I/O and RAM expander
 ld(0b01111100);                 C('Disable SPI slaves; Enable RAM; Select bank 1')
-st([ctrlBits], X);
+st([ctrlBits], X)
 ctrl(X)
 
 # Simple RAM test and size check by writing to [1<<n] and see if [0] changes.
@@ -3266,22 +3266,24 @@ ld(-128/2)                      #125
 
 label('sys_Control_v3x_40')
 
-anda(0b11111100);               C('Safety (SCLK=0)')#18
-st([ctrlBits], X);              C('Set control register')#19
-ld([vAC+1], Y)                  #20 For MOSI (A15)
-ctrl(Y, X);                     #21
+ld([vAC])                       #18
+anda(0b11111100);               C('Safety (SCLK=0)')#19
+st([ctrlBits], X);              C('Set control register')#20
+ld([vAC+1], Y)                  #21 For MOSI (A15)
+ctrl(Y, X);                     #22
 
-ld([sysArgs+3]);                C('Prepare SYS_SpiTransferBytes')#22
-bne('.sysCtrl0')                #23
+ld([sysArgs+3]);                C('Prepare SYS_SpiTransferBytes')#23
+bne('.sysCtrl0')                #24
 label('.sysCtrl0')
-bra('.sysCtrl1')                #24,25
-adda([sysArgs+1])               #25
+bra('.sysCtrl1')                #25,26
+ld([sysArgs+1])                 #26
 label('.sysCtrl1')
-st([sysArgs+3])                 #26
+st([sysArgs+3])                 #27
 
-ld(hi('REENTER'), Y)            #27
-jmpy('REENTER')                 #28
-ld(-32/2)                       #29
+nop()                           #28
+ld(hi('REENTER'), Y)            #29
+jmpy('REENTER')                 #30
+ld(-34/2)                       #31
 
 #-----------------------------------------------------------------------
 #  Built-in full resolution images
