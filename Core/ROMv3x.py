@@ -44,9 +44,13 @@
 #
 #  ROM v4:
 #  XXX Support SPI and RAM expander
-#  XXX - Auto-detect banking, 64K and 128K
-#  XXX - SYS Transfer (bit or bits)
+#  DONE - Setup SPI at power-on
+#  DONE - asm.py: 'ctrl' instruction
+#  DONE - SYS control (Enable/disable slave, set bank etc)
+#  DONE - SYS Exchange bytes
+#  XXX - SYS Exchange bit(s)
 #  XXX - Think about SPI modes
+#  XXX - Auto-detect banking, 64K and 128K
 #  XXX #38 Press [A] to start program" message is stupid
 #  XXX #41 Fix zero page usage in Bricks and Tetronis
 #  XXX #52 Head-only Snake shouldn't be allowed to turn around
@@ -327,9 +331,9 @@ ld(syncBits^hSync, OUT)         # Prepare XOUT update, hSync goes down, RGB to b
 ld(syncBits, OUT)               # hSync goes up, updating XOUT
 
 # Setup I/O and RAM expander
-ld(0b01111100);                 C('Disable SPI slaves; Enable RAM; Select bank 1')
-st([ctrlBits], X)
-ctrl(X)
+ctrl(0b01111100);               C('SCLK=0; Disable SPI slaves; Bank=1; Enable RAM')
+ld(  0b01111100)                # Keep copy in zero page
+st([ctrlBits])
 
 # Simple RAM test and size check by writing to [1<<n] and see if [0] changes.
 ld(1);                          C('RAM test and count')
@@ -1856,12 +1860,17 @@ ld(-26/2)                       #23
 #
 #  vCPU extension functions (for acceleration and compaction) follow below.
 #
-#  The naming convention is: SYS_<CamelCase>_<N>
+#  The naming convention is: SYS_<CamelCase>_[v<V>]_<N>
 #
 #  With <N> the maximum number of cycles the function will run
 #  (counted from NEXT to NEXT). This is the same number that must
 #  be passed to the 'SYS' vCPU instruction as operand, and it will
 #  appear in the GCL code upon use.
+#
+#  If a SYS extension got introduced after ROM v1, the version number of
+#  introduction is included in the name. This helps the programmer to be
+#  reminded to verify the acutal ROM version and fail gracefully on older
+#  ROMs than required. See also Docs/GT1-files.txt on using [romType].
 #
 #-----------------------------------------------------------------------
 
@@ -3220,24 +3229,21 @@ ld([sysArgs+0], X);             C('Fetch byte to send')#15
 ld([sysArgs+1], Y)              #16
 ld([Y,X])                       #17
 
-st([vTmp], Y);                  C('Bit 7')#18
 for i in range(8):
-  a, b =                        '.sysST%da' % i, '.sysST%db' % i
+  a = '.sysST%d' % i
+  st([vTmp], Y);                C('Bit %d' % (7-i))#18+i*12
   ld([ctrlBits], X);            #19+i*12
   ctrl(Y, Xpp);                 C('Set MOSI')#20+i*12
   ctrl(Y, Xpp);                 C('Raise SCLK')#21+i*12
   ld([0]);                      C('Get MISO')#22+i*12
   anda(0b00001111);             #23+i*12
   beq(a)                        #24+i*12
-  label(a)
-  bra(b)                        #25+i*12,26+i*12
+  bra(a)                        #25+i*12
   ld(1)                         #26+i*12
-  label(b)
-  ctrl(Y, X);                   C('Lower SCLK')#27+i*12
+  label(a)
+  ctrl(Y, X);                   C('Lower SCLK')#26+i*12,27+i*12 (must be idempotent)
   adda([vTmp]);                 C('Shift')#28+i*12
   adda([vTmp])                  #29+i*12
-  if i < 7:
-    st([vTmp], Y);              C('Bit %d' % (6-i))#30+i*12
 
 ld([sysArgs+0], X);             C('Store received byte')#114
 ld([sysArgs+3], Y)              #115
@@ -3274,11 +3280,10 @@ ctrl(Y, X);                     #22
 
 ld([sysArgs+3]);                C('Prepare SYS_SpiTransferBytes')#23
 bne('.sysCtrl0')                #24
-label('.sysCtrl0')
-bra('.sysCtrl1')                #25,26
+bra('.sysCtrl0')                #25
 ld([sysArgs+1])                 #26
-label('.sysCtrl1')
-st([sysArgs+3])                 #27
+label('.sysCtrl0')
+st([sysArgs+3])                 #26,27 (must be idempotent)
 
 nop()                           #28
 ld(hi('REENTER'), Y)            #29
