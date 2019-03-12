@@ -36,7 +36,7 @@ gigatron-rom
        +--- at67/               Emulator/visualizer (SDL2), 8-bit/16-bit
        |                        assembler, debugger, MIDI music, demos (sprites,
        |                        lines, game of life, Tetronis game...)
-       +--- Cwiiis              Gigatris game
+       +--- Cwiiis/             Gigatris game
        +--- flok99/             Simple (and slow) visualizer using SDL2
        +--- gigawalt/           Walter's script
        +--- kervinck/           Ramblings (all work in progress)
@@ -61,15 +61,15 @@ Memory map (RAM)
              +-+-------------+-----------+-+-------------+--------------+
 page 0       |0| System vars | User vars |1| User vars <-| Stack/Loader |
              +-+-------------+-----------+-+------+------+--+-----------+
-page 1       | Video table                     239| vReset  | Channel 1 |
+page 1       | Video table                        | vReset  | Channel 1 |
              +------------------------------------+---------+-----------+
-page 2       |0                                    240   249| Channel 2 |
+page 2       |0                                239 240   249| Channel 2 |
              |                                              +-----------+
 page 3       | User vCPU code and/or data                   | Channel 3 |
              |                                              +-----------+
 page 4       |                                              | Channel 4 |
              |                                              +-----------+
-page 5-6     |                                              250      255|
+page 5-6     |                                               250     255|
              |                                                          |
              |                                                          |
              +----------------------------------------------------------+
@@ -86,7 +86,7 @@ page 128-255 | Not used in the 32K system: mirror of page 0-127         |
               0                                                      255
 
 [Note: In the next section, names in parentheses refer to *internal*
-variables that are subject to change between versions.  See for a
+variables that are subject to change between ROM versions. See for a
 more detailed explanation on compatibility the file Docs/GT1-files.txt]
 
 Address   Name          Description
@@ -179,7 +179,7 @@ page 0       | Boot and reset sequences                                 |
              +----------------------------------------------------------+
 page 1       | Video and audio loop (visible lines)                     |
              |                                                          |
-page 2       | Video and audio loop (vertical blank)                    |
+page 2       | Video and audio loop (vertical blank lines)              |
              +----------------------------------------------------------+
 page 3       | vCPU interpreter loop (primary page)                     |
              |                                                          |
