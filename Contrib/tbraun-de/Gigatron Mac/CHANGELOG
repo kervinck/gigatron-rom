@@ -1,3 +1,8 @@
+Version 0.1.3  - 2019-03-14
+---------------------------
+- Rewritten keyboard handling (fix sticking keys, improve typing speed)
+- 
+
 Version 0.1.2  - 2019-02-21
 ----------------------------
 - Fix debugging of some virtual cpu commands

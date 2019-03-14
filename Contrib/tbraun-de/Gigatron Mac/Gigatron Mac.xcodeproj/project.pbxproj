@@ -31,6 +31,7 @@
 		F6B24A5A21DD658D00D09808 /* Gigatron_128pt@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = F6B24A5021DD658D00D09808 /* Gigatron_128pt@2x.png */; };
 		F6B24A5B21DD658D00D09808 /* Gigatron_32pt@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = F6B24A5121DD658D00D09808 /* Gigatron_32pt@2x.png */; };
 		F6B24A5C21DD658D00D09808 /* Gigatron_256pt@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = F6B24A5221DD658D00D09808 /* Gigatron_256pt@2x.png */; };
+		F6D19A12222F1A0C00A47B10 /* GigatronSimulatorApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = F6D19A11222F1A0C00A47B10 /* GigatronSimulatorApplication.m */; };
 		F6F4C20221E53DA500E913EB /* RAMWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = F6F4C20121E53DA500E913EB /* RAMWindow.m */; };
 		F6F8101121A8907500E907DC /* GigatronImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = F6F8101021A8907500E907DC /* GigatronImageView.m */; };
 		F6F8101321A8A14F00E907DC /* ROMv3.rom in Resources */ = {isa = PBXBuildFile; fileRef = F6F8101221A8A14F00E907DC /* ROMv3.rom */; };
@@ -70,6 +71,8 @@
 		F6B24A5121DD658D00D09808 /* Gigatron_32pt@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Gigatron_32pt@2x.png"; sourceTree = "<group>"; };
 		F6B24A5221DD658D00D09808 /* Gigatron_256pt@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Gigatron_256pt@2x.png"; sourceTree = "<group>"; };
 		F6B24A5F21DD68EC00D09808 /* Gigatron Mac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Gigatron Mac.entitlements"; sourceTree = "<group>"; };
+		F6D19A10222F1A0C00A47B10 /* GigatronSimulatorApplication.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GigatronSimulatorApplication.h; sourceTree = "<group>"; };
+		F6D19A11222F1A0C00A47B10 /* GigatronSimulatorApplication.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GigatronSimulatorApplication.m; sourceTree = "<group>"; };
 		F6F4C20021E53D7F00E913EB /* RAMWindow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RAMWindow.h; sourceTree = "<group>"; };
 		F6F4C20121E53DA500E913EB /* RAMWindow.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RAMWindow.m; sourceTree = "<group>"; };
 		F6F8100F21A8907500E907DC /* GigatronImageView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GigatronImageView.h; sourceTree = "<group>"; };
@@ -131,6 +134,8 @@
 				F6B24A2C21DD4FA600D09808 /* Gigatron.m */,
 				F6F8100F21A8907500E907DC /* GigatronImageView.h */,
 				F6F8101021A8907500E907DC /* GigatronImageView.m */,
+				F6D19A10222F1A0C00A47B10 /* GigatronSimulatorApplication.h */,
+				F6D19A11222F1A0C00A47B10 /* GigatronSimulatorApplication.m */,
 				F6388DE121EDCB780098149B /* RAMGadgetWindow.h */,
 				F6388DE221EDCB780098149B /* RAMGadgetWindow.m */,
 				F6388DE621EDCF020098149B /* RAMGadgetImageView.h */,
@@ -267,6 +272,7 @@
 			files = (
 				F6388DE821EDCF020098149B /* RAMGadgetImageView.m in Sources */,
 				F6F4C20221E53DA500E913EB /* RAMWindow.m in Sources */,
+				F6D19A12222F1A0C00A47B10 /* GigatronSimulatorApplication.m in Sources */,
 				F657894B21EA775500812ECC /* CPUWindow.m in Sources */,
 				F6388DE421EDCB780098149B /* RAMGadgetWindow.m in Sources */,
 				F6B24A2D21DD4FA600D09808 /* Gigatron.m in Sources */,
