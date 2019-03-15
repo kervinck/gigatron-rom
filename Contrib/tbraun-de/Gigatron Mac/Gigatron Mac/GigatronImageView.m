@@ -10,25 +10,41 @@
 #import "AppDelegate.h"
 #import "Gigatron.h"
 
-#define BUTTON_A            0x80
-#define BUTTON_B            0x40
-#define BUTTON_SELECT       0x20
-#define BUTTON_START        0x10
-#define BUTTON_UP           0x08
-#define BUTTON_DOWN         0x04
-#define BUTTON_LEFT         0x02
-#define BUTTON_RIGHT        0x01
+#define MAC_KEY_LEFT_ALT        @"left-alt"
+#define MAC_KEY_LEFT_CMD        @"left-cmd"
+#define MAC_KEY_RIGHT_ALT       @"right-alt"
+#define MAC_KEY_RIGHT_CMD       @"right-cmd"
+#define MAC_KEY_CONTROL         @"control"
+#define MAC_CURSOR_UP           @"cursor-up"
+#define MAC_CURSOR_DOWN         @"cursor-down"
+#define MAC_CURSOR_LEFT         @"cursor-left"
+#define MAC_CURSOR_RIGHT        @"cursor-right"
+#define MAC_SHIFT               @"shift"
+#define MAC_KEY_TAB             @"tab"
+#define MAC_KEY_ESC             @"esc"
+#define MAC_KEY_BACKSPACE       @"backspace"
+#define MAC_KEY_ENTER           @"enter"
 
-#define KEY_ENTER           0x0a
-#define KEY_BACKSPACE       0x7f
-#define KEY_TAB             0x09
-#define KEY_ESCAPE          0x1b
+#define GIGATRON_BUTTON_A       0x80
+#define GIGATRON_BUTTON_B       0x40
+#define GIGATRON_BUTTON_SELECT  0x20
+#define GIGATRON_BUTTON_START   0x10
+#define GIGATRON_BUTTON_UP      0x08
+#define GIGATRON_BUTTON_DOWN    0x04
+#define GIGATRON_BUTTON_LEFT    0x02
+#define GIGATRON_BUTTON_RIGHT   0x01
+
+#define GIGATRON_KEY_ENTER      0x0a
+#define GIGATRON_KEY_BACKSPACE  0x7f
+#define GIGATRON_KEY_TAB        0x09
+#define GIGATRON_KEY_ESCAPE     0x1b
 
 @implementation GigatronImageView
 
 BOOL controlKeyPressed;
 CGContextRef bitmapContext;
 Gigatron *gigatron;
+NSMutableSet *pressedKeys;
 
 - (id) initWithCoder:(NSCoder *)coder {
     self = [super initWithCoder:coder];
@@ -45,6 +61,7 @@ Gigatron *gigatron;
                                           kCGImageAlphaNoneSkipLast);
     
     CFRelease(colorSpace);
+    pressedKeys = [[NSMutableSet alloc] init];
     
     [[self window] makeFirstResponder:self];
     
@@ -64,120 +81,153 @@ Gigatron *gigatron;
 
 - (void) flagsChanged: (NSEvent *)event {
     if([event type] == NSEventTypeFlagsChanged) {
-        [self handleKey:event];
+        NSLog(@"modifier flags: %lu", [event modifierFlags]);
+        [pressedKeys removeObject:MAC_KEY_LEFT_ALT];
+        [pressedKeys removeObject:MAC_KEY_LEFT_CMD];
+        [pressedKeys removeObject:MAC_KEY_RIGHT_ALT];
+        [pressedKeys removeObject:MAC_KEY_RIGHT_CMD];
+        [pressedKeys removeObject:MAC_KEY_CONTROL];
+        if([event modifierFlags] & 0x20) [pressedKeys addObject:MAC_KEY_LEFT_ALT];
+        if([event modifierFlags] & 0x40) [pressedKeys addObject:MAC_KEY_RIGHT_ALT];
+        if([event modifierFlags] & 0x08) [pressedKeys addObject:MAC_KEY_LEFT_CMD];
+        if([event modifierFlags] & 0x10) [pressedKeys addObject:MAC_KEY_RIGHT_CMD];
+        if([event modifierFlags] & NSEventModifierFlagControl) [pressedKeys addObject:MAC_KEY_CONTROL];
+        [self handlePressedKeys];
     }
+}
+
+- (void) logPressedKeys {
+    NSMutableString *s = [[NSMutableString alloc] initWithString:@"Pressed keys: "];
+    for(NSString *key in pressedKeys) {
+        [s appendFormat:@"[%@] ", key];
+    }
+    NSLog(@"%@", s);
 }
 
 - (void) keyDown:(NSEvent *)event {
-    if([self handleKey:event] != true) {
-        [self interpretKeyEvents:[NSArray arrayWithObject:event]];
-    }
-}
-
-- (void) keyUp:(NSEvent *)event {
-    if([self handleKey:event] != true) {
-        [self interpretKeyEvents:[NSArray arrayWithObject:event]];
-    }
-}
-
-- (BOOL) handleKey:(NSEvent *)event {
+    // Debugger specific keys are only handled in keyDown
     short keyCode = [event keyCode];
-    NSEventType type = [event type];
-
-    uint8_t mappedKey = 0x00;
-    BOOL gamepadButton = true;
-    
-    if(type == NSEventTypeKeyDown) {
-        NSLog(@"Pressed key %d", keyCode);
-    } else if(type == NSEventTypeKeyUp) {
-        NSLog(@"Released key %d", keyCode);
-    }
     
     switch(keyCode) {
         case 96: // F5
-            if(type == NSEventTypeKeyDown) {
-                [gigatron singleStepCPU];
-            }
-            break;
+            [gigatron singleStepCPU];
         case 97: // F6
-            if(type == NSEventTypeKeyDown) {
-                [gigatron singleStepvCPU];
-            }
-            break;
+            [gigatron singleStepvCPU];
         case 98: // F7
-            if(type == NSEventTypeKeyDown) {
-                [gigatron resume];
-            }
-            break;
-        case 126:  // Cursor UP
-            mappedKey = BUTTON_UP; break;
-        case 125:  // Cursor DOWN
-            mappedKey = BUTTON_DOWN; break;
-        case 123:  // Cursor LEFT
-            mappedKey = BUTTON_LEFT; break;
-        case 124:  // Cursor RIGHT
-            mappedKey = BUTTON_RIGHT; break;
-        case 58:   // Left ALT
-            mappedKey = BUTTON_SELECT; break;
-        case 55:   // Left CMD
-            mappedKey = BUTTON_START; break;
-        case 61:   // Right ALT
-            mappedKey = BUTTON_B; break;
-        case 54:   // Right CMD
-            mappedKey = BUTTON_A; break;
-        case 36:   // ENTER
-            mappedKey = KEY_ENTER;
-            gamepadButton = false;
-            break;
-        case 48:   // TAB
-            mappedKey = KEY_TAB;
-            gamepadButton = false;
-            break;
-        case 53:   // ESC
-            mappedKey = KEY_ESCAPE;
-            gamepadButton = false;
-            break;
-        case 51:   // Backspace
-            mappedKey = KEY_BACKSPACE;
-            gamepadButton = false;
-            break;
-        case 59:   // ctrl
-            controlKeyPressed = !controlKeyPressed; return true;
-        default:
-            if(type != NSEventTypeFlagsChanged && [[event charactersIgnoringModifiers] length] > 0) {
-                const char *characters = [[event charactersIgnoringModifiers] cStringUsingEncoding:NSUTF8StringEncoding];
-                if(type == NSEventTypeKeyDown) {
-                    if(controlKeyPressed) {
-                        mappedKey = characters[0] & 0x1F;
-                    } else {
-                        mappedKey = characters[0];
-                    }
-                }
-            }
-            gamepadButton = false;
-            break;
+            [gigatron resume];
+            return; // for those three cases: return directly
     }
     
-    if(gamepadButton) {
-        if(type == NSEventTypeKeyDown) {
-            gigatron.InRegister &= ~mappedKey;
-        } else if(type == NSEventTypeKeyUp) {
-            gigatron.InRegister |= mappedKey;
-        } else if(type == NSEventTypeFlagsChanged) {
-            gigatron.InRegister ^= mappedKey;
+    NSString *pressedKey = [self getStringForKeyEvent:event];
+    NSLog(@"Key DOWN: %@", pressedKey);
+    
+    // if a non-special character is pressed, which is indicated by a string length of "1", then
+    // release all non-special keys (numbers, letters, signs), but not shift, alt, cmd or any of the cursor keys
+    if([pressedKey length] == 1) {
+        for(NSString *key in pressedKeys) {
+            if([key length] == 1) {
+                [pressedKeys removeObject:key];
+            }
         }
-        return true;
     }
     
-    if(type == NSEventTypeKeyDown) {
-        gigatron.InRegister = mappedKey;
-        return true;
-    } else {
+    [pressedKeys addObject:pressedKey];
+    [self handlePressedKeys];
+
+    // [self interpretKeyEvents:[NSArray arrayWithObject:event]];
+}
+
+- (void) keyUp:(NSEvent *)event {
+    NSString *releasedKey = [self getStringForKeyEvent:event];
+    NSLog(@"Key UP: %@", releasedKey);
+    [pressedKeys removeObject:releasedKey];
+    
+    // if a non-special character is released, which is indicated by a string length of "1", then
+    // release all non-special keys (numbers, letters, signs), but not shift, alt, cmd or any of the cursor keys
+    if([releasedKey length] == 1) {
+        for(NSString *key in pressedKeys) {
+            if([key length] == 1) {
+                [pressedKeys removeObject:key];
+            }
+        }
+    }
+    
+    [self handlePressedKeys];
+
+    // [self interpretKeyEvents:[NSArray arrayWithObject:event]];
+}
+
+- (NSString *) getStringForKeyEvent:(NSEvent *)event {
+    short keyCode = [event keyCode];
+    
+    switch(keyCode) {
+        case 126:  // Cursor UP
+            return MAC_CURSOR_UP;
+        case 125:  // Cursor DOWN
+            return MAC_CURSOR_DOWN;
+        case 123:  // Cursor LEFT
+            return MAC_CURSOR_LEFT;
+        case 124:  // Cursor RIGHT
+            return MAC_CURSOR_RIGHT;
+        case 36:   // Enter key
+            return MAC_KEY_ENTER;
+        case 48:   // TAB
+            return MAC_KEY_TAB;
+        case 53:   // ESC
+            return MAC_KEY_ESC;
+        case 51:   // Backspace
+            return MAC_KEY_BACKSPACE;
+        default:
+            if([[event charactersIgnoringModifiers] length] == 1)
+                return [event charactersIgnoringModifiers];
+    }
+    return nil;
+}
+
+
+- (void) handlePressedKeys {
+    [self logPressedKeys];
+    
+    if([pressedKeys count] == 0) {
         gigatron.InRegister = 0xff;
-        return true;
+        return;
+    }
+    
+    gigatron.InRegister = 0;
+    
+    // first, find out if any of the gigatron buttons equivalents is be pressed (START / SELECT / A / B  or a direction key):
+    // compose the IN register out of those keys, if there are any
+    if([pressedKeys containsObject:MAC_KEY_RIGHT_CMD]) gigatron.InRegister |= GIGATRON_BUTTON_A;
+    if([pressedKeys containsObject:MAC_KEY_RIGHT_ALT]) gigatron.InRegister |= GIGATRON_BUTTON_B;
+    if([pressedKeys containsObject:MAC_KEY_LEFT_ALT]) gigatron.InRegister |= GIGATRON_BUTTON_SELECT;
+    if([pressedKeys containsObject:MAC_KEY_LEFT_CMD]) gigatron.InRegister |= GIGATRON_BUTTON_START;
+    if([pressedKeys containsObject:MAC_CURSOR_UP]) gigatron.InRegister |= GIGATRON_BUTTON_UP;
+    if([pressedKeys containsObject:MAC_CURSOR_DOWN]) gigatron.InRegister |= GIGATRON_BUTTON_DOWN;
+    if([pressedKeys containsObject:MAC_CURSOR_LEFT]) gigatron.InRegister |= GIGATRON_BUTTON_LEFT;
+    if([pressedKeys containsObject:MAC_CURSOR_RIGHT]) gigatron.InRegister |= GIGATRON_BUTTON_RIGHT;
+    
+    if(gigatron.InRegister != 0) {
+        gigatron.InRegister = ~gigatron.InRegister;
+        return;
+    }
+    
+    // if not continue with special keys (tab, esc, backspace and enter)
+    if([pressedKeys containsObject:MAC_KEY_TAB]) gigatron.InRegister = GIGATRON_KEY_TAB;
+    if([pressedKeys containsObject:MAC_KEY_ESC]) gigatron.InRegister = GIGATRON_KEY_ESCAPE;
+    if([pressedKeys containsObject:MAC_KEY_BACKSPACE]) gigatron.InRegister = GIGATRON_KEY_BACKSPACE;
+    if([pressedKeys containsObject:MAC_KEY_ENTER]) gigatron.InRegister = GIGATRON_KEY_ENTER;
+
+    if(gigatron.InRegister != 0) {
+        return;
     }
 
-    return false;
+    // if no special gigatron keys are pressed, then continue with any "normal" keyboard keys
+    gigatron.InRegister = [((NSString *)[pressedKeys anyObject]) characterAtIndex:0];
+    
+    // if [control] is pressed, handle this also for gigatron
+    if([pressedKeys count] >= 2 && [pressedKeys containsObject:MAC_KEY_CONTROL]) {
+        gigatron.InRegister &= 0x1F;
+    }
 }
 
 - (void) dealloc {
