@@ -113,20 +113,21 @@ memory can be addressed as bytes using 16-bit pointers.
 -----------------
 Notes on notation
 -----------------
+
 GCL programs are written as a long sequence of "words" without much
 structure enforced by the compiler. Most words map directly to a
-single virtual instruction and therefore also encode an embedded
-operand (e.g. 1+). Many words operate on both vAC and some variable
-or constant. Sequences can be grouped with () {} or [], each of
-which has its own meaning. Spaces and newlines simply separate
-words. Use indentation for clarity. There is no need for spaces
-around the grouping characters []{}().
+single vCPU instruction and therefore also encode an embedded operand
+(e.g. `1+' means `LDI 1'). Many words operate on both vAC and some
+variable or constant. Sequences can be grouped with () {} or [],
+each of which has its own meaning. Spaces and newlines simply
+separate words. Use indentation for clarity. There is no need for
+spaces around the grouping characters []{}().
 
 Constants are decimal, or hexadecimal when preceded with '$'.
 Constants can be preceded by '-' or '+' (note: -$1000, not $-0000).
 For convenience, symbols defined by the host system can be referenced
 by prefixing a backslash, e.g. '\fontData'. This can be used anywhere
-where an integer is expected.
+where an integer constant is expected.
 
 Variable names start with an alphanumeric character and are case
 sensitive.  The overview below uses the following conventions:
