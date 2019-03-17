@@ -73,7 +73,6 @@
 #  XXX Scoping for variables or some form of local variables? $i ("localized")
 #  XXX Simple GCL programs might be compiled by the host instead of offline?
 #  XXX vCPU: Clear just vAC[0:7] (Workaround is not bad: |255 ^255)
-
 #-----------------------------------------------------------------------
 
 from sys import argv
@@ -1210,7 +1209,7 @@ jmpy([vReturn]);                C('Return to caller')#7
 ld(0)                           #8 AC should be 0 already. Still..
 assert vOverheadInt ==          9
 
-# Instruction LDWI: Load immediate constant (AC=$DDDD), 20 cycles
+# Instruction LDWI: Load immediate word constant (vAC=D), 20 cycles
 label('LDWI')
 st([vAC])                       #10
 st([Y,Xpp])                     #11 Just to increment X
@@ -1223,7 +1222,7 @@ ld(-20/2)                       #17
 bra('NEXT')                     #18
 #nop()                          #(19)
 #
-# Instruction LD: Load from zero page (AC=[D]), 18 cycles
+# Instruction LD: Load byte from zero page (vAC=[D]), 18 cycles
 label('LD')
 ld(AC, X)                       #10,19 (overlap with LDWI)
 ld([X])                         #11
@@ -1234,7 +1233,7 @@ ld(-18/2)                       #15
 bra('NEXT')                     #16
 #nop()                          #(17)
 #
-# Instruction LDW: Word load from zero page (AC=[D],[D+1]), 20 cycles
+# Instruction LDW: Load word from zero page (vAC=[D]+256*[D+1]), 20 cycles
 label('LDW')
 ld(AC, X)                       #10,17 (overlap with LD)
 adda(1)                         #11
@@ -1248,7 +1247,7 @@ bra('NEXT')                     #18
 ld(-20/2)                       #19
 #nop()                          #(20)
 #
-# Instruction STW: Word load from zero page (AC=[D],[D+1]), 20 cycles
+# Instruction STW: Store word in zero page ([D],[D+1]=vAC&255,vAC>>8), 20 cycles
 label('STW')
 ld(AC, X)                       #10,20 (overlap with LDW)
 adda(1)                         #11
@@ -1326,7 +1325,7 @@ bgt('.cond4')                   #20
 ble('.cond5')                   #21
 ld([Y,X])                       #22
 
-# Instruction LDI: Load immediate constant (AC=$DD), 16 cycles
+# Instruction LDI: Load immediate small positive constant (vAC=D), 16 cycles
 label('LDI')
 st([vAC])                       #10
 ld(0)                           #11
@@ -1335,7 +1334,7 @@ ld(-16/2)                       #13
 bra('NEXT')                     #14
 #nop()                          #(15)
 #
-# Instruction ST: Store in zero page ([D]=vACL), 16 cycles
+# Instruction ST: Store byte in zero page ([D]=vAC&255), 16 cycles
 label('ST')
 ld(AC, X)                       #10,15 (overlap with LDI)
 ld([vAC])                       #11
@@ -1344,7 +1343,7 @@ ld(-16/2)                       #13
 bra('NEXT')                     #14
 #nop()                          #(15)
 #
-# Instruction POP: (LR=[SP++]), 26 cycles
+# Instruction POP: Pop address from stack (vLR,vSP==[vSP]+256*[vSP+1],vSP+2), 26 cycles
 label('POP')
 ld([vSP], X)                    #10,15 (overlap with ST)
 ld([X])                         #11
@@ -1370,7 +1369,7 @@ beq('.cond4')                   #20,25 (overlap with POP)
 bne('.cond5')                   #21
 ld([Y,X])                       #22
 
-# Instruction PUSH: ([--SP]=LR), 26 cycles
+# Instruction PUSH: Push vLR on stack ([vSP-2],v[vSP-1],vSP=vLR&255,vLR>>8,vLR-2), 26 cycles
 label('PUSH')
 ld([vSP])                       #10
 suba(1, X)                      #11
@@ -1383,13 +1382,13 @@ ld([vLR])                       #17
 bra('next1')                    #18
 st([X])                         #19
 
-# Instruction LUP: ROM lookup (vAC=ROM[vAC+256*D]), 26 cycles
+# Instruction LUP: ROM lookup (vAC=ROM[D,vAC]), 26 cycles
 label('LUP')
 ld([vAC+1], Y)                  #10
 jmpy(251);                      C('Trampoline offset')#11
 adda([vAC])                     #12
 
-# Instruction ANDI: Logical-AND with constant (AC&=D), 16 cycles
+# Instruction ANDI: Logical-AND with small constant (vAC&=D), 16 cycles
 label('ANDI')
 anda([vAC])                     #10
 st([vAC])                       #11
@@ -1398,21 +1397,21 @@ st([vAC+1])                     #13
 bra('NEXT')                     #14
 ld(-16/2)                       #15
 
-# Instruction ORI: Logical-OR with constant (AC|=D), 14 cycles
+# Instruction ORI: Logical-OR with small constant (vAC|=D), 14 cycles
 label('ORI')
 ora([vAC])                      #10
 st([vAC])                       #11
 bra('NEXT')                     #12
 ld(-14/2)                       #13
 
-# Instruction XORI: Logical-XOR with constant (AC^=D), 14 cycles
+# Instruction XORI: Logical-XOR with small constant (vAC^=D), 14 cycles
 label('XORI')
 xora([vAC])                     #10
 st([vAC])                       #11
 bra('NEXT')                     #12
 ld(-14/2)                       #13
 
-# Instruction BRA: Branch unconditionally (vPCL=D), 14 cycles
+# Instruction BRA: Branch unconditionally (vPC=(vPC&0xff00)+D), 14 cycles
 label('BRA')
 st([vPC])                       #10
 ld(-14/2)                       #11
@@ -1428,7 +1427,7 @@ st([X])                         #13
 bra('NEXT')                     #14
 ld(-16/2)                       #15
 
-# Instruction ADDW: Word addition with zero page (AC+=[D]+256*[D+1]), 28 cycles
+# Instruction ADDW: Word addition with zero page (vAC+=[D]+256*[D+1]), 28 cycles
 label('ADDW')
 # The non-carry paths could be 26 cycles at the expense of (much) more code.
 # But a smaller size is better so more instructions fit in this code page.
@@ -1456,7 +1455,7 @@ st([vAC+1])                     #25 Store high result
 bra('NEXT')                     #26
 ld(-28/2)                       #27
 
-# Instruction PEEK: (vAC=[vAC]), 26 cycles
+# Instruction PEEK: Read byte from memory (vAC=[vAC]), 26 cycles
 label('PEEK')
 ld(hi('peek'), Y)               #10
 jmpy('peek')                    #11
@@ -1519,13 +1518,13 @@ label('REENTER')
 bra('NEXT');                    C('Return from SYS calls')#26
 ld([vPC+1], Y)                  #27
 
-# Instruction DEF: Define data or code (AC,vPCL=vPC+2,D), 18 cycles
+# Instruction DEF: Define data or code (vAC,vPC=vPC+2,(vPC&0xff00)+D), 18 cycles
 label('DEF')
 ld(hi('def'), Y)                #10
 jmpy('def')                     #11
 #st([vTmp])                     #12
 #
-# Instruction CALL: (LR=vPC+2,vPC=[D]-2), 26 cycles
+# Instruction CALL: Goto address but remember vPC (vLR,vPC=vPC+2,[D]+256*[D+1]-2), 26 cycles
 label('CALL')
 st([vTmp])                      #10,12 (overlap with DEF)
 ld([vPC])                       #11
@@ -1544,8 +1543,7 @@ st([vPC+1], Y)                  #23
 bra('NEXT')                     #24
 ld(-26/2)                       #25
 
-# ALLOCA implementation
-# Instruction ALLOCA: (SP+=D), 14 cycles
+# Instruction ALLOC: Create or destroy stack frame (vSP+=D), 14 cycles
 label('ALLOC')
 adda([vSP])                     #10
 st([vSP])                       #11
@@ -1559,38 +1557,38 @@ ld(-14/2)                       #13
 # Gigatron applications (Snake, Racer, Mandelbrot, Loader). By providing them
 # in this way, at least they don't need to be implemented as a SYS extension.
 
-# Instruction ADDI: Add small positive constant (AC+=D), 28 cycles
+# Instruction ADDI: Add small positive constant (vAC+=D), 28 cycles
 label('ADDI')
 ld(hi('addi'), Y)               #10
 jmpy('addi')                    #11
 st([vTmp])                      #12
 
-# Instruction SUBI: Subtract small positive constant (AC+=D), 28 cycles
+# Instruction SUBI: Subtract small positive constant (vAC+=D), 28 cycles
 label('SUBI')
 ld(hi('subi'), Y)               #10
 jmpy('subi')                    #11
 st([vTmp])                      #12
 
-# Instruction LSLW: Logical shift left (AC<<=1), 28 cycles
+# Instruction LSLW: Logical shift left (vAC<<=1), 28 cycles
 # Useful, because ADDW can't add vAC to itself. Also more compact.
 label('LSLW')
 ld(hi('lslw'), Y)               #10
 jmpy('lslw')                    #11
 ld([vAC])                       #12
 
-# Instruction STLW: Store word in stack frame (vSP[D],vSP[D+1]=vAC&255,vAC>>8), 26 cycles
+# Instruction STLW: Store word in stack frame ([vSP+D],[vSP+D+1]=vAC&255,vAC>>8), 26 cycles
 label('STLW')
 ld(hi('stlw'), Y)               #10
 jmpy('stlw')                    #11
 #nop()                          #12
 #
-# Instruction LDLW: Load word from stack frame (vAC=vSP[D]+256*vSP[D+1]), 26 cycles
+# Instruction LDLW: Load word from stack frame (vAC=[vSP+D]+256*[vSP+D+1]), 26 cycles
 label('LDLW')
 ld(hi('ldlw'), Y)               #10,12 (overlap with STLW)
 jmpy('ldlw')                    #11
 #nop()                          #12
 #
-# Instruction POKE: Write byte in memory ([[D+1],[D]]=vACL), 28 cycles
+# Instruction POKE: Write byte in memory ([[D+1],[D]]=vAC&255), 28 cycles
 label('POKE')
 ld(hi('poke'), Y)               #10,12 (overlap with LDLW)
 jmpy('poke')                    #11
@@ -1608,19 +1606,19 @@ ld(hi('deek'), Y)               #10
 jmpy('deek')                    #11
 #nop()                          #12
 #
-# Instruction ANDW: (AC&=[D]+256*[D+1]), 28 cycles
+# Instruction ANDW: Word logical-AND with zero page (vAC&=[D]+256*[D+1]), 28 cycles
 label('ANDW')
 ld(hi('andw'), Y)               #10,12 (overlap with DEEK)
 jmpy('andw')                    #11
 #nop()                          #12
 #
-# Instruction ORW: (AC|=[D]+256*[D+1]), 28 cycles
+# Instruction ORW: Word logical-OR with zero page (vAC|=[D]+256*[D+1]), 28 cycles
 label('ORW')
 ld(hi('orw'), Y)                #10,12 (overlap with ANDW)
 jmpy('orw')                     #11
 #nop()                          #12
 #
-# Instruction XORW: (AC^=[D]+256*[D+1]), 26 cycles
+# Instruction XORW: Word logical-XOR with zero page (vAC^=[D]+256*[D+1]), 26 cycles
 label('XORW')
 ld(hi('xorw'), Y)               #10,12 (overlap with ORW)
 jmpy('xorw')                    #11
@@ -1629,7 +1627,7 @@ st([vTmp])                      #12
 # can be useful for comparing numbers for equality a tiny
 # bit faster than with SUBW
 
-# Instruction RET: Function return (vPC=LR-2), 16 cycles
+# Instruction RET: Function return (vPC=vLR-2), 16 cycles
 label('RET')
 ld([vLR])                       #10
 assert pc()&255 == 0
