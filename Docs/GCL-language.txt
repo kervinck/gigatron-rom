@@ -72,7 +72,7 @@ vCPU program into the Gigatron. One is by sending it into RAM through
 the input port using the Loader application.  The other is to store
 the object code in the ROM disk portion of the EPROM.  The file
 format for exchange of vCPU programs is GT1. This format is described
-in a different document: GT1-FileFormat.txt
+in a different document: GT1-files.txt
 
 -----------------
 Programming model
@@ -107,8 +107,8 @@ vSP  is the stack pointer. The stack lives in the zero page top and
      grows down.
 
 Program variables are 16-bit words and typically hold a number or
-a pointer.  Named variables reside in the zero page. Arbitrary
-memory can be addressed as bytes using 16-bit pointers.
+a pointer.  Variables normally reside in the zero page. Arbitrary
+memory can be addressed as bytes and words using 16-bit pointers.
 
 -----------------
 Notes on notation
@@ -117,11 +117,11 @@ Notes on notation
 GCL programs are written as a long sequence of "words" without much
 structure enforced by the compiler. Most words map directly to a
 single vCPU instruction and therefore also encode an embedded operand
-(e.g. `1+' means `LDI 1'). Many words operate on both vAC and some
-variable or constant. Sequences can be grouped with () {} or [],
-each of which has its own meaning. Spaces and newlines simply
-separate words. Use indentation for clarity. There is no need for
-spaces around the grouping characters []{}().
+(e.g. `1' means `LDI 1' and `2+' means `ADDI 2'). Many words operate
+on both vAC and some variable or constant. Sequences can be grouped
+with () {} or [], each of which has its own meaning. Spaces and
+newlines simply separate words. Use indentation for clarity. There
+is no need for spaces around the grouping characters []{}().
 
 Constants are decimal, or hexadecimal when preceded with '$'.
 Constants can be preceded by '-' or '+' (note: -$1000, not $-0000).
