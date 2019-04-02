@@ -334,11 +334,20 @@ unsigned emitasm(Node p, int nt) {
 	char *fmt;
 	Node kids[10];
 
+	debug(fprint(stderr, "emitasm(%p, %s, %s)", p, opname(p->op), p->syms[RX] ? p->syms[RX]->name : "(none)"));
+
 	p = reuse(p, nt);
 	rulenum = getrule(p, nt);
 	nts = IR->x._nts[rulenum];
 	fmt = IR->x._templates[rulenum];
 	assert(fmt);
+
+	if (rulenum == 0) {
+		debug(fprint(stderr, " (no rule)\n"));
+	} else {
+		debug(fprint(stderr, " %s\n", fmt));
+	}
+
 	if (IR->x._isinstruction[rulenum] && p->x.emitted)
 		print("%s", p->syms[RX]->x.name);
 	else if (*fmt == '#')
@@ -457,6 +466,7 @@ void rtarget(Node p, int n, Symbol r) {
 	assert(r->sclass == REGISTER || !r->x.wildcard);
 	assert(q->syms[RX]);
 	if (r != q->syms[RX] && !q->syms[RX]->x.wildcard) {
+		debug(fprintf(stderr, "(inserting load from %s to %s)\n", q->syms[RX]->x.name, r->x.name));
 		q = newnode(LOAD + opkind(q->op),
 			q, NULL, q->syms[0]);
 		if (r->u.t.cse == p->kids[n])
