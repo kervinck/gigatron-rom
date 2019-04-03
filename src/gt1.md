@@ -24,12 +24,17 @@ static void import(Symbol);
 static void local(Symbol);
 static void progbeg(int, char **);
 static void progend(void);
+static int rangep(Node, unsigned, unsigned);
 static void segment(int);
 static void space(int);
 static void target(Node);
 
 static Symbol regs[32];
 static Symbol regw;
+static struct {
+	int known;
+	unsigned value;
+} vac;
 %}
 
 %start stmt
@@ -176,6 +181,8 @@ static Symbol regw;
 
 %term VREGP=711
 
+%term SYSI2=2661
+
 %%
 reg: INDIRI1(VREGP)       "# read register\n"
 reg: INDIRU1(VREGP)       "# read register\n"
@@ -212,6 +219,7 @@ con1: CNSTU2 "1" range(a, 1, 1)
 
 scon: CNSTI2 "%a" range(a, 0, 127)
 scon: CNSTU2 "%a" range(a, 0, 255)
+scon: CNSTP2 "%a" rangep(a, 0, 255)
 
 reg: con "# %0\n" 1
 
@@ -379,11 +387,19 @@ stmt: GTF2(reg, reg) "# stw ha\nldw %1\ncall gtf\njcc ne zero %a # pseudo\n" 1
 stmt: LEF2(reg, reg) "# stw ha\nldw %1\ncall lef\njcc ne zero %a # pseudo\n" 1
 stmt: LTF2(reg, reg) "# stw ha\nldw %1\ncall ltf\njcc ne zero %a # pseudo\n" 1
 
+stmt: ARGF2(reg) "# push %0\n"  1
+stmt: ARGI2(reg) "# push %0\n"  1
+stmt: ARGU2(reg) "# push %0\n"  1
+stmt: ARGP2(reg) "# push %0\n"  1
+
 reg: CALLF2(reg)  "# call %0\n" 1
 reg: CALLI2(reg)  "# call %0\n" 1
 reg: CALLP2(reg)  "# call %0\n" 1
 reg: CALLU2(reg)  "# call %0\n" 1
 reg: CALLV(reg)   "# call %0\n" 1
+
+reg: SYSI2 "# sys %0\n" 1
+reg: SYSI2 "# sys %0\n" 1
 
 stmt: RETF2(reg)  "# ret\n" 1
 stmt: RETI2(reg)  "# ret\n" 1
@@ -432,6 +448,15 @@ static void segment(int n) {
 }
 static void progend(void) {
 	// Nothing to do for the moment.
+}
+static int rangep(Node p, unsigned lo, unsigned hi) {
+	if (specific(p->op) != CNST+P) {
+		return LBURG_MAX;
+	}
+
+	Symbol s = p->syms[0];
+	unsigned u = (unsigned)s->u.c.v.p;
+	return u >= lo && u <= hi ? 0 : LBURG_MAX;
 }
 static void target(Node p) {
 	int kop;
@@ -508,6 +533,7 @@ static void target(Node p) {
 		}
 		break;
 	case CALL:
+	case SYS:
 		// Set the result register to vAC.
 		setreg(p, regs[0]);
 		break;
@@ -531,39 +557,55 @@ static void emit2(Node p) {
 
 	long i;
 	unsigned long u;
-	int kop;
 	switch (specific(p->op)) {
 	case CNST+F:
 		assert(getregnum(p) == 0);
 		// TODO: convert double to 16-bit fixed point
 		print("ldwi $%x\n", p->syms[0]->u.c.v.d);
+		vac.known = 1;
+		vac.value = (unsigned)p->syms[0]->u.c.v.u;
 		break;
 	case CNST+I:
 		assert(getregnum(p) == 0);
 		i = p->syms[0]->u.c.v.i;
+		if (vac.known && vac.value == (unsigned)i) {
+			break;
+		}
 		if (i >= 0 && i < 256) {
 			print("ldi $%x\n", i & 0xff);
 		} else {
 			print("ldwi $%x\n", (unsigned long)i);
 		}
+		vac.known = 1;
+		vac.value = (unsigned)i;
 		break;
 	case CNST+P:
 		assert(getregnum(p) == 0);
 		u = (unsigned)p->syms[0]->u.c.v.p;
-		if (u < 256) {
-			print("ldi $%x\n", i & 0xff);
-		} else {
-			print("ldwi $%x\n", (unsigned long)i);
+		if (vac.known && vac.value == u) {
+			break;
 		}
+		if (u < 256) {
+			print("ldi $%x\n", u & 0xff);
+		} else {
+			print("ldwi $%x\n", u);
+		}
+		vac.known = 1;
+		vac.value = u;
 		break;
 	case CNST+U:
 		assert(getregnum(p) == 0);
 		u = p->syms[0]->u.c.v.u;
-		if (u < 256) {
-			print("ldi $%x\n", i & 0xff);
-		} else {
-			print("ldwi $%x\n", (unsigned long)i);
+		if (vac.known && vac.value == u) {
+			break;
 		}
+		if (u < 256) {
+			print("ldi $%x\n", u & 0xff);
+		} else {
+			print("ldwi $%x\n", u);
+		}
+		vac.known = 1;
+		vac.value = u;
 		break;
 
 	case ASGN+F:
@@ -577,12 +619,12 @@ static void emit2(Node p) {
 			print("stw ha\nldwi %d\ncall stloc\n", local->syms[0]->x.offset);
 		} else if (p->kids[0]->op == VREG+P) {
 			//print("; write register variable\n");
-		} else if (range(p->kids[0], 0, 255) == 0) {
+		} else if (range(p->kids[0], 0, 255) == 0 || rangep(p->kids[0], 0, 255) == 0) {
 			char* op = "st";
 			if (opsize(p->op) == 2) {
 				op = "stw";
 			}
-			print("%s $%x\n', op, p->kids[0]->syms[0]->u.c.v.u);
+			print("%s $%x\n", op, p->kids[0]->syms[0]->u.c.v.u);
 		} else {
 			char* op = "poke";
 			if (opsize(p->op) == 2) {
@@ -607,6 +649,7 @@ static void emit2(Node p) {
 				print("ldiw %d\n", imm);
 			}
 			print("call ldloc\n");
+			vac.known = 0;
 		} else if (generic(p->kids[0]->op) == ADDRL) {
 			int imm = p->kids[0]->syms[0]->x.offset;
 			if (imm < 256) {
@@ -615,16 +658,20 @@ static void emit2(Node p) {
 				print("ldiw %d\n", imm);
 			}
 			print("call ldloc\n");
+			vac.known = 0;
 		} else if (range(p->kids[0], 0, 255) == 0) {
 			char* op = "ld";
 			if (opsize(p->op) == 2) {
 				op = "ldw";
 			}
 			print("%s $%x\n", op, p->kids[0]->syms[0]->u.c.v.u);
+			vac.known = 0;
 		} else if (opsize(p->op) == 2) {
 			print("deek\n");
+			vac.known = 0;
 		} else if (opsize(p->op) == 1) {
 			print("peek\n");
+			vac.known = 0;
 		}
 		if (getregnum(p) != 0) {
 			print("stw r%d\n", getregnum(p));
@@ -648,6 +695,13 @@ static void emit2(Node p) {
 	case NEG+I:
 		break;
 
+	case ARG+F:
+	case ARG+I:
+	case ARG+U:
+	case ARG+P:
+		print("; arg...\n");
+		break;
+
 	case CALL+F:
 	case CALL+I:
 	case CALL+P:
@@ -658,6 +712,11 @@ static void emit2(Node p) {
 		} else {
 			print("call r%d\n", getregnum(p->kids[0]));
 		}
+		vac.known = 0;
+		break;
+
+	case SYS+I:
+		print("sys %d\n", p->syms[0]->u.c.v.i);
 		break;
 
 	case RET+F:
@@ -672,6 +731,7 @@ static void emit2(Node p) {
 		if (getregnum(p) != 0) {
 			print("stw r%d\n", getregnum(p));
 		}
+		vac.known = 0;
 		break;
 
 	case ADDRF+P:
@@ -691,6 +751,7 @@ static void emit2(Node p) {
 		if (getregnum(p) != 0) {
 			print("stw r%d\n", getregnum(p));
 		}
+		vac.known = 0;
 		break;
 
 	case SUB+F:
@@ -709,6 +770,7 @@ static void emit2(Node p) {
 		if (getregnum(p) != 0) {
 			print("stw r%d\n", getregnum(p));
 		}
+		vac.known = 0;
 		break;
 
 	case MOD+I:
@@ -774,6 +836,7 @@ static void emit2(Node p) {
 		} else if (getregnum(p->kids[0]) == 0) {
 			print("stw r%d\n", getregnum(p));
 		}
+		vac.known = 0;
 		break;
 	}
 }
@@ -795,6 +858,8 @@ static void local(Symbol p) {
 	}
 }
 static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
+	vac.known = 0;
+
 	print("%s:\n", f->x.name);
 
 	// TODO: prolog?
@@ -856,7 +921,7 @@ static void address(Symbol q, Symbol p, long n) {
 }
 static void defconst(int suffix, int size, Value v) {
 	// TODO: need to do something here...
-	assert(0);
+	//assert(0);
 }
 static void defaddress(Symbol n) {
 	// TODO: need to do something here...

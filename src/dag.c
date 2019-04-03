@@ -203,6 +203,10 @@ Node listnodes(Tree tp, int tlab, int flab) {
 		      l = listnodes(tp->kids[0], 0, 0);
 		      list(newnode(JUMP+V, l, NULL, NULL));
 		      reset(); } break;
+	case SYS:   { assert(tlab == 0 && flab == 0);
+		      p = node(op, NULL, NULL, constant(unqual(tp->type), tp->u.v));
+		      list(p);
+		      reset(); } break;
 	case CALL:  { Tree save = firstarg;
 		      firstarg = NULL;
 		      assert(tlab == 0 && flab == 0);

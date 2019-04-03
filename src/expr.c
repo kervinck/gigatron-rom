@@ -212,6 +212,27 @@ static Tree unary(void) {
 				      		error("`sizeof' applied to a bit field\n");
 				      	p = cnsttree(unsignedlong, (unsigned long)ty->size);
 				      } } break;
+	case SYSCALL: { int op = t;
+					  p = NULL;
+					  t = gettok();
+					  if (t == '(') {
+						  t = gettok();
+						  if (t == ICON) {
+							  int n = tsym->u.c.v.i;
+							  if (n < 0 || n > 255) {
+								  error("__syscall argument must be an integer constant in [0, 256)\n");
+							  }
+							  p = systree(n);
+							  t = gettok();
+							  expect(')');
+						  } else {
+							  p = postfix(expr(')'));
+							  error("__syscall argument must be an integer constant in [0, 256)\n");
+						  }
+					  } else {
+						  p = unary();
+					  }
+				  } break;
 	case '(':
 		t = gettok();
 		if (istypename(t, tsym)) {

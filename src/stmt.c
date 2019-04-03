@@ -659,7 +659,7 @@ static Symbol localaddr(Tree p) {
 	if (p == NULL)
 		return NULL;
 	switch (generic(p->op)) {
-	case INDIR: case CALL: case ARG:
+	case INDIR: case CALL: case ARG: case SYS:
 		return NULL;
 	case ADDRL: case ADDRF:
 		return p->u.sym;

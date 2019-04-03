@@ -117,7 +117,7 @@ static Tree root1(Tree p) {
 			if (warn++ == 0)
 				warning("expression with no effect elided\n");
 		return root1(p->kids[0]);
-	case ARG: case ASGN: case CALL: case JUMP: case LABEL:
+	case ARG: case ASGN: case CALL: case JUMP: case LABEL: case SYS:
 		break;
 	default: assert(0);
 	}
@@ -169,6 +169,7 @@ char *opname(int op) {
 	"NE",
 	"JUMP",
 	"LABEL",
+	"SYS",
 	"AND",
 	"NOT",
 	"OR",

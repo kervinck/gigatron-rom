@@ -300,6 +300,9 @@ static void dumptree(Node p) {
 		fprint(stderr, ", ");
 		dumptree(p->kids[1]);
 		break;
+	case SYS:
+		fprint(stderr, "%d", p->syms[0]->u.c.v.i);
+		break;
 	default: assert(0);
 	}
 	fprint(stderr, ")");

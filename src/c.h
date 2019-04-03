@@ -316,12 +316,12 @@ struct tree {
 	} u;
 };
 enum {
-	AND=38<<4,
-	NOT=39<<4,
-	OR=40<<4,
-	COND=41<<4,
-	RIGHT=42<<4,
-	FIELD=43<<4
+	AND=39<<4,
+	NOT=40<<4,
+	OR=41<<4,
+	COND=42<<4,
+	RIGHT=43<<4,
+	FIELD=44<<4
 };
 struct type {
 	int op;
@@ -446,6 +446,7 @@ extern Tree consttree(int, Type);
 extern Tree eqtree(int, Tree, Tree);
 extern int iscallb(Tree);
 extern Tree shtree(int, Tree, Tree);
+extern Tree systree(int);
 extern void typeerror(int, Tree, Tree);
 
 extern void test(int tok, char set[]);

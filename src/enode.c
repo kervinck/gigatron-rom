@@ -521,6 +521,13 @@ static Tree subtree(int op, Tree l, Tree r) {
 	return simplify(op, ty, l, r);
 }
 
+/* systree - construct tree for __syscall(int) */
+Tree systree(int n) {
+	Tree p = tree(mkop(SYS,inttype), inttype, NULL, NULL);
+	p->u.v.i = (long)n;
+	return p;
+}
+
 /* typeerror - issue "operands of op have illegal types `l' and `r'" */
 void typeerror(int op, Tree l, Tree r) {
 	int i;
