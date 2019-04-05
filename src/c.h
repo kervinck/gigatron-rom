@@ -92,6 +92,8 @@ typedef struct type *Type;
 
 typedef struct field *Field;
 
+typedef void (*Action)(Node node);
+
 typedef struct {
 	unsigned printed:1;
 	unsigned marked;

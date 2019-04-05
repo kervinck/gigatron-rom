@@ -39,6 +39,13 @@ struct tree {		/* tree patterns: */
 };
 extern Tree tree(char *op, Tree left, Tree right);
 
+typedef struct action *Action;
+struct action {
+	char *template; /* the template string, if a template */
+	char *code;     /* the action expression, if an expression */
+};
+extern Action action(char *template, char *code);
+
 struct rule {		/* rules: */
 	Nonterm lhs;		/* lefthand side nonterminal */
 	Tree pattern;		/* rule pattern */
@@ -46,14 +53,14 @@ struct rule {		/* rules: */
 	int packed;		/* packed external rule number */
 	int cost;		/* cost, if a constant */
 	char *code;		/* cost, if an expression */
-	char *template;		/* assembler template */
+	Action action; /* rule action */
 	Rule link;		/* next rule in ern order */
 	Rule next;		/* next rule with same pattern root */
 	Rule chain;		/* next chain rule with same rhs */
 	Rule decode;		/* next rule with same lhs */
 	Rule kids;		/* next rule with same _kids pattern */
 };
-extern Rule rule(char *id, Tree pattern, char *template, char *code);
+extern Rule rule(char *id, Tree pattern, Action action, char *code);
 
 /* gram.y: */
 void yyerror(char *fmt, ...);

@@ -326,14 +326,19 @@ static void dumpcover(Node p, int nt, int in) {
 
 static void dumprule(int rulenum) {
 	assert(rulenum);
-	fprint(stderr, "%s / %s", IR->x._string[rulenum],
-		IR->x._templates[rulenum]);
+
+	char *str = IR->x._templates[rulenum];
+	if (str == 0)
+		str = "(action)\n";
+
+	fprint(stderr, "%s / %s", IR->x._string[rulenum], str);
 	if (!IR->x._isinstruction[rulenum])
 		fprint(stderr, "\n");
 }
 unsigned emitasm(Node p, int nt) {
 	int rulenum;
 	short *nts;
+	Action act;
 	char *fmt;
 	Node kids[10];
 
@@ -342,17 +347,21 @@ unsigned emitasm(Node p, int nt) {
 	p = reuse(p, nt);
 	rulenum = getrule(p, nt);
 	nts = IR->x._nts[rulenum];
+	act = IR->x._actions[rulenum];
 	fmt = IR->x._templates[rulenum];
-	assert(fmt);
 
 	if (rulenum == 0) {
 		debug(fprint(stderr, " (no rule)\n"));
+	} else if (fmt == 0) {
+		debug(fprint(stderr, " (action)\n"));
 	} else {
 		debug(fprint(stderr, " %s\n", fmt));
 	}
 
 	if (IR->x._isinstruction[rulenum] && p->x.emitted)
 		print("%s", p->syms[RX]->x.name);
+	else if (fmt == 0)
+		act(p);
 	else if (*fmt == '#')
 		(*IR->x.emit2)(p);
 	else {
@@ -641,7 +650,8 @@ static void ralloc(Node p) {
 		assert(set);
 		if (set->sclass != REGISTER) {
 			Symbol r;
-			if (*IR->x._templates[getrule(p, p->x.inst)] == '?')
+			char *fmt = IR->x._templates[getrule(p, p->x.inst)];
+			if (fmt && *fmt == '?')
 				for (i = 1; i < NELEMS(p->x.kids) && p->x.kids[i]; i++) {
 					Symbol r = p->x.kids[i]->syms[RX];
 					assert(p->x.kids[i]->x.registered);

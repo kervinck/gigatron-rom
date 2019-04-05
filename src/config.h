@@ -13,6 +13,7 @@ typedef struct {
 	short **_nts;
 	void (*_kids)(Node, int, Node*);
 	char **_string;
+	Action *_actions;
 	char **_templates;
 	char *_isinstruction;
 	char **_ntname;

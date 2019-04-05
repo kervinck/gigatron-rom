@@ -9,6 +9,7 @@ static int yylineno = 0;
 	int n;
 	char *string;
 	Tree tree;
+	Action action;
 }
 %term TERMINAL
 %term START
@@ -18,6 +19,7 @@ static int yylineno = 0;
 %token  <n>             INT
 %type	<string>	nonterm cost
 %type   <tree>          tree
+%type   <action>        action
 %%
 spec	: decls PPERCENT rules		{ yylineno = 0; }
 	| decls				{ yylineno = 0; }
@@ -41,7 +43,7 @@ blist	: /* lambda */
 	;
 
 rules	: /* lambda */
-	| rules nonterm ':' tree TEMPLATE cost '\n'	{ rule($2, $4, $5, $6); }
+	| rules nonterm ':' tree action cost '\n'	{ rule($2, $4, $5, $6); }
 	| rules '\n'
 	| rules error '\n'		{ yyerrok; }
 	;
@@ -52,6 +54,10 @@ nonterm	: ID				{ nonterm($$ = $1); }
 tree	: ID                            { $$ = tree($1,  0,  0); }
 	| ID '(' tree ')'               { $$ = tree($1, $3,  0); }
 	| ID '(' tree ',' tree ')'      { $$ = tree($1, $3, $5); }
+	;
+
+action	: TEMPLATE	{ $$ = action($1, 0); }
+	| CODE	{ $$ = action(0, $1); }
 	;
 
 cost	: CODE				{ if (*$1 == 0) $$ = "0"; }
@@ -162,6 +168,20 @@ int yylex(void) {
 			bp = *p == '"' ? p + 1 : p;
 			code++;
 			return TEMPLATE;
+		} else if (c == '`') {
+			char *p = strchr(bp, '`');
+			if (p == NULL) {
+				yyerror("missing ` in assembler code\n");
+				p = strchr(bp, '\n');
+				if (p == NULL)
+					p = strchr(bp, '\0');
+			}
+			assert(p);
+			yylval.string = alloc(p - bp + 1);
+			strncpy(yylval.string, bp, p - bp);
+			bp = *p == '`' ? p + 1 : p;
+			code++;
+			return CODE;
 		} else if (isdigit(c)) {
 			int n = 0;
 			do {

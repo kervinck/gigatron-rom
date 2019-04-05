@@ -239,8 +239,16 @@ Tree tree(char *id, Tree left, Tree right) {
 	return t;
 }
 
+/* action - create & initialize an action with the given fields */
+Action action(char *template, char *code) {
+	Action a = alloc(sizeof *a);
+	a->template = template;
+	a->code = code;
+	return a;
+}
+
 /* rule - create & initialize a rule with the given fields */
-Rule rule(char *id, Tree pattern, char *template, char *code) {
+Rule rule(char *id, Tree pattern, Action action, char *code) {
 	Rule r = alloc(sizeof *r), *q;
 	Term p = pattern->op;
 	char *end;
@@ -252,7 +260,7 @@ Rule rule(char *id, Tree pattern, char *template, char *code) {
 	*q = r;
 	r->pattern = pattern;
 	r->ern = ++nrules;
-	r->template = template;
+	r->action = action;
 	r->code = code;
 	r->cost = strtol(code, &end, 10);
 	if (*end) {
@@ -621,22 +629,46 @@ static void emitrule(Nonterm nts) {
 	print("%1default:\n%2fatal(\"%Prule\", \"Bad goal nonterminal %%d\\n\", goalnt);\n%2return 0;\n%1}\n}\n\n");
 }
 
-/* emitstring - emit arrays of templates, instruction flags, and rules */
+/* emitstring - emit arrays of actions, instruction flags, and rules */
 static void emitstring(Rule rules) {
 	Rule r;
 
+	print("static Action %Pactions[] = {\n");
+	print("/* 0 */%10,\n");
+	for (r = rules; r; r = r->link) {
+		print("/* %d */%1", r->ern);
+		if (r->action->code == 0)
+			print("0");
+		else
+			print("%s", r->action->code);
+		print(",%1/* %R */\n", r);
+	}
+	print("};\n");
 	print("static char *%Ptemplates[] = {\n");
 	print("/* 0 */%10,\n");
-	for (r = rules; r; r = r->link)
-		print("/* %d */%1\"%s\",%1/* %R */\n", r->ern, r->template, r);
+	for (r = rules; r; r = r->link) {
+		print("/* %d */%1", r->ern);
+		if (r->action->template == 0)
+			print("0");
+		else
+			print("\"%s\"", r->action->template);
+		print(",%1/* %R */\n", r);
+	}
 	print("};\n");
 	print("\nstatic char %Pisinstruction[] = {\n");
 	print("/* 0 */%10,\n");
 	for (r = rules; r; r = r->link) {
-		int len = strlen(r->template);
-		print("/* %d */%1%d,%1/* %s */\n", r->ern,
-			len >= 2 && r->template[len-2] == '\\' && r->template[len-1] == 'n',
-			r->template);
+		int isinst;
+		char *info;
+		if (r->action->template == 0) {
+			isinst = strncmp(r->action->code, "inst_", 5) == 0;
+			info = r->action->code;
+		} else {
+			int len = strlen(r->action->template);
+			isinst = len >= 2 && r->action->template[len-2] == '\\' && r->action->template[len-1] == 'n';
+			info = r->action->template;
+		}
+		print("/* %d */%1%d,%1/* %s */\n", r->ern, isinst, info);
 	}
 	print("};\n");
 	print("\nstatic char *%Pstring[] = {\n");

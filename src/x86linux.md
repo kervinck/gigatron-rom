@@ -1072,6 +1072,7 @@ Interface x86linuxIR = {
             _nts,
             _kids,
             _string,
+			_actions,
             _templates,
             _isinstruction,
             _ntname,

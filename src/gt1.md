@@ -29,6 +29,37 @@ static void segment(int);
 static void space(int);
 static void target(Node);
 
+static void inst_spill(Node);
+static void inst_copy(Node);
+static void inst_ldloc(Node);
+static void inst_ld(Node);
+static void inst_st(Node);
+static void inst_peek(Node);
+static void inst_poke(Node);
+static void inst_scon(Node);
+static void inst_addr(Node);
+static void inst_cnstw(Node);
+static void inst_addi(Node p);
+static void inst_subi(Node p);
+static void inst_andi(Node p);
+static void inst_ori(Node p);
+static void inst_xori(Node p);
+static void inst_addw(Node p);
+static void inst_subw(Node p);
+static void inst_andw(Node p);
+static void inst_orw(Node p);
+static void inst_xorw(Node p);
+static void inst_lslw(Node p);
+static void inst_lsh(Node p);
+static void inst_rsh(Node p);
+static void inst_mul(Node p);
+static void inst_mod(Node p);
+static void inst_div(Node p);
+static void inst_neg(Node p);
+static void inst_bcom(Node p);
+static void inst_call(Node p);
+static void inst_sys(Node p);
+
 static Symbol regs[32];
 static Symbol regw;
 static struct {
@@ -198,19 +229,8 @@ stmt: ASGNI2(VREGP, reg)  "# write register\n"
 stmt: ASGNU2(VREGP, reg)  "# write register\n"
 stmt: ASGNP2(VREGP, reg)  "# write register\n"
 
-stmt: ASGNI2(ADDRLP2, LOADI2(INDIRI2(VREGP))) "# spill\n" 1
-stmt: ASGNU2(ADDRLP2, LOADU2(INDIRU2(VREGP))) "# spill\n" 1
-
-con: CNSTI1  "# %a" 1
-con: CNSTU1  "# %a" 1
-
-con: CNSTI2  "# %a" 1
-con: CNSTU2  "# %a" 1
-con: CNSTP2  "# %a" 1
-
-con: ADDRGP2  "# %a" 1
-con: ADDRFP2  "# %a" 1
-con: ADDRLP2  "# %a" 1
+stmt: ASGNI2(ADDRLP2, LOADI2(INDIRI2(VREGP))) `inst_spill` 1
+stmt: ASGNU2(ADDRLP2, LOADU2(INDIRU2(VREGP))) `inst_spill` 1
 
 stmt: reg "# "
 
@@ -221,117 +241,102 @@ scon: CNSTI2 "%a" range(a, 0, 127)
 scon: CNSTU2 "%a" range(a, 0, 255)
 scon: CNSTP2 "%a" rangep(a, 0, 255)
 
-reg: con "# %0\n" 1
+reg: LOADI1(reg)  `inst_copy` 1
+reg: LOADI2(reg)  `inst_copy` 1
+reg: LOADU1(reg)  `inst_copy` 1
+reg: LOADU2(reg)  `inst_copy` 1
 
-reg: LOADI1(reg)  "# copy\n" 1
-reg: LOADI2(reg)  "# copy\n" 1
-reg: LOADU1(reg)  "# copy\n" 1
-reg: LOADU2(reg)  "# copy\n" 1
+reg: INDIRI1(ADDRLP2) `inst_ldloc` 1
+reg: INDIRI2(ADDRLP2) `inst_ldloc` 1
+reg: INDIRU1(ADDRLP2) `inst_ldloc` 1
+reg: INDIRU2(ADDRLP2) `inst_ldloc` 1
+reg: INDIRP2(ADDRLP2) `inst_ldloc` 1
+reg: INDIRF2(ADDRLP2) `inst_ldloc` 1
 
-reg: INDIRI1(ADDRLP2) "# ldloc\n" 1
-reg: INDIRI2(ADDRLP2) "# ldlocw\n" 1
-reg: INDIRU1(ADDRLP2) "# ldloc\n" 1
-reg: INDIRU2(ADDRLP2) "# ldlocw\n" 1
-reg: INDIRP2(ADDRLP2) "# ldlocw\n" 1
-reg: INDIRF2(ADDRLP2) "# ldlocw\n" 1
+reg: INDIRI1(ADDRFP2) `inst_ldloc` 1
+reg: INDIRI2(ADDRFP2) `inst_ldloc` 1
+reg: INDIRU1(ADDRFP2) `inst_ldloc` 1
+reg: INDIRU2(ADDRFP2) `inst_ldloc` 1
+reg: INDIRP2(ADDRFP2) `inst_ldloc` 1
+reg: INDIRF2(ADDRFP2) `inst_ldloc` 1
 
-reg: INDIRI1(ADDRFP2) "# ldloc\n" 1
-reg: INDIRI2(ADDRFP2) "# ldlocw\n" 1
-reg: INDIRU1(ADDRFP2) "# ldloc\n" 1
-reg: INDIRU2(ADDRFP2) "# ldlocw\n" 1
-reg: INDIRP2(ADDRFP2) "# ldlocw\n" 1
-reg: INDIRF2(ADDRFP2) "# ldlocw\n" 1
+reg: INDIRI1(scon) `inst_ld` 1
+reg: INDIRU1(scon) `inst_ld` 1
+reg: INDIRI2(scon) `inst_ld` 1
+reg: INDIRU2(scon) `inst_ld` 1
+reg: INDIRP2(scon) `inst_ld` 1
+reg: INDIRF2(scon) `inst_ld` 1
+stmt: ASGNI1(scon, reg) `inst_st` 1
+stmt: ASGNU1(scon, reg) `inst_st` 1
+stmt: ASGNI2(scon, reg) `inst_st` 1
+stmt: ASGNU2(scon, reg) `inst_st` 1
+stmt: ASGNP2(scon, reg) `inst_st` 1
+stmt: ASGNF2(scon, reg) `inst_st` 1
 
-reg: INDIRI1(scon) "# ld\n" 1
-reg: INDIRU1(scon) "# ld\n" 1
-reg: INDIRI2(scon) "# ldw\n" 1
-reg: INDIRU2(scon) "# ldw\n" 1
-reg: INDIRP2(scon) "# ldw\n" 1
-reg: INDIRF2(scon) "# ldw\n" 1
-stmt: ASGNI1(scon, reg) "# st %0\n" 1
-stmt: ASGNU1(scon, reg) "# st %0\n" 1
-stmt: ASGNI2(scon, reg) "# stw %0\n" 1
-stmt: ASGNU2(scon, reg) "# stw %0\n" 1
-stmt: ASGNP2(scon, reg) "# stw %0\n" 1
-stmt: ASGNF2(scon, reg) "# stw %0\n" 1
+reg: INDIRI1(reg) `inst_peek` 1
+reg: INDIRU1(reg) `inst_peek` 1
+reg: INDIRI2(reg) `inst_peek` 1
+reg: INDIRU2(reg) `inst_peek` 1
+reg: INDIRP2(reg) `inst_peek` 1
+reg: INDIRF2(reg) `inst_peek` 1
+stmt: ASGNI1(reg, reg) `inst_poke` 1
+stmt: ASGNU1(reg, reg) `inst_poke` 1
+stmt: ASGNI2(reg, reg) `inst_poke` 1
+stmt: ASGNU2(reg, reg) `inst_poke` 1
+stmt: ASGNP2(reg, reg) `inst_poke` 1
+stmt: ASGNF2(reg, reg) `inst_poke` 1
 
-reg: INDIRI1(reg) "# peek\n" 1
-reg: INDIRU1(reg) "# peek\n" 1
-reg: INDIRI2(reg) "# deek\n" 1
-reg: INDIRU2(reg) "# deek\n" 1
-reg: INDIRP2(reg) "# deek\n" 1
-reg: INDIRF2(reg) "# deek\n" 1
-stmt: ASGNI1(reg, reg) "# poke %0\n" 1
-stmt: ASGNU1(reg, reg) "# poke %0\n" 1
-stmt: ASGNI2(reg, reg) "# doke %0\n" 1
-stmt: ASGNU2(reg, reg) "# doke %0\n" 1
-stmt: ASGNP2(reg, reg) "# doke %0\n" 1
-stmt: ASGNF2(reg, reg) "# doke %0\n" 1
+reg: scon    `inst_scon` 1
+reg: CNSTI1  `inst_cnstw` 1
+reg: CNSTU1  `inst_scon` 1
+reg: CNSTI2  `inst_cnstw` 1
+reg: CNSTU2  `inst_cnstw` 1
+reg: CNSTP2  `inst_cnstw` 1
+reg: CNSTF2  `inst_cnstw` 1
+reg: ADDRLP2 `inst_addr` 1
+reg: ADDRFP2 `inst_addr` 1
+reg: ADDRGP2 `inst_addr` 1
 
-reg: scon    "# ldi\n" 1
-reg: CNSTI1  "# ldiw\n" 1
-reg: CNSTU1  "# ldi\n" 1
-reg: CNSTI2  "# ldiw\n" 1
-reg: CNSTU2  "# ldiw\n" 1
-reg: CNSTP2  "# ldiw\n" 1
-reg: CNSTF2  "# ldiw\n" 1
+reg: ADDI2(reg, scon)   `inst_addi` 1
+reg: ADDU2(reg, scon)   `inst_addi` 1
+reg: ADDP2(reg, scon)   `inst_addi` 1
+reg: SUBI2(reg, scon)   `inst_subi` 1
+reg: SUBU2(reg, scon)   `inst_subi` 1
+reg: SUBP2(reg, scon)   `inst_subi` 1
+reg: BANDI2(reg, scon)  `inst_andi` 1
+reg: BANDU2(reg, scon)  `inst_andi` 1
+reg: BORI2(reg, scon)   `inst_ori` 1
+reg: BORU2(reg, scon)   `inst_ori` 1
+reg: BXORI2(reg, scon)  `inst_xori` 1
+reg: BXORU2(reg, scon)  `inst_xori` 1
 
-reg: ADDI2(reg, scon)   "# addi\n" 1
-reg: ADDU2(reg, scon)   "# addi\n" 1
-reg: ADDP2(reg, scon)   "# addi\n" 1
-reg: SUBI2(reg, scon)   "# subi\n" 1
-reg: SUBU2(reg, scon)   "# subi\n" 1
-reg: SUBP2(reg, scon)   "# subi\n" 1
-reg: BANDI2(reg, scon)  "# andi\n" 1
-reg: BANDU2(reg, scon)  "# andi\n" 1
-reg: BORI2(reg, scon)   "# ori\n" 1
-reg: BORU2(reg, scon)   "# ori\n" 1
-reg: BXORI2(reg, scon)  "# xori\n" 1
-reg: BXORU2(reg, scon)  "# xori\n" 1
+reg: ADDI2(reg, reg)   `inst_addw` 1
+reg: ADDU2(reg, reg)   `inst_addw` 1
+reg: ADDP2(reg, reg)   `inst_addw` 1
+reg: SUBI2(reg, reg)   `inst_subw` 1
+reg: SUBU2(reg, reg)   `inst_subw` 1
+reg: SUBP2(reg, reg)   `inst_subw` 1
+reg: BANDI2(reg, reg)  `inst_andw` 1
+reg: BANDU2(reg, reg)  `inst_andw` 1
+reg: BORI2(reg, reg)   `inst_orw` 1
+reg: BORU2(reg, reg)   `inst_orw` 1
+reg: BXORI2(reg, reg)  `inst_xorw` 1
+reg: BXORU2(reg, reg)  `inst_xorw` 1
 
-reg: ADDI2(reg, reg)   "# addw\n" 1
-reg: ADDU2(reg, reg)   "# addw\n" 1
-reg: ADDP2(reg, reg)   "# addw\n" 1
-reg: SUBI2(reg, reg)   "# subw\n" 1
-reg: SUBU2(reg, reg)   "# subw\n" 1
-reg: SUBP2(reg, reg)   "# subw\n" 1
-reg: BANDI2(reg, reg)  "# andw\n" 1
-reg: BANDU2(reg, reg)  "# andw\n" 1
-reg: BORI2(reg, reg)   "# orw\n" 1
-reg: BORU2(reg, reg)   "# orw\n" 1
-reg: BXORI2(reg, reg)  "# xorw\n" 1
-reg: BXORU2(reg, reg)  "# xorw\n" 1
+reg: LSHI2(reg, con1)  `inst_lslw` 1
+reg: LSHU2(reg, con1)  `inst_lslw` 1
 
-reg: LSHI2(reg, con1)  "# lslw\n" 1
-reg: LSHU2(reg, con1)  "# lslw\n" 1
+reg: LSHI2(reg, reg)  `inst_lsh` 1
+reg: LSHU2(reg, reg)  `inst_lsh` 1
+reg: RSHI2(reg, reg)  `inst_rsh` 1
+reg: RSHU2(reg, reg)  `inst_rsh` 1
 
-reg: LSHI2(reg, con)  "# stw ha\nldi %1\ncall lsh\n" 1
-reg: LSHI2(reg, reg)  "# stw ha\nldw %1\ncall lsh\n" 1
-reg: LSHU2(reg, con)  "# stw ha\nldi %1\ncall lsh\n" 1
-reg: LSHU2(reg, reg)  "# stw ha\nldw %1\ncall lsh\n" 1
-reg: RSHI2(reg, con)  "# stw ha\nldi %1\ncall rshi\n" 1
-reg: RSHI2(reg, reg)  "# stw ha\nldw %1\ncall rshi\n" 1
-reg: RSHU2(reg, con)  "# stw ha\nldi %1\ncall rshu\n" 1
-reg: RSHU2(reg, reg)  "# stw ha\nldw %1\ncall rshu\n" 1
-
-reg: MULI2(reg, scon)  "# stw ha\nldi %1\ncall muli\n" 1
-reg: MULI2(reg, con)   "# stw ha\nldwi %1\ncall muli\n" 1
-reg: MULI2(reg, reg)   "# stw ha\nldw %1\ncall muli\n" 1
-reg: MULU2(reg, scon)  "# stw ha\nldi %1\ncall mulu\n" 1
-reg: MULU2(reg, con)   "# stw ha\nldwi %1\ncall mulu\n" 1
-reg: MULU2(reg, reg)   "# stw ha\nldw %1\ncall mulu\n" 1
-reg: MODI2(reg, scon)  "# stw ha\nldi %1\ncall modi\n" 1
-reg: MODI2(reg, con)   "# stw ha\nldwi %1\ncall modi\n" 1
-reg: MODI2(reg, reg)   "# stw ha\nldw %1\ncall modi\n" 1
-reg: MODU2(reg, scon)  "# stw ha\nldi %1\ncall modu\n" 1
-reg: MODU2(reg, con)   "# stw ha\nldwi %1\ncall modu\n" 1
-reg: MODU2(reg, reg)   "# stw ha\nldw %1\ncall modu\n" 1
-reg: DIVI2(reg, scon)  "# stw ha\nldi %1\ncall divi\n" 1
-reg: DIVI2(reg, con)   "# stw ha\nldwi %1\ncall divi\n" 1
-reg: DIVI2(reg, reg)   "# stw ha\nldw %1\ncall divi\n" 1
-reg: DIVU2(reg, scon)  "# stw ha\nldi %1\ncall divu\n" 1
-reg: DIVU2(reg, con)   "# stw ha\nldwi %1\ncall divu\n" 1
-reg: DIVU2(reg, reg)   "# stw ha\nldw %1\ncall divu\n" 1
+reg: MULI2(reg, reg)   `inst_mul` 1
+reg: MULU2(reg, reg)   `inst_mul` 1
+reg: MODI2(reg, reg)   `inst_mod` 1
+reg: MODU2(reg, reg)   `inst_mod` 1
+reg: DIVI2(reg, reg)   `inst_div` 1
+reg: DIVU2(reg, reg)   `inst_div` 1
 
 reg: CVII1(reg)  "# andi $ff # fixme: sign-extend\n" 1
 reg: CVII2(reg)  "# " 1
@@ -346,26 +351,22 @@ reg: CVUP2(reg)  "# " 1
 reg: CVUU1(reg)  "# andi $ff\n" 1
 reg: CVUU2(reg)  "# " 1
 
-reg: NEGI2(reg)  "# stw extemp\nldw zero\nsubw extemp\n" 1
+reg: NEGI2(reg)  `inst_neg` 1
 
-reg: BCOMI2(reg) "# stw ha\nldiw $ffff\nxorw ha\n" 1
-reg: BCOMU2(reg) "# stw ha\nldiw $ffff\nxorw ha\n" 1
+reg: BCOMI2(reg) `inst_bcom` 1
+reg: BCOMU2(reg) `inst_bcom` 1
 
 reg: CVFF2(reg)  "# " 1
 reg: CVFI2(reg)  "# call cvfi\n" 1
 reg: CVIF2(reg)  "# call cvif\n" 1
 reg: NEGF2(reg)  "# call negf\n" 1
 
-reg: ADDF2(reg, CNSTF2)  "# stw ha\nldwi %1\ncall addf\n" 1
 reg: ADDF2(reg, reg)     "# stw ha\nldw %1\ncall addf\n" 1
-reg: SUBF2(reg, CNSTF2)  "# stw ha\nldwi %1\ncall subf\n" 1
 reg: SUBF2(reg, reg)     "# stw ha\nldw %1\ncall subf\n" 1
-reg: MULF2(reg, CNSTF2)  "# stw ha\nldwi %1\ncall mulf\n" 1
 reg: MULF2(reg, reg)     "# stw ha\nldw %1\ncall mulf\n" 1
-reg: DIVF2(reg, CNSTF2)  "# stw ha\nldwi %1\ncall divf\n" 1
 reg: DIVF2(reg, reg)     "# stw ha\nldw %1\ncall divf\n" 1
 
-stmt: JUMPV(reg)  "# subi 2\ndoke pvPC\n" 1
+stmt: JUMPV(reg) "j\n" 1
 stmt: LABELV     "%a:\n"
 stmt: EQI2(reg, reg) "# jcc eq %1 %a # pseudo\n" 1
 stmt: EQU2(reg, reg) "# jcc eq %1 %a # pseudo\n" 1
@@ -392,14 +393,13 @@ stmt: ARGI2(reg) "# push %0\n"  1
 stmt: ARGU2(reg) "# push %0\n"  1
 stmt: ARGP2(reg) "# push %0\n"  1
 
-reg: CALLF2(reg)  "# call %0\n" 1
-reg: CALLI2(reg)  "# call %0\n" 1
-reg: CALLP2(reg)  "# call %0\n" 1
-reg: CALLU2(reg)  "# call %0\n" 1
-reg: CALLV(reg)   "# call %0\n" 1
+reg: CALLF2(reg)  `inst_call` 1
+reg: CALLI2(reg)  `inst_call` 1
+reg: CALLP2(reg)  `inst_call` 1
+reg: CALLU2(reg)  `inst_call` 1
+reg: CALLV(reg)   `inst_call` 1
 
-reg: SYSI2 "# sys %0\n" 1
-reg: SYSI2 "# sys %0\n" 1
+reg: SYSI2 `inst_sys` 1
 
 stmt: RETF2(reg)  "# ret\n" 1
 stmt: RETI2(reg)  "# ret\n" 1
@@ -476,10 +476,15 @@ static void target(Node p) {
 			break;
 		}
 		// fallthrough
-	case NEG:
 	case RET:
 		// Standard unary operators require their operand in vAC.
 		rtarget(p, 0, regs[0]);
+		break;
+	case NEG:
+	case BCOM:
+		// These operators require their operand in a register besides vAC, and produce a result in vAC. We can't
+		// represent the former--we'll just spull to ha if the operand is in vAC--but we can handle the latter.
+		setreg(p, regs[0]);
 		break;
 	case ADD:
 	case BAND:
@@ -491,7 +496,6 @@ static void target(Node p) {
 			break;
 		}
 		// fallthrough
-	case MUL:
 	case EQ:
 	case GE:
 	case GT:
@@ -508,9 +512,10 @@ static void target(Node p) {
 			break;
 		}
 		// fallthrough
-	case DIV:
-	case MOD:
 	case RSH:
+	case MUL:
+	case MOD:
+	case DIV:
 		// Helper calls. We can pick the targets to help avoid spills. We'll put the LHS in r0 and the RHS in vAC.
 		rtarget(p, 0, regs[1]);
 		rtarget(p, 1, regs[0]);
@@ -544,140 +549,224 @@ static void clobber(Node p) {
 		spill(0x00ff, IREG, p);
 	}
 }
-static void emit2(Node p) {
-	//print("; emit2: %p, %s, %s", p, opname(p->op), p->syms[RX] ? p->syms[RX]->name : "(none)");
-
-	int rulenum = _rule(p->x.state, p->x.inst);
-	if (rulenum == 0) {
-		//print(" (no rule)\n");
-		return;
+static void emitjcc(Node p, char* kind) {
+	if (range(p->kids[0], 0, 0) != 0) {
+		print("sub r%d\n", getregnum(p->kids[0]));
 	}
-	char* fmt = _templates[rulenum];
-	//print(" %s\n", fmt);
+	print("jcc %s %s\n", kind, p->syms[0]->x.name);
+}
 
+static void ensurereg(Node p) {
+	int r = getregnum(p);
+	if (r != 0) {
+		print("stw r%d\n", r);
+	}
+}
+
+static void inst_spill(Node p) {
+	Node local = p->kids[0];
+	Node vregp = p->kids[1]->kids[0]->kids[0];
+	assert(getregnum(vregp) == 0);
+	print("stw ha\nldwi %d\ncall stloc\n", local->syms[0]->x.offset);
+}
+
+static void inst_copy(Node p) {
+	assert(getregnum(p) == 0 || getregnum(p->kids[0]) == 0);
+	if (getregnum(p) == 0) {
+		print("ldw r%d\n", getregnum(p->kids[0]));
+	} else if (getregnum(p->kids[0]) == 0) {
+		print("stw r%d\n", getregnum(p));
+	}
+}
+
+static void inst_ldloc(Node p) {
+	assert(getregnum(p) == 0);
+
+	int offs;
+	if (generic(p->kids[0]->op) == ADDRF) {
+		offs = p->kids[0]->syms[0]->x.offset + offset;
+	} else {
+		assert(generic(p->kids[0]->op) == ADDRL);
+		offs = p->kids[0]->syms[0]->x.offset;
+	}
+
+	if (offs < 256) {
+		print("ldi %d\n", offs);
+	} else {
+		print("ldiw %d\n", offs);
+	}
+	print("call ldloc\n");
+}
+
+static void inst_st(Node p) {
+	char* op = "st";
+	if (opsize(p->op) == 2) {
+		op = "stw";
+	}
+	print("%s $%x\n", op, p->kids[0]->syms[0]->u.c.v.u);
+}
+
+static void inst_ld(Node p) {
+	char* op = "ld";
+	if (opsize(p->op) == 2) {
+		op = "ldw";
+	}
+	print("%s $%x\n", op, p->kids[0]->syms[0]->u.c.v.u);
+	ensurereg(p);
+}
+
+static void inst_peek(Node p) {
+	char* op = "peek";
+	if (opsize(p->op) == 2) {
+		op = "deek";
+	}
+	print("%s\n", op);
+	ensurereg(p);
+}
+
+static void inst_poke(Node p) {
+	char* op = "poke";
+	if (opsize(p->op) == 2) {
+		op = "doke";
+	}
+	print("%s r%d\n", op, getregnum(p->kids[0]));
+}
+
+static void inst_scon(Node p) {
+	assert(getregnum(p) == 0);
+	print("ldi $%x\n", p->syms[0]->u.c.v.u);
+}
+
+static void inst_cnstw(Node p) {
+	assert(getregnum(p) == 0);
+	print("ldwi $%x\n", p->syms[0]->u.c.v.u);
+}
+
+static void inst_addr(Node p) {
+	assert(getregnum(p) == 0);
+	print("ldwi %s\n", p->syms[0]->x.name);
+}
+
+static void inst_addi(Node p) {
+	print("addi $%x\n", p->kids[1]->syms[0]->u.c.v.u);
+	ensurereg(p);
+}
+
+static void inst_subi(Node p) {
+	print("subi $%x\n", p->kids[1]->syms[0]->u.c.v.u);
+	ensurereg(p);
+}
+
+static void inst_andi(Node p) {
+	print("andi $%x\n", p->kids[1]->syms[0]->u.c.v.u);
+	ensurereg(p);
+}
+
+static void inst_ori(Node p) {
+	print("ori $%x\n", p->kids[1]->syms[0]->u.c.v.u);
+	ensurereg(p);
+}
+
+static void inst_xori(Node p) {
+	print("xori $%x\n", p->kids[1]->syms[0]->u.c.v.u);
+	ensurereg(p);
+}
+
+static void inst_addw(Node p) {
+	print("addw r%d\n", getregnum(p->kids[0]));
+	ensurereg(p);
+}
+
+static void inst_subw(Node p) {
+	print("subw r%d\n", getregnum(p->kids[0]));
+	ensurereg(p);
+}
+
+static void inst_andw(Node p) {
+	print("andw r%d\n", getregnum(p->kids[0]));
+	ensurereg(p);
+}
+
+static void inst_orw(Node p) {
+	print("orw r%d\n", getregnum(p->kids[0]));
+	ensurereg(p);
+}
+
+static void inst_xorw(Node p) {
+	print("xorw r%d\n", getregnum(p->kids[0]));
+	ensurereg(p);
+}
+
+static void inst_lslw(Node p) {
+	print("lslw\n");
+	ensurereg(p);
+}
+
+static void inst_lsh(Node p) {
+	print("call lsh\n");
+	ensurereg(p);
+}
+
+static void inst_rsh(Node p) {
+	print("call rsh\n");
+	ensurereg(p);
+}
+
+static void inst_mul(Node p) {
+	print("call mul\n");
+	ensurereg(p);
+}
+
+static void inst_mod(Node p) {
+	print("call mod\n");
+	ensurereg(p);
+}
+
+static void inst_div(Node p) {
+	print("call div\n");
+	ensurereg(p);
+}
+
+static void inst_neg(Node p) {
+	assert(getregnum(p) == 0);
+	if (getregnum(p->kids[0]) == 0) {
+		print("st ha\n");
+		print("ldi 0\n");
+		print("sub ha\n");
+	} else {
+		print("ldi 0\n");
+		print("sub r%d\n", getregnum(p->kids[0]));
+	}
+}
+
+static void inst_bcom(Node p) {
+	assert(getregnum(p) == 0);
+	if (getregnum(p->kids[0]) == 0) {
+		print("st ha\n");
+		print("ldwi $ffff\n");
+		print("xorw ha\n");
+	} else {
+		print("ldwi $ffff\n");
+		print("xorw r%d\n", getregnum(p->kids[0]));
+	}
+}
+
+static void inst_call(Node p) {
+	if (getregnum(p->kids[0]) == 0) {
+		print("call vAC\n");
+	} else {
+		print("call r%d\n", getregnum(p->kids[0]));
+	}
+}
+
+static void inst_sys(Node p) {
+	print("sys %d\n", p->syms[0]->u.c.v.i);
+}
+
+static void emit2(Node p) {
 	long i;
 	unsigned long u;
 	switch (specific(p->op)) {
-	case CNST+F:
-		assert(getregnum(p) == 0);
-		// TODO: convert double to 16-bit fixed point
-		print("ldwi $%x\n", p->syms[0]->u.c.v.d);
-		vac.known = 1;
-		vac.value = (unsigned)p->syms[0]->u.c.v.u;
-		break;
-	case CNST+I:
-		assert(getregnum(p) == 0);
-		i = p->syms[0]->u.c.v.i;
-		if (vac.known && vac.value == (unsigned)i) {
-			break;
-		}
-		if (i >= 0 && i < 256) {
-			print("ldi $%x\n", i & 0xff);
-		} else {
-			print("ldwi $%x\n", (unsigned long)i);
-		}
-		vac.known = 1;
-		vac.value = (unsigned)i;
-		break;
-	case CNST+P:
-		assert(getregnum(p) == 0);
-		u = (unsigned)p->syms[0]->u.c.v.p;
-		if (vac.known && vac.value == u) {
-			break;
-		}
-		if (u < 256) {
-			print("ldi $%x\n", u & 0xff);
-		} else {
-			print("ldwi $%x\n", u);
-		}
-		vac.known = 1;
-		vac.value = u;
-		break;
-	case CNST+U:
-		assert(getregnum(p) == 0);
-		u = p->syms[0]->u.c.v.u;
-		if (vac.known && vac.value == u) {
-			break;
-		}
-		if (u < 256) {
-			print("ldi $%x\n", u & 0xff);
-		} else {
-			print("ldwi $%x\n", u);
-		}
-		vac.known = 1;
-		vac.value = u;
-		break;
-
-	case ASGN+F:
-	case ASGN+I:
-	case ASGN+P:
-	case ASGN+U:
-		if (strcmp(fmt, "# spill\n") == 0) {
-			Node local = p->kids[0];
-			Node vregp = p->kids[1]->kids[0]->kids[0];
-			assert(getregnum(vregp) == 0);
-			print("stw ha\nldwi %d\ncall stloc\n", local->syms[0]->x.offset);
-		} else if (p->kids[0]->op == VREG+P) {
-			//print("; write register variable\n");
-		} else if (range(p->kids[0], 0, 255) == 0 || rangep(p->kids[0], 0, 255) == 0) {
-			char* op = "st";
-			if (opsize(p->op) == 2) {
-				op = "stw";
-			}
-			print("%s $%x\n", op, p->kids[0]->syms[0]->u.c.v.u);
-		} else {
-			char* op = "poke";
-			if (opsize(p->op) == 2) {
-				op = "doke";
-			}
-			print("%s r%d\n", op, getregnum(p->kids[0]));
-		}
-		break;
-
-	case INDIR+F:
-	case INDIR+I:
-	case INDIR+P:
-	case INDIR+U:
-		if (specific(p->kids[0]->op) == VREG+P) {
-			//print("; read register variable %s\n", p->kids[0]->syms[0]->name);
-			break;
-		} else if (generic(p->kids[0]->op) == ADDRF) {
-			int imm = p->kids[0]->syms[0]->x.offset + offset;
-			if (imm < 256) {
-				print("ldi %d\n", imm);
-			} else {
-				print("ldiw %d\n", imm);
-			}
-			print("call ldloc\n");
-			vac.known = 0;
-		} else if (generic(p->kids[0]->op) == ADDRL) {
-			int imm = p->kids[0]->syms[0]->x.offset;
-			if (imm < 256) {
-				print("ldi %d\n", imm);
-			} else {
-				print("ldiw %d\n", imm);
-			}
-			print("call ldloc\n");
-			vac.known = 0;
-		} else if (range(p->kids[0], 0, 255) == 0) {
-			char* op = "ld";
-			if (opsize(p->op) == 2) {
-				op = "ldw";
-			}
-			print("%s $%x\n", op, p->kids[0]->syms[0]->u.c.v.u);
-			vac.known = 0;
-		} else if (opsize(p->op) == 2) {
-			print("deek\n");
-			vac.known = 0;
-		} else if (opsize(p->op) == 1) {
-			print("peek\n");
-			vac.known = 0;
-		}
-		if (getregnum(p) != 0) {
-			print("stw r%d\n", getregnum(p));
-		}
-		break;
-
 	case CVF+F:
 	case CVF+I:
 
@@ -702,141 +791,50 @@ static void emit2(Node p) {
 		print("; arg...\n");
 		break;
 
-	case CALL+F:
-	case CALL+I:
-	case CALL+P:
-	case CALL+U:
-	case CALL+V:
-		if (getregnum(p->kids[0]) == 0) {
-			print("call vAC\n");
-		} else {
-			print("call r%d\n", getregnum(p->kids[0]));
-		}
-		vac.known = 0;
-		break;
-
-	case SYS+I:
-		print("sys %d\n", p->syms[0]->u.c.v.i);
-		break;
-
-	case RET+F:
-	case RET+I:
-	case RET+P:
-	case RET+U:
-	case RET+V:
-		break;
-
-	case ADDRG+P:
-		print("ldwi %s\n", p->syms[0]->x.name);
-		if (getregnum(p) != 0) {
-			print("stw r%d\n", getregnum(p));
-		}
-		vac.known = 0;
-		break;
-
 	case ADDRF+P:
 
 	case ADDRL+P:
 		break;
 
-	case ADD+F:
-	case ADD+I:
-	case ADD+P:
-	case ADD+U:
-		if (range(p->kids[1], 0, optype(p->op) == U ? 255 : 127) == 0) {
-			print("addi $%x\n", p->kids[1]->syms[0]->u.c.v.u);
-		} else {
-			print("addw r%d\n", getregnum(p->kids[0]));
-		}
-		if (getregnum(p) != 0) {
-			print("stw r%d\n", getregnum(p));
-		}
-		vac.known = 0;
-		break;
-
-	case SUB+F:
-	case SUB+I:
-	case SUB+P:
-	case SUB+U:
-		break;
-
-	case LSH+I:
-	case LSH+U:
-		if (range(p->kids[1], 1, 1) == 0) {
-			print("lslw\n");
-		} else {
-			print("; TODO: helper call for LSH\n");
-		}
-		if (getregnum(p) != 0) {
-			print("stw r%d\n", getregnum(p));
-		}
-		vac.known = 0;
-		break;
-
-	case MOD+I:
-	case MOD+U:
-
-	case RSH+I:
-	case RSH+U:
-
-	case BAND+I:
-	case BAND+U:
-
-	case BCOM+I:
-	case BCOM+U:
-
-	case BOR+I:
-	case BOR+U:
-
-	case BXOR+I:
-	case BXOR+U:
-
-	case DIV+F:
-	case DIV+I:
-	case DIV+U:
-
-	case MUL+F:
-	case MUL+I:
-	case MUL+U:
-
 	case EQ+F:
 	case EQ+I:
 	case EQ+U:
+		emitjcc(p, "eq");
+		break;
 
 	case GE+F:
 	case GE+I:
 	case GE+U:
+		emitjcc(p, "lt");
+		break;
 
 	case GT+F:
 	case GT+I:
 	case GT+U:
+		emitjcc(p, "le");
+		break;
 
 	case LE+F:
 	case LE+I:
 	case LE+U:
+		emitjcc(p, "gt");
+		break;
 
 	case LT+F:
 	case LT+I:
 	case LT+U:
+		emitjcc(p, "ge");
+		break;
 
 	case NE+F:
 	case NE+I:
 	case NE+U:
+		emitjcc(p, "ne");
+		break;
 
 	case JUMP+V:
 
 	case LABEL+V:
-		break;
-
-	case LOAD+I:
-	case LOAD+U:
-		assert(getregnum(p) == 0 || getregnum(p->kids[0]) == 0);
-		if (getregnum(p) == 0) {
-			print("ldw r%d\n", getregnum(p->kids[0]));
-		} else if (getregnum(p->kids[0]) == 0) {
-			print("stw r%d\n", getregnum(p));
-		}
-		vac.known = 0;
 		break;
 	}
 }
@@ -989,6 +987,7 @@ Interface gt1IR = {
 		_nts,
 		_kids,
 		_string,
+		_actions,
 		_templates,
 		_isinstruction,
 		_ntname,
