@@ -39,26 +39,32 @@ static void inst_poke(Node);
 static void inst_scon(Node);
 static void inst_addr(Node);
 static void inst_cnstw(Node);
-static void inst_addi(Node p);
-static void inst_subi(Node p);
-static void inst_andi(Node p);
-static void inst_ori(Node p);
-static void inst_xori(Node p);
-static void inst_addw(Node p);
-static void inst_subw(Node p);
-static void inst_andw(Node p);
-static void inst_orw(Node p);
-static void inst_xorw(Node p);
-static void inst_lslw(Node p);
-static void inst_lsh(Node p);
-static void inst_rsh(Node p);
-static void inst_mul(Node p);
-static void inst_mod(Node p);
-static void inst_div(Node p);
-static void inst_neg(Node p);
-static void inst_bcom(Node p);
-static void inst_call(Node p);
-static void inst_sys(Node p);
+static void inst_addi(Node);
+static void inst_subi(Node);
+static void inst_andi(Node);
+static void inst_ori(Node);
+static void inst_xori(Node);
+static void inst_addw(Node);
+static void inst_subw(Node);
+static void inst_andw(Node);
+static void inst_orw(Node);
+static void inst_xorw(Node);
+static void inst_lslw(Node);
+static void inst_lsh(Node);
+static void inst_rsh(Node);
+static void inst_mul(Node);
+static void inst_mod(Node);
+static void inst_div(Node);
+static void inst_neg(Node);
+static void inst_bcom(Node);
+static void inst_jeq(Node);
+static void inst_jne(Node);
+static void inst_jge(Node);
+static void inst_jgt(Node);
+static void inst_jle(Node);
+static void inst_jlt(Node);
+static void inst_call(Node);
+static void inst_sys(Node);
 
 static Symbol regs[32];
 static Symbol regw;
@@ -234,6 +240,9 @@ stmt: ASGNU2(ADDRLP2, LOADU2(INDIRU2(VREGP))) `inst_spill` 1
 
 stmt: reg "# "
 
+con0: CNSTI2 "0" range(a, 0, 0)
+con0: CNSTU2 "0" range(a, 0, 0)
+
 con1: CNSTI2 "1" range(a, 1, 1)
 con1: CNSTU2 "1" range(a, 1, 1)
 
@@ -368,18 +377,32 @@ reg: DIVF2(reg, reg)     "# stw ha\nldw %1\ncall divf\n" 1
 
 stmt: JUMPV(reg) "j\n" 1
 stmt: LABELV     "%a:\n"
-stmt: EQI2(reg, reg) "# jcc eq %1 %a # pseudo\n" 1
-stmt: EQU2(reg, reg) "# jcc eq %1 %a # pseudo\n" 1
-stmt: NEI2(reg, reg) "# jcc ne %1 %a # pseudo\n" 1
-stmt: NEU2(reg, reg) "# jcc ne %1 %a # pseudo\n" 1
-stmt: GEI2(reg, reg) "# jcc ge %1 %a # pseudo\n" 1
-stmt: GEU2(reg, reg) "# jcc ge %1 %a # pseudo\n" 1
-stmt: GTI2(reg, reg) "# jcc gt %1 %a # pseudo\n" 1
-stmt: GTU2(reg, reg) "# jcc gt %1 %a # pseudo\n" 1
-stmt: LEI2(reg, reg) "# jcc le %1 %a # pseudo\n" 1
-stmt: LEU2(reg, reg) "# jcc le %1 %a # pseudo\n" 1
-stmt: LTI2(reg, reg) "# jcc lt %1 %a # pseudo\n" 1
-stmt: LTU2(reg, reg) "# jcc lt %1 %a # pseudo\n" 1
+
+stmt: EQI2(reg, con0) `inst_jeq` 1
+stmt: EQU2(reg, con0) `inst_jeq` 1
+stmt: NEI2(reg, con0) `inst_jne` 1
+stmt: NEU2(reg, con0) `inst_jne` 1
+stmt: GEI2(reg, con0) `inst_jge` 1
+stmt: GEU2(reg, con0) `inst_jge` 1
+stmt: GTI2(reg, con0) `inst_jgt` 1
+stmt: GTU2(reg, con0) `inst_jgt` 1
+stmt: LEI2(reg, con0) `inst_jle` 1
+stmt: LEU2(reg, con0) `inst_jle` 1
+stmt: LTI2(reg, con0) `inst_jlt` 1
+stmt: LTU2(reg, con0) `inst_jlt` 1
+
+stmt: EQI2(reg, reg) `inst_jeq` 1
+stmt: EQU2(reg, reg) `inst_jeq` 1
+stmt: NEI2(reg, reg) `inst_jne` 1
+stmt: NEU2(reg, reg) `inst_jne` 1
+stmt: GEI2(reg, reg) `inst_jge` 1
+stmt: GEU2(reg, reg) `inst_jge` 1
+stmt: GTI2(reg, reg) `inst_jgt` 1
+stmt: GTU2(reg, reg) `inst_jgt` 1
+stmt: LEI2(reg, reg) `inst_jle` 1
+stmt: LEU2(reg, reg) `inst_jle` 1
+stmt: LTI2(reg, reg) `inst_jlt` 1
+stmt: LTU2(reg, reg) `inst_jlt` 1
 
 stmt: EQF2(reg, reg) "# jcc eq %1 %a # pseudo\n" 1
 stmt: NEF2(reg, reg) "# jcc ne %1 %a # pseudo\n" 1
@@ -490,19 +513,21 @@ static void target(Node p) {
 	case BAND:
 	case BOR:
 	case BXOR:
-		// Commutative binops that can take a small constant operand.
+		// Commutative binops that can take a small constant operand. Otherwise, put the RHS in vAC to help avoid
+		// spills.
 		if (range(p->kids[1], 0, optype(p->op) == U ? 255 : 127) == 0) {
-			rtarget(p->kids[0], 0, regs[0]);
-			break;
+			rtarget(p, 0, regs[0]);
+		} else {
+			rtarget(p, 1, regs[0]);
 		}
-		// fallthrough
+		break;
 	case EQ:
 	case GE:
 	case GT:
 	case LE:
 	case LT:
 	case NE:
-		// Commutative operators and comparisons. In these cases, we put the RHS in vAC to help avoid spills.
+		// Comparisons. In these cases, we put the RHS in vAC to help avoid spills.
 		rtarget(p, 1, regs[0]);
 		break;
 	case LSH:
@@ -751,6 +776,30 @@ static void inst_bcom(Node p) {
 	}
 }
 
+static void inst_jeq(Node p) {
+	emitjcc(p, "eq");
+}
+
+static void inst_jne(Node p) {
+	emitjcc(p, "ne");
+}
+
+static void inst_jge(Node p) {
+	emitjcc(p, "lt");
+}
+
+static void inst_jgt(Node p) {
+	emitjcc(p, "le");
+}
+
+static void inst_jle(Node p) {
+	emitjcc(p, "gt");
+}
+
+static void inst_jlt(Node p) {
+	emitjcc(p, "ge");
+}
+
 static void inst_call(Node p) {
 	if (getregnum(p->kids[0]) == 0) {
 		print("call vAC\n");
@@ -764,8 +813,6 @@ static void inst_sys(Node p) {
 }
 
 static void emit2(Node p) {
-	long i;
-	unsigned long u;
 	switch (specific(p->op)) {
 	case CVF+F:
 	case CVF+I:
@@ -794,42 +841,6 @@ static void emit2(Node p) {
 	case ADDRF+P:
 
 	case ADDRL+P:
-		break;
-
-	case EQ+F:
-	case EQ+I:
-	case EQ+U:
-		emitjcc(p, "eq");
-		break;
-
-	case GE+F:
-	case GE+I:
-	case GE+U:
-		emitjcc(p, "lt");
-		break;
-
-	case GT+F:
-	case GT+I:
-	case GT+U:
-		emitjcc(p, "le");
-		break;
-
-	case LE+F:
-	case LE+I:
-	case LE+U:
-		emitjcc(p, "gt");
-		break;
-
-	case LT+F:
-	case LT+I:
-	case LT+U:
-		emitjcc(p, "ge");
-		break;
-
-	case NE+F:
-	case NE+I:
-	case NE+U:
-		emitjcc(p, "ne");
 		break;
 
 	case JUMP+V:
