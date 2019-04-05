@@ -17,8 +17,10 @@ static void defsymbol(Symbol);
 static void doarg(Node);
 static void emit2(Node);
 static void export(Symbol);
+static void canonicalize(Node);
 static void clobber(Node);
 static void function(Symbol, Symbol [], Symbol [], int);
+static Node gengt1(Node);
 static void global(Symbol);
 static void import(Symbol);
 static void local(Symbol);
@@ -57,21 +59,11 @@ static void inst_mod(Node);
 static void inst_div(Node);
 static void inst_neg(Node);
 static void inst_bcom(Node);
-static void inst_jeq(Node);
-static void inst_jne(Node);
-static void inst_jge(Node);
-static void inst_jgt(Node);
-static void inst_jle(Node);
-static void inst_jlt(Node);
 static void inst_call(Node);
 static void inst_sys(Node);
 
 static Symbol regs[32];
 static Symbol regw;
-static struct {
-	int known;
-	unsigned value;
-} vac;
 %}
 
 %start stmt
@@ -378,31 +370,18 @@ reg: DIVF2(reg, reg)     "# stw ha\nldw %1\ncall divf\n" 1
 stmt: JUMPV(reg) "j\n" 1
 stmt: LABELV     "%a:\n"
 
-stmt: EQI2(reg, con0) `inst_jeq` 1
-stmt: EQU2(reg, con0) `inst_jeq` 1
-stmt: NEI2(reg, con0) `inst_jne` 1
-stmt: NEU2(reg, con0) `inst_jne` 1
-stmt: GEI2(reg, con0) `inst_jge` 1
-stmt: GEU2(reg, con0) `inst_jge` 1
-stmt: GTI2(reg, con0) `inst_jgt` 1
-stmt: GTU2(reg, con0) `inst_jgt` 1
-stmt: LEI2(reg, con0) `inst_jle` 1
-stmt: LEU2(reg, con0) `inst_jle` 1
-stmt: LTI2(reg, con0) `inst_jlt` 1
-stmt: LTU2(reg, con0) `inst_jlt` 1
-
-stmt: EQI2(reg, reg) `inst_jeq` 1
-stmt: EQU2(reg, reg) `inst_jeq` 1
-stmt: NEI2(reg, reg) `inst_jne` 1
-stmt: NEU2(reg, reg) `inst_jne` 1
-stmt: GEI2(reg, reg) `inst_jge` 1
-stmt: GEU2(reg, reg) `inst_jge` 1
-stmt: GTI2(reg, reg) `inst_jgt` 1
-stmt: GTU2(reg, reg) `inst_jgt` 1
-stmt: LEI2(reg, reg) `inst_jle` 1
-stmt: LEU2(reg, reg) `inst_jle` 1
-stmt: LTI2(reg, reg) `inst_jlt` 1
-stmt: LTU2(reg, reg) `inst_jlt` 1
+stmt: EQI2(reg, con0) "jcc eq %a\n" 1
+stmt: EQU2(reg, con0) "jcc eq %a\n" 1
+stmt: NEI2(reg, con0) "jcc ne %a\n" 1
+stmt: NEU2(reg, con0) "jcc ne %a\n" 1
+stmt: GEI2(reg, con0) "jcc ge %a\n" 1
+stmt: GEU2(reg, con0) "jcc ge %a\n" 1
+stmt: GTI2(reg, con0) "jcc gt %a\n" 1
+stmt: GTU2(reg, con0) "jcc gt %a\n" 1
+stmt: LEI2(reg, con0) "jcc le %a\n" 1
+stmt: LEU2(reg, con0) "jcc le %a\n" 1
+stmt: LTI2(reg, con0) "jcc lt %a\n" 1
+stmt: LTU2(reg, con0) "jcc lt %a\n" 1
 
 stmt: EQF2(reg, reg) "# jcc eq %1 %a # pseudo\n" 1
 stmt: NEF2(reg, reg) "# jcc ne %1 %a # pseudo\n" 1
@@ -472,6 +451,55 @@ static void segment(int n) {
 static void progend(void) {
 	// Nothing to do for the moment.
 }
+static Symbol constant_zero(int type) {
+	Value v;
+	switch (type) {
+	case I:
+		v.i = 0;
+		return constant(inttype, v);
+	case U:
+		v.u = 0;
+		return constant(unsignedtype, v);
+	}
+	assert(0);
+	return NULL;
+}
+static void canonicalize(Node p) {
+	// Canonicalization:
+	// - Ensure that constants are always on the RHS (except for SUB)
+	// - Replace conditionals with conditionals vs. 0
+
+	if (p == NULL) {
+		return;
+	}
+	canonicalize(p->kids[0]);
+	canonicalize(p->kids[1]);
+	switch (generic(p->op)) {
+	case ADD: case BAND: case BOR: case BXOR:
+		if (generic(p->kids[0]->op) == CNST) {
+			Node k = p->kids[0];
+			p->kids[0] = p->kids[1];
+			p->kids[1] = k;
+		}
+		break;
+	case EQ: case NE: case GE: case GT: case LE: case LT:
+		if (generic(p->kids[0]->op) == CNST) {
+			Node k = p->kids[0];
+			p->kids[0] = p->kids[1];
+			p->kids[1] = k;
+		}
+		if (range(p->kids[1], 0, 0) != 0) {
+			int opst = optype(p->op) + sizeop(opsize(p->op));
+			p->kids[0] = newnode(SUB + opst, p->kids[0], p->kids[1], NULL);
+			p->kids[1] = newnode(CNST + opst, NULL, NULL, constant_zero(optype(p->op)));
+		}
+		break;
+	}
+}
+static Node gengt1(Node forest) {
+	canonicalize(forest);
+	return gen(forest);
+}
 static int rangep(Node p, unsigned lo, unsigned hi) {
 	if (specific(p->op) != CNST+P) {
 		return LBURG_MAX;
@@ -527,8 +555,8 @@ static void target(Node p) {
 	case LE:
 	case LT:
 	case NE:
-		// Comparisons. In these cases, we put the RHS in vAC to help avoid spills.
-		rtarget(p, 1, regs[0]);
+		// Comparisons. All of these have an RHS of 0; we need the LHS in vAC.
+		rtarget(p, 0, regs[0]);
 		break;
 	case LSH:
 		// LSH reg, 1 is a unary operator. LSH reg, reg is a helper call.
@@ -548,7 +576,7 @@ static void target(Node p) {
 	case SUB:
 		// SUB can take a small constant operand.
 		if (range(p->kids[1], 0, optype(p->op) == U ? 255 : 127) == 0) {
-			rtarget(p->kids[0], 0, regs[0]);
+			rtarget(p, 0, regs[0]);
 			break;
 		}
 
@@ -574,13 +602,6 @@ static void clobber(Node p) {
 		spill(0x00ff, IREG, p);
 	}
 }
-static void emitjcc(Node p, char* kind) {
-	if (range(p->kids[0], 0, 0) != 0) {
-		print("sub r%d\n", getregnum(p->kids[0]));
-	}
-	print("jcc %s %s\n", kind, p->syms[0]->x.name);
-}
-
 static void ensurereg(Node p) {
 	int r = getregnum(p);
 	if (r != 0) {
@@ -776,30 +797,6 @@ static void inst_bcom(Node p) {
 	}
 }
 
-static void inst_jeq(Node p) {
-	emitjcc(p, "eq");
-}
-
-static void inst_jne(Node p) {
-	emitjcc(p, "ne");
-}
-
-static void inst_jge(Node p) {
-	emitjcc(p, "lt");
-}
-
-static void inst_jgt(Node p) {
-	emitjcc(p, "le");
-}
-
-static void inst_jle(Node p) {
-	emitjcc(p, "gt");
-}
-
-static void inst_jlt(Node p) {
-	emitjcc(p, "ge");
-}
-
 static void inst_call(Node p) {
 	if (getregnum(p->kids[0]) == 0) {
 		print("call vAC\n");
@@ -813,41 +810,7 @@ static void inst_sys(Node p) {
 }
 
 static void emit2(Node p) {
-	switch (specific(p->op)) {
-	case CVF+F:
-	case CVF+I:
-
-	case CVI+F:
-	case CVI+I:
-	case CVI+U:
-
-	case CVP+U:
-
-	case CVU+I:
-	case CVU+P:
-	case CVU+U:
-
-	case NEG+F:
-	case NEG+I:
-		break;
-
-	case ARG+F:
-	case ARG+I:
-	case ARG+U:
-	case ARG+P:
-		print("; arg...\n");
-		break;
-
-	case ADDRF+P:
-
-	case ADDRL+P:
-		break;
-
-	case JUMP+V:
-
-	case LABEL+V:
-		break;
-	}
+	// Nothing to do
 }
 static void doarg(Node p) {
 	// Nothing to do
@@ -867,8 +830,6 @@ static void local(Symbol p) {
 	}
 }
 static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
-	vac.known = 0;
-
 	print("%s:\n", f->x.name);
 
 	// TODO: prolog?
@@ -982,7 +943,7 @@ Interface gt1IR = {
 	emit,
 	export,
 	function,
-	gen,
+	gengt1,
 	global,
 	import,
 	local,
