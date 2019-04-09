@@ -639,7 +639,7 @@ static Node visit(Node p, int listed) {
 			p->kids[1] = visit(p->kids[1], 0);
 		}
 
-		else if (specific(p->op) == ADDRL+P || specific(p->op) == ADDRF+P) {
+		else if (specific(p->op) == ADDRL+P || specific(p->op) == ADDRF+P || generic(p->op) == CNST) {
 			assert(!listed);
 			p = newnode(p->op, NULL, NULL, p->syms[0]);
 			p->count = 1;

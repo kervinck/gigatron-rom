@@ -265,13 +265,20 @@ reg: INDIRU2(ADDRFP2) `inst_ldloc` 1
 reg: INDIRP2(ADDRFP2) `inst_ldloc` 1
 reg: INDIRF2(ADDRFP2) `inst_ldloc` 1
 
+trunc: CVII1(reg)  "%a" 1
+trunc: CVIU1(reg)  "%a" 1
+trunc: CVUI1(reg)  "%a" 1
+trunc: CVUU1(reg)  "%a" 1
+
 reg: INDIRI1(scon) `inst_ld` 1
 reg: INDIRU1(scon) `inst_ld` 1
 reg: INDIRI2(scon) `inst_ld` 1
 reg: INDIRU2(scon) `inst_ld` 1
 reg: INDIRP2(scon) `inst_ld` 1
 reg: INDIRF2(scon) `inst_ld` 1
+stmt: ASGNI1(scon, trunc) `inst_st` 1
 stmt: ASGNI1(scon, reg) `inst_st` 1
+stmt: ASGNU1(scon, trunc) `inst_st` 1
 stmt: ASGNU1(scon, reg) `inst_st` 1
 stmt: ASGNI2(scon, reg) `inst_st` 1
 stmt: ASGNU2(scon, reg) `inst_st` 1
@@ -468,6 +475,11 @@ static Symbol constant_zero(int type) {
 	assert(0);
 	return NULL;
 }
+static Symbol constant_negate(Symbol c) {
+	Value v = c->u.c.v;
+	v.i = -v.i;
+	return constant(c->type, v);
+}
 static void canonicalize(Node* pp) {
 	// Canonicalization:
 	// - Ensure that constants are always on the RHS (except for SUB)
@@ -499,6 +511,12 @@ static void canonicalize(Node* pp) {
 			Node k = p->kids[0];
 			p->kids[0] = p->kids[1];
 			p->kids[1] = k;
+		}
+		break;
+	case SUB:
+		if (generic(p->kids[1]->op) == CNST && range(p->kids[1], 0, 255) != 0) {
+			p->kids[1]->syms[0] = constant_negate(p->kids[1]->syms[0]);
+			p->op = ADD + optype(p->op) + sizeop(opsize(p->op));
 		}
 		break;
 	case EQ: case NE: case GE: case GT: case LE: case LT:
