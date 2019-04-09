@@ -207,6 +207,7 @@ static Symbol regw;
 %term LOADI2=2277
 %term LOADU1=1254
 %term LOADU2=2278
+%term LOADP2=2279
 
 %term VREGP=711
 
@@ -246,6 +247,7 @@ reg: LOADI1(reg)  `inst_copy` 1
 reg: LOADI2(reg)  `inst_copy` 1
 reg: LOADU1(reg)  `inst_copy` 1
 reg: LOADU2(reg)  `inst_copy` 1
+reg: LOADP2(reg)  `inst_copy` 1
 
 reg: INDIRI1(ADDRLP2) `inst_ldloc` 1
 reg: INDIRI2(ADDRLP2) `inst_ldloc` 1
@@ -367,21 +369,21 @@ reg: SUBF2(reg, reg)     "# stw ha\nldw %1\ncall subf\n" 1
 reg: MULF2(reg, reg)     "# stw ha\nldw %1\ncall mulf\n" 1
 reg: DIVF2(reg, reg)     "# stw ha\nldw %1\ncall divf\n" 1
 
-stmt: JUMPV(reg) "j\n" 1
-stmt: LABELV     "%a:\n"
+stmt: JUMPV(reg) "asm.jr()\n" 1
+stmt: LABELV     "asm.label('%a')\n"
 
-stmt: EQI2(reg, con0) "jcc eq %a\n" 1
-stmt: EQU2(reg, con0) "jcc eq %a\n" 1
-stmt: NEI2(reg, con0) "jcc ne %a\n" 1
-stmt: NEU2(reg, con0) "jcc ne %a\n" 1
-stmt: GEI2(reg, con0) "jcc ge %a\n" 1
-stmt: GEU2(reg, con0) "jcc ge %a\n" 1
-stmt: GTI2(reg, con0) "jcc gt %a\n" 1
-stmt: GTU2(reg, con0) "jcc gt %a\n" 1
-stmt: LEI2(reg, con0) "jcc le %a\n" 1
-stmt: LEU2(reg, con0) "jcc le %a\n" 1
-stmt: LTI2(reg, con0) "jcc lt %a\n" 1
-stmt: LTU2(reg, con0) "jcc lt %a\n" 1
+stmt: EQI2(reg, con0) "asm.jeq('%a')\n" 1
+stmt: EQU2(reg, con0) "asm.jeq('%a')\n" 1
+stmt: NEI2(reg, con0) "asm.jne('%a')\n" 1
+stmt: NEU2(reg, con0) "asm.jne('%a')\n" 1
+stmt: GEI2(reg, con0) "asm.jge('%a')\n" 1
+stmt: GEU2(reg, con0) "asm.jge('%a')\n" 1
+stmt: GTI2(reg, con0) "asm.jgt('%a')\n" 1
+stmt: GTU2(reg, con0) "asm.jgt('%a')\n" 1
+stmt: LEI2(reg, con0) "asm.jle('%a')\n" 1
+stmt: LEU2(reg, con0) "asm.jle('%a')\n" 1
+stmt: LTI2(reg, con0) "asm.jlt('%a')\n" 1
+stmt: LTU2(reg, con0) "asm.jlt('%a')\n" 1
 
 stmt: EQF2(reg, reg) "# jcc eq %1 %a # pseudo\n" 1
 stmt: NEF2(reg, reg) "# jcc ne %1 %a # pseudo\n" 1
@@ -534,7 +536,7 @@ static void target(Node p) {
 	case NEG:
 	case BCOM:
 		// These operators require their operand in a register besides vAC, and produce a result in vAC. We can't
-		// represent the former--we'll just spull to ha if the operand is in vAC--but we can handle the latter.
+		// represent the former--we'll just spill to ha if the operand is in vAC--but we can handle the latter.
 		setreg(p, regs[0]);
 		break;
 	case ADD:
@@ -574,15 +576,9 @@ static void target(Node p) {
 		rtarget(p, 1, regs[0]);
 		break;
 	case SUB:
-		// SUB can take a small constant operand.
-		if (range(p->kids[1], 0, optype(p->op) == U ? 255 : 127) == 0) {
-			rtarget(p, 0, regs[0]);
-			break;
-		}
-
-		// TODO: attempt to swap the operands and turn this into an RSUB. For now, target the RHS in vAC, let the
-		// LHS live anywhere, then spill the RHS to ha and load the LHS into vAC.
-		rtarget(p, 1, regs[0]);
+		// TODO: attempt to swap the operands and turn this into an RSUB. For now, target the LHS in vAC, despite
+		// the increased chance of spills.
+		rtarget(p, 0, regs[0]);
 		break;
 	case ASGN:
 		// Assignments to VREG nodes do not need targeting.
@@ -605,7 +601,7 @@ static void clobber(Node p) {
 static void ensurereg(Node p) {
 	int r = getregnum(p);
 	if (r != 0) {
-		print("stw r%d\n", r);
+		print("asm.stw('r%d')\n", r);
 	}
 }
 
@@ -613,15 +609,21 @@ static void inst_spill(Node p) {
 	Node local = p->kids[0];
 	Node vregp = p->kids[1]->kids[0]->kids[0];
 	assert(getregnum(vregp) == 0);
-	print("stw ha\nldwi %d\ncall stloc\n", local->syms[0]->x.offset);
+	print("asm.stw('ha')\n");
+	print("asm.ldwi(%d)\n", local->syms[0]->x.offset);
+	print("asm.call('stloc')\n");
 }
 
 static void inst_copy(Node p) {
-	assert(getregnum(p) == 0 || getregnum(p->kids[0]) == 0);
-	if (getregnum(p) == 0) {
-		print("ldw r%d\n", getregnum(p->kids[0]));
-	} else if (getregnum(p->kids[0]) == 0) {
-		print("stw r%d\n", getregnum(p));
+	unsigned to = getregnum(p), from = getregnum(p->kids[0]);
+	assert(to == 0 || from == 0 || to == from);
+
+	if (to == from) {
+		// ignore this case
+	} else if (to == 0) {
+		print("asm.ldw('r%d')\n", getregnum(p->kids[0]));
+	} else if (from == 0) {
+		print("asm.stw('r%d')\n", getregnum(p));
 	}
 }
 
@@ -637,11 +639,11 @@ static void inst_ldloc(Node p) {
 	}
 
 	if (offs < 256) {
-		print("ldi %d\n", offs);
+		print("asm.ldi(%d)\n", offs);
 	} else {
-		print("ldiw %d\n", offs);
+		print("asm.ldiw(%d)\n", offs);
 	}
-	print("call ldloc\n");
+	print("asm.call('ldloc')\n");
 }
 
 static void inst_st(Node p) {
@@ -649,7 +651,7 @@ static void inst_st(Node p) {
 	if (opsize(p->op) == 2) {
 		op = "stw";
 	}
-	print("%s $%x\n", op, p->kids[0]->syms[0]->u.c.v.u);
+	print("asm.%s(0x%x)\n", op, p->kids[0]->syms[0]->u.c.v.u);
 }
 
 static void inst_ld(Node p) {
@@ -657,7 +659,7 @@ static void inst_ld(Node p) {
 	if (opsize(p->op) == 2) {
 		op = "ldw";
 	}
-	print("%s $%x\n", op, p->kids[0]->syms[0]->u.c.v.u);
+	print("asm.%s(0x%x)\n", op, p->kids[0]->syms[0]->u.c.v.u);
 	ensurereg(p);
 }
 
@@ -666,7 +668,7 @@ static void inst_peek(Node p) {
 	if (opsize(p->op) == 2) {
 		op = "deek";
 	}
-	print("%s\n", op);
+	print("asm.%s()\n", op);
 	ensurereg(p);
 }
 
@@ -675,138 +677,138 @@ static void inst_poke(Node p) {
 	if (opsize(p->op) == 2) {
 		op = "doke";
 	}
-	print("%s r%d\n", op, getregnum(p->kids[0]));
+	print("asm.%s('r%d')\n", op, getregnum(p->kids[0]));
 }
 
 static void inst_scon(Node p) {
 	assert(getregnum(p) == 0);
-	print("ldi $%x\n", p->syms[0]->u.c.v.u);
+	print("asm.ldi(0x%x)\n", p->syms[0]->u.c.v.u);
 }
 
 static void inst_cnstw(Node p) {
 	assert(getregnum(p) == 0);
-	print("ldwi $%x\n", p->syms[0]->u.c.v.u);
+	print("asm.ldwi(0x%x)\n", p->syms[0]->u.c.v.u);
 }
 
 static void inst_addr(Node p) {
 	assert(getregnum(p) == 0);
-	print("ldwi %s\n", p->syms[0]->x.name);
+	print("asm.ldwi('%s')\n", p->syms[0]->x.name);
 }
 
 static void inst_addi(Node p) {
-	print("addi $%x\n", p->kids[1]->syms[0]->u.c.v.u);
+	print("asm.addi(0x%x)\n", p->kids[1]->syms[0]->u.c.v.u);
 	ensurereg(p);
 }
 
 static void inst_subi(Node p) {
-	print("subi $%x\n", p->kids[1]->syms[0]->u.c.v.u);
+	print("asm.subi(0x%x)\n", p->kids[1]->syms[0]->u.c.v.u);
 	ensurereg(p);
 }
 
 static void inst_andi(Node p) {
-	print("andi $%x\n", p->kids[1]->syms[0]->u.c.v.u);
+	print("asm.andi(0x%x)\n", p->kids[1]->syms[0]->u.c.v.u);
 	ensurereg(p);
 }
 
 static void inst_ori(Node p) {
-	print("ori $%x\n", p->kids[1]->syms[0]->u.c.v.u);
+	print("asm.ori(0x%x)\n", p->kids[1]->syms[0]->u.c.v.u);
 	ensurereg(p);
 }
 
 static void inst_xori(Node p) {
-	print("xori $%x\n", p->kids[1]->syms[0]->u.c.v.u);
+	print("asm.xori(0x%x)\n", p->kids[1]->syms[0]->u.c.v.u);
 	ensurereg(p);
 }
 
 static void inst_addw(Node p) {
-	print("addw r%d\n", getregnum(p->kids[0]));
+	print("asm.addw('r%d')\n", getregnum(p->kids[0]));
 	ensurereg(p);
 }
 
 static void inst_subw(Node p) {
-	print("subw r%d\n", getregnum(p->kids[0]));
+	print("asm.subw('r%d')\n", getregnum(p->kids[1]));
 	ensurereg(p);
 }
 
 static void inst_andw(Node p) {
-	print("andw r%d\n", getregnum(p->kids[0]));
+	print("asm.andw('r%d')\n", getregnum(p->kids[0]));
 	ensurereg(p);
 }
 
 static void inst_orw(Node p) {
-	print("orw r%d\n", getregnum(p->kids[0]));
+	print("asm.orw('r%d')\n", getregnum(p->kids[0]));
 	ensurereg(p);
 }
 
 static void inst_xorw(Node p) {
-	print("xorw r%d\n", getregnum(p->kids[0]));
+	print("asm.xorw('r%d')\n", getregnum(p->kids[0]));
 	ensurereg(p);
 }
 
 static void inst_lslw(Node p) {
-	print("lslw\n");
+	print("asm.lslw()\n");
 	ensurereg(p);
 }
 
 static void inst_lsh(Node p) {
-	print("call lsh\n");
+	print("asm.call('lsh')\n");
 	ensurereg(p);
 }
 
 static void inst_rsh(Node p) {
-	print("call rsh\n");
+	print("asm.call('rsh')\n");
 	ensurereg(p);
 }
 
 static void inst_mul(Node p) {
-	print("call mul\n");
+	print("asm.call('mul')\n");
 	ensurereg(p);
 }
 
 static void inst_mod(Node p) {
-	print("call mod\n");
+	print("asm.call('mod')\n");
 	ensurereg(p);
 }
 
 static void inst_div(Node p) {
-	print("call div\n");
+	print("asm.call('div')\n");
 	ensurereg(p);
 }
 
 static void inst_neg(Node p) {
 	assert(getregnum(p) == 0);
 	if (getregnum(p->kids[0]) == 0) {
-		print("st ha\n");
-		print("ldi 0\n");
-		print("sub ha\n");
+		print("asm.st('ha')\n");
+		print("asm.ldi(0)\n");
+		print("asm.sub('ha')\n");
 	} else {
-		print("ldi 0\n");
-		print("sub r%d\n", getregnum(p->kids[0]));
+		print("asm.ldi(0)\n");
+		print("asm.sub('r%d')\n", getregnum(p->kids[0]));
 	}
 }
 
 static void inst_bcom(Node p) {
 	assert(getregnum(p) == 0);
 	if (getregnum(p->kids[0]) == 0) {
-		print("st ha\n");
-		print("ldwi $ffff\n");
-		print("xorw ha\n");
+		print("asm.st('ha')\n");
+		print("asm.ldwi(0xffff)\n");
+		print("asm.xorw('ha')\n");
 	} else {
-		print("ldwi $ffff\n");
-		print("xorw r%d\n", getregnum(p->kids[0]));
+		print("asm.ldwi(0xffff)\n");
+		print("asm.xorw('r%d')\n", getregnum(p->kids[0]));
 	}
 }
 
 static void inst_call(Node p) {
 	if (getregnum(p->kids[0]) == 0) {
-		print("call vAC\n");
+		print("asm.call('vAC')\n");
 	} else {
-		print("call r%d\n", getregnum(p->kids[0]));
+		print("asm.call('r%d')\n", getregnum(p->kids[0]));
 	}
 }
 
 static void inst_sys(Node p) {
-	print("sys %d\n", p->syms[0]->u.c.v.i);
+	print("asm.sys(%d)\n", p->syms[0]->u.c.v.i);
 }
 
 static void emit2(Node p) {
@@ -830,7 +832,7 @@ static void local(Symbol p) {
 	}
 }
 static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
-	print("%s:\n", f->x.name);
+	print("asm.defun('%s')\n", f->x.name);
 
 	// TODO: prolog?
 
@@ -851,23 +853,23 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 
 	gencode(caller, callee);
 	framesize = maxoffset;
-	print("push\n");
+	print("asm.push()\n");
 	if (framesize > 0) {
-		print("%s %d\n", framesize < 256 ? "ldi" : "ldwi", -framesize);
-		print("addw sp\n");
-		print("stw sp\n");
+		print("asm.%s(%d)\n", framesize < 256 ? "ldi" : "ldwi", -framesize);
+		print("asm.addw('sp')\n");
+		print("asm.stw('sp')\n");
 	}
 
 	emitcode();
 
 	if (framesize > 0) {
-		print("%s %d\n", framesize < 256 ? "ldi" : "ldwi", framesize);
-		print("addw sp\n");
-		print("stw sp\n");
+		print("asm.%s(%d)\n", framesize < 256 ? "ldi" : "ldwi", framesize);
+		print("asm.addw('sp')\n");
+		print("asm.stw('sp')\n");
 	}
 
-	print("pop\n");
-	print("ret\n");
+	print("asm.pop()\n");
+	print("asm.ret()\n");
 }
 static void defsymbol(Symbol p) {
 	if (p->scope >= LOCAL && p->sclass == STATIC) {
