@@ -17,7 +17,7 @@ static void defsymbol(Symbol);
 static void doarg(Node);
 static void emit2(Node);
 static void export(Symbol);
-static void canonicalize(Node);
+static void canonicalize(Node*);
 static void clobber(Node);
 static void function(Symbol, Symbol [], Symbol [], int);
 static Node gengt1(Node);
@@ -57,6 +57,8 @@ static void inst_rsh(Node);
 static void inst_mul(Node);
 static void inst_mod(Node);
 static void inst_div(Node);
+static void inst_trunc(Node);
+static void inst_sext(Node);
 static void inst_neg(Node);
 static void inst_bcom(Node);
 static void inst_call(Node);
@@ -341,17 +343,17 @@ reg: MODU2(reg, reg)   `inst_mod` 1
 reg: DIVI2(reg, reg)   `inst_div` 1
 reg: DIVU2(reg, reg)   `inst_div` 1
 
-reg: CVII1(reg)  "# andi $ff # fixme: sign-extend\n" 1
-reg: CVII2(reg)  "# " 1
-reg: CVIU1(reg)  "# andi $ff\n" 1
-reg: CVIU2(reg)  "# " 1
+reg: CVII1(reg)  `inst_trunc` 1
+reg: CVII2(reg)  `inst_sext` 1
+reg: CVIU1(reg)  `inst_trunc` 1
+reg: CVIU2(reg)  `inst_sext` 1
 
 reg: CVPU2(reg)  "# " 1
 
-reg: CVUI1(reg)  "# andi $ff # fixme: sign-extend\n" 1
+reg: CVUI1(reg)  `inst_trunc` 1
 reg: CVUI2(reg)  "# " 1
 reg: CVUP2(reg)  "# " 1
-reg: CVUU1(reg)  "# andi $ff\n" 1
+reg: CVUU1(reg)  `inst_trunc` 1
 reg: CVUU2(reg)  "# " 1
 
 reg: NEGI2(reg)  `inst_neg` 1
@@ -466,17 +468,32 @@ static Symbol constant_zero(int type) {
 	assert(0);
 	return NULL;
 }
-static void canonicalize(Node p) {
+static void canonicalize(Node* pp) {
 	// Canonicalization:
 	// - Ensure that constants are always on the RHS (except for SUB)
 	// - Replace conditionals with conditionals vs. 0
 
+	Node p = *pp;
 	if (p == NULL) {
 		return;
 	}
-	canonicalize(p->kids[0]);
-	canonicalize(p->kids[1]);
+	debug(fprintf(stderr, "(canonicalizing %p (%p, %p))\n", p, p->kids[0], p->kids[1]));
+	canonicalize(&p->kids[0]);
+	canonicalize(&p->kids[1]);
 	switch (generic(p->op)) {
+	case CVP:
+		*pp = p->kids[0];
+		break;
+	case CVU:
+		if (opsize(p->op) == 2) {
+			*pp = p->kids[0];
+		}
+		break;
+	case CVI:
+		if (opsize(p->op) == p->syms[0]->u.c.v.i) {
+			*pp = p->kids[0];
+		}
+		break;
 	case ADD: case BAND: case BOR: case BXOR:
 		if (generic(p->kids[0]->op) == CNST) {
 			Node k = p->kids[0];
@@ -499,7 +516,10 @@ static void canonicalize(Node p) {
 	}
 }
 static Node gengt1(Node forest) {
-	canonicalize(forest);
+	for (Node* p = &forest; *p != NULL; p = &(*p)->link) {
+		canonicalize(p);
+	}
+
 	return gen(forest);
 }
 static int rangep(Node p, unsigned lo, unsigned hi) {
@@ -529,6 +549,9 @@ static void target(Node p) {
 			break;
 		}
 		// fallthrough
+	case CVI:
+	case CVU:
+	case CVF:
 	case RET:
 		// Standard unary operators require their operand in vAC.
 		rtarget(p, 0, regs[0]);
@@ -772,6 +795,16 @@ static void inst_mod(Node p) {
 
 static void inst_div(Node p) {
 	print("asm.call('div')\n");
+	ensurereg(p);
+}
+
+static void inst_trunc(Node p) {
+	print("asm.andi(0xff)\n");
+	ensurereg(p);
+}
+
+static void inst_sext(Node p) {
+	print("asm.call('sext')\n");
 	ensurereg(p);
 }
 
