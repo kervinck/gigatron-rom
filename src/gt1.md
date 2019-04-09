@@ -23,6 +23,7 @@ static void function(Symbol, Symbol [], Symbol [], int);
 static Node gengt1(Node);
 static void global(Symbol);
 static void import(Symbol);
+static int isinc(Node);
 static void local(Symbol);
 static void progbeg(int, char **);
 static void progend(void);
@@ -31,6 +32,8 @@ static void segment(int);
 static void space(int);
 static void target(Node);
 
+static void inst_inc(Node);
+static void inst_strunc(Node);
 static void inst_spill(Node);
 static void inst_copy(Node);
 static void inst_ldloc(Node);
@@ -64,8 +67,8 @@ static void inst_bcom(Node);
 static void inst_call(Node);
 static void inst_sys(Node);
 
-static Symbol regs[32];
-static Symbol regw;
+static Symbol wregs[32], bregs[32];
+static Symbol wregw, bregw;
 %}
 
 %start stmt
@@ -216,12 +219,35 @@ static Symbol regw;
 %term SYSI2=2661
 
 %%
+trunc: CVII1(reg)  "%a" 1
+trunc: CVIU1(reg)  "%a" 1
+trunc: CVUI1(reg)  "%a" 1
+trunc: CVUU1(reg)  "%a" 1
+
+con0: CNSTI2 "0" range(a, 0, 0)
+con0: CNSTU2 "0" range(a, 0, 0)
+
+con1: CNSTI2 "1" range(a, 1, 1)
+con1: CNSTU2 "1" range(a, 1, 1)
+
+scon: CNSTI2 "%a" range(a, 0, 127)
+scon: CNSTU2 "%a" range(a, 0, 255)
+scon: CNSTP2 "%a" rangep(a, 0, 255)
+
 reg: INDIRI1(VREGP)       "# read register\n"
 reg: INDIRU1(VREGP)       "# read register\n"
 
 reg: INDIRI2(VREGP)       "# read register\n"
 reg: INDIRU2(VREGP)       "# read register\n"
 reg: INDIRP2(VREGP)       "# read register\n"
+
+stmt: ASGNI1(VREGP, CVII1(ADDI2(LOADI1(INDIRI1(VREGP)), con1))) `inst_inc` isinc(a)
+stmt: ASGNU1(VREGP, CVUU1(ADDI2(LOADU1(INDIRU1(VREGP)), con1))) `inst_inc` isinc(a)
+stmt: ASGNI1(scon, CVII1(ADDI2(INDIRI1(scon), con1))) `inst_inc` isinc(a)
+stmt: ASGNU1(scon, CVUU1(ADDU2(INDIRU1(scon), con1))) `inst_inc` isinc(a)
+
+stmt: ASGNI1(VREGP, trunc) `inst_strunc`
+stmt: ASGNU1(VREGP, trunc) `inst_strunc`
 
 stmt: ASGNI1(VREGP, reg)  "# write register\n"
 stmt: ASGNU1(VREGP, reg)  "# write register\n"
@@ -234,16 +260,6 @@ stmt: ASGNI2(ADDRLP2, LOADI2(INDIRI2(VREGP))) `inst_spill` 1
 stmt: ASGNU2(ADDRLP2, LOADU2(INDIRU2(VREGP))) `inst_spill` 1
 
 stmt: reg "# "
-
-con0: CNSTI2 "0" range(a, 0, 0)
-con0: CNSTU2 "0" range(a, 0, 0)
-
-con1: CNSTI2 "1" range(a, 1, 1)
-con1: CNSTU2 "1" range(a, 1, 1)
-
-scon: CNSTI2 "%a" range(a, 0, 127)
-scon: CNSTU2 "%a" range(a, 0, 255)
-scon: CNSTP2 "%a" rangep(a, 0, 255)
 
 reg: LOADI1(reg)  `inst_copy` 1
 reg: LOADI2(reg)  `inst_copy` 1
@@ -264,11 +280,6 @@ reg: INDIRU1(ADDRFP2) `inst_ldloc` 1
 reg: INDIRU2(ADDRFP2) `inst_ldloc` 1
 reg: INDIRP2(ADDRFP2) `inst_ldloc` 1
 reg: INDIRF2(ADDRFP2) `inst_ldloc` 1
-
-trunc: CVII1(reg)  "%a" 1
-trunc: CVIU1(reg)  "%a" 1
-trunc: CVUI1(reg)  "%a" 1
-trunc: CVUU1(reg)  "%a" 1
 
 reg: INDIRI1(scon) `inst_ld` 1
 reg: INDIRU1(scon) `inst_ld` 1
@@ -434,12 +445,15 @@ static void progbeg(int argc, char* argv[]) {
 	}
 	parseflags(argc, argv);
 
-	regs[0] = mkreg("vAC", 0, 1, IREG);
+	wregs[0] = mkreg("vAC", 0, 1, IREG);
+	bregs[0] = mkreg("vACb", 0, 1, IREG);
 	for (i = 1; i < 16; i++) {
-		regs[i] = mkreg("r%d", i, 1, IREG);
+		wregs[i] = mkreg("r%d", i, 1, IREG);
+		bregs[i] = mkreg("r%db", i, 1, IREG);
 	}
 
-	regw = mkwildcard(regs);
+	wregw = mkwildcard(wregs);
+	bregw = mkwildcard(wregs);
 
 	tmask[IREG] = 0x00ff; tmask[FREG] = 0;
 	vmask[IREG] = 0x7f00; vmask[FREG] = 0;
@@ -448,12 +462,22 @@ static Symbol rmap(int opk) {
 	switch (optype(opk)) {
 	case I:
 	case U:
+		return opsize(opk) == 1 ? bregw : wregw;
 	case P:
 	case B:
 	case F:
-		return regw;
+		return wregw;
 	default:
 		return 0;
+	}
+}
+static Symbol vac(int opk) {
+	switch (optype(opk)) {
+	case I:
+	case U:
+		return opsize(opk) == 1 ? bregs[0] : wregs[0];
+	default:
+		return wregs[0];
 	}
 }
 static void segment(int n) {
@@ -557,28 +581,29 @@ static void target(Node p) {
 	case ADDRG:
 	case ADDRL:
 		// Constants must be loaded into vAC.
-		setreg(p, regs[0]);
+		setreg(p, wregs[0]);
 		break;
 	case INDIR:
 		// If this is a ldloc, we also require vAC, so just assign the result to vAC.
 		kop = generic(p->kids[0]->op);
 		if (kop == ADDRF || kop == ADDRL) {
-			setreg(p, regs[0]);
-			break;
+			setreg(p, wregs[0]);
+		} else {
+			rtarget(p, 0, wregs[0]);
 		}
-		// fallthrough
+		break;
 	case CVI:
 	case CVU:
 	case CVF:
 	case RET:
 		// Standard unary operators require their operand in vAC.
-		rtarget(p, 0, regs[0]);
+		rtarget(p, 0, vac(p->kids[0]->op));
 		break;
 	case NEG:
 	case BCOM:
 		// These operators require their operand in a register besides vAC, and produce a result in vAC. We can't
 		// represent the former--we'll just spill to ha if the operand is in vAC--but we can handle the latter.
-		setreg(p, regs[0]);
+		setreg(p, wregs[0]);
 		break;
 	case ADD:
 	case BAND:
@@ -587,9 +612,9 @@ static void target(Node p) {
 		// Commutative binops that can take a small constant operand. Otherwise, put the RHS in vAC to help avoid
 		// spills.
 		if (range(p->kids[1], 0, optype(p->op) == U ? 255 : 127) == 0) {
-			rtarget(p, 0, regs[0]);
+			rtarget(p, 0, wregs[0]);
 		} else {
-			rtarget(p, 1, regs[0]);
+			rtarget(p, 1, wregs[0]);
 		}
 		break;
 	case EQ:
@@ -599,12 +624,12 @@ static void target(Node p) {
 	case LT:
 	case NE:
 		// Comparisons. All of these have an RHS of 0; we need the LHS in vAC.
-		rtarget(p, 0, regs[0]);
+		rtarget(p, 0, wregs[0]);
 		break;
 	case LSH:
 		// LSH reg, 1 is a unary operator. LSH reg, reg is a helper call.
 		if (generic(p->kids[1]->op) == CNST && p->kids[1]->syms[0]->u.c.v.u == 1) {
-			rtarget(p, 0, regs[0]);
+			rtarget(p, 0, wregs[0]);
 			break;
 		}
 		// fallthrough
@@ -613,24 +638,28 @@ static void target(Node p) {
 	case MOD:
 	case DIV:
 		// Helper calls. We can pick the targets to help avoid spills. We'll put the LHS in r0 and the RHS in vAC.
-		rtarget(p, 0, regs[1]);
-		rtarget(p, 1, regs[0]);
+		rtarget(p, 0, wregs[1]);
+		rtarget(p, 1, wregs[0]);
 		break;
 	case SUB:
 		// TODO: attempt to swap the operands and turn this into an RSUB. For now, target the LHS in vAC, despite
 		// the increased chance of spills.
-		rtarget(p, 0, regs[0]);
+		rtarget(p, 0, wregs[0]);
 		break;
 	case ASGN:
-		// Assignments to VREG nodes do not need targeting.
-		if (generic(p->kids[0]->op) != VREG) {
-			rtarget(p, 1, regs[0]);
+		// Assignments to VREG nodes may need targeting if there is no intermediate load through vAC.
+		if (p->kids[0]->op == VREG+P) {
+			if (generic(p->kids[1]->op) == LOAD && getregnum(p->kids[1]) != 0) {
+				rtarget(p->kids[1], 0, vac(p->kids[1]->kids[0]->op));
+			}
+		} else {
+			rtarget(p, 1, vac(p->kids[0]->op));
 		}
 		break;
 	case CALL:
 	case SYS:
 		// Set the result register to vAC.
-		setreg(p, regs[0]);
+		setreg(p, wregs[0]);
 		break;
 	}
 }
@@ -644,6 +673,36 @@ static void ensurereg(Node p) {
 	if (r != 0) {
 		print("asm.stw('r%d')\n", r);
 	}
+}
+static int isinc(Node p) {
+	// Two cases: reg and zp increment
+	// 
+	// TODO: the patterns that match this need to be more comprehensive.
+	if (p->kids[0]->op == VREG+P) {
+		Symbol dest = p->kids[0]->syms[0];
+		Symbol src = p->kids[1]->kids[0]->kids[0]->kids[0]->syms[RX];
+		return src != NULL && src == dest ? 0 : LBURG_MAX;
+	}
+
+	Symbol src = p->kids[0]->syms[0];
+	Symbol dest = p->kids[1]->kids[0]->kids[0]->syms[0];
+	return src->u.c.v.u == dest->u.c.v.u ? 0 : LBURG_MAX;
+}
+
+static void inst_inc(Node p) {
+	// Two cases: reg and zp increment
+	if (p->kids[0]->op == VREG+P) {
+		print("asm.inc('r%d')\n", p->kids[0]->syms[0]->x.regnode->number);
+	} else {
+		print("asm.inc(0x%x)\n", p->kids[0]->syms[0]->u.c.v.u);
+	}
+}
+
+static void inst_strunc(Node p) {
+	unsigned to = p->kids[0]->syms[0]->x.regnode->number;
+	unsigned from = getregnum(p->kids[1]->kids[0]);
+	assert(from == 0 || to != 0);
+	print("asm.st('r%d')\n", to);
 }
 
 static void inst_spill(Node p) {
@@ -659,12 +718,17 @@ static void inst_copy(Node p) {
 	unsigned to = getregnum(p), from = getregnum(p->kids[0]);
 	assert(to == 0 || from == 0 || to == from);
 
+	char* sz = "w";
+	if (opsize(p->op) == 1) {
+		sz = "";
+	}
+
 	if (to == from) {
 		// ignore this case
 	} else if (to == 0) {
-		print("asm.ldw('r%d')\n", getregnum(p->kids[0]));
+		print("asm.ld%s('r%d')\n", sz, getregnum(p->kids[0]));
 	} else if (from == 0) {
-		print("asm.stw('r%d')\n", getregnum(p));
+		print("asm.st%s('r%d')\n", sz, getregnum(p));
 	}
 }
 
