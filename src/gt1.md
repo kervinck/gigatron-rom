@@ -28,6 +28,7 @@ static void local(Symbol);
 static void progbeg(int, char **);
 static void progend(void);
 static int rangep(Node, unsigned, unsigned);
+static int saferegnum(Node);
 static void segment(int);
 static void space(int);
 static void target(Node);
@@ -55,6 +56,8 @@ static void inst_andw(Node);
 static void inst_orw(Node);
 static void inst_xorw(Node);
 static void inst_lslw(Node);
+static void inst_lsh8(Node);
+static void inst_rsh8(Node);
 static void inst_lsh(Node);
 static void inst_rsh(Node);
 static void inst_mul(Node);
@@ -230,7 +233,10 @@ con0: CNSTU2 "0" range(a, 0, 0)
 con1: CNSTI2 "1" range(a, 1, 1)
 con1: CNSTU2 "1" range(a, 1, 1)
 
-scon: CNSTI2 "%a" range(a, 0, 127)
+con8: CNSTI2 "8" range(a, 8, 8)
+con8: CNSTU2 "8" range(a, 8, 8)
+
+scon: CNSTI2 "%a" range(a, 0, 255)
 scon: CNSTU2 "%a" range(a, 0, 255)
 scon: CNSTP2 "%a" rangep(a, 0, 255)
 
@@ -348,6 +354,12 @@ reg: BXORU2(reg, reg)  `inst_xorw` 1
 
 reg: LSHI2(reg, con1)  `inst_lslw` 1
 reg: LSHU2(reg, con1)  `inst_lslw` 1
+
+reg: LSHI2(reg, con8)  `inst_lsh8` 1
+reg: LSHU2(reg, con8)  `inst_lsh8` 1
+
+reg: RSHI2(reg, con8)  `inst_rsh8` 1
+reg: RSHU2(reg, con8)  `inst_rsh8` 1
 
 reg: LSHI2(reg, reg)  `inst_lsh` 1
 reg: LSHU2(reg, reg)  `inst_lsh` 1
@@ -559,7 +571,15 @@ static void canonicalize(Node* pp) {
 }
 static Node gengt1(Node forest) {
 	for (Node* p = &forest; *p != NULL; p = &(*p)->link) {
+		debug(fprintf(stderr, "pre-canon: "));
+		debug(dumptree(*p));
+		debug(fprint(stderr, "\n"));
+
 		canonicalize(p);
+
+		debug(fprintf(stderr, "post-canon: "));
+		debug(dumptree(*p));
+		debug(fprint(stderr, "\n"));
 	}
 
 	return gen(forest);
@@ -572,6 +592,13 @@ static int rangep(Node p, unsigned lo, unsigned hi) {
 	Symbol s = p->syms[0];
 	unsigned u = (unsigned)s->u.c.v.p;
 	return u >= lo && u <= hi ? 0 : LBURG_MAX;
+}
+static int saferegnum(Node p) {
+	if (p->syms[RX]->x.regnode == NULL) {
+		assert(p->syms[RX]->sclass == REGISTER);
+		return -1;
+	}
+	return getregnum(p);
 }
 static void target(Node p) {
 	int kop;
@@ -611,7 +638,7 @@ static void target(Node p) {
 	case BXOR:
 		// Commutative binops that can take a small constant operand. Otherwise, put the RHS in vAC to help avoid
 		// spills.
-		if (range(p->kids[1], 0, optype(p->op) == U ? 255 : 127) == 0) {
+		if (range(p->kids[1], 0, 255) == 0) {
 			rtarget(p, 0, wregs[0]);
 		} else {
 			rtarget(p, 1, wregs[0]);
@@ -627,13 +654,16 @@ static void target(Node p) {
 		rtarget(p, 0, wregs[0]);
 		break;
 	case LSH:
-		// LSH reg, 1 is a unary operator. LSH reg, reg is a helper call.
-		if (generic(p->kids[1]->op) == CNST && p->kids[1]->syms[0]->u.c.v.u == 1) {
-			rtarget(p, 0, wregs[0]);
+	case RSH:
+		// LSH reg, [1,8] are unary operators. LSH reg, reg is a helper call.
+		if (generic(p->kids[1]->op) == CNST) {
+			unsigned amt = p->kids[1]->syms[0]->u.c.v.u;
+			if ((generic(p->op) == LSH && amt == 1) || amt == 8) {
+				rtarget(p, 0, wregs[0]);
+			}
 			break;
 		}
 		// fallthrough
-	case RSH:
 	case MUL:
 	case MOD:
 	case DIV:
@@ -649,7 +679,7 @@ static void target(Node p) {
 	case ASGN:
 		// Assignments to VREG nodes may need targeting if there is no intermediate load through vAC.
 		if (p->kids[0]->op == VREG+P) {
-			if (generic(p->kids[1]->op) == LOAD && getregnum(p->kids[1]) != 0) {
+			if (generic(p->kids[1]->op) == LOAD && saferegnum(p->kids[1]) != 0) {
 				rtarget(p->kids[1], 0, vac(p->kids[1]->kids[0]->op));
 			}
 		} else {
@@ -718,17 +748,12 @@ static void inst_copy(Node p) {
 	unsigned to = getregnum(p), from = getregnum(p->kids[0]);
 	assert(to == 0 || from == 0 || to == from);
 
-	char* sz = "w";
-	if (opsize(p->op) == 1) {
-		sz = "";
-	}
-
 	if (to == from) {
 		// ignore this case
 	} else if (to == 0) {
-		print("asm.ld%s('r%d')\n", sz, getregnum(p->kids[0]));
+		print("asm.ldw('r%d')\n", getregnum(p->kids[0]));
 	} else if (from == 0) {
-		print("asm.st%s('r%d')\n", sz, getregnum(p));
+		print("asm.stw('r%d')\n", getregnum(p));
 	}
 }
 
@@ -852,6 +877,18 @@ static void inst_xorw(Node p) {
 
 static void inst_lslw(Node p) {
 	print("asm.lslw()\n");
+	ensurereg(p);
+}
+
+static void inst_lsh8(Node p) {
+	print("asm.st('vACH')\n");
+	print("asm.ori(0xff)\n");
+	print("asm.xori(0xff)\n");
+	ensurereg(p);
+}
+
+static void inst_rsh8(Node p) {
+	print("asm.ld('vACH')\n");
 	ensurereg(p);
 }
 

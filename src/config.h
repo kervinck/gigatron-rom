@@ -24,6 +24,7 @@ typedef struct {
 } Xinterface;
 extern int     askregvar(Symbol, Symbol);
 extern void    blkcopy(int, int, int, int, int, int[]);
+extern void    dumptree(Node p);
 extern unsigned emitasm(Node, int);
 extern int     getregnum(Node);
 extern int     mayrecalc(Node);

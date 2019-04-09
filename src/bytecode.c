@@ -77,14 +77,14 @@ static void I(defsymbol)(Symbol p) {
 		p->x.name = p->name;
 }
 
-static void dumptree(Node p) {
+static void emittree(Node p) {
 	switch (specific(p->op)) {
 	case ASGN+B:
 		assert(p->kids[0]);
 		assert(p->kids[1]);
 		assert(p->syms[0]);
-		dumptree(p->kids[0]);
-		dumptree(p->kids[1]);
+		emittree(p->kids[0]);
+		emittree(p->kids[1]);
 		print("%s %d\n", opname(p->op), p->syms[0]->u.c.v.u);
 		return;
 	case RET+V:
@@ -104,28 +104,28 @@ static void dumptree(Node p) {
 		assert(p->kids[0]);
 		assert(!p->kids[1]);
 		assert(p->syms[0]);
-		dumptree(p->kids[0]);
+		emittree(p->kids[0]);
 		print("%s %d\n", opname(p->op), p->syms[0]->u.c.v.i);
 		return;
 	case ARG: case BCOM: case NEG: case INDIR: case JUMP: case RET:
 		assert(p->kids[0]);
 		assert(!p->kids[1]);
-		dumptree(p->kids[0]);
+		emittree(p->kids[0]);
 		print("%s\n", opname(p->op));
 		return;
 	case CALL:
 		assert(p->kids[0]);
 		assert(!p->kids[1]);
 		assert(optype(p->op) != B);
-		dumptree(p->kids[0]);
+		emittree(p->kids[0]);
 		print("%s\n", opname(p->op));
 		return;
 	case ASGN: case BOR: case BAND: case BXOR: case RSH: case LSH:
 	case ADD: case SUB: case DIV: case MUL: case MOD:
 		assert(p->kids[0]);
 		assert(p->kids[1]);
-		dumptree(p->kids[0]);
-		dumptree(p->kids[1]);
+		emittree(p->kids[0]);
+		emittree(p->kids[1]);
 		print("%s\n", opname(p->op));
 		return;
 	case EQ: case NE: case GT: case GE: case LE: case LT:
@@ -133,8 +133,8 @@ static void dumptree(Node p) {
 		assert(p->kids[1]);
 		assert(p->syms[0]);
 		assert(p->syms[0]->x.name);
-		dumptree(p->kids[0]);
-		dumptree(p->kids[1]);
+		emittree(p->kids[0]);
+		emittree(p->kids[1]);
 		print("%s %s\n", opname(p->op), p->syms[0]->x.name);
 		return;
 	}
@@ -143,7 +143,7 @@ static void dumptree(Node p) {
 
 static void I(emit)(Node p) {
 	for (; p; p = p->link)
-		dumptree(p);
+		emittree(p);
 }
 
 static void I(export)(Symbol p) {

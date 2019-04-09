@@ -17,7 +17,6 @@ static void     docall(Node);
 static void     dumpcover(Node, int, int);
 static void     dumpregs(char *, char *, char *);
 static void     dumprule(int);
-static void     dumptree(Node);
 static void     genreload(Node, Symbol, int);
 static void     genspill(Symbol, Node, Symbol);
 static Symbol   getreg(Symbol, unsigned*, Node);
@@ -262,7 +261,7 @@ int range(Node p, int lo, int hi) {
 	}
 	return LBURG_MAX;
 }
-static void dumptree(Node p) {
+void dumptree(Node p) {
 	if (p->op == VREG+P && p->syms[0]) {
 		fprint(stderr, "VREGP(%s)", p->syms[0]->name);
 		return;
