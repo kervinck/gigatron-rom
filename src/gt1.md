@@ -1025,9 +1025,9 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 }
 static void defsymbol(Symbol p) {
 	if (p->scope >= LOCAL && p->sclass == STATIC) {
-		p->x.name = stringf("L%d", genlabel(1));
+		p->x.name = stringf(".L%d", genlabel(1));
 	} else if (p->generated) {
-		p->x.name = stringf("L%s", p->name);
+		p->x.name = stringf(".L%s", p->name);
 	} else if (p->scope == GLOBAL || p->sclass == EXTERN) {
 		p->x.name = stringf("_%s", p->name);
 	} else {
