@@ -231,7 +231,7 @@ def xorw(d):
 def ret():
     func.append(Inst('ret', None, 1, False, lambda i, s: s.emit(bytes([0xff]))))
 
-def link():
+def link(entry):
     # Set up the segment map.
     segments = [
         Segment(0x200, 0xfa),
@@ -282,8 +282,6 @@ def link():
                 inst.size = 5
 
     def layout(seg, sidx, func, emitting):
-        global segment
-
         pc, remaining = seg.pc(), seg.remaining()
         changed = False
         for i in range(0, len(func)):
@@ -365,5 +363,5 @@ def link():
             s.buffer[offset + 1] = (target >> 8) & 0xff
         s.write(stdout.buffer)
 
-    start = funclabels['_main']
+    start = funclabels[entry]
     stdout.buffer.write(bytes([0x00, (start >> 8) & 0xff, start & 0xff]))
