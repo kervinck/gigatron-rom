@@ -2,8 +2,11 @@ from copy import copy
 from sys import stdout, stderr
 
 global_labels = {
+    'vPC': 0x0016,
     'vAC': 0x0018,
     'vACH': 0x0019,
+    'vLR': 0x001a,
+    'vLRH': 0x001b,
     'r1': 0x0030,
     'r2': 0x0032,
     'r3': 0x0034,
@@ -23,13 +26,15 @@ global_labels = {
     'pvpc': 0x004e,
     'ldloc': 0x0050,
     'stloc': 0x0052,
-    'thunk': 0x0054,
+    'thunk0': 0x0054,
     'lsh': 0x0056,
     'rsh': 0x0058,
     'mul': 0x005a,
     'mod': 0x005c,
     'div': 0x005e,
     'sp': 0x0060,
+    'ht': 0x0062,
+    'thunk1': 0x0064,
 }
 
 class Inst:
@@ -311,7 +316,11 @@ def link():
                     pc, remaining = seg.pc(), seg.remaining()
 
                     if emitting:
-                        call(thunk).emit()
+                        if pc & 0xff == 0:
+                            call('thunk0').emit()
+                        else:
+                            assert(pc & 0xff == 0xa0)
+                            call('thunk1').emit()
                         segment = seg
 
                     shorten(inst, pc)
