@@ -45,25 +45,39 @@ class Inst:
         self._emit(self)
 
 class Segment:
-    def __init__(self, address):
-        assert(address & 0xff == 0)
+    def __init__(self, address, size):
         self.address = address
+        self.size = size
         self.buffer = bytearray()
+        self.relocs = {}
+
+    def pc(self):
+        return self.address + len(self.buffer)
+
+    def remaining(self):
+        return self.size - len(self.buffer)
 
     def emit(self, data):
-        assert(len(self.buffer) + len(data) <= 256)
+        assert(len(self.buffer) + len(data) <= self.size)
         self.buffer += data
 
-    def write(self, stream):
-        stream.write(bytes([self.address >> 8 & 0xff, self.address & 0xff, len(self.buffer)]))
-        stream.write(self.buffer)
+    def reloc(self, addr, symbol):
+        assert(addr >= self.address and addr < self.address + self.size)
+        self.relocs[addr - self.address] = symbol
 
+    def write(self, stream):
+        if len(self.buffer) != 0:
+            stream.write(bytes([self.address >> 8 & 0xff, self.address & 0xff, len(self.buffer)]))
+            stream.write(self.buffer)
+
+functions = {}
 func = None
 segment = None
 
 def defun(name):
     global func
     func = []
+    functions[name] = func
 
 def emit(data):
     segment.emit(data)
@@ -217,7 +231,18 @@ def ret():
     func.append(Inst('ret', None, 1, False, lambda _: emit(bytes([0xff]))))
 
 def link():
-    global segment, vac
+    global segment
+
+    # Set up the segment map.
+    segments = [
+        Segment(0x200, 0xfa),
+        Segment(0x300, 0xfa),
+        Segment(0x400, 0xfa),
+        Segment(0x500, 0x100),
+        Segment(0x600, 0x100),
+    ]
+    for i in range(0, 0x80-0x8):
+        segments.append(Segment(0x08a0 + (i << 8), 96))
 
     # TODO: take memory map into account
     #
@@ -229,9 +254,7 @@ def link():
     # - place page fallthough code as necessary
     # then attempt to shorten jumps and iterate until reaching a fixed point
 
-    base = 0x500
-    segments = []
-    labels = copy(global_labels)
+    labels = {}
 
     def near(target, pc):
         if type(target) is str:
@@ -259,8 +282,10 @@ def link():
                 print(f'far jump from {pc:x} to {0 if target is None else target:x}', file=stderr)
                 inst.size = 5
 
-    def layout(emitting):
-        pc, remaining = base, 0x100
+    def layout(seg, sidx, func, emitting):
+        global segment
+
+        pc, remaining = seg.pc(), seg.remaining()
         changed = False
         for i in range(0, len(func)):
             inst = func[i]
@@ -281,13 +306,13 @@ def link():
                 if nr >= 0 and sum(ins.size for ins in func[i+1:]) <= nr:
                     pass
                 else:
-                    pc = pc + remaining
-                    remaining = 0x100
+                    sidx += 1
+                    seg = segments[sidx]
+                    pc, remaining = seg.pc(), seg.remaining()
 
                     if emitting:
                         call(thunk).emit()
-                        segment = Segment(pc)
-                        segments.append(segment)
+                        segment = seg
 
                     shorten(inst, pc)
 
@@ -297,27 +322,45 @@ def link():
 
             if emitting:
                 if type(inst.operand) is str:
-                    inst.operand = labels[inst.operand]
-                if inst.opcode == 'ldwi':
-                    vac = inst.operand
-                else:
-                    vac = None
+                    if inst.operand in labels:
+                        inst.operand = labels[inst.operand]
+                    else:
+                        assert(inst.opcode == 'ldwi')
+                        segment.reloc(pc + 1, inst.operand)
+                        inst.operand = 0x102e
                 inst.emit()
 
             pc += inst.size
             remaining -= inst.size
 
-        return (pc, changed)
+        return (pc, changed, sidx)
 
-    while True:
-        pc, changed = layout(False)
-        if not changed:
-            break
+    def dofunc(seg, sidx, func):
+        while True:
+            _, changed, _ = layout(seg, sidx, func, False)
+            if not changed:
+                break
+        pc = seg.pc()
+        _, _, sidx = layout(seg, sidx, func, True)
+        return pc, sidx
 
-    segment = Segment(base)
-    segments.append(segment)
-    layout(True)
+    funclabels = {}
+    segment, sidx = segments[0], 0
+    for name, f in functions.items():
+        while segment.remaining() == 0:
+            sidx += 1
+            segment = segments[sidx]
+
+        labels = copy(global_labels)
+        pc, sidx = dofunc(segment, sidx, f)
+        funclabels[name] = pc
 
     for s in segments:
+        for offset, label in s.relocs.items():
+            target = funclabels[label]
+            s.buffer[offset] = target & 0xff
+            s.buffer[offset + 1] = (target >> 8) & 0xff
         s.write(stdout.buffer)
-    stdout.buffer.write(bytes([0x00, 0x05, 0x00]))
+
+    start = funclabels['_main']
+    stdout.buffer.write(bytes([0x00, (start >> 8) & 0xff, start & 0xff]))
