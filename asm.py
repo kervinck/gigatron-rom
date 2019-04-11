@@ -96,7 +96,7 @@ class Inst:
             print(f'emitting far branch from {self.addr:x} to {self.operand:x}', file=stderr)
             skip = self.addr + 8
             segment.emit(bytes([0x35, far, displacement(skip)])) # bcc <far> <skip>
-            segment.emitw(0x11, self.operand)             # ldwi <target>
+            segment.emitw(0x11, self.operand - 2)         # ldwi <target>
             segment.emitb(0xf3, global_labels['pvpc'])    # doke vpc
         else:
             # near jump
