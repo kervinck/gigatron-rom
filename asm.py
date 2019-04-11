@@ -39,18 +39,6 @@ global_labels = {
     'leave': 0x006a,
 }
 
-class Inst:
-    def __init__(self, opcode, operand, size, branch, emit):
-        self.addr = None
-        self.opcode = opcode
-        self.operand = operand
-        self.size = size
-        self.branch = branch
-        self._emit = emit
-
-    def emit(self, segment):
-        self._emit(self, segment)
-
 class Segment:
     def __init__(self, address, size):
         self.address = address
@@ -85,6 +73,121 @@ class Segment:
             stream.write(bytes([self.address >> 8 & 0xff, self.address & 0xff, len(self.buffer)]))
             stream.write(self.buffer)
 
+def displacement(operand):
+    operand = operand & 0xff
+    return operand - 2 if operand >= 2 else 254 + operand
+
+class Inst:
+    def __init__(self, opcode, operand, size, branch, emit):
+        self.addr = None
+        self.opcode = opcode
+        self.operand = operand
+        self.size = size
+        self.branch = branch
+        self._emit = emit
+
+    def emit(self, segment):
+        self._emit(self, segment)
+
+    def emitjcc(self, segment, near, far):
+        if self.operand & 0xff00 != self.addr & 0xff00:
+            # far jump
+            assert(self.size == 8)
+            print(f'emitting far branch from {self.addr:x} to {self.operand:x}', file=stderr)
+            skip = self.addr + 8
+            segment.emit(bytes([0x35, far, displacement(skip)])) # bcc <far> <skip>
+            segment.emitw(0x11, self.operand)             # ldwi <target>
+            segment.emitb(0xf3, global_labels['pvpc'])    # doke vpc
+        else:
+            # near jump
+            assert(self.size == 3)
+            print(f'emitting near branch from {self.addr:x} to {self.operand:x}', file=stderr)
+            segment.emit(bytes([0x35, near, displacement(self.operand)]))
+
+    def emitj(self, segment):
+        if self.operand & 0xff00 == self.addr & 0xff00:
+            print(f'emitting near jump from {self.addr:x} to {self.operand:x}', file=stderr)
+            segment.emitb(0x90, displacement(self.operand))
+        else:
+            print(f'emitting far jump from {self.addr:x} to {self.operand:x}', file=stderr)
+            Inst.ldwi(self.operand - 2).emit(segment)
+            segment.emitb(0xf3, global_labels['pvpc'])
+
+    @staticmethod
+    def label(name): return Inst('label', name, 0, False, lambda i, s: None)
+    @staticmethod
+    def ldwi(con): return Inst('ldwi', con, 3, False, lambda i, s: s.emitw(0x11, i.operand))
+    @staticmethod
+    def ld(d): return Inst('ld', d, 2, False, lambda i, s: s.emitb(0x1a, i.operand))
+    @staticmethod
+    def ldw(d): return Inst('ldw', d, 2, False, lambda i, s: s.emitb(0x21, i.operand))
+    @staticmethod
+    def stw(d): return Inst('stw', d, 2, False, lambda i, s: s.emitb(0x2b, i.operand))
+    @staticmethod
+    def jeq(l): return Inst('jeq', l, 8, True, lambda i, s: i.emitjcc(s, 0x3f, 0x72))
+    @staticmethod
+    def jne(l): return Inst('jne', l, 8, True, lambda i, s: i.emitjcc(s, 0x72, 0x3f))
+    @staticmethod
+    def jge(l): return Inst('jge', l, 8, True, lambda i, s: i.emitjcc(s, 0x53, 0x50))
+    @staticmethod
+    def jgt(l): return Inst('jgt', l, 8, True, lambda i, s: i.emitjcc(s, 0x4d, 0x56))
+    @staticmethod
+    def jle(l): return Inst('jle', l, 8, True, lambda i, s: i.emitjcc(s, 0x56, 0x4d))
+    @staticmethod
+    def jlt(l): return Inst('jlt', l, 8, True, lambda i, s: i.emitjcc(s, 0x50, 0x53))
+    @staticmethod
+    def ldi(con): return Inst('ldi', con, 2, False, lambda i, s: s.emitb(0x59, i.operand))
+    @staticmethod
+    def st(d): return Inst('st', d, 2, False, lambda i, s: s.emitb(0x5e, i.operand))
+    @staticmethod
+    def pop(): return Inst('pop', None, 1, False, lambda i, s: s.emit(bytes([0x63])))
+    @staticmethod
+    def push(): return Inst('push', None, 1, False, lambda i, s: s.emit(bytes([0x75])))
+    @staticmethod
+    def lup(d): return Inst('lup', d, 2, False, lambda i, s: s.emitb(0x7f, i.operand))
+    @staticmethod
+    def andi(con): return Inst('andi', con, 2, False, lambda i, s: s.emitb(0x82, i.operand))
+    @staticmethod
+    def ori(con): return Inst('ori', con, 2, False, lambda i, s: s.emitb(0x88, i.operand))
+    @staticmethod
+    def xori(con): return Inst('xori', con, 2, False, lambda i, s: s.emitb(0x8c, i.operand))
+    @staticmethod
+    def j(l): return Inst('j', l, 5, False, lambda i, s: i.emitj(s))
+    @staticmethod
+    def jr(): return Inst('jr', None, 2, False, lambda i, s: s.emitb(0xf3, global_labels['pvpc']))
+    @staticmethod
+    def inc(d): return Inst('inc', d, 2, False, lambda i, s: s.emitb(0x93, i.operand))
+    @staticmethod
+    def addw(d): return Inst('addw', d, 2, False, lambda i, s: s.emitb(0x99, i.operand))
+    @staticmethod
+    def peek(): return Inst('peek', None, 1, False, lambda i, s: s.emit(bytes([0xad])))
+    @staticmethod
+    def sys(con): return Inst('sys', con, 2, False, lambda i, s: s.emitb(0xb4, i.operand))
+    @staticmethod
+    def subw(d): return Inst('subw', d, 2, False, lambda i, s: s.emitb(0xb8, i.operand))
+    @staticmethod
+    def call(d): return Inst('call', d, 2, False, lambda i, s: s.emitb(0xcf, i.operand))
+    @staticmethod
+    def addi(con): return Inst('addi', con, 2, False, lambda i, s: s.emitb(0xe3, i.operand))
+    @staticmethod
+    def subi(con): return Inst('subi', con, 2, False, lambda i, s: s.emitb(0xe6, i.operand))
+    @staticmethod
+    def lslw(): return Inst('lslw', None, 1, False, lambda i, s: s.emit(bytes([0xe9])))
+    @staticmethod
+    def poke(d): return Inst('poke', d, 2, False, lambda i, s: s.emitb(0xf0, i.operand))
+    @staticmethod
+    def doke(d): return Inst('doke', d, 2, False, lambda i, s: s.emitb(0xf3, i.operand))
+    @staticmethod
+    def deek(): return Inst('deek', None, 1, False, lambda i, s: s.emit(bytes([0xf6])))
+    @staticmethod
+    def andw(d): return Inst('andw', d, 2, False, lambda i, s: s.emitb(0xf8, i.operand))
+    @staticmethod
+    def orw(d): return Inst('orw', d, 2, False, lambda i, s: s.emitb(0xfa, i.operand))
+    @staticmethod
+    def xorw(d): return Inst('xorw', d, 2, False, lambda i, s: emnitb(0xfc, i.operand))
+    @staticmethod
+    def ret(): return Inst('ret', None, 1, False, lambda i, s: s.emit(bytes([0xff])))
+
 functions = {}
 func = None
 
@@ -93,145 +196,49 @@ def defun(name):
     func = []
     functions[name] = func
 
-def displacement(operand):
-    operand = operand & 0xff
-    return operand - 2 if operand >= 2 else 254 + operand
-
-def emitjcc(segment, inst, near, far):
-    if inst.operand & 0xff00 != inst.addr & 0xff00:
-        # far jump
-        assert(inst.size == 8)
-        print(f'emitting far branch from {inst.addr:x} to {inst.operand:x}', file=stderr)
-        skip = inst.addr + 8
-        segment.emit(bytes([0x35, far, displacement(skip)])) # bcc <far> <skip>
-        segment.emitw(0x11, inst.operand)             # ldwi <target>
-        segment.emitb(0xf3, global_labels['pvpc'])    # doke vpc
-    else:
-        # near jump
-        assert(inst.size == 3)
-        print(f'emitting near branch from {inst.addr:x} to {inst.operand:x}', file=stderr)
-        segment.emit(bytes([0x35, near, displacement(inst.operand)]))
-
-def label(name):
-    func.append(Inst('label', name, 0, False, lambda i, s: None))
-
-def ldwi(con):
-    func.append(Inst('ldwi', con, 3, False, lambda i, s: s.emitw(0x11, i.operand)))
-
-def ld(d):
-    func.append(Inst('ld', d, 2, False, lambda i, s: s.emitb(0x1a, i.operand)))
-
-def ldw(d):
-    func.append(Inst('ldw', d, 2, False, lambda i, s: s.emitb(0x21, i.operand)))
-
-def stw(d):
-    func.append(Inst('stw', d, 2, False, lambda i, s: s.emitb(0x2b, i.operand)))
-
-def jeq(l):
-    func.append(Inst('jeq', l, 8, True, lambda i, s: emitjcc(s, i, 0x3f, 0x72)))
-
-def jne(l):
-    func.append(Inst('jne', l, 8, True, lambda i, s: emitjcc(s, i, 0x72, 0x3f)))
-
-def jge(l):
-    func.append(Inst('jge', l, 8, True, lambda i, s: emitjcc(s, i, 0x53, 0x50)))
-
-def jgt(l):
-    func.append(Inst('jgt', l, 8, True, lambda i, s: emitjcc(s, i, 0x4d, 0x56)))
-
-def jle(l):
-    func.append(Inst('jle', l, 8, True, lambda i, s: emitjcc(s, i, 0x56, 0x4d)))
-
-def jlt(l):
-    func.append(Inst('jlt', l, 8, True, lambda i, s: emitjcc(s, i, 0x50, 0x53)))
-
-def ldi(con):
-    func.append(Inst('ldi', con, 2, False, lambda i, s: s.emitb(0x59, i.operand)))
-
-def st(d):
-    func.append(Inst('st', d, 2, False, lambda i, s: s.emitb(0x5e, i.operand)))
-
-def pop():
-    func.append(Inst('pop', None, 1, False, lambda i, s: s.emit(bytes([0x63]))))
-
-def push():
-    func.append(Inst('push', None, 1, False, lambda i, s: s.emit(bytes([0x75]))))
-
-def lup(d):
-    func.append(Inst('lup', d, 2, False, lambda i, s: s.emitb(0x7f, i.operand)))
-
-def andi(con):
-    func.append(Inst('andi', con, 2, False, lambda i, s: s.emitb(0x82, i.operand)))
-
-def ori(con):
-    func.append(Inst('ori', con, 2, False, lambda i, s: s.emitb(0x88, i.operand)))
-
-def xori(con):
-    func.append(Inst('xori', con, 2, False, lambda i, s: s.emitb(0x8c, i.operand)))
+def label(name): func.append(Inst.label(name))
+def ldwi(con): func.append(Inst.ldwi(con))
+def ld(d): func.append(Inst.ld(d))
+def ldw(d): func.append(Inst.ldw(d))
+def stw(d): func.append(Inst.stw(d))
+def jeq(l): func.append(Inst.jeq(l))
+def jne(l): func.append(Inst.jne(l))
+def jge(l): func.append(Inst.jge(l))
+def jgt(l): func.append(Inst.jgt(l))
+def jle(l): func.append(Inst.jle(l))
+def jlt(l): func.append(Inst.jlt(l))
+def ldi(con): func.append(Inst.ldi(con))
+def st(d): func.append(Inst.st(d))
+def pop(): func.append(Inst.pop())
+def push(): func.append(Inst.push())
+def lup(d): func.append(Inst.lup(d))
+def andi(con): func.append(Inst.andi(con))
+def ori(con): func.append(Inst.ori(con))
+def xori(con): func.append(Inst.xori(con))
 
 def jr():
     # Check for a preceding ldwi. If one exists, snip it out and create a 'j' instead of a 'jr'.
     if len(func) > 0 and func[len(func)-1].opcode == 'ldwi':
-        def e(inst, segment):
-            if inst.operand & 0xff00 == inst.addr & 0xff00:
-                print(f'emitting near jump from {inst.addr:x} to {inst.operand:x}', file=stderr)
-                segment.emitb(0x90, displacement(inst.operand))
-            else:
-                # TODO: does the operand need to be adjusted? probably.
-                print(f'emitting far jump from {inst.addr:x} to {inst.operand:x}', file=stderr)
-                ldwi(inst.operand).emit(segment)
-                segment.emitb(0xf3, global_labels['pvpc'])
-        func[len(func)-1] = Inst('j', func[len(func)-1].operand, 5, False, e)
+        func[len(func)-1] = Inst.j(func[len(func)-1].operand)
     else:
-        func.append(Inst('jr', None, 2, False, lambda i, s: s.emitb(0xf3, global_labels['pvpc'])))
+        func.append(Inst.jr())
 
-def inc(d):
-    func.append(Inst('inc', d, 2, False, lambda i, s: s.emitb(0x93, i.operand)))
-
-def addw(d):
-    func.append(Inst('addw', d, 2, False, lambda i, s: s.emitb(0x99, i.operand)))
-
-def peek():
-    func.append(Inst('peek', None, 1, False, lambda i, s: s.emit(bytes([0xad]))))
-
-def sys(con):
-    func.append(Inst('sys', con, 2, False, lambda i, s: s.emitb(0xb4, i.operand)))
-
-def subw(d):
-    func.append(Inst('subw', d, 2, False, lambda i, s: s.emitb(0xb8, i.operand)))
-
-def call(d):
-    func.append(Inst('call', d, 2, False, lambda i, s: s.emitb(0xcf, i.operand)))
-
-def addi(con):
-    func.append(Inst('addi', con, 2, False, lambda i, s: s.emitb(0xe3, i.operand)))
-
-def subi(con):
-    func.append(Inst('subi', con, 2, False, lambda i, s: s.emitb(0xe6, i.operand)))
-
-def lslw():
-    func.append(Inst('lslw', None, 1, False, lambda i, s: s.emit(bytes([0xe9]))))
-
-def poke(d):
-    func.append(Inst('poke', d, 2, False, lambda i, s: s.emitb(0xf0, i.operand)))
-
-def doke(d):
-    func.append(Inst('doke', d, 2, False, lambda i, s: s.emitb(0xf3, i.operand)))
-
-def deek():
-    func.append(Inst('deek', None, 1, False, lambda i, s: s.emit(bytes([0xf6]))))
-
-def andw(d):
-    func.append(Inst('andw', d, 2, False, lambda i, s: s.emitb(0xf8, i.operand)))
-
-def orw(d):
-    func.append(Inst('orw', d, 2, False, lambda i, s: s.emitb(0xfa, i.operand)))
-
-def xorw(d):
-    func.append(Inst('xorw', d, 2, False, lambda i, s: emnitb(0xfc, i.operand)))
-
-def ret():
-    func.append(Inst('ret', None, 1, False, lambda i, s: s.emit(bytes([0xff]))))
+def inc(d): func.append(Inst.inc(d))
+def addw(d): func.append(Inst.addw(d))
+def peek(): func.append(Inst.peek())
+def sys(con): func.append(Inst.sys(con))
+def subw(d): func.append(Inst.subw(d))
+def call(d): func.append(Inst.call(d))
+def addi(con): func.append(Inst.addi(con))
+def subi(con): func.append(Inst.subi(con))
+def lslw(): func.append(Inst.lslw())
+def poke(d): func.append(Inst.poke(d))
+def doke(d): func.append(Inst.doke(d))
+def deek(): func.append(Inst.deek())
+def andw(d): func.append(Inst.andw(d))
+def orw(d): func.append(Inst.orw(d))
+def xorw(d): func.append(Inst.xorw(d))
+def ret(): func.append(Inst.ret())
 
 def link(entry):
     # Set up the segment map.
@@ -308,13 +315,13 @@ def link(entry):
                     sidx += 1
                     nextseg = segments[sidx]
 
-                    print(f'moving to segment {sidx} @ {nextseg.pc()}', file=stderr)
+                    print(f'moving to segment {sidx} @ {nextseg.pc():x}', file=stderr)
                     if emitting:
-                        if pc & 0xff == 0:
-                            call('thunk0').emit(seg)
+                        if nextseg.pc() & 0xff == 0:
+                            Inst.call(global_labels['thunk0']).emit(seg)
                         else:
-                            assert(pc & 0xff == 0xa0)
-                            call('thunk1').emit(seg)
+                            assert(nextseg.pc() & 0xff == 0xa0)
+                            Inst.call(global_labels['thunk1']).emit(seg)
 
                     seg = nextseg
                     pc, remaining = seg.pc(), seg.remaining()
@@ -339,12 +346,14 @@ def link(entry):
 
         return (pc, changed, seg, sidx)
 
-    def dofunc(seg, sidx, func):
+    def dofunc(seg, sidx, func, name):
+        print(f'laying out function {name}', file=stderr)
         while True:
             _, changed, _, _ = layout(seg, sidx, func, False)
             if not changed:
                 break
         pc = seg.pc()
+        print(f'emitting function {name} @ {pc:x}', file=stderr)
         _, _, seg, sidx = layout(seg, sidx, func, True)
         return pc, seg, sidx
 
@@ -356,7 +365,7 @@ def link(entry):
             segment = segments[sidx]
 
         labels = copy(global_labels)
-        pc, segment, sidx = dofunc(segment, sidx, f)
+        pc, segment, sidx = dofunc(segment, sidx, f, name)
         funclabels[name] = pc
 
     for s in segments:
