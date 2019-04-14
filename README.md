@@ -17,17 +17,17 @@ gigatron-rom
  |     +--- Blinky.gcl          Very simple GCL program
  |     +--- HelloWorld.gcl      Program that draws "Hello world" on screen
  |     +--- WozMon.gt1          Port of Apple-1 monitor program
- |     `--- TinyBASIC.gt1       Integer BASIC interpreter
+ |     `--- TinyBASIC.gt1       Integer BASIC interpreter with graphics commands
  +--- BASIC/                    Example BASIC programs
  +--- Images/                   Built-in images
  +--- Utils/
  |     +--- sendFile.py         Send a GT1 or BASIC file from laptop/PC to Gigatron
  |     `--- BabelFish/          Generic Arduino sketch for interfacing with
  |                              Gigatron. Used for transferring GT1 files into
- |                              the computer and/or hooking up an keyboard.
+ |                              the computer and/or hooking up a PS/2 keyboard
  +--- Docs/
- |     +--- GT1-files.txt       vCPU object file format and ROM versioning
  |     +--- GCL-language.txt    Gigatron Control Language and vCPU explanation
+ |     +--- GT1-files.txt       vCPU object file format and ROM versioning
  |     +--- gtemu.c             Instruction set definition (as executable code)
  |     +--- TinyBASIC.ebnf      Formal definition of Gigatron TinyBASIC syntax
  |     `--- TinyBASIC.xhtml     Railroad diagram of Gigatron TinyBASIC syntax
