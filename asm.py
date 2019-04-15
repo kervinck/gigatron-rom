@@ -22,21 +22,6 @@ global_labels = {
     'r13': 0x0048,
     'r14': 0x004a,
     'r15': 0x004c,
-    'ha': 0x004e,
-    'pvpc': 0x0050,
-    'ldloc': 0x0052,
-    'stloc': 0x0054,
-    'thunk0': 0x0056,
-    'lsh': 0x0058,
-    'rsh': 0x005a,
-    'mul': 0x005c,
-    'mod': 0x005e,
-    'div': 0x0060,
-    'sp': 0x0062,
-    'ht': 0x0064,
-    'thunk1': 0x0066,
-    'enter': 0x0068,
-    'leave': 0x006a,
 }
 
 class Segment:
@@ -70,6 +55,7 @@ class Segment:
 
     def write(self, stream):
         if len(self.buffer) != 0:
+            print(f'writing segment {self.address:x}:{self.pc():x}', file=stderr)
             stream.write(bytes([self.address >> 8 & 0xff, self.address & 0xff, len(self.buffer)]))
             stream.write(self.buffer)
 
@@ -113,6 +99,8 @@ class Inst:
             Inst.ldwi(self.operand - 2).emit(segment)
             segment.emitb(0xf3, global_labels['pvpc'])
 
+    @staticmethod
+    def glob(name): return Inst('glob', name, 0, False, lambda i, s: None)
     @staticmethod
     def label(name): return Inst('label', name, 0, False, lambda i, s: None)
     @staticmethod
@@ -187,6 +175,10 @@ class Inst:
     def xorw(d): return Inst('xorw', d, 2, False, lambda i, s: emnitb(0xfc, i.operand))
     @staticmethod
     def ret(): return Inst('ret', None, 1, False, lambda i, s: s.emit(bytes([0xff])))
+    @staticmethod
+    def db(con): return Inst('db', con, 1, False, lambda i, s: s.emit(bytes([i.operand])))
+    @staticmethod
+    def dw(con): return Inst('dw', con, 2, False, lambda i, s: s.emit(bytes([i.operand & 0xff, (i.operand >> 8) & 0xff])))
 
 functions = {}
 func = None
@@ -196,6 +188,7 @@ def defun(name):
     func = []
     functions[name] = func
 
+def glob(name): func.append(Inst.glob(name))
 def label(name): func.append(Inst.label(name))
 def ldwi(con): func.append(Inst.ldwi(con))
 def ld(d): func.append(Inst.ld(d))
@@ -239,15 +232,16 @@ def andw(d): func.append(Inst.andw(d))
 def orw(d): func.append(Inst.orw(d))
 def xorw(d): func.append(Inst.xorw(d))
 def ret(): func.append(Inst.ret())
+def db(con): func.append(Inst.db(con))
+def dw(con): func.append(Inst.dw(con))
 
 def link(entry):
     # Set up the segment map.
     segments = [
-        Segment(0x200, 0xfa),
-        Segment(0x300, 0xfa),
-        Segment(0x400, 0xfa),
-        Segment(0x500, 0x100),
-        Segment(0x600, 0x100),
+        Segment(0x004e, 0x32),
+        Segment(0x0200, 0xfa),
+        Segment(0x0300, 0xfa),
+        Segment(0x0400, 0xfa),
     ]
     for i in range(0, 0x80-0x8):
         segments.append(Segment(0x08a0 + (i << 8), 96))
@@ -296,9 +290,12 @@ def link(entry):
         for i in range(0, len(func)):
             inst = func[i]
 
-            if inst.opcode == 'label':
+            if inst.opcode == 'label' or inst.opcode == 'glob':
                 inst.addr = pc
                 labels[inst.operand] = pc
+                if inst.opcode == 'glob':
+                    print(f'defining global label {inst.operand}', file=stderr)
+                    global_labels[inst.operand] = pc
                 continue
 
             # if this is a branch, we may be able to shorten it. check for that here.
@@ -312,12 +309,17 @@ def link(entry):
                 if nr >= 0 and sum(ins.size for ins in func[i+1:]) <= nr:
                     pass
                 else:
+                    # If this is segment 0, fail.
+                    assert(sidx != 0)
+
                     sidx += 1
                     nextseg = segments[sidx]
 
                     print(f'moving to segment {sidx} @ {nextseg.pc():x}', file=stderr)
                     if emitting:
-                        if nextseg.pc() & 0xff == 0:
+                        if nextseg.pc() == 0x08a0:
+                            Inst.call(global_labels['thunk2']).emit(seg)
+                        elif nextseg.pc() & 0xff == 0:
                             Inst.call(global_labels['thunk0']).emit(seg)
                         else:
                             assert(nextseg.pc() & 0xff == 0xa0)
@@ -335,9 +337,12 @@ def link(entry):
                 if type(inst.operand) is str:
                     if inst.operand in labels:
                         inst.operand = labels[inst.operand]
-                    else:
-                        assert(inst.opcode == 'ldwi')
+                    elif inst.opcode == 'ldwi':
                         seg.reloc(pc + 1, inst.operand)
+                        inst.operand = 0x102e
+                    else:
+                        assert(inst.opcode == 'dw')
+                        seg.reloc(pc, inst.operand)
                         inst.operand = 0x102e
                 inst.emit(seg)
 
@@ -357,8 +362,15 @@ def link(entry):
         _, _, seg, sidx = layout(seg, sidx, func, True)
         return pc, seg, sidx
 
+    # The linker treats "@globals" as a special function. This is the only function that can live in the zero
+    # page, and must consist of static data only.
+    if '@globals' in functions:
+        labels = copy(global_labels)
+        dofunc(segments[0], 0, functions['@globals'], '@globals')
+        del functions['@globals']
+
     funclabels = {}
-    segment, sidx = segments[0], 0
+    segment, sidx = segments[1], 1
     for name, f in functions.items():
         while segment.remaining() == 0:
             sidx += 1
@@ -371,6 +383,7 @@ def link(entry):
     for s in segments:
         for offset, label in s.relocs.items():
             target = funclabels[label]
+            print(f'reloc: {label} -> {target:x} @ {offset:x}', file=stderr)
             s.buffer[offset] = target & 0xff
             s.buffer[offset + 1] = (target >> 8) & 0xff
         s.write(stdout.buffer)

@@ -519,6 +519,7 @@ static Symbol constant_negate(Symbol c) {
 static void canonicalize(Node* pp) {
 	// Canonicalization:
 	// - Ensure that constants are always on the RHS (except for SUB)
+	// - Turn subtraction of a large constant into addition of the negated constant
 	// - Replace conditionals with conditionals vs. 0
 
 	Node p = *pp;
@@ -562,6 +563,8 @@ static void canonicalize(Node* pp) {
 			p->kids[1] = k;
 		}
 		if (range(p->kids[1], 0, 0) != 0) {
+			// TODO: check for opposite signs if this is a signed compare. This is relatively complicated, as it
+			// involves spilling to a temp and inserting a new tree.
 			int opst = optype(p->op) + sizeop(opsize(p->op));
 			p->kids[0] = newnode(SUB + opst, p->kids[0], p->kids[1], NULL);
 			p->kids[1] = newnode(CNST + opst, NULL, NULL, constant_zero(optype(p->op)));
@@ -694,9 +697,7 @@ static void target(Node p) {
 	}
 }
 static void clobber(Node p) {
-	if (generic(p->op) == CALL) {
-		spill(0x00ff, IREG, p);
-	}
+	// Nothing to do.
 }
 static void ensurereg(Node p) {
 	int r = getregnum(p);
@@ -986,8 +987,6 @@ static void local(Symbol p) {
 static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 	print("asm.defun('%s')\n", f->x.name);
 
-	// TODO: prolog?
-
 	usedmask[0] = usedmask[1] = 0;
 	freemask[0] = freemask[1] = ~(unsigned)0;
 
@@ -1004,20 +1003,40 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 	offset = maxoffset = 0;
 
 	gencode(caller, callee);
+
 	framesize = maxoffset;
 	print("asm.push()\n");
+
+	// Save any registers that are used by this function.
+	unsigned entermask = 0, leavemask = 0, saversize = 0;
+	for (unsigned e = 1 << 1,l = 1 << 15, n = 1; n < 16; e <<= 1, l >>= 1, n++) {
+		if (usedmask[IREG] & e) {
+			entermask |= e, leavemask |= l;
+			saversize += 2;
+		}
+	}
+	if (entermask != 0) {
+		print("asm.ldwi(0x%x)\n", entermask);
+		print("asm.call('enter')\n");
+	}
+
 	if (framesize > 0) {
 		print("asm.%s(%d)\n", framesize < 256 ? "ldi" : "ldwi", -framesize);
 		print("asm.addw('sp')\n");
 		print("asm.stw('sp')\n");
 	}
 
+	// TODO: adjust local sizes by the size of the saved registers.
 	emitcode();
 
 	if (framesize > 0) {
 		print("asm.%s(%d)\n", framesize < 256 ? "ldi" : "ldwi", framesize);
 		print("asm.addw('sp')\n");
 		print("asm.stw('sp')\n");
+	}
+	if (leavemask != 0) {
+		print("asm.ldwi(0x%x)\n", leavemask);
+		print("asm.call('leave')\n");
 	}
 
 	print("asm.pop()\n");
