@@ -72,6 +72,7 @@ static void inst_sys(Node);
 
 static Symbol wregs[32], bregs[32];
 static Symbol wregw, bregw;
+static unsigned argsize, saversize;
 %}
 
 %start stmt
@@ -424,10 +425,10 @@ stmt: GTF2(reg, reg) "# stw ha\nldw %1\ncall gtf\njcc ne zero %a # pseudo\n" 1
 stmt: LEF2(reg, reg) "# stw ha\nldw %1\ncall lef\njcc ne zero %a # pseudo\n" 1
 stmt: LTF2(reg, reg) "# stw ha\nldw %1\ncall ltf\njcc ne zero %a # pseudo\n" 1
 
-stmt: ARGF2(reg) "# push %0\n"  1
-stmt: ARGI2(reg) "# push %0\n"  1
-stmt: ARGU2(reg) "# push %0\n"  1
-stmt: ARGP2(reg) "# push %0\n"  1
+stmt: ARGF2(reg) "asm.call('pusha')\n"  1
+stmt: ARGI2(reg) "asm.call('pusha')\n"  1
+stmt: ARGU2(reg) "asm.call('pusha')\n"  1
+stmt: ARGP2(reg) "asm.call('pusha')\n"  1
 
 reg: CALLF2(reg)  `inst_call` 1
 reg: CALLI2(reg)  `inst_call` 1
@@ -437,10 +438,10 @@ reg: CALLV(reg)   `inst_call` 1
 
 reg: SYSI2 `inst_sys` 1
 
-stmt: RETF2(reg)  "# ret\n" 1
-stmt: RETI2(reg)  "# ret\n" 1
-stmt: RETP2(reg)  "# ret\n" 1
-stmt: RETU2(reg)  "# ret\n" 1
+stmt: RETF2(reg)  "asm.stw('rv')\n" 1
+stmt: RETI2(reg)  "asm.stw('rv')\n" 1
+stmt: RETP2(reg)  "asm.stw('rv')\n" 1
+stmt: RETU2(reg)  "asm.stw('rv')\n" 1
 stmt: RETV(reg)   "# ret\n" 1
 %%
 static void progbeg(int argc, char* argv[]) {
@@ -626,6 +627,7 @@ static void target(Node p) {
 	case CVU:
 	case CVF:
 	case RET:
+	case ARG:
 		// Standard unary operators require their operand in vAC.
 		rtarget(p, 0, vac(p->kids[0]->op));
 		break;
@@ -763,10 +765,12 @@ static void inst_ldloc(Node p) {
 
 	int offs;
 	if (generic(p->kids[0]->op) == ADDRF) {
-		offs = p->kids[0]->syms[0]->x.offset + offset;
+		// Args start at sp + framesize + saversize + argsize.
+		offs = framesize + saversize + argsize - p->kids[0]->syms[0]->x.offset;
 	} else {
 		assert(generic(p->kids[0]->op) == ADDRL);
-		offs = p->kids[0]->syms[0]->x.offset;
+		// Locals start at sp + framesize.
+		offs = framesize - p->kids[0]->syms[0]->x.offset;
 	}
 
 	if (offs < 256) {
@@ -980,11 +984,25 @@ static void local(Symbol p) {
 	if (askregvar(p, (*IR->x.rmap)(ttob(p->type))) == 0) {
 		assert(p->sclass == AUTO);
 		offset += p->type->size;
-		p->x.offset = -offset;
-		p->x.name = stringd(-offset);
+		p->x.offset = offset;
+		p->x.name = stringd(offset);
 	}
 }
 static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
+	// Frame:
+	//
+	// +-------------------------------+
+	// | Incoming arguments            |
+	// +-------------------------------+ <- original sp
+	// | Saved registers               | <- saversize bytes
+	// +-------------------------------+
+	// | Locals                        | <- framesize bytes
+	// +-------------------------------+ <- sp
+	//
+	// - Args end at sp + framesize + saversize
+	// - Locals end at sp
+
+
 	print("asm.defun('%s')\n", f->x.name);
 
 	usedmask[0] = usedmask[1] = 0;
@@ -998,8 +1016,9 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 		p->x.offset = q->x.offset = offset;
 		p->x.name = q->x.name = stringf("%d", p->x.offset);
 		p->sclass = q->sclass = AUTO;
-		offset += q->type->size;
+		offset += roundup(q->type->size, 2);
 	}
+	argsize = offset;
 	offset = maxoffset = 0;
 
 	gencode(caller, callee);
@@ -1008,7 +1027,8 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 	print("asm.push()\n");
 
 	// Save any registers that are used by this function.
-	unsigned entermask = 0, leavemask = 0, saversize = 0;
+	saversize = 0;
+	unsigned entermask = 0, leavemask = 0;
 	for (unsigned e = 1 << 1,l = 1 << 15, n = 1; n < 16; e <<= 1, l >>= 1, n++) {
 		if (usedmask[IREG] & e) {
 			entermask |= e, leavemask |= l;
@@ -1026,7 +1046,7 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 		print("asm.stw('sp')\n");
 	}
 
-	// TODO: adjust local sizes by the size of the saved registers.
+	debug(fprintf(stderr, "framesize: %d, saversize: %d, argsize: %d\n", framesize, saversize, argsize));
 	emitcode();
 
 	if (framesize > 0) {
@@ -1037,6 +1057,15 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 	if (leavemask != 0) {
 		print("asm.ldwi(0x%x)\n", leavemask);
 		print("asm.call('leave')\n");
+	}
+	if (argsize > 0) {
+		print("asm.%s(%d)\n", argsize < 256 ? "ldi" : "ldwi", argsize);
+		print("asm.addw('sp')\n");
+		print("asm.stw('sp')\n");
+	}
+
+	if (f->type->type != voidtype) {
+		print("asm.ldw('rv')\n");
 	}
 
 	print("asm.pop()\n");
@@ -1103,7 +1132,7 @@ Interface gt1IR = {
 	0,        /* mulops_calls */
 	0,        /* wants_callb */
 	1,        /* wants_argb */
-	0,        /* left_to_right */
+	1,        /* left_to_right */
 	0,        /* wants_dag */
 	0,        /* unsigned_char */
 	address,
