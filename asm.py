@@ -179,6 +179,8 @@ class Inst:
     def db(con): return Inst('db', con, 1, False, lambda i, s: s.emit(bytes([i.operand])))
     @staticmethod
     def dw(con): return Inst('dw', con, 2, False, lambda i, s: s.emit(bytes([i.operand & 0xff, (i.operand >> 8) & 0xff])))
+    @staticmethod
+    def dx(x): return Inst('dx', x, len(x), False, lambda i, s: s.emit(bytes(x)))
 
 functions = {}
 func = None
@@ -234,6 +236,7 @@ def xorw(d): func.append(Inst.xorw(d))
 def ret(): func.append(Inst.ret())
 def db(con): func.append(Inst.db(con))
 def dw(con): func.append(Inst.dw(con))
+def dx(x): func.append(Inst.dx(con))
 
 def link(entry):
     # Set up the segment map.

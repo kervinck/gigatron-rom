@@ -3,6 +3,7 @@ defining global label ht
 defining global label ha
 defining global label pvpc
 defining global label sp
+defining global label rv
 defining global label thunk0
 defining global label thunk1
 defining global label thunk2
@@ -20,6 +21,7 @@ defining global label ht
 defining global label ha
 defining global label pvpc
 defining global label sp
+defining global label rv
 defining global label thunk0
 defining global label thunk1
 defining global label thunk2
@@ -38,6 +40,7 @@ defining global label ht
 defining global label ha
 defining global label pvpc
 defining global label sp
+defining global label rv
 defining global label thunk0
 defining global label thunk1
 defining global label thunk2
@@ -70,201 +73,88 @@ emitting function @thunk2 @ 22a
 laying out function @enter
 far branch from 23c to 0
 far branch from 244 to 0
-near jump from 25f to 23c
-near branch from 23c to 261
+near jump from 263 to 23c
+near branch from 23c to 265
 near branch from 23f to 257
-near jump from 255 to 23c
-near branch from 23c to 257
+near jump from 259 to 23c
+near branch from 23c to 25b
 near branch from 23f to 24d
-near jump from 255 to 23c
+near jump from 259 to 23c
 emitting function @enter @ 234
-near branch from 23c to 257
-emitting near branch from 23c to 257
+near branch from 23c to 25b
+emitting near branch from 23c to 25b
 near branch from 23f to 24d
 emitting near branch from 23f to 24d
-near jump from 255 to 23c
-emitting near jump from 255 to 23c
+near jump from 259 to 23c
+emitting near jump from 259 to 23c
 laying out function @leave
-far branch from 260 to 0
-far branch from 268 to 0
-near jump from 287 to 260
-near branch from 260 to 289
-near branch from 263 to 27b
-near jump from 27d to 260
-near branch from 260 to 27f
-near branch from 263 to 271
-near jump from 27d to 260
-emitting function @leave @ 258
-near branch from 260 to 27f
-emitting near branch from 260 to 27f
-near branch from 263 to 271
-emitting near branch from 263 to 271
-near jump from 27d to 260
-emitting near jump from 27d to 260
+far branch from 264 to 0
+far branch from 26c to 0
+near jump from 287 to 264
+near branch from 264 to 289
+near branch from 267 to 27d
+near jump from 27d to 264
+near branch from 264 to 27f
+near branch from 267 to 273
+near jump from 27d to 264
+emitting function @leave @ 25c
+near branch from 264 to 27f
+emitting near branch from 264 to 27f
+near branch from 267 to 273
+emitting near branch from 267 to 273
+near jump from 27d to 264
+emitting near jump from 27d to 264
+laying out function @pusha
+emitting function @pusha @ 280
+laying out function .S2
+emitting function .S2 @ 289
+laying out function _rand
+near branch from 29f to 291
+near branch from 29f to 291
+emitting function _rand @ 28b
+near branch from 29f to 291
+emitting near branch from 29f to 291
 laying out function _main
-far jump from 28a to 0
-far jump from 2a8 to 0
-far branch from 2b4 to 0
-far jump from 2c6 to 0
-near branch from 2dd to 2ad
-near branch from 2e6 to 28f
-far jump from 2ed to 0
+far jump from 2c3 to 0
+far jump from 2dd to 0
 moving to segment 2 @ 300
-far jump from 31f to 0
-far branch from 379 to 0
-far branch from 385 to 0
-far branch from 391 to 0
-near branch from 3c2 to 324
-far branch from 3cb to 2f2
-far jump from 3d7 to 0
-far jump from 3f1 to 0
-moving to segment 3 @ 400
-far branch from 403 to 0
-far jump from 40f to 0
-far branch from 426 to 3f6
-far branch from 434 to 3dc
-far jump from 43c to 2e9
-near jump from 28a to 2e2
-near jump from 2a5 to 2db
-near branch from 2ae to 2cb
-near jump from 2bb to 2d5
-near branch from 2cf to 2a7
-near branch from 2d8 to 28c
-far jump from 2df to 3c7
+far branch from 304 to 2e2
+far branch from 312 to 2c8
+far jump from 2c3 to 30e
+near jump from 2dd to 2f7
+near branch from 2f8 to 2df
 moving to segment 2 @ 300
-near jump from 312 to 3c0
-near branch from 369 to 38d
-near branch from 370 to 399
-near branch from 377 to 3a8
-near branch from 3a3 to 314
-far branch from 3ac to 2e4
-far jump from 3b8 to 430
-far jump from 3d2 to 424
-far branch from 3dc to 414
-far jump from 3e8 to 418
-moving to segment 3 @ 400
-far branch from 408 to 3d7
-far branch from 416 to 3bd
-far jump from 41e to 2db
-near jump from 28a to 2d4
-near jump from 2a5 to 2cd
-near branch from 2ae to 2bd
-near jump from 2bb to 2c7
-near branch from 2cf to 2a7
-near branch from 2d8 to 28c
-far jump from 2df to 3a8
+far branch from 300 to 2df
+far branch from 30e to 2c8
+far jump from 2c3 to 30a
+near jump from 2dd to 2f4
+near branch from 2f8 to 2df
 moving to segment 2 @ 300
-near jump from 312 to 3a1
-near branch from 369 to 373
-near branch from 370 to 37a
-near branch from 377 to 389
-near branch from 3a3 to 314
-far branch from 3ac to 2e4
-far jump from 3b8 to 412
-far jump from 3d2 to 406
-near branch from 3dc to 3ed
-near jump from 3e3 to 3f1
-near branch from 3f7 to 3d7
-moving to segment 3 @ 400
-far branch from 400 to 3d7
-far branch from 40e to 3bd
-far jump from 416 to 2db
-near jump from 28a to 2d4
-near jump from 2a5 to 2cd
-near branch from 2ae to 2bd
-near jump from 2bb to 2c7
-near branch from 2cf to 2a7
-near branch from 2d8 to 28c
-far jump from 2df to 3a8
+far branch from 300 to 2df
+far branch from 30e to 2c8
+emitting function _main @ 2b9
+far jump from 2c3 to 30a
+emitting far jump from 2c3 to 30a
+near jump from 2dd to 2f4
+emitting near jump from 2dd to 2f4
+near branch from 2f8 to 2df
 moving to segment 2 @ 300
-near jump from 312 to 3a1
-near branch from 369 to 373
-near branch from 370 to 37a
-near branch from 377 to 389
-near branch from 3a3 to 314
-far branch from 3ac to 2e4
-far jump from 3b8 to 40a
-near jump from 3d2 to 3f5
-near branch from 3d9 to 3e5
-near jump from 3e0 to 3e9
-near branch from 3f4 to 3d4
-moving to segment 3 @ 400
-far branch from 406 to 3bd
-far jump from 40e to 2db
-near jump from 28a to 2d4
-near jump from 2a5 to 2cd
-near branch from 2ae to 2bd
-near jump from 2bb to 2c7
-near branch from 2cf to 2a7
-near branch from 2d8 to 28c
-far jump from 2df to 3a8
-moving to segment 2 @ 300
-near jump from 312 to 3a1
-near branch from 369 to 373
-near branch from 370 to 37a
-near branch from 377 to 389
-near branch from 3a3 to 314
-far branch from 3ac to 2e4
-far jump from 3b8 to 402
-near jump from 3d2 to 3f2
-near branch from 3d9 to 3e2
-near jump from 3e0 to 3e6
-near branch from 3f4 to 3d4
-moving to segment 3 @ 400
-far branch from 406 to 3bd
-far jump from 40e to 2db
-emitting function _main @ 280
-near jump from 28a to 2d4
-emitting near jump from 28a to 2d4
-near jump from 2a5 to 2cd
-emitting near jump from 2a5 to 2cd
-near branch from 2ae to 2bd
-emitting near branch from 2ae to 2bd
-near jump from 2bb to 2c7
-emitting near jump from 2bb to 2c7
-near branch from 2cf to 2a7
-emitting near branch from 2cf to 2a7
-near branch from 2d8 to 28c
-emitting near branch from 2d8 to 28c
-far jump from 2df to 3a8
-emitting far jump from 2df to 3a8
-moving to segment 2 @ 300
-near jump from 312 to 3a1
-emitting near jump from 312 to 3a1
-near branch from 369 to 373
-emitting near branch from 369 to 373
-near branch from 370 to 37a
-emitting near branch from 370 to 37a
-near branch from 377 to 389
-emitting near branch from 377 to 389
-near branch from 3a3 to 314
-emitting near branch from 3a3 to 314
-far branch from 3ac to 2e4
-emitting far branch from 3ac to 2e4
-far jump from 3b8 to 402
-emitting far jump from 3b8 to 402
-near jump from 3d2 to 3f2
-emitting near jump from 3d2 to 3f2
-near branch from 3d9 to 3e2
-emitting near branch from 3d9 to 3e2
-near jump from 3e0 to 3e6
-emitting near jump from 3e0 to 3e6
-near branch from 3f4 to 3d4
-emitting near branch from 3f4 to 3d4
-moving to segment 3 @ 400
-far branch from 406 to 3bd
-emitting far branch from 406 to 3bd
-far jump from 40e to 2db
-emitting far jump from 40e to 2db
-reloc: @thunk0 -> 214 @ 8
-reloc: @thunk1 -> 21f @ a
-reloc: @thunk2 -> 22a @ c
-reloc: @enter -> 234 @ e
-reloc: @leave -> 258 @ 10
-reloc: @ldloc -> 207 @ 12
-reloc: @stloc -> 20b @ 14
-writing segment 4e:70
-reloc: _main -> 280 @ 1
-writing segment 200:2f9
-writing segment 300:3f9
-writing segment 400:41a
+far branch from 300 to 2df
+emitting far branch from 300 to 2df
+far branch from 30e to 2c8
+emitting far branch from 30e to 2c8
+reloc: @thunk0 -> 214 @ a
+reloc: @thunk1 -> 21f @ c
+reloc: @thunk2 -> 22a @ e
+reloc: @enter -> 234 @ 10
+reloc: @leave -> 25c @ 12
+reloc: @ldloc -> 207 @ 14
+reloc: @stloc -> 20b @ 16
+reloc: @pusha -> 280 @ 18
+writing segment 4e:72
+reloc: _main -> 2b9 @ 1
+reloc: .S2 -> 289 @ 96
+reloc: .S2 -> 289 @ a3
+reloc: _rand -> 28b @ e0
+writing segment 200:2fa
+writing segment 300:31d

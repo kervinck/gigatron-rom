@@ -263,7 +263,9 @@ stmt: ASGNI2(VREGP, reg)  "# write register\n"
 stmt: ASGNU2(VREGP, reg)  "# write register\n"
 stmt: ASGNP2(VREGP, reg)  "# write register\n"
 
+stmt: ASGNI1(ADDRLP2, LOADI1(INDIRI1(VREGP))) `inst_spill` 1
 stmt: ASGNI2(ADDRLP2, LOADI2(INDIRI2(VREGP))) `inst_spill` 1
+stmt: ASGNU1(ADDRLP2, LOADU1(INDIRU1(VREGP))) `inst_spill` 1
 stmt: ASGNU2(ADDRLP2, LOADU2(INDIRU2(VREGP))) `inst_spill` 1
 
 stmt: reg "# "
@@ -677,9 +679,13 @@ static void target(Node p) {
 		rtarget(p, 1, wregs[0]);
 		break;
 	case SUB:
-		// TODO: attempt to swap the operands and turn this into an RSUB. For now, target the LHS in vAC, despite
-		// the increased chance of spills.
-		rtarget(p, 0, wregs[0]);
+		// TODO: attempt to swap the operands and turn this into an RSUB. For now, do nothing:
+		// - pattern matching during emit will allow us to handle constants, etc.
+		// - at emit time:
+		//     - if the RHS is in vAC, put it in ht
+		//     - if the LHS is not in vAC, load it into vAC
+		// - because we do not have any operand killing vAC, we need the SUB itself to kill vAC.
+		setreg(p, wregs[0]);
 		break;
 	case ASGN:
 		// Assignments to VREG nodes may need targeting if there is no intermediate load through vAC.
@@ -836,8 +842,12 @@ static void inst_addi(Node p) {
 }
 
 static void inst_subi(Node p) {
+	assert(getregnum(p) == 0);
+
+	if (getregnum(p->kids[0]) != 0) {
+		print("asm.ldw('r%d')\n", getregnum(p->kids[0]));
+	}
 	print("asm.subi(0x%x)\n", p->kids[1]->syms[0]->u.c.v.u);
-	ensurereg(p);
 }
 
 static void inst_andi(Node p) {
@@ -861,8 +871,17 @@ static void inst_addw(Node p) {
 }
 
 static void inst_subw(Node p) {
-	print("asm.subw('r%d')\n", getregnum(p->kids[1]));
-	ensurereg(p);
+	assert(getregnum(p) == 0);
+
+	char* fmt = "asm.subw('r%d')\n";
+	if (getregnum(p->kids[1]) == 0) {
+		fmt = "asm.subw('ht')\n";
+		print("asm.stw('ht')\n");
+	}
+	if (getregnum(p->kids[0]) != 0) {
+		print("asm.ldw('r%d')\n", getregnum(p->kids[0]));
+	}
+	print(fmt, getregnum(p->kids[1]));
 }
 
 static void inst_andw(Node p) {
@@ -1073,7 +1092,7 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 }
 static void defsymbol(Symbol p) {
 	if (p->scope >= LOCAL && p->sclass == STATIC) {
-		p->x.name = stringf(".L%d", genlabel(1));
+		p->x.name = stringf(".S%d", genlabel(1));
 	} else if (p->generated) {
 		p->x.name = stringf(".L%s", p->name);
 	} else if (p->scope == GLOBAL || p->sclass == EXTERN) {
@@ -1092,17 +1111,26 @@ static void address(Symbol q, Symbol p, long n) {
 	}
 }
 static void defconst(int suffix, int size, Value v) {
-	// TODO: need to do something here...
-	//assert(0);
+	switch (suffix) {
+	case I:
+	case U:
+	case P:
+	case F:
+		print("asm.d%c(%x)\n", size == 1 ? 'b' : 'w', v.u);
+		break;
+	default:
+		assert(0);
+	}
 }
-static void defaddress(Symbol n) {
-	// TODO: need to do something here...
-	assert(0);	
+static void defaddress(Symbol p) {
+	print("asm.dw('%s')\n", p->x.name);
 }
 static void defstring(int n, char* str) {
-	// TODO: need to do something here...
-	//assert(0);
-	print("%s\n", str);
+	print("asm.dx([");
+	for (int x = 0; x < n; x++) {
+		print("%s%c", x == 0 ? "" : ",", str[x]);
+	}
+	print("]);\n");
 }
 static void export(Symbol p) {
 	// Nothing to do
@@ -1111,11 +1139,10 @@ static void import(Symbol p) {
 	// Nothing to do
 }
 static void global(Symbol p) {
-	print("%s:\n", p->x.name);
-	// Nothing to do
+	print("asm.defun('%s')\n", p->x.name);
 }
 static void space(int n) {
-	// TODO: need to do something here...
+	print("asm.dx([0] * %d)\n", n);
 }
 Interface gt1IR = {
 	1, 1, 0,  /* char */
