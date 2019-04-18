@@ -19,7 +19,7 @@ T=$(TSTDIR)/
 what:
 	-@echo make all rcc lburg cpp lcc bprint liblcc triple clean clobber
 
-all::	rcc lburg cpp lcc bprint liblcc
+all::	rcc lburg cpp lcc bprint liblcc gt1s
 
 rcc:	$Brcc$E
 lburg:	$Blburg$E
@@ -27,6 +27,7 @@ cpp:	$Bcpp$E
 lcc:	$Blcc$E
 bprint:	$Bbprint$E
 liblcc:	$Bliblcc$A
+gt1s:	$Bgtlink.py $Brt.py $Basm.py
 
 RCCOBJS=$Balloc$O \
 	$Bbind$O \
@@ -129,6 +130,10 @@ $Blcc$E:	$Blcc$O $Bhost$O;	$(LD) $(LDFLAGS) -o $@ $Blcc$O $Bhost$O
 
 $Blcc$O:	etc/lcc.c;		$(CC) $(CFLAGS) -c -o $@ etc/lcc.c
 $Bhost$O:	$(HOSTFILE);	$(CC) $(CFLAGS) -c -o $@ $(HOSTFILE)
+
+$Bgtlink.py:	gtlink.py;	cp gtlink.py $@
+$Basm.py:	asm.py; cp asm.py $@
+$Brt.py:	rt.py; cp rt.py $@
 
 LIBOBJS=$Bassert$O $Bbbexit$O $Byynull$O
 

@@ -1,5 +1,5 @@
 from copy import copy
-from sys import stdout, stderr
+from sys import stderr
 
 global_labels = {
     'vPC': 0x0016,
@@ -238,7 +238,7 @@ def db(con): func.append(Inst.db(con))
 def dw(con): func.append(Inst.dw(con))
 def dx(x): func.append(Inst.dx(con))
 
-def link(entry):
+def link(entry, outf):
     # Set up the segment map.
     segments = [
         Segment(0x004e, 0x32),
@@ -389,7 +389,7 @@ def link(entry):
             print(f'reloc: {label} -> {target:x} @ {offset:x}', file=stderr)
             s.buffer[offset] = target & 0xff
             s.buffer[offset + 1] = (target >> 8) & 0xff
-        s.write(stdout.buffer)
+        s.write(outf)
 
     start = funclabels[entry]
-    stdout.buffer.write(bytes([0x00, (start >> 8) & 0xff, start & 0xff]))
+    outf.write(bytes([0x00, (start >> 8) & 0xff, start & 0xff]))
