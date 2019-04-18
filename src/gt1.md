@@ -35,9 +35,9 @@ static void target(Node);
 
 static void inst_inc(Node);
 static void inst_strunc(Node);
-static void inst_spill(Node);
 static void inst_copy(Node);
 static void inst_ldloc(Node);
+static void inst_stloc(Node);
 static void inst_ld(Node);
 static void inst_st(Node);
 static void inst_peek(Node);
@@ -263,11 +263,6 @@ stmt: ASGNI2(VREGP, reg)  "# write register\n"
 stmt: ASGNU2(VREGP, reg)  "# write register\n"
 stmt: ASGNP2(VREGP, reg)  "# write register\n"
 
-stmt: ASGNI1(ADDRLP2, LOADI1(INDIRI1(VREGP))) `inst_spill` 1
-stmt: ASGNI2(ADDRLP2, LOADI2(INDIRI2(VREGP))) `inst_spill` 1
-stmt: ASGNU1(ADDRLP2, LOADU1(INDIRU1(VREGP))) `inst_spill` 1
-stmt: ASGNU2(ADDRLP2, LOADU2(INDIRU2(VREGP))) `inst_spill` 1
-
 stmt: reg "# "
 
 reg: LOADI1(reg)  `inst_copy` 1
@@ -289,6 +284,13 @@ reg: INDIRU1(ADDRFP2) `inst_ldloc` 1
 reg: INDIRU2(ADDRFP2) `inst_ldloc` 1
 reg: INDIRP2(ADDRFP2) `inst_ldloc` 1
 reg: INDIRF2(ADDRFP2) `inst_ldloc` 1
+
+stmt: ASGNI1(ADDRLP2, reg) `inst_stloc` 1
+stmt: ASGNI2(ADDRLP2, reg) `inst_stloc` 1
+stmt: ASGNU1(ADDRLP2, reg) `inst_stloc` 1
+stmt: ASGNU2(ADDRLP2, reg) `inst_stloc` 1
+stmt: ASGNP2(ADDRLP2, reg) `inst_stloc` 1
+stmt: ASGNF2(ADDRLP2, reg) `inst_stloc` 1
 
 reg: INDIRI1(scon) `inst_ld` 1
 reg: INDIRU1(scon) `inst_ld` 1
@@ -747,15 +749,6 @@ static void inst_strunc(Node p) {
 	print("asm.st('r%d')\n", to);
 }
 
-static void inst_spill(Node p) {
-	Node local = p->kids[0];
-	Node vregp = p->kids[1]->kids[0]->kids[0];
-	assert(getregnum(vregp) == 0);
-	print("asm.stw('ha')\n");
-	print("asm.ldwi(%d)\n", local->syms[0]->x.offset);
-	print("asm.call('stloc')\n");
-}
-
 static void inst_copy(Node p) {
 	unsigned to = getregnum(p), from = getregnum(p->kids[0]);
 	assert(to == 0 || from == 0 || to == from);
@@ -769,18 +762,22 @@ static void inst_copy(Node p) {
 	}
 }
 
+static int localoffset(Node addr) {
+	if (generic(addr->op) == ADDRF) {
+		// Args start at sp + framesize + saversize + argsize.
+		return framesize + saversize + argsize - addr->syms[0]->x.offset;
+	}
+
+	// Locals start at sp + framesize.
+	assert(generic(addr->op) == ADDRL);
+	return framesize - addr->syms[0]->x.offset;
+}
+
 static void inst_ldloc(Node p) {
 	assert(getregnum(p) == 0);
 
-	int offs;
-	if (generic(p->kids[0]->op) == ADDRF) {
-		// Args start at sp + framesize + saversize + argsize.
-		offs = framesize + saversize + argsize - p->kids[0]->syms[0]->x.offset;
-	} else {
-		assert(generic(p->kids[0]->op) == ADDRL);
-		// Locals start at sp + framesize.
-		offs = framesize - p->kids[0]->syms[0]->x.offset;
-	}
+	int offs = localoffset(p->kids[0]);
+	assert(offs >= 0);
 
 	if (offs < 256) {
 		print("asm.ldi(%d)\n", offs);
@@ -788,6 +785,21 @@ static void inst_ldloc(Node p) {
 		print("asm.ldiw(%d)\n", offs);
 	}
 	print("asm.call('ldloc')\n");
+}
+
+static void inst_stloc(Node p) {
+	assert(getregnum(p->kids[1]) == 0);
+
+	int offs = localoffset(p->kids[0]);
+	assert(offs >= 0);
+
+	print("asm.stw('ha')\n");
+	if (offs < 256) {
+		print("asm.ldi(%d)\n", offs);
+	} else {
+		print("asm.ldiw(%d)\n", offs);
+	}
+	print("asm.call('stloc')\n");
 }
 
 static void inst_st(Node p) {
@@ -836,7 +848,26 @@ static void inst_cnstw(Node p) {
 
 static void inst_addr(Node p) {
 	assert(getregnum(p) == 0);
-	print("asm.ldwi('%s')\n", p->syms[0]->x.name);
+
+	int offs;
+	switch (generic(p->op)) {
+	case ADDRF:
+	case ADDRL:
+		offs = localoffset(Node addr);
+		if (offs < 256) {
+			print("ldw('sp')\n");
+			print("addi(%d)\n", offs);
+		} else {
+			print("ldwi(%d)\n", offs);
+			print("addw('sp')\n");
+		}
+		break;
+	case ADDRG:
+		print("asm.ldwi('%s')\n", p->syms[0]->x.name);
+		break;
+	default:
+		assert(0);
+	}
 }
 
 static void inst_addi(Node p) {

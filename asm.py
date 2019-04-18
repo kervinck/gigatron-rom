@@ -217,6 +217,8 @@ def andi(con): func.append(Inst.andi(con))
 def ori(con): func.append(Inst.ori(con))
 def xori(con): func.append(Inst.xori(con))
 
+def j(l): func.append(Inst.j(l))
+
 def jr():
     # Check for a preceding ldwi. If one exists, snip it out and create a 'j' instead of a 'jr'.
     if len(func) > 0 and func[len(func)-1].opcode == 'ldwi':
