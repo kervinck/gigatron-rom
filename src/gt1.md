@@ -706,6 +706,9 @@ static void target(Node p) {
 }
 static void clobber(Node p) {
 	// Nothing to do.
+	if (generic(p->op) == CALL) {
+		debug(fprintf(stderr, "live registers at callsite: %x\n", ~freemask[IREG]));
+	}
 }
 static void ensurereg(Node p) {
 	int r = getregnum(p);
@@ -1021,7 +1024,7 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 	// - Args end at sp + framesize + saversize
 	// - Locals end at sp
 
-
+	debug(fprint(stderr, "(function %s)\n", f->x.name));
 	print("asm.defun('%s')\n", f->x.name);
 
 	usedmask[0] = usedmask[1] = 0;
@@ -1046,6 +1049,7 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 	print("asm.push()\n");
 
 	// Save any registers that are used by this function.
+	debug(fprint(stderr, "(used registers: %x)\n", usedmask[IREG]));
 	saversize = 0;
 	unsigned entermask = 0, leavemask = 0;
 	for (unsigned e = 1 << 1,l = 1 << 15, n = 1; n < 16; e <<= 1, l >>= 1, n++) {

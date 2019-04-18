@@ -14,7 +14,7 @@ char *cpp[] = { LCCDIR "cpp", "$1", "$2", "$3", 0 };
 char *com[] =  { LCCDIR "rcc", "-target=gt1", "$1", "$2", "$3", "", 0 };
 char *include[] = { "-I" LCCDIR "include", 0 };
 char *as[] = { "/bin/cp", "$2", "$3", 0 };
-char *ld[] = { LCCDIR "gtlink.py", "-o", "$3", LCCDIR "rt.py", "$1", "$2", 0 };
+char *ld[] = { LCCDIR "gtlink.py", "-o", "$3", "$1", LCCDIR "rt.py", "$2", 0 };
 
 extern char *concat(char *, char *);
 extern int access(const char *, int);
@@ -25,7 +25,7 @@ int option(char *arg) {
 		include[0] = concat("-I", concat(&arg[8], "/include"));
 		com[0] = concat(&arg[8], "/rcc");
 		ld[0] = concat(&arg[8], "/gtlink.py");
-		ld[3] = concat(&arg[8], "/rt.py");
+		ld[4] = concat(&arg[8], "/rt.py");
 	} else {
 		return 0;
 	}

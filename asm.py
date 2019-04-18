@@ -24,6 +24,12 @@ global_labels = {
     'r15': 0x004c,
 }
 
+class Log:
+    def __init__(self, f):
+        self.f = f
+
+log = Log(stderr)
+
 class Segment:
     def __init__(self, address, size):
         self.address = address
@@ -55,7 +61,7 @@ class Segment:
 
     def write(self, stream):
         if len(self.buffer) != 0:
-            print(f'writing segment {self.address:x}:{self.pc():x}', file=stderr)
+            print(f'writing segment {self.address:x}:{self.pc():x}', file=log.f)
             stream.write(bytes([self.address >> 8 & 0xff, self.address & 0xff, len(self.buffer)]))
             stream.write(self.buffer)
 
@@ -79,7 +85,7 @@ class Inst:
         if self.operand & 0xff00 != self.addr & 0xff00:
             # far jump
             assert(self.size == 8)
-            print(f'emitting far branch from {self.addr:x} to {self.operand:x}', file=stderr)
+            print(f'emitting far branch from {self.addr:x} to {self.operand:x}', file=log.f)
             skip = self.addr + 8
             segment.emit(bytes([0x35, far, displacement(skip)])) # bcc <far> <skip>
             segment.emitw(0x11, self.operand - 2)         # ldwi <target>
@@ -87,15 +93,15 @@ class Inst:
         else:
             # near jump
             assert(self.size == 3)
-            print(f'emitting near branch from {self.addr:x} to {self.operand:x}', file=stderr)
+            print(f'emitting near branch from {self.addr:x} to {self.operand:x}', file=log.f)
             segment.emit(bytes([0x35, near, displacement(self.operand)]))
 
     def emitj(self, segment):
         if self.operand & 0xff00 == self.addr & 0xff00:
-            print(f'emitting near jump from {self.addr:x} to {self.operand:x}', file=stderr)
+            print(f'emitting near jump from {self.addr:x} to {self.operand:x}', file=log.f)
             segment.emitb(0x90, displacement(self.operand))
         else:
-            print(f'emitting far jump from {self.addr:x} to {self.operand:x}', file=stderr)
+            print(f'emitting far jump from {self.addr:x} to {self.operand:x}', file=log.f)
             Inst.ldwi(self.operand - 2).emit(segment)
             segment.emitb(0xf3, global_labels['pvpc'])
 
@@ -238,7 +244,9 @@ def db(con): func.append(Inst.db(con))
 def dw(con): func.append(Inst.dw(con))
 def dx(x): func.append(Inst.dx(con))
 
-def link(entry, outf):
+def link(entry, outf, logf):
+    log.f = logf
+
     # Set up the segment map.
     segments = [
         Segment(0x004e, 0x32),
@@ -274,17 +282,17 @@ def link(entry, outf):
 
         if inst.branch:
             if near:
-                print(f'near branch from {pc:x} to {target:x}', file=stderr)
+                print(f'near branch from {pc:x} to {target:x}', file=log.f)
                 inst.size = 3
             else:
-                print(f'far branch from {pc:x} to {0 if target is None else target:x}', file=stderr)
+                print(f'far branch from {pc:x} to {0 if target is None else target:x}', file=log.f)
                 inst.size = 8
         elif inst.opcode == 'j':
             if near:
-                print(f'near jump from {pc:x} to {target:x}', file=stderr)
+                print(f'near jump from {pc:x} to {target:x}', file=log.f)
                 inst.size = 2
             else:
-                print(f'far jump from {pc:x} to {0 if target is None else target:x}', file=stderr)
+                print(f'far jump from {pc:x} to {0 if target is None else target:x}', file=log.f)
                 inst.size = 5
 
     def layout(seg, sidx, func, emitting):
@@ -297,7 +305,7 @@ def link(entry, outf):
                 inst.addr = pc
                 labels[inst.operand] = pc
                 if inst.opcode == 'glob':
-                    print(f'defining global label {inst.operand}', file=stderr)
+                    print(f'defining global label {inst.operand}', file=log.f)
                     global_labels[inst.operand] = pc
                 continue
 
@@ -318,7 +326,7 @@ def link(entry, outf):
                     sidx += 1
                     nextseg = segments[sidx]
 
-                    print(f'moving to segment {sidx} @ {nextseg.pc():x}', file=stderr)
+                    print(f'moving to segment {sidx} @ {nextseg.pc():x}', file=log.f)
                     if emitting:
                         if nextseg.pc() == 0x08a0:
                             Inst.call(global_labels['thunk2']).emit(seg)
@@ -355,13 +363,13 @@ def link(entry, outf):
         return (pc, changed, seg, sidx)
 
     def dofunc(seg, sidx, func, name):
-        print(f'laying out function {name}', file=stderr)
+        print(f'laying out function {name}', file=log.f)
         while True:
             _, changed, _, _ = layout(seg, sidx, func, False)
             if not changed:
                 break
         pc = seg.pc()
-        print(f'emitting function {name} @ {pc:x}', file=stderr)
+        print(f'emitting function {name} @ {pc:x}', file=log.f)
         _, _, seg, sidx = layout(seg, sidx, func, True)
         return pc, seg, sidx
 
@@ -386,7 +394,7 @@ def link(entry, outf):
     for s in segments:
         for offset, label in s.relocs.items():
             target = funclabels[label]
-            print(f'reloc: {label} -> {target:x} @ {offset:x}', file=stderr)
+            print(f'reloc: {label} -> {target:x} @ {offset:x}', file=log.f)
             s.buffer[offset] = target & 0xff
             s.buffer[offset + 1] = (target >> 8) & 0xff
         s.write(outf)
