@@ -178,7 +178,7 @@ class Inst:
     @staticmethod
     def orw(d): return Inst('orw', d, 2, False, lambda i, s: s.emitb(0xfa, i.operand))
     @staticmethod
-    def xorw(d): return Inst('xorw', d, 2, False, lambda i, s: emnitb(0xfc, i.operand))
+    def xorw(d): return Inst('xorw', d, 2, False, lambda i, s: s.emitb(0xfc, i.operand))
     @staticmethod
     def ret(): return Inst('ret', None, 1, False, lambda i, s: s.emit(bytes([0xff])))
     @staticmethod

@@ -36,6 +36,7 @@ static void target(Node);
 static void inst_inc(Node);
 static void inst_strunc(Node);
 static void inst_copy(Node);
+static void inst_spill(Node);
 static void inst_ldloc(Node);
 static void inst_stloc(Node);
 static void inst_ld(Node);
@@ -70,8 +71,8 @@ static void inst_bcom(Node);
 static void inst_call(Node);
 static void inst_sys(Node);
 
-static Symbol wregs[32], bregs[32];
-static Symbol wregw, bregw;
+static Symbol wregs[32], bregs[32], vregs[32];
+static Symbol wregw, bregw, vregw;
 static unsigned argsize, saversize;
 %}
 
@@ -262,6 +263,12 @@ stmt: ASGNU1(VREGP, reg)  "# write register\n"
 stmt: ASGNI2(VREGP, reg)  "# write register\n"
 stmt: ASGNU2(VREGP, reg)  "# write register\n"
 stmt: ASGNP2(VREGP, reg)  "# write register\n"
+
+stmt: ASGNI1(ADDRLP2, LOADI1(INDIRI1(VREGP))) `inst_spill` 1
+stmt: ASGNI2(ADDRLP2, LOADI2(INDIRI2(VREGP))) `inst_spill` 1
+stmt: ASGNU1(ADDRLP2, LOADU1(INDIRU1(VREGP))) `inst_spill` 1
+stmt: ASGNU2(ADDRLP2, LOADU2(INDIRU2(VREGP))) `inst_spill` 1
+stmt: ASGNP2(ADDRLP2, LOADP2(INDIRP2(VREGP))) `inst_spill` 1
 
 stmt: reg "# "
 
@@ -464,13 +471,15 @@ static void progbeg(int argc, char* argv[]) {
 
 	wregs[0] = mkreg("vAC", 0, 1, IREG);
 	bregs[0] = mkreg("vACb", 0, 1, IREG);
+	vregs[0] = NULL;
 	for (i = 1; i < 16; i++) {
-		wregs[i] = mkreg("r%d", i, 1, IREG);
+		vregs[i] = wregs[i] = mkreg("r%d", i, 1, IREG);
 		bregs[i] = mkreg("r%db", i, 1, IREG);
 	}
 
 	wregw = mkwildcard(wregs);
-	bregw = mkwildcard(wregs);
+	bregw = mkwildcard(bregs);
+	vregw = mkwildcard(vregs);
 
 	tmask[IREG] = 0x00ff; tmask[FREG] = 0;
 	vmask[IREG] = 0x7f00; vmask[FREG] = 0;
@@ -637,8 +646,8 @@ static void target(Node p) {
 		break;
 	case NEG:
 	case BCOM:
-		// These operators require their operand in a register besides vAC, and produce a result in vAC. We can't
-		// represent the former--we'll just spill to ha if the operand is in vAC--but we can handle the latter.
+		// These operators require their operand in a register besides vAC, and produce a result in vAC.
+		rtarget(p, 0, vregw);
 		setreg(p, wregs[0]);
 		break;
 	case ADD:
@@ -650,6 +659,7 @@ static void target(Node p) {
 		if (range(p->kids[1], 0, 255) == 0) {
 			rtarget(p, 0, wregs[0]);
 		} else {
+			rtarget(p, 0, vregw);
 			rtarget(p, 1, wregs[0]);
 		}
 		break;
@@ -696,6 +706,10 @@ static void target(Node p) {
 				rtarget(p->kids[1], 0, vac(p->kids[1]->kids[0]->op));
 			}
 		} else {
+			// stores to locals are special
+			if (generic(p->kids[0]->op) != ADDRL && generic(p->kids[0]->op) != ADDRF) {
+				rtarget(p, 0, vregw);
+			}
 			rtarget(p, 1, vac(p->kids[0]->op));
 		}
 		break;
@@ -760,6 +774,15 @@ static void inst_copy(Node p) {
 	} else if (from == 0) {
 		print("asm.stw('r%d')\n", getregnum(p));
 	}
+}
+
+static void inst_spill(Node p) {
+	// inst_spill is essentially the same as inst_stloc, but covers an entire spill tree to avoid reentry in the
+	// spiller when spilling vAC.
+	Node vregp = p->kids[1]->kids[0]->kids[0];
+	assert(getregnum(vregp) == 0);
+	setreg(p->kids[1], wregs[0]);
+	inst_stloc(p);
 }
 
 static int localoffset(Node addr) {
@@ -853,13 +876,15 @@ static void inst_addr(Node p) {
 	switch (generic(p->op)) {
 	case ADDRF:
 	case ADDRL:
-		offs = localoffset(Node addr);
+		offs = localoffset(p);
 		if (offs < 256) {
-			print("ldw('sp')\n");
-			print("addi(%d)\n", offs);
+			print("asm.ldw('sp')\n");
+			if (offs > 0) {
+				print("asm.addi(%d)\n", offs);
+			}
 		} else {
-			print("ldwi(%d)\n", offs);
-			print("addw('sp')\n");
+			print("asm.ldwi(%d)\n", offs);
+			print("asm.addw('sp')\n");
 		}
 		break;
 	case ADDRG:
@@ -1094,16 +1119,21 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 		print("asm.call('enter')\n");
 	}
 
-	if (framesize > 0) {
-		print("asm.%s(%d)\n", framesize < 256 ? "ldi" : "ldwi", -framesize);
-		print("asm.addw('sp')\n");
+	if (framesize > 2) {
+		if (framesize < 256) {
+			print("asm.ldw('sp')\n");
+			print("asm.subi(%d)\n", framesize);
+		} else {
+			print("asm.ldwi(%d)\n", -framesize);
+			print("asm.addw('sp')\n");
+		}
 		print("asm.stw('sp')\n");
 	}
 
 	debug(fprintf(stderr, "framesize: %d, saversize: %d, argsize: %d\n", framesize, saversize, argsize));
 	emitcode();
 
-	if (framesize > 0) {
+	if (framesize > 2) {
 		print("asm.%s(%d)\n", framesize < 256 ? "ldi" : "ldwi", framesize);
 		print("asm.addw('sp')\n");
 		print("asm.stw('sp')\n");
@@ -1151,7 +1181,7 @@ static void defconst(int suffix, int size, Value v) {
 	case U:
 	case P:
 	case F:
-		print("asm.d%c(%x)\n", size == 1 ? 'b' : 'w', v.u);
+		print("asm.d%c(0x%x)\n", size == 1 ? 'b' : 'w', v.u);
 		break;
 	default:
 		assert(0);

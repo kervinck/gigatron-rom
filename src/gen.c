@@ -469,24 +469,41 @@ static void prelabel(Node p) {
 void setreg(Node p, Symbol r) {
 	p->syms[RX] = r;
 }
+int inset(Symbol rs, Symbol r) {
+	int i;
+
+	if (!rs->x.wildcard) {
+		return rs == r;
+	}
+
+	// Register vars need special treatment, as they cannot use reference equality.
+	for (i = 31; i >= 0; i--) {
+		Symbol c = rs->x.wildcard[i];
+		if (c == r || (r->sclass == REGISTER && r->x.regnode->number == i)) {
+			return 1;
+		}
+	}
+	return 0;
+}
 void rtarget(Node p, int n, Symbol r) {
 	Node q = p->kids[n];
 
 	assert(q);
 	assert(r);
-	assert(r->sclass == REGISTER || !r->x.wildcard);
 	assert(q->syms[RX]);
-	if (r != q->syms[RX] && !q->syms[RX]->x.wildcard) {
-		debug(fprintf(stderr, "(inserting load from %s to %s)\n", q->syms[RX]->x.name, r->x.name));
-		q = newnode(LOAD + opkind(q->op),
-			q, NULL, q->syms[0]);
-		if (r->u.t.cse == p->kids[n])
-			r->u.t.cse = q;
-		p->kids[n] = p->x.kids[n] = q;
-		q->x.kids[0] = q->kids[0];
+	if (!inset(r, q->syms[RX])) {
+		if (!q->syms[RX]->x.wildcard) {
+			debug(fprintf(stderr, "(inserting load from %s to %s)\n", q->syms[RX]->x.name, r->x.name));
+			q = newnode(LOAD + opkind(q->op),
+				q, NULL, q->syms[0]);
+			if (r->u.t.cse == p->kids[n])
+				r->u.t.cse = q;
+			p->kids[n] = p->x.kids[n] = q;
+			q->x.kids[0] = q->kids[0];
+		}
+		setreg(q, r);
+		debug(fprint(stderr, "(targeting %x->x.kids[%d]=%x to %s)\n", p, n, p->kids[n], r->x.name));
 	}
-	setreg(q, r);
-	debug(fprint(stderr, "(targeting %x->x.kids[%d]=%x to %s)\n", p, n, p->kids[n], r->x.name));
 }
 static void rewrite(Node p) {
 	assert(p->x.inst == 0);
