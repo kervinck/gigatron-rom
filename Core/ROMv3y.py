@@ -75,7 +75,11 @@ loadBindings('interface.json')
 romTypeValue = symbol('romTypeValue_ROMv3')
 
 # Gigatron clock
-cpuClock = 6.250e+06
+cpuClock = 12.5e+06
+cyclesPerLine = 400
+
+assert cyclesPerLine in [200, 400]
+hFreq = cpuClock / cyclesPerLine
 
 # Output pin assignment for VGA
 R, G, B, hSync, vSync = 1, 4, 16, 64, 128
@@ -96,7 +100,7 @@ vgaClock = 25.175e+06
 # 1. Our clock is (slighty) slower than 1/4th VGA clock. Not all monitors will
 #    accept the decreased frame rate, so we restore the frame rate to above
 #    minimum 59.94 Hz by cutting some lines from the vertical front porch.
-vFrontAdjust = vgaLines - int(4 * cpuClock / vgaClock * vgaLines)
+vFrontAdjust = vgaLines - int(800 * hFreq / vgaClock * vgaLines)
 vFront -= vFrontAdjust
 # 2. Extend vertical sync pulse so we can feed the game controller the same
 #    signal. This is needed for controllers based on the 4021 instead of 74165
@@ -266,7 +270,7 @@ maxSYS = -999 # Largest time slice for 'SYS
 minSYS = +999 # Smallest time slice for 'SYS'
 
 def runVcpu(n, ref, returnTo=None):
-  """Run interpreter for exactly n cycles"""
+  """Run interpreter for exactly n cycles (including overhead)"""
   comment = 'Run vCPU for %s cycles' % n
   if ref:
     comment += ' (%s)' % ref
@@ -279,13 +283,15 @@ def runVcpu(n, ref, returnTo=None):
   print 'runVcpu at %04x cycles %3s info %s' % (pc(), n, ref)
   n -= 2*maxTicks
 
-  assert n >= 0 and n % 2 == 0
-
   global maxSYS, minSYS
   maxSYS = max(maxSYS, n + 2*maxTicks)
   minSYS = min(minSYS, n + 2*maxTicks)
 
+  assert n % 2 == 0
   n /= 2
+
+  assert 0 <= n and n < 128
+
   if returnTo is None:
     # Return to next instruction
     returnTo = pc() + 5
@@ -792,7 +798,11 @@ if soundDiscontinuity == 2:
 if soundDiscontinuity > 2:
   print "Warning: sound discontinuity not supressed"
 
-runVcpu(189-74-extra, 'line0')  #74 Application cycles (scan line 0)
+if cyclesPerLine == 200:
+  runVcpu(189-74-extra, 'line0')#74 Application cycles (scan line 0)
+else: # 400
+  runVcpu(296, 'line0')         #74 Application cycles (scan line 0)
+  wait(189+200-370-extra)       #370
 
 # Sound on/off (6 cycles)
 ld([soundTimer]);               C('Sound on/off')#189
@@ -900,11 +910,15 @@ st([xout])                      #53
 st(sample, [sample]);           C('Reset for next sample')#54
 
 runVcpu(199-55, 'line1-39 typeC')#55 Appplication cycles (scan line 1-43 with sample update)
+if cyclesPerLine == 400:
+  runVcpu(200, 'line1-39 typeC+')
 bra('sound1')                   #199
 ld([videoSync0], OUT);          C('<New scan line start>')#0 Ends the vertical blank pulse at the right cycle
 
 label('vBlankNormal')
 runVcpu(199-51, 'line1-39 typeABD')#51 Application cycles (scan line 1-43 without sample update)
+if cyclesPerLine == 400:
+  runVcpu(200, 'line1-39 typeABD+')
 bra('sound1')                   #199
 ld([videoSync0], OUT);          C('<New scan line start>')#0 Ends the vertical blank pulse at the right cycle
 
@@ -943,25 +957,23 @@ ld([resetTimer])                #42 As long as button pressed
 suba(1)                         #43 ... count down the timer
 st([resetTimer])                #44
 anda(127)                       #45
-beq('.restart2')                #46 Reset at 0 (normal 2s) or 128 (extended 4s)
+beq('.restart1')                #46 Reset at 0 (normal 2s) or 128 (extended 4s)
 ld((vReset&255)-2)              #47 Start force reset when hitting 0
-bra('.restart1')                #48 ... otherwise do nothing yet
-bra('.restart3')                #49
+bra('.restart2')                #48 ... otherwise do nothing yet
+bra('.restart2')                #49
 label('.restart0')
-ld(128)                         #43 Restore to ~2 seconds when not pressed
-st([resetTimer])                #44
-wait(49-45)                     #45
-bra('.restart3')                #49
+wait(48-43)                     #43
+ld(128)                         #48 Restore to ~2 seconds when not pressed
+bra('.restart2')                #49
+st([resetTimer])                #50
 label('.restart1')
-nop()                           #50
-label('.restart2')
 st([vPC])                       #48 Continue force reset
 ld(vReset>>8)                   #49
 st([vPC+1])                     #50
-label('.restart3')
+label('.restart2')
 
 # Switch video mode when (only) select is pressed (16 cycles)
-ld([buttonState])               #51
+ld([buttonState])               #50,51
 xora(~buttonSelect)             #52 Only trigger when just [Select] is pressed
 bne('.select2')                 #53
 ld([videoModeC])                #54
@@ -985,10 +997,13 @@ st([buttonState])               #192
 bra('.skipVcpu')                #193
 ld(0)                           #194
 label('.select2')
-
-runVcpu(195-55, 'line40')       #67 Application cycles (scan line 40)
+runVcpu(195-55, 'line40')       #55 Application cycles (scan line 40)
 # vAC==0 now
+
 label('.skipVcpu')
+if cyclesPerLine == 400:
+  runVcpu(200, 'line40+')
+# vAC==0 now
 st([videoY])                    #195
 st([frameX])                    #196
 ld('videoA')                    #197
@@ -1000,42 +1015,20 @@ ld(hi('sound2'), Y)             #2
 jmpy('sound2')                  #3
 ld(syncBits^hSync, OUT)         #4 Start horizontal pulse
 
+videoFcont = 0x1ff if cyclesPerLine == 200 else 0x1fa
 # Filler
-while pc()&255 < 255:
+while pc() < videoFcont:
   nop()
+assert pc() == videoFcont
+
+if cyclesPerLine == 400:
+  runVcpu(401-201, 'line41-520 typeBCD+')#201 Application (every 4th of scan lines 41-520)
 
 assert pc() == 0x1ff
-bra('sound3');                  C('<New scan line start>')#200,0
+ld([channel]);                  C('Advance to next sound channel')#401,201,1
 # --- Page boundary ---
-ld([channel])                   #1 Advance to next sound channel
-
-# Back porch A: first of 4 repeated scan lines
-# - Fetch next Yi and store it for retrieval in the next scan lines
-# - Calculate Xi from dXi, but there is no cycle time left to store it as well
-label('videoA')
-ld('videoB')                    #29
-st([nextVideo])                 #30
-ld(videoTable>>8, Y)            #31
-ld([videoY], X)                 #32
-ld([Y,X])                       #33
-st([Y,Xpp])                     #34 Just to increment X
-st([frameY])                    #35
-ld([Y,X])                       #36
-adda([frameX], X)               #37
-label('pixels')
-ld([frameY], Y)                 #38
-ld(syncBits)                    #39
-
-# Stream 160 pixels from memory location <Yi,Xi> onwards
-# Superimpose the sync signal bits to be robust against misprogramming
-for i in range(160):
-  ora([Y,Xpp], OUT)             #40-199
-  if i==0:                      C('Pixel burst')
-ld(syncBits, OUT);              C('<New scan line start>')#0 Back to black
 
 # Front porch
-ld([channel]);                  C('Advance to next sound channel')#1
-label('sound3')                 # Return from vCPU interpreter
 anda(3)                         #2
 adda(1)                         #3
 ld(syncBits^hSync, OUT);        C('Start horizontal pulse')#4
@@ -1070,6 +1063,34 @@ st([sample])                    #25
 ld([xout]);                     C('Gets copied to XOUT')#26
 bra([nextVideo])                #27
 ld(syncBits, OUT);              C('End horizontal pulse')#28
+
+# Back porch A: first of 4 repeated scan lines
+# - Fetch next Yi and store it for retrieval in the next scan lines
+# - Calculate Xi from dXi, but there is no cycle time left to store it as well
+label('videoA')
+ld('videoB')                    #29
+st([nextVideo])                 #30
+ld(videoTable>>8, Y)            #31
+ld([videoY], X)                 #32
+ld([Y,X])                       #33
+st([Y,Xpp])                     #34 Just to increment X
+st([frameY])                    #35
+ld([Y,X])                       #36
+adda([frameX], X)               #37
+label('pixels')
+ld([frameY], Y)                 #38
+ld(syncBits)                    #39
+
+# Stream 160 pixels from memory location <Yi,Xi> onwards
+# Superimpose the sync signal bits to be robust against misprogramming
+for i in range(160):
+  ora([Y,Xpp], OUT)             #40-199
+  if i==0:                      C('Pixel burst')
+ld(syncBits, OUT);              C('<New scan line start>')#0 Back to black
+
+# Use right-half of pixel line for running vCPU (200 cycles)
+if cyclesPerLine == 400:
+  runVcpu(200, 'line41-520 pixels+', returnTo=0x1ff)
 
 # Back porch B: second of 4 repeated scan lines
 # - Recompute Xi from dXi and store for retrieval in the next scan lines
@@ -1128,8 +1149,8 @@ ld(syncBits)                    #31
 
 # Alternative for pixel burst: faster application mode
 label('videoF')
-runVcpu(200-38, 'line41-520 typeBCD',
-  returnTo=0x1ff)               #38 Application (every 4th of scan lines 41-520)
+runVcpu(201-38, 'line41-520 typeBCD',
+  returnTo=videoFcont)          #38 Application (every 4th of scan lines 41-520)
 
 # XXX videoG: Graphics acceleration per scanline?
 
@@ -2377,7 +2398,7 @@ trampoline()
 
 align(0x100, 0x100)
 notes = 'CCDDEFFGGAAB'
-sampleRate = cpuClock / 200.0 / 4
+sampleRate = hFreq / 4
 label('notesTable')
 for i in range(0, 250, 2):
   j = i/2-1
