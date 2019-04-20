@@ -772,9 +772,9 @@ static void inst_copy(Node p) {
 	if (to == from) {
 		// ignore this case
 	} else if (to == 0) {
-		print("asm.ldw('r%d')\n", getregnum(p->kids[0]));
+		print("asm.ldw('r%d')\n", from);
 	} else if (from == 0) {
-		print("asm.stw('r%d')\n", getregnum(p));
+		print("asm.stw('r%d')\n", to);
 	}
 }
 
