@@ -694,9 +694,11 @@ static void target(Node p) {
 		// TODO: attempt to swap the operands and turn this into an RSUB. For now, do nothing:
 		// - pattern matching during emit will allow us to handle constants, etc.
 		// - at emit time:
-		//     - if the RHS is in vAC, put it in ht
 		//     - if the LHS is not in vAC, load it into vAC
 		// - because we do not have any operand killing vAC, we need the SUB itself to kill vAC.
+		if (generic(p->kids[1]->op) != CNST) {
+			rtarget(p, 1, vregw);
+		}
 		setreg(p, wregs[0]);
 		break;
 	case ASGN:
