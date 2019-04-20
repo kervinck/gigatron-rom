@@ -965,25 +965,23 @@ ld([resetTimer])                #42 As long as button pressed
 suba(1)                         #43 ... count down the timer
 st([resetTimer])                #44
 anda(127)                       #45
-beq('.restart2')                #46 Reset at 0 (normal 2s) or 128 (extended 4s)
+beq('.restart1')                #46 Reset at 0 (normal 2s) or 128 (extended 4s)
 ld((vReset&255)-2)              #47 Start force reset when hitting 0
-bra('.restart1')                #48 ... otherwise do nothing yet
-bra('.restart3')                #49
+bra('.restart2')                #48 ... otherwise do nothing yet
+bra('.restart2')                #49
 label('.restart0')
-ld(128)                         #43 Restore to ~2 seconds when not pressed
-st([resetTimer])                #44
-wait(49-45)                     #45
-bra('.restart3')                #49
+wait(48-43)                     #43
+ld(128)                         #48 Restore to ~2 seconds when not pressed
+bra('.restart2')                #49
+st([resetTimer])                #50
 label('.restart1')
-nop()                           #50
-label('.restart2')
 st([vPC])                       #48 Continue force reset
 ld(vReset>>8)                   #49
 st([vPC+1])                     #50
-label('.restart3')
+label('.restart2')
 
 # Switch video mode when (only) select is pressed (16 cycles)
-ld([buttonState])               #51
+ld([buttonState])               #50,51
 xora(~buttonSelect)             #52 Only trigger when just [Select] is pressed
 bne('.select2')                 #53
 ld([videoModeC])                #54
