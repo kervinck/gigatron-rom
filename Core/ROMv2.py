@@ -997,7 +997,7 @@ bra('.skipVcpu')                #193
 ld(0)                           #194
 label('.select2')
 
-runVcpu(195-55, 'line40')       #67 Application cycles (scan line 40)
+runVcpu(195-55, 'line40')       #55 Application cycles (scan line 40)
 # vAC==0 now
 label('.skipVcpu')
 st([videoY])                    #195
