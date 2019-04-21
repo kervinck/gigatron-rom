@@ -70,10 +70,69 @@ static void inst_neg(Node);
 static void inst_bcom(Node);
 static void inst_call(Node);
 static void inst_sys(Node);
+static void inst_jr(Node);
+static void inst_label(Node);
+static void inst_jeq(Node);
+static void inst_jne(Node);
+static void inst_jge(Node);
+static void inst_jgt(Node);
+static void inst_jle(Node);
+static void inst_jlt(Node);
+static void inst_arg(Node);
+static void inst_ret(Node);
+
+#define I_LDWI 1
+#define I_LD 2
+#define I_LDW 3
+#define I_STW 4
+#define I_JEQ 5
+#define I_JNE 6
+#define I_JGE 7
+#define I_JGT 8
+#define I_JLE 9
+#define I_JLT 10
+#define I_LDI 11
+#define I_ST 12
+#define I_POP 13
+#define I_PUSH 14
+#define I_LUP 15
+#define I_ANDI 16
+#define I_ORI 17
+#define I_XORI 18
+#define I_J 19
+#define I_JR 20
+#define I_INC 21
+#define I_ADDW 22
+#define I_PEEK 23
+#define I_SYS 24
+#define I_SUBW 25
+#define I_CALL 26
+#define I_ADDI 27
+#define I_SUBI 28
+#define I_LSLW 29
+#define I_POKE 30
+#define I_DOKE 31
+#define I_DEEK 32
+#define I_ANDW 33
+#define I_ORW 34
+#define I_XORW 35
+#define I_RET 36
+#define I_DB 37
+#define I_DW 38
+#define I_DX 39
+#define I_LABEL 40
+
+struct inst {
+	int opcode;
+	Symbol operand;
+	struct inst *prev, *next;
+};
+typedef struct inst *Inst;
 
 static Symbol wregs[32], bregs[32], vregs[32];
 static Symbol wregw, bregw, vregw;
 static unsigned argsize, saversize;
+static Inst* insts;
 %}
 
 %start stmt
@@ -413,21 +472,21 @@ reg: SUBF2(reg, reg)     "# stw ha\nldw %1\ncall subf\n" 1
 reg: MULF2(reg, reg)     "# stw ha\nldw %1\ncall mulf\n" 1
 reg: DIVF2(reg, reg)     "# stw ha\nldw %1\ncall divf\n" 1
 
-stmt: JUMPV(reg) "asm.jr()\n" 1
-stmt: LABELV     "asm.label('%a')\n"
+stmt: JUMPV(reg) `inst_jr` 1
+stmt: LABELV     `inst_label`
 
-stmt: EQI2(reg, con0) "asm.jeq('%a')\n" 1
-stmt: EQU2(reg, con0) "asm.jeq('%a')\n" 1
-stmt: NEI2(reg, con0) "asm.jne('%a')\n" 1
-stmt: NEU2(reg, con0) "asm.jne('%a')\n" 1
-stmt: GEI2(reg, con0) "asm.jge('%a')\n" 1
-stmt: GEU2(reg, con0) "asm.jge('%a')\n" 1
-stmt: GTI2(reg, con0) "asm.jgt('%a')\n" 1
-stmt: GTU2(reg, con0) "asm.jgt('%a')\n" 1
-stmt: LEI2(reg, con0) "asm.jle('%a')\n" 1
-stmt: LEU2(reg, con0) "asm.jle('%a')\n" 1
-stmt: LTI2(reg, con0) "asm.jlt('%a')\n" 1
-stmt: LTU2(reg, con0) "asm.jlt('%a')\n" 1
+stmt: EQI2(reg, con0) `inst_jeq` 1
+stmt: EQU2(reg, con0) `inst_jeq` 1
+stmt: NEI2(reg, con0) `inst_jne` 1
+stmt: NEU2(reg, con0) `inst_jne` 1
+stmt: GEI2(reg, con0) `inst_jge` 1
+stmt: GEU2(reg, con0) `inst_jge` 1
+stmt: GTI2(reg, con0) `inst_jgt` 1
+stmt: GTU2(reg, con0) `inst_jgt` 1
+stmt: LEI2(reg, con0) `inst_jle` 1
+stmt: LEU2(reg, con0) `inst_jle` 1
+stmt: LTI2(reg, con0) `inst_jlt` 1
+stmt: LTU2(reg, con0) `inst_jlt` 1
 
 stmt: EQF2(reg, reg) "# jcc eq %1 %a # pseudo\n" 1
 stmt: NEF2(reg, reg) "# jcc ne %1 %a # pseudo\n" 1
@@ -436,10 +495,10 @@ stmt: GTF2(reg, reg) "# stw ha\nldw %1\ncall gtf\njcc ne zero %a # pseudo\n" 1
 stmt: LEF2(reg, reg) "# stw ha\nldw %1\ncall lef\njcc ne zero %a # pseudo\n" 1
 stmt: LTF2(reg, reg) "# stw ha\nldw %1\ncall ltf\njcc ne zero %a # pseudo\n" 1
 
-stmt: ARGF2(reg) "asm.call('pusha')\n"  1
-stmt: ARGI2(reg) "asm.call('pusha')\n"  1
-stmt: ARGU2(reg) "asm.call('pusha')\n"  1
-stmt: ARGP2(reg) "asm.call('pusha')\n"  1
+stmt: ARGF2(reg) `inst_arg`  1
+stmt: ARGI2(reg) `inst_arg`  1
+stmt: ARGU2(reg) `inst_arg`  1
+stmt: ARGP2(reg) `inst_arg`  1
 
 reg: CALLF2(reg)  `inst_call` 1
 reg: CALLI2(reg)  `inst_call` 1
@@ -449,10 +508,10 @@ reg: CALLV(reg)   `inst_call` 1
 
 reg: SYSI2 `inst_sys` 1
 
-stmt: RETF2(reg)  "asm.stw('rv')\n" 1
-stmt: RETI2(reg)  "asm.stw('rv')\n" 1
-stmt: RETP2(reg)  "asm.stw('rv')\n" 1
-stmt: RETU2(reg)  "asm.stw('rv')\n" 1
+stmt: RETF2(reg)  `inst_ret` 1
+stmt: RETI2(reg)  `inst_ret` 1
+stmt: RETP2(reg)  `inst_ret` 1
+stmt: RETU2(reg)  `inst_ret` 1
 stmt: RETV(reg)   "# ret\n" 1
 %%
 static void progbeg(int argc, char* argv[]) {
@@ -1046,6 +1105,46 @@ static void inst_call(Node p) {
 
 static void inst_sys(Node p) {
 	print("asm.sys(%d)\n", p->syms[0]->u.c.v.i);
+}
+
+static void inst_jr(Node p) {
+	print("asm.jr()\n");
+}
+
+static void inst_label(Node p) {
+	print("asm.label('%s')\n", p->syms[0]->x.name);
+}
+
+static void inst_jeq(Node p) {
+	print("asm.jeq('%s')\n", p->syms[0]->x.name);
+}
+
+static void inst_jne(Node p) {
+	print("asm.jne('%s')\n", p->syms[0]->x.name);
+}
+
+static void inst_jge(Node p) {
+	print("asm.jge('%s')\n", p->syms[0]->x.name);
+}
+
+static void inst_jgt(Node p) {
+	print("asm.jgt('%s')\n", p->syms[0]->x.name);
+}
+
+static void inst_jle(Node p) {
+	print("asm.jle('%s')\n", p->syms[0]->x.name);
+}
+
+static void inst_jlt(Node p) {
+	print("asm.jlt('%s')\n", p->syms[0]->x.name);
+}
+
+static void inst_arg(Node p) {
+	print("asm.call('pusha')\n");
+}
+
+static void inst_ret(Node p) {
+	print("asm.stw('rv')\n");
 }
 
 static void emit2(Node p) {
