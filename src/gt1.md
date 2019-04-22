@@ -358,6 +358,13 @@ stmt: ASGNU2(ADDRLP2, reg) `inst_stloc` 1
 stmt: ASGNP2(ADDRLP2, reg) `inst_stloc` 1
 stmt: ASGNF2(ADDRLP2, reg) `inst_stloc` 1
 
+stmt: ASGNI1(ADDRFP2, reg) `inst_stloc` 1
+stmt: ASGNI2(ADDRFP2, reg) `inst_stloc` 1
+stmt: ASGNU1(ADDRFP2, reg) `inst_stloc` 1
+stmt: ASGNU2(ADDRFP2, reg) `inst_stloc` 1
+stmt: ASGNP2(ADDRFP2, reg) `inst_stloc` 1
+stmt: ASGNF2(ADDRFP2, reg) `inst_stloc` 1
+
 reg: INDIRI1(scon) `inst_ld` 1
 reg: INDIRU1(scon) `inst_ld` 1
 reg: INDIRI2(scon) `inst_ld` 1
@@ -746,6 +753,8 @@ static void target(Node p) {
 	case MOD:
 	case DIV:
 		// Helper calls. We can pick the targets to help avoid spills. We'll put the LHS in r0 and the RHS in vAC.
+		// Note that we first target the LHS to vAC in order to ensure that a copy-through-vAC is inserted.
+		rtarget(p, 0, wregs[0]);
 		rtarget(p, 0, wregs[1]);
 		rtarget(p, 1, wregs[0]);
 		break;
@@ -1272,7 +1281,7 @@ static void address(Symbol q, Symbol p, long n) {
 		q->x.name = stringf("%s%s%D", p->x.name, n >= 0 ? "+" : "", n);
 	} else {
 		assert(n <= INT_MAX && n >= INT_MIN);
-		q->x.offset = p->x.offset + n;
+		q->x.offset = p->x.offset - n;
 		q->x.name = stringd(q->x.offset);
 	}
 }

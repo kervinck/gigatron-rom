@@ -477,6 +477,9 @@ int inset(Symbol rs, Symbol r) {
 	}
 
 	// Register vars need special treatment, as they cannot use reference equality.
+	if (r->sclass == REGISTER && r->x.regnode == NULL) {
+		return 1;
+	}
 	for (i = 31; i >= 0; i--) {
 		Symbol c = rs->x.wildcard[i];
 		if (c == r || (r->sclass == REGISTER && r->x.regnode->number == i)) {
