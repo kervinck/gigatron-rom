@@ -5,14 +5,7 @@
  |                                                                      |
  +----------------------------------------------------------------------*/
 
-/*
- *  Synopsis:
- *
- *      #include "Gigatron.h"
- *      #include "ClearScreen.c"
- *
- *      ClearScreen(color);
- */
+#include "Gigatron.h"
 
 void ClearScreen(byte color)
 {

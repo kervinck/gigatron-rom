@@ -28,6 +28,31 @@ typedef unsigned short word;
   sysArgs[4:5]  Position on screen
 */
 
+/*
+ *  vReset() restarts the Gigatron and returns to the main menu
+ */
+#define vReset                  ((void(*)(void)) 0x1f0)
+
+/*----------------------------------------------------------------------+
+ |      Library functions                                               |
+ +----------------------------------------------------------------------*/
+
+void ClearScreen(byte color);
+
+// Not implemented/decided
+void SetColor(byte color);
+void SetBgColor(byte color);
+void GotoXY(byte x, byte y);
+void PutChar(char c);            // Needed?
+void Newline(void);
+void Scroll(void);
+void GetLine(void);
+void GetChar(void);
+void PrintDecimal(int n);
+void PutString(char *c);
+void DrawLine(int dx, int dy);
+word Random16(void);
+
 /*----------------------------------------------------------------------+
  |                                                                      |
  +----------------------------------------------------------------------*/
