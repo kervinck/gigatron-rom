@@ -296,6 +296,9 @@ con0: CNSTU2 "0" range(a, 0, 0)
 con1: CNSTI2 "1" range(a, 1, 1)
 con1: CNSTU2 "1" range(a, 1, 1)
 
+lshcon: CNSTI2 "%a" range(a, 0, 4)
+lshcon: CNSTU2 "%a" range(a, 0, 4)
+
 con8: CNSTI2 "8" range(a, 8, 8)
 con8: CNSTU2 "8" range(a, 8, 8)
 
@@ -432,8 +435,8 @@ reg: BORU2(reg, reg)   `inst_orw` 1
 reg: BXORI2(reg, reg)  `inst_xorw` 1
 reg: BXORU2(reg, reg)  `inst_xorw` 1
 
-reg: LSHI2(reg, con1)  `inst_lslw` 1
-reg: LSHU2(reg, con1)  `inst_lslw` 1
+reg: LSHI2(reg, lshcon)  `inst_lslw` 1
+reg: LSHU2(reg, lshcon)  `inst_lslw` 1
 
 reg: LSHI2(reg, con8)  `inst_lsh8` 1
 reg: LSHU2(reg, con8)  `inst_lsh8` 1
@@ -748,7 +751,7 @@ static void target(Node p) {
 		// LSH reg, [1,8] are unary operators. LSH reg, reg is a helper call.
 		if (generic(p->kids[1]->op) == CNST) {
 			unsigned amt = p->kids[1]->syms[0]->u.c.v.u;
-			if ((generic(p->op) == LSH && amt == 1) || amt == 8) {
+			if ((generic(p->op) == LSH && amt <= 4) || amt == 8) {
 				rtarget(p, 0, wregs[0]);
 			}
 			break;
@@ -1034,7 +1037,9 @@ static void inst_xorw(Node p) {
 }
 
 static void inst_lslw(Node p) {
-	print("asm.lslw()\n");
+	for (unsigned i = 0; i < p->kids[1]->syms[0]->u.c.v.u; i++) {
+		print("asm.lslw()\n");
+	}
 	ensurereg(p);
 }
 
@@ -1312,7 +1317,7 @@ static void defaddress(Symbol p) {
 static void defstring(int n, char* str) {
 	print("asm.dx([");
 	for (int x = 0; x < n; x++) {
-		print("%s%c", x == 0 ? "" : ",", str[x]);
+		print("%s0x%x", x == 0 ? "" : ", ", str[x]);
 	}
 	print("]);\n");
 }

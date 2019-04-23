@@ -7,6 +7,7 @@ global_labels = {
     'vACH': 0x0019,
     'vLR': 0x001a,
     'vLRH': 0x001b,
+    'sysFn': 0x0022,
     'r1': 0x0030,
     'r2': 0x0032,
     'r3': 0x0034,
@@ -244,7 +245,7 @@ def xorw(d): func.append(Inst.xorw(d))
 def ret(): func.append(Inst.ret())
 def db(con): func.append(Inst.db(con))
 def dw(con): func.append(Inst.dw(con))
-def dx(x): func.append(Inst.dx(con))
+def dx(x): func.append(Inst.dx(x))
 
 def link(entry, outf, logf):
     log.f = logf
@@ -277,6 +278,9 @@ def link(entry, outf, logf):
         return target is not None and target & 0xff00 == pc & 0xff00
 
     def shorten(inst, pc):
+        if not inst.branch and inst.opcode != 'j':
+            return
+
         target = inst.operand
         if type(target) is str:
             target = labels.get(target)
@@ -289,7 +293,7 @@ def link(entry, outf, logf):
             else:
                 print(f'far branch from {pc:x} to {0 if target is None else target:x}', file=log.f)
                 inst.size = 8
-        elif inst.opcode == 'j':
+        else:
             if near:
                 print(f'near jump from {pc:x} to {target:x}', file=log.f)
                 inst.size = 2
