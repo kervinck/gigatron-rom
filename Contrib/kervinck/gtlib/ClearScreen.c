@@ -9,7 +9,7 @@
  *  Synopsis:
  *
  *      #include "Gigatron.h"
- *      #include "ClearScreen.h"
+ *      #include "ClearScreen.c"
  *
  *      ClearScreen(color);
  */
