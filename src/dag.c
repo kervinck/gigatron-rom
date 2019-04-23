@@ -207,6 +207,10 @@ Node listnodes(Tree tp, int tlab, int flab) {
 		      p = node(op, NULL, NULL, constant(unqual(tp->type), tp->u.v));
 		      list(p);
 		      reset(); } break;
+	case LUP:   { assert(tlab == 0 && flab == 0);
+		      assert(tp->kids[0]);
+		      l = listnodes(tp->kids[0], 0, 0);
+			  p = node(op, l, NULL, constant(unqual(tp->type), tp->u.v)); } break;
 	case CALL:  { Tree save = firstarg;
 		      firstarg = NULL;
 		      assert(tlab == 0 && flab == 0);

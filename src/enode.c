@@ -459,6 +459,13 @@ Tree bittree(int op, Tree l, Tree r) {
 	return simplify(op, ty, l, r);
 }
 
+/* luptree - construct tree for __lookup(n, idx) */
+Tree luptree(int n, Tree idx) {
+	Tree p = tree(mkop(LUP,inttype), inttype, idx, NULL);
+	p->u.v.i = (long)n;
+	return p;
+}
+
 /* multree - construct tree for l [* /] r */
 static Tree multree(int op, Tree l, Tree r) {
 	Type ty = inttype;

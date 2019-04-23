@@ -233,6 +233,32 @@ static Tree unary(void) {
 						  p = unary();
 					  }
 				  } break;
+	case LOOKUP: { int op = t;
+					 p = NULL;
+					 t = gettok();
+					 if (t == '(') {
+						 t = gettok();
+						 if (t == ICON) {
+							 int n = tsym->u.c.v.i;
+							 if (n < 0 || n > 255) {
+								 error("the first argument to __lookup must be an integer constant in [0, 256)\n");
+							 }
+							 t = gettok();
+							 if (t == ',') {
+								 t = gettok();
+								 p = luptree(n, postfix(expr(')')));
+							 } else {
+							 	 p = postfix(expr(')'));
+								 error("__lookup expects two arguments\n");
+							 }
+						 } else {
+						 	 p = postfix(expr(')'));
+							 error("the first argument to __lookup must be an integer constant in [0, 256)\n");
+						}
+					} else {
+						p = unary();
+					}
+				} break;
 	case '(':
 		t = gettok();
 		if (istypename(t, tsym)) {

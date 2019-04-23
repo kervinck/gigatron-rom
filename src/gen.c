@@ -67,7 +67,8 @@ static char NeedsReg[] = {
 	1, 1, 1, 1,             /* BAND BCOM BOR BXOR */
 	1, 1,                   /* DIV MUL */
 	0, 0, 0, 0, 0, 0,       /* EQ GE GT LE LT NE */
-	0, 0                   /* JUMP LABEL   */
+	0, 0,                   /* JUMP LABEL   */
+	1, 1,                   /* SYS LUP */
 };
 Node head;
 
@@ -301,6 +302,10 @@ void dumptree(Node p) {
 		break;
 	case SYS:
 		fprint(stderr, "%d", p->syms[0]->u.c.v.i);
+		break;
+	case LUP:
+		fprint(stderr, "%d, ", p->syms[0]->u.c.v.i);
+		dumptree(p->kids[0]);
 		break;
 	default: assert(0);
 	}
@@ -557,7 +562,7 @@ Node gen(Node forest) {
 		ralloc(p);
 		if (p->x.listed && NeedsReg[opindex(p->op)]
 		&& (*IR->x.rmap)(opkind(p->op))) {
-			assert(generic(p->op) == CALL || generic(p->op) == LOAD);
+			assert(generic(p->op) == CALL || generic(p->op) == LOAD || generic(p->op) == SYS);
 			putreg(p->syms[RX]);
 		}
 	}

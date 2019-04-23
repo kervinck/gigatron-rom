@@ -70,6 +70,7 @@ static void inst_neg(Node);
 static void inst_bcom(Node);
 static void inst_call(Node);
 static void inst_sys(Node);
+static void inst_lup(Node);
 static void inst_jr(Node);
 static void inst_label(Node);
 static void inst_jeq(Node);
@@ -281,6 +282,7 @@ static Inst* insts;
 %term VREGP=711
 
 %term SYSI2=2661
+%term LUPI2=2677
 
 %%
 trunc: CVII1(reg)  "%a" 1
@@ -515,6 +517,8 @@ reg: CALLV(reg)   `inst_call` 1
 
 reg: SYSI2 `inst_sys` 1
 
+reg: LUPI2(reg) `inst_lup` 1
+
 stmt: RETF2(reg)  `inst_ret` 1
 stmt: RETI2(reg)  `inst_ret` 1
 stmt: RETP2(reg)  `inst_ret` 1
@@ -707,6 +711,7 @@ static void target(Node p) {
 	case CVF:
 	case RET:
 	case ARG:
+	case LUP:
 		// Standard unary operators require their operand in vAC.
 		rtarget(p, 0, vac(p->kids[0]->op));
 		break;
@@ -1114,6 +1119,10 @@ static void inst_call(Node p) {
 
 static void inst_sys(Node p) {
 	print("asm.sys(%d)\n", p->syms[0]->u.c.v.i);
+}
+
+static void inst_lup(Node p) {
+	print("asm.lup(%d)\n", p->syms[0]->u.c.v.i);
 }
 
 static void inst_jr(Node p) {

@@ -696,6 +696,17 @@ int gettok(void) {
 				cp = rcp + 8;
 				return SYSCALL;
 			}
+			if (rcp[0] == '_'
+			&&  rcp[1] == 'l'
+			&&  rcp[2] == 'o'
+			&&  rcp[3] == 'o'
+			&&  rcp[4] == 'k'
+			&&  rcp[5] == 'u'
+			&&  rcp[6] == 'p'
+			&& !(map[rcp[7]]&(DIGIT|LETTER))) {
+				cp = rcp + 7;
+				return LOOKUP;
+			}
 			goto id;
 		default:
 			if ((map[cp[-1]]&BLANK) == 0)
