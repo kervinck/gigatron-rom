@@ -4,8 +4,8 @@
 |       Recreation of Tiny BASIC for Gigatron TTL microcomputer         |
 |                                                                       |
 |       - Integer BASIC, with PRINT supporting string constants         |
-|       - One statement per line, up to 25 characters per line          |
 |       - Supports roughly 300 line programs in the 32K system          |
+|       - Multiple statements per line, up to 25 characters combined    |
 |       - Based on Dennis Allison's original 1976 Tiny BASIC            |
 |       - Extended with POKE/PEEK/RND/FOR/NEXT/CLS/AT/PUT/MODE/Arrays/  |
 |         LINE/SAVE                                                     |

@@ -6,12 +6,12 @@ emulators benefit from a single standard.
 Format
 ======
 
-The format is based on the same byte sequence that the ROM-to-RAM
-routine sees in ROM v1 (SYS_Exec_88).  That is essentially the
-in-ROM sequence of operand bytes, but skipping the trampolines in
-the top 5 words of every ROM page.  Those instructions are not part
-of the program but part of the mechanism for accessing the data.
-Two extra bytes are added for a start address.
+The format is based on the same byte sequence that the ROM loader
+routine SYS_Exec_88 sees in ROM v1.  That is essentially the in-ROM
+sequence of operand bytes, but skipping the trampolines in the top
+5 words of every ROM page.  Those instructions are not part of the
+program but part of the mechanism for accessing the data.  Two extra
+bytes are added for a start address.
 
 vCPU programs are fragmented in RAM because the RAM organisation
 is fragmented.  Both Snake and Racer protrude into the unused bytes
@@ -175,15 +175,15 @@ To help remind the programmer which features were introduced after
 ROM v1, and therefore require a romType check before use, we'll add
 a ROM version number to their names.
 
-32K vs. 64K
------------
+32K vs. 64K: "_64K.gt1"
+-----------------------
 It is understood that a program that really requires an extended
 64K memory crashes while loading on a 32K system. In that case
 please end the filename with "_64K.gt1". The main idea is still
 that a user doesn't get unexpected surprises.
 
-Hack files
-----------
+Hack files: ".gt1x"
+-------------------
 Of course the Gigatron is an open system, so there will be plenty
 of methods to detect what kind of ROM you're running on. If you
 make a GT1 file that you know depends on undocumented features (or
