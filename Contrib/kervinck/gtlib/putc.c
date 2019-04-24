@@ -16,12 +16,13 @@ int putc(int c)
         }
         bitmap = &bitmap[(i << 2) + i];
 
-        sysArgs[0] = 0x3f; // XXX color
+        sysArgs[0] = BgColor;
+        sysArgs[1] = Color;
         *(int*)(sysArgs+4) = _ScreenPos;
         sysFn = SYS_VDrawBits_134;
 
         for (i = 5; i > 0; --i, bitmap++) {
-                sysArgs[2] = __lookup(0, bitmap) ^ 0xff;
+                sysArgs[2] = __lookup(0, bitmap);
                 __syscall(203);
                 sysArgs[4]++;
         }

@@ -7,13 +7,13 @@
 
 #include "Gigatron.h"
 
-void ClearScreen(byte color)
+void ClearScreen(void)
 {
   int p = (int)screenMemory;
-  _ScreenPos = p + 2;           // Indent 2 pixels
+  _ScreenPos = p + _Indent;     // Go back to top left of screen
 
   sysFn = SYS_VDrawBits_134;    // SYS function plots 8 pixels vertically
-  sysArgs[0] = color;           // Background color
+  sysArgs[0] = BgColor;         // Background color
   sysArgs[2] = 0;               // All-zero bit pattern: only background
 
   do {

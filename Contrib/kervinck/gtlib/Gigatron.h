@@ -40,10 +40,12 @@ typedef unsigned short word;
  |      Library functions                                               |
  +----------------------------------------------------------------------*/
 
-#define _Indent 2
+#define _Indent 2               // Indent 2 pixels from the left
 extern int _ScreenPos = 0;
+extern byte Color   = 0x3f;
+extern byte BgColor = 0x30;
 
-void ClearScreen(byte color);
+void ClearScreen(void);
 void Newline(void);
 
 // Not implemented/decided

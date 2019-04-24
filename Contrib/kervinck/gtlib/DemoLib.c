@@ -17,7 +17,8 @@ int main(void)
 {
   byte color = 0;
   while (1) {
-    ClearScreen(color++);
+    BgColor = color++;
+    ClearScreen();
     puts("Hello Gigatron!");
   }
   return 0;
