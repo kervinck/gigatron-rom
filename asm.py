@@ -330,6 +330,7 @@ def link(entry, outf, logf):
             inst = func[i]
 
             if inst.opcode == 'label' or inst.opcode == 'glob':
+                print(f'defining label {inst.operand}', file=log.f)
                 inst.addr = pc
                 labels[inst.operand] = pc
                 if inst.opcode == 'glob':
@@ -412,7 +413,7 @@ def link(entry, outf, logf):
     funclabels = {}
     segment, sidx = segments[1], 1
     for name, f in functions.items():
-        while segment.remaining() == 0:
+        while segment.remaining() < 2:
             sidx += 1
             segment = segments[sidx]
 

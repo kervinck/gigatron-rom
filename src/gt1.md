@@ -37,6 +37,7 @@ static void inst_inc(Node);
 static void inst_strunc(Node);
 static void inst_copy(Node);
 static void inst_spill(Node);
+static void inst_blkcopy(Node);
 static void inst_ldloc(Node);
 static void inst_stloc(Node);
 static void inst_ld(Node);
@@ -134,6 +135,8 @@ static Symbol wregs[32], bregs[32], vregs[32];
 static Symbol wregw, bregw, vregw;
 static unsigned argsize, saversize;
 static Inst* insts;
+
+static int infunction = 0;
 %}
 
 %start stmt
@@ -333,6 +336,8 @@ stmt: ASGNI2(ADDRLP2, LOADI2(INDIRI2(VREGP))) `inst_spill` 1
 stmt: ASGNU1(ADDRLP2, LOADU1(INDIRU1(VREGP))) `inst_spill` 1
 stmt: ASGNU2(ADDRLP2, LOADU2(INDIRU2(VREGP))) `inst_spill` 1
 stmt: ASGNP2(ADDRLP2, LOADP2(INDIRP2(VREGP))) `inst_spill` 1
+
+stmt: ASGNB(reg, INDIRB(reg)) `inst_blkcopy` 1
 
 stmt: reg "# "
 
@@ -753,8 +758,8 @@ static void target(Node p) {
 			unsigned amt = p->kids[1]->syms[0]->u.c.v.u;
 			if ((generic(p->op) == LSH && amt <= 4) || amt == 8) {
 				rtarget(p, 0, wregs[0]);
+				break;
 			}
-			break;
 		}
 		// fallthrough
 	case MUL:
@@ -778,6 +783,14 @@ static void target(Node p) {
 		setreg(p, wregs[0]);
 		break;
 	case ASGN:
+		// Handle block copies first. These become helper calls.
+		if (specific(p->op) == ASGN+B) {
+			rtarget(p, 0, wregs[0]);
+			rtarget(p, 0, wregs[1]);
+			rtarget(p, 1, wregs[0]);
+			break;
+		}
+
 		// Assignments to VREG nodes may need targeting if there is no intermediate load through vAC.
 		if (p->kids[0]->op == VREG+P) {
 			if (generic(p->kids[1]->op) == LOAD && saferegnum(p->kids[1]) != 0) {
@@ -863,6 +876,12 @@ static void inst_spill(Node p) {
 	inst_stloc(p);
 }
 
+static void inst_blkcopy(Node p) {
+	print("asm.stw('ha')\n");
+	print("asm.ldi(%d)\n", p->syms[0]->u.c.v.u);
+	print("asm.call('blkcopy')\n");
+}
+
 static int localoffset(Node addr) {
 	if (generic(addr->op) == ADDRF) {
 		// Args start at sp + framesize + saversize + argsize.
@@ -885,7 +904,7 @@ static void inst_ldloc(Node p) {
 	} else {
 		print("asm.ldiw(%d)\n", offs);
 	}
-	print("asm.call('ldloc')\n");
+	print("asm.call('ldloc%s')\n", opsize(p->op) == 1 ? "b" : "");
 }
 
 static void inst_stloc(Node p) {
@@ -900,7 +919,7 @@ static void inst_stloc(Node p) {
 	} else {
 		print("asm.ldiw(%d)\n", offs);
 	}
-	print("asm.call('stloc')\n");
+	print("asm.call('stloc%s')\n", opsize(p->op) == 1 ? "b" : "");
 }
 
 static void inst_st(Node p) {
@@ -1095,10 +1114,10 @@ static void inst_neg(Node p) {
 	if (getregnum(p->kids[0]) == 0) {
 		print("asm.st('ha')\n");
 		print("asm.ldi(0)\n");
-		print("asm.sub('ha')\n");
+		print("asm.subw('ha')\n");
 	} else {
 		print("asm.ldi(0)\n");
-		print("asm.sub('r%d')\n", getregnum(p->kids[0]));
+		print("asm.subw('r%d')\n", getregnum(p->kids[0]));
 	}
 }
 
@@ -1206,6 +1225,7 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 
 	debug(fprint(stderr, "(function %s)\n", f->x.name));
 	print("asm.defun('%s')\n", f->x.name);
+	infunction = 1;
 
 	usedmask[0] = usedmask[1] = 0;
 	freemask[0] = freemask[1] = ~(unsigned)0;
@@ -1278,6 +1298,8 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 
 	print("asm.pop()\n");
 	print("asm.ret()\n");
+
+	infunction = 0;
 }
 static void defsymbol(Symbol p) {
 	if (p->scope >= LOCAL && p->sclass == STATIC) {
@@ -1317,7 +1339,7 @@ static void defaddress(Symbol p) {
 static void defstring(int n, char* str) {
 	print("asm.dx([");
 	for (int x = 0; x < n; x++) {
-		print("%s0x%x", x == 0 ? "" : ", ", str[x]);
+		print("%s0x%b", x == 0 ? "" : ", ", str[x]);
 	}
 	print("]);\n");
 }
@@ -1328,7 +1350,7 @@ static void import(Symbol p) {
 	// Nothing to do
 }
 static void global(Symbol p) {
-	print("asm.defun('%s')\n", p->x.name);
+	print("asm.%s('%s')\n", infunction ? "glob" : "defun", p->x.name);
 }
 static void space(int n) {
 	print("asm.dx([0] * %d)\n", n);
@@ -1347,7 +1369,7 @@ Interface gt1IR = {
 	1,        /* little_endian */
 	0,        /* mulops_calls */
 	0,        /* wants_callb */
-	1,        /* wants_argb */
+	0,        /* wants_argb */
 	1,        /* left_to_right */
 	0,        /* wants_dag */
 	0,        /* unsigned_char */

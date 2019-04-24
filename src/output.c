@@ -69,6 +69,7 @@ void vfprint(FILE *f, char *bp, const char *fmt, va_list ap) {
 	for (; *fmt; fmt++)
 		if (*fmt == '%')
 			switch (*++fmt) {
+			case 'b': bp = outu(va_arg(ap, unsigned) & 0xff, 16, f, bp); break;
 			case 'd': bp = outd(va_arg(ap, int), f, bp); break;
 			case 'D': bp = outd(va_arg(ap, long), f, bp); break;
 			case 'U': bp = outu(va_arg(ap, unsigned long), 10, f, bp); break;
