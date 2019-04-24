@@ -1,6 +1,6 @@
 
-#include "../Gigatron.h"
-#include "../stdio.h"
+#include <Gigatron.h>
+#include <stdio.h>
 
 /*
  *  Write the given string to stdout, appending a newline.

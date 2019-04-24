@@ -1,5 +1,5 @@
 
-#include "../Gigatron.h"
+#include <Gigatron.h>
 
 void Newline(void)
 {
