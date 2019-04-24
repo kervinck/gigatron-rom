@@ -20,6 +20,9 @@ typedef unsigned short word;
 #define sysArgs                 ( (byte*)0x0024)
 #define screenMemory            ( (byte*)0x0800)
 
+#define font32up                ( (byte*)0x0700)
+#define font82up                ( (byte*)0x0800)
+
 #define SYS_VDrawBits_134       0x04e1
 /*
   sysArgs[0]    Color 0 (background)
