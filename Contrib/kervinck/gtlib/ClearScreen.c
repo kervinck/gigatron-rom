@@ -10,6 +10,7 @@
 void ClearScreen(byte color)
 {
   int p = (int)screenMemory;
+  _ScreenPos = p + 2;           // Indent 2 pixels
 
   sysFn = SYS_VDrawBits_134;    // SYS function plots 8 pixels vertically
   sysArgs[0] = color;           // Background color
@@ -23,7 +24,8 @@ void ClearScreen(byte color)
     } while (p >= 0);
 
     p += 0x8801;                // Step 120 pixels up, 1 pixel right
-  } while ((p & 255) != 160);   // Until reaching x position 160
+  } while ((p & 255) != 160);   // Until reaching X position 160
+
 }
 
 /*----------------------------------------------------------------------+

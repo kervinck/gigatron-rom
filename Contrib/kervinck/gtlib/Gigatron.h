@@ -40,14 +40,17 @@ typedef unsigned short word;
  |      Library functions                                               |
  +----------------------------------------------------------------------*/
 
+#define _Indent 2
+extern int _ScreenPos = 0;
+
 void ClearScreen(byte color);
+void Newline(void);
 
 // Not implemented/decided
 void SetColor(byte color);
 void SetBgColor(byte color);
 void GotoXY(byte x, byte y);
 void PutChar(char c);            // Needed?
-void Newline(void);
 void Scroll(void);
 void GetLine(void);
 void GetChar(void);

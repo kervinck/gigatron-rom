@@ -1,3 +1,4 @@
 
-int puts(char* s);
+int putc(int c);
+int puts(const char *s);
 
