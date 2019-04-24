@@ -250,6 +250,28 @@ def dx(x): func.append(Inst.dx(x))
 def link(entry, outf, logf):
     log.f = logf
 
+    # Before laying out any functions, garbage collect those that are not used.
+    marked = {'@globals', '@thunk0', '@thunk1', '@thunk2', entry}
+    for name, func in functions.items():
+        if name == '@globals':
+            continue
+
+        labels = set()
+        for inst in func:
+            if inst.opcode == 'label' or inst.opcode == 'glob':
+                labels.add(inst.operand)
+            elif type(inst.operand) is str and inst.operand not in labels:
+                marked.add(inst.operand)
+
+    for name in list(functions.keys()):
+        if name[0] == '@':
+            if name not in marked and name[1:] not in marked:
+                print(f'removing function {name}', file=log.f)
+                functions[name] = []
+        elif name not in marked:
+            print(f'removing function {name}', file=log.f)
+            del functions[name]
+
     # Set up the segment map.
     segments = [
         Segment(0x004e, 0x32),
@@ -358,6 +380,7 @@ def link(entry, outf, logf):
                         seg.reloc(pc + 1, inst.operand)
                         inst.operand = 0x102e
                     else:
+                        print(f'{inst.opcode} {inst.operand}', file=log.f)
                         assert(inst.opcode == 'dw')
                         seg.reloc(pc, inst.operand)
                         inst.operand = 0x102e
