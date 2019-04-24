@@ -14,7 +14,7 @@ int puts(const char *s)
   const byte *ss = (const byte *)s;
   for (; *ss != '\0'; ss++)
     putc(*ss);
-  //Newline();
+  Newline();
   return 0;
 }
 
