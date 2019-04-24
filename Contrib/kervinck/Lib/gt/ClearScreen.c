@@ -5,7 +5,7 @@
  |                                                                      |
  +----------------------------------------------------------------------*/
 
-#include "Gigatron.h"
+#include "../Gigatron.h"
 
 void ClearScreen(void)
 {

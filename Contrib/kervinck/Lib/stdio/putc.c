@@ -1,6 +1,6 @@
 
-#include "Gigatron.h"
-#include "stdio.h"
+#include "../Gigatron.h"
+#include "../stdio.h"
 
 int putc(int c)
 {
