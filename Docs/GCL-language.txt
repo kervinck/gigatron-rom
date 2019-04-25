@@ -335,11 +335,14 @@ $ff| $ff^               Clear vAC low byte (there is no 'ANDWI' instruction)
 
 128- 128-               Decrement vAC high byte
 
+128^ 128-               Sign extend vAC (provided the high byte is zero)
+
 a b- [if>=0 ...]        if a >= b ... But this breaks in case of overflow!
                         (For example consider a = 30000 and b = -5000)
 
 a b^ [if<0 b else a b-] Checking if the operands are of opposite sign first
 [if>=0 ...]             makes the comparison safe from overflow.
+
 
 -------------
 SYS extension

@@ -25,6 +25,7 @@ gigatron-rom
  |     `--- BabelFish/          Generic Arduino sketch for interfacing with
  |                              Gigatron. Used for transferring GT1 files into
  |                              the computer and/or hooking up a PS/2 keyboard
+ |--- Libs/                     C libraries for Gigatron programs (NOT STABLE)
  +--- Docs/
  |     +--- GCL-language.txt    Gigatron Control Language and vCPU explanation
  |     +--- GT1-files.txt       vCPU object file format and ROM versioning
