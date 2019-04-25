@@ -133,7 +133,7 @@ typedef struct inst *Inst;
 
 static Symbol wregs[32], bregs[32], vregs[32];
 static Symbol wregw, bregw, vregw;
-static unsigned argsize, saversize;
+static unsigned argsize, saversize, argdepth;
 static Inst* insts;
 
 static int infunction = 0;
@@ -884,13 +884,13 @@ static void inst_blkcopy(Node p) {
 
 static int localoffset(Node addr) {
 	if (generic(addr->op) == ADDRF) {
-		// Args start at sp + framesize + saversize + argsize.
-		return framesize + saversize + argsize - addr->syms[0]->x.offset;
+		// Args end at sp + 2 + framesize + saversize + argsize.
+		return 2 + argdepth + framesize + saversize + argsize - addr->syms[0]->x.offset;
 	}
 
-	// Locals start at sp + framesize.
+	// Locals end at sp + 2 + framesize.
 	assert(generic(addr->op) == ADDRL);
-	return framesize - addr->syms[0]->x.offset;
+	return 2 + argdepth + framesize - addr->syms[0]->x.offset;
 }
 
 static void inst_ldloc(Node p) {
@@ -1139,6 +1139,7 @@ static void inst_call(Node p) {
 	} else {
 		print("asm.call('r%d')\n", getregnum(p->kids[0]));
 	}
+	argdepth = 0;
 }
 
 static void inst_sys(Node p) {
@@ -1183,6 +1184,7 @@ static void inst_jlt(Node p) {
 
 static void inst_arg(Node p) {
 	print("asm.call('pusha')\n");
+	argdepth += 2;
 }
 
 static void inst_ret(Node p) {
@@ -1205,6 +1207,7 @@ static void local(Symbol p) {
 	if (askregvar(p, (*IR->x.rmap)(ttob(p->type))) == 0) {
 		assert(p->sclass == AUTO);
 		offset += p->type->size;
+		debug(fprint(stderr, "local %s of size %d @ offset %d\n", p->name, p->type->size, offset));
 		p->x.offset = offset;
 		p->x.name = stringd(offset);
 	}
@@ -1235,10 +1238,11 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 	for (int i = 0; callee[i]; i++) {
 		Symbol p = callee[i], q = caller[i];
 		assert(q);
+		offset += roundup(q->type->size, 2);
+		debug(fprint(stderr, "parameter %s of size %d @ offset %d\n", p->name, p->type->size, offset));
 		p->x.offset = q->x.offset = offset;
 		p->x.name = q->x.name = stringf("%d", p->x.offset);
 		p->sclass = q->sclass = AUTO;
-		offset += roundup(q->type->size, 2);
 	}
 	argsize = offset;
 	offset = maxoffset = 0;
@@ -1263,7 +1267,7 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 		print("asm.call('enter')\n");
 	}
 
-	if (framesize > 2) {
+	if (framesize > 0) {
 		if (framesize < 256) {
 			print("asm.ldw('sp')\n");
 			print("asm.subi(%d)\n", framesize);
@@ -1277,7 +1281,7 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 	debug(fprintf(stderr, "framesize: %d, saversize: %d, argsize: %d\n", framesize, saversize, argsize));
 	emitcode();
 
-	if (framesize > 2) {
+	if (framesize > 0) {
 		print("asm.%s(%d)\n", framesize < 256 ? "ldi" : "ldwi", framesize);
 		print("asm.addw('sp')\n");
 		print("asm.stw('sp')\n");
