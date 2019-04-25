@@ -1,4 +1,4 @@
 
-int putc(int c);
+int putchar(int c);
 int puts(const char *s);
 

@@ -2,12 +2,12 @@
 #include <Gigatron.h>
 #include <stdio.h>
 
-int putc(int c)
+int putchar(int c)
 {
         if (c == '\n') {
                 Newline();
         } else {
-                unsigned char* bitmap;
+                byte *bitmap;
                 unsigned i = c - 32;
                 if (i < 50) {
                         bitmap = font32up;
@@ -17,10 +17,10 @@ int putc(int c)
                 }
                 bitmap = &bitmap[(i << 2) + i];
 
+                sysFn = SYS_VDrawBits_134;
                 sysArgs[0] = BgColor;
                 sysArgs[1] = Color;
                 *(int*)(sysArgs+4) = _ScreenPos;
-                sysFn = SYS_VDrawBits_134;
 
                 for (i = 5; i > 0; --i, bitmap++) {
                         sysArgs[2] = __lookup(0, bitmap);

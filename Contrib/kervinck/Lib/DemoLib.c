@@ -1,12 +1,11 @@
 
 /*----------------------------------------------------------------------+
  |                                                                      |
- |      DemoClearScreen.c -- Demonstrate the ClearScreen function       |
+ |      DemoLib.c -- Demonstrate ideas for standard library             |
  |                                                                      |
  +----------------------------------------------------------------------*/
 
 #include <Gigatron.h>
-
 #include <stdio.h>
 
 /*----------------------------------------------------------------------+
