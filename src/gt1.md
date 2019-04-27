@@ -1112,7 +1112,7 @@ static void inst_sext(Node p) {
 static void inst_neg(Node p) {
 	assert(getregnum(p) == 0);
 	if (getregnum(p->kids[0]) == 0) {
-		print("asm.st('ha')\n");
+		print("asm.stw('ha')\n");
 		print("asm.ldi(0)\n");
 		print("asm.subw('ha')\n");
 	} else {
@@ -1124,7 +1124,7 @@ static void inst_neg(Node p) {
 static void inst_bcom(Node p) {
 	assert(getregnum(p) == 0);
 	if (getregnum(p->kids[0]) == 0) {
-		print("asm.st('ha')\n");
+		print("asm.stw('ha')\n");
 		print("asm.ldwi(0xffff)\n");
 		print("asm.xorw('ha')\n");
 	} else {
@@ -1338,7 +1338,7 @@ static void defconst(int suffix, int size, Value v) {
 	}
 }
 static void defaddress(Symbol p) {
-	print("asm.dw('%s')\n", p->x.name);
+	print("asm.d%c('%s')\n", p->scope == LABELS ? 'c' : 'w', p->x.name);
 }
 static void defstring(int n, char* str) {
 	print("asm.dx([");

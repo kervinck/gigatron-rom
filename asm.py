@@ -188,6 +188,10 @@ class Inst:
     def dw(con): return Inst('dw', con, 2, False, lambda i, s: s.emit(bytes([i.operand & 0xff, (i.operand >> 8) & 0xff])))
     @staticmethod
     def dx(x): return Inst('dx', x, len(x), False, lambda i, s: s.emit(bytes(x)))
+    @staticmethod
+    def dc(l): return Inst('dc', l, 2, False, lambda i, s: s.emit(bytes([(i.operand - 2) & 0xff, ((i.operand - 2) >> 8) & 0xff])))
+    @staticmethod
+    def dl(l): return Inst('dl', l, sum([i.size for i in l]), False, None)
 
 functions = {}
 func = None
@@ -246,6 +250,7 @@ def ret(): func.append(Inst.ret())
 def db(con): func.append(Inst.db(con))
 def dw(con): func.append(Inst.dw(con))
 def dx(x): func.append(Inst.dx(x))
+def dc(l): func.append(Inst.dc(l))
 
 def link(entry, outf, logf):
     log.f = logf
@@ -272,6 +277,26 @@ def link(entry, outf, logf):
             print(f'removing function {name}', file=log.f)
             del functions[name]
 
+    # After garbage collection, coalesce adjacent data instructions into contiguous lists. This is necessary in
+    # order to avoid arrays being split across segment discontinuities.
+    for name, func in functions.items():
+        result = []
+
+        coalesced = None
+        for inst in func:
+            if inst.opcode in { 'db', 'dw', 'dx', 'dc' }:
+                if coalesced is None:
+                    coalesced = []
+                coalesced.append(inst)
+            else:
+                if coalesced is not None:
+                    result.append(Inst.dl(coalesced))
+                    coalesced = None
+                result.append(inst)
+        if coalesced is not None:
+            result.append(Inst.dl(coalesced))
+        functions[name] = result
+
     # Set up the segment map.
     segments = [
         Segment(0x004e, 0x32),
@@ -282,8 +307,6 @@ def link(entry, outf, logf):
     for i in range(0, 0x80-0x8):
         segments.append(Segment(0x08a0 + (i << 8), 96))
 
-    # TODO: function-granularity DCE
-    #
     # lay out the current function
     # first set its offset
     # then do its initial layout:
@@ -323,6 +346,18 @@ def link(entry, outf, logf):
                 print(f'far jump from {pc:x} to {0 if target is None else target:x}', file=log.f)
                 inst.size = 5
 
+    def resolve_operand(inst, seg, pc):
+        if type(inst.operand) is str:
+            if inst.operand in labels:
+                inst.operand = labels[inst.operand]
+            elif inst.opcode == 'ldwi':
+                seg.reloc(pc + 1, inst.operand)
+                inst.operand = 0x102e
+            else:
+                assert(inst.opcode == 'dw')
+                seg.reloc(pc, inst.operand)
+                inst.operand = 0x102e
+
     def layout(seg, sidx, func, emitting):
         pc, remaining = seg.pc(), seg.remaining()
         changed = False
@@ -330,6 +365,8 @@ def link(entry, outf, logf):
             inst = func[i]
 
             if inst.opcode == 'label' or inst.opcode == 'glob':
+                # TODO: defer label definition until the following instruction, or we may get the PC wrong for
+                # inline data.
                 print(f'defining label {inst.operand}', file=log.f)
                 inst.addr = pc
                 labels[inst.operand] = pc
@@ -374,18 +411,15 @@ def link(entry, outf, logf):
             inst.addr = pc
 
             if emitting:
-                if type(inst.operand) is str:
-                    if inst.operand in labels:
-                        inst.operand = labels[inst.operand]
-                    elif inst.opcode == 'ldwi':
-                        seg.reloc(pc + 1, inst.operand)
-                        inst.operand = 0x102e
-                    else:
-                        print(f'{inst.opcode} {inst.operand}', file=log.f)
-                        assert(inst.opcode == 'dw')
-                        seg.reloc(pc, inst.operand)
-                        inst.operand = 0x102e
-                inst.emit(seg)
+                if inst.opcode == 'dl':
+                    ipc = pc
+                    for i in inst.operand:
+                        resolve_operand(i, seg, ipc)
+                        i.emit(seg)
+                        ipc += i.size
+                else:
+                    resolve_operand(inst, seg, pc)
+                    inst.emit(seg)
 
             pc += inst.size
             remaining -= inst.size
@@ -413,9 +447,14 @@ def link(entry, outf, logf):
     funclabels = {}
     segment, sidx = segments[1], 1
     for name, f in functions.items():
-        while segment.remaining() < 2:
-            sidx += 1
-            segment = segments[sidx]
+        if len(f) > 0 and f[0].opcode == 'dl':
+            while segment.remaining() < f[0].size:
+                sidx += 1
+                segment = segments[sidx]
+        else:
+            while segment.remaining() < 2:
+                sidx += 1
+                segment = segments[sidx]
 
         labels = copy(global_labels)
         pc, segment, sidx = dofunc(segment, sidx, f, name)

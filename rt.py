@@ -72,7 +72,7 @@ asm.ret()
 
 asm.defun('@stlocb')
 asm.addw('sp')
-asm.st('ht')
+asm.stw('ht')
 asm.ld('ha')
 asm.poke('ht')
 asm.ret()
