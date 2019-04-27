@@ -317,6 +317,15 @@ def link(entry, outf, logf):
 
     labels = {}
 
+    def deflabel(inst, pc):
+        assert inst.opcode == 'label' or inst.opcode == 'glob'
+        print(f'defining label {inst.operand}', file=log.f)
+        inst.addr = pc
+        labels[inst.operand] = pc
+        if inst.opcode == 'glob':
+            print(f'defining global label {inst.operand}', file=log.f)
+            global_labels[inst.operand] = pc
+
     def near(target, pc):
         if type(target) is str:
             target = labels.get(target)
@@ -360,22 +369,18 @@ def link(entry, outf, logf):
 
     def layout(seg, sidx, func, emitting):
         pc, remaining = seg.pc(), seg.remaining()
+        pending_labels = []
         changed = False
         for i in range(0, len(func)):
             inst = func[i]
 
             if inst.opcode == 'label' or inst.opcode == 'glob':
-                # TODO: defer label definition until the following instruction, or we may get the PC wrong for
-                # inline data.
-                print(f'defining label {inst.operand}', file=log.f)
-                inst.addr = pc
-                labels[inst.operand] = pc
-                if inst.opcode == 'glob':
-                    print(f'defining global label {inst.operand}', file=log.f)
-                    global_labels[inst.operand] = pc
+                pending_labels.append(inst)
                 continue
 
-            # if this is a branch, we may be able to shorten it. check for that here.
+            # Define any labels that precede this instruction and attempt branch shortening.
+            for l in pending_labels:
+                deflabel(l, pc)
             shorten(inst, pc)
 
             # if there is not enough space remaining for this instruction and a page thunk call, jump to the next
@@ -404,12 +409,20 @@ def link(entry, outf, logf):
 
                     seg = nextseg
                     pc, remaining = seg.pc(), seg.remaining()
+
+                    # Redefine any labels that precede this instruction and retry branch shortening since the PC
+                    # has changed.
+                    for l in pending_labels:
+                        deflabel(l, pc)
                     shorten(inst, pc)
+
+            pending_labels = []
 
             if inst.addr != pc:
                 changed = True
             inst.addr = pc
 
+            # if this is a branch, we may be able to shorten it. check for that here.
             if emitting:
                 if inst.opcode == 'dl':
                     ipc = pc
@@ -423,6 +436,10 @@ def link(entry, outf, logf):
 
             pc += inst.size
             remaining -= inst.size
+
+        # define any remaining labels
+        for l in pending_labels:
+            deflabel(l, pc)
 
         return (pc, changed, seg, sidx)
 
