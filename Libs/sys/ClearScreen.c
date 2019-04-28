@@ -7,7 +7,7 @@
 
 #include <Gigatron.h>
 
-extern int ScreenPos           = (int)screenMemory + Indent;
+extern int ScreenPos            = (int)screenMemory + ((120-8)*256 + 255);
 extern byte Color               = 0x3f; // White
 extern byte BgColor             = 0x30; // Blue
 
@@ -27,9 +27,8 @@ void ClearScreen(void)
       p += 0x800;               // Step 8 pixels down
     } while (p >= 0);
 
-    p += 0x8801;                // Step 120 pixels up, 1 pixel right
+    p += -120*256 + 1;          // Step 120 pixels up, 1 pixel right
   } while ((p & 255) != 160);   // Until reaching X position 160
-
 }
 
 /*----------------------------------------------------------------------+
