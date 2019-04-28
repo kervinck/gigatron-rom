@@ -26,6 +26,9 @@ gigatron-rom
  |                              Gigatron. Used for transferring GT1 files into
  |                              the computer and/or hooking up a PS/2 keyboard
  +--- Libs/                     C libraries for Gigatron programs (NOT STABLE)
+ |     +--- stdio.h, ..., *.h   Library header files
+ |     +--- stdio/, ..., */     Library C functions
+ |     `--- Example.c           Example C program
  +--- Docs/
  |     +--- GCL-language.txt    Gigatron Control Language and vCPU explanation
  |     +--- GT1-files.txt       vCPU object file format and ROM versioning
