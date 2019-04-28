@@ -7,14 +7,14 @@
 
 #include <Gigatron.h>
 
-extern int _ScreenPos           = (int)screenMemory + _Indent;
+extern int ScreenPos           = (int)screenMemory + Indent;
 extern byte Color               = 0x3f; // White
 extern byte BgColor             = 0x30; // Blue
 
 void ClearScreen(void)
 {
   int p = (int)screenMemory;
-  _ScreenPos = p + _Indent;     // Go back to top left of screen
+  ScreenPos = p + Indent;       // Go back to top left of screen
 
   sysFn = SYS_VDrawBits_134;    // SYS function plots 8 pixels vertically
   sysArgs[0] = BgColor;         // Background color

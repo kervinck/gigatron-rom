@@ -4,35 +4,40 @@
 
 int putchar(int c)
 {
-        if (c == '\n') {
-                Newline();
-        } else {
-                byte *bitmap;
-                unsigned i = c - 32;
-                if (i < 50) {
-                        bitmap = font32up;
-                } else {
-                        i -= 50;
-                        bitmap = font82up;
-                }
-                bitmap = &bitmap[(i << 2) + i];
+  byte *bitmap;
+  int i;
 
-                sysFn = SYS_VDrawBits_134;
-                sysArgs[0] = BgColor;
-                sysArgs[1] = Color;
-                *(int*)(sysArgs+4) = _ScreenPos;
+  if (c == '\n')
+    Newline();
+  else {
+    if (*(byte*)&ScreenPos > 160-6)
+      Newline(); // Line wrapping
 
-                for (i = 5; i > 0; --i, bitmap++) {
-                        sysArgs[2] = __lookup(0, bitmap);
-                        __syscall(203);
-                        sysArgs[4]++;
-                }
-                sysArgs[2] = 0;
-                __syscall(203);
+    i = c - 32;
+    if (i < 50)
+      bitmap = font32up;
+    else {
+      i -= 50;
+      bitmap = font82up;
+    }
+    bitmap = &bitmap[(i << 2) + i];
 
-                _ScreenPos += 6;
-        }
+    sysFn = SYS_VDrawBits_134;
+    sysArgs[0] = BgColor;
+    sysArgs[1] = Color;
+    *(int*)(sysArgs+4) = ScreenPos;
 
-        return 0;
+    for (i = 5; i > 0; --i, bitmap++) {
+      sysArgs[2] = __lookup(0, bitmap);
+      __syscall(203);
+      sysArgs[4]++;
+    }
+    sysArgs[2] = 0;
+    __syscall(203);
+
+    ScreenPos += 6;
+  }
+
+  return 0;
 }
 

@@ -48,13 +48,13 @@ typedef unsigned short word;
  |      Library definitions                                             |
  +----------------------------------------------------------------------*/
 
-#define _Indent 2               // Indent 2 pixels from the left
+#define Indent 2                // Indent 2 pixels from the left
 
 /*----------------------------------------------------------------------+
  |      Library data                                                    |
  +----------------------------------------------------------------------*/
 
-extern int _ScreenPos;
+extern int ScreenPos;
 extern byte Color;
 extern byte BgColor;
 

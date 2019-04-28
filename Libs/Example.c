@@ -18,7 +18,7 @@ int main(void)
   while (1) {
     BgColor = color++;
     ClearScreen();
-    puts("Hello Gigatron!\nHow are you today?");
+    puts("Hello Gigatron! How are you today?");
   }
   return 0;
 }

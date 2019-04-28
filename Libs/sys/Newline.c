@@ -6,9 +6,9 @@ void Newline(void)
   // TODO Scroll up screen when needed (using videoTable)
 
   // Go down 8..15 pixels, realigning at 8 pixel rows, and indent
-  _ScreenPos = ((_ScreenPos + 0x0700) & 0xf800) + (0x0800 + _Indent);
+  ScreenPos = ((ScreenPos + 0x0700) & 0xf800) + (0x0800 + Indent);
 
-  if (_ScreenPos < 0)
-    _ScreenPos = (int)screenMemory + _Indent; // Wrap around
+  if (ScreenPos < 0)
+    ScreenPos = (int)screenMemory + Indent; // Wrap around
 }
 
