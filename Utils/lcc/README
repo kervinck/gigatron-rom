@@ -1,3 +1,32 @@
+LCC for Gigatron
+================
+
+C compiler targetting the Gigatron TTL computer
+
+ANSI C cross-compiler (C89) that generates .gt1 files. These files
+can be loaded with the Loader application and sendFile.py, or
+embedded into an EPROM, or loaded into a Gigatron emulator.
+
+Based on Pat Gavlin's initial work on adding a Gigatron backend to
+`lcc`. Requires Python 3.6+.
+
+This is still very much work in progress, some of thee many
+restrictions include:
+ * No floating point
+ * Work on libraries has barely started
+ * 'long' and 'long long' are 16-bit
+ * Sometimes hangs or crashes
+ * ...
+
+Resources:
+ * Forum thread: https://forum.gigatron.io/viewtopic.php?f=4&t=116
+ * Gigatron website: https://gigatron.io/
+ * LCC website: http://sites.google.com/site/lccretargetablecompiler/
+ * Original LCC sources: https://github.com/drh/lcc
+
+Original README from lcc project
+================================
+
 This hierarchy is the distribution for lcc version 4.2.
 
 lcc version 3.x is described in the book "A Retargetable C Compiler:
