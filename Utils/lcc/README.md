@@ -4,18 +4,20 @@ LCC for Gigatron
 C compiler targetting the Gigatron TTL computer
 
 ANSI C cross-compiler (C89) that generates .gt1 files. These files
-can be loaded with the Loader application and sendFile.py, or
-embedded into an EPROM, or loaded into a Gigatron emulator.
+can be loaded with the Loader application, embedded into an EPROM,
+or loaded into a Gigatron emulator.
 
 Based on Pat Gavlin's initial work on adding a Gigatron backend to
 `lcc`. Requires Python 3.6+.
 
-This is still very much work in progress, some of thee many
+This is still very much work in progress, some of the many
 restrictions include:
- * No floating point
- * Work on libraries has barely started
+ * No floating point (this will probably be the case for a _very_ long time)
+ * Multiplication, division, modulus, arbitrary-width left and right shifts to be completed
+ * Comparisons are probably still broken with respect to overflow
  * 'long' and 'long long' are 16-bit
- * Sometimes hangs or crashes
+ * Work on libraries has barely started. No malloc yet. No file system.
+ * Sometimes hangs, or crashes with a stack trace instead of a nice message
  * ...
 
 Resources:
@@ -27,7 +29,7 @@ Resources:
 Instructions
 ============
 
-Build lcc from the root directory of the gigatron-rom/ repro:
+Build `lcc` from the root directory of the gigatron-rom/ repro:
 
 ```
 $ make lcc
@@ -45,8 +47,8 @@ cp asm.py build/asm.py
 $
 ```
 
-All of lcc is now in a the directory Utils/lcc/build/. The compiler
-has many subprograms and files, with lcc itself being the driver
+All of `lcc` is now in the directory Utils/lcc/build/. The compiler
+has many subprograms and files, with `lcc` itself being the driver
 for it all. We can simply keep everything there.
 
 Next compile the test program. The Gigatron backend requires Python
@@ -66,7 +68,7 @@ $ ls -l Example.gt1
 ```
 
 Now we have a program that we can send to a Gigatron with sendFile.py
-(Python 2...!), or load into an emulator.
+(Python 2...!), or load into directly into one of the emulators.
 
 Original README from lcc project
 ================================
