@@ -127,6 +127,20 @@ burn85:
 	# Uses ImageMagick
 	convert "$<" "$@"
 
+LCCDIR:=Utils/lcc/build
+export LCCDIR
+CC:=$(LCCDIR)/lcc -ILibs
+
+lcc:
+	mkdir -p $(LCCDIR)
+	cd Utils/lcc && env HOSTFILE=etc/gt1h.c make all
+
+%.o: %.c
+	$(CC) -c $< -o $@
+
+Example.gt1: Libs/sys/ClearScreen.o Libs/sys/Newline.o Libs/sys/Random.o Libs/stdio/putchar.o Libs/stdio/puts.o Libs/Example.o
+	$(CC) $^ -o $@
+
 todo:
 	@git ls-files | sed 's/ /\\ /g' | xargs grep -I -E '(TODO|XXX)'
 
