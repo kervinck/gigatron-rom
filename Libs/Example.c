@@ -24,10 +24,29 @@ int main(void)
     ScreenPos = p;              // Go back
 
     c = WaitKey();
+
     if (c == '\n') {
       putchar(' ');
       ScreenPos = p;
     }
+
+/*
+    switch (c) {
+    case buttonLeft:
+      ScreenPos -= 1;
+      break;
+    case buttonRight:
+      ScreenPos += 1;
+      break;
+    case buttonUp:
+      ScreenPos -= 0x100;
+      break;
+    case buttonDown:
+      ScreenPos += 0x100;
+      break;
+    }
+*/
+
     putchar(c);
   }
   return 0;

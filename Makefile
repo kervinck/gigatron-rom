@@ -138,7 +138,7 @@ lcc:
 %.o: %.c
 	$(CC) -c $< -o $@
 
-Example.gt1: Libs/sys/ClearScreen.o Libs/sys/Newline.o Libs/sys/Random.o Libs/stdio/putchar.o Libs/stdio/puts.o Libs/Example.o
+Example.gt1: Libs/sys/ClearScreen.o Libs/sys/Newline.o Libs/sys/Random.o Libs/sys/WaitKey.o Libs/stdio/putchar.o Libs/stdio/puts.o Libs/Example.o
 	$(CC) $^ -o $@
 
 todo:

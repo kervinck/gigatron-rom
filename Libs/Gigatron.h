@@ -25,6 +25,15 @@ typedef unsigned short word;
 #define font32up                ( (byte*)0x0700)
 #define font82up                ( (byte*)0x0800)
 
+#define buttonRight             (255^1)
+#define buttonLeft              (255^2)
+#define buttonDown              (255^4)
+#define buttonUp                (255^8)
+#define buttonStart             (255^16)
+#define buttonSelect            (255^32)
+#define buttonB                 (255^64)
+#define buttonA                 (255^128)
+
 /*
  *  Draw 8 pixels vertically from bit mask
  *
