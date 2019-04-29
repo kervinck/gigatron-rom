@@ -16,6 +16,7 @@ typedef unsigned short word;
  |      Definitions from interface.json                                 |
  +----------------------------------------------------------------------*/
 
+#define serialRaw               (*(byte*)0x000f)
 #define vAC                     (*(word*)0x0018)
 #define sysFn                   (*(word*)0x0022)
 #define sysArgs                 ( (byte*)0x0024)
@@ -65,6 +66,7 @@ extern byte BgColor;
 void ClearScreen(void);
 void Newline(void);
 word Random(void);
+byte WaitKey(void);
 
 // Not implemented/decided
 void GotoXY(byte x, byte y);

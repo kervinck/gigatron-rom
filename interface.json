@@ -51,6 +51,15 @@
  "oscL"                 : 254,
  "oscH"                 : 255,
 
+ "buttonRight"          : "0xfe",
+ "buttonLeft"           : "0xfd",
+ "buttonDown"           : "0xfb",
+ "buttonUp"             : "0xf7",
+ "buttonStart"          : "0xef",
+ "buttonSelect"         : "0xdf",
+ "buttonB"              : "0xbf",
+ "buttonA"              : "0x7f",
+
  "maxTicks"             : 14,
  "LDWI"                 : "0x0311",
  "LD"                   : "0x031a",

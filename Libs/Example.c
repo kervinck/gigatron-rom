@@ -14,11 +14,21 @@
 
 int main(void)
 {
-  byte color = 0;
+  ClearScreen();
+  puts("Hello Gigatron! How are you today?");
+
   while (1) {
-    BgColor = color++;
-    ClearScreen();
-    puts("Hello Gigatron! How are you today?");
+    int p = ScreenPos;
+    int c;
+    putchar(127);               // Cursor symbol
+    ScreenPos = p;              // Go back
+
+    c = WaitKey();
+    if (c == '\n') {
+      putchar(' ');
+      ScreenPos = p;
+    }
+    putchar(c);
   }
   return 0;
 }
