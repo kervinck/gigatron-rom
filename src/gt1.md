@@ -843,7 +843,7 @@ static void inst_inc(Node p) {
 	if (p->kids[0]->op == VREG+P) {
 		print("asm.inc('r%d')\n", p->kids[0]->syms[0]->x.regnode->number);
 	} else {
-		print("asm.inc(0x%x)\n", p->kids[0]->syms[0]->u.c.v.u);
+		print("asm.inc(%D)\n", p->kids[0]->syms[0]->u.c.v.i);
 	}
 }
 
@@ -902,7 +902,7 @@ static void inst_ldloc(Node p) {
 	if (offs < 256) {
 		print("asm.ldi(%d)\n", offs);
 	} else {
-		print("asm.ldiw(%d)\n", offs);
+		print("asm.ldwi(%d)\n", offs);
 	}
 	print("asm.call('ldloc%s')\n", opsize(p->op) == 1 ? "b" : "");
 }
@@ -917,7 +917,7 @@ static void inst_stloc(Node p) {
 	if (offs < 256) {
 		print("asm.ldi(%d)\n", offs);
 	} else {
-		print("asm.ldiw(%d)\n", offs);
+		print("asm.ldwi(%d)\n", offs);
 	}
 	print("asm.call('stloc%s')\n", opsize(p->op) == 1 ? "b" : "");
 }
@@ -927,7 +927,7 @@ static void inst_st(Node p) {
 	if (opsize(p->op) == 2) {
 		op = "stw";
 	}
-	print("asm.%s(0x%x)\n", op, p->kids[0]->syms[0]->u.c.v.u);
+	print("asm.%s(%D)\n", op, p->kids[0]->syms[0]->u.c.v.i);
 }
 
 static void inst_ld(Node p) {
@@ -935,7 +935,7 @@ static void inst_ld(Node p) {
 	if (opsize(p->op) == 2) {
 		op = "ldw";
 	}
-	print("asm.%s(0x%x)\n", op, p->kids[0]->syms[0]->u.c.v.u);
+	print("asm.%s(%D)\n", op, p->kids[0]->syms[0]->u.c.v.i);
 	ensurereg(p);
 }
 
@@ -958,12 +958,12 @@ static void inst_poke(Node p) {
 
 static void inst_scon(Node p) {
 	assert(getregnum(p) == 0);
-	print("asm.ldi(0x%x)\n", p->syms[0]->u.c.v.u);
+	print("asm.ldi(%D)\n", p->syms[0]->u.c.v.i);
 }
 
 static void inst_cnstw(Node p) {
 	assert(getregnum(p) == 0);
-	print("asm.ldwi(0x%x)\n", p->syms[0]->u.c.v.u);
+	print("asm.ldwi(%D)\n", p->syms[0]->u.c.v.i);
 }
 
 static void inst_addr(Node p) {
@@ -993,7 +993,7 @@ static void inst_addr(Node p) {
 }
 
 static void inst_addi(Node p) {
-	print("asm.addi(0x%x)\n", p->kids[1]->syms[0]->u.c.v.u);
+	print("asm.addi(%D)\n", p->kids[1]->syms[0]->u.c.v.i);
 	ensurereg(p);
 }
 
@@ -1003,21 +1003,21 @@ static void inst_subi(Node p) {
 	if (getregnum(p->kids[0]) != 0) {
 		print("asm.ldw('r%d')\n", getregnum(p->kids[0]));
 	}
-	print("asm.subi(0x%x)\n", p->kids[1]->syms[0]->u.c.v.u);
+	print("asm.subi(%D)\n", p->kids[1]->syms[0]->u.c.v.i);
 }
 
 static void inst_andi(Node p) {
-	print("asm.andi(0x%x)\n", p->kids[1]->syms[0]->u.c.v.u);
+	print("asm.andi(%D)\n", p->kids[1]->syms[0]->u.c.v.i);
 	ensurereg(p);
 }
 
 static void inst_ori(Node p) {
-	print("asm.ori(0x%x)\n", p->kids[1]->syms[0]->u.c.v.u);
+	print("asm.ori(%D)\n", p->kids[1]->syms[0]->u.c.v.i);
 	ensurereg(p);
 }
 
 static void inst_xori(Node p) {
-	print("asm.xori(0x%x)\n", p->kids[1]->syms[0]->u.c.v.u);
+	print("asm.xori(%D)\n", p->kids[1]->syms[0]->u.c.v.i);
 	ensurereg(p);
 }
 
@@ -1105,7 +1105,8 @@ static void inst_trunc(Node p) {
 }
 
 static void inst_sext(Node p) {
-	print("asm.call('sext')\n");
+	print("asm.xori(0x80)\n");
+	print("asm.subi(0x80)\n");
 	ensurereg(p);
 }
 
@@ -1143,11 +1144,11 @@ static void inst_call(Node p) {
 }
 
 static void inst_sys(Node p) {
-	print("asm.sys(%d)\n", p->syms[0]->u.c.v.i);
+	print("asm.sys(%D)\n", p->syms[0]->u.c.v.i);
 }
 
 static void inst_lup(Node p) {
-	print("asm.lup(%d)\n", p->syms[0]->u.c.v.i);
+	print("asm.lup(%D)\n", p->syms[0]->u.c.v.i);
 }
 
 static void inst_jr(Node p) {
@@ -1331,7 +1332,7 @@ static void defconst(int suffix, int size, Value v) {
 	case U:
 	case P:
 	case F:
-		print("asm.d%c(0x%x)\n", size == 1 ? 'b' : 'w', v.u);
+		print("asm.d%c(%D)\n", size == 1 ? 'b' : 'w', v.i);
 		break;
 	default:
 		assert(0);
