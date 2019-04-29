@@ -24,6 +24,50 @@ Resources:
  * LCC website: http://sites.google.com/site/lccretargetablecompiler/
  * Original LCC sources: https://github.com/drh/lcc
 
+Instructions
+============
+
+Build lcc from the root directory of the gigatron-rom/ repro:
+
+```
+$ make lcc
+mkdir -p Utils/lcc/build
+cd Utils/lcc && env HOSTFILE=etc/gt1h.c make all
+cc -g -c -Isrc -o build/main.o src/main.c
+cc -g -c -Isrc -o build/alloc.o src/alloc.c
+cc -g -c -Isrc -o build/bind.o src/bind.c
+cc -g -c -Isrc -o build/dag.o src/dag.c
+[
+ ...lots of output and compiler warnings snipped...
+]
+cp rt.py build/rt.py
+cp asm.py build/asm.py
+$
+```
+
+All of lcc is now in a the directory Utils/lcc/build/. The compiler
+has many subprograms and files, with lcc itself being the driver
+for it all. We can simply keep everything there.
+
+Next compile the test program. The Gigatron backend requires Python
+3.6 or up to be installed on the system.
+
+```
+$ make Example.gt1
+Utils/lcc/build/lcc -ILibs -c Libs/sys/ClearScreen.c -o Libs/sys/ClearScreen.o
+Utils/lcc/build/lcc -ILibs -c Libs/sys/Newline.c -o Libs/sys/Newline.o
+Utils/lcc/build/lcc -ILibs -c Libs/sys/Random.c -o Libs/sys/Random.o
+Utils/lcc/build/lcc -ILibs -c Libs/stdio/putchar.c -o Libs/stdio/putchar.o
+Utils/lcc/build/lcc -ILibs -c Libs/stdio/puts.c -o Libs/stdio/puts.o
+Utils/lcc/build/lcc -ILibs -c Libs/Example.c -o Libs/Example.o
+Utils/lcc/build/lcc -ILibs Libs/sys/ClearScreen.o Libs/sys/Newline.o Libs/sys/Random.o Libs/stdio/putchar.o Libs/stdio/puts.o Libs/Example.o -o Example.gt1
+$ ls -l Example.gt1
+-rw-r-----  1 marcelk  staff  743 Apr 29 22:59 Example.gt1
+```
+
+Now we have a program that we can send to a Gigatron with sendFile.py
+(Python 2...!), or load into an emulator.
+
 Original README from lcc project
 ================================
 
