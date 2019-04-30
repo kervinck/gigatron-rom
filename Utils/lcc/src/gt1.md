@@ -1320,6 +1320,7 @@ static void space(int n) {
 	print("asm.dx([0] * %d)\n", n);
 }
 Interface gt1IR = {
+        //size align outofline
 	1, 1, 0,  /* char */
 	2, 1, 0,  /* short */
 	2, 1, 0,  /* int */
@@ -1336,7 +1337,7 @@ Interface gt1IR = {
 	0,        /* wants_argb */
 	1,        /* left_to_right */
 	0,        /* wants_dag */
-	0,        /* unsigned_char */
+	1,        /* unsigned_char */
 	address,
 	blockbeg,
 	blockend,
