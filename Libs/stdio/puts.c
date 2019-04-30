@@ -1,5 +1,4 @@
 
-#include <Gigatron.h>
 #include <stdio.h>
 
 /*
@@ -10,8 +9,7 @@ int puts(const char *s)
 {
   for (; *s; s++)
     putchar(*s);
-  Newline();
-
+  putchar('\n');
   return 0;
 }
 

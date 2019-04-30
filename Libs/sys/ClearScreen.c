@@ -7,9 +7,9 @@
 
 #include <Gigatron.h>
 
-extern int ScreenPos            = (int)screenMemory + ((120-8)*256 + 255);
-extern byte Color               = 0x3f; // White
-extern byte BgColor             = 0x30; // Blue
+extern int ScreenPos            = 0;
+extern byte Color               = White;
+extern byte BgColor             = Blue;
 
 void ClearScreen(void)
 {

@@ -36,6 +36,18 @@ typedef unsigned short word;
 #define buttonB                 (255^64)
 #define buttonA                 (255^128)
 
+#define Black                   0x00
+#define DarkRed                 0x01
+#define Red                     0x02
+#define LightRed                0x03
+#define DarkGreen               0x04
+#define Green                   0x08
+#define LightGreen              0x0c
+#define DarkBlue                0x10
+#define Blue                    0x20
+#define LightBlue               0x30
+#define White                   0x3f
+
 /*
  *  Draw 8 pixels vertically from bit mask
  *

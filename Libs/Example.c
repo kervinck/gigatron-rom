@@ -14,25 +14,27 @@
 
 int main(void)
 {
-  ClearScreen();
   puts("Hello Gigatron! How are you today?");
+  //Wait(60);
+
+  ClearScreen();
+
+  puts("Ready");
+
+  BgColor = LightBlue;
 
   while (1) {
     int c;
 
-    int p = ScreenPos;
     putchar(127);               // Cursor symbol
-    ScreenPos = p;              // Go back
+    ScreenPos -= 6;             // Go back
 
     c = WaitKey();
 
-    if (c == '\n') {
-      putchar(' ');             // Remove cursor
-      ScreenPos = p;
-    }
+    putchar(' ');               // Remove cursor
+    ScreenPos -= 6;             // Go back
 
-/*
-    switch (c) {
+    switch (c) {                // Handle arrow keys and/or buttons
     case buttonLeft:
       ScreenPos -= 1;
       break;
@@ -45,10 +47,10 @@ int main(void)
     case buttonDown:
       ScreenPos += 0x100;
       break;
+    default:
+      putchar(c);               // Put character on screen
+      break;
     }
-*/
-
-    putchar(c);                 // Put character on screen
   }
   return 0;
 }
