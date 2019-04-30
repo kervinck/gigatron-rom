@@ -83,47 +83,6 @@ static void inst_jlt(Node);
 static void inst_arg(Node);
 static void inst_ret(Node);
 
-#define I_LDWI 1
-#define I_LD 2
-#define I_LDW 3
-#define I_STW 4
-#define I_JEQ 5
-#define I_JNE 6
-#define I_JGE 7
-#define I_JGT 8
-#define I_JLE 9
-#define I_JLT 10
-#define I_LDI 11
-#define I_ST 12
-#define I_POP 13
-#define I_PUSH 14
-#define I_LUP 15
-#define I_ANDI 16
-#define I_ORI 17
-#define I_XORI 18
-#define I_J 19
-#define I_JR 20
-#define I_INC 21
-#define I_ADDW 22
-#define I_PEEK 23
-#define I_SYS 24
-#define I_SUBW 25
-#define I_CALL 26
-#define I_ADDI 27
-#define I_SUBI 28
-#define I_LSLW 29
-#define I_POKE 30
-#define I_DOKE 31
-#define I_DEEK 32
-#define I_ANDW 33
-#define I_ORW 34
-#define I_XORW 35
-#define I_RET 36
-#define I_DB 37
-#define I_DW 38
-#define I_DX 39
-#define I_LABEL 40
-
 struct inst {
 	int opcode;
 	Symbol operand;
