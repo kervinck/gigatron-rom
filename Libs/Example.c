@@ -1,7 +1,7 @@
 
 /*----------------------------------------------------------------------+
  |                                                                      |
- |      DemoLib.c -- Demonstrate ideas for standard library             |
+ |      Example.c -- Demonstrate ideas for standard library             |
  |                                                                      |
  +----------------------------------------------------------------------*/
 
@@ -18,15 +18,16 @@ int main(void)
   puts("Hello Gigatron! How are you today?");
 
   while (1) {
-    int p = ScreenPos;
     int c;
+
+    int p = ScreenPos;
     putchar(127);               // Cursor symbol
     ScreenPos = p;              // Go back
 
     c = WaitKey();
 
     if (c == '\n') {
-      putchar(' ');
+      putchar(' ');             // Remove cursor
       ScreenPos = p;
     }
 
@@ -47,7 +48,7 @@ int main(void)
     }
 */
 
-    putchar(c);
+    putchar(c);                 // Put character on screen
   }
   return 0;
 }

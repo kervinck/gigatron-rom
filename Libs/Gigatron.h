@@ -20,6 +20,8 @@ typedef unsigned short word;
 #define vAC                     (*(word*)0x0018)
 #define sysFn                   (*(word*)0x0022)
 #define sysArgs                 ( (byte*)0x0024)
+
+#define videoTable              ( (byte*)0x0100)
 #define screenMemory            ( (byte*)0x0800)
 
 #define font32up                ( (byte*)0x0700)
