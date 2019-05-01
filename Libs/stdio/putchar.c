@@ -15,7 +15,7 @@ int putchar(int c)
     }
 
     // Automatic line wrapping
-    if (*(byte*)&ScreenPos > 160-6)
+    if (((byte*)&ScreenPos)[0] > 160-6)
       Newline();
 
     // Avoid writing outside screen memory

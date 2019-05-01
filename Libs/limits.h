@@ -1,5 +1,5 @@
 
-// Gigatron vCPU's unqualified characters are unsigned
+// Gigatron vCPU's plain characters are unsigned
 #define CHAR_BIT 8
 #define CHAR_MIN 0
 #define CHAR_MAX 255

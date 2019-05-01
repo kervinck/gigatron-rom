@@ -62,9 +62,9 @@ Utils/lcc/build/lcc -ILibs -c Libs/sys/Random.c -o Libs/sys/Random.o
 Utils/lcc/build/lcc -ILibs -c Libs/stdio/putchar.c -o Libs/stdio/putchar.o
 Utils/lcc/build/lcc -ILibs -c Libs/stdio/puts.c -o Libs/stdio/puts.o
 Utils/lcc/build/lcc -ILibs -c Libs/Example.c -o Libs/Example.o
-Utils/lcc/build/lcc -ILibs Libs/sys/ClearScreen.o Libs/sys/Newline.o Libs/sys/Random.o Libs/stdio/putchar.o Libs/stdio/puts.o Libs/Example.o -o Example.gt1
-$ ls -l Example.gt1
--rw-r-----  1 marcelk  staff  743 Apr 29 22:59 Example.gt1
+Utils/lcc/build/lcc -ILibs Libs/sys/ClearScreen.o Libs/sys/Newline.o Libs/sys/Random.o Libs/stdio/putchar.o Libs/stdio/puts.o Libs/Example.o -o Libs/Example.gt1
+$ ls -l Libs/Example.gt1
+-rw-r-----  1 marcelk  staff  743 Apr 29 22:59 Libs/Example.gt1
 ```
 
 Now we have a program that we can send to a Gigatron with sendFile.py

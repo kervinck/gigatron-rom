@@ -36,18 +36,6 @@ typedef unsigned short word;
 #define buttonB                 (255^64)
 #define buttonA                 (255^128)
 
-#define Black                   0x00
-#define DarkRed                 0x01
-#define Red                     0x02
-#define LightRed                0x03
-#define DarkGreen               0x04
-#define Green                   0x08
-#define LightGreen              0x0c
-#define DarkBlue                0x10
-#define Blue                    0x20
-#define LightBlue               0x30
-#define White                   0x3f
-
 /*
  *  Draw 8 pixels vertically from bit mask
  *
@@ -74,13 +62,26 @@ typedef unsigned short word;
 
 #define Indent 2                // Indent 2 pixels from the left
 
+// TODO: add to interface.json
+#define Black                   0x00
+#define DarkRed                 0x01
+#define Red                     0x02
+#define LightRed                0x03
+#define DarkGreen               0x04
+#define Green                   0x08
+#define LightGreen              0x0c
+#define DarkBlue                0x10
+#define Blue                    0x20
+#define LightBlue               0x30
+#define White                   0x3f
+
 /*----------------------------------------------------------------------+
  |      Library data                                                    |
  +----------------------------------------------------------------------*/
 
-extern int ScreenPos;
-extern byte Color;
-extern byte BgColor;
+extern int ScreenPos;           // Really a pointer into screen memory
+extern byte Color;              // Pen color
+extern byte BgColor;            // Background color
 
 /*----------------------------------------------------------------------+
  |      Library functions                                               |
@@ -91,15 +92,12 @@ void Newline(void);
 word Random(void);
 byte WaitKey(void);
 
-// Not implemented/decided
-void GotoXY(byte x, byte y);
-void PutChar(char c);
-void Scroll(void);
-void GetLine(void);
-void GetChar(void);
-void PrintDecimal(int n);
-void PutString(char *c);
+// Not implemented and/or decided:
+void VideoScrollY(int dy);
+char *IntToString(char s[7], int n);
+char *UIntToString(char s[7], unsigned n);
 void DrawLine(int dx, int dy);
+//int scanf(const char *restrict format, ...);
 
 /*----------------------------------------------------------------------+
  |                                                                      |

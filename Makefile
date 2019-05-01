@@ -129,17 +129,23 @@ burn85:
 
 LCCDIR:=Utils/lcc/build
 export LCCDIR
-CC:=$(LCCDIR)/lcc -ILibs
+CC:=$(LCCDIR)/lcc
+CFLAGS:=-ILibs
 
 lcc:
 	mkdir -p $(LCCDIR)
 	cd Utils/lcc && env HOSTFILE=etc/gt1h.c make all
 
-%.o: %.c
-	$(CC) -c $< -o $@
+%.o: %.c $(wildcard Libs/*.h)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-Example.gt1: Libs/sys/ClearScreen.o Libs/sys/Newline.o Libs/sys/Random.o Libs/sys/WaitKey.o Libs/stdio/putchar.o Libs/stdio/puts.o Libs/Example.o
+libSources:=$(wildcard Libs/*/*.c)
+libObjects:=$(libSources:.c=.o)
+
+%.gt1: %.o $(libObjects)
 	$(CC) $^ -o $@
+
+ctest: Libs/Example.gt1
 
 todo:
 	@git ls-files | sed 's/ /\\ /g' | xargs grep -I -E '(TODO|XXX)'
