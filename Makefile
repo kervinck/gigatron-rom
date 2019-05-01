@@ -147,6 +147,12 @@ libObjects:=$(libSources:.c=.o)
 
 ctest: Libs/Example.gt1
 
+# Moon shot for C compiler: MSCP 1.4 (Marcel's Simple Chess Program)
+# Doesn't work yet. Use as guinea pig to help mature our standard C library
+mscp: Contrib/kervinck/mscp.gt1
+Contrib/kervinck/mscp.o: Contrib/kervinck/mscp.c $(wildcard Libs/*.h)
+	$(CC) $(CFLAGS) -N -P -A -v -c $< -o $@
+
 todo:
 	@git ls-files | sed 's/ /\\ /g' | xargs grep -I -E '(TODO|XXX)'
 
