@@ -55,7 +55,7 @@ Next compile the test program. The Gigatron backend requires Python
 3.6 or up to be installed on the system.
 
 ```
-$ make Example.gt1
+$ make Libs/Example.gt1
 Utils/lcc/build/lcc -ILibs -c Libs/sys/ClearScreen.c -o Libs/sys/ClearScreen.o
 Utils/lcc/build/lcc -ILibs -c Libs/sys/Newline.c -o Libs/sys/Newline.o
 Utils/lcc/build/lcc -ILibs -c Libs/sys/Random.c -o Libs/sys/Random.o
