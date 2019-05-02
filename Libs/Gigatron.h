@@ -16,7 +16,8 @@ typedef unsigned short word;
  |      Definitions from interface.json                                 |
  +----------------------------------------------------------------------*/
 
-#define serialRaw               (*(byte*)0x000f)
+#define frameCount              (*(volatile byte*)0x000e)
+#define serialRaw               (*(volatile byte*)0x000f)
 #define vAC                     (*(word*)0x0018)
 #define sysFn                   (*(word*)0x0022)
 #define sysArgs                 ( (byte*)0x0024)
@@ -91,6 +92,7 @@ void ClearScreen(void);
 void Newline(void);
 word Random(void);
 byte WaitKey(void);
+void BusyWait(int frames);
 
 // Not implemented and/or decided:
 void VideoScrollY(int dy);

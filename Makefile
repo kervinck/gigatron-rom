@@ -142,6 +142,7 @@ lcc:
 libSources:=$(wildcard Libs/*/*.c)
 libObjects:=$(libSources:.c=.o)
 
+.SECONDARY: # Keep intermeditate .o files
 %.gt1: %.o $(libObjects)
 	$(CC) $^ -o $@
 
