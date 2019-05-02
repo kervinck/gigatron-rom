@@ -602,7 +602,7 @@ static void canonicalize(Node* pp) {
 		}
 		break;
 	case SUB:
-		if (generic(p->kids[1]->op) == CNST && range(p->kids[1], 0, 255) != 0) {
+		if (generic(p->kids[1]->op) == CNST && range(p->kids[1], 0, 255) != 0 && range(p->kids[1], -32767, 32767) == 0) {
 			p->kids[1]->syms[0] = constant_negate(p->kids[1]->syms[0]);
 			p->op = ADD + optype(p->op) + sizeop(opsize(p->op));
 		}

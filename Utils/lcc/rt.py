@@ -223,6 +223,7 @@ asm.ldw('ht')
 asm.lslw()
 asm.stw('ht')
 asm.jne('loop')
+asm.ldw('rv')
 asm.ret()
 
 # r1 = dest, ha = src, vAC = size

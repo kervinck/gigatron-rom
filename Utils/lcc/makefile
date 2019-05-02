@@ -169,6 +169,40 @@ $Bhideset$O:	cpp/hideset.c;	$(CC) $(CFLAGS) -c -Icpp -o $@ cpp/hideset.c
 $Bgetopt$O:	cpp/getopt.c;	$(CC) $(CFLAGS) -c -Icpp -o $@ cpp/getopt.c
 $Bunix$O:	cpp/unix.c;	$(CC) $(CFLAGS) -c -Icpp -o $@ cpp/unix.c
 
+GTHARNESS=$Tharness$O
+
+gttest: $Techo \
+	$Temu \
+	$Tsmath \
+	$Tumath
+
+$Tgigatron.rom: gt1/none/tst/ROMv3.rom; cp $< $@
+$Tharness$O: gt1/none/tst/harness.c; $(CC) $(CFLAGS) -c -o $@ $^
+
+$Techo$O: gt1/none/tst/echo.c; $(CC) $(CFlAGS) -c -o $@ $^
+$Techo.gt1: gt1/none/tst/echo.c all; LCCDIR=$(BUILDDIR) $(BUILDDIR)/lcc -DTEST $< -o $Techo.gt1
+$Techo: $Techo.gt1 $Tgigatron.rom $Techo$O $(GTHARNESS)
+	$(LD) $(LDFLAGS) -o $@ $Techo$O $(GTHARNESS)
+	cd $T && ./echo echo.log
+
+$Temu$O: gt1/none/tst/emu.c; $(CC) $(CFlAGS) -c -o $@ $^
+$Temu.gt1: gt1/none/tst/emu.c all; LCCDIR=$(BUILDDIR) $(BUILDDIR)/lcc -DTEST $< -o $Temu.gt1
+$Temu: $Temu.gt1 $Tgigatron.rom $Temu$O $(GTHARNESS)
+	$(LD) $(LDFLAGS) -o $@ $Temu$O $(GTHARNESS)
+	cd $T && ./emu emu.log
+
+$Tsmath$O: gt1/none/tst/smath.c; $(CC) $(CFlAGS) -c -o $@ $^
+$Tsmath.gt1: gt1/none/tst/smath.c all; LCCDIR=$(BUILDDIR) $(BUILDDIR)/lcc -DTEST $< -o $Tsmath.gt1
+$Tsmath: $Tsmath.gt1 $Tgigatron.rom $Tsmath$O $(GTHARNESS)
+	$(LD) $(LDFLAGS) -o $@ $Tsmath$O $(GTHARNESS)
+	cd $T && ./smath smath.log
+
+$Tumath$O: gt1/none/tst/umath.c; $(CC) $(CFlAGS) -c -o $@ $^
+$Tumath.gt1: gt1/none/tst/umath.c all; LCCDIR=$(BUILDDIR) $(BUILDDIR)/lcc -DTEST $< -o $Tumath.gt1
+$Tumath: $Tumath.gt1 $Tgigatron.rom $Tumath$O $(GTHARNESS)
+	$(LD) $(LDFLAGS) -o $@ $Tumath$O $(GTHARNESS)
+	cd $T && ./umath umath.log
+
 test:	$T8q.s \
 	$Tarray.s \
 	$Tcf.s \
