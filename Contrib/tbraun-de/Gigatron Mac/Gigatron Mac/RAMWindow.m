@@ -110,7 +110,7 @@
 - (void) refresh {
     uint8_t *RAM = [self.gigatron getRAM];
     
-    for(int i=0; i<0xFF; i++) {
+    for(int i=0; i<=0xFF; i++) {
         NSTextField *label = [self.hexLabels objectAtIndex:i];
         NSString *oldValue = [label stringValue];
         NSString *newValue =[NSString stringWithFormat:@"%02X", RAM[self.page+i]];

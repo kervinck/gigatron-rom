@@ -246,12 +246,11 @@ NSMutableSet *pressedKeys;
 - (void)drawRect:(NSRect)dirtyRect {
     [super drawRect:dirtyRect];
     
+    CGContextRef myContext = [[NSGraphicsContext currentContext] graphicsPort];
+    
     if(bitmapContext != nil) {
         CGImageRef cgImage = CGBitmapContextCreateImage(bitmapContext);
-        NSImage *newUIImage = [[NSImage alloc] initWithCGImage:cgImage size:NSZeroSize];
-        
-        [newUIImage drawInRect:dirtyRect fromRect:NSZeroRect operation:NSCompositingOperationCopy fraction:1.0];
-        
+        CGContextDrawImage(myContext, dirtyRect, cgImage);
         CGImageRelease(cgImage);
     }
 }
