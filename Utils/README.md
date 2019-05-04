@@ -9,6 +9,7 @@ gcl.vim                         VIM syntax highlighting file
 raw24toraw6.py                  Raw 24bpp to GCL-format packed 6bpp converter
 sendFile.py                     Send a GT1 or BASIC file from laptop/PC to Gigatron
 SerialTest.gt1                  Test file for verifying serial transmission
+gt1dump.py                      Dump GT1 file to show internal structure
 ```
 
 Installing VIM syntax highlighting
