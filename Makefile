@@ -134,7 +134,8 @@ CFLAGS:=-ILibs
 
 lcc:
 	mkdir -p $(LCCDIR)
-	cd Utils/lcc && env HOSTFILE=etc/gt1h.c make all
+	mkdir -p $(LCCDIR)/tst
+	cd Utils/lcc && env HOSTFILE=etc/gt1h.c make all gttest
 
 %.o: %.c $(wildcard Libs/*.h)
 	$(CC) $(CFLAGS) -c $< -o $@
