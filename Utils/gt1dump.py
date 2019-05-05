@@ -4,7 +4,7 @@
 #  gt1dump.py -- Tool to dump GT1 files to ASCII
 #
 # 2019-05-04 (marcelk) Initial version
-# 2019-05-04 (marcelk) Added disassembly option -d
+# 2019-05-05 (marcelk) Added disassembly option -d
 #
 #-----------------------------------------------------------------------
 
@@ -192,7 +192,7 @@ while True:
 hiAddress, loAddress = readByte(fp), readByte(fp)
 address = (hiAddress << 8) + loAddress
 if address:
-  print('* start at 0x%04x' % (address))
+  print('* start at $%04x' % address)
   print()
 
 if len(fp.read()) > 0:
