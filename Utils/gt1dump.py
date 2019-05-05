@@ -110,6 +110,8 @@ if args.filename:
       raise Exception('Bad extension %s' % repr(suffix))
   print('* file: %s' % args.filename)
   print()
+else:
+  fp = sys.stdin.buffer # Note: `buffer` for binary mode
 
 hiAddress = readByte(fp)
 
