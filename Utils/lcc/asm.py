@@ -66,9 +66,12 @@ class Segment:
             stream.write(bytes([self.address >> 8 & 0xff, self.address & 0xff, len(self.buffer)]))
             stream.write(self.buffer)
 
-def displacement(operand):
-    operand = operand & 0xff
-    return operand - 2 if operand >= 2 else 254 + operand
+def displacement(target):
+    """Subtract 2 while staying in the same page
+
+      This is needed for target calculations because vCPU always
+      increments [vPC] by 2 *before* fetching the next opcode."""
+    return (target & 0xff00) + ((target - 2) & 0xff)
 
 class Inst:
     def __init__(self, opcode, operand, size, branch, emit):
@@ -83,24 +86,25 @@ class Inst:
         self._emit(self, segment)
 
     def emitjcc(self, segment, near, far):
+        # 'near' is the condition code for local branches, 'far' is its inverse condition
         if self.operand & 0xff00 != self.addr & 0xff00:
             # far jump
             assert(self.size == 8)
             print(f'emitting far branch from {self.addr:x} to {self.operand:x}', file=log.f)
             skip = self.addr + 8
-            segment.emit(bytes([0x35, far, displacement(skip)])) # bcc <far> <skip>
-            segment.emitw(0x11, self.operand - 2)         # ldwi <target>
+            segment.emit(bytes([0x35, far, displacement(skip) & 0xff])) # bcc <far> <skip>
+            segment.emitw(0x11, displacement(self.operand)) # ldwi <target>
             segment.emitb(0xf3, global_labels['pvpc'])    # doke vpc
         else:
             # near jump
             assert(self.size == 3)
             print(f'emitting near branch from {self.addr:x} to {self.operand:x}', file=log.f)
-            segment.emit(bytes([0x35, near, displacement(self.operand)]))
+            segment.emit(bytes([0x35, near, displacement(self.operand) & 0xff]))
 
     def emitj(self, segment):
         if self.operand & 0xff00 == self.addr & 0xff00:
             print(f'emitting near jump from {self.addr:x} to {self.operand:x}', file=log.f)
-            segment.emitb(0x90, displacement(self.operand))
+            segment.emitb(0x90, displacement(self.operand) & 0xff)
         else:
             print(f'emitting far jump from {self.addr:x} to {self.operand:x}', file=log.f)
             Inst.ldwi(self.operand - 2).emit(segment)

@@ -14,15 +14,13 @@
 
 int main(void)
 {
-  int d = 60; // XXX BusyWait(60) crashes
-
   puts("Hello Gigatron! How are you today?");
-  BusyWait(d);                 // Wait one second
+  BusyWait(60);                 // Wait one second
 
   ClearScreen();
   puts("Ready");
 
-  BgColor = LightBlue;
+  BgColor = LightBlue;          // Slightly different for effect
   while (1) {
     int c;
 
@@ -39,6 +37,10 @@ int main(void)
     case buttonRight: ScreenPos +=     1; break;
     case buttonUp:    ScreenPos -= 0x100; break;
     case buttonDown:  ScreenPos += 0x100; break;
+    case 127:                   // Delete key (also the [A] button...)
+      if ((ScreenPos & 255) >= 6)
+        ScreenPos -= 6;
+      break;
     default:
       putchar(c);               // Put character on screen
       break;

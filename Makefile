@@ -142,11 +142,14 @@ lcc:
 libSources:=$(wildcard Libs/*/*.c)
 libObjects:=$(libSources:.c=.o)
 
-.SECONDARY: # Keep intermeditate .o files
+.SECONDARY: # Instructs 'make' not to delete intermeditate .o files
 %.gt1: %.o $(libObjects)
 	$(CC) $^ -o $@
 
 ctest: Libs/Example.gt1
+
+cclean:
+	rm -f Libs/Example.gt1 Libs/*.o Libs/*/*.o
 
 # Moon shot for C compiler: MSCP 1.4 (Marcel's Simple Chess Program)
 # Doesn't work yet. Use as guinea pig to help mature our standard C library
