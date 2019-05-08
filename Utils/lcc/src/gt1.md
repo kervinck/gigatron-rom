@@ -612,6 +612,10 @@ static void canonicalize(Node* pp) {
 			Node k = p->kids[0];
 			p->kids[0] = p->kids[1];
 			p->kids[1] = k;
+			switch (generic(p->op)) {
+			case GT: case LT: p->op ^= GT^LT; break;
+			case GE: case LE: p->op ^= GE^LE; break;
+			}
 		}
 		if (range(p->kids[1], 0, 0) != 0) {
 			// TODO: check for opposite signs if this is a signed compare. This is relatively complicated, as it
@@ -843,8 +847,8 @@ static void inst_blkcopy(Node p) {
 
 static int localoffset(Node addr) {
 	if (generic(addr->op) == ADDRF) {
-		// Args end at sp + 2 + framesize + saversize + argsize.
-		return 2 + argdepth + framesize + saversize + argsize - addr->syms[0]->x.offset;
+		// Args start at sp + 2 + framesize + saversize
+		return 2 + argdepth + framesize + saversize + addr->syms[0]->x.offset;
 	}
 
 	// Locals end at sp + 2 + framesize.
@@ -1093,11 +1097,41 @@ static void inst_bcom(Node p) {
 	}
 }
 
+static int fargsize(Type ty) { // size of all formal arguments
+	assert(isfunc(ty) && hasproto(ty));
+	int size = isstruct(ty->type) ? 2 : 0; // one hidden argument for struct return
+	for (int i = 0; ty->u.f.proto[i]; i++) {
+		if (ty->u.f.proto[i] == voidtype) {
+			break; // void or variadic function
+		}
+		size += 2;
+	}
+	return size;
+}
+
 static void inst_call(Node p) {
 	if (getregnum(p->kids[0]) == 0) {
 		print("asm.call('vAC')\n");
 	} else {
 		print("asm.call('r%d')\n", getregnum(p->kids[0]));
+	}
+
+	int vargsize = 0;
+	Type fntype = p->kids[0]->syms[0]->type;
+	if (hasproto(fntype)) {
+		vargsize = argdepth - fargsize(fntype);
+	}
+	assert(vargsize >= 0);
+
+	if (vargsize > 0) {
+		assert(variadic(fntype));
+		if (vargsize < 256) {
+			print("asm.ldi(%d)\n", vargsize);
+		} else {
+			print("asm.ldwi(%d)\n", vargsize);
+		}
+		print("asm.addw('sp')\n");
+		print("asm.stw('sp')\n");
 	}
 	argdepth = 0;
 }
@@ -1198,11 +1232,11 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 	for (int i = 0; callee[i]; i++) {
 		Symbol p = callee[i], q = caller[i];
 		assert(q);
-		offset += roundup(q->type->size, 2);
 		debug(fprint(stderr, "parameter %s of size %d @ offset %d\n", p->name, p->type->size, offset));
 		p->x.offset = q->x.offset = offset;
 		p->x.name = q->x.name = stringf("%d", p->x.offset);
 		p->sclass = q->sclass = AUTO;
+		offset += roundup(q->type->size, 2);
 	}
 	argsize = offset;
 	offset = maxoffset = 0;
@@ -1320,7 +1354,7 @@ static void space(int n) {
 	print("asm.dx([0] * %d)\n", n);
 }
 Interface gt1IR = {
-        //size align outofline
+	//size align outofline
 	1, 1, 0,  /* char */
 	2, 1, 0,  /* short */
 	2, 1, 0,  /* int */
@@ -1335,7 +1369,7 @@ Interface gt1IR = {
 	0,        /* mulops_calls */
 	0,        /* wants_callb */
 	0,        /* wants_argb */
-	1,        /* left_to_right */
+	0,        /* left_to_right */
 	0,        /* wants_dag */
 	1,        /* unsigned_char */
 	NULL /*address*/, // 2019-04-30 (marcelk) TODO: Enable when asm.py can evaluate symbol offsets

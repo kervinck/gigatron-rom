@@ -1,4 +1,3 @@
-
 #include <Gigatron.h>
 #include <stdio.h>
 
@@ -24,6 +23,7 @@ int putchar(int c)
       Newline();
 
     // Ignore non-printable characters
+    // XXX This still can print rubish?
     i = c - 32;
     if ((unsigned)i >= 128-32)
       break;
@@ -58,6 +58,5 @@ int putchar(int c)
     ScreenPos += 6;
   } while (0);
 
-  return 0;
+  return c;
 }
-

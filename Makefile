@@ -129,8 +129,8 @@ burn85:
 
 LCCDIR:=Utils/lcc/build
 export LCCDIR
-CC:=$(LCCDIR)/lcc
-CFLAGS:=-ILibs
+LCC:=$(LCCDIR)/lcc
+LCCFLAGS:=-ILibs
 
 lcc:
 	mkdir -p $(LCCDIR)
@@ -138,14 +138,14 @@ lcc:
 	cd Utils/lcc && env HOSTFILE=etc/gt1h.c make all gttest
 
 %.o: %.c $(wildcard Libs/*.h)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(LCC) $(LCCFLAGS) -c $< -o $@
 
 libSources:=$(wildcard Libs/*/*.c)
 libObjects:=$(libSources:.c=.o)
 
 .SECONDARY: # Instructs 'make' not to delete intermeditate .o files
 %.gt1: %.o $(libObjects)
-	$(CC) $^ -o $@
+	$(LCC) $^ -o $@
 
 ctest: Libs/Example.gt1
 
@@ -156,7 +156,7 @@ cclean:
 # Doesn't work yet. Use as guinea pig to help mature our standard C library
 mscp: Contrib/kervinck/mscp.gt1
 Contrib/kervinck/mscp.o: Contrib/kervinck/mscp.c $(wildcard Libs/*.h)
-	$(CC) $(CFLAGS) -N -P -A -v -c $< -o $@
+	$(LCC) $(LCCFLAGS) -N -P -A -v -c $< -o $@
 
 todo:
 	@git ls-files | sed 's/ /\\ /g' | xargs grep -I -E '(TODO|XXX)'

@@ -5,8 +5,13 @@
  |                                                                      |
  +----------------------------------------------------------------------*/
 
-#include <Gigatron.h>
+// Standard includes
+#include <limits.h>
+#include <stdarg.h>
 #include <stdio.h>
+
+// System include
+#include <Gigatron.h>
 
 /*----------------------------------------------------------------------+
  |      main                                                            |
@@ -14,10 +19,23 @@
 
 int main(void)
 {
-  puts("Hello Gigatron! How are you today?");
+  char *name = "Gigatron";
+  char punct = '!';
+  char text[64];
+
+  sprintf(text, "Hello %s%c How are you today? %d%%?", name, punct, 100);
+  puts(text);
+
   BusyWait(60);                 // Wait one second
 
   ClearScreen();
+
+  // Demo printf and varargs
+  printf("%d %d %u\n",          1972, -327, UINT_MAX);
+  printf("%07d %07d %07u\n",    1972, -327, UINT_MAX);
+  printf("%+7d %+7d %+7u\n",    1972, -327, UINT_MAX);
+  printf("%+07d %+07d %+07u\n", 1972, -327, UINT_MAX);
+
   puts("Ready");
 
   BgColor = LightBlue;          // Slightly different for effect

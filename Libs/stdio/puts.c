@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 
 /*
@@ -12,4 +11,3 @@ int puts(const char *s)
   putchar('\n');
   return 0;
 }
-
