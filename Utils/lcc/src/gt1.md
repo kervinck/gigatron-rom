@@ -1377,7 +1377,7 @@ Interface gt1IR = {
 	0,        /* left_to_right */
 	0,        /* wants_dag */
 	1,        /* unsigned_char */
-	address,
+	NULL/*address*/, // 2019-05-11 (marcelk) Symbol offset evaluation doesn't work yet
 	blockbeg,
 	blockend,
 	defaddress,
