@@ -1116,23 +1116,28 @@ static void inst_call(Node p) {
 		print("asm.call('r%d')\n", getregnum(p->kids[0]));
 	}
 
-	int vargsize = 0;
-	Type fntype = p->kids[0]->syms[0]->type;
-	if (hasproto(fntype)) {
-		vargsize = argdepth - fargsize(fntype);
-	}
-	assert(vargsize >= 0);
-
-	if (vargsize > 0) {
-		assert(variadic(fntype));
-		if (vargsize < 256) {
-			print("asm.ldi(%d)\n", vargsize);
-		} else {
-			print("asm.ldwi(%d)\n", vargsize);
+	// Handle "extra" arguments to variadic functions
+	// XXX This doesn't yet work for the case where the variadic
+	//     function is called through a function pointer, because
+	//     then the function type seems to be lost in the dag?!?!
+	Symbol fnsym = p->kids[0]->syms[0];
+	Type fntype = (fnsym != NULL) ? fnsym->type : NULL;
+	debug(fprint(stderr, "(inst_call fntype %p)\n", fntype));
+	if (fntype != NULL && hasproto(fntype)) {
+		int vargsize = argdepth - fargsize(fntype);
+		assert(vargsize >= 0);
+		if (vargsize > 0) {
+			assert(variadic(fntype));
+			if (vargsize < 256) {
+				print("asm.ldi(%d)\n", vargsize);
+			} else {
+				print("asm.ldwi(%d)\n", vargsize);
+			}
+			print("asm.addw('sp')\n");
+			print("asm.stw('sp')\n");
 		}
-		print("asm.addw('sp')\n");
-		print("asm.stw('sp')\n");
 	}
+
 	argdepth = 0;
 }
 
