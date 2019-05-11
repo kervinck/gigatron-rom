@@ -1,4 +1,5 @@
 from copy import copy
+from re import findall
 from sys import stderr
 
 global_labels = {
@@ -107,7 +108,7 @@ class Inst:
             segment.emitb(0x90, displacement(self.operand) & 0xff)
         else:
             print(f'emitting far jump from {self.addr:x} to {self.operand:x}', file=log.f)
-            Inst.ldwi(self.operand - 2).emit(segment)
+            Inst.ldwi(displacement(self.operand)).emit(segment)
             segment.emitb(0xf3, global_labels['pvpc'])
 
     @staticmethod
@@ -193,7 +194,7 @@ class Inst:
     @staticmethod
     def dx(x): return Inst('dx', x, len(x), False, lambda i, s: s.emit(bytes(x)))
     @staticmethod
-    def dc(l): return Inst('dc', l, 2, False, lambda i, s: s.emit(bytes([(i.operand - 2) & 0xff, ((i.operand - 2) >> 8) & 0xff])))
+    def dc(l): return Inst('dc', l, 2, False, lambda i, s: s.emit(bytes([displacement(i.operand) & 0xff, displacement(i.operand) >> 8])))
     @staticmethod
     def dl(l): return Inst('dl', l, sum([i.size for i in l]), False, None)
 
@@ -359,17 +360,26 @@ def link(entry, outf, logf):
                 print(f'far jump from {pc:x} to {0 if target is None else target:x}', file=log.f)
                 inst.size = 5
 
+    def calctarget(symbolexpr, symboltable):
+        """Resolve symbol or symbol expression such as '.L99+100-1'"""
+        terms = findall(r'[^+-]+|[+-][0-9]+', symbolexpr)
+        if terms[0] in symboltable:
+            return symboltable[terms[0]] + sum([int(t) for t in terms[1:]])
+        else:
+            return None
+
     def resolve_operand(inst, seg, pc):
         if type(inst.operand) is str:
-            if inst.operand in labels:
-                inst.operand = labels[inst.operand]
+            target = calctarget(inst.operand, labels)
+            if target is not None:
+                inst.operand = target
             elif inst.opcode == 'ldwi':
                 seg.reloc(pc + 1, inst.operand)
-                inst.operand = 0x102e
+                inst.operand = 0 # Operand goes through relocs{} from here
             else:
                 assert(inst.opcode == 'dw')
                 seg.reloc(pc, inst.operand)
-                inst.operand = 0x102e
+                inst.operand = 0 # Operand goes through relocs{} from here
 
     def layout(seg, sidx, func, emitting):
         pc, remaining = seg.pc(), seg.remaining()
@@ -483,7 +493,7 @@ def link(entry, outf, logf):
 
     for s in segments:
         for offset, label in s.relocs.items():
-            target = funclabels[label]
+            target = calctarget(label, funclabels)
             print(f'reloc: {label} -> {target:x} @ {offset:x}', file=log.f)
             s.buffer[offset] = target & 0xff
             s.buffer[offset + 1] = (target >> 8) & 0xff

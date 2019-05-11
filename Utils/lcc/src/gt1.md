@@ -1372,7 +1372,7 @@ Interface gt1IR = {
 	0,        /* left_to_right */
 	0,        /* wants_dag */
 	1,        /* unsigned_char */
-	NULL /*address*/, // 2019-04-30 (marcelk) TODO: Enable when asm.py can evaluate symbol offsets
+	address,
 	blockbeg,
 	blockend,
 	defaddress,
