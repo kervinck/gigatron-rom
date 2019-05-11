@@ -64,15 +64,15 @@ class Segment:
     def write(self, stream):
         if len(self.buffer) != 0:
             print(f'writing segment {self.address:x}:{self.pc():x}', file=log.f)
-            stream.write(bytes([self.address >> 8 & 0xff, self.address & 0xff, len(self.buffer)]))
+            stream.write(bytes([self.address >> 8 & 0xff, self.address & 0xff, len(self.buffer) & 0xff]))
             stream.write(self.buffer)
 
-def displacement(target):
+def prev(address, step=2):
     """Subtract 2 while staying in the same page
 
       This is needed for target calculations because vCPU always
       increments [vPC] by 2 *before* fetching the next opcode."""
-    return (target & 0xff00) + ((target - 2) & 0xff)
+    return (address & 0xff00) | ((address - step) & 0x00ff)
 
 class Inst:
     def __init__(self, opcode, operand, size, branch, emit):
@@ -92,24 +92,24 @@ class Inst:
             # far jump
             assert(self.size == 8)
             print(f'emitting far branch from {self.addr:x} to {self.operand:x}', file=log.f)
-            skip = self.addr + 8
-            segment.emit(bytes([0x35, far, displacement(skip) & 0xff])) # bcc <far> <skip>
-            segment.emitw(0x11, displacement(self.operand)) # ldwi <target>
-            segment.emitb(0xf3, global_labels['pvpc'])    # doke vpc
+            skip = prev(self.addr, step=2-8);
+            segment.emit(bytes([0x35, far, skip & 0xff]))               # BCC <far> <skip>
+            segment.emitw(0x11, prev(self.operand))                     # LDWI <target>
+            segment.emitb(0xf3, global_labels['pvpc'])                  # DOKE pvpc
         else:
             # near jump
             assert(self.size == 3)
             print(f'emitting near branch from {self.addr:x} to {self.operand:x}', file=log.f)
-            segment.emit(bytes([0x35, near, displacement(self.operand) & 0xff]))
+            segment.emit(bytes([0x35, near, prev(self.operand) & 0xff]))# BCC <near> <target>
 
     def emitj(self, segment):
         if self.operand & 0xff00 == self.addr & 0xff00:
             print(f'emitting near jump from {self.addr:x} to {self.operand:x}', file=log.f)
-            segment.emitb(0x90, displacement(self.operand) & 0xff)
+            segment.emitb(0x90, prev(self.operand) & 0xff)              # BRA <target>
         else:
             print(f'emitting far jump from {self.addr:x} to {self.operand:x}', file=log.f)
-            Inst.ldwi(displacement(self.operand)).emit(segment)
-            segment.emitb(0xf3, global_labels['pvpc'])
+            Inst.ldwi(prev(self.operand)).emit(segment)
+            segment.emitb(0xf3, global_labels['pvpc'])                  # DOKE pvpc
 
     @staticmethod
     def glob(name): return Inst('glob', name, 0, False, lambda i, s: None)
@@ -194,7 +194,7 @@ class Inst:
     @staticmethod
     def dx(x): return Inst('dx', x, len(x), False, lambda i, s: s.emit(bytes(x)))
     @staticmethod
-    def dc(l): return Inst('dc', l, 2, False, lambda i, s: s.emit(bytes([displacement(i.operand) & 0xff, displacement(i.operand) >> 8])))
+    def dc(l): return Inst('dc', l, 2, False, lambda i, s: s.emit(bytes([prev(i.operand) & 0xff, prev(i.operand) >> 8])))
     @staticmethod
     def dl(l): return Inst('dl', l, sum([i.size for i in l]), False, None)
 

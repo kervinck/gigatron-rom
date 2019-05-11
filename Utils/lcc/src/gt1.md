@@ -1320,7 +1320,7 @@ static void address(Symbol q, Symbol p, long n) {
 		q->x.name = stringf("%s%s%D", p->x.name, n >= 0 ? "+" : "", n);
 	} else {
 		assert(n <= INT_MAX && n >= INT_MIN);
-		q->x.offset = p->x.offset - n;
+		q->x.offset = p->x.offset + n;
 		q->x.name = stringd(q->x.offset);
 	}
 }
@@ -1377,7 +1377,7 @@ Interface gt1IR = {
 	0,        /* left_to_right */
 	0,        /* wants_dag */
 	1,        /* unsigned_char */
-	NULL/*address*/, // 2019-05-11 (marcelk) Symbol offset evaluation doesn't work yet
+	address,
 	blockbeg,
 	blockend,
 	defaddress,

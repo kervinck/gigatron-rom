@@ -294,9 +294,10 @@ void runTest(char *romfile, char *testfile, char *logfile, SysHook sys1)
 		}
 		fread(&alo, 1, sizeof alo, fp);
 		fread(&sz, 1, sizeof sz, fp);
-		fread(&RAM[((uint16_t)ahi<<8) | (uint16_t)alo], 1, sz, fp);
+		int size = sz ? sz : 256;
+		fread(&RAM[((uint16_t)ahi<<8) | (uint16_t)alo], 1, size, fp);
 		if (log) {
-			fprintf(log, "Loaded segment %d of %d bytes at 0x%04x\n", i, sz, ((uint16_t)ahi<<8) | (uint16_t)alo);
+			fprintf(log, "Loaded segment %d of %d bytes at 0x%04x\n", i, size, ((uint16_t)ahi<<8) | (uint16_t)alo);
 		}
 	}
 
