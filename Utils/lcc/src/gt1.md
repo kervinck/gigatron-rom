@@ -846,21 +846,23 @@ static void inst_blkcopy(Node p) {
 }
 
 static int localoffset(Node addr) {
+	int offs;
 	if (generic(addr->op) == ADDRF) {
 		// Args start at sp + 2 + framesize + saversize
-		return 2 + argdepth + framesize + saversize + addr->syms[0]->x.offset;
+		offs = 2 + argdepth + framesize + saversize + addr->syms[0]->x.offset;
+	} else {
+		assert(generic(addr->op) == ADDRL);
+		// Locals start at sp + 2
+		offs = 2 + argdepth + addr->syms[0]->x.offset;
 	}
-
-	// Locals end at sp + 2 + framesize.
-	assert(generic(addr->op) == ADDRL);
-	return 2 + argdepth + framesize - addr->syms[0]->x.offset;
+	assert(offs >= 2);
+	return offs;
 }
 
 static void inst_ldloc(Node p) {
 	assert(getregnum(p) == 0);
 
 	int offs = localoffset(p->kids[0]);
-	assert(offs >= 0);
 
 	if (offs < 256) {
 		print("asm.ldi(%d)\n", offs);
@@ -874,7 +876,6 @@ static void inst_stloc(Node p) {
 	assert(getregnum(p->kids[1]) == 0);
 
 	int offs = localoffset(p->kids[0]);
-	assert(offs >= 0);
 
 	print("asm.stw('ha')\n");
 	if (offs < 256) {
@@ -1205,25 +1206,26 @@ static void local(Symbol p) {
 	}
 	if (askregvar(p, (*IR->x.rmap)(ttob(p->type))) == 0) {
 		assert(p->sclass == AUTO);
-		offset += p->type->size;
-		debug(fprint(stderr, "local %s of size %d @ offset %d\n", p->name, p->type->size, offset));
 		p->x.offset = offset;
+		debug(fprint(stderr, "local %s of size %d @ offset %d\n", p->name, p->type->size, offset));
 		p->x.name = stringd(offset);
+		offset += p->type->size;
 	}
 }
 static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 	// Frame:
 	//
-	// +-------------------------------+
+	// +-------------------------------+ <- highest address
 	// | Incoming arguments            |
 	// +-------------------------------+ <- original sp
 	// | Saved registers               | <- saversize bytes
 	// +-------------------------------+
 	// | Locals                        | <- framesize bytes
-	// +-------------------------------+ <- sp
+	// +-------------------------------+
+	// | 2 bytes before first local    | <- sp
 	//
-	// - Args end at sp + framesize + saversize
-	// - Locals end at sp
+	// - Args start at sp + 2 + framesize + saversize
+	// - Locals start at sp + 2
 
 	debug(fprint(stderr, "(function %s)\n", f->x.name));
 	print("asm.defun('%s')\n", f->x.name);
@@ -1246,9 +1248,11 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 	argsize = offset;
 	offset = maxoffset = 0;
 
+	// Process function body (but don't emit yet)
 	gencode(caller, callee);
 
 	framesize = maxoffset;
+	// Put vLR on call stack
 	print("asm.push()\n");
 
 	// Save any registers that are used by this function.
@@ -1265,7 +1269,7 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 		print("asm.ldwi(0x%x)\n", entermask);
 		print("asm.call('enter')\n");
 	}
-
+	// Setup data stack for local variables
 	if (framesize > 0) {
 		if (framesize < 256) {
 			print("asm.ldw('sp')\n");
@@ -1280,25 +1284,30 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 	debug(fprintf(stderr, "framesize: %d, saversize: %d, argsize: %d\n", framesize, saversize, argsize));
 	emitcode();
 
+	// Remove local variables from data stack
 	if (framesize > 0) {
 		print("asm.%s(%d)\n", framesize < 256 ? "ldi" : "ldwi", framesize);
 		print("asm.addw('sp')\n");
 		print("asm.stw('sp')\n");
 	}
+	// Restore registers used by this function
 	if (leavemask != 0) {
 		print("asm.ldwi(0x%x)\n", leavemask);
 		print("asm.call('leave')\n");
 	}
+	// Remove formal arguments from data stack
 	if (argsize > 0) {
 		print("asm.%s(%d)\n", argsize < 256 ? "ldi" : "ldwi", argsize);
 		print("asm.addw('sp')\n");
 		print("asm.stw('sp')\n");
 	}
 
+	// Optional return value
 	if (f->type->type != voidtype) {
 		print("asm.ldw('rv')\n");
 	}
 
+	// Return to caller
 	print("asm.pop()\n");
 	print("asm.ret()\n");
 
