@@ -7,7 +7,9 @@
 int puts(const char *s)
 {
   for (; *s; s++)
-    putchar(*s);
-  putchar('\n');
-  return 0;
+    if (putc(*s, stdout) < 0)
+      return EOF;
+  if (putc('\n', stdout) < 0)
+    return EOF;
+  return fflush(stdout);
 }

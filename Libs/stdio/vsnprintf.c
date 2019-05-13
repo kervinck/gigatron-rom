@@ -13,7 +13,6 @@
  *  from https://github.com/kervinck/gigatron-rom for terms and conditions.
  */
 
-// TODO Handle EOF error from putc
 // TODO Handle size, flags, width and precision
 // TODO Implement %o %x %X %p
 // TODO Cross-check with C89 standard instead of K&R2
@@ -35,11 +34,9 @@
  *  Our vsnprintf can work with string outputs and streams. This way
  *  we don't need to duplicate the implementation for the formatting
  *  logic, or work with intermediate buffers in memory. Strings are
- *  char pointers into memory. Streams are special pointer values
- *  representing file descriptors, and not true FILE* pointers.
- *  XXX For now, we even only recognize NULL/0 for stdout and/or stdin.
+ *  char pointers into memory. Streams are passed through the "backdoor"
+ *  as `size' and marked with a NULL value for `str'.
  */
-#define _isstream(str) ((int)(str) == 0)
 
 /*----------------------------------------------------------------------+
  |      Data                                                            |
@@ -53,7 +50,7 @@ static const unsigned radixtable[] = { 1, 10, 100, 1000, 10000 };
 
 // Helpers
 static const char *_parsenum(const char *str, int *num);
-static char *_charout(int c, char *str);
+static int _discard(int c, FILE *stream);
 
 /*----------------------------------------------------------------------+
  |       vsnprintf                                                      |
@@ -61,20 +58,38 @@ static char *_charout(int c, char *str);
 
 int vsnprintf(char *str, size_t size, const char *format, va_list ap)
 {
-  #define charout(c) (str = _charout((c), str))
   enum { minus = 1, plus = 2, zero = 4, space = 8, hash = 16 };
 
   int count = 0; // Return value is the number of chars produced
   int flags, width, precision;
 
   // For conversion
-  int sign, r, digit, m, radix;
+  int sign, i, digit, m, radix;
   const char *s;
+
+  struct _iobuf strbuf, *stream;
+
+  // Write out strings through a dummy FILE structure instead of str
+  #define charout(c) do{\
+    if (putc(c, stream) < 0)\
+      return EOF;\
+    count++;\
+  }while(0)
+
+  // String or stream?
+  if (str) {                    // String
+    if (size == 0)
+      return 0;                 // No space for anything
+    strbuf._ptr = str;
+    strbuf._avail = size;
+    strbuf._flush = _discard;
+    stream = &strbuf;
+  } else                        // Stream
+    stream = (FILE*)size;
 
   for (; *format; format++) {
     if (*format != '%') {
       charout(*format);         // Verbatim
-      count++;
       continue;
     }
     // Process formatter in the remainder of body
@@ -146,14 +161,13 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
 
       if (sign && (flags & zero)) {
         charout(sign);          // Emit sign first when padding with zeroes
-        count++;
         sign = 0;
         digit += '0';           // digit != 0 causes padding with zeroes
       }
 
       // Emit digits
-      for (r=4; r>=0; r--) {
-        radix = radixtable[r];  // Simpler and faster than division/modulo
+      for (i=4; i>=0; i--) {
+        radix = radixtable[i];  // Simpler and faster than division/modulo
         while (1) {
           m -= radix;
           if (m < 0)            // This relies on signed overflow for %u
@@ -163,37 +177,29 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
         m += radix;
 
         if (digit || radix == 1U) {// Non-zero or last digit?
-          while (--width > r) { // Padding with spaces or zeroes
+          while (--width > i)   // Padding with spaces or zeroes
             charout(flags & zero ? '0' : ' ');
-            count++;
-          }
           if (sign) {
             charout(sign);      // Emit sign before first digit
-            count++;
             sign = 0;
           }
           charout(digit|'0');   // Emit digit as printable ASCII
-          count++;
           digit = '0';          // Enable all following digits
         }
       }
       break;
     case 'c':                   // int: single character, cast to unsigned char
       charout(va_arg(ap, unsigned char));
-      count++;
       break;
     case 's':                   // char*s: string
-      for (s=va_arg(ap, const char*); *s; s++) {
+      for (s=va_arg(ap, const char*); *s; s++)
         charout(*s);
-        count++;
-      }
       break;
     case 'n':                   // int*n: count write-back, no conversion
       *va_arg(ap, int*) = count;
       break;
     case '%':                   // literal %-sign, no conversion
       charout('%');
-      count++;
       break;
 #if 0
     case 'o':                   // int: unsigned octal (without a leading zero)
@@ -210,8 +216,8 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
     }
   }
 
-  if (!_isstream(str))
-    *str = '\0';                // Terminating zero for strings
+  if (str)
+    *stream->_ptr = '\0';       // Terminating zero for strings
 
   return count;
 }
@@ -234,13 +240,12 @@ static const char *_parsenum(const char *s, int *num)
   return s;
 }
 
-static char *_charout(int c, char *str)
+/*
+ *  Throw away chars that don't fit in the caller's string space
+ */
+static int _discard(int c, FILE *stream)
 {
-  if (_isstream(str))
-    putc(c, (FILE*)str);        // To stream
-  else
-    *str++ = c;                 // To string
-  return str;
+  return (stream->_avail = 1);
 }
 
 /*----------------------------------------------------------------------+

@@ -6,7 +6,7 @@
 int fputs(const char *s, FILE *stream)
 {
   for (; *s; s++)
-    if (putc(*s, stream) == EOF)
+    if (putc(*s, stream) < 0)
       return EOF;
-  return 0;
+  return fflush(stream);
 }

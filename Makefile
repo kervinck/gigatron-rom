@@ -131,6 +131,7 @@ LCCDIR:=Utils/lcc/build
 export LCCDIR
 LCC:=$(LCCDIR)/lcc
 LCCFLAGS:=-ILibs
+#LCCFLAGS:=-ILibs -Wf-d -Wa-d
 
 lcc:
 	mkdir -p $(LCCDIR)
@@ -145,7 +146,7 @@ libObjects:=$(libSources:.c=.o)
 
 .SECONDARY: # Instructs 'make' not to delete intermeditate .o files
 %.gt1: %.o $(libObjects)
-	$(LCC) $^ -o $@
+	$(LCC) $(LCCFLAGS) $^ -o $@
 
 ctest: Libs/Example.gt1
 

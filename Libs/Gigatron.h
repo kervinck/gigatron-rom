@@ -93,6 +93,7 @@ void Newline(void);
 word Random(void);
 byte WaitKey(void);
 void BusyWait(int frames);
+void PutChar(int c);
 
 // Not implemented and/or decided:
 void VideoScrollY(int dy);

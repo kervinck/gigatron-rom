@@ -7,7 +7,7 @@ int fprintf(FILE *stream, const char *format, ...)
   int r;
   va_list ap;
   va_start(ap, format);
-  r = vsnprintf((char*)stream, UINT_MAX, format, ap);
+  r = vsnprintf(NULL, (size_t)stream, format, ap);
   va_end(ap);
   return r;
 }

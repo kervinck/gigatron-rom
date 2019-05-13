@@ -23,7 +23,7 @@ int main(void)
   char punct = '!';
   char text[64];
 
-  sprintf(text, "Hello %s%c How are you today? %d%%?", name, punct, 100);
+  snprintf(text, sizeof text, "Hello %s%c How are you today? %d%%?", name, punct, 100);
   puts(text);
 
   BusyWait(60);                 // Wait one second
@@ -42,12 +42,12 @@ int main(void)
   while (1) {
     int c;
 
-    putchar(127);               // Cursor symbol
+    PutChar(127);               // Cursor symbol
     ScreenPos -= 6;             // Go back
 
     c = WaitKey();
 
-    putchar(' ');               // Remove cursor
+    PutChar(' ');               // Remove cursor
     ScreenPos -= 6;             // Go back
 
     switch (c) {                // Handle arrow keys and/or buttons
@@ -60,7 +60,7 @@ int main(void)
         ScreenPos -= 6;
       break;
     default:
-      putchar(c);               // Put character on screen
+      PutChar(c);               // Put character on screen
       break;
     }
   }
