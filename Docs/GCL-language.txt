@@ -308,7 +308,7 @@ PEEK  -        Read byte from memory (vAC=[vAC])
 DEEK  -        Read word from memory (vAC=[vAC]+256*[vAC+1])
 POKE  $DD      Write byte in memory ([[D+1],[D]]=vAC&255)
 DOKE  $DD      Write word in memory ([[D+1],[D]],[[D+1],[D]+1]=vAC&255,vAC>>8)
-LUP   $DD      ROM lookup, needs trampoline in target page (vAC=ROM[D,vAC])
+LUP   $DD      ROM lookup, needs trampoline in target page (vAC=ROM[vAC+D])
 BRA   $DD      Branch unconditionally (vPC=(vPC&0xff00)+D)
 BCC   $CC $DD  Test vAC and branch conditionally. CC can be EQ,NE,LT,GT,LE,GE
 CALL  $DD      Goto address but remember vPC (vLR,vPC=vPC+2,[D]+256*[D+1]-2)

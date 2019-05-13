@@ -1341,7 +1341,7 @@ ld([vLR])                       #17
 bra('next1')                    #18
 st([X])                         #19
 
-# Instruction LUP: ROM lookup (AC=ROM[AC+256*D]), 26 cycles
+# Instruction LUP: ROM lookup (AC=ROM[vAC+D]), 26 cycles
 label('LUP')
 ld([vAC+1], Y)                  #10
 jmpy(251);                      C('Trampoline offset')#11
