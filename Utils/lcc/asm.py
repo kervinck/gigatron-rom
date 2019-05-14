@@ -125,6 +125,12 @@ class Inst:
     @staticmethod
     def stw(d): return Inst('stw', d, 2, False, lambda i, s: s.emitb(0x2b, i.operand))
     @staticmethod
+    def ldlw(d): return Inst('ldlw', d, 2, False, lambda i, s: s.emitb(0xee, i.operand))
+    @staticmethod
+    def stlw(d): return Inst('stlw', d, 2, False, lambda i, s: s.emitb(0xec, i.operand))
+    @staticmethod
+    def alloc(d): return Inst('alloc', d, 2, False, lambda i, s: s.emitb(0xdf, i.operand))
+    @staticmethod
     def jeq(l): return Inst('jeq', l, 8, True, lambda i, s: i.emitjcc(s, 0x3f, 0x72))
     @staticmethod
     def jne(l): return Inst('jne', l, 8, True, lambda i, s: i.emitjcc(s, 0x72, 0x3f))
@@ -213,6 +219,9 @@ def ldwi(con): func.append(Inst.ldwi(con))
 def ld(d): func.append(Inst.ld(d))
 def ldw(d): func.append(Inst.ldw(d))
 def stw(d): func.append(Inst.stw(d))
+def ldlw(d): func.append(Inst.ldlw(d))
+def stlw(d): func.append(Inst.stlw(d))
+def alloc(d): func.append(Inst.alloc(d))
 def jeq(l): func.append(Inst.jeq(l))
 def jne(l): func.append(Inst.jne(l))
 def jge(l): func.append(Inst.jge(l))
