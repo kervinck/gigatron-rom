@@ -24,6 +24,7 @@ global_labels = {
     'r13': 0x0048,
     'r14': 0x004a,
     'r15': 0x004c,
+    'SYS_LSRW1_48' : 0x0600,
 }
 
 class Log:
