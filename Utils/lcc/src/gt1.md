@@ -64,7 +64,9 @@ static void inst_lsh(Node);
 static void inst_rsh(Node);
 static void inst_mul(Node);
 static void inst_mod(Node);
+static void inst_modu(Node);
 static void inst_div(Node);
+static void inst_divu(Node);
 static void inst_trunc(Node);
 static void inst_sext(Node);
 static void inst_neg(Node);
@@ -416,9 +418,9 @@ reg: RSHU2(reg, reg)  `inst_rsh` 1
 reg: MULI2(reg, reg)   `inst_mul` 1
 reg: MULU2(reg, reg)   `inst_mul` 1
 reg: MODI2(reg, reg)   `inst_mod` 1
-reg: MODU2(reg, reg)   `inst_mod` 1
+reg: MODU2(reg, reg)   `inst_modu` 1
 reg: DIVI2(reg, reg)   `inst_div` 1
-reg: DIVU2(reg, reg)   `inst_div` 1
+reg: DIVU2(reg, reg)   `inst_divu` 1
 
 reg: CVII1(reg)  `inst_trunc` 1
 reg: CVII2(reg)  `inst_sext` 1
@@ -1054,12 +1056,25 @@ static void inst_mul(Node p) {
 }
 
 static void inst_mod(Node p) {
-	print("asm.call('mod')\n");
+	print("asm.call('div')\n");
+	print("asm.ldw('ht')\n");
+	ensurereg(p);
+}
+
+static void inst_modu(Node p) {
+	print("asm.call('divu')\n");
+	print("asm.ldw('ht')\n");
 	ensurereg(p);
 }
 
 static void inst_div(Node p) {
 	print("asm.call('div')\n");
+	ensurereg(p);
+}
+
+static void inst_divu(Node p) {
+	print("asm.call('divu')\n");
+	print("asm.ldw('r1')\n");
 	ensurereg(p);
 }
 
