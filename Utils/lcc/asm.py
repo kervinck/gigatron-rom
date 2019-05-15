@@ -232,8 +232,8 @@ def jle(l): func.append(Inst.jle(l))
 def jlt(l): func.append(Inst.jlt(l))
 def ldi(con): func.append(Inst.ldi(con))
 def st(d): func.append(Inst.st(d))
-#def pop(): func.append(Inst.pop()) #Avoid bare POP because thunk clobbers vLR
-def popret(): func.append(Inst.popret())
+def pop(): func.append(Inst.pop())# Avoid because any following thunk clobbers vLR
+def popret(): func.append(Inst.popret())# Combined POP+RET
 def push(): func.append(Inst.push())
 def lup(d): func.append(Inst.lup(d))
 def andi(con): func.append(Inst.andi(con))
