@@ -1323,8 +1323,7 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
 	}
 
 	// Return to caller
-	print("asm.pop()\n");
-	print("asm.ret()\n");
+	print("asm.popret()\n");
 
 	infunction = 0;
 }

@@ -149,6 +149,8 @@ class Inst:
     @staticmethod
     def pop(): return Inst('pop', None, 1, False, lambda i, s: s.emit(bytes([0x63])))
     @staticmethod
+    def popret(): return Inst('popret', None, 2, False, lambda i, s: s.emit(bytes([0x63, 0xff])))
+    @staticmethod
     def push(): return Inst('push', None, 1, False, lambda i, s: s.emit(bytes([0x75])))
     @staticmethod
     def lup(d): return Inst('lup', d, 2, False, lambda i, s: s.emitb(0x7f, i.operand))
@@ -230,7 +232,8 @@ def jle(l): func.append(Inst.jle(l))
 def jlt(l): func.append(Inst.jlt(l))
 def ldi(con): func.append(Inst.ldi(con))
 def st(d): func.append(Inst.st(d))
-def pop(): func.append(Inst.pop())
+#def pop(): func.append(Inst.pop()) #Avoid bare POP because thunk clobbers vLR
+def popret(): func.append(Inst.popret())
 def push(): func.append(Inst.push())
 def lup(d): func.append(Inst.lup(d))
 def andi(con): func.append(Inst.andi(con))
