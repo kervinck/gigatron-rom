@@ -504,6 +504,9 @@ def link(entry, outf, logf):
     for s in segments:
         for offset, label in s.relocs.items():
             target = calctarget(label, funclabels)
+            if target is None:
+                print(f'Undefined symbol: {label}')
+                exit(1)
             print(f'reloc: {label} -> {target} @ {offset}', file=log.f)
             s.buffer[offset] = target & 0xff
             s.buffer[offset + 1] = (target >> 8) & 0xff
