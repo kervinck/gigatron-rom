@@ -397,7 +397,7 @@ def link(entry, outf, logf):
     def layout(seg, sidx, func, emitting):
         pc, remaining = seg.pc(), seg.remaining()
         pending_labels = []
-        changed = False
+        changed, clobber_vLR = False, False
         for i in range(0, len(func)):
             inst = func[i]
 
@@ -420,6 +420,10 @@ def link(entry, outf, logf):
                 else:
                     # If this is segment 0, fail.
                     assert(sidx != 0)
+
+                    # Setup warning if function doesn't push vLR
+                    if 'push' not in [func[j].opcode for j in range(i)]:
+                        clobber_vLR = True
 
                     sidx += 1
                     nextseg = segments[sidx]
@@ -468,17 +472,19 @@ def link(entry, outf, logf):
         for l in pending_labels:
             deflabel(l, pc)
 
-        return (pc, changed, seg, sidx)
+        return (pc, changed, seg, sidx, clobber_vLR)
 
     def dofunc(seg, sidx, func, name):
         print(f'laying out function {name}', file=log.f)
         while True:
-            _, changed, _, _ = layout(seg, sidx, func, False)
+            _, changed, _, _, _ = layout(seg, sidx, func, False)
             if not changed:
                 break
         pc = seg.pc()
         print(f'emitting function {name} @ {pc:x}', file=log.f)
-        _, _, seg, sidx = layout(seg, sidx, func, True)
+        _, _, seg, sidx, clobber_vLR = layout(seg, sidx, func, True)
+        if clobber_vLR:
+            print('Warning: unsafe thunking in', name)
         return pc, seg, sidx
 
     # The linker treats "@globals" as a special function. This is the only function that can live in the zero
