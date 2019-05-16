@@ -7,14 +7,13 @@ ANSI C cross-compiler (C89) that generates .gt1 files. These files
 can be loaded with the Loader application, embedded into an EPROM,
 or loaded into a Gigatron emulator.
 
-Based on Pat Gavlin's initial work on adding a Gigatron backend to
+Based on Pat Gavlin's excellent initial work on adding a Gigatron backend to
 `lcc`. Requires Python 3.6+.
 
 This is still very much work in progress, some of the many
 restrictions include:
  * No floating point (this will probably be the case for a _very_ long time)
- * Multiplication, division, modulus, arbitrary-width left and right shifts to be completed
- * Comparisons are probably still broken with respect to overflow
+ * Comparisons are still broken with respect to overflow
  * 'long' and 'long long' are 16-bit
  * Work on libraries has barely started. No malloc yet. No file system.
  * Sometimes hangs, or crashes with a stack trace instead of a nice message
