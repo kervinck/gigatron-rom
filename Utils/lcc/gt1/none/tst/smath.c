@@ -3,13 +3,10 @@
 // sysArg4-5 holds the RHS of the operation
 // sysArg6-7 holds the result
 
-#define ADD 0
-#define SUB 1
-#define LSH 2
-#define RSH 3
-#define MUL 4
-#define DIV 5
-#define MOD 6
+enum {
+	ADD, SUB, LSH, RSH, MUL, DIV, MOD,
+	GT, LT, NE, EQ, GE, LE
+};
 
 #ifdef TEST
 // Target platform (Gigatron vCPU)
@@ -34,6 +31,12 @@
 #define MULT(a, b) OPT(a, b, *)
 #define DIVT(a, b) OPT(a, b, /)
 #define MODT(a, b) OPT(a, b, %)
+#define GTT(a, b) OPT(a, b, >)
+#define LTT(a, b) OPT(a, b, <)
+#define NET(a, b) OPT(a, b, !=)
+#define EQT(a, b) OPT(a, b, ==)
+#define GET(a, b) OPT(a, b, >=)
+#define LET(a, b) OPT(a, b, <=)
 
 void add() {
 	int t, u;
@@ -132,6 +135,102 @@ void mod() {
 	MODT(-32767-1, -32767-1);
 }
 
+void gt() {
+	int t, u;
+	sysArgsw[0] = GT;
+
+	GTT(0, 0);
+	GTT(0, 327);
+	GTT(327, 0);
+	GTT(327, 327);
+	GTT(327, 1972);
+	GTT(1972, 327);
+	GTT(32767, 0);
+	GTT(0, 32767);
+	GTT(32767, 32767);
+}
+
+void lt() {
+	int t, u;
+	sysArgsw[0] = LT;
+
+	LTT(0, 0);
+	LTT(0, 327);
+	LTT(327, 0);
+	LTT(327, 327);
+	LTT(327, 1972);
+	LTT(1972, 327);
+	LTT(32767, 0);
+	LTT(0, 32767);
+	LTT(32767, 32767);
+}
+
+void ne() {
+	int t, u;
+	sysArgsw[0] = NE;
+
+	NET(0, 0);
+	NET(0, 327);
+	NET(327, 0);
+	NET(327, 327);
+	NET(1972, 327);
+	NET(32767, 0);
+	NET(0, 32767);
+	NET(32767, 32767);
+	NET(0, -327);
+	NET(-327, 0);
+	NET(-327, -327);
+	NET(1972, -327);
+	NET(-32767-1, 32767);
+}
+
+void eq() {
+	int t, u;
+	sysArgsw[0] = EQ;
+
+	EQT(0, 0);
+	EQT(0, 327);
+	EQT(327, 0);
+	EQT(327, 327);
+	EQT(1972, 327);
+	EQT(32767, 0);
+	EQT(0, 32767);
+	EQT(32767, 32767);
+	EQT(0, -327);
+	EQT(-327, 0);
+	EQT(-327, -327);
+	EQT(1972, -327);
+	EQT(-32767-1, 32767);
+}
+
+void ge() {
+	int t, u;
+	sysArgsw[0] = GE;
+
+	GET(0, 0);
+	GET(0, 327);
+	GET(327, 0);
+	GET(327, 327);
+	GET(1972, 327);
+	GET(32767, 0);
+	GET(0, 32767);
+	GET(32767, 32767);
+}
+
+void le() {
+	int t, u;
+	sysArgsw[0] = LE;
+
+	LET(0, 0);
+	LET(0, 327);
+	LET(327, 0);
+	LET(327, 327);
+	LET(1972, 327);
+	LET(32767, 0);
+	LET(0, 32767);
+	LET(32767, 32767);
+}
+
 void main() {
 	*sysFn = 1;
 
@@ -142,6 +241,12 @@ void main() {
 	mul();
 	div();
 	mod();
+	gt();
+	lt();
+	ne();
+	eq();
+	ge();
+	le();
 
 	*sysFn = 0;
 	__syscall(0);
@@ -175,6 +280,12 @@ void sys1() {
 	case MUL: opStr = "*", x = a * b; break;
 	case DIV: opStr = "/", x = a / b; break;
 	case MOD: opStr = "%", x = a % b; break;
+	case GT: opStr = ">", x = a > b; break;
+	case LT: opStr = "<", x = a < b; break;
+	case NE: opStr = "!=", x = a != b; break;
+	case EQ: opStr = "==", x = a == b; break;
+	case GE: opStr = ">=", x = a >= b; break;
+	case LE: opStr = "<=", x = a <= b; break;
 	default:
 		fprintf(stderr, "error: unknown operation 0x%04x\n", op);
 		fail = 1;
@@ -182,7 +293,7 @@ void sys1() {
 	}
 
 	if (r != x) {
-		fprintf(stderr, "error: %hd %s %hd = %hd, expected %hd\n", a, opStr, b, r, x);
+		fprintf(stderr, "error: (%hd %s %hd) == %hd, expected %hd\n", a, opStr, b, r, x);
 		fail = 1;
 	}
 }
