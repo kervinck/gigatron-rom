@@ -8,6 +8,8 @@
 #define LSH 2
 #define RSH 3
 #define MUL 4
+#define DIV 5
+#define MOD 6
 
 #ifdef TEST
 
@@ -29,6 +31,8 @@
 #define LSHT(a, b) OPT(a, b, <<)
 #define RSHT(a, b) OPT(a, b, >>)
 #define MULT(a, b) OPT(a, b, *)
+#define DIVT(a, b) OPT(a, b, /)
+#define MODT(a, b) OPT(a, b, %)
 
 void add() {
 	int t, u;
@@ -93,6 +97,36 @@ void mul() {
 	MULT(2, -1);
 }
 
+void div() {
+	int t, u;
+
+	sysArgsw[0] = DIV;
+	DIVT(10000, 3);
+	DIVT(-10000, 3);
+	DIVT(1972, 327);
+	DIVT(1972, -327);
+	DIVT(-1972, -327);
+	DIVT(-1972, 327);
+	DIVT(0x55*0xaa, 0x55);
+	#DIVT( 32767, -32767-1);
+	DIVT(-32767-1, 32767);
+}
+
+void mod() {
+	int t, u;
+
+	sysArgsw[0] = MOD;
+	MODT(10000, 3);
+	MODT(-10000, 3);
+	MODT(1972, 327);
+	MODT(1972, -327);
+	MODT(-1972, -327);
+	MODT(-1972, 327);
+	MODT(0x55*0xaa, 0x55);
+	MODT( 32767, -32767-1);
+	MODT(-32767-1, 32767);
+}
+
 void main() {
 	*sysFn = 1;
 
@@ -101,6 +135,8 @@ void main() {
 	lsh();
 	rsh();
 	mul();
+	div();
+	//mod();
 
 	*sysFn = 0;
 	__syscall(0xff);
@@ -131,6 +167,8 @@ void sys1() {
 	case LSH: opStr = "<<", x = b >= 16 ? a : a << b; break;
 	case RSH: opStr = ">>", x = b >= 16 ? a : (int16_t)((uint16_t)a >> b); break;
 	case MUL: opStr = "*", x = a * b; break;
+	case DIV: opStr = "/", x = a / b; break;
+	case MOD: opStr = "%", x = a % b; break;
 	default:
 		fprintf(stderr, "error: unknown operation 0x%04x\n", op);
 		fail = 1;
