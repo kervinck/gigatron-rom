@@ -12,19 +12,20 @@
 #define MOD 6
 
 #ifdef TEST
+// Target platform (Gigatron vCPU)
 
-#define sysFn ((unsigned*)(void*)0x0022)
-#define sysArgsw ((unsigned*)(void*)0x0024)
+#define sysFn ((int*)0x0022)
+#define sysArgsw ((int*)0x0024)
 
 #define OPT(a, b, op) \
 	t = a; \
 	u = b; \
-	((int*)sysArgsw)[1] = a; \
-	((int*)sysArgsw)[2] = b; \
-	((int*)sysArgsw)[3] = t op u; \
-   	__syscall(0xff); \
-	((int*)sysArgsw)[3] = t op b; \
-	__syscall(0xff); \
+	sysArgsw[1] = t; \
+	sysArgsw[2] = u; \
+	sysArgsw[3] = t op u; \
+	__syscall(0); \
+	sysArgsw[3] = t op (b); \
+	__syscall(0); \
 
 #define ADDT(a, b) OPT(a, b, +)
 #define SUBT(a, b) OPT(a, b, -)
@@ -108,8 +109,10 @@ void div() {
 	DIVT(-1972, -327);
 	DIVT(-1972, 327);
 	DIVT(0x55*0xaa, 0x55);
-	#DIVT( 32767, -32767-1);
-	DIVT(-32767-1, 32767);
+	DIVT(32767, -32767-1);
+	DIVT(-32767-1, 2);
+	DIVT(-32767-1, 0x7fff);
+	DIVT(-32767-1, -32767-1);
 }
 
 void mod() {
@@ -123,8 +126,10 @@ void mod() {
 	MODT(-1972, -327);
 	MODT(-1972, 327);
 	MODT(0x55*0xaa, 0x55);
-	MODT( 32767, -32767-1);
+	MODT(32767, -32767-1);
+	MODT(-32767-1, 2);
 	MODT(-32767-1, 32767);
+	MODT(-32767-1, -32767-1);
 }
 
 void main() {
@@ -136,13 +141,14 @@ void main() {
 	rsh();
 	mul();
 	div();
-	//mod();
+	mod();
 
 	*sysFn = 0;
-	__syscall(0xff);
+	__syscall(0);
 }
 
 #else
+// Host platform (Linux/Mac/etc...)
 
 #include <stdint.h>
 #include <stdio.h>
@@ -155,9 +161,9 @@ void sys1() {
 	uint16_t* sysArgsw = (uint16_t*)&RAM[0x24];
 
 	uint16_t op = sysArgsw[0];
-	int16_t a = ((int16_t*)sysArgsw)[1];
-	int16_t b = ((int16_t*)sysArgsw)[2];
-	int16_t r = ((int16_t*)sysArgsw)[3];
+	int16_t a = sysArgsw[1];
+	int16_t b = sysArgsw[2];
+	int16_t r = sysArgsw[3];
 
 	char* opStr;
 	int16_t x;

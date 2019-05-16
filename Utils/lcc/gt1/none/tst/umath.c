@@ -8,27 +8,32 @@
 #define LSH 2
 #define RSH 3
 #define MUL 4
+#define DIV 5
+#define MOD 6
 
 #ifdef TEST
+// Target platform (Gigatron vCPU)
 
-#define sysFn ((unsigned*)(void*)0x0022)
-#define sysArgsw ((unsigned*)(void*)0x0024)
+#define sysFn ((int*)0x0022)
+#define sysArgsw ((unsigned*)0x0024)
 
 #define OPT(a, b, op) \
 	t = a; \
 	u = b; \
-	sysArgsw[1] = a; \
-	sysArgsw[2] = b; \
+	sysArgsw[1] = t; \
+	sysArgsw[2] = u; \
 	sysArgsw[3] = t op u; \
-   	__syscall(0xff); \
-	sysArgsw[3] = t op b; \
-	__syscall(0xff); \
+	__syscall(0); \
+	sysArgsw[3] = t op (b); \
+	__syscall(0); \
 
 #define ADDT(a, b) OPT(a, b, +)
 #define SUBT(a, b) OPT(a, b, -)
 #define LSHT(a, b) OPT(a, b, <<)
 #define RSHT(a, b) OPT(a, b, >>)
 #define MULT(a, b) OPT(a, b, *)
+#define DIVT(a, b) OPT(a, b, /)
+#define MODT(a, b) OPT(a, b, %)
 
 void add() {
 	unsigned t, u;
@@ -90,6 +95,46 @@ void mul() {
 	MULT(256, 256);
 }
 
+void div() {
+	unsigned t, u;
+
+	sysArgsw[0] = DIV;
+	DIVT(10000, 3);
+	DIVT(60000, 3);
+	DIVT(1972, 327);
+	DIVT(1972, 65209u);
+	DIVT(63564u, 65209u)
+	DIVT(63564u, 327);
+	DIVT(0x55*0xaa, 0x55);
+	DIVT(0x7fffu, 0x8000u);
+	DIVT(0x8000u, 2);
+	DIVT(0x8000u, 32767);
+	DIVT(0x8000u, 0x8000u);
+	DIVT(0xffffu, 32767);
+	DIVT(0xffffu, 0x8000u);
+	DIVT(0xffffu, 0xffffu);
+}
+
+void mod() {
+	unsigned t, u;
+
+	sysArgsw[0] = MOD;
+	MODT(10000, 3);
+	MODT(60000, 3);
+	MODT(1972, 327);
+	MODT(1972, 65209u);
+	MODT(63564u, 65209u)
+	MODT(63564u, 327);
+	MODT(0x55*0xaa, 0x55);
+	MODT(0x7fffu, 0x8000u);
+	MODT(0x8000u, 2);
+	MODT(0x8000u, 32767);
+	MODT(0x8000u, 0x8000u);
+	MODT(0xffffu, 32767);
+	MODT(0xffffu, 0x8000u);
+	MODT(0xffffu, 0xffffu);
+}
+
 void main() {
 	*sysFn = 1;
 
@@ -98,12 +143,15 @@ void main() {
 	lsh();
 	rsh();
 	mul();
+	div();
+	mod();
 
 	*sysFn = 0;
-	__syscall(0xff);
+	__syscall(0);
 }
 
 #else
+// Host platform (Linux/Mac/etc...)
 
 #include <stdint.h>
 #include <stdio.h>
@@ -128,6 +176,8 @@ void sys1() {
 	case LSH: opStr = "<<", x = b >= 16 ? a : a << b; break;
 	case RSH: opStr = ">>", x = b >= 16 ? a : a >> b; break;
 	case MUL: opStr = "*", x = a * b; break;
+	case DIV: opStr = "/", x = a / b; break;
+	case MOD: opStr = "%", x = a % b; break;
 	default:
 		fprintf(stderr, "error: unknown operation 0x%04x\n", op);
 		fail = 1;
