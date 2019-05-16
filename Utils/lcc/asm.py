@@ -232,8 +232,8 @@ def jle(l): func.append(Inst.jle(l))
 def jlt(l): func.append(Inst.jlt(l))
 def ldi(con): func.append(Inst.ldi(con))
 def st(d): func.append(Inst.st(d))
-def pop(): func.append(Inst.pop())# Avoid because any following thunk clobbers vLR
-def popret(): func.append(Inst.popret())# Combined POP+RET
+def pop(): func.append(Inst.pop())
+def popret(): func.append(Inst.popret())
 def push(): func.append(Inst.push())
 def lup(d): func.append(Inst.lup(d))
 def andi(con): func.append(Inst.andi(con))
@@ -351,9 +351,9 @@ def link(entry, outf, logf):
 
     def shorten(inst, pc):
         if not inst.branch and inst.opcode != 'j':
-            return
+            return 0
 
-        target = inst.operand
+        target, oldsize = inst.operand, inst.size
         if type(target) is str:
             target = labels.get(target)
         near = target is not None and target & 0xff00 == pc & 0xff00
@@ -372,6 +372,7 @@ def link(entry, outf, logf):
             else:
                 print(f'far jump from {pc:x} to {0 if target is None else target:x}', file=log.f)
                 inst.size = 5
+        return oldsize - inst.size
 
     def calctarget(symbolexpr, symboltable):
         """Resolve symbol or symbol expression such as '.L99+100-1'"""
@@ -394,10 +395,11 @@ def link(entry, outf, logf):
                 seg.reloc(pc, inst.operand)
                 inst.operand = 0 # Operand goes through relocs{} from here
 
-    def layout(seg, sidx, func, emitting):
+    def layout(seg, sidx, func, emitting, name):
+        todo = sum(ins.size for ins in func)
         pc, remaining = seg.pc(), seg.remaining()
         pending_labels = []
-        changed, clobber_vLR = False, False
+        changed, has_push, expect_pop, ret_is_safe = False, False, False, True
         for i in range(0, len(func)):
             inst = func[i]
 
@@ -408,44 +410,37 @@ def link(entry, outf, logf):
             # Define any labels that precede this instruction and attempt branch shortening.
             for l in pending_labels:
                 deflabel(l, pc)
-            shorten(inst, pc)
+            todo -= shorten(inst, pc)
 
-            # if there is not enough space remaining for this instruction and a page thunk call, jump to the next
-            # page.
-            if remaining < inst.size + 2:
-                # if there is enough space for the rest of the instructions, we're ok.
-                nr = remaining - inst.size
-                if nr >= 0 and sum(ins.size for ins in func[i+1:]) <= nr:
-                    pass
-                else:
-                    # If this is segment 0, fail.
-                    assert(sidx != 0)
+            # If there is not enough space remaining for this instruction and a page thunk call,
+            # jump to the next page (unless there is enough space for the rest of the instructions).
+            # This also ensures that any final 'POP+RET' pair won't be split.
+            if inst.size + 2 > remaining and todo > remaining:
+                # If this is segment 0, fail.
+                assert(sidx != 0)
 
-                    # Setup warning if function doesn't push vLR
-                    if 'push' not in [func[j].opcode for j in range(i)]:
-                        clobber_vLR = True
+                sidx += 1
+                nextseg = segments[sidx]
 
-                    sidx += 1
-                    nextseg = segments[sidx]
+                print(f'moving to segment {sidx} @ {nextseg.pc():x}', file=log.f)
+                if emitting:
+                    if nextseg.pc() == 0x08a0:
+                        Inst.call(global_labels['thunk2']).emit(seg)
+                    elif nextseg.pc() & 0xff == 0:
+                        Inst.call(global_labels['thunk0']).emit(seg)
+                    else:
+                        assert(nextseg.pc() & 0xff == 0xa0)
+                        Inst.call(global_labels['thunk1']).emit(seg)
+                    ret_is_safe = False
 
-                    print(f'moving to segment {sidx} @ {nextseg.pc():x}', file=log.f)
-                    if emitting:
-                        if nextseg.pc() == 0x08a0:
-                            Inst.call(global_labels['thunk2']).emit(seg)
-                        elif nextseg.pc() & 0xff == 0:
-                            Inst.call(global_labels['thunk0']).emit(seg)
-                        else:
-                            assert(nextseg.pc() & 0xff == 0xa0)
-                            Inst.call(global_labels['thunk1']).emit(seg)
+                seg = nextseg
+                pc, remaining = seg.pc(), seg.remaining()
 
-                    seg = nextseg
-                    pc, remaining = seg.pc(), seg.remaining()
-
-                    # Redefine any labels that precede this instruction and retry branch shortening since the PC
-                    # has changed.
-                    for l in pending_labels:
-                        deflabel(l, pc)
-                    shorten(inst, pc)
+                # Redefine any labels that precede this instruction and retry branch shortening since the PC
+                # has changed.
+                for l in pending_labels:
+                    deflabel(l, pc)
+                todo -= shorten(inst, pc)
 
             pending_labels = []
 
@@ -453,7 +448,6 @@ def link(entry, outf, logf):
                 changed = True
             inst.addr = pc
 
-            # if this is a branch, we may be able to shorten it. check for that here.
             if emitting:
                 if inst.opcode == 'dl':
                     ipc = pc
@@ -465,26 +459,41 @@ def link(entry, outf, logf):
                     resolve_operand(inst, seg, pc)
                     inst.emit(seg)
 
+                # Simple heuristic to check for vLR clobbering
+                if inst.opcode == 'push':
+                    has_push, expect_pop = True, True
+                if inst.opcode == 'call':
+                    ret_is_safe = False
+                if inst.opcode in ['pop', 'popret']:
+                    if not has_push:
+                        print('Warning: POP without PUSH in', name)
+                    expect_pop, ret_is_safe = False, True
+                if inst.opcode in ['ret', 'popret']:
+                    if expect_pop:
+                        print('Warning: PUSH without POP in', name)
+                    if not ret_is_safe:
+                        print('Warning: unsafe RET in', name)
+                    ret_is_safe, expect_pop = True, has_push
+
             pc += inst.size
             remaining -= inst.size
+            todo -= inst.size
 
         # define any remaining labels
         for l in pending_labels:
             deflabel(l, pc)
 
-        return (pc, changed, seg, sidx, clobber_vLR)
+        return (pc, changed, seg, sidx)
 
     def dofunc(seg, sidx, func, name):
         print(f'laying out function {name}', file=log.f)
         while True:
-            _, changed, _, _, _ = layout(seg, sidx, func, False)
+            _, changed, _, _ = layout(seg, sidx, func, False, None)
             if not changed:
                 break
         pc = seg.pc()
         print(f'emitting function {name} @ {pc:x}', file=log.f)
-        _, _, seg, sidx, clobber_vLR = layout(seg, sidx, func, True)
-        if clobber_vLR:
-            print('Warning: unsafe thunking in', name)
+        _, _, seg, sidx = layout(seg, sidx, func, True, name)
         return pc, seg, sidx
 
     # The linker treats "@globals" as a special function. This is the only function that can live in the zero
