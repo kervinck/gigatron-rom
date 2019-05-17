@@ -397,9 +397,17 @@ def link(entry, outf, logf):
 
     def layout(seg, sidx, func, emitting, name):
         todo = sum(ins.size for ins in func)
-        pc, remaining = seg.pc(), seg.remaining()
+        startpc, remaining = seg.pc(), seg.remaining()
         pending_labels = []
         changed, has_push, expect_pop, ret_is_safe = False, False, False, True
+
+        if remaining <= 2:
+            sidx += 1
+            seg = segments[sidx]
+            startpc, remaining = seg.pc(), seg.remaining()
+        assert remaining > 2
+        pc = startpc
+
         for i in range(0, len(func)):
             inst = func[i]
 
@@ -424,6 +432,8 @@ def link(entry, outf, logf):
 
                 print(f'moving to segment {sidx} @ {nextseg.pc():x}', file=log.f)
                 if emitting:
+                    if not has_push:
+                        print('Warning: unsafe thunk CALL in', name)
                     if nextseg.pc() == 0x08a0:
                         Inst.call(global_labels['thunk2']).emit(seg)
                     elif nextseg.pc() & 0xff == 0:
@@ -483,18 +493,17 @@ def link(entry, outf, logf):
         for l in pending_labels:
             deflabel(l, pc)
 
-        return (pc, changed, seg, sidx)
+        return (startpc, pc, changed, seg, sidx)
 
     def dofunc(seg, sidx, func, name):
         print(f'laying out function {name}', file=log.f)
         while True:
-            _, changed, _, _ = layout(seg, sidx, func, False, None)
+            startpc, _, changed, _, _ = layout(seg, sidx, func, False, None)
             if not changed:
                 break
-        pc = seg.pc()
-        print(f'emitting function {name} @ {pc:x}', file=log.f)
-        _, _, seg, sidx = layout(seg, sidx, func, True, name)
-        return pc, seg, sidx
+        print(f'emitting function {name} @ {startpc:x}', file=log.f)
+        startpc, _, _, seg, sidx = layout(seg, sidx, func, True, name)
+        return startpc, seg, sidx
 
     # The linker treats "@globals" as a special function. This is the only function that can live in the zero
     # page, and must consist of static data only.
