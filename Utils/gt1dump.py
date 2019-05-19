@@ -5,11 +5,13 @@
 #
 # 2019-05-04 (marcelk) Initial version
 # 2019-05-05 (marcelk) Added disassembly option -d
+# 2019-05-19 (marcelk) Check for bad segment size; Small numbers in decimal
 #
 #-----------------------------------------------------------------------
 
 import argparse
 import pathlib
+import re
 import sys
 
 # One-for-all error handler (don't throw scary stack traces at the user)
@@ -120,9 +122,11 @@ while True:
   loAddress = readByte(fp)
   address = (hiAddress << 8) + loAddress
 
-  segmentSize = readByte(fp)                    # Segment length
+  segmentSize = readByte(fp)                    # Segment size
   if segmentSize == 0:
     segmentSize = 256
+  if loAddress + segmentSize > 256:
+    raise Exception('Bad size %d for segment $%04x' % (segmentSize, address))
 
   j, text = 0, ''
   ins, ops = None, 0
@@ -171,6 +175,8 @@ while True:
     if ops == 0:
       if ins:
         # Print as disassembled instruction
+        # Convert single digit operand to decimal
+        asm = re.sub(r'\$0([0-9])$', r'\1', asm)
         print('%s%-25s|%s|' % ((26 - j) * ' ', asm, text))
         ins, j, text = None, 0, ''
 
