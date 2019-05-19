@@ -1225,6 +1225,7 @@ static void local(Symbol p) {
 		debug(fprint(stderr, "local %s of size %d @ offset %d\n", p->name, p->type->size, offset));
 		p->x.name = stringd(offset);
 		offset += p->type->size;
+		assert(offset < 0x10000lu); // Catch only big overruns. Default stack is much smaller.
 	}
 }
 static void function(Symbol f, Symbol caller[], Symbol callee[], int n) {
