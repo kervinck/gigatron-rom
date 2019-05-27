@@ -81,7 +81,7 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
     if (size == 0)
       return 0;                 // No space for anything
     strbuf._ptr = str;
-    strbuf._avail = size;
+    strbuf._n = size;
     strbuf._flush = _discard;
     stream = &strbuf;
   } else                        // Stream
@@ -245,7 +245,7 @@ static const char *_parsenum(const char *s, int *num)
  */
 static int _discard(int c, FILE *stream)
 {
-  return (stream->_avail = 1);
+  return (stream->_n = 1);
 }
 
 /*----------------------------------------------------------------------+

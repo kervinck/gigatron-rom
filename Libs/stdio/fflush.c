@@ -4,7 +4,7 @@
 int fflush(FILE *stream)
 {
   if (stream->_flags & _iowrite) {
-    stream->_avail--;
+    stream->_n--;
     return stream->_flush(EOF, stream);
   } else {
     errno = -EBADF;

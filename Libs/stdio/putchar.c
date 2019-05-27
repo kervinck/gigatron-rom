@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <Gigatron.h>
 
 int putchar(int c)
 {

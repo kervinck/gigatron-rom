@@ -7,9 +7,9 @@ int fputc(int c, FILE *stream)
 {
 #if 0
   // Issue #73
-  return --stream->_avail ? (*stream->_ptr++ = c) : stream->_flush(c, stream);
+  return --stream->_n ? (*stream->_ptr++ = c) : stream->_flush(c, stream);
 #else
-  if (--stream->_avail) {
+  if (--stream->_n) {
     *stream->_ptr++ = c;
     return c;
   } else

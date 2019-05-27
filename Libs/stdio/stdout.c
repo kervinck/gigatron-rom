@@ -14,7 +14,7 @@ static int _flush_stdout(int c, FILE *stream);
 struct _stdout _stdout = {
   {
     _stdout.buffer,             // _ptr
-    N,                          // _avail
+    N,                          // _n -> how much can be added to buffer
     &_flush_stdout,             // _flush
     _iowrite,                   // _flags
   }
@@ -22,10 +22,10 @@ struct _stdout _stdout = {
 
 static int _flush_stdout(int c, FILE *stream)
 {
-  int n = N - 1 - stream->_avail;
+  int n = N - 1 - stream->_n;
   int i;
 
-  stream->_avail = N;
+  stream->_n = N;
   stream->_ptr = ((struct _stdout*)stream)->buffer;
 
   for (i=0; i<n; i++)

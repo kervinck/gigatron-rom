@@ -1151,6 +1151,7 @@ static void inst_call(Node p) {
 			}
 			print("asm.addw('sp')\n");
 			print("asm.stw('sp')\n");
+			print("asm.ldw('rv')\n");
 		}
 	}
 
