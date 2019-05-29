@@ -22,9 +22,7 @@ int vfscanf(FILE *stream, const char *format, va_list arg)
 
   for (; c>=0 && *format; format++) {
     switch (*format) {
-    case ' ':
-      while (isspace(c))
-        c = getc(stream);
+    case ' ': case '\t':        // Whitespace is ignored
       continue;
     case '%':
       flags = 0;
@@ -35,26 +33,24 @@ int vfscanf(FILE *stream, const char *format, va_list arg)
       }
       switch (*format) {
       case 'd':                 // Decimal %d
+      case 'u':                 // Unsigned works due to unchecked overflows
         while (isspace(c))
           c = getc(stream);
-        if (c == '-' || c == '+') {
-          sign = c;
+        sign = c;
+        if (c == '-' || c == '+')
           c = getc(stream);
-        } else
-          sign = 0;
-        if (isdigit(c)) {
-          n = 0;
-          do {
-            n = n * 10 + c - '0';
-            c = getc(stream);
-          } while (isdigit(c));
-          if ((flags & star) == 0) {
-            *va_arg(arg, int*) = (sign == '-') ? -n : n;
-            r++;
-          }
-          continue;
+        if (!isdigit(c))
+          goto stop;            // Break out of switch+switch+for...
+        n = 0;
+        do {
+          n = n * 10 + c - '0';
+          c = getc(stream);
+        } while (isdigit(c));
+        if ((flags & star) == 0) {
+          *va_arg(arg, int*) = (sign == '-') ? -n : n;
+          r++;
         }
-        break;
+        continue;
       case 's':                 // String %s
         s = va_arg(arg, char*);
         while (isspace(c))
@@ -77,11 +73,13 @@ int vfscanf(FILE *stream, const char *format, va_list arg)
         }
         c = getc(stream);
         continue;
-      default:                  // Also handles %%
+      default:                  // Also handles %% by fall through below
         break;
       }
       // !!! Fall through !!!
     default:
+      while (isspace(c))
+        c = getc(stream);
       if (c == *format) {       // Matching character
         c = getc(stream);
         continue;
@@ -91,6 +89,7 @@ int vfscanf(FILE *stream, const char *format, va_list arg)
     break; // Unable to continue processing
   }
 
+stop:
   if (ungetc(c,stream)<0 && r==0)// Push back the look-ahead
     return EOF;                 // Error before first conversion
   else
