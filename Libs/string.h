@@ -3,8 +3,10 @@
 typedef unsigned size_t;
 #endif
 
-// Not implemented:
+char *strcpy(char *dst, const char *src);
 void *memset(void *b, int c, size_t len);
+
+// Not implemented:
 char *strchr(const char *s, int c);
 int strcmp(const char *s1, const char *s2);
 char *strerror(int errnum);
