@@ -10,12 +10,11 @@
     "author": "Phil Thomas",
     "license": "SEE LICENSE IN LICENSE",
     "devDependencies": {
-        "eslint-config-google": "^0.9.1",
+        "eslint": "^5.16.0",
+        "eslint-config-google": "^0.13.0",
         "http-server": "^0.11.1"
     },
-    "dependencies": {
-        "eslint": "^4.19.1"
-    },
+    "dependencies": {},
     "repository": {
         "type": "git",
         "url": "git+https://github.com/PhilThomas/gigatron.git"
