@@ -58,7 +58,7 @@ def ora (a, b=AC):        _assemble(_opOR,  a, b)
 def xora(a, b=AC):        _assemble(_opXOR, a, b)
 def adda(a, b=AC):        _assemble(_opADD, a, b)
 def suba(a, b=AC):        _assemble(_opSUB, a, b)
-def jmpy(a):              _assemble(_opJ|_jL,  a)
+def _jmpy(a):             _assemble(_opJ|_jL,  a)
 def bgt (a):              _assemble(_opJ|_jGT, a)
 def blt (a):              _assemble(_opJ|_jLT, a)
 def bne (a):              _assemble(_opJ|_jNE, a)
@@ -72,6 +72,9 @@ def st  (a, b=None, c=None):
 def ctrl(a, b=None):
   if a in [X, Y] and b:   _assemble(_opST|_busRAM, [a, b], None)
   else:                   _assemble(_opST|_busRAM, [a], b)
+def jmp(a, b):
+  assert a is Y
+  _jmpy(b)
 
 bpl = bge # Alias
 bmi = blt # Alias
@@ -169,7 +172,7 @@ def trampoline():
   C('|                                   |')
   ld(hi('lupReturn'), Y)        #15
   C('| Trampoline for page $%04x lookups |' % (pc()&~255))
-  jmpy(lo('lupReturn'))         #17
+  jmp(Y,lo('lupReturn'))        #17
   C('|                                   |')
   st([lo('vAC')])               #18
   C('+-----------------------------------+')
