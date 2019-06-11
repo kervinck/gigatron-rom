@@ -2007,7 +2007,7 @@ st([vTmp])                      #18
 ld([vAC])                       #19
 anda(0b11111110)                #20
 jmp(Y,AC)                       #21
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#22
+bra(255);                       C('bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw1a')
 st([vAC])                       #26
 ld([vAC+1]);                    C('Transfer bit 8')#27
@@ -2021,7 +2021,7 @@ st([vTmp])                      #34
 ld([vAC+1])                     #35
 anda(0b11111110)                #36
 jmp(Y,AC)                       #37
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#38
+bra(255);                       C('bra $%04x' % (shiftTable+255))#38
 label('.sysLsrw1b')
 st([vAC+1])                     #42
 ld(hi('REENTER'), Y)            #43
@@ -2036,7 +2036,7 @@ ld([vAC])                       #18
 anda(0b11111100)                #19
 ora( 0b00000001)                #20
 jmp(Y,AC)                       #21
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#22
+bra(255);                       C('bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw2a')
 st([vAC])                       #26
 ld([vAC+1]);                    C('Transfer bit 8:9')#27
@@ -2054,7 +2054,7 @@ ld([vAC+1])                     #38
 anda(0b11111100)                #39
 ora( 0b00000001)                #40
 jmp(Y,AC)                       #41
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#42
+bra(255);                       C('bra $%04x' % (shiftTable+255))#42
 label('.sysLsrw2b')
 st([vAC+1])                     #46
 ld(hi('REENTER'), Y)            #47
@@ -2069,7 +2069,7 @@ ld([vAC])                       #18
 anda(0b11111000)                #19
 ora( 0b00000011)                #20
 jmp(Y,AC)                       #21
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#22
+bra(255);                       C('bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw3a')
 st([vAC])                       #26
 ld([vAC+1]);                    C('Transfer bit 8:10')#27
@@ -2086,7 +2086,7 @@ ld([vAC+1])                     #37
 anda(0b11111000)                #38
 ora( 0b00000011)                #39
 jmp(Y,AC)                       #40
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#41
+bra(255);                       C('bra $%04x' % (shiftTable+255))#41
 label('.sysLsrw3b')
 st([vAC+1])                     #45
 ld(-52/2)                       #46
@@ -2102,7 +2102,7 @@ ld([vAC])                       #18
 anda(0b11110000)                #19
 ora( 0b00000111)                #20
 jmp(Y,AC)                       #21
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#22
+bra(255);                       C('bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw4a')
 st([vAC])                       #26
 ld([vAC+1]);                    C('Transfer bit 8:11')#27
@@ -2118,7 +2118,7 @@ ld([vAC+1])                     #36
 anda(0b11110000)                #37
 ora( 0b00000111)                #38
 jmp(Y,AC)                       #39
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#40
+bra(255);                       C('bra $%04x' % (shiftTable+255))#40
 label('.sysLsrw4b')
 st([vAC+1])                     #44
 ld(hi('REENTER'), Y)            #45
@@ -2133,7 +2133,7 @@ ld([vAC])                       #18
 anda(0b11100000)                #19
 ora( 0b00001111)                #20
 jmp(Y,AC)                       #21
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#22
+bra(255);                       C('bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw5a')
 st([vAC])                       #26
 ld([vAC+1]);                    C('Transfer bit 8:13')#27
@@ -2148,7 +2148,7 @@ ld([vAC+1])                     #35
 anda(0b11100000)                #36
 ora( 0b00001111)                #37
 jmp(Y,AC)                       #38
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#39
+bra(255);                       C('bra $%04x' % (shiftTable+255))#39
 label('.sysLsrw5b')
 st([vAC+1])                     #44
 ld(-50/2)                       #45
@@ -2164,7 +2164,7 @@ ld([vAC])                       #18
 anda(0b11000000)                #19
 ora( 0b00011111)                #20
 jmp(Y,AC)                       #21
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#22
+bra(255);                       C('bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw6a')
 st([vAC])                       #26
 ld([vAC+1]);                    C('Transfer bit 8:13')#27
@@ -2178,7 +2178,7 @@ ld([vAC+1])                     #34
 anda(0b11000000)                #35
 ora( 0b00011111)                #36
 jmp(Y,AC)                       #37
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#38
+bra(255);                       C('bra $%04x' % (shiftTable+255))#38
 label('.sysLsrw6b')
 st([vAC+1])                     #42
 ld(hi('REENTER'), Y)            #43
@@ -2199,7 +2199,7 @@ ld([vAC])                       #24
 anda(0b11110000)                #25
 ora( 0b00000111)                #26
 jmp(Y,AC)                       #27
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#28
+bra(255);                       C('bra $%04x' % (shiftTable+255))#28
 label('.sysLsrl4')
 ora([vAC+1])                    #32
 st([vAC+1])                     #33

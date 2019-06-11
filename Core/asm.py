@@ -322,7 +322,7 @@ _mnemonics = [ 'ld', 'anda', 'ora', 'xora', 'adda', 'suba', 'st', 'j' ]
 def _hexString(val):
   return '$%02x' % val
 
-def disassemble(opcode, operand, address=None):
+def disassemble(opcode, operand, address=None, lastOpcode=None):
   text = _mnemonics[opcode >> 5] # (74LS155)
   isStore = (opcode & _maskOp) == _opST
 
@@ -357,12 +357,13 @@ def disassemble(opcode, operand, address=None):
     if opcode & _maskCc == _jLE: text = 'ble  '
     if address is not None and opcode & _maskCc != _jL and opcode & _maskBus == _busD:
       # We can calculate the destination address
-      # XXX Except when the previous instruction is a far jump (jmp y,...)
       lo, hi = address & 255, address >> 8
       if lo == 255: # When branching from $xxFF, we still end up in the next page
         hi = (hi + 1) & 255
       destination = (hi << 8) + operand
-      if destination in _labels:
+      if lastOpcode & (_maskOp|_maskCc) == _opJ|_jL:
+        bus = '$%02x' % operand
+      elif destination in _labels:
         bus = _labels[destination][-1]
       else:
         bus = '$%04x' % destination
@@ -447,6 +448,7 @@ def writeRomFiles(sourceFile):
     repeats, previous, postponed = 0, None, None
     maxRepeat = 3
 
+    lastOpcode = None
     for instruction in zip(_rom0, _rom1):
       # Check if there is a label defined for this address
       label = _labels[address][-1] + ':' if address in _labels else ''
@@ -467,7 +469,7 @@ def writeRomFiles(sourceFile):
 
       if repeats <= maxRepeat:
         opcode, operand = instruction
-        disassembly = disassemble(opcode, operand, address)
+        disassembly = disassemble(opcode, operand, address, lastOpcode)
         if comment:
           line = '%-13s %04x %02x%02x  %-16s ;%s\n' % (label, address, opcode, operand, disassembly, comment)
         else:
@@ -484,6 +486,7 @@ def writeRomFiles(sourceFile):
         postponed = 14*' '+'* %d times\n' % (1+repeats)
 
       address += 1
+      lastOpcode = opcode
 
     if postponed:
       file.write(postponed)

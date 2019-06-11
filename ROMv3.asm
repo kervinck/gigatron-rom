@@ -1358,7 +1358,7 @@ SYS_LSRW1_48: 0600 0200  nop
               0604 0118  ld   [$18]
               0605 20fe  anda $fe
               0606 e200  jmp  y,ac
-              0607 fcff  bra  $06ff       ;Actually: bra $05ff
+              0607 fcff  bra  $ff         ;bra $05ff
 .sysLsrw1a:   0608 c218  st   [$18]
               0609 0119  ld   [$19]       ;Transfer bit 8
               060a 2001  anda $01
@@ -1371,7 +1371,7 @@ SYS_LSRW1_48: 0600 0200  nop
               0611 0119  ld   [$19]
               0612 20fe  anda $fe
               0613 e200  jmp  y,ac
-              0614 fcff  bra  $06ff       ;Actually: bra $05ff
+              0614 fcff  bra  $ff         ;bra $05ff
 .sysLsrw1b:   0615 c219  st   [$19]
               0616 1403  ld   $03,y
               0617 e0cb  jmp  y,$cb
@@ -1383,7 +1383,7 @@ SYS_LSRW2_52: 0619 1405  ld   $05,y       ;Logical shift right 2 bit (X >> 2)
               061d 20fc  anda $fc
               061e 4001  ora  $01
               061f e200  jmp  y,ac
-              0620 fcff  bra  $06ff       ;Actually: bra $05ff
+              0620 fcff  bra  $ff         ;bra $05ff
 .sysLsrw2a:   0621 c218  st   [$18]
               0622 0119  ld   [$19]       ;Transfer bit 8:9
               0623 8200  adda ac
@@ -1398,7 +1398,7 @@ SYS_LSRW2_52: 0619 1405  ld   $05,y       ;Logical shift right 2 bit (X >> 2)
               062e 20fc  anda $fc
               062f 4001  ora  $01
               0630 e200  jmp  y,ac
-              0631 fcff  bra  $06ff       ;Actually: bra $05ff
+              0631 fcff  bra  $ff         ;bra $05ff
 .sysLsrw2b:   0632 c219  st   [$19]
               0633 1403  ld   $03,y
               0634 e0cb  jmp  y,$cb
@@ -1410,7 +1410,7 @@ SYS_LSRW3_52: 0636 1405  ld   $05,y       ;Logical shift right 3 bit (X >> 3)
               063a 20f8  anda $f8
               063b 4003  ora  $03
               063c e200  jmp  y,ac
-              063d fcff  bra  $06ff       ;Actually: bra $05ff
+              063d fcff  bra  $ff         ;bra $05ff
 .sysLsrw3a:   063e c218  st   [$18]
               063f 0119  ld   [$19]       ;Transfer bit 8:10
               0640 8200  adda ac
@@ -1425,7 +1425,7 @@ SYS_LSRW3_52: 0636 1405  ld   $05,y       ;Logical shift right 3 bit (X >> 3)
               064a 20f8  anda $f8
               064b 4003  ora  $03
               064c e200  jmp  y,ac
-              064d fcff  bra  $06ff       ;Actually: bra $05ff
+              064d fcff  bra  $ff         ;bra $05ff
 .sysLsrw3b:   064e c219  st   [$19]
               064f 00e6  ld   $e6
               0650 1403  ld   $03,y
@@ -1437,7 +1437,7 @@ SYS_LSRW4_50: 0652 1405  ld   $05,y       ;Logical shift right 4 bit (X >> 4)
               0656 20f0  anda $f0
               0657 4007  ora  $07
               0658 e200  jmp  y,ac
-              0659 fcff  bra  $06ff       ;Actually: bra $05ff
+              0659 fcff  bra  $ff         ;bra $05ff
 .sysLsrw4a:   065a c218  st   [$18]
               065b 0119  ld   [$19]       ;Transfer bit 8:11
               065c 8200  adda ac
@@ -1452,7 +1452,7 @@ SYS_LSRW4_50: 0652 1405  ld   $05,y       ;Logical shift right 4 bit (X >> 4)
               0665 20f0  anda $f0
               0666 4007  ora  $07
               0667 e200  jmp  y,ac
-              0668 fcff  bra  $06ff       ;Actually: bra $05ff
+              0668 fcff  bra  $ff         ;bra $05ff
 .sysLsrw4b:   0669 c219  st   [$19]
               066a 1403  ld   $03,y
               066b e0cb  jmp  y,$cb
@@ -1464,7 +1464,7 @@ SYS_LSRW5_50: 066d 1405  ld   $05,y       ;Logical shift right 5 bit (X >> 5)
               0671 20e0  anda $e0
               0672 400f  ora  $0f
               0673 e200  jmp  y,ac
-              0674 fcff  bra  $06ff       ;Actually: bra $05ff
+              0674 fcff  bra  $ff         ;bra $05ff
 .sysLsrw5a:   0675 c218  st   [$18]
               0676 0119  ld   [$19]       ;Transfer bit 8:13
               0677 8200  adda ac
@@ -1478,7 +1478,7 @@ SYS_LSRW5_50: 066d 1405  ld   $05,y       ;Logical shift right 5 bit (X >> 5)
               067f 20e0  anda $e0
               0680 400f  ora  $0f
               0681 e200  jmp  y,ac
-              0682 fcff  bra  $06ff       ;Actually: bra $05ff
+              0682 fcff  bra  $ff         ;bra $05ff
 .sysLsrw5b:   0683 c219  st   [$19]
               0684 00e7  ld   $e7
               0685 1403  ld   $03,y
@@ -1490,7 +1490,7 @@ SYS_LSRW6_48: 0687 1405  ld   $05,y       ;Logical shift right 6 bit (X >> 6)
               068b 20c0  anda $c0
               068c 401f  ora  $1f
               068d e200  jmp  y,ac
-              068e fcff  bra  $06ff       ;Actually: bra $05ff
+              068e fcff  bra  $ff         ;bra $05ff
 .sysLsrw6a:   068f c218  st   [$18]
               0690 0119  ld   [$19]       ;Transfer bit 8:13
               0691 8200  adda ac
@@ -1503,7 +1503,7 @@ SYS_LSRW6_48: 0687 1405  ld   $05,y       ;Logical shift right 6 bit (X >> 6)
               0698 20c0  anda $c0
               0699 401f  ora  $1f
               069a e200  jmp  y,ac
-              069b fcff  bra  $06ff       ;Actually: bra $05ff
+              069b fcff  bra  $ff         ;bra $05ff
 .sysLsrw6b:   069c c219  st   [$19]
               069d 1403  ld   $03,y
               069e e0cb  jmp  y,$cb
@@ -1521,7 +1521,7 @@ SYS_LSLW4_46: 06a0 1405  ld   $05,y       ;Logical shift left 4 bit (X << 4)
               06aa 20f0  anda $f0
               06ab 4007  ora  $07
               06ac e200  jmp  y,ac
-              06ad fcff  bra  $06ff       ;Actually: bra $05ff
+              06ad fcff  bra  $ff         ;bra $05ff
 .sysLsrl4:    06ae 4119  ora  [$19]
               06af c219  st   [$19]
               06b0 0118  ld   [$18]
