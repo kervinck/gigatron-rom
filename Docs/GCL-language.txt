@@ -7,7 +7,7 @@ applications for the Gigatron TTL microcomputer, without bothering
 the programmer with the harsh timing requirements of the hardware
 platform.
 
-vCPU is the interpreted 16-bit machine language running in the dead
+vCPU is the interpreted 16-bit virtual processor running in the dead
 time of the video/sound loop.
 
 The two are closely tied together, and we sometimes we mix them up.
@@ -60,6 +60,62 @@ gcl1 {GCL version}
     if>0 loop]                          {120 IF B>0 THEN 100}
   Plot!                                 {130 GOSUB 20}
   loop]                                 {140 GOTO 80}
+
+Compiled to vCPU instructions this program looks like this:
+
+        RAM address
+        |     encoding
+        |     |         vCPU instruction
+        |     |         |     operand
+        |     |         |     |         GCL notation
+        |     |         |     |         |
+        V     V         V     V         V
+        0200  cd 29     DEF   $022b     [def
+        0202  11 48 44  LDWI  $4448       $4448
+        0205  2b 30     STW   $30         D=
+                                          [do
+        0207  21 32     LDW   $32           C
+        0209  35 53 0e  BGE   $0210         [if<0
+        020c  59 0f     LDI   $0f             15
+        020e  90 10     BRA   $0212         else
+        0210  59 05     LDI   5               5]
+        0212  f0 30     POKE  $30           D.
+        0214  21 32     LDW   $32           C
+        0216  99 32     ADDW  $32           C+
+        0218  2b 32     STW   $32           C=
+        021a  21 30     LDW   $30           D
+        021c  e3 01     ADDI  1             1+
+        021e  2b 30     STW   $30           D=
+        0220  11 a8 bb  LDWI  $bba8         -$4458
+        0223  99 30     ADDW  $30           D+
+        0225  35 53 28  BGE   $022a         if<0
+        0228  90 05     BRA   $0207         loop]
+        022a  ff        RET               ret]
+        022b  2b 34     STW   $34       Plot=
+                                        [do
+        022d  59 00     LDI   0           0
+        022f  2b 36     STW   $36         A=
+        0231  59 01     LDI   1           1
+        0233  2b 38     STW   $38         B=
+                                          [do
+        0235  21 36     LDW   $36           A
+        0237  99 38     ADDW  $38           B+
+        0239  2b 32     STW   $32           C=
+        023b  21 38     LDW   $38           B
+        023d  2b 36     STW   $36           A=
+        023f  21 32     LDW   $32           C
+        0241  2b 38     STW   $38           B=
+        0243  35 56 46  BLE   $0248         if>0
+        0246  90 33     BRA   $0235         loop]
+        0248  cf 34     CALL  $34         Plot!
+        024a  90 2b     BRA   $022d     loop]
+
+As you can see, there is a near perfect one-to-one relation between
+GCL words and vCPU instructions.
+
+BTW: To make a visual distinction between 16-bits code and native
+code, we always captalize vCPU instructions while we write 8-bits
+Gigatron code in lower case.
 
 ----------
 Deployment
