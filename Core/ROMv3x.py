@@ -55,10 +55,18 @@
 #  XXX #41 Fix zero page usage in Bricks and Tetronis
 #  XXX #52 Head-only Snake shouldn't be allowed to turn around
 #  XXX Better noise by changing wavX every frame (for at least 1 sound channel)
-#  XXX GCL: Direct ASCII support
+#  XXX v6502 as additional interpreter
+#  XXX SYS_Run6502_v4_XXX (also adjust S,P etc)
+#  DONE Retire bootCount
+#  XXX Better startup chime
+#  XXX Fast system video modes (something like ROM v3y)? Mode 4 (black)
+#  XXX vCPU extension for C: HOP_v4 $DD
+#  XXX Relocate App-specific SYS functions above v6502 (Racer, Loader)
+#  XXX New Easter egg (maze.gt1?)
+#  XXX SYS function for plotting a full character in one go
 #
 #  Ideas for ROM v5+
-#  XXX SYS function for plotting a full character
+#  XXX Reset.c and Main.c (that is: port these from GCL to C)
 #  XXX Sprites by scan line 4 reset method? ("videoG"=graphics)
 #  XXX Need keymaps in ROM? (perhaps undocumented if not tested)
 #  XXX FrogStroll (not in Contrib/)
@@ -70,9 +78,6 @@
 #  XXX vCPU: Interrupts / Task switching (e.g for clock, LED sequencer)
 #  XXX Scroll out the top line of text, or generic vertical scroll SYS call
 #  XXX Multitasking/threading/sleeping (start with date/time clock in GCL)
-#  XXX Scoping for variables or some form of local variables? $i ("localized")
-#  XXX Simple GCL programs might be compiled by the host instead of offline?
-#  XXX vCPU: Clear just vAC[0:7] (Workaround is not bad: |255 ^255)
 #-----------------------------------------------------------------------
 
 from sys import argv
@@ -174,9 +179,9 @@ assert 4*63 + sample < 256
 # We pin this reset/address value to 3, so `sample' swings from 3 to 255
 assert sample == 3
 
-# Booting
-bootCount       = zpByte() # 0 for cold boot
-bootCheck       = zpByte() # Checksum
+# Former bootCount and bootCheck (<= ROMv3)
+zpByte()                   # Unused
+vCPUselect_v4   = zpByte() # Active interpreter page
 
 # Entropy harvested from SRAM startup and controller input
 entropy         = zpByte(3)
@@ -277,24 +282,29 @@ screenMemory = 0x0800   # Default start of screen memory: 0x0800 to 0x7fff
 #  Application definitions
 #-----------------------------------------------------------------------
 
-maxTicks = 28/2 # Duration of vCPU's slowest virtual opcode
+maxTicks = 28/2                 # Duration of vCPU's slowest virtual opcode (ticks)
+v6502_maxTicks = 38/2 # XXX     # Max duration of v6502 processing phase (ticks)
 
-vOverheadInt = 9 # Overhead of jumping in and out. Cycles, not ticks
-vOverheadExt = 5
+runVcpu_overhead = 5            # Caller overhead (cycles)
+vCPU_overhead = 9               # Callee overhead of jumping in and out (cycles)
+v6502_overhead = 11             # Callee overhead for v6502 (cycles)
 
-maxSYS = -999 # Largest time slice for 'SYS
-minSYS = +999 # Smallest time slice for 'SYS'
+v6502_adjust = (v6502_maxTicks - maxTicks) + (v6502_overhead - vCPU_overhead)/2
+assert v6502_adjust >= 0        # v6502's overhead should be a bit more
+
+maxSYS = -999                   # Largest time slice for 'SYS
+minSYS = +999                   # Smallest time slice for 'SYS'
 
 def runVcpu(n, ref, returnTo=None):
-  """Run interpreter for exactly n cycles"""
+  """Run interpreter for exactly n cycles. Returns 0"""
   comment = 'Run vCPU for %s cycles' % n
   if ref:
     comment += ' (%s)' % ref
-  if n % 2 != (vOverheadExt + vOverheadInt) % 2:
+  if n % 2 != (runVcpu_overhead + vCPU_overhead) % 2:
     nop()
     comment = C(comment)
     n -= 1
-  n -= vOverheadExt + vOverheadInt
+  n -= runVcpu_overhead + vCPU_overhead
 
   print 'runVcpu at %04x cycles %3s info %s' % (pc(), n, ref)
   n -= 2*maxTicks
@@ -306,15 +316,17 @@ def runVcpu(n, ref, returnTo=None):
   minSYS = min(minSYS, n + 2*maxTicks)
 
   n /= 2
+  assert n >= v6502_adjust
   if returnTo is None:
     # Return to next instruction
     returnTo = pc() + 5
   ld(returnTo&255)              #0
   comment = C(comment)
   st([vReturn])                 #1
-  ld(hi('ENTER'), Y)            #4
-  jmp(Y,'ENTER')                #5
-  ld(n)                         #6
+  ld([vCPUselect_v4],Y)         #2
+  jmp(Y,lo('ENTER'))            #3
+  ld(n)                         #4
+assert runVcpu_overhead ==       5
 
 #-----------------------------------------------------------------------
 #
@@ -409,24 +421,6 @@ ld(0b0011);                     C('LEDs |**OO|')
 ld(syncBits^hSync, OUT)
 ld(syncBits, OUT)
 
-# Determine if this is a cold or a warm start. We do this by checking the
-# boot counter and comparing it to a simplistic checksum. The assumption
-# is that after a cold start the checksum is invalid.
-
-ld([bootCount]);                C('Cold or warm boot?')
-adda([bootCheck])
-adda(0x5a)
-bne('cold')
-ld(0)
-label('warm')
-ld([bootCount])                 # if warm start: bootCount += 1
-adda(1)
-label('cold')
-st([bootCount])                 # if cold start: bootCount = 0
-xora(255)
-suba(0x5a-1)
-st([bootCheck])
-
 # vCPU reset handler
 vReset = videoTable + 240 # we have 10 unused bytes behind the video table
 ld((vReset&255)-2);             C('Setup vCPU reset handler')
@@ -442,6 +436,9 @@ st('SYS',             [Y,Xpp])
 st(256-38/2+maxTicks, [Y,Xpp])
 st('SYS',             [Y,Xpp])  # SYS_Exec_88
 st(256-88/2+maxTicks, [Y,Xpp])
+
+ld(hi('ENTER'));                C('Active interpreter (vCPU,v6502) = vCPU')
+st([vCPUselect_v4])
 
 ld(255);                        C('Setup serial input')
 st([frameCount])
@@ -526,6 +523,15 @@ jmp(Y,'vBlankStart')
 ld(syncBits)
 
 # Fillers
+nop()
+nop()
+nop()
+nop()
+nop()
+nop()
+nop()
+nop()
+nop()
 nop()
 nop()
 
@@ -1000,14 +1006,14 @@ nop()                           #61
 label('.select1')
 st([videoModeD])                #62
 wait(192-63)                    #63 No code space left for calling vCPU
-# vAC==255 now
+# AC==255 now
 st([buttonState])               #192
 bra('.skipVcpu')                #193
 ld(0)                           #194
 label('.select2')
 
 runVcpu(195-55, 'line40')       #67 Application cycles (scan line 40)
-# vAC==0 now
+# AC==0 now
 label('.skipVcpu')
 st([videoY])                    #195
 st([frameX])                    #196
@@ -1203,9 +1209,9 @@ adda(maxTicks)                  #3
 bgt(pc()&255);                  C('Resync')#4
 suba(1)                         #5
 ld(hi('vBlankStart'), Y)        #6
-jmp(Y,[vReturn]);               C('Return to caller')#7
+jmp(Y,[vReturn]);               C('To video driver')#7
 ld(0)                           #8 AC should be 0 already. Still..
-assert vOverheadInt ==          9
+assert vCPU_overhead ==          9
 
 # Instruction LDWI: Load immediate word constant (vAC=D), 20 cycles
 label('LDWI')
@@ -3285,6 +3291,867 @@ nop()                           #28
 ld(hi('REENTER'), Y)            #29
 jmp(Y,'REENTER')                #30
 ld(-34/2)                       #31
+
+#-----------------------------------------------------------------------
+#       MOS 6502 emulator !!! UNFINISHED AND UNTESTED !!!
+#-----------------------------------------------------------------------
+
+# Some quirks:
+# - Stack in zero page instead of page 1
+# - No decimal mode
+# - No interrupts
+
+# Registers
+v6502_PC        = vAC           # Program Counter
+v6502_S         = vSP           # Stack Pointer (stored as S+1)
+v6502_A         = sysArgs+0     # Accumulator
+v6502_X         = sysArgs+1     # Index Register X
+v6502_Y         = sysArgs+2     # Index Register Y
+v6502_P         = sysArgs+3     # Processor Status Register
+v6502_Q         = sysArgs+4     # Last accumulator value (for Z and N flags)
+v6502_IR        = sysArgs+5     # Instruction Register
+v6502_L         = sysArgs+6     # Low Address Register
+v6502_H         = sysArgs+7     # High Address Register
+#               = vTmp          # Not used
+
+v6502_C = 1                     # Carry Flag
+v6502_Z = 2                     # Zero Flag
+v6502_I = 4                     # Interrupt Enable Flag
+v6502_D = 8                     # Decimal Enable Flag
+v6502_B = 16                    # Break (or PHP) Instruction Flag
+v6502_U = 32                    # Unused Flag (always 1)
+v6502_V = 64                    # Overflow Flag
+v6502_N = 128                   # Negative Flag
+
+# All interpreter entry points must share the same page offset, because
+# this offset is hard-coded as immediate operand in the video driver.
+# The Gigatron's original vCPU's 'ENTER' label is already at $2ff, so we
+# just use $dff for 'v6502_enter'. v6502 actually has two entry points.
+# The other is 'v6502_continue' at $10ff. It is used for instructions
+# that were fetched but not yet executed. Allowing the split gives finer
+# granulariy, and hopefully more throughput for the simpler instructions.
+# (There is no "overhead" for allowing instruction splitting, because
+#  both emulation phases must administer [vTicks] anyway.)
+while pc()&255 < 255:
+  nop()
+label('v6502_enter')
+bra('v6502_next2')              #0
+C('v6502 primary entry point')
+# --- Page boundary ---
+suba(v6502_adjust)              #1,19 Adjust for timing differences between vCPU and v6502
+
+#19 Addressing modes
+(   'v6502_mode0'  ); bra('v6502_modeIZX'); bra('v6502_modeIMM'); bra('v6502_modeILL') # xxx000xx
+bra('v6502_modeZP');  bra('v6502_modeZP');  bra('v6502_modeZP');  bra('v6502_modeILL') # xxx001xx
+bra('v6502_modeIMP'); bra('v6502_modeZP');  bra('v6502_modeACC'); bra('v6502_modeILL') # xxx010xx
+bra('v6502_modeABS'); bra('v6502_modeABS'); bra('v6502_modeABS'); bra('v6502_modeILL') # xxx011xx
+bra('v6502_modeREL'); bra('v6502_modeIZY'); bra('v6502_modeIMM'); bra('v6502_modeILL') # xxx100xx
+bra('v6502_modeZPX'); bra('v6502_modeZPX'); bra('v6502_modeZPX'); bra('v6502_modeILL') # xxx101xx
+bra('v6502_modeIMP'); bra('v6502_modeABY'); bra('v6502_modeIMP'); bra('v6502_modeILL') # xxx110xx
+bra('v6502_modeABX'); bra('v6502_modeABX'); bra('v6502_modeABX'); bra('v6502_modeILL') # xxx111xx
+
+# Special cases for emulator:
+#     $00 BRK -         but gets #$DD           Handle in v6502_mode0
+#     $20 JSR $DDDD     but gets #$DD           Handle in v6502_mode0 and v6502_JSR
+#     $40 RTI -         but gets #$DD           Handle in v6502_mode0
+#     $60 RTS -         but gets #$DD           Handle in v6502_mode0
+#     $6C JMP ($DDDD)   but gets $DDDD          Handle in v6502_x6C
+#     $96 STX $DD,Y     but gets $DD,X          XXX Handle in v6502_modeZPX?
+#     $B6 LDX $DD,Y     but gets $DD,X          XXX Handle in v6502_modeZPY?
+#     $BE LDX $DDDD,Y   but gets $DDDD,X        XXX Handle in v6502_modeABX?
+# Illegal opcodes may still read any number of operands before trapping
+
+label('v6502_next')
+adda([vTicks])                  #0
+blt('v6502_exitBefore');        C('Escape')#1
+label('v6502_next2')
+st([vTicks])                    #2
+#
+# Fetch opcode
+ld([v6502_PC+0],X)              #3
+ld([v6502_PC+1],Y)              #4
+ld([Y,X]);                      C('Fetch IR')#5
+st([v6502_IR])                  #6
+ld([v6502_PC+0]);               C('PC++')#7
+adda(1)                         #8
+st([v6502_PC+0],X)              #9
+beq(pc()+3)                     #10
+bra(pc()+3)                     #11
+ld(0)                           #12
+ld(1)                           #12
+adda([v6502_PC+1])              #13
+st([v6502_PC+1],Y)              #14
+#
+# Get addressing mode and fetch operands
+ld([v6502_IR]);                 C('Get addressing mode')#15
+anda(31)                        #16
+bra(AC)                         #17
+bra('.L1')                      #18
+# (jump table)                  #19
+label('.L1')
+ld([Y,X]);                      C('Fetch L')#20
+# Most opcodes bra() away now, but IR & 31 == 0 falls through
+#
+# Immediate Mode: #$FF (except for BRK JSR RTI RTS) -- 26 cycles
+ld([v6502_IR]);                 C('"v6502_mode0"')#21
+bmi('.L2')                      #22
+ld([v6502_PC+1])                #23
+bra('v6502_check')              #24
+ld(-26/2)                       #25
+
+# Resync with caller. At this point we're returning BEFORE
+# fetching and executing the next instruction.
+label('v6502_exitBefore')
+adda(v6502_maxTicks);           C('Exit BEFORE fetch')#3
+bgt(pc()&255);                  C('Resync')#4
+suba(1)                         #5
+ld(hi('v6502_enter'));          C('Set entry point to before \'fetch\'')#6
+st([vCPUselect_v4])             #7
+ld(hi('vBlankStart'),Y)         #8
+jmp(Y,[vReturn]);               C('To video driver')#9
+ld(0)                           #10
+assert v6502_overhead ==         11
+
+# Immediate Mode: #$FF -- 36 cycles
+label('v6502_modeIMM')
+nop()                           #21 Wait for v6502_mode0 to join
+nop()                           #22
+ld([v6502_PC+1]);               C('Copy PC');#23
+label('.L2')
+st([v6502_H])                   #24
+ld([v6502_PC+0])                #25
+st([v6502_L])                   #26
+adda(1);                        C('PC++')#27
+st([v6502_PC+0])                #28
+beq(pc()+3)                     #29
+bra(pc()+3)                     #30
+ld(0)                           #31
+ld(1)                           #31
+adda([v6502_PC+1])              #32
+st([v6502_PC+1])                #33
+bra('v6502_check')              #34
+ld(-36/2)                       #35
+
+# Accumulator Mode: ROL ROR LSL ASR -- 28 cycles
+label('v6502_modeACC')
+ld(v6502_A&255);                C('Address of AC')#21
+st([v6502_L])                   #22
+ld(v6502_A>>8)                  #23
+st([v6502_H])                   #24
+ld(-28/2)                       #25
+bra('v6502_check')              #26
+#nop()                          #27 Overlap with v6502_modeIMP
+#
+# Implied Mode: no operand -- 24 cycles
+label('v6502_modeILL')
+label('v6502_modeIMP')
+nop()                           #21,27
+bra('v6502_check')              #22
+ld(-24/2)                       #23
+
+# Zero Page Modes: $DD $DD,X $DD,Y -- 38 cycles
+label('v6502_modeZP')
+bra('.L3')                      #21
+ld(0)                           #22
+label('v6502_modeZPX')
+bra('.L3')                      #21
+label('v6502_modeZPY')
+ld([v6502_X])                   #21,22
+ld([v6502_Y])                   #22
+label('.L3')
+adda([Y,X]);                    C('Fetch L')#23
+st([v6502_L])                   #24
+ld(0)                           #25 Stay in zero page
+st([v6502_H])                   #26
+ld([v6502_PC+0]);               C('PC++')#27
+adda(1)                         #28
+st([v6502_PC+0])                #29
+beq(pc()+3)                     #30
+bra(pc()+3)                     #31
+ld(0)                           #32
+ld(1)                           #32
+adda([v6502_PC+1])              #33
+st([v6502_PC+1])                #34
+ld(-38/2)                       #35
+bra('v6502_check')              #36
+#nop()                          #37 Overlap with v6502_retry
+#
+# Possible retry loop for modeABS and modeIZY -- 38 cycles
+label('v6502_retry')
+beq(pc()+3);                    C('PC--')#28,37
+bra(pc()+3)                     #29
+ld(0)                           #30
+ld(-1)                          #30
+adda([v6502_PC+1])              #31
+st([v6502_PC+1])                #32
+ld([v6502_PC+0])                #33
+suba(1)                         #34
+st([v6502_PC+0])                #35
+bra('v6502_next');              C('Retry until sufficient time')#36
+ld(-38/2)                       #37
+
+# Absolute Modes: $DDDD $DDDD,X $DDDD,Y -- 60 cycles
+label('v6502_modeABS')
+bra('.L4')                      #21
+ld(0)                           #22
+label('v6502_modeABX')
+bra('.L4')                      #21
+label('v6502_modeABY')
+ld([v6502_X])                   #21,22
+ld([v6502_Y])                   #22
+label('.L4')
+st([v6502_L])                   #23
+ld(-60/2+v6502_maxTicks)        #24 Is there enough time for the excess ticks?
+adda([vTicks])                  #25
+blt('v6502_retry')              #26
+ld([v6502_PC+0])                #27
+ld([Y,X]);                      C('Fetch L')#28
+adda([v6502_L]);                C('Add offset')#29
+st([v6502_L])                   #30
+bmi('.L5');                     C('Carry?')#31 Figure out if there was a carry
+suba([Y,X]);                    #32 Gets back original operand
+bra('.L6')                      #33
+ora([Y,X])                      #34 Carry in bit 7
+label('.L5')
+anda([Y,X])                     #33 Carry in bit 7
+nop()                           #34
+label('.L6')
+anda(128,X)                     #35 Move the carry to bit 0 (0 or +1)
+ld([X])                         #36
+st([v6502_H])                   #37
+ld([v6502_PC+0]);               C('PC++')#38
+adda(1)                         #39
+st([v6502_PC+0],X)              #40
+beq(pc()+3)                     #41
+bra(pc()+3)                     #42
+ld(0)                           #43
+ld(1)                           #43
+adda([v6502_PC+1])              #44
+st([v6502_PC+1],Y)              #45
+ld([Y,X]);                      C('Fetch H')#46
+adda([v6502_H])                 #47
+st([v6502_H])                   #48
+ld([v6502_PC+0]);               C('PC++')#49
+adda(1)                         #50
+st([v6502_PC+0])                #51
+beq(pc()+3)                     #52
+bra(pc()+3)                     #53
+ld(0)                           #54
+ld(1)                           #54
+adda([v6502_PC+1])              #55
+st([v6502_PC+1])                #56
+nop()                           #57
+bra('v6502_check')              #58
+ld(-60/2)                       #59
+
+# Indexed Indirect Mode: ($DD,X) -- 30 cycles
+label('v6502_modeIZX')
+adda([v6502_X],X);              C('Add X')#21
+ld([v6502_PC+0]);               C('PC++')#22
+adda(1)                         #23
+st([v6502_PC+0])                #24
+beq(pc()+3)                     #25
+bra(pc()+3)                     #26
+ld(0)                           #27
+ld(1)                           #27
+adda([v6502_PC+1])              #28
+st([v6502_PC+1])                #29
+ld(0,Y);                        C('Read word from zero-page')#30
+ld([Y,X])                       #31
+st([Y,Xpp])                     #32
+st([v6502_L])                   #33
+ld([Y,X])                       #34
+st([v6502_H])                   #35
+bra('v6502_check')              #36
+ld(-38/2)                       #37
+
+# Indirect Indexed Mode: ($DD),Y -- 56 cycles
+label('v6502_modeIZY')
+ld(AC,X)                        #21
+nop()                           #22
+nop()                           #23
+ld(-56/2+v6502_maxTicks)        #24 Is there enough time for the excess ticks?
+adda([vTicks])                  #25
+blt('v6502_retry')              #26
+ld([v6502_PC+0])                #27
+ld([v6502_PC+0]);               C('PC++')#28
+adda(1)                         #29
+st([v6502_PC+0])                #30
+beq(pc()+3)                     #31
+bra(pc()+3)                     #32
+ld(0)                           #33
+ld(1)                           #33
+adda([v6502_PC+1])              #34
+st([v6502_PC+1])                #35
+ld(0,Y);                        C('Read word from zero-page')#36
+ld([Y,X])                       #37
+st([Y,Xpp])                     #38
+st([v6502_L])                   #39
+ld([Y,X])                       #40
+st([v6502_H])                   #41
+ld([v6502_L]);                  C('Add Y')#42
+adda([v6502_Y])                 #43
+st([v6502_L])                   #44
+bmi('.L7');                     C('Carry?')#45 Figure out if there was a carry
+suba([v6502_Y])                 #46 Gets back original operand
+bra('.L8')                      #47
+ora([v6502_Y])                  #48 Carry in bit 7
+label('.L7')
+anda([v6502_Y])                 #47 Carry in bit 7
+nop()                           #48
+label('.L8')
+anda(128,X)                     #49 Move the carry to bit 0 (0 or +1)
+ld([X])                         #50
+adda([v6502_H])                 #51
+st([v6502_H])                   #52
+nop()                           #53
+bra('v6502_check')              #54
+ld(-56/2)                       #55
+
+# Relative Mode: BEQ BNE BPL BMI BCC BCS BVC BVS -- 38 cycles
+label('v6502_modeREL')
+ld([Y,X]);                      C('Fetch offset')#21 Only needed for branch
+st([v6502_L])                   #22
+bmi(pc()+3);                    C('Sign extend')#23
+bra(pc()+3)                     #24
+ld(0)                           #25
+ld(255)                         #25
+st([v6502_H])                   #26
+ld([v6502_PC+0]);               C('PC++')#27 Needed for both cases
+adda(1)                         #28
+st([v6502_PC+0])                #29
+beq(pc()+3)                     #30
+bra(pc()+3)                     #31
+ld(0)                           #32
+ld(1)                           #32
+adda([v6502_PC+1])              #34
+st([v6502_PC+1])                #35
+bra('v6502_check')              #36
+ld(-38/2)                       #37
+
+# Update elapsed time for the addressing mode processing.
+# Then check if we can immediately execute this instruction as well.
+# Otherwise transfer control to the video driver
+label('v6502_check')
+adda([vTicks])                  #0
+blt('v6502_exitAfter');         C('Escape')#1
+st([vTicks])                    #2
+ld(hi('v6502_execute'),Y)       #3
+jmp(Y,[v6502_IR])               #4
+bra(255)                        #5
+
+# Otherwise resync with caller. At this point we're returning AFTER
+# addressing mode decoding, but before executing the instruction.
+label('v6502_exitAfter')
+adda(v6502_maxTicks);           C('Exit AFTER fetch')#3
+bgt(pc()&255);                  C('Resync')#4
+suba(1)                         #5
+ld(hi('v6502_continue'));       C('Set entry point to before \'execute\'')#6
+st([vCPUselect_v4])             #7
+ld(hi('vBlankStart'),Y)         #8
+jmp(Y,[vReturn]);               C('To video driver')#9
+ld(0)                           #10
+assert v6502_overhead ==         11
+
+align(0x100,0x100)
+label('v6502_execute')
+ld('v6502_BRK'); ld('v6502_ORA'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_ILL'); ld('v6502_ORA'); ld('v6502_ASL'); ld('v6502_ILL') #6
+ld('v6502_PHP'); ld('v6502_ORA'); ld('v6502_ASL'); ld('v6502_ILL') #6
+ld('v6502_ILL'); ld('v6502_ORA'); ld('v6502_ASL'); ld('v6502_ILL') #6
+ld('v6502_BPL'); ld('v6502_ORA'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_ILL'); ld('v6502_ORA'); ld('v6502_ASL'); ld('v6502_ILL') #6
+ld('v6502_CLC'); ld('v6502_ORA'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_ILL'); ld('v6502_ORA'); ld('v6502_ASL'); ld('v6502_ILL') #6
+ld('v6502_JSR'); ld('v6502_AND'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_BIT'); ld('v6502_AND'); ld('v6502_ROL'); ld('v6502_ILL') #6
+ld('v6502_PLP'); ld('v6502_AND'); ld('v6502_ROL'); ld('v6502_ILL') #6
+ld('v6502_BIT'); ld('v6502_AND'); ld('v6502_ROL'); ld('v6502_ILL') #6
+ld('v6502_BMI'); ld('v6502_AND'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_ILL'); ld('v6502_AND'); ld('v6502_ROL'); ld('v6502_ILL') #6
+ld('v6502_SEC'); ld('v6502_AND'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_ILL'); ld('v6502_AND'); ld('v6502_ROL'); ld('v6502_ILL') #6
+ld('v6502_RTI'); ld('v6502_EOR'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_ILL'); ld('v6502_EOR'); ld('v6502_LSR'); ld('v6502_ILL') #6
+ld('v6502_PHA'); ld('v6502_EOR'); ld('v6502_LSR'); ld('v6502_ILL') #6
+ld('v6502_JMP'); ld('v6502_EOR'); ld('v6502_LSR'); ld('v6502_ILL') #6
+ld('v6502_BVC'); ld('v6502_EOR'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_ILL'); ld('v6502_EOR'); ld('v6502_LSR'); ld('v6502_ILL') #6
+ld('v6502_CLI'); ld('v6502_EOR'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_ILL'); ld('v6502_EOR'); ld('v6502_LSR'); ld('v6502_ILL') #6
+ld('v6502_RTS'); ld('v6502_ADC'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_ILL'); ld('v6502_ADC'); ld('v6502_ROR'); ld('v6502_ILL') #6
+ld('v6502_PLA'); ld('v6502_ADC'); ld('v6502_ROR'); ld('v6502_ILL') #6
+ld('v6502_x6C');  ld('v6502_ADC'); ld('v6502_ROR'); ld('v6502_ILL') #6
+ld('v6502_BVS'); ld('v6502_ADC'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_ILL'); ld('v6502_ADC'); ld('v6502_ROR'); ld('v6502_ILL') #6
+ld('v6502_SEI'); ld('v6502_ADC'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_ILL'); ld('v6502_ADC'); ld('v6502_ROR'); ld('v6502_ILL') #6
+ld('v6502_ILL'); ld('v6502_STA'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_STY'); ld('v6502_STA'); ld('v6502_STX'); ld('v6502_ILL') #6
+ld('v6502_DEY'); ld('v6502_ILL'); ld('v6502_TXA'); ld('v6502_ILL') #6
+ld('v6502_STY'); ld('v6502_STA'); ld('v6502_STX'); ld('v6502_ILL') #6
+ld('v6502_BCC'); ld('v6502_STA'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_STY'); ld('v6502_STA'); ld('v6502_STX'); ld('v6502_ILL') #6
+ld('v6502_TYA'); ld('v6502_STA'); ld('v6502_TXS'); ld('v6502_ILL') #6
+ld('v6502_ILL'); ld('v6502_STA'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_LDY'); ld('v6502_LDA'); ld('v6502_LDX'); ld('v6502_ILL') #6
+ld('v6502_LDY'); ld('v6502_LDA'); ld('v6502_LDX'); ld('v6502_ILL') #6
+ld('v6502_TAY'); ld('v6502_LDA'); ld('v6502_TAX'); ld('v6502_ILL') #6
+ld('v6502_LDY'); ld('v6502_LDA'); ld('v6502_LDX'); ld('v6502_ILL') #6
+ld('v6502_BCS'); ld('v6502_LDA'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_LDY'); ld('v6502_LDA'); ld('v6502_LDX'); ld('v6502_ILL') #6
+ld('v6502_CLV'); ld('v6502_LDA'); ld('v6502_TSX'); ld('v6502_ILL') #6
+ld('v6502_LDY'); ld('v6502_LDA'); ld('v6502_LDX'); ld('v6502_ILL') #6
+ld('v6502_CPY'); ld('v6502_CMP'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_CPY'); ld('v6502_CMP'); ld('v6502_DEC'); ld('v6502_ILL') #6
+ld('v6502_INY'); ld('v6502_CMP'); ld('v6502_DEX'); ld('v6502_ILL') #6
+ld('v6502_CPY'); ld('v6502_CMP'); ld('v6502_DEC'); ld('v6502_ILL') #6
+ld('v6502_BNE'); ld('v6502_CMP'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_ILL'); ld('v6502_CMP'); ld('v6502_DEC'); ld('v6502_ILL') #6
+ld('v6502_CLD'); ld('v6502_CMP'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_ILL'); ld('v6502_CMP'); ld('v6502_DEC'); ld('v6502_ILL') #6
+ld('v6502_CPX'); ld('v6502_SBC'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_CPX'); ld('v6502_SBC'); ld('v6502_INC'); ld('v6502_ILL') #6
+ld('v6502_INX'); ld('v6502_SBC'); ld('v6502_NOP'); ld('v6502_ILL') #6
+ld('v6502_CPX'); ld('v6502_SBC'); ld('v6502_INC'); ld('v6502_ILL') #6
+ld('v6502_BEQ'); ld('v6502_SBC'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_ILL'); ld('v6502_SBC'); ld('v6502_INC'); ld('v6502_ILL') #6
+ld('v6502_SED'); ld('v6502_SBC'); ld('v6502_ILL'); ld('v6502_ILL') #6
+ld('v6502_ILL'); ld('v6502_SBC'); ld('v6502_INC')                  #6
+bra(AC);C('Dispatch into next page')                               #6,7
+# --- Page boundary ---
+align(0x100,0x100)
+ld(hi('v6502_next'),Y)          #8 Handy for instructions that don't clobber Y
+
+label('v6502_BRK')
+ld([v6502_P])                   #9
+ora(v6502_B)                    #10
+st([v6502_P])                   #11
+ld(hi('ENTER'));                C('Switch back to vCPU')#12
+st([vCPUselect_v4])             #13
+nop()                           #14
+ld(hi('REENTER'),Y)             #15 Switch in the current time slice
+jmp(Y,lo('REENTER'));           #16
+ld(-20/2+v6502_maxTicks-maxTicks)#17
+
+label('v6502_ORA')
+ld([v6502_L],X)                 #9
+ld([v6502_H],Y)                 #10
+ld([v6502_A])                   #11
+ora([Y,X])                      #12
+st([v6502_A])                   #13
+# XXX Update flags
+nop()                           #14
+ld(hi('v6502_next'),Y)          #15
+jmp(Y,lo('v6502_next'))         #16
+ld(-18/2)                       #17
+
+label('v6502_ASL')
+label('v6502_PHP')
+# XXX
+
+label('v6502_BPL')
+ld([v6502_Q])                   #9
+nop()                           #10
+bpl('v6502_branch')             #11
+ld(hi('v6502_next'),Y)          #12
+nop()                           #13
+jmp(Y,lo('v6502_next'))         #14
+ld(-16/2)                       #15
+
+label('v6502_CLC')
+ld([v6502_P])                   #9
+anda(~v6502_C)                  #10
+st([v6502_P])                   #11
+jmp(Y,lo('v6502_next'))         #12
+ld(-14/2)                       #13
+
+label('v6502_JSR')
+ld([v6502_S]);                  #9
+suba(2)                         #10
+st([v6502_S],X)                 #11
+ld(0,Y)                         #12
+ld([v6502_PC+1])                #13
+st([v6502_H])                   #14
+ld([v6502_PC+0])                #15
+st([v6502_L])                   #16
+adda(1);                        C('Push ++PC')#17
+st([v6502_PC+0])                #18
+st([Y,Xpp])                     #19
+beq(pc()+3)                     #20
+bra(pc()+3)                     #21
+ld(0)                           #22
+ld(1)                           #22
+adda([v6502_PC+1])              #23
+st([v6502_PC+1])                #24
+st([Y,X])                       #25
+ld([v6502_PC+0],X);             C('Fetch H')#26
+ld([v6502_PC+1],Y)              #27
+ld([Y,X])                       #28
+st([v6502_PC+1])                #29
+ld([v6502_L],X);                C('Fetch L')#30
+ld([v6502_H],Y)                 #31
+ld([Y,X])                       #32
+st([v6502_PC+0])                #33
+nop()                           #34
+ld(hi('v6502_check'),Y)         #35
+jmp(Y,lo('v6502_check'))        #36
+ld(-38/2)                       #37
+
+label('v6502_AND')
+ld([v6502_L],X)                 #9
+ld([v6502_H],Y)                 #10
+ld([v6502_A])                   #11
+anda([Y,X])                     #12
+st([v6502_A])                   #13
+# XXX Update flags
+nop()                           #14
+ld(hi('v6502_next'),Y)          #15
+jmp(Y,lo('v6502_next'))         #16
+ld(-16/2)                       #17
+
+label('v6502_BIT')
+label('v6502_ROL')
+label('v6502_PLP')
+# XXX
+
+label('v6502_BMI')
+ld([v6502_Q])                   #9
+nop()                           #10
+bmi('v6502_branch')             #11
+ld(hi('v6502_next'),Y)          #12
+nop()                           #13
+jmp(Y,lo('v6502_next'))         #14
+ld(-16/2)                       #15
+
+label('v6502_SEC')
+label('v6502_RTI')
+# XXX
+
+label('v6502_EOR')
+ld([v6502_L],X)                 #9
+ld([v6502_H],Y)                 #10
+ld([v6502_A])                   #11
+xora([Y,X])                     #12
+st([v6502_A])                   #13
+# XXX Update flags
+nop()                           #14
+ld(hi('v6502_next'),Y)          #15
+jmp(Y,lo('v6502_next'))         #16
+ld(-18/2)                       #17
+
+label('v6502_LSR')
+label('v6502_PHA')
+label('v6502_BVC')
+# XXX
+
+label('v6502_CLI')
+ld([v6502_P])                   #9
+anda(~v6502_I)                  #10
+st([v6502_P])                   #11
+jmp(Y,lo('v6502_next'))         #12
+ld(-14/2)                       #13
+
+label('v6502_RTS')
+# XXX
+
+label('v6502_ADC')
+ld([v6502_L],X)                 #9
+ld([v6502_H],Y)                 #10
+ld([v6502_P])                   #11
+anda(1)                         #12 Isolate carry
+ld([v6502_A])                   #13
+adda([Y,X])                     #14
+st([v6502_A])                   #15
+st([v6502_Q])                   #16
+# XXX Update flags
+ld(hi('v6502_next'),Y)          #17
+jmp(Y,lo('v6502_next'))         #18
+ld(-20/2)                       #19
+
+label('v6502_ROR')
+label('v6502_PLA')
+# XXX
+
+label('v6502_JMP')
+ld([v6502_L])                   #9
+st([v6502_PC+0])                #10
+ld([v6502_H])                   #11
+st([v6502_PC+1])                #12
+ld(hi('v6502_next'),Y)          #13
+jmp(Y,lo('v6502_next'))         #14
+ld(-16/2)                       #15
+
+label('v6502_BVS')
+label('v6502_SEI')
+# XXX
+
+label('v6502_STA')
+ld([v6502_L],X)                 #9
+ld([v6502_H],Y)                 #10
+ld([v6502_A])                   #11
+st([Y,X])                       #12
+# XXX Update flags
+ld(hi('v6502_next'),Y)          #13
+jmp(Y,lo('v6502_next'))         #14
+ld(-16/2)                       #15
+
+label('v6502_STY')
+ld([v6502_L],X)                 #9
+ld([v6502_H],Y)                 #10
+ld([v6502_Y])                   #11
+st([Y,X])                       #12
+# XXX Update flags
+ld(hi('v6502_next'),Y)          #13
+jmp(Y,lo('v6502_next'))         #14
+ld(-16/2)                       #15
+
+label('v6502_STX')
+ld([v6502_L],X)                 #9
+ld([v6502_H],Y)                 #10
+ld([v6502_X])                   #11
+st([Y,X])                       #12
+ld(hi('v6502_next'),Y)          #14
+jmp(Y,lo('v6502_next'))         #15
+ld(-16/2)                       #15
+
+label('v6502_DEY')
+ld([v6502_Y])                   #9
+suba(1)                         #10
+st([v6502_Y])                   #11
+# XXX Update flags
+jmp(Y,lo('v6502_next'))         #12
+ld(-14/2)                       #15
+
+label('v6502_TXA')
+label('v6502_BCC')
+label('v6502_TYA')
+label('v6502_TXS')
+# XXX
+
+label('v6502_LDY')
+ld([v6502_L],X)                 #9
+ld([v6502_H],Y)                 #10
+ld([Y,X])                       #11
+st([v6502_Y])                   #12
+ld(hi('v6502_next'),Y)          #13
+jmp(Y,lo('v6502_next'))         #14
+ld(-16/2)                       #15
+
+label('v6502_LDA')
+ld([v6502_L],X)                 #9
+ld([v6502_H],Y)                 #10
+ld([Y,X])                       #11
+st([v6502_A])                   #12
+# XXX Update flags
+ld(hi('v6502_next'),Y)          #13
+jmp(Y,lo('v6502_next'))         #14
+ld(-16/2)                       #15
+
+label('v6502_LDX')
+ld([v6502_L],X)                 #9
+ld([v6502_H],Y)                 #10
+ld([Y,X])                       #11
+st([v6502_X])                   #12
+# XXX Update flags
+ld(hi('v6502_next'),Y)          #13
+jmp(Y,lo('v6502_next'))         #14
+ld(-16/2)                       #15
+
+label('v6502_TAY')
+label('v6502_TAX')
+label('v6502_BCS')
+# XXX
+
+label('v6502_CLV')
+ld([v6502_P])                   #9
+anda(~v6502_V)                  #10
+st([v6502_P])                   #11
+jmp(Y,lo('v6502_next'))         #12
+ld(-14/2)                       #13
+
+label('v6502_TSX')
+label('v6502_CPY')
+label('v6502_CMP')
+label('v6502_DEC')
+# XXX
+
+label('v6502_INY')
+ld([v6502_Y])                   #9
+adda(1)                         #10
+st([v6502_Y])                   #11
+# XXX Update flags
+jmp(Y,lo('v6502_next'))         #12
+ld(-14/2)                       #13
+
+label('v6502_DEX')
+ld([v6502_X])                   #9
+suba(1)                         #10
+st([v6502_X])                   #11
+# XXX Update flags
+nop()                           #12
+ld(hi('v6502_next'),Y)          #13
+jmp(Y,lo('v6502_next'))         #14
+ld(-16/2)                       #15
+
+label('v6502_BNE')
+ld([v6502_Q])                   #9
+nop()                           #10
+bne('v6502_branch')             #11
+ld(hi('v6502_next'),Y)          #12
+nop()                           #13
+jmp(Y,lo('v6502_next'))         #14
+ld(-16/2)                       #15
+
+label('v6502_CLD')
+ld([v6502_P])                   #9
+anda(~v6502_D)                  #10
+st([v6502_P])                   #11
+jmp(Y,lo('v6502_next'))         #12
+ld(-14/2)                       #13
+
+label('v6502_CPX')
+# XXX
+
+label('v6502_SBC')
+ld([v6502_L],X)                 #9
+ld([v6502_H],Y)                 #10
+ld([v6502_P])                   #11
+assert(v6502_C == 1)
+anda(1)                         #12 Isolate carry
+suba(1)                         #13
+adda([v6502_A])                 #14
+suba([Y,X])                     #15
+st([v6502_A])                   #16
+st([v6502_Q])                   #17
+# XXX Update flags
+nop()                           #18
+ld(hi('v6502_next'),Y)          #19
+jmp(Y,lo('v6502_next'))         #20
+ld(-22/2)                       #20
+
+label('v6502_INC')
+ld([v6502_L],X)                 #9
+ld([v6502_H],Y)                 #10
+ld([Y,X])                       #11
+adda(1)                         #12
+st([Y,X])                       #13
+# XXX Update flags
+nop()                           #14
+ld(hi('v6502_next'),Y)          #15
+jmp(Y,lo('v6502_next'))         #16
+ld(-18/2)                       #17
+
+label('v6502_INX')
+ld([v6502_X])                   #9
+adda(1)                         #10
+st([v6502_X])                   #11
+# XXX Update flags
+jmp(Y,lo('v6502_next'))         #12
+ld(-14/2)                       #13
+
+label('v6502_NOP')
+ld(-12/2)                       #9
+jmp(Y,lo('v6502_next'))         #10
+nop()                           #11
+
+label('v6502_BEQ')
+ld([v6502_Q])                   #9
+nop()                           #10
+beq('v6502_branch')             #11
+ld(hi('v6502_next'),Y)          #12
+nop()                           #13
+jmp(Y,lo('v6502_next'))         #14
+ld(-16/2)                       #15
+
+label('v6502_branch')
+ld([v6502_PC+0]);               C('PC + offset')#13
+adda([v6502_L])                 #14
+st([v6502_PC+0])                #15
+bmi('.nb0');                    C('Carry')#16
+suba([v6502_L])                 #17
+bra('.nb1')                     #18
+ora([v6502_L])                  #19
+label('.nb0')
+anda([v6502_L])                 #18
+nop()                           #19
+label('.nb1')
+anda(128,X)                     #20
+ld([X])                         #21
+adda([v6502_H])                 #22
+st([v6502_PC+1])                #23
+jmp(Y,lo('v6502_next'))         #24
+ld(-26/2)                       #25
+
+# Instructions implemented in the extended page
+
+label('v6502_x6C')
+ld(hi('v6502_i6C'),Y);          C('JMP ($DDDD)')#9
+jmp(Y,hi('v6502_i6C'))          #10
+nop()                           #11
+
+# Carry calculation table
+# L7  B7  BX  C7  SC  UC
+# --- --- --- --- --- ---
+#  0   0   0   0   0   0
+#  0   0   0   1   0   0
+#  1   0   0   0  +1   1
+#  1   0   0   1   0   0
+#  0   1  -1   0   0   1
+#  0   1  -1   1  -1   0
+#  1   1  -1   0   0   1
+#  1   1  -1   1   0   1
+# --- --- --- --- --- ---
+#  ^   ^   ^   ^   ^   ^
+#  |   |   |   |   |   `--- Carry out of L + unsigned R: UC = C7 ? L7&R7 : L7|R7
+#  |   |   |   |   `----- Carry out of L + signed R: SC = BX + UC
+#  |   |   |   `------- MSB of unextended L + R
+#  |   |   `--------- Sign extension of signed R
+#  |   `----------- MSB of left operand L
+#  `------------- MSB of right operand R
+
+# `v6502_continue' is the interpreter's entry point when opcode and
+# operands were already fetched just before the last hPulse.
+# It must be at $xxff, prefably somewhere in v6502's own code pages.
+# Illegal opcodes must *also* be at page offset 255. So entry
+# points are a scarce commodity. In this case we can share the
+# entry point: illegal instructions will have AC==255, while
+# entry will have a non-negative number of vTicks in AC. Therefore
+# we can detect the different uses and branch accordingly.
+while pc()&255 < 255:
+  nop()
+label('v6502_SED')              # Decimal mode not implemented
+label('v6502_ILL')
+label('v6502_continue')
+blt('v6502_illegal')            #0,9
+C('v6502 secondary entry point')
+# --- Page boundary ---
+align(0x100,0x100)
+ld(hi('v6502_execute'),Y)       #1,10
+suba(v6502_adjust)              #2
+st([vTicks])                    #3
+jmp(Y,[v6502_IR])               #4
+bra(255)                        #5
+
+label('v6502_illegal')
+ld(hi('ENTER'));                C('Switch back to vCPU')#11
+st([vCPUselect_v4])             #12
+ld(hi('REENTER'),Y)             #13 Switch in the current time slice
+jmp(Y,lo('REENTER'));           #14
+ld(-16/2+v6502_maxTicks-maxTicks)#15
+
+label('v6502_i6C')
+ld([v6502_L],X);                C('JMP ($DDDD)')#12
+ld([v6502_H],Y)                 #13
+ld([Y,X])                       #14
+st([Y,Xpp]);                    C('Wrap around: bug compatible with NMOS')#15
+st([v6502_PC+0])                #16
+ld([Y,X])                       #17
+st([v6502_PC+1])                #18
+ld(hi('v6502_next'),Y)          #19
+jmp(Y,lo('v6502_next'))         #20
+ld(-22/2)                       #21
 
 #-----------------------------------------------------------------------
 #  Built-in full resolution images
