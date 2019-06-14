@@ -38,6 +38,16 @@ $(DEV).rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Main_v3.gcl\
 		Core/Reset_v4.gcl
 
+# Test ROM for v6502 testing
+mos: v6502.rom
+v6502.rom: Core/* Apps/* Images/* Makefile interface.json
+	rm -f ROMv3x.rom ROMv3x.asm
+	python Core/ROMv3x.py\
+		Main=Core/v6502-test.gcl\
+		Core/Reset_v4.gcl
+	mv ROMv3x.rom v6502.rom
+	mv ROMv3x.asm v6502.asm
+
 # Experimental revision, based on ROM v3, for overclocked systems at 12.5 MHz.
 # Adds vCPU slices on scanlines to get 400 cycles per scanline
 ROMv3y.rom: Core/* Apps/* Images/* Makefile interface.json
@@ -106,6 +116,9 @@ burnv3: ROMv3.rom
 	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
 burn: $(DEV).rom
+	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
+
+burnmos: v6502.rom
 	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
 burn85:

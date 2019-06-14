@@ -1,0 +1,35 @@
+gcl0x
+
+{ Tester for v6502 }
+{ Nice online assembler: https://www.masswerk.at/6502/assembler.html }
+{ Demo jumping back and forth between vCPU and v6502 code }
+
+[def                            {      org $0202   }
+        $EA#                    { 0202 nop         }
+        $AE# $00# $08#          { 0203 ldx $0800   }
+        $E8#                    { 0206 inx         }
+        $FE# $00# $08#          { 0207 inc $0800,X }
+        $D0# $FA#               { 020a bne *-6     }
+        $00#                    { 020c brk         }
+] \vLR= { = v6502 PC }
+
+{ GCL notation for main loop }
+$0b0c \sysFn=                   { SYS_v6502_v4_80 (preliminary address) }
+[do
+  push                          { Save start address on stack }
+  80!                           { Run v6502 until BRK }
+  pop                           { Restore start address }
+  loop]                         { Forever }
+
+{ vCPU disassembly of main loop
+        0200  cd 0b             DEF   $020d
+        ...
+        020d  2b 1a             STW   vLR
+        020f  11 0c 0b          LDWI  $0b0c
+        0212  2b 22             STW   sysFn
+        0214  75                PUSH
+        0215  b4 e6             SYS   80
+        0217  63                POP
+        0218  90 12             BRA   $0214
+}
+
