@@ -21,8 +21,8 @@ $0600: {Large page}
   {Draw 5 vertical slices: 5 using font data}
   32      \sysArgs0. {Blue}
   15      \sysArgs1. {Yellow}
-  Pos     \sysArgs4=
-  \SYS_VDrawBits_134 \sysFn=
+  Pos     \sysArgs4:
+  \SYS_VDrawBits_134 \sysFn:
   $fb i= [do
     fontData 0? fontData<++ \sysArgs2. 134!
     \sysArgs4<++
@@ -39,9 +39,9 @@ $7800 Pos=
   $800 Pos+ [if<0 $0800] Pos=
 
   {Clear line}
-  Pos \sysArgs4=
+  Pos \sysArgs4:
   32 \sysArgs0. \sysArgs1. {All blue}
-  \SYS_VDrawBits_134 \sysFn=
+  \SYS_VDrawBits_134 \sysFn:
   [do
     134!
     \sysArgs4<++

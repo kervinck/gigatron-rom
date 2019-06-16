@@ -67,9 +67,9 @@ $01df deek Pos=                 {Bottom character row in screen memory}
   i 2<< i+                      {Multiply by 5}
   k+ k=                         {Add to page address to reach bitmap data}
 
-  \SYS_VDrawBits_134 \sysFn=    {Prepare SYS calls}
+  \SYS_VDrawBits_134 \sysFn:    {Prepare SYS calls}
   \sysArgs6; \sysArgs0:         {Apply caller-defined colors}
-  Pos \sysArgs4=                {Position for character}
+  Pos \sysArgs4:                {Position for character}
   $fe%=                         {Temporarily park return value on the stack}
   6+ Pos=                       {Advance position by 6 pixels}
 
@@ -86,10 +86,10 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 { Print a newline conditionally }
 [def
   Pos<, [if<>0                  {If not at start already}
-    \SYS_VDrawBits_134 \sysFn=  {Prepare SYS call}
+    \SYS_VDrawBits_134 \sysFn:  {Prepare SYS call}
     $800 Pos<.                  {Go back to start}
     Pos+ [if<0 $0800] Pos=      {Go down 8 lines and wrap around if needed}
-    \sysArgs4=                  {sysArgs[4:5] is position on screen}
+    \sysArgs4:                  {sysArgs[4:5] is position on screen}
     \sysArgs2.                  {All-zero output pattern}
     [do
       134!                      {SYS call}
@@ -112,7 +112,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 [def
   push
   tmp=                          {Save value}
-  \SYS_LSRW4_50 \sysFn=         {Prepare SYS call for shift}
+  \SYS_LSRW4_50 \sysFn:         {Prepare SYS call for shift}
   tmp 50!                       {Shift right 4 bits}
   10- [if>=0 7+] $3a+           {Convert to hex digit}
   PrintChar!

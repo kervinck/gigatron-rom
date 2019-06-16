@@ -238,7 +238,7 @@ $0f20 \sysArgs6:                {Pen color yellow, background color blue}
     Keyword! $29# 0#            {')'}
     [if=0 SyntaxError!]
     \entropy;                   {Two random bytes}
-    \SYS_Random_34 \sysFn=      {Prepare SYS call}
+    \SYS_Random_34 \sysFn:      {Prepare SYS call}
     [do 34! if<0loop]           {Get positive random number}
     Divide!                     {Modulo expression}
     i Value=
@@ -272,10 +272,10 @@ $0f20 \sysArgs6:                {Pen color yellow, background color blue}
 
 { Continue printing on new line. Returns 0 }
 [def
-  \SYS_VDrawBits_134 \sysFn=    {Prepare SYS call}
+  \SYS_VDrawBits_134 \sysFn:    {Prepare SYS call}
   $800 Pos<.                    {Go back to start}
   Pos+ [if<0 $0800] Pos=        {Go down 8 lines and wrap around if needed}
-  \sysArgs4=                    {sysArgs[4:5] is position on screen}
+  \sysArgs4:                    {sysArgs[4:5] is position on screen}
   \sysArgs2.                    {All-zero output pattern}
   [do
     134!                        {SYS call}
@@ -311,9 +311,9 @@ $0300:
   i 2<< i+                      {Multiply by 5}
   k+ k=                         {Add to page address to reach bitmap data}
 
-  \SYS_VDrawBits_134 \sysFn=    {Prepare SYS calls}
+  \SYS_VDrawBits_134 \sysFn:    {Prepare SYS calls}
   \sysArgs6; \sysArgs0:         {Apply caller-defined colors}
-  Pos \sysArgs4=                {Position for character}
+  Pos \sysArgs4:                {Position for character}
   $fe%=                         {Temporarily park return value on the stack}
   6+ Pos=                       {Advance position by 6 pixels}
 
@@ -666,7 +666,7 @@ $13a0 deek End=                 {At startup 'End' comes from loaded segment}
 2+ Active=                      {BASIC command(s) to run at startup}
 
 {-----------------------------------------------------------------------+
-|}$08a0 \vLR= ret{      RAM page 8                                      |
+|}$08a0 \vLR: ret{      RAM page 8                                      |
 +-----------------------------------------------------------------------}
 $08a0:
 

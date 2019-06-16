@@ -18,7 +18,7 @@ gcl0x                           {GCL version for this program}
   \sysArgs2.                    {All-zero 8-bit pattern}
   [do                           {Outer horizontal loop}
     [do                         {Inner vertical loop}
-      \sysArgs4= 134!           {VDrawBits SYS call clears 8 pixels vertically}
+      \sysArgs4: 134!           {VDrawBits SYS call clears 8 pixels vertically}
       i+ if>0loop]              {Go down and repeat for entire vertical stripe}
     255& 159^ if<>0             {Until completing X=159 position}
     \sysArgs4; j+ loop]         {Step to next vertical stripe and repeat}
@@ -32,7 +32,7 @@ gcl0x                           {GCL version for this program}
    else     i= \font82up] j=    {Second page is ASCII 82..127}
   i 2<< i+                      {Multiply by 5}
   j+ j=                         {Add page address to reach bitmap data}
-  Pos \sysArgs4=                {Position of character}
+  Pos \sysArgs4:                {Position of character}
   6+ Pos=                       {Advance position by 6 pixels for next call}
   5 [do i=                      {Loop to draw 5 vertical slices of 8 pixels}
     j 0? \sysArgs2.             {Get byte from ROM}
@@ -61,7 +61,7 @@ gcl0x                           {GCL version for this program}
 { After the setup above the main program can start }
 { Clear the screen and print our friendly message! }
 
-\SYS_VDrawBits_134 \sysFn=      {Prepare SYS calls}
+\SYS_VDrawBits_134 \sysFn:      {Prepare SYS calls}
 $203f \sysArgs0:                {Middle blue pen color and white background}
 ClearScreen!                    {Erase all screen data}
 $4029 Pos=                      {Set cursor to an address in middle of screen}

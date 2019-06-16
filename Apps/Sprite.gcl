@@ -59,14 +59,14 @@ $800 p=                         {Top of screen}
 ] Image=
 
 [def
-  \SYS_Sprite6_v3_64 \sysFn=    {Normal sprite drawing}
+  \SYS_Sprite6_v3_64 \sysFn:    {Normal sprite drawing}
   0 o=                          {Origin correction}
   1 u=                          {Direction}
   ret
 ] FaceRight=
 
 [def
-  \SYS_Sprite6x_v3_64 \sysFn=   {X-flipped sprite drawing}
+  \SYS_Sprite6x_v3_64 \sysFn:   {X-flipped sprite drawing}
   6 o=                          {Origin correction}
   -1 u=                         {Direction}
   ret

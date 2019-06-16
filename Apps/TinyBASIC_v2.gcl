@@ -256,7 +256,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
     0#
   [if<>0
     Expression!
-    \SYS_Random_34 \sysFn=      {Prepare SYS call}
+    \SYS_Random_34 \sysFn:      {Prepare SYS call}
     [do 34! if<0loop]           {Get positive random number}
     Divide!                     {Modulo expression}
     i Value=
@@ -342,9 +342,9 @@ $0300:
       k+ k=                     {Add to page address to reach bitmap data}
 
       \SYS_VDrawBits_134        {Prepare SYS calls}
-      \sysFn=
+      \sysFn:
       \sysArgs6; \sysArgs0:     {Apply caller-defined colors}
-      Pos \sysArgs4=            {Position for character}
+      Pos \sysArgs4:            {Position for character}
       $fe%=                     {Temporarily park return value on the stack}
       6+ Pos=                   {Advance position by 6 pixels}
 
@@ -567,7 +567,7 @@ $0500:
     \romTypeValue_ROMv2-
     [if>=0
       \SYS_SetMode_v2_80        {Available from ROM v2}
-      \sysFn= Value 80!]
+      \sysFn: Value 80!]
     EndOfLine!]
 
   Keyword! $73# $61# $76# $65#  {'save'}
@@ -675,7 +675,7 @@ PrintS!                         {'*** Tiny BASIC v2'}
 Newline!
 
 {-----------------------------------------------------------------------+
-|}$08a0 \vLR= ret{      RAM page 8                                      |
+|}$08a0 \vLR: ret{      RAM page 8                                      |
 +-----------------------------------------------------------------------}
 $08a0:
 
@@ -1268,10 +1268,10 @@ $17a0:
     [if<0                       {A newline has started}
       10 Address.               {Terminate the save line}
       Address 31| 31^ Address=  {Back to start of buffer}
-      \sysArgs0=                {Prepare SYS call}
+      \sysArgs0:                {Prepare SYS call}
       1 \sysArgs2.              {First bit}
       \SYS_SendSerial1_v3_80
-      \sysFn= 80!               {SYS call to send bits to serial port}
+      \sysFn: 80!               {SYS call to send bits to serial port}
       [if<>0                    {'BreakError' would be better}
         3 \serialRaw.           {Not a great hack...}
         TestBreak!]             {...to initiate a break error}
@@ -1299,7 +1299,7 @@ $18a0:
 {Newline}
 
   { Prepare for printing on new line }
-  \SYS_VDrawBits_134 \sysFn=    {Prepare SYS call}
+  \SYS_VDrawBits_134 \sysFn:    {Prepare SYS call}
 
   0 Pos<.                       {Go back to start of line}
   \sysArgs2.                    {All-zero output pattern}
@@ -1310,7 +1310,7 @@ $18a0:
 
   \sysArgs6; \sysArgs0:         {Apply caller-defined colors}
 
-  Pos \sysArgs4=                {sysArgs[4:5] is position on screen}
+  Pos \sysArgs4:                {sysArgs[4:5] is position on screen}
   [do
     134! \sysArgs4<++           {SYS call and advance to next slice}
     134! \sysArgs4<++           {A bit unrolling for speed}

@@ -1,18 +1,18 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 from asm import *
+import string
 import sys
 
-# XXX Give warning for redefining a label
-# XXX Make dot-labels local ('.loop:')
-# XXX Make inline vCPU assembly possible
-# XXX Give a warning when starting new block after calls were made
+# XXX Change to Python3
+# XXX Give warning when starting new block after calls were made
 # XXX Give warning when def-block contains 'call' put no 'push'
 # XXX Give warning when def-block contains code but no 'ret'
-# XXX Primitive or macro to clear just lower byte of vAC
 # XXX Give warning when a variable is not both written and read 
-# XXX Macros
-# XXX 'page' macro
+
+def has(x):
+  return x is not None
 
 class Program:
   def __init__(self, address, name, forRom=True):
@@ -24,7 +24,7 @@ class Program:
     self.loops = {} # block -> address of last do
     self.conds = {} # block -> address of continuation
     self.defs  = {} # block -> address of last def
-    self.vars  = {} # name -> address
+    self.vars  = {} # name -> address (GCL variables)
     self.segStart = None
     self.vPC = None
     self.segId = 0
@@ -45,7 +45,7 @@ class Program:
   def openSegment(self):
     """Write header for segment"""
     address = self.segStart
-    if self.execute is None:
+    if not has(self.execute):
       self.execute = address
     assert self.segId == 0 or address>>8 != 0 # Zero-page segment can only be first
     self.putInRomTable(address>>8, '| RAM segment address (high byte first)')
@@ -58,11 +58,11 @@ class Program:
     if len(self.blocks) > 1:
       self.error('Unterminated block')
     if self.vPC != self.segStart:
-      print ' Segment at %04x size %3d used %3d unused %3d' % (
+      print(' Segment at %04x size %3d used %3d unused %3d' % (
         self.segStart,
         self.segEnd - self.segStart,
         self.vPC - self.segStart,
-        self.segEnd - self.vPC)
+        self.segEnd - self.vPC))
       length = self.vPC - self.segStart
       assert 1 <= length <= 256
       define('$%s.seg.%d' % (self.name, self.segId), length)
@@ -142,12 +142,18 @@ class Program:
     self.putInRomTable(lo(ins), '%04x %s' % (self.vPC, ins))
     self.vPC += 1
 
+  def address(self, var, offset=0):
+    comment = '%04x %s' % (prev(self.vPC, 1), repr(var))
+    comment += '%+d' % offset if offset else ''
+    self.emit(self.getAddress(var)+offset, comment)
+
   def word(self, word):
     """Process a word and emit its code"""
     if len(word) == 0:
       return
 
-    if self.version is None:
+    if not has(self.version):
+       # XXX For ideas on language changes, see Docs/GCL-language.txt
       if word in ['gcl0x']:
         self.version = word
       else:
@@ -205,13 +211,13 @@ class Program:
     elif word == 'deek': self.opcode('DEEK')
     else:
       var, con, op = self.parseWord(word) # XXX Simplify this
-      if op is None:
+      if not has(op):
         if var:
           self.opcode('LDW')
-          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
+          self.address(var)
         else:
-          if con is None:
-            self.error('Invalid word %s' % repr(word))
+          if not has(con):
+            self.error('(%s) Invalid word' % word)
           if 0 <= con < 256:
             self.opcode('LDI')
             self.emit(con)
@@ -219,130 +225,156 @@ class Program:
             self.opcode('LDWI')
             self.emit( con    &0xff)
             self.emit((con>>8)&0xff)
-      elif op == ';' and con is not None:
+      elif op == ';' and has(con):
           self.opcode('LDW')
           self.emit(con)
 
       elif op == ':' and con > 0xff: # XXX Replace with automatic allocation ('page')
           self.org(con)
-      elif op == ':' and con is not None: # XXX Why do we have this ...
+      elif op == ':' and has(con):
           self.opcode('STW')
           self.emit(con)
       elif op == '=' and con is not None: # XXX ... as well as this?
+          self.warning('(%s) i= is depricated, use i:' % word)
           self.opcode('STW')
           self.emit(con)
-      elif op == '.' and con is not None:
+      elif op == '.' and has(con):
           self.opcode('ST')
           self.emit(con)
-      elif op == ',' and con is not None:
+      elif op == ',' and has(con):
           self.opcode('LD')
           self.emit(con)
-      elif op == '=' and var:
+      elif op == '=' and has(var):
           self.opcode('STW')
-          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
+          self.address(var)
           if var not in self.lengths and self.thisBlock() in self.lengths:
             self.lengths[var] = self.lengths[self.thisBlock()]
           else:
             self.lengths[var] = None # No def lengths can be associated
-      elif op == '+' and var:
+      elif op == '+' and has(var):
           self.opcode('ADDW')
-          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '+' and con is not None:
+          self.address(var)
+      elif op == '+' and has(con):
           self.opcode('ADDI')
           self.emit(con)
-      elif op == '-' and var:
+      elif op == '-' and has(var):
           self.opcode('SUBW')
-          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '-' and con is not None:
+          self.address(var)
+      elif op == '-' and has(con):
           self.opcode('SUBI')
           self.emit(con)
-      elif op == '<<' and con is not None:
+      elif op == '<<' and has(con):
           for i in range(con):
             self.opcode('LSLW')
-      elif op == '--' and con is not None:
+      elif op == '--' and has(con):
           self.opcode('ALLOC')
           self.emit(-con&255)
-      elif op == '++' and con is not None:
+      elif op == '++' and has(con):
           self.opcode('ALLOC')
           self.emit(con)
-      elif op == '%=' and con is not None:
+      elif op == '%=' and has(con):
           self.opcode('STLW')
           self.emit(con)
-      elif op == '%' and con is not None:
+      elif op == '%' and has(con):
           self.opcode('LDLW')
           self.emit(con)
-      elif op == '#' and con is not None:
+      elif op == '\'' and has(var): # Inline ASCII
+          if len(var) > 0:
+            for c in var:
+              self.emit(ord(c))
+          else:
+             self.emit(ord(' '))
+      elif op == '#' and has(con):
+          # XXX self.warning('(%s) i# is depricated, use #i' % word)
           self.emit(con & 255)
-      elif op == '?' and con is not None:
+      elif op == '# ' and has(con): # Prefix
+          self.emit(con & 255)
+      elif op == '?' and has(con):
           self.opcode('LUP')
           self.emit(con)
-      elif op == '&' and var:
+      elif op == '&' and has(var):
           self.opcode('ANDW')
-          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '&' and con is not None:
+          self.address(var)
+      elif op == '&' and has(con):
           self.opcode('ANDI')
           self.emit(con)
-      elif op == '|' and var:
+      elif op == '|' and has(var):
           self.opcode('ORW')
-          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '|' and con is not None:
+          self.address(var)
+      elif op == '|' and has(con):
           self.opcode('ORI')
           self.emit(con)
-      elif op == '^' and var:
+      elif op == '^' and has(var):
           self.opcode('XORW')
-          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '^' and con is not None:
+          self.address(var)
+      elif op == '^' and has(con):
           self.opcode('XORI')
           self.emit(con)
-      elif op == '.' and var:
+      elif op == '.' and has(var):
           self.opcode('POKE')
-          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == ':' and var:
+          self.address(var)
+      elif op == ':' and has(var):
           self.opcode('DOKE')
-          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '<.' and var:
+          self.address(var)
+      elif op == '<.' and has(var):
           self.opcode('ST')
-          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '>.' and var:
+          self.address(var)
+      elif op == '>.' and has(var):
           self.opcode('ST')
-          self.emit(self.getAddress(var)+1, '%04x %s+1' % (prev(self.vPC, 1), repr(var)))
-      elif op == ',' and var:
+          self.address(var, +1)
+      elif op == ',' and has(var):
           self.opcode('LDW')
-          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
+          self.address(var)
           self.opcode('PEEK')
-      elif op == ';' and var:
+      elif op == ';' and has(var):
           self.opcode('LDW')
-          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
+          self.address(var)
           self.opcode('DEEK')
-      elif op == '<++' and var:
+      elif op == '<++' and has(var):
+          # XXX self.warning('(%s) X<++ is depricated, use <X++' % word)
           self.opcode('INC')
-          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '<++' and con is not None:
+          self.address(var)
+      elif op == '<++' and has(con):
+          # XXX self.warning('(%s) i<++ is depricated, use <i++' % word)
           self.opcode('INC')
           self.emit(con)
-      elif op == '>++' and var:
+      elif op == '>++' and has(var):
+          # XXX self.warning('(%s) X>++ is depricated, use >X++' % word)
           self.opcode('INC')
-          self.emit(self.getAddress(var)+1, '%04x %s+1' % (prev(self.vPC, 1), repr(var)))
-      elif op == '>++' and con is not None:
+          self.address(var, +1)
+      elif op == '>++' and has(con):
+          # XXX self.warning('(%s) i>++ is depricated, use j++ (j=i+1)' % word)
           self.opcode('INC')
           self.emit(con+1)
-      elif op == '<,' and var:
+      elif op == '< ++' and has(var):
+          self.opcode('INC')
+          self.address(var)
+      elif op == '< ++' and has(con):
+          self.opcode('INC')
+          self.emit(con)
+      elif op == '> ++' and has(var):
+          self.opcode('INC')
+          self.address(var, +1)
+      elif op == '> ++' and has(con):
+          self.opcode('INC')
+          self.emit(con+1)
+      elif op == '<,' and has(var):
           self.opcode('LD')
-          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '>,' and var:
+          self.address(var)
+      elif op == '>,' and has(var):
           self.opcode('LD')
-          self.emit(self.getAddress(var)+1, '%04x %s+1' % (prev(self.vPC, 1), repr(var)))
-      elif op == '!' and var:
+          self.address(var, +1)
+      elif op == '!' and has(var):
           self.opcode('CALL')
-          self.emit(self.getAddress(var), '%04x %s' % (prev(self.vPC, 1), repr(var)))
-      elif op == '!' and con is not None:
+          self.address(var)
+      elif op == '!' and has(con):
           if con&1:
-            self.error('Invalid value %s (must be even)' % con)
+            self.error('(%s) Invalid value (must be even)' % word)
           self.opcode('SYS')
           extraTicks = con/2 - symbol('maxTicks')
           self.emit(256 - extraTicks if extraTicks > 0 else 0)
       else:
-        self.error('Invalid word %s' % repr(word))
+        self.error('(%s) Invalid word' % word)
 
   def _emitIf(self, cond):
       self.opcode('BCC')
@@ -368,93 +400,89 @@ class Program:
     """Break word into pieces"""
 
     word += '\0' # Avoid checking len() everywhere
-    unnamed, sign = None, None
-    name, number = None, 0
+    sign = None
+    name, number, op = None, None, ''
+
+    if word[0] == '\'':
+      # Quoted word (single quote will give a space)
+      name, op = word[1:-1], word[0]
+      return name, number, op
 
     ix = 0
-    if word[ix] == '%':
-      # Unnamed variable
-      unnamed = word[ix]
+    if word[ix] in ['%', '#', '<', '>']:
+      # Prefix operators
+      op += word[ix] + ' ' # We use space to marks prefix operators
       ix += 1
 
-    if word[ix] in '-+':
+    if word[ix] in ['-', '+']:
       # Number sign
       sign = word[ix]
       ix += 1
 
-    if word[ix] == '$':
-      # Hexadecimal number?
+    if word[ix] == '$' and word[ix+1] in string.hexdigits:
+      # Hexadecimal number
       jx = ix+1
-      while word[jx]:
-        o = ord(word[jx])
-        if word[jx] in '0123456789': number = 16*number + o - ord('0')
-        elif word[jx] in 'abcdef': number = 16*number + 10 + o - ord('a')
-        elif word[jx] in 'ABCDEF': number = 16*number + 10 + o - ord('A')
-        else: break
+      number = 0
+      while word[jx] in string.hexdigits:
+        o = string.hexdigits.index(word[jx])
+        number = 16*number + (o if o<16 else o-6)
         jx += 1
       ix = jx if jx-ix > 1 else 0
     elif word[ix].isdigit():
       # Decimal number
+      number = 0
       while word[ix].isdigit():
         number = 10*number + ord(word[ix]) - ord('0')
         ix += 1
-    elif word[ix] == '\\':
-        sym = ''
-        ix += 1
-        while word[ix].isalnum() or word[ix] == '_':
-          sym += word[ix]
-          ix += 1
-        number = symbol(sym)
-        if number is None:
-          self.error('Undefined symbol %s' % repr(sym))
     else:
-      # Named variable?
-      number = None
-      if unnamed or sign:
-         ix = 0 # Reset
-      else:
-        name = ''
-        while word[ix].isalnum() or word[ix] == '_':
-          name += word[ix]
-          ix += 1
+      name = ''
+      while word[ix].isalnum() or word[ix] in ['\\', '_']:
+        name += word[ix]
+        ix += 1
+      name = name if len(name)>0 else None
 
-        name = name if len(name)>0 else None
+      # Resolve '\symbol' as the number it represents
+      if has(name) and name[0] == '\\':
+        # Peeking into the assembler's symbol table (not GCL's)
+        # Substitute \symbol with its value and keep the postfix operator
+        number = symbol(name[1:])
+        if not has(number):
+          self.error('(%s) Undefined symbol %s' % (word, name))
+        name, op = None, ''
 
-    if number is not None:
+    if has(number):
       if sign == '-': number = -number
-      if unnamed: name, number = number, None
 
-    op = word[ix:-1]
+    op += word[ix:-1]                   # Also strips sentinel '\0'
     return (name, number, op if len(op)>0 else None)
 
   def end(self):
     if self.comment > 0:
       self.error('Unterminated comment')
     self.closeSegment()
-    print ' Variables count %d bytes %d end %04x' % (len(self.vars), 2*len(self.vars), zpByte(0))
+    print(' Variables count %d bytes %d end %04x' % (len(self.vars), 2*len(self.vars), zpByte(0)))
     line = ' :'
     for var in sorted(self.vars.keys()):
       if var in self.lengths and self.lengths[var]:
         var += ' [%s]' % self.lengths[var]
       if len(line + var) + 1 > 72:
-        print line
+        print(line)
         line = ' :'
       line += ' ' + var
-    print line
+    print(line)
     self.putInRomTable(0) # Zero marks the end of stream
     C('End of file')
 
-  def warning(self, message):
-    prefix = 'GCL warning:'
+  def prefix(self, prefix):
     prefix += (' file %s' % repr(self.filename)) if self.filename else ''
     prefix += ' line %s:' % self.lineNumber
-    print prefix, message
+    return prefix
+
+  def warning(self, message):
+    print(self.prefix('GCL warning'), message)
 
   def error(self, message):
-    prefix = 'GCL error:'
-    prefix += (' file %s' % repr(self.filename)) if self.filename else ''
-    prefix += ' line %s:' % self.lineNumber
-    print prefix, message
+    print(self.prefix('GCL error'), message)
     sys.exit()
 
   def putInRomTable(self, byte, comment=None):
