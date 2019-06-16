@@ -43,8 +43,8 @@ XXX Image compression?
   {Draw 6 vertical slices: 5 using font data, the last with all-zeros}
   BgColor \sysArgs0.
   Color   \sysArgs1.
-  Pos     \sysArgs4=
-  \SYS_VDrawBits_134 \sysFn=
+  Pos     \sysArgs4:
+  \SYS_VDrawBits_134 \sysFn:
   $fb i= [do
     fontData 0? fontData<++ \sysArgs2. 134!
     \sysArgs4<++
@@ -298,9 +298,9 @@ $0500:
   {Update video table low bytes for road}
 
   {Prepare SYS call}
-  $01ed           \sysArgs0= {"p"}
-  $74d1           \sysArgs2= {"q"}
- {$74d0} 1-  peek \sysArgs4= {"X"}
+  $01ed           \sysArgs0: {"p"}
+  $74d1           \sysArgs2: {"q"}
+ {$74d0} 1-  peek \sysArgs4: {"X"}
 
   HorizonX>, tmp=                    {Pivot 12px from bottom (front of car)}
   $74d5 peek 48+ tmp- tmp=
@@ -318,7 +318,7 @@ $0500:
   HorizonX>, s.
 
   {Copy to video table. This is most timing-critical for a smooth road update}
-  \SYS_RacerUpdateVideoX_40 \sysFn= 40!
+  \SYS_RacerUpdateVideoX_40 \sysFn: 40!
   {This SYS call self-repeats for a total of 47 times and is equivalent to:
     [do
       q, X- p. p 4- p=
@@ -411,7 +411,7 @@ $0600:
 [def 2#         40# 20# 20# 20# 40# 40# 20# 20# 20# 40#         0#] Car2=
 
 {-----------------------------------------------------------------------+
-|}$08a0 \vLR= ret{      RAM page 8                                      |
+|}$08a0 \vLR: ret{      RAM page 8                                      |
 +-----------------------------------------------------------------------}
 $08a0:
 
@@ -441,10 +441,10 @@ $08a0:
 }
 
   {Accelerated version}
-  $012e \sysArgs0= {"p"}
+  $012e \sysArgs0: {"p"}
   $20   \sysArgs2. {"SegmentY"}
   \invTable q=
-  \SYS_RacerUpdateVideoY_40 \sysFn=
+  \SYS_RacerUpdateVideoY_40 \sysFn:
   [do
     q 8?
     Distance+ \sysArgs3. 40!
@@ -511,8 +511,8 @@ $0ba0:
   48 BgColor=
 
   BgColor \sysArgs0. \sysArgs1.
-  $800    \sysArgs4=
-  \SYS_VDrawBits_134 \sysFn=
+  $800    \sysArgs4:
+  \SYS_VDrawBits_134 \sysFn:
   [do
     134!
     \sysArgs4<++
@@ -589,8 +589,8 @@ $0ea0:
   [do
     p 0? \sysArgs0. tmp!
       0? \sysArgs1. tmp!
-      0? \sysArgs2. tmp! \SYS_Unpack_56 \sysFn= 56!
-      q \sysArgs4= 4+ q= \SYS_Draw4_30  \sysFn= 30!
+      0? \sysArgs2. tmp! \SYS_Unpack_56 \sysFn: 56!
+      q \sysArgs4: 4+ q= \SYS_Draw4_30  \sysFn: 30!
     q>, $20^ if<>0loop]
 
   pop ret

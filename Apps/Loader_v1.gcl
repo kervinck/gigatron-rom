@@ -20,9 +20,9 @@ gcl0x
   {Draw 5 vertical slices: 5 using font data}
   32      \sysArgs0. {Blue}
   15      \sysArgs1. {Yellow}
-  Pos     \sysArgs4=
+  Pos     \sysArgs4:
   6+      Pos=
-  \SYS_VDrawBits_134 \sysFn=
+  \SYS_VDrawBits_134 \sysFn:
   $fb i= [do
     fontData 0? fontData<++ \sysArgs2. 134!
     \sysArgs4<++
@@ -47,7 +47,7 @@ $5b0c B=                {Buffer}
 103 {'g'} \sysArgs2.    {Reset checksum}
 
 {-----------------------------------------------------------------------+
-|}$5a0c \vLR= ret{      Inside screen area                              |
+|}$5a0c \vLR: ret{      Inside screen area                              |
 +-----------------------------------------------------------------------}
 $5a0c:
 
@@ -55,16 +55,16 @@ $5a0c:
 
 [do
   {Receive the next transmission frame}
-  B   \sysArgs0=                           {Input buffer}
-  207 \sysArgs3. NextByteIn_32 \sysFn= 32! {Protocol byte}
+  B   \sysArgs0:                           {Input buffer}
+  207 \sysArgs3. NextByteIn_32 \sysFn: 32! {Protocol byte}
   219 \sysArgs3.                       32! {Length, 6 new bits}
   235 \sysArgs3.                       32! {Low address}
   251 \sysArgs3.                       32! {High address}
-                PayloadCopy_34 \sysFn= 34! {Copy previous bytes}
-  2   \sysArgs3. NextByteIn_32 \sysFn= 32! {Payload 0}
+                PayloadCopy_34 \sysFn: 34! {Copy previous bytes}
+  2   \sysArgs3. NextByteIn_32 \sysFn: 32! {Payload 0}
   6   \sysArgs3.
-  [do           PayloadCopy_34 \sysFn= 34! {Copy previous bytes}
-                 NextByteIn_32 \sysFn= 32! {Payload 1-59}
+  [do           PayloadCopy_34 \sysFn: 34! {Copy previous bytes}
+                 NextByteIn_32 \sysFn: 32! {Payload 1-59}
     \sysArgs3, 4+ \sysArgs3.
     242^ if<>0loop]
   185 \sysArgs3.                       32! {Checksum byte}
@@ -79,7 +79,7 @@ $5a0c:
   63 A.
 
   {Check checksum and command, and execute if OK. Also reset checksum.}
-  \SYS_LoaderProcessInput_48 \sysFn= 48!
+  \SYS_LoaderProcessInput_48 \sysFn: 48!
 loop]
 
 {

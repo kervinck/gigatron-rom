@@ -422,57 +422,42 @@ SYS   $DD      Native function call using at most 2*T cycles, D=270-max(14,T)
 DEF   $DD      Define data or code (vAC,vPC=vPC+2,(vPC&0xff00)+D)
 
 
------------------------------------------------
-Mapping between vCPU instructions and GCL words
------------------------------------------------
+-------------------------------------------
+Mapping from vCPU instructions to GCL words
+-------------------------------------------
 
-vCPU            Variable        Constant
-instruction     word            word
------------     ---------       ----------
+Instruction     Variable word   Constant word   Keyword         Comment
+-----------     -------------   -------------   -------         -------
 LDI                             i
 LDWI                            ii
 LDW             X               i;
-STW             X=              i:              (i= is depricated)
-PEEK            peek
+STW             X=              i:                              i= is depricated
+PEEK                                            peek
 LDW+PEEK        X,
 POKE            X.
-DEEK            deek
+DEEK                                            deek
 LDW+DEEK        X;
 DOKE            X:
 LD                              i,
 ST                              i.
-INC             <X++
-INC             >X++
+INC             <X++ >X++       <i++ >i++
 LDLW                            i%
 STLW                            i%=
-ALLOC                           i--
-ALLOC                           i++
-CALL            X!
-ANDW            X&
-ORW             X|
-XORW            X^
-ADDW            X+
-SUBW            X-
-ANDI                            i&
-ORI                             i|
-XORI                            i^
-ADDI                            i+
-SUBI                            i-
+ALLOC                           i-- i++
+CALL            X!                              call            call is alias for \vAC!
+DEF                                             def
+POP                                             pop
+PUSH                                            push
+RET                                             ret
+BRA                                             else loop
+BCC                                             if...
+ANDW/ANDI       X&              i&
+ORW/ORI         X|              i|
+XORW/XORI       X^              i^
+ADDW/ADDI       X+              i+
+SUBW/SUBI       X-              i-
 SYS                             i!
 LUP                             i?
-(ORG)                           ii:
-
-vCPU instruction        GCL word
------------------       --------
-DEF                     def
-CALL                    call            (only as alias for \vAC!)
-POP                     pop
-PUSH                    push
-RET                     ret
-BRA                     else
-BRA                     loop
-BCC                     if<relop>0
-BCC                     if<relop>0loop
 
 ------------------------
 Idioms and coding tricks

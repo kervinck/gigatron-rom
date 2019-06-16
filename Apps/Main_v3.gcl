@@ -11,7 +11,7 @@ gcl0x
 \buttonState;                   {Fetch buttonState and resetTimer}
 [if>0                           {If resetTimer positive}
   16& [if=0                     {And [Start] pressed}
-  \Sprites \sysArgs0= 88!]]     {Start demo. SYS_Exec_88 still in sysFn}
+  \Sprites \sysArgs0: 88!]]     {Start demo. SYS_Exec_88 still in sysFn}
 
 { Print a 5x8 character on screen with the built-in font
   Char must be in the 32-127 range (this is not checked) }
@@ -25,9 +25,9 @@ gcl0x
   {Draw 5 vertical slices: 5 using font data}
   32      \sysArgs0. {Blue}
   Color   \sysArgs1.
-  Pos     \sysArgs4=
+  Pos     \sysArgs4:
   6+      Pos=
-  \SYS_VDrawBits_134 \sysFn=
+  \SYS_VDrawBits_134 \sysFn:
   $fb i= [do
     fontData 0? fontData<++ \sysArgs2. 134!
     \sysArgs4<++
@@ -202,7 +202,7 @@ SelectMenu!
 $8801 i=                        {Offset to next stripe}
 $ff80 j=                        {Mask for keeping the selected item}
 Pos 48+ j& q=                   {Box of current cursor}
-\SYS_VDrawBits_134 \sysFn=      {SYS function}
+\SYS_VDrawBits_134 \sysFn:      {SYS function}
 32 \sysArgs0. \sysArgs1.        {Colors}
 [do
   \sysArgs4;
@@ -218,12 +218,12 @@ Pos 48+ j& q=                   {Box of current cursor}
   255& 160^ if<>0loop]          {Next stripe}
 
 { Load and start the selected program }
-\SYS_Exec_88 \sysFn=            {ROM loader}
-Program \sysArgs0=              {ROM image}
-$200 \vLR=                      {Start of execution address}
+\SYS_Exec_88 \sysFn:            {ROM loader}
+Program \sysArgs0:              {ROM image}
+$200 \vLR:                      {Start of execution address}
 Item 6^ [if=0                   {Tetronis workaround}
   $80 \vSP.                     { 1. Zero-page conflict: move stack}
-  $6f9 \vLR=]                   { 2. Stack must be restored with patch}
+  $6f9 \vLR:]                   { 2. Stack must be restored with patch}
 Item 7^ [if=0                   {Bricks workaround}
   $80 \vSP.]                    { 1. Zero-page conflict: move stack}
 Item 8^ [if=0                   {TicTacToe needs special launcher}
@@ -244,11 +244,11 @@ $200 \vSP. call                 {Restore stack pointer and go to entry_point}
 
 $7fa0:
 
-  11+ \vLR=                     {Return to this program after SYS}
-  \TinyBASIC \sysArgs0= 88!     {Load only, SYS_Exec_88 still in sysFn}
+  11+ \vLR:                     {Return to this program after SYS}
+  \TinyBASIC \sysArgs0: 88!     {Load only, SYS_Exec_88 still in sysFn}
                                 {Return here}
-  $200 \vLR=
-  \TicTacToe \sysArgs0= 88!     {Load Tic-Tac-Toe and execute BASIC}
+  $200 \vLR:
+  \TicTacToe \sysArgs0: 88!     {Load Tic-Tac-Toe and execute BASIC}
 
 {-----------------------------------------------------------------------+
 |                                                                       |

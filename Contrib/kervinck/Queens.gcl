@@ -5,7 +5,7 @@ gcl0x
 
 $ffff FFFF=
 
-\SYS_LSRW1_48 \sysFn=
+\SYS_LSRW1_48 \sysFn:
 
 [def {Search}
   push
