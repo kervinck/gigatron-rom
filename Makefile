@@ -103,10 +103,10 @@ test: Docs/gtemu $(DEV).rom
 Utils/BabelFish/tinyfont.h: Utils/BabelFish/tinyfont.py
 	python "$<" > "$@"
 
-compiletest: Apps/*.gt1
+compiletest: Apps/*.gcl
 	# Test compilation
 	# (Use 'git diff' afterwards to detect unwanted changes)
-	for GT1 in Apps/*.gt1; do rm "$${GT1}"; make "$${GT1}"; done
+	for GCL in Apps/*.gcl; do Core/compilegcl.py "$${GCL}" Apps; done
 
 time: Docs/gtemu $(DEV).rom
 	# Run emulation until first sound
@@ -128,7 +128,7 @@ burn85:
 	minipro -p attiny85 -w Utils/BabelFish/BabelFish.ATtiny85.bin -s
 
 %.gt1: %.gcl
-	Core/compilegcl.py "$<" `dirname ./"$@"`
+	Core/compilegcl.py "$<" `dirname "./$@"`
 
 %.h: %.gt1
 	# Convert GT1 file into header for including as PROGMEM data
@@ -147,19 +147,19 @@ LCCFLAGS:=-ILibs
 #LCCFLAGS:=-ILibs -Wf-d -Wa-d
 
 lcc:
-	mkdir -p $(LCCDIR)
-	mkdir -p $(LCCDIR)/tst
+	mkdir -p "$(LCCDIR)"
+	mkdir -p "$(LCCDIR)/tst"
 	cd Utils/lcc && env HOSTFILE=etc/gt1h.c make all gttest
 
 %.o: %.c $(wildcard Libs/*.h)
-	$(LCC) $(LCCFLAGS) -c $< -o $@
+	$(LCC) $(LCCFLAGS) -c "$<" -o "$@"
 
 libSources:=$(wildcard Libs/*/*.c)
 libObjects:=$(libSources:.c=.o)
 
 .SECONDARY: # Instructs 'make' not to delete intermeditate .o files
 %.gt1: %.o $(libObjects)
-	$(LCC) $(LCCFLAGS) $^ -o $@
+	$(LCC) $(LCCFLAGS) "$^" -o "$@"
 
 ctest: Libs/Example.gt1
 
@@ -170,7 +170,7 @@ cclean:
 # Doesn't work yet. Use as guinea pig to help mature our standard C library
 mscp: Contrib/kervinck/mscp.gt1
 Contrib/kervinck/mscp.o: Contrib/kervinck/mscp.c $(wildcard Libs/*.h)
-	$(LCC) $(LCCFLAGS) -N -P -A -v -c $< -o $@
+	$(LCC) $(LCCFLAGS) -N -P -A -v -c "$<" -o "$@"
 
 todo:
 	@git ls-files | sed 's/ /\\ /g' | xargs grep -I -E '(TODO|XXX)'

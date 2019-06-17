@@ -1,29 +1,29 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
-from asm import *
-import string
-import sys
-
 # XXX Change to Python3
+# XXX Backquoted words should have precedence over grouping
 # XXX Give warning when starting new block after calls were made
 # XXX Give warning when def-block contains 'call' put no 'push'
 # XXX Give warning when def-block contains code but no 'ret'
 # XXX Give warning when a variable is not both written and read 
 
-def has(x):
-  return x is not None
+from asm import *
+import string
+import sys
 
 class Program:
   def __init__(self, address, name, forRom=True):
-    self.name = name
-    self.forRom = forRom # Inject trampolines
+    self.name = name     # For defining unique labels in global symbol table
+    self.forRom = forRom # Inject trampolines if compiling for ROM XXX why not do that outside?
     self.comment = 0     # Nesting level
-    self.lineNumber, self.filename = 0, None
-    self.blocks, self.blockId = [0], 1
-    self.loops = {} # block -> address of last do
-    self.conds = {} # block -> address of continuation
-    self.defs  = {} # block -> address of last def
+    self.lineNumber = 0
+    self.filename = None
+    self.openBlocks = [0] # Outside first block is 0
+    self.nextBlockId = 1
+    self.loops = {} # blockId -> address after `do'
+    self.elses = {} # blockId -> count of `else'
+    self.defs  = {} # blockId -> address of last `def'
     self.vars  = {} # name -> address (GCL variables)
     self.segStart = None
     self.vPC = None
@@ -35,41 +35,12 @@ class Program:
     self.lengths = {} # block -> length, or var -> length
 
   def org(self, address):
-    """Set a new address"""
+    """Set start address"""
     self.closeSegment()
     self.segStart = address
     self.vPC = address
     page = address & ~255
     self.segEnd = page + (250 if 0x100 <= page <= 0x400 else 256)
-
-  def openSegment(self):
-    """Write header for segment"""
-    address = self.segStart
-    if not has(self.execute):
-      self.execute = address
-    assert self.segId == 0 or address>>8 != 0 # Zero-page segment can only be first
-    self.putInRomTable(address>>8, '| RAM segment address (high byte first)')
-    self.putInRomTable(address&255, '|')
-    # Fill in the length through the symbol table
-    self.putInRomTable(lo('$%s.seg.%d' % (self.name, self.segId)), '| Length (1..256)')
-
-  def closeSegment(self):
-    """Register length of segment"""
-    if len(self.blocks) > 1:
-      self.error('Unterminated block')
-    if self.vPC != self.segStart:
-      print(' Segment at %04x size %3d used %3d unused %3d' % (
-        self.segStart,
-        self.segEnd - self.segStart,
-        self.vPC - self.segStart,
-        self.segEnd - self.vPC))
-      length = self.vPC - self.segStart
-      assert 1 <= length <= 256
-      define('$%s.seg.%d' % (self.name, self.segId), length)
-      self.segId += 1
-
-  def thisBlock(self):
-    return self.blocks[-1]
 
   def line(self, line):
     """Process a line by tokenizing and processing the words"""
@@ -93,250 +64,158 @@ class Program:
         nextWord = ''
         if nextChar == '{': self.comment += 1
         elif nextChar == '}': self.error('Spurious %s' % repr(nextChar))
-        elif nextChar == '[': self.blocks.append(self.blockId); self.blockId +=  1
+        elif nextChar == '[':
+           self.openBlocks.append(self.nextBlockId)
+           self.elses[self.nextBlockId] = 0
+           self.nextBlockId += 1
         elif nextChar == ']':
-          if len(self.blocks) <= 1:
-            self.error('Unexpected %s' % repr(nextChar))
-          block = self.blocks.pop()
-          if block in self.conds:
-            # There was an if-statement in this block
-            # Define the label to jump here
-            # XXX why not always make a label?
-            define('$%s.if.%d.%d' % (self.name, block, self.conds[block]), prev(self.vPC))
-            del self.conds[block]
-          if block in self.defs:
-            define('$%s.def.%d' % (self.name, self.defs[block]), prev(self.vPC))
-            self.lengths[self.thisBlock()] = self.vPC - self.defs[block] + 2
-            del self.defs[block]
+          if len(self.openBlocks) <= 1:
+            self.error('Block close without open')
+          b = self.openBlocks.pop()
+          define('__%s_%d_cond%d__' % (self.name, b, self.elses[b]), prev(self.vPC))
+          del self.elses[b]
+          if b in self.defs:
+            self.lengths[self.thisBlock()] = self.vPC - self.defs[b] + 2
+            define('__%s_%#04x_def__' % (self.name, self.defs[b]), prev(self.vPC))
+            del self.defs[b]
         elif nextChar == '(': pass
         elif nextChar == ')': pass
     self.word(nextWord)
 
-  def getAddress(self, var):
-    if isinstance(var, str):
-      if var not in self.vars:
-        self.vars[var] = zpByte(2)
-      return self.vars[var]
-    else:
-      if var<0 or var>255:
-        self.error('Index out of range %s' % repr(var))
-      return var
-
-  def emit(self, byte, comment=None):
-    """Next program byte in RAM"""
-    if self.vPC >= self.segEnd:
-      self.error('Out of code space')
-    if byte < 0 or byte >= 256:
-      self.error('Value out of range %d (must be 0..255)' % byte)
-    if self.segStart == self.vPC:
-      self.openSegment()
-    self.putInRomTable(byte, comment)
-    self.vPC += 1
-
-  def opcode(self, ins):
-    """Next opcode in RAM"""
-    if self.vPC >= self.segEnd:
-      self.error('Out of code space')
-    if self.segStart == self.vPC:
-      self.openSegment()
-    self.putInRomTable(lo(ins), '%04x %s' % (self.vPC, ins))
-    self.vPC += 1
-
-  def address(self, var, offset=0):
-    comment = '%04x %s' % (prev(self.vPC, 1), repr(var))
-    comment += '%+d' % offset if offset else ''
-    self.emit(self.getAddress(var)+offset, comment)
+  def end(self):
+    """Signal end of program"""
+    if self.comment > 0:
+      self.error('Unterminated comment')
+    self.closeSegment()
+    print(' Variables count %d bytes %d end %04x' % (len(self.vars), 2*len(self.vars), zpByte(0)))
+    line = ' :'
+    for var in sorted(self.vars.keys()):
+      if var in self.lengths and self.lengths[var]:
+        var += ' [%s]' % self.lengths[var]
+      if len(line + var) + 1 > 72:
+        print(line)
+        line = ' :'
+      line += ' ' + var
+    print(line)
+    self.putInRomTable(0) # Zero marks the end of stream
+    C('End of file')
 
   def word(self, word):
-    """Process a word and emit its code"""
+    # Process a GCL word and emit its corresponding code
     if len(word) == 0:
       return
+    self.lastWord = word
 
-    # Bare keywords
+    # Simple keywords
     if not has(self.version):
-       # XXX For ideas on language changes, see Docs/GCL-language.txt
       if word in ['gcl0x']:
         self.version = word
       else:
-        self.error('Invalid GCL version %s' % repr(word))
-    elif word == 'def':
-      pc = self.vPC # Just an identifier
-      self.opcode('DEF')
-      self.defs[self.thisBlock()] = pc
-      self.emit(lo('$%s.def.%d' % (self.name, pc)))
-    elif word == 'do':
-      self.loops[self.thisBlock()] = self.vPC
-    elif word == 'loop':
-      to = [block for block in self.blocks if block in self.loops]
-      if len(to) == 0:
-        self.error('Loop without do')
-      to = self.loops[to[-1]]
-      to = prev(to)
-      if self.vPC>>8 != to>>8:
-        self.error('Loop outside page')
-      self.opcode('BRA')
-      self.emit(to&255)
-    elif word == 'if<>0':     self._emitIf('EQ')
-    elif word == 'if=0':      self._emitIf('NE')
-    elif word == 'if>=0':     self._emitIf('LT')
-    elif word == 'if<=0':     self._emitIf('GT')
-    elif word == 'if>0':      self._emitIf('LE')
-    elif word == 'if<0':      self._emitIf('GE')
-    elif word == 'if<>0loop': self._emitIfLoop('NE')
-    elif word == 'if=0loop':  self._emitIfLoop('EQ')
-    elif word == 'if>0loop':  self._emitIfLoop('GT')
-    elif word == 'if<0loop':  self._emitIfLoop('LT')
-    elif word == 'if>=0loop': self._emitIfLoop('GE')
-    elif word == 'if<=0loop': self._emitIfLoop('LE')
-    elif word == 'else':
-      block = self.thisBlock()
-      if block not in self.conds:
-        self.error('Unexpected %s' % repr(word))
-      if self.conds[block] > 0:
-        self.error('Too many %s' % repr(word))
-      self.opcode('BRA')
-      self.emit(lo('$%s.if.%d.1' % (self.name, block)))
-      define('$%s.if.%d.0' % (self.name, block), prev(self.vPC))
-      self.conds[block] = 1
-    elif word == 'call':
-      self.opcode('CALL')
-      self.emit(symbol('vAC'), '%04x vAC' % prev(self.vPC, 1))
-    elif word == 'push': self.opcode('PUSH')
-    elif word == 'pop':  self.opcode('POP')
-    elif word == 'ret':
-      self.opcode('RET')
-      if len(self.blocks) == 1:
-        self.needPatch = True # Top-level use of 'ret' --> apply patch
-    elif word == 'peek': self.opcode('PEEK')
-    elif word == 'deek': self.opcode('DEEK')
+        self.error('(%s) Invalid GCL version' % word)
+    elif word == 'def':       self.emitDef()
+    elif word == 'do':        self.loops[self.thisBlock()] = self.vPC
+    elif word == 'loop':      self.emitLoop()
+    elif word == 'if<>0':     self.emitIf('EQ')
+    elif word == 'if=0':      self.emitIf('NE')
+    elif word == 'if>=0':     self.emitIf('LT')
+    elif word == 'if<=0':     self.emitIf('GT')
+    elif word == 'if>0':      self.emitIf('LE')
+    elif word == 'if<0':      self.emitIf('GE')
+    elif word == 'if<>0loop': self.emitIfLoop('NE')
+    elif word == 'if=0loop':  self.emitIfLoop('EQ')
+    elif word == 'if>0loop':  self.emitIfLoop('GT')
+    elif word == 'if<0loop':  self.emitIfLoop('LT')
+    elif word == 'if>=0loop': self.emitIfLoop('GE')
+    elif word == 'if<=0loop': self.emitIfLoop('LE')
+    elif word == 'else':      self.emitElse()
+    elif word == 'call':      self.emitOp('CALL'); self.emit(symbol('vAC'), '%04x vAC' % prev(self.vPC, 1))
+    elif word == 'push':      self.emitOp('PUSH')
+    elif word == 'pop':       self.emitOp('POP')
+    elif word == 'ret':       self.emitOp('RET'); self.needPatch = self.needPatch or len(self.openBlocks) == 1 # Top-level use of 'ret' --> apply patch
+    elif word == 'peek':      self.emitOp('PEEK')
+    elif word == 'deek':      self.emitOp('DEEK')
     else:
-      # Operand words
-      var, con, op = self.parseWord(word) # XXX Simplify this
-      if not has(op):
-        if var:
-          self.opcode('LDW')
-          self.address(var)
-        else:
-          if not has(con):
-            self.error('(%s) Invalid word' % word)
-          if 0 <= con < 256:
-            self.opcode('LDI')
-            self.emit(con)
-          else:
-            self.opcode('LDWI')
-            self.emit( con     & 255)
-            self.emit((con>>8) & 255)
+      var, con, op = self.parseWord(word)
 
-      # Constant words
-      elif has(con):
-        if op == '<<':
-          for i in range(con):
-            self.opcode('LSLW')
-          con = None
+      # Words with constant value as operand
+      if has(con):
+        if not has(op):
+          if 0 <= con < 256:
+            self.emitOp('LDI')
+          else:
+            self.emitOp('LDWI'); self.emit(con & 255); con = (con >> 8) & 255
         elif op == ':' and con > 255: self.org(con); con = None
-        elif op == '=':    self.opcode('STW'); self.depr(word, 'i=', 'i:')
-        elif op == ':':    self.opcode('STW')
-        elif op == ';':    self.opcode('LDW')
-        elif op == '.':    self.opcode('ST')
-        elif op == ',':    self.opcode('LD')
-        elif op == '&':    self.opcode('ANDI')
-        elif op == '|':    self.opcode('ORI')
-        elif op == '^':    self.opcode('XORI')
-        elif op == '+':    self.opcode('ADDI')
-        elif op == '-':    self.opcode('SUBI')
-        elif op == '%=':   self.opcode('STLW')
-        elif op == '%':    self.opcode('LDLW')
-        elif op == '--':   self.opcode('ALLOC'); con = -con & 255
-        elif op == '++':   self.opcode('ALLOC')
-        elif op == '#':    con &= 255                      #self.depr(word, 'i#', '#i')
+        elif op == ';':    self.emitOp('LDW')
+        elif op == '=':    self.emitOp('STW'); self.depr('i=', 'i:')
+        elif op == ':':    self.emitOp('STW')
+        elif op == ',':    self.emitOp('LD')
+        elif op == '.':    self.emitOp('ST')
+        elif op == '&':    self.emitOp('ANDI')
+        elif op == '|':    self.emitOp('ORI')
+        elif op == '^':    self.emitOp('XORI')
+        elif op == '+':    self.emitOp('ADDI')
+        elif op == '-':    self.emitOp('SUBI')
+        elif op == '%=':   self.emitOp('STLW')
+        elif op == '%':    self.emitOp('LDLW')
+        elif op == '--':   self.emitOp('ALLOC'); con = -con & 255
+        elif op == '++':   self.emitOp('ALLOC')
+        elif op == '< ++': self.emitOp('INC')
+        elif op == '> ++': self.emitOp('INC'); con += 1
+        elif op == '!':    self.emitOp('SYS'); con = self.sysTicks(con)
+        elif op == '?':    self.emitOp('LUP')
         elif op == '# ':   con &= 255
-        elif op == '<++':  self.opcode('INC');             #self.depr(word, 'i<++', '<i++')
-        elif op == '>++':  self.opcode('INC'); con += 1;   #self.depr(word, 'i>++', '>i++')
-        elif op == '< ++': self.opcode('INC')
-        elif op == '> ++': self.opcode('INC'); con += 1
-        elif op == '!':    self.opcode('SYS'); con = self.sysOperand(word, con)
-        elif op == '?':    self.opcode('LUP')
+        elif op == '<<':
+          for i in range(con):
+            self.emitOp('LSLW')
+          con = None
+        # Depricated syntax
+        elif op == '#':    con &= 255                    #self.depr('i#', '#i')
+        elif op == '<++':  self.emitOp('INC');           #self.depr('i<++', '<i++')
+        elif op == '>++':  self.emitOp('INC'); con += 1; #self.depr('i>++', '>i++')
         else:
-          self.error('(%s) Invalid word' % word)
+         self.error("Invalid operator '%s' with constant" % op)
         if has(con):
           self.emit(con)
 
-      # Variable words
+      # Words with variable name as operand
       elif has(var):
         offset = 0
-        if op == '`': # Inline ASCII
-          if len(var) > 0:
-            for c in var:
-              self.emit(ord(' ' if c == '`' else c))
-          else:
-            self.emit(ord('`'))
-          var = None
-        elif op == '=':    self.opcode('STW'); self.defInfo(var)
-        elif op == ',':    self.opcode('LDW'); self.address(var); self.opcode('PEEK'); var = None
-        elif op == ';':    self.opcode('LDW'); self.address(var); self.opcode('DEEK'); var = None
-        elif op == '&':    self.opcode('ANDW')
-        elif op == '|':    self.opcode('ORW')
-        elif op == '^':    self.opcode('XORW')
-        elif op == '+':    self.opcode('ADDW')
-        elif op == '-':    self.opcode('SUBW')
-        elif op == '.':    self.opcode('POKE')
-        elif op == ':':    self.opcode('DOKE')
-        elif op == '<++':  self.opcode('INC');             #self.depr(word, 'X<++', '<X++')
-        elif op == '>++':  self.opcode('INC'); offset = 1; #self.depr(word, 'X>++', '>X++')
-        elif op == '< ++': self.opcode('INC')
-        elif op == '> ++': self.opcode('INC'); offset = 1
-        elif op == '<,':   self.opcode('LD');              #self.depr(word, 'X<,', '>X,')
-        elif op == '>,':   self.opcode('LD'); offset = 1;  #self.depr(word, 'X>,', '>X,')
-        elif op == '<.':   self.opcode('ST');              #self.depr(word, 'X<.', '<X.')
-        elif op == '>.':   self.opcode('ST'); offset = 1;  #self.depr(word, 'X>.', '>X.')
-        elif op == '< ,':  self.opcode('LD')
-        elif op == '> ,':  self.opcode('LD'); offset = 1
-        elif op == '< .':  self.opcode('ST')
-        elif op == '> .':  self.opcode('ST'); offset = 1
-        elif op == '!':    self.opcode('CALL')
+        if not has(op):    self.emitOp('LDW')
+        elif op == '=':    self.emitOp('STW'); self.defInfo(var)
+        elif op == ',':    self.emitOp('LDW'); self.emitVar(var); self.emitOp('PEEK'); var = None
+        elif op == ';':    self.emitOp('LDW'); self.emitVar(var); self.emitOp('DEEK'); var = None
+        elif op == '.':    self.emitOp('POKE')
+        elif op == ':':    self.emitOp('DOKE')
+        elif op == '< ,':  self.emitOp('LD')
+        elif op == '> ,':  self.emitOp('LD'); offset = 1
+        elif op == '< .':  self.emitOp('ST')
+        elif op == '> .':  self.emitOp('ST'); offset = 1
+        elif op == '&':    self.emitOp('ANDW')
+        elif op == '|':    self.emitOp('ORW')
+        elif op == '^':    self.emitOp('XORW')
+        elif op == '+':    self.emitOp('ADDW')
+        elif op == '-':    self.emitOp('SUBW')
+        elif op == '< ++': self.emitOp('INC')
+        elif op == '> ++': self.emitOp('INC'); offset = 1
+        elif op == '!':    self.emitOp('CALL')
+        elif op == '`':    self.emitQuote(var); var = None
+        # Depricated syntax
+        elif op == '<++':  self.emitOp('INC');             #self.depr('X<++', '<X++')
+        elif op == '>++':  self.emitOp('INC'); offset = 1; #self.depr('X>++', '>X++')
+        elif op == '<,':   self.emitOp('LD');              #self.depr('X<,', '<X,')
+        elif op == '>,':   self.emitOp('LD'); offset = 1;  #self.depr('X>,', '>X,')
+        elif op == '<.':   self.emitOp('ST');              #self.depr('X<.', '<X.')
+        elif op == '>.':   self.emitOp('ST'); offset = 1;  #self.depr('X>.', '>X.')
         else:
-          self.error('(%s) Invalid word' % word)
+          self.error("Invalid operator '%s' with variable" % op)
         if has(var):
-          self.address(var, offset)
+          self.emitVar(var, offset)
 
       else:
-        self.error('(%s) Invalid word' % word)
-
-  def defInfo(self, var):
-    # Heuristic to track def lengths
-    if var not in self.lengths and self.thisBlock() in self.lengths:
-      self.lengths[var] = self.lengths[self.thisBlock()]
-    else:
-      self.lengths[var] = None # No def lengths can be associated
-
-  def sysOperand(self, word, con):
-    if con & 1:
-      self.error('(%s) Invalid value (must be even)' % word)
-    extraTicks = con/2 - symbol('maxTicks')
-    return 256 - extraTicks if extraTicks > 0 else 0
-
-  def _emitIf(self, cond):
-      self.opcode('BCC')
-      self.opcode(cond)
-      block = self.thisBlock()
-      self.emit(lo('$%s.if.%d.0' % (self.name, block)))
-      self.conds[block] = 0
-
-  def _emitIfLoop(self, cond):
-      block = self.thisBlock()
-      to = [block for block in self.blocks if block in self.loops]
-      if len(to) == 0:
-        self.error('Loop without do')
-      to = self.loops[to[-1]]
-      to = prev(to)
-      if self.vPC>>8 != to>>8:
-        self.error('Loop outside page')
-      self.opcode('BCC')
-      self.opcode(cond)
-      self.emit(to&255)
+        self.error('Invalid keyword')
 
   def parseWord(self, word):
-    """Break word into pieces"""
+    # Break word into pieces
 
     word += '\0' # Avoid checking len() everywhere
     sign = None
@@ -386,7 +265,7 @@ class Program:
         # Substitute \symbol with its value and keep the postfix operator
         number = symbol(name[1:])
         if not has(number):
-          self.error('(%s) Undefined symbol %s' % (word, name))
+          self.error('Undefined symbol %s' % name)
         name, op = None, ''
 
     if has(number):
@@ -395,37 +274,126 @@ class Program:
     op += word[ix:-1]                   # Also strips sentinel '\0'
     return (name, number, op if len(op)>0 else None)
 
-  def end(self):
-    if self.comment > 0:
-      self.error('Unterminated comment')
-    self.closeSegment()
-    print(' Variables count %d bytes %d end %04x' % (len(self.vars), 2*len(self.vars), zpByte(0)))
-    line = ' :'
-    for var in sorted(self.vars.keys()):
-      if var in self.lengths and self.lengths[var]:
-        var += ' [%s]' % self.lengths[var]
-      if len(line + var) + 1 > 72:
-        print(line)
-        line = ' :'
-      line += ' ' + var
-    print(line)
-    self.putInRomTable(0) # Zero marks the end of stream
-    C('End of file')
+  def sysTicks(self, con):
+    # Convert maximum Gigatron cycles to the negative of excess ticks
+    if con & 1:
+      self.error('Invalid value (must be even, got %d)' % con)
+    extraTicks = con/2 - symbol('maxTicks')
+    return 256 - extraTicks if extraTicks > 0 else 0
 
-  def prefix(self, prefix):
-    prefix += (' file %s' % repr(self.filename)) if self.filename else ''
-    prefix += ' line %s:' % self.lineNumber
-    return prefix
+  def emitQuote(self, var):
+    # Emit symbol as text, replacing backquotes with spaces
+    if len(var) > 0:
+      for c in var:
+        self.emit(ord(' ' if c == '`' else c))
+    else:
+      self.emit(ord('`')) # And symbol becomes a backquote
 
-  def warning(self, message):
-    print(self.prefix('GCL warning'), message)
+  def emitDef(self):
+      self.emitOp('DEF')
+      self.defs[self.thisBlock()] = self.vPC
+      self.emit(lo('__%s_%#04x_def__' % (self.name, self.vPC)))
 
-  def error(self, message):
-    print(self.prefix('GCL error'), message)
-    sys.exit()
+  def defInfo(self, var):
+    # Heuristic to track def lengths
+    if var not in self.lengths and self.thisBlock() in self.lengths:
+      self.lengths[var] = self.lengths[self.thisBlock()]
+    else:
+      self.lengths[var] = None # No def lengths can be associated
 
-  def depr(self, word, old, new):
-    self.warning('(%s) %s is depricated, use %s' % (word, old, new))
+  def emitLoop(self):
+      to = [b for b in self.openBlocks if b in self.loops]
+      if len(to) == 0:
+        self.error('Loop without do')
+      to = self.loops[to[-1]]
+      to = prev(to)
+      if self.vPC>>8 != to>>8:
+        self.error('Loop crosses page boundary')
+      self.emitOp('BRA')
+      self.emit(to&255)
+
+  def emitIf(self, cond):
+      self.emitOp('BCC')
+      self.emitOp(cond)
+      b = self.thisBlock()
+      self.emit(lo('__%s_%d_cond%d__' % (self.name, b, self.elses[b])))
+
+  def emitIfLoop(self, cond):
+      to = [blockId for blockId in self.openBlocks if blockId in self.loops]
+      if len(to) == 0:
+        self.error('Loop without do')
+      to = self.loops[to[-1]]
+      to = prev(to)
+      if self.vPC>>8 != to>>8:
+        self.error('Loop to different page')
+      self.emitOp('BCC')
+      self.emitOp(cond)
+      self.emit(to&255)
+
+  def emitElse(self):
+      self.emitOp('BRA')
+      b = self.thisBlock()
+      i = self.elses[b]
+      self.emit(lo('__%s_%d_cond%d__' % (self.name, b, i+1)))
+      define('__%s_%d_cond%d__' % (self.name, b, i), prev(self.vPC))
+      self.elses[b] = i+1
+
+  def emitOp(self, ins):
+    # Emit vCPU opcode
+    if self.vPC >= self.segEnd:
+      self.error('Out of code space' % self.vPC)
+    if self.segStart == self.vPC:
+      self.openSegment()
+    self.putInRomTable(lo(ins), '%04x %s' % (self.vPC, ins))
+    self.vPC += 1
+
+  def emitVar(self, var, offset=0):
+    # Get or create address for GCL variable and emit it
+    comment = '%04x %s' % (prev(self.vPC, 1), repr(var))
+    comment += '%+d' % offset if offset else ''
+    if var not in self.vars:
+      self.vars[var] = zpByte(2)
+    self.emit(self.vars[var] + offset, comment)
+
+  def thisBlock(self):
+    return self.openBlocks[-1]
+
+  def openSegment(self):
+    # Write header for GT1 segment
+    address = self.segStart
+    if not has(self.execute):
+      self.execute = address
+    assert self.segId == 0 or address>>8 != 0 # Zero-page segment can only be first
+    self.putInRomTable(address>>8, '| RAM segment address (high byte first)')
+    self.putInRomTable(address&255, '|')
+    # Fill in the length through the symbol table
+    self.putInRomTable(lo('__%s_seg%d__' % (self.name, self.segId)), '| Length (1..256)')
+
+  def emit(self, byte, comment=None):
+    # Next program byte in RAM
+    if self.vPC >= self.segEnd:
+      self.error('Out of code space')
+    if byte < 0 or byte >= 256:
+      self.error('Value out of range %d (must be 0..255)' % byte)
+    if self.segStart == self.vPC:
+      self.openSegment()
+    self.putInRomTable(byte, comment)
+    self.vPC += 1
+
+  def closeSegment(self):
+    # Register length of GT1 segment
+    if len(self.openBlocks) > 1:
+      self.error('Unterminated block')
+    if self.vPC != self.segStart:
+      print(' Segment at %04x size %3d used %3d unused %3d' % (
+        self.segStart,
+        self.segEnd - self.segStart,
+        self.vPC - self.segStart,
+        self.segEnd - self.vPC))
+      length = self.vPC - self.segStart
+      assert 1 <= length <= 256
+      define('__%s_seg%d__' % (self.name, self.segId), length)
+      self.segId += 1
 
   def putInRomTable(self, byte, comment=None):
     ld(byte)
@@ -434,6 +402,29 @@ class Program:
     if self.forRom and pc()&255 == 251:
       trampoline()
 
+  def depr(self, old, new):
+    self.warning('%s is depricated, please use %s' % (old, new))
+
+  def warning(self, message):
+    print(self.prefix('Warning'), message)
+
+  def error(self, message):
+    print(self.prefix('Error'), message)
+    sys.exit()
+
+  def prefix(self, prefix):
+    # Informative line prefix for warning and error messages
+    if has(self.filename):
+       prefix += ' file %s' % repr(self.filename)
+    if self.lineNumber != 0:
+      prefix += ' line %s' % self.lineNumber
+    if has(self.lastWord):
+      prefix += ' word %s' % self.lastWord
+    prefix += ': '
+
+def has(x):
+  return x is not None
+
 def prev(address, step=2):
-  """Take vPC two bytes back, wrap around if needed to stay on page"""
-  return (address & 0xff00) | ((address-step) & 0x00ff)
+  # Take vPC two bytes back, wrap around if needed to stay on page
+  return (address & ~255) | ((address-step) & 255)
