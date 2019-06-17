@@ -57,12 +57,15 @@
 #  XXX #52 Head-only Snake shouldn't be allowed to turn around
 #  XXX Better noise by changing wavX every frame (for at least 1 sound channel)
 #  XXX v6502 as additional interpreter
-#  DONE SYS_v6502_vX_80 (also adjust S,P etc)
-#  DONE Retire bootCount
+#  DONE - SYS_v6502_vX_80 (also adjust S,P etc)
+#  DONE - Retire bootCount
+#  XXX - Relocate app-specific SYS functions above v6502 (Racer, Loader)
+#  XXX - Specify app-specific SYS functions on command line (.py files)
 #  XXX Better startup chime
 #  XXX Fast system video modes (something like ROM v3y)? Mode 4 (black)
 #  XXX vCPU extension for C: HOP_v4 $DD
-#  XXX Relocate App-specific SYS functions above v6502 (Racer, Loader)
+#  XXX vCPU extension for C: LSRW_v4
+#  XXX vCPU extension for C: CMPW_v4
 #  XXX New Easter egg (maze.gt1?)
 #
 #  Ideas for ROM v5+
@@ -87,6 +90,14 @@ from os  import getenv
 from asm import *
 import gcl0x as gcl
 import font_v2 as font
+
+# Scan command line arguments to determine which
+# application-specific SYS functions to assemble
+hasRacer = False
+hasLoader = False
+for arg in argv[1:]:
+  if '/Racer_v'  in arg: hasRacer = True
+  if '/Loader_v' in arg: hasLoader = True
 
 # Pre-loading the formal interface as a way to get warnings when
 # accidently redefined with a different value
@@ -2349,27 +2360,29 @@ ld(-56/2)                       #53
 # sysArgs[4]   Copy count
 # sysArgs[5:6] Destination address
 
-label('SYS_LoaderPayloadCopy_34')
-ld([sysArgs+4])                 #15 Copy count
-beq('.sysCc0')                  #16
-suba(1)                         #17
-st([sysArgs+4])                 #18
-ld([sysArgs+0], X)              #19 Current pointer
-ld([sysArgs+1], Y)              #20
-ld([Y,X])                       #21
-ld([sysArgs+5], X)              #22 Target pointer
-ld([sysArgs+6], Y)              #23
-st([Y,X])                       #24
-ld([sysArgs+5])                 #25 Increment target
-adda(1)                         #26
-st([sysArgs+5])                 #27
-bra('.sysCc1')                  #28
-label('.sysCc0')
-ld(hi('REENTER'), Y)            #18,29
-wait(30-19)                     #19
-label('.sysCc1')
-jmp(Y,'REENTER')                #30
-ld(-34/2)                       #31
+if hasLoader:
+  label('SYS_LoaderPayloadCopy_34')
+  ld([sysArgs+4])               #15 Copy count
+  beq('.sysCc0')                #16
+  suba(1)                       #17
+  st([sysArgs+4])               #18
+  ld([sysArgs+0],X)             #19 Current pointer
+  ld([sysArgs+1],Y)             #20
+  ld([Y,X])                     #21
+  ld([sysArgs+5],X)             #22 Target pointer
+  ld([sysArgs+6],Y)             #23
+  st([Y,X])                     #24
+  ld([sysArgs+5])               #25 Increment target
+  adda(1)                       #26
+  st([sysArgs+5])               #27
+  bra('.sysCc1')                #28
+  label('.sysCc0')
+  ld(hi('REENTER'),Y)           #18,29
+  wait(30-19)                   #19
+  label('.sysCc1')
+  jmp(Y,'REENTER')              #30
+  ld(-34/2)                     #31
+
 
 #-----------------------------------------------------------------------
 #
@@ -2790,65 +2803,6 @@ st([vAC+1])                     #41
 jmp(Y,'REENTER')                #42
 ld(-46/2)                       #43
 
-# SYS_SendSerial2_vX_110 implementation
-#
-# !!! Some monitors are not happy with jumps of 3 or more scanlines
-#
-#label('sys_SendSerial2')
-#beq('.sysSs5')                  #18
-#ld([sysArgs+0],X)               #19
-#ld([vPC])                       #20      Wait for vBlank
-#suba(2)                         #21
-#st([vPC])                       #22
-#ld(hi('REENTER'),Y)             #23
-#jmp(Y,'REENTER')                #24
-#ld(-28/2)                       #25
-#label('.sysSs5')
-#ld([sysArgs+1],Y)               #20      Synchronized with vBlank
-#ld([sysArgs+4])                 #21      Shortest videoPulse
-#st([videoPulse])                #22
-#ld(1*2)                         #23      Out bit = 2, 4, 8
-##label('.sysSs6')
-#st([vTmp])                      #24+i*22
-#ld([Y,X])                       #25+i*22 Copy next bit
-#anda([sysArgs+2])               #26+i*22
-#bne('.sysSs7')                  #27+i*22
-#bra('.sysSs8')                  #28+i*22
-#ld(0)                           #29+i*22
-#label('.sysSs7')
-#ld([vTmp])                      #29+i*22
-#label('.sysSs8')
-#adda([videoPulse])              #30+i*22
-#st([videoPulse])                #31+i*22
-#ld([sysArgs+2])                 #32+i*22 Rotate input bit
-#adda(AC)                        #33+i*22
-#bne('.sysSs9')                  #34+i*22
-#bra('.sysSs9')                  #35+i*22
-#ld(1)                           #36+i*22
-#label('.sysSs9')
-#st([sysArgs+2])                 #36,37+i*22 (must be idempotent)
-#anda(1)                         #38+i*22 Optionally increment pointer
-#adda([sysArgs+0])               #39+i*22
-#st([sysArgs+0],X)               #40+i*22
-#ld([vTmp])                      #41+i*22 Shift output bit
-#adda(AC)                        #42+i*22
-#xora(16*2)                      #43+i*22
-#bne('.sysSs6')                  #44+i*22
-#xora(16*2)                      #45+i*22
-#ld([sysArgs+3])                 #90      Bit counter
-#suba(1)                         #91
-#beq('.sysSs10')                 #92
-#ld(hi('REENTER'),Y)             #93
-#st([sysArgs+3])                 #94
-#ld([vPC])                       #95      Continue sending bits
-#suba(2)                         #96
-#st([vPC])                       #97
-#jmp(Y,'REENTER')                #98
-#ld(-102/2)                      #99
-#label('.sysSs10')
-#jmp(Y,'REENTER')                #94      Stop sending bits
-#ld(-98/2)                       #95
-
 #-----------------------------------------------------------------------
 #  Application specific SYS extensions
 #-----------------------------------------------------------------------
@@ -2856,62 +2810,64 @@ ld(-46/2)                       #43
 # !!! These aren't defined in interface.json and therefore
 # !!! availability and presence will vary
 
-label('SYS_RacerUpdateVideoX_40')
-ld([sysArgs+2], X)              #15 q,
-ld([sysArgs+3], Y)              #16
-ld([Y,X])                       #17
-st([vTmp])                      #18
-suba([sysArgs+4])               #19 X-
-ld([sysArgs+0], X)              #20 p.
-ld([sysArgs+1], Y)              #21
-st([Y,X])                       #22
-ld([sysArgs+0])                 #23 p 4- p=
-suba(4)                         #24
-st([sysArgs+0])                 #25
-ld([vTmp])                      #26 q,
-st([sysArgs+4])                 #27 X=
-ld([sysArgs+2])                 #28 q<++
-adda(1)                         #29
-st([sysArgs+2])                 #30
-bne('.sysRacer0')               #31 Self-repeat by adjusting vPC
-ld([vPC])                       #32
-bra('.sysRacer1')               #33
-nop()                           #34
-label('.sysRacer0')
-suba(2)                         #33
-st([vPC])                       #34
-label('.sysRacer1')
-ld(hi('REENTER'), Y)            #35
-jmp(Y,'REENTER')                #36
-ld(-40/2)                       #37
+if hasRacer:
+  label('SYS_RacerUpdateVideoX_40')
+  ld([sysArgs+2],X)             #15 q,
+  ld([sysArgs+3],Y)             #16
+  ld([Y,X])                     #17
+  st([vTmp])                    #18
+  suba([sysArgs+4])             #19 X-
+  ld([sysArgs+0],X)             #20 p.
+  ld([sysArgs+1],Y)             #21
+  st([Y,X])                     #22
+  ld([sysArgs+0])               #23 p 4- p=
+  suba(4)                       #24
+  st([sysArgs+0])               #25
+  ld([vTmp])                    #26 q,
+  st([sysArgs+4])               #27 X=
+  ld([sysArgs+2])               #28 q<++
+  adda(1)                       #29
+  st([sysArgs+2])               #30
+  bne('.sysRacer0')             #31 Self-repeat by adjusting vPC
+  ld([vPC])                     #32
+  bra('.sysRacer1')             #33
+  nop()                         #34
+  label('.sysRacer0')
+  suba(2)                       #33
+  st([vPC])                     #34
+  label('.sysRacer1')
+  ld(hi('REENTER'),Y)           #35
+  jmp(Y,'REENTER')              #36
+  ld(-40/2)                     #37
 
-label('SYS_RacerUpdateVideoY_40')
-ld([sysArgs+3])                 #15 8&
-anda(8)                         #16
-bne('.sysRacer2')               #17 [if<>0 1]
-bra('.sysRacer3')               #18
-ld(0)                           #19
-label('.sysRacer2')
-ld(1)                           #19
-label('.sysRacer3')
-st([vTmp])                      #20 tmp=
-ld([sysArgs+1], Y  )            #21
-ld([sysArgs+0])                 #22 p<++ p<++
-adda(2)                         #23
-st([sysArgs+0], X)              #24
-xora(238)                       #25 238^
-st([vAC])                       #26
-st([vAC+1])                     #27
-ld([sysArgs+2])                 #28 SegmentY
-anda(254)                       #29 254&
-adda([vTmp])                    #30 tmp+
-st([Y,X])                       #31
-ld([sysArgs+2])                 #32 SegmentY<++
-adda(1)                         #33
-st([sysArgs+2])                 #34
-ld(hi('REENTER'), Y)            #35
-jmp(Y,'REENTER')                #36
-ld(-40/2)                       #37
+if hasRacer:
+  label('SYS_RacerUpdateVideoY_40')
+  ld([sysArgs+3])               #15 8&
+  anda(8)                       #16
+  bne('.sysRacer2')             #17 [if<>0 1]
+  bra('.sysRacer3')             #18
+  ld(0)                         #19
+  label('.sysRacer2')
+  ld(1)                         #19
+  label('.sysRacer3')
+  st([vTmp])                    #20 tmp=
+  ld([sysArgs+1],Y)             #21
+  ld([sysArgs+0])               #22 p<++ p<++
+  adda(2)                       #23
+  st([sysArgs+0],X)             #24
+  xora(238)                     #25 238^
+  st([vAC])                     #26
+  st([vAC+1])                   #27
+  ld([sysArgs+2])               #28 SegmentY
+  anda(254)                     #29 254&
+  adda([vTmp])                  #30 tmp+
+  st([Y,X])                     #31
+  ld([sysArgs+2])               #32 SegmentY<++
+  adda(1)                       #33
+  st([sysArgs+2])               #34
+  ld(hi('REENTER'),Y)           #35
+  jmp(Y,'REENTER')              #36
+  ld(-40/2)                     #37
 
 #-----------------------------------------------------------------------
 # Extension SYS_LoaderNextByteIn_32
@@ -2921,31 +2877,32 @@ ld(-40/2)                       #37
 # sysArgs[2]   Checksum
 # sysArgs[3]   Wait value (videoY)
 
-label('SYS_LoaderNextByteIn_32')
-ld([videoY])                    #15
-xora([sysArgs+3])               #16
-bne('.sysNbi')                  #17
-ld([sysArgs+0], X)              #18
-ld([sysArgs+1], Y)              #19
-ld(IN)                          #20
-st([Y,X])                       #21
-adda([sysArgs+2])               #22
-st([sysArgs+2])                 #23
-ld([sysArgs+0])                 #24
-adda(1)                         #25
-st([sysArgs+0])                 #26
-ld(hi('REENTER'), Y)            #27
-jmp(Y,'REENTER')                #28
-ld(-32/2)                       #29
-# Restart instruction
-label('.sysNbi')
-ld([vPC])                       #19
-suba(2)                         #20
-st([vPC])                       #21
-ld(-28/2)                       #22
-ld(hi('REENTER'), Y)            #23
-jmp(Y,'REENTER')                #24
-nop()                           #25
+if hasLoader:
+  label('SYS_LoaderNextByteIn_32')
+  ld([videoY])                  #15
+  xora([sysArgs+3])             #16
+  bne('.sysNbi')                #17
+  ld([sysArgs+0], X)            #18
+  ld([sysArgs+1], Y)            #19
+  ld(IN)                        #20
+  st([Y,X])                     #21
+  adda([sysArgs+2])             #22
+  st([sysArgs+2])               #23
+  ld([sysArgs+0])               #24
+  adda(1)                       #25
+  st([sysArgs+0])               #26
+  ld(hi('REENTER'),Y)           #27
+  jmp(Y,'REENTER')              #28
+  ld(-32/2)                     #29
+  # Restart instruction
+  label('.sysNbi')
+  ld([vPC])                     #19
+  suba(2)                       #20
+  st([vPC])                     #21
+  ld(-28/2)                     #22
+  ld(hi('REENTER'),Y)           #23
+  jmp(Y,'REENTER')              #24
+  nop()                         #25
 
 #-----------------------------------------------------------------------
 #
@@ -4383,61 +4340,7 @@ ld(-18/2)                       #17
 label('v6502_xxx')
 # XXX Dummy label for missing instructions. Remove eventually
 
-#-----------------------------------------------------------------------
-#  Built-in full resolution images
-#-----------------------------------------------------------------------
-
-def importImage(rgbName, width, height, ref):
-  f = open(rgbName)
-  raw = f.read()
-  f.close()
-  align(0x100)
-  label(ref)
-  for y in range(0, height, 2):
-    for j in range(2):
-      align(0x80)
-      comment = 'Pixels for %s line %s' % (ref, y+j)
-      for x in range(0, width, 4):
-        bytes = []
-        for i in range(4):
-          R = ord(raw[3 * ((y + j) * width + x + i) + 0])
-          G = ord(raw[3 * ((y + j) * width + x + i) + 1])
-          B = ord(raw[3 * ((y + j) * width + x + i) + 2])
-          bytes.append( (R/85) + 4*(G/85) + 16*(B/85) )
-
-        # Pack 4 pixels in 3 bytes
-        ld( ((bytes[0]&0b111111)>>0) + ((bytes[1]&0b000011)<<6) ); comment = C(comment)
-        ld( ((bytes[1]&0b111100)>>2) + ((bytes[2]&0b001111)<<4) )
-        ld( ((bytes[2]&0b110000)>>4) + ((bytes[3]&0b111111)<<2) )
-      if j==0:
-        trampoline3a()
-      else:
-        trampoline3b()
-
-importImage('Images/Parrot-160x120.rgb',  160, 120, 'packedParrot')
-#importImage('Images/Baboon-160x120.rgb',  160, 120, 'packedBaboon')
-importImage('Images/Jupiter-160x120.rgb', 160, 120, 'packedJupiter')
-
-#-----------------------------------------------------------------------
-#
-#  ROM page XX: Skyline for Racer
-#
-#-----------------------------------------------------------------------
-
-f = open('Images/RacerHorizon-256x16.rgb', 'rb')
-raw = f.read()
-f.close()
-
-packed, quartet = [], []
-for i in xrange(0, len(raw), 3):
-  R, G, B = ord(raw[i+0]), ord(raw[i+1]), ord(raw[i+2])
-  quartet.append((R/85) + 4*(G/85) + 16*(B/85))
-  if len(quartet) == 4:
-    # Pack 4 pixels in 3 bytes
-    packed.append( ((quartet[0]&0b111111)>>0) + ((quartet[1]&0b000011)<<6) )
-    packed.append( ((quartet[1]&0b111100)>>2) + ((quartet[2]&0b001111)<<4) )
-    packed.append( ((quartet[2]&0b110000)>>4) + ((quartet[3]&0b111111)<<2) )
-    quartet = []
+align(1)
 
 #-----------------------------------------------------------------------
 #  Some more application specific SYS extensions
@@ -4455,68 +4358,59 @@ for i in xrange(0, len(raw), 3):
 # sysArgs[4]   Copy count
 # sysArgs[5:6] Destination address
 
-label('SYS_LoaderProcessInput_48')
-ld([sysArgs+1], Y)              #15
-ld([sysArgs+2])                 #16
-bne('.sysPi0')                  #17
-ld([sysArgs+0])                 #18
-suba(65, X)                     #19 Point at first byte of buffer
-ld([Y,X])                       #20 Command byte
-st([Y,Xpp])                     #21 X++
-xora(ord('L'))                  #22 This loader lumps everything under 'L'
-bne('.sysPi1')                  #23
-ld([Y,X]);                      C('Valid command')#24 Length byte
-st([Y,Xpp])                     #25 X++
-anda(63)                        #26 Bit 6:7 are garbage
-st([sysArgs+4])                 #27 Copy count
-ld([Y,X])                       #28 Low copy address
-st([Y,Xpp])                     #29 X++
-st([sysArgs+5])                 #30
-ld([Y,X])                       #31 High copy address
-st([Y,Xpp])                     #32 X++
-st([sysArgs+6])                 #33
-ld([sysArgs+4])                 #34
-bne('.sysPi2')                  #35
-# Execute code (don't care about checksum anymore)
-ld([sysArgs+5]);                C('Execute')#36 Low run address
-suba(2)                         #37
-st([vPC])                       #38
-st([vLR])                       #39
-ld([sysArgs+6])                 #40 High run address
-st([vPC+1])                     #41
-st([vLR+1])                     #42
-ld(hi('REENTER'), Y)            #43
-jmp(Y,'REENTER')                #44
-ld(-48/2)                       #45
-# Invalid checksum
-label('.sysPi0')
-wait(25-19);                    C('Invalid checksum')#19 Reset checksum
-# Unknown command
-label('.sysPi1')
-ld(ord('g'));                   C('Unknown command')#25 Reset checksum
-st([sysArgs+2])                 #26
-ld(hi('REENTER'), Y)            #27
-jmp(Y,'REENTER')                #28
-ld(-32/2)                       #29
-# Loading data
-label('.sysPi2')
-ld([sysArgs+0]);                C('Loading data')#37 Continue checksum
-suba(1, X)                      #38 Point at last byte
-ld([Y,X])                       #39
-st([sysArgs+2])                 #40
-ld(hi('REENTER'), Y)            #41
-jmp(Y,'REENTER')                #42
-ld(-46/2)                       #43
-
-#-----------------------------------------------------------------------
-
-label('zippedRacerHorizon')
-for i in xrange(len(packed)):
-  ld(packed[i])
-  if pc()&255 == 251:
-    trampoline()
-
-# !!! Expects trampoline() for last page to be provided below !!!
+if hasLoader:
+  label('SYS_LoaderProcessInput_48')
+  ld([sysArgs+1],Y)             #15
+  ld([sysArgs+2])               #16
+  bne('.sysPi0')                #17
+  ld([sysArgs+0])               #18
+  suba(65, X)                   #19 Point at first byte of buffer
+  ld([Y,X])                     #20 Command byte
+  st([Y,Xpp])                   #21 X++
+  xora(ord('L'))                #22 This loader lumps everything under 'L'
+  bne('.sysPi1')                #23
+  ld([Y,X]);                    C('Valid command')#24 Length byte
+  st([Y,Xpp])                   #25 X++
+  anda(63)                      #26 Bit 6:7 are garbage
+  st([sysArgs+4])               #27 Copy count
+  ld([Y,X])                     #28 Low copy address
+  st([Y,Xpp])                   #29 X++
+  st([sysArgs+5])               #30
+  ld([Y,X])                     #31 High copy address
+  st([Y,Xpp])                   #32 X++
+  st([sysArgs+6])               #33
+  ld([sysArgs+4])               #34
+  bne('.sysPi2')                #35
+  # Execute code (don't care about checksum anymore)
+  ld([sysArgs+5]);              C('Execute')#36 Low run address
+  suba(2)                       #37
+  st([vPC])                     #38
+  st([vLR])                     #39
+  ld([sysArgs+6])               #40 High run address
+  st([vPC+1])                   #41
+  st([vLR+1])                   #42
+  ld(hi('REENTER'),Y)           #43
+  jmp(Y,'REENTER')              #44
+  ld(-48/2)                     #45
+  # Invalid checksum
+  label('.sysPi0')
+  wait(25-19);                  C('Invalid checksum')#19 Reset checksum
+  # Unknown command
+  label('.sysPi1')
+  ld(ord('g'));                 C('Unknown command')#25 Reset checksum
+  st([sysArgs+2])               #26
+  ld(hi('REENTER'),Y)           #27
+  jmp(Y,'REENTER')              #28
+  ld(-32/2)                     #29
+  # Loading data
+  label('.sysPi2')
+  ld([sysArgs+0]);              C('Loading data')#37 Continue checksum
+  suba(1, X)                    #38 Point at last byte
+  ld([Y,X])                     #39
+  st([sysArgs+2])               #40
+  ld(hi('REENTER'),Y)           #41
+  jmp(Y,'REENTER')              #42
+  ld(-46/2)                     #43
 
 #-----------------------------------------------------------------------
 #
@@ -4568,15 +4462,10 @@ define('vPC+1',      vPC+1)
 
 #-----------------------------------------------------------------------
 #
-#       Embedded programs
+#       Embedded programs -- import and convert programs and data
 #
 #-----------------------------------------------------------------------
 
-#-----------------------------------------------------------------------
-#       Tic-Tac-Toe BASIC program as Easter egg
-#-----------------------------------------------------------------------
-
-# For ROMv3
 def basicLine(address, number, text):
   """Helper to encode lines for TinyBASIC"""
   head = [] if number is None else [number&255, number>>8]
@@ -4587,84 +4476,137 @@ def basicLine(address, number, text):
   for byte in s:
     program.putInRomTable(byte)
 
-gtbName = 'Apps/TicTac_v1.gtb'
-name = 'TicTacToe'
-print
-print 'Including file %s label %s ROM %04x' % (gtbName, name, pc())
-label(name)
-address = 0x1bc0
-program = gcl.Program(address, name)
-zpReset(userVars)
-i = 0
-for line in open(gtbName):
-  i += 1
-  line = line.rstrip()[0:25]
-  number, text = '', ''
-  for c in line:
-    if c.isdigit() and len(text) == 0:
-      number += c
-    else:
-      text += c
-  basicLine(address, int(number), text)
-  address += 32
-  if address & 255 == 0:
-    address += 160
-basicLine(address+2, None, 'RUN')       # Startup command
-basicLine(0x1ba0, address, None)        # End of program
-print ' Lines', i
-program.putInRomTable(0)
-program.end()
-
-#-----------------------------------------------------------------------
-#       Compile built-in GCL programs or load pre-compiled GT1 files
 #-----------------------------------------------------------------------
 
 for application in argv[1:]:
+  print
 
-  # Explicit relabeling
   if '=' in application:
+    # Explicit name name
     name, application = application.split('=', 1)
-    label(name)
-    print
-    print 'Labeling file %s label %s ROM %04x' % (application, name, pc())
+  else:
+    # Derived name name
+    name = application.rsplit('.', 1)[0] # Remove extension
+    name = name.rsplit('_v', 1)[0]       # Remove version
+    name = name.rsplit('/', 1)[-1]       # Remove path
+  print 'Processing file %s label %s' % (application, name)
+
+  if 'TinyBASIC_v2.' in application:
+    hasTinyBASIC = True
 
   # Pre-compiled GT1 files
-  if application.endswith('.gt1'):
-    gt1File = application
-    name = gt1File.rsplit('.', 1)[0]    # Remove extension
-    name = name.rsplit('_v', 1)[0]      # Remove version
-    name = name.rsplit('/', 1)[-1]      # Remove path
-    print
-    print 'Include file %s label %s ROM %04x' % (gt1File, name, pc())
-    with open(gt1File, 'rb') as f:
+  if application.endswith(('.gt1', '.gt1x')):
+    print 'Load type .gt1 address %04x' % pc()
+    with open(application, 'rb') as f:
       raw = f.read()
     label(name)
     raw = raw[:-2] # Drop start address
     if ord(raw[0]) == 0 and ord(raw[1]) + ord(raw[2]) > 0xc0:
-      print 'Warning: zero-page conflict with ROM loader (SYS_Exec_88)'
-    program = gcl.Program(userCode, name)
-    zpReset(userVars)
+      print ' Warning: zero-page conflict with ROM loader (SYS_Exec_88)'
+    program = gcl.Program(None)
     for byte in raw:
       program.putInRomTable(ord(byte))
     program.end()
 
   # GCL files
   elif application.endswith('.gcl'):
-    gclSource = application
-    name = gclSource.rsplit('.', 1)[0]  # Remove extension
-    name = name.rsplit('_v', 1)[0]      # Remove version
-    name = name.rsplit('/', 1)[-1]      # Remove path
-    print
-    print 'Compile file %s label %s ROM %04x' % (gclSource, name, pc())
+    print 'Compile type .gcl address %04x' % pc()
     label(name)
-    program = gcl.Program(userCode, name)
+    program = gcl.Program(name)
+    program.org(userCode)
     zpReset(userVars)
-    for line in open(gclSource).readlines():
+    for line in open(application).readlines():
       program.line(line)
     program.end()
 
+  # GTB files
+  elif application.endswith('.gtb'):
+    assert hasTinyBASIC
+    print 'Link type .gtb address %04x' % pc()
+    zpReset(userVars)
+    label(name)
+    program = gcl.Program(name)
+    address = 0x1bc0                    # XXX Hardcoded for TinyBASIC_v2
+    program.org(address)
+    i = 0
+    for line in open(application):
+      i += 1
+      line = line.rstrip()[0:25]
+      number, text = '', ''
+      for c in line:
+        if c.isdigit() and len(text) == 0:
+          number += c
+        else:
+          text += c
+      basicLine(address, int(number), text)
+      address += 32
+      if address & 255 == 0:
+        address += 160
+    basicLine(address+2, None, 'RUN')       # Startup command
+    basicLine(0x1ba0, address, None)        # End of program
+    program.putInRomTable(0)
+    program.end()
+    print ' Lines', i
+
+  # Simple sequential RGB file (RacerHorizon)
+  elif application.endswith('-256x16.rgb'):
+    width, height = 256, 16
+    print 'Convert type .rgb/sequential address %04x' % pc()
+    f = open(application, 'rb')
+    raw = f.read()
+    f.close()
+    label(name)
+    packed, quartet = [], []
+    for i in xrange(0, len(raw), 3):
+      R, G, B = ord(raw[i+0]), ord(raw[i+1]), ord(raw[i+2])
+      quartet.append((R/85) + 4*(G/85) + 16*(B/85))
+      if len(quartet) == 4:
+        # Pack 4 pixels in 3 bytes
+        packed.append( ((quartet[0]&0b111111)>>0) + ((quartet[1]&0b000011)<<6) )
+        packed.append( ((quartet[1]&0b111100)>>2) + ((quartet[2]&0b001111)<<4) )
+        packed.append( ((quartet[2]&0b110000)>>4) + ((quartet[3]&0b111111)<<2) )
+        quartet = []
+    for i in xrange(len(packed)):
+      ld(packed[i])
+      if pc()&255 == 251:
+        trampoline()
+    print ' Pixels %dx%d' % (width, height)
+
+  # Random access RGB files (for Pictures application)
+  elif application.endswith('-160x120.rgb'):
+    width, height = 160, 120
+    align(0x100)
+    print 'Convert type .rgb/parallel address %04x' % pc()
+    f = open(application)
+    raw = f.read()
+    f.close()
+    label(name)
+    for y in range(0, height, 2):
+      for j in range(2):
+        align(0x80)
+        comment = 'Pixels for %s line %s' % (name, y+j)
+        for x in range(0, width, 4):
+          bytes = []
+          for i in range(4):
+            R = ord(raw[3 * ((y + j) * width + x + i) + 0])
+            G = ord(raw[3 * ((y + j) * width + x + i) + 1])
+            B = ord(raw[3 * ((y + j) * width + x + i) + 2])
+            bytes.append( (R/85) + 4*(G/85) + 16*(B/85) )
+          # Pack 4 pixels in 3 bytes
+          ld( ((bytes[0]&0b111111)>>0) + ((bytes[1]&0b000011)<<6) ); comment = C(comment)
+          ld( ((bytes[1]&0b111100)>>2) + ((bytes[2]&0b001111)<<4) )
+          ld( ((bytes[2]&0b110000)>>4) + ((bytes[3]&0b111111)<<2) )
+        if j==0:
+          trampoline3a()
+        else:
+          trampoline3b()
+    print ' Pixels %dx%d' % (width, height)
+
   else:
     assert False
+
+  print ' Words %s' % (pc() - symbol(name))
+
 print
 
 #-----------------------------------------------------------------------

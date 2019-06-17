@@ -248,7 +248,7 @@ $7fa0:
   \TinyBASIC \sysArgs0: 88!     {Load only, SYS_Exec_88 still in sysFn}
                                 {Return here}
   $200 \vLR:
-  \TicTacToe \sysArgs0: 88!     {Load Tic-Tac-Toe and execute BASIC}
+  \TicTac \sysArgs0: 88!        {Load Tic-Tac-Toe and execute BASIC}
 
 {-----------------------------------------------------------------------+
 |                                                                       |

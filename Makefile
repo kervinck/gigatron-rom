@@ -4,6 +4,7 @@ DEV:=ROMv3x
 # Latest released version as default target:
 # Integrates BASIC, WozMon, Tetronis, Bricks, TicTacToe
 # vPulse modulation (for SAVE in BASIC), sprite acceleration
+# Note: ROM builder still directly incudes TicTac_v1.gtb
 ROMv3.rom: Core/* Apps/* Images/* Makefile interface.json
 	python Core/ROMv3.py\
 		Apps/Snake_v2.gcl\
@@ -24,7 +25,10 @@ ROMv3.rom: Core/* Apps/* Images/* Makefile interface.json
 dev: $(DEV).rom
 $(DEV).rom: Core/* Apps/* Images/* Makefile interface.json
 	python Core/$(DEV).py\
+		packedParrot=Images/Parrot-160x120.rgb\
+		packedJupiter=Images/Jupiter-160x120.rgb\
 		Apps/Snake_v2.gcl\
+		zippedRacerHorizon=Images/RacerHorizon-256x16.rgb\
 		Apps/Racer_v1.gcl\
 		Apps/Mandelbrot_v1.gcl\
 		Apps/Pictures_v2.gcl\
@@ -33,6 +37,7 @@ $(DEV).rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Tetronis_v1.gt1\
 		Apps/Bricks_v1.gt1\
 		Apps/TinyBASIC_v2.gcl\
+		Apps/TicTac_v1.gtb\
 		Apps/WozMon_v2.gt1\
 		Apps/Sprites_v1.gt1\
 		Apps/Main_v3.gcl\
@@ -43,7 +48,7 @@ mos: v6502.rom
 v6502.rom: Core/* Apps/* Images/* Makefile interface.json
 	rm -f ROMv3x.rom ROMv3x.asm
 	python Core/ROMv3x.py\
-		Main=Core/v6502-test.gcl\
+		Main=Apps/Munching6502.gt1x\
 		Core/Reset_v4.gcl
 	mv ROMv3x.rom v6502.rom
 	mv ROMv3x.asm v6502.asm
@@ -129,6 +134,10 @@ burn85:
 
 %.gt1: %.gcl
 	Core/compilegcl.py "$<" `dirname "./$@"`
+
+%.gt1x: %.gt1
+	# Non-compliant files in .gt1 format (see Docs/GT1-files.txt)
+	mv "$<" "$@"
 
 %.h: %.gt1
 	# Convert GT1 file into header for including as PROGMEM data

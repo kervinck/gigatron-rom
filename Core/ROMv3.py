@@ -3385,7 +3385,7 @@ def basicLine(address, number, text):
     program.putInRomTable(byte)
 
 gtbName = 'Apps/TicTac_v1.gtb'
-name = 'TicTacToe'
+name = 'TicTac'
 print
 print 'Including file %s label %s ROM %04x' % (gtbName, name, pc())
 label(name)
@@ -3426,7 +3426,7 @@ for application in argv[1:]:
     print 'Labeling file %s label %s ROM %04x' % (application, name, pc())
 
   # Pre-compiled GT1 files
-  if application.endswith('.gt1'):
+  if application.endswith(('.gt1', '.gt1x')):
     gt1File = application
     name = gt1File.rsplit('.', 1)[0]    # Remove extension
     name = name.rsplit('_v', 1)[0]      # Remove version
@@ -3435,12 +3435,13 @@ for application in argv[1:]:
     print 'Include file %s label %s ROM %04x' % (gt1File, name, pc())
     with open(gt1File, 'rb') as f:
       raw = f.read()
-    label(name)
     raw = raw[:-2] # Drop start address
     if ord(raw[0]) == 0 and ord(raw[1]) + ord(raw[2]) > 0xc0:
-      print 'Warning: zero-page conflict with ROM loader (SYS_Exec_88)'
-    program = gcl.Program(userCode, name)
+      print ' Warning: zero-page conflict with ROM loader (SYS_Exec_88)'
     zpReset(userVars)
+    label(name)
+    program = gcl.Program(name)
+    program.org(userCode)
     for byte in raw:
       program.putInRomTable(ord(byte))
     program.end()
@@ -3453,9 +3454,10 @@ for application in argv[1:]:
     name = name.rsplit('/', 1)[-1]      # Remove path
     print
     print 'Compile file %s label %s ROM %04x' % (gclSource, name, pc())
-    label(name)
-    program = gcl.Program(userCode, name)
     zpReset(userVars)
+    label(name)
+    program = gcl.Program(name)
+    program.org(userCode)
     for line in open(gclSource).readlines():
       program.line(line)
     program.end()

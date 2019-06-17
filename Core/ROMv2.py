@@ -2916,24 +2916,6 @@ def patchTinyBASIC(program):
   program.line('$16e2:' + basicLine(None, '?"RUN'))  # For show
   program.line('$17a2:' + basicLine(None, 'RUN'))
 
-# Load pre-compiled GT1 file
-#
-#gt1File = 'Contrib/at67/vCPU/graphics/lines.gt1'
-#name = 'Lines'
-#f = open(gt1File, 'rb')
-#raw = f.read()
-#f.close()
-#print
-#print 'Include file %s label %s ROM %04x' % (gt1File, name, pc())
-#label(name)
-#raw = chr(ord(raw[0]) + 0x80) + raw[1:] # Patch zero page loading (only for 32KB system)
-#raw = raw[:-2] # Drop start address
-#program = gcl.Program(userCode, name)
-#zpReset(userVars)
-#for byte in raw:
-  #program.putInRomTable(ord(byte))
-#program.end()
-
 # Compile built-in GCL programs
 for gclSource in argv[1:]:
   name = gclSource.rsplit('.', 1)[0] # Remove extension
@@ -2941,9 +2923,10 @@ for gclSource in argv[1:]:
   name = name.rsplit('/', 1)[-1]     # Remove path
   print
   print 'Compile file %s label %s ROM %04x' % (gclSource, name, pc())
-  label(name)
-  program = gcl.Program(userCode, name)
   zpReset(userVars)
+  label(name)
+  program = gcl.Program(name)
+  program.org(userCode)
   for line in open(gclSource).readlines():
     program.line(line)
   if name == 'TinyBASIC':

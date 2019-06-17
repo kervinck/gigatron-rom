@@ -44,7 +44,8 @@ userCode = asm.symbol('userCode')
 userVars = asm.symbol('userVars')
 
 print('Compiling file %s' % args.gclSource)
-program = gcl.Program(userCode, 'Main', forRom=False)
+program = gcl.Program('Main', forRom=False)
+program.org(userCode)
 asm.align(1)          # Forces default maximum ROM size
 asm.zpReset(userVars) # User variables can start here
 for line in open(args.gclSource).readlines():

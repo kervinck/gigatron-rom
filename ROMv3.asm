@@ -31352,7 +31352,7 @@ zippedRacerHorizon:
               9168 00eb  ld   $eb
               9169 001a  ld   $1a
               916a 0004  ld   $04
-TicTacToe:    916b 001b  ld   $1b
+TicTac:       916b 001b  ld   $1b
               916c 00c0  ld   $c0
               916d 0019  ld   $19
               916e 0064  ld   $64

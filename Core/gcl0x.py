@@ -13,7 +13,7 @@ import string
 import sys
 
 class Program:
-  def __init__(self, address, name, forRom=True):
+  def __init__(self, name, forRom=True):
     self.name = name     # For defining unique labels in global symbol table
     self.forRom = forRom # Inject trampolines if compiling for ROM XXX why not do that outside?
     self.comment = 0     # Nesting level
@@ -28,7 +28,6 @@ class Program:
     self.segStart = None
     self.vPC = None
     self.segId = 0
-    self.org(address)
     self.version = None # Must be first word 'gcl<N>'
     self.execute = None
     self.needPatch = False
@@ -87,6 +86,12 @@ class Program:
     if self.comment > 0:
       self.error('Unterminated comment')
     self.closeSegment()
+    self.putInRomTable(0) # Zero marks the end of stream
+    if self.lineNumber > 0:
+      self.dumpVars()
+    C('End of file')
+
+  def dumpVars(self):
     print(' Variables count %d bytes %d end %04x' % (len(self.vars), 2*len(self.vars), zpByte(0)))
     line = ' :'
     for var in sorted(self.vars.keys()):
@@ -97,8 +102,6 @@ class Program:
         line = ' :'
       line += ' ' + var
     print(line)
-    self.putInRomTable(0) # Zero marks the end of stream
-    C('End of file')
 
   def word(self, word):
     # Process a GCL word and emit its corresponding code
