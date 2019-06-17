@@ -213,24 +213,19 @@ X& X| X^        Logical AND/OR/XOR vAC with variable X
 
 Advanced
 --------
-X<. X>.         Store vAC as byte into the low/high byte of variable X
-X<, X>,         Read low/high byte of variable X
+<X, >X,         Load low/high byte of variable X
+<X. >X.         Store vAC as byte into the low/high byte of variable X
 <X++ >X++       Increment low/high byte of variable X
 <i++ >i++       Increment byte at address i/i+1
 
 Memory
 ------
-X,              Read unsigned byte from memory pointed by X into vAC
-X.              Write vAC as byte to memory pointed by variable X
-X;              Read word from memory pointed by X into vAC
-X:              Write vAC as word to memory pointed by variable X
-i,              Read unsigned byte at zero page address i into vAC
-i.              Store vAC as byte in zero page address i
-i;              Read word at zero page address i into vAC
-i:              Write vAC as word in zero page address i
-i?              Table lookup from ROM address vAC+i
-peek            Read byte from memory pointed by vAC (Same as `\vAC,')
-deek            Read word from memory pointed by vAC (Same as `\vAC;')
+X, X.           Read/write unsigned byte at memory address pointed at by X
+X; X:           Read/write word at memory address pointed at by X
+peek deek       Read byte/word from memory address pointed at by vAC
+i, i.           Read/write unsigned byte at zero page address i
+i; i:           Read/write word at zero page address i
+i?              Table lookup from ROM address vAC+i (ROM page must be prepared)
 
 Structured programming
 ----------------------
@@ -247,27 +242,24 @@ if>0loop        Optimization for `if>0' + `loop' (works with all conditions)
 
 Subroutines
 -----------
-X!              Jump to function pointed by X, store old vPC in vLR
+X!              Jump to function pointed at by X, store old vPC in vLR
 ret             Jump to vLR, to return from a leaf function. Non-leaf
                 functions should use `pop' + `ret' as return sequence
 push            Push vLR onto stack, for entering a non-leaf function
 pop             Remove top of stack and put value in vLR
-i!              Call native code pointed by sysFn, not exceeding i cycles
-call            Jump to function pointed by vAC (Same as `\vAC!')
+i!              Call native code pointed at by sysFn, not exceeding i cycles
+call            Jump to function pointed at by vAC
 
 Stack variables
 ---------------
 i-- i++         Subtract/add constant value from/to stack pointer
-i%              Load stack variable at relative byte offset i into vAC
-i%=             Store vAC on stack at relative byte offset i
+i% i%=          Load/store stack variable at relative byte offset i
 
 Data
 ----
 #i              Inline byte value i, truncated to lowest 8 bits
-`word           Emits word as inline ASCII characters
-`word`          Same, but replaces the last backquote with a space
-`               Emits a single space
-``              Emits a single backquote (also within `word)
+`Hello`world!   Emit inline ASCII test. Replace backquotes with spaces
+`               Emits a single backquote
 
 Versioning
 ----------
@@ -349,8 +341,6 @@ develop GCL much further, as it has served its purpose.
 
 Some gcl1 changes we're still pondering about:
 
-()              Compile time expressions? Macros? (128+1) -> 129.
-                Can could escape to Python for evaluation
 Consistency     Especially surrounding ,.:; and \ (backslash)
                 Symptoms:
                 - i: and i= do the same thing (store vAC on zero-page)
@@ -358,24 +348,23 @@ Consistency     Especially surrounding ,.:; and \ (backslash)
                   no notation to POKE/DOKE using a zero page address i
                 - ii: sets the compilation address, it isn't a DOKE
                 - Therefore we can't create code in the zero page
-%i              Unnamed variables: treat a known zero page location
-                as a GCL variable
+:ii             Alias for ii:
+:X              Label definition (XXX label use? XXX far vs near?)
+i-- i++         Replace with something that associates with stack: %++i %--i ?
 &X &<X &>X      Get an variable's address. Should treat < and > as part
                 of the name instead of the prefix part of the operator
-:X              Label definition
-:ii             Alias for ii:
-All prefix?     Huge change. Perhaps study VTL-2 a bit better first. Some ideas:
-                A +B =A         for A B+ A=
-                -=10            for 10- (-10 wouldn't work)
-                ++              for 1+
+%i              Unnamed variables: treat a known zero page location
+                as a GCL variable
+()              Compile time expressions? Macros? (128+1) -> 129.
+                Can could escape to Python for evaluation
 
 -------------------
 Depricated features
 -------------------
 i=              Alias for i: (was often used as \symbol=)
 i#              Original notation for #i
-X<++            Original notation for <X++
-X>++            Original notation for >X++
+X<++ X>++       Original notation for <X++ >X++
+i<++ i>++       Original notation for <i++ >i++
 
 ----------------------
 vCPU instruction table
@@ -435,18 +424,18 @@ LDI                             i
 LDWI                            ii
 LDW             X               i;
 STW             X=              i:                              i= is depricated
-PEEK                                            peek
+PEEK                                            peek            alias for \vAC,
 LDW+PEEK        X,
 POKE            X.
-DEEK                                            deek
+DEEK                                            deek            alias for \vAC;
 LDW+DEEK        X;
 DOKE            X:
-LD                              i,
-ST                              i.
+LD              <X, >X,         i,
+ST              <X. >X.         i.
 INC             <X++ >X++       <i++ >i++
 LDLW                            i%
 STLW                            i%=
-ALLOC                           i-- i++
+ALLOC                           i-- i++                         XXX needs better notation
 CALL            X!                              call            call is alias for \vAC!
 DEF                                             def
 POP                                             pop
@@ -459,6 +448,7 @@ ORW/ORI         X|              i|
 XORW/XORI       X^              i^
 ADDW/ADDI       X+              i+
 SUBW/SUBI       X-              i-
+LSLW                            i<<                             i<< is alias for i*LSLW
 SYS                             i!
 LUP                             i?
 

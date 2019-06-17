@@ -251,6 +251,24 @@ class Program:
             self.lengths[var] = self.lengths[self.thisBlock()]
           else:
             self.lengths[var] = None # No def lengths can be associated
+      elif op == '&' and has(var):
+          self.opcode('ANDW')
+          self.address(var)
+      elif op == '&' and has(con):
+          self.opcode('ANDI')
+          self.emit(con)
+      elif op == '|' and has(var):
+          self.opcode('ORW')
+          self.address(var)
+      elif op == '|' and has(con):
+          self.opcode('ORI')
+          self.emit(con)
+      elif op == '^' and has(var):
+          self.opcode('XORW')
+          self.address(var)
+      elif op == '^' and has(con):
+          self.opcode('XORI')
+          self.emit(con)
       elif op == '+' and has(var):
           self.opcode('ADDW')
           self.address(var)
@@ -279,22 +297,11 @@ class Program:
           self.opcode('LDLW')
           self.emit(con)
       elif op == '`' and has(var): # Inline ASCII
-          escape = op
           if len(var) > 0:
-            escape = None
             for c in var:
-              if escape:
-                if c != escape:
-                  self.emit(ord(escape))
-                self.emit(ord(c))
-                escape = None
-              else:
-                if c == '`':
-                  escape = c
-                else:
-                  self.emit(ord(c))
-          if escape:
-            self.emit(ord(' '))
+              self.emit(ord(' ' if c == '`' else c))
+          else:
+            self.emit(ord('`'))
       elif op == '#' and has(con):
           # XXX self.warning('(%s) i# is depricated, use #i' % word)
           self.emit(con & 255)
@@ -303,36 +310,12 @@ class Program:
       elif op == '?' and has(con):
           self.opcode('LUP')
           self.emit(con)
-      elif op == '&' and has(var):
-          self.opcode('ANDW')
-          self.address(var)
-      elif op == '&' and has(con):
-          self.opcode('ANDI')
-          self.emit(con)
-      elif op == '|' and has(var):
-          self.opcode('ORW')
-          self.address(var)
-      elif op == '|' and has(con):
-          self.opcode('ORI')
-          self.emit(con)
-      elif op == '^' and has(var):
-          self.opcode('XORW')
-          self.address(var)
-      elif op == '^' and has(con):
-          self.opcode('XORI')
-          self.emit(con)
       elif op == '.' and has(var):
           self.opcode('POKE')
           self.address(var)
       elif op == ':' and has(var):
           self.opcode('DOKE')
           self.address(var)
-      elif op == '<.' and has(var):
-          self.opcode('ST')
-          self.address(var)
-      elif op == '>.' and has(var):
-          self.opcode('ST')
-          self.address(var, +1)
       elif op == ',' and has(var):
           self.opcode('LDW')
           self.address(var)
@@ -345,35 +328,57 @@ class Program:
           # XXX self.warning('(%s) X<++ is depricated, use <X++' % word)
           self.opcode('INC')
           self.address(var)
-      elif op == '<++' and has(con):
-          # XXX self.warning('(%s) i<++ is depricated, use <i++' % word)
-          self.opcode('INC')
-          self.emit(con)
       elif op == '>++' and has(var):
           # XXX self.warning('(%s) X>++ is depricated, use >X++' % word)
           self.opcode('INC')
           self.address(var, +1)
-      elif op == '>++' and has(con):
-          # XXX self.warning('(%s) i>++ is depricated, use j++ (j=i+1)' % word)
-          self.opcode('INC')
-          self.emit(con+1)
       elif op == '< ++' and has(var):
           self.opcode('INC')
           self.address(var)
-      elif op == '< ++' and has(con):
-          self.opcode('INC')
-          self.emit(con)
       elif op == '> ++' and has(var):
           self.opcode('INC')
           self.address(var, +1)
+      elif op == '<++' and has(con):
+          # XXX self.warning('(%s) i<++ is depricated, use <i++' % word)
+          self.opcode('INC')
+          self.emit(con)
+      elif op == '>++' and has(con):
+          # XXX self.warning('(%s) i>++ is depricated, use >i++' % word)
+          self.opcode('INC')
+          self.emit(con+1)
+      elif op == '< ++' and has(con):
+          self.opcode('INC')
+          self.emit(con)
       elif op == '> ++' and has(con):
           self.opcode('INC')
           self.emit(con+1)
       elif op == '<,' and has(var):
+          # XXX self.warning('(%s) X<, is depricated, use <X,' % word)
           self.opcode('LD')
           self.address(var)
       elif op == '>,' and has(var):
+          # XXX self.warning('(%s) X>, is depricated, use >X,' % word)
           self.opcode('LD')
+          self.address(var, +1)
+      elif op == '<.' and has(var):
+          # XXX self.warning('(%s) X<. is depricated, use <X.' % word)
+          self.opcode('ST')
+          self.address(var)
+      elif op == '>.' and has(var):
+          # XXX self.warning('(%s) X>. is depricated, use >X.' % word)
+          self.opcode('ST')
+          self.address(var, +1)
+      elif op == '< ,' and has(var):
+          self.opcode('LD')
+          self.address(var)
+      elif op == '> ,' and has(var):
+          self.opcode('LD')
+          self.address(var, +1)
+      elif op == '< .' and has(var):
+          self.opcode('ST')
+          self.address(var)
+      elif op == '> .' and has(var):
+          self.opcode('ST')
           self.address(var, +1)
       elif op == '!' and has(var):
           self.opcode('CALL')

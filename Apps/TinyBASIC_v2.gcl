@@ -653,7 +653,7 @@ $353f \sysArgs6:                {Pen color blue/purple, background color white}
 $18a0 Newline= call             {Scroll and clear last line}
 
 { Welcome message }
-PrintS! `***` `Tiny` `BASIC` `v2 #0
+PrintS! `***`Tiny`BASIC`v2 #0
 Newline!
 
 {-----------------------------------------------------------------------+
@@ -985,7 +985,7 @@ $10a0:
   PrintChar PrintCharScreen^
   [if=0                         {When not in SAVE mode}
     PrintValue!                 {vAC>=0 triggers conversion without sign}
-    PrintS! ` `bytes` `free #0
+    PrintS! ``bytes`free #0
   ]
 
   pop ret
@@ -1054,13 +1054,13 @@ Active=
       PrintChar!
       tmp, tmp<++
       if<>0loop]
-    PrintS! ` `error #0
+    PrintS! ``error #0
     32-                         {$ffe0}
     Active&                     {Align to begin of block}
 {   0+}{dummy offset} deek      {Fetch active line number from offset 0}
     [if<>0                      {Input buffer has line number 0, don't print}
       Value=                    {Prepare line number for printing}
-      PrintS! ` `in` #0
+      PrintS! ``in` #0
       PrintValue!]              {Print line number}
     Newline!]
 
