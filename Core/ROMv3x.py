@@ -4113,12 +4113,12 @@ ld(hi('v6502_xxx'),Y)           #9,11
 jmp(Y,lo('v6502_xxx'))          #10 XXX
 #nop()                          #11 Overlap
 label('v6502_PHA')
-ld(hi('v6502_xxx'),Y)           #9,11
-jmp(Y,lo('v6502_xxx'))          #10 XXX
+ld(hi('v6502_pha'),Y)           #9,11
+jmp(Y,lo('v6502_pha'))          #10
 #nop()                          #11 Overlap
 label('v6502_CLI')
-ld(hi('v6502_xxx'),Y)           #9,11
-jmp(Y,lo('v6502_xxx'))          #10 XXX
+ld(hi('v6502_cli'),Y)           #9,11
+jmp(Y,lo('v6502_cli'))          #10
 #nop()                          #11 Overlap
 label('v6502_RTS')
 ld(hi('v6502_xxx'),Y)           #9,11
@@ -4128,21 +4128,21 @@ label('v6502_ROR') # XXX Flags: N Z C
 ld(hi('v6502_xxx'),Y)           #9,11
 jmp(Y,lo('v6502_xxx'))          #10 XXX
 #nop()                          #11 Overlap
-label('v6502_PLA') # XXX Flags: N Z
-ld(hi('v6502_xxx'),Y)           #9,11
-jmp(Y,lo('v6502_xxx'))          #10 XXX
+label('v6502_PLA')
+ld(hi('v6502_pla'),Y)           #9,11
+jmp(Y,lo('v6502_pla'))          #10
 #nop()                          #11 Overlap
 label('v6502_SEI')
-ld(hi('v6502_xxx'),Y)           #9,11
-jmp(Y,lo('v6502_xxx'))          #10 XXX
+ld(hi('v6502_sei'),Y)           #9,11
+jmp(Y,lo('v6502_sei'))          #10
 #nop()                          #11 Overlap
-label('v6502_TXS') # XXX Flags: N Z
-ld(hi('v6502_xxx'),Y)           #9,11
-jmp(Y,lo('v6502_xxx'))          #10 XXX
+label('v6502_TXS')
+ld(hi('v6502_txs'),Y)           #9,11
+jmp(Y,lo('v6502_txs'))          #10
 #nop()                          #11 Overlap
-label('v6502_TSX') # XXX Flags: N Z
-ld(hi('v6502_xxx'),Y)           #9,11
-jmp(Y,lo('v6502_xxx'))          #10 XXX
+label('v6502_TSX')
+ld(hi('v6502_tsx'),Y)           #9,11
+jmp(Y,lo('v6502_tsx'))          #10
 #nop()                          #11 Overlap
 label('v6502_CPY') # XXX Flags: N Z C
 ld(hi('v6502_xxx'),Y)           #9,11
@@ -4153,20 +4153,20 @@ ld(hi('v6502_xxx'),Y)           #9,11
 jmp(Y,lo('v6502_xxx'))          #10 XXX
 #nop()                          #11 Overlap
 label('v6502_DEC') # XXX Flags: N Z
-ld(hi('v6502_xxx'),Y)           #9,11
-jmp(Y,lo('v6502_xxx'))          #10 XXX
+ld(hi('v6502_dec'),Y)           #9,11
+jmp(Y,lo('v6502_dec'))          #10 XXX
 #nop()                          #11 Overlap
 label('v6502_CLD')
-ld(hi('v6502_xxx'),Y)           #9,11
-jmp(Y,lo('v6502_xxx'))          #10 XXX
+ld(hi('v6502_cld'),Y)           #9,11
+jmp(Y,lo('v6502_cld'))          #10
 #nop()                          #11 Overlap
 label('v6502_CPX') # XXX Flags: N Z C
 ld(hi('v6502_xxx'),Y)           #9,11
 jmp(Y,lo('v6502_xxx'))          #10 XXX
 #nop()                          #11 Overlap
-label('v6502_ASL') # XXX Flags: N Z C
-ld(hi('v6502_xxx'),Y)           #9,11
-jmp(Y,lo('v6502_xxx'))          #10 XXX
+label('v6502_ASL')
+ld(hi('v6502_asl'),Y)           #9,11
+jmp(Y,lo('v6502_asl'))          #10
 #nop()                          #11 Overlap
 label('v6502_PHP')
 ld(hi('v6502_xxx'),Y)           #9,11
@@ -4176,17 +4176,17 @@ label('v6502_BIT') # XXX Flags: N V Z
 ld(hi('v6502_xxx'),Y)           #9
 jmp(Y,lo('v6502_xxx'))          #10 XXX
 #nop()                          #11 Overlap
-label('v6502_ROL') # XXX Flags: N Z C
-ld(hi('v6502_xxx'),Y)           #9
-jmp(Y,lo('v6502_xxx'))          #10 XXX
+label('v6502_ROL')
+ld(hi('v6502_rol'),Y)           #9
+jmp(Y,lo('v6502_rol'))          #10
 #nop()                          #11 Overlap
 label('v6502_PLP')
 ld(hi('v6502_xxx'),Y)           #9
 jmp(Y,lo('v6502_xxx'))          #10 XXX
 #nop()                          #11 Overlap
 label('v6502_SED')              # Decimal mode not implemented
-ld(hi('v6502_xxx'),Y)           #9,11
-jmp(Y,lo('v6502_xxx'))          #10 XXX
+ld(hi('v6502_sed'),Y)           #9,11
+jmp(Y,lo('v6502_sed'))          #10
 #nop()                          #11 Overlap
 label('v6502_ILL') # All illegal opcodes map to BRK, except $FF which will crash
 label('v6502_BRK')
@@ -4244,6 +4244,47 @@ ld(hi('v6502_next'),Y)          #17
 jmp(Y,lo('v6502_next'))         #18
 ld(-20/2)                       #19
 
+label('v6502_asl')
+assert v6502_C == 1
+ld([v6502_ADH],Y)               #12
+ld([Y,X])                       #13
+anda(0x80)                      #14
+st([v6502_Tmp])                 #15
+bra('.rol18')                   #16
+ld(0)                           #17
+
+label('v6502_rol')
+assert v6502_C == 1
+ld([v6502_ADH],Y)               #12
+ld([Y,X])                       #13
+anda(0x80)                      #14
+st([v6502_Tmp])                 #15
+ld([v6502_P])                   #16
+anda(1)                         #17
+label('.rol18')
+adda([Y,X])                     #18
+adda([Y,X])                     #19
+st([Y,X])                       #20
+st([v6502_Q])                   #21
+ld([v6502_P])                   #22
+anda(~1)                        #23
+ld([v6502_Tmp],X)               #24
+ora([X])                        #25
+st([v6502_P])                   #26
+ld(hi('v6502_next'),Y)          #27
+jmp(Y,lo('v6502_next'))         #28
+ld(-30/2)                       #29
+
+label('v6502_dec')
+ld([v6502_ADH],Y)               #12
+ld([Y,X])                       #13
+suba(1)                         #14
+st([Y,X])                       #15
+st([v6502_Q])                   #16
+ld(hi('v6502_next'),Y)          #17
+jmp(Y,lo('v6502_next'))         #18
+ld(-20/2)                       #19
+
 label('v6502_inc')
 ld([v6502_ADH],Y)               #12
 ld([Y,X])                       #13
@@ -4254,7 +4295,7 @@ ld(hi('v6502_next'),Y)          #17
 jmp(Y,lo('v6502_next'))         #18
 label('v6502_lda')
 ld(-20/2)                       #19,12
-
+#
 #label('v6502_lda')
 #nop()                          #12 Overlap
 ld([v6502_ADH],Y)               #13
@@ -4302,7 +4343,7 @@ ld(hi('v6502_next'),Y)          #15
 jmp(Y,lo('v6502_next'))         #16
 label('v6502_tax')
 ld(-18/2)                       #17,12
-
+#
 #label('v6502_tax')
 #nop()                          #12 Overlap
 ld([v6502_A])                   #13
@@ -4312,7 +4353,25 @@ st([v6502_Q])                   #15
 nop()                           #16
 ld(hi('v6502_next'),Y)          #17
 jmp(Y,lo('v6502_next'))         #18
+label('v6502_tsx')
 ld(-20/2)                       #19
+#
+#label('v6502_tsx')
+#nop()                          #12 Overlap
+ld([v6502_S])                   #13
+suba(1);                        C('Correct on export')#14
+st([v6502_X])                   #15
+label('.tsx16')
+st([v6502_Q])                   #16
+ld(hi('v6502_next'),Y)          #17
+jmp(Y,lo('v6502_next'))         #18
+ld(-20/2)                       #19
+
+label('v6502_txs')
+ld([v6502_X])                   #12
+adda(1);                        C('Offset on import')#13
+bra('.tsx16')                   #14
+st([v6502_S])                   #15
 
 label('v6502_tay')
 ld([v6502_A])                   #12
@@ -4329,13 +4388,60 @@ ld([v6502_Y])                   #12
 bra('.tax15')                   #13
 st([v6502_A])                   #14
 
-label('v6502_clv')
+label('v6502_cli')
 ld([v6502_P])                   #12
-anda(0x7f)                      #13
-st([v6502_P])                   #14
-nop()                           #15
-jmp(Y,lo('v6502_next'))         #16
-ld(-18/2)                       #17
+bra('.clv15')                   #13
+anda(~v6502_I)                  #14
+
+label('v6502_sei')
+ld([v6502_P])                   #12
+bra('.clv15')                   #13
+ora(v6502_I)                    #14
+
+label('v6502_cld')
+ld([v6502_P])                   #12
+bra('.clv15')                   #13
+anda(~v6502_D)                  #14
+
+label('v6502_sed')
+ld([v6502_P])                   #12
+bra('.clv15')                   #13
+label('v6502_clv')
+ora(v6502_D)                    #14,12 OVerlap
+#
+#label('v6502_clv')
+#nop()                          #12
+ld([v6502_P])                   #13
+anda(~v6502_Vemu)               #14
+label('.clv15')
+st([v6502_P])                   #15
+ld(hi('v6502_next'),Y)          #16
+ld(-20/2)                       #17
+jmp(Y,lo('v6502_next'))         #18
+#nop()                          #19 Overlap
+#
+label('v6502_pha')
+ld(hi('v6502_next'),Y)          #12,19
+ld([v6502_S])                   #13
+suba(1)                         #14
+st([v6502_S],X)                 #15
+ld([v6502_A])                   #16
+st([X])                         #17
+jmp(Y,lo('v6502_next'))         #18
+label('v6502_pla')
+ld(-20/2)                       #19,12
+#
+#label('v6502_pla')
+#nop()                          #12 Overlap
+ld([v6502_S])                   #13
+ld(AC,X)                        #14
+adda(1)                         #15
+st([v6502_S])                   #16
+ld([X])                         #17
+st([v6502_A])                   #18
+st([v6502_Q])                   #19
+jmp(Y,lo('v6502_next'))         #20
+ld(-22/2)                       #21
 
 label('v6502_xxx')
 # XXX Dummy label for missing instructions. Remove eventually
