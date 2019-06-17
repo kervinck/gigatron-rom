@@ -240,20 +240,18 @@ $01df deek Pos=                 {Bottom character row in screen memory}
     Spaces!
     pop ret]                    {Result already in Value}
 
-  Keyword! $28# 0#              {'('}
+  Keyword! `( #0
   [if<>0
     Expression!
   else
 
-  Keyword! $70# $65# $65# $6b#  {'peek('}
-    $28# 0#
+  Keyword! `peek( #0
   [if<>0
     Expression!
     peek Value=
   else
 
-  Keyword! $72# $6e# $64# $28#  {'rnd('}
-    0#
+  Keyword! `rnd( #0
   [if<>0
     Expression!
     \SYS_Random_34 \sysFn:      {Prepare SYS call}
@@ -262,8 +260,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
     i Value=
   else
 
-  Keyword! $75# $73# $72# $28#  {'usr('}
-    0#
+  Keyword! `usr( #0
   [if<>0
     Expression!
     Value! Value=               {vCPU call and result}
@@ -271,7 +268,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 
     Variable! k=                {Otherwise it MUST be a variable}
     Spaces!
-    Keyword! $28# 0#            {'('}
+    Keyword! `( #0
     [if<>0                      {Optional array index}
       push k 0%=                {Save address on stack}
       Expression!
@@ -282,14 +279,14 @@ $01df deek Pos=                 {Bottom character row in screen memory}
       [if<0 End                 {Opposite signs}
        else k End-]             {Equal signs}
       [if<0 ValueError!]
-      Keyword! $29# 0#          {')'}
+      Keyword! `) #0
       if=0 SyntaxError!]
 
     k; Value=                   {Fetch value}
     pop ret
   ]]]]
 
-  Keyword! $29# 0#              {')'}
+  Keyword! `) #0
   [if=0 SyntaxError!]
   pop ret
 ] Factor=
@@ -308,9 +305,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
   \serialRaw, 3^                {Test for Ctrl-C (ASCII ETX) as break request}
   [if=0
     PrintCharScreen PrintChar=  {In case we break a SAVE command}
-    Prompt!                     {'Break'}
-      $42# $72# $65# $61# $6b#
-      0#]
+    Prompt! `Break #0]
   ret
 ] TestBreak=
 
@@ -419,27 +414,24 @@ GetLine=
 [def
   Spaces!
 
-  Keyword! $67# $6f# $74# $6f#  {'goto'}
-    0#
+  Keyword! `goto #0
   [if<>0
     Expression!                 {Computed goto}
     GotoValue!]                 {Find that line and continue there}
 
-  Keyword! $67# $6f# $73# $75#  {'gosub'}
-     $62# 0#
+  Keyword! `gosub #0
   [if<>0
     Expression!                 {Also does the stack check}
     push Active 0%=             {Push current line to stack}
     GotoValue!]                 {Find that line and continue there}
 
-  Keyword! $72# $65# $74# $75#  {'return'}
-    $72# $6e# 0#
+  Keyword! `return #0
   [if<>0
     \vSP, [if=0 StackError!]    {Top of stack}
     deek Active= pop            {Pop line from stack}
     EndOfLine!]
 
-  Keyword! $69# $66# 0#         {'if'}
+  Keyword! `if #0
   [if<>0
     Expression!
     4-- 2%=                     {Push first value on stack}
@@ -447,8 +439,7 @@ GetLine=
     [if=0 SyntaxError!]
     0%=                         {Park RelOp bits on stack}
     Expression!
-    Keyword! $74# $68# $65#     {'then' (optional)}
-      $6e# 0#
+    Keyword! `then #0           {Optional}
     2% Value^                   {Do the comparison, beware of overflows}
     [if<0 2%                    {Opposite signs}
      else 2% Value-]            {Same signs}
@@ -463,27 +454,25 @@ GetLine=
       Active<++ loop]
     EndOfLine!]                 {Continue with next line}
 
-  Keyword! $70# $6f# $6b# $65#  {'poke'}
-    0#
+  Keyword! `poke #0
   [if<>0
     Expression!
     Address=
-    Keyword! $2c# 0#            {','}
+    Keyword! `, #0
     [if=0 SyntaxError!]
     Expression!
     Address.                    {Write byte to memory}
     EndOfLine!]
 
-  Keyword! $72# $65# $6d# 0#    {'rem'}
-  [if=0 Keyword! $27# 0#]       {'\''}
+  Keyword! `rem #0
+  [if=0 Keyword! `' #0]
   [if<>0
     [do
       Active, if<>0             {Find end of line}
       Active<++ loop]
     EndOfLine!]
 
-  Keyword! $6c# $69# $6e# $65#  {'line'}
-    0#
+  Keyword! `line #0
   [if<>0 $19a0 call]
 
   $500 call                     {Continue in another page}
@@ -496,8 +485,7 @@ $0500:
 
 { Continuation of Statement }
 
-  Keyword! $6e# $65# $78#       {'next'}
-     $74# 0#
+  Keyword! `next #0
   [if<>0
     Variable! Address=          {Pointer to loop variable}
     push Active 0%=             {Park program index on stack}
@@ -517,27 +505,27 @@ $0500:
     TestBreak!                  {Test for break request}
     EndOfLine!]
 
-  Keyword! $66# $6f# $72# 0#    {'for'}
+  Keyword! `for #0
   [if<>0
     Variable! Address=          {Pointer to loop variable}
     Spaces!
-    Keyword! $3d# 0#            {'='}
+    Keyword! `= #0
     [if=0 SyntaxError!]
     Expression!                 {Evaluate expression}
     Address:                    {Store value in variable}
-    Keyword! $74# $6f# 0#       {'to'}
+    Keyword! `to #0
     [if=0 SyntaxError!]
     -$100 Address+ j=           {Retrieve loop pointer}
     Active j:                   {Remember return point for NEXT}
     Expression!                 {Evaluate but ignore result}
     EndOfLine!]
 
-  Keyword! $61# $74# 0#         {'at'}
+  Keyword! `at #0
   [if<>0
     Expression!                 {X position}
     [if<0 ValueError!]
     Pos<.
-    Keyword! $2c# 0#            {','}
+    Keyword! `, #0
     [if<>0
       Expression!               {Optional Y position}
       [if<0 ValueError!]
@@ -547,20 +535,18 @@ $0500:
       peek Pos>.]
     EndOfLine!]
 
-  Keyword! $70# $75# $74# 0#    {'put'}
+  Keyword! `put #0
   [if<>0
     Expression!
     PrintChar!
     EndOfLine!]
 
-  Keyword! $70# $72# $69# $6e#  {'print'}
-    $74# 0#
-  [if=0 Keyword! $3f# 0#]       {'?'}
+  Keyword! `print #0
+  [if=0 Keyword! `? #0]
   [if<>0
     $13a0 call]                 {PRINT}
 
-  Keyword! $6d# $6f# $64# $65#  {'mode'}
-     0#
+  Keyword! `mode #0
   [if<>0
     Expression!                 {Degrade gracefully in ROM v1}
     \romType,
@@ -570,8 +556,7 @@ $0500:
       \sysFn: Value 80!]
     EndOfLine!]
 
-  Keyword! $73# $61# $76# $65#  {'save'}
-    0#
+  Keyword! `save #0
   [if<>0
     \romType, \romTypeValue_ROMv3-
     [if<0 ValueError!]          {Error on ROM before v3}
@@ -668,10 +653,7 @@ $353f \sysArgs6:                {Pen color blue/purple, background color white}
 $18a0 Newline= call             {Scroll and clear last line}
 
 { Welcome message }
-PrintS!                         {'*** Tiny BASIC v2'}
-  $2a# $2a# $2a# $20# $54# $69#
-  $6e# $79# $20# $42# $41# $53#
-  $49# $43# $20# $76# $32# 0#
+PrintS! `***` `Tiny` `BASIC` `v2 #0
 Newline!
 
 {-----------------------------------------------------------------------+
@@ -709,8 +691,7 @@ $08a0:
       TestBreak!                {Test for break request}
       Statements!]              {And continue from there}
     i NextBlock! loop]          {Otherwise try next line}
-  Prompt! $4c# $69# $6e# $65#   {'Line' error}
-    0#
+  Prompt! `Line #0              {Line error}
 ] {GotoValue=}
 
 {-----------------------------------------------------------------------+
@@ -743,13 +724,11 @@ GotoValue=
 ] PrintValue=
 
 [def
-  Prompt! $53# $74# $61# $63#   {'Stack'}
-    $6b# 0#
+  Prompt! `Stack #0             {Stack error}
 ] StackError=
 
 [def
-  Prompt! $53# $79# $6e# $74#   {'Syntax'}
-    $61# $78# 0#
+  Prompt! `Syntax #0            {Syntax error}
 ] SyntaxError=
 
 {-----------------------------------------------------------------------+
@@ -844,22 +823,22 @@ Clear=
   [if<0 StackError!]            {Too complex expression AND too deep}
 
                                 {First term}
-  Keyword! $2d# 0#              {'-'}
+  Keyword! `- #0
   [if<>0                        {Accept unary minus}
     Term!
     0 Value-                    {Negate}
   else
-    Keyword! $2b# 0#            {'+' Ignore unary plus}
+    Keyword! `+ #0              {Ignore unary plus}
     Term!]
 
   push 0%=                      {Put partial result on stack}
   [do                           {Optional additional terms}
-    Keyword! $2b# 0#            {'+'}
+    Keyword! `+ #0
     [if<>0
        Term!
        0% Value+ 0%=            {Perform addition}
        loop]
-    Keyword! $2d# 0#            {'-'}
+    Keyword! `- #0
     [if<>0
        Term!
        0% Value- 0%=            {Perform subtraction}
@@ -870,8 +849,7 @@ Clear=
 ] Expression=
 
 [def
-  Prompt! $56# $61# $6c# $75#   {'Value'}
-    $65# 0#
+  Prompt! `Value #0             {Value error}
 ] ValueError=
 
 {-----------------------------------------------------------------------+
@@ -885,17 +863,17 @@ $0da0:
   Factor!                       {First factor}
   push Value 0%=                {Put partial result on stack}
   [do                           {Optional additional factors}
-    Keyword! $2a# 0#            {'*'}
+    Keyword! `* #0
     [if<>0
        Factor!
        0% Multiply! 0%=
        loop]
-    Keyword! $2f# 0#            {'/'}
+    Keyword! `/ #0
     [if<>0
        Factor!
        0% Divide! 0%=
        loop]
-    Keyword! $25# 0#            {'%'}
+    Keyword! `% #0
     [if<>0
        Factor!
        0% Divide! i 0%=
@@ -1007,10 +985,7 @@ $10a0:
   PrintChar PrintCharScreen^
   [if=0                         {When not in SAVE mode}
     PrintValue!                 {vAC>=0 triggers conversion without sign}
-    PrintS!                     {' bytes free'}
-      $20# $62# $79# $74# $65#
-      $73# $20# $66# $72# $65#
-      $65# 0#
+    PrintS! ` `bytes` `free #0
   ]
 
   pop ret
@@ -1045,13 +1020,13 @@ List=
   push
   0 k=
 
-  Keyword! $3c# 0#              {'<' in bit 0}
+  Keyword! `< #0                {'<' in bit 0}
   [if<>0 k<++]
 
-  Keyword! $3e# 0#              {'>' in bit 2}
+  Keyword! `> #0                {'>' in bit 2}
   [if<>0 k 4+ k=]
 
-  Keyword! $3d# 0#              {'=' in bit 1}
+  Keyword! `= #0                {'=' in bit 1}
   [if<>0 k 2+ k=]
 
   k
@@ -1079,20 +1054,17 @@ Active=
       PrintChar!
       tmp, tmp<++
       if<>0loop]
-    PrintS!                     {' error'}
-      $20# $65# $72# $72# $6f#
-      $72# 0#
+    PrintS! ` `error #0
     32-                         {$ffe0}
     Active&                     {Align to begin of block}
 {   0+}{dummy offset} deek      {Fetch active line number from offset 0}
     [if<>0                      {Input buffer has line number 0, don't print}
       Value=                    {Prepare line number for printing}
-      PrintS!                   {' in '}
-        $20# $69# $6e# $20# 0#
+      PrintS! ` `in` #0
       PrintValue!]              {Print line number}
     Newline!]
 
-  PrintS! $4f# $6b# 0#          {'Ok'}
+  PrintS! `Ok #0                {'Ok'}
   Newline!
 
   { Main loop }

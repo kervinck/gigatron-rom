@@ -22,7 +22,7 @@ vCPU's advantages over native 8-bit Gigatron code are:
 Its disadvantage is that vCPU is slower than native code.
 
 The main menu, `Snake', `Mandelbrot', `Tiny BASIC v2' and `WozMon'
-are pure GCL programs.  These programs still use generic support
+are pure GCL programs. These programs still use generic support
 ROM functions implemented as native code: the so-called SYS functions.
 
 `Racer', `Pictures' and `Loader' are hybrid programs, meaning that
@@ -125,8 +125,8 @@ Translation from GCL to vCPU is done offline. So the Gigatron runs
 vCPU applications. There are other ways to generate vCPU programs,
 for example through at67's assembler. There are two ways to get a
 vCPU program into the Gigatron. One is by sending it into RAM through
-the input port using the Loader application.  The other is to store
-the object code in the ROM disk portion of the EPROM.  The file
+the input port using the Loader application. The other is to store
+the object code in the ROM disk portion of the EPROM. The file
 format for exchange of vCPU programs is GT1. This format is described
 in a different document: GT1-files.txt
 
@@ -134,10 +134,10 @@ in a different document: GT1-files.txt
 Programming model
 -----------------
 
-The GCL programming model is "accumulator oriented": there is no
+The GCL programming model is accumulator oriented: there is no
 implicit expression stack. vCPU does have a call stack however.
 Programs are typically made of many small function definitions
-followed by a main loop.  The functions usually operate on global
+followed by a main loop. The functions usually operate on global
 variables, although it is also possible to put variables on the
 stack.
 
@@ -161,7 +161,7 @@ vSP  is the stack pointer. The stack lives in the zero page top and
      grows down.
 
 Program variables are 16-bit words and typically hold a number or
-a pointer.  Variables normally reside in the zero page. Arbitrary
+a pointer. Variables normally reside in the zero page. Arbitrary
 memory can be addressed as bytes and words using 16-bit pointers.
 
 ---------------------
@@ -173,7 +173,7 @@ SWEET16 (Apple II) and FALSE (Amiga). There is a little bit of a
 FORTH influence as well. There are also similarities with UNIX dc(1)
 and Altair VTL-2, although those are coincidental.
 
-GCL programs are written as a long sequence of "words" without much
+GCL programs are written as a long sequence of words without much
 structure enforced by the compiler. Most words map directly to a
 single vCPU instruction and therefore also encode an embedded operand
 (e.g. `1' means `LDI 1' and `2+' means `ADDI 2'). Many words operate
@@ -185,12 +185,12 @@ is no need for spaces around the grouping characters []{}().
 Constants are decimal, or hexadecimal when preceded with '$'.
 Constants can be preceded by '-' or '+' (note: -$1000, not $-0000).
 
-For convenience, symbols defined by the host system can be referenced
+For convenience, symbols predefined by the system can be referenced
 by prefixing a backslash, e.g. '\fontData'. This can be used anywhere
 where a constant is expected. It also may be preceded by a sign.
 
 Variable names start with an alphanumeric character and are case
-sensitive.  The overview below uses the following conventions:
+sensitive. The overview below uses the following conventions:
  'i'  indicates an 8-bit integer constant.
  'ii' indicates a 16-bit integer constant.
  'X'  indicates a named variable, allocated globally on the zero page.
@@ -229,31 +229,31 @@ i.              Store vAC as byte in zero page address i
 i;              Read word at zero page address i into vAC
 i:              Write vAC as word in zero page address i
 i?              Table lookup from ROM address vAC+i
-peek            Read byte from memory pointed by vAC (Same as "\vAC,")
-deek            Read word from memory pointed by vAC (Same as "\vAC;")
+peek            Read byte from memory pointed by vAC (Same as `\vAC,')
+deek            Read word from memory pointed by vAC (Same as `\vAC;')
 
 Structured programming
 ----------------------
-[...]           Code block, used with "if", "else", "do", "loop"
+[...]           Code block, used with `if', `else', `do', `loop'
 def             Define function or inline data: load next vPC in vAC,
                 then jump to end of the current block
 if>0            Continue executing code if vAC>0, otherwise jump to
-                end of the block (or past an optional matching "else")
-                Conditions are "=0" ">0" "<0" "<=0" ">=0" "<>0"
+                end of the block (or past an optional matching `else')
+                Conditions are `=0' `>0' `<0' `<=0' `>=0' `<>0'
 else            When encountered, skip rest of code until end of block
 do              Mark the start of a loop
-loop            Jump back to matching "do" (which may be in an outer block)
-if>0loop        Optimization for "if>0 loop" (works with all conditions)
+loop            Jump back to matching `do' (which may be in an outer block)
+if>0loop        Optimization for `if>0' + `loop' (works with all conditions)
 
 Subroutines
 -----------
 X!              Jump to function pointed by X, store old vPC in vLR
 ret             Jump to vLR, to return from a leaf function. Non-leaf
-                functions should use "pop ret" as return sequence
+                functions should use `pop' + `ret' as return sequence
 push            Push vLR onto stack, for entering a non-leaf function
 pop             Remove top of stack and put value in vLR
 i!              Call native code pointed by sysFn, not exceeding i cycles
-call            Jump to function pointed by vAC (Same as "\vAC!")
+call            Jump to function pointed by vAC (Same as `\vAC!')
 
 Stack variables
 ---------------
@@ -264,11 +264,14 @@ i%=             Store vAC on stack at relative byte offset i
 Data
 ----
 #i              Inline byte value i, truncated to lowest 8 bits
-'word           Emit word as inline ASCII characters, use ' for a space
+`word           Emits word as inline ASCII characters
+`word`          Same, but replaces the last backquote with a space
+`               Emits a single space
+``              Emits a single backquote (also within `word)
 
 Versioning
 ----------
-gcl0x gcl1      GCL version. "x" denotes experimental/extended versions
+gcl0x gcl1      GCL version. `x' denotes experimental/extended versions
 
 There are two versions of GCL: gcl0x and gcl1. gcl0x is what we
 used to make the built-in applications of ROM v1. gcl1 is the planned
@@ -279,11 +282,11 @@ Program structure
 -----------------
 GCL translation is single-pass and doesn't have a linking stage.
 Therefore a typical GCL program has a setup phase followed by a
-main loop.  In the setup phase, variables are initialized with
+main loop. In the setup phase, variables are initialized with
 values and references to functions or data. When running, function
 calling is done through those variables. vCPU is optimized for
-function calling in that way.  Long functions that don't fit in a
-page should be split into multiple functions.  When a program gets
+function calling in that way. Long functions that don't fit in a
+page should be split into multiple functions. When a program gets
 bigger than a single segment or page, the setup phase will have to
 hop over to the next page. The clearest way to do that is as follows:
 
@@ -322,8 +325,8 @@ $400:
 ----------------------------------
 Common pitfalls in GCL programming
 ----------------------------------
-- Forgetting "ret" at the end of a function block
-- Calling functions from a leaf function (forgetting "push" and "pop")
+- Forgetting `ret' at the end of a function block
+- Calling functions from a leaf function (forgetting `push' and `pop')
 - Forgetting that all named variables are global
 - Calling a function before the last page when also using vLR hopping in setup
 - Misspelling a variable (Tip: inspect the symbol table output)
@@ -335,7 +338,7 @@ Future extensions
 
 The current GCL version is 'gcl0x'. The 'x' suffix intends to warn
 that incompatible changes happen without notice or version number
-change.  Once we believe the notation is stable and some weird
+change. Once we believe the notation is stable and some weird
 quirks removed, we plan to rename it 'gcl1'.
 
 Having stated that, GCL was primarily the bootstrapping notation
@@ -344,7 +347,7 @@ us all the way to Tiny BASIC. In the meantime a more traditional
 assembler has emerged, and we have a C compiler. So we might not
 develop GCL much further, as it has served its purpose.
 
-GCL "v1" differences we're still pondering about:
+Some gcl1 changes we're still pondering about:
 
 ()              Compile time expressions? Macros? (128+1) -> 129.
                 Can could escape to Python for evaluation

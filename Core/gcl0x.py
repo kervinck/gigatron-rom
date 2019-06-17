@@ -82,7 +82,7 @@ class Program:
         # Inside comments anything goes
         if nextChar == '{': self.comment += 1
         if nextChar == '}': self.comment -= 1
-      elif nextChar not in '{}[]()':
+      elif nextChar not in '{}[]':
         if nextChar.isspace():
           self.word(nextWord)
           nextWord = ''
@@ -278,12 +278,23 @@ class Program:
       elif op == '%' and has(con):
           self.opcode('LDLW')
           self.emit(con)
-      elif op == '\'' and has(var): # Inline ASCII
+      elif op == '`' and has(var): # Inline ASCII
+          escape = op
           if len(var) > 0:
+            escape = None
             for c in var:
-              self.emit(ord(c))
-          else:
-             self.emit(ord(' '))
+              if escape:
+                if c != escape:
+                  self.emit(ord(escape))
+                self.emit(ord(c))
+                escape = None
+              else:
+                if c == '`':
+                  escape = c
+                else:
+                  self.emit(ord(c))
+          if escape:
+            self.emit(ord(' '))
       elif op == '#' and has(con):
           # XXX self.warning('(%s) i# is depricated, use #i' % word)
           self.emit(con & 255)
@@ -403,8 +414,8 @@ class Program:
     sign = None
     name, number, op = None, None, ''
 
-    if word[0] == '\'':
-      # Quoted word (single quote will give a space)
+    if word[0] == '`':
+      # Quoted word
       name, op = word[1:-1], word[0]
       return name, number, op
 
