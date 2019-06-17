@@ -49,7 +49,7 @@ class Program:
       self.execute = address
     assert self.segId == 0 or address>>8 != 0 # Zero-page segment can only be first
     self.putInRomTable(address>>8, '| RAM segment address (high byte first)')
-    self.putInRomTable(address&0xff, '|')
+    self.putInRomTable(address&255, '|')
     # Fill in the length through the symbol table
     self.putInRomTable(lo('$%s.seg.%d' % (self.name, self.segId)), '| Length (1..256)')
 
@@ -152,12 +152,20 @@ class Program:
     if len(word) == 0:
       return
 
+    # Bare keywords
     if not has(self.version):
        # XXX For ideas on language changes, see Docs/GCL-language.txt
       if word in ['gcl0x']:
         self.version = word
       else:
         self.error('Invalid GCL version %s' % repr(word))
+    elif word == 'def':
+      pc = self.vPC # Just an identifier
+      self.opcode('DEF')
+      self.defs[self.thisBlock()] = pc
+      self.emit(lo('$%s.def.%d' % (self.name, pc)))
+    elif word == 'do':
+      self.loops[self.thisBlock()] = self.vPC
     elif word == 'loop':
       to = [block for block in self.blocks if block in self.loops]
       if len(to) == 0:
@@ -168,19 +176,12 @@ class Program:
         self.error('Loop outside page')
       self.opcode('BRA')
       self.emit(to&255)
-    elif word == 'def':
-      pc = self.vPC # Just an identifier
-      self.opcode('DEF')
-      self.defs[self.thisBlock()] = pc
-      self.emit(lo('$%s.def.%d' % (self.name, pc)))
-    elif word == 'do':
-      self.loops[self.thisBlock()] = self.vPC
-    elif word == 'if<>0': self._emitIf('EQ')
-    elif word == 'if=0':  self._emitIf('NE')
-    elif word == 'if>=0': self._emitIf('LT')
-    elif word == 'if<=0': self._emitIf('GT')
-    elif word == 'if>0':  self._emitIf('LE')
-    elif word == 'if<0':  self._emitIf('GE')
+    elif word == 'if<>0':     self._emitIf('EQ')
+    elif word == 'if=0':      self._emitIf('NE')
+    elif word == 'if>=0':     self._emitIf('LT')
+    elif word == 'if<=0':     self._emitIf('GT')
+    elif word == 'if>0':      self._emitIf('LE')
+    elif word == 'if<0':      self._emitIf('GE')
     elif word == 'if<>0loop': self._emitIfLoop('NE')
     elif word == 'if=0loop':  self._emitIfLoop('EQ')
     elif word == 'if>0loop':  self._emitIfLoop('GT')
@@ -197,19 +198,19 @@ class Program:
       self.emit(lo('$%s.if.%d.1' % (self.name, block)))
       define('$%s.if.%d.0' % (self.name, block), prev(self.vPC))
       self.conds[block] = 1
-
+    elif word == 'call':
+      self.opcode('CALL')
+      self.emit(symbol('vAC'), '%04x vAC' % prev(self.vPC, 1))
     elif word == 'push': self.opcode('PUSH')
     elif word == 'pop':  self.opcode('POP')
     elif word == 'ret':
       self.opcode('RET')
       if len(self.blocks) == 1:
         self.needPatch = True # Top-level use of 'ret' --> apply patch
-    elif word == 'call':
-      self.opcode('CALL')
-      self.emit(symbol('vAC'), '%04x vAC' % prev(self.vPC, 1))
     elif word == 'peek': self.opcode('PEEK')
     elif word == 'deek': self.opcode('DEEK')
     else:
+      # Operand words
       var, con, op = self.parseWord(word) # XXX Simplify this
       if not has(op):
         if var:
@@ -223,174 +224,96 @@ class Program:
             self.emit(con)
           else:
             self.opcode('LDWI')
-            self.emit( con    &0xff)
-            self.emit((con>>8)&0xff)
-      elif op == ';' and has(con):
-          self.opcode('LDW')
-          self.emit(con)
+            self.emit( con     & 255)
+            self.emit((con>>8) & 255)
 
-      elif op == ':' and con > 0xff: # XXX Replace with automatic allocation ('page')
-          self.org(con)
-      elif op == ':' and has(con):
-          self.opcode('STW')
-          self.emit(con)
-      elif op == '=' and con is not None: # XXX ... as well as this?
-          self.warning('(%s) i= is depricated, use i:' % word)
-          self.opcode('STW')
-          self.emit(con)
-      elif op == '.' and has(con):
-          self.opcode('ST')
-          self.emit(con)
-      elif op == ',' and has(con):
-          self.opcode('LD')
-          self.emit(con)
-      elif op == '=' and has(var):
-          self.opcode('STW')
-          self.address(var)
-          if var not in self.lengths and self.thisBlock() in self.lengths:
-            self.lengths[var] = self.lengths[self.thisBlock()]
-          else:
-            self.lengths[var] = None # No def lengths can be associated
-      elif op == '&' and has(var):
-          self.opcode('ANDW')
-          self.address(var)
-      elif op == '&' and has(con):
-          self.opcode('ANDI')
-          self.emit(con)
-      elif op == '|' and has(var):
-          self.opcode('ORW')
-          self.address(var)
-      elif op == '|' and has(con):
-          self.opcode('ORI')
-          self.emit(con)
-      elif op == '^' and has(var):
-          self.opcode('XORW')
-          self.address(var)
-      elif op == '^' and has(con):
-          self.opcode('XORI')
-          self.emit(con)
-      elif op == '+' and has(var):
-          self.opcode('ADDW')
-          self.address(var)
-      elif op == '+' and has(con):
-          self.opcode('ADDI')
-          self.emit(con)
-      elif op == '-' and has(var):
-          self.opcode('SUBW')
-          self.address(var)
-      elif op == '-' and has(con):
-          self.opcode('SUBI')
-          self.emit(con)
-      elif op == '<<' and has(con):
+      # Constant words
+      elif has(con):
+        if op == '<<':
           for i in range(con):
             self.opcode('LSLW')
-      elif op == '--' and has(con):
-          self.opcode('ALLOC')
-          self.emit(-con&255)
-      elif op == '++' and has(con):
-          self.opcode('ALLOC')
+          con = None
+        elif op == ':' and con > 255: self.org(con); con = None
+        elif op == '=':    self.opcode('STW'); self.depr(word, 'i=', 'i:')
+        elif op == ':':    self.opcode('STW')
+        elif op == ';':    self.opcode('LDW')
+        elif op == '.':    self.opcode('ST')
+        elif op == ',':    self.opcode('LD')
+        elif op == '&':    self.opcode('ANDI')
+        elif op == '|':    self.opcode('ORI')
+        elif op == '^':    self.opcode('XORI')
+        elif op == '+':    self.opcode('ADDI')
+        elif op == '-':    self.opcode('SUBI')
+        elif op == '%=':   self.opcode('STLW')
+        elif op == '%':    self.opcode('LDLW')
+        elif op == '--':   self.opcode('ALLOC'); con = -con & 255
+        elif op == '++':   self.opcode('ALLOC')
+        elif op == '#':    con &= 255                      #self.depr(word, 'i#', '#i')
+        elif op == '# ':   con &= 255
+        elif op == '<++':  self.opcode('INC');             #self.depr(word, 'i<++', '<i++')
+        elif op == '>++':  self.opcode('INC'); con += 1;   #self.depr(word, 'i>++', '>i++')
+        elif op == '< ++': self.opcode('INC')
+        elif op == '> ++': self.opcode('INC'); con += 1
+        elif op == '!':    self.opcode('SYS'); con = self.sysOperand(word, con)
+        elif op == '?':    self.opcode('LUP')
+        else:
+          self.error('(%s) Invalid word' % word)
+        if has(con):
           self.emit(con)
-      elif op == '%=' and has(con):
-          self.opcode('STLW')
-          self.emit(con)
-      elif op == '%' and has(con):
-          self.opcode('LDLW')
-          self.emit(con)
-      elif op == '`' and has(var): # Inline ASCII
+
+      # Variable words
+      elif has(var):
+        offset = 0
+        if op == '`': # Inline ASCII
           if len(var) > 0:
             for c in var:
               self.emit(ord(' ' if c == '`' else c))
           else:
             self.emit(ord('`'))
-      elif op == '#' and has(con):
-          # XXX self.warning('(%s) i# is depricated, use #i' % word)
-          self.emit(con & 255)
-      elif op == '# ' and has(con): # Prefix
-          self.emit(con & 255)
-      elif op == '?' and has(con):
-          self.opcode('LUP')
-          self.emit(con)
-      elif op == '.' and has(var):
-          self.opcode('POKE')
-          self.address(var)
-      elif op == ':' and has(var):
-          self.opcode('DOKE')
-          self.address(var)
-      elif op == ',' and has(var):
-          self.opcode('LDW')
-          self.address(var)
-          self.opcode('PEEK')
-      elif op == ';' and has(var):
-          self.opcode('LDW')
-          self.address(var)
-          self.opcode('DEEK')
-      elif op == '<++' and has(var):
-          # XXX self.warning('(%s) X<++ is depricated, use <X++' % word)
-          self.opcode('INC')
-          self.address(var)
-      elif op == '>++' and has(var):
-          # XXX self.warning('(%s) X>++ is depricated, use >X++' % word)
-          self.opcode('INC')
-          self.address(var, +1)
-      elif op == '< ++' and has(var):
-          self.opcode('INC')
-          self.address(var)
-      elif op == '> ++' and has(var):
-          self.opcode('INC')
-          self.address(var, +1)
-      elif op == '<++' and has(con):
-          # XXX self.warning('(%s) i<++ is depricated, use <i++' % word)
-          self.opcode('INC')
-          self.emit(con)
-      elif op == '>++' and has(con):
-          # XXX self.warning('(%s) i>++ is depricated, use >i++' % word)
-          self.opcode('INC')
-          self.emit(con+1)
-      elif op == '< ++' and has(con):
-          self.opcode('INC')
-          self.emit(con)
-      elif op == '> ++' and has(con):
-          self.opcode('INC')
-          self.emit(con+1)
-      elif op == '<,' and has(var):
-          # XXX self.warning('(%s) X<, is depricated, use <X,' % word)
-          self.opcode('LD')
-          self.address(var)
-      elif op == '>,' and has(var):
-          # XXX self.warning('(%s) X>, is depricated, use >X,' % word)
-          self.opcode('LD')
-          self.address(var, +1)
-      elif op == '<.' and has(var):
-          # XXX self.warning('(%s) X<. is depricated, use <X.' % word)
-          self.opcode('ST')
-          self.address(var)
-      elif op == '>.' and has(var):
-          # XXX self.warning('(%s) X>. is depricated, use >X.' % word)
-          self.opcode('ST')
-          self.address(var, +1)
-      elif op == '< ,' and has(var):
-          self.opcode('LD')
-          self.address(var)
-      elif op == '> ,' and has(var):
-          self.opcode('LD')
-          self.address(var, +1)
-      elif op == '< .' and has(var):
-          self.opcode('ST')
-          self.address(var)
-      elif op == '> .' and has(var):
-          self.opcode('ST')
-          self.address(var, +1)
-      elif op == '!' and has(var):
-          self.opcode('CALL')
-          self.address(var)
-      elif op == '!' and has(con):
-          if con&1:
-            self.error('(%s) Invalid value (must be even)' % word)
-          self.opcode('SYS')
-          extraTicks = con/2 - symbol('maxTicks')
-          self.emit(256 - extraTicks if extraTicks > 0 else 0)
+          var = None
+        elif op == '=':    self.opcode('STW'); self.defInfo(var)
+        elif op == ',':    self.opcode('LDW'); self.address(var); self.opcode('PEEK'); var = None
+        elif op == ';':    self.opcode('LDW'); self.address(var); self.opcode('DEEK'); var = None
+        elif op == '&':    self.opcode('ANDW')
+        elif op == '|':    self.opcode('ORW')
+        elif op == '^':    self.opcode('XORW')
+        elif op == '+':    self.opcode('ADDW')
+        elif op == '-':    self.opcode('SUBW')
+        elif op == '.':    self.opcode('POKE')
+        elif op == ':':    self.opcode('DOKE')
+        elif op == '<++':  self.opcode('INC');             #self.depr(word, 'X<++', '<X++')
+        elif op == '>++':  self.opcode('INC'); offset = 1; #self.depr(word, 'X>++', '>X++')
+        elif op == '< ++': self.opcode('INC')
+        elif op == '> ++': self.opcode('INC'); offset = 1
+        elif op == '<,':   self.opcode('LD');              #self.depr(word, 'X<,', '>X,')
+        elif op == '>,':   self.opcode('LD'); offset = 1;  #self.depr(word, 'X>,', '>X,')
+        elif op == '<.':   self.opcode('ST');              #self.depr(word, 'X<.', '<X.')
+        elif op == '>.':   self.opcode('ST'); offset = 1;  #self.depr(word, 'X>.', '>X.')
+        elif op == '< ,':  self.opcode('LD')
+        elif op == '> ,':  self.opcode('LD'); offset = 1
+        elif op == '< .':  self.opcode('ST')
+        elif op == '> .':  self.opcode('ST'); offset = 1
+        elif op == '!':    self.opcode('CALL')
+        else:
+          self.error('(%s) Invalid word' % word)
+        if has(var):
+          self.address(var, offset)
+
       else:
         self.error('(%s) Invalid word' % word)
+
+  def defInfo(self, var):
+    # Heuristic to track def lengths
+    if var not in self.lengths and self.thisBlock() in self.lengths:
+      self.lengths[var] = self.lengths[self.thisBlock()]
+    else:
+      self.lengths[var] = None # No def lengths can be associated
+
+  def sysOperand(self, word, con):
+    if con & 1:
+      self.error('(%s) Invalid value (must be even)' % word)
+    extraTicks = con/2 - symbol('maxTicks')
+    return 256 - extraTicks if extraTicks > 0 else 0
 
   def _emitIf(self, cond):
       self.opcode('BCC')
@@ -410,7 +333,7 @@ class Program:
         self.error('Loop outside page')
       self.opcode('BCC')
       self.opcode(cond)
-      self.emit(to&0xff)
+      self.emit(to&255)
 
   def parseWord(self, word):
     """Break word into pieces"""
@@ -500,6 +423,9 @@ class Program:
   def error(self, message):
     print(self.prefix('GCL error'), message)
     sys.exit()
+
+  def depr(self, word, old, new):
+    self.warning('(%s) %s is depricated, use %s' % (word, old, new))
 
   def putInRomTable(self, byte, comment=None):
     ld(byte)
