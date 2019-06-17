@@ -1,35 +1,46 @@
 gcl0x
 
+{ Version check > ROM v3 (see Docs/GT1-files.txt) }
+\romType, \romTypeValue_ROMv3-
+[if<=0 $800 p= [do p. 1+ loop]]
+
 { Tester for v6502 }
 { Nice online assembler: https://www.masswerk.at/6502/assembler.html }
+{ Also: https://cc65.github.io Homebrew: brew install cc65 }
+
 { Demo jumping back and forth between vCPU and v6502 code }
 
-[def                            {      org $0202   }
-        $EA#                    { 0202 nop         }
-        $AE# $00# $08#          { 0203 ldx $0800   }
-        $E8#                    { 0206 inx         }
-        $FE# $00# $08#          { 0207 inc $0800,X }
-        $D0# $FA#               { 020a bne *-6     }
-        $00#                    { 020c brk         }
-] \vLR= { = v6502 PC }
+[def
+        #$85 #$30               { munch sta $30         }
+        #$a9 #$00               {       lda #0          }
+        #$85 #$31               {       sta $31         }
+        #$a9 #$10               {       lda #16         }
+        #$85 #$32               {       sta $32         }
+        #$a9 #$18               { nextT lda #$18        }
+        #$85 #$33               {       sta $33         }
+        #$a5 #$33               { nextY lda $33         }
+        #$45 #$31               {       eor $31         }
+        #$a8                    {       tay             }
+        #$a5 #$30               {       lda $30         }
+        #$91 #$32               {       sta ($32),y     }
+        #$e6 #$33               {       inc $33         }
+        #$10 #$f3               {       bpl *-13        }
+        #$e6 #$31               {       inc $31         }
+        #$10 #$eb               {       bpl *-21        }
+        #$a5 #$30               {       lda $30         }
+        #$00                    {       brk             }
+
+] \vLR: { = v6502_PC }
 
 { GCL notation for main loop }
-$0b0c \sysFn=                   { SYS_v6502_v4_80 (preliminary address) }
+
+$0b0c \sysFn:                   { SYS_v6502_vX_80 (preliminary address) }
+
+0 {Black}
 [do
   push                          { Save start address on stack }
+  23+                           { New color }
   80!                           { Run v6502 until BRK }
   pop                           { Restore start address }
   loop]                         { Forever }
-
-{ vCPU disassembly of main loop
-        0200  cd 0b             DEF   $020d
-        ...
-        020d  2b 1a             STW   vLR
-        020f  11 0c 0b          LDWI  $0b0c
-        0212  2b 22             STW   sysFn
-        0214  75                PUSH
-        0215  b4 e6             SYS   80
-        0217  63                POP
-        0218  90 12             BRA   $0214
-}
 
