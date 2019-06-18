@@ -23,7 +23,7 @@
   |
   | 0207  21 0e                    LDW   frameCount         |!.|
   | 0209  f3 17                    DOKE  vPC+1              |..|
-  | 020d  90 07                    BRA   $0209              |..|
+  | 020b  90 05                    BRA   $0207              |..|
   | * 6 bytes
   |
   | * start at $0207
