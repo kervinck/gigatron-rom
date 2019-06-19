@@ -2,7 +2,7 @@ gcl0x
 
 { Version check > ROM v3 (see Docs/GT1-files.txt) }
 \romType, \romTypeValue_ROMv3-
-[if<=0 $800 p= [do p. 1+ loop]]
+[if<=0 do \frameCount; #\DOKE #\vPCH loop]
 
 { Tester for v6502 }
 { Nice online assembler: https://www.masswerk.at/6502/assembler.html }
