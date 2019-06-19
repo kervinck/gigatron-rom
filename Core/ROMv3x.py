@@ -341,6 +341,54 @@ def runVcpu(n, ref, returnTo=None):
 assert runVcpu_overhead ==       5
 
 #-----------------------------------------------------------------------
+#       v6502 definitions
+#-----------------------------------------------------------------------
+
+# Registers are zero page variables
+v6502_PCL       = vLR+0         # Program Counter Low
+v6502_PCH       = vLR+1         # Program Counter High
+v6502_S         = vSP           # Stack Pointer (kept as "S+1")
+v6502_A         = vAC+0         # Accumulator
+v6502_M         = vAC+1         # Modified Operand (used by SBC)
+v6502_X         = sysArgs+0     # Index Register X
+v6502_Y         = sysArgs+1     # Index Register Y
+v6502_P         = sysArgs+2     # Processor Status Register (V flag in bit 7)
+v6502_Q         = sysArgs+3     # Quick Status Register (for Z and N flags)
+v6502_IR        = sysArgs+4     # Instruction Register
+v6502_ADL       = sysArgs+5     # Low Address Register
+v6502_ADH       = sysArgs+6     # High Address Register
+v6502_Tmp       = vTmp          # Scratch (may be clobbered outside v6502)
+
+# MCS 6502 definitions for P register
+v6502_C = 1                     # Carry Flag (unsigned overflow)
+v6502_Z = 2                     # Zero Flag (all bits zero)
+v6502_I = 4                     # Interrupt Enable Flag (1=Disable)
+v6502_D = 8                     # Decimal Enable Flag (aka BCD mode, 1=Enable)
+v6502_B = 16                    # Break (or PHP) Instruction Flag
+v6502_U = 32                    # Unused (always 1)
+v6502_V = 64                    # Overflow Flag (signed overflow)
+v6502_N = 128                   # Negative Flag (bit 7 of result)
+
+# In emulation it is much faster to keep the V flag in bit 7
+# This can be corrected when importing/exporting with PHP, PLP, etc
+v6502_Vemu = 128
+
+# On overflow:
+#       """Overflow is set if two inputs with the same sign produce
+#          a result with a different sign. Otherwise it is clear."""
+# Formula (without carry/borrow in!):
+#       (A ^ (A+B)) & (B ^ (A+B)) & 0x80
+# References:
+#       http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
+#       http://6502.org/tutorials/vflag.html
+
+# Memory layout
+v6502_Stack     = 0x0000        # 0x0100 is already used in the Gigatron
+#v6502_NMI      = 0xfffa
+#v6502_RESET    = 0xfffc
+#v6502_IRQ      = 0xfffe
+
+#-----------------------------------------------------------------------
 #
 #  ROM page 0: Boot
 #
@@ -2353,36 +2401,26 @@ jmp(Y,'REENTER')                #52
 ld(-56/2)                       #53
 
 #-----------------------------------------------------------------------
-# Extension SYS_LoaderPayloadCopy_34
+#       v6502 right shift instruction
 #-----------------------------------------------------------------------
 
-# sysArgs[0:1] Source address
-# sysArgs[4]   Copy count
-# sysArgs[5:6] Destination address
+label('v6502_lsr30')
+ld([v6502_ADH],Y);              C('Result')#30
+st([Y,X])                       #31
+st([v6502_Q]);                  C('N and Z flags')#32
+ld(hi('v6502_next'),Y)          #33
+jmp(Y,lo('v6502_next'))         #34
+ld(-36/2)                       #35
 
-if hasLoader:
-  label('SYS_LoaderPayloadCopy_34')
-  ld([sysArgs+4])               #15 Copy count
-  beq('.sysCc0')                #16
-  suba(1)                       #17
-  st([sysArgs+4])               #18
-  ld([sysArgs+0],X)             #19 Current pointer
-  ld([sysArgs+1],Y)             #20
-  ld([Y,X])                     #21
-  ld([sysArgs+5],X)             #22 Target pointer
-  ld([sysArgs+6],Y)             #23
-  st([Y,X])                     #24
-  ld([sysArgs+5])               #25 Increment target
-  adda(1)                       #26
-  st([sysArgs+5])               #27
-  bra('.sysCc1')                #28
-  label('.sysCc0')
-  ld(hi('REENTER'),Y)           #18,29
-  wait(30-19)                   #19
-  label('.sysCc1')
-  jmp(Y,'REENTER')              #30
-  ld(-34/2)                     #31
-
+label('v6502_ror38')
+ora([v6502_M]);                 C('Transfer bit 8')#38
+ld([v6502_ADH],Y);              C('Result')#39
+st([Y,X])                       #40
+st([v6502_Q]);                  C('N and Z flags')#41
+nop()                           #42
+ld(hi('v6502_next'),Y)          #43
+jmp(Y,lo('v6502_next'))         #44
+ld(-46/2)                       #45
 
 #-----------------------------------------------------------------------
 #
@@ -2803,106 +2841,7 @@ st([vAC+1])                     #41
 jmp(Y,'REENTER')                #42
 ld(-46/2)                       #43
 
-#-----------------------------------------------------------------------
-#  Application specific SYS extensions
-#-----------------------------------------------------------------------
-
-# !!! These aren't defined in interface.json and therefore
-# !!! availability and presence will vary
-
-if hasRacer:
-  label('SYS_RacerUpdateVideoX_40')
-  ld([sysArgs+2],X)             #15 q,
-  ld([sysArgs+3],Y)             #16
-  ld([Y,X])                     #17
-  st([vTmp])                    #18
-  suba([sysArgs+4])             #19 X-
-  ld([sysArgs+0],X)             #20 p.
-  ld([sysArgs+1],Y)             #21
-  st([Y,X])                     #22
-  ld([sysArgs+0])               #23 p 4- p=
-  suba(4)                       #24
-  st([sysArgs+0])               #25
-  ld([vTmp])                    #26 q,
-  st([sysArgs+4])               #27 X=
-  ld([sysArgs+2])               #28 q<++
-  adda(1)                       #29
-  st([sysArgs+2])               #30
-  bne('.sysRacer0')             #31 Self-repeat by adjusting vPC
-  ld([vPC])                     #32
-  bra('.sysRacer1')             #33
-  nop()                         #34
-  label('.sysRacer0')
-  suba(2)                       #33
-  st([vPC])                     #34
-  label('.sysRacer1')
-  ld(hi('REENTER'),Y)           #35
-  jmp(Y,'REENTER')              #36
-  ld(-40/2)                     #37
-
-if hasRacer:
-  label('SYS_RacerUpdateVideoY_40')
-  ld([sysArgs+3])               #15 8&
-  anda(8)                       #16
-  bne('.sysRacer2')             #17 [if<>0 1]
-  bra('.sysRacer3')             #18
-  ld(0)                         #19
-  label('.sysRacer2')
-  ld(1)                         #19
-  label('.sysRacer3')
-  st([vTmp])                    #20 tmp=
-  ld([sysArgs+1],Y)             #21
-  ld([sysArgs+0])               #22 p<++ p<++
-  adda(2)                       #23
-  st([sysArgs+0],X)             #24
-  xora(238)                     #25 238^
-  st([vAC])                     #26
-  st([vAC+1])                   #27
-  ld([sysArgs+2])               #28 SegmentY
-  anda(254)                     #29 254&
-  adda([vTmp])                  #30 tmp+
-  st([Y,X])                     #31
-  ld([sysArgs+2])               #32 SegmentY<++
-  adda(1)                       #33
-  st([sysArgs+2])               #34
-  ld(hi('REENTER'),Y)           #35
-  jmp(Y,'REENTER')              #36
-  ld(-40/2)                     #37
-
-#-----------------------------------------------------------------------
-# Extension SYS_LoaderNextByteIn_32
-#-----------------------------------------------------------------------
-
-# sysArgs[0:1] Current address
-# sysArgs[2]   Checksum
-# sysArgs[3]   Wait value (videoY)
-
-if hasLoader:
-  label('SYS_LoaderNextByteIn_32')
-  ld([videoY])                  #15
-  xora([sysArgs+3])             #16
-  bne('.sysNbi')                #17
-  ld([sysArgs+0], X)            #18
-  ld([sysArgs+1], Y)            #19
-  ld(IN)                        #20
-  st([Y,X])                     #21
-  adda([sysArgs+2])             #22
-  st([sysArgs+2])               #23
-  ld([sysArgs+0])               #24
-  adda(1)                       #25
-  st([sysArgs+0])               #26
-  ld(hi('REENTER'),Y)           #27
-  jmp(Y,'REENTER')              #28
-  ld(-32/2)                     #29
-  # Restart instruction
-  label('.sysNbi')
-  ld([vPC])                     #19
-  suba(2)                       #20
-  st([vPC])                     #21
-  ld(-28/2)                     #22
-  ld(hi('REENTER'),Y)           #23
-  jmp(Y,'REENTER')              #24
-  nop()                         #25
+# XXX Lots of space here
 
 #-----------------------------------------------------------------------
 #
@@ -3337,49 +3276,139 @@ assert (38 - 22)/2 >= v6502_adjust
 # - Mnemonics in interface.json (Paul Allen's notation will work: https://www.pagetable.com/?p=774)
 # - Stuff cc65 output in a .gt1 file
 
-# Registers are zero page variables
-v6502_PCL       = vLR+0         # Program Counter Low
-v6502_PCH       = vLR+1         # Program Counter High
-v6502_S         = vSP           # Stack Pointer (kept as "S+1")
-v6502_A         = vAC+0         # Accumulator
-v6502_M         = vAC+1         # Modified Operand (used by SBC)
-v6502_X         = sysArgs+0     # Index Register X
-v6502_Y         = sysArgs+1     # Index Register Y
-v6502_P         = sysArgs+2     # Processor Status Register (V flag in bit 7)
-v6502_Q         = sysArgs+3     # Quick Status Register (for Z and N flags)
-v6502_IR        = sysArgs+4     # Instruction Register
-v6502_ADL       = sysArgs+5     # Low Address Register
-v6502_ADH       = sysArgs+6     # High Address Register
-v6502_Tmp       = vTmp          # Scratch (may be clobbered outside v6502)
+label('v6502_ror')
+assert v6502_C == 1
+ld([v6502_ADH],Y)               #12
+ld(-46/2+v6502_maxTicks)        #13 Is there enough time for the excess ticks?
+adda([vTicks])                  #14
+blt('.recheck17')               #15
+ld([v6502_P]);                  C('Transfer C to bit 8')#16
+anda(1)                         #17 v6502_C
+adda(127)                       #18
+anda(128)                       #19
+st([v6502_M])                   #20
+ld([v6502_P]);                  C('Transfer bit 0 to C')#21
+anda(1)                         #22
+st([v6502_P])                   #23
+ld([Y,X])                       #24
+anda(1)                         #25 v6502_C
+ora([v6502_P])                  #26
+st([v6502_P])                   #27
+ld([Y,X]);                      C('Shift table lookup')#28
+anda(~1)                        #29
+ld('v6502_ror38');              #30
+st([vTmp])                      #31
+ld(hi('shiftTable'),Y);         #32
+jmp(Y,AC)                       #33
+bra(255);                       C('bra $%04x' % (shiftTable+255))#34
+label('.recheck17')
+ld(hi('v6502_check'),Y)         #17 Go back to time check before dispatch
+jmp(Y,lo('v6502_check'))        #18
+ld(-20/2)                       #19
 
-# MCS 6502 definitions for P register
-v6502_C = 1                     # Carry Flag (unsigned overflow)
-v6502_Z = 2                     # Zero Flag (all bits zero)
-v6502_I = 4                     # Interrupt Enable Flag (1=Disable)
-v6502_D = 8                     # Decimal Enable Flag (aka BCD mode, 1=Enable)
-v6502_B = 16                    # Break (or PHP) Instruction Flag
-v6502_U = 32                    # Unused (always 1)
-v6502_V = 64                    # Overflow Flag (signed overflow)
-v6502_N = 128                   # Negative Flag (bit 7 of result)
+label('v6502_lsr')
+assert v6502_C == 1
+ld([v6502_ADH],Y)               #12
+ld([v6502_P]);                  C('Transfer bit 0 to C')#13
+anda(~1)                        #14
+st([v6502_P])                   #15
+ld([Y,X])                       #16
+anda(1)                         #17
+ora([v6502_P])                  #18
+st([v6502_P])                   #19
+ld([Y,X]);                      C('Shift table lookup')#20
+anda(~1)                        #21
+ld('v6502_lsr30');              #22
+st([vTmp])                      #23
+ld(hi('shiftTable'),Y);         #24
+jmp(Y,AC)                       #25
+bra(255);                       C('bra $%04x' % (shiftTable+255))#26
 
-# In emulation it is much faster to keep the V flag in bit 7
-# This can be corrected when importing/exporting with PHP, PLP, etc
-v6502_Vemu = 128
+label('v6502_rol')
+assert v6502_C == 1
+ld([v6502_ADH],Y)               #12
+ld([Y,X])                       #13
+anda(0x80)                      #14
+st([v6502_Tmp])                 #15
+ld([v6502_P])                   #16
+anda(1)                         #17
+label('.rol18')
+adda([Y,X])                     #18
+adda([Y,X])                     #19
+st([Y,X])                       #20
+st([v6502_Q])                   #21
+ld([v6502_P])                   #22
+anda(~1)                        #23
+ld([v6502_Tmp],X)               #24
+ora([X])                        #25
+st([v6502_P])                   #26
+ld(hi('v6502_next'),Y)          #27
+jmp(Y,lo('v6502_next'))         #28
+ld(-30/2)                       #29
 
-# On overflow:
-#       """Overflow is set if two inputs with the same sign produce
-#          a result with a different sign. Otherwise it is clear."""
-# Formula (without carry/borrow in!):
-#       (A ^ (A+B)) & (B ^ (A+B)) & 0x80
-# References:
-#       http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
-#       http://6502.org/tutorials/vflag.html
+label('v6502_asl')
+assert v6502_C == 1
+ld([v6502_ADH],Y)               #12
+ld([Y,X])                       #13
+anda(0x80)                      #14
+st([v6502_Tmp])                 #15
+bra('.rol18')                   #16
+ld(0)                           #17
 
-# Memory layout
-v6502_Stack     = 0x0000        # 0x0100 is already used in the Gigatron
-#v6502_NMI      = 0xfffa
-#v6502_RESET    = 0xfffc
-#v6502_IRQ      = 0xfffe
+label('v6502_jmp1')
+nop()                           #12
+ld([v6502_ADL])                 #13
+st([v6502_PCL])                 #14
+ld([v6502_ADH])                 #15
+st([v6502_PCH])                 #16
+ld(hi('v6502_next'),Y)          #17
+jmp(Y,lo('v6502_next'))         #18
+ld(-20/2)                       #19
+
+label('v6502_jmp2')
+nop();                          #12
+ld([v6502_ADH],Y)               #13
+ld([Y,X])                       #14
+st([Y,Xpp]);                    C('Wrap around: bug compatible with NMOS')#15
+st([v6502_PCL])                 #16
+ld([Y,X])                       #17
+st([v6502_PCH])                 #18
+ld(hi('v6502_next'),Y)          #19
+jmp(Y,lo('v6502_next'))         #20
+ld(-22/2)                       #21
+
+label('v6502_pla')
+ld([v6502_S])                   #12
+ld(AC,X)                        #13
+adda(1)                         #14
+st([v6502_S])                   #15
+ld([X])                         #16
+st([v6502_A])                   #17
+st([v6502_Q])                   #18
+ld(hi('v6502_next'),Y)          #19
+jmp(Y,lo('v6502_next'))         #20
+ld(-22/2)                       #21
+
+label('v6502_pha')
+ld(hi('v6502_next'),Y)          #12,19
+ld([v6502_S])                   #13
+suba(1)                         #14
+st([v6502_S],X)                 #15
+ld([v6502_A])                   #16
+st([X])                         #17
+jmp(Y,lo('v6502_next'))         #18
+ld(-20/2)                       #19,12
+
+label('v6502_brk')
+ld(hi('ENTER'));                C('Switch to vCPU')#12
+st([vCPUselect])                #13
+assert v6502_A == vAC
+ld(0)                           #14
+st([vAC+1])                     #15
+ld(hi('REENTER'),Y)             #16 Switch in the current time slice
+ld(-22/2+v6502_adjust)          #17
+jmp(Y,lo('REENTER'));           #18
+nop()                           #19
 
 # All interpreter entry points must share the same page offset, because
 # this offset is hard-coded as immediate operand in the video driver.
@@ -4108,9 +4137,13 @@ label('v6502_RTI')
 ld(hi('v6502_xxx'),Y)           #9,11
 jmp(Y,lo('v6502_xxx'))          #10 XXX
 #nop()                          #11 Overlap
-label('v6502_LSR') # XXX Flags: N Z C
-ld(hi('v6502_xxx'),Y)           #9,11
-jmp(Y,lo('v6502_xxx'))          #10 XXX
+label('v6502_ROR')
+ld(hi('v6502_ror'),Y)           #9,11
+jmp(Y,lo('v6502_ror'))          #10
+#nop()                          #11 Overlap
+label('v6502_LSR')
+ld(hi('v6502_lsr'),Y)           #9,11
+jmp(Y,lo('v6502_lsr'))          #10
 #nop()                          #11 Overlap
 label('v6502_PHA')
 ld(hi('v6502_pha'),Y)           #9,11
@@ -4121,10 +4154,6 @@ ld(hi('v6502_cli'),Y)           #9,11
 jmp(Y,lo('v6502_cli'))          #10
 #nop()                          #11 Overlap
 label('v6502_RTS')
-ld(hi('v6502_xxx'),Y)           #9,11
-jmp(Y,lo('v6502_xxx'))          #10 XXX
-#nop()                          #11 Overlap
-label('v6502_ROR') # XXX Flags: N Z C
 ld(hi('v6502_xxx'),Y)           #9,11
 jmp(Y,lo('v6502_xxx'))          #10 XXX
 #nop()                          #11 Overlap
@@ -4210,70 +4239,6 @@ ld([v6502_ADL],X)               #2
 ld(hi('v6502_execute'),Y)       #3
 jmp(Y,[v6502_IR])               #4
 bra(255)                        #5
-
-label('v6502_jmp2')
-nop();                          #12
-ld([v6502_ADH],Y)               #13
-ld([Y,X])                       #14
-st([Y,Xpp]);                    C('Wrap around: bug compatible with NMOS')#15
-st([v6502_PCL])                 #16
-ld([Y,X])                       #17
-st([v6502_PCH])                 #18
-ld(hi('v6502_next'),Y)          #19
-jmp(Y,lo('v6502_next'))         #20
-ld(-22/2)                       #21
-
-label('v6502_brk')
-ld(hi('ENTER'));                C('Switch to vCPU')#12
-st([vCPUselect])                #13
-assert v6502_A == vAC
-ld(0)                           #14
-st([vAC+1])                     #15
-ld(hi('REENTER'),Y)             #16 Switch in the current time slice
-ld(-22/2+v6502_adjust)          #17
-jmp(Y,lo('REENTER'));           #18
-nop()                           #19
-
-label('v6502_jmp1')
-nop()                           #12
-ld([v6502_ADL])                 #13
-st([v6502_PCL])                 #14
-ld([v6502_ADH])                 #15
-st([v6502_PCH])                 #16
-ld(hi('v6502_next'),Y)          #17
-jmp(Y,lo('v6502_next'))         #18
-ld(-20/2)                       #19
-
-label('v6502_asl')
-assert v6502_C == 1
-ld([v6502_ADH],Y)               #12
-ld([Y,X])                       #13
-anda(0x80)                      #14
-st([v6502_Tmp])                 #15
-bra('.rol18')                   #16
-ld(0)                           #17
-
-label('v6502_rol')
-assert v6502_C == 1
-ld([v6502_ADH],Y)               #12
-ld([Y,X])                       #13
-anda(0x80)                      #14
-st([v6502_Tmp])                 #15
-ld([v6502_P])                   #16
-anda(1)                         #17
-label('.rol18')
-adda([Y,X])                     #18
-adda([Y,X])                     #19
-st([Y,X])                       #20
-st([v6502_Q])                   #21
-ld([v6502_P])                   #22
-anda(~1)                        #23
-ld([v6502_Tmp],X)               #24
-ora([X])                        #25
-st([v6502_P])                   #26
-ld(hi('v6502_next'),Y)          #27
-jmp(Y,lo('v6502_next'))         #28
-ld(-30/2)                       #29
 
 label('v6502_dec')
 ld([v6502_ADH],Y)               #12
@@ -4407,7 +4372,7 @@ label('v6502_sed')
 ld([v6502_P])                   #12
 bra('.clv15')                   #13
 label('v6502_clv')
-ora(v6502_D)                    #14,12 OVerlap
+ora(v6502_D)                    #14,12 Overlap
 #
 #label('v6502_clv')
 #nop()                          #12
@@ -4418,30 +4383,7 @@ st([v6502_P])                   #15
 ld(hi('v6502_next'),Y)          #16
 ld(-20/2)                       #17
 jmp(Y,lo('v6502_next'))         #18
-#nop()                          #19 Overlap
-#
-label('v6502_pha')
-ld(hi('v6502_next'),Y)          #12,19
-ld([v6502_S])                   #13
-suba(1)                         #14
-st([v6502_S],X)                 #15
-ld([v6502_A])                   #16
-st([X])                         #17
-jmp(Y,lo('v6502_next'))         #18
-label('v6502_pla')
-ld(-20/2)                       #19,12
-#
-#label('v6502_pla')
-#nop()                          #12 Overlap
-ld([v6502_S])                   #13
-ld(AC,X)                        #14
-adda(1)                         #15
-st([v6502_S])                   #16
-ld([X])                         #17
-st([v6502_A])                   #18
-st([v6502_Q])                   #19
-jmp(Y,lo('v6502_next'))         #20
-ld(-22/2)                       #21
+nop()                           #19
 
 label('v6502_xxx')
 # XXX Dummy label for missing instructions. Remove eventually
@@ -4449,11 +4391,155 @@ label('v6502_xxx')
 align(1)
 
 #-----------------------------------------------------------------------
-#  Some more application specific SYS extensions
+#
+#  End of core
+#
+#-----------------------------------------------------------------------
+
+# For info
+print 'SYS limits low %s high %s' % (repr(minSYS), repr(maxSYS))
+
+# Export some zero page variables to GCL
+# These constants were already loaded from interface.json.
+# We're redefining them here to get a consistency check.
+define('memSize',    memSize)
+for i in range(3):
+  define('entropy%d' % i, entropy+i)
+define('videoY',     videoY)
+define('frameCount', frameCount)
+define('serialRaw',  serialRaw)
+define('buttonState', buttonState)
+define('xoutMask',   xoutMask)
+define('vPC',        vPC)
+define('vAC',        vAC)
+define('vACH',       vAC+1)
+define('vLR',        vLR)
+define('vSP',        vSP)
+define('romType',    romType)
+define('sysFn',      sysFn)
+for i in range(8):
+  define('sysArgs%d' % i, sysArgs+i)
+define('soundTimer', soundTimer)
+define('ledTimer',   ledTimer)
+define('ledState_v2',ledState_v2)
+define('ledTempo',   ledTempo)
+define('userVars',   userVars)
+define('videoTable', videoTable)
+define('userCode',   userCode)
+define('soundTable', soundTable)
+define('screenMemory',screenMemory)
+define('wavA',       wavA)
+define('wavX',       wavX)
+define('keyL',       keyL)
+define('keyH',       keyH)
+define('oscL',       oscL)
+define('oscH',       oscH)
+define('maxTicks',   maxTicks)
+# XXX This is a hack (trampoline() is probably in the wrong module):
+define('vPC+1',      vPC+1)
+
+#-----------------------------------------------------------------------
+#
+#       Application specific SYS extensions
+#
 #-----------------------------------------------------------------------
 
 # !!! These aren't defined in interface.json and therefore
 # !!! availability and presence will vary
+
+if hasRacer:
+  label('SYS_RacerUpdateVideoX_40')
+  ld([sysArgs+2],X)             #15 q,
+  ld([sysArgs+3],Y)             #16
+  ld([Y,X])                     #17
+  st([vTmp])                    #18
+  suba([sysArgs+4])             #19 X-
+  ld([sysArgs+0],X)             #20 p.
+  ld([sysArgs+1],Y)             #21
+  st([Y,X])                     #22
+  ld([sysArgs+0])               #23 p 4- p=
+  suba(4)                       #24
+  st([sysArgs+0])               #25
+  ld([vTmp])                    #26 q,
+  st([sysArgs+4])               #27 X=
+  ld([sysArgs+2])               #28 q<++
+  adda(1)                       #29
+  st([sysArgs+2])               #30
+  bne('.sysRacer0')             #31 Self-repeat by adjusting vPC
+  ld([vPC])                     #32
+  bra('.sysRacer1')             #33
+  nop()                         #34
+  label('.sysRacer0')
+  suba(2)                       #33
+  st([vPC])                     #34
+  label('.sysRacer1')
+  ld(hi('REENTER'),Y)           #35
+  jmp(Y,'REENTER')              #36
+  ld(-40/2)                     #37
+
+if hasRacer:
+  label('SYS_RacerUpdateVideoY_40')
+  ld([sysArgs+3])               #15 8&
+  anda(8)                       #16
+  bne('.sysRacer2')             #17 [if<>0 1]
+  bra('.sysRacer3')             #18
+  ld(0)                         #19
+  label('.sysRacer2')
+  ld(1)                         #19
+  label('.sysRacer3')
+  st([vTmp])                    #20 tmp=
+  ld([sysArgs+1],Y)             #21
+  ld([sysArgs+0])               #22 p<++ p<++
+  adda(2)                       #23
+  st([sysArgs+0],X)             #24
+  xora(238)                     #25 238^
+  st([vAC])                     #26
+  st([vAC+1])                   #27
+  ld([sysArgs+2])               #28 SegmentY
+  anda(254)                     #29 254&
+  adda([vTmp])                  #30 tmp+
+  st([Y,X])                     #31
+  ld([sysArgs+2])               #32 SegmentY<++
+  adda(1)                       #33
+  st([sysArgs+2])               #34
+  ld(hi('REENTER'),Y)           #35
+  jmp(Y,'REENTER')              #36
+  ld(-40/2)                     #37
+
+#-----------------------------------------------------------------------
+# Extension SYS_LoaderNextByteIn_32
+#-----------------------------------------------------------------------
+
+# sysArgs[0:1] Current address
+# sysArgs[2]   Checksum
+# sysArgs[3]   Wait value (videoY)
+
+if hasLoader:
+  label('SYS_LoaderNextByteIn_32')
+  ld([videoY])                  #15
+  xora([sysArgs+3])             #16
+  bne('.sysNbi')                #17
+  ld([sysArgs+0], X)            #18
+  ld([sysArgs+1], Y)            #19
+  ld(IN)                        #20
+  st([Y,X])                     #21
+  adda([sysArgs+2])             #22
+  st([sysArgs+2])               #23
+  ld([sysArgs+0])               #24
+  adda(1)                       #25
+  st([sysArgs+0])               #26
+  ld(hi('REENTER'),Y)           #27
+  jmp(Y,'REENTER')              #28
+  ld(-32/2)                     #29
+  # Restart instruction
+  label('.sysNbi')
+  ld([vPC])                     #19
+  suba(2)                       #20
+  st([vPC])                     #21
+  ld(-28/2)                     #22
+  ld(hi('REENTER'),Y)           #23
+  jmp(Y,'REENTER')              #24
+  nop()                         #25
 
 #-----------------------------------------------------------------------
 # Extension SYS_LoaderProcessInput_48
@@ -4519,52 +4605,35 @@ if hasLoader:
   ld(-46/2)                     #43
 
 #-----------------------------------------------------------------------
-#
-#  ROM page XX: Bootstrap vCPU
-#
+# Extension SYS_LoaderPayloadCopy_34
 #-----------------------------------------------------------------------
 
-# For info
-print 'SYS limits low %s high %s' % (repr(minSYS), repr(maxSYS))
+# sysArgs[0:1] Source address
+# sysArgs[4]   Copy count
+# sysArgs[5:6] Destination address
 
-# Export some zero page variables to GCL
-# These constants were already loaded from interface.json.
-# We're redefining them here to get a consistency check.
-define('memSize',    memSize)
-for i in range(3):
-  define('entropy%d' % i, entropy+i)
-define('videoY',     videoY)
-define('frameCount', frameCount)
-define('serialRaw',  serialRaw)
-define('buttonState', buttonState)
-define('xoutMask',   xoutMask)
-define('vPC',        vPC)
-define('vAC',        vAC)
-define('vACH',       vAC+1)
-define('vLR',        vLR)
-define('vSP',        vSP)
-define('romType',    romType)
-define('sysFn',      sysFn)
-for i in range(8):
-  define('sysArgs%d' % i, sysArgs+i)
-define('soundTimer', soundTimer)
-define('ledTimer',   ledTimer)
-define('ledState_v2',ledState_v2)
-define('ledTempo',   ledTempo)
-define('userVars',   userVars)
-define('videoTable', videoTable)
-define('userCode',   userCode)
-define('soundTable', soundTable)
-define('screenMemory',screenMemory)
-define('wavA',       wavA)
-define('wavX',       wavX)
-define('keyL',       keyL)
-define('keyH',       keyH)
-define('oscL',       oscL)
-define('oscH',       oscH)
-define('maxTicks',   maxTicks)
-# XXX This is a hack (trampoline() is probably in the wrong module):
-define('vPC+1',      vPC+1)
+if hasLoader:
+  label('SYS_LoaderPayloadCopy_34')
+  ld([sysArgs+4])               #15 Copy count
+  beq('.sysCc0')                #16
+  suba(1)                       #17
+  st([sysArgs+4])               #18
+  ld([sysArgs+0],X)             #19 Current pointer
+  ld([sysArgs+1],Y)             #20
+  ld([Y,X])                     #21
+  ld([sysArgs+5],X)             #22 Target pointer
+  ld([sysArgs+6],Y)             #23
+  st([Y,X])                     #24
+  ld([sysArgs+5])               #25 Increment target
+  adda(1)                       #26
+  st([sysArgs+5])               #27
+  bra('.sysCc1')                #28
+  label('.sysCc0')
+  ld(hi('REENTER'),Y)           #18,29
+  wait(30-19)                   #19
+  label('.sysCc1')
+  jmp(Y,'REENTER')              #30
+  ld(-34/2)                     #31
 
 #-----------------------------------------------------------------------
 #
