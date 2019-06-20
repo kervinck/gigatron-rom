@@ -7,7 +7,7 @@ gcl0x
 |                                                                       |
 +-----------------------------------------------------------------------}
 
-{ Fall into TinyBASIC if [Start] is pressed for >4 seconds }
+{ Fall into Sprites demo if [Start] is pressed for >4 seconds }
 \buttonState;                   {Fetch buttonState and resetTimer}
 [if>0                           {If resetTimer positive}
   16& [if=0                     {And [Start] pressed}
@@ -136,38 +136,19 @@ $0400:
 ] Newline=
 
 [def
-  9# $53# $6e# $61# $6b# $65#   9#       32#  32#       {Snake}
-  9# $54# $65# $74# $72# $6f# $6e# $69# $73# 10#                {Tetronis}
-  9# $52# $61# $63# $65# $72#   9#       32#  32#       {Racer}
-  9# $42# $72# $69# $63# $6b# $73# 10#                          {Bricks}
-  9# $4d# $61# $6e# $64# $65# $6c# $62# $72# $6f# $74#  {Mandelbrot}
-  9# $54# $69# $63# $54# $61# $63# $54# $6f# $65# 10#           {TicTacToe}
-  9# $50# $69# $63# $74# $75# $72# $65# $73#   32# 32#  {Pictures}
-  9# $42# $41# $53# $49# $43# 10#                               {BASIC}
-  9# $43# $72# $65# $64# $69# $74# $73# 9#              {Credits}
-  9# $57# $6f# $7a# $4d# $6f# $6e# 10#                          {WozMon}
-  9# $4c# $6f# $61# $64# $65# $72# 10#                  {Loader}
-  0#
+  #9 `Snake #9 ``` #9 `Tetronis  #10
+  #9 `Racer #9 ``` #9 `Bricks    #10
+  #9 `Mandelbrot   #9 `TicTacToe #10
+  #9 `Pictures ``` #9 `BASIC     #10
+  #9 `Credits #9   #9 `WozMon    #10
+  #9 `Loader                     #10 #0
 ] MainMenu=
 
 [def
-  {Use [Arrows] to select}
-  $55# $73# $65# $20# $5b# $41# $72#
-  $72# $6f# $77# $73# $5d# $20# $74# $6f#
-  $20# $73# $65# $6c# $65# $63# $74#
-  {Press [A] to start program}
-  10#
-  $50# $72# $65# $73# $73# $20# $5b# $41#
-  $5d# $20# $74# $6f# $20# $73# $74# $61#
-  $72# $74# $20# $70# $72# $6f# $67# $72#
-  $61# $6d#
-  {Hold [Start] for reset}
-  10#
-  10#
-  $48# $6f# $6c# $64# $20# $5b# $53# $74#
-  $61# $72# $74# $5d# $20# $66# $6f# $72#
-  $20# $72# $65# $73# $65# $74#
-  0#
+  `Use` #91 `Arrows #93 ``to`select     #10
+  `Press` #91 `A #93 ``to`start`program #10
+                                        #10
+  `Hold` #91 `Start #93 ``for`reset     #0
 ] HelpText=
 
 [def
