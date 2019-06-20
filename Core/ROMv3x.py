@@ -552,6 +552,7 @@ nop()
 nop()
 nop()
 nop()
+nop()
 
 #-----------------------------------------------------------------------
 
@@ -721,7 +722,6 @@ ld(hi('REENTER'), Y)            #81
 jmp(Y,'REENTER')                #82
 ld(-86/2)                       #83 One tick faster than needed
 
-nop()
 nop()
 nop()
 
