@@ -52,6 +52,7 @@
 #  XXX - SYS Exchange bit(s)
 #  XXX - Think about SPI modes
 #  XXX - Auto-detect banking, 64K and 128K
+#  DONE Reinitialize waveforms at soft reset, not just at power on
 #  XXX #38 Press [A] to start program" message is stupid
 #  XXX #41 Fix zero page usage in Bricks and Tetronis
 #  XXX #52 Head-only Snake shouldn't be allowed to turn around
@@ -511,65 +512,8 @@ ld(0b0111);                     C('LEDs |***O|')
 ld(syncBits^hSync, OUT)
 ld(syncBits, OUT)
 
-# XXX Everything below should at one point migrate to Reset.gcl
-
-# Init sound tables
-ld(soundTable>>8, Y);           C('Setup sound tables')
 ld(0)
 st([channel])
-ld(0, X)
-label('.loop0')
-st([vTmp]);                     C('Noise: T[4x+0] = x (permutate below)')
-st([Y,Xpp])
-anda(0x20);                     C('Triangle: T[4x+1] = 2x if x<32 else 127-2x')
-bne('.initTri0')
-ld([vTmp])
-bra('.initTri1')
-label('.initTri0')
-adda([vTmp])
-xora(127)
-label('.initTri1')
-st([Y,Xpp])
-ld([vTmp]);                     C('Pulse: T[4x+2] = 0 if x<32 else 63')
-anda(0x20)
-beq('.initPul')
-ld(0)
-ld(63)
-label('.initPul')
-st([Y,Xpp])
-ld([vTmp]);                     C('Sawtooth: T[4x+3] = x')
-st([Y,Xpp])
-adda(1)
-xora(0x40)
-bne('.loop0')
-xora(0x40)
-
-ld(0);                          C('Permutate noise table T[4i]')
-st([vAC+0]);                    C('x')
-st([vAC+1]);                    C('4y')
-label('.loop1')
-ld([vAC+1], X);                 C('tmp = T[4y]')
-ld([Y,X])
-st([vTmp])
-ld([vAC+0]);                    C('T[4y] = T[4x]')
-adda(AC)
-adda(AC, X)
-ld([Y,X])
-ld([vAC+1], X)
-st([Y,X])
-adda(AC);                       C('y += T[4x]')
-adda(AC)
-adda([vAC+1])
-st([vAC+1])
-ld([vAC+0]);                    C('T[x] = tmp')
-adda(AC)
-adda(AC, X)
-ld([vTmp])
-st([Y,X])
-ld([vAC+0]);                    C('while(++x)')
-adda(1)
-bne('.loop1')
-st([vAC+0])
 
 ld(0b1111);                     C('LEDs |****|')
 ld(syncBits^hSync, OUT)
@@ -594,6 +538,57 @@ nop()
 nop()
 nop()
 nop()
+nop()
+nop()
+nop()
+nop()
+nop()
+nop()
+nop()
+nop()
+nop()
+nop()
+nop()
+nop()
+nop()
+nop()
+
+#-----------------------------------------------------------------------
+
+label('sys_ResetWaveforms')
+ld([vAC+0]);                    C('X=4i')#18
+adda(AC)                        #19
+adda(AC,X)                      #20
+ld([vAC+0]);                    #21
+st([Y,Xpp]);                    C('Sawtooth: T[4i+0] = i')#22
+anda(0x20);                     C('Triangle: T[4i+1] = 2i if i<32 else 127-2i')#23
+bne(pc()+3)                     #24
+ld([vAC+0])                     #25
+bra(pc()+3)                     #26
+adda([vAC+0])                   #26,27
+xora(127)                       #27
+st([Y,Xpp])                     #28
+ld([vAC+0]);                    C('Pulse: T[4i+2] = 0 if i<32 else 63')#29
+anda(0x20)                      #30
+bne(pc()+3)                     #31
+bra(pc()+3)                     #32
+ld(0)                           #33
+ld(63)                          #33(!)
+st([Y,Xpp])                     #34
+ld([vAC+0]);                    C('Sawtooth: T[4i+3] = i')#35
+st([Y,X])                       #36
+adda(1);                        C('i += 1')#37
+st([vAC+0])                     #38
+xora(64);                       C('For 64 iterations')#39
+beq(pc()+3);                    #40
+bra(pc()+3)                     #41
+ld(-2)                          #42
+ld(0)                           #42(!)
+adda([vPC])                     #43
+st([vPC])                       #44
+ld(hi('REENTER'),Y)             #45
+jmp(Y,lo('REENTER'))            #46
+ld(-50/2)                       #47
 
 #-----------------------------------------------------------------------
 # Extension SYS_Reset_38: Soft reset
@@ -726,6 +721,7 @@ ld(hi('REENTER'), Y)            #81
 jmp(Y,'REENTER')                #82
 ld(-86/2)                       #83 One tick faster than needed
 
+nop()
 nop()
 nop()
 
@@ -926,12 +922,10 @@ ld(AC, X)                       #17
 ld([Y,wavA])                    #18
 ld(soundTable>>8, Y)            #19
 adda([Y,X])                     #20
-bmi('.sound1a')                 #21
-bra('.sound1b')                 #22
+bmi(pc()+3)                     #21
+bra(pc()+3)                     #22
 anda(63)                        #23
-label('.sound1a')
-ld(63)                          #23
-label('.sound1b')
+ld(63)                          #23(!)
 adda([sample])                  #24
 st([sample])                    #25
 
@@ -1144,12 +1138,10 @@ ld(AC, X)                       #17
 ld([Y,wavA])                    #18
 ld(soundTable>>8, Y)            #19
 adda([Y,X])                     #20
-bmi('.sound2a')                 #21
-bra('.sound2b')                 #22
+bmi(pc()+3)                     #21
+bra(pc()+3)                     #22
 anda(63)                        #23
-label('.sound2a')
-ld(63)                          #23
-label('.sound2b')
+ld(63)                          #23(!)
 adda([sample])                  #24
 st([sample])                    #25
 
@@ -2055,8 +2047,23 @@ jmp(Y,'REENTER')                #130
 ld(-134/2)                      #131
 
 #-----------------------------------------------------------------------
+#       Reserved
+#-----------------------------------------------------------------------
+
+#  11 words. Keep space reserved for possible use future LSRW
+
+#.lsrw??:
+#       ld   lo('.lsrw??')
+#       st   [vTmp]
+#       ld   [vAC+0]
+#       ora  1
+#       bra  [ac]
+
+#-----------------------------------------------------------------------
 #  ROM page 5-6: Shift table and code
 #-----------------------------------------------------------------------
+
+align(0x100, 0x200)
 
 # Lookup table for i>>n, with n in 1..6
 # Indexing ix = i & ~b | (b-1), where b = 1<<(n-1)
@@ -2075,10 +2082,9 @@ ld(-134/2)                      #131
 #       ld   [x]
 #       ...
 
-align(0x100, 0x200)
-
 label('shiftTable')
 shiftTable = pc()
+
 for ix in range(255):
   for n in range(1,7): # Find first zero
     if ~ix & (1 << (n-1)):
@@ -2423,6 +2429,12 @@ jmp(Y,lo('v6502_next'))         #44
 ld(-46/2)                       #45
 
 #-----------------------------------------------------------------------
+#       Reserved
+#-----------------------------------------------------------------------
+
+# XXX Reserve space for LSRW
+
+#-----------------------------------------------------------------------
 #
 #  ROM page 7-8: Gigatron font data
 #
@@ -2632,6 +2644,31 @@ jmp(Y,'sys_v6502')              #16
 ld(hi('v6502_ENTER'));          C('Activate v6502')#17
 
 #-----------------------------------------------------------------------
+# Extension SYS_ResetWaveforms_vX_50
+#-----------------------------------------------------------------------
+
+# soundTable[4x+0] = sawtooth, to be modified into metallic/noise
+# soundTable[4x+1] = pulse
+# soundTable[4x+2] = triangle
+# soundTable[4x+3] = sawtooth, also useful to right shift 2 bits
+
+label('SYS_ResetWaveforms_vX_50')
+ld(hi('sys_ResetWaveforms'),Y); C('Initial setup of waveforms. [vAC+0]=i')#15
+jmp(Y,lo('sys_ResetWaveforms')) #16
+ld(soundTable>>8,Y);            #17
+
+#-----------------------------------------------------------------------
+# Extension SYS_ShuffleNoise_vX_46
+#-----------------------------------------------------------------------
+
+# Use simple 6-bits variation of RC4 to permutate waveform 0 in soundTable
+
+label('SYS_ShuffleNoise_vX_46')
+ld(hi('sys_ShuffleNoise'),Y);   C('Shuffle soundTable[4i+0]. [vAC+0]=4j, [vAC+1]=4i')#15
+jmp(Y,lo('sys_ShuffleNoise'))   #16
+ld(soundTable>>8,Y);            #17
+
+#-----------------------------------------------------------------------
 # Some placeholders for future SYS functions. They work as a kind of jump
 # table. This allows implementations to be moved around between ROM
 # versions, at the expense of 2 (or 1) clock cycles. When the function is
@@ -2641,14 +2678,6 @@ ld(hi('v6502_ENTER'));          C('Activate v6502')#17
 # before a function, or by overdeclaring them in the first place. This
 # last method doesn't even cost space (initially).
 #-----------------------------------------------------------------------
-
-ld(hi('REENTER'), Y)            #15 slot 0xb0f
-jmp(Y,'REENTER')                #16
-ld(-20/2)                       #17
-
-ld(hi('REENTER'), Y)            #15 slot 0xb12
-jmp(Y,'REENTER')                #16
-ld(-20/2)                       #17
 
 ld(hi('REENTER'), Y)            #15 slot 0xb15
 jmp(Y,'REENTER')                #16
@@ -2839,6 +2868,37 @@ label('.sysSs5')
 st([vAC])                       #40 Stop sending bits, no error
 st([vAC+1])                     #41
 jmp(Y,'REENTER')                #42
+ld(-46/2)                       #43
+
+#-----------------------------------------------------------------------
+
+label('sys_ShuffleNoise')
+ld([vAC+0],X);                  C('tmp = T[4j]');#18
+ld([Y,X]);                      #19
+st([vTmp])                      #20
+ld([vAC+1],X);                  C('T[4j] = T[4i]')#21
+ld([Y,X])                       #22
+ld([vAC+0],X)                   #23
+st([Y,X])                       #24
+adda(AC);                       C('j += T[4i]')#25
+adda(AC,)                       #26
+adda([vAC+0])                   #27
+st([vAC+0])                     #28
+ld([vAC+1],X);                  C('T[4i] = tmp')#29
+ld([vTmp])                      #30
+st([Y,X])                       #31
+ld([vAC+1]);                    C('i += 1');#32
+adda(4)                         #33
+st([vAC+1])                     #34
+beq(pc()+3);                    C('For 64 iterations')#35
+bra(pc()+3)                     #36
+ld(-2)                          #37
+ld(0)                           #37!
+adda([vPC])                     #38
+st([vPC])                       #39
+nop()                           #40
+ld(hi('REENTER'),Y)             #41
+jmp(Y,lo('REENTER'))            #42
 ld(-46/2)                       #43
 
 # XXX Lots of space here

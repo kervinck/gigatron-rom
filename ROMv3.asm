@@ -133,7 +133,7 @@ cold:         003e c204  st   [$04]
               007e 8200  adda ac
               007f 8119  adda [$19]
               0080 c219  st   [$19]
-              0081 0118  ld   [$18]       ;T[x] = tmp
+              0081 0118  ld   [$18]       ;T[4x] = tmp
               0082 8200  adda ac
               0083 9200  adda ac,x
               0084 011d  ld   [$1d]
