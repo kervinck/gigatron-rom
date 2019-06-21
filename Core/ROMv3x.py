@@ -142,7 +142,6 @@ vBack -= vPulseExtension
 
 # Start value of vertical blank counter
 videoYline0 = 1-2*(vFront+vPulse+vBack-2)
-videoYline1 = videoYline0+2
 
 # Mismatch between video lines and sound channels
 soundDiscontinuity = (vFront+vPulse+vBack) % 4
@@ -305,11 +304,19 @@ v6502_overhead = 11             # Callee overhead for v6502 (cycles)
 v6502_adjust = (v6502_maxTicks - maxTicks) + (v6502_overhead - vCPU_overhead)/2
 assert v6502_adjust >= 0        # v6502's overhead is a bit more than vCPU
 
-maxSYS = -999                   # Largest time slice for 'SYS
-minSYS = +999                   # Smallest time slice for 'SYS'
+def runVcpu(n, ref=None, returnTo=None):
+  """Macro to run interpreter for exactly n cycles. Returns 0 in AC.
 
-def runVcpu(n, ref, returnTo=None):
-  """Run interpreter for exactly n cycles. Returns 0"""
+  - `n' is the number of available Gigatron cycles including overhead.
+    This is converted into interpreter ticks and takes into account
+    the vCPU calling overheads. A `nop' is inserted when necessary
+    for alignment between cycles and ticks.
+  - `ref' is emitted as a comment in the disassembly
+  - `returnTo' is where program flow continues after return. If not set
+     explicitely, it will be the first instruction behind the expansion.
+  - If another interpreter than vCPU is active (v6502...), that one
+    must adjust for the timing differences, because runVcpu wouldn't know."""
+
   comment = 'Run vCPU for %s cycles' % n
   if ref:
     comment += ' (%s)' % ref
@@ -323,10 +330,6 @@ def runVcpu(n, ref, returnTo=None):
   n -= 2*maxTicks
 
   assert n >= 0 and n % 2 == 0
-
-  global maxSYS, minSYS
-  maxSYS = max(maxSYS, n + 2*maxTicks)
-  minSYS = min(minSYS, n + 2*maxTicks)
 
   n /= 2
   assert n >= v6502_adjust
@@ -350,7 +353,7 @@ v6502_PCL       = vLR+0         # Program Counter Low
 v6502_PCH       = vLR+1         # Program Counter High
 v6502_S         = vSP           # Stack Pointer (kept as "S+1")
 v6502_A         = vAC+0         # Accumulator
-v6502_O         = vAC+1         # Operand (used by SBC)
+v6502_BI        = vAC+1         # B Input Register (used by SBC)
 v6502_X         = sysArgs+0     # Index Register X
 v6502_Y         = sysArgs+1     # Index Register Y
 v6502_P         = sysArgs+2     # Processor Status Register (V flag in bit 7)
@@ -523,7 +526,7 @@ st([xout])                      # Setup for control by video loop
 st([xoutMask])
 st([ledState_v2])               # Setting 1..126 means "stopped"
 
-ld(hi('vBlankStart'), Y);       C('Enter video loop')
+ld(hi('vBlankStart'), Y);       C('Enter video loop at vertical blank')
 jmp(Y,'vBlankStart')
 ld(syncBits)
 
@@ -788,48 +791,40 @@ adda([entropy+0])               #45
 st([entropy+0])                 #46
 adda([entropy+2])               #47 Some hidden state
 st([entropy+2])                 #48
-bmi('.rnd0')                    #49
-bra('.rnd1')                    #50
+bmi(pc()+3)                     #49
+bra(pc()+3)                     #50
 xora(64+16+2+1)                 #51
-label('.rnd0')
-xora(64+32+8+4)                 #51
-label('.rnd1')
+xora(64+32+8+4)                 #51(!)
 adda([entropy+1])               #52
 st([entropy+1])                 #53
 
 # LED sequencer (18 cycles)
 ld([ledTimer]);                 C('Blinkenlight sequencer')#54
-beq('.leds0')                   #55
-bra('.leds1')                   #56
+beq(pc()+3)                     #55
+bra(pc()+3)                     #56
 suba(1)                         #57
-label('.leds0')
-ld([ledTempo])                  #57
-label('.leds1')
+ld([ledTempo])                  #57(!)
 st([ledTimer])                  #58
 
-beq('.leds2')                   #59
-bra('.leds3')                   #60
+beq(pc()+3)                     #59
+bra(pc()+3)                     #60
 ld(0)                           #61 Don't advance state
-label('.leds2')
-ld(1)                           #61 Advance state when timer passes through 0
-label('.leds3')
+ld(1)                           #61(!) Advance state when timer passes through 0
 adda([ledState_v2])             #62
 
-bne('.leds4')                   #63
-bra('.leds5')                   #64
+bne(pc()+3)                     #63
+bra(pc()+3)                     #64
 ld(-24)                         #65 State 0 becomes -24, start of sequence
-label('.leds4')
-bgt('.leds6')                   #65 Catch the stopped state (>0)
-label('.leds5')
+bgt('.leds67')                  #65(!) Catch the stopped state (>0)
 st([ledState_v2])               #66
-adda('.leds7')                  #67
+adda('.leds71')                 #67
 bra(AC)                         #68 Jump to lookup table
-bra('.leds7')                   #69 Single-instruction subroutine
+bra('.leds71')                  #69 Single-instruction subroutine
 
-label('.leds6')
+label('.leds67')
 ld(0x0f)                        #67 Maintain stopped state
 st([ledState_v2])               #68
-bra('.leds7')                   #69
+bra('.leds71')                  #69
 anda([xoutMask])                #70 Always clear sound bits (this is why AC=0x0f)
 
 ld(0b1111);C('LEDs |****|')     #70 offset -24 Low 4 bits are the LED output
@@ -856,7 +851,7 @@ ld(0b0100);C('LEDs |OO*O|')     #70
 ld(0b1000);C('LEDs |OOO*|')     #70
 ld(0b1100);C('LEDs |OO**|')     #70
 ld(0b1110);C('LEDs |O***|')     #70 offset -1
-label('.leds7')
+label('.leds71')
 st([xoutMask])                  #71 Sound bits will be re-enabled below
 
 ld(vPulse*2)                    #72 vPulse default length when not modulated
@@ -877,27 +872,23 @@ if soundDiscontinuity == 2:
 if soundDiscontinuity > 2:
   print "Warning: sound discontinuity not supressed"
 
-runVcpu(189-74-extra, 'line0')  #74 Application cycles (scan line 0)
+runVcpu(189-74-extra, '---D line 0')#74 Application cycles (scan line 0)
 
 # Sound on/off (6 cycles)
 ld([soundTimer]);               C('Sound on/off')#189
-bne('.snd0')                    #190
-bra('.snd1')                    #191
+bne(pc()+3)                     #190
+bra(pc()+3)                     #191
 ld(0)                           #192 Keeps sound unchanged (should be off here)
-label('.snd0')
-ld(0xf0)                        #192 Turns sound back on
-label('.snd1')
+ld(0xf0)                        #192(!) Turns sound back on
 ora([xoutMask])                 #193
 st([xoutMask])                  #194
 
 # Sound timer count down (5 cycles)
 ld([soundTimer]);               C('Sound timer')#195
-beq('.snd2')                    #196
-bra('.snd3')                    #197
+beq(pc()+3)                     #196
+bra(pc()+3)                     #197
 suba(1)                         #198
-label('.snd2')
 ld(0)                           #198
-label('.snd3')
 st([soundTimer])                #199
 
 ld([videoSync0], OUT);          C('<New scan line start>')#0
@@ -937,57 +928,56 @@ ld([videoSync0], OUT);          C('End horizontal pulse')#28
 # Count through the vertical blank interval until its last scan line
 ld([videoY])                    #29
 bpl('vBlankLast')               #30
-adda(videoYline1-videoYline0)   #31
+adda(2)                         #31
 st([videoY])                    #32
 
 # Determine if we're in the vertical sync pulse
-suba(1-2*(vBack+vPulse-1))      #33
-bne('vSync0')                   #34 Tests for start of vPulse
+suba(1-2*(vBack+vPulse-1));     C('Prepare sync values')#33
+bne('.prepSync36')              #34 Tests for start of vPulse
 suba([videoPulse])              #35
 ld(syncBits^vSync)              #36 Entering vertical sync pulse
-bra('vSync2')                   #37
+bra('.prepSync39')              #37
 st([videoSync0])                #38
-label('vSync0')
-bne('vSync1')                   #36 Tests for end of vPulse
+label('.prepSync36')
+bne('.prepSync38')              #36 Tests for end of vPulse
 ld(syncBits)                    #37
-bra('vSync3')                   #38 Entering vertical back porch
+bra('.prepSync40')              #38 Entering vertical back porch
 st([videoSync0])                #39
-label('vSync1')
+label('.prepSync38')
 ld([videoSync0])                #38 Load current value
-label('vSync2')
+label('.prepSync39')
 nop()                           #39
-label('vSync3')
+label('.prepSync40')
 xora(hSync)                     #40 Precompute, as during the pulse there is no time
 st([videoSync1])                #41
 
 # Capture the serial input before the '595 shifts it out
 ld([videoY]);                   C('Capture serial input')#42
 xora(1-2*(vBack-1-1))           #43 Exactly when the 74HC595 has captured all 8 controller bits
-bne('.ser0')                    #44
-bra('.ser1')                    #45
+bne(pc()+3)                     #44
+bra(pc()+3)                     #45
 st(IN, [serialRaw])             #46
-label('.ser0')
-nop()                           #46
-label('.ser1')
+nop()                           #46(!)
 
 # Update [xout] with the next sound sample every 4 scan lines.
 # Keep doing this on 'videoC equivalent' scan lines in vertical blank.
 ld([videoY])                    #47
 anda(6)                         #48
-bne('vBlankNormal')             #49
+beq('vBlankSample')             #49
 ld([sample])                    #50
+
+label('vBlankNormal')
+runVcpu(199-51, 'AB-D line 1-36')#51 Application cycles (vBlank scan lines without sound sample update)
+bra('sound1')                   #199
+ld([videoSync0], OUT);          C('<New scan line start>')#0 Ends the vertical blank pulse at the right cycle
+
 label('vBlankSample')
 ora(0x0f);                      C('New sound sample is ready')#51
 anda([xoutMask])                #52
 st([xout])                      #53
 st(sample, [sample]);           C('Reset for next sample')#54
 
-runVcpu(199-55, 'line1-39 typeC')#55 Appplication cycles (scan line 1-43 with sample update)
-bra('sound1')                   #199
-ld([videoSync0], OUT);          C('<New scan line start>')#0 Ends the vertical blank pulse at the right cycle
-
-label('vBlankNormal')
-runVcpu(199-51, 'line1-39 typeABD')#51 Application cycles (scan line 1-43 without sample update)
+runVcpu(199-55, '--C- line 3-39')#55 Application cycles (vBlank scan lines with sound sample update)
 bra('sound1')                   #199
 ld([videoSync0], OUT);          C('<New scan line start>')#0 Ends the vertical blank pulse at the right cycle
 
@@ -1021,55 +1011,56 @@ st([serialLast])                #39
 # - The unintended power-up scenarios of ROMv1 (pulling SER_DATA low, or
 #   pressing [Select] together with another button) now don't trigger anymore.
 xora(~buttonStart);             C('Check for soft reset')#40
-bne('.restart0')                #41
+bne('.restart43')               #41
 ld([resetTimer])                #42 As long as button pressed
 suba(1)                         #43 ... count down the timer
 st([resetTimer])                #44
 anda(127)                       #45
-beq('.restart1')                #46 Reset at 0 (normal 2s) or 128 (extended 4s)
+beq('.restart48')               #46 Reset at 0 (normal 2s) or 128 (extended 4s)
 ld((vReset&255)-2)              #47 Start force reset when hitting 0
-bra('.restart2')                #48 ... otherwise do nothing yet
-bra('.restart2')                #49
-label('.restart0')
+bra('.restart51')               #48 ... otherwise do nothing yet
+bra('.restart51')               #49
+label('.restart43')
 wait(48-43)                     #43
 ld(128)                         #48 Restore to ~2 seconds when not pressed
-bra('.restart2')                #49
+bra('.restart51')               #49
 st([resetTimer])                #50
-label('.restart1')
+label('.restart48')
 st([vPC])                       #48 Continue force reset
 ld(vReset>>8)                   #49
 st([vPC+1])                     #50
-label('.restart2')
+label('.restart51')
 
 # Switch video mode when (only) select is pressed (16 cycles)
+# XXX We could make this a vCPU interrupt
 ld([buttonState])               #50,51
 xora(~buttonSelect)             #52 Only trigger when just [Select] is pressed
-bne('.select2')                 #53
+bne('.select55')                #53
 ld([videoModeC])                #54
-bmi('.select0')                 #55 Branch when line C is off
+bmi('.select57')                #55 Branch when line C is off
 ld([videoModeB])                #56 Rotate: Off->D->B->C
 st([videoModeC])                #57
 ld([videoModeD])                #58
 st([videoModeB])                #59
-bra('.select1')                 #60
-label('.select0')
-ld('videoF')                    #61/57
+bra('.select62')                #60
+label('.select57')
+ld('videoF')                    #61,57
 ld('pixels')                    #58 Reset: On->D->B->C
 st([videoModeC])                #59
 st([videoModeB])                #60
 nop()                           #61
-label('.select1')
+label('.select62')
 st([videoModeD])                #62
-wait(192-63)                    #63 No code space left for calling vCPU
+wait(192-63)                    #63 Don't waste code space expanding runVcpu here
 # AC==255 now
 st([buttonState])               #192
-bra('.skipVcpu')                #193
+bra('vBlankEnd')                #193
 ld(0)                           #194
-label('.select2')
+label('.select55')
+runVcpu(195-55, '---D line 40') #55 Application cycles (scan line 40)
 
-runVcpu(195-55, 'line40')       #67 Application cycles (scan line 40)
 # AC==0 now
-label('.skipVcpu')
+label('vBlankEnd')
 st([videoY])                    #195
 st([frameX])                    #196
 ld('videoA')                    #197
@@ -1081,11 +1072,17 @@ ld(hi('sound2'), Y)             #2
 jmp(Y,'sound2')                 #3
 ld(syncBits^hSync, OUT)         #4 Start horizontal pulse
 
-# Filler
+# Video off mode (also no sound, serial, timer, blinkenlights, ...).
+# For benchmarking purposes. This still has the overhead for the vTicks
+# administration, time slice granularity etc.
+label('videoZ')
+runVcpu(256+14-2+runVcpu_overhead+vCPU_overhead, 'no video', returnTo=pc()+2)
+
+# Fillers
 while pc()&255 < 255:
   nop()
 
-assert pc() == 0x1ff
+assert pc() == 0x1ff            # Enables runVcpu() to re-enter into the next page
 bra('sound3');                  C('<New scan line start>')#200,0
 # --- Page boundary ---
 ld([channel])                   #1 Advance to next sound channel
@@ -1121,7 +1118,7 @@ anda(3)                         #2
 adda(1)                         #3
 ld(syncBits^hSync, OUT);        C('Start horizontal pulse')#4
 
-# Horizontal sync
+# Horizontal sync and sound channel update for scanlines outside vBlank
 label('sound2')
 st([channel], Y)                #5
 ld(0x7f)                        #6
@@ -1183,32 +1180,33 @@ label('videoD')                 # Default video mode
 ld([frameX], X)                 #29
 ld([videoY])                    #30
 suba((120-1)*2)                 #31
-beq('.last')                    #32
-adda(120*2)                     #33 More pixel lines to go
+beq('.last34')                  #32
+adda(120*2);                    C('More pixel lines to go')#33
 st([videoY])                    #34
 ld('videoA')                    #35
 bra([videoModeD])               #36
 st([nextVideo])                 #37
-label('.last')
+
+label('.last34')
 if soundDiscontinuity == 1:
   st(sample, [sample])          ;C('Sound continuity')#34
 else:
   nop()                         #34
-ld('videoE');                   C('No more pixel lines')#35
+ld('videoE');                   C('No more pixel lines to go')#35
 bra([videoModeD])               #36
 st([nextVideo])                 #37
 
 # Back porch "E": after the last line
 # - Go back and and enter vertical blank (program page 2)
 label('videoE') # Exit visible area
-ld(hi('vBlankStart'), Y)        #29
+ld(hi('vBlankStart'), Y);       C('Return to vertical blank interval')#29
 jmp(Y,'vBlankStart')            #30
 ld(syncBits)                    #31
 
 # Alternative for pixel burst: faster application mode
 label('videoF')
-runVcpu(200-38, 'line41-520 typeBCD',
-  returnTo=0x1ff)               #38 Application (every 4th of scan lines 41-520)
+runVcpu(200-38, '-BCD line 41-520',
+  returnTo=0x1ff)               #38 Application interpreter (black scanlines)
 
 # XXX videoG: Graphics acceleration per scanline?
 
@@ -2423,7 +2421,7 @@ jmp(Y,lo('v6502_next'))         #36
 #
 label('v6502_ror38')
 ld([v6502_ADH],Y);              C('Result')#38,38
-ora([v6502_O]);                 C('Transfer bit 8')#39
+ora([v6502_BI]);                C('Transfer bit 8')#39
 st([Y,X])                       #40
 st([v6502_Qz]);                 C('Z flag')#41
 st([v6502_Qn]);                 C('N flag')#42
@@ -2896,7 +2894,7 @@ st([vAC+1])                     #34
 beq(pc()+3);                    C('For 64 iterations')#35
 bra(pc()+3)                     #36
 ld(-2)                          #37
-ld(0)                           #37!
+ld(0)                           #37(!)
 adda([vPC])                     #38
 st([vPC])                       #39
 nop()                           #40
@@ -3349,7 +3347,7 @@ ld([v6502_P]);                  C('Transfer C to bit 8')#16
 anda(1)                         #17 v6502_C
 adda(127)                       #18
 anda(128)                       #19
-st([v6502_O])                   #20
+st([v6502_BI])                  #20 The real 6502 wouldn't use BI for this
 ld([v6502_P]);                  C('Transfer bit 0 to C')#21
 anda(1)                         #22
 st([v6502_P])                   #23
@@ -3943,10 +3941,10 @@ label('v6502_SBC')
 ld([v6502_ADH],Y)               #9,24
 ld([Y,X])                       #10
 xora(255)                       #11 Invert right-hand side operand
-st([v6502_O])                   #12 Park modified operand for v6502_ADC
-ld(v6502_O&255)                 #13 Create pointer value
+st([v6502_BI])                  #12 Park modified operand for v6502_ADC
+ld(v6502_BI&255)                #13 Create pointer value
 st([v6502_ADL],X)               #14
-ld(v6502_O>>8)                  #15
+ld(v6502_BI>>8)                 #15
 st([v6502_ADH])                 #16
 ld(0x69);                       C('ADC #$xx')#17 Any ADC opcode will do
 st([v6502_IR])                  #18
@@ -4516,9 +4514,6 @@ align(1)
 #  End of core
 #
 #-----------------------------------------------------------------------
-
-# For info
-print 'SYS limits low %s high %s' % (repr(minSYS), repr(maxSYS))
 
 # Export some zero page variables to GCL
 # These constants were already loaded from interface.json.
