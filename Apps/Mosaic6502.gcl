@@ -12,39 +12,51 @@ gcl0x
 
 [def
 {mosaic}
-        #$8d #$2a #$02          {       sta $022a       }
+        #$20 #$16 #$02          {       jsr $0216       }
+        #$00                    {       brk             }
+        #$48                    {       pha             }
+        #$8d #$38 #$02          {       sta $0238 ins   }
         #$a9 #$00               {       lda #0          }
+        #$85 #$26               {       sta $26  flags  }
         #$85 #$31               {       sta $31  A      }
         #$a9 #$08               {       lda #8          }
         #$85 #$33               {       sta $33  L      }
+        #$a9 #$58               {       lda #88         }
+        #$85 #$35               {       sta $35         }
         #$a9 #$22               {       lda #$22        }
         #$85 #$34               {       sta $34  H      }
-{loop A}
-        #$a9 #$00               {       lda #0          }
+        #$85 #$36               {       sta $36         }
+{loopA} #$a9 #$00               {       lda #0          }
         #$85 #$32               {       sta $32  B      }
         #$a0 #$00               {       ldy #0          }
-{loop B}
-        #$a5 #$31               {       lda $31  A      }
+{loopB} #$a5 #$31               {       lda $31  A      }
         #$38                    {       sec             }
-{022a}  #$e5 #$32               {       sbc $32  B      }
-        #$6a                    {       ror a           }
+        #$18                    {       clc             }
+{0238}  #$00 #$32               {       xxx $32  B      }
+        #$08                    {       php             }
         #$4a                    {       lsr a           }
+        #$6a                    {       ror a           }
         #$91 #$33               {       sta ($33),y     }
+        #$68                    {       pla             }
+        #$0a                    {       asl a           }
+        #$2a                    {       rol a           }
+        #$2a                    {       rol a           }
+        #$91 #$35               {       sta ($35),y     }
         #$c8                    {       iny             }
-{next B}
         #$a5 #$32               {       lda $32  B      }
         #$09 #$06               {       ora #6          }
         #$85 #$32               {       sta $32         }
         #$e6 #$32               {       inc $32         }
-        #$d0 #$ec               {       bne *-20        }
-{next A}
+        #$d0 #$e4               {       bne *-28 loopB  }
         #$e6 #$34               {       inc $34  H      }
+        #$e6 #$36               {       inc $36         }
         #$a9 #$06               {       lda #6          }
         #$05 #$31               {       ora $31  A      }
         #$85 #$31               {       sta $31         }
         #$e6 #$31               {       inc $31         }
-        #$d0 #$da               {       bne *-38        }
-        #$00                    {       brk             }
+        #$d0 #$d0               {       bne *-48 loopA  }
+        #$68                    {       pla             }
+        #$60                    {       rts             }
 ] \vLR: { = v6502_PC }
 
 { GCL notation for main loop }
@@ -59,6 +71,7 @@ $0b0c \sysFn:                   { SYS_v6502_vX_80 (preliminary address) }
   push $45 80! pop              { XOR }
   push $65 80! pop              { ADC }
   push $e5 80! pop              { SBC }
+  push $24 80! pop              { BIT }
 
   loop]                         { Forever }
 

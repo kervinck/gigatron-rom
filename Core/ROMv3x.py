@@ -295,6 +295,7 @@ screenMemory = 0x0800   # Default start of screen memory: 0x0800 to 0x7fff
 #-----------------------------------------------------------------------
 
 maxTicks = 28/2                 # Duration of vCPU's slowest virtual opcode (ticks)
+minTicks = 14/2                 # vcPU's fastest instruction
 v6502_maxTicks = 38/2 # XXX     # Max duration of v6502 processing phase (ticks)
 
 runVcpu_overhead = 5            # Caller overhead (cycles)
@@ -1076,7 +1077,8 @@ ld(syncBits^hSync, OUT)         #4 Start horizontal pulse
 # For benchmarking purposes. This still has the overhead for the vTicks
 # administration, time slice granularity etc.
 label('videoZ')
-runVcpu(256+14-2+runVcpu_overhead+vCPU_overhead, 'no video', returnTo=pc()+2)
+runVcpu((128+minTicks-1)*2 +runVcpu_overhead+vCPU_overhead,\
+        'no video', returnTo=pc()+2)
 
 # Fillers
 while pc()&255 < 255:
@@ -3320,22 +3322,17 @@ assert (38 - 22)/2 >= v6502_adjust
 
 # Some quirks:
 # - Stack in zero page instead of page 1
-# - No decimal mode
+# - No decimal mode, may never be added
 # - No interrupts
 
 # Big things TODO:
-# - Switching vCPU/v6502 for easier testing with WozMon
-# - Cycle count verification
-# - V flag testing http://6502.org/tutorials/vflag.html
-# - ROR, LSR
-# - PHP, PLP, RTI
-# - Non trivial applications
-# - Verification
-# - The reset button doesn't work until vCPU is active again
-# - Decimal mode
-# - LUP, SYS directly from 6502
-# - Mnemonics in interface.json (Paul Allen's notation will work: https://www.pagetable.com/?p=774)
-# - Stuff cc65 output in a .gt1 file
+# XXX PLP, RTI
+# XXX CMP, CPX, CPY
+# XXX Non trivial applications: VTL02, wozmon
+# XXX Stuff cc65 output in a .gt1 file
+# XXX The reset button doesn't work until vCPU is active again
+# XXX Mnemonics in interface.json (Paul Allen's notation will work: https://www.pagetable.com/?p=774)
+# XXX Tuning, put most frequent instructions in the primary page
 
 label('v6502_ror')
 assert v6502_C == 1
@@ -3942,7 +3939,7 @@ ld([v6502_ADH],Y)               #9,24
 ld([Y,X])                       #10
 xora(255)                       #11 Invert right-hand side operand
 st([v6502_BI])                  #12 Park modified operand for v6502_ADC
-ld(v6502_BI&255)                #13 Create pointer value
+ld(v6502_BI&255)                #13 Address of BI
 st([v6502_ADL],X)               #14
 ld(v6502_BI>>8)                 #15
 st([v6502_ADH])                 #16
@@ -4147,8 +4144,8 @@ st([Y,X])                       #25
 ld([v6502_ADL],X);              C('Fetch L')#26
 ld([v6502_ADH],Y)               #27
 ld([Y,X])                       #28
-st([v6502_PCL])                 #29
 ld([v6502_PCL],X);              C('Fetch H')#30
+st([v6502_PCL])                 #29
 ld([v6502_PCH],Y)               #31
 ld([Y,X])                       #32
 st([v6502_PCH])                 #33
@@ -4270,8 +4267,8 @@ ld(hi('v6502_asl'),Y)           #9,11
 jmp(Y,lo('v6502_asl'))          #10
 #nop()                          #11 Overlap
 label('v6502_PHP')
-ld(hi('v6502_xxx'),Y)           #9,11
-jmp(Y,lo('v6502_xxx'))          #10 XXX
+ld(hi('v6502_php'),Y)           #9,11
+jmp(Y,lo('v6502_php'))          #10
 #nop()                          #11 Overlap
 label('v6502_BIT')
 ld(hi('v6502_bit'),Y)           #9
@@ -4471,18 +4468,18 @@ ld([v6502_ADL],X)               #13
 ld([v6502_ADH],Y)               #14
 ld([Y,X])                       #15
 st([v6502_Qn]);                 C('N flag')#16
-anda(v6502_A);                  C('This is a reason we keep N and Z in separate bytes');#17
+anda([v6502_A]);                C('This is a reason we keep N and Z in separate bytes');#17
 st([v6502_Qz]);                 C('Z flag')#18
-ld(v6502_P)                     #19
+ld([v6502_P])                   #19
 anda(~v6502_Vemu)               #20
-st(v6502_P)                     #21
+st([v6502_P])                   #21
 ld([Y,X])                       #22
 adda(AC)                        #23
 anda(v6502_Vemu)                #24
-ora(v6502_P)                    #25
-st(v6502_P)                     #26 Update V
-jmp(Y,lo('v6502_next'))         #27
-ld(hi('v6502_next'),Y)          #28
+ora([v6502_P])                  #25
+st([v6502_P])                   #26 Update V
+ld(hi('v6502_next'),Y)          #27
+jmp(Y,lo('v6502_next'))         #28
 ld(-30/2)                       #29
 
 label('v6502_rts')
@@ -4490,24 +4487,53 @@ ld([v6502_S])                   #12
 ld(AC,X)                        #13
 adda(2)                         #14
 st([v6502_S])                   #15
-ld([Y,X])                       #16
-st([Y,Xpp])                     #17
-adda(1)                         #18
-st([v6502_PCL])                 #19
-beq(pc()+3)                     #20
-bra(pc()+3)                     #21
-ld(0)                           #22
-ld(1)                           #22(!)
-adda([Y,X])                     #23
-st([v6502_PCH])                 #24
-ld(hi('v6502_next'),Y)          #25
-jmp(Y,lo('v6502_next'))         #26
-ld(-28/2)                       #27
+ld(0,Y)                         #16
+ld([Y,X])                       #17
+st([Y,Xpp])                     #18
+adda(1)                         #19
+st([v6502_PCL])                 #20
+beq(pc()+3)                     #21
+bra(pc()+3)                     #22
+ld(0)                           #23
+ld(1)                           #23(!)
+adda([Y,X])                     #24
+st([v6502_PCH])                 #25
+nop()                           #26
+ld(hi('v6502_next'),Y)          #27
+jmp(Y,lo('v6502_next'))         #28
+ld(-30/2)                       #29
+
+label('v6502_php')
+ld([v6502_S])                   #12
+suba(1)                         #13
+st([v6502_S],X)                 #14
+ld([v6502_P])                   #15
+anda(255&~v6502_V&~v6502_Z);    C('Keep Vemu,B,D,I,C');#16
+bpl(pc()+3);                    C('V to bit 7')#17
+bra(pc()+2)                     #18
+xora(v6502_V^v6502_Vemu)        #19
+st([X])                         #19,20
+ld([v6502_Qz]);                 C('Z flag')#21
+beq(pc()+3)                     #22
+bra(pc()+3)                     #23
+ld(0)                           #24
+ld(v6502_Z)                     #24(!)
+ora([X])                        #25
+st([X])                         #26
+ld([v6502_Qn]);                 C('N flag')#27
+anda(0x80)                      #28
+ora([X])                        #29
+ora(v6502_U);                   C('Unused bit')#30
+st([X])                         #31
+nop()                           #32
+ld(hi('v6502_next'),Y)          #33
+jmp(Y,lo('v6502_next'))         #34
+ld(-36/2)                       #35
 
 label('v6502_xxx')
 # XXX Dummy label for missing instructions. Remove eventually
 
-align(1)
+align(1)                        # Resets size limit
 
 #-----------------------------------------------------------------------
 #
@@ -4896,7 +4922,7 @@ for application in argv[1:]:
   else:
     assert False
 
-  print ' Words %s' % (pc() - symbol(name))
+  print ' Size %s' % (pc() - symbol(name))
 
 print
 
