@@ -12,63 +12,53 @@ gcl0x
 
 [def
 {mosaic}
-        #$85 #$30               {       sta $30         }
-        #$a9 #$00               {       lda #0   A      }
-        #$85 #$31               {       sta $31         }
-        #$a9 #$10               {       lda #$10 L      }
-        #$85 #$33               {       sta $33         }
-        #$a9 #$22               {       lda #$22 H      }
-        #$85 #$34               {       sta $34         }
+        #$8d #$2a #$02          {       sta $022a       }
+        #$a9 #$00               {       lda #0          }
+        #$85 #$31               {       sta $31  A      }
+        #$a9 #$08               {       lda #8          }
+        #$85 #$33               {       sta $33  L      }
+        #$a9 #$22               {       lda #$22        }
+        #$85 #$34               {       sta $34  H      }
 {loop A}
-        #$a9 #$00               {       lda #0   B      }
-        #$85 #$32               {       sta $32         }
+        #$a9 #$00               {       lda #0          }
+        #$85 #$32               {       sta $32  B      }
         #$a0 #$00               {       ldy #0          }
 {loop B}
-        #$a5 #$31               {       lda $31         }
-        #$45 #$30               {       eor $30         }
-
-      { #$18                    {       cls             }
-        #$65 #$32               {       adc $32         } }
+        #$a5 #$31               {       lda $31  A      }
         #$38                    {       sec             }
-        #$e5 #$32               {       sbc $32         }
-
-      { #$ea                    {       nop             }
-        #$ea                    {       nop             } }
-      { #$4a                    {       lsr a           }
-        #$4a                    {       lsr a           } }
+{022a}  #$e5 #$32               {       sbc $32  B      }
         #$6a                    {       ror a           }
-        #$6a                    {       ror a           }
-
+        #$4a                    {       lsr a           }
         #$91 #$33               {       sta ($33),y     }
         #$c8                    {       iny             }
 {next B}
         #$a5 #$32               {       lda $32  B      }
-        #$09 #$02               {       ora #2          }
+        #$09 #$06               {       ora #6          }
         #$85 #$32               {       sta $32         }
         #$e6 #$32               {       inc $32         }
-        #$d0 #$ea               {       bne *-22        }
+        #$d0 #$ec               {       bne *-20        }
 {next A}
         #$e6 #$34               {       inc $34  H      }
         #$a9 #$06               {       lda #6          }
         #$05 #$31               {       ora $31  A      }
         #$85 #$31               {       sta $31         }
         #$e6 #$31               {       inc $31         }
-        #$d0 #$d8               {       bne *-40        }
-        #$a5 #$30               {       lda $30         }
+        #$d0 #$da               {       bne *-38        }
         #$00                    {       brk             }
-
 ] \vLR: { = v6502_PC }
 
 { GCL notation for main loop }
 
 $0b0c \sysFn:                   { SYS_v6502_vX_80 (preliminary address) }
 
-0 {Black}
 [do
-  push                          { Save start address on stack }
-  23+                           { New color }
-  80!                           { Run v6502 until BRK }
-  { C= 255 \xoutMask. C }
-  pop                           { Restore start address }
+
+  push $a5 80! pop              { LDA }
+  push $25 80! pop              { AND }
+  push $05 80! pop              { ORA }
+  push $45 80! pop              { XOR }
+  push $65 80! pop              { ADC }
+  push $e5 80! pop              { SBC }
+
   loop]                         { Forever }
 
