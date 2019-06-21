@@ -48,7 +48,7 @@ mos: v6502.rom
 v6502.rom: Core/* Apps/* Images/* Makefile interface.json
 	rm -f ROMv3x.rom ROMv3x.asm
 	python Core/ROMv3x.py\
-		Main=Apps/Munching6502.gt1x\
+		Main=Apps/Mosaic6502.gt1x\
 		Core/Reset_v4.gcl
 	mv ROMv3x.rom v6502.rom
 	mv ROMv3x.asm v6502.asm

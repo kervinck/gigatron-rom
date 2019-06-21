@@ -3357,10 +3357,10 @@ ld([Y,X])                       #24
 anda(1)                         #25 v6502_C
 ora([v6502_P])                  #26
 st([v6502_P])                   #27
-ld([Y,X]);                      C('Shift table lookup')#28
-anda(~1)                        #29
-ld('v6502_ror38');              #30
-st([vTmp])                      #31
+ld('v6502_ror38');              C('Shift table lookup')#28
+st([vTmp])                      #29
+ld([Y,X]);                      #30
+anda(~1)                        #31
 ld(hi('shiftTable'),Y);         #32
 jmp(Y,AC)                       #33
 bra(255);                       C('bra $%04x' % (shiftTable+255))#34
@@ -3379,10 +3379,10 @@ ld([Y,X])                       #16
 anda(1)                         #17
 ora([v6502_P])                  #18
 st([v6502_P])                   #19
-ld([Y,X]);                      C('Shift table lookup')#20
-anda(~1)                        #21
-ld('v6502_lsr30');              #22
-st([vTmp])                      #23
+ld('v6502_lsr30');              C('Shift table lookup')#20
+st([vTmp])                      #21
+ld([Y,X]);                      #22
+anda(~1)                        #23
 ld(hi('shiftTable'),Y);         #24
 jmp(Y,AC)                       #25
 bra(255);                       C('bra $%04x' % (shiftTable+255))#26
@@ -3945,7 +3945,7 @@ ld([Y,X])                       #10
 xora(255)                       #11 Invert right-hand side operand
 st([v6502_O])                   #12 Park modified operand for v6502_ADC
 ld(v6502_O&255)                 #13 Create pointer value
-st([v6502_ADL])                 #14
+st([v6502_ADL],X)               #14
 ld(v6502_O>>8)                  #15
 st([v6502_ADH])                 #16
 ld(0x69);                       C('ADC #$xx')#17 Any ADC opcode will do

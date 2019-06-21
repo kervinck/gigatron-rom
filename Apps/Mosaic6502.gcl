@@ -1,0 +1,74 @@
+gcl0x
+
+{ Version check > ROM v3 (see Docs/GT1-files.txt) }
+\romType, \romTypeValue_ROMv3-
+[if<=0 do \frameCount; #\DOKE #\vPCH loop]
+
+{ Tester for v6502 }
+{ Nice online assembler: https://www.masswerk.at/6502/assembler.html }
+{ Also: https://cc65.github.io Homebrew: brew install cc65 }
+
+{ Demo jumping back and forth between vCPU and v6502 code }
+
+[def
+{mosaic}
+        #$85 #$30               {       sta $30         }
+        #$a9 #$00               {       lda #0   A      }
+        #$85 #$31               {       sta $31         }
+        #$a9 #$10               {       lda #$10 L      }
+        #$85 #$33               {       sta $33         }
+        #$a9 #$22               {       lda #$22 H      }
+        #$85 #$34               {       sta $34         }
+{loop A}
+        #$a9 #$00               {       lda #0   B      }
+        #$85 #$32               {       sta $32         }
+        #$a0 #$00               {       ldy #0          }
+{loop B}
+        #$a5 #$31               {       lda $31         }
+        #$45 #$30               {       eor $30         }
+
+      { #$18                    {       cls             }
+        #$65 #$32               {       adc $32         } }
+        #$38                    {       sec             }
+        #$e5 #$32               {       sbc $32         }
+
+      { #$ea                    {       nop             }
+        #$ea                    {       nop             } }
+      { #$4a                    {       lsr a           }
+        #$4a                    {       lsr a           } }
+        #$6a                    {       ror a           }
+        #$6a                    {       ror a           }
+
+        #$91 #$33               {       sta ($33),y     }
+        #$c8                    {       iny             }
+{next B}
+        #$a5 #$32               {       lda $32  B      }
+        #$09 #$02               {       ora #2          }
+        #$85 #$32               {       sta $32         }
+        #$e6 #$32               {       inc $32         }
+        #$d0 #$ea               {       bne *-22        }
+{next A}
+        #$e6 #$34               {       inc $34  H      }
+        #$a9 #$06               {       lda #6          }
+        #$05 #$31               {       ora $31  A      }
+        #$85 #$31               {       sta $31         }
+        #$e6 #$31               {       inc $31         }
+        #$d0 #$d8               {       bne *-40        }
+        #$a5 #$30               {       lda $30         }
+        #$00                    {       brk             }
+
+] \vLR: { = v6502_PC }
+
+{ GCL notation for main loop }
+
+$0b0c \sysFn:                   { SYS_v6502_vX_80 (preliminary address) }
+
+0 {Black}
+[do
+  push                          { Save start address on stack }
+  23+                           { New color }
+  80!                           { Run v6502 until BRK }
+  { C= 255 \xoutMask. C }
+  pop                           { Restore start address }
+  loop]                         { Forever }
+
