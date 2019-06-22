@@ -12,11 +12,20 @@ gcl0x
 
 [def
 {mosaic}
-        #$20 #$16 #$02          {       jsr $0216       }
-        #$00                    {       brk             }
         #$48                    {       pha             }
-        #$8d #$38 #$02          {       sta $0238 ins   }
-        #$a9 #$00               {       lda #0          }
+        #$8d #$3e #$02          {       sta $023e ins   }
+        #$20 #$18 #$02          {       jsr $0218       }
+        #$68                    {       pla             }
+        #$00                    {       brk             }
+
+{0218}  #$a9 #$02               {       lda #>$0220     }
+        #$48                    {       pha             }
+        #$a9 #$20               {       lda #<$0220     }
+        #$48                    {       pha             }
+        #$08                    {       php             }
+        #$40                    {       rti             }
+
+{0220}  #$a9 #$00               {       lda #0          }
         #$85 #$26               {       sta $26  flags  }
         #$85 #$31               {       sta $31  A      }
         #$a9 #$08               {       lda #8          }
@@ -32,7 +41,9 @@ gcl0x
 {loopB} #$a5 #$31               {       lda $31  A      }
         #$38                    {       sec             }
         #$18                    {       clc             }
-{0238}  #$00 #$32               {       xxx $32  B      }
+{023e}  #$00 #$32               {       xxx $32  B      }
+        #$08                    {       php             }
+        #$28                    {       plp             }
         #$08                    {       php             }
         #$4a                    {       lsr a           }
         #$6a                    {       ror a           }
@@ -47,15 +58,14 @@ gcl0x
         #$09 #$06               {       ora #6          }
         #$85 #$32               {       sta $32         }
         #$e6 #$32               {       inc $32         }
-        #$d0 #$e4               {       bne *-28 loopB  }
+        #$d0 #$e2               {       bne *-30 loopB  }
         #$e6 #$34               {       inc $34  H      }
         #$e6 #$36               {       inc $36         }
         #$a9 #$06               {       lda #6          }
         #$05 #$31               {       ora $31  A      }
         #$85 #$31               {       sta $31         }
         #$e6 #$31               {       inc $31         }
-        #$d0 #$d0               {       bne *-48 loopA  }
-        #$68                    {       pla             }
+        #$d0 #$ce               {       bne *-50 loopA  }
         #$60                    {       rts             }
 ] \vLR: { = v6502_PC }
 
@@ -71,6 +81,7 @@ $0b0c \sysFn:                   { SYS_v6502_vX_80 (preliminary address) }
   push $45 80! pop              { XOR }
   push $65 80! pop              { ADC }
   push $e5 80! pop              { SBC }
+  push $c5 80! pop              { CMP }
   push $24 80! pop              { BIT }
 
   loop]                         { Forever }

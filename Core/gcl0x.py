@@ -269,7 +269,7 @@ class Program:
         number = symbol(name[1:])
         if not has(number):
           self.error('Undefined symbol %s' % name)
-        name, op = None, ''
+        name = None
 
     if has(number):
       if sign == '-': number = -number

@@ -3326,8 +3326,10 @@ assert (38 - 22)/2 >= v6502_adjust
 # - No interrupts
 
 # Big things TODO:
-# XXX PLP, RTI
-# XXX CMP, CPX, CPY
+# XXX Exceptions
+#     $96 STX $DD,Y     but gets $DD,X     XXX Handle in v6502_modeZPX?
+#     $B6 LDX $DD,Y     but gets $DD,X     XXX Handle in v6502_modeZPX?
+#     $BE LDX $DDDD,Y   but gets $DDDD,X   XXX Handle in v6502_modeABX?
 # XXX Non trivial applications: VTL02, wozmon
 # XXX Stuff cc65 output in a .gt1 file
 # XXX The reset button doesn't work until vCPU is active again
@@ -4203,8 +4205,8 @@ ld(hi('v6502_clv'),Y)           #9,11
 jmp(Y,lo('v6502_clv'))          #10
 #nop()                          #11 Overlap
 label('v6502_RTI')
-ld(hi('v6502_xxx'),Y)           #9,11
-jmp(Y,lo('v6502_xxx'))          #10 XXX
+ld(hi('v6502_rti'),Y)           #9,11
+jmp(Y,lo('v6502_rti'))          #10
 #nop()                          #11 Overlap
 label('v6502_ROR')
 ld(hi('v6502_ror'),Y)           #9,11
@@ -4242,25 +4244,25 @@ label('v6502_TSX')
 ld(hi('v6502_tsx'),Y)           #9,11
 jmp(Y,lo('v6502_tsx'))          #10
 #nop()                          #11 Overlap
-label('v6502_CPY') # XXX Flags: N Z C
-ld(hi('v6502_xxx'),Y)           #9,11
-jmp(Y,lo('v6502_xxx'))          #10 XXX
+label('v6502_CPY')
+ld(hi('v6502_cpy'),Y)           #9,11
+jmp(Y,lo('v6502_cpy'))          #10
 #nop()                          #11 Overlap
-label('v6502_CMP') # XXX Flags: N Z C
-ld(hi('v6502_xxx'),Y)           #9,11
-jmp(Y,lo('v6502_xxx'))          #10 XXX
+label('v6502_CMP')
+ld(hi('v6502_cmp'),Y)           #9,11
+jmp(Y,lo('v6502_cmp'))          #10
 #nop()                          #11 Overlap
-label('v6502_DEC') # XXX Flags: N Z
+label('v6502_DEC')
 ld(hi('v6502_dec'),Y)           #9,11
-jmp(Y,lo('v6502_dec'))          #10 XXX
+jmp(Y,lo('v6502_dec'))          #10
 #nop()                          #11 Overlap
 label('v6502_CLD')
 ld(hi('v6502_cld'),Y)           #9,11
 jmp(Y,lo('v6502_cld'))          #10
 #nop()                          #11 Overlap
-label('v6502_CPX') # XXX Flags: N Z C
-ld(hi('v6502_xxx'),Y)           #9,11
-jmp(Y,lo('v6502_xxx'))          #10 XXX
+label('v6502_CPX')
+ld(hi('v6502_cpx'),Y)           #9,11
+jmp(Y,lo('v6502_cpx'))          #10
 #nop()                          #11 Overlap
 label('v6502_ASL')
 ld(hi('v6502_asl'),Y)           #9,11
@@ -4279,8 +4281,8 @@ ld(hi('v6502_rol'),Y)           #9
 jmp(Y,lo('v6502_rol'))          #10
 #nop()                          #11 Overlap
 label('v6502_PLP')
-ld(hi('v6502_xxx'),Y)           #9
-jmp(Y,lo('v6502_xxx'))          #10 XXX
+ld(hi('v6502_plp'),Y)           #9
+jmp(Y,lo('v6502_plp'))          #10
 #nop()                          #11 Overlap
 label('v6502_SED')              # Decimal mode not implemented
 ld(hi('v6502_sed'),Y)           #9,11
@@ -4509,7 +4511,7 @@ suba(1)                         #13
 st([v6502_S],X)                 #14
 ld([v6502_P])                   #15
 anda(255&~v6502_V&~v6502_Z);    C('Keep Vemu,B,D,I,C');#16
-bpl(pc()+3);                    C('V to bit 7')#17
+bpl(pc()+3);                    C('V to bit 6')#17
 bra(pc()+2)                     #18
 xora(v6502_V^v6502_Vemu)        #19
 st([X])                         #19,20
@@ -4530,8 +4532,91 @@ ld(hi('v6502_next'),Y)          #33
 jmp(Y,lo('v6502_next'))         #34
 ld(-36/2)                       #35
 
-label('v6502_xxx')
-# XXX Dummy label for missing instructions. Remove eventually
+label('v6502_cpx')
+bra('.cmp14')                   #12
+ld([v6502_X])                   #13
+
+label('v6502_cpy')
+bra('.cmp14')                   #12
+label('v6502_cmp')
+ld([v6502_Y])                   #13,12
+#
+#label('v6502_cmp')             #12 Overlap
+assert v6502_C == 1
+ld([v6502_A])                   #13
+label('.cmp14')
+st([v6502_Tmp])                 #14
+ld([v6502_P])                   #15
+anda(1)                         #16
+suba(1)                         #17
+ld([v6502_ADH],Y)               #18
+suba([Y,X])                     #19
+adda([v6502_Tmp])               #20
+st([v6502_Qz]);                 C('Z flag')#21
+st([v6502_Qn]);                 C('N flag')#22
+bmi('.cmp25');                  C('Carry?')#23
+ld([Y,X])                       #24
+bra('.cmp27')                   #25
+ora([v6502_Tmp])                #26 Carry in bit 7
+label('.cmp25')
+anda([v6502_Tmp])               #25 Carry in bit 7
+nop()                           #26
+label('.cmp27')
+anda(0x80,X)                    #27 Move carry to bit 0
+ld([v6502_P]);                  C('C flag')#28
+anda(~1)                        #29
+ora([X])                        #30
+st([v6502_P])                   #31
+nop()                           #32
+ld(hi('v6502_next'),Y)          #33
+jmp(Y,lo('v6502_next'))         #34
+ld(-36/2)                       #35
+
+label('v6502_plp')
+assert v6502_N == 128
+assert 2*v6502_V == v6502_Vemu
+ld([v6502_S])                   #12
+ld(AC,X)                        #13
+adda(1)                         #14
+st([v6502_S])                   #15
+ld([X])                         #16
+st([v6502_Qn]);                 C('N flag')#17
+anda(v6502_Z)                   #18
+xora(v6502_Z)                   #19
+st([v6502_Qz]);                 C('Z flag')#20
+ld([X])                         #21
+anda(~v6502_Vemu);              C('V to bit 7')#22
+adda(v6502_V)                   #23
+st([v6502_P]);                  C('All other flags')#24
+ld(hi('v6502_next'),Y)          #25
+jmp(Y,lo('v6502_next'))         #26
+ld(-28/2)                       #27
+
+label('v6502_rti')
+ld([v6502_S])                   #12
+ld(AC,X)                        #13
+adda(3)                         #14
+st([v6502_S])                   #15
+ld([X])                         #16
+st([v6502_Qn]);                 C('N flag')#17
+anda(v6502_Z)                   #18
+xora(v6502_Z)                   #19
+st([v6502_Qz]);                 C('Z flag')#20
+ld(0,Y)                         #21
+ld([Y,X])                       #22
+st([Y,Xpp])                     #23
+anda(~v6502_Vemu);              C('V to bit 7')#24
+adda(v6502_V)                   #25
+st([v6502_P]);                  C('All other flags')#26
+ld([Y,X])                       #27
+st([Y,Xpp])                     #28
+st([v6502_PCL])                 #29
+ld([Y,X])                       #30
+st([v6502_PCH])                 #31
+nop()                           #32
+ld(hi('v6502_next'),Y)          #33
+jmp(Y,lo('v6502_next'))         #34
+ld(-36/2)                       #35
 
 align(1)                        # Resets size limit
 
