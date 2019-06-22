@@ -3317,21 +3317,20 @@ adda([vTicks])                  #21
 assert (38 - 22)/2 >= v6502_adjust
 
 #-----------------------------------------------------------------------
-#       MOS 6502 emulator !!! UNFINISHED AND UNTESTED !!!
+#       MOS 6502 emulator
 #-----------------------------------------------------------------------
 
 # Some quirks:
 # - Stack in zero page instead of page 1
-# - No decimal mode, may never be added
 # - No interrupts
+# - No decimal mode (may never be added). D flag is emulated but ignored.
+# - BRK switches back to running 16-bits vCPU
+# - Illegal opcodes map to BRK, but can read ghost operands before trapping
+# - Illegal opcode $ff won't be trapped and cause havoc instead
 
 # Big things TODO:
-# XXX Exceptions
-#     $96 STX $DD,Y     but gets $DD,X     XXX Handle in v6502_modeZPX?
-#     $B6 LDX $DD,Y     but gets $DD,X     XXX Handle in v6502_modeZPX?
-#     $BE LDX $DDDD,Y   but gets $DDDD,X   XXX Handle in v6502_modeABX?
-# XXX Non trivial applications: VTL02, wozmon
-# XXX Stuff cc65 output in a .gt1 file
+# XXX Test with some non trivial applications: VTL02, wozmon
+# XXX Easy method to stuff cc65 output in a .gt1 file, with proper prelude
 # XXX The reset button doesn't work until vCPU is active again
 # XXX Mnemonics in interface.json (Paul Allen's notation will work: https://www.pagetable.com/?p=774)
 # XXX Tuning, put most frequent instructions in the primary page
@@ -3494,26 +3493,25 @@ suba(v6502_adjust)              #1,19 Adjust for vCPU/v6520 timing differences
 (   'v6502_mode0'  ); bra('v6502_modeIZX'); bra('v6502_modeIMM'); bra('v6502_modeILL') # $00 xxx000xx
 bra('v6502_modeZP');  bra('v6502_modeZP');  bra('v6502_modeZP');  bra('v6502_modeILL') # $04 xxx001xx
 bra('v6502_modeIMP'); bra('v6502_modeIMM'); bra('v6502_modeACC'); bra('v6502_modeILL') # $08 xxx010xx
-bra('v6502_modeABS'); bra('v6502_modeABS'); bra('v6502_modeABS'); bra('v6502_modeILL') # $10 xxx011xx
-bra('v6502_modeREL'); bra('v6502_modeIZY'); bra('v6502_modeIMM'); bra('v6502_modeILL') # $14 xxx100xx
+bra('v6502_modeABS'); bra('v6502_modeABS'); bra('v6502_modeABS'); bra('v6502_modeILL') # $0c xxx011xx
+bra('v6502_modeREL'); bra('v6502_modeIZY'); bra('v6502_modeIMM'); bra('v6502_modeILL') # $10 xxx100xx
 bra('v6502_modeZPX'); bra('v6502_modeZPX'); bra('v6502_modeZPX'); bra('v6502_modeILL') # $14 xxx101xx
 bra('v6502_modeIMP'); bra('v6502_modeABY'); bra('v6502_modeIMP'); bra('v6502_modeILL') # $18 xxx110xx
 bra('v6502_modeABX'); bra('v6502_modeABX'); bra('v6502_modeABX'); bra('v6502_modeILL') # $1c xxx111xx
 
-# Special cases for emulator:
-#     $00 BRK -         but gets #$DD      Handle in v6502_mode0
-#     $20 JSR $DDDD     but gets #$DD      Handle in v6502_mode0 and v6502_JSR
-#     $40 RTI -         but gets #$DD      Handle in v6502_mode0
-#     $60 RTS -         but gets #$DD      Handle in v6502_mode0
-#     $6C JMP ($DDDD)   but gets $DDDD     Handle in v6502_JMP2
-#     $96 STX $DD,Y     but gets $DD,X     XXX Handle in v6502_modeZPX?
-#     $B6 LDX $DD,Y     but gets $DD,X     XXX Handle in v6502_modeZPX?
-#     $BE LDX $DDDD,Y   but gets $DDDD,X   XXX Handle in v6502_modeABX?
-# Illegal opcodes may still read any number of operands before trapping
+# Special encoding cases for emulator:
+#     $00 BRK -         but gets mapped to #$DD      handled in v6502_mode0
+#     $20 JSR $DDDD     but gets mapped to #$DD      handled in v6502_mode0 and v6502_JSR
+#     $40 RTI -         but gets mapped to #$DD      handled in v6502_mode0
+#     $60 RTS -         but gets mapped to #$DD      handled in v6502_mode0
+#     $6C JMP ($DDDD)   but gets mapped to $DDDD     handled in v6502_JMP2
+#     $96 STX $DD,Y     but gets mapped to $DD,X     handled in v6502_STX2
+#     $B6 LDX $DD,Y     but gets mapped to $DD,X     handled in v6502_LDX2
+#     $BE LDX $DDDD,Y   but gets mapped to $DDDD,X   handled in v6502_modeABX
 
 label('v6502_next')
 adda([vTicks])                  #0
-blt('v6502_exitBefore');        C('Escape')#1
+blt('v6502_exitBefore');        C('No more ticks')#1
 label('v6502_next2')
 st([vTicks])                    #2
 #
@@ -3607,11 +3605,7 @@ bra('.zp23')                    #21
 adda([v6502_X])                 #22
 label('v6502_modeZP')
 bra('.zp23')                    #21
-label('v6502_modeZPY')
-nop()                           #22,2
-#label('v6502_modeZPY')
-#nop()                          #21 Overlap
-adda([v6502_Y])                 #22
+nop()                           #22
 label('.zp23')
 st([v6502_ADL],X)               #23
 ld(0);                          C('H=0')#24
@@ -3644,7 +3638,7 @@ st([v6502_PCL])                 #35
 bra('v6502_next');              C('Retry until sufficient time')#36
 ld(-38/2)                       #37
 
-# Absolute Modes: $DDDD $DDDD,X $DDDD,Y -- 60 cycles
+# Absolute Modes: $DDDD $DDDD,X $DDDD,Y -- 64 cycles
 label('v6502_modeABS')
 bra('.abs23')                   #21
 ld(0)                           #22
@@ -3655,48 +3649,53 @@ ld([v6502_X])                   #21,22
 ld([v6502_Y])                   #22
 label('.abs23')
 st([v6502_ADL])                 #23
-ld(-60/2+v6502_maxTicks)        #24 Is there enough time for the excess ticks?
+ld(-64/2+v6502_maxTicks)        #24 Is there enough time for the excess ticks?
 adda([vTicks])                  #25
 blt('.retry28')                 #26
 ld([v6502_PCL])                 #27
-ld([Y,X]);                      C('Fetch L')#28
-adda([v6502_ADL]);              C('Add offset')#29
-st([v6502_ADL])                 #30
-bmi('.abs33');                  C('Carry?')#31
-suba([Y,X]);                    #32 Gets back original operand
-bra('.abs35')                   #33
-ora([Y,X])                      #34 Carry in bit 7
-label('.abs33')
-anda([Y,X])                     #33 Carry in bit 7
-nop()                           #34
-label('.abs35')
-anda(0x80,X)                    #35 Move carry to bit 0
-ld([X])                         #36
-st([v6502_ADH])                 #37
-ld([v6502_PCL]);                C('PC++')#38
-adda(1)                         #39
-st([v6502_PCL],X)               #40
-beq(pc()+3)                     #41
-bra(pc()+3)                     #42
-ld(0)                           #43
-ld(1)                           #43(!)
-adda([v6502_PCH])               #44
-st([v6502_PCH],Y)               #45
-ld([Y,X]);                      C('Fetch H')#46
-adda([v6502_ADH])               #47
-st([v6502_ADH])                 #48
-ld([v6502_PCL]);                C('PC++')#49
-adda(1)                         #50
-st([v6502_PCL])                 #51
-beq(pc()+3)                     #52
-bra(pc()+3)                     #53
-ld(0)                           #54
-ld(1)                           #54(!)
-adda([v6502_PCH])               #55
-st([v6502_PCH])                 #56
-ld([v6502_ADL],X)               #57
-bra('v6502_check')              #58
-ld(-60/2)                       #59
+ld([v6502_IR]);                 C('Special case $BE: LDX $DDDD,Y (we got X in ADL)')#28
+xora(0xbe)                      #29
+beq(pc()+3)                     #30
+bra(pc()+3)                     #31
+ld([v6502_ADL])                 #32
+ld([v6502_Y])                   #32(!)
+adda([Y,X]);                    C('Fetch and add L')#33
+st([v6502_ADL])                 #34
+bmi('.abs37');                  C('Carry?')#35
+suba([Y,X]);                    #36 Gets back original operand
+bra('.abs39')                   #37
+ora([Y,X])                      #38 Carry in bit 7
+label('.abs37')
+anda([Y,X])                     #37 Carry in bit 7
+nop()                           #38
+label('.abs39')
+anda(0x80,X)                    #39 Move carry to bit 0
+ld([X])                         #40
+st([v6502_ADH])                 #41
+ld([v6502_PCL]);                C('PC++')#42
+adda(1)                         #43
+st([v6502_PCL],X)               #44
+beq(pc()+3)                     #45
+bra(pc()+3)                     #46
+ld(0)                           #47
+ld(1)                           #47(!)
+adda([v6502_PCH])               #48
+st([v6502_PCH],Y)               #49
+ld([Y,X]);                      C('Fetch H')#50
+adda([v6502_ADH])               #51
+st([v6502_ADH])                 #52
+ld([v6502_PCL]);                C('PC++')#53
+adda(1)                         #54
+st([v6502_PCL])                 #55
+beq(pc()+3)                     #56
+bra(pc()+3)                     #57
+ld(0)                           #58
+ld(1)                           #58(!)
+adda([v6502_PCH])               #59
+st([v6502_PCH])                 #60
+ld([v6502_ADL],X)               #61
+bra('v6502_check')              #62
+ld(-64/2)                       #63
 
 # Indexed Indirect Mode: ($DD,X) -- 38 cycles
 label('v6502_modeIZX')
@@ -3785,7 +3784,7 @@ ld(-36/2)                       #35 !!! Fall through to v6502_check !!!
 # Otherwise transfer control to the video driver.
 label('v6502_check')
 adda([vTicks])                  #0
-blt('v6502_exitAfter');         C('Escape')#1
+blt('v6502_exitAfter');         C('No more ticks')#1
 st([vTicks])                    #2
 ld(hi('v6502_execute'),Y)       #3
 jmp(Y,[v6502_IR])               #4
@@ -3849,7 +3848,7 @@ ld('v6502_STY'); ld('v6502_STA'); ld('v6502_STX'); ld('v6502_ILL') #6
 ld('v6502_DEY'); ld('v6502_ILL'); ld('v6502_TXA'); ld('v6502_ILL') #6
 ld('v6502_STY'); ld('v6502_STA'); ld('v6502_STX'); ld('v6502_ILL') #6
 ld('v6502_BCC'); ld('v6502_STA'); ld('v6502_ILL'); ld('v6502_ILL') #6 $90
-ld('v6502_STY'); ld('v6502_STA'); ld('v6502_STX'); ld('v6502_ILL') #6
+ld('v6502_STY'); ld('v6502_STA'); ld('v6502_STX2');ld('v6502_ILL') #6
 ld('v6502_TYA'); ld('v6502_STA'); ld('v6502_TXS'); ld('v6502_ILL') #6
 ld('v6502_ILL'); ld('v6502_STA'); ld('v6502_ILL'); ld('v6502_ILL') #6
 ld('v6502_LDY'); ld('v6502_LDA'); ld('v6502_LDX'); ld('v6502_ILL') #6 $A0
@@ -3857,7 +3856,7 @@ ld('v6502_LDY'); ld('v6502_LDA'); ld('v6502_LDX'); ld('v6502_ILL') #6
 ld('v6502_TAY'); ld('v6502_LDA'); ld('v6502_TAX'); ld('v6502_ILL') #6
 ld('v6502_LDY'); ld('v6502_LDA'); ld('v6502_LDX'); ld('v6502_ILL') #6
 ld('v6502_BCS'); ld('v6502_LDA'); ld('v6502_ILL'); ld('v6502_ILL') #6 $B0
-ld('v6502_LDY'); ld('v6502_LDA'); ld('v6502_LDX'); ld('v6502_ILL') #6
+ld('v6502_LDY'); ld('v6502_LDA'); ld('v6502_LDX2');ld('v6502_ILL') #6
 ld('v6502_CLV'); ld('v6502_LDA'); ld('v6502_TSX'); ld('v6502_ILL') #6
 ld('v6502_LDY'); ld('v6502_LDA'); ld('v6502_LDX'); ld('v6502_ILL') #6
 ld('v6502_CPY'); ld('v6502_CMP'); ld('v6502_ILL'); ld('v6502_ILL') #6 $C0
@@ -4168,6 +4167,10 @@ label('v6502_LDX')
 ld(hi('v6502_ldx'),Y)           #9,11
 jmp(Y,lo('v6502_ldx'))          #10
 #nop()                          #11 Overlap
+label('v6502_LDX2')
+ld(hi('v6502_ldx2'),Y)          #9,11
+jmp(Y,lo('v6502_ldx2'))         #10
+#nop()                          #11 Overlap
 label('v6502_LDY')
 ld(hi('v6502_ldy'),Y)           #9,11
 jmp(Y,lo('v6502_ldy'))          #10
@@ -4179,6 +4182,10 @@ jmp(Y,lo('v6502_sta'))          #10
 label('v6502_STX')
 ld(hi('v6502_stx'),Y)           #9,11
 jmp(Y,lo('v6502_stx'))          #10
+#nop()                          #11 Overlap
+label('v6502_STX2')
+ld(hi('v6502_stx2'),Y)          #9,11
+jmp(Y,lo('v6502_stx2'))         #10
 #nop()                          #11 Overlap
 label('v6502_STY')
 ld(hi('v6502_sty'),Y)           #9,11
@@ -4360,6 +4367,18 @@ ld([Y,X])                       #13
 bra('.lda16')                   #14
 st([v6502_Y])                   #15
 
+label('v6502_ldx2')
+ld([v6502_ADL]);                C('Special case $B6: LDX $DD,Y')#12
+suba([v6502_X]);                C('Undo X offset')#13
+adda([v6502_Y],X);              C('Apply Y instead')#14
+ld([X])                         #15
+st([v6502_X])                   #16
+st([v6502_Qz]);                 C('Z flag')#17
+st([v6502_Qn]);                 C('N flag')#18
+ld(hi('v6502_next'),Y)          #19
+jmp(Y,lo('v6502_next'))         #20
+ld(-22/2)                       #21
+
 label('v6502_sta')
 ld([v6502_ADH],Y)               #12
 ld([v6502_A])                   #13
@@ -4375,6 +4394,16 @@ st([Y,X])                       #14
 ld(hi('v6502_next'),Y)          #15
 jmp(Y,lo('v6502_next'))         #16
 ld(-18/2)                       #17
+
+label('v6502_stx2')
+ld([v6502_ADL]);                C('Special case $96: STX $DD,Y')#12
+suba([v6502_X]);                C('Undo X offset')#13
+adda([v6502_Y],X);              C('Apply Y instead')#14
+ld([v6502_X])                   #15
+st([X])                         #16
+ld(hi('v6502_next'),Y)          #17
+jmp(Y,lo('v6502_next'))         #18
+ld(-20/2)                       #19
 
 label('v6502_sty')
 ld([v6502_ADH],Y)               #12
