@@ -3696,27 +3696,6 @@ ld([v6502_ADL],X)               #61
 bra('v6502_check')              #62
 ld(-64/2)                       #63
 
-# Indexed Indirect Mode: ($DD,X) -- 38 cycles
-label('v6502_modeIZX')
-adda([v6502_X],X);              C('Add X')#21
-ld([v6502_PCL]);                C('PC++')#22
-adda(1)                         #23
-st([v6502_PCL])                 #24
-beq(pc()+3)                     #25
-bra(pc()+3)                     #26
-ld(0)                           #27
-ld(1)                           #27(!)
-adda([v6502_PCH])               #28
-st([v6502_PCH])                 #29
-ld(0,Y);                        C('Read word from zero-page')#30
-ld([Y,X])                       #31
-st([Y,Xpp])                     #32
-st([v6502_ADL],X)               #33
-ld([Y,X])                       #34
-st([v6502_ADH])                 #35
-bra('v6502_check')              #36
-ld(-38/2)                       #37
-
 # Indirect Indexed Mode: ($DD),Y -- 54 cycles
 label('v6502_modeIZY')
 ld(AC,X)                        #21 $DD
@@ -3760,23 +3739,44 @@ ld(-54/2)                       #53
 
 # Relative Mode: BEQ BNE BPL BMI BCC BCS BVC BVS -- 36 cycles
 label('v6502_modeREL')
-nop()                           #21
-st([v6502_ADL],X);              C('Offset')#22 Only needed for branch
-bmi(pc()+3);                    C('Sign extend')#23
-bra(pc()+3)                     #24
-ld(0)                           #25
-ld(255)                         #25(!)
-st([v6502_ADH])                 #26
-ld([v6502_PCL]);                C('PC++')#27 Needed for both cases
-adda(1)                         #28
-st([v6502_PCL])                 #29
-beq(pc()+3)                     #30
-bra(pc()+3)                     #31
-ld(0)                           #32
-ld(1)                           #32(!)
-adda([v6502_PCH])               #33
-st([v6502_PCH])                 #34
-ld(-36/2)                       #35 !!! Fall through to v6502_check !!!
+st([v6502_ADL],X);              C('Offset')#21 Only needed for branch
+bmi(pc()+3);                    C('Sign extend')#22
+bra(pc()+3)                     #23
+ld(0)                           #24
+ld(255)                         #24(!)
+st([v6502_ADH])                 #25
+ld([v6502_PCL]);                C('PC++')#26 Needed for both cases
+adda(1)                         #27
+st([v6502_PCL])                 #28
+beq(pc()+3)                     #29
+bra(pc()+3)                     #30
+ld(0)                           #31
+ld(1)                           #31(!)
+adda([v6502_PCH])               #32
+st([v6502_PCH])                 #33
+bra('v6502_check')              #34
+ld(-36/2)                       #53
+
+# Indexed Indirect Mode: ($DD,X) -- 38 cycles
+label('v6502_modeIZX')
+adda([v6502_X]);                C('Add X')#21
+st([v6502_Tmp])                 #22
+adda(1,X);                      C('Read word from zero-page')#23
+ld([X]);                        #24
+st([v6502_ADH])                 #25
+ld([v6502_Tmp],X)               #26
+ld([X])                         #27
+st([v6502_ADL],X)               #28
+ld([v6502_PCL]);                C('PC++')#29
+adda(1)                         #30
+st([v6502_PCL])                 #31
+beq(pc()+3)                     #32
+bra(pc()+3)                     #33
+ld(0)                           #34
+ld(1)                           #34(!)
+adda([v6502_PCH])               #35
+st([v6502_PCH])                 #36
+ld(-38/2)                       #37 !!! Fall through to v6502_check !!!
 #
 # Update elapsed time for the addressing mode processing.
 # Then check if we can immediately execute this instruction.
