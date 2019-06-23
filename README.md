@@ -109,8 +109,8 @@ Address   Name          Description
 000d      (videoModeD)  Handler for every 4th line (pixel burst or vCPU)
 000e      frameCount    Continuous video frame counter
 000f      serialRaw     New raw serial read
-0010      (serialLast)  Previous serial read
-0011      buttonState   Edge-triggered clearable button state (can be convenient in user code)
+0010      (serialLast)  Previous serial read (used for edge detection)
+0011      buttonState   Negative edge-triggered and resettable bits
 0012      (resetTimer)  After 2 seconds of holding 'Start', do a soft reset
 0013      (xout)        Memory cache for XOUT register
 0014      xoutMask      The blinkenlights and sound on/off state

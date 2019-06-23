@@ -21,6 +21,7 @@ class Program:
     self.filename = None
     self.openBlocks = [0] # Outside first block is 0
     self.nextBlockId = 1
+    self.start = {} # blockId -> address of block start
     self.loops = {} # blockId -> address after `do'
     self.elses = {} # blockId -> count of `else'
     self.defs  = {} # blockId -> address of last `def'
@@ -66,11 +67,14 @@ class Program:
         elif nextChar == '[':
            self.openBlocks.append(self.nextBlockId)
            self.elses[self.nextBlockId] = 0
+           self.start[self.nextBlockId] = self.vPC
            self.nextBlockId += 1
         elif nextChar == ']':
           if len(self.openBlocks) <= 1:
             self.error('Block close without open')
           b = self.openBlocks.pop()
+          if self.start[b]>>8 != (self.vPC-1)>>8:
+            self.error('Block crosses page boundary')
           define('__%s_%d_cond%d__' % (self.name, b, self.elses[b]), prev(self.vPC))
           del self.elses[b]
           if b in self.defs:
@@ -86,6 +90,8 @@ class Program:
     if self.comment > 0:
       self.error('Unterminated comment')
     self.closeSegment()
+    if len(self.openBlocks) > 1:
+      self.error('Unterminated block')
     self.putInRomTable(0) # Zero marks the end of stream
     if self.lineNumber > 0:
       self.dumpVars()
@@ -294,7 +300,10 @@ class Program:
 
   def emitDef(self):
       self.emitOp('DEF')
-      self.defs[self.thisBlock()] = self.vPC
+      b = self.thisBlock()
+      if b in self.defs:
+        self.error('Second DEF in block')
+      self.defs[b] = self.vPC
       self.emit(lo('__%s_%#04x_def__' % (self.name, self.vPC)))
 
   def defInfo(self, var):
@@ -344,7 +353,7 @@ class Program:
   def emitOp(self, ins):
     # Emit vCPU opcode
     if self.vPC >= self.segEnd:
-      self.error('Out of code space' % self.vPC)
+      self.error('Out of code space (%04x)' % self.vPC)
     if self.segStart == self.vPC:
       self.openSegment()
     self.putInRomTable(lo(ins), '%04x %s' % (self.vPC, ins))
@@ -375,7 +384,7 @@ class Program:
   def emit(self, byte, comment=None):
     # Next program byte in RAM
     if self.vPC >= self.segEnd:
-      self.error('Out of code space')
+      self.error('Out of code space (%04x)' % self.vPC)
     if byte < 0 or byte >= 256:
       self.error('Value out of range %d (must be 0..255)' % byte)
     if self.segStart == self.vPC:
@@ -385,8 +394,6 @@ class Program:
 
   def closeSegment(self):
     # Register length of GT1 segment
-    if len(self.openBlocks) > 1:
-      self.error('Unterminated block')
     if self.vPC != self.segStart:
       print(' Segment at %04x size %3d used %3d unused %3d' % (
         self.segStart,
@@ -420,10 +427,10 @@ class Program:
     if has(self.filename):
        prefix += ' file %s' % repr(self.filename)
     if self.lineNumber != 0:
-      prefix += ' line %s' % self.lineNumber
+      prefix += ':%s' % self.lineNumber
     if has(self.lastWord):
-      prefix += ' word %s' % self.lastWord
-    prefix += ': '
+      prefix += ' %s' % self.lastWord
+    return prefix + ':'
 
 def has(x):
   return x is not None

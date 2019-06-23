@@ -3426,7 +3426,7 @@ jmp(Y,lo('v6502_next'))         #18
 ld(-20/2)                       #19
 
 label('v6502_jmp2')
-nop();                          #12
+nop()                           #12
 ld([v6502_ADH],Y)               #13
 ld([Y,X])                       #14
 st([Y,Xpp]);                    C('Wrap around: bug compatible with NMOS')#15
@@ -4120,7 +4120,7 @@ jmp(Y,lo('v6502_jmp1'))         #10
 #nop()                          #11 Overlap
 label('v6502_JMP2')
 ld(hi('v6502_jmp2'),Y);         C('JMP ($DDDD)')#9
-jmp(Y,hi('v6502_jmp2'))         #10
+jmp(Y,lo('v6502_jmp2'))         #10
 #nop()                          #11 Overlap
 label('v6502_JSR')
 ld([v6502_S])                   #9,11
