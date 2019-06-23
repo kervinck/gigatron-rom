@@ -8,14 +8,11 @@ gcl0x
 
 {
  Issues:
-  XXX 600R still crashes
   XXX Relocate vCPU code to allow full input buffer from $200..$27f
-  XXX Smaller spaces to avoid linewrap in block mode
   XXX Change videoTable to allow wozmon at original $ff00 address
   XXX Smaller screen so there's more space for programs (top 16 lines = 4K)
   XXX Cursor symbol `@'
   XXX Map Delete to Rubout $5f
-  XXX Relocate i and j, and move wozmon variables
 }
 
 {-----------------------------------------------------------------------+
