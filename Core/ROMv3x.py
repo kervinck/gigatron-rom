@@ -4907,6 +4907,9 @@ def basicLine(address, number, text):
 for application in argv[1:]:
   print
 
+  while pc()&255 > 251:
+    nop()
+
   if '=' in application:
     # Explicit name name
     name, application = application.split('=', 1)
