@@ -8,11 +8,13 @@ gcl0x
 
 {
  Issues:
+  XXX BLOCK XAM doesn't cross page boundary (v6502 bug?)
   XXX Relocate vCPU code to allow full input buffer from $200..$27f
-  XXX Change videoTable to allow wozmon at original $ff00 address
-  XXX Smaller screen so there's more space for programs (top 16 lines = 4K)
+  XXX Smaller screen so there's more space for real programs (top 16 lines = 4K)
   XXX Cursor symbol `@'
+  XXX Change videoTable to allow wozmon at original $ff00 address
   XXX Map Delete to Rubout $5f
+  XXX From user pov, BRK is a nice way to return to monitor
 }
 
 {-----------------------------------------------------------------------+

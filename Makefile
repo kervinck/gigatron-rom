@@ -48,10 +48,11 @@ mos: v6502.rom
 v6502.rom: Core/* Apps/* Images/* Makefile interface.json
 	rm -f ROMv3x.rom ROMv3x.asm
 	python Core/ROMv3x.py\
-		Main=Apps/Mosaic6502.gt1x\
+		Main=Apps/Apple1.gcl\
 		Core/Reset_v4.gcl
 	mv ROMv3x.rom v6502.rom
 	mv ROMv3x.asm v6502.asm
+	open http://127.0.0.1:8000/src
 
 # Experimental revision, based on ROM v3, for overclocked systems at 12.5 MHz.
 # Adds vCPU slices on scanlines to get 400 cycles per scanline
