@@ -355,25 +355,25 @@ v6502_PCH       = vLR+1         # Program Counter High
 v6502_S         = vSP           # Stack Pointer (kept as "S+1")
 v6502_A         = vAC+0         # Accumulator
 v6502_BI        = vAC+1         # B Input Register (used by SBC)
-v6502_X         = sysArgs+0     # Index Register X
-v6502_Y         = sysArgs+1     # Index Register Y
-v6502_P         = sysArgs+2     # Processor Status Register (V flag in bit 7)
-v6502_Qz        = sysArgs+3     # Quick Status Register for Z flag
-v6502_Qn        = sysArgs+4     # Quick Status Register for N flag
-v6502_IR        = sysArgs+5     # Instruction Register
-v6502_ADL       = sysArgs+6     # Low Address Register
-v6502_ADH       = sysArgs+7     # High Address Register
+v6502_ADL       = sysArgs+0     # Low Address Register
+v6502_ADH       = sysArgs+1     # High Address Register
+v6502_IR        = sysArgs+2     # Instruction Register
+v6502_P         = sysArgs+3     # Processor Status Register (V flag in bit 7)
+v6502_Qz        = sysArgs+4     # Quick Status Register for Z flag
+v6502_Qn        = sysArgs+5     # Quick Status Register for N flag
+v6502_X         = sysArgs+6     # Index Register X
+v6502_Y         = sysArgs+7     # Index Register Y
 v6502_Tmp       = vTmp          # Scratch (may be clobbered outside v6502)
 
-# MCS 6502 definitions for P register
-v6502_C = 1                     # Carry Flag (unsigned overflow)
-v6502_Z = 2                     # Zero Flag (all bits zero)
-v6502_I = 4                     # Interrupt Enable Flag (1=Disable)
-v6502_D = 8                     # Decimal Enable Flag (aka BCD mode, 1=Enable)
-v6502_B = 16                    # Break (or PHP) Instruction Flag
-v6502_U = 32                    # Unused (always 1)
-v6502_V = 64                    # Overflow Flag (signed overflow)
-v6502_N = 128                   # Negative Flag (bit 7 of result)
+# MOS 6502 definitions for P register
+v6502_Cflag = 1                 # Carry Flag (unsigned overflow)
+v6502_Zflag = 2                 # Zero Flag (all bits zero)
+v6502_Iflag = 4                 # Interrupt Enable Flag (1=Disable)
+v6502_Dflag = 8                 # Decimal Enable Flag (aka BCD mode, 1=Enable)
+v6502_Bflag = 16                # Break (or PHP) Instruction Flag
+v6502_Uflag = 32                # Unused (always 1)
+v6502_Vflag = 64                # Overflow Flag (signed overflow)
+v6502_Nflag = 128               # Negative Flag (bit 7 of result)
 
 # In emulation it is much faster to keep the V flag in bit 7
 # This can be corrected when importing/exporting with PHP, PLP, etc
@@ -3336,21 +3336,21 @@ assert (38 - 22)/2 >= v6502_adjust
 # XXX Tuning, put most frequent instructions in the primary page
 
 label('v6502_ror')
-assert v6502_C == 1
+assert v6502_Cflag == 1
 ld([v6502_ADH],Y)               #12
 ld(-46/2+v6502_maxTicks)        #13 Is there enough time for the excess ticks?
 adda([vTicks])                  #14
 blt('.recheck17')               #15
-ld([v6502_P]);                  C('Transfer C to bit 8')#16
-anda(1)                         #17 v6502_C
+ld([v6502_P]);                  C('Transfer C to "bit 8"')#16
+anda(1)                         #17
 adda(127)                       #18
 anda(128)                       #19
 st([v6502_BI])                  #20 The real 6502 wouldn't use BI for this
 ld([v6502_P]);                  C('Transfer bit 0 to C')#21
-anda(1)                         #22
+anda(~1)                        #22
 st([v6502_P])                   #23
 ld([Y,X])                       #24
-anda(1)                         #25 v6502_C
+anda(1)                         #25
 ora([v6502_P])                  #26
 st([v6502_P])                   #27
 ld('v6502_ror38');              C('Shift table lookup')#28
@@ -3366,7 +3366,7 @@ jmp(Y,lo('v6502_check'))        #18
 ld(-20/2)                       #19
 
 label('v6502_lsr')
-assert v6502_C == 1
+assert v6502_Cflag == 1
 ld([v6502_ADH],Y)               #12
 ld([v6502_P]);                  C('Transfer bit 0 to C')#13
 anda(~1)                        #14
@@ -3384,7 +3384,7 @@ jmp(Y,AC)                       #25
 bra(255);                       C('bra $%04x' % (shiftTable+255))#26
 
 label('v6502_rol')
-assert v6502_C == 1
+assert v6502_Cflag == 1
 ld([v6502_ADH],Y)               #12
 ld([Y,X])                       #13
 anda(0x80)                      #14
@@ -3397,7 +3397,7 @@ adda([Y,X])                     #19
 st([Y,X])                       #20
 st([v6502_Qz]);                 C('Z flag')#21
 st([v6502_Qn]);                 C('N flag')#22
-ld([v6502_P])                   #23
+ld([v6502_P]);                  C('C flag')#23
 anda(~1)                        #24
 ld([v6502_Tmp],X)               #25
 ora([X])                        #26
@@ -3408,7 +3408,6 @@ jmp(Y,lo('v6502_next'))         #30
 #nop()                          #31 Overlap
 #
 label('v6502_asl')
-assert v6502_C == 1
 ld([v6502_ADH],Y)               #12,32
 ld([Y,X])                       #13
 anda(0x80)                      #14
@@ -3882,7 +3881,7 @@ ld(hi('v6502_next'),Y)          #8 Handy for instructions that don't clobber Y
 
 label('v6502_ADC')
 assert pc()&255 == 1
-assert v6502_C == 1
+assert v6502_Cflag == 1
 assert v6502_Vemu == 128
 ld([v6502_ADH],Y)               #9,15
 anda([v6502_P]);                C('Carry in')#10 AC=1 because lo('v6502_ADC')=1
@@ -3974,9 +3973,9 @@ label('v6502_CLC')
 ld([v6502_P])                   #9
 bra('.sec12')                   #10
 label('v6502_SEC')
-anda(~v6502_C)                  #9,11 Overlap
+anda(~v6502_Cflag)              #9,11 Overlap
 ld([v6502_P])                   #10
-ora(v6502_C)                    #11
+ora(v6502_Cflag)                #11
 label('.sec12')
 st([v6502_P])                   #12
 nop()                           #13
@@ -4008,13 +4007,13 @@ beq('.next14')                  #12
 #nop()                          #13 Overlap
 label('v6502_BCC')
 ld([v6502_P])                   #9,13
-anda(v6502_C)                   #10
+anda(v6502_Cflag)               #10
 beq('.branch13')                #11
 bne('.next14')                  #12
 #nop()                          #13 Overlap
 label('v6502_BCS')
 ld([v6502_P])                   #9,13
-anda(v6502_C)                   #10
+anda(v6502_Cflag)               #10
 bne('.branch13')                #11
 beq('.next14')                  #12
 #nop()                          #13 Overlap
@@ -4429,7 +4428,7 @@ ld(-20/2)                       #19
 #label('v6502_tsx')
 #nop()                          #12 Overlap
 ld([v6502_S])                   #13
-suba(1);                        C('Correct on export')#14
+suba(1);                        C('Shift down on export')#14
 st([v6502_X])                   #15
 label('.tsx16')
 st([v6502_Qz]);                 C('Z flag')#16
@@ -4441,7 +4440,7 @@ ld(-22/2)                       #21
 
 label('v6502_txs')
 ld([v6502_X])                   #12
-adda(1);                        C('Offset on import')#13
+adda(1);                        C('Shift up on import')#13
 bra('.tsx16')                   #14
 st([v6502_S])                   #15
 
@@ -4463,23 +4462,23 @@ st([v6502_A])                   #14
 label('v6502_cli')
 ld([v6502_P])                   #12
 bra('.clv15')                   #13
-anda(~v6502_I)                  #14
+anda(~v6502_Iflag)              #14
 
 label('v6502_sei')
 ld([v6502_P])                   #12
 bra('.clv15')                   #13
-ora(v6502_I)                    #14
+ora(v6502_Iflag)                #14
 
 label('v6502_cld')
 ld([v6502_P])                   #12
 bra('.clv15')                   #13
-anda(~v6502_D)                  #14
+anda(~v6502_Dflag)              #14
 
 label('v6502_sed')
 ld([v6502_P])                   #12
 bra('.clv15')                   #13
 label('v6502_clv')
-ora(v6502_D)                    #14,12 Overlap
+ora(v6502_Dflag)                #14,12 Overlap
 #
 #label('v6502_clv')
 #nop()                          #12
@@ -4539,22 +4538,22 @@ ld([v6502_S])                   #12
 suba(1)                         #13
 st([v6502_S],X)                 #14
 ld([v6502_P])                   #15
-anda(255&~v6502_V&~v6502_Z);    C('Keep Vemu,B,D,I,C');#16
-bpl(pc()+3);                    C('V to bit 6')#17
+anda(~v6502_Vflag&~v6502_Zflag);C('Keep Vemu,B,D,I,C');#16
+bpl(pc()+3);                    C('V to bit 6 and clear N')#17
 bra(pc()+2)                     #18
-xora(v6502_V^v6502_Vemu)        #19
+xora(v6502_Vflag^v6502_Vemu)    #19
 st([X])                         #19,20
 ld([v6502_Qz]);                 C('Z flag')#21
 beq(pc()+3)                     #22
 bra(pc()+3)                     #23
 ld(0)                           #24
-ld(v6502_Z)                     #24(!)
+ld(v6502_Zflag)                 #24(!)
 ora([X])                        #25
 st([X])                         #26
 ld([v6502_Qn]);                 C('N flag')#27
 anda(0x80)                      #28
 ora([X])                        #29
-ora(v6502_U);                   C('Unused bit')#30
+ora(v6502_Uflag);               C('Unused bit')#30
 st([X])                         #31
 nop()                           #32
 ld(hi('v6502_next'),Y)          #33
@@ -4571,51 +4570,47 @@ label('v6502_cmp')
 ld([v6502_Y])                   #13,12
 #
 #label('v6502_cmp')             #12 Overlap
-assert v6502_C == 1
+assert v6502_Cflag == 1
 ld([v6502_A])                   #13
 label('.cmp14')
-st([v6502_Tmp])                 #14
-ld([v6502_P])                   #15
-anda(1)                         #16
-suba(1)                         #17
-ld([v6502_ADH],Y)               #18
-suba([Y,X])                     #19
-adda([v6502_Tmp])               #20
-st([v6502_Qz]);                 C('Z flag')#21
-st([v6502_Qn]);                 C('N flag')#22
-bmi('.cmp25');                  C('Carry?')#23
-ld([Y,X])                       #24
-bra('.cmp27')                   #25
-ora([v6502_Tmp])                #26 Carry in bit 7
-label('.cmp25')
-anda([v6502_Tmp])               #25 Carry in bit 7
-nop()                           #26
-label('.cmp27')
-anda(0x80,X)                    #27 Move carry to bit 0
-ld([v6502_P]);                  C('C flag')#28
-anda(~1)                        #29
-ora([X])                        #30
-st([v6502_P])                   #31
-nop()                           #32
-ld(hi('v6502_next'),Y)          #33
-jmp(Y,lo('v6502_next'))         #34
-ld(-36/2)                       #35
+ld([v6502_ADH],Y)               #14
+bmi('.cmp17');                  C('Carry?')#15
+suba([Y,X])                     #16
+st([v6502_Qz]);                 C('Z flag')#17
+st([v6502_Qn]);                 C('N flag')#18
+bra('.cmp21')                   #19
+ora([Y,X])                      #20
+label('.cmp17')
+st([v6502_Qz]);                 C('Z flag')#17
+st([v6502_Qn]);                 C('N flag')#18
+anda([Y,X])                     #19
+nop()                           #20
+label('.cmp21')
+xora(0x80)                      #21
+anda(0x80,X)                    #22 Move carry to bit 0
+ld([v6502_P]);                  C('C flag')#23
+anda(~1)                        #24
+ora([X])                        #25
+st([v6502_P])                   #26
+ld(hi('v6502_next'),Y)          #27
+jmp(Y,lo('v6502_next'))         #28
+ld(-30/2)                       #29
 
 label('v6502_plp')
-assert v6502_N == 128
-assert 2*v6502_V == v6502_Vemu
+assert v6502_Nflag == 128
+assert 2*v6502_Vflag == v6502_Vemu
 ld([v6502_S])                   #12
 ld(AC,X)                        #13
 adda(1)                         #14
 st([v6502_S])                   #15
 ld([X])                         #16
 st([v6502_Qn]);                 C('N flag')#17
-anda(v6502_Z)                   #18
-xora(v6502_Z)                   #19
+anda(v6502_Zflag)               #18
+xora(v6502_Zflag)               #19
 st([v6502_Qz]);                 C('Z flag')#20
 ld([X])                         #21
 anda(~v6502_Vemu);              C('V to bit 7')#22
-adda(v6502_V)                   #23
+adda(v6502_Vflag)               #23
 st([v6502_P]);                  C('All other flags')#24
 ld(hi('v6502_next'),Y)          #25
 jmp(Y,lo('v6502_next'))         #26
@@ -4628,14 +4623,14 @@ adda(3)                         #14
 st([v6502_S])                   #15
 ld([X])                         #16
 st([v6502_Qn]);                 C('N flag')#17
-anda(v6502_Z)                   #18
-xora(v6502_Z)                   #19
+anda(v6502_Zflag)               #18
+xora(v6502_Zflag)               #19
 st([v6502_Qz]);                 C('Z flag')#20
 ld(0,Y)                         #21
 ld([Y,X])                       #22
 st([Y,Xpp])                     #23
 anda(~v6502_Vemu);              C('V to bit 7')#24
-adda(v6502_V)                   #25
+adda(v6502_Vflag)               #25
 st([v6502_P]);                  C('All other flags')#26
 ld([Y,X])                       #27
 st([Y,Xpp])                     #28
