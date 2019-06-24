@@ -8,7 +8,6 @@ gcl0x
 
 {
  Issues:
-  XXX BLOCK XAM doesn't cross page boundary (v6502 bug?)
   XXX Relocate vCPU code to allow full input buffer from $200..$27f
   XXX Smaller screen so there's more space for real programs (top 16 lines = 4K)
   XXX Cursor symbol `@'
@@ -57,7 +56,7 @@ $8a Pos=                        {Known startup value and force initial LF}
 +-----------------------------------------------------------------------}
 
                                 {Clear new line first}
-    \sysArgs0; Pos<.            {Go to start of line}
+    \sysArgs0; <Pos.            {Go to start of line}
     Pos+ [if<0 \sysArgs0;] Pos= {Go down 8 scanlines and wrap around if needed}
     \sysArgs4:                  {Set screen position}
     \sysArgs2.                  {Set all-zero output pattern}

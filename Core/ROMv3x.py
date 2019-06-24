@@ -3909,7 +3909,7 @@ nop()                           #28
 label('.adc29')
 anda(0x80,X)                    #29
 ld([v6502_P]);                  C('Update P')#30
-anda(~v6502_Vemu)               #31
+anda(~v6502_Vemu&~v6502_Cflag)  #31
 ora([X])                        #32
 ora([v6502_Tmp])                #33
 st([v6502_P])                   #34
