@@ -619,7 +619,7 @@ st([vLR])                       #19
 st([soundTimer])                #20
 ld(userCode>>8)                 #21
 st([vLR+1])                     #22
-ld('videoF')                    #23 Do this before first visible pixels
+ld('nopixels')                  #23 Do this before first visible pixels
 st([videoModeB])                #24
 st([videoModeC])                #25
 st([videoModeD])                #26
@@ -1045,7 +1045,7 @@ ld([videoModeD])                #58
 st([videoModeB])                #59
 bra('.select62')                #60
 label('.select57')
-ld('videoF')                    #61,57
+ld('nopixels')                  #61,57
 ld('pixels')                    #58 Reset: On->D->B->C
 st([videoModeC])                #59
 st([videoModeB])                #60
@@ -1160,10 +1160,11 @@ adda(1, X)                      #33
 ld([frameX])                    #34
 adda([Y,X])                     #35
 bra([videoModeB])               #36
-st([frameX], X)                 #37 Undocumented opcode "store in RAM and X"!
+st([frameX], X)                 #37 Store in RAM and X
 
 # Back porch C: third of 4 repeated scan lines
-# - Nothing new to do, Yi and Xi are known
+# - Nothing new to for video do as Yi and Xi are known,
+# - This is the time to emit and reset the next sound sample
 label('videoC')
 ld('videoD')                    #29
 st([nextVideo])                 #30
@@ -1182,14 +1183,14 @@ label('videoD')                 # Default video mode
 ld([frameX], X)                 #29
 ld([videoY])                    #30
 suba((120-1)*2)                 #31
-beq('.last34')                  #32
+beq('.lastpixels34')            #32
 adda(120*2);                    C('More pixel lines to go')#33
 st([videoY])                    #34
 ld('videoA')                    #35
 bra([videoModeD])               #36
 st([nextVideo])                 #37
 
-label('.last34')
+label('.lastpixels34')
 if soundDiscontinuity == 1:
   st(sample, [sample])          ;C('Sound continuity')#34
 else:
@@ -1206,7 +1207,7 @@ jmp(Y,'vBlankStart')            #30
 ld(syncBits)                    #31
 
 # Alternative for pixel burst: faster application mode
-label('videoF')
+label('nopixels')
 runVcpu(200-38, '-BCD line 41-520',
   returnTo=0x1ff)               #38 Application interpreter (black scanlines)
 
@@ -2785,8 +2786,8 @@ bra('.sysSvm2')                 #21
 label('.sysSvm1')
 ld('pixels')                    #22
 ld('pixels')                    #22
-ld('videoF')                    #22
-ld('videoF')                    #22
+ld('nopixels')                  #22
+ld('nopixels')                  #22
 label('.sysSvm2')
 st([videoModeB])                #23
 ld([vAC])                       #24
@@ -2798,7 +2799,7 @@ label('.sysSvm3')
 ld('pixels')                    #29
 ld('pixels')                    #29
 ld('pixels')                    #29
-ld('videoF')                    #29
+ld('nopixels')                  #29
 label('.sysSvm4')
 st([videoModeC])                #30
 ld([vAC])                       #31
@@ -2808,9 +2809,9 @@ bra(AC)                         #34
 bra('.sysSvm6')                 #35
 label('.sysSvm5')
 ld('pixels')                    #36
-ld('videoF')                    #36
-ld('videoF')                    #36
-ld('videoF')                    #36
+ld('nopixels')                  #36
+ld('nopixels')                  #36
+ld('nopixels')                  #36
 label('.sysSvm6')
 st([videoModeD])                #37
 ld(-44/2)                       #39
@@ -2909,6 +2910,9 @@ ld(-46/2)                       #43
 #-----------------------------------------------------------------------
 #
 #  ROM page 12: More SYS functions (sprites)
+#
+#       Page 1: vertical blank interval
+#       Page 2: visible scanlines
 #
 #-----------------------------------------------------------------------
 
@@ -4904,11 +4908,14 @@ def basicLine(address, number, text):
 
 #-----------------------------------------------------------------------
 
+# Don't start in a trampoline region
+while pc()&255 > 251:
+  nop()
+
+#-----------------------------------------------------------------------
+
 for application in argv[1:]:
   print
-
-  while pc()&255 > 251:
-    nop()
 
   if '=' in application:
     # Explicit name name
