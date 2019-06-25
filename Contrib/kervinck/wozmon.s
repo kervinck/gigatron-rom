@@ -3,8 +3,6 @@
 
 ; Adapted for Gigatron TTL microcomputer
 
-; XXX Map Delete to Rubout $5f
-
 ; wozmon.gt1x: wozmon.s
 ;        ca65 wozmon.s -o wozmon.o -l wozmon.lst
 ;        ld65 -t none -o wozmon.gt1x wozmon.o
@@ -13,14 +11,14 @@
 
 buttonState     = $11           ; [Gigatron] Edge-triggered resettable input bits
 
-XAML            = $36           ; Last "opened" location Low
-XAMH            = $37           ; Last "opened" location High
-STL             = $38           ; Store address Low
-STH             = $39           ; Store address High
-L               = $3A           ; Hex value parsing Low
-H               = $3B           ; Hex value parsing High
-YSAV            = $3C           ; Used to see if hex value is given
-MODE            = $3D           ; $00=XAM, $7F=STOR, $AE=BLOCK XAM
+XAML            = $44           ; Last "opened" location Low
+XAMH            = $45           ; Last "opened" location High
+STL             = $46           ; Store address Low
+STH             = $47           ; Store address High
+L               = $48           ; Hex value parsing Low
+H               = $49           ; Hex value parsing High
+YSAV            = $4A           ; Used to see if hex value is given
+MODE            = $4B           ; $00=XAM, $7F=STOR, $AE=BLOCK XAM
 
 
 ; Other Variables
@@ -29,36 +27,52 @@ IN              = $0200         ;  Input buffer to $027F
 
                 ; Gigatron vCPU startup and PrintChar/Newline loop (Apple1dsp.gcl)
 START           = $0200
-               .BYTE $02,$00,$18,$1A,$21,$E6,$28,$35,$4D,$0B,$21,$0E,$F3,$17,$90,$05
-               .BYTE $11,$00,$06,$2B,$1A,$59,$8A,$2B,$30,$90,$4E,$02,$50,$A9,$EC,$FE
-               .BYTE $11,$E1,$04,$2B,$22,$11,$00,$08,$2B,$24,$EE,$FE,$8C,$8A,$35,$3F
-               .BYTE $6A,$1A,$30,$E6,$9B,$35,$56,$6A,$59,$00,$35,$72,$A9,$21,$24,$5E
-               .BYTE $30,$99,$30,$35,$53,$78,$21,$24,$2B,$30,$2B,$28,$5E,$26,$B4,$CB
-               .BYTE $93,$28,$1A,$28,$8C,$A0,$35,$72,$7E,$11,$EE,$01,$2B,$32,$21,$32
-               .BYTE $AD,$E6,$78,$35,$53,$9A,$8C,$80,$90,$9C,$8C,$08,$F0,$32,$21,$32
-               .BYTE $E6,$02,$2B,$32,$8C,$FE,$35,$72,$8E,$EE,$FE,$E6,$A0,$35,$50,$EE
-               .BYTE $E6,$32,$35,$53,$BE,$E3,$32,$2B,$32,$11,$00,$07,$90,$C3,$2B,$32
-               .BYTE $11,$00,$08,$2B,$34,$21,$32,$E9,$E9,$99,$32,$99,$34,$2B,$34,$21
-               .BYTE $30,$2B,$28,$E3,$06,$2B,$30,$59,$05,$2B,$32,$21,$34,$7F,$00,$5E
-               .BYTE $26,$B4,$CB,$93,$34,$93,$28,$21,$32,$E6,$01,$35,$4D,$D9,$11,$0C
-               .BYTE $0B,$2B,$22,$B4,$E6,$90,$4E
+
+                ; Setup
+                .BYTE $02,$00,$1F
+                .BYTE $1A,$21,$E6,$28,$35,$4D,$0B,$21,$0E,$F3,$17,$90,$05,$11,$00,$03
+                .BYTE $2B,$30,$59,$8D,$2B,$32,$CF,$30,$11,$00,$06,$2B,$1A,$90,$7E
+
+                ; Main loop
+                .BYTE $02,$80,$45
+                .BYTE $11,$0C,$0B,$2B,$22,$21,$34,$B4,$E6,$75,$35,$72,$BC,$59,$C0,$CF
+                .BYTE $30,$2B,$32,$1A,$11,$2B,$34,$82,$80,$35,$72,$91,$59,$A0,$CF,$30
+                .BYTE $2B,$32,$59,$FF,$5E,$11,$21,$34,$E6,$60,$35,$50,$AF,$E3,$40,$2B
+                .BYTE $34,$21,$34,$8C,$0A,$35,$72,$BA,$59,$0D,$2B,$34,$90,$C0,$2B,$34
+                .BYTE $CF,$30,$63,$90,$7E
+
+                ; PrintChar
+                .BYTE $03,$00,$a5
+                .BYTE $EC,$FE,$11,$E1,$04,$2B,$22,$11,$00,$08,$2B,$24,$EE,$FE,$8C,$8D
+                .BYTE $35,$3F,$1A,$1A,$32,$E6,$9B,$35,$56,$1A,$59,$00,$35,$72,$59,$21
+                .BYTE $24,$5E,$32,$99,$32,$35,$53,$28,$21,$24,$2B,$32,$2B,$28,$5E,$26
+                .BYTE $B4,$CB,$93,$28,$1A,$28,$8C,$A0,$35,$72,$2E,$11,$EE,$01,$2B,$36
+                .BYTE $21,$36,$AD,$E6,$78,$35,$53,$4A,$8C,$80,$90,$4C,$8C,$08,$F0,$36
+                .BYTE $21,$36,$E6,$02,$2B,$36,$8C,$FE,$35,$72,$3E,$EE,$FE,$E6,$A0,$35
+                .BYTE $50,$A2,$E6,$32,$35,$53,$6E,$E3,$32,$2B,$36,$11,$00,$07,$90,$73
+                .BYTE $2B,$36,$11,$00,$08,$2B,$38,$21,$36,$E9,$E9,$99,$36,$99,$38,$2B
+                .BYTE $38,$21,$32,$2B,$28,$EC,$FE,$E3,$06,$2B,$32,$59,$05,$2B,$36,$21
+                .BYTE $38,$7F,$00,$5E,$26,$B4,$CB,$93,$38,$93,$28,$21,$36,$E6,$01,$35
+                .BYTE $4D,$8B,$EE,$FE,$FF
 
                 ; Gigatron GT1 file segment header for WozMon code
-                .BYTE >RESET,<RESET,END-RESET
+                .BYTE >RESET,<RESET,(END-RESET)&255
 
                .org $0600       ; [Gigatron] Original $ff00 appears in screen memory
-
 RESET:          CLD             ; Clear decimal arithmetic mode.
                 CLI
-                LDX #0          ; [Gigatron]
-                BEQ ESCAPE      ; [Gigatron] Always taken.
-GETKBD:         LDA buttonState ; [Gigatron] Key ready?
-                BMI GETKBD      ; [Gigatron] Loop until ready.
-                DEX             ; [Gigatron] 255->X.
-                STX buttonState ; [Gigatron] Mark all bits as read.
-                INX             ; [Gigatron] 0->X.
-                RTS             ; [Gigatron]
-NOTCR:          CMP #$FF        ; [Gigatron] "<-"? Keyboard sends 127 (not "_").
+                LDY #$7F        ; Mask for DSP data direction register.
+                NOP             ; [Gigatron]
+                NOP             ; [Gigatron]
+                NOP             ; [Gigatron]
+                LDA #$A7        ; KBD and DSP control register mask.
+                NOP             ; [Gigatron]
+                NOP             ; [Gigatron]
+                NOP             ; [Gigatron]
+                NOP             ; [Gigatron]
+                NOP             ; [Gigatron]
+                NOP             ; [Gigatron]
+NOTCR:          CMP #$DF        ; "<-"?
                 BEQ BACKSPACE   ; Yes.
                 CMP #$9B        ; ESC?
                 BEQ ESCAPE      ; Yes.
@@ -66,19 +80,20 @@ NOTCR:          CMP #$FF        ; [Gigatron] "<-"? Keyboard sends 127 (not "_").
                 BPL NEXTCHAR    ; Auto ESC if > 127.
 ESCAPE:         LDA #$DC        ; "\".
                 JSR ECHO        ; Output it.
-GETLINE:        LDA #$8A        ; [Gigatron] Keyboard sends LF (not CR).
+GETLINE:        LDA #$8D        ; CR.
                 JSR ECHO        ; Output it.
                 LDY #$01        ; Initiallize text index.
 BACKSPACE:      DEY             ; Back up text index.
                 BMI GETLINE     ; Beyond start of line, reinitialize.
-NEXTCHAR:       JSR GETKBD      ; [Gigatron] Load character.
+NEXTCHAR:       LDA #$00        ; [Gigatron] A=0 to read keyboard.
+                BRK             ; [Gigatron] Transfer to vCPU for input.
                 ORA #$80        ; [Gigatron] B7 should be '1'.
                 NOP             ; [Gigatron]
                 NOP             ; [Gigatron]
                 NOP             ; [Gigatron]
                 STA IN,Y        ; Add to text buffer.
                 JSR ECHO        ; Display character.
-                CMP #$8A        ; [Gigatron] LF?
+                CMP #$8D        ; CR?
                 BNE NOTCR       ; No.
                 LDY #$FF        ; Reset text index.
                 LDA #$00        ; For XAM mode.
@@ -87,7 +102,7 @@ SETSTOR:        ASL             ; Leaves $7B if setting STOR mode.
 SETMODE:        STA MODE        ; $00 = XAM, $7B= STOR,$AE= BLOK XAM
 BLSKIP:         INY             ; Advance text index.
 NEXTITEM:       LDA IN,Y        ; Get character.
-                CMP #$8A        ; [Gigatron] LF?
+                CMP #$8D        ; CR?
                 BEQ GETLINE     ; Yes, done this line.
                 CMP #$AE        ; "."?
                 BCC BLSKIP      ; Skip delimiter.
@@ -137,7 +152,7 @@ SETADR:         LDA L-1,X       ; Copy hex data to
                 DEX             ; Next of 2 bytes.
                 BNE SETADR      ; Loop unless X = 0.
 NXTPRNT:        BNE PRDATA      ; NE means no address to print.
-                LDA #$8A        ; [Gigatron] LF.
+                LDA #$8D        ; CR.
                 JSR ECHO        ; Output it.
                 LDA XAMH        ; 'Examine index' high-order byte.
                 JSR PRBYTE      ; Output it in hex format.
@@ -178,9 +193,14 @@ ECHO:           PHA             ; [Gigatron]
                 PLA             ; [Gigatron]
                 RTS             ; [Gigatron] Return.
 BLANK:          CLC             ; [Gigatron] Advance fewer pixels so BLOCK
-                ADC $30         ; [Gigatron]   XAM doesn't wrap around
-                STA $30         ; [Gigatron]   the 160 pixel wide screen.
+                ADC $32         ; [Gigatron]   XAM doesn't wrap around
+                STA $32         ; [Gigatron]   the 160 pixel wide screen.
                 RTS             ; [Gigatron]
+
+                .BYTE $00       ; (unused)
+                .BYTE $00,$00   ; (NMI)
+                .BYTE $00,$06   ; (RESET)
+                .BYTE $00,$00   ; (IRQ)
 
 END:            ; Gigatron end of GT1 file footer
                 .BYTE 0,>START,<START

@@ -136,7 +136,7 @@ burn85:
 %.gt1: %.gcl
 	Core/compilegcl.py "$<" `dirname "./$@"`
 
-%.gt1x: %.gt1
+%.gt1x: %.gt1 %.gcl
 	# Non-compliant files in .gt1 format (see Docs/GT1-files.txt)
 	mv "$<" "$@"
 

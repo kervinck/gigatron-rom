@@ -8,12 +8,10 @@ gcl0x
 
 {
  Issues:
-  XXX Relocate vCPU code to allow full input buffer from $200..$27f
   XXX Smaller screen so there's more space for real programs (top 16 lines = 4K)
-  XXX Cursor symbol `@'
   XXX Change videoTable to allow wozmon at original $ff00 address
-  XXX Map Delete to Rubout $5f
-  XXX From user pov, BRK is a nice way to return to monitor
+  XXX BRK as a way to return to monitor ($FFFE/$FFFF) after R, can it be done?
+  XXX Eliminate one of i,j,k and move Wozmon variables to $34+
 }
 
 {-----------------------------------------------------------------------+
@@ -28,25 +26,52 @@ gcl0x
 |       Initialize                                                      |
 +-----------------------------------------------------------------------}
 
+$300 PrintChar= {$30}
+$8d Pos= {$32} PrintChar!       {Known startup value and force initial LF}
 $600 \vLR:                      {Start address for Wozmon on 32K Gigatron}
-$8a Pos=                        {Known startup value and force initial LF}
 
-[else $250:]                    {WozMon uses all of $200..$27f as input buffer.
-                                 XXX Give it room for 80 bytes and hope for the best}
+[else $280:]                    {WozMon uses all of $200..$27f as input buffer}
 
 {-----------------------------------------------------------------------+
 |       Main loop                                                       |
 +-----------------------------------------------------------------------}
 
-{Minimalistic character output, with bit 7 set by WozMon}
 [do
-  $fe%=                         {Park character in stack area}
+  $0b0c \sysFn:                 {Set SYS call to SYS_v6502}
+  k                             {ASCII code in A}
+  80!                           {Run 6502 code until BRK}
+  push                          {Save v6502 PC}
+  [if=0                         {A=0 reads from keyboard}
+    $c0 PrintChar! Pos=         {Display `@' as cursor and go back}
+    [do
+      \buttonState, k= 128&     {Key ready?}
+      if<>0loop]                {Loop until ready}
+    $a0 PrintChar! Pos=         {Replace `@' with a ` '}
+    255 \buttonState.           {Mark all bits as read}
+    k $60- [if>=0 $40+ k=]      {Map to upper case, and Del to rubout}
+    k  10^ [if=0  13 k=]        {Map LF to CR}
+  else                          {A<>0 for echo}
+    k=
+    PrintChar!
+  ]
+  pop                           {Restore v6502 PC}
+  loop]                         {Back to wozmon}
+
+{-----------------------------------------------------------------------+
+|       PrintChar                                                       |
++-----------------------------------------------------------------------}
+
+$300:
+[
+  {Minimalistic terminal output, with bit 7 set by WozMon}
+
+  %$fe=                         {Park character in stack area}
   \SYS_VDrawBits_134 \sysFn:    {Prepare SYS calls}
   $800 \sysArgs0:               {Magic constant: (1) green on black, (2) start of
                                  screen memory and (3) offset to go one row down}
 
-  $fe%                          {Get character back}
-  $8a^ [if<>0                   {Test for CR...}
+  %$fe                          {Get character back}
+  $8d^ [if<>0                   {Test for CR...}
     <Pos, 155- if>0 0]          {...or line wrap}
 
   [if=0
@@ -55,7 +80,8 @@ $8a Pos=                        {Known startup value and force initial LF}
 |       Newline                                                         |
 +-----------------------------------------------------------------------}
 
-                                {Clear new line first}
+    {Clear new line first}
+
     \sysArgs0; <Pos.            {Go to start of line}
     Pos+ [if<0 \sysArgs0;] Pos= {Go down 8 scanlines and wrap around if needed}
     \sysArgs4:                  {Set screen position}
@@ -65,7 +91,9 @@ $8a Pos=                        {Known startup value and force initial LF}
       <\sysArgs4++              {Step 1 pixel right}
       \sysArgs4, 160^           {Test for end of line}
       if<>0loop]
-                                {Then scroll up by modifying videoTable}
+
+    {Then scroll up by modifying videoTable}
+
     $01ee i=                    {Last entry in video table}
     [do
       i, 120- [if<0 128^
@@ -74,7 +102,7 @@ $8a Pos=                        {Known startup value and force initial LF}
       $fe^ if<>0loop]           {Until all done}
   ]
 
-  $fe% $a0-                     {WozMon sends ASCII with bit 7 set}
+  %$fe $a0-                     {WozMon sends ASCII with bit 7 set}
   [if>=0                        {If printable}
 
 {-----------------------------------------------------------------------+
@@ -91,6 +119,7 @@ $8a Pos=                        {Known startup value and force initial LF}
     j+ j=                       {Add to page address to reach bitmap data}
 
     Pos \sysArgs4:              {Screen position for character}
+    %$fe=                       {Remember this position}
     6+ Pos=                     {Advance by 6 pixels}
 
     5 [do i=                    {Draw character as 5 vertical bit slices}
@@ -98,15 +127,12 @@ $8a Pos=                        {Known startup value and force initial LF}
       134!                      {SYS call to draw 8 pixels vertically}
       <j++ <\sysArgs4++         {Advance to next byte}
       i 1- if>0loop]            {Looping}
+
+    %$fe                        {Return position for backspace}
   ]
 
-{-----------------------------------------------------------------------+
-|       Switch to v6502 virtual CPU                                     |
-+-----------------------------------------------------------------------}
-
-  $0b0c \sysFn: 80!             {Run 6502 code until BRK}
-
-  loop]                         {Forever}
+  ret
+]
 
 {-----------------------------------------------------------------------+
 |       WozMon                                                          |
@@ -116,15 +142,18 @@ $600:
 
 {0600} #$D8           { RESET:          CLD             Clear decimal arithmetic mode.          }
 {0601} #$58           {                 CLI                                                     }
-{0602} #$A2 #$00      {                 LDX #0          [Gigatron]                              }
-{0604} #$F0 #$14      {                 BEQ ESCAPE      [Gigatron] Always taken.                }
-{0606} #$A5 #$11      { GETKBD:         LDA buttonState [Gigatron] Key ready?                   }
-{0608} #$30 #$FC      {                 BMI GETKBD      [Gigatron] Loop until ready.            }
-{060A} #$CA           {                 DEX             [Gigatron] 255->X.                      }
-{060B} #$86 #$11      {                 STX buttonState [Gigatron] Mark all bits as read.       }
-{060D} #$E8           {                 INX             [Gigatron] 0->X.                        }
-{060E} #$60           {                 RTS             [Gigatron]                              }
-{060F} #$C9 #$FF      { NOTCR:          CMP #$FF        [Gigatron] "<-"? We get 127 (not "_").  }
+{0602} #$A0 #$7F      {                 LDY #$7F        Mask for DSP data direction register.   }
+{0604} #$EA           {                 NOP             [Gigatron]                              }
+{0605} #$EA           {                 NOP             [Gigatron]                              }
+{0606} #$EA           {                 NOP             [Gigatron]                              }
+{0607} #$A9 #$A7      {                 LDA #$A7        KBD and DSP control register mask.      }
+{0609} #$EA           {                 NOP             [Gigatron]                              }
+{060A} #$EA           {                 NOP             [Gigatron]                              }
+{060B} #$EA           {                 NOP             [Gigatron]                              }
+{060C} #$EA           {                 NOP             [Gigatron]                              }
+{060D} #$EA           {                 NOP             [Gigatron]                              }
+{060E} #$EA           {                 NOP             [Gigatron]                              }
+{060F} #$C9 #$DF      { NOTCR:          CMP #$DF        "<-"?                                   }
 {0611} #$F0 #$13      {                 BEQ BACKSPACE   Yes.                                    }
 {0613} #$C9 #$9B      {                 CMP #$9B        ESC?                                    }
 {0615} #$F0 #$03      {                 BEQ ESCAPE      Yes.                                    }
@@ -132,19 +161,20 @@ $600:
 {0618} #$10 #$0F      {                 BPL NEXTCHAR    Auto ESC if > 127.                      }
 {061A} #$A9 #$DC      { ESCAPE:         LDA #$DC        "\".                                    }
 {061C} #$20 #$EF #$06 {                 JSR ECHO        Output it.                              }
-{061F} #$A9 #$8A      { GETLINE:        LDA #$8A        [Gigatron] Keyboard sends LF (not CR).  }
+{061F} #$A9 #$8D      { GETLINE:        LDA #$8D        CR.                                     }
 {0621} #$20 #$EF #$06 {                 JSR ECHO        Output it.                              }
 {0624} #$A0 #$01      {                 LDY #$01        Initiallize text index.                 }
 {0626} #$88           { BACKSPACE:      DEY             Back up text index.                     }
 {0627} #$30 #$F6      {                 BMI GETLINE     Beyond start of line, reinitialize.     }
-{0629} #$20 #$06 #$06 { NEXTCHAR:       JSR GETKBD      [Gigatron] Load character.              }
+{0629} #$A9 #$00      { NEXTCHAR:       LDA #$00        [Gigatron] A=0 to read keyboard.        }
+{062B} #$00           {                 BRK             [Gigatron] Transfer to vCPU for input.  }
 {062C} #$09 #$80      {                 ORA #$80        [Gigatron] B7 should be '1'.            }
 {062E} #$EA           {                 NOP             [Gigatron]                              }
 {062F} #$EA           {                 NOP             [Gigatron]                              }
 {0630} #$EA           {                 NOP             [Gigatron]                              }
 {0631} #$99 #$00 #$02 {                 STA IN,Y        Add to text buffer.                     }
 {0634} #$20 #$EF #$06 {                 JSR ECHO        Display character.                      }
-{0637} #$C9 #$8A      {                 CMP #$8A        [Gigatron] LF?                          }
+{0637} #$C9 #$8D      {                 CMP #$8D        CR?                                     }
 {0639} #$D0 #$D4      {                 BNE NOTCR       No.                                     }
 {063B} #$A0 #$FF      {                 LDY #$FF        Reset text index.                       }
 {063D} #$A9 #$00      {                 LDA #$00        For XAM mode.                           }
@@ -153,7 +183,7 @@ $600:
 {0641} #$85 #$4B      { SETMODE:        STA MODE        $00 = XAM, $7B= STOR,$AE= BLOK XAM      }
 {0643} #$C8           { BLSKIP:         INY             Advance text index.                     }
 {0644} #$B9 #$00 #$02 { NEXTITEM:       LDA IN,Y        Get character.                          }
-{0647} #$C9 #$8A      {                 CMP #$8A        [Gigatron] LF?                          }
+{0647} #$C9 #$8D      {                 CMP #$8D        CR?                                     }
 {0649} #$F0 #$D4      {                 BEQ GETLINE     Yes, done this line.                    }
 {064B} #$C9 #$AE      {                 CMP #$AE        "."?                                    }
 {064D} #$90 #$F4      {                 BCC BLSKIP      Skip delimiter.                         }
@@ -203,7 +233,7 @@ $600:
 {06A1} #$CA           {                 DEX             Next of 2 bytes.                        }
 {06A2} #$D0 #$F7      {                 BNE SETADR      Loop unless X = 0.                      }
 {06A4} #$D0 #$14      { NXTPRNT:        BNE PRDATA      NE means no address to print.           }
-{06A6} #$A9 #$8A      {                 LDA #$8A        [Gigatron] LF.                          }
+{06A6} #$A9 #$8D      {                 LDA #$8D        CR.                                     }
 {06A8} #$20 #$EF #$06 {                 JSR ECHO        Output it.                              }
 {06AB} #$A5 #$45      {                 LDA XAMH        'Examine index' high-order byte.        }
 {06AD} #$20 #$DC #$06 {                 JSR PRBYTE      Output it in hex format.                }
@@ -244,8 +274,8 @@ $600:
 {06F1} #$68           {                 PLA             [Gigatron]                              }
 {06F2} #$60           {                 RTS             [Gigatron] Return.                      }
 {06F3} #$18           { BLANK:          CLC             [Gigatron] Advance few pixels so BLOCK  }
-{06F4} #$65 #$30      {                 ADC $30         [Gigatron]   XAM doesn't wrap around    }
-{06F6} #$85 #$30      {                 STA $30         [Gigatron]   the 160 pixel wide screen. }
+{06F4} #$65 #$32      {                 ADC $32         [Gigatron]   XAM doesn't wrap around    }
+{06F6} #$85 #$32      {                 STA $32         [Gigatron]   the 160 pixel wide screen. }
 {06F8} #$60           {                 RTS             [Gigatron]                              }
 {06F9} #$00           { (unused)                                                                }
 {06FA} #$00 #$00      { (NMI)                                                                   }

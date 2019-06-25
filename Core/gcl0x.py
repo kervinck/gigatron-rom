@@ -164,8 +164,8 @@ class Program:
         elif op == '^':    self.emitOp('XORI')
         elif op == '+':    self.emitOp('ADDI')
         elif op == '-':    self.emitOp('SUBI')
-        elif op == '%=':   self.emitOp('STLW')
-        elif op == '%':    self.emitOp('LDLW')
+        elif op == '% =':  self.emitOp('STLW')
+        elif op == '% ':   self.emitOp('LDLW')
         elif op == '--':   self.emitOp('ALLOC'); con = -con & 255
         elif op == '++':   self.emitOp('ALLOC')
         elif op == '< ++': self.emitOp('INC')
@@ -178,9 +178,11 @@ class Program:
             self.emitOp('LSLW')
           con = None
         # Depricated syntax
-        elif op == '#':    con &= 255                    #self.depr('i#', '#i')
-        elif op == '<++':  self.emitOp('INC');           #self.depr('i<++', '<i++')
-        elif op == '>++':  self.emitOp('INC'); con += 1; #self.depr('i>++', '>i++')
+        elif op == '#':    con &= 255                   #self.depr('i#', '#i')
+        elif op == '<++':  self.emitOp('INC')           #self.depr('i<++', '<i++')
+        elif op == '>++':  self.emitOp('INC'); con += 1 #self.depr('i>++', '>i++')
+        elif op == '%=':   self.emitOp('STLW')          #self.depr('i%=', '%i=')
+        elif op == '%':    self.emitOp('LDLW')          #self.depr('i%', %i')
         else:
          self.error("Invalid operator '%s' with constant" % op)
         if has(con):
