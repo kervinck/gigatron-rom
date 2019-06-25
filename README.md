@@ -178,33 +178,37 @@ Address   Name          Description
 Memory map (ROM)
 ================
 ```
-             +----------------------------------------------------------+
-page 0       | Boot and reset sequences                                 |
-             +----------------------------------------------------------+
-page 1       | Video and audio loop (visible lines)                     |
-             |                                                          |
-page 2       | Video and audio loop (vertical blank lines)              |
-             +----------------------------------------------------------+
-page 3       | vCPU interpreter loop (primary page)                     |
-             |                                                          |
-page 4       | vCPU extended instructions and SYS functions             |
-             +----------------------------------------------------------+
-page 5       | Shift tables                                             |
-             |                                                          |
-page 6       | SYS functions (LSRW and others)                          |
-             +----------------------------------------------------------+
-page 7-8     | Font table (ASCII 32..81 and 82..127)                    |
-             +----------------------------------------------------------+
-page 9       | Notes table (C-0..A#7)                                   |
-             +----------------------------------------------------------+
-page 10      | Inversion table                                          |
-             +----------------------------------------------------------+
-page 11-214  | SYS functions                                            |
-             |                                                          |
-             | ROM tables: Embedded high-resolution images (packed)     |
-             |                                                          |
-page 215-255 | ROM files: Embedded vCPU applications (serial)           |
-             +----------------------------------------------------------+
+             +----------------------------------------------------------+  ---
+page 0       | Boot and reset sequences                                 |   ^
+             +----------------------------------------------------------+   |
+page 1       | Video and audio loop (vertical blank lines)              |   |
+             |                                                          |   |
+page 2       | Video and audio loop (visible lines)                     |   |
+             +----------------------------------------------------------+   |
+page 3       | vCPU interpreter loop (primary page)                     |   |
+             |                                                          |   |
+page 4       | vCPU extended instructions (and some SYS functions)      |   |
+             +----------------------------------------------------------+   |
+page 5       | Shift tables                                             |   |
+             |                                                          |   |  Core system
+page 6       | SYS functions (LSRW and others)                          |   |  Kernel and drivers
+             +----------------------------------------------------------+   |
+page 7-8     | Font table (ASCII 32..81 and 82..127)                    |   |
+             +----------------------------------------------------------+   |
+page 9       | Notes table (C-0..A#7)                                   |   |
+             |                                                          |   |
+page 10      | Inversion table                                          |   |
+             +----------------------------------------------------------+   |
+page 11-13   | SYS functions (SendSerial, Sprites, SPI, ...)            |   |
+             |                                                          |   |
+page 13-17   | v6502 (planned)                                          |   v
+             +----------------------------------------------------------+  ---
+page 18      | Application-specific SYS functions                       |   ^
+             |                                                          |   |  Applications /
+page 19-     | ROM files: Embedded high-resolution images (packed)      |   |  cold storage
+             |                                                          |   |
+page    -255 | ROM files: Embedded vCPU applications (serial)           |   v
+             +----------------------------------------------------------+  ---
               0                                                      255
 ```
 
