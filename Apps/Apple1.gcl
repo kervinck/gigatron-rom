@@ -42,8 +42,10 @@ $600 \vLR:                      {Start address for Wozmon on 32K Gigatron}
   80!                           {Run 6502 code until BRK}
   push                          {Save v6502 PC}
   [if=0                         {A=0 reads from keyboard}
-    $c0 PrintChar! Pos=         {Display `@' as cursor and go back}
     [do
+      \frameCount, 48&          {Roughly 1 Hz and 75/25 duty cycle}
+      [if=0 $a0 else $c0]       {Select ` ' or `@'}
+      PrintChar! Pos=           {Display cursor and go back}
       \buttonState, k= 128&     {Key ready?}
       if<>0loop]                {Loop until ready}
     $a0 PrintChar! Pos=         {Replace `@' with a ` '}
