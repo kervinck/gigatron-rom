@@ -104,15 +104,21 @@ def define(name, newValue):
   _symbols[name] = newValue
 
 def symbol(name):
-  return _symbols[name]
+  return _symbols[name] if name in _symbols else None
 
 def lo(name):
-  _refsL.append((name, _romSize))
-  return 0 # placeholder
+  if isinstance(name, int):
+    return name & 255
+  else:
+    _refsL.append((name, _romSize))
+    return 0 # placeholder
 
 def hi(name):
-  _refsH.append((name, _romSize))
-  return 0 # placeholder
+  if isinstance(name, int):
+    return (name >> 8) & 255
+  else:
+    _refsH.append((name, _romSize))
+    return 0 # placeholder
 
 def align(n, chunkSize=0x10000):
   """Insert nops to align with chunk boundary"""
@@ -197,6 +203,7 @@ def end():
 
   if errors:
     print '%d error(s)' % errors
+    print
     exit()
 
 #------------------------------------------------------------------------

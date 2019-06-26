@@ -25,53 +25,47 @@ MODE            = $4B           ; $00=XAM, $7F=STOR, $AE=BLOCK XAM
 
 IN              = $0200         ;  Input buffer to $027F
 
-                ; Gigatron vCPU startup and PrintChar/Newline loop (Apple1dsp.gcl)
-START           = $0200
 
-                ; Setup
-                .BYTE $02,$00,$1F
-                .BYTE $1A,$21,$E6,$28,$35,$4D,$0B,$21,$0E,$F3,$17,$90,$05,$11,$00,$03
-                .BYTE $2B,$30,$59,$8D,$2B,$32,$CF,$30,$11,$00,$06,$2B,$1A,$90,$7E
+                ; Gigatron vCPU startup
+                .BYTE >START,<START,ENDSTART-START
+                .ORG $0200
+START:          .BYTE $1A,$21,$E6,$28,$35,$4D,$0B,$21,$0E,$F3,$17,$90,$05,$11,$00,$01
+                .BYTE $2B,$30,$59,$78,$8C,$7F,$F3,$30,$93,$30,$93,$30,$E3,$01,$8C,$7F
+                .BYTE $35,$72,$12,$11,$52,$03,$2B,$32,$59,$8D,$CF,$32,$11,$00,$03,$2B
+                .BYTE $1A,$11,$00,$FF,$FF
+ENDSTART:
 
-                ; Main loop
-                .BYTE $02,$80,$50
-                .BYTE $11,$0C,$0B,$2B,$22,$21,$34,$B4,$E6,$75,$35,$72,$C7,$1A,$0E,$82
-                .BYTE $30,$35,$72,$96,$59,$A0,$90,$98,$59,$C0,$CF,$30,$2B,$32,$1A,$11
-                .BYTE $2B,$34,$82,$80,$35,$72,$8B,$59,$A0,$CF,$30,$2B,$32,$59,$FF,$5E
-                .BYTE $11,$21,$34,$E6,$60,$35,$50,$BA,$E3,$40,$2B,$34,$21,$34,$8C,$0A
-                .BYTE $35,$72,$C5,$59,$0D,$2B,$34,$90,$CB,$2B,$34,$CF,$30,$63,$90,$7E
-
-                ; PrintChar
-                .BYTE $03,$00,$A5
-                .BYTE $EC,$FE,$11,$E1,$04,$2B,$22,$11,$00,$08,$2B,$24,$EE,$FE,$8C,$8D
-                .BYTE $35,$3F,$1A,$1A,$32,$E6,$9B,$35,$56,$1A,$59,$00,$35,$72,$59,$21
-                .BYTE $24,$5E,$32,$99,$32,$35,$53,$28,$21,$24,$2B,$32,$2B,$28,$5E,$26
-                .BYTE $B4,$CB,$93,$28,$1A,$28,$8C,$A0,$35,$72,$2E,$11,$EE,$01,$2B,$36
-                .BYTE $21,$36,$AD,$E6,$78,$35,$53,$4A,$8C,$80,$90,$4C,$8C,$08,$F0,$36
-                .BYTE $21,$36,$E6,$02,$2B,$36,$8C,$FE,$35,$72,$3E,$EE,$FE,$E6,$A0,$35
-                .BYTE $50,$A2,$E6,$32,$35,$53,$6E,$E3,$32,$2B,$36,$11,$00,$07,$90,$73
-                .BYTE $2B,$36,$11,$00,$08,$2B,$38,$21,$36,$E9,$E9,$99,$36,$99,$38,$2B
-                .BYTE $38,$21,$32,$2B,$28,$EC,$FE,$E3,$06,$2B,$32,$59,$05,$2B,$36,$21
-                .BYTE $38,$7F,$00,$5E,$26,$B4,$CB,$93,$38,$93,$28,$21,$36,$E6,$01,$35
-                .BYTE $4D,$8B,$EE,$FE,$FF
+                ; Main loop and I/O mockup
+                .BYTE >MAIN,<MAIN,ENDMAIN-MAIN
+                .ORG $0300
+MAIN:           .BYTE $2B,$1A,$11,$0C,$0B,$2B,$22,$21,$34,$B4,$E6,$75,$35,$72,$49,$1A
+                .BYTE $0E,$82,$30,$35,$72,$18,$59,$A0,$90,$1A,$59,$C0,$CF,$32,$2B,$30
+                .BYTE $1A,$11,$2B,$34,$82,$80,$35,$72,$0D,$59,$FF,$5E,$11,$59,$A0,$CF
+                .BYTE $32,$2B,$30,$21,$34,$E6,$60,$35,$50,$3C,$E3,$40,$2B,$34,$21,$34
+                .BYTE $8C,$0A,$35,$72,$47,$59,$0D,$2B,$34,$90,$4D,$2B,$34,$CF,$32,$63
+                .BYTE $90,$00,$EC,$FE,$11,$E1,$04,$2B,$22,$11,$00,$08,$2B,$24,$EE,$FE
+                .BYTE $8C,$8D,$35,$3F,$6C,$1A,$30,$E6,$9B,$35,$56,$6C,$59,$00,$35,$72
+                .BYTE $A8,$11,$00,$01,$5E,$30,$AD,$5E,$31,$21,$30,$2B,$28,$5E,$26,$B4
+                .BYTE $CB,$93,$28,$1A,$28,$8C,$A0,$35,$72,$7D,$11,$EE,$01,$2B,$36,$21
+                .BYTE $36,$AD,$E6,$77,$35,$53,$99,$E3,$7F,$90,$9B,$E3,$07,$F0,$36,$21
+                .BYTE $36,$E6,$02,$2B,$36,$8C,$FE,$35,$72,$8D,$EE,$FE,$E6,$A0,$35,$50
+                .BYTE $F1,$E6,$32,$35,$53,$BD,$E3,$32,$2B,$36,$11,$00,$07,$90,$C2,$2B
+                .BYTE $36,$11,$00,$08,$2B,$38,$21,$36,$E9,$E9,$99,$36,$99,$38,$2B,$38
+                .BYTE $21,$30,$2B,$28,$EC,$FE,$E3,$06,$2B,$30,$59,$05,$2B,$36,$21,$38
+                .BYTE $7F,$00,$5E,$26,$B4,$CB,$93,$38,$93,$28,$21,$36,$E6,$01,$35,$4D
+                .BYTE $DA,$EE,$FE,$FF
+ENDMAIN:
 
                 ; Gigatron GT1 file segment header for WozMon code
                 .BYTE >RESET,<RESET,(END-RESET)&255
-
-               .org $0600       ; [Gigatron] Original $ff00 appears in screen memory
+               .ORG $FF00
 RESET:          CLD             ; Clear decimal arithmetic mode.
                 CLI
                 LDY #$7F        ; Mask for DSP data direction register.
-                NOP             ; [Gigatron]
-                NOP             ; [Gigatron]
-                NOP             ; [Gigatron]
+        .BYTE   $2C,$12,$D0     ; [Gigatron] BIT DSP (was: STY DSP)
                 LDA #$A7        ; KBD and DSP control register mask.
-                NOP             ; [Gigatron]
-                NOP             ; [Gigatron]
-                NOP             ; [Gigatron]
-                NOP             ; [Gigatron]
-                NOP             ; [Gigatron]
-                NOP             ; [Gigatron]
+        .BYTE   $2C,$11,$D0     ; [Gigatron] BIT KBDCR (was: STA KBDCR)
+        .BYTE   $2C,$13,$D0     ; [Gigatron] BIT DSPCR (was: STA DSPCR)
 NOTCR:          CMP #$DF        ; "<-"?
                 BEQ BACKSPACE   ; Yes.
                 CMP #$9B        ; ESC?
@@ -88,9 +82,7 @@ BACKSPACE:      DEY             ; Back up text index.
 NEXTCHAR:       LDA #$00        ; [Gigatron] A=0 to read keyboard.
                 BRK             ; [Gigatron] Transfer to vCPU for input.
                 ORA #$80        ; [Gigatron] B7 should be '1'.
-                NOP             ; [Gigatron]
-                NOP             ; [Gigatron]
-                NOP             ; [Gigatron]
+        .BYTE   $2C,$10,$D0     ; [Gigatron] BIT KBD (was: LDA KBD)
                 STA IN,Y        ; Add to text buffer.
                 JSR ECHO        ; Display character.
                 CMP #$8D        ; CR?
@@ -193,14 +185,14 @@ ECHO:           PHA             ; [Gigatron]
                 PLA             ; [Gigatron]
                 RTS             ; [Gigatron] Return.
 BLANK:          CLC             ; [Gigatron] Advance fewer pixels so BLOCK
-                ADC $32         ; [Gigatron]   XAM doesn't wrap around
-                STA $32         ; [Gigatron]   the 160 pixel wide screen.
+                ADC $30         ; [Gigatron]   XAM doesn't wrap around
+                STA $30         ; [Gigatron]   the 160 pixel wide screen.
                 RTS             ; [Gigatron]
 
-                .BYTE $00       ; (unused)
-                .BYTE $00,$00   ; (NMI)
-                .BYTE $00,$06   ; (RESET)
-                .BYTE $00,$00   ; (IRQ)
+        .BYTE   $00             ;(unused)
+        .BYTE   $00,$00         ;(NMI)
+        .BYTE   $00,$FF         ;(RESET)
+        .BYTE   $00,$00         ;(IRQ)
 
 END:            ; Gigatron end of GT1 file footer
-                .BYTE 0,>START,<START
+        .BYTE   0,>START,<START

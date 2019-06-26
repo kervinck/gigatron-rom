@@ -152,11 +152,11 @@ class Program:
           if 0 <= con < 256:
             self.emitOp('LDI')
           else:
-            self.emitOp('LDWI'); self.emit(con & 255); con = (con >> 8) & 255
-        elif op == ':' and con > 255: self.org(con); con = None
+            self.emitOp('LDWI'); self.emit(lo(con)); con = hi(con)
+        elif op == '*= ':  self.org(con); con = None
         elif op == ';':    self.emitOp('LDW')
         elif op == '=':    self.emitOp('STW'); self.depr('i=', 'i:')
-        elif op == ':':    self.emitOp('STW')
+        elif op == ':' and con < 256: self.emitOp('STW')
         elif op == ',':    self.emitOp('LD')
         elif op == '.':    self.emitOp('ST')
         elif op == '&':    self.emitOp('ANDI')
@@ -178,13 +178,14 @@ class Program:
             self.emitOp('LSLW')
           con = None
         # Depricated syntax
-        elif op == '#':    con &= 255                   #self.depr('i#', '#i')
-        elif op == '<++':  self.emitOp('INC')           #self.depr('i<++', '<i++')
+        elif op == ':':    self.org(con); con = None;   #self.depr('ii:', '*=ii')
+        elif op == '#':    con &= 255;                  #self.depr('i#', '#i')
+        elif op == '<++':  self.emitOp('INC');          #self.depr('i<++', '<i++')
         elif op == '>++':  self.emitOp('INC'); con += 1 #self.depr('i>++', '>i++')
-        elif op == '%=':   self.emitOp('STLW')          #self.depr('i%=', '%i=')
-        elif op == '%':    self.emitOp('LDLW')          #self.depr('i%', %i')
+        elif op == '%=':   self.emitOp('STLW');         #self.depr('i%=', '%i=')
+        elif op == '%':    self.emitOp('LDLW');         #self.depr('i%', %i')
         else:
-         self.error("Invalid operator '%s' with constant" % op)
+          self.error("Invalid operator '%s' with constant" % op)
         if has(con):
           self.emit(con)
 
@@ -210,6 +211,7 @@ class Program:
         elif op == '> ++': self.emitOp('INC'); offset = 1
         elif op == '!':    self.emitOp('CALL')
         elif op == '`':    self.emitQuote(var); var = None
+        elif op == '=*':   define(var, self.vPC); var = None
         # Depricated syntax
         elif op == '<++':  self.emitOp('INC');             #self.depr('X<++', '<X++')
         elif op == '>++':  self.emitOp('INC'); offset = 1; #self.depr('X>++', '>X++')
@@ -238,10 +240,13 @@ class Program:
       return name, number, op
 
     ix = 0
-    if word[ix] in ['%', '#', '<', '>']:
+    prefixes = ['%', '#', '<', '>', '*', '=']
+    if word[ix] in prefixes:
       # Prefix operators
-      op += word[ix] + ' ' # We use space to marks prefix operators
-      ix += 1
+      while word[ix] in prefixes:
+        op += word[ix]
+        ix += 1
+      op += ' ' # Use space to marks prefix operators
 
     if word[ix] in ['-', '+']:
       # Number sign
@@ -276,11 +281,14 @@ class Program:
         # Substitute \symbol with its value and keep the postfix operator
         number = symbol(name[1:])
         if not has(number):
-          self.error('Undefined symbol %s' % name)
+          number = name[1:] # Forward reference
         name = None
 
-    if has(number):
-      if sign == '-': number = -number
+    if sign == '-':
+      if has(number):
+        number = -number
+      else:
+        self.error('Can\'t negate')
 
     op += word[ix:-1]                   # Also strips sentinel '\0'
     return (name, number, op if len(op)>0 else None)

@@ -110,7 +110,7 @@ Address   Name          Description
 000e      frameCount    Continuous video frame counter
 000f      serialRaw     New raw serial read
 0010      (serialLast)  Previous serial read (used for edge detection)
-0011      buttonState   Negative edge-triggered and resettable bits
+0011      buttonState   Negative edge-triggered and resettable input bits
 0012      (resetTimer)  After 2 seconds of holding 'Start', do a soft reset
 0013      (xout)        Memory cache for XOUT register
 0014      xoutMask      The blinkenlights and sound on/off state
