@@ -127,7 +127,7 @@ Address   Name          Description
 0022-0023 sysFn         Address for SYS function call
 0024-002b sysArgs       Arguments for SYS functions
 002c      soundTimer    Countdown timer for playing sound
-002d      ledTimer      Number of frames until next LED change
+002d      (ledTimer)    Number of frames until next LED change
 002e      ledState      Current LED state machine value (branch offset)
 002f      ledTempo      Next value for ledTimer after LED state change
 0030-007f userVars      Program variables

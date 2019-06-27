@@ -32,7 +32,6 @@
  "sysArgs6"             : "0x002a",
  "sysArgs7"             : "0x002b",
  "soundTimer"           : "0x002c",
- "ledTimer"             : "0x002d",
  "ledState_v2"          : "0x002e",
  "ledTempo"             : "0x002f",
  "userVars"             : "0x0030",
