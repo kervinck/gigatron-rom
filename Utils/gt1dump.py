@@ -88,7 +88,6 @@ zeroPageSyms = {
  0x2a: "sysArgs+6",
  0x2b: "sysArgs+7",
  0x2c: "soundTimer",
- 0x2d: "ledTimer",
  0x2e: "ledState_v2",
  0x2f: "ledTempo",
  0x80: "oneConst",
