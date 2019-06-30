@@ -268,27 +268,30 @@ class Program:
       while word[ix].isdigit():
         number = 10*number + ord(word[ix]) - ord('0')
         ix += 1
-    else:
-      name = ''
-      while word[ix].isalnum() or word[ix] in ['\\', '_']:
+    elif word[ix].isalnum() or word[ix] in ['.', '\\', '_']:
+      # Named variable or named constant
+      name = word[ix]
+      ix += 1
+      while word[ix].isalnum() or word[ix] == '_':
         name += word[ix]
         ix += 1
-      name = name if len(name)>0 else None
+    else:
+      pass
 
-      # Resolve '\symbol' as the number it represents
-      if has(name) and name[0] == '\\':
-        # Peeking into the assembler's symbol table (not GCL's)
-        # Substitute \symbol with its value and keep the postfix operator
-        number = symbol(name[1:])
-        if not has(number):
-          number = name[1:] # Forward reference
-        name = None
+    # Resolve '\symbol' as the number it represents
+    if has(name) and name[0] == '\\':
+      # Peeking into the assembler's symbol table (not GCL's)
+      # Substitute \symbol with its value, and keeping the operator
+      number = symbol(name[1:])
+      if not has(number):
+        number = name[1:] # Pass back as an unresolved reference
+      name = None
 
     if sign == '-':
-      if has(number):
+      if has(number) and isinstance(number, int):
         number = -number
       else:
-        self.error('Can\'t negate')
+        self.error('Unable to negate')
 
     op += word[ix:-1]                   # Also strips sentinel '\0'
     return (name, number, op if len(op)>0 else None)
@@ -373,9 +376,12 @@ class Program:
     # Get or create address for GCL variable and emit it
     comment = '%04x %s' % (prev(self.vPC, 1), repr(var))
     comment += '%+d' % offset if offset else ''
-    if var not in self.vars:
-      self.vars[var] = zpByte(2)
-    self.emit(self.vars[var] + offset, comment)
+    if var[0] == '.':
+      self.emit(int(var[1:]) + offset, comment)
+    else:
+      if var not in self.vars:
+        self.vars[var] = zpByte(2)
+      self.emit(self.vars[var] + offset, comment)
 
   def thisBlock(self):
     return self.openBlocks[-1]
@@ -423,6 +429,9 @@ class Program:
       trampoline()
 
   def depr(self, old, new):
+    var, con, _op = self.parseWord(word)
+    old = old.replace(' ', str(con) if has(con) else var)
+    new = new.replace(' ', str(con) if has(con) else var)
     self.warning('%s is depricated, please use %s' % (old, new))
 
   def warning(self, message):
