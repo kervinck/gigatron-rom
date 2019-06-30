@@ -41,13 +41,13 @@ gcl0x
   {StartupMessage} 13+ p=         {Position within StartupMessage for memory size}
   $2f2f Char=                     {Two ASCII counters, both starting at '0'-1}
   \memSize, 1- 255& 1+            {Number of pages as counted at boot}
-  [do <Char++ 40- if>=0loop] 40+  {Count number of 10K chunks}
+  [do >Char++ 40- if>=0loop] 40+  {Count number of 10K chunks}
   [do <Char++  4- if>=0loop]      {Count number of 1K chunks}
   >Char, p. <p++ Char p.          {Put decimals into StartupMessage}
 
   [do
     Text, if<>0 Char= <Text++ {while((Char=*Text++)!=0)...}
-    10^ [if=0 2 <Pos. <Pos, 8+ <Pos. else PrintChar!]
+    10^ [if=0 2 <Pos. >Pos, 8+ >Pos. else PrintChar!]
     loop]
   pop ret
 ] PrintStartupMessage=
