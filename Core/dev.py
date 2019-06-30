@@ -208,9 +208,10 @@ assert sample == 3
 # Former bootCount and bootCheck (<= ROMv3)
 zpByte()                   # Recycled and still unused. Candidate future uses:
                            # - SPI control state (to remember banking state)
-                           # - Video driver high address
+                           # - Video driver high address (for alternative video modes)
                            # - v6502: ADH offset ("MMU")
-                           # - channelMask (to free up page 2,3,4 high bytes)
+                           # - channelMask (for freeing up the page 2,3,4 high bytes)
+                           # - mapping for for matrix keyboards (C16, C64, VIC20...)
 vCPUselect      = zpByte() # Active interpreter page
 
 # Entropy harvested from SRAM startup and controller input
@@ -584,6 +585,7 @@ ld(syncBits, OUT)
 
 ld(0)
 st([channel])
+st([0]);                        C('Carry lookup ([0x80] in first line of vBlank)')
 
 ld(0b1111);                     C('LEDs |****|')
 ld(syncBits^hSync, OUT)
@@ -597,7 +599,6 @@ jmp(Y,'vBlankStart')
 ld(syncBits)
 
 # Fillers
-nop()
 nop()
 nop()
 nop()
@@ -836,93 +837,85 @@ st([videoSync0]);               C('Start of vertical blank interval')#32
 ld(syncBits^hSync)              #33
 st([videoSync1])                #34
 
-# (Re)initialize carry table for robustness
-# XXX both can be combined with other functions
-st(0, [0]);                     C('Carry table')#35
-ld(1)                           #36
-st([0x80])                      #37
+# Reset line counter before vCPU can see it
+ld(videoYline0)                 #35
+st([videoY])                    #36
 
-# It is nice to set counter before vCPU starts
-ld(videoYline0)                 #38
-st([videoY])                    #39
-
-# Uptime frame count (3 cycles)
-ld([frameCount]);               C('Frame counter')#40
-adda(1)                         #41 XXX Also do st([0x80]) here
-st([frameCount])                #42
+# Update frame count and [0x80] (4 cycles)
+ld(1);                          C('Reinitialize carry lookup, for robustness')#37
+st([0x80])                      #38
+adda([frameCount]);             C('Frame counter')#39
+st([frameCount])                #40
 
 # Mix entropy (11 cycles)
-xora([entropy+1]);              C('Mix entropy')#43
-xora([serialRaw])               #44 Mix in serial input
-adda([entropy+0])               #45
-st([entropy+0])                 #46
-adda([entropy+2])               #47 Some hidden state
-st([entropy+2])                 #48
-bmi(pc()+3)                     #49
-bra(pc()+3)                     #50
-xora(64+16+2+1)                 #51
-xora(64+32+8+4)                 #51(!)
-adda([entropy+1])               #52
-st([entropy+1])                 #53
+xora([entropy+1]);              C('Mix entropy')#41
+xora([serialRaw])               #42 Mix in serial input
+adda([entropy+0])               #43
+st([entropy+0])                 #44
+adda([entropy+2])               #45 Some hidden state
+st([entropy+2])                 #46
+bmi(pc()+3)                     #47
+bra(pc()+3)                     #48
+xora(64+16+2+1)                 #49
+xora(64+32+8+4)                 #49(!)
+adda([entropy+1])               #50
+st([entropy+1])                 #51
 
 # LED sequencer (18 cycles)
-ld([ledTimer]);                 C('Blinkenlight sequencer')#54
-beq(pc()+3)                     #55
-bra(pc()+3)                     #56
-suba(1)                         #57
-ld([ledTempo])                  #57(!)
-st([ledTimer])                  #58
+ld([ledTimer]);                 C('Blinkenlight sequencer')#52
+beq(pc()+3)                     #53
+bra(pc()+3)                     #54
+suba(1)                         #55
+ld([ledTempo])                  #55(!)
+st([ledTimer])                  #56
+beq(pc()+3)                     #57
+bra(pc()+3)                     #58
+ld(0)                           #59 Don't advance state
+ld(1)                           #59(!) Advance state when timer passes through 0
+adda([ledState_v2])             #60
+bne(pc()+3)                     #61
+bra(pc()+3)                     #62
+ld(-24)                         #63 State 0 becomes -24, start of sequence
+bgt('.leds#65')                 #63(!) Catch the stopped state (>0)
+st([ledState_v2])               #64
+adda('.leds#69')                #65
+bra(AC)                         #66 Jump to lookup table
+bra('.leds#69')                 #67 Single-instruction subroutine
 
-beq(pc()+3)                     #59
-bra(pc()+3)                     #60
-ld(0)                           #61 Don't advance state
-ld(1)                           #61(!) Advance state when timer passes through 0
-adda([ledState_v2])             #62
-
-bne(pc()+3)                     #63
-bra(pc()+3)                     #64
-ld(-24)                         #65 State 0 becomes -24, start of sequence
-bgt('.leds67')                  #65(!) Catch the stopped state (>0)
+label('.leds#65')
+ld(0x0f)                        #65 Maintain stopped state
 st([ledState_v2])               #66
-adda('.leds71')                 #67
-bra(AC)                         #68 Jump to lookup table
-bra('.leds71')                  #69 Single-instruction subroutine
+bra('.leds#69')                 #67
+anda([xoutMask])                #68 Always clear sound bits (this is why AC=0x0f)
 
-label('.leds67')
-ld(0x0f)                        #67 Maintain stopped state
-st([ledState_v2])               #68
-bra('.leds71')                  #69
-anda([xoutMask])                #70 Always clear sound bits (this is why AC=0x0f)
-
-ld(0b1111);C('LEDs |****|')     #70 offset -24 Low 4 bits are the LED output
-ld(0b0111);C('LEDs |***O|')     #70
-ld(0b0011);C('LEDs |**OO|')     #70
-ld(0b0001);C('LEDs |*OOO|')     #70
-ld(0b0010);C('LEDs |O*OO|')     #70
-ld(0b0100);C('LEDs |OO*O|')     #70
-ld(0b1000);C('LEDs |OOO*|')     #70
-ld(0b0100);C('LEDs |OO*O|')     #70
-ld(0b0010);C('LEDs |O*OO|')     #70
-ld(0b0001);C('LEDs |*OOO|')     #70
-ld(0b0011);C('LEDs |**OO|')     #70
-ld(0b0111);C('LEDs |***O|')     #70
-ld(0b1111);C('LEDs |****|')     #70
-ld(0b1110);C('LEDs |O***|')     #70
-ld(0b1100);C('LEDs |OO**|')     #70
-ld(0b1000);C('LEDs |OOO*|')     #70
-ld(0b0100);C('LEDs |OO*O|')     #70
-ld(0b0010);C('LEDs |O*OO|')     #70
-ld(0b0001);C('LEDs |*OOO|')     #70
-ld(0b0010);C('LEDs |O*OO|')     #70
-ld(0b0100);C('LEDs |OO*O|')     #70
-ld(0b1000);C('LEDs |OOO*|')     #70
-ld(0b1100);C('LEDs |OO**|')     #70
-ld(0b1110);C('LEDs |O***|')     #70 offset -1
-label('.leds71')
-st([xoutMask])                  #71 Sound bits will be re-enabled below
-
-ld(vPulse*2)                    #72 vPulse default length when not modulated
-st([videoPulse])                #73
+ld(0b1111);C('LEDs |****|')     #68 offset -24 Low 4 bits are the LED output
+ld(0b0111);C('LEDs |***O|')     #68
+ld(0b0011);C('LEDs |**OO|')     #68
+ld(0b0001);C('LEDs |*OOO|')     #68
+ld(0b0010);C('LEDs |O*OO|')     #68
+ld(0b0100);C('LEDs |OO*O|')     #68
+ld(0b1000);C('LEDs |OOO*|')     #68
+ld(0b0100);C('LEDs |OO*O|')     #68
+ld(0b0010);C('LEDs |O*OO|')     #68
+ld(0b0001);C('LEDs |*OOO|')     #68
+ld(0b0011);C('LEDs |**OO|')     #68
+ld(0b0111);C('LEDs |***O|')     #68
+ld(0b1111);C('LEDs |****|')     #68
+ld(0b1110);C('LEDs |O***|')     #68
+ld(0b1100);C('LEDs |OO**|')     #68
+ld(0b1000);C('LEDs |OOO*|')     #68
+ld(0b0100);C('LEDs |OO*O|')     #68
+ld(0b0010);C('LEDs |O*OO|')     #68
+ld(0b0001);C('LEDs |*OOO|')     #68
+ld(0b0010);C('LEDs |O*OO|')     #68
+ld(0b0100);C('LEDs |OO*O|')     #68
+ld(0b1000);C('LEDs |OOO*|')     #68
+ld(0b1100);C('LEDs |OO**|')     #68
+ld(0b1110);C('LEDs |O***|')     #68 offset -1
+label('.leds#69')
+st([xoutMask])                  #69 Sound bits will be re-enabled below
+ld(vPulse*2)                    #70 vPulse default length when not modulated
+st([videoPulse])                #71
 
 # When the total number of scan lines per frame is not an exact multiple of the
 # (4) channels, there will be an audible discontinuity if no measure is taken.
@@ -939,7 +932,7 @@ if soundDiscontinuity == 2:
 if soundDiscontinuity > 2:
   print "Warning: sound discontinuity not supressed"
 
-runVcpu(189-74-extra, '---D line 0')#74 Application cycles (scan line 0)
+runVcpu(189-72-extra, '---D line 0')#72 Application cycles (scan line 0)
 
 # Sound on/off (6 cycles)
 ld([soundTimer]);               C('Sound on/off')#189
@@ -1024,7 +1017,7 @@ xora(1-2*(vBack-1-1))           #43 Exactly when the 74HC595 has captured all 8 
 bne(pc()+3)                     #44
 bra(pc()+3)                     #45
 st(IN, [serialRaw])             #46
-nop()                           #46(!) XXX Also do st(0,[0]) here
+st(0,[0]);                      C('Reinitialize carry lookup, for robustness')#46(!)
 
 # Update [xout] with the next sound sample every 4 scan lines.
 # Keep doing this on 'videoC equivalent' scan lines in vertical blank.
