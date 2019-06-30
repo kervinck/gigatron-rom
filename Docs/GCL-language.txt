@@ -194,6 +194,7 @@ sensitive. The overview below uses the following conventions:
  'i'  indicates an 8-bit integer constant.
  'ii' indicates a 16-bit integer constant.
  'X'  indicates a named variable, allocated globally on the zero page.
+ 'C'  indicates a named constant, or label, from the system's symbol table
 
 --------------------
 Meaning of GCL words
@@ -213,6 +214,8 @@ X& X| X^        Logical AND/OR/XOR vAC with variable X
 
 Advanced
 --------
+*=ii            Set compilation address (default is $200)
+C=*             Label definition. Refer to its value as \C
 <X, >X,         Load low/high byte of variable X
 <X. >X.         Store vAC as byte into the low/high byte of variable X
 <X++ >X++       Increment low/high byte of variable X
@@ -253,13 +256,14 @@ call            Jump to function pointed at by vAC
 Stack variables
 ---------------
 i-- i++         Subtract/add constant value from/to stack pointer
-i% i%=          Load/store stack variable at relative byte offset i
+%i %i=          Load/store stack variable at relative byte offset i
 
 Data
 ----
 #i              Inline byte value i, truncated to lowest 8 bits
 `Hello`world!   Emit inline ASCII test. Replace backquotes with spaces
 `               Emits a single backquote
+
 
 Versioning
 ----------
@@ -303,12 +307,12 @@ can't do any function calls in the setup phase as that uses vLR.
 {Start compilation at $200. (vLR=$200)}
   [def ... ret] Function1=
   [def ... ret] Function2=
-  \vLR>++ ret {Increment high byte of vLR and go there}
+  >\vLR++ ret {Increment high byte of vLR and go there}
 {Continue compilation at $300}
 $300:
   [def ... ret] Function3=
   [def ... ret] Function4=
-  \vLR>++ ret
+  >\vLR++ ret
 {Continue compilation at $400}
 $400:
   [def ... ret] Function5=
@@ -348,15 +352,18 @@ Consistency     Especially surrounding ,.:; and \ (backslash)
                   no notation to POKE/DOKE using a zero page address i
                 - ii: sets the compilation address, it isn't a DOKE
                 - Therefore we can't create code in the zero page
-:ii             Alias for ii:
-:X              Label definition (XXX label use? XXX far vs near?)
-i-- i++         Replace with something that associates with stack: %++i %--i ?
+C=123           Constant naming
 &X &<X &>X      Get an variable's address. Should treat < and > as part
                 of the name instead of the prefix part of the operator
-%i              Unnamed variables: treat a known zero page location
-                as a GCL variable
+.C              Treat symbol C as a GCL variable
+*i              Treat as the name of a GCL variable with address i
+i-- i++         Replace with something that associates with stack: %++i %--i ?
 ()              Compile time expressions? Macros? (128+1) -> 129.
-                Can could escape to Python for evaluation
+                Can could escape to Python for evaluation.
+                E.g. Color=(Blue+1)
+
+See GitHub issue #80 for a more detailed discussion.
+https://github.com/kervinck/gigatron-rom/issues/80
 
 -------------------
 Depricated features
@@ -365,6 +372,8 @@ i=              Alias for i: (was often used as \symbol=)
 i#              Original notation for #i
 X<++ X>++       Original notation for <X++ >X++
 i<++ i>++       Original notation for <i++ >i++
+ii:             Original notation for *=ii
+i% i%=          Original notation for %i %i=
 
 ----------------------
 vCPU instruction table
@@ -418,39 +427,57 @@ DEF   $DD      Define data or code (vAC,vPC=vPC+2,(vPC&0xff00)+D)
 Mapping from vCPU instructions to GCL words
 -------------------------------------------
 
+Summary of prefixes:
+                                                                Operators
+Word variables:                        X      *i      .C        X X= X, X. X; X: X& X| X^ X+ X-
+Byte variables:                       <X     <*i     <.C        X, X. X++
+                                      >X     >*i     >.C
+Addresses or constants                &X       i      \C        i& i| i^ i+ i-
+
 Instruction     Variable word   Constant word   Keyword         Comment
 -----------     -------------   -------------   -------         -------
-LDI                             i
-LDWI                            ii
-LDW             X               i;
-STW             X=              i:                              i= is depricated
-PEEK                                            peek            alias for \vAC,
-LDW+PEEK        X,
-POKE            X.
-DEEK                                            deek            alias for \vAC;
-LDW+DEEK        X;
-DOKE            X:
-LD              <X, >X,         i,
-ST              <X. >X.         i.
-INC             <X++ >X++       <i++ >i++
-LDLW                            i%
-STLW                            i%=
-ALLOC                           i-- i++                         XXX needs better notation
-CALL            X!                              call            call is alias for \vAC!
+LDI                             <ii   >ii   i
+                                      \C                        if defined earlier as small constant
+LDWI                            ii    \C
+LDW             X               *i    .C                        was i; and \C; (keep?)
+STW             X=              *i=    i:                       i= depricated
+STW                             .C=   \C:
+PEEK                                            peek            alias for .vAC,
+LDW+PEEK        X,              *i,   .C,
+POKE            X.              *i.   .C.
+DEEK                                            deek            alias for .vAC;
+LDW+DEEK        X;              *i;   .C;
+DOKE            X:              *i:   .C:
+LD              <X   >X         <*i   >*i                       was i,  (keep?)
+                                <.C   >.C                       was \C, (keep?)
+ST              <X=  >X=        <*i=  >*i=                      was i.  (keep?)
+                                <.C=  >.C=                      was \C. (keep?)
+INC             <X++ >X++       <*i++ >*i++
+                                <.C++ >.C++
+LDLW                            %i                              was i%
+STLW                            %i=                             was i%=
+ALLOC                           i-- i++                         XXX should become i%-  i%+
+CALL            X!              *i! .C!         call            alias for .vAC!
 DEF                                             def
 POP                                             pop
 PUSH                                            push
 RET                                             ret
 BRA                                             else loop
 BCC                                             if...
-ANDW/ANDI       X&              i&
-ORW/ORI         X|              i|
-XORW/XORI       X^              i^
-ADDW/ADDI       X+              i+
-SUBW/SUBI       X-              i-
-LSLW                            i<<                             i<< is alias for i*LSLW
-SYS                             i!
-LUP                             i?
+ANDW            X&              *i& .C&
+ORW             X|              *i| .C|
+XORW            X^              *i^ .C^
+ADDW            X+              *i+ .C+
+SUBW            X-              *i- .C-
+ANDI            &X&             i&  \C&
+ORI             &X|             i|  \C|
+XORI            &X^             i^  \C^
+ADDI            &X+             i+  \C+
+SUBI            &X-             i-  \C-
+LSLW                            i<< \C<<                        alias for i*LSLW
+LSRW                            i>> \C>>                        XXX if we can add LSRW to vCPU
+SYS                             i!  \C!
+LUP                             i?  \C?
 
 ------------------------
 Idioms and coding tricks
@@ -464,7 +491,7 @@ Idioms and coding tricks
 
 \vACH. 255| 255^        Move vAC low byte to high (vAC<<=8)
 
-\vAC>++                 Increment vAC high byte
+>\vAC++                 Increment vAC high byte
 
 128- 128-               Decrement vAC high byte
 
