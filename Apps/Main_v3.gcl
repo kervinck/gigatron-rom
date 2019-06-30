@@ -7,11 +7,11 @@ gcl0x
 |                                                                       |
 +-----------------------------------------------------------------------}
 
-{ Fall into Sprites demo if [Start] is pressed for >4 seconds }
+{ Fall into Easter Egg if [Start] is pressed for >4 seconds }
 \buttonState;                   {Fetch buttonState and resetTimer}
 [if>0                           {If resetTimer positive}
   16& [if=0                     {And [Start] pressed}
-  \Sprites \sysArgs0: 88!]]     {Start demo. SYS_Exec_88 still in sysFn}
+  \Egg \sysArgs0: 88!]]         {Start program. SYS_Exec_88 still in sysFn}
 
 { Print a 5x8 character on screen with the built-in font
   Char must be in the 32-127 range (this is not checked) }

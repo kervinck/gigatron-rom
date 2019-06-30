@@ -136,29 +136,29 @@ Address   Name          Description
 ....-00ff <stack>       Call and value stack for vCPU (also used by ROM loader)
 0100-01ef videoTable    Video indirection table (Y0,dX0,Y1,dX1,Y2,...,dX119)
 01f0-01f9 vReset        vCPU routine to load and start Reset sequence
-01fa      wavA[1]       Sound channel 1: Waveform modulation with ADD
-01fb      wavX[1]       ...............: Waveform modulation with XOR
+01fa      wavA[1]       Sound channel 1: Waveform modulation with `adda'
+01fb      wavX[1]       ...............: Waveform modulation with `xora'
 01fc      keyL[1]       ...............: Frequency low 7 bits (bit7 == 0)
 01fd      keyH[1]       ...............: Frequency high 8 bits
 01fe      oscL[1]       ...............: Phase low 7 bits
 01ff      oscH[1]       ...............: Phase high 8 bits
 0200-02f9 userCode      vCPU code/data (default start of user code)
-02fa      wavA[2]       Sound channel 2: Waveform modulation with ADD
-02fb      wavX[2]       ...............: Waveform modulation with XOR
+02fa      wavA[2]       Sound channel 2: Waveform modulation with `adda'
+02fb      wavX[2]       ...............: Waveform modulation with `xora'
 02fc      keyL[2]       ...............: Frequency low 7 bits (bit7 == 0)
 02fd      keyH[2]       ...............: Frequency high 8 bits
 02fe      oscL[2]       ...............: Phase low 7 bits
 02ff      oscH[2]       ...............: Phase high 8 bits
 0300-03f9 -             vCPU code/data
-03fa      wavA[3]       Sound channel 3: Waveform modulation with ADD
-03fb      wavX[3]       ...............: Waveform modulation with XOR
+03fa      wavA[3]       Sound channel 3: Waveform modulation with `adda'
+03fb      wavX[3]       ...............: Waveform modulation with `xora'
 03fc      keyL[3]       ...............: Frequency low 7 bits (bit7 == 0)
 03fd      keyH[3]       ...............: Frequency high 8 bits
 03fe      oscL[3]       ...............: Phase low 7 bits
 03ff      oscH[3]       ...............: Phase high 8 bits
 0400-04f9 -             vCPU code/data
-04fa      wavA[4]       Sound channel 4: Waveform modulation with ADD
-04fb      wavX[4]       ...............: Waveform modulation with XOR
+04fa      wavA[4]       Sound channel 4: Waveform modulation with `adda'
+04fb      wavX[4]       ...............: Waveform modulation with `xora'
 04fc      keyL[4]       ...............: Frequency low 7 bits (bit7 == 0)
 04fd      keyH[4]       ...............: Frequency high 8 bits
 04fe      oscL[4]       ...............: Phase low 7 bits

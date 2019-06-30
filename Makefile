@@ -1,5 +1,7 @@
 CFLAGS:=-std=c11 -O3 -Wall
-DEV:=ROMv3x
+
+gigatron.rom: ROMv3.rom
+	ln -sf "$<" "$@"
 
 # Latest released version as default target:
 # Integrates BASIC, WozMon, Tetronis, Bricks, TicTacToe
@@ -17,14 +19,14 @@ ROMv3.rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Bricks_v1.gt1\
 		Apps/TinyBASIC_v2.gcl\
 		Apps/WozMon_v2.gt1\
-		Apps/Sprites_v1.gt1\
+		Egg=Apps/Sprites_v1.gt1\
 		Apps/Main_v3.gcl\
 		Core/Reset_v3.gcl
 
 # Development towards ROM v4
-dev: $(DEV).rom
-$(DEV).rom: Core/* Apps/* Images/* Makefile interface.json
-	python Core/$(DEV).py\
+dev: dev.rom
+dev.rom: Core/* Apps/* Images/* Makefile interface.json
+	python Core/dev.py\
 		packedParrot=Images/Parrot-160x120.rgb\
 		packedJupiter=Images/Jupiter-160x120.rgb\
 		Apps/Snake_v2.gcl\
@@ -39,9 +41,10 @@ $(DEV).rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/TinyBASIC_v2.gcl\
 		Apps/TicTac_v1.gtb\
 		Apps/WozMon_v2.gt1\
-		Apps/Sprites_v1.gt1\
+		Egg=Apps/Sprites_v1.gt1\
 		Apps/Main_v3.gcl\
-		Core/Reset_v4.gcl
+		Core/Reset.gcl
+	open http://127.0.0.1:8000/src
 
 # Test ROM for v6502 testing
 mos: v6502.rom
@@ -49,7 +52,7 @@ v6502.rom: Core/* Apps/* Images/* Makefile interface.json
 	rm -f ROMv3x.rom ROMv3x.asm
 	python Core/ROMv3x.py\
 		Main=Apps/Apple1.gcl\
-		Core/Reset_v4.gcl
+		Core/Reset.gcl
 	mv ROMv3x.rom v6502.rom
 	mv ROMv3x.asm v6502.asm
 	open http://127.0.0.1:8000/src
@@ -68,7 +71,7 @@ ROMv3y.rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Bricks_v1.gt1\
 		Apps/TinyBASIC_v2.gcl\
 		Apps/WozMon_v2.gt1\
-		Apps/Sprites_v1.gt1\
+		Egg=Apps/Sprites_v1.gt1\
 		Apps/Main_v3.gcl\
 		Core/Reset_v3y.gcl
 
@@ -99,12 +102,12 @@ ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Main_v1.gcl\
 		Core/Reset_v1.gcl
 
-run: Docs/gtemu $(DEV).rom
-	Docs/gtemu $(DEV).rom
+run: Docs/gtemu dev.rom
+	Docs/gtemu dev.rom
 
-test: Docs/gtemu $(DEV).rom
+test: Docs/gtemu dev.rom
 	# Check for hSync errors in first ~30 seconds of emulation
-	Docs/gtemu $(DEV).rom | head -999999 | grep \~
+	Docs/gtemu dev.rom | head -999999 | grep \~
 
 Utils/BabelFish/tinyfont.h: Utils/BabelFish/tinyfont.py
 	python "$<" > "$@"
@@ -114,14 +117,14 @@ compiletest: Apps/*.gcl
 	# (Use 'git diff' afterwards to detect unwanted changes)
 	for GCL in Apps/*.gcl; do Core/compilegcl.py "$${GCL}" Apps; done
 
-time: Docs/gtemu $(DEV).rom
+time: Docs/gtemu dev.rom
 	# Run emulation until first sound
-	Docs/gtemu $(DEV).rom | grep -m 1 'xout [^0]'
+	Docs/gtemu dev.rom | grep -m 1 'xout [^0]'
 
 burnv3: ROMv3.rom
 	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
-burn: $(DEV).rom
+burn: dev.rom
 	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
 burnmos: v6502.rom

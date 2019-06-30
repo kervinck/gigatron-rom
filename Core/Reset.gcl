@@ -32,8 +32,9 @@ gcl0x
 [def {PrintStartupMessage}
   push
   [def
-      `***`Gigatron`??K`***     #10
-    ``TTL`microcomputer`ROM`v3x #0
+      `***`Gigatron`??K`*** #10
+    ``TTL`microcomputer`DEV`ROM   {ROM`vN for versioned ROMs}
+    #0
   ] Text=
 
   { Convert memory size into decimal text }

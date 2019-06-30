@@ -44,45 +44,59 @@
 #  DONE Update version number to v3
 #
 #  ROM v4:
-#  XXX Support SPI and RAM expander
-#  DONE - Setup SPI at power-on
-#  DONE - asm.py: 'ctrl' instruction
-#  DONE - SYS control (Enable/disable slave, set bank etc)
-#  DONE - SYS Exchange bytes
-#  XXX - SYS Exchange bit(s)
-#  XXX - Think about SPI modes
-#  XXX - Auto-detect banking, 64K and 128K
+#  XXX  Detect game controller TypeC
 #  DONE Reinitialize waveforms at soft reset, not just at power on
-#  XXX #38 Press [A] to start program" message is stupid
-#  XXX #41 Fix zero page usage in Bricks and Tetronis
-#  XXX #52 Head-only Snake shouldn't be allowed to turn around
-#  XXX Better noise by changing wavX every frame (for at least 1 sound channel)
-#  XXX v6502 as additional interpreter
-#  DONE - SYS_v6502_vX_80 (also adjust S,P etc)
-#  DONE - Retire bootCount
-#  XXX - Relocate app-specific SYS functions above v6502 (Racer, Loader)
-#  XXX - Specify app-specific SYS functions on command line (.py files)
-#  XXX Better startup chime
-#  XXX Fast system video modes (something like ROM v3y)? Mode 4 (black)
-#  XXX vCPU extension for C: HOP_v4 $DD
-#  XXX vCPU extension for C: LSRW_v4
-#  XXX vCPU extension for C: CMPW_v4
-#  XXX New Easter egg (maze.gt1?)
+#  XXX  v6502 as additional interpreter
+#  DONE v6502: Retire bootCount to free up zp variables
+#  DONE v6502: SYS_v6502_RunToBRK_v4_80
+#  XXX  v6502: Reset also when v6502 is active
+#  XXX  v6502: Stub D010-D013 with JSR targets
+#  XXX  v6502: Preload with WOZMON and MUNCH
+#  XXX  v6502: Relocate app-specific SYS functions above v6502 (Racer, Loader)
+#  XXX  #38 "Press [A] to start program" message is stupid
+#  XXX  Update romTypeValue and displayed version in Main
+#  XXX  Update interface.json
+#  XXX  New Easter egg (Apple1.gt1? maze.gt1?)
 #
-#  Ideas for ROM v5+
-#  XXX Reset.c and Main.c (that is: port these from GCL to C)
-#  XXX Sprites by scan line 4 reset method? ("videoG"=graphics)
-#  XXX Need keymaps in ROM? (perhaps undocumented if not tested)
-#  XXX FrogStroll (not in Contrib/)
-#  XXX How it works memo: brief description of every software function
-#  XXX Music sequencer (combined with LED sequencer, but retire soundTimer???)
-#  XXX Adjustable return for LUP trampolines (in case SYS functions need it)
-#  XXX Loader: make noise when data comes in
-#  XXX vCPU: Multiplication (mulShift8?)
-#  XXX vCPU: Interrupts / Task switching (e.g for clock, LED sequencer)
-#  XXX Scroll out the top line of text, or generic vertical scroll SYS call
-#  XXX SYS function for plotting a full character in one go
-#  XXX Multitasking/threading/sleeping (start with date/time clock in GCL)
+#  ROM v5:
+#  XXX  Support SPI and RAM expander
+#  XXX  v6502: Test with VTL02?
+#  DONE SPI: Setup SPI at power-on
+#  DONE SPI: asm.py: 'ctrl' instruction
+#  DONE SPI: SYS control (Enable/disable slave, set bank etc)
+#  DONE SPI: SYS Exchange bytes
+#  XXX  SPI: SYS Exchange bit(s)
+#  XXX  SPI: Think about SPI modes
+#  XXX  SPI: Auto-detect banking, 64K and 128K
+#  XXX  channelMask: to switch single sound channel
+#  XXX  v6502: SYS_v6502_IRQ
+#  XXX  v6502: SYS_v6502_NMI
+#  XXX  v6502: SYS_v6502_RESET
+#  XXX  Main: add Apple1 to main menu
+#  XXX  #41 Fix zero page usage in Bricks and Tetronis
+#  XXX  #52 Head-only Snake shouldn't be allowed to turn around
+#  XXX  Sound: Better noise by changing wavX every frame (for at least 1 sound channel)
+#  XXX  Core:: Specify app-specific SYS functions on command line (.py files)
+#  XXX  Main: Better startup chime
+#  XXX  Video: Fast system video modes (something like ROM v3y)? Mode 4 (black)
+#  XXX  vCPU: extension for C: HOP_v4 $DD
+#  XXX  vCPU: extension for C: LSRW_v4
+#  XXX  vCPU: extension for C: CMPW_v4
+#
+#  Ideas for ROM v6+
+#  XXX  Reset.c and Main.c (that is: port these from GCL to C)
+#  XXX  Sprites by scan line 4 reset method? ("videoG"=graphics)
+#  XXX  Need keymaps in ROM? (perhaps undocumented if not tested)
+#  XXX  FrogStroll (not in Contrib/)
+#  XXX  How it works memo: brief description of every software function
+#  XXX  Music sequencer (combined with LED sequencer, but retire soundTimer???)
+#  XXX  Adjustable return for LUP trampolines (in case SYS functions need it)
+#  XXX  Loader: make noise when data comes in
+#  XXX  vCPU: Multiplication (mulShift8?)
+#  XXX  vCPU: Interrupts / Task switching (e.g for clock, LED sequencer)
+#  XXX  Scroll out the top line of text, or generic vertical scroll SYS call
+#  XXX  SYS function for plotting a full character in one go
+#  XXX  Multitasking/threading/sleeping (start with date/time clock in GCL)
 #-----------------------------------------------------------------------
 
 from sys import argv
@@ -192,7 +206,11 @@ assert 4*63 + sample < 256
 assert sample == 3
 
 # Former bootCount and bootCheck (<= ROMv3)
-zpByte()                   # Unused
+zpByte()                   # Recycled and still unused. Candidate future uses:
+                           # - SPI control state (to remember banking state)
+                           # - Video driver high address
+                           # - v6502: ADH offset ("MMU")
+                           # - channelMask (to free up page 2,3,4 high bytes)
 vCPUselect      = zpByte() # Active interpreter page
 
 # Entropy harvested from SRAM startup and controller input
@@ -219,6 +237,7 @@ serialRaw       = zpByte() # New raw serial read
 serialLast      = zpByte() # Previous serial read
 buttonState     = zpByte() # Clearable button state
 resetTimer      = zpByte() # After 2 seconds of holding 'Start', do a soft reset
+                           # XXX move to page 1 to free up space
 
 # Extended output (blinkenlights in bit 0:3 and audio in bit 4:7). This
 # value must be present in AC during a rising hSync edge. It then gets
@@ -270,17 +289,61 @@ ctrlBits        = zpByte()
 #-----------------------------------------------------------------------
 
 # Byte 0-239 define the video lines
-videoTable = 0x0100 # Indirection table: Y[0] dX[0]  ..., Y[119] dX[119]
+videoTable      = 0x0100 # Indirection table: Y[0] dX[0]  ..., Y[119] dX[119]
 
-# Highest bytes are for channel 1 variables
+vReset          = 0x01f0
 
-# Sound synthesis  ch1   ch2   ch3   ch4
-wavA = 250
-wavX = 251
-keyL = 252
-keyH = 253
-oscL = 254
-oscH = 255
+#resetTimer     = 0x01f8 XXX Future. Also change Easter Egg detection in main
+
+# Game controller type
+#controllerType  = 0x01f9
+#
+# TypeA: Based on 74LS165 shift register (not supported)
+# TypeB: Based on CD4021B shift register (standard)
+# TypeC: Based on priority encoder
+#
+# Stateless mapping doesn't work due to ambiguities, so we need the variable
+#
+# Notes:
+# - TypeA was only used during development and first beta test, before ROM v1
+# - TypeB appears as type A with negative logic levels
+# - TypeB is the game controller type that comes with the original kit and ROM v1
+# - TypeB is mimicked by BabelFish / Pluggy McPlugface
+# - TypeB requires a prolonged /SER_LATCH, therefore vPulse is 8 scanlines, not 2
+# - TypeB and TypeC can be sampled in the same scanline
+# - TypeA is 1 scanline shifted as it looks at a different edge (XXX up or down?)
+# - TypeC gives incomplete information: lower buttons overshadow higher ones
+#
+#       Typ C       TypeB
+#       00000000 -> 11111110 Right      ^@      Set flag
+#       00000001 -> 11111101 Left       ^A      Set flag
+#       00000011 -> 11111011 Down       ^C
+#       00000111 -> 11110111 Up         ^G      Set flag
+#       00001111 -> 11101111 Start      ^O      Set flag
+#       00011111 -> 11011111 Select     ^_      Set flag
+#       00111111 -> 10111111 B?         '?'
+#       01111111 -> 01111111 A?         DEL
+#       11111111 -> 11111111 (None)
+#
+#       Conversion formula:
+#               f(x) := 254 - x
+#
+#       Detection algorithm:
+#               # At boot time:
+#               controllerType = TypeB
+#               # Every video frame:
+#               if serialRaw == 15: # better: serialRaw in [0,1,7,15,31]:
+#                       controllerType = TypeC
+#               if serialRaw not in [0,1,3,7,15,31,63,127,255]:
+#                       controllerType = TypeB
+
+# Highest bytes are for sound channel variables
+wavA = 250      # Waveform modulation with `adda'
+wavX = 251      # Waveform modulation with `xora'
+keyL = 252      # Frequency low 7 bits (bit7 == 0)
+keyH = 253      # Frequency high 8 bits
+oscL = 254      # Phase low 7 bits
+oscH = 255      # Phase high 8 bits
 
 #-----------------------------------------------------------------------
 #  Memory layout
@@ -396,7 +459,7 @@ v6502_Stack     = 0x0000        # 0x0100 is already used in the Gigatron
 
 #-----------------------------------------------------------------------
 #
-#  ROM page 0: Boot
+#  $0000 ROM page 0: Boot
 #
 #-----------------------------------------------------------------------
 
@@ -488,7 +551,6 @@ ld(syncBits^hSync, OUT)
 ld(syncBits, OUT)
 
 # vCPU reset handler
-vReset = videoTable + 240 # we have 10 unused bytes behind the video table
 ld((vReset&255)-2);             C('Setup vCPU reset handler')
 st([vPC])
 adda(2, X)
@@ -512,6 +574,9 @@ st([serialRaw])
 st([serialLast])
 st([buttonState])
 st([resetTimer])                # resetTimer<0 when entering Main.gcl
+#ld(lo('TypeB'))
+#ld(hi(controllerType),Y)
+#st([Y,lo(controllerType)])
 
 ld(0b0111);                     C('LEDs |***O|')
 ld(syncBits^hSync, OUT)
@@ -758,7 +823,7 @@ assert pc()&255 == 0
 
 #-----------------------------------------------------------------------
 #
-#  ROM page 1-2: Video loop
+#  $0100 ROM page 1-2: Video loop
 #
 #-----------------------------------------------------------------------
 align(0x100, 0x200)
@@ -772,6 +837,7 @@ ld(syncBits^hSync)              #33
 st([videoSync1])                #34
 
 # (Re)initialize carry table for robustness
+# XXX both can be combined with other functions
 st(0, [0]);                     C('Carry table')#35
 ld(1)                           #36
 st([0x80])                      #37
@@ -782,7 +848,7 @@ st([videoY])                    #39
 
 # Uptime frame count (3 cycles)
 ld([frameCount]);               C('Frame counter')#40
-adda(1)                         #41
+adda(1)                         #41 XXX Also do st([0x80]) here
 st([frameCount])                #42
 
 # Mix entropy (11 cycles)
@@ -923,12 +989,12 @@ adda([sample])                  #24
 st([sample])                    #25
 
 ld([xout]);                     C('Gets copied to XOUT')#26
-nop()                           #27
+ld(hi('vBlankLast#34'),Y)       #27 Prepare jumping out of page in last line
 ld([videoSync0], OUT);          C('End horizontal pulse')#28
 
 # Count through the vertical blank interval until its last scan line
 ld([videoY])                    #29
-bpl('vBlankLast')               #30
+bpl('.vBlankLast#32')           #30
 adda(2)                         #31
 st([videoY])                    #32
 
@@ -958,7 +1024,7 @@ xora(1-2*(vBack-1-1))           #43 Exactly when the 74HC595 has captured all 8 
 bne(pc()+3)                     #44
 bra(pc()+3)                     #45
 st(IN, [serialRaw])             #46
-nop()                           #46(!)
+nop()                           #46(!) XXX Also do st(0,[0]) here
 
 # Update [xout] with the next sound sample every 4 scan lines.
 # Keep doing this on 'videoC equivalent' scan lines in vertical blank.
@@ -982,21 +1048,15 @@ runVcpu(199-55, '--C- line 3-39')#55 Application cycles (vBlank scan lines with 
 bra('sound1')                   #199
 ld([videoSync0], OUT);          C('<New scan line start>')#0 Ends the vertical blank pulse at the right cycle
 
-# Last blank line before transfering to visible area
-label('vBlankLast')
+#-----------------------------------------------------------------------
 
-# pChange = pNew & ~pOld
-# nChange = nNew | ~nOld {DeMorgan}
+label('.vBlankLast#32')
+jmp(Y,lo('vBlankLast#34'));     C('Jump out of page for space reasons')#32
+#assert hi(controllerType) == hi(pc()) # Assume these share the high address
+ld(hi(pc()),Y)                  #33
 
-# Filter raw serial input captured in last vblank (8 cycles)
-ld(255);                        C('Filter controller input')#32
-xora([serialLast])              #33
-ora([serialRaw])                #34 Catch button-press events
-anda([buttonState])             #35 Keep active button presses
-ora([serialRaw])                #36 Auto-reset already-released buttons
-st([buttonState])               #37
-ld([serialRaw])                 #38
-st([serialLast])                #39
+label('vBlankLast#52')
+xxx                           = 52 - 40
 
 # Respond to reset button (11 cycles)
 # - ResetTimer decrements as long as just [Start] is pressed down
@@ -1011,7 +1071,7 @@ st([serialLast])                #39
 #   was still pressed so the count reaches <128. Two reasonable expectations.
 # - The unintended power-up scenarios of ROMv1 (pulling SER_DATA low, or
 #   pressing [Select] together with another button) now don't trigger anymore.
-xora(~buttonStart);             C('Check for soft reset')#40
+xora(~buttonStart);             C('Check [Start] for soft reset')#40
 bne('.restart43')               #41
 ld([resetTimer])                #42 As long as button pressed
 suba(1)                         #43 ... count down the timer
@@ -1034,7 +1094,7 @@ label('.restart51')
 
 # Switch video mode when (only) select is pressed (16 cycles)
 # XXX We could make this a vCPU interrupt
-ld([buttonState])               #50,51
+ld([buttonState]);              C('Check [Select] to switch modes')#50,51
 xora(~buttonSelect)             #52 Only trigger when just [Select] is pressed
 bne('.select55')                #53
 ld([videoModeC])                #54
@@ -1052,13 +1112,13 @@ st([videoModeB])                #60
 nop()                           #61
 label('.select62')
 st([videoModeD])                #62
-wait(192-63)                    #63 Don't waste code space expanding runVcpu here
+wait(192-63-xxx)                #63 Don't waste space expanding runVcpu here
 # AC==255 now
 st([buttonState])               #192
 bra('vBlankEnd')                #193
 ld(0)                           #194
 label('.select55')
-runVcpu(195-55, '---D line 40') #55 Application cycles (scan line 40)
+runVcpu(195-55-xxx, '---D line 40') #55 Application cycles (scan line 40)
 
 # AC==0 now
 label('vBlankEnd')
@@ -1215,7 +1275,7 @@ runVcpu(200-38, '-BCD line 41-520',
 
 #-----------------------------------------------------------------------
 #
-#  ROM page 3: Application interpreter primary page
+#  $0300 ROM page 3: Application interpreter primary page
 #
 #-----------------------------------------------------------------------
 
@@ -1692,7 +1752,7 @@ assert pc()&255 == 0
 
 #-----------------------------------------------------------------------
 #
-#  ROM page 4: Application interpreter extension
+#  $0400 ROM page 4: Application interpreter extension
 #
 #-----------------------------------------------------------------------
 align(0x100, 0x100)
@@ -2062,7 +2122,9 @@ ld(-134/2)                      #131
 #       bra  [ac]
 
 #-----------------------------------------------------------------------
-#  ROM page 5-6: Shift table and code
+#
+#  $0500 ROM page 5-6: Shift table and code
+#
 #-----------------------------------------------------------------------
 
 align(0x100, 0x200)
@@ -2440,7 +2502,7 @@ ld(-46/2)                       #45
 
 #-----------------------------------------------------------------------
 #
-#  ROM page 7-8: Gigatron font data
+#  $0700 ROM page 7-8: Gigatron font data
 #
 #-----------------------------------------------------------------------
 
@@ -2470,7 +2532,7 @@ trampoline()
 
 #-----------------------------------------------------------------------
 #
-#  ROM page 9: Key table for music
+#  $0900 ROM page 9: Key table for music
 #
 #-----------------------------------------------------------------------
 
@@ -2478,6 +2540,8 @@ align(0x100, 0x100)
 notes = 'CCDDEFFGGAAB'
 sampleRate = cpuClock / 200.0 / 4
 label('notesTable')
+ld(0)
+ld(0)
 for i in range(0, 250, 2):
   j = i/2-1
   freq = 440.0*2.0**((j-57)/12.0)
@@ -2486,15 +2550,125 @@ for i in range(0, 250, 2):
     octave, note = j/12, notes[j%12]
     sharp = '-' if notes[j%12-1] != note else '#'
     comment = '%s%s%s (%0.1f Hz)' % (note, sharp, octave, freq)
-  else:
-    key, comment = 0, None
-  ld(key&127); C(comment)
-  ld(key>>7)
+    ld(key&127); C(comment)
+    ld(key>>7)
+
+#-----------------------------------------------------------------------
+
+# Fillers
+while pc()&255 < 0xde:
+  ld(0)
+
+# Use remaining space for overflow of video loop
+
+# Entered last line of vertical blank (line 40)
+label('vBlankLast#34')
+
+# Detect controller TypeC
+ld([serialRaw]);                C('if serialRaw in [0,1,3,7,15,31,63,127,255]')#34
+adda(1)                         #35
+anda([serialRaw])               #36
+bne('.buttons#39')              #37
+# TypeC
+ld([serialRaw]);                C('[TypeC] if serialRaw < serialLast')#38
+adda(1)                         #39
+anda([serialLast])              #40
+bne('.buttons#43')              #41
+ld(254);                        C('then clear the selected bit')#42
+nop()                           #43
+bra('.buttons#46')              #44
+label('.buttons#43')
+suba([serialRaw])               #43,45
+anda([buttonState])             #44
+st([buttonState])               #45
+label('.buttons#46')
+ld([serialRaw]);                C('Set the lower bits')#46
+ora([buttonState])              #47
+label('.buttons#48')
+st([buttonState])               #48
+ld([serialRaw]);                C('Update serialLast for next pass')#49
+jmp(Y,lo('vBlankLast#52'))      #50
+st([serialLast])                #51
+
+# TypeB
+label('.buttons#39')
+ld(255);                        C('[TypeB] Bitwise edge-filter to detect button presses')#39
+xora([serialLast])              #40
+ora([serialRaw])                #41 Catch button-press events
+anda([buttonState])             #42 Keep active button presses
+ora([serialRaw])                #43
+nop()                           #44
+nop()                           #45
+bra('.buttons#48')              #46
+nop()                           #47
+
+# Auto-detect controller TypeB and keyboard (7 cycles)
+#ld([serialRaw]);                C('if serialRaw not in [0,1,3,7,15,31,63,127,255]')#34
+#adda(1)                         #35
+#anda([serialRaw])               #36
+#beq(pc()+3)                     #37
+#bra(pc()+3)                     #38
+#ld(lo('TypeB'));                C('Bit pattern /.*10.*/ -> TypeB')#39
+#ld([Y,lo(controllerType)]);     C('Bit pattern /0*1*/')#39(!)
+#st([Y,lo(controllerType)])      #40
+
+# Auto-detect controller TypeC (7 cycles)
+#ld([serialRaw]);                C('if serialRaw in [15]')#41
+#xora(15)                        #42
+#bne(pc()+3)                     #44
+#bra(pc()+3)                     #45
+#ld(lo('TypeC'));                C('[Start] as 0b00001111 -> TypeC')#45
+#ld([Y,lo(controllerType)])      #45(!)
+#bra(AC)                         #46
+#st([Y,lo(controllerType)])      #47
+
+# Convert raw serial input captured in last vblank to button state (11 cycles)
+#
+# TypeB
+# pChange = pNew & ~pOld
+# nChange = nNew | ~nOld {DeMorgan}
+#label('TypeB')
+#ld(255);                        C('TypeB: Bitwise edge-filter to detect button presses')#48
+#xora([serialLast])              #49
+#ora([serialRaw])                #50 Catch button-press events
+#anda([buttonState])             #51 Keep active button presses
+#ora([serialRaw])                #52
+#nop()                           #53
+#nop()                           #54
+#nop()                           #55
+#bra('.buttons58')               #56
+#nop()                           #57
+#
+# TypeC
+#label('TypeC')
+#ld([serialRaw]);                C('TypeC: if serialRaw < serialLast')#48
+#adda(1)                         #49
+#anda([serialLast])              #50
+#beq('.buttons53')               #51
+#ld(254);                        C('then clear the selected bit')#52
+#nop()                           #53
+#bra('.buttons56')               #54
+#label('.buttons53')
+#suba([serialRaw])               #53,54
+#anda([buttonState])             #54
+#st([buttonState])               #55
+#label('.buttons56')
+#ld([serialRaw]);                C('endif: set the lower bits')#56
+#ora([buttonState])              #57
+#label('.buttons58')
+#st([buttonState])               #58
+#
+# Prepare serialLast for next frame (2 cycles)
+# All
+#ld([serialRaw])                 #59
+#jmp(Y,lo('vBlankLast62'))       #60
+#st([serialLast])                #61
+
 trampoline()
 
 #-----------------------------------------------------------------------
 #
-#  ROM page 10: Inversion table
+#  $0a00 ROM page 10: Inversion table
 #
 #-----------------------------------------------------------------------
 
@@ -2509,7 +2683,7 @@ trampoline()
 
 #-----------------------------------------------------------------------
 #
-#  ROM page 11: More SYS functions
+#  $0d00 ROM page 11: More SYS functions
 #
 #-----------------------------------------------------------------------
 
@@ -2909,7 +3083,7 @@ ld(-46/2)                       #43
 
 #-----------------------------------------------------------------------
 #
-#  ROM page 12: More SYS functions (sprites)
+#  $0c00 ROM page 12: More SYS functions (sprites)
 #
 #       Page 1: vertical blank interval
 #       Page 2: visible scanlines
@@ -4683,6 +4857,7 @@ define('videoTable', videoTable)
 define('userCode',   userCode)
 define('soundTable', soundTable)
 define('screenMemory',screenMemory)
+define('vReset',     vReset)
 define('wavA',       wavA)
 define('wavX',       wavX)
 define('keyL',       keyL)

@@ -55992,6 +55992,7 @@ WozMon:       ef94 0002  ld   $02
               f1ed 00fe  ld   $fe
               f1ee 0000  ld   $00
               f1ef 0000  ld   $00         ;End of file
+Egg:
 Sprites:      f1f0 0002  ld   $02
               f1f1 0000  ld   $00
               f1f2 00db  ld   $db
