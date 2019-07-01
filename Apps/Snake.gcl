@@ -10,19 +10,32 @@ gcl0x
 {
 Maybe:
 XXX Don't allow autoplayer to obtain a hi score
-XXX Use DOKE to plot fat pixels
 XXX More colors, less green
 XXX Smarter border drawing (spiral draw)
 XXX Use same drawing techique for clearing playfield
-XXX Increasing speed
+XXX Begin slow, increasing speed later
 XXX Increase speed when pressing button
 }
 
-{-
+{-----------------------------------------------------------------------+
+|       ROM type check >= v2                                            |
++-----------------------------------------------------------------------}
+
+\romType, \romTypeValue_ROMv2-
+[if<0 do
+  #\LDW  #\frameCount
+  #\DOKE #\vPCH
+  loop]
+
+{-----------------------------------------------------------------------+
+|       Setup                                                           |
++-----------------------------------------------------------------------}
+
+{
   First setup all subroutine definitions and variables, without making
   calls. This way allows use of vLR to hop from page to page during setup,
   with minimal overhead. At the end, run the main loop.
--}
+}
 
 0 HighScore=
 
@@ -42,9 +55,9 @@ XXX Increase speed when pressing button
   6+      Pos=
   \SYS_VDrawBits_134 \sysFn:
   $fb i= [do
-    fontData 0? fontData<++ \sysArgs2. 134!
-    \sysArgs4<++
-    i<++ i if<>0loop]
+    fontData 0? <fontData++ \sysArgs2. 134!
+    <\sysArgs4++
+    <i++ i if<>0loop]
   ret
 ] PrintChar=
 
@@ -54,21 +67,17 @@ XXX Increase speed when pressing button
   [do
     Text, Char= {Next character to be printed}
     if<>0       {Zero termination}
-      Text<++   {Advance text pointer}
-      Char 10^ [if=0 Pos<. $800 Pos+ Pos=
+      <Text++   {Advance text pointer}
+      Char 10^ [if=0 <Pos. $800 Pos+ Pos=
                 else PrintChar!]
       loop]
   pop ret
 ] PrintText=
 
 [def
-   $47# $69# $67# $61# $74# $72# $6f# $6e# 0# {Gigatron}
-] Title=
-
-[def
-{-
+{
   DrawLine -- Draw line
--}
+}
   Count i=
   [do if>0
     Color Pos.
@@ -94,20 +103,18 @@ XXX Increase speed when pressing button
 ] DrawHead=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 3                                      |
+|}>\vLR++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
 $0300:
 
 [def
-{-
+{
   Game over
--}
+}
   push
   $4435 Pos=
   4 BgColor=
-  [def
-    $47# $41# $4d# $45# $20# $4f# $56# $45# $52# 0# {GAME OVER}
-  ] PrintText!
+  [def `GAME`OVER #0] PrintText!
 
   Score HighScore- [if>0
     Score HighScore=
@@ -126,34 +133,30 @@ $0300:
 ] Wait=
 
 [def
-{-
+{
   Intro
--}
+}
   push
 
   {Display welcome tekst}
   8 {Green} Color=
   0 BgColor=
   $800 ClearScreen!
-  $838 Pos= Title PrintText!
+  $838 Pos=
+  [def `Gigatron #0] PrintText!
 
   pop ret
 ] Intro=
 
 [def {ClearScreen -- Clear screen from current position to bottom right}
-  Pos= p=
-  Pos 255| 255^         {Clear low byte}
-  i= $8001 i+ i=        {Offset to move to next stripe}
-  BgColor \sysArgs0. \sysArgs1.
-  \SYS_VDrawBits_134 \sysFn:
-  [do
-    {Clear one stripe}
-    p [do
-      \sysArgs4: 134! {Clears 8 pixels vertically}
-      $800 p+ p= if>0loop]
-    {Next stripe}
-    i+ p=
-    255& 160^ if<>0loop]
+  p=
+  \SYS_SetMemory_v2_54 \sysFn:  {!!! Not in ROM v1 !!!}
+  BgColor \sysArgs1.            {Color}
+  p [do
+    \sysArgs2:                  {Destination}
+    160 \sysArgs0.              {Count}
+    54!                         {SYS call}
+    $100 p+ p= if>0loop]
   ret
 ] ClearScreen=
 
@@ -172,23 +175,21 @@ $0300:
 ] TurnR=
 
 [def
-  Pos    p=
-  Color  Pos.
-  Pos<++ Pos.
-  Pos>++ Pos.
-  p>++ p.
+  Color >Color.                 {Duplicate Color low byte to high byte}
+  Color  Pos:                   {Draws 2 pixels with DOKE}
+  >Pos++ Pos:                   {Draws 2 pixels below}
   ret
 ] DrawBlock=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 4                                      |
+|}>\vLR++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
 $0400:
 
 [def
-{-
-  RunGame --
--}
+{
+  RunGame
+}
   push
 
   [do
@@ -197,7 +198,7 @@ $0400:
 
     {Leave a trace behind in the pixels two high bits}
     {Bit 15 and bit 0 of stepU identify the direction}
-    stepU>, 128& tmp=
+    >stepU, 128& tmp=
     stepU     1& [if<>0 64] tmp+
 
     30+ {Cyan} Color= Head Pos= DrawBlock! {Tail color and trace}
@@ -208,12 +209,12 @@ $0400:
     Head, $33& [if<>0 {Hit wall or poison} pop ret]
     Head, 8^ {Food?} [if=0
       {Eat food}
-      $40 Timer+ SetTone!
+      $40 Timer+ SetNote!
       2 \soundTimer.
       Score Timer+ Score=
       DrawScore!
       5 AddTimer!
-      Grow<++ Drops<++
+      <Grow++ <Drops++
     ]
     DrawHead!
 
@@ -243,15 +244,15 @@ $0400:
   8 {Green} Color=
   [do
     \SYS_Random_34 \sysFn: 34! Pos=
-    Pos<,      128- [if<0 157+] 1+   {1..157}   $fe& Pos<.
-    Pos>, 127& 64-  [if<0 109+] $11+ {$11..$fd} $fe& Pos>.
+    <Pos,      128- [if<0 157+] 1+   {1..157}   $fe& <Pos.
+    >Pos, 127& 64-  [if<0 109+] $11+ {$11..$fd} $fe& >Pos.
     Pos, 4^ if<>0loop]
   DrawBlock!
   pop ret
 ] AddFood=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 5                                      |
+|}>\vLR++ ret{          RAM page 5                                      |
 +-----------------------------------------------------------------------}
 $0500:
 
@@ -288,14 +289,12 @@ $0500:
   \buttonState, $f7^ {~buttonUp}    [if=0 $ff00 tmp=]
   {Only turn if not reversing 180 degrees}
   tmp stepU+ [if<>0 tmp stepU=]
-  {Or if there is no tail yet in the beginning of the game}
-  Tail Head- [if=0 tmp stepU=]
   {Note: `stepV' is not used once under player control}
   ret
 ] PlayerControl=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 6                                      |
+|}>\vLR++ ret{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
 $0600:
 
@@ -318,7 +317,7 @@ $0600:
 
   {ClearScreen}
   4 BgColor=
-  $1000 ClearScreen!
+  $1000 Pos= ClearScreen!
 
   {Draw bounding box}
   26 Color=
@@ -333,14 +332,10 @@ $0600:
 
   {Get ready message}
   $4432 Pos= 3 {Red} Color=
-  [def
-    $47# $45# $54# $20# $52# $45# $41# $44# $59# $21# 0# {GET READY!}
-  ] PrintText!
+  [def `GET`READY! #0] PrintText!
   60 Wait!
   $4432 Pos=
-  [def
-    $20# $20# $20# $20# $20# $20# $20# $20# $20# $20# 0#
-  ] PrintText!
+  [def ``````````` #0] PrintText!
 
   {Place snake}
   $4430 Head= Tail=
@@ -364,16 +359,16 @@ $0600:
 $08a0:
 
 [def {LaunchControl}
-{-
+{
   XXX better strategy: run both PlayerControl and AutoControl.
   The first one to take control will take over the game...
--}
+}
   push
   $449c Head- [if=0
     {Switch to autopilot when reaching this position}
     30 {XXX} Color=
     $0802 Pos=
-    [def $41# $55# $54# $4f# 0#{AUTO}] PrintText!
+    [def `AUTO #0] PrintText!
     AutoControl Control= call
   else
     {Disable launch control once a button is pressed}
@@ -392,7 +387,7 @@ $08a0:
 ] DrawNumber2=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 9                                      |
+|}>\vLR++ ret{          RAM page 9                                      |
 +-----------------------------------------------------------------------}
 $09a0:
 
@@ -405,7 +400,7 @@ $09a0:
       Radix-
       if>=0
         Value=
-        Char<++
+        <Char++
         loop
     ]
     PrintChar!
@@ -428,7 +423,7 @@ $09a0:
 ] DrawNumber4=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 10                                     |
+|}>\vLR++ ret{          RAM page 10                                     |
 +-----------------------------------------------------------------------}
 $0aa0:
 
@@ -452,35 +447,35 @@ $0aa0:
 ] DrawTimer=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 11                                     |
+|}>\vLR++ ret{          RAM page 11                                     |
 +-----------------------------------------------------------------------}
 $0ba0:
 
 [def
   push
   $874 Pos= 0 BgColor=
-  [def $48# $49# $20# 0# {HI }] PrintText!
+  [def `HI` #0] PrintText!
   HighScore Value= DrawNumber4!
   pop ret
 ] DrawHighScore=
 
 [def {SetupChannel}
   i= 255| 255^ $fa| p=          {Pointer to channel struct}
-  i<, i=                        {Extract note}
-  0 p. p<++                     {.wavA}
-  1 p. p<++                     {.wavX: 0 "Noise", 1 Triangle, 2 Pulse, 3 Sawtooth}
-  \notesTable i+ 0? p. p<++     {.keyL}
-  \notesTable i+ 1? p. p<++     {.keyH}
+  <i, i=                        {Extract note}
+  0 p. <p++                     {.wavA}
+  1 p. <p++                     {.wavX: 0 "Noise", 1 Triangle, 2 Pulse, 3 Sawtooth}
+  \notesTable i+ 0? p. <p++     {.keyL}
+  \notesTable i+ 1? p. <p++     {.keyH}
   ret
 ] SetupChannel=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 12                                     |
+|}>\vLR++ ret{          RAM page 12                                     |
 +-----------------------------------------------------------------------}
 $0ca0:
 
-{ Setup a G-major chord with 4 channels but don't play it yet }
-[def {SetTone}
+{ Setup note in all channels, but don't play it yet }
+[def {SetNote}
   push
   1<< tmp=
   $100 tmp| {Channel 1} SetupChannel!
@@ -488,12 +483,12 @@ $0ca0:
   $300 tmp| {Channel 3} SetupChannel!
   $400 tmp| {Channel 4} SetupChannel!
   pop ret
-] SetTone=
+] SetNote=
 
 [def
   push
   $49 j= [do
-    j SetTone!
+    j SetNote!
     5 \soundTimer.
     [do \soundTimer, if<>0loop]
     j 1- j= $30^ if<>0loop]
@@ -501,15 +496,17 @@ $0ca0:
 ] PlayGameOverSound=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 13                                     |
+|}>\vLR++ ret{          RAM page 13                                     |
 +-----------------------------------------------------------------------}
 $0da0:
 
-{--- Run ---}
+{-----------------------------------------------------------------------+
+|       Run                                                             |
++-----------------------------------------------------------------------}
 
 Intro!
 
-$49 SetTone!
+$49 SetNote!
 
 [do
   SetupGame!
