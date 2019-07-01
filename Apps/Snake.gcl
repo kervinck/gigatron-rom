@@ -7,12 +7,6 @@
 
 gcl0x
 
-{
-Maybe:
-XXX Don't allow autoplayer to obtain a high score
-XXX Smarter autoplayer (dont repeat same turn 3 times: use counter ++, --))
-}
-
 {-----------------------------------------------------------------------+
 |       ROM type check >= v2                                            |
 +-----------------------------------------------------------------------}
@@ -35,8 +29,10 @@ XXX Smarter autoplayer (dont repeat same turn 3 times: use counter ++, --))
 
 0 HighScore=
 
-{ Print a 5x8 character on screen with the built-in font
-  Char must be in the 32-127 range (this is not checked) }
+{
+  Print a 5x8 character on screen with the built-in font
+  Char must be in the 32-127 range (this is not checked)
+}
 [def {PrintChar}
   {Map ASCII code to offset in font table}
   Char 82- [if<0 50+ i= \font32up
@@ -57,19 +53,20 @@ XXX Smarter autoplayer (dont repeat same turn 3 times: use counter ++, --))
   ret
 ] PrintChar=
 
-[def {PrintText}
+{ PrintText }
+[def
   push
   Text=
   [do
-    Text, Char= {Next character to be printed}
-    <Text++     {Advance text pointer}
-    if<>0       {Zero termination}
+    Text, Char=                 {Next character to be printed}
+    <Text++                     {Advance text pointer}
+    if<>0                       {Zero termination}
       PrintChar!
       loop]
   pop ret
 ] PrintText=
 
-{ DrawLine -- Draw line }
+{ DrawLine }
 [def
   [do if>0
     i=
@@ -80,6 +77,7 @@ XXX Smarter autoplayer (dont repeat same turn 3 times: use counter ++, --))
   ret
 ] DrawLine=
 
+{ Delay until next game cycle }
 [def
   push
 
@@ -95,6 +93,7 @@ XXX Smarter autoplayer (dont repeat same turn 3 times: use counter ++, --))
   pop ret
 ] TimeStep=
 
+{ Draw count down timer }
 [def
   push
   $820 Pos=
@@ -110,24 +109,24 @@ XXX Smarter autoplayer (dont repeat same turn 3 times: use counter ++, --))
 +-----------------------------------------------------------------------}
 $0300:
 
+{ Draw snake head }
 [def
   push
   15 {Yellow head} Color= Head DrawBlock!
   pop ret
 ] DrawHead=
 
+{ Game over }
 [def
-{
-  Game over
-}
   push
   $4435 Pos=
   4 BgColor=
   [def `GAME`OVER #0] PrintText!
 
-  Score HighScore- [if>0
-    Score HighScore=
-    30 Color= DrawHighScore!
+  Score HighScore- [if>0        {Improved high score?}
+    Control PlayerControl^ if=0 {Only accept human scores}
+      Score HighScore=          {Update high score}
+      30 Color= DrawHighScore!  {Highlight it}
   ]
 
   PlayGameOverSound!
@@ -135,16 +134,15 @@ $0300:
   pop ret
 ] GameOver=
 
-[def {Wait -- Wait number of frames (range 1..255)}
+{Wait number of frames (range 1..255)}
+[def
   tmp= \frameCount, tmp+ 255& tmp=
   [do \frameCount, tmp- if<>0loop]
   ret
 ] Wait=
 
+{ Intro }
 [def
-{
-  Intro
-}
   push
 
   {Display welcome tekst}
@@ -157,45 +155,44 @@ $0300:
   pop ret
 ] Intro=
 
-[def {ClearScreen -- Clear screen from current position to bottom right}
+{ Clear screen from current position to bottom right }
+[def
   p=
-  \SYS_SetMemory_v2_54 \sysFn:  {!!! Not in ROM v1 !!!}
+  \SYS_SetMemory_v2_54 \sysFn:  {Not in ROM v1}
   BgColor \sysArgs1.            {Color}
   p [do
     \sysArgs2:                  {Destination}
-    160 \sysArgs0.              {Count}
-    54!                         {SYS call}
-    $100 p+ p= if>0loop]
+    160 \sysArgs0.              {Byte count}
+    54!                         {Make SYS call}
+    $100 p+ p= if>0loop]        {To next line}
   ret
 ] ClearScreen=
 
+{ Turn left }
 [def
   0 stepV- tmp=
   stepU stepV=
   tmp   stepU=
+  Bias [if<0 50+] 50+ Bias=     {Increase bias against left}
   ret
 ] TurnL=
 
+{ Turn right }
 [def
   0 stepU- tmp=
   stepV stepU=
   tmp   stepV=
+  Bias [if>0 50-] 50- Bias=     {Increase bias against right}
   ret
 ] TurnR=
 
+{ Draw 2x2 pixel block in single color }
 [def
   Pos=
   Color \vACH.                  {Duplicate Color low byte to high byte}
   Pos: >Pos++ Pos:              {Draws 2x2 pixels with DOKE}
   ret
 ] DrawBlock=
-
-[def
-  Tail Pos=
-  4 {Field color} Pos:
-  $400     >Pos++ Pos:
-  ret
-] DrawTrail=
 
 {-----------------------------------------------------------------------+
 |}>\vLR++ ret{          RAM page 4                                      |
@@ -211,67 +208,76 @@ $0400:
     Control!
 
     {Leave a trace behind in the pixels two high bits}
-    {Bit 15 and bit 0 of stepU identify the direction}
+    {Bit 15 and bit 1 of stepU identify the direction}
     >stepU, 128& tmp=
-    stepU     1& [if<>0 64] tmp+
+    stepU     2& [if<>0 64] tmp+
 
-    27+ {Orange tail} Color=
-    >Head, Head^ 2& [if<>0 1] Color^ Color=
-    Head DrawBlock! {Tail color and trace}
+    27+ {Orange tail} Color=    {Tail color}
+    >Head, Head^ 2&             {Striped tail effect}
+    [if<>0 1] Color^ Color=     {Apply effect}
+    Head DrawBlock!             {Draws head in tail color}
 
-    {Make step}
-    Head stepU+ stepU+ Head=
+    Head stepU+ Head=           {Make step}
 
-    { Field  =  8 =     8   }
-    { Wall   = 26 = 16+ 8+2 }
-    { Head   = 15 =    12+3 }
-    { Tail   = 27 = 16+ 8+3 }
-    { Food   = 24 = 16+ 8   }
-    { Poison = 11 =     8+3 }
-
+    { Colors:        B  G  R
+      -------       -- -- --
+      Field  =  8 =     8
+      Wall   = 26 = 16+ 8+ 2
+      Head   = 15 =    12+ 3
+      Tail1  = 27 = 16+ 8+ 3
+      Tail2  = 26 = 16+ 8+ 2
+      Food   = 24 = 16+ 8
+      Poison = 11 =     8+ 3
+                           ^
+                           Use red channel to detect unsafe steps
+    }
     Head, 3& [if<>0 {Hit wall or poison} pop ret]
-    Head, 24^ {Food color} [if=0
-      {Eat food}
+    Head, 24^ {Food} [if=0      {Eating the food}
       $40 Timer+ SetNote!
       2 \soundTimer.
-      Score Timer+ Score=
+      Score Timer+ Score=       {Add remaining seconds to score}
       DrawScore!
-      5 AddTimer!
+      5 AddTimer!               {5 seconds bonus}
       <Grow++ <Drops++
     ]
     DrawHead!
 
     {Update tail}
     Grow [if>0
-      1- Grow= {Do nothing while growing}
+      1- Grow=                  {Do nothing while growing}
       AddFood!
     else
       {Tail is following the head}
       Tail, tmp=
-      Drops [if>0 1- Drops= 62 {Poison} Color= Tail DrawBlock!
-             else DrawTrail!]
+      Drops [if>0 1- Drops= 62  {Poison}
+             else 4]            {Field}
+      Color= Tail DrawBlock!
 
       tmp 64&  [if=0 $0100 else $0001] x=
       tmp 128& [if=0 x else 0 x-]
       1<< Tail+ Tail=
     ]
 
-    TimeStep!
+    TimeStep!                   {Delay for next game step}
 
     loop]
 ] RunGame=
 
+{ Place random food in field }
 [def
   push
   24 {Greenish food} Color=
   [do
-    \SYS_Random_34 \sysFn: 34! Pos=     {Get random 16-bit number}
-    <Pos,      128- [if<0 150+] 5+      {X in range 5..154}  $fe& <Pos.
-    >Pos, 127& 64-  [if<0 102+] 21+     {Y in range 21..122} $fe& >Pos.
-    Pos, if<>0 4^ if<>0loop]            {Repeat if not free}
+    \SYS_Random_34 \sysFn:
+    34! Pos=                    {Get random 16-bit number}
+    <Pos, 128- [if<0 150+] 5+   {X in range 5..154}  254& <Pos.
+    >Pos, 127& 64- [if<0 102+] 21+ {Y in range 21..122} 254& >Pos.
+    Pos, 4^ if<>0loop]          {Repeat if not free}
   Pos DrawBlock!
   pop ret
 ] AddFood=
+
+0 Bias=                         {Short-term memory for auto control}
 
 {-----------------------------------------------------------------------+
 |}>\vLR++ ret{          RAM page 5                                      |
@@ -280,35 +286,57 @@ $0500:
 
 [def
   push
-  {If a key is pressed, start restart the game}
-  \buttonState, $cf& {~buttonStart&~buttonSelect} $cf^ [if<>0 SetupGame! pop ret]
 
-  {Auto snake control}
-  TurnL p=
-  TurnR q=
-  {Look ahead} Head stepU+ stepU+ peek 4^ tmp=
-  {Look left}  Head stepV- stepV- peek 4^ [if<>0 {24^4}28^ [if<>0 0 p= else 0 q= 1 tmp=]]
-  {Look right} Head stepV+ stepV+ peek 4^ [if<>0 {24^4}28^ [if<>0 0 q= else 0 p= 1 tmp=]]
-                                  tmp  [if=0 \entropy, $7f& 6- [if<0 1 else 0]]
-  [if<>0 {24^4}28^ if<>0
-    {Wall or random direction change: must go left or right.
-     Pick randomly, without bias, but don't crash into a wall when not needed}
-    p [if=0 q else
-      q [if=0 p else
-       \entropy, 1& [if=0 p else q]
+  \buttonState, $cf& $cf^       {~buttonStart&~buttonSelect}
+  [if<>0 SetupGame! pop ret]    {If button pressed, restart game}
+
+  TurnL p=                      {p stays set as long as left turn is ok}
+  TurnR q=                      {q stays set as long as right turn is ok}
+
+  Head stepU+ peek              {Look ahead}
+  4^ tmp=                       {tmp!=1 for turning, 0 for straight}
+
+  Head stepV- peek              {Look left}
+  4^ [if=0 Head stepV- stepV-   {Upto two steps}
+           peek 4^]
+  [if<>0                        {Something is there}
+    {24^4}28^ [if<>0 0 p=       {Not safe, don't go there}
+               else 1 tmp=      {Food! Must turn...}
+                    0 q=]]      {...but not right}
+
+  Head stepV+ peek              {Look right}
+  4^ [if=0 Head stepV+ stepV+   {Upto two steps}
+           peek 4^]
+  [if<>0                        {Something is there}
+    {24^4}28^ [if<>0 0 q=       {Not safe, don't go there}
+               else 1 tmp=      {Food! Must turn...}
+                      0 p=]]    {...but not left}
+
+  tmp [if=0                     {If not already turning}
+    \entropy, 13-               {Turn randomly 13 out of 128, or 5%}
+    [if<0 1 else 0]]
+
+  [if<>0                        {Algorithm wants to turn}
+    {24^4}28^ if<>0             {Overrule if food directly ahead}
+    p [if=0 q else              {Not left means right}
+      q [if=0 p else            {Not right means left}
+       \entropy, 128-           {Pick direction randomly otherwise}
+       Bias+                    {With progressive bias against last turns}
+       [if<0 p else q]
       ]
     ]
-    [if<>0 call {TurnL or TurnR}]
+
+    [if<>0 call]                {TurnL or TurnR and update Bias}
   ]
   pop ret
 ] AutoControl=
 
 [def
   stepU tmp= {Default keep running in same direction}
-  \buttonState, $fe^ {~buttonRight} [if=0 $0001 tmp=]
-  \buttonState, $fd^ {~buttonLeft}  [if=0 $ffff tmp=]
-  \buttonState, $fb^ {~buttonDown}  [if=0 $0100 tmp=]
-  \buttonState, $f7^ {~buttonUp}    [if=0 $ff00 tmp=]
+  \buttonState, $fe^ {~buttonRight} [if=0 $0002 tmp=]
+  \buttonState, $fd^ {~buttonLeft}  [if=0 $fffe tmp=]
+  \buttonState, $fb^ {~buttonDown}  [if=0 $0200 tmp=]
+  \buttonState, $f7^ {~buttonUp}    [if=0 $fe00 tmp=]
   {Only turn if not reversing 180 degrees}
   tmp stepU+ [if<>0 tmp stepU=]
   {Note: `stepV' is not used once under player control}
@@ -361,7 +389,7 @@ $0600:
 
   0 Grow= Drops=
   Timer= 15 AddTimer!
-  $0001 stepU= $0100 stepV= {Start right}
+  $0002 stepU= $0200 stepV= {Start right}
 
   {Place 25 foods}
   25 [do i= AddFood! i 1- if>0loop]
@@ -488,7 +516,7 @@ $0ba0:
 $0ca0:
 
 { Setup note in all channels, but don't play it yet }
-[def {SetNote}
+[def
   push
   1<< tmp=
   $100 tmp| {Channel 1} SetupChannel!
