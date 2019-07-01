@@ -9,12 +9,8 @@ gcl0x
 
 {
 Maybe:
-XXX Don't allow autoplayer to obtain a hi score
-XXX More colors, less green
-XXX Smarter border drawing (spiral draw)
-XXX Use same drawing techique for clearing playfield
-XXX Begin slow, increasing speed later
-XXX Increase speed when pressing button
+XXX Don't allow autoplayer to obtain a high score
+XXX Smarter autoplayer (dont repeat same turn 3 times: use counter ++, --))
 }
 
 {-----------------------------------------------------------------------+
@@ -66,46 +62,59 @@ XXX Increase speed when pressing button
   Text=
   [do
     Text, Char= {Next character to be printed}
+    <Text++     {Advance text pointer}
     if<>0       {Zero termination}
-      <Text++   {Advance text pointer}
-      Char 10^ [if=0 <Pos. $800 Pos+ Pos=
-                else PrintChar!]
+      PrintChar!
       loop]
   pop ret
 ] PrintText=
 
+{ DrawLine -- Draw line }
 [def
-{
-  DrawLine -- Draw line
-}
-  Count i=
   [do if>0
+    i=
     Color Pos.
     Pos Step+ Pos=
-    i 1- i=
+    i 1-
     loop]
   ret
 ] DrawLine=
 
 [def
   push
+
+  {Update count down timer}
   \frameCount, TimeOut- 128& [if=0
     Timer [if>0 1- Timer=]
     DrawTimer!
   ]
+
+  {Game delay, but accelerate with [A] button}
+  \buttonState, \buttonA& [if=0 1- else 0] Delay+ Wait!
+
   pop ret
-] UpdateTimer=
+] TimeStep=
 
 [def
   push
-  Head Pos= 63 {White} Color= DrawBlock!
+  $820 Pos=
+  8 Color=
+  0 BgColor=
+  Timer Value= DrawNumber2!
+  TimeOut 60+ 255& TimeOut=
   pop ret
-] DrawHead=
+] DrawTimer=
 
 {-----------------------------------------------------------------------+
 |}>\vLR++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
 $0300:
+
+[def
+  push
+  15 {Yellow head} Color= Head DrawBlock!
+  pop ret
+] DrawHead=
 
 [def
 {
@@ -126,7 +135,7 @@ $0300:
   pop ret
 ] GameOver=
 
-[def {Wait -- Wait Delay number of frames (range 1..255)}
+[def {Wait -- Wait number of frames (range 1..255)}
   tmp= \frameCount, tmp+ 255& tmp=
   [do \frameCount, tmp- if<>0loop]
   ret
@@ -175,21 +184,26 @@ $0300:
 ] TurnR=
 
 [def
-  Color >Color.                 {Duplicate Color low byte to high byte}
-  Color  Pos:                   {Draws 2 pixels with DOKE}
-  >Pos++ Pos:                   {Draws 2 pixels below}
+  Pos=
+  Color \vACH.                  {Duplicate Color low byte to high byte}
+  Pos: >Pos++ Pos:              {Draws 2x2 pixels with DOKE}
   ret
 ] DrawBlock=
+
+[def
+  Tail Pos=
+  4 {Field color} Pos:
+  $400     >Pos++ Pos:
+  ret
+] DrawTrail=
 
 {-----------------------------------------------------------------------+
 |}>\vLR++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
 $0400:
 
+{ RunGame }
 [def
-{
-  RunGame
-}
   push
 
   [do
@@ -201,13 +215,22 @@ $0400:
     >stepU, 128& tmp=
     stepU     1& [if<>0 64] tmp+
 
-    30+ {Cyan} Color= Head Pos= DrawBlock! {Tail color and trace}
+    27+ {Orange tail} Color=
+    >Head, Head^ 2& [if<>0 1] Color^ Color=
+    Head DrawBlock! {Tail color and trace}
 
     {Make step}
     Head stepU+ stepU+ Head=
 
-    Head, $33& [if<>0 {Hit wall or poison} pop ret]
-    Head, 8^ {Food?} [if=0
+    { Field  =  8 =     8   }
+    { Wall   = 26 = 16+ 8+2 }
+    { Head   = 15 =    12+3 }
+    { Tail   = 27 = 16+ 8+3 }
+    { Food   = 24 = 16+ 8   }
+    { Poison = 11 =     8+3 }
+
+    Head, 3& [if<>0 {Hit wall or poison} pop ret]
+    Head, 24^ {Food color} [if=0
       {Eat food}
       $40 Timer+ SetNote!
       2 \soundTimer.
@@ -225,29 +248,28 @@ $0400:
     else
       {Tail is following the head}
       Tail, tmp=
-      Drops [if>0 1- Drops= 63 {White} else 4] Color=
-      Tail Pos= DrawBlock!
+      Drops [if>0 1- Drops= 62 {Poison} Color= Tail DrawBlock!
+             else DrawTrail!]
 
       tmp 64&  [if=0 $0100 else $0001] x=
       tmp 128& [if=0 x else 0 x-]
       1<< Tail+ Tail=
     ]
 
-    UpdateTimer!
+    TimeStep!
 
-    2 Wait! {Fixed game speed}
     loop]
 ] RunGame=
 
 [def
   push
-  8 {Green} Color=
+  24 {Greenish food} Color=
   [do
-    \SYS_Random_34 \sysFn: 34! Pos=
-    <Pos,      128- [if<0 157+] 1+   {1..157}   $fe& <Pos.
-    >Pos, 127& 64-  [if<0 109+] $11+ {$11..$fd} $fe& >Pos.
-    Pos, 4^ if<>0loop]
-  DrawBlock!
+    \SYS_Random_34 \sysFn: 34! Pos=     {Get random 16-bit number}
+    <Pos,      128- [if<0 150+] 5+      {X in range 5..154}  $fe& <Pos.
+    >Pos, 127& 64-  [if<0 102+] 21+     {Y in range 21..122} $fe& >Pos.
+    Pos, if<>0 4^ if<>0loop]            {Repeat if not free}
+  Pos DrawBlock!
   pop ret
 ] AddFood=
 
@@ -265,10 +287,10 @@ $0500:
   TurnL p=
   TurnR q=
   {Look ahead} Head stepU+ stepU+ peek 4^ tmp=
-  {Look left}  Head stepV- stepV- peek 4^ [if<>0 {8^4}12^ [if<>0 0 p= else 0 q= 1 tmp=]]
-  {Look right} Head stepV+ stepV+ peek 4^ [if<>0 {8^4}12^ [if<>0 0 q= else 0 p= 1 tmp=]]
+  {Look left}  Head stepV- stepV- peek 4^ [if<>0 {24^4}28^ [if<>0 0 p= else 0 q= 1 tmp=]]
+  {Look right} Head stepV+ stepV+ peek 4^ [if<>0 {24^4}28^ [if<>0 0 q= else 0 p= 1 tmp=]]
                                   tmp  [if=0 \entropy, $7f& 6- [if<0 1 else 0]]
-  [if<>0 {8^4}12^ if<>0
+  [if<>0 {24^4}28^ if<>0
     {Wall or random direction change: must go left or right.
      Pick randomly, without bias, but don't crash into a wall when not needed}
     p [if=0 q else
@@ -315,27 +337,23 @@ $0600:
   15 Timer= DrawTimer!
   DrawHighScore!
 
-  {ClearScreen}
-  4 BgColor=
+  {Clear playing field}
+  4 {Dark green field} BgColor=
   $1000 Pos= ClearScreen!
 
   {Draw bounding box}
-  26 Color=
-     +1 Step= 159 Count= DrawLine!
-   $100 Step= 111 Count= DrawLine!
-     -1 Step= 159 Count= DrawLine!
-  -$100 Step= 110 Count= DrawLine!
-     +1 Step= 158 Count= DrawLine!
-   $100 Step= 109 Count= DrawLine!
-     -1 Step= 157 Count= DrawLine!
-  -$100 Step= 109 Count= DrawLine!
+  26 {Orange wall} Color=
+     +1 Step= 159 DrawLine!
+   $100 Step= 111 DrawLine!
+     -1 Step= 159 DrawLine!
+  -$100 Step= 110 DrawLine!
+     +1 Step= 158 DrawLine!
+   $100 Step= 109 DrawLine!
+     -1 Step= 157 DrawLine!
+  -$100 Step= 109 DrawLine!
 
-  {Get ready message}
-  $4432 Pos= 3 {Red} Color=
-  [def `GET`READY! #0] PrintText!
-  60 Wait!
-  $4432 Pos=
-  [def ``````````` #0] PrintText!
+  {Play messages}
+  GetReady!
 
   {Place snake}
   $4430 Head= Tail=
@@ -433,18 +451,13 @@ $0aa0:
   Score HighScore- [if>0 30 else 8] Color=
   0 BgColor=
   Score Value= DrawNumber4!
+
+  {Progressive game speed}
+  Score 100- [if<0 4 else
+        200- [if<0 3 else 2]] Delay=
+
   pop ret
 ] DrawScore=
-
-[def
-  push
-  $820 Pos=
-  8 Color=
-  0 BgColor=
-  Timer Value= DrawNumber2!
-  TimeOut 60+ 255& TimeOut=
-  pop ret
-] DrawTimer=
 
 {-----------------------------------------------------------------------+
 |}>\vLR++ ret{          RAM page 11                                     |
@@ -500,6 +513,27 @@ $0ca0:
 +-----------------------------------------------------------------------}
 $0da0:
 
+{ Display the get ready messages }
+[def
+  push
+  $4533
+  p= Pos= 24 Color= Messages PrintText! 45 Wait! {Eat food}
+  p  Pos= 62 Color= Text     PrintText! 45 Wait! {Not poison}
+  p  Pos= 15 Color= Text     PrintText! 45 Wait! {Get ready}
+  p  Pos=           Text     PrintText!
+  pop ret
+] GetReady=
+
+{-----------------------------------------------------------------------+
+|}>\vLR++ ret{          RAM page 14                                     |
++-----------------------------------------------------------------------}
+$0ea0:
+
+[def ``EAT`FOOD  #0
+     `NOT`POISON #0
+     `GET`READY! #0
+     ``````````` #0] Messages=
+
 {-----------------------------------------------------------------------+
 |       Run                                                             |
 +-----------------------------------------------------------------------}
@@ -513,7 +547,7 @@ $49 SetNote!
   RunGame!
 
   120 \soundTimer.
-  3 {Bright Red} Color= Head Pos= DrawBlock!
+  7 {Orange} Color= Head DrawBlock!
   GameOver!
   60 Wait!
 
