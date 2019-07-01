@@ -51,6 +51,7 @@
 #  DONE v6502: SYS_v6502_RunToBRK_v4_80
 #  XXX  v6502: Reset also when v6502 is active
 #  XXX  v6502: Stub D010-D013 with JSR targets
+#  XXX  Apple1: Don't use buttonState but serialRaw
 #  XXX  v6502: Preload with WOZMON and MUNCH
 #  XXX  v6502: Relocate app-specific SYS functions above v6502 (Racer, Loader)
 #  XXX  #38 "Press [A] to start program" message is stupid
@@ -81,7 +82,7 @@
 #  XXX  Video: Fast system video modes (something like ROM v3y)? Mode 4 (black)
 #  XXX  vCPU: extension for C: HOP_v4 $DD
 #  XXX  vCPU: extension for C: LSRW_v4
-#  XXX  vCPU: extension for C: CMPW_v4
+#  XXX  vCPU: extension for C: CMPW_v4 $DD
 #
 #  Ideas for ROM v6+
 #  XXX  Reset.c and Main.c (that is: port these from GCL to C)
@@ -111,8 +112,8 @@ import font_v2 as font
 hasRacer = False
 hasLoader = False
 for arg in argv[1:]:
-  if '/Racer_v'  in arg: hasRacer = True
-  if '/Loader_v' in arg: hasLoader = True
+  if '/Racer'  in arg: hasRacer = True
+  if '/Loader' in arg: hasLoader = True
 
 # Pre-loading the formal interface as a way to get warnings when
 # accidently redefined with a different value
@@ -1049,7 +1050,6 @@ jmp(Y,lo('vBlankLast#34'));     C('Jump out of page for space reasons')#32
 ld(hi(pc()),Y)                  #33
 
 label('vBlankLast#52')
-xxx                           = 52 - 40
 
 # Respond to reset button (11 cycles)
 # - ResetTimer decrements as long as just [Start] is pressed down
@@ -1064,54 +1064,56 @@ xxx                           = 52 - 40
 #   was still pressed so the count reaches <128. Two reasonable expectations.
 # - The unintended power-up scenarios of ROMv1 (pulling SER_DATA low, or
 #   pressing [Select] together with another button) now don't trigger anymore.
-xora(~buttonStart);             C('Check [Start] for soft reset')#40
-bne('.restart43')               #41
-ld([resetTimer])                #42 As long as button pressed
-suba(1)                         #43 ... count down the timer
-st([resetTimer])                #44
-anda(127)                       #45
-beq('.restart48')               #46 Reset at 0 (normal 2s) or 128 (extended 4s)
-ld((vReset&255)-2)              #47 Start force reset when hitting 0
-bra('.restart51')               #48 ... otherwise do nothing yet
-bra('.restart51')               #49
-label('.restart43')
-wait(48-43)                     #43
-ld(128)                         #48 Restore to ~2 seconds when not pressed
-bra('.restart51')               #49
-st([resetTimer])                #50
-label('.restart48')
-st([vPC])                       #48 Continue force reset
-ld(vReset>>8)                   #49
-st([vPC+1])                     #50
-label('.restart51')
+
+ld([buttonState]);              C('Check [Start] for soft reset')#52
+xora(~buttonStart)              #53
+bne('.restart#56')              #54
+ld([resetTimer])                #55 As long as button pressed
+suba(1)                         #56 ... count down the timer
+st([resetTimer])                #57
+anda(127)                       #58
+beq('.restart#61')              #59 Reset at 0 (normal 2s) or 128 (extended 4s)
+ld((vReset&255)-2)              #60 Start force reset when hitting 0
+bra('.restart#64')              #61 ... otherwise do nothing yet
+bra('.restart#64')              #62
+label('.restart#56')
+wait(61-56)                     #56
+ld(128)                         #61 Restore to ~2 seconds when not pressed
+bra('.restart#64')              #62
+st([resetTimer])                #63
+label('.restart#61')
+st([vPC])                       #61 Continue force reset
+ld(vReset>>8)                   #62
+st([vPC+1])                     #63
+label('.restart#64')
 
 # Switch video mode when (only) select is pressed (16 cycles)
 # XXX We could make this a vCPU interrupt
-ld([buttonState]);              C('Check [Select] to switch modes')#50,51
-xora(~buttonSelect)             #52 Only trigger when just [Select] is pressed
-bne('.select55')                #53
-ld([videoModeC])                #54
-bmi('.select57')                #55 Branch when line C is off
-ld([videoModeB])                #56 Rotate: Off->D->B->C
-st([videoModeC])                #57
-ld([videoModeD])                #58
-st([videoModeB])                #59
-bra('.select62')                #60
-label('.select57')
-ld('nopixels')                  #61,57
-ld('pixels')                    #58 Reset: On->D->B->C
-st([videoModeC])                #59
-st([videoModeB])                #60
-nop()                           #61
-label('.select62')
-st([videoModeD])                #62
-wait(192-63-xxx)                #63 Don't waste space expanding runVcpu here
+ld([buttonState]);              C('Check [Select] to switch modes')#63,64
+xora(~buttonSelect)             #65 Only trigger when just [Select] is pressed
+bne('.select#68')               #66
+ld([videoModeC])                #67
+bmi('.select#70')               #68 Branch when line C is off
+ld([videoModeB])                #69 Rotate: Off->D->B->C
+st([videoModeC])                #70
+ld([videoModeD])                #71
+st([videoModeB])                #72
+bra('.select#75')               #73
+label('.select#70')
+ld('nopixels')                  #74,70
+ld('pixels')                    #71 Reset: On->D->B->C
+st([videoModeC])                #72
+st([videoModeB])                #73
+nop()                           #74
+label('.select#75')
+st([videoModeD])                #75
+wait(192-76)                    #76 Don't waste space expanding runVcpu here
 # AC==255 now
 st([buttonState])               #192
 bra('vBlankEnd')                #193
 ld(0)                           #194
-label('.select55')
-runVcpu(195-55-xxx, '---D line 40') #55 Application cycles (scan line 40)
+label('.select#68')
+runVcpu(195-68, '---D line 40') #68 Application cycles (scan line 40)
 
 # AC==0 now
 label('vBlankEnd')
@@ -4858,6 +4860,16 @@ define('keyH',       keyH)
 define('oscL',       oscL)
 define('oscH',       oscH)
 define('maxTicks',   maxTicks)
+
+define('buttonRight',buttonRight)
+define('buttonLeft', buttonLeft)
+define('buttonDown', buttonDown)
+define('buttonUp',   buttonUp)
+define('buttonStart',buttonStart)
+define('buttonSelect',buttonSelect)
+define('buttonB',    buttonB)
+define('buttonA',    buttonA)
+
 # XXX This is a hack (trampoline() is probably in the wrong module):
 define('vPC+1',      vPC+1)
 

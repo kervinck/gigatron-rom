@@ -65,17 +65,17 @@ XXX Image compression?
 
   {Steering}
   0 Steer=
-  \serialRaw, $01& {buttonRight} [if=0  $200 CarX+ CarX= +1 Steer=]
-  \serialRaw, $02& {buttonLeft}  [if=0 -$200 CarX+ CarX= -1 Steer=]
+  \buttonState, \buttonRight& [if=0  $200 CarX+ CarX= +1 Steer=]
+  \buttonState, \buttonLeft&  [if=0 -$200 CarX+ CarX= -1 Steer=]
 
   {Speed control}
-  \serialRaw, $80& {buttonA} [if=0 {Accelerating}
+  \buttonState, \buttonA& [if=0 {Accelerating}
     Speed $10+ Speed= {At 15 fps $10 means ~1s to reach the next speed level}
     $5ff Speed- [if<0 $5ff Speed=]
    else
     -$108 Speed+ [if>=0 Speed 8- Speed=] {Slowly drop to very low speed}
   ]
-  \serialRaw, $40& {buttonB} [if=0 Speed $40- [if<0 0] Speed=] {Braking}
+  \buttonState, \buttonB& [if=0 Speed $40- [if<0 0] Speed=] {Braking}
   ret
 ] ControlRaceCar=
 

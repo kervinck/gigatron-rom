@@ -29,9 +29,9 @@ dev.rom: Core/* Apps/* Images/* Makefile interface.json
 	python Core/dev.py\
 		packedParrot=Images/Parrot-160x120.rgb\
 		packedJupiter=Images/Jupiter-160x120.rgb\
-		Apps/Snake_v2.gcl\
+		Apps/Snake.gcl\
 		zippedRacerHorizon=Images/RacerHorizon-256x16.rgb\
-		Apps/Racer_v1.gcl\
+		Apps/Racer.gcl\
 		Apps/Mandelbrot_v1.gcl\
 		Apps/Pictures_v2.gcl\
 		Apps/Credits_v2.gcl\
@@ -41,7 +41,7 @@ dev.rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/TinyBASIC_v2.gcl\
 		Apps/TicTac_v1.gtb\
 		Apps/WozMon_v2.gt1\
-		Egg=Apps/Sprites_v1.gt1\
+		Egg=Apps/Munching6502.gcl\
 		Apps/Main_v3.gcl\
 		Core/Reset.gcl
 	open http://127.0.0.1:8000/src

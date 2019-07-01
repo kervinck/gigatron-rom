@@ -258,7 +258,7 @@ $0500:
 [def
   push
   {If a key is pressed, start restart the game}
-  \serialRaw, $cf& {~buttonStart&~buttonSelect} $cf^ [if<>0 SetupGame! pop ret]
+  \buttonState, $cf& {~buttonStart&~buttonSelect} $cf^ [if<>0 SetupGame! pop ret]
 
   {Auto snake control}
   TurnL p=
@@ -282,10 +282,10 @@ $0500:
 
 [def
   stepU tmp= {Default keep running in same direction}
-  \serialRaw, $fe^ {~buttonRight} [if=0 $0001 tmp=]
-  \serialRaw, $fd^ {~buttonLeft}  [if=0 $ffff tmp=]
-  \serialRaw, $fb^ {~buttonDown}  [if=0 $0100 tmp=]
-  \serialRaw, $f7^ {~buttonUp}    [if=0 $ff00 tmp=]
+  \buttonState, $fe^ {~buttonRight} [if=0 $0001 tmp=]
+  \buttonState, $fd^ {~buttonLeft}  [if=0 $ffff tmp=]
+  \buttonState, $fb^ {~buttonDown}  [if=0 $0100 tmp=]
+  \buttonState, $f7^ {~buttonUp}    [if=0 $ff00 tmp=]
   {Only turn if not reversing 180 degrees}
   tmp stepU+ [if<>0 tmp stepU=]
   {Or if there is no tail yet in the beginning of the game}
@@ -377,7 +377,7 @@ $08a0:
     AutoControl Control= call
   else
     {Disable launch control once a button is pressed}
-    \serialRaw, $cf& {~buttonStart|~buttonSelect} $cf^ [if<>0 PlayerControl Control= call]
+    \buttonState, $cf& {~buttonStart|~buttonSelect} $cf^ [if<>0 PlayerControl Control= call]
   ]
   pop ret
 ] LaunchControl=
