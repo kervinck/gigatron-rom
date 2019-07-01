@@ -51,7 +51,7 @@ IN  = '__in__'
 AC  = '__ac__'
 
 # Mnemonics for Gigatron native 8-bit instruction set
-def nop ():               _assemble(_opLD, AC)
+def nop (dummy=None):     _assemble(_opLD, AC)
 def ld  (a, b=AC):        _assemble(_opLD,  a, b)
 def anda(a, b=AC):        _assemble(_opAND, a, b)
 def ora (a, b=AC):        _assemble(_opOR,  a, b)
@@ -120,13 +120,16 @@ def hi(name):
     _refsH.append((name, _romSize))
     return 0 # placeholder
 
-def align(n, chunkSize=0x10000):
+def align(m=0x100, chunkSize=0x10000):
   """Insert nops to align with chunk boundary"""
-  global _romSize, _maxRomSize
-  _maxRomSize = 0x10000
-  while _romSize % n > 0:
+  global _maxRomSize
+  n = (m - pc()) % m
+  comment = ' (filler' if n==1 else ' (%d fillers' % n
+  comment += ', alignment)'
+  while pc() % m > 0:
     nop()
-  _maxRomSize = min(_maxRomSize, _romSize + chunkSize)
+    comment = C(comment)
+  _maxRomSize = min(0x10000, pc() + chunkSize)
 
 def wait(n):
   """Insert delay sequence of n cycles. Might clobber AC"""
@@ -162,10 +165,17 @@ def zpReset(startFrom=1):
   global _zpSize
   _zpSize = startFrom
 
+def fillers(offset, instruction=nop):
+  """Insert fillers until given page offset"""
+  n = offset - (pc() & 255)
+  comment = ' (filler)' if n==1 else ' (%d fillers)' % n
+  for i in range(n):
+    instruction(0)
+    comment = C(comment)
+
 def trampoline():
   """Read 1 byte from ROM page"""
-  while pc()&255 < 256-5:
-    nop()
+  fillers(256-5)
   bra(AC)                       #13
   """
      It is possible to make this section 2 bytes shorter

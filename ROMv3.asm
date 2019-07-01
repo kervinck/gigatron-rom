@@ -1091,7 +1091,7 @@ SYS_VDrawBits_134:
               04f2 1403  ld   $03,y
               04f3 e0cb  jmp  y,$cb
               04f4 00bd  ld   $bd
-              04f5 0200  nop
+              04f5 0200  nop              ; (11 fillers, alignment)
               04f6 0200  nop
               04f7 0200  nop
               * 11 times
@@ -1601,7 +1601,7 @@ SYS_LoaderPayloadCopy_34:
               06f8 a001  suba $01
 .sysCc1:      06f9 e0cb  jmp  y,$cb
               06fa 00ef  ld   $ef
-              06fb 0200  nop
+              06fb 0200  nop              ; (5 fillers, alignment)
               06fc 0200  nop
               06fd 0200  nop
               * 5 times
@@ -1852,7 +1852,7 @@ font32up:     0700 0000  ld   $00         ;Char ' '
               07f7 008a  ld   $8a
               07f8 0084  ld   $84
               07f9 007a  ld   $7a
-              07fa 0200  nop
+              07fa 0200  nop              ; (filler)
               07fb fe00  bra  ac          ;+-----------------------------------+
               07fc fcfd  bra  $07fd       ;|                                   |
               07fd 1404  ld   $04,y       ;| Trampoline for page $0700 lookups |
@@ -2086,7 +2086,7 @@ font82up:     0800 00fe  ld   $fe         ;Char 'R'
               08e2 00fe  ld   $fe
               08e3 00fe  ld   $fe
               * 5 times
-              08e6 0200  nop
+              08e6 0200  nop              ; (21 fillers)
               08e7 0200  nop
               08e8 0200  nop
               * 21 times
@@ -2291,7 +2291,7 @@ notesTable:   0900 0000  ld   $00
               09c1 0000  ld   $00
               09c2 0000  ld   $00
               * 58 times
-              09fa 0200  nop
+              09fa 0200  nop              ; (filler)
               09fb fe00  bra  ac          ;+-----------------------------------+
               09fc fcfd  bra  $09fd       ;|                                   |
               09fd 1404  ld   $04,y       ;| Trampoline for page $0900 lookups |
@@ -2736,9 +2736,10 @@ SYS_LoaderNextByteIn_32:
               0bf2 1403  ld   $03,y
               0bf3 e0cb  jmp  y,$cb
               0bf4 0200  nop
-              0bf5 0200  nop
+              0bf5 0200  nop              ; (11 fillers, alignment)
               0bf6 0200  nop
-              * 12 times
+              0bf7 0200  nop
+              * 11 times
 SYS_Sprite6_v3_64:
               0c00 1124  ld   [$24],x     ;Pixel data source address
               0c01 1525  ld   [$25],y
@@ -2799,7 +2800,7 @@ SYS_Sprite6_v3_64:
               0c38 1403  ld   $03,y
               0c39 e0cb  jmp  y,$cb
               0c3a 00e0  ld   $e0
-              0c3b 0200  nop
+              0c3b 0200  nop              ; (5 fillers, alignment)
               0c3c 0200  nop
               0c3d 0200  nop
               * 5 times
@@ -2861,7 +2862,7 @@ SYS_Sprite6x_v3_64:
               0c76 1403  ld   $03,y
               0c77 e0cb  jmp  y,$cb
               0c78 00e1  ld   $e1
-              0c79 0200  nop
+              0c79 0200  nop              ; (7 fillers, alignment)
               0c7a 0200  nop
               0c7b 0200  nop
               * 7 times
@@ -2927,7 +2928,7 @@ SYS_Sprite6y_v3_64:
               0cba 1403  ld   $03,y
               0cbb e0cb  jmp  y,$cb
               0cbc 00e0  ld   $e0
-              0cbd 0200  nop
+              0cbd 0200  nop              ; (3 fillers, alignment)
               0cbe 0200  nop
               0cbf 0200  nop
 SYS_Sprite6xy_v3_64:
@@ -2990,7 +2991,7 @@ SYS_Sprite6xy_v3_64:
               0cf8 1403  ld   $03,y
               0cf9 e0cb  jmp  y,$cb
               0cfa 00e1  ld   $e1
-              0cfb 0200  nop
+              0cfb 0200  nop              ; (5 fillers, alignment)
               0cfc 0200  nop
               0cfd 0200  nop
               * 5 times
@@ -57860,7 +57861,7 @@ Reset:        f7e2 0002  ld   $02         ;| RAM segment address (high byte firs
               f98f 00b4  ld   $b4         ;03d6 SYS
               f990 00e2  ld   $e2
               f991 0000  ld   $00         ;End of file
-              f992 0200  nop
+              f992 0200  nop              ; (105 fillers)
               f993 0200  nop
               f994 0200  nop
               * 105 times

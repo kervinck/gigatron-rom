@@ -599,33 +599,6 @@ ld(hi('vBlankStart'), Y);       C('Enter video loop at vertical blank')
 jmp(Y,'vBlankStart')
 ld(syncBits)
 
-# Fillers
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-nop()
-
 #-----------------------------------------------------------------------
 
 label('sys_ResetWaveforms')
@@ -700,6 +673,10 @@ st([sysArgs+1])                 #32
 ld(hi('REENTER'), Y)            #33
 jmp(Y,'REENTER')                #34
 ld(-38/2)                       #35
+
+#-----------------------------------------------------------------------
+
+fillers(symbol('SYS_Exec_88') & 255)
 
 #-----------------------------------------------------------------------
 # Extension SYS_Exec_88: Load code from ROM into memory and execute it
@@ -1135,10 +1112,7 @@ label('videoZ')
 runVcpu((128+minTicks-1)*2 +runVcpu_overhead+vCPU_overhead,\
         'no video', returnTo=pc()+2)
 
-# Fillers
-while pc()&255 < 255:
-  nop()
-
+fillers(0xff)
 assert pc() == 0x1ff            # Enables runVcpu() to re-enter into the next page
 bra('sound3');                  C('<New scan line start>')#200,0
 # --- Page boundary ---
@@ -2550,9 +2524,7 @@ for i in range(0, 250, 2):
 
 #-----------------------------------------------------------------------
 
-# Fillers
-while pc()&255 < 0xde:
-  ld(0)
+fillers(0xde, instruction=ld)
 
 # Use remaining space for overflow of video loop
 

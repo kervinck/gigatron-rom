@@ -1089,7 +1089,7 @@ SYS_VDrawBits_134:
               04f2 1403  ld   $03,y
               04f3 e0cb  jmp  y,$cb
               04f4 00bd  ld   $bd
-              04f5 0200  nop
+              04f5 0200  nop              ; (11 fillers, alignment)
               04f6 0200  nop
               04f7 0200  nop
               * 11 times
@@ -1599,7 +1599,7 @@ SYS_LoaderPayloadCopy_34:
               06f8 a001  suba $01
 .sysCc1:      06f9 e0cb  jmp  y,$cb
               06fa 00ef  ld   $ef
-              06fb 0200  nop
+              06fb 0200  nop              ; (5 fillers, alignment)
               06fc 0200  nop
               06fd 0200  nop
               * 5 times
@@ -1850,7 +1850,7 @@ font32up:     0700 0000  ld   $00         ;Char ' '
               07f7 008a  ld   $8a
               07f8 0084  ld   $84
               07f9 007a  ld   $7a
-              07fa 0200  nop
+              07fa 0200  nop              ; (filler)
               07fb fe00  bra  ac          ;+-----------------------------------+
               07fc fcfd  bra  $07fd       ;|                                   |
               07fd 1404  ld   $04,y       ;| Trampoline for page $0700 lookups |
@@ -2084,7 +2084,7 @@ font82up:     0800 00fe  ld   $fe         ;Char 'R'
               08e2 00fe  ld   $fe
               08e3 00fe  ld   $fe
               * 5 times
-              08e6 0200  nop
+              08e6 0200  nop              ; (21 fillers)
               08e7 0200  nop
               08e8 0200  nop
               * 21 times
@@ -2289,7 +2289,7 @@ notesTable:   0900 0000  ld   $00
               09c1 0000  ld   $00
               09c2 0000  ld   $00
               * 58 times
-              09fa 0200  nop
+              09fa 0200  nop              ; (filler)
               09fb fe00  bra  ac          ;+-----------------------------------+
               09fc fcfd  bra  $09fd       ;|                                   |
               09fd 1404  ld   $04,y       ;| Trampoline for page $0900 lookups |
@@ -2733,7 +2733,7 @@ SYS_LoaderProcessInput_48:
               0bf2 1403  ld   $03,y
               0bf3 e0cb  jmp  y,$cb
               0bf4 00e9  ld   $e9
-              0bf5 0200  nop
+              0bf5 0200  nop              ; (11 fillers, alignment)
               0bf6 0200  nop
               0bf7 0200  nop
               * 11 times
@@ -56244,7 +56244,7 @@ Reset:        f1e8 0002  ld   $02         ;| RAM segment address (high byte firs
               f393 00b4  ld   $b4         ;03d6 SYS
               f394 00e2  ld   $e2
               f395 0000  ld   $00         ;End of file
-              f396 0200  nop
+              f396 0200  nop              ; (101 fillers)
               f397 0200  nop
               f398 0200  nop
               * 101 times
