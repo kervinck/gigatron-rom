@@ -33,7 +33,7 @@
 #  DONE Sanity test on several monitors
 #  DONE Update version number to v2
 #
-#  ROM v3:
+#  ROM v3: New applications
 #  DONE vPulse width modulation (for SAVE in BASIC)
 #  DONE Bricks
 #  DONE Tetronis
@@ -43,41 +43,54 @@
 #  DONE Replace Easter egg
 #  DONE Update version number to v3
 #
-#  ROM v4:
-#  DONE Support game controller TypeC
-#  DONE Reinitialize waveforms at soft reset, not just at power on
-#  DONE v6502: Retire bootCount to free up zp variables
-#  DONE v6502: SYS_v6502_Run_v4_80
-#  DONE  v6502: Reset also when v6502 is active
-#  XXX  v6502 as additional interpreter
-#  XXX  v6502: Stub D010-D013 with JSR targets
-#  XXX  Apple1: Don't use buttonState but serialRaw
-#  XXX  v6502: Preload with WOZMON and MUNCH
-#  XXX  v6502: Relocate app-specific SYS functions above v6502 (Racer, Loader)
-#  XXX  #38 "Press [A] to start program" message is stupid
-#  XXX  Update romTypeValue and displayed version in Main
-#  XXX  Update interface.json
-#  XXX  New Easter egg (Apple1.gt1? maze.gt1?)
-#
-#  ROM v5:
-#  XXX  Support SPI and RAM expander
-#  XXX  v6502: Test with VTL02?
-#  DONE SPI: Setup SPI at power-on
-#  DONE SPI: asm.py: 'ctrl' instruction
+#  ROM v4: Minor changes
+#  DONE SPI: Setup SPI at power-on and add 'ctrl' instrucion to asm.py
 #  DONE SPI: SYS control (Enable/disable slave, set bank etc)
 #  DONE SPI: SYS Exchange bytes
-#  XXX  SPI: SYS Exchange bit(s)
-#  XXX  SPI: Think about SPI modes
-#  XXX  SPI: Auto-detect banking, 64K and 128K
-#  XXX  channelMask: to switch single sound channel
+#  DONE v6502: Prototype. Retire bootCount to free up zp variables
+#  DONE Reinitialize waveforms at soft reset, not just at power on
+#  DONE v6502: Allow soft reset when v6502 is active
+#  DONE Relocate app-specific SYS functions above v6502 (Racer, Loader)
+#  DONE Apple1: Preload with WOZMON and MUNCH
+#  DONE #81 Support alternative game controllers (--> TypeC added)
+#  DONE Snake,Racer: Don't use serialRaw but buttonState
+#  DONE #52 Head-only Snake shouldn't be allowed to turn around
+#  DONE Snake: improve game play and colors in general
+#  DONE Apple1: Don't use buttonState but serialRaw
+#  DONE Replace Easter egg
+#  XXX  Racer: faster road setup
+#  XXX  channelMask: to switch off the higher sound channels
+#  XXX  #38 "Press [A] to start program" message is stupid
+#  XXX  Review ROM layout
+#  XXX  Core: Specify app-specific SYS functions on command line (.py files)
+#  XXX  Review SPI status (130 or 132)?
+#  XXX  Update romTypeValue and interface.json
+#  XXX  Update version number to v4
+#
+#  Extern:
+#  XXX  Update interface.json
+#  XXX  Update romType documentation wrt. channelMask
+#  XXX  Simplify label logic (only do A=B)
+#  XXX  v6502: Add SYS_v6502_Run_vX_80 to interface.json
+#
+#  ROM v5:
+#  XXX  v6502: Test with VTL02
+#  XXX  v6502: Test with Microchess
+#  XXX  v6502: Test with Apple1 BASIC
+#  XXX  v6502: Stub D010-D013 with JSR targets for easier patching
 #  XXX  v6502: SYS_v6502_IRQ
 #  XXX  v6502: SYS_v6502_NMI
 #  XXX  v6502: SYS_v6502_RESET
 #  XXX  Main: add Apple1 to main menu
+#  XXX  Support SPI and RAM expander
+#  XXX  SPI: SYS Exchange bit(s)
+#  XXX  SPI: Auto-detect banking, 64K and 128K
+#  XXX  SPI: Think about SPI modes
 #  XXX  #41 Fix zero page usage in Bricks and Tetronis
-#  XXX  #52 Head-only Snake shouldn't be allowed to turn around
-#  XXX  Sound: Better noise by changing wavX every frame (for at least 1 sound channel)
-#  XXX  Core:: Specify app-specific SYS functions on command line (.py files)
+#  XXX  Discoverable ROM contents
+#  XXX  Sound: Better noise by changing wavX every frame (at least in channel 1)
+#  XXX  Music sequencer (combined with LED sequencer, but retire soundTimer???)
+#  XXX  Sound demo: Play SMB Underworld tune
 #  XXX  Main: Better startup chime
 #  XXX  Video: Fast system video modes (something like ROM v3y)? Mode 4 (black)
 #  XXX  vCPU: extension for C: HOP_v4 $DD
@@ -90,7 +103,6 @@
 #  XXX  Need keymaps in ROM? (perhaps undocumented if not tested)
 #  XXX  FrogStroll (not in Contrib/)
 #  XXX  How it works memo: brief description of every software function
-#  XXX  Music sequencer (combined with LED sequencer, but retire soundTimer???)
 #  XXX  Adjustable return for LUP trampolines (in case SYS functions need it)
 #  XXX  Loader: make noise when data comes in
 #  XXX  vCPU: Multiplication (mulShift8?)
