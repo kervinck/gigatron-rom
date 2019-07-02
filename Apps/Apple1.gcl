@@ -9,11 +9,44 @@ gcl0x
 {
  Issues:
   XXX Pack variables Pos,PrintChar,WozMon variables,i,j,k
-  XXX Smaller screen so there's more space for real programs (top 16 lines = 4K)
-  XXX BRK as a way to return to monitor ($FFFE/$FFFF) after R, can it be done?
-      (Proper way to return is by JMP $FF1F)
   XXX Shift screen memory 96 pixels right
   XXX Disable sound channels
+
+  XXX NMI/IRQ/RESET to wozmon (through vector) without going through main menu
+  XXX Smaller screen so there's more space for real programs (top 16 lines = 4K)
+  XXX We can win memory by sharing all black pixel lines in one page
+      But drawing characters then touches the top line
+      - Option 1: VDRawBits7
+      - Option 2: Always hide top line
+      - Option 3: New draw transparent plot function, clear with SetBytes
+      - Option 4: Vary which page is the black line, will be the bottom line
+                  -> doesn't work at memory wrap-around
+      - Option 5: New videoTable-aware (character) plot function
+      - Option 6: use Sprite functions for plotting chars
+  XXX Print a welcome message (only on first boot)
+  XXX Possible memory map with compressed video memory
+        +--------------------------+
+        |30-7F,81-FF FREE ZP+STACK!|
+        |0100-01F9   VIDEO+SYSTEM  |
+        |0200-0FFF   FREE RAM      | 1000-5FFF -> 80 scanlines
+        |E000-EFFF   FREE RAM      | F000-FBFF -> 12 scanlines --> total 13*7+1
+        |FC00-FD00   FREE RAM      |
+        |FE00        KBD/DSP MOCKUP| Add entry points at D010-D013 = 5010-5013
+        |FF00        WOZMON        |
+        |                          |
+        |C100R     LOADER MENU     |
+        |E000R     BASIC COLD START|
+        |E2B3R     BASIC WARM START|
+        +--------------------------+
+  XXX Emulate ACI Apple Cassete Interface? C100R --> 4100 = RAM (still ok)
+  XXX       D010 60 KBD     RTS
+            D011 80 KBDCR   BRA $D037      NOK: (JMP $6024 = $E024)
+            D012 24 DSP     BIT $60
+            D013 60 DSPCR   RTS
+            D014    _DSP:
+            D037    _KBDCR:
+
+        https://www.sbprojects.net/projects/apple1/a1basic.php
 }
 
 {-----------------------------------------------------------------------+
