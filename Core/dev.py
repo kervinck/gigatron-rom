@@ -44,12 +44,12 @@
 #  DONE Update version number to v3
 #
 #  ROM v4:
-#  XXX  Detect game controller TypeC
+#  DONE Support game controller TypeC
 #  DONE Reinitialize waveforms at soft reset, not just at power on
-#  XXX  v6502 as additional interpreter
 #  DONE v6502: Retire bootCount to free up zp variables
-#  DONE v6502: SYS_v6502_RunToBRK_v4_80
-#  XXX  v6502: Reset also when v6502 is active
+#  DONE v6502: SYS_v6502_Run_v4_80
+#  DONE  v6502: Reset also when v6502 is active
+#  XXX  v6502 as additional interpreter
 #  XXX  v6502: Stub D010-D013 with JSR targets
 #  XXX  Apple1: Don't use buttonState but serialRaw
 #  XXX  v6502: Preload with WOZMON and MUNCH
@@ -120,8 +120,7 @@ for arg in argv[1:]:
 loadBindings('interface.json')
 
 # ROM type (see also Docs/GT1-files.txt)
-romTypeValue = symbol('romTypeValue_ROMv3')
-romTypeValue += 1 # TODO: Change to ROMv4
+romTypeValue = symbol('romTypeValue_DEVROM')
 
 # Gigatron clock
 cpuClock = 6.250e+06
@@ -1051,46 +1050,48 @@ st([resetTimer])                #57
 anda(127)                       #58
 beq('.restart#61')              #59 Reset at 0 (normal 2s) or 128 (extended 4s)
 ld((vReset&255)-2)              #60 Start force reset when hitting 0
-bra('.restart#64')              #61 ... otherwise do nothing yet
-bra('.restart#64')              #62
+bra('.restart#66')              #61 ... otherwise do nothing yet
+bra('.restart#66')              #62
 label('.restart#56')
-wait(61-56)                     #56
-ld(128)                         #61 Restore to ~2 seconds when not pressed
-bra('.restart#64')              #62
-st([resetTimer])                #63
+wait(63-56)                     #56
+ld(128)                         #63 Restore to ~2 seconds when not pressed
+bra('.restart#66')              #64
+st([resetTimer])                #65
 label('.restart#61')
 st([vPC])                       #61 Continue force reset
 ld(vReset>>8)                   #62
 st([vPC+1])                     #63
-label('.restart#64')
+ld(hi('ENTER'));                C('vCPU')#64
+st([vCPUselect])                #65
+label('.restart#66')
 
 # Switch video mode when (only) select is pressed (16 cycles)
 # XXX We could make this a vCPU interrupt
-ld([buttonState]);              C('Check [Select] to switch modes')#63,64
-xora(~buttonSelect)             #65 Only trigger when just [Select] is pressed
-bne('.select#68')               #66
-ld([videoModeC])                #67
-bmi('.select#70')               #68 Branch when line C is off
-ld([videoModeB])                #69 Rotate: Off->D->B->C
-st([videoModeC])                #70
-ld([videoModeD])                #71
-st([videoModeB])                #72
-bra('.select#75')               #73
-label('.select#70')
-ld('nopixels')                  #74,70
-ld('pixels')                    #71 Reset: On->D->B->C
+ld([buttonState]);              C('Check [Select] to switch modes')#65,66
+xora(~buttonSelect)             #67 Only trigger when just [Select] is pressed
+bne('.select#70')               #68
+ld([videoModeC])                #69
+bmi('.select#72')               #70 Branch when line C is off
+ld([videoModeB])                #71 Rotate: Off->D->B->C
 st([videoModeC])                #72
-st([videoModeB])                #73
-nop()                           #74
-label('.select#75')
-st([videoModeD])                #75
-wait(192-76)                    #76 Don't waste space expanding runVcpu here
+ld([videoModeD])                #73
+st([videoModeB])                #74
+bra('.select#77')               #75
+label('.select#72')
+ld('nopixels')                  #72,76
+ld('pixels')                    #73 Reset: On->D->B->C
+st([videoModeC])                #74
+st([videoModeB])                #75
+nop()                           #76
+label('.select#77')
+st([videoModeD])                #77
+wait(192-78)                    #78 Don't waste space expanding runVcpu here
 # AC==255 now
 st([buttonState])               #192
 bra('vBlankEnd')                #193
 ld(0)                           #194
-label('.select#68')
-runVcpu(195-68, '---D line 40') #68 Application cycles (scan line 40)
+label('.select#70')
+runVcpu(195-70, '---D line 40') #70 Application cycles (scan line 40)
 
 # AC==0 now
 label('vBlankEnd')
@@ -2727,7 +2728,7 @@ jmp(Y,'sys_Control_v3x_40')     #16
 ld([vAC])                       #17
 
 #-----------------------------------------------------------------------
-# Extension SYS_v6502_vX_80
+# Extension SYS_v6502_Run_vX_80
 #-----------------------------------------------------------------------
 
 # Immediately transfer control to v6502, without waiting for the current
@@ -2746,7 +2747,7 @@ ld([vAC])                       #17
 # - Another way is to set vPC before BRK, and vCPU will continue (after +=2)
 
 # Calling v6502 code from vCPU looks like this:
-#       LDWI  SYS_v6502_vX_80
+#       LDWI  SYS_v6502_Run_vX_80
 #       STW   sysFn
 #       LDWI  $6502_start_address
 #       STW   vLR
@@ -2783,7 +2784,7 @@ ld([vAC])                       #17
 #                              2*v6520_maxTicks                    11
 #                                                            v6502_overhead
 
-label('SYS_v6502_vX_80')
+label('SYS_v6502_Run_vX_80')
 ld(hi('sys_v6502'),Y)           #15
 jmp(Y,'sys_v6502')              #16
 ld(hi('v6502_ENTER'));          C('Activate v6502')#17

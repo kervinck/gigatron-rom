@@ -12,14 +12,16 @@ gcl0x
   XXX Smaller screen so there's more space for real programs (top 16 lines = 4K)
   XXX BRK as a way to return to monitor ($FFFE/$FFFF) after R, can it be done?
       (Proper way to return is by JMP $FF1F)
+  XXX Shift screen memory 96 pixels right
+  XXX Disable sound channels
 }
 
 {-----------------------------------------------------------------------+
 |       ROM type check                                                  |
 +-----------------------------------------------------------------------}
 
-\romType, \romTypeValue_ROMv3-  {Need version > ROMv3, see Docs/GT1-files.txt}
-[if<=0 do \frameCount;          {https://forum.gigatron.io/viewtopic.php?f=4&t=130}
+\romType, \romTypeValue_DEVROM- {Need version >= DEVROM, see Docs/GT1-files.txt}
+[if<0 do \frameCount;           {https://forum.gigatron.io/viewtopic.php?f=4&t=130}
   #\DOKE #\vPCH loop]
 
 {-----------------------------------------------------------------------+
@@ -36,10 +38,43 @@ gcl0x
   1+ 127^ if<>0loop]            {Next in range}
 
 \_PrintChar PrintChar=          {Forward reference}
-$8d PrintChar!                  {Force initial LF and reset of Pos}
-\_Main \vLR:                    {Prepare transfer to main loop}
-\_WozMon                        {Start address for WozMon}
-[ret]                           {Jump to _Main (and avoid automatic vLR patch)}
+\Apple1 \vLR:                   {Prepare transfer to main loop}
+\Munch                          {Start address for Munching6502}
+[ret]                           {Jump to Main (the brackets avoid the automatic vLR patch)}
+
+{-----------------------------------------------------------------------+
+|       Preloaded demo program                                          |
++-----------------------------------------------------------------------}
+
+*=$280
+
+Munch=* #$18                    { Munch clc             }
+        #$69 #$17               {       adc #23         XXX idea: #\ADCzp  #23}
+        #$85 #$40               {       sta $40         }
+        #$a9 #$00               {       lda #0          }
+        #$85 #$41               {       sta $41         }
+        #$a9 #$10               {       lda #16         }
+        #$85 #$42               {       sta $42         }
+        #$a9 #$07               { nextT lda #$07        }
+        #$85 #$43               {       sta $43         }
+        #$45 #$41               { nextY eor $41         }
+        #$a8                    {       tay             }
+        #$a5 #$40               {       lda $40         }
+        #$91 #$42               {       sta ($42),y     }
+        #$e6 #$43               {       inc $43         }
+        #$a5 #$43               {       lda $43         }
+        #$c9 #$7f               {       cmp #$7f        }
+        #$d0 #$f1               {       bne *-15        nextY}
+        #$a5 #\serialRaw        {       lda serialRaw   }
+        #$c9 #$03               {       cmp #3          Ctrl-C}
+        #$f0 #$09               {       beq out         }
+        #$e6 #$41               {       inc $41         }
+        #$10 #$e3               {       bpl *-29        nextT}
+        #$a5 #$40               {       lda $40         }
+        #$4c #$80 #$02          {       jmp Munch       }
+        #$a9 #$8d               {       lda #$8d        Force initial LF and reset of Pos}
+        #$00                    {       brk             }
+        #$4c #$00 #$ff          {       jmp WozMon      }
 
 {-----------------------------------------------------------------------+
 |       Main loop                                                       |
@@ -47,21 +82,24 @@ $8d PrintChar!                  {Force initial LF and reset of Pos}
 
 *=$300
 
-_Main=*
+Apple1=*
+
 \vLR:                           {Reset v6502 PC}
 [do
-  $0b0c \sysFn:                 {Set SYS call to SYS_v6502}
+  $0b0c \sysFn:                 {Set SYS call to SYS_v6502_Run_vX_80}
   k                             {ASCII code in A}
   80!                           {Run 6502 code until BRK}
   push                          {Save v6502 PC}
   [if=0                         {A=0 reads from keyboard}
     [do
+      \serialRaw, 255^          {Wait for idle keyboard}
+      if<>0loop]
+    [do
       \frameCount, 48&          {Roughly 1 Hz and 75% duty cycle}
       [if=0 $a0 else $c0]       {Select space or '@'}
       PrintChar! Pos=           {Display cursor and go back}
-      \buttonState, k= 128&     {Key ready?}
+      \serialRaw, k= 128&       {Key ready?}
       if<>0loop]                {Loop until ready}
-    255 \buttonState.           {Mark all bits as read}
     $a0 PrintChar! Pos=         {Overwrite '@' with a space}
     k $60- [if>=0 $40+ k=]      {Map to upper case, and DEL to rubout}
     k  10^ [if=0  13 k=]        {Map LF to CR}
@@ -153,7 +191,7 @@ _PrintChar=*
 
 *=$ff00
 
-_WozMon=*
+WozMon=*
 
 {FF00} #$D8           { RESET:          CLD             Clear decimal arithmetic mode.          }
 {FF01} #$58           {                 CLI                                                     }

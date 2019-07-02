@@ -1,7 +1,8 @@
 {
- "romTypeValue_ROMv1"   : "0x001c",
- "romTypeValue_ROMv2"   : "0x0020",
- "romTypeValue_ROMv3"   : "0x0028",
+ "romTypeValue_ROMv1"   : "0x1c",
+ "romTypeValue_ROMv2"   : "0x20",
+ "romTypeValue_ROMv3"   : "0x28",
+ "romTypeValue_DEVROM"  : "0xf8",
 
  "zeroConst"            : "0x0000",
  "memSize"              : "0x0001",

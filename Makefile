@@ -41,7 +41,7 @@ dev.rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/TinyBASIC_v2.gcl\
 		Apps/TicTac_v1.gtb\
 		Apps/WozMon_v2.gt1\
-		Egg=Apps/Munching6502.gcl\
+		Egg=Apps/Apple1.gt1x\
 		Apps/Main_v3.gcl\
 		Core/Reset.gcl
 	open http://127.0.0.1:8000/src

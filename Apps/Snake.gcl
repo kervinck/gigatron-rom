@@ -12,10 +12,7 @@ gcl0x
 +-----------------------------------------------------------------------}
 
 \romType, \romTypeValue_ROMv2-
-[if<0 do
-  #\LDW  #\frameCount
-  #\DOKE #\vPCH
-  loop]
+[if<0 do \frameCount; #\DOKE #\vPCH loop]
 
 {-----------------------------------------------------------------------+
 |       Setup                                                           |
@@ -399,6 +396,20 @@ $0600:
   pop ret
 ] SetupGame=
 
+[def
+  push
+  $802 Pos=
+  Score HighScore- [if>0 30 else 8] Color=
+  0 BgColor=
+  Score Value= DrawNumber4!
+
+  {Progressive game speed}
+  Score 100- [if<0 4 else
+        200- [if<0 3 else 2]] Delay=
+
+  pop ret
+] DrawScore=
+
 {-----------------------------------------------------------------------+
 |}$08a0 \vLR: ret{      RAM page 8                                      |
 +-----------------------------------------------------------------------}
@@ -475,25 +486,6 @@ $0aa0:
 
 [def
   push
-  $802 Pos=
-  Score HighScore- [if>0 30 else 8] Color=
-  0 BgColor=
-  Score Value= DrawNumber4!
-
-  {Progressive game speed}
-  Score 100- [if<0 4 else
-        200- [if<0 3 else 2]] Delay=
-
-  pop ret
-] DrawScore=
-
-{-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM page 11                                     |
-+-----------------------------------------------------------------------}
-$0ba0:
-
-[def
-  push
   $874 Pos= 0 BgColor=
   [def `HI` #0] PrintText!
   HighScore Value= DrawNumber4!
@@ -511,9 +503,9 @@ $0ba0:
 ] SetupChannel=
 
 {-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM page 12                                     |
+|}>\vLR++ ret{          RAM page 11                                     |
 +-----------------------------------------------------------------------}
-$0ca0:
+$0ba0:
 
 { Setup note in all channels, but don't play it yet }
 [def
@@ -537,9 +529,9 @@ $0ca0:
 ] PlayGameOverSound=
 
 {-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM page 13                                     |
+|}>\vLR++ ret{          RAM page 12                                     |
 +-----------------------------------------------------------------------}
-$0da0:
+$0ca0:
 
 { Display the get ready messages }
 [def
@@ -553,9 +545,9 @@ $0da0:
 ] GetReady=
 
 {-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM page 14                                     |
+|}>\vLR++ ret{          RAM page 13                                     |
 +-----------------------------------------------------------------------}
-$0ea0:
+$0da0:
 
 [def ``EAT`FOOD  #0
      `NOT`POISON #0
