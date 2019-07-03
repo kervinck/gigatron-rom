@@ -29,21 +29,21 @@ dev.rom: Core/* Apps/* Images/* Makefile interface.json
 	python Core/dev.py\
 		packedParrot=Images/Parrot-160x120.rgb\
 		packedJupiter=Images/Jupiter-160x120.rgb\
-		Apps/Snake.gcl\
+		Snake=Apps/Snake.gcl\
 		zippedRacerHorizon=Images/RacerHorizon-256x16.rgb\
-		Apps/Racer.gcl\
-		Apps/Mandelbrot_v1.gcl\
-		Apps/Pictures_v2.gcl\
-		Apps/Credits_v2.gcl\
-		Apps/Loader_v2.gcl\
-		Apps/Tetronis_v1.gt1\
-		Apps/Bricks_v1.gt1\
-		Apps/TinyBASIC_v2.gcl\
-		Apps/TicTac_v1.gtb\
-		Apps/WozMon_v2.gt1\
+		Racer=Apps/Racer.gcl\
+		Mandelbrot=Apps/Mandelbrot_v1.gcl\
+		Pictures=Apps/Pictures_v2.gcl\
+		Credits=Apps/Credits_v2.gcl\
+		Loader=Apps/Loader_v2.gcl\
+		Tetronis=Apps/Tetronis_v1.gt1\
+		Bricks=Apps/Bricks_v1.gt1\
+		TinyBASIC=Apps/TinyBASIC_v2.gcl\
+		TicTac=Apps/TicTac_v1.gtb\
+		WozMon=Apps/WozMon_v2.gt1\
 		Egg=Apps/Apple1.gt1x\
-		Apps/Main_v3.gcl\
-		Core/Reset.gcl
+		Main=Apps/Main.gcl\
+		Reset=Core/Reset.gcl
 	open http://127.0.0.1:8000/src
 
 # Test ROM for v6502 testing

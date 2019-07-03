@@ -82,7 +82,8 @@
 #  XXX  v6502: SYS_v6502_NMI
 #  XXX  v6502: SYS_v6502_RESET
 #  XXX  Main: add Apple1 to main menu
-#  XXX  Support SPI and RAM expander
+#  XXX  Formally Support SPI and RAM expander: publish in interface.json
+#  XXX  SPI: Also reset at soft reset
 #  XXX  SPI: SYS Exchange bit(s)
 #  XXX  SPI: Auto-detect banking, 64K and 128K
 #  XXX  SPI: Think about SPI modes
@@ -5083,17 +5084,13 @@ for application in argv[1:]:
   print
 
   if '=' in application:
-    # Explicit name name
+    # Explicit label
     name, application = application.split('=', 1)
   else:
-    # Derived name name
+    # Derived label
     name = application.rsplit('.', 1)[0] # Remove extension
-    name = name.rsplit('_v', 1)[0]       # Remove version
     name = name.rsplit('/', 1)[-1]       # Remove path
   print 'Processing file %s label %s' % (application, name)
-
-  if 'TinyBASIC_v2.' in application:
-    hasTinyBASIC = True
 
   # Pre-compiled GT1 files
   if application.endswith(('.gt1', '.gt1x')):
@@ -5122,12 +5119,13 @@ for application in argv[1:]:
 
   # GTB files
   elif application.endswith('.gtb'):
-    assert hasTinyBASIC
     print 'Link type .gtb address %04x' % pc()
     zpReset(userVars)
     label(name)
     program = gcl.Program(name)
-    address = 0x1bc0                    # XXX Hardcoded for TinyBASIC_v2
+    address = symbol('_UserProg')
+    if not has(address):
+      print ' Error: TinyBASIC must be compiled-in first'
     program.org(address)
     i = 0
     for line in open(application):
@@ -5143,8 +5141,8 @@ for application in argv[1:]:
       address += 32
       if address & 255 == 0:
         address += 160
-    basicLine(address+2, None, 'RUN')       # Startup command
-    basicLine(0x1ba0, address, None)        # End of program
+    basicLine(address+2, None, 'RUN')   # Startup command
+    basicLine(0x1ba0, address, None)    # End of program
     program.putInRomTable(0)
     program.end()
     print ' Lines', i

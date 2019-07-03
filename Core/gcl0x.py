@@ -451,9 +451,6 @@ class Program:
       prefix += ' %s' % self.lastWord
     return prefix + ':'
 
-def has(x):
-  return x is not None
-
 def prev(address, step=2):
   # Take vPC two bytes back, wrap around if needed to stay on page
   return (address & ~255) | ((address-step) & 255)

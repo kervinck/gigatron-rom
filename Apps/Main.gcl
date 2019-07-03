@@ -13,9 +13,8 @@ gcl0x
   16& [if=0                     {And [Start] pressed}
   \Egg \sysArgs0: 88!]]         {Start program. SYS_Exec_88 still in sysFn}
 
-{ Print a 5x8 character on screen with the built-in font
-  Char must be in the 32-127 range (this is not checked) }
-[def {PrintChar}
+{ Print ASCII character (32..127) on screen in 5x8 pixels }
+[def
   {Map ASCII code to offset in font table}
   Char 82- [if<0 50+ i= \font32up
             else     i= \font82up] fontData= {Select low or high page}
@@ -35,7 +34,8 @@ gcl0x
   ret
 ] PrintChar=
 
-[def {PrintText}
+{ PrintText }
+[def
   push
   Text=
   [do
@@ -66,9 +66,9 @@ gcl0x
 ] PrintArrow=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 3                                      |
+|}>\vLR++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
-$0300:
+*=$0300
 
 { Operate menu }
 [def
@@ -103,8 +103,8 @@ $0300:
        Item [if<>0 6- if<>0 Item 1- Item=]
        \buttonState, 8| \buttonState.]
 
-    {buttonA}
-    \buttonState, 127^ if<>0loop
+    {buttonA, or any ASCII key from keyboard, 'A' included...}
+    \buttonState, 128& if<>0loop
 
     42 {Gray} Color= PrintArrow!
 
@@ -125,11 +125,12 @@ $0300:
 ] SelectMenu=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 4                                      |
+|}>\vLR++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
-$0400:
+*=$0400
 
-[def {Newline}
+{Newline}
+[def
   Pos>, 8+ Pos>.
   2 Pos<.
   ret
@@ -159,9 +160,9 @@ $0400:
 ] WipeOutArrow=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 5                                      |
+|}>\vLR++ ret{          RAM page 5                                      |
 +-----------------------------------------------------------------------}
-$0500:
+*=$0500
 
 [def {PrintMenu}
   push
@@ -204,18 +205,18 @@ Program \sysArgs0:              {ROM image}
 $200 \vLR:                      {Start of execution address}
 Item 6^ [if=0                   {Tetronis workaround}
   $80 \vSP.                     { 1. Zero-page conflict: move stack}
-  $6f9 \vLR:]                   { 2. Stack must be restored with patch}
+  \TetronisPatch \vLR:]         { 2. Stack must be restored with patch}
 Item 7^ [if=0                   {Bricks workaround}
   $80 \vSP.]                    { 1. Zero-page conflict: move stack}
 Item 8^ [if=0                   {TicTacToe needs special launcher}
-  $7fa0 call]
+  \LaunchTicTacToe call]
 88!                             {Load from ROM and execute}
 
 {-----------------------------------------------------------------------+
 |       Tetronis patch                                                  |
 +-----------------------------------------------------------------------}
 
-$6f9:
+*=$06f9 TetronisPatch=*
 
 $200 \vSP. call                 {Restore stack pointer and go to entry_point}
 
@@ -223,7 +224,7 @@ $200 \vSP. call                 {Restore stack pointer and go to entry_point}
 |       Tic Tac Toe launcher                                            |
 +-----------------------------------------------------------------------}
 
-$7fa0:
+*=$7fa0 LaunchTicTacToe=*
 
   11+ \vLR:                     {Return to this program after SYS}
   \TinyBASIC \sysArgs0: 88!     {Load only, SYS_Exec_88 still in sysFn}

@@ -310,9 +310,9 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 ] TestBreak=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 3                                      |
+|}>\vLR++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
-$0300:
+*=$0300
 
 { Print ASCII character (32..127) on screen in 5x8 pixels }
 { For valid characters, return the actual position }
@@ -361,7 +361,7 @@ $0300:
   push
 
   tmp=                          {Line number}
-  $1ba0 Active=                 {Input buffer}
+  \_Buffer Active=              {Input buffer}
   tmp Active:                   {For error messages}
   $a2 Active<.                  {Text area}
 
@@ -404,9 +404,9 @@ $0300:
 ] {GetLine=}
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 4                                      |
+|}>\vLR++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
-$0400:
+*=$0400
 GetLine=
 
 { Statement executor. Doesn't return through vLR }
@@ -479,9 +479,9 @@ GetLine=
 ] Statements=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ \vLR>++ ret{  RAM page 5                                      |
+|}>\vLR++ >\vLR++ ret{  RAM page 5                                      |
 +-----------------------------------------------------------------------}
-$0500:
+*=$0500
 
 { Continuation of Statement }
 
@@ -568,7 +568,7 @@ $0500:
 {-----------------------------------------------------------------------+
 |                       RAM page 6                                      |
 +-----------------------------------------------------------------------}
-$0600:
+*=$0600
 
 {
  Six scenarios for InsertLine          Check   Search  Shift   Copy    Shift
@@ -659,7 +659,7 @@ Newline!
 {-----------------------------------------------------------------------+
 |}$08a0 \vLR: ret{      RAM page 8                                      |
 +-----------------------------------------------------------------------}
-$08a0:
+*=$08a0
 
 { Calculate address of next 32-byte block for storing BASIC lines }
 { Realign if needed }
@@ -695,9 +695,9 @@ $08a0:
 ] {GotoValue=}
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 9                                      |
+|}>\vLR++ ret{          RAM page 9                                      |
 +-----------------------------------------------------------------------}
-$09a0:
+*=$09a0
 GotoValue=
 
 { Destructively print Value as signed decimal number }
@@ -732,9 +732,9 @@ GotoValue=
 ] SyntaxError=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 10                                     |
+|}>\vLR++ ret{          RAM page 10                                     |
 +-----------------------------------------------------------------------}
-$0aa0:
+*=$0aa0
 
 { Parse an inline keyword. Returns 0 for failure }
 [def
@@ -773,9 +773,9 @@ $0aa0:
 ] {Number=}
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 11                                     |
+|}>\vLR++ ret{          RAM page 11                                     |
 +-----------------------------------------------------------------------}
-$0ba0:
+*=$0ba0
 Number=
 
 { Verify that there is nothing else on the line, then continue with next }
@@ -786,7 +786,7 @@ Number=
     SyntaxError!]               {There must be nothing left on the line}
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
-    $1bc0 Active^ if<>0         {Also stop if we came from the input buffer}
+    \_UserProg Active^ if<>0    {Also stop if we came from the input buffer}
     Active 2+ Active=           {Skip past line number}
     Statements!]                {And continue from there}
   Prompt! 0#                    {Program finished ok}
@@ -804,14 +804,14 @@ Number=
       i<++                      {Advance pointer}
       i<, if<>0loop]            {Until end of page}
     j 1- if<>0loop]
-  $1bc0 Begin=
+  \_UserProg Begin=
   ret
 ] {Clear=}
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 12                                     |
+|}>\vLR++ ret{          RAM page 12                                     |
 +-----------------------------------------------------------------------}
-$0ca0:
+*=$0ca0
 Clear=
 
 { Process a full expression, result in Value and vAC }
@@ -853,9 +853,9 @@ Clear=
 ] ValueError=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 13                                     |
+|}>\vLR++ ret{          RAM page 13                                     |
 +-----------------------------------------------------------------------}
-$0da0:
+*=$0da0
 
 { Process an expression term, result in Value and vAC }
 [def
@@ -884,9 +884,9 @@ $0da0:
 ] Term=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 14                                     |
+|}>\vLR++ ret{          RAM page 14                                     |
 +-----------------------------------------------------------------------}
-$0ea0:
+*=$0ea0
 
 { Calculate vAC / Value, result in vAC, remainder in i }
 [def
@@ -911,9 +911,9 @@ $0ea0:
 ] {Divide=}
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 15                                     |
+|}>\vLR++ ret{          RAM page 15                                     |
 +-----------------------------------------------------------------------}
-$0fa0:
+*=$0fa0
 Divide=
 
 { Calculate vAC * Value, result in vAC }
@@ -950,9 +950,9 @@ Divide=
 ] Spaces=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 16                                     |
+|}>\vLR++ ret{          RAM page 16                                     |
 +-----------------------------------------------------------------------}
-$10a0:
+*=$10a0
 
 { List program, count and print free bytes }
 [def
@@ -992,9 +992,9 @@ $10a0:
 ] {List=}
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 17                                     |
+|}>\vLR++ ret{          RAM page 17                                     |
 +-----------------------------------------------------------------------}
-$11a0:
+*=$11a0
 List=
 
 { Conditionally print leading decimal digit }
@@ -1033,13 +1033,13 @@ List=
   pop ret
 ] RelOp=
 
-$1ba0 deek End=                 {At startup 'End' comes from loaded segment}
+\_Buffer deek End=              {At startup 'End' comes from loaded segment}
 2+ {Active=}                    {BASIC command(s) to run at startup}
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 18                                     |
+|}>\vLR++ ret{          RAM page 18                                     |
 +-----------------------------------------------------------------------}
-$12a0:
+*=$12a0
 Active=
 
 { Error reporting function and re-entry point for main loop }
@@ -1083,7 +1083,7 @@ Statements!                     {Execute statements}
 {-----------------------------------------------------------------------+
 |                       RAM page 19                                     |
 +-----------------------------------------------------------------------}
-$13a0:
+*=$13a0
 
 {PRINT}
 
@@ -1123,7 +1123,7 @@ $13a0:
 {-----------------------------------------------------------------------+
 |                       RAM page 20                                     |
 +-----------------------------------------------------------------------}
-$14a0:
+*=$14a0
 
   Keyword! $69# $6e# $70# $75#  {'input'}
     $74# 0#
@@ -1161,7 +1161,7 @@ $14a0:
 {-----------------------------------------------------------------------+
 |                       RAM page 21                                     |
 +-----------------------------------------------------------------------}
-$15a0:
+*=$15a0
 
   Keyword! $63# $6c# $73# 0#    {'cls'}
   [if<>0
@@ -1194,7 +1194,7 @@ $15a0:
 {-----------------------------------------------------------------------+
 |                       RAM page 22                                     |
 +-----------------------------------------------------------------------}
-$16a0:
+*=$16a0
 
   Keyword! $6c# $65# $74# 0#    {'let' (optional)}
   Variable!
@@ -1220,7 +1220,7 @@ $16a0:
 {-----------------------------------------------------------------------+
 |                       RAM page 23                                     |
 +-----------------------------------------------------------------------}
-$17a0:
+*=$17a0
 
 {SAVE}
 
@@ -1266,7 +1266,7 @@ $17a0:
 {-----------------------------------------------------------------------+
 |                       RAM page 24                                     |
 +-----------------------------------------------------------------------}
-$18a0:
+*=$18a0
 
 {Newline}
 
@@ -1306,7 +1306,7 @@ $18a0:
 {-----------------------------------------------------------------------+
 |                       RAM page 25                                     |
 +-----------------------------------------------------------------------}
-$19a0:
+*=$19a0
 
 {LINE}
 
@@ -1340,7 +1340,7 @@ $19a0:
 {-----------------------------------------------------------------------+
 |                       RAM page 26                                     |
 +-----------------------------------------------------------------------}
-$1aa0:
+*=$1aa0
 
 {Continuation of LINE}
 
@@ -1379,6 +1379,13 @@ $1aa0:
 { BASIC data begins here. In this setup the interpreter can be patched
   to include a BASIC program and a first command for execution }
 
-$1ba0: $a0# $1b#                {Point to self}
-       $4e# $45# $57# 0#        {'NEW' to start interactive session}
+*=$1ba0 _Buffer=*               {Must be the "line" before user program}
+       #$a0 #$1b                {Point to self}
+       `NEW 0#                  {'NEW' to start interactive session}
+
+*=$1bc0 _UserProg=*             {User program starts here}
+
+{-----------------------------------------------------------------------+
+|                                                                       |
++-----------------------------------------------------------------------}
 

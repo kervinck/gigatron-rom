@@ -106,6 +106,10 @@ def define(name, newValue):
 def symbol(name):
   return _symbols[name] if name in _symbols else None
 
+def has(x):
+  """Useful primitive"""
+  return x is not None
+
 def lo(name):
   if isinstance(name, int):
     return name & 255
