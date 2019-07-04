@@ -104,6 +104,7 @@ def define(name, newValue):
   _symbols[name] = newValue
 
 def symbol(name):
+  """Lookup a symbol or None if not defined"""
   return _symbols[name] if name in _symbols else None
 
 def has(x):
@@ -417,6 +418,7 @@ def _emit(opcode, operand):
       disassembly = disassemble(opcode, operand)
       print '%04x %02x%02x  %s' % (_romSize, opcode, operand, disassembly)
       print 'Error: Program size limit exceeded'
+      errors += 1
       _maxRomSize = 0x10000 # Extend to full address space to prevent more of the same errors
   _rom0.append(opcode)
   _rom1.append(operand)

@@ -28,9 +28,9 @@ gcl0x
   6+      Pos=
   \SYS_VDrawBits_134 \sysFn:
   $fb i= [do
-    fontData 0? fontData<++ \sysArgs2. 134!
-    \sysArgs4<++
-    i<++ i if<>0loop]
+    fontData 0? <fontData++ \sysArgs2. 134!
+    <\sysArgs4++
+    <i++ i if<>0loop]
   ret
 ] PrintChar=
 
@@ -39,7 +39,7 @@ gcl0x
   push
   Text=
   [do
-    Text, if<>0 Char= Text<++           {while((Char=*Text++)!=0)...}
+    Text, if<>0 Char= <Text++           {while((Char=*Text++)!=0)...}
     9^ [if=0 Pos 18+ Pos= loop]         {Horizontal tab}
     3^ [if=0 Newline! loop]             {Newline 9^10=3}
     PrintChar!                          {Regular character}
@@ -94,7 +94,7 @@ gcl0x
     {buttonDown}
     \buttonState, 251^ [if=0
        WipeOutArrow!
-       Item 5- [if<>0 5- if<>0 Item<++]
+       Item 5- [if<>0 5- if<>0 <Item++]
        \buttonState, 4| \buttonState.]
 
     {buttonUp}
@@ -131,8 +131,8 @@ gcl0x
 
 {Newline}
 [def
-  Pos>, 8+ Pos>.
-  2 Pos<.
+  >Pos, 8+ >Pos.
+  2 <Pos.
   ret
 ] Newline=
 
@@ -190,10 +190,10 @@ Pos 48+ j& q=                   {Box of current cursor}
   \sysArgs4;
   [do
     48+ j& q^ [if<>0            {Don't clear selected item}
-      p>, $78^ if<>0            {Also don't clear the bottom row}
+      >p, $78^ if<>0            {Also don't clear the bottom row}
       134!]                     {Clears 8 pixels vertically}
     $800
-    \ADDW# \sysArgs4#           {Inline assembly}
+    #\ADDW #\sysArgs4           {Inline assembly}
     \sysArgs4:
     if>0loop]                   {Step down}
   i+ \sysArgs4:

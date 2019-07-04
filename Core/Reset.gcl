@@ -55,11 +55,10 @@ gcl0x
 {-----------------------------------------------------------------------+
 |}>\vLR++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
-$0300:
+*=$0300
 
-{ Print a 5x8 character on screen with the built-in font
-  Char must be in the 32-127 range (this is not checked) }
-[def {PrintChar}
+{ Print ASCII character (32..127) on screen in 5x8 pixels }
+[def
   {Map ASCII code to offset in font table}
   Char 82- [if<0 50+ i= \font32up
             else     i= \font82up] fontData= {Select low or high page}
@@ -107,7 +106,7 @@ $378 {3: B-4} SetupChannel!
 $47e {4: D-5} SetupChannel!
 
 SetupVideo!
-$814 Pos= PrintStartupMessage! {Returns 0}
+$814 Pos= PrintStartupMessage!  {Returns 0}
 
 { Start blinkenlights }
 \ledState_v2, 128&              {Check if sequencer still running}

@@ -58,11 +58,11 @@
 #  DONE Snake: improve game play and colors in general
 #  DONE Apple1: Don't use buttonState but serialRaw
 #  DONE Replace Easter egg
+#  DONE  #38 "Press [A] to start program" message is stupid
+#  DONE  channelMask: to switch off the higher sound channels
+#  DONE Core: Specify app-specific SYS functions on command line (.py files)
 #  XXX  Racer: faster road setup
-#  XXX  channelMask: to switch off the higher sound channels
-#  XXX  #38 "Press [A] to start program" message is stupid
 #  XXX  Review ROM layout
-#  XXX  Core: Specify app-specific SYS functions on command line (.py files)
 #  XXX  Review SPI status (130 or 132)?
 #  XXX  Update romTypeValue and interface.json
 #  XXX  Update version number to v4
@@ -70,7 +70,7 @@
 #  Extern:
 #  XXX  Update interface.json
 #  XXX  Update romType documentation wrt. channelMask
-#  XXX  Simplify label logic (only do A=B)
+#  DONE Simplify label logic (only do A=B)
 #  XXX  v6502: Add SYS_v6502_Run_vX_80 to interface.json
 #
 #  ROM v5:
@@ -113,20 +113,13 @@
 #  XXX  Multitasking/threading/sleeping (start with date/time clock in GCL)
 #-----------------------------------------------------------------------
 
+import importlib
 from sys import argv
 from os  import getenv
 
 from asm import *
 import gcl0x as gcl
 import font_v2 as font
-
-# Scan command line arguments to determine which
-# application-specific SYS functions to assemble
-hasRacer = False
-hasLoader = False
-for arg in argv[1:]:
-  if '/Racer'  in arg: hasRacer = True
-  if '/Loader' in arg: hasLoader = True
 
 # Pre-loading the formal interface as a way to get warnings when
 # accidently redefined with a different value
@@ -223,7 +216,6 @@ zpByte()                   # Recycled and still unused. Candidate future uses:
                            # - SPI control state (to remember banking state)
                            # - Video driver high address (for alternative video modes)
                            # - v6502: ADH offset ("MMU")
-                           # - channelMask (for freeing up the page 2,3,4 high bytes)
                            # - mapping for for matrix keyboards (C16, C64, VIC20...)
 vCPUselect      = zpByte() # Active interpreter page
 
@@ -276,6 +268,15 @@ videoModeC      = zpByte(1) # Pixel burst or vCPU
 # Versioning for GT1 compatibility
 # Please refer to Docs/GT1-files.txt for interpreting this variable
 romType         = zpByte(1)
+
+# The low 3 bits are repurposed to select the actively updated sound channels.
+# Valid bit combinations are:
+#  xxxxx011     Default after reset: 4 channels (page 1,2,3,4)
+#  xxxxx001     2 channels at double update rate (page 1,2)
+#  xxxxx000     1 channel at quadruple update rate (page 1)
+# The main application for this is to free up the high bytyes of page 2,3,4.
+channelMask = symbol('channelMask_DEVROM')
+assert romType == channelMask
 
 # SYS function arguments and results/scratch
 sysFn           = zpByte(2)
@@ -662,7 +663,8 @@ ld(-50/2)                       #47
 
 label('SYS_Reset_38')
 assert pc()>>8 == 0
-ld(romTypeValue);               C('Set ROM type/version')#15
+assert (romTypeValue & 7) == 0
+ld(romTypeValue|3);             C('Set ROM type/version and channel mask')#15
 st([romType])                   #16
 ld(0)                           #17
 st([vSP])                       #18 Reset stack pointer
@@ -922,7 +924,12 @@ if soundDiscontinuity == 2:
 if soundDiscontinuity > 2:
   print "Warning: sound discontinuity not supressed"
 
-runVcpu(189-72-extra, '---D line 0')#72 Application cycles (scan line 0)
+runVcpu(186-72-extra, '---D line 0')#72 Application cycles (scan line 0)
+
+# Mitigation for rogue channelMask (3 cycles)
+ld([channelMask]);              C('Normalize channelMask, for robustness')#186
+anda(0b11111011)                #187
+st([channelMask])               #188
 
 # Sound on/off (6 cycles)
 ld([soundTimer]);               C('Sound on/off')#189
@@ -945,7 +952,7 @@ ld([videoSync0], OUT);          C('<New scan line start>')#0
 
 label('sound1')
 ld([channel]);                  C('Advance to next sound channel')#1
-anda(3)                         #2
+anda([channelMask])             #2
 adda(1)                         #3
 ld([videoSync1], OUT);          C('Start horizontal pulse')#4
 st([channel], Y)                #5
@@ -1104,7 +1111,13 @@ st([buttonState])               #192
 bra('vBlankEnd')                #193
 ld(0)                           #194
 label('.select#70')
-runVcpu(195-70, '---D line 40') #70 Application cycles (scan line 40)
+
+# Mitigation of runaway channel variable
+st([channel]);                  C('Normalize channel, for robustness')#70
+anda(0b00000011)                #71
+st([channel])                   #72 Stop wild channel updates
+
+runVcpu(195-73, '---D line 40') #73 Application cycles (scan line 40)
 
 # AC==0 now
 label('vBlankEnd')
@@ -1113,7 +1126,7 @@ st([frameX])                    #196
 ld('videoA')                    #197
 st([nextVideo])                 #198
 ld([channel])                   #199 Advance to next sound channel
-anda(3);                        C('<New scan line start>')#0
+anda([channelMask]);            C('<New scan line start>')#0
 adda(1)                         #1
 ld(hi('sound2'), Y)             #2
 jmp(Y,'sound2')                 #3
@@ -1159,7 +1172,7 @@ ld(syncBits, OUT);              C('<New scan line start>')#0 Back to black
 # Front porch
 ld([channel]);                  C('Advance to next sound channel')#1
 label('sound3')                 # Return from vCPU interpreter
-anda(3)                         #2
+anda([channelMask])             #2
 adda(1)                         #3
 ld(syncBits^hSync, OUT);        C('Start horizontal pulse')#4
 
@@ -4805,7 +4818,7 @@ align(1)                        # Resets size limit
 
 #-----------------------------------------------------------------------
 #
-#  End of core
+#  End of core -- Start of storage area
 #
 #-----------------------------------------------------------------------
 
@@ -4825,6 +4838,7 @@ define('vAC',        vAC)
 define('vACH',       vAC+1)
 define('vLR',        vLR)
 define('vSP',        vSP)
+define('vTmp',       vTmp)      # Not in interface.json
 define('romType',    romType)
 define('sysFn',      sysFn)
 for i in range(8):
@@ -4860,206 +4874,7 @@ define('buttonA',    buttonA)
 define('vPC+1',      vPC+1)
 
 #-----------------------------------------------------------------------
-#
-#       Application specific SYS extensions
-#
-#-----------------------------------------------------------------------
-
-# !!! These aren't defined in interface.json and therefore
-# !!! availability and presence will vary
-
-if hasRacer:
-  label('SYS_RacerUpdateVideoX_40')
-  ld([sysArgs+2],X)             #15 q,
-  ld([sysArgs+3],Y)             #16
-  ld([Y,X])                     #17
-  st([vTmp])                    #18
-  suba([sysArgs+4])             #19 X-
-  ld([sysArgs+0],X)             #20 p.
-  ld([sysArgs+1],Y)             #21
-  st([Y,X])                     #22
-  ld([sysArgs+0])               #23 p 4- p=
-  suba(4)                       #24
-  st([sysArgs+0])               #25
-  ld([vTmp])                    #26 q,
-  st([sysArgs+4])               #27 X=
-  ld([sysArgs+2])               #28 q<++
-  adda(1)                       #29
-  st([sysArgs+2])               #30
-  bne('.sysRacer0')             #31 Self-repeat by adjusting vPC
-  ld([vPC])                     #32
-  bra('.sysRacer1')             #33
-  nop()                         #34
-  label('.sysRacer0')
-  suba(2)                       #33
-  st([vPC])                     #34
-  label('.sysRacer1')
-  ld(hi('REENTER'),Y)           #35
-  jmp(Y,'REENTER')              #36
-  ld(-40/2)                     #37
-
-if hasRacer:
-  label('SYS_RacerUpdateVideoY_40')
-  ld([sysArgs+3])               #15 8&
-  anda(8)                       #16
-  bne('.sysRacer2')             #17 [if<>0 1]
-  bra('.sysRacer3')             #18
-  ld(0)                         #19
-  label('.sysRacer2')
-  ld(1)                         #19
-  label('.sysRacer3')
-  st([vTmp])                    #20 tmp=
-  ld([sysArgs+1],Y)             #21
-  ld([sysArgs+0])               #22 p<++ p<++
-  adda(2)                       #23
-  st([sysArgs+0],X)             #24
-  xora(238)                     #25 238^
-  st([vAC])                     #26
-  st([vAC+1])                   #27
-  ld([sysArgs+2])               #28 SegmentY
-  anda(254)                     #29 254&
-  adda([vTmp])                  #30 tmp+
-  st([Y,X])                     #31
-  ld([sysArgs+2])               #32 SegmentY<++
-  adda(1)                       #33
-  st([sysArgs+2])               #34
-  ld(hi('REENTER'),Y)           #35
-  jmp(Y,'REENTER')              #36
-  ld(-40/2)                     #37
-
-#-----------------------------------------------------------------------
-# Extension SYS_LoaderNextByteIn_32
-#-----------------------------------------------------------------------
-
-# sysArgs[0:1] Current address
-# sysArgs[2]   Checksum
-# sysArgs[3]   Wait value (videoY)
-
-if hasLoader:
-  label('SYS_LoaderNextByteIn_32')
-  ld([videoY])                  #15
-  xora([sysArgs+3])             #16
-  bne('.sysNbi')                #17
-  ld([sysArgs+0], X)            #18
-  ld([sysArgs+1], Y)            #19
-  ld(IN)                        #20
-  st([Y,X])                     #21
-  adda([sysArgs+2])             #22
-  st([sysArgs+2])               #23
-  ld([sysArgs+0])               #24
-  adda(1)                       #25
-  st([sysArgs+0])               #26
-  ld(hi('REENTER'),Y)           #27
-  jmp(Y,'REENTER')              #28
-  ld(-32/2)                     #29
-  # Restart instruction
-  label('.sysNbi')
-  ld([vPC])                     #19
-  suba(2)                       #20
-  st([vPC])                     #21
-  ld(-28/2)                     #22
-  ld(hi('REENTER'),Y)           #23
-  jmp(Y,'REENTER')              #24
-  nop()                         #25
-
-#-----------------------------------------------------------------------
-# Extension SYS_LoaderProcessInput_48
-#-----------------------------------------------------------------------
-
-# sysArgs[0:1] Source address
-# sysArgs[2]   Checksum
-# sysArgs[4]   Copy count
-# sysArgs[5:6] Destination address
-
-if hasLoader:
-  label('SYS_LoaderProcessInput_48')
-  ld([sysArgs+1],Y)             #15
-  ld([sysArgs+2])               #16
-  bne('.sysPi0')                #17
-  ld([sysArgs+0])               #18
-  suba(65, X)                   #19 Point at first byte of buffer
-  ld([Y,X])                     #20 Command byte
-  st([Y,Xpp])                   #21 X++
-  xora(ord('L'))                #22 This loader lumps everything under 'L'
-  bne('.sysPi1')                #23
-  ld([Y,X]);                    C('Valid command')#24 Length byte
-  st([Y,Xpp])                   #25 X++
-  anda(63)                      #26 Bit 6:7 are garbage
-  st([sysArgs+4])               #27 Copy count
-  ld([Y,X])                     #28 Low copy address
-  st([Y,Xpp])                   #29 X++
-  st([sysArgs+5])               #30
-  ld([Y,X])                     #31 High copy address
-  st([Y,Xpp])                   #32 X++
-  st([sysArgs+6])               #33
-  ld([sysArgs+4])               #34
-  bne('.sysPi2')                #35
-  # Execute code (don't care about checksum anymore)
-  ld([sysArgs+5]);              C('Execute')#36 Low run address
-  suba(2)                       #37
-  st([vPC])                     #38
-  st([vLR])                     #39
-  ld([sysArgs+6])               #40 High run address
-  st([vPC+1])                   #41
-  st([vLR+1])                   #42
-  ld(hi('REENTER'),Y)           #43
-  jmp(Y,'REENTER')              #44
-  ld(-48/2)                     #45
-  # Invalid checksum
-  label('.sysPi0')
-  wait(25-19);                  C('Invalid checksum')#19 Reset checksum
-  # Unknown command
-  label('.sysPi1')
-  ld(ord('g'));                 C('Unknown command')#25 Reset checksum
-  st([sysArgs+2])               #26
-  ld(hi('REENTER'),Y)           #27
-  jmp(Y,'REENTER')              #28
-  ld(-32/2)                     #29
-  # Loading data
-  label('.sysPi2')
-  ld([sysArgs+0]);              C('Loading data')#37 Continue checksum
-  suba(1, X)                    #38 Point at last byte
-  ld([Y,X])                     #39
-  st([sysArgs+2])               #40
-  ld(hi('REENTER'),Y)           #41
-  jmp(Y,'REENTER')              #42
-  ld(-46/2)                     #43
-
-#-----------------------------------------------------------------------
-# Extension SYS_LoaderPayloadCopy_34
-#-----------------------------------------------------------------------
-
-# sysArgs[0:1] Source address
-# sysArgs[4]   Copy count
-# sysArgs[5:6] Destination address
-
-if hasLoader:
-  label('SYS_LoaderPayloadCopy_34')
-  ld([sysArgs+4])               #15 Copy count
-  beq('.sysCc0')                #16
-  suba(1)                       #17
-  st([sysArgs+4])               #18
-  ld([sysArgs+0],X)             #19 Current pointer
-  ld([sysArgs+1],Y)             #20
-  ld([Y,X])                     #21
-  ld([sysArgs+5],X)             #22 Target pointer
-  ld([sysArgs+6],Y)             #23
-  st([Y,X])                     #24
-  ld([sysArgs+5])               #25 Increment target
-  adda(1)                       #26
-  st([sysArgs+5])               #27
-  bra('.sysCc1')                #28
-  label('.sysCc0')
-  ld(hi('REENTER'),Y)           #18,29
-  wait(30-19)                   #19
-  label('.sysCc1')
-  jmp(Y,'REENTER')              #30
-  ld(-34/2)                     #31
-
-#-----------------------------------------------------------------------
-#
 #       Embedded programs -- import and convert programs and data
-#
 #-----------------------------------------------------------------------
 
 def basicLine(address, number, text):
@@ -5079,15 +4894,18 @@ while pc()&255 > 251:
   nop()
 
 #-----------------------------------------------------------------------
+#       Embedded programs must be given on the command line
+#-----------------------------------------------------------------------
 
 for application in argv[1:]:
   print
 
+  # Determine label
   if '=' in application:
-    # Explicit label
+    # Explicit label given as 'label=filename'
     name, application = application.split('=', 1)
   else:
-    # Derived label
+    # Label derived from filename itself
     name = application.rsplit('.', 1)[0] # Remove extension
     name = name.rsplit('/', 1)[-1]       # Remove path
   print 'Processing file %s label %s' % (application, name)
@@ -5116,6 +4934,12 @@ for application in argv[1:]:
     for line in open(application).readlines():
       program.line(line)
     program.end()
+
+  # Application-specific SYS extensions
+  elif application.endswith('.py'):
+    print 'Include type .py address %04x' % pc()
+    label(name)
+    importlib.import_module(name)
 
   # GTB files
   elif application.endswith('.gtb'):

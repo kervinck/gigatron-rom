@@ -1,5 +1,9 @@
 CFLAGS:=-std=c11 -O3 -Wall
 
+# Allow application-specific SYS extensions to live in Apps/
+PYTHONPATH=Apps
+export PYTHONPATH
+
 gigatron.rom: ROMv3.rom
 	ln -sf "$<" "$@"
 
@@ -29,6 +33,8 @@ dev.rom: Core/* Apps/* Images/* Makefile interface.json
 	python Core/dev.py\
 		packedParrot=Images/Parrot-160x120.rgb\
 		packedJupiter=Images/Jupiter-160x120.rgb\
+		SYS_Racer_v1.py\
+		SYS_Loader_v1.py\
 		Snake=Apps/Snake.gcl\
 		zippedRacerHorizon=Images/RacerHorizon-256x16.rgb\
 		Racer=Apps/Racer.gcl\

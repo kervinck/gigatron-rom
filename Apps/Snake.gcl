@@ -84,7 +84,7 @@ gcl0x
     DrawTimer!
   ]
 
-  {Game delay, but accelerate with [A] button}
+  {Game delay, but accelerate with [A] button or any ASCII key from keyboard}
   \buttonState, \buttonA& [if=0 1- else 0] Delay+ Wait!
 
   pop ret

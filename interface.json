@@ -23,6 +23,7 @@
  "vLRH"                 : "0x001b",
  "vSP"                  : "0x001c",
  "romType"              : "0x0021",
+ "channelMask_DEVROM"   : "0x0021",
  "sysFn"                : "0x0022",
  "sysArgs0"             : "0x0024",
  "sysArgs1"             : "0x0025",

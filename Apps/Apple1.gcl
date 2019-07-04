@@ -10,7 +10,6 @@ gcl0x
  Issues:
   XXX Pack variables Pos,PrintChar,WozMon variables,i,j,k
   XXX Shift screen memory 96 pixels right
-  XXX Disable sound channels
 
   XXX NMI/IRQ/RESET to wozmon (through vector) without going through main menu
   XXX Smaller screen so there's more space for real programs (top 16 lines = 4K)
@@ -61,10 +60,13 @@ gcl0x
 |       Initialize                                                      |
 +-----------------------------------------------------------------------}
 
-{ This code runs once and is then reused as the input buffer }
+{ This code runs once and is then reused as the input buffer for wozmon }
+
+{ Sacrifice sound channels 2,3,4 for a less fragmented memory map }
+\channelMask_DEVROM, $f8& \channelMask_DEVROM.
 
 { Setup video indirection table such that WozMon can be at $7F00/$FF00 }
-\videoTable Pos=                {First variable $30, later becomes Pos}
+\videoTable Pos=                {First GCL variable at $30, later becomes Pos}
 120                             {7^127}
 [do 127^                        {Loop over 7..126 range}
   Pos: <Pos++ <Pos++            {Y[y]=7+j and dX[y]=0}

@@ -179,35 +179,39 @@ Memory map (ROM)
 ================
 ```
              +----------------------------------------------------------+  ---
-page 0       | Boot and reset sequences                                 |   ^
+$0000        | Boot and reset sequences                                 |   ^
              +----------------------------------------------------------+   |
-page 1       | Video and audio loop (vertical blank lines)              |   |
+$0100        | Video and audio loop (vertical blank lines)              |   |
              |                                                          |   |
-page 2       | Video and audio loop (visible lines)                     |   |
+$0200        | Video and audio loop (visible lines)                     |   |
              +----------------------------------------------------------+   |
-page 3       | vCPU interpreter loop (primary page)                     |   |
+$0300        | vCPU interpreter loop (primary page)                     |   |
              |                                                          |   |
-page 4       | vCPU extended instructions (and some SYS functions)      |   |
+$0400        | vCPU extended instructions (and some SYS functions)      |   |
              +----------------------------------------------------------+   |
-page 5       | Shift tables                                             |   |
+$0500        | Shift tables                                             |   |
              |                                                          |   |  Core system
-page 6       | SYS functions (LSRW and others)                          |   |  Kernel and drivers
+$0600        | SYS functions (LSRW and others)                          |   |  Kernel and drivers
              +----------------------------------------------------------+   |
-page 7-8     | Font table (ASCII 32..81 and 82..127)                    |   |
-             +----------------------------------------------------------+   |
-page 9       | Notes table (C-0..A#7)                                   |   |
+$0700        | Font table (ASCII 32..81)                                |   |
              |                                                          |   |
-page 10      | Inversion table                                          |   |
-             +----------------------------------------------------------+   |
-page 11-13   | SYS functions (SendSerial, Sprites, SPI, ...)            |   |
+$0800        | Font table (ASCII 82..126, 127 as cursor symbol)         |   |
              |                                                          |   |
-page 13-17   | v6502 (planned)                                          |   v
-             +----------------------------------------------------------+  ---
-page 18      | Application-specific SYS functions                       |   ^
+$0900        | Notes table (C-0..A#7)                                   |   |
+             |                                                          |   |
+$0a00        | Inversion table                                          |   |
+             +----------------------------------------------------------+   |
+$0b00        | SYS functions (SendSerial, Sprites, SPI, ...)            |   |
+             |                                                          |   |
+$0d82-$11ff  | v6502 secondary interpreter (planned)                    |   v
+             +==========================================================+  ---
+             |                                                          |   ^
+             | ROM tables: Embedded high-resolution images (packed)     |   |
              |                                                          |   |  Applications /
-page 19-     | ROM files: Embedded high-resolution images (packed)      |   |  cold storage
+$1200-$ffff  | Include files: application-specific SYS functions        |   |  cold storage
              |                                                          |   |
-page    -255 | ROM files: Embedded vCPU applications (serial)           |   v
+             | ROM files: Embedded vCPU/v6502 applications (serialized) |   |
+             |                                                          |   v
              +----------------------------------------------------------+  ---
               0                                                      255
 ```
