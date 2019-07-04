@@ -402,7 +402,7 @@ class Program:
     if self.vPC >= self.segEnd:
       self.error('Out of code space (%04x)' % self.vPC)
     if byte < 0 or byte >= 256:
-      self.error('Value out of range %d (must be 0..255)' % byte)
+      self.error('Value out of range %s (must be 0..255)' % byte)
     if self.segStart == self.vPC:
       self.openSegment()
     self.putInRomTable(byte, comment)

@@ -58,10 +58,11 @@
 #  DONE Snake: improve game play and colors in general
 #  DONE Apple1: Don't use buttonState but serialRaw
 #  DONE Replace Easter egg
-#  DONE  #38 "Press [A] to start program" message is stupid
-#  DONE  channelMask: to switch off the higher sound channels
+#  DONE #38 "Press [A] to start program" message is stupid
+#  DONE channelMask: to switch off the higher sound channels
 #  DONE Core: Specify app-specific SYS functions on command line (.py files)
-#  XXX  Racer: faster road setup
+#  DONE Racer: faster road setup
+#  XXX  Snake: Refactor AI
 #  XXX  Review ROM layout
 #  XXX  Review SPI status (130 or 132)?
 #  XXX  Update romTypeValue and interface.json
@@ -90,6 +91,7 @@
 #  XXX  #41 Fix zero page usage in Bricks and Tetronis
 #  XXX  Discoverable ROM contents
 #  XXX  Sound: Better noise by changing wavX every frame (at least in channel 1)
+#  XXX  Racer: Make noise when crashing
 #  XXX  Music sequencer (combined with LED sequencer, but retire soundTimer???)
 #  XXX  Sound demo: Play SMB Underworld tune
 #  XXX  Main: Better startup chime
@@ -274,7 +276,7 @@ romType         = zpByte(1)
 #  xxxxx011     Default after reset: 4 channels (page 1,2,3,4)
 #  xxxxx001     2 channels at double update rate (page 1,2)
 #  xxxxx000     1 channel at quadruple update rate (page 1)
-# The main application for this is to free up the high bytyes of page 2,3,4.
+# The main application for this is to free up the high bytes of page 2,3,4.
 channelMask = symbol('channelMask_DEVROM')
 assert romType == channelMask
 
