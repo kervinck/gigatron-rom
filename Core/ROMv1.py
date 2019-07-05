@@ -1265,7 +1265,7 @@ ble('.cond4')                   #20
 bgt('.cond5')                   #21
 ld([Y,X])                       #22
 
-# Conditional LT: Branch if negative (if(vACL<0)vPCL=D), 16 cycles
+# Conditional LT: Branch if negative (if(vACL<0)vPCL=D)
 label('LT')
 bge('.cond4')                   #20
 blt('.cond5')                   #21
