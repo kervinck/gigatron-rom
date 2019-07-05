@@ -6,7 +6,7 @@ gcl0x
   This loads Blinky at the bottom of screen memory so we
   can see the program after it has loaded
 }
-$7f00:
+*=$7f00
 
 {
   Setup a pointer to a pixel in the middle of the screen:

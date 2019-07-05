@@ -37,7 +37,7 @@ gcl0x                           {GCL version for this program}
   5 [do i=                      {Loop to draw 5 vertical slices of 8 pixels}
     j 0? \sysArgs2.             {Get byte from ROM}
     134!                        {Invoke SYS function to draw 8 vertical pixels}
-    j<++ \sysArgs4<++           {Advance to next slice in ROM and on screen}
+    <j++ <\sysArgs4++           {Advance to next slice in ROM and on screen}
     i 1- if>0loop]              {Looping}
   ret
 ] PrintChar=
@@ -48,14 +48,13 @@ gcl0x                           {GCL version for this program}
   Text= [do                     {Loop over characters}
     Text, if<>0                 {Next character to be printed, unless 0}
     PrintChar!                  {Print the character and advance cursor}
-    Text<++ loop]               {Advance text pointer and loop}
+    <Text++ loop]               {Advance text pointer and loop}
   pop ret
 ] PrintText=
 
 { `def' can also define data! }
 [def
-   $48# $65# $6c# $6c# $6f# $2c# $20# $57# $6f# $72#    {'Hello, Wor'}
-   $6c# $64# $21# 0#                                    {'ld!\0'}
+   `Hello,`World! #0            {Inline "Hello, World!\0"}
 ] StringHelloWorld=
 
 { After the setup above the main program can start }
