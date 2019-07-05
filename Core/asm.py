@@ -104,7 +104,7 @@ def define(name, newValue):
   _symbols[name] = newValue
 
 def symbol(name):
-  """Lookup a symbol or None if not defined"""
+  """Lookup a symbol, return None if not defined"""
   return _symbols[name] if name in _symbols else None
 
 def has(x):
@@ -197,29 +197,33 @@ def trampoline():
   C('|                                   |')
   st([lo('vAC')])               #18
   C('+-----------------------------------+')
+  align(1, 0x100)
 
 def end():
   """Resolve symbols and write output"""
-  errors = 0
+  global _errors
 
   for name, where in _refsL:
     if name in _symbols:
       _rom1[where] ^= _symbols[name] & 255 # xor allows some label tricks
     else:
       print 'Error: Undefined symbol %s' % repr(name)
-      errors += 1
+      _symbols[name] = 0 # No more errors
+      _errors += 1
 
   for name, where in _refsH:
     if name in _symbols:
       _rom1[where] += _symbols[name] >> 8
     else:
       print 'Error: Undefined symbol %s' % repr(name)
-      errors += 1
+      _errors += 1
 
-  if errors:
-    print '%d error(s)' % errors
+  if _errors:
+    print '%d error(s)' % _errors
     print
     exit()
+
+  align(1)
 
 #------------------------------------------------------------------------
 #       Behind the scenes
@@ -231,6 +235,7 @@ _symbols, _refsL, _refsH = {}, [], []
 _labels = {} # Inverse of _symbols, but only when made with label(). For disassembler
 _comments = {}
 _rom0, _rom1 = [], []
+_errors = 0
 
 # General instruction layout
 _maskOp   = 0b11100000
@@ -413,12 +418,12 @@ def disassemble(opcode, operand, address=None, lastOpcode=None):
   return text
 
 def _emit(opcode, operand):
-  global _romSize, _maxRomSize
+  global _romSize, _maxRomSize, _errors
   if _romSize >= _maxRomSize:
       disassembly = disassemble(opcode, operand)
       print '%04x %02x%02x  %s' % (_romSize, opcode, operand, disassembly)
       print 'Error: Program size limit exceeded'
-      errors += 1
+      _errors += 1
       _maxRomSize = 0x10000 # Extend to full address space to prevent more of the same errors
   _rom0.append(opcode)
   _rom1.append(operand)

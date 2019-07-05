@@ -1,14 +1,83 @@
-CFLAGS:=-std=c11 -O3 -Wall
+#-----------------------------------------------------------------------
+#
+#	Makefile for Gigatron ROM and tooling
+#
+#-----------------------------------------------------------------------
 
-# Allow application-specific SYS extensions to live in Apps/
-PYTHONPATH=Apps
-export PYTHONPATH
-
-gigatron.rom: ROMv3.rom
+# Latest development version as default target
+gigatron.rom: dev.rom
 	ln -sf "$<" "$@"
 
-# Latest released version as default target:
-# Integrates BASIC, WozMon, Tetronis, Bricks, TicTacToe
+# Allow application-specific SYS extensions to live in Apps/
+export PYTHONPATH=Apps
+
+CFLAGS:=-std=c11 -O3 -Wall
+
+#-----------------------------------------------------------------------
+#	Development
+#-----------------------------------------------------------------------
+
+# Development towards "ROM v4"
+dev: dev.rom
+dev.rom: Core/* Apps/* Images/* Makefile interface.json
+	python -B Core/dev.py\
+		packedParrot=Images/Parrot-160x120.rgb\
+		packedJupiter=Images/Jupiter-160x120.rgb\
+		SYS_Racer_v1.py\
+		SYS_Loader_v2.py\
+		Snake=Apps/Snake.gcl\
+		zippedRacerHorizon=Images/RacerHorizon-256x16.rgb\
+		Racer=Apps/Racer.gcl\
+		Mandelbrot=Apps/Mandelbrot_v1.gcl\
+		Pictures=Apps/Pictures_v2.gcl\
+		Credits=Apps/Credits_v2.gcl\
+		Loader=Apps/Loader_v2.gcl\
+		Tetronis=Apps/Tetronis_v1.gt1\
+		Bricks=Apps/Bricks_v1.gt1\
+		TinyBASIC=Apps/TinyBASIC_v2.gcl\
+		TicTac=Apps/TicTac_v1.gtb\
+		WozMon=Apps/WozMon_v2.gt1\
+		Egg=Apps/Apple1.gt1x\
+		Main=Apps/Main.gcl\
+		Reset=Core/Reset.gcl
+
+open:
+	# First do: cd Contrib/PhilThomas/src && npm start
+	open http://127.0.0.1:8000/src
+
+run: Docs/gtemu dev.rom
+	# Run in reference emulator
+	# Hop from frame to frame with 'n' (next)
+	Docs/gtemu dev.rom | less -p 'line 0'
+
+test: Docs/gtemu dev.rom
+	# Check for hSync errors in first ~30 seconds of emulation
+	Docs/gtemu dev.rom | head -999999 | grep \~
+
+compiletest: Apps/*.gcl
+	# Test compilation
+	# (Use 'git diff' afterwards to detect unwanted changes)
+	for GCL in Apps/*.gcl; do Core/compilegcl.py "$${GCL}" Apps; done
+
+time: Docs/gtemu dev.rom
+	# Run emulation until first sound
+	Docs/gtemu dev.rom | grep -m 1 'xout [^0]'
+
+burn: dev.rom
+	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
+
+burn85:
+	# Program Pluggy McPlugface
+	# Set to 8 MHz
+	minipro -p attiny85 -w Utils/BabelFish/BabelFish.ATtiny85_fuses.txt -c config
+	# ROM image
+	minipro -p attiny85 -w Utils/BabelFish/BabelFish.ATtiny85.bin -s
+
+#-----------------------------------------------------------------------
+#	Released ROM versions
+#-----------------------------------------------------------------------
+
+# ROM v3 integrates BASIC, WozMon, Tetronis, Bricks, TicTacToe
 # vPulse modulation (for SAVE in BASIC), sprite acceleration
 # Note: ROM builder still directly incudes TicTac_v1.gtb
 ROMv3.rom: Core/* Apps/* Images/* Makefile interface.json
@@ -27,59 +96,8 @@ ROMv3.rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Main_v3.gcl\
 		Core/Reset_v3.gcl
 
-# Development towards ROM v4
-dev: dev.rom
-dev.rom: Core/* Apps/* Images/* Makefile interface.json
-	python Core/dev.py\
-		packedParrot=Images/Parrot-160x120.rgb\
-		packedJupiter=Images/Jupiter-160x120.rgb\
-		SYS_Racer_v1.py\
-		SYS_Loader_v1.py\
-		Snake=Apps/Snake.gcl\
-		zippedRacerHorizon=Images/RacerHorizon-256x16.rgb\
-		Racer=Apps/Racer.gcl\
-		Mandelbrot=Apps/Mandelbrot_v1.gcl\
-		Pictures=Apps/Pictures_v2.gcl\
-		Credits=Apps/Credits_v2.gcl\
-		Loader=Apps/Loader_v2.gcl\
-		Tetronis=Apps/Tetronis_v1.gt1\
-		Bricks=Apps/Bricks_v1.gt1\
-		TinyBASIC=Apps/TinyBASIC_v2.gcl\
-		TicTac=Apps/TicTac_v1.gtb\
-		WozMon=Apps/WozMon_v2.gt1\
-		Egg=Apps/Apple1.gt1x\
-		Main=Apps/Main.gcl\
-		Reset=Core/Reset.gcl
-	open http://127.0.0.1:8000/src
-
-# Test ROM for v6502 testing
-mos: v6502.rom
-v6502.rom: Core/* Apps/* Images/* Makefile interface.json
-	rm -f ROMv3x.rom ROMv3x.asm
-	python Core/ROMv3x.py\
-		Main=Apps/Apple1.gcl\
-		Core/Reset.gcl
-	mv ROMv3x.rom v6502.rom
-	mv ROMv3x.asm v6502.asm
-	open http://127.0.0.1:8000/src
-
-# Experimental revision, based on ROM v3, for overclocked systems at 12.5 MHz.
-# Adds vCPU slices on scanlines to get 400 cycles per scanline
-ROMv3y.rom: Core/* Apps/* Images/* Makefile interface.json
-	python Core/ROMv3y.py\
-		Apps/Snake_v2.gcl\
-		Apps/Racer_v1.gcl\
-		Apps/Mandelbrot_v1.gcl\
-		Apps/Pictures_v2.gcl\
-		Apps/Credits_v2.gcl\
-		Apps/Loader_v2.gcl\
-		Apps/Tetronis_v1.gt1\
-		Apps/Bricks_v1.gt1\
-		Apps/TinyBASIC_v2.gcl\
-		Apps/WozMon_v2.gt1\
-		Egg=Apps/Sprites_v1.gt1\
-		Apps/Main_v3.gcl\
-		Core/Reset_v3y.gcl
+burnv3: ROMv3.rom
+	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
 # ROM v2 minor changes only
 ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
@@ -108,39 +126,44 @@ ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/Main_v1.gcl\
 		Core/Reset_v1.gcl
 
-run: Docs/gtemu dev.rom
-	Docs/gtemu dev.rom
+#-----------------------------------------------------------------------
+#	Experimental and temporary (to be removed)
+#-----------------------------------------------------------------------
 
-test: Docs/gtemu dev.rom
-	# Check for hSync errors in first ~30 seconds of emulation
-	Docs/gtemu dev.rom | head -999999 | grep \~
-
-Utils/BabelFish/tinyfont.h: Utils/BabelFish/tinyfont.py
-	python "$<" > "$@"
-
-compiletest: Apps/*.gcl
-	# Test compilation
-	# (Use 'git diff' afterwards to detect unwanted changes)
-	for GCL in Apps/*.gcl; do Core/compilegcl.py "$${GCL}" Apps; done
-
-time: Docs/gtemu dev.rom
-	# Run emulation until first sound
-	Docs/gtemu dev.rom | grep -m 1 'xout [^0]'
-
-burnv3: ROMv3.rom
-	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
-
-burn: dev.rom
-	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
+# Test ROM for v6502 testing
+mos: v6502.rom
+v6502.rom: Core/* Apps/* Images/* Makefile interface.json
+	rm -f ROMv3x.rom ROMv3x.asm
+	python Core/ROMv3x.py\
+		Main=Apps/Apple1.gcl\
+		Core/Reset.gcl
+	mv ROMv3x.rom v6502.rom
+	mv ROMv3x.asm v6502.asm
+	open http://127.0.0.1:8000/src
 
 burnmos: v6502.rom
 	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
-burn85:
-	# Set to 8 MHz
-	minipro -p attiny85 -w Utils/BabelFish/BabelFish.ATtiny85_fuses.txt -c config
-	# ROM image
-	minipro -p attiny85 -w Utils/BabelFish/BabelFish.ATtiny85.bin -s
+# Adds vCPU slices on scanlines to get 400 cycles per scanline
+ROMv3y.rom: Core/* Apps/* Images/* Makefile interface.json
+	python Core/ROMv3y.py\
+		Apps/Snake_v2.gcl\
+		Apps/Racer_v1.gcl\
+		Apps/Mandelbrot_v1.gcl\
+		Apps/Pictures_v2.gcl\
+		Apps/Credits_v2.gcl\
+		Apps/Loader_v2.gcl\
+		Apps/Tetronis_v1.gt1\
+		Apps/Bricks_v1.gt1\
+		Apps/TinyBASIC_v2.gcl\
+		Apps/WozMon_v2.gt1\
+		Egg=Apps/Sprites_v1.gt1\
+		Apps/Main_v3.gcl\
+		Core/Reset_v3y.gcl
+
+#-----------------------------------------------------------------------
+#	Generic rules
+#-----------------------------------------------------------------------
 
 %.gt1: %.gcl
 	Core/compilegcl.py "$<" `dirname "./$@"`
@@ -158,6 +181,20 @@ burn85:
 %.rgb: %.png
 	# Uses ImageMagick
 	convert "$<" "$@"
+
+Utils/BabelFish/tinyfont.h: Utils/BabelFish/tinyfont.py
+	python "$<" > "$@"
+
+todo:
+	@git ls-files | sed 's/ /\\ /g' | xargs grep -I -E '(TODO|XXX)'
+
+# Show simplified git log
+log:
+	git log --oneline --decorate --graph --all
+
+#-----------------------------------------------------------------------
+#	C compiler (LCC retargeted for vCPU)
+#-----------------------------------------------------------------------
 
 LCCDIR:=Utils/lcc/build
 export LCCDIR
@@ -191,11 +228,7 @@ mscp: Contrib/kervinck/mscp.gt1
 Contrib/kervinck/mscp.o: Contrib/kervinck/mscp.c $(wildcard Libs/*.h)
 	$(LCC) $(LCCFLAGS) -N -P -A -v -c "$<" -o "$@"
 
-todo:
-	@git ls-files | sed 's/ /\\ /g' | xargs grep -I -E '(TODO|XXX)'
-
-# Show simplified git log
-log:
-	git log --oneline --decorate --graph --all
-
+#-----------------------------------------------------------------------
+#
+#-----------------------------------------------------------------------
 # vi: noexpandtab

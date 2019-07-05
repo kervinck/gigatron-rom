@@ -11,7 +11,7 @@ from asm import *
 videoY = symbol('videoY')
 sysArgs = symbol('sysArgs0')
 vPC = symbol('vPC')
-vLR = symbol('vPC')
+vLR = symbol('vLR')
 
 #-----------------------------------------------------------------------
 # Extension SYS_LoaderNextByteIn_32
@@ -24,9 +24,9 @@ vLR = symbol('vPC')
 label('SYS_LoaderNextByteIn_32')
 ld([videoY])                    #15
 xora([sysArgs+3])               #16
-bne('.sysNbi')                  #17
-ld([sysArgs+0], X)              #18
-ld([sysArgs+1], Y)              #19
+bne('.sysNbi#19')               #17
+ld([sysArgs+0],X)               #18
+ld([sysArgs+1],Y)               #19
 ld(IN)                          #20
 st([Y,X])                       #21
 adda([sysArgs+2])               #22
@@ -37,8 +37,8 @@ st([sysArgs+0])                 #26
 ld(hi('REENTER'),Y)             #27
 jmp(Y,'REENTER')                #28
 ld(-32/2)                       #29
-# Restart instruction
-label('.sysNbi')
+# Restart the instruction in the next timeslice
+label('.sysNbi#19')
 ld([vPC])                       #19
 suba(2)                         #20
 st([vPC])                       #21
@@ -59,13 +59,13 @@ nop()                           #25
 label('SYS_LoaderProcessInput_48')
 ld([sysArgs+1],Y)               #15
 ld([sysArgs+2])                 #16
-bne('.sysPi0')                  #17
+bne('.sysPi#19')                #17
 ld([sysArgs+0])                 #18
 suba(65, X)                     #19 Point at first byte of buffer
 ld([Y,X])                       #20 Command byte
 st([Y,Xpp])                     #21 X++
 xora(ord('L'))                  #22 This loader lumps everything under 'L'
-bne('.sysPi1')                  #23
+bne('.sysPi#25')                #23
 ld([Y,X]);                      C('Valid command')#24 Length byte
 st([Y,Xpp])                     #25 X++
 anda(63)                        #26 Bit 6:7 are garbage
@@ -77,12 +77,12 @@ ld([Y,X])                       #31 High copy address
 st([Y,Xpp])                     #32 X++
 st([sysArgs+6])                 #33
 ld([sysArgs+4])                 #34
-bne('.sysPi2')                  #35
+bne('.sysPi#37')                #35
 # Execute code (don't care about checksum anymore)
 ld([sysArgs+5]);                C('Execute')#36 Low run address
-suba(2)                         #37
-st([vPC])                       #38
-st([vLR])                       #39
+st([vLR])                       #37 https://forum.gigatron.io/viewtopic.php?p=29#p29
+suba(2)                         #38
+st([vPC])                       #39
 ld([sysArgs+6])                 #40 High run address
 st([vPC+1])                     #41
 st([vLR+1])                     #42
@@ -90,17 +90,17 @@ ld(hi('REENTER'),Y)             #43
 jmp(Y,'REENTER')                #44
 ld(-48/2)                       #45
 # Invalid checksum
-label('.sysPi0')
+label('.sysPi#19')
 wait(25-19);                    C('Invalid checksum')#19 Reset checksum
 # Unknown command
-label('.sysPi1')
+label('.sysPi#25')
 ld(ord('g'));                   C('Unknown command')#25 Reset checksum
 st([sysArgs+2])                 #26
 ld(hi('REENTER'),Y)             #27
 jmp(Y,'REENTER')                #28
 ld(-32/2)                       #29
 # Loading data
-label('.sysPi2')
+label('.sysPi#37')
 ld([sysArgs+0]);                C('Loading data')#37 Continue checksum
 suba(1, X)                      #38 Point at last byte
 ld([Y,X])                       #39
@@ -119,7 +119,7 @@ ld(-46/2)                       #43
 
 label('SYS_LoaderPayloadCopy_34')
 ld([sysArgs+4])                 #15 Copy count
-beq('.sysCc0')                  #16
+beq('.sysCc#18')                #16
 suba(1)                         #17
 st([sysArgs+4])                 #18
 ld([sysArgs+0],X)               #19 Current pointer
@@ -131,11 +131,11 @@ st([Y,X])                       #24
 ld([sysArgs+5])                 #25 Increment target
 adda(1)                         #26
 st([sysArgs+5])                 #27
-bra('.sysCc1')                  #28
-label('.sysCc0')
+bra('.sysCc#30')                #28
+label('.sysCc#18')
 ld(hi('REENTER'),Y)             #18,29
 wait(30-19)                     #19
-label('.sysCc1')
+label('.sysCc#30')
 jmp(Y,'REENTER')                #30
 ld(-34/2)                       #31
 
