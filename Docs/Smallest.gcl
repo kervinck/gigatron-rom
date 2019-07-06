@@ -54,7 +54,7 @@
 
 gcl0x                   { GCL version }
 
-$0207:                  { Only works well on page 2 }
+*=$0207                 { Only works well on page 2 }
 [do
 
   #\LDW  #\frameCount   { Read zero page [$0d] (frame counter) in vACL, and
@@ -99,7 +99,7 @@ $0207:                  { Only works well on page 2 }
                           for shifting right. This affects the Pictures
                           application and Racer (but it doesn't cause them
                           to crash). The soundTable is initialized during
-                          cold reboot, not again at soft reset. We should
-                          really move that part into Reset.gcl anyway. }
+                          cold reboot, but not again at soft reset on ROM
+                          versions before ROM v4. }
 
   loop]                 { Loop forever }

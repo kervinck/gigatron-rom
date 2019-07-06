@@ -66,7 +66,7 @@ dispatched again, possibly in the next timeslice.
 
 Naming
 ------
-The naming convention is: SYS_<CamelCase>_[v<V>]_<N>
+The naming convention is: SYS_<CamelCase>[_v<V>]_<N>
 
 With <N> the maximum number of clocks or cycles (not ticks!) the
 function will need, counted from NEXT to NEXT. This duration <N>

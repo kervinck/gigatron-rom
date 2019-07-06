@@ -1936,7 +1936,7 @@ ld(-26/2)                       #23
 #
 #  vCPU extension functions (for acceleration and compaction) follow below.
 #
-#  The naming convention is: SYS_<CamelCase>_[v<V>]_<N>
+#  The naming convention is: SYS_<CamelCase>[_v<V>]_<N>
 #
 #  With <N> the maximum number of cycles the function will run
 #  (counted from NEXT to NEXT). This is the same number that must

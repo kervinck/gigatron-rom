@@ -14,6 +14,7 @@
 
 {
   History:
+  2019-07-06 (marcelk) Update GCL notation (no changes to GT1 file)
   2018-06-19 (marcelk) Scaffolding: can evaluate direct print statements
   2018-06-21 (marcelk) Can edit programs, delete lines, but no RUN yet
   2018-06-23 (marcelk) Can RUN, GOTO, GOSUB, RETURN and break program
@@ -274,7 +275,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
       Expression!
       [if<0 ValueError!]        {Index must be non-negative}
       0% k= pop                 {Pop address from stack}
-      k>, Value- 2- k>.
+      >k, Value- 2- >k.
       End k^                    {64K safe bound check}
       [if<0 End                 {Opposite signs}
        else k End-]             {Equal signs}
@@ -295,7 +296,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 [def
   \vLR; tmp=                    {vLR points to inline argument}
   [do
-    tmp, tmp<++                 {Grab next character}
+    tmp, <tmp++                 {Grab next character}
     if<>0 PrintChar!            {Print as long as non-zero}
     loop]
   tmp!                          {Returns to caller}
@@ -319,13 +320,13 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 [def
   k=                            {Temporarily save character}
   [127- if<=0                   {Suppress characters >127}
-   Pos>, 120- if<=0             {Suppress when vertically protruding
+   >Pos, 120- if<=0             {Suppress when vertically protruding
                                  screen memory (note this can be in the
                                  middle of the screen after scrolling
                                  and using AT with non-multiples of 8,
                                  leading to unexpected missing of text}
 
-      Pos<, 154- [if>0          {Automatic newline BEFORE printing}
+      <Pos, 154- [if>0          {Automatic newline BEFORE printing}
         push Newline! pop]
 
       k 82-                     {Map ASCII code to offset in font table}
@@ -346,7 +347,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
       5 [do i=                  {Draw 5 vertical slices}
         k 0? \sysArgs2.         {Get slice from ROM}
         134!                    {Invoke SYS function to draw pixels}
-        k<++ \sysArgs4<++       {Advance to next slice}
+        <k++ <\sysArgs4++       {Advance to next slice}
         i 1- if>0loop]          {Looping}
 
       \sysArgs2. 134!           {Render 6th slice}
@@ -363,7 +364,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
   tmp=                          {Line number}
   \_Buffer Active=              {Input buffer}
   tmp Active:                   {For error messages}
-  $a2 Active<.                  {Text area}
+  $a2 <Active.                  {Text area}
 
   [do {NEXTCHAR}
     127 PrintChar! Pos=         {Draw cursor symbol}
@@ -378,26 +379,26 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 
     117^ [if=0                  {Delete pressed (10^127 == 117)}
       $20 PrintChar! Pos=       {Remove cursor}
-      Pos<, 6- [if>=0           {If not on first position}
-        Pos<.                   {Step back}
+      <Pos, 6- [if>=0           {If not on first position}
+        <Pos.                   {Step back}
         Active 1- Active=]      {Remove character from buffer}
       loop]                     {To NEXTCHAR}
 
     96- if>=0loop               {Ignore apparent unprintable garbage}
 
-    Pos<, 150- [if>=0           {Fewer than 2 chars or 11 pixels will fit}
-      $a2 Active<.              {Discard of too long input}
+    <Pos, 150- [if>=0           {Fewer than 2 chars or 11 pixels will fit}
+      $a2 <Active.              {Discard of too long input}
       $5c PrintChar!            {Overflow indicator '\'}
       loop]                     {To NEXTCHAR, cursor will print on new line}
 
     Active, PrintChar!          {Print accepted characters}
-    Active<++                   {Advance pointer, keeping the character}
+    <Active++                   {Advance pointer, keeping the character}
     loop]                       {To NEXTCHAR}
 
   Active.                       {Terminate input with zero}
   $20 PrintChar!                {Remove cursor}
   Newline!
-  $a2 Active<.                  {Back to start of buffer}
+  $a2 <Active.                  {Back to start of buffer}
   Spaces!                       {Process leading spaces}
   Active,                       {Tell caller if there is input}
   pop ret
@@ -451,7 +452,7 @@ GetLine=
     [if<>0 Statements!]         {Conditional execution}
     [do
       Active, if<>0             {Find end of line}
-      Active<++ loop]
+      <Active++ loop]
     EndOfLine!]                 {Continue with next line}
 
   Keyword! `poke #0
@@ -469,7 +470,7 @@ GetLine=
   [if<>0
     [do
       Active, if<>0             {Find end of line}
-      Active<++ loop]
+      <Active++ loop]
     EndOfLine!]
 
   Keyword! `line #0
@@ -524,7 +525,7 @@ GetLine=
   [if<>0
     Expression!                 {X position}
     [if<0 ValueError!]
-    Pos<.
+    <Pos.
     Keyword! `, #0
     [if<>0
       Expression!               {Optional Y position}
@@ -532,7 +533,7 @@ GetLine=
       120-
       [if>=0 ValueError!]       {Point into videoTable}
       248+ 1<<                  {\videoTable+2*y}
-      peek Pos>.]
+      peek >Pos.]
     EndOfLine!]
 
   Keyword! `put #0
@@ -602,7 +603,7 @@ GetLine=
             j= tmp=
             [do                 {Copy tmp[0:31] to k[0:31]}
               tmp, k.           {Copy as bytes, don't bother with word copy}
-              tmp<++ k<++       {Advance both pointers}
+              <tmp++ <k++       {Advance both pointers}
               tmp 31&
               if<>0loop]        {Copy all 32 bytes}
 
@@ -621,10 +622,10 @@ GetLine=
     [if<>0
       { Copy line from buffer into program }
       Value i:                  {Copy line number}
-      i<++                      {Copy line text}
+      <i++                      {Copy line text}
       [do
-        i<++
-        Active, Active<++       {From input buffer}
+        <i++
+        Active, <Active++       {From input buffer}
         i.                      {Into program memory}
         if<>0loop]              {Until terminating zero}
     else
@@ -635,7 +636,7 @@ GetLine=
           j NextBlock! j= tmp=  {Go down one block}
           [do                   {Copy tmp[0:31] to i[0:31]}
             tmp, i.             {Copy as bytes, don't bother with word copy}
-            tmp<++ i<++         {Advance both pointers}
+            <tmp++ <i++         {Advance both pointers}
             tmp 31& if<>0loop]  {Copy all 32 bytes}
           j i=
           loop]
@@ -741,14 +742,14 @@ GotoValue=
   \vLR; tmp=                    {vLR points to inline argument}
   Active j=                     {Save Active in case word match fails}
   [do
-    tmp, tmp<++                 {Next expected character from argument}
+    tmp, <tmp++                 {Next expected character from argument}
     if<>0                       {Compare until non-zero}
     i=
     Active,                     {Grab next character from line}
     $20|                        {Ignore case}
-    i^ [if=0 Active<++ loop]    {Accept if character matches}
+    i^ [if=0 <Active++ loop]    {Accept if character matches}
     j Active=                   {Restore program pointer on mismatch}
-    [do tmp, tmp<++ if<>0loop]  {Eat remaining characters}
+    [do tmp, <tmp++ if<>0loop]  {Eat remaining characters}
     tmp!]
   Spaces!                       {Remove trailing whitespace on match}
   tmp!                          {Effectively returns past the keyword}
@@ -766,7 +767,7 @@ GotoValue=
     10-  {'9'} if<0             {Decimal digit}
       10+                       {Map in 0..9 range}
       i+                        {Add it to value}
-      Active<++
+      <Active++
       loop]
   Value                         {Result, negative value indicates error}
   ret
@@ -782,7 +783,7 @@ Number=
 [def
   Active, [if<>0
     $3a^ [if=0                  {Accept statements separated by colon (':')}
-      Active<++ Statements!]
+      <Active++ Statements!]
     SyntaxError!]               {There must be nothing left on the line}
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
@@ -801,8 +802,8 @@ Number=
     i 54- i=                    {i -= 2*27}
     [do
       0 i.                      {Clear byte}
-      i<++                      {Advance pointer}
-      i<, if<>0loop]            {Until end of page}
+      <i++                      {Advance pointer}
+      <i, if<>0loop]            {Until end of page}
     j 1- if<>0loop]
   \_UserProg Begin=
   ret
@@ -900,9 +901,9 @@ Clear=
   [do
     tmp=                        {Loop counter}
     i i+ i=                     {Shift left}
-    j [if<0 i<++]               {Carry bit over to i}
+    j [if<0 <i++]               {Carry bit over to i}
     j j+ j=                     {Shift left}
-    i Value- [if>=0 i= j<++]    {Result bit}
+    i Value- [if>=0 i= <j++]    {Result bit}
     tmp 1+ 15&                  {Iterate 16 times}
     if<>0loop]
 
@@ -937,7 +938,7 @@ Divide=
   $5f&                          {Ignore case}
   $40- {'@'} [if>=0             {Bail out if out of range}
    27- {'Z'} if<0               {Letter A..Z, @ or a..z}
-    Active<++                   {Accept character}
+    <Active++                   {Accept character}
     1<< i+                      {Address is base-52+2*n}
     ret]                        {Return address on success}
   SyntaxError!
@@ -945,7 +946,7 @@ Divide=
 
 { Eat whitespace. Returns non-zero }
 [def
-  [do Active, $20^ if=0 Active<++ loop]
+  [do Active, $20^ if=0 <Active++ loop]
   ret
 ] Spaces=
 
@@ -964,9 +965,9 @@ Divide=
     End^ if<>0                  {Repeat until the last line}
     TestBreak!                  {Test for break request}
     j; Value= PrintValue!       {Print line number}
-    j<++                        {Print line text}
+    <j++                        {Print line text}
     [do                         {Loop over all characters in program line}
-      j<++ j,
+      <j++ j,
       if<>0 PrintChar!
       loop]
     Newline!
@@ -1005,7 +1006,7 @@ List=
     i-                          {Subtract i}
     if>=0                       {As many times as fits}
     Value=
-    k<++                        {Increment 0..9 times}
+    <k++                        {Increment 0..9 times}
     loop]
   k [if<>0                      {If non-zero digit or non-leading zero}
      $30| PrintChar!            {Map to $30..$39 range and print digit}
@@ -1021,7 +1022,7 @@ List=
   0 k=
 
   Keyword! `< #0                {'<' in bit 0}
-  [if<>0 k<++]
+  [if<>0 <k++]
 
   Keyword! `> #0                {'>' in bit 2}
   [if<>0 k 4+ k=]
@@ -1046,13 +1047,13 @@ Active=
 { Call with inline partial error message, or with 0# for no error }
 [def
   \vLR; tmp=                    {vLR points to inline string argument}
-  [Pos<, 2- if>0 Newline!]      {Conditional newline}
+  [<Pos, 2- if>0 Newline!]      {Conditional newline}
   0 \vSP.                       {Reset stack}
   tmp, [if<>0                   {Test for error in first byte of message}
     $3f                         {Begin error messages with '?'}
     [do                         {Print inline string as prelude}
       PrintChar!
-      tmp, tmp<++
+      tmp, <tmp++
       if<>0loop]
     PrintS! ``error #0
     32-                         {$ffe0}
@@ -1096,7 +1097,7 @@ Statements!                     {Execute statements}
       $18^                      {'"' = $22 = $3a^$18}
       [if=0
         [do {PRINTSTRING}       {String constant}
-          Active<++             {Skip past opening quote or string character}
+          <Active++             {Skip past opening quote or string character}
           Keyword! $22# 0#      {'"'}
           if=0
           Active,               {Next character}
@@ -1110,7 +1111,7 @@ Statements!                     {Execute statements}
       [if<>0
         [do
           $20 PrintChar!
-          Pos<, 7& if<>0loop]   {Tab stops every 4 characters}
+          <Pos, 7& if<>0loop]   {Tab stops every 4 characters}
         loop]                   {To PRINTLIST}
       Keyword! $3b# 0#          {';'}
       if<>0loop                 {To PRINTLIST}
@@ -1125,8 +1126,7 @@ Statements!                     {Execute statements}
 +-----------------------------------------------------------------------}
 *=$14a0
 
-  Keyword! $69# $6e# $70# $75#  {'input'}
-    $74# 0#
+  Keyword! `input #0
   [if<>0
     [do
       Active,
@@ -1145,16 +1145,16 @@ Statements!                     {Execute statements}
       Expression!               {Accept arbitrary expression as input \o/}
       Address:                  {Store received value in variable}
       2% Active= 4++            {Restore program pointer from stack}
-      Keyword! $2c# 0#          {','}
+      Keyword! `, #0            {','}
       if<>0loop]                {Next variable}
     EndOfLine!]
 
-  Keyword! $6e# $65# $77# 0#    {'new'}
+  Keyword! `new #0
   [if<>0
     Clear!                      {Clear variables}
     End=                        {Clear program}
     List!                       {To print number of free bytes}
-    Prompt! 0#]                 {Return to prompt}
+    Prompt! #0]                 {Return to prompt}
 
   $15a0 call
 
@@ -1163,9 +1163,9 @@ Statements!                     {Execute statements}
 +-----------------------------------------------------------------------}
 *=$15a0
 
-  Keyword! $63# $6c# $73# 0#    {'cls'}
+  Keyword! `cls #0
   [if<>0
-    $100 peek Pos>.             {Start at top of page}
+    $100 peek >Pos.             {Start at top of page}
     14 [do                      {14 newlines}
       j=
       Newline!
@@ -1173,21 +1173,20 @@ Statements!                     {Execute statements}
     [do                         {Continue until video table is normal}
       Newline!
       $100 peek 8^ if<>0loop]
-    8 Pos>.                     {Return cursor to top of page}
+    8 >Pos.                     {Return cursor to top of page}
     EndOfLine!]
 
-  Keyword!                      {'list'}
-    $6c# $69# $73# $74# 0#
+  Keyword! `list #0
   [if<>0 List! EndOfLine!]
 
-  Keyword! $72# $75# $6e# 0#    {'run'}
+  Keyword! `run #0
   [if<>0
     Clear!                      {Clear variables}
     deek Value=                 {First program line, if any}
     GotoValue!]                 {Also tests for break}
 
-  Keyword! $65# $6e# $64# 0#    {'end'}
-  [if<>0 Prompt! 0#]
+  Keyword! `end #0
+  [if<>0 Prompt! #0]
 
   $16a0 call
 
@@ -1196,7 +1195,7 @@ Statements!                     {Execute statements}
 +-----------------------------------------------------------------------}
 *=$16a0
 
-  Keyword! $6c# $65# $74# 0#    {'let' (optional)}
+  Keyword! `let #0              {LET is optional}
   Variable!
   Address=                      {Park here}
   Spaces!
@@ -1204,14 +1203,14 @@ Statements!                     {Execute statements}
   [if<>0                        {Optional array index}
     Expression!
     [if<0 ValueError!]          {Index must be non-negative}
-    Address>, Value- 2- Address>.
+    >Address, Value- 2- >Address.
     End Address^                {64K safe bound check}
     [if<0 End                   {Opposite signs}
      else Address End-]         {Equal signs}
     [if<0 ValueError!]
     Keyword! $29# 0#            {')'}
     if=0 SyntaxError!]
-  Keyword! $3d# 0#              {'='}
+  Keyword! `= #0                {'='}
   [if=0 SyntaxError!]
   Expression!                   {Evaluate expression}
   Address:                      {Store value in variable}
@@ -1236,7 +1235,7 @@ Statements!                     {Execute statements}
     push
     k=
     \sysArgs3, 8+ \sysArgs3.    {Always count 8 more bits}
-    Pos<, 6-                    {At or near left margin}
+    <Pos, 6-                    {At or near left margin}
     [if<0                       {A newline has started}
       10 Address.               {Terminate the save line}
       Address 31| 31^ Address=  {Back to start of buffer}
@@ -1248,7 +1247,7 @@ Statements!                     {Execute statements}
         3 \serialRaw.           {Not a great hack...}
         TestBreak!]             {...to initiate a break error}
       8 \sysArgs3.]
-    k Address. Address<++       {Put in buffer}
+    k Address. <Address++       {Put in buffer}
     PrintCharScreen!            {Print to screen as well}
     pop ret
   ] PrintChar=                  {Globally redefines original PrintChar}
@@ -1273,19 +1272,19 @@ Statements!                     {Execute statements}
   { Prepare for printing on new line }
   \SYS_VDrawBits_134 \sysFn:    {Prepare SYS call}
 
-  0 Pos<.                       {Go back to start of line}
+  0 <Pos.                       {Go back to start of line}
   \sysArgs2.                    {All-zero output pattern}
 
-  Pos>, 15+                     {Go down upto 8 upto 15 lines}
+  >Pos, 15+                     {Go down upto 8 upto 15 lines}
   120& [if=0 8]                 {Wrap around and re-align to 8-fold if needed}
-  Pos>.
+  >Pos.
 
   \sysArgs6; \sysArgs0:         {Apply caller-defined colors}
 
   Pos \sysArgs4:                {sysArgs[4:5] is position on screen}
   [do
-    134! \sysArgs4<++           {SYS call and advance to next slice}
-    134! \sysArgs4<++           {A bit unrolling for speed}
+    134! <\sysArgs4++           {SYS call and advance to next slice}
+    134! <\sysArgs4++           {A bit unrolling for speed}
     \sysArgs4, 160^             {Test for end of screen}
     if<>0loop]
 
@@ -1300,7 +1299,7 @@ Statements!                     {Execute statements}
       i 2- i=                   {Previous entry in video table}
       $fe^ if<>0loop]           {Until all done}
 
-  Pos<++ Pos<++                 {Indent by 2 pixels}
+  <Pos++ <Pos++                 {Indent by 2 pixels}
   ret
 
 {-----------------------------------------------------------------------+
@@ -1313,7 +1312,7 @@ Statements!                     {Execute statements}
   1 \sysArgs0: $100 \sysArgs2:  {Vector pair U, V}
 
   Expression! push 0%=          {Park dX argument on stack}
-  Keyword! $2c# 0#              {','}
+  Keyword! `, 0#                {','}
   [if=0 SyntaxError!]
   Expression! j=                {dY argument as j}
 
@@ -1362,10 +1361,10 @@ Statements!                     {Execute statements}
       \sysArgs2; Pos+ Pos=]     {Pos += V {Step along short side}}
     \sysArgs0; Pos+ Pos=        {Pos += U {Step along long side}}
 
-    Pos<, 160- [if>=0           {Wrapping around left/right border}
-      [if>0 Pos>++ 64+] Pos<.]  {Map X back into 0..159 range}
+    <Pos, 160- [if>=0           {Wrapping around left/right border}
+      [if>0 >Pos++ 64+] <Pos.]  {Map X back into 0..159 range}
 
-    Pos>, $78& [if=0            {This occurs midscreen if text has scrolled}
+    >Pos, $78& [if=0            {This occurs midscreen if text has scrolled}
       \sysArgs4; Pos+ Pos=]     {Map Y back into 8..127 range}
 
     loop]
