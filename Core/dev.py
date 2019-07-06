@@ -65,6 +65,7 @@
 #  DONE Review SPI status
 #  DONE Review ROM layout
 #  DONE Mode -1 (for zombie mode), can do mode -2 to restore previous mode
+#  DONE Add 4 arrows to font to fill up the ROM page
 #  XXX  Apple1: ZP vars
 #  XXX  Snake: Refactor AI
 #  XXX  Update romTypeValue and interface.json
@@ -128,7 +129,7 @@ from os  import getenv
 
 from asm import *
 import gcl0x as gcl
-import font_v2 as font
+import font_v3 as font
 
 # Pre-loading the formal interface as a way to get warnings when
 # accidently redefined with a different value
@@ -2499,7 +2500,7 @@ trampoline()
 align(0x100, 0x100)
 
 label('font82up')
-for ch in range(32+50, 128):
+for ch in range(32+50, 132):
   comment = 'Char %s' % repr(chr(ch))
   for byte in font.font[ch-32]:
     ld(byte)
