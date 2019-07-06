@@ -33,8 +33,10 @@ gigatron-rom
  |     +--- GCL-language.txt    Gigatron Control Language and vCPU explanation
  |     +--- GT1-files.txt       vCPU object file format and ROM versioning
  |     +--- gtemu.c             Instruction set definition (as executable code)
+ |     +--- SYS-functions.txt   Explanation on how SYS extensions work
  |     +--- TinyBASIC.ebnf      Formal definition of Gigatron TinyBASIC syntax
- |     `--- TinyBASIC.xhtml     Railroad diagram of Gigatron TinyBASIC syntax
+ |     +--- TinyBASIC.xhtml     Railroad diagram of Gigatron TinyBASIC syntax
+ |     `--- vCPU-summary.txt    Overview of 16-bit virtual CPU instruction set
  |
  `--- Contrib/                  Contributions outside the kit's ROM and tooling:
        +--- at67/               Emulator/visualizer (SDL2), 8-bit/16-bit

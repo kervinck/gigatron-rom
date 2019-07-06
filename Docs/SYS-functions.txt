@@ -23,23 +23,26 @@ SYS functions are free to do whatever they want, as long as they
 play well with the rules of the timing game. For simplicity of
 implementation, vCPU measures elapsed time in integer number of
 "ticks". 1 tick equals two hardware CPU cycles (1 cycle is 160 ns,
-so 1 tick is 320 ns). All vCPU and SYS functions execute an even
-number of cycles.
+so 1 tick is 320 ns). All vCPU instructions and SYS functions
+therefore execute in an even number of cycles. A nop must be added
+if the cycle count would be odd without it.
 
 Rule 1
 ------
 SYS functions must complete and reenter the vCPU within their maximum
-declared time. This time is given by the operand D of the SYS call.
-vCPU uses this to decide upfront if the function can complete in
-the current timeslice or must wait for the start of the next one.
-The total allowed time is (270-D) & 255 "ticks". This includes all
-overhead including that of the SYS instruction itself. It is best
-study the cycle count annotations in the source code for this.
+declared time. This time is specified in the operand D of the SYS
+call. vCPU uses this value to decide upfront if the function can
+complete in the remainder of the current timeslice, or if it must
+wait for the start of the next one. The total allowed time is 28-2*D
+clocks or cycles, with D <= 0. This includes all overhead including
+that of the SYS vCPU instruction itself. It is best to study the
+cycle count annotations in the ROM source code for concrete examples
+on how this is used.
 
 Reserving an insufficient number of ticks results in broken video
 signals. It's OK to "ask" for more time than will be used. This may
 only result in getting dispatched in a later timeslice than strictly
-necessary.  Still, some of the more complex built-in SYS functions
+necessary. Still, some of the more complex built-in SYS functions
 do this to allow for bug fixing without changing the caller.
 
 Rule 2
@@ -66,8 +69,8 @@ Naming
 The naming convention is: SYS_<CamelCase>_[v<V>]_<N>
 
 With <N> the maximum number of clocks or cycles (not ticks!) the
-function will need, counted from NEXT to NEXT. This duration <N> must
-be passed passed to the 'SYS' vCPU instruction as operand, represented
+function will need, counted from NEXT to NEXT. This duration <N>
+must be passed to the 'SYS' vCPU instruction as operand, represented
 as `270-max(14,<N>/2)'. In GCL you can just type `<N>!', and the
 compiler translates the operand for you. The gt1dump tool disassembles
 and displays <N>.

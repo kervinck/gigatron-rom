@@ -44,7 +44,7 @@
 #  DONE Update version number to v3
 #
 #  ROM v4: Small updates
-#  DONE #81 Support alternative game controllers (--> TypeC added)
+#  DONE #81 Support alternative game controllers (TypeC added)
 #  DONE SPI: Setup SPI at power-on and add 'ctrl' instrucion to asm.py
 #  DONE SPI: Expander control (Enable/disable slave, set bank etc)
 #  DONE SPI: SYS Exchange bytes
@@ -64,7 +64,7 @@
 #  DONE Racer: faster road setup
 #  DONE Review SPI status
 #  DONE Review ROM layout
-#  XXX  Tetronis: investigate humming
+#  XXX  SYS_TurboBoost_v4_XX
 #  XXX  Apple1: ZP vars
 #  XXX  Snake: Refactor AI
 #  XXX  Update romTypeValue and interface.json
@@ -104,6 +104,8 @@
 #  XXX  vCPU: extension for C: HOP_v4 $DD
 #  XXX  vCPU: extension for C: LSRW_v4
 #  XXX  vCPU: extension for C: CMPW_v4 $DD
+#  XXX  Faster SYS_Exec_88, with start address?
+#  XXX  ROM decrunch
 #
 #  Ideas for ROM v6+
 #  XXX  Reset.c and Main.c (that is: port these from GCL to C)
