@@ -8,9 +8,10 @@ gigatron-rom
  +--- LICENSE                   2-Clause BSD License
  +--- Makefile                  Marcel's Makefile
  +--- Core/                     Gigatron kernel and build tools
- |     +--- ROMv3.py            Video/audio/io/interpreter loops, built-in vCPU
- |     |                        applications and data ("kernel + ROM disk")
- |     |                        Execute this to build ROM files
+ |     +--- dev.py              Development ROM (type 'make' to build):
+ |     |                        Video/audio/io/interpreter loops and cold storage
+ |     |                        for applications and data ("kernel + ROM disk")
+ |     +--- ROMv3.py            Source for release ROM v3 (most recent release)
  |     `--- compilegcl.py       Stand-alone GCL to vCPU compiler (GT1 files)
  +--- interface.json            Formal bindings interface to ROM for programs
  +--- Apps/                     Built-in and example applications (GCL and GT1)
