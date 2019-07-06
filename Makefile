@@ -48,7 +48,7 @@ open:
 run: Docs/gtemu dev.rom
 	# Run in reference emulator
 	# Hop from frame to frame with 'n' (next)
-	Docs/gtemu dev.rom | less -p 'line 0'
+	Docs/gtemu dev.rom #| less -p 'line 0'
 
 test: Docs/gtemu dev.rom
 	# Check for hSync errors in first ~30 seconds of emulation
