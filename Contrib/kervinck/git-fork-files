@@ -47,8 +47,11 @@ for F in "$@"; do
 done
 
 # git commit -n
-forkFiles="$@".forked
-git commit -n -m "(git-fork-files) Creating: $forkFiles"
+message="(git-fork-files) Creating:"
+for F in "$@"; do
+  message="$message $F.forked"
+done
+git commit -n -m "$message"
 echo
 
 # SAVED=`git rev-parse HEAD`
@@ -63,7 +66,7 @@ for F in "$@"; do
 done
 
 # git commit -n
-git commit -n -m "(git-fork-files) Saving: $@"
+git commit -n -m "(git-fork-files) Saving: $*"
 echo
 
 # git merge $SAVED # This will generate conflicts
@@ -86,4 +89,4 @@ done
 # git commit -n
 echo
 echo "Rename the new files and then commit all with:"
-echo git commit -n -m \""Forking: $@"\"
+echo git commit -n -m \""Forking: $*"\"

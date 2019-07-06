@@ -34,7 +34,7 @@ dev.rom: Core/* Apps/* Images/* Makefile interface.json
 		Loader=Apps/Loader_v2.gcl\
 		Tetronis=Apps/Tetronis_v1.gt1\
 		Bricks=Apps/Bricks_v1.gt1\
-		TinyBASIC=Apps/TinyBASIC_v2.gcl\
+		TinyBASIC=Apps/TinyBASIC.gcl\
 		TicTac=Apps/TicTac_v1.gtb\
 		WozMon=Apps/WozMon_v2.gt1\
 		Egg=Apps/Apple1.gt1x\
@@ -42,7 +42,10 @@ dev.rom: Core/* Apps/* Images/* Makefile interface.json
 		Reset=Core/Reset.gcl
 
 open:
-	# First do: cd Contrib/PhilThomas/src && npm start
+	# First do:
+	#       cd Contrib/PhilThomas/src
+	#       ln -sf ../../../dev.rom gigatron.rom
+	#       npm start
 	open http://127.0.0.1:8000/src
 
 run: Docs/gtemu dev.rom

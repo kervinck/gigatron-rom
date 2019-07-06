@@ -14,6 +14,7 @@
 
 {
   History:
+  2019-07-07 (marcelk) PrintChar accepts arrow chars; Fix indent issue #40.
   2019-07-06 (marcelk) Update GCL notation (no changes to GT1 file)
   2018-06-19 (marcelk) Scaffolding: can evaluate direct print statements
   2018-06-21 (marcelk) Can edit programs, delete lines, but no RUN yet
@@ -315,11 +316,11 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 +-----------------------------------------------------------------------}
 *=$0300
 
-{ Print ASCII character (32..127) on screen in 5x8 pixels }
+{ Print ASCII character (32..131) on screen in 5x8 pixels }
 { For valid characters, return the actual position }
 [def
   k=                            {Temporarily save character}
-  [127- if<=0                   {Suppress characters >127}
+  [131- if<=0                   {Suppress characters >131}
    >Pos, 120- if<=0             {Suppress when vertically protruding
                                  screen memory (note this can be in the
                                  middle of the screen after scrolling
@@ -474,15 +475,17 @@ GetLine=
     EndOfLine!]
 
   Keyword! `line #0
-  [if<>0 $19a0 call]
+  [if<>0 \Line call]
 
-  $500 call                     {Continue in another page}
+  \Statements2 call             {Continue in another page}
 ] Statements=
 
 {-----------------------------------------------------------------------+
 |}>\vLR++ >\vLR++ ret{  RAM page 5                                      |
 +-----------------------------------------------------------------------}
 *=$0500
+
+Statements2=*
 
 { Continuation of Statement }
 
@@ -545,7 +548,7 @@ GetLine=
   Keyword! `print #0
   [if=0 Keyword! `? #0]
   [if<>0
-    $13a0 call]                 {PRINT}
+    \Print call]                {PRINT}
 
   Keyword! `mode #0
   [if<>0
@@ -561,10 +564,10 @@ GetLine=
   [if<>0
     \romType, \romTypeValue_ROMv3-
     [if<0 ValueError!]          {Error on ROM before v3}
-    $17a0 call
+    \Save call
   ]
 
-  $14a0 call                    {INPUT, NEW, CLS, LIST, RUN, END, LET}
+  \Statements3 call             {INPUT, NEW, CLS, LIST, RUN, END, LET}
 
 {-----------------------------------------------------------------------+
 |                       RAM page 6                                      |
@@ -651,10 +654,10 @@ $353f \sysArgs6:                {Pen color blue/purple, background color white}
 
 { Note: It is safe here to call functions before hopping over to page 8 }
 
-$18a0 Newline= call             {Scroll and clear last line}
+\_Newline Newline= call         {Scroll and clear last line}
 
 { Welcome message }
-PrintS! `***`Tiny`BASIC`v2 #0
+PrintS! `***`Tiny`BASIC`v2 #0   {Keep calling this 'v2', despite small tweaks}
 Newline!
 
 {-----------------------------------------------------------------------+
@@ -1086,6 +1089,8 @@ Statements!                     {Execute statements}
 +-----------------------------------------------------------------------}
 *=$13a0
 
+Print=*
+
 {PRINT}
 
   Active, [if<>0                {Special case for newlines}
@@ -1111,7 +1116,8 @@ Statements!                     {Execute statements}
       [if<>0
         [do
           $20 PrintChar!
-          <Pos, 7& if<>0loop]   {Tab stops every 4 characters}
+          <Pos, 2-              {Correct for 2 pixel indentation}
+          7& if<>0loop]         {Tab stops every 4 characters}
         loop]                   {To PRINTLIST}
       Keyword! $3b# 0#          {';'}
       if<>0loop                 {To PRINTLIST}
@@ -1125,6 +1131,8 @@ Statements!                     {Execute statements}
 |                       RAM page 20                                     |
 +-----------------------------------------------------------------------}
 *=$14a0
+
+Statements3=*
 
   Keyword! `input #0
   [if<>0
@@ -1156,12 +1164,14 @@ Statements!                     {Execute statements}
     List!                       {To print number of free bytes}
     Prompt! #0]                 {Return to prompt}
 
-  $15a0 call
+  \Statements4 call
 
 {-----------------------------------------------------------------------+
 |                       RAM page 21                                     |
 +-----------------------------------------------------------------------}
 *=$15a0
+
+Statements4=*
 
   Keyword! `cls #0
   [if<>0
@@ -1188,12 +1198,14 @@ Statements!                     {Execute statements}
   Keyword! `end #0
   [if<>0 Prompt! #0]
 
-  $16a0 call
+  \Statements5 call
 
 {-----------------------------------------------------------------------+
 |                       RAM page 22                                     |
 +-----------------------------------------------------------------------}
 *=$16a0
+
+Statements5=*
 
   Keyword! `let #0              {LET is optional}
   Variable!
@@ -1220,6 +1232,8 @@ Statements!                     {Execute statements}
 |                       RAM page 23                                     |
 +-----------------------------------------------------------------------}
 *=$17a0
+
+Save=*
 
 {SAVE}
 
@@ -1267,6 +1281,8 @@ Statements!                     {Execute statements}
 +-----------------------------------------------------------------------}
 *=$18a0
 
+_Newline=*
+
 {Newline}
 
   { Prepare for printing on new line }
@@ -1307,6 +1323,8 @@ Statements!                     {Execute statements}
 +-----------------------------------------------------------------------}
 *=$19a0
 
+Line=*
+
 {LINE}
 
   1 \sysArgs0: $100 \sysArgs2:  {Vector pair U, V}
@@ -1334,12 +1352,14 @@ Statements!                     {Execute statements}
 
   pop                           {Shorter than 2++}
 
-  $1aa0 call
+  \Line2 call
 
 {-----------------------------------------------------------------------+
 |                       RAM page 26                                     |
 +-----------------------------------------------------------------------}
 *=$1aa0
+
+Line2=*
 
 {Continuation of LINE}
 
