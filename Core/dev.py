@@ -43,7 +43,7 @@
 #  DONE Replace Easter egg
 #  DONE Update version number to v3
 #
-#  ROM v4: Small updates
+#  ROM v4: Numerous small updates, no new applications
 #  DONE #81 Support alternative game controllers (TypeC added)
 #  DONE SPI: Setup SPI at power-on and add 'ctrl' instrucion to asm.py
 #  DONE SPI: Expander control (Enable/disable slave, set bank etc)
@@ -54,7 +54,7 @@
 #  DONE Relocate app-specific SYS functions above v6502 (Racer, Loader)
 #  DONE Apple1: Preload with WozMon and Munch
 #  DONE Snake,Racer: Don't use serialRaw but buttonState
-#  DONE #52 Head-only Snake shouldn't be allowed to turn around
+#  DONE #52 Head-only snake shouldn't be allowed to turn around
 #  DONE Snake: improve game play and colors in general
 #  DONE Apple1: Don't use buttonState but serialRaw
 #  DONE Replace Easter egg
@@ -66,8 +66,8 @@
 #  DONE Review ROM layout
 #  DONE Mode -1 (for zombie mode), can do mode -2 to restore previous mode
 #  DONE Add 4 arrows to font to fill up the ROM page
-#  XXX  Apple1: ZP vars
-#  XXX  Snake: Refactor AI?
+#  DONE Apple1: ZP vars
+#  DONE Snake: Tweak AI. Also autoplayer can't get hiscore anymore
 #  XXX  Update romTypeValue and interface.json
 #  XXX  Update version number to v4
 #
@@ -90,7 +90,7 @@
 #  XXX  v6502: SYS_v6502_RESET
 #  XXX  Main: add Apple1 to main menu
 #  XXX  Formally Support SPI and RAM expander: publish in interface.json
-#  XXX  SPI: Also reset at soft reset
+#  XXX  SPI: Also reset state at soft reset
 #  XXX  SPI: SYS Exchange bit(s)
 #  XXX  SPI: Auto-detect banking, 64K and 128K
 #  XXX  SPI: Think about SPI modes

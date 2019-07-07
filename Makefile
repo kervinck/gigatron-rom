@@ -48,7 +48,7 @@ run: Docs/gtemu dev.rom
 	Docs/gtemu dev.rom | less -p 'line 0'
 
 export jsEmu=Contrib/PhilThomas/src
-runjs:
+runjs: dev.rom
 	# Run ROM in javascript emulator in web browser (macOS)
 	cd "$(jsEmu)" && ln -sf ../../../dev.rom gigatron.rom
 	(sleep 1 && open http://127.0.0.1:8000/src) &

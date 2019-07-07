@@ -104,7 +104,7 @@ gcl0x
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
-$0300:
+*=$300
 
 { Draw snake head }
 [def
@@ -170,7 +170,7 @@ $0300:
   0 stepV- tmp=
   stepU stepV=
   tmp   stepU=
-  Bias [if<0 50+] 50+ Bias=     {Increase bias against left}
+  Bias [if<0 0] 60+ Bias=       {Increase bias against left}
   ret
 ] TurnL=
 
@@ -179,7 +179,7 @@ $0300:
   0 stepU- tmp=
   stepV stepU=
   tmp   stepV=
-  Bias [if>0 50-] 50- Bias=     {Increase bias against right}
+  Bias [if>0 0] 60- Bias=       {Increase bias against right}
   ret
 ] TurnR=
 
@@ -194,7 +194,7 @@ $0300:
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
-$0400:
+*=$400
 
 { RunGame }
 [def
@@ -214,21 +214,21 @@ $0400:
     [if<>0 1] Color^ Color=     {Apply effect}
     Head DrawBlock!             {Draws head in tail color}
 
-    Head stepU+ Head=           {Make step}
+    Head stepU+ Head=           {Make step with head first}
 
-    { Colors:        B  G  R
+    { Colors:        R  G  B
       -------       -- -- --
       Field  =  8 =     8
-      Wall   = 26 = 16+ 8+ 2
-      Head   = 15 =    12+ 3
-      Tail1  = 27 = 16+ 8+ 3
-      Tail2  = 26 = 16+ 8+ 2
-      Food   = 24 = 16+ 8
-      Poison = 11 =     8+ 3
-                           ^
-                           Use red channel to detect unsafe steps
+      Wall   = 26 =  2+ 8+16
+      Head   = 15 =  3 12
+      Tail1  = 27 =  3+ 8+16
+      Tail2  = 26 =  2+ 8+16
+      Food   = 24 =   + 8+16
+      Poison = 62 =  2+12+48
+                     ^
+                     Use red channel to detect unsafe steps
     }
-    Head, 3& [if<>0 {Hit wall or poison} pop ret]
+    Head, 3& [if<>0 pop ret]    {Hit wall, tail or poison}
     Head, 24^ {Food} [if=0      {Eating the food}
       $40 Timer+ SetNote!
       2 \soundTimer.
@@ -267,8 +267,16 @@ $0400:
   [do
     \SYS_Random_34 \sysFn:
     34! Pos=                    {Get random 16-bit number}
-    <Pos, 128- [if<0 150+] 5+   {X in range 5..154}  254& <Pos.
+    {
+      The ranges are such that 1. no food will touch the wall,
+      and 2. the probability of landing one step away from
+      the wall is half (due to truncation with 254&), and 3.
+      the probability in the center is double (due to partial
+      overlap of the low and high ranges).
+    }
+    <Pos, 128-     [if<0 150+] 5+  {X in range  5..154} 254& <Pos.
     >Pos, 127& 64- [if<0 102+] 21+ {Y in range 21..122} 254& >Pos.
+
     Pos, 4^ if<>0loop]          {Repeat if not free}
   Pos DrawBlock!
   pop ret
@@ -279,42 +287,54 @@ $0400:
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page 5                                      |
 +-----------------------------------------------------------------------}
-$0500:
+*=$500
 
+{ AutoControl }
 [def
   push
 
-  \buttonState, $cf& $cf^       {~buttonStart&~buttonSelect}
-  [if<>0 SetupGame! pop ret]    {If button pressed, restart game}
+  \buttonState, $cf& $cf^       {Ignore buttonStart and buttonSelect}
+  [if<>0 SetupGame! pop ret]    {If other button pressed, restart game}
 
   TurnL p=                      {p stays set as long as left turn is ok}
   TurnR q=                      {q stays set as long as right turn is ok}
 
   Head stepU+ peek              {Look ahead}
-  4^ tmp=                       {tmp!=1 for turning, 0 for straight}
+  4^ tmp=                       {tmp<>0 for turning, tmp=0 for straight}
+  [if<>0
+    {24^4} 28^ [if=0 tmp=]      {Go straight if food ahead}
+  else
+    Head stepU+ stepU+ peek     {If clear also look two steps ahead}
+    62^ if=0 >tmp++             {Turn early when heading towards poison}
+  ]
 
-  Head stepV- peek              {Look left}
-  4^ [if=0 Head stepV- stepV-   {Upto two steps}
-           peek 4^]
-  [if<>0                        {Something is there}
-    {24^4}28^ [if<>0 0 p=       {Not safe, don't go there}
-               else 1 tmp=      {Food! Must turn...}
-                    0 q=]]      {...but not right}
+  Head stepV- peek 4^           {Look left}
+  [if<>0 {24^4} 28^             {Something is there}
+    [if=0 q= >tmp++             {Food! Must turn but not right}
+     else 0 p=]                 {Not safe, don't go there}
+  else                          {Left is clear}
+    Head stepV- stepV- peek 4^  {Look two steps left}
+    if<>0 {24^4} 28^
+      [if=0 q= >tmp++           {Also turn for food two steps away}
+       else Bias 15+ Bias]      {Build up some extra bias for right}
+  ]
 
-  Head stepV+ peek              {Look right}
-  4^ [if=0 Head stepV+ stepV+   {Upto two steps}
-           peek 4^]
-  [if<>0                        {Something is there}
-    {24^4}28^ [if<>0 0 q=       {Not safe, don't go there}
-               else 1 tmp=      {Food! Must turn...}
-                      0 p=]]    {...but not left}
+  Head stepV+ peek 4^           {Look right}
+  [if<>0 {24^4} 28^             {Something is there}
+    [if=0 p= >tmp++             {Food! Must turn but not right}
+     else 0 q=]                 {Not safe, don't go there}
+  else                          {Right is clear}
+    Head stepV+ stepV+ peek 4^  {Look two steps right}
+    if<>0 {24^4} 28^
+      [if=0 p= >tmp++           {Also turn for food two steps away}
+       else Bias 15- Bias]      {Build up some extra bias for left}
+  ]
 
   tmp [if=0                     {If not already turning}
     \entropy, 13-               {Turn randomly 13 out of 128, or 5%}
     [if<0 1 else 0]]
 
   [if<>0                        {Algorithm wants to turn}
-    {24^4}28^ if<>0             {Overrule if food directly ahead}
     p [if=0 q else              {Not left means right}
       q [if=0 p else            {Not right means left}
        \entropy, 128-           {Pick direction randomly otherwise}
@@ -323,27 +343,15 @@ $0500:
       ]
     ]
 
-    [if<>0 call]                {TurnL or TurnR and update Bias}
+    if<>0 call                  {TurnL or TurnR and update Bias}
   ]
   pop ret
 ] AutoControl=
 
-[def
-  stepU tmp= {Default keep running in same direction}
-  \buttonState, $fe^ {~buttonRight} [if=0 $0002 tmp=]
-  \buttonState, $fd^ {~buttonLeft}  [if=0 $fffe tmp=]
-  \buttonState, $fb^ {~buttonDown}  [if=0 $0200 tmp=]
-  \buttonState, $f7^ {~buttonUp}    [if=0 $fe00 tmp=]
-  {Only turn if not reversing 180 degrees}
-  tmp stepU+ [if<>0 tmp stepU=]
-  {Note: `stepV' is not used once under player control}
-  ret
-] PlayerControl=
-
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
-$0600:
+*=$600
 
 [def {AddTimer}
   push
@@ -413,7 +421,7 @@ $0600:
 {-----------------------------------------------------------------------+
 |}$08a0 \vLR: ret{      RAM page 8                                      |
 +-----------------------------------------------------------------------}
-$08a0:
+*=$8a0
 
 [def {LaunchControl}
 {
@@ -446,7 +454,7 @@ $08a0:
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page 9                                      |
 +-----------------------------------------------------------------------}
-$09a0:
+*=$9a0
 
 [def { DrawNextDigit -- Value Radix }
   push
@@ -482,7 +490,7 @@ $09a0:
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page 10                                     |
 +-----------------------------------------------------------------------}
-$0aa0:
+*=$aa0
 
 [def
   push
@@ -505,7 +513,7 @@ $0aa0:
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page 11                                     |
 +-----------------------------------------------------------------------}
-$0ba0:
+*=$ba0
 
 { Setup note in all channels, but don't play it yet }
 [def
@@ -531,7 +539,7 @@ $0ba0:
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page 12                                     |
 +-----------------------------------------------------------------------}
-$0ca0:
+*=$ca0
 
 { Display the get ready messages }
 [def
@@ -547,7 +555,24 @@ $0ca0:
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page 13                                     |
 +-----------------------------------------------------------------------}
-$0da0:
+*=$da0
+
+[def
+  stepU tmp= {Default keep running in same direction}
+  \buttonState, $fe^ {~buttonRight} [if=0 $0002 tmp=]
+  \buttonState, $fd^ {~buttonLeft}  [if=0 $fffe tmp=]
+  \buttonState, $fb^ {~buttonDown}  [if=0 $0200 tmp=]
+  \buttonState, $f7^ {~buttonUp}    [if=0 $fe00 tmp=]
+  {Only turn if not reversing 180 degrees}
+  tmp stepU+ [if<>0 tmp stepU=]
+  {Note: `stepV' is not used once under player control}
+  ret
+] PlayerControl=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 14                                     |
++-----------------------------------------------------------------------}
+*=$ea0
 
 [def ``EAT`FOOD  #0
      `NOT`POISON #0
