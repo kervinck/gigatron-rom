@@ -133,6 +133,7 @@
  "SYS_SetMode_v2_80"    : "0x0b00",
  "SYS_SetMemory_v2_54"  : "0x0b03",
  "SYS_SendSerial1_v3_80": "0x0b06",
+ "SYS_Run6502_DEVROM_80": "0x0b0c",
  "SYS_Sprite6_v3_64"    : "0x0c00",
  "SYS_Sprite6x_v3_64"   : "0x0c40",
  "SYS_Sprite6y_v3_64"   : "0x0c80",

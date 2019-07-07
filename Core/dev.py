@@ -4921,7 +4921,7 @@ for application in argv[1:]:
     zpReset(userVars)
     label(name)
     program = gcl.Program(name)
-    address = symbol('_BasicProgram')
+    address = symbol('BasicProgram')
     if not has(address):
       print ' Error: TinyBASIC must be compiled-in first'
     program.org(address)

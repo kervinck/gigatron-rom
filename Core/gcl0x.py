@@ -110,7 +110,7 @@ class Program:
     print(line)
 
   def word(self, word):
-    # Process a GCL word and emit its corresponding code
+    # Process a GCL word and emit its corresponding vCPU code
     if len(word) == 0:
       return
     self.lastWord = word
@@ -146,8 +146,14 @@ class Program:
     else:
       var, con, op = self.parseWord(word)
 
+      # Label definitions
+      if has(var) and has(con):
+        if op == '=': self.defSymbol(var, con)
+        else:
+          self.error("Invalid operator '%s' with name and constant" % op)
+
       # Words with constant value as operand
-      if has(con):
+      elif has(con):
         if not has(op):
           if 0 <= con < 256:
             self.emitOp('LDI')
@@ -191,7 +197,7 @@ class Program:
         if has(con):
           self.emit(con)
 
-      # Words with variable name as operand
+      # Words with variable or symbol name as operand
       elif has(var):
         offset = 0
         if not has(op):    self.emitOp('LDW')
@@ -222,12 +228,12 @@ class Program:
         elif op == '<.':   self.emitOp('ST');              #self.depr('X<.', '<X.')
         elif op == '>.':   self.emitOp('ST'); offset = 1;  #self.depr('X>.', '>X.')
         else:
-          self.error("Invalid operator '%s' with variable" % op)
+          self.error("Invalid operator '%s' with variable or symbol '%s'" % (op, var))
         if has(var):
           self.emitVar(var, offset)
 
       else:
-        self.error('Invalid keyword')
+        self.error('Invalid word')
 
   def parseWord(self, word):
     # Break word into pieces
@@ -248,7 +254,21 @@ class Program:
       while word[ix] in prefixes:
         op += word[ix]
         ix += 1
-      op += ' ' # Use space to marks prefix operators
+      op += ' ' # Space to demarcate prefix operators
+
+    if word[ix].isalpha() or word[ix] in ['&', '\\', '_']:
+      # Named variable or named constant
+      name = word[ix]
+      ix += 1
+      while word[ix].isalnum() or word[ix] == '_':
+        name += word[ix]
+        ix += 1
+
+    if word[ix] == '=':
+      # Infix symbol definition
+      op += word[ix]
+      # op += ' ' # Space to demarcate infix operator
+      ix += 1
 
     if word[ix] in ['-', '+']:
       # Number sign
@@ -270,15 +290,19 @@ class Program:
       while word[ix].isdigit():
         number = 10*number + ord(word[ix]) - ord('0')
         ix += 1
-    elif word[ix].isalnum() or word[ix] in ['\\', '_']:
-      # Named variable or named constant
-      name = word[ix]
-      ix += 1
-      while word[ix].isalnum() or word[ix] == '_':
-        name += word[ix]
-        ix += 1
+    elif has(sign):
+      op += sign
+      sign = None
     else:
       pass
+
+    # Resolve '&_symbol' as the number it represents
+    if has(name) and name[0] == '&':
+      if name[1] == '_':
+        number = symbol(name[2:])
+      if not has(number):
+        number = name[2:] # Pass back as an unresolved reference without '_'
+      name = None
 
     # Resolve '\symbol' as the number it represents
     if has(name) and name[0] == '\\':
@@ -382,7 +406,7 @@ class Program:
     if var[0] == '_':
       # _C notation for labels as variables
       if not has(symbol(var[1:])):
-        self.error('Undefined symbol %s' % var[1:])
+        self.error('Undefined symbol %s' % var)
       self.emit(symbol(var[1:]) + offset, comment)
     else:
       # Regular GCL variable
@@ -415,6 +439,7 @@ class Program:
       self.openSegment()
     self.putInRomTable(byte, comment)
     self.vPC += 1
+    return self
 
   def closeSegment(self):
     # Register length of GT1 segment
@@ -462,8 +487,8 @@ class Program:
   def defSymbol(self, name, value):
     # Define a label from GCL in the systems symbol table
     if name[0] != '_':
-      self.error("Symbol %s doesn\'t begin with underscore ('_')" % repr(name))
-    define(name, value)
+      self.error('Symbol \'%s\' must begin with underscore (\'_\')' % name)
+    define(name[1:], value)
 
 def prev(address, step=2):
   # Take vPC two bytes back, wrap around if needed to stay on page

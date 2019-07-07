@@ -138,13 +138,12 @@ ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 # Test ROM for v6502 testing
 mos: v6502.rom
 v6502.rom: Core/* Apps/* Images/* Makefile interface.json
-	rm -f ROMv3x.rom ROMv3x.asm
-	python Core/ROMv3x.py\
+	rm -f dev.rom dev.asm
+	python Core/dev.py\
 		Main=Apps/Apple1.gcl\
 		Core/Reset.gcl
-	mv ROMv3x.rom v6502.rom
-	mv ROMv3x.asm v6502.asm
-	open http://127.0.0.1:8000/src
+	mv dev.rom v6502.rom
+	mv dev.asm v6502.asm
 
 burnmos: v6502.rom
 	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s

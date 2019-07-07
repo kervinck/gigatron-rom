@@ -363,7 +363,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
   push
 
   tmp=                          {Line number}
-  \_Buffer Active=              {Input buffer}
+  &_Buffer Active=              {Input buffer}
   tmp Active:                   {For error messages}
   $a2 <Active.                  {Text area}
 
@@ -475,9 +475,9 @@ GetLine=
     EndOfLine!]
 
   Keyword! `line #0
-  [if<>0 \_Line call]
+  [if<>0 &_Line call]
 
-  \_Statements2 call            {Continue in another page}
+  &_Statements2 call            {Continue in another page}
 ] Statements=
 
 {-----------------------------------------------------------------------+
@@ -548,7 +548,7 @@ _Statements2=*
   Keyword! `print #0
   [if=0 Keyword! `? #0]
   [if<>0
-    \_Print call]               {PRINT}
+    &_Print call]               {PRINT}
 
   Keyword! `mode #0
   [if<>0
@@ -564,10 +564,10 @@ _Statements2=*
   [if<>0
     \romType, \romTypeValue_ROMv3-
     [if<0 ValueError!]          {Error on ROM before v3}
-    \_Save call
+    &_Save call
   ]
 
-  \_Statements3 call            {INPUT, NEW, CLS, LIST, RUN, END, LET}
+  &_Statements3 call            {INPUT, NEW, CLS, LIST, RUN, END, LET}
 
 {-----------------------------------------------------------------------+
 |                       RAM page 6                                      |
@@ -654,7 +654,7 @@ $353f \sysArgs6:                {Pen color blue/purple, background color white}
 
 { Note: It is safe here to call functions before hopping over to page 8 }
 
-\_Newline Newline= call         {Scroll and clear last line}
+&_Newline Newline= call         {Scroll and clear last line}
 
 { Welcome message }
 PrintS! `***`Tiny`BASIC`v2 #0   {Keep calling this 'v2', despite small tweaks}
@@ -790,7 +790,7 @@ Number=
     SyntaxError!]               {There must be nothing left on the line}
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
-    \_BasicProgram Active^      {Also stop if we came from the input buffer}
+    &_BasicProgram Active^      {Also stop if we came from the input buffer}
     if<>0 Active 2+ Active=     {Skip past line number}
     Statements!]                {And continue from there}
   Prompt! #0                    {Program finished ok}
@@ -808,7 +808,7 @@ Number=
       <i++                      {Advance pointer}
       <i, if<>0loop]            {Until end of page}
     j 1- if<>0loop]
-  \_BasicProgram Begin=
+  &_BasicProgram Begin=
   ret
 ] {Clear=}
 
@@ -1037,7 +1037,7 @@ List=
   pop ret
 ] RelOp=
 
-\_Buffer deek End=              {At startup 'End' comes from loaded segment}
+&_Buffer deek End=              {At startup 'End' comes from loaded segment}
 2+ {Active=}                    {BASIC command(s) to run at startup}
 
 {-----------------------------------------------------------------------+
@@ -1164,7 +1164,7 @@ _Statements3=*
     List!                       {To print number of free bytes}
     Prompt! #0]                 {Return to prompt}
 
-  \_Statements4 call
+  &_Statements4 call
 
 {-----------------------------------------------------------------------+
 |                       RAM page 21                                     |
@@ -1198,7 +1198,7 @@ _Statements4=*
   Keyword! `end #0
   [if<>0 Prompt! #0]
 
-  \_Statements5 call
+  &_Statements5 call
 
 {-----------------------------------------------------------------------+
 |                       RAM page 22                                     |
@@ -1352,7 +1352,7 @@ _Line=*
 
   pop                           {Shorter than 2++}
 
-  \_Line2 call
+  &_Line2 call
 
 {-----------------------------------------------------------------------+
 |                       RAM page 26                                     |
@@ -1399,7 +1399,7 @@ _Line2=*
   to include a BASIC program and a first command for execution }
 
 *=$1ba0 _Buffer=*               {Must be the "line" before user program}
-       #<\_Buffer #>\_Buffer    {Point to self}
+       #<&_Buffer #>&_Buffer    {Point to self}
        `NEW #0                  {'NEW' to start interactive session}
 
 *=$1bc0 _BasicProgram=*         {BASIC program starts here}

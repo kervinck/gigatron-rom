@@ -8,7 +8,6 @@ gcl0x
 
 {
  Issues:
-  XXX Pack variables Pos,PrintChar,WozMon variables,i,j,k
   XXX Shift screen memory 96 pixels right
 
   XXX NMI/IRQ/RESET to wozmon (through vector) without going through main menu
@@ -46,15 +45,25 @@ gcl0x
             D037    _KBDCR:
 
         https://www.sbprojects.net/projects/apple1/a1basic.php
+
+Zero page usage:
+$30-$31         Pos
+$32-$33         PrintChar
+$34-$3b         WozMon variables
 }
+_i=$3c
+_j=$3e
+_k=$3a          {Share with wozmon YSAV}
 
 {-----------------------------------------------------------------------+
 |       ROM type check                                                  |
 +-----------------------------------------------------------------------}
 
+*=\userCode
+
 \romType, \romTypeValue_DEVROM- {Need version >= DEVROM, see Docs/GT1-files.txt}
-[if<0 do \frameCount;           {https://forum.gigatron.io/viewtopic.php?f=4&t=130}
-  _vPCH: loop]
+[if<0 do \frameCount; _vPCH:    {https://forum.gigatron.io/viewtopic.php?f=4&t=130}
+      loop]
 
 {-----------------------------------------------------------------------+
 |       Initialize                                                      |
@@ -72,9 +81,9 @@ gcl0x
   Pos: <Pos++ <Pos++            {Y[y]=7+j and dX[y]=0}
   1+ 127^ if<>0loop]            {Next in range}
 
-\_PrintChar PrintChar=          {Forward reference}
-\_Apple1 _vLR=                  {Prepare transfer to main loop}
-\_Munch                         {Start address for Munching6502}
+&_PrintChar PrintChar=          {Forward reference}
+&_Apple1 _vLR=                  {Prepare transfer to main loop}
+&_Munch                         {Start address for Munching6502}
 [ret]                           {Jump to Main (the brackets avoid the automatic vLR patch)}
 
 {-----------------------------------------------------------------------+
@@ -108,7 +117,7 @@ _Munch=* #$18                   { Munch clc             }
         #$a5 #$40               {       lda $40         }
         #$4c #$80 #$02          {       jmp Munch       }
         #$a9 #$8d               {       lda #$8d        Force initial LF and reset of Pos}
-        #$00                    {       brk             }
+        #$00                    {       brk             PrintChar}
         #$4c #$00 #$ff          {       jmp WozMon      }
 
 {-----------------------------------------------------------------------+
@@ -121,8 +130,8 @@ _Apple1=*
 
 _vLR=                           {Reset v6502 PC}
 [do
-  $0b0c _sysFn=                 {Set SYS call to SYS_v6502_Run_vX_80}
-  k                             {ASCII code in A}
+  \SYS_Run6502_DEVROM_80 _sysFn=
+  \k,                           {ASCII code in A}
   80!                           {Run 6502 code until BRK}
   push                          {Save v6502 PC}
   [if=0                         {A=0 reads from keyboard}
@@ -133,13 +142,13 @@ _vLR=                           {Reset v6502 PC}
       \frameCount, 48&          {Roughly 1 Hz and 75% duty cycle}
       [if=0 $a0 else $c0]       {Select space or '@'}
       PrintChar! Pos=           {Display cursor and go back}
-      \serialRaw, k= 128&       {Key ready?}
+      \serialRaw, \k. 128&      {Key ready?}
       if<>0loop]                {Loop until ready}
     $a0 PrintChar! Pos=         {Overwrite '@' with a space}
-    k $60- [if>=0 $40+ k=]      {Map to upper case, and DEL to rubout}
-    k  10^ [if=0  13 k=]        {Map LF to CR}
+    \k, $60- [if>=0 $40+ \k.]   {Map to upper case, and DEL to rubout}
+    \k, 10^  [if=0  13   \k.]   {Map LF to CR}
   else                          {A<>0 for echo}
-    k=
+    \k.
     PrintChar!
   ]
   pop                           {Restore v6502 PC}
@@ -180,11 +189,11 @@ _PrintChar=*
 
     {Then scroll up by modifying videoTable}
 
-    $01ee i=                    {Last entry in video table}
+    $01ee _i=                   {Last entry in video table}
     [do
-      i, 119- [if<0 127+
-               else 7+] i.      {Rotate by 8 in 7..126 range}
-      i 2- i=                   {Move to previous entry in video table}
+      _i, 119- [if<0 127+
+                else 7+] _i.    {Rotate by 8 in 7..126 range}
+      _i 2- _i=                 {Move to previous entry in video table}
       $fe^ if<>0loop]           {Until all done}
   ]
 
@@ -199,20 +208,20 @@ _PrintChar=*
     { and advance cursor position }
 
     50-                         {Map ASCII code to offset in font table}
-    [if<0 50+ i= \font32up      {ASCII 32..81}
-     else     i= \font82up] j=  {ASCII 82..127}
-    i 2<< i+                    {Multiply char code by 5}
-    j+ j=                       {Add to page address to reach bitmap data}
+    [if<0 50+ _i= \font32up     {ASCII 32..81}
+     else     _i= \font82up]    {ASCII 82..127}
+    _j= _i 2<< _i+              {Multiply char code by 5}
+    _j+ _j=                     {Add to page address to reach bitmap data}
 
     Pos \sysArgs4:              {Screen position for character}
     %$fe=                       {Remember this position}
     6+ Pos=                     {Advance by 6 pixels}
 
-    5 [do i=                    {Draw character as 5 vertical bit slices}
-      j 0? \sysArgs2.           {Get bit slice as byte from ROM table}
+    5 [do _i=                   {Draw character as 5 vertical bit slices}
+      _j 0? \sysArgs2.          {Get bit slice as byte from ROM table}
       134!                      {SYS call to draw 8 pixels vertically}
-      <j++ <\sysArgs4++         {Advance to next byte}
-      i 1- if>0loop]            {Looping}
+      <_j++ <\sysArgs4++        {Advance to next byte}
+      _i 1- if>0loop]           {Looping}
 
     %$fe                        {Return position for backspace}
   ]
@@ -260,7 +269,7 @@ _WozMon=*
 {FF3D} #$A9 #$00      {                 LDA #$00        For XAM mode.                           }
 {FF3F} #$AA           {                 TAX             0->X.                                   }
 {FF40} #$0A           { SETSTOR:        ASL             Leaves $7B if setting STOR mode.        }
-{FF41} #$85 #$4B      { SETMODE:        STA MODE        $00 = XAM, $7B= STOR,$AE= BLOK XAM      }
+{FF41} #$85 #$3B      { SETMODE:        STA MODE        $00 = XAM, $7B= STOR,$AE= BLOK XAM      }
 {FF43} #$C8           { BLSKIP:         INY             Advance text index.                     }
 {FF44} #$B9 #$00 #$02 { NEXTITEM:       LDA IN,Y        Get character.                          }
 {FF47} #$C9 #$8D      {                 CMP #$8D        CR?                                     }
@@ -272,9 +281,9 @@ _WozMon=*
 {FF53} #$F0 #$EB      {                 BEQ SETSTOR     Yes, set STOR mode.                     }
 {FF55} #$C9 #$D2      {                 CMP #$D2        "R"?                                    }
 {FF57} #$F0 #$3B      {                 BEQ RUN         Yes, run user program.                  }
-{FF59} #$86 #$48      {                 STX L           $00->L.                                 }
-{FF5B} #$86 #$49      {                 STX H            and H.                                 }
-{FF5D} #$84 #$4A      {                 STY YSAV        Save Y for comparison.                  }
+{FF59} #$86 #$38      {                 STX L           $00->L.                                 }
+{FF5B} #$86 #$39      {                 STX H            and H.                                 }
+{FF5D} #$84 #$3A      {                 STY YSAV        Save Y for comparison.                  }
 {FF5F} #$B9 #$00 #$02 { NEXTHEX:        LDA IN,Y        Get character for hex test.             }
 {FF62} #$49 #$B0      {                 EOR #$B0        Map digits to $0-9.                     }
 {FF64} #$C9 #$0A      {                 CMP #$0A        Digit?                                  }
@@ -288,53 +297,53 @@ _WozMon=*
 {FF71} #$0A           {                 ASL                                                     }
 {FF72} #$A2 #$04      {                 LDX #$04        Shift count.                            }
 {FF74} #$0A           { HEXSHIFT:       ASL             Hex digit left, MSB to carry.           }
-{FF75} #$26 #$48      {                 ROL L           Rotate into LSD.                        }
-{FF77} #$26 #$49      {                 ROL H           Rotate into MSD's.                      }
+{FF75} #$26 #$38      {                 ROL L           Rotate into LSD.                        }
+{FF77} #$26 #$39      {                 ROL H           Rotate into MSD's.                      }
 {FF79} #$CA           {                 DEX             Done 4 shifts?                          }
 {FF7A} #$D0 #$F8      {                 BNE HEXSHIFT    No, loop.                               }
 {FF7C} #$C8           {                 INY             Advance text index.                     }
 {FF7D} #$D0 #$E0      {                 BNE NEXTHEX     Always taken. Check next character for hex.}
-{FF7F} #$C4 #$4A      { NOTHEX:         CPY YSAV        Check if L, H empty (no hex digits).    }
+{FF7F} #$C4 #$3A      { NOTHEX:         CPY YSAV        Check if L, H empty (no hex digits).    }
 {FF81} #$F0 #$97      {                 BEQ ESCAPE      Yes, generate  ESC sequence.            }
-{FF83} #$24 #$4B      {                 BIT MODE        Test MODE byte.                         }
+{FF83} #$24 #$3B      {                 BIT MODE        Test MODE byte.                         }
 {FF85} #$50 #$10      {                 BVC NOTSTOR     B6 = 0 for STOR, 1 for XAM and BLOCK XAM}
-{FF87} #$A5 #$48      {                 LDA L           LSD's of hex data.                      }
-{FF89} #$81 #$46      {                 STA (STL,X)     Store at current 'store index'.         }
-{FF8B} #$E6 #$46      {                 INC STL         Increment store index.                  }
+{FF87} #$A5 #$38      {                 LDA L           LSD's of hex data.                      }
+{FF89} #$81 #$36      {                 STA (STL,X)     Store at current 'store index'.         }
+{FF8B} #$E6 #$36      {                 INC STL         Increment store index.                  }
 {FF8D} #$D0 #$B5      {                 BNE NEXTITEM    Get next item. (no carry).              }
-{FF8F} #$E6 #$47      {                 INC STH         Add carry to 'store index' high order.  }
+{FF8F} #$E6 #$37      {                 INC STH         Add carry to 'store index' high order.  }
 {FF91} #$4C #$44 #$FF { TONEXTITEM:     JMP NEXTITEM    Get next command item.                  }
-{FF94} #$6C #$44 #$00 { RUN:            JMP (XAML)      Run at current XAM index.               }
+{FF94} #$6C #$34 #$00 { RUN:            JMP (XAML)      Run at current XAM index.               }
 {FF97} #$30 #$2B      { NOTSTOR:        BMI XAMNEXT     B7 = 0 for XAM, 1 for BLOCK XAM.        }
 {FF99} #$A2 #$02      {                 LDX #$02        Byte count.                             }
-{FF9B} #$B5 #$47      { SETADR:         LDA L-1,X       Copy hex data to                        }
-{FF9D} #$95 #$45      {                 STA STL-1,X       'store index'.                        }
-{FF9F} #$95 #$43      {                 STA XAML-1,X    And to 'XAM index'.                     }
+{FF9B} #$B5 #$37      { SETADR:         LDA L-1,X       Copy hex data to                        }
+{FF9D} #$95 #$35      {                 STA STL-1,X       'store index'.                        }
+{FF9F} #$95 #$33      {                 STA XAML-1,X    And to 'XAM index'.                     }
 {FFA1} #$CA           {                 DEX             Next of 2 bytes.                        }
 {FFA2} #$D0 #$F7      {                 BNE SETADR      Loop unless X = 0.                      }
 {FFA4} #$D0 #$14      { NXTPRNT:        BNE PRDATA      NE means no address to print.           }
 {FFA6} #$A9 #$8D      {                 LDA #$8D        CR.                                     }
 {FFA8} #$20 #$EF #$FF {                 JSR ECHO        Output it.                              }
-{FFAB} #$A5 #$45      {                 LDA XAMH        'Examine index' high-order byte.        }
+{FFAB} #$A5 #$35      {                 LDA XAMH        'Examine index' high-order byte.        }
 {FFAD} #$20 #$DC #$FF {                 JSR PRBYTE      Output it in hex format.                }
-{FFB0} #$A5 #$44      {                 LDA XAML        Low-order 'examine index' byte.         }
+{FFB0} #$A5 #$34      {                 LDA XAML        Low-order 'examine index' byte.         }
 {FFB2} #$20 #$DC #$FF {                 JSR PRBYTE      Output it in hex format.                }
 {FFB5} #$A9 #$BA      {                 LDA #$BA        ":".                                    }
 {FFB7} #$20 #$EF #$FF {                 JSR ECHO        Output it.                              }
 {FFBA} #$A9 #$04      { PRDATA:         LDA #$04        [Gigatron] 4 pixels wide blank.         }
 {FFBC} #$20 #$F3 #$FF {                 JSR BLANK       [Gigatron] Output it.                   }
-{FFBF} #$A1 #$44      {                 LDA (XAML,X)    Get data byte at 'examine index'.       }
+{FFBF} #$A1 #$34      {                 LDA (XAML,X)    Get data byte at 'examine index'.       }
 {FFC1} #$20 #$DC #$FF {                 JSR PRBYTE      Output it in hex format.                }
-{FFC4} #$86 #$4B      { XAMNEXT:        STX MODE        0->MODE (XAM mode).                     }
-{FFC6} #$A5 #$44      {                 LDA XAML                                                }
-{FFC8} #$C5 #$48      {                 CMP L           Compare 'examine index' to hex data.    }
-{FFCA} #$A5 #$45      {                 LDA XAMH                                                }
-{FFCC} #$E5 #$49      {                 SBC H                                                   }
+{FFC4} #$86 #$3B      { XAMNEXT:        STX MODE        0->MODE (XAM mode).                     }
+{FFC6} #$A5 #$34      {                 LDA XAML                                                }
+{FFC8} #$C5 #$38      {                 CMP L           Compare 'examine index' to hex data.    }
+{FFCA} #$A5 #$35      {                 LDA XAMH                                                }
+{FFCC} #$E5 #$39      {                 SBC H                                                   }
 {FFCE} #$B0 #$C1      {                 BCS TONEXTITEM  Not less, so no more data to output.    }
-{FFD0} #$E6 #$44      {                 INC XAML                                                }
+{FFD0} #$E6 #$34      {                 INC XAML                                                }
 {FFD2} #$D0 #$02      {                 BNE MOD8CHK     Increment 'examine index'.              }
-{FFD4} #$E6 #$45      {                 INC XAMH                                                }
-{FFD6} #$A5 #$44      { MOD8CHK:        LDA XAML        Check low-order 'examine index' byte    }
+{FFD4} #$E6 #$35      {                 INC XAMH                                                }
+{FFD6} #$A5 #$34      { MOD8CHK:        LDA XAML        Check low-order 'examine index' byte    }
 {FFD8} #$29 #$07      {                 AND #$07          For MOD 8= 0                          }
 {FFDA} #$10 #$C8      {                 BPL NXTPRNT     Always taken.                           }
 {FFDC} #$48           { PRBYTE:         PHA             Save A for LSD.                         }

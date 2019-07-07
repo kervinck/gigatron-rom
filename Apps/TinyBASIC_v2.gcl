@@ -362,7 +362,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
   push
 
   tmp=                          {Line number}
-  \_Buffer Active=              {Input buffer}
+  &_Buffer Active=              {Input buffer}
   tmp Active:                   {For error messages}
   $a2 <Active.                  {Text area}
 
@@ -474,15 +474,17 @@ GetLine=
     EndOfLine!]
 
   Keyword! `line #0
-  [if<>0 $19a0 call]
+  [if<>0 &_Line call]
 
-  $500 call                     {Continue in another page}
+  &_Statements2 call            {Continue in another page}
 ] Statements=
 
 {-----------------------------------------------------------------------+
 |}>\vLR++ >\vLR++ ret{  RAM page 5                                      |
 +-----------------------------------------------------------------------}
 *=$0500
+
+_Statements2=*
 
 { Continuation of Statement }
 
@@ -545,7 +547,7 @@ GetLine=
   Keyword! `print #0
   [if=0 Keyword! `? #0]
   [if<>0
-    $13a0 call]                 {PRINT}
+    &_Print call]               {PRINT}
 
   Keyword! `mode #0
   [if<>0
@@ -561,10 +563,10 @@ GetLine=
   [if<>0
     \romType, \romTypeValue_ROMv3-
     [if<0 ValueError!]          {Error on ROM before v3}
-    $17a0 call
+    &_Save call
   ]
 
-  $14a0 call                    {INPUT, NEW, CLS, LIST, RUN, END, LET}
+  &_Statements3 call            {INPUT, NEW, CLS, LIST, RUN, END, LET}
 
 {-----------------------------------------------------------------------+
 |                       RAM page 6                                      |
@@ -651,10 +653,10 @@ $353f \sysArgs6:                {Pen color blue/purple, background color white}
 
 { Note: It is safe here to call functions before hopping over to page 8 }
 
-$18a0 Newline= call             {Scroll and clear last line}
+&_Newline Newline= call         {Scroll and clear last line}
 
 { Welcome message }
-PrintS! `***`Tiny`BASIC`v2 #0
+PrintS! `***`Tiny`BASIC`v2 #0   {Keep calling this 'v2', despite small tweaks}
 Newline!
 
 {-----------------------------------------------------------------------+
@@ -787,10 +789,10 @@ Number=
     SyntaxError!]               {There must be nothing left on the line}
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
-    \_UserProg Active^ if<>0    {Also stop if we came from the input buffer}
-    Active 2+ Active=           {Skip past line number}
+    &_BasicProgram Active^      {Also stop if we came from the input buffer}
+    if<>0 Active 2+ Active=     {Skip past line number}
     Statements!]                {And continue from there}
-  Prompt! 0#                    {Program finished ok}
+  Prompt! #0                    {Program finished ok}
 ] EndOfLine=
 
 { Clear variables but not arrays. Returns begin address for programs }
@@ -805,7 +807,7 @@ Number=
       <i++                      {Advance pointer}
       <i, if<>0loop]            {Until end of page}
     j 1- if<>0loop]
-  \_UserProg Begin=
+  &_BasicProgram Begin=
   ret
 ] {Clear=}
 
@@ -1034,7 +1036,7 @@ List=
   pop ret
 ] RelOp=
 
-\_Buffer deek End=              {At startup 'End' comes from loaded segment}
+&_Buffer deek End=              {At startup 'End' comes from loaded segment}
 2+ {Active=}                    {BASIC command(s) to run at startup}
 
 {-----------------------------------------------------------------------+
@@ -1044,7 +1046,7 @@ List=
 Active=
 
 { Error reporting function and re-entry point for main loop }
-{ Call with inline partial error message, or with 0# for no error }
+{ Call with inline partial error message, or with #0 for no error }
 [def
   \vLR; tmp=                    {vLR points to inline string argument}
   [<Pos, 2- if>0 Newline!]      {Conditional newline}
@@ -1076,7 +1078,7 @@ Active=
     Insert!                     {Test for line number and insert or delete}
     if>0loop]                   {If success, continue without prompt}
 
-  \LDWI#                        {1-byte hack to fall through and skip 'Prompt='}
+  #\LDWI                        {1-byte hack to fall through and skip 'Prompt='}
 ] Prompt=
 
 Statements!                     {Execute statements}
@@ -1085,6 +1087,8 @@ Statements!                     {Execute statements}
 |                       RAM page 19                                     |
 +-----------------------------------------------------------------------}
 *=$13a0
+
+_Print=*
 
 {PRINT}
 
@@ -1098,7 +1102,7 @@ Statements!                     {Execute statements}
       [if=0
         [do {PRINTSTRING}       {String constant}
           <Active++             {Skip past opening quote or string character}
-          Keyword! $22# 0#      {'"'}
+          Keyword! #$22 #0      {'"'}
           if=0
           Active,               {Next character}
           if<>0                 {Silently accept unterminated string}
@@ -1107,13 +1111,13 @@ Statements!                     {Execute statements}
       else
         Expression!
         PrintValue!]
-      Keyword! $2c# 0#          {','}
+      Keyword! #$2c #0          {','}
       [if<>0
         [do
           $20 PrintChar!
           <Pos, 7& if<>0loop]   {Tab stops every 4 characters}
         loop]                   {To PRINTLIST}
-      Keyword! $3b# 0#          {';'}
+      Keyword! #$3b #0          {';'}
       if<>0loop                 {To PRINTLIST}
       Newline!]                 {When no trailing ',' or ';'}
   else
@@ -1125,6 +1129,8 @@ Statements!                     {Execute statements}
 |                       RAM page 20                                     |
 +-----------------------------------------------------------------------}
 *=$14a0
+
+_Statements3=*
 
   Keyword! `input #0
   [if<>0
@@ -1156,12 +1162,14 @@ Statements!                     {Execute statements}
     List!                       {To print number of free bytes}
     Prompt! #0]                 {Return to prompt}
 
-  $15a0 call
+  &_Statements4 call
 
 {-----------------------------------------------------------------------+
 |                       RAM page 21                                     |
 +-----------------------------------------------------------------------}
 *=$15a0
+
+_Statements4=*
 
   Keyword! `cls #0
   [if<>0
@@ -1188,18 +1196,20 @@ Statements!                     {Execute statements}
   Keyword! `end #0
   [if<>0 Prompt! #0]
 
-  $16a0 call
+  &_Statements5 call
 
 {-----------------------------------------------------------------------+
 |                       RAM page 22                                     |
 +-----------------------------------------------------------------------}
 *=$16a0
 
+_Statements5=*
+
   Keyword! `let #0              {LET is optional}
   Variable!
   Address=                      {Park here}
   Spaces!
-  Keyword! $28# 0#              {'('}
+  Keyword! #$28 #0              {'('}
   [if<>0                        {Optional array index}
     Expression!
     [if<0 ValueError!]          {Index must be non-negative}
@@ -1208,7 +1218,7 @@ Statements!                     {Execute statements}
     [if<0 End                   {Opposite signs}
      else Address End-]         {Equal signs}
     [if<0 ValueError!]
-    Keyword! $29# 0#            {')'}
+    Keyword! #$29 #0            {')'}
     if=0 SyntaxError!]
   Keyword! `= #0                {'='}
   [if=0 SyntaxError!]
@@ -1220,6 +1230,8 @@ Statements!                     {Execute statements}
 |                       RAM page 23                                     |
 +-----------------------------------------------------------------------}
 *=$17a0
+
+_Save=*
 
 {SAVE}
 
@@ -1267,6 +1279,8 @@ Statements!                     {Execute statements}
 +-----------------------------------------------------------------------}
 *=$18a0
 
+_Newline=*
+
 {Newline}
 
   { Prepare for printing on new line }
@@ -1307,23 +1321,25 @@ Statements!                     {Execute statements}
 +-----------------------------------------------------------------------}
 *=$19a0
 
+_Line=*
+
 {LINE}
 
   1 \sysArgs0: $100 \sysArgs2:  {Vector pair U, V}
 
   Expression! push 0%=          {Park dX argument on stack}
-  Keyword! `, 0#                {','}
+  Keyword! `, #0                {','}
   [if=0 SyntaxError!]
   Expression! j=                {dY argument as j}
 
   [if<0                         {Make dY >= 0}
-    0 \SUBW# \sysArgs2#         {Inline assembly}
+    0 #\SUBW #\sysArgs2         {Inline assembly}
     \sysArgs2:                  {V = -V}
     0 j- j=]
 
   0% i=                         {dX argument as i}
   [if<0                         {Make dX >= 0}
-    0 \SUBW# \sysArgs0#         {Inline assembly}
+    0 #\SUBW #\sysArgs0         {Inline assembly}
     \sysArgs0:                  {U = -U}
     0 i- i=]
 
@@ -1334,12 +1350,14 @@ Statements!                     {Execute statements}
 
   pop                           {Shorter than 2++}
 
-  $1aa0 call
+  &_Line2 call
 
 {-----------------------------------------------------------------------+
 |                       RAM page 26                                     |
 +-----------------------------------------------------------------------}
 *=$1aa0
+
+_Line2=*
 
 {Continuation of LINE}
 
@@ -1379,10 +1397,10 @@ Statements!                     {Execute statements}
   to include a BASIC program and a first command for execution }
 
 *=$1ba0 _Buffer=*               {Must be the "line" before user program}
-       #$a0 #$1b                {Point to self}
-       `NEW 0#                  {'NEW' to start interactive session}
+       #<&_Buffer #>&_Buffer    {Point to self}
+       `NEW #0                  {'NEW' to start interactive session}
 
-*=$1bc0 _UserProg=*             {User program starts here}
+*=$1bc0 _BasicProgram=*         {BASIC program starts here}
 
 {-----------------------------------------------------------------------+
 |                                                                       |

@@ -11,49 +11,58 @@
 
 buttonState     = $11           ; [Gigatron] Edge-triggered resettable input bits
 
-XAML            = $44           ; Last "opened" location Low
-XAMH            = $45           ; Last "opened" location High
-STL             = $46           ; Store address Low
-STH             = $47           ; Store address High
-L               = $48           ; Hex value parsing Low
-H               = $49           ; Hex value parsing High
-YSAV            = $4A           ; Used to see if hex value is given
-MODE            = $4B           ; $00=XAM, $7F=STOR, $AE=BLOCK XAM
+                                ; [Gigatron] ZP addresses moved from $2X to $3X
+XAML            = $34           ; Last "opened" location Low
+XAMH            = $35           ; Last "opened" location High
+STL             = $36           ; Store address Low
+STH             = $37           ; Store address High
+L               = $38           ; Hex value parsing Low
+H               = $39           ; Hex value parsing High
+YSAV            = $3A           ; Used to see if hex value is given
+MODE            = $3B           ; $00=XAM, $7F=STOR, $AE=BLOCK XAM
 
 
 ; Other Variables
 
-IN              = $0200         ;  Input buffer to $027F
-
+IN              = $200          ; Input buffer to $027F
 
                 ; Gigatron vCPU startup
                 .BYTE >START,<START,ENDSTART-START
-                .ORG $0200
-START:          .BYTE $1A,$21,$E6,$28,$35,$4D,$0B,$21,$0E,$F3,$17,$90,$05,$11,$00,$01
-                .BYTE $2B,$30,$59,$78,$8C,$7F,$F3,$30,$93,$30,$93,$30,$E3,$01,$8C,$7F
-                .BYTE $35,$72,$12,$11,$52,$03,$2B,$32,$59,$8D,$CF,$32,$11,$00,$03,$2B
-                .BYTE $1A,$11,$00,$FF,$FF
+                .ORG $200
+START:          .BYTE $1A,$21,$E6,$F8,$35,$53,$0B,$21,$0E,$F3,$17,$90,$05,$1A,$21,$82
+                .BYTE $F8,$5E,$21,$11,$00,$01,$2B,$30,$59,$78,$8C,$7F,$F3,$30,$93,$30
+                .BYTE $93,$30,$E3,$01,$8C,$7F,$35,$72,$18,$11,$55,$03,$2B,$32,$11,$00
+                .BYTE $03,$2B,$1A,$11,$80,$02,$FF
 ENDSTART:
+
+                ; Munching square intro
+                .BYTE >MUNCH,<MUNCH,ENDMUNCH-MUNCH
+                .ORG $280
+MUNCH:          .BYTE $18,$69,$17,$85,$40,$A9,$00,$85,$41,$A9,$10,$85,$42,$A9,$07,$85
+                .BYTE $43,$45,$41,$A8,$A5,$40,$91,$42,$E6,$43,$A5,$43,$C9,$7F,$D0,$F1
+                .BYTE $A5,$0F,$C9,$03,$F0,$09,$E6,$41,$10,$E3,$A5,$40,$4C,$80,$02,$A9
+                .BYTE $8D,$00,$4C,$00,$FF
+ENDMUNCH:
 
                 ; Main loop and I/O mockup
                 .BYTE >MAIN,<MAIN,ENDMAIN-MAIN
-                .ORG $0300
-MAIN:           .BYTE $2B,$1A,$11,$0C,$0B,$2B,$22,$21,$34,$B4,$E6,$75,$35,$72,$49,$1A
-                .BYTE $0E,$82,$30,$35,$72,$18,$59,$A0,$90,$1A,$59,$C0,$CF,$32,$2B,$30
-                .BYTE $1A,$11,$2B,$34,$82,$80,$35,$72,$0D,$59,$FF,$5E,$11,$59,$A0,$CF
-                .BYTE $32,$2B,$30,$21,$34,$E6,$60,$35,$50,$3C,$E3,$40,$2B,$34,$21,$34
-                .BYTE $8C,$0A,$35,$72,$47,$59,$0D,$2B,$34,$90,$4D,$2B,$34,$CF,$32,$63
-                .BYTE $90,$00,$EC,$FE,$11,$E1,$04,$2B,$22,$11,$00,$08,$2B,$24,$EE,$FE
-                .BYTE $8C,$8D,$35,$3F,$6C,$1A,$30,$E6,$9B,$35,$56,$6C,$59,$00,$35,$72
-                .BYTE $A8,$11,$00,$01,$5E,$30,$AD,$5E,$31,$21,$30,$2B,$28,$5E,$26,$B4
-                .BYTE $CB,$93,$28,$1A,$28,$8C,$A0,$35,$72,$7D,$11,$EE,$01,$2B,$36,$21
-                .BYTE $36,$AD,$E6,$77,$35,$53,$99,$E3,$7F,$90,$9B,$E3,$07,$F0,$36,$21
-                .BYTE $36,$E6,$02,$2B,$36,$8C,$FE,$35,$72,$8D,$EE,$FE,$E6,$A0,$35,$50
-                .BYTE $F1,$E6,$32,$35,$53,$BD,$E3,$32,$2B,$36,$11,$00,$07,$90,$C2,$2B
-                .BYTE $36,$11,$00,$08,$2B,$38,$21,$36,$E9,$E9,$99,$36,$99,$38,$2B,$38
-                .BYTE $21,$30,$2B,$28,$EC,$FE,$E3,$06,$2B,$30,$59,$05,$2B,$36,$21,$38
-                .BYTE $7F,$00,$5E,$26,$B4,$CB,$93,$38,$93,$28,$21,$36,$E6,$01,$35,$4D
-                .BYTE $DA,$EE,$FE,$FF
+                .ORG $300
+MAIN:           .BYTE $2B,$1A,$11,$0C,$0B,$2B,$22,$1A,$3A,$B4,$E6,$75,$35,$72,$4C,$1A
+                .BYTE $0F,$8C,$FF,$35,$72,$0D,$1A,$0E,$82,$30,$35,$72,$1F,$59,$A0,$90
+                .BYTE $21,$59,$C0,$CF,$32,$2B,$30,$1A,$0F,$5E,$3A,$82,$80,$35,$72,$14
+                .BYTE $59,$A0,$CF,$32,$2B,$30,$1A,$3A,$E6,$60,$35,$50,$3F,$E3,$40,$5E
+                .BYTE $3A,$1A,$3A,$8C,$0A,$35,$72,$4A,$59,$0D,$5E,$3A,$90,$50,$5E,$3A
+                .BYTE $CF,$32,$63,$90,$00,$EC,$FE,$11,$E1,$04,$2B,$22,$11,$00,$08,$2B
+                .BYTE $24,$EE,$FE,$8C,$8D,$35,$3F,$6F,$1A,$30,$E6,$9B,$35,$56,$6F,$59
+                .BYTE $00,$35,$72,$AB,$11,$00,$01,$5E,$30,$AD,$5E,$31,$21,$30,$2B,$28
+                .BYTE $5E,$26,$B4,$CB,$93,$28,$1A,$28,$8C,$A0,$35,$72,$80,$11,$EE,$01
+                .BYTE $2B,$3C,$21,$3C,$AD,$E6,$77,$35,$53,$9C,$E3,$7F,$90,$9E,$E3,$07
+                .BYTE $F0,$3C,$21,$3C,$E6,$02,$2B,$3C,$8C,$FE,$35,$72,$90,$EE,$FE,$E6
+                .BYTE $A0,$35,$50,$F4,$E6,$32,$35,$53,$C0,$E3,$32,$2B,$3C,$11,$00,$07
+                .BYTE $90,$C5,$2B,$3C,$11,$00,$08,$2B,$3E,$21,$3C,$E9,$E9,$99,$3C,$99
+                .BYTE $3E,$2B,$3E,$21,$30,$2B,$28,$EC,$FE,$E3,$06,$2B,$30,$59,$05,$2B
+                .BYTE $3C,$21,$3E,$7F,$00,$5E,$26,$B4,$CB,$93,$3E,$93,$28,$21,$3C,$E6
+                .BYTE $01,$35,$4D,$DD,$EE,$FE,$FF
 ENDMAIN:
 
                 ; Gigatron GT1 file segment header for WozMon code

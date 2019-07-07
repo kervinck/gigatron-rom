@@ -204,11 +204,11 @@ Program \sysArgs0:              {ROM image}
 \userCode _vLR=                 {Start of execution address}
 Item 6^ [if=0                   {Tetronis workaround}
   $80 \vSP.                     { 1. Zero-page conflict: move stack}
-  \_TetronisPatch _vLR=]        { 2. Stack must be restored with patch}
+  &_TetronisPatch _vLR=]        { 2. Stack must be restored with patch}
 Item 7^ [if=0                   {Bricks workaround}
   $80 \vSP.]                    { 1. Zero-page conflict: move stack}
 Item 8^ [if=0                   {TicTacToe needs special launcher}
-  \_LaunchTicTacToe call]
+  &_LaunchTicTacToe call]
 88!                             {Load from ROM and execute}
 
 {-----------------------------------------------------------------------+
