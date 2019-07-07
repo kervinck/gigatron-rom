@@ -19,7 +19,7 @@
     - Occupies 6 bytes of RAM (3 vCPU instructions)
     - Loads at a non-intrusive memory location
 
-  | * file: Docs/Smallest.gt1
+  | * file: Apps/Smallest.gt1
   |
   | 0207  21 0e                    LDW   frameCount         |!.|
   | 0209  f3 17                    DOKE  vPC+1              |..|
@@ -57,10 +57,10 @@ gcl0x                   { GCL version }
 *=$0207                 { Only works well on page 2 }
 [do
 
-  #\LDW  #\frameCount   { Read zero page [$0d] (frame counter) in vACL, and
+  _frameCount           { Read zero page [$0d] (frame counter) in vACL, and
                           zero page [$0e] in vACH (serial input port) }
 
-  #\DOKE #\vPCH         { Write vAC as word to address (vACL<<8) + vPCH }
+  _vPCH:                { Write vAC as word to address (vACL<<8) + vPCH }
 
                         { A vertical line of two pixels wide is formed
                           at a rate of 1 scanline per video frame.

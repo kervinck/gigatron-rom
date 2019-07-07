@@ -195,7 +195,7 @@ sensitive. The overview below uses the following conventions:
  'i'  indicates an 8-bit integer constant.
  'ii' indicates a 16-bit integer constant.
  'X'  indicates a named variable, allocated globally on the zero page.
- 'C'  indicates a named constant, or label, from the system's symbol table
+ '_C' indicates a named constant, or label, from the system's symbol table
 
 --------------------
 Meaning of GCL words
@@ -215,12 +215,16 @@ X& X| X^        Logical AND/OR/XOR vAC with variable X
 
 Advanced
 --------
-*=ii            Set compilation address (default is $200)
-C=*             Label definition. Refer to its value as \C
 <X, >X,         Load low/high byte of variable X
 <X. >X.         Store vAC as byte into the low/high byte of variable X
 <X++ >X++       Increment low/high byte of variable X
 <i++ >i++       Increment byte at address i/i+1
+
+System
+------
+*=ii            Set compilation address (default is $200)
+_C=*            Label definition. Refer to its value as \_C
+_C              Treat system symbol `C' as a GCL variable (e.g. .sysFn=)
 
 Memory
 ------
@@ -308,12 +312,12 @@ can't do any function calls in the setup phase as that uses vLR.
 {Start compilation at $200. (vLR=$200)}
   [def ... ret] Function1=
   [def ... ret] Function2=
-  >\vLR++ ret {Increment high byte of vLR and go there}
+  >_vLR++ ret {Increment high byte of _vLR and go there}
 {Continue compilation at $300}
 $300:
   [def ... ret] Function3=
   [def ... ret] Function4=
-  >\vLR++ ret
+  >_vLR++ ret
 {Continue compilation at $400}
 $400:
   [def ... ret] Function5=
@@ -353,10 +357,9 @@ Consistency     Especially surrounding ,.:; and \ (backslash)
                   no notation to POKE/DOKE using a zero page address i
                 - ii: sets the compilation address, it isn't a DOKE
                 - Therefore we can't create code in the zero page
-C=123           Constant naming
+_C=123          Constant naming
 &X &<X &>X      Get an variable's address. Should treat < and > as part
                 of the name instead of the prefix part of the operator
-.C              Treat symbol C as a GCL variable
 *i              Treat as the name of a GCL variable with address i
 i-- i++         Replace with something that associates with stack: %++i %--i ?
 ()              Compile time expressions? Macros? (128+1) -> 129.
@@ -433,55 +436,50 @@ Mapping from vCPU instructions to GCL words
 
 Summary of prefixes:
                                                                 Operators
-Word variables:                        X      *i      .C        X X= X, X. X; X: X& X| X^ X+ X-
-Byte variables:                       <X     <*i     <.C        X, X. X++
-                                      >X     >*i     >.C
-Addresses or constants                &X       i      \C        i& i| i^ i+ i-
+Word variables:                        X      *i                X X= X, X. X; X: X& X| X^ X+ X-
+Byte variables:                       <X     <*i                X, X. X++
+                                      >X     >*i
+Addresses or constants                &X       i                i& i| i^ i+ i-
 
 Instruction     Variable word   Constant word   Keyword         Comment
 -----------     -------------   -------------   -------         -------
-LDI                             <ii   >ii   i
-                                      \C                        if defined earlier as small constant
-LDWI                            ii    \C
-LDW             X               *i    .C                        was i; and \C; (keep?)
-STW             X=              *i=    i:                       i= depricated
-STW                             .C=   \C:
-PEEK                                            peek            alias for .vAC,
-LDW+PEEK        X,              *i,   .C,
-POKE            X.              *i.   .C.
-DEEK                                            deek            alias for .vAC;
-LDW+DEEK        X;              *i;   .C;
-DOKE            X:              *i:   .C:
+LDI                             <ii >ii i
+LDWI                            ii
+LDW             X                                               was i; and \C; (keep?)
+STW             X=              i:                              i= depricated
+PEEK                                            peek            alias for _vAC,
+LDW+PEEK        X,
+POKE            X.
+DEEK                                            deek            alias for _vAC;
+LDW+DEEK        X;
+DOKE            X:
 LD              <X   >X         <*i   >*i                       was i,  (keep?)
-                                <.C   >.C                       was \C, (keep?)
 ST              <X=  >X=        <*i=  >*i=                      was i.  (keep?)
-                                <.C=  >.C=                      was \C. (keep?)
-INC             <X++ >X++       <*i++ >*i++
-                                <.C++ >.C++
+INC             <X++ >X++       <*i++ >*i++                     change to i++
 LDLW                            %i                              was i%
 STLW                            %i=                             was i%=
-ALLOC                           i-- i++                         XXX should become i%-  i%+
-CALL            X!              *i! .C!         call            alias for .vAC!
+ALLOC                           i-- i++                         XXX should become i%- i%+
+CALL            X!              *i!             call            alias for _vAC!
 DEF                                             def
 POP                                             pop
 PUSH                                            push
 RET                                             ret
 BRA                                             else loop
 BCC                                             if...
-ANDW            X&              *i& .C&
-ORW             X|              *i| .C|
-XORW            X^              *i^ .C^
-ADDW            X+              *i+ .C+
-SUBW            X-              *i- .C-
-ANDI            &X&             i&  \C&
-ORI             &X|             i|  \C|
-XORI            &X^             i^  \C^
-ADDI            &X+             i+  \C+
-SUBI            &X-             i-  \C-
-LSLW                            i<< \C<<                        alias for i*LSLW
-LSRW                            i>> \C>>                        XXX if we can add LSRW to vCPU
-SYS                             i!  \C!
-LUP                             i?  \C?
+ANDW            X&              *i&
+ORW             X|              *i|
+XORW            X^              *i^
+ADDW            X+              *i+
+SUBW            X-              *i-
+ANDI            &X&             i&
+ORI             &X|             i|
+XORI            &X^             i^
+ADDI            &X+             i+
+SUBI            &X-             i-
+LSLW                            i<<                             alias for i*LSLW
+LSRW                            i>>                             XXX if we can add LSRW to vCPU
+SYS                             i!
+LUP                             i?
 
 ------------------------
 Idioms and coding tricks
@@ -495,7 +493,7 @@ Idioms and coding tricks
 
 \vACH. 255| 255^        Move vAC low byte to high (vAC<<=8)
 
->\vAC++                 Increment vAC high byte
+>_vAC++                 Increment vAC high byte
 
 128- 128-               Decrement vAC high byte
 

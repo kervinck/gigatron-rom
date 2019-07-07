@@ -169,7 +169,7 @@ Example:
         \romType, \romTypeValue_ROMv3-  {Test for ROM v3}
         [if<0 [do p. 1+ loop]]          {Halt and blink pixel on older ROM}
 
-See Docs/Smallest.gcl for a smaller busy loop, and much cooler too!
+See Apps/Smallest.gcl for a smaller busy loop, and much cooler too!
 
 By publishing a file as GT1 you're signaling that you expect the
 file can be loaded with any past, present or future ROM version.

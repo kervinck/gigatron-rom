@@ -2,7 +2,7 @@
 gcl0x
 
 {
-  Set $7f00 as code destination (default is $0200)
+  Set $7f00 as code destination (default is $200)
   This loads Blinky at the bottom of screen memory so we
   can see the program after it has loaded
 }

@@ -41,17 +41,18 @@ dev.rom: Core/* Apps/* Images/* Makefile interface.json
 		Main=Apps/Main.gcl\
 		Reset=Core/Reset.gcl
 
-open:
-	# First do:
-	#       cd Contrib/PhilThomas/src
-	#       ln -sf ../../../dev.rom gigatron.rom
-	#       npm start
-	open http://127.0.0.1:8000/src
-
 run: Docs/gtemu dev.rom
-	# Run in reference emulator
-	# Hop from frame to frame with 'n' (next)
-	Docs/gtemu dev.rom #| less -p 'line 0'
+	# Run ROM in reference emulator on console
+	# Pipe though less(1) to hop from frame to frame with 'n' (next)
+	# !!! Set terminal width to >225 chars !!!
+	Docs/gtemu dev.rom | less -p 'line 0'
+
+export jsEmu=Contrib/PhilThomas/src
+runjs:
+	# Run ROM in javascript emulator in web browser (macOS)
+	cd "$(jsEmu)" && ln -sf ../../../dev.rom gigatron.rom
+	(sleep 1 && open http://127.0.0.1:8000/src) &
+	cd "$(jsEmu)" && npm start
 
 test: Docs/gtemu dev.rom
 	# Check for hSync errors in first ~30 seconds of emulation
@@ -63,10 +64,11 @@ compiletest: Apps/*.gcl
 	for GCL in Apps/*.gcl; do Core/compilegcl.py "$${GCL}" Apps; done
 
 time: Docs/gtemu dev.rom
-	# Run emulation until first sound
+	# Run emulation until first sound, typically for benchmarking
 	Docs/gtemu dev.rom | grep -m 1 'xout [^0]'
 
 burn: dev.rom
+	# Program 27C1024 EEPROM with ROM image
 	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
 burn85:

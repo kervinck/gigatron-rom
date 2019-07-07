@@ -363,7 +363,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
   push
 
   tmp=                          {Line number}
-  \Buffer Active=               {Input buffer}
+  \_Buffer Active=              {Input buffer}
   tmp Active:                   {For error messages}
   $a2 <Active.                  {Text area}
 
@@ -475,9 +475,9 @@ GetLine=
     EndOfLine!]
 
   Keyword! `line #0
-  [if<>0 \Line call]
+  [if<>0 \_Line call]
 
-  \Statements2 call             {Continue in another page}
+  \_Statements2 call            {Continue in another page}
 ] Statements=
 
 {-----------------------------------------------------------------------+
@@ -485,7 +485,7 @@ GetLine=
 +-----------------------------------------------------------------------}
 *=$0500
 
-Statements2=*
+_Statements2=*
 
 { Continuation of Statement }
 
@@ -548,7 +548,7 @@ Statements2=*
   Keyword! `print #0
   [if=0 Keyword! `? #0]
   [if<>0
-    \Print call]                {PRINT}
+    \_Print call]               {PRINT}
 
   Keyword! `mode #0
   [if<>0
@@ -564,10 +564,10 @@ Statements2=*
   [if<>0
     \romType, \romTypeValue_ROMv3-
     [if<0 ValueError!]          {Error on ROM before v3}
-    \Save call
+    \_Save call
   ]
 
-  \Statements3 call             {INPUT, NEW, CLS, LIST, RUN, END, LET}
+  \_Statements3 call            {INPUT, NEW, CLS, LIST, RUN, END, LET}
 
 {-----------------------------------------------------------------------+
 |                       RAM page 6                                      |
@@ -790,8 +790,8 @@ Number=
     SyntaxError!]               {There must be nothing left on the line}
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
-    \UserProg Active^ if<>0     {Also stop if we came from the input buffer}
-    Active 2+ Active=           {Skip past line number}
+    \_BasicProgram Active^      {Also stop if we came from the input buffer}
+    if<>0 Active 2+ Active=     {Skip past line number}
     Statements!]                {And continue from there}
   Prompt! #0                    {Program finished ok}
 ] EndOfLine=
@@ -808,7 +808,7 @@ Number=
       <i++                      {Advance pointer}
       <i, if<>0loop]            {Until end of page}
     j 1- if<>0loop]
-  \UserProg Begin=
+  \_BasicProgram Begin=
   ret
 ] {Clear=}
 
@@ -1037,7 +1037,7 @@ List=
   pop ret
 ] RelOp=
 
-\Buffer deek End=               {At startup 'End' comes from loaded segment}
+\_Buffer deek End=              {At startup 'End' comes from loaded segment}
 2+ {Active=}                    {BASIC command(s) to run at startup}
 
 {-----------------------------------------------------------------------+
@@ -1089,7 +1089,7 @@ Statements!                     {Execute statements}
 +-----------------------------------------------------------------------}
 *=$13a0
 
-Print=*
+_Print=*
 
 {PRINT}
 
@@ -1132,7 +1132,7 @@ Print=*
 +-----------------------------------------------------------------------}
 *=$14a0
 
-Statements3=*
+_Statements3=*
 
   Keyword! `input #0
   [if<>0
@@ -1164,14 +1164,14 @@ Statements3=*
     List!                       {To print number of free bytes}
     Prompt! #0]                 {Return to prompt}
 
-  \Statements4 call
+  \_Statements4 call
 
 {-----------------------------------------------------------------------+
 |                       RAM page 21                                     |
 +-----------------------------------------------------------------------}
 *=$15a0
 
-Statements4=*
+_Statements4=*
 
   Keyword! `cls #0
   [if<>0
@@ -1198,14 +1198,14 @@ Statements4=*
   Keyword! `end #0
   [if<>0 Prompt! #0]
 
-  \Statements5 call
+  \_Statements5 call
 
 {-----------------------------------------------------------------------+
 |                       RAM page 22                                     |
 +-----------------------------------------------------------------------}
 *=$16a0
 
-Statements5=*
+_Statements5=*
 
   Keyword! `let #0              {LET is optional}
   Variable!
@@ -1233,7 +1233,7 @@ Statements5=*
 +-----------------------------------------------------------------------}
 *=$17a0
 
-Save=*
+_Save=*
 
 {SAVE}
 
@@ -1323,7 +1323,7 @@ _Newline=*
 +-----------------------------------------------------------------------}
 *=$19a0
 
-Line=*
+_Line=*
 
 {LINE}
 
@@ -1352,14 +1352,14 @@ Line=*
 
   pop                           {Shorter than 2++}
 
-  \Line2 call
+  \_Line2 call
 
 {-----------------------------------------------------------------------+
 |                       RAM page 26                                     |
 +-----------------------------------------------------------------------}
 *=$1aa0
 
-Line2=*
+_Line2=*
 
 {Continuation of LINE}
 
@@ -1398,11 +1398,11 @@ Line2=*
 { BASIC data begins here. In this setup the interpreter can be patched
   to include a BASIC program and a first command for execution }
 
-*=$1ba0 Buffer=*                {Must be the "line" before user program}
-       #<\Buffer #>\Buffer      {Point to self}
+*=$1ba0 _Buffer=*               {Must be the "line" before user program}
+       #<\_Buffer #>\_Buffer    {Point to self}
        `NEW #0                  {'NEW' to start interactive session}
 
-*=$1bc0 UserProg=*              {User program starts here}
+*=$1bc0 _BasicProgram=*         {BASIC program starts here}
 
 {-----------------------------------------------------------------------+
 |                                                                       |

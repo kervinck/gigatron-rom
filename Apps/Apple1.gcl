@@ -38,7 +38,7 @@ gcl0x
         |E2B3R     BASIC WARM START|
         +--------------------------+
   XXX Emulate ACI Apple Cassete Interface? C100R --> 4100 = RAM (still ok)
-  XXX       D010 60 KBD     RTS
+  XXX       D010 60 KBD     RTS            <-- Or store keyboard value here
             D011 80 KBDCR   BRA $D037      NOK: (JMP $6024 = $E024)
             D012 24 DSP     BIT $60
             D013 60 DSPCR   RTS
@@ -54,7 +54,7 @@ gcl0x
 
 \romType, \romTypeValue_DEVROM- {Need version >= DEVROM, see Docs/GT1-files.txt}
 [if<0 do \frameCount;           {https://forum.gigatron.io/viewtopic.php?f=4&t=130}
-  #\DOKE #\vPCH loop]
+  _vPCH: loop]
 
 {-----------------------------------------------------------------------+
 |       Initialize                                                      |
@@ -73,8 +73,8 @@ gcl0x
   1+ 127^ if<>0loop]            {Next in range}
 
 \_PrintChar PrintChar=          {Forward reference}
-\Apple1 \vLR:                   {Prepare transfer to main loop}
-\Munch                          {Start address for Munching6502}
+\_Apple1 _vLR=                  {Prepare transfer to main loop}
+\_Munch                         {Start address for Munching6502}
 [ret]                           {Jump to Main (the brackets avoid the automatic vLR patch)}
 
 {-----------------------------------------------------------------------+
@@ -83,7 +83,7 @@ gcl0x
 
 *=$280
 
-Munch=* #$18                    { Munch clc             }
+_Munch=* #$18                   { Munch clc             }
         #$69 #$17               {       adc #23         XXX idea: #\ADCzp  #23}
         #$85 #$40               {       sta $40         }
         #$a9 #$00               {       lda #0          }
@@ -117,11 +117,11 @@ Munch=* #$18                    { Munch clc             }
 
 *=$300
 
-Apple1=*
+_Apple1=*
 
-\vLR:                           {Reset v6502 PC}
+_vLR=                           {Reset v6502 PC}
 [do
-  $0b0c \sysFn:                 {Set SYS call to SYS_v6502_Run_vX_80}
+  $0b0c _sysFn=                 {Set SYS call to SYS_v6502_Run_vX_80}
   k                             {ASCII code in A}
   80!                           {Run 6502 code until BRK}
   push                          {Save v6502 PC}
@@ -154,7 +154,7 @@ _PrintChar=*
   {Minimalistic terminal output, with bit 7 set by WozMon}
 
   %$fe=                         {Park character in stack area}
-  \SYS_VDrawBits_134 \sysFn:    {Prepare SYS calls}
+  \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
   $800 \sysArgs0:               {Green on black}
 
   %$fe                          {Get character back}
@@ -226,7 +226,7 @@ _PrintChar=*
 
 *=$ff00
 
-WozMon=*
+_WozMon=*
 
 {FF00} #$D8           { RESET:          CLD             Clear decimal arithmetic mode.          }
 {FF01} #$58           {                 CLI                                                     }

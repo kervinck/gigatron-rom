@@ -73,3 +73,5 @@ DEF   $CD DD    18 Define data or code (vAC,vPC=vPC+2,(vPC&0xff00)+D)
 
 #C is the number of clocks or cycles, counted back-to-back.
 So this number includes advancing vPC, fetch, dispatch and execute.
+
+-- End of document --

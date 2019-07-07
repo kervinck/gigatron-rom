@@ -65,7 +65,7 @@ gcl0x
 ] PrintArrow=
 
 {-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM page 3                                      |
+|}>_vLR++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
 *=$0300
 
@@ -124,7 +124,7 @@ gcl0x
 ] SelectMenu=
 
 {-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM page 4                                      |
+|}>_vLR++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
 *=$0400
 
@@ -159,7 +159,7 @@ gcl0x
 ] WipeOutArrow=
 
 {-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM page 5                                      |
+|}>_vLR++ ret{          RAM page 5                                      |
 +-----------------------------------------------------------------------}
 *=$0500
 
@@ -201,34 +201,36 @@ Pos 48+ j& q=                   {Box of current cursor}
 { Load and start the selected program }
 \SYS_Exec_88 \sysFn:            {ROM loader}
 Program \sysArgs0:              {ROM image}
-$200 \vLR:                      {Start of execution address}
+\userCode _vLR=                 {Start of execution address}
 Item 6^ [if=0                   {Tetronis workaround}
   $80 \vSP.                     { 1. Zero-page conflict: move stack}
-  \TetronisPatch \vLR:]         { 2. Stack must be restored with patch}
+  \_TetronisPatch _vLR=]        { 2. Stack must be restored with patch}
 Item 7^ [if=0                   {Bricks workaround}
   $80 \vSP.]                    { 1. Zero-page conflict: move stack}
 Item 8^ [if=0                   {TicTacToe needs special launcher}
-  \LaunchTicTacToe call]
+  \_LaunchTicTacToe call]
 88!                             {Load from ROM and execute}
 
 {-----------------------------------------------------------------------+
 |       Tetronis patch                                                  |
 +-----------------------------------------------------------------------}
 
-*=$06f9 TetronisPatch=*
+*=$06f9
 
-$200 \vSP. call                 {Restore stack pointer and go to entry_point}
+_TetronisPatch=*
+
+\userCode \vSP. call            {Restore stack pointer and go to entry_point}
 
 {-----------------------------------------------------------------------+
 |       Tic Tac Toe launcher                                            |
 +-----------------------------------------------------------------------}
 
-*=$7fa0 LaunchTicTacToe=*
+*=$7fa0 _LaunchTicTacToe=*
 
-  11+ \vLR:                     {Return to this program after SYS}
+  11+ _vLR=                     {Return to this program after SYS}
   \TinyBASIC \sysArgs0: 88!     {Load only, SYS_Exec_88 still in sysFn}
                                 {Return here}
-  $200 \vLR:
+  \userCode _vLR=
   \TicTac \sysArgs0: 88!        {Load Tic-Tac-Toe and execute BASIC}
 
 {-----------------------------------------------------------------------+

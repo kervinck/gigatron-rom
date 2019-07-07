@@ -67,7 +67,7 @@
 #  DONE Mode -1 (for zombie mode), can do mode -2 to restore previous mode
 #  DONE Add 4 arrows to font to fill up the ROM page
 #  XXX  Apple1: ZP vars
-#  XXX  Snake: Refactor AI
+#  XXX  Snake: Refactor AI?
 #  XXX  Update romTypeValue and interface.json
 #  XXX  Update version number to v4
 #
@@ -4921,7 +4921,7 @@ for application in argv[1:]:
     zpReset(userVars)
     label(name)
     program = gcl.Program(name)
-    address = symbol('UserProg')
+    address = symbol('_BasicProgram')
     if not has(address):
       print ' Error: TinyBASIC must be compiled-in first'
     program.org(address)

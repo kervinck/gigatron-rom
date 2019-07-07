@@ -70,9 +70,9 @@ page 1       | Video table                        | vReset  | Channel 1 |
              +------------------------------------+---------+-----------+ ---
 page 2       |0                                239 240   249| Channel 2 |  ^
              |                                              +-----------+  |  Also see
-page 3       | User vCPU code and/or data                   | Channel 3 |  |  channelMask
+page 3       |                                              | Channel 3 |  |  channelMask
              |                                              +-----------+  |
-page 4       |                                              | Channel 4 |  v
+page 4       |            User vCPU code and/or data        | Channel 4 |  v
              |                                              +-----------+ ---
 page 5-6     |                                               250     255|
              |                                                          |
@@ -111,7 +111,7 @@ Address   Name          Description
 000e      frameCount    Continuous video frame counter
 000f      serialRaw     New raw serial read
 0010      (serialLast)  Previous serial read (used for edge detection)
-0011      buttonState   Negative edge-triggered and resettable input bits
+0011      buttonState   Edge-triggered and resettable input bits
 0012      (resetTimer)  After 2 seconds of holding 'Start', do a soft reset
 0013      (xout)        Memory cache for XOUT register
 0014      xoutMask      The blinkenlights and sound on/off state
@@ -197,7 +197,7 @@ $0600        | SYS functions (LSRW and others)                          |   |  K
              +----------------------------------------------------------+   |
 $0700        | Font table (ASCII 32..81)                                |   |
              |                                                          |   |
-$0800        | Font table (ASCII 82..126, 127 as cursor symbol)         |   |
+$0800        | Font table (ASCII 82..126 and symbols 127-131)           |   |
              |                                                          |   |
 $0900        | Notes table (C-0..A#7)                                   |   |
              |                                                          |   |

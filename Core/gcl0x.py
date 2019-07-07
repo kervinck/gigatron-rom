@@ -213,7 +213,7 @@ class Program:
         elif op == '> ++': self.emitOp('INC'); offset = 1
         elif op == '!':    self.emitOp('CALL')
         elif op == '`':    self.emitQuote(var); var = None
-        elif op == '=*':   define(var, self.vPC); var = None
+        elif op == '=*':   self.defSymbol(var, self.vPC); var = None
         # Depricated syntax
         elif op == '<++':  self.emitOp('INC');             #self.depr('X<++', '<X++')
         elif op == '>++':  self.emitOp('INC'); offset = 1; #self.depr('X>++', '>X++')
@@ -270,7 +270,7 @@ class Program:
       while word[ix].isdigit():
         number = 10*number + ord(word[ix]) - ord('0')
         ix += 1
-    elif word[ix].isalnum() or word[ix] in ['.', '\\', '_']:
+    elif word[ix].isalnum() or word[ix] in ['\\', '_']:
       # Named variable or named constant
       name = word[ix]
       ix += 1
@@ -379,9 +379,13 @@ class Program:
     # Get or create address for GCL variable and emit it
     comment = '%04x %s' % (prev(self.vPC, 1), repr(var))
     comment += '%+d' % offset if offset else ''
-    if var[0] == '.':
-      self.emit(int(var[1:]) + offset, comment)
+    if var[0] == '_':
+      # _C notation for labels as variables
+      if not has(symbol(var[1:])):
+        self.error('Undefined symbol %s' % var[1:])
+      self.emit(symbol(var[1:]) + offset, comment)
     else:
+      # Regular GCL variable
       if var not in self.vars:
         self.vars[var] = zpByte(2)
       self.emit(self.vars[var] + offset, comment)
@@ -406,7 +410,7 @@ class Program:
     if self.vPC >= self.segEnd:
       self.error('Out of code space (%04x)' % self.vPC)
     if byte < 0 or byte >= 256:
-      self.error('Value out of range %s (must be 0..255)' % byte)
+      self.error('Value %s out of range (must be 0..255)' % repr(byte))
     if self.segStart == self.vPC:
       self.openSegment()
     self.putInRomTable(byte, comment)
@@ -454,6 +458,12 @@ class Program:
     if has(self.lastWord):
       prefix += ' %s' % self.lastWord
     return prefix + ':'
+
+  def defSymbol(self, name, value):
+    # Define a label from GCL in the systems symbol table
+    if name[0] != '_':
+      self.error("Symbol %s doesn\'t begin with underscore ('_')" % repr(name))
+    define(name, value)
 
 def prev(address, step=2):
   # Take vPC two bytes back, wrap around if needed to stay on page

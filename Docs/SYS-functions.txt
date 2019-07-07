@@ -81,3 +81,4 @@ programmer to be reminded to verify the acutal ROM version. A program
 must fail gracefully on older ROMs, or at least not crash. See also
 Docs/GT1-files.txt on using `romType' for this purpose.
 
+-- End of document --
