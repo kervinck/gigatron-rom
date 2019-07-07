@@ -107,6 +107,8 @@
 #  XXX  vCPU: extension for C: CMPW_v4 $DD
 #  XXX  Faster SYS_Exec_88, with start address?
 #  XXX  ROM decrunch
+#  XXX  Video mode 4 (all or partly black? Single color? Active syncs)
+#  XXX  Video mode for 12.5 MHz systems
 #
 #  Ideas for ROM v6+
 #  XXX  Reset.c and Main.c (that is: port these from GCL to C)
@@ -4919,7 +4921,7 @@ for application in argv[1:]:
     zpReset(userVars)
     label(name)
     program = gcl.Program(name)
-    address = symbol('_UserProg')
+    address = symbol('UserProg')
     if not has(address):
       print ' Error: TinyBASIC must be compiled-in first'
     program.org(address)

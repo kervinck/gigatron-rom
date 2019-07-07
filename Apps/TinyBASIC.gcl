@@ -14,8 +14,6 @@
 
 {
   History:
-  2019-07-07 (marcelk) PrintChar accepts arrow chars; Fix indent issue #40.
-  2019-07-06 (marcelk) Update GCL notation (no changes to GT1 file)
   2018-06-19 (marcelk) Scaffolding: can evaluate direct print statements
   2018-06-21 (marcelk) Can edit programs, delete lines, but no RUN yet
   2018-06-23 (marcelk) Can RUN, GOTO, GOSUB, RETURN and break program
@@ -29,7 +27,9 @@
   2018-08-14 (marcelk) SAVE, LINE (both draft)
   2018-08-22 (marcelk) LINE now wraps around edges to stay on screen
   2018-08-31 (marcelk) SAVE into BabelFish EEPROM
-  2019-09-04 (marcelk) Faster start; Error when SAVE not there; Tiny BASIC v2
+  2018-09-04 (marcelk) Faster start; Error when SAVE not there; Tiny BASIC v2
+  2019-07-06 (marcelk) Update GCL notation (no changes to GT1 file)
+  2019-07-07 (marcelk) PrintChar accepts arrow chars; Fix indent issue #40.
 
   Formal grammar:
 
@@ -363,7 +363,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
   push
 
   tmp=                          {Line number}
-  \_Buffer Active=              {Input buffer}
+  \Buffer Active=               {Input buffer}
   tmp Active:                   {For error messages}
   $a2 <Active.                  {Text area}
 
@@ -790,10 +790,10 @@ Number=
     SyntaxError!]               {There must be nothing left on the line}
   Active NextBlock! Active=     {Advance to next line}
   End^ [if<>0                   {Stop at end of program}
-    \_UserProg Active^ if<>0    {Also stop if we came from the input buffer}
+    \UserProg Active^ if<>0     {Also stop if we came from the input buffer}
     Active 2+ Active=           {Skip past line number}
     Statements!]                {And continue from there}
-  Prompt! 0#                    {Program finished ok}
+  Prompt! #0                    {Program finished ok}
 ] EndOfLine=
 
 { Clear variables but not arrays. Returns begin address for programs }
@@ -808,7 +808,7 @@ Number=
       <i++                      {Advance pointer}
       <i, if<>0loop]            {Until end of page}
     j 1- if<>0loop]
-  \_UserProg Begin=
+  \UserProg Begin=
   ret
 ] {Clear=}
 
@@ -1037,7 +1037,7 @@ List=
   pop ret
 ] RelOp=
 
-\_Buffer deek End=              {At startup 'End' comes from loaded segment}
+\Buffer deek End=               {At startup 'End' comes from loaded segment}
 2+ {Active=}                    {BASIC command(s) to run at startup}
 
 {-----------------------------------------------------------------------+
@@ -1047,7 +1047,7 @@ List=
 Active=
 
 { Error reporting function and re-entry point for main loop }
-{ Call with inline partial error message, or with 0# for no error }
+{ Call with inline partial error message, or with #0 for no error }
 [def
   \vLR; tmp=                    {vLR points to inline string argument}
   [<Pos, 2- if>0 Newline!]      {Conditional newline}
@@ -1079,7 +1079,7 @@ Active=
     Insert!                     {Test for line number and insert or delete}
     if>0loop]                   {If success, continue without prompt}
 
-  \LDWI#                        {1-byte hack to fall through and skip 'Prompt='}
+  #\LDWI                        {1-byte hack to fall through and skip 'Prompt='}
 ] Prompt=
 
 Statements!                     {Execute statements}
@@ -1103,7 +1103,7 @@ Print=*
       [if=0
         [do {PRINTSTRING}       {String constant}
           <Active++             {Skip past opening quote or string character}
-          Keyword! $22# 0#      {'"'}
+          Keyword! #$22 #0      {'"'}
           if=0
           Active,               {Next character}
           if<>0                 {Silently accept unterminated string}
@@ -1112,14 +1112,14 @@ Print=*
       else
         Expression!
         PrintValue!]
-      Keyword! $2c# 0#          {','}
+      Keyword! #$2c #0          {','}
       [if<>0
         [do
           $20 PrintChar!
           <Pos, 2-              {Correct for 2 pixel indentation}
           7& if<>0loop]         {Tab stops every 4 characters}
         loop]                   {To PRINTLIST}
-      Keyword! $3b# 0#          {';'}
+      Keyword! #$3b #0          {';'}
       if<>0loop                 {To PRINTLIST}
       Newline!]                 {When no trailing ',' or ';'}
   else
@@ -1211,7 +1211,7 @@ Statements5=*
   Variable!
   Address=                      {Park here}
   Spaces!
-  Keyword! $28# 0#              {'('}
+  Keyword! #$28 #0              {'('}
   [if<>0                        {Optional array index}
     Expression!
     [if<0 ValueError!]          {Index must be non-negative}
@@ -1220,7 +1220,7 @@ Statements5=*
     [if<0 End                   {Opposite signs}
      else Address End-]         {Equal signs}
     [if<0 ValueError!]
-    Keyword! $29# 0#            {')'}
+    Keyword! #$29 #0            {')'}
     if=0 SyntaxError!]
   Keyword! `= #0                {'='}
   [if=0 SyntaxError!]
@@ -1330,18 +1330,18 @@ Line=*
   1 \sysArgs0: $100 \sysArgs2:  {Vector pair U, V}
 
   Expression! push 0%=          {Park dX argument on stack}
-  Keyword! `, 0#                {','}
+  Keyword! `, #0                {','}
   [if=0 SyntaxError!]
   Expression! j=                {dY argument as j}
 
   [if<0                         {Make dY >= 0}
-    0 \SUBW# \sysArgs2#         {Inline assembly}
+    0 #\SUBW #\sysArgs2         {Inline assembly}
     \sysArgs2:                  {V = -V}
     0 j- j=]
 
   0% i=                         {dX argument as i}
   [if<0                         {Make dX >= 0}
-    0 \SUBW# \sysArgs0#         {Inline assembly}
+    0 #\SUBW #\sysArgs0         {Inline assembly}
     \sysArgs0:                  {U = -U}
     0 i- i=]
 
@@ -1398,11 +1398,11 @@ Line2=*
 { BASIC data begins here. In this setup the interpreter can be patched
   to include a BASIC program and a first command for execution }
 
-*=$1ba0 _Buffer=*               {Must be the "line" before user program}
-       #$a0 #$1b                {Point to self}
-       `NEW 0#                  {'NEW' to start interactive session}
+*=$1ba0 Buffer=*                {Must be the "line" before user program}
+       #<\Buffer #>\Buffer      {Point to self}
+       `NEW #0                  {'NEW' to start interactive session}
 
-*=$1bc0 _UserProg=*             {User program starts here}
+*=$1bc0 UserProg=*              {User program starts here}
 
 {-----------------------------------------------------------------------+
 |                                                                       |

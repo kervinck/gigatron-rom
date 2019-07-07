@@ -14,7 +14,6 @@
 
 {
   History:
-  2019-07-06 (marcelk) Update GCL notation (no changes to GT1 file)
   2018-06-19 (marcelk) Scaffolding: can evaluate direct print statements
   2018-06-21 (marcelk) Can edit programs, delete lines, but no RUN yet
   2018-06-23 (marcelk) Can RUN, GOTO, GOSUB, RETURN and break program
@@ -28,7 +27,8 @@
   2018-08-14 (marcelk) SAVE, LINE (both draft)
   2018-08-22 (marcelk) LINE now wraps around edges to stay on screen
   2018-08-31 (marcelk) SAVE into BabelFish EEPROM
-  2019-09-04 (marcelk) Faster start; Error when SAVE not there; Tiny BASIC v2
+  2018-09-04 (marcelk) Faster start; Error when SAVE not there; Tiny BASIC v2
+  2019-07-06 (marcelk) Update GCL notation (no changes to GT1 file)
 
   Formal grammar:
 

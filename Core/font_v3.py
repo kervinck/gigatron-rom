@@ -1,5 +1,6 @@
 #
-# Gigatron built-in 5x8 font for ASCII codes 32 (SP) to 127 (DEL)
+# Gigatron built-in 5x8 font for ASCII codes 32 (SP) to 126 (~).
+# Additionally there is a cursor symbol (127) and arrows (128..131).
 #
 
 def _char(*args):

@@ -261,10 +261,10 @@ i-- i++         Subtract/add constant value from/to stack pointer
 
 Data
 ----
-#i              Inline byte value i, truncated to lowest 8 bits
-`Hello`world!   Emit inline ASCII test. Replace backquotes with spaces
-`               Emits a single backquote
-
+#i #<ii         Inline byte value i, silently truncated to lowest 8 bits
+#>ii            Inline high byte value (most often used with labels)
+`Hello`world!   Inline ASCII test. Replace backquotes with spaces
+`               A single inline backquote (ASCII 96)
 
 Versioning
 ----------

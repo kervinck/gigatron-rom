@@ -137,7 +137,7 @@ class Program:
     elif word == 'if>=0loop': self.emitIfLoop('GE')
     elif word == 'if<=0loop': self.emitIfLoop('LE')
     elif word == 'else':      self.emitElse()
-    elif word == 'call':      self.emitOp('CALL'); self.emit(symbol('vAC'), '%04x vAC' % prev(self.vPC, 1))
+    elif word == 'call':      self.emitOp('CALL').emit(symbol('vAC'), '%04x vAC' % prev(self.vPC, 1))
     elif word == 'push':      self.emitOp('PUSH')
     elif word == 'pop':       self.emitOp('POP')
     elif word == 'ret':       self.emitOp('RET'); self.needPatch = self.needPatch or len(self.openBlocks) == 1 # Top-level use of 'ret' --> apply patch
@@ -152,7 +152,7 @@ class Program:
           if 0 <= con < 256:
             self.emitOp('LDI')
           else:
-            self.emitOp('LDWI'); self.emit(lo(con)); con = hi(con)
+            self.emitOp('LDWI').emit(lo(con)); con = hi(con)
         elif op == '*= ':  self.org(con); con = None
         elif op == ';':    self.emitOp('LDW')
         elif op == '=':    self.emitOp('STW'); self.depr('i=', 'i:')
@@ -166,13 +166,15 @@ class Program:
         elif op == '-':    self.emitOp('SUBI')
         elif op == '% =':  self.emitOp('STLW')
         elif op == '% ':   self.emitOp('LDLW')
-        elif op == '--':   self.emitOp('ALLOC'); con = -con & 255
+        elif op == '--':   self.emitOp('ALLOC'); con = 256-con if con else 0
         elif op == '++':   self.emitOp('ALLOC')
         elif op == '< ++': self.emitOp('INC')
         elif op == '> ++': self.emitOp('INC'); con += 1
         elif op == '!':    self.emitOp('SYS'); con = self.sysTicks(con)
         elif op == '?':    self.emitOp('LUP')
-        elif op == '# ':   con &= 255
+        elif op == '# ':   con = lo(con) # Silent truncation
+        elif op == '#< ':  con = lo(con)
+        elif op == '#> ':  con = hi(con)
         elif op == '<<':
           for i in range(con):
             self.emitOp('LSLW')
@@ -193,9 +195,9 @@ class Program:
       elif has(var):
         offset = 0
         if not has(op):    self.emitOp('LDW')
-        elif op == '=':    self.emitOp('STW'); self.defInfo(var)
-        elif op == ',':    self.emitOp('LDW'); self.emitVar(var); self.emitOp('PEEK'); var = None
-        elif op == ';':    self.emitOp('LDW'); self.emitVar(var); self.emitOp('DEEK'); var = None
+        elif op == '=':    self.emitOp('STW'); self.updateDefInfo(var)
+        elif op == ',':    self.emitOp('LDW').emitVar(var).emitOp('PEEK'); var = None
+        elif op == ';':    self.emitOp('LDW').emitVar(var).emitOp('DEEK'); var = None
         elif op == '.':    self.emitOp('POKE')
         elif op == ':':    self.emitOp('DOKE')
         elif op == '< ,':  self.emitOp('LD')
@@ -319,8 +321,8 @@ class Program:
       self.defs[b] = self.vPC
       self.emit(lo('__%s_%#04x_def__' % (self.name, self.vPC)))
 
-  def defInfo(self, var):
-    # Heuristic to track def lengths
+  def updateDefInfo(self, var):
+    # Heuristicly track `def' lengths for reporting on stdout
     if var not in self.lengths and self.thisBlock() in self.lengths:
       self.lengths[var] = self.lengths[self.thisBlock()]
     else:
@@ -371,6 +373,7 @@ class Program:
       self.openSegment()
     self.putInRomTable(lo(ins), '%04x %s' % (self.vPC, ins))
     self.vPC += 1
+    return self
 
   def emitVar(self, var, offset=0):
     # Get or create address for GCL variable and emit it
@@ -382,6 +385,7 @@ class Program:
       if var not in self.vars:
         self.vars[var] = zpByte(2)
       self.emit(self.vars[var] + offset, comment)
+    return self
 
   def thisBlock(self):
     return self.openBlocks[-1]
