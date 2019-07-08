@@ -29,7 +29,8 @@
   2018-08-31 (marcelk) SAVE into BabelFish EEPROM
   2018-09-04 (marcelk) Faster start; Error when SAVE not there; Tiny BASIC v2
   2019-07-06 (marcelk) Update GCL notation (no changes to GT1 file)
-  2019-07-07 (marcelk) PrintChar accepts arrow chars; Fix indent issue #40.
+  2019-07-07 (marcelk) PrintChar accepts arrow chars; Fix indent issue #40
+  2019-07-08 (marcelk) Reenable video on user input after MODE -1
 
   Formal grammar:
 
@@ -363,6 +364,12 @@ $01df deek Pos=                 {Bottom character row in screen memory}
   push
 
   tmp=                          {Line number}
+
+  { On ROM v4 and higher MODE -1 disables the video/audio/IO/... }
+  { completely. This will rectivate it before asking for input.  }
+  \SYS_SetMode_v2_80 _sysFn= \romType, \romTypeValue_DEVROM-
+  [if>=0 255- 80!]              {Any value < -1 will do}
+
   &_Buffer Active=              {Input buffer}
   tmp Active:                   {For error messages}
   $a2 <Active.                  {Text area}
@@ -396,14 +403,8 @@ $01df deek Pos=                 {Bottom character row in screen memory}
     <Active++                   {Advance pointer, keeping the character}
     loop]                       {To NEXTCHAR}
 
-  Active.                       {Terminate input with zero}
-  $20 PrintChar!                {Remove cursor}
-  Newline!
-  $a2 <Active.                  {Back to start of buffer}
-  Spaces!                       {Process leading spaces}
-  Active,                       {Tell caller if there is input}
-  pop ret
-] {GetLine=}
+  &_GetLine2 call               {Part2}
+]
 
 {-----------------------------------------------------------------------+
 |}>\vLR++ ret{          RAM page 4                                      |
@@ -660,8 +661,23 @@ $353f \sysArgs6:                {Pen color blue/purple, background color white}
 PrintS! `***`Tiny`BASIC`v2 #0   {Keep calling this 'v2', despite small tweaks}
 Newline!
 
+{ Hop to next page }
+$08a0 \vLR: ret
+
+_GetLine2=*
+
+{ Continuation of GetLine }
+
+  0 Active.                     {Terminate input with zero}
+  $20 PrintChar!                {Remove cursor}
+  Newline!
+  $a2 <Active.                  {Back to start of buffer}
+  Spaces!                       {Process leading spaces}
+  Active,                       {Tell caller if there is input}
+  pop ret
+
 {-----------------------------------------------------------------------+
-|}$08a0 \vLR: ret{      RAM page 8                                      |
+|                       RAM page 8                                      |
 +-----------------------------------------------------------------------}
 *=$08a0
 
@@ -890,6 +906,7 @@ Clear=
 {-----------------------------------------------------------------------+
 |}>\vLR++ ret{          RAM page 14                                     |
 +-----------------------------------------------------------------------}
+
 *=$0ea0
 
 { Calculate vAC / Value, result in vAC, remainder in i }
