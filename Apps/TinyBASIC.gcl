@@ -30,7 +30,7 @@
   2018-09-04 (marcelk) Faster start; Error when SAVE not there; Tiny BASIC v2
   2019-07-06 (marcelk) Update GCL notation (no changes to GT1 file)
   2019-07-07 (marcelk) PrintChar accepts arrow chars; Fix indent issue #40
-  2019-07-08 (marcelk) Reenable video on user input after MODE -1
+  2019-07-08 (marcelk) Reenable video on input after MODE -1; Tiny BASIC v3
 
   Formal grammar:
 
@@ -366,7 +366,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
   tmp=                          {Line number}
 
   { On ROM v4 and higher MODE -1 disables the video/audio/IO/... }
-  { completely. This will rectivate it before asking for input.  }
+  { completely. This will reactivate it before asking for input. }
   \SYS_SetMode_v2_80 _sysFn= \romType, \romTypeValue_DEVROM-
   [if>=0 255- 80!]              {Any value < -1 will do}
 
@@ -658,7 +658,7 @@ $353f \sysArgs6:                {Pen color blue/purple, background color white}
 &_Newline Newline= call         {Scroll and clear last line}
 
 { Welcome message }
-PrintS! `***`Tiny`BASIC`v2 #0   {Keep calling this 'v2', despite small tweaks}
+PrintS! `***`Tiny`BASIC`v3 #0
 Newline!
 
 { Hop to next page }
