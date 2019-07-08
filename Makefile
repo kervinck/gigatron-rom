@@ -17,7 +17,7 @@ CFLAGS:=-std=c11 -O3 -Wall
 #	Development
 #-----------------------------------------------------------------------
 
-# Development towards "ROM v4"
+# Development towards "ROM v5"
 dev: dev.rom
 dev.rom: Core/* Apps/* Images/* Makefile interface.json
 	python -B Core/dev.py\
@@ -40,6 +40,32 @@ dev.rom: Core/* Apps/* Images/* Makefile interface.json
 		Egg=Apps/Apple1.gt1x\
 		Main=Apps/Main.gcl\
 		Reset=Core/Reset.gcl
+
+# ROM v4a has many small changes, but no new applications
+ROMv4a.rom: Core/* Apps/* Images/* Makefile interface.json
+	python -B Core/ROMv4a.py\
+		packedParrot=Images/Parrot-160x120.rgb\
+		packedJupiter=Images/Jupiter-160x120.rgb\
+		SYS_Racer_v1.py\
+		SYS_Loader_v2.py\
+		Snake=Apps/Snake.gcl\
+		zippedRacerHorizon=Images/RacerHorizon-256x16.rgb\
+		Racer=Apps/Racer.gcl\
+		Mandelbrot=Apps/Mandelbrot_v1.gcl\
+		Pictures=Apps/Pictures_v2.gcl\
+		Credits=Apps/Credits_v2.gcl\
+		Loader=Apps/Loader_v2.gcl\
+		Tetronis=Apps/Tetronis_v1.gt1\
+		Bricks=Apps/Bricks_v1.gt1\
+		TinyBASIC=Apps/TinyBASIC.gcl\
+		TicTac=Apps/TicTac_v1.gtb\
+		WozMon=Apps/WozMon_v2.gt1\
+		Egg=Apps/Apple1.gt1x\
+		Main=Apps/Main.gcl\
+		Reset=Core/Reset_v4.gcl
+
+burnv4a: ROMv4a.rom
+	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
 run: Docs/gtemu dev.rom
 	# Run ROM in reference emulator on console

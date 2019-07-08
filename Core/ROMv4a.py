@@ -58,16 +58,14 @@
 #  DONE Snake: improve game play and colors in general
 #  DONE Apple1: Don't use buttonState but serialRaw
 #  DONE Replace Easter egg
-#  DONE #38 "Press [A] to start program" message is stupid
+#  DONE #38 "Press [A] to start program": accept keyboard also (incl. 'A')
 #  DONE channelMask: to switch off the higher sound channels
-#  DONE Core: Specify app-specific SYS functions on command line (.py files)
+#  DONE Makefile: Pass app-specific SYS functions on command line (.py files)
 #  DONE Racer: faster road setup
-#  DONE Review SPI status
-#  DONE Review ROM layout
 #  DONE Mode -1 (for zombie mode), can do mode -2 to restore previous mode
 #  DONE Add 4 arrows to font to fill up the ROM page
-#  DONE Apple1: ZP vars
 #  DONE Snake: Tweak AI. Also autoplayer can't get hiscore anymore
+#  DONE TinyBASIC: support larger font and MODE -1. Fix indent issue #40
 #  XXX  Update romTypeValue and interface.json
 #  XXX  Update version number to v4
 #
