@@ -219,7 +219,7 @@
  +----------------------------------------------------------------------*/
 
 const byte TinyBASIC_gt1[] PROGMEM = {
-  #include "TinyBASIC_v2.h"
+  #include "TinyBASIC_v3.h"
 };
 const byte WozMon_gt1[]    PROGMEM = {
   #include "WozMon.h"
@@ -247,7 +247,7 @@ const byte tetris_gt1[]    PROGMEM = {
 };
 
 const struct { const byte *gt1; const char *name; } gt1Files[] = {
-  { TinyBASIC_gt1, "BASIC"                    }, // 3048 bytes
+  { TinyBASIC_gt1, "BASIC"                    }, // 3073 bytes
 #if maxStorage >= 10000
   { WozMon_gt1,    "WozMon"                   }, // 595 bytes
   { Terminal_gt1,  "Terminal"                 }, // 256 bytes

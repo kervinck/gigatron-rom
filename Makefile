@@ -34,7 +34,7 @@ dev.rom: Core/* Apps/* Images/* Makefile interface.json
 		Loader=Apps/Loader_v2.gcl\
 		Tetronis=Apps/Tetronis_v1.gt1\
 		Bricks=Apps/Bricks_v1.gt1\
-		TinyBASIC=Apps/TinyBASIC.gcl\
+		TinyBASIC=Apps/TinyBASIC_v3.gcl\
 		TicTac=Apps/TicTac_v2.gtb\
 		WozMon=Apps/WozMon_v2.gt1\
 		Egg=Apps/Apple1.gt1\
@@ -57,7 +57,7 @@ ROMv4b.rom: Core/* Apps/* Images/* Makefile interface.json
 		Loader=Apps/Loader_v2.gcl\
 		Tetronis=Apps/Tetronis_v1.gt1\
 		Bricks=Apps/Bricks_v1.gt1\
-		TinyBASIC=Apps/TinyBASIC.gcl\
+		TinyBASIC=Apps/TinyBASIC_v3.gcl\
 		TicTac=Apps/TicTac_v2.gtb\
 		WozMon=Apps/WozMon_v2.gt1\
 		Egg=Apps/Apple1.gt1\
