@@ -501,7 +501,7 @@ class Program:
     if self.lineNumber != 0:
       prefix += ':%s' % self.lineNumber
     if has(self.lastWord):
-      prefix += ' [%s]' % self.lastWord
+      prefix += ' %s' % repr(self.lastWord)
     return prefix + ':'
 
   def defSymbol(self, name, value):

@@ -2651,15 +2651,7 @@ align(0x100, 0x100)
 #                               3       "A---" -> HGM's mode
 # vAC bit 2:15                  Ignored bits and should be 0
 #
-# vAC = -1                      Zombie mode (no output signals, no input, no blinkenlights)
-
-#       -1                      Boring
-#       42                      HHGTTG
-#       88                      Mph
-#       1976                    Apple 1
-#       1984
-#       2017
-#       53265                   $d011 C64
+# vAC = 1975                    Zombie mode (no video signals, no input, no blinkenlights)
 
 # Actual duration is <80 cycles, but keep some room for future extensions
 label('SYS_SetMode_v2_80')
@@ -2939,8 +2931,8 @@ st([vReturn])                   #20,21
 ld([vAC+1])                     #22
 beq('.sysSm#25')                #23
 ld(hi('REENTER'),Y)             #24
-anda([vAC])                     #25
-xora(255)                       #26
+xora([vAC])                     #25
+xora((1975>>8)^(1975&255));     C('Poor man\'s 1975 detection')#26
 bne(pc()+3)                     #27
 bra(pc()+3)                     #28
 assert videoZ == 0x0100
