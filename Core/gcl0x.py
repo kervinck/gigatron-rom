@@ -398,9 +398,8 @@ class Program:
 
   def emitOp(self, ins):
     # Emit vCPU opcode
-    if self.vPC >= self.segEnd:
-      self.error('Out of code space (%04x)' % self.vPC)
-    if self.segStart == self.vPC:
+    self.checkSpace()
+    if self.vPC & 255 == 0:
       self.openSegment() # Must come before lo()
     self.putInRomTable(lo(ins), '%04x %s' % (self.vPC, ins))
     self.vPC += 1
@@ -425,8 +424,7 @@ class Program:
     # Safely emit low byte of symbol
     if var[0] != '_':
       self.error('Symbol \'%s\' must begin with underscore (\'_\')' % name)
-    if self.vPC >= self.segEnd:
-      self.error('Out of code space (%04x)' % self.vPC)
+    self.checkSpace()
     if self.segStart == self.vPC:
       self.openSegment() # Must come before lo()
     self.putInRomTable(lo(var[1:]), '%04x %s' % (self.vPC, var))
@@ -449,8 +447,7 @@ class Program:
 
   def emit(self, byte, comment=None):
     # Next program byte in RAM
-    if self.vPC >= self.segEnd:
-      self.error('Out of code space (%04x)' % self.vPC)
+    self.checkSpace()
     if byte < -128 or byte >= 256:
       self.error('Value %s out of range (must be -128..255)' % repr(byte))
     if self.segStart == self.vPC:
@@ -485,6 +482,11 @@ class Program:
     new = new.replace(' ', str(con) if has(con) else var)
     self.warning('%s is depricated, please use %s' % (old, new))
 
+  def checkSpace(self):
+    if self.vPC >= self.segEnd:
+      severity = self.warning if self.vPC & 255 > 0 else self.error
+      severity('Out of code space (%04x)' % self.vPC)
+
   def warning(self, message):
     print(self.prefix('Warning'), message)
 
@@ -499,7 +501,7 @@ class Program:
     if self.lineNumber != 0:
       prefix += ':%s' % self.lineNumber
     if has(self.lastWord):
-      prefix += ' \"%s\"' % self.lastWord
+      prefix += ' [%s]' % self.lastWord
     return prefix + ':'
 
   def defSymbol(self, name, value):
