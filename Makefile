@@ -112,7 +112,7 @@ burn85:
 # vPulse modulation (for SAVE in BASIC), sprite acceleration
 # Note: ROM builder still directly incudes TicTac_v1.gtb
 ROMv3.rom: Core/* Apps/* Images/* Makefile interface.json
-	python Core/ROMv3.py\
+	python -B Core/ROMv3.py\
 		Apps/Snake_v2.gcl\
 		Apps/Racer_v1.gcl\
 		Apps/Mandelbrot_v1.gcl\
@@ -132,7 +132,7 @@ burnv3: ROMv3.rom
 
 # ROM v2 minor changes only
 ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
-	python Core/ROMv2.py\
+	python -B Core/ROMv2.py\
 		Apps/Snake_v2.gcl\
 		Apps/Racer_v1.gcl\
 		Apps/Mandelbrot_v1.gcl\
@@ -146,7 +146,7 @@ ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
 
 # ROM v1 as shipped with first batches of kits
 ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
-	python Core/ROMv1.py\
+	python -B Core/ROMv1.py\
 		Apps/Snake_v1.gcl\
 		Apps/Racer_v1.gcl\
 		Apps/Mandelbrot_v1.gcl\
@@ -165,7 +165,7 @@ ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 mos: v6502.rom
 v6502.rom: Core/* Apps/* Images/* Makefile interface.json
 	rm -f dev.rom dev.asm
-	python Core/dev.py\
+	python -B Core/dev.py\
 		Main=Apps/Apple1.gcl\
 		Core/Reset.gcl
 	mv dev.rom v6502.rom
@@ -176,7 +176,7 @@ burnmos: v6502.rom
 
 # Adds vCPU slices on scanlines to get 400 cycles per scanline
 ROMv3y.rom: Core/* Apps/* Images/* Makefile interface.json
-	python Core/ROMv3y.py\
+	python -B Core/ROMv3y.py\
 		Apps/Snake_v2.gcl\
 		Apps/Racer_v1.gcl\
 		Apps/Mandelbrot_v1.gcl\

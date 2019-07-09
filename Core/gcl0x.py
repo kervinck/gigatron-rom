@@ -480,7 +480,7 @@ class Program:
       trampoline()
 
   def depr(self, old, new):
-    var, con, _op = self.parseWord(word)
+    var, con, _op = self.parseWord(self.lastWord)
     old = old.replace(' ', str(con) if has(con) else var)
     new = new.replace(' ', str(con) if has(con) else var)
     self.warning('%s is depricated, please use %s' % (old, new))
@@ -499,7 +499,7 @@ class Program:
     if self.lineNumber != 0:
       prefix += ':%s' % self.lineNumber
     if has(self.lastWord):
-      prefix += ' %s' % self.lastWord
+      prefix += ' \"%s\"' % self.lastWord
     return prefix + ':'
 
   def defSymbol(self, name, value):
