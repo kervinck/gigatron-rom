@@ -37,6 +37,7 @@ class Program:
   def org(self, address):
     """Set start address"""
     self.closeSegment()
+    # Don't open new segment before the first byte comes
     self.segStart = address
     self.vPC = address
     page = address & ~255
@@ -178,9 +179,9 @@ class Program:
         elif op == '> ++': self.emitOp('INC'); con += 1
         elif op == '!':    self.emitOp('SYS'); con = self.sysTicks(con)
         elif op == '?':    self.emitOp('LUP')
-        elif op == '# ':   con = lo(con) # Silent truncation
-        elif op == '#< ':  con = lo(con)
-        elif op == '#> ':  con = hi(con)
+        elif op == '# ':   self.emitOp(con); con = None # Silent truncation
+        elif op == '#< ':  self.emitOp(con); con = None
+        elif op == '#> ':  con = hi(con); assert self.segStart != self.vPC # XXX Conflict
         elif op == '<<':
           for i in range(con):
             self.emitOp('LSLW')
@@ -218,8 +219,11 @@ class Program:
         elif op == '< ++': self.emitOp('INC')
         elif op == '> ++': self.emitOp('INC'); offset = 1
         elif op == '!':    self.emitOp('CALL')
-        elif op == '`':    self.emitQuote(var); var = None
-        elif op == '=*':   self.defSymbol(var, self.vPC); var = None
+        elif op == '`':    self.emitQuote(var);                var = None
+        elif op == '=*':   self.defSymbol(var, self.vPC);      var = None
+        elif op == '# ':   self.emitLo(var);                   var = None
+        elif op == '## ':  self.emitLo(var).emit(hi(var[1:])); var = None
+        elif op == '#@ ':  offset = -self.vPC-1 # PC relative, 6502 style
         # Depricated syntax
         elif op == '<++':  self.emitOp('INC');             #self.depr('X<++', '<X++')
         elif op == '>++':  self.emitOp('INC'); offset = 1; #self.depr('X>++', '>X++')
@@ -248,7 +252,7 @@ class Program:
       return name, number, op
 
     ix = 0
-    prefixes = ['%', '#', '<', '>', '*', '=']
+    prefixes = ['%', '#', '<', '>', '*', '=', '@']
     if word[ix] in prefixes:
       # Prefix operators
       while word[ix] in prefixes:
@@ -330,12 +334,15 @@ class Program:
     return 256 - extraTicks if extraTicks > 0 else 0
 
   def emitQuote(self, var):
-    # Emit symbol as text, replacing backquotes with spaces
     if len(var) > 0:
+      d = '' # Replace backquotes with spaces
       for c in var:
-        self.emit(ord(' ' if c == '`' else c))
+        d += ' ' if c == '`' else c
     else:
-      self.emit(ord('`')) # And symbol becomes a backquote
+      d = '`' # And symbol becomes a backquote
+    for c in d:
+      comment = '%04x %s' % (self.vPC, repr(c))
+      self.emit(ord(c), comment=comment)
 
   def emitDef(self):
       self.emitOp('DEF')
@@ -394,7 +401,7 @@ class Program:
     if self.vPC >= self.segEnd:
       self.error('Out of code space (%04x)' % self.vPC)
     if self.segStart == self.vPC:
-      self.openSegment()
+      self.openSegment() # Must come before lo()
     self.putInRomTable(lo(ins), '%04x %s' % (self.vPC, ins))
     self.vPC += 1
     return self
@@ -405,14 +412,25 @@ class Program:
     comment += '%+d' % offset if offset else ''
     if var[0] == '_':
       # _C notation for labels as variables
-      if not has(symbol(var[1:])):
-        self.error('Undefined symbol %s' % var)
-      self.emit(symbol(var[1:]) + offset, comment)
+      address, offset = lo(var[1:]), offset & 255
     else:
       # Regular GCL variable
       if var not in self.vars:
         self.vars[var] = zpByte(2)
-      self.emit(self.vars[var] + offset, comment)
+      address = self.vars[var]
+    assert self.segStart != self.vPC # XXX Conflict
+    return self.emit(address + offset, comment)
+
+  def emitLo(self, var):
+    # Safely emit low byte of symbol
+    if var[0] != '_':
+      self.error('Symbol \'%s\' must begin with underscore (\'_\')' % name)
+    if self.vPC >= self.segEnd:
+      self.error('Out of code space (%04x)' % self.vPC)
+    if self.segStart == self.vPC:
+      self.openSegment() # Must come before lo()
+    self.putInRomTable(lo(var[1:]), '%04x %s' % (self.vPC, var))
+    self.vPC += 1
     return self
 
   def thisBlock(self):
@@ -433,8 +451,8 @@ class Program:
     # Next program byte in RAM
     if self.vPC >= self.segEnd:
       self.error('Out of code space (%04x)' % self.vPC)
-    if byte < 0 or byte >= 256:
-      self.error('Value %s out of range (must be 0..255)' % repr(byte))
+    if byte < -128 or byte >= 256:
+      self.error('Value %s out of range (must be -128..255)' % repr(byte))
     if self.segStart == self.vPC:
       self.openSegment()
     self.putInRomTable(byte, comment)

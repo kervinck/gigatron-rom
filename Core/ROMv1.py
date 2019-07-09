@@ -1046,7 +1046,7 @@ beq('.select0')                 #53
 bra('.select1')                 #54
 ld(0)                           #55
 label('.select0')
-ld(lo('videoD')^lo('videoF'))   #55 The XOR is actually done by the 2nd pass
+ld(symbol('videoD')^symbol('videoF'))#55 Flip between the two modes
 label('.select1')
 xora([videoDorF])               #56
 st([videoDorF])                 #57

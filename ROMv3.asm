@@ -39819,175 +39819,175 @@ Credits:      b257 0002  ld   $02         ;| RAM segment address (high byte firs
               b282 0038  ld   $38         ;0227 'PrintText'
               b283 00cd  ld   $cd         ;0229 DEF
               b284 00cd  ld   $cd
-              b285 0054  ld   $54
-              b286 0068  ld   $68
-              b287 0069  ld   $69
-              b288 0073  ld   $73
-              b289 0020  ld   $20
-              b28a 0047  ld   $47
-              b28b 0069  ld   $69
-              b28c 0067  ld   $67
-              b28d 0061  ld   $61
-              b28e 0074  ld   $74
-              b28f 0072  ld   $72
-              b290 006f  ld   $6f
-              b291 006e  ld   $6e
-              b292 0020  ld   $20
-              b293 0054  ld   $54
-              b294 0054  ld   $54
-              b295 004c  ld   $4c
-              b296 0020  ld   $20
-              b297 0063  ld   $63
-              b298 006f  ld   $6f
-              b299 006d  ld   $6d
-              b29a 0070  ld   $70
-              b29b 0075  ld   $75
-              b29c 0074  ld   $74
-              b29d 0065  ld   $65
-              b29e 0072  ld   $72
-              b29f 000a  ld   $0a
-              b2a0 006b  ld   $6b
-              b2a1 0069  ld   $69
-              b2a2 0074  ld   $74
-              b2a3 0020  ld   $20
-              b2a4 0077  ld   $77
-              b2a5 0061  ld   $61
-              b2a6 0073  ld   $73
-              b2a7 0020  ld   $20
-              b2a8 0062  ld   $62
-              b2a9 0072  ld   $72
-              b2aa 006f  ld   $6f
-              b2ab 0075  ld   $75
-              b2ac 0067  ld   $67
-              b2ad 0068  ld   $68
-              b2ae 0074  ld   $74
-              b2af 0020  ld   $20
-              b2b0 0074  ld   $74
-              b2b1 006f  ld   $6f
-              b2b2 0020  ld   $20
-              b2b3 0079  ld   $79
-              b2b4 006f  ld   $6f
-              b2b5 0075  ld   $75
-              b2b6 0020  ld   $20
-              b2b7 0062  ld   $62
-              b2b8 0079  ld   $79
-              b2b9 000a  ld   $0a
-              b2ba 004d  ld   $4d
-              b2bb 0061  ld   $61
-              b2bc 0072  ld   $72
-              b2bd 0063  ld   $63
-              b2be 0065  ld   $65
-              b2bf 006c  ld   $6c
-              b2c0 0020  ld   $20
-              b2c1 0076  ld   $76
-              b2c2 0061  ld   $61
-              b2c3 006e  ld   $6e
-              b2c4 0020  ld   $20
-              b2c5 004b  ld   $4b
-              b2c6 0065  ld   $65
-              b2c7 0072  ld   $72
-              b2c8 0076  ld   $76
-              b2c9 0069  ld   $69
-              b2ca 006e  ld   $6e
-              b2cb 0063  ld   $63
-              b2cc 006b  ld   $6b
-              b2cd 0020  ld   $20
-              b2ce 0061  ld   $61
-              b2cf 006e  ld   $6e
-              b2d0 0064  ld   $64
-              b2d1 000a  ld   $0a
-              b2d2 0057  ld   $57
-              b2d3 0061  ld   $61
-              b2d4 006c  ld   $6c
-              b2d5 0074  ld   $74
-              b2d6 0065  ld   $65
-              b2d7 0072  ld   $72
-              b2d8 0020  ld   $20
-              b2d9 0042  ld   $42
-              b2da 0065  ld   $65
-              b2db 006c  ld   $6c
-              b2dc 0067  ld   $67
-              b2dd 0065  ld   $65
-              b2de 0072  ld   $72
-              b2df 0073  ld   $73
-              b2e0 002e  ld   $2e
-              b2e1 000a  ld   $0a
-              b2e2 000a  ld   $0a
-              b2e3 0060  ld   $60
-              b2e4 0054  ld   $54
-              b2e5 0065  ld   $65
-              b2e6 0074  ld   $74
-              b2e7 0072  ld   $72
-              b2e8 006f  ld   $6f
-              b2e9 006e  ld   $6e
-              b2ea 0069  ld   $69
-              b2eb 0073  ld   $73
-              b2ec 0027  ld   $27
-              b2ed 0020  ld   $20
-              b2ee 0069  ld   $69
-              b2ef 0073  ld   $73
-              b2f0 0020  ld   $20
-              b2f1 0062  ld   $62
-              b2f2 0079  ld   $79
-              b2f3 0020  ld   $20
-              b2f4 0061  ld   $61
-              b2f5 0074  ld   $74
-              b2f6 0036  ld   $36
-              b2f7 0037  ld   $37
-              b2f8 0020  ld   $20
-              b2f9 0061  ld   $61
-              b2fa 006e  ld   $6e
+              b285 0054  ld   $54         ;022b 'T'
+              b286 0068  ld   $68         ;022c 'h'
+              b287 0069  ld   $69         ;022d 'i'
+              b288 0073  ld   $73         ;022e 's'
+              b289 0020  ld   $20         ;022f ' '
+              b28a 0047  ld   $47         ;0230 'G'
+              b28b 0069  ld   $69         ;0231 'i'
+              b28c 0067  ld   $67         ;0232 'g'
+              b28d 0061  ld   $61         ;0233 'a'
+              b28e 0074  ld   $74         ;0234 't'
+              b28f 0072  ld   $72         ;0235 'r'
+              b290 006f  ld   $6f         ;0236 'o'
+              b291 006e  ld   $6e         ;0237 'n'
+              b292 0020  ld   $20         ;0238 ' '
+              b293 0054  ld   $54         ;0239 'T'
+              b294 0054  ld   $54         ;023a 'T'
+              b295 004c  ld   $4c         ;023b 'L'
+              b296 0020  ld   $20         ;023c ' '
+              b297 0063  ld   $63         ;023d 'c'
+              b298 006f  ld   $6f         ;023e 'o'
+              b299 006d  ld   $6d         ;023f 'm'
+              b29a 0070  ld   $70         ;0240 'p'
+              b29b 0075  ld   $75         ;0241 'u'
+              b29c 0074  ld   $74         ;0242 't'
+              b29d 0065  ld   $65         ;0243 'e'
+              b29e 0072  ld   $72         ;0244 'r'
+              b29f 000a  ld   $0a         ;0245 10
+              b2a0 006b  ld   $6b         ;0246 'k'
+              b2a1 0069  ld   $69         ;0247 'i'
+              b2a2 0074  ld   $74         ;0248 't'
+              b2a3 0020  ld   $20         ;0249 ' '
+              b2a4 0077  ld   $77         ;024a 'w'
+              b2a5 0061  ld   $61         ;024b 'a'
+              b2a6 0073  ld   $73         ;024c 's'
+              b2a7 0020  ld   $20         ;024d ' '
+              b2a8 0062  ld   $62         ;024e 'b'
+              b2a9 0072  ld   $72         ;024f 'r'
+              b2aa 006f  ld   $6f         ;0250 'o'
+              b2ab 0075  ld   $75         ;0251 'u'
+              b2ac 0067  ld   $67         ;0252 'g'
+              b2ad 0068  ld   $68         ;0253 'h'
+              b2ae 0074  ld   $74         ;0254 't'
+              b2af 0020  ld   $20         ;0255 ' '
+              b2b0 0074  ld   $74         ;0256 't'
+              b2b1 006f  ld   $6f         ;0257 'o'
+              b2b2 0020  ld   $20         ;0258 ' '
+              b2b3 0079  ld   $79         ;0259 'y'
+              b2b4 006f  ld   $6f         ;025a 'o'
+              b2b5 0075  ld   $75         ;025b 'u'
+              b2b6 0020  ld   $20         ;025c ' '
+              b2b7 0062  ld   $62         ;025d 'b'
+              b2b8 0079  ld   $79         ;025e 'y'
+              b2b9 000a  ld   $0a         ;025f 10
+              b2ba 004d  ld   $4d         ;0260 'M'
+              b2bb 0061  ld   $61         ;0261 'a'
+              b2bc 0072  ld   $72         ;0262 'r'
+              b2bd 0063  ld   $63         ;0263 'c'
+              b2be 0065  ld   $65         ;0264 'e'
+              b2bf 006c  ld   $6c         ;0265 'l'
+              b2c0 0020  ld   $20         ;0266 ' '
+              b2c1 0076  ld   $76         ;0267 'v'
+              b2c2 0061  ld   $61         ;0268 'a'
+              b2c3 006e  ld   $6e         ;0269 'n'
+              b2c4 0020  ld   $20         ;026a ' '
+              b2c5 004b  ld   $4b         ;026b 'K'
+              b2c6 0065  ld   $65         ;026c 'e'
+              b2c7 0072  ld   $72         ;026d 'r'
+              b2c8 0076  ld   $76         ;026e 'v'
+              b2c9 0069  ld   $69         ;026f 'i'
+              b2ca 006e  ld   $6e         ;0270 'n'
+              b2cb 0063  ld   $63         ;0271 'c'
+              b2cc 006b  ld   $6b         ;0272 'k'
+              b2cd 0020  ld   $20         ;0273 ' '
+              b2ce 0061  ld   $61         ;0274 'a'
+              b2cf 006e  ld   $6e         ;0275 'n'
+              b2d0 0064  ld   $64         ;0276 'd'
+              b2d1 000a  ld   $0a         ;0277 10
+              b2d2 0057  ld   $57         ;0278 'W'
+              b2d3 0061  ld   $61         ;0279 'a'
+              b2d4 006c  ld   $6c         ;027a 'l'
+              b2d5 0074  ld   $74         ;027b 't'
+              b2d6 0065  ld   $65         ;027c 'e'
+              b2d7 0072  ld   $72         ;027d 'r'
+              b2d8 0020  ld   $20         ;027e ' '
+              b2d9 0042  ld   $42         ;027f 'B'
+              b2da 0065  ld   $65         ;0280 'e'
+              b2db 006c  ld   $6c         ;0281 'l'
+              b2dc 0067  ld   $67         ;0282 'g'
+              b2dd 0065  ld   $65         ;0283 'e'
+              b2de 0072  ld   $72         ;0284 'r'
+              b2df 0073  ld   $73         ;0285 's'
+              b2e0 002e  ld   $2e         ;0286 '.'
+              b2e1 000a  ld   $0a         ;0287 10
+              b2e2 000a  ld   $0a         ;0288 10
+              b2e3 0060  ld   $60         ;0289 '`'
+              b2e4 0054  ld   $54         ;028a 'T'
+              b2e5 0065  ld   $65         ;028b 'e'
+              b2e6 0074  ld   $74         ;028c 't'
+              b2e7 0072  ld   $72         ;028d 'r'
+              b2e8 006f  ld   $6f         ;028e 'o'
+              b2e9 006e  ld   $6e         ;028f 'n'
+              b2ea 0069  ld   $69         ;0290 'i'
+              b2eb 0073  ld   $73         ;0291 's'
+              b2ec 0027  ld   $27         ;0292 "'"
+              b2ed 0020  ld   $20         ;0293 ' '
+              b2ee 0069  ld   $69         ;0294 'i'
+              b2ef 0073  ld   $73         ;0295 's'
+              b2f0 0020  ld   $20         ;0296 ' '
+              b2f1 0062  ld   $62         ;0297 'b'
+              b2f2 0079  ld   $79         ;0298 'y'
+              b2f3 0020  ld   $20         ;0299 ' '
+              b2f4 0061  ld   $61         ;029a 'a'
+              b2f5 0074  ld   $74         ;029b 't'
+              b2f6 0036  ld   $36         ;029c '6'
+              b2f7 0037  ld   $37         ;029d '7'
+              b2f8 0020  ld   $20         ;029e ' '
+              b2f9 0061  ld   $61         ;029f 'a'
+              b2fa 006e  ld   $6e         ;02a0 'n'
               b2fb fe00  bra  ac          ;+-----------------------------------+
               b2fc fcfd  bra  $b2fd       ;|                                   |
               b2fd 1404  ld   $04,y       ;| Trampoline for page $b200 lookups |
               b2fe e065  jmp  y,$65       ;|                                   |
               b2ff c218  st   [$18]       ;+-----------------------------------+
-              b300 0064  ld   $64
-              b301 000a  ld   $0a
-              b302 0060  ld   $60
-              b303 0042  ld   $42
-              b304 0072  ld   $72
-              b305 0069  ld   $69
-              b306 0063  ld   $63
-              b307 006b  ld   $6b
-              b308 0073  ld   $73
-              b309 0027  ld   $27
-              b30a 0020  ld   $20
-              b30b 0062  ld   $62
-              b30c 0079  ld   $79
-              b30d 0020  ld   $20
-              b30e 0078  ld   $78
-              b30f 0062  ld   $62
-              b310 0078  ld   $78
-              b311 002e  ld   $2e
-              b312 000a  ld   $0a
-              b313 000a  ld   $0a
-              b314 0053  ld   $53
-              b315 0070  ld   $70
-              b316 0065  ld   $65
-              b317 0063  ld   $63
-              b318 0069  ld   $69
-              b319 0061  ld   $61
-              b31a 006c  ld   $6c
-              b31b 0020  ld   $20
-              b31c 0074  ld   $74
-              b31d 0068  ld   $68
-              b31e 0061  ld   $61
-              b31f 006e  ld   $6e
-              b320 006b  ld   $6b
-              b321 0073  ld   $73
-              b322 0020  ld   $20
-              b323 006d  ld   $6d
-              b324 0075  ld   $75
-              b325 0073  ld   $73
-              b326 0074  ld   $74
-              b327 0020  ld   $20
-              b328 0067  ld   $67
-              b329 006f  ld   $6f
-              b32a 0020  ld   $20
-              b32b 0074  ld   $74
-              b32c 006f  ld   $6f
-              b32d 0000  ld   $00
+              b300 0064  ld   $64         ;02a1 'd'
+              b301 000a  ld   $0a         ;02a2 10
+              b302 0060  ld   $60         ;02a3 '`'
+              b303 0042  ld   $42         ;02a4 'B'
+              b304 0072  ld   $72         ;02a5 'r'
+              b305 0069  ld   $69         ;02a6 'i'
+              b306 0063  ld   $63         ;02a7 'c'
+              b307 006b  ld   $6b         ;02a8 'k'
+              b308 0073  ld   $73         ;02a9 's'
+              b309 0027  ld   $27         ;02aa "'"
+              b30a 0020  ld   $20         ;02ab ' '
+              b30b 0062  ld   $62         ;02ac 'b'
+              b30c 0079  ld   $79         ;02ad 'y'
+              b30d 0020  ld   $20         ;02ae ' '
+              b30e 0078  ld   $78         ;02af 'x'
+              b30f 0062  ld   $62         ;02b0 'b'
+              b310 0078  ld   $78         ;02b1 'x'
+              b311 002e  ld   $2e         ;02b2 '.'
+              b312 000a  ld   $0a         ;02b3 10
+              b313 000a  ld   $0a         ;02b4 10
+              b314 0053  ld   $53         ;02b5 'S'
+              b315 0070  ld   $70         ;02b6 'p'
+              b316 0065  ld   $65         ;02b7 'e'
+              b317 0063  ld   $63         ;02b8 'c'
+              b318 0069  ld   $69         ;02b9 'i'
+              b319 0061  ld   $61         ;02ba 'a'
+              b31a 006c  ld   $6c         ;02bb 'l'
+              b31b 0020  ld   $20         ;02bc ' '
+              b31c 0074  ld   $74         ;02bd 't'
+              b31d 0068  ld   $68         ;02be 'h'
+              b31e 0061  ld   $61         ;02bf 'a'
+              b31f 006e  ld   $6e         ;02c0 'n'
+              b320 006b  ld   $6b         ;02c1 'k'
+              b321 0073  ld   $73         ;02c2 's'
+              b322 0020  ld   $20         ;02c3 ' '
+              b323 006d  ld   $6d         ;02c4 'm'
+              b324 0075  ld   $75         ;02c5 'u'
+              b325 0073  ld   $73         ;02c6 's'
+              b326 0074  ld   $74         ;02c7 't'
+              b327 0020  ld   $20         ;02c8 ' '
+              b328 0067  ld   $67         ;02c9 'g'
+              b329 006f  ld   $6f         ;02ca 'o'
+              b32a 0020  ld   $20         ;02cb ' '
+              b32b 0074  ld   $74         ;02cc 't'
+              b32c 006f  ld   $6f         ;02cd 'o'
+              b32d 0000  ld   $00         ;02ce 0
               b32e 002b  ld   $2b         ;02cf STW
               b32f 003a  ld   $3a         ;02cf 'Part1'
               b330 0093  ld   $93         ;02d1 INC
@@ -39998,151 +39998,158 @@ Credits:      b257 0002  ld   $02         ;| RAM segment address (high byte firs
               b335 00e8  ld   $e8         ;| Length (1..256)
               b336 00cd  ld   $cd         ;0300 DEF
               b337 0098  ld   $98
-              b338 000a  ld   $0a
-              b339 004d  ld   $4d
-              b33a 0061  ld   $61
-              b33b 0072  ld   $72
-              b33c 0063  ld   $63
-              b33d 002c  ld   $2c
-              b33e 0020  ld   $20
-              b33f 0050  ld   $50
-              b340 0061  ld   $61
-              b341 0075  ld   $75
-              b342 006c  ld   $6c
-              b343 002c  ld   $2c
-              b344 0020  ld   $20
-              b345 0049  ld   $49
-              b346 0076  ld   $76
-              b347 0061  ld   $61
-              b348 006e  ld   $6e
-              b349 0061  ld   $61
-              b34a 002c  ld   $2c
-              b34b 0020  ld   $20
-              b34c 004f  ld   $4f
-              b34d 0073  ld   $73
-              b34e 0063  ld   $63
-              b34f 0061  ld   $61
-              b350 0072  ld   $72
-              b351 002c  ld   $2c
-              b352 000a  ld   $0a
-              b353 004d  ld   $4d
-              b354 0061  ld   $61
-              b355 0072  ld   $72
-              b356 0074  ld   $74
-              b357 0069  ld   $69
-              b358 006a  ld   $6a
-              b359 006e  ld   $6e
-              b35a 002c  ld   $2c
-              b35b 0020  ld   $20
-              b35c 0045  ld   $45
-              b35d 0072  ld   $72
-              b35e 0069  ld   $69
-              b35f 006b  ld   $6b
-              b360 002c  ld   $2c
-              b361 0020  ld   $20
-              b362 0042  ld   $42
-              b363 0065  ld   $65
-              b364 006c  ld   $6c
-              b365 006c  ld   $6c
-              b366 0061  ld   $61
-              b367 002c  ld   $2c
-              b368 0020  ld   $20
-              b369 0042  ld   $42
-              b36a 0065  ld   $65
-              b36b 006e  ld   $6e
-              b36c 002c  ld   $2c
-              b36d 000a  ld   $0a
-              b36e 0044  ld   $44
-              b36f 0069  ld   $69
-              b370 0065  ld   $65
-              b371 0074  ld   $74
-              b372 0065  ld   $65
-              b373 0072  ld   $72
-              b374 002c  ld   $2c
-              b375 0020  ld   $20
-              b376 004d  ld   $4d
-              b377 0061  ld   $61
-              b378 0072  ld   $72
-              b379 0074  ld   $74
-              b37a 0069  ld   $69
-              b37b 006e  ld   $6e
-              b37c 002c  ld   $2c
-              b37d 0020  ld   $20
-              b37e 0042  ld   $42
-              b37f 0072  ld   $72
-              b380 0061  ld   $61
-              b381 0064  ld   $64
-              b382 002c  ld   $2c
-              b383 0020  ld   $20
-              b384 004c  ld   $4c
-              b385 006f  ld   $6f
-              b386 0075  ld   $75
-              b387 002c  ld   $2c
-              b388 000a  ld   $0a
-              b389 0050  ld   $50
-              b38a 0068  ld   $68
-              b38b 0069  ld   $69
-              b38c 006c  ld   $6c
-              b38d 002c  ld   $2c
-              b38e 0020  ld   $20
-              b38f 0042  ld   $42
-              b390 0072  ld   $72
-              b391 0069  ld   $69
-              b392 0061  ld   $61
-              b393 006e  ld   $6e
-              b394 002c  ld   $2c
-              b395 0020  ld   $20
-              b396 0044  ld   $44
-              b397 0061  ld   $61
-              b398 0076  ld   $76
-              b399 0069  ld   $69
-              b39a 0064  ld   $64
-              b39b 002c  ld   $2c
-              b39c 0020  ld   $20
-              b39d 0044  ld   $44
-              b39e 0061  ld   $61
-              b39f 0076  ld   $76
-              b3a0 0065  ld   $65
-              b3a1 002c  ld   $2c
-              b3a2 000a  ld   $0a
-              b3a3 0048  ld   $48
-              b3a4 0047  ld   $47
-              b3a5 0020  ld   $20
-              b3a6 0061  ld   $61
-              b3a7 006e  ld   $6e
-              b3a8 0064  ld   $64
-              b3a9 0020  ld   $20
-              b3aa 0061  ld   $61
-              b3ab 006c  ld   $6c
-              b3ac 006c  ld   $6c
-              b3ad 0020  ld   $20
-              b3ae 0066  ld   $66
-              b3af 0061  ld   $61
-              b3b0 006e  ld   $6e
-              b3b1 0073  ld   $73
-              b3b2 0021  ld   $21
-              b3b3 000a  ld   $0a
-              b3b4 0020  ld   $20
-              b3b5 0020  ld   $20
-              b3b6 0020  ld   $20
-              * 11 times
-              b3bf 004d  ld   $4d
-              b3c0 0061  ld   $61
-              b3c1 0072  ld   $72
-              b3c2 0063  ld   $63
-              b3c3 0065  ld   $65
-              b3c4 006c  ld   $6c
-              b3c5 0020  ld   $20
-              b3c6 0026  ld   $26
-              b3c7 0020  ld   $20
-              b3c8 0057  ld   $57
-              b3c9 0061  ld   $61
-              b3ca 006c  ld   $6c
-              b3cb 0074  ld   $74
-              b3cc 0065  ld   $65
-              b3cd 0072  ld   $72
-              b3ce 000a  ld   $0a
-              b3cf 0000  ld   $00
+              b338 000a  ld   $0a         ;0302 10
+              b339 004d  ld   $4d         ;0303 'M'
+              b33a 0061  ld   $61         ;0304 'a'
+              b33b 0072  ld   $72         ;0305 'r'
+              b33c 0063  ld   $63         ;0306 'c'
+              b33d 002c  ld   $2c         ;0307 ','
+              b33e 0020  ld   $20         ;0308 ' '
+              b33f 0050  ld   $50         ;0309 'P'
+              b340 0061  ld   $61         ;030a 'a'
+              b341 0075  ld   $75         ;030b 'u'
+              b342 006c  ld   $6c         ;030c 'l'
+              b343 002c  ld   $2c         ;030d ','
+              b344 0020  ld   $20         ;030e ' '
+              b345 0049  ld   $49         ;030f 'I'
+              b346 0076  ld   $76         ;0310 'v'
+              b347 0061  ld   $61         ;0311 'a'
+              b348 006e  ld   $6e         ;0312 'n'
+              b349 0061  ld   $61         ;0313 'a'
+              b34a 002c  ld   $2c         ;0314 ','
+              b34b 0020  ld   $20         ;0315 ' '
+              b34c 004f  ld   $4f         ;0316 'O'
+              b34d 0073  ld   $73         ;0317 's'
+              b34e 0063  ld   $63         ;0318 'c'
+              b34f 0061  ld   $61         ;0319 'a'
+              b350 0072  ld   $72         ;031a 'r'
+              b351 002c  ld   $2c         ;031b ','
+              b352 000a  ld   $0a         ;031c 10
+              b353 004d  ld   $4d         ;031d 'M'
+              b354 0061  ld   $61         ;031e 'a'
+              b355 0072  ld   $72         ;031f 'r'
+              b356 0074  ld   $74         ;0320 't'
+              b357 0069  ld   $69         ;0321 'i'
+              b358 006a  ld   $6a         ;0322 'j'
+              b359 006e  ld   $6e         ;0323 'n'
+              b35a 002c  ld   $2c         ;0324 ','
+              b35b 0020  ld   $20         ;0325 ' '
+              b35c 0045  ld   $45         ;0326 'E'
+              b35d 0072  ld   $72         ;0327 'r'
+              b35e 0069  ld   $69         ;0328 'i'
+              b35f 006b  ld   $6b         ;0329 'k'
+              b360 002c  ld   $2c         ;032a ','
+              b361 0020  ld   $20         ;032b ' '
+              b362 0042  ld   $42         ;032c 'B'
+              b363 0065  ld   $65         ;032d 'e'
+              b364 006c  ld   $6c         ;032e 'l'
+              b365 006c  ld   $6c         ;032f 'l'
+              b366 0061  ld   $61         ;0330 'a'
+              b367 002c  ld   $2c         ;0331 ','
+              b368 0020  ld   $20         ;0332 ' '
+              b369 0042  ld   $42         ;0333 'B'
+              b36a 0065  ld   $65         ;0334 'e'
+              b36b 006e  ld   $6e         ;0335 'n'
+              b36c 002c  ld   $2c         ;0336 ','
+              b36d 000a  ld   $0a         ;0337 10
+              b36e 0044  ld   $44         ;0338 'D'
+              b36f 0069  ld   $69         ;0339 'i'
+              b370 0065  ld   $65         ;033a 'e'
+              b371 0074  ld   $74         ;033b 't'
+              b372 0065  ld   $65         ;033c 'e'
+              b373 0072  ld   $72         ;033d 'r'
+              b374 002c  ld   $2c         ;033e ','
+              b375 0020  ld   $20         ;033f ' '
+              b376 004d  ld   $4d         ;0340 'M'
+              b377 0061  ld   $61         ;0341 'a'
+              b378 0072  ld   $72         ;0342 'r'
+              b379 0074  ld   $74         ;0343 't'
+              b37a 0069  ld   $69         ;0344 'i'
+              b37b 006e  ld   $6e         ;0345 'n'
+              b37c 002c  ld   $2c         ;0346 ','
+              b37d 0020  ld   $20         ;0347 ' '
+              b37e 0042  ld   $42         ;0348 'B'
+              b37f 0072  ld   $72         ;0349 'r'
+              b380 0061  ld   $61         ;034a 'a'
+              b381 0064  ld   $64         ;034b 'd'
+              b382 002c  ld   $2c         ;034c ','
+              b383 0020  ld   $20         ;034d ' '
+              b384 004c  ld   $4c         ;034e 'L'
+              b385 006f  ld   $6f         ;034f 'o'
+              b386 0075  ld   $75         ;0350 'u'
+              b387 002c  ld   $2c         ;0351 ','
+              b388 000a  ld   $0a         ;0352 10
+              b389 0050  ld   $50         ;0353 'P'
+              b38a 0068  ld   $68         ;0354 'h'
+              b38b 0069  ld   $69         ;0355 'i'
+              b38c 006c  ld   $6c         ;0356 'l'
+              b38d 002c  ld   $2c         ;0357 ','
+              b38e 0020  ld   $20         ;0358 ' '
+              b38f 0042  ld   $42         ;0359 'B'
+              b390 0072  ld   $72         ;035a 'r'
+              b391 0069  ld   $69         ;035b 'i'
+              b392 0061  ld   $61         ;035c 'a'
+              b393 006e  ld   $6e         ;035d 'n'
+              b394 002c  ld   $2c         ;035e ','
+              b395 0020  ld   $20         ;035f ' '
+              b396 0044  ld   $44         ;0360 'D'
+              b397 0061  ld   $61         ;0361 'a'
+              b398 0076  ld   $76         ;0362 'v'
+              b399 0069  ld   $69         ;0363 'i'
+              b39a 0064  ld   $64         ;0364 'd'
+              b39b 002c  ld   $2c         ;0365 ','
+              b39c 0020  ld   $20         ;0366 ' '
+              b39d 0044  ld   $44         ;0367 'D'
+              b39e 0061  ld   $61         ;0368 'a'
+              b39f 0076  ld   $76         ;0369 'v'
+              b3a0 0065  ld   $65         ;036a 'e'
+              b3a1 002c  ld   $2c         ;036b ','
+              b3a2 000a  ld   $0a         ;036c 10
+              b3a3 0048  ld   $48         ;036d 'H'
+              b3a4 0047  ld   $47         ;036e 'G'
+              b3a5 0020  ld   $20         ;036f ' '
+              b3a6 0061  ld   $61         ;0370 'a'
+              b3a7 006e  ld   $6e         ;0371 'n'
+              b3a8 0064  ld   $64         ;0372 'd'
+              b3a9 0020  ld   $20         ;0373 ' '
+              b3aa 0061  ld   $61         ;0374 'a'
+              b3ab 006c  ld   $6c         ;0375 'l'
+              b3ac 006c  ld   $6c         ;0376 'l'
+              b3ad 0020  ld   $20         ;0377 ' '
+              b3ae 0066  ld   $66         ;0378 'f'
+              b3af 0061  ld   $61         ;0379 'a'
+              b3b0 006e  ld   $6e         ;037a 'n'
+              b3b1 0073  ld   $73         ;037b 's'
+              b3b2 0021  ld   $21         ;037c '!'
+              b3b3 000a  ld   $0a         ;037d 10
+              b3b4 0020  ld   $20         ;037e ' '
+              b3b5 0020  ld   $20         ;037f ' '
+              b3b6 0020  ld   $20         ;0380 ' '
+              b3b7 0020  ld   $20         ;0381 ' '
+              b3b8 0020  ld   $20         ;0382 ' '
+              b3b9 0020  ld   $20         ;0383 ' '
+              b3ba 0020  ld   $20         ;0384 ' '
+              b3bb 0020  ld   $20         ;0385 ' '
+              b3bc 0020  ld   $20         ;0386 ' '
+              b3bd 0020  ld   $20         ;0387 ' '
+              b3be 0020  ld   $20         ;0388 ' '
+              b3bf 004d  ld   $4d         ;0389 'M'
+              b3c0 0061  ld   $61         ;038a 'a'
+              b3c1 0072  ld   $72         ;038b 'r'
+              b3c2 0063  ld   $63         ;038c 'c'
+              b3c3 0065  ld   $65         ;038d 'e'
+              b3c4 006c  ld   $6c         ;038e 'l'
+              b3c5 0020  ld   $20         ;038f ' '
+              b3c6 0026  ld   $26         ;0390 '&'
+              b3c7 0020  ld   $20         ;0391 ' '
+              b3c8 0057  ld   $57         ;0392 'W'
+              b3c9 0061  ld   $61         ;0393 'a'
+              b3ca 006c  ld   $6c         ;0394 'l'
+              b3cb 0074  ld   $74         ;0395 't'
+              b3cc 0065  ld   $65         ;0396 'e'
+              b3cd 0072  ld   $72         ;0397 'r'
+              b3ce 000a  ld   $0a         ;0398 10
+              b3cf 0000  ld   $00         ;0399 0
               b3d0 002b  ld   $2b         ;039a STW
               b3d1 003c  ld   $3c         ;039a 'Part2'
               b3d2 00cd  ld   $cd         ;039c DEF
@@ -52315,8 +52322,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e38f 00ff  ld   $ff         ;0211 RET
               e390 00cf  ld   $cf         ;0212 CALL
               e391 0036  ld   $36         ;0212 'Keyword'
-              e392 0028  ld   $28
-              e393 0000  ld   $00
+              e392 0028  ld   $28         ;0214 '('
+              e393 0000  ld   $00         ;0215 0
               e394 0035  ld   $35         ;0216 BCC
               e395 003f  ld   $3f         ;0217 EQ
               e396 001b  ld   $1b
@@ -52326,12 +52333,12 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e39a 00a7  ld   $a7
               e39b 00cf  ld   $cf         ;021d CALL
               e39c 0036  ld   $36         ;021d 'Keyword'
-              e39d 0070  ld   $70
-              e39e 0065  ld   $65
-              e39f 0065  ld   $65
-              e3a0 006b  ld   $6b
-              e3a1 0028  ld   $28
-              e3a2 0000  ld   $00
+              e39d 0070  ld   $70         ;021f 'p'
+              e39e 0065  ld   $65         ;0220 'e'
+              e39f 0065  ld   $65         ;0221 'e'
+              e3a0 006b  ld   $6b         ;0222 'k'
+              e3a1 0028  ld   $28         ;0223 '('
+              e3a2 0000  ld   $00         ;0224 0
               e3a3 0035  ld   $35         ;0225 BCC
               e3a4 003f  ld   $3f         ;0226 EQ
               e3a5 002d  ld   $2d
@@ -52344,11 +52351,11 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e3ac 00a7  ld   $a7
               e3ad 00cf  ld   $cf         ;022f CALL
               e3ae 0036  ld   $36         ;022f 'Keyword'
-              e3af 0072  ld   $72
-              e3b0 006e  ld   $6e
-              e3b1 0064  ld   $64
-              e3b2 0028  ld   $28
-              e3b3 0000  ld   $00
+              e3af 0072  ld   $72         ;0231 'r'
+              e3b0 006e  ld   $6e         ;0232 'n'
+              e3b1 0064  ld   $64         ;0233 'd'
+              e3b2 0028  ld   $28         ;0234 '('
+              e3b3 0000  ld   $00         ;0235 0
               e3b4 0035  ld   $35         ;0236 BCC
               e3b5 003f  ld   $3f         ;0237 EQ
               e3b6 004b  ld   $4b
@@ -52374,11 +52381,11 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e3ca 00a7  ld   $a7
               e3cb 00cf  ld   $cf         ;024d CALL
               e3cc 0036  ld   $36         ;024d 'Keyword'
-              e3cd 0075  ld   $75
-              e3ce 0073  ld   $73
-              e3cf 0072  ld   $72
-              e3d0 0028  ld   $28
-              e3d1 0000  ld   $00
+              e3cd 0075  ld   $75         ;024f 'u'
+              e3ce 0073  ld   $73         ;0250 's'
+              e3cf 0072  ld   $72         ;0251 'r'
+              e3d0 0028  ld   $28         ;0252 '('
+              e3d1 0000  ld   $00         ;0253 0
               e3d2 0035  ld   $35         ;0254 BCC
               e3d3 003f  ld   $3f         ;0255 EQ
               e3d4 005d  ld   $5d
@@ -52398,8 +52405,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e3e2 0034  ld   $34         ;0263 'Spaces'
               e3e3 00cf  ld   $cf         ;0265 CALL
               e3e4 0036  ld   $36         ;0265 'Keyword'
-              e3e5 0028  ld   $28
-              e3e6 0000  ld   $00
+              e3e5 0028  ld   $28         ;0267 '('
+              e3e6 0000  ld   $00         ;0268 0
               e3e7 0035  ld   $35         ;0269 BCC
               e3e8 003f  ld   $3f         ;026a EQ
               e3e9 00a0  ld   $a0
@@ -52455,8 +52462,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e41b 0044  ld   $44         ;0297 'ValueError'
               e41c 00cf  ld   $cf         ;0299 CALL
               e41d 0036  ld   $36         ;0299 'Keyword'
-              e41e 0029  ld   $29
-              e41f 0000  ld   $00
+              e41e 0029  ld   $29         ;029b ')'
+              e41f 0000  ld   $00         ;029c 0
               e420 0035  ld   $35         ;029d BCC
               e421 0072  ld   $72         ;029e NE
               e422 00a0  ld   $a0
@@ -52471,8 +52478,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e42b 00ff  ld   $ff         ;02a8 RET
               e42c 00cf  ld   $cf         ;02a9 CALL
               e42d 0036  ld   $36         ;02a9 'Keyword'
-              e42e 0029  ld   $29
-              e42f 0000  ld   $00
+              e42e 0029  ld   $29         ;02ab ')'
+              e42f 0000  ld   $00         ;02ac 0
               e430 0035  ld   $35         ;02ad BCC
               e431 0072  ld   $72         ;02ae NE
               e432 00b0  ld   $b0
@@ -52519,12 +52526,12 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e45b 004e  ld   $4e         ;02d7 'PrintChar'
               e45c 00cf  ld   $cf         ;02d9 CALL
               e45d 0054  ld   $54         ;02d9 'Prompt'
-              e45e 0042  ld   $42
-              e45f 0072  ld   $72
-              e460 0065  ld   $65
-              e461 0061  ld   $61
-              e462 006b  ld   $6b
-              e463 0000  ld   $00
+              e45e 0042  ld   $42         ;02db 'B'
+              e45f 0072  ld   $72         ;02dc 'r'
+              e460 0065  ld   $65         ;02dd 'e'
+              e461 0061  ld   $61         ;02de 'a'
+              e462 006b  ld   $6b         ;02df 'k'
+              e463 0000  ld   $00         ;02e0 0
               e464 00ff  ld   $ff         ;02e1 RET
               e465 002b  ld   $2b         ;02e2 STW
               e466 0056  ld   $56         ;02e2 'TestBreak'
@@ -52797,11 +52804,11 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e571 0034  ld   $34         ;0404 'Spaces'
               e572 00cf  ld   $cf         ;0406 CALL
               e573 0036  ld   $36         ;0406 'Keyword'
-              e574 0067  ld   $67
-              e575 006f  ld   $6f
-              e576 0074  ld   $74
-              e577 006f  ld   $6f
-              e578 0000  ld   $00
+              e574 0067  ld   $67         ;0408 'g'
+              e575 006f  ld   $6f         ;0409 'o'
+              e576 0074  ld   $74         ;040a 't'
+              e577 006f  ld   $6f         ;040b 'o'
+              e578 0000  ld   $00         ;040c 0
               e579 0035  ld   $35         ;040d BCC
               e57a 003f  ld   $3f         ;040e EQ
               e57b 0012  ld   $12
@@ -52811,12 +52818,12 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e57f 005e  ld   $5e         ;0412 'GotoValue'
               e580 00cf  ld   $cf         ;0414 CALL
               e581 0036  ld   $36         ;0414 'Keyword'
-              e582 0067  ld   $67
-              e583 006f  ld   $6f
-              e584 0073  ld   $73
-              e585 0075  ld   $75
-              e586 0062  ld   $62
-              e587 0000  ld   $00
+              e582 0067  ld   $67         ;0416 'g'
+              e583 006f  ld   $6f         ;0417 'o'
+              e584 0073  ld   $73         ;0418 's'
+              e585 0075  ld   $75         ;0419 'u'
+              e586 0062  ld   $62         ;041a 'b'
+              e587 0000  ld   $00         ;041b 0
               e588 0035  ld   $35         ;041c BCC
               e589 003f  ld   $3f         ;041d EQ
               e58a 0026  ld   $26
@@ -52831,13 +52838,13 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e593 005e  ld   $5e         ;0426 'GotoValue'
               e594 00cf  ld   $cf         ;0428 CALL
               e595 0036  ld   $36         ;0428 'Keyword'
-              e596 0072  ld   $72
-              e597 0065  ld   $65
-              e598 0074  ld   $74
-              e599 0075  ld   $75
-              e59a 0072  ld   $72
-              e59b 006e  ld   $6e
-              e59c 0000  ld   $00
+              e596 0072  ld   $72         ;042a 'r'
+              e597 0065  ld   $65         ;042b 'e'
+              e598 0074  ld   $74         ;042c 't'
+              e599 0075  ld   $75         ;042d 'u'
+              e59a 0072  ld   $72         ;042e 'r'
+              e59b 006e  ld   $6e         ;042f 'n'
+              e59c 0000  ld   $00         ;0430 0
               e59d 0035  ld   $35         ;0431 BCC
               e59e 003f  ld   $3f         ;0432 EQ
               e59f 003f  ld   $3f
@@ -52856,9 +52863,9 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e5ac 0062  ld   $62         ;043f 'EndOfLine'
               e5ad 00cf  ld   $cf         ;0441 CALL
               e5ae 0036  ld   $36         ;0441 'Keyword'
-              e5af 0069  ld   $69
-              e5b0 0066  ld   $66
-              e5b1 0000  ld   $00
+              e5af 0069  ld   $69         ;0443 'i'
+              e5b0 0066  ld   $66         ;0444 'f'
+              e5b1 0000  ld   $00         ;0445 0
               e5b2 0035  ld   $35         ;0446 BCC
               e5b3 003f  ld   $3f         ;0447 EQ
               e5b4 0096  ld   $96
@@ -52881,11 +52888,11 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e5c5 0038  ld   $38         ;0458 'Expression'
               e5c6 00cf  ld   $cf         ;045a CALL
               e5c7 0036  ld   $36         ;045a 'Keyword'
-              e5c8 0074  ld   $74
-              e5c9 0068  ld   $68
-              e5ca 0065  ld   $65
-              e5cb 006e  ld   $6e
-              e5cc 0000  ld   $00
+              e5c8 0074  ld   $74         ;045c 't'
+              e5c9 0068  ld   $68         ;045d 'h'
+              e5ca 0065  ld   $65         ;045e 'e'
+              e5cb 006e  ld   $6e         ;045f 'n'
+              e5cc 0000  ld   $00         ;0460 0
               e5cd 00ee  ld   $ee         ;0461 LDLW
               e5ce 0002  ld   $02
               e5cf 00fc  ld   $fc         ;0463 XORW
@@ -52948,11 +52955,11 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e608 0062  ld   $62         ;0496 'EndOfLine'
               e609 00cf  ld   $cf         ;0498 CALL
               e60a 0036  ld   $36         ;0498 'Keyword'
-              e60b 0070  ld   $70
-              e60c 006f  ld   $6f
-              e60d 006b  ld   $6b
-              e60e 0065  ld   $65
-              e60f 0000  ld   $00
+              e60b 0070  ld   $70         ;049a 'p'
+              e60c 006f  ld   $6f         ;049b 'o'
+              e60d 006b  ld   $6b         ;049c 'k'
+              e60e 0065  ld   $65         ;049d 'e'
+              e60f 0000  ld   $00         ;049e 0
               e610 0035  ld   $35         ;049f BCC
               e611 003f  ld   $3f         ;04a0 EQ
               e612 00b3  ld   $b3
@@ -52962,8 +52969,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e616 0068  ld   $68         ;04a4 'Address'
               e617 00cf  ld   $cf         ;04a6 CALL
               e618 0036  ld   $36         ;04a6 'Keyword'
-              e619 002c  ld   $2c
-              e61a 0000  ld   $00
+              e619 002c  ld   $2c         ;04a8 ','
+              e61a 0000  ld   $00         ;04a9 0
               e61b 0035  ld   $35         ;04aa BCC
               e61c 0072  ld   $72         ;04ab NE
               e61d 00ad  ld   $ad
@@ -52977,17 +52984,17 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e625 0062  ld   $62         ;04b3 'EndOfLine'
               e626 00cf  ld   $cf         ;04b5 CALL
               e627 0036  ld   $36         ;04b5 'Keyword'
-              e628 0072  ld   $72
-              e629 0065  ld   $65
-              e62a 006d  ld   $6d
-              e62b 0000  ld   $00
+              e628 0072  ld   $72         ;04b7 'r'
+              e629 0065  ld   $65         ;04b8 'e'
+              e62a 006d  ld   $6d         ;04b9 'm'
+              e62b 0000  ld   $00         ;04ba 0
               e62c 0035  ld   $35         ;04bb BCC
               e62d 0072  ld   $72         ;04bc NE
               e62e 00c0  ld   $c0
               e62f 00cf  ld   $cf         ;04be CALL
               e630 0036  ld   $36         ;04be 'Keyword'
-              e631 0027  ld   $27
-              e632 0000  ld   $00
+              e631 0027  ld   $27         ;04c0 "'"
+              e632 0000  ld   $00         ;04c1 0
               e633 0035  ld   $35         ;04c2 BCC
               e634 003f  ld   $3f         ;04c3 EQ
               e635 00cf  ld   $cf
@@ -53005,11 +53012,11 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e641 0062  ld   $62         ;04cf 'EndOfLine'
               e642 00cf  ld   $cf         ;04d1 CALL
               e643 0036  ld   $36         ;04d1 'Keyword'
-              e644 006c  ld   $6c
-              e645 0069  ld   $69
-              e646 006e  ld   $6e
-              e647 0065  ld   $65
-              e648 0000  ld   $00
+              e644 006c  ld   $6c         ;04d3 'l'
+              e645 0069  ld   $69         ;04d4 'i'
+              e646 006e  ld   $6e         ;04d5 'n'
+              e647 0065  ld   $65         ;04d6 'e'
+              e648 0000  ld   $00         ;04d7 0
               e649 0035  ld   $35         ;04d8 BCC
               e64a 003f  ld   $3f         ;04d9 EQ
               e64b 00de  ld   $de
@@ -53035,11 +53042,11 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e65f 00fd  ld   $fd         ;| Length (1..256)
               e660 00cf  ld   $cf         ;0500 CALL
               e661 0036  ld   $36         ;0500 'Keyword'
-              e662 006e  ld   $6e
-              e663 0065  ld   $65
-              e664 0078  ld   $78
-              e665 0074  ld   $74
-              e666 0000  ld   $00
+              e662 006e  ld   $6e         ;0502 'n'
+              e663 0065  ld   $65         ;0503 'e'
+              e664 0078  ld   $78         ;0504 'x'
+              e665 0074  ld   $74         ;0505 't'
+              e666 0000  ld   $00         ;0506 0
               e667 0035  ld   $35         ;0507 BCC
               e668 003f  ld   $3f         ;0508 EQ
               e669 0037  ld   $37
@@ -53092,10 +53099,10 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e698 0062  ld   $62         ;0537 'EndOfLine'
               e699 00cf  ld   $cf         ;0539 CALL
               e69a 0036  ld   $36         ;0539 'Keyword'
-              e69b 0066  ld   $66
-              e69c 006f  ld   $6f
-              e69d 0072  ld   $72
-              e69e 0000  ld   $00
+              e69b 0066  ld   $66         ;053b 'f'
+              e69c 006f  ld   $6f         ;053c 'o'
+              e69d 0072  ld   $72         ;053d 'r'
+              e69e 0000  ld   $00         ;053e 0
               e69f 0035  ld   $35         ;053f BCC
               e6a0 003f  ld   $3f         ;0540 EQ
               e6a1 006c  ld   $6c
@@ -53107,8 +53114,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e6a7 0034  ld   $34         ;0546 'Spaces'
               e6a8 00cf  ld   $cf         ;0548 CALL
               e6a9 0036  ld   $36         ;0548 'Keyword'
-              e6aa 003d  ld   $3d
-              e6ab 0000  ld   $00
+              e6aa 003d  ld   $3d         ;054a '='
+              e6ab 0000  ld   $00         ;054b 0
               e6ac 0035  ld   $35         ;054c BCC
               e6ad 0072  ld   $72         ;054d NE
               e6ae 004f  ld   $4f
@@ -53120,9 +53127,9 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e6b4 0068  ld   $68         ;0553 'Address'
               e6b5 00cf  ld   $cf         ;0555 CALL
               e6b6 0036  ld   $36         ;0555 'Keyword'
-              e6b7 0074  ld   $74
-              e6b8 006f  ld   $6f
-              e6b9 0000  ld   $00
+              e6b7 0074  ld   $74         ;0557 't'
+              e6b8 006f  ld   $6f         ;0558 'o'
+              e6b9 0000  ld   $00         ;0559 0
               e6ba 0035  ld   $35         ;055a BCC
               e6bb 0072  ld   $72         ;055b NE
               e6bc 005d  ld   $5d
@@ -53145,9 +53152,9 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e6cd 0062  ld   $62         ;056c 'EndOfLine'
               e6ce 00cf  ld   $cf         ;056e CALL
               e6cf 0036  ld   $36         ;056e 'Keyword'
-              e6d0 0061  ld   $61
-              e6d1 0074  ld   $74
-              e6d2 0000  ld   $00
+              e6d0 0061  ld   $61         ;0570 'a'
+              e6d1 0074  ld   $74         ;0571 't'
+              e6d2 0000  ld   $00         ;0572 0
               e6d3 0035  ld   $35         ;0573 BCC
               e6d4 003f  ld   $3f         ;0574 EQ
               e6d5 009a  ld   $9a
@@ -53162,8 +53169,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e6de 0030  ld   $30         ;057d 'Pos'
               e6df 00cf  ld   $cf         ;057f CALL
               e6e0 0036  ld   $36         ;057f 'Keyword'
-              e6e1 002c  ld   $2c
-              e6e2 0000  ld   $00
+              e6e1 002c  ld   $2c         ;0581 ','
+              e6e2 0000  ld   $00         ;0582 0
               e6e3 0035  ld   $35         ;0583 BCC
               e6e4 003f  ld   $3f         ;0584 EQ
               e6e5 0098  ld   $98
@@ -53196,10 +53203,10 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e700 0062  ld   $62         ;059a 'EndOfLine'
               e701 00cf  ld   $cf         ;059c CALL
               e702 0036  ld   $36         ;059c 'Keyword'
-              e703 0070  ld   $70
-              e704 0075  ld   $75
-              e705 0074  ld   $74
-              e706 0000  ld   $00
+              e703 0070  ld   $70         ;059e 'p'
+              e704 0075  ld   $75         ;059f 'u'
+              e705 0074  ld   $74         ;05a0 't'
+              e706 0000  ld   $00         ;05a1 0
               e707 0035  ld   $35         ;05a2 BCC
               e708 003f  ld   $3f         ;05a3 EQ
               e709 00a9  ld   $a9
@@ -53211,19 +53218,19 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e70f 0062  ld   $62         ;05a9 'EndOfLine'
               e710 00cf  ld   $cf         ;05ab CALL
               e711 0036  ld   $36         ;05ab 'Keyword'
-              e712 0070  ld   $70
-              e713 0072  ld   $72
-              e714 0069  ld   $69
-              e715 006e  ld   $6e
-              e716 0074  ld   $74
-              e717 0000  ld   $00
+              e712 0070  ld   $70         ;05ad 'p'
+              e713 0072  ld   $72         ;05ae 'r'
+              e714 0069  ld   $69         ;05af 'i'
+              e715 006e  ld   $6e         ;05b0 'n'
+              e716 0074  ld   $74         ;05b1 't'
+              e717 0000  ld   $00         ;05b2 0
               e718 0035  ld   $35         ;05b3 BCC
               e719 0072  ld   $72         ;05b4 NE
               e71a 00b8  ld   $b8
               e71b 00cf  ld   $cf         ;05b6 CALL
               e71c 0036  ld   $36         ;05b6 'Keyword'
-              e71d 003f  ld   $3f
-              e71e 0000  ld   $00
+              e71d 003f  ld   $3f         ;05b8 '?'
+              e71e 0000  ld   $00         ;05b9 0
               e71f 0035  ld   $35         ;05ba BCC
               e720 003f  ld   $3f         ;05bb EQ
               e721 00c0  ld   $c0
@@ -53234,11 +53241,11 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e726 0018  ld   $18         ;05c0 vAC
               e727 00cf  ld   $cf         ;05c2 CALL
               e728 0036  ld   $36         ;05c2 'Keyword'
-              e729 006d  ld   $6d
-              e72a 006f  ld   $6f
-              e72b 0064  ld   $64
-              e72c 0065  ld   $65
-              e72d 0000  ld   $00
+              e729 006d  ld   $6d         ;05c4 'm'
+              e72a 006f  ld   $6f         ;05c5 'o'
+              e72b 0064  ld   $64         ;05c6 'd'
+              e72c 0065  ld   $65         ;05c7 'e'
+              e72d 0000  ld   $00         ;05c8 0
               e72e 0035  ld   $35         ;05c9 BCC
               e72f 003f  ld   $3f         ;05ca EQ
               e730 00de  ld   $de
@@ -53264,11 +53271,11 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e744 0062  ld   $62         ;05de 'EndOfLine'
               e745 00cf  ld   $cf         ;05e0 CALL
               e746 0036  ld   $36         ;05e0 'Keyword'
-              e747 0073  ld   $73
-              e748 0061  ld   $61
-              e749 0076  ld   $76
-              e74a 0065  ld   $65
-              e74b 0000  ld   $00
+              e747 0073  ld   $73         ;05e2 's'
+              e748 0061  ld   $61         ;05e3 'a'
+              e749 0076  ld   $76         ;05e4 'v'
+              e74a 0065  ld   $65         ;05e5 'e'
+              e74b 0000  ld   $00         ;05e6 0
               e74c 0035  ld   $35         ;05e7 BCC
               e74d 003f  ld   $3f         ;05e8 EQ
               e74e 00f6  ld   $f6
@@ -53504,24 +53511,24 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e834 0018  ld   $18         ;06c9 vAC
               e835 00cf  ld   $cf         ;06cb CALL
               e836 0050  ld   $50         ;06cb 'PrintS'
-              e837 002a  ld   $2a
-              e838 002a  ld   $2a
-              e839 002a  ld   $2a
-              e83a 0020  ld   $20
-              e83b 0054  ld   $54
-              e83c 0069  ld   $69
-              e83d 006e  ld   $6e
-              e83e 0079  ld   $79
-              e83f 0020  ld   $20
-              e840 0042  ld   $42
-              e841 0041  ld   $41
-              e842 0053  ld   $53
-              e843 0049  ld   $49
-              e844 0043  ld   $43
-              e845 0020  ld   $20
-              e846 0076  ld   $76
-              e847 0032  ld   $32
-              e848 0000  ld   $00
+              e837 002a  ld   $2a         ;06cd '*'
+              e838 002a  ld   $2a         ;06ce '*'
+              e839 002a  ld   $2a         ;06cf '*'
+              e83a 0020  ld   $20         ;06d0 ' '
+              e83b 0054  ld   $54         ;06d1 'T'
+              e83c 0069  ld   $69         ;06d2 'i'
+              e83d 006e  ld   $6e         ;06d3 'n'
+              e83e 0079  ld   $79         ;06d4 'y'
+              e83f 0020  ld   $20         ;06d5 ' '
+              e840 0042  ld   $42         ;06d6 'B'
+              e841 0041  ld   $41         ;06d7 'A'
+              e842 0053  ld   $53         ;06d8 'S'
+              e843 0049  ld   $49         ;06d9 'I'
+              e844 0043  ld   $43         ;06da 'C'
+              e845 0020  ld   $20         ;06db ' '
+              e846 0076  ld   $76         ;06dc 'v'
+              e847 0032  ld   $32         ;06dd '2'
+              e848 0000  ld   $00         ;06de 0
               e849 00cf  ld   $cf         ;06df CALL
               e84a 0058  ld   $58         ;06df 'Newline'
               e84b 0011  ld   $11         ;06e1 LDWI
@@ -53620,11 +53627,11 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e8a8 00d4  ld   $d4
               e8a9 00cf  ld   $cf         ;08f5 CALL
               e8aa 0054  ld   $54         ;08f5 'Prompt'
-              e8ab 004c  ld   $4c
-              e8ac 0069  ld   $69
-              e8ad 006e  ld   $6e
-              e8ae 0065  ld   $65
-              e8af 0000  ld   $00
+              e8ab 004c  ld   $4c         ;08f7 'L'
+              e8ac 0069  ld   $69         ;08f8 'i'
+              e8ad 006e  ld   $6e         ;08f9 'n'
+              e8ae 0065  ld   $65         ;08fa 'e'
+              e8af 0000  ld   $00         ;08fb 0
               e8b0 0093  ld   $93         ;08fc INC
               e8b1 001b  ld   $1b
               e8b2 00ff  ld   $ff         ;08fe RET
@@ -53706,25 +53713,25 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e8fe e065  jmp  y,$65       ;|                                   |
               e8ff c218  st   [$18]       ;+-----------------------------------+
               e900 0054  ld   $54         ;09e4 'Prompt'
-              e901 0053  ld   $53
-              e902 0074  ld   $74
-              e903 0061  ld   $61
-              e904 0063  ld   $63
-              e905 006b  ld   $6b
-              e906 0000  ld   $00
+              e901 0053  ld   $53         ;09e6 'S'
+              e902 0074  ld   $74         ;09e7 't'
+              e903 0061  ld   $61         ;09e8 'a'
+              e904 0063  ld   $63         ;09e9 'c'
+              e905 006b  ld   $6b         ;09ea 'k'
+              e906 0000  ld   $00         ;09eb 0
               e907 002b  ld   $2b         ;09ec STW
               e908 0060  ld   $60         ;09ec 'StackError'
               e909 00cd  ld   $cd         ;09ee DEF
               e90a 00f7  ld   $f7
               e90b 00cf  ld   $cf         ;09f0 CALL
               e90c 0054  ld   $54         ;09f0 'Prompt'
-              e90d 0053  ld   $53
-              e90e 0079  ld   $79
-              e90f 006e  ld   $6e
-              e910 0074  ld   $74
-              e911 0061  ld   $61
-              e912 0078  ld   $78
-              e913 0000  ld   $00
+              e90d 0053  ld   $53         ;09f2 'S'
+              e90e 0079  ld   $79         ;09f3 'y'
+              e90f 006e  ld   $6e         ;09f4 'n'
+              e910 0074  ld   $74         ;09f5 't'
+              e911 0061  ld   $61         ;09f6 'a'
+              e912 0078  ld   $78         ;09f7 'x'
+              e913 0000  ld   $00         ;09f8 0
               e914 002b  ld   $2b         ;09f9 STW
               e915 0048  ld   $48         ;09f9 'SyntaxError'
               e916 0093  ld   $93         ;09fb INC
@@ -53881,7 +53888,7 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e9ad 0066  ld   $66         ;0bce 'Statements'
               e9ae 00cf  ld   $cf         ;0bd0 CALL
               e9af 0054  ld   $54         ;0bd0 'Prompt'
-              e9b0 0000  ld   $00
+              e9b0 0000  ld   $00         ;0bd2 0
               e9b1 002b  ld   $2b         ;0bd3 STW
               e9b2 0062  ld   $62         ;0bd3 'EndOfLine'
               e9b3 00cd  ld   $cd         ;0bd5 DEF
@@ -53946,8 +53953,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               e9ee 0060  ld   $60         ;0cac 'StackError'
               e9ef 00cf  ld   $cf         ;0cae CALL
               e9f0 0036  ld   $36         ;0cae 'Keyword'
-              e9f1 002d  ld   $2d
-              e9f2 0000  ld   $00
+              e9f1 002d  ld   $2d         ;0cb0 '-'
+              e9f2 0000  ld   $00         ;0cb1 0
               e9f3 0035  ld   $35         ;0cb2 BCC
               e9f4 003f  ld   $3f         ;0cb3 EQ
               e9f5 00bb  ld   $bb
@@ -53966,8 +53973,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ea02 00c1  ld   $c1
               ea03 00cf  ld   $cf         ;0cbd CALL
               ea04 0036  ld   $36         ;0cbd 'Keyword'
-              ea05 002b  ld   $2b
-              ea06 0000  ld   $00
+              ea05 002b  ld   $2b         ;0cbf '+'
+              ea06 0000  ld   $00         ;0cc0 0
               ea07 00cf  ld   $cf         ;0cc1 CALL
               ea08 007a  ld   $7a         ;0cc1 'Term'
               ea09 0075  ld   $75         ;0cc3 PUSH
@@ -53975,8 +53982,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ea0b 0000  ld   $00
               ea0c 00cf  ld   $cf         ;0cc6 CALL
               ea0d 0036  ld   $36         ;0cc6 'Keyword'
-              ea0e 002b  ld   $2b
-              ea0f 0000  ld   $00
+              ea0e 002b  ld   $2b         ;0cc8 '+'
+              ea0f 0000  ld   $00         ;0cc9 0
               ea10 0035  ld   $35         ;0cca BCC
               ea11 003f  ld   $3f         ;0ccb EQ
               ea12 00d5  ld   $d5
@@ -53992,8 +53999,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ea1c 00c4  ld   $c4
               ea1d 00cf  ld   $cf         ;0cd7 CALL
               ea1e 0036  ld   $36         ;0cd7 'Keyword'
-              ea1f 002d  ld   $2d
-              ea20 0000  ld   $00
+              ea1f 002d  ld   $2d         ;0cd9 '-'
+              ea20 0000  ld   $00         ;0cda 0
               ea21 0035  ld   $35         ;0cdb BCC
               ea22 003f  ld   $3f         ;0cdc EQ
               ea23 00e6  ld   $e6
@@ -54020,12 +54027,12 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ea38 00f9  ld   $f9
               ea39 00cf  ld   $cf         ;0cf3 CALL
               ea3a 0054  ld   $54         ;0cf3 'Prompt'
-              ea3b 0056  ld   $56
-              ea3c 0061  ld   $61
-              ea3d 006c  ld   $6c
-              ea3e 0075  ld   $75
-              ea3f 0065  ld   $65
-              ea40 0000  ld   $00
+              ea3b 0056  ld   $56         ;0cf5 'V'
+              ea3c 0061  ld   $61         ;0cf6 'a'
+              ea3d 006c  ld   $6c         ;0cf7 'l'
+              ea3e 0075  ld   $75         ;0cf8 'u'
+              ea3f 0065  ld   $65         ;0cf9 'e'
+              ea40 0000  ld   $00         ;0cfa 0
               ea41 002b  ld   $2b         ;0cfb STW
               ea42 0044  ld   $44         ;0cfb 'ValueError'
               ea43 0093  ld   $93         ;0cfd INC
@@ -54046,8 +54053,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ea52 0000  ld   $00
               ea53 00cf  ld   $cf         ;0daa CALL
               ea54 0036  ld   $36         ;0daa 'Keyword'
-              ea55 002a  ld   $2a
-              ea56 0000  ld   $00
+              ea55 002a  ld   $2a         ;0dac '*'
+              ea56 0000  ld   $00         ;0dad 0
               ea57 0035  ld   $35         ;0dae BCC
               ea58 003f  ld   $3f         ;0daf EQ
               ea59 00b9  ld   $b9
@@ -54063,8 +54070,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ea63 00a8  ld   $a8
               ea64 00cf  ld   $cf         ;0dbb CALL
               ea65 0036  ld   $36         ;0dbb 'Keyword'
-              ea66 002f  ld   $2f
-              ea67 0000  ld   $00
+              ea66 002f  ld   $2f         ;0dbd '/'
+              ea67 0000  ld   $00         ;0dbe 0
               ea68 0035  ld   $35         ;0dbf BCC
               ea69 003f  ld   $3f         ;0dc0 EQ
               ea6a 00ca  ld   $ca
@@ -54080,8 +54087,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ea74 00a8  ld   $a8
               ea75 00cf  ld   $cf         ;0dcc CALL
               ea76 0036  ld   $36         ;0dcc 'Keyword'
-              ea77 0025  ld   $25
-              ea78 0000  ld   $00
+              ea77 0025  ld   $25         ;0dce '%'
+              ea78 0000  ld   $00         ;0dcf 0
               ea79 0035  ld   $35         ;0dd0 BCC
               ea7a 003f  ld   $3f         ;0dd1 EQ
               ea7b 00dd  ld   $dd
@@ -54392,18 +54399,18 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ebac 0076  ld   $76         ;10eb 'PrintValue'
               ebad 00cf  ld   $cf         ;10ed CALL
               ebae 0050  ld   $50         ;10ed 'PrintS'
-              ebaf 0020  ld   $20
-              ebb0 0062  ld   $62
-              ebb1 0079  ld   $79
-              ebb2 0074  ld   $74
-              ebb3 0065  ld   $65
-              ebb4 0073  ld   $73
-              ebb5 0020  ld   $20
-              ebb6 0066  ld   $66
-              ebb7 0072  ld   $72
-              ebb8 0065  ld   $65
-              ebb9 0065  ld   $65
-              ebba 0000  ld   $00
+              ebaf 0020  ld   $20         ;10ef ' '
+              ebb0 0062  ld   $62         ;10f0 'b'
+              ebb1 0079  ld   $79         ;10f1 'y'
+              ebb2 0074  ld   $74         ;10f2 't'
+              ebb3 0065  ld   $65         ;10f3 'e'
+              ebb4 0073  ld   $73         ;10f4 's'
+              ebb5 0020  ld   $20         ;10f5 ' '
+              ebb6 0066  ld   $66         ;10f6 'f'
+              ebb7 0072  ld   $72         ;10f7 'r'
+              ebb8 0065  ld   $65         ;10f8 'e'
+              ebb9 0065  ld   $65         ;10f9 'e'
+              ebba 0000  ld   $00         ;10fa 0
               ebbb 0063  ld   $63         ;10fb POP
               ebbc 00ff  ld   $ff         ;10fc RET
               ebbd 0093  ld   $93         ;10fd INC
@@ -54458,8 +54465,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ebee 0042  ld   $42         ;11ca 'k'
               ebef 00cf  ld   $cf         ;11cc CALL
               ebf0 0036  ld   $36         ;11cc 'Keyword'
-              ebf1 003c  ld   $3c
-              ebf2 0000  ld   $00
+              ebf1 003c  ld   $3c         ;11ce '<'
+              ebf2 0000  ld   $00         ;11cf 0
               ebf3 0035  ld   $35         ;11d0 BCC
               ebf4 003f  ld   $3f         ;11d1 EQ
               ebf5 00d3  ld   $d3
@@ -54467,13 +54474,13 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ebf7 0042  ld   $42         ;11d3 'k'
               ebf8 00cf  ld   $cf         ;11d5 CALL
               ebf9 0036  ld   $36         ;11d5 'Keyword'
-              ebfa 003e  ld   $3e
+              ebfa 003e  ld   $3e         ;11d7 '>'
               ebfb fe00  bra  ac          ;+-----------------------------------+
               ebfc fcfd  bra  $ebfd       ;|                                   |
               ebfd 1404  ld   $04,y       ;| Trampoline for page $eb00 lookups |
               ebfe e065  jmp  y,$65       ;|                                   |
               ebff c218  st   [$18]       ;+-----------------------------------+
-              ec00 0000  ld   $00
+              ec00 0000  ld   $00         ;11d8 0
               ec01 0035  ld   $35         ;11d9 BCC
               ec02 003f  ld   $3f         ;11da EQ
               ec03 00e0  ld   $e0
@@ -54485,8 +54492,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ec09 0042  ld   $42         ;11e0 'k'
               ec0a 00cf  ld   $cf         ;11e2 CALL
               ec0b 0036  ld   $36         ;11e2 'Keyword'
-              ec0c 003d  ld   $3d
-              ec0d 0000  ld   $00
+              ec0c 003d  ld   $3d         ;11e4 '='
+              ec0d 0000  ld   $00         ;11e5 0
               ec0e 0035  ld   $35         ;11e6 BCC
               ec0f 003f  ld   $3f         ;11e7 EQ
               ec10 00ed  ld   $ed
@@ -54557,13 +54564,13 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ec51 00bb  ld   $bb
               ec52 00cf  ld   $cf         ;12c7 CALL
               ec53 0050  ld   $50         ;12c7 'PrintS'
-              ec54 0020  ld   $20
-              ec55 0065  ld   $65
-              ec56 0072  ld   $72
-              ec57 0072  ld   $72
-              ec58 006f  ld   $6f
-              ec59 0072  ld   $72
-              ec5a 0000  ld   $00
+              ec54 0020  ld   $20         ;12c9 ' '
+              ec55 0065  ld   $65         ;12ca 'e'
+              ec56 0072  ld   $72         ;12cb 'r'
+              ec57 0072  ld   $72         ;12cc 'r'
+              ec58 006f  ld   $6f         ;12cd 'o'
+              ec59 0072  ld   $72         ;12ce 'r'
+              ec5a 0000  ld   $00         ;12cf 0
               ec5b 00e6  ld   $e6         ;12d0 SUBI
               ec5c 0020  ld   $20
               ec5d 00f8  ld   $f8         ;12d2 ANDW
@@ -54576,20 +54583,20 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ec64 003a  ld   $3a         ;12d8 'Value'
               ec65 00cf  ld   $cf         ;12da CALL
               ec66 0050  ld   $50         ;12da 'PrintS'
-              ec67 0020  ld   $20
-              ec68 0069  ld   $69
-              ec69 006e  ld   $6e
-              ec6a 0020  ld   $20
-              ec6b 0000  ld   $00
+              ec67 0020  ld   $20         ;12dc ' '
+              ec68 0069  ld   $69         ;12dd 'i'
+              ec69 006e  ld   $6e         ;12de 'n'
+              ec6a 0020  ld   $20         ;12df ' '
+              ec6b 0000  ld   $00         ;12e0 0
               ec6c 00cf  ld   $cf         ;12e1 CALL
               ec6d 0076  ld   $76         ;12e1 'PrintValue'
               ec6e 00cf  ld   $cf         ;12e3 CALL
               ec6f 0058  ld   $58         ;12e3 'Newline'
               ec70 00cf  ld   $cf         ;12e5 CALL
               ec71 0050  ld   $50         ;12e5 'PrintS'
-              ec72 004f  ld   $4f
-              ec73 006b  ld   $6b
-              ec74 0000  ld   $00
+              ec72 004f  ld   $4f         ;12e7 'O'
+              ec73 006b  ld   $6b         ;12e8 'k'
+              ec74 0000  ld   $00         ;12e9 0
               ec75 00cf  ld   $cf         ;12ea CALL
               ec76 0058  ld   $58         ;12ea 'Newline'
               ec77 0059  ld   $59         ;12ec LDI
@@ -54604,7 +54611,7 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ec80 0035  ld   $35         ;12f5 BCC
               ec81 004d  ld   $4d         ;12f6 GT
               ec82 00ea  ld   $ea
-              ec83 0011  ld   $11
+              ec83 0011  ld   $11         ;12f8 785
               ec84 002b  ld   $2b         ;12f9 STW
               ec85 0054  ld   $54         ;12f9 'Prompt'
               ec86 00cf  ld   $cf         ;12fb CALL
@@ -54643,8 +54650,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               eca7 005a  ld   $5a         ;13bb 'Active'
               eca8 00cf  ld   $cf         ;13bd CALL
               eca9 0036  ld   $36         ;13bd 'Keyword'
-              ecaa 0022  ld   $22
-              ecab 0000  ld   $00
+              ecaa 0022  ld   $22         ;13bf 34
+              ecab 0000  ld   $00         ;13c0 0
               ecac 0035  ld   $35         ;13c1 BCC
               ecad 0072  ld   $72         ;13c2 NE
               ecae 00cc  ld   $cc
@@ -54666,8 +54673,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ecbe 0076  ld   $76         ;13d2 'PrintValue'
               ecbf 00cf  ld   $cf         ;13d4 CALL
               ecc0 0036  ld   $36         ;13d4 'Keyword'
-              ecc1 002c  ld   $2c
-              ecc2 0000  ld   $00
+              ecc1 002c  ld   $2c         ;13d6 44
+              ecc2 0000  ld   $00         ;13d7 0
               ecc3 0035  ld   $35         ;13d8 BCC
               ecc4 003f  ld   $3f         ;13d9 EQ
               ecc5 00e6  ld   $e6
@@ -54686,8 +54693,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ecd2 00a9  ld   $a9
               ecd3 00cf  ld   $cf         ;13e8 CALL
               ecd4 0036  ld   $36         ;13e8 'Keyword'
-              ecd5 003b  ld   $3b
-              ecd6 0000  ld   $00
+              ecd5 003b  ld   $3b         ;13ea 59
+              ecd6 0000  ld   $00         ;13eb 0
               ecd7 0035  ld   $35         ;13ec BCC
               ecd8 0072  ld   $72         ;13ed NE
               ecd9 00a9  ld   $a9
@@ -54704,12 +54711,12 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ece4 005d  ld   $5d         ;| Length (1..256)
               ece5 00cf  ld   $cf         ;14a0 CALL
               ece6 0036  ld   $36         ;14a0 'Keyword'
-              ece7 0069  ld   $69
-              ece8 006e  ld   $6e
-              ece9 0070  ld   $70
-              ecea 0075  ld   $75
-              eceb 0074  ld   $74
-              ecec 0000  ld   $00
+              ece7 0069  ld   $69         ;14a2 'i'
+              ece8 006e  ld   $6e         ;14a3 'n'
+              ece9 0070  ld   $70         ;14a4 'p'
+              ecea 0075  ld   $75         ;14a5 'u'
+              eceb 0074  ld   $74         ;14a6 't'
+              ecec 0000  ld   $00         ;14a7 0
               eced 0035  ld   $35         ;14a8 BCC
               ecee 003f  ld   $3f         ;14a9 EQ
               ecef 00e4  ld   $e4
@@ -54770,8 +54777,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ed26 0004  ld   $04
               ed27 00cf  ld   $cf         ;14dd CALL
               ed28 0036  ld   $36         ;14dd 'Keyword'
-              ed29 002c  ld   $2c
-              ed2a 0000  ld   $00
+              ed29 002c  ld   $2c         ;14df ','
+              ed2a 0000  ld   $00         ;14e0 0
               ed2b 0035  ld   $35         ;14e1 BCC
               ed2c 0072  ld   $72         ;14e2 NE
               ed2d 00a9  ld   $a9
@@ -54779,10 +54786,10 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ed2f 0062  ld   $62         ;14e4 'EndOfLine'
               ed30 00cf  ld   $cf         ;14e6 CALL
               ed31 0036  ld   $36         ;14e6 'Keyword'
-              ed32 006e  ld   $6e
-              ed33 0065  ld   $65
-              ed34 0077  ld   $77
-              ed35 0000  ld   $00
+              ed32 006e  ld   $6e         ;14e8 'n'
+              ed33 0065  ld   $65         ;14e9 'e'
+              ed34 0077  ld   $77         ;14ea 'w'
+              ed35 0000  ld   $00         ;14eb 0
               ed36 0035  ld   $35         ;14ec BCC
               ed37 003f  ld   $3f         ;14ed EQ
               ed38 00f6  ld   $f6
@@ -54794,7 +54801,7 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ed3e 007e  ld   $7e         ;14f3 'List'
               ed3f 00cf  ld   $cf         ;14f5 CALL
               ed40 0054  ld   $54         ;14f5 'Prompt'
-              ed41 0000  ld   $00
+              ed41 0000  ld   $00         ;14f7 0
               ed42 0011  ld   $11         ;14f8 LDWI
               ed43 00a0  ld   $a0
               ed44 0015  ld   $15
@@ -54805,10 +54812,10 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ed49 005c  ld   $5c         ;| Length (1..256)
               ed4a 00cf  ld   $cf         ;15a0 CALL
               ed4b 0036  ld   $36         ;15a0 'Keyword'
-              ed4c 0063  ld   $63
-              ed4d 006c  ld   $6c
-              ed4e 0073  ld   $73
-              ed4f 0000  ld   $00
+              ed4c 0063  ld   $63         ;15a2 'c'
+              ed4d 006c  ld   $6c         ;15a3 'l'
+              ed4e 0073  ld   $73         ;15a4 's'
+              ed4f 0000  ld   $00         ;15a5 0
               ed50 0035  ld   $35         ;15a6 BCC
               ed51 003f  ld   $3f         ;15a7 EQ
               ed52 00cb  ld   $cb
@@ -54850,11 +54857,11 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ed76 0062  ld   $62         ;15cb 'EndOfLine'
               ed77 00cf  ld   $cf         ;15cd CALL
               ed78 0036  ld   $36         ;15cd 'Keyword'
-              ed79 006c  ld   $6c
-              ed7a 0069  ld   $69
-              ed7b 0073  ld   $73
-              ed7c 0074  ld   $74
-              ed7d 0000  ld   $00
+              ed79 006c  ld   $6c         ;15cf 'l'
+              ed7a 0069  ld   $69         ;15d0 'i'
+              ed7b 0073  ld   $73         ;15d1 's'
+              ed7c 0074  ld   $74         ;15d2 't'
+              ed7d 0000  ld   $00         ;15d3 0
               ed7e 0035  ld   $35         ;15d4 BCC
               ed7f 003f  ld   $3f         ;15d5 EQ
               ed80 00d9  ld   $d9
@@ -54864,10 +54871,10 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ed84 0062  ld   $62         ;15d9 'EndOfLine'
               ed85 00cf  ld   $cf         ;15db CALL
               ed86 0036  ld   $36         ;15db 'Keyword'
-              ed87 0072  ld   $72
-              ed88 0075  ld   $75
-              ed89 006e  ld   $6e
-              ed8a 0000  ld   $00
+              ed87 0072  ld   $72         ;15dd 'r'
+              ed88 0075  ld   $75         ;15de 'u'
+              ed89 006e  ld   $6e         ;15df 'n'
+              ed8a 0000  ld   $00         ;15e0 0
               ed8b 0035  ld   $35         ;15e1 BCC
               ed8c 003f  ld   $3f         ;15e2 EQ
               ed8d 00e9  ld   $e9
@@ -54880,16 +54887,16 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ed94 005e  ld   $5e         ;15e9 'GotoValue'
               ed95 00cf  ld   $cf         ;15eb CALL
               ed96 0036  ld   $36         ;15eb 'Keyword'
-              ed97 0065  ld   $65
-              ed98 006e  ld   $6e
-              ed99 0064  ld   $64
-              ed9a 0000  ld   $00
+              ed97 0065  ld   $65         ;15ed 'e'
+              ed98 006e  ld   $6e         ;15ee 'n'
+              ed99 0064  ld   $64         ;15ef 'd'
+              ed9a 0000  ld   $00         ;15f0 0
               ed9b 0035  ld   $35         ;15f1 BCC
               ed9c 003f  ld   $3f         ;15f2 EQ
               ed9d 00f5  ld   $f5
               ed9e 00cf  ld   $cf         ;15f4 CALL
               ed9f 0054  ld   $54         ;15f4 'Prompt'
-              eda0 0000  ld   $00
+              eda0 0000  ld   $00         ;15f6 0
               eda1 0011  ld   $11         ;15f7 LDWI
               eda2 00a0  ld   $a0
               eda3 0016  ld   $16
@@ -54900,10 +54907,10 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               eda8 004e  ld   $4e         ;| Length (1..256)
               eda9 00cf  ld   $cf         ;16a0 CALL
               edaa 0036  ld   $36         ;16a0 'Keyword'
-              edab 006c  ld   $6c
-              edac 0065  ld   $65
-              edad 0074  ld   $74
-              edae 0000  ld   $00
+              edab 006c  ld   $6c         ;16a2 'l'
+              edac 0065  ld   $65         ;16a3 'e'
+              edad 0074  ld   $74         ;16a4 't'
+              edae 0000  ld   $00         ;16a5 0
               edaf 00cf  ld   $cf         ;16a6 CALL
               edb0 0040  ld   $40         ;16a6 'Variable'
               edb1 002b  ld   $2b         ;16a8 STW
@@ -54912,8 +54919,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               edb4 0034  ld   $34         ;16aa 'Spaces'
               edb5 00cf  ld   $cf         ;16ac CALL
               edb6 0036  ld   $36         ;16ac 'Keyword'
-              edb7 0028  ld   $28
-              edb8 0000  ld   $00
+              edb7 0028  ld   $28         ;16ae 40
+              edb8 0000  ld   $00         ;16af 0
               edb9 0035  ld   $35         ;16b0 BCC
               edba 003f  ld   $3f         ;16b1 EQ
               edbb 00dd  ld   $dd
@@ -54954,8 +54961,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               edde 0044  ld   $44         ;16d4 'ValueError'
               eddf 00cf  ld   $cf         ;16d6 CALL
               ede0 0036  ld   $36         ;16d6 'Keyword'
-              ede1 0029  ld   $29
-              ede2 0000  ld   $00
+              ede1 0029  ld   $29         ;16d8 41
+              ede2 0000  ld   $00         ;16d9 0
               ede3 0035  ld   $35         ;16da BCC
               ede4 0072  ld   $72         ;16db NE
               ede5 00dd  ld   $dd
@@ -54963,8 +54970,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ede7 0048  ld   $48         ;16dd 'SyntaxError'
               ede8 00cf  ld   $cf         ;16df CALL
               ede9 0036  ld   $36         ;16df 'Keyword'
-              edea 003d  ld   $3d
-              edeb 0000  ld   $00
+              edea 003d  ld   $3d         ;16e1 '='
+              edeb 0000  ld   $00         ;16e2 0
               edec 0035  ld   $35         ;16e3 BCC
               eded 0072  ld   $72         ;16e4 NE
               edee 00e6  ld   $e6
@@ -55195,8 +55202,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               eecf 0000  ld   $00
               eed0 00cf  ld   $cf         ;19ae CALL
               eed1 0036  ld   $36         ;19ae 'Keyword'
-              eed2 002c  ld   $2c
-              eed3 0000  ld   $00
+              eed2 002c  ld   $2c         ;19b0 ','
+              eed3 0000  ld   $00         ;19b1 0
               eed4 0035  ld   $35         ;19b2 BCC
               eed5 0072  ld   $72         ;19b3 NE
               eed6 00b5  ld   $b5
@@ -55211,8 +55218,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               eedf 00c8  ld   $c8
               eee0 0059  ld   $59         ;19be LDI
               eee1 0000  ld   $00
-              eee2 00b8  ld   $b8
-              eee3 0026  ld   $26
+              eee2 00b8  ld   $b8         ;19c0 952
+              eee3 0026  ld   $26         ;19c1 38
               eee4 002b  ld   $2b         ;19c2 STW
               eee5 0026  ld   $26
               eee6 0059  ld   $59         ;19c4 LDI
@@ -55230,8 +55237,8 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               eef2 00db  ld   $db
               eef3 0059  ld   $59         ;19d1 LDI
               eef4 0000  ld   $00
-              eef5 00b8  ld   $b8
-              eef6 0024  ld   $24
+              eef5 00b8  ld   $b8         ;19d3 952
+              eef6 0024  ld   $24         ;19d4 36
               eef7 002b  ld   $2b         ;19d5 STW
               eef8 0024  ld   $24
               eef9 0059  ld   $59         ;19d7 LDI
@@ -55382,12 +55389,12 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ef8a 001b  ld   $1b         ;| RAM segment address (high byte first)
               ef8b 00a0  ld   $a0         ;|
               ef8c 0006  ld   $06         ;| Length (1..256)
-              ef8d 00a0  ld   $a0
+              ef8d 00a0  ld   $a0         ;1ba0 7072
               ef8e 001b  ld   $1b
-              ef8f 004e  ld   $4e
-              ef90 0045  ld   $45
-              ef91 0057  ld   $57
-              ef92 0000  ld   $00
+              ef8f 004e  ld   $4e         ;1ba2 'N'
+              ef90 0045  ld   $45         ;1ba3 'E'
+              ef91 0057  ld   $57         ;1ba4 'W'
+              ef92 0000  ld   $00         ;1ba5 0
               ef93 0000  ld   $00         ;End of file
 WozMon:       ef94 0002  ld   $02
               ef95 0000  ld   $00
@@ -57005,186 +57012,186 @@ Main:         f43c 0002  ld   $02         ;| RAM segment address (high byte firs
               f637 003e  ld   $3e         ;040d 'Newline'
               f638 00cd  ld   $cd         ;040f DEF
               f639 0075  ld   $75
-              f63a 0009  ld   $09
-              f63b 0053  ld   $53
-              f63c 006e  ld   $6e
-              f63d 0061  ld   $61
-              f63e 006b  ld   $6b
-              f63f 0065  ld   $65
-              f640 0009  ld   $09
-              f641 0020  ld   $20
-              f642 0020  ld   $20
-              f643 0009  ld   $09
-              f644 0054  ld   $54
-              f645 0065  ld   $65
-              f646 0074  ld   $74
-              f647 0072  ld   $72
-              f648 006f  ld   $6f
-              f649 006e  ld   $6e
-              f64a 0069  ld   $69
-              f64b 0073  ld   $73
-              f64c 000a  ld   $0a
-              f64d 0009  ld   $09
-              f64e 0052  ld   $52
-              f64f 0061  ld   $61
-              f650 0063  ld   $63
-              f651 0065  ld   $65
-              f652 0072  ld   $72
-              f653 0009  ld   $09
-              f654 0020  ld   $20
-              f655 0020  ld   $20
-              f656 0009  ld   $09
-              f657 0042  ld   $42
-              f658 0072  ld   $72
-              f659 0069  ld   $69
-              f65a 0063  ld   $63
-              f65b 006b  ld   $6b
-              f65c 0073  ld   $73
-              f65d 000a  ld   $0a
-              f65e 0009  ld   $09
-              f65f 004d  ld   $4d
-              f660 0061  ld   $61
-              f661 006e  ld   $6e
-              f662 0064  ld   $64
-              f663 0065  ld   $65
-              f664 006c  ld   $6c
-              f665 0062  ld   $62
-              f666 0072  ld   $72
-              f667 006f  ld   $6f
-              f668 0074  ld   $74
-              f669 0009  ld   $09
-              f66a 0054  ld   $54
-              f66b 0069  ld   $69
-              f66c 0063  ld   $63
-              f66d 0054  ld   $54
-              f66e 0061  ld   $61
-              f66f 0063  ld   $63
-              f670 0054  ld   $54
-              f671 006f  ld   $6f
-              f672 0065  ld   $65
-              f673 000a  ld   $0a
-              f674 0009  ld   $09
-              f675 0050  ld   $50
-              f676 0069  ld   $69
-              f677 0063  ld   $63
-              f678 0074  ld   $74
-              f679 0075  ld   $75
-              f67a 0072  ld   $72
-              f67b 0065  ld   $65
-              f67c 0073  ld   $73
-              f67d 0020  ld   $20
-              f67e 0020  ld   $20
-              f67f 0009  ld   $09
-              f680 0042  ld   $42
-              f681 0041  ld   $41
-              f682 0053  ld   $53
-              f683 0049  ld   $49
-              f684 0043  ld   $43
-              f685 000a  ld   $0a
-              f686 0009  ld   $09
-              f687 0043  ld   $43
-              f688 0072  ld   $72
-              f689 0065  ld   $65
-              f68a 0064  ld   $64
-              f68b 0069  ld   $69
-              f68c 0074  ld   $74
-              f68d 0073  ld   $73
-              f68e 0009  ld   $09
-              f68f 0009  ld   $09
-              f690 0057  ld   $57
-              f691 006f  ld   $6f
-              f692 007a  ld   $7a
-              f693 004d  ld   $4d
-              f694 006f  ld   $6f
-              f695 006e  ld   $6e
-              f696 000a  ld   $0a
-              f697 0009  ld   $09
-              f698 004c  ld   $4c
-              f699 006f  ld   $6f
-              f69a 0061  ld   $61
-              f69b 0064  ld   $64
-              f69c 0065  ld   $65
-              f69d 0072  ld   $72
-              f69e 000a  ld   $0a
-              f69f 0000  ld   $00
+              f63a 0009  ld   $09         ;0411 9
+              f63b 0053  ld   $53         ;0412 'S'
+              f63c 006e  ld   $6e         ;0413 'n'
+              f63d 0061  ld   $61         ;0414 'a'
+              f63e 006b  ld   $6b         ;0415 'k'
+              f63f 0065  ld   $65         ;0416 'e'
+              f640 0009  ld   $09         ;0417 9
+              f641 0020  ld   $20         ;0418 ' '
+              f642 0020  ld   $20         ;0419 ' '
+              f643 0009  ld   $09         ;041a 9
+              f644 0054  ld   $54         ;041b 'T'
+              f645 0065  ld   $65         ;041c 'e'
+              f646 0074  ld   $74         ;041d 't'
+              f647 0072  ld   $72         ;041e 'r'
+              f648 006f  ld   $6f         ;041f 'o'
+              f649 006e  ld   $6e         ;0420 'n'
+              f64a 0069  ld   $69         ;0421 'i'
+              f64b 0073  ld   $73         ;0422 's'
+              f64c 000a  ld   $0a         ;0423 10
+              f64d 0009  ld   $09         ;0424 9
+              f64e 0052  ld   $52         ;0425 'R'
+              f64f 0061  ld   $61         ;0426 'a'
+              f650 0063  ld   $63         ;0427 'c'
+              f651 0065  ld   $65         ;0428 'e'
+              f652 0072  ld   $72         ;0429 'r'
+              f653 0009  ld   $09         ;042a 9
+              f654 0020  ld   $20         ;042b ' '
+              f655 0020  ld   $20         ;042c ' '
+              f656 0009  ld   $09         ;042d 9
+              f657 0042  ld   $42         ;042e 'B'
+              f658 0072  ld   $72         ;042f 'r'
+              f659 0069  ld   $69         ;0430 'i'
+              f65a 0063  ld   $63         ;0431 'c'
+              f65b 006b  ld   $6b         ;0432 'k'
+              f65c 0073  ld   $73         ;0433 's'
+              f65d 000a  ld   $0a         ;0434 10
+              f65e 0009  ld   $09         ;0435 9
+              f65f 004d  ld   $4d         ;0436 'M'
+              f660 0061  ld   $61         ;0437 'a'
+              f661 006e  ld   $6e         ;0438 'n'
+              f662 0064  ld   $64         ;0439 'd'
+              f663 0065  ld   $65         ;043a 'e'
+              f664 006c  ld   $6c         ;043b 'l'
+              f665 0062  ld   $62         ;043c 'b'
+              f666 0072  ld   $72         ;043d 'r'
+              f667 006f  ld   $6f         ;043e 'o'
+              f668 0074  ld   $74         ;043f 't'
+              f669 0009  ld   $09         ;0440 9
+              f66a 0054  ld   $54         ;0441 'T'
+              f66b 0069  ld   $69         ;0442 'i'
+              f66c 0063  ld   $63         ;0443 'c'
+              f66d 0054  ld   $54         ;0444 'T'
+              f66e 0061  ld   $61         ;0445 'a'
+              f66f 0063  ld   $63         ;0446 'c'
+              f670 0054  ld   $54         ;0447 'T'
+              f671 006f  ld   $6f         ;0448 'o'
+              f672 0065  ld   $65         ;0449 'e'
+              f673 000a  ld   $0a         ;044a 10
+              f674 0009  ld   $09         ;044b 9
+              f675 0050  ld   $50         ;044c 'P'
+              f676 0069  ld   $69         ;044d 'i'
+              f677 0063  ld   $63         ;044e 'c'
+              f678 0074  ld   $74         ;044f 't'
+              f679 0075  ld   $75         ;0450 'u'
+              f67a 0072  ld   $72         ;0451 'r'
+              f67b 0065  ld   $65         ;0452 'e'
+              f67c 0073  ld   $73         ;0453 's'
+              f67d 0020  ld   $20         ;0454 ' '
+              f67e 0020  ld   $20         ;0455 ' '
+              f67f 0009  ld   $09         ;0456 9
+              f680 0042  ld   $42         ;0457 'B'
+              f681 0041  ld   $41         ;0458 'A'
+              f682 0053  ld   $53         ;0459 'S'
+              f683 0049  ld   $49         ;045a 'I'
+              f684 0043  ld   $43         ;045b 'C'
+              f685 000a  ld   $0a         ;045c 10
+              f686 0009  ld   $09         ;045d 9
+              f687 0043  ld   $43         ;045e 'C'
+              f688 0072  ld   $72         ;045f 'r'
+              f689 0065  ld   $65         ;0460 'e'
+              f68a 0064  ld   $64         ;0461 'd'
+              f68b 0069  ld   $69         ;0462 'i'
+              f68c 0074  ld   $74         ;0463 't'
+              f68d 0073  ld   $73         ;0464 's'
+              f68e 0009  ld   $09         ;0465 9
+              f68f 0009  ld   $09         ;0466 9
+              f690 0057  ld   $57         ;0467 'W'
+              f691 006f  ld   $6f         ;0468 'o'
+              f692 007a  ld   $7a         ;0469 'z'
+              f693 004d  ld   $4d         ;046a 'M'
+              f694 006f  ld   $6f         ;046b 'o'
+              f695 006e  ld   $6e         ;046c 'n'
+              f696 000a  ld   $0a         ;046d 10
+              f697 0009  ld   $09         ;046e 9
+              f698 004c  ld   $4c         ;046f 'L'
+              f699 006f  ld   $6f         ;0470 'o'
+              f69a 0061  ld   $61         ;0471 'a'
+              f69b 0064  ld   $64         ;0472 'd'
+              f69c 0065  ld   $65         ;0473 'e'
+              f69d 0072  ld   $72         ;0474 'r'
+              f69e 000a  ld   $0a         ;0475 10
+              f69f 0000  ld   $00         ;0476 0
               f6a0 002b  ld   $2b         ;0477 STW
               f6a1 0050  ld   $50         ;0477 'MainMenu'
               f6a2 00cd  ld   $cd         ;0479 DEF
               f6a3 00c3  ld   $c3
-              f6a4 0055  ld   $55
-              f6a5 0073  ld   $73
-              f6a6 0065  ld   $65
-              f6a7 0020  ld   $20
-              f6a8 005b  ld   $5b
-              f6a9 0041  ld   $41
-              f6aa 0072  ld   $72
-              f6ab 0072  ld   $72
-              f6ac 006f  ld   $6f
-              f6ad 0077  ld   $77
-              f6ae 0073  ld   $73
-              f6af 005d  ld   $5d
-              f6b0 0020  ld   $20
-              f6b1 0074  ld   $74
-              f6b2 006f  ld   $6f
-              f6b3 0020  ld   $20
-              f6b4 0073  ld   $73
-              f6b5 0065  ld   $65
-              f6b6 006c  ld   $6c
-              f6b7 0065  ld   $65
-              f6b8 0063  ld   $63
-              f6b9 0074  ld   $74
-              f6ba 000a  ld   $0a
-              f6bb 0050  ld   $50
-              f6bc 0072  ld   $72
-              f6bd 0065  ld   $65
-              f6be 0073  ld   $73
-              f6bf 0073  ld   $73
-              f6c0 0020  ld   $20
-              f6c1 005b  ld   $5b
-              f6c2 0041  ld   $41
-              f6c3 005d  ld   $5d
-              f6c4 0020  ld   $20
-              f6c5 0074  ld   $74
-              f6c6 006f  ld   $6f
-              f6c7 0020  ld   $20
-              f6c8 0073  ld   $73
-              f6c9 0074  ld   $74
-              f6ca 0061  ld   $61
-              f6cb 0072  ld   $72
-              f6cc 0074  ld   $74
-              f6cd 0020  ld   $20
-              f6ce 0070  ld   $70
-              f6cf 0072  ld   $72
-              f6d0 006f  ld   $6f
-              f6d1 0067  ld   $67
-              f6d2 0072  ld   $72
-              f6d3 0061  ld   $61
-              f6d4 006d  ld   $6d
-              f6d5 000a  ld   $0a
-              f6d6 000a  ld   $0a
-              f6d7 0048  ld   $48
-              f6d8 006f  ld   $6f
-              f6d9 006c  ld   $6c
-              f6da 0064  ld   $64
-              f6db 0020  ld   $20
-              f6dc 005b  ld   $5b
-              f6dd 0053  ld   $53
-              f6de 0074  ld   $74
-              f6df 0061  ld   $61
-              f6e0 0072  ld   $72
-              f6e1 0074  ld   $74
-              f6e2 005d  ld   $5d
-              f6e3 0020  ld   $20
-              f6e4 0066  ld   $66
-              f6e5 006f  ld   $6f
-              f6e6 0072  ld   $72
-              f6e7 0020  ld   $20
-              f6e8 0072  ld   $72
-              f6e9 0065  ld   $65
-              f6ea 0073  ld   $73
-              f6eb 0065  ld   $65
-              f6ec 0074  ld   $74
-              f6ed 0000  ld   $00
+              f6a4 0055  ld   $55         ;047b 'U'
+              f6a5 0073  ld   $73         ;047c 's'
+              f6a6 0065  ld   $65         ;047d 'e'
+              f6a7 0020  ld   $20         ;047e ' '
+              f6a8 005b  ld   $5b         ;047f 91
+              f6a9 0041  ld   $41         ;0480 'A'
+              f6aa 0072  ld   $72         ;0481 'r'
+              f6ab 0072  ld   $72         ;0482 'r'
+              f6ac 006f  ld   $6f         ;0483 'o'
+              f6ad 0077  ld   $77         ;0484 'w'
+              f6ae 0073  ld   $73         ;0485 's'
+              f6af 005d  ld   $5d         ;0486 93
+              f6b0 0020  ld   $20         ;0487 ' '
+              f6b1 0074  ld   $74         ;0488 't'
+              f6b2 006f  ld   $6f         ;0489 'o'
+              f6b3 0020  ld   $20         ;048a ' '
+              f6b4 0073  ld   $73         ;048b 's'
+              f6b5 0065  ld   $65         ;048c 'e'
+              f6b6 006c  ld   $6c         ;048d 'l'
+              f6b7 0065  ld   $65         ;048e 'e'
+              f6b8 0063  ld   $63         ;048f 'c'
+              f6b9 0074  ld   $74         ;0490 't'
+              f6ba 000a  ld   $0a         ;0491 10
+              f6bb 0050  ld   $50         ;0492 'P'
+              f6bc 0072  ld   $72         ;0493 'r'
+              f6bd 0065  ld   $65         ;0494 'e'
+              f6be 0073  ld   $73         ;0495 's'
+              f6bf 0073  ld   $73         ;0496 's'
+              f6c0 0020  ld   $20         ;0497 ' '
+              f6c1 005b  ld   $5b         ;0498 91
+              f6c2 0041  ld   $41         ;0499 'A'
+              f6c3 005d  ld   $5d         ;049a 93
+              f6c4 0020  ld   $20         ;049b ' '
+              f6c5 0074  ld   $74         ;049c 't'
+              f6c6 006f  ld   $6f         ;049d 'o'
+              f6c7 0020  ld   $20         ;049e ' '
+              f6c8 0073  ld   $73         ;049f 's'
+              f6c9 0074  ld   $74         ;04a0 't'
+              f6ca 0061  ld   $61         ;04a1 'a'
+              f6cb 0072  ld   $72         ;04a2 'r'
+              f6cc 0074  ld   $74         ;04a3 't'
+              f6cd 0020  ld   $20         ;04a4 ' '
+              f6ce 0070  ld   $70         ;04a5 'p'
+              f6cf 0072  ld   $72         ;04a6 'r'
+              f6d0 006f  ld   $6f         ;04a7 'o'
+              f6d1 0067  ld   $67         ;04a8 'g'
+              f6d2 0072  ld   $72         ;04a9 'r'
+              f6d3 0061  ld   $61         ;04aa 'a'
+              f6d4 006d  ld   $6d         ;04ab 'm'
+              f6d5 000a  ld   $0a         ;04ac 10
+              f6d6 000a  ld   $0a         ;04ad 10
+              f6d7 0048  ld   $48         ;04ae 'H'
+              f6d8 006f  ld   $6f         ;04af 'o'
+              f6d9 006c  ld   $6c         ;04b0 'l'
+              f6da 0064  ld   $64         ;04b1 'd'
+              f6db 0020  ld   $20         ;04b2 ' '
+              f6dc 005b  ld   $5b         ;04b3 91
+              f6dd 0053  ld   $53         ;04b4 'S'
+              f6de 0074  ld   $74         ;04b5 't'
+              f6df 0061  ld   $61         ;04b6 'a'
+              f6e0 0072  ld   $72         ;04b7 'r'
+              f6e1 0074  ld   $74         ;04b8 't'
+              f6e2 005d  ld   $5d         ;04b9 93
+              f6e3 0020  ld   $20         ;04ba ' '
+              f6e4 0066  ld   $66         ;04bb 'f'
+              f6e5 006f  ld   $6f         ;04bc 'o'
+              f6e6 0072  ld   $72         ;04bd 'r'
+              f6e7 0020  ld   $20         ;04be ' '
+              f6e8 0072  ld   $72         ;04bf 'r'
+              f6e9 0065  ld   $65         ;04c0 'e'
+              f6ea 0073  ld   $73         ;04c1 's'
+              f6eb 0065  ld   $65         ;04c2 'e'
+              f6ec 0074  ld   $74         ;04c3 't'
+              f6ed 0000  ld   $00         ;04c4 0
               f6ee 002b  ld   $2b         ;04c5 STW
               f6ef 0052  ld   $52         ;04c5 'HelpText'
               f6f0 00cd  ld   $cd         ;04c7 DEF
@@ -57506,53 +57513,53 @@ Reset:        f7e2 0002  ld   $02         ;| RAM segment address (high byte firs
               f82c 0075  ld   $75         ;0242 PUSH
               f82d 00cd  ld   $cd         ;0243 DEF
               f82e 0072  ld   $72
-              f82f 002a  ld   $2a
-              f830 002a  ld   $2a
-              f831 002a  ld   $2a
-              f832 0020  ld   $20
-              f833 0047  ld   $47
-              f834 0069  ld   $69
-              f835 0067  ld   $67
-              f836 0061  ld   $61
-              f837 0074  ld   $74
-              f838 0072  ld   $72
-              f839 006f  ld   $6f
-              f83a 006e  ld   $6e
-              f83b 0020  ld   $20
-              f83c 003f  ld   $3f
-              f83d 003f  ld   $3f
-              f83e 004b  ld   $4b
-              f83f 0020  ld   $20
-              f840 002a  ld   $2a
-              f841 002a  ld   $2a
-              f842 002a  ld   $2a
-              f843 000a  ld   $0a
-              f844 0020  ld   $20
-              f845 0054  ld   $54
-              f846 0054  ld   $54
-              f847 004c  ld   $4c
-              f848 0020  ld   $20
-              f849 006d  ld   $6d
-              f84a 0069  ld   $69
-              f84b 0063  ld   $63
-              f84c 0072  ld   $72
-              f84d 006f  ld   $6f
-              f84e 0063  ld   $63
-              f84f 006f  ld   $6f
-              f850 006d  ld   $6d
-              f851 0070  ld   $70
-              f852 0075  ld   $75
-              f853 0074  ld   $74
-              f854 0065  ld   $65
-              f855 0072  ld   $72
-              f856 0020  ld   $20
-              f857 0052  ld   $52
-              f858 004f  ld   $4f
-              f859 004d  ld   $4d
-              f85a 0020  ld   $20
-              f85b 0076  ld   $76
-              f85c 0033  ld   $33
-              f85d 0000  ld   $00
+              f82f 002a  ld   $2a         ;0245 '*'
+              f830 002a  ld   $2a         ;0246 '*'
+              f831 002a  ld   $2a         ;0247 '*'
+              f832 0020  ld   $20         ;0248 ' '
+              f833 0047  ld   $47         ;0249 'G'
+              f834 0069  ld   $69         ;024a 'i'
+              f835 0067  ld   $67         ;024b 'g'
+              f836 0061  ld   $61         ;024c 'a'
+              f837 0074  ld   $74         ;024d 't'
+              f838 0072  ld   $72         ;024e 'r'
+              f839 006f  ld   $6f         ;024f 'o'
+              f83a 006e  ld   $6e         ;0250 'n'
+              f83b 0020  ld   $20         ;0251 ' '
+              f83c 003f  ld   $3f         ;0252 '?'
+              f83d 003f  ld   $3f         ;0253 '?'
+              f83e 004b  ld   $4b         ;0254 'K'
+              f83f 0020  ld   $20         ;0255 ' '
+              f840 002a  ld   $2a         ;0256 '*'
+              f841 002a  ld   $2a         ;0257 '*'
+              f842 002a  ld   $2a         ;0258 '*'
+              f843 000a  ld   $0a         ;0259 10
+              f844 0020  ld   $20         ;025a ' '
+              f845 0054  ld   $54         ;025b 'T'
+              f846 0054  ld   $54         ;025c 'T'
+              f847 004c  ld   $4c         ;025d 'L'
+              f848 0020  ld   $20         ;025e ' '
+              f849 006d  ld   $6d         ;025f 'm'
+              f84a 0069  ld   $69         ;0260 'i'
+              f84b 0063  ld   $63         ;0261 'c'
+              f84c 0072  ld   $72         ;0262 'r'
+              f84d 006f  ld   $6f         ;0263 'o'
+              f84e 0063  ld   $63         ;0264 'c'
+              f84f 006f  ld   $6f         ;0265 'o'
+              f850 006d  ld   $6d         ;0266 'm'
+              f851 0070  ld   $70         ;0267 'p'
+              f852 0075  ld   $75         ;0268 'u'
+              f853 0074  ld   $74         ;0269 't'
+              f854 0065  ld   $65         ;026a 'e'
+              f855 0072  ld   $72         ;026b 'r'
+              f856 0020  ld   $20         ;026c ' '
+              f857 0052  ld   $52         ;026d 'R'
+              f858 004f  ld   $4f         ;026e 'O'
+              f859 004d  ld   $4d         ;026f 'M'
+              f85a 0020  ld   $20         ;0270 ' '
+              f85b 0076  ld   $76         ;0271 'v'
+              f85c 0033  ld   $33         ;0272 '3'
+              f85d 0000  ld   $00         ;0273 0
               f85e 002b  ld   $2b         ;0274 STW
               f85f 0036  ld   $36         ;0274 'Text'
               f860 00e3  ld   $e3         ;0276 ADDI

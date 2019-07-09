@@ -1,8 +1,7 @@
 gcl0x
 
-{ Version check > ROM v3 (see Docs/GT1-files.txt) }
-\romType, \romTypeValue_ROMv3-
-[if<=0 do _frameCount _vPCH: loop]
+{ Version check >= ROMv4, see Docs/GT1-files.txt }
+\romType, \romTypeValue_ROMv4- [if<0 do _frameCount _vPCH: loop]
 
 { Tester for v6502 }
 { Nice online assembler: https://www.masswerk.at/6502/assembler.html }
@@ -71,7 +70,7 @@ gcl0x
 
 { GCL notation for main loop }
 
-$0b0c \sysFn:                   { SYS_v6502_vX_80 (preliminary address) }
+\SYS_Run6502_DEVROM_80 _sysFn=
 
 [do
 

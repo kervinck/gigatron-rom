@@ -58,7 +58,7 @@ gcl0x
 
 [def
   push
-  Item 6- [if<0 $200c else $f05a] Pos=
+  Item 6- [if<0 $200b else $f059] Pos=
   Item [do j= $800 Pos+ Pos= j 1- if>=0loop]
   130 {'->'} Char= PrintChar!
   pop ret

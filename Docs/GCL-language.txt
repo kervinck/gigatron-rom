@@ -269,6 +269,8 @@ Data
 #>ii            Inline high byte value (most often used with labels)
 `Hello`world!   Inline ASCII test. Replace backquotes with spaces
 `               A single inline backquote (ASCII 96)
+##ii ##_C       Inline word value, little-endian
+#@_C            PC relative offset (6502-style)
 
 Versioning
 ----------

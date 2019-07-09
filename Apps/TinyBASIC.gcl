@@ -365,10 +365,11 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 
   tmp=                          {Line number}
 
-  { On ROM v4 and higher MODE -1 disables the video/audio/IO/... }
-  { completely. This will reactivate it before asking for input. }
-  \SYS_SetMode_v2_80 _sysFn= \romType, \romTypeValue_DEVROM-
-  [if>=0 255- 80!]              {Any value < -1 will do}
+  { On ROM v4 and higher `MODE -1' disables all video/audio/IO/etc }
+  { completely. Better reactivate it before waiting for new input. }
+  \SYS_SetMode_v2_80 _sysFn=
+  \romType, \romTypeValue_ROMv4-
+  [if>=0 255- 80!]              {Any value < -1 will work}
 
   &_Buffer Active=              {Input buffer}
   tmp Active:                   {For error messages}

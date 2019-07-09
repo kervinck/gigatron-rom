@@ -8,8 +8,12 @@ gcl0x
 
 {
  Issues:
-  XXX Shift screen memory 96 pixels right
+  XXX Clear screen on start
+  XXX Faster cursor
+  XXX Apple-1 startup message
+  XXX Need more space --> strip TicTac_v1.gtb
 
+  XXX Shift screen memory 96 pixels right
   XXX NMI/IRQ/RESET to wozmon (through vector) without going through main menu
   XXX Smaller screen so there's more space for real programs (top 16 lines = 4K)
   XXX We can win memory by sharing all black pixel lines in one page
@@ -61,8 +65,8 @@ _k=$3a          {Share with wozmon YSAV}
 
 *=\userCode
 
-\romType, \romTypeValue_DEVROM- {Need version >= DEVROM, see Docs/GT1-files.txt}
-[if<0 do \frameCount; _vPCH:    {https://forum.gigatron.io/viewtopic.php?f=4&t=130}
+\romType, \romTypeValue_ROMv4-  {Version check >= ROMv4, see Docs/GT1-files.txt}
+[if<0 do _frameCount _vPCH:     {https://forum.gigatron.io/viewtopic.php?f=4&t=130}
       loop]
 
 {-----------------------------------------------------------------------+
@@ -82,9 +86,18 @@ _k=$3a          {Share with wozmon YSAV}
   1+ 127^ if<>0loop]            {Next in range}
 
 &_PrintChar PrintChar=          {Forward reference}
+
 &_Apple1 _vLR=                  {Prepare transfer to main loop}
-&_Munch                         {Start address for Munching6502}
+&_Start                         {Start address for clear screen and Munching6502}
 [ret]                           {Jump to Main (the brackets avoid the automatic vLR patch)}
+
+_Start=*
+        #$a2 #15                {       ldx #15         Clear screen}
+_L0=*   #$a9 #$8d               {       lda #$8d        }
+        #$00                    {       brk             }
+        #$ca                    {       dex             }
+        #$d0 #@_L0              {       bne _L0         }
+        #$f0 #@_Munch           {       beq _Munch      Always taken}
 
 {-----------------------------------------------------------------------+
 |       Preloaded demo program                                          |
@@ -93,32 +106,43 @@ _k=$3a          {Share with wozmon YSAV}
 *=$280
 
 _Munch=* #$18                   { Munch clc             }
-        #$69 #$17               {       adc #23         XXX idea: #\ADCzp  #23}
+        #$69 #23                {       adc #23         }
         #$85 #$40               {       sta $40         }
         #$a9 #$00               {       lda #0          }
         #$85 #$41               {       sta $41         }
         #$a9 #$10               {       lda #16         }
         #$85 #$42               {       sta $42         }
-        #$a9 #$07               { nextT lda #$07        }
+_L1=*   #$a9 #$07               { nextT lda #$07        }
         #$85 #$43               {       sta $43         }
-        #$45 #$41               { nextY eor $41         }
+_L2=*   #$45 #$41               { nextY eor $41         }
         #$a8                    {       tay             }
         #$a5 #$40               {       lda $40         }
         #$91 #$42               {       sta ($42),y     }
         #$e6 #$43               {       inc $43         }
         #$a5 #$43               {       lda $43         }
         #$c9 #$7f               {       cmp #$7f        }
-        #$d0 #$f1               {       bne *-15        nextY}
-        #$a5 #\serialRaw        {       lda serialRaw   }
+        #$d0 #@_L2              {       bne _L2         }
+        #$a5 #_serialRaw        {       lda serialRaw   }
         #$c9 #$03               {       cmp #3          Ctrl-C}
-        #$f0 #$09               {       beq out         }
+        #$f0 #@_L3              {       beq _L3         }
         #$e6 #$41               {       inc $41         }
-        #$10 #$e3               {       bpl *-29        nextT}
+        #$10 #@_L1              {       bpl _L1         }
         #$a5 #$40               {       lda $40         }
-        #$4c #$80 #$02          {       jmp Munch       }
-        #$a9 #$8d               {       lda #$8d        Force initial LF and reset of Pos}
-        #$00                    {       brk             PrintChar}
-        #$4c #$00 #$ff          {       jmp WozMon      }
+        #$4c ##_Munch           {       jmp _Munch      }
+
+_L3=*   #$a9 #$8d               {       lda #$8d        }
+        #$00                    {       brk             }
+        #$4c ##_WozMon          {       jmp _WozMon     }
+{
+_L3=*   #$a2 #7                 {       ldx #7          }
+_L4=*   #$bd ##_MSG             {       lda _MSG,x      }
+        #$00                    {       brk             }
+        #$ca                    {       dex             }
+        #$d0 #@_L0              {       bne _L4         }
+        #$4c ##_WozMon          {       jmp _WozMon     }
+
+_MSG=*  #$8d #$b1 #$ad #$c5 #$cc #$d0 #$d0 #$c1 { "\r1-ELPPA" }
+}
 
 {-----------------------------------------------------------------------+
 |       Main loop                                                       |
@@ -162,11 +186,11 @@ _PrintChar=*
 [
   {Minimalistic terminal output, with bit 7 set by WozMon}
 
-  %$fe=                         {Park character in stack area}
+  %-2=                          {Park character in stack area}
   \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
   $800 \sysArgs0:               {Green on black}
 
-  %$fe                          {Get character back}
+  %-2                           {Get character back}
   $8d^ [if<>0                   {Test for CR...}
     <Pos, 155- if>0 0]          {...or line wrap}
 
@@ -197,7 +221,7 @@ _PrintChar=*
       $fe^ if<>0loop]           {Until all done}
   ]
 
-  %$fe $a0-                     {WozMon sends ASCII with bit 7 set}
+  %-2 $a0-                      {WozMon sends ASCII with bit 7 set}
   [if>=0                        {If printable}
 
     {-------------------------------------------------------------------+
@@ -214,7 +238,7 @@ _PrintChar=*
     _j+ _j=                     {Add to page address to reach bitmap data}
 
     Pos \sysArgs4:              {Screen position for character}
-    %$fe=                       {Remember this position}
+    %-2=                        {Remember this position}
     6+ Pos=                     {Advance by 6 pixels}
 
     5 [do _i=                   {Draw character as 5 vertical bit slices}
@@ -223,7 +247,7 @@ _PrintChar=*
       <_j++ <\sysArgs4++        {Advance to next byte}
       _i 1- if>0loop]           {Looping}
 
-    %$fe                        {Return position for backspace}
+    %-2                         {Return position for backspace}
   ]
 
   ret

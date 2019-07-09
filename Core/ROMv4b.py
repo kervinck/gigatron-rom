@@ -58,14 +58,16 @@
 #  DONE Snake: improve game play and colors in general
 #  DONE Apple1: Don't use buttonState but serialRaw
 #  DONE Replace Easter egg
-#  DONE #38 "Press [A] to start program": accept keyboard also (incl. 'A')
+#  DONE #38 "Press [A] to start program" message is stupid
 #  DONE channelMask: to switch off the higher sound channels
-#  DONE Makefile: Pass app-specific SYS functions on command line (.py files)
+#  DONE Core: Specify app-specific SYS functions on command line (.py files)
 #  DONE Racer: faster road setup
+#  DONE Review SPI status
+#  DONE Review ROM layout
 #  DONE Mode -1 (for zombie mode), can do mode -2 to restore previous mode
 #  DONE Add 4 arrows to font to fill up the ROM page
+#  DONE Apple1: ZP vars
 #  DONE Snake: Tweak AI. Also autoplayer can't get hiscore anymore
-#  DONE TinyBASIC: support larger font and MODE -1. Fix indent issue #40
 #  XXX  Update romTypeValue and interface.json
 #  XXX  Update version number to v4
 #
@@ -136,7 +138,7 @@ import font_v3 as font
 loadBindings('interface.json')
 
 # ROM type (see also Docs/GT1-files.txt)
-romTypeValue = symbol('romTypeValue_DEVROM')
+romTypeValue = symbol('romTypeValue_ROMv4')
 
 # Gigatron clock
 cpuClock = 6.250e+06
@@ -1033,7 +1035,7 @@ ld(hi(pc()),Y)                  #33
 
 label('vBlankLast#52')
 
-# Respond to reset button (11 cycles)
+# Respond to reset button (14 cycles)
 # - ResetTimer decrements as long as just [Start] is pressed down
 # - Reaching 0 (normal) or 128 (extended) triggers the soft reset sequence
 # - Initial value is 128 (or 255 at boot), first decrement, then check
@@ -1051,29 +1053,32 @@ ld([buttonState]);              C('Check [Start] for soft reset')#52
 xora(~buttonStart)              #53
 bne('.restart#56')              #54
 ld([resetTimer])                #55 As long as button pressed
-suba(1)                         #56 ... count down the timer
+suba(1);                        C('Pressed and counting')#56 ... count down the timer
 st([resetTimer])                #57
 anda(127)                       #58
 beq('.restart#61')              #59 Reset at 0 (normal 2s) or 128 (extended 4s)
 ld((vReset&255)-2)              #60 Start force reset when hitting 0
-bra('.restart#66')              #61 ... otherwise do nothing yet
-bra('.restart#66')              #62
+bra('.restart#63')              #61 ... otherwise do nothing yet
+bra('.restart#64')              #62
 label('.restart#56')
-wait(63-56)                     #56
-ld(128)                         #63 Restore to ~2 seconds when not pressed
+wait(62-56);                    #56
+ld(128);                        C('Not pressed, reset the timer')#62
+st([resetTimer])                #63
+label('.restart#64')
 bra('.restart#66')              #64
-st([resetTimer])                #65
+label('.restart#63')
+nop()                           #63,65
 label('.restart#61')
-st([vPC])                       #61 Continue force reset
+st([vPC]);                      C('Point vPC at vReset')#61 Continue force reset
 ld(vReset>>8)                   #62
 st([vPC+1])                     #63
-ld(hi('ENTER'));                C('vCPU')#64
+ld(hi('ENTER'));                C('Set active interpreter to vCPU')#64
 st([vCPUselect])                #65
 label('.restart#66')
 
 # Switch video mode when (only) select is pressed (16 cycles)
 # XXX We could make this a vCPU interrupt
-ld([buttonState]);              C('Check [Select] to switch modes')#65,66
+ld([buttonState]);              C('Check [Select] to switch modes')#66
 xora(~buttonSelect)             #67 Only trigger when just [Select] is pressed
 bne('.select#70')               #68
 ld([videoModeC])                #69
@@ -2693,8 +2698,6 @@ nop()                           #filler
 #
 # This modulates the next upcoming X vertical pulses with the supplied
 # data. After that, the vPulse width falls back to 8 lines (idle).
-#
-# XXX Test with several monitors
 
 label('SYS_SendSerial1_v3_80')
 ld([videoY])                    #15
@@ -2723,18 +2726,18 @@ ld([vAC])                       #17
 #
 # Calling 6502 code from vCPU goes (only) through this SYS function.
 # Directly modifying the vCPUselect variable is unreliable.
-# vCPU code and v6502 code can interoperate without much hassle::
-# - The v6502 program counter is vLR. v6502 doesn't touch vPC.
+# vCPU code and v6502 code can interoperate without much hassle:
+# - The v6502 program counter is vLR, and v6502 doesn't touch vPC
 # - Returning to vCPU is with the BRK instruction
-# - BRK doesn't dump process state on the stack.
+# - BRK doesn't dump process state on the stack
 # - vCPU can save/restore the vLR with PUSH/POP
 # - Stacks are shared, vAC is shared
-# - vAC can indicate what the v6502 code wants. vAC+1 will be cleared.
-# - Alternative is to leave a word in sysArgs[0:1] (v6502 X and Y registers)
-# - Another way is to set vPC before BRK, and vCPU will continue (after +=2)
+# - vAC can indicate what the v6502 code wants. vAC+1 will be cleared
+# - Alternative is to leave a word in sysArgs[6:7] (v6502 X and Y registers)
+# - Another way is to set vPC before BRK, and vCPU will continue there(+2)
 
 # Calling v6502 code from vCPU looks like this:
-#       LDWI  SYS_Run6502_vX_80
+#       LDWI  SYS_Run6502_DEVROM_80
 #       STW   sysFn
 #       LDWI  $6502_start_address
 #       STW   vLR
@@ -2751,7 +2754,7 @@ ld([vAC])                       #17
 #    ---+----+---------+------------+------------------+-----------+---
 # video | nop| runVcpu |   ENTER    | At least one ins |   EXIT    | video
 #    ---+----+---------+------------+------------------+-----------+---
-#        sync prelude   ENTER-to-ins    ins-to-NEXT     NEXT-to-video
+#        sync  prelude  ENTER-to-ins    ins-to-NEXT     NEXT-to-video
 #       |<-->|
 #        0/1 |<------->|
 #                 5    |<----------------------------->|
@@ -2872,25 +2875,25 @@ st([sysArgs+0])                 #18
 ld([sysArgs+2], X)              #19
 ld([sysArgs+3], Y)              #20
 ld([sysArgs+1])                 #21
-st([Y,Xpp])                     #22 Copy byte 1
+st([Y,Xpp]);                    C('Copy byte 1')#22
 ld([sysArgs+0])                 #23
 beq('.sysSb1')                  #24
 suba(1)                         #25
 st([sysArgs+0])                 #26
 ld([sysArgs+1])                 #27
-st([Y,Xpp])                     #28 Copy byte 2
+st([Y,Xpp]);                    C('Copy byte 2')#28
 ld([sysArgs+0])                 #29
 beq('.sysSb2')                  #30
 suba(1)                         #31
 st([sysArgs+0])                 #32
 ld([sysArgs+1])                 #33
-st([Y,Xpp])                     #34 Copy byte 3
+st([Y,Xpp]);                    C('Copy byte 3')#34
 ld([sysArgs+0])                 #35
 beq('.sysSb3')                  #36
 suba(1)                         #37
 st([sysArgs+0])                 #38
 ld([sysArgs+1])                 #39
-st([Y,Xpp])                     #40 Copy byte 4
+st([Y,Xpp]);                    C('Copy byte 4')#40
 ld([sysArgs+0])                 #41
 beq('.sysSb4')                  #42
 ld([vPC])                       #43 Self-restarting SYS call
@@ -2933,7 +2936,7 @@ xora(255)                       #26
 bne(pc()+3)                     #27
 bra(pc()+3)                     #28
 assert videoZ == 0x0100
-st([vReturn]);                  C('Mode -1: No video/audio/serial/...')#29
+st([vReturn]);                  C('DISABLE video/audio/serial/etc')#29
 nop();                          C('Ignore and return')#29(!)
 jmp(Y,'REENTER')                #30
 ld(-34/2)                       #31
@@ -2944,7 +2947,7 @@ adda('.sysSm#30')               #27
 bra(AC)                         #28
 bra('.sysSm#31')                #29
 label('.sysSm#30')
-ld('pixels');                   C('B lines')#30
+ld('pixels');                   C('videoB lines')#30
 ld('pixels')                    #30
 ld('nopixels')                  #30
 ld('nopixels')                  #30
@@ -2956,7 +2959,7 @@ adda('.sysSm#37')               #34
 bra(AC)                         #35
 bra('.sysSm#38')                #36
 label('.sysSm#37')
-ld('pixels');                   C('C lines')#37
+ld('pixels');                   C('videoC lines')#37
 ld('pixels')                    #37
 ld('pixels')                    #37
 ld('nopixels')                  #37
@@ -2968,7 +2971,7 @@ adda('.sysSm#44')               #41
 bra(AC)                         #42
 bra('.sysSm#45')                #43
 label('.sysSm#44')
-ld('pixels');                   C('D lines')#44
+ld('pixels');                   C('videoD lines')#44
 ld('nopixels')                  #44
 ld('nopixels')                  #44
 ld('nopixels')                  #44
@@ -4852,12 +4855,12 @@ define('vPC+1',      vPC+1)
 def basicLine(address, number, text):
   """Helper to encode lines for TinyBASIC"""
   head = [] if number is None else [number&255, number>>8]
-  body = [] if text is None else [ord(c) for c in text + '\0']
+  body = [] if text is None else [ord(c) for c in text] + [0]
   s = head + body
   assert len(s) > 0
-  s = [address>>8, address&255, len(s)] + s
-  for byte in s:
-    program.putInRomTable(byte)
+  for i, byte in enumerate([address>>8, address&255, len(s)]+s):
+    comment = repr(chr(byte)) if i >= 3+len(head) else None
+    program.putInRomTable(byte, comment=comment)
 
 #-----------------------------------------------------------------------
 
@@ -4937,8 +4940,8 @@ for application in argv[1:]:
       address += 32
       if address & 255 == 0:
         address += 160
-    basicLine(address+2, None, 'RUN')   # Startup command
-    basicLine(0x1ba0, address, None)    # End of program
+    basicLine(address+2, None, 'RUN')           # Startup command
+    basicLine(symbol('Buffer'), address, None)  # End of program
     program.putInRomTable(0)
     program.end()
     print ' Lines', i

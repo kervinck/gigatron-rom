@@ -37,13 +37,13 @@ dev.rom: Core/* Apps/* Images/* Makefile interface.json
 		TinyBASIC=Apps/TinyBASIC.gcl\
 		TicTac=Apps/TicTac_v1.gtb\
 		WozMon=Apps/WozMon_v2.gt1\
-		Egg=Apps/Apple1.gt1x\
+		Egg=Apps/Apple1.gt1\
 		Main=Apps/Main.gcl\
 		Reset=Core/Reset.gcl
 
-# ROM v4a has many small changes, but no new applications
-ROMv4a.rom: Core/* Apps/* Images/* Makefile interface.json
-	python -B Core/ROMv4a.py\
+# ROM v4b has many small changes, but no new applications
+ROMv4b.rom: Core/* Apps/* Images/* Makefile interface.json
+	python -B Core/ROMv4b.py\
 		packedParrot=Images/Parrot-160x120.rgb\
 		packedJupiter=Images/Jupiter-160x120.rgb\
 		SYS_Racer_v1.py\
@@ -60,11 +60,11 @@ ROMv4a.rom: Core/* Apps/* Images/* Makefile interface.json
 		TinyBASIC=Apps/TinyBASIC.gcl\
 		TicTac=Apps/TicTac_v1.gtb\
 		WozMon=Apps/WozMon_v2.gt1\
-		Egg=Apps/Apple1.gt1x\
+		Egg=Apps/Apple1.gt1\
 		Main=Apps/Main.gcl\
 		Reset=Core/Reset_v4.gcl
 
-burnv4a: ROMv4a.rom
+burnv4b: ROMv4b.rom
 	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
 run: Docs/gtemu dev.rom

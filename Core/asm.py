@@ -205,7 +205,8 @@ def end():
 
   for name, where in _refsL:
     if name in _symbols:
-      _rom1[where] ^= _symbols[name] & 255 # xor allows some label tricks
+      _rom1[where] += _symbols[name] # adding allows some label tricks
+      _rom1[where] &= 255
     else:
       print 'Error: Undefined symbol %s' % repr(name)
       _symbols[name] = 0 # No more errors
