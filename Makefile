@@ -41,9 +41,9 @@ dev.rom: Core/* Apps/* Images/* Makefile interface.json
 		Main=Apps/Main.gcl\
 		Reset=Core/Reset.gcl
 
-# ROM v4b has many small changes, but no new applications
-ROMv4b.rom: Core/* Apps/* Images/* Makefile interface.json
-	python -B Core/ROMv4b.py\
+# ROM v4c has many small changes, but no new applications
+ROMv4c.rom: Core/* Apps/* Images/* Makefile interface.json
+	python -B Core/ROMv4c.py\
 		packedParrot=Images/Parrot-160x120.rgb\
 		packedJupiter=Images/Jupiter-160x120.rgb\
 		SYS_Racer_v1.py\
@@ -64,7 +64,7 @@ ROMv4b.rom: Core/* Apps/* Images/* Makefile interface.json
 		Main=Apps/Main.gcl\
 		Reset=Core/Reset_v4.gcl
 
-burnv4b: ROMv4b.rom
+burnv4c: ROMv4c.rom
 	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
 run: Docs/gtemu dev.rom

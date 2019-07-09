@@ -74,7 +74,7 @@
 #  Extern:
 #  DONE Simplify label logic (only do A=B)
 #  XXX  interface.json: Add SYS_ExpanderControl_v4_40
-#  XXX  interface.json: Add SYS_SpiExchangeBytes_v4_130
+#  XXX  interface.json: Add SYS_SpiExchangeBytes_v4_134
 #  XXX  interface.json: Add SYS_ResetWaveforms_v4_50
 #  XXX  interface.json: Add SYS_ShuffleNoise_v4_46
 #  XXX  interface.json: Add SYS_Run6502_v80
@@ -2805,7 +2805,7 @@ jmp(Y,'sys_ShuffleNoise')       #16
 ld(soundTable>>8,Y);            #17
 
 #-----------------------------------------------------------------------
-# Extension SYS_SpiExchangeBytes_DEVROM_130
+# Extension SYS_SpiExchangeBytes_DEVROM_134
 #-----------------------------------------------------------------------
 
 # Send AND receive 1..256 bytes over SPI interface
@@ -2816,7 +2816,7 @@ ld(soundTable>>8,Y);            #17
 #       sysArgs[2]      Page index stop (input)
 #       sysArgs[3]      Memory page for receive data (input)
 
-label('SYS_SpiExchangeBytes_DEVROM_130')
+label('SYS_SpiExchangeBytes_DEVROM_134')
 ld(hi('sys_SpiExchangeBytes'),Y);C('Exchange 1..256 bytes over SPI interface')
 jmp(Y,'sys_SpiExchangeBytes')   #16
 ld([sysArgs+0],X);              C('Fetch byte to send')#17
@@ -3448,7 +3448,7 @@ suba(2)                         #125
 st([vPC])                       #126
 ld(hi('REENTER'), Y)            #127
 jmp(Y,'REENTER')                #128
-ld(-130/2)                      #129
+ld(-132/2)                      #129
 
 label('.sysSpi#125')
 ld(hi('REENTER'), Y);           C('Continue program')#125
