@@ -160,7 +160,7 @@ _vLR=                           {Reset v6502 PC}
       \serialRaw, 255^          {Wait for idle keyboard}
       if<>0loop]
     [do
-      \frameCount 15& [if=0     {4 Hz cursor redraw rate}
+      \frameCount, 15& [if=0    {4 Hz cursor redraw rate}
         \frameCount, 48&        {Flash at 1 Hz with 75% duty cycle}
         [if=0 $a0 else $c0]     {Select space or '@'}
         PrintChar! Pos=]        {Display cursor and move back}

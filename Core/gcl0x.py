@@ -399,7 +399,7 @@ class Program:
   def emitOp(self, ins):
     # Emit vCPU opcode
     self.checkSpace()
-    if self.vPC & 255 == 0:
+    if self.segStart == self.vPC:
       self.openSegment() # Must come before lo()
     self.putInRomTable(lo(ins), '%04x %s' % (self.vPC, ins))
     self.vPC += 1
