@@ -68,8 +68,8 @@
 #  DONE Add 4 arrows to font to fill up the ROM page
 #  DONE Apple1: ZP vars
 #  DONE Snake: Tweak AI. Also autoplayer can't get hiscore anymore
-#  XXX  Update romTypeValue and interface.json
-#  XXX  Update version number to v4
+#  DONE Update romTypeValue and interface.json
+#  DONE Update version number to v4
 #
 #  Extern:
 #  DONE Simplify label logic (only do A=B)
@@ -2652,6 +2652,14 @@ align(0x100, 0x100)
 # vAC bit 2:15                  Ignored bits and should be 0
 #
 # vAC = -1                      Zombie mode (no output signals, no input, no blinkenlights)
+
+#       -1                      Boring
+#       42                      HHGTTG
+#       88                      Mph
+#       1976                    Apple 1
+#       1984
+#       2017
+#       53265                   $d011 C64
 
 # Actual duration is <80 cycles, but keep some room for future extensions
 label('SYS_SetMode_v2_80')

@@ -8,10 +8,7 @@ gcl0x
 
 {
  Issues:
-  XXX Clear screen on start
   XXX Faster cursor
-  XXX Apple-1 startup message
-  XXX Need more space --> strip TicTac_v1.gtb
 
   XXX Shift screen memory 96 pixels right
   XXX NMI/IRQ/RESET to wozmon (through vector) without going through main menu
@@ -129,20 +126,22 @@ _L2=*   #$45 #$41               { nextY eor $41         }
         #$10 #@_L1              {       bpl _L1         }
         #$a5 #$40               {       lda $40         }
         #$4c ##_Munch           {       jmp _Munch      }
-
-_L3=*   #$a9 #$8d               {       lda #$8d        }
-        #$00                    {       brk             }
-        #$4c ##_WozMon          {       jmp _WozMon     }
-{
-_L3=*   #$a2 #7                 {       ldx #7          }
+_L3=*   #$a2 #53                {       ldx #53         }
 _L4=*   #$bd ##_MSG             {       lda _MSG,x      }
         #$00                    {       brk             }
         #$ca                    {       dex             }
-        #$d0 #@_L0              {       bne _L4         }
+        #$10 #@_L4              {       bpl _L4         }
         #$4c ##_WozMon          {       jmp _WozMon     }
 
-_MSG=*  #$8d #$b1 #$ad #$c5 #$cc #$d0 #$d0 #$c1 { "\r1-ELPPA" }
-}
+_MSG=*  { '\r'
+          'TTL Apple 1\r'
+          'FF00.FFFF Monitor\r'
+          '280R      Munching6502\r' (reversed and +128) }
+	#$8d #$b2 #$b0 #$b5 #$b6 #$e7 #$ee #$e9 #$e8 #$e3 #$ee #$f5
+	#$cd #$a0 #$a0 #$a0 #$a0 #$a0 #$a0 #$d2 #$b0 #$b8 #$b2 #$8d
+	#$f2 #$ef #$f4 #$e9 #$ee #$ef #$cd #$a0 #$c6 #$c6 #$c6 #$c6
+	#$ae #$b0 #$b0 #$c6 #$c6 #$8d #$b1 #$a0 #$e5 #$ec #$f0 #$f0
+	#$c1 #$a0 #$cc #$d4 #$d4 #$8d
 
 {-----------------------------------------------------------------------+
 |       Main loop                                                       |
