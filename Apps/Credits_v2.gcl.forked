@@ -1,0 +1,131 @@
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Credits screen                                                  |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+gcl0x
+
+{
+  First setup all subroutine definitions and variables, without making
+  calls. This way allows use of vLR to hop from page to page during setup,
+  with minimal overhead. At the end, run the main loop.
+}
+
+[def
+{-
+  PrintText(Text,Pos)
+
+  Draw a zero-terminated text string to the screen.
+  Character 10 acts as newline.
+  There is no check for running off screen.
+-}
+  push
+  [do
+    Text, Char= {Next character to be printed}
+    if<>0       {Zero termination}
+      Text<++   {Advance text pointer}
+      Char 10^ [if=0 2 Pos<. $800 Pos+ Pos=
+                else PrintChar!]
+      loop]
+  pop ret
+] PrintText=
+
+[def {Message}
+        `This`Gigatron`TTL`computer     #10
+        `kit`was`brought`to`you`by      #10
+        `Marcel`van`Kervinck`and        #10
+        `Walter`Belgers.                #10
+                                        #10
+        ` `Tetronis'`is`by`at67`and     #10
+        ` `Bricks'`by`xbx.              #10
+                                        #10
+        `Special`thanks`must`go`to
+        #0
+] Part1=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 3                                      |
++-----------------------------------------------------------------------}
+$0300:
+
+[def
+                                        #10
+        `Marc,`Paul,`Ivana,`Oscar,      #10
+        `Martijn,`Erik,`Bella,`Ben,     #10
+        `Dieter,`Martin,`Brad,`Lou,     #10
+        `Phil,`Brian,`David,`Dave,      #10
+        `HG`and`all`fans!               #10
+        ````````````Marcel`&`Walter     #10
+        #0
+] Part2=
+
+[def { Clear screen }
+  $800 p= $8801 i=
+  0 \sysArgs0. \sysArgs1. {Black}
+  \SYS_VDrawBits_134 \sysFn:
+  [do
+    p [do
+      \sysArgs4: 134! {Clears 8 pixels vertically}
+      $800 p+ p= if>0loop]
+    i+ p=
+    255& 160^ if<>0loop]
+  ret
+] ClearScreen=
+
+[def
+{-
+  Wait -- Wait Delay number of frames (range 1..255)
+-}
+  \frameCount, Delay+ 255& tmp=
+  [do \frameCount, tmp- if<>0loop]
+  ret
+] Wait=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+$0400:
+
+{ Print a 5x8 character on screen with the built-in font
+  Char must be in the 32-127 range (this is not checked) }
+[def {PrintChar}
+  {Map ASCII code to offset in font table}
+  Char 82- [if<0 50+ i= \font32up
+            else     i= \font82up] fontData= {Select low or high page}
+  i 2<< i+             {Multiply by 5}
+  fontData+ fontData=  {Add to page address to reach bitmap data for Char}
+
+  {Draw 5 vertical slices: 5 using font data}
+  Color   \sysArgs1.
+  Pos     \sysArgs4:
+  6+      Pos=
+  \SYS_VDrawBits_134 \sysFn:
+  $fb i= [do
+    fontData 0? fontData<++ \sysArgs2. 134!
+    \sysArgs4<++
+    i<++ i if<>0loop]
+  ret
+] PrintChar=
+
+{--- Setup ---}
+
+$802 Pos= ClearScreen!
+
+[do
+ {Redraw text in several colors}
+ 62 Color= {Pen color}
+ [do
+   $800 Pos= {Pen position at top of screen}
+   Part1 Text= PrintText!
+   Part2 Text= PrintText!
+   240 Delay= Wait!
+   Color 8^ if<>0 Color 9- Color= loop]
+
+loop]
+
+{-----------------------------------------------------------------------+
+|       End                                                             |
++-----------------------------------------------------------------------}
+
