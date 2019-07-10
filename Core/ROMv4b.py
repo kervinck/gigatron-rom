@@ -45,84 +45,29 @@
 #
 #  ROM v4: Numerous small updates, no new applications
 #  DONE #81 Support alternative game controllers (TypeC added)
-#  DONE SPI: Setup SPI at power-on and add 'ctrl' instrucion to asm.py
+#  DONE SPI: Setup SPI at power-on and add 'ctrl' instruction to asm.py
 #  DONE SPI: Expander control (Enable/disable slave, set bank etc)
 #  DONE SPI: SYS Exchange bytes
-#  DONE Reinitialize waveforms at soft reset, not just at power on
+#  DONE SYS: Reinitialize waveforms at soft reset, not just at power on
 #  DONE v6502: Prototype. Retire bootCount to free up zp variables
 #  DONE v6502: Allow soft reset when v6502 is active
-#  DONE Relocate app-specific SYS functions above v6502 (Racer, Loader)
-#  DONE Apple1: Preload with WozMon and Munch
-#  DONE Snake,Racer: Don't use serialRaw but buttonState
-#  DONE #52 Head-only snake shouldn't be allowed to turn around
-#  DONE Snake: improve game play and colors in general
+#  DONE Apple1: As easter egg, preload with WozMon and Munching6502
 #  DONE Apple1: Don't use buttonState but serialRaw
-#  DONE Replace Easter egg
-#  DONE #38 "Press [A] to start program" message is stupid
-#  DONE channelMask: to switch off the higher sound channels
-#  DONE Core: Specify app-specific SYS functions on command line (.py files)
-#  DONE Racer: faster road setup
-#  DONE Review SPI status
-#  DONE Review ROM layout
-#  DONE Mode -1 (for zombie mode), can do mode -2 to restore previous mode
-#  DONE Add 4 arrows to font to fill up the ROM page
-#  DONE Apple1: ZP vars
+#  DONE Snake: Don't use serialRaw but buttonState
+#  DONE Snake: Head-only snake shouldn't be allowed to turn around #52
+#  DONE Snake: Improve game play and colors in general
 #  DONE Snake: Tweak AI. Also autoplayer can't get hiscore anymore
+#  DONE Racer: Don't use serialRaw but buttonState
+#  DONE Racer: Faster road setup with SYS_SetMemory
+#  DONE Makefile: Pass app-specific SYS functions on command line (.py files)
+#  DONE Main: "Press [A] to start": accept keyboard also (incl. 'A') #38
+#  DONE Add 4 arrows to font to fill up the ROM page
+#  DONE Mode 1975 (for "zombie" mode), can do mode -1 to recover
+#  DONE TinyBASIC: support larger font and MODE 1975. Fix indent issue #40
+#  DONE Add channelMask to switch off the higher sound channels
 #  DONE Update romTypeValue and interface.json
 #  DONE Update version number to v4
 #
-#  Extern:
-#  DONE Simplify label logic (only do A=B)
-#  XXX  interface.json: Add SYS_ExpanderControl_v4_40
-#  XXX  interface.json: Add SYS_SpiExchangeBytes_v4_130
-#  XXX  interface.json: Add SYS_ResetWaveforms_v4_50
-#  XXX  interface.json: Add SYS_ShuffleNoise_v4_46
-#  XXX  interface.json: Add SYS_Run6502_v80
-#  XXX  Update romType documentation wrt. channelMask
-#
-#  ROM v5:
-#  XXX  v6502: Test with VTL02
-#  XXX  v6502: Test with Microchess
-#  XXX  v6502: Test with Apple1 BASIC
-#  XXX  v6502: Stub D010-D013 with JSR targets for easier patching
-#  XXX  v6502: SYS_v6502_IRQ
-#  XXX  v6502: SYS_v6502_NMI
-#  XXX  v6502: SYS_v6502_RESET
-#  XXX  Main: add Apple1 to main menu
-#  XXX  Formally Support SPI and RAM expander: publish in interface.json
-#  XXX  SPI: Also reset state at soft reset
-#  XXX  SPI: SYS Exchange bit(s)
-#  XXX  SPI: Auto-detect banking, 64K and 128K
-#  XXX  SPI: Think about SPI modes
-#  XXX  #41 Fix zero page usage in Bricks and Tetronis
-#  XXX  Discoverable ROM contents
-#  XXX  Sound: Better noise by changing wavX every frame (at least in channel 1)
-#  XXX  Racer: Make noise when crashing
-#  XXX  Music sequencer (combined with LED sequencer, but retire soundTimer???)
-#  XXX  Sound demo: Play SMB Underworld tune
-#  XXX  Main: Better startup chime
-#  XXX  Video: Fast system video modes (something like ROM v3y)? Mode 4 (black)
-#  XXX  vCPU: extension for C: HOP_v4 $DD
-#  XXX  vCPU: extension for C: LSRW_v4
-#  XXX  vCPU: extension for C: CMPW_v4 $DD
-#  XXX  Faster SYS_Exec_88, with start address?
-#  XXX  ROM decrunch
-#  XXX  Video mode 4 (all or partly black? Single color? Active syncs)
-#  XXX  Video mode for 12.5 MHz systems
-#
-#  Ideas for ROM v6+
-#  XXX  Reset.c and Main.c (that is: port these from GCL to C)
-#  XXX  Sprites by scan line 4 reset method? ("videoG"=graphics)
-#  XXX  Need keymaps in ROM? (perhaps undocumented if not tested)
-#  XXX  FrogStroll (not in Contrib/)
-#  XXX  How it works memo: brief description of every software function
-#  XXX  Adjustable return for LUP trampolines (in case SYS functions need it)
-#  XXX  Loader: make noise when data comes in
-#  XXX  vCPU: Multiplication (mulShift8?)
-#  XXX  vCPU: Interrupts / Task switching (e.g for clock, LED sequencer)
-#  XXX  Scroll out the top line of text, or generic vertical scroll SYS call
-#  XXX  SYS function for plotting a full character in one go
-#  XXX  Multitasking/threading/sleeping (start with date/time clock in GCL)
 #-----------------------------------------------------------------------
 
 import importlib

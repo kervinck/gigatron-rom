@@ -45,29 +45,26 @@
 #
 #  ROM v4: Numerous small updates, no new applications
 #  DONE #81 Support alternative game controllers (TypeC added)
-#  DONE SPI: Setup SPI at power-on and add 'ctrl' instrucion to asm.py
+#  DONE SPI: Setup SPI at power-on and add 'ctrl' instruction to asm.py
 #  DONE SPI: Expander control (Enable/disable slave, set bank etc)
 #  DONE SPI: SYS Exchange bytes
-#  DONE Reinitialize waveforms at soft reset, not just at power on
+#  DONE SYS: Reinitialize waveforms at soft reset, not just at power on
 #  DONE v6502: Prototype. Retire bootCount to free up zp variables
 #  DONE v6502: Allow soft reset when v6502 is active
-#  DONE Relocate app-specific SYS functions above v6502 (Racer, Loader)
-#  DONE Apple1: Preload with WozMon and Munch
-#  DONE Snake,Racer: Don't use serialRaw but buttonState
-#  DONE #52 Head-only snake shouldn't be allowed to turn around
-#  DONE Snake: improve game play and colors in general
+#  DONE Apple1: As easter egg, preload with WozMon and Munching6502
 #  DONE Apple1: Don't use buttonState but serialRaw
-#  DONE Replace Easter egg
-#  DONE #38 "Press [A] to start program" message is stupid
-#  DONE channelMask: to switch off the higher sound channels
-#  DONE Core: Specify app-specific SYS functions on command line (.py files)
-#  DONE Racer: faster road setup
-#  DONE Review SPI status
-#  DONE Review ROM layout
-#  DONE Mode -1 (for zombie mode), can do mode -2 to restore previous mode
-#  DONE Add 4 arrows to font to fill up the ROM page
-#  DONE Apple1: ZP vars
+#  DONE Snake: Don't use serialRaw but buttonState
+#  DONE Snake: Head-only snake shouldn't be allowed to turn around #52
+#  DONE Snake: Improve game play and colors in general
 #  DONE Snake: Tweak AI. Also autoplayer can't get hiscore anymore
+#  DONE Racer: Don't use serialRaw but buttonState
+#  DONE Racer: Faster road setup with SYS_SetMemory
+#  DONE Makefile: Pass app-specific SYS functions on command line (.py files)
+#  DONE Main: "Press [A] to start": accept keyboard also (incl. 'A') #38
+#  DONE Add 4 arrows to font to fill up the ROM page
+#  DONE Mode 1975 (for "zombie" mode), can do mode -1 to recover
+#  DONE TinyBASIC: support larger font and MODE 1975. Fix indent issue #40
+#  DONE Add channelMask to switch off the higher sound channels
 #  DONE Update romTypeValue and interface.json
 #  DONE Update version number to v4
 #
@@ -106,7 +103,7 @@
 #  XXX  vCPU: extension for C: LSRW_v4
 #  XXX  vCPU: extension for C: CMPW_v4 $DD
 #  XXX  Faster SYS_Exec_88, with start address?
-#  XXX  ROM decrunch
+#  XXX  Pucrunch (well documented) or eximozer 3.0.2 (better compression)
 #  XXX  Video mode 4 (all or partly black? Single color? Active syncs)
 #  XXX  Video mode for 12.5 MHz systems
 #
