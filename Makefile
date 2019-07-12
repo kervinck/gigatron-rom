@@ -38,7 +38,7 @@ dev.rom: Core/* Apps/* Images/* Makefile interface.json
 		TicTac=Apps/TicTac_v2.gtb\
 		WozMon=Apps/WozMon_v2.gt1\
 		Egg=Apps/Apple1.gt1\
-		Main=Apps/Main.gcl\
+		Main=Apps/MainMenu_v4.gcl\
 		Reset=Core/Reset.gcl
 
 # ROM v4c has many small changes, but no new applications
@@ -61,7 +61,7 @@ ROMv4c.rom: Core/* Apps/* Images/* Makefile interface.json
 		TicTac=Apps/TicTac_v2.gtb\
 		WozMon=Apps/WozMon_v2.gt1\
 		Egg=Apps/Apple1.gt1\
-		Main=Apps/Main.gcl\
+		Main=Apps/MainMenu_v4.gcl\
 		Reset=Core/Reset_v4.gcl
 
 burnv4c: ROMv4c.rom
@@ -124,7 +124,7 @@ ROMv3.rom: Core/* Apps/* Images/* Makefile interface.json
 		Apps/TinyBASIC_v2.gcl\
 		Apps/WozMon_v2.gt1\
 		Egg=Apps/Sprites_v1.gt1\
-		Apps/Main_v3.gcl\
+		Main=Apps/MainMenu_v3.gcl\
 		Core/Reset_v3.gcl
 
 burnv3: ROMv3.rom

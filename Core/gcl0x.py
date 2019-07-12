@@ -96,10 +96,9 @@ class Program:
     self.putInRomTable(0) # Zero marks the end of stream
     if self.lineNumber > 0:
       self.dumpVars()
-    C('End of file')
 
   def dumpVars(self):
-    print(' Variables count %d bytes %d end %04x' % (len(self.vars), 2*len(self.vars), zpByte(0)))
+    print(' Variables count %d bytes %d end $%04x' % (len(self.vars), 2*len(self.vars), zpByte(0)))
     line = ' :'
     for var in sorted(self.vars.keys()):
       if var in self.lengths and self.lengths[var]:
@@ -459,7 +458,7 @@ class Program:
   def closeSegment(self):
     # Register length of GT1 segment
     if self.vPC != self.segStart:
-      print(' Segment at %04x size %3d used %3d unused %3d' % (
+      print(' Segment at $%04x size %3d used %3d unused %3d' % (
         self.segStart,
         self.segEnd - self.segStart,
         self.vPC - self.segStart,
@@ -485,7 +484,7 @@ class Program:
   def checkSpace(self):
     if self.vPC >= self.segEnd:
       severity = self.warning if self.vPC & 255 > 0 else self.error
-      severity('Out of code space (%04x)' % self.vPC)
+      severity('Out of code space ($%04x)' % self.vPC)
 
   def warning(self, message):
     print(self.prefix('Warning'), message)
@@ -501,7 +500,7 @@ class Program:
     if self.lineNumber != 0:
       prefix += ':%s' % self.lineNumber
     if has(self.lastWord):
-      prefix += ' %s' % repr(self.lastWord)
+      prefix += ' (%s)' % self.lastWord
     return prefix + ':'
 
   def defSymbol(self, name, value):

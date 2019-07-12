@@ -83,7 +83,7 @@ _k=$3a          {Share with wozmon YSAV}
 &_PrintChar PrintChar=          {Forward reference}
 
 &_Apple1 _vLR=                  {Prepare transfer to main loop}
-&_Start                         {Start address for clear screen and Munching6502}
+&_Start                         {Start address for 6502 program}
 [ret]                           {Jump to Main (the brackets avoid the automatic vLR patch)}
 
 _Start=*
