@@ -405,9 +405,9 @@ _PRPC=*         #_LDAIM_        #$8D
                 #_LDAZ_         #_PCH
                 #_LDXZ_         #_PCL
                 #_JSR_          ##_PRNTAX       { OUTPUT PCL,H }
-              { #_LDAIM_        #$AD          } {                     [Gigatron] Removed }
-              { #_JSR_          ##_CHAROUT    } { "OUTPUT '-'         [Gigatron] Removed }
-_PRBLNK=*       #_LDXIM_        #$1             { BLANK COUNT         [Gigatron] Was: #$3 }
+                #_LDAIM_        #$AD
+                #_JSR_          ##_CHAROUT      { OUTPUT '-' }
+_PRBLNK=*       #_LDXIM_        #$1             { BLANK COUNT [Gigatron] Was: #$3 }
 _PRBL2=*        #_LDAIM_        #$A0
 _PRBL3=*        #_JSR_          ##_CHAROUT      { OUTPUT A BLANK }
                 #_DEX_
@@ -420,14 +420,12 @@ _PCADJ3=*       #_LDYZ_         #_PCH
                 #_BPL_          #@_PCADJ4       { *   BRANCH). EXTEND NEG }
                 #_DEY_                          { *   BY DECREMENTING PCH. }
 _PCADJ4=*       #_ADCZ_         #_PCL
-
+                *=$500                          { [Gigatron] Open next GT1 file segment }
                 #_BCC_          #@_RTS1         { PCL+LENGTH (OR DISPL) +1 TO A. }
                 #_INY_                          { *  CARRY INTO Y (PCH) }
 _RTS1=*         #_RTS_
 
-_MODE1=*        #$40
-                *=$500                          { [Gigatron] Open next GT1 file segment }
-                     #$2  #$45 #$3
+_MODE1=*        #$40 #$2  #$45 #$3
                 #$D0 #$8  #$40 #$9
                 #$30                            { XXXXXXZ0 INSTRS.. }
                 #$22
