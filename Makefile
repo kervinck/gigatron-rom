@@ -76,7 +76,7 @@ run: Docs/gtemu dev.rom
 export jsEmu=Contrib/PhilThomas/src
 runjs: dev.rom
 	# Run ROM in javascript emulator in web browser (macOS)
-	cd "$(jsEmu)" && ln -sf ../../../dev.rom gigatron.rom
+	cd "$(jsEmu)" && ln -sf ../../../dev.rom dev.rom
 	(sleep 1 && open http://127.0.0.1:8000/src) &
 	cd "$(jsEmu)" && npm start
 
@@ -163,10 +163,10 @@ ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 
 # Test ROM for v6502 testing
 mos: v6502.rom
-v6502.rom: Core/* Apps/* Images/* Makefile interface.json
+v6502.rom: Core/* Apps/* Images/* Makefile interface.json Microchess.out
 	rm -f dev.rom dev.asm
 	python -B Core/dev.py\
-		Main=Apps/Apple1.gcl\
+		Main=Apps/Microchess.gcl\
 		Core/Reset.gcl
 	mv dev.rom v6502.rom
 	mv dev.asm v6502.asm
@@ -211,6 +211,12 @@ ROMv3y.rom: Core/* Apps/* Images/* Makefile interface.json
 %.rgb: %.png
 	# Uses ImageMagick
 	convert "$<" "$@"
+
+%.out: %.asm
+	64tass -b "$^" -o "$@" -L "$@".lst
+	od -An -t x1 -v <"$@" |\
+        awk '{for(i=1;i<=NF;i++)print" #$$" $$i}' |\
+        fmt -w 80 > "$@".hex
 
 Utils/BabelFish/tinyfont.h: Utils/BabelFish/tinyfont.py
 	python "$<" > "$@"
