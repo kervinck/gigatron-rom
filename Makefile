@@ -41,9 +41,9 @@ dev.rom: Core/* Apps/* Images/* Makefile interface.json
 		Main=Apps/MainMenu_v4.gcl\
 		Reset=Core/Reset.gcl
 
-# ROM v4c has many small changes, but no new applications
-ROMv4c.rom: Core/* Apps/* Images/* Makefile interface.json
-	python -B Core/ROMv4c.py\
+# ROM v4x has many small changes, but no new applications
+ROMv4x.rom: Core/* Apps/* Images/* Makefile interface.json
+	python -B Core/ROMv4x.py\
 		packedParrot=Images/Parrot-160x120.rgb\
 		packedJupiter=Images/Jupiter-160x120.rgb\
 		SYS_Racer_v1.py\
@@ -64,7 +64,7 @@ ROMv4c.rom: Core/* Apps/* Images/* Makefile interface.json
 		Main=Apps/MainMenu_v4.gcl\
 		Reset=Core/Reset_v4.gcl
 
-burnv4c: ROMv4c.rom
+burnv4x: ROMv4x.rom
 	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
 run: Docs/gtemu dev.rom
@@ -163,7 +163,7 @@ ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 
 # Test ROM for v6502 testing
 mos: v6502.rom
-v6502.rom: Core/* Apps/* Images/* Makefile interface.json Microchess.out
+v6502.rom: Core/* Apps/* Images/* Makefile interface.json
 	rm -f dev.rom dev.asm
 	python -B Core/dev.py\
 		Main=Apps/Microchess.gcl\
@@ -219,7 +219,7 @@ ROMv3y.rom: Core/* Apps/* Images/* Makefile interface.json
         fmt -w 80 > "$@".hex
 
 Utils/BabelFish/tinyfont.h: Utils/BabelFish/tinyfont.py
-	python "$<" > "$@"
+	python -B "$<" > "$@"
 
 todo:
 	@git ls-files | sed 's/ /\\ /g' | xargs grep -I -E '(TODO|XXX)'
