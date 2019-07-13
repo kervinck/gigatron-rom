@@ -33,7 +33,7 @@ gcl0x
   push
   [def
       `***`Gigatron`??K`*** #10
-    ``TTL`microcomputer`ROM`v4b   {ROM`vN for versioned release ROMs}
+    ``TTL`microcomputer`ROM`v4c   {ROM`vN for versioned release ROMs}
     #0
   ] Text=
 

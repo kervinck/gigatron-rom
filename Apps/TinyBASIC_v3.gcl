@@ -273,10 +273,10 @@ $01df deek Pos=                 {Bottom character row in screen memory}
     Spaces!
     Keyword! `( #0
     [if<>0                      {Optional array index}
-      push k 0%=                {Save address on stack}
+      push k %0=                {Save address on stack}
       Expression!
       [if<0 ValueError!]        {Index must be non-negative}
-      0% k= pop                 {Pop address from stack}
+      %0 k= pop                 {Pop address from stack}
       >k, Value- 2- >k.
       End k^                    {64K safe bound check}
       [if<0 End                 {Opposite signs}
@@ -343,7 +343,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
       \sysFn:
       \sysArgs6; \sysArgs0:     {Apply caller-defined colors}
       Pos \sysArgs4:            {Position for character}
-      $fe%=                     {Temporarily park return value on the stack}
+      %-2=                      {Temporarily park return value on the stack}
       6+ Pos=                   {Advance position by 6 pixels}
 
       5 [do i=                  {Draw 5 vertical slices}
@@ -354,7 +354,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 
       \sysArgs2. 134!           {Render 6th slice}
 
-      $fe%]                     {Return effective position}
+      %-2]                      {Return effective position}
   ret
 ] PrintChar=
   PrintCharScreen=
@@ -427,7 +427,7 @@ GetLine=
   Keyword! `gosub #0
   [if<>0
     Expression!                 {Also does the stack check}
-    push Active 0%=             {Push current line to stack}
+    push Active %0=             {Push current line to stack}
     GotoValue!]                 {Find that line and continue there}
 
   Keyword! `return #0
@@ -439,19 +439,19 @@ GetLine=
   Keyword! `if #0
   [if<>0
     Expression!
-    4-- 2%=                     {Push first value on stack}
+    4-- %2=                     {Push first value on stack}
     RelOp!
     [if=0 SyntaxError!]
-    0%=                         {Park RelOp bits on stack}
+    %0=                         {Park RelOp bits on stack}
     Expression!
     Keyword! `then #0           {Optional}
-    2% Value^                   {Do the comparison, beware of overflows}
-    [if<0 2%                    {Opposite signs}
-     else 2% Value-]            {Same signs}
+    %2 Value^                   {Do the comparison, beware of overflows}
+    [if<0 %2                    {Opposite signs}
+     else %2 Value-]            {Same signs}
     [if>0 4]                    {First is greater}
     [if<0 1]                    {Second is greater}
     [if=0 2]                    {Values are equal}
-    i= 0% i&                    {Compare to RelOp bits}
+    i= %0 i&                    {Compare to RelOp bits}
     4++                         {Restore stack}
     [if<>0 Statements!]         {Conditional execution}
     [do
@@ -495,7 +495,7 @@ _Statements2=*
   Keyword! `next #0
   [if<>0
     Variable! Address=          {Pointer to loop variable}
-    push Active 0%=             {Park program index on stack}
+    push Active %0=             {Park program index on stack}
     -$100 Address+ deek         {Retrieve loop pointer}
     [if=0 ValueError!]          {NEXT without FOR error}
     Active=                     {Switch back to tail of FOR statement}
@@ -506,7 +506,7 @@ _Statements2=*
     [if<0 Value^                {Opposite signs}
      else Value^ Value-] }      {Same signs}
     [if>0                       {Loop variable > End value}
-      0% Active=                {Break the loop}
+      %0 Active=                {Break the loop}
       Spaces!]
     pop                         {Shorter than 2++}
     TestBreak!                  {Test for break request}
@@ -853,20 +853,20 @@ Clear=
     Keyword! `+ #0              {Ignore unary plus}
     Term!]
 
-  push 0%=                      {Put partial result on stack}
+  push %0=                      {Put partial result on stack}
   [do                           {Optional additional terms}
     Keyword! `+ #0
     [if<>0
        Term!
-       0% Value+ 0%=            {Perform addition}
+       %0 Value+ %0=            {Perform addition}
        loop]
     Keyword! `- #0
     [if<>0
        Term!
-       0% Value- 0%=            {Perform subtraction}
+       %0 Value- %0=            {Perform subtraction}
        loop]
   ]
-  0% Value= pop                 {Make stack value the result}
+  %0 Value= pop                 {Make stack value the result}
   pop ret
 ] Expression=
 
@@ -883,25 +883,25 @@ Clear=
 [def
   push
   Factor!                       {First factor}
-  push Value 0%=                {Put partial result on stack}
+  push Value %0=                {Put partial result on stack}
   [do                           {Optional additional factors}
     Keyword! `* #0
     [if<>0
        Factor!
-       0% Multiply! 0%=
+       %0 Multiply! %0=
        loop]
     Keyword! `/ #0
     [if<>0
        Factor!
-       0% Divide! 0%=
+       %0 Divide! %0=
        loop]
     Keyword! `% #0
     [if<>0
        Factor!
-       0% Divide! i 0%=
+       %0 Divide! i %0=
        loop]
   ]
-  0% Value= pop                 {Make stack value the result}
+  %0 Value= pop                 {Make stack value the result}
   pop ret
 ] Term=
 
@@ -1161,17 +1161,17 @@ _Statements3=*
       Variable!                 {Parse variable name}
       Address=                  {Park here}
       Spaces!
-      4-- Active 2%=            {Save program pointer on stack}
-      31| 31- deek 0%=          {Current line number in program}
+      4-- Active %2=            {Save program pointer on stack}
+      31| 31- deek %0=          {Current line number in program}
       [do
         $3f PrintChar!          {'?'}
         Newline!                {Avoid dealing with partially printed lines}
-        0%                      {Line number for errors}
+        %0                      {Line number for errors}
         GetLine!                {Let user type something}
         if=0loop]               {Repeat with prompt when nothing is typed}
       Expression!               {Accept arbitrary expression as input \o/}
       Address:                  {Store received value in variable}
-      2% Active= 4++            {Restore program pointer from stack}
+      %2 Active= 4++            {Restore program pointer from stack}
       Keyword! `, #0            {','}
       if<>0loop]                {Next variable}
     EndOfLine!]
@@ -1348,7 +1348,7 @@ _Line=*
 
   1 \sysArgs0: $100 \sysArgs2:  {Vector pair U, V}
 
-  Expression! push 0%=          {Park dX argument on stack}
+  Expression! push %0=          {Park dX argument on stack}
   Keyword! `, #0                {','}
   [if=0 SyntaxError!]
   Expression! j=                {dY argument as j}
@@ -1358,7 +1358,7 @@ _Line=*
     \sysArgs2:                  {V = -V}
     0 j- j=]
 
-  0% i=                         {dX argument as i}
+  %0 i=                         {dX argument as i}
   [if<0                         {Make dX >= 0}
     0 #\SUBW #\sysArgs0         {Inline assembly}
     \sysArgs0:                  {U = -U}

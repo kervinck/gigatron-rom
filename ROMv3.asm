@@ -1091,7 +1091,7 @@ SYS_VDrawBits_134:
               04f2 1403  ld   $03,y
               04f3 e0cb  jmp  y,$cb
               04f4 00bd  ld   $bd
-              04f5 0200  nop              ; (11 fillers, alignment)
+              04f5 0200  nop              ;11 fillers
               04f6 0200  nop
               04f7 0200  nop
               * 11 times
@@ -1601,7 +1601,7 @@ SYS_LoaderPayloadCopy_34:
               06f8 a001  suba $01
 .sysCc1:      06f9 e0cb  jmp  y,$cb
               06fa 00ef  ld   $ef
-              06fb 0200  nop              ; (5 fillers, alignment)
+              06fb 0200  nop              ;5 fillers
               06fc 0200  nop
               06fd 0200  nop
               * 5 times
@@ -1852,7 +1852,7 @@ font32up:     0700 0000  ld   $00         ;Char ' '
               07f7 008a  ld   $8a
               07f8 0084  ld   $84
               07f9 007a  ld   $7a
-              07fa 0200  nop              ; (filler)
+              07fa 0200  nop              ;filler
               07fb fe00  bra  ac          ;+-----------------------------------+
               07fc fcfd  bra  $07fd       ;|                                   |
               07fd 1404  ld   $04,y       ;| Trampoline for page $0700 lookups |
@@ -2086,7 +2086,7 @@ font82up:     0800 00fe  ld   $fe         ;Char 'R'
               08e2 00fe  ld   $fe
               08e3 00fe  ld   $fe
               * 5 times
-              08e6 0200  nop              ; (21 fillers)
+              08e6 0200  nop              ;21 fillers
               08e7 0200  nop
               08e8 0200  nop
               * 21 times
@@ -2291,7 +2291,7 @@ notesTable:   0900 0000  ld   $00
               09c1 0000  ld   $00
               09c2 0000  ld   $00
               * 58 times
-              09fa 0200  nop              ; (filler)
+              09fa 0200  nop              ;filler
               09fb fe00  bra  ac          ;+-----------------------------------+
               09fc fcfd  bra  $09fd       ;|                                   |
               09fd 1404  ld   $04,y       ;| Trampoline for page $0900 lookups |
@@ -2736,7 +2736,7 @@ SYS_LoaderNextByteIn_32:
               0bf2 1403  ld   $03,y
               0bf3 e0cb  jmp  y,$cb
               0bf4 0200  nop
-              0bf5 0200  nop              ; (11 fillers, alignment)
+              0bf5 0200  nop              ;11 fillers
               0bf6 0200  nop
               0bf7 0200  nop
               * 11 times
@@ -2800,7 +2800,7 @@ SYS_Sprite6_v3_64:
               0c38 1403  ld   $03,y
               0c39 e0cb  jmp  y,$cb
               0c3a 00e0  ld   $e0
-              0c3b 0200  nop              ; (5 fillers, alignment)
+              0c3b 0200  nop              ;5 fillers
               0c3c 0200  nop
               0c3d 0200  nop
               * 5 times
@@ -2862,7 +2862,7 @@ SYS_Sprite6x_v3_64:
               0c76 1403  ld   $03,y
               0c77 e0cb  jmp  y,$cb
               0c78 00e1  ld   $e1
-              0c79 0200  nop              ; (7 fillers, alignment)
+              0c79 0200  nop              ;7 fillers
               0c7a 0200  nop
               0c7b 0200  nop
               * 7 times
@@ -2928,7 +2928,7 @@ SYS_Sprite6y_v3_64:
               0cba 1403  ld   $03,y
               0cbb e0cb  jmp  y,$cb
               0cbc 00e0  ld   $e0
-              0cbd 0200  nop              ; (3 fillers, alignment)
+              0cbd 0200  nop              ;3 fillers
               0cbe 0200  nop
               0cbf 0200  nop
 SYS_Sprite6xy_v3_64:
@@ -2991,7 +2991,7 @@ SYS_Sprite6xy_v3_64:
               0cf8 1403  ld   $03,y
               0cf9 e0cb  jmp  y,$cb
               0cfa 00e1  ld   $e1
-              0cfb 0200  nop              ; (5 fillers, alignment)
+              0cfb 0200  nop              ;5 fillers
               0cfc 0200  nop
               0cfd 0200  nop
               * 5 times
@@ -34771,7 +34771,7 @@ TicTac:       916b 001b  ld   $1b
               9ec2 00a0  ld   $a0
               9ec3 0054  ld   $54
               9ec4 0000  ld   $00
-              9ec5 0000  ld   $00         ;End of file
+              9ec5 0000  ld   $00
 Snake:        9ec6 0002  ld   $02         ;| RAM segment address (high byte first)
               9ec7 0000  ld   $00         ;|
               9ec8 00d9  ld   $d9         ;| Length (1..256)
@@ -36452,7 +36452,7 @@ Snake:        9ec6 0002  ld   $02         ;| RAM segment address (high byte firs
               a559 0064  ld   $64         ;0dbc 'Wait'
               a55a 0090  ld   $90         ;0dbe BRA
               a55b 00a4  ld   $a4
-              a55c 0000  ld   $00         ;End of file
+              a55c 0000  ld   $00
 Racer:        a55d 0002  ld   $02         ;| RAM segment address (high byte first)
               a55e 0000  ld   $00         ;|
               a55f 00ea  ld   $ea         ;| Length (1..256)
@@ -38308,7 +38308,7 @@ Racer:        a55d 0002  ld   $02         ;| RAM segment address (high byte firs
               ac9b 0099  ld   $99         ;0ff0 'PrintBestTime'
               ac9c 0090  ld   $90         ;0ff2 BRA
               ac9d 00a0  ld   $a0
-              ac9e 0000  ld   $00         ;End of file
+              ac9e 0000  ld   $00
 Mandelbrot:   ac9f 0002  ld   $02         ;| RAM segment address (high byte first)
               aca0 0000  ld   $00         ;|
               aca1 00ef  ld   $ef         ;| Length (1..256)
@@ -39563,7 +39563,7 @@ Mandelbrot:   ac9f 0002  ld   $02         ;| RAM segment address (high byte firs
               b182 005c  ld   $5c         ;06fa 'CalcSet'
               b183 0090  ld   $90         ;06fc BRA
               b184 009c  ld   $9c
-              b185 0000  ld   $00         ;End of file
+              b185 0000  ld   $00
 Pictures:     b186 0002  ld   $02         ;| RAM segment address (high byte first)
               b187 0000  ld   $00         ;|
               b188 00c8  ld   $c8         ;| Length (1..256)
@@ -39772,7 +39772,7 @@ Pictures:     b186 0002  ld   $02         ;| RAM segment address (high byte firs
               b253 0044  ld   $44         ;02c4 'WaitController'
               b254 0090  ld   $90         ;02c6 BRA
               b255 00ae  ld   $ae
-              b256 0000  ld   $00         ;End of file
+              b256 0000  ld   $00
 Credits:      b257 0002  ld   $02         ;| RAM segment address (high byte first)
               b258 0000  ld   $00         ;|
               b259 00d4  ld   $d4         ;| Length (1..256)
@@ -40365,7 +40365,7 @@ Credits:      b257 0002  ld   $02         ;| RAM segment address (high byte firs
               b4a4 0057  ld   $57
               b4a5 0090  ld   $90         ;047f BRA
               b4a6 0053  ld   $53
-              b4a7 0000  ld   $00         ;End of file
+              b4a7 0000  ld   $00
 Loader:       b4a8 0002  ld   $02         ;| RAM segment address (high byte first)
               b4a9 0000  ld   $00         ;|
               b4aa 009c  ld   $9c         ;| Length (1..256)
@@ -40650,7 +40650,7 @@ Loader:       b4a8 0002  ld   $02         ;| RAM segment address (high byte firs
               b5c1 00f6  ld   $f6
               b5c2 0090  ld   $90         ;5a7f BRA
               b5c3 000a  ld   $0a
-              b5c4 0000  ld   $00         ;End of file
+              b5c4 0000  ld   $00
 Tetronis:     b5c5 0000  ld   $00
               b5c6 00a0  ld   $a0
               b5c7 0050  ld   $50
@@ -50705,7 +50705,7 @@ Tetronis:     b5c5 0000  ld   $00
               dd13 003b  ld   $3b
               dd14 0031  ld   $31
               dd15 0000  ld   $00
-              dd16 0000  ld   $00         ;End of file
+              dd16 0000  ld   $00
 Bricks:       dd17 0000  ld   $00
               dd18 0082  ld   $82
               dd19 006e  ld   $6e
@@ -52298,7 +52298,7 @@ Bricks:       dd17 0000  ld   $00
               e377 0063  ld   $63
               e378 00ff  ld   $ff
               e379 0000  ld   $00
-              e37a 0000  ld   $00         ;End of file
+              e37a 0000  ld   $00
 TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte first)
               e37c 0000  ld   $00         ;|
               e37d 00e7  ld   $e7         ;| Length (1..256)
@@ -55395,7 +55395,7 @@ TinyBASIC:    e37b 0002  ld   $02         ;| RAM segment address (high byte firs
               ef90 0045  ld   $45         ;1ba3 'E'
               ef91 0057  ld   $57         ;1ba4 'W'
               ef92 0000  ld   $00         ;1ba5 0
-              ef93 0000  ld   $00         ;End of file
+              ef93 0000  ld   $00
 WozMon:       ef94 0002  ld   $02
               ef95 0000  ld   $00
               ef96 00e2  ld   $e2
@@ -55999,7 +55999,7 @@ WozMon:       ef94 0002  ld   $02
               f1ec 0090  ld   $90
               f1ed 00fe  ld   $fe
               f1ee 0000  ld   $00
-              f1ef 0000  ld   $00         ;End of file
+              f1ef 0000  ld   $00
 Egg:
 Sprites:      f1f0 0002  ld   $02
               f1f1 0000  ld   $00
@@ -56501,8 +56501,9 @@ Sprites:      f1f0 0002  ld   $02
               f438 001a  ld   $1a
               f439 00ff  ld   $ff
               f43a 0000  ld   $00
-              f43b 0000  ld   $00         ;End of file
-Main:         f43c 0002  ld   $02         ;| RAM segment address (high byte first)
+              f43b 0000  ld   $00
+Main:
+MainMenu:     f43c 0002  ld   $02         ;| RAM segment address (high byte first)
               f43d 0000  ld   $00         ;|
               f43e 00e3  ld   $e3         ;| Length (1..256)
               f43f 0021  ld   $21         ;0200 LDW
@@ -57435,7 +57436,7 @@ Main:         f43c 0002  ld   $02         ;| RAM segment address (high byte firs
               f7de 0024  ld   $24
               f7df 00b4  ld   $b4         ;7fb5 SYS
               f7e0 00e2  ld   $e2
-              f7e1 0000  ld   $00         ;End of file
+              f7e1 0000  ld   $00
 Reset:        f7e2 0002  ld   $02         ;| RAM segment address (high byte first)
               f7e3 0000  ld   $00         ;|
               f7e4 00c7  ld   $c7         ;| Length (1..256)
@@ -57867,8 +57868,8 @@ Reset:        f7e2 0002  ld   $02         ;| RAM segment address (high byte firs
               f98e 0022  ld   $22
               f98f 00b4  ld   $b4         ;03d6 SYS
               f990 00e2  ld   $e2
-              f991 0000  ld   $00         ;End of file
-              f992 0200  nop              ; (105 fillers)
+              f991 0000  ld   $00
+              f992 0200  nop              ;105 fillers
               f993 0200  nop
               f994 0200  nop
               * 105 times

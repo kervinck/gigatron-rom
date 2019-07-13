@@ -172,7 +172,9 @@ gcl0x
   pop ret
 ] PrintMenu=
 
-120 \soundTimer.
+\channelMask_DEVROM, 3|
+\channelMask_DEVROM.            {Enable all 4 sound channels}
+90 \soundTimer.                 {Play sound for 1.5 seconds}
 $2002 Pos=
 
 PrintMenu!

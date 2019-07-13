@@ -129,8 +129,7 @@ def align(m=0x100, chunkSize=0x10000):
   """Insert nops to align with chunk boundary"""
   global _maxRomSize
   n = (m - pc()) % m
-  comment = ' (filler' if n==1 else ' (%d fillers' % n
-  comment += ', alignment)'
+  comment = 'filler' if n==1 else '%d fillers' % n
   while pc() % m > 0:
     nop()
     comment = C(comment)
@@ -170,10 +169,10 @@ def zpReset(startFrom=1):
   global _zpSize
   _zpSize = startFrom
 
-def fillers(offset, instruction=nop):
+def fillers(until=256, instruction=nop):
   """Insert fillers until given page offset"""
-  n = offset - (pc() & 255)
-  comment = ' (filler)' if n==1 else ' (%d fillers)' % n
+  n = until - (pc() & 255)
+  comment = 'filler' if n==1 else '%d fillers' % n
   for i in range(n):
     instruction(0)
     comment = C(comment)
@@ -446,6 +445,7 @@ def _emit(opcode, operand):
     print 'Warning: large propagation delay (conditional branch with RAM on bus)'
 
 def loadBindings(symfile):
+  # Load JSON file into symbol table
   global _symbols
   with open(symfile) as file:
     for (name, value) in json.load(file).items():

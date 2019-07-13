@@ -16,7 +16,7 @@ class Program:
   def __init__(self, name, forRom=True):
     self.name = name     # For defining unique labels in global symbol table
     self.forRom = forRom # Inject trampolines if compiling for ROM XXX why not do that outside?
-    self.comment = 0     # Nesting level
+    self.comments = []   # Stack of line numbers
     self.lineNumber = 0
     self.filename = None
     self.openBlocks = [0] # Outside first block is 0
@@ -33,6 +33,7 @@ class Program:
     self.execute = None
     self.needPatch = False
     self.lengths = {} # block -> length, or var -> length
+    loadBindings('Core/v6502.json') # XXX Provisional method to load mnemonics
 
   def org(self, address):
     """Set start address"""
@@ -50,10 +51,10 @@ class Program:
     nextWord = ''
 
     for nextChar in line:
-      if self.comment > 0:
+      if len(self.comments) > 0:
         # Inside comments anything goes
-        if nextChar == '{': self.comment += 1
-        if nextChar == '}': self.comment -= 1
+        if nextChar == '{': self.comments.append(self.lineNumber)
+        if nextChar == '}': self.comments.pop()
       elif nextChar not in '{}[]':
         if nextChar.isspace():
           self.word(nextWord)
@@ -63,7 +64,7 @@ class Program:
       else:
         self.word(nextWord)
         nextWord = ''
-        if nextChar == '{': self.comment += 1
+        if nextChar == '{': self.comments.append(self.lineNumber)
         elif nextChar == '}': self.error('Spurious %s' % repr(nextChar))
         elif nextChar == '[':
            self.openBlocks.append(self.nextBlockId)
@@ -88,7 +89,8 @@ class Program:
 
   def end(self):
     """Signal end of program"""
-    if self.comment > 0:
+    if len(self.comments) > 0:
+      self.lineNumber = self.comments[-1]
       self.error('Unterminated comment')
     self.closeSegment()
     if len(self.openBlocks) > 1:
@@ -96,10 +98,9 @@ class Program:
     self.putInRomTable(0) # Zero marks the end of stream
     if self.lineNumber > 0:
       self.dumpVars()
-    C('End of file')
 
   def dumpVars(self):
-    print(' Variables count %d bytes %d end %04x' % (len(self.vars), 2*len(self.vars), zpByte(0)))
+    print(' Variables count %d bytes %d end $%04x' % (len(self.vars), 2*len(self.vars), zpByte(0)))
     line = ' :'
     for var in sorted(self.vars.keys()):
       if var in self.lengths and self.lengths[var]:
@@ -182,6 +183,7 @@ class Program:
         elif op == '# ':   self.emitOp(con); con = None # Silent truncation
         elif op == '#< ':  self.emitOp(con); con = None
         elif op == '#> ':  con = hi(con); assert self.segStart != self.vPC # XXX Conflict
+        elif op == '## ':  self.emit(lo(con)).emit(hi(con)); con = None
         elif op == '<<':
           for i in range(con):
             self.emitOp('LSLW')
@@ -219,10 +221,12 @@ class Program:
         elif op == '< ++': self.emitOp('INC')
         elif op == '> ++': self.emitOp('INC'); offset = 1
         elif op == '!':    self.emitOp('CALL')
-        elif op == '`':    self.emitQuote(var);                var = None
-        elif op == '=*':   self.defSymbol(var, self.vPC);      var = None
-        elif op == '# ':   self.emitLo(var);                   var = None
-        elif op == '## ':  self.emitLo(var).emit(hi(var[1:])); var = None
+        elif op == '`':    self.emitQuote(var);                 var = None
+        elif op == '=*':   self.defSymbol(var, self.vPC);       var = None
+        elif op == '# ':   self.emitImm(var);                   var = None
+        elif op == '#< ':  self.emitImm(var);                   var = None
+        elif op == '#> ':  self.emitImm(var, half=hi);          var = None
+        elif op == '## ':  self.emitImm(var).emit(hi(var[1:])); var = None
         elif op == '#@ ':  offset = -self.vPC-1 # PC relative, 6502 style
         # Depricated syntax
         elif op == '<++':  self.emitOp('INC');             #self.depr('X<++', '<X++')
@@ -407,6 +411,7 @@ class Program:
 
   def emitVar(self, var, offset=0):
     # Get or create address for GCL variable and emit it
+    # !!! Don't use for immediate bytes at start of segment !!!
     comment = '%04x %s' % (prev(self.vPC, 1), repr(var))
     comment += '%+d' % offset if offset else ''
     if var[0] == '_':
@@ -420,14 +425,19 @@ class Program:
     assert self.segStart != self.vPC # XXX Conflict
     return self.emit(address + offset, comment)
 
-  def emitLo(self, var):
-    # Safely emit low byte of symbol
-    if var[0] != '_':
-      self.error('Symbol \'%s\' must begin with underscore (\'_\')' % name)
+  def emitImm(self, var, half=lo):
+    # Emit low or high byte of symbol
+    # !!! Also safe at start of segment !!!
     self.checkSpace()
     if self.segStart == self.vPC:
-      self.openSegment() # Must come before lo()
-    self.putInRomTable(lo(var[1:]), '%04x %s' % (self.vPC, var))
+      self.openSegment() # Must come before lo() or hi()
+    if var[0] == '_':
+      address = half(var[1:])
+    else:
+      if var not in self.vars:
+        self.vars[var] = zpByte(2)
+      address = self.vars[var]
+    self.putInRomTable(address, '%04x %s' % (self.vPC, var))
     self.vPC += 1
     return self
 
@@ -459,7 +469,7 @@ class Program:
   def closeSegment(self):
     # Register length of GT1 segment
     if self.vPC != self.segStart:
-      print(' Segment at %04x size %3d used %3d unused %3d' % (
+      print(' Segment at $%04x size %3d used %3d unused %3d' % (
         self.segStart,
         self.segEnd - self.segStart,
         self.vPC - self.segStart,
@@ -485,7 +495,7 @@ class Program:
   def checkSpace(self):
     if self.vPC >= self.segEnd:
       severity = self.warning if self.vPC & 255 > 0 else self.error
-      severity('Out of code space (%04x)' % self.vPC)
+      severity('Out of code space ($%04x)' % self.vPC)
 
   def warning(self, message):
     print(self.prefix('Warning'), message)
@@ -501,7 +511,7 @@ class Program:
     if self.lineNumber != 0:
       prefix += ':%s' % self.lineNumber
     if has(self.lastWord):
-      prefix += ' %s' % repr(self.lastWord)
+      prefix += ' (%s)' % self.lastWord
     return prefix + ':'
 
   def defSymbol(self, name, value):
