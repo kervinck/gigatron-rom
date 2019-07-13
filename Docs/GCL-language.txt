@@ -389,8 +389,6 @@ a jump offset into the interpreter code page to the code that
 implements its behavior. Most instructions take a single byte
 operand, but some have two and others none.
 
-The formulas are pseudo-formal. Better take them with a grain of salt.
-
 Mnem. Encoding  #C Description
 ----- --------- -- -----------
 ST    $5E DD    16 Store byte in zero page ([D]=vAC&256)
@@ -431,6 +429,14 @@ DEF   $CD DD    18 Define data or code (vAC,vPC=vPC+2,(vPC&0xff00)+D)
 
 #C is the number of clocks or cycles, counted back-to-back.
 So this number includes advancing vPC, fetch, dispatch and execute.
+
+The formulas are pseudo-formal. Better take them with a grain of
+salt.  Still: 'DD' or 'D' are intended to represent a single byte.
+'LL HH' is intended to represent a 16-bit word in little-endian
+order. '[X]' is intended to represent a RAM location as in the
+native instruction set. 'vAC=D' is intended to mean that the (16-bits)
+vAC gets the (unsigned) 8-bit value D, and with that clearing its
+high 8 bits in the process.
 
 -------------------------------------------
 Mapping from vCPU instructions to GCL words
