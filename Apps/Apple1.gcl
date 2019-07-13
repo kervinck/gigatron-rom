@@ -86,13 +86,12 @@ _k=$3a          {Share with wozmon YSAV}
 &_Start                         {Start address for 6502 program}
 [ret]                           {Jump to Main (the brackets avoid the automatic vLR patch)}
 
-_Start=*
-        #$a2 #15                {       ldx #15         Clear screen}
-_L0=*   #$a9 #$8d               {       lda #$8d        }
-        #$00                    {       brk             }
-        #$ca                    {       dex             }
-        #$d0 #@_L0              {       bne _L0         }
-        #$f0 #@_Munch           {       beq _Munch      Always taken}
+_Start=*        #_LDXIM_ #15            {Clear screen}
+_L0=*           #_LDAIM_ #$8d
+                #_BRK_
+                #_DEX_
+                #_BNE_   #@_L0
+                #_BEQ_   #@_MUNCH       {Always taken}
 
 {-----------------------------------------------------------------------+
 |       Preloaded demo program                                          |
@@ -100,46 +99,65 @@ _L0=*   #$a9 #$8d               {       lda #$8d        }
 
 *=$280
 
-_Munch=* #$18                   { Munch clc             }
-        #$69 #23                {       adc #23         }
-        #$85 #$40               {       sta $40         }
-        #$a9 #$00               {       lda #0          }
-        #$85 #$41               {       sta $41         }
-        #$a9 #$10               {       lda #16         }
-        #$85 #$42               {       sta $42         }
-_L1=*   #$a9 #$07               { nextT lda #$07        }
-        #$85 #$43               {       sta $43         }
-_L2=*   #$45 #$41               { nextY eor $41         }
-        #$a8                    {       tay             }
-        #$a5 #$40               {       lda $40         }
-        #$91 #$42               {       sta ($42),y     }
-        #$e6 #$43               {       inc $43         }
-        #$a5 #$43               {       lda $43         }
-        #$c9 #$7f               {       cmp #$7f        }
-        #$d0 #@_L2              {       bne _L2         }
-        #$a5 #_serialRaw        {       lda serialRaw   }
-        #$c9 #$03               {       cmp #3          Ctrl-C}
-        #$f0 #@_L3              {       beq _L3         }
-        #$e6 #$41               {       inc $41         }
-        #$10 #@_L1              {       bpl _L1         }
-        #$a5 #$40               {       lda $40         }
-        #$4c ##_Munch           {       jmp _Munch      }
-_L3=*   #$a2 #54                {       ldx #54         }
-_L4=*   #$bd ##_MSG             {       lda _MSG,x      }
-        #$00                    {       brk             }
-        #$ca                    {       dex             }
-        #$10 #@_L4              {       bpl _L4         }
-        #$4c ##_WozMon          {       jmp _WozMon     }
+_MUNCH=*        #_CLC_
+                #_ADCIM_ #23
+                #_STAZ_  #$40
+                #_LDAIM_ #$00
+                #_STAZ_  #$41
+                #_LDAIM_ #$10
+                #_STAZ_  #$42
+_L1=*           #_LDAIM_ #$07
+                #_STAZ_  #$43
+_L2=*           #_EORZ_  #$41
+                #_TAY_
+                #_LDAZ_  #$40
+                #_STAIY_ #$42
+                #_INCZ_  #$43
+                #_LDAZ_  #$43
+                #_CMPIM_ #$7f
+                #_BNE_   #@_L2
+                #_LDAZ_  #_serialRaw
+                #_CMPIM_ #$03
+                #_BEQ_   #@_L3
+                #_INCZ_  #$41
+                #_BPL_   #@_L1
+                #_LDAZ_  #$40
+                #_JMP_   ##_MUNCH
+_L3=*           #_LDXIM_ #61
+_L4=*           #_LDAAX_ ##_MSG
+                #_BRK_
+                #_DEX_
+                #_BPL_   #@_L4
+                #_JMP_   ##_RESET
 
-_MSG=*  { '\r\r'
-          'TTL Apple 1\r'
-          'FF00.FFFF Monitor\r'
-          '280R      Munching6502\r' (reversed and +128) }
-	#$8d #$b2 #$b0 #$b5 #$b6 #$e7 #$ee #$e9 #$e8 #$e3 #$ee #$f5
-	#$cd #$a0 #$a0 #$a0 #$a0 #$a0 #$a0 #$d2 #$b0 #$b8 #$b2 #$8d
-	#$f2 #$ef #$f4 #$e9 #$ee #$ef #$cd #$a0 #$c6 #$c6 #$c6 #$c6
-	#$ae #$b0 #$b0 #$c6 #$c6 #$8d #$b1 #$a0 #$e5 #$ec #$f0 #$f0
-	#$c1 #$a0 #$cc #$d4 #$d4 #$8d #$8d
+_MSG=*
+
+                { '500  Free\r' }
+                #$8d #$e5 #$e5 #$f2 #$c6 #$a0 #$a0 #$b0
+                #$b0 #$b6
+
+                { '400R Disassembler\r' }
+                #$8d #$f2 #$e5 #$ec #$e2 #$ed #$e5 #$f3
+                #$f3 #$e1 #$f3 #$e9 #$c4 #$a0 #$d2 #$b0
+                #$b0 #$b4
+
+                { '280R Munching6502\r' }
+                #$8d #$b2 #$b0 #$b5 #$b6 #$e7 #$ee #$e9
+                #$e8 #$e3 #$ee #$f5 #$cd #$a0 #$d2 #$b0
+                #$b8 #$b2
+
+                { 'Apple-1 on TTL\r' }
+                #$8d #$cc #$d4 #$d4 #$a0 #$ee #$ef #$a0
+                #$b1 #$ad #$e5 #$ec #$f0 #$f0 #$c1
+
+                { '\r\r' }
+                #$8d #$8d
+
+                {
+                  Create message with:
+                  s = 'Message text'
+                  ' '.join('#$%02x'%(ord(c)+128) for c in reversed(s))
+                }
 
 {-----------------------------------------------------------------------+
 |       Main loop                                                       |
@@ -252,146 +270,402 @@ _PrintChar=*
 ]
 
 {-----------------------------------------------------------------------+
+|       Disassembler                                                    |
++-----------------------------------------------------------------------}
+
+{
+        WRITTEN BY STEVE WOZNIAK & ALLEN BAUM
+        AND PUBLISHED IN DOCTOR DOBBS JOURNAL
+        SEPT 1976
+}
+                *=$400
+
+_FORMAT=$40
+_LENGTH=$41
+_LMNEM=$42
+_RMNEM=$43
+_PCL=$44
+_PCH=$45
+_COUNT=$46
+
+                #_JSR_          ##_DSMBL        { [Gigatron] Call disassembler as subroutine }
+                #_JMP_          ##_GETLINE      { [Gigatron] Back to wozmon }
+
+_DSMBL=*        #_LDAIM_        #$d {was $13}   { COUNT FOR 13 INSTR. DSMBLY }
+                #_STAZ_         #_COUNT
+_DSMBL2=*       #_JSR_          ##_INSTDS       { DISASSEMBLE AND DISPLAY INSTR. }
+                #_JSR_          ##_PCADJ
+                #_STAZ_         #_PCL           { UPDATE PCL,H TO NEXT INSTR. }
+                #_STYZ_         #_PCH
+                #_DECZ_         #_COUNT         { DONE FIRST 19 INSTR?. }
+                #_BNE_          #@_DSMBL2       { * YES, LOOP. ELSE DSMBL 20TH. }
+_INSTDS=*       #_JSR_          ##_PRPC         { PRINT PCL,H }
+                #_LDAIX_        #_PCL           { GET OPCODE }
+                #_TAY_
+                #_LSRA_                         { EVEN/ODD TEST }
+                #_BCC_          #@_IEVEN
+                #_LSRA_                         { * TEST BIT 1 }
+                #_BCS_          #@_ERR          { *  XXXXXX11 INSTR. INVALID. }
+                #_CMPIM_        #$22
+                #_BEQ_          #@_ERR          { *  10001001 INSTR. INVALID. }
+                #_ANDIM_        #$7             { MASK 3 BITS FOR ADDRESS MODE & }
+                #_ORAIM_        #$80            { *  ADD INDEXING OFFSET. }
+_IEVEN=*        #_LSRA_                         { * LSB INTO CARRY FOR }
+                #_TAX_                          { * LEFT/RIGHT TEST BELOW. }
+                #_LDAAX_        ##_MODE1        { INDEX INTO ADDRESS MODE TABLE.}
+                #_BCS_          #@_RTMODE       { IF CARRY SET USE LSD FOR }
+                #_LSRA_                         { * PRINT FORMAT INDEX }
+                #_LSRA_
+                #_LSRA_                         { * IF CARRY CLEAR USE MSD. }
+                #_LSRA_
+_RTMODE=*       #_ANDIM_        #$F             { MASK FOR 4-BIT INDEX. }
+                #_BNE_          #@_GETFMT       { $0 FOR INVALID OP CODES. }
+_ERR=*          #_LDYIM_        #$80            { SUBSTITUTE $80 FOR INVALID OP, }
+                #_LDAIM_        #$0             { SET PRINT FORMAT INDEX TO 0 }
+_GETFMT=*       #_TAX_
+                #_LDAAX_        ##_MODE2        { INDEX INTO PRINT FORMAT TABLE. }
+                #_STAZ_         #_FORMAT        { SAVE FOR ADDRESS FIELD FORMAT. }
+                #_ANDIM_        #$3             { MASK 2-BIT LENGTH. 0=1-BYTE }
+                #_STAZ_         #_LENGTH        { *  1=2-BYTE, 2=3-BYTE. }
+                #_TYA_                          { * OP CODE. }
+                #_ANDIM_        #$8F            { MASK IT FOR 1XXX1010 TEST. }
+                #_TAX_                          { SAVE IT. }
+                #_TYA_                          { * OP CODE TO 'A' AGAIN. }
+                #_LDYIM_        #$3
+                #_CPXIM_        #$8A
+                #_BEQ_          #@_MNNDX3
+_MNNDX1=*       #_LSRA_
+                #_BCC_          #@_MNNDX3       { FORM INDEX INTO MNEMONIC TABLE. }
+                #_LSRA_
+_MNNDX2=*       #_LSRA_                         { * 1XXX1010 -> 00101XXX }
+                #_ORAIM_        #$20            { * XXXYYY01 -> 00111XXX }
+                #_DEY_                          { * XXXYYY10 -> 00110XXX }
+                #_BNE_          #@_MNNDX2       { * XXXYY100 -> 00100XXX }
+                #_INY_                          { * XXXXX000 -> 000XXXXX }
+_MNNDX3=*       #_DEY_
+                #_BNE_          #@_MNNDX1
+                #_PHA_                          { * SAVE MNEMONIC TABLE INDEX. }
+_PROP=*         #_LDAIY_        #_PCL
+                #_JSR_          ##_PRBYTE
+                #_LDXIM_        #$1
+_PROPBL=*       #_JSR_          ##_PRBL2
+                #_CPYZ_         #_LENGTH        { PRINT INSTR (1 TO 3 BYTES) }
+                #_INY_                          { IN A 12 CHARACTYER FIELD. }
+                #_BCC_          #@_PROP
+                #_LDXIM_        #$3             { CHAR COUNT FOR MNEMONIC PRINT. }
+                #_CPYIM_        #$3
+                #_BCC_          #@_PROPBL
+                #_PLA_                          { RECOVER MNEMONIC INDEX. }
+                #_TAY_
+                #_LDAAY_        ##_MNEML
+                #_STAZ_         #_LMNEM         { FETCH 3-CHAR MNEMONIC }
+                #_LDAAY_        ##_MNEMR        { *  (PACKED IN TWO BYTES) }
+                #_STAZ_         #_RMNEM
+_PRMN1=*        #_LDAIM_        #$0
+                #_LDYIM_        #$5
+_PRMN2=*        #_ASLZ_         #_RMNEM
+                #_ROLZ_         #_LMNEM         { SHIFT 5 BITS OF CHAR INTO 'A'. }
+                #_ROLA_                         { * (CLEAR CARRY) }
+                #_DEY_
+                #_BNE_          #@_PRMN2
+                #_ADCIM_        #$BF            { ADD '?' OFFSET. }
+                #_JSR_          ##_CHAROUT      { OUTPUT A CHAR OR MNEMONIC }
+                #_DEX_
+                #_BNE_          #@_PRMN1
+                #_JSR_          ##_PRBLNK       { OUTPUT 3 BLANKS. }
+                #_LDXIM_        #$6             { COUNT FOR 6 PRINT FORMAT BITS. }
+_PRADR1=*       #_CPXIM_        #$3
+                #_BNE_          #@_PRADR3       { IF X=3 THEN PRINT ADDRESS VAL. }
+                #_LDYZ_         #_LENGTH
+                #_BEQ_          #@_PRADR3       { NO PRINT IF LENGTH=0. }
+_PRADR2=*       #_LDAZ_         #_FORMAT
+                #_CMPIM_        #$E8            { HANDLE REL ADDRESSING MODE }
+                #_LDAIY_        #_PCL           { SPECIAL (PRINT TARGET ADDR) }
+                #_BCS_          #@_RELADR       { * (NOT DISPLACEMENT) }
+                #_JSR_          ##_PRBYTE       { OUTPUT 1- OR 2- BYTE ADDRESS. }
+                #_DEY_                          { MORE SIGNIFICANT BYTE FIRST. }
+                #_BNE_          #@_PRADR2
+_PRADR3=*       #_ASLZ_         #_FORMAT        { TEST NEXT PRINT FORMAT BIT. }
+                #_BCC_          #@_PRADR4       { IF 0, DONT PRINT }
+                #_LDAAX_        ##_CHAR1_MINUS1 { CORRESPONDING CHAR. }
+                #_JSR_          ##_CHAROUT      { OUTPUT 1 OR 2 CHARS. }
+                #_LDAAX_        ##_CHAR2_MINUS1 { *   (IF CHAR FROM CHAR2 IS 0, }
+                #_BEQ_          #@_PRADR4       { *     DON'T FRINT IT) }
+                #_JSR_          ##_CHAROUT
+_PRADR4=*       #_DEX_
+                #_BNE_          #@_PRADR1
+                #_RTS_                          { *RETURN IF DONE 6 FORMAT BITS. }
+_RELADR=*       #_JSR_          ##_PCADJ3       { PCL,H + DISPL + 1 TO 'A','Y'. }
+                #_TAX_
+                #_INX_
+                #_BNE_          #@_PRNTYX       { *    +1 TO 'X','Y'. }
+                #_INY_
+_PRNTYX=*       #_TYA_
+_PRNTAX=*       #_JSR_          ##_PRBYTE       { PRINT TARGET ADDRESS OF BRANCH }
+_PRNTX=*        #_TXA_                          { AND RETURN }
+                #_JMP_          ##_PRBYTE
+_PRPC=*         #_LDAIM_        #$8D
+                #_JSR_          ##_CHAROUT      { OUTPUT CARRIAGE RETURN. }
+                #_LDAZ_         #_PCH
+                #_LDXZ_         #_PCL
+                #_JSR_          ##_PRNTAX       { OUTPUT PCL,H }
+{               #_LDAIM_        #$AD           }{             [Gigatron] Removed }
+{               #_JSR_          ##_CHAROUT     }{ "OUTPUT '-' [Gigatron] Removed }
+_PRBLNK=*       #_LDXIM_        #$1             { BLANK COUNT [Gigatron] Was: LDX #$3 }
+_PRBL2=*        #_LDAIM_        #$A0
+_PRBL3=*        #_JSR_          ##_CHAROUT      { OUTPUT A BLANK }
+                #_DEX_
+                #_BNE_          #@_PRBL2        { LOOP UNTIL COUNT =0 }
+                #_RTS_
+_PCADJ=*        #_LDAZ_         #_LENGTH        { 0=1-BYTE, 1=2-BYTE, 2=3-BYTE. }
+_PCADJ2=*       #_SEC_
+_PCADJ3=*       #_LDYZ_         #_PCH
+                #_TAX_                          { * TEST DISPL SIGN (FOR REL }
+                #_BPL_          #@_PCADJ4       { *   BRANCH). EXTEND NEG }
+                #_DEY_                          { *   BY DECREMENTING PCH. }
+_PCADJ4=*       #_ADCZ_         #_PCL
+
+                #_BCC_          #@_RTS1         { PCL+LENGTH (OR DISPL) +1 TO 'A'. }
+                #_INY_                          { * CARRY INTO 'Y' (PCH) }
+_RTS1=*         #_RTS_
+
+_MODE1=*        #$40
+
+                *=$500                          { [Gigatron] Open next GT1 file segment }
+
+                      #$2 #$45 #$3 #$D0 #$8 #$40 #$9 #$30
+
+                                        { XXXXXXZ0 INSTRUCTIONS. }
+                #$22 #$45 #$33 #$D0 #$8 #$40 #$9 #$40 #$2 #$45
+
+                                        { *  Z=0, LEFT HALF BYTE }
+                                        { *  Z=1, RIGHT HALF BYTE }
+                #$33 #$D0 #$8 #$40 #$9 #$40 #$0 #$40 #$B0 #$D0
+                #$0 #$40 #$0 #$0 #$22 #$44 #$33 #$D0 #$8C #$44
+                #$0 #$11 #$22 #$44 #$33 #$D0 #$8C #$44 #$9A #$10
+                #$22 #$44 #$33 #$D0 #$8 #$40 #$9 #$10 #$22 #$44
+                #$33 #$D0 #$8 #$40 #$9 #$62
+
+                                        { YYXXXZ01 INSTRUCTIONS }
+                #$13 #$78 #$A9
+
+_MODE2=*        #$0                     { ERR }
+                #$21                    { IMM }
+                #$81                    { Z-PAG }
+                #$82                    { ABS }
+                #$0                     { IMPL }
+                #$0                     { ACC }
+                #$59                    { (Z-PAG,X) }
+                #$4D                    { (Z-PAG),Y }
+                #$91                    { Z-PAG,X }
+                #$92                    { ABS,X }
+                #$86                    { ABS,Y }
+                #$4A                    { (ABS) }
+                #$85                    { Z-PAG,Y }
+_CHAR1_MINUS1=*
+                #$9D                    { REL }
+_CHAR1=*        #$AC #$A9 #$AC #$A3 #$A8
+_CHAR2_MINUS1=*
+                #$A4
+_CHAR2=*        #$D9 #$0 #$D8 #$A4 #$A4 #$0
+
+                                        { XXXXX000 INSTRUCTIONS }
+_MNEML=*        #$1C #$8A #$1C #$23 #$5D #$8B #$1B #$A1 #$9D
+
+                #$8A #$1D #$23 #$9D #$8B #$1D #$A1 #$0 #$29 #$19
+                #$AE #$69 #$A8 #$19 #$23 #$24 #$53 #$1B #$23
+                #$24 #$53 #$19 #$A1 #$0
+
+                                        { XXXYY100 INSTRUCTIONS. }
+                #$1A #$5B #$5B #$A5 #$69 #$24 #$24
+
+                                        { 1XXX1010 INSTRUCTIONS }
+                #$AE #$AE #$A8 #$AD #$29 #$0 #$7C #$0
+
+                                        { XXXYYY10 INSTRUCTIONS }
+                #$15 #$9C #$6D #$9C #$A5 #$69 #$29 #$53
+
+                                        { XXXYY01 INSTRUCTIONS. }
+                #$84 #$13 #$34 #$11 #$A5 #$69 #$23 #$A0
+
+                                        { XXXXX000 INSTRUCTIONS. }
+_MNEMR=*        #$D8 #$62 #$5A #$48 #$26 #$62 #$94 #$88
+                #$54 #$44 #$C8 #$54 #$68 #$44 #$E8 #$94 #$0 #$B4
+                #$8 #$84 #$74 #$B4 #$28 #$6E #$74 #$F4 #$CC #$4A
+                #$72 #$F2 #$A4 #$8A
+
+                                        { XXXYY100 INSTRUCTIONS. }
+                #$0 #$AA #$A2 #$A2 #$74 #$74 #$74 #$72
+
+                                        { 1XXX1010 INSTRUCTIONS. }
+                #$44 #$68 #$B2 #$32 #$B2 #$0 #$22 #$0
+
+                                        { XXXYYY10 INSTRUCTIONS. }
+                #$1A #$1A #$26 #$26 #$72 #$72 #$88 #$C8
+
+                                        { XXXYYY01 INSTRUCTIONS }
+                #$C4 #$CA #$26 #$48 #$44 #$44 #$A2 #$C8
+
+{-----------------------------------------------------------------------+
 |       WozMon                                                          |
 +-----------------------------------------------------------------------}
 
 *=$ff00
 
-_WozMon=*
+                { Original ZP usage is 24.2B, but that's taken in the Gigatron }
 
-{FF00} #$D8           { RESET:          CLD             Clear decimal arithmetic mode.          }
-{FF01} #$58           {                 CLI                                                     }
-{FF02} #$A0 #$7F      {                 LDY #$7F        Mask for DSP data direction register.   }
-{FF04} #$2C #$12 #$D0 {         .BYTE   $2C,$12,$D0     [Gigatron] BIT DSP (was: STY DSP)       }
-{FF07} #$A9 #$A7      {                 LDA #$A7        KBD and DSP control register mask.      }
-{FF09} #$2C #$11 #$D0 {         .BYTE   $2C,$11,$D0     [Gigatron] BIT KBDCR (was: STA KBDCR)   }
-{FF0C} #$2C #$13 #$D0 {         .BYTE   $2C,$13,$D0     [Gigatron] BIT DSPCR (was: STY DSPCR)   }
-{FF0F} #$C9 #$DF      { NOTCR:          CMP #$DF        "<-"?                                   }
-{FF11} #$F0 #$13      {                 BEQ BACKSPACE   Yes.                                    }
-{FF13} #$C9 #$9B      {                 CMP #$9B        ESC?                                    }
-{FF15} #$F0 #$03      {                 BEQ ESCAPE      Yes.                                    }
-{FF17} #$C8           {                 INY             Advance text index.                     }
-{FF18} #$10 #$0F      {                 BPL NEXTCHAR    Auto ESC if > 127.                      }
-{FF1A} #$A9 #$DC      { ESCAPE:         LDA #$DC        "\".                                    }
-{FF1C} #$20 #$EF #$FF {                 JSR ECHO        Output it.                              }
-{FF1F} #$A9 #$8D      { GETLINE:        LDA #$8D        CR.                                     }
-{FF21} #$20 #$EF #$FF {                 JSR ECHO        Output it.                              }
-{FF24} #$A0 #$01      {                 LDY #$01        Initiallize text index.                 }
-{FF26} #$88           { BACKSPACE:      DEY             Back up text index.                     }
-{FF27} #$30 #$F6      {                 BMI GETLINE     Beyond start of line, reinitialize.     }
-{FF29} #$A9 #$00      { NEXTCHAR:       LDA #$00        [Gigatron] A=0 to read keyboard.        }
-{FF2B} #$00           {                 BRK             [Gigatron] Transfer to vCPU for input.  }
-{FF2C} #$09 #$80      {                 ORA #$80        [Gigatron] B7 should be '1'.            }
-{FF2E} #$2C #$10 #$D0 {         .BYTE   $2C,$10,$D0     [Gigatron] BIT KBD (was: LDA KBD)       }
-{FF31} #$99 #$00 #$02 {                 STA IN,Y        Add to text buffer.                     }
-{FF34} #$20 #$EF #$FF {                 JSR ECHO        Display character.                      }
-{FF37} #$C9 #$8D      {                 CMP #$8D        CR?                                     }
-{FF39} #$D0 #$D4      {                 BNE NOTCR       No.                                     }
-{FF3B} #$A0 #$FF      {                 LDY #$FF        Reset text index.                       }
-{FF3D} #$A9 #$00      {                 LDA #$00        For XAM mode.                           }
-{FF3F} #$AA           {                 TAX             0->X.                                   }
-{FF40} #$0A           { SETSTOR:        ASL             Leaves $7B if setting STOR mode.        }
-{FF41} #$85 #$3B      { SETMODE:        STA MODE        $00 = XAM, $7B= STOR,$AE= BLOK XAM      }
-{FF43} #$C8           { BLSKIP:         INY             Advance text index.                     }
-{FF44} #$B9 #$00 #$02 { NEXTITEM:       LDA IN,Y        Get character.                          }
-{FF47} #$C9 #$8D      {                 CMP #$8D        CR?                                     }
-{FF49} #$F0 #$D4      {                 BEQ GETLINE     Yes, done this line.                    }
-{FF4B} #$C9 #$AE      {                 CMP #$AE        "."?                                    }
-{FF4D} #$90 #$F4      {                 BCC BLSKIP      Skip delimiter.                         }
-{FF4F} #$F0 #$F0      {                 BEQ SETMODE     Yes, BLOCK XAM mode.                    }
-{FF51} #$C9 #$BA      {                 CMP #$BA        ":"?                                    }
-{FF53} #$F0 #$EB      {                 BEQ SETSTOR     Yes, set STOR mode.                     }
-{FF55} #$C9 #$D2      {                 CMP #$D2        "R"?                                    }
-{FF57} #$F0 #$3B      {                 BEQ RUN         Yes, run user program.                  }
-{FF59} #$86 #$38      {                 STX L           $00->L.                                 }
-{FF5B} #$86 #$39      {                 STX H            and H.                                 }
-{FF5D} #$84 #$3A      {                 STY YSAV        Save Y for comparison.                  }
-{FF5F} #$B9 #$00 #$02 { NEXTHEX:        LDA IN,Y        Get character for hex test.             }
-{FF62} #$49 #$B0      {                 EOR #$B0        Map digits to $0-9.                     }
-{FF64} #$C9 #$0A      {                 CMP #$0A        Digit?                                  }
-{FF66} #$90 #$06      {                 BCC DIG         Yes.                                    }
-{FF68} #$69 #$88      {                 ADC #$88        Map letter "A"-"F" to $FA-FF.           }
-{FF6A} #$C9 #$FA      {                 CMP #$FA        Hex letter?                             }
-{FF6C} #$90 #$11      {                 BCC NOTHEX      No, character not hex.                  }
-{FF6E} #$0A           { DIG:            ASL                                                     }
-{FF6F} #$0A           {                 ASL             Hex digit to MSD of A.                  }
-{FF70} #$0A           {                 ASL                                                     }
-{FF71} #$0A           {                 ASL                                                     }
-{FF72} #$A2 #$04      {                 LDX #$04        Shift count.                            }
-{FF74} #$0A           { HEXSHIFT:       ASL             Hex digit left, MSB to carry.           }
-{FF75} #$26 #$38      {                 ROL L           Rotate into LSD.                        }
-{FF77} #$26 #$39      {                 ROL H           Rotate into MSD's.                      }
-{FF79} #$CA           {                 DEX             Done 4 shifts?                          }
-{FF7A} #$D0 #$F8      {                 BNE HEXSHIFT    No, loop.                               }
-{FF7C} #$C8           {                 INY             Advance text index.                     }
-{FF7D} #$D0 #$E0      {                 BNE NEXTHEX     Always taken. Check next character for hex.}
-{FF7F} #$C4 #$3A      { NOTHEX:         CPY YSAV        Check if L, H empty (no hex digits).    }
-{FF81} #$F0 #$97      {                 BEQ ESCAPE      Yes, generate  ESC sequence.            }
-{FF83} #$24 #$3B      {                 BIT MODE        Test MODE byte.                         }
-{FF85} #$50 #$10      {                 BVC NOTSTOR     B6 = 0 for STOR, 1 for XAM and BLOCK XAM}
-{FF87} #$A5 #$38      {                 LDA L           LSD's of hex data.                      }
-{FF89} #$81 #$36      {                 STA (STL,X)     Store at current 'store index'.         }
-{FF8B} #$E6 #$36      {                 INC STL         Increment store index.                  }
-{FF8D} #$D0 #$B5      {                 BNE NEXTITEM    Get next item. (no carry).              }
-{FF8F} #$E6 #$37      {                 INC STH         Add carry to 'store index' high order.  }
-{FF91} #$4C #$44 #$FF { TONEXTITEM:     JMP NEXTITEM    Get next command item.                  }
-{FF94} #$6C #$34 #$00 { RUN:            JMP (XAML)      Run at current XAM index.               }
-{FF97} #$30 #$2B      { NOTSTOR:        BMI XAMNEXT     B7 = 0 for XAM, 1 for BLOCK XAM.        }
-{FF99} #$A2 #$02      {                 LDX #$02        Byte count.                             }
-{FF9B} #$B5 #$37      { SETADR:         LDA L-1,X       Copy hex data to                        }
-{FF9D} #$95 #$35      {                 STA STL-1,X       'store index'.                        }
-{FF9F} #$95 #$33      {                 STA XAML-1,X    And to 'XAM index'.                     }
-{FFA1} #$CA           {                 DEX             Next of 2 bytes.                        }
-{FFA2} #$D0 #$F7      {                 BNE SETADR      Loop unless X = 0.                      }
-{FFA4} #$D0 #$14      { NXTPRNT:        BNE PRDATA      NE means no address to print.           }
-{FFA6} #$A9 #$8D      {                 LDA #$8D        CR.                                     }
-{FFA8} #$20 #$EF #$FF {                 JSR ECHO        Output it.                              }
-{FFAB} #$A5 #$35      {                 LDA XAMH        'Examine index' high-order byte.        }
-{FFAD} #$20 #$DC #$FF {                 JSR PRBYTE      Output it in hex format.                }
-{FFB0} #$A5 #$34      {                 LDA XAML        Low-order 'examine index' byte.         }
-{FFB2} #$20 #$DC #$FF {                 JSR PRBYTE      Output it in hex format.                }
-{FFB5} #$A9 #$BA      {                 LDA #$BA        ":".                                    }
-{FFB7} #$20 #$EF #$FF {                 JSR ECHO        Output it.                              }
-{FFBA} #$A9 #$04      { PRDATA:         LDA #$04        [Gigatron] 4 pixels wide blank.         }
-{FFBC} #$20 #$F3 #$FF {                 JSR BLANK       [Gigatron] Output it.                   }
-{FFBF} #$A1 #$34      {                 LDA (XAML,X)    Get data byte at 'examine index'.       }
-{FFC1} #$20 #$DC #$FF {                 JSR PRBYTE      Output it in hex format.                }
-{FFC4} #$86 #$3B      { XAMNEXT:        STX MODE        0->MODE (XAM mode).                     }
-{FFC6} #$A5 #$34      {                 LDA XAML                                                }
-{FFC8} #$C5 #$38      {                 CMP L           Compare 'examine index' to hex data.    }
-{FFCA} #$A5 #$35      {                 LDA XAMH                                                }
-{FFCC} #$E5 #$39      {                 SBC H                                                   }
-{FFCE} #$B0 #$C1      {                 BCS TONEXTITEM  Not less, so no more data to output.    }
-{FFD0} #$E6 #$34      {                 INC XAML                                                }
-{FFD2} #$D0 #$02      {                 BNE MOD8CHK     Increment 'examine index'.              }
-{FFD4} #$E6 #$35      {                 INC XAMH                                                }
-{FFD6} #$A5 #$34      { MOD8CHK:        LDA XAML        Check low-order 'examine index' byte    }
-{FFD8} #$29 #$07      {                 AND #$07          For MOD 8= 0                          }
-{FFDA} #$10 #$C8      {                 BPL NXTPRNT     Always taken.                           }
-{FFDC} #$48           { PRBYTE:         PHA             Save A for LSD.                         }
-{FFDD} #$4A           {                 LSR                                                     }
-{FFDE} #$4A           {                 LSR                                                     }
-{FFDF} #$4A           {                 LSR             MSD to LSD position.                    }
-{FFE0} #$4A           {                 LSR                                                     }
-{FFE1} #$20 #$E5 #$FF {                 JSR PRHEX       Output hex digit.                       }
-{FFE4} #$68           {                 PLA             Restore A.                              }
-{FFE5} #$29 #$0F      { PRHEX:          AND #$0F        Mask LSD for hex print.                 }
-{FFE7} #$09 #$B0      {                 ORA #$B0        Add "0".                                }
-{FFE9} #$C9 #$BA      {                 CMP #$BA        Digit?                                  }
-{FFEB} #$90 #$02      {                 BCC ECHO        Yes, output it.                         }
-{FFED} #$69 #$06      {                 ADC #$06        Add offset for letter.                  }
-{FFEF} #$48           { ECHO:           PHA             [Gigatron]                              }
-{FFF0} #$00           {                 BRK             [Gigatron] Transfer to vCPU for display.}
-{FFF1} #$68           {                 PLA             [Gigatron]                              }
-{FFF2} #$60           {                 RTS             [Gigatron] Return.                      }
-{FFF3} #$18           { BLANK:          CLC             [Gigatron] Advance few pixels so BLOCK  }
-{FFF4} #$65 #$30      {                 ADC $30         [Gigatron]   XAM doesn't wrap around    }
-{FFF6} #$85 #$30      {                 STA $30         [Gigatron]   the 160 pixel wide screen. }
-{FFF8} #$60           {                 RTS             [Gigatron]                              }
-{FFF9} #$00           { (unused)                                                                }
-{FFFA} #$00 #$00      { (NMI)                                                                   }
-{FFFC} #$00 #$FF      { (RESET)                                                                 }
-{FFFE} #$00 #$00      { (IRQ)                                                                   }
+_XAML=$34       _XAML_MINUS1=$33
+_XAMH=$35
+_STL=$36        _STL_MINUS1=$35
+_STH=$37
+_L=$38          _L_MINUS1=$37
+_H=$39
+_YSAV=$3A
+_MODE=$3B
+
+                { Patches with respect to original are marked [Gigatron] }
+
+_IN=$200
+
+_KBD=$D010
+_KBDCR=$D011
+_DSP=$D012
+_DSPCR=$D013
+
+_RESET=*        #_CLD_                  { Clear decimal arithmetic mode.          }
+                #_CLI_
+                #_LDYIM_ #$7F           { Mask for DSP data direction register.   }
+                #_BIT_   ##_DSP         { [Gigatron] Was: STY DSP                 }
+                #_LDAIM_ #$A7           { KBD and DSP control register mask.      }
+                #_BIT_   ##_KBDCR       { [Gigatron] Was: STA KBDCR               }
+                #_BIT_   ##_DSPCR       { [Gigatron] Was: STY DSPCR               }
+_NOTCR=*        #_CMPIM_ #$DF           { "<-"?                                   }
+                #_BEQ_   #@_BACKSPACE   { Yes.                                    }
+                #_CMPIM_ #$9B           { ESC?                                    }
+                #_BEQ_   #@_ESCAPE      { Yes.                                    }
+                #_INY_                  { Advance text index.                     }
+                #_BPL_   #@_NEXTCHAR    { Auto ESC if > 127.                      }
+_ESCAPE=*       #_LDAIM_ #$DC           { "\".                                    }
+                #_JSR_   ##_ECHO        { Output it.                              }
+_GETLINE=*      #_LDAIM_ #$8D           { CR.                                     }
+                #_JSR_   ##_ECHO        { Output it.                              }
+                #_LDYIM_ #$01           { Initiallize text index.                 }
+_BACKSPACE=*    #_DEY_                  { Back up text index.                     }
+                #_BMI_   #@_GETLINE     { Beyond start of line, reinitialize.     }
+_NEXTCHAR=*     #_LDAIM_ #$00           { [Gigatron] A=0 to read keyboard.        }
+                #_BRK_                  { [Gigatron] Transfer to vCPU for input.  }
+                #_ORAIM_ #$80           { [Gigatron] B7 should be '1'.            }
+                #_BIT_   ##_KBD         { [Gigatron] Was: LDA KBD                 }
+                #_STAAY_ ##_IN          { Add to text buffer.                     }
+                #_JSR_   ##_ECHO        { Display character.                      }
+                #_CMPIM_ #$8D           { CR?                                     }
+                #_BNE_   #@_NOTCR       { No.                                     }
+                #_LDYIM_ #$FF           { Reset text index.                       }
+                #_LDAIM_ #$00           { For XAM mode.                           }
+                #_TAX_                  { 0->X.                                   }
+_SETSTOR=*      #_ASLA_                 { Leaves $7B if setting STOR mode.        }
+_SETMODE=*      #_STAZ_  #_MODE         { $00 = XAM, $7B= STOR,$AE= BLOK XAM      }
+_BLSKIP=*       #_INY_                  { Advance text index.                     }
+_NEXTITEM=*     #_LDAAY_ ##_IN          { Get character.                          }
+                #_CMPIM_ #$8D           { CR?                                     }
+                #_BEQ_   #@_GETLINE     { Yes, done this line.                    }
+                #_CMPIM_ #$AE           { "."?                                    }
+                #_BCC_   #@_BLSKIP      { Skip delimiter.                         }
+                #_BEQ_   #@_SETMODE     { Yes, BLOCK XAM mode.                    }
+                #_CMPIM_ #$BA           { ":"?                                    }
+                #_BEQ_   #@_SETSTOR     { Yes, set STOR mode.                     }
+                #_CMPIM_ #$D2           { "R"?                                    }
+                #_BEQ_   #@_RUN         { Yes, run user program.                  }
+                #_STXZ_  #_L            { $00->L.                                 }
+                #_STXZ_  #_H            {  and H.                                 }
+                #_STYZ_  #_YSAV         { Save Y for comparison.                  }
+_NEXTHEX=*      #_LDAAY_ ##_IN          { Get character for hex test.             }
+                #_EORIM_ #$B0           { Map digits to $0-9.                     }
+                #_CMPIM_ #$0A           { Digit?                                  }
+                #_BCC_   #@_DIG         { Yes.                                    }
+                #_ADCIM_ #$88           { Map letter "A"-"F" to $FA-FF.           }
+                #_CMPIM_ #$FA           { Hex letter?                             }
+                #_BCC_   #@_NOTHEX      { No, character not hex.                  }
+_DIG=*          #_ASLA_                 {                                         }
+                #_ASLA_                 { Hex digit to MSD of A.                  }
+                #_ASLA_                 {                                         }
+                #_ASLA_                 {                                         }
+                #_LDXIM_ #$04           { Shift count.                            }
+_HEXSHIFT=*     #_ASLA_                 { Hex digit left, MSB to carry.           }
+                #_ROLZ_  #_L            { Rotate into LSD.                        }
+                #_ROLZ_  #_H            { Rotate into MSD's.                      }
+                #_DEX_                  { Done 4 shifts?                          }
+                #_BNE_   #@_HEXSHIFT    { No, loop.                               }
+                #_INY_                  { Advance text index.                     }
+                #_BNE_   #@_NEXTHEX     { Always taken. Check next character for hex.}
+_NOTHEX=*       #_CPYZ_  #_YSAV         { Check if L, H empty (no hex digits).    }
+                #_BEQ_   #@_ESCAPE      { Yes, generate  ESC sequence.            }
+                #_BITZ_  #_MODE         { Test MODE byte.                         }
+                #_BVC_   #@_NOTSTOR     { B6 = 0 for STOR, 1 for XAM and BLOCK XAM}
+                #_LDAZ_  #_L            { LSD's of hex data.                      }
+                #_STAIX_ #_STL          { Store at current 'store index'.         }
+                #_INCZ_  #_STL          { Increment store index.                  }
+                #_BNE_   #@_NEXTITEM    { Get next item. (no carry).              }
+                #_INCZ_  #_STH          { Add carry to 'store index' high order.  }
+_TONEXTITEM=*   #_JMP_   ##_NEXTITEM    { Get next command item.                  }
+_RUN=*          #_JMI_   ##_XAML        { Run at current XAM index.               }
+_NOTSTOR=*      #_BMI_   #@_XAMNEXT     { B7 = 0 for XAM, 1 for BLOCK XAM.        }
+                #_LDXIM_ #$02           { Byte count.                             }
+_SETADR=*       #_LDAZX_ #_L_MINUS1     { Copy hex data to                        }
+                #_STAZX_ #_STL_MINUS1   {   'store index'.                        }
+                #_STAZX_ #_XAML_MINUS1  { And to 'XAM index'.                     }
+                #_DEX_                  { Next of 2 bytes.                        }
+                #_BNE_   #@_SETADR      { Loop unless X = 0.                      }
+_NXTPRNT=*      #_BNE_   #@_PRDATA      { NE means no address to print.           }
+                #_LDAIM_ #$8D           { CR.                                     }
+                #_JSR_   ##_ECHO        { Output it.                              }
+                #_LDAZ_  #_XAMH         { 'Examine index' high-order byte.        }
+                #_JSR_   ##_PRBYTE      { Output it in hex format.                }
+                #_LDAZ_  #_XAML         { Low-order 'examine index' byte.         }
+                #_JSR_   ##_PRBYTE      { Output it in hex format.                }
+                #_LDAIM_ #$BA           { ":".                                    }
+                #_JSR_   ##_ECHO        { Output it.                              }
+_PRDATA=*       #_LDAIM_ #$04           { [Gigatron] 4 pixels wide blank.         }
+                #_JSR_   ##_BLANK       { [Gigatron] Output it.                   }
+                #_LDAIX_ #_XAML         { Get data byte at 'examine index'.       }
+                #_JSR_   ##_PRBYTE      { Output it in hex format.                }
+_XAMNEXT=*      #_STXZ_  #_MODE         { 0->MODE (XAM mode).                     }
+                #_LDAZ_  #_XAML         {                                         }
+                #_CMPZ_  #_L            { Compare 'examine index' to hex data.    }
+                #_LDAZ_  #_XAMH         {                                         }
+                #_SBCZ_  #_H            {                                         }
+                #_BCS_   #@_TONEXTITEM  { Not less, so no more data to output.    }
+                #_INCZ_  #_XAML         {                                         }
+                #_BNE_   #@_MOD8CHK     { Increment 'examine index'.              }
+                #_INCZ_  #_XAMH         {                                         }
+_MOD8CHK=*      #_LDAZ_  #_XAML         { Check low-order 'examine index' byte    }
+                #_ANDIM_ #$07           {   For MOD 8= 0                          }
+                #_BPL_   #@_NXTPRNT     { Always taken.                           }
+_PRBYTE=*       #_PHA_                  { Save A for LSD.                         }
+                #_LSRA_                 {                                         }
+                #_LSRA_                 {                                         }
+                #_LSRA_                 { MSD to LSD position.                    }
+                #_LSRA_                 {                                         }
+                #_JSR_   ##_PRHEX       { Output hex digit.                       }
+                #_PLA_                  { Restore A.                              }
+_PRHEX=*        #_ANDIM_ #$0F           { Mask LSD for hex print.                 }
+                #_ORAIM_ #$B0           { Add "0".                                }
+                #_CMPIM_ #$BA           { Digit?                                  }
+                #_BCC_   #@_ECHO        { Yes, output it.                         }
+                #_ADCIM_ #$06           { Add offset for letter.                  }
+_CHAROUT=*
+_ECHO=*         #_PHA_                  { [Gigatron]                              }
+                #_BRK_                  { [Gigatron] Transfer to vCPU for display.}
+                #_PLA_                  { [Gigatron]                              }
+                #_RTS_                  { [Gigatron] Return.                      }
+_BLANK=*        #_CLC_                  { [Gigatron] Advance few pixels so BLOCK  }
+                #_ADCZ_  #<Pos          { [Gigatron]   XAM doesn't wrap around    }
+                #_STAZ_  #<Pos          { [Gigatron]   the 160 pixel wide screen. }
+                #_RTS_                  { [Gigatron]                              }
+                #$00                    { (unused)                                }
+{FFFA}          ##$0000                 { (NMI)                                   }
+{FFFC}          ##_RESET                { (RESET)                                 }
+{FFFE}          ##$0000                 { (IRQ)                                   }
 
 {-----------------------------------------------------------------------+
 |                                                                       |
