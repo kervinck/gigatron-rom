@@ -10,7 +10,6 @@ gcl0x
  Issues:
   XXX Shift screen memory 96 pixels right
   XXX NMI/IRQ/RESET to wozmon (through vector) without going through main menu
-  XXX Smaller screen so there's more space for real programs (top 16 lines = 4K)
   XXX We can win memory by sharing all black pixel lines in one page
       But drawing characters then touches the top line
       - Option 1: VDRawBits7
@@ -20,8 +19,7 @@ gcl0x
                   -> doesn't work at memory wrap-around
       - Option 5: New videoTable-aware (character) plot function
       - Option 6: use Sprite functions for plotting chars
-  XXX Print a welcome message (only on first boot)
-  XXX Possible memory map with compressed video memory
+      Possible memory map with compressed video memory:
         +--------------------------+
         |30-7F,81-FF FREE ZP+STACK!|
         |0100-01F9   VIDEO+SYSTEM  |
@@ -29,7 +27,7 @@ gcl0x
         |E000-EFFF   FREE RAM      | F000-FBFF -> 12 scanlines --> total 13*7+1
         |FC00-FD00   FREE RAM      |
         |FE00        KBD/DSP MOCKUP| Add entry points at D010-D013 = 5010-5013
-        |FF00        WOZMON        |
+        |FF00        APPLE1 ROM    |
         |                          |
         |C100R     LOADER MENU     |
         |E000R     BASIC COLD START|
@@ -50,9 +48,10 @@ $30-$31         Pos
 $32-$33         PrintChar
 $34-$3b         WozMon variables
 }
-_i=$3c
-_j=$3e
-_k=$3a          {Share with wozmon YSAV}
+
+_i=$3c          {2 bytes}
+_j=$3e          {2 bytes}
+_k=$3a          {1 bytes, share with wozmon YSAV}
 
 {-----------------------------------------------------------------------+
 |       ROM type check                                                  |
@@ -83,10 +82,10 @@ _k=$3a          {Share with wozmon YSAV}
 &_PrintChar PrintChar=          {Forward reference}
 
 &_Apple1 _vLR=                  {Prepare transfer to main loop}
-&_Start                         {Start address for 6502 program}
+&_FirstStart                    {Start address for 6502 program}
 [ret]                           {Jump to Main (the brackets avoid the automatic vLR patch)}
 
-_Start=*        #_LDXIM_ #15            {Clear screen}
+_FirstStart=*   #_LDXIM_ #15            {Clear screen}
 _L0=*           #_LDAIM_ #$8d
                 #_BRK_
                 #_DEX_
@@ -123,7 +122,7 @@ _L2=*           #_EORZ_  #$41
                 #_BPL_   #@_L1
                 #_LDAZ_  #$40
                 #_JMP_   ##_MUNCH
-_L3=*           #_LDXIM_ #61
+_L3=*           #_LDXIM_ #66
 _L4=*           #_LDAAX_ ##_MSG
                 #_BRK_
                 #_DEX_
@@ -132,14 +131,14 @@ _L4=*           #_LDAAX_ ##_MSG
 
 _MSG=*
 
-                { '500  Free\r' }
+                { '600  Free\r' }
                 #$8d #$e5 #$e5 #$f2 #$c6 #$a0 #$a0 #$b0
                 #$b0 #$b6
 
-                { '400R Disassembler\r' }
-                #$8d #$f2 #$e5 #$ec #$e2 #$ed #$e5 #$f3
-                #$f3 #$e1 #$f3 #$e9 #$c4 #$a0 #$d2 #$b0
-                #$b0 #$b4
+                { '400R Disassemble 44.45\r' }
+                #$8d #$b5 #$b4 #$ae #$b4 #$b4 #$a0 #$e5
+                #$ec #$e2 #$ed #$e5 #$f3 #$f3 #$e1 #$f3
+                #$e9 #$c4 #$a0 #$d2 #$b0 #$b0 #$b4
 
                 { '280R Munching6502\r' }
                 #$8d #$b2 #$b0 #$b5 #$b6 #$e7 #$ee #$e9
@@ -409,9 +408,9 @@ _PRPC=*         #_LDAIM_        #$8D
                 #_LDAZ_         #_PCH
                 #_LDXZ_         #_PCL
                 #_JSR_          ##_PRNTAX       { OUTPUT PCL,H }
-{               #_LDAIM_        #$AD           }{             [Gigatron] Removed }
-{               #_JSR_          ##_CHAROUT     }{ "OUTPUT '-' [Gigatron] Removed }
-_PRBLNK=*       #_LDXIM_        #$1             { BLANK COUNT [Gigatron] Was: LDX #$3 }
+              { #_LDAIM_        #$AD          } {                     [Gigatron] Removed }
+              { #_JSR_          ##_CHAROUT    } { "OUTPUT '-'         [Gigatron] Removed }
+_PRBLNK=*       #_LDXIM_        #$1             { BLANK COUNT         [Gigatron] Was: #$3 }
 _PRBL2=*        #_LDAIM_        #$A0
 _PRBL3=*        #_JSR_          ##_CHAROUT      { OUTPUT A BLANK }
                 #_DEX_
@@ -425,86 +424,98 @@ _PCADJ3=*       #_LDYZ_         #_PCH
                 #_DEY_                          { *   BY DECREMENTING PCH. }
 _PCADJ4=*       #_ADCZ_         #_PCL
 
-                #_BCC_          #@_RTS1         { PCL+LENGTH (OR DISPL) +1 TO 'A'. }
-                #_INY_                          { * CARRY INTO 'Y' (PCH) }
+                #_BCC_          #@_RTS1         { PCL+LENGTH (OR DISPL) +1 TO A. }
+                #_INY_                          { *  CARRY INTO Y (PCH) }
 _RTS1=*         #_RTS_
 
 _MODE1=*        #$40
-
                 *=$500                          { [Gigatron] Open next GT1 file segment }
+                     #$2  #$45 #$3
+                #$D0 #$8  #$40 #$9
+                #$30                            { XXXXXXZ0 INSTRS.. }
+                #$22
+                #$45                            { *  Z=0, LEFT HALF-BYTE }
+                #$33                            { *  Z=1, RIGHT HALF-BYTE }
+                #$D0 #$8  #$40 #$9
+                #$40 #$2  #$45 #$33
+                #$D0 #$8  #$40 #$9
+                #$40 #$0  #$40 #$B0
+                #$D0 #$0  #$40 #$0
+                #$0  #$22 #$44 #$33
+                #$D0 #$8C #$44 #$0
+                #$11 #$22 #$44 #$33
+                #$D0 #$8C #$44 #$9A
+                #$10 #$22 #$44 #$33
+                #$D0 #$8  #$40 #$9
+                #$10 #$22 #$44 #$33
+                #$D0 #$8  #$40 #$9
+                #$62
+                #$13                            { YYXXXZ01 INSTRS. }
+                #$78
+                #$A9
 
-                      #$2 #$45 #$3 #$D0 #$8 #$40 #$9 #$30
+_MODE2=*        #$0                             { ERR }
+                #$21                            { IMM }
+                #$81                            { Z-PAG }
+                #$82                            { ABS }
+                #$0                             { IMPL }
+                #$0                             { ACC }
+                #$59                            { (Z-PAG,X) }
+                #$4D                            { (Z-PAG),Y }
+                #$91                            { Z-PAG,X }
+                #$92                            { ABS,X }
+                #$86                            { ABS,Y }
+                #$4A                            { (ABS) }
+                #$85                            { Z-PAG,Y }
+_CHAR1_MINUS1=* #$9D                            { REL }
 
-                                        { XXXXXXZ0 INSTRUCTIONS. }
-                #$22 #$45 #$33 #$D0 #$8 #$40 #$9 #$40 #$2 #$45
+_CHAR1=*        #$AC                            { ',' }
+                #$A9                            { ')' }
+                #$AC                            { ',' }
+                #$A3                            { '#' }
+                #$A8                            { '(' }
+_CHAR2_MINUS1=* #$A4                            { '$' }
 
-                                        { *  Z=0, LEFT HALF BYTE }
-                                        { *  Z=1, RIGHT HALF BYTE }
-                #$33 #$D0 #$8 #$40 #$9 #$40 #$0 #$40 #$B0 #$D0
-                #$0 #$40 #$0 #$0 #$22 #$44 #$33 #$D0 #$8C #$44
-                #$0 #$11 #$22 #$44 #$33 #$D0 #$8C #$44 #$9A #$10
-                #$22 #$44 #$33 #$D0 #$8 #$40 #$9 #$10 #$22 #$44
-                #$33 #$D0 #$8 #$40 #$9 #$62
+_CHAR2=*        #$D9                            { 'Y' }
+                #$0
+                #$D8                            { 'X' }
+                #$A4                            { '$' }
+                #$A4                            { '$' }
+                #$0
 
-                                        { YYXXXZ01 INSTRUCTIONS }
-                #$13 #$78 #$A9
+_MNEML=*        #$1C #$8A #$1C #$23             { XXXXX000 INSTRS. }
+                #$5D #$8B #$1B #$A1
+                #$9D #$8A #$1D #$23
+                #$9D #$8B #$1D #$A1
+                #$0  #$29 #$19 #$AE
+                #$69 #$A8 #$19 #$23
+                #$24 #$53 #$1B #$23
+                #$24 #$53 #$19 #$A1
+                #$0  #$1A #$5B #$5B             { XXXYY100 INSTRS. }
+                #$A5 #$69 #$24 #$24
+                #$AE #$AE #$A8 #$AD             { 1XXX1010 INSTRS. }
+                #$29 #$0  #$7C #$0
+                #$15 #$9C #$6D #$9C             { XXXYYY10 INSTRS. }
+                #$A5 #$69 #$29 #$53
+                #$84 #$13 #$34 #$11             { XXXYYY01 INSTRS. }
+                #$A5 #$69 #$23 #$A0
 
-_MODE2=*        #$0                     { ERR }
-                #$21                    { IMM }
-                #$81                    { Z-PAG }
-                #$82                    { ABS }
-                #$0                     { IMPL }
-                #$0                     { ACC }
-                #$59                    { (Z-PAG,X) }
-                #$4D                    { (Z-PAG),Y }
-                #$91                    { Z-PAG,X }
-                #$92                    { ABS,X }
-                #$86                    { ABS,Y }
-                #$4A                    { (ABS) }
-                #$85                    { Z-PAG,Y }
-_CHAR1_MINUS1=*
-                #$9D                    { REL }
-_CHAR1=*        #$AC #$A9 #$AC #$A3 #$A8
-_CHAR2_MINUS1=*
-                #$A4
-_CHAR2=*        #$D9 #$0 #$D8 #$A4 #$A4 #$0
-
-                                        { XXXXX000 INSTRUCTIONS }
-_MNEML=*        #$1C #$8A #$1C #$23 #$5D #$8B #$1B #$A1 #$9D
-
-                #$8A #$1D #$23 #$9D #$8B #$1D #$A1 #$0 #$29 #$19
-                #$AE #$69 #$A8 #$19 #$23 #$24 #$53 #$1B #$23
-                #$24 #$53 #$19 #$A1 #$0
-
-                                        { XXXYY100 INSTRUCTIONS. }
-                #$1A #$5B #$5B #$A5 #$69 #$24 #$24
-
-                                        { 1XXX1010 INSTRUCTIONS }
-                #$AE #$AE #$A8 #$AD #$29 #$0 #$7C #$0
-
-                                        { XXXYYY10 INSTRUCTIONS }
-                #$15 #$9C #$6D #$9C #$A5 #$69 #$29 #$53
-
-                                        { XXXYY01 INSTRUCTIONS. }
-                #$84 #$13 #$34 #$11 #$A5 #$69 #$23 #$A0
-
-                                        { XXXXX000 INSTRUCTIONS. }
-_MNEMR=*        #$D8 #$62 #$5A #$48 #$26 #$62 #$94 #$88
-                #$54 #$44 #$C8 #$54 #$68 #$44 #$E8 #$94 #$0 #$B4
-                #$8 #$84 #$74 #$B4 #$28 #$6E #$74 #$F4 #$CC #$4A
+_MNEMR=*        #$D8 #$62 #$5A #$48             { XXXXX000 INSTRS }
+                #$26 #$62 #$94 #$88
+                #$54 #$44 #$C8 #$54
+                #$68 #$44 #$E8 #$94
+                #$0  #$B4 #$8  #$84
+                #$74 #$B4 #$28 #$6E
+                #$74 #$F4 #$CC #$4A
                 #$72 #$F2 #$A4 #$8A
-
-                                        { XXXYY100 INSTRUCTIONS. }
-                #$0 #$AA #$A2 #$A2 #$74 #$74 #$74 #$72
-
-                                        { 1XXX1010 INSTRUCTIONS. }
-                #$44 #$68 #$B2 #$32 #$B2 #$0 #$22 #$0
-
-                                        { XXXYYY10 INSTRUCTIONS. }
-                #$1A #$1A #$26 #$26 #$72 #$72 #$88 #$C8
-
-                                        { XXXYYY01 INSTRUCTIONS }
-                #$C4 #$CA #$26 #$48 #$44 #$44 #$A2 #$C8
+                #$0  #$AA #$A2 #$A2             { XXXYY100 INSTRS }
+                #$74 #$74 #$74 #$72
+                #$44 #$68 #$B2 #$32             { 1XXX1010 INSTRS. }
+                #$B2 #$0 #$22 #$0
+                #$1A #$1A #$26 #$26             { XXXYYY10 INSTRS. }
+                #$72 #$72 #$88 #$C8
+                #$C4 #$CA #$26 #$48             { XXXYYY01 INSTRS. }
+                #$44 #$44 #$A2 #$C8
 
 {-----------------------------------------------------------------------+
 |       WozMon                                                          |
@@ -512,33 +523,33 @@ _MNEMR=*        #$D8 #$62 #$5A #$48 #$26 #$62 #$94 #$88
 
 *=$ff00
 
-                { Original ZP usage is 24.2B, but that's taken in the Gigatron }
+        { Original ZP usage is 24.2B, but that's taken by Gigatron }
 
-_XAML=$34       _XAML_MINUS1=$33
-_XAMH=$35
-_STL=$36        _STL_MINUS1=$35
-_STH=$37
-_L=$38          _L_MINUS1=$37
-_H=$39
-_YSAV=$3A
-_MODE=$3B
+   _XAML=$34        _XAML_MINUS1=$33
+   _XAMH=$35
+    _STL=$36         _STL_MINUS1=$35
+    _STH=$37
+      _L=$38           _L_MINUS1=$37
+      _H=$39
+   _YSAV=$3A
+   _MODE=$3B
 
-                { Patches with respect to original are marked [Gigatron] }
+       { Patches with respect to original are marked [Gigatron] }
 
-_IN=$200
+     _IN=$200
 
-_KBD=$D010
-_KBDCR=$D011
-_DSP=$D012
-_DSPCR=$D013
+    _KBD=$D010
+  _KBDCR=$D011
+    _DSP=$D012
+  _DSPCR=$D013
 
 _RESET=*        #_CLD_                  { Clear decimal arithmetic mode.          }
                 #_CLI_
                 #_LDYIM_ #$7F           { Mask for DSP data direction register.   }
-                #_BIT_   ##_DSP         { [Gigatron] Was: STY DSP                 }
+                #_STY_   ##_DSP
                 #_LDAIM_ #$A7           { KBD and DSP control register mask.      }
-                #_BIT_   ##_KBDCR       { [Gigatron] Was: STA KBDCR               }
-                #_BIT_   ##_DSPCR       { [Gigatron] Was: STY DSPCR               }
+                #_STA_   ##_KBDCR
+                #_STA_   ##_DSPCR
 _NOTCR=*        #_CMPIM_ #$DF           { "<-"?                                   }
                 #_BEQ_   #@_BACKSPACE   { Yes.                                    }
                 #_CMPIM_ #$9B           { ESC?                                    }
@@ -555,7 +566,7 @@ _BACKSPACE=*    #_DEY_                  { Back up text index.                   
 _NEXTCHAR=*     #_LDAIM_ #$00           { [Gigatron] A=0 to read keyboard.        }
                 #_BRK_                  { [Gigatron] Transfer to vCPU for input.  }
                 #_ORAIM_ #$80           { [Gigatron] B7 should be '1'.            }
-                #_BIT_   ##_KBD         { [Gigatron] Was: LDA KBD                 }
+                #_BIT_   ##_KBD         { [Gigatron] Was: LDA                     }
                 #_STAAY_ ##_IN          { Add to text buffer.                     }
                 #_JSR_   ##_ECHO        { Display character.                      }
                 #_CMPIM_ #$8D           { CR?                                     }
