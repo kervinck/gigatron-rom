@@ -79,15 +79,8 @@ _k=$3a          {1 bytes, share with wozmon YSAV}
 &_PrintChar PrintChar=          {Forward reference}
 
 &_Apple1 _vLR=                  {Prepare transfer to main loop}
-&_FirstStart                    {Start address for 6502 program}
+&_PRE_RESET                     {Start address for 6502 program}
 [ret]                           {Jump to Main (the brackets avoid the automatic vLR patch)}
-
-_FirstStart=*   #_LDXIM_ #15            {Clear screen}
-_L0=*           #_LDAIM_ #$8d
-                #_BRK_
-                #_DEX_
-                #_BNE_   #@_L0
-                #_BEQ_   #@_MUNCH       {Always taken}
 
 {-----------------------------------------------------------------------+
 |       Preloaded demo program                                          |
@@ -114,12 +107,13 @@ _L2=*           #_EORZ_  #$41
                 #_BNE_   #@_L2
                 #_LDAZ_  #_serialRaw
                 #_CMPIM_ #$03
-                #_BEQ_   #@_L3
+                #_BEQ_   #@_PRE_RESET
                 #_INCZ_  #$41
                 #_BPL_   #@_L1
                 #_LDAZ_  #$40
                 #_JMP_   ##_MUNCH
-_L3=*           #_LDXIM_ #66
+
+_PRE_RESET=*    #_LDXIM_ #66
 _L4=*           #_LDAAX_ ##_MSG
                 #_BRK_
                 #_DEX_

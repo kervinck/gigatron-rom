@@ -61,7 +61,7 @@ ROMv4x.rom: Core/* Apps/* Images/* Makefile interface.json
 		TinyBASIC=Apps/TinyBASIC_v3.gcl\
 		TicTac=Apps/TicTac_v2.gtb\
 		WozMon=Apps/WozMon_v2.gt1\
-		Egg=Apps/Apple1.gt1\
+		Egg=Apps/Apple1_v1.gt1\
 		Main=Apps/MainMenu_v4.gcl\
 		Reset=Core/Reset_v4.gcl
 
