@@ -30,22 +30,23 @@ if the cycle count would be odd without it.
 Rule 1
 ------
 SYS functions must complete and reenter the vCPU within their maximum
-declared time. This maximum duration is passed to vCPU as the operand
-D of the SYS call. Although the *caller* must feed this maximum
-value into vCPU, the caller should only pass a value that matches
-with the SYS functions' own declaration. vCPU in turn uses this
-value to decide if the function can complete in the remainder of
-the current timeslice, or if it must wait for the start of the next
-one. The total allowed time is 28-2*D clocks or cycles, with D<=0.
-This includes all overhead including that of the SYS vCPU instruction
-itself. It is best to study the cycle count annotations in the ROM
-source code for concrete examples on how this is used.
+declared time. This maximum duration is passed to vCPU through the
+operand D of the SYS call. Although the *caller* must feed this
+maximum value into vCPU, the caller may only pass a value that
+matches with the SYS function's own declaration. vCPU in turn uses
+this value to decide if the function can complete in the remainder
+of the current timeslice, or if it must wait for the start of the
+next one. The total allowed time is 28-2*D clocks or cycles, with
+D<=0. This includes all overhead including that of the SYS vCPU
+instruction itself.
 
 Reserving an insufficient number of ticks results in broken video
-signals. It's OK to "ask" for more time than will be used. This may
-only result in getting dispatched in a later timeslice than strictly
-necessary. Still, some of the more complex built-in SYS functions
-do this to allow for bug fixing without changing the caller.
+signals. It's OK for the caller to "ask" for or "reserve"  more
+time than will be used. This may only result in getting dispatched
+in a later timeslice than strictly necessary. Still, some of the
+more complex built-in SYS functions declare a higher value than
+their implementation needs. This is to allow for future bug fixing
+without changing the caller in existing programs.
 
 Rule 2
 ------
@@ -60,6 +61,9 @@ because they must fit in the time between two horizontal pulses,
 including overhead. This translates to roughly ~130 CPU cycles at
 most. In reality they typically replace a small sequence of vCPU
 instructions.
+
+It is best to study the cycle count annotations in the ROM source
+code for concrete examples on how this is done.
 
 Loops are normally not possible. Small loops are usually unrolled
 to reduce overhead. Still, some SYS functions implement iteration
@@ -79,7 +83,7 @@ and displays <N>.
 
 If a SYS extension was introduced after ROM v1, the version number
 of introduction is included in the name as v<V>. This helps the
-programmer to be reminded to verify the acutal ROM version. A program
+programmer to be reminded to verify the actual ROM version. A program
 must fail gracefully on older ROMs, or at least not crash. See also
 Docs/GT1-files.txt on using `romType' for this purpose.
 
