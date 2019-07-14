@@ -77,7 +77,7 @@ run: Docs/gtemu dev.rom
 export jsEmu=Contrib/PhilThomas/src
 runjs: dev.rom
 	# Run ROM in javascript emulator in web browser (macOS)
-	cd "$(jsEmu)" && ln -sf ../../../dev.rom dev.rom
+	cd "$(jsEmu)" && ln -sf ../../../dev.rom gigatron.rom
 	(sleep 1 && open http://127.0.0.1:8000/src) &
 	cd "$(jsEmu)" && npm start
 
