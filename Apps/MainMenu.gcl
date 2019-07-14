@@ -209,6 +209,9 @@ MenuItem 7^ [if=0               {Bricks workaround}
   $80 \vSP.]                    { 1. Zero-page conflict: move stack}
 MenuItem 8^ [if=0               {TicTacToe needs special launcher}
   &_LaunchTicTacToe call]
+MenuItem 11^ [if=0              {Apple1 workaround}
+  \channelMask_DEVROM, $f8&     { 1. Clear channelMask before loading}
+  \channelMask_DEVROM.]
 88!                             {Load from ROM and execute}
 
 {-----------------------------------------------------------------------+

@@ -104,6 +104,7 @@
 #  XXX  vCPU: extension for C: LSRW_v4
 #  XXX  vCPU: extension for C: CMPW_v4 $DD
 #  XXX  Faster SYS_Exec_88, with start address?
+#  XXX  Let SYS_Exec_88 clear channelMask when loading into live variables
 #  XXX  Pucrunch (well documented) or eximozer 3.0.2 (better compression)
 #  XXX  Video mode 4 (all or partly black? Single color? Active syncs)
 #  XXX  Video mode for 12.5 MHz systems
