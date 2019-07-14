@@ -58,8 +58,8 @@ gcl0x
 
 [def
   push
-  Item 6- [if<0 $200b else $f059] Pos=
-  Item [do j= $800 Pos+ Pos= j 1- if>=0loop]
+  MenuItem 6- [if<0 $200b else $f059] Pos=
+  MenuItem [do j= $800 Pos+ Pos= j 1- if>=0loop]
   130 {'->'} Char= PrintChar!
   pop ret
 ] PrintArrow=
@@ -72,34 +72,29 @@ gcl0x
 { Operate menu }
 [def
   push
-  0 Item=
   [do
-    \frameCount, Color= PrintArrow!
+    \frameCount, Color= PrintArrow!     {Flashing cursor effect}
 
     { Handle each stroke of Up/Down and A controller buttons }
 
-    {buttonRight}
-    \buttonState, 254^ [if=0
+    \buttonState, 254^ [if=0            {buttonRight}
        WipeOutArrow!
-       Item 4- [if<=0 10+ Item=]
+       MenuItem 5- [if<=0 11+ MenuItem=]
        \buttonState, 1| \buttonState.]
 
-    {buttonLeft}
-    \buttonState, 253^ [if=0
+    \buttonState, 253^ [if=0            {buttonLeft}
        WipeOutArrow!
-       Item 6- [if>=0 Item=]
+       MenuItem 6- [if>=0 MenuItem=]
        \buttonState, 2| \buttonState.]
 
-    {buttonDown}
-    \buttonState, 251^ [if=0
+    \buttonState, 251^ [if=0            {buttonDown}
        WipeOutArrow!
-       Item 5- [if<>0 5- if<>0 <Item++]
+       MenuItem 5- [if<>0 6- if<>0 <MenuItem++]
        \buttonState, 4| \buttonState.]
 
-    {buttonUp}
-    \buttonState, 247^ [if=0
+    \buttonState, 247^ [if=0            {buttonUp}
        WipeOutArrow!
-       Item [if<>0 6- if<>0 Item 1- Item=]
+       MenuItem [if<>0 6- if<>0 MenuItem 1- MenuItem=]
        \buttonState, 8| \buttonState.]
 
     {buttonA, or any ASCII key from keyboard, 'A' included...}
@@ -107,26 +102,28 @@ gcl0x
 
     42 {Gray} Color= PrintArrow!
 
-    { Map menu item to program }
-    Item [if=0 \Snake      else
-    1-   [if=0 \Racer      else
-    1-   [if=0 \Mandelbrot else
-    1-   [if=0 \Pictures   else
-    1-   [if=0 \Credits    else
-    1-   [if=0 \Loader     else
-    1-   [if=0 \Tetronis   else
-    1-   [if=0 \Bricks     else
-    2-   [if<=0 \TinyBASIC else {TicTacToe and stand-alone BASIC}
-    1-   [if=0 \WozMon     else loop]]]]]]]]]]
+    MenuItem [if=0 \Snake      else     {Map menu item to program}
+        1-   [if=0 \Racer      else
+        1-   [if=0 \Mandelbrot else
+        1-   [if=0 \Pictures   else
+        1-   [if=0 \Credits    else
+        1-   [if=0 \Loader     else
+        1-   [if=0 \Tetronis   else
+        1-   [if=0 \Bricks     else
+        2-   [if<=0 \TinyBASIC else     {TicTacToe and stand-alone BASIC}
+        1-   [if=0 \WozMon     else
+        1-   [if=0 \Apple1     else loop]]]]]]]]]]]
     Program=
   ]
   pop ret
-] SelectMenu=
+] {SelectMenu}
 
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
 *=$0400
+
+SelectMenu=
 
 {Newline}
 [def
@@ -141,7 +138,7 @@ gcl0x
   #9 `Mandelbrot   #9 `TicTacToe #10
   #9 `Pictures ``` #9 `BASIC     #10
   #9 `Credits #9   #9 `WozMon    #10
-  #9 `Loader                     #10 #0
+  #9 `Loader #9 `` #9 `Apple1    #10 #0
 ] MainMenu=
 
 [def
@@ -151,17 +148,17 @@ gcl0x
   `Hold` #91 `Start #93 ``for`reset     #0
 ] HelpText=
 
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 5                                      |
++-----------------------------------------------------------------------}
+*=$0500
+
 [def
   push
   Pos 12- Pos=
   $20 {space} Char= PrintChar! PrintChar!
   pop ret
 ] WipeOutArrow=
-
-{-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 5                                      |
-+-----------------------------------------------------------------------}
-*=$0500
 
 [def {PrintMenu}
   push
@@ -178,7 +175,8 @@ gcl0x
 $2002 Pos=
 
 PrintMenu!
-SelectMenu!
+0 MenuItem=                     {Point at first item (Snake)}
+SelectMenu!                     {Let user navigate and select}
 
 { Wipe out everything but the selected and bottom line }
  $800 \sysArgs4:                {Pointer in screen memory}
@@ -204,12 +202,12 @@ Pos 48+ j& q=                   {Box of current cursor}
 \SYS_Exec_88 \sysFn:            {ROM loader}
 Program \sysArgs0:              {ROM image}
 \userCode _vLR=                 {Start of execution address}
-Item 6^ [if=0                   {Tetronis workaround}
+MenuItem 6^ [if=0               {Tetronis workaround}
   $80 \vSP.                     { 1. Zero-page conflict: move stack}
   &_TetronisPatch _vLR=]        { 2. Stack must be restored with patch}
-Item 7^ [if=0                   {Bricks workaround}
+MenuItem 7^ [if=0               {Bricks workaround}
   $80 \vSP.]                    { 1. Zero-page conflict: move stack}
-Item 8^ [if=0                   {TicTacToe needs special launcher}
+MenuItem 8^ [if=0               {TicTacToe needs special launcher}
   &_LaunchTicTacToe call]
 88!                             {Load from ROM and execute}
 

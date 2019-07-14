@@ -35,7 +35,7 @@ gcl0x                           {GCL version for this program}
   Pos \sysArgs4:                {Position of character}
   6+ Pos=                       {Advance position by 6 pixels for next call}
   5 [do i=                      {Loop to draw 5 vertical slices of 8 pixels}
-    j 0? \sysArgs2.             {Get byte from ROM}
+    j 0? \sysArgs2.             {Get byte from ROM using `LUP 0' instruction}
     134!                        {Invoke SYS function to draw 8 vertical pixels}
     <j++ <\sysArgs4++           {Advance to next slice in ROM and on screen}
     i 1- if>0loop]              {Looping}
@@ -44,7 +44,7 @@ gcl0x                           {GCL version for this program}
 
 { Print text string }
 [def
-  push                          {Save vLR because this is not a leaf routine}
+  push                          {Save vLR because this is not a leaf subroutine}
   Text= [do                     {Loop over characters}
     Text, if<>0                 {Next character to be printed, unless 0}
     PrintChar!                  {Print the character and advance cursor}

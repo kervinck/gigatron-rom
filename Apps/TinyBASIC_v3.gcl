@@ -30,7 +30,7 @@
   2018-09-04 (marcelk) Faster start; Error when SAVE not there; Tiny BASIC v2
   2019-07-06 (marcelk) Update GCL notation (no changes to GT1 file)
   2019-07-07 (marcelk) PrintChar accepts arrow chars; Fix indent issue #40
-  2019-07-08 (marcelk) Reenable video on input after MODE -1; Tiny BASIC v3
+  2019-07-08 (marcelk) Reenable video on input after MODE 1975; Tiny BASIC v3
 
   Formal grammar:
 
@@ -369,8 +369,9 @@ $01df deek Pos=                 {Bottom character row in screen memory}
   { completely. Better reactivate it before waiting for new input.   }
   \SYS_SetMode_v2_80 _sysFn=
   \romType, \romTypeValue_ROMv4-
-  [if>=0 255- 80!]              {Any value <0 will restore signal, except -177}
-                                {But -177+255+$38 isn't valid romType content }
+  [if>=0 255- 80!]              {Any value <0 will restore signal, except -177.}
+                                {But -177+255+$38 isn't valid romType content,}
+                                {so that's just fine.}
 
   &_Buffer Active=              {Input buffer}
   tmp Active:                   {For error messages}
