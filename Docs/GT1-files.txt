@@ -1,21 +1,21 @@
-I want to set a standard for precompiled vCPU programs.  There are
+I want to set a standard for precompiled vCPU programs. There are
 many emulators getting born, and BabelFish.ino will need to adopt
-something as well.  Both users of real Gigatrons and users of
+something as well. Both users of real Gigatrons and users of
 emulators benefit from a single standard.
 
 Format
 ======
 
 The format is based on the same byte sequence that the ROM loader
-routine SYS_Exec_88 sees in ROM v1.  That is essentially the in-ROM
+routine SYS_Exec_88 sees in ROM v1. That is essentially the in-ROM
 sequence of operand bytes, but skipping the trampolines in the top
-5 words of every ROM page.  Those instructions are not part of the
-program but part of the mechanism for accessing the data.  Two extra
+5 words of every ROM page. Those instructions are not part of the
+program but part of the mechanism for accessing the data. Two extra
 bytes are added for a start address.
 
 vCPU programs are fragmented in RAM because the RAM organisation
-is fragmented.  Both Snake and Racer protrude into the unused bytes
-of the video area.  In essence, the file format is a list of n>0
+is fragmented. Both Snake and Racer protrude into the unused bytes
+of the video area. In essence, the file format is a list of n>0
 segments of 1 to 256 bytes each. A segment isn't allowed to cross
 a page boundary.
 
@@ -34,11 +34,11 @@ clear. To be specific: The number "n" itself will not appear at the
 start of the file.
 
 The first two bytes are the RAM address of the first byte to be
-loaded, in big-endian order.  (I'm a little-endian guy, but this
+loaded, in big-endian order. (I'm a little-endian guy, but this
 order is useful in the ROM-to-RAM loader). Segments may be in any
-order in the file, with one exception described below.  Segments
-are loaded sequentially.  In case of overlap, the later one overwrites
-the earlier one.  (We can make movies with that!) The end of the
+order in the file, with one exception described below. Segments
+are loaded sequentially. In case of overlap, the later one overwrites
+the earlier one. (We can make movies with that!) The end of the
 segment list is implied by the terminating zero-byte as high address.
 
 This format implies that there's a translation to do in BabelFish.ino
@@ -68,14 +68,14 @@ This is an extension of the layout as used in ROM v1, which can't
 load data into the zero-page. But it's useful for initializing
 variables.
 
-Also there's no encoding for a zero-length program.  Use an zero-length
-file for that use case, for all I care...  or encode a known constant,
+Also there's no encoding for a zero-length program. Use an zero-length
+file for that use case, for all I care... or encode a known constant,
 such as [0]=0 as follows: 00 00 01 00 00 00
 
 Avoid loading data in the system variables area and in the top of
 the zero page, where the stack lives. Although it might seem to
 work with Loader and in emulators, the ROM loader (SYS_Exec_88)
-uses the stack to setup its inner loop.  As a rule of thumb,
+uses the stack to setup its inner loop. As a rule of thumb,
 [$30..$bf] are free to load data into, with the note that [$80]
 must always be 1. After loading, the top area is free to use in any
 way, as long as the program's own stack usage permits.
@@ -86,8 +86,8 @@ Extension
 File name extension: .gt1 (For Gigatron-1)
 
 I feel that .vcpu is the lesser choice because it's a generic
-abbreviation for virtual CPU.  For example, the MyCPU uses the same
-abbreviation for something similar.  And ... retro-extensions should
+abbreviation for virtual CPU. For example, the MyCPU uses the same
+abbreviation for something similar. And ... retro-extensions should
 be 3 characters of course...
 
 ROM bindings
@@ -95,7 +95,7 @@ ROM bindings
 
 GT1 files contain vCPU instructions and rely on things that are
 defined by the ROM on the target platform. The ROM bindings (ABI)
-for ROM v1 are listed in interface.json.  If your program depends
+for ROM v1 are listed in interface.json. If your program depends
 on some extension of this, then it's nice not to crash other people's
 machines. ROMs with different bindings should use a different romType
 value in address $0021. GT1 programs can then check this value and

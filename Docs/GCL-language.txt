@@ -433,7 +433,7 @@ So this number includes advancing vPC, fetch, dispatch and execute.
 The formulas are pseudo-formal. Better take them with a grain of
 salt.  Still: 'DD' or 'D' are intended to represent a single byte.
 'LL HH' is intended to represent a 16-bit word in little-endian
-order. '[X]' is intended to represent a RAM location as in the
+order. '[X]' is intended to represent a RAM location, as in the
 native instruction set. 'vAC=D' is intended to mean that the (16-bits)
 vAC gets the (unsigned) 8-bit value D, and with that clearing its
 high 8 bits in the process.

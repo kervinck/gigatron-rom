@@ -24,11 +24,12 @@ play well with the rules of the timing game. For simplicity of
 implementation, vCPU measures elapsed time in integer number of
 "ticks". 1 tick equals two hardware CPU cycles (1 cycle is 160 ns,
 so 1 tick is 320 ns). All vCPU instructions and SYS functions
-therefore execute in an even number of cycles. A nop must be added
-if the cycle count would be odd without it.
+therefore execute in an even number of cycles. A `nop' must be
+inserted if the cycle count would be odd without it.
 
 Rule 1
 ------
+
 SYS functions must complete and reenter the vCPU within their maximum
 declared time. This maximum duration is passed to vCPU through the
 operand D of the SYS call. Although the *caller* must feed this
@@ -41,12 +42,17 @@ D<=0. This includes all overhead including that of the SYS vCPU
 instruction itself.
 
 Reserving an insufficient number of ticks results in broken video
-signals. It's OK for the caller to "ask" for or "reserve"  more
+signals. It's OK for the caller to "ask" for, or "reserve", more
 time than will be used. This may only result in getting dispatched
 in a later timeslice than strictly necessary. Still, some of the
 more complex built-in SYS functions declare a higher value than
 their implementation needs. This is to allow for future bug fixing
 without changing the caller in existing programs.
+
+[Side note: One way to see the raw value of D is as the *excess*
+number of ticks that vCPU must accomodate for, but represented as
+a number <=0. By default vCPU already accounts for 28 cycles for
+standard instructions.]
 
 Rule 2
 ------
@@ -62,13 +68,16 @@ including overhead. This translates to roughly ~130 CPU cycles at
 most. In reality they typically replace a small sequence of vCPU
 instructions.
 
-It is best to study the cycle count annotations in the ROM source
-code for concrete examples on how this is done.
-
 Loops are normally not possible. Small loops are usually unrolled
 to reduce overhead. Still, some SYS functions implement iteration
 by setting back vPC just before returning. This causes them to be
 dispatched again, possibly in the next timeslice.
+
+[Side note: It's best to study the cycle count annotations in the
+ROM source code for concrete examples on how things are typically
+done: how the return value is passed back to vCPU, how branches are
+annotated and how sometimes `nop' instructions are inserted to make
+the total cycle count even.]
 
 Naming
 ------

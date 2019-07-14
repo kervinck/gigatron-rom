@@ -5,29 +5,18 @@ vCPU: The virtual 16-bit CPU for Gigatron applications
 vCPU is the interpreted 16-bit virtual processor running in the dead
 time of the video/sound loop.
 
-This is an extract from Docs/GCL-language.txt. GCL and vCPU are closely
-tied together. For a detailed explanation, refer to that document.
+This file is an *extract* from Docs/GCL-language.txt. GCL and vCPU
+are closely tied together. For a detailed explanation of both,
+please refer to that document.
 
 -----------------
 Programming model
 -----------------
 
-vAC  is the virtual accumulator, used by instructions as operand
-     and/or result
-
-vPC  is the virtual program counter. Programs run from RAM. When
-     executing, vPC auto-increments just its low byte, so it wraps
-     around on the same RAM page. (Code normally doesn't "use" this.)
-     Function calls can go across pages. vPC gets incremented by 2
-     BEFORE fetching the next instruction, except after CALL and RET.
-
-vLR  is the link register. It points to the instruction after the
-     most recent CALL instruction. This is used to return after
-     making a function call. When nesting functions, vLR should
-     be pushed on the stack.
-
-vSP  is the stack pointer. The stack lives in the zero page top and
-     grows down.
+vAC     ACcumulator (16-bits)
+vPC     Program Counter (16-bits)
+vLR     Link Register (16-bits)
+vSP     Stack Pointer (8-bits)
 
 ----------------------
 vCPU instruction table
@@ -70,8 +59,5 @@ POP   $63       26 Pop address from stack (vLR,vSP=[vSP]+256*[vSP+1],vSP+2)
 ALLOC $DF DD    14 Create or destroy stack frame (vSP+=D)
 SYS   $B4 DD   20+ Native function call using at most 2*T cycles, D=270-max(14,T)
 DEF   $CD DD    18 Define data or code (vAC,vPC=vPC+2,(vPC&0xff00)+D)
-
-#C is the number of clocks or cycles, counted back-to-back.
-So this number includes advancing vPC, fetch, dispatch and execute.
 
 -- End of document --
