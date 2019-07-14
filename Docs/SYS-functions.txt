@@ -56,6 +56,7 @@ standard instructions.]
 
 Rule 2
 ------
+
 On return, SYS functions always report back, in hardware register
 AC, how much time they have *actually* consumed. This returned value
 is the negated number of whole ticks spent. Miscounting results in
@@ -81,6 +82,7 @@ the total cycle count even.]
 
 Naming
 ------
+
 The naming convention is: SYS_<CamelCase>[_v<V>]_<N>
 
 With <N> the maximum number of clocks or cycles (not ticks!) the

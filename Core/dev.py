@@ -343,7 +343,7 @@ screenMemory = 0x0800   # Default start of screen memory: 0x0800 to 0x7fff
 
 maxTicks = 28/2                 # Duration of vCPU's slowest virtual opcode (ticks)
 minTicks = 14/2                 # vcPU's fastest instruction
-v6502_maxTicks = 38/2 # XXX     # Max duration of v6502 processing phase (ticks)
+v6502_maxTicks = 38/2           # Max duration of v6502 processing phase (ticks)
 
 runVcpu_overhead = 5            # Caller overhead (cycles)
 vCPU_overhead = 9               # Callee overhead of jumping in and out (cycles)
@@ -1250,8 +1250,6 @@ ld(syncBits)                    #31
 label('nopixels')
 runVcpu(200-38, '-BCD line 41-520',
   returnTo=0x1ff)               #38 Application interpreter (black scanlines)
-
-# XXX videoG: Graphics acceleration per scanline?
 
 #-----------------------------------------------------------------------
 #
@@ -3477,10 +3475,6 @@ assert (38 - 22)/2 >= v6502_adjust
 # - Illegal opcode $ff won't be trapped and cause havoc instead
 
 # Big things TODO:
-# XXX Test with some non trivial applications: VTL02, wozmon
-# XXX Easy method to stuff cc65 output in a .gt1 file, with proper prelude
-# XXX The reset button doesn't work until vCPU is active again
-# XXX Mnemonics in interface.json (Paul Allen's notation will work: https://www.pagetable.com/?p=774)
 # XXX Tuning, put most frequent instructions in the primary page
 
 label('v6502_ror')

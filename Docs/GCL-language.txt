@@ -283,6 +283,7 @@ cosmetic upgrade in notation.
 -----------------
 Program structure
 -----------------
+
 GCL translation is single-pass and doesn't have a linking stage.
 Therefore a typical GCL program has a setup phase followed by a
 main loop. In the setup phase, variables are initialized with
@@ -328,6 +329,7 @@ $400:
 ----------------------------------
 Common pitfalls in GCL programming
 ----------------------------------
+
 - Forgetting `ret' at the end of a function block
 - Calling functions from a leaf function (forgetting `push' and `pop')
 - Forgetting that all named variables are global
@@ -374,6 +376,7 @@ https://github.com/kervinck/gigatron-rom/issues/80
 -------------------
 Depricated features
 -------------------
+
 i=              Alias for i: (was often used as \symbol=)
 i#              Original notation for #i
 X<++ X>++       Original notation for <X++ >X++
@@ -384,6 +387,7 @@ i% i%=          Original notation for %i %i=
 ----------------------
 vCPU instruction table
 ----------------------
+
 The vCPU interpreter has 34 core instructions. Each opcode is just
 a jump offset into the interpreter code page to the code that
 implements its behavior. Most instructions take a single byte
@@ -513,10 +517,10 @@ a b- [if>=0 ...]        if a >= b ... But this breaks in case of overflow!
 a b^ [if<0 b else a b-] Checking if the operands are of opposite sign first
 [if>=0 ...]             makes the comparison safe from overflow.
 
+--------------
+SYS extensions
+--------------
 
--------------
-SYS extension
--------------
 Addresses of SYS functions that are part of the ABI:
 
 00ad    SYS_Exec_88             Load serialized vCPU code from ROM and execute
@@ -561,5 +565,8 @@ SYS_RacerUpdateVideoY_40        (Racer)
 
 Retro-actively retired from ABI:
 SYS_Reset_36                    Soft reset (use vReset instead)
+
+For details on arguments, side-effects and return values, please
+refer to the comments in the ROM source files (Core/ROMxxx.py).
 
 -- End of document --

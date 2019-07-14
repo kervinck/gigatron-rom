@@ -89,7 +89,7 @@ variables that are subject to change between ROM versions. See for a
 more detailed explanation on compatibility the file Docs/GT1-files.txt]
 
 Address   Name          Description
---------  ------------- -----------
+--------- ------------- -----------
 0000      zeroConst     Constant value 0 (for arithmetic carry)
 0001      memSize       Number of RAM pages detected at hard reset (64kB=0)
 0002      (channel)     Sound channel update on current scanline
