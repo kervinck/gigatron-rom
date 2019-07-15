@@ -7,54 +7,54 @@ gcl0x
 
 { Setup }
 
-{ Print a 5x8 character on screen with the built-in font
-  Char must be in the 32-127 range (this is not checked) }
-[def {PrintChar}
-  Char=
-  {Map ASCII code to offset in font table}
-  82- [if<0 50+ i= \font32up
-            else     i= \font82up] fontData= {Select low or high page}
-  i 2<< i+             {Multiply by 5}
-  fontData+ fontData=  {Add to page address to reach bitmap data for Char}
-
-  {Draw 5 vertical slices: 5 using font data}
-  32      \sysArgs0. {Blue}
-  15      \sysArgs1. {Yellow}
-  Pos     \sysArgs4:
-  6+      Pos=
-  \SYS_VDrawBits_134 \sysFn:
-  $fb i= [do
-    fontData 0? fontData<++ \sysArgs2. 134!
-    \sysArgs4<++
-    i<++ i if<>0loop]
-  \sysArgs2. 134!           {Render 6th slice}
+{ Print ASCII character (32..127) on screen using the 5x8 pixel built-in font }
+[def
+  82-                           {Map ASCII code to offset in font table}
+  [if<0 50+ i= \font32up        {First page for ASCII 32..81}
+   else     i= \font82up] j=    {Second page is ASCII 82..127}
+  i 2<< i+                      {Multiply by 5}
+  j+ j=                         {Add page address to reach bitmap data}
+  Pos \sysArgs4:                {Position of character}
+  6+ Pos=                       {Advance position by 6 pixels for next call}
+  5 [do i=                      {Loop to draw 5 vertical slices of 8 pixels}
+    j 0? \sysArgs2.             {Get byte from ROM using `LUP 0' instruction}
+    134!                        {Invoke SYS function to draw 8 vertical pixels}
+    <j++ <\sysArgs4++           {Advance to next slice in ROM and on screen}
+    i 1- if>0loop]              {Looping}
+  \sysArgs2. 134!               {Render 6th slice}
   ret
 ] PrintChar=
 
 { Display ready to load text }
-$5006 Pos=
-[def { Ready to load}
-  $20#
-  $52# $65# $61# $64# $79# $20# $74# $6f#
-  $20# $6c# $6f# $61# $64# 0# ] Text=
+\SYS_VDrawBits_134 \sysFn:      {Prepare SYS calls}
+$0f20 \sysArgs0:                {Yellow on blue}
+$5006 Pos=                      {Overwrite the text that MainMenu left behind}
+[def ``Ready`to`load #0] Text=
 [do Text, if<>0 Text<++ PrintChar! loop]
 
 { Put these in variable to save some code space below }
 \SYS_LoaderNextByteIn_32  NextByteIn_32=
 \SYS_LoaderPayloadCopy_34 PayloadCopy_34=
 
-0 \sysArgs4.            {Clears the copy counter}
-$590c A=                {Activity indicator}
-$5b0c B=                {Buffer}
-103 {'g'} \sysArgs2.    {Reset checksum}
+\channelMask_DEVROM, $f8&       {Clear channelMask bits to allow safe}
+\channelMask_DEVROM.            { loading into sound channels 2-4}
+$02fe i= 0 i:                   {And place canaries to detect that}
+      >i++ i:
+      >i++ i:
+\sysArgs4.                      {Clears the copy counter}
+$590c A=                        {Activity indicator}
+$5b0c B=                        {Buffer}
+103 {'g'} \sysArgs2.            {Reset checksum}
+
+\Loop \vLR: ret                 {Start main loop that's in the screen area}
 
 {-----------------------------------------------------------------------+
-|}$5a0c \vLR: ret{      Inside screen area                              |
+|                       Inside screen area                              |
 +-----------------------------------------------------------------------}
-$5a0c:
 
-{ Loop }
+*=$5a0c
 
+_Loop=*
 [do
   {Receive the next transmission frame}
   B   \sysArgs0:                           {Input buffer}
@@ -81,7 +81,7 @@ $5a0c:
   63 A.
 
   {Check checksum and command, and execute if OK. Also reset checksum.}
-  \SYS_LoaderProcessInput_48 \sysFn: 48!
+  \SYS_LoaderProcessInput_64 \sysFn: 64!
 loop]
 
 {

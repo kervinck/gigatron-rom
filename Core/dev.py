@@ -65,6 +65,7 @@
 #  DONE Mode 1975 (for "zombie" mode), can do mode -1 to recover
 #  DONE TinyBASIC: support larger font and MODE 1975. Fix indent issue #40
 #  DONE Add channelMask to switch off the higher sound channels
+#  DONE Loader: clear channelMask when loading into sound channels
 #  DONE Update romTypeValue and interface.json
 #  DONE Update version number to v4
 #
@@ -643,7 +644,7 @@ ld(-50/2)                       #47
 label('SYS_Reset_38')
 assert pc()>>8 == 0
 assert (romTypeValue & 7) == 0
-ld(romTypeValue);               C('Set ROM type/version and channel mask')#15 Boot with 1 channel
+ld(romTypeValue);               C('Set ROM type/version and clear channel mask')#15 Boot with 1 channel
 st([romType])                   #16
 ld(0)                           #17
 st([vSP])                       #18 Reset stack pointer
@@ -3557,7 +3558,7 @@ st([v6502_Tmp])                 #15
 bra('.rol18')                   #16
 ld(0)                           #17
 
-label('v6502_jmp')
+label('v6502_jmp1')
 nop()                           #12
 ld([v6502_ADL])                 #13
 st([v6502_PCL])                 #14
@@ -3567,7 +3568,7 @@ ld(hi('v6502_next'),Y)          #17
 jmp(Y,'v6502_next')             #18
 ld(-20/2)                       #19
 
-label('v6502_jmi')
+label('v6502_jmp2')
 nop()                           #12
 ld([v6502_ADH],Y)               #13
 ld([Y,X])                       #14
@@ -3645,7 +3646,7 @@ bra('v6502_modeABX'); bra('v6502_modeABX'); bra('v6502_modeABX'); bra('v6502_mod
 #     $20 JSR $DDDD     but gets mapped to #$DD      handled in v6502_mode0 and v6502_JSR
 #     $40 RTI -         but gets mapped to #$DD      handled in v6502_mode0
 #     $60 RTS -         but gets mapped to #$DD      handled in v6502_mode0
-#     $6C JMP ($DDDD)   but gets mapped to $DDDD     handled in v6502_JMI
+#     $6C JMP ($DDDD)   but gets mapped to $DDDD     handled in v6502_JMP2
 #     $96 STX $DD,Y     but gets mapped to $DD,X     handled in v6502_STX2
 #     $B6 LDX $DD,Y     but gets mapped to $DD,X     handled in v6502_LDX2
 #     $BE LDX $DDDD,Y   but gets mapped to $DDDD,X   handled in v6502_modeABX
@@ -3971,7 +3972,7 @@ ld('v6502_ILL'); ld('v6502_AND'); ld('v6502_ROL'); ld('v6502_ILL') #6
 ld('v6502_RTI'); ld('v6502_EOR'); ld('v6502_ILL'); ld('v6502_ILL') #6 $40
 ld('v6502_ILL'); ld('v6502_EOR'); ld('v6502_LSR'); ld('v6502_ILL') #6
 ld('v6502_PHA'); ld('v6502_EOR'); ld('v6502_LSR'); ld('v6502_ILL') #6
-ld('v6502_JMP'); ld('v6502_EOR'); ld('v6502_LSR'); ld('v6502_ILL') #6
+ld('v6502_JMP1');ld('v6502_EOR'); ld('v6502_LSR'); ld('v6502_ILL') #6
 ld('v6502_BVC'); ld('v6502_EOR'); ld('v6502_ILL'); ld('v6502_ILL') #6 $50
 ld('v6502_ILL'); ld('v6502_EOR'); ld('v6502_LSR'); ld('v6502_ILL') #6
 ld('v6502_CLI'); ld('v6502_EOR'); ld('v6502_ILL'); ld('v6502_ILL') #6
@@ -3979,7 +3980,7 @@ ld('v6502_ILL'); ld('v6502_EOR'); ld('v6502_LSR'); ld('v6502_ILL') #6
 ld('v6502_RTS'); ld('v6502_ADC'); ld('v6502_ILL'); ld('v6502_ILL') #6 $60
 ld('v6502_ILL'); ld('v6502_ADC'); ld('v6502_ROR'); ld('v6502_ILL') #6
 ld('v6502_PLA'); ld('v6502_ADC'); ld('v6502_ROR'); ld('v6502_ILL') #6
-ld('v6502_JMI'); ld('v6502_ADC'); ld('v6502_ROR'); ld('v6502_ILL') #6
+ld('v6502_JMP2');ld('v6502_ADC'); ld('v6502_ROR'); ld('v6502_ILL') #6
 ld('v6502_BVS'); ld('v6502_ADC'); ld('v6502_ILL'); ld('v6502_ILL') #6 $70
 ld('v6502_ILL'); ld('v6502_ADC'); ld('v6502_ROR'); ld('v6502_ILL') #6
 ld('v6502_SEI'); ld('v6502_ADC'); ld('v6502_ILL'); ld('v6502_ILL') #6
@@ -4256,13 +4257,13 @@ ld(-20/2)                       #17
 jmp(Y,'v6502_next')             #18
 #nop()                          #19 Overlap
 #
-label('v6502_JMP')
-ld(hi('v6502_jmp'),Y);          C('JMP $DDDD')#9,19
-jmp(Y,'v6502_jmp')              #10
+label('v6502_JMP1')
+ld(hi('v6502_jmp1'),Y);         C('JMP $DDDD')#9,19
+jmp(Y,'v6502_jmp1')             #10
 #nop()                          #11 Overlap
-label('v6502_JMI')
-ld(hi('v6502_jmi'),Y);          C('JMP ($DDDD)')#9
-jmp(Y,'v6502_jmi')              #10
+label('v6502_JMP2')
+ld(hi('v6502_jmp2'),Y);         C('JMP ($DDDD)')#9
+jmp(Y,'v6502_jmp2')             #10
 #nop()                          #11 Overlap
 label('v6502_JSR')
 ld([v6502_S])                   #9,11

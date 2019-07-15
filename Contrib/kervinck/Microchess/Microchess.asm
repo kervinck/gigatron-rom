@@ -177,7 +177,7 @@ NOGO            CMP     #$0D            ; [Enter]
 NOMV            CMP     #$41            ; [Q] ***Added to allow game exit***
                 BEQ     DONE            ; quit the game, exit back to system.
                 JMP     INPUT           ; process move
-DONE            JMP     $FF00           ; *** MUST set this to YOUR OS starting address
+DONE            JMP     $FF1F           ; *** MUST set this to YOUR OS starting address [Gigatron] RESET->GETLINE (Apple1)
 ;
 ;       THE ROUTINE JANUS DIRECTS THE
 ;       ANALYSIS BY DETERMINING WHAT

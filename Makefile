@@ -5,7 +5,8 @@
 #-----------------------------------------------------------------------
 
 # Latest development version as default target
-gigatron.rom: dev.rom
+DEV:=dev.rom
+gigatron.rom: $(DEV)
 	ln -sf "$<" "$@"
 
 # Allow application-specific SYS extensions to live in Apps/
@@ -18,20 +19,19 @@ CFLAGS:=-std=c11 -O3 -Wall
 #-----------------------------------------------------------------------
 
 # Development towards "ROM v5"
-dev: dev.rom
 dev.rom: Core/* Apps/* Images/* Makefile interface.json
 	python -B Core/dev.py\
 		packedParrot=Images/Parrot-160x120.rgb\
 		packedJupiter=Images/Jupiter-160x120.rgb\
 		SYS_Racer_v1.py\
-		SYS_Loader_v2.py\
+		SYS_Loader_v3.py\
 		Snake=Apps/Snake.gcl\
 		zippedRacerHorizon=Images/RacerHorizon-256x16.rgb\
 		Racer=Apps/Racer.gcl\
 		Mandelbrot=Apps/Mandelbrot_v1.gcl\
 		Pictures=Apps/Pictures_v2.gcl\
 		Credits=Apps/Credits_v3.gcl\
-		Loader=Apps/Loader_v2.gcl\
+		Loader=Apps/Loader_v3.gcl\
 		Tetronis=Apps/Tetronis_v1.gt1\
 		Bricks=Apps/Bricks_v1.gt1\
 		TinyBASIC=Apps/TinyBASIC_v3.gcl\
@@ -48,14 +48,14 @@ ROMv4x.rom: Core/* Apps/* Images/* Makefile interface.json
 		packedParrot=Images/Parrot-160x120.rgb\
 		packedJupiter=Images/Jupiter-160x120.rgb\
 		SYS_Racer_v1.py\
-		SYS_Loader_v2.py\
+		SYS_Loader_v3.py\
 		Snake=Apps/Snake.gcl\
 		zippedRacerHorizon=Images/RacerHorizon-256x16.rgb\
 		Racer=Apps/Racer.gcl\
 		Mandelbrot=Apps/Mandelbrot_v1.gcl\
 		Pictures=Apps/Pictures_v2.gcl\
 		Credits=Apps/Credits_v3.gcl\
-		Loader=Apps/Loader_v2.gcl\
+		Loader=Apps/Loader_v3.gcl\
 		Tetronis=Apps/Tetronis_v1.gt1\
 		Bricks=Apps/Bricks_v1.gt1\
 		TinyBASIC=Apps/TinyBASIC_v3.gcl\
@@ -68,33 +68,33 @@ ROMv4x.rom: Core/* Apps/* Images/* Makefile interface.json
 burnv4x: ROMv4x.rom
 	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
-run: Docs/gtemu dev.rom
+run: Docs/gtemu $(DEV)
 	# Run ROM in reference emulator on console
 	# Pipe though less(1) to hop from frame to frame with 'n' (next)
 	# !!! Set terminal width to >225 chars !!!
-	Docs/gtemu dev.rom | less -p 'line 0'
+	Docs/gtemu $(DEV) | less -p 'line 0'
 
 export jsEmu=Contrib/PhilThomas/src
-runjs: dev.rom
+runjs: $(DEV)
 	# Run ROM in javascript emulator in web browser (macOS)
-	cd "$(jsEmu)" && ln -sf ../../../dev.rom gigatron.rom
+	cd "$(jsEmu)" && ln -sf ../../../$(DEV) gigatron.rom
 	(sleep 1 && open http://127.0.0.1:8000/src) &
 	cd "$(jsEmu)" && npm start
 
-test: Docs/gtemu dev.rom
+test: Docs/gtemu $(DEV)
 	# Check for hSync errors in first ~30 seconds of emulation
-	Docs/gtemu dev.rom | head -999999 | grep \~
+	Docs/gtemu $(DEV) | head -999999 | grep \~
 
 compiletest: Apps/*.gcl
 	# Test compilation
 	# (Use 'git diff' afterwards to detect unwanted changes)
 	for GCL in Apps/*.gcl; do Core/compilegcl.py "$${GCL}" Apps; done
 
-time: Docs/gtemu dev.rom
+time: Docs/gtemu $(DEV)
 	# Run emulation until first sound, typically for benchmarking
-	Docs/gtemu dev.rom | grep -m 1 'xout [^0]'
+	Docs/gtemu $(DEV) | grep -m 1 'xout [^0]'
 
-burn: dev.rom
+burn: $(DEV)
 	# Program 27C1024 EEPROM with ROM image
 	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 

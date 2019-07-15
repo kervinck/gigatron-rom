@@ -12,6 +12,7 @@ videoY = symbol('videoY')
 sysArgs = symbol('sysArgs0')
 vPC = symbol('vPC')
 vLR = symbol('vLR')
+channelMask = symbol('channelMask_DEVROM')
 
 #-----------------------------------------------------------------------
 # Extension SYS_LoaderNextByteIn_32
@@ -48,7 +49,7 @@ jmp(Y,'REENTER')                #24
 nop()                           #25
 
 #-----------------------------------------------------------------------
-# Extension SYS_LoaderProcessInput_48
+# Extension SYS_LoaderProcessInput_64
 #-----------------------------------------------------------------------
 
 # sysArgs[0:1] Source address
@@ -56,7 +57,7 @@ nop()                           #25
 # sysArgs[4]   Copy count
 # sysArgs[5:6] Destination address
 
-label('SYS_LoaderProcessInput_48')
+label('SYS_LoaderProcessInput_64')
 ld([sysArgs+1],Y)               #15
 ld([sysArgs+2])                 #16
 bne('.sysPi#19')                #17
@@ -86,9 +87,25 @@ st([vPC])                       #39
 ld([sysArgs+6])                 #40 High run address
 st([vPC+1])                     #41
 st([vLR+1])                     #42
-ld(hi('REENTER'),Y)             #43
-jmp(Y,'REENTER')                #44
-ld(-48/2)                       #45
+ld(0);                          C('Reactivate sound channels?')#43
+ld(2,Y)                         #44
+ora([Y,254])                    #45
+ora([Y,255])                    #46
+ld(3,Y)                         #47
+ora([Y,254])                    #48
+ora([Y,255])                    #49
+ld(4,Y)                         #50
+ora([Y,254])                    #51
+ora([Y,255])                    #52
+bne(pc()+3)                     #53
+bra(pc()+3)                     #54
+ld(3);                          C('Yes')#55
+ld(0);                          C('No')#56
+ora([channelMask])              #57
+st([channelMask])               #58
+ld(hi('REENTER'),Y)             #59
+jmp(Y,'REENTER')                #60
+ld(-64/2)                       #61
 # Invalid checksum
 label('.sysPi#19')
 wait(25-19);                    C('Invalid checksum')#19 Reset checksum
