@@ -25,9 +25,9 @@ dev.rom: Core/* Apps/* Images/* Makefile interface.json
 		packedJupiter=Images/Jupiter-160x120.rgb\
 		SYS_Racer_v1.py\
 		SYS_Loader_v3.py\
-		Snake=Apps/Snake.gcl\
+		Snake=Apps/Snake_v3.gcl\
 		zippedRacerHorizon=Images/RacerHorizon-256x16.rgb\
-		Racer=Apps/Racer.gcl\
+		Racer=Apps/Racer_v2.gcl\
 		Mandelbrot=Apps/Mandelbrot_v1.gcl\
 		Pictures=Apps/Pictures_v2.gcl\
 		Credits=Apps/Credits_v3.gcl\
@@ -42,16 +42,17 @@ dev.rom: Core/* Apps/* Images/* Makefile interface.json
 		Main=Apps/MainMenu.gcl\
 		Reset=Core/Reset.gcl
 
-# ROM v4x has many small changes, but no new applications
-ROMv4x.rom: Core/* Apps/* Images/* Makefile interface.json
-	python -B Core/ROMv4x.py\
+# ROM v4 support `TypeC' game controller signals. There are
+# many small changes under the hood, but no new applications.
+ROMv4.rom: Core/* Apps/* Images/* Makefile interface.json
+	python -B Core/ROMv4.py\
 		packedParrot=Images/Parrot-160x120.rgb\
 		packedJupiter=Images/Jupiter-160x120.rgb\
 		SYS_Racer_v1.py\
 		SYS_Loader_v3.py\
-		Snake=Apps/Snake.gcl\
+		Snake=Apps/Snake_v3.gcl\
 		zippedRacerHorizon=Images/RacerHorizon-256x16.rgb\
-		Racer=Apps/Racer.gcl\
+		Racer=Apps/Racer_v2.gcl\
 		Mandelbrot=Apps/Mandelbrot_v1.gcl\
 		Pictures=Apps/Pictures_v2.gcl\
 		Credits=Apps/Credits_v3.gcl\
@@ -65,7 +66,7 @@ ROMv4x.rom: Core/* Apps/* Images/* Makefile interface.json
 		Main=Apps/MainMenu_v4.gcl\
 		Reset=Core/Reset_v4.gcl
 
-burnv4x: ROMv4x.rom
+burnv4: ROMv4.rom
 	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
 run: Docs/gtemu $(DEV)

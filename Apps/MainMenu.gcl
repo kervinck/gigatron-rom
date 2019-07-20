@@ -169,8 +169,8 @@ SelectMenu=
   pop ret
 ] PrintMenu=
 
-\channelMask_DEVROM, 3|
-\channelMask_DEVROM.            {Enable all 4 sound channels}
+\channelMask_v4, 3|
+\channelMask_v4.                {Enable all 4 sound channels}
 90 \soundTimer.                 {Play sound for 1.5 seconds}
 $2002 Pos=
 
@@ -210,8 +210,8 @@ MenuItem 7^ [if=0               {Bricks workaround}
 MenuItem 8^ [if=0               {TicTacToe needs special launcher}
   &_LaunchTicTacToe call]
 MenuItem 11^ [if=0              {Apple1 workaround}
-  \channelMask_DEVROM, $f8&     { 1. Clear channelMask before loading}
-  \channelMask_DEVROM.]
+  \channelMask_v4, $f8&         { 1. Clear channelMask before loading}
+  \channelMask_v4.]
 88!                             {Load from ROM and execute}
 
 {-----------------------------------------------------------------------+

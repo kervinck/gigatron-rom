@@ -12,7 +12,7 @@ videoY = symbol('videoY')
 sysArgs = symbol('sysArgs0')
 vPC = symbol('vPC')
 vLR = symbol('vLR')
-channelMask = symbol('channelMask_DEVROM')
+channelMask = symbol('channelMask_v4')
 
 #-----------------------------------------------------------------------
 # Extension SYS_LoaderNextByteIn_32

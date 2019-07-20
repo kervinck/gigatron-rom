@@ -36,8 +36,8 @@ $5006 Pos=                      {Overwrite the text that MainMenu left behind}
 \SYS_LoaderNextByteIn_32  NextByteIn_32=
 \SYS_LoaderPayloadCopy_34 PayloadCopy_34=
 
-\channelMask_DEVROM, $f8&       {Clear channelMask bits to allow safe}
-\channelMask_DEVROM.            { loading into sound channels 2-4}
+\channelMask_v4, $f8&           {Clear channelMask bits to allow safe}
+\channelMask_v4.                { loading into sound channels 2-4}
 $02fe i= 0 i:                   {And place canaries to detect that}
       >i++ i:
       >i++ i:

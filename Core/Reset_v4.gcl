@@ -33,7 +33,7 @@ gcl0x
   push
   [def
       `***`Gigatron`??K`*** #10
-    ``TTL`microcomputer`ROM`v4x   {ROM`vN for versioned release ROMs}
+    ``TTL`microcomputer`ROM`v4    {ROM`vN for versioned release ROMs}
     #0
   ] Text=
 
@@ -96,8 +96,8 @@ gcl0x
 { No need for romType check because Reset.gcl gets hard-compiled in  }
 
 { Resetting waveform tables after video/audio/vCPU have started }
-\SYS_ResetWaveforms_DEVROM_50 \sysFn: 0 50!
-\SYS_ShuffleNoise_DEVROM_46   \sysFn: 0 46! 46! 46! 46!
+\SYS_ResetWaveforms_v4_50 \sysFn: 0 50!
+\SYS_ShuffleNoise_v4_46   \sysFn: 0 46! 46! 46! 46!
 
 { Setup a G-major chord with 4 channels but don't play it yet }
 $158 {1: G-3} SetupChannel!

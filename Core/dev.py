@@ -70,12 +70,7 @@
 #  DONE Update version number to v4
 #
 #  Extern:
-#  DONE Simplify label logic (only do A=B)
-#  XXX  interface.json: Add SYS_ExpanderControl_v4_40
-#  XXX  interface.json: Add SYS_SpiExchangeBytes_v4_134
-#  XXX  interface.json: Add SYS_ResetWaveforms_v4_50
-#  XXX  interface.json: Add SYS_ShuffleNoise_v4_46
-#  XXX  interface.json: Add SYS_Run6502_v80
+#  XXX  interface.json: Add SYS_Run6502_DEVROM_80
 #  XXX  Update romType documentation wrt. channelMask
 #
 #  ROM v5:
@@ -287,7 +282,7 @@ romType         = zpByte(1)
 #  xxxxx001     2 channels at double update rate (page 1,2)
 #  xxxxx000     1 channel at quadruple update rate (page 1)
 # The main application for this is to free up the high bytes of page 2,3,4.
-channelMask = symbol('channelMask_DEVROM')
+channelMask = symbol('channelMask_v4')
 assert romType == channelMask
 
 # SYS function arguments and results/scratch
@@ -2703,14 +2698,14 @@ bra('sys_SendSerial1')          #16
 xora(videoYline0)               #17 First line of vertical blank
 
 #-----------------------------------------------------------------------
-# Extension SYS_ExpanderControl_DEVROM_40
+# Extension SYS_ExpanderControl_v4_40
 #-----------------------------------------------------------------------
 
 # Sets the I/O and RAM expander's control register
 # Intended for prototyping, and probably too low-level for most applications
 # Still there's a safeguard: it's not possible to disable RAM using this
 
-label('SYS_ExpanderControl_DEVROM_40')
+label('SYS_ExpanderControl_v4_40')
 ld(hi('sys_ExpanderControl'),Y) #15
 jmp(Y,'sys_ExpanderControl')    #16
 ld([vAC])                       #17
@@ -2778,7 +2773,7 @@ jmp(Y,'sys_v6502')              #16
 ld(hi('v6502_ENTER'));          C('Activate v6502')#17
 
 #-----------------------------------------------------------------------
-# Extension SYS_ResetWaveforms_DEVROM_50
+# Extension SYS_ResetWaveforms_v4_50
 #-----------------------------------------------------------------------
 
 # soundTable[4x+0] = sawtooth, to be modified into metallic/noise
@@ -2786,24 +2781,24 @@ ld(hi('v6502_ENTER'));          C('Activate v6502')#17
 # soundTable[4x+2] = triangle
 # soundTable[4x+3] = sawtooth, also useful to right shift 2 bits
 
-label('SYS_ResetWaveforms_DEVROM_50')
+label('SYS_ResetWaveforms_v4_50')
 ld(hi('sys_ResetWaveforms'),Y); C('Initial setup of waveforms. [vAC+0]=i')#15
 jmp(Y,'sys_ResetWaveforms')     #16
 ld(soundTable>>8,Y);            #17
 
 #-----------------------------------------------------------------------
-# Extension SYS_ShuffleNoise_DEVROM_46
+# Extension SYS_ShuffleNoise_v4_46
 #-----------------------------------------------------------------------
 
 # Use simple 6-bits variation of RC4 to permutate waveform 0 in soundTable
 
-label('SYS_ShuffleNoise_DEVROM_46')
+label('SYS_ShuffleNoise_v4_46')
 ld(hi('sys_ShuffleNoise'),Y);   C('Shuffle soundTable[4i+0]. [vAC+0]=4j, [vAC+1]=4i')#15
 jmp(Y,'sys_ShuffleNoise')       #16
 ld(soundTable>>8,Y);            #17
 
 #-----------------------------------------------------------------------
-# Extension SYS_SpiExchangeBytes_DEVROM_134
+# Extension SYS_SpiExchangeBytes_v4_134
 #-----------------------------------------------------------------------
 
 # Send AND receive 1..256 bytes over SPI interface
@@ -2814,7 +2809,7 @@ ld(soundTable>>8,Y);            #17
 #       sysArgs[2]      Page index stop (input)
 #       sysArgs[3]      Memory page for receive data (input)
 
-label('SYS_SpiExchangeBytes_DEVROM_134')
+label('SYS_SpiExchangeBytes_v4_134')
 ld(hi('sys_SpiExchangeBytes'),Y);C('Exchange 1..256 bytes over SPI interface')
 jmp(Y,'sys_SpiExchangeBytes')   #16
 ld([sysArgs+0],X);              C('Fetch byte to send')#17
