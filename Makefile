@@ -6,8 +6,11 @@
 
 # Latest development version as default target
 DEV:=dev.rom
+
 gigatron.rom: $(DEV)
 	ln -sf "$<" "$@"
+
+dev: $(DEV)
 
 # Allow application-specific SYS extensions to live in Apps/
 export PYTHONPATH=Apps
@@ -41,33 +44,6 @@ dev.rom: Core/* Apps/* Images/* Makefile interface.json
 		Egg=Apps/HelloWorld.gt1\
 		Main=Apps/MainMenu.gcl\
 		Reset=Core/Reset.gcl
-
-# ROM v4 support `TypeC' game controller signals. There are
-# many small changes under the hood, but no new applications.
-ROMv4.rom: Core/* Apps/* Images/* Makefile interface.json
-	python -B Core/ROMv4.py\
-		packedParrot=Images/Parrot-160x120.rgb\
-		packedJupiter=Images/Jupiter-160x120.rgb\
-		SYS_Racer_v1.py\
-		SYS_Loader_v3.py\
-		Snake=Apps/Snake_v3.gcl\
-		zippedRacerHorizon=Images/RacerHorizon-256x16.rgb\
-		Racer=Apps/Racer_v2.gcl\
-		Mandelbrot=Apps/Mandelbrot_v1.gcl\
-		Pictures=Apps/Pictures_v2.gcl\
-		Credits=Apps/Credits_v3.gcl\
-		Loader=Apps/Loader_v3.gcl\
-		Tetronis=Apps/Tetronis_v1.gt1\
-		Bricks=Apps/Bricks_v1.gt1\
-		TinyBASIC=Apps/TinyBASIC_v3.gcl\
-		TicTac=Apps/TicTac_v2.gtb\
-		WozMon=Apps/WozMon_v2.gt1\
-		Egg=Apps/Apple1_v1.gt1\
-		Main=Apps/MainMenu_v4.gcl\
-		Reset=Core/Reset_v4.gcl
-
-burnv4: ROMv4.rom
-	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
 run: Docs/gtemu $(DEV)
 	# Run ROM in reference emulator on console
@@ -109,6 +85,33 @@ burn85:
 #-----------------------------------------------------------------------
 #	Released ROM versions
 #-----------------------------------------------------------------------
+
+# ROM v4 support `TypeC' game controller signals. There are
+# many small changes under the hood, but no new applications.
+ROMv4.rom: Core/* Apps/* Images/* Makefile interface.json
+	python -B Core/ROMv4.py\
+		packedParrot=Images/Parrot-160x120.rgb\
+		packedJupiter=Images/Jupiter-160x120.rgb\
+		SYS_Racer_v1.py\
+		SYS_Loader_v3.py\
+		Snake=Apps/Snake_v3.gcl\
+		zippedRacerHorizon=Images/RacerHorizon-256x16.rgb\
+		Racer=Apps/Racer_v2.gcl\
+		Mandelbrot=Apps/Mandelbrot_v1.gcl\
+		Pictures=Apps/Pictures_v2.gcl\
+		Credits=Apps/Credits_v3.gcl\
+		Loader=Apps/Loader_v3.gcl\
+		Tetronis=Apps/Tetronis_v1.gt1\
+		Bricks=Apps/Bricks_v1.gt1\
+		TinyBASIC=Apps/TinyBASIC_v3.gcl\
+		TicTac=Apps/TicTac_v2.gtb\
+		WozMon=Apps/WozMon_v2.gt1\
+		Egg=Apps/Apple1_v1.gt1\
+		Main=Apps/MainMenu_v4.gcl\
+		Reset=Core/Reset_v4.gcl
+
+burnv4: ROMv4.rom
+	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
 # ROM v3 integrates BASIC, WozMon, Tetronis, Bricks, TicTacToe
 # vPulse modulation (for SAVE in BASIC), sprite acceleration
@@ -215,10 +218,10 @@ ROMv3y.rom: Core/* Apps/* Images/* Makefile interface.json
 	convert "$<" "$@"
 
 %.out: %.asm
-	64tass -b "$^" -o "$@" -L "$@".lst
-	od -An -t x1 -v <"$@" |\
+	64tass -b "$<" -o "$@" -L "$*.lst"
+	od -An -t x1 -v < "$@" |\
         awk '{for(i=1;i<=NF;i++)print" #$$" $$i}' |\
-        fmt -w 80 > "$@".hex
+        fmt -w 80 > "$*.hex"
 
 Utils/BabelFish/tinyfont.h: Utils/BabelFish/tinyfont.py
 	python -B "$<" > "$@"
@@ -253,7 +256,7 @@ libObjects:=$(libSources:.c=.o)
 
 .SECONDARY: # Instructs 'make' not to delete intermeditate .o files
 %.gt1: %.o $(libObjects)
-	$(LCC) $(LCCFLAGS) "$^" -o "$@"
+	$(LCC) $(LCCFLAGS) $^ -o "$@"
 
 ctest: Libs/Example.gt1
 

@@ -224,7 +224,7 @@ System
 ------
 *=ii            Set compilation address (default is $200)
 _C=*            Label definition. Refer to its value as \_C
-_C              Treat system symbol `C' as a GCL variable (e.g. .sysFn=)
+_C              Treat system symbol `C' as a GCL variable (e.g. _sysFn=)
 
 Memory
 ------

@@ -254,7 +254,7 @@ Added in ROM v4:
 0b09    SYS_ExpanderControl_v4_40       Set register in I/O and RAM expander
 0b0f    SYS_ResetWaveforms_v4_50        Setup sound tables in page 7
 0b12    SYS_ShuffleNoise_v4_46          Shuffle noise table in page 7
-0b15    SYS_SpiExchangeBytes_v4_134     Send and receive byts
+0b15    SYS_SpiExchangeBytes_v4_134     Send and receive bytes
 
 Under development:
 
