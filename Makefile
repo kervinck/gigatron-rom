@@ -236,10 +236,6 @@ ROMv3y.rom: Core/* Apps/* Images/* Makefile interface.json
 	awk '{for(i=1;i<=NF;i++)print" #$$" $$i}' |\
 	fmt -w 80 > "$@"
 
-# GT1 file from object file
-%.gt1: %.obj
-	Utils/obj2gt1.py < "$<" > "$*.gt1"
-
 Utils/BabelFish/tinyfont.h: Utils/BabelFish/tinyfont.py
 	python -B "$<" > "$@"
 

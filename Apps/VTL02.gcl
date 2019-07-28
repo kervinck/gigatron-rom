@@ -101,7 +101,7 @@ _VTL02=*
 |       Initialize                                                      |
 +-----------------------------------------------------------------------}
 
-{ This code runs once and is then reused as the input buffer }
+{ This code runs once }
 
 *=$8a0
 
