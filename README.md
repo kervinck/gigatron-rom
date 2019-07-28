@@ -168,7 +168,7 @@ Address   Name          Description
 .........
 7f00-7f9f -             Pixel line 119
 7fa0-7fff -             vCPU code/data
---------  ------------- -----------
+--------- ------------- -----------
 ```
 
 Memory map (ROM)

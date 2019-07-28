@@ -217,11 +217,28 @@ ROMv3y.rom: Core/* Apps/* Images/* Makefile interface.json
 	# Uses ImageMagick
 	convert "$<" "$@"
 
-%.out: %.asm
+# 64tass assembler
+%.obj: %.asm
 	64tass -b "$<" -o "$@" -L "$*.lst"
 	od -An -t x1 -v < "$@" |\
-        awk '{for(i=1;i<=NF;i++)print" #$$" $$i}' |\
-        fmt -w 80 > "$*.hex"
+	awk '{for(i=1;i<=NF;i++)print" #$$" $$i}' |\
+	fmt -w 80 > "$*.hex"
+
+# as65 assembler (from cc65)
+%.obj: %.s
+	ca65 "$<" -o "$*.o.tmp" -l "$*.lst"
+	ld65 -t none -o "$*.obj" "$*.o.tmp"
+	rm -f "$*.o.tmp"
+
+# Hex dump from object file
+%.hex: %.obj
+	od -An -t x1 -v < "$<" |\
+	awk '{for(i=1;i<=NF;i++)print" #$$" $$i}' |\
+	fmt -w 80 > "$@"
+
+# GT1 file from object file
+%.gt1: %.obj
+	Utils/obj2gt1.py < "$<" > "$*.gt1"
 
 Utils/BabelFish/tinyfont.h: Utils/BabelFish/tinyfont.py
 	python -B "$<" > "$@"
