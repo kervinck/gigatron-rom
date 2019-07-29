@@ -14,6 +14,7 @@ dev: $(DEV)
 
 # Allow application-specific SYS extensions to live in Apps/
 export PYTHONPATH=Apps
+export PYTHONDONTWRITEBYTECODE=please
 
 CFLAGS:=-std=c11 -O3 -Wall
 
@@ -23,7 +24,7 @@ CFLAGS:=-std=c11 -O3 -Wall
 
 # Development towards "ROM v5"
 dev.rom: Core/* Apps/* Images/* Makefile interface.json
-	python -B Core/dev.py\
+	python Core/dev.py\
 		packedParrot=Images/Parrot-160x120.rgb\
 		packedJupiter=Images/Jupiter-160x120.rgb\
 		SYS_Racer_v1.py\
@@ -89,7 +90,7 @@ burn85:
 # ROM v4 support `TypeC' game controller signals. There are
 # many small changes under the hood, but no new applications.
 ROMv4.rom: Core/* Apps/* Images/* Makefile interface.json
-	python -B Core/ROMv4.py\
+	python Core/ROMv4.py\
 		packedParrot=Images/Parrot-160x120.rgb\
 		packedJupiter=Images/Jupiter-160x120.rgb\
 		SYS_Racer_v1.py\
@@ -117,7 +118,7 @@ burnv4: ROMv4.rom
 # vPulse modulation (for SAVE in BASIC), sprite acceleration
 # Note: ROM builder still directly incudes TicTac_v1.gtb
 ROMv3.rom: Core/* Apps/* Images/* Makefile interface.json
-	python -B Core/ROMv3.py\
+	python Core/ROMv3.py\
 		Apps/Snake_v2.gcl\
 		Apps/Racer_v1.gcl\
 		Apps/Mandelbrot_v1.gcl\
@@ -137,7 +138,7 @@ burnv3: ROMv3.rom
 
 # ROM v2 minor changes only
 ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
-	python -B Core/ROMv2.py\
+	python Core/ROMv2.py\
 		Apps/Snake_v2.gcl\
 		Apps/Racer_v1.gcl\
 		Apps/Mandelbrot_v1.gcl\
@@ -151,7 +152,7 @@ ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
 
 # ROM v1 as shipped with first batches of kits
 ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
-	python -B Core/ROMv1.py\
+	python Core/ROMv1.py\
 		Apps/Snake_v1.gcl\
 		Apps/Racer_v1.gcl\
 		Apps/Mandelbrot_v1.gcl\
@@ -170,7 +171,7 @@ ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 mos: v6502.rom
 v6502.rom: Core/* Apps/* Images/* Makefile interface.json
 	rm -f dev.rom dev.asm
-	python -B Core/dev.py\
+	python Core/dev.py\
 		Main=Apps/Microchess.gcl\
 		Core/Reset.gcl
 	mv dev.rom v6502.rom
@@ -181,7 +182,7 @@ burnmos: v6502.rom
 
 # Adds vCPU slices on scanlines to get 400 cycles per scanline
 ROMv3y.rom: Core/* Apps/* Images/* Makefile interface.json
-	python -B Core/ROMv3y.py\
+	python Core/ROMv3y.py\
 		Apps/Snake_v2.gcl\
 		Apps/Racer_v1.gcl\
 		Apps/Mandelbrot_v1.gcl\
@@ -237,7 +238,7 @@ ROMv3y.rom: Core/* Apps/* Images/* Makefile interface.json
 	fmt -w 80 > "$@"
 
 Utils/BabelFish/tinyfont.h: Utils/BabelFish/tinyfont.py
-	python -B "$<" > "$@"
+	python "$<" > "$@"
 
 todo:
 	@git ls-files | sed 's/ /\\ /g' | xargs grep -I -E '(TODO|XXX)'
