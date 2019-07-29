@@ -402,18 +402,15 @@ class Program:
 
   def emitOp(self, ins):
     # Emit vCPU opcode
-    self.checkSpace()
-    if self.segStart == self.vPC:
-      self.openSegment() # Must come before lo()
+    self.prepareSegment()
     self.putInRomTable(lo(ins), '%04x %s' % (self.vPC, ins))
     self.vPC += 1
     return self
 
   def emitVar(self, var, offset=0):
     # Get or create address for GCL variable and emit it
-    # !!! Don't use for immediate bytes at start of segment !!!
-    comment = '%04x %s' % (prev(self.vPC, 1), repr(var))
-    comment += '%+d' % offset if offset else ''
+    # !!! Also safe at start of segment !!!
+    self.prepareSegment()
     if var[0] == '_':
       # _C notation for labels as variables
       address, offset = lo(var[1:]), offset & 255
@@ -422,15 +419,19 @@ class Program:
       if var not in self.vars:
         self.vars[var] = zpByte(2)
       address = self.vars[var]
-    assert self.segStart != self.vPC # XXX Conflict
-    return self.emit(address + offset, comment)
+    comment = '%04x %s' % (prev(self.vPC, 1), repr(var))
+    comment += '%+d' % offset if offset else ''
+    byte = address + offset
+    if byte < -128 or byte >= 256:
+      self.error('Value %s out of range (must be -128..255)' % repr(byte))
+    self.putInRomTable(byte, comment)
+    self.vPC += 1
+    return self
 
   def emitImm(self, var, half=lo):
     # Emit low or high byte of symbol
     # !!! Also safe at start of segment !!!
-    self.checkSpace()
-    if self.segStart == self.vPC:
-      self.openSegment() # Must come before lo() or hi()
+    self.prepareSegment()
     if var[0] == '_':
       address = half(var[1:])
     else:
@@ -444,24 +445,30 @@ class Program:
   def thisBlock(self):
     return self.openBlocks[-1]
 
-  def openSegment(self):
-    # Write header for GT1 segment
-    address = self.segStart
-    if not has(self.execute):
-      self.execute = address
-    assert self.segId == 0 or address>>8 != 0 # Zero-page segment can only be first
-    self.putInRomTable(address>>8, '| RAM segment address (high byte first)')
-    self.putInRomTable(address&255, '|')
-    # Fill in the length through the symbol table
-    self.putInRomTable(lo('__%s_seg%d__' % (self.name, self.segId)), '| Length (1..256)')
+  def prepareSegment(self):
+    # Check if there's space in the current segment
+    if self.vPC >= self.segEnd:
+      severity = self.warning if self.vPC & 255 > 0 else self.error
+      severity('Out of code space ($%04x)' % self.vPC)
+
+    # And write header bytes for a new segment
+    if self.segStart == self.vPC:
+      # This must come before any lo() or hi()
+      # Write header for GT1 segment
+      address = self.segStart
+      if not has(self.execute):
+        self.execute = address
+      assert self.segId == 0 or address>>8 != 0 # Zero-page segment can only be first
+      self.putInRomTable(address>>8, '| RAM segment address (high byte first)')
+      self.putInRomTable(address&255, '|')
+      # Fill in the length through the symbol table
+      self.putInRomTable(lo('__%s_seg%d__' % (self.name, self.segId)), '| Length (1..256)')
 
   def emit(self, byte, comment=None):
     # Next program byte in RAM
-    self.checkSpace()
+    self.prepareSegment()
     if byte < -128 or byte >= 256:
       self.error('Value %s out of range (must be -128..255)' % repr(byte))
-    if self.segStart == self.vPC:
-      self.openSegment()
     self.putInRomTable(byte, comment)
     self.vPC += 1
     return self
@@ -480,6 +487,8 @@ class Program:
       self.segId += 1
 
   def putInRomTable(self, byte, comment=None):
+    if byte < -128 or byte >= 256:
+      self.error('Value %s out of range (must be -128..255)' % repr(byte))
     ld(byte)
     if comment:
       C(comment)
@@ -491,11 +500,6 @@ class Program:
     old = old.replace(' ', str(con) if has(con) else var)
     new = new.replace(' ', str(con) if has(con) else var)
     self.warning('%s is depricated, please use %s' % (old, new))
-
-  def checkSpace(self):
-    if self.vPC >= self.segEnd:
-      severity = self.warning if self.vPC & 255 > 0 else self.error
-      severity('Out of code space ($%04x)' % self.vPC)
 
   def warning(self, message):
     print(self.prefix('Warning'), message)

@@ -49,91 +49,701 @@ _Init=*
 &_PrintChar PrintChar=          {Forward reference}
 
 &_Apple1 _vLR=                  {Prepare transfer to main loop}
-&_FirstStart                    {Start address for 6502 program}
+&_CHESS                         {Start address for 6502 program}
 [ret]                           {Jump to Main (the brackets avoid the automatic vLR patch)}
 
 {-----------------------------------------------------------------------+
 |       Microchess from $220 (Keeps just 200.21F for wozmon input)      |
 +-----------------------------------------------------------------------}
 
+{
+        (C) COPYRIGHT 1976, PETER JENNINGS, MICROCHESS,
+        1612-43 THORNCLIFFE PK DR, TORONTO, CANADA.
+        ALL RIGHTS RESERVED.  REPRODUCTION BY   ANY
+        MEANS, IN WHOLE OR IN PART, IS PROHIBITED.
+
+        Adapted for Gigatron with permission of Peter Jennings
+        https://www.benlo.com/
+}
+
+{ Zero page variables }
+
+  _BOARD=$50    { LOCATION OF PIECES }
+     _BK=$60    { OPPONENT'S PIECES }
+  _PIECE=$70    { CURRENT PIECE UNDER ANALYSIS  [Gigatron] Was $B0 }
+ _SQUARE=$F3    { TO SQUARE OF .PIECE           [Gigatron] Was $B1 }
+    _SP2=$F4    { STACK POINTER FOR STACK 2     [Gigatron] Was $B2 }
+    _SP1=$F5    { STACK POINTER FOR STACK 1     [Gigatron] Was $B3 }
+ _INCHEK=$F6    { MOVE INTO CHECK FLAG          [Gigatron] Was $B4 }
+  _STATE=$F7    { STATE OF ANALYSIS             [Gigatron] Was $B5 }
+  _MOVEN=$F8    { MOVE TABLE POINTER            [Gigatron] Was $B6 }
+  _OMOVE=$DC    { OPENING POINTER }
+  _WCAP0=$DD    { COMPUTER CAPTURE 0 }
+  _COUNT=$DE    { START OF COUNT TABLE }
+  _BCAP2=$DE    { OPPONENT CAPTURE 2 }
+  _WCAP2=$DF    { COMPUTER CAPTURE 2 }
+  _BCAP1=$E0    { OPPONENT CAPTURE 1 }
+  _WCAP1=$E1    { COMPUTER CAPTURE 1 }
+  _BCAP0=$E2    { OPPONENT CAPTURE 0 }
+    _MOB=$E3    { MOBILITY }
+   _MAXC=$E4    { MAXIMUM CAPTURE }
+     _CC=$E5    { CAPTURE COUNT }
+   _PCAP=$E6    { PIECE ID OF MAXC }
+   _BMOB=$E3    { OPPONENT MOBILITY }
+  _BMAXC=$E4    { OPPONENT MAXIMUM CAPTURE }
+   _BMCC=$E5    { OPPONENT CAPTURE COUNT        [Gigatron] Was BCC }
+  _BMAXP=$E6    { OPPONENT MAXP }
+  _XMAXC=$E8    { CURRENT MAXIMUM CAPTURE }
+   _WMOB=$EB    { COMPUTER MOBILITY }
+  _WMAXC=$EC    { COMPUTER MAXIMUM CAPTURE }
+    _WCC=$ED    { COMPUTER CAPTURE COUNT }
+  _WMAXP=$EE    { COMPUTER MAXP }
+   _PMOB=$EF    { PREVIOUS COMPUTER MOB }
+  _PMAXC=$F0    { PREVIOUS COMPUTER MAXC }
+    _PCC=$F1    { PREVIOUS COMPUTER CC }
+    _PCP=$F2    { PREVIOUS COMPUTER MAXP }
+ {_OLDKY=$F3}   { KEY INPUT TEMPORARY           [Gigatron] Removed }
+  _BESTP=$FB    { PIECE OF BEST MOVE FOUND }
+  _BESTV=$FA    { VALUE OF BEST MOVE FOUND }
+  _BESTM=$F9    { TO SQUARE OF BEST MOVE }
+   _DIS1=$FB    { DISPLAY POINT 1 }
+   _DIS2=$FA    { DISPLAY POINT 2 }
+   _DIS3=$F9    { DISPLAY POINT 3 }
+
 *=$220
+                { +++ }
+_CHESS=*        #_CLD_                  { INITIALIZE }
+                #_LDXIM_ #$DB           { TWO STACKS [Gigatron] Was #$FF }
+                #_TXS_
+                #_LDXIM_ #$9F           { [Gigatron] Was #$C8 }
+                #_STXZ_  #_SP2
+{
+              ROUTINES TO LIGHT LED
+              DISPLAY AND GET KEY
+              FROM KEYBOARD.
+}
+_OUT=*          #_LDAIM_ #$8d           { [Gigatron] CR }
+                #_BRK_                  { [Gigatron] Character out }
+                #_LDXIM_ #2             { [Gigatron] }
+_NEXT=*         #_LDAZX_ #_DIS3         { [Gigatron] }
+                #_JSR_   ##_PRBYTE      { [Gigatron] Print as hex }
+                #_DEX_                  { [Gigatron] }
+                #_BPL_   #@_NEXT        { [Gigatron] }
+                #_LDAIM_ #$A0           { [Gigatron] Space }
+                #_BRK_                  { [Gigatron] Character out }
+                #_LDAIM_ #$BF           { [Gigatron] '?' }
+                #_BRK_                  { [Gigatron] Character out}
+                #_LDAIM_ #0             { [Gigatron] }
+                #_BRK_                  { [Gigatron] Wait for input }
+                #_PHA_                  { [Gigatron] }
+                #_ORAIM_ #128           { [Gigatron] Echo }
+                #_BRK_                  { [Gigatron] Character out}
+                #_PLA_                  { [Gigatron] }
+                #_ANDIM_ #$4F           { [Gigatron] MASK 0-7, AND ALPHA'S }
 
-_FirstStart=*
+                #_CMPIM_ #$43           { [C] }
+                #_BNE_   #@_NOSET       { SET UP }
+                #_LDXIM_ #$1F           { BOARD }
+_WHSET=*        #_LDAAX_ ##_SETW        { FROM }
+                #_STAZX_ #_BOARD        { SETW }
+                #_DEX_
+                #_BPL_   #@_WHSET
+                #_LDXIM_ #$1B           { *ADDED }
+                #_STXZ_  #_OMOVE
+                #_LDAIM_ #$CC
+                #_BNE_   #@_CLDSP
 
- #$d8 #$a2 #$db #$9a #$a2 #$9f #$86 #$f4 #$a9 #$8d #$00 #$a2 #$02 #$b5 #$f9 #$20
- #$dc #$ff #$ca #$10 #$f8 #$a9 #$a0 #$00 #$a9 #$bf #$00 #$a9 #$00 #$00 #$48 #$09
- #$80 #$00 #$68 #$29 #$4f #$c9 #$43 #$d0 #$12 #$a2 #$1f #$bd #$a0 #$07 #$95 #$50
- #$ca #$10 #$f8 #$a2 #$1b #$86 #$dc #$a9 #$cc #$d0 #$12 #$c9 #$45 #$d0 #$07 #$20
- #$ea #$03 #$a9 #$ee #$d0 #$07 #$c9 #$40 #$d0 #$0b #$20 #$dd #$04 #$85 #$fb #$85
- #$fa #$85 #$f9 #$d0 #$ab #$c9 #$0d #$d0 #$06 #$20 #$84 #$04 #$4c #$26 #$03 #$c9
- #$41 #$f0 #$03 #$4c #$1f #$03 #$4c #$1f #$ff #$a6 #$f7 #$30 #$5c #$a5 #$70 #$f0
- #$08 #$e0 #$08 #$d0 #$04 #$c5 #$e6 #$f0 #$2e #$f6 #$e3 #$c9 #$01 #$d0 #$02 #$f6
- #$e3 #$50 #$1e #$a0 #$0f #$a5 #$f3 #$d9 #$60 #$00 #$f0 #$03 #$88 #$10 #$f8 #$b9
- #$d0 #$07 #$d5 #$e4 #$90 #$04 #$94 #$e6 #$95 #$e4 #$18 #$08 #$75 #$e5 #$95 #$e5
- #$28 #$e0 #$04 #$f0 #$03 #$30 #$31 #$60 #$a5 #$e8 #$85 #$dd #$a9 #$00 #$85 #$f7
- #$20 #$84 #$04 #$20 #$ea #$03 #$20 #$38 #$03 #$20 #$ea #$03 #$a9 #$08 #$85 #$f7
- #$20 #$41 #$03 #$20 #$6a #$04 #$4c #$3a #$05 #$e0 #$f9 #$d0 #$0b #$a5 #$60 #$c5
- #$f3 #$d0 #$04 #$a9 #$00 #$85 #$f6 #$60 #$50 #$fd #$a0 #$07 #$a5 #$f3 #$d9 #$60
+_NOSET=*        #_CMPIM_ #$45           { [E] }
+                #_BNE_   #@_NOREV       { REVERSE }
+                #_JSR_   ##_REVERSE     { BOARD AS }
+                #_LDAIM_ #$EE           {    IS }
+                #_BNE_   #@_CLDSP
 
-*=$300
+_NOREV=*        #_CMPIM_ #$40           { [P] }
+                #_BNE_   #@_NOGO        { PLAY CHESS }
+                #_JSR_   ##_GO
+_CLDSP=*        #_STAZ_  #_DIS1         { DISPLAY }
+                #_STAZ_  #_DIS2         { ACROSS }
+                #_STAZ_  #_DIS3         { DISPLAY }
+                #_BNE_   #@_CHESS
 
- #$00 #$f0 #$05 #$88 #$f0 #$f1 #$10 #$f6 #$b9 #$d0 #$07 #$d5 #$e2 #$90 #$02 #$95
- #$e2 #$c6 #$f7 #$a9 #$ff #$c5 #$f7 #$f0 #$03 #$20 #$5e #$04 #$e6 #$f7 #$60 #$c9
- #$08 #$b0 #$12 #$20 #$2a #$05 #$a2 #$1f #$b5 #$50 #$c5 #$fa #$f0 #$03 #$ca #$10
- #$f7 #$86 #$fb #$86 #$70 #$4c #$20 #$02 #$a2 #$10 #$a9 #$00 #$95 #$de #$ca #$10
- #$fb #$a9 #$10 #$85 #$70 #$c6 #$70 #$10 #$01 #$60 #$20 #$57 #$04 #$a4 #$70 #$a2
- #$08 #$86 #$f8 #$c0 #$08 #$10 #$41 #$c0 #$06 #$10 #$2e #$c0 #$04 #$10 #$1f #$c0
- #$01 #$f0 #$09 #$10 #$0e #$20 #$c6 #$03 #$d0 #$fb #$f0 #$d9 #$20 #$d4 #$03 #$d0
- #$fb #$f0 #$d2 #$a2 #$04 #$86 #$f8 #$20 #$d4 #$03 #$d0 #$fb #$f0 #$c7 #$20 #$d4
- #$03 #$a5 #$f8 #$c9 #$04 #$d0 #$f7 #$f0 #$bc #$a2 #$10 #$86 #$f8 #$20 #$c6 #$03
- #$a5 #$f8 #$c9 #$08 #$d0 #$f7 #$f0 #$ad #$a2 #$06 #$86 #$f8 #$20 #$02 #$04 #$50
- #$05 #$30 #$03 #$20 #$89 #$02 #$20 #$57 #$04 #$c6 #$f8 #$a5 #$f8 #$c9 #$05 #$f0
- #$eb #$20 #$02 #$04 #$70 #$8f #$30 #$8d #$20 #$89 #$02 #$a5 #$f3 #$29 #$f0 #$c9
- #$20 #$f0 #$ee #$4c #$45 #$03 #$20 #$02 #$04 #$30 #$03 #$20 #$89 #$02 #$20 #$57
- #$04 #$c6 #$f8 #$60 #$20 #$02 #$04 #$90 #$02 #$50 #$f9 #$30 #$07 #$08 #$20 #$89
- #$02 #$28 #$50 #$f0 #$20 #$57 #$04 #$c6 #$f8 #$60 #$a2 #$0f #$38 #$b4 #$60 #$a9
- #$77 #$f5 #$50 #$95 #$60 #$94 #$50 #$38 #$a9 #$77 #$f5 #$50 #$95 #$50 #$ca #$10
+_NOGO=*         #_CMPIM_ #$0D           { [Enter] }
+                #_BNE_   #@_NOMV        { MOVE MAN }
+                #_JSR_   ##_MOVE        { AS ENTERED }
+                #_JMP_   ##_DISP
+_NOMV=*
+                #_CMPIM_ #$41           { [Q] ***Added to allow game exit*** }
+                #_BEQ_   #@_DONE        { quit the game, exit back to system. }
+                #_JMP_   ##_INPUT       { process move }
+_DONE=*         #_JMP_   ##_GETLINE     { *** MUST set this to YOUR OS starting }
+{
+                THE ROUTINE JANUS DIRECTS THE
+                ANALYSIS BY DETERMINING WHAT
+                SHOULD OCCUR AFTER EACH MOVE
+                GENERATED BY GNM
+}
+                { +++ }
+_JANUS=*        #_LDXZ_  #_STATE
+                #_BMI_   #@_NOCOUNT
+{
+                THIS ROUTINE COUNTS OCCURRENCES
+                IT DEPENDS UPON STATE TO INDEX
+                THE CORRECT COUNTERS
+}
+_COUNTS=*       #_LDAZ_  #_PIECE
+                #_BEQ_   #@_OVER        { IF STATE=8 }
+                #_CPXIM_ #$08           { DO NOT COUNT }
+                #_BNE_   #@_OVER        { BLK MAX CAP }
+                #_CMPZ_  #_BMAXP        { MOVES FOR }
+                #_BEQ_   #@_XRT         { WHITE }
 
-*=$400
+_OVER=*         #_INCZX_ #_MOB          { MOBILITY }
+                #_CMPIM_ #$01           { + QUEEN }
+                #_BNE_   #@_NOQ         { FOR TWO }
+                #_INCZX_ #_MOB
 
- #$eb #$60 #$a5 #$f3 #$a6 #$f8 #$18 #$7d #$bf #$07 #$85 #$f3 #$29 #$88 #$d0 #$42
- #$a5 #$f3 #$a2 #$20 #$ca #$30 #$0e #$d5 #$50 #$d0 #$f9 #$e0 #$10 #$30 #$33 #$a9
- #$7f #$69 #$01 #$70 #$01 #$b8 #$a5 #$f7 #$30 #$24 #$c9 #$00 #$10 #$20 #$48 #$08
- #$a9 #$f9 #$85 #$f7 #$85 #$f6 #$20 #$84 #$04 #$20 #$ea #$03 #$20 #$41 #$03 #$20
- #$67 #$04 #$28 #$68 #$85 #$f7 #$a5 #$f6 #$30 #$04 #$38 #$a9 #$ff #$60 #$18 #$a9
- #$00 #$60 #$a9 #$ff #$18 #$b8 #$60 #$a6 #$70 #$b5 #$50 #$85 #$f3 #$60 #$20 #$84
- #$04 #$20 #$ea #$03 #$20 #$41 #$03 #$20 #$ea #$03 #$ba #$86 #$f5 #$a6 #$f4 #$9a
- #$68 #$85 #$f8 #$68 #$85 #$70 #$aa #$68 #$95 #$50 #$68 #$aa #$68 #$85 #$f3 #$95
- #$50 #$4c #$a9 #$04 #$ba #$86 #$f5 #$a6 #$f4 #$9a #$a5 #$f3 #$48 #$a8 #$a2 #$1f
- #$d5 #$50 #$f0 #$03 #$ca #$10 #$f9 #$a9 #$cc #$95 #$50 #$8a #$48 #$a6 #$70 #$b5
- #$50 #$94 #$50 #$48 #$8a #$48 #$a5 #$f8 #$48 #$ba #$86 #$f4 #$a6 #$f5 #$9a #$60
- #$a6 #$e4 #$ec #$d0 #$07 #$d0 #$04 #$a9 #$00 #$f0 #$0a #$a6 #$e3 #$d0 #$06 #$a6
- #$ee #$d0 #$02 #$a9 #$ff #$a2 #$04 #$86 #$f7 #$c5 #$fa #$90 #$0c #$f0 #$0a #$85
- #$fa #$a5 #$70 #$85 #$fb #$a5 #$f3 #$85 #$f9 #$a9 #$ae #$00 #$60 #$a6 #$dc #$30
- #$1c #$a5 #$f9 #$dd #$e0 #$07 #$d0 #$11 #$ca #$bd #$e0 #$07 #$85 #$fb #$ca #$bd
- #$e0 #$07 #$85 #$f9 #$ca #$86 #$dc #$d0 #$1c #$a9 #$ff #$85 #$dc #$a2 #$0c #$86
+_NOQ=*          #_BVC_   #@_NOCAP
+                #_LDYIM_ #$0F           { CALCULATE }
+                #_LDAZ_  #_SQUARE       { POINTS }
+_ELOOP=*        #_CMPAY_ ##_BK          { CAPTURED }
+                #_BEQ_   #@_FOUN        { BY THIS }
+                #_DEY_                  { MOVE }
+                #_BPL_   #@_ELOOP
+_FOUN=*         #_LDAAY_ ##_POINTS
+                #_CMPZX_ #_MAXC
+                #_BCC_   #@_LESS        { SAVE IF }
+                #_STYZX_ #_PCAP         { BEST THIS }
+                #_STAZX_ #_MAXC         { STATE }
 
+_LESS=*         #_CLC_
+                #_PHP_                  { ADD TO }
+                #_ADCZX_ #_CC           { CAPTURE }
+                #_STAZX_ #_CC           { COUNTS }
+                #_PLP_
+
+_NOCAP=*        #_CPXIM_ #$04
+                #_BEQ_   #@_ON4
+                #_BMI_   #@_TREE        { (=00 ONLY) }
+_XRT=*          #_RTS_
+{
+                GENERATE FURTHER MOVES FOR COUNT
+                AND ANALYSIS
+}
+_ON4=*          #_LDAZ_  #_XMAXC        { SAVE ACTUAL }
+                #_STAZ_  #_WCAP0        {  CAPTURE }
+                #_LDAIM_ #$00           { STATE=0 }
+                #_STAZ_  #_STATE
+                #_JSR_   ##_MOVE        { GENERATE }
+                #_JSR_   ##_REVERSE     { IMMEDIATE }
+                #_JSR_   ##_GNMZ        { REPLY MOVES }
+                #_JSR_   ##_REVERSE
+
+                #_LDAIM_ #$08           { STATE=8 }
+                #_STAZ_  #_STATE        { GENERATE }
+                #_JSR_   ##_GNM         { CONTINUATION }
+                #_JSR_   ##_UMOVE       { MOVES }
+
+                #_JMP_   ##_STRATGY     { FINAL EVALUATION }
+_NOCOUNT=*      #_CPXIM_ #$F9
+                #_BNE_   #@_TREE
+{
+                DETERMINE IF THE KING CAN BE
+                TAKEN, USED BY CHKCHK
+}
+                #_LDAZ_  #_BK           { IS KING }
+                #_CMPZ_  #_SQUARE       { IN CHECK? }
+                #_BNE_   #@_RETJ        { SET INCHEK=0 }
+                #_LDAIM_ #$00           { IF IT IS }
+                #_STAZ_  #_INCHEK
+_RETJ=*         #_RTS_
+{
+                IF A PIECE HAS BEEN CAPTURED BY
+                A TRIAL MOVE, GENERATE REPLIES &
+                EVALUATE THE EXCHANGE GAIN/LOSS
+}
+_TREE=*         #_BVC_   #@_RETJ        { NO CAP }
+                #_LDYIM_ #$07           { (PIECES) }
+                #_LDAZ_  #_SQUARE
+_LOOPX=*        #_CMPAY_ #<_BK
+*=$300                         #>_BK
+                #_BEQ_   #@_FOUNX
+                #_DEY_
+                #_BEQ_   #@_RETJ        { (KING) }
+                #_BPL_   #@_LOOPX       { SAVE }
+_FOUNX=*        #_LDAAY_ ##_POINTS      { BEST CAP }
+                #_CMPZX_ #_BCAP0        { AT THIS }
+                #_BCC_   #@_NOMAX       { LEVEL }
+                #_STAZX_ #_BCAP0
+_NOMAX=*        #_DECZ_  #_STATE
+                #_LDAIM_ #$FF           { [Gigatron] Was #$FB, changed for super blitz }
+                #_CMPZ_  #_STATE        { TIME TO TURN }
+                #_BEQ_   #@_UPTREE      { AROUND }
+                #_JSR_   ##_GENRM       { GENERATE FURTHER }
+_UPTREE=*       #_INCZ_  #_STATE        { CAPTURES }
+                #_RTS_
+
+{      THE PLAYER'S MOVE IS INPUT }
+
+_INPUT=*        #_CMPIM_ #$08           { NOT A LEGAL }
+                #_BCS_   #@_ERROR       { SQUARE # }
+                #_JSR_   ##_DISMV
+_DISP=*         #_LDXIM_ #$1F
+_SEARCH=*       #_LDAZX_ #_BOARD
+                #_CMPZ_  #_DIS2
+                #_BEQ_   #@_HERE        { DISPLAY }
+                #_DEX_                  { PIECE AT }
+                #_BPL_   #@_SEARCH      { FROM }
+_HERE=*         #_STXZ_  #_DIS1         { SQUARE }
+                #_STXZ_  #_PIECE
+_ERROR=*        #_JMP_   ##_CHESS
+{
+                GENERATE ALL MOVES FOR ONE
+                SIDE, CALL JANUS AFTER EACH
+                ONE FOR NEXT STEP
+}
+                { +++ }
+_GNMZ=*         #_LDXIM_ #$10           { CLEAR }
+_GNMX=*         #_LDAIM_ #$00           { COUNTERS }
+_CLEAR=*        #_STAZX_ #_COUNT
+                #_DEX_
+                #_BPL_   #@_CLEAR
+
+_GNM=*          #_LDAIM_ #$10           { SET UP }
+                #_STAZ_  #_PIECE        { PIECE }
+_NEWP=*         #_DECZ_  #_PIECE        { NEW PIECE }
+                #_BPL_   #@_NEX         { ALL DONE? }
+                #_RTS_                  {    -YES }
+
+_NEX=*          #_JSR_   ##_RESETX      {READY }
+                #_LDYZ_  #_PIECE        { GET PIECE }
+                #_LDXIM_ #$08
+                #_STXZ_  #_MOVEN        { COMMON START }
+                #_CPYIM_ #$08           { WHAT IS IT? }
+                #_BPL_   #@_PAWN        { PAWN }
+                #_CPYIM_ #$06
+                #_BPL_   #@_KNIGHT      { KNIGHT }
+                #_CPYIM_ #$04
+                #_BPL_   #@_BISHOP      { BISHOP }
+                #_CPYIM_ #$01
+                #_BEQ_   #@_QUEEN       { QUEEN }
+                #_BPL_   #@_ROOK        { ROOK }
+
+_KING=*         #_JSR_   ##_SNGMV       { MUST BE KING! }
+                #_BNE_   #@_KING        { MOVES }
+                #_BEQ_   #@_NEWP        { 8 TO 1 }
+_QUEEN=*        #_JSR_   ##_LINE
+                #_BNE_   #@_QUEEN       { MOVES }
+                #_BEQ_   #@_NEWP        { 8 TO 1 }
+
+_ROOK=*         #_LDXIM_ #$04
+                #_STXZ_  #_MOVEN        { MOVES }
+_AGNR=*         #_JSR_   ##_LINE        { 4 TO 1 }
+                #_BNE_   #@_AGNR
+                #_BEQ_   #@_NEWP
+
+_BISHOP=*       #_JSR_   ##_LINE
+                #_LDAZ_  #_MOVEN        { MOVES }
+                #_CMPIM_ #$04           { 8 TO 5 }
+                #_BNE_   #@_BISHOP
+                #_BEQ_   #@_NEWP
+
+_KNIGHT=*       #_LDXIM_ #$10
+                #_STXZ_  #_MOVEN        { MOVES }
+_AGNN=*         #_JSR_   ##_SNGMV       { 16 TO 9 }
+                #_LDAZ_  #_MOVEN
+                #_CMPIM_ #$08
+                #_BNE_   #@_AGNN
+                #_BEQ_   #@_NEWP
+
+_PAWN=*         #_LDXIM_ #$06
+                #_STXZ_  #_MOVEN
+_P1=*           #_JSR_   ##_CMOVE       { RIGHT CAP? }
+                #_BVC_   #@_P2
+                #_BMI_   #@_P2
+                #_JSR_   ##_JANUS       { YES }
+_P2=*           #_JSR_   ##_RESETX
+                #_DECZ_  #_MOVEN        { LEFT CAP? }
+                #_LDAZ_  #_MOVEN
+                #_CMPIM_ #$05
+                #_BEQ_   #@_P1
+_P3=*           #_JSR_   ##_CMOVE       { AHEAD }
+                #_BVS_   #@_NEWP        { ILLEGAL }
+                #_BMI_   #@_NEWP
+                #_JSR_   ##_JANUS
+                #_LDAZ_  #_SQUARE       { GETS TO }
+                #_ANDIM_ #$F0           { 3RD RANK? }
+                #_CMPIM_ #$20
+                #_BEQ_   #@_P3          { DO DOUBLE }
+                #_JMP_   ##_NEWP
+{
+                CALCULATE SINGLE STEP MOVES
+                FOR K, N
+}
+_SNGMV=*        #_JSR_   ##_CMOVE       { CALC MOVE }
+                #_BMI_   #@_ILL1        {  -IF LEGAL }
+                #_JSR_   ##_JANUS       {  -EVALUATE }
+_ILL1=*         #_JSR_   ##_RESETX
+                #_DECZ_  #_MOVEN
+                #_RTS_
+{
+                CALCULATE ALL MOVES DOWN A
+                STRAIGHT LINE FOR Q,B,R
+}
+_LINE=*         #_JSR_   ##_CMOVE       { CALC MOVE }
+                #_BCC_   #@_OVL         {  NO CHK }
+                #_BVC_   #@_LINE        {  CH,NOCAP }
+_OVL=*          #_BMI_   #@_ILL         {  RETURN }
+                #_PHP_
+                #_JSR_   ##_JANUS       { EVALUATE POSN }
+                #_PLP_
+                #_BVC_   #@_LINE        { NOT A CAP }
+_ILL=*          #_JSR_   ##_RESETX      { LINE STOPPED }
+                #_DECZ_  #_MOVEN        {  NEXT DIR }
+                #_RTS_
+{
+                EXCHANGE SIDES FOR REPLY
+                ANALYSIS
+}
+_REVERSE=*      #_LDXIM_ #$0F
+_ETC=*          #_SEC_
+                #_LDYZX_ #_BK           { SUBTRACT }
+                #_LDAIM_ #$77           { POSITION }
+                #_SBCZX_ #_BOARD        { FROM 77 }
+                #_STAZX_ #_BK
+                #_STYZX_ #_BOARD        {   AND }
+                #_SEC_
+                #_LDAIM_ #$77           { EXCHANGE }
+                #_SBCZX_ #_BOARD        { PIECES }
+                #_STAZX_ #_BOARD
+                #_DEX_
+                #_BPL_
+*=$400          #@_ETC
+                #_RTS_
+{
+               CMOVE CALCULATES THE TO SQUARE
+               USING .SQUARE AND THE MOVE
+              TABLE.  FLAGS SET AS FOLLOWS:
+              N - ILLEGAL MOVE
+              V - CAPTURE (LEGAL UNLESS IN CH)
+              C - ILLEGAL BECAUSE OF CHECK
+              [MY THANKS TO JIM BUTTERFIELD
+               WHO WROTE THIS MORE EFFICIENT
+               VERSION OF CMOVE]
+}
+_CMOVE=*        #_LDAZ_  #_SQUARE       { GET SQUARE }
+                #_LDXZ_  #_MOVEN        { MOVE POINTER }
+                #_CLC_
+                #_ADCAX_ ##_MOVEX       { MOVE LIST }
+                #_STAZ_  #_SQUARE       { NEW POS'N }
+                #_ANDIM_ #$88
+                #_BNE_   #@_ILLEGAL     { OFF BOARD }
+                #_LDAZ_  #_SQUARE
+
+                #_LDXIM_ #$20
+_LOOP=*         #_DEX_                  { IS TO }
+                #_BMI_   #@_NO          { SQUARE }
+                #_CMPZX_ #_BOARD        { OCCUPIED? }
+                #_BNE_   #@_LOOP
+
+                #_CPXIM_ #$10           { BY SELF? }
+                #_BMI_   #@_ILLEGAL
+
+                #_LDAIM_ #$7F           { MUST BE CAP! }
+                #_ADCIM_ #$01           { SET V FLAG }
+                #_BVS_   #@_SPX         { (JMP) }
+
+_NO=*           #_CLV_                  { NO CAPTURE }
+
+_SPX=*          #_LDAZ_  #_STATE        { SHOULD WE }
+                #_BMI_   #@_RETL        { DO THE }
+                #_CMPIM_ #$00           { CHECK CHECK? [Gigatron] Was #$08, changed for super blitz }
+                #_BPL_   #@_RETL
+{
+               CHKCHK REVERSES SIDES
+              AND LOOKS FOR A KING
+              CAPTURE TO INDICATE
+              ILLEGAL MOVE BECAUSE OF
+              CHECK.  SINCE THIS IS
+              TIME CONSUMING, IT IS NOT
+              ALWAYS DONE.
+}
+_CHKCHK=*       #_PHA_                   { STATE }
+                #_PHP_
+                #_LDAIM_ #$F9
+                #_STAZ_  #_STATE        { GENERATE }
+                #_STAZ_  #_INCHEK       { ALL REPLY }
+                #_JSR_   ##_MOVE        { MOVES TO }
+                #_JSR_   ##_REVERSE     { SEE IF KING }
+                #_JSR_   ##_GNM         { IS IN }
+                #_JSR_   ##_RUM         { CHECK }
+                #_PLP_
+                #_PLA_
+                #_STAZ_  #_STATE
+                #_LDAZ_  #_INCHEK
+                #_BMI_   #@_RETL        { NO - SAFE }
+                #_SEC_                  { YES - IN CHK }
+                #_LDAIM_ #$FF
+                #_RTS_
+
+_RETL=*         #_CLC_                  { LEGAL }
+                #_LDAIM_ #$00           { RETURN }
+                #_RTS_
+
+_ILLEGAL=*      #_LDAIM_ #$FF
+                #_CLC_                  { ILLEGAL }
+                #_CLV_                  { RETURN }
+                #_RTS_
+{
+              REPLACE .PIECE ON CORRECT .SQUARE
+}
+_RESETX=*       #_LDXZ_  #_PIECE        { GET LOGAT. }
+                #_LDAZX_ #_BOARD        { FOR PIECE }
+                #_STAZ_  #_SQUARE       { FROM BOARD }
+                #_RTS_
+
+_GENRM=*        #_JSR_   ##_MOVE        { MAKE MOVE }
+_GENR2=*        #_JSR_   ##_REVERSE     { REVERSE BOARD }
+                #_JSR_   ##_GNM         { GENERATE MOVES }
+_RUM=*          #_JSR_   ##_REVERSE     { REVERSE BACK }
+{
+              ROUTINE TO UNMAKE A MOVE MADE BY
+                       MOVE
+}
+_UMOVE=*        #_TSX_                  { UNMAKE MOVE }
+                #_STXZ_  #_SP1
+                #_LDXZ_  #_SP2          { EXCHANGE }
+                #_TXS_                  { STACKS }
+                #_PLA_                  { MOVEN }
+                #_STAZ_  #_MOVEN
+                #_PLA_                  { CAPTURED }
+                #_STAZ_  #_PIECE        { PIECE }
+                #_TAX_
+                #_PLA_                  { FROM SQUARE }
+                #_STAZX_ #_BOARD
+                #_PLA_                  { PIECE }
+                #_TAX_
+                #_PLA_                  { TO SOUARE }
+                #_STAZ_  #_SQUARE
+                #_STAZX_ #_BOARD
+                #_JMP_   ##_STRV
+{
+              THIS ROUTINE MOVES .PIECE
+              TO .SQUARE,  PARAMETERS
+              ARE SAVED IN A STACK TO UNMAKE
+              THE MOVE LATER
+}
+_MOVE=*         #_TSX_
+                #_STXZ_  #_SP1          { SWITCH }
+                #_LDXZ_  #_SP2          { STACKS }
+                #_TXS_
+                #_LDAZ_  #_SQUARE
+                #_PHA_                  { TO SQUARE }
+                #_TAY_
+                #_LDXIM_ #$1F
+_CHECK=*        #_CMPZX_ #_BOARD        { CHECK FOR }
+                #_BEQ_   #@_TAKE        { CAPTURE }
+                #_DEX_
+                #_BPL_   #@_CHECK
+_TAKE=*         #_LDAIM_ #$CC
+                #_STAZX_ #_BOARD
+                #_TXA_                  { CAPTURED }
+                #_PHA_                  { PIECE }
+                #_LDXZ_  #_PIECE
+                #_LDAZX_ #_BOARD
+                #_STYZX_ #_BOARD        { FROM }
+                #_PHA_                  {    SQUARE }
+                #_TXA_
+                #_PHA_                  { PIECE }
+                #_LDAZ_  #_MOVEN
+                #_PHA_                  { MOVEN }
+_STRV=*         #_TSX_
+                #_STXZ_  #_SP2          { SWITCH }
+                #_LDXZ_  #_SP1          { STACKS }
+                #_TXS_                  { BACK }
+                #_RTS_
+{
+              CONTINUATION OF SUB STRATGY
+              -CHECKS FOR CHECK OR CHECKMATE
+              AND ASSIGNS VALUE TO MOVE
+}
+_CKMATE=*       #_LDXZ_  #_BMAXC        { CAN BLK CAP }
+                #_CPX_   ##_POINTS      { MY KING? }
+                #_BNE_   #@_NOCHEK
+                #_LDAIM_ #$00           { GULP! }
+                #_BEQ_   #@_RETV        { DUMB MOVE! }
+
+_NOCHEK=*       #_LDXZ_  #_BMOB         { IS BLACK }
+                #_BNE_   #@_RETV        { UNABLE TO }
+                #_LDXZ_  #_WMAXP        { MOVE AND }
+                #_BNE_   #@_RETV        { KING IN CH? }
+                #_LDAIM_ #$FF           { YES! MATE }
+
+_RETV=*         #_LDXIM_ #$04           { RESTORE }
+                #_STXZ_  #_STATE        { STATE=4 }
+{
+              THE VALUE OF THE MOVE (IN ACCU)
+              IS COMPARED TO THE BEST MOVE AND
+              REPLACES IT IF IT IS BETTER
+}
+{_PUSH}         #_CMPZ_  #_BESTV        { IS THIS BEST }
+                #_BCC_   #@_RETP        { MOVE SO FAR? }
+                #_BEQ_   #@_RETP
+                #_STAZ_  #_BESTV        { YES! }
+                #_LDAZ_  #_PIECE        { SAVE IT }
+                #_STAZ_  #_BESTP
+                #_LDAZ_  #_SQUARE
+                #_STAZ_  #_BESTM        { FLASH DISPLAY }
+_RETP=*
+                #_LDAIM_ #$AE           { [Gigatron] '.' }
+                #_BRK_                  { [Gigatron] Character out }
+                #_RTS_                  { [Gigatron] }
+{
+              MAIN PROGRAM TO PLAY CHESS
+              PLAY FROM OPENING OR THINK
+}
+_GO=*           #_LDXZ_  #_OMOVE        { OPENING? }
+{               #_BPL_   #@_NOOPEN      {     -NO }
+}               #_BMI_   #@_NOOPEN      { [Gigatron] XXX *ADD CHANGE FROM BPL }
+                #_LDAZ_  #_DIS3         { -YES WAS }
+                #_CMPAX_ ##_OPNING       {  OPPONENT'S }
+                #_BNE_   #@_END         {  MOVE OK? }
+                #_DEX_
+                #_LDAAX_ ##_OPNING       { GET NEXT }
+                #_STAZ_  #_DIS1         { CANNED }
+                #_DEX_                  { OPENING MOVE }
+                #_LDAAX_ ##_OPNING
+                #_STAZ_  #_DIS3         { DISPLAY IT }
+                #_DEX_
+                #_STXZ_  #_OMOVE        { MOVE IT }
+                #_BNE_   #@_MV2         { (JMP) }
+
+_END=*          #_LDAIM_ #$FF           { [Gigatron] XXX *ADD - STOP CANNED MOVES }
+                #_STAZ_  #_OMOVE        { FLAG OPENING }
+_NOOPEN=*       #_LDXIM_ #$0C           { FINISHED }
+                #_STXZ_
 *=$500
+                         #_STATE        { STATE=C }
+                #_STXZ_  #_BESTV        { CLEAR BESTV }
+                #_LDXIM_ #$14           { GENERATE P }
+                #_JSR_   ##_GNMX        { MOVES }
 
- #$f7 #$86 #$fa #$a2 #$14 #$20 #$3a #$03 #$a2 #$04 #$86 #$f7 #$20 #$38 #$03 #$a6
- #$fa #$e0 #$0f #$90 #$12 #$a6 #$fb #$b5 #$50 #$85 #$fa #$86 #$70 #$a5 #$f9 #$85
- #$f3 #$20 #$84 #$04 #$4c #$20 #$02 #$a9 #$ff #$60 #$a2 #$04 #$06 #$f9 #$26 #$fa
- #$ca #$d0 #$f9 #$05 #$f9 #$85 #$f9 #$85 #$f3 #$60 #$18 #$a9 #$80 #$65 #$eb #$65
- #$ec #$65 #$ed #$65 #$e1 #$65 #$df #$38 #$e5 #$f0 #$e5 #$f1 #$e5 #$e2 #$e5 #$e0
- #$e5 #$de #$e5 #$ef #$e5 #$e3 #$b0 #$02 #$a9 #$00 #$4a #$18 #$69 #$40 #$65 #$ec
- #$65 #$ed #$38 #$e5 #$e4 #$4a #$18 #$69 #$90 #$65 #$dd #$65 #$dd #$65 #$dd #$65
- #$dd #$65 #$e1 #$38 #$e5 #$e4 #$e5 #$e4 #$e5 #$e5 #$e5 #$e5 #$e5 #$e0 #$a6 #$f3
- #$e0 #$33 #$f0 #$16 #$e0 #$34 #$f0 #$12 #$e0 #$22 #$f0 #$0e #$e0 #$25 #$f0 #$0a
- #$a6 #$70 #$f0 #$09 #$b4 #$50 #$c0 #$10 #$10 #$03 #$18 #$69 #$02 #$4c #$b0 #$04
+                #_LDXIM_ #$04           { STATE=4 }
+                #_STXZ_  #_STATE        { GENERATE AND }
+                #_JSR_   ##_GNMZ        { TEST AVAILABLE }
+                                        { MOVES }
 
-*=$7a0
+                #_LDXZ_  #_BESTV        { GET BEST MOVE }
+                #_CPXIM_ #$0F           { IF NONE }
+                #_BCC_   #@_MATE        { OH OH! }
 
- #$03 #$04 #$00 #$07 #$02 #$05 #$01 #$06 #$10 #$17 #$11 #$16 #$12 #$15 #$14 #$13
- #$73 #$74 #$70 #$77 #$72 #$75 #$71 #$76 #$60 #$67 #$61 #$66 #$62 #$65 #$64 #$63
- #$f0 #$ff #$01 #$10 #$11 #$0f #$ef #$f1 #$df #$e1 #$ee #$f2 #$12 #$0e #$1f #$21
- #$0b #$0a #$06 #$06 #$04 #$04 #$04 #$04 #$02 #$02 #$02 #$02 #$02 #$02 #$02 #$02
- #$99 #$25 #$0b #$25 #$01 #$00 #$33 #$25 #$07 #$36 #$34 #$0d #$34 #$34 #$0e #$52
- #$25 #$0d #$45 #$35 #$04 #$55 #$22 #$06 #$43 #$33 #$0f #$cc
+_MV2=*          #_LDXZ_  #_BESTP        { MOVE }
+                #_LDAZX_ #_BOARD        {  THE }
+                #_STAZ_  #_BESTV        { BEST }
+                #_STXZ_  #_PIECE        { MOVE }
+                #_LDAZ_  #_BESTM
+                #_STAZ_  #_SQUARE       { AND DISPLAY }
+                #_JSR_   ##_MOVE        {   IT }
+                #_JMP_   ##_CHESS
+
+_MATE=*         #_LDAIM_ #$FF           { RESIGN }
+                #_RTS_                  { OR STALEMATE }
+{
+              SUBROUTINE TO ENTER THE
+              PLAYER'S MOVE
+}
+_DISMV=*        #_LDXIM_ #$04           { ROTATE }
+_ROL=*          #_ASLZ_  #_DIS3         {  KEY }
+                #_ROLZ_  #_DIS2         { INTO }
+                #_DEX_                  { DISPLAY }
+                #_BNE_   #@_ROL
+                #_ORAZ_  #_DIS3
+                #_STAZ_  #_DIS3
+                #_STAZ_  #_SQUARE
+                #_RTS_
+{
+              THE FOLLOWING SUBROUTINE ASSIGNS
+              A VALUE TO THE MOVE UNDER
+              CONSIDERATION AND RETURNS IT IN
+                THE ACCUMULATOR
+}
+                { +++ }
+_STRATGY=*      #_CLC_
+                #_LDAIM_ #$80
+                #_ADCZ_  #_WMOB         {  PARAMETERS }
+                #_ADCZ_  #_WMAXC        {  WITH WEIGHT }
+                #_ADCZ_  #_WCC          {  OF 0.25 }
+                #_ADCZ_  #_WCAP1
+                #_ADCZ_  #_WCAP2
+                #_SEC_
+                #_SBCZ_  #_PMAXC
+                #_SBCZ_  #_PCC
+                #_SBCZ_  #_BCAP0
+                #_SBCZ_  #_BCAP1
+                #_SBCZ_  #_BCAP2
+                #_SBCZ_  #_PMOB
+                #_SBCZ_  #_BMOB
+                #_BCS_   #@_POS         { UNDERFLOW }
+                #_LDAIM_ #$00           { PREVENTION }
+_POS=*          #_LSRA_
+                #_CLC_                  { ************** }
+                #_ADCIM_ #$40
+                #_ADCZ_  #_WMAXC        { PARAMETERS }
+                #_ADCZ_  #_WCC          { WITH WEIGHT }
+                #_SEC_                  { OF 0.5 }
+                #_SBCZ_  #_BMAXC
+                #_LSRA_                 { ************** }
+                #_CLC_
+                #_ADCIM_ #$90
+                #_ADCZ_  #_WCAP0        { PARAMETERS }
+                #_ADCZ_  #_WCAP0        { WITH WEIGHT }
+                #_ADCZ_  #_WCAP0        { OF 1.0 }
+                #_ADCZ_  #_WCAP0
+                #_ADCZ_  #_WCAP1
+                #_SEC_                  { [UNDER OR OVER- }
+                #_SBCZ_  #_BMAXC        {  FLOW MAY OCCUR }
+                #_SBCZ_  #_BMAXC        {  FROM THIS }
+                #_SBCZ_  #_BMCC         {  SECTION] }
+                #_SBCZ_  #_BMCC
+                #_SBCZ_  #_BCAP1
+                #_LDXZ_  #_SQUARE       { *************** }
+                #_CPXIM_ #$33
+                #_BEQ_   #@_POSN        { POSITION }
+                #_CPXIM_ #$34           { BONUS FOR }
+                #_BEQ_   #@_POSN        { MOVE TO }
+                #_CPXIM_ #$22           { CENTRE }
+                #_BEQ_   #@_POSN        {    OR }
+                #_CPXIM_ #$25           { OUT OF }
+                #_BEQ_   #@_POSN        { BACK RANK }
+                #_LDXZ_  #_PIECE
+                #_BEQ_   #@_NOPOSN
+                #_LDYZX_ #_BOARD
+                #_CPYIM_ #$10
+                #_BPL_   #@_NOPOSN
+_POSN=*         #_CLC_
+                #_ADCIM_ #$02
+_NOPOSN=*       #_JMP_   ##_CKMATE      { CONTINUE }
+
+*=$7A0          { Tables fit nicely in Gigatron screen memory }
+
+                { INITIAL PIECE LOCATIONS }
+_SETW=*         #$03 #$04 #$00 #$07 #$02 #$05 #$01 #$06
+                #$10 #$17 #$11 #$16 #$12 #$15 #$14 #$13
+                #$73 #$74 #$70 #$77 #$72 #$75 #$71 #$76
+                #$60 #$67 #$61 #$66 #$62 #$65 #$64
+_MOVEX=*                                           #$63
+                { TABLE OF MOVE DIRECTIONS }
+                #$F0 #$FF #$01 #$10 #$11 #$0F #$EF #$F1
+                #$DF #$E1 #$EE #$F2 #$12 #$0E #$1F #$21
+
+                { TABLE OF PIECE VALUES }
+_POINTS=*       #$0B #$0A #$06 #$06 #$04 #$04 #$04 #$04
+                #$02 #$02 #$02 #$02 #$02 #$02 #$02 #$02
+
+                { OPENING MOVE TABLE }
+_OPNING=*       #$99 #$25 #$0B #$25 #$01 #$00 #$33 #$25
+                #$07 #$36 #$34 #$0D #$34 #$34 #$0E #$52
+                #$25 #$0D #$45 #$35 #$04 #$55 #$22 #$06
+                #$43 #$33 #$0F #$CC
 
 {-----------------------------------------------------------------------+
 |       Main loop                                                       |
