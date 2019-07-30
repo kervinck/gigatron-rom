@@ -19,13 +19,14 @@ gcl0x
                   -> doesn't work at memory wrap-around
       - Option 5: New videoTable-aware (character) plot function
       - Option 6: use Sprite functions for plotting chars
+      - Option 7: Keep 8-pixel height, make 10-row or 11-row screen (simplest)
       Possible memory map with compressed video memory:
         +--------------------------+
         |30-7F,81-FF FREE ZP+STACK!|
         |0100-01F9   VIDEO+SYSTEM  |
         |0200-0FFF   FREE RAM      | 1000-5FFF -> 80 scanlines
         |E000-EFFF   FREE RAM      | F000-FBFF -> 12 scanlines --> total 13*7+1
-        |FC00-FD00   FREE RAM      |
+        |FC00-FDFF   FREE RAM      |
         |FE00        KBD/DSP MOCKUP| Add entry points at D010-D013 = 5010-5013
         |FF00        APPLE1 ROM    |
         |                          |
@@ -40,6 +41,7 @@ gcl0x
             D013 60 DSPCR   RTS
             D014    _DSP:
             D037    _KBDCR:
+  XXX Another idea: interrupts to handle memory mapped DSP/KBD/..
 
         https://www.sbprojects.net/projects/apple1/a1basic.php
 
