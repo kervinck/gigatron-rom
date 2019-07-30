@@ -15,8 +15,8 @@ gigatron-rom
  |     `--- compilegcl.py       Stand-alone GCL to vCPU compiler (GT1 files)
  +--- interface.json            Formal bindings interface to ROM for programs
  +--- Apps/                     Built-in and example applications (GCL and GT1)
- |     +--- Blinky.gcl          Very simple GCL program
- |     `--- HelloWorld.gcl      Program that draws "Hello world" on screen
+ |     +--- Blinky/Blinky.gcl   Very simple GCL program
+ |     `--- HelloWorld/         Program that draws "Hello world" on screen
  +--- BASIC/                    Example BASIC programs
  +--- Images/                   Built-in images
  +--- Utils/
@@ -32,7 +32,6 @@ gigatron-rom
  |     +--- gtemu.c             Instruction set definition (as executable code)
  |     +--- SYS-functions.txt   Explanation on how SYS extensions work
  |     `--- vCPU-summary.txt    Overview of 16-bit virtual CPU instruction set
- |
  `--- Contrib/                  Contributions outside the kit's ROM and tooling:
        +--- at67/               Emulator/visualizer (SDL2), 8-bit/16-bit
        |                        assembler, debugger, MIDI music, demos (sprites,

@@ -3384,7 +3384,7 @@ def basicLine(address, number, text):
   for byte in s:
     program.putInRomTable(byte)
 
-gtbName = 'Apps/TicTac_v1.gtb'
+gtbName = 'Apps/TicTac/TicTac_v1.gtb'
 name = 'TicTac'
 print
 print 'Including file %s label %s ROM %04x' % (gtbName, name, pc())

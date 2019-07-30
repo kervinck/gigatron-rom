@@ -29520,7 +29520,7 @@ packedJupiter:
               89fe fe00  bra  ac
               89ff e0bc  jmp  y,$bc       ;End of Images/Jupiter-160x120.rgb, size 15360
                                           ;+-----------------------------------+
-                                          ;| SYS_Racer_v1.py                   |
+                                          ;| Apps/Racer/SYS_Racer_v1.py        |
                                           ;+-----------------------------------+
 SYS_Racer_v1:
 SYS_RacerUpdateVideoX_40:
@@ -29573,9 +29573,9 @@ SYS_RacerUpdateVideoY_40:
               8a2d c226  st   [$26]
               8a2e 1403  ld   $03,y
               8a2f e0cb  jmp  y,$cb
-              8a30 00ec  ld   $ec         ;End of SYS_Racer_v1.py, size 49
+              8a30 00ec  ld   $ec         ;End of Apps/Racer/SYS_Racer_v1.py, size 49
                                           ;+-----------------------------------+
-                                          ;| SYS_Loader_v3.py                  |
+                                          ;| Apps/Loader/SYS_Loader_v3.py      |
                                           ;+-----------------------------------+
 SYS_Loader_v3:
 SYS_LoaderNextByteIn_32:
@@ -29685,9 +29685,9 @@ SYS_LoaderPayloadCopy_34:
               8a96 ec96  bne  $8a96
               8a97 a001  suba $01
 .sysCc#30:    8a98 e0cb  jmp  y,$cb
-              8a99 00ef  ld   $ef         ;End of SYS_Loader_v3.py, size 105
+              8a99 00ef  ld   $ef         ;End of Apps/Loader/SYS_Loader_v3.py, size 105
                                           ;+-----------------------------------+
-                                          ;| Apps/Snake_v3.gcl                 |
+                                          ;| Apps/Snake/Snake_v3.gcl           |
                                           ;+-----------------------------------+
 Snake:        8a9a 0002  ld   $02         ;| RAM segment address (high byte first)
               8a9b 0000  ld   $00         ;|
@@ -31522,7 +31522,7 @@ Snake:        8a9a 0002  ld   $02         ;| RAM segment address (high byte firs
               91c0 0050  ld   $50         ;0ee9 'Wait'
               91c1 0090  ld   $90         ;0eeb BRA
               91c2 00d3  ld   $d3
-              91c3 0000  ld   $00         ;End of Apps/Snake_v3.gcl, size 1834
+              91c3 0000  ld   $00         ;End of Apps/Snake/Snake_v3.gcl, size 1834
                                           ;+-----------------------------------+
                                           ;| Images/RacerHorizon-256x16.rgb    |
                                           ;+-----------------------------------+
@@ -34607,7 +34607,7 @@ zippedRacerHorizon:
               9e03 001a  ld   $1a
               9e04 0004  ld   $04         ;End of Images/RacerHorizon-256x16.rgb, size 3137
                                           ;+-----------------------------------+
-                                          ;| Apps/Racer_v2.gcl                 |
+                                          ;| Apps/Racer/Racer_v2.gcl           |
                                           ;+-----------------------------------+
 Racer:        9e05 0002  ld   $02         ;| RAM segment address (high byte first)
               9e06 0000  ld   $00         ;|
@@ -36476,9 +36476,9 @@ Racer:        9e05 0002  ld   $02         ;| RAM segment address (high byte firs
               a54d 0099  ld   $99         ;0ff0 'PrintBestTime'
               a54e 0090  ld   $90         ;0ff2 BRA
               a54f 00a0  ld   $a0
-              a550 0000  ld   $00         ;End of Apps/Racer_v2.gcl, size 1868
+              a550 0000  ld   $00         ;End of Apps/Racer/Racer_v2.gcl, size 1868
                                           ;+-----------------------------------+
-                                          ;| Apps/Mandelbrot_v1.gcl            |
+                                          ;| Apps/Mandelbrot/Mandelbrot_v1.gcl |
                                           ;+-----------------------------------+
 Mandelbrot:   a551 0002  ld   $02         ;| RAM segment address (high byte first)
               a552 0000  ld   $00         ;|
@@ -37734,9 +37734,9 @@ Mandelbrot:   a551 0002  ld   $02         ;| RAM segment address (high byte firs
               aa34 005c  ld   $5c         ;06fa 'CalcSet'
               aa35 0090  ld   $90         ;06fc BRA
               aa36 009c  ld   $9c
-              aa37 0000  ld   $00         ;End of Apps/Mandelbrot_v1.gcl, size 1255
+              aa37 0000  ld   $00         ;End of Apps/Mandelbrot/Mandelbrot_v1.gcl, size 1255
                                           ;+-----------------------------------+
-                                          ;| Apps/Pictures_v2.gcl              |
+                                          ;| Apps/Pictures/Pictures_v2.gcl     |
                                           ;+-----------------------------------+
 Pictures:     aa38 0002  ld   $02         ;| RAM segment address (high byte first)
               aa39 0000  ld   $00         ;|
@@ -37946,9 +37946,9 @@ Pictures:     aa38 0002  ld   $02         ;| RAM segment address (high byte firs
               ab05 0044  ld   $44         ;02c4 'WaitController'
               ab06 0090  ld   $90         ;02c6 BRA
               ab07 00ae  ld   $ae
-              ab08 0000  ld   $00         ;End of Apps/Pictures_v2.gcl, size 209
+              ab08 0000  ld   $00         ;End of Apps/Pictures/Pictures_v2.gcl, size 209
                                           ;+-----------------------------------+
-                                          ;| Apps/Credits_v3.gcl               |
+                                          ;| Apps/Credits/Credits_v3.gcl       |
                                           ;+-----------------------------------+
 Credits:      ab09 0002  ld   $02         ;| RAM segment address (high byte first)
               ab0a 0000  ld   $00         ;|
@@ -38542,9 +38542,9 @@ Credits:      ab09 0002  ld   $02         ;| RAM segment address (high byte firs
               ad56 0057  ld   $57
               ad57 0090  ld   $90         ;047f BRA
               ad58 0053  ld   $53
-              ad59 0000  ld   $00         ;End of Apps/Credits_v3.gcl, size 593
+              ad59 0000  ld   $00         ;End of Apps/Credits/Credits_v3.gcl, size 593
                                           ;+-----------------------------------+
-                                          ;| Apps/Loader_v3.gcl                |
+                                          ;| Apps/Loader/Loader_v3.gcl         |
                                           ;+-----------------------------------+
 Loader:       ad5a 0002  ld   $02         ;| RAM segment address (high byte first)
               ad5b 0000  ld   $00         ;|
@@ -38846,9 +38846,9 @@ Loader:       ad5a 0002  ld   $02         ;| RAM segment address (high byte firs
               ae83 00ee  ld   $ee
               ae84 0090  ld   $90         ;5a7f BRA
               ae85 000a  ld   $0a
-              ae86 0000  ld   $00         ;End of Apps/Loader_v3.gcl, size 301
+              ae86 0000  ld   $00         ;End of Apps/Loader/Loader_v3.gcl, size 301
                                           ;+-----------------------------------+
-                                          ;| Apps/Tetronis_v1.gt1              |
+                                          ;| Apps/Tetronis/Tetronis_v1.gt1     |
                                           ;+-----------------------------------+
 Tetronis:     ae87 0000  ld   $00
               ae88 00a0  ld   $a0
@@ -48899,9 +48899,9 @@ Tetronis:     ae87 0000  ld   $00
               d5d0 003b  ld   $3b
               d5d1 0031  ld   $31
               d5d2 0000  ld   $00
-              d5d3 0000  ld   $00         ;End of Apps/Tetronis_v1.gt1, size 10061
+              d5d3 0000  ld   $00         ;End of Apps/Tetronis/Tetronis_v1.gt1, size 10061
                                           ;+-----------------------------------+
-                                          ;| Apps/Bricks_v1.gt1                |
+                                          ;| Apps/Bricks/Bricks_v1.gt1         |
                                           ;+-----------------------------------+
 Bricks:       d5d4 0000  ld   $00
               d5d5 0082  ld   $82
@@ -50500,9 +50500,9 @@ Bricks:       d5d4 0000  ld   $00
               dc39 0063  ld   $63
               dc3a 00ff  ld   $ff
               dc3b 0000  ld   $00
-              dc3c 0000  ld   $00         ;End of Apps/Bricks_v1.gt1, size 1641
+              dc3c 0000  ld   $00         ;End of Apps/Bricks/Bricks_v1.gt1, size 1641
                                           ;+-----------------------------------+
-                                          ;| Apps/TinyBASIC_v3.gcl             |
+                                          ;| Apps/TinyBASIC/TinyBASIC_v3.gcl   |
                                           ;+-----------------------------------+
 TinyBASIC:    dc3d 0002  ld   $02         ;| RAM segment address (high byte first)
               dc3e 0000  ld   $00         ;|
@@ -53625,9 +53625,9 @@ TinyBASIC:    dc3d 0002  ld   $02         ;| RAM segment address (high byte firs
               e86b 0045  ld   $45         ;1ba3 'E'
               e86c 0057  ld   $57         ;1ba4 'W'
               e86d 0000  ld   $00         ;1ba5 0
-              e86e 0000  ld   $00         ;End of Apps/TinyBASIC_v3.gcl, size 3122
+              e86e 0000  ld   $00         ;End of Apps/TinyBASIC/TinyBASIC_v3.gcl, size 3122
                                           ;+-----------------------------------+
-                                          ;| Apps/TicTac_v2.gtb                |
+                                          ;| Apps/TicTac/TicTac_v2.gtb         |
                                           ;+-----------------------------------+
 TicTac:       e86f 001b  ld   $1b
               e870 00c0  ld   $c0
@@ -55640,9 +55640,9 @@ TicTac:       e86f 001b  ld   $1b
               f047 00e0  ld   $e0
               f048 0045  ld   $45
               f049 0000  ld   $00
-              f04a 0000  ld   $00         ;End of Apps/TicTac_v2.gtb, size 2012
+              f04a 0000  ld   $00         ;End of Apps/TicTac/TicTac_v2.gtb, size 2012
                                           ;+-----------------------------------+
-                                          ;| Apps/WozMon_v2.gt1                |
+                                          ;| Apps/WozMon/WozMon_v2.gt1         |
                                           ;+-----------------------------------+
 WozMon:       f04b 0002  ld   $02
               f04c 0000  ld   $00
@@ -56247,9 +56247,9 @@ WozMon:       f04b 0002  ld   $02
               f2a3 0090  ld   $90
               f2a4 00fe  ld   $fe
               f2a5 0000  ld   $00
-              f2a6 0000  ld   $00         ;End of Apps/WozMon_v2.gt1, size 604
+              f2a6 0000  ld   $00         ;End of Apps/WozMon/WozMon_v2.gt1, size 604
                                           ;+-----------------------------------+
-                                          ;| Apps/Apple1_v1.gt1                |
+                                          ;| Apps/Apple1/Apple1_v1.gt1         |
                                           ;+-----------------------------------+
 Egg:          f2a7 0002  ld   $02
               f2a8 0000  ld   $00
@@ -57473,9 +57473,9 @@ Egg:          f2a7 0002  ld   $02
               f76a 0000  ld   $00
               f76b 0000  ld   $00
               f76c 0000  ld   $00
-              f76d 0000  ld   $00         ;End of Apps/Apple1_v1.gt1, size 1223
+              f76d 0000  ld   $00         ;End of Apps/Apple1/Apple1_v1.gt1, size 1223
                                           ;+-----------------------------------+
-                                          ;| Apps/MainMenu_v4.gcl              |
+                                          ;| Apps/MainMenu/MainMenu_v4.gcl     |
                                           ;+-----------------------------------+
 Main:         f76e 0002  ld   $02         ;| RAM segment address (high byte first)
               f76f 0000  ld   $00         ;|
@@ -58415,7 +58415,7 @@ Main:         f76e 0002  ld   $02         ;| RAM segment address (high byte firs
               fb15 0024  ld   $24
               fb16 00b4  ld   $b4         ;7fb5 SYS
               fb17 00e2  ld   $e2
-              fb18 0000  ld   $00         ;End of Apps/MainMenu_v4.gcl, size 939
+              fb18 0000  ld   $00         ;End of Apps/MainMenu/MainMenu_v4.gcl, size 939
                                           ;+-----------------------------------+
                                           ;| Core/Reset_v4.gcl                 |
                                           ;+-----------------------------------+

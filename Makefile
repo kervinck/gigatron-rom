@@ -13,7 +13,7 @@ gigatron.rom: $(DEV)
 dev: $(DEV)
 
 # Allow application-specific SYS extensions to live in Apps/
-export PYTHONPATH=Apps
+export PYTHONPATH=Apps/Loader:Apps/Racer
 export PYTHONDONTWRITEBYTECODE=please
 
 CFLAGS:=-std=c11 -O3 -Wall
@@ -29,21 +29,21 @@ dev.rom: Core/* Apps/* Images/* Makefile interface.json
 		packedJupiter=Images/Jupiter-160x120.rgb\
 		SYS_Racer_v1.py\
 		SYS_Loader_v3.py\
-		Snake=Apps/Snake_v3.gcl\
+		Snake=Apps/Snake/Snake_v3.gcl\
 		zippedRacerHorizon=Images/RacerHorizon-256x16.rgb\
-		Racer=Apps/Racer_v2.gcl\
-		Mandelbrot=Apps/Mandelbrot_v1.gcl\
-		Pictures=Apps/Pictures_v2.gcl\
-		Credits=Apps/Credits_v3.gcl\
-		Loader=Apps/Loader_v3.gcl\
-		Tetronis=Apps/Tetronis_v1.gt1\
-		Bricks=Apps/Bricks_v1.gt1\
-		TinyBASIC=Apps/TinyBASIC_v3.gcl\
-		TicTac=Apps/TicTac_v2.gtb\
-		WozMon=Apps/WozMon_v2.gt1\
-		Apple1=Apps/Apple1.gt1\
-		Egg=Apps/HelloWorld.gt1\
-		Main=Apps/MainMenu.gcl\
+		Racer=Apps/Racer/Racer_v2.gcl\
+		Mandelbrot=Apps/Mandelbrot/Mandelbrot_v1.gcl\
+		Pictures=Apps/Pictures/Pictures_v2.gcl\
+		Credits=Apps/Credits/Credits_v3.gcl\
+		Loader=Apps/Loader/Loader_v3.gcl\
+		Tetronis=Apps/Tetronis/Tetronis_v1.gt1\
+		Bricks=Apps/Bricks/Bricks_v1.gt1\
+		TinyBASIC=Apps/TinyBASIC/TinyBASIC_v3.gcl\
+		TicTac=Apps/TicTac/TicTac_v2.gtb\
+		WozMon=Apps/WozMon/WozMon_v2.gt1\
+		Apple1=Apps/Apple1/Apple1.gt1\
+		Egg=Apps/HelloWorld/HelloWorld.gt1\
+		Main=Apps/MainMenu/MainMenu.gcl\
 		Reset=Core/Reset.gcl
 
 run: Docs/gtemu $(DEV)
@@ -93,22 +93,22 @@ ROMv4.rom: Core/* Apps/* Images/* Makefile interface.json
 	python Core/ROMv4.py\
 		packedParrot=Images/Parrot-160x120.rgb\
 		packedJupiter=Images/Jupiter-160x120.rgb\
-		SYS_Racer_v1.py\
-		SYS_Loader_v3.py\
-		Snake=Apps/Snake_v3.gcl\
+		Apps/Racer/SYS_Racer_v1.py\
+		Apps/Loader/SYS_Loader_v3.py\
+		Snake=Apps/Snake/Snake_v3.gcl\
 		zippedRacerHorizon=Images/RacerHorizon-256x16.rgb\
-		Racer=Apps/Racer_v2.gcl\
-		Mandelbrot=Apps/Mandelbrot_v1.gcl\
-		Pictures=Apps/Pictures_v2.gcl\
-		Credits=Apps/Credits_v3.gcl\
-		Loader=Apps/Loader_v3.gcl\
-		Tetronis=Apps/Tetronis_v1.gt1\
-		Bricks=Apps/Bricks_v1.gt1\
-		TinyBASIC=Apps/TinyBASIC_v3.gcl\
-		TicTac=Apps/TicTac_v2.gtb\
-		WozMon=Apps/WozMon_v2.gt1\
-		Egg=Apps/Apple1_v1.gt1\
-		Main=Apps/MainMenu_v4.gcl\
+		Racer=Apps/Racer/Racer_v2.gcl\
+		Mandelbrot=Apps/Mandelbrot/Mandelbrot_v1.gcl\
+		Pictures=Apps/Pictures/Pictures_v2.gcl\
+		Credits=Apps/Credits/Credits_v3.gcl\
+		Loader=Apps/Loader/Loader_v3.gcl\
+		Tetronis=Apps/Tetronis/Tetronis_v1.gt1\
+		Bricks=Apps/Bricks/Bricks_v1.gt1\
+		TinyBASIC=Apps/TinyBASIC/TinyBASIC_v3.gcl\
+		TicTac=Apps/TicTac/TicTac_v2.gtb\
+		WozMon=Apps/WozMon/WozMon_v2.gt1\
+		Egg=Apps/Apple1/Apple1_v1.gt1\
+		Main=Apps/MainMenu/MainMenu_v4.gcl\
 		Reset=Core/Reset_v4.gcl
 
 burnv4: ROMv4.rom
@@ -119,18 +119,18 @@ burnv4: ROMv4.rom
 # Note: ROM builder still directly incudes TicTac_v1.gtb
 ROMv3.rom: Core/* Apps/* Images/* Makefile interface.json
 	python Core/ROMv3.py\
-		Apps/Snake_v2.gcl\
-		Apps/Racer_v1.gcl\
-		Apps/Mandelbrot_v1.gcl\
-		Apps/Pictures_v2.gcl\
-		Apps/Credits_v2.gcl\
-		Apps/Loader_v2.gcl\
-		Apps/Tetronis_v1.gt1\
-		Apps/Bricks_v1.gt1\
-		Apps/TinyBASIC_v2.gcl\
-		Apps/WozMon_v2.gt1\
-		Egg=Apps/Sprites_v1.gt1\
-		Main=Apps/MainMenu_v3.gcl\
+		Apps/Snake/Snake_v2.gcl\
+		Apps/Racer/Racer_v1.gcl\
+		Apps/Mandelbrot/Mandelbrot_v1.gcl\
+		Apps/Pictures/Pictures_v2.gcl\
+		Apps/Credits/Credits_v2.gcl\
+		Apps/Loader/Loader_v2.gcl\
+		Apps/Tetronis/Tetronis_v1.gt1\
+		Apps/Bricks/Bricks_v1.gt1\
+		Apps/TinyBASIC/TinyBASIC_v2.gcl\
+		Apps/WozMon/WozMon_v2.gt1\
+		Egg=Apps/Sprites/Sprites_v1.gt1\
+		Main=Apps/MainMenu/MainMenu_v3.gcl\
 		Core/Reset_v3.gcl
 
 burnv3: ROMv3.rom
@@ -139,28 +139,28 @@ burnv3: ROMv3.rom
 # ROM v2 minor changes only
 ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
 	python Core/ROMv2.py\
-		Apps/Snake_v2.gcl\
-		Apps/Racer_v1.gcl\
-		Apps/Mandelbrot_v1.gcl\
-		Apps/Pictures_v1.gcl\
-		Apps/Credits_v1.gcl\
-		Apps/Loader_v1.gcl\
-		Apps/TinyBASIC_v1.gcl\
-		Apps/WozMon_v1.gcl\
-		Apps/Main_v2.gcl\
+		Apps/Snake/Snake_v2.gcl\
+		Apps/Racer/Racer_v1.gcl\
+		Apps/Mandelbrot/Mandelbrot_v1.gcl\
+		Apps/Pictures/Pictures_v1.gcl\
+		Apps/Credits/Credits_v1.gcl\
+		Apps/Loader/Loader_v1.gcl\
+		Apps/TinyBASIC/TinyBASIC_v1.gcl\
+		Apps/WozMon/WozMon_v1.gcl\
+		Apps/MainMenu/Main_v2.gcl\
 		Core/Reset_v2.gcl
 
 # ROM v1 as shipped with first batches of kits
 ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 	python Core/ROMv1.py\
-		Apps/Snake_v1.gcl\
-		Apps/Racer_v1.gcl\
-		Apps/Mandelbrot_v1.gcl\
-		Apps/Pictures_v1.gcl\
-		Apps/Credits_v1.gcl\
-		Apps/Loader_v1.gcl\
-		Apps/Screen_v1.gcl\
-		Apps/Main_v1.gcl\
+		Apps/Snake/Snake_v1.gcl\
+		Apps/Racer/Racer_v1.gcl\
+		Apps/Mandelbrot/Mandelbrot_v1.gcl\
+		Apps/Pictures/Pictures_v1.gcl\
+		Apps/Credits/Credits_v1.gcl\
+		Apps/Loader/Loader_v1.gcl\
+		Apps/Screen/Screen_v1.gcl\
+		Apps/MainMenu/Main_v1.gcl\
 		Core/Reset_v1.gcl
 
 #-----------------------------------------------------------------------
@@ -183,18 +183,18 @@ burnmos: v6502.rom
 # Adds vCPU slices on scanlines to get 400 cycles per scanline
 ROMv3y.rom: Core/* Apps/* Images/* Makefile interface.json
 	python Core/ROMv3y.py\
-		Apps/Snake_v2.gcl\
-		Apps/Racer_v1.gcl\
-		Apps/Mandelbrot_v1.gcl\
-		Apps/Pictures_v2.gcl\
-		Apps/Credits_v2.gcl\
-		Apps/Loader_v2.gcl\
-		Apps/Tetronis_v1.gt1\
-		Apps/Bricks_v1.gt1\
-		Apps/TinyBASIC_v2.gcl\
-		Apps/WozMon_v2.gt1\
-		Egg=Apps/Sprites_v1.gt1\
-		Apps/Main_v3.gcl\
+		Apps/Snake/Snake_v2.gcl\
+		Apps/Racer/Racer_v1.gcl\
+		Apps/Mandelbrot/Mandelbrot_v1.gcl\
+		Apps/Pictures/Pictures_v2.gcl\
+		Apps/Credits/Credits_v2.gcl\
+		Apps/Loader/Loader_v2.gcl\
+		Apps/Tetronis/Tetronis_v1.gt1\
+		Apps/Bricks/Bricks_v1.gt1\
+		Apps/TinyBASIC/TinyBASIC_v2.gcl\
+		Apps/WozMon/WozMon_v2.gt1\
+		Egg=Apps/Sprites/Sprites_v1.gt1\
+		Main=Apps/MainMenu/MainMenu_v3.gcl\
 		Core/Reset_v3y.gcl
 
 #-----------------------------------------------------------------------
