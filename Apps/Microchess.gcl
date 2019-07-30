@@ -21,23 +21,23 @@ _k=$3a          {1 bytes, share with wozmon YSAV}
 |       ROM type check                                                  |
 +-----------------------------------------------------------------------}
 
+{ This code runs once and is then reused as the input buffer for wozmon }
+
 *=\userCode
 
 \romType, \romTypeValue_ROMv4-  {Version check >= ROMv4, see Docs/GT1-files.txt}
 [if<0 do _frameCount _vPCH:     {https://forum.gigatron.io/viewtopic.php?f=4&t=130}
       loop]
 
-&_Init call
+&_Setup call                    {Continue in page 8}
 
 {-----------------------------------------------------------------------+
-|       Initialize                                                      |
+|       Setup                                                           |
 +-----------------------------------------------------------------------}
-
-{ This code runs once and is then reused as the input buffer for wozmon }
 
 *=$8a0
 
-_Init=*
+_Setup=*                        {Continuation of program start}
 
 { Setup video indirection table such that WozMon can be at $7F00/$FF00 }
 \videoTable Pos=                {First GCL variable at $30, later becomes Pos}
@@ -46,14 +46,24 @@ _Init=*
   Pos: <Pos++ <Pos++            {Y[y]=7+j and dX[y]=0}
   1+ 127^ if<>0loop]            {Next in range}
 
-&_PrintChar PrintChar=          {Forward reference}
+&_PrintChar PrintChar=          {Prepare for vCPU calls}
+
+[def #$d0 #$e5 #$f4 #$e5 #$f2 #$a0 #$ca #$e5 #$ee #$ee  {Peter Jenn}
+     #$e9 #$ee #$e7 #$f3 #$a7 #$a0 #$cd #$e9 #$e3 #$f2  {ings' Micr}
+     #$ef #$e3 #$e8 #$e5 #$f3 #$f3 #$a8 #$c3 #$a9 #$b1  {ochess(C)1}
+     #$b9 #$b7 #$b6 #$a0 #$e2 #$e5 #$ee #$ec #$ef #$ae  {976 benlo.}
+     #$e3 #$ef #$ed #0 ] s=                             {com}
+
+[do s, if<>0                    {Print message}
+    PrintChar!
+    <s++ loop]
 
 &_Apple1 _vLR=                  {Prepare transfer to main loop}
 &_CHESS                         {Start address for 6502 program}
 [ret]                           {Jump to Main (the brackets avoid the automatic vLR patch)}
 
 {-----------------------------------------------------------------------+
-|       Microchess from $220 (Keeps just 200.21F for wozmon input)      |
+|       Microchess                                                      |
 +-----------------------------------------------------------------------}
 
 {
@@ -62,14 +72,25 @@ _Init=*
         ALL RIGHTS RESERVED.  REPRODUCTION BY   ANY
         MEANS, IN WHOLE OR IN PART, IS PROHIBITED.
 
-        Adapted for Gigatron with permission of Peter Jennings
-        https://www.benlo.com/
+        Adapted for Gigatron by Marcel van Kervinck, July 2019
+        With assistance of Oscar Vermeulen
+
+        Primarily based on the original KIM-1 sources at
+        http://www.benlo.com/microchess/Kim-1Microchess.html
+        - Transcribed for assembly by GCL
+        - Some changes adopted from Daryl Rictor and Bill Foster
+        - All changes to original are marked `[Gigatron]'
+
+        Published with permission of Peter Jennings, June 2019
 }
 
 { Zero page variables }
 
   _BOARD=$50    { LOCATION OF PIECES }
      _BK=$60    { OPPONENT'S PIECES }
+  {_SETW}                                     { [Gigatron] Moved to $7A0.$7BF }
+ {_MOVEX}                                     { [Gigatron] Moved to $7C0.$7CF }
+{_POINTS}                                     { [Gigatron] Moved to $7D0.$7DF }
   _PIECE=$70    { CURRENT PIECE UNDER ANALYSIS  [Gigatron] Was $B0 }
  _SQUARE=$F3    { TO SQUARE OF .PIECE           [Gigatron] Was $B1 }
     _SP2=$F4    { STACK POINTER FOR STACK 2     [Gigatron] Was $B2 }
@@ -78,6 +99,7 @@ _Init=*
   _STATE=$F7    { STATE OF ANALYSIS             [Gigatron] Was $B5 }
   _MOVEN=$F8    { MOVE TABLE POINTER            [Gigatron] Was $B6 }
   _OMOVE=$DC    { OPENING POINTER }
+{_OPNING}                                     { [Gigatron] Moved to $7E0.$7FB }
   _WCAP0=$DD    { COMPUTER CAPTURE 0 }
   _COUNT=$DE    { START OF COUNT TABLE }
   _BCAP2=$DE    { OPPONENT CAPTURE 2 }
@@ -91,7 +113,7 @@ _Init=*
    _PCAP=$E6    { PIECE ID OF MAXC }
    _BMOB=$E3    { OPPONENT MOBILITY }
   _BMAXC=$E4    { OPPONENT MAXIMUM CAPTURE }
-   _BMCC=$E5    { OPPONENT CAPTURE COUNT        [Gigatron] Was BCC }
+   _BMCC=$E5    { OPPONENT CAPTURE COUNT        [Gigatron] Was BCC (vCPU conflict) }
   _BMAXP=$E6    { OPPONENT MAXP }
   _XMAXC=$E8    { CURRENT MAXIMUM CAPTURE }
    _WMOB=$EB    { COMPUTER MOBILITY }
@@ -110,7 +132,8 @@ _Init=*
    _DIS2=$FA    { DISPLAY POINT 2 }
    _DIS3=$F9    { DISPLAY POINT 3 }
 
-*=$220
+*=$220                                  { [Gigatron] Keep $200.$21F as input buffer }
+
                 { +++ }
 _CHESS=*        #_CLD_                  { INITIALIZE }
                 #_LDXIM_ #$DB           { TWO STACKS [Gigatron] Was #$FF }
@@ -136,30 +159,29 @@ _NEXT=*         #_LDAZX_ #_DIS3         { [Gigatron] }
                 #_LDAIM_ #0             { [Gigatron] }
                 #_BRK_                  { [Gigatron] Wait for input }
                 #_PHA_                  { [Gigatron] }
-                #_ORAIM_ #128           { [Gigatron] Echo }
+                #_ORAIM_ #128           { [Gigatron] Set bit 7 for echo }
                 #_BRK_                  { [Gigatron] Character out}
                 #_PLA_                  { [Gigatron] }
                 #_ANDIM_ #$4F           { [Gigatron] MASK 0-7, AND ALPHA'S }
 
-                #_CMPIM_ #$43           { [C] }
+                #_CMPIM_ #$43           { [Gigatron] [C] Was #$0C }
                 #_BNE_   #@_NOSET       { SET UP }
                 #_LDXIM_ #$1F           { BOARD }
 _WHSET=*        #_LDAAX_ ##_SETW        { FROM }
                 #_STAZX_ #_BOARD        { SETW }
                 #_DEX_
                 #_BPL_   #@_WHSET
-                #_LDXIM_ #$1B           { *ADDED }
                 #_STXZ_  #_OMOVE
                 #_LDAIM_ #$CC
                 #_BNE_   #@_CLDSP
 
-_NOSET=*        #_CMPIM_ #$45           { [E] }
+_NOSET=*        #_CMPIM_ #$45           { [Gigatron] [E] Was #$0E }
                 #_BNE_   #@_NOREV       { REVERSE }
                 #_JSR_   ##_REVERSE     { BOARD AS }
                 #_LDAIM_ #$EE           {    IS }
                 #_BNE_   #@_CLDSP
 
-_NOREV=*        #_CMPIM_ #$40           { [P] }
+_NOREV=*        #_CMPIM_ #$40           { [Gigatron] [P] Was #$14 [PC] }
                 #_BNE_   #@_NOGO        { PLAY CHESS }
                 #_JSR_   ##_GO
 _CLDSP=*        #_STAZ_  #_DIS1         { DISPLAY }
@@ -167,15 +189,15 @@ _CLDSP=*        #_STAZ_  #_DIS1         { DISPLAY }
                 #_STAZ_  #_DIS3         { DISPLAY }
                 #_BNE_   #@_CHESS
 
-_NOGO=*         #_CMPIM_ #$0D           { [Enter] }
+_NOGO=*         #_CMPIM_ #$0D           { [Gigatron] [Enter] Was #$0F [F] }
                 #_BNE_   #@_NOMV        { MOVE MAN }
                 #_JSR_   ##_MOVE        { AS ENTERED }
                 #_JMP_   ##_DISP
 _NOMV=*
-                #_CMPIM_ #$41           { [Q] ***Added to allow game exit*** }
-                #_BEQ_   #@_DONE        { quit the game, exit back to system. }
-                #_JMP_   ##_INPUT       { process move }
-_DONE=*         #_JMP_   ##_GETLINE     { *** MUST set this to YOUR OS starting }
+                #_CMPIM_ #$41           { [Gigatron] [Q] ***Added to allow game exit*** }
+                #_BEQ_   #@_DONE        { [Gigatron] quit the game, exit back to system. }
+                #_JMP_   ##_INPUT       { [Gigatron] process move }
+_DONE=*         #_JMP_   ##_GETLINE     { [Gigatron] *** MUST set this to YOUR OS starting address }
 {
                 THE ROUTINE JANUS DIRECTS THE
                 ANALYSIS BY DETERMINING WHAT
@@ -264,9 +286,10 @@ _RETJ=*         #_RTS_
 _TREE=*         #_BVC_   #@_RETJ        { NO CAP }
                 #_LDYIM_ #$07           { (PIECES) }
                 #_LDAZ_  #_SQUARE
-_LOOPX=*        #_CMPAY_ #<_BK
-*=$300                         #>_BK
-                #_BEQ_   #@_FOUNX
+_LOOPX=*        #_CMPAY_ ##_BK
+                #_BEQ_
+*=$300
+                         #@_FOUNX
                 #_DEY_
                 #_BEQ_   #@_RETJ        { (KING) }
                 #_BPL_   #@_LOOPX       { SAVE }
@@ -416,9 +439,9 @@ _ETC=*          #_SEC_
                 #_SBCZX_ #_BOARD        { PIECES }
                 #_STAZX_ #_BOARD
                 #_DEX_
-                #_BPL_
-*=$400          #@_ETC
+                #_BPL_   #@_ETC
                 #_RTS_
+*=$400
 {
                CMOVE CALCULATES THE TO SQUARE
                USING .SQUARE AND THE MOVE
@@ -467,7 +490,7 @@ _SPX=*          #_LDAZ_  #_STATE        { SHOULD WE }
               TIME CONSUMING, IT IS NOT
               ALWAYS DONE.
 }
-_CHKCHK=*       #_PHA_                   { STATE }
+_CHKCHK=*       #_PHA_                  { STATE }
                 #_PHP_
                 #_LDAIM_ #$F9
                 #_STAZ_  #_STATE        { GENERATE }
@@ -602,13 +625,12 @@ _RETP=*
               PLAY FROM OPENING OR THINK
 }
 _GO=*           #_LDXZ_  #_OMOVE        { OPENING? }
-{               #_BPL_   #@_NOOPEN      {     -NO }
-}               #_BMI_   #@_NOOPEN      { [Gigatron] XXX *ADD CHANGE FROM BPL }
+                #_BPL_   #@_NOOPEN      {     -NO }
                 #_LDAZ_  #_DIS3         { -YES WAS }
-                #_CMPAX_ ##_OPNING       {  OPPONENT'S }
+                #_CMPAX_ ##_OPNING      {  OPPONENT'S }
                 #_BNE_   #@_END         {  MOVE OK? }
                 #_DEX_
-                #_LDAAX_ ##_OPNING       { GET NEXT }
+                #_LDAAX_ ##_OPNING      { GET NEXT }
                 #_STAZ_  #_DIS1         { CANNED }
                 #_DEX_                  { OPENING MOVE }
                 #_LDAAX_ ##_OPNING
@@ -617,14 +639,13 @@ _GO=*           #_LDXZ_  #_OMOVE        { OPENING? }
                 #_STXZ_  #_OMOVE        { MOVE IT }
                 #_BNE_   #@_MV2         { (JMP) }
 
-_END=*          #_LDAIM_ #$FF           { [Gigatron] XXX *ADD - STOP CANNED MOVES }
-                #_STAZ_  #_OMOVE        { FLAG OPENING }
+_END=*          #_STAZ_  #_OMOVE        { FLAG OPENING }
 _NOOPEN=*       #_LDXIM_ #$0C           { FINISHED }
-                #_STXZ_
-*=$500
-                         #_STATE        { STATE=C }
+                #_STXZ_  #_STATE        { STATE=C }
                 #_STXZ_  #_BESTV        { CLEAR BESTV }
-                #_LDXIM_ #$14           { GENERATE P }
+                #_LDXIM_
+*=$500
+                         #$14           { GENERATE P }
                 #_JSR_   ##_GNMX        { MOVES }
 
                 #_LDXIM_ #$04           { STATE=4 }
@@ -740,10 +761,48 @@ _POINTS=*       #$0B #$0A #$06 #$06 #$04 #$04 #$04 #$04
                 #$02 #$02 #$02 #$02 #$02 #$02 #$02 #$02
 
                 { OPENING MOVE TABLE }
-_OPNING=*       #$99 #$25 #$0B #$25 #$01 #$00 #$33 #$25
+                { GIUOCO PIANO (COMPUTER IS WHITE) }
+                #$99 #$25 #$0B #$25 #$01 #$00 #$33 #$25
                 #$07 #$36 #$34 #$0D #$34 #$34 #$0E #$52
                 #$25 #$0D #$45 #$35 #$04 #$55 #$22 #$06
                 #$43 #$33 #$0F #$CC
+_OPNING=$6FC    { _OPNING[$FF] == $CC }
+
+{
+         ----------------------------------------------------------------
+        |    |  FRENCH   |  GIUOCO   |  RUY      |  QUEEN'S  |  FOUR     |
+        |ADDR|W DEFENCE B|W PIANO   B|W LOPEZ   B|W INDIAN  B|W KNIGHTS B|
+        |----+-----------+-----------+-----------+-----------+-----------|
+        | DB |CC       44|CC       44|CC       44|CC       43|CC       44|
+        | DA |0F P-K3  0F|0F P-K4  0F|0F P-K4  0F|0E P-Q4  06|0F P-K4  0F|
+        | D9 |33 P-K3  24|33 P-K4  34|33 P-K4  34|34 N-KB3 25|33 P-K4  34|
+        | D8 |53       43|43       55|43       55|52       42|43       55|
+        | D7 |0E P-Q4  0E|06 N-KB3 07|06 N-KB3 07|0D P-QB4 0F|06 N-KB3 07|
+        | D6 |43 P-Q4  33|22 N-QB3 22|22 N-QB3 22|35 P-K3  24|22 N-QB3 22|
+        | D5 |44       52|55       42|55       31|53       55|55       52|
+        | D4 |07 N-QB3 06|04 B-B4  04|04 B-N5  06|06 N-KB3 0B|07 N-B3  06|
+        | D3 |25 N-KB3 25|35 B-B4  32|46 N-B3  25|22 P-QN3 21|25 N-B3  25|
+        | D2 |52       36|45       52|52       75|56       56|52       31|
+        | D1 |05 B-N5  04|0D P-B3  06|00 O-O   06|0A P-KN3 05|04 B-N5  04|
+        | D0 |41 B-K2  14|25 N-B3  25|01 NxP   44|21 B-N2  11|46 B-N5  41|
+        | CF |63       34|52       43|33       43|66       66|36       75|
+        | CE |0F P-K5  06|0E P-Q4  0F|0E P-Q4  04|04 B-N2  04|00 O-O   00|
+        | CD |43 KN-Q2 13|34 PxP   43|34 B-K2  14|11 B-K2  14|01 O-O   06|
+        | CC |64       14|34       43|63       64|63       75|72       53|
+        | CB |05 BxB   01|0D PxP   04|01 Q-K2  06|00 O-O   00|0E P-Q3  0E|
+        | CA |63 QxB   14|34 B-N5  41|13 N-Q3  23|01 O-O   06|24 P-Q3  23|
+        | C9 |63       63|36       52|54       22|72       52|54       36|
+        | C8 |01 Q-Q2  00|07 N-B3  06|04 BxN   0B|07 N-B3  06|05 B-N5  04|
+        | C7 |14 O-O   06|25 NxKP  44|55 NPxB  22|25 N-K5  44|41 BxN   52|
+        | C6 |72       45|33       75|55       34|33       62|25       52|
+        | C5 |0C P-B4  0D|00 O-O   06|0E PxP   06|01 Q-B2  06|0B PxB   01|
+        | C4 |32 P-QB4 32|01 NxN   52|43 N-N2  11|15 NxN   52|25 Q-K2  14|
+        | C3 |45       55|25       52|66       52|25       52|63       74|
+        | C2 |06 N-B3  07|0B PxN   04|07 N-B3  00|01 QxN   0C|02 R-K1  07|
+        | C1 |22 N-QB3 22|25 BxP   52|25 O-O   06|25 P-KB4 35|03 N-Q1  03|
+        | C0 |99       99|99       99|99       99|99       99|99       99|
+         ----------------------------------------------------------------
+}
 
 {-----------------------------------------------------------------------+
 |       Main loop                                                       |
