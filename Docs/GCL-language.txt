@@ -505,6 +505,8 @@ Idioms and coding tricks
 
 \vACH. 255| 255^        Move vAC low byte to high (vAC<<=8)
 
+255^ 1+                 Negate vAC
+
 >_vAC++                 Increment vAC high byte
 
 128- 128-               Decrement vAC high byte
