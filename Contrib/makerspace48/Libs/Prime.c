@@ -2,6 +2,8 @@
 int main()
 {
   int n, i = 3, count, c;
+while(1)
+{
   printf("How many prime numbers?\n");
   scanf("%d",&n);
   if ( n >= 1 )
@@ -22,6 +24,8 @@ int main()
     }
     i++;
   }
+printf("\n");
+}
   return 0;
 }
 
