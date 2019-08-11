@@ -247,8 +247,8 @@ const byte tetris_gt1[]    PROGMEM = {
 };
 
 const struct { const byte *gt1; const char *name; } gt1Files[] = {
-  { TinyBASIC_gt1, "BASIC"                    }, // 3073 bytes
 #if maxStorage >= 10000
+  { TinyBASIC_gt1, "BASIC"                    }, // 3073 bytes
   { WozMon_gt1,    "WozMon"                   }, // 595 bytes
   { Terminal_gt1,  "Terminal"                 }, // 256 bytes
   { Blinky_gt1,    "Blinky"                   }, // 17 bytes
@@ -1103,4 +1103,3 @@ void sendSavedFile()
       delay(nextByte == 10 ? 70 : 20);  // Allow Gigatron software to process byte
     } while (++i < EEPROM.length());
 }
-
