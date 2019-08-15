@@ -94,7 +94,10 @@ int main(int argc, char *argv[])
     fprintf(stderr, "Error: failed to open ROM file\n");
     exit(EXIT_FAILURE);
   }
-  fread(ROM, 1, sizeof ROM, fp);
+  if (fread(ROM, 1, sizeof ROM, fp) != sizeof ROM) {
+    fprintf(stderr, "Error: incorrect reading ROM file\n");
+    exit(EXIT_FAILURE);
+  }
   fclose(fp);
 
   int vgaX=0, vgaY=0;
@@ -108,7 +111,6 @@ int main(int argc, char *argv[])
     if (vSync < 0) vgaY = -36; // Falling vSync edge
     if (vgaX++ < 200) {
       if (hSync) putchar('|');              // Visual indicator of hSync
-      else if (vgaX == 200) putchar('>');   // Too many pixels
       else if (~S.OUT & 0x80) putchar('^'); // Visualize vBlank pulse
       else putchar(32 + (S.OUT & 63));      // Plot pixel
     }
