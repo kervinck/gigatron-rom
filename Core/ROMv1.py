@@ -102,7 +102,7 @@ sample          = zpByte()
 # 2 instruction reset:
 #       ld 0
 #       st [sample]
-# The difference is not perceptible. This is fine when the reset/address
+# The difference is not audible. This is fine when the reset/address
 # value is low and doesn't overflow with 4 channels added to it.
 # There is an alternative, but it requires pull-down diodes on the data bus:
 #       st [sample],[sample]
@@ -1117,7 +1117,7 @@ assert pc()&255 == 255
 # Enter the timing-aware application interpreter (aka virtual CPU, vCPU)
 #
 # This routine will execute as many as possible instructions in the
-# allowed time. When time runs out, it synchronizes such that the total
+# allotted time. When time runs out, it synchronizes such that the total
 # duration matches the caller's request. Durations are counted in `ticks',
 # which are multiples of 2 clock cycles.
 #
