@@ -6,7 +6,7 @@ from __future__ import print_function
 # XXX Give warning when starting new block after calls were made
 # XXX Give warning when def-block contains 'call' put no 'push'
 # XXX Give warning when def-block contains code but no 'ret'
-# XXX Give warning when a variable is not both written and read 
+# XXX Give warning when a variable is not both written and read
 
 from asm import *
 import string
@@ -188,7 +188,7 @@ class Program:
           for i in range(con):
             self.emitOp('LSLW')
           con = None
-        # Depricated syntax
+        # Deprecated syntax
         elif op == ':':    self.org(con); con = None;   #self.depr('ii:', '*=ii')
         elif op == '#':    con &= 255;                  #self.depr('i#', '#i')
         elif op == '<++':  self.emitOp('INC');          #self.depr('i<++', '<i++')
@@ -228,7 +228,7 @@ class Program:
         elif op == '#> ':  self.emitImm(var, half=hi);          var = None
         elif op == '## ':  self.emitImm(var).emit(hi(var[1:])); var = None
         elif op == '#@ ':  offset = -self.vPC-1 # PC relative, 6502 style
-        # Depricated syntax
+        # Deprecated syntax
         elif op == '<++':  self.emitOp('INC');             #self.depr('X<++', '<X++')
         elif op == '>++':  self.emitOp('INC'); offset = 1; #self.depr('X>++', '>X++')
         elif op == '<,':   self.emitOp('LD');              #self.depr('X<,', '<X,')
@@ -357,7 +357,7 @@ class Program:
       self.emit(lo('__%s_%#04x_def__' % (self.name, self.vPC)))
 
   def updateDefInfo(self, var):
-    # Heuristicly track `def' lengths for reporting on stdout
+    # Heuristically track `def' lengths for reporting on stdout
     if var not in self.lengths and self.thisBlock() in self.lengths:
       self.lengths[var] = self.lengths[self.thisBlock()]
     else:
@@ -499,7 +499,7 @@ class Program:
     var, con, _op = self.parseWord(self.lastWord)
     old = old.replace(' ', str(con) if has(con) else var)
     new = new.replace(' ', str(con) if has(con) else var)
-    self.warning('%s is depricated, please use %s' % (old, new))
+    self.warning('%s is deprecated, please use %s' % (old, new))
 
   def warning(self, message):
     print(self.prefix('Warning'), message)

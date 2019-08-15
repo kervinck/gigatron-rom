@@ -129,7 +129,7 @@ import gcl0x as gcl
 import font_v3 as font
 
 # Pre-loading the formal interface as a way to get warnings when
-# accidently redefined with a different value
+# accidentally redefined with a different value
 loadBindings('interface.json')
 
 # ROM type (see also Docs/GT1-files.txt)
@@ -154,7 +154,7 @@ vgaLines = vFront + vPulse + vBack + 480
 vgaClock = 25.175e+06
 
 # Video adjustments for Gigatron
-# 1. Our clock is (slighty) slower than 1/4th VGA clock. Not all monitors will
+# 1. Our clock is (slightly) slower than 1/4th VGA clock. Not all monitors will
 #    accept the decreased frame rate, so we restore the frame rate to above
 #    minimum 59.94 Hz by cutting some lines from the vertical front porch.
 vFrontAdjust = vgaLines - int(4 * cpuClock / vgaClock * vgaLines)
@@ -210,7 +210,7 @@ sample          = zpByte()
 # 2 instruction reset:
 #       ld 0
 #       st [sample]
-# The difference is unhearable. This is fine when the reset/address
+# The difference is not perceptible. This is fine when the reset/address
 # value is low and doesn't overflow with 4 channels added to it.
 # There is an alternative, but it requires pull-down diodes on the data bus:
 #       st [sample],[sample]
@@ -905,7 +905,7 @@ if soundDiscontinuity == 2:
   C('Sound continuity')
   extra += 1
 if soundDiscontinuity > 2:
-  print 'Warning: sound discontinuity not supressed'
+  print 'Warning: sound discontinuity not suppressed'
 
 runVcpu(186-72-extra, '---D line 0')#72 Application cycles (scan line 0)
 
@@ -1256,7 +1256,7 @@ runVcpu(200-38, '-BCD line 41-520',
 # Enter the timing-aware application interpreter (aka virtual CPU, vCPU)
 #
 # This routine will execute as many as possible instructions in the
-# alotted time. When time runs out, it synchronizes such that the total
+# allowed time. When time runs out, it synchronizes such that the total
 # duration matches the caller's request. Durations are counted in `ticks',
 # which are multiples of 2 clock cycles.
 #

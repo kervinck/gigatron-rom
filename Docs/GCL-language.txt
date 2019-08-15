@@ -374,7 +374,7 @@ See GitHub issue #80 for a more detailed discussion.
 https://github.com/kervinck/gigatron-rom/issues/80
 
 -------------------
-Depricated features
+Deprecated features
 -------------------
 
 i=              Alias for i: (was often used as \symbol=)
@@ -458,7 +458,7 @@ Instruction     Variable word   Constant word   Keyword         Comment
 LDI                             <ii >ii i
 LDWI                            ii
 LDW             X                                               was i; and \C; (keep?)
-STW             X=              i:                              i= depricated
+STW             X=              i:                              i= deprecated
 PEEK                                            peek            alias for _vAC,
 LDW+PEEK        X,
 POKE            X.

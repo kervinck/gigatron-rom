@@ -50,7 +50,7 @@ their implementation needs. This is to allow for future bug fixing
 without changing the caller in existing programs.
 
 [Side note: One way to see the raw value of D is as the *excess*
-number of ticks that vCPU must accomodate for, but represented as
+number of ticks that vCPU must accommodate for, but represented as
 a number <=0. By default vCPU already accounts for 28 cycles for
 standard instructions.]
 

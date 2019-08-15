@@ -13,7 +13,7 @@
   3. Behaves consistent and doesn't crash:
     - Is compatible with all ROM versions, past, present and future
     - Doesn't rely on undocumented features
-    - Doesn't accidently clobber system variables (*)
+    - Doesn't accidentally clobber system variables (*)
 
   4. Is as small as possible
     - Occupies 6 bytes of RAM (3 vCPU instructions)
