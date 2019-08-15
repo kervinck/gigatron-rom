@@ -52,7 +52,7 @@ Starting address
 
 Additionally, 2 bytes are always appended that indicate the start
 address for execution. The bytes must be present and zero ($0000)
-means "no execution". Although the Gigagron ROM is little-endian
+means "no execution". Although the Gigatron ROM is little-endian
 where possible, all addresses in this format are stored as big-endian.
 
 The original in-ROM format doesn't have these bytes. This is an
