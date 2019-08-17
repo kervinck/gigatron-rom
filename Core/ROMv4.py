@@ -2,17 +2,19 @@
 #-----------------------------------------------------------------------
 #
 #  Core video, sound and interpreter loop for Gigatron TTL microcomputer
-#  - 6.25MHz clock
+#
+#  - 6.25 MHz clock
 #  - Rendering 160x120 pixels at 6.25MHz with flexible videoline programming
 #  - Must stay above 31 kHz horizontal sync --> 200 cycles/scanline
 #  - Must stay above 59.94 Hz vertical sync --> 521 scanlines/frame
 #  - 4 channels sound
 #  - 16-bits vCPU interpreter
 #  - 8-bits v6502 emulator
-#  - Builtin vCPU programs (Snake, Racer, etc)
-#  - Serial input handler
+#  - Builtin vCPU programs (Snake, Racer, etc) loaded from unused ROM area
+#  - Serial input handler, supporting ASCII input and two game controller types
 #  - Serial output handler
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
+#  - Low-level support for I/O and RAM expander (SPI and banking)
 #
 #  ROM v2: Mimimal changes
 #  DONE Snake color upgrade (just white, still a bit boring)

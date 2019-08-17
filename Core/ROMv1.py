@@ -2,14 +2,14 @@
 #-----------------------------------------------------------------------
 #
 #  Core video, sound and interpreter loop for Gigatron TTL microcomputer
-#  - 6.25MHz clock
+#  - 6.25 MHz clock
 #  - Rendering 160x120 pixels at 6.25MHz with flexible videoline programming
 #  - Must stay above 31 kHz horizontal sync --> 200 cycles/scanline
 #  - Must stay above 59.94 Hz vertical sync --> 521 scanlines/frame
 #  - 4 channels sound
 #  - 16-bits vCPU interpreter
-#  - Builtin vCPU programs (Snake, Racer, etc)
-#  - Serial input handler
+#  - Builtin vCPU programs (Snake, Racer, etc) loaded from unused ROM area
+#  - Serial input handler, supporting ASCII input and game controller
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #-----------------------------------------------------------------------
@@ -2394,7 +2394,7 @@ trampoline()
 #  ROM page 11: Built-in full resolution images
 #-----------------------------------------------------------------------
 
-f = open('Images/gigatron.rgb', 'rb')
+f = open('Apps/Screen/gigatron.rgb', 'rb')
 raw = f.read()
 f.close()
 align(0x100)
@@ -2432,9 +2432,9 @@ def importImage(rgbName, width, height, ref):
       else:
         trampoline3b()
 
-importImage('Images/Parrot-160x120.rgb',  160, 120, 'packedParrot')
-importImage('Images/Baboon-160x120.rgb',  160, 120, 'packedBaboon')
-importImage('Images/Jupiter-160x120.rgb', 160, 120, 'packedJupiter')
+importImage('Apps/Pictures/Parrot-160x120.rgb',  160, 120, 'packedParrot')
+importImage('Apps/Pictures/Baboon-160x120.rgb',  160, 120, 'packedBaboon')
+importImage('Apps/Pictures/Jupiter-160x120.rgb', 160, 120, 'packedJupiter')
 
 #-----------------------------------------------------------------------
 #  Application specific SYS extensions
@@ -2565,7 +2565,7 @@ ld(-46/2)                       #43
 #
 #-----------------------------------------------------------------------
 
-f = open('Images/RacerHorizon-256x16.rgb', 'rb')
+f = open('Apps/Racer/RacerHorizon-256x16.rgb', 'rb')
 raw = f.read()
 f.close()
 

@@ -18,7 +18,6 @@ gigatron-rom
  |     +--- Blinky/Blinky.gcl   Very simple GCL program
  |     `--- HelloWorld/         Program that draws "Hello world" on screen
  +--- BASIC/                    Example BASIC programs
- +--- Images/                   Built-in images
  +--- Utils/
  |     +--- BabelFish/          Generic Arduino sketch for talking with Gigatron
  |     +--- gt1dump.py          Dump or disassemble GT1 files

@@ -470,6 +470,7 @@ prmsg:
 prmsg2:
     tax             ; save closing delimiter
     jsr  inkey      ; any key = pause?
+   ; [Gigatron] inkey handles the second key already
    ;beq  prout      ;   no: proceed
    ;jsr  inch       ;   yes: wait for another key
 prout:

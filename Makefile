@@ -23,14 +23,14 @@ CFLAGS:=-std=c11 -O3 -Wall
 #-----------------------------------------------------------------------
 
 # Development towards "ROM v5"
-dev.rom: Core/* Apps/* Images/* Makefile interface.json
+dev.rom: Core/* Apps/*/* Makefile interface.json
 	python Core/dev.py\
-		packedParrot=Images/Parrot-160x120.rgb\
-		packedJupiter=Images/Jupiter-160x120.rgb\
+		packedParrot=Apps/Pictures/Parrot-160x120.rgb\
+		packedJupiter=Apps/Pictures/Jupiter-160x120.rgb\
 		SYS_Racer_v1.py\
 		SYS_Loader_v3.py\
 		Snake=Apps/Snake/Snake_v3.gcl\
-		zippedRacerHorizon=Images/RacerHorizon-256x16.rgb\
+		zippedRacerHorizon=Apps/Racer/RacerHorizon-256x16.rgb\
 		Racer=Apps/Racer/Racer_v2.gcl\
 		Mandelbrot=Apps/Mandelbrot/Mandelbrot_v1.gcl\
 		Pictures=Apps/Pictures/Pictures_v2.gcl\
@@ -63,10 +63,11 @@ test: Docs/gtemu $(DEV)
 	# Check for hSync errors in first ~30 seconds of emulation
 	Docs/gtemu $(DEV) | head -999999 | grep \~
 
-compiletest: Apps/*.gcl
+compiletest: Apps/*/*.gcl
 	# Test compilation
 	# (Use 'git diff' afterwards to detect unwanted changes)
-	for GCL in Apps/*.gcl; do Core/compilegcl.py "$${GCL}" Apps; done
+	for GCL in Apps/*/*.gcl; do Core/compilegcl.py "$${GCL}" `dirname "./$${GCL}"` ; done
+	@echo "Use 'git diff' to inspect result (no .gt1 file should have changed)"
 
 time: Docs/gtemu $(DEV)
 	# Run emulation until first sound, typically for benchmarking
@@ -89,14 +90,14 @@ burn85:
 
 # ROM v4 support `TypeC' game controller signals. There are
 # many small changes under the hood, but no new applications.
-ROMv4.rom: Core/* Apps/* Images/* Makefile interface.json
+ROMv4.rom: Core/* Apps/*/* Makefile interface.json
 	python Core/ROMv4.py\
-		packedParrot=Images/Parrot-160x120.rgb\
-		packedJupiter=Images/Jupiter-160x120.rgb\
+		packedParrot=Apps/Pictures/Parrot-160x120.rgb\
+		packedJupiter=Apps/Pictures/Jupiter-160x120.rgb\
 		Apps/Racer/SYS_Racer_v1.py\
 		Apps/Loader/SYS_Loader_v3.py\
 		Snake=Apps/Snake/Snake_v3.gcl\
-		zippedRacerHorizon=Images/RacerHorizon-256x16.rgb\
+		zippedRacerHorizon=Apps/Racer//RacerHorizon-256x16.rgb\
 		Racer=Apps/Racer/Racer_v2.gcl\
 		Mandelbrot=Apps/Mandelbrot/Mandelbrot_v1.gcl\
 		Pictures=Apps/Pictures/Pictures_v2.gcl\
@@ -117,7 +118,7 @@ burnv4: ROMv4.rom
 # ROM v3 integrates BASIC, WozMon, Tetronis, Bricks, TicTacToe
 # vPulse modulation (for SAVE in BASIC), sprite acceleration
 # Note: ROM builder still directly incudes TicTac_v1.gtb
-ROMv3.rom: Core/* Apps/* Images/* Makefile interface.json
+ROMv3.rom: Core/* Apps/*/* Makefile interface.json
 	python Core/ROMv3.py\
 		Apps/Snake/Snake_v2.gcl\
 		Apps/Racer/Racer_v1.gcl\
@@ -137,7 +138,7 @@ burnv3: ROMv3.rom
 	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
 # ROM v2 minor changes only
-ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
+ROMv2.rom: Core/* Apps/*/* Makefile interface.json
 	python Core/ROMv2.py\
 		Apps/Snake/Snake_v2.gcl\
 		Apps/Racer/Racer_v1.gcl\
@@ -151,7 +152,7 @@ ROMv2.rom: Core/* Apps/* Images/* Makefile interface.json
 		Core/Reset_v2.gcl
 
 # ROM v1 as shipped with first batches of kits
-ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
+ROMv1.rom: Core/* Apps/*/* Makefile interface.json
 	python Core/ROMv1.py\
 		Apps/Snake/Snake_v1.gcl\
 		Apps/Racer/Racer_v1.gcl\
@@ -169,7 +170,7 @@ ROMv1.rom: Core/* Apps/* Images/* Makefile interface.json
 
 # Test ROM for v6502 testing
 mos: v6502.rom
-v6502.rom: Core/* Apps/* Images/* Makefile interface.json
+v6502.rom: Core/* Apps/*/* Makefile interface.json
 	rm -f dev.rom dev.asm
 	python Core/dev.py\
 		Main=Apps/Microchess.gcl\
@@ -181,7 +182,7 @@ burnmos: v6502.rom
 	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
 # Adds vCPU slices on scanlines to get 400 cycles per scanline
-ROMv3y.rom: Core/* Apps/* Images/* Makefile interface.json
+ROMv3y.rom: Core/* Apps/*/* Makefile interface.json
 	python Core/ROMv3y.py\
 		Apps/Snake/Snake_v2.gcl\
 		Apps/Racer/Racer_v1.gcl\

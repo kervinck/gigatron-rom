@@ -147,7 +147,7 @@ by an arbitrary number with each release, so there no way to
 
 With this it's not possible that two "official" ROM releases have
 the same romType value. However, third-party ROMs with compatible
-GT1 loading capability are adviced to use the same romType value
+GT1 loading capability are advised to use the same romType value
 as the ROM version they were derived from.
 
 End user is in control
@@ -177,6 +177,9 @@ To help remind the programmer which features were introduced after
 ROM v1, and therefore require a romType check before use, we'll add
 a ROM version number to their names.
 
+More thoughts on the above
+==========================
+
 32K vs. 64K: "_64K.gt1"
 -----------------------
 It is understood that a program that really requires an extended
@@ -189,7 +192,7 @@ Hack files: ".gt1x"
 Of course the Gigatron is an open system, so there will be plenty
 of methods to detect what kind of ROM you're running on. If you
 make a GT1 file that you know depends on undocumented features (or
-better phrased: features not listed in interface.json), it's adviced
+better phrased: features not listed in interface.json), it's advised
 to give it a different extension. For example 'Demo3_ROMv1only.gt1x'
 (I always append a 'x' to such experimental files with no expectation
 of compatibility.)
@@ -227,5 +230,16 @@ soon: it's part of Loader, but that is logically not a GT1 file.
 The proper way to initiate that is by redirecting the vCPU to vReset
 (0x1f0). So we have retro-actively added vReset to the interface.json
 files instead.
+
+ROM v4: romType and channelMask
+-------------------------------
+As of ROM v4, the romType variable lends its lower three bits to
+the new channelMask function. For version comparisons this doesn't
+matter, and it's not needed to treat the value at $21 differently
+due to this. For example, there's no need to mask these bits out
+prior to your version check. Just be aware that (in)equality tests
+may not work, because in newer ROMs these lower bits could be
+different than expected. (But you shouldn't use == or != for this
+purpose anyway.)
 
 -- End of document --

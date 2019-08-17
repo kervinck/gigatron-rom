@@ -477,6 +477,7 @@ Current file: Apps/VTL02/vtl02ca2.s
 000344  1               prmsg2:
 000344  1  AA               tax             ; save closing delimiter
 000345  1  20 E5 05         jsr  inkey      ; any key = pause?
+000348  1                  ; [Gigatron] inkey handles the second key already
 000348  1                  ;beq  prout      ;   no: proceed
 000348  1                  ;jsr  inch       ;   yes: wait for another key
 000348  1               prout:

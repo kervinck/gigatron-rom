@@ -2,19 +2,28 @@
 #-----------------------------------------------------------------------
 #
 #  Core video, sound and interpreter loop for Gigatron TTL microcomputer
-#  - 6.25MHz clock
+#
+#-----------------------------------------------------------------------
+#
+#  Main characteristics:
+#
+#  - 6.25 MHz clock
 #  - Rendering 160x120 pixels at 6.25MHz with flexible videoline programming
 #  - Must stay above 31 kHz horizontal sync --> 200 cycles/scanline
 #  - Must stay above 59.94 Hz vertical sync --> 521 scanlines/frame
 #  - 4 channels sound
 #  - 16-bits vCPU interpreter
 #  - 8-bits v6502 emulator
-#  - Builtin vCPU programs (Snake, Racer, etc)
-#  - Serial input handler
+#  - Builtin vCPU programs (Snake, Racer, etc) loaded from unused ROM area
+#  - Serial input handler, supporting ASCII input and two game controller types
 #  - Serial output handler
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
+#  - Low-level support for I/O and RAM expander (SPI and banking)
+#
+#-----------------------------------------------------------------------
 #
 #  ROM v2: Mimimal changes
+#
 #  DONE Snake color upgrade (just white, still a bit boring)
 #  DONE Sound continuity fix
 #  DONE A-C- mode (Also A--- added)
@@ -33,7 +42,10 @@
 #  DONE Sanity test on several monitors
 #  DONE Update version number to v2
 #
+#-----------------------------------------------------------------------
+#
 #  ROM v3: New applications
+#
 #  DONE vPulse width modulation (for SAVE in BASIC)
 #  DONE Bricks
 #  DONE Tetronis
@@ -43,7 +55,10 @@
 #  DONE Replace Easter egg
 #  DONE Update version number to v3
 #
+#-----------------------------------------------------------------------
+#
 #  ROM v4: Numerous small updates, no new applications
+#
 #  DONE #81 Support alternative game controllers (TypeC added)
 #  DONE SPI: Setup SPI at power-on and add 'ctrl' instruction to asm.py
 #  DONE SPI: Expander control (Enable/disable slave, set bank etc)
@@ -69,13 +84,14 @@
 #  DONE Update romTypeValue and interface.json
 #  DONE Update version number to v4
 #
-#  Extern:
-#  XXX  interface.json: Add SYS_Run6502_DEVROM_80
-#  XXX  Update romType documentation wrt. channelMask
+#-----------------------------------------------------------------------
 #
-#  ROM v5:
-#  XXX  v6502: Test with VTL02
-#  XXX  v6502: Test with Microchess
+#  Ideas for ROM v5:
+#
+#  DONE v6502: Test with VTL02
+#  DONE v6502: Test with Microchess
+#  DONE Sound: Better noise by changing wavX every frame (at least in channel 1)
+#  DONE Sound demo: Play SMB Underworld tune
 #  XXX  v6502: Test with Apple1 BASIC
 #  XXX  v6502: Stub D010-D013 with JSR targets for easier patching
 #  XXX  v6502: SYS_v6502_IRQ
@@ -90,10 +106,7 @@
 #  XXX  SPI: Think about SPI modes
 #  XXX  #41 Fix zero page usage in Bricks and Tetronis
 #  XXX  Discoverable ROM contents
-#  XXX  Sound: Better noise by changing wavX every frame (at least in channel 1)
 #  XXX  Racer: Make noise when crashing
-#  XXX  Music sequencer (combined with LED sequencer, but retire soundTimer???)
-#  XXX  Sound demo: Play SMB Underworld tune
 #  XXX  Main: Better startup chime
 #  XXX  Video: Fast system video modes (something like ROM v3y)? Mode 4 (black)
 #  XXX  vCPU: extension for C: HOP_v4 $DD
@@ -223,6 +236,7 @@ zpByte()                   # Recycled and still unused. Candidate future uses:
                            # - SPI control state (to remember banking state)
                            # - Video driver high address (for alternative video modes)
                            # - v6502: ADH offset ("MMU")
+                           # - v8080: ???
                            # - mapping for for matrix keyboards (C16, C64, VIC20...)
 vCPUselect      = zpByte() # Active interpreter page
 
@@ -457,7 +471,7 @@ v6502_Stack     = 0x0000        # 0x0100 is already used in the Gigatron
 #
 #-----------------------------------------------------------------------
 
-align(0x100, 0x100)
+align(0x100, 0x80)
 
 # Give a first sign of life that can be checked with a voltmeter
 ld(0b0000);                     C('LEDs |OOOO|')
@@ -588,43 +602,6 @@ jmp(Y,'startVideo')
 st([ledState_v2])               # Setting to 1..126 means "stopped"
 
 #-----------------------------------------------------------------------
-
-label('sys_ResetWaveforms')
-ld([vAC+0]);                    C('X=4i')#18
-adda(AC)                        #19
-adda(AC,X)                      #20
-ld([vAC+0]);                    #21
-st([Y,Xpp]);                    C('Sawtooth: T[4i+0] = i')#22
-anda(0x20);                     C('Triangle: T[4i+1] = 2i if i<32 else 127-2i')#23
-bne(pc()+3)                     #24
-ld([vAC+0])                     #25
-bra(pc()+3)                     #26
-adda([vAC+0])                   #26,27
-xora(127)                       #27
-st([Y,Xpp])                     #28
-ld([vAC+0]);                    C('Pulse: T[4i+2] = 0 if i<32 else 63')#29
-anda(0x20)                      #30
-bne(pc()+3)                     #31
-bra(pc()+3)                     #32
-ld(0)                           #33
-ld(63)                          #33(!)
-st([Y,Xpp])                     #34
-ld([vAC+0]);                    C('Sawtooth: T[4i+3] = i')#35
-st([Y,X])                       #36
-adda(1);                        C('i += 1')#37
-st([vAC+0])                     #38
-xora(64);                       C('For 64 iterations')#39
-beq(pc()+3);                    #40
-bra(pc()+3)                     #41
-ld(-2)                          #42
-ld(0)                           #42(!)
-adda([vPC])                     #43
-st([vPC])                       #44
-ld(hi('REENTER'),Y)             #45
-jmp(Y,'REENTER')                #46
-ld(-50/2)                       #47
-
-#-----------------------------------------------------------------------
 # Extension SYS_Reset_38: Soft reset
 #-----------------------------------------------------------------------
 
@@ -664,8 +641,83 @@ jmp(Y,'REENTER')                #34
 ld(-38/2)                       #35
 
 #-----------------------------------------------------------------------
+# Placeholders for future SYS functions. This works as a kind of jump
+# table. The indirection allows SYS implementations to be moved around
+# between ROM versions, at the expense of 2 clock cycles (or 1). When
+# the function is not present it just acts as a NOP. Of course, when a
+# SYS function must be patched or extended it needs to have budget for
+# that in its declared maximum cycle count.
+#
+# Technically the same goal can be achieved by starting each function
+# with 2 nop's, or by overdeclaring their duration in the first place
+# (a bit is still wise to do). But this can result in fragmentation
+# of future ROM images. The indirection avoids that.
+#
+# An added advantage of having these in ROM page 0 is that it saves one
+# byte when setting sysFn: LDI+STW (4 bytes) instead of LDWI+STW (5 bytes)
+#-----------------------------------------------------------------------
 
-fillers(until=symbol('SYS_Exec_88') & 255)
+align(0x80, 0x80)
+
+ld(hi('REENTER'), Y)            #15 slot 0x80
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0x83
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0x86
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0x89
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0x8c
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0x8f
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0x92
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0x95
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0x98
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0x9b
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0x9e
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xa1
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xa4
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xa7
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xaa
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
 
 #-----------------------------------------------------------------------
 # Extension SYS_Exec_88: Load code from ROM into memory and execute it
@@ -685,83 +737,103 @@ fillers(until=symbol('SYS_Exec_88') & 255)
 #       vLR             vCPU continues here (input set by caller)
 
 label('SYS_Exec_88')
-assert pc()>>8 == 0
-ld(0)                           #15 Address of loader on zero page
-st([vPC+1], Y)                  #16
-ld([vSP])                       #17 Place ROM loader below current stack pointer
-suba(53+2)                      #18 (AC -> *+0) One extra word for PUSH
-st([vTmp], X)                   #19
-adda(-2)                        #20 (AC -> *-2)
-st([vPC])                       #21
-# Start of manually compiled vCPU section
-st('PUSH',    [Y,Xpp]);C('PUSH')#22 *+0
-st('CALL',    [Y,Xpp]);C('CALL')#23 *+26 Fetch first byte
-adda(33--2)                     #24 (AC -> *+33)
-st(           [Y,Xpp])          #25 *+27
-st('ST',      [Y,Xpp]);C('ST')  #26 *+3 Chunk copy loop
-st(sysArgs+3, [Y,Xpp])          #27 *+4 High-address comes first
-st('CALL',    [Y,Xpp]);C('CALL')#28 *+5
-st(           [Y,Xpp])          #29 *+6
-st('ST',      [Y,Xpp]);C('ST')  #30 *+7
-st(sysArgs+2, [Y,Xpp])          #31 *+8 Then the low address
-st('CALL',    [Y,Xpp]);C('CALL')#32 *+9
-st(           [Y,Xpp])          #33 *+10
-st('ST',      [Y,Xpp]);C('ST')  #34 *+11 Byte copy loop
-st(sysArgs+4, [Y,Xpp])          #35 *+12 Byte count (0 means 256)
-st('CALL',    [Y,Xpp]);C('CALL')#36 *+13
-st(           [Y,Xpp])          #37 *+14
-st('POKE',    [Y,Xpp]);C('POKE')#38 *+15
-st(sysArgs+2, [Y,Xpp])          #39 *+16
-st('INC',     [Y,Xpp]);C('INC') #40 *+17
-st(sysArgs+2, [Y,Xpp])          #41 *+18
-st('LD',      [Y,Xpp]);C('LD')  #42 *+19
-st(sysArgs+4, [Y,Xpp])          #43 *+20
-st('SUBI',    [Y,Xpp]);C('SUBI')#44 *+21
-st(1,         [Y,Xpp])          #45 *+22
-st('BCC',     [Y,Xpp]);C('BCC') #46 *+23
-st('NE',      [Y,Xpp]);C('NE')  #47 *+24
-adda(11-2-33)                   #48 (AC -> *+9)
-st(           [Y,Xpp])          #49 *+25
-st('CALL',    [Y,Xpp]);C('CALL')#50 *+26 Go to next block
-adda(33-9)                      #51 (AC -> *+33)
-st(           [Y,Xpp])          #52 *+27
-st('BCC',     [Y,Xpp]);C('BCC') #53 *+28
-st('NE',      [Y,Xpp]);C('NE')  #54 *+29
-adda(3-2-33)                    #55 (AC -> *+1)
-st(           [Y,Xpp])          #56 *+30
-st('POP',     [Y,Xpp]);C('POP') #57 *+31 End
-st('RET',     [Y,Xpp]);C('RET') #58 *+32
-# Pointer constant pointing to the routine below (for use by CALL)
-adda(35-1)                      #59 (AC -> *+35)
-st(           [Y,Xpp])          #60 *+33
-st(0,         [Y,Xpp])          #61 *+34
-# Routine to read next byte from ROM and advance read pointer
-st('LD',      [Y,Xpp]);C('LD')  #62 *+35 Test for end of ROM table
-st(sysArgs+0, [Y,Xpp])          #63 *+36
-st('XORI',    [Y,Xpp]);C('XORI')#64 *+37
-st(251,       [Y,Xpp])          #65 *+38
-st('BCC',     [Y,Xpp]);C('BCC') #66 *+39
-st('NE',      [Y,Xpp]);C('NE')  #67 *+40
-adda(46-2-35)                   #68 (AC -> *+44)
-st(           [Y,Xpp])          #69 *+41
-st('ST',      [Y,Xpp]);C('ST')  #70 *+42 Wrap to next ROM page
-st(sysArgs+0, [Y,Xpp])          #71 *+43
-st('INC',     [Y,Xpp]);C('INC') #72 *+44
-st(sysArgs+1, [Y,Xpp])          #73 *+45
-st('LDW',     [Y,Xpp]);C('LDW') #74 *+46 Read next byte from ROM table
-st(sysArgs+0, [Y,Xpp])          #75 *+47
-st('LUP',     [Y,Xpp]);C('LUP') #76 *+48
-st(0,         [Y,Xpp])          #77 *+49
-st('INC',     [Y,Xpp]);C('INC') #78 *+50 Increment read pointer
-st(sysArgs+0, [Y,Xpp])          #79 *+51
-st('RET',     [Y,Xpp]);C('RET') #80 *+52 Return
-# Return to interpreter
-ld(hi('REENTER'), Y)            #81
-jmp(Y,'REENTER')                #82
-ld(-86/2)                       #83 One tick faster than needed
+ld(hi('sys_Exec'),Y)            #15
+jmp(Y,'sys_Exec')               #16
+ld(0)                           #17 Address of loader on zero page
 
-nop()
-nop()
+#-----------------------------------------------------------------------
+# More placeholders for future SYS functions
+#-----------------------------------------------------------------------
+
+ld(hi('REENTER'), Y)            #15 slot 0xb0
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xb3
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xb6
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xb9
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xbc
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xbf
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xc2
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xc5
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xc8
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xcb
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xce
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xd1
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xd4
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xd7
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xda
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xdd
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xe0
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xe3
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xe6
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xe9
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xec
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+ld(hi('REENTER'), Y)            #15 slot 0xef
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
+
+fillers(until=symbol('SYS_Out_22') & 255)
 
 #-----------------------------------------------------------------------
 # Extension SYS_Out_22: Send byte to output port
@@ -2815,49 +2887,6 @@ jmp(Y,'sys_SpiExchangeBytes')   #16
 ld([sysArgs+0],X);              C('Fetch byte to send')#17
 
 #-----------------------------------------------------------------------
-# Some placeholders for future SYS functions. They work as a kind of jump
-# table. This allows implementations to be moved around between ROM
-# versions, at the expense of 2 (or 1) clock cycles. When the function is
-# not present it just acts as a NOP. Of course, when a SYS function must
-# be patched or extended it needs to have room for that in its declared
-# maximum cycle count. The same goal can be achieved by prepending 2 NOPs
-# before a function, or by overdeclaring them in the first place. This
-# last method doesn't even cost space (initially).
-#-----------------------------------------------------------------------
-
-ld(hi('REENTER'), Y)            #15 slot 0xb18
-jmp(Y,'REENTER')                #16
-ld(-20/2)                       #17
-
-ld(hi('REENTER'), Y)            #15 slot 0xb1b
-jmp(Y,'REENTER')                #16
-ld(-20/2)                       #17
-
-ld(hi('REENTER'), Y)            #15 slot 0xb1e
-jmp(Y,'REENTER')                #16
-ld(-20/2)                       #17
-
-ld(hi('REENTER'), Y)            #15 slot 0xb21
-jmp(Y,'REENTER')                #16
-ld(-20/2)                       #17
-
-ld(hi('REENTER'), Y)            #15 slot 0xb24
-jmp(Y,'REENTER')                #16
-ld(-20/2)                       #17
-
-ld(hi('REENTER'), Y)            #15 slot 0xb27
-jmp(Y,'REENTER')                #16
-ld(-20/2)                       #17
-
-ld(hi('REENTER'), Y)            #15 slot 0xb2a
-jmp(Y,'REENTER')                #16
-ld(-20/2)                       #17
-
-ld(hi('REENTER'), Y)            #15 slot 0xb2d
-jmp(Y,'REENTER')                #16
-ld(-20/2)                       #17
-
-#-----------------------------------------------------------------------
 #  Implementations
 #-----------------------------------------------------------------------
 
@@ -3030,6 +3059,45 @@ ld(-46/2)                       #43
 
 #-----------------------------------------------------------------------
 
+# SYS_ResetWaveforms_v4_50 implementation
+label('sys_ResetWaveforms')
+ld([vAC+0]);                    C('X=4i')#18
+adda(AC)                        #19
+adda(AC,X)                      #20
+ld([vAC+0]);                    #21
+st([Y,Xpp]);                    C('Sawtooth: T[4i+0] = i')#22
+anda(0x20);                     C('Triangle: T[4i+1] = 2i if i<32 else 127-2i')#23
+bne(pc()+3)                     #24
+ld([vAC+0])                     #25
+bra(pc()+3)                     #26
+adda([vAC+0])                   #26,27
+xora(127)                       #27
+st([Y,Xpp])                     #28
+ld([vAC+0]);                    C('Pulse: T[4i+2] = 0 if i<32 else 63')#29
+anda(0x20)                      #30
+bne(pc()+3)                     #31
+bra(pc()+3)                     #32
+ld(0)                           #33
+ld(63)                          #33(!)
+st([Y,Xpp])                     #34
+ld([vAC+0]);                    C('Sawtooth: T[4i+3] = i')#35
+st([Y,X])                       #36
+adda(1);                        C('i += 1')#37
+st([vAC+0])                     #38
+xora(64);                       C('For 64 iterations')#39
+beq(pc()+3);                    #40
+bra(pc()+3)                     #41
+ld(-2)                          #42
+ld(0)                           #42(!)
+adda([vPC])                     #43
+st([vPC])                       #44
+ld(hi('REENTER'),Y)             #45
+jmp(Y,'REENTER')                #46
+ld(-50/2)                       #47
+
+#-----------------------------------------------------------------------
+
+# SYS_ShuffleNoise_v4_46 implementation
 label('sys_ShuffleNoise')
 ld([vAC+0],X);                  C('tmp = T[4j]');#18
 ld([Y,X]);                      #19
@@ -3058,8 +3126,6 @@ nop()                           #40
 ld(hi('REENTER'),Y)             #41
 jmp(Y,'REENTER')                #42
 ld(-46/2)                       #43
-
-# XXX Lots of space here
 
 #-----------------------------------------------------------------------
 #
@@ -4448,7 +4514,7 @@ label('v6502_RESUME')
 assert (pc()&255) == 255
 suba(v6502_adjust);             C('v6502 secondary entry point')#0,11
 # --- Page boundary ---
-align(0x100,0x100)
+align(0x100,0x200)
 st([vTicks])                    #1
 ld([v6502_ADL],X)               #2
 ld(hi('v6502_execute'),Y)       #3
@@ -4779,6 +4845,91 @@ nop()                           #32
 ld(hi('v6502_next'),Y)          #33
 jmp(Y,'v6502_next')             #34
 ld(-36/2)                       #35
+
+#-----------------------------------------------------------------------
+#       More SYS functions
+#-----------------------------------------------------------------------
+
+# SYS_Exec_88 implementation
+label('sys_Exec')
+st([vPC+1],Y)                   #18 Clear vPCH and Y
+ld([vSP])                       #19 Place ROM loader below current stack pointer
+suba(53+2)                      #20 (AC -> *+0) One extra word for PUSH
+st([vTmp],X)                    #21
+adda(-2)                        #22 (AC -> *-2)
+st([vPC])                       #23
+# Start of manually compiled vCPU section
+st('PUSH',    [Y,Xpp]);C('PUSH')#24 *+0
+st('CALL',    [Y,Xpp]);C('CALL')#25 *+26 Fetch first byte
+adda(33-(-2))                   #26 (AC -> *+33)
+st(           [Y,Xpp])          #27 *+27
+st('ST',      [Y,Xpp]);C('ST')  #28 *+3 Chunk copy loop
+st(sysArgs+3, [Y,Xpp])          #29 *+4 High-address comes first
+st('CALL',    [Y,Xpp]);C('CALL')#30 *+5
+st(           [Y,Xpp])          #31 *+6
+st('ST',      [Y,Xpp]);C('ST')  #32 *+7
+st(sysArgs+2, [Y,Xpp])          #33 *+8 Then the low address
+st('CALL',    [Y,Xpp]);C('CALL')#34 *+9
+st(           [Y,Xpp])          #35 *+10
+st('ST',      [Y,Xpp]);C('ST')  #36 *+11 Byte copy loop
+st(sysArgs+4, [Y,Xpp])          #37 *+12 Byte count (0 means 256)
+st('CALL',    [Y,Xpp]);C('CALL')#38 *+13
+st(           [Y,Xpp])          #39 *+14
+st('POKE',    [Y,Xpp]);C('POKE')#40 *+15
+st(sysArgs+2, [Y,Xpp])          #41 *+16
+st('INC',     [Y,Xpp]);C('INC') #42 *+17
+st(sysArgs+2, [Y,Xpp])          #43 *+18
+st('LD',      [Y,Xpp]);C('LD')  #44 *+19
+st(sysArgs+4, [Y,Xpp])          #45 *+20
+st('SUBI',    [Y,Xpp]);C('SUBI')#46 *+21
+st(1,         [Y,Xpp])          #47 *+22
+st('BCC',     [Y,Xpp]);C('BCC') #48 *+23
+st('NE',      [Y,Xpp]);C('NE')  #49 *+24
+adda(11-2-33)                   #50 (AC -> *+9)
+st(           [Y,Xpp])          #51 *+25
+st('CALL',    [Y,Xpp]);C('CALL')#52 *+26 Go to next block
+adda(33-9)                      #53 (AC -> *+33)
+st(           [Y,Xpp])          #54 *+27
+st('BCC',     [Y,Xpp]);C('BCC') #55 *+28
+st('NE',      [Y,Xpp]);C('NE')  #56 *+29
+adda(3-2-33)                    #57 (AC -> *+1)
+st(           [Y,Xpp])          #58 *+30
+st('POP',     [Y,Xpp]);C('POP') #59 *+31 End
+st('RET',     [Y,Xpp]);C('RET') #60 *+32
+# Pointer constant pointing to the routine below (for use by CALL)
+adda(35-1)                      #61 (AC -> *+35)
+st(           [Y,Xpp])          #62 *+33
+st(0,         [Y,Xpp])          #63 *+34
+# Routine to read next byte from ROM and advance read pointer
+st('LD',      [Y,Xpp]);C('LD')  #64 *+35 Test for end of ROM table
+st(sysArgs+0, [Y,Xpp])          #65 *+36
+st('XORI',    [Y,Xpp]);C('XORI')#66 *+37
+st(251,       [Y,Xpp])          #67 *+38
+st('BCC',     [Y,Xpp]);C('BCC') #68 *+39
+st('NE',      [Y,Xpp]);C('NE')  #69 *+40
+adda(46-2-35)                   #70 (AC -> *+44)
+st(           [Y,Xpp])          #71 *+41
+st('ST',      [Y,Xpp]);C('ST')  #72 *+42 Wrap to next ROM page
+st(sysArgs+0, [Y,Xpp])          #73 *+43
+st('INC',     [Y,Xpp]);C('INC') #74 *+44
+st(sysArgs+1, [Y,Xpp])          #75 *+45
+st('LDW',     [Y,Xpp]);C('LDW') #76 *+46 Read next byte from ROM table
+st(sysArgs+0, [Y,Xpp])          #77 *+47
+st('LUP',     [Y,Xpp]);C('LUP') #78 *+48
+st(0,         [Y,Xpp])          #79 *+49
+st('INC',     [Y,Xpp]);C('INC') #80 *+50 Increment read pointer
+st(sysArgs+0, [Y,Xpp])          #81 *+51
+st('RET',     [Y,Xpp]);C('RET') #82 *+52 Return
+# Return to interpreter
+ld(hi('REENTER'),Y)             #83
+jmp(Y,'REENTER')                #84
+ld(-88/2)                       #85
+
+#-----------------------------------------------------------------------
+
+# XXX Lots of space here
+
+align(0x100)
 
 #-----------------------------------------------------------------------
 #
