@@ -130,7 +130,7 @@
         https://www.applefritter.com/node/2859
         Apple 1 BASIC
 
-  'Maybe in v3' list:
+  'Maybe in vN+1' list:
     A(0)=x,y,z  Array assignment with list expression
     A$ .. Z$    String variables (only in LET, PRINT, INPUT?)
     Boot        Some kind of autorun of a saved program
@@ -141,7 +141,7 @@
     @           Give it an implicit meaning such as "max index in arrays"?
     Speed       Cache result of NextBlock (at offset 30 of block?)
 
-  'Maybe in v4' list:
+  'Maybe in vN+2' list:
     Unary minus Original Tiny BASIC does it wrong in some edge cases: 8/-2
     Speed       Cache GOTO/GOSUB target (only for constant targets...)
     Speed       SYS functions for NextBlock, EndOfLine, Number
