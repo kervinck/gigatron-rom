@@ -45,7 +45,7 @@ int main (int argc, char *argv[])
 
 	static struct GTRomEntry rom[0x10000];
 	static unsigned char ram[0x8000];
-	static char outputbuffer[1000];
+	static char outputbuffer[128];
 	size_t outputpos = 0;
 
 	gtemu_init(&gt, rom, sizeof(rom), ram, sizeof(ram));
@@ -72,8 +72,8 @@ int main (int argc, char *argv[])
 			SDL_Event ev;
 			int hasevent = gtsdl_runuiframe(&s, &gt, &ph, &ev);
 			if (outputpos > 0) {
-				outputbuffer[outputpos] = '\0';
-				printf("%s", outputbuffer);
+				fwrite(outputbuffer, sizeof(outputbuffer[0]),
+					outputpos, stdout);
 				outputpos = 0;
 			}
 			if (hasevent == 0) {
