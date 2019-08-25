@@ -30,8 +30,8 @@ Compiling
 ---------
 
 You will probably have to modify the provided Makefile to fit to your
-system, but there are only a few files and few dependencies.  As an example for
-compiling Lua bindings you might look at [LPEG][lpeg].
+system, but there are only a few files and few dependencies.  As an example
+for compiling Lua bindings you might look at [LPEG][lpeg].
 
 [lpeg]: http://www.inf.puc-rio.br/~roberto/lpeg/#download
 
@@ -77,10 +77,10 @@ functions directly and use other means to output graphics and sound.
 ### Emulation and peripherals
 
 The core emulation is written without external dependencies except for the
-standard C "rand" function and just performs the raw computations.  Its
+standard C `rand()` function and just performs the raw computations.  Its
 functions are defined in the header file gtemu.h.
 
-gtemu.h defines two major structures: GTState and GTPeriph.  GTState
+gtemu.h defines two major structures: `GTState` and `GTPeriph`.  `GTState`
 containes the state of the CPU and its fields are open for inspection and
 manipulation:
 
@@ -98,7 +98,7 @@ manipulation:
 		unsigned int rammask;
 	};
 
-GTPeriph on the other hand contains the state of the peripherals; the
+`GTPeriph` on the other hand contains the state of the peripherals; the
 board, the video output, the audio output, the GT1 loader and the serial
 output.  The variables are implementation details and should not be
 accessed directly.
@@ -111,9 +111,9 @@ accessed directly.
 		struct GTRomEntry *rom, size_t romsize,
 		unsigned char *ram, size_t ramsize);
 
-Initializes the contents of the GTState structure and sets
+Initializes the contents of the `GTState` structure and sets
 pointers to the given RAM and ROM arrays.  You can (and should) initialize
-the content of those arrays.  romsize is the size in bytes, not the number
+the content of those arrays.  `romsize` is the size in bytes, not the number
 of entries.
 
 #### gtemu_initperiph
@@ -121,7 +121,7 @@ of entries.
 	extern void gtemu_initperiph (struct GTPeriph *ph, int audiofreq);
 
 Initializes the state of the simulated peripherals.
-audiofreq should be a valid value even if you do not want to output the
+`audiofreq` should be a valid value even if you do not want to output the
 sound (just set it to 48000).  Otherwise you can get it from the SDL
 functions.
 
@@ -162,17 +162,17 @@ functions.
 
 It will output the pixels in a 16-bit RGB444 format, the pitch variable
 determines the length of one row in bytes.  The pixel and pitch arguments
-are chosen to be compatible with the SDL_LockTexture function from
+are chosen to be compatible with the `SDL_LockTexture` function from
 [SDL][sdl].
 
 The sound samples are expected to be 16-bit in native byte order. This
 function will output only positive 15-bit numbers to be compatible with
 both unsigned and signed formats.
 
-The pointers pixels and samples may be NULL if you are not interested in
-the output.
+The pointers `pixels` and `samples` may be NULL if you are not interested
+in the output.
 
-nsamples points to a variable with the current position inside the samples
+`nsamples` points to a variable with the current position inside the samples
 array and must not be NULL, even if no sound is being played.  Just let
 it point to a dummy variable on the stack.
 
@@ -191,7 +191,7 @@ This function is called internally by `gtsdl_render` (and
 `gtsdl_runuiframe`), you only need to use it when not using one of those
 functions.
 
-power indicates the state of the power LED.  The default rendering function
+`power` indicates the state of the power LED.  The default rendering function
 uses it to indicate that the frame rate is at the expected 60 FPS.
 
 #### gtserialout_setbuffer
@@ -200,7 +200,7 @@ uses it to indicate that the frame rate is at the expected 60 FPS.
 		size_t buffersize, size_t *bufferpos);
 
 Sets the buffer into which emulated programs can write data by manipulating
-the synchronization signals.  bufferpos points to a variable containing
+the synchronization signals.  `bufferpos` points to a variable containing
 the current index into the buffer.  You can change that variable at any
 time to make place for new data.
 
@@ -219,7 +219,7 @@ Gigatron that can be evaluated by the Loader program.  This function does
 not check whether the GT1 is valid and expects the Loader application to be
 running already.
 
-The memory pointed to by data must stay valid until everything is sent.
+The memory pointed to by `data` must stay valid until everything is sent.
 
 It returns 1 on success and 0 on failure when there is still previous data
 that was not completely sent.
@@ -241,7 +241,7 @@ already written will stay in RAM.
 
 At the end it will set vPC to the execution address and vSP to 0.
 
-The gt pointer may be NULL: in this case this function just validates the
+The `gt` pointer may be NULL: in this case this function just validates the
 contents.
 
 The return value is 1 if the contents were valid, 0 otherwise.
