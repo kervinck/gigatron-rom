@@ -36,6 +36,7 @@ gigatron-rom
        |                        assembler, debugger, MIDI music, demos (sprites,
        |                        lines, game of life, Tetronis game...)
        +--- Cwiiis/             Gigatris game
+       +--- dhkolf/             Emulation library
        +--- flok99/             Simple (and slow) visualizer using SDL2
        +--- gigawalt/           Walter's script
        +--- kervinck/           Ramblings (all work in progress)
