@@ -379,9 +379,26 @@ Closes the window and releases the SDL subsystems.  This function is called
 automatically when the window object is garbage collected or at the end
 of the application.
 
-#### gtemu.newemulation (window)
+#### gtemu.newemulation (window [, ramsize])
 
-Initializes the emulation.  This function returns an emulation object.
+Initializes the emulation. `ramsize` can be either 32 or 64.  When
+omitted it defaults to 32.
+
+This function returns an emulation object.
+
+Example of setting up the application and starting an emulation:
+
+	gtemu = require "gtemu"
+
+	gtemu.initsdl()
+	window = gtemu.openwindow("Gigatron in Lua")
+	emulation = gtemu.newemulation(window, 64)
+
+	f = assert(io.open("gigatron.rom", "rb"))
+	emulation:loadrom(f:read("*a"))
+	f:close()
+
+	window:runloop(emulation)
 
 #### Properties of emulation
 
@@ -422,8 +439,8 @@ The following read-only values are also available:
 
 Loads a string into ROM:
 
-	local f = assert(io.open("gigatron.rom", "rb"))
-	emu:loadrom(f:read("*a"))
+	f = assert(io.open("gigatron.rom", "rb"))
+	emulation:loadrom(f:read("*a"))
 	f:close()
 
 #### emulation:processtick ()
@@ -439,7 +456,7 @@ Advances the simulation for an entire screen without any output.
 Sends data from a GT1 file to the Loader application (assuming it is
 running):
 
-	local f = assert(io.open("Overworld.gt1", "rb"))
+	f = assert(io.open("Overworld.gt1", "rb"))
 	gt1 = f:read("*a")
 	f:close()
 
@@ -454,11 +471,11 @@ for invalid data.
 
 Loads data from a GT1 file directly into RAM and executes it:
 
-	local f = assert(io.open("Overworld.gt1", "rb"))
+	f = assert(io.open("Overworld.gt1", "rb"))
 	gt1 = f:read("*a")
 	f:close()
 
-	emu:loadgt1(gt1)
+	emulation:loadgt1(gt1)
 
 #### emulation:createbuffer (size)
 
