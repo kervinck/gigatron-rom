@@ -329,8 +329,8 @@ static int lgtemuget_xout (lua_State *L)
 static void pushkeysym(lua_State *L, SDL_KeyboardEvent *ev)
 {
 	lua_pushstring(L, SDL_GetKeyName(ev->keysym.sym));
-	lua_pushinteger(L, ev->keysym.scancode);
 	lua_pushinteger(L, ev->keysym.mod);
+	lua_pushinteger(L, ev->keysym.scancode);
 	lua_pushinteger(L, ev->keysym.sym);
 }
 
