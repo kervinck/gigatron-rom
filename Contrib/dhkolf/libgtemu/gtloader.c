@@ -201,8 +201,7 @@ int gtloader_isactive (struct GTPeriph *ph)
 	return ph->loader.state != L_IDLE;
 }
 
-int gtloader_loadgt1 (struct GTState *gt,
-	const char *data, size_t datasize)
+int gtloader_validategt1 (const char *data, size_t datasize)
 {
 	const unsigned char *ud = (const unsigned char *) data;
 	unsigned char adhi;
@@ -212,9 +211,7 @@ int gtloader_loadgt1 (struct GTState *gt,
 	adhi = ud[0];
 	do {
 		unsigned char adlo = ud[1];
-		int addr = adlo | adhi << 8;
 		int size = ud[2];
-		int i;
 		if (size == 0) {
 			size = 256;
 		}
@@ -226,23 +223,12 @@ int gtloader_loadgt1 (struct GTState *gt,
 		if (size + adlo > 256) {
 			return 0;
 		}
-		if (gt != NULL) {
-			for (i = 0; i < size; i++) {
-				gt->ram[(addr + i) & gt->rammask] =
-					ud[i];
-			}
-		}
 		ud += size;
 		datasize -= size;
 		adhi = ud[0];
 	} while (adhi != 0 && datasize > 3);
 	if (datasize < 3) {
 		return 0;
-	}
-	if (gt != NULL) {
-		gt->ram[0x16] = ud[2];
-		gt->ram[0x17] = ud[1];
-		gt->ram[0x1c] = 0; /* reset vSP */
 	}
 
 	return 1;

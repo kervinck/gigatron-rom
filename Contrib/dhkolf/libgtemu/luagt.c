@@ -146,10 +146,10 @@ static int lgtemusendgt1 (lua_State *L)
 	const char *str = lua_tolstring(L, 2, &len);
 	int res;
 
-	res = gtloader_loadgt1(NULL, str, len);
+	res = gtloader_validategt1(str, len);
 
 	if (!res) {
-		return luaL_error(L, "invalid GT1 structure", res);
+		return luaL_error(L, "invalid GT1 structure");
 	}
 
 	if (gtloader_sendgt1(&emu->ph, str, len)) {
@@ -159,22 +159,6 @@ static int lgtemusendgt1 (lua_State *L)
 		lua_settable(L, lua_upvalueindex(1));
 	} else {
 		luaL_error(L, "loader is busy");
-	}
-
-	return 0;
-}
-
-static int lgtemuloadgt1 (lua_State *L)
-{
-	struct GTEmulationData *emu = checkemu(L, 1);
-	size_t len;
-	const char *str = lua_tolstring(L, 2, &len);
-	int res;
-
-	res = gtloader_loadgt1(&emu->gt, str, len);
-
-	if (!res) {
-		return luaL_error(L, "invalid GT1 structure");
 	}
 
 	return 0;
@@ -418,7 +402,6 @@ static luaL_Reg lgtemufns[] = {
 	{"processtick", lgtemuprocesstick},
 	{"processscreen", lgtemuprocessscreen},
 	{"sendgt1", lgtemusendgt1},
-	{"loadgt1", lgtemuloadgt1},
 	{"createbuffer", lgtemucreatebuffer},
 	{"getbuffer", lgtemugetbuffer},
 	{"resetbuffer", lgtemuresetbuffer},

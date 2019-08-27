@@ -239,19 +239,11 @@ that was not completely sent.
 
 Returns whether the loader is active at the moment.
 
-#### gtloader_loadgt1
+#### gtloader_validategt1
 
-	extern int gtloader_loadgt1 (struct GTState *gt,
-		const char *data, size_t datasize);
+	extern int gtloader_validategt1 (const char *data, size_t datasize);
 
-Places the contents of a GT1 file directly into the RAM and checks it for
-validity. When a file is not valid it will stop at that point but any data
-already written will stay in RAM.
-
-At the end it will set vPC to the execution address and vSP to 0.
-
-The `gt` pointer may be NULL: in this case this function just validates the
-contents.
+Validates a GT1 file.
 
 The return value is 1 if the contents were valid, 0 otherwise.
 
@@ -475,16 +467,6 @@ running):
 
 The data is automatically verified before sending, an error will be raised
 for invalid data.
-
-#### emulation:loadgt1 (data)
-
-Loads data from a GT1 file directly into RAM and executes it:
-
-	f = assert(io.open("Overworld.gt1", "rb"))
-	gt1 = f:read("*a")
-	f:close()
-
-	emulation:loadgt1(gt1)
 
 #### emulation:createbuffer (size)
 
