@@ -3,7 +3,7 @@ A=.a
 O=.o
 E=
 CC=cc
-CFLAGS=-g
+CFLAGS=-g -std=c11
 LDFLAGS=-g
 LD=$(CC)
 AR=ar ruv
