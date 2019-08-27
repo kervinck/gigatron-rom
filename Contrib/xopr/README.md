@@ -17,11 +17,11 @@ To apply the  patch, run `git apply Contrib/xopr/NetTerm/SYS_VDrawWord.patch` fo
 
 The patch itself was created using:
 ```
-git add Core/dev.py interface.json
+git add Core/dev.py
 git commit -m "Added SYS_VDrawWord function"
 git format-patch -1 master --stdout > Contrib/xopr/NetTerm/SYS_VDrawWord.patch
 git reset HEAD^
-git checkout -- Core/dev.py interface.json
+git checkout -- Core/dev.py
 ```
 
 # SPI_slave
