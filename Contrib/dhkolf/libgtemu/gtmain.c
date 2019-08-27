@@ -13,15 +13,6 @@
 
 #include "gtsdl.h"
 
-static void randfill (void *mem, size_t size)
-{
-	int *imem = (int *) mem;
-	int i;
-	for (i = 0; i < size / sizeof(int); i++) {
-		imem[i] = rand();
-	}
-}
-
 static int loadrom (const char *fname, struct GTState *gt)
 {
 	FILE *f;
@@ -42,6 +33,7 @@ int main (int argc, char *argv[])
 	struct GTSDLState s;
 	struct GTState gt;
 	struct GTPeriph ph;
+	unsigned long randstate;
 
 	static struct GTRomEntry rom[0x10000];
 	static unsigned char ram[0x8000];
@@ -50,9 +42,9 @@ int main (int argc, char *argv[])
 
 	gtemu_init(&gt, rom, sizeof(rom), ram, sizeof(ram));
 
-	srand(time(0));
-	randfill(rom, sizeof(rom));
-	randfill(ram, sizeof(ram));
+	randstate = time(0);
+	randstate = gtemu_randomizemem(randstate, rom, sizeof(rom));
+	randstate = gtemu_randomizemem(randstate, ram, sizeof(ram));
 
 	if (!loadrom(argc>1 ? argv[1] : "gigatron.rom", &gt)) {
 		fprintf(stderr, "failed to open ROM.\n");
@@ -65,7 +57,7 @@ int main (int argc, char *argv[])
 	}
 
 	if (gtsdl_openwindow(&s, "Gigatron")) {
-		gtemu_initperiph(&ph, gtsdl_getaudiofreq(&s));
+		gtemu_initperiph(&ph, gtsdl_getaudiofreq(&s), randstate);
 		gtserialout_setbuffer(&ph, outputbuffer,
 			sizeof(outputbuffer), &outputpos);
 		for (;;) {

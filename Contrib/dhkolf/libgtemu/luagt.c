@@ -12,6 +12,8 @@
 #include <lauxlib.h>
 #include <SDL2/SDL.h>
 
+#include <time.h>
+
 #include "gtemu.h"
 #include "gtsdl.h"
 
@@ -73,21 +75,13 @@ static int lgtclosewindow (lua_State *L)
 	return 0;
 }
 
-static void randfill (void *mem, size_t size)
-{
-	int *imem = (int *) mem;
-	int i;
-	for (i = 0; i < size / sizeof(int); i++) {
-		imem[i] = rand();
-	}
-}
-
 static int lgtnewemulation (lua_State *L)
 {
 	struct GTSDLState *s = (struct GTSDLState *)
 		luaL_checkudata(L, 1, "gtemu.sdlstate");
 	int ramkb = luaL_optinteger(L, 2, 32);
 	size_t ramsize;
+	unsigned long rngstate;
 	struct GTEmulationData *emu;
 
 	if (ramkb == 32) {
@@ -100,12 +94,13 @@ static int lgtnewemulation (lua_State *L)
 
 	emu = newud(L, struct GTEmulationData);
 
+	rngstate = time(0);
+	rngstate = gtemu_randomizemem(rngstate, emu->rom, sizeof(emu->rom));
+	rngstate = gtemu_randomizemem(rngstate, emu->ram, sizeof(emu->ram));
+
 	gtemu_init(&emu->gt, emu->rom, sizeof(emu->rom),
 		emu->ram, ramsize);
-	gtemu_initperiph(&emu->ph, gtsdl_getaudiofreq(s));
-
-	randfill(emu->rom, sizeof(emu->rom));
-	randfill(emu->ram, sizeof(emu->ram));
+	gtemu_initperiph(&emu->ph, gtsdl_getaudiofreq(s), rngstate);
 
 	luaL_setmetatable(L, "gtemu.emulation");
 	return 1;

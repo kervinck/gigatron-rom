@@ -18,6 +18,14 @@ const int screenwidth = 640 / 4;
 const int vbackporch = 33;
 const int screenheight = 480;
 
+static unsigned long xorshift32 (unsigned long x)
+{
+	x ^= x << 13;
+	x ^= x >> 17;
+	x ^= x << 5;
+	return x;
+}
+
 void gtemu_init (struct GTState *gt,
 	struct GTRomEntry *rom, size_t romsize,
 	unsigned char *ram, size_t ramsize)
@@ -31,10 +39,30 @@ void gtemu_init (struct GTState *gt,
 	gt->out = 0x80;
 }
 
-void gtemu_initperiph (struct GTPeriph *ph, int audiofreq)
+unsigned long gtemu_randomizemem (unsigned long seed,
+	void *mem, size_t size)
+{
+	int *imem = (int *) mem;
+	int i;
+	if (seed == 0) {
+		/* 0 is an invalid value for xorshift */
+		seed = 0x74007400;
+	}
+	for (i = 0; i < size / sizeof(int); i++) {
+		imem[i] = seed = xorshift32(seed);
+	}
+	return seed;
+}
+
+void gtemu_initperiph (struct GTPeriph *ph, int audiofreq,
+	unsigned long randseed)
 {
 	ph->board.booted = 0;
-	ph->board.undef = rand();
+	if (randseed == 0) {
+		/* 0 is an invalid value for xorshift */
+		randseed = 0x74007400;
+	}
+	ph->board.undef = xorshift32(randseed);
 	ph->board.clock = 0;
 	ph->board.xout = 0;
 	ph->video.x = ph->video.y = 1000;
@@ -306,7 +334,7 @@ int gtemu_processtick (struct GTState *gt, struct GTPeriph *ph)
 	if (risingout & 0x80) {
 		/* vsync */
 		ph->video.y = -vbackporch + 5;
-		ph->board.undef = rand();
+		ph->board.undef = xorshift32(ph->board.undef);
 
 		gtserialout_onrisingvsync(gt, ph);
 	}

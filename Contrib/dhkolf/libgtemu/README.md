@@ -76,9 +76,9 @@ functions directly and use other means to output graphics and sound.
 
 ### Emulation and peripherals
 
-The core emulation is written without external dependencies except for the
-standard C `rand()` function and just performs the raw computations.  Its
-functions are defined in the header file gtemu.h.
+The core emulation is written without external dependencies and just
+performs the raw computations.  Its functions are defined in the header
+file gtemu.h.
 
 gtemu.h defines two major structures: `GTState` and `GTPeriph`.  `GTState`
 containes the state of the CPU and its fields are open for inspection and
@@ -118,12 +118,21 @@ of entries.
 
 #### gtemu_initperiph
 
-	extern void gtemu_initperiph (struct GTPeriph *ph, int audiofreq);
+	extern void gtemu_initperiph (struct GTPeriph *ph, int audiofreq,
+		unsigned long randseed);
 
 Initializes the state of the simulated peripherals.
 `audiofreq` should be a valid value even if you do not want to output the
 sound (just set it to 48000).  Otherwise you can get it from the SDL
-functions.
+functions.  `randseed` is a seed value for the random number generator.
+
+#### gtemu_randomizemem
+
+	unsigned long gtemu_randomizemem (unsigned long seed,
+		void *mem, size_t size);
+
+Randomizes a designated area of memory (like the RAM or the ROM). The
+return value is the new state of the xorshift32-random number generator.
 
 #### gtemu_getclock
 
