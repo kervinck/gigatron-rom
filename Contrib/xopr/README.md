@@ -13,9 +13,16 @@ byte SPIExchangeKey( byte _key )
 ```
 **Note:** 
 This application is still experimental and only works with a [Gigatron expander card](https://forum.gigatron.io/viewtopic.php?f=4&t=64)  combined with a patched *dev.rom* that enables drawing of the 3x5 'tinyfont'.
-To apply the  patch, run `cat Contrib/xopr/NetTerm/SYS_VDrawWord_137.patch | git am` followed by `make dev.rom` and `make burn` to compile and burn the DEVROM to EPRPOM.
+To apply the  patch, run `git apply Contrib/xopr/NetTerm/SYS_VDrawWord.patch` followed by `make dev.rom` and `make burn` to compile and burn the DEVROM to EPRPOM.
 
-The patch itself was created using `git format-patch -1 master > Contrib/xopr/NetTerm/SYS_VDrawWord_137.patch`
+The patch itself was created using:
+```
+git add Core/dev.py interface.json
+git commit -m "Added SYS_VDrawWord function"
+git format-patch -1 master --stdout > Contrib/xopr/NetTerm/SYS_VDrawWord.patch
+git reset HEAD^
+git checkout -- Core/dev.py interface.json
+```
 
 # SPI_slave
 This Arduino program acts like a SPI slave that transfers bytes from and to the USB serial connection.

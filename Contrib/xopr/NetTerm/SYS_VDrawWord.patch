@@ -1,62 +1,48 @@
-From 9f32613e0441ea67e51a0040cc59a0138fc8cc75 Mon Sep 17 00:00:00 2001
+From 6aaa4178d925bf79742136b404b131cd4b1d61a8 Mon Sep 17 00:00:00 2001
 From: xopr <xopr@ackspace.nl>
-Date: Mon, 26 Aug 2019 21:18:09 +0200
-Subject: [PATCH] Added SYS_VDrawWord_137@0xb18 to DEVROM
+Date: Tue, 27 Aug 2019 17:54:54 +0200
+Subject: [PATCH] Added SYS_VDrawWord function
 
 ---
- Core/dev.py    | 231 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ Core/dev.py    | 220 ++++++++++++++++++++++++++++++++++++++++++++++++-
  interface.json |   1 +
- 2 files changed, 228 insertions(+), 4 deletions(-)
+ 2 files changed, 218 insertions(+), 3 deletions(-)
+ mode change 100755 => 100644 Core/dev.py
 
 diff --git a/Core/dev.py b/Core/dev.py
-index 81466e7..ec3c85c 100755
+old mode 100755
+new mode 100644
+index 76669ed..6a28e91
 --- a/Core/dev.py
 +++ b/Core/dev.py
-@@ -2814,6 +2814,23 @@ ld(hi('sys_SpiExchangeBytes'),Y);C('Exchange 1..256 bytes over SPI interface')
- jmp(Y,'sys_SpiExchangeBytes')   #16
- ld([sysArgs+0],X);              C('Fetch byte to send')#17
+@@ -781,9 +781,14 @@ ld(hi('REENTER'), Y)            #15 slot 0xc8
+ jmp(Y,'REENTER')                #16
+ ld(-20/2)                       #17
  
+-ld(hi('REENTER'), Y)            #15 slot 0xcb
+-jmp(Y,'REENTER')                #16
+-ld(-20/2)                       #17
 +#-----------------------------------------------------------------------
 +# Extension SYS_VDrawWord_137
 +#-----------------------------------------------------------------------
 +
-+# Draw a 3x5 glyph (as tiny font SYS_VDrawBits_134 substitute)
-+
-+# Variables:
-+#       sysArgs[0]      Color 0 (background)
-+#       sysArgs[1]      Color 1 (pen)
-+#       sysArgs[2:3]    16 bits (word) (destructive)
-+#       sysArgs[4:5]    Position on screen
-+
 +label('SYS_VDrawWord_137')
-+ld(hi('sys_VDrawWord'),Y);C('Draw a 3x5 glyph') #15 slot 0xb18
++ld(hi('sys_VDrawWord'),Y);C('Draw a 3x5 glyph') #15 slot 0xcb
 +jmp(Y,'sys_VDrawWord')   #16
 +ld([sysArgs+4], X)              #17
-+
- #-----------------------------------------------------------------------
- # Some placeholders for future SYS functions. They work as a kind of jump
- # table. This allows implementations to be moved around between ROM
-@@ -2825,10 +2842,6 @@ ld([sysArgs+0],X);              C('Fetch byte to send')#17
- # last method doesn't even cost space (initially).
- #-----------------------------------------------------------------------
  
--ld(hi('REENTER'), Y)            #15 slot 0xb18
--jmp(Y,'REENTER')                #16
--ld(-20/2)                       #17
--
- ld(hi('REENTER'), Y)            #15 slot 0xb1b
+ ld(hi('REENTER'), Y)            #15 slot 0xce
  jmp(Y,'REENTER')                #16
- ld(-20/2)                       #17
-@@ -3450,6 +3463,216 @@ ld(-130/2)                      #127
+@@ -4931,6 +4936,215 @@ ld(-88/2)                       #85
  
- #-----------------------------------------------------------------------
+ align(0x100)
  
 +label('sys_VDrawWord')
 +
 +# Draw 3x5 glyph from word
 +# sysArgs[0]    Color 0 (background)
 +# sysArgs[1]    Color 1 (pen)
-+# sysArgs[2:3]  16 bits, bit (14, 9, 4),(13, 8, 3),(12, 7, 2),(11, 6, 1),(10, 5, 0)
++# sysArgs[2:3]  16 bits (word) (destructive), bit (14, 9, 4),(13, 8, 3),(12, 7, 2),(11, 6, 1),(10, 5, 0)
 +#               they are grouped in chunks of 5 bits from top left to bottom right (with special case: MSB=offset)
 +#               for example: bit 14 is column 1 row 1, ..., bit 10 is column 1 row 5
 +#               bit 9 is column 2 row 1, ..., bit 0 is column 3 row 5
@@ -259,23 +245,22 @@ index 81466e7..ec3c85c 100755
 +jmp(Y,'REENTER')                #131
 +ld(-138/2)                      #132
 +
-+#-----------------------------------------------------------------------
 +
- label('sys_v6502')
- 
- st([vCPUselect],Y);             C('Activate v6502')#18
+ #-----------------------------------------------------------------------
+ #
+ #  End of core -- Start of storage area
 diff --git a/interface.json b/interface.json
-index ae17d19..522c9d2 100644
+index ae17d19..a0d1955 100644
 --- a/interface.json
 +++ b/interface.json
-@@ -139,6 +139,7 @@
-  "SYS_ResetWaveforms_v4_50"   : "0x0b0f",
-  "SYS_ShuffleNoise_v4_46"     : "0x0b12",
-  "SYS_SpiExchangeBytes_v4_134": "0x0b15",
-+ "SYS_VDrawWord_137"    : "0x0b18",
-  "SYS_Sprite6_v3_64"    : "0x0c00",
-  "SYS_Sprite6x_v3_64"   : "0x0c40",
-  "SYS_Sprite6y_v3_64"   : "0x0c80",
+@@ -110,6 +110,7 @@
+  "RET"                  : "0x03ff",
+ 
+  "SYS_Exec_88"          : "0x00ad",
++ "SYS_VDrawWord_137"    : "0x00cb",
+  "SYS_Out_22"           : "0x00f4",
+  "SYS_In_24"            : "0x00f9",
+  "SYS_Random_34"        : "0x04a7",
 -- 
 2.17.1
 

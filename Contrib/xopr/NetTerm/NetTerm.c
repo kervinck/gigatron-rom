@@ -18,7 +18,7 @@ const int tinyfont[96] = {
 #define SYS_SetMemory_v2_54             0x0b03
 #define SYS_ExpanderControl_v4_40       0x0b09
 #define SYS_SpiExchangeBytes_v4_134     0x0b15
-#define SYS_VDrawWord_137               0x0b18
+#define SYS_VDrawWord_137               0x00cb
 
 #define CHAR_LEADING 0
 #define CHAR_WIDTH 4
