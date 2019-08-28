@@ -325,6 +325,10 @@ static int onkeydown (struct GTSDLState *s, struct GTState *gt,
 static int ontextinput (struct GTSDLState *s, struct GTState *gt,
 	SDL_TextInputEvent *ev)
 {
+	if (SDL_GetModState() == KMOD_LALT) {
+		/* Alt+X should not be text input */
+		return 0;
+	}
 	if (ev->text[0] > 0 && ev->text[0] < 128) {
 		gt->in = ev->text[0];
 		s->textkeydown = 1;
