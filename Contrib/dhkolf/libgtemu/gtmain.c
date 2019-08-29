@@ -18,6 +18,7 @@ struct MainState {
 	const char *romfile;
 	const char *sendfile;
 	int displayhelp;
+	int ramexpansion;
 	char *sendbuffer;
 	size_t sendbuffersize;
 };
@@ -150,6 +151,7 @@ static void parseargs (int argc, char *argv[], struct MainState *a)
 	a->romfile = NULL;
 	a->sendfile = NULL;
 	a->displayhelp = 0;
+	a->ramexpansion = 0;
 	for (i = 1; i < argc; i++) {
 		if (argv[i][0] != '-') {
 			break;
@@ -184,6 +186,13 @@ static void parseargs (int argc, char *argv[], struct MainState *a)
 			}
 			a->sendfile = argv[i];
 			break;
+		case '6':
+			if (argv[i][2] != '4' || argv[i][3] != '\0') {
+				a->displayhelp = 1;
+				return;
+			}
+			a->ramexpansion = 1;
+			break;
 		default:
 			a->displayhelp = 1;
 			return;
@@ -200,12 +209,13 @@ static void displayhelp (const char *progname)
 		progname = "gtemu";
 	}
 	fprintf(stderr,
-		"usage: %s [-h] [-l filename.gt1] [filename.rom]\n"
-                "\n"
+		"usage: %s [-h] [-l filename.gt1] [-64] [filename.rom]\n"
+		"\n"
 		"Arguments:\n"
-                " -h               Display this help.\n"
-                " -l filename.gt1  File to be sent with Ctrl-F2.\n"
-                "    filename.rom  ROM file (default name: gigatron.rom).\n"
+		" -h               Display this help.\n"
+		" -l filename.gt1  File to be sent with Ctrl-F2.\n"
+		" -64              Expand RAM to 64k.\n"
+		"    filename.rom  ROM file (default name: gigatron.rom).\n"
 		"\n"
 		"Special keys:\n"
 		"    Ctrl-F2       Send designated GT1 file.\n"
@@ -224,7 +234,7 @@ int main (int argc, char *argv[])
 	size_t outputpos = 0;
 
 	static struct GTRomEntry rom[0x10000];
-	static unsigned char ram[0x8000];
+	static unsigned char ram[0x10000];
 	static char sendbuffer[0x11000];
 	static char outputbuffer[128];
 
@@ -238,7 +248,8 @@ int main (int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	gtemu_init(&gt, rom, sizeof(rom), ram, sizeof(ram));
+	gtemu_init(&gt, rom, sizeof(rom), ram,
+		mstate.ramexpansion ? 0x10000 : 0x8000);
 
 	randstate = time(0);
 	randstate = gtemu_randomizemem(randstate, rom, sizeof(rom));
