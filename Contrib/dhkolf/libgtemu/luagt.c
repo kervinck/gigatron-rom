@@ -12,6 +12,8 @@
 #include <lauxlib.h>
 #include <SDL2/SDL.h>
 
+#include <time.h>
+
 #include "gtemu.h"
 #include "gtsdl.h"
 
@@ -73,21 +75,13 @@ static int lgtclosewindow (lua_State *L)
 	return 0;
 }
 
-static void randfill (void *mem, size_t size)
-{
-	int *imem = (int *) mem;
-	int i;
-	for (i = 0; i < size / sizeof(int); i++) {
-		imem[i] = rand();
-	}
-}
-
 static int lgtnewemulation (lua_State *L)
 {
 	struct GTSDLState *s = (struct GTSDLState *)
 		luaL_checkudata(L, 1, "gtemu.sdlstate");
 	int ramkb = luaL_optinteger(L, 2, 32);
 	size_t ramsize;
+	unsigned long rngstate;
 	struct GTEmulationData *emu;
 
 	if (ramkb == 32) {
@@ -100,12 +94,13 @@ static int lgtnewemulation (lua_State *L)
 
 	emu = newud(L, struct GTEmulationData);
 
+	rngstate = time(0);
+	rngstate = gtemu_randomizemem(rngstate, emu->rom, sizeof(emu->rom));
+	rngstate = gtemu_randomizemem(rngstate, emu->ram, sizeof(emu->ram));
+
 	gtemu_init(&emu->gt, emu->rom, sizeof(emu->rom),
 		emu->ram, ramsize);
-	gtemu_initperiph(&emu->ph, gtsdl_getaudiofreq(s));
-
-	randfill(emu->rom, sizeof(emu->rom));
-	randfill(emu->ram, sizeof(emu->ram));
+	gtemu_initperiph(&emu->ph, gtsdl_getaudiofreq(s), rngstate);
 
 	luaL_setmetatable(L, "gtemu.emulation");
 	return 1;
@@ -151,10 +146,10 @@ static int lgtemusendgt1 (lua_State *L)
 	const char *str = lua_tolstring(L, 2, &len);
 	int res;
 
-	res = gtloader_loadgt1(NULL, str, len);
+	res = gtloader_validategt1(str, len);
 
 	if (!res) {
-		return luaL_error(L, "invalid GT1 structure", res);
+		return luaL_error(L, "invalid GT1 structure");
 	}
 
 	if (gtloader_sendgt1(&emu->ph, str, len)) {
@@ -164,22 +159,6 @@ static int lgtemusendgt1 (lua_State *L)
 		lua_settable(L, lua_upvalueindex(1));
 	} else {
 		luaL_error(L, "loader is busy");
-	}
-
-	return 0;
-}
-
-static int lgtemuloadgt1 (lua_State *L)
-{
-	struct GTEmulationData *emu = checkemu(L, 1);
-	size_t len;
-	const char *str = lua_tolstring(L, 2, &len);
-	int res;
-
-	res = gtloader_loadgt1(&emu->gt, str, len);
-
-	if (!res) {
-		return luaL_error(L, "invalid GT1 structure");
 	}
 
 	return 0;
@@ -329,8 +308,8 @@ static int lgtemuget_xout (lua_State *L)
 static void pushkeysym(lua_State *L, SDL_KeyboardEvent *ev)
 {
 	lua_pushstring(L, SDL_GetKeyName(ev->keysym.sym));
-	lua_pushinteger(L, ev->keysym.scancode);
 	lua_pushinteger(L, ev->keysym.mod);
+	lua_pushinteger(L, ev->keysym.scancode);
 	lua_pushinteger(L, ev->keysym.sym);
 }
 
@@ -423,7 +402,6 @@ static luaL_Reg lgtemufns[] = {
 	{"processtick", lgtemuprocesstick},
 	{"processscreen", lgtemuprocessscreen},
 	{"sendgt1", lgtemusendgt1},
-	{"loadgt1", lgtemuloadgt1},
 	{"createbuffer", lgtemucreatebuffer},
 	{"getbuffer", lgtemugetbuffer},
 	{"resetbuffer", lgtemuresetbuffer},

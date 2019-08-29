@@ -13,7 +13,7 @@
 #ifndef GTEMU_H
 #define GTEMU_H 1
 
-#include <stdlib.h>
+#include <stddef.h>
 
 #define GT_SCREENWIDTH 160
 #define GT_SCREENHEIGHT 480
@@ -79,7 +79,11 @@ extern void gtemu_init (struct GTState *gt,
 	struct GTRomEntry *rom, size_t romsize,
 	unsigned char *ram, size_t ramsize);
 
-extern void gtemu_initperiph (struct GTPeriph *ph, int audiofreq);
+extern void gtemu_initperiph (struct GTPeriph *ph, int audiofreq,
+	unsigned long randseed);
+
+unsigned long gtemu_randomizemem (unsigned long seed,
+	void *mem, size_t size);
 
 extern unsigned long long gtemu_getclock (struct GTPeriph *ph);
 
@@ -104,8 +108,7 @@ extern int gtloader_sendgt1 (struct GTPeriph *ph,
 
 extern int gtloader_isactive (struct GTPeriph *ph);
 
-extern int gtloader_loadgt1 (struct GTState *gt,
-	const char *data, size_t datasize);
+extern int gtloader_validategt1 (const char *data, size_t datasize);
 
 #endif /* GTEMU_H */
 

@@ -2,7 +2,7 @@
 libgtemu -- David Kolf's Library for Gigatron Emulation
 =======================================================
 
-Version 0.1.0
+Version 0.2.0
 
 About
 -----
@@ -67,6 +67,26 @@ The following features might be nice to have:
 
 [scm]: https://cdn.hackaday.io/files/20781889094304/Schematics.pdf
 
+Stand-alone emulator
+--------------------
+
+The stand-alone emulator offers the following basic features on the
+command line:
+
+	usage: ./gtemu [-h] [-l filename.gt1] [-64] [filename.rom]
+
+	Arguments:
+	 -h               Display this help.
+	 -l filename.gt1  File to be sent with Ctrl-F2.
+	 -64              Expand RAM to 64k.
+	    filename.rom  ROM file (default name: gigatron.rom).
+
+	Special keys:
+	    Ctrl-F2       Send designated GT1 file.
+	    Alt-L         Perform hard reset and select loader.
+	    ESC           Close the emulation.
+
+
 Structure and C-API
 -------------------
 
@@ -76,9 +96,9 @@ functions directly and use other means to output graphics and sound.
 
 ### Emulation and peripherals
 
-The core emulation is written without external dependencies except for the
-standard C `rand()` function and just performs the raw computations.  Its
-functions are defined in the header file gtemu.h.
+The core emulation is written without external dependencies and just
+performs the raw computations.  Its functions are defined in the header
+file gtemu.h.
 
 gtemu.h defines two major structures: `GTState` and `GTPeriph`.  `GTState`
 containes the state of the CPU and its fields are open for inspection and
@@ -118,12 +138,21 @@ of entries.
 
 #### gtemu_initperiph
 
-	extern void gtemu_initperiph (struct GTPeriph *ph, int audiofreq);
+	extern void gtemu_initperiph (struct GTPeriph *ph, int audiofreq,
+		unsigned long randseed);
 
 Initializes the state of the simulated peripherals.
 `audiofreq` should be a valid value even if you do not want to output the
 sound (just set it to 48000).  Otherwise you can get it from the SDL
-functions.
+functions.  `randseed` is a seed value for the random number generator.
+
+#### gtemu_randomizemem
+
+	unsigned long gtemu_randomizemem (unsigned long seed,
+		void *mem, size_t size);
+
+Randomizes a designated area of memory (like the RAM or the ROM). The
+return value is the new state of the xorshift32-random number generator.
 
 #### gtemu_getclock
 
@@ -230,19 +259,11 @@ that was not completely sent.
 
 Returns whether the loader is active at the moment.
 
-#### gtloader_loadgt1
+#### gtloader_validategt1
 
-	extern int gtloader_loadgt1 (struct GTState *gt,
-		const char *data, size_t datasize);
+	extern int gtloader_validategt1 (const char *data, size_t datasize);
 
-Places the contents of a GT1 file directly into the RAM and checks it for
-validity. When a file is not valid it will stop at that point but any data
-already written will stay in RAM.
-
-At the end it will set vPC to the execution address and vSP to 0.
-
-The `gt` pointer may be NULL: in this case this function just validates the
-contents.
+Validates a GT1 file.
 
 The return value is 1 if the contents were valid, 0 otherwise.
 
@@ -466,16 +487,6 @@ running):
 
 The data is automatically verified before sending, an error will be raised
 for invalid data.
-
-#### emulation:loadgt1 (data)
-
-Loads data from a GT1 file directly into RAM and executes it:
-
-	f = assert(io.open("Overworld.gt1", "rb"))
-	gt1 = f:read("*a")
-	f:close()
-
-	emulation:loadgt1(gt1)
 
 #### emulation:createbuffer (size)
 
