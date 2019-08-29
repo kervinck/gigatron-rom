@@ -1,0 +1,253 @@
+From f752729d2e88b6d0a37c4aac8b3b2f1793dd73a3 Mon Sep 17 00:00:00 2001
+From: xopr <xopr@ackspace.nl>
+Date: Tue, 27 Aug 2019 19:59:41 +0200
+Subject: [PATCH] SYS_VDrawWord_134 fixed annotations
+
+---
+ Core/dev.py | 220 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 217 insertions(+), 3 deletions(-)
+ mode change 100755 => 100644 Core/dev.py
+
+diff --git a/Core/dev.py b/Core/dev.py
+old mode 100755
+new mode 100644
+index 76669ed..530052c
+--- a/Core/dev.py
++++ b/Core/dev.py
+@@ -781,9 +781,14 @@ ld(hi('REENTER'), Y)            #15 slot 0xc8
+ jmp(Y,'REENTER')                #16
+ ld(-20/2)                       #17
+ 
+-ld(hi('REENTER'), Y)            #15 slot 0xcb
+-jmp(Y,'REENTER')                #16
+-ld(-20/2)                       #17
++#-----------------------------------------------------------------------
++# Extension SYS_VDrawWord_134
++#-----------------------------------------------------------------------
++
++label('SYS_VDrawWord_134')
++ld(hi('sys_VDrawWord'),Y);C('Draw a 3x5 glyph') #15 slot 0xcb
++jmp(Y,'sys_VDrawWord')   #16
++ld([sysArgs+4], X)              #17
+ 
+ ld(hi('REENTER'), Y)            #15 slot 0xce
+ jmp(Y,'REENTER')                #16
+@@ -4931,6 +4936,215 @@ ld(-88/2)                       #85
+ 
+ align(0x100)
+ 
++label('sys_VDrawWord')
++
++# Draw 3x5 glyph from word
++# sysArgs[0]    Color 0 (background)
++# sysArgs[1]    Color 1 (pen)
++# sysArgs[2:3]  16 bits (word) (destructive), bit (14, 9, 4),(13, 8, 3),(12, 7, 2),(11, 6, 1),(10, 5, 0)
++#               they are grouped in chunks of 5 bits from top left to bottom right (with special case: MSB=offset)
++#               for example: bit 14 is column 1 row 1, ..., bit 10 is column 1 row 5
++#               bit 9 is column 2 row 1, ..., bit 0 is column 3 row 5
++# sysArgs[4:5]  Position on screen
++
++
++# Line 1
++ld([sysArgs+5], Y)              #18 store arg5 in Y
++
++#TODO: MSB set means empty line (bmi)
++ld([sysArgs+3])                 #19 load (high) byte
++anda(0x40)                      #20 mask bit (r1c1)
++bne('.fgc1')                    #21 branch if bit set (AC not equal 0)
++bra('.drawpxl1')                #22 jump to "draw pixel"
++ld([sysArgs+0])                 #23a select BG color
++label('.fgc1')
++ld([sysArgs+1])                 #23b select FG color
++label('.drawpxl1')
++st([Y,Xpp])                     #24 Draw pixel, increase X
++
++ld([sysArgs+3])                 #25 load (high) byte
++anda(0x02)                      #26 mask bit (r1c2)
++bne('.fgc2')                    #27 branch if bit set (AC not equal 0)
++bra('.drawpxl2')                #28 jump to "draw pixel"
++ld([sysArgs+0])                 #29a select BG color
++label('.fgc2')
++ld([sysArgs+1])                 #29b select FG color
++label('.drawpxl2')
++st([Y,Xpp])                     #30 Draw pixel, increase X
++
++ld([sysArgs+2])                 #31 load (low) byte
++anda(0x10)                      #32 mask bit (r1c3)
++bne('.fgc3')                    #33 branch if bit set (AC not equal 0)
++bra('.drawpxl3')                #34 jump to "draw pixel"
++ld([sysArgs+0])                 #35a select BG color
++label('.fgc3')
++ld([sysArgs+1])                 #35b select FG color
++label('.drawpxl3')
++st([Y,Xpp])                     #36 Draw pixel, increase X
++
++
++ld([sysArgs+5])                 #37 load arg5 (vert)
++adda(1)                         #38 increase by one
++st([sysArgs+5])                 #39 store result (destructive)
++
++
++# Line 2
++ld(AC, Y)                       #40 load (new) Y position
++ld([sysArgs+4], X)              #41 store arg4 in X (reset X)
++
++ld([sysArgs+3])                 #42 load (high) byte
++anda(0x20)                      #43 mask bit (r1c1)
++bne('.fgc4')                    #44 branch if bit set (AC not equal 0)
++bra('.drawpxl4')                #45 jump to "draw pixel"
++ld([sysArgs+0])                 #46a select BG color
++label('.fgc4')
++ld([sysArgs+1])                 #46b select FG color
++label('.drawpxl4')
++st([Y,Xpp])                     #47 Draw pixel, increase X
++
++ld([sysArgs+3])                 #48 load (high) byte
++anda(0x01)                      #49 mask bit (r1c2)
++bne('.fgc5')                    #50 branch if bit set (AC not equal 0)
++bra('.drawpxl5')                #51 jump to "draw pixel"
++ld([sysArgs+0])                 #52a select BG color
++label('.fgc5')
++ld([sysArgs+1])                 #52b select FG color
++label('.drawpxl5')
++st([Y,Xpp])                     #53 Draw pixel, increase X
++
++ld([sysArgs+2])                 #54 load (low) byte
++anda(0x08)                      #55 mask bit (r1c3)
++bne('.fgc6')                    #56 branch if bit set (AC not equal 0)
++bra('.drawpxl6')                #57 jump to "draw pixel"
++ld([sysArgs+0])                 #58a select BG color
++label('.fgc6')
++ld([sysArgs+1])                 #58b select FG color
++label('.drawpxl6')
++st([Y,Xpp])                     #59 Draw pixel, increase X
++
++ld([sysArgs+5])                 #60 load arg5 (vert)
++adda(1)                         #61 increase by one
++st([sysArgs+5])                 #62 store result (destructive)
++
++
++# Line 3
++ld(AC, Y)                       #63 load (new) Y position
++ld([sysArgs+4], X)              #64 store arg4 in X (reset X)
++
++ld([sysArgs+3])                 #65 load (high) byte
++anda(0x10)                      #66 mask bit (r1c1)
++bne('.fgc7')                    #67 branch if bit set (AC not equal 0)
++bra('.drawpxl7')                #68 jump to "draw pixel"
++ld([sysArgs+0])                 #69a select BG color
++label('.fgc7')
++ld([sysArgs+1])                 #69b select FG color
++label('.drawpxl7')
++st([Y,Xpp])                     #70 Draw pixel, increase X
++
++ld([sysArgs+2])                 #71 load (low) byte
++anda(0x80)                      #72 mask bit (r1c2)
++bne('.fgc8')                    #73 branch if bit set (AC not equal 0)
++bra('.drawpxl8')                #74 jump to "draw pixel"
++ld([sysArgs+0])                 #75a select BG color
++label('.fgc8')
++ld([sysArgs+1])                 #75b select FG color
++label('.drawpxl8')
++st([Y,Xpp])                     #76 Draw pixel, increase X
++
++ld([sysArgs+2])                 #77 load (low) byte
++anda(0x04)                      #78 mask bit (r1c3)
++bne('.fgc9')                    #79 branch if bit set (AC not equal 0)
++bra('.drawpxl9')                #80 jump to "draw pixel"
++ld([sysArgs+0])                 #81 select BG color
++label('.fgc9')
++ld([sysArgs+1])                 #82a select FG color
++label('.drawpxl9')
++st([Y,Xpp])                     #82b Draw pixel, increase X
++
++ld([sysArgs+5])                 #83 load arg5 (vert)
++adda(1)                         #84 increase by one
++st([sysArgs+5])                 #85 store result (destructive)
++
++
++# Line 4
++ld(AC, Y)                       #86 load (new) Y position
++ld([sysArgs+4], X)              #87 store arg4 in X (reset X)
++
++ld([sysArgs+3])                 #88 load (high) byte
++anda(0x08)                      #89 mask bit (r1c1)
++bne('.fgc10')                   #90 branch if bit set (AC not equal 0)
++bra('.drawpxl10')               #91 jump to "draw pixel"
++ld([sysArgs+0])                 #92a select BG color
++label('.fgc10')
++ld([sysArgs+1])                 #92b select FG color
++label('.drawpxl10')
++st([Y,Xpp])                     #93 Draw pixel, increase X
++
++ld([sysArgs+2])                 #94 load (low) byte
++anda(0x40)                      #95 mask bit (r1c2)
++bne('.fgc11')                   #96 branch if bit set (AC not equal 0)
++bra('.drawpxl11')               #97 jump to "draw pixel"
++ld([sysArgs+0])                 #98a select BG color
++label('.fgc11')
++ld([sysArgs+1])                 #98b select FG color
++label('.drawpxl11')
++st([Y,Xpp])                     #99 Draw pixel, increase X
++
++ld([sysArgs+2])                 #100 load (low) byte
++anda(0x02)                      #101 mask bit (r1c3)
++bne('.fgc12')                   #102 branch if bit set (AC not equal 0)
++bra('.drawpxl12')               #103 jump to "draw pixel"
++ld([sysArgs+0])                 #104a select BG color
++label('.fgc12')
++ld([sysArgs+1])                 #104b select FG color
++label('.drawpxl12')
++st([Y,Xpp])                     #105 Draw pixel, increase X
++
++ld([sysArgs+5])                 #106 load arg5 (vert)
++adda(1)                         #107 increase by one
++st([sysArgs+5])                 #108 store result (destructive)
++
++
++# Line 5
++ld(AC, Y)                       #109 load (new) Y position
++ld([sysArgs+4], X)              #110 store arg4 in X (reset X)
++
++ld([sysArgs+3])                 #111 load (high) byte
++anda(0x04)                      #112 mask bit (r1c1)
++bne('.fgc13')                   #113 branch if bit set (AC not equal 0)
++bra('.drawpxl13')               #114 jump to "draw pixel"
++ld([sysArgs+0])                 #115a select BG color
++label('.fgc13')
++ld([sysArgs+1])                 #115b select FG color
++label('.drawpxl13')
++st([Y,Xpp])                     #116 Draw pixel, increase X
++
++ld([sysArgs+2])                 #117 load (low) byte
++anda(0x20)                      #118 mask bit (r1c2)
++bne('.fgc14')                   #119 branch if bit set (AC not equal 0)
++bra('.drawpxl14')               #120 jump to "draw pixel"
++ld([sysArgs+0])                 #121a select BG color
++label('.fgc14')
++ld([sysArgs+1])                 #121b select FG color
++label('.drawpxl14')
++st([Y,Xpp])                     #122 Draw pixel, increase X
++
++ld([sysArgs+2])                 #123 load (low) byte
++anda(0x01)                      #124 mask bit (r1c3)
++bne('.fgc15')                   #125 branch if bit set (AC not equal 0)
++bra('.drawpxl15')               #126 jump to "draw pixel"
++ld([sysArgs+0])                 #127a select BG color
++label('.fgc15')
++ld([sysArgs+1])                 #127b select FG color
++label('.drawpxl15')
++st([Y,Xpp])                     #128 Draw pixel, increase X
++
++# Return to interpreter
++ld(hi('REENTER'), Y)            #129
++jmp(Y,'REENTER')                #130
++ld(-134/2)                      #131  
++
++
+ #-----------------------------------------------------------------------
+ #
+ #  End of core -- Start of storage area
+-- 
+2.17.1
+

@@ -36,12 +36,13 @@ gigatron-rom
        |                        assembler, debugger, MIDI music, demos (sprites,
        |                        lines, game of life, Tetronis game...)
        +--- Cwiiis/             Gigatris game
-       +--- dhkolf/             Emulation library
+       +--- dhkolf/             Fast emulator for Linux, using SDL2 and lua
        +--- flok99/             Simple (and slow) visualizer using SDL2
        +--- gigawalt/           Walter's script
        +--- kervinck/           Ramblings (all work in progress)
        +--- PhilThomas/         Javascript-based Gigatron emulator
        +--- tbraun-de/          Gigatron Mac; Python port of gtemu.c; maze.gt1
+       +--- xopr/               NetTerm: Terminal program for SPI interface
        `--- xxxbxxx/            Bricks game; RPi port of BabelFish; frogstroll
 ```
 
