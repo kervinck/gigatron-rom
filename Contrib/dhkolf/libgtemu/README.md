@@ -2,7 +2,7 @@
 libgtemu -- David Kolf's Library for Gigatron Emulation
 =======================================================
 
-Version 0.1.0
+Version 0.2.0
 
 About
 -----
@@ -66,6 +66,26 @@ The following features might be nice to have:
      factor of 5.
 
 [scm]: https://cdn.hackaday.io/files/20781889094304/Schematics.pdf
+
+Stand-alone emulator
+--------------------
+
+The stand-alone emulator offers the following basic features on the
+command line:
+
+	usage: ./gtemu [-h] [-l filename.gt1] [-64] [filename.rom]
+
+	Arguments:
+	 -h               Display this help.
+	 -l filename.gt1  File to be sent with Ctrl-F2.
+	 -64              Expand RAM to 64k.
+	    filename.rom  ROM file (default name: gigatron.rom).
+
+	Special keys:
+	    Ctrl-F2       Send designated GT1 file.
+	    Alt-L         Perform hard reset and select loader.
+	    ESC           Close the emulation.
+
 
 Structure and C-API
 -------------------
