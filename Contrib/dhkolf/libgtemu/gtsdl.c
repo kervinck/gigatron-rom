@@ -10,6 +10,13 @@
 
 #include "gtsdl.h"
 
+static unsigned short audiobuffers[3][1024];
+static size_t firstsample[3];
+static size_t lastsample[3];
+static unsigned short lastsamplevalue;
+static int activeplaybackbuffer;
+static int activerecordingbuffer;
+
 static void resettime (struct GTSDLState *s)
 {
 	unsigned int currenttime = SDL_GetTicks();
@@ -35,6 +42,45 @@ static SDL_Texture *createtexture (SDL_Renderer *renderer)
 		GT_SCREENWIDTH * 4, GT_SCREENHEIGHT);
 }
 
+static void audiocallback (void * ud, unsigned char *stream, int len)
+{
+	unsigned short *out = (unsigned short *) stream;
+	int i, outsize;
+	i = 0;
+	outsize = 0;
+	while (outsize < len &&
+		activeplaybackbuffer != activerecordingbuffer) {
+
+		int f = firstsample[activeplaybackbuffer];
+		int l = lastsample[activeplaybackbuffer];
+
+		for (; outsize + 1 < len && f < l; outsize+=2, f++, i++) {
+			out[i] = lastsamplevalue =
+				audiobuffers[activeplaybackbuffer][f];
+		}
+		firstsample[activeplaybackbuffer] = f;
+		if (f >= l) {
+			activeplaybackbuffer++;
+			if (activeplaybackbuffer >= 3) {
+				activeplaybackbuffer = 0;
+			}
+		}
+	}
+	for (; outsize + 1 < len; outsize+=2, i++) {
+		/* Avoid clicks by repeating the value of the last
+		   sample. */
+		out[i] = lastsamplevalue;
+	}
+}
+
+SDL_AudioCallback gtsdl_getaudiocallback()
+{
+	/* To avoid needing special compiler flags for linking as a shared
+	   object, declare audiocallback as static and publish a function
+	   that returns its address. */
+	return audiocallback;
+}
+
 static int setupaudio (struct GTSDLState *s, SDL_AudioDeviceID audiodev,
 	SDL_AudioSpec *audiospec)
 {
@@ -56,10 +102,6 @@ static int setupaudio (struct GTSDLState *s, SDL_AudioDeviceID audiodev,
 	if (SDL_AUDIO_BITSIZE(audiospec->format) != 16) {
 		SDL_SetError("Only 16 bit sounds are supported, not %d",
 			SDL_AUDIO_BITSIZE(audiospec->format));
-		return 0;
-	}
-	if (audiospec->callback != NULL) {
-		SDL_SetError("Audio output must be in queue mode, without callback");
 		return 0;
 	}
 
@@ -103,12 +145,19 @@ int gtsdl_openwindow (struct GTSDLState *s, const char *title)
 		return 0;
 	}
 
+	SDL_memset(audiobuffers, 0, sizeof(audiobuffers));
+	SDL_memset(firstsample, 0, sizeof(firstsample));
+	SDL_memset(lastsample, 0, sizeof(lastsample));
+	activeplaybackbuffer = 2;
+	activerecordingbuffer = 0;
+	lastsamplevalue = 0;
+
 	SDL_memset(&desired, 0, sizeof(desired));
 	desired.freq = 48000;
 	desired.format = AUDIO_U16;
 	desired.channels = 1;
-	desired.samples = 4096;
-	desired.callback = NULL;
+	desired.samples = 800; /* samples per frame: 48000 / 60 */
+	desired.callback = gtsdl_getaudiocallback();
 #if 0
 	/* For some reason SDL_OpenAudioDevice doesn't work for me,
 	   but SDL_OpenAudio does. */
@@ -125,7 +174,7 @@ int gtsdl_openwindow (struct GTSDLState *s, const char *title)
 	if (!setupaudio(s, audiodev, &obtained)) {
 		return 0;
 	} else if (s->audiodev != 0) {
-		SDL_PauseAudio(0);
+		SDL_PauseAudioDevice(s->audiodev, 0);
 	}
 
 	SDL_StartTextInput();
@@ -190,21 +239,30 @@ SDL_Texture *gtsdl_render (struct GTSDLState *s, struct GTState *gt,
 {
 	void *pixels;
 	int pitch;
-	static unsigned short audiobuffer[1024];
-	size_t audiolen = 0;
+
+	SDL_LockAudioDevice(s->audiodev);
+	activerecordingbuffer++;
+	if (activerecordingbuffer >= 3) {
+		activerecordingbuffer = 0;
+	}
+	if (activerecordingbuffer == activeplaybackbuffer) {
+		activeplaybackbuffer++;
+		if (activeplaybackbuffer >= 3) {
+			activeplaybackbuffer = 0;
+		}
+	}
+	firstsample[activerecordingbuffer] = 0;
+	lastsample[activerecordingbuffer] = 0;
+	SDL_UnlockAudioDevice(s->audiodev);
 
 	SDL_LockTexture(s->gamescreen, NULL, &pixels, &pitch);
 
 	gtemu_processscreen(gt, ph, pixels, pitch,
-		audiobuffer, 1024, &audiolen);
+		audiobuffers[activerecordingbuffer], 1024,
+		&lastsample[activerecordingbuffer]);
 	gtemu_placelights(ph, pixels, pitch, s->fps >= 59 && s->fps <= 61);
 
 	SDL_UnlockTexture(s->gamescreen);
-
-	if (s->audiodev != 0 && audiolen > 0) {
-		SDL_QueueAudio(s->audiodev, audiobuffer,
-			audiolen * sizeof(audiobuffer[0]));
-	}
 
 	return s->gamescreen;
 }
