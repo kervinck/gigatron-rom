@@ -281,6 +281,7 @@ int main (int argc, char *argv[])
 			if (outputpos > 0) {
 				fwrite(outputbuffer, sizeof(outputbuffer[0]),
 					outputpos, stdout);
+				fflush(stdout);
 				outputpos = 0;
 			}
 			if (hasevent == 0) {
