@@ -31,6 +31,7 @@ static void clearstate (struct GTSDLState *s, int standalone)
 	s->gamescreen = NULL;
 	s->audiodev = 0;
 	s->fps = 0;
+	s->textkeydown = 0;
 	s->standalone = standalone;
 }
 
