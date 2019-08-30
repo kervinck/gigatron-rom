@@ -133,12 +133,16 @@ static int onkeydown (struct MainState *mstate, struct GTState *gt,
 	struct GTPeriph *ph, SDL_KeyboardEvent *ev)
 {
 	if (ev->keysym.sym == 'l' && ev->keysym.mod == KMOD_LALT) {
-		startloader(gt, ph);
+		if (!ev->repeat) {
+			startloader(gt, ph);
+		}
 		return 1;
 	}
 	if (ev->keysym.mod == KMOD_LCTRL || ev->keysym.mod == KMOD_RCTRL) {
 		if (ev->keysym.sym == SDLK_F2) {
-			sendgt1file(mstate, ph);
+			if (!ev->repeat) {
+				sendgt1file(mstate, ph);
+			}
 			return 1;
 		}
 	}
