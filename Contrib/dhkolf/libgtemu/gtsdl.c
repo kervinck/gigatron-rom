@@ -159,18 +159,9 @@ int gtsdl_openwindow (struct GTSDLState *s, const char *title)
 	desired.channels = 1;
 	desired.samples = 800; /* samples per frame: 48000 / 60 */
 	desired.callback = gtsdl_getaudiocallback();
-#if 0
-	/* For some reason SDL_OpenAudioDevice doesn't work for me,
-	   but SDL_OpenAudio does. */
+
 	audiodev = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained,
-		SDL_AUDIO_ALLOW_FREQUENCY_CHANGE);
-#else
-	if (SDL_OpenAudio(&desired, &obtained) < 0) {
-		audiodev = 0;
-	} else {
-		audiodev = 1;
-	}
-#endif
+		SDL_AUDIO_ALLOW_FREQUENCY_CHANGE | SDL_AUDIO_ALLOW_FORMAT_CHANGE);
 
 	if (!setupaudio(s, audiodev, &obtained)) {
 		return 0;
