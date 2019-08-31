@@ -209,6 +209,8 @@ static void parseargs (int argc, char *argv[], struct MainState *a)
 
 static void displayhelp (const char *progname)
 {
+	SDL_version linkedsdl;
+	SDL_GetVersion(&linkedsdl);
 	if (progname == NULL) {
 		progname = "gtemu";
 	}
@@ -224,8 +226,11 @@ static void displayhelp (const char *progname)
 		"Special keys:\n"
 		"    Ctrl-F2       Send designated GT1 file.\n"
 		"    Alt-L         Perform hard reset and select loader.\n"
-		"    ESC           Close the emulation.\n",
-		progname);
+		"    ESC           Close the emulation.\n"
+		"\n"
+		"libgtemu version 0.2.0, using SDL version %d.%d.%d.\n",
+		progname, linkedsdl.major, linkedsdl.minor,
+		linkedsdl.patch);
 }
 
 int main (int argc, char *argv[])
