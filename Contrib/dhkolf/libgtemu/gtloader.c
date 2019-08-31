@@ -22,7 +22,9 @@ enum LoaderState {
 	L4_PAYLOAD_RH,
 	L5_FILLER_RH,
 	L6_CHECKSUM_RH,
-	L7_FINISH_RH
+	L7_FINISH_RH,
+	LT1_KEYUP_FV,
+	LT2_KEYDOWN_FV
 };
 
 static void sendbit (struct GTState *gt, struct GTPeriph *ph,
@@ -144,10 +146,50 @@ static void sendchecksumbit (struct GTState *gt, struct GTPeriph *ph)
 	}
 }
 
-void gtloader_onfallingvsync(struct GTState *gt, struct GTPeriph *ph)
+static void sendtextrelease (struct GTState *gt, struct GTPeriph *ph)
 {
-	if (ph->loader.state == L1_INIT_FV) {
+	ph->loader.remainingframe--;
+	if (ph->loader.remainingframe == 0) {
+		ph->loader.remainingframe = 3;
+		gt->in = 0xff;
+		if (ph->loader.remainingdata > 0) {
+			ph->loader.state = LT2_KEYDOWN_FV;
+		} else {
+			ph->loader.state = L_IDLE;
+		}
+	}
+}
+
+static void sendtextbyte (struct GTState *gt, struct GTPeriph *ph)
+{
+	ph->loader.remainingframe--;
+	if (ph->loader.remainingframe == 0) {
+		gt->in = ph->loader.data[0];
+		if (gt->in == '\n') {
+			ph->loader.remainingframe = 9;
+		} else {
+			ph->loader.remainingframe = 3;
+		}
+		ph->loader.data++;
+		ph->loader.remainingdata--;
+		ph->loader.state = LT1_KEYUP_FV;
+	}
+}
+
+void gtloader_onfallingvsync (struct GTState *gt, struct GTPeriph *ph)
+{
+	switch (ph->loader.state) {
+	case L1_INIT_FV:
 		ph->loader.state = L2_INIT_RH;
+		return;
+	case LT1_KEYUP_FV:
+		sendtextrelease(gt, ph);
+		return;
+	case LT2_KEYDOWN_FV:
+		sendtextbyte(gt, ph);
+		return;
+	default:
+		return;
 	}
 }
 
@@ -230,6 +272,22 @@ int gtloader_validategt1 (const char *data, size_t datasize)
 	if (datasize < 3) {
 		return 0;
 	}
+
+	return 1;
+}
+
+int gtloader_sendtext (struct GTPeriph *ph,
+	const char *data, size_t datasize)
+{
+	if (ph->loader.state != L_IDLE) {
+		return 0;
+	}
+
+	ph->loader.data = (const unsigned char *) data;
+	ph->loader.remainingdata = datasize;
+	ph->loader.remainingframe = 3;
+
+	ph->loader.state = LT1_KEYUP_FV;
 
 	return 1;
 }

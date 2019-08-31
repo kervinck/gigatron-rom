@@ -110,5 +110,8 @@ extern int gtloader_isactive (struct GTPeriph *ph);
 
 extern int gtloader_validategt1 (const char *data, size_t datasize);
 
+extern int gtloader_sendtext (struct GTPeriph *ph,
+	const char *data, size_t datasize);
+
 #endif /* GTEMU_H */
 

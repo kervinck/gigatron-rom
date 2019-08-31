@@ -17,24 +17,53 @@
 struct MainState {
 	const char *romfile;
 	const char *sendfile;
+	const char *textfile;
 	int displayhelp;
 	int ramexpansion;
 	char *sendbuffer;
 	size_t sendbuffersize;
 };
 
-static int loadrom (const char *fname, struct GTState *gt)
+static int loadfile (const char *fname, void *buffer, size_t elementsize,
+	size_t elementcount, size_t *readcount)
 {
-	FILE *f;
+	FILE *f = fopen(fname, "rb");
 
-	f = fopen(fname, "rb");
+	if (f == NULL) {
+		fprintf(stderr, "Failed to open %s: %s\n",
+			fname, strerror(errno));
+		return 0;
+	}
 
-	if (!f) return 0;
+	*readcount = fread(buffer, elementsize, elementcount, f);
 
-	fread(gt->rom, sizeof(struct GTRomEntry), gt->romcount, f);
+	if (*readcount >= elementcount) {
+		char dummy;
+		/* to check for EOF, try to read a further byte */
+		if (fread(&dummy, 1, 1, f) > 0) {
+			fprintf(stderr, "File %s is too large.\n", fname);
+			fclose(f);
+			return 0;
+		}
+	} else if (ferror(f)) {
+		fprintf(stderr, "Error reading %s: %s\n",
+			fname, strerror(errno));
+		fclose(f);
+		return 0;
+	}
 
 	fclose(f);
 
+	return 1;
+}
+
+static int loadrom (const char *fname, struct GTState *gt)
+{
+	size_t datasize;
+	if (!loadfile(fname, gt->rom,
+		sizeof(struct GTRomEntry), gt->romcount, &datasize)) {
+		return 0;
+	}
 	return 1;
 }
 
@@ -78,7 +107,6 @@ static void startloader (struct GTState *gt, struct GTPeriph *ph)
 
 static void sendgt1file (struct MainState *mstate, struct GTPeriph *ph)
 {
-	FILE *f;
 	size_t datasize;
 
 	if (mstate->sendfile == NULL) {
@@ -94,28 +122,10 @@ static void sendgt1file (struct MainState *mstate, struct GTPeriph *ph)
 		return;
 	}
 
-	f = fopen(mstate->sendfile, "rb");
-
-	if (f == NULL) {
-		fprintf(stderr, "Failed to open %s: %s\n",
-			mstate->sendfile, strerror(errno));
+	if (!loadfile(mstate->sendfile, mstate->sendbuffer,
+		1, mstate->sendbuffersize, &datasize)) {
 		return;
 	}
-
-	datasize = fread(mstate->sendbuffer, 1, mstate->sendbuffersize, f);
-
-	if (datasize >= mstate->sendbuffersize) {
-		fprintf(stderr, "File too large.\n");
-		fclose(f);
-		return;
-	} else if (ferror(f)) {
-		fprintf(stderr, "Error reading %s: %s\n",
-			mstate->sendfile, strerror(errno));
-		fclose(f);
-		return;
-	}
-
-	fclose(f);
 
 	if (!gtloader_validategt1(mstate->sendbuffer, datasize)) {
 		fprintf(stderr, "%s is not a valid GT1 file.\n",
@@ -124,6 +134,34 @@ static void sendgt1file (struct MainState *mstate, struct GTPeriph *ph)
 	}
 
 	if (!gtloader_sendgt1(ph, mstate->sendbuffer, datasize)) {
+		/* Should not happen as we checked isactive earlier. */
+		fprintf(stderr, "Loader peripherals are not ready.\n");
+	}
+}
+
+static void sendtextfile (struct MainState *mstate, struct GTPeriph *ph)
+{
+	size_t datasize;
+
+	if (mstate->textfile == NULL) {
+		fprintf(stderr, "No file specified for sending, use "
+			"the -t option to specify a file.\n");
+		return;
+	}
+
+	if (gtloader_isactive(ph)) {
+		/* Check first whether a file is still being sent, to
+		   avoid changing data during the progress. */
+		fprintf(stderr, "A file is already being sent.\n");
+		return;
+	}
+
+	if (!loadfile(mstate->textfile, mstate->sendbuffer,
+		1, mstate->sendbuffersize, &datasize)) {
+		return;
+	}
+
+	if (!gtloader_sendtext(ph, mstate->sendbuffer, datasize)) {
 		/* Should not happen as we checked isactive earlier. */
 		fprintf(stderr, "Loader peripherals are not ready.\n");
 	}
@@ -139,11 +177,19 @@ static int onkeydown (struct MainState *mstate, struct GTState *gt,
 		return 1;
 	}
 	if (ev->keysym.mod == KMOD_LCTRL || ev->keysym.mod == KMOD_RCTRL) {
-		if (ev->keysym.sym == SDLK_F2) {
+		switch(ev->keysym.sym) {
+		case SDLK_F2:
 			if (!ev->repeat) {
 				sendgt1file(mstate, ph);
 			}
 			return 1;
+		case SDLK_F3:
+			if (!ev->repeat) {
+				sendtextfile(mstate, ph);
+			}
+			return 1;
+		default:
+			return 0;
 		}
 	}
 	return 0;
@@ -154,6 +200,7 @@ static void parseargs (int argc, char *argv[], struct MainState *a)
 	int i;
 	a->romfile = NULL;
 	a->sendfile = NULL;
+	a->textfile = NULL;
 	a->displayhelp = 0;
 	a->ramexpansion = 0;
 	for (i = 1; i < argc; i++) {
@@ -190,6 +237,24 @@ static void parseargs (int argc, char *argv[], struct MainState *a)
 			}
 			a->sendfile = argv[i];
 			break;
+		case 't':
+			if (argv[i][2] != '\0') {
+				a->textfile = argv[i] + 2;
+				break;
+			}
+			i++;
+			if (i >= argc) {
+				/* no file name given */
+				a->displayhelp = 1;
+				return;
+			}
+			if (argv[i][0] == '-') {
+				/* another option */
+				a->displayhelp = 1;
+				return;
+			}
+			a->textfile = argv[i];
+			break;
 		case '6':
 			if (argv[i][2] != '4' || argv[i][3] != '\0') {
 				a->displayhelp = 1;
@@ -215,16 +280,19 @@ static void displayhelp (const char *progname)
 		progname = "gtemu";
 	}
 	fprintf(stderr,
-		"usage: %s [-h] [-l filename.gt1] [-64] [filename.rom]\n"
+		"usage: %s [-h] [-l filename.gt1] [-t filename.gtb] "
+		"[-64] [filename.rom]\n"
 		"\n"
 		"Arguments:\n"
 		" -h               Display this help.\n"
 		" -l filename.gt1  File to be sent with Ctrl-F2.\n"
+		" -t filename.gtb  Text file to be sent with Ctrl-F3.\n"
 		" -64              Expand RAM to 64k.\n"
 		"    filename.rom  ROM file (default name: gigatron.rom).\n"
 		"\n"
 		"Special keys:\n"
 		"    Ctrl-F2       Send designated GT1 file.\n"
+		"    Ctrl-F3       Send designated text file.\n"
 		"    Alt-L         Perform hard reset and select loader.\n"
 		"    ESC           Close the emulation.\n"
 		"\n"
@@ -267,7 +335,6 @@ int main (int argc, char *argv[])
 	if (!loadrom(mstate.romfile != NULL ? mstate.romfile :
 		"gigatron.rom", &gt)) {
 
-		fprintf(stderr, "failed to open ROM.\n");
 		return EXIT_FAILURE;
 	}
 

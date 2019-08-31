@@ -164,6 +164,24 @@ static int lgtemusendgt1 (lua_State *L)
 	return 0;
 }
 
+static int lgtemusendtext (lua_State *L)
+{
+	struct GTEmulationData *emu = checkemu(L, 1);
+	size_t len;
+	const char *str = lua_tolstring(L, 2, &len);
+
+	if (gtloader_sendtext(&emu->ph, str, len)) {
+		/* prevent garbage collection while the loader is working */
+		lua_pushvalue(L, 1);
+		lua_pushvalue(L, 2);
+		lua_settable(L, lua_upvalueindex(1));
+	} else {
+		luaL_error(L, "loader is busy");
+	}
+
+	return 0;
+}
+
 static int lgtemucreatebuffer (lua_State *L)
 {
 	struct GTEmulationData *emu = checkemu(L, 1);
@@ -402,6 +420,7 @@ static luaL_Reg lgtemufns[] = {
 	{"processtick", lgtemuprocesstick},
 	{"processscreen", lgtemuprocessscreen},
 	{"sendgt1", lgtemusendgt1},
+	{"sendtext", lgtemusendtext},
 	{"createbuffer", lgtemucreatebuffer},
 	{"getbuffer", lgtemugetbuffer},
 	{"resetbuffer", lgtemuresetbuffer},
