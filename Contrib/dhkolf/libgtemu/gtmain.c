@@ -154,13 +154,7 @@ static void sendgt1file (struct MainState *mstate, struct GTState *gt,
 		startloader(gt, ph, 1);
 	}
 
-	if (!gtloader_sendgt1(ph, mstate->sendbuffer, datasize)) {
-		/* Should not happen as we checked isactive earlier. */
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
-			"Sending GT1 program",
-			"Loader peripherals are not ready.",
-			NULL);
-	}
+	gtloader_sendgt1(ph, mstate->sendbuffer, datasize);
 }
 
 static void sendtextfile (struct MainState *mstate, struct GTPeriph *ph)
@@ -191,13 +185,7 @@ static void sendtextfile (struct MainState *mstate, struct GTPeriph *ph)
 		return;
 	}
 
-	if (!gtloader_sendtext(ph, mstate->sendbuffer, datasize)) {
-		/* Should not happen as we checked isactive earlier. */
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
-			"Sending text",
-			"Loader peripherals are not ready.",
-			NULL);
-	}
+	gtloader_sendtext(ph, mstate->sendbuffer, datasize);
 }
 
 static int onkeydown (struct MainState *mstate, struct GTState *gt,
@@ -236,6 +224,35 @@ static int onkeydown (struct MainState *mstate, struct GTState *gt,
 		}
 	}
 	return 0;
+}
+
+static void ondroppedfile (struct MainState *mstate, struct GTState *gt,
+	struct GTPeriph *ph, const char *fname)
+{
+	size_t datasize;
+
+	if (gtloader_isactive(ph)) {
+		/* Check first whether a file is still being sent, to
+		   avoid changing data during the progress. */
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING,
+			fname,
+			"A file is already being sent.",
+			NULL);
+		return;
+	}
+
+	if (!loadfile(fname, mstate->sendbuffer,
+		1, mstate->sendbuffersize, &datasize)) {
+		return;
+	}
+
+	if (gtloader_validategt1(mstate->sendbuffer, datasize)) {
+		startloader(gt, ph, 1);
+		gtloader_sendgt1(ph, mstate->sendbuffer, datasize);
+	} else {
+		gtloader_sendtext(ph, mstate->sendbuffer, datasize);
+	}
+
 }
 
 static void parseargs (int argc, char *argv[], struct MainState *a)
@@ -421,6 +438,12 @@ int main (int argc, char *argv[])
 				if (onkeydown(&mstate, &gt, &ph, &ev.key)) {
 					continue;
 				}
+			}
+			if (ev.type == SDL_DROPFILE) {
+				ondroppedfile(&mstate, &gt, &ph,
+					ev.drop.file);
+				SDL_free(ev.drop.file);
+				continue;
 			}
 			gtsdl_handleevent(&s, &gt, &ev);
 		}
