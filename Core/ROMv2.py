@@ -2823,7 +2823,7 @@ importImage('Apps/Pictures/Jupiter-160x120.rgb', 160, 120, 'packedJupiter')
 #
 #-----------------------------------------------------------------------
 
-f = open('Apps/Racer/RacerHorizon-256x16.rgb', 'rb')
+f = open('Apps/Racer/Horizon-256x16.rgb', 'rb')
 raw = f.read()
 f.close()
 

@@ -4281,7 +4281,7 @@ v6502_rti:    11e4 011c  ld   [$1c]
               11fd 0200  nop
               11fe 0200  nop
               11ff 0200  nop              ;+-----------------------------------+
-                                          ;| Images/Parrot-160x120.rgb         |
+                                          ;| Apps/Pictures/Parrot-160x120.rgb  |
                                           ;+-----------------------------------+
 packedParrot: 1200 0000  ld   $00         ;Pixels for packedParrot line 0
               1201 0000  ld   $00
@@ -19052,9 +19052,9 @@ packedParrot: 1200 0000  ld   $00         ;Pixels for packedParrot line 0
               4dfc 8002  adda $02
               4dfd 1406  ld   $06,y
               4dfe fe00  bra  ac
-              4dff e0bc  jmp  y,$bc       ;End of Images/Parrot-160x120.rgb, size 15360
+              4dff e0bc  jmp  y,$bc       ;End of Apps/Pictures/Parrot-160x120.rgb, size 15360
                                           ;+-----------------------------------+
-                                          ;| Images/Jupiter-160x120.rgb        |
+                                          ;| Apps/Pictures/Jupiter-160x120.rgb |
                                           ;+-----------------------------------+
 packedJupiter:
               4e00 0000  ld   $00         ;Pixels for packedJupiter line 0
@@ -29518,7 +29518,7 @@ packedJupiter:
               89fc 8002  adda $02
               89fd 1406  ld   $06,y
               89fe fe00  bra  ac
-              89ff e0bc  jmp  y,$bc       ;End of Images/Jupiter-160x120.rgb, size 15360
+              89ff e0bc  jmp  y,$bc       ;End of Apps/Pictures/Jupiter-160x120.rgb, size 15360
                                           ;+-----------------------------------+
                                           ;| Apps/Racer/SYS_Racer_v1.py        |
                                           ;+-----------------------------------+
@@ -31524,7 +31524,7 @@ Snake:        8a9a 0002  ld   $02         ;| RAM segment address (high byte firs
               91c2 00d3  ld   $d3
               91c3 0000  ld   $00         ;End of Apps/Snake/Snake_v3.gcl, size 1834
                                           ;+-----------------------------------+
-                                          ;| Images/RacerHorizon-256x16.rgb    |
+                                          ;| Apps/Racer/Horizon-256x16.rgb     |
                                           ;+-----------------------------------+
 zippedRacerHorizon:
               91c4 0041  ld   $41
@@ -34605,7 +34605,7 @@ zippedRacerHorizon:
               9e01 00c3  ld   $c3
               9e02 00eb  ld   $eb
               9e03 001a  ld   $1a
-              9e04 0004  ld   $04         ;End of Images/RacerHorizon-256x16.rgb, size 3137
+              9e04 0004  ld   $04         ;End of Apps/Racer/Horizon-256x16.rgb, size 3137
                                           ;+-----------------------------------+
                                           ;| Apps/Racer/Racer_v2.gcl           |
                                           ;+-----------------------------------+

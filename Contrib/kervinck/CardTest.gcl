@@ -1,0 +1,413 @@
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       CardTest                                                        |
+|                                                                       |
+|       !!! Work in progress !!!                                        |
+|                                                                       |
+|       The goal is to connect to a FAT32-formatted MicroSD card        |
+|       over the SPI interface, and then list its root directory.       |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+{
+  References:
+
+        http://www.dejazzer.com/ee379/lecture_notes/lec12_sd_card.pdf
+        SPI and SD cards
+
+        https://electronics.stackexchange.com/questions/303745/sd-card-initialization-problem-cmd8-wrong-response
+        SD card initialization problem - CMD8 wrong response
+
+        http://www.rjhcoding.com/avrc-sd-interface-1.php
+        http://www.rjhcoding.com/avrc-sd-interface-2.php
+        http://www.rjhcoding.com/avrc-sd-interface-3.php
+        http://www.rjhcoding.com/avrc-sd-interface-4.php
+        Interfacing an SD Card Part 1-4
+
+        https://www.pjrc.com/tech/8051/ide/fat32.html
+        Understanding FAT32 Filesystems
+}
+
+gcl0x
+
+{-----------------------------------------------------------------------+
+|                       RAM page 2                                      |
++-----------------------------------------------------------------------}
+
+\romType, \romTypeValue_ROMv4-  {Version check >= ROMv4}
+[if<0 do _frameCount _vPCH: loop]
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Memory card section                                             |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+{ ResetCard }
+[def
+  push
+
+  {
+  |  """To communicate with the SD card, your program has to place the SD
+  |     card into the SPI mode. To do this, set the MOSI and CS lines to
+  |     logic value 1 and toggle SD CLK for at least 74 cycles."""
+  }
+
+  10 [do i=                     {Lets do 10 bytes for 80 cycles}
+    255 SendByteToCard!         {Keep MOSI line high by only sending ones}
+    i 1- if>0loop]
+
+  {
+  |  """After the 74 cycles (or more) have occurred, your program
+  |     should set the CS line to 0 and send the command CMD0:
+  |         01.000000 00000000 00000000 00000000 00000000 1001010.1
+  |     This is the reset command, which puts the SD card into the SPI
+  |     mode if executed when the CS line is low."""
+  }
+
+  EnableCard!                   {Sets /SS0 to 0}
+  [def #$40 #0 #0 #0 #0 #$95]   {CMD0 Reset}
+  SendCommandToCard!
+
+  {
+  |  """The SD card will respond to the reset command by sending a basic
+  |     8-bit response on the MISO line. The structure of this response is
+  |     shown in Fig.6. The first bit is always a 0, while the other bits
+  |     specify any errors that may have occured when processing the last
+  |     message. If the command you sent was successfully received, then
+  |     you will receive the message (00000001)_2.
+  |
+  |         7   6   5   4   3   2   1   0
+  |       +---+---+---+---+---+---+---+---+
+  |       | 0 |   |   |   |   |   |   |   |
+  |       +---+---+---+---+---+---+---+---+
+  |             ^   ^   ^   ^   ^   ^   ^
+  |             |   |   |   |   |   |   `--------in idle state
+  |             |   |   |   |   |   `------------erase state
+  |             |   |   |   |   `----------------illegal command
+  |             |   |   |   `--------------------CRC error
+  |             |   |   `------------------------erase sequence error
+  |             |   `----------------------------address error
+  |             `--------------------------------parameter error
+  |     Figure 6 Format of a basic 8-bit Response to every command in SPI mode"""
+  }
+
+  WaitForCardReply!
+  DisableCard!
+  CardReply 1^                  {Return result: only 1 means success}
+
+  pop ret
+] ResetCard=
+
+{ TestCard }
+[def
+  push
+
+  {
+  |  """Following a successful reset, test if your system can successfully
+  |     communicate with the SD card by sending a different command. For
+  |     example, send one of the following commands, while keeping the CS
+  |     at value 0: (i) Command CMD8
+  |             01.001000 00000000 00000000 00000001 10101010 1000011.1
+  |                                                          (^^^^^^^ Fixed --marcelk)
+  |
+  |     This command is only available in the latest cards, compatible with
+  |     SD card Specifications version 2.0. For most older cards this command
+  |     should fail and cause the SD card to respond with a message that
+  |     this command is illegal.
+  |     (ii) Command CMD58
+  |             01.111010 00000000 00000000 00000000 00000000 0111010.1
+  |     This command requests the contents of the operating conditions
+  |     register for the connected card.
+  |
+  |     A response to these commands consists of 40 bits (see Fig.7), where
+  |     the first 8 bits are identical to the basic 8-bit response, while
+  |     the remaining 32 bits contain specific information about the SD
+  |     card. Although the actual contents of the remaining 32 bits are not
+  |     important for this discussion, a valid response indicates that your
+  |     command was transmitted and processed successfully. If successful,
+  |     the first 8 bits of the response will be either 00000001 or 00000101
+  |     depending on the version of your SD card.
+  |
+  |    39 38 37 36 35 34 33 32 31...28 27 .. 12 11 .. 8 7    ..     0
+  |   +--+--+--+--+--+--+--+--+-------+--------+-------+-------------+
+  |   | 0|  |  |  |  |  |  |  |Version|Reserved|Voltage|Check Pattern|
+  |   +--+--+--+--+--+--+--+--+-------+--------+-------+-------------+
+  |        ^  ^  ^  ^  ^  ^  ^
+  |        |  |  |  |  |  |  `-----in idle state
+  |        |  |  |  |  |  `--------erase state
+  |        |  |  |  |  `-----------illegal command
+  |        |  |  |  `--------------CRC error
+  |        |  |  `-----------------erase sequence error
+  |        |  `--------------------address error
+  |        `-----------------------parameter error
+  |   Figure 7 The format of the 40-bit Response."""
+  }
+
+  EnableCard!
+  [def #$48 #0 #0 #1 #$aa #$87] {CMD8 Get Version}
+  SendCommandToCard!
+  WaitForCardReply!
+  DisableCard!
+
+  CardReply 1^ [if<>0 4^]      {Return result: 1 or 5 means success}
+
+  pop ret
+] CheckCard=
+
+{ EnableCard }
+[def
+  push
+  {
+        Bus     ROM v4+
+        ---     --------
+        A0      SCLK
+        A1      (unused)
+        A2      /SS0
+        A3      /SS1
+        A4      /SS2
+        A5      /SS3
+        A6      B0
+        A7      B1
+        A8-A14  (unused)
+        A15     MOSI
+  }
+  255 SendByteToCard!           {Extra clocks for reliabilty}
+  \SYS_ExpanderControl_v4_40    {SYS function}
+  _sysFn= $8078 40!             {Enable SPI0, keep MOSI high, bank=1}
+  pop ret
+] EnableCard=
+
+{ DisableCard }
+[def
+  push
+  \SYS_ExpanderControl_v4_40    {SYS function}
+  _sysFn= $807c 40!             {Disable SPI0, keep MOSI high, bank=1}
+  255 SendByteToCard!           {Extra clocks for reliabilty}
+  pop ret
+] DisableCard=
+
+{ SendByteToCard }
+[def
+  Address.                      {Place byte in exchange buffer}
+  Address _sysArgs0=
+  1+      _sysArgs2=
+  \SYS_SpiExchangeBytes_v4_134  {SYS function}
+  _sysFn= 134!                  {Exchanges a single byte}
+  Address,                      {Reply byte}
+  ret
+] SendByteToCard=
+
+{ SendCommandToCard }
+[def
+  push
+
+  { Copy 6 command bytes to exchange buffer }
+  p= Address q=
+  6 [do i=
+    p, <p++                     {Fetch byte and advance read pointer}
+    q. <q++                     {Store byte and advance write pointer}
+    i 1- if>0loop]              {Loop}
+
+  { Send to SPI interface }
+  Address _sysArgs0=            {Begin}
+  6+      _sysArgs2=            {End and overwrite exchange buffer}
+  \SYS_SpiExchangeBytes_v4_134  {SYS function}
+  _sysFn= 134!
+
+  pop ret
+] SendCommandToCard=
+
+$500 Address=                   {Memory address for data exchange}
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 3                                      |
++-----------------------------------------------------------------------}
+*=$300
+
+{ WaitForCardReply }
+[def
+  push
+  {
+  |  """To receive this message, your program should continuously toggle
+  |     the SD CLK signal and observe the MISO line for data, while keeping
+  |     the MOSI line high and the CS line low. Your program can detect the
+  |     message, because every message begins with a 0 bit, and when the
+  |     SD card sends no data it keeps the MISO line high."""
+  |
+  }
+  8 [do i=                      {Poll for upto 8 reply bytes}
+    255 SendByteToCard!         {Keep MOSI line high by only sending ones}
+    128&                        {Note: communication is byte-aligned}
+    if<>0                       {Break out when valid message detected}
+      i 1- if>0loop]            {Or when loop counter exhausted}
+
+  Address, CardReply=           {Reply from card}
+  32      PrintChar!            {Space}
+  Address PrintByte!            {Print hex value}
+
+  pop ret
+] WaitForCardReply=
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       FAT32 section                                                   |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+PartitionL PartitionH           {First block of partition}
+RootDirL RootDirH               {Root dir first cluster}
+SectsPerClust                   {1, 2, ... 128}
+
+FATL FATH                       {Begin of FAT area}
+
+SectorL SectorH                 {Logical Sector Address}
+
+{ Gives PartionL }
+[def
+  ret
+] ReadMBR=
+
+[def
+  ret
+] ReadVolumeID=
+
+[def
+  ret
+] ReadSector=
+
+[def
+  ret
+] ReadNextSector=
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Video terminal section                                          |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+{ Newline }
+[def
+                                {Clear new line first}
+  $3f20 _sysArgs0=              {White on blue}
+  $100 <Pos. peek >Pos. Pos     {Go to start of next line}
+  _sysArgs4=                    {Set screen position}
+  \sysArgs2.                    {Set all-zero output pattern}
+  [do
+    \SYS_VDrawBits_134          {SYS call to draw 8 pixels vertically}
+    _sysFn= 134!
+    <_sysArgs4++                {Step 1 pixel right}
+    \sysArgs4, 160^             {Test for end of line}
+    if<>0loop]
+                                {Then scroll up by modifying videoTable}
+  $01ee i=                      {Last entry in video table}
+  [do
+    i, 120- [if<0 128+
+             else 8+] i.        {Rotate by 8 in 7..126 range}
+    i 2- i=                     {Move to previous entry in video table}
+    $fe^ if<>0loop]             {Until all done}
+
+  ret
+] Newline=
+
+{ Print ASCII character (32..127) on screen using the 5x8 pixel built-in font }
+[def
+  82-                           {Map ASCII code to offset in font table}
+  [if<0 50+ i= &_font32up       {First page for ASCII 32..81}
+   else     i= &_font82up] j=   {Second page is ASCII 82..127}
+  i 2<< i+                      {Multiply by 5}
+  j+ j=                         {Add page address to reach bitmap data}
+  $3f20 _sysArgs0=              {White on blue}
+  Pos _sysArgs4=                {Position of character}
+  6+ Pos=                       {Advance position by 6 pixels for next call}
+  \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
+  5 [do i=                      {Loop to draw 5 vertical slices of 8 pixels}
+    j 0? \sysArgs2.             {Get byte from ROM using `LUP 0' instruction}
+    134!                        {Invoke SYS function to draw 8 vertical pixels}
+    <j++ <_sysArgs4++           {Advance to next slice in ROM and on screen}
+    i 1- if>0loop]              {Looping}
+  ret
+] PrintChar=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+*=$400
+
+{ Print text string }
+[def
+  push                          {Save vLR because this is not a leaf subroutine}
+  p=
+  [do                           {Loop over characters}
+    p, if<>0                    {Next character to be printed, unless 0}
+    10^ [if<>0 10^ PrintChar!   {Print the character and advance cursor}
+         else      Newline!]    {Or go to next line}
+    <p++ loop]                  {Advance text pointer and loop}
+  pop ret
+] PrintText=
+
+{ Print " OK" }
+[def
+  push
+  [def ``OK #10 #0] PrintText!
+  pop ret
+] OK=
+
+{ Print " FAILED" }
+[def
+  push
+  [def ``FAILED #10 #0] PrintText!
+  pop ret
+] FAILED=
+
+{ Print hex digit in vAC }
+[def
+  push
+  15&
+  10- [if<0 $3a+ else $41+] PrintChar!
+  pop ret
+] PrintHexDigit=
+
+{ Print byte pointed to at vAC }
+[def
+  push
+  q=
+  q, 4<< \vACH, PrintHexDigit!   {High nibble}
+  q,            PrintHexDigit!   {Low nibble}
+  pop ret
+] PrintByte=
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Main program                                                    |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+[def #10 `***`Memory`card #10 #0] PrintText!
+
+[do
+  [def `Reset`card #0] PrintText!
+  ResetCard!
+
+  if<>0 FAILED!
+  {
+  |  """Note that the response to each command is sent by the card a few
+  |     SD CLK cycles later. If the expected response is not received within
+  |     16 clock cycles after sending the reset command, the reset command
+  |     has to be sent again."""
+  }
+  loop]
+OK!
+
+[def `Check`card #0] PrintText!
+CheckCard!
+[if<>0 FAILED! else OK!]
+
+0 SectorL= SectorH= ReadSector!
+
+[do loop]
+
+{-----------------------------------------------------------------------+
+|                                                                       |
++-----------------------------------------------------------------------}

@@ -4891,7 +4891,7 @@ for application in argv[1:]:
     program.end()
     print ' Lines', i
 
-  # Simple sequential RGB file (RacerHorizon)
+  # Simple sequential RGB file
   elif application.endswith('-256x16.rgb'):
     width, height = 256, 16
     print 'Convert type .rgb/sequential at $%04x' % pc()
