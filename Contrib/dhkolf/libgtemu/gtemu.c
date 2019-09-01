@@ -320,7 +320,7 @@ int gtemu_processtick (struct GTState *gt, struct GTPeriph *ph)
 		/* hsync */
 		unsigned char ac = gt->ac;
 		unsigned short sample8 = (ac & 0xf0) | (ac >> 4);
-		/* only use 15 bit, sometimes SDL selects signed sound */
+		/* only use 15 bit, sometimes SDL needs signed sound */
 		ph->audio.sample = sample8 << 7 | sample8 >> 1;
 
 		ph->board.xout = ac;

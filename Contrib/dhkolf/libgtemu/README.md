@@ -2,7 +2,7 @@
 libgtemu -- David Kolf's Library for Gigatron Emulation
 =======================================================
 
-Version 0.2.0
+Version 0.3.0
 
 About
 -----
@@ -73,17 +73,20 @@ Stand-alone emulator
 The stand-alone emulator offers the following basic features on the
 command line:
 
-	usage: ./gtemu [-h] [-l filename.gt1] [-64] [filename.rom]
+	usage: ./gtrun [-h] [-l filename.gt1] [-t filename.gtb] [-64] [filename.rom]
 
 	Arguments:
 	 -h               Display this help.
-	 -l filename.gt1  File to be sent with Ctrl-F2.
+	 -l filename.gt1  GT1 program to be loaded at the start.
+	 -t filename.gtb  Text file to be sent with Ctrl-F3.
 	 -64              Expand RAM to 64k.
 	    filename.rom  ROM file (default name: gigatron.rom).
 
 	Special keys:
 	    Ctrl-F2       Send designated GT1 file.
+	    Ctrl-F3       Send designated text file.
 	    Alt-L         Perform hard reset and select loader.
+	    Alt-X         Perform hard reset and send GT1 file.
 	    ESC           Close the emulation.
 
 
@@ -285,6 +288,13 @@ and creates a standalone window.
 It returns 1 in case of success and 0 in case of errors.  The error can
 be requested using `SDL_GetError`.
 
+#### gtsdl_getaudiocallback
+
+	extern SDL_AudioCallback gtsdl_getaudiocallback();
+
+Returns a pointer to the audio callback.  Can be used if you want to set
+up audio on your own (see also `gtsdl_setup`).
+
 #### gtsdl_setup
 
 	extern int gtsdl_setup (struct GTSDLState *s, SDL_Renderer *renderer,
@@ -293,7 +303,8 @@ be requested using `SDL_GetError`.
 This function is an alternative to `gtsdl_openwindow` in case your
 application initialized SDL and created an window on its own.
 
-The audiospec has to be 16-bit integer without a callback function.
+The audiospec has to be 16-bit integer and you can get the callback
+function through `gtsdl_getaudiocallback`.
 
 In case you want to mix the audio you could avoid the provided SDL
 functions of this library and just call `gtemu_processscreen` directly in
@@ -386,9 +397,10 @@ event `SQL_QUIT` was received, one of the eventhandlers requested a break
 or the Escape key was detected.
 
 `eventhandlers` is an optional table where the callback functions
-`onkeydown (keyname, mods, scancode, keycode)`,
-`onkeyup (keyname, mods, scancode, keycode)` and
-`ontextinput (text)` can be defined.
+`onkeydown (keyname, mods, repeated, scancode, keycode)`,
+`onkeyup (keyname, mods, repeated, scancode, keycode)`,
+`ontextinput (text)`, `ondropfile (filename)` and `onframe ()` can be
+defined.
 
 The functions can return either `true`, `false` or the string `"break"`.
 When `true` is returned the event handling is finished, for `false` the

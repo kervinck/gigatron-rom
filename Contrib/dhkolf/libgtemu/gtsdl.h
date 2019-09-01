@@ -30,6 +30,8 @@ struct GTSDLState {
 
 extern int gtsdl_openwindow (struct GTSDLState *s, const char *title);
 
+extern SDL_AudioCallback gtsdl_getaudiocallback();
+
 extern int gtsdl_setup (struct GTSDLState *s, SDL_Renderer *renderer,
 	SDL_AudioDeviceID audiodev, SDL_AudioSpec *audiospec);
 

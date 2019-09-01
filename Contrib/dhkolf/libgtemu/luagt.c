@@ -164,6 +164,24 @@ static int lgtemusendgt1 (lua_State *L)
 	return 0;
 }
 
+static int lgtemusendtext (lua_State *L)
+{
+	struct GTEmulationData *emu = checkemu(L, 1);
+	size_t len;
+	const char *str = lua_tolstring(L, 2, &len);
+
+	if (gtloader_sendtext(&emu->ph, str, len)) {
+		/* prevent garbage collection while the loader is working */
+		lua_pushvalue(L, 1);
+		lua_pushvalue(L, 2);
+		lua_settable(L, lua_upvalueindex(1));
+	} else {
+		luaL_error(L, "loader is busy");
+	}
+
+	return 0;
+}
+
 static int lgtemucreatebuffer (lua_State *L)
 {
 	struct GTEmulationData *emu = checkemu(L, 1);
@@ -309,6 +327,7 @@ static void pushkeysym(lua_State *L, SDL_KeyboardEvent *ev)
 {
 	lua_pushstring(L, SDL_GetKeyName(ev->keysym.sym));
 	lua_pushinteger(L, ev->keysym.mod);
+	lua_pushboolean(L, ev->repeat);
 	lua_pushinteger(L, ev->keysym.scancode);
 	lua_pushinteger(L, ev->keysym.sym);
 }
@@ -319,10 +338,11 @@ static int lgtrunloop (lua_State *L)
 		luaL_checkudata(L, 1, "gtemu.sdlstate");
 	struct GTEmulationData *emu = (struct GTEmulationData *)
 		luaL_checkudata(L, 2, "gtemu.emulation");
-	int onkeydown = 0, onkeyup = 0, ontextinput = 0, breaksym = 7;
+	int onkeydown = 0, onkeyup = 0, ontextinput = 0, ondropfile = 0,
+		onframe = 0, breaksym = 9;
 
 	if (lua_isnoneornil(L, 3)) {
-		lua_settop(L, 7);
+		lua_settop(L, breaksym);
 	} else {
 		lua_settop(L, 3);
 		luaL_checktype(L, 3, LUA_TTABLE);
@@ -336,12 +356,27 @@ static int lgtrunloop (lua_State *L)
 		lua_getfield(L, 3, "ontextinput");
 		ontextinput = lua_isnil(L, 6) ? 0 : 6;
 
+		lua_getfield(L, 3, "ondropfile");
+		ondropfile = lua_isnil(L, 7) ? 0 : 7;
+
+		lua_getfield(L, 3, "onframe");
+		onframe = lua_isnil(L, 8) ? 0 : 8;
+
 		lua_pushliteral(L, "break");
 	}
 
 	for (;;) {
 		SDL_Event ev;
 		int checkres = 0;
+		if (onframe != 0) {
+			lua_pushvalue(L, onframe);
+			lua_call(L, 0, 1);
+			if (lua_compare(L, -1, breaksym, LUA_OPEQ)) {
+				lua_pop(L, 1);
+				break;
+			} else {
+				lua_pop(L, 1);
+			}		}
 		if (gtsdl_runuiframe(s, &emu->gt, &emu->ph, &ev) == 0) {
 			continue;
 		}
@@ -351,24 +386,39 @@ static int lgtrunloop (lua_State *L)
 		if (ev.type == SDL_KEYDOWN && onkeydown != 0) {
 			lua_pushvalue(L, onkeydown);
 			pushkeysym(L, &ev.key);
-			lua_call(L, 4, 1);
+			lua_call(L, 5, 1);
 			checkres = 1;
 		} else if (ev.type == SDL_KEYUP && onkeyup != 0) {
 			lua_pushvalue(L, onkeyup);
 			pushkeysym(L, &ev.key);
-			lua_call(L, 4, 1);
+			lua_call(L, 5, 1);
 			checkres = 1;
 		} else if (ev.type == SDL_TEXTINPUT && ontextinput != 0) {
 			lua_pushvalue(L, ontextinput);
 			lua_pushstring(L, ev.text.text);
 			lua_call(L, 1, 1);
 			checkres = 1;
+		} else if (ev.type == SDL_DROPFILE) {
+			if (ondropfile != 0) {
+				lua_pushvalue(L, ondropfile);
+				lua_pushstring(L, ev.drop.file);
+			}
+			SDL_free(ev.drop.file);
+			ev.drop.file = NULL;
+			if (ondropfile != 0) {
+				lua_call(L, 1, 1);
+			} else {
+				lua_pushnil(L);
+			}
+			/* We freed the file name already, this event
+			   cannot be handled by a later stage anymore. */
+			checkres = 2;
 		}
 		if (checkres) {
 			if (lua_compare(L, -1, breaksym, LUA_OPEQ)) {
 				lua_pop(L, 1);
 				break;
-			} else if (lua_toboolean(L, -1)) {
+			} else if (checkres == 2 || lua_toboolean(L, -1)) {
 				lua_pop(L, 1);
 				continue;
 			} else {
@@ -402,6 +452,7 @@ static luaL_Reg lgtemufns[] = {
 	{"processtick", lgtemuprocesstick},
 	{"processscreen", lgtemuprocessscreen},
 	{"sendgt1", lgtemusendgt1},
+	{"sendtext", lgtemusendtext},
 	{"createbuffer", lgtemucreatebuffer},
 	{"getbuffer", lgtemugetbuffer},
 	{"resetbuffer", lgtemuresetbuffer},

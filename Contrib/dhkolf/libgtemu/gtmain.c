@@ -9,6 +9,7 @@
 */
 
 #include <stdio.h>
+#include <string.h>
 #include <errno.h>
 #include <time.h>
 
@@ -17,28 +18,58 @@
 struct MainState {
 	const char *romfile;
 	const char *sendfile;
+	const char *textfile;
 	int displayhelp;
 	int ramexpansion;
 	char *sendbuffer;
 	size_t sendbuffersize;
 };
 
-static int loadrom (const char *fname, struct GTState *gt)
+static int loadfile (const char *fname, void *buffer, size_t elementsize,
+	size_t elementcount, size_t *readcount)
 {
-	FILE *f;
+	FILE *f = fopen(fname, "rb");
 
-	f = fopen(fname, "rb");
+	if (f == NULL) {
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+			fname, strerror(errno), NULL);
+		return 0;
+	}
 
-	if (!f) return 0;
+	*readcount = fread(buffer, elementsize, elementcount, f);
 
-	fread(gt->rom, sizeof(struct GTRomEntry), gt->romcount, f);
+	if (*readcount >= elementcount) {
+		char dummy;
+		/* to check for EOF, try to read a further byte */
+		if (fread(&dummy, 1, 1, f) > 0) {
+			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+				fname, "File is too large.", NULL);
+			fclose(f);
+			return 0;
+		}
+	} else if (ferror(f)) {
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+			fname, strerror(errno), NULL);
+		fclose(f);
+		return 0;
+	}
 
 	fclose(f);
 
 	return 1;
 }
 
-static void startloader (struct GTState *gt, struct GTPeriph *ph)
+static int loadrom (const char *fname, struct GTState *gt)
+{
+	size_t datasize;
+	if (!loadfile(fname, gt->rom,
+		sizeof(struct GTRomEntry), gt->romcount, &datasize)) {
+		return 0;
+	}
+	return 1;
+}
+
+static void startloader (struct GTState *gt, struct GTPeriph *ph, int wait)
 {
 	unsigned char *ram = gt->ram;
 	int i;
@@ -74,75 +105,154 @@ static void startloader (struct GTState *gt, struct GTPeriph *ph)
 		gtemu_processtick(gt, ph);
 	}
 	gt->in = 0xff;
+	if (wait) {
+		/* wait until vPC is in the screen page 0x5a */
+		while (gtemu_getclock(ph) < timeout && ram[0x17] < 0x5a) {
+			gtemu_processtick(gt, ph);
+		}
+	}
 }
 
-static void sendgt1file (struct MainState *mstate, struct GTPeriph *ph)
+static void sendgt1file (struct MainState *mstate, struct GTState *gt,
+	struct GTPeriph *ph, int restart)
 {
-	FILE *f;
 	size_t datasize;
 
 	if (mstate->sendfile == NULL) {
-		fprintf(stderr, "No file specified for sending, use "
-			"the -l option to specify a file.\n");
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION,
+			"Sending GT1 program",
+			"No file specified for sending, use "
+			"the -l option to specify a file.",
+			NULL);
 		return;
 	}
 
 	if (gtloader_isactive(ph)) {
 		/* Check first whether a file is still being sent, to
 		   avoid changing data during the progress. */
-		fprintf(stderr, "A file is already being sent.\n");
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING,
+			"Sending GT1 program",
+			"A file is already being sent.",
+			NULL);
 		return;
 	}
 
-	f = fopen(mstate->sendfile, "rb");
-
-	if (f == NULL) {
-		fprintf(stderr, "Failed to open %s: %s\n",
-			mstate->sendfile, strerror(errno));
+	if (!loadfile(mstate->sendfile, mstate->sendbuffer,
+		1, mstate->sendbuffersize, &datasize)) {
 		return;
 	}
-
-	datasize = fread(mstate->sendbuffer, 1, mstate->sendbuffersize, f);
-
-	if (datasize >= mstate->sendbuffersize) {
-		fprintf(stderr, "File too large.\n");
-		fclose(f);
-		return;
-	} else if (ferror(f)) {
-		fprintf(stderr, "Error reading %s: %s\n",
-			mstate->sendfile, strerror(errno));
-		fclose(f);
-		return;
-	}
-
-	fclose(f);
 
 	if (!gtloader_validategt1(mstate->sendbuffer, datasize)) {
-		fprintf(stderr, "%s is not a valid GT1 file.\n",
-			mstate->sendfile);
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+			mstate->sendfile,
+			"File is not a valid GT1 file.",
+			NULL);
 		return;
 	}
 
-	if (!gtloader_sendgt1(ph, mstate->sendbuffer, datasize)) {
-		/* Should not happen as we checked isactive earlier. */
-		fprintf(stderr, "Loader peripherals are not ready.\n");
+	if (restart) {
+		startloader(gt, ph, 1);
 	}
+
+	gtloader_sendgt1(ph, mstate->sendbuffer, datasize);
+}
+
+static void sendtextfile (struct MainState *mstate, struct GTPeriph *ph)
+{
+	size_t datasize;
+
+	if (mstate->textfile == NULL) {
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION,
+			"Sending text",
+			"No file specified for sending, use "
+			"the -t option to specify a file.",
+			NULL);
+		return;
+	}
+
+	if (gtloader_isactive(ph)) {
+		/* Check first whether a file is still being sent, to
+		   avoid changing data during the progress. */
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING,
+			"Sending text",
+			"A file is already being sent.",
+			NULL);
+		return;
+	}
+
+	if (!loadfile(mstate->textfile, mstate->sendbuffer,
+		1, mstate->sendbuffersize, &datasize)) {
+		return;
+	}
+
+	gtloader_sendtext(ph, mstate->sendbuffer, datasize);
 }
 
 static int onkeydown (struct MainState *mstate, struct GTState *gt,
 	struct GTPeriph *ph, SDL_KeyboardEvent *ev)
 {
-	if (ev->keysym.sym == 'l' && ev->keysym.mod == KMOD_LALT) {
-		startloader(gt, ph);
-		return 1;
+	if (ev->keysym.mod == KMOD_LALT) {
+		switch (ev->keysym.sym) {
+		case 'l':
+			if (!ev->repeat) {
+				startloader(gt, ph, 0);
+			}
+			return 1;
+		case 'x':
+			if (!ev->repeat) {
+				sendgt1file(mstate, gt, ph, 1);
+			}
+			return 1;
+		default:
+			return 0;
+		}
 	}
 	if (ev->keysym.mod == KMOD_LCTRL || ev->keysym.mod == KMOD_RCTRL) {
-		if (ev->keysym.sym == SDLK_F2) {
-			sendgt1file(mstate, ph);
+		switch (ev->keysym.sym) {
+		case SDLK_F2:
+			if (!ev->repeat) {
+				sendgt1file(mstate, gt, ph, 0);
+			}
 			return 1;
+		case SDLK_F3:
+			if (!ev->repeat) {
+				sendtextfile(mstate, ph);
+			}
+			return 1;
+		default:
+			return 0;
 		}
 	}
 	return 0;
+}
+
+static void ondroppedfile (struct MainState *mstate, struct GTState *gt,
+	struct GTPeriph *ph, const char *fname)
+{
+	size_t datasize;
+
+	if (gtloader_isactive(ph)) {
+		/* Check first whether a file is still being sent, to
+		   avoid changing data during the progress. */
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING,
+			fname,
+			"A file is already being sent.",
+			NULL);
+		return;
+	}
+
+	if (!loadfile(fname, mstate->sendbuffer,
+		1, mstate->sendbuffersize, &datasize)) {
+		return;
+	}
+
+	if (gtloader_validategt1(mstate->sendbuffer, datasize)) {
+		startloader(gt, ph, 1);
+		gtloader_sendgt1(ph, mstate->sendbuffer, datasize);
+	} else {
+		gtloader_sendtext(ph, mstate->sendbuffer, datasize);
+	}
+
 }
 
 static void parseargs (int argc, char *argv[], struct MainState *a)
@@ -150,6 +260,7 @@ static void parseargs (int argc, char *argv[], struct MainState *a)
 	int i;
 	a->romfile = NULL;
 	a->sendfile = NULL;
+	a->textfile = NULL;
 	a->displayhelp = 0;
 	a->ramexpansion = 0;
 	for (i = 1; i < argc; i++) {
@@ -186,6 +297,24 @@ static void parseargs (int argc, char *argv[], struct MainState *a)
 			}
 			a->sendfile = argv[i];
 			break;
+		case 't':
+			if (argv[i][2] != '\0') {
+				a->textfile = argv[i] + 2;
+				break;
+			}
+			i++;
+			if (i >= argc) {
+				/* no file name given */
+				a->displayhelp = 1;
+				return;
+			}
+			if (argv[i][0] == '-') {
+				/* another option */
+				a->displayhelp = 1;
+				return;
+			}
+			a->textfile = argv[i];
+			break;
 		case '6':
 			if (argv[i][2] != '4' || argv[i][3] != '\0') {
 				a->displayhelp = 1;
@@ -205,23 +334,32 @@ static void parseargs (int argc, char *argv[], struct MainState *a)
 
 static void displayhelp (const char *progname)
 {
+	SDL_version linkedsdl;
+	SDL_GetVersion(&linkedsdl);
 	if (progname == NULL) {
 		progname = "gtemu";
 	}
 	fprintf(stderr,
-		"usage: %s [-h] [-l filename.gt1] [-64] [filename.rom]\n"
+		"usage: %s [-h] [-l filename.gt1] [-t filename.gtb] "
+		"[-64] [filename.rom]\n"
 		"\n"
 		"Arguments:\n"
 		" -h               Display this help.\n"
-		" -l filename.gt1  File to be sent with Ctrl-F2.\n"
+		" -l filename.gt1  GT1 program to be loaded at the start.\n"
+		" -t filename.gtb  Text file to be sent with Ctrl-F3.\n"
 		" -64              Expand RAM to 64k.\n"
 		"    filename.rom  ROM file (default name: gigatron.rom).\n"
 		"\n"
 		"Special keys:\n"
 		"    Ctrl-F2       Send designated GT1 file.\n"
+		"    Ctrl-F3       Send designated text file.\n"
 		"    Alt-L         Perform hard reset and select loader.\n"
-		"    ESC           Close the emulation.\n",
-		progname);
+		"    Alt-X         Perform hard reset and send GT1 file.\n"
+		"    ESC           Close the emulation.\n"
+		"\n"
+		"libgtemu version 0.3.0, using SDL version %d.%d.%d.\n",
+		progname, linkedsdl.major, linkedsdl.minor,
+		linkedsdl.patch);
 }
 
 int main (int argc, char *argv[])
@@ -258,12 +396,14 @@ int main (int argc, char *argv[])
 	if (!loadrom(mstate.romfile != NULL ? mstate.romfile :
 		"gigatron.rom", &gt)) {
 
-		fprintf(stderr, "failed to open ROM.\n");
 		return EXIT_FAILURE;
 	}
 
 	if (SDL_Init(0) < 0) {
-		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
+		const char *sdlerror = SDL_GetError();
+		fprintf(stderr, "SDL error: %s\n", sdlerror);
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+			"SDL error", sdlerror, NULL);
 		return EXIT_FAILURE;
 	}
 
@@ -271,12 +411,18 @@ int main (int argc, char *argv[])
 		gtemu_initperiph(&ph, gtsdl_getaudiofreq(&s), randstate);
 		gtserialout_setbuffer(&ph, outputbuffer,
 			sizeof(outputbuffer), &outputpos);
+
+		if (mstate.sendfile != NULL) {
+			sendgt1file(&mstate, &gt, &ph, 1);
+		}
+
 		for (;;) {
 			SDL_Event ev;
 			int hasevent = gtsdl_runuiframe(&s, &gt, &ph, &ev);
 			if (outputpos > 0) {
 				fwrite(outputbuffer, sizeof(outputbuffer[0]),
 					outputpos, stdout);
+				fflush(stdout);
 				outputpos = 0;
 			}
 			if (hasevent == 0) {
@@ -293,10 +439,19 @@ int main (int argc, char *argv[])
 					continue;
 				}
 			}
+			if (ev.type == SDL_DROPFILE) {
+				ondroppedfile(&mstate, &gt, &ph,
+					ev.drop.file);
+				SDL_free(ev.drop.file);
+				continue;
+			}
 			gtsdl_handleevent(&s, &gt, &ev);
 		}
 	} else {
-		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
+		const char *sdlerror = SDL_GetError();
+		fprintf(stderr, "SDL error: %s\n", sdlerror);
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+			"SDL error", sdlerror, NULL);
 	}
 
 	gtsdl_close(&s);
