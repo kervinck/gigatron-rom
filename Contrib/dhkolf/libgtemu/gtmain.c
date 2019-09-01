@@ -31,8 +31,8 @@ static int loadfile (const char *fname, void *buffer, size_t elementsize,
 	FILE *f = fopen(fname, "rb");
 
 	if (f == NULL) {
-		fprintf(stderr, "Failed to open %s: %s\n",
-			fname, strerror(errno));
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+			fname, strerror(errno), NULL);
 		return 0;
 	}
 
@@ -42,13 +42,14 @@ static int loadfile (const char *fname, void *buffer, size_t elementsize,
 		char dummy;
 		/* to check for EOF, try to read a further byte */
 		if (fread(&dummy, 1, 1, f) > 0) {
-			fprintf(stderr, "File %s is too large.\n", fname);
+			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+				fname, "File is too large.", NULL);
 			fclose(f);
 			return 0;
 		}
 	} else if (ferror(f)) {
-		fprintf(stderr, "Error reading %s: %s\n",
-			fname, strerror(errno));
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+			fname, strerror(errno), NULL);
 		fclose(f);
 		return 0;
 	}
@@ -111,15 +112,21 @@ static void sendgt1file (struct MainState *mstate, struct GTPeriph *ph)
 	size_t datasize;
 
 	if (mstate->sendfile == NULL) {
-		fprintf(stderr, "No file specified for sending, use "
-			"the -l option to specify a file.\n");
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION,
+			"Sending GT1 program",
+			"No file specified for sending, use "
+			"the -l option to specify a file.",
+			NULL);
 		return;
 	}
 
 	if (gtloader_isactive(ph)) {
 		/* Check first whether a file is still being sent, to
 		   avoid changing data during the progress. */
-		fprintf(stderr, "A file is already being sent.\n");
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING,
+			"Sending GT1 program",
+			"A file is already being sent.",
+			NULL);
 		return;
 	}
 
@@ -129,14 +136,19 @@ static void sendgt1file (struct MainState *mstate, struct GTPeriph *ph)
 	}
 
 	if (!gtloader_validategt1(mstate->sendbuffer, datasize)) {
-		fprintf(stderr, "%s is not a valid GT1 file.\n",
-			mstate->sendfile);
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+			mstate->sendfile,
+			"File is not a valid GT1 file.",
+			NULL);
 		return;
 	}
 
 	if (!gtloader_sendgt1(ph, mstate->sendbuffer, datasize)) {
 		/* Should not happen as we checked isactive earlier. */
-		fprintf(stderr, "Loader peripherals are not ready.\n");
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+			"Sending GT1 program",
+			"Loader peripherals are not ready.",
+			NULL);
 	}
 }
 
@@ -145,15 +157,21 @@ static void sendtextfile (struct MainState *mstate, struct GTPeriph *ph)
 	size_t datasize;
 
 	if (mstate->textfile == NULL) {
-		fprintf(stderr, "No file specified for sending, use "
-			"the -t option to specify a file.\n");
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION,
+			"Sending text",
+			"No file specified for sending, use "
+			"the -t option to specify a file.",
+			NULL);
 		return;
 	}
 
 	if (gtloader_isactive(ph)) {
 		/* Check first whether a file is still being sent, to
 		   avoid changing data during the progress. */
-		fprintf(stderr, "A file is already being sent.\n");
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING,
+			"Sending text",
+			"A file is already being sent.",
+			NULL);
 		return;
 	}
 
@@ -164,7 +182,10 @@ static void sendtextfile (struct MainState *mstate, struct GTPeriph *ph)
 
 	if (!gtloader_sendtext(ph, mstate->sendbuffer, datasize)) {
 		/* Should not happen as we checked isactive earlier. */
-		fprintf(stderr, "Loader peripherals are not ready.\n");
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+			"Sending text",
+			"Loader peripherals are not ready.",
+			NULL);
 	}
 }
 
@@ -340,7 +361,10 @@ int main (int argc, char *argv[])
 	}
 
 	if (SDL_Init(0) < 0) {
-		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
+		const char *sdlerror = SDL_GetError();
+		fprintf(stderr, "SDL error: %s\n", sdlerror);
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+			"SDL error", sdlerror, NULL);
 		return EXIT_FAILURE;
 	}
 
@@ -374,7 +398,10 @@ int main (int argc, char *argv[])
 			gtsdl_handleevent(&s, &gt, &ev);
 		}
 	} else {
-		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
+		const char *sdlerror = SDL_GetError();
+		fprintf(stderr, "SDL error: %s\n", sdlerror);
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+			"SDL error", sdlerror, NULL);
 	}
 
 	gtsdl_close(&s);
