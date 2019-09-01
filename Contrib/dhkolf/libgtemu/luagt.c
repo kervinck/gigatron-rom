@@ -327,6 +327,7 @@ static void pushkeysym(lua_State *L, SDL_KeyboardEvent *ev)
 {
 	lua_pushstring(L, SDL_GetKeyName(ev->keysym.sym));
 	lua_pushinteger(L, ev->keysym.mod);
+	lua_pushboolean(L, ev->repeat);
 	lua_pushinteger(L, ev->keysym.scancode);
 	lua_pushinteger(L, ev->keysym.sym);
 }
@@ -369,12 +370,12 @@ static int lgtrunloop (lua_State *L)
 		if (ev.type == SDL_KEYDOWN && onkeydown != 0) {
 			lua_pushvalue(L, onkeydown);
 			pushkeysym(L, &ev.key);
-			lua_call(L, 4, 1);
+			lua_call(L, 5, 1);
 			checkres = 1;
 		} else if (ev.type == SDL_KEYUP && onkeyup != 0) {
 			lua_pushvalue(L, onkeyup);
 			pushkeysym(L, &ev.key);
-			lua_call(L, 4, 1);
+			lua_call(L, 5, 1);
 			checkres = 1;
 		} else if (ev.type == SDL_TEXTINPUT && ontextinput != 0) {
 			lua_pushvalue(L, ontextinput);

@@ -386,8 +386,8 @@ event `SQL_QUIT` was received, one of the eventhandlers requested a break
 or the Escape key was detected.
 
 `eventhandlers` is an optional table where the callback functions
-`onkeydown (keyname, mods, scancode, keycode)`,
-`onkeyup (keyname, mods, scancode, keycode)` and
+`onkeydown (keyname, mods, repeated, scancode, keycode)`,
+`onkeyup (keyname, mods, repeated, scancode, keycode)` and
 `ontextinput (text)` can be defined.
 
 The functions can return either `true`, `false` or the string `"break"`.
