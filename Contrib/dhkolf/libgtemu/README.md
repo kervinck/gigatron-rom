@@ -73,7 +73,7 @@ Stand-alone emulator
 The stand-alone emulator offers the following basic features on the
 command line:
 
-	usage: ./gtemu [-h] [-l filename.gt1] [-64] [filename.rom]
+	usage: ./gtrun [-h] [-l filename.gt1] [-64] [filename.rom]
 
 	Arguments:
 	 -h               Display this help.

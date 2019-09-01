@@ -3,9 +3,9 @@ CFLAGS= -Wall
 GTLIB_O= gtsdl.o gtemu.o gtloader.o
 LUADIR= ../lua-5.3.4/src
 
-all: gtemu gtemu.so
+all: gtrun gtemu.so
 
-gtemu: gtmain.o $(GTLIB_O)
+gtrun: gtmain.o $(GTLIB_O)
 	gcc -o $@ gtmain.o $(GTLIB_O) -lSDL2
 
 gtemu.so: luagt.o $(GTLIB_O)
