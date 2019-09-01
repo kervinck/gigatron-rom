@@ -339,7 +339,7 @@ static int lgtrunloop (lua_State *L)
 	struct GTEmulationData *emu = (struct GTEmulationData *)
 		luaL_checkudata(L, 2, "gtemu.emulation");
 	int onkeydown = 0, onkeyup = 0, ontextinput = 0, ondropfile = 0,
-		breaksym = 8;
+		onframe = 0, breaksym = 9;
 
 	if (lua_isnoneornil(L, 3)) {
 		lua_settop(L, breaksym);
@@ -359,12 +359,24 @@ static int lgtrunloop (lua_State *L)
 		lua_getfield(L, 3, "ondropfile");
 		ondropfile = lua_isnil(L, 7) ? 0 : 7;
 
+		lua_getfield(L, 3, "onframe");
+		onframe = lua_isnil(L, 8) ? 0 : 8;
+
 		lua_pushliteral(L, "break");
 	}
 
 	for (;;) {
 		SDL_Event ev;
 		int checkres = 0;
+		if (onframe != 0) {
+			lua_pushvalue(L, onframe);
+			lua_call(L, 0, 1);
+			if (lua_compare(L, -1, breaksym, LUA_OPEQ)) {
+				lua_pop(L, 1);
+				break;
+			} else {
+				lua_pop(L, 1);
+			}		}
 		if (gtsdl_runuiframe(s, &emu->gt, &emu->ph, &ev) == 0) {
 			continue;
 		}

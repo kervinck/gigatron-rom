@@ -388,7 +388,8 @@ or the Escape key was detected.
 `eventhandlers` is an optional table where the callback functions
 `onkeydown (keyname, mods, repeated, scancode, keycode)`,
 `onkeyup (keyname, mods, repeated, scancode, keycode)`,
-`ontextinput (text)` and `ondropfile (filename)` can be defined.
+`ontextinput (text)`, `ondropfile (filename)` and `onframe ()` can be
+defined.
 
 The functions can return either `true`, `false` or the string `"break"`.
 When `true` is returned the event handling is finished, for `false` the
