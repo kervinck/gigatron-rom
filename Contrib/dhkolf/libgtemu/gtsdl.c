@@ -155,13 +155,15 @@ int gtsdl_openwindow (struct GTSDLState *s, const char *title)
 
 	SDL_memset(&desired, 0, sizeof(desired));
 	desired.freq = 48000;
-	desired.format = AUDIO_U16;
+	/* I wanted unsigned sound, but that doesn't seem to work
+	   properly (stays silent on my computer). */
+	desired.format = AUDIO_S16;
 	desired.channels = 1;
 	desired.samples = 800; /* samples per frame: 48000 / 60 */
 	desired.callback = gtsdl_getaudiocallback();
 
 	audiodev = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained,
-		SDL_AUDIO_ALLOW_FREQUENCY_CHANGE | SDL_AUDIO_ALLOW_FORMAT_CHANGE);
+		SDL_AUDIO_ALLOW_FREQUENCY_CHANGE);
 
 	if (!setupaudio(s, audiodev, &obtained)) {
 		return 0;
