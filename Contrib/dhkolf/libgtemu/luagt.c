@@ -338,10 +338,11 @@ static int lgtrunloop (lua_State *L)
 		luaL_checkudata(L, 1, "gtemu.sdlstate");
 	struct GTEmulationData *emu = (struct GTEmulationData *)
 		luaL_checkudata(L, 2, "gtemu.emulation");
-	int onkeydown = 0, onkeyup = 0, ontextinput = 0, breaksym = 7;
+	int onkeydown = 0, onkeyup = 0, ontextinput = 0, ondropfile = 0,
+		breaksym = 8;
 
 	if (lua_isnoneornil(L, 3)) {
-		lua_settop(L, 7);
+		lua_settop(L, breaksym);
 	} else {
 		lua_settop(L, 3);
 		luaL_checktype(L, 3, LUA_TTABLE);
@@ -354,6 +355,9 @@ static int lgtrunloop (lua_State *L)
 
 		lua_getfield(L, 3, "ontextinput");
 		ontextinput = lua_isnil(L, 6) ? 0 : 6;
+
+		lua_getfield(L, 3, "ondropfile");
+		ondropfile = lua_isnil(L, 7) ? 0 : 7;
 
 		lua_pushliteral(L, "break");
 	}
@@ -382,12 +386,27 @@ static int lgtrunloop (lua_State *L)
 			lua_pushstring(L, ev.text.text);
 			lua_call(L, 1, 1);
 			checkres = 1;
+		} else if (ev.type == SDL_DROPFILE) {
+			if (ondropfile != 0) {
+				lua_pushvalue(L, ondropfile);
+				lua_pushstring(L, ev.drop.file);
+			}
+			SDL_free(ev.drop.file);
+			ev.drop.file = NULL;
+			if (ondropfile != 0) {
+				lua_call(L, 1, 1);
+			} else {
+				lua_pushnil(L);
+			}
+			/* We freed the file name already, this event
+			   cannot be handled by a later stage anymore. */
+			checkres = 2;
 		}
 		if (checkres) {
 			if (lua_compare(L, -1, breaksym, LUA_OPEQ)) {
 				lua_pop(L, 1);
 				break;
-			} else if (lua_toboolean(L, -1)) {
+			} else if (checkres == 2 || lua_toboolean(L, -1)) {
 				lua_pop(L, 1);
 				continue;
 			} else {
