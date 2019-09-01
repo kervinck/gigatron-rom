@@ -69,7 +69,7 @@ static int loadrom (const char *fname, struct GTState *gt)
 	return 1;
 }
 
-static void startloader (struct GTState *gt, struct GTPeriph *ph)
+static void startloader (struct GTState *gt, struct GTPeriph *ph, int wait)
 {
 	unsigned char *ram = gt->ram;
 	int i;
@@ -105,9 +105,16 @@ static void startloader (struct GTState *gt, struct GTPeriph *ph)
 		gtemu_processtick(gt, ph);
 	}
 	gt->in = 0xff;
+	if (wait) {
+		/* wait until vPC is in the screen page 0x5a */
+		while (gtemu_getclock(ph) < timeout && ram[0x17] < 0x5a) {
+			gtemu_processtick(gt, ph);
+		}
+	}
 }
 
-static void sendgt1file (struct MainState *mstate, struct GTPeriph *ph)
+static void sendgt1file (struct MainState *mstate, struct GTState *gt,
+	struct GTPeriph *ph, int restart)
 {
 	size_t datasize;
 
@@ -141,6 +148,10 @@ static void sendgt1file (struct MainState *mstate, struct GTPeriph *ph)
 			"File is not a valid GT1 file.",
 			NULL);
 		return;
+	}
+
+	if (restart) {
+		startloader(gt, ph, 1);
 	}
 
 	if (!gtloader_sendgt1(ph, mstate->sendbuffer, datasize)) {
@@ -192,17 +203,27 @@ static void sendtextfile (struct MainState *mstate, struct GTPeriph *ph)
 static int onkeydown (struct MainState *mstate, struct GTState *gt,
 	struct GTPeriph *ph, SDL_KeyboardEvent *ev)
 {
-	if (ev->keysym.sym == 'l' && ev->keysym.mod == KMOD_LALT) {
-		if (!ev->repeat) {
-			startloader(gt, ph);
+	if (ev->keysym.mod == KMOD_LALT) {
+		switch (ev->keysym.sym) {
+		case 'l':
+			if (!ev->repeat) {
+				startloader(gt, ph, 0);
+			}
+			return 1;
+		case 'x':
+			if (!ev->repeat) {
+				sendgt1file(mstate, gt, ph, 1);
+			}
+			return 1;
+		default:
+			return 0;
 		}
-		return 1;
 	}
 	if (ev->keysym.mod == KMOD_LCTRL || ev->keysym.mod == KMOD_RCTRL) {
-		switch(ev->keysym.sym) {
+		switch (ev->keysym.sym) {
 		case SDLK_F2:
 			if (!ev->repeat) {
-				sendgt1file(mstate, ph);
+				sendgt1file(mstate, gt, ph, 0);
 			}
 			return 1;
 		case SDLK_F3:
@@ -307,7 +328,7 @@ static void displayhelp (const char *progname)
 		"\n"
 		"Arguments:\n"
 		" -h               Display this help.\n"
-		" -l filename.gt1  File to be sent with Ctrl-F2.\n"
+		" -l filename.gt1  GT1 program to be loaded at the start.\n"
 		" -t filename.gtb  Text file to be sent with Ctrl-F3.\n"
 		" -64              Expand RAM to 64k.\n"
 		"    filename.rom  ROM file (default name: gigatron.rom).\n"
@@ -316,6 +337,7 @@ static void displayhelp (const char *progname)
 		"    Ctrl-F2       Send designated GT1 file.\n"
 		"    Ctrl-F3       Send designated text file.\n"
 		"    Alt-L         Perform hard reset and select loader.\n"
+		"    Alt-X         Perform hard reset and send GT1 file.\n"
 		"    ESC           Close the emulation.\n"
 		"\n"
 		"libgtemu version 0.2.0, using SDL version %d.%d.%d.\n",
@@ -372,6 +394,11 @@ int main (int argc, char *argv[])
 		gtemu_initperiph(&ph, gtsdl_getaudiofreq(&s), randstate);
 		gtserialout_setbuffer(&ph, outputbuffer,
 			sizeof(outputbuffer), &outputpos);
+
+		if (mstate.sendfile != NULL) {
+			sendgt1file(&mstate, &gt, &ph, 1);
+		}
+
 		for (;;) {
 			SDL_Event ev;
 			int hasevent = gtsdl_runuiframe(&s, &gt, &ph, &ev);
