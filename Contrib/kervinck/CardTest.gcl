@@ -44,9 +44,13 @@ gcl0x
 |                                                                       |
 +-----------------------------------------------------------------------}
 
-{ ResetCard }
+$500 Address=                   {Memory address for data exchange}
+
+{ CMD0 }
 [def
   push
+
+  0 CardType=
 
   {
   |  """To communicate with the SD card, your program has to place the SD
@@ -55,7 +59,7 @@ gcl0x
   }
 
   10 [do i=                     {Lets do 10 bytes for 80 cycles}
-    255 SendByteToCard!         {Keep MOSI line high by only sending ones}
+    SendOnesToCard!             {Keep MOSI line high by only sending ones}
     i 1- if>0loop]
 
   {
@@ -95,12 +99,12 @@ gcl0x
 
   WaitForCardReply!
   DisableCard!
-  CardReply 1^                  {Return result: only 1 means success}
+  CardReply 254&                {Return result: only 0 and 1 mean success}
 
   pop ret
-] ResetCard=
+] CMD0=
 
-{ TestCard }
+{ CMD8 }
 [def
   push
 
@@ -110,7 +114,7 @@ gcl0x
   |     example, send one of the following commands, while keeping the CS
   |     at value 0: (i) Command CMD8
   |             01.001000 00000000 00000000 00000001 10101010 1000011.1
-  |                                                          (^^^^^^^ Fixed --marcelk)
+  |                                       (Fixed CRC -marcelk ^^^^^^^)
   |
   |     This command is only available in the latest cards, compatible with
   |     SD card Specifications version 2.0. For most older cards this command
@@ -146,15 +150,70 @@ gcl0x
   }
 
   EnableCard!
-  [def #$48 #0 #0 #1 #$aa #$87] {CMD8 Get Version}
+  [def #$48 #0 #0 #1 #$aa #$87] {CMD8 Get Version, voltage 2.7-3.6V}
+  SendCommandToCard!
+  WaitForCardReply!
+
+  CardReply $ff^ [if<>0
+
+    CardReply 4& [if<>0
+      1 CardType=               {Version 1}
+    else
+      SendOnesToCard!           {R7 response}
+      SendOnesToCard!
+      SendOnesToCard!
+      SendOnesToCard!
+      $aa- [if=0                {Correct pattern response}
+        2 CardType=             {Version 2}
+      ]
+    ]
+  ]
+  DisableCard!
+
+  CardReply 250&                {Return result: 0, 1, 4 or 5 means success}
+
+  pop ret
+] CMD8=
+
+{ CMD58 }
+[def
+  push
+  EnableCard!
+  [def #$7a #0 #0 #0 #0 #0]     {CMD58 Read OCR}
+  SendCommandToCard!
+  WaitForCardReply!
+  SendOnesToCard!               {R3 response}
+  SendOnesToCard!
+  SendOnesToCard!
+  $40& [if<>0 4 CardType=]      {SDXC or SDHC}
+  DisableCard!
+  CardReply 254&                {Return result: only 0 and 1 mean success}
+  pop ret
+] CMD58=
+
+{ CMD55 }
+[def
+  push
+  EnableCard!
+  [def #$77 #0 #0 #0 #0 #0]     {CMD55 Alt Command}
   SendCommandToCard!
   WaitForCardReply!
   DisableCard!
-
-  CardReply 1^ [if<>0 4^]      {Return result: 1 or 5 means success}
-
+  CardReply 254&                {Return result: only 0 and 1 mean success}
   pop ret
-] CheckCard=
+] CMD55=
+
+{ ACMD41 }
+[def
+  push
+  EnableCard!
+  [def #$69 #$40 #0 #0 #0 #0]   {ACMD41}
+  SendCommandToCard!
+  WaitForCardReply!
+  DisableCard!
+  CardReply 254&                {Return result: only 0 and 1 mean success}
+  pop ret
+] ACMD41=
 
 { EnableCard }
 [def
@@ -173,31 +232,38 @@ gcl0x
         A8-A14  (unused)
         A15     MOSI
   }
-  255 SendByteToCard!           {Extra clocks for reliabilty}
   \SYS_ExpanderControl_v4_40    {SYS function}
   _sysFn= $8078 40!             {Enable SPI0, keep MOSI high, bank=1}
+  SendOnesToCard!               {Extra clocks for reliabilty}
   pop ret
 ] EnableCard=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 3                                      |
++-----------------------------------------------------------------------}
+*=$300
 
 { DisableCard }
 [def
   push
+{
+  SendOnesToCard!               {Extra clocks for reliabilty}
+}
   \SYS_ExpanderControl_v4_40    {SYS function}
   _sysFn= $807c 40!             {Disable SPI0, keep MOSI high, bank=1}
-  255 SendByteToCard!           {Extra clocks for reliabilty}
   pop ret
 ] DisableCard=
 
-{ SendByteToCard }
+{ SendOnesToCard }
 [def
-  Address.                      {Place byte in exchange buffer}
+  255 Address.                  {Place byte in exchange buffer}
   Address _sysArgs0=
   1+      _sysArgs2=
   \SYS_SpiExchangeBytes_v4_134  {SYS function}
   _sysFn= 134!                  {Exchanges a single byte}
   Address,                      {Reply byte}
   ret
-] SendByteToCard=
+] SendOnesToCard=
 
 { SendCommandToCard }
 [def
@@ -219,13 +285,6 @@ gcl0x
   pop ret
 ] SendCommandToCard=
 
-$500 Address=                   {Memory address for data exchange}
-
-{-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 3                                      |
-+-----------------------------------------------------------------------}
-*=$300
-
 { WaitForCardReply }
 [def
   push
@@ -238,14 +297,14 @@ $500 Address=                   {Memory address for data exchange}
   |
   }
   8 [do i=                      {Poll for upto 8 reply bytes}
-    255 SendByteToCard!         {Keep MOSI line high by only sending ones}
+    SendOnesToCard!             {Keep MOSI line high by only sending ones}
     128&                        {Note: communication is byte-aligned}
     if<>0                       {Break out when valid message detected}
       i 1- if>0loop]            {Or when loop counter exhausted}
 
   Address, CardReply=           {Reply from card}
-  32      PrintChar!            {Space}
-  Address PrintByte!            {Print hex value}
+  32       PrintChar!           {Space}
+  Address, PrintByte!           {Print hex value}
 
   pop ret
 ] WaitForCardReply=
@@ -282,6 +341,63 @@ SectorL SectorH                 {Logical Sector Address}
 ] ReadNextSector=
 
 {-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+*=$400
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Main program                                                    |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+[def
+  [def #10 `***`Memory`card #10 #0] PrintText!
+
+  [do
+    [def `CMD0`` #0] PrintText!
+    CMD0!
+
+    if<>0 FAILED!
+    {
+    |  """Note that the response to each command is sent by the card a few
+    |     SD CLK cycles later. If the expected response is not received within
+    |     16 clock cycles after sending the reset command, the reset command
+    |     has to be sent again."""
+    }
+    loop]
+  OK!
+
+  [def `CMD8`` #0] PrintText!
+  CMD8! [if<>0 FAILED! else OK!]
+
+  [do
+  [def `CMD55` #0] PrintText!
+  CMD55! [if<>0 FAILED! else OK!]
+
+  [def `ACMD41 #0] PrintText!
+  ACMD41! [if<>0 FAILED! else OK!]
+
+  CardReply if<>0loop]
+
+  [def `CMD58` #0] PrintText!
+  CMD58! [if<>0 FAILED! else OK!]
+
+
+  [def `CardType` #0] PrintText!
+  CardType PrintByte!
+
+  [do loop]
+
+  0 SectorL= SectorH= ReadSector!
+] Main=
+
+{-----------------------------------------------------------------------+
+|}$08a0 _vLR= ret{      RAM page 8                                      |
++-----------------------------------------------------------------------}
+*=$8a0
+
+{-----------------------------------------------------------------------+
 |                                                                       |
 |       Video terminal section                                          |
 |                                                                       |
@@ -311,6 +427,11 @@ SectorL SectorH                 {Logical Sector Address}
   ret
 ] Newline=
 
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 9                                      |
++-----------------------------------------------------------------------}
+*=$9a0
+
 { Print ASCII character (32..127) on screen using the 5x8 pixel built-in font }
 [def
   82-                           {Map ASCII code to offset in font table}
@@ -331,9 +452,9 @@ SectorL SectorH                 {Logical Sector Address}
 ] PrintChar=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 4                                      |
+|}>_vLR++ ret{          RAM page 10                                     |
 +-----------------------------------------------------------------------}
-*=$400
+*=$aa0
 
 { Print text string }
 [def
@@ -369,44 +490,22 @@ SectorL SectorH                 {Logical Sector Address}
   pop ret
 ] PrintHexDigit=
 
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 11                                     |
++-----------------------------------------------------------------------}
+*=$ba0
+
 { Print byte pointed to at vAC }
 [def
   push
-  q=
-  q, 4<< \vACH, PrintHexDigit!   {High nibble}
-  q,            PrintHexDigit!   {Low nibble}
+  2-- %0=
+  4<< \vACH, PrintHexDigit!   {High nibble}
+  %0         PrintHexDigit!   {Low nibble}
+  2++
   pop ret
 ] PrintByte=
 
-{-----------------------------------------------------------------------+
-|                                                                       |
-|       Main program                                                    |
-|                                                                       |
-+-----------------------------------------------------------------------}
-
-[def #10 `***`Memory`card #10 #0] PrintText!
-
-[do
-  [def `Reset`card #0] PrintText!
-  ResetCard!
-
-  if<>0 FAILED!
-  {
-  |  """Note that the response to each command is sent by the card a few
-  |     SD CLK cycles later. If the expected response is not received within
-  |     16 clock cycles after sending the reset command, the reset command
-  |     has to be sent again."""
-  }
-  loop]
-OK!
-
-[def `Check`card #0] PrintText!
-CheckCard!
-[if<>0 FAILED! else OK!]
-
-0 SectorL= SectorH= ReadSector!
-
-[do loop]
+Main!
 
 {-----------------------------------------------------------------------+
 |                                                                       |
