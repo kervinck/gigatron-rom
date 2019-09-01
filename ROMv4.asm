@@ -31524,7 +31524,7 @@ Snake:        8a9a 0002  ld   $02         ;| RAM segment address (high byte firs
               91c2 00d3  ld   $d3
               91c3 0000  ld   $00         ;End of Apps/Snake/Snake_v3.gcl, size 1834
                                           ;+-----------------------------------+
-                                          ;| Apps/Racer//RacerHorizon-256x16.rgb |
+                                          ;| Apps/Racer/Horizon-256x16.rgb     |
                                           ;+-----------------------------------+
 zippedRacerHorizon:
               91c4 0041  ld   $41
@@ -34605,7 +34605,7 @@ zippedRacerHorizon:
               9e01 00c3  ld   $c3
               9e02 00eb  ld   $eb
               9e03 001a  ld   $1a
-              9e04 0004  ld   $04         ;End of Apps/Racer//RacerHorizon-256x16.rgb, size 3137
+              9e04 0004  ld   $04         ;End of Apps/Racer/Horizon-256x16.rgb, size 3137
                                           ;+-----------------------------------+
                                           ;| Apps/Racer/Racer_v2.gcl           |
                                           ;+-----------------------------------+

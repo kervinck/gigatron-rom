@@ -2565,7 +2565,7 @@ ld(-46/2)                       #43
 #
 #-----------------------------------------------------------------------
 
-f = open('Apps/Racer/RacerHorizon-256x16.rgb', 'rb')
+f = open('Apps/Racer/Horizon-256x16.rgb', 'rb')
 raw = f.read()
 f.close()
 

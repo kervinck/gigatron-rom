@@ -30,7 +30,7 @@ dev.rom: Core/* Apps/*/* Makefile interface.json
 		SYS_Racer_v1.py\
 		SYS_Loader_v3.py\
 		Snake=Apps/Snake/Snake_v3.gcl\
-		zippedRacerHorizon=Apps/Racer/RacerHorizon-256x16.rgb\
+		zippedRacerHorizon=Apps/Racer/Horizon-256x16.rgb\
 		Racer=Apps/Racer/Racer_v2.gcl\
 		Mandelbrot=Apps/Mandelbrot/Mandelbrot_v1.gcl\
 		Pictures=Apps/Pictures/Pictures_v2.gcl\
@@ -97,7 +97,7 @@ ROMv4.rom: Core/* Apps/*/* Makefile interface.json
 		Apps/Racer/SYS_Racer_v1.py\
 		Apps/Loader/SYS_Loader_v3.py\
 		Snake=Apps/Snake/Snake_v3.gcl\
-		zippedRacerHorizon=Apps/Racer//RacerHorizon-256x16.rgb\
+		zippedRacerHorizon=Apps/Racer/Horizon-256x16.rgb\
 		Racer=Apps/Racer/Racer_v2.gcl\
 		Mandelbrot=Apps/Mandelbrot/Mandelbrot_v1.gcl\
 		Pictures=Apps/Pictures/Pictures_v2.gcl\
