@@ -28,7 +28,7 @@ dev.rom: Core/* Apps/*/* Makefile interface.json
 		packedParrot=Apps/Pictures/Parrot-160x120.rgb\
 		packedJupiter=Apps/Pictures/Jupiter-160x120.rgb\
 		SYS_Racer_v1.py\
-		SYS_Loader_v3.py\
+		SYS_Loader.py\
 		Snake=Apps/Snake/Snake_v3.gcl\
 		zippedRacerHorizon=Apps/Racer/Horizon-256x16.rgb\
 		Racer=Apps/Racer/Racer_v2.gcl\

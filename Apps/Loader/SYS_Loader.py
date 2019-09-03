@@ -100,9 +100,10 @@ ora([Y,255])                    #52
 bne(pc()+3)                     #53
 bra(pc()+3)                     #54
 ld(3);                          C('Yes')#55
-ld(0);                          C('No')#56
-ora([channelMask])              #57
-st([channelMask])               #58
+ld(0);                          C('No')#55(!)
+ora([channelMask])              #56
+st([channelMask])               #57
+nop()                           #58
 ld(hi('REENTER'),Y)             #59
 jmp(Y,'REENTER')                #60
 ld(-64/2)                       #61
