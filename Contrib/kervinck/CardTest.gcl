@@ -46,8 +46,11 @@ gcl0x
 
 $500 Address=                   {Memory address for data exchange}
 
-{ CMD0 }
+{ CMD0: GO_IDLE_STATE }
 [def
+  {
+    Resets the SD Memory Card
+  }
   push
   [def `CMD0`` #0] PrintText!
 
@@ -99,14 +102,16 @@ $500 Address=                   {Memory address for data exchange}
   }
 
   WaitForCardReply!
-  DisableCard!
   CardReply 254& PrintResult!   {Only 0 and 1 mean success}
 
   pop ret
 ] CMD0=
 
-{ CMD8 }
+{ CMD8: SEND_IF_COND }
 [def
+  {
+    Send interface condition
+  }
   push
   [def `CMD8`` #0] PrintText!
 
@@ -170,39 +175,39 @@ $500 Address=                   {Memory address for data exchange}
       ]
     ]
   ]
-  DisableCard!
 
   CardReply 250& PrintResult!   {Return result: 0, 1, 4 or 5 means success}
 
   pop ret
 ] CMD8=
 
-{ CMD58 }
+{ CMD58: READ_OCR }
 [def
   push
   [def `CMD58` #0] PrintText!
   EnableCard!
-  [def #$7a #0 #0 #0 #0 #0]     {CMD58 Read OCR}
+  [def #$7a #0 #0 #0 #0 #0]     {CMD58}
   SendCommandToCard!
   WaitForCardReply!
   SendOnesToCard!               {R3 response}
   SendOnesToCard!
   SendOnesToCard!
-  $40& [if<>0 4 CardType=]      {SDXC or SDHC}
-  DisableCard!
+  $c0& $c0^ [if=0 4 CardType=]  {CCS bit signals card is SDXC/SDHC}
   CardReply 254& PrintResult!   {Only 0 and 1 mean success}
   pop ret
 ] CMD58=
 
-{ CMD55 }
+{ CMD55: APP_CMD }
 [def
+  {
+    Defines to the card that the next command is an application specific
+    command rather than a standard command
+  }
   push
   [def `CMD55` #0] PrintText!
-  EnableCard!
-  [def #$77 #0 #0 #0 #0 #0]     {CMD55 Alt Command}
+  [def #$77 #0 #0 #0 #0 #0]     {CMD55}
   SendCommandToCard!
   WaitForCardReply!
-  DisableCard!
   CardReply 254& PrintResult!   {Only 0 and 1 mean success}
   pop ret
 ] CMD55=
@@ -212,18 +217,55 @@ $500 Address=                   {Memory address for data exchange}
 +-----------------------------------------------------------------------}
 *=$300
 
-{ ACMD41 }
+{ ACMD41 SD_SEND_OP_COND }
 [def
+  {
+    Sends hosts capacity support information and activates the card's
+    initialization process. Reserved bits shall be set to '0'
+  }
   push
   [def `ACMD41 #0] PrintText!
-  EnableCard!
-  [def #$69 #$40 #0 #0 #0 #0]   {ACMD41}
+  CardType 1^ [if=0
+    [def #$69 #0 #0 #0 #0 #0]   {ACMD41 for version 1.X}
+  else
+    [def #$69 #$40 #0 #0 #0 #0] {ACMD41 for version 2.0+}
+  ]
   SendCommandToCard!
   WaitForCardReply!
-  DisableCard!
   CardReply 254& PrintResult!   {Only 0 and 1 mean success}
   pop ret
 ] ACMD41=
+
+{ CMD16: SET_BLOCKLEN }
+[def
+  {
+    Set block size to 512 bytes
+  }
+  push
+  [def `CMD16` #0] PrintText!
+  [def #$50 #0 #0 #$02 #0 #0]   {CMD16}
+  SendCommandToCard!
+  WaitForCardReply!
+  CardReply 254& PrintResult!   {Only 0 and 1 mean success}
+  pop ret
+] CMD16=
+
+{ CMD17: READ_SINGLE_BLOCK }
+[def
+  {
+    Reads a block of the size selected by the SET_BLOCKLEN command
+  }
+  push
+  [def `CMD17` #0] PrintText!
+  [def #$51 #0 #0 #0 #0 #0]     {CMD17}
+  SendCommandToCard!
+  WaitForCardReply!
+
+  Newline!
+
+  CardReply 254& PrintResult!   {Only 0 and 1 mean success}
+  pop ret
+] CMD17=
 
 { EnableCard }
 [def
@@ -266,6 +308,11 @@ $500 Address=                   {Memory address for data exchange}
   ret
 ] SendOnesToCard=
 
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+*=$400
+
 { SendCommandToCard }
 [def
   push
@@ -296,6 +343,10 @@ $500 Address=                   {Memory address for data exchange}
   |     message, because every message begins with a 0 bit, and when the
   |     SD card sends no data it keeps the MISO line high."""
   |
+  |  """Note that the response to each command is sent by the card a few
+  |     SD CLK cycles later. If the expected response is not received within
+  |     16 clock cycles after sending the reset command, the reset command
+  |     has to be sent again."""
   }
   8 [do i=                      {Poll for upto 8 reply bytes}
     SendOnesToCard!             {Keep MOSI line high by only sending ones}
@@ -310,54 +361,62 @@ $500 Address=                   {Memory address for data exchange}
   pop ret
 ] WaitForCardReply=
 
-{ Print "OK" or "FAILED" }
-[def
-  push
-  2-- %0=
-  [if=0
-    [def ``OK #10 #0]
-  else
-    [def ``FAILED #10 #0]
-  ] PrintText!
-  %0 2++
-  pop ret
-] PrintResult=
-
-{-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 4                                      |
-+-----------------------------------------------------------------------}
-*=$400
-
 {-----------------------------------------------------------------------+
 |                                                                       |
 |       FAT32 section                                                   |
 |                                                                       |
 +-----------------------------------------------------------------------}
 
+{
 PartitionL PartitionH           {First block of partition}
 RootDirL RootDirH               {Root dir first cluster}
 SectsPerClust                   {1, 2, ... 128}
-
 FATL FATH                       {Begin of FAT area}
-
 SectorL SectorH                 {Logical Sector Address}
+}
 
 { Gives PartionL }
 [def
-  ret
+  push
+  0 SectorL= SectorH=
+  ReadSector!                   {Read MBR}
+  pop ret
 ] ReadMBR=
 
+{
 [def
   ret
 ] ReadVolumeID=
+}
 
 [def
-  ret
+  push
+
+  CardType 2- [if<=0            {XXX Address <<= 9 }
+  ]
+
+  CMD17!                        {Request block of data}
+
+  {Wait for first data byte}
+  [do
+    SendOnesToCard!
+    $fe^ if<>0loop]             {XXX Need a timeout}
+
+  511 [do k=                    {Number of bytes to read}
+    32 PrintChar!
+    SendOnesToCard!
+    PrintByte!
+    k 7& [if=0 Newline!]
+    k 1- if>=0loop]
+
+  pop ret
 ] ReadSector=
 
+{
 [def
   ret
 ] ReadNextSector=
+}
 
 {-----------------------------------------------------------------------+
 |                                                                       |
@@ -368,31 +427,28 @@ SectorL SectorH                 {Logical Sector Address}
 [def
   [def #10 `***`Memory`card #10 #0] PrintText!
 
+  [do CMD0!                     {Put card in SPI mode and enable card}
+    if<>0 DisableCard! loop]    {Until success}
+  CMD8!                         {Detect v1.x or later}
+  0 _frameCount=                {Reset timer}
   [do
-    CMD0!
-    {
-    |  """Note that the response to each command is sent by the card a few
-    |     SD CLK cycles later. If the expected response is not received within
-    |     16 clock cycles after sending the reset command, the reset command
-    |     has to be sent again."""
-    }
-    if<>0loop]
+    CMD55! ACMD41!              {Query condition}
+    CardReply if<>0             {Until the card is initialised}
+    _frameCount 60- if<0loop]   {But try for no more than 1 second}
+  CardType 2^ [if=0 CMD58!]     {Detect standard capacity or SDHC/SDXC}
+  CMD16!                        {Set block size to 512 bytes}
 
-  CMD8!
-
-  [do
-    CMD55!
-    ACMD41!
-    CardReply if<>0loop]
-
-  CMD58!
-
+{
   [def `CardType` #0] PrintText!
-  CardType PrintByte!
+  CardType PrintByte!           {Show result}
+  Newline!
+}
+
+  ReadMBR!
+
+  DisableCard!                  {Initialisation completed}
 
   [do loop]
-
-  0 SectorL= SectorH= ReadSector!
 ] Main=
 
 {-----------------------------------------------------------------------+
@@ -493,6 +549,19 @@ SectorL SectorH                 {Logical Sector Address}
   2++
   pop ret
 ] PrintByte=
+
+{ Print OK or FAILED }
+[def
+  push
+  2-- %0=
+  [if=0
+    [def ``OK #10 #0]
+  else
+    [def ``FAILED #10 #0]
+  ] PrintText!
+  %0 2++
+  pop ret
+] PrintResult=
 
 Main!
 
