@@ -1,0 +1,277 @@
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Sprite Painter                                                  |
+|                                                                       |
+|    Copyright (C) 2019 David Heiko Kolf                                |
+|                                                                       |
+|    Published under the BSD-2-Clause license.                          |
+|    https://opensource.org/licenses/BSD-2-Clause                       |
+|                                                                       |
++-----------------------------------------------------------------------+
+|                                                                       |
+|  Button A - Place color                                               |
+|  Button B - Pick color                                                |
+|                                                                       |
+|  Button A on red bar on the side - Save to serial                     |
+|                                                                       |
+|  Keys A-Z, a-z, 0-9, +, / and Space can be used to place colors.      |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+gcl0x
+
+{--- ROM version check ---}
+
+\romType, \romTypeValue_ROMv2-
+[if<0 $100 _vAC. do loop]
+
+[def {--- InitScreen ---}
+  {--- Clear screen ---}
+
+  $800 Pos=
+  \SYS_SetMemory_v2_54 \sysFn:
+  $15 \sysArgs1.
+  [do 160 \sysArgs0. Pos \sysArgs2: 54! >Pos++ >Pos, 128^ if<>0loop]
+
+  {--- Paint area ---}
+
+  $2430 Pos=
+  [do
+    64 \sysArgs0.
+    Pos \sysArgs2:
+    >Pos, 1& [if=0 $04 else $10] \sysArgs1.
+    54!
+    >Pos++ >Pos, 100^ if<>0loop]
+
+  {--- Draw sideline ---}
+
+  \SYS_Draw4_30 \sysFn:
+  $2428 \sysArgs4:
+  [do
+    >_sysArgs4, 1& [if=0 $0404 else $1010] \sysArgs0: \sysArgs2:
+    30!
+    >_sysArgs4++ >_sysArgs4, 100^ if<>0loop]
+
+  {--- Draw save button ---}
+
+  $2928 \sysArgs4:
+  $0303 \sysArgs0: \sysArgs2: 30!
+  $2a28 \sysArgs4: 30!
+
+  {--- Draw palette ---}
+
+  $2474 \sysArgs4:
+  $0 \sysArgs0: \sysArgs2:
+  [do
+    [do
+      [do 30! <_sysArgs5++ <_sysArgs5, 3& if<>0loop]
+      <_sysArgs0++ >_sysArgs0++ \sysArgs0; \sysArgs2: 15& if<>0loop]
+    $24 \sysArgs5.
+    \sysArgs4, 4+ \sysArgs4. $84^ if<>0loop]
+  ret] InitScreen=
+
+[def {--- DrawCursor ---}
+  <Color, Pos. <Pos, 3+ <Pos.
+  <Color, Pos. >Pos, 3+ >Pos.
+  >Color, Pos. <Pos, 3- <Pos.
+  >Color, Pos. >Pos, 3- >Pos.
+  ret] DrawCursor=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 3                                      |
++-----------------------------------------------------------------------}
+*=$300
+
+[def push {--- SelectColor ---}
+  GetColor!
+  fieldColor selectedColor=
+  pop ret] SelectColor=
+
+[def {--- DoubleDraw ---}
+  \vACH. \sysArgs0: \sysArgs2:
+  30! <_sysArgs5++ <_sysArgs5++ 30!
+  ret] DoubleDraw=
+
+[def {--- GetColor ---}
+  <Pos, 1+ <Pos. Pos, <fieldColor.
+  >Pos, 3+ >Pos. Pos, >fieldColor.
+  >Pos, 3- >Pos.
+  <Pos, 1- <Pos.
+  ret] GetColor=
+
+[def push {--- MoveCursor ---}
+  [>newPos, $24- if>=0
+   >newPos, $64- if<0
+   <newPos, $28- if>=0
+   <newPos, $84- if<0
+    Color tmp=
+    GetColor!
+    fieldColor Color=
+    DrawCursor!
+    newPos Pos=
+    tmp Color=
+    DrawCursor!
+   else
+    Pos newPos=
+  ]
+  pop ret] MoveCursor=
+
+[def push {--- PlaceColor --}
+  [<newPos, $30- if>=0
+   <newPos, $70- if<0
+    \SYS_Draw4_30 \sysFn:
+    Pos \sysArgs4: <selectedColor, DoubleDraw!
+    Pos \sysArgs4: <_sysArgs5++ >selectedColor, DoubleDraw!
+    DrawCursor!
+  ]
+  pop ret] PlaceColor=
+
+[def push {--- Advance ---}
+  1 textMode=
+  <Pos, 4+ <newPos.
+  MoveCursor!
+  pop ret] Advance=
+
+[def push {--- PlaceIndexColor ---}
+  <selectedColor. >selectedColor.
+  PlaceColor!
+  Advance!
+  pop ret] PlaceIndexColor=
+
+[def push {--- SendLine ---}
+  [do
+    MoveCursor! GetColor!
+    SetChar! SendData!
+    <Pos, 4+ <newPos.
+    $70- if<0loop]
+   10 Data. SendData!
+  pop ret] SendLine=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+*=$400
+
+[def {--- SendData ---}
+  Data \sysArgs0:
+  1 \sysArgs2.
+  8 \sysArgs3.
+  80!
+  ret] SendData=
+
+[def push {--- CheckButtons ---}
+  moveTimeout [if=0
+    \buttonState, drawButton| 126- if>0
+    \buttonState, \buttonRight& [if=0 textMode= <Pos, 4+ <newPos. MoveCursor!]
+    \buttonState, \buttonLeft& [if=0 textMode= <Pos, 4- <newPos. MoveCursor!]
+    \buttonState, \buttonUp& [if=0 textMode= >Pos, 4- >newPos. MoveCursor!]
+    \buttonState, \buttonDown& [if=0 textMode= >Pos, 4+ >newPos. MoveCursor!]
+    \buttonState, \buttonB& [if=0 SelectColor!]
+    \buttonState, \buttonA& [if=0
+      PlaceColor!
+      $ff drawButton=
+    else
+      drawButton [if<>0
+        0 drawButton=
+        $2828 Pos^ [if=0 Save!]
+      ]
+    ]
+    \buttonState $ff^ [if<>0 1 moveTimeout=]
+  ]
+  pop ret] CheckButtons=
+
+[def {--- SetChar ---}
+  $1004 tmp=
+  fieldColor tmp^ [if=0 32 Data. ret]
+  <fieldColor,
+  26- [if<0 91+ Data. ret]
+  26- [if<0 123+ Data. ret]
+  10- [if<0 58+ Data. ret]
+  [if=0 43 Data. ret]
+  47 Data. ret] SetChar=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 5                                      |
++-----------------------------------------------------------------------}
+*=$500
+
+[def push {--- CheckTextInput ---}
+  drawButton [if=0
+    \serialRaw, prevChar^ if<>0
+    \serialRaw, prevChar=
+    10- {#10 '\n'} if>=0
+    [if=0
+      textMode [if=0
+        1 textMode=
+        $2430 newPos=
+      else
+        >Pos, 4+ >newPos.
+        $30 <newPos.
+      ]
+      MoveCursor!
+      pop ret
+    ]
+    22- {#32 ' '} if>=0
+    [if=0 $1004 selectedColor= PlaceColor! Advance! pop ret]
+    11- {#43 '+'} if>=0
+    [if=0 62 PlaceIndexColor! pop ret]
+    4-  {#47 '/'} if>=0
+    [if=0 63 PlaceIndexColor! pop ret]
+    { #48 '0' }
+    11- [if<0 62+ PlaceIndexColor! pop ret]
+    7- { #65 'A' } if>=0
+    26- [if<0 26+ PlaceIndexColor! pop ret]
+    6- { #97 'a' } if>=0
+    26- [if<0 52+ PlaceIndexColor! pop ret]
+  ]
+  pop ret] CheckTextInput=
+
+[def push {--- Save ---}
+  \romType, \romTypeValue_ROMv3-
+  [if<0 ret]
+  \SYS_SetMode_v2_80 \sysFn: 2 80! { Dark screen }
+  $2430 newPos= 
+  \SYS_SendSerial1_v3_80 \sysFn:
+  10 Data. SendData!
+  [do
+    SendLine!
+    >Pos, 4+ >newPos.
+    $64- if<0
+    $30 <newPos.
+    loop]
+  \SYS_SetMode_v2_80 \sysFn: 0 80! { Normal screen }
+  \frameCount, 5+ <nextFrame.
+  pop ret] Save=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 6                                      |
++-----------------------------------------------------------------------}
+*=$600
+
+\SYS_SetMode_v2_80 \sysFn: 3 80! { Fast video mode for initialization }
+InitScreen!
+$2a29 Data=
+$2430 Pos= newPos=
+0 moveTimeout=
+0 selectedColor=
+0 drawButton=
+0 textMode=
+$ff prevChar=
+
+\frameCount, nextFrame=
+\SYS_SetMode_v2_80 \sysFn: 0 80! { Full video mode }
+
+{--- Main loop ---}
+
+[do
+  \frameCount, nextFrame^ [if=0
+    \frameCount, 5+ <nextFrame.
+    $20& $15| <Color. >Color. DrawCursor!
+    moveTimeout [if<>0 1- moveTimeout=]
+  ]
+  CheckButtons!
+  CheckTextInput!
+  loop]
+
+
