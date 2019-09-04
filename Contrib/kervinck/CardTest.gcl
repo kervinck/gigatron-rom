@@ -49,6 +49,7 @@ $500 Address=                   {Memory address for data exchange}
 { CMD0 }
 [def
   push
+  [def `CMD0`` #0] PrintText!
 
   0 CardType=
 
@@ -99,7 +100,7 @@ $500 Address=                   {Memory address for data exchange}
 
   WaitForCardReply!
   DisableCard!
-  CardReply 254&                {Return result: only 0 and 1 mean success}
+  CardReply 254& PrintResult!   {Only 0 and 1 mean success}
 
   pop ret
 ] CMD0=
@@ -107,6 +108,7 @@ $500 Address=                   {Memory address for data exchange}
 { CMD8 }
 [def
   push
+  [def `CMD8`` #0] PrintText!
 
   {
   |  """Following a successful reset, test if your system can successfully
@@ -163,14 +165,14 @@ $500 Address=                   {Memory address for data exchange}
       SendOnesToCard!
       SendOnesToCard!
       SendOnesToCard!
-      $aa- [if=0                {Correct pattern response}
+      $aa^ [if=0                {If pattern response is correct}
         2 CardType=             {Version 2}
       ]
     ]
   ]
   DisableCard!
 
-  CardReply 250&                {Return result: 0, 1, 4 or 5 means success}
+  CardReply 250& PrintResult!   {Return result: 0, 1, 4 or 5 means success}
 
   pop ret
 ] CMD8=
@@ -178,6 +180,7 @@ $500 Address=                   {Memory address for data exchange}
 { CMD58 }
 [def
   push
+  [def `CMD58` #0] PrintText!
   EnableCard!
   [def #$7a #0 #0 #0 #0 #0]     {CMD58 Read OCR}
   SendCommandToCard!
@@ -187,31 +190,38 @@ $500 Address=                   {Memory address for data exchange}
   SendOnesToCard!
   $40& [if<>0 4 CardType=]      {SDXC or SDHC}
   DisableCard!
-  CardReply 254&                {Return result: only 0 and 1 mean success}
+  CardReply 254& PrintResult!   {Only 0 and 1 mean success}
   pop ret
 ] CMD58=
 
 { CMD55 }
 [def
   push
+  [def `CMD55` #0] PrintText!
   EnableCard!
   [def #$77 #0 #0 #0 #0 #0]     {CMD55 Alt Command}
   SendCommandToCard!
   WaitForCardReply!
   DisableCard!
-  CardReply 254&                {Return result: only 0 and 1 mean success}
+  CardReply 254& PrintResult!   {Only 0 and 1 mean success}
   pop ret
 ] CMD55=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 3                                      |
++-----------------------------------------------------------------------}
+*=$300
 
 { ACMD41 }
 [def
   push
+  [def `ACMD41 #0] PrintText!
   EnableCard!
   [def #$69 #$40 #0 #0 #0 #0]   {ACMD41}
   SendCommandToCard!
   WaitForCardReply!
   DisableCard!
-  CardReply 254&                {Return result: only 0 and 1 mean success}
+  CardReply 254& PrintResult!   {Only 0 and 1 mean success}
   pop ret
 ] ACMD41=
 
@@ -234,21 +244,12 @@ $500 Address=                   {Memory address for data exchange}
   }
   \SYS_ExpanderControl_v4_40    {SYS function}
   _sysFn= $8078 40!             {Enable SPI0, keep MOSI high, bank=1}
-  SendOnesToCard!               {Extra clocks for reliabilty}
   pop ret
 ] EnableCard=
-
-{-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 3                                      |
-+-----------------------------------------------------------------------}
-*=$300
 
 { DisableCard }
 [def
   push
-{
-  SendOnesToCard!               {Extra clocks for reliabilty}
-}
   \SYS_ExpanderControl_v4_40    {SYS function}
   _sysFn= $807c 40!             {Disable SPI0, keep MOSI high, bank=1}
   pop ret
@@ -257,8 +258,8 @@ $500 Address=                   {Memory address for data exchange}
 { SendOnesToCard }
 [def
   255 Address.                  {Place byte in exchange buffer}
-  Address _sysArgs0=
-  1+      _sysArgs2=
+  Address _sysArgs0=            {Begin}
+  1+      _sysArgs2=            {End}
   \SYS_SpiExchangeBytes_v4_134  {SYS function}
   _sysFn= 134!                  {Exchanges a single byte}
   Address,                      {Reply byte}
@@ -269,16 +270,16 @@ $500 Address=                   {Memory address for data exchange}
 [def
   push
 
-  { Copy 6 command bytes to exchange buffer }
   p= Address q=
-  6 [do i=
+  255 q. <q++ q. <q++           {Start with two dummy bytes}
+  6 [do i=                      {Copy 6 command bytes to exchange buffer}
     p, <p++                     {Fetch byte and advance read pointer}
     q. <q++                     {Store byte and advance write pointer}
     i 1- if>0loop]              {Loop}
 
   { Send to SPI interface }
   Address _sysArgs0=            {Begin}
-  6+      _sysArgs2=            {End and overwrite exchange buffer}
+  8+      _sysArgs2=            {End and overwrite exchange buffer}
   \SYS_SpiExchangeBytes_v4_134  {SYS function}
   _sysFn= 134!
 
@@ -308,6 +309,24 @@ $500 Address=                   {Memory address for data exchange}
 
   pop ret
 ] WaitForCardReply=
+
+{ Print "OK" or "FAILED" }
+[def
+  push
+  2-- %0=
+  [if=0
+    [def ``OK #10 #0]
+  else
+    [def ``FAILED #10 #0]
+  ] PrintText!
+  %0 2++
+  pop ret
+] PrintResult=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+*=$400
 
 {-----------------------------------------------------------------------+
 |                                                                       |
@@ -341,11 +360,6 @@ SectorL SectorH                 {Logical Sector Address}
 ] ReadNextSector=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 4                                      |
-+-----------------------------------------------------------------------}
-*=$400
-
-{-----------------------------------------------------------------------+
 |                                                                       |
 |       Main program                                                    |
 |                                                                       |
@@ -355,34 +369,23 @@ SectorL SectorH                 {Logical Sector Address}
   [def #10 `***`Memory`card #10 #0] PrintText!
 
   [do
-    [def `CMD0`` #0] PrintText!
     CMD0!
-
-    if<>0 FAILED!
     {
     |  """Note that the response to each command is sent by the card a few
     |     SD CLK cycles later. If the expected response is not received within
     |     16 clock cycles after sending the reset command, the reset command
     |     has to be sent again."""
     }
-    loop]
-  OK!
+    if<>0loop]
 
-  [def `CMD8`` #0] PrintText!
-  CMD8! [if<>0 FAILED! else OK!]
+  CMD8!
 
   [do
-  [def `CMD55` #0] PrintText!
-  CMD55! [if<>0 FAILED! else OK!]
+    CMD55!
+    ACMD41!
+    CardReply if<>0loop]
 
-  [def `ACMD41 #0] PrintText!
-  ACMD41! [if<>0 FAILED! else OK!]
-
-  CardReply if<>0loop]
-
-  [def `CMD58` #0] PrintText!
-  CMD58! [if<>0 FAILED! else OK!]
-
+  CMD58!
 
   [def `CardType` #0] PrintText!
   CardType PrintByte!
@@ -467,20 +470,6 @@ SectorL SectorH                 {Logical Sector Address}
     <p++ loop]                  {Advance text pointer and loop}
   pop ret
 ] PrintText=
-
-{ Print " OK" }
-[def
-  push
-  [def ``OK #10 #0] PrintText!
-  pop ret
-] OK=
-
-{ Print " FAILED" }
-[def
-  push
-  [def ``FAILED #10 #0] PrintText!
-  pop ret
-] FAILED=
 
 { Print hex digit in vAC }
 [def
