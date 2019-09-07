@@ -32,6 +32,28 @@
 gcl0x
 
 {-----------------------------------------------------------------------+
+|                                                                       |
+|       Variables                                                       |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+{
+        Variable                Description
+        --------                -----------
+        CardType                Detected card version
+        Address                 RAM for transfer buffer
+        ValueL,H                32-bit accumulator
+        OffsetL,H               Offset to be added to Sector
+        PartitionL,H            Begin of primary partition (if FAT32)
+        RootDirL,H              Begin cluster of FAT32 root directory
+
+        ClusterSize             Sectors per cluster: 1, 2, ... 128
+        ClusterBaseL,H          Cluster 0 (hypothetical)
+        FatSizeL,H              Sectors per FAT
+        FatBaseL,H              XXX
+}
+
+{-----------------------------------------------------------------------+
 |                       RAM page 2                                      |
 +-----------------------------------------------------------------------}
 
@@ -102,7 +124,7 @@ $500 Address=                   {Memory address for data exchange}
   }
 
   WaitForCardReply!
-  CardReply 254& PrintResult!   {Only 0 and 1 mean success}
+  1^ PrintResult!               {Only 1 means success}
 
   pop ret
 ] CMD0=
@@ -159,10 +181,9 @@ $500 Address=                   {Memory address for data exchange}
   EnableCard!
   [def #$48 #0 #0 #1 #$aa #$87] {CMD8 Get Version, voltage 2.7-3.6V}
   SendCommandToCard!
+
   WaitForCardReply!
-
-  CardReply $ff^ [if<>0
-
+  $ff^ [if<>0
     CardReply 4& [if<>0
       1 CardType=               {Version 1}
     else
@@ -208,7 +229,7 @@ $500 Address=                   {Memory address for data exchange}
   [def #$77 #0 #0 #0 #0 #0]     {CMD55}
   SendCommandToCard!
   WaitForCardReply!
-  CardReply 254& PrintResult!   {Only 0 and 1 mean success}
+  254& PrintResult!             {Only 0 and 1 mean success}
   pop ret
 ] CMD55=
 
@@ -232,7 +253,7 @@ $500 Address=                   {Memory address for data exchange}
   ]
   SendCommandToCard!
   WaitForCardReply!
-  CardReply 254& PrintResult!   {Only 0 and 1 mean success}
+  254& PrintResult!             {Only 0 and 1 mean success}
   pop ret
 ] ACMD41=
 
@@ -246,7 +267,7 @@ $500 Address=                   {Memory address for data exchange}
   [def #$50 #0 #0 #$02 #0 #0]   {CMD16}
   SendCommandToCard!
   WaitForCardReply!
-  CardReply 254& PrintResult!   {Only 0 and 1 mean success}
+  254& PrintResult!             {Only 0 and 1 mean success}
   pop ret
 ] CMD16=
 
@@ -257,20 +278,32 @@ $500 Address=                   {Memory address for data exchange}
   }
   push
   [def `CMD17` #0] PrintText!
+
   [def #$51 #0 #0 #0 #0 #0]     {CMD17}
-  SendCommandToCard!
+  p= q=
+  >ValueH, 15& <q++ q.          {Put bit 0:27 in argument, big-endian order}
+  <ValueH,     <q++ q.
+  >ValueL,     <q++ q.
+  <ValueL,     <q++ q.
+  p SendCommandToCard!
+
   WaitForCardReply!
+  254& PrintResult!             {Only 0 and 1 mean success}
 
-  Newline!
+  [if=0
+    {Wait for first data byte}
+    [def `Wait``` #0] PrintText!
+    [do
+      SendOnesToCard!           {XXX Can we use WaitForCardReply here?}
+      $ff^ if=0loop]            {XXX Loop needs a timeout}
+      \sysArgs6, PrintByte!
+      \sysArgs6, $fe^ PrintResult! {Only $fe is OK}
+  ]
 
-  CardReply 254& PrintResult!   {Only 0 and 1 mean success}
   pop ret
 ] CMD17=
 
-{ EnableCard }
-[def
-  push
-  {
+{
         Bus     ROM v4+
         ---     --------
         A0      SCLK
@@ -283,28 +316,30 @@ $500 Address=                   {Memory address for data exchange}
         A7      B1
         A8-A14  (unused)
         A15     MOSI
-  }
+}
+
+{ EnableCard }
+[def
   \SYS_ExpanderControl_v4_40    {SYS function}
   _sysFn= $8078 40!             {Enable SPI0, keep MOSI high, bank=1}
-  pop ret
+  ret
 ] EnableCard=
 
 { DisableCard }
 [def
-  push
   \SYS_ExpanderControl_v4_40    {SYS function}
   _sysFn= $807c 40!             {Disable SPI0, keep MOSI high, bank=1}
-  pop ret
+  ret
 ] DisableCard=
 
 { SendOnesToCard }
 [def
-  255 Address.                  {Place byte in exchange buffer}
-  Address _sysArgs0=            {Begin}
-  1+      _sysArgs2=            {End}
+  255 \sysArgs6.                {Place byte in exchange buffer}
+  \sysArgs6 _sysArgs0=          {Begin}
+  1+        _sysArgs2=          {End}
   \SYS_SpiExchangeBytes_v4_134  {SYS function}
   _sysFn= 134!                  {Exchanges a single byte}
-  Address,                      {Reply byte}
+  \sysArgs6,                    {Reply byte}
   ret
 ] SendOnesToCard=
 
@@ -322,7 +357,7 @@ $500 Address=                   {Memory address for data exchange}
   6 [do i=                      {Copy 6 command bytes to exchange buffer}
     p, <p++                     {Fetch byte and advance read pointer}
     q. <q++                     {Store byte and advance write pointer}
-    i 1- if>0loop]              {Loop}
+    i 1- if>0loop]              {Looping}
 
   { Send to SPI interface }
   Address _sysArgs0=            {Begin}
@@ -354,12 +389,30 @@ $500 Address=                   {Memory address for data exchange}
     if<>0                       {Break out when valid message detected}
       i 1- if>0loop]            {Or when loop counter exhausted}
 
-  Address, CardReply=           {Reply from card}
-  32       PrintChar!           {Space}
-  Address, PrintByte!           {Print hex value}
-
+  32 PrintChar!                 {Space}
+  \sysArgs6, CardReply=         {Store reply from card}
+  PrintByte!                    {Print hex value}
+  CardReply                     {As return value}
   pop ret
 ] WaitForCardReply=
+
+[def
+  push
+
+  [do CMD0!                     {Put card in SPI mode and enable card}
+    if<>0 DisableCard! loop]    {Until success} {XXX Loop needs a timeout}
+  CMD8!                         {Detect version 1.X or later}
+  0 _frameCount=                {Reset timer}
+  [do
+    CMD55! ACMD41!              {Query condition}
+    CardReply if<>0             {Until the card is initialised}
+    _frameCount 60- if<0loop]   {But try for no more than 1 second}
+  CardType 2^ [if=0 CMD58!]     {Detect standard capacity or SDHC/SDXC}
+  CMD16!                        {Set block size to 512 bytes}
+  DisableCard!                  {Initialisation completed}
+
+  pop ret
+] InitCard=
 
 {-----------------------------------------------------------------------+
 |                                                                       |
@@ -367,48 +420,178 @@ $500 Address=                   {Memory address for data exchange}
 |                                                                       |
 +-----------------------------------------------------------------------}
 
-{
-PartitionL PartitionH           {First block of partition}
-RootDirL RootDirH               {Root dir first cluster}
-SectsPerClust                   {1, 2, ... 128}
-FATL FATH                       {Begin of FAT area}
-SectorL SectorH                 {Logical Sector Address}
-}
-
-{ Gives PartionL }
+{ ReadMBR }
 [def
+  {
+     Checks MBR and finds the primary partition's start block
+  }
   push
-  0 SectorL= SectorH=
+
+  0 ValueL= ValueH=
   ReadSector!                   {Read MBR}
+
+  [def `MBR```` #0] PrintText!
+  $1fe Address+ deek k=         {Check signature}
+  PrintByte! >k, PrintByte!     {Print in byte order}
+  $aa55 k^ PrintResult!
+
   pop ret
 ] ReadMBR=
 
-{
+{-----------------------------------------------------------------------+
+|}$08a0 _vLR= ret{      RAM page 8                                      |
++-----------------------------------------------------------------------}
+*=$8a0
+
+{ InitFAT32 }
 [def
-  ret
+  push
+  [def `FAT32`` #0] PrintText!
+
+  $ffff PartitionL=
+        PartitionH=             {Mark as invalid}
+
+  $1c2 Address+ peek k=
+  PrintByte!
+  $0b k^ [if<>0 $07^]
+  PrintResult!                  {Accepts $0b and $0c}
+                                {XXX Check CHS or LBA ???}
+  [if=0
+    $1c6 Address+ deek PartitionL=
+    $1c8 Address+ deek PartitionH=
+  ]
+
+  pop ret
+] InitFAT32=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 9                                      |
++-----------------------------------------------------------------------}
+*=$9a0
+
+{ ReadVolumeID }
+[def
+  {
+    Reads the first block of the partition. Mind that, despite it's name,
+    this block doesn't hold the volume label: that is stored in the root
+    directory instead.
+  }
+  push
+
+  PartitionL ValueL=
+  PartitionH ValueH=
+  ReadSector!
+
+  [def `Vol.ID` #0] PrintText!
+  $00b Address+ deek k=         {Confirm expected sector length}
+  >k, PrintByte! <k, PrintByte! {Print in word order}
+  512 k^ PrintResult!
+
+  [if=0 InitPartition!]
+
+  pop ret
 ] ReadVolumeID=
-}
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 10                                     |
++-----------------------------------------------------------------------}
+*=$aa0
 
 [def
   push
 
-  CardType 2- [if<=0            {XXX Address <<= 9 }
-  ]
+  {
+        ClusterBaseL,H =
+                PartitionL,H                    from MBR
+              + Reserved Sectors                from VolumeID
+              + (Number of FATs * FAT size)     from VolumeID
+              - 2 * ClusterSize                 from VolumeID
+  }
 
+  $024 Address+ deek {FatSizeL=} ValueL= OffsetL=
+  $026 Address+ deek {FatSizeH=} ValueH= OffsetH=
+  AddOffset!
+
+  $00e Address+ deek OffsetL=   {Number of reserved sectors}
+  0 OffsetH= AddOffset!
+
+  $00d Address+ peek
+  ClusterSize=                  {Sectors per cluster}
+
+  0 ClusterSize- ClusterSize-   {Subtract twice for ClusterBase}
+  OffsetL=
+  $ffff OffsetH= AddOffset!
+
+  PartitionL OffsetL=
+  PartitionH OffsetH=
+  AddOffset!
+
+         ClusterBaseL=
+  ValueH ClusterBaseH=
+
+  { First cluster of root directory }
+  $02c Address+ deek RootDirL=
+  $02d Address+ deek RootDirH=
+
+  pop ret
+] InitPartition=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 11                                     |
++-----------------------------------------------------------------------}
+*=$ba0
+
+[def
+  push
+
+  { Sector = ClusterBase + RootDir * ClusterSize }
+  RootDirL   ValueL=
+  RootDirH   ValueH=
+  ClusterToSector!
+  PrintValue! Newline!
+  ReadSector!
+
+  [def `Dir: #10 #0] PrintText!
+
+  Address q=                    {Setup write pointer}
+  95 [do k=                     {Number of bytes to read}
+    32 PrintChar!               {Space}
+    q, PrintByte!               {Store byte in buffer}
+    <q++                        {Advance read pointer}
+    k 7& [if=0 Newline!]        {Not more than 8 bytes on a line}
+    k 1- if>=0loop]             {Looping}
+
+  pop ret
+] ReadRootDir=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 12                                     |
++-----------------------------------------------------------------------}
+*=$ca0
+
+{ ReadSector }
+[def
+  {
+    Read sector from card (clobbers Sector and Offset variables)
+  }
+  push
+  EnableCard!
+
+  CardType 2- [if<0
+    SectorToByte!]              {Version 1.X cards do byte addressing}
   CMD17!                        {Request block of data}
 
-  {Wait for first data byte}
-  [do
-    SendOnesToCard!
-    $fe^ if<>0loop]             {XXX Need a timeout}
+  Address q=                    {Setup write pointer}
+  512 [do k=                    {Number of bytes to read}
+    SendOnesToCard!             {XXX Read directly into buffer}
+    q.                          {Store byte in buffer}
+    q 1+ q=                     {Advance write pointer, cross page boundaries}
+    k 1- if>0loop]              {Looping}
 
-  511 [do k=                    {Number of bytes to read}
-    32 PrintChar!
-    SendOnesToCard!
-    PrintByte!
-    k 7& [if=0 Newline!]
-    k 1- if>=0loop]
+  SendOnesToCard!               {Read 16-bit checksum}
+  SendOnesToCard!               {XXX We should also verify this checksum}
 
+  DisableCard!
   pop ret
 ] ReadSector=
 
@@ -420,47 +603,165 @@ SectorL SectorH                 {Logical Sector Address}
 
 {-----------------------------------------------------------------------+
 |                                                                       |
-|       Main program                                                    |
+|       32-bit arithmetic section                                       |
 |                                                                       |
 +-----------------------------------------------------------------------}
 
+{ SectorToByte }
 [def
-  [def #10 `***`Memory`card #10 #0] PrintText!
+  {
+    Multiply 32-bit Sector by 512 (clobbers Offset)
+  }
+  push
+  0         <OffsetL.           {First shift left by one byte}
+  <ValueL, >OffsetL.
+  >ValueL, <OffsetH.
+  <ValueH, >OffsetH.
 
-  [do CMD0!                     {Put card in SPI mode and enable card}
-    if<>0 DisableCard! loop]    {Until success}
-  CMD8!                         {Detect v1.x or later}
-  0 _frameCount=                {Reset timer}
-  [do
-    CMD55! ACMD41!              {Query condition}
-    CardReply if<>0             {Until the card is initialised}
-    _frameCount 60- if<0loop]   {But try for no more than 1 second}
-  CardType 2^ [if=0 CMD58!]     {Detect standard capacity or SDHC/SDXC}
-  CMD16!                        {Set block size to 512 bytes}
+  OffsetL ValueL=              {Then double once}
+  OffsetH ValueH= AddOffset!
 
-{
-  [def `CardType` #0] PrintText!
-  CardType PrintByte!           {Show result}
-  Newline!
-}
-
-  ReadMBR!
-
-  DisableCard!                  {Initialisation completed}
-
-  [do loop]
-] Main=
+  pop ret
+] SectorToByte=
 
 {-----------------------------------------------------------------------+
-|}$08a0 _vLR= ret{      RAM page 8                                      |
+|}>_vLR++ ret{          RAM page 13                                     |
 +-----------------------------------------------------------------------}
-*=$8a0
+*=$da0
+
+{ ClusterToSector }
+[def
+  {
+    Multiply ValueL,H by ClusterSize and add ClusterBase (clobbers Offset)
+  }
+  push
+  1 [do k=
+      ClusterSize- if<0
+        ValueL OffsetL=
+        ValueH OffsetH=
+        AddOffset!              {Sector += Sector}
+        k k+ loop]
+
+  ClusterBaseL OffsetL=
+  ClusterBaseH OffsetH=
+  AddOffset!
+
+  pop ret
+] ClusterToSector=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 14                                     |
++-----------------------------------------------------------------------}
+*=$ea0
+
+{ AddOffset }
+[def
+  {
+    Add 32-bit OffsetL,H to 32-bit ValueL,H and store result there.
+  }
+  ValueL OffsetL^ [if<0        {Compare lower halves' most significant bits}
+    ValueL                     {MSB unequal: carry taken from their sum}
+  else
+    $8000                       {MSB equal: carry taken from either term}
+  ] OffsetL+                    {Carry now in MSB of vAC (inverted)}
+  [if>=0 ValueH 1+ ValueH=]   {Apply carry to upper half}
+  ValueH OffsetH+ ValueH=     {Sum upper half}
+  ValueL OffsetL+ ValueL=     {Sum lower half and return this as well}
+  ret
+] AddOffset=
 
 {-----------------------------------------------------------------------+
 |                                                                       |
 |       Video terminal section                                          |
 |                                                                       |
 +-----------------------------------------------------------------------}
+
+{ PrintValue }
+[def
+  {
+    Print 32-bit ValueL,H in hexadecimal
+  }
+  push
+  ValueH PrintWord!
+  ValueL PrintWord!
+  pop ret
+] PrintValue=
+
+{ PrintWord }
+[def
+  {
+    Print 16-bit word in hexadecimal
+  }
+  push
+  k=
+  >k, PrintByte!
+  <k, PrintByte!
+  pop ret
+] PrintWord=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 15                                     |
++-----------------------------------------------------------------------}
+*=$fa0
+
+{ Print byte pointed to at vAC }
+[def
+  push
+  2-- %0=
+  4<< \vACH, PrintHexDigit!   {High nibble}
+  %0         PrintHexDigit!   {Low nibble}
+  2++
+  pop ret
+] PrintByte=
+
+{ Print OK or FAILED }
+[def
+  push
+  k=                            {Preserve vAC for caller}
+  [if=0
+    [def ``OK #10 #0]
+  else
+    [def ``FAILED #10 #0]
+  ] PrintText!
+  k
+  pop ret
+] PrintResult=
+
+{ PrintHexDigit }
+[def
+  {
+     Print lowest nibble from vAC as hex digit
+  }
+  push
+  15&
+  10- [if<0 $3a+ else $41+] PrintChar!
+  pop ret
+] PrintHexDigit=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 16                                     |
++-----------------------------------------------------------------------}
+*=$10a0
+
+{ PrintText }
+[def
+  {
+    Print text string, may include newline characters (#10)
+  }
+  push                          {Save vLR because this is not a leaf subroutine}
+  p=
+  [do                           {Loop over characters}
+    p, if<>0                    {Next character to be printed, unless 0}
+    10^ [if<>0 10^ PrintChar!   {Print the character and advance cursor}
+         else      Newline!]    {Or go to next line}
+    <p++ loop]                  {Advance text pointer and loop}
+  pop ret
+] PrintText=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 17                                     |
++-----------------------------------------------------------------------}
+*=$11a0
 
 { Newline }
 [def
@@ -487,12 +788,19 @@ SectorL SectorH                 {Logical Sector Address}
 ] Newline=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 9                                      |
+|}>_vLR++ ret{          RAM page 18                                     |
 +-----------------------------------------------------------------------}
-*=$9a0
+*=$12a0
 
-{ Print ASCII character (32..127) on screen using the 5x8 pixel built-in font }
+{ PrintChar }
 [def
+  {
+    Print ASCII character (>=32) on screen using the 5x8 pixel built-in font.
+    This is a bare bones version:
+    1. No handling of newline characters
+    2. No implicit linewrapping
+    3. No blanking of the 1 pixel horizontal space between characters
+  }
   82-                           {Map ASCII code to offset in font table}
   [if<0 50+ i= &_font32up       {First page for ASCII 32..81}
    else     i= &_font82up] j=   {Second page is ASCII 82..127}
@@ -511,57 +819,31 @@ SectorL SectorH                 {Logical Sector Address}
 ] PrintChar=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 10                                     |
+|}>_vLR++ ret{          RAM page 19                                     |
 +-----------------------------------------------------------------------}
-*=$aa0
-
-{ Print text string }
-[def
-  push                          {Save vLR because this is not a leaf subroutine}
-  p=
-  [do                           {Loop over characters}
-    p, if<>0                    {Next character to be printed, unless 0}
-    10^ [if<>0 10^ PrintChar!   {Print the character and advance cursor}
-         else      Newline!]    {Or go to next line}
-    <p++ loop]                  {Advance text pointer and loop}
-  pop ret
-] PrintText=
-
-{ Print hex digit in vAC }
-[def
-  push
-  15&
-  10- [if<0 $3a+ else $41+] PrintChar!
-  pop ret
-] PrintHexDigit=
+*=$13a0
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 11                                     |
+|                                                                       |
+|       Main program                                                    |
+|                                                                       |
 +-----------------------------------------------------------------------}
-*=$ba0
 
-{ Print byte pointed to at vAC }
 [def
-  push
-  2-- %0=
-  4<< \vACH, PrintHexDigit!   {High nibble}
-  %0         PrintHexDigit!   {Low nibble}
-  2++
-  pop ret
-] PrintByte=
+  [def #10 `***`Memory`card #10 #0] PrintText!
+  InitCard!
 
-{ Print OK or FAILED }
-[def
-  push
-  2-- %0=
-  [if=0
-    [def ``OK #10 #0]
-  else
-    [def ``FAILED #10 #0]
-  ] PrintText!
-  %0 2++
-  pop ret
-] PrintResult=
+  [def `CardType` #0] PrintText!
+  CardType PrintByte!           {Show detected card version}
+  Newline!
+
+  ReadMBR!
+  InitFAT32!
+  ReadVolumeID!
+  ReadRootDir!
+
+  [do loop]
+] Main=
 
 Main!
 

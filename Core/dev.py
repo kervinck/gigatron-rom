@@ -92,6 +92,8 @@
 #  DONE v6502: Test with Microchess
 #  DONE Sound: Better noise by changing wavX every frame (at least in channel 1)
 #  DONE Sound demo: Play SMB Underworld tune
+#  XXX  Fix clobbering of 0x81 by SPI SYS functions #103
+#  DONE Fix possible video timing error in Loader #100
 #  XXX  v6502: Test with Apple1 BASIC
 #  XXX  v6502: Stub D010-D013 with JSR targets for easier patching
 #  XXX  v6502: SYS_v6502_IRQ
@@ -314,9 +316,8 @@ ledTempo        = zpByte() # Next value for ledTimer after LED state change
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 userVars        = zpByte(0)
 
-# TODO: Give this an address < 0x30
-zpReset(0x81)
-ctrlBits        = zpByte()
+# TODO: Give this an address < 0x30 (GitHub issue #103)
+ctrlBits        = sysArgs+7
 
 #-----------------------------------------------------------------------
 #
