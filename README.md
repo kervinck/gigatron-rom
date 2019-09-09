@@ -36,7 +36,7 @@ gigatron-rom
        |                        assembler, debugger, MIDI music, demos (sprites,
        |                        lines, game of life, Tetronis game...)
        +--- Cwiiis/             Gigatris game
-       +--- dhkolf/             Fast emulator for Linux, using SDL2 and lua
+       +--- dhkolf/             Fast emulator; Demos (SprPaint, PianoBeep,...)
        +--- flok99/             Simple (and slow) visualizer using SDL2
        +--- gigawalt/           Walter's script
        +--- kervinck/           Ramblings (all work in progress)
