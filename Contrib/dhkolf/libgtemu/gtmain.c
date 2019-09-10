@@ -255,6 +255,26 @@ static void ondroppedfile (struct MainState *mstate, struct GTState *gt,
 
 }
 
+static const char *parsefileoption (int argc, char *argv[],
+	int *i, int *displayhelp)
+{
+	if (argv[*i][2] != '\0') {
+		return argv[*i] + 2;
+	}
+	(*i)++;
+	if (*i >= argc) {
+		/* no file name given */
+		*displayhelp = 1;
+		return NULL;
+	}
+	if (argv[*i][0] == '-') {
+		/* another option */
+		*displayhelp = 1;
+		return NULL;
+	}
+	return argv[*i];
+}
+
 static void parseargs (int argc, char *argv[], struct MainState *a)
 {
 	int i;
@@ -280,40 +300,16 @@ static void parseargs (int argc, char *argv[], struct MainState *a)
 			a->displayhelp = 1;
 			break;
 		case 'l':
-			if (argv[i][2] != '\0') {
-				a->sendfile = argv[i] + 2;
-				break;
-			}
-			i++;
-			if (i >= argc) {
-				/* no file name given */
-				a->displayhelp = 1;
-				return;
-			}
-			if (argv[i][0] == '-') {
-				/* another option */
-				a->displayhelp = 1;
-				return;
-			}
-			a->sendfile = argv[i];
+			a->sendfile = parsefileoption(argc, argv,
+				&i, &a->displayhelp);
 			break;
 		case 't':
-			if (argv[i][2] != '\0') {
-				a->textfile = argv[i] + 2;
-				break;
-			}
-			i++;
-			if (i >= argc) {
-				/* no file name given */
-				a->displayhelp = 1;
-				return;
-			}
-			if (argv[i][0] == '-') {
-				/* another option */
-				a->displayhelp = 1;
-				return;
-			}
-			a->textfile = argv[i];
+			a->textfile = parsefileoption(argc, argv,
+				&i, &a->displayhelp);
+			break;
+		case 'r':
+			a->romfile = parsefileoption(argc, argv,
+				&i, &a->displayhelp);
 			break;
 		case '6':
 			if (argv[i][2] != '4' || argv[i][3] != '\0') {
@@ -328,7 +324,7 @@ static void parseargs (int argc, char *argv[], struct MainState *a)
 		}
 	}
 	if (i < argc) {
-		a->romfile = argv[i];
+		a->displayhelp = 1;
 	}
 }
 
@@ -340,15 +336,14 @@ static void displayhelp (const char *progname)
 		progname = "gtemu";
 	}
 	fprintf(stderr,
-		"usage: %s [-h] [-l filename.gt1] [-t filename.gtb] "
-		"[-64] [filename.rom]\n"
+		"usage: %s [-h] [options] "
 		"\n"
 		"Arguments:\n"
 		" -h               Display this help.\n"
 		" -l filename.gt1  GT1 program to be loaded at the start.\n"
 		" -t filename.gtb  Text file to be sent with Ctrl-F3.\n"
+		" -r filename.rom  ROM file (default name: gigatron.rom).\n"
 		" -64              Expand RAM to 64k.\n"
-		"    filename.rom  ROM file (default name: gigatron.rom).\n"
 		"\n"
 		"Special keys:\n"
 		"    Ctrl-F2       Send designated GT1 file.\n"
