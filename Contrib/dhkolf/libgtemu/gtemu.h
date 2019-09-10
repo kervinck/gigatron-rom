@@ -63,6 +63,7 @@ struct GTPeriph {
 		unsigned char checksum;
 		const unsigned char *data;
 		size_t remainingdata, remainingsegment;
+		char prevkey;
 	} loader;
 	struct {
 		int invpulse, sentfull;
@@ -112,6 +113,9 @@ extern int gtloader_validategt1 (const char *data, size_t datasize);
 
 extern int gtloader_sendtext (struct GTPeriph *ph,
 	const char *data, size_t datasize);
+
+extern int gtloader_sendkey (struct GTState *gt, struct GTPeriph *ph,
+	char key);
 
 #endif /* GTEMU_H */
 

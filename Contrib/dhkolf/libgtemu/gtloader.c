@@ -24,7 +24,8 @@ enum LoaderState {
 	L6_CHECKSUM_RH,
 	L7_FINISH_RH,
 	LT1_KEYUP_FV,
-	LT2_KEYDOWN_FV
+	LT2_KEYDOWN_FV,
+	LT3_KEYIDLE_FV,
 };
 
 static void sendbit (struct GTState *gt, struct GTPeriph *ph,
@@ -155,7 +156,7 @@ static void sendtextrelease (struct GTState *gt, struct GTPeriph *ph)
 		if (ph->loader.remainingdata > 0) {
 			ph->loader.state = LT2_KEYDOWN_FV;
 		} else {
-			ph->loader.state = L_IDLE;
+			ph->loader.state = LT3_KEYIDLE_FV;
 		}
 	}
 }
@@ -187,6 +188,12 @@ void gtloader_onfallingvsync (struct GTState *gt, struct GTPeriph *ph)
 		return;
 	case LT2_KEYDOWN_FV:
 		sendtextbyte(gt, ph);
+		return;
+	case LT3_KEYIDLE_FV:
+		ph->loader.remainingframe--;
+		if (ph->loader.remainingframe == 0) {
+			ph->loader.state = L_IDLE;
+		}
 		return;
 	default:
 		return;
@@ -288,6 +295,27 @@ int gtloader_sendtext (struct GTPeriph *ph,
 	ph->loader.remainingframe = 3;
 
 	ph->loader.state = LT1_KEYUP_FV;
+
+	return 1;
+}
+
+int gtloader_sendkey (struct GTState *gt, struct GTPeriph *ph, char key)
+{
+	if (ph->loader.state != L_IDLE &&
+		(ph->loader.state != LT1_KEYUP_FV ||
+			ph->loader.remainingdata > 0) &&
+		ph->loader.state != LT3_KEYIDLE_FV) {
+
+		return 0;
+	}
+
+	if (ph->loader.state == L_IDLE || ph->loader.prevkey != key) {
+		ph->loader.prevkey = key;
+		gt->in = (unsigned char) key;
+		ph->loader.remainingdata = 0;
+		ph->loader.remainingframe = 3;
+		ph->loader.state = LT1_KEYUP_FV;
+	}
 
 	return 1;
 }

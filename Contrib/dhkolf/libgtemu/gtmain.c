@@ -445,7 +445,7 @@ int main (int argc, char *argv[])
 				SDL_free(ev.drop.file);
 				continue;
 			}
-			gtsdl_handleevent(&s, &gt, &ev);
+			gtsdl_handleevent(&s, &gt, &ph, &ev);
 		}
 	} else {
 		const char *sdlerror = SDL_GetError();
