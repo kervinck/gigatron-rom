@@ -108,6 +108,30 @@ static void cputick (struct GTState *gt, unsigned char undef)
 	gt->ir = gt->rom[pc].i;
 	gt->d = gt->rom[pc].d;
 
+#if 1 /* optional optimization */
+	/* shortcuts for the three most frequent instructions */
+	switch (ir) {
+	case 0x5d: /* ora [y,x++],out -- the video output instruction */
+		addr = (gt->x | (gt->y << 8)) & gt->rammask;
+		gt->out = gt->ram[addr] | gt->ac;
+		gt->x++;
+		gt->pc = pc + 1;
+		return;
+	case 0xc2: /* st [D] */
+		/* this assumes that the RAM has at least 256 bytes */
+		gt->ram[d] = gt->ac;
+		gt->pc = pc + 1;
+		return;
+	case 0x01: /* ld [D] */
+		/* this assumes that the RAM has at least 256 bytes */
+		gt->ac = gt->ram[d];
+		gt->pc = pc + 1;
+		return;
+	default:
+		break;
+	}
+#endif
+
 	ins = ir >> 5;
 	mod = (ir >> 2) & 7;
 	bus = ir & 3;

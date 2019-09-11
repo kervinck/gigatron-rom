@@ -2,12 +2,12 @@
 libgtemu -- David Kolf's Library for Gigatron Emulation
 =======================================================
 
-Version 0.3.0
+Version 0.4.0
 
 About
 -----
 
-libgtemu provides functions for emulating the [Gigatron TTL Color Computer][gt]
+libgtemu provides functions for emulating the [Gigatron TTL microcomputer][gt]
 and rendering its graphics through the [SDL library][sdl].
 
 It can be used as a lightweight stand-alone emulator as well as being
@@ -73,14 +73,14 @@ Stand-alone emulator
 The stand-alone emulator offers the following basic features on the
 command line:
 
-	usage: ./gtrun [-h] [-l filename.gt1] [-t filename.gtb] [-64] [filename.rom]
+	usage: ./gtrun [-h] [options]
 
 	Arguments:
 	 -h               Display this help.
 	 -l filename.gt1  GT1 program to be loaded at the start.
 	 -t filename.gtb  Text file to be sent with Ctrl-F3.
+	 -r filename.rom  ROM file (default name: gigatron.rom).
 	 -64              Expand RAM to 64k.
-	    filename.rom  ROM file (default name: gigatron.rom).
 
 	Special keys:
 	    Ctrl-F2       Send designated GT1 file.
@@ -138,6 +138,8 @@ Initializes the contents of the `GTState` structure and sets
 pointers to the given RAM and ROM arrays.  You can (and should) initialize
 the content of those arrays.  `romsize` is the size in bytes, not the number
 of entries.
+
+The RAM size has to be at least 256 bytes.
 
 #### gtemu_initperiph
 
@@ -269,6 +271,31 @@ Returns whether the loader is active at the moment.
 Validates a GT1 file.
 
 The return value is 1 if the contents were valid, 0 otherwise.
+
+#### gtloader_sendtext
+
+	extern int gtloader_sendtext (struct GTPeriph *ph,
+		const char *data, size_t datasize);
+
+Sends data as keystrokes to the emulated Gigatron that can be received by
+TinyBASIC and other programs accepting text input.
+
+The memory pointed to by `data` must stay valid until everything is sent.
+
+It returns 1 on success and 0 on failure when there is still previous data
+that was not completely sent.
+
+#### gtloader_sendkey
+
+	extern int gtloader_sendkey (struct GTState *gt, struct GTPeriph *ph,
+		char key);
+
+Sends a single keypress to the emulated Gigatron.  When two different keys
+are sent quickly after each other, the second key will directly replace
+the input value without first sending a null input.
+
+It returns 1 on success and 0 on failure when there is still previous data
+that was not completely sent.
 
 ### SDL
 

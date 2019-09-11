@@ -25,7 +25,6 @@ struct GTSDLState {
 	int fps;
 	unsigned int nextframe3, nextsecondtime;
 	unsigned int framecount;
-	int textkeydown;
 };
 
 extern int gtsdl_openwindow (struct GTSDLState *s, const char *title);
@@ -46,7 +45,7 @@ extern int gtsdl_runuiframe (struct GTSDLState *s, struct GTState *gt,
 	struct GTPeriph *ph, SDL_Event *ev);
 
 extern int gtsdl_handleevent (struct GTSDLState *s, struct GTState *gt,
-	SDL_Event *ev);
+	struct GTPeriph *ph, SDL_Event *ev);
 
 #endif /* GTSDL_H */
 

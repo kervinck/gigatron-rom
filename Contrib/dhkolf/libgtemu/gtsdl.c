@@ -31,7 +31,6 @@ static void clearstate (struct GTSDLState *s, int standalone)
 	s->gamescreen = NULL;
 	s->audiodev = 0;
 	s->fps = 0;
-	s->textkeydown = 0;
 	s->standalone = standalone;
 }
 
@@ -303,7 +302,7 @@ int gtsdl_runuiframe (struct GTSDLState *s, struct GTState *gt,
 }
 
 static int onplainkeydown (struct GTSDLState *s, struct GTState *gt,
-	SDL_KeyboardEvent *ev)
+	struct GTPeriph *ph, SDL_KeyboardEvent *ev)
 {
 	switch (ev->keysym.scancode) {
 	case SDL_SCANCODE_DELETE:
@@ -335,16 +334,13 @@ static int onplainkeydown (struct GTSDLState *s, struct GTState *gt,
 	}
 	switch (ev->keysym.sym) {
 	case SDLK_RETURN:
-		gt->in = '\n';
-		s->textkeydown = 1;
+		gtloader_sendkey(gt, ph, '\n');
 		return 1;
 	case SDLK_BACKSPACE:
-		gt->in = 127;
-		s->textkeydown = 1;
+		gtloader_sendkey(gt, ph, 127);
 		return 1;
 	case SDLK_TAB:
-		gt->in = '\t';
-		s->textkeydown = 1;
+		gtloader_sendkey(gt, ph, '\t');
 		return 1;
 	default:
 		return 0;
@@ -352,38 +348,36 @@ static int onplainkeydown (struct GTSDLState *s, struct GTState *gt,
 }
 
 static int onctrlkeydown (struct GTSDLState *s, struct GTState *gt,
-	SDL_KeyboardEvent *ev)
+	struct GTPeriph *ph, SDL_KeyboardEvent *ev)
 {
 	if (ev->keysym.sym >= 'a' && ev->keysym.sym <= 'z') {
-		gt->in = ev->keysym.sym & 0x1f;
-		s->textkeydown = 1;
+		gtloader_sendkey(gt, ph, ev->keysym.sym & 0x1f);
 		return 1;
 	}
 	return 0;
 }
 
 static int onkeydown (struct GTSDLState *s, struct GTState *gt,
-	SDL_KeyboardEvent *ev)
+	struct GTPeriph *ph, SDL_KeyboardEvent *ev)
 {
 	if (ev->keysym.mod == 0) {
-		return onplainkeydown(s, gt, ev);
+		return onplainkeydown(s, gt, ph, ev);
 	}
 	if ((ev->keysym.mod & KMOD_CTRL) && !(ev->keysym.mod & ~KMOD_CTRL)) {
-		return onctrlkeydown(s, gt, ev);
+		return onctrlkeydown(s, gt, ph, ev);
 	}
 	return 0;
 }
 
 static int ontextinput (struct GTSDLState *s, struct GTState *gt,
-	SDL_TextInputEvent *ev)
+	struct GTPeriph *ph, SDL_TextInputEvent *ev)
 {
 	if (SDL_GetModState() == KMOD_LALT) {
 		/* Alt+X should not be text input */
 		return 0;
 	}
 	if (ev->text[0] > 0 && ev->text[0] < 128) {
-		gt->in = ev->text[0];
-		s->textkeydown = 1;
+		gtloader_sendkey(gt, ph, ev->text[0]);
 	}
 	return 1;
 }
@@ -417,24 +411,20 @@ static int onkeyup (struct GTSDLState *s, struct GTState *gt,
 		gt->in |= 0x08;
 		return 1;
 	default:
-		if (s->textkeydown) {
-			s->textkeydown = 0;
-			gt->in = 0xff;
-		}
 		return 0;
 	}
 }
 
 int gtsdl_handleevent (struct GTSDLState *s, struct GTState *gt,
-	SDL_Event *ev)
+	struct GTPeriph *ph, SDL_Event *ev)
 {
 	switch (ev->type) {
 	case SDL_KEYDOWN:
-		return onkeydown(s, gt, &ev->key);
+		return onkeydown(s, gt, ph, &ev->key);
 	case SDL_KEYUP:
 		return onkeyup(s, gt, &ev->key);
 	case SDL_TEXTINPUT:
-		return ontextinput(s, gt, &ev->text);
+		return ontextinput(s, gt, ph, &ev->text);
 	default:
 		return 0;
 	}

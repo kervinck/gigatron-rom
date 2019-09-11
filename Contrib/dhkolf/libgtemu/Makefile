@@ -1,5 +1,5 @@
 CC= gcc
-CFLAGS= -Wall
+CFLAGS= -Wall -Os
 GTLIB_O= gtsdl.o gtemu.o gtloader.o
 LUADIR= ../lua-5.3.4/src
 

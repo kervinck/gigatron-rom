@@ -430,7 +430,7 @@ static int lgtrunloop (lua_State *L)
 
 			break;
 		}
-		gtsdl_handleevent(s, &emu->gt, &ev);
+		gtsdl_handleevent(s, &emu->gt, &emu->ph, &ev);
 	}
 
 	return 0;
