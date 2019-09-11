@@ -336,7 +336,7 @@ static void displayhelp (const char *progname)
 		progname = "gtemu";
 	}
 	fprintf(stderr,
-		"usage: %s [-h] [options] "
+		"usage: %s [-h] [options]\n"
 		"\n"
 		"Arguments:\n"
 		" -h               Display this help.\n"
@@ -352,7 +352,7 @@ static void displayhelp (const char *progname)
 		"    Alt-X         Perform hard reset and send GT1 file.\n"
 		"    ESC           Close the emulation.\n"
 		"\n"
-		"libgtemu version 0.3.0, using SDL version %d.%d.%d.\n",
+		"libgtemu version 0.4.0, using SDL version %d.%d.%d.\n",
 		progname, linkedsdl.major, linkedsdl.minor,
 		linkedsdl.patch);
 }
