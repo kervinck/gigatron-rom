@@ -5,10 +5,36 @@
 |                                                                       |
 |       !!! Work in progress !!!                                        |
 |                                                                       |
-|       The goal is to connect to a FAT32-formatted MicroSD card        |
+|       The goal is to connect to a FAT32-formatted SD/MCC card         |
 |       over the SPI interface, and then list its root directory.       |
 |                                                                       |
 +-----------------------------------------------------------------------}
+
+{
+
+  https://cdn.hackaday.io/images/1744261554112919559.png
+  XXX  Byte addressing for V2 cards when CCS bit in OCR of CMD58 is 0
+  XXX  MMC v3 card detection with CMD1
+  XXX  Don't set block size with CMD16 if CCS bit in OCS is 1
+  XXX  Figure out why Apple formats card with type 0x0b
+  XXX  List all entries in root dir
+        --------------------------
+        >DIR
+        Volume GIGATRON-1
+        720327 <DIR> MARCELK
+        190910 <DIR> APPS
+        190910  1810 SNAKE.GT1
+        190910 16232 FILENAME.EXT
+        190910  1212 README.TXT
+        190910 131072 BIGFILE.ROM
+        >
+        --------------------------
+
+  XXX  Implement filesize/EOF
+  XXX  Implement ReadNextSector with FAT
+  XXX  Transfer 256 bytes at once
+  XXX  Verify 16-bit checksum
+}
 
 {
   References:
@@ -43,8 +69,8 @@ gcl0x
         CardType                Detected card version
         Address                 RAM for transfer buffer
         ValueL,H                32-bit accumulator
-        OffsetL,H               Offset to be added to Sector
-        PartitionL,H            Begin of primary partition (if FAT32)
+        OffsetL,H               Offset to be added to ValueL,H
+        SectorL,H               Block number of last sector (if FAT32)
         RootDirL,H              Begin cluster of FAT32 root directory
 
         ClusterSize             Sectors per cluster: 1, 2, ... 128
@@ -277,7 +303,7 @@ $500 Address=                   {Memory address for data exchange}
     Reads a block of the size selected by the SET_BLOCKLEN command
   }
   push
-  [def `CMD17` #0] PrintText!
+  {[def `CMD17` #0] PrintText!}
 
   [def #$51 #0 #0 #0 #0 #0]     {CMD17}
   p= q=
@@ -288,16 +314,16 @@ $500 Address=                   {Memory address for data exchange}
   p SendCommandToCard!
 
   WaitForCardReply!
-  254& PrintResult!             {Only 0 and 1 mean success}
+  254& {PrintResult!}           {Only 0 and 1 mean success}
 
   [if=0
     {Wait for first data byte}
-    [def `Wait``` #0] PrintText!
+    {[def `Wait``` #0] PrintText!}
     [do
       SendOnesToCard!           {XXX Can we use WaitForCardReply here?}
       $ff^ if=0loop]            {XXX Loop needs a timeout}
-      \sysArgs6, PrintByte!
-      \sysArgs6, $fe^ PrintResult! {Only $fe is OK}
+      {\sysArgs6, PrintByte!}
+      {\sysArgs6, $fe^ PrintResult! {Only $fe is OK}}
   ]
 
   pop ret
@@ -389,9 +415,9 @@ $500 Address=                   {Memory address for data exchange}
     if<>0                       {Break out when valid message detected}
       i 1- if>0loop]            {Or when loop counter exhausted}
 
-  32 PrintChar!                 {Space}
+  {32 PrintChar!                 {Space}}
   \sysArgs6, CardReply=         {Store reply from card}
-  PrintByte!                    {Print hex value}
+  {PrintByte!                    {Print hex value}}
   CardReply                     {As return value}
   pop ret
 ] WaitForCardReply=
@@ -448,8 +474,7 @@ $500 Address=                   {Memory address for data exchange}
   push
   [def `FAT32`` #0] PrintText!
 
-  $ffff PartitionL=
-        PartitionH=             {Mark as invalid}
+  $ffff SectorH=                {Mark as invalid}
 
   $1c2 Address+ peek k=
   PrintByte!
@@ -457,8 +482,8 @@ $500 Address=                   {Memory address for data exchange}
   PrintResult!                  {Accepts $0b and $0c}
                                 {XXX Check CHS or LBA ???}
   [if=0
-    $1c6 Address+ deek PartitionL=
-    $1c8 Address+ deek PartitionH=
+    $1c6 Address+ deek ValueL=
+    $1c8 Address+ deek ValueH=
   ]
 
   pop ret
@@ -478,8 +503,6 @@ $500 Address=                   {Memory address for data exchange}
   }
   push
 
-  PartitionL ValueL=
-  PartitionH ValueH=
   ReadSector!
 
   [def `Vol.ID` #0] PrintText!
@@ -522,8 +545,8 @@ $500 Address=                   {Memory address for data exchange}
   OffsetL=
   $ffff OffsetH= AddOffset!
 
-  PartitionL OffsetL=
-  PartitionH OffsetH=
+  SectorL OffsetL=
+  SectorH OffsetH=
   AddOffset!
 
          ClusterBaseL=
@@ -545,36 +568,23 @@ $500 Address=                   {Memory address for data exchange}
   push
 
   { Sector = ClusterBase + RootDir * ClusterSize }
-  RootDirL   ValueL=
-  RootDirH   ValueH=
+  RootDirL ValueL=
+  RootDirH ValueH=
   ClusterToSector!
-  PrintValue! Newline!
   ReadSector!
-
-  [def `Dir: #10 #0] PrintText!
-
-  Address q=                    {Setup write pointer}
-  95 [do k=                     {Number of bytes to read}
-    32 PrintChar!               {Space}
-    q, PrintByte!               {Store byte in buffer}
-    <q++                        {Advance read pointer}
-    k 7& [if=0 Newline!]        {Not more than 8 bytes on a line}
-    k 1- if>=0loop]             {Looping}
 
   pop ret
 ] ReadRootDir=
 
-{-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 12                                     |
-+-----------------------------------------------------------------------}
-*=$ca0
-
 { ReadSector }
 [def
   {
-    Read sector from card (clobbers Sector and Offset variables)
+    Read sector from card (clobbers ValueL,H and OffsetL,H)
   }
   push
+  {PrintValue!}
+  ValueL SectorL=
+  ValueH SectorH=
   EnableCard!
 
   CardType 2- [if<0
@@ -595,11 +605,21 @@ $500 Address=                   {Memory address for data exchange}
   pop ret
 ] ReadSector=
 
-{
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 12                                     |
++-----------------------------------------------------------------------}
+*=$ca0
+
+{ ReadNextSector }
 [def
-  ret
+  push
+  SectorL ValueL=
+  SectorH ValueH=
+  1 OffsetL= 0 OffsetH=
+  AddOffset!
+  ReadSector!
+  pop ret
 ] ReadNextSector=
-}
 
 {-----------------------------------------------------------------------+
 |                                                                       |
@@ -610,10 +630,10 @@ $500 Address=                   {Memory address for data exchange}
 { SectorToByte }
 [def
   {
-    Multiply 32-bit Sector by 512 (clobbers Offset)
+    Multiply 32-bit ValueL,H by 512 (clobbers OffsetL,H)
   }
   push
-  0         <OffsetL.           {First shift left by one byte}
+  0        <OffsetL.           {First shift left by one byte}
   <ValueL, >OffsetL.
   >ValueL, <OffsetH.
   <ValueH, >OffsetH.
@@ -632,15 +652,13 @@ $500 Address=                   {Memory address for data exchange}
 { ClusterToSector }
 [def
   {
-    Multiply ValueL,H by ClusterSize and add ClusterBase (clobbers Offset)
+    Multiply ValueL,H by ClusterSize and add ClusterBase (clobbers OffsetL,H)
   }
   push
   1 [do k=
-      ClusterSize- if<0
-        ValueL OffsetL=
-        ValueH OffsetH=
-        AddOffset!              {Sector += Sector}
-        k k+ loop]
+    ClusterSize- if<0
+    ShiftLeft!
+    k k+ loop]
 
   ClusterBaseL OffsetL=
   ClusterBaseH OffsetH=
@@ -649,32 +667,59 @@ $500 Address=                   {Memory address for data exchange}
   pop ret
 ] ClusterToSector=
 
-{-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 14                                     |
-+-----------------------------------------------------------------------}
-*=$ea0
+{ ShiftLeft }
+[def
+  {
+    Shift left ValueL,H by 1 bit (clobbers OffsetL,H)
+  }
+  push
+  ValueL OffsetL=               {Double value}
+  ValueH OffsetH=
+  AddOffset!
+  OffsetH                       {Return old high word}
+  pop ret
+] ShiftLeft=
 
 { AddOffset }
 [def
   {
-    Add 32-bit OffsetL,H to 32-bit ValueL,H and store result there.
+    Add 32-bit OffsetL,H to 32-bit ValueL,H and store result there
   }
-  ValueL OffsetL^ [if<0        {Compare lower halves' most significant bits}
-    ValueL                     {MSB unequal: carry taken from their sum}
+  ValueL OffsetL^ [if<0         {Compare lower halves' most significant bits}
+    ValueL                      {MSB unequal: carry taken from their sum}
   else
     $8000                       {MSB equal: carry taken from either term}
   ] OffsetL+                    {Carry now in MSB of vAC (inverted)}
-  [if>=0 ValueH 1+ ValueH=]   {Apply carry to upper half}
-  ValueH OffsetH+ ValueH=     {Sum upper half}
-  ValueL OffsetL+ ValueL=     {Sum lower half and return this as well}
+  [if>=0 ValueH 1+ ValueH=]     {Apply carry to upper half}
+  ValueH OffsetH+ ValueH=       {Sum upper half}
+  ValueL OffsetL+ ValueL=       {Sum lower half and return this as well}
   ret
-] AddOffset=
+] {AddOffset=}
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 14                                     |
++-----------------------------------------------------------------------}
+*=$ea0
+AddOffset=
 
 {-----------------------------------------------------------------------+
 |                                                                       |
 |       Video terminal section                                          |
 |                                                                       |
 +-----------------------------------------------------------------------}
+
+{ SafePrintChar }
+[def
+  {
+    Print any byte value as character, map non-ASCII to block symbol
+    Insert Newline when wrapping the line
+  }
+  push
+  32- [if<0 127 else 96-        {Map any non-ASCII to block symbol 127}
+       if>=0 127] 127&
+  PrintChar!                    {And print it}
+  pop ret
+] SafePrintChar=
 
 { PrintValue }
 [def
@@ -684,6 +729,7 @@ $500 Address=                   {Memory address for data exchange}
   push
   ValueH PrintWord!
   ValueL PrintWord!
+  Newline!
   pop ret
 ] PrintValue=
 
@@ -704,18 +750,23 @@ $500 Address=                   {Memory address for data exchange}
 +-----------------------------------------------------------------------}
 *=$fa0
 
-{ Print byte pointed to at vAC }
+{ PrintByte }
 [def
+  {
+    Print byte value in vAC as hexadecimal number
+  }
   push
   2-- %0=
-  4<< \vACH, PrintHexDigit!   {High nibble}
-  %0         PrintHexDigit!   {Low nibble}
-  2++
+  4<< \vACH, PrintHexDigit!     {High nibble}
+  %0 2++     PrintHexDigit!     {Low nibble}
   pop ret
 ] PrintByte=
 
-{ Print OK or FAILED }
+{ PrintResult }
 [def
+  {
+    Print OK or FAILED
+  }
   push
   k=                            {Preserve vAC for caller}
   [if=0
@@ -743,27 +794,143 @@ $500 Address=                   {Memory address for data exchange}
 +-----------------------------------------------------------------------}
 *=$10a0
 
-{ PrintText }
+{ PrintText -- writes q }
 [def
   {
     Print text string, may include newline characters (#10)
+    Returns 0
   }
   push                          {Save vLR because this is not a leaf subroutine}
-  p=
+  q=
   [do                           {Loop over characters}
-    p, if<>0                    {Next character to be printed, unless 0}
+    q, if<>0                    {Next character to be printed, unless 0}
     10^ [if<>0 10^ PrintChar!   {Print the character and advance cursor}
          else      Newline!]    {Or go to next line}
-    <p++ loop]                  {Advance text pointer and loop}
+    <q++ loop]                  {Advance text pointer and loop}
   pop ret
 ] PrintText=
+
+{ PrintVolumeLabel }
+[def
+  push
+
+  [def `Volume` #0] PrintText!
+
+  { Volume label 11 characters }
+  p q=                          {Read pointer}
+  11 [do k=                     {Loop over 12 positions}
+    q, <q++                     {Print the next character}
+    SafePrintChar!
+    k 1- if>0loop]
+
+  Newline!
+
+  pop ret
+] PrintVolumeLabel=
 
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page 17                                     |
 +-----------------------------------------------------------------------}
 *=$11a0
 
-{ Newline }
+{ PrintTwoDecimals }
+[def
+  push
+  Number=
+  $30 k=                        {Do print leading zeroes}
+  10 PrintDigit!                {Print tens}
+  Number $30+ PrintChar!        {Print ones}
+  pop ret
+] PrintTwoDecimals=
+
+{ PrintDate -- reads p, writes i j k q Pos _sysFn _sysArgs[01245] }
+[def
+  push
+
+  \SYS_LSRW1_48 _sysFn=         {Prepare 1-bit right shift}
+  p 17+ peek                    {Select year, origin is 1980}
+  48! 20- [if<0 100+]
+  PrintTwoDecimals!
+
+  \SYS_LSRW5_50 _sysFn=         {Prepare 5-bit shift right}
+  p 16+ deek 50! 15&            {Select month 1-12}
+  PrintTwoDecimals!
+
+  p 16+ peek 31&                {Select day 1-31}
+  PrintTwoDecimals!
+
+  pop ret
+] PrintDate=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 18                                     |
++-----------------------------------------------------------------------}
+*=$12a0
+
+{ PrintDirEntry -- reads p k, writes i j k q Pos _sysFn _sysArgs[01245] }
+[def
+  {
+    Format directory entry as "DDYYMM <size> FILENAME.EXT"
+  }
+  push
+
+  { Date part of timestamp }
+  PrintDate!                    {Print YYMMDD}
+
+  { File size or directory indicator }
+  PrintFileSize!
+
+  32 PrintChar!                 {Space}
+
+  { Filename 8.3 }
+  p q=                          {Read pointer}
+  11 [do k=                     {Loop over 11 positions}
+    3^ [if=0
+      q, 32^ if<>0              {If there is an extension}
+      $2e PrintChar!]           {Period '.' before extension}
+    q, <q++
+    32^ [if<>0 32^              {Skip spaces (padding)}
+      SafePrintChar!]           {Print the next character}
+    k 1- if>0loop]
+
+  Newline!
+
+  pop ret
+] PrintDirEntry=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 19                                     |
++-----------------------------------------------------------------------}
+*=$13a0
+
+{ PrintDigit -- reads k Value, writes i j k Number Pos _sysFn _sysArgs[01245] }
+[def
+  {
+    Extract and print decimal digit or leading space
+  }
+  push
+  i=                            {Radix as argument, keep in i}
+  Number [do                    {Calculate Value/Radix}
+    i-                          {Subtract i}
+    if>=0                       {As many times as fits}
+    Number=
+    <k++                        {Increment 0..9 times}
+    loop]
+  k [if=0                       {If leading zero digit}
+    32 PrintChar!               {Space}
+  else
+    $30| PrintChar!             {Map to $30..$39 range and print digit}
+    $30 k=                      {And mark all further zeroes as non-leading}
+  ]
+  pop ret
+] PrintDigit=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 20                                     |
++-----------------------------------------------------------------------}
+*=$14a0
+
+{ Newline -- writes i Pos _sysFn _sysArgs[01245] }
 [def
                                 {Clear new line first}
   $3f20 _sysArgs0=              {White on blue}
@@ -788,11 +955,11 @@ $500 Address=                   {Memory address for data exchange}
 ] Newline=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 18                                     |
+|}>_vLR++ ret{          RAM page 21                                     |
 +-----------------------------------------------------------------------}
-*=$12a0
+*=$15a0
 
-{ PrintChar }
+{ PrintChar -- reads Pos, writes i j Pos _sysFn _sysArgs[01245] }
 [def
   {
     Print ASCII character (>=32) on screen using the 5x8 pixel built-in font.
@@ -819,9 +986,125 @@ $500 Address=                   {Memory address for data exchange}
 ] PrintChar=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 19                                     |
+|}>_vLR++ ret{          RAM page 22                                     |
 +-----------------------------------------------------------------------}
-*=$13a0
+*=$16a0
+
+{ PrintDir }
+[def
+  {
+    Print directory contents
+  }
+  push
+  Address [do p=                {Loop over all directory entries}
+    $200 Address+ p-            {Break at end of segment}
+    [if<0 ReadNextSector!
+          Address loop]
+    p peek if<>0                {XXX Also handle multiblock directory and EOF}
+    $e5^ [if<>0                 {Skip unused entries}
+      p 11+ peek k=             {Fetch attributes}
+      $0f^ if<>0                {Skip long filename information}
+      2& if<>0                  {Skip hidden entries}
+      k 8& [if<>0
+        PrintVolumeLabel!
+      else
+        PrintDirEntry!]
+    ]
+    p 32+ loop]
+  pop ret
+] PrintDir=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 23                                     |
++-----------------------------------------------------------------------}
+*=$17a0
+
+{ PrintFileSize }
+[def
+  push
+  p 11+ peek 16& [if<>0
+    [def ```<DIR> #0]           {Directory}
+  else
+    p 28+ deek ValueL=          {File size in bytes}
+    p 30+ deek ValueH=
+    ValueToDecimal!
+    0 j=
+    8 [do i=                    {Loop over no more than 9 digits}
+      q, $30- if=0              {Leading zero?}
+      i 6- [if<0 32 q.          {Convert last 5 into a space}
+            else <j++]          {But drop the earlier zeroes}
+      <q++
+      i 1- if>=0loop]
+    Decimal j+
+  ]
+  PrintText!
+  pop ret
+] PrintFileSize=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 24                                     |
++-----------------------------------------------------------------------}
+*=$18a0
+
+{ PrintUnsigned }
+[def
+  push
+
+  Number=
+  0 k=                          {Suppress leading zeroes}
+
+  Number [if<0                  {Bring large unsigned values in range}
+    -30000 Number+ Number=
+    3 k=]
+
+  10000 PrintDigit!             {Print ten thousands, largest for 16 bits}
+   1000 PrintDigit!             {Print thousands}
+    100 PrintDigit!             {Print hundreds}
+     10 PrintDigit!             {Print tens}
+    $30 Number+ PrintChar!      {Print ones}
+  pop ret
+] PrintUnsigned=
+
+[def `---------- #0] Decimal=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 25                                     |
++-----------------------------------------------------------------------}
+*=$19a0
+
+{ ValueToDecimal }
+[def
+  {
+    Convert 32-bit ValueL,H to 10-digit decimal String
+  }
+  push
+
+  9 [do i=                      {For every position i}
+    Decimal i+ q= $30 q.        {Decimal[i] = '0'}
+    i 1- if>=0loop]
+
+  31 [do i=                     {For every bit}
+    ShiftLeft!                  {ValueL,H <<= 1}
+    [if>=0 $6a                  {No carry}
+     else  $69] k=              {Carry}
+
+    9 [do j=                    {Double the decimal result with carry}
+      Decimal j+ q=             {q = &Decimal[i]}
+      q, 1<< k-                 {Double next decimal with carry}
+      [if<0 $3a+ q. $6a         {No carry}
+       else $30+ q. $69] k=     {Carry}
+      j 1- if>=0loop]
+
+    i 1- if>=0loop]
+
+  pop ret
+] {ValueToDecimal=}
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 26                                     |
++-----------------------------------------------------------------------}
+*=$1aa0
+ValueToDecimal=
 
 {-----------------------------------------------------------------------+
 |                                                                       |
@@ -829,23 +1112,20 @@ $500 Address=                   {Memory address for data exchange}
 |                                                                       |
 +-----------------------------------------------------------------------}
 
-[def
-  [def #10 `***`Memory`card #10 #0] PrintText!
-  InitCard!
+[def #10 `***`Memory`card #10 #0] PrintText!
+InitCard!
 
-  [def `CardType` #0] PrintText!
-  CardType PrintByte!           {Show detected card version}
-  Newline!
+[def `CardType` #0] PrintText!
+CardType PrintByte!             {Show detected card version}
+Newline!
 
-  ReadMBR!
-  InitFAT32!
-  ReadVolumeID!
-  ReadRootDir!
-
-  [do loop]
-] Main=
-
-Main!
+ReadMBR!                        {Master Boot Record}
+InitFAT32!                      {Get FAT partition parameters}
+ReadVolumeID!                   {Read first block of FAT partition}
+ReadRootDir!                    {Read root directory}
+PrintDir!                       {List directory}
+[def `Ok #0] PrintText!
+[do loop]
 
 {-----------------------------------------------------------------------+
 |                                                                       |
