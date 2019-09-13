@@ -135,7 +135,7 @@ Programming model
 -----------------
 
 The programming model is accumulator oriented: there is no implicit
-expression stack. vCPU does have a call stack however.  Programs
+expression stack. vCPU does have a call stack however. Programs
 are typically made of many small function definitions followed by
 a main loop. The functions usually operate on global variables,
 although it is also possible to put variables on the stack.
@@ -155,7 +155,7 @@ vPC  is the virtual program counter. Programs run from RAM. When
 vLR  is the link register. It points to the instruction after the
      most recent CALL instruction. This is used to return after
      making a function call. When nesting functions, vLR should
-     be pushed on the stack.
+     be saved on the stack with PUSH and restored with POP.
 
 vSP  is the stack pointer. The stack lives in the zero page top and
      grows down.
@@ -434,7 +434,7 @@ DEF   $CD DD    18 Define data or code (vAC,vPC=vPC+2,(vPC&0xff00)+D)
 So this number includes advancing vPC, fetch, dispatch and execute.
 
 The formulas are pseudo-formal. Better take them with a grain of
-salt.  Still: 'DD' or 'D' are intended to represent a single byte.
+salt. Still: 'DD' or 'D' are intended to represent a single byte.
 'LL HH' is intended to represent a 16-bit word in little-endian
 order. '[X]' is intended to represent a RAM location, as in the
 native instruction set. 'vAC=D' is intended to mean that the (16-bits)
