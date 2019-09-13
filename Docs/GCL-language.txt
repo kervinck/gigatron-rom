@@ -134,14 +134,13 @@ in a different document: GT1-files.txt
 Programming model
 -----------------
 
-The GCL programming model is accumulator oriented: there is no
-implicit expression stack. vCPU does have a call stack however.
-Programs are typically made of many small function definitions
-followed by a main loop. The functions usually operate on global
-variables, although it is also possible to put variables on the
-stack.
+The programming model is accumulator oriented: there is no implicit
+expression stack. vCPU does have a call stack however.  Programs
+are typically made of many small function definitions followed by
+a main loop. The functions usually operate on global variables,
+although it is also possible to put variables on the stack.
 
-The virtual regisers are 16-bits (except vSP) and reside in the
+The virtual registers are 16-bits (except vSP) and reside in the
 zero page.
 
 vAC  is the virtual accumulator, used by instructions as operand

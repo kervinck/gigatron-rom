@@ -1065,7 +1065,7 @@ AddOffset=
   pop ret
 ] PrintUnsigned=
 
-[def `---------- #0] Decimal=
+[def `---------- #0] Decimal=   {String space for 32-bit unsigned decimal}
 
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page 25                                     |
@@ -1075,7 +1075,7 @@ AddOffset=
 { ValueToDecimal }
 [def
   {
-    Convert 32-bit ValueL,H to 10-digit decimal String
+    Convert unsigned 32-bit ValueL,H to 10-digit decimal string
   }
   push
 
@@ -1083,19 +1083,19 @@ AddOffset=
     Decimal i+ q= $30 q.        {Decimal[i] = '0'}
     i 1- if>=0loop]
 
-  31 [do i=                     {For every bit}
+  31 [do j=                     {For every bit}
     ShiftLeft!                  {ValueL,H <<= 1}
     [if>=0 $6a                  {No carry}
      else  $69] k=              {Carry}
 
-    9 [do j=                    {Double the decimal result with carry}
-      Decimal j+ q=             {q = &Decimal[i]}
-      q, 1<< k-                 {Double next decimal with carry}
+    9 [do i=                    {Double the decimal result with carry}
+      Decimal i+ q=             {q = &Decimal[i]}
+      q, 1<< k-                 {Double the next decimal with carry}
       [if<0 $3a+ q. $6a         {No carry}
        else $30+ q. $69] k=     {Carry}
-      j 1- if>=0loop]
+      i 1- if>=0loop]
 
-    i 1- if>=0loop]
+    j 1- if>=0loop]
 
   pop ret
 ] {ValueToDecimal=}
