@@ -103,24 +103,24 @@
 #  XXX  Main: add Apple1 to main menu
 #  XXX  Formally Support SPI and RAM expander: publish in interface.json
 #  XXX  SPI: Also reset state at soft reset
-#  XXX  SPI: SYS Exchange bit(s)
+#  XXX  SPI: Boot from MAIN.GT1 file if SDC/MCC detected
 #  XXX  SPI: Auto-detect banking, 64K and 128K
-#  XXX  SPI: Think about SPI modes
-#  XXX  #41 Fix zero page usage in Bricks and Tetronis
-#  XXX  Discoverable ROM contents
+#  XXX  Fix zero page usage in Bricks and Tetronis #41
+#  XXX  Discoverable ROM contents #46
 #  XXX  Racer: Make noise when crashing
+#  XXX  Racer: Control speed with up/down as well
 #  XXX  Main: Better startup chime
 #  XXX  Video: Fast system video modes (something like ROM v3y)? Mode 4 (black)
 #  XXX  vCPU: extension for C: HOP_v4 $DD
-#  XXX  vCPU: extension for C: LSRW_v4
 #  XXX  vCPU: extension for C: CMPW_v4 $DD
 #  XXX  Faster SYS_Exec_88, with start address?
 #  XXX  Let SYS_Exec_88 clear channelMask when loading into live variables
-#  XXX  Pucrunch (well documented) or eximozer 3.0.2 (better compression)
 #  XXX  Video mode 4 (all or partly black? Single color? Active syncs)
 #  XXX  Video mode for 12.5 MHz systems
 #
 #  Ideas for ROM v6+
+#  XXX  Pucrunch (well documented) or eximozer 3.0.2 (better compression)
+#  XXX  SPI: Think about SPI modes
 #  XXX  Reset.c and Main.c (that is: port these from GCL to C)
 #  XXX  Sprites by scan line 4 reset method? ("videoG"=graphics)
 #  XXX  Need keymaps in ROM? (perhaps undocumented if not tested)
