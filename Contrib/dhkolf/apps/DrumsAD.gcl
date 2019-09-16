@@ -1,0 +1,255 @@
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Drums Attack and Decay                                          |
+|                                                                       |
+|    Copyright (C) 2019 David Heiko Kolf                                |
+|                                                                       |
+|    Published under the BSD-2-Clause license.                          |
+|    https://opensource.org/licenses/BSD-2-Clause                       |
+|                                                                       |
+|    Contains code for printing from Overworld.gcl and                  |
+|    TinyBASIC_v3.gcl.                                                  |
+|                                                                       |
++-----------------------------------------------------------------------+
+|                                                                       |
+|  This program plays the noise sound (wavX=0) and adjusts wavA while   |
+|  the sound is being played to apply an attack-decay envelope.         |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+gcl0x
+
+{--- ROM version check ---}
+
+\romType, \romTypeValue_ROMv2-
+[if<0 $100 _vAC. do loop]
+
+[def push {--- InitScreen ---}
+  {--- Clear screen ---}
+
+  $800 Pos=
+  \SYS_SetMemory_v2_54 \sysFn:
+  0 \sysArgs1.
+  [do 160 \sysArgs0. Pos \sysArgs2: 54! >Pos++ >Pos, 128^ if<>0loop]
+
+  {--- Print keys ---}
+
+  $0b00 \sysArgs0: { Amber on black }
+  $0906 Pos=
+  [def ``2`3```5`6`7```9`0 #0 ] PrintText!
+  $1106 Pos=
+  [def `Q`W`E`R`T`Y`U`I`O`P #0 ] PrintText!
+  $2106 Pos=
+  [def `oct```(a)<` #0 ] PrintText!
+  currentOct Value= PrintValue!
+  [def ``>(s) #0 ] PrintText!
+  $3106 Pos=
+  [def `att```(d)<` #0 ] PrintText!
+  attack Value= PrintValue!
+  [def ``>(f) #0 ] PrintText!
+  $3906 Pos=
+  [def `dec```(g)<` #0 ] PrintText!
+  decay Value= PrintValue!
+  [def ``>(h) #0 ] PrintText!
+  pop ret] InitScreen1=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 3                                      |
++-----------------------------------------------------------------------}
+*=$300
+
+{ Print ASCII character (32..127) on screen using the 5x8 pixel built-in font }
+{ Copied from Overworld.gcl, slight modification }
+[def
+  82-                           { Map ASCII code to offset in font table }
+  [if<0 50+ i= \font32up        { First page for ASCII 32..81 }
+   else     i= \font82up] j=    { Second page is ASCII 82..127 }
+  i 2<< i+                      { Multiply by 5 }
+  j+ j=                         { Add page address to reach bitmap data }
+  \SYS_VDrawBits_134 \sysFn:    { SYS function }
+  Pos \sysArgs4:                { Position of character }
+  6+ Pos=                       { [INSERTED] Advance position }
+  5 [do i=                      { Loop to draw 5 vertical slices of 8 pixels }
+    j 0? \sysArgs2.             { Get byte from ROM using `LUP 0' instruction }
+    134!                        { Call SYS function to draw 8 vertical pixels }
+    <j++ <\sysArgs4++           { Advance to next slice in ROM and on screen }
+    i 1- if>0loop]              { Looping }
+  ret
+] PrintChar=
+
+{ Conditionally print leading decimal digit }
+{ Copied from TinyBASIC_v3.gcl, modified to print leading spaces. }
+[def
+  push
+  i=                            {Radix as argument, keep in i}
+  Value [do                     {Calculate Value/Radix}
+    i-                          {Subtract i}
+    if>=0                       {As many times as fits}
+    Value=
+    <k++                        {Increment 0..9 times}
+    loop]
+  k [if<>0                      {If non-zero digit or non-leading zero}
+     $30| PrintChar!            {Map to $30..$39 range and print digit}
+     $30 k=                     {And mark all further zeroes as non-leading}
+    else
+     $20 PrintChar!]            {MOD: Print space }
+  pop ret
+] PrintDigit=
+
+[def push
+  0 k=                          { Leading Spaces }
+  100 PrintDigit!
+   10 PrintDigit!
+  $30 Value+ PrintChar!
+  pop ret
+] PrintValue=
+
+[def push {--- PrintText ---}
+  ptr=
+  [do ptr, if<>0 PrintChar! <ptr++ loop]
+  pop ret] PrintText=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+*=$400
+
+[def {--- FindKey ---}
+  Keys ptr=
+  \serialRaw, tmp=
+  [do ptr, if<>0 tmp^ if<>0 <ptr++ loop]
+  ptr Keys- currentKey=
+  ret
+] FindKey=
+
+[def {--- InitSound ---}
+  $1fa tmp=
+  [do
+    $fa <tmp.
+    $0000 tmp: { wavA = 0, wavX = 0 -- Noise }
+    <tmp++ <tmp++
+    $0 tmp: { Frequency 0 }
+    <tmp++ <tmp++
+    $0 tmp: { Phase 0 }
+    >tmp++ >tmp, 5^ if<>0loop]
+  ret
+] InitSound=
+
+[def push {--- ApplyAD ---}
+  \frameCount, prevFrame^ [if<>0
+    \frameCount, prevFrame=
+    state 1- [if=0
+      plsA attack+ 63- [if<0
+        63+ plsA=
+      else
+        63 plsA=
+        2 state=
+      ]
+      $01fb ptr= \entropy, $fc& ptr.
+      $01fa ptr= $7f plsA- ptr.
+      pop ret
+    ]
+    1- [if=0
+      plsA decay- [if>0
+        plsA=
+      else
+        0 plsA=
+        0 state=
+      ]
+      $01fb ptr= \entropy, $fc& ptr.
+      $01fa ptr= $7f plsA- ptr.
+    ]
+  ]
+  pop ret
+] ApplyAD=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 5                                      |
++-----------------------------------------------------------------------}
+*=$500
+
+[def push {--- CheckModKey ---}
+  \serialRaw, prevChar^ [if<>0
+    \serialRaw, prevChar=
+    97- { 'a', oct-- } if>=0
+    [if=0
+      currentOct 12- [if>=0
+        currentOct= Value=
+        $2148 Pos= PrintValue!
+      ]
+      pop ret
+    ]
+    3- { 'd', attack-- } if>=0
+    [if=0
+      attack 1- 63& attack= Value=
+      $3148 Pos= PrintValue!
+      pop ret
+    ]
+    2- { 'f', attack++ } if>=0
+    [if=0
+      attack 1+ 63& attack= Value=
+      $3148 Pos= PrintValue!
+      pop ret
+    ]
+    1- { 'g', decay-- }
+    [if=0
+      decay 1- 63& decay= Value=
+      $3948 Pos= PrintValue!
+      pop ret
+    ]
+    1- { 'h', decay++ }
+    [if=0
+      decay 1+ 63& decay= Value=
+      $3948 Pos= PrintValue!
+      pop ret
+    ]
+    11- { 's', oct++ } if>=0
+    [if=0
+      currentOct 60- [if<=0 72+
+        currentOct= Value=
+        $2148 Pos= PrintValue!
+      ]
+      pop ret
+    ]
+  ]
+  pop ret
+] CheckModKey=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 6                                      |
++-----------------------------------------------------------------------}
+*=$600
+
+[def push {--- PlayKey ---}
+  $900 currentOct+ currentOct+ currentKey+ currentKey+ ptr=
+  0? <tmp. ptr 1? >tmp. { Look up the frequency for the key in ROM }
+  $01fc ptr= tmp ptr: { Save the frequency in $01fc }
+  1 state=
+  0 plsA=
+  pop ret
+] PlayKey=
+
+[def `q2w3er5t6y7ui9o0p #0 ] Keys=
+
+\SYS_SetMode_v2_80 \sysFn: 3 80! { Fast video mode for initialization }
+12 currentOct=
+0 plsA=
+10 attack=
+5 decay=
+0 state=
+InitScreen1!
+InitSound!
+\SYS_SetMode_v2_80 \sysFn: 1 80! { Standard video mode }
+\frameCount, prevFrame=
+
+[do
+  FindKey!
+  currentKey 17- [if<0
+    PlayKey!
+  ]
+  CheckModKey!
+  ApplyAD!
+  120 \soundTimer.
+  loop]
+
