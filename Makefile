@@ -248,6 +248,12 @@ todo:
 log:
 	git log --oneline --decorate --graph --all
 
+# Get updates from GitHub while preserving work in progress
+pull:
+	git stash push
+	git pull https://github.com/kervinck/gigatron-rom
+	git stash pop
+
 #-----------------------------------------------------------------------
 #	C compiler (LCC retargeted for vCPU)
 #-----------------------------------------------------------------------
