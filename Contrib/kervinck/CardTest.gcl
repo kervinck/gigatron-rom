@@ -5,9 +5,9 @@
 |                                                                       |
 |       !!! Work in progress !!!                                        |
 |                                                                       |
-|       The goal is to connect to a FAT32-formatted SDC/CMCC card       |
+|       The goal is to connect to a FAT32-formatted SDC/MCC card        |
 |       over the SPI interface, and then list its root directory.       |
-|       If there is a MAIN.GT1 file, load and execute it.               |
+|       If there is a BOOT.GT1 file, load and execute it.               |
 |                                                                       |
 +-----------------------------------------------------------------------}
 
@@ -34,7 +34,9 @@
   XXX  Implement filesize/EOF
   XXX  Implement ReadNextSector with FAT
   XXX  Transfer 256 bytes at once
-  XXX  Verify 16-bit checksum
+  XXX  Think about card detect and monitoring it (inserted = low)
+       Put we can always use the MOSI line for this, or check the
+       init status when opening a file
 }
 
 {
@@ -54,6 +56,9 @@
 
         https://www.pjrc.com/tech/8051/ide/fat32.html
         Understanding FAT32 Filesystems
+
+        https://bits4device.wordpress.com/2017/12/16/sd-crc7-crc16-implementation/
+        CRC definition
 }
 
 gcl0x
@@ -72,13 +77,15 @@ gcl0x
         ValueL,H                32-bit accumulator
         OffsetL,H               Offset to be added to ValueL,H
         SectorL,H               Block number of last sector
-        RootDirL,H              First cluster of root directory
+        CurrentDirL,H           First cluster of current directory
 
         ClusterSize             Sectors per cluster: 1, 2, ... 128
         ClusterBaseL,H          Cluster origin (hypothetical cluster 0)
         FatSizeL,H              Sectors per FAT
         FatBaseL,H              XXX
-        FileSizeL,H             XXX Bytes to go
+        FileSizeL,H             File size from directory entry
+        FilePosL,H              Current R/W position in file: 0..FileSize
+        Checksum                CRC16 checksum over sector data
 }
 
 {-----------------------------------------------------------------------+
@@ -371,6 +378,26 @@ $500 Address=                   {Memory address for data exchange}
   ret
 ] SendOnesToCard=
 
+{ UpdateCRC16 }
+[def
+  {
+    Update checksum for 1 byte in vACL.
+    One caveat with SDC/MMC checksums is that reading all-zeroes
+    still results in a valid check.
+  }
+  #\XORW #>Checksum             {Inline assembly: XOR with Checksum's high byte}
+  >Checksum.
+  8 [do i=                      {Loop for 8 bits}
+    Checksum [if<0              {If bit 15 is 1}
+      Checksum+ Checksum=       {Shift left}
+      $1021 Checksum^           {Apply CRC16-CCITT polynomial}
+    else                        {Else bit 15 is 0}
+      Checksum+]                {Shift left}
+    Checksum=                   {And store result}
+    i 1- if>0loop]
+  ret
+] UpdateCRC16=
+
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
@@ -428,13 +455,13 @@ $500 Address=                   {Memory address for data exchange}
   push
 
   [do CMD0!                     {Put card in SPI mode and enable card}
-    if<>0 DisableCard! loop]    {Until success} {XXX Loop needs a timeout}
+    if<>0 DisableCard!          {Retry on failure}
+    \frameCount, 60- if<0loop]  {No more than 1 second}
   CMD8!                         {Detect version 1.X or later}
-  0 _frameCount=                {Reset timer}
   [do
     CMD55! ACMD41!              {Query condition}
     CardReply if<>0             {Until the card is initialised}
-    _frameCount 60- if<0loop]   {But try for no more than 1 second}
+    \frameCount, 120- if<0loop] {No more than 2 seconds}
   CardType 2^ [if=0 CMD58!]     {Detect standard capacity or SDHC/SDXC}
   CMD16!                        {Set block size to 512 bytes}
   DisableCard!                  {Initialisation completed}
@@ -447,54 +474,6 @@ $500 Address=                   {Memory address for data exchange}
 |       FAT32 section                                                   |
 |                                                                       |
 +-----------------------------------------------------------------------}
-
-{ ReadMBR }
-[def
-  {
-     Checks MBR and finds the primary partition's start block
-  }
-  push
-
-  0 ValueL= ValueH=
-  ReadSector!                   {Read MBR}
-
-  [def `MBR```` #0] PrintText!
-  $1fe Address+ deek k=         {Check signature}
-  PrintByte! >k, PrintByte!     {Print in byte order}
-  $aa55 k^ PrintResult!
-
-  pop ret
-] ReadMBR=
-
-{-----------------------------------------------------------------------+
-|}$08a0 _vLR= ret{      RAM page 8                                      |
-+-----------------------------------------------------------------------}
-*=$8a0
-
-{ InitFAT32 }
-[def
-  push
-  [def `FAT32`` #0] PrintText!
-
-  $ffff SectorH=                {Mark as invalid}
-
-  $1c2 Address+ peek k=
-  PrintByte!
-  $0b k^ [if<>0 $07^]
-  PrintResult!                  {Accepts $0b and $0c}
-                                {XXX Check CHS or LBA ???}
-  [if=0
-    $1c6 Address+ deek ValueL=
-    $1c8 Address+ deek ValueH=
-  ]
-
-  pop ret
-] InitFAT32=
-
-{-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 9                                      |
-+-----------------------------------------------------------------------}
-*=$9a0
 
 { ReadVolumeID }
 [def
@@ -509,18 +488,49 @@ $500 Address=                   {Memory address for data exchange}
 
   [def `Vol.ID` #0] PrintText!
   $00b Address+ deek k=         {Confirm expected sector length}
-  >k, PrintByte! <k, PrintByte! {Print in word order}
+  PrintWord!                    {Print as little-endian word}
   512 k^ PrintResult!
-
-  [if=0 InitPartition!]
 
   pop ret
 ] ReadVolumeID=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 10                                     |
+|}$08a0 _vLR= ret{      RAM page 8                                      |
 +-----------------------------------------------------------------------}
-*=$aa0
+*=$8a0
+
+{ ReadMBR }
+[def
+  {
+     Reads MBR and finds the primary partition's start block
+     Check if it is FAT32
+  }
+  push
+
+  0 ValueL= ValueH=
+  ReadSector!                   {Read MBR}
+
+  [def `MBR` #0] PrintText!
+  $1fe Address+ deek k=         {Fetch signature}
+  $aa55 k^                      {Check signature}
+
+  [if=0
+    $1c6 Address+ deek ValueL=  {Begin of filesystem on disk}
+    $1c8 Address+ deek ValueH=
+
+    $1c2 Address+ peek k=       {Filesystem type code}
+    PrintByte!
+    $0b k^ [if<>0 $07^]         {Accepts $0b and $0c}
+                                {XXX In case of $0b: check for CHS vs LBA ???}
+  ]
+
+  pop ret
+] ReadMBR=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 9                                      |
++-----------------------------------------------------------------------}
+*=$9a0
 
 [def
   push
@@ -555,56 +565,106 @@ $500 Address=                   {Memory address for data exchange}
   ValueH ClusterBaseH=
 
   { First cluster of root directory }
-  $02c Address+ deek RootDirL=
-  $02d Address+ deek RootDirH=
+  $02c Address+ deek CurrentDirL=
+  $02d Address+ deek CurrentDirH=
 
   pop ret
-] InitPartition=
+] InitFAT32=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 11                                     |
+|}>_vLR++ ret{          RAM page 10                                     |
 +-----------------------------------------------------------------------}
-*=$ba0
+*=$aa0
 
-[def
-  push
-
-  { Sector = ClusterBase + RootDir * ClusterSize }
-  RootDirL ValueL=
-  RootDirH ValueH=
-  ClusterToSector!
-  ReadSector!
-
-  pop ret
-] ReadRootDir=
-
-{ ReadSector }
+{ OpenSector }
 [def
   {
-    Read sector from card (clobbers ValueL,H and OffsetL,H)
+    Prepare reading sector data from card
   }
   push
   ValueL SectorL=
   ValueH SectorH=
   EnableCard!
 
-  CardType 2- [if<0
-    SectorToByte!]              {Version 1.X cards do byte addressing}
+  CardType
+  2- [if<0 SectorToByte!]       {Version 1.X cards do byte addressing}
   CMD17!                        {Request block of data}
+  0 Checksum=                   {Reset CRC16 checksum}
+  pop ret
+] OpenSector=
+
+{ ReadSector }
+[def
+  {
+    Read sector from card into memory (clobbers ValueL,H and OffsetL,H)
+  }
+  push
+  OpenSector!                   {Start data stream}
 
   Address q=                    {Setup write pointer}
+  0 Checksum=
   512 [do k=                    {Number of bytes to read}
     SendOnesToCard!             {XXX Read directly into buffer}
     q.                          {Store byte in buffer}
+    UpdateCRC16!
     q 1+ q=                     {Advance write pointer, cross page boundaries}
     k 1- if>0loop]              {Looping}
 
-  SendOnesToCard!               {Read 16-bit checksum}
-  SendOnesToCard!               {XXX We should also verify this checksum}
-
+  SendOnesToCard! UpdateCRC16!  {Read 16-bit checksum}
+  SendOnesToCard! UpdateCRC16!
   DisableCard!
+
+  Checksum                      {CRC16 will be zero on success}
+
   pop ret
 ] ReadSector=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 11                                     |
++-----------------------------------------------------------------------}
+*=$ba0
+
+{ OpenFile }
+[def
+  {
+    Prepare for reading file whose directory entry is pointed at by p
+  }
+  push
+  p $1a+ deek ValueL=           {First cluster for file}
+  p $14+ deek ValueH=
+  0 FilePosL= FilePosH=         {Reset position in file}
+  p $1c+ deek FileSizeL=        {Length of file in bytes}
+  p $1d+ deek FileSizeH=
+  ClusterToSector!
+  OpenSector!
+  pop ret
+] OpenFile=
+
+{ LoadByte }
+[def
+  {
+    Read next byte directly from file and advance position
+    Read next sector when required
+    !!! XXX This is slow !!!
+  }
+  push
+
+  FilePosL FileSizeL^           {Check if EOF}
+  [if=0 FilePosH FileSizeH^]
+  [if<>0
+
+    FilePosL 1+ FilePosL=       {Increment position in file}
+    [if=0 FilePosH 1+ FilePosH=]
+    SendOnesToCard!             {Returns the next data byte}
+    %-2=                        {Park on stack}
+    UpdateCRC16!
+    %-2                         {Restore from stack}
+  else
+    1-                          {EOF}
+  ]
+
+  pop ret
+] LoadByte=
 
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page 12                                     |
@@ -622,6 +682,18 @@ $500 Address=                   {Memory address for data exchange}
   pop ret
 ] ReadNextSector=
 
+[def
+  push
+
+  { Sector = ClusterBase + CurrentDir * ClusterSize }
+  CurrentDirL ValueL=
+  CurrentDirH ValueH=
+  ClusterToSector!
+  ReadSector!
+
+  pop ret
+] ReadDirectory=
+
 {-----------------------------------------------------------------------+
 |                                                                       |
 |       32-bit arithmetic section                                       |
@@ -634,7 +706,7 @@ $500 Address=                   {Memory address for data exchange}
     Multiply ValueL,H by ClusterSize and add ClusterBase (clobbers OffsetL,H)
   }
   push
-  <ValueH, 15& >ValueH.         {Clear top reserved bits in case ClusterSize<16}
+  <ValueH, 15& >ValueH.         {Clear the top 4 reserved bits}
   1 [do k=
     ClusterSize- if<0
     ShiftLeft!
@@ -872,19 +944,19 @@ AddOffset=
 { PrintDirEntry -- reads p k, writes i j k q Pos _sysFn _sysArgs[01245] }
 [def
   {
-    Format directory entry as "DDYYMM <size> FILENAME.EXT"
+    Format directory entry as "YYMMDD <size> FILENAME.EXT"
   }
   push
-  PrintDate!                    {Print YYMMDD}
+  PrintDate!                    {YYMMDD}
   4 Pos+ Pos=                   {Small space}
-  PrintFileSize!                {File size or directory indicator}
+  PrintSize!                    {File size or directory indicator}
   4 Pos+ Pos=                   {Small space}
-  PrintFilename!                {Print FILENAME.EXT}
-  Newline!
+  PrintName!                    {FILENAME.EXT}
+  Newline!                      {End of line}
   pop ret
 ] PrintDirEntry=
 
-{ PrintFileName }
+{ PrintName }
 [def
   {
     Print 8.3 filename
@@ -900,7 +972,7 @@ AddOffset=
       SafePrintChar!]           {Print the next character}
     k 1- if>0loop]
   pop ret
-] PrintFilename=
+] PrintName=
 
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page 19                                     |
@@ -1007,7 +1079,7 @@ AddOffset=
       Address loop]             { and try again}
     p peek if<>0                {Test for end of directory marker}
     $e5^ [if<>0                 {Skip unused entries}
-      p 11+ peek k=             {Fetch attributes}
+      p $0b+ peek k=            {Fetch attributes}
       $0f^ if<>0                {Skip long filename information}
       2& if<>0                  {Skip hidden entries}
       k 8& [if<>0
@@ -1017,8 +1089,7 @@ AddOffset=
         IsMainGt1!              {Are we looking for this file?}
         [if=0                   {File found}
           LoadGt1!              {Load file}
-          [do if=0loop]         {Stop if not executable}
-          call                  {Execute otherwise}
+          Execute!              {Execute otherwise}
         ]
       ]
     ]
@@ -1031,10 +1102,14 @@ AddOffset=
 +-----------------------------------------------------------------------}
 *=$17a0
 
-{ PrintFileSize }
+{ PrintSize }
 [def
+  {
+     Print size in slot as 32-bit decimal ("%5lu")
+     or as "  <DIR>" for directory slots
+  }
   push
-  p 11+ peek 16& [if<>0
+  p $0b+ peek 16& [if<>0
     [def ```<DIR> #0]           {Directory}
   else
     p 28+ deek ValueL=          {File size in bytes}
@@ -1051,19 +1126,12 @@ AddOffset=
   ]
   PrintText!
   pop ret
-] PrintFileSize=
+] PrintSize=
 
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page 24                                     |
 +-----------------------------------------------------------------------}
 *=$18a0
-
-[def `---------- #0] Decimal=   {String space for 32-bit unsigned decimal}
-
-{-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 25                                     |
-+-----------------------------------------------------------------------}
-*=$19a0
 
 { ValueToDecimal }
 [def
@@ -1094,10 +1162,12 @@ AddOffset=
 ] {ValueToDecimal=}
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 26                                     |
+|}>_vLR++ ret{          RAM page 25                                     |
 +-----------------------------------------------------------------------}
-*=$1aa0
+*=$19a0
 ValueToDecimal=
+
+[def `---------- #0] Decimal=   {String space for 32-bit unsigned decimal}
 
 {-----------------------------------------------------------------------+
 |                                                                       |
@@ -1105,49 +1175,48 @@ ValueToDecimal=
 |                                                                       |
 +-----------------------------------------------------------------------}
 
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 26                                     |
++-----------------------------------------------------------------------}
+*=$1aa0
+
 { LoadGt1 }
 [def
   {
-    Load GT1 file into RAM and return start address.
+    Load GT1 file into RAM and store start address in Address.
     See Docs/GT1-files.txt for details on GT1
     XXX Support loading into audio channels
   }
   push
 
   [def `Loading` #0] PrintText!
-  PrintFilename!
+  PrintName!
 
-  { Restore video table }
-  [do
-    Newline!
-    $100 peek 8^
-    if<>0loop]
+  OpenFile!                     {Prepare for reading}
 
-  { Open file pointed by p }
-  p $1a+ deek ValueL=           {First cluster for file}
-  p $14+ deek ValueH=
-  ClusterToSector!
-  ReadSector!
-
-  { Read contents byte by byte }
+  { Read file contents byte by byte }
   LoadByte!                     {Fetch first byte}
   [do                           {Chunk copy loop}
-    \sysArgs3.                  {High-address comes first}
-    LoadByte! \sysArgs2.        {Then the low address}
+    >Address.                   {High-address comes first}
+    LoadByte! <Addres.          {Then the low address}
     LoadByte!                   {Byte count (0 means 256)}
     [do                         {Byte copy loop}
-      \sysArgs4.                {Implicitly chops counter to 8 bits}
-      LoadByte! _sysArgs2.      {Poke next byte into memory}
-      <_sysArgs2++              {Advance write pointer in page}
-      \sysArgs4, 1-             {Decrement counter}
+      \sysArgs5.                {Implicitly chops counter to 8 bits}
+      LoadByte! Address.        {Poke next byte into memory}
+      <Address++                {Advance write pointer in page}
+      \sysArgs5, 1-             {Decrement counter}
       if<>0loop]
     LoadByte!                   {Go to next block}
     if<>0loop]
-  LoadByte! \sysArgs3.          {Load execution address}
-  LoadByte! \sysArgs2.
-  _sysArgs2                     {And return it}
+  LoadByte! >Address.           {Load execution address}
+  LoadByte! <Address.
 
-  { XXX read rest of sector and disable SPI }
+  LoadByte! [if>=0 0 Address=]  {Expect EOF}
+
+  512 [do i=                    {Close sector}
+    SendOnesToCard!
+    i 1- if>0loop]
+  DisableCard!
 
   pop ret
 ] LoadGt1=
@@ -1157,32 +1226,29 @@ ValueToDecimal=
 +-----------------------------------------------------------------------}
 *=$1ba0
 
-{ LoadByte }
-[def
-  {
-    Read next byte from file and advance position
-    XXX File is still at most 512 bytes
-    XXX We shouldn't use Address in this way
-  }
-  push
-  Address _sysArgs0= 1+ Address=
-  _sysArgs0,
-  pop ret
-] LoadByte=
-
 { IsMainGt1 }
 [def
   {
-    Check if directrory entry p is MAIN.GT1
+    Check if directrory entry p is BOOT.GT1
     Returns 0 when name matches, non-zero otherwise
   }
-  [def `MAIN````GT1 #0] q=      {String to match}
+  [def `BOOT````GT1 #0] q=      {String to match}
   p i=
   [do
     q, <q++ if<>0 j=            {Compare until nul terminator}
     i, <i++ j^ if=0loop]        {Loop while equal}
   ret
 ] IsMainGt1=
+
+[def
+  [do                           {Restore video table}
+    $100 peek 8^
+    if<>0 Newline! loop]
+
+  Address
+  [do if=0loop]                 {Stop if not executable}
+  call                          {Run...}
+] Execute=
 
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page 28                                     |
@@ -1196,18 +1262,18 @@ ValueToDecimal=
 +-----------------------------------------------------------------------}
 
 [def #10 `***`Memory`card #10 #0] PrintText!
+0 \frameCount.                  {Reset timer}
 InitCard!
 
 [def `CardType` #0] PrintText!
-CardType PrintByte!             {Show detected card version}
-Newline!
+CardType PrintByte! Newline!    {Show detected card version}
 
-ReadMBR!                        {Master Boot Record}
-InitFAT32!                      {Get FAT partition parameters}
-ReadVolumeID!                   {Read first block of FAT partition}
-ReadRootDir!                    {Read root directory}
-PrintDir!                       {List directory, find MAIN.GT1}
-[def `Ok #0] PrintText!
+ReadMBR! PrintResult!           {Master Boot Record}
+[if=0 ReadVolumeID!]            {Read first block of FAT partition}
+InitFAT32!
+ReadDirectory!                  {Read root directory XXX Move into PrintDir}
+[if=0 PrintDir!]                {List directory, find BOOT.GT1}
+
 [do loop]
 
 {-----------------------------------------------------------------------+
