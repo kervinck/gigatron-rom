@@ -431,6 +431,11 @@ class Program:
   def emitImm(self, var, half=lo):
     # Emit low or high byte of symbol
     # !!! Also safe at start of segment !!!
+    #
+    # Here we see the subtle differences between variables and named constants
+    # again. For named constants (preceeded by '_'), we want their value.
+    # For named variables, we want their address. This becomes evident with the
+    # '>' modifier: constant>>8 vs. address+1
     self.prepareSegment()
     if var[0] == '_':
       address = half(var[1:])
@@ -438,6 +443,9 @@ class Program:
       if var not in self.vars:
         self.vars[var] = zpByte(2)
       address = self.vars[var]
+      if half is hi:
+        address += 1
+        var = '>' + var
     self.putInRomTable(address, '%04x %s' % (self.vPC, var))
     self.vPC += 1
     return self
