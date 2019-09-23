@@ -13,20 +13,18 @@
 
 {
 
-  https://cdn.hackaday.io/images/1744261554112919559.png
+  XXX  https://cdn.hackaday.io/images/1744261554112919559.png
   XXX  LoadtGt1: better closing of sector
   XXX  Byte addressing for V2 cards when CCS bit in OCR of CMD58 is 0
   XXX  MMC v3 card detection with CMD1
   XXX  Don't set block size with CMD16 if CCS bit in OCS is 1
-  XXX  Implement cluster chaining with FAT
+  XXX  Follow cluster chain for directories as well
   XXX  Transfer 256 bytes at once
   XXX  Think about card detect and monitoring it (inserted = low)
        Put we can always use the MOSI line for this, or check the
        init status when opening a file
   XXX  Figure out why Apple formats card with type 0x0b
-}
 
-{
   References:
 
         http://www.dejazzer.com/ee379/lecture_notes/lec12_sd_card.pdf
@@ -67,8 +65,8 @@ gcl0x
         CurrentDirL,H           First cluster of current directory
 
         ClusterSize             Sectors per cluster: 1, 2, ... 128
+        ClusterMask             XXX ClusterSize - 1
         ClusterBaseL,H          Cluster origin (hypothetical cluster 0)
-        FatSizeL,H              XXX Sectors per FAT
         FatBaseL,H              XXX
         FileSizeL,H             File size from directory entry
         FilePosL,H              Current R/W position in file: 0..FileSize
@@ -82,13 +80,18 @@ gcl0x
 \romType, \romTypeValue_ROMv4-  {Version check >= ROMv4}
 [if<0 do _frameCount _vPCH: loop]
 
+$500 Address=                   {512 bytes memory for one sector}
+
+{-----------------------------------------------------------------------+
+|}$58a0 _vLR= ret{      RAM page $58                                    |
++-----------------------------------------------------------------------}
+*=$58a0
+
 {-----------------------------------------------------------------------+
 |                                                                       |
 |       Memory card section                                             |
 |                                                                       |
 +-----------------------------------------------------------------------}
-
-$500 Address=                   {Memory address for data exchange}
 
 { CMD0: GO_IDLE_STATE }
 [def
@@ -150,6 +153,11 @@ $500 Address=                   {Memory address for data exchange}
 
   pop ret
 ] CMD0=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page $59                                    |
++-----------------------------------------------------------------------}
+*=$59a0
 
 { CMD8: SEND_IF_COND }
 [def
@@ -224,6 +232,11 @@ $500 Address=                   {Memory address for data exchange}
   pop ret
 ] CMD8=
 
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page $5a                                    |
++-----------------------------------------------------------------------}
+*=$5aa0
+
 { CMD58: READ_OCR }
 [def
   push
@@ -256,9 +269,9 @@ $500 Address=                   {Memory address for data exchange}
 ] CMD55=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 3                                      |
+|}>_vLR++ ret{          RAM page $5b                                    |
 +-----------------------------------------------------------------------}
-*=$300
+*=$5ba0
 
 { ACMD41 SD_SEND_OP_COND }
 [def
@@ -293,6 +306,11 @@ $500 Address=                   {Memory address for data exchange}
   pop ret
 ] CMD16=
 
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page $5c                                    |
++-----------------------------------------------------------------------}
+*=$5ca0
+
 { CMD17: READ_SINGLE_BLOCK }
 [def
   {
@@ -324,6 +342,11 @@ $500 Address=                   {Memory address for data exchange}
 
   pop ret
 ] CMD17=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page $5d                                    |
++-----------------------------------------------------------------------}
+*=$5da0
 
 {
         Bus     ROM v4+
@@ -365,6 +388,11 @@ $500 Address=                   {Memory address for data exchange}
   ret
 ] SendOnesToCard=
 
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page $5e                                    |
++-----------------------------------------------------------------------}
+*=$5ea0
+
 { UpdateCrc16 }
 [def
   {
@@ -386,9 +414,9 @@ $500 Address=                   {Memory address for data exchange}
 ] UpdateCrc16=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 4                                      |
+|}>_vLR++ ret{          RAM page $5f                                    |
 +-----------------------------------------------------------------------}
-*=$400
+*=$5fa0
 
 { SendCommandToCard }
 [def
@@ -439,6 +467,11 @@ $500 Address=                   {Memory address for data exchange}
   pop ret
 ] WaitForCardReply=
 
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page $60                                    |
++-----------------------------------------------------------------------}
+*=$60a0
+
 { InitCard }
 [def
   {
@@ -487,9 +520,9 @@ $500 Address=                   {Memory address for data exchange}
 ] ReadVolumeID=
 
 {-----------------------------------------------------------------------+
-|}$08a0 _vLR= ret{      RAM page 8                                      |
+|}>_vLR++ ret{          RAM page $61                                    |
 +-----------------------------------------------------------------------}
-*=$8a0
+*=$61a0
 
 { ReadMBR }
 [def
@@ -520,9 +553,9 @@ $500 Address=                   {Memory address for data exchange}
 ] ReadMBR=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 9                                      |
+|}>_vLR++ ret{          RAM page $62                                    |
 +-----------------------------------------------------------------------}
-*=$9a0
+*=$62a0
 
 { InitFat32 }
 [def
@@ -537,23 +570,26 @@ $500 Address=                   {Memory address for data exchange}
               - 2 * ClusterSize                 from VolumeID
   }
 
-  $024 Address+ deek {FatSizeL=} ValueL= OffsetL=
-  $026 Address+ deek {FatSizeH=} ValueH= OffsetH=
-  AddOffset!                    {Number of FATs is always 2}
+  $00d Address+ peek            {Sectors per cluster}
+  ClusterSize=
+
+  SectorL ValueL=               {Partition's first sector, from MBR}
+  SectorH ValueH=
 
   $00e Address+ deek OffsetL=   {Number of reserved sectors}
-  0 OffsetH= AddOffset!
-
-  $00d Address+ peek
-  ClusterSize=                  {Sectors per cluster}
-
-  $ffff OffsetH=                {Minus 1 because ReadSector advanced SectorL}
-  ClusterSize- ClusterSize-     {Subtract twice for ClusterBase}
-  OffsetL=
+  0 OffsetH=
   AddOffset!
 
-  SectorL OffsetL=              {Partition's first sector, from MBR, plus 1}
-  SectorH OffsetH=
+  FatBaseL=
+  ValueH FatBaseH=              {Begin of primary FAT area}
+
+  $024 Address+ deek OffsetL=   {FAT size in sectors}
+  $026 Address+ deek OffsetH=
+  AddOffset! AddOffset!         {Number of FATs is always 2}
+
+  0 ClusterSize- ClusterSize-   {Subtract twice to arrive at ClusterBase}
+  OffsetL=
+  $ffff OffsetH=
   AddOffset!
 
          ClusterBaseL=
@@ -561,15 +597,16 @@ $500 Address=                   {Memory address for data exchange}
 
   { First cluster of root directory }
   $02c Address+ deek CurrentDirL=
-  $02d Address+ deek CurrentDirH=
+  $02e Address+ deek CurrentDirH=
 
   pop ret
-] InitFat32=
+] {InitFat32=}
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 10                                     |
+|}>_vLR++ ret{          RAM page $63                                    |
 +-----------------------------------------------------------------------}
-*=$aa0
+*=$63a0
+InitFat32=
 
 { OpenSector }
 [def
@@ -580,13 +617,11 @@ $500 Address=                   {Memory address for data exchange}
 
   EnableCard!
 
-  CardType
-  2- [if<0 SectorToByte!]       {Version 1.X cards do byte addressing}
+  CardType 2-
+  [if<0 SectorToByte!]          {Version 1.X cards do byte addressing}
   CMD17!                        {Request block of data}
 
   0 Checksum=                   {Reset CRC16 checksum}
-
-  <SectorL++                    {To next sector, don't worry about carry}
 
   pop ret
 ] OpenSector=
@@ -619,9 +654,9 @@ $500 Address=                   {Memory address for data exchange}
 ] ReadSector=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 11                                     |
+|}>_vLR++ ret{          RAM page $64                                    |
 +-----------------------------------------------------------------------}
-*=$ba0
+*=$64a0
 
 { LoadByte }
 [def
@@ -637,7 +672,11 @@ $500 Address=                   {Memory address for data exchange}
   [if<>0                        {More to read}
 
     $1ff FilePosL&              {Read new sector}
-    [if=0 OpenSector!]
+    [if=0
+      SendOnesToCard!           {Ignore checksum}
+      SendOnesToCard!
+      OpenSector!               {Open next sector}
+      NextSector!]
 
     FilePosL 1+ FilePosL=       {Increment position in file}
     [if=0 FilePosH 1+ FilePosH=]
@@ -662,27 +701,28 @@ $500 Address=                   {Memory address for data exchange}
   CurrentDirH ValueH=
   ClusterToSector!
   ReadSector!
+  <SectorL++                    {XXX Replace with ClusterList}
 
   pop ret
 ] ReadDirectory=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 12                                     |
+|}>_vLR++ ret{          RAM page $65                                    |
 +-----------------------------------------------------------------------}
-*=$ca0
+*=$65a0
 
 { OpenFile }
 [def
   {
     Prepare for reading file whose directory entry is pointed at by p
-    XXX This function should read the whole cluster chain from FAT also
   }
   push
   0 FilePosL= FilePosH=         {Reset position in file}
   p $1c+ deek FileSizeL=        {Length of file in bytes}
-  p $1d+ deek FileSizeH=
+  p $1e+ deek FileSizeH=
   p $1a+ deek ValueL=           {First cluster for file}
   p $14+ deek ValueH=
+  ReadClusterChain!
   ClusterToSector!
   pop ret
 ] OpenFile=
@@ -716,14 +756,15 @@ $500 Address=                   {Memory address for data exchange}
 ] ClusterToSector=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 13                                     |
+|}>_vLR++ ret{          RAM page $66                                    |
 +-----------------------------------------------------------------------}
-*=$da0
+*=$66a0
 
 { SectorToByte }
 [def
   {
     Multiply 32-bit ValueL,H by 512 (clobbers OffsetL,H)
+    XXX Figure out what to do with this! This CAN'T be correct any longer
   }
   push
   0        <OffsetL.            {First shift left by one byte}
@@ -767,9 +808,9 @@ $500 Address=                   {Memory address for data exchange}
 ] {AddOffset=}
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 14                                     |
+|}>_vLR++ ret{          RAM page $67                                    |
 +-----------------------------------------------------------------------}
-*=$ea0
+*=$67a0
 AddOffset=
 
 {-----------------------------------------------------------------------+
@@ -816,9 +857,9 @@ AddOffset=
 ] PrintWord=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 15                                     |
+|}>_vLR++ ret{          RAM page $68                                    |
 +-----------------------------------------------------------------------}
-*=$fa0
+*=$68a0
 
 { PrintByte }
 [def
@@ -860,9 +901,9 @@ AddOffset=
 ] PrintHexDigit=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 16                                     |
+|}>_vLR++ ret{          RAM page $69                                    |
 +-----------------------------------------------------------------------}
-*=$10a0
+*=$69a0
 
 { PrintText -- writes q }
 [def
@@ -899,9 +940,9 @@ AddOffset=
 ] PrintVolumeLabel=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 17                                     |
+|}>_vLR++ ret{          RAM page $6a                                    |
 +-----------------------------------------------------------------------}
-*=$11a0
+*=$6aa0
 
 { PrintTwoDecimals }
 [def
@@ -933,9 +974,9 @@ AddOffset=
 ] PrintDate=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 18                                     |
+|}>_vLR++ ret{          RAM page $6b                                    |
 +-----------------------------------------------------------------------}
-*=$12a0
+*=$6ba0
 
 { PrintDirEntry -- reads p k, writes i j k q Pos _sysFn _sysArgs[01245] }
 [def
@@ -971,9 +1012,9 @@ AddOffset=
 ] PrintName=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 19                                     |
+|}>_vLR++ ret{          RAM page $6c                                    |
 +-----------------------------------------------------------------------}
-*=$13a0
+*=$6ca0
 
 { PrintDigit -- reads k Value, writes i j k Number Pos _sysFn _sysArgs[01245] }
 [def
@@ -998,9 +1039,9 @@ AddOffset=
 ] PrintDigit=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 20                                     |
+|}>_vLR++ ret{          RAM page $6d                                    |
 +-----------------------------------------------------------------------}
-*=$14a0
+*=$6da0
 
 { Newline -- writes i Pos _sysFn _sysArgs[01245] }
 [def
@@ -1027,9 +1068,9 @@ AddOffset=
 ] Newline=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 21                                     |
+|}>_vLR++ ret{          RAM page $6e                                    |
 +-----------------------------------------------------------------------}
-*=$15a0
+*=$6ea0
 
 { PrintChar -- reads Pos, writes i j Pos _sysFn _sysArgs[01245] }
 [def
@@ -1058,9 +1099,9 @@ AddOffset=
 ] PrintChar=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 22                                     |
+|}>_vLR++ ret{          RAM page $6f                                    |
 +-----------------------------------------------------------------------}
-*=$16a0
+*=$6fa0
 
 { PrintDirectory }
 [def
@@ -1071,8 +1112,9 @@ AddOffset=
   Address [do p=                {Loop over all directory entries}
     $200 Address+ p-
     [if<=0                      {If past the end of the segment}
-      ReadSector!               { then read more bytes from device}
-      Address loop]             { and try again}
+      ReadSector!               {Then read more bytes from device}
+      <SectorL++                {XXX Replace with NextCluster/ClusterList}
+      Address loop]             {And try again}
     p peek if<>0                {Test for end of directory marker}
     $e5^ [if<>0                 {Skip unused entries}
       p $0b+ peek k=            {Fetch attributes}
@@ -1094,9 +1136,9 @@ AddOffset=
 ] PrintDirectory=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 23                                     |
+|}>_vLR++ ret{          RAM page $70                                    |
 +-----------------------------------------------------------------------}
-*=$17a0
+*=$70a0
 
 { PrintSize }
 [def
@@ -1125,9 +1167,9 @@ AddOffset=
 ] PrintSize=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 24                                     |
+|}>_vLR++ ret{          RAM page $71                                    |
 +-----------------------------------------------------------------------}
-*=$18a0
+*=$71a0
 
 { ValueToDecimal }
 [def
@@ -1158,9 +1200,9 @@ AddOffset=
 ] {ValueToDecimal=}
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 25                                     |
+|}>_vLR++ ret{          RAM page $72                                    |
 +-----------------------------------------------------------------------}
-*=$19a0
+*=$72a0
 ValueToDecimal=
 
 [def `---------- #0] Buffer=    {String space for 32-bit unsigned decimal}
@@ -1172,9 +1214,9 @@ ValueToDecimal=
 +-----------------------------------------------------------------------}
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 26                                     |
+|}>_vLR++ ret{          RAM page $73                                    |
 +-----------------------------------------------------------------------}
-*=$1aa0
+*=$73a0
 
 { LoadGt1 }
 [def
@@ -1219,9 +1261,9 @@ ValueToDecimal=
 ] LoadGt1=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 27                                     |
+|}>_vLR++ ret{          RAM page $74                                    |
 +-----------------------------------------------------------------------}
-*=$1ba0
+*=$74a0
 
 { IsBootGt1 }
 [def
@@ -1237,10 +1279,12 @@ ValueToDecimal=
   ret
 ] IsBootGt1=
 
+{ Execute }
 [def
-  [do                           {Restore video table}
-    $100 peek 8^
-    if<>0 Newline! loop]
+
+  120 [do i=                    {Restore video table}
+    i+ $fe+ p=
+    i 7+ p. 8- if>0loop]
 
   Address
   [do if=0loop]                 {Stop if not executable}
@@ -1248,9 +1292,108 @@ ValueToDecimal=
 ] Execute=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ ret{          RAM page 28                                     |
+|}>_vLR++ ret{          RAM page $75                                    |
 +-----------------------------------------------------------------------}
-*=$1ca0
+*=$75a0
+
+{*** some FAT functions ***}
+
+{ NextSector }
+[def
+  push
+
+  <SectorL++                    {To next sector}
+
+  $1fff FileSizeL&              {XXX Hardcoded. Should derive from ClusterSize}
+  [if=0
+    List 4+ List= deek ValueL=
+    List 2+       deek ValueH=
+    ClusterToSector!
+  ]
+
+  pop ret
+] NextSector=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page $76                                    |
++-----------------------------------------------------------------------}
+*=$76a0
+
+{ ReadClusterChain }
+[def
+  {
+    Traverse the FAT and collect the clusters used by this file
+  }
+  push
+
+  \ClusterList List=            {Reset}
+  Newline!
+  PrintValue!
+  [do
+    { Store in list }
+    ValueL List: <List++ <List++
+    ValueH List: <List++ <List++
+
+    { Break at End Of Cluster marker }
+    $f000 ValueH| 1+ [if=0      {Test high word first, ignore bit 28:31}
+    $0007 ValueL| 1+] if<>0     {Optionally test low word, ignore bit 0:2}
+
+    NextCluster!
+    PrintValue!
+    loop]
+
+  \ClusterList                  {Reset}
+  List=   deek ValueL=
+  List 2+ deek ValueH=
+
+  pop ret
+] ReadClusterChain=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page $77                                    |
++-----------------------------------------------------------------------}
+*=$77a0
+
+{ NextCluster }
+[def
+  {
+    Find next cluster in FAT
+  }
+  push
+
+  >ValueL, <OffsetL.            {Offset = Cluster >> 8}
+  <ValueH, >OffsetL.
+  >ValueH,  OffsetH=
+
+  <ValueL, m=                   {Park the lowest 8 bits in m}
+  128& peek ValueL=             {Value = 1 if bit7 else 0}
+  0         ValueH=
+  AddOffset! AddOffset!         {Value += 2 * Offset: now we have Cluster >> 7}
+
+  FatBaseL OffsetL=             {Value += First sector for FAT}
+  FatBaseH OffsetH=
+  AddOffset!
+
+  SectorL^                      {Compare sector number to what we already have}
+  [if=0 ValueH SectorH^]
+
+  [if<>0
+    ValueL SectorL=             {Read new sector from FAT area}
+    ValueH SectorH=
+    ReadSector!
+  ]
+
+  m 127& 2<< Address+           {Pointer in FAT sector at 32-bit word i & $7f}
+  m=   deek ValueL=             {Fetch next cluster number in the chain}
+  m 2+ deek ValueH=
+
+  pop ret
+] NextCluster=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page $78                                    |
++-----------------------------------------------------------------------}
+*=$78a0
 
 {-----------------------------------------------------------------------+
 |                                                                       |
@@ -1272,6 +1415,12 @@ ReadDirectory!                  {Read root directory XXX Move into PrintDir}
 [if=0 PrintDirectory!]          {List directory, find BOOT.GT1 and execute it}
 
 [do loop]                       {Loop forever if not found}
+
+{-----------------------------------------------------------------------+
+|                       RAM page $7f                                    |
++-----------------------------------------------------------------------}
+
+_ClusterList=$7fa0              {Room for 96/4 = 24 clusters}
 
 {-----------------------------------------------------------------------+
 |                                                                       |
