@@ -29,6 +29,8 @@ gcl0x
   ret
 ] SetupVideo=
 
+\videoTop_DEVROM p= 0 p.        {Skip 0 pixel rows from the top}
+
 [def {PrintStartupMessage}
   push
   [def

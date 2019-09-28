@@ -93,6 +93,7 @@
 #  DONE Sound: Better noise by changing wavX every frame (at least in channel 1)
 #  DONE Sound demo: Play SMB Underworld tune
 #  XXX  Fix clobbering of 0x81 by SPI SYS functions #103
+#  XXX  Control variable to black out the area at the top of the screen
 #  DONE Fix possible video timing error in Loader #100
 #  XXX  v6502: Test with Apple1 BASIC
 #  XXX  v6502: Stub D010-D013 with JSR targets for easier patching
@@ -115,7 +116,6 @@
 #  XXX  vCPU: extension for C: CMPW_v4 $DD
 #  XXX  Faster SYS_Exec_88, with start address?
 #  XXX  Let SYS_Exec_88 clear channelMask when loading into live variables
-#  XXX  Video mode 4 (all or partly black? Single color? Active syncs)
 #  XXX  Video mode for 12.5 MHz systems
 #
 #  Ideas for ROM v6+
@@ -255,7 +255,7 @@ videoModeD      = zpByte() # Handler for every 4th line (pixel burst or vCPU)
 
 # Vertical blank (reuse some variables used in the visible part)
 videoSync0      = frameX   # Vertical sync type on current line (0xc0 or 0x40)
-videoSync1      = frameY   # Same during horizontal pulse
+videoSync1      = frameY   # Same during horizontal pulse (0x80 or 0x00)
 videoPulse      = nextVideo # Used for pulse width modulation
 
 # Frame counter is good enough as system clock
@@ -327,6 +327,8 @@ ctrlBits        = sysArgs+7
 
 # Byte 0-239 define the video lines
 videoTable      = 0x0100 # Indirection table: Y[0] dX[0]  ..., Y[119] dX[119]
+
+videoTop_DEVROM = 0x01f9 # Number of skip lines
 
 vReset          = 0x01f0
 
@@ -565,14 +567,16 @@ st([vPC])
 adda(2, X)
 ld(vReset>>8)
 st([vPC+1], Y)
-st('LDI',             [Y,Xpp])
-st('SYS_Reset_38',    [Y,Xpp])
-st('STW',             [Y,Xpp])
-st(sysFn,             [Y,Xpp])
-st('SYS',             [Y,Xpp])
-st(256-38/2+maxTicks, [Y,Xpp])
-st('SYS',             [Y,Xpp])  # SYS_Exec_88
-st(256-88/2+maxTicks, [Y,Xpp])
+st('LDI',             [Y,Xpp]); C('LDI')
+st('SYS_Reset_38',    [Y,Xpp]); C('SYS_Reset_38')
+st('STW',             [Y,Xpp]); C('STW')
+st(sysFn,             [Y,Xpp]); C('sysFn')
+st('SYS',             [Y,Xpp]); C('SYS -> SYS_Reset_38')
+st(256-38/2+maxTicks, [Y,Xpp]); C('270-38/2')
+st('SYS',             [Y,Xpp]); C('SYS -> SYS_Exec_88)')
+st(256-88/2+maxTicks, [Y,Xpp]); C('270-88/2')
+st(0,                 [Y,Xpp]);
+st(0,                 [Y,Xpp]); C('videoTop')
 
 ld(hi('ENTER'));                C('Active interpreter (vCPU,v6502) = vCPU')
 st([vCPUselect])
@@ -1164,11 +1168,11 @@ st([videoModeB])                #75
 nop()                           #76
 label('.select#77')
 st([videoModeD])                #77
-wait(192-78)                    #78 Don't waste space expanding runVcpu here
+wait(188-78)                    #78 Don't waste code space expanding runVcpu here
 # AC==255 now
-st([buttonState])               #192
-bra('vBlankEnd')                #193
-ld(0)                           #194
+st([buttonState])               #188
+bra('.vBlankEnd#191')           #189
+ld(0)                           #190
 label('.select#70')
 
 # Mitigation of runaway channel variable
@@ -1176,13 +1180,18 @@ ld([channel]);                  C('Normalize channel, for robustness')#70
 anda(0b00000011)                #71
 st([channel])                   #72 Stop wild channel updates
 
-runVcpu(195-73, '---D line 40') #73 Application cycles (scan line 40)
+runVcpu(191-73, '---D line 40') #73 Application cycles (scan line 40)
 
 # AC==0 now
-label('vBlankEnd')
-st([videoY])                    #195
-st([frameX])                    #196
+label('vBlankEnd#191')
+ld(videoTop_DEVROM>>8,Y)        #191
+ld([Y,videoTop_DEVROM])         #192
+st([videoY])                    #193
+st([frameX])                    #194
+bne(pc()+3)                     #195
+bra(pc()+3)                     #196
 ld('videoA')                    #197
+ld('videoF')                    #197(!)
 st([nextVideo])                 #198
 ld([channel])                   #199 Advance to next sound channel
 anda([channelMask]);            C('<New scan line start>')#0
@@ -1202,7 +1211,7 @@ ld([channel])                   #1 Advance to next sound channel
 # - Fetch next Yi and store it for retrieval in the next scan lines
 # - Calculate Xi from dXi, but there is no cycle time left to store it as well
 label('videoA')
-ld('videoB')                    #29
+ld('videoB');                   C('1st scanline of 4 (always visible)')#29
 st([nextVideo])                 #30
 ld(videoTable>>8, Y)            #31
 ld([videoY], X)                 #32
@@ -1261,7 +1270,7 @@ ld(syncBits, OUT);              C('End horizontal pulse')#28
 # Back porch B: second of 4 repeated scan lines
 # - Recompute Xi from dXi and store for retrieval in the next scan lines
 label('videoB')
-ld('videoC')                    #29
+ld('videoC');                   C('2nd scanline of 4')#29
 st([nextVideo])                 #30
 ld(videoTable>>8, Y)            #31
 ld([videoY])                    #32
@@ -1275,7 +1284,7 @@ st([frameX], X)                 #37 Store in RAM and X
 # - Nothing new to for video do as Yi and Xi are known,
 # - This is the time to emit and reset the next sound sample
 label('videoC')
-ld('videoD')                    #29
+ld('videoD');                   C('3rd scanline of 4')#29
 st([nextVideo])                 #30
 ld([sample]);                   C('New sound sample is ready')#31 First something that didn't fit in the audio loop
 ora(0x0f)                       #32
@@ -1289,22 +1298,22 @@ ld([frameX], X)                 #37
 # - Calculate the next frame index
 # - Decide if this is the last line or not
 label('videoD')                 # Default video mode
-ld([frameX], X)                 #29
+ld([frameX], X);                C('4th scanline of 4')#29
 ld([videoY])                    #30
 suba((120-1)*2)                 #31
-beq('.lastpixels34')            #32
-adda(120*2);                    C('More pixel lines to go')#33
+beq('.lastpixels#34')           #32
+adda(120*2);                    C('More pixel rows to go')#33
 st([videoY])                    #34
 ld('videoA')                    #35
 bra([videoModeD])               #36
 st([nextVideo])                 #37
 
-label('.lastpixels34')
+label('.lastpixels#34')
 if soundDiscontinuity == 1:
   st(sample, [sample])          ;C('Sound continuity')#34
 else:
   nop()                         #34
-ld('videoE');                   C('No more pixel lines to go')#35
+ld('videoE');                   C('No more pixel rows to go')#35
 bra([videoModeD])               #36
 st([nextVideo])                 #37
 
@@ -1315,9 +1324,26 @@ ld(hi('vBlankStart'), Y);       C('Return to vertical blank interval')#29
 jmp(Y,'vBlankStart')            #30
 ld(syncBits)                    #31
 
+# Video mode that blacks out one or more pixel rows from the top of screen.
+# This yields some speed, but also frees up screen memory for other purposes.
+# Note: Sound output becomes choppier the more pixel rows are skipped
+# Note: The vertical blank driver leaves 0x80 behind in [videoSync1]
+label('videoF')
+ld([videoSync1]);               C('Completely black pixel row')#29
+adda(0x80)                      #30
+st([videoSync1],X)              #31
+ld([frameX])                    #32
+suba([X])                       #33 Decrements every two VGA scanlines
+beq('.videoF#36')               #34
+st([frameX])                    #35
+bra('nopixels')                 #36
+label('.videoF#36')
+ld('videoA')                    #36,37 Transfer to visible screen area
+st([nextVideo])                 #37
+#
 # Alternative for pixel burst: faster application mode
 label('nopixels')
-runVcpu(200-38, '-BCD line 41-520',
+runVcpu(200-38, 'ABCD line 40-520',
   returnTo=0x1ff)               #38 Application interpreter (black scanlines)
 
 #-----------------------------------------------------------------------
@@ -4965,6 +4991,7 @@ define('ledState_v2',ledState_v2)
 define('ledTempo',   ledTempo)
 define('userVars',   userVars)
 define('videoTable', videoTable)
+define('videoTop_DEVROM', videoTop_DEVROM)
 define('userCode',   userCode)
 define('soundTable', soundTable)
 define('screenMemory',screenMemory)
