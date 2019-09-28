@@ -1171,7 +1171,7 @@ st([videoModeD])                #77
 wait(188-78)                    #78 Don't waste code space expanding runVcpu here
 # AC==255 now
 st([buttonState])               #188
-bra('.vBlankEnd#191')           #189
+bra('vBlankEnd#191')            #189
 ld(0)                           #190
 label('.select#70')
 
