@@ -77,25 +77,25 @@ gcl0x
 
     { Handle each stroke of Up/Down and A controller buttons }
 
-    \buttonState, 254^ [if=0            {buttonRight}
+    \buttonState, $fe^ [if=0            {buttonRight}
        WipeOutArrow!
        MenuItem 5- [if<=0 11+ MenuItem=]
-       \buttonState, 1| \buttonState.]
+       $ef \buttonState.]
 
-    \buttonState, 253^ [if=0            {buttonLeft}
+    \buttonState, $fd^ [if=0            {buttonLeft}
        WipeOutArrow!
        MenuItem 6- [if>=0 MenuItem=]
-       \buttonState, 2| \buttonState.]
+       $ef \buttonState.]
 
-    \buttonState, 251^ [if=0            {buttonDown}
+    \buttonState, $fb^ [if=0            {buttonDown}
        WipeOutArrow!
        MenuItem 5- [if<>0 6- if<>0 <MenuItem++]
-       \buttonState, 4| \buttonState.]
+       $ef \buttonState.]
 
-    \buttonState, 247^ [if=0            {buttonUp}
+    \buttonState, $f7^ [if=0            {buttonUp}
        WipeOutArrow!
        MenuItem [if<>0 6- if<>0 MenuItem 1- MenuItem=]
-       \buttonState, 8| \buttonState.]
+       $ef \buttonState.]
 
     {buttonA, or any ASCII key from keyboard, 'A' included...}
     \buttonState, 128& if<>0loop
