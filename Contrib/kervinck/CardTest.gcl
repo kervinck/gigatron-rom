@@ -5,21 +5,55 @@
 |                                                                       |
 |       !!! Work in progress !!!                                        |
 |                                                                       |
-|       The goal is to connect to a FAT32-formatted SDC/MCC card        |
+|       The goal is to connect to a FAT32-formatted SDC/MMC card        |
 |       over the SPI interface, and then list its root directory.       |
 |       If there is a BOOT.GT1 file, load and execute it.               |
 |                                                                       |
 +-----------------------------------------------------------------------}
 
 {
-
+  XXX  Support loading of segments in zero page
+        - Bricks        82.ef   110 bytes
+        - Tetronis      a0.ef    80 bytes
+        - Frogstroll    82.ef   110 bytes
+        Approach 1: Through page 1
+                Kludge but very simple.
+                Visual artifacts are transient, and only with certain files
+                We could also map it to a different page, e.g. one
+                that will be scrolled out anyway
+        Approach 2: Decoding after load
+                Faster loading, but 2nd pass needed
+                Can't hide visual artifacts, even for simple files
+        Approach 3: Reduce footprint with CALLI and move variables to $c0
+                Lots of work, but this is a good idea anyway
+  XXX  64K systems: put code in highest pages ($ffff and down)
+                --> Conflicts with Apple1 (WozMon)
+  XXX  32K systems: put code in bottom screen memory ($7f9f and down)
+        --> Conflicts with Apple1. So how about $800.$1000
+        16*160 = 2560 bytes
+        Con: It overwrites *** Gigatron 32K *** --> So be it
+        We can always copy that to the bottom of screen memory (silly)
+        Dynamically mak jump table at $f8: if you use it, ALLOC -8
+        $FE PrintChar, Newline, Open, LoadByte, ...
+  XXX  On the matter of scrolling: When to restore the video table?
+       Graphical games probably need it restored. Disk commands don't
+       need that.
+        Option 1: Signal somehow in the GT1 that we don't want to restore
+        Option 2: Start the terminal with cursor at top of screen
+                  This doesn't work if we type "DIR" first
+  XXX  DIR, CLS commands
+  XXX  TYPE command (passing of ARGS)
+  XXX  Name: GTOS, GTDOS, TTLDOS, UDOS, SDOS, MICRODOS, TINYDOS, PROMPT, ...
   XXX  https://cdn.hackaday.io/images/1744261554112919559.png
   XXX  LoadtGt1: better closing of sector
-  XXX  Byte addressing for V2 cards when CCS bit in OCR of CMD58 is 0
-  XXX  MMC v3 card detection with CMD1
-  XXX  Don't set block size with CMD16 if CCS bit in OCS is 1
-  XXX  Follow cluster chain for directories as well
-  XXX  Transfer 256 bytes at once
+  XXX  Compliancy: Byte addressing for V2 cards when CCS bit in CMD58 OCR is 0
+  XXX  Compliancy: MMC v3 card detection with CMD1
+  XXX  Compliancy: Don't set block size with CMD16 if CCS bit in OCS is 1
+  XXX  Compliancy: Reconsider pull-down resistors on MISO lines
+                   Some cards [30%?] [MMC?] have MISO in open collector during
+                   init" But if this is only during CMD0, we can live with it...
+  XXX  Compliancy: Follow cluster chain for directories as well
+  XXX  Speed: Transfer 256 bytes at once
   XXX  Think about card detect and monitoring it (inserted = low)
        Put we can always use the MOSI line for this, or check the
        init status when opening a file
@@ -55,30 +89,39 @@ gcl0x
 +-----------------------------------------------------------------------}
 
 {
-        Variable                Description
-        --------                -----------
-        CardType                Detected card version
-        Address                 RAM for transfer buffer
-        ValueL,H                32-bit accumulator
-        OffsetL,H               Offset to be added to ValueL,H
-        SectorL,H               Block number of last sector
-        CurrentDirL,H           First cluster of current directory
+        Variable        Bytes   Description
+        --------        -----   -----------
+        CardType        X       Detected card version
+        Address         XX      RAM for transfer buffer
+        ValueL,H        XXXX    32-bit accumulator
+        OffsetL,H       XXXX    Offset to be added to ValueL,H
+        SectorL,H       XXXX    Block number of last sector
+        CurrentDirL,H   ----    First cluster of current directory
+        ClusterSize     X       Sectors per cluster: 1, 2, ... 128
+        ClusterMask     X       XXX ClusterSize - 1
+        ClusterBaseL,H  ----    Cluster origin (hypothetical cluster 0)
+        FatBaseL,H      ----    XXX
+        FileSizeL,H     ????    File size from directory entry
+        FilePosL,H      --XX    Current R/W position in file: 0..FileSize
+        Checksum        ----    CRC16 checksum over sector data
 
-        ClusterSize             Sectors per cluster: 1, 2, ... 128
-        ClusterMask             XXX ClusterSize - 1
-        ClusterBaseL,H          Cluster origin (hypothetical cluster 0)
-        FatBaseL,H              XXX
-        FileSizeL,H             File size from directory entry
-        FilePosL,H              Current R/W position in file: 0..FileSize
-        Checksum                CRC16 checksum over sector data
+        Memory usage
+        ------------
+        $200 $4ff               Code not needed for GT1 reading
+                                Eg. detecting the card settings
+        $500 $6ff               Buffer for reading FAT sectors
+        $800 $f9f               GT1 reading core
 }
 
 {-----------------------------------------------------------------------+
 |                       RAM page 2                                      |
 +-----------------------------------------------------------------------}
 
-\romType, \romTypeValue_ROMv4-  {Version check >= ROMv4}
+\romType, \romTypeValue_DEVROM- {Version check >= DEVROM}
 [if<0 do _frameCount _vPCH: loop]
+
+\videoTop_DEVROM Address=       {Shrink visible screen area. This doesn't work}
+32 Address.                     {on ROMv4 or below, but it doesn't harm either}
 
 $500 Address=                   {512 bytes memory for one sector}
 
@@ -500,7 +543,7 @@ $500 Address=                   {512 bytes memory for one sector}
 |                                                                       |
 +-----------------------------------------------------------------------}
 
-{ ReadVolumeID }
+{ ReadVolumeId }
 [def
   {
     Reads the first block of the partition. Mind that, despite it's name,
@@ -517,7 +560,7 @@ $500 Address=                   {512 bytes memory for one sector}
   512 k^ PrintResult!
 
   pop ret
-] ReadVolumeID=
+] ReadVolumeId=
 
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page $61                                    |
@@ -565,9 +608,9 @@ $500 Address=                   {512 bytes memory for one sector}
 
         ClusterBaseL,H =
                 PartitionL,H                    from MBR
-              + Reserved Sectors                from VolumeID
-              + (Number of FATs * FAT size)     from VolumeID
-              - 2 * ClusterSize                 from VolumeID
+              + Reserved Sectors                from VolumeId
+              + (Number of FATs * FAT size)     from VolumeId
+              - 2 * ClusterSize                 from VolumeId
   }
 
   $00d Address+ peek            {Sectors per cluster}
@@ -823,7 +866,8 @@ AddOffset=
 [def
   {
     Print any byte value as character, map non-ASCII to block symbol
-    Insert Newline when wrapping the line
+    XXX Clear 6th slice
+    XXX Insert Newline when wrapping the line
   }
   push
   32- [if<0 127 else 96-        {Map any non-ASCII to block symbol 127}
@@ -1044,11 +1088,12 @@ AddOffset=
 *=$6da0
 
 { Newline -- writes i Pos _sysFn _sysArgs[01245] }
+{ !!! This version scrolls only pixel row 16 through 119 !!! }
 [def
                                 {Clear new line first}
   $3f20 _sysArgs0=              {White on blue}
-  $100 <Pos. peek >Pos. Pos     {Go to start of next line}
-  _sysArgs4=                    {Set screen position}
+  0 <Pos. $120 peek >Pos.       {Go to start of next line}
+  Pos _sysArgs4=                {Set screen position}
   \sysArgs2.                    {Set all-zero output pattern}
   [do
     \SYS_VDrawBits_134          {SYS call to draw 8 pixels vertically}
@@ -1057,12 +1102,12 @@ AddOffset=
     \sysArgs4, 160^             {Test for end of line}
     if<>0loop]
                                 {Then scroll up by modifying videoTable}
-  $01ee i=                      {Last entry in video table}
+  $01 >i. 208                   {Last entry at $100+238, minus 30}
   [do
+    30+ <i.
     i, 120- [if<0 128+
-             else 8+] i.        {Rotate by 8 in 7..126 range}
-    i 2- i=                     {Move to previous entry in video table}
-    $fe^ if<>0loop]             {Until all done}
+             else 24+] i.       {Rotate by 8 in 24..127 range}
+    <i, 32- if>0loop]           {Move to previous entry in video table}
 
   ret
 ] Newline=
@@ -1409,7 +1454,7 @@ InitCard!
 CardType PrintByte! Newline!    {Show detected card version}
 
 ReadMBR! PrintResult!           {Master Boot Record}
-[if=0 ReadVolumeID!]            {Read first block of FAT partition}
+[if=0 ReadVolumeId!]            {Read first block of FAT partition}
 InitFat32!
 ReadDirectory!                  {Read root directory XXX Move into PrintDir}
 [if=0 PrintDirectory!]          {List directory, find BOOT.GT1 and execute it}
