@@ -75,7 +75,7 @@ and possibly even Android. As of v0.6.6 it has only been tested on Microsoft Win
 - cmake .<br/>
 - Open gtemuAT67.sln into Visual Studio, compile and execute.<br/>
 - **Optional:** if you want to be able to develop using SDL2 without having to configure the include and lib variables<br/>
-  for each new project, then just add a the environment variable **SDL2DIR** pointing to the directory you installed SDL2 into.<br/>
+  for each new project, then add an environment variable **SDL2DIR** pointing to the directory you installed SDL2 into.<br/>
   
 ## Linux  
 - sudo apt-get -y install cmake libsdl2-dev<br/>
@@ -83,7 +83,7 @@ and possibly even Android. As of v0.6.6 it has only been tested on Microsoft Win
 - cd gigatron-rom/Contrib/at67<br/>
 - cmake .<br/>
 - make<br/>
-- ./gtemuSDL &<br/>
+- ./gtemuAT67 &<br/>
 
 ## Installation
 - After building, copy the executable and SDL2 shared library\/DLL to an appropriate directory;<br/>
