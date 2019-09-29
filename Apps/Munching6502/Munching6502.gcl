@@ -1,0 +1,45 @@
+gcl0x
+
+{ Version check >= ROMv4, see Docs/GT1-files.txt }
+\romType, \romTypeValue_ROMv4- [if<0 do _frameCount _vPCH: loop]
+
+{ Tester for v6502 }
+{ Nice online assembler: https://www.masswerk.at/6502/assembler.html }
+{ Also: https://cc65.github.io Homebrew: brew install cc65 }
+
+{ Demo jumping back and forth between vCPU and v6502 code }
+
+[def
+        #$85 #$30               { munch sta $30         }
+        #$a9 #$00               {       lda #0          }
+        #$85 #$31               {       sta $31         }
+        #$a9 #$10               {       lda #16         }
+        #$85 #$32               {       sta $32         }
+        #$a9 #$18               { nextT lda #$18        }
+        #$85 #$33               {       sta $33         }
+        #$a5 #$33               { nextY lda $33         }
+        #$45 #$31               {       eor $31         }
+        #$a8                    {       tay             }
+        #$a5 #$30               {       lda $30         }
+        #$91 #$32               {       sta ($32),y     }
+        #$e6 #$33               {       inc $33         }
+        #$10 #$f3               {       bpl *-13        }
+        #$e6 #$31               {       inc $31         }
+        #$10 #$eb               {       bpl *-21        }
+        #$a5 #$30               {       lda $30         }
+        #$00                    {       brk             }
+
+] \vLR: { = v6502_PC }
+
+{ GCL notation for main loop }
+
+\SYS_Run6502_DEVROM_80 _sysFn=
+
+0 {Black}
+[do
+  push                          { Save start address on stack }
+  23+                           { New color }
+  80!                           { Run v6502 until BRK }
+  pop                           { Restore start address }
+  loop]                         { Forever }
+

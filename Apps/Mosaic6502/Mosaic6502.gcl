@@ -1,0 +1,87 @@
+gcl0x
+
+{ Version check >= ROMv4, see Docs/GT1-files.txt }
+\romType, \romTypeValue_ROMv4- [if<0 do _frameCount _vPCH: loop]
+
+{ Tester for v6502 }
+{ Nice online assembler: https://www.masswerk.at/6502/assembler.html }
+{ Also: https://cc65.github.io Homebrew: brew install cc65 }
+
+{ Demo jumping back and forth between vCPU and v6502 code }
+
+[def
+{mosaic}
+        #$48                    {       pha             }
+        #$8d #$3e #$02          {       sta $023e ins   }
+        #$20 #$18 #$02          {       jsr $0218       }
+        #$68                    {       pla             }
+        #$00                    {       brk             }
+
+{0218}  #$a9 #$02               {       lda #>$0220     }
+        #$48                    {       pha             }
+        #$a9 #$20               {       lda #<$0220     }
+        #$48                    {       pha             }
+        #$08                    {       php             }
+        #$40                    {       rti             }
+
+{0220}  #$a9 #$00               {       lda #0          }
+        #$85 #$26               {       sta $26  flags  }
+        #$85 #$31               {       sta $31  A      }
+        #$a9 #$08               {       lda #8          }
+        #$85 #$33               {       sta $33  L      }
+        #$a9 #$58               {       lda #88         }
+        #$85 #$35               {       sta $35         }
+        #$a9 #$22               {       lda #$22        }
+        #$85 #$34               {       sta $34  H      }
+        #$85 #$36               {       sta $36         }
+{loopA} #$a9 #$00               {       lda #0          }
+        #$85 #$32               {       sta $32  B      }
+        #$a0 #$00               {       ldy #0          }
+{loopB} #$a5 #$31               {       lda $31  A      }
+        #$38                    {       sec             }
+        #$18                    {       clc             }
+{023e}  #$00 #$32               {       xxx $32  B      }
+        #$08                    {       php             }
+        #$28                    {       plp             }
+        #$08                    {       php             }
+        #$4a                    {       lsr a           }
+        #$6a                    {       ror a           }
+        #$91 #$33               {       sta ($33),y     }
+        #$68                    {       pla             }
+        #$0a                    {       asl a           }
+        #$2a                    {       rol a           }
+        #$2a                    {       rol a           }
+        #$91 #$35               {       sta ($35),y     }
+        #$c8                    {       iny             }
+        #$a5 #$32               {       lda $32  B      }
+        #$09 #$06               {       ora #6          }
+        #$85 #$32               {       sta $32         }
+        #$e6 #$32               {       inc $32         }
+        #$d0 #$e2               {       bne *-30 loopB  }
+        #$e6 #$34               {       inc $34  H      }
+        #$e6 #$36               {       inc $36         }
+        #$a9 #$06               {       lda #6          }
+        #$05 #$31               {       ora $31  A      }
+        #$85 #$31               {       sta $31         }
+        #$e6 #$31               {       inc $31         }
+        #$d0 #$ce               {       bne *-50 loopA  }
+        #$60                    {       rts             }
+] \vLR: { = v6502_PC }
+
+{ GCL notation for main loop }
+
+\SYS_Run6502_DEVROM_80 _sysFn=
+
+[do
+
+  push $a5 80! pop              { LDA }
+  push $25 80! pop              { AND }
+  push $05 80! pop              { ORA }
+  push $45 80! pop              { XOR }
+  push $65 80! pop              { ADC }
+  push $e5 80! pop              { SBC }
+  push $c5 80! pop              { CMP }
+  push $24 80! pop              { BIT }
+
+  loop]                         { Forever }
+

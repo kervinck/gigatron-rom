@@ -1,0 +1,194 @@
+
+gcl0x
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Application menu                                                |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+{
+  XXX Gigatron logo drawing
+  XXX Rising planet with bombastic tune (like Space Odyssey)
+}
+
+{ Fall into TinyBASIC if [Start] is pressed for >4 seconds }
+\buttonState;                   {Fetch buttonState and resetTimer}
+[if>0                           {If resetTimer positive}
+  16& [if=0                     {And [Start] pressed}
+  \TinyBASIC \sysArgs0: 88!]]   {Start BASIC. SYS_Exec_88 still in sysFn}
+
+{ Print a 5x8 character on screen with the built-in font
+  Char must be in the 32-127 range (this is not checked) }
+[def {PrintChar}
+  {Map ASCII code to offset in font table}
+  Char 82- [if<0 50+ i= \font32up
+            else     i= \font82up] fontData= {Select low or high page}
+  i 2<< i+             {Multiply by 5}
+  fontData+ fontData=  {Add to page address to reach bitmap data for Char}
+
+  {Draw 5 vertical slices: 5 using font data}
+  32      \sysArgs0. {Blue}
+  Color   \sysArgs1.
+  Pos     \sysArgs4:
+  6+      Pos=
+  \SYS_VDrawBits_134 \sysFn:
+  $fb i= [do
+    fontData 0? fontData<++ \sysArgs2. 134!
+    \sysArgs4<++
+    i<++ i if<>0loop]
+  ret
+] PrintChar=
+
+[def {PrintText}
+  push
+  Text=
+  [do
+    Text, if<>0 Char= Text<++           {while((Char=*Text++)!=0)...}
+    9^ [if=0 Pos 30+ Pos= loop]         {Horizontal tab}
+    3^ [if=0 Newline! loop]             {Newline 9^10=3}
+    PrintChar!                          {Regular character}
+    loop]
+  pop ret
+] PrintText=
+
+[def {Newline}
+  Pos>, 8+ Pos>.
+  0 Pos<.
+  ret
+] Newline=
+
+{ Print 26 dashes }
+[def
+ push
+ $2d {'-'} Char=
+ 26 [do j= PrintChar! j 1- if>0loop]
+ Newline!
+ pop ret
+] PrintDivider=
+
+[def
+  push
+  $200c Pos=
+  Item [do j= $800 Pos+ Pos= j 1- if>=0loop]
+  $2d {'-'} Char= PrintChar!
+  $3e {'>'} Char= PrintChar!
+  pop ret
+] PrintArrow=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 3                                      |
++-----------------------------------------------------------------------}
+$0300:
+
+[def
+  9# $53# $6e# $61# $6b# $65# 10#                          {Snake}
+  9# $52# $61# $63# $65# $72# 10#                          {Racer}
+  9# $4d# $61# $6e# $64# $65# $6c# $62# $72# $6f# $74# 10# {Mandelbrot}
+  9# $50# $69# $63# $74# $75# $72# $65# $73# 10#           {Pictures}
+  9# $43# $72# $65# $64# $69# $74# $73# 10#                {Credits}
+  9# $4c# $6f# $61# $64# $65# $72# 10#                     {Loader}
+  0#
+] MainMenu=
+
+[def
+  { Use [Up/Down] to select}
+  $20# $55# $73# $65# $20# $5b# $55# $70#
+  $2f# $44# $6f# $77# $6e# $5d# $20# $74#
+  $6f# $20# $73# $65# $6c# $65# $63# $74#
+  {Press [A] to start program}
+  10#
+  $50# $72# $65# $73# $73# $20# $5b# $41#
+  $5d# $20# $74# $6f# $20# $73# $74# $61#
+  $72# $74# $20# $70# $72# $6f# $67# $72#
+  $61# $6d#
+  {Hold [Start] for reset}
+  10#
+  10#
+  $48# $6f# $6c# $64# $20# $5b# $53# $74#
+  $61# $72# $74# $5d# $20# $66# $6f# $72#
+  $20# $72# $65# $73# $65# $74#
+  0#
+] HelpText=
+
+[def
+  push
+  Pos 12- Pos=
+  $20 {space} Char= PrintChar! PrintChar!
+  pop ret
+] WipeOutArrow=
+
+[def {PrintMenu}
+  push
+  42 {Gray}   Color= PrintDivider!
+  15 {Yellow} Color= MainMenu PrintText!
+  42 {Gray}   Color= PrintDivider!
+                     HelpText PrintText!
+  pop ret
+] PrintMenu=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+$0400:
+
+120 \soundTimer.
+
+{ Print menu }
+$2000 Pos=
+PrintMenu!
+
+{ Operate menu }
+0 Item=
+[do
+  \frameCount, Color= PrintArrow!
+
+  { Handle each stroke of Up/Down and A controller buttons }
+
+  {buttonUp}
+  \buttonState, 247^ [if=0
+     WipeOutArrow!
+     Item    [if>0 1- else 0] Item=
+     \buttonState, 8| \buttonState.]
+
+  {buttonDown}
+  \buttonState, 251^ [if=0
+     WipeOutArrow!
+     Item 5- [if<0 6+ else 5] Item=
+     \buttonState, 4| \buttonState.]
+
+  {buttonA}
+  \buttonState, 127^ if<>0loop
+
+  42 {Gray} Color= PrintArrow!
+
+  { Map menu item to program }
+  Item [if=0 \Snake      else
+  1-   [if=0 \Racer      else
+  1-   [if=0 \Mandelbrot else
+  1-   [if=0 \Pictures   else
+  1-   [if=0 \Credits    else
+  1-   [if=0 \Loader     else loop]]]]]]
+  Program=
+]
+
+{ Wipe out everything but the selected and bottom line }
+$800 p= $8801 i=
+Pos>, q= {Y position of current cursor}
+\SYS_VDrawBits_134 \sysFn: 32 \sysArgs0. \sysArgs1.
+[do
+  p>, q- [if<>0
+    p>, $78^ if<>0
+    p \sysArgs4: 134! {Clears 8 pixels vertically}
+  ]
+  $800 p+ p= if>0loop
+  i+ p=
+  255& 160^ if<>0loop]
+
+{ Load and start the selected program }
+Program \sysArgs0: $200 \vLR: \SYS_Exec_88 \sysFn: 88!
+
+{-----------------------------------------------------------------------+
+|                                                                       |
++-----------------------------------------------------------------------}
+

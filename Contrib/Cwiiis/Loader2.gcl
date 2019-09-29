@@ -1,0 +1,194 @@
+gcl0x
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Loading of programs over the serial port (with Arduino)         |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+{ Setup }
+
+{ Print a 5x8 character on screen with the built-in font
+  Char must be in the 32-127 range (this is not checked) }
+[def {PrintChar}
+  Char=
+  {Map ASCII code to offset in font table}
+  82- [if<0 50+ i= \font32up
+            else     i= \font82up] fontData= {Select low or high page}
+  i 2<< i+             {Multiply by 5}
+  fontData+ fontData=  {Add to page address to reach bitmap data for Char}
+
+  {Draw 5 vertical slices: 5 using font data}
+  $2A00 \sysArgs0: { Light grey on black }
+  Pos     \sysArgs4=
+  6+      Pos=
+  \SYS_VDrawBits_134 \sysFn=
+  $fb i= [do
+    fontData 0? fontData<++ \sysArgs2. 134!
+    \sysArgs4<++
+    i<++ i if<>0loop]
+  ret
+] PrintChar=
+
+[def {DrawImage}
+  {vAC} p=                      {Addres in ROM for image data}
+  $0800 q=                      {Points in video memory}
+  160 [do i=
+
+    q v=
+    [do
+      p \sysArgs6= \SYS_Read3_40  \sysFn= 40! {Read 3 bytes from ROM}
+                   \SYS_Unpack_56 \sysFn= 56! {Unpack to 4 bytes}
+      q \sysArgs4= \SYS_Draw4_30  \sysFn= 30! {Write 4 bytes to screen}
+      $80 p+ p=
+      q>++ q
+      if>0loop]
+    v 4+ q=
+
+    {Advance to next slice}
+    $c403 p+ p=
+
+    i 4- if>0loop]
+  ret
+] DrawImage=
+
+[def {MemCpy}
+  [do i=
+    from, to. from<++ to<++
+  i 1- if<>0loop]
+ret] MemCpy=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 3                                      |
++-----------------------------------------------------------------------}
+$0300:
+
+{ Copy loading code out of video memory area }
+$5a0c from=
+$0500 to=
+117 MemCpy!
+
+{ Play startup sound }
+120 \soundTimer.
+
+{ Draw splash screen }
+\packedJupiter DrawImage!
+
+{ Display RAM size }
+[def $20# $20# $4B# $0# ] Text= { "  K" }
+
+{ Convert memory size into decimal text }
+$2f2f Char=                     {Two ASCII counters, both starting at '0'-1}
+\memSize, 1- 255& 1+            {Number of pages as counted at boot}
+[do Char<++ 40- if>=0loop] 40+  {Count number of 10K chunks}
+[do Char>++  4- if>=0loop]      {Count number of 1K chunks}
+Char Text:
+
+$088E Pos=
+[do Text, if<>0 Text<++ PrintChar! loop]
+
+{ Display ready to load text }
+$1082 Pos=
+[def {Ready\0to load}
+  $52# $65# $61# $64# $79# $0# $74# $6f#
+  $20# $6c# $6f# $61# $64# 0# ] Text=
+[do Text, if<>0 Text<++ PrintChar! loop]
+
+$0400 call
+$0400:
+
+{ Put these in variable to save some code space below }
+\SYS_NextByteIn_32  NextByteIn_32=
+\SYS_PayloadCopy_34 PayloadCopy_34=
+
+0 \sysArgs4.            {Clears the copy counter}
+$590c A=                {Activity indicator}
+$5b0c B=                {Buffer}
+103 {'g'} \sysArgs2.    {Reset checksum}
+
+{ Copy loading code back into video memory area }
+$0500 from=
+$5a0c to=
+117 MemCpy!
+
+{ Start loader }
+$5a0c call
+
+$5a0c: { Loader }
+
+{ Loop }
+
+[do
+  {Receive the next transmission frame}
+  B   \sysArgs0=                           {Input buffer}
+  207 \sysArgs3. NextByteIn_32 \sysFn= 32! {Protocol byte}
+  219 \sysArgs3.                       32! {Length, 6 new bits}
+  235 \sysArgs3.                       32! {Low address}
+  251 \sysArgs3.                       32! {High address}
+                PayloadCopy_34 \sysFn= 34! {Copy previous bytes}
+  2   \sysArgs3. NextByteIn_32 \sysFn= 32! {Payload 0}
+  6   \sysArgs3.
+  [do           PayloadCopy_34 \sysFn= 34! {Copy previous bytes}
+                 NextByteIn_32 \sysFn= 32! {Payload 1-59}
+    \sysArgs3, 4+ \sysArgs3.
+    242^ if<>0loop]
+  185 \sysArgs3.                       32! {Checksum byte}
+
+  {Plot green or red indicator}
+  \sysArgs2, [if=0 12 else 3] A.
+
+  {Advance indicator and wrap around}
+  A<, 11- 127& 12+ A<.
+
+  {White indicator}
+  63 A.
+
+  {Check checksum and command, and execute if OK. Also reset checksum.}
+  \SYS_LoaderProcessInput_48 \sysFn= 48!
+loop]
+
+{
+vgaY nextVideo videoY vCPU Comment
+---- --------- ------ ---- -------
+   0  videoE      238  Yes First vBlank
+   1  videoE      181  Yes
+   2  videoE      183  Yes
+   3  videoE      185  Yes Byte 65 Checksum
+  ..  ...         ...  Yes
+  14  videoE      207  Yes Byte 0 Protocol ('L')
+  ..  ...         ...  Yes
+  20  videoE      219  Yes Byte 1 Length (6 bits)
+  ..  ...         ...  Yes
+  28  videoE      235  Yes Byte 2 Address L
+  ..  ...         ...  Yes
+  36  videoE      251  Yes Byte 3 Address H
+  37  videoE      253  Yes
+  38  videoE      255  Yes
+  39  videoE        1  Yes
+  40  videoE        1  Yes Last vBlank
+  41  videoA->B     0   No Pixel
+  42  videoB->C     0   No Pixel
+  43  videoC->F     0   No Pixel
+  44  videoF->A     2  Yes Byte 4 Payload 0
+  45  videoA->B     2   No Pixel
+  46  videoB->C     2   No Pixel
+  47  videoC->F     2   No Pixel
+  48  vidoeF->A     4  Yes
+  49  videoA->B     4   No Pixel
+  50  videoB->C     4   No Pixel
+  51  videoC->F     4   No Pixel
+  52  videoF->A     6  Yes Byte 5 Payload 1
+  ..  ...         ...  ...
+ 513  videoA->B   236   No Pixel
+ 514  videoB->C   236   No Pixel
+ 515  videoC->F   236   No Pixel
+ 516  videoF->A   238  Yes Byte 64 Payload 59
+ 517  videoA->B   238   No Pixel
+ 518  videoB->C   238   No Pixel
+ 519  videoC->F   238   No Pixel
+ 520  videoF->E   238  Yes
+}
+
+{-----------------------------------------------------------------------+
+|                                                                       |
++-----------------------------------------------------------------------}
+

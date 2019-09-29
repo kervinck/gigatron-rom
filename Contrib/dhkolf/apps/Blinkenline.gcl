@@ -1,0 +1,21 @@
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       "Blinkenline"                                                   |
+|                                                                       |
+|  A tiny program to display the system variables as pixels in the top  |
+|  row and then halt the program.                                       |
+|                                                                       |
+|  Can be used as a stop screen for failed ROM version checks.          |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+gcl0x
+
+$100        { Load $0100 into vAC. The low byte of vAC is set to $00.     }
+
+_vAC.       { Put the contents of the low byte of vAC ($00) at the adress }
+            { pointed to by vAC ($100). This sets the page of the first   }
+            { screenline to 0 (the variables page).                       }
+
+do loop     { Halt the program.                                           }
+

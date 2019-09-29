@@ -1,0 +1,31 @@
+Version 0.1.4  - 2019-05-04
+---------------------------
+- Fix issue in RAM watch (address 0xFF always displays as 0xFF)
+- Test simpler method for updating the display
+
+
+Version 0.1.3  - 2019-03-14
+---------------------------
+- Rewritten keyboard handling (fix sticking keys, improve typing speed)
+
+
+Version 0.1.2  - 2019-02-21
+----------------------------
+- Fix debugging of some virtual cpu commands
+- Display target address for CALL vCPU command
+- Add breakpoint functionality to CPU window
+- Enlarge audio buffer, maybe this will help with stuttering audio on slower Macs
+
+
+Version 0.1.1  -  2019-01-31
+----------------------------
+- Fixed display palette: value range was wrongly caluclated by shifting left instead of multiplying with 85
+- Fixed crash on closing of RAM watch
+- Added refresh interval selector for accessory windows to increase chances of running in 100% speed on older and mobile Macs
+- slightly increased audio buffer size with the expected result that audio could now work better on slower macs
+
+
+Version 0.1   -   2019-01-18
+----------------------------
+- Initial release of Gigatron Mac
+- Working in full speed on a 2013 iMac (3,2 GHz Core i5)

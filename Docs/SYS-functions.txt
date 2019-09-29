@@ -1,0 +1,101 @@
+=====================
+vCPU's SYS extensions
+=====================
+
+SYS extensions, or SYS functions, are a method to mix vCPU code
+with native Gigatron code, mostly for acceleration purposes. The
+SYS function will be in ROM, because that's from where native code
+executes.
+
+The release ROMs come with a set of predefined SYS functions. Any
+application in GT1 format can use those freely, provided they do a
+version check first.
+
+You can also write your own application-specific SYS functions, but
+then you better publish your program as a ROM file, not GT1.
+
+SYS extensions are called with the `SYS' instruction from vCPU.
+Their ROM address must be put in `sysFn' in zero page. Optional
+arguments are in sysArgs[0:7]. It is also common to pass an input
+and return value through vAC.
+
+SYS functions are free to do whatever they want, as long as they
+play well with the rules of the timing game. For simplicity of
+implementation, vCPU measures elapsed time in integer number of
+"ticks". 1 tick equals two hardware CPU cycles (1 cycle is 160 ns,
+so 1 tick is 320 ns). All vCPU instructions and SYS functions
+therefore execute in an even number of cycles. A `nop' must be
+inserted if the cycle count would be odd without it.
+
+Rule 1
+------
+
+SYS functions must complete and reenter the vCPU within their maximum
+declared time. This maximum duration is passed to vCPU through the
+operand D of the SYS call. Although the *caller* must feed this
+maximum value into vCPU, the caller may only pass a value that
+matches with the SYS function's own declaration. vCPU in turn uses
+this value to decide if the function can complete in the remainder
+of the current timeslice, or if it must wait for the start of the
+next one. The total allowed time is 28-2*D clocks or cycles, with
+D<=0. This includes all overhead including that of the SYS vCPU
+instruction itself.
+
+Reserving an insufficient number of ticks results in broken video
+signals. It's OK for the caller to "ask" for, or "reserve", more
+time than will be used. This may only result in getting dispatched
+in a later timeslice than strictly necessary. Still, some of the
+more complex built-in SYS functions declare a higher value than
+their implementation needs. This is to allow for future bug fixing
+without changing the caller in existing programs.
+
+[Side note: One way to see the raw value of D is as the *excess*
+number of ticks that vCPU must accommodate for, but represented as
+a number <=0. By default vCPU already accounts for 28 cycles for
+standard instructions.]
+
+Rule 2
+------
+
+On return, SYS functions always report back, in hardware register
+AC, how much time they have *actually* consumed. This returned value
+is the negated number of whole ticks spent. Miscounting results in
+broken video signals. vCPU uses this to know how much time has
+actually passed. This may be less than reserved, but never more.
+
+These rules restrict SYS calls to relatively simple operations,
+because they must fit in the time between two horizontal pulses,
+including overhead. This translates to roughly ~130 CPU cycles at
+most. In reality they typically replace a small sequence of vCPU
+instructions.
+
+Loops are normally not possible. Small loops are usually unrolled
+to reduce overhead. Still, some SYS functions implement iteration
+by setting back vPC just before returning. This causes them to be
+dispatched again, possibly in the next timeslice.
+
+[Side note: It's best to study the cycle count annotations in the
+ROM source code for concrete examples on how things are typically
+done: how the return value is passed back to vCPU, how branches are
+annotated and how sometimes `nop' instructions are inserted to make
+the total cycle count even.]
+
+Naming
+------
+
+The naming convention is: SYS_<CamelCase>[_v<V>]_<N>
+
+With <N> the maximum number of clocks or cycles (not ticks!) the
+function will need, counted from NEXT to NEXT. This duration <N>
+must be passed to the 'SYS' vCPU instruction as operand, represented
+as `270-max(14,<N>/2)'. In GCL you can just type `<N>!', and the
+compiler translates the operand for you. The gt1dump tool disassembles
+and displays <N>.
+
+If a SYS extension was introduced after ROM v1, the version number
+of introduction is included in the name as v<V>. This helps the
+programmer to be reminded to verify the actual ROM version. A program
+must fail gracefully on older ROMs, or at least not crash. See also
+Docs/GT1-files.txt on using `romType' for this purpose.
+
+-- End of document --

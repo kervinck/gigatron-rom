@@ -1,0 +1,241 @@
+
+gcl0x
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Application menu                                                |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+{ Fall into Easter Egg if [Start] is pressed for >4 seconds }
+\buttonState;                   {Fetch buttonState and resetTimer}
+[if>0                           {If resetTimer positive}
+  16& [if=0                     {And [Start] pressed}
+  \Egg \sysArgs0: 88!]]         {Start program. SYS_Exec_88 still in sysFn}
+
+{ Print ASCII character (32..127) on screen in 5x8 pixels }
+[def
+  {Map ASCII code to offset in font table}
+  Char 82- [if<0 50+ i= \font32up
+            else     i= \font82up] fontData= {Select low or high page}
+  i 2<< i+             {Multiply by 5}
+  fontData+ fontData=  {Add to page address to reach bitmap data for Char}
+
+  {Draw 5 vertical slices: 5 using font data}
+  32      \sysArgs0. {Blue}
+  Color   \sysArgs1.
+  Pos     \sysArgs4:
+  6+      Pos=
+  \SYS_VDrawBits_134 \sysFn:
+  $fb i= [do
+    fontData 0? <fontData++ \sysArgs2. 134!
+    <\sysArgs4++
+    <i++ i if<>0loop]
+  ret
+] PrintChar=
+
+{ PrintText }
+[def
+  push
+  Text=
+  [do
+    Text, if<>0 Char= <Text++           {while((Char=*Text++)!=0)...}
+    9^ [if=0 Pos 18+ Pos= loop]         {Horizontal tab}
+    3^ [if=0 Newline! loop]             {Newline 9^10=3}
+    PrintChar!                          {Regular character}
+    loop]
+  pop ret
+] PrintText=
+
+{ Print 26 dashes }
+[def
+ push
+ $2d {'-'} Char=
+ 26 [do j= PrintChar! j 1- if>0loop]
+ Newline!
+ pop ret
+] PrintDivider=
+
+[def
+  push
+  Item 6- [if<0 $200b else $f059] Pos=
+  Item [do j= $800 Pos+ Pos= j 1- if>=0loop]
+  130 {'->'} Char= PrintChar!
+  pop ret
+] PrintArrow=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 3                                      |
++-----------------------------------------------------------------------}
+*=$0300
+
+{ Operate menu }
+[def
+  push
+  0 Item=
+  [do
+    \frameCount, Color= PrintArrow!
+
+    { Handle each stroke of Up/Down and A controller buttons }
+
+    {buttonRight}
+    \buttonState, 254^ [if=0
+       WipeOutArrow!
+       Item 4- [if<=0 10+ Item=]
+       \buttonState, 1| \buttonState.]
+
+    {buttonLeft}
+    \buttonState, 253^ [if=0
+       WipeOutArrow!
+       Item 6- [if>=0 Item=]
+       \buttonState, 2| \buttonState.]
+
+    {buttonDown}
+    \buttonState, 251^ [if=0
+       WipeOutArrow!
+       Item 5- [if<>0 5- if<>0 <Item++]
+       \buttonState, 4| \buttonState.]
+
+    {buttonUp}
+    \buttonState, 247^ [if=0
+       WipeOutArrow!
+       Item [if<>0 6- if<>0 Item 1- Item=]
+       \buttonState, 8| \buttonState.]
+
+    {buttonA, or any ASCII key from keyboard, 'A' included...}
+    \buttonState, 128& if<>0loop
+
+    42 {Gray} Color= PrintArrow!
+
+    { Map menu item to program }
+    Item [if=0 \Snake      else
+    1-   [if=0 \Racer      else
+    1-   [if=0 \Mandelbrot else
+    1-   [if=0 \Pictures   else
+    1-   [if=0 \Credits    else
+    1-   [if=0 \Loader     else
+    1-   [if=0 \Tetronis   else
+    1-   [if=0 \Bricks     else
+    2-   [if<=0 \TinyBASIC else {TicTacToe and stand-alone BASIC}
+    1-   [if=0 \WozMon     else loop]]]]]]]]]]
+    Program=
+  ]
+  pop ret
+] SelectMenu=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+*=$0400
+
+{Newline}
+[def
+  >Pos, 8+ >Pos.
+  2 <Pos.
+  ret
+] Newline=
+
+[def
+  #9 `Snake #9 ``` #9 `Tetronis  #10
+  #9 `Racer #9 ``` #9 `Bricks    #10
+  #9 `Mandelbrot   #9 `TicTacToe #10
+  #9 `Pictures ``` #9 `BASIC     #10
+  #9 `Credits #9   #9 `WozMon    #10
+  #9 `Loader                     #10 #0
+] MainMenu=
+
+[def
+  `Use` #91 `Arrows #93 ``to`select     #10
+  `Press` #91 `A #93 ``to`start`program #10
+                                        #10
+  `Hold` #91 `Start #93 ``for`reset     #0
+] HelpText=
+
+[def
+  push
+  Pos 12- Pos=
+  $20 {space} Char= PrintChar! PrintChar!
+  pop ret
+] WipeOutArrow=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 5                                      |
++-----------------------------------------------------------------------}
+*=$0500
+
+[def {PrintMenu}
+  push
+  42 {Gray}   Color= PrintDivider!
+  15 {Yellow} Color= MainMenu PrintText!
+  42 {Gray}   Color= PrintDivider!
+                     HelpText PrintText!
+  pop ret
+] PrintMenu=
+
+\channelMask_v4, 3|
+\channelMask_v4.                {Enable all 4 sound channels}
+90 \soundTimer.                 {Play sound for 1.5 seconds}
+$2002 Pos=
+
+PrintMenu!
+SelectMenu!
+
+{ Wipe out everything but the selected and bottom line }
+ $800 \sysArgs4:                {Pointer in screen memory}
+$8801 i=                        {Offset to next stripe}
+$ff80 j=                        {Mask for keeping the selected item}
+Pos 48+ j& q=                   {Box of current cursor}
+\SYS_VDrawBits_134 \sysFn:      {SYS function}
+32 \sysArgs0. \sysArgs1.        {Colors}
+[do
+  \sysArgs4;
+  [do
+    48+ j& q^ [if<>0            {Don't clear selected item}
+      >p, $78^ if<>0            {Also don't clear the bottom row}
+      134!]                     {Clears 8 pixels vertically}
+    $800
+    #\ADDW #\sysArgs4           {Inline assembly}
+    \sysArgs4:
+    if>0loop]                   {Step down}
+  i+ \sysArgs4:
+  255& 160^ if<>0loop]          {Next stripe}
+
+{ Load and start the selected program }
+\SYS_Exec_88 \sysFn:            {ROM loader}
+Program \sysArgs0:              {ROM image}
+\userCode _vLR=                 {Start of execution address}
+Item 6^ [if=0                   {Tetronis workaround}
+  $80 \vSP.                     { 1. Zero-page conflict: move stack}
+  &_TetronisPatch _vLR=]        { 2. Stack must be restored with patch}
+Item 7^ [if=0                   {Bricks workaround}
+  $80 \vSP.]                    { 1. Zero-page conflict: move stack}
+Item 8^ [if=0                   {TicTacToe needs special launcher}
+  &_LaunchTicTacToe call]
+88!                             {Load from ROM and execute}
+
+{-----------------------------------------------------------------------+
+|       Tetronis patch                                                  |
++-----------------------------------------------------------------------}
+
+*=$06f9
+
+_TetronisPatch=*
+
+\userCode \vSP. call            {Restore stack pointer and go to entry_point}
+
+{-----------------------------------------------------------------------+
+|       Tic Tac Toe launcher                                            |
++-----------------------------------------------------------------------}
+
+*=$7fa0 _LaunchTicTacToe=*
+
+  11+ _vLR=                     {Return to this program after SYS}
+  \TinyBASIC \sysArgs0: 88!     {Load only, SYS_Exec_88 still in sysFn}
+                                {Return here}
+  \userCode _vLR=
+  \TicTac \sysArgs0: 88!        {Load Tic-Tac-Toe and execute BASIC}
+
+{-----------------------------------------------------------------------+
+|                                                                       |
++-----------------------------------------------------------------------}
+

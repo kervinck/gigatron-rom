@@ -1,0 +1,69 @@
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Hello World -- Display a friendly greeting                      |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+gcl0x                           {GCL version for this program}
+
+{ First define some subroutines }
+{ Just copy what you need from other programs and adapt }
+
+{ Clear screen }
+[def
+  $9001 j=                      {Step size to next vertical screen line}
+  $800                          {Start of screen memory}
+  i=                            {Step size to next vertical slice of 8 pixels}
+  \sysArgs2.                    {All-zero 8-bit pattern}
+  [do                           {Outer horizontal loop}
+    [do                         {Inner vertical loop}
+      \sysArgs4: 134!           {VDrawBits SYS call clears 8 pixels vertically}
+      i+ if>0loop]              {Go down and repeat for entire vertical stripe}
+    255& 159^ if<>0             {Until completing X=159 position}
+    \sysArgs4; j+ loop]         {Step to next vertical stripe and repeat}
+  ret
+] ClearScreen=
+
+{ Print ASCII character (32..127) on screen using the 5x8 pixel built-in font }
+[def
+  82-                           {Map ASCII code to offset in font table}
+  [if<0 50+ i= \font32up        {First page for ASCII 32..81}
+   else     i= \font82up] j=    {Second page is ASCII 82..127}
+  i 2<< i+                      {Multiply by 5}
+  j+ j=                         {Add page address to reach bitmap data}
+  Pos \sysArgs4:                {Position of character}
+  6+ Pos=                       {Advance position by 6 pixels for next call}
+  5 [do i=                      {Loop to draw 5 vertical slices of 8 pixels}
+    j 0? \sysArgs2.             {Get byte from ROM using `LUP 0' instruction}
+    134!                        {Invoke SYS function to draw 8 vertical pixels}
+    <j++ <\sysArgs4++           {Advance to next slice in ROM and on screen}
+    i 1- if>0loop]              {Looping}
+  ret
+] PrintChar=
+
+{ Print text string }
+[def
+  push                          {Save vLR because this is not a leaf subroutine}
+  Text= [do                     {Loop over characters}
+    Text, if<>0                 {Next character to be printed, unless 0}
+    PrintChar!                  {Print the character and advance cursor}
+    <Text++ loop]               {Advance text pointer and loop}
+  pop ret
+] PrintText=
+
+{ `def' can also define data! }
+[def
+   `Hello,`World! #0            {Inline "Hello, World!\0"}
+] StringHelloWorld=
+
+{ After the setup above the main program can start }
+{ Clear the screen and print our friendly message! }
+
+\SYS_VDrawBits_134 \sysFn:      {Prepare SYS calls}
+$203f \sysArgs0:                {Middle blue pen color and white background}
+ClearScreen!                    {Erase all screen data}
+$4029 Pos=                      {Set cursor to an address in middle of screen}
+StringHelloWorld PrintText!     {Print the friendly greeting}
+[do loop]                       {Loop forever and do nothing}
+

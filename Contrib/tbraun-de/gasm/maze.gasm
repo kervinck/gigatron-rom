@@ -1,0 +1,413 @@
+%include ../../at67/gasm/macros/gigatron.i
+%include ../../at67/gasm/macros/macros.i
+
+vram        EQU     0x0800
+
+vpc         EQU     0x16
+
+rand_x1     EQU     0x06
+rand_y1     EQU     0x07
+rand_x2     EQU     0x08
+rand_y2     EQU     0x0b
+rand        EQU     0x06
+
+base        EQU     0x30
+
+xypos       EQU     0x32
+x           EQU     0x32
+y           EQU     0x33
+tryxypos    EQU     0x34
+tryx        EQU     0x34
+tryy        EQU     0x35
+visited_pix EQU     0x36
+direction   EQU     0x38  ; 0 = right, 1 = down, 2 = left, 3 = top
+dir_count   EQU     0x39
+
+RIGHT       EQU     0x00
+DOWN        EQU     0x01
+LEFT        EQU     0x02
+TOP         EQU     0x03
+
+CLEAR       EQU     0x00
+VISITED     EQU     0x0F
+BACKTRACKED EQU     0x0C
+WALL        EQU     0x3F
+
+MAZE_WIDTH  EQU     79
+MAZE_HEIGHT EQU     59
+WAY_LEN     EQU     0x03
+
+
+
+_startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
+
+_callTable_         EQU     0x007E      ; call addresses are automatically stored here by the assembler, it grows downwards,
+                                        ; make sure it doesn't crash into anything important
+_singleStepWatch_   EQU     vpc         ; the single step debugger watches this variable location to decide when to step,
+                                        ; choose a variable that is updated often
+start               EQU     0x0200
+init_startpixel     EQU     0x0300
+find_visited        EQU     0x0400
+
+ii              EQU     0x30
+jj              EQU     0x31
+kk              EQU     0x32
+ll              EQU     0x33
+xx              EQU     0x34
+yy              EQU     0x35
+
+                ; clears the viewable screen    
+                ; created by at67, see https://github.com/kervinck/gigatron-rom/blob/master/Contrib/at67/gasm/clearscreen.gasm
+clearScreen     LDWI    SYS_Draw4_30        ; setup 4 pixel SYS routine
+                STW     giga_sysFn  
+                LDWI    0x0000              ; 4 y of colour
+                STW     giga_sysArg0    
+                STW     giga_sysArg2    
+    
+                LDI     giga_yres / 2       ; counters
+                ST      jj  
+                LDI     giga_xres / 4   
+                ST      ii  
+    
+                LDWI    0x0800              ; top line
+                STW     xx  
+                LDWI    0x7F00              ; bottom line
+                STW     kk  
+
+clearS_loop     LDW     xx  
+                STW     giga_sysArg4        ; top line
+                SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                LDW     kk  
+                STW     giga_sysArg4        ; bottom line
+                SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                LD      xx                  ; 4 horizontal y
+                ADDI    0x04    
+                ST      xx  
+                LD      kk                  ; 4 horizontal y
+                ADDI    0x04
+                ST      kk
+                LoopCounterTo1 ii clearS_loop
+    
+                INC     yy                  ; next top line
+                LD      ll                  ; next bottom line
+                SUBI    0x01    
+                ST      ll  
+    
+                LDI     0x00                ; reset xx, kk and ii
+                ST      xx
+                ST      kk
+                LDI     giga_xres / 4
+                ST      ii
+                LoopCounterTo1 jj clearS_loop
+                
+; initialize the maze walls and starting point
+                CALL    init_walls
+                CALL    init_startpixel
+                               
+step_maze       LDW     xypos               ; detect if at least one neighboring pixel is still CLEAR
+                STW     tryxypos            ; if so: continue drawing a path
+                                            ; if not: mark the current pixel as BACKTRACKED
+                                            ;         continue backtracking with the neighbouring pixel with state VISITED
+                CALL    find_clear          ; vAC will be "0" if we found a clear pixel
+                BEQ     cont_drawing        ; if so, continue with drawing the next step
+                
+                                            ; if not:
+                LDW     xypos               ; detect if at least one neighboring pixel is VISITED and try backtracking one step
+                STW     tryxypos        
+
+                CALL    find_visited        ; try to find a visited pixel next to the current one. when no VISITED pixel is found, the labyrinth is done!    
+		BEQ	clearScreen         ; if so (when find_visited returns with 0 in vAC): restart from scratch
+                LDW     tryxypos
+                STW     xypos
+                BRA     step_maze        
+                                                            
+cont_drawing    LD      dir_count           ; test if we should change the preferred direction
+                BNE     cont_right            
+                CALL    rand_dir
+
+cont_right      LDW     xypos
+                STW     tryxypos
+                LD      direction
+                BNE     cont_with_down      ; direction = 0?  
+                CALL    try_right           ;                --> right
+                BRA     step_maze
+cont_with_down  LD      direction
+                SUBI    1
+                BNE     cont_with_left      ; direction = 1?
+                CALL    try_down            ;                 --> down
+                BRA     step_maze
+cont_with_left  LD      direction
+                SUBI    2
+                BNE     cont_with_up        ; direction = 2?
+                CALL    try_left            ;                --> left
+                BRA     step_maze
+cont_with_up    CALL    try_up              ; else --> up
+                BRA     step_maze
+
+
+; -- 0x0300 initialization and drawing forward --
+
+; Initialize the maze walls and the start position 
+init_walls      LDWI    vram
+                STW     xypos
+horiz_walls     LDI     WALL
+                POKE    xypos
+                LD      y
+                ADDI    MAZE_HEIGHT * 2
+                ST      y
+                LDI     WALL
+                POKE    xypos
+                LD      y
+                SUBI    MAZE_HEIGHT * 2
+                ST      y
+                INC     x
+                LD      x
+                SUBI    MAZE_WIDTH * 2
+                BEQ     init_vert_walls
+                BRA     horiz_walls
+init_vert_walls LDWI    vram
+                STW     xypos
+vert_walls      LDI     WALL
+                POKE    xypos
+                LD      x
+                ADDI    MAZE_WIDTH * 2
+                ST      x
+                LDI     WALL
+                POKE    xypos
+                LD      x
+                SUBI    MAZE_WIDTH * 2
+                ST      x
+                INC     y
+                LD      y
+                SUBI    MAZE_HEIGHT * 2 + 9
+                BNE     vert_walls
+                RET
+                
+init_startpixel LDWI    vram                ; mark the start pixel as visited
+                STW     xypos
+                INC     x
+                INC     x
+                INC     y
+                INC     y
+                LDI     VISITED
+                POKE    xypos
+                LDI     0x00
+                ST      direction           ; initialize direction and counter for times a certain direction was chosen
+                LDI     WAY_LEN
+                ST      dir_count
+                RET
+
+# maze calculation functions
+rand_dir        LDWI    SYS_Random_34              ; randomize a new direction
+                STW     0x22
+                SYS     253
+                LD      rand            
+                ANDI    0x03
+                ST      direction
+                LDI     WAY_LEN
+                ST      dir_count
+                RET
+
+try_right       INC     tryx                ; test if the pixel is still clear
+                INC     tryx
+                LDW     tryxypos
+                PEEK
+                BEQ     mark_right          ; if the pixel is clear: draw a way to this pixel
+                BRA     rand_dir            ; if not: try a new random direction and return
+mark_right      INC     x
+                LDI     VISITED
+                POKE    xypos
+                INC     x
+                POKE    xypos
+                BRA     ret_after_mark
+                                
+try_down        INC     tryy                ; test if the pixel is still clear
+                INC     tryy
+                LDW     tryxypos
+                PEEK
+                BEQ     mark_down           ; if the pixel is clear: draw a way to this pixel
+                BRA     rand_dir            ; if not: try a new random direction and return
+mark_down       INC     y
+                LDI     VISITED
+                POKE    xypos
+                INC     y
+                POKE    xypos
+                BRA     ret_after_mark
+                        
+try_left        LD      tryx                ; test if the pixel is still clear
+                SUBI    2
+                ST      tryx
+                LDW     tryxypos
+                PEEK
+                BEQ     mark_left           ; if the pixel is clear: draw a way to this pixel
+                BRA     rand_dir            ; if not: try a new random direction and return
+mark_left       LD      x
+                SUBI    1
+                ST      x
+                LDI     VISITED
+                POKE    xypos
+                LD      x
+                SUBI    1
+                ST      x
+                LDI     VISITED
+                POKE    xypos
+                BRA     ret_after_mark
+
+
+try_up          LD      tryy                ; test if the pixel is still clear
+                SUBI    2
+                ST      tryy
+                LDW     tryxypos
+                PEEK
+                BEQ     mark_up             ; if the pixel is clear: draw a way to this pixel
+                BRA     rand_dir            ; if not: try a new random direction and return
+                RET
+mark_up         LD      y
+                SUBI    1
+                ST      y
+                LDI     VISITED
+                POKE    xypos
+                LD      y
+                SUBI    1
+                ST      y
+                LDI     VISITED
+                POKE    xypos
+                
+ret_after_mark  LD      dir_count        
+                SUBI    1
+                ST      dir_count        
+                RET
+
+; find a clear pixel around tryxypos
+find_clear      LD      tryx                ; is left pixel clear?
+                SUBI    2
+                ST      tryx
+                LDW     tryxypos
+                PEEK
+                BEQ     ret_clear_found
+                
+                LD      tryx                ; is right pixel clear?
+                ADDI    4
+                ST      tryx
+                LDW     tryxypos
+                PEEK
+                BEQ     ret_clear_found
+
+                LD      tryx                ; is upper pixel clear
+                SUBI    2
+                ST      tryx
+                LD      tryy
+                SUBI    2
+                ST      tryy
+                LDW     tryxypos
+                PEEK
+                BEQ     ret_clear_found
+                
+                LD      tryy                ; is lower pixel clear
+                ADDI    4
+                ST      tryy
+                LDW     tryxypos
+                PEEK
+                BEQ     ret_clear_found
+                LDI     1                   ; We didn't find a clear pixel, return with 1 in vAC
+                RET
+ret_clear_found LDI     0                   ; indicate that we found a clear pixel and don't need to backtrack
+                RET
+
+; 0x400
+; find a visited pixel around tryxypos
+find_visited    LD      tryx                ; is left pixel VISITED?
+                SUBI    1
+                ST      tryx
+                LDW     tryxypos
+                PEEK
+                SUBI    VISITED
+                BEQ     left_visited
+                
+                LD      tryx                ; is right pixel VISITED?
+                ADDI    2
+                ST      tryx
+                LDW     tryxypos
+                PEEK
+                SUBI    VISITED
+                BEQ     right_visited
+                
+                LD      tryx                ; is upper pixel VISITED
+                SUBI    1
+                ST      tryx
+                LD      tryy
+                SUBI    1
+                ST      tryy
+                LDW     tryxypos
+                PEEK
+                SUBI    VISITED
+                BEQ     up_visited
+                
+                LD      tryy                ; is lower pixel VISITED
+                ADDI    2
+                ST      tryy
+                LDW     tryxypos
+                PEEK
+                SUBI    VISITED
+                BEQ     down_visited
+                
+                ; no pixel was visited!
+                LD      tryy
+                SUBI    1
+                ST      tryy
+                LDI     0                   ; return with 0 in vAC
+                RET
+                
+left_visited    INC     tryx
+                LDI     BACKTRACKED
+                POKE    tryxypos
+                LD      tryx
+                SUBI    1
+                ST      tryx
+                LDI     BACKTRACKED
+                POKE    tryxypos
+                LD      tryx
+                SUBI    1
+                ST      tryx
+                LDI     1                   ; return with 1 in vAC
+                RET
+
+right_visited   LD      tryx
+                SUBI    1
+                ST      tryx
+                LDI     BACKTRACKED
+                POKE    tryxypos
+                INC     tryx
+                LDI     BACKTRACKED
+                POKE    tryxypos
+                INC     tryx
+                LDI     1                   ; return with 1 in vAC
+                RET
+                
+up_visited      INC     tryy
+                LDI     BACKTRACKED
+                POKE    tryxypos
+                LD      tryy
+                SUBI    1
+                ST      tryy
+                LDI     BACKTRACKED
+                POKE    tryxypos
+                LD      tryy
+                SUBI    1
+                ST      tryy
+                LDI     1                   ; return with 1 in vAC
+                RET
+
+down_visited    LD      tryy
+                SUBI    1
+                ST      tryy
+                LDI     BACKTRACKED
+                POKE    tryxypos
+                INC     tryy
+                LDI     BACKTRACKED
+                POKE    tryxypos
+                INC     tryy
+                LDI     1                   ; return with 1 in vAC
+                RET

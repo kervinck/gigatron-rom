@@ -2,14 +2,14 @@
 #-----------------------------------------------------------------------
 #
 #  Core video, sound and interpreter loop for Gigatron TTL microcomputer
-#  - 6.25MHz clock
+#  - 6.25 MHz clock
 #  - Rendering 160x120 pixels at 6.25MHz with flexible videoline programming
 #  - Must stay above 31 kHz horizontal sync --> 200 cycles/scanline
 #  - Must stay above 59.94 Hz vertical sync --> 521 scanlines/frame
 #  - 4 channels sound
 #  - 16-bits vCPU interpreter
-#  - Builtin vCPU programs (Snake, Racer, etc)
-#  - Serial input handler
+#  - Builtin vCPU programs (Snake, Racer, etc) loaded from unused ROM area
+#  - Serial input handler, supporting ASCII input and game controller
 #  - Soft reset button (keep 'Start' button down for 2 seconds)
 #
 #  ROM v2: Mimimal changes
@@ -86,8 +86,11 @@ import gcl0x as gcl
 import font_v2 as font
 
 # Pre-loading the formal interface as a way to get warnings when
-# accidently redefined with a different value
+# accidentally redefined with a different value
 loadBindings('interface.json')
+
+# ROM type (see also Docs/GT1-files.txt)
+romTypeValue = symbol('romTypeValue_ROMv2')
 
 # Gigatron clock
 cpuClock = 6.250e+06
@@ -108,7 +111,7 @@ vgaLines = vFront + vPulse + vBack + 480
 vgaClock = 25.175e+06
 
 # Video adjustments for Gigatron
-# 1. Our clock is (slighty) slower than 1/4th VGA clock. Not all monitors will
+# 1. Our clock is (slightly) slower than 1/4th VGA clock. Not all monitors will
 #    accept the decreased frame rate, so we restore the frame rate to above
 #    minimum 59.94 Hz by cutting some lines from the vertical front porch.
 vFrontAdjust = vgaLines - int(4 * cpuClock / vgaClock * vgaLines)
@@ -161,7 +164,7 @@ sample          = zpByte()
 # 2 instruction reset:
 #       ld 0
 #       st [sample]
-# The difference is unhearable. This is fine when the reset/address
+# The difference is not audible. This is fine when the reset/address
 # value is low and doesn't overflow with 4 channels added to it.
 # There is an alternative, but it requires pull-down diodes on the data bus:
 #       st [sample],[sample]
@@ -197,7 +200,7 @@ serialLast      = zpByte() # Previous serial read
 buttonState     = zpByte() # Clearable button state
 resetTimer      = zpByte() # After 2 seconds of holding 'Start', do a soft reset
 
-# Extended output (blinkenlights in bit 0:3 and audio in but 4:7). This
+# Extended output (blinkenlights in bit 0:3 and audio in bit 4:7). This
 # value must be present in AC during a rising hSync edge. It then gets
 # copied to the XOUT register by the hardware. The XOUT register is only
 # accessible in this indirect manner because it isn't part of the core
@@ -303,7 +306,7 @@ def runVcpu(n, ref, returnTo=None):
   comment = C(comment)
   st([vReturn])                 #1
   ld(hi('ENTER'), Y)            #4
-  jmpy('ENTER')                 #5
+  jmp(Y,'ENTER')                #5
   ld(n)                         #6
 
 #-----------------------------------------------------------------------
@@ -489,7 +492,7 @@ adda(AC);                       C('y += T[4x]')
 adda(AC)
 adda([vAC+1])
 st([vAC+1])
-ld([vAC+0]);                    C('T[x] = tmp')
+ld([vAC+0]);                    C('T[4x] = tmp')
 adda(AC)
 adda(AC, X)
 ld([vTmp])
@@ -508,7 +511,7 @@ st([xoutMask])
 st([ledState_v2])               # Setting 1..126 means "stopped"
 
 ld(hi('vBlankStart'), Y);       C('Enter video loop')
-jmpy('vBlankStart')
+jmp(Y,'vBlankStart')
 ld(syncBits)
 
 # Fillers
@@ -523,8 +526,8 @@ nop()
 #-----------------------------------------------------------------------
 
 # SYS_Reset_38 initiates an immediate Gigatron reset from within the vCPU.
-# The reset sequence itself is mostly implemented in GCL by Reset.gcl .
-# This must first be loaded into RAM. But as that takes more than 1 scanline,
+# The reset sequence itself is mostly implemented in GCL by Reset.gcl,
+# which must first be loaded into RAM. But as that takes more than 1 scanline,
 # some vCPU bootstrapping code gets loaded with SYS_Exec_88. The caller of
 # SYS_Reset_38 provides the SYS instruction to execute that.
 # !!! This function was REMOVED from interface.json
@@ -532,8 +535,6 @@ nop()
 
 label('SYS_Reset_38')
 assert pc()>>8 == 0
-romTypeValue = getenv('romType')
-romTypeValue = int(romTypeValue, base=0) if romTypeValue else 0
 ld(romTypeValue);               C('Set ROM type/version')#15
 st([romType])                   #16
 ld(0)                           #17
@@ -555,7 +556,7 @@ ld(hi('Reset'))                 #31
 st([sysArgs+1])                 #32
 # Return to interpreter
 ld(hi('REENTER'), Y)            #33
-jmpy('REENTER')                 #34
+jmp(Y,'REENTER')                #34
 ld(-38/2)                       #35
 
 #-----------------------------------------------------------------------
@@ -563,8 +564,8 @@ ld(-38/2)                       #35
 #-----------------------------------------------------------------------
 #
 # This loads the vCPU code with consideration of the current vSP
-# Used during reset, but also for switching between applications
-# or for loading data from ROM during an application.
+# Used during reset, but also for switching between applications or for
+# loading data from ROM from within an application (overlays).
 #
 # ROM stream format is [<addrH> <addrL> <n&255> n*<byte>]* 0
 # on top of lookup tables.
@@ -648,7 +649,7 @@ st(sysArgs+0, [Y,Xpp])          #79 *+51
 st('RET',     [Y,Xpp]);C('RET') #80 *+52 Return
 # Return to interpreter
 ld(hi('REENTER'), Y)            #81
-jmpy('REENTER')                 #82
+jmp(Y,'REENTER')                #82
 ld(-86/2)                       #83 One tick faster than needed
 
 nop()
@@ -662,7 +663,7 @@ label('SYS_Out_22')
 ld([sysArgs+0], OUT)            #15
 nop()                           #16
 ld(hi('REENTER'), Y)            #17
-jmpy('REENTER')                 #18
+jmp(Y,'REENTER')                #18
 ld(-22/2)                       #19
 
 #-----------------------------------------------------------------------
@@ -675,7 +676,7 @@ ld(0)                           #16
 st([vAC+1])                     #17
 nop()                           #18
 ld(hi('REENTER'), Y)            #19
-jmpy('REENTER')                 #20
+jmp(Y,'REENTER')                #20
 ld(-24/2)                       #21
 
 assert pc()&255 == 0
@@ -800,7 +801,7 @@ if soundDiscontinuity == 2:
   C('Sound continuity')
   extra += 1
 if soundDiscontinuity > 2:
-  print "Warning: sound discontinuity not supressed"
+  print "Warning: sound discontinuity not suppressed"
 
 runVcpu(189-72-extra, 'line0')  #72 Application cycles (scan line 0)
 
@@ -996,7 +997,7 @@ bra('.skipVcpu')                #193
 ld(0)                           #194
 label('.select2')
 
-runVcpu(195-55, 'line40')       #67 Application cycles (scan line 40)
+runVcpu(195-55, 'line40')       #55 Application cycles (scan line 40)
 # vAC==0 now
 label('.skipVcpu')
 st([videoY])                    #195
@@ -1007,7 +1008,7 @@ ld([channel])                   #199 Advance to next sound channel
 anda(3);                        C('<New scan line start>')#0
 adda(1)                         #1
 ld(hi('sound2'), Y)             #2
-jmpy('sound2')                  #3
+jmp(Y,'sound2')                 #3
 ld(syncBits^hSync, OUT)         #4 Start horizontal pulse
 
 # Filler
@@ -1039,7 +1040,7 @@ ld(syncBits)                    #39
 # Superimpose the sync signal bits to be robust against misprogramming
 for i in range(160):
   ora([Y,Xpp], OUT)             #40-199
-  if i==0: C('Pixel burst')
+  if i==0:                      C('Pixel burst')
 ld(syncBits, OUT);              C('<New scan line start>')#0 Back to black
 
 # Front porch
@@ -1132,7 +1133,7 @@ st([nextVideo])                 #37
 # - Go back and and enter vertical blank (program page 2)
 label('videoE') # Exit visible area
 ld(hi('vBlankStart'), Y)        #29
-jmpy('vBlankStart')             #30
+jmp(Y,'vBlankStart')            #30
 ld(syncBits)                    #31
 
 # Alternative for pixel burst: faster application mode
@@ -1151,7 +1152,7 @@ runVcpu(200-38, 'line41-520 typeBCD',
 # Enter the timing-aware application interpreter (aka virtual CPU, vCPU)
 #
 # This routine will execute as many as possible instructions in the
-# alotted time. When time runs out, it synchronizes such that the total
+# allotted time. When time runs out, it synchronizes such that the total
 # duration matches the caller's request. Durations are counted in `ticks',
 # which are multiples of 2 clock cycles.
 #
@@ -1194,7 +1195,7 @@ adda(maxTicks)                  #3
 bgt(pc()&255);                  C('Resync')#4
 suba(1)                         #5
 ld(hi('vBlankStart'), Y)        #6
-jmpy([vReturn]);                C('Return to caller')#7
+jmp(Y,[vReturn]);               C('Return to caller')#7
 ld(0)                           #8 AC should be 0 already. Still..
 assert vOverheadInt ==          9
 
@@ -1296,7 +1297,7 @@ ble('.cond4')                   #20
 bgt('.cond5')                   #21
 ld([Y,X])                       #22
 
-# Conditional LT: Branch if negative (if(vACL<0)vPCL=D), 16 cycles
+# Conditional LT: Branch if negative (if(vACL<0)vPCL=D)
 label('LT')
 bge('.cond4')                   #20
 blt('.cond5')                   #21
@@ -1371,10 +1372,10 @@ ld([vLR])                       #17
 bra('next1')                    #18
 st([X])                         #19
 
-# Instruction LUP: ROM lookup (vAC=ROM[vAC+256*D]), 26 cycles
+# Instruction LUP: ROM lookup (vAC=ROM[vAC+D]), 26 cycles
 label('LUP')
 ld([vAC+1], Y)                  #10
-jmpy(251);                      C('Trampoline offset')#11
+jmp(Y,251);                     C('Trampoline offset')#11
 adda([vAC])                     #12
 
 # Instruction ANDI: Logical-AND with constant (AC&=D), 16 cycles
@@ -1447,7 +1448,7 @@ ld(-28/2)                       #27
 # Instruction PEEK: (vAC=[vAC]), 26 cycles
 label('PEEK')
 ld(hi('peek'), Y)               #10
-jmpy('peek')                    #11
+jmp(Y,'peek')                   #11
 #ld([vPC])                      #12
 #
 # Instruction SYS: Native call, <=256 cycles (<=128 ticks, in reality less)
@@ -1476,7 +1477,7 @@ label('SYS')
 adda([vTicks])                  #10
 blt('retry')                    #11
 ld([sysFn+1], Y)                #12
-jmpy([sysFn])                   #13
+jmp(Y,[sysFn])                  #13
 #nop()                          #(14)
 #
 # Instruction SUBW: Word subtract with zero page (AC-=[D]+256*[D+1]), 28 cycles
@@ -1510,7 +1511,7 @@ ld([vPC+1], Y)                  #27
 # Instruction DEF: Define data or code (AC,vPCL=vPC+2,D), 18 cycles
 label('DEF')
 ld(hi('def'), Y)                #10
-jmpy('def')                     #11
+jmp(Y,'def')                    #11
 #st([vTmp])                     #12
 #
 # Instruction CALL: (LR=vPC+2,vPC=[D]-2), 26 cycles
@@ -1550,68 +1551,68 @@ ld(-14/2)                       #13
 # Instruction ADDI: Add small positive constant (AC+=D), 28 cycles
 label('ADDI')
 ld(hi('addi'), Y)               #10
-jmpy('addi')                    #11
+jmp(Y,'addi')                   #11
 st([vTmp])                      #12
 
 # Instruction SUBI: Subtract small positive constant (AC+=D), 28 cycles
 label('SUBI')
 ld(hi('subi'), Y)               #10
-jmpy('subi')                    #11
+jmp(Y,'subi')                   #11
 st([vTmp])                      #12
 
 # Instruction LSLW: Logical shift left (AC<<=1), 28 cycles
 # Useful, because ADDW can't add vAC to itself. Also more compact.
 label('LSLW')
 ld(hi('lslw'), Y)               #10
-jmpy('lslw')                    #11
+jmp(Y,'lslw')                   #11
 ld([vAC])                       #12
 
 # Instruction STLW: Store word in stack frame (vSP[D],vSP[D+1]=vAC&255,vAC>>8), 26 cycles
 label('STLW')
 ld(hi('stlw'), Y)               #10
-jmpy('stlw')                    #11
+jmp(Y,'stlw')                   #11
 #nop()                          #12
 #
 # Instruction LDLW: Load word from stack frame (vAC=vSP[D]+256*vSP[D+1]), 26 cycles
 label('LDLW')
 ld(hi('ldlw'), Y)               #10,12 (overlap with STLW)
-jmpy('ldlw')                    #11
+jmp(Y,'ldlw')                   #11
 #nop()                          #12
 #
 # Instruction POKE: Write byte in memory ([[D+1],[D]]=vACL), 28 cycles
 label('POKE')
 ld(hi('poke'), Y)               #10,12 (overlap with LDLW)
-jmpy('poke')                    #11
+jmp(Y,'poke')                   #11
 st([vTmp])                      #12
 
 # Instruction DOKE: Write word in memory ([[D+1],[D]],[[D+1],[D]+1]=vAC&255,vAC>>8), 28 cycles
 label('DOKE')
 ld(hi('doke'), Y)               #10
-jmpy('doke')                    #11
+jmp(Y,'doke')                   #11
 st([vTmp])                      #12
 
 # Instruction DEEK: Read word from memory (vAC=[vAC]+256*[vAC+1]), 28 cycles
 label('DEEK')
 ld(hi('deek'), Y)               #10
-jmpy('deek')                    #11
+jmp(Y,'deek')                   #11
 #nop()                          #12
 #
 # Instruction ANDW: (AC&=[D]+256*[D+1]), 28 cycles
 label('ANDW')
 ld(hi('andw'), Y)               #10,12 (overlap with DEEK)
-jmpy('andw')                    #11
+jmp(Y,'andw')                   #11
 #nop()                          #12
 #
 # Instruction ORW: (AC|=[D]+256*[D+1]), 28 cycles
 label('ORW')
 ld(hi('orw'), Y)                #10,12 (overlap with ANDW)
-jmpy('orw')                     #11
+jmp(Y,'orw')                    #11
 #nop()                          #12
 #
 # Instruction XORW: (AC^=[D]+256*[D+1]), 26 cycles
 label('XORW')
 ld(hi('xorw'), Y)               #10,12 (overlap with ORW)
-jmpy('xorw')                    #11
+jmp(Y,'xorw')                   #11
 st([vTmp])                      #12
 # We keep XORW 2 cycles faster than ANDW/ORW, because that
 # can be useful for comparing numbers for equality a tiny
@@ -1635,7 +1636,7 @@ st([vPC])                       #12
 ld([vLR+1])                     #13
 st([vPC+1])                     #14
 ld(hi('REENTER'), Y)            #15
-jmpy('REENTER')                 #16
+jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 # DEF implementation
@@ -1649,7 +1650,7 @@ ld([vTmp])                      #18
 st([vPC])                       #19
 ld(hi('REENTER'), Y)            #20
 ld(-26/2)                       #21
-jmpy('REENTER')                 #22
+jmp(Y,'REENTER')                #22
 nop()                           #23
 
 # ADDI implementation
@@ -1669,7 +1670,7 @@ ld([X])                         #20
 adda([vAC+1])                   #21 Add the high bytes with carry
 st([vAC+1])                     #22 Store high result
 ld(hi('REENTER'), Y)            #23
-jmpy('REENTER')                 #24
+jmp(Y,'REENTER')                #24
 ld(-28/2)                       #25
 
 # SUBI implementation
@@ -1690,7 +1691,7 @@ ld([vAC+1])                     #20
 suba([X])                       #21
 st([vAC+1])                     #22
 ld(hi('REENTER'), Y)            #23
-jmpy('REENTER')                 #24
+jmp(Y,'REENTER')                #24
 ld(-28/2)                       #25
 
 # LSLW implementation
@@ -1706,7 +1707,7 @@ ld([vPC])                       #20
 suba(1)                         #21
 st([vPC])                       #22
 ld(hi('REENTER'), Y)            #23
-jmpy('REENTER')                 #24
+jmp(Y,'REENTER')                #24
 ld(-28/2)                       #25
 
 # STLW implementation
@@ -1720,7 +1721,7 @@ ld([vTmp], X)                   #18
 ld([vAC])                       #19
 st([X])                         #20
 ld(hi('REENTER'), Y)            #21
-jmpy('REENTER')                 #22
+jmp(Y,'REENTER')                #22
 ld(-26/2)                       #23
 
 # LDLW implementation
@@ -1734,7 +1735,7 @@ ld([vTmp], X)                   #18
 ld([X])                         #19
 st([vAC])                       #20
 ld(hi('REENTER'), Y)            #21
-jmpy('REENTER')                 #22
+jmp(Y,'REENTER')                #22
 ld(-26/2)                       #23
 
 # POKE implementation
@@ -1748,7 +1749,7 @@ ld(AC, X)                       #18
 ld([vAC])                       #19
 st([Y,X])                       #20
 ld(hi('REENTER'), Y)            #21
-jmpy('REENTER')                 #22
+jmp(Y,'REENTER')                #22
 ld(-26/2)                       #23
 
 # PEEK implementation
@@ -1763,7 +1764,7 @@ label('lupReturn')              #Nice coincidence that lupReturn can be here
 ld(0)                           #19
 st([vAC+1])                     #20
 ld(hi('REENTER'), Y)            #21
-jmpy('REENTER')                 #22
+jmp(Y,'REENTER')                #22
 ld(-26/2)                       #23
 #
 # DOKE implementation
@@ -1779,7 +1780,7 @@ st([Y,Xpp])                     #20
 ld([vAC+1])                     #21
 st([Y,X])                       #22
 ld(hi('REENTER'), Y)            #23
-jmpy('REENTER')                 #24
+jmp(Y,'REENTER')                #24
 ld(-28/2)                       #25
 
 # DEEK implementation
@@ -1795,7 +1796,7 @@ st([vAC])                       #20
 ld([Y,X])                       #21
 st([vAC+1])                     #22
 ld(hi('REENTER'), Y)            #23
-jmpy('REENTER')                 #24
+jmp(Y,'REENTER')                #24
 ld(-28/2)                       #25
 
 # ANDW implementation
@@ -1811,7 +1812,7 @@ anda([vAC])                     #20
 st([vAC])                       #21
 ld(-28/2)                       #22
 ld(hi('REENTER'), Y)            #23
-jmpy('REENTER')                 #24
+jmp(Y,'REENTER')                #24
 #nop()                          #(25)
 
 # ORW implementation
@@ -1827,7 +1828,7 @@ ora([vAC])                      #20
 st([vAC])                       #21
 ld(-28/2)                       #22
 ld(hi('REENTER'), Y)            #23
-jmpy('REENTER')                 #24
+jmp(Y,'REENTER')                #24
 #nop()                          #(25)
 
 # XORW implementation
@@ -1841,7 +1842,7 @@ ld([X])                         #18
 xora([vAC])                     #19
 st([vAC])                       #20
 ld(hi('REENTER'), Y)            #21
-jmpy('REENTER')                 #22
+jmp(Y,'REENTER')                #22
 ld(-26/2)                       #23
 
 #-----------------------------------------------------------------------
@@ -1882,7 +1883,7 @@ adda([entropy+1])               #26
 st([entropy+1])                 #27
 st([vAC+1])                     #28
 ld(hi('REENTER'), Y)            #29
-jmpy('REENTER')                 #30
+jmp(Y,'REENTER')                #30
 ld(-34/2)                       #31
 
 label('SYS_LSRW7_30')
@@ -1897,7 +1898,7 @@ anda(128, X)                    #22
 ld([X])                         #23
 st([vAC+1])                     #24
 ld(hi('REENTER'), Y)            #25
-jmpy('REENTER')                 #26
+jmp(Y,'REENTER')                #26
 ld(-30/2)                       #27
 
 label('SYS_LSRW8_24')
@@ -1906,7 +1907,7 @@ st([vAC])                       #16
 ld(0)                           #17
 st([vAC+1])                     #18
 ld(hi('REENTER'), Y)            #19
-jmpy('REENTER')                 #20
+jmp(Y,'REENTER')                #20
 ld(-24/2)                       #21
 
 label('SYS_LSLW8_24')
@@ -1915,7 +1916,7 @@ st([vAC+1])                     #16
 ld(0)                           #17
 st([vAC])                       #18
 ld(hi('REENTER'), Y)            #19
-jmpy('REENTER')                 #20
+jmp(Y,'REENTER')                #20
 ld(-24/2)                       #21
 
 #-----------------------------------------------------------------------
@@ -1937,7 +1938,7 @@ st([Y,Xpp])                     #22
 ld([sysArgs+3])                 #23
 st([Y,Xpp])                     #24
 ld(hi('REENTER'), Y)            #25
-jmpy('REENTER')                 #26
+jmp(Y,'REENTER')                #26
 ld(-30/2)                       #27
 
 #-----------------------------------------------------------------------
@@ -1972,7 +1973,7 @@ suba(7)                         #28+i*14
 bne('.vdb0')                    #29+i*14
 adda(8)                         #30+i*14
 ld(hi('REENTER'), Y)            #129
-jmpy('REENTER')                 #130
+jmp(Y,'REENTER')                #130
 ld(-134/2)                      #131
 
 #-----------------------------------------------------------------------
@@ -2018,8 +2019,8 @@ ld('.sysLsrw1a');               C('Shift low byte')#17
 st([vTmp])                      #18
 ld([vAC])                       #19
 anda(0b11111110)                #20
-jmpy(AC)                        #21
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#22
+jmp(Y,AC)                       #21
+bra(255);                       C('bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw1a')
 st([vAC])                       #26
 ld([vAC+1]);                    C('Transfer bit 8')#27
@@ -2032,12 +2033,12 @@ ld('.sysLsrw1b');               C('Shift high byte')#33
 st([vTmp])                      #34
 ld([vAC+1])                     #35
 anda(0b11111110)                #36
-jmpy(AC)                        #37
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#38
+jmp(Y,AC)                       #37
+bra(255);                       C('bra $%04x' % (shiftTable+255))#38
 label('.sysLsrw1b')
 st([vAC+1])                     #42
 ld(hi('REENTER'), Y)            #43
-jmpy('REENTER')                 #44
+jmp(Y,'REENTER')                #44
 ld(-48/2)                       #45
 
 label('SYS_LSRW2_52')
@@ -2047,8 +2048,8 @@ st([vTmp])                      #17
 ld([vAC])                       #18
 anda(0b11111100)                #19
 ora( 0b00000001)                #20
-jmpy(AC)                        #21
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#22
+jmp(Y,AC)                       #21
+bra(255);                       C('bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw2a')
 st([vAC])                       #26
 ld([vAC+1]);                    C('Transfer bit 8:9')#27
@@ -2065,12 +2066,12 @@ st([vTmp])                      #37
 ld([vAC+1])                     #38
 anda(0b11111100)                #39
 ora( 0b00000001)                #40
-jmpy(AC)                        #41
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#42
+jmp(Y,AC)                       #41
+bra(255);                       C('bra $%04x' % (shiftTable+255))#42
 label('.sysLsrw2b')
 st([vAC+1])                     #46
 ld(hi('REENTER'), Y)            #47
-jmpy('REENTER')                 #48
+jmp(Y,'REENTER')                #48
 ld(-52/2)                       #49
 
 label('SYS_LSRW3_52')
@@ -2080,8 +2081,8 @@ st([vTmp])                      #17
 ld([vAC])                       #18
 anda(0b11111000)                #19
 ora( 0b00000011)                #20
-jmpy(AC)                        #21
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#22
+jmp(Y,AC)                       #21
+bra(255);                       C('bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw3a')
 st([vAC])                       #26
 ld([vAC+1]);                    C('Transfer bit 8:10')#27
@@ -2097,13 +2098,13 @@ st([vTmp])                      #36
 ld([vAC+1])                     #37
 anda(0b11111000)                #38
 ora( 0b00000011)                #39
-jmpy(AC)                        #40
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#41
+jmp(Y,AC)                       #40
+bra(255);                       C('bra $%04x' % (shiftTable+255))#41
 label('.sysLsrw3b')
 st([vAC+1])                     #45
 ld(-52/2)                       #46
 ld(hi('REENTER'), Y)            #47
-jmpy('REENTER')                 #48
+jmp(Y,'REENTER')                #48
 #nop()                          #49
 
 label('SYS_LSRW4_50')
@@ -2113,8 +2114,8 @@ st([vTmp])                      #17
 ld([vAC])                       #18
 anda(0b11110000)                #19
 ora( 0b00000111)                #20
-jmpy(AC)                        #21
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#22
+jmp(Y,AC)                       #21
+bra(255);                       C('bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw4a')
 st([vAC])                       #26
 ld([vAC+1]);                    C('Transfer bit 8:11')#27
@@ -2129,12 +2130,12 @@ st([vTmp])                      #35
 ld([vAC+1])                     #36
 anda(0b11110000)                #37
 ora( 0b00000111)                #38
-jmpy(AC)                        #39
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#40
+jmp(Y,AC)                       #39
+bra(255);                       C('bra $%04x' % (shiftTable+255))#40
 label('.sysLsrw4b')
 st([vAC+1])                     #44
 ld(hi('REENTER'), Y)            #45
-jmpy('REENTER')                 #46
+jmp(Y,'REENTER')                #46
 ld(-50/2)                       #47
 
 label('SYS_LSRW5_50')
@@ -2144,8 +2145,8 @@ st([vTmp])                      #17
 ld([vAC])                       #18
 anda(0b11100000)                #19
 ora( 0b00001111)                #20
-jmpy(AC)                        #21
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#22
+jmp(Y,AC)                       #21
+bra(255);                       C('bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw5a')
 st([vAC])                       #26
 ld([vAC+1]);                    C('Transfer bit 8:13')#27
@@ -2159,13 +2160,13 @@ st([vTmp])                      #34
 ld([vAC+1])                     #35
 anda(0b11100000)                #36
 ora( 0b00001111)                #37
-jmpy(AC)                        #38
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#39
+jmp(Y,AC)                       #38
+bra(255);                       C('bra $%04x' % (shiftTable+255))#39
 label('.sysLsrw5b')
 st([vAC+1])                     #44
 ld(-50/2)                       #45
 ld(hi('REENTER'), Y)            #46
-jmpy('REENTER')                 #47
+jmp(Y,'REENTER')                #47
 #nop()                          #48
 
 label('SYS_LSRW6_48')
@@ -2175,8 +2176,8 @@ st([vTmp])                      #17
 ld([vAC])                       #18
 anda(0b11000000)                #19
 ora( 0b00011111)                #20
-jmpy(AC)                        #21
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#22
+jmp(Y,AC)                       #21
+bra(255);                       C('bra $%04x' % (shiftTable+255))#22
 label('.sysLsrw6a')
 st([vAC])                       #26
 ld([vAC+1]);                    C('Transfer bit 8:13')#27
@@ -2189,12 +2190,12 @@ st([vTmp])                      #33
 ld([vAC+1])                     #34
 anda(0b11000000)                #35
 ora( 0b00011111)                #36
-jmpy(AC)                        #37
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#38
+jmp(Y,AC)                       #37
+bra(255);                       C('bra $%04x' % (shiftTable+255))#38
 label('.sysLsrw6b')
 st([vAC+1])                     #42
 ld(hi('REENTER'), Y)            #43
-jmpy('REENTER')                 #44
+jmp(Y,'REENTER')                #44
 ld(-48/2)                       #45
 
 label('SYS_LSLW4_46')
@@ -2210,8 +2211,8 @@ st([vAC+1])                     #23
 ld([vAC])                       #24
 anda(0b11110000)                #25
 ora( 0b00000111)                #26
-jmpy(AC)                        #27
-bra(255);                       C('Actually: bra $%04x' % (shiftTable+255))#28
+jmp(Y,AC)                       #27
+bra(255);                       C('bra $%04x' % (shiftTable+255))#28
 label('.sysLsrl4')
 ora([vAC+1])                    #32
 st([vAC+1])                     #33
@@ -2223,7 +2224,7 @@ adda(AC)                        #38
 st([vAC])                       #39
 ld(-46/2)                       #40
 ld(hi('REENTER'), Y)            #41
-jmpy('REENTER')                 #42
+jmp(Y,'REENTER')                #42
 #nop()                          #43
 
 #-----------------------------------------------------------------------
@@ -2235,12 +2236,12 @@ jmpy('REENTER')                 #42
 
 label('SYS_Read3_40')
 ld([sysArgs+7], Y)              #15,32
-jmpy(128-7)                     #16 trampoline3a
+jmp(Y,128-7)                    #16 trampoline3a
 ld([sysArgs+6])                 #17
 label('txReturn')
 st([sysArgs+2])                 #34
 ld(hi('REENTER'), Y)            #35
-jmpy('REENTER')                 #36
+jmp(Y,'REENTER')                #36
 ld(-40/2)                       #37
 
 def trampoline3a():
@@ -2266,7 +2267,7 @@ def trampoline3b():
   adda(2)                       #29
   ld(hi('txReturn'), Y)         #30
   bra(AC)                       #31
-  jmpy('txReturn')              #32
+  jmp(Y,'txReturn')             #32
 
 #-----------------------------------------------------------------------
 # Extension SYS_Unpack_56: Unpack 3 bytes into 4 pixels
@@ -2318,7 +2319,7 @@ anda(0x3f)                      #49
 st([sysArgs+0]);                C('-> Pixel 0')#50
 
 ld(hi('REENTER'), Y)            #51
-jmpy('REENTER')                 #52
+jmp(Y,'REENTER')                #52
 ld(-56/2)                       #53
 
 #-----------------------------------------------------------------------
@@ -2348,7 +2349,7 @@ label('.sysCc0')
 ld(hi('REENTER'), Y)            #18,29
 wait(30-19)                     #19
 label('.sysCc1')
-jmpy('REENTER')                 #30
+jmp(Y,'REENTER')                #30
 ld(-34/2)                       #31
 
 #-----------------------------------------------------------------------
@@ -2436,7 +2437,7 @@ align(1)
 # Actual duration is <80 cycles, but keep some room for future extensions
 label('SYS_SetMode_v2_80')
 ld(hi('sys_SetMode'), Y)        #15
-jmpy('sys_SetMode')             #16
+jmp(Y,'sys_SetMode')            #16
 ld([vAC])                       #17
 
 #-----------------------------------------------------------------------
@@ -2469,59 +2470,59 @@ nop()                           #filler
 #-----------------------------------------------------------------------
 
 ld(hi('REENTER'), Y)            #15 slot 0xb06
-jmpy('REENTER')                 #16
+jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 ld(hi('REENTER'), Y)            #15 slot 0xb09
-jmpy('REENTER')                 #16
+jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 ld(hi('REENTER'), Y)            #15 slot 0xb0c
-jmpy('REENTER')                 #16
+jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 ld(hi('REENTER'), Y)            #15 slot 0xb0f
-jmpy('REENTER')                 #16
+jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 ld(hi('REENTER'), Y)            #15 slot 0xb12
-jmpy('REENTER')                 #16
+jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 ld(hi('REENTER'), Y)            #15 slot 0xb15
-jmpy('REENTER')                 #16
+jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 ld(hi('REENTER'), Y)            #15 slot 0xb18
-jmpy('REENTER')                 #16
+jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 ld(hi('REENTER'), Y)            #15 slot 0xb1b
-jmpy('REENTER')                 #16
+jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 ld(hi('REENTER'), Y)            #15 slot 0xb1e
-jmpy('REENTER')                 #16
+jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 ld(hi('REENTER'), Y)            #15 slot 0xb21
-jmpy('REENTER')                 #16
+jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 ld(hi('REENTER'), Y)            #15 slot 0xb24
-jmpy('REENTER')                 #16
+jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 ld(hi('REENTER'), Y)            #15 slot 0xb27
-jmpy('REENTER')                 #16
+jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 ld(hi('REENTER'), Y)            #15 slot 0xb2a
-jmpy('REENTER')                 #16
+jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 ld(hi('REENTER'), Y)            #15 slot 0xb2d
-jmpy('REENTER')                 #16
+jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 #-----------------------------------------------------------------------
@@ -2563,23 +2564,23 @@ ld([sysArgs+2])                 #46
 adda(4)                         #47
 st([sysArgs+2])                 #48
 ld(hi('REENTER'), Y)            #49 Return fragments
-jmpy('REENTER')                 #50
+jmp(Y,'REENTER')                #50
 label('.sysSb1')
 ld(-54/2)                       #51,26
 ld(hi('REENTER'), Y)            #27
-jmpy('REENTER')                 #28
+jmp(Y,'REENTER')                #28
 label('.sysSb2')
 ld(-32/2)                       #29,32
 ld(hi('REENTER'), Y)            #33
-jmpy('REENTER')                 #34
+jmp(Y,'REENTER')                #34
 label('.sysSb3')
 ld(-38/2)                       #35,38
 ld(hi('REENTER'), Y)            #39
-jmpy('REENTER')                 #40
+jmp(Y,'REENTER')                #40
 label('.sysSb4')
 ld(-44/2)                       #41,44
 ld(hi('REENTER'), Y)            #45
-jmpy('REENTER')                 #46
+jmp(Y,'REENTER')                #46
 ld(-50/2)                       #47
 
 # SYS_SetMode_80  implementation
@@ -2621,7 +2622,7 @@ label('.sysSvm6')
 st([videoModeD])                #37
 ld(-44/2)                       #39
 ld(hi('REENTER'), Y)            #38
-jmpy('REENTER')                 #40
+jmp(Y,'REENTER')                #40
 nop()                           #41
 
 #-----------------------------------------------------------------------
@@ -2654,7 +2655,7 @@ suba(2)                         #33
 st([vPC])                       #34
 label('.sysRacer1')
 ld(hi('REENTER'), Y)            #35
-jmpy('REENTER')                 #36
+jmp(Y,'REENTER')                #36
 ld(-40/2)                       #37
 
 label('SYS_RacerUpdateVideoY_40')
@@ -2682,7 +2683,7 @@ ld([sysArgs+2])                 #32 SegmentY<++
 adda(1)                         #33
 st([sysArgs+2])                 #34
 ld(hi('REENTER'), Y)            #35
-jmpy('REENTER')                 #36
+jmp(Y,'REENTER')                #36
 ld(-40/2)                       #37
 
 #-----------------------------------------------------------------------
@@ -2707,7 +2708,7 @@ ld([sysArgs+0])                 #24
 adda(1)                         #25
 st([sysArgs+0])                 #26
 ld(hi('REENTER'), Y)            #27
-jmpy('REENTER')                 #28
+jmp(Y,'REENTER')                #28
 ld(-32/2)                       #29
 # Restart instruction
 label('.sysNbi')
@@ -2716,7 +2717,7 @@ suba(2)                         #20
 st([vPC])                       #21
 ld(-28/2)                       #22
 ld(hi('REENTER'), Y)            #23
-jmpy('REENTER')                 #24
+jmp(Y,'REENTER')                #24
 #nop()                          #(25)
 
 #-----------------------------------------------------------------------
@@ -2759,7 +2760,7 @@ ld([sysArgs+6])                 #40 High run address
 st([vPC+1])                     #41
 st([vLR+1])                     #42
 ld(hi('REENTER'), Y)            #43
-jmpy('REENTER')                 #44
+jmp(Y,'REENTER')                #44
 ld(-48/2)                       #45
 # Invalid checksum
 label('.sysPi0')
@@ -2769,7 +2770,7 @@ label('.sysPi1')
 ld(ord('g'));                   C('Unknown command')#25 Reset checksum
 st([sysArgs+2])                 #26
 ld(hi('REENTER'), Y)            #27
-jmpy('REENTER')                 #28
+jmp(Y,'REENTER')                #28
 ld(-32/2)                       #29
 # Loading data
 label('.sysPi2')
@@ -2778,7 +2779,7 @@ suba(1, X)                      #38 Point at last byte
 ld([Y,X])                       #39
 st([sysArgs+2])                 #40
 ld(hi('REENTER'), Y)            #41
-jmpy('REENTER')                 #42
+jmp(Y,'REENTER')                #42
 ld(-46/2)                       #43
 
 #-----------------------------------------------------------------------
@@ -2812,9 +2813,9 @@ def importImage(rgbName, width, height, ref):
       else:
         trampoline3b()
 
-importImage('Images/Parrot-160x120.rgb',  160, 120, 'packedParrot')
-importImage('Images/Baboon-160x120.rgb',  160, 120, 'packedBaboon')
-importImage('Images/Jupiter-160x120.rgb', 160, 120, 'packedJupiter')
+importImage('Apps/Pictures/Parrot-160x120.rgb',  160, 120, 'packedParrot')
+importImage('Apps/Pictures/Baboon-160x120.rgb',  160, 120, 'packedBaboon')
+importImage('Apps/Pictures/Jupiter-160x120.rgb', 160, 120, 'packedJupiter')
 
 #-----------------------------------------------------------------------
 #
@@ -2822,7 +2823,7 @@ importImage('Images/Jupiter-160x120.rgb', 160, 120, 'packedJupiter')
 #
 #-----------------------------------------------------------------------
 
-f = open('Images/RacerHorizon-256x16.rgb', 'rb')
+f = open('Apps/Racer/Horizon-256x16.rgb', 'rb')
 raw = f.read()
 f.close()
 
@@ -2855,10 +2856,9 @@ for i in xrange(len(packed)):
 print 'SYS limits low %s high %s' % (repr(minSYS), repr(maxSYS))
 
 # Export some zero page variables to GCL
-# XXX Solve in another way (not through symbol table!)
-define('romTypeValue', romTypeValue)
+# These constants were already loaded from interface.json.
+# We're redefining them here to get a consistency check.
 define('memSize',    memSize)
-define('bootCount',  bootCount)
 for i in range(3):
   define('entropy%d' % i, entropy+i)
 define('videoY',     videoY)
@@ -2916,24 +2916,6 @@ def patchTinyBASIC(program):
   program.line('$16e2:' + basicLine(None, '?"RUN'))  # For show
   program.line('$17a2:' + basicLine(None, 'RUN'))
 
-# Load pre-compiled GT1 file
-#
-#gt1File = 'Contrib/at67/vCPU/graphics/lines.gt1'
-#name = 'Lines'
-#f = open(gt1File, 'rb')
-#raw = f.read()
-#f.close()
-#print
-#print 'Include file %s label %s ROM %04x' % (gt1File, name, pc())
-#label(name)
-#raw = chr(ord(raw[0]) + 0x80) + raw[1:] # Patch zero page loading (only for 32KB system)
-#raw = raw[:-2] # Drop start address
-#program = gcl.Program(userCode, name)
-#zpReset(userVars)
-#for byte in raw:
-  #program.putInRomTable(ord(byte))
-#program.end()
-
 # Compile built-in GCL programs
 for gclSource in argv[1:]:
   name = gclSource.rsplit('.', 1)[0] # Remove extension
@@ -2941,9 +2923,10 @@ for gclSource in argv[1:]:
   name = name.rsplit('/', 1)[-1]     # Remove path
   print
   print 'Compile file %s label %s ROM %04x' % (gclSource, name, pc())
-  label(name)
-  program = gcl.Program(userCode, name)
   zpReset(userVars)
+  label(name)
+  program = gcl.Program(name)
+  program.org(userCode)
   for line in open(gclSource).readlines():
     program.line(line)
   if name == 'TinyBASIC':

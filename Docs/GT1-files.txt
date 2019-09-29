@@ -1,21 +1,21 @@
-I want to set a standard for precompiled vCPU programs.  There are
-many emulators getting born, and Loader.ino will need to adopt
-something as well.  Both users of real Gigatrons and users of
+I want to set a standard for precompiled vCPU programs. There are
+many emulators getting born, and BabelFish.ino will need to adopt
+something as well. Both users of real Gigatrons and users of
 emulators benefit from a single standard.
 
 Format
 ======
 
-The format is is based on the same byte sequence that the ROM-to-RAM
-routine sees in ROM v1 (SYS_Exec_88).  That is essentially the
-in-ROM sequence of operand bytes, but skipping the trampolines in
-the top 5 words of every ROM page.  Those instructions are not part
-of the program but part of the mechanism for accessing the data.
-Two extra bytes are added for a start address.
+The format is based on the same byte sequence that the ROM loader
+routine SYS_Exec_88 sees in ROM v1. That is essentially the in-ROM
+sequence of operand bytes, but skipping the trampolines in the top
+5 words of every ROM page. Those instructions are not part of the
+program but part of the mechanism for accessing the data. Two extra
+bytes are added for a start address.
 
 vCPU programs are fragmented in RAM because the RAM organisation
-is fragmented.  Both Snake and Racer protrude into the unused bytes
-of the video area.  In essence, the file format is a list of n>0
+is fragmented. Both Snake and Racer protrude into the unused bytes
+of the video area. In essence, the file format is a list of n>0
 segments of 1 to 256 bytes each. A segment isn't allowed to cross
 a page boundary.
 
@@ -34,14 +34,14 @@ clear. To be specific: The number "n" itself will not appear at the
 start of the file.
 
 The first two bytes are the RAM address of the first byte to be
-loaded, in big-endian order.  (I'm a little-endian guy, but this
+loaded, in big-endian order. (I'm a little-endian guy, but this
 order is useful in the ROM-to-RAM loader). Segments may be in any
-order in the file, with one exception described below.  Segments
-are loaded sequentially.  In case of overlap, the later one overwrites
-the earlier one.  (We can make movies with that!) The end of the
+order in the file, with one exception described below. Segments
+are loaded sequentially. In case of overlap, the later one overwrites
+the earlier one. (We can make movies with that!) The end of the
 segment list is implied by the terminating zero-byte as high address.
 
-This format implies that there is a translation to do in Loader.ino
+This format implies that there's a translation to do in BabelFish.ino
 when loading such files into a Gigatron, but I think that is ok:
 the limitations on the Loader packets (60 bytes) are influenced by
 what the video signal looks like. I suggest we keep that kind of
@@ -52,7 +52,7 @@ Starting address
 
 Additionally, 2 bytes are always appended that indicate the start
 address for execution. The bytes must be present and zero ($0000)
-means "no execution". Although the Gigagron ROM is little-endian
+means "no execution". Although the Gigatron ROM is little-endian
 where possible, all addresses in this format are stored as big-endian.
 
 The original in-ROM format doesn't have these bytes. This is an
@@ -65,21 +65,29 @@ Segments may be in any order in the file, except when data has to
 go into the zero-page: if you have that, it MUST be the first in
 the sequence. So there can be no more than one of those segments.
 This is an extension of the layout as used in ROM v1, which can't
-load data into the zero-page. But it is useful for initializing
+load data into the zero-page. But it's useful for initializing
 variables.
 
-Also there is no encoding for a zero-length program.  Use an
-zero-length file for that use case, for all I care...  or encode a
-known constant, such as [0]=0 as follows: 00 00 01 00 00 00
+Also there's no encoding for a zero-length program. Use an zero-length
+file for that use case, for all I care... or encode a known constant,
+such as [0]=0 as follows: 00 00 01 00 00 00
+
+Avoid loading data in the system variables area and in the top of
+the zero page, where the stack lives. Although it might seem to
+work with Loader and in emulators, the ROM loader (SYS_Exec_88)
+uses the stack to setup its inner loop. As a rule of thumb,
+[$30..$bf] are free to load data into, with the note that [$80]
+must always be 1. After loading, the top area is free to use in any
+way, as long as the program's own stack usage permits.
 
 Extension
 =========
 
 File name extension: .gt1 (For Gigatron-1)
 
-I feel that .vcpu is the lesser choice because it is a generic
-abbreviation for virtual CPU.  For example, the MyCPU uses the same
-abbreviation for something similar.  And ... retro-extensions should
+I feel that .vcpu is the lesser choice because it's a generic
+abbreviation for virtual CPU. For example, the MyCPU uses the same
+abbreviation for something similar. And ... retro-extensions should
 be 3 characters of course...
 
 ROM bindings
@@ -87,13 +95,13 @@ ROM bindings
 
 GT1 files contain vCPU instructions and rely on things that are
 defined by the ROM on the target platform. The ROM bindings (ABI)
-for ROM v1 are listed in interface.json.  If your program depends on
-some extension of this, then it is nice not to crash other people's
+for ROM v1 are listed in interface.json. If your program depends
+on some extension of this, then it's nice not to crash other people's
 machines. ROMs with different bindings should use a different romType
 value in address $0021. GT1 programs can then check this value and
 not continue when seeing an unexpected value.
 
-The romType is in RAM, so it is always possible for the user to
+The romType is in RAM, so it's always possible for the user to
 modify its value prior before loading an unwilling GT1 file.
 
 BUT: If your program requires a custom ROM, then GT1 is probably not
@@ -105,6 +113,8 @@ ROM v1  0x1c    Initial Gigatron kit release
 ROM v2  0x20    ledState_v2 (write-only, settable to 0 for run and 1 for stop)
                 SYS_SetMemory_v2_54
                 SYS_SetMode_v2_80
+ROM v3  0x28    SYS_SendSerial1_v3_80
+                SYS_Sprite6*_v3_64
 
 Purpose of romType variable
 ---------------------------
@@ -135,9 +145,9 @@ rely on the meaning of individual bits. Also, the value can go up
 by an arbitrary number with each release, so there no way to
 "calculate" the displayed version name as will be known by the user.
 
-With this it is not possible that two "official" ROM releases have
+With this it's not possible that two "official" ROM releases have
 the same romType value. However, third-party ROMs with compatible
-GT1 loading capability are adviced to use the same romType value
+GT1 loading capability are advised to use the same romType value
 as the ROM version they were derived from.
 
 End user is in control
@@ -152,26 +162,37 @@ Don't crash
 -----------
 GT1 files that need a certain interface feature that is not present
 in earlier ROMs should degrade in performance or functionality, or
-fail gracefully, but definitely NOT crash. By publishng a file as
-GT1 you're signaling that you expect the file can be loaded with
-any past, present or future ROM version. To help remind the programmer
-which features were introduced after ROM v1, and therefore require
-a romType check before use, we'll add a ROM version number to their
-names.
+fail gracefully, but definitely NOT crash.
 
-32K vs. 64K
------------
+Example:
+        $800 p=                         {Top of screen}
+        \romType, \romTypeValue_ROMv3-  {Test for ROM v3}
+        [if<0 [do p. 1+ loop]]          {Halt and blink pixel on older ROM}
+
+See Apps/Smallest.gcl for a smaller busy loop, and much cooler too!
+
+By publishing a file as GT1 you're signaling that you expect the
+file can be loaded with any past, present or future ROM version.
+To help remind the programmer which features were introduced after
+ROM v1, and therefore require a romType check before use, we'll add
+a ROM version number to their names.
+
+More thoughts on the above
+==========================
+
+32K vs. 64K: "_64K.gt1"
+-----------------------
 It is understood that a program that really requires an extended
 64K memory crashes while loading on a 32K system. In that case
 please end the filename with "_64K.gt1". The main idea is still
 that a user doesn't get unexpected surprises.
 
-Hack files
-----------
+Hack files: ".gt1x"
+-------------------
 Of course the Gigatron is an open system, so there will be plenty
 of methods to detect what kind of ROM you're running on. If you
 make a GT1 file that you know depends on undocumented features (or
-better phrased: features not listed in interface.json), it is adviced
+better phrased: features not listed in interface.json), it's advised
 to give it a different extension. For example 'Demo3_ROMv1only.gt1x'
 (I always append a 'x' to such experimental files with no expectation
 of compatibility.)
@@ -204,10 +225,21 @@ we can get very far without ever doing something like this...
 files. Their inclusion turned out to be a bit premature and they
 had to change after ROM v1. There will be no alternative for
 SYS_ReadNextInput_32 and SYS_LoaderPayloadCopy_34 in interface.json
-soon: it is part of Loader, but that is logically not a GT1 file.
+soon: it's part of Loader, but that is logically not a GT1 file.
 'SYS_Reset_36' was just an intermediate in the soft reset sequence.
 The proper way to initiate that is by redirecting the vCPU to vReset
 (0x1f0). So we have retro-actively added vReset to the interface.json
 files instead.
+
+ROM v4: romType and channelMask
+-------------------------------
+As of ROM v4, the romType variable lends its lower three bits to
+the new channelMask function. For version comparisons this doesn't
+matter, and it's not needed to treat the value at $21 differently
+due to this. For example, there's no need to mask these bits out
+prior to your version check. Just be aware that (in)equality tests
+may not work, because in newer ROMs these lower bits could be
+different than expected. (But you shouldn't use == or != for this
+purpose anyway.)
 
 -- End of document --

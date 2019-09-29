@@ -9,6 +9,8 @@ Statement   ::= ('PRINT'|'?') ((String|Expression) [,;])*
                                (String|Expression)?
              |  'AT' Expression (',' Expression)?
              |  'PUT' Expression
+             |  'CLS'
+             |  'LINE' Expression ',' Expression
              |  'IF' Expression RelOp Expression 'THEN'? Statements
              |  'GOTO' Expression
              |  'INPUT' Variable (',' Variable)*
@@ -20,11 +22,11 @@ Statement   ::= ('PRINT'|'?') ((String|Expression) [,;])*
              |  'RETURN'
              |  ('REM'|"'") Character*
              |  'MODE' Expression
-             |  'CLS'
              |  'NEW'
              |  'LIST'
              |  'RUN'
              |  'END'
+             |  'SAVE'
 Expression  ::= [+-]? Term ([+-] Term)*
 Term        ::= Factor ([*/%] Factor)*
 Factor      ::= Variable | Number

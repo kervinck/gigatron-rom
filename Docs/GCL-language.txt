@@ -1,13 +1,35 @@
--------------------------------
-Gigatron Control Language (GCL)
--------------------------------
-GCL is an interpreted low-level language for writing simple games for
-the Gigatron TTL microcomputer, without bothering with the harsh timing
-requirements of the hardware platform.
+========================================
+Gigatron Control Language (GCL) and vCPU
+========================================
 
-Technically, "GCL" is the source language or notation, while "vCPU" is the
-virtual CPU, or interpreter, that is executing compiled GCL instructions.
-The two are closely tied together.
+GCL is a compiled low-level language for writing simple games and
+applications for the Gigatron TTL microcomputer, without bothering
+the programmer with the harsh timing requirements of the hardware
+platform.
+
+vCPU is the interpreted 16-bit virtual processor running in the dead
+time of the video/sound loop.
+
+The two are closely tied together, and we sometimes we mix them up.
+Technically still, "GCL" is the source language or notation, while
+"vCPU" is the virtual CPU, or interpreter, that is executing compiled
+GCL instructions.
+
+vCPU's advantages over native 8-bit Gigatron code are:
+ 1. you don't need to think about video timing with everything you do
+ 2. operations are 16-bits, and
+ 3. programs can run from RAM.
+Its disadvantage is that vCPU is slower than native code.
+
+The main menu, `Snake', `Mandelbrot', `Tiny BASIC v2' and `WozMon'
+are pure GCL programs. These programs still use generic support
+ROM functions implemented as native code: the so-called SYS functions.
+
+`Racer', `Pictures' and `Loader' are hybrid programs, meaning that
+they have application-specific SYS functions and/or data in ROM.
+
+`Bricks' and `Tetronis' are vCPU programs written in a vCPU assembler,
+not using GCL at all.
 
 ---------------
 Example program
@@ -39,32 +61,86 @@ gcl1 {GCL version}
   Plot!                                 {130 GOSUB 20}
   loop]                                 {140 GOTO 80}
 
+Compiled to vCPU instructions this program looks like this:
+
+        RAM address
+        |     encoding
+        |     |         vCPU instruction
+        |     |         |     operand
+        |     |         |     |         GCL notation
+        |     |         |     |         |
+        V     V         V     V         V
+        0200  cd 29     DEF   $022b     [def
+        0202  11 48 44  LDWI  $4448       $4448
+        0205  2b 30     STW   $30         D=
+                                          [do
+        0207  21 32     LDW   $32           C
+        0209  35 53 0e  BGE   $0210         [if<0
+        020c  59 0f     LDI   $0f             15
+        020e  90 10     BRA   $0212         else
+        0210  59 05     LDI   5               5]
+        0212  f0 30     POKE  $30           D.
+        0214  21 32     LDW   $32           C
+        0216  99 32     ADDW  $32           C+
+        0218  2b 32     STW   $32           C=
+        021a  21 30     LDW   $30           D
+        021c  e3 01     ADDI  1             1+
+        021e  2b 30     STW   $30           D=
+        0220  11 a8 bb  LDWI  $bba8         -$4458
+        0223  99 30     ADDW  $30           D+
+        0225  35 53 28  BGE   $022a         if<0
+        0228  90 05     BRA   $0207         loop]
+        022a  ff        RET               ret]
+        022b  2b 34     STW   $34       Plot=
+                                        [do
+        022d  59 00     LDI   0           0
+        022f  2b 36     STW   $36         A=
+        0231  59 01     LDI   1           1
+        0233  2b 38     STW   $38         B=
+                                          [do
+        0235  21 36     LDW   $36           A
+        0237  99 38     ADDW  $38           B+
+        0239  2b 32     STW   $32           C=
+        023b  21 38     LDW   $38           B
+        023d  2b 36     STW   $36           A=
+        023f  21 32     LDW   $32           C
+        0241  2b 38     STW   $38           B=
+        0243  35 56 46  BLE   $0248         if>0
+        0246  90 33     BRA   $0235         loop]
+        0248  cf 34     CALL  $34         Plot!
+        024a  90 2b     BRA   $022d     loop]
+
+As you can see, there is a near perfect one-to-one relation between
+GCL words and vCPU instructions.
+
+BTW: To make a visual distinction between 16-bits code and native
+code, we always captalize vCPU instructions while we write 8-bits
+Gigatron code in lower case.
+
 ----------
 Deployment
 ----------
+
 Translation from GCL to vCPU is done offline. So the Gigatron runs
 vCPU applications. There are other ways to generate vCPU programs,
 for example through at67's assembler. There are two ways to get a
 vCPU program into the Gigatron. One is by sending it into RAM through
-the input port using the Loader application.  The other is to store
-the object code in the ROM disk portion of the EPROM.  The file
+the input port using the Loader application. The other is to store
+the object code in the ROM disk portion of the EPROM. The file
 format for exchange of vCPU programs is GT1. This format is described
-in a different document: GT1-FileFormat.txt
+in a different document: GT1-files.txt
 
 -----------------
 Programming model
 -----------------
 
-GCL draws most of its inspiration from two notable mini-languages:
-SWEET16 (Apple II) and FALSE (Amiga). There is also a little bit
-of a FORTH influence.  The GCL programming model is "accumulator
-oriented": there is no implicit expression stack. vCPU does have a
-call stack however. Programs are typically made of many small
-function definitions followed by a main loop. The functions usually
-operate on global variables, although it is also possible to put
-variables on the stack.
+The programming model is accumulator oriented: there is no implicit
+expression stack. vCPU does have a call stack however. Programs
+are typically made of many small function definitions followed by
+a main loop. The functions usually operate on global variables,
+although it is also possible to put variables on the stack.
 
-The virtual regisers are 16-bits (except vSP) and reside in the
+The virtual registers are 16-bits (except vSP) and reside in the
 zero page.
 
 vAC  is the virtual accumulator, used by instructions as operand
@@ -73,27 +149,147 @@ vAC  is the virtual accumulator, used by instructions as operand
 vPC  is the virtual program counter. Programs run from RAM. When
      executing, vPC auto-increments just its low byte, so it wraps
      around on the same RAM page. (Code normally doesn't "use" this.)
-     Function calls can go across pages.
+     Function calls can go across pages. vPC gets incremented by 2
+     BEFORE fetching the next instruction, except after CALL and RET.
 
 vLR  is the link register. It points to the instruction after the
      most recent CALL instruction. This is used to return after
      making a function call. When nesting functions, vLR should
-     be pushed on the stack.
+     be saved on the stack with PUSH and restored with POP.
 
 vSP  is the stack pointer. The stack lives in the zero page top and
      grows down.
 
 Program variables are 16-bit words and typically hold a number or
-a pointer.  Named variables reside in the zero page. Arbitrary
-memory can be addressed as bytes using 16-bit pointers.
+a pointer. Variables normally reside in the zero page. Arbitrary
+memory can be addressed as bytes and words using 16-bit pointers.
+
+---------------------
+Notes on GCL notation
+---------------------
+
+GCL draws most of its inspiration from two notable mini-languages:
+SWEET16 (Apple II) and FALSE (Amiga). There is a little bit of a
+FORTH influence as well. There are also similarities with UNIX dc(1)
+and Altair VTL-2, although those are coincidental.
+
+GCL programs are written as a long sequence of words without much
+structure enforced by the compiler. Most words map directly to a
+single vCPU instruction and therefore also encode an embedded operand
+(e.g. `1' means `LDI 1' and `2+' means `ADDI 2'). Many words operate
+on both vAC and some variable or constant. Sequences can be grouped
+with () {} or [], each of which has its own meaning. Spaces and
+newlines simply separate words. Use indentation for clarity. There
+is no need for spaces around the grouping characters []{}().
+
+Constants are decimal, or hexadecimal when preceded with '$'.
+Constants can be preceded by '-' or '+' (note: -$1000, not $-0000).
+
+For convenience, symbols predefined by the system can be referenced
+by prefixing a backslash, e.g. '\fontData'. This can be used anywhere
+where a constant is expected. It also may be preceded by a sign.
+
+Variable names start with an alphanumeric character and are case
+sensitive. The overview below uses the following conventions:
+ 'i'  indicates an 8-bit integer constant.
+ 'ii' indicates a 16-bit integer constant.
+ 'X'  indicates a named variable, allocated globally on the zero page.
+ '_C' indicates a named constant, or label, from the system's symbol table
+
+--------------------
+Meaning of GCL words
+--------------------
+
+Basics
+------
+{...}           Comments ignored by machine. Comments can be nested
+i ii            Load integer constant into vAC, e.g. 1, +1972, -$be05
+X=              Store vAC into variable X
+X               Load variable X into vAC
+X+ X-           Add/subtract variable X to/from vAC
+i+ i-           Add/subtract small constant to/from vAC
+i<<             Shift vAC i bits left
+i& i| i^        Logical AND/OR/XOR vAC with small constant
+X& X| X^        Logical AND/OR/XOR vAC with variable X
+
+Advanced
+--------
+<X, >X,         Load low/high byte of variable X
+<X. >X.         Store vAC as byte into the low/high byte of variable X
+<X++ >X++       Increment low/high byte of variable X
+<i++ >i++       Increment byte at address i/i+1
+
+System
+------
+*=ii            Set compilation address (default is $200)
+_C=*            Label definition. Refer to its value as \_C
+_C              Treat system symbol `C' as a GCL variable (e.g. _sysFn=)
+
+Memory
+------
+X, X.           Read/write unsigned byte at memory address pointed at by X
+X; X:           Read/write word at memory address pointed at by X
+peek deek       Read byte/word from memory address pointed at by vAC
+i, i.           Read/write unsigned byte at zero page address i
+i; i:           Read/write word at zero page address i
+i?              Table lookup from ROM address vAC+i (ROM page must be prepared)
+
+Structured programming
+----------------------
+[...]           Code block, used with `if', `else', `do', `loop'
+def             Define function or inline data: load next vPC in vAC,
+                then jump to end of the current block
+if>0            Continue executing code if vAC>0, otherwise jump to
+                end of the block (or past an optional matching `else')
+                Conditions are `=0' `>0' `<0' `<=0' `>=0' `<>0'
+else            When encountered, skip rest of code until end of block
+do              Mark the start of a loop
+loop            Jump back to matching `do' (which may be in an outer block)
+if>0loop        Optimization for `if>0' + `loop' (works with all conditions)
+
+Subroutines
+-----------
+X!              Jump to function pointed at by X, store old vPC in vLR
+ret             Jump to vLR, to return from a leaf function. Non-leaf
+                functions should use `pop' + `ret' as return sequence
+push            Push vLR onto stack, for entering a non-leaf function
+pop             Remove top of stack and put value in vLR
+i!              Call native code pointed at by sysFn, not exceeding i cycles
+call            Jump to function pointed at by vAC
+
+Stack variables
+---------------
+i-- i++         Subtract/add constant value from/to stack pointer
+%i %i=          Load/store stack variable at relative byte offset i
+
+Data
+----
+#i #<ii         Inline byte value i, silently truncated to lowest 8 bits
+#>ii            Inline high byte value (most often used with labels)
+`Hello`world!   Inline ASCII test. Replace backquotes with spaces
+`               A single inline backquote (ASCII 96)
+##ii ##_C       Inline word value, little-endian
+#@_C            PC relative offset (6502-style)
+
+Versioning
+----------
+gcl0x gcl1      GCL version. `x' denotes experimental/extended versions
+
+There are two versions of GCL: gcl0x and gcl1. gcl0x is what we
+used to make the built-in applications of ROM v1. gcl1 is the planned
+cosmetic upgrade in notation.
+
+-----------------
+Program structure
+-----------------
 
 GCL translation is single-pass and doesn't have a linking stage.
 Therefore a typical GCL program has a setup phase followed by a
-main loop.  In the setup phase, variables are initialized with
+main loop. In the setup phase, variables are initialized with
 values and references to functions or data. When running, function
 calling is done through those variables. vCPU is optimized for
-function calling in that way.  Long functions that don't fit in a
-page should be split into multiple functions.  When a program gets
+function calling in that way. Long functions that don't fit in a
+page should be split into multiple functions. When a program gets
 bigger than a single segment or page, the setup phase will have to
 hop over to the next page. The clearest way to do that is as follows:
 
@@ -118,116 +314,23 @@ can't do any function calls in the setup phase as that uses vLR.
 {Start compilation at $200. (vLR=$200)}
   [def ... ret] Function1=
   [def ... ret] Function2=
-  \vLR>++ ret {Increment high byte of vLR and go there}
+  >_vLR++ ret {Increment high byte of _vLR and go there}
 {Continue compilation at $300}
 $300:
   [def ... ret] Function3=
   [def ... ret] Function4=
-  \vLR>++ ret
+  >_vLR++ ret
 {Continue compilation at $400}
 $400:
   [def ... ret] Function5=
   [do ... loop] {Main loop}
 
------------------
-Notes on notation
------------------
-GCL programs are written as a long sequence of "words" without much
-structure enforced by the compiler. Most words map directly to a
-single virtual instruction and therefore also encode an embedded
-operand (e.g. 1+). Many words operate on both vAC and some variable
-or constant. Sequences can be grouped with () {} or [], each of
-which has its own meaning. Spaces and newlines simply separate
-words. Use indentation for clarity. There is no need for spaces
-around the grouping characters []{}().
-
-Constants are decimal, or hexadecimal when preceded with '$'.
-Constants can be preceded by '-' or '+' (note: -$1000, not $-0000).
-For convenience, symbols defined by the host system can be referenced
-by prefixing a backslash, e.g. '\fontData'. This can be used anywhere
-where an integer is expected.
-
-Variable names start with an alphanumeric character and are case
-sensitive.  The overview below uses the following conventions:
- 'i'  indicates an 8-bit integer constant.
- 'ii' indicates a 16-bit integer constant.
- 'X'  indicates a named variable, allocated globally on the zero page.
-
---------------------
-Meaning of GCL words
---------------------
-
-Basics
-------
-{...}           Comments ignored by machine. Comments can be nested
-i ii            Load integer constant into vAC, e.g. 1, +1972, -$be05
-X=              Store vAC into variable X
-X               Load variable X into vAC
-X+ X-           Add/subtract variable X to/from vAC
-i+ i-           Add/subtract small constant to/from vAC
-i<<             Shift vAC i bits left
-i& i| i^        Logical AND/OR/XOR vAC with small constant
-X& X| X^        Logical AND/OR/XOR vAC with variable X
-X<. X>.         Store vAC as byte into the low/high byte of variable X
-X<, X>,         Read low/high byte of variable X
-X<++ X>++       Increment low/high byte of variable X
-i-- i++         Subtract/add constant value from/to stack pointer
-i%              Load stack variable at relative byte offset i into vAC
-i%=             Store vAC on stack at relative byte offset i
-
-Memory
-------
-X,              Read unsigned byte from memory pointed by X into vAC
-X.              Write vAC as byte to memory pointed by variable X
-X;              Read word from memory pointed by X into vAC
-X:              Write vAC as word to memory pointed by variable X
-i,              Read unsigned byte at zero page address i into vAC
-i.              Store vAC as byte into zero page address i
-i;              Read word at zero page address i into vAC
-i:              Write vAC as word into zero page address i
-i?              Table lookup from ROM address vAC+i
-peek            Read byte from memory pointed by vAC (Same as "\vAC,")
-deek            Read word from memory pointed by vAC (Same as "\vAC;")
-
-Structured programming
-----------------------
-[...]           Code block, used with "if", "else", "do", "loop"
-if>0            Continue executing code if vAC>0, otherwise jump to
-                end of the block (or past an optional matching "else")
-                Conditions are "=0" ">0" "<0" "<=0" ">=0" "<>0"
-else            When encountered, skip rest of code until end of block
-do              Mark the start of a loop
-loop            Jump back to matching "do" (May be in an outer block)
-if>0loop        Optimization for "if>0 loop" (works with all conditions)
-def             Load next vPC in vAC and jump to end of current block
-
-Subroutines
------------
-X!              Jump to function pointed by X, store old vPC in vLR
-ret             Jump to vLR, to return from a leaf function. Non-leaf
-                functions should use "pop ret" as return sequence
-push            Push vLR onto stack, for entering a non-leaf function
-pop             Remove top of stack and put value in vLR
-i!              Call native code pointed by sysFn, not exceeding i cycles
-call            Jump to function pointed by vAC (Same as "\vAC!")
-
-Data
-----
-i#              Raw byte-value i, value will be truncated to lowest 8 bits
-
-Versioning
-----------
-gcl0x gcl1      GCL version. "x" denotes experimental/extended versions
-
-There are two versions of GCL: gcl0x and gcl1. gcl0x is what we
-used to make the built-in applications of ROM v1. gcl1 is the planned
-cosmetic upgrade in notation.
-
 ----------------------------------
 Common pitfalls in GCL programming
 ----------------------------------
-- Forgetting "ret" at the end of a function block
-- Calling functions from a leaf function (forgetting "push" and "pop")
+
+- Forgetting `ret' at the end of a function block
+- Calling functions from a leaf function (forgetting `push' and `pop')
 - Forgetting that all named variables are global
 - Calling a function before the last page when also using vLR hopping in setup
 - Misspelling a variable (Tip: inspect the symbol table output)
@@ -236,78 +339,189 @@ Common pitfalls in GCL programming
 -----------------
 Future extensions
 -----------------
-GCL "v1" will have differences we're pondering about:
 
-'A              Character code?
-\12             For raw byte values (better readable than 12#)
-<p++ >p++       Notation for p<++ p>++ (Consider < and > as part of the name)
-"Text"          Text string?
-()              Macros?
-Consistency of , . : ; in combination with \
+The current GCL version is 'gcl0x'. The 'x' suffix intends to warn
+that incompatible changes happen without notice or version number
+change. Once we believe the notation is stable and some weird
+quirks removed, we plan to rename it 'gcl1'.
+
+Having stated that, GCL was primarily the bootstrapping notation
+for writing the first vCPU applications in ROMv1. It has brought
+us all the way to Tiny BASIC. In the meantime a more traditional
+assembler has emerged, and we have a C compiler. So we might not
+develop GCL much further, as it has served its purpose.
+
+Some gcl1 changes we're still pondering about:
+
+Consistency     Especially surrounding ,.:; and \ (backslash)
+                Symptoms:
+                - i: and i= do the same thing (store vAC on zero-page)
+                - X: is a DOKE to the address in var X, but there is
+                  no notation to POKE/DOKE using a zero page address i
+                - ii: sets the compilation address, it isn't a DOKE
+                - Therefore we can't create code in the zero page
+_C=123          Constant naming
+&X &<X &>X      Get an variable's address. Should treat < and > as part
+                of the name instead of the prefix part of the operator
+*i              Treat as the name of a GCL variable with address i
+i-- i++         Replace with something that associates with stack: %++i %--i ?
+()              Compile time expressions? Macros? (128+1) -> 129.
+                Can could escape to Python for evaluation.
+                E.g. Color=(Blue+1)
+
+See GitHub issue #80 for a more detailed discussion.
+https://github.com/kervinck/gigatron-rom/issues/80
+
+-------------------
+Deprecated features
+-------------------
+
+i=              Alias for i: (was often used as \symbol=)
+i#              Original notation for #i
+X<++ X>++       Original notation for <X++ >X++
+i<++ i>++       Original notation for <i++ >i++
+ii:             Original notation for *=ii
+i% i%=          Original notation for %i %i=
 
 ----------------------
 vCPU instruction table
 ----------------------
+
 The vCPU interpreter has 34 core instructions. Each opcode is just
 a jump offset into the interpreter code page to the code that
 implements its behavior. Most instructions take a single byte
 operand, but some have two and others none.
 
-Mnem. Operands Description
------ -------- -----------
-ST    $DD      Store byte in zero page ([D]=vAC)
-STW   $DD      Store word into zero page ([D]=vAC&255,[D+1]=vAC>>8)
-STLW  $DD      Store word in stack frame (vSP[D],vSP[D+1]=vAC&255,vAC>>8)
-LD    $DD      Load byte from zero page (vAC=[D])
-LDI   $DD      Load immediate small positive constant (vAC=D)
-LDWI  $DDDD    Load immediate arbitrary constant (vAC=D)
-LDW   $DD      Word load from zero page (vAC=[D]+256*[D+1])
-LDLW  $DD      Load word from stack frame (vAC=vSP[D]+256*vSP[D+1])
-ADDW  $DD      Word addition with zero page (vAC+=[D]+256*[D+1])
-SUBW  $DD      Word subtraction with zero page (vAC-=[D]+256*[D+1])
-ADDI  $DD      Add small positive constant (vAC+=D)
-SUBI  $DD      Subtract small positive constant (vAC-=D)
-LSLW  -        Shift left (because 'ADDW vAC' will not work!) (vAC+=vAC)
-INC   $DD      Increment zero page byte ([D]++)
-ANDI  $DD      Logical-AND with constant (vAC&=D)
-ANDW  $DD      Word logical-AND with zero page (vAC&=[D]+256*[D+1])
-ORI   $DD      Logical-OR with constant (vAC|=D)
-ORW   $DD      Word logical-OR with zero page (vAC|=[D]+256*[D+1])
-XORI  $DD      Logical-XOR with constant (vAC^=D)
-XORW  $DD      Word logical-XOR with zero page (vAC^=[D]+256*[D+1])
-PEEK  -        Read byte from memory (vAC=[vAC])
-DEEK  -        Read word from memory (vAC=[vAC]+256*[vAC+1])
-POKE  $DD      Write byte in memory ([[D+1],[D]]=vAC&255)
-DOKE  $DD      Write word in memory ([[D+1],[D]],[[D+1],[D]+1]=vAC&255,vAC>>8)
-LUP   $DD      ROM lookup (vAC=ROM[D,AC])
-BRA   $DD      Branch unconditionally (vPC=(vPC&0xff00)+D)
-BCC   $CC $DD  Test vAC and branch conditionally. CC can be EQ,NE,LT,GT,LE,GE
-CALL  $DD      Goto address but remember vPC (vLR,vPC=vPC+2,[D]+256*[D+1]-2)
-RET   -        Leaf return (vPC=vLR-2)
-PUSH  -        Push vLR on stack ([--vSP]=vLR&255,[--vSP]=vLR>>8)
-POP   -        Pop value from stack (vAC=[vSP]+256*[vSP+1],vSP+=2)
-ALLOC $DD      Create or destroy stack frame (vSP+=D)
-SYS   $DD      Native function call using at most 2*T cycles, D=270-max(14,T)
-DEF   $DD      Define data or code (vAC,vPC=vPC+2,D+256*(vPC>>8))
+Mnem. Encoding  #C Description
+----- --------- -- -----------
+ST    $5E DD    16 Store byte in zero page ([D]=vAC&256)
+STW   $2B DD    20 Store word in zero page ([D],[D+1]=vAC&255,vAC>>8)
+STLW  $EC DD    26 Store word in stack frame ([vSP+D],[vSP+D+1]=vAC&255,vAC>>8)
+LD    $1A DD    18 Load byte from zero page (vAC=[D])
+LDI   $59 DD    16 Load immediate small positive constant (vAC=D)
+LDWI  $11 LL HH 20 Load immediate word constant (vAC=$HHLL)
+LDW   $21 DD    20 Word load from zero page (vAC=[D]+256*[D+1])
+LDLW  $EE DD    26 Load word from stack frame (vAC=[vSP+D]+256*[vSP+D+1])
+ADDW  $99 DD    28 Word addition with zero page (vAC+=[D]+256*[D+1])
+SUBW  $B8 DD    28 Word subtraction with zero page (vAC-=[D]+256*[D+1])
+ADDI  $E3 DD    28 Add small positive constant (vAC+=D)
+SUBI  $E6 DD    28 Subtract small positive constant (vAC-=D)
+LSLW  $E9       28 Shift left ('ADDW vAC' will not work!) (vAC<<=1)
+INC   $93 DD    16 Increment zero page byte ([D]++)
+ANDI  $82 DD    16 Logical-AND with small constant (vAC&=D)
+ANDW  $F8 DD    28 Word logical-AND with zero page (vAC&=[D]+256*[D+1])
+ORI   $88 DD    14 Logical-OR with small constant (vAC|=D)
+ORW   $FA DD    28 Word logical-OR with zero page (vAC|=[D]+256*[D+1])
+XORI  $8C DD    14 Logical-XOR with small constant (vAC^=D)
+XORW  $FC DD    26 Word logical-XOR with zero page (vAC^=[D]+256*[D+1])
+PEEK  $AD       26 Read byte from memory (vAC=[vAC])
+DEEK  $F6       28 Read word from memory (vAC=[vAC]+256*[vAC+1])
+POKE  $F0 DD    28 Write byte in memory ([[D+1],[D]]=vAC&255)
+DOKE  $F3 DD    28 Write word in memory ([[D+1],[D]],[[D+1],[D]+1]=vAC&255,vAC>>8)
+LUP   $7F DD    26 ROM lookup, needs trampoline in target page (vAC=ROM[vAC+D])
+BRA   $90 DD    14 Branch unconditionally (vPC=(vPC&0xff00)+D)
+BCC   $35 CC DD 28 Test vAC and branch conditionally. CC can be
+                     EQ=$3F, NE=$72, LT=$50, GT=$4D, LE=$56, GE=$53
+CALL  $CF DD    26 Goto address but remember vPC (vLR,vPC=vPC+2,[D]+256*[D+1]-2)
+RET   $FF       16 Leaf return (vPC=vLR-2)
+PUSH  $75       26 Push vLR on stack ([vSP-2],v[vSP-1],vSP=vLR&255,vLR>>8,vLR-2)
+POP   $63       26 Pop address from stack (vLR,vSP=[vSP]+256*[vSP+1],vSP+2)
+ALLOC $DF DD    14 Create or destroy stack frame (vSP+=D)
+SYS   $B4 DD   20+ Native function call using at most 2*T cycles, D=270-max(14,T)
+DEF   $CD DD    18 Define data or code (vAC,vPC=vPC+2,(vPC&0xff00)+D)
 
--------------
-Coding tricks
--------------
+#C is the number of clocks or cycles, counted back-to-back.
+So this number includes advancing vPC, fetch, dispatch and execute.
 
-$ff&                    Clear vAC high byte
-$ff| $ff^               Clear vAC low byte, because there is no $ff00&
-\vACH,                  Move vAC high byte to low
+The formulas are pseudo-formal. Better take them with a grain of
+salt. Still: 'DD' or 'D' are intended to represent a single byte.
+'LL HH' is intended to represent a 16-bit word in little-endian
+order. '[X]' is intended to represent a RAM location, as in the
+native instruction set. 'vAC=D' is intended to mean that the (16-bits)
+vAC gets the (unsigned) 8-bit value D, and with that clearing its
+high 8 bits in the process.
 
-a b-
-[if>=0 ...]             if a >= b ...
-                        But doesn't work in case of overflow
+-------------------------------------------
+Mapping from vCPU instructions to GCL words
+-------------------------------------------
 
-a b^ [if<0 b else a b-]
-[if>=0 ...]             16-bits range version
+Summary of prefixes:
+                                                                Operators
+Word variables:                        X      *i                X X= X, X. X; X: X& X| X^ X+ X-
+Byte variables:                       <X     <*i                X, X. X++
+                                      >X     >*i
+Addresses or constants                &X       i                i& i| i^ i+ i-
 
--------------
-SYS extension
--------------
+Instruction     Variable word   Constant word   Keyword         Comment
+-----------     -------------   -------------   -------         -------
+LDI                             <ii >ii i
+LDWI                            ii
+LDW             X                                               was i; and \C; (keep?)
+STW             X=              i:                              i= deprecated
+PEEK                                            peek            alias for _vAC,
+LDW+PEEK        X,
+POKE            X.
+DEEK                                            deek            alias for _vAC;
+LDW+DEEK        X;
+DOKE            X:
+LD              <X   >X         <*i   >*i                       was i,  (keep?)
+ST              <X=  >X=        <*i=  >*i=                      was i.  (keep?)
+INC             <X++ >X++       <*i++ >*i++                     change to i++
+LDLW                            %i                              was i%
+STLW                            %i=                             was i%=
+ALLOC                           i-- i++                         XXX should become i%- i%+
+CALL            X!              *i!             call            alias for _vAC!
+DEF                                             def
+POP                                             pop
+PUSH                                            push
+RET                                             ret
+BRA                                             else loop
+BCC                                             if...
+ANDW            X&              *i&
+ORW             X|              *i|
+XORW            X^              *i^
+ADDW            X+              *i+
+SUBW            X-              *i-
+ANDI            &X&             i&
+ORI             &X|             i|
+XORI            &X^             i^
+ADDI            &X+             i+
+SUBI            &X-             i-
+LSLW                            i<<                             alias for i*LSLW
+LSRW                            i>>                             XXX if we can add LSRW to vCPU
+SYS                             i!
+LUP                             i?
+
+------------------------
+Idioms and coding tricks
+------------------------
+
+255&                    Clear vAC high byte
+
+255| 255^               Clear vAC low byte (there is no 'ANDWI' instruction)
+
+\vACH,                  Move vAC high byte to low (vAC>>=8)
+
+\vACH. 255| 255^        Move vAC low byte to high (vAC<<=8)
+
+255^ 1+                 Negate vAC low byte
+
+>_vAC++                 Increment vAC high byte
+
+128- 128-               Decrement vAC high byte
+
+128^ 128-               Sign extend vAC (provided the high byte is zero)
+
+a b- [if>=0 ...]        if a >= b ... But this breaks in case of overflow!
+                        (For example consider a = 30000 and b = -5000)
+
+a b^ [if<0 b else a b-] Checking if the operands are of opposite sign first
+[if>=0 ...]             makes the comparison safe from overflow.
+
+--------------
+SYS extensions
+--------------
+
 Addresses of SYS functions that are part of the ABI:
 
 00ad    SYS_Exec_88             Load serialized vCPU code from ROM and execute
@@ -327,21 +541,33 @@ Addresses of SYS functions that are part of the ABI:
 04d4    SYS_Draw4_30            Copy 4 pixels to screen memory
 00f4    SYS_Out_22              Write byte to hardware OUT register
 00f9    SYS_In_24               Read byte from hardwar IN register
-02e9    SYS_NextByteIn_32       Receive next byte and put in load buffer
-06e7    SYS_PayloadCopy_34      Copy byte from load buffer to RAM destination
 
-Added in ROM v2 (ADVICE NOT TO USE IN GT1 FILES INTENDED FOR SHARING):
+Added in ROM v2:
 
-0b00    SYS_SetMode_80          Set video mode 0..3
-0b03    SYS_SetMemory_54        Set 1..256 bytes of memory to value
+0b00    SYS_SetMode_v2_80       Set video mode 0..3
+0b03    SYS_SetMemory_v2_54     Set 1..256 bytes of memory to value
+
+Added in ROM v3:
+
+0b06    SYS_SendSerial1_v3_80   Send data out over game controller port
+0c00    SYS_Sprite6_v3_64       Draw sprite of 6 pixels wide and N pixels high
+0c40    SYS_Sprite6x_v3_64      Draw sprite mirrored in X direction
+0c80    SYS_Sprite6y_v3_64      Draw sprite upside down
+0cc0    SYS_Sprite6xy_v3_64     Draw sprite mirrored and upside down
 
 Application specific SYS calls in ROM v1 that are -not- part of the ABI:
 
-SYS_Read3_40               (Pictures)
-SYS_LoaderProcessInput_48  (Loader)
-SYS_RacerUpdateVideoX_40   (Racer)
-SYS_RacerUpdateVideoY_40   (Racer)
+SYS_Read3_40                    (Pictures)
+SYS_LoaderProcessInput_48       (Loader)
+SYS_LoaderNextByteIn_32         (Loader)
+SYS_LoaderPayloadCopy_34        (Loader)
+SYS_RacerUpdateVideoX_40        (Racer)
+SYS_RacerUpdateVideoY_40        (Racer)
 
 Retro-actively retired from ABI:
 SYS_Reset_36                    Soft reset (use vReset instead)
+
+For details on arguments, side-effects and return values, please
+refer to the comments in the ROM source files (Core/ROMxxx.py).
+
 -- End of document --

@@ -1,0 +1,58 @@
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Reset Gigatron (pseudo) hardware                                |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+gcl0x
+
+{ Setup video }
+[def
+  { Setup video indirection table }
+  $100 p= {videoTable}
+  $800 q= {frame}
+  [do
+    q>,  p. p<++          { Y[i] = 8..127}
+    0    p. p<++          {dX[i] = 0}
+    q>++ q  if>0loop]
+
+  ret
+] SetupVideo=
+
+{ Play a note on one channel
+  High byte is channel, low byte is note (should be even)
+  Reset the oscillators and channel variables }
+[def {SetupChannel}
+  i= 255| 255^ $fa| p=          {Pointer to channel struct}
+  i<, i=                        {Extract note}
+  0 p. p<++                     {.wavA}
+  3 p. p<++                     {.wavX: 0 "Noise", 1 Triangle, 2 Pulse, 3 Sawtooth}
+  \notesTable i+ 0? p. p<++     {.keyL}
+  \notesTable i+ 1? p. p<++     {.keyH}
+  p. p<++                       {.oscL}
+  p.                            {.oscH}
+  ret
+] SetupChannel=
+
+{ Setup a G-major chord with 4 channels but don't play it yet }
+[def {SetupAudio}
+  push
+  $158 {1: G-3} SetupChannel!
+  $270 {2: G-4} SetupChannel!
+  $378 {3: B-4} SetupChannel!
+  $47e {4: D-5} SetupChannel!
+  pop ret
+] SetupAudio=
+
+{ Now it is safe to call functions }
+SetupAudio!
+SetupVideo!
+
+{ Load and start main program }
+\Loader2 \sysArgs0= $200 \vLR= \SYS_Exec_88 \sysFn= 88!
+
+{-----------------------------------------------------------------------+
+|                                                                       |
++-----------------------------------------------------------------------}
+

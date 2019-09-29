@@ -1,0 +1,6 @@
+10 for i=0 to 19
+20 x=4+8*i:y=3+6*i
+30 poke43,peek(43)+7
+40 at x,119:line 159-x,-y
+50 next i
+60 goto 10

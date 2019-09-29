@@ -1,0 +1,1081 @@
+gcl0x
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Apple-1 mockup                                                  |
+|       For testing original Microchess code on v6502                   |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+{
+Zero page usage:
+$30-$31         Pos
+$32-$33         PrintChar
+$34-$3b         WozMon variables
+}
+
+_i=$3c          {2 bytes}
+_j=$3e          {2 bytes}
+_k=$3a          {1 bytes, share with wozmon YSAV}
+
+{-----------------------------------------------------------------------+
+|       ROM type check                                                  |
++-----------------------------------------------------------------------}
+
+{ This code runs once and is then reused as the input buffer for wozmon }
+
+*=\userCode
+
+\romType, \romTypeValue_ROMv4-  {Version check >= ROMv4, see Docs/GT1-files.txt}
+[if<0 do _frameCount _vPCH:     {https://forum.gigatron.io/viewtopic.php?f=4&t=130}
+      loop]
+
+&_Setup call                    {Continue in page 8}
+
+{-----------------------------------------------------------------------+
+|       Setup                                                           |
++-----------------------------------------------------------------------}
+
+*=$8a0
+
+_Setup=*                        {Continuation of program start}
+
+{ Setup video indirection table such that WozMon can be at $7F00/$FF00 }
+\videoTable Pos=                {First GCL variable at $30, later becomes Pos}
+120                             {7^127}
+[do 127^                        {Loop over 7..126 range}
+  Pos: <Pos++ <Pos++            {Y[y]=7+j and dX[y]=0}
+  1+ 127^ if<>0loop]            {Next in range}
+
+&_PrintChar PrintChar=          {Prepare for vCPU calls}
+
+[def #$d0 #$e5 #$f4 #$e5 #$f2 #$a0 #$ca #$e5 #$ee #$ee  {Peter Jenn}
+     #$e9 #$ee #$e7 #$f3 #$a7 #$a0 #$cd #$e9 #$e3 #$f2  {ings' Micr}
+     #$ef #$e3 #$e8 #$e5 #$f3 #$f3 #$a8 #$c3 #$a9 #$b1  {ochess(C)1}
+     #$b9 #$b7 #$b6 #$a0 #$e2 #$e5 #$ee #$ec #$ef #$ae  {976 benlo.}
+     #$e3 #$ef #$ed #0 ] s=                             {com}
+
+[do s, if<>0                    {Print message}
+    PrintChar!
+    <s++ loop]
+
+&_Apple1 _vLR=                  {Prepare transfer to main loop}
+&_CHESS                         {Start address for 6502 program}
+[ret]                           {Jump to Main (the brackets avoid the automatic vLR patch)}
+
+{-----------------------------------------------------------------------+
+|       Microchess                                                      |
++-----------------------------------------------------------------------}
+
+{
+        (C) COPYRIGHT 1976, PETER JENNINGS, MICROCHESS,
+        1612-43 THORNCLIFFE PK DR, TORONTO, CANADA.
+        ALL RIGHTS RESERVED.  REPRODUCTION BY   ANY
+        MEANS, IN WHOLE OR IN PART, IS PROHIBITED.
+
+        Adapted for Gigatron by Marcel van Kervinck, July 2019
+        With assistance of Oscar Vermeulen
+
+        Primarily based on the original KIM-1 sources at
+        http://www.benlo.com/microchess/Kim-1Microchess.html
+        - Transcribed for assembly by GCL
+        - Some changes adopted from Daryl Rictor and Bill Foster
+        - All changes to original are marked `[Gigatron]'
+
+        Published with permission of Peter Jennings, June 2019
+}
+
+{ Zero page variables }
+
+  _BOARD=$50    { LOCATION OF PIECES }
+     _BK=$60    { OPPONENT'S PIECES }
+  {_SETW}                                     { [Gigatron] Moved to $7A0.$7BF }
+ {_MOVEX}                                     { [Gigatron] Moved to $7C0.$7CF }
+{_POINTS}                                     { [Gigatron] Moved to $7D0.$7DF }
+  _PIECE=$70    { CURRENT PIECE UNDER ANALYSIS  [Gigatron] Was $B0 }
+ _SQUARE=$F3    { TO SQUARE OF .PIECE           [Gigatron] Was $B1 }
+    _SP2=$F4    { STACK POINTER FOR STACK 2     [Gigatron] Was $B2 }
+    _SP1=$F5    { STACK POINTER FOR STACK 1     [Gigatron] Was $B3 }
+ _INCHEK=$F6    { MOVE INTO CHECK FLAG          [Gigatron] Was $B4 }
+  _STATE=$F7    { STATE OF ANALYSIS             [Gigatron] Was $B5 }
+  _MOVEN=$F8    { MOVE TABLE POINTER            [Gigatron] Was $B6 }
+  _OMOVE=$DC    { OPENING POINTER }
+{_OPNING}                                     { [Gigatron] Moved to $7E0.$7FB }
+  _WCAP0=$DD    { COMPUTER CAPTURE 0 }
+  _COUNT=$DE    { START OF COUNT TABLE }
+  _BCAP2=$DE    { OPPONENT CAPTURE 2 }
+  _WCAP2=$DF    { COMPUTER CAPTURE 2 }
+  _BCAP1=$E0    { OPPONENT CAPTURE 1 }
+  _WCAP1=$E1    { COMPUTER CAPTURE 1 }
+  _BCAP0=$E2    { OPPONENT CAPTURE 0 }
+    _MOB=$E3    { MOBILITY }
+   _MAXC=$E4    { MAXIMUM CAPTURE }
+     _CC=$E5    { CAPTURE COUNT }
+   _PCAP=$E6    { PIECE ID OF MAXC }
+   _BMOB=$E3    { OPPONENT MOBILITY }
+  _BMAXC=$E4    { OPPONENT MAXIMUM CAPTURE }
+   _BMCC=$E5    { OPPONENT CAPTURE COUNT        [Gigatron] Was BCC (vCPU conflict) }
+  _BMAXP=$E6    { OPPONENT MAXP }
+  _XMAXC=$E8    { CURRENT MAXIMUM CAPTURE }
+   _WMOB=$EB    { COMPUTER MOBILITY }
+  _WMAXC=$EC    { COMPUTER MAXIMUM CAPTURE }
+    _WCC=$ED    { COMPUTER CAPTURE COUNT }
+  _WMAXP=$EE    { COMPUTER MAXP }
+   _PMOB=$EF    { PREVIOUS COMPUTER MOB }
+  _PMAXC=$F0    { PREVIOUS COMPUTER MAXC }
+    _PCC=$F1    { PREVIOUS COMPUTER CC }
+    _PCP=$F2    { PREVIOUS COMPUTER MAXP }
+ {_OLDKY=$F3}   { KEY INPUT TEMPORARY           [Gigatron] Removed }
+  _BESTP=$FB    { PIECE OF BEST MOVE FOUND }
+  _BESTV=$FA    { VALUE OF BEST MOVE FOUND }
+  _BESTM=$F9    { TO SQUARE OF BEST MOVE }
+   _DIS1=$FB    { DISPLAY POINT 1 }
+   _DIS2=$FA    { DISPLAY POINT 2 }
+   _DIS3=$F9    { DISPLAY POINT 3 }
+
+*=$220                                  { [Gigatron] Keep $200.$21F as input buffer }
+
+                { +++ }
+_CHESS=*        #_CLD_                  { INITIALIZE }
+                #_LDXIM_ #$DB           { TWO STACKS [Gigatron] Was #$FF }
+                #_TXS_
+                #_LDXIM_ #$9F           { [Gigatron] Was #$C8 }
+                #_STXZ_  #_SP2
+{
+              ROUTINES TO LIGHT LED
+              DISPLAY AND GET KEY
+              FROM KEYBOARD.
+}
+_OUT=*          #_LDAIM_ #$8d           { [Gigatron] CR }
+                #_BRK_                  { [Gigatron] Character out }
+                #_LDXIM_ #2             { [Gigatron] }
+_NEXT=*         #_LDAZX_ #_DIS3         { [Gigatron] }
+                #_JSR_   ##_PRBYTE      { [Gigatron] Print as hex }
+                #_DEX_                  { [Gigatron] }
+                #_BPL_   #@_NEXT        { [Gigatron] }
+                #_LDAIM_ #$A0           { [Gigatron] Space }
+                #_BRK_                  { [Gigatron] Character out }
+                #_LDAIM_ #$BF           { [Gigatron] '?' }
+                #_BRK_                  { [Gigatron] Character out}
+                #_LDAIM_ #0             { [Gigatron] }
+                #_BRK_                  { [Gigatron] Wait for input }
+                #_PHA_                  { [Gigatron] }
+                #_ORAIM_ #128           { [Gigatron] Set bit 7 for echo }
+                #_BRK_                  { [Gigatron] Character out}
+                #_PLA_                  { [Gigatron] }
+                #_ANDIM_ #$4F           { [Gigatron] MASK 0-7, AND ALPHA'S }
+
+                #_CMPIM_ #$43           { [Gigatron] [C] Was #$0C }
+                #_BNE_   #@_NOSET       { SET UP }
+                #_LDXIM_ #$1F           { BOARD }
+_WHSET=*        #_LDAAX_ ##_SETW        { FROM }
+                #_STAZX_ #_BOARD        { SETW }
+                #_DEX_
+                #_BPL_   #@_WHSET
+                #_STXZ_  #_OMOVE
+                #_LDAIM_ #$CC
+                #_BNE_   #@_CLDSP
+
+_NOSET=*        #_CMPIM_ #$45           { [Gigatron] [E] Was #$0E }
+                #_BNE_   #@_NOREV       { REVERSE }
+                #_JSR_   ##_REVERSE     { BOARD AS }
+                #_LDAIM_ #$EE           {    IS }
+                #_BNE_   #@_CLDSP
+
+_NOREV=*        #_CMPIM_ #$40           { [Gigatron] [P] Was #$14 [PC] }
+                #_BNE_   #@_NOGO        { PLAY CHESS }
+                #_JSR_   ##_GO
+_CLDSP=*        #_STAZ_  #_DIS1         { DISPLAY }
+                #_STAZ_  #_DIS2         { ACROSS }
+                #_STAZ_  #_DIS3         { DISPLAY }
+                #_BNE_   #@_CHESS
+
+_NOGO=*         #_CMPIM_ #$0D           { [Gigatron] [Enter] Was #$0F [F] }
+                #_BNE_   #@_NOMV        { MOVE MAN }
+                #_JSR_   ##_MOVE        { AS ENTERED }
+                #_JMP_   ##_DISP
+_NOMV=*
+                #_CMPIM_ #$41           { [Gigatron] [Q] ***Added to allow game exit*** }
+                #_BEQ_   #@_DONE        { [Gigatron] quit the game, exit back to system. }
+                #_JMP_   ##_INPUT       { [Gigatron] process move }
+_DONE=*         #_JMP_   ##_GETLINE     { [Gigatron] *** MUST set this to YOUR OS starting address }
+{
+                THE ROUTINE JANUS DIRECTS THE
+                ANALYSIS BY DETERMINING WHAT
+                SHOULD OCCUR AFTER EACH MOVE
+                GENERATED BY GNM
+}
+                { +++ }
+_JANUS=*        #_LDXZ_  #_STATE
+                #_BMI_   #@_NOCOUNT
+{
+                THIS ROUTINE COUNTS OCCURRENCES
+                IT DEPENDS UPON STATE TO INDEX
+                THE CORRECT COUNTERS
+}
+_COUNTS=*       #_LDAZ_  #_PIECE
+                #_BEQ_   #@_OVER        { IF STATE=8 }
+                #_CPXIM_ #$08           { DO NOT COUNT }
+                #_BNE_   #@_OVER        { BLK MAX CAP }
+                #_CMPZ_  #_BMAXP        { MOVES FOR }
+                #_BEQ_   #@_XRT         { WHITE }
+
+_OVER=*         #_INCZX_ #_MOB          { MOBILITY }
+                #_CMPIM_ #$01           { + QUEEN }
+                #_BNE_   #@_NOQ         { FOR TWO }
+                #_INCZX_ #_MOB
+
+_NOQ=*          #_BVC_   #@_NOCAP
+                #_LDYIM_ #$0F           { CALCULATE }
+                #_LDAZ_  #_SQUARE       { POINTS }
+_ELOOP=*        #_CMPAY_ ##_BK          { CAPTURED }
+                #_BEQ_   #@_FOUN        { BY THIS }
+                #_DEY_                  { MOVE }
+                #_BPL_   #@_ELOOP
+_FOUN=*         #_LDAAY_ ##_POINTS
+                #_CMPZX_ #_MAXC
+                #_BCC_   #@_LESS        { SAVE IF }
+                #_STYZX_ #_PCAP         { BEST THIS }
+                #_STAZX_ #_MAXC         { STATE }
+
+_LESS=*         #_CLC_
+                #_PHP_                  { ADD TO }
+                #_ADCZX_ #_CC           { CAPTURE }
+                #_STAZX_ #_CC           { COUNTS }
+                #_PLP_
+
+_NOCAP=*        #_CPXIM_ #$04
+                #_BEQ_   #@_ON4
+                #_BMI_   #@_TREE        { (=00 ONLY) }
+_XRT=*          #_RTS_
+{
+                GENERATE FURTHER MOVES FOR COUNT
+                AND ANALYSIS
+}
+_ON4=*          #_LDAZ_  #_XMAXC        { SAVE ACTUAL }
+                #_STAZ_  #_WCAP0        {  CAPTURE }
+                #_LDAIM_ #$00           { STATE=0 }
+                #_STAZ_  #_STATE
+                #_JSR_   ##_MOVE        { GENERATE }
+                #_JSR_   ##_REVERSE     { IMMEDIATE }
+                #_JSR_   ##_GNMZ        { REPLY MOVES }
+                #_JSR_   ##_REVERSE
+
+                #_LDAIM_ #$08           { STATE=8 }
+                #_STAZ_  #_STATE        { GENERATE }
+                #_JSR_   ##_GNM         { CONTINUATION }
+                #_JSR_   ##_UMOVE       { MOVES }
+
+                #_JMP_   ##_STRATGY     { FINAL EVALUATION }
+_NOCOUNT=*      #_CPXIM_ #$F9
+                #_BNE_   #@_TREE
+{
+                DETERMINE IF THE KING CAN BE
+                TAKEN, USED BY CHKCHK
+}
+                #_LDAZ_  #_BK           { IS KING }
+                #_CMPZ_  #_SQUARE       { IN CHECK? }
+                #_BNE_   #@_RETJ        { SET INCHEK=0 }
+                #_LDAIM_ #$00           { IF IT IS }
+                #_STAZ_  #_INCHEK
+_RETJ=*         #_RTS_
+{
+                IF A PIECE HAS BEEN CAPTURED BY
+                A TRIAL MOVE, GENERATE REPLIES &
+                EVALUATE THE EXCHANGE GAIN/LOSS
+}
+_TREE=*         #_BVC_   #@_RETJ        { NO CAP }
+                #_LDYIM_ #$07           { (PIECES) }
+                #_LDAZ_  #_SQUARE
+_LOOPX=*        #_CMPAY_ ##_BK
+                #_BEQ_
+*=$300
+                         #@_FOUNX
+                #_DEY_
+                #_BEQ_   #@_RETJ        { (KING) }
+                #_BPL_   #@_LOOPX       { SAVE }
+_FOUNX=*        #_LDAAY_ ##_POINTS      { BEST CAP }
+                #_CMPZX_ #_BCAP0        { AT THIS }
+                #_BCC_   #@_NOMAX       { LEVEL }
+                #_STAZX_ #_BCAP0
+_NOMAX=*        #_DECZ_  #_STATE
+                #_LDAIM_ #$FF           { [Gigatron] Was #$FB, changed for super blitz }
+                #_CMPZ_  #_STATE        { TIME TO TURN }
+                #_BEQ_   #@_UPTREE      { AROUND }
+                #_JSR_   ##_GENRM       { GENERATE FURTHER }
+_UPTREE=*       #_INCZ_  #_STATE        { CAPTURES }
+                #_RTS_
+
+{      THE PLAYER'S MOVE IS INPUT }
+
+_INPUT=*        #_CMPIM_ #$08           { NOT A LEGAL }
+                #_BCS_   #@_ERROR       { SQUARE # }
+                #_JSR_   ##_DISMV
+_DISP=*         #_LDXIM_ #$1F
+_SEARCH=*       #_LDAZX_ #_BOARD
+                #_CMPZ_  #_DIS2
+                #_BEQ_   #@_HERE        { DISPLAY }
+                #_DEX_                  { PIECE AT }
+                #_BPL_   #@_SEARCH      { FROM }
+_HERE=*         #_STXZ_  #_DIS1         { SQUARE }
+                #_STXZ_  #_PIECE
+_ERROR=*        #_JMP_   ##_CHESS
+{
+                GENERATE ALL MOVES FOR ONE
+                SIDE, CALL JANUS AFTER EACH
+                ONE FOR NEXT STEP
+}
+                { +++ }
+_GNMZ=*         #_LDXIM_ #$10           { CLEAR }
+_GNMX=*         #_LDAIM_ #$00           { COUNTERS }
+_CLEAR=*        #_STAZX_ #_COUNT
+                #_DEX_
+                #_BPL_   #@_CLEAR
+
+_GNM=*          #_LDAIM_ #$10           { SET UP }
+                #_STAZ_  #_PIECE        { PIECE }
+_NEWP=*         #_DECZ_  #_PIECE        { NEW PIECE }
+                #_BPL_   #@_NEX         { ALL DONE? }
+                #_RTS_                  {    -YES }
+
+_NEX=*          #_JSR_   ##_RESETX      {READY }
+                #_LDYZ_  #_PIECE        { GET PIECE }
+                #_LDXIM_ #$08
+                #_STXZ_  #_MOVEN        { COMMON START }
+                #_CPYIM_ #$08           { WHAT IS IT? }
+                #_BPL_   #@_PAWN        { PAWN }
+                #_CPYIM_ #$06
+                #_BPL_   #@_KNIGHT      { KNIGHT }
+                #_CPYIM_ #$04
+                #_BPL_   #@_BISHOP      { BISHOP }
+                #_CPYIM_ #$01
+                #_BEQ_   #@_QUEEN       { QUEEN }
+                #_BPL_   #@_ROOK        { ROOK }
+
+_KING=*         #_JSR_   ##_SNGMV       { MUST BE KING! }
+                #_BNE_   #@_KING        { MOVES }
+                #_BEQ_   #@_NEWP        { 8 TO 1 }
+_QUEEN=*        #_JSR_   ##_LINE
+                #_BNE_   #@_QUEEN       { MOVES }
+                #_BEQ_   #@_NEWP        { 8 TO 1 }
+
+_ROOK=*         #_LDXIM_ #$04
+                #_STXZ_  #_MOVEN        { MOVES }
+_AGNR=*         #_JSR_   ##_LINE        { 4 TO 1 }
+                #_BNE_   #@_AGNR
+                #_BEQ_   #@_NEWP
+
+_BISHOP=*       #_JSR_   ##_LINE
+                #_LDAZ_  #_MOVEN        { MOVES }
+                #_CMPIM_ #$04           { 8 TO 5 }
+                #_BNE_   #@_BISHOP
+                #_BEQ_   #@_NEWP
+
+_KNIGHT=*       #_LDXIM_ #$10
+                #_STXZ_  #_MOVEN        { MOVES }
+_AGNN=*         #_JSR_   ##_SNGMV       { 16 TO 9 }
+                #_LDAZ_  #_MOVEN
+                #_CMPIM_ #$08
+                #_BNE_   #@_AGNN
+                #_BEQ_   #@_NEWP
+
+_PAWN=*         #_LDXIM_ #$06
+                #_STXZ_  #_MOVEN
+_P1=*           #_JSR_   ##_CMOVE       { RIGHT CAP? }
+                #_BVC_   #@_P2
+                #_BMI_   #@_P2
+                #_JSR_   ##_JANUS       { YES }
+_P2=*           #_JSR_   ##_RESETX
+                #_DECZ_  #_MOVEN        { LEFT CAP? }
+                #_LDAZ_  #_MOVEN
+                #_CMPIM_ #$05
+                #_BEQ_   #@_P1
+_P3=*           #_JSR_   ##_CMOVE       { AHEAD }
+                #_BVS_   #@_NEWP        { ILLEGAL }
+                #_BMI_   #@_NEWP
+                #_JSR_   ##_JANUS
+                #_LDAZ_  #_SQUARE       { GETS TO }
+                #_ANDIM_ #$F0           { 3RD RANK? }
+                #_CMPIM_ #$20
+                #_BEQ_   #@_P3          { DO DOUBLE }
+                #_JMP_   ##_NEWP
+{
+                CALCULATE SINGLE STEP MOVES
+                FOR K, N
+}
+_SNGMV=*        #_JSR_   ##_CMOVE       { CALC MOVE }
+                #_BMI_   #@_ILL1        {  -IF LEGAL }
+                #_JSR_   ##_JANUS       {  -EVALUATE }
+_ILL1=*         #_JSR_   ##_RESETX
+                #_DECZ_  #_MOVEN
+                #_RTS_
+{
+                CALCULATE ALL MOVES DOWN A
+                STRAIGHT LINE FOR Q,B,R
+}
+_LINE=*         #_JSR_   ##_CMOVE       { CALC MOVE }
+                #_BCC_   #@_OVL         {  NO CHK }
+                #_BVC_   #@_LINE        {  CH,NOCAP }
+_OVL=*          #_BMI_   #@_ILL         {  RETURN }
+                #_PHP_
+                #_JSR_   ##_JANUS       { EVALUATE POSN }
+                #_PLP_
+                #_BVC_   #@_LINE        { NOT A CAP }
+_ILL=*          #_JSR_   ##_RESETX      { LINE STOPPED }
+                #_DECZ_  #_MOVEN        {  NEXT DIR }
+                #_RTS_
+{
+                EXCHANGE SIDES FOR REPLY
+                ANALYSIS
+}
+_REVERSE=*      #_LDXIM_ #$0F
+_ETC=*          #_SEC_
+                #_LDYZX_ #_BK           { SUBTRACT }
+                #_LDAIM_ #$77           { POSITION }
+                #_SBCZX_ #_BOARD        { FROM 77 }
+                #_STAZX_ #_BK
+                #_STYZX_ #_BOARD        {   AND }
+                #_SEC_
+                #_LDAIM_ #$77           { EXCHANGE }
+                #_SBCZX_ #_BOARD        { PIECES }
+                #_STAZX_ #_BOARD
+                #_DEX_
+                #_BPL_   #@_ETC
+                #_RTS_
+*=$400
+{
+               CMOVE CALCULATES THE TO SQUARE
+               USING .SQUARE AND THE MOVE
+              TABLE.  FLAGS SET AS FOLLOWS:
+              N - ILLEGAL MOVE
+              V - CAPTURE (LEGAL UNLESS IN CH)
+              C - ILLEGAL BECAUSE OF CHECK
+              [MY THANKS TO JIM BUTTERFIELD
+               WHO WROTE THIS MORE EFFICIENT
+               VERSION OF CMOVE]
+}
+_CMOVE=*        #_LDAZ_  #_SQUARE       { GET SQUARE }
+                #_LDXZ_  #_MOVEN        { MOVE POINTER }
+                #_CLC_
+                #_ADCAX_ ##_MOVEX       { MOVE LIST }
+                #_STAZ_  #_SQUARE       { NEW POS'N }
+                #_ANDIM_ #$88
+                #_BNE_   #@_ILLEGAL     { OFF BOARD }
+                #_LDAZ_  #_SQUARE
+
+                #_LDXIM_ #$20
+_LOOP=*         #_DEX_                  { IS TO }
+                #_BMI_   #@_NO          { SQUARE }
+                #_CMPZX_ #_BOARD        { OCCUPIED? }
+                #_BNE_   #@_LOOP
+
+                #_CPXIM_ #$10           { BY SELF? }
+                #_BMI_   #@_ILLEGAL
+
+                #_LDAIM_ #$7F           { MUST BE CAP! }
+                #_ADCIM_ #$01           { SET V FLAG }
+                #_BVS_   #@_SPX         { (JMP) }
+
+_NO=*           #_CLV_                  { NO CAPTURE }
+
+_SPX=*          #_LDAZ_  #_STATE        { SHOULD WE }
+                #_BMI_   #@_RETL        { DO THE }
+                #_CMPIM_ #$00           { CHECK CHECK? [Gigatron] Was #$08, changed for super blitz }
+                #_BPL_   #@_RETL
+{
+               CHKCHK REVERSES SIDES
+              AND LOOKS FOR A KING
+              CAPTURE TO INDICATE
+              ILLEGAL MOVE BECAUSE OF
+              CHECK.  SINCE THIS IS
+              TIME CONSUMING, IT IS NOT
+              ALWAYS DONE.
+}
+_CHKCHK=*       #_PHA_                  { STATE }
+                #_PHP_
+                #_LDAIM_ #$F9
+                #_STAZ_  #_STATE        { GENERATE }
+                #_STAZ_  #_INCHEK       { ALL REPLY }
+                #_JSR_   ##_MOVE        { MOVES TO }
+                #_JSR_   ##_REVERSE     { SEE IF KING }
+                #_JSR_   ##_GNM         { IS IN }
+                #_JSR_   ##_RUM         { CHECK }
+                #_PLP_
+                #_PLA_
+                #_STAZ_  #_STATE
+                #_LDAZ_  #_INCHEK
+                #_BMI_   #@_RETL        { NO - SAFE }
+                #_SEC_                  { YES - IN CHK }
+                #_LDAIM_ #$FF
+                #_RTS_
+
+_RETL=*         #_CLC_                  { LEGAL }
+                #_LDAIM_ #$00           { RETURN }
+                #_RTS_
+
+_ILLEGAL=*      #_LDAIM_ #$FF
+                #_CLC_                  { ILLEGAL }
+                #_CLV_                  { RETURN }
+                #_RTS_
+{
+              REPLACE .PIECE ON CORRECT .SQUARE
+}
+_RESETX=*       #_LDXZ_  #_PIECE        { GET LOGAT. }
+                #_LDAZX_ #_BOARD        { FOR PIECE }
+                #_STAZ_  #_SQUARE       { FROM BOARD }
+                #_RTS_
+
+_GENRM=*        #_JSR_   ##_MOVE        { MAKE MOVE }
+_GENR2=*        #_JSR_   ##_REVERSE     { REVERSE BOARD }
+                #_JSR_   ##_GNM         { GENERATE MOVES }
+_RUM=*          #_JSR_   ##_REVERSE     { REVERSE BACK }
+{
+              ROUTINE TO UNMAKE A MOVE MADE BY
+                       MOVE
+}
+_UMOVE=*        #_TSX_                  { UNMAKE MOVE }
+                #_STXZ_  #_SP1
+                #_LDXZ_  #_SP2          { EXCHANGE }
+                #_TXS_                  { STACKS }
+                #_PLA_                  { MOVEN }
+                #_STAZ_  #_MOVEN
+                #_PLA_                  { CAPTURED }
+                #_STAZ_  #_PIECE        { PIECE }
+                #_TAX_
+                #_PLA_                  { FROM SQUARE }
+                #_STAZX_ #_BOARD
+                #_PLA_                  { PIECE }
+                #_TAX_
+                #_PLA_                  { TO SOUARE }
+                #_STAZ_  #_SQUARE
+                #_STAZX_ #_BOARD
+                #_JMP_   ##_STRV
+{
+              THIS ROUTINE MOVES .PIECE
+              TO .SQUARE,  PARAMETERS
+              ARE SAVED IN A STACK TO UNMAKE
+              THE MOVE LATER
+}
+_MOVE=*         #_TSX_
+                #_STXZ_  #_SP1          { SWITCH }
+                #_LDXZ_  #_SP2          { STACKS }
+                #_TXS_
+                #_LDAZ_  #_SQUARE
+                #_PHA_                  { TO SQUARE }
+                #_TAY_
+                #_LDXIM_ #$1F
+_CHECK=*        #_CMPZX_ #_BOARD        { CHECK FOR }
+                #_BEQ_   #@_TAKE        { CAPTURE }
+                #_DEX_
+                #_BPL_   #@_CHECK
+_TAKE=*         #_LDAIM_ #$CC
+                #_STAZX_ #_BOARD
+                #_TXA_                  { CAPTURED }
+                #_PHA_                  { PIECE }
+                #_LDXZ_  #_PIECE
+                #_LDAZX_ #_BOARD
+                #_STYZX_ #_BOARD        { FROM }
+                #_PHA_                  {    SQUARE }
+                #_TXA_
+                #_PHA_                  { PIECE }
+                #_LDAZ_  #_MOVEN
+                #_PHA_                  { MOVEN }
+_STRV=*         #_TSX_
+                #_STXZ_  #_SP2          { SWITCH }
+                #_LDXZ_  #_SP1          { STACKS }
+                #_TXS_                  { BACK }
+                #_RTS_
+{
+              CONTINUATION OF SUB STRATGY
+              -CHECKS FOR CHECK OR CHECKMATE
+              AND ASSIGNS VALUE TO MOVE
+}
+_CKMATE=*       #_LDXZ_  #_BMAXC        { CAN BLK CAP }
+                #_CPX_   ##_POINTS      { MY KING? }
+                #_BNE_   #@_NOCHEK
+                #_LDAIM_ #$00           { GULP! }
+                #_BEQ_   #@_RETV        { DUMB MOVE! }
+
+_NOCHEK=*       #_LDXZ_  #_BMOB         { IS BLACK }
+                #_BNE_   #@_RETV        { UNABLE TO }
+                #_LDXZ_  #_WMAXP        { MOVE AND }
+                #_BNE_   #@_RETV        { KING IN CH? }
+                #_LDAIM_ #$FF           { YES! MATE }
+
+_RETV=*         #_LDXIM_ #$04           { RESTORE }
+                #_STXZ_  #_STATE        { STATE=4 }
+{
+              THE VALUE OF THE MOVE (IN ACCU)
+              IS COMPARED TO THE BEST MOVE AND
+              REPLACES IT IF IT IS BETTER
+}
+{_PUSH}         #_CMPZ_  #_BESTV        { IS THIS BEST }
+                #_BCC_   #@_RETP        { MOVE SO FAR? }
+                #_BEQ_   #@_RETP
+                #_STAZ_  #_BESTV        { YES! }
+                #_LDAZ_  #_PIECE        { SAVE IT }
+                #_STAZ_  #_BESTP
+                #_LDAZ_  #_SQUARE
+                #_STAZ_  #_BESTM        { FLASH DISPLAY }
+_RETP=*
+                #_LDAIM_ #$AE           { [Gigatron] '.' }
+                #_BRK_                  { [Gigatron] Character out }
+                #_RTS_                  { [Gigatron] }
+{
+              MAIN PROGRAM TO PLAY CHESS
+              PLAY FROM OPENING OR THINK
+}
+_GO=*           #_LDXZ_  #_OMOVE        { OPENING? }
+                #_BPL_   #@_NOOPEN      {     -NO }
+                #_LDAZ_  #_DIS3         { -YES WAS }
+                #_CMPAX_ ##_OPNING      {  OPPONENT'S }
+                #_BNE_   #@_END         {  MOVE OK? }
+                #_DEX_
+                #_LDAAX_ ##_OPNING      { GET NEXT }
+                #_STAZ_  #_DIS1         { CANNED }
+                #_DEX_                  { OPENING MOVE }
+                #_LDAAX_ ##_OPNING
+                #_STAZ_  #_DIS3         { DISPLAY IT }
+                #_DEX_
+                #_STXZ_  #_OMOVE        { MOVE IT }
+                #_BNE_   #@_MV2         { (JMP) }
+
+_END=*          #_STAZ_  #_OMOVE        { FLAG OPENING }
+_NOOPEN=*       #_LDXIM_ #$0C           { FINISHED }
+                #_STXZ_  #_STATE        { STATE=C }
+                #_STXZ_  #_BESTV        { CLEAR BESTV }
+                #_LDXIM_
+*=$500
+                         #$14           { GENERATE P }
+                #_JSR_   ##_GNMX        { MOVES }
+
+                #_LDXIM_ #$04           { STATE=4 }
+                #_STXZ_  #_STATE        { GENERATE AND }
+                #_JSR_   ##_GNMZ        { TEST AVAILABLE }
+                                        { MOVES }
+
+                #_LDXZ_  #_BESTV        { GET BEST MOVE }
+                #_CPXIM_ #$0F           { IF NONE }
+                #_BCC_   #@_MATE        { OH OH! }
+
+_MV2=*          #_LDXZ_  #_BESTP        { MOVE }
+                #_LDAZX_ #_BOARD        {  THE }
+                #_STAZ_  #_BESTV        { BEST }
+                #_STXZ_  #_PIECE        { MOVE }
+                #_LDAZ_  #_BESTM
+                #_STAZ_  #_SQUARE       { AND DISPLAY }
+                #_JSR_   ##_MOVE        {   IT }
+                #_JMP_   ##_CHESS
+
+_MATE=*         #_LDAIM_ #$FF           { RESIGN }
+                #_RTS_                  { OR STALEMATE }
+{
+              SUBROUTINE TO ENTER THE
+              PLAYER'S MOVE
+}
+_DISMV=*        #_LDXIM_ #$04           { ROTATE }
+_ROL=*          #_ASLZ_  #_DIS3         {  KEY }
+                #_ROLZ_  #_DIS2         { INTO }
+                #_DEX_                  { DISPLAY }
+                #_BNE_   #@_ROL
+                #_ORAZ_  #_DIS3
+                #_STAZ_  #_DIS3
+                #_STAZ_  #_SQUARE
+                #_RTS_
+{
+              THE FOLLOWING SUBROUTINE ASSIGNS
+              A VALUE TO THE MOVE UNDER
+              CONSIDERATION AND RETURNS IT IN
+                THE ACCUMULATOR
+}
+                { +++ }
+_STRATGY=*      #_CLC_
+                #_LDAIM_ #$80
+                #_ADCZ_  #_WMOB         {  PARAMETERS }
+                #_ADCZ_  #_WMAXC        {  WITH WEIGHT }
+                #_ADCZ_  #_WCC          {  OF 0.25 }
+                #_ADCZ_  #_WCAP1
+                #_ADCZ_  #_WCAP2
+                #_SEC_
+                #_SBCZ_  #_PMAXC
+                #_SBCZ_  #_PCC
+                #_SBCZ_  #_BCAP0
+                #_SBCZ_  #_BCAP1
+                #_SBCZ_  #_BCAP2
+                #_SBCZ_  #_PMOB
+                #_SBCZ_  #_BMOB
+                #_BCS_   #@_POS         { UNDERFLOW }
+                #_LDAIM_ #$00           { PREVENTION }
+_POS=*          #_LSRA_
+                #_CLC_                  { ************** }
+                #_ADCIM_ #$40
+                #_ADCZ_  #_WMAXC        { PARAMETERS }
+                #_ADCZ_  #_WCC          { WITH WEIGHT }
+                #_SEC_                  { OF 0.5 }
+                #_SBCZ_  #_BMAXC
+                #_LSRA_                 { ************** }
+                #_CLC_
+                #_ADCIM_ #$90
+                #_ADCZ_  #_WCAP0        { PARAMETERS }
+                #_ADCZ_  #_WCAP0        { WITH WEIGHT }
+                #_ADCZ_  #_WCAP0        { OF 1.0 }
+                #_ADCZ_  #_WCAP0
+                #_ADCZ_  #_WCAP1
+                #_SEC_                  { [UNDER OR OVER- }
+                #_SBCZ_  #_BMAXC        {  FLOW MAY OCCUR }
+                #_SBCZ_  #_BMAXC        {  FROM THIS }
+                #_SBCZ_  #_BMCC         {  SECTION] }
+                #_SBCZ_  #_BMCC
+                #_SBCZ_  #_BCAP1
+                #_LDXZ_  #_SQUARE       { *************** }
+                #_CPXIM_ #$33
+                #_BEQ_   #@_POSN        { POSITION }
+                #_CPXIM_ #$34           { BONUS FOR }
+                #_BEQ_   #@_POSN        { MOVE TO }
+                #_CPXIM_ #$22           { CENTRE }
+                #_BEQ_   #@_POSN        {    OR }
+                #_CPXIM_ #$25           { OUT OF }
+                #_BEQ_   #@_POSN        { BACK RANK }
+                #_LDXZ_  #_PIECE
+                #_BEQ_   #@_NOPOSN
+                #_LDYZX_ #_BOARD
+                #_CPYIM_ #$10
+                #_BPL_   #@_NOPOSN
+_POSN=*         #_CLC_
+                #_ADCIM_ #$02
+_NOPOSN=*       #_JMP_   ##_CKMATE      { CONTINUE }
+
+*=$7A0          { Tables fit nicely in Gigatron screen memory }
+
+                { INITIAL PIECE LOCATIONS }
+_SETW=*         #$03 #$04 #$00 #$07 #$02 #$05 #$01 #$06
+                #$10 #$17 #$11 #$16 #$12 #$15 #$14 #$13
+                #$73 #$74 #$70 #$77 #$72 #$75 #$71 #$76
+                #$60 #$67 #$61 #$66 #$62 #$65 #$64
+_MOVEX=*                                           #$63
+                { TABLE OF MOVE DIRECTIONS }
+                #$F0 #$FF #$01 #$10 #$11 #$0F #$EF #$F1
+                #$DF #$E1 #$EE #$F2 #$12 #$0E #$1F #$21
+
+                { TABLE OF PIECE VALUES }
+_POINTS=*       #$0B #$0A #$06 #$06 #$04 #$04 #$04 #$04
+                #$02 #$02 #$02 #$02 #$02 #$02 #$02 #$02
+
+                { OPENING MOVE TABLE }
+                { GIUOCO PIANO (COMPUTER IS WHITE) }
+                #$99 #$25 #$0B #$25 #$01 #$00 #$33 #$25
+                #$07 #$36 #$34 #$0D #$34 #$34 #$0E #$52
+                #$25 #$0D #$45 #$35 #$04 #$55 #$22 #$06
+                #$43 #$33 #$0F #$CC
+_OPNING=$6FC    { _OPNING[$FF] == $CC }
+
+{
+         ----------------------------------------------------------------
+        |    |  FRENCH   |  GIUOCO   |  RUY      |  QUEEN'S  |  FOUR     |
+        |ADDR|W DEFENCE B|W PIANO   B|W LOPEZ   B|W INDIAN  B|W KNIGHTS B|
+        |----+-----------+-----------+-----------+-----------+-----------|
+        | DB |CC       44|CC       44|CC       44|CC       43|CC       44|
+        | DA |0F P-K3  0F|0F P-K4  0F|0F P-K4  0F|0E P-Q4  06|0F P-K4  0F|
+        | D9 |33 P-K3  24|33 P-K4  34|33 P-K4  34|34 N-KB3 25|33 P-K4  34|
+        | D8 |53       43|43       55|43       55|52       42|43       55|
+        | D7 |0E P-Q4  0E|06 N-KB3 07|06 N-KB3 07|0D P-QB4 0F|06 N-KB3 07|
+        | D6 |43 P-Q4  33|22 N-QB3 22|22 N-QB3 22|35 P-K3  24|22 N-QB3 22|
+        | D5 |44       52|55       42|55       31|53       55|55       52|
+        | D4 |07 N-QB3 06|04 B-B4  04|04 B-N5  06|06 N-KB3 0B|07 N-B3  06|
+        | D3 |25 N-KB3 25|35 B-B4  32|46 N-B3  25|22 P-QN3 21|25 N-B3  25|
+        | D2 |52       36|45       52|52       75|56       56|52       31|
+        | D1 |05 B-N5  04|0D P-B3  06|00 O-O   06|0A P-KN3 05|04 B-N5  04|
+        | D0 |41 B-K2  14|25 N-B3  25|01 NxP   44|21 B-N2  11|46 B-N5  41|
+        | CF |63       34|52       43|33       43|66       66|36       75|
+        | CE |0F P-K5  06|0E P-Q4  0F|0E P-Q4  04|04 B-N2  04|00 O-O   00|
+        | CD |43 KN-Q2 13|34 PxP   43|34 B-K2  14|11 B-K2  14|01 O-O   06|
+        | CC |64       14|34       43|63       64|63       75|72       53|
+        | CB |05 BxB   01|0D PxP   04|01 Q-K2  06|00 O-O   00|0E P-Q3  0E|
+        | CA |63 QxB   14|34 B-N5  41|13 N-Q3  23|01 O-O   06|24 P-Q3  23|
+        | C9 |63       63|36       52|54       22|72       52|54       36|
+        | C8 |01 Q-Q2  00|07 N-B3  06|04 BxN   0B|07 N-B3  06|05 B-N5  04|
+        | C7 |14 O-O   06|25 NxKP  44|55 NPxB  22|25 N-K5  44|41 BxN   52|
+        | C6 |72       45|33       75|55       34|33       62|25       52|
+        | C5 |0C P-B4  0D|00 O-O   06|0E PxP   06|01 Q-B2  06|0B PxB   01|
+        | C4 |32 P-QB4 32|01 NxN   52|43 N-N2  11|15 NxN   52|25 Q-K2  14|
+        | C3 |45       55|25       52|66       52|25       52|63       74|
+        | C2 |06 N-B3  07|0B PxN   04|07 N-B3  00|01 QxN   0C|02 R-K1  07|
+        | C1 |22 N-QB3 22|25 BxP   52|25 O-O   06|25 P-KB4 35|03 N-Q1  03|
+        | C0 |99       99|99       99|99       99|99       99|99       99|
+         ----------------------------------------------------------------
+}
+
+{-----------------------------------------------------------------------+
+|       Main loop                                                       |
++-----------------------------------------------------------------------}
+
+*=$600
+
+_Apple1=*
+
+_vLR=                           {Reset v6502 PC}
+[do
+  \SYS_Run6502_DEVROM_80 _sysFn=
+  \k,                           {ASCII code in A}
+  80!                           {Run 6502 code until BRK}
+  push                          {Save v6502 PC}
+  [if=0                         {A=0 reads from keyboard}
+    [do
+      \serialRaw, 255^          {Wait for idle keyboard}
+      if<>0loop]
+    [do
+      \frameCount, 15& [if=0    {4 Hz cursor redraw rate}
+        \frameCount, 48&        {Flash at 1 Hz with 75% duty cycle}
+        [if=0 $a0 else $c0]     {Select space or '@'}
+        PrintChar! Pos=]        {Display cursor and move back}
+      \serialRaw, \k. 128&      {Key ready?}
+      if<>0loop]                {Loop until ready}
+    $a0 PrintChar! Pos=         {Overwrite '@' with a space}
+    \k, $60- [if>=0 $40+ \k.]   {Map to upper case, and DEL to rubout}
+    \k, 10^  [if=0  13   \k.]   {Map LF to CR}
+  else                          {A<>0 for echo}
+    \k.
+    PrintChar!
+  ]
+  pop                           {Restore v6502 PC}
+  loop]                         {Back to wozmon}
+
+{-----------------------------------------------------------------------+
+|       Character output with automatic scrolling                       |
++-----------------------------------------------------------------------}
+
+_PrintChar=*
+[
+  {Minimalistic terminal output, with bit 7 set by WozMon}
+
+  %-2=                          {Park character in stack area}
+  \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
+  $800 \sysArgs0:               {Green on black}
+
+  %-2                           {Get character back}
+  $8d^ [if<>0                   {Test for CR...}
+    <Pos, 155- if>0 0]          {...or line wrap}
+
+  [if=0
+
+    {-------------------------------------------------------------------+
+    |       Newline                                                     |
+    +-------------------------------------------------------------------}
+
+    {Clear new line first}
+
+    $100 <Pos. peek >Pos. Pos   {Go to start of next line}
+    \sysArgs4:                  {Set screen position}
+    \sysArgs2.                  {Set all-zero output pattern}
+    [do
+      134!                      {SYS call to draw 8 pixels vertically}
+      <\sysArgs4++              {Step 1 pixel right}
+      \sysArgs4, 160^           {Test for end of line}
+      if<>0loop]
+
+    {Then scroll up by modifying videoTable}
+
+    $01ee _i=                   {Last entry in video table}
+    [do
+      _i, 119- [if<0 127+
+                else 7+] _i.    {Rotate by 8 in 7..126 range}
+      _i 2- _i=                 {Move to previous entry in video table}
+      $fe^ if<>0loop]           {Until all done}
+  ]
+
+  %-2 $a0-                      {WozMon sends ASCII with bit 7 set}
+  [if>=0                        {If printable}
+
+    {-------------------------------------------------------------------+
+    |       PrintChar                                                   |
+    +-------------------------------------------------------------------}
+
+    { Draw ASCII character (32..127) on screen in 5x8 pixels }
+    { and advance cursor position }
+
+    50-                         {Map ASCII code to offset in font table}
+    [if<0 50+ _i= \font32up     {ASCII 32..81}
+     else     _i= \font82up]    {ASCII 82..127}
+    _j= _i 2<< _i+              {Multiply char code by 5}
+    _j+ _j=                     {Add to page address to reach bitmap data}
+
+    Pos \sysArgs4:              {Screen position for character}
+    %-2=                        {Remember this position}
+    6+ Pos=                     {Advance by 6 pixels}
+
+    5 [do _i=                   {Draw character as 5 vertical bit slices}
+      _j 0? \sysArgs2.          {Get bit slice as byte from ROM table}
+      134!                      {SYS call to draw 8 pixels vertically}
+      <_j++ <\sysArgs4++        {Advance to next byte}
+      _i 1- if>0loop]           {Looping}
+
+    %-2                         {Return position for backspace}
+  ]
+
+  ret
+]
+
+{-----------------------------------------------------------------------+
+|       WozMon                                                          |
++-----------------------------------------------------------------------}
+
+*=$ff00
+
+        { Original ZP usage is 24.2B, but that's taken by Gigatron }
+
+   _XAML=$34        _XAML_MINUS1=$33
+   _XAMH=$35
+    _STL=$36         _STL_MINUS1=$35
+    _STH=$37
+      _L=$38           _L_MINUS1=$37
+      _H=$39
+   _YSAV=$3A
+   _MODE=$3B
+
+       { Patches with respect to original are marked [Gigatron] }
+
+     _IN=$200
+
+    _KBD=$D010
+  _KBDCR=$D011
+    _DSP=$D012
+  _DSPCR=$D013
+
+_RESET=*        #_CLD_                  { Clear decimal arithmetic mode.          }
+                #_CLI_
+                #_LDYIM_ #$7F           { Mask for DSP data direction register.   }
+                #_STY_   ##_DSP
+                #_LDAIM_ #$A7           { KBD and DSP control register mask.      }
+                #_STA_   ##_KBDCR
+                #_STA_   ##_DSPCR
+_NOTCR=*        #_CMPIM_ #$DF           { "<-"?                                   }
+                #_BEQ_   #@_BACKSPACE   { Yes.                                    }
+                #_CMPIM_ #$9B           { ESC?                                    }
+                #_BEQ_   #@_ESCAPE      { Yes.                                    }
+                #_INY_                  { Advance text index.                     }
+                #_BPL_   #@_NEXTCHAR    { Auto ESC if > 127.                      }
+_ESCAPE=*       #_LDAIM_ #$DC           { "\".                                    }
+                #_JSR_   ##_ECHO        { Output it.                              }
+_GETLINE=*      #_LDAIM_ #$8D           { CR.                                     }
+                #_JSR_   ##_ECHO        { Output it.                              }
+                #_LDYIM_ #$01           { Initiallize text index.                 }
+_BACKSPACE=*    #_DEY_                  { Back up text index.                     }
+                #_BMI_   #@_GETLINE     { Beyond start of line, reinitialize.     }
+_NEXTCHAR=*     #_LDAIM_ #$00           { [Gigatron] A=0 to read keyboard.        }
+                #_BRK_                  { [Gigatron] Transfer to vCPU for input.  }
+                #_ORAIM_ #$80           { [Gigatron] B7 should be '1'.            }
+                #_BIT_   ##_KBD         { [Gigatron] Was: LDA                     }
+                #_STAAY_ ##_IN          { Add to text buffer.                     }
+                #_JSR_   ##_ECHO        { Display character.                      }
+                #_CMPIM_ #$8D           { CR?                                     }
+                #_BNE_   #@_NOTCR       { No.                                     }
+                #_LDYIM_ #$FF           { Reset text index.                       }
+                #_LDAIM_ #$00           { For XAM mode.                           }
+                #_TAX_                  { 0->X.                                   }
+_SETSTOR=*      #_ASLA_                 { Leaves $7B if setting STOR mode.        }
+_SETMODE=*      #_STAZ_  #_MODE         { $00 = XAM, $7B= STOR,$AE= BLOK XAM      }
+_BLSKIP=*       #_INY_                  { Advance text index.                     }
+_NEXTITEM=*     #_LDAAY_ ##_IN          { Get character.                          }
+                #_CMPIM_ #$8D           { CR?                                     }
+                #_BEQ_   #@_GETLINE     { Yes, done this line.                    }
+                #_CMPIM_ #$AE           { "."?                                    }
+                #_BCC_   #@_BLSKIP      { Skip delimiter.                         }
+                #_BEQ_   #@_SETMODE     { Yes, BLOCK XAM mode.                    }
+                #_CMPIM_ #$BA           { ":"?                                    }
+                #_BEQ_   #@_SETSTOR     { Yes, set STOR mode.                     }
+                #_CMPIM_ #$D2           { "R"?                                    }
+                #_BEQ_   #@_RUN         { Yes, run user program.                  }
+                #_STXZ_  #_L            { $00->L.                                 }
+                #_STXZ_  #_H            {  and H.                                 }
+                #_STYZ_  #_YSAV         { Save Y for comparison.                  }
+_NEXTHEX=*      #_LDAAY_ ##_IN          { Get character for hex test.             }
+                #_EORIM_ #$B0           { Map digits to $0-9.                     }
+                #_CMPIM_ #$0A           { Digit?                                  }
+                #_BCC_   #@_DIG         { Yes.                                    }
+                #_ADCIM_ #$88           { Map letter "A"-"F" to $FA-FF.           }
+                #_CMPIM_ #$FA           { Hex letter?                             }
+                #_BCC_   #@_NOTHEX      { No, character not hex.                  }
+_DIG=*          #_ASLA_                 {                                         }
+                #_ASLA_                 { Hex digit to MSD of A.                  }
+                #_ASLA_                 {                                         }
+                #_ASLA_                 {                                         }
+                #_LDXIM_ #$04           { Shift count.                            }
+_HEXSHIFT=*     #_ASLA_                 { Hex digit left, MSB to carry.           }
+                #_ROLZ_  #_L            { Rotate into LSD.                        }
+                #_ROLZ_  #_H            { Rotate into MSD's.                      }
+                #_DEX_                  { Done 4 shifts?                          }
+                #_BNE_   #@_HEXSHIFT    { No, loop.                               }
+                #_INY_                  { Advance text index.                     }
+                #_BNE_   #@_NEXTHEX     { Always taken. Check next character for hex.}
+_NOTHEX=*       #_CPYZ_  #_YSAV         { Check if L, H empty (no hex digits).    }
+                #_BEQ_   #@_ESCAPE      { Yes, generate  ESC sequence.            }
+                #_BITZ_  #_MODE         { Test MODE byte.                         }
+                #_BVC_   #@_NOTSTOR     { B6 = 0 for STOR, 1 for XAM and BLOCK XAM}
+                #_LDAZ_  #_L            { LSD's of hex data.                      }
+                #_STAIX_ #_STL          { Store at current 'store index'.         }
+                #_INCZ_  #_STL          { Increment store index.                  }
+                #_BNE_   #@_NEXTITEM    { Get next item. (no carry).              }
+                #_INCZ_  #_STH          { Add carry to 'store index' high order.  }
+_TONEXTITEM=*   #_JMP_   ##_NEXTITEM    { Get next command item.                  }
+_RUN=*          #_JMI_   ##_XAML        { Run at current XAM index.               }
+_NOTSTOR=*      #_BMI_   #@_XAMNEXT     { B7 = 0 for XAM, 1 for BLOCK XAM.        }
+                #_LDXIM_ #$02           { Byte count.                             }
+_SETADR=*       #_LDAZX_ #_L_MINUS1     { Copy hex data to                        }
+                #_STAZX_ #_STL_MINUS1   {   'store index'.                        }
+                #_STAZX_ #_XAML_MINUS1  { And to 'XAM index'.                     }
+                #_DEX_                  { Next of 2 bytes.                        }
+                #_BNE_   #@_SETADR      { Loop unless X = 0.                      }
+_NXTPRNT=*      #_BNE_   #@_PRDATA      { NE means no address to print.           }
+                #_LDAIM_ #$8D           { CR.                                     }
+                #_JSR_   ##_ECHO        { Output it.                              }
+                #_LDAZ_  #_XAMH         { 'Examine index' high-order byte.        }
+                #_JSR_   ##_PRBYTE      { Output it in hex format.                }
+                #_LDAZ_  #_XAML         { Low-order 'examine index' byte.         }
+                #_JSR_   ##_PRBYTE      { Output it in hex format.                }
+                #_LDAIM_ #$BA           { ":".                                    }
+                #_JSR_   ##_ECHO        { Output it.                              }
+_PRDATA=*       #_LDAIM_ #$04           { [Gigatron] 4 pixels wide blank.         }
+                #_JSR_   ##_BLANK       { [Gigatron] Output it.                   }
+                #_LDAIX_ #_XAML         { Get data byte at 'examine index'.       }
+                #_JSR_   ##_PRBYTE      { Output it in hex format.                }
+_XAMNEXT=*      #_STXZ_  #_MODE         { 0->MODE (XAM mode).                     }
+                #_LDAZ_  #_XAML         {                                         }
+                #_CMPZ_  #_L            { Compare 'examine index' to hex data.    }
+                #_LDAZ_  #_XAMH         {                                         }
+                #_SBCZ_  #_H            {                                         }
+                #_BCS_   #@_TONEXTITEM  { Not less, so no more data to output.    }
+                #_INCZ_  #_XAML         {                                         }
+                #_BNE_   #@_MOD8CHK     { Increment 'examine index'.              }
+                #_INCZ_  #_XAMH         {                                         }
+_MOD8CHK=*      #_LDAZ_  #_XAML         { Check low-order 'examine index' byte    }
+                #_ANDIM_ #$07           {   For MOD 8= 0                          }
+                #_BPL_   #@_NXTPRNT     { Always taken.                           }
+_PRBYTE=*       #_PHA_                  { Save A for LSD.                         }
+                #_LSRA_                 {                                         }
+                #_LSRA_                 {                                         }
+                #_LSRA_                 { MSD to LSD position.                    }
+                #_LSRA_                 {                                         }
+                #_JSR_   ##_PRHEX       { Output hex digit.                       }
+                #_PLA_                  { Restore A.                              }
+_PRHEX=*        #_ANDIM_ #$0F           { Mask LSD for hex print.                 }
+                #_ORAIM_ #$B0           { Add "0".                                }
+                #_CMPIM_ #$BA           { Digit?                                  }
+                #_BCC_   #@_ECHO        { Yes, output it.                         }
+                #_ADCIM_ #$06           { Add offset for letter.                  }
+_CHAROUT=*
+_ECHO=*         #_PHA_                  { [Gigatron]                              }
+                #_BRK_                  { [Gigatron] Transfer to vCPU for display.}
+                #_PLA_                  { [Gigatron]                              }
+                #_RTS_                  { [Gigatron] Return.                      }
+_BLANK=*        #_CLC_                  { [Gigatron] Advance few pixels so BLOCK  }
+                #_ADCZ_  #<Pos          { [Gigatron]   XAM doesn't wrap around    }
+                #_STAZ_  #<Pos          { [Gigatron]   the 160 pixel wide screen. }
+                #_RTS_                  { [Gigatron]                              }
+                #$00                    { (unused)                                }
+{FFFA}          ##$0000                 { (NMI)                                   }
+{FFFC}          ##_RESET                { (RESET)                                 }
+{FFFE}          ##$0000                 { (IRQ)                                   }
+
+{-----------------------------------------------------------------------+
+|                                                                       |
++-----------------------------------------------------------------------}
+

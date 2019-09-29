@@ -65,6 +65,21 @@ and possibly even Android. As of v0.6.6 it has only been tested on Microsoft Win
 - A C++ compiler that supports modern STL.<br/>
 - Requires the latest version of SDL2 and it's appropriate include/library/shared files.<br/>
 
+For example, on Linux you can do this:
+```
+  sudo apt-get -y install cmake libsdl2-dev
+  git clone https://github.com/kervinck/gigatron-rom
+  cd gigatron-rom/Contrib/at67
+  cmake .
+  make
+  ./gtemuSDL &
+```
+
+For step-by-step instructions on Windows, see this thread in the Gigatron forum:
+https://forum.gigatron.io/viewtopic.php?p=368#p368
+
+This thread also has some advise on building for macOS.
+
 ## Installation
 - After building, copy the executable and SDL2 shared library\/DLL to an appropriate directory;<br/>
   run the executable from there.<br/>

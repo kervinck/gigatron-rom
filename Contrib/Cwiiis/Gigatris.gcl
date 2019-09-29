@@ -1,0 +1,1360 @@
+gcl0x
+
+{ General purpose variable names to re-use:
+  x, y, i, j, from, to, c
+}
+
+{ RAM page 2 }
+[def {DrawStrip: Copies \vAC*4 packed bytes of Strip to Pos. Strip will point
+                 to the byte after Strip on return.}
+  Pos to=
+  $100 Count- c= [do
+    Strip; \sysArgs0:
+    Strip<++ Strip<++ Strip, \sysArgs2.
+    Strip<++
+
+    \SYS_Unpack_56 \sysFn= 56!
+
+    PixelMeta [if<>0
+      \sysArgs0, PixelMeta| \sysArgs0.
+      \sysArgs1, PixelMeta| \sysArgs1.
+      \sysArgs2, PixelMeta| \sysArgs2.
+      \sysArgs3, PixelMeta| \sysArgs3.
+    ]
+
+    to \sysArgs4= 4+ to=
+    \SYS_Draw4_30 \sysFn= 30!
+
+  c<++ c if<>0loop]
+ret] DrawStrip=
+
+[def {DrawTile: Draws 4x4 Image at Pos. Pos will point to the last line of the
+                tile on return.}
+  push
+  1 Count=
+  Image Strip= DrawStrip!
+  Pos>++ DrawStrip!
+  Pos>++ DrawStrip!
+  Pos>++ DrawStrip!
+pop ret] DrawTile=
+
+[def {EraseOldBlock: Use PixelMeta and clear out old blocks. Uses and destroys
+                     OldX, OldY and OldBlock}
+  push
+
+  GetOldPos!
+
+  1 Width=
+  4 Height=
+
+  { Look up the block WORD in the Blocks lookup table }
+  BlockTable OldBlock+ deek OldBlock=
+
+  $fc OldY= [do
+    $fc OldX= [do
+      OldBlock>, $80&
+      [if<>0 Pos,
+        [if<>0 $40& PixelMeta-
+          [if<>0 $0 ClearRect! -$400 Pos+ Pos=]]]
+      Pos 4+ Pos=
+      OldBlock 1<< OldBlock=
+    OldX<++ OldX if<>0loop]
+    $3F0 Pos+ Pos=
+  OldY<++ OldY if<>0loop]
+
+pop ret] EraseOldBlock=
+
+[def {ClearScreen: Clears screen to 16-bit colour \vAC}
+  push
+  c=
+  $0800 Pos= 40 Width= 120 Height=
+  c ClearRect!
+pop ret] ClearScreen=
+
+\vLR>++ ret
+$0300: { RAM page 3 }
+
+[def {DrawBlock: Draws the gigamino specified by Block and Color at X,Y}
+  push
+
+  { Update position }
+  GetPos!
+
+  { Get the block sprite }
+  GetBlock!
+
+  { Look up the block WORD in the Blocks lookup table }
+  BlockTable Block+ deek i=
+
+  { Draw the 16x16 bit-field as block sprites }
+  $fc y= [do
+    $fc x= [do
+      i>, $80&
+      [if<>0 DrawTile! -$300 Pos+ Pos=]
+      Pos 4+ Pos=
+      i 1<< i=
+    x<++ x if<>0loop]
+    $3F0 Pos+ Pos=
+  y<++ y if<>0loop]
+
+pop ret] DrawBlock=
+
+{ Print a 5x8 character on screen with the built-in font
+  Char must be in the 32-127 range (this is not checked) }
+[def {PrintChar}
+  {Map ASCII code to offset in font table}
+  c 82- [if<0 50+ i= \font32up
+            else     i= \font82up] x= {Select low or high page}
+  i 2<< i+             {Multiply by 5}
+  x+ x=  {Add to page address to reach bitmap data for c}
+
+  {Draw 5 vertical slices: 5 using font data}
+  TextColor \sysArgs0:
+  Pos     \sysArgs4=
+  6+      Pos=
+  \SYS_VDrawBits_134 \sysFn=
+  $fb i= [do
+    x 0? x<++ \sysArgs2. 134!
+    \sysArgs4<++
+    i<++ i if<>0loop]
+  ret
+] PrintChar=
+
+[def {ClearRect: Clears (Width*4)*Height rect at Pos to \vAC colour. Pos points
+                 to the line below the rect on return. Note that \vAC actually
+                 needs to be 16-bit ColourColour.}
+  \sysArgs0: \sysArgs2:
+
+  \SYS_Draw4_30 \sysFn=
+
+  $100 Width- c=
+  $40 Width- 2<< i= { Amount to add after drawing each line to get to the next }
+  $100 Height- y= [do
+    c x= [do
+      Pos \sysArgs4= 4+ Pos=
+      30! {SYS_Draw4_30}
+    x<++ x if<>0loop]
+    Pos i+ Pos=
+  y<++ y if<>0loop]
+ret] ClearRect=
+
+\vLR>++ ret
+$0400: { RAM page 4 }
+
+[def {TitleScreen}
+  push
+
+  { We use the top 2 bits of each pixel to store metadata. The MSB indicates
+    whether or not blocks should collide, the LSB indicates whether or not a
+    moving block piece was there (with on or off alternating meaning each move }
+  $00 PixelMeta=
+
+  $2525 ClearScreen!
+
+  { Title screen image is 72x80, so 18 bytes across at packed 6bpp }
+  18 Count=
+  $30a0 Strip= {packedTitle}
+
+  { Hide the last 80 scanlines for incoming scroll animation }
+  $014E v= { The video table index for the last visible scanline - 80 }
+  $B0 y= [do
+    47 v.                         {Video table Y goes from 8..127}
+    v<++ v<++                     {Skip to next Y entry}
+  y<++ y if<>0loop]
+
+  { Scroll title onto screen }
+  { TODO: Could probably save a few bytes here }
+  $302C Pos= { (44, 40), image is (72,80) }
+  80 [do y=
+    DrawStrip!
+    Pos>++
+    Strip 202+ Strip=
+
+    $01EE v=
+    81 y- [do scroll=
+      {[do \videoY, 1& if=0loop]     {Synchronize with video loop}}
+      47 scroll+ v.
+      v 2- v=
+    scroll 1- if>0loop]
+  y 1- if>0loop]
+
+  { Draw logo }
+  $2eC6 {LogoBlocks} BlockTable=
+  $1210 Origin=
+  0 X= Y= Block= Color=
+  $F8 j= [do
+    Color 1- 3& Color= DrawBlock! X 4+ X= Block<++ Block<++
+  j<++ j if<>0loop]
+
+  { Wait for a button press }
+  [do \serialRaw, $80& {~buttonA} if<>0loop]
+pop ret] TitleScreen=
+
+[def {CheckCollision: Checks if Block has a collision at X,Y.
+                      \vAC is non-zero if there's a collision}
+  push
+
+  { Update Pos }
+  GetNewPos!
+
+  { Look up the block WORD in the Blocks lookup table }
+  BlockTable NewBlock+ deek i=
+
+  { Loop over each bit of the block and check that the corresponding screen
+    position is black }
+  $fc y= [do
+    $fc x= [do
+      i>, $80&
+      [if<>0 Pos, $80& [if<>0 pop ret]]
+      Pos 4+ Pos=
+      i 1<< i=
+    x<++ x if<>0loop]
+    $3F0 Pos+ Pos=
+  y<++ y if<>0loop]
+pop 0 ret] CheckCollision=
+
+\vLR>++ ret
+$0500: { RAM page 5 }
+
+[def {GetOldPos: Set Pos to block position from OldX and OldY}
+  OldY 10<< Origin+ Pos=
+  OldX 2<< Pos+ Pos=
+ret] GetOldPos=
+
+[def {RandomBlock: Initialise Block to a random type}
+  push
+  NextColor NewColor= NextBlock NewBlock=
+  \SYS_Random_34 \sysFn= 34! 7&
+  [if<>0
+    i= 1- 3& NextColor=
+    $2fc5 {PieceIndices-1} i+ peek NextBlock=
+  ]
+  DrawNextBlock!
+  0 Y= NewY= PixelMeta= 6 X= NewX=
+pop ret] RandomBlock=
+
+[def {DoInput: Process pad input}
+  push
+
+  { Allow movement when left/right go up }
+  \serialRaw, 3& {buttonRight|buttonLeft} 3-
+  [if=0 Controls 1| Controls=]
+
+  { Handle piece movement }
+  Controls 1& [if<>0
+    \serialRaw, 1& {buttonRight}
+    [if=0 1 else
+      \serialRaw, 2& {buttonLeft}
+      [if=0 -1 else 0]]
+
+    [if<>0
+      X+ NewX=
+      Controls 1- Controls=
+    else
+      { Hold down to increase speed }
+      \serialRaw, $fb^ {~buttonDown}
+      [if=0
+        $ff ControlLoop=
+        1 AddToScore!
+      ]
+    ]
+  ]
+
+  { Allow rotation when A/B go up }
+  \serialRaw, $C0& {buttonA|buttonB} $C0-
+  [if=0 Controls 2| Controls=]
+
+  { Handle piece rotation }
+  Controls 2& [if<>0
+    \serialRaw, $80& {buttonA}
+    [if=0 $2fa0 else
+      \serialRaw, $40& {buttonB}
+      [if=0 $2fa1 else 0]]
+
+    [if<>0
+      Block+ peek NewBlock=
+      Controls 2- Controls=
+    ]
+  ]
+
+pop ret] DoInput=
+
+\vLR>++ ret
+$0600: { RAM page 6 }
+
+[def {ClearRow: Clears the row at Y}
+  push
+  3 X=
+  GetPos!
+  $300 Pos+ Pos=
+  -$400 Pos+ i=
+
+  \SYS_Draw4_30 \sysFn=
+
+  Y 1- 2<< [do y=
+    $f6 x= [do
+      i; \sysArgs0: i<++ i<++ i; \sysArgs2: i<++ i<++
+      Pos \sysArgs4= 4+ Pos=
+      30! {SYS_Draw4_30}
+    x<++ x if<>0loop]
+    -$128 Pos+ Pos=
+    -$128 i+ i=
+  y 1- if<>0loop]
+pop ret] ClearRow=
+
+[def {CheckClears}
+  push
+  0 j=
+  21 [do Y=
+    $f6 c=
+    3 X= [do
+      GetPos! Pos, $80&
+      [if<>0 c<++ X<++ X 13- if<>0loop]
+    ]
+    c [if=0 ClearRow! Y<++ j<++]
+  Y 1- if<>0loop]
+
+  j [if>0 _CalcScore!]
+
+pop ret] CheckClears=
+
+[def {DrawRect: Draws a rectangle of WidthxHeight in colour \vAC at Pos}
+  c=
+
+  { Draw first line }
+  $101 Width- x= i= [do
+    c Pos. Pos<++
+  x<++ x if<>0loop]
+
+  { Draw left and right sides }
+  Pos to= Width- Pos= Pos<++
+  $101 Height- y= [do
+    c Pos. to. Pos>++ to>++
+  y<++ y if<>0loop]
+
+  { Draw last line }
+  [do
+    c Pos. Pos<++
+  i<++ i if<>0loop]
+  c Pos.
+ret] DrawRect=
+
+{ Go to RAM page 8 (7 is sound tables) }
+$08a0 call
+$08a0: { RAM page 8, after screen }
+
+[def { HideTopLines: Hides the top 2 lines of the playfield }
+  { Use the video table to hide the top 2 blocks worth of play field, to
+    hide blocks appearing on the screen }
+  -$0700 Origin+ v= v>, 1<< $fe+ v= { Video table index for the first line }
+  {$0110 v= { Video table index for line 8 }}
+  $f8 i= [do
+    8 v.
+    v<++ v<++
+  i<++ i if<>0loop]
+ret] HideTopLines=
+
+[def { RestoreTopLines: Restores the top 2 lines of the playfield }
+  -$0700 Origin+ v=
+  v>, 7+ y= { Starting line number + 8 }
+  v>, 1<< $fe+ v= { Video table index for the first line }
+  $f8 i= [do
+    y y<++ v.
+    v<++ v<++
+  i<++ i if<>0loop]
+ret] RestoreTopLines=
+
+$09a0 call
+$09a0: { RAM page 9 }
+
+[def { DrawNumberBox: Draws a number display box at Pos with the text at \vAC }
+  push
+  j=
+  Pos from=
+
+  13 Width=
+  10 Height=
+  $3F3F ClearRect!
+
+  $0A00 from+ Pos=
+  $0101 ClearRect!
+
+  from Pos=
+  52 Width=
+  20 Height=
+  $15 DrawRect!
+
+  $003F TextColor=
+
+  $020B from+ Pos=
+  j PrintText!
+
+pop ret] DrawNumberBox=
+
+$0aa0 call
+$0aa0: { RAM page 10 }
+
+[def { DrawNextDigit: Draws digit (radix) \vAC of number from }
+  push
+  j= from j- [if>=0
+    from=
+    $31 c=
+    from [do
+      j-
+      if>=0
+        from=
+        c<++
+        loop
+    ]
+    PrintChar!
+    $30 c=
+  else
+    PrintChar!
+  ]
+  pop ret
+] DrawNextDigit=
+
+[def { _DrawNumber4 - Draws number from at Pos with leading character c }
+  1000 DrawNextDigit!
+   100 DrawNextDigit!
+    10 DrawNextDigit!
+  $30 c=
+     1 DrawNextDigit!
+pop ret] _DrawNumber4=
+
+[def { DrawNumber4 - Draws number \vAC at Pos }
+  push
+  from=
+  $20 c=
+  _DrawNumber4!
+{ pop ret in _DrawNumber4 }] DrawNumber4=
+
+$0ba0 call
+$0ba0: { RAM page 11 }
+
+[def { DrawNumber04 - Draws number \vAC at Pos with leading zero's }
+  push
+  from=
+  $30 c=
+  _DrawNumber4!
+{ pop ret in _DrawNumber4 }] DrawNumber04=
+
+[def { DrawUI }
+  push
+
+  $1C68 { 104, 28 } Pos=
+  $2CA0 {"SCORE"} DrawNumberBox!
+
+  $1C04 { 4, 28 } Pos=
+  $2CA6 {"LEVEL"} DrawNumberBox!
+
+  $5904 { 4, 89 } Pos=
+  $2cac {"LINES"} DrawNumberBox!
+
+  { Draw box for Next display }
+  $5968 { 104, 89 } Pos=
+  5 Width=
+  20 Height=
+  $0000 ClearRect!
+  $5968 Pos=
+  20 Width=
+  $15 DrawRect!
+
+  { Leave TextColor initialised to draw numbers }
+  $3F01 TextColor=
+
+pop ret] DrawUI=
+
+$0ca0 call
+$0ca0: { RAM page 12 }
+
+[def { UpdateDisplay }
+  push
+
+  { Draw level }
+  $270E { 14, 39 } Pos= Speed $e8- DrawNumber4!
+
+  { Draw Lines}
+  $6413 { 19, 100 } Pos= Lines DrawNumber4!
+
+  DrawScore!
+
+pop ret] UpdateDisplay=
+
+[def { _DrawScore }
+  push
+
+  $276B { 107, 39 } Pos= Score2 DrawNumber04!
+  $2783 { 131, 39 } Pos= Score1 DrawNumber04!
+
+pop ret] DrawScore=
+
+[def {GetNewPos: Set Pos to block position from NewX and NewY}
+  NewY 10<< Origin+ Pos=
+  NewX 2<< Pos+ Pos=
+ret] GetNewPos=
+
+$0da0 call
+$0da0: { RAM page 13 }
+
+[def { InitGame }
+  push
+
+  $9090 ClearScreen!
+
+  $2ea0 {Blocks} BlockTable=
+  $1430 { 60, 12 = $143C - (3*4) = $1430 } Origin=
+
+  DrawUI!
+
+  { Clear a 10x22 playfield of 4x4 blocks, so 40x88 }
+  HideTopLines!
+
+  { Draw outline first }
+  $080b Origin+ Pos=
+  42 Width=
+  81 Height=
+  $95 DrawRect!
+
+  { Draw fill afterwards to overwrite the top drawn line and fix collision }
+  Origin 12+ Pos=
+  10 Width=
+  88 Height=
+  $0000 ClearRect!
+
+  { Initialise block, speed and score }
+  $e8 Speed=
+  0 NextColor= NextBlock= Score1= Score2= Lines=
+  $ff Controls= { Control bitfield: bit0=left/right, bit1=a/b }
+
+  { We want this called twice on game start, so once here and then once in the
+    main game loop. }
+  RandomBlock!
+
+pop ret] InitGame=
+
+$0ea0 call
+$0ea0: { RAM page 14 }
+
+[def { GameOver }
+  push
+
+  { Restore the hidden above-the-field spaces }
+  Origin 12+ Pos= 10 Width= 8 Height=
+  $1010 ClearRect!
+
+  { Restore the video table }
+  RestoreTopLines!
+
+  { Clear the playfield. TODO: Do it more slowly }
+  $80C Origin+ Pos= 10 Width= 80 Height=
+  $1515 ClearRect!
+
+  { Wait for a button press }
+  [do \serialRaw, $80& {~buttonA} if<>0loop]
+
+pop ret] GameOver=
+
+$0fa0 call
+$0fa0: { RAM page 15 }
+
+[def {MoveBlock: Draw block in a new position if it's moved}
+  push
+
+  { Do nothing if the piece hasn't moved }
+  X NewX-
+  [if=0 Y NewY-
+    [if=0 Block NewBlock-
+      [if=0 pop 0 ret]]]
+
+  CheckCollision!
+  [if<>0
+    { Restore old position }
+    i=
+    X NewX=
+    Y NewY=
+    Block NewBlock=
+  pop i ret]
+
+  { Backup old position }
+  X OldX= Y OldY= Block OldBlock=
+
+  { Update piece position/rotation }
+  NewX X= NewY Y= NewBlock Block=
+
+  { Update PixelMeta for old piece erasing }
+  PixelMeta $40^ PixelMeta=
+
+  { Draw block and erase old block }
+  DrawBlock! EraseOldBlock!
+
+pop 0 ret] MoveBlock=
+
+$10a0 call
+$10a0: { RAM page 16 }
+
+[def { AddToScore: Adds \vAC to score. \vAC must be no bigger than 9999. }
+  Score1+ Score1=
+  10000 i= Score1 i-
+  [if>=0
+    Score1= Score2 1+ Score2=
+  ]
+ret] AddToScore=
+
+[def {PrintText}
+  push
+  from=
+  [do
+    from, c= {Next character to be printed}
+    if<>0       {Zero termination}
+      from<++   {Advance text pointer}
+      c 10^ [if=0 Pos<. $800 Pos+ Pos=
+                else PrintChar!]
+      loop]
+  pop ret
+] PrintText=
+
+$11a0 call
+$11a0: { RAM page 17 }
+
+[def {GetBlock: Load the address of the block sprite of Color (0-3) in Image}
+  $2d94 {packedBlocks - 12} Image=
+  $ff Color- i= [do
+    Image 12+ Image=
+  i<++ i if<>0loop]
+ret] GetBlock=
+
+[def {GetPos: Set Pos to block position from X and Y}
+  Y 10<< Origin+ Pos=
+  X 2<< Pos+ Pos=
+ret] GetPos=
+
+[def {Wait: Delay \vAC number of frames}
+  i= \frameCount, i+ 255& i=
+  [do \frameCount, i- if<>0loop]
+ret] Wait=
+
+$12a0 call
+$12a0: { RAM page 18 }
+
+[def { _CalcScore: Calculates and adds to the score for j lines (which it also
+                   expects in \vAC) }
+  Lines+ Lines=
+
+  { Update the speed }
+  c=
+  $e7 Speed=
+  c [do
+    Speed<++
+    10-
+  if>0loop]
+
+  { Update the score }
+  $2cb0 { Bonuses - 2 } j+ j+ j=
+  Speed $ed- [do c=
+    j; AddToScore!
+  c 1- if>0loop]
+pop ret] _CalcScore=
+
+$13a0 call
+$13a0: { RAM page 19 }
+
+[def {DrawNextBlock}
+  push
+  $5a6a Pos=
+  4 Width=
+  18 Height=
+  $0000 ClearRect!
+
+  18 Y= 15 X=
+  NextBlock Block= NextColor Color=
+  DrawBlock!
+  NewBlock Block= NewColor Color=
+pop ret] DrawNextBlock=
+
+$14a0 call
+$14a0: { RAM page 20 }
+
+{ Game loop }
+[do
+  TitleScreen!
+  InitGame!
+
+  [do
+    UpdateDisplay!
+    RandomBlock!
+
+    { Initialise block }
+    CheckCollision! CantMove=
+    DrawBlock!
+
+    CantMove [if=0 [do
+      { Reset left/right to allow repeating }
+      Controls 1| Controls=
+
+      Speed ControlLoop= [do
+        { Handle input }
+        DoInput!
+
+        { Draw piece if its moved }
+        MoveBlock!
+
+        { Small delay }
+        1 Wait!
+
+      ControlLoop<++ ControlLoop if<>0loop]
+
+      { Move the piece down and loop if there's no collision }
+      Y 1+ NewY= MoveBlock! [if=0 loop]
+
+      { Set the pixel metadata as solid and redraw block }
+      $80 PixelMeta= DrawBlock!
+    ]
+
+    CheckClears!
+
+    loop]
+  ]
+
+  GameOver!
+
+loop]
+
+{ RAM page 44: Start of data segment }
+$2ca0:
+{"SCORE"}
+$53# $43# $4f# $52# $45# $00#
+{$2ca6: "LEVEL"}
+$4c# $45# $56# $45# $4c# $00#
+{$2cac: "LINES"}
+$4c# $49# $4e# $45# $53# $00#
+{$2cb2: Bonuses}
+$28# $00# { 40 }
+$64# $00# { 100 }
+$2C# $01# { 300 }
+$B0# $04# { 1200 }
+
+$2da0:
+{ packedBlocks: 4 4x4 pixel blocks, packed }
+ $c3# $30# $0c# $c3# $b2# $0c# $c3# $32# $0c# $c3# $30# $0c#
+ $49# $92# $24# $49# $d7# $25# $49# $97# $24# $49# $92# $24#
+ $34# $4d# $d3# $74# $9e# $d3# $74# $4e# $d3# $34# $4d# $d3#
+ $db# $b6# $6d# $db# $f7# $6d# $db# $b7# $6d# $db# $b6# $6d#
+
+$2ea0:
+{Blocks}
+  {00} $44# $44# { I piece }
+  {02} $00# $0F#
+  {04} $60# $44# { L piece }
+  {06} $80# $0E#
+  {08} $20# $62#
+  {10} $E0# $02#
+  {12} $60# $22# { J piece }
+  {14} $E0# $08#
+  {16} $40# $64#
+  {18} $20# $0E#
+  {20} $40# $0E# { T piece }
+  {22} $20# $26#
+  {24} $E0# $04#
+  {26} $64# $04#
+  {28} $60# $06# { O piece }
+  {30} $C0# $06# { S piece }
+  {32} $20# $46#
+  {34} $60# $0C# { Z piece }
+  {36} $40# $26#
+
+{$2ec6: LogoBlocks}
+  {00} $97# $68# {G}
+  {02} $4E# $E4# {I}
+  {04} $97# $68# {G}
+  {06} $F9# $69# {A}
+  {08} $44# $E4# {T}
+  {10} $A9# $69# {R}
+  {12} $4E# $E4# {I}
+  {14} $2C# $34# {S}
+
+$2fa0:
+{Rotations}
+  {00} 02# 02# { I piece }
+  {02} 00# 00#
+  {04} 06# 10# { L piece }
+  {06} 08# 04#
+  {08} 10# 06#
+  {10} 04# 08#
+  {12} 14# 18# { J piece }
+  {14} 16# 12#
+  {16} 18# 14#
+  {18} 12# 16#
+  {20} 22# 26# { T piece }
+  {22} 24# 20#
+  {24} 26# 22#
+  {26} 20# 24#
+  {28} 28# 28# { O piece }
+  {30} 32# 32# { S piece }
+  {32} 30# 30#
+  {34} 36# 36# { Z piece }
+  {36} 34# 34#
+
+{$2fc6: PieceIndices}
+00# 04# 12# 20# 28# 30# 34#
+
+$30a0:
+{packedTitle01}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $59# $96# $5a# $59# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$31a0:
+{packedTitle02}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $59# $96# $5a# $59# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$32a0:
+{packedTitle03}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $59# $96# $5a# $59# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$33a0:
+{packedTitle04}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $59# $96# $5a# $59# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$34a0:
+{packedTitle05}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $59# $96# $5a# $59# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$35a0:
+{packedTitle06}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $59# $96# $5a# $59# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$36a0:
+{packedTitle07}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $59# $56# $56# $59# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$37a0:
+{packedTitle08}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $a9# $5a# $86# $5a# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$38a0:
+{packedTitle09}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $a5# $6a# $19# $cb# $a6# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$39a0:
+{packedTitle10}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $65# $18# $db# $a2# $95# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$3aa0:
+{packedTitle11}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $19# $18# $86# $a1# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$3ba0:
+{packedTitle12}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $59# $69# $9b# $56# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$3ca0:
+{packedTitle13}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $59# $6d# $9b# $5a# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$3da0:
+{packedTitle14}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $59# $09# $9b# $5a# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$3ea0:
+{packedTitle15}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $59# $59# $9b# $5a# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$3fa0:
+{packedTitle16}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $59# $69# $9a# $5a# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$40a0:
+{packedTitle17}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $59# $19# $9b# $5a# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$41a0:
+{packedTitle18}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $59# $19# $9b# $5a# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$42a0:
+{packedTitle19}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $69# $09# $9b# $55# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$43a0:
+{packedTitle20}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $69# $19# $db# $5a# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$44a0:
+{packedTitle21}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $29# $6c# $db# $56# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$45a0:
+{packedTitle22}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $25# $08# $db# $56# $96# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$46a0:
+{packedTitle23}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $a5# $b5# $09# $db# $66# $95# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$47a0:
+{packedTitle24}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $65# $b0# $19# $db# $b6# $95# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$48a0:
+{packedTitle25}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65#
+ $59# $96# $95# $b0# $19# $d7# $b6# $95# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$49a0:
+{packedTitle26}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $6a# $65#
+ $59# $96# $81# $b1# $5d# $d7# $b6# $95# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96#
+
+$4aa0:
+{packedTitle27}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $6a# $65#
+ $59# $96# $95# $60# $18# $d7# $b6# $59# $65# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $55# $96# $65# $59# $96# $65# $59# $96#
+
+$4ba0:
+{packedTitle28}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $6a# $65#
+ $59# $52# $94# $65# $19# $97# $b1# $69# $68# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $55# $96# $65# $59# $96# $65# $59# $96#
+
+$4ca0:
+{packedTitle29}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $6a# $65#
+ $59# $56# $9a# $61# $6c# $c6# $b6# $69# $59# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $55# $96# $65# $59# $96# $65# $59# $96#
+
+$4da0:
+{packedTitle30}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $6a# $65#
+ $59# $55# $9a# $a6# $69# $9a# $a6# $69# $5a# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $55# $96# $65# $59# $96# $65# $59# $96#
+
+$4ea0:
+{packedTitle31}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $6a# $65#
+ $59# $55# $9a# $a6# $69# $95# $a6# $69# $5a# $59# $96# $65# $59# $96#
+ $65# $59# $96# $65# $55# $96# $65# $59# $96# $65# $59# $96#
+
+$4fa0:
+{packedTitle32}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $a5# $56# $96# $65# $59# $96# $65# $59# $96# $65# $59# $6a# $65#
+ $55# $59# $db# $b6# $59# $d6# $b6# $69# $9a# $56# $96# $65# $59# $96#
+ $65# $59# $96# $65# $55# $96# $65# $59# $96# $65# $59# $96#
+
+$50a0:
+{packedTitle33}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $a5# $56# $96# $65# $59# $96# $65# $59# $96# $65# $59# $6a# $65#
+ $55# $59# $d7# $76# $09# $c2# $b6# $6d# $db# $56# $96# $65# $59# $96#
+ $65# $59# $96# $65# $55# $96# $65# $59# $96# $65# $59# $96#
+
+$51a0:
+{packedTitle34}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $a5# $56# $96# $65# $59# $96# $65# $59# $96# $65# $59# $aa# $65#
+ $05# $54# $82# $61# $19# $c2# $b6# $19# $97# $55# $96# $65# $59# $96#
+ $65# $59# $96# $a5# $5a# $96# $65# $59# $96# $65# $59# $96#
+
+$52a0:
+{packedTitle35}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $a5# $56# $96# $65# $59# $96# $65# $59# $96# $65# $59# $a6# $65#
+ $55# $55# $56# $55# $6d# $c6# $b6# $15# $86# $56# $96# $65# $59# $96#
+ $65# $59# $96# $a5# $5a# $96# $65# $59# $96# $65# $59# $96#
+
+$53a0:
+{packedTitle36}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $a5# $56# $96# $65# $59# $96# $65# $59# $96# $65# $59# $e2# $69#
+ $55# $55# $86# $61# $18# $c6# $b6# $19# $9b# $a6# $96# $65# $59# $96#
+ $65# $59# $96# $25# $50# $96# $65# $59# $96# $65# $59# $96#
+
+$54a0:
+{packedTitle37}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $a5# $56# $96# $65# $59# $96# $65# $59# $96# $65# $99# $a6# $a9#
+ $55# $55# $db# $a6# $59# $96# $b1# $6d# $9b# $a1# $95# $65# $59# $96#
+ $65# $59# $96# $25# $50# $95# $65# $59# $96# $65# $59# $96#
+
+$55a0:
+{packedTitle38}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $85# $52# $96# $65# $59# $96# $65# $59# $96# $65# $9a# $a6# $69#
+ $5a# $59# $da# $66# $58# $d6# $a6# $69# $9b# $b1# $95# $65# $59# $96#
+ $65# $59# $96# $15# $00# $94# $65# $59# $96# $65# $59# $96#
+
+$56a0:
+{packedTitle39}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $96# $9a# $56# $96# $65# $59# $96# $65# $59# $96# $6a# $9a# $a6# $69#
+ $aa# $56# $db# $66# $08# $96# $b6# $6d# $db# $b6# $95# $65# $59# $96#
+ $65# $59# $56# $00# $00# $00# $65# $59# $96# $65# $59# $96#
+
+$57a0:
+{packedTitle40}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $6a# $9a# $a6# $95# $65# $59# $96# $65# $59# $96# $29# $a9# $a6# $69#
+ $9a# $aa# $9a# $a6# $59# $d6# $a6# $69# $db# $66# $94# $65# $59# $96#
+ $65# $59# $55# $56# $55# $55# $55# $59# $96# $65# $59# $96#
+
+$58a0:
+{packedTitle41}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59#
+ $69# $9a# $a6# $69# $65# $59# $96# $65# $49# $aa# $69# $f9# $a7# $a9#
+ $9a# $fa# $e9# $66# $58# $9a# $a6# $69# $9b# $b1# $95# $65# $59# $96#
+ $65# $19# $54# $96# $45# $59# $55# $55# $96# $65# $59# $96#
+
+$59a0:
+{packedTitle42}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $55#
+ $54# $9a# $96# $69# $5a# $59# $96# $65# $59# $aa# $65# $fa# $a7# $e9#
+ $9f# $fa# $a9# $25# $04# $96# $b6# $6d# $9b# $a1# $95# $65# $59# $96#
+ $65# $15# $54# $c5# $95# $55# $55# $55# $96# $65# $59# $96#
+
+$5aa0:
+{packedTitle43}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $96# $5a# $a6#
+ $55# $55# $a6# $28# $9a# $56# $96# $65# $59# $aa# $65# $aa# $a6# $e9#
+ $9f# $aa# $be# $1a# $54# $d6# $b6# $6d# $da# $66# $18# $65# $59# $96#
+ $65# $55# $09# $99# $21# $50# $56# $55# $95# $65# $59# $96#
+
+$5ba0:
+{packedTitle44}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $56# $45# $56#
+ $55# $14# $a5# $29# $89# $a2# $95# $65# $59# $aa# $65# $a9# $a6# $a9#
+ $9a# $fe# $a9# $5a# $55# $9a# $b6# $6d# $9a# $a6# $6d# $65# $59# $96#
+ $65# $50# $09# $56# $26# $54# $15# $50# $95# $65# $59# $96#
+
+$5ca0:
+{packedTitle45}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $56# $44# $55#
+ $51# $54# $55# $15# $89# $a2# $94# $65# $59# $56# $55# $a9# $96# $69#
+ $9a# $a6# $e9# $6a# $6c# $c6# $66# $6c# $9b# $a6# $69# $65# $59# $96#
+ $65# $00# $50# $42# $05# $00# $00# $00# $94# $65# $59# $96#
+
+$5da0:
+{packedTitle46}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $55# $54# $55#
+ $51# $54# $55# $51# $85# $a2# $a4# $65# $59# $56# $15# $a5# $52# $69#
+ $9a# $a6# $ea# $b6# $6d# $96# $61# $6d# $db# $b6# $15# $5a# $59# $96#
+ $65# $15# $14# $45# $51# $14# $55# $55# $96# $65# $59# $96#
+
+$5ea0:
+{packedTitle47}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $59# $01# $55# $05#
+ $00# $55# $05# $00# $95# $51# $a4# $65# $59# $55# $9a# $66# $19# $9a#
+ $a6# $a9# $db# $b6# $6d# $d6# $b6# $6d# $db# $b6# $15# $5a# $59# $96#
+ $65# $29# $18# $86# $61# $18# $46# $55# $96# $65# $59# $96#
+
+$5fa0:
+{packedTitle48}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $49# $01# $00# $00#
+ $00# $01# $00# $00# $45# $a1# $95# $65# $59# $5a# $d6# $b6# $6d# $db#
+ $b6# $6d# $c2# $25# $5c# $c2# $2a# $5c# $db# $66# $14# $4a# $59# $96#
+ $65# $69# $59# $96# $65# $55# $55# $59# $96# $65# $59# $96#
+
+$60a0:
+{packedTitle49}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $55# $96# $40# $10#
+ $04# $45# $15# $04# $05# $55# $96# $65# $59# $56# $d6# $b6# $6d# $db#
+ $b6# $6d# $c2# $26# $08# $82# $15# $5c# $db# $66# $14# $9a# $52# $96#
+ $65# $69# $05# $55# $55# $55# $55# $59# $96# $65# $59# $96#
+
+$61a0:
+{packedTitle50}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $55# $96# $96# $65#
+ $59# $96# $65# $05# $46# $55# $96# $65# $59# $56# $d6# $b6# $6d# $db#
+ $b6# $6d# $c2# $b6# $5d# $82# $15# $58# $86# $51# $68# $9a# $a2# $94#
+ $65# $59# $05# $56# $65# $55# $55# $59# $96# $65# $59# $96#
+
+$62a0:
+{packedTitle51}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $55# $96# $a5# $65#
+ $59# $56# $55# $59# $56# $55# $96# $65# $59# $56# $d6# $66# $5d# $db#
+ $b6# $6d# $82# $b1# $09# $81# $15# $04# $45# $a1# $29# $8a# $a2# $28#
+ $65# $59# $05# $56# $65# $59# $56# $59# $96# $65# $59# $96#
+
+$63a0:
+{packedTitle52}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $55# $96# $65# $60#
+ $05# $41# $10# $54# $65# $59# $96# $65# $59# $5a# $d6# $66# $5d# $db#
+ $b6# $6d# $82# $61# $05# $41# $15# $18# $46# $61# $28# $8a# $a2# $28#
+ $5a# $59# $05# $56# $65# $59# $56# $59# $96# $65# $59# $96#
+
+$64a0:
+{packedTitle53}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $65# $55# $95# $a5# $65#
+ $55# $96# $55# $95# $65# $59# $02# $55# $59# $05# $d6# $66# $5d# $db#
+ $ba# $6d# $96# $55# $01# $55# $05# $04# $86# $51# $68# $8a# $a2# $28#
+ $4a# $5a# $05# $55# $65# $55# $55# $55# $96# $65# $59# $96#
+
+$65a0:
+{packedTitle54}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $25# $50# $95# $a5# $65#
+ $55# $56# $50# $55# $55# $05# $00# $00# $50# $55# $96# $61# $19# $9b#
+ $b1# $6d# $54# $55# $55# $55# $05# $04# $81# $61# $18# $85# $a1# $28#
+ $5a# $50# $59# $40# $55# $55# $55# $55# $95# $65# $59# $96#
+
+$66a0:
+{packedTitle55}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $25# $00# $94# $a5# $65#
+ $55# $56# $50# $55# $00# $00# $00# $00# $50# $55# $db# $26# $58# $d6#
+ $b6# $19# $55# $10# $04# $41# $10# $04# $00# $50# $14# $45# $51# $14#
+ $41# $55# $59# $56# $55# $51# $55# $55# $55# $65# $59# $96#
+
+$67a0:
+{packedTitle56}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $15# $00# $94# $65# $60#
+ $55# $56# $50# $01# $00# $00# $00# $40# $15# $58# $9b# $61# $59# $db#
+ $b6# $6d# $46# $10# $04# $41# $10# $04# $81# $61# $68# $9a# $a6# $15#
+ $01# $50# $59# $96# $55# $55# $55# $55# $55# $65# $59# $96#
+
+$68a0:
+{packedTitle57}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $00# $00# $54# $55# $10#
+ $04# $01# $10# $58# $45# $51# $01# $40# $55# $59# $9a# $a6# $59# $9a#
+ $a6# $69# $9b# $65# $59# $41# $00# $00# $81# $b5# $6d# $db# $b6# $59#
+ $00# $50# $55# $55# $55# $55# $55# $55# $55# $55# $59# $96#
+
+$69a0:
+{packedTitle58}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $00# $00# $58# $16# $60#
+ $55# $15# $00# $58# $96# $65# $55# $40# $55# $59# $db# $b6# $6d# $db#
+ $b6# $69# $9a# $11# $04# $41# $00# $00# $81# $b5# $6d# $db# $b6# $59#
+ $40# $50# $55# $55# $55# $55# $55# $55# $55# $55# $59# $96#
+
+$6aa0:
+{packedTitle59}
+ $65# $59# $96# $65# $59# $96# $65# $59# $96# $00# $00# $58# $55# $55#
+ $a9# $55# $50# $55# $56# $55# $55# $41# $60# $59# $db# $b6# $6d# $db#
+ $b6# $6d# $9b# $41# $54# $16# $00# $00# $80# $b5# $ad# $db# $b6# $05#
+ $41# $10# $04# $41# $10# $04# $41# $60# $59# $55# $59# $96#
+
+$6ba0:
+{packedTitle60}
+ $65# $59# $96# $65# $59# $96# $65# $59# $56# $15# $50# $59# $55# $55#
+ $55# $55# $55# $55# $56# $55# $55# $81# $65# $55# $9a# $b5# $69# $ef#
+ $a6# $69# $db# $96# $69# $46# $55# $01# $80# $b5# $6d# $db# $b6# $05#
+ $40# $10# $04# $41# $10# $58# $96# $65# $05# $65# $59# $96#
+
+$6ca0:
+{packedTitle61}
+ $65# $59# $96# $65# $59# $96# $65# $59# $56# $00# $50# $19# $96# $65#
+ $59# $56# $05# $54# $55# $55# $55# $80# $65# $55# $96# $b5# $69# $db#
+ $b6# $ad# $9b# $b1# $6d# $96# $55# $55# $40# $a5# $65# $99# $a6# $59#
+ $41# $60# $59# $96# $65# $59# $96# $65# $59# $65# $59# $96#
+
+$6da0:
+{packedTitle62}
+ $65# $59# $96# $65# $59# $96# $65# $59# $02# $80# $65# $69# $96# $65#
+ $59# $56# $55# $55# $55# $55# $01# $80# $65# $59# $d6# $b6# $6a# $db#
+ $b6# $ad# $9b# $61# $58# $81# $05# $00# $15# $95# $65# $18# $96# $65#
+ $00# $50# $59# $41# $60# $55# $96# $65# $55# $65# $59# $96#
+
+$6ea0:
+{packedTitle63}
+ $65# $59# $96# $65# $59# $96# $65# $59# $5a# $56# $60# $19# $96# $65#
+ $59# $96# $55# $51# $55# $45# $01# $40# $65# $59# $d6# $66# $69# $db#
+ $b6# $ad# $9b# $15# $58# $55# $00# $04# $81# $b6# $5d# $95# $b6# $69#
+ $55# $50# $59# $96# $55# $a9# $96# $65# $55# $65# $59# $96#
+
+$6fa0:
+{packedTitle64}
+ $65# $59# $96# $65# $59# $96# $65# $59# $05# $96# $65# $19# $96# $65#
+ $59# $96# $55# $55# $41# $05# $04# $40# $65# $59# $d6# $66# $69# $db#
+ $b6# $ad# $9b# $15# $58# $55# $00# $54# $81# $a1# $69# $96# $a5# $69#
+ $56# $50# $59# $56# $50# $a9# $96# $65# $55# $65# $59# $96#
+
+$70a0:
+{packedTitle65}
+ $65# $59# $96# $65# $59# $96# $65# $69# $05# $96# $61# $18# $86# $65#
+ $59# $56# $55# $55# $14# $10# $00# $40# $55# $59# $ab# $65# $ad# $ab#
+ $b6# $6e# $9b# $15# $58# $56# $00# $54# $9b# $50# $65# $db# $66# $69#
+ $56# $50# $59# $96# $55# $55# $96# $55# $55# $65# $59# $96#
+
+$71a0:
+{packedTitle66}
+ $65# $59# $96# $65# $59# $96# $55# $65# $59# $96# $61# $14# $9a# $61#
+ $59# $96# $65# $55# $40# $10# $54# $40# $55# $59# $9b# $65# $ad# $9b#
+ $b6# $6d# $9b# $15# $54# $01# $00# $54# $9a# $65# $19# $9a# $a6# $6d#
+ $96# $61# $59# $56# $55# $59# $55# $55# $55# $65# $59# $96#
+
+$72a0:
+{packedTitle67}
+ $65# $59# $96# $65# $59# $5a# $95# $15# $58# $86# $61# $14# $9a# $11#
+ $58# $96# $65# $59# $55# $55# $59# $81# $55# $59# $9b# $65# $59# $9b#
+ $b6# $6d# $9b# $55# $51# $00# $05# $04# $94# $b6# $19# $56# $a6# $6d#
+ $95# $65# $59# $15# $60# $59# $56# $65# $59# $65# $59# $96#
+
+$73a0:
+{packedTitle68}
+ $65# $59# $96# $65# $59# $59# $95# $15# $58# $96# $61# $18# $86# $11#
+ $04# $96# $65# $59# $81# $65# $05# $41# $55# $59# $5b# $65# $59# $9b#
+ $a6# $6d# $5b# $51# $14# $45# $51# $05# $d6# $b6# $59# $97# $65# $6d#
+ $56# $65# $55# $45# $65# $59# $56# $65# $59# $65# $59# $96#
+
+$74a0:
+{packedTitle69}
+ $65# $59# $96# $65# $59# $59# $96# $65# $59# $81# $61# $18# $46# $10#
+ $58# $95# $65# $59# $96# $15# $04# $55# $45# $65# $59# $96# $65# $59#
+ $96# $65# $5a# $91# $65# $59# $96# $65# $99# $a6# $69# $9a# $46# $55#
+ $55# $51# $14# $45# $05# $54# $55# $55# $55# $65# $59# $96#
+
+$75a0:
+{packedTitle70}
+ $65# $59# $96# $65# $59# $59# $56# $60# $59# $96# $b5# $6d# $46# $60#
+ $69# $9a# $65# $59# $96# $65# $59# $56# $65# $19# $db# $66# $6c# $db#
+ $b6# $6d# $9a# $a6# $69# $9a# $a6# $69# $9a# $a6# $69# $9a# $56# $55#
+ $55# $51# $68# $45# $55# $55# $55# $55# $55# $65# $59# $96#
+
+$76a0:
+{packedTitle71}
+ $65# $59# $96# $65# $59# $59# $56# $60# $05# $81# $65# $59# $56# $60#
+ $6d# $86# $65# $59# $96# $65# $59# $96# $65# $6d# $db# $b6# $6d# $db#
+ $b6# $6d# $db# $66# $68# $9a# $a6# $69# $9a# $a6# $69# $86# $11# $54#
+ $55# $51# $68# $45# $61# $55# $55# $55# $55# $55# $59# $96#
+
+$77a0:
+{packedTitle72}
+ $65# $59# $96# $65# $59# $56# $56# $10# $54# $81# $65# $18# $41# $60#
+ $19# $46# $61# $59# $96# $65# $05# $96# $65# $6d# $db# $b6# $6d# $db#
+ $aa# $6d# $9b# $96# $65# $59# $96# $65# $59# $96# $66# $49# $51# $55#
+ $55# $51# $68# $5a# $61# $55# $55# $65# $59# $55# $59# $96#
+
+$78a0:
+{packedTitle73}
+ $65# $59# $96# $65# $59# $55# $55# $10# $04# $96# $65# $18# $41# $60#
+ $15# $45# $51# $14# $86# $51# $54# $55# $55# $69# $9a# $a6# $69# $9a#
+ $a6# $69# $59# $55# $55# $15# $45# $65# $59# $96# $65# $4a# $52# $01#
+ $45# $51# $14# $5a# $51# $50# $55# $55# $55# $55# $59# $96#
+
+$79a0:
+{packedTitle74}
+ $65# $59# $96# $65# $65# $59# $45# $51# $04# $41# $60# $18# $81# $61#
+ $18# $45# $61# $18# $86# $61# $14# $55# $95# $65# $59# $96# $65# $9a#
+ $a6# $65# $5a# $51# $55# $55# $65# $19# $da# $b6# $19# $85# $52# $04#
+ $45# $51# $14# $9a# $a6# $51# $54# $45# $51# $54# $59# $96#
+
+$7aa0:
+{packedTitle75}
+ $65# $59# $96# $55# $65# $59# $96# $65# $19# $96# $15# $58# $96# $65#
+ $58# $c6# $66# $58# $86# $61# $05# $96# $61# $18# $86# $61# $18# $5b#
+ $a1# $69# $9a# $55# $55# $40# $05# $54# $9b# $61# $59# $56# $51# $55#
+ $45# $51# $14# $85# $96# $64# $54# $55# $55# $55# $55# $96#
+
+$7ba0:
+{packedTitle76}
+ $65# $59# $96# $65# $65# $05# $96# $65# $59# $96# $65# $59# $96# $65#
+ $19# $c6# $66# $04# $96# $65# $05# $96# $65# $59# $56# $65# $69# $5a#
+ $a5# $69# $5a# $55# $15# $55# $05# $00# $96# $01# $00# $45# $51# $14#
+ $05# $51# $64# $85# $96# $14# $45# $05# $54# $40# $55# $95#
+
+$7ca0:
+{packedTitle77}
+ $65# $59# $96# $65# $65# $05# $81# $65# $19# $86# $65# $59# $96# $65#
+ $59# $96# $61# $58# $96# $65# $59# $96# $a5# $69# $9a# $a6# $69# $9a#
+ $a6# $69# $5a# $55# $69# $55# $55# $55# $95# $56# $55# $9a# $a6# $69#
+ $86# $a6# $69# $86# $66# $14# $55# $55# $55# $55# $55# $95#
+
+$7da0:
+{packedTitle78}
+ $65# $59# $aa# $96# $65# $19# $81# $65# $19# $45# $51# $58# $86# $61#
+ $58# $9a# $61# $19# $db# $6a# $59# $96# $a5# $69# $9a# $a6# $69# $af#
+ $a6# $55# $5a# $a5# $69# $55# $55# $55# $65# $55# $55# $9a# $b6# $6d#
+ $db# $b6# $6d# $9a# $b6# $55# $55# $55# $95# $65# $59# $95#
+
+$7ea0:
+{packedTitle79}
+ $65# $59# $5a# $96# $65# $58# $41# $10# $14# $56# $51# $14# $86# $61#
+ $18# $86# $61# $18# $86# $65# $59# $96# $a5# $69# $9a# $a6# $69# $9a#
+ $66# $55# $95# $a6# $55# $9a# $56# $55# $55# $59# $56# $da# $b6# $6d#
+ $db# $ba# $6d# $96# $a6# $55# $55# $55# $96# $65# $a9# $96#
+
+$7fa0:
+{packedTitle80}
+ $65# $59# $59# $96# $55# $05# $41# $10# $04# $96# $65# $59# $81# $61#
+ $18# $86# $61# $18# $86# $61# $59# $96# $a5# $69# $9a# $a6# $69# $9a#
+ $a6# $56# $55# $55# $55# $9a# $56# $55# $55# $55# $55# $da# $b6# $59#
+ $d6# $66# $58# $96# $a6# $55# $55# $55# $55# $55# $55# $95#
+

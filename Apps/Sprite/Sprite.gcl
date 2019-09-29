@@ -1,0 +1,96 @@
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Demonstration of accelerated sprite rendering                   |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+gcl0x                           {GCL version for this program}
+
+{-----------------------------------------------------------------------+
+|                       RAM page 2                                      |
++-----------------------------------------------------------------------}
+
+$800 p=                         {Top of screen}
+
+\romType, \romTypeValue_ROMv3-  {Test for ROMv3}
+[if<0 [do p. 1+ loop]]          {Halt and blink pixel on older ROM}
+
+[def
+  {. . . . . .|. . . . . .
+   . . . . O O|O O O . . .
+   . . O O O O|O O O O O .
+   . O O O O .|O O O O . O
+   . O O O . @|@ O O . @ @
+   . O O O . @|@ O O . @ @
+   . O O O O .|O O O O . O
+   . O O O O O|O O O O O O
+   . O O O O O|O O O O O O
+   . O O . . O|O . O O . O
+   . O . . O O|. . O . . O
+   . . . . . .|. . . . . .}
+
+   0#  0#  0#  0#  0#  0#       {Left side}
+   0#  0#  0#  0#  3#  3#
+   0#  0#  3#  3#  3#  3#
+   0#  3#  3#  3#  3# 63#
+   0#  3#  3#  3# 63# 48#
+   0#  3#  3#  3# 63# 48#
+   0#  3#  3#  3#  3# 63#
+   0#  3#  3#  3#  3#  3#
+   0#  3#  3#  3#  3#  3#
+   0#  3#  3#  0#  0#  3#
+   0#  3#  0#  0#  3#  3#
+   0#  0#  0#  0#  0#  0# 244#
+
+   0#  0#  0#  0#  0#  0#       {Right side}
+   3#  3#  3#  0#  0#  0#
+   3#  3#  3#  3#  3#  0#
+   3#  3#  3#  3# 63#  3#
+  48#  3#  3# 63# 48# 48#
+  48#  3#  3# 63# 48# 48#
+   3#  3#  3#  3# 63#  3#
+   3#  3#  3#  3#  3#  3#
+   3#  3#  3#  3#  3#  3#
+   3#  0#  3#  3#  0#  3#
+   0#  0#  3#  0#  0#  3#
+   0#  0#  0#  0#  0#  0# 244#
+
+] Image=
+
+[def
+  \SYS_Sprite6_v3_64 \sysFn:    {Normal sprite drawing}
+  0 o=                          {Origin correction}
+  1 u=                          {Direction}
+  ret
+] FaceRight=
+
+[def
+  \SYS_Sprite6x_v3_64 \sysFn:   {X-flipped sprite drawing}
+  6 o=                          {Origin correction}
+  -1 u=                         {Direction}
+  ret
+] FaceLeft=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 3                                      |
++-----------------------------------------------------------------------}
+$0300:
+
+FaceRight!                      {Moving right}
+256 v=                          {And moving down}
+
+[do
+  [do \videoY, 179^ if<>0loop]  {Wait for start of vertical blank}
+
+  Image \sysArgs0: p o+         {Setup SYS call}
+  64!                           {Draw first half}
+  64!                           {Draw second half}
+
+  p u+ v+ p=                    {Update position}
+  255& 148^ [if=0 FaceLeft!]    {Reached right border}
+  p<,       [if=0 FaceRight!]   {Reached left border}
+  p>, 116^  [if=0 v- v=]        {Reached bottom border}
+  p>, 8^    [if=0 v- v=]        {Reached top border}
+loop]
+

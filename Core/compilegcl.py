@@ -6,6 +6,7 @@
 # 2018-05-04 (Cwiiis)  Initial version
 # 2018-06-11 (marcelk) Use JSON interface file instead of symbol table dump
 # 2018-06-24 (at67)    Optional output directory
+# 2019-07-07 (marcelk) Remove stack trace suppression
 #
 #-----------------------------------------------------------------------
 
@@ -18,9 +19,6 @@ from os.path import basename, splitext
 
 import asm
 import gcl0x as gcl
-
-# One-for-all error handler (don't throw scary stack traces at the user)
-sys.excepthook = lambda exType, exValue, exTrace: print('%s: %s' % (exType.__name__,  exValue))
 
 #-----------------------------------------------------------------------
 #       Command line arguments
@@ -44,7 +42,8 @@ userCode = asm.symbol('userCode')
 userVars = asm.symbol('userVars')
 
 print('Compiling file %s' % args.gclSource)
-program = gcl.Program(userCode, 'Main', forRom=False)
+program = gcl.Program('Main', forRom=False)
+program.org(userCode)
 asm.align(1)          # Forces default maximum ROM size
 asm.zpReset(userVars) # User variables can start here
 for line in open(args.gclSource).readlines():

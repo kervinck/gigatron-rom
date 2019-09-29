@@ -1,0 +1,48 @@
+   $00 BRK   $01 ORA   -------   -------   -------   $05 ORA   $06 ASL   -------   $08 PHP   $09 ORA   $0A ASL   -------   -------   $0D ORA   $0E ASL   -------
+         -   ($DD,X)   -------   -------   -------       $DD       $DD   -------         -      #$DD         A   -------   -------     $DDDD     $DDDD   -------
+
+   $10 BPL   $11 ORA   -------   -------   -------   $15 ORA   $16 ASL   -------   $18 CLC   $19 ORA   -------   -------   -------   $1D ORA   $1E ASL   -------
+    PC+$DD   ($DD),Y   -------   -------   -------     $DD,X     $DD,X   -------         -   $DDDD,Y   -------   -------   -------   $DDDD,X   $DDDD,X   -------
+
+   $20 JSR   $21 AND   -------   -------   $24 BIT   $25 AND   $26 ROL   -------   $28 PLP   $29 AND   $2A ROL   -------   $2C BIT   $2D AND   $2E ROL   -------
+     $DDDD   ($DD,X)   -------   -------       $DD       $DD       $DD   -------         -      #$DD         A   -------     $DDDD     $DDDD     $DDDD   -------
+
+   $30 BMI   $31 AND   -------   -------   -------   $35 AND   $36 ROL   -------   $38 SEC   $39 AND   -------   -------   -------   $3D AND   $3E ROL   -------
+    PC+$DD   ($DD),Y   -------   -------   -------     $DD,X     $DD,X   -------         -   $DDDD,Y   -------   -------   -------   $DDDD,X   $DDDD,X   -------
+
+   $40 RTI   $41 EOR   -------   -------   -------   $45 EOR   $46 LSR   -------   $48 PHA   $49 EOR   $4A LSR   -------   $4C JMP   $4D EOR   $4E LSR   -------
+         -   ($DD,X)   -------   -------   -------       $DD       $DD   -------         -      #$DD         A   -------     $DDDD     $DDDD     $DDDD   -------
+
+   $50 BVC   $51 EOR   -------   -------   -------   $55 EOR   $56 LSR   -------   $58 CLI   $59 EOR   -------   -------   -------   $5D EOR   $5E LSR   -------
+    PC+$DD   ($DD),Y   -------   -------   -------     $DD,X     $DD,X   -------         -   $DDDD,Y   -------   -------   -------   $DDDD,X   $DDDD,X   -------
+
+   $60 RTS   $61 ADC   -------   -------   -------   $65 ADC   $66 ROR   -------   $68 PLA   $69 ADC   $6A ROR   -------   $6C JMP   $6D ADC   $6E ROR   -------
+         -   ($DD,X)   -------   -------   -------       $DD       $DD   -------         -      #$DD         A   -------   ($DDDD)     $DDDD     $DDDD   -------
+
+   $70 BVS   $71 ADC   -------   -------   -------   $75 ADC   $76 ROR   -------   $78 SEI   $79 ADC   -------   -------   -------   $7D ADC   $7E ROR   -------
+    PC+$DD   ($DD),Y   -------   -------   -------     $DD,X     $DD,X   -------         -   $DDDD,Y   -------   -------   -------   $DDDD,X   $DDDD,X   -------
+
+   -------   $81 STA   -------   -------   $84 STY   $85 STA   $86 STX   -------   $88 DEY   -------   $8A TXA   -------   $8C STY   $8D STA   $8E STX   -------
+   -------   ($DD,X)   -------   -------       $DD       $DD       $DD   -------         -   -------         -   -------     $DDDD     $DDDD     $DDDD   -------
+
+   $90 BCC   $91 STA   -------   -------   $94 STY   $95 STA   $96 STX   -------   $98 TYA   $99 STA   $9A TXS   -------   -------   $9D STA   -------   -------
+    PC+$DD   ($DD),Y   -------   -------     $DD,X     $DD,X     $DD,Y   -------         -   $DDDD,Y         -   -------   -------   $DDDD,X   -------   -------
+
+   $A0 LDY   $A1 LDA   $A2 LDX   -------   $A4 LDY   $A5 LDA   $A6 LDX   -------   $A8 TAY   $A9 LDA   $AA TAX   -------   $AC LDY   $AD LDA   $AE LDX   -------
+      #$DD   ($DD,X)      #$DD   -------       $DD       $DD       $DD   -------         -      #$DD         -   -------     $DDDD     $DDDD     $DDDD   -------
+
+   $B0 BCS   $B1 LDA   -------   -------   $B4 LDY   $B5 LDA   $B6 LDX   -------   $B8 CLV   $B9 LDA   $BA TSX   -------   $BC LDY   $BD LDA   $BE LDX   -------
+    PC+$DD   ($DD),Y   -------   -------     $DD,X     $DD,X     $DD,Y   -------         -   $DDDD,Y         -   -------   $DDDD,X   $DDDD,X   $DDDD,Y   -------
+
+   $C0 CPY   $C1 CMP   -------   -------   $C4 CPY   $C5 CMP   $C6 DEC   -------   $C8 INY   $C9 CMP   $CA DEX   -------   $CC CPY   $CD CMP   $CE DEC   -------
+      #$DD   ($DD,X)   -------   -------       $DD       $DD       $DD   -------         -      #$DD         -   -------     $DDDD     $DDDD     $DDDD   -------
+
+   $D0 BNE   $D1 CMP   -------   -------   -------   $D5 CMP   $D6 DEC   -------   $D8 CLD   $D9 CMP   -------   -------   -------   $DD CMP   $DE DEC   -------
+    PC+$DD   ($DD),Y   -------   -------   -------     $DD,X     $DD,X   -------         -   $DDDD,Y   -------   -------   -------   $DDDD,X   $DDDD,X   -------
+
+   $E0 CPX   $E1 SBC   -------   -------   $E4 CPX   $E5 SBC   $E6 INC   -------   $E8 INX   $E9 SBC   $EA NOP   -------   $EC CPX   $ED SBC   $EE INC   -------
+      #$DD   ($DD,X)   -------   -------       $DD       $DD       $DD   -------         -      #$DD         -   -------     $DDDD     $DDDD     $DDDD   -------
+
+   $F0 BEQ   $F1 SBC   -------   -------   -------   $F5 SBC   $F6 INC   -------   $F8 SED   $F9 SBC   -------   -------   -------   $FD SBC   $FE INC   -------
+    PC+$DD   ($DD),Y   -------   -------   -------     $DD,X     $DD,X   -------         -   $DDDD,Y   -------   -------   -------   $DDDD,X   $DDDD,X   -------
+

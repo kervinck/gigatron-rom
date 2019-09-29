@@ -35,6 +35,13 @@ import json
 #       label('loop')           loop:
 #       bne('loop')                     bne  loop
 #       bra([AC])                       bra  [ac]
+#       ctrl(0x30)                      ctrl $30
+#       ctrl(X)                         ctrl x
+#       ctrl(Y, 0x30)                   ctrl y,$30
+#       ctrl(Y, X)                      ctrl y,x
+#       ctrl(Y, Xpp)                    ctrl y,x++
+#       ctrl($30, X)                    ctrl $30,x      ; Also copies AC into X
+#       ctrl($30, Y)                    ctrl $30,y      ; Also copies AC into Y
 
 X   = '__x__'
 Y   = '__y__'
@@ -44,14 +51,14 @@ IN  = '__in__'
 AC  = '__ac__'
 
 # Mnemonics for Gigatron native 8-bit instruction set
-def nop ():               _assemble(_opLD, AC)
+def nop (dummy=None):     _assemble(_opLD, AC)
 def ld  (a, b=AC):        _assemble(_opLD,  a, b)
 def anda(a, b=AC):        _assemble(_opAND, a, b)
 def ora (a, b=AC):        _assemble(_opOR,  a, b)
 def xora(a, b=AC):        _assemble(_opXOR, a, b)
 def adda(a, b=AC):        _assemble(_opADD, a, b)
 def suba(a, b=AC):        _assemble(_opSUB, a, b)
-def jmpy(a):              _assemble(_opJ|_jL,  a)
+def _jmpy(a):             _assemble(_opJ|_jL,  a)
 def bgt (a):              _assemble(_opJ|_jGT, a)
 def blt (a):              _assemble(_opJ|_jLT, a)
 def bne (a):              _assemble(_opJ|_jNE, a)
@@ -62,6 +69,12 @@ def bra (a):              _assemble(_opJ|_jS,  a)
 def st  (a, b=None, c=None):
   if isinstance(a, list): _assemble(_opST, AC, b, a)
   else:                   _assemble(_opST, a,  c, b)
+def ctrl(a, b=None):
+  if a in [X, Y] and b:   _assemble(_opST|_busRAM, [a, b], None)
+  else:                   _assemble(_opST|_busRAM, [a], b)
+def jmp(a, b):
+  assert a is Y
+  _jmpy(b)
 
 bpl = bge # Alias
 bmi = blt # Alias
@@ -91,23 +104,36 @@ def define(name, newValue):
   _symbols[name] = newValue
 
 def symbol(name):
-  return _symbols[name]
+  """Lookup a symbol, return None if not defined"""
+  return _symbols[name] if name in _symbols else None
+
+def has(x):
+  """Useful primitive"""
+  return x is not None
 
 def lo(name):
-  _refsL.append((name, _romSize))
-  return 0 # placeholder
+  if isinstance(name, int):
+    return name & 255
+  else:
+    _refsL.append((name, _romSize))
+    return 0 # placeholder
 
 def hi(name):
-  _refsH.append((name, _romSize))
-  return 0 # placeholder
+  if isinstance(name, int):
+    return (name >> 8) & 255
+  else:
+    _refsH.append((name, _romSize))
+    return 0 # placeholder
 
-def align(n, chunkSize=0x10000):
+def align(m=0x100, chunkSize=0x10000):
   """Insert nops to align with chunk boundary"""
-  global _romSize, _maxRomSize
-  _maxRomSize = 0x10000
-  while _romSize % n > 0:
+  global _maxRomSize
+  n = (m - pc()) % m
+  comment = 'filler' if n==1 else '%d fillers' % n
+  while pc() % m > 0:
     nop()
-  _maxRomSize = min(_maxRomSize, _romSize + chunkSize)
+    comment = C(comment)
+  _maxRomSize = min(0x10000, pc() + chunkSize)
 
 def wait(n):
   """Insert delay sequence of n cycles. Might clobber AC"""
@@ -143,10 +169,17 @@ def zpReset(startFrom=1):
   global _zpSize
   _zpSize = startFrom
 
+def fillers(until=256, instruction=nop):
+  """Insert fillers until given page offset"""
+  n = until - (pc() & 255)
+  comment = 'filler' if n==1 else '%d fillers' % n
+  for i in range(n):
+    instruction(0)
+    comment = C(comment)
+
 def trampoline():
   """Read 1 byte from ROM page"""
-  while pc()&255 < 256-5:
-    nop()
+  fillers(256-5)
   bra(AC)                       #13
   """
      It is possible to make this section 2 bytes shorter
@@ -159,32 +192,38 @@ def trampoline():
   C('|                                   |')
   ld(hi('lupReturn'), Y)        #15
   C('| Trampoline for page $%04x lookups |' % (pc()&~255))
-  jmpy(lo('lupReturn'))         #17
+  jmp(Y,lo('lupReturn'))        #17
   C('|                                   |')
   st([lo('vAC')])               #18
   C('+-----------------------------------+')
+  align(1, 0x100)
 
 def end():
   """Resolve symbols and write output"""
-  errors = 0
+  global _errors
 
   for name, where in _refsL:
     if name in _symbols:
-      _rom1[where] ^= _symbols[name] & 255 # xor allows some label tricks
+      _rom1[where] += _symbols[name] # adding allows some label tricks
+      _rom1[where] &= 255
     else:
       print 'Error: Undefined symbol %s' % repr(name)
-      errors += 1
+      _symbols[name] = 0 # No more errors
+      _errors += 1
 
   for name, where in _refsH:
     if name in _symbols:
       _rom1[where] += _symbols[name] >> 8
     else:
       print 'Error: Undefined symbol %s' % repr(name)
-      errors += 1
+      _errors += 1
 
-  if errors:
-    print '%d error(s)' % errors
+  if _errors:
+    print '%d error(s)' % _errors
+    print
     exit()
+
+  align(1)
 
 #------------------------------------------------------------------------
 #       Behind the scenes
@@ -196,6 +235,7 @@ _symbols, _refsL, _refsH = {}, [], []
 _labels = {} # Inverse of _symbols, but only when made with label(). For disassembler
 _comments = {}
 _rom0, _rom1 = [], []
+_errors = 0
 
 # General instruction layout
 _maskOp   = 0b11100000
@@ -309,7 +349,7 @@ _mnemonics = [ 'ld', 'anda', 'ora', 'xora', 'adda', 'suba', 'st', 'j' ]
 def _hexString(val):
   return '$%02x' % val
 
-def disassemble(opcode, operand, address=None):
+def disassemble(opcode, operand, address=None, lastOpcode=None):
   text = _mnemonics[opcode >> 5] # (74LS155)
   isStore = (opcode & _maskOp) == _opST
 
@@ -328,7 +368,7 @@ def disassemble(opcode, operand, address=None):
 
   # Decode bus mode (74LS139)
   if opcode & _maskBus == _busD:   bus = _hexString(operand)
-  if opcode & _maskBus == _busRAM: bus = '$??' if isStore else _ea
+  if opcode & _maskBus == _busRAM: bus = None if isStore else _ea
   if opcode & _maskBus == _busAC:  bus = 'ac'
   if opcode & _maskBus == _busIN:  bus = 'in'
 
@@ -344,12 +384,13 @@ def disassemble(opcode, operand, address=None):
     if opcode & _maskCc == _jLE: text = 'ble  '
     if address is not None and opcode & _maskCc != _jL and opcode & _maskBus == _busD:
       # We can calculate the destination address
-      # XXX Except when the previous instruction is a far jump (jmp y,...)
       lo, hi = address & 255, address >> 8
       if lo == 255: # When branching from $xxFF, we still end up in the next page
         hi = (hi + 1) & 255
       destination = (hi << 8) + operand
-      if destination in _labels:
+      if lastOpcode & (_maskOp|_maskCc) == _opJ|_jL:
+        bus = '$%02x' % operand
+      elif destination in _labels:
         bus = _labels[destination][-1]
       else:
         bus = '$%04x' % destination
@@ -361,6 +402,8 @@ def disassemble(opcode, operand, address=None):
         text = '%-4s %s' % (text, _ea)
       else:
         text = '%-4s %s,%s' % (text, bus, _ea)
+      if bus is None:                  # Write/read combination means I/O control
+         text = 'ctrl %s' % _ea[1:-1]  # Strip the brackets
       if reg != 'ac' and reg != 'out': # X and Y are not muted
         text += ',' + reg
     else:
@@ -375,11 +418,12 @@ def disassemble(opcode, operand, address=None):
   return text
 
 def _emit(opcode, operand):
-  global _romSize, _maxRomSize
+  global _romSize, _maxRomSize, _errors
   if _romSize >= _maxRomSize:
       disassembly = disassemble(opcode, operand)
       print '%04x %02x%02x  %s' % (_romSize, opcode, operand, disassembly)
       print 'Error: Program size limit exceeded'
+      _errors += 1
       _maxRomSize = 0x10000 # Extend to full address space to prevent more of the same errors
   _rom0.append(opcode)
   _rom1.append(operand)
@@ -401,6 +445,7 @@ def _emit(opcode, operand):
     print 'Warning: large propagation delay (conditional branch with RAM on bus)'
 
 def loadBindings(symfile):
+  # Load JSON file into symbol table
   global _symbols
   with open(symfile) as file:
     for (name, value) in json.load(file).items():
@@ -432,6 +477,7 @@ def writeRomFiles(sourceFile):
     repeats, previous, postponed = 0, None, None
     maxRepeat = 3
 
+    lastOpcode = None
     for instruction in zip(_rom0, _rom1):
       # Check if there is a label defined for this address
       label = _labels[address][-1] + ':' if address in _labels else ''
@@ -452,7 +498,7 @@ def writeRomFiles(sourceFile):
 
       if repeats <= maxRepeat:
         opcode, operand = instruction
-        disassembly = disassemble(opcode, operand, address)
+        disassembly = disassemble(opcode, operand, address, lastOpcode)
         if comment:
           line = '%-13s %04x %02x%02x  %-16s ;%s\n' % (label, address, opcode, operand, disassembly, comment)
         else:
@@ -469,6 +515,7 @@ def writeRomFiles(sourceFile):
         postponed = 14*' '+'* %d times\n' % (1+repeats)
 
       address += 1
+      lastOpcode = opcode
 
     if postponed:
       file.write(postponed)

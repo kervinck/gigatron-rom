@@ -1,0 +1,63 @@
+======================================================
+vCPU: The virtual 16-bit CPU for Gigatron applications
+======================================================
+
+vCPU is the interpreted 16-bit virtual processor running in the dead
+time of the video/sound loop.
+
+This file is an *extract* from Docs/GCL-language.txt. GCL and vCPU
+are closely tied together. For a detailed explanation of both,
+please refer to that document.
+
+-----------------
+Programming model
+-----------------
+
+vAC     ACcumulator (16-bits)
+vPC     Program Counter (16-bits)
+vLR     Link Register (16-bits)
+vSP     Stack Pointer (8-bits)
+
+----------------------
+vCPU instruction table
+----------------------
+
+Mnem. Encoding  #C Description
+----- --------- -- -----------
+ST    $5E DD    16 Store byte in zero page ([D]=vAC&256)
+STW   $2B DD    20 Store word in zero page ([D],[D+1]=vAC&255,vAC>>8)
+STLW  $EC DD    26 Store word in stack frame ([vSP+D],[vSP+D+1]=vAC&255,vAC>>8)
+LD    $1A DD    18 Load byte from zero page (vAC=[D])
+LDI   $59 DD    16 Load immediate small positive constant (vAC=D)
+LDWI  $11 LL HH 20 Load immediate word constant (vAC=$HHLL)
+LDW   $21 DD    20 Word load from zero page (vAC=[D]+256*[D+1])
+LDLW  $EE DD    26 Load word from stack frame (vAC=[vSP+D]+256*[vSP+D+1])
+ADDW  $99 DD    28 Word addition with zero page (vAC+=[D]+256*[D+1])
+SUBW  $B8 DD    28 Word subtraction with zero page (vAC-=[D]+256*[D+1])
+ADDI  $E3 DD    28 Add small positive constant (vAC+=D)
+SUBI  $E6 DD    28 Subtract small positive constant (vAC-=D)
+LSLW  $E9       28 Shift left ('ADDW vAC' will not work!) (vAC<<=1)
+INC   $93 DD    16 Increment zero page byte ([D]++)
+ANDI  $82 DD    16 Logical-AND with small constant (vAC&=D)
+ANDW  $F8 DD    28 Word logical-AND with zero page (vAC&=[D]+256*[D+1])
+ORI   $88 DD    14 Logical-OR with small constant (vAC|=D)
+ORW   $FA DD    28 Word logical-OR with zero page (vAC|=[D]+256*[D+1])
+XORI  $8C DD    14 Logical-XOR with small constant (vAC^=D)
+XORW  $FC DD    26 Word logical-XOR with zero page (vAC^=[D]+256*[D+1])
+PEEK  $AD       26 Read byte from memory (vAC=[vAC])
+DEEK  $F6       28 Read word from memory (vAC=[vAC]+256*[vAC+1])
+POKE  $F0 DD    28 Write byte in memory ([[D+1],[D]]=vAC&255)
+DOKE  $F3 DD    28 Write word in memory ([[D+1],[D]],[[D+1],[D]+1]=vAC&255,vAC>>8)
+LUP   $7F DD    26 ROM lookup, needs trampoline in target page (vAC=ROM[vAC+D])
+BRA   $90 DD    14 Branch unconditionally (vPC=(vPC&0xff00)+D)
+BCC   $35 CC DD 28 Test vAC and branch conditionally. CC can be
+                     EQ=$3F, NE=$72, LT=$50, GT=$4D, LE=$56, GE=$53
+CALL  $CF DD    26 Goto address but remember vPC (vLR,vPC=vPC+2,[D]+256*[D+1]-2)
+RET   $FF       16 Leaf return (vPC=vLR-2)
+PUSH  $75       26 Push vLR on stack ([vSP-2],v[vSP-1],vSP=vLR&255,vLR>>8,vLR-2)
+POP   $63       26 Pop address from stack (vLR,vSP=[vSP]+256*[vSP+1],vSP+2)
+ALLOC $DF DD    14 Create or destroy stack frame (vSP+=D)
+SYS   $B4 DD   20+ Native function call using at most 2*T cycles, D=270-max(14,T)
+DEF   $CD DD    18 Define data or code (vAC,vPC=vPC+2,(vPC&0xff00)+D)
+
+-- End of document --

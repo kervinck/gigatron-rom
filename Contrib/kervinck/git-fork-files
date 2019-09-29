@@ -1,0 +1,92 @@
+#!/bin/sh
+#-----------------------------------------------------------------------
+#
+#  git-fork-files -- Make local forks of files while preserving history
+#
+# 2019-07-02 (marcelk) Initial version as shell script
+#
+#-----------------------------------------------------------------------
+
+# Based on:
+#   https://stackoverflow.com/questions/16937359/git-copy-file-preserving-history
+#
+#  Why this works
+#
+#  You will end up with a revision history like this:
+#
+#   ORIG_HEAD
+#     /    \
+# SAVED  ALTERNATE
+#     \    /
+#     MERGED
+#       |
+#    RESTORED
+
+# Check if new files don't exist already
+for F in "$@"; do
+  if [ ! -f "$F" ]
+  then
+    echo 1>&2 "$0: $F isn't a file"
+    exit 10
+  fi
+  if [ -f "$F".forked ]
+  then
+    echo 1>&2 "$0: $F.forked already exists"
+    exit 10
+  fi
+  if [ -f "$F".forked.$$ ]
+  then
+    echo 1>&2 "$0: $F.forked.$$ already exists"
+    exit 10
+  fi
+done
+
+# git mv foo bar
+for F in "$@"; do
+  git mv "$F" "$F".forked
+done
+
+# git commit -n
+message="(git-fork-files) Creating:"
+for F in "$@"; do
+  message="$message $F.forked"
+done
+git commit -n -m "$message"
+echo
+
+# SAVED=`git rev-parse HEAD`
+saved=$(git rev-parse HEAD)
+
+# git reset --hard HEAD^
+git reset --hard HEAD^
+
+# git mv foo foo-magic
+for F in "$@"; do
+  git mv "$F" "$F".forked.$$
+done
+
+# git commit -n
+git commit -n -m "(git-fork-files) Saving: $*"
+echo
+
+# git merge $SAVED # This will generate conflicts
+git merge "$saved"
+
+# git commit -a -n # Trivially resolved like this
+git commit -a -n -m "(git-fork-files) Merge and resolve conflict"
+echo
+
+# git mv foo-magic foo
+for F in "$@"; do
+  git mv "$F".forked.$$ "$F"
+done
+
+echo "New files:"
+for F in "$@"; do
+  echo \"$F.forked\"
+done
+
+# git commit -n
+echo
+echo "Rename the new files and then commit all with:"
+echo git commit -n -m \""Forking: $*"\"

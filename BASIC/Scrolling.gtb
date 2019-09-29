@@ -1,0 +1,10 @@
+9 MODE2:P=257:Q=337:R=417
+10 POKEP,-X:POKEQ,X
+20 POKER,X:X=X-1:GOTO10
+30'
+31'Simple scrolling demo.
+32'Timing is critical,
+33'and BASIC is a bit too
+34'slow for very complex
+35'or smooth scrolling.
+36'It is still possible!
