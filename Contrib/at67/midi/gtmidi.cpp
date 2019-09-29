@@ -8,6 +8,8 @@
 #include <string>
 #include <algorithm>
 
+#include "../memory.h"
+
 
 // 64K is maximum size, (good luck getting it into a Gigatron)
 #define MAX_MIDI_BUFFER_SIZE  0x10000
@@ -357,10 +359,10 @@ int main(int argc, char* argv[])
                 // Commands
                 switch(format)
                 {
-                    case Format::vCPU: outputvCPUcommand(outfile, 0xD0, charCount); outputvCPUcommand(outfile, segment & 0x00FF, charCount); outputvCPUcommand(outfile, (segment & 0xFF00) >>8, charCount); break;
-                    case Format::GCL:  outputGCLcommand(outfile, 0xD0, charCount);  outputGCLcommand(outfile, segment & 0x00FF, charCount);  outputGCLcommand(outfile, (segment & 0xFF00) >>8, charCount);  break;
-                    case Format::CPP:  outputCPPcommand(outfile, 0xD0, charCount);  outputCPPcommand(outfile, segment & 0x00FF, charCount);  outputCPPcommand(outfile, (segment & 0xFF00) >>8, charCount);  break;
-                    case Format::PY:   outputPYcommand(outfile, 0xD0, charCount);   outputPYcommand(outfile, segment & 0x00FF, charCount);   outputPYcommand(outfile, (segment & 0xFF00) >>8, charCount);   break;                
+                    case Format::vCPU: outputvCPUcommand(outfile, 0xD0, charCount); outputvCPUcommand(outfile, LO_BYTE(segment), charCount); outputvCPUcommand(outfile, HI_BYTE(segment), charCount); break;
+                    case Format::GCL:  outputGCLcommand(outfile, 0xD0, charCount);  outputGCLcommand(outfile, LO_BYTE(segment), charCount);  outputGCLcommand(outfile, HI_BYTE(segment), charCount);  break;
+                    case Format::CPP:  outputCPPcommand(outfile, 0xD0, charCount);  outputCPPcommand(outfile, LO_BYTE(segment), charCount);  outputCPPcommand(outfile, HI_BYTE(segment), charCount);  break;
+                    case Format::PY:   outputPYcommand(outfile, 0xD0, charCount);   outputPYcommand(outfile, LO_BYTE(segment), charCount);   outputPYcommand(outfile, HI_BYTE(segment), charCount);   break;                
                 }
                 // Old segment footer
                 switch(format)
@@ -386,10 +388,10 @@ int main(int argc, char* argv[])
         {
             switch(format)
             {
-                case Format::vCPU: outputvCPUcommand(outfile, 0xD0, charCount); outputvCPUcommand(outfile, startAddress & 0x00FF, charCount); outputvCPUcommand(outfile, (startAddress & 0xFF00) >>8, charCount); break;
-                case Format::GCL:  outputGCLcommand(outfile, 0xD0, charCount);  outputGCLcommand(outfile, startAddress & 0x00FF, charCount);  outputGCLcommand(outfile, (startAddress & 0xFF00) >>8, charCount);  break;
-                case Format::CPP:  outputCPPcommand(outfile, 0xD0, charCount);  outputCPPcommand(outfile, startAddress & 0x00FF, charCount);  outputCPPcommand(outfile, (startAddress & 0xFF00) >>8, charCount);  break;
-                case Format::PY:   outputPYcommand(outfile, 0xD0, charCount);   outputPYcommand(outfile, startAddress & 0x00FF, charCount);   outputPYcommand(outfile, (startAddress & 0xFF00) >>8, charCount);   break;                
+                case Format::vCPU: outputvCPUcommand(outfile, 0xD0, charCount); outputvCPUcommand(outfile, LO_BYTE(startAddress), charCount); outputvCPUcommand(outfile, HI_BYTE(startAddress), charCount); break;
+                case Format::GCL:  outputGCLcommand(outfile, 0xD0, charCount);  outputGCLcommand(outfile, LO_BYTE(startAddress), charCount);  outputGCLcommand(outfile, HI_BYTE(startAddress), charCount);  break;
+                case Format::CPP:  outputCPPcommand(outfile, 0xD0, charCount);  outputCPPcommand(outfile, LO_BYTE(startAddress), charCount);  outputCPPcommand(outfile, HI_BYTE(startAddress), charCount);  break;
+                case Format::PY:   outputPYcommand(outfile, 0xD0, charCount);   outputPYcommand(outfile, LO_BYTE(startAddress), charCount);   outputPYcommand(outfile, HI_BYTE(startAddress), charCount);   break;                
             }
         }
 

@@ -3,6 +3,8 @@
 #include <fstream>
 #include <sstream>
 
+#include "../../memory.h"
+
 
 #define GT1TOROM_MAJOR_VERSION "0.2"
 #define GT1TOROM_MINOR_VERSION "0"
@@ -24,7 +26,7 @@ bool writeRomDataWithTrampoline(const std::string& outputFilename0, const std::s
         uint16_t address = startAddress + i + trampolineOffset;
 
         // Write ROM trampoline
-        if((address & 0x00FF) == TRAMPOLINE_START)
+        if(LO_BYTE(address) == TRAMPOLINE_START)
         {
             static uint8_t trampolineOpcode[]  = {0xFE, 0xFC, 0x14, 0xE0, 0xC2};
             static uint8_t trampolineOperand[] = {0x00, 0xFD, 0x04, 0x65, 0x18};
@@ -50,7 +52,7 @@ bool writeRomDataWithTrampoline(const std::string& outputFilename0, const std::s
         }
         
         // Don't write default data after last trampoline
-        if((address & 0x00FF) != TRAMPOLINE_START  ||  !_default)
+        if(LO_BYTE(address) != TRAMPOLINE_START  ||  !_default)
         {
             static char nativeLoad[2] = {0x00, 0x00};
             outfile0.write(&nativeLoad[0], 1);
@@ -134,7 +136,7 @@ int main(int argc, char* argv[])
     ss >> startAddress;
 
     if(!writeRomDataWithTrampoline(outputFilename0, outputFilename1, outfile0, outfile1, startAddress, gt1Size, false)) return 1;
-    if(!writeRomDataWithTrampoline(outputFilename0, outputFilename1, outfile0, outfile1, startAddress, TRAMPOLINE_START + 1 - (startAddress & 0x00FF), true)) return 1;
+    if(!writeRomDataWithTrampoline(outputFilename0, outputFilename1, outfile0, outfile1, startAddress, TRAMPOLINE_START + 1 - LO_BYTE(startAddress), true)) return 1;
 
     fprintf(stderr, "%s success : next available address : 0x%04X\n", GT1TOROM_VERSION_STR, startAddress - 1);
 

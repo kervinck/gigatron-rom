@@ -38,7 +38,11 @@
 #define MAX_GTB_LINE_SIZE     32
 #define NUM_GTB_LINES_PER_ROW 3
 
+#define LO_BYTE(a) (a & 0x00FF)
+#define HI_BYTE(a) ((a >>8) & 0x00FF)
+#define HI_MASK(a) (a & 0xFF00)
 
+ 
 namespace Memory
 {
     enum FitType {FitSmallest, FitLargest, FitAscending, NumFitTypes};

@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 
-#define VSYNC_START    -36
+#define VSYNC_START     -36
 #define VSYNC_RATE       60
 #define SCAN_LINES       521
 #define HLINE_START      0
@@ -14,9 +14,9 @@
 #define VSYNC_TIMING_60  0.0166667
 
 #define CLOCK_FREQ   6250000
-#define CLOCK_RESET -3
+#define CLOCK_RESET -2
 
-#define STARTUP_DELAY_CLOCKS    (CLOCK_FREQ * 2)
+#define STARTUP_DELAY_CLOCKS    (CLOCK_FREQ * 1)
 #define CPU_STALL_CLOCKS        500000
 #define SINGLE_STEP_STALL_TIME  1000
 

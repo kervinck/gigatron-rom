@@ -1,5 +1,5 @@
-# gtemuSDL
-gtemuSDL is an emulator, a cross assembler for both vCPU and Native asm code, a debugger, a monitor<br/>
+# gtemuAT67
+gtemuAT67 is an emulator, a cross assembler for both vCPU and Native asm code, a debugger, a monitor<br/>
 and a real time controller for the Gigatron TTL microcomputer; written in C++ using SDL2.<br/>
 This project provides support for Microsoft Windows and should be compatible with Linux, MacOS<br/>
 and possibly even Android. As of v0.6.6 it has only been tested on Microsoft Windows10 and Linux.<br/>

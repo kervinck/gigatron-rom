@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.7)
 
-project(gtemuSDL)
+project(gtemuAT67)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
@@ -20,9 +20,9 @@ set(sources ${sources})
 
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-    add_executable(gtemuSDL WIN32 dirent/dirent.h inih/INIReader.h rs232/rs232.h ${headers} rs232/rs232-win.c ${sources})
+    add_executable(gtemuAT67 WIN32 dirent/dirent.h inih/INIReader.h rs232/rs232.h ${headers} rs232/rs232-win.c ${sources})
 else()
-    add_executable(gtemuSDL inih/INIReader.h rs232/rs232.h ${headers} rs232/rs232-linux.c ${sources})
+    add_executable(gtemuAT67 inih/INIReader.h rs232/rs232.h ${headers} rs232/rs232-linux.c ${sources})
 endif()
 
-target_link_libraries(gtemuSDL ${SDL2_LIBRARY} ${SDL2MAIN_LIBRARY})
+target_link_libraries(gtemuAT67 ${SDL2_LIBRARY} ${SDL2MAIN_LIBRARY})

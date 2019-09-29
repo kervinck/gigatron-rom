@@ -21,10 +21,12 @@
 namespace Graphics
 {
     int _width, _height;
+    int _xpos = 0, _ypos = 0;
     bool _fullScreen = false;
     bool _resizable = false;
     bool _borderless = true;
     bool _vSync = false;
+    bool _fixedSize = false;
 
     bool _displayHelpScreen = false;
     uint8_t _displayHelpScreenAlpha = 0;
@@ -36,7 +38,6 @@ namespace Graphics
     SDL_Window* _window = NULL;
     SDL_Renderer* _renderer = NULL;
     SDL_Texture* _screenTexture = NULL;
-    SDL_Surface* _screenSurface = NULL;
     SDL_Texture* _helpTexture = NULL;
     SDL_Surface* _helpSurface = NULL;
     SDL_Surface* _fontSurface = NULL;
@@ -50,7 +51,6 @@ namespace Graphics
     SDL_Window* getWindow(void) {return _window;}
     SDL_Renderer* getRenderer(void) {return _renderer;}
     SDL_Texture* getScreenTexture(void) {return _screenTexture;}
-    SDL_Surface* getScreenSurface(void) {return _screenSurface;}
     SDL_Texture* getHelpTexture(void) {return _helpTexture;}
     SDL_Surface* getHelpSurface(void) {return _helpSurface;}
     SDL_Surface* getFontSurface(void) {return _fontSurface;}
@@ -197,8 +197,10 @@ namespace Graphics
 
     void initialise(void)
     {
+        // HLINE sync error bar
         for(int i=0; i<GIGA_HEIGHT; i++) _hlineTiming[i] = 0xFF00FF00;
 
+        // Colour palette
         for(int i=0; i<COLOUR_PALETTE; i++)
         {
             int r = (i>>0) & 3;
@@ -221,10 +223,13 @@ namespace Graphics
         SDL_GetCurrentDisplayMode(0, &DM);
         _width = DM.w;
         _height = DM.h;
+        _xpos = 0;
+        _ypos = 0;
         _fullScreen = false;
         _resizable = false;
         _borderless = true;
         _vSync = false;
+        _fixedSize = false;
 
         // Parse graphics config file
         INIReader iniReader(GRAPHICS_CONFIG_INI);
@@ -260,11 +265,17 @@ namespace Graphics
                         _borderless = strtol(result.c_str(), nullptr, 10);
                         getKeyAsString(sectionString, "VSync", "0", result);        
                         _vSync = strtol(result.c_str(), nullptr, 10);
+                        getKeyAsString(sectionString, "FixedSize", "0", result);        
+                        _fixedSize = strtol(result.c_str(), nullptr, 10);
 
                         getKeyAsString(sectionString, "Width", "DESKTOP", result);
-                         _width = (result == "DESKTOP") ? _width : _width = strtol(result.c_str(), nullptr, 10);
+                        _width = (result == "DESKTOP") ? _width : _width = strtol(result.c_str(), nullptr, 10);
                         getKeyAsString(sectionString, "Height", "DESKTOP", result);
                         _height = (result == "DESKTOP") ? _height : _height = strtol(result.c_str(), nullptr, 10);
+                        getKeyAsString(sectionString, "XPos", "0", result);
+                        _xpos = strtol(result.c_str(), nullptr, 10);
+                        getKeyAsString(sectionString, "YPos", "0", result);
+                        _ypos = strtol(result.c_str(), nullptr, 10);
                     }
                     break;
                 }
@@ -293,27 +304,21 @@ namespace Graphics
 
             SDL_SetWindowResizable(_window, (SDL_bool)_resizable);
             SDL_SetWindowBordered(_window, (SDL_bool)!_borderless);
+            SDL_SetWindowPosition(_window, _xpos, _ypos);
         }
+
+        if(_fixedSize) SDL_RenderSetLogicalSize(_renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
 
         // VSync
         char vsChar = char(_vSync + '0');
         SDL_SetHint(SDL_HINT_RENDER_VSYNC, &vsChar);
 
         // Screen texture
-        _screenTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, SCREEN_WIDTH, SCREEN_HEIGHT);
+        _screenTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
         if(_screenTexture == NULL)
         {
             SDL_Quit();
             fprintf(stderr, "Graphics::initialise() :  failed to create SDL texture.\n");
-            _EXIT_(EXIT_FAILURE);
-        }
-
-        // Screen surface
-        _screenSurface = SDL_GetWindowSurface(_window);
-        if(_screenSurface == NULL)
-        {
-            SDL_Quit();
-            fprintf(stderr, "Graphics::initialise() :  failed to create SDL surface.\n");
             _EXIT_(EXIT_FAILURE);
         }
 
@@ -326,7 +331,7 @@ namespace Graphics
             fprintf(stderr, "Graphics::initialise() : failed to create SDL font surface, you're probably missing 'EmuFont-96x48.bmp' in the current directory/path.\n");
             _EXIT_(EXIT_FAILURE);
         }
-        _fontSurface = SDL_ConvertSurfaceFormat(fontSurface, _screenSurface->format->format, NULL);
+        _fontSurface = SDL_ConvertSurfaceFormat(fontSurface, SDL_PIXELFORMAT_ARGB8888, NULL);
         SDL_FreeSurface(fontSurface);
         if(_fontSurface == NULL)
         {
@@ -590,7 +595,7 @@ namespace Graphics
             //drawText(std::string("LEDS:"), _pixels, 0, 0, 0xFFFFFFFF, false, 0);
             sprintf(str, "FPS %5.1f  XOUT %02X IN %02X", 1.0f / Timing::getFrameTime(), Cpu::getXOUT(), Cpu::getIN());
             drawText(std::string(str), _pixels, 0, FONT_CELL_Y, 0xFFFFFFFF, false, 0);
-            drawText("Mode:        Free:", _pixels, 0, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+            drawText("Mode         RAM ", _pixels, 0, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
             sprintf(str, "Hex  ");
             if(Editor::getHexEdit()) sprintf(str, "Edit ");
             if(Editor::getEditorMode() == Editor::Load)         sprintf(str, "Load   ");
@@ -600,8 +605,9 @@ namespace Graphics
             else if(Editor::getEditorMode() == Editor::GigaPS2) sprintf(str, "PS2Giga");
             drawText(std::string(str), _pixels, 30, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
             sprintf(str, "%d", Memory::getFreeRAM());
-            drawText(std::string(str), _pixels, 108, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
-            drawText(std::string(VERSION_STR), _pixels, 30, 472, 0xFFFFFFFF, false, 0);
+            drawText(std::string(str), _pixels, RAM_START, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+            sprintf(str, " ROM %02x", Cpu::getRomType());
+            drawText(std::string(VERSION_STR) + std::string(str), _pixels, 0, 472, 0xFFFFFFFF, false, 0);
         }
     }
 
