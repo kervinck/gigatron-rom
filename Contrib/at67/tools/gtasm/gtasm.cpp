@@ -47,11 +47,11 @@ int main(int argc, char* argv[])
 
     // Create gt1 format
     Loader::Gt1File gt1File;
-    gt1File._loStart = address & 0x00FF;
-    gt1File._hiStart = (address & 0xFF00) >>8;
+    gt1File._loStart = LO_BYTE(address);
+    gt1File._hiStart = HI_BYTE(address);
     Loader::Gt1Segment gt1Segment;
-    gt1Segment._loAddress = address & 0x00FF;
-    gt1Segment._hiAddress = (address & 0xFF00) >>8;
+    gt1Segment._loAddress = LO_BYTE(address);
+    gt1Segment._hiAddress = HI_BYTE(address);
 
     bool hasRomCode = false;
     Assembler::ByteCode byteCode;
@@ -72,8 +72,8 @@ int main(int argc, char* argv[])
 
             address = byteCode._address;
             gt1Segment._isRomAddress = byteCode._isRomAddress;
-            gt1Segment._loAddress = address & 0x00FF;
-            gt1Segment._hiAddress = (address & 0xFF00) >>8;
+            gt1Segment._loAddress = LO_BYTE(address);
+            gt1Segment._hiAddress = HI_BYTE(address);
         }
 
         gt1Segment._dataBytes.push_back(byteCode._data);

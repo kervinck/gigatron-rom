@@ -114,14 +114,29 @@ namespace Expression
         input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
     }
 
-    void padString(std::string &str, int num, char pad)
+    void padString(std::string &input, int num, char pad)
     {
-        if(num > str.size()) str.insert(0, num - str.size(), pad);
+        if(num > input.size()) input.insert(0, num - input.size(), pad);
     }
 
-    void addString(std::string &str, int num, char add)
+    void addString(std::string &input, int num, char add)
     {
-        if(num > 0) str.append(num, add);
+        if(num > 0) input.append(num, add);
+    }
+
+    bool findMatchingBrackets(const std::string& input, size_t start, size_t& lbra, size_t& rbra)
+    {
+        lbra = input.find_first_of("(", start);
+        rbra = input.find_first_of(")", lbra + 1);
+        if(lbra == std::string::npos  ||  rbra == std::string::npos) return false;
+
+        size_t left = lbra;
+        while((left = input.find_first_of("(", left + 1)) != std::string::npos)
+        {
+            rbra = input.find_first_of(")", rbra + 1);
+        }
+        if(lbra != std::string::npos  &&  rbra != std::string::npos) return true;
+        return false;
     }
 
     void operatorReduction(std::string& input)
@@ -409,20 +424,12 @@ namespace Expression
     // ****************************************************************************************************************
     // Recursive decent parser
     // ****************************************************************************************************************
-    char peek(void)
-    {
-        return *_expression;
-    }
+    char peek(void) {return *_expression;  }
+    char get(void)  {return *_expression++;}
 
-    char get(void)
-    {
-        return *_expression++;
-    }
-
-    char* getExpression(void)
-    {
-        return _expression;
-    }
+    char* getExpression(void) {return _expression;}
+    char* getExpressionToParse(void) {return _expressionToParse;}
+    int getLineNumber(void) {return _lineNumber;}
 
     bool number(int16_t& value)
     {
@@ -453,6 +460,11 @@ namespace Expression
         {
             get();
             numeric = expression();
+            if(peek() != ')')
+            {
+                fprintf(stderr, "Expression::factor() : Missing ')' in '%s' on line %d\n", _expressionToParse, _lineNumber + 1);
+                numeric = Numeric(0, false, false, nullptr);
+            }
             get();
         }
         else if(peek() == '-')
@@ -466,13 +478,16 @@ namespace Expression
             if(!number(value))
             {
                 fprintf(stderr, "Expression::factor() : Bad numeric data in '%s' on line %d\n", _expressionToParse, _lineNumber + 1);
-                value = 0;
+                numeric = Numeric(0, false, false, nullptr);
             }
-            numeric = Numeric(value, false, nullptr);
+            else
+            {
+                numeric = Numeric(value, true, false, nullptr);
+            }
         }
         else
         {
-            numeric = numeric = Numeric(defaultValue, true, _expression);
+            numeric = Numeric(defaultValue, true, true, _expression);
         }
 
         return numeric;
@@ -527,12 +542,13 @@ namespace Expression
         return result;
     }
 
-    int16_t parse(char* expressionToParse, int lineNumber)
+    bool parse(char* expressionToParse, int lineNumber, int16_t& value)
     {
         _expressionToParse = expressionToParse;
         _expression = expressionToParse;
         _lineNumber = lineNumber;
 
-        return _exprFunc()._value;
+        value = _exprFunc()._value;
+        return _exprFunc()._isValid;
     }
 }

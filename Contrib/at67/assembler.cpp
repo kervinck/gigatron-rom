@@ -8,15 +8,16 @@
 #include <algorithm>
 #include <cstdarg>
 
-#ifndef STAND_ALONE
-#include "cpu.h"
-#include "editor.h"
-#endif
-
+#include "memory.h"
 #include "audio.h"
 #include "loader.h"
 #include "assembler.h"
 #include "expression.h"
+
+#ifndef STAND_ALONE
+#include "cpu.h"
+#include "editor.h"
+#endif
 
 
 #define BRANCH_ADJUSTMENT    2
@@ -187,7 +188,7 @@ namespace Assembler
             {
                 if((address & 0x0001) == 0x0000)
                 {
-                    fprintf(stderr, "Assembler::getNextAssembledByte() : ROM : %04X  %02X", customAddress + ((address & 0x00FF)>>1), byteCode._data);
+                    fprintf(stderr, "Assembler::getNextAssembledByte() : ROM : %04X  %02X", customAddress + (LO_BYTE(address)>>1), byteCode._data);
                 }
                 else
                 {
@@ -348,7 +349,7 @@ namespace Assembler
         return modified;
     }
 
-    uint16_t evaluateExpression(std::string input, bool nativeCode)
+    bool evaluateExpression(std::string input, bool nativeCode, int16_t& result)
     { 
         // Replace equates
         applyEquatesToExpression(input, _equates);
@@ -360,7 +361,7 @@ namespace Assembler
         input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
 
         // Parse expression and return with a result
-        return Expression::parse((char*)input.c_str(), _lineNumber);
+        return Expression::parse((char*)input.c_str(), _lineNumber, result);
     }
 
     bool searchEquate(const std::string& token, Equate& equate)
@@ -386,7 +387,9 @@ namespace Assembler
         if(expressionType == Expression::Invalid) return false;
         if(expressionType == Expression::Valid)
         {
-            equate._operand = evaluateExpression(token, false);
+            int16_t value;
+            if(!evaluateExpression(token, false, value)) return false;
+            equate._operand = value;
             return true;
         }
 
@@ -500,7 +503,9 @@ namespace Assembler
         if(expressionType == Expression::Invalid) return false;
         if(expressionType == Expression::Valid)
         {
-            label._address = evaluateExpression(token, false);
+            int16_t value;
+            if(!evaluateExpression(token, false, value)) return false;
+            label._address = value;
             return true;
         }
 
@@ -631,8 +636,12 @@ namespace Assembler
                         // Normal expression
                         if(Expression::isExpression(tokens[i]) == Expression::Valid)
                         {
-                            operand = uint8_t(Expression::parse((char*)tokens[i].c_str(), _lineNumber));
-                            success = true;
+                            int16_t value;
+                            if(Expression::parse((char*)tokens[i].c_str(), _lineNumber, value))
+                            {
+                                operand = uint8_t(value);
+                                success = true;
+                            }
                         }
                         else
                         {
@@ -688,8 +697,12 @@ namespace Assembler
                     // Normal expression
                     if(Expression::isExpression(tokens[i]) == Expression::Valid)
                     {
-                        operand = Expression::parse((char*)tokens[i].c_str(), _lineNumber);
-                        success = true;
+                        int16_t value;
+                        if(Expression::parse((char*)tokens[i].c_str(), _lineNumber, value))
+                        {
+                            operand = value;
+                            success = true;
+                        }
                     }
                     else
                     {
@@ -700,7 +713,7 @@ namespace Assembler
 
             if(createInstruction)
             {
-                Instruction inst = {instruction._isRomAddress, false, TwoBytes, uint8_t(operand & 0x00FF), uint8_t((operand & 0xFF00) >>8), 0x00, 0x0000,  instruction._opcodeType};
+                Instruction inst = {instruction._isRomAddress, false, TwoBytes, uint8_t(LO_BYTE(operand)), uint8_t(HI_BYTE(operand)), 0x00, 0x0000,  instruction._opcodeType};
                 _instructions.push_back(inst);
             }
             dwSize += 2;
@@ -716,14 +729,16 @@ namespace Assembler
         if(expressionType == Expression::Valid)
         {
             // Parse expression and return with a result
-            operand = uint8_t(evaluateExpression(token, true));
+            int16_t value;
+            if(!evaluateExpression(token, true, value)) return false;
+            operand = uint8_t(value);
             return true;
         }
 
         Label label;
         if(searchLabel(token, label))
         {
-            operand = uint8_t((label._address >>1) & 0x00FF);
+            operand = uint8_t(LO_BYTE(label._address >>1));
             return true;
         }
 
@@ -994,13 +1009,13 @@ namespace Assembler
                 int end = int(_callTableEntries.size()) - 1;
                 byteCode._isRomAddress = false;
                 byteCode._isCustomAddress = (i == end) ?  true : false;
-                byteCode._data = _callTableEntries[i]._address & 0x00FF;
+                byteCode._data = LO_BYTE(_callTableEntries[i]._address);
                 byteCode._address = _callTable + (end-i)*2 + 2;
                 _byteCode.push_back(byteCode);
 
                 byteCode._isRomAddress = false;
                 byteCode._isCustomAddress = false;
-                byteCode._data = (_callTableEntries[i]._address & 0xFF00) >>8;
+                byteCode._data = HI_BYTE(_callTableEntries[i]._address);
                 byteCode._address = _callTable + (end-i)*2 + 3;
                 _byteCode.push_back(byteCode);
             }
@@ -1029,9 +1044,9 @@ namespace Assembler
             static uint16_t customAddress = 0x0000;
             if(instruction._isCustomAddress) customAddress = instruction._address;
 
-            uint16_t oldAddress = (instruction._isRomAddress) ? customAddress + ((currentAddress & 0x00FF)>>1) : currentAddress;
+            uint16_t oldAddress = (instruction._isRomAddress) ? customAddress + (LO_BYTE(currentAddress)>>1) : currentAddress;
             currentAddress += instructionSize - 1;
-            uint16_t newAddress = (instruction._isRomAddress) ? customAddress + ((currentAddress & 0x00FF)>>1) : currentAddress;
+            uint16_t newAddress = (instruction._isRomAddress) ? customAddress + (LO_BYTE(currentAddress)>>1) : currentAddress;
             if((oldAddress >>8) != (newAddress >>8))
             {
                 fprintf(stderr, "Assembler::assemble() : Page boundary compromised : %04X : %04X : '%s' : in '%s' on line %d\n", oldAddress, newAddress, lineToken._text.c_str(), filename.c_str(), lineNumber+1);
@@ -1499,8 +1514,12 @@ namespace Assembler
                     {
                         if(Expression::isExpression(token) == Expression::Valid)
                         {
-                            data = Expression::parse((char*)token.c_str(), _lineNumber);
-                            success = true;
+                            int16_t value;
+                            if(Expression::parse((char*)token.c_str(), _lineNumber, value))
+                            {
+                                data = value;
+                                success = true;
+                            }
                         }
                     }
                 }
@@ -1860,7 +1879,7 @@ namespace Assembler
                                     if(newLabel)
                                     {
                                         operandValid = true;
-                                        operand = uint8_t(_callTable & 0x00FF);
+                                        operand = uint8_t(LO_BYTE(_callTable));
                                         CallTableEntry entry = {operand, address};
                                         _callTableEntries.push_back(entry);
                                         _callTable -= 0x0002;
@@ -1908,9 +1927,11 @@ namespace Assembler
                                 }
                                 else if(Expression::isExpression(tokens[tokenIndex]) == Expression::Valid)
                                 {
+                                    int16_t value;
                                     std::string input;
                                     preProcessExpression(tokens, tokenIndex, input, true);
-                                    operand = uint8_t(Expression::parse((char*)input.c_str(), _lineNumber));
+                                    if(!Expression::parse((char*)input.c_str(), _lineNumber, value)) return false;
+                                    operand = uint8_t(value);
                                     operandValid = true;
                                 }
                                 else
@@ -1938,7 +1959,7 @@ namespace Assembler
 
                                 instruction._isRomAddress = true;
                                 instruction._opcode = opcode;
-                                instruction._operand0 = uint8_t(operand & 0x00FF);
+                                instruction._operand0 = uint8_t(LO_BYTE(operand));
                                 _instructions.push_back(instruction);
                                 if(!checkInvalidAddress(ParseType(parse), _currentAddress, outputSize, instruction, lineToken, filename, _lineNumber)) return false;
 
@@ -1964,7 +1985,7 @@ namespace Assembler
                                 outputSize = OneByte;
                                 instruction._isRomAddress = (opcodeType == ReservedDBR) ? true : false;
                                 instruction._byteSize = ByteSize(outputSize);
-                                instruction._opcode = uint8_t(operand & 0x00FF);
+                                instruction._opcode = uint8_t(LO_BYTE(operand));
                                 _instructions.push_back(instruction);
     
                                 // Push any remaining operands
@@ -2008,7 +2029,7 @@ namespace Assembler
                                 }
 
                                 instruction._operand0 = branch;
-                                instruction._operand1 = operand & 0x00FF;
+                                instruction._operand1 = LO_BYTE(operand);
                                 _instructions.push_back(instruction);
                                 if(!checkInvalidAddress(ParseType(parse), _currentAddress, outputSize, instruction, lineToken, filename, _lineNumber)) return false;
                             }
@@ -2031,9 +2052,11 @@ namespace Assembler
                                 }
                                 else if(Expression::isExpression(tokens[tokenIndex]) == Expression::Valid)
                                 {
+                                    int16_t value;
                                     std::string input;
                                     preProcessExpression(tokens, tokenIndex, input, true);
-                                    operand = Expression::parse((char*)input.c_str(), _lineNumber);
+                                    if(!Expression::parse((char*)input.c_str(), _lineNumber, value)) return false;
+                                    operand = value;
                                     operandValid = true;
                                 }
                                 else
@@ -2053,8 +2076,8 @@ namespace Assembler
                                     outputSize = TwoBytes;
                                     instruction._isRomAddress = (opcodeType == ReservedDWR) ? true : false;
                                     instruction._byteSize = ByteSize(outputSize);
-                                    instruction._opcode   = uint8_t(operand & 0x00FF);
-                                    instruction._operand0 = uint8_t((operand & 0xFF00) >>8);
+                                    instruction._opcode   = uint8_t(LO_BYTE(operand));
+                                    instruction._operand0 = uint8_t(HI_BYTE(operand));
                                     _instructions.push_back(instruction);
 
                                     // Push any remaining operands
@@ -2064,8 +2087,8 @@ namespace Assembler
                                 // Normal instructions
                                 else
                                 {
-                                    instruction._operand0 = uint8_t(operand & 0x00FF);
-                                    instruction._operand1 = uint8_t((operand & 0xFF00) >>8);
+                                    instruction._operand0 = uint8_t(LO_BYTE(operand));
+                                    instruction._operand1 = uint8_t(HI_BYTE(operand));
                                     _instructions.push_back(instruction);
                                     if(!checkInvalidAddress(ParseType(parse), _currentAddress, instruction._byteSize, instruction, lineToken, filename, _lineNumber)) return false;
                                 }

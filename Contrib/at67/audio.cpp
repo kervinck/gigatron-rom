@@ -3,6 +3,7 @@
 #include <math.h>
 #include <algorithm>
 
+#include "memory.h"
 #include "cpu.h"
 #include "audio.h"
 #include "timing.h"
@@ -123,8 +124,8 @@ namespace Audio
                     uint16_t note = *_scorePtr++;
                     note = (note - 10) * 2 - 2;
                     note = Cpu::getROM16(note + 0x0900, 1);
-                    Cpu::setRAM(GIGA_CH0_KEY_L + channel*GIGA_CHANNEL_OFFSET, uint8_t(note & 0x00FF));
-                    Cpu::setRAM(GIGA_CH0_KEY_H + channel*GIGA_CHANNEL_OFFSET, uint8_t((note & 0xFF00)>>8));
+                    Cpu::setRAM(GIGA_CH0_KEY_L + channel*GIGA_CHANNEL_OFFSET, uint8_t(LO_BYTE(note)));
+                    Cpu::setRAM(GIGA_CH0_KEY_H + channel*GIGA_CHANNEL_OFFSET, uint8_t(HI_BYTE(note)));
                 }
                 // Stop note
                 else if((command & 0xF0) == 0x80)
@@ -137,7 +138,7 @@ namespace Audio
                 else if((command & 0xF0) == 0xD0)
                 {
                     uint16_t segment = *_scorePtr++;
-                    segment |= (((*_scorePtr++) <<8) & 0xFF00);
+                    segment |= HI_MASK((*_scorePtr++) <<8);
                     _scorePtr = (uint8_t*)(uintptr_t)segment;
                 }
             }

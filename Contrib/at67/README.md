@@ -1,5 +1,5 @@
-# gtemuSDL
-gtemuSDL is an emulator, a cross assembler for both vCPU and Native asm code, a debugger, a monitor<br/>
+# gtemuAT67
+gtemuAT67 is an emulator, a cross assembler for both vCPU and Native asm code, a debugger, a monitor<br/>
 and a real time controller for the Gigatron TTL microcomputer; written in C++ using SDL2.<br/>
 This project provides support for Microsoft Windows and should be compatible with Linux, MacOS<br/>
 and possibly even Android. As of v0.6.6 it has only been tested on Microsoft Windows10 and Linux.<br/>
@@ -65,21 +65,27 @@ and possibly even Android. As of v0.6.6 it has only been tested on Microsoft Win
 - A C++ compiler that supports modern STL.<br/>
 - Requires the latest version of SDL2 and it's appropriate include/library/shared files.<br/>
 
-For example, on Linux you can do this:
-```
-  sudo apt-get -y install cmake libsdl2-dev
-  git clone https://github.com/kervinck/gigatron-rom
-  cd gigatron-rom/Contrib/at67
-  cmake .
-  make
-  ./gtemuSDL &
-```
+## Windows
+- Download and install cmake<br/>
+- Download sdl2 development libraries https://www.libsdl.org/release/SDL2-devel-2.0.9-VC.zip<br/>
+- Clone or download https://github.com/kervinck/gigatron-rom<br/>
+- cd gigatron-rom\Contrib\at67<br/>
+- cmake .<br/>
+- make<br/>
+- **Optional:** if you want to be able to develop using SDL2 without having to configure the include and lib variables<br/>
+  for each new project, then just add a the environment variable **SDL2DIR** pointing to the directory you installed SDL2 into.<br/>
+  
+## Linux  
+- sudo apt-get -y install cmake libsdl2-dev<br/>
+- git clone https://github.com/kervinck/gigatron-rom<br/>
+- cd gigatron-rom/Contrib/at67<br/>
+- cmake .<br/>
+- make<br/>
+- ./gtemuSDL &<br/>
 
-For step-by-step instructions on Windows, see this thread in the Gigatron forum:
-https://forum.gigatron.io/viewtopic.php?p=368#p368
-
-This thread also has some advise on building for macOS.
-
+- For detailed instructions for Windows, Linux and macOS, see this thread in the Gigatron forum:<br/>
+  https://forum.gigatron.io/viewtopic.php?p=368#p368<br/>
+  
 ## Installation
 - After building, copy the executable and SDL2 shared library\/DLL to an appropriate directory;<br/>
   run the executable from there.<br/>
@@ -115,25 +121,25 @@ This thread also has some advise on building for macOS.
 ## Controls
 |Key        | Function                                                                          |
 |:---------:|-----------------------------------------------------------------------------------|
-|H          | Displays a help screen showing the currently configured keys.                     |
-|ESC        | Quits the application.                                                            |
+|CTRL + H   | Displays a help screen showing the currently configured keys.                     |
+|CTRL + Q   | Quits the application.                                                            |
 |L or l     | Loads external vCPU files within the vCPU directory, this code is uploaded to     |
 |           | an editable load address. Loading user vCPU code to system critical addresses     |
 |           | can cause the emulator to hang, 0x0200 is guaranteed to be safe.                  |
 |R or r     | Switches Hex Editor between RAM, ROM(0) and ROM(1).                               |
-|F1         | Fast reset, performs the same action as a long hold of Start.                     |
-|CTRL + F1  | Fast reset of real Gigatron hardware, if connected to an Arduino interface.       |
-|F3         | Toggles scanline modes between, Normal, VideoB and VideoBC.                       |
-|F5         | Executes whatever code is present at the load address.                            |
-|F6         | Toggles debug mode, simulation will pause and allow you to single step using F7.  |
-|F7         | Only functions in debug mode, will single step the simulation based on a memory   |
+|CTRL + F1  | Fast reset, performs the same action as a long hold of Start.                     |
+|ALT  + F1  | Fast reset of real Gigatron hardware, if connected to an Arduino interface.       |
+|CTRL + F3  | Toggles scanline modes between, Normal, VideoB and VideoBC, only for ROMv1.       |
+|CTRL + F5  | Executes whatever code is present at the load address.                            |
+|CTRL + F6  | Toggles debug mode, simulation will pause and allow you to single step using F7.  |
+|CTRL + F7  | Only functions in debug mode, will single step the simulation based on a memory   |
 |           | location changing it's value.                                                     |
-|F9         | switches to Hex mode from any other mode                                          |
-|F10        | Toggles PS2 keyboard emulation on and off.                                        |
-|F11        | Toggles Gigatron input between emulator and hardware.                             |
-|F12        | Toggles PS2 keyboard emulation between emulator and hardware                      |
-|ENTER/CR   | Loads vCPU code if editor is in file browse mode, otherwise switches to edit mode.|
-|CTRL + CR  | Uploads vCPU code to real Gigatron hardware, if connected to an Arduino interface.|
+|CTRL + F9  | switches to Hex mode from any other mode                                          |
+|CTRL + F10 | Toggles PS2 keyboard emulation on and off.                                        |
+|CTRL + F11 | Toggles Gigatron input between emulator and hardware.                             |
+|CTRL + F12 | Toggles PS2 keyboard emulation between emulator and hardware                      |
+|CTRL + CR  | Loads vCPU code if editor is in file browse mode, otherwise switches to edit mode.|
+|ALT  + CR  | Uploads vCPU code to real Gigatron hardware, if connected to an Arduino interface.|
 |-/+        | Decrease/increase the speed of the emulation, from a minimum of 60FPS to a        |
 |           | maximum determined by your PC's CPU.                                              |
 |           |                                                                                   |
