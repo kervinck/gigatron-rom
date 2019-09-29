@@ -600,8 +600,9 @@ ld(syncBits^hSync, OUT)
 ld(syncBits, OUT)
 
 ld(0)
-st([channel])
 st([0]);                        C('Carry lookup ([0x80] in first line of vBlank)')
+st([channel])
+st([soundTimer])
 
 ld(0b1111);                     C('LEDs |****|')
 ld(syncBits^hSync, OUT)
@@ -631,10 +632,10 @@ ld(romTypeValue);               C('Set ROM type/version and clear channel mask')
 st([romType])                   #16
 ld(0)                           #17
 st([vSP]);                      C('vSP')#18
-ld(hi('videoTop_DEVROM'),Y);    C('Show all 120 pixel rows')#19
-st([Y,lo('videoTop_DEVROM')])   #20
-assert userCode&255 == 0
+ld(hi('videoTop_DEVROM'),Y)     #19
+st([Y,lo('videoTop_DEVROM')]);  C('Show all 120 pixel rows')#20
 st([soundTimer]);               C('soundTimer')#21
+assert userCode&255 == 0
 st([vLR]);                      C('vLR')#22
 ld(userCode>>8)                 #23
 st([vLR+1])                     #24
@@ -644,7 +645,7 @@ st([videoModeC])                #27
 st([videoModeD])                #28
 ld('SYS_Exec_88');              C('SYS_Exec_88')#29
 st([sysFn])                     #30 High byte (remains) 0
-ld('Reset');                    C('Reset.gcl')#31
+ld('Reset');                    C('Reset.gt1 from EPROM')#31
 st([sysArgs+0])                 #32
 ld(hi('Reset'))                 #33
 st([sysArgs+1])                 #34
