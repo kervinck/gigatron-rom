@@ -848,25 +848,27 @@ namespace Loader
         for(int i=0; i<lines.size(); i++)
         {
             uint16_t lineNumber = (uint16_t)strtol(lines[i].c_str(), &endPtr, 10);
-            Cpu::setRAM(endAddress + 0, lineNumber & 0x00FF);
-            Cpu::setRAM(endAddress + 1, (lineNumber & 0xFF00) >>8);
+            Cpu::setRAM(endAddress + 0, LO_BYTE(lineNumber));
+            Cpu::setRAM(endAddress + 1, HI_BYTE(lineNumber));
             uint8_t lineStart = uint8_t(endPtr - &lines[i][0]);
-            for(uint8_t j=lineStart; j<(MAX_GTB_LINE_SIZE - 2 + lineStart); j++)
+
+            // First 2 bytes are int16 line number
+            for(uint8_t j=lineStart; j<(MAX_GTB_LINE_SIZE-2 + lineStart); j++)
             {
                 uint8_t offset = 2 + j - lineStart;
                 bool validData = offset < MAX_GTB_LINE_SIZE-1  &&  j < lines[i].size()  &&  lines[i][j] >= ' ';
                 uint8_t data = validData ? lines[i][j] : 0;
                 Cpu::setRAM(endAddress + offset, data);
             }
-            endAddress += 0x0020;
-            if((endAddress & 0x00FF) < 0x00A0) endAddress = (endAddress & 0xFF00) | 0x00A0;
+            endAddress += MAX_GTB_LINE_SIZE;
+            if(LO_BYTE(endAddress) < LO_BYTE(GTB_LINE0_ADDRESS)) endAddress = HI_MASK(endAddress) | LO_BYTE(GTB_LINE0_ADDRESS);
         }
 
         uint16_t freeMemory = Memory::getFreeGtbRAM(uint16_t(lines.size()));
         fprintf(stderr, "Loader::loadGtbFile() : start %04x : end %04x : free %d : '%s'\n", startAddress, endAddress, freeMemory, filepath.c_str());
 
-        Cpu::setRAM(GTB_LINE0_ADDRESS + 0, endAddress & 0x00FF);
-        Cpu::setRAM(GTB_LINE0_ADDRESS + 1, (endAddress & 0xFF00) >>8);
+        Cpu::setRAM(GTB_LINE0_ADDRESS + 0, LO_BYTE(endAddress));
+        Cpu::setRAM(GTB_LINE0_ADDRESS + 1, HI_BYTE(endAddress));
         std::string list = "RUN";
         for(int i=0; i<list.size(); i++) Cpu::setRAM(endAddress + 2 + i, list[i]);
         Cpu::setRAM(endAddress + 2 + uint16_t(list.size()), 0);
@@ -988,11 +990,11 @@ namespace Loader
             uint16_t customAddress = executeAddress;
 
             // Save to gt1 format
-            gt1File._loStart = address & 0x00FF;
-            gt1File._hiStart = (address & 0xFF00) >>8;
+            gt1File._loStart = LO_BYTE(address);
+            gt1File._hiStart = HI_BYTE(address);
             Gt1Segment gt1Segment;
-            gt1Segment._loAddress = address & 0x00FF;
-            gt1Segment._hiAddress = (address & 0xFF00) >>8;
+            gt1Segment._loAddress = LO_BYTE(address);
+            gt1Segment._hiAddress = HI_BYTE(address);
 
             Assembler::ByteCode byteCode;
             while(!Assembler::getNextAssembledByte(byteCode))
@@ -1013,8 +1015,8 @@ namespace Loader
                     address = byteCode._address;
                     customAddress = address;
                     gt1Segment._isRomAddress = byteCode._isRomAddress;
-                    gt1Segment._loAddress = address & 0x00FF;
-                    gt1Segment._hiAddress = (address & 0xFF00) >>8;
+                    gt1Segment._loAddress = LO_BYTE(address);
+                    gt1Segment._hiAddress = HI_BYTE(address);
                 }
 
                 if(uploadTarget == Emulator  &&  !_disableUploads)
@@ -1062,10 +1064,10 @@ namespace Loader
             // Execute code
             if(!_disableUploads  &&  hasRamCode)
             {
-                Cpu::setRAM(0x0016, executeAddress-2 & 0x00FF);
-                Cpu::setRAM(0x0017, (executeAddress & 0xFF00) >>8);
-                Cpu::setRAM(0x001a, executeAddress-2 & 0x00FF);
-                Cpu::setRAM(0x001b, (executeAddress & 0xFF00) >>8);
+                Cpu::setRAM(0x0016, LO_BYTE(executeAddress-2));
+                Cpu::setRAM(0x0017, HI_BYTE(executeAddress));
+                Cpu::setRAM(0x001a, LO_BYTE(executeAddress-2));
+                Cpu::setRAM(0x001b, HI_BYTE(executeAddress));
             }
         }
         else if(uploadTarget == Hardware)
@@ -1129,7 +1131,7 @@ namespace Loader
             {
                 if(vgaY == VSYNC_START+22)
                 {
-                    sendByte(address & 0x00FF, checksum);
+                    sendByte(LO_BYTE(address), checksum);
                     loaderState = LoaderState::HighAddress;
                 }
             }
@@ -1139,7 +1141,7 @@ namespace Loader
             {
                 if(vgaY == VSYNC_START+30)
                 {
-                    sendByte(address >> 8, checksum);
+                    sendByte(HI_BYTE(address), checksum);
                     loaderState = LoaderState::Message;
                 }
             }

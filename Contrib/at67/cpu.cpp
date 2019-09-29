@@ -37,6 +37,7 @@ namespace Cpu
     int64_t _clock = -2;
     uint8_t _IN = 0xFF, _XOUT = 0x00;
     uint8_t _ROM[ROM_SIZE][2], _RAM[RAM_SIZE];
+    RomType _romType = ROMERR;
 
     std::vector<uint8_t> _scanlinesRom0;
     std::vector<uint8_t> _scanlinesRom1;
@@ -45,6 +46,7 @@ namespace Cpu
 
 
     uint8_t* getPtrToROM(int& romSize) {romSize = sizeof(_ROM); return (uint8_t*)_ROM;}
+    RomType getRomType(void) {return _romType;}
 
     void initialiseInternalGt1s(void)
     {
@@ -169,8 +171,8 @@ namespace Cpu
         for(int i=0; i<filelength; i++) _ROM[startAddress + i][ROM_DATA] = filebuffer[i];
 
         // Replace internal gt1 menu option with split gt1
-        _ROM[_internalGt1s[gt1Id]._patch + 0][ROM_DATA] = startAddress & 0x00FF;
-        _ROM[_internalGt1s[gt1Id]._patch + 1][ROM_DATA] = (startAddress & 0xFF00) >>8;
+        _ROM[_internalGt1s[gt1Id]._patch + 0][ROM_DATA] = LO_BYTE(startAddress);
+        _ROM[_internalGt1s[gt1Id]._patch + 1][ROM_DATA] = HI_BYTE(startAddress);
 
         // Replace internal gt1 menu option name with split gt1 name
         int minLength = std::min(uint8_t(splitGt1name.size()), _internalGt1s[gt1Id]._length);
@@ -215,15 +217,30 @@ namespace Cpu
         if(address == 0x0000) return;
         if(address == 0x0080) return;
 
-        _RAM[address & (RAM_SIZE-1)] = uint8_t(data & 0x00FF);
-        _RAM[(address+1) & (RAM_SIZE-1)] = uint8_t((data & 0xFF00)>>8);
+        _RAM[address & (RAM_SIZE-1)] = uint8_t(LO_BYTE(data));
+        _RAM[(address+1) & (RAM_SIZE-1)] = uint8_t(HI_BYTE(data));
     }
 
     void setROM16(uint16_t base, uint16_t address, uint16_t data)
     {
         uint16_t offset = (address - base) / 2;
-        _ROM[base + offset][address & 0x01] = uint8_t(data & 0x00FF);
-        _ROM[base + offset][(address+1) & 0x01] = uint8_t((data & 0xFF00)>>8);
+        _ROM[base + offset][address & 0x01] = uint8_t(LO_BYTE(data));
+        _ROM[base + offset][(address+1) & 0x01] = uint8_t(HI_BYTE(data));
+    }
+
+    void setRomType(void)
+    {
+        uint8_t romType = getRAM(ROM_TYPE) & ROM_TYPE_MASK;
+        switch((RomType)romType)
+        {
+            case ROMv1:  _romType = ROMv1;  break;
+            case ROMv2:  _romType = ROMv2;  break;
+            case ROMv3:  _romType = ROMv3;  break;
+            case ROMv4:  _romType = ROMv4;  break;
+            case DEVROM: _romType = DEVROM; break;
+            default:     _romType = ROMv1;  break;
+        }
+        fprintf(stderr, "Cpu::setRomType() : ROM Type = 0x%02x\n", _romType);
     }
 
     void saveScanlineModes(void)
@@ -324,7 +341,7 @@ namespace Cpu
         garble((uint8_t*)&S, sizeof S);
 
         // Check for ROM file
-        std::string filenameRom = "test.rom";
+        std::string filenameRom = "ROMv4.rom";
         std::ifstream romfile(filenameRom, std::ios::binary | std::ios::in);
         if(!romfile.is_open())
         {
@@ -353,7 +370,7 @@ namespace Cpu
 
 #define CUSTOM_ROMV0
 #ifdef CUSTOM_ROMV0
-        patchTitleIntoRom(" TTL micrcomputer AT67 v0");
+        patchTitleIntoRom(" TTL microcomputer ROM v0");
         patchSplitGt1IntoRom("./roms/starfield.rom", "Starfield", 0x0b00, MandelbrotGt1);
         patchSplitGt1IntoRom("./roms/life.rom", "Life", 0x0f00, LoaderGt1);
         patchSplitGt1IntoRom("./roms/lines.rom", "Lines", 0x1100, SnakeGt1);
@@ -361,7 +378,7 @@ namespace Cpu
         patchSplitGt1IntoRom("./roms/tetris.rom", "Tetris", 0x3000, CreditsGt1);
         patchSplitGt1IntoRom("./roms/miditest.rom", "Midi", 0x5800, RacerGt1);
 #else
-        patchTitleIntoRom(" TTL micrcomputer AT67 v0");
+        patchTitleIntoRom(" TTL microcomputer ROM v0");
         patchSplitGt1IntoRom("./roms/midi64.rom", "Midi64", 0x0b00, PicturesGt1);
 #endif
 #endif
@@ -420,7 +437,7 @@ namespace Cpu
         uint8_t ALU; // Arithmetic and Logic Unit
         switch(ins)
         {
-            case 0: ALU =        B; break; // LD
+            case 0: ALU =         B; break; // LD
             case 1: ALU = S._AC & B; break; // ANDA
             case 2: ALU = S._AC | B; break; // ORA
             case 3: ALU = S._AC ^ B; break; // XORA
@@ -456,8 +473,8 @@ namespace Cpu
         // Cold boot
         if(coldBoot)
         {
-            setRAM(BOOT_COUNT, 0x00);
-            setRAM(BOOT_CHECK, 0xA6); // TODO: don't hardcode the checksum, calculate it properly
+            //setRAM(BOOT_COUNT, 0x00);
+            //setRAM(BOOT_CHECK, 0xA6); // TODO: don't hardcode the checksum, calculate it properly
         }
 
         Graphics::resetVTable();

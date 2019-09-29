@@ -12,10 +12,11 @@ namespace Expression
 
     struct Numeric
     {
-        Numeric() {_value = 0; _isAddress = false; _varNamePtr = nullptr;}
-        Numeric(int16_t value, bool isAddress, char* varNamePtr) {_value = value; _isAddress = isAddress; _varNamePtr = varNamePtr;}
+        Numeric() {_value = 0; _isValid = false; _isAddress = false; _varNamePtr = nullptr;}
+        Numeric(int16_t value, bool isValid, bool isAddress, char* varNamePtr) {_value = value; _isValid = isValid; _isAddress = isAddress; _varNamePtr = varNamePtr;}
 
         int16_t _value;
+        bool _isValid = false;
         bool _isAddress = false;
         char* _varNamePtr = nullptr;
     };
@@ -34,10 +35,10 @@ namespace Expression
     std::string::const_iterator findNonStringEquals(const std::string& input);
     void stripNonStringWhitespace(std::string& input);
     void stripWhitespace(std::string& input);
-    void operatorReduction(std::string& input);
-
     void padString(std::string &str, int num, char pad=' ');
     void addString(std::string &str, int num, char add=' ');
+    void operatorReduction(std::string& input);
+    bool findMatchingBrackets(const std::string& input, size_t start, size_t& lbra, size_t& rbra);
 
     std::string byteToHexString(uint8_t n);
     std::string wordToHexString(uint16_t n);
@@ -55,9 +56,12 @@ namespace Expression
     char peek(void);
     char get(void);
     char* getExpression(void);
+    char* getExpressionToParse(void);
+    int getLineNumber(void);
+
     bool number(int16_t& value);
     Numeric expression(void);
-    int16_t parse(char* expressionToParse, int lineNumber);
+    bool parse(char* expressionToParse, int lineNumber, int16_t& value);
 }
 
 #endif

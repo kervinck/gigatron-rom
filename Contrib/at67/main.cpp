@@ -1,7 +1,7 @@
 /**********************************************************************************************/
-/* gtemuSDL                                                                                   */
+/* gtemuAT67                                                                                  */
 /*                                                                                            */ 
-/* gtemuSDL is an emulator for the Gigatron TTL microcomputer, written in C++ using SDL2.     */
+/* gtemuAT67 is an emulator for the Gigatron TTL microcomputer, written in C++ using SDL2.    */
 /* This project provides Microsoft Windows support and should be compatible with Linux, MacOS */
 /* and possibly even Android. As of this version it has only been tested on Windows 10 x64.   */
 /**********************************************************************************************/
@@ -84,14 +84,24 @@ int main(int argc, char* argv[])
             }
         }
 
-        // Watchdog
-        if(!debugging  &&  clock > STARTUP_DELAY_CLOCKS  &&  clock - clock_prev > CPU_STALL_CLOCKS)
+        // RomType and Watchdog
+        if(clock > STARTUP_DELAY_CLOCKS)
         {
-            clock_prev = CLOCK_RESET;
-            Cpu::reset(true);
-            vgaX = 0, vgaY = 0;
-            HSync = 0, VSync = 0;
-            fprintf(stderr, "main(): CPU stall for %" PRId64 " clocks : rebooting.\n", clock - clock_prev);
+            static bool firstTime = true;
+            if(firstTime)
+            {
+                firstTime = false;
+                Cpu::setRomType();
+            }
+
+            if(!debugging  &&  clock - clock_prev > CPU_STALL_CLOCKS)
+            {
+                clock_prev = CLOCK_RESET;
+                Cpu::reset(true);
+                vgaX = 0, vgaY = 0;
+                HSync = 0, VSync = 0;
+                fprintf(stderr, "main(): CPU stall for %" PRId64 " clocks : rebooting.\n", clock - clock_prev);
+            }
         }
 
         // Rising hSync edge

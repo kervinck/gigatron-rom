@@ -25,7 +25,7 @@ namespace Memory
     uint16_t getFreeRAM(void) {return _freeRAM;}
     uint16_t getFreeGtbRAM(uint16_t numLines)
     {
-        uint16_t free = ((0x80 - ((GTB_LINE0_ADDRESS & 0xFF00) >>8))*NUM_GTB_LINES_PER_ROW - numLines)*MAX_GTB_LINE_SIZE - MAX_GTB_LINE_SIZE;
+        uint16_t free = ((0x80 - HI_BYTE(GTB_LINE0_ADDRESS))*NUM_GTB_LINES_PER_ROW - numLines)*MAX_GTB_LINE_SIZE - MAX_GTB_LINE_SIZE;
         if(_has64KRAM) free += (1<<15);
         return free;
     }

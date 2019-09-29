@@ -6,7 +6,7 @@
 
 
 #define GTSPLITROM_MAJOR_VERSION "0.2"
-#define GTSPLITROM_MINOR_VERSION "1"
+#define GTSPLITROM_MINOR_VERSION "2"
 #define GTSPLITROM_VERSION_STR "gtsplitrom v" GTSPLITROM_MAJOR_VERSION "." GTSPLITROM_MINOR_VERSION
 
 
@@ -52,6 +52,8 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+//#define ROM_VER_0x1c
+#if defined(ROM_VER_0x1c)
     // Initialises internal GT1 vector
     Cpu::initialiseInternalGt1s();
 
@@ -60,6 +62,7 @@ int main(int argc, char* argv[])
 
     // Modifies ROM to disable scanline videoB
     Cpu::patchScanlineModeVideoB();
+#endif
 
     std::string outputFilename0 = std::string(argv[2]) + "_i";
     std::ofstream outfile0(outputFilename0, std::ios::binary | std::ios::out);

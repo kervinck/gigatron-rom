@@ -6,9 +6,9 @@
 #include <string>
 
 
-#define MAJOR_VERSION "0.7"
-#define MINOR_VERSION "10"
-#define VERSION_STR "gtemuSDL v" MAJOR_VERSION "." MINOR_VERSION
+#define MAJOR_VERSION "0.8"
+#define MINOR_VERSION "0"
+#define VERSION_STR "gtemuAT67 v" MAJOR_VERSION "." MINOR_VERSION
  
 #define ROM_INST 0
 #define ROM_DATA 1
@@ -19,6 +19,8 @@
 #define BOOT_COUNT 0x0004
 #define BOOT_CHECK 0x0005
 
+#define ROM_TYPE          0x0021
+#define ROM_TYPE_MASK     0x00F8
 #define ROM_VCPU_DISPATCH 0x0309
 
 #if defined(_WIN32)
@@ -39,6 +41,7 @@
 
 namespace Cpu
 {
+    enum RomType {ROMERR=0x00, ROMv1=0x1c, ROMv2=0x20, ROMv3=0x28, ROMv4=0x38, DEVROM=0xf8};
     enum ScanlineMode {Normal=0, VideoB, VideoC, VideoBC, NumScanlineModes};
     enum InternalGt1Id {SnakeGt1=0, RacerGt1=1, MandelbrotGt1=2, PicturesGt1=3, CreditsGt1=4, LoaderGt1=5, NumInternalGt1s};
 
@@ -58,6 +61,7 @@ namespace Cpu
 
 
     uint8_t* getPtrToROM(int& romSize);
+    RomType getRomType(void);
 
     void setFreeRAM(uint16_t freeRAM);
 
@@ -86,6 +90,7 @@ namespace Cpu
     void setROM(uint16_t base, uint16_t address, uint8_t data);
     void setRAM16(uint16_t address, uint16_t data);
     void setROM16(uint16_t base, uint16_t address, uint16_t data);
+    void setRomType(void);
     void setScanlineMode(ScanlineMode scanlineMode);
 
     void initialise(State& S);

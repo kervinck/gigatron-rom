@@ -33,6 +33,7 @@
 #define HEX_START        30
 #define HEX_START_X      6
 #define VAR_START        96
+#define RAM_START        108
 #define CPUA_START       78
 #define CPUB_START       120
 #define HIGHLIGHT_SIZE   23
@@ -48,7 +49,6 @@ namespace Graphics
     SDL_Window* getWindow(void);
     SDL_Renderer* getRenderer(void);
     SDL_Texture* getScreenTexture(void);
-    SDL_Surface* getScreenSurface(void);
     SDL_Texture* getHelpTexture(void);
     SDL_Surface* getHelpSurface(void);
     SDL_Surface* getFontSurface(void);
