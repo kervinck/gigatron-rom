@@ -24,6 +24,6 @@
 32 poke 130,n+n:'$900+n*2
 33 poke p,  usr(129):'Flo
 34 poke p+1,usr(129):'Fhi
-35 poke 44,15;'0.25 secs
+35 poke 44,15:'0.25 secs
 36 if peek(44)>0 goto 36
 37 next n

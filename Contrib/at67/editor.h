@@ -22,6 +22,7 @@
 #define GIGA_PS2_SELECT  8
 #define GIGA_PS2_INPUT_A 9
 #define GIGA_PS2_INPUT_B 27
+#define GIGA_PS2_CTLR_C  3
 #define GIGA_PS2_CR      13
 #define GIGA_PS2_DEL     127
 #define GIGA_PS2_ENABLE  5

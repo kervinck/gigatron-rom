@@ -849,21 +849,34 @@ namespace Loader
             if(line.size()) lines.push_back(line);
         }
         
-        // Validate lines
-        char *endPtr;
-        for(int i=0; i<lines.size(); i++)
+        // Delete non numbered lines, (comments etc)
+        for(auto i=lines.begin(); i!=lines.end();)
         {
-            long lineNumber = strtol(lines[i].c_str(), &endPtr, 10);
-            if(lineNumber < 1  ||  lineNumber > 32767)//  ||  uint8_t(&lines[i][lines[i].size()] - endPtr) > MAX_GTB_LINE_SIZE - 2)  // first 2 bytes are uint16_t line number
+            long lineNumber = strtol(i->c_str(), nullptr, 10);
+            if(lineNumber < 1  ||  lineNumber > 32767)
             {
-                fprintf(stderr, "Loader::loadGtbFile() : Bad line Number : %d : in '%s' on line %d\n", lineNumber, filepath.c_str(), i+1);
-                return false;
+                i = lines.erase(i);
+            }
+            else
+            {
+                ++i;
             }
         }
+
+#if 0
+        // Remove trailing  comments
+        for(int i=0; i<lines.size(); i++)
+        {
+            size_t pos = lines[i].find('\'');
+            if(pos != string::npos  &&  pos > 2) lines[i] = lines[i].substr(0, pos-1);
+            fprintf(stderr, "Loader::loadGtbFile() : %s\n", lines[i].c_str());
+        }
+#endif
 
         // Load .gtb file into memory
         uint16_t startAddress = GTB_LINE0_ADDRESS + MAX_GTB_LINE_SIZE;
         uint16_t endAddress = startAddress;
+        char *endPtr;
         for(int i=0; i<lines.size(); i++)
         {
             uint16_t lineNumber = (uint16_t)strtol(lines[i].c_str(), &endPtr, 10);
@@ -936,7 +949,7 @@ namespace Loader
         else if(_configGclBuildFound  &&  filename.find(".gtb") != filename.npos)
         {
             gtbFilepath = filepath;
-            filename = "TinyBASIC_v1.gt1";
+            filename = "TinyBASIC_v3.gt1";
             filepath = _configGclBuild + "/Apps/TinyBASIC/" + filename;
             isGtbFile = true;
         }

@@ -684,7 +684,7 @@ namespace Editor
                 case SDLK_PAGEDOWN: (_editorMode == GigaPS2) ? Loader::sendCommandToGiga(GIGA_PS2_SELECT, true) : Cpu::setIN(Cpu::getIN() & ~INPUT_SELECT); return true;
             }
 
-            if((_sdlKeyScanCode >= 0  &&  _sdlKeyScanCode <= 31) ||  _sdlKeyScanCode == 127)
+            if((_sdlKeyScanCode >= 0  &&  _sdlKeyScanCode <= 31) ||  _sdlKeyScanCode == 127  ||  _sdlKeyScanCode == 'c')
             {
                 switch(_sdlKeyScanCode)
                 {
@@ -692,6 +692,15 @@ namespace Editor
                     case SDLK_ESCAPE:    (_editorMode == GigaPS2) ? Loader::sendCommandToGiga(GIGA_PS2_INPUT_B, true) : Cpu::setIN(Cpu::getIN() & ~INPUT_B); return true;
                     case SDLK_RETURN:    (_editorMode == GigaPS2) ? Loader::sendCommandToGiga(GIGA_PS2_CR,      true) : Cpu::setIN('\n');                    return true;
                     case SDLK_DELETE:    (_editorMode == GigaPS2) ? Loader::sendCommandToGiga(GIGA_PS2_DEL,     true) : Cpu::setIN(127);                     return true;
+
+                    case 'c':
+                    {
+                        if(_sdlKeyModifier == KMOD_LCTRL)
+                        {
+                            (_editorMode == GigaPS2) ? Loader::sendCommandToGiga(GIGA_PS2_CTLR_C, true) : Cpu::setIN(GIGA_PS2_CTLR_C);
+                            return true;
+                        }
+                    }
                 }
             }
 
