@@ -38,8 +38,14 @@
 namespace Editor
 {
     enum MemoryMode {RAM=0, ROM0, ROM1, NumMemoryModes};
-    enum EditorMode {Hex=0, Load, Giga, PS2KB, GigaPS2, Debug, NumEditorModes};
+    enum EditorMode {Hex=0, Load, Rom, Giga, PS2KB, GigaPS2, Debug, NumEditorModes};
     enum FileType {File=0, Dir, Fifo, Link, NumFileTypes};
+
+    struct RomEntry
+    {
+        uint8_t _version;
+        std::string _name;
+    };
 
 
     int getCursorX(void);
@@ -47,8 +53,10 @@ namespace Editor
     bool getHexEdit(void);
     bool getStartMusic(void);
     bool getSingleStepMode(void);
+
     MemoryMode getMemoryMode(void);
     EditorMode getEditorMode(void);
+
     uint8_t getMemoryDigit(void);
     uint8_t getAddressDigit(void);
     uint16_t getHexBaseAddress(void);
@@ -57,12 +65,23 @@ namespace Editor
     uint16_t getSingleStepWatchAddress(void);
     uint16_t getCpuUsageAddressA(void);
     uint16_t getCpuUsageAddressB(void);
+
     int getFileEntriesIndex(void);
     int getFileEntriesSize(void);
     FileType getFileEntryType(int index);
     FileType getCurrentFileEntryType(void);
     std::string* getFileEntryName(int index);
     std::string* getCurrentFileEntryName(void);
+
+    int getRomEntriesIndex(void);
+    int getRomEntriesSize(void);
+    uint8_t getRomEntryVersion(int index);
+    uint8_t getCurrentRomEntryVersion(int& index);
+    std::string* getRomEntryName(int index);
+    std::string* getCurrentRomEntryName(int& index);
+    int getCurrentRomEntryIndex(void);
+    void setRomEntry(uint8_t version, std::string& name);
+
     std::string getBrowserPath(bool removeSlash=false);
 
     void setCursorX(int x);

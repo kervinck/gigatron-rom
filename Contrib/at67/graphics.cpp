@@ -599,6 +599,7 @@ namespace Graphics
             sprintf(str, "Hex  ");
             if(Editor::getHexEdit()) sprintf(str, "Edit ");
             if(Editor::getEditorMode() == Editor::Load)         sprintf(str, "Load   ");
+            else if(Editor::getEditorMode() == Editor::Rom)     sprintf(str, "Rom    ");
             else if(Editor::getEditorMode() == Editor::Giga)    sprintf(str, "Giga   ");
             else if(Editor::getEditorMode() == Editor::PS2KB)   sprintf(str, "PS2KB  ");
             else if(Editor::getEditorMode() == Editor::Debug)   sprintf(str, "Debug  ");
@@ -631,6 +632,10 @@ namespace Graphics
             // File load
             if(Editor::getEditorMode() == Editor::Load)
             {
+                if(Editor::getCursorY() >= Editor::getFileEntriesSize()) Editor::setCursorY(0);
+                if(Editor::getCursorY() < -2) Editor::setCursorY(Editor::getFileEntriesSize() - 1);
+                onCursor01 = Editor::getCursorY() == -1  &&  (Editor::getCursorX() & 0x01) == 0;
+
                 // File list
                 drawText("Load:      Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0);
                 for(int i=0; i<HEX_CHARS_Y; i++)
@@ -646,6 +651,28 @@ namespace Graphics
 
                 sprintf(str, "%04X", hexLoadAddress);
                 drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, (Editor::getHexEdit() && onCursor01) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor01, 4);
+            }
+            // Rom switch
+            else if(Editor::getEditorMode() == Editor::Rom)
+            {
+                if(Editor::getCursorY() >= Editor::getRomEntriesSize()) Editor::setCursorY(0);
+                if(Editor::getCursorY() < 0) Editor::setCursorY(Editor::getRomEntriesSize() - 1);
+
+                // File list
+                drawText("ROM:       Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0);
+                for(int i=0; i<HEX_CHARS_Y; i++)
+                {
+                    drawText("                       ", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+                }
+                for(int i=0; i<HEX_CHARS_Y; i++)
+                {
+                    int index = Editor::getRomEntriesIndex() + i;
+                    if(index >= int(Editor::getRomEntriesSize())) break;
+                    drawText(*Editor::getRomEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, i == Editor::getCursorY(), HIGHLIGHT_SIZE);
+                }
+
+                sprintf(str, "%02X", Editor::getRomEntryVersion(Editor::getCursorY()));
+                drawText(std::string(str), _pixels, HEX_START-6, FONT_CELL_Y*3, 0xFFFFFFFF, false, 4);
             }
             // Hex monitor
             else

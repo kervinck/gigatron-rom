@@ -1,8 +1,8 @@
 # gtemuAT67
-gtemuAT67 is an emulator, a cross assembler for both vCPU and Native asm code, a debugger, a monitor<br/>
-and a real time controller for the Gigatron TTL microcomputer; written in C++ using SDL2.<br/>
+**_gtemuAT67_** is an emulator, a cross assembler for both vCPU and Native asm code, a debugger, a monitor<br/>
+and a real time controller for Gigatron TTL hardware; written in C++ using SDL2.<br/>
 This project provides support for Microsoft Windows and should be compatible with Linux, MacOS<br/>
-and possibly even Android. As of v0.6.6 it has only been tested on Microsoft Windows10 and Linux.<br/>
+and possibly even Android. As of v0.8.1 it has only been tested on Microsoft Windows10 and Linux.<br/>
 
 ## Features
 - Can control real Gigatron hardware through an Arduino interface.<br/>
@@ -64,44 +64,48 @@ and possibly even Android. As of v0.6.6 it has only been tested on Microsoft Win
   and also built and tested under Linux.<br/>
 - A C++ compiler that supports modern STL.<br/>
 - Requires the latest version of SDL2 and it's appropriate include/library/shared files.<br/>
-
-## Windows
-- Download and install cmake<br/>
-- Download sdl2 development libraries https://www.libsdl.org/release/SDL2-devel-2.0.9-VC.zip<br/>
-- Clone or download https://github.com/kervinck/gigatron-rom<br/>
-- cd gigatron-rom\Contrib\at67<br/>
-- cmake .<br/>
-- make<br/>
-- **Optional:** if you want to be able to develop using SDL2 without having to configure the include and lib variables<br/>
-  for each new project, then just add a the environment variable **SDL2DIR** pointing to the directory you installed SDL2 into.<br/>
-  
-## Linux  
-- sudo apt-get -y install cmake libsdl2-dev<br/>
-- git clone https://github.com/kervinck/gigatron-rom<br/>
-- cd gigatron-rom/Contrib/at67<br/>
-- cmake .<br/>
-- make<br/>
-- ./gtemuSDL &<br/>
-
 - For detailed instructions for Windows, Linux and macOS, see this thread in the Gigatron forum:<br/>
   https://forum.gigatron.io/viewtopic.php?p=368#p368<br/>
+
+## Windows
+~~~
+  Download and install cmake
+  Download sdl2 development libraries https://www.libsdl.org/release/SDL2-devel-2.0.9-VC.zip
+  Clone or download https://github.com/kervinck/gigatron-rom
+  cd gigatron-rom\Contrib\at67
+  cmake .
+~~~
+- Open **_gtemuAT67.sln_** into Visual Studio, compile and execute.<br/>
+- **Optional:** if you want to be able to develop using SDL2 without having to configure the include and lib variables<br/>
+  for each new project, then add an environment variable **_SDL2DIR_** pointing to the directory you installed SDL2 into.<br/>
   
+## Linux  
+~~~
+  sudo apt-get -y install cmake libsdl2-dev
+  git clone https://github.com/kervinck/gigatron-rom
+  cd gigatron-rom/Contrib/at67
+  cmake .
+  make
+  ./gtemuAT67 &
+~~~
+
 ## Installation
 - After building, copy the executable and SDL2 shared library\/DLL to an appropriate directory;<br/>
   run the executable from there.<br/>
 - The default ROM file and default font are now built into the executable., (thanks to  Cwiiis for<br/>
   the idea). The only dependency is the shared library\/DLL from SDL2 that either must be in the current<br/>
   working directory path or in the appropriate system directory.<br/>
-- Custom ROM's can be used by placing them in the current working directory with the executable and naming<br/>
-  them "**_test.rom_**".<br/>
 
 ## Configuration
 - The emulator may be placed anywhere in any directory as long as it has access to the SDL2 shared library.<br/>
 - The emulator will search for and use a file named "**_graphics_config.ini_**" in it's current<br/>
   working directory. This file allows the emulator's graphics and video options to be completely user<br/>
-  configured. The example "**_graphics_config.ini_**" file contains instructions on it's use.<br/>
-  e.g.  Fullscreen = 1, will create a full sized screen that minimises when it loses focus.<br/>
-        Fullscreen = 0, will create a window that does not minimise when it loses focus.<br/>
+  configured:<br/>
+~~~  
+  Fullscreen = 1, will create a full sized screen that minimises when it loses focus
+  Fullscreen = 0, will create a window that does not minimise when it loses focus
+~~~
+  
 - The emulator will search for and use a file named "**_input_config.ini_**" in it's current<br/>
   working directory. This file allows the emulator's keys to be completely user configured. The on<br/>
   screen help menu also uses this file to display help instructions. See the file for help on input<br/>
@@ -109,8 +113,15 @@ and possibly even Android. As of v0.6.6 it has only been tested on Microsoft Win
 
 - The emulator will search for and use a file named "**_loader_config.ini_**" in it's current<br/>
   working directory. This file allows the emulator's com port to be user configured for communicating<br/>
-  with real Gigatron hardware through an Arduino adapter. See the file for help on loader configuration.<br/>
-
+  with real Gigatron hardware through an Arduino adapter. Custom ROM's are also supported:<br/>
+~~~
+  BaudRate    = 115200   ; arduino software stack doesn't like > 115200
+  ComPort     = COM3     ; can be an index or a name, eg: ComPort = 0 or ComPort = COM5
+  Timeout     = 5.0      ; maximum seconds to wait for Gigatron to respond
+  GclBuild    = D:/Projects/Gigatron TTL/gigatron-rom ; must be an absolute path, can contain spaces
+  RomName     = ROMv1.rom  
+~~~
+  
 - The emulator will search for and use an optional file named "**_high_scores.ini_**" in it's current<br/>
   working directory. This file allows the emulator to load and save segments of memory and have them<br/>
   regularly updated, (can be used for debugging, replays, high scores, etc), see the file for help.<br/>
@@ -123,6 +134,7 @@ and possibly even Android. As of v0.6.6 it has only been tested on Microsoft Win
 |:---------:|-----------------------------------------------------------------------------------|
 |CTRL + H   | Displays a help screen showing the currently configured keys.                     |
 |CTRL + Q   | Quits the application.                                                            |
+|CTRL + R   | Switches between ROM types, (v1 to v4 are built in).                              |
 |L or l     | Loads external vCPU files within the vCPU directory, this code is uploaded to     |
 |           | an editable load address. Loading user vCPU code to system critical addresses     |
 |           | can cause the emulator to hang, 0x0200 is guaranteed to be safe.                  |
