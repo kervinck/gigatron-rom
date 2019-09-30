@@ -69,7 +69,7 @@ and possibly even Android. As of v0.8.1 it has only been tested on Microsoft Win
 
 ## Windows
 ~~~
-  Download and install cmake.
+  Download and install cmake
   Download sdl2 development libraries https://www.libsdl.org/release/SDL2-devel-2.0.9-VC.zip
   Clone or download https://github.com/kervinck/gigatron-rom
   cd gigatron-rom\Contrib\at67
@@ -100,9 +100,12 @@ and possibly even Android. As of v0.8.1 it has only been tested on Microsoft Win
 - The emulator may be placed anywhere in any directory as long as it has access to the SDL2 shared library.<br/>
 - The emulator will search for and use a file named "**_graphics_config.ini_**" in it's current<br/>
   working directory. This file allows the emulator's graphics and video options to be completely user<br/>
-  configured. The example "**_graphics_config.ini_**" file contains instructions on it's use.<br/>
-  e.g.  Fullscreen = 1, will create a full sized screen that minimises when it loses focus.<br/>
-        Fullscreen = 0, will create a window that does not minimise when it loses focus.<br/>
+  configured:<br/>
+~~~  
+  Fullscreen = 1, will create a full sized screen that minimises when it loses focus
+  Fullscreen = 0, will create a window that does not minimise when it loses focus
+~~~
+  
 - The emulator will search for and use a file named "**_input_config.ini_**" in it's current<br/>
   working directory. This file allows the emulator's keys to be completely user configured. The on<br/>
   screen help menu also uses this file to display help instructions. See the file for help on input<br/>
@@ -110,10 +113,14 @@ and possibly even Android. As of v0.8.1 it has only been tested on Microsoft Win
 
 - The emulator will search for and use a file named "**_loader_config.ini_**" in it's current<br/>
   working directory. This file allows the emulator's com port to be user configured for communicating<br/>
-  with real Gigatron hardware through an Arduino adapter. See the file for help on loader configuration.<br/>
-
-- A custom ROM can be used by adding it's filename to "**_loader_config.ini_**".<br/>
-  e.g.	RomName = ROMv4.rom<br/>
+  with real Gigatron hardware through an Arduino adapter. Custom ROM's are also supported:<br/>
+~~~
+  BaudRate    = 115200   ; arduino software stack doesn't like > 115200
+  ComPort     = COM3     ; can be an index or a name, eg: ComPort = 0 or ComPort = COM5
+  Timeout     = 5.0      ; maximum seconds to wait for Gigatron to respond
+  GclBuild    = D:/Projects/Gigatron TTL/gigatron-rom ; must be an absolute path, can contain spaces
+  RomName     = ROMv1.rom  
+~~~
   
 - The emulator will search for and use an optional file named "**_high_scores.ini_**" in it's current<br/>
   working directory. This file allows the emulator to load and save segments of memory and have them<br/>
