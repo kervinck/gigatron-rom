@@ -34,13 +34,13 @@ frameCountPrev  EQU     register0 + 0x18
 
 ; Labels
 _entryPoint_    EQU		0x0200
-_10             EQU		0x0200
-_20             EQU		0x0247
-next2           EQU		0x0209
-next3           EQU		0x020e
-next4           EQU		0x0213
-next8           EQU		0x0218
-next16          EQU		0x0245
+_10             EQU		0x022b
+_20             EQU		0x02da
+next2           EQU		0x0234
+next3           EQU		0x0239
+next4           EQU		0x023e
+next8           EQU		0x0266
+next16          EQU		0x02bb
 
 ; Variables
 _a              EQU		0x0030

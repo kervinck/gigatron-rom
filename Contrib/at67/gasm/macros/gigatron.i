@@ -33,6 +33,11 @@ giga_sysArg6        EQU     0x2A
 giga_sysArg7        EQU     0x2B
 giga_soundTimer     EQU     0x2C
 
+vPC             	EQU     0x16
+vAC             	EQU     0x18
+vLR             	EQU     0x1A
+vSP             	EQU     0x1C
+
 ; SYS calls
 SYS_Reset_36        EQU     0x009a
 SYS_Exec_88         EQU     0x00ad

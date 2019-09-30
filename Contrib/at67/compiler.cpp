@@ -1216,8 +1216,7 @@ namespace Compiler
         {
 #if 1
             emitVcpuAsm("LDWI", "_" + gotoLabel, false, lineNumber);
-            emitVcpuAsm("STW", "register0", false, lineNumber);
-            emitVcpuAsm("CALL", "register0", false, lineNumber);
+            emitVcpuAsm("CALL", "vAC", false, lineNumber);
 #else            
             // This uses the call table and wastes precious zero page memory
             emitVcpuAsm("CALL", "_" + gotoLabel, false, lineNumber);
@@ -2025,9 +2024,11 @@ namespace Compiler
                         _vasmPC = itCode->_vasm[0]._address;
                         itCode->_vasm.clear(); // itVasm invalidated
                         insertVcpuAsm("LDWI", Expression::wordToHexString(vasmPC), codeLineIndex, 0);
-                        insertVcpuAsm("STW", "register0", codeLineIndex, 1);
-                        insertVcpuAsm("CALL", "register0", codeLineIndex, 2);
-                        itCode->_vasmSize = 7;
+                        //insertVcpuAsm("STW", "register0", codeLineIndex, 1);
+                        //insertVcpuAsm("CALL", "register0", codeLineIndex, 2);
+                        //itCode->_vasmSize = 7;
+                        insertVcpuAsm("CALL", "vAC", codeLineIndex, 1);
+                        itCode->_vasmSize = 5;
 
                         // Create long jump label and new code
                         Label label;

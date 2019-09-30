@@ -62,8 +62,8 @@ _g              EQU		0x003c
 _z              EQU		0x003e
 
 ; Strings
-usrStr_0x6fa0		EQU		0x6fa0
-usrStr_0x6fa0		DB		1 ' '
+usrStr_0x6ea0		EQU		0x6ea0
+usrStr_0x6ea0		DB		1 ' '
 
 ; Code
 _entryPoint_    Initialise			; INIT
@@ -77,32 +77,32 @@ _32453245324543 LDWI	-3
                 STW		_cat		; cat=-3
 
 _10             PrintVarInt16	_a
-                PrintString	usrStr_0x6fa0
+                PrintString	usrStr_0x6ea0
                 PrintVarInt16	_b
-                PrintString	usrStr_0x6fa0
+                PrintString	usrStr_0x6ea0
                 PrintVarInt16	_d
-                PrintString	usrStr_0x6fa0
+                PrintString	usrStr_0x6ea0
                 PrintVarInt16	_e
-                PrintString	usrStr_0x6fa0
+                PrintString	usrStr_0x6ea0
                 PrintVarInt16	_f
-                PrintString	usrStr_0x6fa0
+                PrintString	usrStr_0x6ea0
                 PrintVarInt16	_g
-                PrintString	usrStr_0x6fa0
+                PrintString	usrStr_0x6ea0
                 PrintVarInt16	_z
-                PrintString	usrStr_0x6fa0
+                PrintString	usrStr_0x6ea0
                 CALL	newLineScroll		; printa;" ";b;" ";d;" ";e;" ";f;" ";g;" ";z;" "
 
                 LDW		_d
                 ADDI	5
-                STW		0x84
+                STW		0x82
                 LDI		20
-                ADDW	0x84
-                STW		0x84
+                ADDW	0x82
+                STW		0x82
                 LDW		_cat
                 SUBW	_a
-                STW		0x86
-                LDW		0x84
-                ADDW	0x86
+                STW		0x84
+                LDW		0x82
+                ADDW	0x84
                 STW		_d		; d=20+(d+5)+(cat-a)
 
                 LDW		_b
@@ -140,8 +140,7 @@ _10             PrintVarInt16	_a
                 STW		_b		; b=b-1
 
                 LDWI	0x0300
-                STW		register0
-                CALL	register0		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+                CALL	vAC		; z=b-(1000+2000-53+2)-(e+300-(f-900))
 
 0x0300          LDWI	-2949
                 ADDW	_b
@@ -258,8 +257,7 @@ _37             LDI		0
                 STW		_f		; f=-g+1000-(24-g)+f
 
                 LDWI	0x0400
-                STW		register0
-                CALL	register0		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+                CALL	vAC		; z=b-(1000+2000-53+2)-(e+300-(f-900))
 
 0x0400          LDWI	-2949
                 ADDW	_b
@@ -374,8 +372,7 @@ _37             LDI		0
                 STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
 
                 LDWI	0x0500
-                STW		register0
-                CALL	register0		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+                CALL	vAC		; z=b-(1000+2000-53+2)-(e+300-(f-900))
 
 0x0500          LDWI	-2949
                 ADDW	_b
@@ -490,8 +487,7 @@ _37             LDI		0
                 STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
 
                 LDWI	0x0600
-                STW		register0
-                CALL	register0		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+                CALL	vAC		; z=b-(1000+2000-53+2)-(e+300-(f-900))
 
 0x0600          LDWI	-2949
                 ADDW	_b
@@ -606,8 +602,7 @@ _37             LDI		0
                 STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
 
                 LDWI	0x0700
-                STW		register0
-                CALL	register0		; z=b-(1000+2000-53+2)-(e+300-(f-900))
+                CALL	vAC		; z=b-(1000+2000-53+2)-(e+300-(f-900))
 
 0x0700          LDWI	-2949
                 ADDW	_b
@@ -626,6 +621,5 @@ _37             LDI		0
                 STW		_z		; z=b-(1000+2000-53+2)-(e+300-(f-900))
 
 _40             LDWI	_10
-                STW		register0
-                CALL	register0		; goto10
+                CALL	vAC		; goto10
 
