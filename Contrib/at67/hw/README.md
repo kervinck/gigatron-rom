@@ -14,12 +14,12 @@ suite of tools to communicate with and control real **_Gigatron TTL_** hardware.
 Kicad files for a ROM switcher that relies on electrically erasable PROM devices for efficient<br/>
 switching between multiple ROMS for ROM debugging and development.<br/>
 - Uses cheap and easily available EEPROMS that are simple and fast to program with a decent ROM programmer.<br/>
-- Uses a banked design to allow for 2 separate 64Kx16 ROMS to be contained with 2 128Kx8 devices.<br/>
+- Uses a banked design to allow for two separate 64Kx16 ROMS to be contained within two 128Kx8 devices.<br/>
 - Simple tools allow you to split ROM's into their separate instruction and data counterparts, which can then be<br/>
   burnt easily into the EEPROMS.<br/>
-- A pass-through socket allows the original EPROM to be part of the ROM switching, effectively allowing for up to 3<br/>
+- A pass-through socket allows the original EPROM to be part of the ROM switching, effectively allowing for up to three<br/>
   unique ROM's to be installed.<br/>
-- A simple set of momentary contact switches allow for board reset and switching between the 3 ROM's, with 3 different<br/>
+- A simple set of momentary contact switches allow for board reset and switching between the three ROM's, with three different<br/>
   coloured LED's providing ROM identification.<br/>
 https://www.youtube.com/watch?v=gdF33IdJ85U&feature=youtu.be
 
