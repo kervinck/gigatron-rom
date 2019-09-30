@@ -78,6 +78,10 @@ namespace Editor
     int _fileEntriesIndex = 0;
     std::vector<FileEntry> _fileEntries;
 
+    int _romEntriesSize = 0;
+    int _romEntriesIndex = 0;
+    std::vector<RomEntry> _romEntries;
+
     INIReader _iniReader;
     std::map<std::string, int> _sdlKeys;
     std::map<std::string, KeyCodeMod> _inputKeys;
@@ -89,8 +93,10 @@ namespace Editor
     bool getStartMusic(void) {return _startMusic;}
     bool getSingleStep(void) {return _singleStep;}
     bool getSingleStepMode(void) {return _singleStepMode;}
+
     MemoryMode getMemoryMode(void) {return _memoryMode;}
     EditorMode getEditorMode(void) {return _editorMode;}
+
     uint8_t getMemoryDigit(void) {return _memoryDigit;}
     uint8_t getAddressDigit(void) {return _addressDigit;}
     uint16_t getHexBaseAddress(void) {return _hexBaseAddress;}
@@ -99,18 +105,22 @@ namespace Editor
     uint16_t getSingleStepWatchAddress(void) {return _singleStepWatchAddress;}
     uint16_t getCpuUsageAddressA(void) {return _cpuUsageAddressA;}
     uint16_t getCpuUsageAddressB(void) {return _cpuUsageAddressB;}
+
     int getFileEntriesIndex(void) {return _fileEntriesIndex;}
     int getFileEntriesSize(void) {return int(_fileEntries.size());}
     FileType getFileEntryType(int index) {return _fileEntries[index % _fileEntries.size()]._fileType;}
     FileType getCurrentFileEntryType(void) {return _fileEntries[(_cursorY + _fileEntriesIndex) % _fileEntries.size()]._fileType;}
     std::string* getFileEntryName(int index) {return &_fileEntries[index % _fileEntries.size()]._name;}
     std::string* getCurrentFileEntryName(void) {return &_fileEntries[(_cursorY + _fileEntriesIndex) % _fileEntries.size()]._name;}
-    std::string getBrowserPath(bool removeSlash)
-    {
-        std::string str = _filePath;
-        if(removeSlash  &&  str.length()) str.erase(str.length()-1);
-        return str;
-    }
+
+    int getRomEntriesIndex(void) {return _romEntriesIndex;}
+    int getRomEntriesSize(void) {return int(_romEntries.size());}
+    uint8_t getRomEntryVersion(int index) {return _romEntries[index % _romEntries.size()]._version;}
+    uint8_t getCurrentRomEntryVersion(int& index) {index = (_cursorY + _romEntriesIndex) % _romEntries.size(); return _romEntries[index]._version;}
+    std::string* getRomEntryName(int index) {return &_romEntries[index % _romEntries.size()]._name;}
+    std::string* getCurrentRomEntryName(int& index) {index = (_cursorY + _romEntriesIndex) % _romEntries.size(); return &_romEntries[index]._name;}
+    int getCurrentRomEntryIndex(void) {return (_cursorY + _romEntriesIndex) % _romEntries.size();}
+    void setRomEntry(uint8_t version, std::string& name) {Editor::RomEntry romEntry = {version, name}; _romEntries.push_back(romEntry); return;}
 
     void setCursorX(int x) {_cursorX = x;}
     void setCursorY(int y) {_cursorY = y;}
@@ -122,6 +132,13 @@ namespace Editor
     void setCpuUsageAddressA(uint16_t address) {_cpuUsageAddressA = address;}
     void setCpuUsageAddressB(uint16_t address) {_cpuUsageAddressB = address;}
 
+
+    std::string getBrowserPath(bool removeSlash)
+    {
+        std::string str = _filePath;
+        if(removeSlash  &&  str.length()) str.erase(str.length()-1);
+        return str;
+    }
 
     bool scanCodeFromIniKey(const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, KeyCodeMod& keyCodeMod)
     {
@@ -439,6 +456,11 @@ namespace Editor
                 _fileEntriesIndex--;
                 if(_fileEntriesIndex < 0) _fileEntriesIndex = 0;
             }
+            else if(_editorMode == Rom)
+            {
+                _romEntriesIndex--;
+                if(_romEntriesIndex < 0) _romEntriesIndex = 0;
+            }
             else
             {
                 _hexBaseAddress = (_hexBaseAddress - HEX_CHARS_X) & (RAM_SIZE-1);
@@ -452,6 +474,14 @@ namespace Editor
                 {
                     _fileEntriesIndex++;
                     if(_fileEntries.size() - _fileEntriesIndex < HEX_CHARS_Y) _fileEntriesIndex--;
+                }
+            }
+            if(_editorMode == Rom)
+            {
+                if(_romEntries.size() > HEX_CHARS_Y)
+                {
+                    _romEntriesIndex++;
+                    if(_romEntries.size() - _romEntriesIndex < HEX_CHARS_Y) _romEntriesIndex--;
                 }
             }
             else
@@ -721,11 +751,14 @@ namespace Editor
 
         //fprintf(stderr, "Editor::handleKeyDown() : key=%d : mod=%04x\n", _sdlKeyScanCode, _sdlKeyModifier);
 
-        int limitY = (_editorMode != Load) ? HEX_CHARS_Y : std::min(int(_fileEntries.size()), HEX_CHARS_Y);
-        if(_sdlKeyScanCode == _inputKeys["Left"].scanCode  &&  _sdlKeyModifier == _inputKeys["Left"].modifier)        {_cursorX = (--_cursorX < 0) ? HEX_CHARS_X-1 : _cursorX;  _memoryDigit = 0; _addressDigit = 0;}
-        else if(_sdlKeyScanCode == _inputKeys["Right"].scanCode  &&  _sdlKeyModifier == _inputKeys["Right"].modifier) {_cursorX = (++_cursorX >= HEX_CHARS_X) ? 0  : _cursorX;  _memoryDigit = 0; _addressDigit = 0;}
-        else if(_sdlKeyScanCode == _inputKeys["Up"].scanCode  &&  _sdlKeyModifier == _inputKeys["Up"].modifier)       {_cursorY = (--_cursorY < -2) ? limitY-1     : _cursorY;  _memoryDigit = 0; _addressDigit = 0;}
-        else if(_sdlKeyScanCode == _inputKeys["Down"].scanCode  &&  _sdlKeyModifier == _inputKeys["Down"].modifier)   {_cursorY = (++_cursorY >= limitY) ? 0       : _cursorY;  _memoryDigit = 0; _addressDigit = 0;}
+        int limitY = HEX_CHARS_Y;
+        if(_editorMode == Load)     limitY = std::min(int(_fileEntries.size()), HEX_CHARS_Y);
+        else if(_editorMode == Rom) limitY = std::min(int(_romEntries.size()),  HEX_CHARS_Y);
+
+        if(_sdlKeyScanCode == _inputKeys["Left"].scanCode        &&  _sdlKeyModifier == _inputKeys["Left"].modifier)  {_cursorX = (--_cursorX < 0) ? HEX_CHARS_X-1 : _cursorX; _memoryDigit = 0; _addressDigit = 0;}
+        else if(_sdlKeyScanCode == _inputKeys["Right"].scanCode  &&  _sdlKeyModifier == _inputKeys["Right"].modifier) {_cursorX = (++_cursorX >= HEX_CHARS_X) ? 0  : _cursorX; _memoryDigit = 0; _addressDigit = 0;}
+        else if(_sdlKeyScanCode == _inputKeys["Down"].scanCode   &&  _sdlKeyModifier == _inputKeys["Down"].modifier)  {_cursorY = (++_cursorY >= limitY) ? 0       : _cursorY; _memoryDigit = 0; _addressDigit = 0;}
+        else if(_sdlKeyScanCode == _inputKeys["Up"].scanCode     &&  _sdlKeyModifier == _inputKeys["Up"].modifier)    {_cursorY = (--_cursorY < -2) ? limitY-1     : _cursorY; _memoryDigit = 0; _addressDigit = 0;}
 
         else if(_sdlKeyScanCode == _inputKeys["PageUp"].scanCode  &&  _sdlKeyModifier == _inputKeys["PageUp"].modifier)
         {
@@ -733,6 +766,11 @@ namespace Editor
             {
                 _fileEntriesIndex--;
                 if(_fileEntriesIndex < 0) _fileEntriesIndex = 0;
+            }
+            else if(_editorMode == Rom)
+            {
+                _romEntriesIndex--;
+                if(_romEntriesIndex < 0) _romEntriesIndex = 0;
             }
             else
             {
@@ -748,6 +786,14 @@ namespace Editor
                 {
                     _fileEntriesIndex++;
                     if(_fileEntries.size() - _fileEntriesIndex < HEX_CHARS_Y) _fileEntriesIndex--;
+                }
+            }
+            else if(_editorMode == Rom)
+            {
+                if(_romEntries.size() > HEX_CHARS_Y)
+                {
+                    _romEntriesIndex++;
+                    if(_romEntries.size() - _romEntriesIndex < HEX_CHARS_Y) _romEntriesIndex--;
                 }
             }
             else
@@ -838,10 +884,10 @@ namespace Editor
             Graphics::setDisplayHelpScreen(helpScreen);
         }
 
-        else if(_sdlKeyScanCode == _inputKeys["ROM_Type"].scanCode  &&  _sdlKeyModifier == _inputKeys["ROM_Type"].modifier)
-        {
-            Cpu::swapRom();
-        }
+        //else if(_sdlKeyScanCode == _inputKeys["ROM_Type"].scanCode  &&  _sdlKeyModifier == _inputKeys["ROM_Type"].modifier)
+        //{
+        //    Cpu::swapRom();
+        //}
 
         // ROMS after v1 have their own inbuilt scanline handlers
         else if(_sdlKeyScanCode == _inputKeys["ScanlineMode"].scanCode  &&  _sdlKeyModifier == _inputKeys["ScanlineMode"].modifier)
@@ -860,9 +906,14 @@ namespace Editor
         {
             if(!_singleStepMode)
             {
-                _editorMode = _editorMode == Load ? Hex : Load;
+                _editorMode = (_editorMode == Load) ? Hex : Load;
                 if(_editorMode == Load) browseDirectory();
             }
+        }
+
+        else if(_sdlKeyScanCode == _inputKeys["ROM_Type"].scanCode  &&  _sdlKeyModifier == _inputKeys["ROM_Type"].modifier)
+        {
+            if(!_singleStepMode) _editorMode = (_editorMode == Rom) ? Hex : Rom;
         }
 
         // Enter debug mode
@@ -935,11 +986,11 @@ namespace Editor
         // Toggle hex edit or start an upload
         else if(_sdlKeyScanCode == _inputKeys["Edit"].scanCode  &&  _sdlKeyModifier == _inputKeys["Edit"].modifier)
         {
-            if(_editorMode != Load  ||  _cursorY < 0)
+            if((_editorMode != Load  &&  _editorMode != Rom)  ||  _cursorY < 0)
             {
                 _hexEdit = !_hexEdit;
             }
-            else
+            else if(_editorMode == Load)
             {
                 FileType fileType = getCurrentFileEntryType();
                 switch(fileType)
@@ -948,6 +999,7 @@ namespace Editor
                     case Dir: changeBrowseDirectory(); break;
                 }
             }
+            else if(_editorMode == Rom) Cpu::loadRom(getCurrentRomEntryIndex());
         }
 
         // Hardware upload and execute

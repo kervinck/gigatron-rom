@@ -936,8 +936,8 @@ namespace Loader
         else if(_configGclBuildFound  &&  filename.find(".gtb") != filename.npos)
         {
             gtbFilepath = filepath;
-            filename = "TinyBASIC.gt1";
-            filepath = _configGclBuild + "/Apps/" + filename;
+            filename = "TinyBASIC_v1.gt1";
+            filepath = _configGclBuild + "/Apps/TinyBASIC/" + filename;
             isGtbFile = true;
         }
         // Compile gcl to gt1
@@ -946,8 +946,9 @@ namespace Loader
             // Create compile gcl string
             std::string browserPath = Editor::getBrowserPath();
             browserPath.pop_back(); // remove trailing '/'
-            chdir(browserPath.c_str());
-            std::string command = "py -B \"" + _configGclBuild + "/Core/compilegcl.py\" \"" + filepath + "\" \"" + browserPath + "\" -s \"" + _configGclBuild + "/interface.json\"";
+            chdir(_configGclBuild.c_str());
+
+            std::string command = "py -B Core\\compilegcl.py -s interface.json \"" + filepath + "\" \"" + browserPath + "\"";
             //fprintf(stderr, command.c_str());
 
             // Create gt1 name and path

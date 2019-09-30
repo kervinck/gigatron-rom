@@ -347,6 +347,13 @@ namespace Cpu
         outfile << "\n};" << std::endl;
     }
 
+    void loadRom(int index)
+    {
+        _romIndex = index % _numRoms;
+        memcpy(_ROM, _romFiles[_romIndex], sizeof(_ROM));
+        reset(true);
+    }
+
     void swapRom(void)
     {
         _romIndex = (_romIndex + 1) % _numRoms;
@@ -412,6 +419,13 @@ namespace Cpu
                 _romFiles[_romIndex] = (uint8_t*)_romFile;
                 memcpy(_ROM, _romFiles[_romIndex], sizeof(_ROM));
             }
+        }
+
+        uint8_t versions[MAX_ROMS] = {0x1c, 0x20, 0x28, 0x38, 0x38};
+        std::string names[MAX_ROMS] = {"ROMv1.rom", "ROMv2.rom", "ROMv3.rom", "ROMv4.rom", "ROMv4.rom"};
+        for(int i=0; i<_numRoms; i++)
+        {
+            Editor::setRomEntry(versions[i], names[i]);
         }
 
 //#define CREATE_ROM_HEADER

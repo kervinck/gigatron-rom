@@ -69,6 +69,7 @@ namespace Cpu
     uint8_t* getPtrToROM(int& romSize);
     RomType getRomType(void);
     
+    void loadRom(int index);
     void swapRom(void);
 
     void setFreeRAM(uint16_t freeRAM);

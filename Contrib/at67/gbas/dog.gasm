@@ -34,20 +34,20 @@ frameCountPrev  EQU     register0 + 0x18
 
 ; Labels
 _entryPoint_    EQU		0x0200
-_10             EQU		0x0233
-_15             EQU		0x025b
-_16             EQU		0x0261
-_20             EQU		0x0267
+_10             EQU		0x0208
+_15             EQU		0x0216
+_16             EQU		0x021c
+_20             EQU		0x0222
 
 ; Variables
 _a              EQU		0x0030
 _b              EQU		0x0032
 
 ; Strings
-usrStr_0x6fa0		EQU		0x6fa0
-usrStr_0x6fa0		DB		1 ' '
-usrStr_0x6fa2		EQU		0x6fa2
-usrStr_0x6fa2		DB		5 ' dog '
+usrStr_0x6ea0		EQU		0x6ea0
+usrStr_0x6ea0		DB		1 ' '
+usrStr_0x6da2		EQU		0x6da2
+usrStr_0x6da2		DB		5 ' dog '
 
 ; Code
 _entryPoint_    Initialise			; INIT
@@ -63,9 +63,9 @@ _10             LDI		7
                 SUBW	0x82
                 STW		0x82
                 PrintVarInt16	0x82
-                PrintString	usrStr_0x6fa0
+                PrintString	usrStr_0x6ea0
                 PrintVarInt16	_a
-                PrintString	usrStr_0x6fa2
+                PrintString	usrStr_0x6da2
                 CALL	newLineScroll		; print54-23+(27*2)-32+(56/3)-(7+b);" ";a;" dog "
 
 _15             LDW		_a
