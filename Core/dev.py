@@ -92,9 +92,11 @@
 #  DONE v6502: Test with Microchess
 #  DONE Sound: Better noise by changing wavX every frame (at least in channel 1)
 #  DONE Sound demo: Play SMB Underworld tune
-#  XXX  Fix clobbering of 0x81 by SPI SYS functions #103
-#  XXX  Control variable to black out the area at the top of the screen
+#  DONE SPI: Also reset state at soft reset
+#  DONE Fix clobbering of 0x81 by SPI SYS functions #103
+#  DONE Control variable to black out the area at the top of the screen
 #  DONE Fix possible video timing error in Loader #100
+#  XXX  Formally Support SPI and RAM expander: publish in interface.json
 #  XXX  v6502: Test with Apple1 BASIC
 #  XXX  v6502: Stub D010-D013 with JSR targets for easier patching
 #  XXX  v6502: SYS_v6502_IRQ
@@ -102,21 +104,17 @@
 #  XXX  v6502: SYS_v6502_RESET
 #  XXX  v6502: add 65c02 opcodes? http://nparker.llx.com/a2/opcodes.html
 #  XXX  Main: add Apple1 to main menu
-#  XXX  Formally Support SPI and RAM expander: publish in interface.json
-#  XXX  SPI: Also reset state at soft reset
-#  XXX  SPI: Boot from MAIN.GT1 file if SDC/MCC detected
+#  XXX  SPI: Boot from BOOT.GT1 file if SDC/MMC detected
 #  XXX  SPI: Auto-detect banking, 64K and 128K
 #  XXX  Fix zero page usage in Bricks and Tetronis #41
 #  XXX  Discoverable ROM contents #46
 #  XXX  Racer: Make noise when crashing
 #  XXX  Racer: Control speed with up/down as well
 #  XXX  Main: Better startup chime
-#  XXX  Video: Fast system video modes (something like ROM v3y)? Mode 4 (black)
-#  XXX  vCPU: extension for C: HOP_v4 $DD
-#  XXX  vCPU: extension for C: CMPW_v4 $DD
+#  XXX  vCPU: extension for C: JMPI_v5 $DD
+#  XXX  vCPU: extension for C: CMPW_v5 $DD (signed and unsigned)
 #  XXX  Faster SYS_Exec_88, with start address?
 #  XXX  Let SYS_Exec_88 clear channelMask when loading into live variables
-#  XXX  Video mode for 12.5 MHz systems
 #
 #  Ideas for ROM v6+
 #  XXX  Pucrunch (well documented) or eximozer 3.0.2 (better compression)
@@ -133,6 +131,7 @@
 #  XXX  Scroll out the top line of text, or generic vertical scroll SYS call
 #  XXX  SYS function for plotting a full character in one go
 #  XXX  Multitasking/threading/sleeping (start with date/time clock in GCL)
+#  XXX  Video mode for 12.5 MHz systems
 #-----------------------------------------------------------------------
 
 import importlib
@@ -482,9 +481,17 @@ ld(syncBits^hSync, OUT)         # Prepare XOUT update, hSync goes down, RGB to b
 ld(syncBits, OUT)               # hSync goes up, updating XOUT
 
 # Setup I/O and RAM expander
-ctrl(0b01111100);               C('SCLK=0; Disable SPI slaves; Bank=1; Enable RAM')
-ld(  0b01111100)                # Keep copy in zero page
-st([ctrlBits])
+ctrl(0b01111100);               C('SCLK=0; Disable SPI slaves; Bank=01; Enable RAM')
+#      ^^^^^^^^
+#      |||||||`-- SCLK
+#      ||||||`--- Not connected
+#      |||||`---- /SS0
+#      ||||`----- /SS1
+#      |||`------ /SS2
+#      ||`------- /SS3
+#      |`-------- B0
+#      `--------- B1
+# bit15 --------- MOSI = 0
 
 # Simple RAM test and size check by writing to [1<<n] and see if [0] changes.
 ld(1);                          C('RAM test and count')
@@ -568,13 +575,13 @@ adda(2, X)
 ld(vReset>>8)
 st([vPC+1], Y)
 st('LDI',             [Y,Xpp]); C('LDI')
-st('SYS_Reset_38',    [Y,Xpp]); C('SYS_Reset_38')
+st('SYS_Reset_88',    [Y,Xpp]); C('SYS_Reset_88')
 st('STW',             [Y,Xpp]); C('STW')
 st(sysFn,             [Y,Xpp]); C('sysFn')
-st('SYS',             [Y,Xpp]); C('SYS -> SYS_Reset_38')
-st(256-38/2+maxTicks, [Y,Xpp]); C('270-38/2')
-st('SYS',             [Y,Xpp]); C('SYS -> SYS_Exec_88)')
+st('SYS',             [Y,Xpp]); C('SYS -> SYS_Reset_88 -> SYS_Exec_88')
 st(256-88/2+maxTicks, [Y,Xpp]); C('270-88/2')
+st(0,                 [Y,Xpp]);
+st(0,                 [Y,Xpp]);
 st(0,                 [Y,Xpp]);
 st(0,                 [Y,Xpp]); C('videoTop')
 
@@ -593,8 +600,9 @@ ld(syncBits^hSync, OUT)
 ld(syncBits, OUT)
 
 ld(0)
-st([channel])
 st([0]);                        C('Carry lookup ([0x80] in first line of vBlank)')
+st([channel])
+st([soundTimer])
 
 ld(0b1111);                     C('LEDs |****|')
 ld(syncBits^hSync, OUT)
@@ -607,43 +615,48 @@ jmp(Y,'startVideo')
 st([ledState_v2])               # Setting to 1..126 means "stopped"
 
 #-----------------------------------------------------------------------
-# Extension SYS_Reset_38: Soft reset
+# Extension SYS_Reset_88: Soft reset
 #-----------------------------------------------------------------------
 
-# SYS_Reset_38 initiates an immediate Gigatron reset from within the vCPU.
+# SYS_Reset_88 initiates an immediate Gigatron reset from within the vCPU.
 # The reset sequence itself is mostly implemented in GCL by Reset.gcl,
 # which must first be loaded into RAM. But as that takes more than 1 scanline,
-# some vCPU bootstrapping code gets loaded with SYS_Exec_88. The caller of
-# SYS_Reset_38 provides the SYS instruction to execute that.
+# some vCPU bootstrapping code gets loaded with SYS_Exec_88.
 # !!! This function was REMOVED from interface.json
 # !!! Better use vReset as generic entry point for soft reset
 
-label('SYS_Reset_38')
+label('SYS_Reset_88')
 assert pc()>>8 == 0
 assert (romTypeValue & 7) == 0
 ld(romTypeValue);               C('Set ROM type/version and clear channel mask')#15 Boot with 1 channel
 st([romType])                   #16
 ld(0)                           #17
-st([vSP])                       #18 Reset stack pointer
+st([vSP]);                      C('vSP')#18
+ld(hi('videoTop_DEVROM'),Y)     #19
+st([Y,lo('videoTop_DEVROM')]);  C('Show all 120 pixel rows')#20
+st([soundTimer]);               C('soundTimer')#21
 assert userCode&255 == 0
-st([vLR])                       #19
-st([soundTimer])                #20
-ld(userCode>>8)                 #21
-st([vLR+1])                     #22
-ld('nopixels')                  #23 Do this before first visible pixels
-st([videoModeB])                #24
-st([videoModeC])                #25
-st([videoModeD])                #26
-ld('SYS_Exec_88')               #27
-st([sysFn])                     #28 High byte (remains) 0
-ld('Reset')                     #29
-st([sysArgs+0])                 #30
-ld(hi('Reset'))                 #31
-st([sysArgs+1])                 #32
-# Return to interpreter
-ld(hi('REENTER'), Y)            #33
-jmp(Y,'REENTER')                #34
-ld(-38/2)                       #35
+st([vLR]);                      C('vLR')#22
+ld(userCode>>8)                 #23
+st([vLR+1])                     #24
+ld('nopixels');                 C('Video mode 3 (fast)')#25 Do this before first visible pixels
+st([videoModeB])                #26
+st([videoModeC])                #27
+st([videoModeD])                #28
+ld('SYS_Exec_88');              C('SYS_Exec_88')#29
+st([sysFn])                     #30 High byte (remains) 0
+ld('Reset');                    C('Reset.gt1 from EPROM')#31
+st([sysArgs+0])                 #32
+ld(hi('Reset'))                 #33
+st([sysArgs+1])                 #34
+ld([vPC]);                      C('Force second SYS call')#35
+suba(2)                         #36
+st([vPC])                       #37
+nop()                           #38
+# Return to interprete7
+ld(hi('REENTER'), Y)            #39
+jmp(Y,'REENTER')                #40
+ld(-44/2)                       #41
 
 #-----------------------------------------------------------------------
 # Placeholders for future SYS functions. This works as a kind of jump
@@ -1111,7 +1124,7 @@ label('vBlankLast#52')
 # - ResetTimer decrements as long as just [Start] is pressed down
 # - Reaching 0 (normal) or 128 (extended) triggers the soft reset sequence
 # - Initial value is 128 (or 255 at boot), first decrement, then check
-# - This starts vReset -> SYS_Reset_38 -> SYS_Exec_88 -> Reset.gcl -> Main.gcl
+# - This starts vReset -> SYS_Reset_88 -> SYS_Exec_88 -> Reset.gcl -> Main.gcl
 # - Main.gcl then recognizes extended presses if resetTimer is 0..127 ("paasei")
 # - This requires a full cycle (4s) in the warm boot scenario
 # - Or a half cycle (2s) when pressing [Select] down during hard reset
@@ -3481,6 +3494,15 @@ label('sys_ExpanderControl')
 
 ld([vAC])                       #18
 anda(0b11111100);               C('Safety (SCLK=0)')#19
+#      ^^^^^^^^
+#      |||||||`-- SCLK
+#      ||||||`--- Not connected
+#      |||||`---- /SS0
+#      ||||`----- /SS1
+#      |||`------ /SS2
+#      ||`------- /SS3
+#      |`-------- B0
+#      `--------- B1
 st([ctrlBits], X);              C('Set control register')#20
 ld([vAC+1], Y)                  #21 For MOSI (A15)
 ctrl(Y, X);                     #22

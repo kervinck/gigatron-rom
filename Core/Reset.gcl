@@ -7,14 +7,17 @@
 
 gcl0x
 
+\SYS_ExpanderControl_v4_40      {SYS function}
+_sysFn= $7c 40!                 {Disable all SPI, set bank to 01}
+
 { Setup video }
 [def
   { Setup video indirection table }
   $100 p= {videoTable}
   $800 q= {frame}
   [do
-    >q,  p. <p++          { Y[i] = 8..127}
-    0    p. <p++          {dX[i] = 0}
+    >q,  p. <p++                { Y[i] = 8..127}
+    0    p. <p++                {dX[i] = 0}
     >q++ q  if>0loop]
 
   { Clear screen }
@@ -29,23 +32,21 @@ gcl0x
   ret
 ] SetupVideo=
 
-\videoTop_DEVROM p= 0 p.        {Skip 0 pixel rows from the top}
-
-[def {PrintStartupMessage}
+{ PrintStartupMessage }
+[def
   push
   [def
       `***`Gigatron`??K`*** #10
     ``TTL`microcomputer`DEVROM  {ROM`vN for versioned release ROMs}
     #0
   ] Text=
-
   { Convert memory size into decimal text }
-  {StartupMessage} 13+ p=         {Position within StartupMessage for memory size}
-  $2f2f Char=                     {Two ASCII counters, both starting at '0'-1}
-  \memSize, 1- 255& 1+            {Number of pages as counted at boot}
-  [do >Char++ 40- if>=0loop] 40+  {Count number of 10K chunks}
-  [do <Char++  4- if>=0loop]      {Count number of 1K chunks}
-  >Char, p. <p++ Char p.          {Put decimals into StartupMessage}
+  {StartupMessage} 13+ p=       {Position within StartupMessage for memory size}
+  $2f2f Char=                   {Two ASCII counters, both starting at '0'-1}
+  \memSize, 1- 255& 1+          {Number of pages as counted at boot}
+  [do >Char++ 40- if>=0loop] 40+{Count number of 10K chunks}
+  [do <Char++  4- if>=0loop]    {Count number of 1K chunks}
+  >Char, p. <p++ Char p.        {Put decimals into StartupMessage}
 
   [do
     Text, if<>0 Char= <Text++ {while((Char=*Text++)!=0)...}
@@ -59,23 +60,22 @@ gcl0x
 +-----------------------------------------------------------------------}
 *=$0300
 
-{ Print ASCII character (32..127) on screen in 5x8 pixels }
+{ Print ASCII character (32..127) on screen using the 5x8 pixel built-in font }
 [def
-  {Map ASCII code to offset in font table}
-  Char 82- [if<0 50+ i= \font32up
-            else     i= \font82up] fontData= {Select low or high page}
-  i 2<< i+             {Multiply by 5}
-  fontData+ fontData=  {Add to page address to reach bitmap data for Char}
-
-  {Draw 5 vertical slices: 5 using font data}
-  $3f20   \sysArgs0: {Blue/White}
-  Pos     \sysArgs4:
-  6+      Pos=
-  \SYS_VDrawBits_134 \sysFn:
-  $fb i= [do
-    fontData 0? <fontData++ \sysArgs2. 134!
-    <\sysArgs4++
-    <i++ i if<>0loop]
+  Char 82-                      {Map ASCII code to offset in font table}
+  [if<0 50+ i= \font32up        {First page for ASCII 32..81}
+   else     i= \font82up] j=    {Second page is ASCII 82..127}
+  i 2<< i+                      {Multiply by 5}
+  j+ j=                         {Add page address to reach bitmap data}
+  \SYS_VDrawBits_134 \sysFn:    {Prepare SYS call}
+  $3f20 \sysArgs0:              {Blue/White}
+  Pos \sysArgs4:                {Position of character}
+  6+ Pos=                       {Advance position by 6 pixels for next call}
+  5 [do i=                      {Loop to draw 5 vertical slices of 8 pixels}
+    j 0? \sysArgs2.             {Get byte from ROM using `LUP 0' instruction}
+    134!                        {Invoke SYS function to draw 8 vertical pixels}
+    <j++ <\sysArgs4++           {Advance to next slice in ROM and on screen}
+    i 1- if>0loop]              {Looping}
   ret
 ] PrintChar=
 
@@ -101,7 +101,7 @@ gcl0x
 \SYS_ResetWaveforms_v4_50 \sysFn: 0 50!
 \SYS_ShuffleNoise_v4_46   \sysFn: 0 46! 46! 46! 46!
 
-{ Setup a G-major chord with 4 channels but don't play it yet }
+{ Setup a G-major chord with 4 channels, but don't play it yet }
 $158 {1: G-3} SetupChannel!
 $270 {2: G-4} SetupChannel!
 $378 {3: B-4} SetupChannel!

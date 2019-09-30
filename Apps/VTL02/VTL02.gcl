@@ -186,7 +186,7 @@ _PrintChar=*
     $01ee i=                    {Last entry in video table}
     [do
       i, 120- [if<0 128+
-               else 8+] i.      {Rotate by 8 in 7..126 range}
+               else 8+] i.      {Rotate by 8 in 8..127 range}
       i 2- i=                   {Move to previous entry in video table}
       $fe^ if<>0loop]           {Until all done}
   ]
