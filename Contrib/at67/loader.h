@@ -60,10 +60,12 @@ namespace Loader
     };
 
 
-    void initialise(void);
-
     UploadTarget getUploadTarget(void);
     void setUploadTarget(UploadTarget target);
+    bool getRomName(std::string& romName);
+
+    void initialise(void);
+
     void disableUploads(bool disable);
     void sendCommandToGiga(char cmd, bool wait);
 

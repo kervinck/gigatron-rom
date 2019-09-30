@@ -11,10 +11,14 @@
 
 #ifndef STAND_ALONE
 #include <SDL.h>
+#include "loader.h"
 #include "editor.h"
 #include "timing.h"
 #include "graphics.h"
 #include "gigatron_0x1c.h"
+#include "gigatron_0x20.h"
+#include "gigatron_0x28.h"
+#include "gigatron_0x38.h"
 #endif
 
 #ifdef _WIN32
@@ -30,21 +34,28 @@
 
 namespace Cpu
 {
+    int _numRoms = MAX_ROMS - 1;
+    int _romIndex = MAX_ROMS - 1;
     int _vCpuInstPerFrame = 0;
     int _vCpuInstPerFrameMax = 0;
     float _vCpuUtilisation = 0.0;
 
+    bool _checkRomType = true;
+
     int64_t _clock = -2;
     uint8_t _IN = 0xFF, _XOUT = 0x00;
-    uint8_t _ROM[ROM_SIZE][2], _RAM[RAM_SIZE];
+    uint8_t _ROM[ROM_SIZE][2], _RAM[RAM_SIZE], _romFile[ROM_SIZE][2];
+    uint8_t* _romFiles[MAX_ROMS];
     RomType _romType = ROMERR;
 
     std::vector<uint8_t> _scanlinesRom0;
     std::vector<uint8_t> _scanlinesRom1;
+    int _scanlineMode = ScanlineMode::Normal;
 
     std::vector<InternalGt1> _internalGt1s;
 
 
+    int getNumRoms(void) {return _numRoms;}
     uint8_t* getPtrToROM(int& romSize) {romSize = sizeof(_ROM); return (uint8_t*)_ROM;}
     RomType getRomType(void) {return _romType;}
 
@@ -230,17 +241,46 @@ namespace Cpu
 
     void setRomType(void)
     {
+        if(!_checkRomType) return;
+        _checkRomType = false;
+
         uint8_t romType = getRAM(ROM_TYPE) & ROM_TYPE_MASK;
         switch((RomType)romType)
         {
-            case ROMv1:  _romType = ROMv1;  break;
-            case ROMv2:  _romType = ROMv2;  break;
-            case ROMv3:  _romType = ROMv3;  break;
-            case ROMv4:  _romType = ROMv4;  break;
-            case DEVROM: _romType = DEVROM; break;
-            default:     _romType = ROMv1;  break;
+            case ROMv1:
+            {
+                _romType = (RomType)romType;
+
+                // Patches SYS_Exec_88 loader to accept page0 segments as the first segment and works with 64KB SRAM hardware
+                patchSYS_Exec_88();
+
+                saveScanlineModes();
+                setRAM(VIDEO_MODE_D, 0xF3);
+                _scanlineMode = ScanlineMode::Normal;
+            }
+            break;
+
+            case ROMv2:  
+            case ROMv3:  
+            case ROMv4:  
+            case DEVROM: 
+            {
+                _romType = (RomType)romType;
+                setRAM(VIDEO_MODE_D, 0xEC);
+                setRAM(VIDEO_MODE_B, 0x0A);
+                setRAM(VIDEO_MODE_C, 0x0A);
+            }
+            break;
+
+            default:
+            {
+                SDL_Quit();
+                fprintf(stderr, "Cpu::setRomType() : Unknown EPROM Type = 0x%02x : exiting...\n", romType);
+                _EXIT_(EXIT_FAILURE);
+            }
+            break;
         }
-        fprintf(stderr, "Cpu::setRomType() : ROM Type = 0x%02x\n", _romType);
+        //fprintf(stderr, "Cpu::setRomType() : ROM Type = 0x%02x\n", _romType);
     }
 
     void saveScanlineModes(void)
@@ -261,9 +301,11 @@ namespace Cpu
         }
     }
 
-    void setScanlineMode(ScanlineMode scanlineMode)
+    void swapScanlineMode(void)
     {
-        switch(scanlineMode)
+        if(++_scanlineMode == ScanlineMode::NumScanlineModes-1) _scanlineMode = ScanlineMode::Normal;
+
+        switch(_scanlineMode)
         {
             case Normal:  restoreScanlineModes();                               break;
             case VideoB:  patchScanlineModeVideoB();                            break;
@@ -305,15 +347,13 @@ namespace Cpu
         outfile << "\n};" << std::endl;
     }
 
-    void loadDefaultRom(const uint8_t* rom)
+    void swapRom(void)
     {
-        uint8_t* srcRom = (uint8_t *)rom;
-        uint8_t* dstRom = (uint8_t *)_ROM;
-        for(int i=0; i<sizeof(_ROM); i++)
-        {
-            *dstRom++ = *srcRom++;
-        } 
+        _romIndex = (_romIndex + 1) % _numRoms;
+        memcpy(_ROM, _romFiles[_romIndex], sizeof(_ROM));
+        reset(true);
     }
+
 
     void initialise(State& S)
     {
@@ -340,28 +380,45 @@ namespace Cpu
         garble(_RAM, sizeof _RAM);
         garble((uint8_t*)&S, sizeof S);
 
+        _numRoms = MAX_ROMS - 1;
+        _romIndex = MAX_ROMS - 2;
+ 
+        _romFiles[0] = _gigatron_0x1c_rom;
+        _romFiles[1] = _gigatron_0x20_rom;
+        _romFiles[2] = _gigatron_0x28_rom;
+        _romFiles[3] = _gigatron_0x38_rom;
+
         // Check for ROM file
-        std::string filenameRom = "ROMv4.rom";
-        std::ifstream romfile(filenameRom, std::ios::binary | std::ios::in);
+        std::string romName;
+        Loader::getRomName(romName);
+        std::ifstream romfile(romName, std::ios::binary | std::ios::in);
         if(!romfile.is_open())
         {
-            loadDefaultRom(_gigatron_0x1c_rom);
+            memcpy(_ROM, _romFiles[_romIndex], sizeof(_ROM));
         }
         else
         {
             // Load ROM file
-            romfile.read((char *)_ROM, sizeof(_ROM));
+            romfile.read((char *)_romFile, sizeof(_romFile));
             if(romfile.bad() || romfile.fail())
             {
-                fprintf(stderr, "Cpu::initialise() : failed to read %s ROM file, using default ROM.\n", filenameRom.c_str());
-                loadDefaultRom(_gigatron_0x1c_rom);
+                fprintf(stderr, "Cpu::initialise() : failed to read %s ROM file, using default ROM.\n", romName.c_str());
             }
-#ifdef CREATE_ROM_HEADER
-            // Use this if you ever want to change the default ROM
-            createRomHeader((uint8_t *)_ROM, "gigatron_0x1c.h", "_gigatron_0x1c_rom", sizeof(_ROM));
-#endif
+            else
+            {
+                _numRoms = MAX_ROMS;
+                _romIndex = MAX_ROMS - 1;
+
+                _romFiles[_romIndex] = (uint8_t*)_romFile;
+                memcpy(_ROM, _romFiles[_romIndex], sizeof(_ROM));
+            }
         }
-        saveScanlineModes();
+
+//#define CREATE_ROM_HEADER
+#ifdef CREATE_ROM_HEADER
+        // Create a header file representation of a ROM, (match the ROM type number with the ROM file before enabling and running this code)
+        createRomHeader((uint8_t *)_ROM, "gigatron_xxxx.h", "_gigatron_xxxx_rom", sizeof(_ROM));
+#endif
 
 //#define CUSTOM_ROM
 #ifdef CUSTOM_ROM
@@ -470,11 +527,13 @@ namespace Cpu
 
     void reset(bool coldBoot)
     {
+        _checkRomType = true;
+
         // Cold boot
         if(coldBoot)
         {
             //setRAM(BOOT_COUNT, 0x00);
-            //setRAM(BOOT_CHECK, 0xA6); // TODO: don't hardcode the checksum, calculate it properly
+            //setRAM(BOOT_CHECK, 0xA6);
         }
 
         Graphics::resetVTable();

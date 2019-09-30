@@ -16,7 +16,8 @@
 #define CLOCK_FREQ   6250000
 #define CLOCK_RESET -2
 
-#define STARTUP_DELAY_CLOCKS    (CLOCK_FREQ * 1)
+// Minimum number of clocks before ROM type is valid in RAM; in the future could be ROM dependant, currently this value works with ROMS v1 through v4
+#define STARTUP_DELAY_CLOCKS    (CLOCK_FREQ * 0.2)
 #define CPU_STALL_CLOCKS        500000
 #define SINGLE_STEP_STALL_TIME  1000
 

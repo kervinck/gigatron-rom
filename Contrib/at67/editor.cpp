@@ -308,6 +308,7 @@ namespace Editor
         // Emulator INI key to SDL key mapping
         _inputKeys["Help"]         = {SDLK_h, KMOD_LCTRL};
         _inputKeys["Quit"]         = {SDLK_q, KMOD_LCTRL};
+        _inputKeys["ROM_Type"]     = {SDLK_r, KMOD_LCTRL};
         _inputKeys["Reset"]        = {SDLK_F1, KMOD_LCTRL};
         _inputKeys["ScanlineMode"] = {SDLK_F3, KMOD_LCTRL};
         _inputKeys["Speed+"]       = {SDLK_EQUALS, KMOD_NONE};
@@ -388,6 +389,7 @@ namespace Editor
                 {
                     scanCodeFromIniKey(sectionString, "Help",         "CTRL+H",   _inputKeys["Help"]);
                     scanCodeFromIniKey(sectionString, "Quit",         "CTRL+Q",   _inputKeys["Quit"]);
+                    scanCodeFromIniKey(sectionString, "ROM_Type",     "CTRL+R",   _inputKeys["ROM_Type"]);
                     scanCodeFromIniKey(sectionString, "Reset",        "CTRL+F1",  _inputKeys["Reset"]);
                     scanCodeFromIniKey(sectionString, "ScanlineMode", "CTRL+F3",  _inputKeys["ScanlineMode"]);
                     scanCodeFromIniKey(sectionString, "Speed+",       "+",        _inputKeys["Speed+"]);
@@ -698,6 +700,13 @@ namespace Editor
             exit(0);
         }
 
+        // ROMS after v1 have their own inbuilt scanline handlers
+        else if(_sdlKeyScanCode == _inputKeys["ScanlineMode"].scanCode  &&  _sdlKeyModifier == _inputKeys["ScanlineMode"].modifier)
+        {
+            // ROMS after v1 have their own inbuilt scanline handlers
+            if(Cpu::getRomType() != Cpu::ROMv1) Cpu::setIN(Cpu::getIN() | INPUT_SELECT);
+        }
+
         // Emulator reset
         else if(!_singleStepMode  &&  _sdlKeyScanCode == _inputKeys["Reset"].scanCode  &&  _sdlKeyModifier == _inputKeys["Reset"].modifier) {Cpu::reset(); return;}
 
@@ -829,11 +838,15 @@ namespace Editor
             Graphics::setDisplayHelpScreen(helpScreen);
         }
 
+        else if(_sdlKeyScanCode == _inputKeys["ROM_Type"].scanCode  &&  _sdlKeyModifier == _inputKeys["ROM_Type"].modifier)
+        {
+            Cpu::swapRom();
+        }
+
+        // ROMS after v1 have their own inbuilt scanline handlers
         else if(_sdlKeyScanCode == _inputKeys["ScanlineMode"].scanCode  &&  _sdlKeyModifier == _inputKeys["ScanlineMode"].modifier)
         {
-            static int scanlineMode = Cpu::ScanlineMode::Normal;
-            if(++scanlineMode == Cpu::ScanlineMode::NumScanlineModes-1) scanlineMode = Cpu::ScanlineMode::Normal;
-            Cpu::setScanlineMode((Cpu::ScanlineMode)scanlineMode);
+            (Cpu::getRomType() != Cpu::ROMv1) ? Cpu::setIN(Cpu::getIN() & ~INPUT_SELECT) : Cpu::swapScanlineMode();
         }
 
         // PS2 Keyboard emulation mode

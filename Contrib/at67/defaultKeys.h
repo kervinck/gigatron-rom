@@ -24,6 +24,7 @@ std::vector<std::string> _defaultKeys =
     "[Emulator]               ; case sensitive                                       ",
     "Help         = CTRL+H    ; toggles help screen on and off                       ",
     "Quit         = CTRL+Q    ; instant quit                                         ",
+	"ROM_Type     = CTRL+R    ; toggles ROM types                                    ",
     "Reset        = CTRL+F1   ; instant reset                                        ",
     "ScanlineMode = CTRL+F3   ; toggles scanline modes, Normal, VideoB and VideoBC   ",
     "Speed+       = +         ; increases the emulation speed                        ",

@@ -259,8 +259,12 @@ namespace Loader
     int _configBaudRate = DEFAULT_COM_BAUD_RATE;
     int _configComPort = DEFAULT_COM_PORT;
     double _configTimeout = DEFAULT_GIGA_TIMEOUT;
+    
     std::string _configGclBuild = ".";
     bool _configGclBuildFound = false;
+
+    std::string _configRomName = "";
+    bool _configRomNameFound = false;
 
     std::string _currentGame = "";
 
@@ -271,6 +275,13 @@ namespace Loader
 
     UploadTarget getUploadTarget(void) {return _uploadTarget;}
     void setUploadTarget(UploadTarget target) {_uploadTarget = target;}
+
+    bool getRomName(std::string& romName)
+    {
+        romName = _configRomName;
+
+        return (_configRomNameFound  &&  romName.length() > 0);
+    }
 
 
     bool getKeyAsString(INIReader& iniReader, const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, std::string& result, bool upperCase=true)
@@ -308,9 +319,11 @@ namespace Loader
                 {
                     case Comms:
                     {
+                        // Baud rate
                          getKeyAsString(_loaderConfigIniReader, sectionString, "BaudRate", "115200", result);   
                         _configBaudRate = strtol(result.c_str(), nullptr, 10);
  
+                        // Com port
                         char *endPtr;
                         getKeyAsString(_loaderConfigIniReader, sectionString, "ComPort", "0", result);   
                         _configComPort = strtol(result.c_str(), &endPtr, 10);
@@ -320,11 +333,17 @@ namespace Loader
                             if(_configComPort < 0) _configComPort = DEFAULT_COM_PORT;
                         }
 
+                        // Time out
                         getKeyAsString(_loaderConfigIniReader, sectionString, "Timeout", "5.0", result);   
                         _configTimeout = strtod(result.c_str(), nullptr);
 
-                        _configGclBuildFound = getKeyAsString(_loaderConfigIniReader, sectionString, "GclBuild", ".", result, false);   
+                        // GCL tools build path
+                        _configGclBuildFound = getKeyAsString(_loaderConfigIniReader, sectionString, "GclBuild", ".", result, false);
                         _configGclBuild = result;
+
+                        // ROM file name
+                        _configRomNameFound = getKeyAsString(_loaderConfigIniReader, sectionString, "RomName", "", result, false);
+                        _configRomName = result;
                     }
                     break;
                 }

@@ -23,12 +23,12 @@ int main(int argc, char* argv[])
 {
     Cpu::State S;
 
+    Loader::initialise();
     Cpu::initialise(S);
     Memory::intitialise();
     Audio::initialise();
     Graphics::initialise();
     Editor::initialise();
-    Loader::initialise();
     Expression::initialise();
     Assembler::initialise();
     Compiler::initialise();
@@ -85,14 +85,10 @@ int main(int argc, char* argv[])
         }
 
         // RomType and Watchdog
+        clock = Cpu::getClock();
         if(clock > STARTUP_DELAY_CLOCKS)
         {
-            static bool firstTime = true;
-            if(firstTime)
-            {
-                firstTime = false;
-                Cpu::setRomType();
-            }
+            Cpu::setRomType();
 
             if(!debugging  &&  clock - clock_prev > CPU_STALL_CLOCKS)
             {
