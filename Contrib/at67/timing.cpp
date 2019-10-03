@@ -35,6 +35,6 @@ namespace Timing
         _frameCount++;
 
         // Used for updating at a constant 60 times per second no matter what the FPS is
-        _frameUpdate = ((_frameCount % int(1.0*VSYNC_TIMING_60/std::min(_frameTime, VSYNC_TIMING_60))) == 0);
+        _frameUpdate = ((_frameCount % int(VSYNC_TIMING_60/std::min(_frameTime, VSYNC_TIMING_60))) == 0);
     }
 }

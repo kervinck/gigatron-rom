@@ -1,3 +1,4 @@
+#include <string>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -13,6 +14,7 @@
 #include "defaultKeys.h"
 
 // Use this if you ever want to change the default font, but it better be 6x8 per char or otherwise you will be in a world of hurt
+//#define CREATE_FONT_HEADER
 #ifndef CREATE_FONT_HEADER
 #include "emuFont96x48.h"
 #endif
@@ -21,12 +23,18 @@
 namespace Graphics
 {
     int _width, _height;
-    int _xpos = 0, _ypos = 0;
+    int _posX = 0, _posY = 0;
+
+    float _aspect = 0.0f;
+    float _scaleX, _scaleY;
+
     bool _fullScreen = false;
     bool _resizable = false;
     bool _borderless = true;
     bool _vSync = false;
     bool _fixedSize = false;
+
+    int _filter = 0;
 
     bool _displayHelpScreen = false;
     uint8_t _displayHelpScreenAlpha = 0;
@@ -44,6 +52,8 @@ namespace Graphics
 
     INIReader _iniReader;
 
+    int getWidth(void) {return _width;}
+    int getHeight(void) {return _height;}
 
     uint32_t* getPixels(void) {return _pixels;}
     uint32_t* getColours(void) {return _colours;}
@@ -56,6 +66,7 @@ namespace Graphics
     SDL_Surface* getFontSurface(void) {return _fontSurface;}
 
     void setDisplayHelpScreen(bool display) {_displayHelpScreen = display;}
+    void setWidthHeight(int width, int height) {_width = width, _height = height;}
 
 
     SDL_Surface* createSurface(int width, int height)
@@ -170,7 +181,7 @@ namespace Graphics
             size_t nonWhiteSpace = lineTokens[i].find_first_not_of("  \n\r\f\t\v");
             if(nonWhiteSpace == std::string::npos) lineTokens[i] = std::string(MAX_CHARS_HELP, ' ');
             if(lineTokens[i].size() < MAX_CHARS_HELP) lineTokens[i] += std::string(MAX_CHARS_HELP - lineTokens[i].size(), ' ');
-            drawText(lineTokens[i], (uint32_t*)_helpSurface->pixels, 0, i*FONT_HEIGHT + (maxLines - numLines)/2 * FONT_HEIGHT, 0xFF00FF00, false, 0, false, true, 0xFFFFFFFF, 0xFF00FFFF);
+            drawText(lineTokens[i], (uint32_t*)_helpSurface->pixels, 0, i*FONT_HEIGHT + (maxLines - numLines)/2 * FONT_HEIGHT, 0xFF00FF00, false, 0, false, -1, true, 0xFFFFFFFF, 0xFF00FFFF);
         }
 
         // Create help screen texture
@@ -218,18 +229,22 @@ namespace Graphics
             _colours[i] = p;
         }
 
-        // Desktop resolution by default
+        // Safe resolution by default
         SDL_DisplayMode DM;
         SDL_GetCurrentDisplayMode(0, &DM);
-        _width = DM.w;
-        _height = DM.h;
-        _xpos = 0;
-        _ypos = 0;
+        _aspect = float(DM.w) / float(DM.h);
         _fullScreen = false;
-        _resizable = false;
-        _borderless = true;
+        _resizable = true;
+        _borderless = false;
         _vSync = false;
         _fixedSize = false;
+        _filter = 0;
+        _width = 640;
+        _height = 480;
+        _scaleX = 2.0f;
+        _scaleY = 2.0f;
+        _posX = 40;
+        _posY = 40;
 
         // Parse graphics config file
         INIReader iniReader(GRAPHICS_CONFIG_INI);
@@ -259,28 +274,44 @@ namespace Graphics
                     {
                         getKeyAsString(sectionString, "Fullscreen", "0", result);   
                         _fullScreen = strtol(result.c_str(), nullptr, 10);
-                        getKeyAsString(sectionString, "Resizable", "0", result);   
+                        getKeyAsString(sectionString, "Resizable", "1", result);   
                         _resizable = strtol(result.c_str(), nullptr, 10);
-                        getKeyAsString(sectionString, "Borderless", "1", result);   
+                        getKeyAsString(sectionString, "Borderless", "0", result);   
                         _borderless = strtol(result.c_str(), nullptr, 10);
                         getKeyAsString(sectionString, "VSync", "0", result);        
                         _vSync = strtol(result.c_str(), nullptr, 10);
                         getKeyAsString(sectionString, "FixedSize", "0", result);        
                         _fixedSize = strtol(result.c_str(), nullptr, 10);
 
-                        getKeyAsString(sectionString, "Width", "DESKTOP", result);
-                        _width = (result == "DESKTOP") ? _width : _width = strtol(result.c_str(), nullptr, 10);
-                        getKeyAsString(sectionString, "Height", "DESKTOP", result);
-                        _height = (result == "DESKTOP") ? _height : _height = strtol(result.c_str(), nullptr, 10);
-                        getKeyAsString(sectionString, "XPos", "0", result);
-                        _xpos = strtol(result.c_str(), nullptr, 10);
-                        getKeyAsString(sectionString, "YPos", "0", result);
-                        _ypos = strtol(result.c_str(), nullptr, 10);
+                        getKeyAsString(sectionString, "Filter", "0", result);        
+                        _filter = strtol(result.c_str(), nullptr, 10);
+                        _filter = (_filter<0 || _filter>2) ? 0 : _filter;
+
+                        getKeyAsString(sectionString, "Width", "640", result);
+                        _width = (result == "DESKTOP") ? DM.w : _width = std::strtol(result.c_str(), nullptr, 10);
+                        getKeyAsString(sectionString, "Height", "480", result);
+                        _height = (result == "DESKTOP") ? DM.h : _height = std::strtol(result.c_str(), nullptr, 10);
+
+                        getKeyAsString(sectionString, "ScaleX", "2.0", result);
+                        _scaleX = std::stof(result.c_str());
+                        getKeyAsString(sectionString, "ScaleY", "2.0", result);
+                        _scaleY = std::stof(result.c_str());
+
+                        getKeyAsString(sectionString, "PosX", "0", result);
+                        _posX = strtol(result.c_str(), nullptr, 10);
+                        getKeyAsString(sectionString, "PosY", "0", result);
+                        _posY = strtol(result.c_str(), nullptr, 10);
                     }
                     break;
                 }
             }
         }
+
+        // SDL hints, VSync and Batching
+        char vsChar = char(_vSync + '0');
+        SDL_SetHint(SDL_HINT_RENDER_VSYNC, &vsChar);
+        SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, std::to_string(_filter).c_str());
 
         // Fullscreen
         if(_fullScreen)
@@ -295,23 +326,42 @@ namespace Graphics
         // Windowed
         else
         {
-            if(SDL_CreateWindowAndRenderer(_width, _height, 0, &_window, &_renderer) < 0)
+            if(_fixedSize)
             {
-                SDL_Quit();
-                fprintf(stderr, "Graphics::initialise() : failed to create SDL window.\n");
-                _EXIT_(EXIT_FAILURE);
+                SDL_RenderSetLogicalSize(_renderer, _width, _height);
+
+                if(SDL_CreateWindowAndRenderer(_width, _height, 0, &_window, &_renderer) < 0)
+                {
+                    SDL_Quit();
+                    fprintf(stderr, "Graphics::initialise() : failed to create SDL window.\n");
+                    _EXIT_(EXIT_FAILURE);
+                }
+
+                SDL_SetWindowTitle(_window, VERSION_STR);
             }
+            else
+            {
+                // Try and keep faithful to Gigatron's real aspect ratio no matter what the window/monitor resolution is
+                _width = int(_width * _scaleX * _aspect * float(_height) / float(_width));
+                _height = int(_height * _scaleY);
 
-            SDL_SetWindowResizable(_window, (SDL_bool)_resizable);
-            SDL_SetWindowBordered(_window, (SDL_bool)!_borderless);
-            SDL_SetWindowPosition(_window, _xpos, _ypos);
+                if(SDL_CreateWindowAndRenderer(_width, _height, 0, &_window, &_renderer) < 0)
+                {
+                    SDL_Quit();
+                    fprintf(stderr, "Graphics::initialise() : failed to create SDL window.\n");
+                    _EXIT_(EXIT_FAILURE);
+                }
+
+                if(!_borderless)
+                {
+                    SDL_SetWindowResizable(_window, (SDL_bool)_resizable);
+                    SDL_SetWindowTitle(_window, VERSION_STR);
+                }
+
+                SDL_SetWindowBordered(_window, (SDL_bool)!_borderless);
+                SDL_SetWindowPosition(_window, _posX, _posY);
+            }
         }
-
-        if(_fixedSize) SDL_RenderSetLogicalSize(_renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-        // VSync
-        char vsChar = char(_vSync + '0');
-        SDL_SetHint(SDL_HINT_RENDER_VSYNC, &vsChar);
 
         // Screen texture
         _screenTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -408,7 +458,7 @@ namespace Graphics
 
     void drawLeds(void)
     {
-        // Update 60 times per second no matter what the FPS is
+        // Update 60 times per second no matter how high the FPS is
         if(Timing::getFrameTime()  &&  Timing::getFrameUpdate())
         {
             for(int i=0; i<NUM_LEDS; i++)
@@ -430,7 +480,7 @@ namespace Graphics
     }
 
     // Simple text routine, font is a non proportional 6*8 font loaded from a 96*48 BMP file
-    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t colour, bool invert, int invertSize, bool colourKey, bool fullscreen, uint32_t commentColour, uint32_t sectionColour)
+    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t colour, bool invert, int invertSize, bool colourKey, int size, bool fullscreen, uint32_t commentColour, uint32_t sectionColour)
     {
         if(!fullscreen)
         {
@@ -440,7 +490,8 @@ namespace Graphics
         if(x<0 || x>=SCREEN_WIDTH || y<0 || y>=SCREEN_HEIGHT) return false;
 
         uint32_t* fontPixels = (uint32_t*)_fontSurface->pixels;
-        for(int i=0; i<text.size(); i++)
+        size = (size == -1) ? int(text.size()) : size;
+        for(int i=0; i<size; i++)
         {
             if(sectionColour)
             {
@@ -474,7 +525,8 @@ namespace Graphics
                 {
                     int fontAddress = (srcx + j)  +  (srcy + k)*FONT_BMP_WIDTH;
                     int pixelAddress = (dstx + j)  +  (dsty + k)*SCREEN_WIDTH;
-                    if((invert  &&  i<invertSize) ? !fontPixels[fontAddress] : fontPixels[fontAddress])
+                    uint32_t fontPixel = fontPixels[fontAddress] & 0x00FFFFFF;
+                    if((invert  &&  i<invertSize) ? !fontPixel : fontPixel)
                     {
                         pixels[pixelAddress] = 0xFF000000 | colour;
                     }
@@ -559,13 +611,13 @@ namespace Graphics
         int i = Editor::getCursorY();
         int index = Editor::getFileEntriesIndex() + i;
         std::string uploadFilename = *Editor::getFileEntryName(index);
-        uploadFilename.append(HIGHLIGHT_SIZE - uploadFilename.size(), ' ');
+        uploadFilename.append(MENU_TEXT_SIZE - uploadFilename.size(), ' ');
         if(upload < 1.0f)
         {
-            char* uploadPercentage = &uploadFilename[HIGHLIGHT_SIZE - 5];
+            char* uploadPercentage = &uploadFilename[MENU_TEXT_SIZE - 5];
             sprintf(uploadPercentage, " %3d%%\r", int(upload * 100.0f));
         }
-        drawText(uploadFilename, _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFA0A0A0 : 0xFFFFFFFF, true, HIGHLIGHT_SIZE);
+        drawText(uploadFilename, _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFA0A0A0 : 0xFFFFFFFF, true, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
         SDL_UpdateTexture(_screenTexture, NULL, _pixels, SCREEN_WIDTH * sizeof(uint32_t));
         SDL_RenderCopy(_renderer, _screenTexture, NULL, NULL);
         SDL_RenderPresent(_renderer);
@@ -575,7 +627,7 @@ namespace Graphics
 
     void renderText(void)
     {
-        // Update 60 times per second no matter what the FPS is
+        // Update 60 times per second no matter how high the FPS is
         if(Timing::getFrameTime()  &&  Timing::getFrameUpdate())
         {
             char str[32];
@@ -595,18 +647,23 @@ namespace Graphics
             //drawText(std::string("LEDS:"), _pixels, 0, 0, 0xFFFFFFFF, false, 0);
             sprintf(str, "FPS %5.1f  XOUT %02X IN %02X", 1.0f / Timing::getFrameTime(), Cpu::getXOUT(), Cpu::getIN());
             drawText(std::string(str), _pixels, 0, FONT_CELL_Y, 0xFFFFFFFF, false, 0);
-            drawText("Mode         RAM ", _pixels, 0, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
-            sprintf(str, "Hex  ");
-            if(Editor::getHexEdit()) sprintf(str, "Edit ");
-            if(Editor::getEditorMode() == Editor::Load)         sprintf(str, "Load   ");
-            else if(Editor::getEditorMode() == Editor::Rom)     sprintf(str, "Rom    ");
-            else if(Editor::getEditorMode() == Editor::Giga)    sprintf(str, "Giga   ");
-            else if(Editor::getEditorMode() == Editor::PS2KB)   sprintf(str, "PS2KB  ");
-            else if(Editor::getEditorMode() == Editor::Debug)   sprintf(str, "Debug  ");
-            else if(Editor::getEditorMode() == Editor::GigaPS2) sprintf(str, "PS2Giga");
-            drawText(std::string(str), _pixels, 30, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
-            sprintf(str, "%d", Memory::getFreeRAM());
-            drawText(std::string(str), _pixels, RAM_START, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+            drawText("M:              R:", _pixels, 0, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+
+            if(Editor::getEditorMode() == Editor::Hex)        sprintf(str, "Hex  ");
+            else if(Editor::getEditorMode() == Editor::Rom)   sprintf(str, "Rom  ");
+            else if(Editor::getEditorMode() == Editor::Load)  sprintf(str, "Load ");
+            else if(Editor::getEditorMode() == Editor::Debug) sprintf(str, "Debug");
+            drawText(std::string(str), _pixels, 12, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
+
+            if(Editor::getKeyboardMode() == Editor::Giga)        sprintf(str, "Kbd  ");
+            else if(Editor::getKeyboardMode() == Editor::PS2)    sprintf(str, "PS2  ");
+            else if(Editor::getKeyboardMode() == Editor::HwGiga) sprintf(str, "HwKbd");
+            else if(Editor::getKeyboardMode() == Editor::HwPS2)  sprintf(str, "HwPS2");
+            drawText("K:", _pixels, 48, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+            drawText(std::string(str), _pixels, 60, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
+
+            sprintf(str, "%05d", Memory::getFreeRAM());
+            drawText(std::string(str), _pixels, RAM_START, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
             sprintf(str, " ROM %02x", Cpu::getRomType());
             drawText(std::string(VERSION_STR) + std::string(str), _pixels, 0, 472, 0xFFFFFFFF, false, 0);
         }
@@ -614,28 +671,32 @@ namespace Graphics
 
     void renderTextWindow(void)
     {
-        // Update 60 times per second no matter what the FPS is
+        // Update 60 times per second no matter how high the FPS is
         if(Timing::getFrameTime()  &&  Timing::getFrameUpdate())
         {
             char str[32] = "";
+
+            int x, y, cy;
+            Editor::getMouseMenuCursor(x, y, cy);
+            if(x>=0 && y>=0)
+            {
+                Editor::setCursorX(x);
+                Editor::setCursorY(cy);
+            }
 
             // Addresses
             uint16_t cpuUsageAddressA = Editor::getCpuUsageAddressA();
             uint16_t cpuUsageAddressB = Editor::getCpuUsageAddressB();
             uint16_t hexLoadAddress = (Editor::getEditorMode() == Editor::Load) ? Editor::getLoadBaseAddress() : Editor::getHexBaseAddress();
             uint16_t varsAddress = Editor::getVarsBaseAddress();
-            bool onCursor00 = Editor::getCursorY() == -2  &&  (Editor::getCursorX() & 0x01) == 0;
-            bool onCursor10 = Editor::getCursorY() == -2  &&  (Editor::getCursorX() & 0x01) == 1;
-            bool onCursor01 = Editor::getCursorY() == -1  &&  (Editor::getCursorX() & 0x01) == 0;
-            bool onCursor11 = Editor::getCursorY() == -1  &&  (Editor::getCursorX() & 0x01) == 1;
+            bool onCursor00 = (Editor::getCursorY() == -2  &&  Editor::getCursorX() > 3  &&  Editor::getCursorX() < 6);
+            bool onCursor10 = (Editor::getCursorY() == -2  &&  Editor::getCursorX() > 5  &&  Editor::getCursorX() < 8);
+            bool onCursor01 = (Editor::getCursorY() == -1  &&  Editor::getCursorX() > 0  &&  Editor::getCursorX() < 3);
+            bool onCursor11 = (Editor::getCursorY() == -1  &&  Editor::getCursorX() > 4  &&  Editor::getCursorX() < 7);
 
             // File load
             if(Editor::getEditorMode() == Editor::Load)
             {
-                if(Editor::getCursorY() >= Editor::getFileEntriesSize()) Editor::setCursorY(0);
-                if(Editor::getCursorY() < -2) Editor::setCursorY(Editor::getFileEntriesSize() - 1);
-                onCursor01 = Editor::getCursorY() == -1  &&  (Editor::getCursorX() & 0x01) == 0;
-
                 // File list
                 drawText("Load:      Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0);
                 for(int i=0; i<HEX_CHARS_Y; i++)
@@ -646,7 +707,7 @@ namespace Graphics
                 {
                     int index = Editor::getFileEntriesIndex() + i;
                     if(index >= int(Editor::getFileEntriesSize())) break;
-                    drawText(*Editor::getFileEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFA0A0A0 : 0xFFFFFFFF, i == Editor::getCursorY(), HIGHLIGHT_SIZE);
+                    drawText(*Editor::getFileEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFA0A0A0 : 0xFFFFFFFF, i == Editor::getCursorY(), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
                 }
 
                 sprintf(str, "%04X", hexLoadAddress);
@@ -655,9 +716,6 @@ namespace Graphics
             // Rom switch
             else if(Editor::getEditorMode() == Editor::Rom)
             {
-                if(Editor::getCursorY() >= Editor::getRomEntriesSize()) Editor::setCursorY(0);
-                if(Editor::getCursorY() < 0) Editor::setCursorY(Editor::getRomEntriesSize() - 1);
-
                 // File list
                 drawText("ROM:       Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0);
                 for(int i=0; i<HEX_CHARS_Y; i++)
@@ -668,7 +726,7 @@ namespace Graphics
                 {
                     int index = Editor::getRomEntriesIndex() + i;
                     if(index >= int(Editor::getRomEntriesSize())) break;
-                    drawText(*Editor::getRomEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, i == Editor::getCursorY(), HIGHLIGHT_SIZE);
+                    drawText(*Editor::getRomEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, i == Editor::getCursorY(), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
                 }
 
                 sprintf(str, "%02X", Editor::getRomEntryVersion(Editor::getCursorY()));
@@ -713,7 +771,10 @@ namespace Graphics
                 if(Editor::getHexEdit())
                 {
                     // Draw memory digit selection box                
-                    if(Editor::getCursorY() >= 0  &&  Editor::getMemoryMode() == Editor::RAM) drawDigitBox(Editor::getMemoryDigit(), HEX_START_X + Editor::getCursorX()*HEX_CHAR_WIDE, FONT_CELL_Y*4 + Editor::getCursorY()*FONT_CELL_Y, 0xFFFF00FF);
+                    if(Editor::getCursorY() >= 0  &&  Editor::getCursorY() < 32  &&  Editor::getCursorX() < 8  &&  Editor::getMemoryMode() == Editor::RAM)
+                    {
+                        drawDigitBox(Editor::getMemoryDigit(), HEX_START_X + Editor::getCursorX()*HEX_CHAR_WIDE, FONT_CELL_Y*4 + Editor::getCursorY()*FONT_CELL_Y, 0xFFFF00FF);
+                    }
                 }
             }
 
@@ -741,9 +802,15 @@ namespace Graphics
                 for(int i=0; i<HEX_CHARS_X; i++)
                 {
                     sprintf(str, "%02X ", Cpu::getRAM(varsAddress++));
-                    drawText(std::string(str), _pixels, 6 + i*HEX_CHAR_WIDE, int(FONT_CELL_Y*4.25) + FONT_CELL_Y*HEX_CHARS_Y + j*(FONT_HEIGHT+FONT_GAP_Y), 0xFF00FFFF, false, 0);
+                    drawText(std::string(str), _pixels, HEX_START_X + i*HEX_CHAR_WIDE, int(FONT_CELL_Y*4.25) + FONT_CELL_Y*HEX_CHARS_Y + j*(FONT_HEIGHT+FONT_GAP_Y), 0xFF00FFFF, false, 0);
                 }
             }
+
+            // Page up/down icons
+            sprintf(str, "^");
+            drawText(std::string(str), _pixels, 140, 44, 0xFF00FF00, Editor::getPageUpButton(), 1);
+            str[0] = 127; str[1] = 0;
+            drawText(std::string(str), _pixels, 140, 428, 0xFF00FF00, Editor::getPageDnButton(), 1);
         }
     }
 
@@ -798,59 +865,59 @@ namespace Graphics
 
     void drawLine(int x, int y, int x2, int y2, uint32_t colour)
     {
-   	    bool yLonger = false;
-	    int shortLen = y2 - y;
-	    int longLen = x2 - x;
-	
+        bool yLonger = false;
+        int shortLen = y2 - y;
+        int longLen = x2 - x;
+        
         if(abs(shortLen) > abs(longLen))
         {
-		    uint8_t swap = shortLen;
-		    shortLen = longLen;
-		    longLen = swap;				
-		    yLonger = true;
-	    }
-
-	    int decInc;
-	    if(longLen ==0 ) decInc=0;
-	    else decInc = (shortLen << 8) / longLen;
-
-	    if(yLonger)
+            uint8_t swap = shortLen;
+            shortLen = longLen;
+            longLen = swap;
+            yLonger = true;
+        }
+        
+        int decInc;
+        if(longLen ==0 ) decInc=0;
+        else decInc = (shortLen << 8) / longLen;
+        
+        if(yLonger)
         {
-		    if(longLen > 0)
+            if(longLen > 0)
             {
-			    longLen += y;
-			    for(int j=0x80+(x<<8); y<=longLen; ++y)
+                longLen += y;
+                for(int j=0x80+(x<<8); y<=longLen; ++y)
                 {
-				    drawPixel(uint8_t(j>>8), uint8_t(y), colour);	
-				    j+=decInc;
-			    }
-			    return;
-		    }
-		    longLen += y;
-		    for(int j=0x80+(x<<8); y>=longLen; --y)
+                    drawPixel(uint8_t(j>>8), uint8_t(y), colour);
+                    j+=decInc;
+                }
+                return;
+            }
+            longLen += y;
+            for(int j=0x80+(x<<8); y>=longLen; --y)
             {
-			    drawPixel(uint8_t(j>>8), uint8_t(y), colour);	
-			    j-=decInc;
-		    }
-		    return;	
-	    }
-
-	    if(longLen>0)
+                drawPixel(uint8_t(j>>8), uint8_t(y), colour);
+                j-=decInc;
+            }
+            return;	
+        }
+        
+        if(longLen>0)
         {
-		    longLen += x;
-		    for(int j=0x80+(y<<8); x<=longLen; ++x)
+            longLen += x;
+            for(int j=0x80+(y<<8); x<=longLen; ++x)
             {
-			    drawPixel(uint8_t(x), uint8_t(j>>8), colour);
-			    j+=decInc;
-		    }
-		    return;
-	    }
-	    longLen += x;
-	    for(int j=0x80+(y<<8); x>=longLen;--x)
+                drawPixel(uint8_t(x), uint8_t(j>>8), colour);
+                j+=decInc;
+            }
+            return;
+        }
+        longLen += x;
+        for(int j=0x80+(y<<8); x>=longLen;--x)
         {
-		    drawPixel(uint8_t(x), uint8_t(j>>8), colour);
-		    j-=decInc;
-	    }
+            drawPixel(uint8_t(x), uint8_t(j>>8), colour);
+            j-=decInc;
+        }
     }
 
     uint8_t getPixelGiga(uint8_t x, uint8_t y)

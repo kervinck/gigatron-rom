@@ -503,7 +503,7 @@ namespace Loader
     }
     
 
-    void sendCommandGiga(char cmd, std::string& line, bool wait)
+    void sendCommandToGiga(char cmd, std::string& line, bool wait)
     {
         char command[2] = {cmd, '\n'};
         comWrite(_currentComPort, command, 2);
@@ -517,7 +517,7 @@ namespace Loader
         if(!openComPort(_configComPort)) return;
 
         std::string line;
-        sendCommandGiga(cmd, line, false);
+        sendCommandToGiga(cmd, line, false);
 
         closeComPort();
     }
@@ -541,9 +541,9 @@ namespace Loader
         }
 
         std::string line;
-        sendCommandGiga('R', line, true);
-        sendCommandGiga('L', line, true);
-        sendCommandGiga('U', line, true);
+        sendCommandToGiga('R', line, true);
+        sendCommandToGiga('L', line, true);
+        sendCommandToGiga('U', line, true);
 
         int index = 0;
         while(std::isdigit(line[0]))

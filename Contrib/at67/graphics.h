@@ -30,19 +30,28 @@
 #define NUM_LEDS         4
 #define MENU_START_X     488
 #define MENU_START_Y     0
+#define MENU_CHARS_X     8
+#define MENU_CHARS_Y     (SCREEN_HEIGHT/FONT_CELL_Y)
 #define HEX_START        30
-#define HEX_START_X      6
+#define HEX_START_X      0
 #define VAR_START        96
 #define RAM_START        108
 #define CPUA_START       78
 #define CPUB_START       120
-#define HIGHLIGHT_SIZE   23
+#define MENU_TEXT_SIZE   23
+#define PAGEUP_START_X   140
+#define PAGEUP_START_Y   44
+#define PAGEDN_START_X   140
+#define PAGEDN_START_Y   428
 
 #define GRAPHICS_CONFIG_INI  "graphics_config.ini"
 
 
 namespace Graphics
 {
+    int getWidth(void);
+    int getHeight(void);
+
     uint32_t* getPixels(void);
     uint32_t* getColours(void);
 
@@ -54,6 +63,7 @@ namespace Graphics
     SDL_Surface* getFontSurface(void);
 
     void setDisplayHelpScreen(bool display);
+    void setWidthHeight(int width, int height);
 
     void initialise(void);
 
@@ -64,7 +74,7 @@ namespace Graphics
     void refreshScreen(void);
 
     void drawLeds(void);
-    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t colour, bool invert, int invertSize, bool colourKey=false, bool fullscreen=false, uint32_t commentColour=0x00000000, uint32_t sectionColour=0x00000000);
+    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t colour, bool invert, int invertSize, bool colourKey=false, int size=-1, bool fullscreen=false, uint32_t commentColour=0x00000000, uint32_t sectionColour=0x00000000);
     void drawDigitBox(uint8_t digit, int x, int y, uint32_t colour);
     void drawUploadBar(float upload);
 
