@@ -14,6 +14,7 @@
 #define ROM_INST 0
 #define ROM_DATA 1
 
+#define NUM_INT_ROMS 4
 #define MAX_ROMS 5
 
 #define ROM_TITLE_ADDRESS 0xFEB1
