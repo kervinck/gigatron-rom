@@ -19,6 +19,41 @@
 #include "compiler.h"
 
 
+//#define COLLECT_INST_STATS
+#if defined(COLLECT_INST_STATS)
+    struct InstCount
+    {
+        uint8_t inst = 0;
+        uint64_t count = 0;
+    };
+
+    uint64_t totalCount = 0;
+    float totalPercent = 0.0f;
+    std::vector<InstCount> instCounts(256);
+
+    void displayInstCounts(void)
+    {
+        std::sort(instCounts.begin(), instCounts.end(), [](const InstCount& a, const InstCount& b)
+        {
+            return (a.count > b.count);
+        });
+
+        for(int i=0; i<instCounts.size(); i++)
+        {
+            float percent = float(instCounts[i].count)/float(totalCount)*100.0f;
+            if(percent > 1.0f)
+            {
+                totalPercent += percent;
+                fprintf(stderr, "inst:%02x count:%012lld %.1f%%\n", instCounts[i].inst, instCounts[i].count, percent);
+            }
+        }
+
+        fprintf(stderr, "Total instructions:%lld\n", totalCount);
+        fprintf(stderr, "Total percentage:%f\n", totalPercent);
+    }
+#endif
+
+
 int main(int argc, char* argv[])
 {
     Cpu::State S;
@@ -33,9 +68,7 @@ int main(int argc, char* argv[])
     Assembler::initialise();
     Compiler::initialise();
 
-
     //Compiler::compile("gbas/test.gbas", "gbas/test.gasm");
-
 
     bool debugging = false;
 
@@ -84,8 +117,20 @@ int main(int argc, char* argv[])
             }
         }
 
-        // RomType and Watchdog
         clock = Cpu::getClock();
+
+#if defined(COLLECT_INST_STATS)
+        totalCount++;
+        instCounts[T._IR].count++;
+        instCounts[T._IR].inst = T._IR;
+        if(clock > STARTUP_DELAY_CLOCKS * 500.0)
+        {
+            displayInstCounts();
+            _EXIT_(0);
+        }
+#endif        
+
+        // RomType and Watchdog
         if(clock > STARTUP_DELAY_CLOCKS)
         {
             Cpu::setRomType();
@@ -106,7 +151,15 @@ int main(int argc, char* argv[])
             Cpu::setXOUT(T._AC);
             
             // Audio
-            Audio::playSample();
+            if(Audio::getRealTimeAudio())
+            {
+                Audio::playSample();
+            }
+            else
+            {
+                Audio::fillAudioBuffer();
+                if(vgaY == SCREEN_HEIGHT+4) Audio::playAudioBuffer();
+            }
 
             // Loader
             Loader::upload(vgaY);

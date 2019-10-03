@@ -34,13 +34,14 @@
 #define RAM_EXPANSION_START  0x8000
 #define RAM_EXPANSION_SIZE   0x8000
 
-#define GTB_LINE0_ADDRESS     0x18A0
+#define GTB_LINE0_ADDRESS     0x1BA0
 #define MAX_GTB_LINE_SIZE     32
 #define NUM_GTB_LINES_PER_ROW 3
 
 #define LO_BYTE(a) (a & 0x00FF)
 #define HI_BYTE(a) ((a >>8) & 0x00FF)
 #define HI_MASK(a) (a & 0xFF00)
+#define MAKE_ADDR(a, b) ((LO_BYTE(a) <<8) | LO_BYTE(b))
 
  
 namespace Memory

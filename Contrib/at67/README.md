@@ -70,7 +70,7 @@ and possibly even Android. As of v0.8.1 it has only been tested on Microsoft Win
 ## Windows
 ~~~
   Download and install cmake
-  Download sdl2 development libraries https://www.libsdl.org/release/SDL2-devel-2.0.9-VC.zip
+  Download sdl2 development libraries https://www.libsdl.org/download-2.0.php
   Clone or download https://github.com/kervinck/gigatron-rom
   cd gigatron-rom\Contrib\at67
   cmake .

@@ -460,36 +460,153 @@ namespace Cpu
             fprintf(stderr, "Cpu::initialise() : failed to initialise SDL.\n");
             _EXIT_(EXIT_FAILURE);
         }
+
+        //Timing::setTimingHack(0.0);
     }
 
     State cycle(const State& S)
     {
-        State T = S; // New state is old state unless something changes
+        // New state is old state unless something changes
+        State T = S;
     
-        T._IR = _ROM[S._PC][ROM_INST]; // Instruction Fetch
+        // Instruction Fetch
+        T._IR = _ROM[S._PC][ROM_INST]; 
         T._D  = _ROM[S._PC][ROM_DATA];
-    
+
+        // Stolen and adapted from https://github.com/kervinck/gigatron-rom/blob/master/Contrib/dhkolf/libgtemu/gtemu.c
+        // Optimise for the statistically most common instructions
+        switch(S._IR)
+        {
+            case 0x5D: // ora [Y,X++],OUT
+            {
+                uint16_t addr = MAKE_ADDR(S._Y, S._X);
+                T._OUT = _RAM[addr] | S._AC;
+                T._X++;
+                T._PC = S._PC + 1;
+                return T;
+            }
+            break;
+
+            case 0xC2: // st [D]
+            {
+                _RAM[S._D] = S._AC;
+                T._PC = S._PC + 1;
+                return T;
+            }
+            break;
+
+            case 0x01: // ld [D]
+            {
+                T._AC = _RAM[S._D];
+                T._PC = S._PC + 1;
+                return T;
+            }
+            break;
+
+            case 0x00: // ld D
+            {
+                T._AC = S._D;
+                T._PC = S._PC + 1;
+                return T;
+            }
+            break;
+
+            case 0x80: // adda D
+            {
+                T._AC += S._D;
+                T._PC = S._PC + 1;
+                return T;
+            }
+            break;
+
+#if 0
+            case 0xFC: // bra D
+            {
+                T._PC = (S._PC & 0xFF00) | S._D;
+                return T;
+            }
+            break;
+
+            case 0x0D: // ld [Y,X]
+            {
+                uint16_t addr = MAKE_ADDR(S._Y, S._X);
+                T._AC = _RAM[addr];
+                T._PC = S._PC + 1;
+                return T;
+            }
+            break;
+
+            case 0xA0: // suba D
+            {
+                T._AC -= S._D;
+                T._PC = S._PC + 1;
+                return T;
+            }
+            break;
+
+            case 0xE8: // blt PC,D
+            {
+                T._PC = (S._AC & 0x80) ? (S._PC & 0xFF00) | S._D : S._PC + 1;
+                return T;
+            }
+            break;
+
+            case 0x81: // adda [D]
+            {
+                T._AC += _RAM[S._D];
+                T._PC = S._PC + 1;
+                return T;
+            }
+            break;
+
+            case 0x89: // adda [Y,D]
+            {
+                uint16_t addr = MAKE_ADDR(S._Y, S._D);
+                T._AC += _RAM[addr];
+                T._PC = S._PC + 1;
+                return T;
+            }
+            break;
+
+            case 0x12: // ld AC,X
+            {
+                T._X = S._AC;
+                T._PC = S._PC + 1;
+                return T;
+            }
+            break;
+
+            case 0x18: // ld D,OUT
+            {
+                T._OUT = S._D;
+                T._PC = S._PC + 1;
+                return T;
+            }
+            break;
+#endif
+        }
+
         int ins = S._IR >> 5;       // Instruction
         int mod = (S._IR >> 2) & 7; // Addressing mode (or condition)
-        int bus = S._IR&3;          // Busmode
-        int W = (ins == 6);        // Write instruction?
-        int J = (ins == 7);        // Jump instruction?
+        int bus = S._IR & 3;        // Busmode
+        int W = (ins == 6);         // Write instruction?
+        int J = (ins == 7);         // Jump instruction?
     
         uint8_t lo=S._D, hi=0, *to=NULL; // Mode Decoder
         int incX=0;
         if(!J)
         {
-            switch (mod)
+            switch(mod)
             {
-                #define E(p) (W?0:p) // Disable _AC and _OUT loading during _RAM write
-                case 0: to=E(&T._AC);                            break;
-                case 1: to=E(&T._AC); lo=S._X;                   break;
-                case 2: to=E(&T._AC);         hi=S._Y;           break;
-                case 3: to=E(&T._AC); lo=S._X; hi=S._Y;          break;
-                case 4: to=  &T._X;                              break;
-                case 5: to=  &T._Y;                              break;
-                case 6: to=E(&T._OUT);                           break;
-                case 7: to=E(&T._OUT); lo=S._X; hi=S._Y; incX=1; break;
+                #define E(p) (W ? 0 : p) // Disable _AC and _OUT loading during _RAM write
+                case 0: to = E(&T._AC);                            break;
+                case 1: to = E(&T._AC);  lo=S._X;                  break;
+                case 2: to = E(&T._AC);           hi=S._Y;         break;
+                case 3: to = E(&T._AC);  lo=S._X; hi=S._Y;         break;
+                case 4: to =   &T._X;                              break;
+                case 5: to =   &T._Y;                              break;
+                case 6: to = E(&T._OUT);                           break;
+                case 7: to = E(&T._OUT); lo=S._X; hi=S._Y; incX=1; break;
             }
         }
 
@@ -527,8 +644,10 @@ namespace Cpu
             if(mod != 0) // Conditional branch within page
             {
                 int cond = (S._AC>>7) + 2*(S._AC==0);
-                if (mod & (1 << cond)) // 74153
-                T._PC = (S._PC & 0xff00) | B;
+                if(mod & (1 << cond)) // 74153
+                {
+                    T._PC = (S._PC & 0xff00) | B;
+                }
             }
             else
             {

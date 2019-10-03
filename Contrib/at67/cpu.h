@@ -4,15 +4,17 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <string>
+#include <algorithm>
 
 
 #define MAJOR_VERSION "0.8"
-#define MINOR_VERSION "1"
+#define MINOR_VERSION "3"
 #define VERSION_STR "gtemuAT67 v" MAJOR_VERSION "." MINOR_VERSION
  
 #define ROM_INST 0
 #define ROM_DATA 1
 
+#define NUM_INT_ROMS 4
 #define MAX_ROMS 5
 
 #define ROM_TITLE_ADDRESS 0xFEB1

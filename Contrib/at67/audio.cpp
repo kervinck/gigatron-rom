@@ -9,38 +9,104 @@
 #include "timing.h"
 #include "editor.h"
 #include "midi/music.h"
+#include "expression.h"
+#include "inih/INIReader.h"
 
 #include <SDL.h>
 
 
+#define AUDIO_SAMPLES    (SCAN_LINES + 1)
+#define AUDIO_FREQUENCY  (SCAN_LINES*VSYNC_RATE)
+
+
 namespace Audio
 {
-    int _scoreIndex = 0;
+    bool _realTimeAudio = true;
+
     SDL_AudioDeviceID _audioDevice = 1;
 
+    int32_t _audioIndex = 0;
+    uint8_t _audioSamples[AUDIO_SAMPLES];
+
+    int _scoreIndex = 0;
     uint8_t* _score[] = {(uint8_t*)musicMidi00};
     uint8_t* _scorePtr = (uint8_t*)_score[_scoreIndex];
 
+    INIReader _configIniReader;
+
+
+    bool getRealTimeAudio(void) {return _realTimeAudio;}
+
+    bool getKeyAsString(const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, std::string& result)
+    {
+        result = _configIniReader.Get(sectionString, iniKey, defaultKey);
+        if(result == defaultKey) return false;
+        result = Expression::strToUpper(result);
+        return true;
+    }
 
     void initialise(void)
     {
-        SDL_AudioSpec wanted;
-        SDL_zero(wanted);
-        wanted.freq = SCAN_LINES*VSYNC_RATE;
-        //wanted.format = AUDIO_U16;
-        wanted.format = AUDIO_U8;
-        wanted.channels = 1;
-        //wanted.samples = 1; //521;
-        //_audioDevice = SDL_OpenAudioDevice(NULL, 0, &wanted, NULL, 0);
-        //if(_audioDevice == 0)
+        // Loader config
+        INIReader iniReader(AUDIO_CONFIG_INI);
+        _configIniReader = iniReader;
+        if(_configIniReader.ParseError() == 0)
+        {
+            // Parse Loader Keys
+            enum Section {Audio};
+            std::map<std::string, Section> section;
+            section["Audio"] = Audio;
+            for(auto sectionString : _configIniReader.Sections())
+            {
+                if(section.find(sectionString) == section.end())
+                {
+                    fprintf(stderr, "Loader::initialise() : INI file '%s' has bad Sections : reverting to default values.\n", AUDIO_CONFIG_INI);
+                    break;
+                }
 
-        if(SDL_OpenAudio(&wanted, NULL) < 0)
+                std::string result;
+                switch(section[sectionString])
+                {
+                    case Audio:
+                    {
+                        getKeyAsString(sectionString, "RealTimeAudio", "1", result);   
+                        _realTimeAudio = strtol(result.c_str(), nullptr, 10);
+                    }
+                    break;
+                }
+            }
+        }
+        else
+        {
+            fprintf(stderr, "Loader::initialise() : couldn't find loader configuration INI file '%s' : reverting to default values.\n", AUDIO_CONFIG_INI);
+        }
+
+        SDL_AudioSpec audSpec;
+        SDL_zero(audSpec);
+        audSpec.freq = AUDIO_FREQUENCY;
+        audSpec.format = AUDIO_U8;
+        audSpec.channels = 1;
+
+        if(SDL_OpenAudio(&audSpec, NULL) < 0)
         {
             SDL_Quit();
             fprintf(stderr, "Audio::initialise() : failed to initialise SDL audio\n");
             _EXIT_(EXIT_FAILURE);
         }
         SDL_PauseAudio(0);
+    }
+
+    void fillAudioBuffer(void)
+    {
+        uint8_t sample = (Cpu::getXOUT() & 0xF0) >>2;
+        _audioSamples[_audioIndex] = sample;
+        _audioIndex = (_audioIndex + 1) % AUDIO_SAMPLES;
+    }
+
+    void playAudioBuffer(void)
+    {
+        SDL_QueueAudio(_audioDevice, &_audioSamples[0], _audioIndex);
+        _audioIndex = 0;
     }
 
     void playSample(void)
