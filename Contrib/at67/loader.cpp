@@ -258,7 +258,7 @@ namespace Loader
 
     int _configBaudRate = DEFAULT_COM_BAUD_RATE;
     int _configComPort = DEFAULT_COM_PORT;
-    double _configTimeout = DEFAULT_GIGA_TIMEOUT;
+    double _configTimeOut = DEFAULT_GIGA_TIMEOUT;
     
     std::string _configGclBuild = ".";
     bool _configGclBuildFound = false;
@@ -268,7 +268,7 @@ namespace Loader
 
     std::string _currentGame = "";
 
-    INIReader _loaderConfigIniReader;
+    INIReader _configIniReader;
     INIReader _highScoresIniReader;
     std::map<std::string, SaveData> _saveData;
 
@@ -298,15 +298,15 @@ namespace Loader
         if(_numComPorts == 0) fprintf(stderr, "Loader::initialise() : no COM ports found.\n");
 
         // Loader config
-        INIReader loaderConfigIniReader(LOADER_CONFIG_INI);
-        _loaderConfigIniReader = loaderConfigIniReader;
-        if(_loaderConfigIniReader.ParseError() == 0)
+        INIReader iniReader(LOADER_CONFIG_INI);
+        _configIniReader = iniReader;
+        if(_configIniReader.ParseError() == 0)
         {
             // Parse Loader Keys
             enum Section {Comms};
             std::map<std::string, Section> section;
             section["Comms"] = Comms;
-            for(auto sectionString : _loaderConfigIniReader.Sections())
+            for(auto sectionString : _configIniReader.Sections())
             {
                 if(section.find(sectionString) == section.end())
                 {
@@ -320,12 +320,12 @@ namespace Loader
                     case Comms:
                     {
                         // Baud rate
-                         getKeyAsString(_loaderConfigIniReader, sectionString, "BaudRate", "115200", result);   
+                         getKeyAsString(_configIniReader, sectionString, "BaudRate", "115200", result);   
                         _configBaudRate = strtol(result.c_str(), nullptr, 10);
  
                         // Com port
                         char *endPtr;
-                        getKeyAsString(_loaderConfigIniReader, sectionString, "ComPort", "0", result);   
+                        getKeyAsString(_configIniReader, sectionString, "ComPort", "0", result);   
                         _configComPort = strtol(result.c_str(), &endPtr, 10);
                         if((endPtr - &result[0]) != result.size())
                         {
@@ -334,15 +334,15 @@ namespace Loader
                         }
 
                         // Time out
-                        getKeyAsString(_loaderConfigIniReader, sectionString, "Timeout", "5.0", result);   
-                        _configTimeout = strtod(result.c_str(), nullptr);
+                        getKeyAsString(_configIniReader, sectionString, "TimeOut", "5.0", result);   
+                        _configTimeOut = strtod(result.c_str(), nullptr);
 
                         // GCL tools build path
-                        _configGclBuildFound = getKeyAsString(_loaderConfigIniReader, sectionString, "GclBuild", ".", result, false);
+                        _configGclBuildFound = getKeyAsString(_configIniReader, sectionString, "GclBuild", ".", result, false);
                         _configGclBuild = result;
 
                         // ROM file name
-                        _configRomNameFound = getKeyAsString(_loaderConfigIniReader, sectionString, "RomName", "", result, false);
+                        _configRomNameFound = getKeyAsString(_configIniReader, sectionString, "RomName", "", result, false);
                         _configRomName = result;
                     }
                     break;
@@ -472,7 +472,7 @@ namespace Loader
         {
             if(comRead(_currentComPort, &buffer, 1)) line.push_back(buffer);
             double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
-            if(frameTime > _configTimeout) return false;
+            if(frameTime > _configTimeOut) return false;
         }
 
         // Replace '\n'

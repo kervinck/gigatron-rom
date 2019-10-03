@@ -151,7 +151,15 @@ int main(int argc, char* argv[])
             Cpu::setXOUT(T._AC);
             
             // Audio
-            Audio::playSample();
+            if(Audio::getRealTimeAudio())
+            {
+                Audio::playSample();
+            }
+            else
+            {
+                Audio::fillAudioBuffer();
+                if(vgaY == SCREEN_HEIGHT+4) Audio::playAudioBuffer();
+            }
 
             // Loader
             Loader::upload(vgaY);

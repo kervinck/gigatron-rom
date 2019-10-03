@@ -87,7 +87,7 @@ namespace Editor
     int _romEntriesIndex = 0;
     std::vector<RomEntry> _romEntries;
 
-    INIReader _iniReader;
+    INIReader _configIniReader;
     std::map<std::string, int> _sdlKeys;
     std::map<std::string, KeyCodeMod> _emulator;
     std::map<std::string, KeyCodeMod> _keyboard;
@@ -190,7 +190,7 @@ namespace Editor
         keyCodeMod.modifier = KMOD_NONE;
 
         std::string mod;
-        std::string key = _iniReader.Get(sectionString, iniKey, defaultKey);
+        std::string key = _configIniReader.Get(sectionString, iniKey, defaultKey);
         key = Expression::strToUpper(key);
 
         // Parse CTRL or ALT
@@ -387,8 +387,8 @@ namespace Editor
 
         // Input configuration
         INIReader iniReader(INPUT_CONFIG_INI);
-        _iniReader = iniReader;
-        if(_iniReader.ParseError() < 0)
+        _configIniReader = iniReader;
+        if(_configIniReader.ParseError() < 0)
         {
             fprintf(stderr, "Editor::initialise() : couldn't load INI file '%s' : reverting to default keys.\n", INPUT_CONFIG_INI);
             return;
@@ -401,7 +401,7 @@ namespace Editor
         section["Keyboard"] = Keyboard;
         section["Hardware"] = Hardware;
         section["Debugger"] = Debugger;
-        for(auto sectionString : _iniReader.Sections())
+        for(auto sectionString : _configIniReader.Sections())
         {
             if(section.find(sectionString) == section.end())
             {
@@ -832,14 +832,14 @@ namespace Editor
         // Gigatron Keyboard emulation mode
         if(handleGigaKeyDown()) return;
 
-
-        else if(_sdlKeyScanCode == _emulator["Speed+"].scanCode  &&  _sdlKeyModifier == _emulator["Speed+"].modifier)
+        // Buffered audio locks the emulator to 60Hz
+        else if(Audio::getRealTimeAudio()  &&  _sdlKeyScanCode == _emulator["Speed+"].scanCode  &&  _sdlKeyModifier == _emulator["Speed+"].modifier)
         {
             double timingHack = Timing::getTimingHack() - VSYNC_TIMING_60*0.05;
             if(timingHack >= 0.0) Timing::setTimingHack(timingHack);
         }
 
-        else if(_sdlKeyScanCode == _emulator["Speed-"].scanCode  &&  _sdlKeyModifier == _emulator["Speed-"].modifier)
+        else if(Audio::getRealTimeAudio()  &&  _sdlKeyScanCode == _emulator["Speed-"].scanCode  &&  _sdlKeyModifier == _emulator["Speed-"].modifier)
         {
             double timingHack = Timing::getTimingHack() + VSYNC_TIMING_60*0.05;
             if(timingHack <= VSYNC_TIMING_60) Timing::setTimingHack(timingHack);

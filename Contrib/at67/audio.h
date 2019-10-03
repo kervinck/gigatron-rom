@@ -34,10 +34,16 @@
 #define GIGA_CH3_OSC_L  0x04FE
 #define GIGA_CH3_OSC_H  0x04FF
 
+#define AUDIO_CONFIG_INI  "audio_config.ini"
+
 
 namespace Audio
 {
+    bool getRealTimeAudio(void);
+
     void initialise(void);
+    void fillAudioBuffer(void);
+    void playAudioBuffer(void);
     void playSample(void);
     void playMusic(void);
     void nextScore(void);

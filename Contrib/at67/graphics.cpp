@@ -50,7 +50,7 @@ namespace Graphics
     SDL_Surface* _helpSurface = NULL;
     SDL_Surface* _fontSurface = NULL;
 
-    INIReader _iniReader;
+    INIReader _configIniReader;
 
     int getWidth(void) {return _width;}
     int getHeight(void) {return _height;}
@@ -200,7 +200,7 @@ namespace Graphics
 
     bool getKeyAsString(const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, std::string& result)
     {
-        result = _iniReader.Get(sectionString, iniKey, defaultKey);
+        result = _configIniReader.Get(sectionString, iniKey, defaultKey);
         if(result == defaultKey) return false;
         result = Expression::strToUpper(result);
         return true;
@@ -248,8 +248,8 @@ namespace Graphics
 
         // Parse graphics config file
         INIReader iniReader(GRAPHICS_CONFIG_INI);
-        _iniReader = iniReader;
-        if(_iniReader.ParseError() < 0)
+        _configIniReader = iniReader;
+        if(_configIniReader.ParseError() < 0)
         {
             fprintf(stderr, "Graphics::initialise() : couldn't load INI file '%s' : reverting to default graphics options.\n", GRAPHICS_CONFIG_INI);
         }
@@ -259,7 +259,7 @@ namespace Graphics
             enum Section {Monitor};
             std::map<std::string, Section> section;
             section["Monitor"] = Monitor;
-            for(auto sectionString : _iniReader.Sections())
+            for(auto sectionString : _configIniReader.Sections())
             {
                 if(section.find(sectionString) == section.end())
                 {
