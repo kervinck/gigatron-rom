@@ -39,9 +39,10 @@
 namespace Editor
 {
     enum MemoryMode {RAM=0, ROM0, ROM1, NumMemoryModes};
-    enum EditorMode {Hex=0, Rom, Load, Debug, NumEditorModes};
+    enum EditorMode {Hex=0, Rom, Load, Dasm, NumEditorModes};
     enum KeyboardMode {Giga=0, PS2, HwGiga, HwPS2, NumKeyboardModes};
     enum FileType {File=0, Dir, Fifo, Link, NumFileTypes};
+    enum OnVarType {OnNone=0, OnCpuA, OnCpuB, OnHex, OnVars, OnWatch, NumOnVarTypes};
 
     struct MouseState
     {
@@ -68,10 +69,12 @@ namespace Editor
     MemoryMode getMemoryMode(void);
     EditorMode getEditorMode(void);
     KeyboardMode getKeyboardMode(void);
+    OnVarType getOnVarType(void);
 
     uint8_t getMemoryDigit(void);
     uint8_t getAddressDigit(void);
     uint16_t getHexBaseAddress(void);
+    uint16_t getVpcBaseAddress(void);
     uint16_t getLoadBaseAddress(void);
     uint16_t getVarsBaseAddress(void);
     uint16_t getSingleStepWatchAddress(void);

@@ -273,5 +273,4 @@ _singleStepWatch_   EQU     xyPos
   as an option as the main loop is synchronised using the performance counters.<br/>
 
 ## TODO
-- Test under MAC and Android.<br/>
-- Add an inbuilt vCPU and native code disassembler.<br/>
+- Build and test on Android.<br/>
