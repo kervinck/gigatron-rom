@@ -678,11 +678,8 @@ namespace Graphics
 
             int x, y, cy;
             Editor::getMouseMenuCursor(x, y, cy);
-            if(x>=0 && y>=0)
-            {
-                Editor::setCursorX(x);
-                Editor::setCursorY(cy);
-            }
+            Editor::setCursorX(x);
+            Editor::setCursorY(cy);
 
             // Addresses
             uint16_t cpuUsageAddressA = Editor::getCpuUsageAddressA();
@@ -727,7 +724,7 @@ namespace Graphics
                     drawText(*Editor::getRomEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, (i < NUM_INT_ROMS) ? 0xFFA0A0A0 : 0xFFFFFFFF, i == Editor::getCursorY(), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
                 }
 
-                sprintf(str, "%02X", Editor::getRomEntryVersion(Editor::getCursorY()));
+                (Editor::getCursorY() < 0  ||  Editor::getCursorY() >= Editor::getRomEntriesSize()) ? sprintf(str, " ") : sprintf(str, "%02X", Editor::getRomEntryVersion(Editor::getCursorY()));
                 drawText(std::string(str), _pixels, HEX_START-6, FONT_CELL_Y*3, 0xFFFFFFFF, false, 4);
             }
             // Hex monitor

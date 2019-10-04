@@ -168,7 +168,8 @@ namespace Editor
         float oy = float(MENU_START_Y) / float(SCREEN_HEIGHT);
 
         // Menu text cursor positions
-        if(mx >= ox  &&  mx < 1.0f  &&  my >= oy  &&  my < 1.0f)
+        x = -1, y = -1, cy = -5;
+        if(mx >= ox  &&  mx < 0.98f  &&  my >= oy  &&  my < 1.0f)
         {
             x = int((mx - ox) * 1.0f / (1.0f - ox) * (MENU_CHARS_X+0.65f));
             y = int((my - oy) * 1.0f / (1.0f - oy) * MENU_CHARS_Y);
@@ -587,7 +588,7 @@ namespace Editor
 
     void handleLoadEdit(void)
     {
-        if((_editorMode == Hex  ||  _editorMode == Debug)  ||  _cursorY < 0)
+        if((_editorMode == Hex  ||  _editorMode == Debug)  ||  (_cursorY < 0  &&  _editorMode != Rom))
         {
             _hexEdit = !_hexEdit;
         }
@@ -602,14 +603,11 @@ namespace Editor
                 case Dir: changeBrowseDirectory(); break;
             }
         }
-        else
+        else if(_editorMode == Rom)
         {
-            if(_editorMode == Rom)
-            {
-                if(_cursorY >= getRomEntriesSize()) return;
+            if(_cursorY < 0  ||  _cursorY >= getRomEntriesSize()) return;
 
-                Cpu::loadRom(getCurrentRomEntryIndex());
-            }
+            Cpu::loadRom(getCurrentRomEntryIndex());
         }
     }
 
@@ -819,30 +817,33 @@ namespace Editor
         // Hardware reset
         else if(_sdlKeyScanCode == _hardware["Reset"].scanCode  &&  _sdlKeyModifier == _hardware["Reset"].modifier) {Loader::sendCommandToGiga('R', false); return;}
 
-        // ROMS after v1 have their own inbuilt scanline handlers
+        // Scanline handler
         else if(_sdlKeyScanCode == _emulator["ScanlineMode"].scanCode  &&  _sdlKeyModifier == _emulator["ScanlineMode"].modifier)
         {
             // ROMS after v1 have their own inbuilt scanline handlers
-            if(!_singleStepMode) if(Cpu::getRomType() != Cpu::ROMv1) Cpu::setIN(Cpu::getIN() | INPUT_SELECT);
+            if(!_singleStepMode)
+            {
+                if(Cpu::getRomType() != Cpu::ROMv1) {Cpu::setIN(Cpu::getIN() | INPUT_SELECT); return;}
+            }
         }
 
         // PS2 Keyboard emulation mode
-        if(handlePs2KeyDown()) return;
+        else if(handlePs2KeyDown()) return;
 
         // Gigatron Keyboard emulation mode
-        if(handleGigaKeyDown()) return;
+        else if(handleGigaKeyDown()) return;
 
         // Buffered audio locks the emulator to 60Hz
         else if(Audio::getRealTimeAudio()  &&  _sdlKeyScanCode == _emulator["Speed+"].scanCode  &&  _sdlKeyModifier == _emulator["Speed+"].modifier)
         {
             double timingHack = Timing::getTimingHack() - VSYNC_TIMING_60*0.05;
-            if(timingHack >= 0.0) Timing::setTimingHack(timingHack);
+            if(timingHack >= 0.0) {Timing::setTimingHack(timingHack); return;}
         }
 
         else if(Audio::getRealTimeAudio()  &&  _sdlKeyScanCode == _emulator["Speed-"].scanCode  &&  _sdlKeyModifier == _emulator["Speed-"].modifier)
         {
             double timingHack = Timing::getTimingHack() + VSYNC_TIMING_60*0.05;
-            if(timingHack <= VSYNC_TIMING_60) Timing::setTimingHack(timingHack);
+            if(timingHack <= VSYNC_TIMING_60) {Timing::setTimingHack(timingHack); return;}
         }
     }
 
@@ -937,7 +938,18 @@ namespace Editor
         // ROM type
         else if(_sdlKeyScanCode == _emulator["RomType"].scanCode  &&  _sdlKeyModifier == _emulator["RomType"].modifier)
         {
-            if(!_singleStepMode) _editorMode = (_editorMode == Rom) ? Hex : Rom;
+            if(!_singleStepMode)
+            {
+                if(_editorMode == Rom)
+                {
+                    _editorMode = Hex;
+                }
+                else
+                {
+                    _hexEdit = false;
+                    _editorMode = Rom;
+                }
+            }
         }
 
         // Debug mode
