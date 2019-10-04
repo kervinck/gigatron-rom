@@ -311,7 +311,7 @@ namespace Graphics
         // SDL hints, VSync and Batching
         char vsChar = char(_vSync + '0');
         SDL_SetHint(SDL_HINT_RENDER_VSYNC, &vsChar);
-        SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
+        //SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
         SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, std::to_string(_filter).c_str());
 
         // Fullscreen
