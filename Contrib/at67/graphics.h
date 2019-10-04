@@ -38,6 +38,7 @@
 #define RAM_START        108
 #define CPUA_START       78
 #define CPUB_START       120
+#define WATCH_START      66
 #define MENU_TEXT_SIZE   23
 #define PAGEUP_START_X   140
 #define PAGEUP_START_Y   44

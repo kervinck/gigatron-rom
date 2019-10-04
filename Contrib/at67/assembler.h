@@ -22,7 +22,14 @@ namespace Assembler
 
 
     uint16_t getStartAddress(void);
+    int getCurrDasmByteCount(void);
+    int getPrevDasmByteCount(void);
+    int getDisassembledCodeSize(void);
+    std::string* getDisassembledCode(int index);
+
     void setIncludePath(const std::string& includePath);
+
+    int disassemble(uint16_t address);
 
     void initialise(void);
     void clearAssembler(void);

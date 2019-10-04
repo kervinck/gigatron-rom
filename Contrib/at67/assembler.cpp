@@ -4,13 +4,17 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
 #include <iterator>
 #include <algorithm>
 #include <cstdarg>
 
 #include "memory.h"
+#include "cpu.h"
 #include "audio.h"
+#include "editor.h"
 #include "loader.h"
+#include "opcodes.h"
 #include "assembler.h"
 #include "expression.h"
 
@@ -20,15 +24,14 @@
 #endif
 
 
-#define BRANCH_ADJUSTMENT    2
+#define BRANCH_ADJUSTMENT 2
+#define MAX_DASM_LINES    32
 
 
 namespace Assembler
 {
     enum ParseType {PreProcessPass=0, MnemonicPass, CodePass, NumParseTypes};
-    enum ByteSize {BadSize=-1, OneByte=1, TwoBytes=2, ThreeBytes=3};
     enum EvaluateResult {Failed=-1, NotFound, Reserved, Duplicate, Skipped, Success};
-    enum OpcodeType {ReservedDB=0, ReservedDW, ReservedDBR, ReservedDWR, vCpu, Native};
     enum AddressMode {D_AC=0b00000000, X_AC=0b00000100, YD_AC=0b00001000, YX_AC=0b00001100, D_X=0b00010000, D_Y=0b00010100, D_OUT=0b00011000, YXpp_OUT=0b00011100};
     enum BusMode {D=0b00000000, RAM=0b00000001, AC=0b00000010, IN=0b00000011};
     enum ReservedWords {CallTable=0, StartAddress, SingleStepWatch, DisableUpload, CpuUsageAddressA, CpuUsageAddressB, INCLUDE, MACRO, ENDM, GPRINTF, NumReservedWords};
@@ -56,14 +59,6 @@ namespace Assembler
         uint8_t _operand0;
         uint8_t _operand1;
         uint16_t _address;
-        OpcodeType _opcodeType;
-    };
-
-    struct InstructionType
-    {
-        uint8_t _opcode;
-        uint8_t _branch;
-        ByteSize _byteSize;
         OpcodeType _opcodeType;
     };
 
@@ -120,6 +115,7 @@ namespace Assembler
     uint16_t _callTable = DEFAULT_CALL_TABLE;
     uint16_t _startAddress = DEFAULT_START_ADDRESS;
     uint16_t _currentAddress = _startAddress;
+    uint16_t _currDasmByteCount = 0, _prevDasmByteCount = 0;
 
     std::string _includePath = "";
 
@@ -129,9 +125,15 @@ namespace Assembler
     std::vector<ByteCode> _byteCode;
     std::vector<CallTableEntry> _callTableEntries;
     std::vector<std::string> _reservedWords;
+    std::vector<std::string> _disassembledCode;
     std::vector<Gprintf> _gprintfs;
 
     uint16_t getStartAddress(void) {return _startAddress;}
+    int getPrevDasmByteCount(void) {return _prevDasmByteCount;}
+    int getCurrDasmByteCount(void) {return _currDasmByteCount;}
+    int getDisassembledCodeSize(void) {return int(_disassembledCode.size());}
+    std::string* getDisassembledCode(int index) {return &_disassembledCode[index % _disassembledCode.size()];}
+
     void setIncludePath(const std::string& includePath) {_includePath = includePath;}
 
 
@@ -147,7 +149,111 @@ namespace Assembler
         _reservedWords.push_back("%MACRO");
         _reservedWords.push_back("%ENDM");
         _reservedWords.push_back("gprintf");
+
+        initialiseOpcodes();
     }
+
+#ifndef STAND_ALONE
+    int disassemble(uint16_t address)
+    {
+        _disassembledCode.clear();
+        _currDasmByteCount = 1;
+        _prevDasmByteCount = 1;
+
+        while(_disassembledCode.size() < MAX_DASM_LINES)
+        {
+            uint8_t instruction, data0, data1;
+            Editor::MemoryMode memoryMode = Editor::getMemoryMode();
+
+            switch(memoryMode)
+            {
+                case Editor::RAM:  instruction = Cpu::getRAM(address);    data0 = Cpu::getRAM(address + 1); data1 = Cpu::getRAM(address + 2); break;
+                case Editor::ROM0: instruction = Cpu::getROM(address, 0); data0 = Cpu::getROM(address, 1);                                    break;
+                case Editor::ROM1: instruction = Cpu::getROM(address, 0); data0 = Cpu::getROM(address, 1);                                    break;
+            }
+
+            // VCPU branch instructions
+            bool foundBranch = false;
+            if(memoryMode == Editor::RAM  &&  instruction == VCPU_BRANCH_OPCODE)
+            {
+                foundBranch = true;
+                instruction = data0;
+            }
+
+            // Construct disassembled line
+            char dasmLine[32];
+            ByteSize byteSize = OneByte;
+            if(_disOpcodes.find(instruction) == _disOpcodes.end())
+            {
+                // Invalid instruction
+                sprintf(dasmLine, "%04x %02x", address, instruction);
+                address++;
+            }
+            // Audio address space
+            else if((address >= GIGA_CH0_WAV_A  &&  address <= GIGA_CH0_OSC_H) ||
+                    (address >= GIGA_CH1_WAV_A  &&  address <= GIGA_CH1_OSC_H) ||
+                    (address >= GIGA_CH2_WAV_A  &&  address <= GIGA_CH2_OSC_H) ||
+                    (address >= GIGA_CH3_WAV_A  &&  address <= GIGA_CH3_OSC_H))
+            {
+                sprintf(dasmLine, "%04x %02x", address, instruction);
+                address++;
+            }
+            else
+            {
+                byteSize = _disOpcodes[instruction]._byteSize;
+                char vpc[2] = {0, 0};
+                //if(address == Editor::getVpcBaseAddress()) vpc[0] = '*';
+                switch(byteSize)
+                {
+                    case OneByte:  sprintf(dasmLine, "%s%04x %-6s", vpc, address, _disOpcodes[instruction]._mnemonic.c_str());             break;
+                    case TwoBytes: sprintf(dasmLine, "%s%04x %-6s %02x", vpc, address, _disOpcodes[instruction]._mnemonic.c_str(), data0); break;
+                    case ThreeBytes:
+                    {
+                        if(foundBranch)
+                        {
+                            sprintf(dasmLine, "%s%04x %-6s %02x", vpc, address, _disOpcodes[instruction]._mnemonic.c_str(), data1);
+                        }
+                        else
+                        {
+                            sprintf(dasmLine, "%s%04x %-6s %02x%02x", vpc, address, _disOpcodes[instruction]._mnemonic.c_str(), data1, data0);
+                        }
+                    }
+                    break;
+                }
+
+                uint16_t addr = address;
+                address = (_disOpcodes[instruction]._opcodeType == Native) ? address + 1 : address + byteSize;
+
+                // Save current and previous instruction lengths
+                if(_disassembledCode.size() == 0)
+                {
+                    if(memoryMode == Editor::RAM)
+                    {
+                        //_prevDasmByteCount = 1;
+                        _currDasmByteCount = (_disOpcodes[instruction]._opcodeType == Native) ? 1 : byteSize;
+
+                        // Attempt to get bytesize of previous instruction
+                        for(uint16_t a=addr-1; a>=addr-3; --a)
+                        {
+                            uint8_t o = addr - a;
+                            uint8_t i = Cpu::getRAM(a);
+                            if(i == VCPU_BRANCH_OPCODE) i = Cpu::getRAM(a + 1);
+                            if(_disOpcodes.find(i) != _disOpcodes.end()  &&  _disOpcodes[i]._opcodeType == vCpu  &&  _disOpcodes[i]._byteSize == o)
+                            {
+                                _prevDasmByteCount = _disOpcodes[i]._byteSize;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            _disassembledCode.push_back(dasmLine);
+        }
+
+        return int(_disassembledCode.size());
+    }
+#endif
 
     // Returns true when finished
     bool getNextAssembledByte(ByteCode& byteCode, bool debug)
@@ -206,79 +312,12 @@ namespace Assembler
 
     InstructionType getOpcode(const std::string& input)
     {
-        InstructionType instructionType = {0x00, 0x00, BadSize, vCpu};
-
         std::string token = input;
         Expression::strToUpper(token);
 
-        // Gigatron vCPU instructions
-        if(token == "ST")         {instructionType._opcode = 0x5E; instructionType._byteSize = TwoBytes;  }
-        else if(token == "STW")   {instructionType._opcode = 0x2B; instructionType._byteSize = TwoBytes;  }
-        else if(token == "STLW")  {instructionType._opcode = 0xEC; instructionType._byteSize = TwoBytes;  }
-        else if(token == "LD")    {instructionType._opcode = 0x1A; instructionType._byteSize = TwoBytes;  }
-        else if(token == "LDI")   {instructionType._opcode = 0x59; instructionType._byteSize = TwoBytes;  }
-        else if(token == "LDWI")  {instructionType._opcode = 0x11; instructionType._byteSize = ThreeBytes;}
-        else if(token == "LDW")   {instructionType._opcode = 0x21; instructionType._byteSize = TwoBytes;  }
-        else if(token == "LDLW")  {instructionType._opcode = 0xEE; instructionType._byteSize = TwoBytes;  }
-        else if(token == "ADDW")  {instructionType._opcode = 0x99; instructionType._byteSize = TwoBytes;  }
-        else if(token == "SUBW")  {instructionType._opcode = 0xB8; instructionType._byteSize = TwoBytes;  }
-        else if(token == "ADDI")  {instructionType._opcode = 0xE3; instructionType._byteSize = TwoBytes;  }
-        else if(token == "SUBI")  {instructionType._opcode = 0xE6; instructionType._byteSize = TwoBytes;  }
-        else if(token == "LSLW")  {instructionType._opcode = 0xE9; instructionType._byteSize = OneByte;   }
-        else if(token == "INC")   {instructionType._opcode = 0x93; instructionType._byteSize = TwoBytes;  }
-        else if(token == "ANDI")  {instructionType._opcode = 0x82; instructionType._byteSize = TwoBytes;  }
-        else if(token == "ANDW")  {instructionType._opcode = 0xF8; instructionType._byteSize = TwoBytes;  }
-        else if(token == "ORI")   {instructionType._opcode = 0x88; instructionType._byteSize = TwoBytes;  }
-        else if(token == "ORW")   {instructionType._opcode = 0xFA; instructionType._byteSize = TwoBytes;  }
-        else if(token == "XORI")  {instructionType._opcode = 0x8C; instructionType._byteSize = TwoBytes;  }
-        else if(token == "XORW")  {instructionType._opcode = 0xFC; instructionType._byteSize = TwoBytes;  }
-        else if(token == "PEEK")  {instructionType._opcode = 0xAD; instructionType._byteSize = OneByte;   }
-        else if(token == "DEEK")  {instructionType._opcode = 0xF6; instructionType._byteSize = OneByte;   }
-        else if(token == "POKE")  {instructionType._opcode = 0xF0; instructionType._byteSize = TwoBytes;  }
-        else if(token == "DOKE")  {instructionType._opcode = 0xF3; instructionType._byteSize = TwoBytes;  }
-        else if(token == "LUP")   {instructionType._opcode = 0x7F; instructionType._byteSize = TwoBytes;  }
-        else if(token == "BRA")   {instructionType._opcode = 0x90; instructionType._byteSize = TwoBytes;  }
-        else if(token == "CALL")  {instructionType._opcode = 0xCF; instructionType._byteSize = TwoBytes;  }
-        else if(token == "RET")   {instructionType._opcode = 0xFF; instructionType._byteSize = OneByte;   }
-        else if(token == "PUSH")  {instructionType._opcode = 0x75; instructionType._byteSize = OneByte;   }
-        else if(token == "POP")   {instructionType._opcode = 0x63; instructionType._byteSize = OneByte;   }
-        else if(token == "ALLOC") {instructionType._opcode = 0xDF; instructionType._byteSize = TwoBytes;  }
-        else if(token == "SYS")   {instructionType._opcode = 0xB4; instructionType._byteSize = TwoBytes;  }
-        else if(token == "DEF")   {instructionType._opcode = 0xCD; instructionType._byteSize = TwoBytes;  }
+        if(_asmOpcodes.find(token) == _asmOpcodes.end()) return {0x00, 0x00, BadSize, vCpu};
 
-        // Gigatron vCPU branch instructions
-        else if(token == "BEQ")   {instructionType._opcode = 0x35; instructionType._branch = 0x3F; instructionType._byteSize = ThreeBytes;}
-        else if(token == "BNE")   {instructionType._opcode = 0x35; instructionType._branch = 0x72; instructionType._byteSize = ThreeBytes;}
-        else if(token == "BLT")   {instructionType._opcode = 0x35; instructionType._branch = 0x50; instructionType._byteSize = ThreeBytes;}
-        else if(token == "BGT")   {instructionType._opcode = 0x35; instructionType._branch = 0x4D; instructionType._byteSize = ThreeBytes;}
-        else if(token == "BLE")   {instructionType._opcode = 0x35; instructionType._branch = 0x56; instructionType._byteSize = ThreeBytes;}
-        else if(token == "BGE")   {instructionType._opcode = 0x35; instructionType._branch = 0x53; instructionType._byteSize = ThreeBytes;}
-
-        // Reserved assembler opcodes
-        else if(token == "DB")    {instructionType._byteSize = TwoBytes;   instructionType._opcodeType = ReservedDB; }
-        else if(token == "DW")    {instructionType._byteSize = ThreeBytes; instructionType._opcodeType = ReservedDW; }
-        else if(token == "DBR")   {instructionType._byteSize = TwoBytes;   instructionType._opcodeType = ReservedDBR;}
-        else if(token == "DWR")   {instructionType._byteSize = ThreeBytes; instructionType._opcodeType = ReservedDWR;}
-                                                                           
-        // Gigatron native instructions                                    
-        else if(token == ".LD")   {instructionType._opcode = 0x00; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
-        else if(token == ".NOP")  {instructionType._opcode = 0x02; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
-        else if(token == ".ANDA") {instructionType._opcode = 0x20; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
-        else if(token == ".ORA")  {instructionType._opcode = 0x40; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
-        else if(token == ".XORA") {instructionType._opcode = 0x60; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
-        else if(token == ".ADDA") {instructionType._opcode = 0x80; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
-        else if(token == ".SUBA") {instructionType._opcode = 0xA0; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
-        else if(token == ".ST")   {instructionType._opcode = 0xC0; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
-        else if(token == ".JMP")  {instructionType._opcode = 0xE0; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
-        else if(token == ".BGT")  {instructionType._opcode = 0xE4; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
-        else if(token == ".BLT")  {instructionType._opcode = 0xE8; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
-        else if(token == ".BNE")  {instructionType._opcode = 0xEC; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
-        else if(token == ".BEQ")  {instructionType._opcode = 0xF0; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
-        else if(token == ".BGE")  {instructionType._opcode = 0xF4; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
-        else if(token == ".BLE")  {instructionType._opcode = 0xF8; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
-        else if(token == ".BRA")  {instructionType._opcode = 0xFC; instructionType._byteSize = TwoBytes; instructionType._opcodeType = Native;}
-
-        return instructionType;
+        return _asmOpcodes[token];
     }
 
     void preProcessExpression(const std::vector<std::string>& tokens, int tokenIndex, std::string& input, bool stripWhiteSpace)

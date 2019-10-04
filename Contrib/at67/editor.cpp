@@ -66,13 +66,15 @@ namespace Editor
     std::string _filePath = "";
 
     MouseState _mouseState;
-
     MemoryMode _memoryMode = RAM;
     EditorMode _editorMode = Hex;
     KeyboardMode _keyboardMode = Giga;
+    OnVarType _onVarType = OnNone;
+
     uint8_t _memoryDigit = 0;
     uint8_t _addressDigit = 0;
     uint16_t _hexBaseAddress = HEX_BASE_ADDRESS;
+    uint16_t _vpcBaseAddress = HEX_BASE_ADDRESS;
     uint16_t _loadBaseAddress = LOAD_BASE_ADDRESS;
     uint16_t _varsBaseAddress = VARS_BASE_ADDRESS;
     uint16_t _singleStepWatchAddress = VIDEO_Y_ADDRESS;
@@ -107,10 +109,12 @@ namespace Editor
     MemoryMode getMemoryMode(void) {return _memoryMode;}
     EditorMode getEditorMode(void) {return _editorMode;}
     KeyboardMode getKeyboardMode(void) {return _keyboardMode;}
+    OnVarType getOnVarType(void) {return _onVarType;}
 
     uint8_t getMemoryDigit(void) {return _memoryDigit;}
     uint8_t getAddressDigit(void) {return _addressDigit;}
     uint16_t getHexBaseAddress(void) {return _hexBaseAddress;}
+    uint16_t getVpcBaseAddress(void) {return _vpcBaseAddress;}
     uint16_t getLoadBaseAddress(void) {return _loadBaseAddress;}
     uint16_t getVarsBaseAddress(void) {return _varsBaseAddress;}
     uint16_t getSingleStepWatchAddress(void) {return _singleStepWatchAddress;}
@@ -168,7 +172,8 @@ namespace Editor
         float oy = float(MENU_START_Y) / float(SCREEN_HEIGHT);
 
         // Menu text cursor positions
-        if(mx >= ox  &&  mx < 1.0f  &&  my >= oy  &&  my < 1.0f)
+        x = -1, y = -1, cy = -5;
+        if(mx >= ox  &&  mx < 0.98f  &&  my >= oy  &&  my < 1.0f)
         {
             x = int((mx - ox) * 1.0f / (1.0f - ox) * (MENU_CHARS_X+0.65f));
             y = int((my - oy) * 1.0f / (1.0f - oy) * MENU_CHARS_Y);
@@ -359,6 +364,7 @@ namespace Editor
         _emulator["Browse"]       = {SDLK_b, KMOD_LCTRL};
         _emulator["RomType"]      = {SDLK_r, KMOD_LCTRL};
         _emulator["Reset"]        = {SDLK_F1, KMOD_LCTRL};
+        _emulator["Disassembler"] = {SDLK_d, KMOD_LCTRL};
         _emulator["ScanlineMode"] = {SDLK_F3, KMOD_LCTRL};
         _emulator["Help"]         = {SDLK_h, KMOD_LCTRL};
         _emulator["Quit"]         = {SDLK_q, KMOD_LCTRL};
@@ -418,6 +424,7 @@ namespace Editor
                     scanCodeFromIniKey(sectionString, "Browse",       "CTRL+B",   _emulator["Browse"]);
                     scanCodeFromIniKey(sectionString, "RomType",      "CTRL+R",   _emulator["RomType"]);
                     scanCodeFromIniKey(sectionString, "Reset",        "CTRL+F1",  _emulator["Reset"]);
+                    scanCodeFromIniKey(sectionString, "Disassembler", "CTRL+D",   _emulator["Disassembler"]);
                     scanCodeFromIniKey(sectionString, "ScanlineMode", "CTRL+F3",  _emulator["ScanlineMode"]);
                     scanCodeFromIniKey(sectionString, "Help",         "CTRL+H",   _emulator["Help"]);
                     scanCodeFromIniKey(sectionString, "Quit",         "CTRL+Q",   _emulator["Quit"]);
@@ -539,43 +546,39 @@ namespace Editor
 
     void handlePageUp(uint16_t numRows)
     {
-        if(_editorMode == Load)
+        switch(_editorMode)
         {
-            _fileEntriesIndex--;
-            if(_fileEntriesIndex < 0) _fileEntriesIndex = 0;
-        }
-        else if(_editorMode == Rom)
-        {
-            _romEntriesIndex--;
-            if(_romEntriesIndex < 0) _romEntriesIndex = 0;
-        }
-        else
-        {
-            _hexBaseAddress = (_hexBaseAddress - HEX_CHARS_X*numRows) & (RAM_SIZE-1);
+            case Hex:  _hexBaseAddress = (_hexBaseAddress - HEX_CHARS_X*numRows) & (RAM_SIZE-1);               break;
+            case Dasm: _hexBaseAddress = (_hexBaseAddress - Assembler::getPrevDasmByteCount()) & (RAM_SIZE-1); break;
+            case Load: if(-_fileEntriesIndex < 0) _fileEntriesIndex = 0;                                       break;
+            case Rom:  if(-_romEntriesIndex < 0) _romEntriesIndex = 0;                                         break;
         }
     }
 
     void handlePageDown(uint16_t numRows)
     {
-        if(_editorMode == Load)
+        switch(_editorMode)
         {
-            if(_fileEntries.size() > HEX_CHARS_Y)
+            case Hex:  _hexBaseAddress = (_hexBaseAddress + HEX_CHARS_X*numRows) & (RAM_SIZE-1);               break;
+            case Dasm: _hexBaseAddress = (_hexBaseAddress + Assembler::getCurrDasmByteCount()) & (RAM_SIZE-1); break;
+            case Load:
             {
-                _fileEntriesIndex++;
-                if(_fileEntries.size() - _fileEntriesIndex < HEX_CHARS_Y) _fileEntriesIndex--;
+                if(_fileEntries.size() > HEX_CHARS_Y)
+                {
+                    _fileEntriesIndex++;
+                    if(_fileEntries.size() - _fileEntriesIndex < HEX_CHARS_Y) _fileEntriesIndex--;
+                }
             }
-        }
-        else if(_editorMode == Rom)
-        {
-            if(_romEntries.size() > HEX_CHARS_Y)
+            break;
+            case Rom:
             {
-                _romEntriesIndex++;
-                if(_romEntries.size() - _romEntriesIndex < HEX_CHARS_Y) _romEntriesIndex--;
+                if(_romEntries.size() > HEX_CHARS_Y)
+                {
+                    _romEntriesIndex++;
+                    if(_romEntries.size() - _romEntriesIndex < HEX_CHARS_Y) _romEntriesIndex--;
+                }
             }
-        }
-        else
-        {
-            _hexBaseAddress = (_hexBaseAddress + HEX_CHARS_X*numRows) & (RAM_SIZE-1);
+            break;
         }
     }
 
@@ -587,7 +590,7 @@ namespace Editor
 
     void handleLoadEdit(void)
     {
-        if((_editorMode == Hex  ||  _editorMode == Debug)  ||  _cursorY < 0)
+        if(_editorMode == Hex  ||  (_cursorY < 0  &&  _editorMode != Rom))
         {
             _hexEdit = !_hexEdit;
         }
@@ -602,19 +605,35 @@ namespace Editor
                 case Dir: changeBrowseDirectory(); break;
             }
         }
+        else if(_editorMode == Rom)
+        {
+            if(_cursorY < 0  ||  _cursorY >= getRomEntriesSize()) return;
+
+            Cpu::loadRom(getCurrentRomEntryIndex());
+        }
+    }
+
+    OnVarType updateOnVarType(void)
+    {
+        if(Editor::getSingleStepMode())
+        {
+            if(getCursorY() == -2  &&  getCursorX() > 5  &&  getCursorX() < 7) return OnWatch;
+        }
         else
         {
-            if(_editorMode == Rom)
-            {
-                if(_cursorY >= getRomEntriesSize()) return;
-
-                Cpu::loadRom(getCurrentRomEntryIndex());
-            }
+            if(getCursorY() == -2  &&  getCursorX() > 3  &&  getCursorX() < 6) return OnCpuA;
+            if(getCursorY() == -2  &&  getCursorX() > 5  &&  getCursorX() < 8) return OnCpuB;
         }
+        if(getCursorY() == -1  &&  getCursorX() > 0  &&  getCursorX() < 3) return OnHex;
+        if(getCursorY() == -1  &&  getCursorX() > 4  &&  getCursorX() < 7) return OnVars;
+    
+        return OnNone;
     }
 
     void updateEditor(void)
     {
+        if(!_hexEdit) return;
+
         int range = 0;
         if(_sdlKeyScanCode >= SDLK_0  &&  _sdlKeyScanCode <= SDLK_9) range = 1;
         if(_sdlKeyScanCode >= SDLK_a  &&  _sdlKeyScanCode <= SDLK_f) range = 2;
@@ -627,11 +646,23 @@ namespace Editor
                 case 2: value = _sdlKeyScanCode - SDLK_a + 10; break;
             }
 
-            // Edit cpu usage addresses
-            if(_cursorY == -2  &&  _hexEdit)
+            // Edit memory
+            if(_memoryMode == RAM  &&  _cursorY >= 0)
             {
-                // A address
-                if(_cursorX > 3  &&  _cursorX < 6)
+                uint16_t address = _hexBaseAddress + _cursorX + _cursorY*HEX_CHARS_X;
+                switch(_memoryDigit)
+                {
+                    case 0: value = (value << 4) & 0x00F0; Cpu::setRAM(address, Cpu::getRAM(address) & 0x000F | value); break;
+                    case 1: value = (value << 0) & 0x000F; Cpu::setRAM(address, Cpu::getRAM(address) & 0x00F0 | value); break;
+                }
+                _memoryDigit = (++_memoryDigit) & 0x01;
+                return;
+            }
+
+            // Edit variables
+            switch(_onVarType)
+            {
+                case OnCpuA:
                 {
                     switch(_addressDigit)
                     {
@@ -641,8 +672,9 @@ namespace Editor
                         case 3: value = (value << 0)  & 0x000F; _cpuUsageAddressA = _cpuUsageAddressA & 0xFFF0 | value; break;
                     }
                 }
-                // B address
-                else if(_cursorX > 5  &&  _cursorX < 8)
+                break;
+
+                case OnCpuB:
                 {
                     switch(_addressDigit)
                     {
@@ -652,27 +684,11 @@ namespace Editor
                         case 3: value = (value << 0)  & 0x000F; _cpuUsageAddressB = _cpuUsageAddressB & 0xFFF0 | value; break;
                     }
                 }
+                break;
 
-                _addressDigit = (++_addressDigit) & 0x03;
-            }
-            else if(_cursorY == -1  &&  _hexEdit)
-            {
-                // Edit hex/load/vars addresses
-                if(_cursorX > 0  &&  _cursorX < 3)
+                case OnHex:
                 {
-                    // Hex address
-                    if(_editorMode != Load)
-                    {
-                        switch(_addressDigit)
-                        {
-                            case 0: value = (value << 12) & 0xF000; _hexBaseAddress = _hexBaseAddress & 0x0FFF | value; break;
-                            case 1: value = (value << 8)  & 0x0F00; _hexBaseAddress = _hexBaseAddress & 0xF0FF | value; break;
-                            case 2: value = (value << 4)  & 0x00F0; _hexBaseAddress = _hexBaseAddress & 0xFF0F | value; break;
-                            case 3: value = (value << 0)  & 0x000F; _hexBaseAddress = _hexBaseAddress & 0xFFF0 | value; break;
-                        }
-                    }
-                    // Load address
-                    else
+                    if(_editorMode == Load)
                     {
                         switch(_addressDigit)
                         {
@@ -684,9 +700,20 @@ namespace Editor
 
                         if(_loadBaseAddress < LOAD_BASE_ADDRESS) _loadBaseAddress = LOAD_BASE_ADDRESS;
                     }
+                    else
+                    {
+                        switch(_addressDigit)
+                        {
+                            case 0: value = (value << 12) & 0xF000; _hexBaseAddress = _hexBaseAddress & 0x0FFF | value; break;
+                            case 1: value = (value << 8)  & 0x0F00; _hexBaseAddress = _hexBaseAddress & 0xF0FF | value; break;
+                            case 2: value = (value << 4)  & 0x00F0; _hexBaseAddress = _hexBaseAddress & 0xFF0F | value; break;
+                            case 3: value = (value << 0)  & 0x000F; _hexBaseAddress = _hexBaseAddress & 0xFFF0 | value; break;
+                        }
+                    }
                 }
-                // Vars address
-                else if(_cursorX > 4  &&  _cursorX < 7)
+                break;
+
+                case OnVars:
                 {
                     switch(_addressDigit)
                     {
@@ -696,36 +723,37 @@ namespace Editor
                         case 3: value = (value << 0)  & 0x000F; _varsBaseAddress = _varsBaseAddress & 0xFFF0 | value; break;
                     }
                 }
+                break;
 
-                _addressDigit = (++_addressDigit) & 0x03;
-            }
-            // Edit memory
-            else if(_memoryMode == RAM  &&  _hexEdit)
-            {
-                uint16_t address = _hexBaseAddress + _cursorX + _cursorY*HEX_CHARS_X;
-                switch(_memoryDigit)
+                case OnWatch:
                 {
-                    case 0: value = (value << 4) & 0x00F0; Cpu::setRAM(address, Cpu::getRAM(address) & 0x000F | value); break;
-                    case 1: value = (value << 0) & 0x000F; Cpu::setRAM(address, Cpu::getRAM(address) & 0x00F0 | value); break;
+                    switch(_addressDigit)
+                    {
+                        case 0: value = (value << 12) & 0xF000; _singleStepWatchAddress = _singleStepWatchAddress & 0x0FFF | value; break;
+                        case 1: value = (value << 8)  & 0x0F00; _singleStepWatchAddress = _singleStepWatchAddress & 0xF0FF | value; break;
+                        case 2: value = (value << 4)  & 0x00F0; _singleStepWatchAddress = _singleStepWatchAddress & 0xFF0F | value; break;
+                        case 3: value = (value << 0)  & 0x000F; _singleStepWatchAddress = _singleStepWatchAddress & 0xFFF0 | value; break;
+                    }
                 }
-                _memoryDigit = (++_memoryDigit) & 0x01;
+                break;
+
+                default: return;
             }
+
+            _addressDigit = (++_addressDigit) & 0x03;
         }
     }
 
     void startDebugger(void)
     {
-        _hexEdit = false;
         _singleStep = false;
         _singleStepMode = true;
-        _editorMode = Debug;
     }
 
     void resetDebugger(void)
     {
         _singleStep = false;
         _singleStepMode = false;
-        _editorMode = Hex;
     }
 
     // PS2 Keyboard emulation mode
@@ -819,30 +847,33 @@ namespace Editor
         // Hardware reset
         else if(_sdlKeyScanCode == _hardware["Reset"].scanCode  &&  _sdlKeyModifier == _hardware["Reset"].modifier) {Loader::sendCommandToGiga('R', false); return;}
 
-        // ROMS after v1 have their own inbuilt scanline handlers
+        // Scanline handler
         else if(_sdlKeyScanCode == _emulator["ScanlineMode"].scanCode  &&  _sdlKeyModifier == _emulator["ScanlineMode"].modifier)
         {
             // ROMS after v1 have their own inbuilt scanline handlers
-            if(!_singleStepMode) if(Cpu::getRomType() != Cpu::ROMv1) Cpu::setIN(Cpu::getIN() | INPUT_SELECT);
+            if(!_singleStepMode)
+            {
+                if(Cpu::getRomType() != Cpu::ROMv1) {Cpu::setIN(Cpu::getIN() | INPUT_SELECT); return;}
+            }
         }
 
         // PS2 Keyboard emulation mode
-        if(handlePs2KeyDown()) return;
+        else if(handlePs2KeyDown()) return;
 
         // Gigatron Keyboard emulation mode
-        if(handleGigaKeyDown()) return;
+        else if(handleGigaKeyDown()) return;
 
         // Buffered audio locks the emulator to 60Hz
         else if(Audio::getRealTimeAudio()  &&  _sdlKeyScanCode == _emulator["Speed+"].scanCode  &&  _sdlKeyModifier == _emulator["Speed+"].modifier)
         {
             double timingHack = Timing::getTimingHack() - VSYNC_TIMING_60*0.05;
-            if(timingHack >= 0.0) Timing::setTimingHack(timingHack);
+            if(timingHack >= 0.0) {Timing::setTimingHack(timingHack); return;}
         }
 
         else if(Audio::getRealTimeAudio()  &&  _sdlKeyScanCode == _emulator["Speed-"].scanCode  &&  _sdlKeyModifier == _emulator["Speed-"].modifier)
         {
             double timingHack = Timing::getTimingHack() + VSYNC_TIMING_60*0.05;
-            if(timingHack <= VSYNC_TIMING_60) Timing::setTimingHack(timingHack);
+            if(timingHack <= VSYNC_TIMING_60) {Timing::setTimingHack(timingHack); return;}
         }
     }
 
@@ -918,6 +949,12 @@ namespace Editor
             Graphics::setDisplayHelpScreen(helpScreen);
         }
 
+        // Disassembler
+        else if(_sdlKeyScanCode == _emulator["Disassembler"].scanCode  &&  _sdlKeyModifier == _emulator["Disassembler"].modifier)
+        {
+            _editorMode = (_editorMode == Dasm) ? Hex : Dasm;
+        }
+
         // ROMS after v1 have their own inbuilt scanline handlers
         else if(_sdlKeyScanCode == _emulator["ScanlineMode"].scanCode  &&  _sdlKeyModifier == _emulator["ScanlineMode"].modifier)
         {
@@ -937,7 +974,18 @@ namespace Editor
         // ROM type
         else if(_sdlKeyScanCode == _emulator["RomType"].scanCode  &&  _sdlKeyModifier == _emulator["RomType"].modifier)
         {
-            if(!_singleStepMode) _editorMode = (_editorMode == Rom) ? Hex : Rom;
+            if(!_singleStepMode)
+            {
+                if(_editorMode == Rom)
+                {
+                    _editorMode = Hex;
+                }
+                else
+                {
+                    _hexEdit = false;
+                    _editorMode = Rom;
+                }
+            }
         }
 
         // Debug mode
@@ -1004,6 +1052,8 @@ namespace Editor
             {
                 _singleStep = false;
                 _singleStepMode = true;
+                _hexBaseAddress = (Cpu::getRAM(0x0017) <<8) | Cpu::getRAM(0x0016);
+                _vpcBaseAddress = _hexBaseAddress;
             }
         }
 
@@ -1017,6 +1067,8 @@ namespace Editor
             Timing::setFrameUpdate(false);
             if(frameTime > VSYNC_TIMING_60)
             {
+                _onVarType = updateOnVarType();
+
                 prevFrameCounter = SDL_GetPerformanceCounter();
                 Timing::setFrameUpdate(true);
                 Graphics::refreshScreen();
@@ -1032,7 +1084,7 @@ namespace Editor
 
                 switch(event.type)
                 {
-                    case SDL_MOUSEBUTTONUP:
+                    case SDL_MOUSEBUTTONDOWN:
                     {
                         if(_pageUpButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageUp(HEX_CHARS_Y);
                         else if(_pageDnButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageDown(HEX_CHARS_Y);
@@ -1100,6 +1152,8 @@ namespace Editor
 
     void handleInput(void)
     {
+        _onVarType = updateOnVarType();
+
         SDL_Event event;
         while(SDL_PollEvent(&event))
         {
@@ -1109,7 +1163,7 @@ namespace Editor
 
             switch(event.type)
             {
-                case SDL_MOUSEBUTTONUP:
+                case SDL_MOUSEBUTTONDOWN:
                 {
                     if(_pageUpButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageUp(HEX_CHARS_Y);
                     else if(_pageDnButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageDown(HEX_CHARS_Y);
