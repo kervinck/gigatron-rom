@@ -52,12 +52,30 @@ LUP   $7F DD    26 ROM lookup, needs trampoline in target page (vAC=ROM[vAC+D])
 BRA   $90 DD    14 Branch unconditionally (vPC=(vPC&0xff00)+D)
 BCC   $35 CC DD 28 Test vAC and branch conditionally. CC can be
                      EQ=$3F, NE=$72, LT=$50, GT=$4D, LE=$56, GE=$53
-CALL  $CF DD    26 Goto address but remember vPC (vLR,vPC=vPC+2,[D]+256*[D+1]-2)
+CALL  $CF DD    26 Goto address and remember vPC (vLR,vPC=vPC+2,[D]+256*[D+1]-2)
 RET   $FF       16 Leaf return (vPC=vLR-2)
 PUSH  $75       26 Push vLR on stack ([vSP-2],v[vSP-1],vSP=vLR&255,vLR>>8,vLR-2)
 POP   $63       26 Pop address from stack (vLR,vSP=[vSP]+256*[vSP+1],vSP+2)
 ALLOC $DF DD    14 Create or destroy stack frame (vSP+=D)
 SYS   $B4 DD   20+ Native function call using at most 2*T cycles, D=270-max(14,T)
 DEF   $CD DD    18 Define data or code (vAC,vPC=vPC+2,(vPC&0xff00)+D)
+
+----------------------------------------
+Experimental vCPU instructions in DEVROM
+----------------------------------------
+
+See also this thread: https://forum.gigatron.io/viewtopic.php?f=4&t=136
+
+Mnem. Encoding  #C Description
+----- --------- -- -----------
+CALLI $85 LL HH 28 Goto immediate address and remember vPC (vLR,vPC=vPC+3,$HHLL)
+CMPHS $1f DD    28 Adjust high byte for signed compare (vACH=XXX)
+CMPHU $97 DD    28 Adjust high byte for unsigned compare (vACH=XXX)
+
+Changed cycle times
+-------------------
+LD    $1A DD    22 (was 18)
+INC   $93 DD    22 (was 16)
+ANDI  $82 DD    22 (was 16)
 
 -- End of document --

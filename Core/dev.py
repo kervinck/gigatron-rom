@@ -97,6 +97,8 @@
 #  DONE Control variable to black out the area at the top of the screen
 #  DONE Fix possible video timing error in Loader #100
 #  XXX  Formally Support SPI and RAM expander: publish in interface.json
+#  XXX  Add CALLI instruction to vCPU
+#  XXX  Add CMPHS/CMPHU instructions to vCPU
 #  XXX  v6502: Test with Apple1 BASIC
 #  XXX  v6502: Stub D010-D013 with JSR targets for easier patching
 #  XXX  v6502: SYS_v6502_IRQ
@@ -111,8 +113,6 @@
 #  XXX  Racer: Make noise when crashing
 #  XXX  Racer: Control speed with up/down as well
 #  XXX  Main: Better startup chime
-#  XXX  vCPU: extension for C: JMPI_v5 $DD
-#  XXX  vCPU: extension for C: CMPW_v5 $DD (signed and unsigned)
 #  XXX  Faster SYS_Exec_88, with start address?
 #  XXX  Let SYS_Exec_88 clear channelMask when loading into live variables
 #
@@ -881,7 +881,7 @@ assert pc()&255 == 0
 
 #-----------------------------------------------------------------------
 #
-#  $0100 ROM page 1-2: Video loop
+#  $0100 ROM page 1: Video loop vertical blank
 #
 #-----------------------------------------------------------------------
 align(0x100, 0x100)
@@ -1214,9 +1214,19 @@ jmp(Y,'sound2')                 #3
 ld(syncBits^hSync, OUT)         #4 Start horizontal pulse
 
 fillers(until=0xff)
+
+#-----------------------------------------------------------------------
+# Return point for vCPU slices during visible screen area
+#-----------------------------------------------------------------------
+
 assert pc() == 0x1ff            # Enables runVcpu() to re-enter into the next page
 bra('sound3');                  C('<New scan line start>')#200,0
-# --- Page boundary ---
+
+#-----------------------------------------------------------------------
+#
+#  $0200 ROM page 2: Video loop visible scanlines
+#
+#-----------------------------------------------------------------------
 align(0x100, 0x100)
 ld([channel])                   #1 Advance to next sound channel
 
@@ -1424,22 +1434,25 @@ adda(1)                         #15
 st([vPC])                       #16
 ld(-20/2)                       #17
 bra('NEXT')                     #18
-#nop()                          #19 Overlap
+#dummy()                        #19 Overlap
 #
-# Instruction LD: Load byte from zero page (vAC=[D]), 18 cycles
+# Instruction LD: Load byte from zero page (vAC=[D]), 22 cycles
 label('LD')
 ld(AC, X)                       #10,19
 ld([X])                         #11
-st([vAC])                       #12
-ld(0)                           #13
-st([vAC+1])                     #14
-ld(-18/2)                       #15
-bra('NEXT')                     #16
-#nop()                          #17 Overlap
+ld(hi('ld'),Y)                  #12
+jmp(Y,'ld')                     #13
+st([vAC])                       #14
+
+# Instruction CMPHS: Adjust high byte for signed compare (vACH=XXX), 28 cycles
+label('CMPHS_DEVROM')
+ld(hi('cmphs'),Y)               #10
+jmp(Y,'cmphs')                  #11
+#ld(AC,X)                       #12 Overlap
 #
 # Instruction LDW: Load word from zero page (vAC=[D]+256*[D+1]), 20 cycles
 label('LDW')
-ld(AC, X)                       #10,17
+ld(AC,X)                        #10,12
 adda(1)                         #11
 st([vTmp])                      #12 Address of high byte
 ld([X])                         #13
@@ -1449,7 +1462,7 @@ ld([X])                         #16
 st([vAC+1])                     #17
 bra('NEXT')                     #18
 ld(-20/2)                       #19
-#nop()                          #20 Overlap
+#dummy()                        #20 Overlap
 #
 # Instruction STW: Store word in zero page ([D],[D+1]=vAC&255,vAC>>8), 20 cycles
 label('STW')
@@ -1467,66 +1480,66 @@ ld(-20/2)                       #19
 # Instruction BCC: Test AC sign and branch conditionally, 28 cycles
 label('BCC')
 ld([vAC+1])                     #10 First inspect high byte of vAC
-bne('.cond2')                   #11
+bne('.bcc#13')                  #11
 st([vTmp])                      #12
 ld([vAC])                       #13 Additionally inspect low byte of vAC
-beq('.cond3')                   #14
+beq('.bcc#16')                  #14
 ld(1)                           #15
 st([vTmp])                      #16
 ld([Y,X])                       #17 Operand is the conditional
-label('.cond1')
+label('.bcc#18')
 bra(AC)                         #18
 ld([vTmp])                      #19
 
 # Conditional EQ: Branch if zero (if(vACL==0)vPCL=D)
 label('EQ')
-bne('.cond4')                   #20
-label('.cond2')
-beq('.cond5');                  C('AC=0 in EQ, AC!=0 from BCC...')#21,13 (overlap with BCC)
+bne('.bcc#22')                  #20
+label('.bcc#13')
+beq('.bcc#23');                 C('AC=0 in EQ, AC!=0 from BCC...')#21,13 (overlap with BCC)
 ld([Y,X])                       #22,14 (overlap with BCC)
 #
 # (continue BCC)
-#label('.cond2')
-#nop()                          #13
-#nop()                          #14
+#label('.bcc#13')
+#dummy()                        #13
+#dummy()                        #14
 nop()                           #15
-label('.cond3')
-bra('.cond1')                   #16
+label('.bcc#16')
+bra('.bcc#18')                  #16
 ld([Y,X])                       #17 Operand is the conditional
-label('.cond4')
+label('.bcc#22')
 ld([vPC]);                      C('False condition')#22
-bra('.cond6')                   #23
+bra('.bcc#25')                  #23
 adda(1)                         #24
-label('.cond5')
+label('.bcc#23')
 st([Y,Xpp]);                    C('True condition')#23 Just X++
 ld([Y,X])                       #24
-label('.cond6')
+label('.bcc#25')
 st([vPC])                       #25
 bra('NEXT')                     #26
 ld(-28/2)                       #27
 
 # Conditional GT: Branch if positive (if(vACL>0)vPCL=D)
 label('GT')
-ble('.cond4')                   #20
-bgt('.cond5')                   #21
+ble('.bcc#22')                  #20
+bgt('.bcc#23')                  #21
 ld([Y,X])                       #22
 
 # Conditional LT: Branch if negative (if(vACL<0)vPCL=D)
 label('LT')
-bge('.cond4')                   #20
-blt('.cond5')                   #21
+bge('.bcc#22')                  #20
+blt('.bcc#23')                  #21
 ld([Y,X])                       #22
 
 # Conditional GE: Branch if positive or zero (if(vACL>=0)vPCL=D)
 label('GE')
-blt('.cond4')                   #20
-bge('.cond5')                   #21
+blt('.bcc#22')                  #20
+bge('.bcc#23')                  #21
 ld([Y,X])                       #22
 
 # Conditional LE: Branch if negative or zero (if(vACL<=0)vPCL=D)
 label('LE')
-bgt('.cond4')                   #20
-ble('.cond5')                   #21
+bgt('.bcc#22')                  #20
+ble('.bcc#23')                  #21
 ld([Y,X])                       #22
 
 # Instruction LDI: Load immediate small positive constant (vAC=D), 16 cycles
@@ -1536,7 +1549,7 @@ ld(0)                           #11
 st([vAC+1])                     #12
 ld(-16/2)                       #13
 bra('NEXT')                     #14
-#nop()                          #15 Overlap
+#dummy()                        #15 Overlap
 #
 # Instruction ST: Store byte in zero page ([D]=vAC&255), 16 cycles
 label('ST')
@@ -1545,7 +1558,7 @@ ld([vAC])                       #11
 st([X])                         #12
 ld(-16/2)                       #13
 bra('NEXT')                     #14
-#nop()                          #15 Overlap
+#dummy()                        #15 Overlap
 #
 # Instruction POP: Pop address from stack (vLR,vSP==[vSP]+256*[vSP+1],vSP+2), 26 cycles
 label('POP')
@@ -1559,18 +1572,18 @@ st([vLR+1])                     #16
 ld([vSP])                       #17
 adda(2)                         #18
 st([vSP])                       #19
-label('next1')
+label('.pop#20')
 ld([vPC])                       #20
 suba(1)                         #21
 st([vPC])                       #22
 ld(-26/2)                       #23
 bra('NEXT')                     #24
-#nop()                          #25 Overlap
+#dummy()                        #25 Overlap
 #
 # Conditional NE: Branch if not zero (if(vACL!=0)vPCL=D)
 label('NE')
-beq('.cond4')                   #20,25
-bne('.cond5')                   #21
+beq('.bcc#22')                  #20,25
+bne('.bcc#23')                  #21
 ld([Y,X])                       #22
 
 # Instruction PUSH: Push vLR on stack ([vSP-2],v[vSP-1],vSP=vLR&255,vLR>>8,vLR-2), 26 cycles
@@ -1583,7 +1596,7 @@ ld([vSP])                       #14
 suba(2)                         #15
 st([vSP], X)                    #16
 ld([vLR])                       #17
-bra('next1')                    #18
+bra('.pop#20')                  #18
 st([X])                         #19
 
 # Instruction LUP: ROM lookup (vAC=ROM[vAC+D]), 26 cycles
@@ -1592,14 +1605,17 @@ ld([vAC+1], Y)                  #10
 jmp(Y,251);                     C('Trampoline offset')#11
 adda([vAC])                     #12
 
-# Instruction ANDI: Logical-AND with small constant (vAC&=D), 16 cycles
+# Instruction ANDI: Logical-AND with small constant (vAC&=D), 22 cycles
 label('ANDI')
-anda([vAC])                     #10
-st([vAC])                       #11
-ld(0)                           #12 Clear high byte
-st([vAC+1])                     #13
-bra('NEXT')                     #14
-ld(-16/2)                       #15
+ld(hi('andi'),Y)                #10
+jmp(Y,'andi')                   #11
+anda([vAC])                     #12
+
+# Instruction CALLI: Goto immediate address and remember vPC (vLR,vPC=vPC+3,$HHLL), 28 cycles
+label('CALLI_DEVROM')
+ld(hi('calli'),Y)               #10
+jmp(Y,'calli')                  #11
+ld([vPC])                       #12
 
 # Instruction ORI: Logical-OR with small constant (vAC|=D), 14 cycles
 label('ORI')
@@ -1620,36 +1636,40 @@ label('BRA')
 st([vPC])                       #10
 ld(-14/2)                       #11
 bra('NEXT')                     #12
-#nop()                          #13 Overlap
+#dummy()                        #13 Overlap
 #
-# Instruction INC: Increment zero page byte ([D]++), 16 cycles
+# Instruction INC: Increment zero page byte ([D]++), 22 cycles
 label('INC')
-ld(AC, X)                       #10,13
-ld([X])                         #11
-adda(1)                         #12
-st([X])                         #13
-bra('NEXT')                     #14
-ld(-16/2)                       #15
+ld(AC,X)                        #10,13
+ld(hi('inc'),Y)                 #11
+jmp(Y,'inc')                    #12
+ld(1)                           #13
 
+# Instruction CMPHU: Adjust high byte for unsigned compare (vACH=XXX), 28 cycles
+label('CMPHU_DEVROM')
+ld(hi('cmphu'),Y)               #10
+jmp(Y,'cmphu')                  #11
+#ld(AC,X)                       #12 Overlap
+#
 # Instruction ADDW: Word addition with zero page (vAC+=[D]+256*[D+1]), 28 cycles
 label('ADDW')
 # The non-carry paths could be 26 cycles at the expense of (much) more code.
 # But a smaller size is better so more instructions fit in this code page.
 # 28 cycles is still 4.5 usec. The 6502 equivalent takes 20 cycles or 20 usec.
-ld(AC, X)                       #10 Address of low byte to be added
+ld(AC,X)                        #10,12 Address of low byte to be added
 adda(1)                         #11
 st([vTmp])                      #12 Address of high byte to be added
 ld([vAC])                       #13 Add the low bytes
 adda([X])                       #14
 st([vAC])                       #15 Store low result
-bmi('.addw0')                   #16 Now figure out if there was a carry
+bmi('.addw#18')                 #16 Now figure out if there was a carry
 suba([X])                       #17 Gets back the initial value of vAC
-bra('.addw1')                   #18
+bra('.addw#20')                 #18
 ora([X])                        #19 Carry in bit 7
-label('.addw0')
+label('.addw#18')
 anda([X])                       #18 Carry in bit 7
 nop()                           #19
-label('.addw1')
+label('.addw#20')
 anda(0x80, X)                   #20 Move carry to bit 0
 ld([X])                         #21
 adda([vAC+1])                   #22 Add the high bytes with carry
@@ -1681,7 +1701,7 @@ jmp(Y,'peek')                   #11
 # of cycles to excess number of ticks.
 # SYS functions can modify vPC to implement repetition. For example to split
 # up work into multiple chucks.
-label('retry')
+label('.sys#13')
 ld([vPC]);                      C('Retry until sufficient time')#13,12
 suba(2)                         #14
 st([vPC])                       #15
@@ -1689,10 +1709,10 @@ bra('REENTER')                  #16
 ld(-20/2)                       #17
 label('SYS')
 adda([vTicks])                  #10
-blt('retry')                    #11
+blt('.sys#13');                 #11
 ld([sysFn+1], Y)                #12
 jmp(Y,[sysFn])                  #13
-#nop()                          #14 Overlap
+#dummy()                        #14 Overlap
 #
 # Instruction SUBW: Word subtract with zero page (AC-=[D]+256*[D+1]), 28 cycles
 # All cases can be done in 26 cycles, but the code will become much larger
@@ -1701,22 +1721,23 @@ ld(AC, X)                       #10,14 Address of low byte to be subtracted
 adda(1)                         #11
 st([vTmp])                      #12 Address of high byte to be subtracted
 ld([vAC])                       #13
-bmi('.subw0')                   #14
+bmi('.subw#16')                 #14
 suba([X])                       #15
 st([vAC])                       #16 Store low result
-bra('.subw1')                   #17
+bra('.subw#19')                 #17
 ora([X])                        #18 Carry in bit 7
-label('.subw0')
+label('.subw#16')
 st([vAC])                       #16 Store low result
 anda([X])                       #17 Carry in bit 7
 nop()                           #18
-label('.subw1')
+label('.subw#19')
 anda(0x80, X)                   #19 Move carry to bit 0
 ld([vAC+1])                     #20
 suba([X])                       #21
 ld([vTmp], X)                   #22
 suba([X])                       #23
 st([vAC+1])                     #24
+label('REENTER_28')
 ld(-28/2)                       #25
 label('REENTER')
 bra('NEXT');                    C('Return from SYS calls')#26
@@ -1728,7 +1749,7 @@ ld(hi('def'), Y)                #10
 jmp(Y,'def')                    #11
 #st([vTmp])                     #12 Overlap
 #
-# Instruction CALL: Goto address but remember vPC (vLR,vPC=vPC+2,[D]+256*[D+1]-2), 26 cycles
+# Instruction CALL: Goto address and remember vPC (vLR,vPC=vPC+2,[D]+256*[D+1]-2), 26 cycles
 label('CALL')
 st([vTmp])                      #10,12
 ld([vPC])                       #11
@@ -1784,13 +1805,13 @@ ld([vAC])                       #12
 label('STLW')
 ld(hi('stlw'), Y)               #10
 jmp(Y,'stlw')                   #11
-#nop()                          #12 Overlap
+#dummy()                        #12 Overlap
 #
 # Instruction LDLW: Load word from stack frame (vAC=[vSP+D]+256*[vSP+D+1]), 26 cycles
 label('LDLW')
 ld(hi('ldlw'), Y)               #10,12
 jmp(Y,'ldlw')                   #11
-#nop()                          #12 Overlap
+#dummy()                        #12 Overlap
 #
 # Instruction POKE: Write byte in memory ([[D+1],[D]]=vAC&255), 28 cycles
 label('POKE')
@@ -1808,19 +1829,19 @@ st([vTmp])                      #12
 label('DEEK')
 ld(hi('deek'), Y)               #10
 jmp(Y,'deek')                   #11
-#nop()                          #12 Overlap
+#dummy()                        #12 Overlap
 #
 # Instruction ANDW: Word logical-AND with zero page (vAC&=[D]+256*[D+1]), 28 cycles
 label('ANDW')
 ld(hi('andw'), Y)               #10,12
 jmp(Y,'andw')                   #11
-#nop()                          #12 Overlap
+#dummy()                        #12 Overlap
 #
 # Instruction ORW: Word logical-OR with zero page (vAC|=[D]+256*[D+1]), 28 cycles
 label('ORW')
 ld(hi('orw'), Y)                #10,12
 jmp(Y,'orw')                    #11
-#nop()                          #12 Overlap
+#dummy()                        #12 Overlap
 #
 # Instruction XORW: Word logical-XOR with zero page (vAC^=[D]+256*[D+1]), 26 cycles
 label('XORW')
@@ -1864,48 +1885,58 @@ st([vPC])                       #19
 ld(hi('REENTER'), Y)            #20
 ld(-26/2)                       #21
 jmp(Y,'REENTER')                #22
-nop()                           #23
+#nop()                          #23 Overlap
+#
+# Clear vACH (continuation of ANDI and LD instructions)
+label('andi')
+nop()                           #13,23
+st([vAC])                       #14
+#
+label('ld')
+ld(0)                           #15 Clear high byte
+st([vAC+1])                     #16
+ld(hi('REENTER'),Y)             #17
+jmp(Y,'REENTER')                #18
+ld(-22/2)                       #19
 
 # ADDI implementation
 label('addi')
 adda([vAC])                     #13
 st([vAC])                       #14 Store low result
-bmi('.addi0')                   #15 Now figure out if there was a carry
+bmi('.addi#17')                 #15 Now figure out if there was a carry
 suba([vTmp])                    #16 Gets back the initial value of vAC
-bra('.addi1')                   #17
+bra('.addi#19')                 #17
 ora([vTmp])                     #18 Carry in bit 7
-label('.addi0')
+label('.addi#17')
 anda([vTmp])                    #17 Carry in bit 7
 nop()                           #18
-label('.addi1')
-anda(0x80, X)                   #19 Move carry to bit 0
+label('.addi#19')
+anda(0x80,X)                    #19 Move carry to bit 0
 ld([X])                         #20
 adda([vAC+1])                   #21 Add the high bytes with carry
-st([vAC+1])                     #22 Store high result
-ld(hi('REENTER'), Y)            #23
-jmp(Y,'REENTER')                #24
-ld(-28/2)                       #25
+ld(hi('REENTER'),Y)             #22
+jmp(Y,'REENTER_28')             #23
+st([vAC+1])                     #24 Store high result
 
 # SUBI implementation
 label('subi')
 ld([vAC])                       #13
-bmi('.subi0')                   #14
+bmi('.subi#16')                 #14
 suba([vTmp])                    #15
 st([vAC])                       #16 Store low result
-bra('.subi1')                   #17
+bra('.subi#19')                 #17
 ora([vTmp])                     #18 Carry in bit 7
-label('.subi0')
+label('.subi#16')
 st([vAC])                       #16 Store low result
 anda([vTmp])                    #17 Carry in bit 7
 nop()                           #18
-label('.subi1')
-anda(0x80, X)                   #19 Move carry to bit 0
+label('.subi#19')
+anda(0x80,X)                    #19 Move carry to bit 0
 ld([vAC+1])                     #20
 suba([X])                       #21
-st([vAC+1])                     #22
-ld(hi('REENTER'), Y)            #23
-jmp(Y,'REENTER')                #24
-ld(-28/2)                       #25
+ld(hi('REENTER'), Y)            #22
+jmp(Y,'REENTER_28')             #23
+st([vAC+1])                     #24
 
 # LSLW implementation
 label('lslw')
@@ -1918,10 +1949,9 @@ adda([vAC+1])                   #18
 st([vAC+1])                     #19
 ld([vPC])                       #20
 suba(1)                         #21
-st([vPC])                       #22
-ld(hi('REENTER'), Y)            #23
-jmp(Y,'REENTER')                #24
-ld(-28/2)                       #25
+ld(hi('REENTER'), Y)            #22
+jmp(Y,'REENTER_28')             #23
+st([vPC])                       #24
 
 # STLW implementation
 label('stlw')
@@ -1991,10 +2021,9 @@ ld(AC, X)                       #18
 ld([vAC])                       #19
 st([Y,Xpp])                     #20
 ld([vAC+1])                     #21
-st([Y,X])                       #22
-ld(hi('REENTER'), Y)            #23
-jmp(Y,'REENTER')                #24
-ld(-28/2)                       #25
+ld(hi('REENTER'), Y)            #22
+jmp(Y,'REENTER_28')             #23
+st([Y,X])                       #24
 
 # DEEK implementation
 label('deek')
@@ -2007,10 +2036,9 @@ ld([Y,X])                       #18
 st([Y,Xpp])                     #19
 st([vAC])                       #20
 ld([Y,X])                       #21
-st([vAC+1])                     #22
-ld(hi('REENTER'), Y)            #23
-jmp(Y,'REENTER')                #24
-ld(-28/2)                       #25
+ld(hi('REENTER'), Y)            #22
+jmp(Y,'REENTER_28')             #23
+st([vAC+1])                     #24
 
 # ANDW implementation
 label('andw')
@@ -2023,14 +2051,13 @@ ld([vTmp], X)                   #18
 ld([X])                         #19
 anda([vAC])                     #20
 st([vAC])                       #21
-ld(-28/2)                       #22
-ld(hi('REENTER'), Y)            #23
-jmp(Y,'REENTER')                #24
-#nop()                          #25 Overlap
+ld(hi('REENTER'), Y)            #22
+jmp(Y,'REENTER_28')             #23
+#dummy()                        #24 Overlap
 #
 # ORW implementation
 label('orw')
-st([vTmp])                      #13,25
+st([vTmp])                      #13,24
 adda(1, X)                      #14
 ld([X])                         #15
 ora([vAC+1])                    #16
@@ -2039,14 +2066,13 @@ ld([vTmp], X)                   #18
 ld([X])                         #19
 ora([vAC])                      #20
 st([vAC])                       #21
-ld(-28/2)                       #22
-ld(hi('REENTER'), Y)            #23
-jmp(Y,'REENTER')                #24
-#nop()                          #25 Overlap
+ld(hi('REENTER'), Y)            #22
+jmp(Y,'REENTER_28')             #23
+#dummy()                        #24 Overlap
 #
 # XORW implementation
 label('xorw')
-adda(1, X)                      #13,25
+adda(1, X)                      #13,24
 ld([X])                         #14
 xora([vAC+1])                   #15
 st([vAC+1])                     #16
@@ -2075,6 +2101,8 @@ ld(-26/2)                       #23
 #  ROMs than required. See also Docs/GT1-files.txt on using [romType].
 #
 #-----------------------------------------------------------------------
+
+fillers(until=0xa7)
 
 #-----------------------------------------------------------------------
 # Extension SYS_Random_34: Update entropy and copy to vAC
@@ -2195,17 +2223,15 @@ jmp(Y,'REENTER')                #130
 ld(-134/2)                      #131
 
 #-----------------------------------------------------------------------
-#       Reserved
-#-----------------------------------------------------------------------
 
-#  11 words. Keep space reserved for possible use future LSRW
-
-#.lsrw??:
-#       ld   lo('.lsrw??')
-#       st   [vTmp]
-#       ld   [vAC+0]
-#       ora  1
-#       bra  [ac]
+# INC implementation
+label('inc')
+adda([X])                       #14
+st([X])                         #15
+ld(-22/2)                       #16
+ld(hi('REENTER'),Y)             #17
+jmp(Y,'REENTER')                #18
+nop()                           #19
 
 #-----------------------------------------------------------------------
 #
@@ -2642,10 +2668,10 @@ for i in range(0, 250, 2):
     ld(key>>7)
 
 #-----------------------------------------------------------------------
+# Steal remaining space in page for stuff that doesn't fit elsewhere
+#-----------------------------------------------------------------------
 
 fillers(until=0xde, instruction=ld)
-
-# Use remaining space for overflow of video loop
 
 # Entered last line of vertical blank (line 40)
 label('vBlankLast#34')
@@ -3044,54 +3070,50 @@ ld(-50/2)                       #47
 
 # SYS_SendSerial1_v3_80 implementation
 label('sys_SendSerial1')
-beq('.sysSs0')                  #18
+beq('.sysSs#20')                #18
 ld([sysArgs+0],X)               #19
 ld([vPC])                       #20 Wait for vBlank
 suba(2)                         #21
-st([vPC])                       #22
-ld(hi('REENTER'),Y)             #23
-jmp(Y,'REENTER')                #24
-ld(-28/2)                       #25
-label('.sysSs0')
+ld(hi('REENTER'),Y)             #22
+jmp(Y,'REENTER_28')             #23
+st([vPC])                       #24
+label('.sysSs#20')
 ld([sysArgs+1],Y)               #20 Synchronized with vBlank
 ld([Y,X])                       #21 Copy next bit
 anda([sysArgs+2])               #22
-bne('.sysSs1')                  #23
-bra('.sysSs2')                  #24
+bne(pc()+3)                     #23
+bra(pc()+3)                     #24
 ld(7*2)                         #25
-label('.sysSs1')
 ld(9*2)                         #25
-label('.sysSs2')
 st([videoPulse])                #26
 ld([sysArgs+2])                 #27 Rotate input bit
 adda(AC)                        #28
-bne('.sysSs3')                  #29
-bra('.sysSs3')                  #30
+bne(pc()+3)                     #29
+bra(pc()+2)                     #30
 ld(1)                           #31
-label('.sysSs3')
 st([sysArgs+2])                 #31,32 (must be idempotent)
 anda(1)                         #33 Optionally increment pointer
 adda([sysArgs+0])               #34
 st([sysArgs+0],X)               #35
 ld([sysArgs+3])                 #36 Frame counter
 suba(1)                         #37
-beq('.sysSs5')                  #38
+beq('.sysSs#40')                #38
 ld(hi('REENTER'),Y)             #39
 st([sysArgs+3])                 #40
 ld([serialRaw])                 #41 Test for anything being sent back
 xora(255)                       #42
-beq('.sysSs4')                  #43
+beq('.sysSs#45')                #43
 st([vAC])                       #44 Abort after key press with non-zero error
 st([vAC+1])                     #45
 jmp(Y,'REENTER')                #46
 ld(-50/2)                       #47
-label('.sysSs4')
+label('.sysSs#45')
 ld([vPC])                       #45 Continue sending bits
 suba(2)                         #46
 st([vPC])                       #47
 jmp(Y,'REENTER')                #48
 ld(-52/2)                       #49
-label('.sysSs5')
+label('.sysSs#40')
 st([vAC])                       #40 Stop sending bits, no error
 st([vAC+1])                     #41
 jmp(Y,'REENTER')                #42
@@ -3166,6 +3188,105 @@ nop()                           #40
 ld(hi('REENTER'),Y)             #41
 jmp(Y,'REENTER')                #42
 ld(-46/2)                       #43
+
+#-----------------------------------------------------------------------
+
+# CALLI implementation
+label('calli')
+adda(3)                         #13
+st([vLR])                       #14
+ld([vPC+1])                     #15
+st([vLR+1],Y)                   #16
+ld([Y,X])                       #17
+st([vPC])                       #18
+st([Y,Xpp])                     #19 Just to increment X
+ld([Y,X])                       #20
+st([vPC+1])                     #21
+ld(hi('REENTER'),Y)             #22
+jmp(Y,'REENTER_28')             #23
+#dummy()                        #24 Overlap
+#
+# CMPHS implementation
+label('cmphs')
+ld(hi('REENTER'),Y)             #13,24
+ld([X])                         #14
+xora([vAC+1])                   #15
+bpl('.cmphu#18')                #16 Skip if same sign
+ld([vAC+1])                     #17
+bmi(pc()+3)                     #18
+bra(pc()+3)                     #19
+label('.cmphs#20')
+ld(+1)                          #20    vAC < variable
+ld(-1)                          #20(!) vAC > variable
+label('.cmphs#21')
+adda([X])                       #21
+st([vAC+1])                     #22
+jmp(Y,'REENTER_28')             #23
+#dummy()                        #24 Overlap
+#
+# CMPHS implementation
+label('cmphu')
+ld(hi('REENTER'),Y)             #13,24
+ld([X])                         #14
+xora([vAC+1])                   #15
+bpl('.cmphu#18')                #16 Skip if same sign
+ld([vAC+1])                     #17
+bmi('.cmphs#20')                #18
+bra('.cmphs#21')                #19
+ld(-1)                          #20    vAC > variable
+
+# No-operation for CMPHS/CMPHU when high bits are equal
+label('.cmphu#18')
+jmp(Y,'REENTER')                #18
+ld(-22/2)                       #19
+
+# ----------------------------------------------------------------
+# On vCPU instructions for comparisons between two 16-bit operands
+# ----------------------------------------------------------------
+#
+# vCPU's conditional branching (BCC) always compares vAC against 0,
+# treating vAC as a two's complement 16-bit number. When we need to
+# compare two arbitrary numnbers we normally first take their difference
+# with SUBW.  However, when this difference is too large, the subtraction
+# overflows and we get the wrong outcome. To get it right over the
+# entire range, an elaborate sequence is needed. TinyBASIC uses this
+# blurp for its relational operators. (It compares stack variable $02
+# with zero page variable $3a.)
+#
+#       0461  ee 02            LDLW  $02
+#       0463  fc 3a            XORW  $3a
+#       0465  35 53 6a         BGE   $046c
+#       0468  ee 02            LDLW  $02
+#       046a  90 6e            BRA   $0470
+#       046c  ee 02            LDLW  $02
+#       046e  b8 3a            SUBW  $3a
+#       0470  35 56 73         BLE   $0475
+#
+# The CMPHS and CMPHU instructions were introduced to simplify this.
+# They inspect both operands to see if there is an overflow risk. If
+# so, they modify vAC such that their difference gets smaller, while
+# preserving the relation between the two operands. After that, the
+# SUBW instruction can't overflow and we achieve a correct comparison.
+# Use CMPHS for signed comparisons and CMPHU for unsigned. With these,
+# the sequence above becomes:
+#
+#       0461  ee 02            LDLW  $02
+#       0463  1f 3b            CMPHS $3b        Note: high byte of operand
+#       0465  b8 3a            SUBW  $3a
+#       0467  35 56 73         BLE   $0475
+#
+# CMPHS/CMPHU don't make much sense other than in combination with
+# SUBW. These modify vACH, if needed, as given in the following table:
+#
+#       vACH  varH  |     vACH
+#       bit7  bit7  | CMPHS  CMPHU
+#       ---------------------------
+#         0     0   |  vACH   vACH      no change needed
+#         0     1   | varH+1 varH-1     narrowing the range
+#         1     0   | varH-1 varH+1     narrowing the range
+#         1     1   |  vACH   vACH      no change needed
+#       ---------------------------
+
 
 #-----------------------------------------------------------------------
 #
