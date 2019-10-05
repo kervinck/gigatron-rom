@@ -1611,7 +1611,7 @@ ld(hi('andi'),Y)                #10
 jmp(Y,'andi')                   #11
 anda([vAC])                     #12
 
-# Instruction CALLI: Goto immediate address and remember vPC (vLR,vPC=vPC+3,$HHLL), 28 cycles
+# Instruction CALLI: Goto immediate address and remember vPC (vLR,vPC=vPC+3,$HHLL-2), 28 cycles
 label('CALLI_DEVROM')
 ld(hi('calli'),Y)               #10
 jmp(Y,'calli')                  #11
@@ -1709,7 +1709,7 @@ bra('REENTER')                  #16
 ld(-20/2)                       #17
 label('SYS')
 adda([vTicks])                  #10
-blt('.sys#13');                 #11
+blt('.sys#13')                  #11
 ld([sysFn+1], Y)                #12
 jmp(Y,[sysFn])                  #13
 #dummy()                        #14 Overlap
@@ -1934,7 +1934,7 @@ label('.subi#19')
 anda(0x80,X)                    #19 Move carry to bit 0
 ld([vAC+1])                     #20
 suba([X])                       #21
-ld(hi('REENTER'), Y)            #22
+ld(hi('REENTER'),Y)             #22
 jmp(Y,'REENTER_28')             #23
 st([vAC+1])                     #24
 
@@ -1949,7 +1949,7 @@ adda([vAC+1])                   #18
 st([vAC+1])                     #19
 ld([vPC])                       #20
 suba(1)                         #21
-ld(hi('REENTER'), Y)            #22
+ld(hi('REENTER'),Y)             #22
 jmp(Y,'REENTER_28')             #23
 st([vPC])                       #24
 
@@ -2009,7 +2009,7 @@ st([vAC+1])                     #20
 ld(hi('REENTER'), Y)            #21
 jmp(Y,'REENTER')                #22
 ld(-26/2)                       #23
-#
+
 # DOKE implementation
 label('doke')
 adda(1, X)                      #13
@@ -2021,9 +2021,10 @@ ld(AC, X)                       #18
 ld([vAC])                       #19
 st([Y,Xpp])                     #20
 ld([vAC+1])                     #21
-ld(hi('REENTER'), Y)            #22
-jmp(Y,'REENTER_28')             #23
-st([Y,X])                       #24
+st([Y,X])                       #22
+ld(hi('REENTER'),Y)             #23
+jmp(Y,'REENTER')                #24
+ld(-28/2)                       #25
 
 # DEEK implementation
 label('deek')
@@ -2036,7 +2037,7 @@ ld([Y,X])                       #18
 st([Y,Xpp])                     #19
 st([vAC])                       #20
 ld([Y,X])                       #21
-ld(hi('REENTER'), Y)            #22
+ld(hi('REENTER'),Y)             #22
 jmp(Y,'REENTER_28')             #23
 st([vAC+1])                     #24
 
@@ -2051,7 +2052,7 @@ ld([vTmp], X)                   #18
 ld([X])                         #19
 anda([vAC])                     #20
 st([vAC])                       #21
-ld(hi('REENTER'), Y)            #22
+ld(hi('REENTER'),Y)             #22
 jmp(Y,'REENTER_28')             #23
 #dummy()                        #24 Overlap
 #
@@ -2066,7 +2067,7 @@ ld([vTmp], X)                   #18
 ld([X])                         #19
 ora([vAC])                      #20
 st([vAC])                       #21
-ld(hi('REENTER'), Y)            #22
+ld(hi('REENTER'),Y)             #22
 jmp(Y,'REENTER_28')             #23
 #dummy()                        #24 Overlap
 #
@@ -3184,31 +3185,31 @@ ld(-2)                          #37
 ld(0)                           #37(!)
 adda([vPC])                     #38
 st([vPC])                       #39
-nop()                           #40
+ld(-46/2 - 3)                   #40
 ld(hi('REENTER'),Y)             #41
 jmp(Y,'REENTER')                #42
-ld(-46/2)                       #43
-
+#adda(3)                        #43 Overlap
+#
 #-----------------------------------------------------------------------
-
+#
 # CALLI implementation
 label('calli')
-adda(3)                         #13
+adda(3)                         #13,43
 st([vLR])                       #14
 ld([vPC+1])                     #15
 st([vLR+1],Y)                   #16
 ld([Y,X])                       #17
-st([vPC])                       #18
-st([Y,Xpp])                     #19 Just to increment X
-ld([Y,X])                       #20
-st([vPC+1])                     #21
+suba(2)                         #18
+st([vPC])                       #19
+st([Y,Xpp])                     #20 Just to increment X
+ld([Y,X])                       #21
 ld(hi('REENTER'),Y)             #22
 jmp(Y,'REENTER_28')             #23
-#dummy()                        #24 Overlap
-#
+st([vPC+1])                     #24
+
 # CMPHS implementation
 label('cmphs')
-ld(hi('REENTER'),Y)             #13,24
+ld(hi('REENTER'),Y)             #13
 ld([X])                         #14
 xora([vAC+1])                   #15
 bpl('.cmphu#18')                #16 Skip if same sign
@@ -3286,7 +3287,6 @@ ld(-22/2)                       #19
 #         1     0   | varH-1 varH+1     narrowing the range
 #         1     1   |  vACH   vACH      no change needed
 #       ---------------------------
-
 
 #-----------------------------------------------------------------------
 #

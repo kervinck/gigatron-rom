@@ -68,7 +68,7 @@ See also this thread: https://forum.gigatron.io/viewtopic.php?f=4&t=136
 
 Mnem. Encoding  #C Description
 ----- --------- -- -----------
-CALLI $85 LL HH 28 Goto immediate address and remember vPC (vLR,vPC=vPC+3,$HHLL)
+CALLI $85 LL HH 28 Goto immediate address and remember vPC (vLR,vPC=vPC+3,$HHLL-2)
 CMPHS $1f DD    28 Adjust high byte for signed compare (vACH=XXX)
 CMPHU $97 DD    28 Adjust high byte for unsigned compare (vACH=XXX)
 
