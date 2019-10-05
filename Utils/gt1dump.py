@@ -37,11 +37,12 @@ args = parser.parse_args()
 #-----------------------------------------------------------------------
 
 opcodes = {
-  0x11: ('LDWI',  2), 0x1a: ('LD',    1), 0x21: ('LDW',   1),
-  0x2b: ('STW',   1), 0x35: ('BCC',   2), 0x59: ('LDI',   1),
-  0x5e: ('ST',    1), 0x63: ('POP',   0), 0x75: ('PUSH',  0),
-  0x7f: ('LUP',   1), 0x82: ('ANDI',  1), 0x88: ('ORI',   1),
-  0x8c: ('XORI',  1), 0x90: ('BRA',   1), 0x93: ('INC',   1),
+  0x11: ('LDWI',  2), 0x1a: ('LD',    1), 0x1f: ('CMPHS', 2),
+  0x21: ('LDW',   1), 0x2b: ('STW',   1), 0x35: ('BCC',   2),
+  0x59: ('LDI',   1), 0x5e: ('ST',    1), 0x63: ('POP',   0),
+  0x75: ('PUSH',  0), 0x7f: ('LUP',   1), 0x82: ('ANDI',  1),
+  0x85: ('CALLI', 2), 0x88: ('ORI',   1), 0x8c: ('XORI',  1),
+  0x90: ('BRA',   1), 0x93: ('INC',   1), 0x97: ('CMPHS', 2),
   0x99: ('ADDW',  1), 0xad: ('PEEK',  0), 0xb4: ('SYS',   1),
   0xb8: ('SUBW',  1), 0xcd: ('DEF',   1), 0xcf: ('CALL',  1),
   0xdf: ('ALLOC', 1), 0xe3: ('ADDI',  1), 0xe6: ('SUBI',  1),
@@ -55,10 +56,9 @@ bccCodes = {
   0x3f: 'EQ', 0x4d: 'GT', 0x50: 'LT', 0x53: 'GE', 0x56: 'LE', 0x72: 'NE',
 }
 
-
 zpInstructions =  [
   'LD', 'LDW', 'STW', 'ST', 'INC', 'ADDW', 'SUBW', 'CALL', 'POKE', 'DOKE',
-  'ANDW', 'ORW', 'XORW']
+  'ANDW', 'ORW', 'XORW', 'CMPHS', 'CMPHU']
 
 zeroPageSyms = {
  0x00: "zeroConst",
