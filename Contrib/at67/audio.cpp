@@ -26,7 +26,7 @@ namespace Audio
     SDL_AudioDeviceID _audioDevice = 1;
 
     int32_t _audioIndex = 0;
-    uint8_t _audioSamples[AUDIO_SAMPLES];
+    uint8_t _audioSamples[AUDIO_SAMPLES] = {0};
 
     int _scoreIndex = 0;
     uint8_t* _score[] = {(uint8_t*)musicMidi00};
