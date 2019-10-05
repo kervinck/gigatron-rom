@@ -86,6 +86,9 @@ int main(int argc, char* argv[])
         // Update CPU
         Cpu::State T = Cpu::cycle(S);
 
+        // vCPU instruction slot utilisation
+        Cpu::vCpuUsage(S);
+
         HSync = (T._OUT & 0x40) - (S._OUT & 0x40);
         VSync = (T._OUT & 0x80) - (S._OUT & 0x80);
         
@@ -187,9 +190,6 @@ int main(int argc, char* argv[])
         // Debugger
         debugging = Editor::singleStepDebug();
 
-        // vCPU instruction slot utilisation
-        Cpu::vCpuUsage(S);
-        
 #if 0
         Audio::playMusic();
 #endif

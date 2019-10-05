@@ -125,14 +125,14 @@ namespace Assembler
     std::vector<ByteCode> _byteCode;
     std::vector<CallTableEntry> _callTableEntries;
     std::vector<std::string> _reservedWords;
-    std::vector<std::string> _disassembledCode;
+    std::vector<DasmCode> _disassembledCode;
     std::vector<Gprintf> _gprintfs;
 
     uint16_t getStartAddress(void) {return _startAddress;}
     int getPrevDasmByteCount(void) {return _prevDasmByteCount;}
     int getCurrDasmByteCount(void) {return _currDasmByteCount;}
     int getDisassembledCodeSize(void) {return int(_disassembledCode.size());}
-    std::string* getDisassembledCode(int index) {return &_disassembledCode[index % _disassembledCode.size()];}
+    DasmCode* getDisassembledCode(int index) {return &_disassembledCode[index % _disassembledCode.size()];}
 
     void setIncludePath(const std::string& includePath) {_includePath = includePath;}
 
@@ -154,6 +154,136 @@ namespace Assembler
     }
 
 #ifndef STAND_ALONE
+    void getVcpuCurrAndPrevByteSize(uint16_t address, uint8_t instruction, ByteSize byteSize)
+    {
+        if(Editor::getMemoryMode() != Editor::RAM)
+        {
+            _currDasmByteCount = 1;
+            _prevDasmByteCount = 1;
+            return;
+        }
+
+        // Save current and previous instruction lengths
+        if(_disassembledCode.size() == 0)
+        {
+            if(Editor::getMemoryMode() == Editor::RAM)
+            {
+                _currDasmByteCount = byteSize;
+
+                // Attempt to get bytesize of previous instruction
+                for(uint16_t addr=address-1; addr>=address-3; --addr)
+                {
+                    uint8_t size = address - addr;
+                    uint8_t inst = Cpu::getRAM(addr);
+                    if(inst == VCPU_BRANCH_OPCODE) inst = Cpu::getRAM(addr + 1);
+                    if(_vcpuOpcodes.find(inst) != _vcpuOpcodes.end()  &&  _vcpuOpcodes[inst]._opcodeType == vCpu  &&  _vcpuOpcodes[inst]._byteSize == size)
+                    {
+                        _prevDasmByteCount = _vcpuOpcodes[inst]._byteSize;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    std::string removeBrackets(char* str)
+    {
+        std::string string = str;
+        string.erase(std::remove(string.begin(), string.end(), '['), string.end());
+        string.erase(std::remove(string.begin(), string.end(), ']'), string.end());
+        return string;
+    }
+
+    // Adapted from disassemble() in Core\asm.py
+    bool getNativeMnemonic(uint8_t instruction, uint8_t data, char* mnemonic)
+    {
+        uint8_t inst, addr, bus;
+
+        // Special case NOP
+        if(instruction == 0x02  &&  data == 0x00)
+        {
+            sprintf(mnemonic, _nativeOpcodes[instruction]._mnemonic.c_str());
+            return true;
+        }
+
+        inst = instruction & 0xE0;
+        addr = instruction & 0x1C;
+        bus  = instruction & 0x03;
+
+        bool store = (inst == 0xC0);
+        bool jump = (inst == 0xE0);
+
+        if(_nativeOpcodes.find(inst) == _nativeOpcodes.end()) return false;
+
+        // Instruction mnemonic, jump = 0xE0 + (condition codes)
+        char instStr[8];
+        (!jump) ? sprintf(instStr, _nativeOpcodes[inst]._mnemonic.c_str()) : sprintf(instStr, _nativeOpcodes[0xE0 + addr]._mnemonic.c_str());
+
+        // Effective address string
+        char addrStr[12];
+        char regStr[4];
+        if(!jump)
+        {
+            switch(addr)
+            {
+                case EA_0D_AC:    sprintf(addrStr, "[%02x]",   data); sprintf(regStr, "AC");  break;
+                case EA_0X_AC:    sprintf(addrStr, "[X]");            sprintf(regStr, "AC");  break;
+                case EA_YD_AC:    sprintf(addrStr, "[Y,%02x]", data); sprintf(regStr, "AC");  break;
+                case EA_YX_AC:    sprintf(addrStr, "[Y,X]");          sprintf(regStr, "AC");  break;
+                case EA_0D_X:     sprintf(addrStr, "[%02x]",   data); sprintf(regStr, "X");   break;
+                case EA_0D_Y:     sprintf(addrStr, "[%02x]",   data); sprintf(regStr, "Y");   break;
+                case EA_0D_OUT:   sprintf(addrStr, "[%02x]",   data); sprintf(regStr, "OUT"); break;
+                case EA_YX_OUTIX: sprintf(addrStr, "[Y,X++]");        sprintf(regStr, "OUT"); break;
+            }
+        }
+        else
+        {
+            sprintf(addrStr, "[%02x]", data);
+        }
+
+        // Bus string
+        char busStr[8];
+        switch(bus)
+        {
+            case BUS_D:   sprintf(busStr, "%02x", data);                           break;
+            case BUS_RAM: (!store) ? strcpy(busStr, addrStr) : strcpy(busStr, ""); break;
+            case BUS_AC:  sprintf(busStr, "AC");                                   break;
+            case BUS_IN:  sprintf(busStr, "IN");                                   break;
+        }
+        
+        // Compose instruction string
+        if(!jump)
+        {
+            if(store)
+            {
+                char storeStr[32];
+                (bus == BUS_AC) ? sprintf(storeStr, "%-5s %s", instStr, addrStr) : sprintf(storeStr, "%-5s %s,%s", instStr, busStr, addrStr);
+                if(bus == BUS_RAM) sprintf(storeStr, ".CTRL %s", removeBrackets(addrStr).c_str());
+                if(addr == EA_0D_X  ||  addr == EA_0D_Y) sprintf(mnemonic, "%s,%s", storeStr, regStr);
+                else strcpy(mnemonic, storeStr);
+            }
+            else
+            {
+                // if reg == AC
+                (addr <= EA_YX_AC) ? sprintf(mnemonic, "%-5s %s", instStr, busStr) : sprintf(mnemonic, "%-5s %s,%s", instStr, busStr, regStr);
+            }
+        }
+        // Compose jump string
+        else
+        {
+            char jumpStr[32];
+            switch(addr)
+            {
+                case BRA_CC_FAR: sprintf(jumpStr, "%-5s Y,", instStr); break;
+                default:         sprintf(jumpStr, "%-5s ",   instStr); break;
+            }
+
+            sprintf(mnemonic, "%-5s%s", jumpStr, busStr);
+        }
+
+        return true;
+    }
+
     int disassemble(uint16_t address)
     {
         _disassembledCode.clear();
@@ -162,93 +292,85 @@ namespace Assembler
 
         while(_disassembledCode.size() < MAX_DASM_LINES)
         {
+            char dasmText[32];
+            DasmCode dasmCode;
+            ByteSize byteSize;
             uint8_t instruction, data0, data1;
-            Editor::MemoryMode memoryMode = Editor::getMemoryMode();
 
+            Editor::MemoryMode memoryMode = Editor::getMemoryMode();
             switch(memoryMode)
             {
-                case Editor::RAM:  instruction = Cpu::getRAM(address);    data0 = Cpu::getRAM(address + 1); data1 = Cpu::getRAM(address + 2); break;
-                case Editor::ROM0: instruction = Cpu::getROM(address, 0); data0 = Cpu::getROM(address, 1);                                    break;
-                case Editor::ROM1: instruction = Cpu::getROM(address, 0); data0 = Cpu::getROM(address, 1);                                    break;
-            }
-
-            // VCPU branch instructions
-            bool foundBranch = false;
-            if(memoryMode == Editor::RAM  &&  instruction == VCPU_BRANCH_OPCODE)
-            {
-                foundBranch = true;
-                instruction = data0;
-            }
-
-            // Construct disassembled line
-            char dasmLine[32];
-            ByteSize byteSize = OneByte;
-            if(_disOpcodes.find(instruction) == _disOpcodes.end())
-            {
-                // Invalid instruction
-                sprintf(dasmLine, "%04x %02x", address, instruction);
-                address++;
-            }
-            // Audio address space
-            else if((address >= GIGA_CH0_WAV_A  &&  address <= GIGA_CH0_OSC_H) ||
-                    (address >= GIGA_CH1_WAV_A  &&  address <= GIGA_CH1_OSC_H) ||
-                    (address >= GIGA_CH2_WAV_A  &&  address <= GIGA_CH2_OSC_H) ||
-                    (address >= GIGA_CH3_WAV_A  &&  address <= GIGA_CH3_OSC_H))
-            {
-                sprintf(dasmLine, "%04x %02x", address, instruction);
-                address++;
-            }
-            else
-            {
-                byteSize = _disOpcodes[instruction]._byteSize;
-                char vpc[2] = {0, 0};
-                //if(address == Editor::getVpcBaseAddress()) vpc[0] = '*';
-                switch(byteSize)
+                // Native instructions
+                case Editor::ROM0: 
+                case Editor::ROM1: 
                 {
-                    case OneByte:  sprintf(dasmLine, "%s%04x %-6s", vpc, address, _disOpcodes[instruction]._mnemonic.c_str());             break;
-                    case TwoBytes: sprintf(dasmLine, "%s%04x %-6s %02x", vpc, address, _disOpcodes[instruction]._mnemonic.c_str(), data0); break;
-                    case ThreeBytes:
+                    instruction = Cpu::getROM(address, 0);
+                    data0 = Cpu::getROM(address, 1);
+                    data1 = 0;
+
+                    char mnemonic[24];
+                    if(!getNativeMnemonic(instruction, data0, mnemonic))
                     {
-                        if(foundBranch)
-                        {
-                            sprintf(dasmLine, "%s%04x %-6s %02x", vpc, address, _disOpcodes[instruction]._mnemonic.c_str(), data1);
-                        }
-                        else
-                        {
-                            sprintf(dasmLine, "%s%04x %-6s %02x%02x", vpc, address, _disOpcodes[instruction]._mnemonic.c_str(), data1, data0);
-                        }
+                        sprintf(dasmText, "%04x %02x %02x", address, instruction, data0);
+                        dasmCode._address = address;
+                        address++;
+                        break;
                     }
-                    break;
+
+                    sprintf(dasmText, "%04x %s", address, mnemonic);
+                    dasmCode._address = address;
+                    address++;
                 }
+                break;
 
-                uint16_t addr = address;
-                address = (_disOpcodes[instruction]._opcodeType == Native) ? address + 1 : address + byteSize;
-
-                // Save current and previous instruction lengths
-                if(_disassembledCode.size() == 0)
+                // VCPU instructions
+                case Editor::RAM:
                 {
-                    if(memoryMode == Editor::RAM)
-                    {
-                        //_prevDasmByteCount = 1;
-                        _currDasmByteCount = (_disOpcodes[instruction]._opcodeType == Native) ? 1 : byteSize;
+                    instruction = Cpu::getRAM(address);
+                    data0 = Cpu::getRAM(address + 1);
+                    data1 = Cpu::getRAM(address + 2);
 
-                        // Attempt to get bytesize of previous instruction
-                        for(uint16_t a=addr-1; a>=addr-3; --a)
-                        {
-                            uint8_t o = addr - a;
-                            uint8_t i = Cpu::getRAM(a);
-                            if(i == VCPU_BRANCH_OPCODE) i = Cpu::getRAM(a + 1);
-                            if(_disOpcodes.find(i) != _disOpcodes.end()  &&  _disOpcodes[i]._opcodeType == vCpu  &&  _disOpcodes[i]._byteSize == o)
-                            {
-                                _prevDasmByteCount = _disOpcodes[i]._byteSize;
-                                break;
-                            }
-                        }
+                    // Invalid instruction or invalid address space
+                    if((_vcpuOpcodes.find(instruction) == _vcpuOpcodes.end()  &&  instruction != VCPU_BRANCH_OPCODE)  ||
+                       (address >= GIGA_CH0_WAV_A  &&  address <= GIGA_CH0_OSC_H) ||  (address >= GIGA_CH1_WAV_A  &&  address <= GIGA_CH1_OSC_H) ||
+                       (address >= GIGA_CH2_WAV_A  &&  address <= GIGA_CH2_OSC_H) ||  (address >= GIGA_CH3_WAV_A  &&  address <= GIGA_CH3_OSC_H))
+                    {
+                        sprintf(dasmText, "%04x %02x", address, instruction);
+                        dasmCode._address = address;
+                        address++;
+                        break;
                     }
+
+                    // Branch instructions
+                    bool foundBranch = false;
+                    if(instruction == VCPU_BRANCH_OPCODE)
+                    {
+                        foundBranch = true;
+                        instruction = data0;
+                    }
+
+                    byteSize = _vcpuOpcodes[instruction]._byteSize;
+                    switch(byteSize)
+                    {
+                        case OneByte:  sprintf(dasmText, "%04x %-5s", address, _vcpuOpcodes[instruction]._mnemonic.c_str());             break;
+                        case TwoBytes: sprintf(dasmText, "%04x %-5s %02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data0); break;
+                        case ThreeBytes: (foundBranch) ? sprintf(dasmText, "%04x %-5s %02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1) : sprintf(dasmText, "%04x %-5s %02x%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1, data0); break;
+                    }
+                    dasmCode._address = address;
+                    address = address + byteSize;
+
+                    // Save current and previous instruction sizes to allow scrolling
+                    getVcpuCurrAndPrevByteSize(dasmCode._address, instruction, byteSize);
                 }
+                break;
             }
 
-            _disassembledCode.push_back(dasmLine);
+            dasmCode._instruction = instruction;
+            dasmCode._data0 = data0;
+            dasmCode._data1 = data1;
+            dasmCode._text = Expression::strToUpper(std::string(dasmText));
+
+            _disassembledCode.push_back(dasmCode);
         }
 
         return int(_disassembledCode.size());

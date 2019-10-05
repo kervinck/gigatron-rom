@@ -49,7 +49,7 @@ numSprites  EQU     16
    
 _startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
 
-_callTable_         EQU     0x00FE      ; call addresses are automatically stored here by the assembler, it grows downwards,
+_callTable_         EQU     0x00EE      ; call addresses are automatically stored here by the assembler, it grows downwards,
                                         ; for every NEW call address; make sure it doesn't crash into anything important
 _singleStepWatch_   EQU     k           ; the single step debugger watches this variable location to decide when to step,
                                         ; choose a variable that is updated often

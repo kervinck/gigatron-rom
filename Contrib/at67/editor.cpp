@@ -60,7 +60,7 @@ namespace Editor
     bool _singleStep = false;
     bool _singleStepMode = false;
     uint32_t _singleStepTicks = 0;
-    uint8_t _singleStepWatch = 0x00;
+    uint16_t _singleStepWatch = 0x0000;
 
     std::string _cwdPath = "";
     std::string _filePath = "";
@@ -68,6 +68,7 @@ namespace Editor
     MouseState _mouseState;
     MemoryMode _memoryMode = RAM;
     EditorMode _editorMode = Hex;
+    EditorMode _editorModePrev = Hex;
     KeyboardMode _keyboardMode = Giga;
     OnVarType _onVarType = OnNone;
 
@@ -137,8 +138,11 @@ namespace Editor
     int getCurrentRomEntryIndex(void) {return (_cursorY + _romEntriesIndex) % _romEntries.size();}
     void setRomEntry(uint8_t version, std::string& name) {Editor::RomEntry romEntry = {version, name}; _romEntries.push_back(romEntry); return;}
 
+    void resetEditor(void) {_memoryDigit = 0; _addressDigit = 0;}
+
     void setCursorX(int x) {_cursorX = x;}
     void setCursorY(int y) {_cursorY = y;}
+    void setHexEdit(bool hexEdit) {_hexEdit = hexEdit; if(!hexEdit) resetEditor();}
     void setStartMusic(bool startMusic) {_startMusic = startMusic;}
     void setSingleStep(bool singleStep) {_singleStep = singleStep;}
     void setSingleStepMode(bool singleStepMode) {_singleStepMode = singleStepMode;}
@@ -360,11 +364,12 @@ namespace Editor
 
         // Emulator INI key to SDL key mapping
         _emulator["RamMode"]      = {SDLK_m, KMOD_LCTRL};
-        _emulator["Execute"]      = {SDLK_F5, KMOD_LCTRL};
         _emulator["Browse"]       = {SDLK_b, KMOD_LCTRL};
         _emulator["RomType"]      = {SDLK_r, KMOD_LCTRL};
-        _emulator["Reset"]        = {SDLK_F1, KMOD_LCTRL};
+        _emulator["HexMonitor"]   = {SDLK_x, KMOD_LCTRL};
         _emulator["Disassembler"] = {SDLK_d, KMOD_LCTRL};
+        _emulator["Reset"]        = {SDLK_F1, KMOD_LCTRL};
+        _emulator["Execute"]      = {SDLK_F5, KMOD_LCTRL};
         _emulator["ScanlineMode"] = {SDLK_F3, KMOD_LCTRL};
         _emulator["Help"]         = {SDLK_h, KMOD_LCTRL};
         _emulator["Quit"]         = {SDLK_q, KMOD_LCTRL};
@@ -420,11 +425,12 @@ namespace Editor
                 case Emulator:
                 {
                     scanCodeFromIniKey(sectionString, "RamMode",      "CTRL+M",   _emulator["RamMode"]);
-                    scanCodeFromIniKey(sectionString, "Execute",      "CTRL+F5",  _emulator["Execute"]);
                     scanCodeFromIniKey(sectionString, "Browse",       "CTRL+B",   _emulator["Browse"]);
                     scanCodeFromIniKey(sectionString, "RomType",      "CTRL+R",   _emulator["RomType"]);
-                    scanCodeFromIniKey(sectionString, "Reset",        "CTRL+F1",  _emulator["Reset"]);
+                    scanCodeFromIniKey(sectionString, "HexMonitor",   "CTRL+X",   _emulator["HexMonitor"]);
                     scanCodeFromIniKey(sectionString, "Disassembler", "CTRL+D",   _emulator["Disassembler"]);
+                    scanCodeFromIniKey(sectionString, "Reset",        "CTRL+F1",  _emulator["Reset"]);
+                    scanCodeFromIniKey(sectionString, "Execute",      "CTRL+F5",  _emulator["Execute"]);
                     scanCodeFromIniKey(sectionString, "ScanlineMode", "CTRL+F3",  _emulator["ScanlineMode"]);
                     scanCodeFromIniKey(sectionString, "Help",         "CTRL+H",   _emulator["Help"]);
                     scanCodeFromIniKey(sectionString, "Quit",         "CTRL+Q",   _emulator["Quit"]);
@@ -593,6 +599,7 @@ namespace Editor
         if(_editorMode == Hex  ||  (_cursorY < 0  &&  _editorMode != Rom))
         {
             _hexEdit = !_hexEdit;
+            if(!_hexEdit) resetEditor();
         }
         else if(_editorMode == Load)
         {
@@ -632,7 +639,14 @@ namespace Editor
 
     void updateEditor(void)
     {
-        if(!_hexEdit) return;
+        if(!_hexEdit)
+        {
+            resetEditor();
+            return;
+        }
+
+        // Don't allow emulator commands to accidently modify fields
+        if(_sdlKeyModifier == KMOD_LALT  ||  _sdlKeyModifier == KMOD_LCTRL) return;
 
         int range = 0;
         if(_sdlKeyScanCode >= SDLK_0  &&  _sdlKeyScanCode <= SDLK_9) range = 1;
@@ -748,6 +762,8 @@ namespace Editor
     {
         _singleStep = false;
         _singleStepMode = true;
+        _hexBaseAddress = Cpu::getVPC();
+        _vpcBaseAddress = Cpu::getVPC();
     }
 
     void resetDebugger(void)
@@ -952,7 +968,16 @@ namespace Editor
         // Disassembler
         else if(_sdlKeyScanCode == _emulator["Disassembler"].scanCode  &&  _sdlKeyModifier == _emulator["Disassembler"].modifier)
         {
-            _editorMode = (_editorMode == Dasm) ? Hex : Dasm;
+            if(_editorMode == Dasm)
+            {
+                _editorMode = _editorModePrev;
+                _editorModePrev = Dasm;
+            }
+            else
+            {
+                _editorModePrev = _editorMode;
+                _editorMode = Dasm;
+            }
         }
 
         // ROMS after v1 have their own inbuilt scanline handlers
@@ -966,8 +991,17 @@ namespace Editor
         {
             if(!_singleStepMode)
             {
-                _editorMode = (_editorMode == Load) ? Hex : Load;
-                if(_editorMode == Load) browseDirectory();
+                if(_editorMode == Load)
+                {
+                    _editorMode = _editorModePrev;
+                    _editorModePrev = Load;
+                }
+                else
+                {
+                    _editorModePrev = _editorMode;
+                    _editorMode = Load;
+                    browseDirectory();
+                }
             }
         }
 
@@ -978,12 +1012,33 @@ namespace Editor
             {
                 if(_editorMode == Rom)
                 {
-                    _editorMode = Hex;
+                    _editorMode = _editorModePrev;
+                    _editorModePrev = Rom;
                 }
                 else
                 {
-                    _hexEdit = false;
+                    _editorModePrev = _editorMode;
                     _editorMode = Rom;
+                    _hexEdit = false;
+                    resetEditor();
+                }
+            }
+        }
+
+        // ROM type
+        else if(_sdlKeyScanCode == _emulator["HexMonitor"].scanCode  &&  _sdlKeyModifier == _emulator["HexMonitor"].modifier)
+        {
+            if(!_singleStepMode)
+            {
+                if(_editorMode == Hex)
+                {
+                    _editorMode = _editorModePrev;
+                    _editorModePrev = Hex;
+                }
+                else
+                {
+                    _editorModePrev = _editorMode;
+                    _editorMode = Hex;
                 }
             }
         }
@@ -1048,12 +1103,13 @@ namespace Editor
                 fprintf(stderr, "Editor::singleStepDebug() : Single step stall for %d milliseconds : exiting debugger.\n", SDL_GetTicks() - _singleStepTicks);
             }
             // Watch variable 
-            else if(Cpu::getRAM(_singleStepWatchAddress) != _singleStepWatch) 
+            //else if(Cpu::getRAM(_singleStepWatchAddress) != _singleStepWatch) 
+            else if(Cpu::getVPC() != _singleStepWatch) 
             {
                 _singleStep = false;
                 _singleStepMode = true;
-                _hexBaseAddress = (Cpu::getRAM(0x0017) <<8) | Cpu::getRAM(0x0016);
-                _vpcBaseAddress = _hexBaseAddress;
+                _hexBaseAddress = Cpu::getVPC();
+                _vpcBaseAddress = Cpu::getVPC();
             }
         }
 
@@ -1130,7 +1186,8 @@ namespace Editor
                             _singleStep = true;
                             _singleStepMode = false;
                             _singleStepTicks = SDL_GetTicks();
-                            _singleStepWatch = Cpu::getRAM(_singleStepWatchAddress);
+                            //_singleStepWatch = Cpu::getRAM(_singleStepWatchAddress);
+                            _singleStepWatch = Cpu::getVPC();
                         }
                         else
                         {

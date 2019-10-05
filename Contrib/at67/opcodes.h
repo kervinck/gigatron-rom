@@ -7,6 +7,38 @@
 
 #define VCPU_BRANCH_OPCODE 0x35
 
+#define OPCODE_LD  0x00
+#define OPCODE_AND 0x20
+#define OPCODE_OR  0x40
+#define OPCODE_XOR 0x60
+#define OPCODE_ADD 0x80
+#define OPCODE_SUB 0xA0
+#define OPCODE_ST  0xC0
+#define OPCODE_J   0xE0
+
+#define EA_0D_AC    0x00
+#define EA_0X_AC    0x04
+#define EA_YD_AC    0x08
+#define EA_YX_AC    0x0C
+#define EA_0D_X     0x10
+#define EA_0D_Y     0x14
+#define EA_0D_OUT   0x18
+#define EA_YX_OUTIX 0x1C
+
+#define BUS_D   0x00
+#define BUS_RAM 0x01
+#define BUS_AC  0x02
+#define BUS_IN  0x03
+
+#define BRA_CC_FAR    0x00
+#define BRA_CC_GT     0x04
+#define BRA_CC_LT     0x08
+#define BRA_CC_NE     0x0C
+#define BRA_CC_EQ     0x10
+#define BRA_CC_GE     0x14
+#define BRA_CC_LE     0x18
+#define BRA_CC_ALWAYS 0x1C
+
 
 namespace Assembler
 {
@@ -31,7 +63,8 @@ namespace Assembler
     };
 
     std::map<std::string, InstructionType> _asmOpcodes;
-    std::map<uint8_t, InstructionDasm> _disOpcodes;
+    std::map<uint8_t, InstructionDasm> _vcpuOpcodes;
+    std::map<uint8_t, InstructionDasm> _nativeOpcodes;
 
 
     void initialiseOpcodes(void)
@@ -105,65 +138,65 @@ namespace Assembler
 
 
         // Gigatron vCPU instructions
-        _disOpcodes[0x5E] = {0x5E, 0x00, TwoBytes,   vCpu, "ST"   };
-        _disOpcodes[0x2B] = {0x2B, 0x00, TwoBytes,   vCpu, "STW"  };
-        _disOpcodes[0xEC] = {0xEC, 0x00, TwoBytes,   vCpu, "STLW" };
-        _disOpcodes[0x1A] = {0x1A, 0x00, TwoBytes,   vCpu, "LD"   };
-        _disOpcodes[0x59] = {0x59, 0x00, TwoBytes,   vCpu, "LDI"  };
-        _disOpcodes[0x11] = {0x11, 0x00, ThreeBytes, vCpu, "LDWI" };
-        _disOpcodes[0x21] = {0x21, 0x00, TwoBytes,   vCpu, "LDW"  };
-        _disOpcodes[0xEE] = {0xEE, 0x00, TwoBytes,   vCpu, "LDLW" };
-        _disOpcodes[0x99] = {0x99, 0x00, TwoBytes,   vCpu, "ADDW" };
-        _disOpcodes[0xB8] = {0xB8, 0x00, TwoBytes,   vCpu, "SUBW" };
-        _disOpcodes[0xE3] = {0xE3, 0x00, TwoBytes,   vCpu, "ADDI" };
-        _disOpcodes[0xE6] = {0xE6, 0x00, TwoBytes,   vCpu, "SUBI" };
-        _disOpcodes[0xE9] = {0xE9, 0x00, OneByte,    vCpu, "LSLW" };
-        _disOpcodes[0x93] = {0x93, 0x00, TwoBytes,   vCpu, "INC"  };
-        _disOpcodes[0x82] = {0x82, 0x00, TwoBytes,   vCpu, "ANDI" };
-        _disOpcodes[0xF8] = {0xF8, 0x00, TwoBytes,   vCpu, "ANDW" };
-        _disOpcodes[0x88] = {0x88, 0x00, TwoBytes,   vCpu, "ORI"  };
-        _disOpcodes[0xFA] = {0xFA, 0x00, TwoBytes,   vCpu, "ORW"  };
-        _disOpcodes[0x8C] = {0x8C, 0x00, TwoBytes,   vCpu, "XORI" };
-        _disOpcodes[0xFC] = {0xFC, 0x00, TwoBytes,   vCpu, "XORW" };
-        _disOpcodes[0xAD] = {0xAD, 0x00, OneByte,    vCpu, "PEEK" };
-        _disOpcodes[0xF6] = {0xF6, 0x00, OneByte,    vCpu, "DEEK" };
-        _disOpcodes[0xF0] = {0xF0, 0x00, TwoBytes,   vCpu, "POKE" };
-        _disOpcodes[0xF3] = {0xF3, 0x00, TwoBytes,   vCpu, "DOKE" };
-        _disOpcodes[0x7F] = {0x7F, 0x00, TwoBytes,   vCpu, "LUP"  };
-        _disOpcodes[0x90] = {0x90, 0x00, TwoBytes,   vCpu, "BRA"  };
-        _disOpcodes[0xCF] = {0xCF, 0x00, TwoBytes,   vCpu, "CALL" };
-        _disOpcodes[0xFF] = {0xFF, 0x00, OneByte,    vCpu, "RET"  };
-        _disOpcodes[0x75] = {0x75, 0x00, OneByte,    vCpu, "PUSH" };
-        _disOpcodes[0x63] = {0x63, 0x00, OneByte,    vCpu, "POP"  };
-        _disOpcodes[0xDF] = {0xDF, 0x00, TwoBytes,   vCpu, "ALLOC"};
-        _disOpcodes[0xB4] = {0xB4, 0x00, TwoBytes,   vCpu, "SYS"  };
-        _disOpcodes[0xCD] = {0xCD, 0x00, TwoBytes,   vCpu, "DEF"  };
+        _vcpuOpcodes[0x5E] = {0x5E, 0x00, TwoBytes,   vCpu, "ST"   };
+        _vcpuOpcodes[0x2B] = {0x2B, 0x00, TwoBytes,   vCpu, "STW"  };
+        _vcpuOpcodes[0xEC] = {0xEC, 0x00, TwoBytes,   vCpu, "STLW" };
+        _vcpuOpcodes[0x1A] = {0x1A, 0x00, TwoBytes,   vCpu, "LD"   };
+        _vcpuOpcodes[0x59] = {0x59, 0x00, TwoBytes,   vCpu, "LDI"  };
+        _vcpuOpcodes[0x11] = {0x11, 0x00, ThreeBytes, vCpu, "LDWI" };
+        _vcpuOpcodes[0x21] = {0x21, 0x00, TwoBytes,   vCpu, "LDW"  };
+        _vcpuOpcodes[0xEE] = {0xEE, 0x00, TwoBytes,   vCpu, "LDLW" };
+        _vcpuOpcodes[0x99] = {0x99, 0x00, TwoBytes,   vCpu, "ADDW" };
+        _vcpuOpcodes[0xB8] = {0xB8, 0x00, TwoBytes,   vCpu, "SUBW" };
+        _vcpuOpcodes[0xE3] = {0xE3, 0x00, TwoBytes,   vCpu, "ADDI" };
+        _vcpuOpcodes[0xE6] = {0xE6, 0x00, TwoBytes,   vCpu, "SUBI" };
+        _vcpuOpcodes[0xE9] = {0xE9, 0x00, OneByte,    vCpu, "LSLW" };
+        _vcpuOpcodes[0x93] = {0x93, 0x00, TwoBytes,   vCpu, "INC"  };
+        _vcpuOpcodes[0x82] = {0x82, 0x00, TwoBytes,   vCpu, "ANDI" };
+        _vcpuOpcodes[0xF8] = {0xF8, 0x00, TwoBytes,   vCpu, "ANDW" };
+        _vcpuOpcodes[0x88] = {0x88, 0x00, TwoBytes,   vCpu, "ORI"  };
+        _vcpuOpcodes[0xFA] = {0xFA, 0x00, TwoBytes,   vCpu, "ORW"  };
+        _vcpuOpcodes[0x8C] = {0x8C, 0x00, TwoBytes,   vCpu, "XORI" };
+        _vcpuOpcodes[0xFC] = {0xFC, 0x00, TwoBytes,   vCpu, "XORW" };
+        _vcpuOpcodes[0xAD] = {0xAD, 0x00, OneByte,    vCpu, "PEEK" };
+        _vcpuOpcodes[0xF6] = {0xF6, 0x00, OneByte,    vCpu, "DEEK" };
+        _vcpuOpcodes[0xF0] = {0xF0, 0x00, TwoBytes,   vCpu, "POKE" };
+        _vcpuOpcodes[0xF3] = {0xF3, 0x00, TwoBytes,   vCpu, "DOKE" };
+        _vcpuOpcodes[0x7F] = {0x7F, 0x00, TwoBytes,   vCpu, "LUP"  };
+        _vcpuOpcodes[0x90] = {0x90, 0x00, TwoBytes,   vCpu, "BRA"  };
+        _vcpuOpcodes[0xCF] = {0xCF, 0x00, TwoBytes,   vCpu, "CALL" };
+        _vcpuOpcodes[0xFF] = {0xFF, 0x00, OneByte,    vCpu, "RET"  };
+        _vcpuOpcodes[0x75] = {0x75, 0x00, OneByte,    vCpu, "PUSH" };
+        _vcpuOpcodes[0x63] = {0x63, 0x00, OneByte,    vCpu, "POP"  };
+        _vcpuOpcodes[0xDF] = {0xDF, 0x00, TwoBytes,   vCpu, "ALLOC"};
+        _vcpuOpcodes[0xB4] = {0xB4, 0x00, TwoBytes,   vCpu, "SYS"  };
+        _vcpuOpcodes[0xCD] = {0xCD, 0x00, TwoBytes,   vCpu, "DEF"  };
 
         // Gigatron vCPU branch instructions, (this works because condition code is still unique compared to opcodes)
-        _disOpcodes[0x3F] = {VCPU_BRANCH_OPCODE, 0x3F, ThreeBytes, vCpu, "BEQ"};
-        _disOpcodes[0x72] = {VCPU_BRANCH_OPCODE, 0x72, ThreeBytes, vCpu, "BNE"};
-        _disOpcodes[0x50] = {VCPU_BRANCH_OPCODE, 0x50, ThreeBytes, vCpu, "BLT"};
-        _disOpcodes[0x4D] = {VCPU_BRANCH_OPCODE, 0x4D, ThreeBytes, vCpu, "BGT"};
-        _disOpcodes[0x56] = {VCPU_BRANCH_OPCODE, 0x56, ThreeBytes, vCpu, "BLE"};
-        _disOpcodes[0x53] = {VCPU_BRANCH_OPCODE, 0x53, ThreeBytes, vCpu, "BGE"};
+        _vcpuOpcodes[0x3F] = {VCPU_BRANCH_OPCODE, 0x3F, ThreeBytes, vCpu, "BEQ"};
+        _vcpuOpcodes[0x72] = {VCPU_BRANCH_OPCODE, 0x72, ThreeBytes, vCpu, "BNE"};
+        _vcpuOpcodes[0x50] = {VCPU_BRANCH_OPCODE, 0x50, ThreeBytes, vCpu, "BLT"};
+        _vcpuOpcodes[0x4D] = {VCPU_BRANCH_OPCODE, 0x4D, ThreeBytes, vCpu, "BGT"};
+        _vcpuOpcodes[0x56] = {VCPU_BRANCH_OPCODE, 0x56, ThreeBytes, vCpu, "BLE"};
+        _vcpuOpcodes[0x53] = {VCPU_BRANCH_OPCODE, 0x53, ThreeBytes, vCpu, "BGE"};
 
-        // Gigatron native instructions                                    
-        _disOpcodes[0x00] = {0x00, 0x00, TwoBytes, Native, ".LD"  };
-        _disOpcodes[0x02] = {0x02, 0x00, TwoBytes, Native, ".NOP" };
-        _disOpcodes[0x20] = {0x20, 0x00, TwoBytes, Native, ".ANDA"};
-        _disOpcodes[0x40] = {0x40, 0x00, TwoBytes, Native, ".ORA" };
-        _disOpcodes[0x60] = {0x60, 0x00, TwoBytes, Native, ".XORA"};
-        _disOpcodes[0x80] = {0x80, 0x00, TwoBytes, Native, ".ADDA"};
-        _disOpcodes[0xA0] = {0xA0, 0x00, TwoBytes, Native, ".SUBA"};
-        _disOpcodes[0xC0] = {0xC0, 0x00, TwoBytes, Native, ".ST"  };
-        _disOpcodes[0xE0] = {0xE0, 0x00, TwoBytes, Native, ".JMP" };
-        _disOpcodes[0xE4] = {0xE4, 0x00, TwoBytes, Native, ".BGT" };
-        _disOpcodes[0xE8] = {0xE8, 0x00, TwoBytes, Native, ".BLT" };
-        _disOpcodes[0xEC] = {0xEC, 0x00, TwoBytes, Native, ".BNE" };
-        _disOpcodes[0xF0] = {0xF0, 0x00, TwoBytes, Native, ".BEQ" };
-        _disOpcodes[0xF4] = {0xF4, 0x00, TwoBytes, Native, ".BGE" };
-        _disOpcodes[0xF8] = {0xF8, 0x00, TwoBytes, Native, ".BLE" };
-        _disOpcodes[0xFC] = {0xFC, 0x00, TwoBytes, Native, ".BRA" };
+        // Gigatron native instructions
+        _nativeOpcodes[0x00] = {0x00, 0x00, TwoBytes, Native, ".LD"  };
+        _nativeOpcodes[0x02] = {0x02, 0x00, TwoBytes, Native, ".NOP" };
+        _nativeOpcodes[0x20] = {0x20, 0x00, TwoBytes, Native, ".ANDA"};
+        _nativeOpcodes[0x40] = {0x40, 0x00, TwoBytes, Native, ".ORA" };
+        _nativeOpcodes[0x60] = {0x60, 0x00, TwoBytes, Native, ".XORA"};
+        _nativeOpcodes[0x80] = {0x80, 0x00, TwoBytes, Native, ".ADDA"};
+        _nativeOpcodes[0xA0] = {0xA0, 0x00, TwoBytes, Native, ".SUBA"};
+        _nativeOpcodes[0xC0] = {0xC0, 0x00, TwoBytes, Native, ".ST"  };
+        _nativeOpcodes[0xE0] = {0xE0, 0x00, TwoBytes, Native, ".JMP" };
+        _nativeOpcodes[0xE4] = {0xE4, 0x00, TwoBytes, Native, ".BGT" };
+        _nativeOpcodes[0xE8] = {0xE8, 0x00, TwoBytes, Native, ".BLT" };
+        _nativeOpcodes[0xEC] = {0xEC, 0x00, TwoBytes, Native, ".BNE" };
+        _nativeOpcodes[0xF0] = {0xF0, 0x00, TwoBytes, Native, ".BEQ" };
+        _nativeOpcodes[0xF4] = {0xF4, 0x00, TwoBytes, Native, ".BGE" };
+        _nativeOpcodes[0xF8] = {0xF8, 0x00, TwoBytes, Native, ".BLE" };
+        _nativeOpcodes[0xFC] = {0xFC, 0x00, TwoBytes, Native, ".BRA" };
     }
 }
 

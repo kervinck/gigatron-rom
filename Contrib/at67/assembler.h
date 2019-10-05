@@ -20,12 +20,21 @@ namespace Assembler
         uint16_t _address;
     };
 
+    struct DasmCode
+    {
+        uint8_t _instruction;
+        uint8_t _data0;
+        uint8_t _data1;
+        uint16_t _address;
+        std::string _text;
+    };
+    
 
     uint16_t getStartAddress(void);
     int getCurrDasmByteCount(void);
     int getPrevDasmByteCount(void);
     int getDisassembledCodeSize(void);
-    std::string* getDisassembledCode(int index);
+    DasmCode* getDisassembledCode(int index);
 
     void setIncludePath(const std::string& includePath);
 

@@ -46,6 +46,7 @@ namespace Cpu
     uint8_t _IN = 0xFF, _XOUT = 0x00;
     uint8_t _ROM[ROM_SIZE][2], _RAM[RAM_SIZE], _romFile[ROM_SIZE][2];
     uint8_t* _romFiles[MAX_ROMS];
+    uint16_t _vPC = 0x0200;
     RomType _romType = ROMERR;
 
     std::vector<uint8_t> _scanlinesRom0;
@@ -196,6 +197,7 @@ namespace Cpu
     int64_t getClock(void) {return _clock;}
     uint8_t getIN(void) {return _IN;}
     uint8_t getXOUT(void) {return _XOUT;}
+    uint16_t getVPC(void) {return _vPC;}
     uint8_t getRAM(uint16_t address) {return _RAM[address & (RAM_SIZE-1)];}
     uint8_t getROM(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01];}
     uint16_t getRAM16(uint16_t address) {return _RAM[address & (RAM_SIZE-1)] | (_RAM[(address+1) & (RAM_SIZE-1)]<<8);}
@@ -474,7 +476,7 @@ namespace Cpu
         T._IR = _ROM[S._PC][ROM_INST]; 
         T._D  = _ROM[S._PC][ROM_DATA];
 
-        // Stolen and adapted from https://github.com/kervinck/gigatron-rom/blob/master/Contrib/dhkolf/libgtemu/gtemu.c
+        // Adapted from https://github.com/kervinck/gigatron-rom/blob/master/Contrib/dhkolf/libgtemu/gtemu.c
         // Optimise for the statistically most common instructions
         switch(S._IR)
         {
@@ -680,8 +682,8 @@ namespace Cpu
     {
         if(S._PC == ROM_VCPU_DISPATCH)
         {
-            uint16_t vPC = (getRAM(0x0017) <<8) |getRAM(0x0016);
-            if(vPC < Editor::getCpuUsageAddressA()  ||  vPC > Editor::getCpuUsageAddressB()) _vCpuInstPerFrame++;
+            _vPC = (getRAM(0x0017) <<8) |getRAM(0x0016);
+            if(_vPC < Editor::getCpuUsageAddressA()  ||  _vPC > Editor::getCpuUsageAddressB()) _vCpuInstPerFrame++;
             _vCpuInstPerFrameMax++;
 
             static uint64_t prevFrameCounter = 0;

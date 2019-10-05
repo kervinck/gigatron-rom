@@ -88,6 +88,7 @@ namespace Cpu
     int64_t getClock(void);
     uint8_t getIN(void);
     uint8_t getXOUT(void);
+    uint16_t getVPC(void);
     uint8_t getRAM(uint16_t address);
     uint8_t getROM(uint16_t address, int page);
     uint16_t getRAM16(uint16_t address);

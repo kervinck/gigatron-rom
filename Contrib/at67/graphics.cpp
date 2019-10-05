@@ -311,7 +311,6 @@ namespace Graphics
         // SDL hints, VSync and Batching
         char vsChar = char(_vSync + '0');
         SDL_SetHint(SDL_HINT_RENDER_VSYNC, &vsChar);
-        //SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
         SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, std::to_string(_filter).c_str());
 
         // Fullscreen
@@ -618,7 +617,7 @@ namespace Graphics
             char* uploadPercentage = &uploadFilename[MENU_TEXT_SIZE - 5];
             sprintf(uploadPercentage, " %3d%%\r", int(upload * 100.0f));
         }
-        drawText(uploadFilename, _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFA0A0A0 : 0xFFFFFFFF, true, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+        drawText(uploadFilename, _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFB0B0B0 : 0xFFFFFFFF, true, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
         SDL_UpdateTexture(_screenTexture, NULL, _pixels, SCREEN_WIDTH * sizeof(uint32_t));
         SDL_RenderCopy(_renderer, _screenTexture, NULL, NULL);
         SDL_RenderPresent(_renderer);
@@ -672,9 +671,10 @@ namespace Graphics
         }
     }
 
-    void renderHexMonitor(bool onHex)
+    int renderHexMonitor(bool onHex)
     {
         char str[32] = "";
+        int hexDigitIndex = -1;
 
         switch(Editor::getMemoryMode())
         {
@@ -699,7 +699,8 @@ namespace Graphics
                 }
                 sprintf(str, "%02X ", value);
                 bool onCursor = (i == Editor::getCursorX()  &&  j == Editor::getCursorY());
-                drawText(std::string(str), _pixels, HEX_START_X + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), (Editor::getHexEdit() && Editor::getMemoryMode() == Editor::RAM && onCursor) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor, 2);
+                if(onCursor) hexDigitIndex = j*HEX_CHARS_X + i;
+                drawText(std::string(str), _pixels, HEX_START_X + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), (Editor::getHexEdit() && Editor::getMemoryMode() == Editor::RAM && onCursor) ? 0xFF00FF00 : 0xFFB0B0B0, onCursor, 2);
                 if(onCursor) cursorAddress = hexAddress;
                 hexAddress++;
             }
@@ -717,6 +718,8 @@ namespace Graphics
                 drawDigitBox(Editor::getMemoryDigit(), HEX_START_X + Editor::getCursorX()*HEX_CHAR_WIDE, FONT_CELL_Y*4 + Editor::getCursorY()*FONT_CELL_Y, 0xFFFF00FF);
             }
         }
+
+        return hexDigitIndex;
     }
 
     void renderRomBrowser(void)
@@ -730,7 +733,7 @@ namespace Graphics
         {
             int index = Editor::getRomEntriesIndex() + i;
             if(index >= int(Editor::getRomEntriesSize())) break;
-            drawText(*Editor::getRomEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, (i < NUM_INT_ROMS) ? 0xFFA0A0A0 : 0xFFFFFFFF, i == Editor::getCursorY(), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+            drawText(*Editor::getRomEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, (i < NUM_INT_ROMS) ? 0xFFB0B0B0 : 0xFFFFFFFF, i == Editor::getCursorY(), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
         }
 
         char str[32] = "";
@@ -751,7 +754,7 @@ namespace Graphics
         {
             int index = Editor::getFileEntriesIndex() + i;
             if(index >= int(Editor::getFileEntriesSize())) break;
-            drawText(*Editor::getFileEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFA0A0A0 : 0xFFFFFFFF, i == Editor::getCursorY(), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+            drawText(*Editor::getFileEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFB0B0B0 : 0xFFFFFFFF, i == Editor::getCursorY(), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
         }
 
         char str[32] = "";
@@ -771,7 +774,8 @@ namespace Graphics
         }
         for(int i=0; i<Assembler::getDisassembledCodeSize(); i++)
         {
-            drawText(*Assembler::getDisassembledCode(i), _pixels, HEX_START_X+6, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFA0A0A0, i == Editor::getCursorY(), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+            bool onVPC = (Assembler::getDisassembledCode(i)->_address == Editor::getVpcBaseAddress()  &&  Editor::getSingleStepMode());
+            drawText(Assembler::getDisassembledCode(i)->_text, _pixels, HEX_START_X+6, FONT_CELL_Y*4 + i*FONT_CELL_Y,  (onVPC) ? 0xFFFFFFFF : 0xFFB0B0B0, i == Editor::getCursorY(), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
         }
 
         switch(Editor::getMemoryMode())
@@ -804,22 +808,29 @@ namespace Graphics
 
             // Mouse cursor over vars
             Editor::OnVarType onVarType = Editor::getOnVarType();
-            sprintf(str, "%d\n", onVarType);
-            fprintf(stderr, str);
             bool onHex   = (onVarType == Editor::OnHex);
             bool onCpuA  = (onVarType == Editor::OnCpuA);
             bool onCpuB  = (onVarType == Editor::OnCpuB);
             bool onVars  = (onVarType == Editor::OnVars);
             bool onWatch = (onVarType == Editor::OnWatch);
+            uint8_t onVarMask = uint8_t(onHex) | (uint8_t(onCpuA) <<1) | (uint8_t(onCpuB) <<2) | (uint8_t(onVars) <<3) | (uint8_t(onWatch) <<4);
+            static uint8_t onVarMaskPrev = onVarMask;
 
             // Text window
+            int hexDigitIndex = -1;
+            static int hexDigitIndexPrev = hexDigitIndex;
             switch(Editor::getEditorMode())
             {
-                case Editor::Hex:  renderHexMonitor(onHex);   break;
-                case Editor::Rom:  renderRomBrowser();        break;
-                case Editor::Load: renderLoadBrowser(onHex);  break;
-                case Editor::Dasm: renderDisassembler(onHex); break;
+                case Editor::Hex:  hexDigitIndex = renderHexMonitor(onHex); break;
+                case Editor::Rom:  renderRomBrowser();                      break;
+                case Editor::Load: renderLoadBrowser(onHex);                break;
+                case Editor::Dasm: renderDisassembler(onHex);               break;
             }
+
+            // Disable hex/var editing when mouse moves off a currently editing field
+            if(onVarMask != onVarMaskPrev  ||  hexDigitIndex != hexDigitIndexPrev) Editor::setHexEdit(false);
+            onVarMaskPrev = onVarMask;
+            hexDigitIndexPrev = hexDigitIndex;
 
             // Draw addresses
             if(Editor::getSingleStepMode())

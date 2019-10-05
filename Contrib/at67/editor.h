@@ -99,6 +99,7 @@ namespace Editor
 
     void setCursorX(int x);
     void setCursorY(int y);
+    void setHexEdit(bool hexEdit);
     void setStartMusic(bool startMusic);
     void setSingleStep(bool singleStep);
     void setSingleStepMode(bool singleStepMode);
