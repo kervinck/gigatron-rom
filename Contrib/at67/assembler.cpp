@@ -257,7 +257,7 @@ namespace Assembler
             if(store)
             {
                 char storeStr[32];
-                (bus == BUS_AC) ? sprintf(storeStr, "%-5s %s", instStr, addrStr) : sprintf(storeStr, "%-5s %s,%s", instStr, busStr, addrStr);
+                (bus == BUS_AC) ? sprintf(storeStr, "%-4s %s", instStr, addrStr) : sprintf(storeStr, "%-4s %s,%s", instStr, busStr, addrStr);
                 if(bus == BUS_RAM) sprintf(storeStr, ".CTRL %s", removeBrackets(addrStr).c_str());
                 if(addr == EA_0D_X  ||  addr == EA_0D_Y) sprintf(mnemonic, "%s,%s", storeStr, regStr);
                 else strcpy(mnemonic, storeStr);
@@ -265,7 +265,7 @@ namespace Assembler
             else
             {
                 // if reg == AC
-                (addr <= EA_YX_AC) ? sprintf(mnemonic, "%-5s %s", instStr, busStr) : sprintf(mnemonic, "%-5s %s,%s", instStr, busStr, regStr);
+                (addr <= EA_YX_AC) ? sprintf(mnemonic, "%-4s %s", instStr, busStr) : sprintf(mnemonic, "%-4s %s,%s", instStr, busStr, regStr);
             }
         }
         // Compose jump string
@@ -274,11 +274,11 @@ namespace Assembler
             char jumpStr[32];
             switch(addr)
             {
-                case BRA_CC_FAR: sprintf(jumpStr, "%-5s Y,", instStr); break;
-                default:         sprintf(jumpStr, "%-5s ",   instStr); break;
+                case BRA_CC_FAR: sprintf(jumpStr, "%-4s Y,", instStr); break;
+                default:         sprintf(jumpStr, "%-4s ",   instStr); break;
             }
 
-            sprintf(mnemonic, "%-5s%s", jumpStr, busStr);
+            sprintf(mnemonic, "%-4s%s", jumpStr, busStr);
         }
 
         return true;
@@ -311,15 +311,17 @@ namespace Assembler
                     char mnemonic[24];
                     if(!getNativeMnemonic(instruction, data0, mnemonic))
                     {
-                        sprintf(dasmText, "%04x %02x %02x", address, instruction, data0);
+                        sprintf(dasmText, "%04x  %02x %02x", address, instruction, data0);
                         dasmCode._address = address;
                         address++;
                         break;
                     }
 
-                    sprintf(dasmText, "%04x %s", address, mnemonic);
+                    sprintf(dasmText, "%04x  %s", address, mnemonic);
                     dasmCode._address = address;
                     address++;
+
+                    dasmCode._text = Expression::strToLower(std::string(dasmText));
                 }
                 break;
 
@@ -335,7 +337,7 @@ namespace Assembler
                        (address >= GIGA_CH0_WAV_A  &&  address <= GIGA_CH0_OSC_H) ||  (address >= GIGA_CH1_WAV_A  &&  address <= GIGA_CH1_OSC_H) ||
                        (address >= GIGA_CH2_WAV_A  &&  address <= GIGA_CH2_OSC_H) ||  (address >= GIGA_CH3_WAV_A  &&  address <= GIGA_CH3_OSC_H))
                     {
-                        sprintf(dasmText, "%04x %02x", address, instruction);
+                        sprintf(dasmText, "%04x  %02x", address, instruction);
                         dasmCode._address = address;
                         address++;
                         break;
@@ -352,15 +354,17 @@ namespace Assembler
                     byteSize = _vcpuOpcodes[instruction]._byteSize;
                     switch(byteSize)
                     {
-                        case OneByte:  sprintf(dasmText, "%04x %-5s", address, _vcpuOpcodes[instruction]._mnemonic.c_str());             break;
-                        case TwoBytes: sprintf(dasmText, "%04x %-5s %02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data0); break;
-                        case ThreeBytes: (foundBranch) ? sprintf(dasmText, "%04x %-5s %02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1) : sprintf(dasmText, "%04x %-5s %02x%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1, data0); break;
+                        case OneByte:  sprintf(dasmText, "%04x  %-4s", address, _vcpuOpcodes[instruction]._mnemonic.c_str());             break;
+                        case TwoBytes: sprintf(dasmText, "%04x  %-4s %02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data0); break;
+                        case ThreeBytes: (foundBranch) ? sprintf(dasmText, "%04x  %-4s %02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1) : sprintf(dasmText, "%04x  %-4s %02x%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1, data0); break;
                     }
                     dasmCode._address = address;
                     address = address + byteSize;
 
                     // Save current and previous instruction sizes to allow scrolling
                     getVcpuCurrAndPrevByteSize(dasmCode._address, instruction, byteSize);
+
+                    dasmCode._text = Expression::strToUpper(std::string(dasmText));
                 }
                 break;
             }
@@ -368,7 +372,6 @@ namespace Assembler
             dasmCode._instruction = instruction;
             dasmCode._data0 = data0;
             dasmCode._data1 = data1;
-            dasmCode._text = Expression::strToUpper(std::string(dasmText));
 
             _disassembledCode.push_back(dasmCode);
         }

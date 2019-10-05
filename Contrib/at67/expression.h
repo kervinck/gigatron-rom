@@ -42,6 +42,7 @@ namespace Expression
 
     std::string byteToHexString(uint8_t n);
     std::string wordToHexString(uint16_t n);
+    std::string& strToLower(std::string& s);
     std::string& strToUpper(std::string& s);
 
     NumericType getBase(const std::string& input, long& result);

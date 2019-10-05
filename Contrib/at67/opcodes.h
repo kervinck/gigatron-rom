@@ -181,22 +181,22 @@ namespace Assembler
         _vcpuOpcodes[0x53] = {VCPU_BRANCH_OPCODE, 0x53, ThreeBytes, vCpu, "BGE"};
 
         // Gigatron native instructions
-        _nativeOpcodes[0x00] = {0x00, 0x00, TwoBytes, Native, ".LD"  };
-        _nativeOpcodes[0x02] = {0x02, 0x00, TwoBytes, Native, ".NOP" };
-        _nativeOpcodes[0x20] = {0x20, 0x00, TwoBytes, Native, ".ANDA"};
-        _nativeOpcodes[0x40] = {0x40, 0x00, TwoBytes, Native, ".ORA" };
-        _nativeOpcodes[0x60] = {0x60, 0x00, TwoBytes, Native, ".XORA"};
-        _nativeOpcodes[0x80] = {0x80, 0x00, TwoBytes, Native, ".ADDA"};
-        _nativeOpcodes[0xA0] = {0xA0, 0x00, TwoBytes, Native, ".SUBA"};
-        _nativeOpcodes[0xC0] = {0xC0, 0x00, TwoBytes, Native, ".ST"  };
-        _nativeOpcodes[0xE0] = {0xE0, 0x00, TwoBytes, Native, ".JMP" };
-        _nativeOpcodes[0xE4] = {0xE4, 0x00, TwoBytes, Native, ".BGT" };
-        _nativeOpcodes[0xE8] = {0xE8, 0x00, TwoBytes, Native, ".BLT" };
-        _nativeOpcodes[0xEC] = {0xEC, 0x00, TwoBytes, Native, ".BNE" };
-        _nativeOpcodes[0xF0] = {0xF0, 0x00, TwoBytes, Native, ".BEQ" };
-        _nativeOpcodes[0xF4] = {0xF4, 0x00, TwoBytes, Native, ".BGE" };
-        _nativeOpcodes[0xF8] = {0xF8, 0x00, TwoBytes, Native, ".BLE" };
-        _nativeOpcodes[0xFC] = {0xFC, 0x00, TwoBytes, Native, ".BRA" };
+        _nativeOpcodes[0x00] = {0x00, 0x00, TwoBytes, Native, "LD"  };
+        _nativeOpcodes[0x02] = {0x02, 0x00, TwoBytes, Native, "NOP" };
+        _nativeOpcodes[0x20] = {0x20, 0x00, TwoBytes, Native, "ANDA"};
+        _nativeOpcodes[0x40] = {0x40, 0x00, TwoBytes, Native, "ORA" };
+        _nativeOpcodes[0x60] = {0x60, 0x00, TwoBytes, Native, "XORA"};
+        _nativeOpcodes[0x80] = {0x80, 0x00, TwoBytes, Native, "ADDA"};
+        _nativeOpcodes[0xA0] = {0xA0, 0x00, TwoBytes, Native, "SUBA"};
+        _nativeOpcodes[0xC0] = {0xC0, 0x00, TwoBytes, Native, "ST"  };
+        _nativeOpcodes[0xE0] = {0xE0, 0x00, TwoBytes, Native, "JMP" };
+        _nativeOpcodes[0xE4] = {0xE4, 0x00, TwoBytes, Native, "BGT" };
+        _nativeOpcodes[0xE8] = {0xE8, 0x00, TwoBytes, Native, "BLT" };
+        _nativeOpcodes[0xEC] = {0xEC, 0x00, TwoBytes, Native, "BNE" };
+        _nativeOpcodes[0xF0] = {0xF0, 0x00, TwoBytes, Native, "BEQ" };
+        _nativeOpcodes[0xF4] = {0xF4, 0x00, TwoBytes, Native, "BGE" };
+        _nativeOpcodes[0xF8] = {0xF8, 0x00, TwoBytes, Native, "BLE" };
+        _nativeOpcodes[0xFC] = {0xFC, 0x00, TwoBytes, Native, "BRA" };
     }
 }
 

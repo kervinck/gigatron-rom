@@ -1066,7 +1066,7 @@ namespace Editor
             if(!_singleStepMode)
             {
                 static int memoryMode = RAM;
-                memoryMode = (++memoryMode) % NumMemoryModes;
+                memoryMode = (_editorMode == Dasm) ? (++memoryMode) % (NumMemoryModes-1) : (++memoryMode) % NumMemoryModes;
                 _memoryMode = (MemoryMode)memoryMode;
             }
         }
