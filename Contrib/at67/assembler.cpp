@@ -320,8 +320,6 @@ namespace Assembler
                     sprintf(dasmText, "%04x  %s", address, mnemonic);
                     dasmCode._address = address;
                     address++;
-
-                    dasmCode._text = Expression::strToLower(std::string(dasmText));
                 }
                 break;
 
@@ -363,8 +361,6 @@ namespace Assembler
 
                     // Save current and previous instruction sizes to allow scrolling
                     getVcpuCurrAndPrevByteSize(dasmCode._address, instruction, byteSize);
-
-                    dasmCode._text = Expression::strToUpper(std::string(dasmText));
                 }
                 break;
             }
@@ -372,6 +368,7 @@ namespace Assembler
             dasmCode._instruction = instruction;
             dasmCode._data0 = data0;
             dasmCode._data1 = data1;
+            dasmCode._text = (memoryMode == Editor::RAM) ? Expression::strToUpper(std::string(dasmText)) : Expression::strToLower(std::string(dasmText));
 
             _disassembledCode.push_back(dasmCode);
         }
