@@ -7,8 +7,13 @@
 # Latest development version as default target
 DEV:=dev.rom
 
+# Emulators open gigatron.rom as their ROM image
 gigatron.rom: $(DEV)
+ ifdef OS # Windows
+	copy $< $@
+ else
 	ln -sf "$<" "$@"
+ endif
 
 dev: $(DEV)
 
