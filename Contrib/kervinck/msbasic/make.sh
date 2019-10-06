@@ -12,5 +12,13 @@ ld65 -C $i.cfg tmp/$i.o -o tmp/$i.bin -Ln tmp/$i.lbl
 done
 
 # Gigatron
-ls -l tmp/*.bin tmp/*.lst
 
+od -v -A n -t x1 tmp/gigatron.bin |\
+fmt -1 |\
+awk -v A=0x280 '{
+ if(A%16==0)print""
+ if(A%256==0)printf"\n*=$%x\n",A
+ printf " #$%02x",$1
+ A++}' > include.gcl
+
+ls -l tmp/*.bin tmp/*.lst include.gcl
