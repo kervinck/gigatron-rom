@@ -13,11 +13,16 @@ Based on Pat Gavlin's excellent initial work on adding a Gigatron backend to
 This is still very much work in progress, some of the many
 restrictions include:
  * No floating point (this will probably be the case for a _very_ long time)
+ * Sometimes hangs, or crashes with a stack trace instead of a nice message
+ * Especially on 'complex' expressions. We still have a registor allocation issue
+ * No large structs and arrays (they must typically be much smaller than 100 bytes)
+ * Work on libraries has barely started. No malloc yet. No file system.
  * Comparisons are still broken with respect to overflow
  * 'long' and 'long long' are 16-bit
- * Work on libraries has barely started. No malloc yet. No file system.
- * Sometimes hangs, or crashes with a stack trace instead of a nice message
  * ...
+
+See the open GitHub issues with "lcc:" in their title for the current status.
+Link: https://github.com/kervinck/gigatron-rom/issues?&q=is%3Aissue+is%3Aopen+lcc%3A
 
 Resources:
  * Forum thread: https://forum.gigatron.io/viewtopic.php?f=4&t=116
