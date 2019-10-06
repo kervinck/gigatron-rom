@@ -13,8 +13,12 @@ gigatron.rom: $(DEV)
 dev: $(DEV)
 
 # Allow application-specific SYS extensions to live in Apps/
-export PYTHONPATH=Apps/Loader:Apps/Racer
-export PYTHONDONTWRITEBYTECODE=please
+export PYTHONPATH:=Apps/Loader:Apps/Racer
+export PYTHONDONTWRITEBYTECODE:=please
+
+ifdef OS # Windows
+ export PYTHONPATH:=$(subst :,;,$(PYTHONPATH))
+endif
 
 CFLAGS:=-std=c11 -O3 -Wall
 
