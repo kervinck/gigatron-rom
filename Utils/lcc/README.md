@@ -10,6 +10,15 @@ or loaded into a Gigatron emulator.
 Based on Pat Gavlin's excellent initial work on adding a Gigatron backend to
 `lcc`. Requires Python 3.6+.
 
+Resources:
+ * Forum thread: https://forum.gigatron.io/viewtopic.php?f=4&t=116
+ * Gigatron website: https://gigatron.io/
+ * LCC website: http://sites.google.com/site/lccretargetablecompiler/
+ * Original LCC sources: https://github.com/drh/lcc
+
+Caveats
+=======
+
 This is still very much work in progress, some of the many
 restrictions include:
  * No floating point (this will probably be the case for a _very_ long time)
@@ -28,12 +37,6 @@ In short: when writing new C code for the Gigatron and you know
 what the compiler is doing (`Utils/gt1dump.py -d` is your friend),
 you can already make interesting programs. However, porting existing
 C code will become frustrating rather quickly.
-
-Resources:
- * Forum thread: https://forum.gigatron.io/viewtopic.php?f=4&t=116
- * Gigatron website: https://gigatron.io/
- * LCC website: http://sites.google.com/site/lccretargetablecompiler/
- * Original LCC sources: https://github.com/drh/lcc
 
 Instructions
 ============
