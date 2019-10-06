@@ -36,7 +36,9 @@ std::vector<std::string> _defaultKeys =
     "                                                                                ",
     "[Debugger]               ; case sensitive                                       ",
     "Debug        = CTRL+F6   ; toggles debugging mode, can be used to pause         ",
-    "Step         = CTRL+F7   ; single steps debugger based on a watched variable    ",
+    "RunToBrk     = CTRL+F7   ; run to breakpoint, does nada if no breakpoints exist ",
+    "StepVpc      = CTRL+F8   ; single steps debugger based on vPC                   ",
+    "StepWatch    = CTRL+F9   ; single steps debugger based on a watched variable    ",
     "                         ; by default is videoY which changes once per scanline ",
     "                                                                                "
 };

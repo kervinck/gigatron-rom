@@ -60,11 +60,12 @@ namespace Editor
     int getCursorX(void);
     int getCursorY(void);
     bool getHexEdit(void);
+    bool getSingleStepEnabled(void);
     bool getStartMusic(void);
-    bool getSingleStepMode(void);
 
     bool getPageUpButton(void);
     bool getPageDnButton(void);
+    bool getDelAllButton(void);
 
     MemoryMode getMemoryMode(void);
     EditorMode getEditorMode(void);
@@ -77,9 +78,12 @@ namespace Editor
     uint16_t getVpcBaseAddress(void);
     uint16_t getLoadBaseAddress(void);
     uint16_t getVarsBaseAddress(void);
-    uint16_t getSingleStepWatchAddress(void);
+    uint16_t getSingleStepAddress(void);
     uint16_t getCpuUsageAddressA(void);
     uint16_t getCpuUsageAddressB(void);
+
+    int getBreakpointsSize(void);
+    uint16_t getBreakpointAddress(int index);
 
     int getFileEntriesIndex(void);
     int getFileEntriesSize(void);
@@ -101,10 +105,8 @@ namespace Editor
     void setCursorY(int y);
     void setHexEdit(bool hexEdit);
     void setStartMusic(bool startMusic);
-    void setSingleStep(bool singleStep);
-    void setSingleStepMode(bool singleStepMode);
+    void setSingleStepAddress(uint16_t address);
     void setLoadBaseAddress(uint16_t address);
-    void setSingleStepWatchAddress(uint16_t address);
     void setCpuUsageAddressA(uint16_t address);
     void setCpuUsageAddressB(uint16_t address);
 
@@ -115,7 +117,7 @@ namespace Editor
 
     void initialise(void);
     void browseDirectory(void);
-    bool singleStepDebug(void);
+    bool handleDebugger(void);
     void handleInput(void);
 }
 

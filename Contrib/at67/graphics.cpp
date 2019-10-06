@@ -610,6 +610,7 @@ namespace Graphics
     {
         int i = Editor::getCursorY();
         int index = Editor::getFileEntriesIndex() + i;
+
         std::string uploadFilename = *Editor::getFileEntryName(index);
         uploadFilename.append(MENU_TEXT_SIZE - uploadFilename.size(), ' ');
         if(upload < 1.0f)
@@ -617,7 +618,10 @@ namespace Graphics
             char* uploadPercentage = &uploadFilename[MENU_TEXT_SIZE - 5];
             sprintf(uploadPercentage, " %3d%%\r", int(upload * 100.0f));
         }
-        drawText(uploadFilename, _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFB0B0B0 : 0xFFFFFFFF, true, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+
+        uint32_t colour = (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFB0B0B0 : 0xFFFFFFFF;
+        drawText(uploadFilename, _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, true, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+
         SDL_UpdateTexture(_screenTexture, NULL, _pixels, SCREEN_WIDTH * sizeof(uint32_t));
         SDL_RenderCopy(_renderer, _screenTexture, NULL, NULL);
         SDL_RenderPresent(_renderer);
@@ -700,14 +704,16 @@ namespace Graphics
                 sprintf(str, "%02X ", value);
                 bool onCursor = (i == Editor::getCursorX()  &&  j == Editor::getCursorY());
                 if(onCursor) hexDigitIndex = j*HEX_CHARS_X + i;
-                drawText(std::string(str), _pixels, HEX_START_X + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), (Editor::getHexEdit() && Editor::getMemoryMode() == Editor::RAM && onCursor) ? 0xFF00FF00 : 0xFFB0B0B0, onCursor, 2);
+                uint32_t colour = (Editor::getHexEdit() && Editor::getMemoryMode() == Editor::RAM && onCursor) ? 0xFF00FF00 : 0xFFB0B0B0;
+                drawText(std::string(str), _pixels, HEX_START_X + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), colour, onCursor, 2);
                 if(onCursor) cursorAddress = hexAddress;
                 hexAddress++;
             }
         }
 
         sprintf(str, "%04X", cursorAddress);
-        drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, (Editor::getHexEdit() && onHex) ? 0xFF00FF00 : 0xFFFFFFFF, onHex, 4);
+        uint32_t colour = (Editor::getHexEdit() && onHex) ? 0xFF00FF00 : 0xFFFFFFFF;
+        drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, colour, onHex, 4);
 
         // Edit digit select for monitor
         if(Editor::getHexEdit())
@@ -725,17 +731,21 @@ namespace Graphics
     void renderRomBrowser(void)
     {
         drawText("ROM:       Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0);
+
+        // Clear window
+        for(int i=0; i<HEX_CHARS_Y; i++) drawText("                       ", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+
+        // ROM list
         for(int i=0; i<HEX_CHARS_Y; i++)
         {
-            drawText("                       ", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
-        }
-        for(int i=0; i<HEX_CHARS_Y; i++)
-        {
+            bool onCursor = i == Editor::getCursorY();
             int index = Editor::getRomEntriesIndex() + i;
             if(index >= int(Editor::getRomEntriesSize())) break;
-            drawText(*Editor::getRomEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, (i < NUM_INT_ROMS) ? 0xFFB0B0B0 : 0xFFFFFFFF, i == Editor::getCursorY(), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+            uint32_t colour = (i < NUM_INT_ROMS) ? 0xFFB0B0B0 : 0xFFFFFFFF;
+            drawText(*Editor::getRomEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
         }
 
+        // ROM version
         char str[32] = "";
         (Editor::getCursorY() < 0  ||  Editor::getCursorY() >= Editor::getRomEntriesSize()) ? sprintf(str, "  ") : sprintf(str, "%02X", Editor::getRomEntryVersion(Editor::getCursorY()));
         drawText(std::string(str), _pixels, HEX_START-6, FONT_CELL_Y*3, 0xFFFFFFFF, false, 4);
@@ -746,20 +756,25 @@ namespace Graphics
         uint16_t hexLoadAddress = (Editor::getEditorMode() == Editor::Load) ? Editor::getLoadBaseAddress() : Editor::getHexBaseAddress();
 
         drawText("Load:      Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0);
+
+        // Clear window
+        for(int i=0; i<HEX_CHARS_Y; i++) drawText("                       ", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+
+        // File list
         for(int i=0; i<HEX_CHARS_Y; i++)
         {
-            drawText("                       ", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
-        }
-        for(int i=0; i<HEX_CHARS_Y; i++)
-        {
+            bool onCursor = i == Editor::getCursorY();
             int index = Editor::getFileEntriesIndex() + i;
             if(index >= int(Editor::getFileEntriesSize())) break;
-            drawText(*Editor::getFileEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFB0B0B0 : 0xFFFFFFFF, i == Editor::getCursorY(), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+            uint32_t colour = (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFB0B0B0 : 0xFFFFFFFF;
+            drawText(*Editor::getFileEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
         }
 
+        // Load address
         char str[32] = "";
         sprintf(str, "%04X", hexLoadAddress);
-        drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, (Editor::getHexEdit() && onHex) ? 0xFF00FF00 : 0xFFFFFFFF, onHex, 4);
+        uint32_t colour = (Editor::getHexEdit() && onHex) ? 0xFF00FF00 : 0xFFFFFFFF;
+        drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, colour, onHex, 4);
     }
 
     void renderDisassembler(bool onHex)
@@ -768,24 +783,45 @@ namespace Graphics
 
         Assembler::disassemble(Editor::getHexBaseAddress());
 
-        for(int i=0; i<HEX_CHARS_Y; i++)
-        {
-            drawText("                       ", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
-        }
+        //sprintf(str, "%d\n", Editor::getBreakpointsSize());
+        //fprintf(stderr, str);
+
+        // Clear window
+        for(int i=0; i<HEX_CHARS_Y; i++) drawText("                       ", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+
         for(int i=0; i<Assembler::getDisassembledCodeSize(); i++)
         {
-            bool onVPC = (Assembler::getDisassembledCode(i)->_address == Editor::getVpcBaseAddress()  &&  Editor::getSingleStepMode());
-            drawText(Assembler::getDisassembledCode(i)->_text, _pixels, HEX_START_X+6, FONT_CELL_Y*4 + i*FONT_CELL_Y,  (onVPC) ? 0xFFFFFFFF : 0xFFB0B0B0, i == Editor::getCursorY(), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+            bool onCursor = i == Editor::getCursorY();
+            bool onVPC = (Assembler::getDisassembledCode(i)->_address == Editor::getVpcBaseAddress()  &&  Editor::getSingleStepEnabled());
+
+            // vPC icon in debug mode
+            if(onVPC) drawText(">", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFFFFFF00, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+
+            for(int j=0; j<Editor::getBreakpointsSize(); j++)
+            {
+                // Breakpoint icon
+                if(Assembler::getDisassembledCode(i)->_address == Editor::getBreakpointAddress(j)  &&  Editor::getSingleStepEnabled())
+                {
+                    drawText("*", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFFB000B0, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+                    break;
+                }
+            }
+
+            // Mnemonic, highlight if on vPC and show cursor in debug mode
+            uint32_t colour = (onVPC) ? 0xFFFFFFFF : 0xFFB0B0B0;
+            drawText(Assembler::getDisassembledCode(i)->_text, _pixels, HEX_START_X+6, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, onCursor  &&  (Editor::getSingleStepEnabled()), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
         }
 
         switch(Editor::getMemoryMode())
         {
             case Editor::RAM:  drawText("RAM:       Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
             case Editor::ROM0: drawText("ROM:       Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
+            case Editor::ROM1: drawText("ROM:       Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
         }
 
         sprintf(str, "%04X", Editor::getHexBaseAddress());
-        drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, (Editor::getHexEdit() && onHex) ? 0xFF00FF00 : 0xFFFFFFFF, onHex, 4);
+        uint32_t colour = (Editor::getHexEdit() && onHex) ? 0xFF00FF00 : 0xFFFFFFFF;
+        drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, colour, onHex, 4);
     }
 
     void renderTextWindow(void)
@@ -832,21 +868,25 @@ namespace Graphics
             hexDigitIndexPrev = hexDigitIndex;
 
             // Draw addresses
-            if(Editor::getSingleStepMode())
+            if(Editor::getSingleStepEnabled())
             {
                 drawText("Watch:", _pixels, WATCH_START, FONT_CELL_Y*2, 0xFFFFFFFF, false, 0);
-                sprintf(str, "%04x   ", Editor::getSingleStepWatchAddress());
-                drawText(str, _pixels, WATCH_START+36, FONT_CELL_Y*2, (Editor::getHexEdit() && onWatch) ? 0xFF00FF00 : 0xFFFFFFFF, onWatch, 4);
+                sprintf(str, "%04x   ", Editor::getSingleStepAddress());
+                uint32_t colour = (Editor::getHexEdit() && onWatch) ? 0xFF00FF00 : 0xFFFFFFFF;
+                drawText(str, _pixels, WATCH_START+36, FONT_CELL_Y*2, colour, onWatch, 4);
             }
             else
             {
                 sprintf(str, "%04X", cpuUsageAddressA);
-                drawText(std::string(str), _pixels, CPUA_START, FONT_CELL_Y*2, (Editor::getHexEdit() && onCpuA) ? 0xFF00FF00 : 0xFFFFFFFF, onCpuA, 4);
+                uint32_t colourA = (Editor::getHexEdit() && onCpuA) ? 0xFF00FF00 : 0xFFFFFFFF;
+                drawText(std::string(str), _pixels, CPUA_START, FONT_CELL_Y*2, colourA, onCpuA, 4);
                 sprintf(str, "%04X", cpuUsageAddressB);
-                drawText(std::string(str), _pixels, CPUB_START, FONT_CELL_Y*2, (Editor::getHexEdit() && onCpuB) ? 0xFF00FF00 : 0xFFFFFFFF, onCpuB, 4);
+                uint32_t colourB = (Editor::getHexEdit() && onCpuB) ? 0xFF00FF00 : 0xFFFFFFFF;
+                drawText(std::string(str), _pixels, CPUB_START, FONT_CELL_Y*2, colourB, onCpuB, 4);
             }
             sprintf(str, "%04X", varsAddress);
-            drawText(std::string(str), _pixels, VAR_START, FONT_CELL_Y*3, (Editor::getHexEdit() && onVars) ? 0xFF00FF00 : 0xFFFFFFFF, onVars, 4);
+            uint32_t colour = (Editor::getHexEdit() && onVars) ? 0xFF00FF00 : 0xFFFFFFFF;
+            drawText(std::string(str), _pixels, VAR_START, FONT_CELL_Y*3, colour, onVars, 4);
 
             // Edit digit select for addresses
             if(Editor::getHexEdit())
@@ -871,9 +911,19 @@ namespace Graphics
 
             // Page up/down icons
             sprintf(str, "^");
-            drawText(std::string(str), _pixels, 140, 44, 0xFF00FF00, Editor::getPageUpButton(), 1);
+            drawText(std::string(str), _pixels, PAGEUP_START_X, PAGEUP_START_Y, 0xFF00FF00, Editor::getPageUpButton(), 1);
             str[0] = 127; str[1] = 0;
-            drawText(std::string(str), _pixels, 140, 428, 0xFF00FF00, Editor::getPageDnButton(), 1);
+            drawText(std::string(str), _pixels, PAGEDN_START_X, PAGEDN_START_Y, 0xFF00FF00, Editor::getPageDnButton(), 1);
+
+            // Delete icon
+            if(Editor::getEditorMode() == Editor::Dasm  &&  (Editor::getSingleStepEnabled()))
+            {
+                drawText("x", _pixels, DELALL_START_X, DELALL_START_Y, 0xFFFF0000, Editor::getDelAllButton(), 1);
+            }
+            else
+            {
+                drawText(" ", _pixels, DELALL_START_X, DELALL_START_Y, 0, false, 0);
+            }
         }
     }
 

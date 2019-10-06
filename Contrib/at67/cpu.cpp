@@ -463,8 +463,6 @@ namespace Cpu
             fprintf(stderr, "Cpu::initialise() : failed to initialise SDL.\n");
             _EXIT_(EXIT_FAILURE);
         }
-
-        //Timing::setTimingHack(0.0);
     }
 
     State cycle(const State& S)
@@ -673,16 +671,17 @@ namespace Cpu
         }
 
         Graphics::resetVTable();
-        Editor::setSingleStepWatchAddress(VIDEO_Y_ADDRESS);
+        Editor::setSingleStepAddress(VIDEO_Y_ADDRESS);
         setClock(CLOCK_RESET);
     }
 
     // Counts maximum and used vCPU instruction slots available per frame
     void vCpuUsage(State& S)
     {
+        // All ROM's so far v1 through v4 use the same vCPU dispatch address!
         if(S._PC == ROM_VCPU_DISPATCH)
         {
-            _vPC = (getRAM(0x0017) <<8) |getRAM(0x0016);
+            _vPC = (getRAM(0x0017) <<8) | getRAM(0x0016);
             if(_vPC < Editor::getCpuUsageAddressA()  ||  _vPC > Editor::getCpuUsageAddressB()) _vCpuInstPerFrame++;
             _vCpuInstPerFrameMax++;
 

@@ -608,7 +608,7 @@ namespace Assembler
                 // Reserved word, (equate), _singleStepWatch_
                 else if(tokens[0] == "_singleStepWatch_")
                 {
-                    Editor::setSingleStepWatchAddress(equate._operand);
+                    Editor::setSingleStepAddress(equate._operand);
                 }
                 // Start address of vCPU exclusion zone
                 else if(tokens[0] == "_cpuUsageAddressA_")
@@ -1760,27 +1760,24 @@ namespace Assembler
 
     void printGprintfStrings(void)
     {
-        if(_gprintfs.size())
-        {
-            uint16_t vPC = (Cpu::getRAM(0x0017) <<8) | Cpu::getRAM(0x0016);
+        if(_gprintfs.size() == 0) return;
 
-            for(int i=0; i<_gprintfs.size(); i++)
+        for(int i=0; i<_gprintfs.size(); i++)
+        {
+            if(Cpu::getVPC() == _gprintfs[i]._address)
             {
-                if(vPC == _gprintfs[i]._address)
+                // Emulator can cycle many times for one CPU cycle, so make sure gprintf is displayed only once
+                if(!_gprintfs[i]._displayed)
                 {
-                    // Emulator can cycle many times for one CPU cycle, so make sure gprintf is displayed only once
-                    if(!_gprintfs[i]._displayed)
-                    {
-                        std::string gstring;
-                        getGprintfString(i, gstring);
-                        fprintf(stderr, "gprintf() : address $%04X : '%s'\n", _gprintfs[i]._address, gstring.c_str());
-                        _gprintfs[i]._displayed = true;
-                    }
+                    std::string gstring;
+                    getGprintfString(i, gstring);
+                    fprintf(stderr, "gprintf() : address $%04X : '%s'\n", _gprintfs[i]._address, gstring.c_str());
+                    _gprintfs[i]._displayed = true;
                 }
-                else
-                {
-                    _gprintfs[i]._displayed = false;;
-                }
+            }
+            else
+            {
+                _gprintfs[i]._displayed = false;;
             }
         }
     }

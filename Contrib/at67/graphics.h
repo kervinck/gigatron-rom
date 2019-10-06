@@ -44,6 +44,8 @@
 #define PAGEUP_START_Y   44
 #define PAGEDN_START_X   140
 #define PAGEDN_START_Y   428
+#define DELALL_START_X   140
+#define DELALL_START_Y   32
 
 #define GRAPHICS_CONFIG_INI  "graphics_config.ini"
 

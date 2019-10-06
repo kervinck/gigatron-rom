@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
             {
                 static uint32_t colour = 0xFF220000;
                 if((vgaY % 4) == 0) colour = 0xFF220000;
-                if(vgaX != 200  &&  vgaX != 400)
+                if(vgaX != 200  &&  vgaX != 400) // Support for 6.25Mhz and 12.5MHz
                 {
                     colour = 0xFFFF0000;
                     fprintf(stderr, "main(): Horizontal timing error : vgaX %03d : vgaY %03d : xout %02x : time %0.3f\n", vgaX, vgaY, T._AC, float(clock)/6.250e+06f);
@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
         }
 
         // Debugger
-        debugging = Editor::singleStepDebug();
+        debugging = Editor::handleDebugger();
 
 #if 0
         Audio::playMusic();
