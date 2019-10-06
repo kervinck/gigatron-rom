@@ -1,0 +1,245 @@
+gcl0x
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Micro-Soft BASIC for Gigatron                                   |
+|                                                                       |
+|       !!! Work in progress !!!                                        |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+{
+        ### COMMODORE BASIC ###
+        3000 BYTES FREE
+        READY.
+
+        Features:
+        9-digit floating point
+        WAIT 6502,1 Easter Egg
+        TI$
+
+        Removed:
+        LOAD/SAVE removed in this version
+        Device I/O functions removed
+
+        $30 - $37               Pos CharOut i j
+        $38 -                   Relocated MS BASIC variables
+
+        $0200 - $027f           Input buffer
+        $0280 - $23ff           Microsoft BASIC version 2 (Commodore PET)
+        $2460 - $71ff           Video RAM for 11 text rows: 1 + 11*7 = 78 pages
+        $..00 - $..5f           I/O routines
+        $7200 - $7fff           Free RAM, giving 3584 bytes free
+}
+
+{-----------------------------------------------------------------------+
+|       Setup                                                           |
++-----------------------------------------------------------------------}
+*=$200
+
+{ This code runs once and is then its space is reused as input buffer }
+
+\romType, \romTypeValue_ROMv4-  {Version check >= ROMv4}
+[if<0 do _frameCount _vPCH: loop]{Apps/Smallest/Smallest.gcl}
+
+{ Setup alternative video indirection table }
+
+\videoTable Pos=                {First variable at $30, will become Pos later}
+120
+[do i=                          {Set all 120 video lines the same}
+  $24 Pos:                      {Y[y]=$24 and dX[y]=0}
+  <Pos++ <Pos++                 {Advance pointer one word}
+  i 1- if>0loop]
+
+{ Create one dedicated empty pixel line }
+
+$2460 Pos=                      {Clear $2460 - $24ff}
+[do 0 Pos. <Pos++
+  <Pos, if<>0loop]
+
+\videoTable Pos=
+7 j=
+$25 $72-                        {XXX Simplify}
+[do i= $72+                     {Loop over $24..$72 range}
+  Pos. <Pos++ <Pos++            {Y[y]=7+j }
+  j 1- [if=0
+    Pos 8+ Pos=                 {Several shared empty lines between text rows}
+    7] j=
+  i 1+ if<>0loop]
+
+{
+  Shift the horizontal display by 96 bytes. For MS BASIC it doesn't matter,
+  but this prepares the I/O routines for an improved Apple 1 emulator:
+  that one has less flexibility in how the RAM address space can be set up.
+}
+$101 {videTable+1} Pos= $60 Pos.{Use offsets 96..255 for pixels, not 0..159}
+
+&_Setup call                    {Continue}
+
+{-----------------------------------------------------------------------+
+|       Setup                                                           |
++-----------------------------------------------------------------------}
+
+*=$600
+
+_Setup=*
+
+$2560 Pos=                      {New top of screen memory}
+&_CharOut CharOut=              {Prepare for vCPU calls}
+_k=$2a                          {sysArg6: Parking spot for keyboard handler}
+
+
+{ XXX Message to test I/O routines }
+[def
+  #$8d #$8d                                     {\r\r}
+  #$cd #$c9 #$c3 #$d2 #$cf #$ad #$d3 #$cf       {MICRO-SO}
+  #$c6 #$d4 #$a0 #$c2 #$c1 #$d3 #$c9 #$c3       {FT BASIC}
+  #$a0 #$cf #$ce #$a0 #$d4 #$d4 #$cc            { ON TTL}
+  #$8d #$8d #0] s=                              {\r\r\0}
+
+[do s, if<>0                    {XXX Print message}
+    CharOut!
+    <s++ loop]
+
+&_MainLoop _vLR=                {Prepare transfer to main loop}
+&_BASIC                         {Start address for 6502 program}
+[ret]                           {Jump to MainLoop (the brackets just prevent}
+                                {the GCL compiler's insert of a vLR patch)}
+
+{-----------------------------------------------------------------------+
+|       Microsoft BASIC                                                 |
++-----------------------------------------------------------------------}
+*=$280
+
+_BASIC=*
+        { XXX Busy loop for debugging }
+        #_INC_ ##$2460
+        #_JMP_ ##$280
+
+{ XXX Insert BASIC image here }
+
+{-----------------------------------------------------------------------+
+|       Main loop                                                       |
++-----------------------------------------------------------------------}
+*=$2400
+
+_MainLoop=*
+
+{ Main loop from the perspective of the Gigatron I/O system }
+
+_vLR=                           {Reset v6502 PC}
+[do
+  \SYS_Run6502_DEVROM_80 _sysFn=
+  \k,                           {ASCII code in A}
+  80!                           {Run 6502 code until BRK}
+  push                          {Save v6502 PC}
+  [if=0                         {A=0 reads from keyboard}
+    [do
+      \serialRaw, 255^          {Wait for idle keyboard}
+      if<>0loop]
+    [do
+      \frameCount, 15& [if=0    {4 Hz cursor redraw rate}
+        \frameCount, 48&        {Flash at 1 Hz with 75% duty cycle}
+        [if=0 $a0 else $c0]     {Select space or '@'}
+        CharOut! Pos=           {Display cursor and immediately move back}
+      ]
+      \serialRaw, \k. 128&      {Key ready?}
+      if<>0loop]                {Loop until ready}
+    $a0 CharOut! Pos=           {Overwrite '@' with a space}
+    \k, $60- [if>=0 $40+ \k.]   {Map to upper case, and DEL to rubout}
+    \k, 10^  [if=0  13   \k.]   {Map LF to CR}
+  else                          {A<>0 for echo}
+    \k.
+    CharOut!
+  ]
+  pop                           {Restore v6502 PC}
+  loop]                         {Back to wozmon}
+
+{-----------------------------------------------------------------------+
+|       Character output with automatic scrolling                       |
++-----------------------------------------------------------------------}
+*=$2500
+
+_CharOut=*
+
+{ Minimalistic terminal output, ASCII with bit 7 set }
+
+push
+
+%-2=                            {Park character in stack area}
+\SYS_VDrawBits_134 _sysFn=      {Prepare SYS calls for rendering text}
+$800 \sysArgs0:                 {Green on black}
+
+%-2                             {Get character back}
+$8d^ [if<>0                     {Test for CR...}
+  <Pos, 251- if>0 0]            {...or line wrap}
+
+[if=0
+
+  {-------------------------------------------------------------------+
+  |       Newline                                                     |
+  +-------------------------------------------------------------------}
+
+  { Clear a new line first }
+
+  $60 <Pos.                     {Go to start of line}
+  $a0+ i=                       {$0100: first entry in video table}
+  \sysArgs2.                    {Set all-zero output pattern}
+  peek >Pos.                    {Move to what is now still the top text row}
+  Pos \sysArgs4:                {Set drawing position}
+  [do
+    134!                        {SYS call to draw 8 pixels vertically}
+    <\sysArgs4++                {Step 1 pixel right}
+    \sysArgs4, if<>0loop]       {Loop until end of pixel line}
+
+  { Then scroll everything up by modifying videoTable[] }
+
+  [do
+    i 22+ j=
+
+    i,         \sysArgs7.       {Swap 7+4 with scanlines below}
+    j,         i.
+    \sysArgs7, j.
+
+    i 2+ i=                     {Move to next entry in video table}
+    255& 212^ if<>0loop]        {Until all done}
+]
+
+$2600 call
+{-----------------------------------------------------------------------}
+*=$2600
+
+%-2 $a0-                        {WozMon sends ASCII with bit 7 set}
+[if>=0                          {If printable}
+
+  {-------------------------------------------------------------------+
+  |       Draw character in screen memory                             |
+  +-------------------------------------------------------------------}
+
+  { Draw ASCII character (32..127) on screen in 5x8 pixels }
+  { and advance cursor position }
+
+  50-                           {Map ASCII code to offset in font table}
+  [if<0 50+ i= \font32up        {ASCII 32..81}
+   else     i= \font82up]       {ASCII 82..127}
+  j= i 2<< i+                   {Multiply char code by 5}
+  j+ j=                         {Add to page address to reach bitmap data}
+
+  Pos \sysArgs4:                {Screen position for character}
+  %-2=                          {Remember this position}
+  6+ Pos=                       {Advance by 6 pixels}
+
+  5 [do i=                      {Draw character as 5 vertical bit slices}
+    j 0? \sysArgs2.             {Get bit slice as byte from ROM table}
+    134!                        {SYS call to draw 8 pixels vertically}
+    <j++ <\sysArgs4++           {Advance to next byte}
+    i 1- if>0loop]              {Looping}
+
+  %-2                           {Return position for backspace}
+]
+
+[pop ret]
+
+{-----------------------------------------------------------------------+
+|                                                                       |
++-----------------------------------------------------------------------}
+
