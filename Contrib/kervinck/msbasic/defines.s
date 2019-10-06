@@ -25,6 +25,10 @@ AIM65 := 1
 .elseif .def(sym1)
 SYM1 := 1
 .include "defines_sym1.s"
+.elseif .def(gigatron)
+CBM2 := 1
+GT1 := 1
+.include "defines_gt1.s"
 .endif
 
 .ifdef CONFIG_2C
@@ -66,7 +70,9 @@ FOR_STACK2		:= BYTES_FP+4
 MAX_EXPON = 10
 .endif
 
+.ifndef STACK
 STACK           := $0100
+.endif
 .ifndef STACK2
 STACK2          := STACK
 .endif
