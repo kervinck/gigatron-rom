@@ -10,20 +10,33 @@ or loaded into a Gigatron emulator.
 Based on Pat Gavlin's excellent initial work on adding a Gigatron backend to
 `lcc`. Requires Python 3.6+.
 
-This is still very much work in progress, some of the many
-restrictions include:
- * No floating point (this will probably be the case for a _very_ long time)
- * Comparisons are still broken with respect to overflow
- * 'long' and 'long long' are 16-bit
- * Work on libraries has barely started. No malloc yet. No file system.
- * Sometimes hangs, or crashes with a stack trace instead of a nice message
- * ...
-
 Resources:
  * Forum thread: https://forum.gigatron.io/viewtopic.php?f=4&t=116
  * Gigatron website: https://gigatron.io/
  * LCC website: http://sites.google.com/site/lccretargetablecompiler/
  * Original LCC sources: https://github.com/drh/lcc
+
+Caveats
+=======
+
+This is still very much work in progress, some of the many
+restrictions include:
+ * No floating point (this will probably be the case for a _very_ long time)
+ * Sometimes hangs, or crashes with a stack trace instead of a nice message
+ * Especially barks on 'complex' expressions (we still have a register allocation issue)
+ * No large structs and arrays (they must typically be much smaller than 100 bytes)
+ * Work on libraries has barely started. No malloc yet. No file system.
+ * Integer comparisons are still broken when then range is large (due to overflow)
+ * 'long' and 'long long' are 16-bit
+ * ...
+
+See the open GitHub issues with "lcc:" in their title for the current status.
+Link: https://github.com/kervinck/gigatron-rom/issues?&q=is%3Aissue+is%3Aopen+lcc%3A
+
+In short: when writing new C code for the Gigatron and you know
+what the compiler is doing (`Utils/gt1dump.py -d` is your friend),
+you can already make interesting programs. However, porting existing
+C code will become frustrating rather quickly.
 
 Instructions
 ============

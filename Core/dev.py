@@ -247,14 +247,11 @@ entropy         = zpByte(3)
 # Visible video
 videoY          = zpByte() # Counts up from 0 to 238 in steps of 2
                            # Counts up (and is odd) during vertical blank
-frameX          = zpByte() # Starting byte within page
-frameY          = zpByte() # Page of current pixel row (updated by videoA)
-nextVideo       = zpByte() # Jump offset to scan line handler (videoA, B, C...)
+videoModeB      = zpByte() # Handler for every 2nd line (pixel burst or vCPU)
+videoModeC      = zpByte() # Handler for every 3rd line (pixel burst or vCPU)
 videoModeD      = zpByte() # Handler for every 4th line (pixel burst or vCPU)
 
-# Vertical blank (reuse some variables used in the visible part)
-videoSync0      = frameX   # Vertical sync type on current line (0xc0 or 0x40)
-videoSync1      = frameY   # Same during horizontal pulse (0x80 or 0x00)
+nextVideo       = zpByte() # Jump offset to scan line handler (videoA, B, C...)
 videoPulse      = nextVideo # Used for pulse width modulation
 
 # Frame counter is good enough as system clock
@@ -284,8 +281,13 @@ vSP             = zpByte(1) # Stack pointer
 vTmp            = zpByte()
 vReturn         = zpByte()  # Return into video loop (in page of vBlankStart)
 
-videoModeB      = zpByte(1) # Pixel burst or vCPU
-videoModeC      = zpByte(1) # Pixel burst or vCPU
+# Scratch
+frameX          = zpByte() # Starting byte within page
+frameY          = zpByte() # Page of current pixel row (updated by videoA)
+
+# Vertical blank (reuse some variables used in the visible part)
+videoSync0      = frameX   # Vertical sync type on current line (0xc0 or 0x40)
+videoSync1      = frameY   # Same during horizontal pulse (0x80 or 0x00)
 
 # Versioning for GT1 compatibility
 # Please refer to Docs/GT1-files.txt for interpreting this variable
