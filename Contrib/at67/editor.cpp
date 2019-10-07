@@ -143,12 +143,12 @@ namespace Editor
 
     int getRomEntriesIndex(void) {return _romEntriesIndex;}
     int getRomEntriesSize(void) {return int(_romEntries.size());}
-    uint8_t getRomEntryVersion(int index) {return _romEntries.size() ? _romEntries[index % _romEntries.size()]._version : 0;}
-    uint8_t getCurrentRomEntryVersion(int& index) {if(_romEntries.size() == 0) return 0; index = (_cursorY + _romEntriesIndex) % _romEntries.size(); return _romEntries[index]._version;}
+    uint8_t getRomEntryType(int index) {return _romEntries.size() ? _romEntries[index % _romEntries.size()]._type : 0;}
+    uint8_t getCurrentRomEntryType(int& index) {if(_romEntries.size() == 0) return 0; index = (_cursorY + _romEntriesIndex) % _romEntries.size(); return _romEntries[index]._type;}
     std::string* getRomEntryName(int index) {return _romEntries.size() ? &_romEntries[index % _romEntries.size()]._name : nullptr;}
     std::string* getCurrentRomEntryName(int& index) {if(_romEntries.size() == 0) return nullptr; index = (_cursorY + _romEntriesIndex) % _romEntries.size(); return &_romEntries[index]._name;}
     int getCurrentRomEntryIndex(void) {return _romEntries.size() ? (_cursorY + _romEntriesIndex) % _romEntries.size() : 0;}
-    void setRomEntry(uint8_t version, std::string& name) {Editor::RomEntry romEntry = {version, name}; _romEntries.push_back(romEntry); return;}
+    void addRomEntry(uint8_t type, std::string& name) {Editor::RomEntry romEntry = {type, name}; _romEntries.push_back(romEntry); return;}
 
     void resetEditor(void) {_memoryDigit = 0; _addressDigit = 0;}
 
@@ -885,7 +885,7 @@ namespace Editor
 
         if(_sdlKeyScanCode == _emulator["Quit"].scanCode  &&  _sdlKeyModifier == _emulator["Quit"].modifier)
         {
-            SDL_Quit();
+            Cpu::shutdown();
             exit(0);
         }
 
@@ -1132,7 +1132,7 @@ namespace Editor
         // Gprintfs
         Assembler::printGprintfStrings();
 
-        // Debug, (this code can potentially run for every Native instruction, for efficiency we use vPC to only run it for each vCPU instruction)
+        // Debug, (this code can potentially run for every Native instruction, for efficiency we check vPC to only run it for each vCPU instruction)
         static uint16_t vPC = Cpu::getVPC();
         if(_singleStep  &&  vPC != Cpu::getVPC())
         {
@@ -1141,8 +1141,7 @@ namespace Editor
             // Timeout on change of variable
             if(SDL_GetTicks() - _singleStepTicks > SINGLE_STEP_STALL_TIME)
             {
-                _singleStep = false;
-                _singleStepEnabled = false;
+                resetDebugger();
                 fprintf(stderr, "Editor::handleDebugger() : Single step stall for %d milliseconds : exiting debugger.\n", SDL_GetTicks() - _singleStepTicks);
             }
             // Single step on vPC or on watch value
@@ -1150,14 +1149,14 @@ namespace Editor
             {
                 case RunToBrk:
                 {
-                    auto it = std::find(_breakpoints.begin(), _breakpoints.end(), Cpu::getVPC());
+                    auto it = std::find(_breakpoints.begin(), _breakpoints.end(), vPC);
                     if(it != _breakpoints.end()) singleStep();
                 }
                 break;
                 
                 case StepVpc:
                 {
-                    if(Cpu::getVPC() != _singleStepValue) singleStep();
+                    if(vPC != _singleStepValue) singleStep();
                 }
                 break;
 
@@ -1323,7 +1322,7 @@ namespace Editor
                 case SDL_KEYUP:      handleKeyUp();           break;
                 case SDL_QUIT: 
                 {
-                    SDL_Quit();
+                    Cpu::shutdown();
                     exit(0);
                 }
             }

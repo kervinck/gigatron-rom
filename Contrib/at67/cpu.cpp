@@ -34,8 +34,8 @@
 
 namespace Cpu
 {
-    int _numRoms = MAX_ROMS - 1;
-    int _romIndex = MAX_ROMS - 1;
+    int _numRoms = 0;
+    int _romIndex = 0;
     int _vCpuInstPerFrame = 0;
     int _vCpuInstPerFrameMax = 0;
     float _vCpuUtilisation = 0.0;
@@ -44,8 +44,8 @@ namespace Cpu
 
     int64_t _clock = -2;
     uint8_t _IN = 0xFF, _XOUT = 0x00;
-    uint8_t _ROM[ROM_SIZE][2], _RAM[RAM_SIZE], _romFile[ROM_SIZE][2];
-    uint8_t* _romFiles[MAX_ROMS];
+    uint8_t _ROM[ROM_SIZE][2], _RAM[RAM_SIZE];
+    std::vector<uint8_t*> _romFiles;
     uint16_t _vPC = 0x0200;
     RomType _romType = ROMERR;
 
@@ -276,7 +276,7 @@ namespace Cpu
 
             default:
             {
-                SDL_Quit();
+                Cpu::shutdown();
                 fprintf(stderr, "Cpu::setRomType() : Unknown EPROM Type = 0x%02x : exiting...\n", romType);
                 _EXIT_(EXIT_FAILURE);
             }
@@ -364,6 +364,20 @@ namespace Cpu
     }
 
 
+    void shutdown(void)
+    {
+        for(int i=NUM_INT_ROMS; i<_romFiles.size(); i++)
+        {
+            if(_romFiles[i])
+            {
+                delete [] _romFiles[i];
+                _romFiles[i] = nullptr;
+            }
+        }
+
+        SDL_Quit();
+    }
+
     void initialise(State& S)
     {
 #ifdef _WIN32
@@ -389,47 +403,54 @@ namespace Cpu
         garble(_RAM, sizeof _RAM);
         garble((uint8_t*)&S, sizeof S);
 
-        _numRoms = MAX_ROMS - 1;
-        _romIndex = MAX_ROMS - 2;
- 
-        _romFiles[0] = _gigatron_0x1c_rom;
-        _romFiles[1] = _gigatron_0x20_rom;
-        _romFiles[2] = _gigatron_0x28_rom;
-        _romFiles[3] = _gigatron_0x38_rom;
+        // Internal ROMS
+        _romFiles.push_back(_gigatron_0x1c_rom);
+        _romFiles.push_back(_gigatron_0x20_rom);
+        _romFiles.push_back(_gigatron_0x28_rom);
+        _romFiles.push_back(_gigatron_0x38_rom);
+        uint8_t types[NUM_INT_ROMS] = {0x1c, 0x20, 0x28, 0x38};
+        std::string names[NUM_INT_ROMS] = {"ROMv1.rom", "ROMv2.rom", "ROMv3.rom", "ROMv4.rom"};
+        for(int i=0; i<NUM_INT_ROMS; i++) Editor::addRomEntry(types[i], names[i]);
 
-        // Check for ROM file
-        std::string romName;
-        Loader::getRomName(romName);
-        std::ifstream romfile(romName, std::ios::binary | std::ios::in);
-        if(!romfile.is_open())
+        // External ROMS
+        for(int i=0; i<Loader::getConfigRomsSize(); i++)
         {
-            fprintf(stderr, "Cpu::initialise() : failed to open ROM file : %s\n", romName.c_str());
-            memcpy(_ROM, _romFiles[_romIndex], sizeof(_ROM));
-        }
-        else
-        {
-            // Load ROM file
-            romfile.read((char *)_romFile, sizeof(_romFile));
-            if(romfile.bad() || romfile.fail())
+            uint8_t type = Loader::getConfigRom(i)->_type;
+            std::string name = Loader::getConfigRom(i)->_name;
+
+            std::ifstream file(name, std::ios::binary | std::ios::in);
+            if(!file.is_open())
             {
-                fprintf(stderr, "Cpu::initialise() : failed to read ROM file : %s\n", romName.c_str());
+                fprintf(stderr, "Cpu::initialise() : failed to open ROM file : %s\n", name.c_str());
             }
             else
             {
-                _numRoms = MAX_ROMS;
-                _romIndex = MAX_ROMS - 1;
+                // Load ROM file
+                uint8_t* rom = new uint8_t[sizeof(_ROM)];
+                if(!rom)
+                {
+                    shutdown();
+                    fprintf(stderr, "Cpu::initialise() : out of memory!\n");
+                    _EXIT_(EXIT_FAILURE);
+                }
 
-                _romFiles[_romIndex] = (uint8_t*)_romFile;
-                memcpy(_ROM, _romFiles[_romIndex], sizeof(_ROM));
+                file.read((char *)rom, sizeof(_ROM));
+                if(file.bad() || file.fail())
+                {
+                    fprintf(stderr, "Cpu::initialise() : failed to read ROM file : %s\n", name.c_str());
+                }
+                else
+                {
+                    _romFiles.push_back(rom);
+                    Editor::addRomEntry(type, name);
+                }
             }
         }
 
-        uint8_t versions[MAX_ROMS] = {0x1c, 0x20, 0x28, 0x38, 0x38};
-        std::string names[MAX_ROMS] = {"ROMv1.rom", "ROMv2.rom", "ROMv3.rom", "ROMv4.rom", romName};
-        for(int i=0; i<_numRoms; i++)
-        {
-            Editor::setRomEntry(versions[i], names[i]);
-        }
+        // Switchable ROMS
+        _numRoms = int(_romFiles.size());
+        _romIndex = _numRoms - 1;
+        memcpy(_ROM, _romFiles[_romIndex], sizeof(_ROM));
 
 //#define CREATE_ROM_HEADER
 #ifdef CREATE_ROM_HEADER

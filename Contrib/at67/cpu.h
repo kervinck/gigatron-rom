@@ -15,7 +15,6 @@
 #define ROM_DATA 1
 
 #define NUM_INT_ROMS 4
-#define MAX_ROMS 5
 
 #define ROM_TITLE_ADDRESS 0xFEB1
 #define MAX_TITLE_CHARS   25
@@ -109,6 +108,7 @@ namespace Cpu
     void swapScanlineMode(void);
 
     void initialise(State& S);
+    void shutdown(void);
     State cycle(const State& S);
     void reset(bool coldBoot=false);
     void vCpuUsage(State& S);

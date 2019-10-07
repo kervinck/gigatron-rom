@@ -89,7 +89,7 @@ namespace Graphics
         SDL_Surface* surface = SDL_CreateRGBSurface(0, width, height, 32, rmask, gmask, bmask, amask);
         if(surface == NULL)
         {
-            SDL_Quit();
+            Cpu::shutdown();
             fprintf(stderr, "Graphics::createSurface() :  failed to create SDL surface.\n");
             _EXIT_(EXIT_FAILURE);
         }
@@ -165,7 +165,7 @@ namespace Graphics
                 lineTokens.push_back(lineToken);
                 if(!infile.good()  &&  !infile.eof())
                 {
-                    SDL_Quit();
+                    Cpu::shutdown();
                     fprintf(stderr, "Graphics::createHelpTexture() : Bad line : '%s' : in %s : on line %d\n", lineToken.c_str(), INPUT_CONFIG_INI, lines);
                     _EXIT_(EXIT_FAILURE);
                 }
@@ -189,7 +189,7 @@ namespace Graphics
         _helpTexture = SDL_CreateTextureFromSurface(_renderer, _helpSurface);
         if(_helpTexture == NULL)
         {
-            SDL_Quit();
+            Cpu::shutdown();
             fprintf(stderr, "Graphics::createHelpTexture() :  failed to create SDL texture.\n");
             _EXIT_(EXIT_FAILURE);
         }
@@ -318,7 +318,7 @@ namespace Graphics
         {
             if(SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP, &_window, &_renderer) < 0)
             {
-                SDL_Quit();
+                Cpu::shutdown();
                 fprintf(stderr, "Graphics::initialise() : failed to create SDL window.\n");
                 _EXIT_(EXIT_FAILURE);
             }
@@ -332,7 +332,7 @@ namespace Graphics
 
                 if(SDL_CreateWindowAndRenderer(_width, _height, 0, &_window, &_renderer) < 0)
                 {
-                    SDL_Quit();
+                    Cpu::shutdown();
                     fprintf(stderr, "Graphics::initialise() : failed to create SDL window.\n");
                     _EXIT_(EXIT_FAILURE);
                 }
@@ -347,7 +347,7 @@ namespace Graphics
 
                 if(SDL_CreateWindowAndRenderer(_width, _height, 0, &_window, &_renderer) < 0)
                 {
-                    SDL_Quit();
+                    Cpu::shutdown();
                     fprintf(stderr, "Graphics::initialise() : failed to create SDL window.\n");
                     _EXIT_(EXIT_FAILURE);
                 }
@@ -367,7 +367,7 @@ namespace Graphics
         _screenTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
         if(_screenTexture == NULL)
         {
-            SDL_Quit();
+            Cpu::shutdown();
             fprintf(stderr, "Graphics::initialise() :  failed to create SDL texture.\n");
             _EXIT_(EXIT_FAILURE);
         }
@@ -377,7 +377,7 @@ namespace Graphics
         SDL_Surface* fontSurface = SDL_LoadBMP("EmuFont-96x48.bmp");
         if(fontSurface == NULL)
         {
-            SDL_Quit();
+            Cpu::shutdown();
             fprintf(stderr, "Graphics::initialise() : failed to create SDL font surface, you're probably missing 'EmuFont-96x48.bmp' in the current directory/path.\n");
             _EXIT_(EXIT_FAILURE);
         }
@@ -385,7 +385,7 @@ namespace Graphics
         SDL_FreeSurface(fontSurface);
         if(_fontSurface == NULL)
         {
-            SDL_Quit();
+            Cpu::shutdown();
             fprintf(stderr, "Graphics::initialise() : failed to convert SDL font surface format to screen surface format.\n");
             _EXIT_(EXIT_FAILURE);
         }
@@ -745,9 +745,9 @@ namespace Graphics
             drawText(*Editor::getRomEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
         }
 
-        // ROM version
+        // ROM type
         char str[32] = "";
-        (Editor::getCursorY() < 0  ||  Editor::getCursorY() >= Editor::getRomEntriesSize()) ? sprintf(str, "  ") : sprintf(str, "%02X", Editor::getRomEntryVersion(Editor::getCursorY()));
+        (Editor::getCursorY() < 0  ||  Editor::getCursorY() >= Editor::getRomEntriesSize()) ? sprintf(str, "  ") : sprintf(str, "%02X", Editor::getRomEntryType(Editor::getCursorY()));
         drawText(std::string(str), _pixels, HEX_START-6, FONT_CELL_Y*3, 0xFFFFFFFF, false, 4);
     }
 
@@ -1522,7 +1522,7 @@ namespace Graphics
 
                     case SDLK_ESCAPE:
                     {
-                        SDL_Quit();
+                        Cpu::shutdown();
                         exit(0);
                     }
                 }

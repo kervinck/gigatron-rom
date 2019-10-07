@@ -89,7 +89,7 @@ namespace Audio
 
         if(SDL_OpenAudio(&audSpec, NULL) < 0)
         {
-            SDL_Quit();
+            Cpu::shutdown();
             fprintf(stderr, "Audio::initialise() : failed to initialise SDL audio\n");
             _EXIT_(EXIT_FAILURE);
         }

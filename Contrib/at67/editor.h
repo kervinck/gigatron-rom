@@ -52,7 +52,7 @@ namespace Editor
 
     struct RomEntry
     {
-        uint8_t _version;
+        uint8_t _type;
         std::string _name;
     };
 
@@ -94,12 +94,12 @@ namespace Editor
 
     int getRomEntriesIndex(void);
     int getRomEntriesSize(void);
-    uint8_t getRomEntryVersion(int index);
-    uint8_t getCurrentRomEntryVersion(int& index);
+    uint8_t getRomEntryType(int index);
+    uint8_t getCurrentRomEntryType(int& index);
     std::string* getRomEntryName(int index);
     std::string* getCurrentRomEntryName(int& index);
     int getCurrentRomEntryIndex(void);
-    void setRomEntry(uint8_t version, std::string& name);
+    void addRomEntry(uint8_t type, std::string& name);
 
     void setCursorX(int x);
     void setCursorY(int y);

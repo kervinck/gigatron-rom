@@ -59,10 +59,18 @@ namespace Loader
         std::vector<std::vector<uint8_t>> _data;
     };
 
+    struct ConfigRom
+    {
+        uint8_t _type;
+        std::string _name;
+    };
+
 
     UploadTarget getUploadTarget(void);
     void setUploadTarget(UploadTarget target);
-    bool getRomName(std::string& romName);
+
+    int getConfigRomsSize(void);
+    ConfigRom* getConfigRom(int index);
 
     void initialise(void);
 

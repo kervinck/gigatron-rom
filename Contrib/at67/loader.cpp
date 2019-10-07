@@ -263,8 +263,7 @@ namespace Loader
     std::string _configGclBuild = ".";
     bool _configGclBuildFound = false;
 
-    std::string _configRomName = "";
-    bool _configRomNameFound = false;
+    std::vector<ConfigRom> _configRoms;
 
     std::string _currentGame = "";
 
@@ -276,11 +275,12 @@ namespace Loader
     UploadTarget getUploadTarget(void) {return _uploadTarget;}
     void setUploadTarget(UploadTarget target) {_uploadTarget = target;}
 
-    bool getRomName(std::string& romName)
+    int getConfigRomsSize(void) {return int(_configRoms.size());}
+    ConfigRom* getConfigRom(int index)
     {
-        romName = _configRomName;
+        if(_configRoms.size() == 0  ||  index >= _configRoms.size()) return nullptr;
 
-        return (_configRomNameFound  &&  romName.length() > 0);
+        return &_configRoms[index];
     }
 
 
@@ -303,9 +303,11 @@ namespace Loader
         if(_configIniReader.ParseError() == 0)
         {
             // Parse Loader Keys
-            enum Section {Comms};
+            enum Section {Comms, ROMS};
             std::map<std::string, Section> section;
             section["Comms"] = Comms;
+            section["ROMS"]  = ROMS;
+
             for(auto sectionString : _configIniReader.Sections())
             {
                 if(section.find(sectionString) == section.end())
@@ -334,16 +336,31 @@ namespace Loader
                         }
 
                         // Time out
-                        getKeyAsString(_configIniReader, sectionString, "TimeOut", "5.0", result);   
+                        getKeyAsString(_configIniReader, sectionString, "TimeOut", "5.0", result);
                         _configTimeOut = strtod(result.c_str(), nullptr);
 
                         // GCL tools build path
                         _configGclBuildFound = getKeyAsString(_configIniReader, sectionString, "GclBuild", ".", result, false);
                         _configGclBuild = result;
+                    }
+                    break;
 
-                        // ROM file name
-                        _configRomNameFound = getKeyAsString(_configIniReader, sectionString, "RomName", "", result, false);
-                        _configRomName = result;
+                    case ROMS:
+                    {
+                        for(int index=0; ; index++)
+                        {
+                            ConfigRom configRom;
+
+                            std::string romName = "RomName" + std::to_string(index);
+                            if(getKeyAsString(_configIniReader, sectionString, romName, "", result) == false) break;
+                            configRom._name = result;
+
+                            std::string romVer = "RomType" + std::to_string(index);
+                            if(getKeyAsString(_configIniReader, sectionString, romVer, "", result) == false) break;
+                            configRom._type = uint8_t(std::stoul(result, nullptr, 16));
+
+                            _configRoms.push_back(configRom);
+                        }
                     }
                     break;
                 }
