@@ -117,21 +117,37 @@ namespace Loader
             return (addressA < addressB);
         });
 
-        // Special case: There can only be one segment in page 0 - merge all the occurences with padding if necessary.
-        while (gt1File._segments.size() >= 2 && gt1File._segments[0]._hiAddress == 0 && gt1File._segments[1]._hiAddress == 0)
+        // Merge page 0 segments together
+        Gt1Segment page0;
+        int segments = 0;
+        for(int i=0; i<gt1File._segments.size(); i++) if(gt1File._segments[i]._hiAddress == 0x00) segments++;
+        if(segments > 1)
         {
-            Gt1Segment& A = gt1File._segments[0];
-            Gt1Segment& B = gt1File._segments[1];
-            uint8_t addr = A._loAddress + A._segmentSize;
-            while (addr < B._loAddress) {
-                A._dataBytes.push_back(addr == 0x80 ? 1:0);
-                A._segmentSize++;
-                addr++;
-            }
-            A._dataBytes.insert(A._dataBytes.end(), B._dataBytes.begin(), B._dataBytes.end());
-            A._segmentSize += B._segmentSize;
+            uint8_t start = gt1File._segments[0]._loAddress;
+            uint8_t end = gt1File._segments[segments-1]._loAddress + uint8_t(gt1File._segments[segments-1]._dataBytes.size()) - 1;
 
-            gt1File._segments.erase(gt1File._segments.begin() + 1);
+            // Reserve space taking into account ONE_CONST_ADDRESS
+            page0._loAddress = start;
+            page0._segmentSize = end - start + 1;
+            page0._dataBytes.resize(end - start + 1, 0x00);
+            if(start <= ONE_CONST_ADDRESS && end >= ONE_CONST_ADDRESS) page0._dataBytes[ONE_CONST_ADDRESS-start] = 1;
+
+            // Copy page 0 segments
+            for(int i=0; i<segments; i++)
+            {
+                int j = 0;
+                int seg = gt1File._segments[i]._loAddress - start;
+                for(int k=seg; k<seg+gt1File._segments[i]._dataBytes.size(); k++)
+                {
+                    page0._dataBytes[k] = gt1File._segments[i]._dataBytes[j++];
+                }
+            }
+
+            // Erase old page 0 segments
+            for(int i=0; i<segments; i++) gt1File._segments.erase(gt1File._segments.begin());
+
+            // Insert merged page0 segment
+            gt1File._segments.insert(gt1File._segments.begin(), page0);
         }
 
         for(int i=0; i<gt1File._segments.size(); i++)
@@ -1119,6 +1135,8 @@ namespace Loader
                 Cpu::setRAM(0x001a, LO_BYTE(executeAddress-2));
                 Cpu::setRAM(0x001b, HI_BYTE(executeAddress));
             }
+
+            //Editor::startDebugger();
         }
         else if(uploadTarget == Hardware)
         {

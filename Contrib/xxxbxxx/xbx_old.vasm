@@ -209,7 +209,7 @@ printT_slice LDW     textPos
 
 
 _startAddress_      EQU     entry_point
-_callTable_         EQU     0x007E
+_callTable_         EQU     0x00EE
 _singleStepWatch_   EQU     giga_frameCount
 _cpuUsageAddressA_  EQU     subroutines
 _cpuUsageAddressB_  EQU     subroutines+0x10	; waitVBlank

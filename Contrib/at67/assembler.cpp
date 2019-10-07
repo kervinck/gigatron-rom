@@ -115,7 +115,7 @@ namespace Assembler
     uint16_t _callTable = DEFAULT_CALL_TABLE;
     uint16_t _startAddress = DEFAULT_START_ADDRESS;
     uint16_t _currentAddress = _startAddress;
-    uint16_t _currDasmByteCount = 0, _prevDasmByteCount = 0;
+    uint16_t _currDasmByteCount = 1, _prevDasmByteCount = 1;
 
     std::string _includePath = "";
 
@@ -156,12 +156,10 @@ namespace Assembler
 #ifndef STAND_ALONE
     void getVcpuCurrAndPrevByteSize(uint16_t address, uint8_t instruction, ByteSize byteSize)
     {
-        if(Editor::getMemoryMode() != Editor::RAM)
-        {
-            _currDasmByteCount = 1;
-            _prevDasmByteCount = 1;
-            return;
-        }
+        _currDasmByteCount = 1;
+        _prevDasmByteCount = 1;
+
+        if(Editor::getMemoryMode() != Editor::RAM) return;
 
         // Save current and previous instruction lengths
         if(_disassembledCode.size() == 0)
@@ -258,7 +256,7 @@ namespace Assembler
             {
                 char storeStr[32];
                 (bus == BUS_AC) ? sprintf(storeStr, "%-4s %s", instStr, addrStr) : sprintf(storeStr, "%-4s %s,%s", instStr, busStr, addrStr);
-                if(bus == BUS_RAM) sprintf(storeStr, ".CTRL %s", removeBrackets(addrStr).c_str());
+                if(bus == BUS_RAM) sprintf(storeStr, "CTRL %s", removeBrackets(addrStr).c_str());
                 if(addr == EA_0D_X  ||  addr == EA_0D_Y) sprintf(mnemonic, "%s,%s", storeStr, regStr);
                 else strcpy(mnemonic, storeStr);
             }
@@ -347,6 +345,13 @@ namespace Assembler
                     {
                         foundBranch = true;
                         instruction = data0;
+                        if(_vcpuOpcodes.find(instruction) == _vcpuOpcodes.end())
+                        {
+                            sprintf(dasmText, "%04x  %02x", address, instruction);
+                            dasmCode._address = address;
+                            address++;
+                            break;
+                        }
                     }
 
                     byteSize = _vcpuOpcodes[instruction]._byteSize;

@@ -6,7 +6,7 @@
 ; ===========================================
 
 ; --- mem layout ---
-vars            EQU     0x00A0
+vars            EQU     0x0030
 consts          EQU     0x0082                  ; skip 0x80 - reserved!!
 data            EQU     0x0300
 tiles           EQU     0x5C00                  ; after loader app mem.
@@ -481,7 +481,7 @@ _ai_xy          LD      frog_y+1
 
 
 _startAddress_      EQU     entry_point
-_callTable_         EQU     0x007E
+_callTable_         EQU     0x00EE
 _singleStepWatch_   EQU     giga_frameCount
 _cpuUsageAddressA_  EQU     subroutines0
 _cpuUsageAddressB_  EQU     subroutines0+0x10	; waitVBlank

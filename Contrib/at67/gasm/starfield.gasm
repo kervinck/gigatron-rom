@@ -36,10 +36,11 @@ numStars        EQU     64          ; max 64
 
 _startAddress_  EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
                 
-_callTable_     EQU     0x00EE      ; this grows downwards as you use more CALL's, it will crash into program variables if you are not careful
-                                    ; "_callTable_" is a reserved word, do not use it for anything other than it's intended use
-                                    ; leave some space for stack, (nested calls)
-
+_callTable_     EQU     0x007E      ; call addresses are automatically stored here by the assembler, it grows downwards
+                                    ; *NOTE* gt1 spec only allows for one zero page segment, .vasm files use this for the call table
+                                    ; do *NOT* define any data/constants in zero page using DB or DW, it will not work! (use code)
+                                    ; do *NOT* make this address higher than 0x00BE, it will conflict with future ROM loading mechanisms
+                                    
 _singleStepWatch_   EQU     i       ; the single step debugger watches this variable location to decide when to step,
                                     ; choose a variable that is updated often
  

@@ -34,14 +34,17 @@ ij_mask     EQU     0x1F1F  ; determines max size of world, limited by available
                                         
 _startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
 
-_callTable_         EQU     0x007E      ; call addresses are automatically stored here by the assembler, it grows downwards,
-                                        ; for every NEW call address; make sure it doesn't crash into anything important
+_callTable_         EQU     0x007E      ; call addresses are automatically stored here by the assembler, it grows downwards
+                                        ; *NOTE* gt1 spec only allows for one zero page segment, .vasm files use this for the call table
+                                        ; do *NOT* define any data/constants in zero page using DB or DW, it will not work! (use code)
+                                        ; do *NOT* make this address higher than 0x00BE, it will conflict with future ROM loading mechanisms
+                                        
 _singleStepWatch_   EQU     watch       ; the single step debugger watches this variable location to decide when to step,
                                         ; choose a variable that is updated often
 
 
 n_lut       EQU     0x0060  
-n-1-1       EQU     0x0300
+n_l_t       EQU     0x0300
 
 
             LDI     0x00        ; look up table that is used to evaluate neighbour counts
@@ -130,10 +133,10 @@ glider      LDW     gliders
             LDI     0x00
             ST      i
             ST      j
-            CALL    n-1-1
+            CALL    n_l_t
 
           
-n-1-1       LDI     0x00        ; reset neighbour count
+n_l_t       LDI     0x00        ; reset neighbour count
             ST      neighbours
             
             LD      i           ; -1, -1 neighbour
@@ -146,62 +149,62 @@ n-1-1       LDI     0x00        ; reset neighbour count
             ANDW    mask
             ADDW    cbase0
             PEEK
-            BEQ     n+0-1
+            BEQ     n_m_t
             INC     neighbours
             
-n+0-1       INC     i           ; 0, -1 neighbour
+n_m_t       INC     i           ; 0, -1 neighbour
             LDW     i
             ANDW    mask
             ADDW    cbase0
             PEEK
-            BEQ     n+1-1
+            BEQ     n_r_t
             INC     neighbours
 
-n+1-1       INC     i           ; 1, -1 neighbour
+n_r_t       INC     i           ; 1, -1 neighbour
             LDW     i
             ANDW    mask
             ADDW    cbase0
             PEEK
-            BEQ     n+1+0
+            BEQ     n_r_m
             INC     neighbours
 
-n+1+0       INC     j           ; 1, 0 neighbour
+n_r_m       INC     j           ; 1, 0 neighbour
             LDW     i
             ANDW    mask
             ADDW    cbase0
             PEEK
-            BEQ     n+1+1
+            BEQ     n_r_b
             INC     neighbours
             
-n+1+1       INC     j           ; 1, 1 neighbour
+n_r_b       INC     j           ; 1, 1 neighbour
             LDW     i
             ANDW    mask
             ADDW    cbase0
             PEEK
-            BEQ     n+0+1
+            BEQ     n_m_b
             INC     neighbours
             
-n+0+1       LD      i           ; 0, 1 neighbour
+n_m_b       LD      i           ; 0, 1 neighbour
             SUBI    0x01
             ST      i
             LDW     i
             ANDW    mask
             ADDW    cbase0
             PEEK
-            BEQ     n-1+1
+            BEQ     n_l_b
             INC     neighbours
             
-n-1+1       LD      i           ; -1, 1 neighbour
+n_l_b       LD      i           ; -1, 1 neighbour
             SUBI    0x01
             ST      i
             LDW     i
             ANDW    mask
             ADDW    cbase0
             PEEK
-            BEQ     n-1+0
+            BEQ     n_l_m
             INC     neighbours            
             
-n-1+0       LD      j           ; -1, 0 neighbour
+n_l_m       LD      j           ; -1, 0 neighbour
             SUBI    0x01
             ST      j
             LDW     i
@@ -239,13 +242,13 @@ lut         LD      0x60        ; self modifying code
             ADDI    0x01
             ANDI    ij_mask
             ST      i
-            BNE     n-1-1
+            BNE     n_l_t
 
             LD      j           ; inc j
             ADDI    0x01
             ANDI    ij_mask
             ST      j
-            BNE     n-1-1
+            BNE     n_l_t
 
             LDW     cbase0      ; swap buffers
             STW     scratch
@@ -254,4 +257,4 @@ lut         LD      0x60        ; self modifying code
             LDW     scratch
             STW     cbase1
             
-            BRA     n-1-1
+            BRA     n_l_t

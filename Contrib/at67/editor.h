@@ -119,6 +119,9 @@ namespace Editor
     void browseDirectory(void);
     bool handleDebugger(void);
     void handleInput(void);
+
+    void startDebugger(void);
+    void resetDebugger(void);
 }
 
 #endif

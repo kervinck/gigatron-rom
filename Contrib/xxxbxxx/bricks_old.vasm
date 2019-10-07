@@ -5,7 +5,7 @@
 ; ===========================================
 
 ; --- mem layout ---
-vars            EQU     0x00B0
+vars            EQU     0x0030
 consts          EQU     0x0082                  ; skip 0x80 - reserved!!
 data            EQU     0x10c0                  ; (unused vram)
 
@@ -905,7 +905,7 @@ _go_wait        LDI     1
                 RET
 
 _startAddress_          EQU entry_point
-_callTable_             EQU 0x007E
+_callTable_             EQU 0x00EE
 _singleStepWatch_       EQU giga_frameCount
 _cpuUsageAddressA_      EQU subroutines3
 _cpuUsageAddressB_      EQU subroutines3+0x10   ; WaitVBlank

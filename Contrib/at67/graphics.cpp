@@ -659,10 +659,10 @@ namespace Graphics
 
             switch(Editor::getKeyboardMode())
             {
-                case Editor::Giga:   sprintf(str, "Kbd  "); break;
-                case Editor::PS2:    sprintf(str, "PS2  "); break;
-                case Editor::HwGiga: sprintf(str, "HwKbd"); break;
-                case Editor::HwPS2:  sprintf(str, "HwPS2"); break;
+                case Editor::Giga:   sprintf(str, "Kbd   "); break;
+                case Editor::PS2:    sprintf(str, "PS2   "); break;
+                case Editor::HwGiga: sprintf(str, "HwKbd "); break;
+                case Editor::HwPS2:  sprintf(str, "HwPS2 "); break;
                 default: sprintf(str, "     ");
             }
             drawText("K:", _pixels, 48, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);

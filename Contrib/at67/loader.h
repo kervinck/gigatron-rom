@@ -13,6 +13,7 @@
 #define GT1FILE_TRAILER_SIZE      3
 #define DEFAULT_START_ADDRESS_HI  0x02
 #define DEFAULT_START_ADDRESS_LO  0x00
+#define ONE_CONST_ADDRESS         0x80
 
 #define LOADER_CONFIG_INI  "loader_config.ini"
 #define HIGH_SCORES_INI    "high_scores.ini"
