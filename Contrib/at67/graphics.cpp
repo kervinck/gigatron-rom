@@ -649,10 +649,10 @@ namespace Graphics
 
             switch(Editor::getEditorMode())
             {
-                case Editor::Hex:   sprintf(str, "Hex  "); break;
-                case Editor::Rom:   sprintf(str, "Rom  "); break;
-                case Editor::Load:  sprintf(str, "Load "); break;
-                case Editor::Dasm:  sprintf(str, "Dasm "); break;
+                case Editor::Hex:   (Editor::getSingleStepEnabled()) ? sprintf(str, "Debug ") : sprintf(str, "Hex   "); break;
+                case Editor::Rom:   sprintf(str, "Rom   "); break;
+                case Editor::Load:  sprintf(str, "Load  "); break;
+                case Editor::Dasm:  (Editor::getSingleStepEnabled()) ? sprintf(str, "Debug ") : sprintf(str, "Dasm  "); break;
                 default: sprintf(str, "     ");
             }
             drawText(std::string(str), _pixels, 12, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
