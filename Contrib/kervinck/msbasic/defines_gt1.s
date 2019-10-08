@@ -40,7 +40,7 @@ WIDTH			:= 26   ; (was 40)
 
 WIDTH2			:= 30   ; XXX ???
 
-RAMSTART2		:= $2800
+RAMSTART2		:= $7200
 
 ; magic memory locations
 ENTROPY = $06
@@ -52,7 +52,7 @@ CHKIN	:= $FFC6
 CHKOUT	:= $FFC9
 CLRCH	:= $FFCC
 CHRIN	:= $FFCF
-CHROUT	:= $FFD2
+CHROUT	:= $2700        ; Gigatron
 LOAD	:= $FFD5
 SAVE	:= $FFD8
 VERIFY	:= $FFDB
