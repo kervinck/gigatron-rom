@@ -8,7 +8,7 @@
 
 
 #define MAJOR_VERSION "0.8"
-#define MINOR_VERSION "4"
+#define MINOR_VERSION "5"
 #define VERSION_STR "gtemuAT67 v" MAJOR_VERSION "." MINOR_VERSION
  
 #define ROM_INST 0
@@ -21,6 +21,8 @@
 
 #define BOOT_COUNT 0x0004
 #define BOOT_CHECK 0x0005
+
+#define STACK_POINTER 0x001C
 
 #define VIDEO_MODE_D 0x000D
 #define VIDEO_MODE_B 0x001F
@@ -84,6 +86,8 @@ namespace Cpu
     void patchSplitGt1IntoRom(const std::string& splitGt1path, const std::string& splitGt1name, uint16_t startAddress, InternalGt1Id gt1Id);
 
 #ifndef STAND_ALONE
+    State& getStateS(void);
+    State& getStateT(void);
     int64_t getClock(void);
     uint8_t getIN(void);
     uint8_t getXOUT(void);
@@ -109,9 +113,9 @@ namespace Cpu
 
     void initialise(State& S);
     void shutdown(void);
-    State cycle(const State& S);
+    void cycle(const State& S, State& T);
     void reset(bool coldBoot=false);
-    void vCpuUsage(State& S);
+    void vCpuUsage(State& S, State& T);
 #endif
 }
 

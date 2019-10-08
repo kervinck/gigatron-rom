@@ -42,11 +42,13 @@ namespace Cpu
 
     bool _checkRomType = true;
 
+    State _stateS, _stateT;
     int64_t _clock = -2;
     uint8_t _IN = 0xFF, _XOUT = 0x00;
+    uint16_t _vPC = 0x0200;
+    
     uint8_t _ROM[ROM_SIZE][2], _RAM[RAM_SIZE];
     std::vector<uint8_t*> _romFiles;
-    uint16_t _vPC = 0x0200;
     RomType _romType = ROMERR;
 
     std::vector<uint8_t> _scanlinesRom0;
@@ -194,6 +196,8 @@ namespace Cpu
 
 
 #ifndef STAND_ALONE
+    State& getStateS(void) {return _stateS;}
+    State& getStateT(void) {return _stateT;}
     int64_t getClock(void) {return _clock;}
     uint8_t getIN(void) {return _IN;}
     uint8_t getXOUT(void) {return _XOUT;}
@@ -486,10 +490,10 @@ namespace Cpu
         }
     }
 
-    State cycle(const State& S)
+    void cycle(const State& S, State& T)
     {
         // New state is old state unless something changes
-        State T = S;
+        T = S;
     
         // Instruction Fetch
         T._IR = _ROM[S._PC][ROM_INST]; 
@@ -505,7 +509,7 @@ namespace Cpu
                 T._OUT = _RAM[addr] | S._AC;
                 T._X++;
                 T._PC = S._PC + 1;
-                return T;
+                return;
             }
             break;
 
@@ -513,7 +517,7 @@ namespace Cpu
             {
                 _RAM[S._D] = S._AC;
                 T._PC = S._PC + 1;
-                return T;
+                return;
             }
             break;
 
@@ -521,15 +525,16 @@ namespace Cpu
             {
                 T._AC = _RAM[S._D];
                 T._PC = S._PC + 1;
-                return T;
+                return;
             }
             break;
 
+#if 0
             case 0x00: // ld D
             {
                 T._AC = S._D;
                 T._PC = S._PC + 1;
-                return T;
+                return;
             }
             break;
 
@@ -537,15 +542,14 @@ namespace Cpu
             {
                 T._AC += S._D;
                 T._PC = S._PC + 1;
-                return T;
+                return;
             }
             break;
 
-#if 0
             case 0xFC: // bra D
             {
                 T._PC = (S._PC & 0xFF00) | S._D;
-                return T;
+                return;
             }
             break;
 
@@ -554,7 +558,7 @@ namespace Cpu
                 uint16_t addr = MAKE_ADDR(S._Y, S._X);
                 T._AC = _RAM[addr];
                 T._PC = S._PC + 1;
-                return T;
+                return;
             }
             break;
 
@@ -562,14 +566,14 @@ namespace Cpu
             {
                 T._AC -= S._D;
                 T._PC = S._PC + 1;
-                return T;
+                return;
             }
             break;
 
             case 0xE8: // blt PC,D
             {
                 T._PC = (S._AC & 0x80) ? (S._PC & 0xFF00) | S._D : S._PC + 1;
-                return T;
+                return;
             }
             break;
 
@@ -577,7 +581,7 @@ namespace Cpu
             {
                 T._AC += _RAM[S._D];
                 T._PC = S._PC + 1;
-                return T;
+                return;
             }
             break;
 
@@ -586,7 +590,7 @@ namespace Cpu
                 uint16_t addr = MAKE_ADDR(S._Y, S._D);
                 T._AC += _RAM[addr];
                 T._PC = S._PC + 1;
-                return T;
+                return;
             }
             break;
 
@@ -594,7 +598,7 @@ namespace Cpu
             {
                 T._X = S._AC;
                 T._PC = S._PC + 1;
-                return T;
+                return;
             }
             break;
 
@@ -602,7 +606,7 @@ namespace Cpu
             {
                 T._OUT = S._D;
                 T._PC = S._PC + 1;
-                return T;
+                return;
             }
             break;
 #endif
@@ -676,8 +680,6 @@ namespace Cpu
                 T._PC = (S._Y << 8) | B; // Unconditional far jump
             }
         }
-
-        return T;
     }
 
     void reset(bool coldBoot)
@@ -692,13 +694,18 @@ namespace Cpu
         }
 
         Graphics::resetVTable();
+        setRAM(ZERO_CONST_ADDRESS, 0x00);
+        setRAM(ONE_CONST_ADDRESS, 0x01);
         Editor::setSingleStepAddress(VIDEO_Y_ADDRESS);
         setClock(CLOCK_RESET);
     }
 
     // Counts maximum and used vCPU instruction slots available per frame
-    void vCpuUsage(State& S)
+    void vCpuUsage(State& S, State& T)
     {
+        _stateS = S;
+        _stateT = T;
+
         // All ROM's so far v1 through v4 use the same vCPU dispatch address!
         if(S._PC == ROM_VCPU_DISPATCH)
         {

@@ -25,7 +25,7 @@
 
 
 #define BRANCH_ADJUSTMENT 2
-#define MAX_DASM_LINES    32
+#define MAX_DASM_LINES    30
 
 
 namespace Assembler
@@ -212,8 +212,6 @@ namespace Assembler
                 address--;
             }
         }
-
-        fprintf(stderr, "GOOD: %04x %d\n", address, _prevDasmPageByteCount);
     }
 
     std::string removeBrackets(const char* str)
@@ -256,26 +254,26 @@ namespace Assembler
         {
             switch(addr)
             {
-                case EA_0D_AC:    sprintf(addrStr, "[%02x]",   data); sprintf(regStr, "AC");  break;
-                case EA_0X_AC:    sprintf(addrStr, "[X]");            sprintf(regStr, "AC");  break;
-                case EA_YD_AC:    sprintf(addrStr, "[Y,%02x]", data); sprintf(regStr, "AC");  break;
-                case EA_YX_AC:    sprintf(addrStr, "[Y,X]");          sprintf(regStr, "AC");  break;
-                case EA_0D_X:     sprintf(addrStr, "[%02x]",   data); sprintf(regStr, "X");   break;
-                case EA_0D_Y:     sprintf(addrStr, "[%02x]",   data); sprintf(regStr, "Y");   break;
-                case EA_0D_OUT:   sprintf(addrStr, "[%02x]",   data); sprintf(regStr, "OUT"); break;
-                case EA_YX_OUTIX: sprintf(addrStr, "[Y,X++]");        sprintf(regStr, "OUT"); break;
+                case EA_0D_AC:    sprintf(addrStr, "[$%02x]",   data); sprintf(regStr, "AC");  break;
+                case EA_0X_AC:    sprintf(addrStr, "[X]");            sprintf(regStr, "AC");   break;
+                case EA_YD_AC:    sprintf(addrStr, "[Y,$%02x]", data); sprintf(regStr, "AC");  break;
+                case EA_YX_AC:    sprintf(addrStr, "[Y,X]");          sprintf(regStr, "AC");   break;
+                case EA_0D_X:     sprintf(addrStr, "[$%02x]",   data); sprintf(regStr, "X");   break;
+                case EA_0D_Y:     sprintf(addrStr, "[$%02x]",   data); sprintf(regStr, "Y");   break;
+                case EA_0D_OUT:   sprintf(addrStr, "[$%02x]",   data); sprintf(regStr, "OUT"); break;
+                case EA_YX_OUTIX: sprintf(addrStr, "[Y,X++]");        sprintf(regStr, "OUT");  break;
             }
         }
         else
         {
-            sprintf(addrStr, "[%02x]", data);
+            sprintf(addrStr, "[$%02x]", data);
         }
 
         // Bus string
         char busStr[8];
         switch(bus)
         {
-            case BUS_D:   sprintf(busStr, "%02x", data);                           break;
+            case BUS_D:   sprintf(busStr, "$%02x", data);                          break;
             case BUS_RAM: (!store) ? strcpy(busStr, addrStr) : strcpy(busStr, ""); break;
             case BUS_AC:  sprintf(busStr, "AC");                                   break;
             case BUS_IN:  sprintf(busStr, "IN");                                   break;
@@ -342,7 +340,7 @@ namespace Assembler
                     char mnemonic[24];
                     if(!getNativeMnemonic(instruction, data0, mnemonic))
                     {
-                        sprintf(dasmText, "%04x  %02x %02x", address, instruction, data0);
+                        sprintf(dasmText, "%04x  $%02x $%02x", address, instruction, data0);
                         dasmCode._address = address;
                         address++;
                         break;
@@ -366,7 +364,7 @@ namespace Assembler
                        (address >= GIGA_CH0_WAV_A  &&  address <= GIGA_CH0_OSC_H) ||  (address >= GIGA_CH1_WAV_A  &&  address <= GIGA_CH1_OSC_H) ||
                        (address >= GIGA_CH2_WAV_A  &&  address <= GIGA_CH2_OSC_H) ||  (address >= GIGA_CH3_WAV_A  &&  address <= GIGA_CH3_OSC_H))
                     {
-                        sprintf(dasmText, "%04x  %02x", address, instruction);
+                        sprintf(dasmText, "%04x  $%02x", address, instruction);
                         dasmCode._address = address;
                         address++;
                         break;
@@ -379,7 +377,7 @@ namespace Assembler
                         instruction = data0;
                         if(_vcpuOpcodes.find(instruction) == _vcpuOpcodes.end())
                         {
-                            sprintf(dasmText, "%04x  %02x", address, instruction);
+                            sprintf(dasmText, "%04x  $%02x", address, instruction);
                             dasmCode._address = address;
                             address++;
                             break;
@@ -390,9 +388,9 @@ namespace Assembler
                     byteSize = _vcpuOpcodes[instruction]._byteSize;
                     switch(byteSize)
                     {
-                        case OneByte:  sprintf(dasmText, "%04x  %-4s", address, _vcpuOpcodes[instruction]._mnemonic.c_str());             break;
-                        case TwoBytes: sprintf(dasmText, "%04x  %-4s %02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data0); break;
-                        case ThreeBytes: (foundBranch) ? sprintf(dasmText, "%04x  %-4s %02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1) : sprintf(dasmText, "%04x  %-4s %02x%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1, data0); break;
+                        case OneByte:  sprintf(dasmText, "%04x  %-4s", address, _vcpuOpcodes[instruction]._mnemonic.c_str());              break;
+                        case TwoBytes: sprintf(dasmText, "%04x  %-4s $%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data0); break;
+                        case ThreeBytes: (foundBranch) ? sprintf(dasmText, "%04x  %-4s $%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1) : sprintf(dasmText, "%04x  %-4s $%02x%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1, data0); break;
                     }
                     dasmCode._address = address;
                     address = address + byteSize;

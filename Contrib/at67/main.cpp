@@ -56,7 +56,7 @@
 
 int main(int argc, char* argv[])
 {
-    Cpu::State S;
+    Cpu::State S, T;
 
     Loader::initialise();
     Cpu::initialise(S);
@@ -84,10 +84,10 @@ int main(int argc, char* argv[])
         if(clock < 0) S._PC = 0; 
 
         // Update CPU
-        Cpu::State T = Cpu::cycle(S);
+        Cpu::cycle(S, T);
 
         // vCPU instruction slot utilisation
-        Cpu::vCpuUsage(S);
+        Cpu::vCpuUsage(S, T);
 
         HSync = (T._OUT & 0x40) - (S._OUT & 0x40);
         VSync = (T._OUT & 0x80) - (S._OUT & 0x80);
@@ -198,7 +198,7 @@ int main(int argc, char* argv[])
         clock = Cpu::getClock();
         Cpu::setClock(++clock);
 
-        S=T;
+        S = T;
     }
 
     return 0;

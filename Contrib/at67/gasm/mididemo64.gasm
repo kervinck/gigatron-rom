@@ -59,15 +59,16 @@ velocity        EQU     0x09A1
 clearScreen     EQU     0x0AA1
 clearScreen_0   EQU     0x0BA1
 resetAudio      EQU     0x0CA1
-playMidi        EQU     0x0DA1
-midiStartNote   EQU     0x0EA1
-midiSegment     EQU     0x0FA1
-printText       EQU     0x10A1
+playMidiAsync   EQU     0x0DA1
+playMidi        EQU     0x0EA1
+midiStartNote   EQU     0x0FA1
+midiSegment     EQU     0x10A1
+printText       EQU     0x11A1
 
 ; these two addresses are used to build an exclusion zone around vCPU code that will not be counted
 ; in the vCPU usage meter, (almost always used to exclude your VBlank polling loop, in this case MIDI)
-_cpuUsageAddressA_  EQU     resetAudio  
-_cpuUsageAddressB_  EQU     printText - 1
+_cpuUsageAddressA_  EQU     start  
+_cpuUsageAddressB_  EQU     playMidiAsync - 1
 
 
 start           CALL    resetAudio

@@ -643,15 +643,15 @@ namespace Graphics
             drawText(std::string(str), _pixels, FONT_WIDTH*4, FONT_CELL_Y*2, 0x80808080, false, 0, true);
 
             //drawText(std::string("LEDS:"), _pixels, 0, 0, 0xFFFFFFFF, false, 0);
-            sprintf(str, "FPS %5.1f  XOUT %02X IN %02X", 1.0f / Timing::getFrameTime(), Cpu::getXOUT(), Cpu::getIN());
+            sprintf(str, "FPS %5.1f  XOUT:%02X IN:%02X", 1.0f / Timing::getFrameTime(), Cpu::getXOUT(), Cpu::getIN());
             drawText(std::string(str), _pixels, 0, FONT_CELL_Y, 0xFFFFFFFF, false, 0);
             drawText("M:              R:", _pixels, 0, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
 
             switch(Editor::getEditorMode())
             {
                 case Editor::Hex:   (Editor::getSingleStepEnabled()) ? sprintf(str, "Debug ") : sprintf(str, "Hex   "); break;
-                case Editor::Rom:   sprintf(str, "Rom   "); break;
-                case Editor::Load:  sprintf(str, "Load  "); break;
+                case Editor::Rom:   (Editor::getSingleStepEnabled()) ? sprintf(str, "Debug ") : sprintf(str, "Rom   "); break;
+                case Editor::Load:  (Editor::getSingleStepEnabled()) ? sprintf(str, "Debug ") : sprintf(str, "Load  "); break;
                 case Editor::Dasm:  (Editor::getSingleStepEnabled()) ? sprintf(str, "Debug ") : sprintf(str, "Dasm  "); break;
                 default: sprintf(str, "     ");
             }
@@ -822,6 +822,12 @@ namespace Graphics
         sprintf(str, "%04X", Editor::getHexBaseAddress());
         uint32_t colour = (Editor::getHexEdit() && onHex) ? 0xFF00FF00 : 0xFFFFFFFF;
         drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, colour, onHex, 4);
+
+        // Display native registers
+        sprintf(str, "PC:%04X  IR:%02X  OUT:%02X", Cpu::getStateS()._PC, Cpu::getStateT()._IR, Cpu::getStateT()._OUT);
+        drawText(std::string(str), _pixels, HEX_START_X, int(FONT_CELL_Y*2.0) + FONT_CELL_Y*HEX_CHARS_Y, 0xFF00FFFF, false, 0);
+        sprintf(str, "AC:%02X  X:%02X  Y:%02X  D:%02X", Cpu::getStateT()._AC, Cpu::getStateT()._X, Cpu::getStateT()._Y, Cpu::getStateT()._D);
+        drawText(std::string(str), _pixels, HEX_START_X, int(FONT_CELL_Y*3.0) + FONT_CELL_Y*HEX_CHARS_Y, 0xFF00FFFF, false, 0);
     }
 
     void renderTextWindow(void)
@@ -915,8 +921,8 @@ namespace Graphics
             str[0] = 127; str[1] = 0;
             drawText(std::string(str), _pixels, PAGEDN_START_X, PAGEDN_START_Y, 0xFF00FF00, Editor::getPageDnButton(), 1);
 
-            // Delete icon
-            if(Editor::getEditorMode() == Editor::Dasm  &&  (Editor::getSingleStepEnabled()))
+            // Delete icon, (currently only used for clearing breakpoints)
+            if(Editor::getEditorMode() == Editor::Dasm  &&  (Editor::getSingleStepEnabled())  &&  Editor::getMemoryMode() == Editor::RAM)
             {
                 drawText("x", _pixels, DELALL_START_X, DELALL_START_Y, 0xFFFF0000, Editor::getDelAllButton(), 1);
             }

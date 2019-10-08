@@ -379,14 +379,14 @@ namespace Editor
 
 
         // Emulator INI key to SDL key mapping
-        _emulator["RamMode"]      = {SDLK_m, KMOD_LCTRL};
+        _emulator["MemoryMode"]   = {SDLK_m, KMOD_LCTRL};
         _emulator["Browse"]       = {SDLK_b, KMOD_LCTRL};
         _emulator["RomType"]      = {SDLK_r, KMOD_LCTRL};
         _emulator["HexMonitor"]   = {SDLK_x, KMOD_LCTRL};
         _emulator["Disassembler"] = {SDLK_d, KMOD_LCTRL};
+        _emulator["ScanlineMode"] = {SDLK_s, KMOD_LCTRL};
         _emulator["Reset"]        = {SDLK_F1, KMOD_LCTRL};
         _emulator["Execute"]      = {SDLK_F5, KMOD_LCTRL};
-        _emulator["ScanlineMode"] = {SDLK_F3, KMOD_LCTRL};
         _emulator["Help"]         = {SDLK_h, KMOD_LCTRL};
         _emulator["Quit"]         = {SDLK_q, KMOD_LCTRL};
         _emulator["Speed+"]       = {SDLK_EQUALS, KMOD_NONE};
@@ -441,14 +441,14 @@ namespace Editor
             {
                 case Emulator:
                 {
-                    scanCodeFromIniKey(sectionString, "RamMode",      "CTRL+M",   _emulator["RamMode"]);
+                    scanCodeFromIniKey(sectionString, "MemoryMode",   "CTRL+M",   _emulator["MemoryMode"]);
                     scanCodeFromIniKey(sectionString, "Browse",       "CTRL+B",   _emulator["Browse"]);
                     scanCodeFromIniKey(sectionString, "RomType",      "CTRL+R",   _emulator["RomType"]);
                     scanCodeFromIniKey(sectionString, "HexMonitor",   "CTRL+X",   _emulator["HexMonitor"]);
                     scanCodeFromIniKey(sectionString, "Disassembler", "CTRL+D",   _emulator["Disassembler"]);
+                    scanCodeFromIniKey(sectionString, "ScanlineMode", "CTRL+S",   _emulator["ScanlineMode"]);
                     scanCodeFromIniKey(sectionString, "Reset",        "CTRL+F1",  _emulator["Reset"]);
                     scanCodeFromIniKey(sectionString, "Execute",      "CTRL+F5",  _emulator["Execute"]);
-                    scanCodeFromIniKey(sectionString, "ScanlineMode", "CTRL+F3",  _emulator["ScanlineMode"]);
                     scanCodeFromIniKey(sectionString, "Help",         "CTRL+H",   _emulator["Help"]);
                     scanCodeFromIniKey(sectionString, "Quit",         "CTRL+Q",   _emulator["Quit"]);
                     scanCodeFromIniKey(sectionString, "Speed+",       "+",        _emulator["Speed+"]);
@@ -574,8 +574,8 @@ namespace Editor
         switch(_editorMode)
         {
             case Hex:  _hexBaseAddress = (_hexBaseAddress - HEX_CHARS_X*numRows) & (RAM_SIZE-1); break;
-            case Load: if(-_fileEntriesIndex < 0) _fileEntriesIndex = 0;                         break;
-            case Rom:  if(-_romEntriesIndex < 0) _romEntriesIndex = 0;                           break;
+            case Load: if(--_fileEntriesIndex < 0) _fileEntriesIndex = 0;                        break;
+            case Rom:  if(--_romEntriesIndex < 0) _romEntriesIndex = 0;                          break;
             case Dasm: 
             {
                 if(numRows == 1)
@@ -661,7 +661,8 @@ namespace Editor
         }
         else if(_editorMode == Dasm  &&  _singleStepEnabled)
         {
-            if(_cursorY < 0  ||  _cursorY >= Assembler::getDisassembledCodeSize()) return;
+            // Breakpoints only work in vCPU code
+            if(_cursorY < 0  ||  _cursorY >= Assembler::getDisassembledCodeSize() ||  _memoryMode != RAM) return;
 
             // If breakpoint already exists, delete it, otherwise save it
             auto it = std::find(_breakpoints.begin(), _breakpoints.end(), Assembler::getDisassembledCode(_cursorY)->_address);
@@ -809,14 +810,12 @@ namespace Editor
 
     void startDebugger(void)
     {
-        _memoryMode = RAM;
-
         _singleStep = false;
         _singleStepEnabled = true;
         _singleStepMode = RunToBrk;
 
-        _hexBaseAddress = Cpu::getVPC();
-        _vpcBaseAddress = Cpu::getVPC();
+        _hexBaseAddress = (_memoryMode == RAM) ? Cpu::getVPC() : Cpu::getStateS()._PC;
+        _vpcBaseAddress = _hexBaseAddress;
     }
 
     void resetDebugger(void)
@@ -1115,13 +1114,17 @@ namespace Editor
         }
 
         // RAM/ROM mode
-        else if(_sdlKeyScanCode ==  _emulator["RamMode"].scanCode  &&  _sdlKeyModifier == _emulator["RamMode"].modifier)
+        else if(_sdlKeyScanCode ==  _emulator["MemoryMode"].scanCode  &&  _sdlKeyModifier == _emulator["MemoryMode"].modifier)
         {
-            if(!_singleStepEnabled)
+            int memoryMode = _memoryMode;
+            memoryMode = (_editorMode == Dasm) ? (++memoryMode) % (NumMemoryModes-1) : (++memoryMode) % NumMemoryModes;
+            _memoryMode = (MemoryMode)memoryMode;
+            
+            // Update hex address with PC or vPC
+            if(_singleStepEnabled)
             {
-                int memoryMode = _memoryMode;
-                memoryMode = (_editorMode == Dasm) ? (++memoryMode) % (NumMemoryModes-1) : (++memoryMode) % NumMemoryModes;
-                _memoryMode = (MemoryMode)memoryMode;
+                _hexBaseAddress = (_memoryMode == RAM) ? Cpu::getVPC() : Cpu::getStateS()._PC;
+                _vpcBaseAddress = _hexBaseAddress;
             }
         }
 
@@ -1140,12 +1143,12 @@ namespace Editor
         if(handleGigaKeyUp()) return;
     }
 
-    void singleStep(void)
+    void singleStep(uint16_t address)
     {
         _singleStep = false;
         _singleStepEnabled = true;
-        _hexBaseAddress = Cpu::getVPC();
-        _vpcBaseAddress = Cpu::getVPC();
+        _hexBaseAddress = address;
+        _vpcBaseAddress = address;
     }
 
     // Debug mode, handles it's own input and rendering
@@ -1154,39 +1157,48 @@ namespace Editor
         // Gprintfs
         Assembler::printGprintfStrings();
 
-        // Debug, (this code can potentially run for every Native instruction, for efficiency we check vPC to only run it for each vCPU instruction)
+        // Debug
         static uint16_t vPC = Cpu::getVPC();
-        if(_singleStep  &&  vPC != Cpu::getVPC())
+        if(_singleStep)
         {
-            vPC = Cpu::getVPC();
-
-            // Timeout on change of variable
-            if(SDL_GetTicks() - _singleStepTicks > SINGLE_STEP_STALL_TIME)
+            // Native debugging
+            if(_memoryMode != RAM)
             {
-                resetDebugger();
-                fprintf(stderr, "Editor::handleDebugger() : Single step stall for %d milliseconds : exiting debugger.\n", SDL_GetTicks() - _singleStepTicks);
+                singleStep(Cpu::getStateS()._PC);
             }
-            // Single step on vPC or on watch value
-            switch(_singleStepMode)
+            // vCPU debugging, (this code can potentially run for every Native instruction, for efficiency we check vPC so this code only runs for each vCPU instruction)
+            else if(vPC != Cpu::getVPC())
             {
-                case RunToBrk:
-                {
-                    auto it = std::find(_breakpoints.begin(), _breakpoints.end(), vPC);
-                    if(it != _breakpoints.end()) singleStep();
-                }
-                break;
-                
-                case StepVpc:
-                {
-                    if(vPC != _singleStepValue) singleStep();
-                }
-                break;
+                vPC = Cpu::getVPC();
 
-                case StepWatch:
+                // Timeout on change of variable
+                if(SDL_GetTicks() - _singleStepTicks > SINGLE_STEP_STALL_TIME)
                 {
-                    if(Cpu::getRAM(_singleStepAddress) != _singleStepValue) singleStep();
+                    resetDebugger();
+                    fprintf(stderr, "Editor::handleDebugger() : Single step stall for %d milliseconds : exiting debugger.\n", SDL_GetTicks() - _singleStepTicks);
                 }
-                break;
+                // Single step on vPC or on watch value
+                switch(_singleStepMode)
+                {
+                    case RunToBrk:
+                    {
+                        auto it = std::find(_breakpoints.begin(), _breakpoints.end(), vPC);
+                        if(it != _breakpoints.end()) singleStep(vPC);
+                    }
+                    break;
+                
+                    case StepVpc:
+                    {
+                        if(vPC != _singleStepValue) singleStep(vPC);
+                    }
+                    break;
+
+                    case StepWatch:
+                    {
+                        if(Cpu::getRAM(_singleStepAddress) != _singleStepValue) singleStep(vPC);
+                    }
+                    break;
+                }
             }
         }
 
@@ -1221,7 +1233,7 @@ namespace Editor
                     {
                         if(_pageUpButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageUp(HEX_CHARS_Y);
                         else if(_pageDnButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageDown(HEX_CHARS_Y);
-                        else if(_delAllButton  &&  event.button.button == SDL_BUTTON_LEFT) _breakpoints.clear();
+                        else if(_memoryMode == RAM  &&  _delAllButton  &&  event.button.button == SDL_BUTTON_LEFT) _breakpoints.clear();
                         else if(event.button.button == SDL_BUTTON_LEFT) handleMouseClick();
                     }
                     break;
@@ -1258,25 +1270,25 @@ namespace Editor
 
                     case SDL_KEYDOWN:
                     {
-                        // Single step on vPC
-                        if(_sdlKeyScanCode == _debugger["RunToBrk"].scanCode  &&  _sdlKeyModifier == _debugger["RunToBrk"].modifier)
+                        // Run to breakpoint, (vCPU only)
+                        if(_memoryMode == RAM  &&  _sdlKeyScanCode == _debugger["RunToBrk"].scanCode  &&  _sdlKeyModifier == _debugger["RunToBrk"].modifier)
                         {
                             _singleStep = true;
                             _singleStepEnabled = false;
                             _singleStepMode = RunToBrk;
                             _singleStepTicks = SDL_GetTicks();
                         }
-                        // Single step on vPC
+                        // Single step on vPC or on PC, (vCPU or native)
                         else if(_sdlKeyScanCode == _debugger["StepVpc"].scanCode  &&  _sdlKeyModifier == _debugger["StepVpc"].modifier)
                         {
                             _singleStep = true;
                             _singleStepEnabled = false;
                             _singleStepMode = StepVpc;
                             _singleStepTicks = SDL_GetTicks();
-                            _singleStepValue = Cpu::getVPC();
+                            _singleStepValue = (_memoryMode == RAM) ? Cpu::getVPC() : Cpu::getStateS()._PC;
                         }
-                        // Single step on watch value
-                        else if(_sdlKeyScanCode == _debugger["StepWatch"].scanCode  &&  _sdlKeyModifier == _debugger["StepWatch"].modifier)
+                        // Single step on watch value, (vCPU only)
+                        else if(_memoryMode == RAM  &&  _sdlKeyScanCode == _debugger["StepWatch"].scanCode  &&  _sdlKeyModifier == _debugger["StepWatch"].modifier)
                         {
                             _singleStep = true;
                             _singleStepEnabled = false;
@@ -1319,7 +1331,7 @@ namespace Editor
                 {
                     if(_pageUpButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageUp(HEX_CHARS_Y);
                     else if(_pageDnButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageDown(HEX_CHARS_Y);
-                    else if(_delAllButton  &&  event.button.button == SDL_BUTTON_LEFT) _breakpoints.clear();
+                    else if(_memoryMode == RAM  &&  _delAllButton  &&  event.button.button == SDL_BUTTON_LEFT) _breakpoints.clear();
                     else if(event.button.button == SDL_BUTTON_LEFT) handleMouseClick();
                 }
                 break;
