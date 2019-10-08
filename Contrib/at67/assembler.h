@@ -23,6 +23,7 @@ namespace Assembler
     struct DasmCode
     {
         uint8_t _instruction;
+        uint8_t _byteSize;
         uint8_t _data0;
         uint8_t _data1;
         uint16_t _address;
@@ -33,6 +34,8 @@ namespace Assembler
     uint16_t getStartAddress(void);
     int getCurrDasmByteCount(void);
     int getPrevDasmByteCount(void);
+    int getPrevDasmPageByteCount(void);
+    int getCurrDasmPageByteCount(void);
     int getDisassembledCodeSize(void);
     DasmCode* getDisassembledCode(int index);
 

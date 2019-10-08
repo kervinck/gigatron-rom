@@ -116,6 +116,7 @@ namespace Assembler
     uint16_t _startAddress = DEFAULT_START_ADDRESS;
     uint16_t _currentAddress = _startAddress;
     uint16_t _currDasmByteCount = 1, _prevDasmByteCount = 1;
+    uint16_t _currDasmPageByteCount = 0, _prevDasmPageByteCount = 0;
 
     std::string _includePath = "";
 
@@ -131,6 +132,8 @@ namespace Assembler
     uint16_t getStartAddress(void) {return _startAddress;}
     int getPrevDasmByteCount(void) {return _prevDasmByteCount;}
     int getCurrDasmByteCount(void) {return _currDasmByteCount;}
+    int getPrevDasmPageByteCount(void) {return _prevDasmPageByteCount;}
+    int getCurrDasmPageByteCount(void) {return _currDasmPageByteCount;}
     int getDisassembledCodeSize(void) {return int(_disassembledCode.size());}
     DasmCode* getDisassembledCode(int index) {return &_disassembledCode[index % _disassembledCode.size()];}
 
@@ -154,37 +157,66 @@ namespace Assembler
     }
 
 #ifndef STAND_ALONE
-    void getVcpuCurrAndPrevByteSize(uint16_t address, uint8_t instruction, ByteSize byteSize)
+    void getDasmCurrAndPrevByteSize(uint16_t address, ByteSize byteSize)
     {
-        _currDasmByteCount = 1;
-        _prevDasmByteCount = 1;
-
-        if(Editor::getMemoryMode() != Editor::RAM) return;
-
         // Save current and previous instruction lengths
         if(_disassembledCode.size() == 0)
         {
-            if(Editor::getMemoryMode() == Editor::RAM)
-            {
-                _currDasmByteCount = byteSize;
+            _currDasmByteCount = byteSize;
 
-                // Attempt to get bytesize of previous instruction
-                for(uint16_t addr=address-1; addr>=address-3; --addr)
+            // Attempt to get bytesize of previous instruction
+            for(uint16_t addr=address-1; addr>=address-3; --addr)
+            {
+                uint8_t size = address - addr;
+                uint8_t inst = Cpu::getRAM(addr);
+                if(inst == VCPU_BRANCH_OPCODE) inst = Cpu::getRAM(addr + 1);
+                if(_vcpuOpcodes.find(inst) != _vcpuOpcodes.end()  &&  _vcpuOpcodes[inst]._opcodeType == vCpu  &&  _vcpuOpcodes[inst]._byteSize == size)
                 {
-                    uint8_t size = address - addr;
-                    uint8_t inst = Cpu::getRAM(addr);
-                    if(inst == VCPU_BRANCH_OPCODE) inst = Cpu::getRAM(addr + 1);
-                    if(_vcpuOpcodes.find(inst) != _vcpuOpcodes.end()  &&  _vcpuOpcodes[inst]._opcodeType == vCpu  &&  _vcpuOpcodes[inst]._byteSize == size)
-                    {
-                        _prevDasmByteCount = _vcpuOpcodes[inst]._byteSize;
-                        break;
-                    }
+                    _prevDasmByteCount = size;
+                    break;
                 }
             }
         }
     }
 
-    std::string removeBrackets(char* str)
+    void getDasmCurrAndPrevPageByteSize(int pageSize)
+    {
+        // Current page size
+        _currDasmPageByteCount = 0;
+        for(int i=0; i<pageSize; i++) _currDasmPageByteCount += _disassembledCode[i]._byteSize;
+
+        // Previous page size
+        _prevDasmPageByteCount = 0;
+        uint16_t address = _disassembledCode[0]._address;
+        for(int i=0; i<pageSize; i++)
+        {
+            // Get bytesize of previous page worth of instructions
+            bool foundInstruction = false;
+            for(uint16_t addr=address-1; addr>=address-3; --addr)
+            {
+                uint8_t size = address - addr;
+                uint8_t inst = Cpu::getRAM(addr);
+                if(inst == VCPU_BRANCH_OPCODE) inst = Cpu::getRAM(addr + 1);
+                if(_vcpuOpcodes.find(inst) != _vcpuOpcodes.end()  &&  _vcpuOpcodes[inst]._opcodeType == vCpu  &&  _vcpuOpcodes[inst]._byteSize == size)
+                {
+                    foundInstruction = true;
+                    _prevDasmPageByteCount += size;
+                    address -= size;
+                    break;
+                }
+            }
+
+            if(!foundInstruction)
+            {
+                _prevDasmPageByteCount++;
+                address--;
+            }
+        }
+
+        fprintf(stderr, "GOOD: %04x %d\n", address, _prevDasmPageByteCount);
+    }
+
+    std::string removeBrackets(const char* str)
     {
         std::string string = str;
         string.erase(std::remove(string.begin(), string.end(), '['), string.end());
@@ -285,6 +317,7 @@ namespace Assembler
     int disassemble(uint16_t address)
     {
         _disassembledCode.clear();
+
         _currDasmByteCount = 1;
         _prevDasmByteCount = 1;
 
@@ -321,7 +354,7 @@ namespace Assembler
                 }
                 break;
 
-                // VCPU instructions
+                // vCPU instructions
                 case Editor::RAM:
                 {
                     instruction = Cpu::getRAM(address);
@@ -343,7 +376,6 @@ namespace Assembler
                     bool foundBranch = false;
                     if(instruction == VCPU_BRANCH_OPCODE)
                     {
-                        foundBranch = true;
                         instruction = data0;
                         if(_vcpuOpcodes.find(instruction) == _vcpuOpcodes.end())
                         {
@@ -352,6 +384,7 @@ namespace Assembler
                             address++;
                             break;
                         }
+                        foundBranch = true;
                     }
 
                     byteSize = _vcpuOpcodes[instruction]._byteSize;
@@ -365,17 +398,29 @@ namespace Assembler
                     address = address + byteSize;
 
                     // Save current and previous instruction sizes to allow scrolling
-                    getVcpuCurrAndPrevByteSize(dasmCode._address, instruction, byteSize);
+                    getDasmCurrAndPrevByteSize(dasmCode._address, byteSize);
                 }
                 break;
             }
 
             dasmCode._instruction = instruction;
+            dasmCode._byteSize = byteSize;
             dasmCode._data0 = data0;
             dasmCode._data1 = data1;
             dasmCode._text = (memoryMode == Editor::RAM) ? Expression::strToUpper(std::string(dasmText)) : Expression::strToLower(std::string(dasmText));
 
             _disassembledCode.push_back(dasmCode);
+        }
+
+        // Save current and previous page instruction sizes to allow page scrolling
+        if(Editor::getMemoryMode() == Editor::RAM)
+        {
+            getDasmCurrAndPrevPageByteSize(MAX_DASM_LINES);
+        }
+        else
+        {
+            _currDasmPageByteCount = MAX_DASM_LINES;
+            _prevDasmPageByteCount = MAX_DASM_LINES;
         }
 
         return int(_disassembledCode.size());

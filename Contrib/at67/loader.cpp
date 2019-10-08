@@ -112,8 +112,8 @@ namespace Loader
         // Sort segments from lowest address to highest address
         std::sort(gt1File._segments.begin(), gt1File._segments.end(), [](const Gt1Segment& segmentA, const Gt1Segment& segmentB)
         {
-            uint16_t addressA = segmentA._loAddress + (segmentA._hiAddress <<8);
-            uint16_t addressB = segmentB._loAddress + (segmentB._hiAddress <<8);
+            uint16_t addressA = (segmentA._hiAddress <<8) | segmentA._loAddress;
+            uint16_t addressB = (segmentB._hiAddress <<8) | segmentB._loAddress;
             return (addressA < addressB);
         });
 
@@ -130,7 +130,7 @@ namespace Loader
             page0._loAddress = start;
             page0._segmentSize = end - start + 1;
             page0._dataBytes.resize(end - start + 1, 0x00);
-            if(start <= ONE_CONST_ADDRESS && end >= ONE_CONST_ADDRESS) page0._dataBytes[ONE_CONST_ADDRESS-start] = 1;
+            if(start <= ONE_CONST_ADDRESS && end >= ONE_CONST_ADDRESS) page0._dataBytes[ONE_CONST_ADDRESS-start] = 0x01;
 
             // Copy page 0 segments
             for(int i=0; i<segments; i++)

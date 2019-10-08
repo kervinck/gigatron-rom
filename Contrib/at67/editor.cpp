@@ -573,10 +573,21 @@ namespace Editor
     {
         switch(_editorMode)
         {
-            case Hex:  _hexBaseAddress = (_hexBaseAddress - HEX_CHARS_X*numRows) & (RAM_SIZE-1);               break;
-            case Dasm: _hexBaseAddress = (_hexBaseAddress - Assembler::getPrevDasmByteCount()) & (RAM_SIZE-1); break;
-            case Load: if(-_fileEntriesIndex < 0) _fileEntriesIndex = 0;                                       break;
-            case Rom:  if(-_romEntriesIndex < 0) _romEntriesIndex = 0;                                         break;
+            case Hex:  _hexBaseAddress = (_hexBaseAddress - HEX_CHARS_X*numRows) & (RAM_SIZE-1); break;
+            case Load: if(-_fileEntriesIndex < 0) _fileEntriesIndex = 0;                         break;
+            case Rom:  if(-_romEntriesIndex < 0) _romEntriesIndex = 0;                           break;
+            case Dasm: 
+            {
+                if(numRows == 1)
+                {
+                    _hexBaseAddress = (_hexBaseAddress - Assembler::getPrevDasmByteCount()) & (RAM_SIZE-1);
+                }
+                else
+                {
+                    _hexBaseAddress = (_hexBaseAddress - Assembler::getPrevDasmPageByteCount()) & (RAM_SIZE-1);
+                }
+            }
+            break;
         }
     }
 
@@ -584,8 +595,7 @@ namespace Editor
     {
         switch(_editorMode)
         {
-            case Hex:  _hexBaseAddress = (_hexBaseAddress + HEX_CHARS_X*numRows) & (RAM_SIZE-1);               break;
-            case Dasm: _hexBaseAddress = (_hexBaseAddress + Assembler::getCurrDasmByteCount()) & (RAM_SIZE-1); break;
+            case Hex:  _hexBaseAddress = (_hexBaseAddress + HEX_CHARS_X*numRows) & (RAM_SIZE-1); break;
             case Load:
             {
                 if(_fileEntries.size() > HEX_CHARS_Y)
@@ -601,6 +611,18 @@ namespace Editor
                 {
                     _romEntriesIndex++;
                     if(_romEntries.size() - _romEntriesIndex < HEX_CHARS_Y) _romEntriesIndex--;
+                }
+            }
+            break;
+            case Dasm:
+            {
+                if(numRows == 1)
+                {
+                    _hexBaseAddress = (_hexBaseAddress + Assembler::getCurrDasmByteCount()) & (RAM_SIZE-1);
+                }
+                else
+                {
+                    _hexBaseAddress = (_hexBaseAddress + Assembler::getCurrDasmPageByteCount()) & (RAM_SIZE-1);
                 }
             }
             break;
