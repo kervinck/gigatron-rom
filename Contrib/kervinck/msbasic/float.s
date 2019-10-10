@@ -1434,11 +1434,7 @@ FOUT1:
         bpl     L3C73
         lda     #$2D
 L3C73:
-.if STACK2 <> 0
         sta     STACK2-1,y
-.else
-        sta     STACK2+65535,y ;GT1
-.endif
         sta     FACSIGN
         sty     STRNG2
         iny
@@ -1519,20 +1515,12 @@ L3CDF:
         ldy     STRNG2
         lda     #$2E
         iny
-.if STACK2 <> 0
         sta     STACK2-1,y
-.else
-        sta     STACK2+65535,y ;GT1
-.endif
         txa
         beq     L3CF0
         lda     #$30
         iny
-.if STACK2 <> 0
         sta     STACK2-1,y
-.else
-        sta     STACK2+65535,y ;GT1
-.endif
 L3CF0:
         sty     STRNG2
 ; ----------------------------------------------------------------------------
@@ -1582,20 +1570,12 @@ L3D23:
         iny
         tax
         and     #$7F
-.if STACK2 <> 0
         sta     STACK2-1,y
-.else
-        sta     STACK2+65535,y ;GT1
-.endif
         dec     INDX
         bne     L3D3E
         lda     #$2E
         iny
-.if STACK2 <> 0
         sta     STACK2-1,y
-.else
-        sta     STACK2+65535,y ;GT1
-.endif
 L3D3E:
         sty     STRNG2
         ldy     VARPNT
@@ -1617,11 +1597,7 @@ L3D3E:
 LDD96:
         ldy     STRNG2
 L3D4E:
-.if STACK2 <> 0
         lda     STACK2-1,y
-.else
-        lda     STACK2+65535,y ;GT1
-.endif
         dey
         cmp     #$30
         beq     L3D4E
@@ -1657,11 +1633,7 @@ L3D77:
         sta     STACK2+4,y
         beq     L3D94
 FOUT4:
-.if STACK2 <> 0
         sta     STACK2-1,y
-.else
-        sta     STACK2+65535,y ;GT1
-.endif
 L3D8F:
         lda     #$00
         sta     STACK2,y

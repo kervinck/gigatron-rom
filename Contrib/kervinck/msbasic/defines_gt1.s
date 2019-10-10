@@ -30,6 +30,9 @@ USR				:= GORESTART ; XXX
 STACK			:= $0000
 			; Stack size: 81 bytes ($AF.$FF)
 
+STACK2			:= $7100
+			; Floating point buffer
+
 ; inputbuffer
 INPUTBUFFER     := $0200
 
@@ -57,8 +60,8 @@ LOAD	:= $FFD5
 SAVE	:= $FFD8
 VERIFY	:= $FFDB
 SYS		:= $FFDE
-ISCNTC	:= $FFE1
-GETIN	:= $FFE4
+ISCNTC	:= $2900
+GETIN	:= $2800
 CLALL	:= $FFE7
 LE7F3	:= $E7F3; for CBM1
 MONCOUT	:= CHROUT
