@@ -39,19 +39,28 @@ EASTER_EGG:
         lda     LINNUM+1
         sbc     #>6502
         bne     L3628
+.ifndef gigatron
         sta     LINNUM
         tay
         lda     #$80
         sta     LINNUM+1
+.endif
 LD758:
         ldx     #$0A
 LD75A:
         lda     MICROSOFT-1,x
         and     #$3F
+.ifndef gigatron
         sta     (LINNUM),y
         iny
         bne     LD766
         inc     LINNUM+1
+.else
+        eor     #$20
+        clc
+        adc     #$20
+        jsr     CHROUT
+.endif
 LD766:
         dex
         bne     LD75A
