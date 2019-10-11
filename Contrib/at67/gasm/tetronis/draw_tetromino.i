@@ -25,6 +25,10 @@ setT_loop       LDW     vbase           ; vram address
                 STW     giga_sysArg4
                 SYS     0xFF            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
 
+                PUSH
+                CALL    playMidi
+                POP
+                
                 LD      yy              ; yy++
                 ADDI    0x01
                 ST      yy
@@ -124,6 +128,10 @@ drawN_skip      LD      xx
                 LDW     colour
                 POKE    xx
 
+                PUSH
+                CALL    playMidi
+                POP
+                
                 LoopCounter ii drawN_loop
                 RET
 

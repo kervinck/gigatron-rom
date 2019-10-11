@@ -112,7 +112,7 @@ namespace Assembler
     int _lineNumber;
 
     uint16_t _byteCount = 0;
-    uint16_t _callTable = DEFAULT_CALL_TABLE;
+    uint16_t _callTablePtr = DEFAULT_CALL_TABLE;
     uint16_t _startAddress = DEFAULT_START_ADDRESS;
     uint16_t _currentAddress = _startAddress;
     uint16_t _currDasmByteCount = 1, _prevDasmByteCount = 1;
@@ -255,13 +255,13 @@ namespace Assembler
             switch(addr)
             {
                 case EA_0D_AC:    sprintf(addrStr, "[$%02x]",   data); sprintf(regStr, "AC");  break;
-                case EA_0X_AC:    sprintf(addrStr, "[X]");            sprintf(regStr, "AC");   break;
+                case EA_0X_AC:    sprintf(addrStr, "[X]");             sprintf(regStr, "AC");  break;
                 case EA_YD_AC:    sprintf(addrStr, "[Y,$%02x]", data); sprintf(regStr, "AC");  break;
-                case EA_YX_AC:    sprintf(addrStr, "[Y,X]");          sprintf(regStr, "AC");   break;
+                case EA_YX_AC:    sprintf(addrStr, "[Y,X]");           sprintf(regStr, "AC");  break;
                 case EA_0D_X:     sprintf(addrStr, "[$%02x]",   data); sprintf(regStr, "X");   break;
                 case EA_0D_Y:     sprintf(addrStr, "[$%02x]",   data); sprintf(regStr, "Y");   break;
                 case EA_0D_OUT:   sprintf(addrStr, "[$%02x]",   data); sprintf(regStr, "OUT"); break;
-                case EA_YX_OUTIX: sprintf(addrStr, "[Y,X++]");        sprintf(regStr, "OUT");  break;
+                case EA_YX_OUTIX: sprintf(addrStr, "[Y,X++]");         sprintf(regStr, "OUT"); break;
             }
         }
         else
@@ -323,7 +323,7 @@ namespace Assembler
         {
             char dasmText[32];
             DasmCode dasmCode;
-            ByteSize byteSize;
+            ByteSize byteSize = OneByte;
             uint8_t instruction, data0, data1;
 
             Editor::MemoryMode memoryMode = Editor::getMemoryMode();
@@ -388,9 +388,9 @@ namespace Assembler
                     byteSize = _vcpuOpcodes[instruction]._byteSize;
                     switch(byteSize)
                     {
-                        case OneByte:  sprintf(dasmText, "%04x  %-4s", address, _vcpuOpcodes[instruction]._mnemonic.c_str());              break;
-                        case TwoBytes: sprintf(dasmText, "%04x  %-4s $%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data0); break;
-                        case ThreeBytes: (foundBranch) ? sprintf(dasmText, "%04x  %-4s $%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1) : sprintf(dasmText, "%04x  %-4s $%02x%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1, data0); break;
+                        case OneByte:  sprintf(dasmText, "%04x  %-5s", address, _vcpuOpcodes[instruction]._mnemonic.c_str());              break;
+                        case TwoBytes: sprintf(dasmText, "%04x  %-5s $%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data0); break;
+                        case ThreeBytes: (foundBranch) ? sprintf(dasmText, "%04x  %-5s $%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1) : sprintf(dasmText, "%04x  %-5s $%02x%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1, data0); break;
                     }
                     dasmCode._address = address;
                     address = address + byteSize;
@@ -639,7 +639,7 @@ namespace Assembler
                 // Reserved word, (equate), _callTable_
                 if(tokens[0] == "_callTable_")
                 {
-                    _callTable = equate._operand;
+                    _callTablePtr = equate._operand;
                 }
                 // Reserved word, (equate), _startAddress_
                 else if(tokens[0] == "_startAddress_")
@@ -1210,22 +1210,22 @@ namespace Assembler
         }
 
         // Append call table
-        if(_callTable  &&  _callTableEntries.size())
+        if(_callTablePtr  &&  _callTableEntries.size())
         {
             // _callTable grows downwards, pointer is 2 bytes below the bottom of the table by the time we get here
             for(int i=int(_callTableEntries.size())-1; i>=0; i--)
             {
                 int end = int(_callTableEntries.size()) - 1;
                 byteCode._isRomAddress = false;
-                byteCode._isCustomAddress = (i == end) ?  true : false;
+                byteCode._isCustomAddress = true;  // calltable entries can be non-sequential because of 0x80, (ONE_CONST_ADDRESS)
                 byteCode._data = LO_BYTE(_callTableEntries[i]._address);
-                byteCode._address = _callTable + (end-i)*2 + 2;
+                byteCode._address = LO_BYTE(_callTableEntries[i]._operand);
                 _byteCode.push_back(byteCode);
 
                 byteCode._isRomAddress = false;
                 byteCode._isCustomAddress = false;
                 byteCode._data = HI_BYTE(_callTableEntries[i]._address);
-                byteCode._address = _callTable + (end-i)*2 + 3;
+                byteCode._address = LO_BYTE(_callTableEntries[i]._operand + 1);
                 _byteCode.push_back(byteCode);
             }
         }
@@ -1788,10 +1788,12 @@ namespace Assembler
                     for(int j=width-1; j>=0; j--)
                     {
                         token[width-1 - j] = '0' + ((data >> j) & 1);
-                        if(j == 0) token[width-1 + 1] = 0;
                     }
+                    token[width] = 0;
                 }
                 break;
+
+                default: return false;
             }
 
             // Replace substrings
@@ -1852,7 +1854,7 @@ namespace Assembler
 
         fprintf(stderr, "\nAssembling file '%s'\n", filename.c_str());
 
-        _callTable = 0x0000;
+        _callTablePtr = 0x0000;
         _startAddress = startAddress;
         _currentAddress = _startAddress;
         clearAssembler();
@@ -2061,7 +2063,7 @@ namespace Assembler
                                 }
                             }
                             // CALL
-                            else if(opcodeType == vCpu  &&  opcode == 0xCF  &&  _callTable)
+                            else if(opcodeType == vCpu  &&  opcode == 0xCF  &&  _callTablePtr)
                             {
                                 // Search for call label
                                 Label label;
@@ -2085,10 +2087,22 @@ namespace Assembler
                                     if(newLabel)
                                     {
                                         operandValid = true;
-                                        operand = uint8_t(LO_BYTE(_callTable));
+                                        operand = uint8_t(LO_BYTE(_callTablePtr));
                                         CallTableEntry entry = {operand, address};
                                         _callTableEntries.push_back(entry);
-                                        _callTable -= 0x0002;
+                                        _callTablePtr -= 0x0002;
+
+                                        // Avoid ONE_CONST_ADDRESS
+                                        if(_callTablePtr == ONE_CONST_ADDRESS)
+                                        {
+                                            fprintf(stderr, "Assembler::assemble() : Calltable : 0x%02x : collided with : 0x%02x : on line %d\n", _callTablePtr, ONE_CONST_ADDRESS, _lineNumber+1);
+                                            _callTablePtr -= 0x0002;
+                                        }
+                                        else if(_callTablePtr+1 == ONE_CONST_ADDRESS)
+                                        {
+                                            fprintf(stderr, "Assembler::assemble() : Calltable : 0x%02x : collided with : 0x%02x : on line %d\n", _callTablePtr+1, ONE_CONST_ADDRESS, _lineNumber+1);
+                                            _callTablePtr -= 0x0001;
+                                        }
                                     }
                                 }
                                 // CALL that doesn't use the call table, (usually to save zero page memory at the expense of code size and code speed).

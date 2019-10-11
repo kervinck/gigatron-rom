@@ -2254,7 +2254,7 @@ namespace Compiler
         clearCompiler();
 
         uint16_t address;
-        Memory::getRam(Memory::FitLargest, Memory::RamVasm, 96, address);
+        Memory::getRAM(Memory::FitLargest, Memory::RamVasm, 96, address);
 
         // Read .gbas file
         int numLines = 0;

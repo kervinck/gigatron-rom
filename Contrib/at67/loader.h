@@ -69,6 +69,9 @@ namespace Loader
     };
 
 
+    std::string& getCurrentGame(void);
+    void setCurrentGame(std::string& currentGame);
+
     UploadTarget getUploadTarget(void);
     void setUploadTarget(UploadTarget target);
 
@@ -83,7 +86,7 @@ namespace Loader
     bool loadDataFile(SaveData& saveData);
     bool saveDataFile(const SaveData& saveData);
     void loadHighScore(void);
-    void saveHighScore(void);
+    bool saveHighScore(void);
     void updateHighScore(void);
 
     void upload(int vgaY);

@@ -26,7 +26,7 @@ namespace Audio
     SDL_AudioDeviceID _audioDevice = 1;
 
     int32_t _audioIndex = 0;
-    uint8_t _audioSamples[AUDIO_SAMPLES] = {0};
+    uint16_t _audioSamples[AUDIO_SAMPLES] = {0};
 
     int _scoreIndex = 0;
     uint8_t* _score[] = {(uint8_t*)musicMidi00};
@@ -84,7 +84,7 @@ namespace Audio
         SDL_AudioSpec audSpec;
         SDL_zero(audSpec);
         audSpec.freq = AUDIO_FREQUENCY;
-        audSpec.format = AUDIO_U8;
+        audSpec.format = AUDIO_S16;
         audSpec.channels = 1;
 
         if(SDL_OpenAudio(&audSpec, NULL) < 0)
@@ -98,14 +98,13 @@ namespace Audio
 
     void fillAudioBuffer(void)
     {
-        uint8_t sample = (Cpu::getXOUT() & 0xF0) >>2;
-        _audioSamples[_audioIndex] = sample;
+        _audioSamples[_audioIndex] = (Cpu::getXOUT() & 0xf0) <<5;
         _audioIndex = (_audioIndex + 1) % AUDIO_SAMPLES;
     }
 
     void playAudioBuffer(void)
     {
-        SDL_QueueAudio(_audioDevice, &_audioSamples[0], _audioIndex);
+        SDL_QueueAudio(_audioDevice, &_audioSamples[0], _audioIndex <<1);
         _audioIndex = 0;
     }
 
@@ -119,8 +118,8 @@ namespace Audio
         skip += 1.0 / ratio;
         if(uint64_t(skip) > count)
         {
-            uint8_t sample = (Cpu::getXOUT() & 0xF0) >>2;
-            SDL_QueueAudio(_audioDevice, &sample, 1);
+            uint16_t sample = (Cpu::getXOUT() & 0xf0) <<5;
+            SDL_QueueAudio(_audioDevice, &sample, 2);
         }
     }
 

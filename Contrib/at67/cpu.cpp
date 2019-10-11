@@ -40,6 +40,7 @@ namespace Cpu
     int _vCpuInstPerFrameMax = 0;
     float _vCpuUtilisation = 0.0;
 
+    bool _isInReset = false;
     bool _checkRomType = true;
 
     State _stateS, _stateT;
@@ -47,7 +48,8 @@ namespace Cpu
     uint8_t _IN = 0xFF, _XOUT = 0x00;
     uint16_t _vPC = 0x0200;
     
-    uint8_t _ROM[ROM_SIZE][2], _RAM[RAM_SIZE];
+    uint8_t* _RAM;
+    uint8_t _ROM[ROM_SIZE][2];
     std::vector<uint8_t*> _romFiles;
     RomType _romType = ROMERR;
 
@@ -59,7 +61,7 @@ namespace Cpu
 
 
     int getNumRoms(void) {return _numRoms;}
-    uint8_t* getPtrToROM(int& romSize) {romSize = sizeof(_ROM); return (uint8_t*)_ROM;}
+    uint8_t* getPtrToROM(int& romSize) {romSize = sizeof _ROM; return (uint8_t*)_ROM;}
     RomType getRomType(void) {return _romType;}
 
     void initialiseInternalGt1s(void)
@@ -165,23 +167,51 @@ namespace Cpu
         for(int i=minLength; i<MAX_TITLE_CHARS; i++) _ROM[ROM_TITLE_ADDRESS + i][ROM_DATA] = ' ';
     }
 
-    void patchSplitGt1IntoRom(const std::string& splitGt1path, const std::string& splitGt1name, uint16_t startAddress, InternalGt1Id gt1Id)
+    char filebuffer[RAM_SIZE_HI];
+    bool patchSplitGt1IntoRom(const std::string& splitGt1path, const std::string& splitGt1name, uint16_t startAddress, InternalGt1Id gt1Id)
     {
         size_t filelength = 0;
-        char filebuffer[RAM_SIZE];
 
+        // Instruction ROM
         std::ifstream romfile_ti(splitGt1path + "_ti", std::ios::binary | std::ios::in);
-        if(!romfile_ti.is_open()) fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to open %s ROM file.\n", std::string(splitGt1path + "_ti").c_str());
+        if(!romfile_ti.is_open())
+        {
+            fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to open %s ROM file.\n", std::string(splitGt1path + "_ti").c_str());
+            return false;
+        }
         romfile_ti.seekg (0, romfile_ti.end); filelength = romfile_ti.tellg(); romfile_ti.seekg (0, romfile_ti.beg);
+        if(filelength > RAM_SIZE_HI)
+        {
+            fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : ROM file %s must be less than %d in size.\n", std::string(splitGt1path + "_ti").c_str(), RAM_SIZE_HI);
+            return false;
+        }
         romfile_ti.read(filebuffer, filelength);
-        if(romfile_ti.eof() || romfile_ti.bad() || romfile_ti.fail()) fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to read %s ROM file.\n", std::string(splitGt1path + "_ti").c_str());
+        if(romfile_ti.eof() || romfile_ti.bad() || romfile_ti.fail())
+        {
+            fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to read %s ROM file.\n", std::string(splitGt1path + "_ti").c_str());
+            return false;
+        }
         for(int i=0; i<filelength; i++) _ROM[startAddress + i][ROM_INST] = filebuffer[i];
 
+        // Data ROM
         std::ifstream romfile_td(splitGt1path + "_td", std::ios::binary | std::ios::in);
-        if(!romfile_td.is_open()) fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to open %s ROM file.\n", std::string(splitGt1path + "_td").c_str());
+        if(!romfile_td.is_open())
+        {
+            fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to open %s ROM file.\n", std::string(splitGt1path + "_td").c_str());
+            return false;
+        }
         romfile_td.seekg (0, romfile_td.end); filelength = romfile_td.tellg(); romfile_td.seekg (0, romfile_td.beg);
+        if(filelength > RAM_SIZE_HI)
+        {
+            fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : ROM file %s must be less than %d in size.\n", std::string(splitGt1path + "_td").c_str(), RAM_SIZE_HI);
+            return false;
+        }
         romfile_td.read(filebuffer, filelength);
-        if(romfile_td.eof() || romfile_td.bad() || romfile_td.fail()) fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to read %s ROM file.\n", std::string(splitGt1path + "_td").c_str());
+        if(romfile_td.eof() || romfile_td.bad() || romfile_td.fail())
+        {
+            fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to read %s ROM file.\n", std::string(splitGt1path + "_td").c_str());
+            return false;
+        }
         for(int i=0; i<filelength; i++) _ROM[startAddress + i][ROM_DATA] = filebuffer[i];
 
         // Replace internal gt1 menu option with split gt1
@@ -192,23 +222,27 @@ namespace Cpu
         int minLength = std::min(uint8_t(splitGt1name.size()), _internalGt1s[gt1Id]._length);
         for(int i=0; i<minLength; i++) _ROM[_internalGt1s[gt1Id]._string + i][ROM_DATA] = splitGt1name[i];
         for(int i=minLength; i<_internalGt1s[gt1Id]._length; i++) _ROM[_internalGt1s[gt1Id]._string + i][ROM_DATA] = ' ';
+
+        return true;
     }
 
 
 #ifndef STAND_ALONE
+    bool getIsInReset(void) {return _isInReset;}
     State& getStateS(void) {return _stateS;}
     State& getStateT(void) {return _stateT;}
     int64_t getClock(void) {return _clock;}
     uint8_t getIN(void) {return _IN;}
     uint8_t getXOUT(void) {return _XOUT;}
     uint16_t getVPC(void) {return _vPC;}
-    uint8_t getRAM(uint16_t address) {return _RAM[address & (RAM_SIZE-1)];}
+    uint8_t getRAM(uint16_t address) {return _RAM[address & (Memory::getSizeRAM()-1)];}
     uint8_t getROM(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01];}
-    uint16_t getRAM16(uint16_t address) {return _RAM[address & (RAM_SIZE-1)] | (_RAM[(address+1) & (RAM_SIZE-1)]<<8);}
+    uint16_t getRAM16(uint16_t address) {return _RAM[address & (Memory::getSizeRAM()-1)] | (_RAM[(address+1) & (Memory::getSizeRAM()-1)]<<8);}
     uint16_t getROM16(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01] | (_ROM[(address+1) & (ROM_SIZE-1)][page & 0x01]<<8);}
     float getvCpuUtilisation(void) {return _vCpuUtilisation;}
 
 
+    void setIsInReset(bool isInReset) {_isInReset = isInReset;}
     void setClock(int64_t clock) {_clock = clock;}
     void setIN(uint8_t in) {_IN = in;}
     void setXOUT(uint8_t xout) {_XOUT = xout;}
@@ -216,10 +250,9 @@ namespace Cpu
     void setRAM(uint16_t address, uint8_t data)
     {
         // Constant "0" and "1" are stored here
-        if(address == 0x0000) return;
-        if(address == 0x0080) return;
+        if(address == ZERO_CONST_ADDRESS  ||  address == ONE_CONST_ADDRESS) return;
 
-        _RAM[address & (RAM_SIZE-1)] = data;
+        _RAM[address & (Memory::getSizeRAM()-1)] = data;
     }
 
     void setROM(uint16_t base, uint16_t address, uint8_t data)
@@ -234,8 +267,8 @@ namespace Cpu
         if(address == 0x0000) return;
         if(address == 0x0080) return;
 
-        _RAM[address & (RAM_SIZE-1)] = uint8_t(LO_BYTE(data));
-        _RAM[(address+1) & (RAM_SIZE-1)] = uint8_t(HI_BYTE(data));
+        _RAM[address & (Memory::getSizeRAM()-1)] = uint8_t(LO_BYTE(data));
+        _RAM[(address+1) & (Memory::getSizeRAM()-1)] = uint8_t(HI_BYTE(data));
     }
 
     void setROM16(uint16_t base, uint16_t address, uint16_t data)
@@ -356,20 +389,26 @@ namespace Cpu
     void loadRom(int index)
     {
         _romIndex = index % _numRoms;
-        memcpy(_ROM, _romFiles[_romIndex], sizeof(_ROM));
+        memcpy(_ROM, _romFiles[_romIndex], sizeof _ROM);
         reset(true);
     }
 
     void swapRom(void)
     {
         _romIndex = (_romIndex + 1) % _numRoms;
-        memcpy(_ROM, _romFiles[_romIndex], sizeof(_ROM));
+        memcpy(_ROM, _romFiles[_romIndex], sizeof _ROM);
         reset(true);
     }
 
 
     void shutdown(void)
     {
+        if(_RAM)
+        {
+            delete [] _RAM;
+            _RAM = nullptr;
+        }
+
         for(int i=NUM_INT_ROMS; i<_romFiles.size(); i++)
         {
             if(_romFiles[i])
@@ -401,10 +440,20 @@ namespace Cpu
         setbuf(stdout, NULL);
 #endif    
 
+        _RAM = new uint8_t[Memory::getSizeRAM()];
+        if(!_RAM)
+        {
+            // This is fairly pointless as the code does not have any exception handling for the many std:: memory allocations that occur
+            // If you're running out of memory running this application, (which requires a couple of Mbytes), then you need to leave the 80's
+            shutdown();
+            fprintf(stderr, "Cpu::initialise() : out of memory!\n");
+            _EXIT_(EXIT_FAILURE);
+        }
+
         // Memory
         srand((unsigned int)time(NULL)); // Initialize with randomized data
         garble((uint8_t*)_ROM, sizeof _ROM);
-        garble(_RAM, sizeof _RAM);
+        garble(_RAM, Memory::getSizeRAM());
         garble((uint8_t*)&S, sizeof S);
 
         // Internal ROMS
@@ -430,15 +479,17 @@ namespace Cpu
             else
             {
                 // Load ROM file
-                uint8_t* rom = new uint8_t[sizeof(_ROM)];
+                uint8_t* rom = new uint8_t[sizeof _ROM];
                 if(!rom)
                 {
+                    // This is fairly pointless as the code does not have any exception handling for the many std:: memory allocations that occur
+                    // If you're running out of memory running this application, (which requires a couple of Mbytes), then you need to leave the 80's
                     shutdown();
                     fprintf(stderr, "Cpu::initialise() : out of memory!\n");
                     _EXIT_(EXIT_FAILURE);
                 }
 
-                file.read((char *)rom, sizeof(_ROM));
+                file.read((char *)rom, sizeof _ROM);
                 if(file.bad() || file.fail())
                 {
                     fprintf(stderr, "Cpu::initialise() : failed to read ROM file : %s\n", name.c_str());
@@ -454,12 +505,12 @@ namespace Cpu
         // Switchable ROMS
         _numRoms = int(_romFiles.size());
         _romIndex = _numRoms - 1;
-        memcpy(_ROM, _romFiles[_romIndex], sizeof(_ROM));
+        memcpy(_ROM, _romFiles[_romIndex], sizeof _ROM);
 
 //#define CREATE_ROM_HEADER
 #ifdef CREATE_ROM_HEADER
         // Create a header file representation of a ROM, (match the ROM type number with the ROM file before enabling and running this code)
-        createRomHeader((uint8_t *)_ROM, "gigatron_xxxx.h", "_gigatron_xxxx_rom", sizeof(_ROM));
+        createRomHeader((uint8_t *)_ROM, "gigatron_xxxx.h", "_gigatron_xxxx_rom", sizeof _ROM);
 #endif
 
 //#define CUSTOM_ROM
@@ -640,15 +691,15 @@ namespace Cpu
         int B = S._undef; // Data Bus
         switch(bus)
         {
-            case 0: B=S._D;                              break;
-            case 1: if (!W) B = _RAM[addr&(RAM_SIZE-1)]; break;
-            case 2: B=S._AC;                             break;
-            case 3: B=_IN;                               break;
+            case 0: B=S._D;                                          break;
+            case 1: if (!W) B = _RAM[addr&(Memory::getSizeRAM()-1)]; break;
+            case 2: B=S._AC;                                         break;
+            case 3: B=_IN;                                           break;
         }
 
-        if(W) _RAM[addr&(RAM_SIZE-1)] = B; // Random Access Memory
+        if(W) _RAM[addr&(Memory::getSizeRAM()-1)] = B; // Random Access Memory
 
-        uint8_t ALU; // Arithmetic and Logic Unit
+        uint8_t ALU = 0; // Arithmetic and Logic Unit
         switch(ins)
         {
             case 0: ALU =         B; break; // LD
@@ -700,6 +751,11 @@ namespace Cpu
         setClock(CLOCK_RESET);
     }
 
+    void softReset(void)
+    {
+        Loader::setCurrentGame(std::string(""));
+    }
+
     // Counts maximum and used vCPU instruction slots available per frame
     void vCpuUsage(State& S, State& T)
     {
@@ -712,6 +768,9 @@ namespace Cpu
             _vPC = (getRAM(0x0017) <<8) | getRAM(0x0016);
             if(_vPC < Editor::getCpuUsageAddressA()  ||  _vPC > Editor::getCpuUsageAddressB()) _vCpuInstPerFrame++;
             _vCpuInstPerFrameMax++;
+
+            // Soft reset
+            if(_vPC == 0x01F0) softReset();
 
             static uint64_t prevFrameCounter = 0;
             double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());

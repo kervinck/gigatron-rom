@@ -246,7 +246,7 @@ namespace Editor
 
         // Current working directory
         char cwdPath[FILENAME_MAX];
-        getcwd(cwdPath, FILENAME_MAX);
+        if(!getcwd(cwdPath, FILENAME_MAX)) sprintf(cwdPath, ".");
         _cwdPath = std::string(cwdPath);
         _filePath = _cwdPath + "/";
 
@@ -573,18 +573,18 @@ namespace Editor
     {
         switch(_editorMode)
         {
-            case Hex:  _hexBaseAddress = (_hexBaseAddress - HEX_CHARS_X*numRows) & (RAM_SIZE-1); break;
-            case Load: if(--_fileEntriesIndex < 0) _fileEntriesIndex = 0;                        break;
-            case Rom:  if(--_romEntriesIndex < 0) _romEntriesIndex = 0;                          break;
+            case Hex:  _hexBaseAddress = (_hexBaseAddress - HEX_CHARS_X*numRows) & (Memory::getSizeRAM()-1); break;
+            case Load: if(--_fileEntriesIndex < 0) _fileEntriesIndex = 0;                                    break;
+            case Rom:  if(--_romEntriesIndex < 0) _romEntriesIndex = 0;                                      break;
             case Dasm: 
             {
                 if(numRows == 1)
                 {
-                    _hexBaseAddress = (_hexBaseAddress - Assembler::getPrevDasmByteCount()) & (RAM_SIZE-1);
+                    _hexBaseAddress = (_hexBaseAddress - Assembler::getPrevDasmByteCount()) & (Memory::getSizeRAM()-1);
                 }
                 else
                 {
-                    _hexBaseAddress = (_hexBaseAddress - Assembler::getPrevDasmPageByteCount()) & (RAM_SIZE-1);
+                    _hexBaseAddress = (_hexBaseAddress - Assembler::getPrevDasmPageByteCount()) & (Memory::getSizeRAM()-1);
                 }
             }
             break;
@@ -595,7 +595,7 @@ namespace Editor
     {
         switch(_editorMode)
         {
-            case Hex:  _hexBaseAddress = (_hexBaseAddress + HEX_CHARS_X*numRows) & (RAM_SIZE-1); break;
+            case Hex:  _hexBaseAddress = (_hexBaseAddress + HEX_CHARS_X*numRows) & (Memory::getSizeRAM()-1); break;
             case Load:
             {
                 if(_fileEntries.size() > HEX_CHARS_Y)
@@ -618,11 +618,11 @@ namespace Editor
             {
                 if(numRows == 1)
                 {
-                    _hexBaseAddress = (_hexBaseAddress + Assembler::getCurrDasmByteCount()) & (RAM_SIZE-1);
+                    _hexBaseAddress = (_hexBaseAddress + Assembler::getCurrDasmByteCount()) & (Memory::getSizeRAM()-1);
                 }
                 else
                 {
-                    _hexBaseAddress = (_hexBaseAddress + Assembler::getCurrDasmPageByteCount()) & (RAM_SIZE-1);
+                    _hexBaseAddress = (_hexBaseAddress + Assembler::getCurrDasmPageByteCount()) & (Memory::getSizeRAM()-1);
                 }
             }
             break;

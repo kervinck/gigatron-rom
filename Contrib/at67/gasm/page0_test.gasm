@@ -1,0 +1,36 @@
+%include macros/gigatron.i
+
+
+_startAddress_      EQU     0x0200              ; entry point for the code, if this is missing defaults to 0x0200
+        
+_callTable_         EQU     0x007E              ; call addresses are automatically stored here by the assembler, it grows downwards
+                                                ; *NOTE* gt1 spec only allows for one zero page segment, .vasm files use this for the call table
+                                                ; do *NOT* define any data/constants in zero page using DB or DW, it will not work! (use code)
+                                                ; do *NOT* make this address higher than 0x00BE, it will conflict with future ROM loading mechanisms
+                                                ; current serial port loader expects to be able to use 0x30 -> 0x44 for variable space, do *NOT* define
+                                                ; any constants or any part of the calltable in this area either
+                                        
+_singleStepWatch_   EQU     giga_frameCount     ; the single step debugger watches this variable location to decide when to step,
+                                                ; choose a variable that is updated often
+_cpuUsageAddressA_  EQU     0x0600              ; these two addresses are used to build an exclusion zone around vCPU code that will not be counted
+_cpuUsageAddressB_  EQU     0x0620              ; in the vCPU usage meter, (almost always used to exclude your VBlank polling loop)
+
+
+;data0           EQU     0x30
+data1           EQU     0x44
+data2           EQU     0x82
+data3           EQU     0xA0
+data4           EQU     0xB0
+data5           EQU     0xC0
+
+;data0           DW      0x3377
+data1           DW      1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40
+data2           DW      0xdead 0xbeef 0xffff 0xfffe 0xfffd 0xfffc 0xfffb 0xfffa 0xfff9 0xfff8 0xfff7 0xfff6 0xfff5 0xfff4 0xfff3
+data3           DB      16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1
+data4           DB      1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
+data5           DW      0x0101 0x0202 0x0303 0x0404 0x0505 0x0606 0x0707 0x0808 0x0909 0x0a0a 0x0b0b 0x0c0c 0x0d0d 0x0e0e 0x0f0f 0xaa55
+
+entry_point     EQU     0x0200
+
+
+entry_point     BRA     entry_point

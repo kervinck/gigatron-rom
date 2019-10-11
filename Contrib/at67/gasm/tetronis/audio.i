@@ -4,7 +4,7 @@ resetAudio      LDWI    0x0000
                 STW     midiNote
                 LDWI    giga_soundChan1 + 2 ; keyL, keyH
                 STW     midiChannel
-                STW     scratch
+                STW     midiScratch
                 LDWI    title_screenMidi00  ; midi score
                 STW     midiStreamPtr
 
@@ -12,106 +12,88 @@ resetAudio      LDWI    0x0000
                 ST      ii
 
 resetA_loop     LDI     giga_soundChan1     ; reset low byte
-                ST      scratch
+                ST      midiScratch
                 LDWI    0x0300              
-                DOKE    scratch             ; wavA and wavX
-                INC     scratch
-                INC     scratch    
+                DOKE    midiScratch         ; wavA and wavX
+                INC     midiScratch
+                INC     midiScratch    
                 LDWI    0x0000
-                DOKE    scratch             ; keyL and keyH
-                INC     scratch
-                INC     scratch
-                DOKE    scratch             ; oscL and oscH
-                INC     scratch + 1         ; increment high byte
+                DOKE    midiScratch         ; keyL and keyH
+                INC     midiScratch
+                INC     midiScratch
+                DOKE    midiScratch         ; oscL and oscH
+                INC     midiScratch + 1     ; increment high byte
                 LoopCounter ii resetA_loop
                 RET
 
 
-playMidiAsync   LD      giga_frameCount
-                SUBW    frameCountPrev
-                BEQ     playMV_exit
-                LD      giga_frameCount
-                STW     frameCountPrev
-                PUSH
-                CALL    playMidi
-                POP
-playMV_exit     RET
-
-
-playMidi        LDI     0x01                ; keep pumping soundTimer, so that global sound stays alive
+playMidi        LDI     0x05                ; keep pumping soundTimer, so that global sound stays alive
                 ST      giga_soundTimer
-                LDW     midiDelay
-                BEQ     playM_process
-                SUBI    0x01
-                STW     midiDelay
-                BEQ     playM_process    
+                LD      giga_frameCount
+                SUBW    midiDelay
+                BEQ     playM_start
                 RET
 
+playM_start     PUSH
 playM_process   LDW     midiStreamPtr
                 PEEK                        ; get midi stream byte
                 STW     midiCommand
                 LDW     midiStreamPtr
                 ADDI    0x01
                 STW     midiStreamPtr
-                LDW     midiCommand
-                ANDI    0xF0
-                STW     scratch
+                LDI     0xF0
+                ANDW    midiCommand
                 XORI    0x90                ; check for start note
                 BNE     playM_endnote
 
-                PUSH                    
                 CALL    midiStartNote       ; start note
-                POP
                 BRA     playM_process
                 
-playM_endnote   LDW     scratch 
-                XORI    0x80                ; check for end note
+playM_endnote   XORI    0x10                ; check for end note
                 BNE     playM_segment
 
-                PUSH
                 CALL    midiEndNote         ; end note
-                POP
                 BRA     playM_process
 
 
-playM_segment   LDW     scratch
-                XORI    0xD0                ; check for new segment
+playM_segment   XORI    0x50                ; check for new segment
                 BNE     playM_delay
 
-                PUSH
-                CALL    midiSegment         ; new midi segment
-                POP
+                LDW     midiStreamPtr       ; midi score
+                DEEK
+                STW     midiStreamPtr       ; 0xD0 new midi segment address
                 BRA     playM_process
 
-playM_delay     LDW     midiCommand         ; all that is left is delay
-                STW     midiDelay
+playM_delay     LD      giga_frameCount     ; midiDelay = (midiCommand + peek(frameCount)) & 0x00FF 
+                ADDW    midiCommand
+                ST      midiDelay
+                POP
                 RET
 
 
 midiStartNote   LDWI    giga_notesTable     ; note table in ROM
-                STW     scratch
+                STW     midiScratch
                 LDW     midiStreamPtr       ; midi score
                 PEEK
-                SUBI    10
+                SUBI    11
                 LSLW
-                SUBI    2
-                ADDW    scratch
-                STW     scratch
+                ADDW    midiScratch
+                STW     midiScratch
                 LUP     0x00                ; get ROM midi note low byte
                 ST      midiNote
-                LDW     scratch
+                LDW     midiScratch
                 LUP     0x01                ; get ROM midi note high byte
                 ST      midiNote + 1
                 LDW     midiCommand
                 ANDI    0x03                ; get channel
-                ST      scratch + 1
+                ST      midiScratch + 1
                 LDI     0x00
-                ST      scratch
-                LDW     scratch
+                ST      midiScratch
+                LDW     midiScratch
                 ADDW    midiChannel         ; channel address
-                STW     scratch
+                STW     midiScratch
                 LDW     midiNote
-                DOKE    scratch             ; set note
+                DOKE    midiScratch         ; set note
                 LDW     midiStreamPtr
                 ADDI    0x01                ; midiStreamPtr++
                 STW     midiStreamPtr
@@ -120,18 +102,12 @@ midiStartNote   LDWI    giga_notesTable     ; note table in ROM
 
 midiEndNote     LDW     midiCommand
                 ANDI    0x03                ; get channel
-                ST      scratch + 1
+                ST      midiScratch + 1
                 LDI     0x00
-                ST      scratch
-                LDW     scratch
+                ST      midiScratch
+                LDW     midiScratch
                 ADDW    midiChannel         ; channel address
-                STW     scratch
+                STW     midiScratch
                 LDWI    0x0000
-                DOKE    scratch             ; end note
-                RET
-
-
-midiSegment     LDW     midiStreamPtr       ; midi score
-                DEEK
-                STW     midiStreamPtr       ; 0xD0 new midi segment address
+                DOKE    midiScratch         ; end note
                 RET

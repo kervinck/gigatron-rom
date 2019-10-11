@@ -133,6 +133,7 @@ namespace Loader
             if(start <= ONE_CONST_ADDRESS && end >= ONE_CONST_ADDRESS) page0._dataBytes[ONE_CONST_ADDRESS-start] = 0x01;
 
             // Copy page 0 segments
+            fprintf(stderr, "\n* Merging %d page 0 segments\n", segments);
             for(int i=0; i<segments; i++)
             {
                 int j = 0;
@@ -141,6 +142,9 @@ namespace Loader
                 {
                     page0._dataBytes[k] = gt1File._segments[i]._dataBytes[j++];
                 }
+                fprintf(stderr, "* Segment: %03d  start: 0x%0x  end: 0x%02x  size: 0x%02x\n", i, gt1File._segments[i]._loAddress, 
+                                                                                                 gt1File._segments[i]._loAddress + uint8_t(gt1File._segments[i]._dataBytes.size()) - 1, 
+                                                                                                 uint8_t(gt1File._segments[i]._dataBytes.size()));
             }
 
             // Erase old page 0 segments
@@ -148,6 +152,9 @@ namespace Loader
 
             // Insert merged page0 segment
             gt1File._segments.insert(gt1File._segments.begin(), page0);
+            fprintf(stderr, "* Merged:       start: 0x%0x  end: 0x%02x  size: 0x%02x\n", gt1File._segments[0]._loAddress, 
+                                                                                       gt1File._segments[0]._loAddress + uint8_t(gt1File._segments[0]._dataBytes.size()) - 1, 
+                                                                                       uint8_t(gt1File._segments[0]._dataBytes.size()));
         }
 
         for(int i=0; i<gt1File._segments.size(); i++)
@@ -287,6 +294,9 @@ namespace Loader
     INIReader _highScoresIniReader;
     std::map<std::string, SaveData> _saveData;
 
+
+    std::string& getCurrentGame(void) {return _currentGame;}
+    void setCurrentGame(std::string& currentGame) {_currentGame = currentGame;}
 
     UploadTarget getUploadTarget(void) {return _uploadTarget;}
     void setUploadTarget(UploadTarget target) {_uploadTarget = target;}
@@ -667,7 +677,7 @@ namespace Loader
         // load data
         for(int j=0; j<sdata._addresses.size(); j++)
         {
-            sdata._data.push_back(std::vector<uint8_t>(sdata._counts[j], 0x00));
+            //sdata._data.push_back(std::vector<uint8_t>(sdata._counts[j], 0x00));
             for(int i=0; i<sdata._counts[j]; i++)
             {
                 uint8_t data;
@@ -794,18 +804,21 @@ namespace Loader
     }
 
     // Saves high score for current game to a simple <game>.dat file
-    void saveHighScore(void)
+    bool saveHighScore(void)
     {
         if(_saveData.find(_currentGame) == _saveData.end())
         {
             fprintf(stderr, "Loader::saveHighScore() : error, no game entry defined in '%s' for '%s'\n", HIGH_SCORES_INI, _currentGame.c_str());
-            return;
+            return false;
         }
 
         if(Loader::saveDataFile(_saveData[_currentGame]))
         {
             fprintf(stderr, "Loader::saveHighScore() : saved high score data successfully for '%s'\n", _currentGame.c_str());
+            return true;
         }
+
+        return false;
     }
 
     // Updates a game's high score, (call this in the vertical blank)
@@ -822,7 +835,6 @@ namespace Loader
         frameCount = 0;
 
         // Update data, (checks byte by byte and saves if larger, endian order is configurable)
-        bool save = false;
         for(int j=0; j<_saveData[_currentGame]._addresses.size(); j++)
         {
             // Defaults to little endian
@@ -992,7 +1004,11 @@ namespace Loader
             // Create compile gcl string
             std::string browserPath = Editor::getBrowserPath();
             browserPath.pop_back(); // remove trailing '/'
-            chdir(_configGclBuild.c_str());
+            if(chdir(_configGclBuild.c_str()))
+            {
+                fprintf(stderr, "\nLoader::uploadDirect() : failed to change directory to '%s' : can't build %s\n", _configGclBuild.c_str(), filename.c_str());
+                return;
+            }
 
             std::string command = "py -B Core\\compilegcl.py -s interface.json \"" + filepath + "\" \"" + browserPath + "\"";
             //fprintf(stderr, command.c_str());
@@ -1033,10 +1049,14 @@ namespace Loader
             {
                 for(int j=0; j<gt1File._segments.size(); j++)
                 {
+                    // Ignore if address will not fit in current RAM
                     uint16_t address = gt1File._segments[j]._loAddress + (gt1File._segments[j]._hiAddress <<8);
-                    for(int i=0; i<gt1File._segments[j]._dataBytes.size(); i++)
+                    if((address + gt1File._segments[j]._dataBytes.size() - 1) < Memory::getSizeRAM())
                     {
-                        Cpu::setRAM(address+i, gt1File._segments[j]._dataBytes[i]);
+                        for(int i=0; i<gt1File._segments[j]._dataBytes.size(); i++)
+                        {
+                            Cpu::setRAM(address+i, gt1File._segments[j]._dataBytes[i]);
+                        }
                     }
                 }
             }
@@ -1263,7 +1283,7 @@ namespace Loader
         static bool frameUploading = false;
         static FILE* fileToUpload = NULL;
         static FILE* fileToSave = NULL;
-        static uint8_t payload[RAM_SIZE];
+        static uint8_t payload[RAM_SIZE_HI];
         static uint8_t payloadSize = 0;
 
         if(_uploadTarget != None  ||  frameUploading)

@@ -1,12 +1,29 @@
 %include ../macros/gigatron.i
 
-; 0x30 -> 0x7F  CallTable   *DO NOT* pull CallTable above 0xBE, future ROMS will *NOT* work as the CallTable is preloaded and will conflict with ROM loader
-; 0x81 -> 0x89  Vars
-; 0x90 -> 0x99  Midi
-; 0xA0 -> 0xED  Vars
-; 0xEE -> 0xFF  Stack       The amount of stack space you will require depends on how many nested CALLS you make, 18 bytes allows for upto 9 nested calls
+; 0x30 -> 0x38  Vars
+; 0x3A -> 0x45  Midi
+; 0x4A -> 0x96  CallTable   *DO NOT* pull CallTable above 0xBE, future ROMS will *NOT* work as the CallTable is preloaded and will conflict with future loading mechanisms
+; 0x98 -> 0xE5  Vars
+; 0xE6 -> 0xFF  Stack       The amount of stack space you will require depends on how many nested CALLS you make, 28 bytes allows for upto 14 nested calls
 
-xx              EQU     0xA0
+kk              EQU     0x30
+ll              EQU     kk + 0x01
+mm              EQU     kk + 0x02
+nn              EQU     kk + 0x03
+tt              EQU     kk + 0x04
+buttonStatePrev EQU     kk + 0x05
+refresh         EQU     kk + 0x06
+blocked         EQU     kk + 0x07
+tetrominoNext   EQU     kk + 0x08
+
+midiStreamPtr   EQU     0x3A
+midiCommand     EQU     midiStreamPtr + 0x02
+midiChannel     EQU     midiStreamPtr + 0x04
+midiDelay       EQU     midiStreamPtr + 0x06
+midiNote        EQU     midiStreamPtr + 0x08
+midiScratch     EQU     midiStreamPtr + 0x0A
+
+xx              EQU     0x98
 yy              EQU     xx + 0x01
 ii              EQU     xx + 0x02
 jj              EQU     xx + 0x03
@@ -49,22 +66,6 @@ scoreLevel      EQU     xx + 0x48
 scoreUpdate     EQU     xx + 0x4A
 scoreScratch    EQU     xx + 0x4C
 
-kk              EQU     0x81            ; 0x80 can't be used
-ll              EQU     kk + 0x01
-mm              EQU     kk + 0x02
-nn              EQU     kk + 0x03
-tt              EQU     kk + 0x04
-buttonStatePrev EQU     kk + 0x05
-refresh         EQU     kk + 0x06
-blocked         EQU     kk + 0x07
-tetrominoNext   EQU     kk + 0x08
-
-midiStreamPtr   EQU     0x90
-midiCommand     EQU     midiStreamPtr + 0x02
-midiChannel     EQU     midiStreamPtr + 0x04
-midiDelay       EQU     midiStreamPtr + 0x06
-midiNote        EQU     midiStreamPtr + 0x08
-
 xTetris         EQU     10
 yTetris         EQU     20
 xPixels         EQU     xTetris*4
@@ -85,7 +86,7 @@ bgColourW       EQU     0x1515
              
 _startAddress_      EQU     0x0200       ; entry point for the code, if this is missing defaults to 0x0200
 
-_callTable_         EQU     0x007E       ; call addresses are automatically stored here by the assembler, it grows downwards
+_callTable_         EQU     0x0096       ; call addresses are automatically stored here by the assembler, it grows downwards
                                          ; *NOTE* gt1 spec only allows for one zero page segment, .vasm files use this for the call table
                                          ; do *NOT* define any data/constants in zero page using DB or DW, it will not work! (use code)
                                          ; do *NOT* make this address higher than 0x00BE, it will conflict with future ROM loading mechanisms
@@ -222,6 +223,9 @@ restart         CALL    resetLevel
                      
                 CALL    spawnTetromino
                 
+                LD      giga_frameCount ; Start checking midi stream immediately
+                ST      midiDelay
+                
                 ; main update loop
 update          ST      scratch
                 CALL    saveTetromino
@@ -229,7 +233,7 @@ update          ST      scratch
                 ; wait for VBlank
 vBlank          CALL    waitVBlank
                 CALL    playMidi
-
+                
                 ; input
                 CALL    handleInput
                 ST      refresh

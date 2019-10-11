@@ -58,9 +58,9 @@ int main(int argc, char* argv[])
 {
     Cpu::State S, T;
 
+    Memory::intitialise();
     Loader::initialise();
     Cpu::initialise(S);
-    Memory::intitialise();
     Audio::initialise();
     Graphics::initialise();
     Editor::initialise();
@@ -81,7 +81,12 @@ int main(int argc, char* argv[])
         int64_t clock = Cpu::getClock();
 
         // MCP100 Power-On Reset
-        if(clock < 0) S._PC = 0; 
+        if(clock < 0)
+        {
+            S._PC = 0; 
+            Cpu::setIsInReset(true);
+            Loader::setCurrentGame(std::string(""));
+        }
 
         // Update CPU
         Cpu::cycle(S, T);
@@ -137,6 +142,7 @@ int main(int argc, char* argv[])
         if(clock > STARTUP_DELAY_CLOCKS)
         {
             Cpu::setRomType();
+            Cpu::setIsInReset(false);
 
             if(!debugging  &&  clock - clock_prev > CPU_STALL_CLOCKS)
             {
@@ -177,7 +183,7 @@ int main(int argc, char* argv[])
                     colour = 0xFFFF0000;
                     //fprintf(stderr, "main(): Horizontal timing error : vgaX %03d : vgaY %03d : xout %02x : time %0.3f\n", vgaX, vgaY, T._AC, float(clock)/6.250e+06f);
                 }
-                if((vgaY % 4) == 3) Graphics::refreshTimingPixel(S, 160, (vgaY/4) % GIGA_HEIGHT, colour, debugging);
+                if((vgaY % 4) == 3) Graphics::refreshTimingPixel(S, 160, vgaY / 4, colour, debugging);
             }
 
             vgaX = 0;

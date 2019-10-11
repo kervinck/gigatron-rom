@@ -83,9 +83,10 @@ namespace Cpu
     void patchScanlineModeVideoB(void);
     void patchScanlineModeVideoC(void);
     void patchTitleIntoRom(const std::string& title);
-    void patchSplitGt1IntoRom(const std::string& splitGt1path, const std::string& splitGt1name, uint16_t startAddress, InternalGt1Id gt1Id);
+    bool patchSplitGt1IntoRom(const std::string& splitGt1path, const std::string& splitGt1name, uint16_t startAddress, InternalGt1Id gt1Id);
 
 #ifndef STAND_ALONE
+    bool getIsInReset(void);
     State& getStateS(void);
     State& getStateT(void);
     int64_t getClock(void);
@@ -98,6 +99,7 @@ namespace Cpu
     uint16_t getROM16(uint16_t address, int page);
     float getvCpuUtilisation(void);
 
+    void setIsInReset(bool isInReset);
     void setClock(int64_t clock);
     void setIN(uint8_t in);
     void setXOUT(uint8_t xout);

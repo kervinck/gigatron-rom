@@ -33,8 +33,7 @@ midiCommand     EQU     0x5A
 midiChannel     EQU     0x5C
 midiDelay       EQU     0x5E
 midiNote        EQU     0x60
-frameCountPrev  EQU     0x62
-tbase           EQU     0x64
+tbase           EQU     0x62
 
 xyPosArray      EQU     0x600
 xyVelArray      EQU     0x680
@@ -59,16 +58,15 @@ velocity        EQU     0x09A1
 clearScreen     EQU     0x0AA1
 clearScreen_0   EQU     0x0BA1
 resetAudio      EQU     0x0CA1
-playMidiAsync   EQU     0x0DA1
-playMidi        EQU     0x0EA1
-midiStartNote   EQU     0x0FA1
-midiSegment     EQU     0x10A1
-printText       EQU     0x11A1
+playMidi        EQU     0x0DA1
+midiStartNote   EQU     0x0EA1
+midiSegment     EQU     0x0FA1
+printText       EQU     0x10A1
 
 ; these two addresses are used to build an exclusion zone around vCPU code that will not be counted
 ; in the vCPU usage meter, (almost always used to exclude your VBlank polling loop, in this case MIDI)
 _cpuUsageAddressA_  EQU     start  
-_cpuUsageAddressB_  EQU     playMidiAsync - 1
+_cpuUsageAddressB_  EQU     playMidi - 1
 
 
 start           CALL    resetAudio
@@ -117,7 +115,13 @@ rand_vel        CALL    centerPos
                    
                 LoopCounterTo1 ii rand_vel
 
-loopInit        LDI     numStars    
+                LD      giga_frameCount     ; Start checking midi stream immediately
+                ST      midiDelay
+
+loopInit        LDI     0x10                ; keep pumping soundTimer, so that global sound stays alive
+                ST      giga_soundTimer
+                
+                LDI     numStars    
                 ST      ii  
         
                 LDWI    xyPosArray  
@@ -180,7 +184,7 @@ draw            LDW     xPos
                 INC     yVel    
                 INC     yVel    
         
-                CALL    playMidiAsync
+                CALL    playMidi
 
                 LoopCounterTo1 ii erase
                 BRA     loopInit    
@@ -339,64 +343,45 @@ resetA_loop     LDI     giga_soundChan1     ; reset low byte
                 RET
 
 
-playMidiAsync   LD      giga_frameCount
-                SUBW    frameCountPrev
-                BEQ     playMV_exit
-                LD      giga_frameCount
-                STW     frameCountPrev
-                PUSH
-                CALL    playMidi
-                POP
-playMV_exit     RET
-
-
-playMidi        LDI     0x01                ; keep pumping soundTimer, so that global sound stays alive
-                ST      giga_soundTimer
-                LDW     midiDelay
-                BEQ     playM_process
-                SUBI    0x01
-                STW     midiDelay
-                BEQ     playM_process    
+playMidi        LD      giga_frameCount
+                SUBW    midiDelay
+                BEQ     playM_start
                 RET
 
+playM_start     PUSH
 playM_process   LDW     midiStreamPtr
                 PEEK                        ; get midi stream byte
                 STW     midiCommand
                 LDW     midiStreamPtr
                 ADDI    0x01
                 STW     midiStreamPtr
-                LDW     midiCommand
-                ANDI    0xF0
-                STW     scratch
+                LDI     0xF0
+                ANDW    midiCommand
                 XORI    0x90                ; check for start note
                 BNE     playM_endnote
 
-                PUSH                    
                 CALL    midiStartNote       ; start note
-                POP
                 BRA     playM_process
                 
-playM_endnote   LDW     scratch 
-                XORI    0x80                ; check for end note
+playM_endnote   XORI    0x10                ; check for end note
                 BNE     playM_segment
 
-                PUSH
                 CALL    midiEndNote         ; end note
-                POP
                 BRA     playM_process
 
 
-playM_segment   LDW     scratch
-                XORI    0xD0                ; check for new segment
+playM_segment   XORI    0x50                ; check for new segment
                 BNE     playM_delay
 
-                PUSH
-                CALL    midiSegment         ; new midi segment
-                POP
+                LDW     midiStreamPtr       ; midi score
+                DEEK
+                STW     midiStreamPtr       ; 0xD0 new midi segment address
                 BRA     playM_process
 
-playM_delay     LDW     midiCommand         ; all that is left is delay
-                STW     midiDelay
+playM_delay     LD      giga_frameCount     ; midiDelay = (midiCommand + peek(frameCount)) & 0x00FF 
+                ADDW    midiCommand
+                ST      midiDelay
+                POP
                 RET
 
 
@@ -404,9 +389,8 @@ midiStartNote   LDWI    giga_notesTable     ; note table in ROM
                 STW     scratch
                 LDW     midiStreamPtr       ; midi score
                 PEEK
-                SUBI    10
+                SUBI    11
                 LSLW
-                SUBI    2
                 ADDW    scratch
                 STW     scratch
                 LUP     0x00                ; get ROM midi note low byte
@@ -441,12 +425,6 @@ midiEndNote     LDW     midiCommand
                 LDWI    0x0000
                 DOKE    scratch             ; end note
                 RET
-
-
-midiSegment     LDW     midiStreamPtr       ; midi score
-                DEEK
-                STW     midiStreamPtr       ; 0xD0 new midi segment address
-midiSegmentEnd  RET
 
 
                 ; prints text using the inbuilt font and SYS routine

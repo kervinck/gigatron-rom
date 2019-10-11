@@ -74,12 +74,9 @@ updateS_score   PUSH                        ; increment score string
                 STW     textStr
                 LDWI    scorePos
                 STW     textPos
-                PUSH
-                CALL    printDigits
-                POP
 
                 PUSH
-                CALL    playMidiAsync
+                CALL    printDigits
                 POP
 
                 LDW     scoreScratch        ; increment score scoreScratch/5 times, (score is a multiple of 5)
