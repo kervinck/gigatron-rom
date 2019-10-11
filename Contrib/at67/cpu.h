@@ -75,8 +75,6 @@ namespace Cpu
     void loadRom(int index);
     void swapRom(void);
 
-    void setFreeRAM(uint16_t freeRAM);
-
     void initialiseInternalGt1s(void);
 
     void patchSYS_Exec_88(void);

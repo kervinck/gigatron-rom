@@ -59,11 +59,11 @@ namespace Memory
 
     int getSizeRAM(void);
     int getBaseFreeRAM(void);
-    int getFreeRAM(void);
+    int getSizeFreeRAM(void);
     int getFreeGtbRAM(int numLines);
 
     void setSizeRAM(int sizeRAM);
-    void setFreeRAM(int freeRAM);
+    void setSizeFreeRAM(int freeRAM);
 
     void intitialise(void);
 

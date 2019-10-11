@@ -10,7 +10,7 @@ namespace Memory
 {
     int _sizeRAM = RAM_SIZE_LO;
     int _baseFreeRAM = _sizeRAM - RAM_USED_DEFAULT;
-    int _freeRAM = _baseFreeRAM;
+    int _sizeFreeRAM = _baseFreeRAM;
 
     std::vector<RamEntry> _freeRam;
     std::vector<RamEntry> _stackRam;
@@ -22,7 +22,7 @@ namespace Memory
 
     int getSizeRAM(void) {return _sizeRAM;}
     int getBaseFreeRAM(void) {return _baseFreeRAM;}
-    int getFreeRAM(void) {return _freeRAM;}
+    int getSizeFreeRAM(void) {return _sizeFreeRAM;}
     int getFreeGtbRAM(int numLines)
     {
         int free = ((0x80 - HI_BYTE(GTB_LINE0_ADDRESS))*NUM_GTB_LINES_PER_ROW - numLines)*MAX_GTB_LINE_SIZE - MAX_GTB_LINE_SIZE;
@@ -31,7 +31,17 @@ namespace Memory
     }
 
     void setSizeRAM(int sizeRAM) {_sizeRAM = sizeRAM;}
-    void setFreeRAM(int freeRAM) {_freeRAM = freeRAM;}
+
+    void setSizeFreeRAM(int freeRAM)
+    {
+        if(freeRAM == RAM_SIZE_LO  ||  freeRAM == RAM_SIZE_HI)
+        {
+            _sizeFreeRAM = freeRAM;
+            return;
+        }
+
+        _sizeFreeRAM = RAM_SIZE_LO;
+    }
 
     void intitialise(void)
     {
@@ -52,6 +62,9 @@ namespace Memory
         for(uint16_t i=RAM_SEGMENTS_START; i<=RAM_SEGMENTS_END; i+=RAM_SEGMENTS_OFS) _freeRam.push_back({i, RAM_SEGMENTS_SIZE});
 
         if(_sizeRAM == RAM_SIZE_HI) _freeRam.push_back({RAM_EXPANSION_START, RAM_EXPANSION_SIZE});
+
+        _baseFreeRAM = _sizeRAM - RAM_USED_DEFAULT;
+        _sizeFreeRAM = _baseFreeRAM;
     }
 
     bool updateRamLists(RamType ramType, int index, uint16_t address, int size, int newSize)

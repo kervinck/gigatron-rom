@@ -1133,7 +1133,7 @@ namespace Loader
         }
 
         uint16_t totalSize = printGt1Stats(filename, gt1File);
-        Memory::setFreeRAM(Memory::getBaseFreeRAM() - totalSize); 
+        Memory::setSizeFreeRAM(Memory::getBaseFreeRAM() - totalSize); 
 
         if(uploadTarget == Emulator)
         {
