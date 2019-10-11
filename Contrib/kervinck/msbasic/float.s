@@ -39,19 +39,34 @@ EASTER_EGG:
         lda     LINNUM+1
         sbc     #>6502
         bne     L3628
+.ifndef GT1
         sta     LINNUM
         tay
         lda     #$80
         sta     LINNUM+1
+.else
+        sta     $38
+        lda     $39
+        pha
+        lda     $100
+        sta     $39
+.endif
 LD758:
         ldx     #$0A
 LD75A:
         lda     MICROSOFT-1,x
         and     #$3F
+.ifndef GT1
         sta     (LINNUM),y
         iny
         bne     LD766
         inc     LINNUM+1
+.else
+        eor     #$20 ; Map charset code to ASCII
+        clc
+        adc     #$20
+        jsr     CHROUT
+.endif
 LD766:
         dex
         bne     LD75A
@@ -1434,11 +1449,7 @@ FOUT1:
         bpl     L3C73
         lda     #$2D
 L3C73:
-.if STACK2 <> 0
         sta     STACK2-1,y
-.else
-        sta     STACK2+65535,y ;GT1
-.endif
         sta     FACSIGN
         sty     STRNG2
         iny
@@ -1519,20 +1530,12 @@ L3CDF:
         ldy     STRNG2
         lda     #$2E
         iny
-.if STACK2 <> 0
         sta     STACK2-1,y
-.else
-        sta     STACK2+65535,y ;GT1
-.endif
         txa
         beq     L3CF0
         lda     #$30
         iny
-.if STACK2 <> 0
         sta     STACK2-1,y
-.else
-        sta     STACK2+65535,y ;GT1
-.endif
 L3CF0:
         sty     STRNG2
 ; ----------------------------------------------------------------------------
@@ -1582,20 +1585,12 @@ L3D23:
         iny
         tax
         and     #$7F
-.if STACK2 <> 0
         sta     STACK2-1,y
-.else
-        sta     STACK2+65535,y ;GT1
-.endif
         dec     INDX
         bne     L3D3E
         lda     #$2E
         iny
-.if STACK2 <> 0
         sta     STACK2-1,y
-.else
-        sta     STACK2+65535,y ;GT1
-.endif
 L3D3E:
         sty     STRNG2
         ldy     VARPNT
@@ -1617,11 +1612,7 @@ L3D3E:
 LDD96:
         ldy     STRNG2
 L3D4E:
-.if STACK2 <> 0
         lda     STACK2-1,y
-.else
-        lda     STACK2+65535,y ;GT1
-.endif
         dey
         cmp     #$30
         beq     L3D4E
@@ -1657,11 +1648,7 @@ L3D77:
         sta     STACK2+4,y
         beq     L3D94
 FOUT4:
-.if STACK2 <> 0
         sta     STACK2-1,y
-.else
-        sta     STACK2+65535,y ;GT1
-.endif
 L3D8F:
         lda     #$00
         sta     STACK2,y
