@@ -39,24 +39,30 @@ EASTER_EGG:
         lda     LINNUM+1
         sbc     #>6502
         bne     L3628
-.ifndef gigatron
+.ifndef GT1
         sta     LINNUM
         tay
         lda     #$80
         sta     LINNUM+1
+.else
+        sta     $38
+        lda     $39
+        pha
+        lda     $100
+        sta     $39
 .endif
 LD758:
         ldx     #$0A
 LD75A:
         lda     MICROSOFT-1,x
         and     #$3F
-.ifndef gigatron
+.ifndef GT1
         sta     (LINNUM),y
         iny
         bne     LD766
         inc     LINNUM+1
 .else
-        eor     #$20
+        eor     #$20 ; Map charset code to ASCII
         clc
         adc     #$20
         jsr     CHROUT
