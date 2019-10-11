@@ -62,6 +62,7 @@ namespace Memory
     int getFreeRAM(void);
     int getFreeGtbRAM(int numLines);
 
+    void setSizeRAM(int sizeRAM);
     void setFreeRAM(int freeRAM);
 
     void intitialise(void);

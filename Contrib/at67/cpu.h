@@ -117,6 +117,8 @@ namespace Cpu
     void shutdown(void);
     void cycle(const State& S, State& T);
     void reset(bool coldBoot=false);
+    void softReset(void);
+    void swapMemoryModel(void);
     void vCpuUsage(State& S, State& T);
 #endif
 }

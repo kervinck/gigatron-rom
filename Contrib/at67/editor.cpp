@@ -380,6 +380,7 @@ namespace Editor
 
         // Emulator INI key to SDL key mapping
         _emulator["MemoryMode"]   = {SDLK_m, KMOD_LCTRL};
+        _emulator["MemorySize"]   = {SDLK_z, KMOD_LCTRL};
         _emulator["Browse"]       = {SDLK_b, KMOD_LCTRL};
         _emulator["RomType"]      = {SDLK_r, KMOD_LCTRL};
         _emulator["HexMonitor"]   = {SDLK_x, KMOD_LCTRL};
@@ -442,6 +443,7 @@ namespace Editor
                 case Emulator:
                 {
                     scanCodeFromIniKey(sectionString, "MemoryMode",   "CTRL+M",   _emulator["MemoryMode"]);
+                    scanCodeFromIniKey(sectionString, "MemorySize",   "CTRL+Z",   _emulator["MemorySize"]);
                     scanCodeFromIniKey(sectionString, "Browse",       "CTRL+B",   _emulator["Browse"]);
                     scanCodeFromIniKey(sectionString, "RomType",      "CTRL+R",   _emulator["RomType"]);
                     scanCodeFromIniKey(sectionString, "HexMonitor",   "CTRL+X",   _emulator["HexMonitor"]);
@@ -1081,18 +1083,15 @@ namespace Editor
         // ROM type
         else if(_sdlKeyScanCode == _emulator["HexMonitor"].scanCode  &&  _sdlKeyModifier == _emulator["HexMonitor"].modifier)
         {
-            if(!_singleStepEnabled)
+            if(_editorMode == Hex)
             {
-                if(_editorMode == Hex)
-                {
-                    _editorMode = _editorModePrev;
-                    _editorModePrev = Hex;
-                }
-                else
-                {
-                    _editorModePrev = _editorMode;
-                    _editorMode = Hex;
-                }
+                _editorMode = _editorModePrev;
+                _editorModePrev = Hex;
+            }
+            else
+            {
+                _editorModePrev = _editorMode;
+                _editorMode = Hex;
             }
         }
 
@@ -1126,6 +1125,12 @@ namespace Editor
                 _hexBaseAddress = (_memoryMode == RAM) ? Cpu::getVPC() : Cpu::getStateS()._PC;
                 _vpcBaseAddress = _hexBaseAddress;
             }
+        }
+
+        // RAM Size
+        else if(_sdlKeyScanCode ==  _emulator["MemorySize"].scanCode  &&  _sdlKeyModifier == _emulator["MemorySize"].modifier)
+        {
+            Cpu::swapMemoryModel();
         }
 
         // Hardware upload and execute

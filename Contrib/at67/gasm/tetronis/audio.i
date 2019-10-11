@@ -13,7 +13,7 @@ resetAudio      LDWI    0x0000
 
 resetA_loop     LDI     giga_soundChan1     ; reset low byte
                 ST      midiScratch
-                LDWI    0x0300              
+                LDWI    0x0200              
                 DOKE    midiScratch         ; wavA and wavX
                 INC     midiScratch
                 INC     midiScratch    

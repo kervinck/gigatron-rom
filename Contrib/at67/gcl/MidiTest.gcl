@@ -9,13 +9,6 @@ gcl0x
 [def { ResetAudio -- reset audio hardware }
   0 midiCommand=
   0 midiNote=
-  
-  2- ptr= $200 ptr:               { Channel 1: Pulse }
-  >ptr++       ptr:               { Channel 2: Pulse }
-  >ptr++  $100 ptr:               { Channel 3: Triangle }
-  >ptr++  $068 ptr:               { Channel 4: Metallic (softened) }
-
-{  
   $01FA gigaAudio= 
   $01FC midiChannel=
   $08A0 midiStreamPtr=
@@ -33,7 +26,6 @@ gcl0x
     ii 1- ii=
   if>=0 loop]  
   ret
-}  
 ] ResetAudio=
 
 [def { PlayMidi -- plays MIDI stream, use this after your main VBlank loop or more often if needed}

@@ -48,7 +48,7 @@ namespace Cpu
     uint8_t _IN = 0xFF, _XOUT = 0x00;
     uint16_t _vPC = 0x0200;
     
-    uint8_t* _RAM;
+    std::vector<uint8_t> _RAM;
     uint8_t _ROM[ROM_SIZE][2];
     std::vector<uint8_t*> _romFiles;
     RomType _romType = ROMERR;
@@ -403,12 +403,6 @@ namespace Cpu
 
     void shutdown(void)
     {
-        if(_RAM)
-        {
-            delete [] _RAM;
-            _RAM = nullptr;
-        }
-
         for(int i=NUM_INT_ROMS; i<_romFiles.size(); i++)
         {
             if(_romFiles[i])
@@ -440,20 +434,12 @@ namespace Cpu
         setbuf(stdout, NULL);
 #endif    
 
-        _RAM = new uint8_t[Memory::getSizeRAM()];
-        if(!_RAM)
-        {
-            // This is fairly pointless as the code does not have any exception handling for the many std:: memory allocations that occur
-            // If you're running out of memory running this application, (which requires a couple of Mbytes), then you need to leave the 80's
-            shutdown();
-            fprintf(stderr, "Cpu::initialise() : out of memory!\n");
-            _EXIT_(EXIT_FAILURE);
-        }
+        _RAM.resize(Memory::getSizeRAM());
 
         // Memory
         srand((unsigned int)time(NULL)); // Initialize with randomized data
         garble((uint8_t*)_ROM, sizeof _ROM);
-        garble(_RAM, Memory::getSizeRAM());
+        garble(&_RAM[0], Memory::getSizeRAM());
         garble((uint8_t*)&S, sizeof S);
 
         // Internal ROMS
@@ -754,6 +740,14 @@ namespace Cpu
     void softReset(void)
     {
         Loader::setCurrentGame(std::string(""));
+    }
+
+    void swapMemoryModel(void)
+    {
+        (Memory::getSizeRAM() == RAM_SIZE_LO) ? Memory::setSizeRAM(RAM_SIZE_HI) : Memory::setSizeRAM(RAM_SIZE_LO);
+        _RAM.resize(Memory::getSizeRAM());
+        Memory::intitialise();
+        reset(false);
     }
 
     // Counts maximum and used vCPU instruction slots available per frame

@@ -59,8 +59,10 @@ _startAddress_      EQU     0x0200      ; entry point for the code, if this is m
 
 _callTable_         EQU     0x008E      ; call addresses are automatically stored here by the assembler, it grows downwards
                                         ; *NOTE* gt1 spec only allows for one zero page segment, .vasm files use this for the call table
-                                        ; do *NOT* define any data/constants in zero page using DB or DW, it will not work! (use code)
                                         ; do *NOT* make this address higher than 0x00BE, it will conflict with future ROM loading mechanisms
+                                        ; do *NOT* define constants, (DB or DW), between 0x30 -> 0x44 and 0xc0 -> 0xFF, these addresses are
+                                        ; used by the loader and the vCPU stack, you can create variables in these areas as long as you don't
+                                        ; corrupt your nested CALL return addresses on the stack
                                         
 _singleStepWatch_   EQU     k           ; the single step debugger watches this variable location to decide when to step,
                                         ; choose a variable that is updated often

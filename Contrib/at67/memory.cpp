@@ -8,7 +8,7 @@
 
 namespace Memory
 {
-    int _sizeRAM = RAM_SIZE_HI;
+    int _sizeRAM = RAM_SIZE_LO;
     int _baseFreeRAM = _sizeRAM - RAM_USED_DEFAULT;
     int _freeRAM = _baseFreeRAM;
 
@@ -30,6 +30,7 @@ namespace Memory
         return free;
     }
 
+    void setSizeRAM(int sizeRAM) {_sizeRAM = sizeRAM;}
     void setFreeRAM(int freeRAM) {_freeRAM = freeRAM;}
 
     void intitialise(void)
