@@ -14,6 +14,8 @@ gcl0x
 
         READY.
 
+        Issues:
+        XXX First command is not recognized
 
         Features:
         9-digit floating point
@@ -84,8 +86,7 @@ $ffb3                           {$24 - $71}
 }
 $101 {videoTable+1} p= $60 p.   {Use offsets 96..255 for pixel data, not 0..159}
 
-
-$8d CharOut!                    {A newline initializes p}
+\ClearScreen call
 
 &_MainLoop _vLR=                {Prepare transfer to main loop}
 &_COLD_START                    {Start address for 6502 program}
@@ -816,7 +817,8 @@ $2700 call
   6+ p=                         {Advance by 6 pixels}
 
   5 [do i=                      {Draw character as 5 vertical bit slices}
-    j 0? \sysArgs2.             {Get bit slice as byte from ROM table}
+    j 0?                        {Get bit slice as byte from ROM table}
+    $fe& \sysArgs2.             {Clear bottom pixel}
     134!                        {SYS call to draw 8 pixels vertically}
     <j++ <\sysArgs4++           {Advance to next byte}
     i 1- if>0loop]              {Looping}
@@ -824,6 +826,19 @@ $2700 call
   %-2                           {Return position for backspace}
 ]
 
+[pop ret]
+
+{-----------------------------------------------------------------------+
+|       ClearScreen                                                     |
++-----------------------------------------------------------------------}
+
+_ClearScreen=*
+
+push
+6 [do
+  \k.
+  $8d CharOut!
+  \k, 1- if>0loop]
 [pop ret]
 
 {-----------------------------------------------------------------------+
