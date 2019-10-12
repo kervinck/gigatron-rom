@@ -34,7 +34,8 @@ STACK2			:= $7100
 			; Floating point buffer
 
 ; inputbuffer
-INPUTBUFFER     := $0200
+INPUTBUFFER     := $2400
+CONFIG_INPUTBUFFER_0200 := 1
 
 ; constants
 SPACE_FOR_GOSUB := $3E          ; XXX ???
@@ -55,14 +56,14 @@ CHKIN	:= $FFC6
 CHKOUT	:= $FFC9
 CLRCH	:= $FFCC
 CHRIN	:= $FFCF
-CHROUT	:= $2700        ; Gigatron
+CHROUT	:= $2800        ; Gigatron
 LOAD	:= $FFD5
 SAVE	:= $FFD8
 VERIFY	:= $FFDB
 SYS		:= $FFDE
-ISCNTC	:= $2900
-GETIN	:= $2800
-CLALL	:= $2A00
+ISCNTC	:= $2A00
+GETIN	:= $2900
+CLALL	:= $2B00
 LE7F3	:= $E7F3; for CBM1
 MONCOUT	:= CHROUT
 MONRDKEY := GETIN

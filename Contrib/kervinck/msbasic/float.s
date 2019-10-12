@@ -44,12 +44,6 @@ EASTER_EGG:
         tay
         lda     #$80
         sta     LINNUM+1
-.else
-        sta     $38
-        lda     $39
-        pha
-        lda     $100
-        sta     $39
 .endif
 LD758:
         ldx     #$0A
