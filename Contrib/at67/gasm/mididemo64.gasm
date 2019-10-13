@@ -33,7 +33,7 @@ midiCommand     EQU     0x5A
 midiChannel     EQU     0x5C
 midiDelay       EQU     0x5E
 midiNote        EQU     0x60
-tbase           EQU     0x62
+fontBase        EQU     0x62
 
 xyPosArray      EQU     0x600
 xyVelArray      EQU     0x680
@@ -70,17 +70,31 @@ printText       EQU     0x10A1
 _cpuUsageAddressA_  EQU     start  
 _cpuUsageAddressB_  EQU     playMidi - 1
 
+RAM_64K_string  EQU     0x0300
+RAM_64K_string  DB      13 'Need 64K RAM!'
+
 
 start           CALL    resetAudio
                 CALL    clearScreen
+                
+                LD      giga_memSize        ; check for 64K RAM
+                BEQ     found_64K
+
+                LDWI    giga_text32 
+                STW     fontBase            ; text font base address, (ROM)
+                LDWI    0xFF00              ; foreground and background colour
+                STW     giga_sysArg0
+                LDWI    0x3E30              ; position
+                STW     textPos
+                LDWI    RAM_64K_string
+                STW     textStr
+                CALL    printText
+need_64k        BRA     need_64k               
                     
-                LDWI    vram
+found_64K       LDWI    vram
                 STW     vbase               ; vram base address
                 STW     pixels              ; pixel address
         
-                LDWI    giga_text32 
-                STW     tbase               ; text font base address, (ROM)
-    
                 LDWI    rand    
                 STW     random  
         
@@ -433,11 +447,6 @@ midiEndNote     LDW     midiCommand
 printText       LDWI    SYS_VDrawBits_134   ; setup 8 vertical pixel SYS routine
                 STW     giga_sysFn
 
-                LDI     0x00                ; background colour
-                ST      giga_sysArg0
-                LD      giga_rand0          ; foreground colour
-                ST      giga_sysArg1
-
                 LDW     textStr             ; first byte is length
                 PEEK
                 ST      tt
@@ -451,7 +460,7 @@ printT_chr      LDW     textStr
                 LSLW    scratch
                 LSLW    scratch
                 ADDW    textChr
-                ADDW    tbase
+                ADDW    fontBase
                 STW     scratch             ; text font slice base address for chars 32-81
 
                 LDW     textChr

@@ -31,17 +31,8 @@ namespace Memory
     }
 
     void setSizeRAM(int sizeRAM) {_sizeRAM = sizeRAM;}
+    void setSizeFreeRAM(int freeRAM) {_sizeFreeRAM = (freeRAM >= 0) ? freeRAM : 0;}
 
-    void setSizeFreeRAM(int freeRAM)
-    {
-        if(freeRAM == RAM_SIZE_LO  ||  freeRAM == RAM_SIZE_HI)
-        {
-            _sizeFreeRAM = freeRAM;
-            return;
-        }
-
-        _sizeFreeRAM = RAM_SIZE_LO;
-    }
 
     void intitialise(void)
     {

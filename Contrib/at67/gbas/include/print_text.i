@@ -7,23 +7,10 @@ textSlice       EQU     register4
 scanLine        EQU     register5
 digitMult       EQU     register6
 digitIndex      EQU     register7
+clearloop       EQU     register8
 
 
-                ; prints text using the inbuilt font
-printText       PUSH
-                LDW     textStr             
-                PEEK
-                ST      textLen             ; first byte is length
-
-printT_char     INC     textStr             ; next char
-                LDW     textStr             
-                PEEK
-                CALL    printChar
-printT_loop     LoopCounter textLen printT_char
-                POP
-                RET
-
-
+                ; clears the top 8 lines of pixels in preparation of text scrolling
 clearCursorRow  LDWI    0x2020
                 STW     giga_sysArg0        ; 4 pixels of colour
                 STW     giga_sysArg2
@@ -31,7 +18,7 @@ clearCursorRow  LDWI    0x2020
                 STW     giga_sysFn
 
                 LDI     8
-                ST      ycount
+                ST      clearloop
 
                 LDWI    giga_videoTable     ; current cursor position
                 PEEK
@@ -42,22 +29,41 @@ clearCR_loopy   LDI     giga_xres
 clearCR_loopx   SUBI    4                   ; loop is unrolled 4 times
                 ST      giga_sysArg4
                 SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                LD      giga_sysArg4
                 SUBI    4
                 ST      giga_sysArg4
                 SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                LD      giga_sysArg4
                 SUBI    4
                 ST      giga_sysArg4
                 SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                LD      giga_sysArg4
                 SUBI    4
                 ST      giga_sysArg4
                 SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
                 BGT     clearCR_loopx
 
                 INC     giga_sysArg4 + 1    ; next line                
-                LoopCounter ycount clearCR_loopy
+                LoopCounter clearloop clearCR_loopy
+                RET
+                
+                ; prints text using the inbuilt font
+printText       PUSH
+                LDW     textStr             
+                PEEK
+                ST      textLen             ; first byte is length
+
+printT_char     INC     textStr             ; next char
+                LDW     textStr             
+                PEEK
+                ST      textChr
+                LDWI    printChar
+                CALL    giga_vAC
+printT_loop     LoopCounter textLen printT_char
+                POP
                 RET
 
-
+                
 printDigit      PUSH
                 LDW     textDigits
 printD_index    SUBW    digitMult
@@ -69,7 +75,9 @@ printD_index    SUBW    digitMult
 printD_cont     LD      digitIndex
                 BEQ     printD_exit
                 ORI     0x30
-                CALL    printChar
+                ST      textChr
+                LDWI    printChar
+                CALL    giga_vAC
                 LDI     0x30
                 ST      digitIndex
 printD_exit     POP
@@ -82,36 +90,45 @@ printVarInt16   PUSH
                 LDW     textDigits
                 BGE     printVI16_pos
                 LDI     0x2D
-                CALL    printChar
+                ST      textChr
+                LDWI    printChar
+                CALL    giga_vAC
                 LDWI    0
                 SUBW    textDigits
 printVI16_pos   STW     textDigits    
 
                 LDWI    10000
                 STW     digitMult
-                CALL    printDigit
+                LDWI    printDigit
+                CALL    giga_vAC
                 LDWI    1000
                 STW     digitMult
-                CALL    printDigit
+                LDWI    printDigit
+                CALL    giga_vAC
                 LDWI    100
                 STW     digitMult
-                CALL    printDigit
+                LDWI    printDigit
+                CALL    giga_vAC
                 LDWI    10
                 STW     digitMult
-                CALL    printDigit
+                LDWI    printDigit
+                CALL    giga_vAC
                 LD      textDigits
                 ORI     0x30
-                CALL    printChar
+                ST      textChr
+                LDWI    printChar
+                CALL    giga_vAC
                 POP
                 RET
 
 
                 ; char in accumulator
-printChar       SUBI    32                  ; (char - 32)*5 + 0x0700
+printChar       LD      textChr             ; (char-32)*5 + 0x0700
+                SUBI    32
                 STW     textChr
                 STW     textFont
-                LSLW    textFont
-                LSLW    textFont
+                LSLW    
+                LSLW    
                 ADDW    textChr
                 STW     textFont             
                 LDWI    giga_text32
@@ -150,7 +167,8 @@ printC_slice    LDW     textFont            ; text font slice base address
                 SUBI    158
                 BLT     printC_exit
                 PUSH
-                CALL    newLineScroll       ; next row, scroll at bottom
+                LDWI    newLineScroll       ; next row, scroll at bottom
+                CALL    giga_vAC
                 POP
 printC_exit     RET
 
@@ -168,7 +186,8 @@ newLineScroll   LDI     0x02                ; x offset slightly
                 BLT     newLS_exit
                 
 newLS_cont      PUSH
-                CALL    clearCursorRow
+                LDWI    clearCursorRow
+                CALL    giga_vAC
                 POP
 
                 LDWI    giga_videoTable
@@ -199,12 +218,12 @@ newLS_adjust    ADDI    8
 newLS_exit      RET
 
 
-                ; arg in accumulator, result in accumulator and textChr
-validChar       ANDI    0x7F                ; char = <32...127>
+                ; arg in textChr, result in textChr
+validChar       LD      textChr
+                ANDI    0x7F                ; char = <32...127>
                 ST      textChr
                 SUBI    32
                 BGE     validC_chr
                 LDI     32
                 ST      textChr
-validC_chr      LD      textChr
-                RET
+validC_chr      RET

@@ -5,10 +5,35 @@ treset          EQU     register3
 breset          EQU     register4
 top             EQU     register5
 bot             EQU     register6
+vramptr         EQU     register7
+evenaddr        EQU     register8
 
 
+                ; resets video table pointers
+resetVideoTable LDWI    0x0008
+                STW     vramptr
+                LDWI    giga_videoTable
+                STW     evenaddr
+
+resetVT_loop    LDW     vramptr
+                DOKE    evenaddr
+                INC     evenaddr
+                INC     evenaddr
+
+                INC     vramptr
+                LD      vramptr
+                SUBI    giga_yres+8
+                BLT     resetVT_loop
+                RET
+
+                
                 ; clears a region within the viewable screen
-clearRegion     LDWI    SYS_Draw4_30    ; setup 4 pixel SYS routine
+clearRegion     PUSH
+                LDWI    resetVideoTable
+                CALL    giga_vAC
+                POP
+
+                LDWI    SYS_Draw4_30    ; setup 4 pixel SYS routine
                 STW     giga_sysFn
 
 clearS_loop     LDW     top

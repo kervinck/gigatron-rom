@@ -8,6 +8,9 @@
 ; sprite test
 
 
+%include ../macros/gigatron.i
+
+
 vram        EQU     0x0800
 buff0       EQU     0x08B0
 buff1       EQU     0x08D0
@@ -229,7 +232,7 @@ velocity    LDW     xyPos       ; xpos += xvel
             LDW     xyPos
             DEEK
             ADDW    vbase       ; generate vram address
-            DOKE     pixels
+            DOKE    pixels
 
 save        STW     srcAddr
             LDW     backBuffer
@@ -284,7 +287,7 @@ draw        LDW     pixels
             
             ;CALL    vblank0
             ;CALL    vblank1
-            CALL    vblank2
+            ;CALL    vblank2
             
             LDWI    buff1
             STW     backBuffer
@@ -294,7 +297,9 @@ draw        LDW     pixels
             LDI     0x00
             ST      i
 
-restore     LDW     backBuffer
+restore     CALL    waitScanln
+
+            LDW     backBuffer
             STW     srcAddr
             LDW     pixels
             DEEK
@@ -336,6 +341,16 @@ loopdelay   LDW     i
             STW     i
             SUBW    delay
             BLT     loopdelay
+            RET
+
+waitScanln  LD      videoY
+            STW     scratch
+            ADDW    videoY
+            STW     scratch
+            LDW     xyPosHi     ; ypos
+            PEEK
+            SUBW    scratch
+            BGT     waitScanln
             RET
 
 fillsprite  LDI     0x00

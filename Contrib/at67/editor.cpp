@@ -89,7 +89,7 @@ namespace Editor
     uint16_t _cpuUsageAddressA = HEX_BASE_ADDRESS;
     uint16_t _cpuUsageAddressB = HEX_BASE_ADDRESS + 0x0020;
     
-    std::vector<uint16_t> _breakpoints;
+    std::vector<uint16_t> _breakPoints;
 
     int _fileEntriesSize = 0;
     int _fileEntriesIndex = 0;
@@ -131,8 +131,10 @@ namespace Editor
     uint16_t getCpuUsageAddressA(void) {return _cpuUsageAddressA;}
     uint16_t getCpuUsageAddressB(void) {return _cpuUsageAddressB;}
 
-    int getBreakpointsSize(void) {return int(_breakpoints.size());}
-    uint16_t getBreakpointAddress(int index) {return _breakpoints.size() ? _breakpoints[index % _breakpoints.size()] : 0;}
+    int getBreakPointsSize(void) {return int(_breakPoints.size());}
+    uint16_t getBreakPointAddress(int index) {return _breakPoints.size() ? _breakPoints[index % _breakPoints.size()] : 0;}
+    void addBreakPoint(uint16_t address) {_breakPoints.push_back(address);}
+    void clearBreakPoints(void) {_breakPoints.clear();}
 
     int getFileEntriesIndex(void) {return _fileEntriesIndex;}
     int getFileEntriesSize(void) {return int(_fileEntries.size());}
@@ -151,6 +153,7 @@ namespace Editor
     void addRomEntry(uint8_t type, std::string& name) {Editor::RomEntry romEntry = {type, name}; _romEntries.push_back(romEntry); return;}
 
     void resetEditor(void) {_memoryDigit = 0; _addressDigit = 0;}
+    void setEditorMode(EditorMode editorMode) {_editorModePrev = _editorMode; _editorMode = editorMode;}
 
     void setCursorX(int x) {_cursorX = x;}
     void setCursorY(int y) {_cursorY = y;}
@@ -667,8 +670,8 @@ namespace Editor
             if(_cursorY < 0  ||  _cursorY >= Assembler::getDisassembledCodeSize() ||  _memoryMode != RAM) return;
 
             // If breakpoint already exists, delete it, otherwise save it
-            auto it = std::find(_breakpoints.begin(), _breakpoints.end(), Assembler::getDisassembledCode(_cursorY)->_address);
-            (it != _breakpoints.end()) ? _breakpoints.erase(it) : _breakpoints.push_back(Assembler::getDisassembledCode(_cursorY)->_address);
+            auto it = std::find(_breakPoints.begin(), _breakPoints.end(), Assembler::getDisassembledCode(_cursorY)->_address);
+            (it != _breakPoints.end()) ? _breakPoints.erase(it) : _breakPoints.push_back(Assembler::getDisassembledCode(_cursorY)->_address);
         }
     }
 
@@ -1187,8 +1190,8 @@ namespace Editor
                 {
                     case RunToBrk:
                     {
-                        auto it = std::find(_breakpoints.begin(), _breakpoints.end(), vPC);
-                        if(it != _breakpoints.end()) singleStep(vPC);
+                        auto it = std::find(_breakPoints.begin(), _breakPoints.end(), vPC);
+                        if(it != _breakPoints.end()) singleStep(vPC);
                     }
                     break;
                 
@@ -1238,7 +1241,7 @@ namespace Editor
                     {
                         if(_pageUpButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageUp(HEX_CHARS_Y);
                         else if(_pageDnButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageDown(HEX_CHARS_Y);
-                        else if(_memoryMode == RAM  &&  _delAllButton  &&  event.button.button == SDL_BUTTON_LEFT) _breakpoints.clear();
+                        else if(_memoryMode == RAM  &&  _delAllButton  &&  event.button.button == SDL_BUTTON_LEFT) _breakPoints.clear();
                         else if(event.button.button == SDL_BUTTON_LEFT) handleMouseClick();
                     }
                     break;
@@ -1336,7 +1339,7 @@ namespace Editor
                 {
                     if(_pageUpButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageUp(HEX_CHARS_Y);
                     else if(_pageDnButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageDown(HEX_CHARS_Y);
-                    else if(_memoryMode == RAM  &&  _delAllButton  &&  event.button.button == SDL_BUTTON_LEFT) _breakpoints.clear();
+                    else if(_memoryMode == RAM  &&  _delAllButton  &&  event.button.button == SDL_BUTTON_LEFT) _breakPoints.clear();
                     else if(event.button.button == SDL_BUTTON_LEFT) handleMouseClick();
                 }
                 break;

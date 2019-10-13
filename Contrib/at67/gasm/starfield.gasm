@@ -41,6 +41,7 @@ numStars        EQU     40          ; max 64, (arrays are fixed at a maximum siz
 _startAddress_  EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
                 
 _callTable_     EQU     0x007E      ; call addresses are automatically stored here by the assembler, it grows downwards
+                                    ; this is optional, if you choose not to use it, then you must use the LDWI xxxx, CALL _vAC paradigm
                                     ; *NOTE* gt1 spec only allows for one zero page segment, .vasm files use this for the call table
                                     ; do *NOT* make this address higher than 0x00BE, it will conflict with future ROM loading mechanisms
                                     ; do *NOT* define constants, (DB or DW), between 0x30 -> 0x44 and 0xc0 -> 0xFF, these addresses are
@@ -543,6 +544,4 @@ midiEndNote     LDW     midiCommand
                 RET
                 
                 
-%include midi0.i
-%include midi1.i
-%include midi2.i
+%include midi.i

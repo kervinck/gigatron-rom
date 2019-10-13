@@ -797,10 +797,10 @@ namespace Graphics
             // vPC icon in debug mode
             if(onVPC) drawText(">", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFFFFFF00, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
 
-            for(int j=0; j<Editor::getBreakpointsSize(); j++)
+            for(int j=0; j<Editor::getBreakPointsSize(); j++)
             {
                 // Breakpoint icon
-                if(Assembler::getDisassembledCode(i)->_address == Editor::getBreakpointAddress(j)  &&  Editor::getSingleStepEnabled())
+                if(Assembler::getDisassembledCode(i)->_address == Editor::getBreakPointAddress(j)  &&  Editor::getSingleStepEnabled())
                 {
                     drawText("*", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFFB000B0, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
                     break;

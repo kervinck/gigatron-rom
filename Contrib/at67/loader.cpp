@@ -198,7 +198,12 @@ namespace Loader
         uint16_t totalSize = 0;
         for(int i=0; i<gt1File._segments.size(); i++)
         {
-            totalSize += int(gt1File._segments[i]._dataBytes.size());
+            // Don't count page 0 RAM usage or segments outside of current RAM size
+            if(gt1File._segments[i]._hiAddress)
+            {
+                uint16_t address = gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8);
+                if((address + gt1File._segments[i]._dataBytes.size() - 1) < Memory::getSizeRAM()) totalSize += int(gt1File._segments[i]._dataBytes.size());
+            }
         }
         uint16_t startAddress = gt1File._loStart + (gt1File._hiStart <<8);
         fprintf(stderr, "\n************************************************************\n");
@@ -1070,6 +1075,14 @@ namespace Loader
         else if(filename.find(".gasm") != filename.npos  ||  filename.find(".vasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
         {
             if(!Assembler::assemble(filepath, DEFAULT_START_ADDRESS)) return;
+
+            // Found a breakpoint in source code
+            if(Editor::getBreakPointsSize())
+            {
+                Editor::startDebugger();
+                Editor::setEditorMode(Editor::Dasm);
+            }
+
             executeAddress = Assembler::getStartAddress();
             Editor::setLoadBaseAddress(executeAddress);
             uint16_t address = executeAddress;
@@ -1107,7 +1120,14 @@ namespace Loader
 
                 if(uploadTarget == Emulator  &&  !_disableUploads)
                 {
-                    (byteCode._isRomAddress) ? Cpu::setROM(customAddress, address++, byteCode._data) : Cpu::setRAM(address++, byteCode._data);
+                    if(byteCode._isRomAddress)
+                    {
+                        Cpu::setROM(customAddress, address++, byteCode._data);
+                    }
+                    else
+                    {
+                        if(address < Memory::getSizeRAM()) Cpu::setRAM(address++, byteCode._data);
+                    }
                 }
                 gt1Segment._dataBytes.push_back(byteCode._data);
             }

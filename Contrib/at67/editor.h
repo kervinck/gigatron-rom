@@ -82,8 +82,10 @@ namespace Editor
     uint16_t getCpuUsageAddressA(void);
     uint16_t getCpuUsageAddressB(void);
 
-    int getBreakpointsSize(void);
-    uint16_t getBreakpointAddress(int index);
+    int getBreakPointsSize(void);
+    uint16_t getBreakPointAddress(int index);
+    void addBreakPoint(uint16_t address);
+    void clearBreakPoints(void);
 
     int getFileEntriesIndex(void);
     int getFileEntriesSize(void);
@@ -100,6 +102,9 @@ namespace Editor
     std::string* getCurrentRomEntryName(int& index);
     int getCurrentRomEntryIndex(void);
     void addRomEntry(uint8_t type, std::string& name);
+
+    void resetEditor(void);
+    void setEditorMode(EditorMode editorMode);
 
     void setCursorX(int x);
     void setCursorY(int y);

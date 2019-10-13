@@ -543,7 +543,7 @@ namespace Cpu
             case 0x5D: // ora [Y,X++],OUT
             {
                 uint16_t addr = MAKE_ADDR(S._Y, S._X);
-                T._OUT = _RAM[addr] | S._AC;
+                T._OUT = _RAM[addr & (Memory::getSizeRAM()-1)] | S._AC;
                 T._X++;
                 T._PC = S._PC + 1;
                 return;
@@ -552,7 +552,7 @@ namespace Cpu
 
             case 0xC2: // st [D]
             {
-                _RAM[S._D] = S._AC;
+                _RAM[S._D & (Memory::getSizeRAM()-1)] = S._AC;
                 T._PC = S._PC + 1;
                 return;
             }
@@ -560,7 +560,7 @@ namespace Cpu
 
             case 0x01: // ld [D]
             {
-                T._AC = _RAM[S._D];
+                T._AC = _RAM[S._D & (Memory::getSizeRAM()-1)];
                 T._PC = S._PC + 1;
                 return;
             }
@@ -593,7 +593,7 @@ namespace Cpu
             case 0x0D: // ld [Y,X]
             {
                 uint16_t addr = MAKE_ADDR(S._Y, S._X);
-                T._AC = _RAM[addr];
+                T._AC = _RAM[addr & (Memory::getSizeRAM()-1)];
                 T._PC = S._PC + 1;
                 return;
             }
@@ -616,7 +616,7 @@ namespace Cpu
 
             case 0x81: // adda [D]
             {
-                T._AC += _RAM[S._D];
+                T._AC += _RAM[S._D & (Memory::getSizeRAM()-1)];
                 T._PC = S._PC + 1;
                 return;
             }
@@ -625,7 +625,7 @@ namespace Cpu
             case 0x89: // adda [Y,D]
             {
                 uint16_t addr = MAKE_ADDR(S._Y, S._D);
-                T._AC += _RAM[addr];
+                T._AC += _RAM[addr & (Memory::getSizeRAM()-1)];
                 T._PC = S._PC + 1;
                 return;
             }
@@ -677,13 +677,13 @@ namespace Cpu
         int B = S._undef; // Data Bus
         switch(bus)
         {
-            case 0: B=S._D;                                          break;
-            case 1: if (!W) B = _RAM[addr&(Memory::getSizeRAM()-1)]; break;
-            case 2: B=S._AC;                                         break;
-            case 3: B=_IN;                                           break;
+            case 0: B=S._D;                                            break;
+            case 1: if (!W) B = _RAM[addr & (Memory::getSizeRAM()-1)]; break;
+            case 2: B=S._AC;                                           break;
+            case 3: B=_IN;                                             break;
         }
 
-        if(W) _RAM[addr&(Memory::getSizeRAM()-1)] = B; // Random Access Memory
+        if(W) _RAM[addr & (Memory::getSizeRAM()-1)] = B; // Random Access Memory
 
         uint8_t ALU = 0; // Arithmetic and Logic Unit
         switch(ins)
