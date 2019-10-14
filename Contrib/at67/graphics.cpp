@@ -44,6 +44,7 @@ namespace Graphics
     std::atomic<bool> _enableUploadBar = false;
     std::atomic<int> _uploadCursorY = -1;
     std::atomic<float> _uploadPercentage = 0.0f;
+    std::string _uploadFilename;
 
     uint32_t _pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
     uint32_t _colours[COLOUR_PALETTE];
@@ -75,12 +76,21 @@ namespace Graphics
     void setWidthHeight(int width, int height) {_width = width, _height = height;}
 
     bool getUploadBarEnabled(void) {return _enableUploadBar;}
+    void setUploadFilename(const std::string& uploadFilename) {_uploadFilename = uploadFilename;}
     void updateUploadBar(float uploadPercentage) {_uploadPercentage = uploadPercentage;}
     void enableUploadBar(bool enableUploadBar)
     {
         _uploadPercentage = 0.0f;
         _enableUploadBar = enableUploadBar;
-        _uploadCursorY = (enableUploadBar) ? Editor::getCursorY() : -1;
+        if(enableUploadBar)
+        {
+            _uploadCursorY = 34;
+        }
+        else
+        {
+            _uploadCursorY = -1;
+            _uploadFilename = "";
+        }
     }
 
 
@@ -624,19 +634,16 @@ namespace Graphics
     {
         if(!_enableUploadBar  ||  _uploadCursorY == -1) return;
 
-        int index = Editor::getFileEntriesIndex() + _uploadCursorY;
-        if(index >= int(Editor::getFileEntriesSize())) return;
-
-        std::string uploadFilename = *Editor::getFileEntryName(index);
-        uploadFilename.append(MENU_TEXT_SIZE - uploadFilename.size(), ' ');
+        char uploadPercentage[MENU_TEXT_SIZE+2] = "";
+        std::string uploadFilename = _uploadFilename;
+        if(uploadFilename.size() < MENU_TEXT_SIZE+1) uploadFilename.append(MENU_TEXT_SIZE+1 - uploadFilename.size(), ' ');
         if(upload < 1.0f)
         {
-            char* uploadPercentage = &uploadFilename[MENU_TEXT_SIZE - 5];
-            sprintf(uploadPercentage, " %3d%%\r", int(upload * 100.0f));
+            sprintf(uploadPercentage, uploadFilename.substr(0, MENU_TEXT_SIZE+1).c_str());
+            sprintf(&uploadPercentage[MENU_TEXT_SIZE+1 - 6], " %3d%%\r", int(upload * 100.0f));
         }
 
-        uint32_t colour = (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFB0B0B0 : 0xFFFFFFFF;
-        drawText(uploadFilename, _pixels, HEX_START_X, FONT_CELL_Y*4 + _uploadCursorY*FONT_CELL_Y, colour, true, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+        drawText(uploadPercentage, _pixels, HEX_START_X, int(FONT_CELL_Y*4.4) + _uploadCursorY*FONT_CELL_Y, 0xFFB0B0B0, true, MENU_TEXT_SIZE+1, false, MENU_TEXT_SIZE+1);
     }
 
     void renderText(void)

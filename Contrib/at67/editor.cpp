@@ -670,7 +670,8 @@ namespace Editor
         }
         else if(_editorMode == Load)
         {
-            if(_cursorY >= getFileEntriesSize()  ||  Graphics::getUploadBarEnabled()) return;
+            // No loading/browsing if cursor is out of bounds
+            if(_cursorY >= getFileEntriesSize()) return;
 
             FileType fileType = getCurrentFileEntryType();
             switch(fileType)

@@ -69,6 +69,7 @@ namespace Graphics
     void setWidthHeight(int width, int height);
 
     bool getUploadBarEnabled(void);
+    void setUploadFilename(const std::string& uploadFilename);
     void enableUploadBar(bool enableUploadBar);
     void updateUploadBar(float uploadPercentage);
 

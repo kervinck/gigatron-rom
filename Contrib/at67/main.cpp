@@ -1,10 +1,12 @@
-/**********************************************************************************************/
-/* gtemuAT67                                                                                  */
-/*                                                                                            */ 
-/* gtemuAT67 is an emulator for the Gigatron TTL microcomputer, written in C++ using SDL2.    */
-/* This project provides Microsoft Windows support and should be compatible with Linux, MacOS */
-/* and possibly even Android. As of this version it has only been tested on Windows 10 x64.   */
-/**********************************************************************************************/
+/*******************************************************************************/
+/* gtemuAT67 ver0.8.6                                                          */
+/*                                                                             */ 
+/* gtemuAT67 is an emulator, controller, assembler, (vCPU and Native code),    */
+/* disassembler, debugger and soon to be a BASIC compiler for the Gigatron TTL */
+/* microcomputer. Written in C++ using SDL2 by Ari Tsironis, (see the LICENSE  */
+/* and README.md in Contrib\at67 for comprehensive documentation), this        */
+/* project provides Microsoft Windows, Linux and MacOS support.                */
+/*******************************************************************************/
 
 
 #include "memory.h"

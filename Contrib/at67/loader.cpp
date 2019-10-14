@@ -610,24 +610,26 @@ namespace Loader
         return 0;
     }
 
-    void uploadToGiga(const std::string& filename)
+    void uploadToGiga(const std::string& filepath, const std::string& filename)
     {
         // An upload is already in progress
         if(Graphics::getUploadBarEnabled()) return;
 
-        std::ifstream gt1file(filename, std::ios::binary | std::ios::in);
+        std::ifstream gt1file(filepath, std::ios::binary | std::ios::in);
         if(!gt1file.is_open())
         {
-            fprintf(stderr, "Loader::uploadToGiga() : failed to open '%s'\n", filename.c_str());
+            fprintf(stderr, "Loader::uploadToGiga() : failed to open '%s'\n", filepath.c_str());
             return;
         }
 
         gt1file.read(_gt1Buffer, MAX_GT1_SIZE);
         if(gt1file.bad())
         {
-            fprintf(stderr, "Loader::uploadToGiga() : failed to read GT1 file '%s'\n", filename.c_str());
+            fprintf(stderr, "Loader::uploadToGiga() : failed to read GT1 file '%s'\n", filepath.c_str());
             return;
         }
+
+        Graphics::setUploadFilename(filename);
 
         _gt1UploadSize = int(gt1file.gcount());
         SDL_Thread* uploadThread = SDL_CreateThread(uploadToGigaThread, VERSION_STR, (void*)&_gt1UploadSize);
@@ -1201,12 +1203,12 @@ namespace Loader
             if(!isGt1File)
             {
                 size_t i = filepath.rfind('.');
-                filename = (i != std::string::npos) ? filepath.substr(0, i) + ".gt1" : filepath + ".gt1";
-                uploadToGiga(filename);
+                std::string filepathGt1 = (i != std::string::npos) ? filepath.substr(0, i) + ".gt1" : filepath + ".gt1";
+                uploadToGiga(filepathGt1, filename);
             }
             else
             {
-                uploadToGiga(filepath);
+                uploadToGiga(filepath, filename);
             }
         }
 
