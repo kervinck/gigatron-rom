@@ -11,6 +11,7 @@
 
 #ifndef STAND_ALONE
 #include <SDL.h>
+#include "audio.h"
 #include "loader.h"
 #include "editor.h"
 #include "timing.h"
@@ -42,12 +43,9 @@ namespace Cpu
 
     bool _isInReset = false;
     bool _checkRomType = true;
+    bool _debugging = false;
+    bool _initAudio = true;
 
-    State _stateS, _stateT;
-    int64_t _clock = -2;
-    uint8_t _IN = 0xFF, _XOUT = 0x00;
-    uint16_t _vPC = 0x0200;
-    
     std::vector<uint8_t> _RAM;
     uint8_t _ROM[ROM_SIZE][2];
     std::vector<uint8_t*> _romFiles;
@@ -59,10 +57,45 @@ namespace Cpu
 
     std::vector<InternalGt1> _internalGt1s;
 
-
     int getNumRoms(void) {return _numRoms;}
     uint8_t* getPtrToROM(int& romSize) {romSize = sizeof _ROM; return (uint8_t*)_ROM;}
     RomType getRomType(void) {return _romType;}
+
+
+//#define COLLECT_INST_STATS
+#if defined(COLLECT_INST_STATS)
+    struct InstCount
+    {
+        uint8_t _inst = 0;
+        uint64_t _count = 0;
+    };
+
+    uint64_t _totalCount = 0;
+    float _totalPercent = 0.0f;
+    std::vector<InstCount> _instCounts(256);
+
+    void displayInstCounts(void)
+    {
+        std::sort(_instCounts.begin(), _instCounts.end(), [](const InstCount& a, const InstCount& b)
+        {
+            return (a._count > b._count);
+        });
+
+        for(int i=0; i<_instCounts.size(); i++)
+        {
+            float percent = float(_instCounts[i]._count)/float(_totalCount)*100.0f;
+            if(percent > 1.0f)
+            {
+                _totalPercent += percent;
+                fprintf(stderr, "inst:%02x count:%012lld %.1f%%\n", _instCounts[i]._inst, _instCounts[i]._count, percent);
+            }
+        }
+
+        fprintf(stderr, "Total instructions:%lld\n", _totalCount);
+        fprintf(stderr, "Total percentage:%f\n", _totalPercent);
+    }
+#endif
+
 
     void initialiseInternalGt1s(void)
     {
@@ -228,6 +261,14 @@ namespace Cpu
 
 
 #ifndef STAND_ALONE
+    int _vgaX = 0, _vgaY = 0;
+    int _hSync = 0, _vSync = 0;
+    int64_t _clockStall = CLOCK_RESET;
+    int64_t _clock = CLOCK_RESET;
+    uint8_t _IN = 0xFF, _XOUT = 0x00;
+    uint16_t _vPC = 0x0200;
+    State _stateS, _stateT;
+
     bool getIsInReset(void) {return _isInReset;}
     State& getStateS(void) {return _stateS;}
     State& getStateT(void) {return _stateT;}
@@ -415,7 +456,7 @@ namespace Cpu
         SDL_Quit();
     }
 
-    void initialise(State& S)
+    void initialise(void)
     {
 #ifdef _WIN32
         CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -440,7 +481,7 @@ namespace Cpu
         srand((unsigned int)time(NULL)); // Initialize with randomized data
         garble((uint8_t*)_ROM, sizeof _ROM);
         garble(&_RAM[0], Memory::getSizeRAM());
-        garble((uint8_t*)&S, sizeof S);
+        garble((uint8_t*)&_stateS, sizeof _stateS);
 
         // Internal ROMS
         _romFiles.push_back(_gigatron_0x1c_rom);
@@ -751,11 +792,8 @@ namespace Cpu
     }
 
     // Counts maximum and used vCPU instruction slots available per frame
-    void vCpuUsage(State& S, State& T)
+    void vCpuUsage(const State& S, const State& T)
     {
-        _stateS = S;
-        _stateT = T;
-
         // All ROM's so far v1 through v4 use the same vCPU dispatch address!
         if(S._PC == ROM_VCPU_DISPATCH)
         {
@@ -789,5 +827,133 @@ namespace Cpu
             }
         }
     }
+
+    bool process(void)
+    {
+        // MCP100 Power-On Reset
+        if(_clock < 0)
+        {
+            _stateS._PC = 0; 
+            _initAudio = true;
+            _isInReset = true;
+            Loader::setCurrentGame(std::string(""));
+        }
+
+        // Update CPU
+        cycle(_stateS, _stateT);
+
+        // vCPU instruction slot utilisation
+        vCpuUsage(_stateS, _stateT);
+
+        _hSync = (_stateT._OUT & 0x40) - (_stateS._OUT & 0x40);
+        _vSync = (_stateT._OUT & 0x80) - (_stateS._OUT & 0x80);
+    
+        // Falling vSync edge
+        if(_vSync < 0)
+        {
+            _clockStall = _clock;
+            _vgaY = VSYNC_START;
+
+            // Input and graphics
+            if(!_debugging)
+            {
+                Editor::handleInput();
+                Graphics::render();
+            }
+        }
+
+        // Pixel
+        if(_vgaX++ < HLINE_END)
+        {
+            if(_vgaY >= 0  &&  _vgaY < SCREEN_HEIGHT  &&  _vgaX >=HPIXELS_START  &&  _vgaX < HPIXELS_END)
+            {
+                Graphics::refreshPixel(_stateS, _vgaX-HPIXELS_START, _vgaY, _debugging);
+            }
+        }
+
+#if defined(COLLECT_INST_STATS)
+        _totalCount++;
+        _instCounts[_stateT._IR]._count++;
+        _instCounts[_stateT._IR]._inst = _stateT._IR;
+        if(_clock > STARTUP_DELAY_CLOCKS * 500.0)
+        {
+            displayInstCounts();
+            _EXIT_(0);
+        }
+#endif        
+
+        // RomType and Watchdog
+        if(_clock > STARTUP_DELAY_CLOCKS)
+        {
+            if(_isInReset)
+            {
+                setRomType();
+                _isInReset = false;
+            }
+
+            if(_initAudio  &&  _clock > STARTUP_DELAY_CLOCKS*10.0)
+            {
+                _initAudio = false;
+                Audio::initialiseChannels();
+            }
+
+            if(!_debugging  &&  _clock - _clockStall > CPU_STALL_CLOCKS)
+            {
+                _clockStall = CLOCK_RESET;
+                reset(true);
+                _vgaX = 0, _vgaY = 0;
+                _hSync = 0, _vSync = 0;
+                fprintf(stderr, "main(): CPU stall for %" PRId64 " clocks : rebooting.\n", _clock - _clockStall);
+            }
+        }
+
+        // Rising hSync edge
+        if(_hSync > 0)
+        {
+            setXOUT(_stateT._AC);
+        
+            // Audio
+            if(Audio::getRealTimeAudio())
+            {
+                Audio::playSample();
+            }
+            else
+            {
+                Audio::fillAudioBuffer();
+                if(_vgaY == SCREEN_HEIGHT+4) Audio::playAudioBuffer();
+            }
+
+            // Loader
+            Loader::upload(_vgaY);
+
+            // Horizontal timing errors
+            if(_vgaY >= 0  &&  _vgaY < SCREEN_HEIGHT)
+            {
+                static uint32_t colour = 0xFF220000;
+                if((_vgaY % 4) == 0) colour = 0xFF220000;
+                if(_vgaX != 200  &&  _vgaX != 400) // Support for 6.25Mhz and 12.5MHz
+                {
+                    colour = 0xFFFF0000;
+                    fprintf(stderr, "main(): Horizontal timing error : vgaX %03d : vgaY %03d : xout %02x : time %0.3f\n", _vgaX, _vgaY, _stateT._AC, float(_clock)/float(CLOCK_FREQ));
+                }
+                if((_vgaY % 4) == 3) Graphics::refreshTimingPixel(_stateS, GIGA_WIDTH, _vgaY / 4, colour, _debugging);
+            }
+
+            _vgaX = 0;
+            _vgaY++;
+
+            // Change this once in a while
+            _stateT._undef = rand() & 0xff;
+        }
+
+        // Debugger
+        _debugging = Editor::handleDebugger();
+
+        _stateS = _stateT;
+        _clock++;
+
+        return true;
+    }
+
 #endif
 }

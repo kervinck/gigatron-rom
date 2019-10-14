@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <string>
 
+#ifndef STAND_ALONE
+#include <SDL.h>
+#endif
+
 
 #define INPUT_RIGHT   0x01
 #define INPUT_LEFT    0x02
@@ -122,6 +126,10 @@ namespace Editor
 
     void initialise(void);
     void browseDirectory(void);
+
+#ifndef STAND_ALONE
+    void handleGuiEvents(SDL_Event& event);
+#endif
     bool handleDebugger(void);
     void handleInput(void);
 

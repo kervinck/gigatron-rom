@@ -183,7 +183,7 @@ entry_point     LDWI    giga_vram
                 STW     tbase               ; text font base address, (ROM)
                 LDWI    digit_font0         
                 STW     dbase               ; tiny digit font base address, (RAM)
-                LDWI    giga_videoTable
+                LDWI    giga_videoTable + 1
                 STW     xScroll
 
                 CALL    resetAudio

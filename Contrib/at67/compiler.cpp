@@ -1299,13 +1299,8 @@ namespace Compiler
         // Long jump
         else
         {
-#if 1
             emitVcpuAsm("LDWI", "_" + gotoLabel, false, lineNumber, "", -1, true);
             emitVcpuAsm("CALL", "giga_vAC", false, lineNumber, "", -1, true);
-#else            
-            // This uses the call table and wastes precious zero page memory
-            emitVcpuAsm("CALL", "_" + gotoLabel, false, lineNumber);
-#endif
         }
 
         return true;
@@ -2161,10 +2156,10 @@ namespace Compiler
                 {
                     if(HI_MASK(_codeLines[i]._vasm[j]._address) != HI_MASK(_labels[gotoLabelIndex]._address))
                     {
-                        //fprintf(stderr, "Compiler::checkBranchLabels() : trying to branch to : %04x : from %04x in '%s' on line %d\n", _labels[gotoLabelIndex]._address,
-                        //                                                                                                               _codeLines[i]._vasm[j]._address, 
-                        //                                                                                                               _codeLines[i]._code.c_str(), i);
-                        //return false;
+                        fprintf(stderr, "Compiler::checkBranchLabels() : trying to branch to : %04x : from %04x in '%s' on line %d\n", _labels[gotoLabelIndex]._address,
+                                                                                                                                       _codeLines[i]._vasm[j]._address, 
+                                                                                                                                       _codeLines[i]._code.c_str(), i);
+                        return false;
                     }
                 }
             }

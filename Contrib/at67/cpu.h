@@ -111,13 +111,14 @@ namespace Cpu
     void restoreScanlineModes(void);
     void swapScanlineMode(void);
 
-    void initialise(State& S);
+    void initialise(void);
     void shutdown(void);
     void cycle(const State& S, State& T);
     void reset(bool coldBoot=false);
     void softReset(void);
     void swapMemoryModel(void);
-    void vCpuUsage(State& S, State& T);
+    void vCpuUsage(const State& S, const State& T);
+    bool process(void);
 #endif
 }
 

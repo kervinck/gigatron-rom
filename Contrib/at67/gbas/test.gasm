@@ -2,14 +2,14 @@ _startAddress_  EQU		0x0200
 clearRegion     EQU     0x7fa0
 resetVideoTable EQU     clearRegion - 0x0100
 clearCursorRow  EQU     clearRegion - 0x0200
-printText       EQU     clearRegion - 0x0300
-printDigit      EQU     clearRegion - 0x0400
-printVarInt16   EQU     clearRegion - 0x0500
-printChar       EQU     clearRegion - 0x0600
-newLineScroll   EQU     clearRegion - 0x0700
-resetAudio      EQU     clearRegion - 0x0800
-playMidi        EQU     clearRegion - 0x0900
-midiStartNote   EQU     clearRegion - 0x0A00
+printText       EQU     clearRegion - 0x0400
+printDigit      EQU     clearRegion - 0x0500
+printVarInt16   EQU     clearRegion - 0x0600
+printChar       EQU     clearRegion - 0x0700
+newLineScroll   EQU     clearRegion - 0x0800
+resetAudio      EQU     clearRegion - 0x0900
+playMidi        EQU     clearRegion - 0x0A00
+midiStartNote   EQU     clearRegion - 0x0B00
 
 ; Internal variables
 register0       EQU     0x00a0

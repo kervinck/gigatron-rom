@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <iostream>
 #include <algorithm>
+#include <atomic>
 
 #include "graphics.h"
 #include "memory.h"
@@ -40,6 +41,10 @@ namespace Graphics
     bool _displayHelpScreen = false;
     uint8_t _displayHelpScreenAlpha = 0;
 
+    std::atomic<bool> _enableUploadBar = false;
+    std::atomic<int> _uploadCursorY = -1;
+    std::atomic<float> _uploadPercentage = 0.0f;
+
     uint32_t _pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
     uint32_t _colours[COLOUR_PALETTE];
     uint32_t _hlineTiming[GIGA_HEIGHT];
@@ -68,6 +73,15 @@ namespace Graphics
 
     void setDisplayHelpScreen(bool display) {_displayHelpScreen = display;}
     void setWidthHeight(int width, int height) {_width = width, _height = height;}
+
+    bool getUploadBarEnabled(void) {return _enableUploadBar;}
+    void updateUploadBar(float uploadPercentage) {_uploadPercentage = uploadPercentage;}
+    void enableUploadBar(bool enableUploadBar)
+    {
+        _uploadPercentage = 0.0f;
+        _enableUploadBar = enableUploadBar;
+        _uploadCursorY = (enableUploadBar) ? Editor::getCursorY() : -1;
+    }
 
 
     SDL_Surface* createSurface(int width, int height)
@@ -608,8 +622,10 @@ namespace Graphics
 
     void drawUploadBar(float upload)
     {
-        int i = Editor::getCursorY();
-        int index = Editor::getFileEntriesIndex() + i;
+        if(!_enableUploadBar  ||  _uploadCursorY == -1) return;
+
+        int index = Editor::getFileEntriesIndex() + _uploadCursorY;
+        if(index >= int(Editor::getFileEntriesSize())) return;
 
         std::string uploadFilename = *Editor::getFileEntryName(index);
         uploadFilename.append(MENU_TEXT_SIZE - uploadFilename.size(), ' ');
@@ -620,13 +636,7 @@ namespace Graphics
         }
 
         uint32_t colour = (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFB0B0B0 : 0xFFFFFFFF;
-        drawText(uploadFilename, _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, true, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
-
-        SDL_UpdateTexture(_screenTexture, NULL, _pixels, SCREEN_WIDTH * sizeof uint32_t);
-        SDL_RenderCopy(_renderer, _screenTexture, NULL, NULL);
-        SDL_RenderPresent(_renderer);
-        SDL_Event event;
-        while(SDL_PollEvent(&event));
+        drawText(uploadFilename, _pixels, HEX_START_X, FONT_CELL_Y*4 + _uploadCursorY*FONT_CELL_Y, colour, true, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
     }
 
     void renderText(void)
@@ -775,6 +785,9 @@ namespace Graphics
         sprintf(str, "%04X", hexLoadAddress);
         uint32_t colour = (Editor::getHexEdit() && onHex) ? 0xFF00FF00 : 0xFFFFFFFF;
         drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, colour, onHex, 4);
+
+        // Upload bar
+        drawUploadBar(_uploadPercentage);
     }
 
     void renderDisassembler(bool onHex)

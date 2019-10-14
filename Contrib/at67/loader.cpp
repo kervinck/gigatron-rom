@@ -280,6 +280,8 @@ namespace Loader
     UploadTarget _uploadTarget = None;
     bool _disableUploads = false;
 
+    int _gt1UploadSize = 0;
+
     int _numComPorts = 0;
     int _currentComPort = -1;
     char _gt1Buffer[MAX_GT1_SIZE];
@@ -570,9 +572,48 @@ namespace Loader
         closeComPort();
     }
 
+    int uploadToGigaThread(void* userData)
+    {
+        if(!openComPort(_configComPort)) return -1;
+
+        Graphics::enableUploadBar(true);
+
+        std::string line;
+        sendCommandToGiga('R', line, true);
+        sendCommandToGiga('L', line, true);
+        sendCommandToGiga('U', line, true);
+
+        int gt1Size = *((int*)userData);
+
+        int index = 0;
+        while(std::isdigit(line[0]))
+        {
+            int n = strtol(line.c_str(), nullptr, 10);
+            comWrite(_currentComPort, &_gt1Buffer[index], n);
+            index += n;
+
+            if(!waitForPromptGiga(line))
+            {
+                closeComPort();
+                return -1;
+            }
+
+            float upload = float(index) / float(gt1Size);
+            Graphics::updateUploadBar(upload);
+            //fprintf(stderr, "Loader::uploadToGiga() : Uploading...%3d%%\r", int(upload * 100.0f));
+        }
+
+        Graphics::enableUploadBar(false);
+        closeComPort();
+        //fprintf(stderr, "\n");
+
+        return 0;
+    }
+
     void uploadToGiga(const std::string& filename)
     {
-        if(!openComPort(_configComPort)) return;
+        // An upload is already in progress
+        if(Graphics::getUploadBarEnabled()) return;
 
         std::ifstream gt1file(filename, std::ios::binary | std::ios::in);
         if(!gt1file.is_open())
@@ -588,31 +629,8 @@ namespace Loader
             return;
         }
 
-        std::string line;
-        sendCommandToGiga('R', line, true);
-        sendCommandToGiga('L', line, true);
-        sendCommandToGiga('U', line, true);
-
-        int index = 0;
-        while(std::isdigit(line[0]))
-        {
-            int n = strtol(line.c_str(), nullptr, 10);
-            comWrite(_currentComPort, &_gt1Buffer[index], n);
-            index += n;
-
-            if(!waitForPromptGiga(line))
-            {
-                closeComPort();
-                return;
-            }
-
-            float upload = float(index) / float(gt1file.gcount());
-            Graphics::drawUploadBar(upload);
-            fprintf(stderr, "Loader::uploadToGiga() : Uploading...%3d%%\r", int(upload * 100.0f));
-        }
-
-        fprintf(stderr, "\n");
-        closeComPort();
+        _gt1UploadSize = int(gt1file.gcount());
+        SDL_Thread* uploadThread = SDL_CreateThread(uploadToGigaThread, VERSION_STR, (void*)&_gt1UploadSize);
     }
 
     void disableUploads(bool disable)

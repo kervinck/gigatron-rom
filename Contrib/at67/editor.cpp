@@ -243,8 +243,29 @@ namespace Editor
         return true;
     }
 
+
+    // Attempt to solve Window's Non Client Area process starvation
+    int eventFilter(void* data, SDL_Event *event)
+    {
+        if(event->type == SDL_WINDOWEVENT  ||  event->type == SDL_SYSWMEVENT)
+        {
+            if(event->window.event == SDL_WINDOWEVENT_SIZE_CHANGED  ||  event->window.event == SDL_WINDOWEVENT_MOVED)
+            {
+                SDL_RenderSetViewport(Graphics::getRenderer(), NULL);
+                //Graphics::refreshScreen();
+                //Graphics::render();
+                //fprintf(stderr, "%08x\n", event->window.event);
+                for(int i=0; i<CLOCK_FREQ/600; i++) Cpu::process();
+            }
+        }
+
+        return 1;
+    }
+
     void initialise(void)
     {
+        //SDL_SetEventFilter(eventFilter, NULL);
+
         SDL_StartTextInput();
 
         // Current working directory
@@ -649,7 +670,7 @@ namespace Editor
         }
         else if(_editorMode == Load)
         {
-            if(_cursorY >= getFileEntriesSize()) return;
+            if(_cursorY >= getFileEntriesSize()  ||  Graphics::getUploadBarEnabled()) return;
 
             FileType fileType = getCurrentFileEntryType();
             switch(fileType)
@@ -1151,6 +1172,34 @@ namespace Editor
         if(handleGigaKeyUp()) return;
     }
 
+
+    void handleGuiEvents(SDL_Event& event)
+    {
+        switch(event.type)
+        {
+            case SDL_WINDOWEVENT:
+            {
+                switch(event.window.event)
+                {
+                    case SDL_WINDOWEVENT_RESIZED:
+                    case SDL_WINDOWEVENT_SIZE_CHANGED:
+                    {
+                        Graphics::setWidthHeight(event.window.data1, event.window.data2);
+                    }
+                    break;
+                }
+            }
+            break;
+
+            case SDL_QUIT: 
+            {
+                Cpu::shutdown();
+                exit(0);
+            }
+        }
+    }
+
+
     void singleStep(uint16_t address)
     {
         _singleStep = false;
@@ -1235,6 +1284,8 @@ namespace Editor
                 _sdlKeyModifier = event.key.keysym.mod & (KMOD_LCTRL | KMOD_LALT);
                 _mouseState._state = SDL_GetMouseState(&_mouseState._x, &_mouseState._y);
 
+                handleGuiEvents(event);
+
                 switch(event.type)
                 {
                     case SDL_MOUSEBUTTONDOWN:
@@ -1246,21 +1297,11 @@ namespace Editor
                     }
                     break;
 
-                    case SDL_WINDOWEVENT:
+                    case SDL_MOUSEWHEEL:
                     {
-                        switch(event.window.event)
-                        {
-                            case SDL_WINDOWEVENT_RESIZED:
-                            case SDL_WINDOWEVENT_SIZE_CHANGED:
-                            {
-                                Graphics::setWidthHeight(event.window.data1, event.window.data2);
-                            }
-                            break;
-                        }
+                        handleMouseWheel(event);
                     }
                     break;
-
-                    case SDL_MOUSEWHEEL: handleMouseWheel(event); break;
 
                     case SDL_KEYUP:
                     {
@@ -1333,6 +1374,8 @@ namespace Editor
             _sdlKeyModifier = event.key.keysym.mod & (KMOD_LCTRL | KMOD_LALT);
             _mouseState._state = SDL_GetMouseState(&_mouseState._x, &_mouseState._y);
 
+            handleGuiEvents(event);
+
             switch(event.type)
             {
                 case SDL_MOUSEBUTTONDOWN:
@@ -1344,29 +1387,10 @@ namespace Editor
                 }
                 break;
 
-                case SDL_WINDOWEVENT:
-                {
-                    switch(event.window.event)
-                    {
-                        case SDL_WINDOWEVENT_RESIZED:
-                        case SDL_WINDOWEVENT_SIZE_CHANGED:
-                        {
-                            Graphics::setWidthHeight(event.window.data1, event.window.data2);
-                        }
-                        break;
-                    }
-                }
-                break;
-
                 case SDL_MOUSEWHEEL: handleMouseWheel(event); break;
                 case SDL_TEXTINPUT:  handlePS2key(event);     break;
                 case SDL_KEYDOWN:    handleKeyDown();         break;
                 case SDL_KEYUP:      handleKeyUp();           break;
-                case SDL_QUIT: 
-                {
-                    Cpu::shutdown();
-                    exit(0);
-                }
             }
         }
 
