@@ -254,6 +254,7 @@ namespace Compiler
     bool handleTAN(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
 
     bool handleCHR$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
+    bool handleHEX$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
     bool handleMID$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
     bool handleLEFT$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
     bool handleRIGHT$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result);
@@ -313,6 +314,7 @@ namespace Compiler
         _mathwords.push_back({"TAN", handleTAN});
 
         _stringwords.push_back({"CHR$",   handleCHR$});
+        _stringwords.push_back({"HEX$",   handleHEX$});
         _stringwords.push_back({"MID$",   handleMID$});
         _stringwords.push_back({"LEFT$",  handleLEFT$});
         _stringwords.push_back({"RIGHT$", handleRIGHT$});
@@ -1332,6 +1334,11 @@ namespace Compiler
                             emitVcpuAsm("%PrintAcChar", "", false, lineNumber);
                             continue;
                         }
+                        else if(result._name == "HEX$")
+                        {
+                            emitVcpuAsm("%PrintAcHex", "", false, lineNumber);
+                            continue;
+                        }
                     }
 
                     size_t lquote = tokens[i].find_first_of("\"");
@@ -1789,6 +1796,54 @@ namespace Compiler
         return true;
     }
 
+    bool handleHEX$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
+    {
+        // Parse hex$
+        size_t lbra, rbra;
+        if(Expression::findMatchingBrackets(codeLine._code, foundPos, lbra, rbra))
+        {
+            std::string expr = codeLine._code.substr(lbra + 1, rbra - (lbra + 1));
+            Expression::ExpressionType expressionType = isExpression(expr);
+            switch(expressionType)
+            {
+                case Expression::None:
+                case Expression::Valid:
+                {
+                    Expression::setExprFunc(Expression::expression);
+                    if(!Expression::parse((char*)expr.c_str(), lineNumber, result._data)) return false;
+                    emitVcpuAsm("LDI", std::to_string(result._data), false, lineNumber);
+                }
+                break;
+
+                case Expression::HasAlpha:
+                {
+                    CodeLine cl = codeLine;
+                    cl._code = cl._expression = expr;
+                    if(!varExpressionParse(cl, lineNumber)) return false;
+                    int varIndex = varAssignmentParse(cl, lineNumber);
+                    (varIndex >= 0) ? emitVcpuAsm("LD", "_" + _integerVars[varIndex]._name, false, lineNumber) : emitVcpuAsm("LD", Expression::byteToHexString(uint8_t(_tempVarStart)), false, lineNumber);
+                }
+                break;
+
+                default:
+                {
+                    fprintf(stderr, "Compiler::handleHEX$() : invalid input in '%s' on line %d\n", expr.c_str(), lineNumber);
+                    return false;
+                }
+                break;
+            }
+        }
+        else
+        {
+            fprintf(stderr, "Compiler::handleHEX$() : expecting () in '%s' on line %d\n", codeLine._code.c_str(), lineNumber);
+            return false;
+        }
+
+        result._name = "HEX$";
+
+        return true;
+    }
+
     bool handleMID$(CodeLine& codeLine, int lineNumber, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
@@ -2203,10 +2258,11 @@ namespace Compiler
         _output.push_back("clearRegion     EQU     " + Expression::wordToHexString(INT_FUNC_START) + "\n");
         _output.push_back("resetVideoTable EQU     clearRegion - 0x0100\n");
         _output.push_back("clearCursorRow  EQU     clearRegion - 0x0200\n");
-        _output.push_back("printText       EQU     clearRegion - 0x0400\n");
-        _output.push_back("printDigit      EQU     clearRegion - 0x0500\n");
-        _output.push_back("printVarInt16   EQU     clearRegion - 0x0600\n");
-        _output.push_back("printChar       EQU     clearRegion - 0x0700\n");
+        _output.push_back("printText       EQU     clearRegion - 0x0300\n");
+        _output.push_back("printDigit      EQU     clearRegion - 0x0400\n");
+        _output.push_back("printVarInt16   EQU     clearRegion - 0x0500\n");
+        _output.push_back("printChar       EQU     clearRegion - 0x0600\n");
+        _output.push_back("printHex        EQU     clearRegion - 0x0700\n");
         _output.push_back("newLineScroll   EQU     clearRegion - 0x0800\n");
         _output.push_back("resetAudio      EQU     clearRegion - 0x0900\n");
         _output.push_back("playMidi        EQU     clearRegion - 0x0A00\n");

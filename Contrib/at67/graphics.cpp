@@ -792,9 +792,6 @@ namespace Graphics
         sprintf(str, "%04X", hexLoadAddress);
         uint32_t colour = (Editor::getHexEdit() && onHex) ? 0xFF00FF00 : 0xFFFFFFFF;
         drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, colour, onHex, 4);
-
-        // Upload bar
-        drawUploadBar(_uploadPercentage);
     }
 
     void renderDisassembler(bool onHex)
@@ -829,7 +826,7 @@ namespace Graphics
 
             // Mnemonic, highlight if on vPC and show cursor in debug mode
             uint32_t colour = (onVPC) ? 0xFFFFFFFF : 0xFFB0B0B0;
-            drawText(Assembler::getDisassembledCode(i)->_text, _pixels, HEX_START_X+6, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, onCursor  &&  (Editor::getSingleStepEnabled()), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+            drawText(Assembler::getDisassembledCode(i)->_text, _pixels, HEX_START_X+6, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, (onCursor || onVPC)  &&  (Editor::getSingleStepEnabled()), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
         }
 
         switch(Editor::getMemoryMode())
@@ -934,6 +931,9 @@ namespace Graphics
                     drawText(std::string(str), _pixels, HEX_START_X + i*HEX_CHAR_WIDE, int(FONT_CELL_Y*4.25) + FONT_CELL_Y*HEX_CHARS_Y + j*(FONT_HEIGHT+FONT_GAP_Y), 0xFF00FFFF, false, 0);
                 }
             }
+
+            // Upload bar
+            drawUploadBar(_uploadPercentage);
 
             // Page up/down icons
             sprintf(str, "^");
