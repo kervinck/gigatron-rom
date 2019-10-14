@@ -2,10 +2,11 @@ _startAddress_  EQU		0x0200
 clearRegion     EQU     0x7fa0
 resetVideoTable EQU     clearRegion - 0x0100
 clearCursorRow  EQU     clearRegion - 0x0200
-printText       EQU     clearRegion - 0x0400
-printDigit      EQU     clearRegion - 0x0500
-printVarInt16   EQU     clearRegion - 0x0600
-printChar       EQU     clearRegion - 0x0700
+printText       EQU     clearRegion - 0x0300
+printDigit      EQU     clearRegion - 0x0400
+printVarInt16   EQU     clearRegion - 0x0500
+printChar       EQU     clearRegion - 0x0600
+printHex        EQU     clearRegion - 0x0700
 newLineScroll   EQU     clearRegion - 0x0800
 resetAudio      EQU     clearRegion - 0x0900
 playMidi        EQU     clearRegion - 0x0A00
@@ -38,20 +39,17 @@ frameCountPrev  EQU     register0 + 0x1C
 ; Labels
 _entryPoint_    EQU		0x0200
 _10             EQU		0x022e
-_20             EQU		0x023d
+_20             EQU		0x0237
 
 ; Variables
 
 ; Strings
-usrStr_0x6ea0		EQU		0x6ea0
-usrStr_0x6ea0		DB		36 'caadsdggggggggg9s789sd12346fdsffaaab'
 
 ; Code
 _entryPoint_    Initialise			; INIT
 
-_10             PrintString	usrStr_0x6ea0
-                LDWI	newLineScroll
-                CALL	giga_vAC		; print"caadsdggggggggg9s789sd12346fdsffaaab"
+_10             LDI		127
+                PrintAcHex			; printhex$(127);
 
 _20             BRA		_10		; goto10
 

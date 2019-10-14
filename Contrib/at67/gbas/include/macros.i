@@ -118,6 +118,12 @@ _label_ LD      giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  PrintAcHex
+        ST      textHex
+        LDWI    printHex
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  PrintString _str
         LDWI    _str
         STW     textStr
@@ -127,20 +133,20 @@ _label_ LD      giga_vAC
 
 %MACRO  PrintInt16 _int
         LDWI    _int
-        STW     textDigits    
+        STW     textNum    
         LDWI    printVarInt16
         CALL    giga_vAC
 %ENDM
 
 %MACRO  PrintAcInt16
-        STW     textDigits    
+        STW     textNum    
         LDWI    printVarInt16
         CALL    giga_vAC
 %ENDM
 
 %MACRO  PrintVarInt16 _var
         LDW     _var
-        STW     textDigits    
+        STW     textNum    
         LDWI    printVarInt16
         CALL    giga_vAC
 %ENDM

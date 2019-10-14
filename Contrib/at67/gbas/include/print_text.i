@@ -1,13 +1,14 @@
 textStr         EQU     register0
-textDigits      EQU     register0
+textNum         EQU     register0
 textLen         EQU     register1
 textFont        EQU     register2
 textChr         EQU     register3
-textSlice       EQU     register4
-scanLine        EQU     register5
-digitMult       EQU     register6
-digitIndex      EQU     register7
-clearloop       EQU     register8
+textHex         EQU     register4
+textSlice       EQU     register5
+scanLine        EQU     register6
+digitMult       EQU     register7
+digitIndex      EQU     register8
+clearloop       EQU     register9
 
 
                 ; clears the top 8 lines of pixels in preparation of text scrolling
@@ -65,10 +66,10 @@ printT_loop     LoopCounter textLen printT_char
 
                 
 printDigit      PUSH
-                LDW     textDigits
+                LDW     textNum
 printD_index    SUBW    digitMult
                 BLT     printD_cont
-                STW     textDigits
+                STW     textNum
                 INC     digitIndex
                 BRA     printD_index
 
@@ -87,15 +88,15 @@ printD_exit     POP
 printVarInt16   PUSH
                 LDI     0
                 ST      digitIndex
-                LDW     textDigits
+                LDW     textNum
                 BGE     printVI16_pos
                 LDI     0x2D
                 ST      textChr
                 LDWI    printChar
                 CALL    giga_vAC
                 LDWI    0
-                SUBW    textDigits
-printVI16_pos   STW     textDigits    
+                SUBW    textNum
+printVI16_pos   STW     textNum    
 
                 LDWI    10000
                 STW     digitMult
@@ -113,7 +114,7 @@ printVI16_pos   STW     textDigits
                 STW     digitMult
                 LDWI    printDigit
                 CALL    giga_vAC
-                LD      textDigits
+                LD      textNum
                 ORI     0x30
                 ST      textChr
                 LDWI    printChar
@@ -227,3 +228,33 @@ validChar       LD      textChr
                 LDI     32
                 ST      textChr
 validC_chr      RET
+
+
+printHex        LDWI    SYS_LSRW4_50    ; shift right by 4 SYS routine
+                STW     giga_sysFn
+                LD      textHex
+                SYS     0xF5            ; SYS_LSRW4_50, 270 - 50/2 = 0xF5
+                SUBI    10
+                BLT     printH_skip0
+                ADDI    7
+printH_skip0    ADDI    0x3A
+                ST      textChr
+                PUSH
+                LDWI    printChar
+                CALL    giga_vAC
+                POP
+                LD      textHex
+                ANDI    0x0F
+                SUBI    10
+                BLT     printH_skip1
+                ADDI    7
+printH_skip1    ADDI    0x3A
+                ST      textChr
+                PUSH
+                LDWI    printChar
+                CALL    giga_vAC
+                POP
+                RET
+
+                
+

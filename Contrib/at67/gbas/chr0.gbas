@@ -1,2 +1,2 @@
-10 print "caadsdggggggggg9s789sd12346fdsffaaab"
+10 print hex$(127);
 20 goto 10
