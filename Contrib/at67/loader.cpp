@@ -522,7 +522,11 @@ namespace Loader
         {
             if(comRead(_currentComPort, &buffer, 1)) line.push_back(buffer);
             double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
-            if(frameTime > _configTimeOut) return false;
+            if(frameTime > _configTimeOut)
+            {
+                Graphics::enableUploadBar(false);
+                return false;
+            }
         }
 
         // Replace '\n'
