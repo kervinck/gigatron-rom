@@ -2527,7 +2527,7 @@ SYS_ExpanderControl_v4_40:
               0b09 140c  ld   $0c,y
               0b0a e0fb  jmp  y,$fb
               0b0b 0118  ld   [$18]
-SYS_Run6502_DEVROM_80:
+SYS_Run6502_v4_80:
               0b0c 140d  ld   $0d,y
               0b0d e07c  jmp  y,$7c
               0b0e 000d  ld   $0d         ;Activate v6502

@@ -2663,7 +2663,7 @@ jmp(Y,'sys_ExpanderControl')    #16
 ld([vAC])                       #17
 
 #-----------------------------------------------------------------------
-# Extension SYS_Run6502_DEVROM_80
+# Extension SYS_Run6502_v4_80
 #-----------------------------------------------------------------------
 
 # Immediately transfer control to v6502, without waiting for the current
@@ -2682,7 +2682,7 @@ ld([vAC])                       #17
 # - Another way is to set vPC before BRK, and vCPU will continue there(+2)
 
 # Calling v6502 code from vCPU looks like this:
-#       LDWI  SYS_Run6502_DEVROM_80
+#       LDWI  SYS_Run6502_v4_80
 #       STW   sysFn
 #       LDWI  $6502_start_address
 #       STW   vLR
@@ -2719,7 +2719,7 @@ ld([vAC])                       #17
 #                              2*v6520_maxTicks                    11
 #                                                            v6502_overhead
 
-label('SYS_Run6502_DEVROM_80')
+label('SYS_Run6502_v4_80')
 ld(hi('sys_v6502'),Y)           #15
 jmp(Y,'sys_v6502')              #16
 ld(hi('v6502_ENTER'));          C('Activate v6502')#17

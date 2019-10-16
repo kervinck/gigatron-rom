@@ -161,7 +161,7 @@ _Apple1=*
 
 _vLR=                           {Reset v6502 PC}
 [do
-  \SYS_Run6502_DEVROM_80 _sysFn=
+  \SYS_Run6502_v4_80 _sysFn=
   \k,                           {ASCII code in A}
   80!                           {Run 6502 code until BRK}
   push                          {Save v6502 PC}
