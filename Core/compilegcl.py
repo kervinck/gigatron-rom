@@ -62,7 +62,7 @@ address = program.execute
 # See: https://forum.gigatron.io/viewtopic.php?p=27#p27
 if program.needPatch:
   patchArea = 0x5b86 # Somewhere after the ROMv1 Loader's buffer
-  print('Apply patch %04x' % patchArea)
+  print('Apply patch $%04x' % patchArea)
   data = data[:-1] # Remove terminating zero
   data += ''.join(chr(byte) for byte in [
     patchArea>>8, patchArea&255, 6,   # Patch segment, 6 bytes at $5b80
@@ -75,7 +75,7 @@ if program.needPatch:
   address = patchArea
 
 # Final two bytes are execution address
-print('Execute at %04x' % address)
+print('Execute at $%04x' % address)
 data += chr(address>>8)
 data += chr(address&255)
 
