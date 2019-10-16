@@ -38,18 +38,121 @@ frameCountPrev  EQU     register0 + 0x1C
 
 ; Labels
 _entryPoint_    EQU		0x0200
-_10             EQU		0x022e
-_20             EQU		0x0237
+_10             EQU		0x0234
+_test           EQU		0x0287
+_next3          EQU		0x0239
+_next4          EQU		0x023e
+_end_10         EQU		0x0285
+0x0300          EQU		0x0300
 
 ; Variables
+_z              EQU		0x0030
+_b              EQU		0x0032
+_i              EQU		0x0034
+_j              EQU		0x0036
 
 ; Strings
+usrStr_0x6ea0		EQU		0x6ea0
+usrStr_0x6ea0		DB		11 'lkalalalala'
+usrStr_0x6dac		EQU		0x6dac
+usrStr_0x6dac		DB		1 ' '
 
 ; Code
-_entryPoint_    Initialise			; INIT
+_entryPoint_    Initialise	                        		; INIT
+                LDI		33
+                STW		_z                          		; let z = 33
+                STW		_b                          		; b = z
 
-_10             LDI		127
-                PrintAcHex			; printhex$(127);
+_10             LDWI	0
+                STW		_i                          		; for i = 0 to 2
 
-_20             BRA		_10		; goto10
+_next3          LDWI	0
+                STW		_j                          		; for j = 0 to 2
+
+_next4          LDWI	_test
+                CALL	giga_vAC                    		; gosub   test
+
+                ForNextLoopP	_j _next4 2         		; next j
+
+                ForNextLoopP	_i _next3 2         		; next i
+
+                LD		_b
+                PrintAcChar	
+                LDWI	newLineScroll
+                CALL	giga_vAC                    		; print chr$(b)
+
+                PrintString	usrStr_0x6ea0
+                LDWI	newLineScroll
+                CALL	giga_vAC                    		; print "lkalalalala"
+
+_end_10         BRA		_end_10                     		; END
+
+_test           PUSH	
+                LDW		_i
+                ADDI	40
+                PrintAcHex	
+                PrintString	usrStr_0x6dac
+                LDW		_j
+                ADDI	30
+                PrintAcHex	
+                PrintString	usrStr_0x6dac
+                LDWI	newLineScroll
+                CALL	giga_vAC                    		; print hex$(i+40);" ";hex$(j+30);" "
+
+                LDW		_i
+                ADDI	30
+                PrintAcHex	
+                PrintString	usrStr_0x6dac
+                LDW		_j
+                ADDI	40
+                PrintAcHex	
+                PrintString	usrStr_0x6dac
+                LDWI	newLineScroll
+                CALL	giga_vAC                    		; print hex$(i+30);" ";hex$(j+40);" "
+
+                LDWI	0x0300
+                CALL	giga_vAC                    		; PAGE JUMP
+
+0x0300          PrintInt16	0x003d
+                PrintString	usrStr_0x6dac
+                PrintVarInt16	_i
+                PrintString	usrStr_0x6dac
+                PrintVarInt16	_j
+                PrintString	usrStr_0x6dac
+                LDW		_j
+                ADDI	23
+                STW		0xd0
+                PrintVarInt16	0xd0
+                PrintString	usrStr_0x6dac
+                LDW		_i
+                ADDI	55
+                STW		0xd2
+                PrintVarInt16	0xd2
+                PrintString	usrStr_0x6dac
+                LDW		_i
+                ADDW	_j
+                STW		0xd4
+                PrintVarInt16	0xd4
+                PrintString	usrStr_0x6dac
+                LDW		_i
+                SUBW	_j
+                STW		0xd6
+                PrintVarInt16	0xd6
+                PrintString	usrStr_0x6dac
+                LDW		_i
+                SUBW	_j
+                ADDI	1
+                STW		0xd8
+                PrintVarInt16	0xd8
+                PrintString	usrStr_0x6dac
+                LDW		_i
+                ADDW	_j
+                ADDW	_j
+                STW		0xda
+                PrintVarInt16	0xda
+                LDWI	newLineScroll
+                CALL	giga_vAC                    		; print 20*3+1;" ";i;" ";j;" ";j+23;" ";i+55;" ";i+j;" ";i-j;" ";i-j+1;" ";i+j+j
+
+                POP		
+                RET		                            		; return
 

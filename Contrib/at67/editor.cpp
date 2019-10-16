@@ -661,7 +661,7 @@ namespace Editor
         if(event.wheel.y < 0) handlePageDown(1);
     }
 
-    void handleMouseClick(void)
+    void handleMouseLeftClick(void)
     {
         if(_editorMode == Hex  ||  (_cursorY < 0  &&  _editorMode != Rom))
         {
@@ -694,6 +694,21 @@ namespace Editor
             // If breakpoint already exists, delete it, otherwise save it
             auto it = std::find(_breakPoints.begin(), _breakPoints.end(), Assembler::getDisassembledCode(_cursorY)->_address);
             (it != _breakPoints.end()) ? _breakPoints.erase(it) : _breakPoints.push_back(Assembler::getDisassembledCode(_cursorY)->_address);
+        }
+    }
+
+    void handleMouseRightClick(void)
+    {
+        if(_editorMode == Load)
+        {
+            // No loading/browsing if cursor is out of bounds
+            if(_cursorY >= getFileEntriesSize()) return;
+
+            FileType fileType = getCurrentFileEntryType();
+            switch(fileType)
+            {
+                case File: Loader::setUploadTarget(Loader::Hardware); break;
+            }
         }
     }
 
@@ -947,10 +962,7 @@ namespace Editor
         else if(_sdlKeyScanCode == _emulator["ScanlineMode"].scanCode  &&  _sdlKeyModifier == _emulator["ScanlineMode"].modifier)
         {
             // ROMS after v1 have their own inbuilt scanline handlers
-            if(!_singleStepEnabled)
-            {
-                if(Cpu::getRomType() != Cpu::ROMv1) {Cpu::setIN(Cpu::getIN() | INPUT_SELECT); return;}
-            }
+            if(Cpu::getRomType() != Cpu::ROMv1) {Cpu::setIN(Cpu::getIN() | INPUT_SELECT); return;}
         }
 
         // PS2 Keyboard emulation mode
@@ -1063,7 +1075,7 @@ namespace Editor
         // ROMS after v1 have their own inbuilt scanline handlers
         else if(_sdlKeyScanCode == _emulator["ScanlineMode"].scanCode  &&  _sdlKeyModifier == _emulator["ScanlineMode"].modifier)
         {
-            if(!_singleStepEnabled) (Cpu::getRomType() != Cpu::ROMv1) ? Cpu::setIN(Cpu::getIN() & ~INPUT_SELECT) : Cpu::swapScanlineMode();
+            (Cpu::getRomType() != Cpu::ROMv1) ? Cpu::setIN(Cpu::getIN() & ~INPUT_SELECT) : Cpu::swapScanlineMode();
         }
 
         // Browse vCPU directory
@@ -1219,13 +1231,15 @@ namespace Editor
         static uint16_t vPC = Cpu::getVPC();
         if(_singleStep)
         {
+            static int cycles = 0;
+
             // Native debugging
             if(_memoryMode != RAM)
             {
                 singleStep(Cpu::getStateS()._PC);
             }
             // vCPU debugging, (this code can potentially run for every Native instruction, for efficiency we check vPC so this code only runs for each vCPU instruction)
-            else if(vPC != Cpu::getVPC())
+            else if(vPC != Cpu::getVPC()  ||  cycles >= MAX_SINGLE_STEP_CYCLES)
             {
                 vPC = Cpu::getVPC();
 
@@ -1247,7 +1261,8 @@ namespace Editor
                 
                     case StepVpc:
                     {
-                        if(vPC != _singleStepValue) singleStep(vPC);
+                        // Step whenever program counter changes or when MAX_SINGLE_STEP_CYCLES cycles have occured, (to avoid deadlocks)
+                        if(vPC != _singleStepValue  ||  cycles >= MAX_SINGLE_STEP_CYCLES) singleStep(vPC);
                     }
                     break;
 
@@ -1257,7 +1272,11 @@ namespace Editor
                     }
                     break;
                 }
+
+                cycles = 0;
             }
+
+            cycles++;
         }
 
         // Pause simulation and handle debugging keys
@@ -1294,7 +1313,7 @@ namespace Editor
                         if(_pageUpButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageUp(HEX_CHARS_Y);
                         else if(_pageDnButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageDown(HEX_CHARS_Y);
                         else if(_memoryMode == RAM  &&  _delAllButton  &&  event.button.button == SDL_BUTTON_LEFT) _breakPoints.clear();
-                        else if(event.button.button == SDL_BUTTON_LEFT) handleMouseClick();
+                        else if(event.button.button == SDL_BUTTON_LEFT) handleMouseLeftClick();
                     }
                     break;
 
@@ -1384,7 +1403,8 @@ namespace Editor
                     if(_pageUpButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageUp(HEX_CHARS_Y);
                     else if(_pageDnButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageDown(HEX_CHARS_Y);
                     else if(_memoryMode == RAM  &&  _delAllButton  &&  event.button.button == SDL_BUTTON_LEFT) _breakPoints.clear();
-                    else if(event.button.button == SDL_BUTTON_LEFT) handleMouseClick();
+                    else if(event.button.button == SDL_BUTTON_LEFT) handleMouseLeftClick();
+                    else if(event.button.button == SDL_BUTTON_RIGHT) handleMouseRightClick();
                 }
                 break;
 

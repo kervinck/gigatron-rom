@@ -40,11 +40,11 @@ frameCountPrev  EQU     register0 + 0x1C
 _entryPoint_    EQU		0x0200
 _10             EQU		0x022e
 _20             EQU		0x0365
-next2           EQU		0x0237
-next3           EQU		0x023c
-next4           EQU		0x0241
-next8           EQU		0x0278
-next16          EQU		0x0305
+_next2          EQU		0x0237
+_next3          EQU		0x023c
+_next4          EQU		0x0241
+_next8          EQU		0x0278
+_next16         EQU		0x0305
 0x0300          EQU		0x0300
 
 ; Variables
@@ -67,34 +67,34 @@ usrStr_0x6ae6		EQU		0x6ae6
 usrStr_0x6ae6		DB		3 'dog'
 
 ; Code
-_entryPoint_    Initialise			; INIT
+_entryPoint_    Initialise	                        		; INIT
 
 _10             LDI		1
-                STW		_a		; a=1
+                STW		_a                          		; a =1
 
                 LDWI	0
-                STW		_k		; fork=0to1
+                STW		_k                          		; for k = 0 to 1
 
-next2           LDWI	0
-                STW		_j		; forj=0to1
+_next2          LDWI	0
+                STW		_j                          		; for j = 0 to 1
 
-next3           LDWI	0
-                STW		_i		; fori=0to1
+_next3          LDWI	0
+                STW		_i                          		; for i = 0 to 1
 
-next4           PrintString	usrStr_0x6ea0		; print"yahooowalllallllalalalwallla";
+_next4          PrintString	usrStr_0x6ea0           		; print "yahooowalllallllalalalwallla";
 
                 PrintString	usrStr_0x6dbd
-                PrintString	usrStr_0x6cc1		; print"yes";" ";
+                PrintString	usrStr_0x6cc1           		; print "yes";" ";
 
                 PrintInt16	0x003d
-                PrintString	usrStr_0x6cc1		; print20*3+1;" ";
+                PrintString	usrStr_0x6cc1           		; print 20*3+1;" ";
 
                 LDWI	32
-                STW		_char		; forchar=32to127
+                STW		_char                       		; for char = 32 to 127
 
-next8           LDW		_a
+_next8          LDW		_a
                 ADDI	1
-                STW		_a		; a=a+1
+                STW		_a                          		; a = a + 1
 
                 LDW		_char
                 ADDI	1
@@ -111,35 +111,34 @@ next8           LDW		_a
                 SUBW	_k
                 STW		0xd2
                 LDW		0xd0
-                ADDW	0xd2
-                PrintAcChar			; printchr$(char+1+a+a+a-32*0+50/0+a/0+3-a-a-a-4+j*0+(k-k));
+                PrintAcChar	                        		; print chr$(char+1 +a+a+a - 32*0 + 50/0 + a/0 + 3 - a -a -a -4 + j*0 + (k-k));
 
-                ForNextLoopP	_char next8 127		; nextchar
+                ForNextLoopP	_char _next8 127    		; next char
 
-                ForNextLoopP	_i next4 1		; nexti
+                ForNextLoopP	_i _next4 1         		; next i
 
-                ForNextLoopP	_j next3 1		; nextj
+                ForNextLoopP	_j _next3 1         		; next j
 
-                ForNextLoopP	_k next2 1		; nextk
+                ForNextLoopP	_k _next2 1         		; next k
 
-                PrintString	usrStr_0x6bc3		; print"wooooooooooooooooooooooooooooow!!!";
+                PrintString	usrStr_0x6bc3           		; print "wooooooooooooooooooooooooooooow!!!";
 
                 LDWI	0x0300
-                CALL	giga_vAC		; rem LONG_JUMP
+                CALL	giga_vAC                    		; PAGE JUMP
 
 0x0300          LDWI	0
-                STW		_i		; fori=0to6
+                STW		_i                          		; for i = 0 to 6
 
-next16          PrintString	usrStr_0x6ae6
+_next16         PrintString	usrStr_0x6ae6
                 PrintString	usrStr_0x6cc1
                 PrintVarInt16	_i
                 LDWI	newLineScroll
-                CALL	giga_vAC		; print"dog";" ";i
+                CALL	giga_vAC                    		; print "dog";" ";i
 
-                ForNextLoopP	_i next16 6		; nexti
+                ForNextLoopP	_i _next16 6        		; next i
 
-                Initialise			; cls
+                Initialise	                        		; cls
 
 _20             LDWI	_10
-                CALL	giga_vAC		; goto10
+                CALL	giga_vAC                    		; goto 10
 

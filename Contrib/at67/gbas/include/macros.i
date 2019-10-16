@@ -73,7 +73,7 @@
         BGT     _label_
         LDWI    _label
         CALL    giga_vAC
-_label_ LD      giga_vAC        
+_label_ LD      _var
 %ENDM
 
 %MACRO  ForNextLoopVsVeP _var _label _varEnd _varStep
@@ -119,6 +119,13 @@ _label_ LD      giga_vAC
 %ENDM
 
 %MACRO  PrintAcHex
+        ST      textHex
+        LDWI    printHex
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  PrintVarHex _var
+        LD      _var
         ST      textHex
         LDWI    printHex
         CALL    giga_vAC

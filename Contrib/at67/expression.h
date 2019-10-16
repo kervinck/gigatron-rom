@@ -35,8 +35,10 @@ namespace Expression
     std::string::const_iterator findNonStringEquals(const std::string& input);
     void stripNonStringWhitespace(std::string& input);
     void stripWhitespace(std::string& input);
+    void trimWhitespace(std::string& input);
     void padString(std::string &str, int num, char pad=' ');
     void addString(std::string &str, int num, char add=' ');
+    int tabbedStringLength(const std::string& input, int tabSize);
     void operatorReduction(std::string& input);
     bool findMatchingBrackets(const std::string& input, size_t start, size_t& lbra, size_t& rbra);
 

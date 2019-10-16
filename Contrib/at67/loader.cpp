@@ -192,7 +192,7 @@ namespace Loader
     {
         size_t nameSuffix = filename.find_last_of(".");
         std::string output = filename.substr(0, nameSuffix) + ".gt1";
-        fprintf(stderr, "\nUploading file '%s'\n", output.c_str());
+        fprintf(stderr, "\nFile:   %s\n", output.c_str());
 
         // Header
         uint16_t totalSize = 0;
@@ -522,11 +522,7 @@ namespace Loader
         {
             if(comRead(_currentComPort, &buffer, 1)) line.push_back(buffer);
             double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
-            if(frameTime > _configTimeOut)
-            {
-                Graphics::enableUploadBar(false);
-                return false;
-            }
+            if(frameTime > _configTimeOut) return false;
         }
 
         // Replace '\n'
@@ -598,7 +594,9 @@ namespace Loader
 
             if(!waitForPromptGiga(line))
             {
+                Graphics::enableUploadBar(false);
                 closeComPort();
+                //fprintf(stderr, "\n");
                 return -1;
             }
 
@@ -1176,6 +1174,8 @@ namespace Loader
             return;
         }
 
+        if(uploadTarget == Emulator) fprintf(stderr, "\nTarget: Emulator");
+        else if(uploadTarget == Hardware) fprintf(stderr, "\nTarget: Gigatron");
         uint16_t totalSize = printGt1Stats(filename, gt1File);
         Memory::setSizeFreeRAM(Memory::getBaseFreeRAM() - totalSize); 
 
@@ -1337,14 +1337,13 @@ namespace Loader
             {
                 uploadDirect(_uploadTarget);
                 _uploadTarget = None;
-                //frameUploading = true;
 
                 return;
             }
-            
+
+            frameUploading = true;            
             static uint8_t checksum = 0;
             static FrameState frameState = FrameState::Resync;
-
             switch(frameState)
             {
                 case FrameState::Resync:

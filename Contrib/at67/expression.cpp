@@ -114,6 +114,17 @@ namespace Expression
         input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
     }
 
+    void trimWhitespace(std::string& input)
+    {
+        size_t start = input.find_first_not_of(" \n\r\f\t\v");
+        if(start == std::string::npos) return;
+
+        size_t end = input.find_last_not_of(" \n\r\f\t\v");
+        size_t size = end - start + 1;
+
+        input = input.substr(start, size);
+    }
+
     void padString(std::string &input, int num, char pad)
     {
         if(num > input.size()) input.insert(0, num - input.size(), pad);
@@ -124,19 +135,37 @@ namespace Expression
         if(num > 0) input.append(num, add);
     }
 
+    int tabbedStringLength(const std::string& input, int tabSize)
+    {
+        int length = 0, newLine = 0;
+        for(int i=0; i<input.size(); i++)
+        {
+            switch(input[i])
+            {
+                case '\n':
+                case '\r': length = 0; newLine = i + 1;                   break;
+                case '\t': length += tabSize - ((i - newLine) % tabSize); break;
+                default:   length++;                                      break;
+            }
+        }
+
+        return length;
+    }
+
     bool findMatchingBrackets(const std::string& input, size_t start, size_t& lbra, size_t& rbra)
     {
         lbra = input.find_first_of("(", start);
         rbra = input.find_first_of(")", lbra + 1);
         if(lbra == std::string::npos  ||  rbra == std::string::npos) return false;
+        return true;
 
-        size_t left = lbra;
-        while((left = input.find_first_of("(", left + 1)) != std::string::npos)
-        {
-            rbra = input.find_first_of(")", rbra + 1);
-        }
-        if(lbra != std::string::npos  &&  rbra != std::string::npos) return true;
-        return false;
+        //size_t left = lbra;
+        //while((left = input.find_first_of("(", left + 1)) != std::string::npos)
+        //{
+        //    rbra = input.find_first_of(")", rbra + 1);
+        //}
+        //if(lbra != std::string::npos  &&  rbra != std::string::npos) return true;
+        //return false;
     }
 
     void operatorReduction(std::string& input)

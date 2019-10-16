@@ -2244,6 +2244,12 @@ namespace Assembler
                                     operandValid = true;
                                     operand = uint8_t(label._address) - BRANCH_ADJUSTMENT;
                                 }
+                                // Allow branches to raw hex values, lets hope the user knows what he is doing
+                                else if(Expression::stringToU8(tokens[tokenIndex], operand))
+                                {
+                                    operandValid = true;
+                                    operand -= BRANCH_ADJUSTMENT;
+                                }
                                 else
                                 {
                                     fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);

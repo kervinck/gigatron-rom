@@ -30,15 +30,12 @@ clearCR_loopy   LDI     giga_xres
 clearCR_loopx   SUBI    4                   ; loop is unrolled 4 times
                 ST      giga_sysArg4
                 SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
-                LD      giga_sysArg4
                 SUBI    4
                 ST      giga_sysArg4
                 SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
-                LD      giga_sysArg4
                 SUBI    4
                 ST      giga_sysArg4
                 SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
-                LD      giga_sysArg4
                 SUBI    4
                 ST      giga_sysArg4
                 SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
@@ -124,7 +121,8 @@ printVI16_pos   STW     textNum
 
 
                 ; char in accumulator
-printChar       LD      textChr             ; (char-32)*5 + 0x0700
+printChar       PUSH
+                LD      textChr             ; (char-32)*5 + 0x0700
                 SUBI    32
                 STW     textChr
                 STW     textFont
@@ -167,15 +165,15 @@ printC_slice    LDW     textFont            ; text font slice base address
                 ST      cursorXY
                 SUBI    158
                 BLT     printC_exit
-                PUSH
                 LDWI    newLineScroll       ; next row, scroll at bottom
                 CALL    giga_vAC
-                POP
-printC_exit     RET
+printC_exit     POP
+                RET
 
 
                 ; print from top row to bottom row, then start scrolling 
-newLineScroll   LDI     0x02                ; x offset slightly
+newLineScroll   PUSH
+                LDI     0x02                ; x offset slightly
                 ST      cursorXY
                 LD      cursorXY+1
                 ANDI    0x80                ; on bottom row flag
@@ -186,11 +184,9 @@ newLineScroll   LDI     0x02                ; x offset slightly
                 SUBI    128
                 BLT     newLS_exit
                 
-newLS_cont      PUSH
-                LDWI    clearCursorRow
+newLS_cont      LDWI    clearCursorRow
                 CALL    giga_vAC
-                POP
-
+                
                 LDWI    giga_videoTable
                 STW     scanLine
 
@@ -215,8 +211,8 @@ newLS_adjust    ADDI    8
                 PEEK
                 ORI     0x80                ; on bottom row
                 ST      cursorXY+1
-
-newLS_exit      RET
+newLS_exit      POP
+                RET
 
 
                 ; arg in textChr, result in textChr
@@ -230,7 +226,8 @@ validChar       LD      textChr
 validC_chr      RET
 
 
-printHex        LDWI    SYS_LSRW4_50    ; shift right by 4 SYS routine
+printHex        PUSH
+                LDWI    SYS_LSRW4_50    ; shift right by 4 SYS routine
                 STW     giga_sysFn
                 LD      textHex
                 SYS     0xF5            ; SYS_LSRW4_50, 270 - 50/2 = 0xF5
@@ -239,10 +236,8 @@ printHex        LDWI    SYS_LSRW4_50    ; shift right by 4 SYS routine
                 ADDI    7
 printH_skip0    ADDI    0x3A
                 ST      textChr
-                PUSH
                 LDWI    printChar
                 CALL    giga_vAC
-                POP
                 LD      textHex
                 ANDI    0x0F
                 SUBI    10
@@ -250,7 +245,6 @@ printH_skip0    ADDI    0x3A
                 ADDI    7
 printH_skip1    ADDI    0x3A
                 ST      textChr
-                PUSH
                 LDWI    printChar
                 CALL    giga_vAC
                 POP

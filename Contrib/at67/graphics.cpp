@@ -343,7 +343,7 @@ namespace Graphics
             if(SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP, &_window, &_renderer) < 0)
             {
                 Cpu::shutdown();
-                fprintf(stderr, "Graphics::initialise() : failed to create SDL window.\n");
+                fprintf(stderr, "Graphics::initialise() : failed to create SDL fullscreen window.\n");
                 _EXIT_(EXIT_FAILURE);
             }
         }

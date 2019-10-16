@@ -36,7 +36,7 @@ clearRegion     PUSH
                 LDWI    SYS_Draw4_30    ; setup 4 pixel SYS routine
                 STW     giga_sysFn
 
-clearS_loop     LDW     top
+clearR_loop     LDW     top
                 STW     giga_sysArg4    ; top line
                 SYS     0xFF            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
 
@@ -50,7 +50,7 @@ clearS_loop     LDW     top
                 LD      bot             ; 4 horizontal pixels
                 ADDI    0x04
                 ST      bot
-                LoopCounter xcount clearS_loop
+                LoopCounter xcount clearR_loop
 
                 INC     top + 1         ; next top line
                 LD      bot + 1         ; next bottom line
@@ -63,5 +63,5 @@ clearS_loop     LDW     top
                 ST      bot
                 LD      xreset
                 ST      xcount
-                LoopCounter ycount clearS_loop
+                LoopCounter ycount clearR_loop
                 RET
