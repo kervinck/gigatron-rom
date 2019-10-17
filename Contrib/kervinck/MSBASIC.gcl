@@ -17,18 +17,12 @@ gcl0x
         --------------------------
 
         Open issues:
-        XXX Automatic line wrap seems broken (only when typing lines)
-        XXX OUT OF MEMORY ERROR IN drops second digit of line number
-        XXX See if we can do smoother typing
-        XXX Add some indentation
-        XXX TI$ not yet implemented
         XXX No line editting yet (DEL)
+        XXX TI$ not yet implemented
         XXX Fix POS() and TAB() (needs proper POSX system variable)
         XXX Support 64K Gigatron
-        XXX Keyboard buffer should move back to page 2
-        XXX Floating point buffer (STACK2) should move back
-        XXX Meaning of WIDTH, WIDTH2?
-        XXX Meaning of SPACE_FOR_GOSUB?
+        XXX Win 256 bytes by moving init code to flank of screen
+        XXX Floating point buffer (STACK2) should move
 
         Features:
         - 9 digit floating point (40 bits)
@@ -791,7 +785,7 @@ _CharOut=*
 
   $8d^ [if<>0 <p, 251- if>0 0]  {Test for CR or line wrap}
 
-  [if=0 \Newline call]          {Tail call: doesn't return}
+  [if=0 \Newline call]          {Move to next line}
 
   %-2 $a0-                      {Apple 1 wants ASCII with bit 7 set}
   [if<0 pop ret]                {Skip non-printables}
@@ -842,17 +836,15 @@ _PiOut=*
 
 _Newline=*
 [
-  { Tail function: pops without push }
-
   { First clear the top text row }
 
-  $60 <p.                       {Go to start of line}
-  $a0+ i=                       {$0100 first entry in video table}
+  $62 <p.                       {Go to start of line, indent 2 pixels}
+  $9e+ i=                       {$0100 first entry in video table}
   peek >p.                      {Move to what is now still the top text row}
 
   \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
   0 \sysArgs0:                  {All black}
-  p \sysArgs4:                  {Set drawing position for clearing}
+  p 2- \sysArgs4:               {Set drawing position for clearing}
 
   [do
     134!                        {SYS call to draw 8 pixels vertically}
@@ -869,7 +861,7 @@ _Newline=*
     i 2+ i=                     {Advance to next entry in video table}
     255& 212^ if<>0loop]        {Until all done}
 
-  pop ret
+  ret
 ]
 
 {-----------------------------------------------------------------------+
@@ -901,17 +893,18 @@ _WaitKey=*
     Wait for key stroke and leave ASCII result in [\k]
   }
   push
+  \serialRaw, \k.
   [do
-    \serialRaw, 255^            {Wait for idle keyboard}
-    if<>0loop]
-  [do
-    \frameCount, 15& [if=0      {4 Hz cursor redraw rate}
-      \frameCount, 48&          {Flash at 1 Hz with 75% duty cycle}
-      [if=0 $a0 else $ff]       {Select space or cursor symbol}
-      CharOut! p=               {Display cursor and immediately move back}
-    ]
-    \serialRaw, \k. 128&        {Key ready?}
-    if<>0loop]                  {Loop until ready}
+    \k, i=
+    \serialRaw, \k.
+    i^ [if=0                    {No state change}
+      \frameCount, 15& [if=0    {4 Hz cursor redraw rate}
+        \frameCount, 16&        {Blink at 2 Hz with 50% duty cycle}
+        [if=0 $a0 else $ff]     {Select space or cursor symbol}
+        CharOut! p=]            {Display cursor and immediately move back}
+      loop]                     {Loop until key state changes}
+    \k, 255^ if=0loop]          {And also became pressed}
+
   $a0 CharOut! p=               {Overwrite cursor symbol with a space}
   \k, $60- [if=0 $bf]           {Back tick to become pi}
            [if>0 $40+ \k.]      {Map to upper case, DEL becomes rubout}
