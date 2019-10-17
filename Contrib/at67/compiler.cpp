@@ -141,7 +141,7 @@ namespace Compiler
         std::string _name;
     };
 
-    using KeywordFuncPtr = std::function<bool (CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)>;
+    using KeywordFuncPtr = std::function<bool (CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)>;
     struct Keyword
     {
         std::string _name;
@@ -215,64 +215,64 @@ namespace Compiler
     std::map<std::string, MacroIndexEntry> _macroIndexEntries;
 
 
-    bool handleREM(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleLET(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleEND(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleGOTO(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleCLS(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handlePRINT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleFOR(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleNEXT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleTHEN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleELSE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleELSEIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleENDIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleDIM(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleDEF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleINPUT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleREAD(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleDATA(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handlePEEK(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handlePOKE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleDEEK(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleDOKE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleON(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleGOSUB(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleRETURN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleDO(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleLOOP(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleWHILE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleUNTIL(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleEXIT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleAND(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleOR(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleXOR(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleNOT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool handleREM(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleLET(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleEND(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleGOTO(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleCLS(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handlePRINT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleFOR(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleNEXT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleTHEN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleELSE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleELSEIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleENDIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleDIM(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleDEF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleINPUT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleREAD(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleDATA(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handlePEEK(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handlePOKE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleDEEK(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleDOKE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleON(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleGOSUB(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleRETURN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleDO(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleLOOP(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleWHILE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleUNTIL(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleEXIT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleAND(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleOR(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleXOR(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleNOT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
 
-    bool handleABS(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleACS(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleASC(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleASN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleATN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleCOS(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleEXP(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleINT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleLOG(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleRND(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleSIN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleSQR(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleTAN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool handleABS(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleACS(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleASC(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleASN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleATN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleCOS(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleEXP(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleINT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleLOG(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleRND(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleSIN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleSQR(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleTAN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
 
-    bool handleCHR$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleHEX$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleHEXW$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleMID$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleLEFT$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleRIGHT$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleSPC$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleSTR$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool handleTIME$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool handleCHR$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleHEX$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleHEXW$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleMID$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleLEFT$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleRIGHT$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleSPC$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleSTR$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
+    bool handleTIME$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print);
 
     
     bool initialise(void)
@@ -996,11 +996,11 @@ namespace Compiler
             KeywordFuncResult result;
             if(findKeyword(_codeLines[i]._code, "REM", foundPos))
             {
-                handleREM(_codeLines[i], 0, foundPos, result);
+                handleREM(_codeLines[i], 0, foundPos, result, false);
             }
             else if(findKeyword(_codeLines[i]._code, "LET", foundPos))
             {
-                handleLET(_codeLines[i], 0, foundPos, result);
+                handleLET(_codeLines[i], 0, foundPos, result, false);
             }
 
             int varIndex;
@@ -1277,7 +1277,7 @@ namespace Compiler
     }
 
 
-    KeywordResult handleKeywords(CodeLine& codeLine, const std::string& keyword, int codeLineIndex, KeywordFuncResult& result, size_t& offset)
+    KeywordResult handleKeywords(CodeLine& codeLine, const std::string& keyword, int codeLineIndex, KeywordFuncResult& result, size_t& offset, bool print)
     {
         size_t foundPos;
 
@@ -1287,7 +1287,7 @@ namespace Compiler
             if(findKeyword(keyword, _keywords[i]._name, foundPos))
             {
                 offset += foundPos;
-                bool error = _keywords[i]._func(codeLine, codeLineIndex, offset, result);
+                bool error = _keywords[i]._func(codeLine, codeLineIndex, offset, result, print);
                 return (!error) ? KeywordError : KeywordFound;
             }
         }
@@ -1295,7 +1295,7 @@ namespace Compiler
         return KeywordNotFound;
     }
 
-    KeywordResult handleKeywords(CodeLine& codeLine, size_t offset, int codeLineIndex, KeywordFuncResult& result)
+    KeywordResult handleKeywords(CodeLine& codeLine, size_t offset, int codeLineIndex, KeywordFuncResult& result, bool print)
     {
         size_t foundPos;
 
@@ -1304,7 +1304,7 @@ namespace Compiler
         {
             if(findKeyword(codeLine._code.substr(offset), _keywords[i]._name, foundPos))
             {
-                bool error = _keywords[i]._func(codeLine, codeLineIndex, foundPos, result);
+                bool error = _keywords[i]._func(codeLine, codeLineIndex, foundPos, result, print);
                 return (!error) ? KeywordError : KeywordFound;
             }
         }
@@ -1312,7 +1312,7 @@ namespace Compiler
         return KeywordNotFound;
     }
 
-    KeywordResult handleMathwords(CodeLine& codeLine, size_t offset, int codeLineIndex, KeywordFuncResult& result)
+    KeywordResult handleMathwords(CodeLine& codeLine, size_t offset, int codeLineIndex, KeywordFuncResult& result, bool print)
     {
         size_t foundPos;
 
@@ -1321,7 +1321,7 @@ namespace Compiler
         {
             if(findKeyword(codeLine._code.substr(offset), _mathwords[i]._name, foundPos))
             {
-                bool error = _mathwords[i]._func(codeLine, codeLineIndex, foundPos, result);
+                bool error = _mathwords[i]._func(codeLine, codeLineIndex, foundPos, result, print);
                 return (!error) ? KeywordError : KeywordFound;
             }
         }
@@ -1329,7 +1329,7 @@ namespace Compiler
         return KeywordNotFound;
     }
 
-    KeywordResult handleStringwords(CodeLine& codeLine, const std::string& stringword, int codeLineIndex, KeywordFuncResult& result, size_t& offset)
+    KeywordResult handleStringwords(CodeLine& codeLine, size_t offset, const std::string& stringword, int codeLineIndex, KeywordFuncResult& result, bool print)
     {
         size_t foundPos;
 
@@ -1338,8 +1338,7 @@ namespace Compiler
         {
             if(findKeyword(stringword, _stringwords[i]._name, foundPos))
             {
-                offset += foundPos;
-                bool error = _stringwords[i]._func(codeLine, codeLineIndex, offset, result);
+                bool error = _stringwords[i]._func(codeLine, codeLineIndex, offset, result, print);
                 return (!error) ? KeywordError : KeywordFound;
             }
         }
@@ -1347,7 +1346,7 @@ namespace Compiler
         return KeywordNotFound;
     }
 
-    KeywordResult handleStringwords(CodeLine& codeLine, size_t offset, int codeLineIndex, KeywordFuncResult& result)
+    KeywordResult handleStringwords(CodeLine& codeLine, size_t offset, int codeLineIndex, KeywordFuncResult& result, bool print)
     {
         size_t foundPos;
 
@@ -1356,7 +1355,7 @@ namespace Compiler
         {
             if(findKeyword(codeLine._code.substr(offset), _stringwords[i]._name, foundPos))
             {
-                bool error = _stringwords[i]._func(codeLine, codeLineIndex, foundPos, result);
+                bool error = _stringwords[i]._func(codeLine, codeLineIndex, foundPos, result, print);
                 return (!error) ? KeywordError : KeywordFound;
             }
         }
@@ -1365,7 +1364,7 @@ namespace Compiler
     }
 
 
-    bool handleREM(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleREM(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         // Remove REM and everything after it in code
         codeLine._code.erase(foundPos - 3, codeLine._code.size() - (foundPos - 3));
@@ -1394,7 +1393,7 @@ namespace Compiler
         return true;
     }
 
-    bool handleLET(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleLET(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         // Remove LET from code
         codeLine._code.erase(foundPos - 3, foundPos);
@@ -1402,7 +1401,7 @@ namespace Compiler
         return true;
     }
 
-    bool handleEND(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleEND(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         Label label;
         std::string endName = "_end_" + std::to_string(codeLineIndex);
@@ -1414,13 +1413,13 @@ namespace Compiler
         return true;
     }
 
-    bool handleGOTO(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleGOTO(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         std::string gotoLabel = codeLine._code.substr(4);
         int labelIndex = findLabel(gotoLabel);
         if(labelIndex == -1)
         {
-            fprintf(stderr, "Compiler::handleGOTO() : invalid label in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Compiler::handleGOTO() : invalid label in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -1439,19 +1438,23 @@ namespace Compiler
         return true;
     }
 
-    bool handleCLS(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleCLS(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         emitVcpuAsm("%Initialise", "", false, codeLineIndex);
 
         return true;
     }
 
-    bool handlePRINT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handlePRINT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
-        size_t searchPos = foundPos;
-
         // Parse print tokens
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ';', false);
+        std::vector<size_t> offsets;
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ';', offsets, false);
+
+        // First offset is always missing and last one is always bogus
+        offsets.insert(offsets.begin(), 0);
+        offsets.pop_back();
+
         for(int i=0; i<tokens.size(); i++)
         {
             Expression::ExpressionType expressionType = isExpression(tokens[i]);
@@ -1459,25 +1462,8 @@ namespace Compiler
             {
                 case Expression::IsString:
                 {
-                    KeywordResult keywordResult = handleStringwords(codeLine, tokens[i], codeLineIndex, result, searchPos);
-                    if(keywordResult == KeywordFound)
-                    {
-                        if(result._name == "CHR$")
-                        {
-                            emitVcpuAsm("%PrintAcChar", "", false, codeLineIndex);
-                            continue;
-                        }
-                        else if(result._name == "HEX$")
-                        {
-                            emitVcpuAsm("%PrintAcHexByte", "", false, codeLineIndex);
-                            continue;
-                        }
-                        else if(result._name == "HEXW$")
-                        {
-                            emitVcpuAsm("%PrintAcHexWord", "", false, codeLineIndex);
-                            continue;
-                        }
-                    }
+                    KeywordResult keywordResult = handleStringwords(codeLine, foundPos + offsets[i], tokens[i], codeLineIndex, result, true);
+                    if(keywordResult == KeywordFound) continue;
 
                     size_t lquote = tokens[i].find_first_of("\"");
                     size_t rquote = tokens[i].find_first_of("\"", lquote + 1);
@@ -1487,7 +1473,7 @@ namespace Compiler
                         std::string str = tokens[i].substr(lquote + 1, rquote - (lquote + 1));
                         if(str.size() > USER_STR_SIZE)
                         {
-                            fprintf(stderr, "Compiler::handlePRINT() : user string is %d characters too long in '%s' on line %d\n", int(str.size() - USER_STR_SIZE), codeLine._code.c_str(), codeLineIndex);
+                            fprintf(stderr, "Compiler::handlePRINT() : user string is %d characters too long in '%s' on line %d\n", int(str.size() - USER_STR_SIZE), codeLine._text.c_str(), codeLineIndex + 1);
                             return false;
                         }
 
@@ -1510,7 +1496,7 @@ namespace Compiler
                             _userStrStart -= 0x0100;
                             if(_userStrStart < 0x08A0)
                             {
-                                fprintf(stderr, "Compiler::handlePRINT() : out of string memory, user string address %04x in '%s' on line %d\n", _userStrStart, codeLine._code.c_str(), codeLineIndex);
+                                fprintf(stderr, "Compiler::handlePRINT() : out of string memory, user string address %04x in '%s' on line %d\n", _userStrStart, codeLine._text.c_str(), codeLineIndex + 1);
                                 return false;
                             }
                         }
@@ -1536,7 +1522,7 @@ namespace Compiler
 
                 case Expression::HasAlpha:
                 {
-                    KeywordResult keywordResult = handleKeywords(codeLine, tokens[i], codeLineIndex, result, searchPos);
+                    KeywordResult keywordResult = handleKeywords(codeLine, tokens[i], codeLineIndex, result, foundPos, true);
                     if(keywordResult == KeywordFound)
                     {
                         if(result._name == "PEEK")
@@ -1547,8 +1533,8 @@ namespace Compiler
                     }
 
                     // Search math words and string words
-                    keywordResult = handleMathwords(codeLine, foundPos, codeLineIndex, result);
-                    if(keywordResult == KeywordNotFound) keywordResult = handleStringwords(codeLine, foundPos, codeLineIndex, result);
+                    keywordResult = handleMathwords(codeLine, foundPos, codeLineIndex, result, true);
+                    if(keywordResult == KeywordNotFound) keywordResult = handleStringwords(codeLine, foundPos, codeLineIndex, result, true);
                     if(keywordResult == KeywordNotFound)
                     {
                         CodeLine cl = codeLine;
@@ -1586,21 +1572,21 @@ namespace Compiler
         return true;
     }
 
-    bool handleFOR(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleFOR(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         if(codeLine._tokens.size() < 6  ||  codeLine._tokens.size() > 8)
         {
-            fprintf(stderr, "Compiler::handleFOR() : syntax error, (wrong number of tokens), in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Compiler::handleFOR() : syntax error, (wrong number of tokens), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
         if(codeLine._tokens[2] != "=")
         {
-            fprintf(stderr, "Compiler::handleFOR() : syntax error, (missing '='), in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Compiler::handleFOR() : syntax error, (missing '='), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
         if(Expression::strToUpper(codeLine._tokens[4]) != "TO")
         {
-            fprintf(stderr, "Compiler::handleFOR() : syntax error, (missing 'TO'), in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Compiler::handleFOR() : syntax error, (missing 'TO'), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
         
@@ -1613,7 +1599,7 @@ namespace Compiler
         int16_t loopStart;
         if(!Expression::stringToI16(codeLine._tokens[3], loopStart))
         {
-            fprintf(stderr, "Compiler::handleFOR() : syntax error, (bad FOR start), in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Compiler::handleFOR() : syntax error, (bad FOR start), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -1625,7 +1611,7 @@ namespace Compiler
         int16_t loopEnd;
         if(!Expression::stringToI16(codeLine._tokens[5], loopEnd))
         {
-            fprintf(stderr, "Compiler::handleFOR() : syntax error, (bad FOR end), in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Compiler::handleFOR() : syntax error, (bad FOR end), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -1633,7 +1619,7 @@ namespace Compiler
         // Maximum of 4 nested loops
         if(_forNextDataStack.size() == 4)
         {
-            fprintf(stderr, "Compiler::handleFOR() : syntax error, (maximum nested loops is 4), in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Compiler::handleFOR() : syntax error, (maximum nested loops is 4), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -1646,16 +1632,31 @@ namespace Compiler
 
         emitVcpuAsm("LDWI", std::to_string(loopStart), false, codeLineIndex);
 
-        // Create FOR loop label, (label is attached to line after for loop initialisation)
+        // Find first valid line
+        int lineAfterLoopInit = -1;
+        for(int i=_currentCodeLineIndex + 1; i<_codeLines.size(); i++)
+        {
+            if(_codeLines[i]._code.size())
+            {
+                lineAfterLoopInit = i;
+                break;
+            }
+        }
+        if(lineAfterLoopInit == -1)
+        {
+            lineAfterLoopInit = _currentCodeLineIndex + 1;
+            fprintf(stderr, "Compiler::handleFOR() : no valid line of FOR loop code, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+        }
+
+        // Create FOR loop label, (label is attached to line after FOR loop initialisation)
         Label label;
-        int lineAfterLoopInit = _currentCodeLineIndex + 1;
-        std::string name = "_next" + std::to_string(_currentCodeLineIndex); // + "_" + _integerVars[varIndex]._name;
+        std::string name = "_next" + std::to_string(lineAfterLoopInit); // + "_" + _integerVars[varIndex]._name;
         createLabel(_vasmPC, name, name + "\t", lineAfterLoopInit, label, false, false, false);
         _codeLines[lineAfterLoopInit]._ownsLabel = true;
         _codeLines[lineAfterLoopInit]._labelIndex = _currentLabelIndex;
 
         // Update all lines belonging to this label
-        for(int i=_currentCodeLineIndex + 2; i<_codeLines.size(); i++)
+        for(int i=lineAfterLoopInit; i<_codeLines.size(); i++)
         {
             if(!_codeLines[i]._ownsLabel) _codeLines[i]._labelIndex = _currentLabelIndex;
         }
@@ -1666,11 +1667,11 @@ namespace Compiler
         return true;
     }
 
-    bool handleNEXT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleNEXT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         if(codeLine._tokens.size() != 2)
         {
-            fprintf(stderr, "Compiler::handleNEXT() : syntax error, (wrong number of tokens), in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Compiler::handleNEXT() : syntax error, (wrong number of tokens), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -1678,7 +1679,7 @@ namespace Compiler
         int varIndex = findVar(codeLine._tokens[1]);
         if(varIndex < 0)
         {
-            fprintf(stderr, "Compiler::handleNEXT() : syntax error, (bad var), in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Compiler::handleNEXT() : syntax error, (bad var), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -1686,7 +1687,7 @@ namespace Compiler
         _forNextDataStack.pop();
         if(varIndex != forNextData._varIndex)
         {
-            fprintf(stderr, "Compiler::handleNEXT() : syntax error, (wrong var), in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Compiler::handleNEXT() : syntax error, (wrong var), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -1699,57 +1700,57 @@ namespace Compiler
         return true;
     }
 
-    bool handleIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleTHEN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleTHEN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleELSE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleELSE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleELSEIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleELSEIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleENDIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleENDIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleDIM(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleDIM(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleDEF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleDEF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleINPUT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleINPUT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleREAD(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleREAD(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleDATA(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleDATA(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handlePEEK(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handlePEEK(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         size_t lbra, rbra;
         if(Expression::findMatchingBrackets(codeLine._code, foundPos, lbra, rbra))
@@ -1789,7 +1790,7 @@ namespace Compiler
         }
         else
         {
-            fprintf(stderr, "Compiler::handlePEEK() : expecting () in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Compiler::handlePEEK() : expecting () in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -1798,33 +1799,33 @@ namespace Compiler
         return true;
     }
 
-    bool handlePOKE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handlePOKE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleDEEK(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleDEEK(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleDOKE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleDOKE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleON(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleON(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleGOSUB(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleGOSUB(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         std::string gosubLabel = codeLine._code.substr(5);
         int labelIndex = findLabel(gosubLabel);
         if(labelIndex == -1)
         {
-            fprintf(stderr, "Compiler::handleGOSUB() : invalid label in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Compiler::handleGOSUB() : invalid label in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -1835,7 +1836,7 @@ namespace Compiler
 
         return true;
     }
-    bool handleRETURN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleRETURN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         emitVcpuAsm("POP", "", false, codeLineIndex);
         emitVcpuAsm("RET", "", false, codeLineIndex);
@@ -1843,32 +1844,32 @@ namespace Compiler
         return true;
     }
 
-    bool handleDO(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleDO(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleLOOP(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleLOOP(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleWHILE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleWHILE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleUNTIL(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleUNTIL(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleEXIT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleEXIT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleAND(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleAND(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         uint16_t operand;
         std::string input = codeLine._code.substr(3);
@@ -1890,92 +1891,89 @@ namespace Compiler
         return true;
     }
 
-    bool handleOR(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleOR(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleXOR(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleXOR(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleNOT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleNOT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleABS(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleABS(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleACS(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleACS(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleASC(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleASC(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleASN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleASN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleATN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleATN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleCOS(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleCOS(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleEXP(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleEXP(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleINT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleINT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleLOG(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleLOG(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleRND(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleRND(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleSIN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleSIN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleSQR(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleSQR(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleTAN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleTAN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleCHR$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleCHR$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         // Parse chr$
-        //size_t lbra = codeLine._code.find_first_of("(", foundPos);
-        //size_t rbra = codeLine._code.find_first_of(")", lbra + 1);
-        //if(lbra != std::string::npos  &&  rbra != std::string::npos)
         size_t lbra, rbra;
         if(Expression::findMatchingBrackets(codeLine._code, foundPos, lbra, rbra))
         {
@@ -1989,6 +1987,7 @@ namespace Compiler
                     Expression::setExprFunc(Expression::expression);
                     if(!Expression::parse((char*)expr.c_str(), codeLineIndex, result._data)) return false;
                     emitVcpuAsm("LDI", std::to_string(result._data), false, codeLineIndex);
+                    if(print) emitVcpuAsm("%PrintAcChar", "", false, codeLineIndex);
                 }
                 break;
 
@@ -1998,13 +1997,22 @@ namespace Compiler
                     cl._code = cl._expression = expr;
                     if(!varExpressionParse(cl, codeLineIndex)) return false;
                     int varIndex = varAssignmentParse(cl, codeLineIndex);
-                    (varIndex >= 0) ? emitVcpuAsm("LD", "_" + _integerVars[varIndex]._name, false, codeLineIndex) : emitVcpuAsm("LD", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
+                    if(varIndex >= 0)
+                    {
+                        std::string var = "_" + _integerVars[varIndex]._name;
+                        (!print) ? emitVcpuAsm("LD", var, false, codeLineIndex) : emitVcpuAsm("%PrintVarChar", var, false, codeLineIndex);
+                    }
+                    else
+                    {
+                        std::string temp = Expression::byteToHexString(uint8_t(_tempVarStart));
+                        (!print) ? emitVcpuAsm("LD", temp, false, codeLineIndex) :  emitVcpuAsm("%PrintVarChar", temp, false, codeLineIndex);
+                    }
                 }
                 break;
 
                 default:
                 {
-                    fprintf(stderr, "Compiler::handleCHR$() : invalid input in '%s' on line %d\n", expr.c_str(), codeLineIndex);
+                    fprintf(stderr, "Compiler::handleCHR$() : invalid input in '%s' on line %d\n", expr.c_str(), codeLineIndex + 1);
                     return false;
                 }
                 break;
@@ -2012,16 +2020,14 @@ namespace Compiler
         }
         else
         {
-            fprintf(stderr, "Compiler::handleCHR$() : expecting () in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Compiler::handleCHR$() : expecting () in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
-
-        result._name = "CHR$";
 
         return true;
     }
 
-    bool handleHEX$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleHEX$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         // Parse hex$
         size_t lbra, rbra;
@@ -2037,6 +2043,7 @@ namespace Compiler
                     Expression::setExprFunc(Expression::expression);
                     if(!Expression::parse((char*)expr.c_str(), codeLineIndex, result._data)) return false;
                     emitVcpuAsm("LDI", std::to_string(result._data), false, codeLineIndex);
+                    if(print) emitVcpuAsm("%PrintAcHexByte", "", false, codeLineIndex);
                 }
                 break;
 
@@ -2046,13 +2053,22 @@ namespace Compiler
                     cl._code = cl._expression = expr;
                     if(!varExpressionParse(cl, codeLineIndex)) return false;
                     int varIndex = varAssignmentParse(cl, codeLineIndex);
-                    (varIndex >= 0) ? emitVcpuAsm("LD", "_" + _integerVars[varIndex]._name, false, codeLineIndex) : emitVcpuAsm("LD", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
+                    if(varIndex >= 0)
+                    {
+                        std::string var = "_" + _integerVars[varIndex]._name;
+                        (!print) ? emitVcpuAsm("LD", var, false, codeLineIndex) : emitVcpuAsm("%PrintVarHexByte", var, false, codeLineIndex);
+                    }
+                    else
+                    {
+                        std::string temp = Expression::byteToHexString(uint8_t(_tempVarStart));
+                        (!print) ? emitVcpuAsm("LD", temp, false, codeLineIndex) :  emitVcpuAsm("%PrintVarHexByte", temp, false, codeLineIndex);
+                    }
                 }
                 break;
 
                 default:
                 {
-                    fprintf(stderr, "Compiler::handleHEX$() : invalid input in '%s' on line %d\n", expr.c_str(), codeLineIndex);
+                    fprintf(stderr, "Compiler::handleHEX$() : invalid input in '%s' on line %d\n", expr.c_str(), codeLineIndex + 1);
                     return false;
                 }
                 break;
@@ -2060,16 +2076,14 @@ namespace Compiler
         }
         else
         {
-            fprintf(stderr, "Compiler::handleHEX$() : expecting () in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Compiler::handleHEX$() : expecting () in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
-
-        result._name = "HEX$";
 
         return true;
     }
 
-    bool handleHEXW$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleHEXW$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         // Parse hexw$
         size_t lbra, rbra;
@@ -2085,6 +2099,7 @@ namespace Compiler
                     Expression::setExprFunc(Expression::expression);
                     if(!Expression::parse((char*)expr.c_str(), codeLineIndex, result._data)) return false;
                     emitVcpuAsm("LDWI", std::to_string(result._data), false, codeLineIndex);
+                    if(print) emitVcpuAsm("%PrintAcHexWord", "", false, codeLineIndex);
                 }
                 break;
 
@@ -2094,13 +2109,22 @@ namespace Compiler
                     cl._code = cl._expression = expr;
                     if(!varExpressionParse(cl, codeLineIndex)) return false;
                     int varIndex = varAssignmentParse(cl, codeLineIndex);
-                    (varIndex >= 0) ? emitVcpuAsm("LDW", "_" + _integerVars[varIndex]._name, false, codeLineIndex) : emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
+                    if(varIndex >= 0)
+                    {
+                        std::string var = "_" + _integerVars[varIndex]._name;
+                        (!print) ? emitVcpuAsm("LDW", var, false, codeLineIndex) : emitVcpuAsm("%PrintVarHexWord", var, false, codeLineIndex);
+                    }
+                    else
+                    {
+                        std::string temp = Expression::byteToHexString(uint8_t(_tempVarStart));
+                        (!print) ? emitVcpuAsm("LDW", temp, false, codeLineIndex) :  emitVcpuAsm("%PrintVarHexWord", temp, false, codeLineIndex);
+                    }
                 }
                 break;
 
                 default:
                 {
-                    fprintf(stderr, "Compiler::handleHEXW$() : invalid input in '%s' on line %d\n", expr.c_str(), codeLineIndex);
+                    fprintf(stderr, "Compiler::handleHEXW$() : invalid input in '%s' on line %d\n", expr.c_str(), codeLineIndex + 1);
                     return false;
                 }
                 break;
@@ -2108,41 +2132,39 @@ namespace Compiler
         }
         else
         {
-            fprintf(stderr, "Compiler::handleHEXW$() : expecting () in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Compiler::handleHEXW$() : expecting () in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
-        result._name = "HEXW$";
-
         return true;
     }
 
-    bool handleMID$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleMID$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleLEFT$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleLEFT$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleRIGHT$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleRIGHT$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleSPC$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleSPC$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleSTR$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleSTR$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
 
-    bool handleTIME$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool handleTIME$(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result, bool print)
     {
         return true;
     }
@@ -2161,9 +2183,9 @@ namespace Compiler
         if(_labels[codeLine._labelIndex]._gosub) emitVcpuAsm("PUSH", "", false, codeLineIndex);
 
         KeywordFuncResult result;
-        KeywordResult keywordResult = handleKeywords(codeLine, 0, codeLineIndex, result);
-        if(keywordResult == KeywordNotFound) keywordResult = handleMathwords(codeLine, 0, codeLineIndex, result);
-        if(keywordResult == KeywordNotFound) keywordResult = handleStringwords(codeLine, 0, codeLineIndex, result);
+        KeywordResult keywordResult = handleKeywords(codeLine, 0, codeLineIndex, result, false);
+        if(keywordResult == KeywordNotFound) keywordResult = handleMathwords(codeLine, 0, codeLineIndex, result, false);
+        if(keywordResult == KeywordNotFound) keywordResult = handleStringwords(codeLine, 0, codeLineIndex, result, false);
         else if(keywordResult == KeywordError) return false;
 
         // Check for matching brackets
@@ -2187,7 +2209,7 @@ namespace Compiler
                 int varIndex = varAssignmentParse(codeLine, codeLineIndex);
 
                 // Optimise LDW away if possible
-                if((varIndex >= 0  &&  varIndex != prevVarIndex  &&  keywordResult != KeywordFound)  ||  _labels[codeLine._labelIndex]._gosub == true)
+                if((varIndex >= 0  &&  varIndex != prevVarIndex  &&  keywordResult != KeywordFound))//  ||  (varIndex >= 0  &&  _labels[codeLine._labelIndex]._gosub == true))
                 {
                     emitVcpuAsm("LDW", "_" + _integerVars[varIndex]._name, false, codeLineIndex);
                 }

@@ -127,7 +127,7 @@ _label_ LD      _var
 %MACRO  PrintVarHexByte _var
         LD      _var
         ST      textHex
-        LDWI    printHex
+        LDWI    printHexByte
         CALL    giga_vAC
 %ENDM
 

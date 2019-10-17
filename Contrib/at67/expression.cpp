@@ -385,6 +385,30 @@ namespace Expression
         return result;
     }
 
+    std::vector<std::string> tokenise(const std::string& text, char c, std::vector<size_t>& offsets, bool skipSpaces, bool toUpper)
+    {
+        std::vector<std::string> result;
+        const char* str = text.c_str();
+
+        do
+        {
+            const char *begin = str;
+
+            while(*str  &&  *str != c) str++;
+
+            std::string s = std::string(begin, str);
+            if(str > begin  &&  (!skipSpaces  ||  !std::all_of(s.begin(), s.end(), isspace)))
+            {
+                if(toUpper) strToUpper(s);
+                offsets.push_back(size_t(str - text.c_str()) + 1);
+                result.push_back(s);
+            }
+        }
+        while (*str++ != 0);
+
+        return result;
+    }
+
     std::vector<std::string> tokeniseLine(std::string& line)
     {
         std::string token = "";
@@ -474,8 +498,9 @@ namespace Expression
     // ****************************************************************************************************************
     // Recursive decent parser
     // ****************************************************************************************************************
-    char peek(void) {return *_expression;  }
-    char get(void)  {return *_expression++;}
+    char peek(void)           {return *_expression;  }
+    char get(void)            {return *_expression++;}
+    void advance(uintptr_t n) {_expression += n;     }
 
     char* getExpression(void) {return _expression;}
     char* getExpressionToParse(void) {return _expressionToParse;}
@@ -580,6 +605,22 @@ namespace Expression
         bool finished = false;
         while(!finished)
         {
+            char boolKeyword[4];
+            strncpy_s(boolKeyword, sizeof boolKeyword,  _expression, (sizeof boolKeyword)-1);
+            std::string boolKeywordStr = std::string(boolKeyword);
+            if(boolKeywordStr == "AND")
+            {
+                advance(3); t = term(); result = and(result, t);
+            }
+            else if(boolKeywordStr == "OR")
+            {
+                advance(3); t = term(); result = or(result, t);
+            }
+            else if(boolKeywordStr == "XOR")
+            {
+                advance(3); t = term(); result = xor(result, t);
+            }
+
             switch(peek())
             {
                 case '+': get(); t = term(); result = add(result, t); break;

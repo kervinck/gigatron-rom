@@ -1,5 +1,5 @@
 let z = 33
-b = z
+b=z
 
 10  for i = 0 to 2
         for j = 0 to 2
@@ -7,19 +7,29 @@ b = z
         next j
     next i
 
-    print chr$(b);" ";peek(0x21)
-    
-    a = peek(0x21) AND 0xFC
-    print hex$(a+1)
-    print hexw$(0xAA55 ^ 0x55AA)
-    print 56
-    print hexw$(0xdead)
-    print hexw$(0b0000111100001111 | 0b1000000010000000)
+    print chr$(b);" ";peek(0x21);" "
+    print hex$(80);" ";hexw$(0xdead);" ";hexw$(0xbeef)
 
-    print "lalalalala2345534563465"
+    for ii = 0 to 3
+        rem cls
+        gosub Big
+    next ii
+    
     END
     
 test: print hex$(i+40);" ";hex$(j+30);" "
       print hex$(i+30);" ";hex$(j+40);" "
       print 20*3+1;" ";i;" ";j;" ";j+23;" ";i+55;" ";i+j;" ";i-j;" ";i-j+1;" ";i+j+j
       return
+      
+      
+Big:     a = peek(0x21) rem AND 0xFC
+    print hex$(a)
+    print hexw$(0xAA55 ^ 0x55AA)
+    print 56
+    print hexw$(0xdead)
+    print hexw$(0b0000111100001111 | 0b1000000010000000)
+
+    print "lalalalala2345534563465"
+    return
+      
